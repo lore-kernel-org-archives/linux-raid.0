@@ -1,65 +1,48 @@
-From: Phil Turmel <philip@turmel.org>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: Data recovery
-Date: Thu, 21 Sep 2017 10:37:12 -0400
-Message-ID: <e110978b-92a3-eb52-9d24-1722e34dc81d@turmel.org>
+Date: Thu, 21 Sep 2017 16:15:53 +0100
+Message-ID: <59C3D7A9.708@youngman.org.uk>
 References: <CAEmSg0_=5ni2mA1Q_A1DjZmvjG9u8tKXOQHmnmT33=12yJwYqA@mail.gmail.com>
  <59C309C7.9030300@youngman.org.uk>
- <796e5efe-04af-60c7-4ef0-f9962e456061@turmel.org>
- <CAEmSg09hzYijYix=gc_Nkbr1Ub4YuDGvP--MpEB8UjB=U71onA@mail.gmail.com>
- <54c6f639-0912-1f82-41b9-0a778fb5bb89@turmel.org>
- <CAEmSg08aYMppy6Ardarjz_0P6-HDU8_GCkcOV88g32-T053k_g@mail.gmail.com>
+ <CAEmSg0-AD09KM=S21a-EVGQEEE0=em-PCpb9LAAbd8cP2+ysBA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEmSg08aYMppy6Ardarjz_0P6-HDU8_GCkcOV88g32-T053k_g@mail.gmail.com>
-Content-Language: en-GB
+In-Reply-To: <CAEmSg0-AD09KM=S21a-EVGQEEE0=em-PCpb9LAAbd8cP2+ysBA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?Vm9qdMSbY2ggS2xldGXEjWth?= <vojta.kletecka@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: =?UTF-8?B?Vm9qdMSbY2ggS2xldGXEjWth?= <vojta.kletecka@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 09/21/2017 09:22 AM, Vojtěch Kletečka wrote:
-> I tried both reasonable versions without success:
+On 21/09/17 09:33, Vojtěch Kletečka wrote:
+>> Why are they connected over USB?
 
-There is only one reasonable version. The one that leaves out the
-out-of-sync device.  Your device letters might be changing, as your
-mdadm -E reports indicate the one to leave out is /dev/sdd1, active
-device #2.
+> Because the disks are WD Elements Desktop - 2TB, without
+> dissassembling connecteable only via usb. Also we thought it might be
+> good if we are able to mount them on multiple computers so hence usb.
+> Terrible mistake I know..
+> 
+>> > Raid doesn't like USB. Because USB likes dropping disks and then raid
+>> > wonders where the disk has gone - sounds exactly like what's happened to
+>> > you!
 
-> sudo mdadm --assemble --verbose --force /dev/md127 /dev/sd[ce]1
-> [sudo] password for vojtech:
-> mdadm: looking for devices for /dev/md127
-> mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 2.
-> mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 1.
-> mdadm: no uptodate device for slot 0 of /dev/md127
-> mdadm: added /dev/sdc1 to /dev/md127 as 2 (possibly out of date)
-> mdadm: added /dev/sde1 to /dev/md127 as 1
-> mdadm: /dev/md127 assembled from 1 drive - not enough to start the array.
+> I see that now, guess it would be best to either dissassemble the
+> disks and put them to computer or use them as regular disks without
+> raid.
+> 
+Another option that might help with what Phil has been suggesting ... if
+you want to keep them as portable backup drives (not a bad idea) get a
+couple of new drives to stick in a computer, dd or ddrescue the
+partitions across, and fix it on the computer in order to do your
+recovery (I note that USB seems to have been shuffling your drive order,
+making re-assembling the array difficult!).
 
-I would have thought this would be the correct incantation, but it
-identified sdc1 as slot 2.
+Amazon have been pushing the Hitachi 7K4000 drive at me, which is a 4TB
+drive apparently certified for raid, for only £70! Two of those will
+enable you to recover your array, back it up, and then you can decide
+what sort of raid or whatever you want to make from those drives. Four
+of them would give you a lovely 8TB raid-6 as a store for whatever you
+want ... drooolll....
 
-> sudo mdadm --assemble --verbose --force /dev/md127 /dev/sd[de]1
-> mdadm: looking for devices for /dev/md127
-> mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 0.
-> mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 1.
-> mdadm: added /dev/sde1 to /dev/md127 as 1
-> mdadm: no uptodate device for slot 4 of /dev/md127
-> mdadm: added /dev/sdd1 to /dev/md127 as 0
-> mdadm: failed to RUN_ARRAY /dev/md127: Input/output error
-
-This has slots 0 and 1 as expected, but is asking for slot #4. Which
-shouldn't be necessary with a 3-device raid10.  Your metadata seems
-badly corrupted.
-
-Which means that --create --assume-clean is the right answer, and you
-have complete mdadm -E reports to supply the right parameters
-(especially chunk size and data offsets) to get it right.  You just have
-to make sure you use the correct devices for slots 0 and 1 and supply
-'missing' for slot 2.  {Do not use shell [] notation as a shortcut in
-any --create command, as [] notation can reorder the letters.}
-
-Phil
-
-
+Cheers,
+Wol
