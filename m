@@ -1,130 +1,80 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: I/O hangs after resuming from suspend-to-ram
-Date: Thu, 21 Sep 2017 06:20:12 +0800
-Message-ID: <20170920222011.GB5105@ming.t460p>
-References: <3926917.BCSovyVWdL@natalenko.name>
- <4174287.OjL0pO8MRx@natalenko.name>
- <20170828125822.GA19670@ming.t460p>
- <3567128.t9myNOm9ia@merkaba>
+From: =?UTF-8?B?Vm9qdMSbY2ggS2xldGXEjWth?= <vojta.kletecka@gmail.com>
+Subject: Data recovery
+Date: Thu, 21 Sep 2017 02:08:22 +0200
+Message-ID: <CAEmSg0_=5ni2mA1Q_A1DjZmvjG9u8tKXOQHmnmT33=12yJwYqA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3567128.t9myNOm9ia@merkaba>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Aug 28, 2017 at 03:10:35PM +0200, Martin Steigerwald wrote:
-> Ming Lei - 28.08.17, 20:58:
-> > On Sun, Aug 27, 2017 at 09:43:52AM +0200, Oleksandr Natalenko wrote:
-> > > Hi.
-> > > 
-> > > Here is disk setup for QEMU VM:
-> > > 
-> > > ===
-> > > [root@archmq ~]# smartctl -i /dev/sda
-> > > …
-> > > Device Model:     QEMU HARDDISK
-> > > Serial Number:    QM00001
-> > > Firmware Version: 2.5+
-> > > User Capacity:    4,294,967,296 bytes [4.29 GB]
-> > > Sector Size:      512 bytes logical/physical
-> > > Device is:        Not in smartctl database [for details use: -P showall]
-> > > ATA Version is:   ATA/ATAPI-7, ATA/ATAPI-5 published, ANSI NCITS 340-2000
-> > > Local Time is:    Sun Aug 27 09:31:54 2017 CEST
-> > > SMART support is: Available - device has SMART capability.
-> > > SMART support is: Enabled
-> > > 
-> > > [root@archmq ~]# lsblk
-> > > NAME                MAJ:MIN RM  SIZE RO TYPE   MOUNTPOINT
-> > > sda                   8:0    0    4G  0 disk
-> > > `-sda1                8:1    0    4G  0 part
-> > > 
-> > >   `-md0               9:0    0    4G  0 raid10
-> > >   
-> > >     `-system        253:0    0    4G  0 crypt
-> > >     
-> > >       |-system-boot 253:1    0  512M  0 lvm    /boot
-> > >       |-system-swap 253:2    0  512M  0 lvm    [SWAP]
-> > >       
-> > >       `-system-root 253:3    0    3G  0 lvm    /
-> > > 
-> > > sdb                   8:16   0    4G  0 disk
-> > > `-sdb1                8:17   0    4G  0 part
-> > > 
-> > >   `-md0               9:0    0    4G  0 raid10
-> > >   
-> > >     `-system        253:0    0    4G  0 crypt
-> > >     
-> > >       |-system-boot 253:1    0  512M  0 lvm    /boot
-> > >       |-system-swap 253:2    0  512M  0 lvm    [SWAP]
-> > >       
-> > >       `-system-root 253:3    0    3G  0 lvm    /
-> > > 
-> > > sr0                  11:0    1 1024M  0 rom
-> > > 
-> > > [root@archmq ~]# mdadm --misc --detail /dev/md0
-> > > 
-> > > /dev/md0:
-> > >         Version : 1.2
-> > >   
-> > >   Creation Time : Sat Jul 29 16:37:05 2017
-> > >   
-> > >      Raid Level : raid10
-> > >      Array Size : 4191232 (4.00 GiB 4.29 GB)
-> > >   
-> > >   Used Dev Size : 4191232 (4.00 GiB 4.29 GB)
-> > >   
-> > >    Raid Devices : 2
-> > >   
-> > >   Total Devices : 2
-> > >   
-> > >     Persistence : Superblock is persistent
-> > >     
-> > >     Update Time : Sun Aug 27 09:30:33 2017
-> > >     
-> > >           State : clean
-> > >  
-> > >  Active Devices : 2
-> > > 
-> > > Working Devices : 2
-> > > 
-> > >  Failed Devices : 0
-> > >  
-> > >   Spare Devices : 0
-> > >   
-> > >          Layout : far=2
-> > >      
-> > >      Chunk Size : 512K
-> > >      
-> > >            Name : archiso:0
-> > >            UUID : 43f4be59:c8d2fa0a:a94acdff:1c7f2f4e
-> > >          
-> > >          Events : 485
-> > >     
-> > >     Number   Major   Minor   RaidDevice State
-> > >     
-> > >        0       8        1        0      active sync   /dev/sda1
-> > >        1       8       17        1      active sync   /dev/sdb1
-> > > 
-> > > ===
-> > > 
-> > > In words: 2 virtual disks, RAID10 setup with far-2 layout, LUKS on it,
-> > > then
-> > > LVM, then ext4 for boot, swap and btrfs for /.
-> > > 
-> > > I couldn't reproduce the issue with single disk without RAID.
-> > 
-> > Could you verify if the following patch fixes your issue?
+Dear linux-raid subscribers,
 
-Yes, the patch should address this kind of issue, not related
-with RAID specially, and the latest version can be found in the
-following link:
+may I humbly request your assistance?
 
-	https://marc.info/?l=linux-block&m=150579298505484&w=2
+I have three disks connected over usb from which I have made raid10
+array with two far coppies. Ocasionally when connecting all three
+disks to another computer one or two of the disks are not visible when
+creating array due to bad contacts on usb port. Sometimes also one of
+the disks suddenly disconnects from the array.
+So far I always managed to solve the problems caused by these (very
+poor, I am fully aware of that now) conditions by readding disk and
+letting it synchronize with other disks. But now I apparently caused a
+bigger issue because I am not able to assemble the raid at all.
 
--- 
-Ming
+As far as I remember when I connected the disks today, linux detected
+only one. After few tries I found right usb ports for all three disks
+and they were indeed shown in output of fdisk -l. But device was not
+assembled at first. I have waited a little bit and mdadm finally
+assembled the device (although I am not sure if there were two or
+three devices). Strangely "cat /proc/mdstat" reported that devices are
+99.something synchronized but supposedly with all blocks synchronized
+(I mean both numbers were exactly the same) and 0kb speed. Weird I
+thought and I issued mdadm --stop /dev/md127 because I wasn't able to
+mount /dev/md127 to filesystem.
+
+That was last thing I was able to do with the array. After that I have
+tried all possible combinations of disks, assembling and incremental
+assembling with/without --force and/or --run but everything without
+any results. All commands just failed, in most cases with these two
+errors:
+
+sudo mdadm --assemble /dev/md127 /dev/sd[cde]1
+mdadm: /dev/md127 assembled from 2 drives - need all 3 to start it
+(use --run to insist).
+(this command caused "kicking non-fresh sdd1 from array!" in dmesg)
+
+sudo mdadm --assemble /dev/md127 /dev/sd[cde]1 --run
+mdadm: failed to RUN_ARRAY /dev/md127: Input/output error
+(this command caused "not enough operational mirrors." in dmesg)
+
+From various examining commands (see archive for all commands
+requested in "asking for help" part of wiki here:
+http://mysharegadget.com/328200519) I have concluded, that one of
+disks is far behind others in synchronization and other two disks
+strangely don't have enough mirrors (although I though there are
+exactly two disks where each block of data is written, at least in
+this case).
+
+sudo mdadm --examine /dev/sd[c-e]1 | egrep 'Event|/dev/sd'
+/dev/sdc1:
+         Events : 44607
+/dev/sdd1:
+         Events : 36570
+/dev/sde1:
+         Events : 44607
+
+Is there any possibility of data recovery? For example by forcing
+mdamd to think that the disks are synchronized?
+As far as I know the disks should be synchronized because last time my
+brother used the array he let it synchronize afterwards. Also I
+haven't used "mdadm --create" yet as it might be dangerous and I am
+not sure if all data saved in array are backed up.
+
+Thank you for your time and any suggestions.
+
+With kind regards,
+
+Vojt=C4=9Bch Klete=C4=8Dka
