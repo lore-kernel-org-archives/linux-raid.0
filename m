@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH 1/3] md: separate request handling
-Date: Thu, 21 Sep 2017 10:42:57 -0700
-Message-ID: <437b4e764467f74295203e652c8128e5265a4776.1506015297.git.shli@fb.com>
+Subject: [PATCH 2/3] md: fix a race condition for flush request handling
+Date: Thu, 21 Sep 2017 10:42:58 -0700
+Message-ID: <71bf02053eb983f12561099c4779ae99c06e0098.1506015297.git.shli@fb.com>
 References: <cover.1506015297.git.shli@fb.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <cover.1506015297.git.shli@fb.com>
@@ -14,121 +14,49 @@ List-Id: linux-raid.ids
 
 From: Shaohua Li <shli@fb.com>
 
-With commit cc27b0c78c79, pers->make_request could bail out without handling
-the bio. If that happens, we should retry.  The commit fixes md_make_request
-but not other call sites. Separate the request handling part, so other call
-sites can use it.
+md_submit_flush_data calls pers->make_request, which missed the suspend check.
+Fix it with the new md_handle_request API.
 
 Reported-by: Nate Dailey <nate.dailey@stratus.com>
+Tested-by: Nate Dailey <nate.dailey@stratus.com>
 Fix: cc27b0c78c79(md: fix deadlock between mddev_suspend() and md_write_start())
 Cc: NeilBrown <neilb@suse.com>
 Cc: stable@vger.kernel.org
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/md.c | 58 ++++++++++++++++++++++++++++++++-------------------------
- drivers/md/md.h |  1 +
- 2 files changed, 34 insertions(+), 25 deletions(-)
+ drivers/md/md.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 08fcaebc61bd..1db1a22ed835 100644
+index 1db1a22ed835..0ff1bbf6c90e 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -266,6 +266,37 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
-  * call has finished, the bio has been linked into some internal structure
-  * and so is visible to ->quiesce(), so we don't need the refcount any more.
-  */
-+void md_handle_request(struct mddev *mddev, struct bio *bio)
-+{
-+check_suspended:
-+	rcu_read_lock();
-+	if (mddev->suspended) {
-+		DEFINE_WAIT(__wait);
-+		for (;;) {
-+			prepare_to_wait(&mddev->sb_wait, &__wait,
-+					TASK_UNINTERRUPTIBLE);
-+			if (!mddev->suspended)
-+				break;
-+			rcu_read_unlock();
-+			schedule();
-+			rcu_read_lock();
-+		}
-+		finish_wait(&mddev->sb_wait, &__wait);
-+	}
-+	atomic_inc(&mddev->active_io);
-+	rcu_read_unlock();
+@@ -447,16 +447,22 @@ static void md_submit_flush_data(struct work_struct *ws)
+ 	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
+ 	struct bio *bio = mddev->flush_bio;
+ 
++	/*
++	 * must reset flush_bio before calling into md_handle_request to avoid a
++	 * deadlock, because other bios passed md_handle_request suspend check
++	 * could wait for this and below md_handle_request could wait for those
++	 * bios because of suspend check
++	 */
++	mddev->flush_bio = NULL;
++	wake_up(&mddev->sb_wait);
 +
-+	if (!mddev->pers->make_request(mddev, bio)) {
-+		atomic_dec(&mddev->active_io);
-+		wake_up(&mddev->sb_wait);
-+		goto check_suspended;
-+	}
-+
-+	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
-+		wake_up(&mddev->sb_wait);
-+}
-+EXPORT_SYMBOL(md_handle_request);
-+
- static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
- {
- 	const int rw = bio_data_dir(bio);
-@@ -285,23 +316,6 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
+ 	if (bio->bi_iter.bi_size == 0)
+ 		/* an empty barrier - all done */
  		bio_endio(bio);
- 		return BLK_QC_T_NONE;
+ 	else {
+ 		bio->bi_opf &= ~REQ_PREFLUSH;
+-		mddev->pers->make_request(mddev, bio);
++		md_handle_request(mddev, bio);
  	}
--check_suspended:
--	rcu_read_lock();
--	if (mddev->suspended) {
--		DEFINE_WAIT(__wait);
--		for (;;) {
--			prepare_to_wait(&mddev->sb_wait, &__wait,
--					TASK_UNINTERRUPTIBLE);
--			if (!mddev->suspended)
--				break;
--			rcu_read_unlock();
--			schedule();
--			rcu_read_lock();
--		}
--		finish_wait(&mddev->sb_wait, &__wait);
--	}
--	atomic_inc(&mddev->active_io);
--	rcu_read_unlock();
- 
- 	/*
- 	 * save the sectors now since our bio can
-@@ -310,20 +324,14 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
- 	sectors = bio_sectors(bio);
- 	/* bio could be mergeable after passing to underlayer */
- 	bio->bi_opf &= ~REQ_NOMERGE;
--	if (!mddev->pers->make_request(mddev, bio)) {
--		atomic_dec(&mddev->active_io);
--		wake_up(&mddev->sb_wait);
--		goto check_suspended;
--	}
-+
-+	md_handle_request(mddev, bio);
- 
- 	cpu = part_stat_lock();
- 	part_stat_inc(cpu, &mddev->gendisk->part0, ios[rw]);
- 	part_stat_add(cpu, &mddev->gendisk->part0, sectors[rw], sectors);
- 	part_stat_unlock();
- 
--	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
--		wake_up(&mddev->sb_wait);
 -
- 	return BLK_QC_T_NONE;
+-	mddev->flush_bio = NULL;
+-	wake_up(&mddev->sb_wait);
  }
  
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 561d22b9a9a8..d8287d3cd1bf 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -692,6 +692,7 @@ extern void md_stop_writes(struct mddev *mddev);
- extern int md_rdev_init(struct md_rdev *rdev);
- extern void md_rdev_clear(struct md_rdev *rdev);
- 
-+extern void md_handle_request(struct mddev *mddev, struct bio *bio);
- extern void mddev_suspend(struct mddev *mddev);
- extern void mddev_resume(struct mddev *mddev);
- extern struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ void md_flush_request(struct mddev *mddev, struct bio *bio)
 -- 
 2.11.0
