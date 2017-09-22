@@ -1,111 +1,59 @@
-From: Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH v3 1/6] md: Make md resync and reshape threads freezable
-Date: Fri, 22 Sep 2017 15:14:00 -0700
-Message-ID: <20170922221405.22091-2-bart.vanassche@wdc.com>
-References: <20170922221405.22091-1-bart.vanassche@wdc.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170922221405.22091-1-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, Bart Van Assche <bart.vanassche@wdc.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: possible HighPoint RocketRAID 2720SGL failure
+Date: Sat, 23 Sep 2017 08:52:06 +1000
+Message-ID: <6c99402d-506c-32de-9673-22f5179df8d7@eyal.emu.id.au>
+References: <73afd1f8-176a-07e9-1024-57692dc96904@eyal.emu.id.au>
+ <20170921172019.2067e49b@natsu>
+ <CAAMCDefoZFzP2yLu4+_cs90KpqHvwXZKZpAs-xBvJ_s-0Gy4pg@mail.gmail.com>
+ <a0d2e5e4-f5eb-6a73-3e91-250aead0aa3a@eyal.emu.id.au>
+ <bcb8a0a8-9e3e-f953-577e-42abe9cb0968@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bcb8a0a8-9e3e-f953-577e-42abe9cb0968@turmel.org>
+Content-Language: en-AU
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Some people use the md driver on laptops and use the suspend and
-resume functionality. Since it is essential that submitting of
-new I/O requests stops before device quiescing starts, make the
-md resync and reshape threads freezable.
+On 22/09/17 23:20, Phil Turmel wrote:
+> On 09/22/2017 04:27 AM, Eyal Lebedinsky wrote:
+>> On 22/09/17 11:08, Roger Heflin wrote:
+>>> If it is the marvell issue I had before then quit doing smartctl
+>>> commands (disable all smart queries of any sort) as that seemed to
+>>> massively increase the reliablity.  It did not completely fix the
+>>> issues, it just made them happen a lot less often.
+>>
+>> I now tried this and it did not help. I stopped all smart access, but
+>> running
+>> a md 'check' fails as before (all the disks disappear). Each test fails
+>> at a
+>> different address. This time the machine was mostly idle when the check was
+>> running.
+>>
+>> I should note that this HighPoint card was running without any problem for
+>> 4 years.
+>>
+>> Maybe a driver issue? I was running f19 until a few weeks ago, and the
+>> failures
+>> all happened after I upgraded to f22 (and now on f26).
+> 
+> Your issue sounds like an overheating controller chip.  Four years of
+> dust accumulation and/or fan bearing wear.  It's failing when you load
+> it down with a scrub.  Replace the controller card.
 
-Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/md/md.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+Thanks Phil,
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 08fcaebc61bd..26a12bd0db65 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -66,6 +66,7 @@
- #include <linux/raid/md_u.h>
- #include <linux/slab.h>
- #include <linux/percpu-refcount.h>
-+#include <linux/freezer.h>
- 
- #include <trace/events/block.h>
- #include "md.h"
-@@ -7424,6 +7425,7 @@ static int md_thread(void *arg)
- 	 */
- 
- 	allow_signal(SIGKILL);
-+	set_freezable();
- 	while (!kthread_should_stop()) {
- 
- 		/* We need to wait INTERRUPTIBLE so that
-@@ -7434,7 +7436,7 @@ static int md_thread(void *arg)
- 		if (signal_pending(current))
- 			flush_signals(current);
- 
--		wait_event_interruptible_timeout
-+		wait_event_freezable_timeout
- 			(thread->wqueue,
- 			 test_bit(THREAD_WAKEUP, &thread->flags)
- 			 || kthread_should_stop() || kthread_should_park(),
-@@ -8133,6 +8135,8 @@ void md_do_sync(struct md_thread *thread)
- 		return;
- 	}
- 
-+	set_freezable();
-+
- 	if (mddev_is_clustered(mddev)) {
- 		ret = md_cluster_ops->resync_start(mddev);
- 		if (ret)
-@@ -8324,7 +8328,7 @@ void md_do_sync(struct md_thread *thread)
- 		     mddev->curr_resync_completed > mddev->resync_max
- 			    )) {
- 			/* time to update curr_resync_completed */
--			wait_event(mddev->recovery_wait,
-+			wait_event_freezable(mddev->recovery_wait,
- 				   atomic_read(&mddev->recovery_active) == 0);
- 			mddev->curr_resync_completed = j;
- 			if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) &&
-@@ -8342,10 +8346,10 @@ void md_do_sync(struct md_thread *thread)
- 			 * to avoid triggering warnings.
- 			 */
- 			flush_signals(current); /* just in case */
--			wait_event_interruptible(mddev->recovery_wait,
--						 mddev->resync_max > j
--						 || test_bit(MD_RECOVERY_INTR,
--							     &mddev->recovery));
-+			wait_event_freezable(mddev->recovery_wait,
-+					     mddev->resync_max > j ||
-+					     test_bit(MD_RECOVERY_INTR,
-+						      &mddev->recovery));
- 		}
- 
- 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-@@ -8421,7 +8425,7 @@ void md_do_sync(struct md_thread *thread)
- 				 * Give other IO more of a chance.
- 				 * The faster the devices, the less we wait.
- 				 */
--				wait_event(mddev->recovery_wait,
-+				wait_event_freezable(mddev->recovery_wait,
- 					   !atomic_read(&mddev->recovery_active));
- 			}
- 		}
-@@ -8433,7 +8437,8 @@ void md_do_sync(struct md_thread *thread)
- 	 * this also signals 'finished resyncing' to md_stop
- 	 */
- 	blk_finish_plug(&plug);
--	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
-+	wait_event_freezable(mddev->recovery_wait,
-+			     !atomic_read(&mddev->recovery_active));
- 
- 	if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
- 	    !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+Interesting. I checked the card and it still looks "as new", no dust.
+It does not have a fan and the heatsink is glued firmly to the processor.
+Does not look like there is anything I can do here.
+
+I added a fan firing external air directly at the card and will test again
+later. I really need to understand the source of the problem. If this fixes
+it then I will get a replacement controller (the fan is just a hack).
+
+> Phil
+
 -- 
-2.14.1
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
