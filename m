@@ -1,44 +1,37 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: possible HighPoint RocketRAID 2720SGL failure
-Date: Fri, 22 Sep 2017 09:20:37 -0400
-Message-ID: <bcb8a0a8-9e3e-f953-577e-42abe9cb0968@turmel.org>
-References: <73afd1f8-176a-07e9-1024-57692dc96904@eyal.emu.id.au>
- <20170921172019.2067e49b@natsu>
- <CAAMCDefoZFzP2yLu4+_cs90KpqHvwXZKZpAs-xBvJ_s-0Gy4pg@mail.gmail.com>
- <a0d2e5e4-f5eb-6a73-3e91-250aead0aa3a@eyal.emu.id.au>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: mdadm - raid6 best practices ?
+Date: Fri, 22 Sep 2017 11:26:07 -0700
+Message-ID: <20170922182607.1977620-1-songliubraving@fb.com>
+References: <CAMNNMLHLA8mEEKpX8UAXgZPYXyL+mhSBC74K_azC25z=+VAc7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a0d2e5e4-f5eb-6a73-3e91-250aead0aa3a@eyal.emu.id.au>
-Content-Language: en-GB
+In-Reply-To: <CAMNNMLHLA8mEEKpX8UAXgZPYXyL+mhSBC74K_azC25z=+VAc7w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>, list linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: nkshirsa@redhat.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 09/22/2017 04:27 AM, Eyal Lebedinsky wrote:
-> On 22/09/17 11:08, Roger Heflin wrote:
->> If it is the marvell issue I had before then quit doing smartctl
->> commands (disable all smart queries of any sort) as that seemed to
->> massively increase the reliablity.  It did not completely fix the
->> issues, it just made them happen a lot less often.
-> 
-> I now tried this and it did not help. I stopped all smart access, but
-> running
-> a md 'check' fails as before (all the disks disappear). Each test fails
-> at a
-> different address. This time the machine was mostly idle when the check was
-> running.
-> 
-> I should note that this HighPoint card was running without any problem for
-> 4 years.
-> 
-> Maybe a driver issue? I was running f19 until a few weeks ago, and the
-> failures
-> all happened after I upgraded to f22 (and now on f26).
+I would say this is a tradeoff between space overhead (2 parity disks per
+array) and data reliability (mean time before data loss, MTBDL, or MTTF).
+Space overhead is easy to calculate. For MTBDL, there are various of
+documents online, for example:
 
-Your issue sounds like an overheating controller chip.  Four years of
-dust accumulation and/or fan bearing wear.  It's failing when you load
-it down with a scrub.  Replace the controller card.
+https://jontse.com/courses/files/cornell/ece5730/Lecture24.pdf
 
-Phil
+For your questions:
+
+> a) recommended number of disks included in RAID array set?
+I would personally recommend 12 to 15 HDDs per array.
+
+> b) Is it possible to include all 84 disks in one array and leave 2 of
+them as host spare?
+It is possible, but not recommended. 84 disks per array really hurts
+reliability.
+
+> c) Is there a raid6 best practices document to refer to ?
+I am not aware of such documents.
+
+Hope these help.
+
+Song
