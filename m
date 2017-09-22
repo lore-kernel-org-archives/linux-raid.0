@@ -1,72 +1,68 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: mdadm - raid6 best practices ?
-Date: Fri, 22 Sep 2017 20:24:49 +0100
-Message-ID: <59C56381.3030704@youngman.org.uk>
+Date: Fri, 22 Sep 2017 17:44:41 -0400
+Message-ID: <22981.33865.311446.50850@quad.stoffel.home>
 References: <CAMNNMLHLA8mEEKpX8UAXgZPYXyL+mhSBC74K_azC25z=+VAc7w@mail.gmail.com>
- <20170922182607.1977620-1-songliubraving@fb.com>
+        <20170922182607.1977620-1-songliubraving@fb.com>
+        <59C56381.3030704@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170922182607.1977620-1-songliubraving@fb.com>
+In-Reply-To: <59C56381.3030704@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: nkshirsa@redhat.com
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org, nkshirsa@redhat.com
 List-Id: linux-raid.ids
 
-On 22/09/17 19:26, Song Liu wrote:
-> I would say this is a tradeoff between space overhead (2 parity disks per
-> array) and data reliability (mean time before data loss, MTBDL, or MTTF).
-> Space overhead is easy to calculate. For MTBDL, there are various of
-> documents online, for example:
-> 
-> https://jontse.com/courses/files/cornell/ece5730/Lecture24.pdf
-> 
-> For your questions:
-> 
->> a) recommended number of disks included in RAID array set?
-> I would personally recommend 12 to 15 HDDs per array.
-> 
-My gut feel too was that 84 is an awful lot of disks ...
+>>>>> "Wols" == Wols Lists <antlists@youngman.org.uk> writes:
 
->> b) Is it possible to include all 84 disks in one array and leave 2 of
-> them as host spare?
+Wols> On 22/09/17 19:26, Song Liu wrote:
+>> I would say this is a tradeoff between space overhead (2 parity disks per
+>> array) and data reliability (mean time before data loss, MTBDL, or MTTF).
+>> Space overhead is easy to calculate. For MTBDL, there are various of
+>> documents online, for example:
+>> 
+>> https://jontse.com/courses/files/cornell/ece5730/Lecture24.pdf
+>> 
+>> For your questions:
+>> 
+>>> a) recommended number of disks included in RAID array set?
+>> I would personally recommend 12 to 15 HDDs per array.
+>> 
+Wols> My gut feel too was that 84 is an awful lot of disks ...
 
-Do you mean hot spare, or were you thinking of raid-6's two parity disks?
+It really is... just do the math.  If you have 84 disks, and two of
+them are parity, what's the rate of failures that gives you three disk
+failures and them *boom* your data is gone.
 
-The problem with a hot spare is exactly that - when the array is powered
-up, they will be powered up. Yes, with an array that size I guess you
-really do want a bunch of hot spares configured, but I'm not sure that's
-really a good use of disks. If your main disks are beginning to die, the
-spares could easily be going the same way :-(
+Also, with that wide a stripe, you then have *horrible* performance
+when you update a small 32k file, it has to read and re-write 81 disks
+worth of data.  You're going to have horrible performance.
 
-> It is possible, but not recommended. 84 disks per array really hurts
-> reliability.
-> 
->> c) Is there a raid6 best practices document to refer to ?
+It would be smarter to have 12-16 disks in RAID6 pairs, then you could
+either stripe or append to them.  I'd probably not even do that unless
+I needed a single large volume.  The goal is to minimize data loss if
+something goes wrong.
 
-> I am not aware of such documents.
-> 
-I don't know as it's really a "best practices" document, but there's a
-fair bit in the archaeology section of the website you might find
-interesting. More about optimisation and speed tests and stuff, but
-because it was all old when we started updating the site last year,
-that's why it ended up in archaeology.
+You also don't mention what filesystem(s) you've looked into for
+this.  Or how you plan of sharing this disk space to other systems.
+This is another area you need to be careful off.
 
-One thing you really must do is regular scrubs. And MAKE SURE that you
-have lots of active and passive monitoring - it would be oh so easy to
-lose three disks the moment the guy on watch gets casual and stops
-checking ... I don't have access to the stats off the top of my head,
-but with that many disks, losing a couple a month to failures doesn't
-seem that far-fetched.
+Also, when you have this many disks in your system, which sounds like
+one of the backblaze.com systems, you need to think about your
+controllers and whether or not you're using expanders, etc.
 
-> Hope these help.
-> 
-If you do come across some stuff (or write it yourself :-) please let me
-know - this is exactly the stuff that should be on the website if I can
-find it.
+If you're just going to maximum space for the least money, you could
+just go with RAID0 and stripe data across the disks.  Pretty fast I
+bet, but if you lose one... boom!  All gone.
 
-> Song
+You could do five 16 disk RAID6 arrays, leaving you with four hot
+spares.  Then I'd probably just make them all seperate XFS
+filesystems, especially since I don't know if you're using 4Tb disks
+or some other size.
 
-Cheers,
-Wol
+When you have this much space... it pays to be cautious, because users
+will assume it's reliable and won't lose their data.
+
+John
