@@ -1,87 +1,74 @@
 From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: ServeRAID-BR10i (LSI SAS1068E) strageness
-Date: Fri, 22 Sep 2017 18:11:36 +1000
-Message-ID: <74846504-299c-1d75-d6e9-8fbe8b603f52@eyal.emu.id.au>
+Subject: Re: possible HighPoint RocketRAID 2720SGL failure
+Date: Fri, 22 Sep 2017 18:27:02 +1000
+Message-ID: <a0d2e5e4-f5eb-6a73-3e91-250aead0aa3a@eyal.emu.id.au>
+References: <73afd1f8-176a-07e9-1024-57692dc96904@eyal.emu.id.au>
+ <20170921172019.2067e49b@natsu>
+ <CAAMCDefoZFzP2yLu4+_cs90KpqHvwXZKZpAs-xBvJ_s-0Gy4pg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAMCDefoZFzP2yLu4+_cs90KpqHvwXZKZpAs-xBvJ_s-0Gy4pg@mail.gmail.com>
 Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
 To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is an IBM ServeRAID-BR10i. Identified at boot time as
-	LSISAS1068E B3, FwRev=011b5600h
-I was using another controller (HighPoint RocketRAID 2720SGL) which gives me grief
-so decided to re-commission my old (slow) controller. It worked perfectly until retired
-4 years ago.
+On 22/09/17 11:08, Roger Heflin wrote:
+> If it is the marvell issue I had before then quit doing smartctl
+> commands (disable all smart queries of any sort) as that seemed to
+> massively increase the reliablity.  It did not completely fix the
+> issues, it just made them happen a lot less often.
 
-I want to use this old controller, to confirm that my recent problems are from my controller,
-and if so acquire a reliable one.
+I now tried this and it did not help. I stopped all smart access, but running
+a md 'check' fails as before (all the disks disappear). Each test fails at a
+different address. This time the machine was mostly idle when the check was
+running.
 
-The LSI controller POST messages indicated it seed all 7 disks, and they are also
-present in the linux messages, but the partitions are not there. I did not enter
-the controller's configuration dialogue.
+I should note that this HighPoint card was running without any problem for
+4 years.
 
-Each disk has one (unformatted, created with gparted) partition which is a member of
-a RAID6.
+Maybe a driver issue? I was running f19 until a few weeks ago, and the failures
+all happened after I upgraded to f22 (and now on f26).
 
-The messages in the log are these:
+Eyal
 
-Sep 22 14:59:18 e7 kernel: mptsas: ioc0: attaching sata device: fw_channel 0, fw_id 20, phy 0, sas_addr 0x70944e23a5c4b492
-Sep 22 14:59:18 e7 kernel: scsi 6:0:0:0: Direct-Access     ATA      WDC WD4003FZEX-0 1A01 PQ: 0 ANSI: 5
-Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: Attached scsi generic sg2 type 0
-Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: [sdc] 4294967294 512-byte logical blocks: (2.20 TB/2.00 TiB)
-Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: [sdc] Write Protect is off
-Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-
-Unlike the usual messages:
-
-Sep 23 01:05:17 e7 kernel: ata7.00: ATA-8: WDC WD4001FAEX-00MJRA0, 01.01L01, max UDMA/133
-Sep 23 01:05:17 e7 kernel: ata7.00: 7814037168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-Sep 23 01:05:17 e7 kernel: ata7.00: configured for UDMA/133
-Sep 23 01:05:17 e7 kernel: scsi 6:0:0:0: Direct-Access     ATA      WDC WD4001FAEX-0 1L01 PQ: 0 ANSI: 5
-Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: Attached scsi generic sg2 type 0
-Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] 7814037168 512-byte logical blocks: (4.00 TB/3.64 TiB)
-Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] Write Protect is off
-Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Sep 23 01:05:19 e7 kernel: sdc: sdc1
-Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] Attached SCSI disk
-
-In short, no ata?.00 devices and no 'sdc: sdc1' partition list.
-
-As an aside, I notice that the messages from parted are a bit different from what I have recorded.
-My records are from when I was running f19 (now on f26) so maybe the utilities changed.
-
-The old record (from f19):
-
-$ sudo parted /dev/sdj print
-Model: ATA WDC WD4001FAEX-0 (scsi)
-Disk /dev/sdj: 4001GB
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-Disk Flags:
-
-Number  Start   End     Size    File system  Name  Flags
-  1      1049kB  4001GB  4001GB
-
-What I see now (from f26):
-
-$ sudo parted /dev/sdc print
-Model: ATA WDC WD4001FAEX-0 (scsi)
-Disk /dev/sdc: 4001GB
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-Disk Flags:
-
-Number  Start   End     Size    File system  Name  Flags
-  1      1049kB  4001GB  4001GB                     msftdata
-
-The partition is now showing a flag 'msftdata'.
-Is this a utility change (fdisk is also slightly different) or did the LSI touch the partition table?
-
-TIA
+> good luck, I finally just gave up and quit using marvell controllers.
+> 
+> On Thu, Sep 21, 2017 at 7:20 AM, Roman Mamedov <rm@romanrm.net> wrote:
+>> On Thu, 21 Sep 2017 21:12:36 +1000
+>> Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
+>>
+>>> It looks like the controller failed as all 7 disks disappeared together and did not respond
+>>> to any i/o or even smart.
+>>>
+>>> After power off/on things look OK. The raid6 did a very short recovery, then the ext4 fs did
+>>> a quick recovery. fsck found no problems.
+>>>
+>>> I later started a raid 'check' but it failed in less that an hour (out of 10) in the same way.
+>>> A day later I tried again and it failed within 15 minutes.
+>>>
+>>> So far it looks like nothing was lost but I am uncomfortable with this situation.
+>>> No surprise here...
+>>>
+>>> The controller did not log any errors.
+>>>
+>>> Does this look familiar to anyone?
+>>
+>> The controller is based on the Marvell 9485 chip and Marvell SATA/RAID
+>> controllers seem to have a bad reputation for reliability:
+>>
+>> https://www.jethrocarr.com/2013/11/24/adventures-in-io-hell/
+>> https://www.youtube.com/watch?v=010urq9wY3A
+>>
+>> I have also faced some CRC errors or disk drop-outs/reconnects on 9123 cards,
+>> and in one case all disks (or possibly the controller itself) disappear from
+>> the system until reboot on a 88SX7042 based controller.
+>>
+>> --
+>> With respect,
+>> Roman
 
 -- 
 Eyal Lebedinsky (eyal@eyal.emu.id.au)
