@@ -1,39 +1,70 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: possible HighPoint RocketRAID 2720SGL failure
-Date: Sat, 23 Sep 2017 17:53:30 +0100
-Message-ID: <59C6918A.6040609@youngman.org.uk>
-References: <73afd1f8-176a-07e9-1024-57692dc96904@eyal.emu.id.au>
- <20170921172019.2067e49b@natsu>
- <CAAMCDefoZFzP2yLu4+_cs90KpqHvwXZKZpAs-xBvJ_s-0Gy4pg@mail.gmail.com>
- <a0d2e5e4-f5eb-6a73-3e91-250aead0aa3a@eyal.emu.id.au>
- <bcb8a0a8-9e3e-f953-577e-42abe9cb0968@turmel.org>
- <6c99402d-506c-32de-9673-22f5179df8d7@eyal.emu.id.au>
- <b86d07f2-c306-398a-fb6a-e75df5f94311@eyal.emu.id.au>
- <fb8f1bc9-ef8a-96c7-b152-b12f07ba3243@turmel.org>
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: I/O hangs after resuming from suspend-to-ram
+Date: Sun, 24 Sep 2017 19:33:00 +0200
+Message-ID: <9658713.A4bv0G9Yjl@merkaba>
+References: <3926917.BCSovyVWdL@natalenko.name> <2260365.vTb2K2ZmgF@merkaba> <20170920221703.GA5105@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fb8f1bc9-ef8a-96c7-b152-b12f07ba3243@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, list linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170920221703.GA5105@ming.t460p>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On 23/09/17 15:49, Phil Turmel wrote:
-> If thermal stress doesn't kill them, then dopant diffusion within the
-> semiconductors eventually will.  This occurs even when turned off, but
-> proceeds much faster at elevated temperatures.  Dopant concentrations
-> are engineered to not suffer from diffusion effects well beyond the
-> expected life of the components (at rated operating temps), but that
-> doesn't mean there aren't marginal production runs.  Which can be hard
-> to discover before parts start failing years later.  If that happens
-> after the warranty period, the manufacturer has dodged a big bullet.
-> With a bit of tarnish on their name, of course.
+Ming Lei - 21.09.17, 06:17:
+> On Wed, Sep 20, 2017 at 07:25:02PM +0200, Martin Steigerwald wrote:
+> > Ming Lei - 28.08.17, 21:32:
+> > > On Mon, Aug 28, 2017 at 03:10:35PM +0200, Martin Steigerwald wrote:
+> > > > Ming Lei - 28.08.17, 20:58:
+> > > > > On Sun, Aug 27, 2017 at 09:43:52AM +0200, Oleksandr Natalenko wrote:
+> > > > > > Hi.
+> > 
+> > > > > > Here is disk setup for QEMU VM:
+> > […]
+> > 
+> > > > > > In words: 2 virtual disks, RAID10 setup with far-2 layout, LUKS on
+> > > > > > it,
+> > > > > > then
+> > > > > > LVM, then ext4 for boot, swap and btrfs for /.
+> > > > > > 
+> > > > > > I couldn't reproduce the issue with single disk without RAID.
+> > > > > 
+> > > > > Could you verify if the following patch fixes your issue?
+> > > > 
+> > > > Could this also apply to non MD RAID systems? I am using BTRFS RAID
+> > > > 1 with two SSDs. So far with CFQ it runs stable.
+> > > 
+> > > It is for fixing Oleksandr's issue wrt. blk-mq, and looks not for you.
+> > 
+> > My findings are different:
+> > 
+> > On 4.12.10 with CONFIG_HZ=1000, CONFIG_PREEMPT=y and optimizations for
+> > Intel Core/newer Xeon I see this:
+> > 
+> > 1) Running with CFQ: No hang after resume
+> > 
+> > 2) Running with scsi_mod.use_blk_mq=1 + BFQ: Hang after resume within
+> > first 1-2 days.
+> 
+> Hi Martin,
+> 
+> Thanks for your report!
+> 
+> Could you test the following patchset to see if it fixes your issue?
+> 
+> 	https://marc.info/?l=linux-block&m=150579298505484&w=2
 
-And as manufacturers shrink their die sizes, dopant diffusion and
-quantum leakage become much bigger problems :-( If your transistor is
-only four or five atoms deep, it won't have many dopant atoms, and they
-only have to diffuse a short distance before your transistor is toast.
+Testing with https://github.com/ming1/linux.git, my_v4.13-safe-scsi-
+quiesce_V5_for_test branch as of 53954fd58fb9fe6894b1635dad1acec96ca51a2f I 
+now have a bit more than three days and 8 hours of uptime without a hang on 
+resume from memory or disk, despite using blk-mq + BFQ.
 
-Cheers,
-Wol
+So it looks like this patch set fixes the issue for me. To say for sure I´d say 
+some more days of testing are needed. But it looks like the hang on resume is 
+fixed by this patch set.
+
+Thanks,
+-- 
+Martin
