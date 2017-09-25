@@ -1,57 +1,31 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be needed.
-Date: Mon, 25 Sep 2017 11:26:14 -0400
-Message-ID: <22985.8214.251962.72926@quad.stoffel.home>
-References: <87y3p372b0.fsf@notabene.neil.brown.name>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v3 1/6] md: Make md resync and reshape threads freezable
+Date: Mon, 25 Sep 2017 16:22:29 +0000
+Message-ID: <1506356548.2641.13.camel@wdc.com>
+References: <20170922221405.22091-1-bart.vanassche@wdc.com>
+         <20170922221405.22091-2-bart.vanassche@wdc.com>
+         <20170925023804.GD6434@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87y3p372b0.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170925023804.GD6434@ming.t460p>
+Content-Language: en-US
+Content-ID: <CF7061553DD2864FB420D2D7ADC41B86@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
-
-NeilBrown> Creating an array by opening a block-device with major number of 9
-NeilBrown> will transparently load the md module if needed.
-NeilBrown> Creating an array by opening
-NeilBrown>    /sys/module/md_mod/parameters/new_array
-NeilBrown> and writing to it won't, it will just fail if md_mod isn't loaded.
-
-NeilBrown> So when opening that file fails with ENOENT, run "modprobe md_mod" and
-NeilBrown> try again.
-
-NeilBrown> This fixes a bug whereby if you have "CREATE names=yes" in mdadm.conf,
-NeilBrown> and the md modules isn't loaded, then creating or assembling an
-NeilBrown> array will not honor the "names=yes" configuration.
-
-NeilBrown> Signed-off-by: NeilBrown <neilb@suse.com>
-NeilBrown> ---
-NeilBrown>  mdopen.c | 4 ++++
-NeilBrown>  1 file changed, 4 insertions(+)
-
-NeilBrown> diff --git a/mdopen.c b/mdopen.c
-NeilBrown> index 3c0052f2db23..dcdc6f23e6c1 100644
-NeilBrown> --- a/mdopen.c
-NeilBrown> +++ b/mdopen.c
-NeilBrown> @@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
-NeilBrown>  		if (block_udev)
-NeilBrown>  			udev_block(devnm);
-NeilBrown>  		fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
-NeilBrown> +		if (fd < 0 && errno == ENOENT) {
-NeilBrown> +			system("modprobe md_mod");
-NeilBrown> +			fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
-NeilBrown> +		}
-NeilBrown>  		if (fd >= 0) {
-NeilBrown>  			n = write(fd, devnm, strlen(devnm));
-NeilBrown>  			close(fd);
-NeilBrown> -- 
-NeilBrown> 2.14.0.rc0.dirty
-
-I haven't looked, but shouldn't the path for modprobe be hardcoded
-here to /sbin/modprobe?  Or the PATH sanitized so that random people
-can't put something into the system PATH and cause problems? 
-
+T24gTW9uLCAyMDE3LTA5LTI1IGF0IDEwOjM4ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
+RnJpLCBTZXAgMjIsIDIwMTcgYXQgMDM6MTQ6MDBQTSAtMDcwMCwgQmFydCBWYW4gQXNzY2hlIHdy
+b3RlOg0KPiA+IFNvbWUgcGVvcGxlIHVzZSB0aGUgbWQgZHJpdmVyIG9uIGxhcHRvcHMgYW5kIHVz
+ZSB0aGUgc3VzcGVuZCBhbmQNCj4gPiByZXN1bWUgZnVuY3Rpb25hbGl0eS4gU2luY2UgaXQgaXMg
+ZXNzZW50aWFsIHRoYXQgc3VibWl0dGluZyBvZg0KPiA+IG5ldyBJL08gcmVxdWVzdHMgc3RvcHMg
+YmVmb3JlIGRldmljZSBxdWllc2Npbmcgc3RhcnRzLCBtYWtlIHRoZQ0KPiA+IG1kIHJlc3luYyBh
+bmQgcmVzaGFwZSB0aHJlYWRzIGZyZWV6YWJsZS4NCj4gDQo+IFdoeSBpcyB0aGlzIHBhdGNoIHBh
+cnQgb2YgdGhpcyBwYXRjaHNldD8gSSBkb24ndCB0aGluaw0KPiBNRCBpcyBzcGVjaWFsIGVub3Vn
+aCB3cnQuIHRoZSBTQ1NJIHF1aWVzY2UgaXNzdWUuDQoNCkJlY2F1c2UgdGhlIHNjb3BlIG9mIHRo
+aXMgcGF0Y2ggc2VyaWVzIGlzIG5vdCBvbmx5IHRvIG1ha2UgU0NTSSBxdWllc2NlIHNhZmUNCmJ1
+dCBhbHNvIHRvIGF2b2lkIHRoYXQgc3VzcGVuZCBhbmQgcmVzdW1lIGxvY2sgdXAgd2l0aCBhIHN0
+b3JhZ2Ugc3RhY2sgdGhhdA0KdXNlcyB0aGUgbWQgZHJpdmVyLg0KDQpCYXJ0Lg==
