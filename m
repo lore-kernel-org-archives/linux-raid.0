@@ -1,76 +1,55 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be needed.
-Date: Mon, 25 Sep 2017 15:52:19 +1000
-Message-ID: <87y3p372b0.fsf@notabene.neil.brown.name>
+From: Xuesong LU <disluxs@nus.edu.sg>
+Subject: Need Help for Raid Recovery
+Date: Mon, 25 Sep 2017 15:53:05 +0800
+Message-ID: <ccba6492-26b7-c084-aa1e-6d69c7f48785@nus.edu.sg>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi,
+
+One of the raid devices on my server could not assemble after server
+reboot.  The raid is level 6 assembled using partition sdg1~sdp1, 10
+disks in total. Below is what I have done to the issue.
+
+1) mdadm --examine /dev/sd[g-p]1. All event counts are the same.
+2) mdadm --assemble /dev/md0 /dev/sd[g-p]1. It read 'md0 is started',
+then the server rebooted itself. However, the server got stuck for one
+hour at the centos 7 loading bar screen.
+3) I forced shutdown and restarted the server. This time --examine said
+'couldn't find superblocks on sdg1'. Also partition file sdk1, sdo1 and
+sdp1 disappeared. I guess this is because I forced shutdown?
+
+More details are here.
+
+cat /proc/mdstat shows only md1, where is another raid device. However,
+what I want to recover is /dev/md0.
+
+mdadm --assemble /dev/md0 /dev/sd[g-p]1 says 'only six drives found' so
+cannot assemble.
+
+mdadm --examine /dev/sd[g-p] prints raid partition information for
+sd[h,i,j,l,m,n]. No superblock detected on sd[g,k,o,p].
+
+mdadm --examine /dev/sd[g-p]1 prints raid partition information for
+sd[h,i,j,l,m,n]1. The event counts are the same. It also prints 'No
+superblock detected' for sdg1, and 'no such files' for sd[k,o,p]1.
+(Gone? Can still recover?)
+
+I have UUID for md0 in the mdadm.conf file.
+
+Is there still hope to recover my raid? Thank you!
+
+--
+Best,
+Xuesong
 
 
-Creating an array by opening a block-device with major number of 9
-will transparently load the md module if needed.
-Creating an array by opening
-   /sys/module/md_mod/parameters/new_array
-and writing to it won't, it will just fail if md_mod isn't loaded.
+________________________________
 
-So when opening that file fails with ENOENT, run "modprobe md_mod" and
-try again.
-
-This fixes a bug whereby if you have "CREATE names=3Dyes" in mdadm.conf,
-and the md modules isn't loaded, then creating or assembling an
-array will not honor the "names=3Dyes" configuration.
-
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- mdopen.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/mdopen.c b/mdopen.c
-index 3c0052f2db23..dcdc6f23e6c1 100644
-=2D-- a/mdopen.c
-+++ b/mdopen.c
-@@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof, int=
- trustworthy,
- 		if (block_udev)
- 			udev_block(devnm);
- 		fd =3D open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
-+		if (fd < 0 && errno =3D=3D ENOENT) {
-+			system("modprobe md_mod");
-+			fd =3D open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
-+		}
- 		if (fd >=3D 0) {
- 			n =3D write(fd, devnm, strlen(devnm));
- 			close(fd);
-=2D-=20
-2.14.0.rc0.dirty
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnImZUACgkQOeye3VZi
-gbn+6hAAs3qoAdFjxpOyVK70dEe0M9sTlNfEmJx/xF/zA+1ldHRVSYJ9e5wNjPZ7
-Gr8xcer/Um0QWwZpTq8ooO8CFAXYzriypdKDtIkjoGN2llUEmadQc1xnwFCrTNzR
-N/dY9jXWxsKFxX7h8U0zP8Tr+3kkD7aJzAnY+zCS/JG436sKrlXXBQU2yXCISU7b
-sv7BuP6Jw/mLe2an6IGJ+4FxQO8utC41xxU5GcEG97sy2pQnJvez7J+/QVgaYsHy
-4mWUvUUKV4JB2Ca9O8YwMhjCWEdfgEbFvvgLU1vIHQ7nH4gNpPNfGCrGBC8/Rkpd
-XH/y5/y1A4tJK2riCiJNnDz+qB0hE4CQ+pg49FERWJcV8cMU8fKFidrqjx3Q+FTS
-HtND1w5LcFdQJplgClk1fDOx/mAYlN7EWm+JQpl465DNp7f6V3cBq6S1ru3O25KS
-muhsHaeuhTkN2e1OgejYMSUx3Zoy2D8bgVo0iYaRjkj458xAkyDv78H/BdIspAE6
-sTQJGCnvq+SeaOTQxGeJ3VZ8GdvTaX3iYLu8Sm6KWOjE1Fc808qiWoRUP+3DoBi+
-0GLjjfHoewer0h/lLYBynbNunjjzT3pz+3JI6Jx+5h4ebRrhbt8TWSCOAUsG0ikH
-LSLsnOGFzrS4wMR4meHz+75+C9GVOlRJqBmtpnOb4/jHp4slNAc=
-=5gQc
------END PGP SIGNATURE-----
---=-=-=--
+Important: This email is confidential and may be privileged. If you are not the intended recipient, please delete it and notify us immediately; you should not copy or use it for any purpose, nor disclose its contents to any other person. Thank you.
