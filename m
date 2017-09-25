@@ -1,81 +1,76 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: I/O hangs after resuming from suspend-to-ram
-Date: Mon, 25 Sep 2017 10:59:24 +0800
-Message-ID: <20170925025917.GA7090@ming.t460p>
-References: <3926917.BCSovyVWdL@natalenko.name>
- <2260365.vTb2K2ZmgF@merkaba>
- <20170920221703.GA5105@ming.t460p>
- <9658713.A4bv0G9Yjl@merkaba>
+From: NeilBrown <neilb@suse.com>
+Subject: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be needed.
+Date: Mon, 25 Sep 2017 15:52:19 +1000
+Message-ID: <87y3p372b0.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <9658713.A4bv0G9Yjl@merkaba>
-Sender: linux-block-owner@vger.kernel.org
-To: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Oleksandr Natalenko <oleksandr@natalenko.name>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Sep 24, 2017 at 07:33:00PM +0200, Martin Steigerwald wrote:
-> Ming Lei - 21.09.17, 06:17:
-> > On Wed, Sep 20, 2017 at 07:25:02PM +0200, Martin Steigerwald wrote:
-> > > Ming Lei - 28.08.17, 21:32:
-> > > > On Mon, Aug 28, 2017 at 03:10:35PM +0200, Martin Steigerwald wrote:
-> > > > > Ming Lei - 28.08.17, 20:58:
-> > > > > > On Sun, Aug 27, 2017 at 09:43:52AM +0200, Oleksandr Natalenko wrote:
-> > > > > > > Hi.
-> > > 
-> > > > > > > Here is disk setup for QEMU VM:
-> > > […]
-> > > 
-> > > > > > > In words: 2 virtual disks, RAID10 setup with far-2 layout, LUKS on
-> > > > > > > it,
-> > > > > > > then
-> > > > > > > LVM, then ext4 for boot, swap and btrfs for /.
-> > > > > > > 
-> > > > > > > I couldn't reproduce the issue with single disk without RAID.
-> > > > > > 
-> > > > > > Could you verify if the following patch fixes your issue?
-> > > > > 
-> > > > > Could this also apply to non MD RAID systems? I am using BTRFS RAID
-> > > > > 1 with two SSDs. So far with CFQ it runs stable.
-> > > > 
-> > > > It is for fixing Oleksandr's issue wrt. blk-mq, and looks not for you.
-> > > 
-> > > My findings are different:
-> > > 
-> > > On 4.12.10 with CONFIG_HZ=1000, CONFIG_PREEMPT=y and optimizations for
-> > > Intel Core/newer Xeon I see this:
-> > > 
-> > > 1) Running with CFQ: No hang after resume
-> > > 
-> > > 2) Running with scsi_mod.use_blk_mq=1 + BFQ: Hang after resume within
-> > > first 1-2 days.
-> > 
-> > Hi Martin,
-> > 
-> > Thanks for your report!
-> > 
-> > Could you test the following patchset to see if it fixes your issue?
-> > 
-> > 	https://marc.info/?l=linux-block&m=150579298505484&w=2
-> 
-> Testing with https://github.com/ming1/linux.git, my_v4.13-safe-scsi-
-> quiesce_V5_for_test branch as of 53954fd58fb9fe6894b1635dad1acec96ca51a2f I 
-> now have a bit more than three days and 8 hours of uptime without a hang on 
-> resume from memory or disk, despite using blk-mq + BFQ.
-> 
-> So it looks like this patch set fixes the issue for me. To say for sure I´d say 
-> some more days of testing are needed. But it looks like the hang on resume is 
-> fixed by this patch set.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Martin, thanks for your test, it is great to see your issue is fixed
-by this patchset.
 
-Also I remember that your issue wasn't related with MD, and actually
-you were using BTRFS(RAID), just want to double check with you,
-is that true?
+Creating an array by opening a block-device with major number of 9
+will transparently load the md module if needed.
+Creating an array by opening
+   /sys/module/md_mod/parameters/new_array
+and writing to it won't, it will just fail if md_mod isn't loaded.
 
--- 
-Ming
+So when opening that file fails with ENOENT, run "modprobe md_mod" and
+try again.
+
+This fixes a bug whereby if you have "CREATE names=3Dyes" in mdadm.conf,
+and the md modules isn't loaded, then creating or assembling an
+array will not honor the "names=3Dyes" configuration.
+
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ mdopen.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/mdopen.c b/mdopen.c
+index 3c0052f2db23..dcdc6f23e6c1 100644
+=2D-- a/mdopen.c
++++ b/mdopen.c
+@@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof, int=
+ trustworthy,
+ 		if (block_udev)
+ 			udev_block(devnm);
+ 		fd =3D open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
++		if (fd < 0 && errno =3D=3D ENOENT) {
++			system("modprobe md_mod");
++			fd =3D open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
++		}
+ 		if (fd >=3D 0) {
+ 			n =3D write(fd, devnm, strlen(devnm));
+ 			close(fd);
+=2D-=20
+2.14.0.rc0.dirty
+
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnImZUACgkQOeye3VZi
+gbn+6hAAs3qoAdFjxpOyVK70dEe0M9sTlNfEmJx/xF/zA+1ldHRVSYJ9e5wNjPZ7
+Gr8xcer/Um0QWwZpTq8ooO8CFAXYzriypdKDtIkjoGN2llUEmadQc1xnwFCrTNzR
+N/dY9jXWxsKFxX7h8U0zP8Tr+3kkD7aJzAnY+zCS/JG436sKrlXXBQU2yXCISU7b
+sv7BuP6Jw/mLe2an6IGJ+4FxQO8utC41xxU5GcEG97sy2pQnJvez7J+/QVgaYsHy
+4mWUvUUKV4JB2Ca9O8YwMhjCWEdfgEbFvvgLU1vIHQ7nH4gNpPNfGCrGBC8/Rkpd
+XH/y5/y1A4tJK2riCiJNnDz+qB0hE4CQ+pg49FERWJcV8cMU8fKFidrqjx3Q+FTS
+HtND1w5LcFdQJplgClk1fDOx/mAYlN7EWm+JQpl465DNp7f6V3cBq6S1ru3O25KS
+muhsHaeuhTkN2e1OgejYMSUx3Zoy2D8bgVo0iYaRjkj458xAkyDv78H/BdIspAE6
+sTQJGCnvq+SeaOTQxGeJ3VZ8GdvTaX3iYLu8Sm6KWOjE1Fc808qiWoRUP+3DoBi+
+0GLjjfHoewer0h/lLYBynbNunjjzT3pz+3JI6Jx+5h4ebRrhbt8TWSCOAUsG0ikH
+LSLsnOGFzrS4wMR4meHz+75+C9GVOlRJqBmtpnOb4/jHp4slNAc=
+=5gQc
+-----END PGP SIGNATURE-----
+--=-=-=--
