@@ -1,65 +1,45 @@
-From: Ming Lei <ming.lei@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH v4 1/7] md: Make md resync and reshape threads freezable
-Date: Tue, 26 Sep 2017 12:01:10 +0800
-Message-ID: <20170926040103.GA19111@ming.t460p>
+Date: Tue, 26 Sep 2017 08:06:33 +0200
+Message-ID: <d7af8afc-f8c4-90f7-fff1-326e4e6ff335@suse.de>
 References: <20170925202924.16603-1-bart.vanassche@wdc.com>
  <20170925202924.16603-2-bart.vanassche@wdc.com>
- <20170925230421.GD18137@ming.t460p>
- <1506380954.2641.57.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1506380954.2641.57.camel@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170925202924.16603-2-bart.vanassche@wdc.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-raid.ids
 
-On Mon, Sep 25, 2017 at 11:09:15PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-09-26 at 07:04 +0800, Ming Lei wrote:
-> > On Mon, Sep 25, 2017 at 01:29:18PM -0700, Bart Van Assche wrote:
-> > > Some people use the md driver on laptops and use the suspend and
-> > > resume functionality. Since it is essential that submitting of
-> > > new I/O requests stops before device quiescing starts, make the
-> > > md resync and reshape threads freezable.
-> > 
-> > As I explained, if SCSI quiesce is safe, this patch shouldn't
-> > be needed.
-> > 
-> > The issue isn't MD specific, and in theory can be triggered
-> > on all devices. And you can see the I/O hang report on BTRFS(RAID)
-> > without MD involved:
-> > 
-> > 	https://marc.info/?l=linux-block&m=150634883816965&w=2
+On 09/25/2017 10:29 PM, Bart Van Assche wrote:
+> Some people use the md driver on laptops and use the suspend and
+> resume functionality. Since it is essential that submitting of
+> new I/O requests stops before device quiescing starts, make the
+> md resync and reshape threads freezable.
 > 
-> What makes you think that this patch is not necessary once SCSI quiesce
-> has been made safe? Does this mean that you have not tested suspend and
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/md/md.c | 21 +++++++++++++--------
+>  1 file changed, 13 insertions(+), 8 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-If we want to make SCSI quiesce safe, we have to drain up all submitted
-I/O and prevent new I/O from being submitted, that is enough to deal
-with MD's resync too.
+Cheers,
 
-> resume while md RAID 1 resync was in progress? This patch is necessary
-> to avoid that suspend locks up while md RAID 1 resync is in progress.
-
-I tested my patchset on RAID10 when resync in progress, not see any
-issue during suspend/resume, without any MD's change. I will test
-RAID1's later, but I don't think there is difference compared with
-RAID10 because my patchset can make the queue being quiesced totally.
-
-The upstream report did not mention that the resync is in progress:
-
-	https://marc.info/?l=linux-block&m=150402198315951&w=2
-
-I want to make the patchset(make SCSI quiesce safe) focusing on this
-SCSI quiesce issue.
-
-Maybe with this MD patch, the original report becomes quite difficult
-to reproduce, that doesn't mean this MD patch fixes this kind of
-issue. What I really cares is that your changes on BLOCK/SCSI can
-fix this issue.
-
-
+Hannes
 -- 
-Ming
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
