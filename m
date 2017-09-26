@@ -1,104 +1,65 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be needed.
-Date: Tue, 26 Sep 2017 09:50:06 +1000
-Message-ID: <87poae72z5.fsf@notabene.neil.brown.name>
-References: <87y3p372b0.fsf@notabene.neil.brown.name> <22985.8214.251962.72926@quad.stoffel.home>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v4 1/7] md: Make md resync and reshape threads freezable
+Date: Tue, 26 Sep 2017 12:01:10 +0800
+Message-ID: <20170926040103.GA19111@ming.t460p>
+References: <20170925202924.16603-1-bart.vanassche@wdc.com>
+ <20170925202924.16603-2-bart.vanassche@wdc.com>
+ <20170925230421.GD18137@ming.t460p>
+ <1506380954.2641.57.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22985.8214.251962.72926@quad.stoffel.home>
-Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1506380954.2641.57.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, Sep 25, 2017 at 11:09:15PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-09-26 at 07:04 +0800, Ming Lei wrote:
+> > On Mon, Sep 25, 2017 at 01:29:18PM -0700, Bart Van Assche wrote:
+> > > Some people use the md driver on laptops and use the suspend and
+> > > resume functionality. Since it is essential that submitting of
+> > > new I/O requests stops before device quiescing starts, make the
+> > > md resync and reshape threads freezable.
+> > 
+> > As I explained, if SCSI quiesce is safe, this patch shouldn't
+> > be needed.
+> > 
+> > The issue isn't MD specific, and in theory can be triggered
+> > on all devices. And you can see the I/O hang report on BTRFS(RAID)
+> > without MD involved:
+> > 
+> > 	https://marc.info/?l=linux-block&m=150634883816965&w=2
+> 
+> What makes you think that this patch is not necessary once SCSI quiesce
+> has been made safe? Does this mean that you have not tested suspend and
 
-On Mon, Sep 25 2017, John Stoffel wrote:
+If we want to make SCSI quiesce safe, we have to drain up all submitted
+I/O and prevent new I/O from being submitted, that is enough to deal
+with MD's resync too.
 
->>>>>> "NeilBrown" =3D=3D NeilBrown  <neilb@suse.com> writes:
->
-> NeilBrown> Creating an array by opening a block-device with major number =
-of 9
-> NeilBrown> will transparently load the md module if needed.
-> NeilBrown> Creating an array by opening
-> NeilBrown>    /sys/module/md_mod/parameters/new_array
-> NeilBrown> and writing to it won't, it will just fail if md_mod isn't loa=
-ded.
->
-> NeilBrown> So when opening that file fails with ENOENT, run "modprobe md_=
-mod" and
-> NeilBrown> try again.
->
-> NeilBrown> This fixes a bug whereby if you have "CREATE names=3Dyes" in m=
-dadm.conf,
-> NeilBrown> and the md modules isn't loaded, then creating or assembling an
-> NeilBrown> array will not honor the "names=3Dyes" configuration.
->
-> NeilBrown> Signed-off-by: NeilBrown <neilb@suse.com>
-> NeilBrown> ---
-> NeilBrown>  mdopen.c | 4 ++++
-> NeilBrown>  1 file changed, 4 insertions(+)
->
-> NeilBrown> diff --git a/mdopen.c b/mdopen.c
-> NeilBrown> index 3c0052f2db23..dcdc6f23e6c1 100644
-> NeilBrown> --- a/mdopen.c
-> NeilBrown> +++ b/mdopen.c
-> NeilBrown> @@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, i=
-nt autof, int trustworthy,
-> NeilBrown>  		if (block_udev)
-> NeilBrown>  			udev_block(devnm);
-> NeilBrown>  		fd =3D open("/sys/module/md_mod/parameters/new_array", O_WR=
-ONLY);
-> NeilBrown> +		if (fd < 0 && errno =3D=3D ENOENT) {
-> NeilBrown> +			system("modprobe md_mod");
-> NeilBrown> +			fd =3D open("/sys/module/md_mod/parameters/new_array", O_W=
-RONLY);
-> NeilBrown> +		}
-> NeilBrown>  		if (fd >=3D 0) {
-> NeilBrown>  			n =3D write(fd, devnm, strlen(devnm));
-> NeilBrown>  			close(fd);
-> NeilBrown> --=20
-> NeilBrown> 2.14.0.rc0.dirty
->
-> I haven't looked, but shouldn't the path for modprobe be hardcoded
-> here to /sbin/modprobe?  Or the PATH sanitized so that random people
-> can't put something into the system PATH and cause problems?=20
+> resume while md RAID 1 resync was in progress? This patch is necessary
+> to avoid that suspend locks up while md RAID 1 resync is in progress.
 
-That issue briefly crossed my mind as I wrote the code (is it OK to use
-system()? should I use /sbin/modprobe or just modprobe?) but as mdadm is
-not set-uid and cannot be run in an environment created by a
-non-privileged user, there is no security risk.
-Certainly a careless sysadmin might set path wrongs, but the most likely
-wrong outcome is that modprobe won't be found, and there is very little
-cost to that.
+I tested my patchset on RAID10 when resync in progress, not see any
+issue during suspend/resume, without any MD's change. I will test
+RAID1's later, but I don't think there is difference compared with
+RAID10 because my patchset can make the queue being quiesced totally.
 
-So thanks for asking, but I don't think there is any need for any extra
-care, in which case "simplest is best".
+The upstream report did not mention that the resync is in progress:
 
-Thanks,
-NeilBrown
+	https://marc.info/?l=linux-block&m=150402198315951&w=2
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+I want to make the patchset(make SCSI quiesce safe) focusing on this
+SCSI quiesce issue.
 
------BEGIN PGP SIGNATURE-----
+Maybe with this MD patch, the original report becomes quite difficult
+to reproduce, that doesn't mean this MD patch fixes this kind of
+issue. What I really cares is that your changes on BLOCK/SCSI can
+fix this issue.
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnJli8ACgkQOeye3VZi
-gbkwbBAAm5+r2RkK5L2pNdKN0YyknNfUWkus+3T3xv6oKDKvN4FDP5oBrKXzPdJe
-s25TTs13uDlwUZ/mS5LMgFXAqsCSFRmgi/IfKK46MoktqulPanxQ5S6sMoSUgOJb
-wPNrsfjbCk/1v5Y0SfC51wtDgxBFmOQMqj64LTqi/IJl9LRifVxdjr85oN50z/bw
-bIZWk2i1bqyeWEVmoLlEB6gj8BZXmVTYKpaRYurodU19Xm1FphflhxsD+BSmFA9L
-vSvlUMeQCuZ2vrBT+297kmy09nwAOIG9FviT0q8HMoQu0BjZAiB6SnoG7GnBcbGM
-SryPh1qiN1bDLIkKJVPLTSfPpHDUWb+3gfV91gYZ6Hk2oskhnciy2jVckq8kUKse
-Xw/E13E5MefxgOjty6b+bwM88M+3x3WW/OSeURIzhfUcUA5c9CxGketqfQ0+J8QZ
-y8QpkPXzXnx/5vYbsT070ORFpaXUtEuOX4AVnm06jfXBbWooscrV1WP8vvPZnXKX
-prncnLVCUAjSmcPHSUTXxS7qS9XdEQUS/asNquxYqDm7rtyrz2I7Mp1qfz6JRWY8
-XIh9Pg7l89A2u7cCx09950ZuKZHxEahpeftWO1K5zTDOd2FkK9gReDCU1tCR/8cC
-LyKDM06pD0ARs1jPlvayUYWmiaN10EV0c1+4J3mF8YngrtM/Gzw=
-=MbBu
------END PGP SIGNATURE-----
---=-=-=--
+
+-- 
+Ming
