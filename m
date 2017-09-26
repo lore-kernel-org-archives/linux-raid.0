@@ -1,51 +1,46 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v4 1/7] md: Make md resync and reshape threads freezable
-Date: Tue, 26 Sep 2017 23:02:51 +0800
-Message-ID: <20170926150250.GD31449@ming.t460p>
-References: <20170925202924.16603-1-bart.vanassche@wdc.com>
- <20170925202924.16603-2-bart.vanassche@wdc.com>
- <20170925230421.GD18137@ming.t460p>
- <1506380954.2641.57.camel@wdc.com>
- <20170926040103.GA19111@ming.t460p>
- <20170926081309.GA518@ming.t460p>
- <1506436834.3787.22.camel@wdc.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be
+ needed.
+Date: Tue, 26 Sep 2017 11:11:36 -0400
+Message-ID: <250d2eff-ce7e-df72-1e6c-b4a8a2c43537@gmail.com>
+References: <87y3p372b0.fsf@notabene.neil.brown.name>
+ <22985.8214.251962.72926@quad.stoffel.home>
+ <87poae72z5.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1506436834.3787.22.camel@wdc.com>
+In-Reply-To: <87poae72z5.fsf@notabene.neil.brown.name>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
+To: NeilBrown <neilb@suse.com>, John Stoffel <john@stoffel.org>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Sep 26, 2017 at 02:40:36PM +0000, Bart Van Assche wrote:
-> On Tue, 2017-09-26 at 16:13 +0800, Ming Lei wrote:
-> > I am pretty sure that suspend/resume can survive when resync in progress
-> > with my patchset applied on RAID1, without any MD change.
+On 09/25/2017 07:50 PM, NeilBrown wrote:
+> On Mon, Sep 25 2017, John Stoffel wrote:
 > 
-> The above shows that you do not understand how suspend and resume works.
-> In the documents in the directory Documentation/power it is explained clearly
-> that I/O must be stopped before the hibernation image is generation to avoid
-
-No, I don't use hibernation, and just use suspend/resume(s2r).
-
-> hard to repair filesystem corruption. Although md is not a filesystem I think
-> this also applies to md since md keeps some state information in RAM and some
-> state information on disk. It is essential that all that state information is
-> in consistent.
+>> I haven't looked, but shouldn't the path for modprobe be hardcoded
+>> here to /sbin/modprobe?  Or the PATH sanitized so that random people
+>> can't put something into the system PATH and cause problems?
 > 
-> > If your patchset depends on this MD change, something should be wrong
-> > in the following patches. Now I need to take a close look.
+> That issue briefly crossed my mind as I wrote the code (is it OK to use
+> system()? should I use /sbin/modprobe or just modprobe?) but as mdadm is
+> not set-uid and cannot be run in an environment created by a
+> non-privileged user, there is no security risk.
+> Certainly a careless sysadmin might set path wrongs, but the most likely
+> wrong outcome is that modprobe won't be found, and there is very little
+> cost to that.
 > 
-> The later patches that make SCSI quiesce and resume safe do not depend on
-> this change.
+> So thanks for asking, but I don't think there is any need for any extra
+> care, in which case "simplest is best".
 
-Are you sure?
+I completely agree, I also think we shouldn't hardcode imposed layouts 
+unless there are very strong reasons for it. Someone may want to put 
+this into an initramfs or somewhere else and want to put it in a 
+different location.
 
-If I remove the 1st patch, system suspend/resume will hang with all your
-other 6 patchset.
+Cheers,
+Jes
 
 
--- 
-Ming
