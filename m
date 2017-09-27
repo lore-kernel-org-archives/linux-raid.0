@@ -1,142 +1,84 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH v4 1/7] md: Make md resync and reshape threads freezable
-Date: Wed, 27 Sep 2017 03:12:47 +0000
-Message-ID: <1506481915.2822.9.camel@wdc.com>
+Date: Wed, 27 Sep 2017 19:00:09 +0800
+Message-ID: <20170927110006.GB1994@ming.t460p>
 References: <20170925202924.16603-1-bart.vanassche@wdc.com>
-         <20170925202924.16603-2-bart.vanassche@wdc.com>
-         <20170926111747.GA16794@ming.t460p> <1506436926.3787.24.camel@wdc.com>
-         <20170926145919.GC31449@ming.t460p>
+ <20170925202924.16603-2-bart.vanassche@wdc.com>
+ <20170926111747.GA16794@ming.t460p>
+ <1506436926.3787.24.camel@wdc.com>
+ <20170926145919.GC31449@ming.t460p>
+ <1506481915.2822.9.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170926145919.GC31449@ming.t460p>
-Content-Language: en-US
-Content-ID: <F566BF2E46DE9743A1407DCDAE3E44C5@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1506481915.2822.9.camel@wdc.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
 Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE3LTA5LTI2IGF0IDIyOjU5ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gT24g
-VHVlLCBTZXAgMjYsIDIwMTcgYXQgMDI6NDI6MDdQTSArMDAwMCwgQmFydCBWYW4gQXNzY2hlIHdy
-b3RlOg0KPiA+IE9uIFR1ZSwgMjAxNy0wOS0yNiBhdCAxOToxNyArMDgwMCwgTWluZyBMZWkgd3Jv
-dGU6DQo+ID4gPiBKdXN0IHRlc3QgdGhpcyBwYXRjaCBhIGJpdCBhbmQgdGhlIGZvbGxvd2luZyBm
-YWlsdXJlIG9mIGZyZWV6aW5nIHRhc2sNCj4gPiA+IGlzIHRyaWdnZXJlZCBkdXJpbmcgc3VzcGVu
-ZDogWyAuLi4gXQ0KPiA+IA0KPiA+IFdoYXQga2VybmVsIHZlcnNpb24gZGlkIHlvdSBzdGFydCBm
-cm9tIGFuZCB3aGljaCBwYXRjaGVzIHdlcmUgYXBwbGllZCBvbiB0b3Agb2YNCj4gPiB0aGF0IGtl
-cm5lbD8gT25seSBwYXRjaCAxLzcgb3IgYWxsIHNldmVuIHBhdGNoZXM/IFdoYXQgc3RvcmFnZSBj
-b25maWd1cmF0aW9uIGRpZA0KPiANCj4gSXQgaXMgdjQuMTQtcmMxKywgYW5kIHRvcCBjb21taXQg
-aXMgOGQ5M2M3YTQzMTU3LCB3aXRoIGFsbCB5b3VyIDcgcGF0Y2hlcw0KPiBhcHBsaWVkLg0KPiAN
-Cj4gPiB5b3UgdXNlIGluIHlvdXIgdGVzdCBhbmQgd2hhdCBjb21tYW5kKHMpIGRpZCB5b3UgdXNl
-IHRvIHRyaWdnZXIgc3VzcGVuZD8NCj4gDQo+IEZvbGxvd3MgbXkgcG0gdGVzdCBzY3JpcHQ6DQo+
-IA0KPiAJIyEvYmluL3NoDQo+IAkNCj4gCWVjaG8gY2hlY2sgPiAvc3lzL2Jsb2NrL21kMTI3L21k
-L3N5bmNfYWN0aW9uDQo+IAkNCj4gCW1rZnMuZXh0NCAtRiAvZGV2L21kMTI3DQo+IAkNCj4gCW1v
-dW50IC9kZXYvbWQwIC9tbnQvZGF0YQ0KPiAJDQo+IAlkZCBpZj0vZGV2L3plcm8gb2Y9L21udC9k
-YXRhL2QxLmltZyBicz00ayBjb3VudD0xMjhrJg0KPiAJDQo+IAllY2hvIDkgPiAvcHJvYy9zeXMv
-a2VybmVsL3ByaW50aw0KPiAJZWNobyBkZXZpY2VzID4gL3N5cy9wb3dlci9wbV90ZXN0DQo+IAll
-Y2hvIG1lbSA+IC9zeXMvcG93ZXIvc3RhdGUNCj4gCQ0KPiAJd2FpdA0KPiAJdW1vdW50IC9tbnQv
-ZGF0YQ0KPiANCj4gU3RvcmFnZSBzZXR0aW5nOg0KPiANCj4gCXN1ZG8gbWRhZG0gLS1jcmVhdGUg
-L2Rldi9tZC90ZXN0IC9kZXYvc2RhIC9kZXYvc2RiIC0tbGV2ZWw9MSAtLXJhaWQtZGV2aWNlcz0y
-DQo+IAlib3RoIC9kZXYvc2RhIGFuZCAvZGV2L3NkYiBhcmUgdmlydGlvLXNjc2kuDQoNClRoYW5r
-cyBmb3IgdGhlIGRldGFpbGVkIHJlcGx5LiBJIGhhdmUgYmVlbiBhYmxlIHRvIHJlcHJvZHVjZSB0
-aGUgZnJlZXplIGZhaWx1cmUNCnlvdSByZXBvcnRlZC4gVGhlIG91dHB1dCBvZiBTeXNScS10IGxl
-YXJuZWQgbWUgdGhhdCB0aGUgbWQgcmVib290IG5vdGlmaWVyIHdhcw0Kd2FpdGluZyBmb3IgdGhl
-IGZyb3plbiBtZCBzeW5jIHRocmVhZCBhbmQgdGhhdCB0aGlzIGNhdXNlZCB0aGUgZnJlZXplIGZh
-aWx1cmUuIFNvDQpJIGhhdmUgc3RhcnRlZCB0ZXN0aW5nIHRoZSBwYXRjaCBiZWxvdyBpbnN0ZWFk
-IG9mIHRoZSBwYXRjaCBhdCB0aGUgc3RhcnQgb2YgdGhpcw0KZS1tYWlsIHRocmVhZDoNCg0KDQpT
-dWJqZWN0OiBbUEFUQ0hdIG1kOiBTdG9wIHJlc3luYyBhbmQgcmVzaGFwZSB1cG9uIHN5c3RlbSBm
-cmVlemUNCg0KU29tZSBwZW9wbGUgdXNlIHRoZSBtZCBkcml2ZXIgb24gbGFwdG9wcyBhbmQgdXNl
-IHRoZSBzdXNwZW5kIGFuZA0KcmVzdW1lIGZ1bmN0aW9uYWxpdHkuIFNpbmNlIGl0IGlzIGVzc2Vu
-dGlhbCB0aGF0IHN1Ym1pdHRpbmcgb2YNCm5ldyBJL08gcmVxdWVzdHMgc3RvcHMgYmVmb3JlIGEg
-aGliZXJuYXRpb24gaW1hZ2UgaXMgY3JlYXRlZCwNCmludGVycnVwdCB0aGUgbWQgcmVzeW5jIGFu
-ZCByZXNoYXBlIGFjdGlvbnMgaWYgdGhlIHN5c3RlbSBpcw0KYmVpbmcgZnJvemVuLiBOb3RlOiB0
-aGUgcmVzeW5jIGFuZCByZXNoYXBlIHdpbGwgcmVzdGFydCBhZnRlcg0KdGhlIHN5c3RlbSBpcyBy
-ZXN1bWVkIGFuZCBhIG1lc3NhZ2Ugc2ltaWxhciB0byB0aGUgZm9sbG93aW5nDQp3aWxsIGFwcGVh
-ciBpbiB0aGUgc3lzdGVtIGxvZzoNCg0KbWQ6IG1kMDogZGF0YS1jaGVjayBpbnRlcnJ1cHRlZC4N
-Cg0KLS0tDQogZHJpdmVycy9tZC9tZC5jIHwgMzQgKysrKysrKysrKysrKysrKysrKystLS0tLS0t
-LS0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCAyMCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlvbnMo
-LSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2RyaXZlcnMvbWQvbWQuYw0KaW5k
-ZXggMDhmY2FlYmM2MWJkLi4xZTlkNTBmNzM0NWUgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21kL21k
-LmMNCisrKyBiL2RyaXZlcnMvbWQvbWQuYw0KQEAgLTY2LDYgKzY2LDcgQEANCiAjaW5jbHVkZSA8
-bGludXgvcmFpZC9tZF91Lmg+DQogI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4NCiAjaW5jbHVkZSA8
-bGludXgvcGVyY3B1LXJlZmNvdW50Lmg+DQorI2luY2x1ZGUgPGxpbnV4L2ZyZWV6ZXIuaD4NCiAN
-CiAjaW5jbHVkZSA8dHJhY2UvZXZlbnRzL2Jsb2NrLmg+DQogI2luY2x1ZGUgIm1kLmgiDQpAQCAt
-ODEwMyw2ICs4MTA0LDEyIEBAIHZvaWQgbWRfYWxsb3dfd3JpdGUoc3RydWN0IG1kZGV2ICptZGRl
-dikNCiB9DQogRVhQT1JUX1NZTUJPTF9HUEwobWRfYWxsb3dfd3JpdGUpOw0KIA0KK3N0YXRpYyBi
-b29sIG1kX3N5bmNfaW50ZXJydXB0ZWQoc3RydWN0IG1kZGV2ICptZGRldikNCit7DQorCXJldHVy
-biB0ZXN0X2JpdChNRF9SRUNPVkVSWV9JTlRSLCAmbWRkZXYtPnJlY292ZXJ5KSB8fA0KKwkJZnJl
-ZXppbmcoY3VycmVudCk7DQorfQ0KKw0KICNkZWZpbmUgU1lOQ19NQVJLUwkxMA0KICNkZWZpbmUJ
-U1lOQ19NQVJLX1NURVAJKDMqSFopDQogI2RlZmluZSBVUERBVEVfRlJFUVVFTkNZICg1KjYwKkha
-KQ0KQEAgLTgxMzMsNiArODE0MCw4IEBAIHZvaWQgbWRfZG9fc3luYyhzdHJ1Y3QgbWRfdGhyZWFk
-ICp0aHJlYWQpDQogCQlyZXR1cm47DQogCX0NCiANCisJc2V0X2ZyZWV6YWJsZSgpOw0KKw0KIAlp
-ZiAobWRkZXZfaXNfY2x1c3RlcmVkKG1kZGV2KSkgew0KIAkJcmV0ID0gbWRfY2x1c3Rlcl9vcHMt
-PnJlc3luY19zdGFydChtZGRldik7DQogCQlpZiAocmV0KQ0KQEAgLTgxODQsNyArODE5Myw3IEBA
-IHZvaWQgbWRfZG9fc3luYyhzdHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQpDQogCQltZGRldi0+Y3Vy
-cl9yZXN5bmMgPSAyOw0KIA0KIAl0cnlfYWdhaW46DQotCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZF
-UllfSU5UUiwgJm1kZGV2LT5yZWNvdmVyeSkpDQorCQlpZiAobWRfc3luY19pbnRlcnJ1cHRlZCht
-ZGRldikpDQogCQkJZ290byBza2lwOw0KIAkJZm9yX2VhY2hfbWRkZXYobWRkZXYyLCB0bXApIHsN
-CiAJCQlpZiAobWRkZXYyID09IG1kZGV2KQ0KQEAgLTgyMDgsNyArODIxNyw3IEBAIHZvaWQgbWRf
-ZG9fc3luYyhzdHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQpDQogCQkJCSAqIGJlIGNhdWdodCBieSAn
-c29mdGxvY2t1cCcNCiAJCQkJICovDQogCQkJCXByZXBhcmVfdG9fd2FpdCgmcmVzeW5jX3dhaXQs
-ICZ3cSwgVEFTS19JTlRFUlJVUFRJQkxFKTsNCi0JCQkJaWYgKCF0ZXN0X2JpdChNRF9SRUNPVkVS
-WV9JTlRSLCAmbWRkZXYtPnJlY292ZXJ5KSAmJg0KKwkJCQlpZiAoIW1kX3N5bmNfaW50ZXJydXB0
-ZWQobWRkZXYpICYmDQogCQkJCSAgICBtZGRldjItPmN1cnJfcmVzeW5jID49IG1kZGV2LT5jdXJy
-X3Jlc3luYykgew0KIAkJCQkJaWYgKG1kZGV2Ml9taW5vciAhPSBtZGRldjItPm1kX21pbm9yKSB7
-DQogCQkJCQkJbWRkZXYyX21pbm9yID0gbWRkZXYyLT5tZF9taW5vcjsNCkBAIC04MzM1LDggKzgz
-NDQsNyBAQCB2b2lkIG1kX2RvX3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0KIAkJCXN5
-c2ZzX25vdGlmeSgmbWRkZXYtPmtvYmosIE5VTEwsICJzeW5jX2NvbXBsZXRlZCIpOw0KIAkJfQ0K
-IA0KLQkJd2hpbGUgKGogPj0gbWRkZXYtPnJlc3luY19tYXggJiYNCi0JCSAgICAgICAhdGVzdF9i
-aXQoTURfUkVDT1ZFUllfSU5UUiwgJm1kZGV2LT5yZWNvdmVyeSkpIHsNCisJCXdoaWxlIChqID49
-IG1kZGV2LT5yZXN5bmNfbWF4ICYmICFtZF9zeW5jX2ludGVycnVwdGVkKG1kZGV2KSkgew0KIAkJ
-CS8qIEFzIHRoaXMgY29uZGl0aW9uIGlzIGNvbnRyb2xsZWQgYnkgdXNlci1zcGFjZSwNCiAJCQkg
-KiB3ZSBjYW4gYmxvY2sgaW5kZWZpbml0ZWx5LCBzbyB1c2UgJ19pbnRlcnJ1cHRpYmxlJw0KIAkJ
-CSAqIHRvIGF2b2lkIHRyaWdnZXJpbmcgd2FybmluZ3MuDQpAQCAtODM0OCw3ICs4MzU2LDcgQEAg
-dm9pZCBtZF9kb19zeW5jKHN0cnVjdCBtZF90aHJlYWQgKnRocmVhZCkNCiAJCQkJCQkJICAgICAm
-bWRkZXYtPnJlY292ZXJ5KSk7DQogCQl9DQogDQotCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllf
-SU5UUiwgJm1kZGV2LT5yZWNvdmVyeSkpDQorCQlpZiAobWRfc3luY19pbnRlcnJ1cHRlZChtZGRl
-dikpDQogCQkJYnJlYWs7DQogDQogCQlzZWN0b3JzID0gbWRkZXYtPnBlcnMtPnN5bmNfcmVxdWVz
-dChtZGRldiwgaiwgJnNraXBwZWQpOw0KQEAgLTgzNjIsNyArODM3MCw3IEBAIHZvaWQgbWRfZG9f
-c3luYyhzdHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQpDQogCQkJYXRvbWljX2FkZChzZWN0b3JzLCAm
-bWRkZXYtPnJlY292ZXJ5X2FjdGl2ZSk7DQogCQl9DQogDQotCQlpZiAodGVzdF9iaXQoTURfUkVD
-T1ZFUllfSU5UUiwgJm1kZGV2LT5yZWNvdmVyeSkpDQorCQlpZiAobWRfc3luY19pbnRlcnJ1cHRl
-ZChtZGRldikpDQogCQkJYnJlYWs7DQogDQogCQlqICs9IHNlY3RvcnM7DQpAQCAtODM5NCw3ICs4
-NDAyLDcgQEAgdm9pZCBtZF9kb19zeW5jKHN0cnVjdCBtZF90aHJlYWQgKnRocmVhZCkNCiAJCQls
-YXN0X21hcmsgPSBuZXh0Ow0KIAkJfQ0KIA0KLQkJaWYgKHRlc3RfYml0KE1EX1JFQ09WRVJZX0lO
-VFIsICZtZGRldi0+cmVjb3ZlcnkpKQ0KKwkJaWYgKG1kX3N5bmNfaW50ZXJydXB0ZWQobWRkZXYp
-KQ0KIAkJCWJyZWFrOw0KIA0KIAkJLyoNCkBAIC04NDI3LDggKzg0MzUsNyBAQCB2b2lkIG1kX2Rv
-X3N5bmMoc3RydWN0IG1kX3RocmVhZCAqdGhyZWFkKQ0KIAkJfQ0KIAl9DQogCXByX2luZm8oIm1k
-OiAlczogJXMgJXMuXG4iLG1kbmFtZShtZGRldiksIGRlc2MsDQotCQl0ZXN0X2JpdChNRF9SRUNP
-VkVSWV9JTlRSLCAmbWRkZXYtPnJlY292ZXJ5KQ0KLQkJPyAiaW50ZXJydXB0ZWQiIDogImRvbmUi
-KTsNCisJCW1kX3N5bmNfaW50ZXJydXB0ZWQobWRkZXYpID8gImludGVycnVwdGVkIiA6ICJkb25l
-Iik7DQogCS8qDQogCSAqIHRoaXMgYWxzbyBzaWduYWxzICdmaW5pc2hlZCByZXN5bmNpbmcnIHRv
-IG1kX3N0b3ANCiAJICovDQpAQCAtODQzNiw4ICs4NDQzLDcgQEAgdm9pZCBtZF9kb19zeW5jKHN0
-cnVjdCBtZF90aHJlYWQgKnRocmVhZCkNCiAJd2FpdF9ldmVudChtZGRldi0+cmVjb3Zlcnlfd2Fp
-dCwgIWF0b21pY19yZWFkKCZtZGRldi0+cmVjb3ZlcnlfYWN0aXZlKSk7DQogDQogCWlmICghdGVz
-dF9iaXQoTURfUkVDT1ZFUllfUkVTSEFQRSwgJm1kZGV2LT5yZWNvdmVyeSkgJiYNCi0JICAgICF0
-ZXN0X2JpdChNRF9SRUNPVkVSWV9JTlRSLCAmbWRkZXYtPnJlY292ZXJ5KSAmJg0KLQkgICAgbWRk
-ZXYtPmN1cnJfcmVzeW5jID4gMykgew0KKwkgICAgIW1kX3N5bmNfaW50ZXJydXB0ZWQobWRkZXYp
-ICYmIG1kZGV2LT5jdXJyX3Jlc3luYyA+IDMpIHsNCiAJCW1kZGV2LT5jdXJyX3Jlc3luY19jb21w
-bGV0ZWQgPSBtZGRldi0+Y3Vycl9yZXN5bmM7DQogCQlzeXNmc19ub3RpZnkoJm1kZGV2LT5rb2Jq
-LCBOVUxMLCAic3luY19jb21wbGV0ZWQiKTsNCiAJfQ0KQEAgLTg0NDYsNyArODQ1Miw3IEBAIHZv
-aWQgbWRfZG9fc3luYyhzdHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQpDQogCWlmICghdGVzdF9iaXQo
-TURfUkVDT1ZFUllfQ0hFQ0ssICZtZGRldi0+cmVjb3ZlcnkpICYmDQogCSAgICBtZGRldi0+Y3Vy
-cl9yZXN5bmMgPiAzKSB7DQogCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllfU1lOQywgJm1kZGV2
-LT5yZWNvdmVyeSkpIHsNCi0JCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllfSU5UUiwgJm1kZGV2
-LT5yZWNvdmVyeSkpIHsNCisJCQlpZiAobWRfc3luY19pbnRlcnJ1cHRlZChtZGRldikpIHsNCiAJ
-CQkJaWYgKG1kZGV2LT5jdXJyX3Jlc3luYyA+PSBtZGRldi0+cmVjb3ZlcnlfY3ApIHsNCiAJCQkJ
-CXByX2RlYnVnKCJtZDogY2hlY2twb2ludGluZyAlcyBvZiAlcy5cbiIsDQogCQkJCQkJIGRlc2Ms
-IG1kbmFtZShtZGRldikpOw0KQEAgLTg0NjEsNyArODQ2Nyw3IEBAIHZvaWQgbWRfZG9fc3luYyhz
-dHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQpDQogCQkJfSBlbHNlDQogCQkJCW1kZGV2LT5yZWNvdmVy
-eV9jcCA9IE1heFNlY3RvcjsNCiAJCX0gZWxzZSB7DQotCQkJaWYgKCF0ZXN0X2JpdChNRF9SRUNP
-VkVSWV9JTlRSLCAmbWRkZXYtPnJlY292ZXJ5KSkNCisJCQlpZiAoIW1kX3N5bmNfaW50ZXJydXB0
-ZWQobWRkZXYpKQ0KIAkJCQltZGRldi0+Y3Vycl9yZXN5bmMgPSBNYXhTZWN0b3I7DQogCQkJcmN1
-X3JlYWRfbG9jaygpOw0KIAkJCXJkZXZfZm9yX2VhY2hfcmN1KHJkZXYsIG1kZGV2KQ0KQEAgLTg0
-ODMsNyArODQ4OSw3IEBAIHZvaWQgbWRfZG9fc3luYyhzdHJ1Y3QgbWRfdGhyZWFkICp0aHJlYWQp
-DQogCQkgICAgICBCSVQoTURfU0JfQ0hBTkdFX1BFTkRJTkcpIHwgQklUKE1EX1NCX0NIQU5HRV9E
-RVZTKSk7DQogDQogCXNwaW5fbG9jaygmbWRkZXYtPmxvY2spOw0KLQlpZiAoIXRlc3RfYml0KE1E
-X1JFQ09WRVJZX0lOVFIsICZtZGRldi0+cmVjb3ZlcnkpKSB7DQorCWlmICghbWRfc3luY19pbnRl
-cnJ1cHRlZChtZGRldikpIHsNCiAJCS8qIFdlIGNvbXBsZXRlZCBzbyBtaW4vbWF4IHNldHRpbmcg
-Y2FuIGJlIGZvcmdvdHRlbiBpZiB1c2VkLiAqLw0KIAkJaWYgKHRlc3RfYml0KE1EX1JFQ09WRVJZ
-X1JFUVVFU1RFRCwgJm1kZGV2LT5yZWNvdmVyeSkpDQogCQkJbWRkZXYtPnJlc3luY19taW4gPSAw
-Ow0K
+On Wed, Sep 27, 2017 at 03:12:47AM +0000, Bart Van Assche wrote:
+> On Tue, 2017-09-26 at 22:59 +0800, Ming Lei wrote:
+> > On Tue, Sep 26, 2017 at 02:42:07PM +0000, Bart Van Assche wrote:
+> > > On Tue, 2017-09-26 at 19:17 +0800, Ming Lei wrote:
+> > > > Just test this patch a bit and the following failure of freezing task
+> > > > is triggered during suspend: [ ... ]
+> > > 
+> > > What kernel version did you start from and which patches were applied on top of
+> > > that kernel? Only patch 1/7 or all seven patches? What storage configuration did
+> > 
+> > It is v4.14-rc1+, and top commit is 8d93c7a43157, with all your 7 patches
+> > applied.
+> > 
+> > > you use in your test and what command(s) did you use to trigger suspend?
+> > 
+> > Follows my pm test script:
+> > 
+> > 	#!/bin/sh
+> > 	
+> > 	echo check > /sys/block/md127/md/sync_action
+> > 	
+> > 	mkfs.ext4 -F /dev/md127
+> > 	
+> > 	mount /dev/md0 /mnt/data
+> > 	
+> > 	dd if=/dev/zero of=/mnt/data/d1.img bs=4k count=128k&
+> > 	
+> > 	echo 9 > /proc/sys/kernel/printk
+> > 	echo devices > /sys/power/pm_test
+> > 	echo mem > /sys/power/state
+> > 	
+> > 	wait
+> > 	umount /mnt/data
+> > 
+> > Storage setting:
+> > 
+> > 	sudo mdadm --create /dev/md/test /dev/sda /dev/sdb --level=1 --raid-devices=2
+> > 	both /dev/sda and /dev/sdb are virtio-scsi.
+> 
+> Thanks for the detailed reply. I have been able to reproduce the freeze failure
+> you reported. The output of SysRq-t learned me that the md reboot notifier was
+> waiting for the frozen md sync thread and that this caused the freeze failure. So
+> I have started testing the patch below instead of the patch at the start of this
+> e-mail thread:
+
+OK, thanks for figuring out the reason.
+
+With current linus tree, SCSI I/O is prevented from being dispatch to
+device during suspend by SCSI quiesce, and will be dispatched again
+in resume. With Safe SCSI quiesce[1], any underlying IO request will
+stop at blk_queue_enter() during suspend, and restart from there during
+resume.
+
+For other non-SCSI driver, their .suspend/.resume often
+handles I/O in similar way, for example, NVMe queue will
+be frozen in .suspend, and unfreeze in .resume.
+
+So could you explain a bit which kind of bug this patch fixes?
+
+[1] https://marc.info/?l=linux-block&m=150649136519281&w=2
+
+
+-- 
+Ming
