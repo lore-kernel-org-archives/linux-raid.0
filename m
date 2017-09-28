@@ -1,39 +1,35 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 10/12] imsm: always do ppl recovery when starting a rebuilding array
-Date: Thu, 28 Sep 2017 14:41:16 +0200
-Message-ID: <20170928124118.23361-11-pawel.baldysiak@intel.com>
-References: <20170928124118.23361-1-pawel.baldysiak@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Need Help for Raid Recovery
+Date: Thu, 28 Sep 2017 16:08:42 +0100
+Message-ID: <59CD107A.3030901@youngman.org.uk>
+References: <ccba6492-26b7-c084-aa1e-6d69c7f48785@nus.edu.sg>
+ <59C94393.8010405@youngman.org.uk>
+ <5d0b41c1-57e7-b2df-ea13-ca7242e036e1@nus.edu.sg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170928124118.23361-1-pawel.baldysiak@intel.com>
+In-Reply-To: <5d0b41c1-57e7-b2df-ea13-ca7242e036e1@nus.edu.sg>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+On 28/09/17 06:31, Xuesong LU wrote:
+> Thank Wol and Hank anyway for the reply:)
 
-Set resync_start to 0 when starting a rebuilding array to make the
-kernel perform ppl recovery before the rebuild.
+This has now been written up on the raid wiki :-)
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- super-intel.c | 3 +++
- 1 file changed, 3 insertions(+)
+In the "When things go wrogn" section, I've added a new page "Easy
+Fixes". It's meant for all those little things where the experienced
+sysadmin will go "not again, click click click, fixed", while the newbie
+will panic "My array's disappeared, help, the world's imploded".
 
-diff --git a/super-intel.c b/super-intel.c
-index 2e8eb0d4..56c60423 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -7756,6 +7756,9 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 						map->blocks_per_strip;
- 				info_d->ppl_sector = this->ppl_sector;
- 				info_d->ppl_size = this->ppl_size;
-+				if (this->consistency_policy == CONSISTENCY_POLICY_PPL &&
-+				    recovery_start == 0)
-+					this->resync_start = 0;
- 			} else {
- 				info_d->component_size = blocks_per_member(map);
- 			}
--- 
-2.13.5
+At the end of the day, when things go wrong it usually is just a little
+glitch that experience can solve in seconds, and this page is meant for
+passing that knowledge on.
 
+I've also added a section about making sure your controller card is
+compatible with your drives :-) (ServeRAID-BR10i (LSI SAS1068E) strageness)
+
+Cheers,
+Wol
