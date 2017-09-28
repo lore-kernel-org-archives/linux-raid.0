@@ -1,42 +1,113 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 00/12] Multiple PPL support and PPL bugfixes
-Date: Thu, 28 Sep 2017 14:41:06 +0200
-Message-ID: <20170928124118.23361-1-pawel.baldysiak@intel.com>
+Subject: [PATCH 01/12] Don't abort starting the array if kernel does not support ppl
+Date: Thu, 28 Sep 2017 14:41:07 +0200
+Message-ID: <20170928124118.23361-2-pawel.baldysiak@intel.com>
+References: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-This patchset introduces userspace support for multiple PPLs written in a
-circular buffer. It also contains few general bug fixes for PPL, and
-couple of IMSM specific compatibility patches related to new PPL.
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-Artur Paszkiewicz (5):
-  Don't abort starting the array if kernel does not support ppl
-  imsm: don't skip resync when an invalid ppl header is found
-  imsm: always do ppl recovery when starting a rebuilding array
-  imsm: use correct map when validating ppl
-  imsm: write initial ppl on a disk added for rebuild
+Change the behavior of assemble and create for consistency-policy=ppl
+for external metadata arrays. If the kernel does not support ppl, don't
+abort but print a warning and start the array without ppl
+(consistency-policy=resync). No change for native md arrays because the
+kernel will not allow starting the array if it finds an unsupported
+feature bit in the superblock.
 
-Pawel Baldysiak (7):
-  super1: Add support for multiple-ppls
-  imsm: Add support for multiple ppls
-  imsm: validate multiple ppls during assemble
-  Zeroout whole ppl space during creation/force assemble
-  imsm: switch to multiple ppls automatically during assemble
-  Grow: fix switching on PPL during recovery
-  imsm: Write empty PPL header if assembling regular clean array.
+In sysfs_add_disk() check consistency_policy in the mdinfo structure
+that represents the array, not the disk and read the current consistency
+policy from sysfs in mdmon's manage_member(). This is necessary to make
+sysfs_add_disk() honor the actual consistency policy and not what is in
+the metadata. Also remove all the places where consistency_policy is set
+for a disk's mdinfo - it is a property of the array, not the disk.
 
- Grow.c        |   3 -
- managemon.c   |  11 +++-
- mdadm.h       |   1 +
- super-intel.c | 181 ++++++++++++++++++++++++++++++++++++++++++++--------------
- super1.c      |  70 ++++++++++++++---------
- sysfs.c       |   6 +-
- util.c        |  49 ++++++++++++++++
- 7 files changed, 241 insertions(+), 80 deletions(-)
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ managemon.c   | 11 ++++++++---
+ super-intel.c |  4 +---
+ sysfs.c       |  6 +++---
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
+diff --git a/managemon.c b/managemon.c
+index 68f0c2d3..cc3c6f10 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -477,7 +477,7 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 	char buf[64];
+ 	int frozen;
+ 	struct supertype *container = a->container;
+-	unsigned long long int component_size = 0;
++	struct mdinfo *mdi;
+ 
+ 	if (container == NULL)
+ 		/* Raced with something */
+@@ -489,8 +489,13 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 		// MORE
+ 	}
+ 
+-	if (sysfs_get_ll(&a->info, NULL, "component_size", &component_size) >= 0)
+-		a->info.component_size = component_size << 1;
++	mdi = sysfs_read(-1, mdstat->devnm,
++			 GET_COMPONENT|GET_CONSISTENCY_POLICY);
++	if (mdi) {
++		a->info.component_size = mdi->component_size;
++		a->info.consistency_policy = mdi->consistency_policy;
++		sysfs_free(mdi);
++	}
+ 
+ 	/* honor 'frozen' */
+ 	if (sysfs_get_str(&a->info, NULL, "metadata_version", buf, sizeof(buf)) > 0)
+diff --git a/super-intel.c b/super-intel.c
+index 125c3a98..2f378dea 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -7669,7 +7669,6 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 			} else {
+ 				info_d->component_size = blocks_per_member(map);
+ 			}
+-			info_d->consistency_policy = this->consistency_policy;
+ 
+ 			info_d->bb.supported = 1;
+ 			get_volume_badblocks(super->bbm_log, ord_to_idx(ord),
+@@ -8758,8 +8757,7 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+ 		di->component_size = a->info.component_size;
+ 		di->container_member = inst;
+ 		di->bb.supported = 1;
+-		if (dev->rwh_policy == RWH_DISTRIBUTED) {
+-			di->consistency_policy = CONSISTENCY_POLICY_PPL;
++		if (a->info.consistency_policy == CONSISTENCY_POLICY_PPL) {
+ 			di->ppl_sector = get_ppl_sector(super, inst);
+ 			di->ppl_size = (PPL_HEADER_SIZE + PPL_ENTRY_SPACE) >> 9;
+ 		}
+diff --git a/sysfs.c b/sysfs.c
+index 78d2b526..8ea7ba2a 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -709,8 +709,8 @@ int sysfs_set_array(struct mdinfo *info, int vers)
+ 		if (sysfs_set_str(info, NULL, "consistency_policy",
+ 				  map_num(consistency_policies,
+ 					  info->consistency_policy))) {
+-			pr_err("This kernel does not support PPL\n");
+-			return 1;
++			pr_err("This kernel does not support PPL. Falling back to consistency-policy=resync.\n");
++			info->consistency_policy = CONSISTENCY_POLICY_RESYNC;
+ 		}
+ 	}
+ 
+@@ -745,7 +745,7 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
+ 	rv = sysfs_set_num(sra, sd, "offset", sd->data_offset);
+ 	rv |= sysfs_set_num(sra, sd, "size", (sd->component_size+1) / 2);
+ 	if (sra->array.level != LEVEL_CONTAINER) {
+-		if (sd->consistency_policy == CONSISTENCY_POLICY_PPL) {
++		if (sra->consistency_policy == CONSISTENCY_POLICY_PPL) {
+ 			rv |= sysfs_set_num(sra, sd, "ppl_sector", sd->ppl_sector);
+ 			rv |= sysfs_set_num(sra, sd, "ppl_size", sd->ppl_size);
+ 		}
 -- 
 2.13.5
 
