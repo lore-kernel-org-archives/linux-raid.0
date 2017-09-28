@@ -1,200 +1,130 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 02/12] super1: Add support for multiple-ppls
-Date: Thu, 28 Sep 2017 14:41:08 +0200
-Message-ID: <20170928124118.23361-3-pawel.baldysiak@intel.com>
+Subject: [PATCH 04/12] imsm: validate multiple ppls during assemble
+Date: Thu, 28 Sep 2017 14:41:10 +0200
+Message-ID: <20170928124118.23361-5-pawel.baldysiak@intel.com>
 References: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-Add support for super1 with multiple ppls. Extend ppl area size to 1MB.
-Use 1MB as default during creation. Always start array as single ppl -
-if kernel is capable of multiple ppls and there is enough space reserved -
-it will switch the policy during first metadata update.
+Change validation algorithm to check validity of multiple ppls that
+are stored in PPL area.
+
+If read error occurs during - treat the all PPLs as invalid -
+there is no guarantee that this one was not latest. If the header CRC is
+incorrect - assume that there are no further PPLs in PPL area.
+
+If whole PPL area was written at least once - there is a possibility that
+old PPL (with lower generation number) will follow the recent one
+(with higest generation number). Compare those generation numbers to check
+which PPL is latest.
 
 Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- super1.c | 65 ++++++++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 37 insertions(+), 28 deletions(-)
+ super-intel.c | 71 +++++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 47 insertions(+), 24 deletions(-)
 
-diff --git a/super1.c b/super1.c
-index f6a10450..b31f8450 100644
---- a/super1.c
-+++ b/super1.c
-@@ -121,6 +121,9 @@ struct misc_dev_info {
- 	__u64 device_size;
- };
+diff --git a/super-intel.c b/super-intel.c
+index 21eb048a..d11ddae4 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -6106,11 +6106,14 @@ static int validate_ppl_imsm(struct supertype *st, struct mdinfo *info,
+ 	struct imsm_dev *dev;
+ 	struct imsm_map *map;
+ 	__u32 idx;
++	unsigned int i;
++	unsigned long long ppl_offset = 0;
++	unsigned long long prev_gen_num = 0;
  
-+#define MULTIPLE_PPL_AREA_SIZE_SUPER1 (1024 * 1024) /* Size of the whole
-+						     * mutliple PPL area
-+						     */
- /* feature_map bits */
- #define MD_FEATURE_BITMAP_OFFSET	1
- #define	MD_FEATURE_RECOVERY_OFFSET	2 /* recovery_offset is present and
-@@ -140,6 +143,7 @@ struct misc_dev_info {
- #define	MD_FEATURE_BITMAP_VERSIONED	256 /* bitmap version number checked properly */
- #define	MD_FEATURE_JOURNAL		512 /* support write journal */
- #define	MD_FEATURE_PPL			1024 /* support PPL */
-+#define	MD_FEATURE_MUTLIPLE_PPLS	2048 /* support for multiple PPLs */
- #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
- 					|MD_FEATURE_RECOVERY_OFFSET	\
- 					|MD_FEATURE_RESHAPE_ACTIVE	\
-@@ -150,6 +154,7 @@ struct misc_dev_info {
- 					|MD_FEATURE_BITMAP_VERSIONED	\
- 					|MD_FEATURE_JOURNAL		\
- 					|MD_FEATURE_PPL			\
-+					|MD_FEATURE_MULTIPLE_PPLS	\
- 					)
+ 	if (disk->disk.raid_disk < 0)
+ 		return 0;
  
- static int role_from_sb(struct mdp_superblock_1 *sb)
-@@ -298,6 +303,12 @@ static int awrite(struct align_fd *afd, void *buf, int len)
- 	return len;
- }
+-	if (posix_memalign(&buf, 4096, PPL_HEADER_SIZE)) {
++	if (posix_memalign(&buf, MAX_SECTOR_SIZE, PPL_HEADER_SIZE)) {
+ 		pr_err("Failed to allocate PPL header buffer\n");
+ 		return -1;
+ 	}
+@@ -6123,34 +6126,54 @@ static int validate_ppl_imsm(struct supertype *st, struct mdinfo *info,
+ 	if (!d || d->index < 0 || is_failed(&d->disk))
+ 		goto out;
  
-+static inline unsigned int md_feature_any_ppl_on(__u32 feature_map)
-+{
-+	return ((__cpu_to_le32(feature_map) &
-+	    (MD_FEATURE_PPL | MD_FEATURE_MUTLIPLE_PPLS)));
-+}
-+
- static inline unsigned int choose_ppl_space(int chunk)
- {
- 	return (PPL_HEADER_SIZE >> 9) + (chunk > 128*2 ? chunk : 128*2);
-@@ -409,7 +420,7 @@ static void examine_super1(struct supertype *st, char *homehost)
- 	if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
- 		printf("Internal Bitmap : %ld sectors from superblock\n",
- 		       (long)(int32_t)__le32_to_cpu(sb->bitmap_offset));
--	} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+	} else if (md_feature_any_ppl_on(sb->feature_map)) {
- 		printf("            PPL : %u sectors at offset %d sectors from superblock\n",
- 		       __le16_to_cpu(sb->ppl.size),
- 		       __le16_to_cpu(sb->ppl.offset));
-@@ -985,7 +996,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 		info->bitmap_offset = (int32_t)__le32_to_cpu(sb->bitmap_offset);
- 		if (__le32_to_cpu(bsb->nodes) > 1)
- 			info->array.state |= (1 << MD_SB_CLUSTERED);
--	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
-+	} else if (md_feature_any_ppl_on(sb->feature_map)) {
- 		info->ppl_offset = __le16_to_cpu(sb->ppl.offset);
- 		info->ppl_size = __le16_to_cpu(sb->ppl.size);
- 		info->ppl_sector = super_offset + info->ppl_offset;
-@@ -1140,7 +1151,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_JOURNAL)) {
- 		info->journal_device_required = 1;
- 		info->consistency_policy = CONSISTENCY_POLICY_JOURNAL;
--	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_PPL)) {
-+	} else if (md_feature_any_ppl_on(sb->feature_map)) {
- 		info->consistency_policy = CONSISTENCY_POLICY_PPL;
- 	} else if (sb->feature_map & __le32_to_cpu(MD_FEATURE_BITMAP_OFFSET)) {
- 		info->consistency_policy = CONSISTENCY_POLICY_BITMAP;
-@@ -1324,7 +1335,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
- 			bitmap_offset = (long)__le32_to_cpu(sb->bitmap_offset);
- 			bm_sectors = calc_bitmap_size(bms, 4096) >> 9;
--		} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
-+		} else if (md_feature_any_ppl_on(sb->feature_map)) {
- 			bitmap_offset = (long)__le16_to_cpu(sb->ppl.offset);
- 			bm_sectors = (long)__le16_to_cpu(sb->ppl.size);
- 		}
-@@ -1377,7 +1388,6 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		unsigned long long data_size = __le64_to_cpu(sb->data_size);
- 		long bb_offset = __le32_to_cpu(sb->bblog_offset);
- 		int space;
--		int optimal_space;
- 		int offset;
+-	if (lseek64(d->fd, info->ppl_sector * 512, SEEK_SET) < 0) {
+-		perror("Failed to seek to PPL header location");
+-		ret = -1;
+-		goto out;
+-	}
++	ret = 1;
++	while (ppl_offset < MULTIPLE_PPL_AREA_SIZE_IMSM) {
++		dprintf("Checking potential PPL at offset: %llu\n", ppl_offset);
  
- 		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BITMAP_OFFSET)) {
-@@ -1408,18 +1418,23 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 			return -2;
- 		}
- 
--		optimal_space = choose_ppl_space(__le32_to_cpu(sb->chunksize));
--
--		if (space > optimal_space)
--			space = optimal_space;
--		if (space > UINT16_MAX)
--			space = UINT16_MAX;
-+		if (space >= (MULTIPLE_PPL_AREA_SIZE_SUPER1 >> 9)) {
-+			space = (MULTIPLE_PPL_AREA_SIZE_SUPER1 >> 9);
-+		} else {
-+			int optimal_space = choose_ppl_space(
-+						__le32_to_cpu(sb->chunksize));
-+			if (space > optimal_space)
-+				space = optimal_space;
-+			if (space > UINT16_MAX)
-+				space = UINT16_MAX;
+-	if (read(d->fd, buf, PPL_HEADER_SIZE) != PPL_HEADER_SIZE) {
+-		perror("Read PPL header failed");
+-		ret = -1;
+-		goto out;
+-	}
++		if (lseek64(d->fd, info->ppl_sector * 512 + ppl_offset,
++			    SEEK_SET) < 0) {
++			perror("Failed to seek to PPL header location");
++			ret = -1;
++			goto out;
 +		}
  
- 		sb->ppl.offset = __cpu_to_le16(offset);
- 		sb->ppl.size = __cpu_to_le16(space);
- 		sb->feature_map |= __cpu_to_le32(MD_FEATURE_PPL);
- 	} else if (strcmp(update, "no-ppl") == 0) {
--		sb->feature_map &= ~ __cpu_to_le32(MD_FEATURE_PPL);
-+		sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_PPL |
-+						   MD_FEATURE_MUTLIPLE_PPLS);
- 	} else if (strcmp(update, "name") == 0) {
- 		if (info->name[0] == 0)
- 			sprintf(info->name, "%d", info->array.md_minor);
-@@ -1974,20 +1989,12 @@ static int write_init_super1(struct supertype *st)
- 					(((char *)sb) + MAX_SB_SIZE);
- 			bm_space = calc_bitmap_size(bms, 4096) >> 9;
- 			bm_offset = (long)__le32_to_cpu(sb->bitmap_offset);
--		} else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_PPL)) {
--			bm_space =
--			  choose_ppl_space(__le32_to_cpu(sb->chunksize));
--			if (bm_space > UINT16_MAX)
--				bm_space = UINT16_MAX;
--			if (st->minor_version == 0) {
-+		} else if (md_feature_any_ppl_on(sb->feature_map)) {
-+			bm_space = MULTIPLE_PPL_AREA_SIZE_SUPER1 >> 9;
-+			if (st->minor_version == 0)
- 				bm_offset = -bm_space - 8;
--				if (bm_offset < INT16_MIN) {
--					bm_offset = INT16_MIN;
--					bm_space = -bm_offset - 8;
--				}
--			} else {
-+			else
- 				bm_offset = 8;
--			}
- 			sb->ppl.offset = __cpu_to_le16(bm_offset);
- 			sb->ppl.size = __cpu_to_le16(bm_space);
- 		} else {
-@@ -2069,7 +2076,7 @@ static int write_init_super1(struct supertype *st)
- 		     MD_FEATURE_BITMAP_OFFSET)) {
- 			rv = st->ss->write_bitmap(st, di->fd, NodeNumUpdate);
- 		} else if (rv == 0 &&
--			 (__le32_to_cpu(sb->feature_map) & MD_FEATURE_PPL)) {
-+		    md_feature_any_ppl_on(sb->feature_map)) {
- 			struct mdinfo info;
+-	ppl_hdr = buf;
++		if (read(d->fd, buf, PPL_HEADER_SIZE) != PPL_HEADER_SIZE) {
++			perror("Read PPL header failed");
++			ret = -1;
++			goto out;
++		}
  
- 			st->ss->getinfo_super(st, &info, NULL);
-@@ -2345,7 +2352,7 @@ static __u64 avail_size1(struct supertype *st, __u64 devsize,
- 		struct bitmap_super_s *bsb;
- 		bsb = (struct bitmap_super_s *)(((char*)super)+MAX_SB_SIZE);
- 		bmspace = calc_bitmap_size(bsb, 4096) >> 9;
--	} else if (__le32_to_cpu(super->feature_map) & MD_FEATURE_PPL) {
-+	} else if (md_feature_any_ppl_on(super->feature_map)) {
- 		bmspace = __le16_to_cpu(super->ppl.size);
+-	crc = __le32_to_cpu(ppl_hdr->checksum);
+-	ppl_hdr->checksum = 0;
++		ppl_hdr = buf;
+ 
+-	if (crc != ~crc32c_le(~0, buf, PPL_HEADER_SIZE)) {
+-		dprintf("Wrong PPL header checksum on %s\n",
+-			d->devname);
+-		ret = 1;
+-	}
++		crc = __le32_to_cpu(ppl_hdr->checksum);
++		ppl_hdr->checksum = 0;
++
++		if (crc != ~crc32c_le(~0, buf, PPL_HEADER_SIZE)) {
++			dprintf("Wrong PPL header checksum on %s\n",
++				d->devname);
++			goto out;
++		}
++
++		if (prev_gen_num > __le64_to_cpu(ppl_hdr->generation)) {
++			/* previous was newest, it was already checked */
++			goto out;
++		}
++
++		if ((__le32_to_cpu(ppl_hdr->signature) !=
++			      super->anchor->orig_family_num)) {
++			dprintf("Wrong PPL header signature on %s\n",
++				d->devname);
++			ret = 1;
++			goto out;
++		}
++
++		ret = 0;
++		prev_gen_num = __le64_to_cpu(ppl_hdr->generation);
+ 
+-	if (!ret && (__le32_to_cpu(ppl_hdr->signature) !=
+-		      super->anchor->orig_family_num)) {
+-		dprintf("Wrong PPL header signature on %s\n",
+-			d->devname);
+-		ret = 1;
++		ppl_offset += PPL_HEADER_SIZE;
++		for (i = 0; i < __le32_to_cpu(ppl_hdr->entries_count); i++)
++			ppl_offset +=
++				   __le32_to_cpu(ppl_hdr->entries[i].pp_size);
  	}
  
-@@ -2769,8 +2776,10 @@ static int validate_geometry1(struct supertype *st, int level,
- 	}
- 
- 	/* creating:  allow suitable space for bitmap or PPL */
--	bmspace = consistency_policy == CONSISTENCY_POLICY_PPL ?
--		  choose_ppl_space((*chunk)*2) : choose_bm_space(devsize);
-+	if (consistency_policy == CONSISTENCY_POLICY_PPL)
-+		bmspace = MULTIPLE_PPL_AREA_SIZE_SUPER1 >> 9;
-+	else
-+		bmspace = choose_bm_space(devsize);
- 
- 	if (data_offset == INVALID_SECTORS)
- 		data_offset = st->data_offset;
+ out:
 -- 
 2.13.5
 
