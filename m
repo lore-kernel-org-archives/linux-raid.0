@@ -1,7 +1,7 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 03/12] imsm: Add support for multiple ppls
-Date: Thu, 28 Sep 2017 14:41:09 +0200
-Message-ID: <20170928124118.23361-4-pawel.baldysiak@intel.com>
+Subject: [PATCH 06/12] imsm: switch to multiple ppls automatically during assemble
+Date: Thu, 28 Sep 2017 14:41:12 +0200
+Message-ID: <20170928124118.23361-7-pawel.baldysiak@intel.com>
 References: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170928124118.23361-1-pawel.baldysiak@intel.com>
@@ -10,129 +10,56 @@ To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Add interpreting new rwh_policy bits. Set PPL size as 1MB.
-If new array with ppl is created - use new implementation of ppl by
-default.
+If user has array with single ppl -
+update the metadata to use multiple ppls.
 
 Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- super-intel.c | 37 +++++++++++++++++++++++++++----------
- 1 file changed, 27 insertions(+), 10 deletions(-)
+ super-intel.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 diff --git a/super-intel.c b/super-intel.c
-index 2f378dea..21eb048a 100644
+index e1862d4a..6c48725d 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -92,6 +92,9 @@
- #define NUM_BLOCKS_DIRTY_STRIPE_REGION 2056
- #define SECT_PER_MB_SHIFT 11
- #define MAX_SECTOR_SIZE 4096
-+#define MULTIPLE_PPL_AREA_SIZE_IMSM (1024 * 1024) /* Size of the whole
-+						   * mutliple PPL area
-+						   */
+@@ -6184,6 +6184,36 @@ static int validate_ppl_imsm(struct supertype *st, struct mdinfo *info,
+ out:
+ 	free(buf);
  
- /* Disk configuration info. */
- #define IMSM_MAX_DEVICES 255
-@@ -207,6 +210,9 @@ struct imsm_dev {
- #define RWH_OFF 0
- #define RWH_DISTRIBUTED 1
- #define RWH_JOURNALING_DRIVE 2
-+#define RWH_MULTIPLE_DISTRIBUTED 3
-+#define RWH_MULTIPLE_PPLS_JOURNALING_DRIVE 4
-+#define RWH_MULTIPLE_OFF 5
- 	__u8  rwh_policy; /* Raid Write Hole Policy */
- 	__u8  jd_serial[MAX_RAID_SERIAL_LEN]; /* Journal Drive serial number */
- 	__u8  filler1;
-@@ -284,7 +290,7 @@ static char *map_state_str[] = { "normal", "uninitialized", "degraded", "failed"
- 				 *  already been migrated and must
- 				 *  be recovered from checkpoint area */
++	/*
++	 * Update metadata to use mutliple PPLs area (1MB).
++	 * This is done once for all RAID members
++	 */
++	if (info->consistency_policy == CONSISTENCY_POLICY_PPL &&
++	    info->ppl_size != (MULTIPLE_PPL_AREA_SIZE_IMSM >> 9)) {
++		char subarray[20];
++		struct mdinfo *member_dev;
++
++		sprintf(subarray, "%d", info->container_member);
++
++		if (mdmon_running(st->container_devnm))
++			st->update_tail = &st->updates;
++
++		if (st->ss->update_subarray(st, subarray, "ppl", NULL)) {
++			pr_err("Failed to update subarray %s\n",
++			      subarray);
++		} else {
++			if (st->update_tail)
++				flush_metadata_updates(st);
++			else
++				st->ss->sync_metadata(st);
++			info->ppl_size = (MULTIPLE_PPL_AREA_SIZE_IMSM >> 9);
++			for (member_dev = info->devs; member_dev;
++			     member_dev = member_dev->next)
++				member_dev->ppl_size =
++				    (MULTIPLE_PPL_AREA_SIZE_IMSM >> 9);
++		}
++	}
++
+ 	if (ret == 1 && map->map_state == IMSM_T_STATE_UNINITIALIZED)
+ 		return st->ss->write_init_ppl(st, info, d->fd);
  
--#define PPL_ENTRY_SPACE (128 * 1024) /* Size of the PPL, without the header */
-+#define PPL_ENTRY_SPACE (128 * 1024) /* Size of single PPL, without the header */
- 
- struct migr_record {
- 	__u32 rec_status;	    /* Status used to determine how to restart
-@@ -1539,12 +1545,16 @@ static void print_imsm_dev(struct intel_super *super,
- 	printf("    Dirty State : %s\n", (dev->vol.dirty & RAIDVOL_DIRTY) ?
- 					 "dirty" : "clean");
- 	printf("     RWH Policy : ");
--	if (dev->rwh_policy == RWH_OFF)
-+	if (dev->rwh_policy == RWH_OFF || dev->rwh_policy == RWH_MULTIPLE_OFF)
- 		printf("off\n");
- 	else if (dev->rwh_policy == RWH_DISTRIBUTED)
- 		printf("PPL distributed\n");
- 	else if (dev->rwh_policy == RWH_JOURNALING_DRIVE)
- 		printf("PPL journaling drive\n");
-+	else if (dev->rwh_policy == RWH_MULTIPLE_DISTRIBUTED)
-+		printf("Multiple distributed PPLs\n");
-+	else if (dev->rwh_policy == RWH_MULTIPLE_PPLS_JOURNALING_DRIVE)
-+		printf("Multiple PPLs on journaling drive\n");
- 	else
- 		printf("<unknown:%d>\n", dev->rwh_policy);
- }
-@@ -3294,10 +3304,16 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	memset(info->uuid, 0, sizeof(info->uuid));
- 	info->recovery_start = MaxSector;
- 
--	if (info->array.level == 5 && dev->rwh_policy == RWH_DISTRIBUTED) {
-+	if (info->array.level == 5 &&
-+	    (dev->rwh_policy == RWH_DISTRIBUTED ||
-+	     dev->rwh_policy == RWH_MULTIPLE_DISTRIBUTED)) {
- 		info->consistency_policy = CONSISTENCY_POLICY_PPL;
- 		info->ppl_sector = get_ppl_sector(super, super->current_vol);
--		info->ppl_size = (PPL_HEADER_SIZE + PPL_ENTRY_SPACE) >> 9;
-+		if (dev->rwh_policy == RWH_MULTIPLE_DISTRIBUTED)
-+			info->ppl_size = MULTIPLE_PPL_AREA_SIZE_IMSM >> 9;
-+		else
-+			info->ppl_size = (PPL_HEADER_SIZE + PPL_ENTRY_SPACE)
-+					  >> 9;
- 	} else if (info->array.level <= 0) {
- 		info->consistency_policy = CONSISTENCY_POLICY_NONE;
- 	} else {
-@@ -5390,9 +5406,9 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 	dev->my_vol_raid_dev_num = mpb->num_raid_devs_created;
- 
- 	if (s->consistency_policy <= CONSISTENCY_POLICY_RESYNC) {
--		dev->rwh_policy = RWH_OFF;
-+		dev->rwh_policy = RWH_MULTIPLE_OFF;
- 	} else if (s->consistency_policy == CONSISTENCY_POLICY_PPL) {
--		dev->rwh_policy = RWH_DISTRIBUTED;
-+		dev->rwh_policy = RWH_MULTIPLE_DISTRIBUTED;
- 	} else {
- 		free(dev);
- 		free(dv);
-@@ -7403,9 +7419,9 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
- 			return 2;
- 
- 		if (strcmp(update, "ppl") == 0)
--			new_policy = RWH_DISTRIBUTED;
-+			new_policy = RWH_MULTIPLE_DISTRIBUTED;
- 		else
--			new_policy = RWH_OFF;
-+			new_policy = RWH_MULTIPLE_OFF;
- 
- 		if (st->update_tail) {
- 			struct imsm_update_rwh_policy *u = xmalloc(sizeof(*u));
-@@ -8205,7 +8221,8 @@ skip_mark_checkpoint:
- 			dev->vol.dirty = RAIDVOL_CLEAN;
- 		} else {
- 			dev->vol.dirty = RAIDVOL_DIRTY;
--			if (dev->rwh_policy == RWH_DISTRIBUTED)
-+			if (dev->rwh_policy == RWH_DISTRIBUTED ||
-+			    dev->rwh_policy == RWH_MULTIPLE_DISTRIBUTED)
- 				dev->vol.dirty |= RAIDVOL_DSRECORD_VALID;
- 		}
- 		super->updates_pending++;
-@@ -8759,7 +8776,7 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 		di->bb.supported = 1;
- 		if (a->info.consistency_policy == CONSISTENCY_POLICY_PPL) {
- 			di->ppl_sector = get_ppl_sector(super, inst);
--			di->ppl_size = (PPL_HEADER_SIZE + PPL_ENTRY_SPACE) >> 9;
-+			di->ppl_size = MULTIPLE_PPL_AREA_SIZE_IMSM >> 9;
- 		}
- 		super->random = random32();
- 		di->next = rv;
 -- 
 2.13.5
 
