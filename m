@@ -1,7 +1,7 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 12/12] imsm: write initial ppl on a disk added for rebuild
-Date: Thu, 28 Sep 2017 14:41:18 +0200
-Message-ID: <20170928124118.23361-13-pawel.baldysiak@intel.com>
+Subject: [PATCH 10/12] imsm: always do ppl recovery when starting a rebuilding array
+Date: Thu, 28 Sep 2017 14:41:16 +0200
+Message-ID: <20170928124118.23361-11-pawel.baldysiak@intel.com>
 References: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170928124118.23361-1-pawel.baldysiak@intel.com>
@@ -12,31 +12,28 @@ List-Id: linux-raid.ids
 
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-When rebuild is initiated by the UEFI driver it is possible that the new
-disk will not contain a valid ppl header. Just write the initial ppl
-and don't abort assembly.
+Set resync_start to 0 when starting a rebuilding array to make the
+kernel perform ppl recovery before the rebuild.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- super-intel.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ super-intel.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/super-intel.c b/super-intel.c
-index 8f89930a..53385018 100644
+index 2e8eb0d4..56c60423 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6227,7 +6227,10 @@ out:
- 
- 		if (map->map_state == IMSM_T_STATE_UNINITIALIZED ||
- 		   (map->map_state == IMSM_T_STATE_NORMAL &&
--		   !(dev->vol.dirty & RAIDVOL_DIRTY)))
-+		   !(dev->vol.dirty & RAIDVOL_DIRTY)) ||
-+		   (dev->vol.migr_state == MIGR_REBUILD &&
-+		    dev->vol.curr_migr_unit == 0 &&
-+		    get_imsm_disk_idx(dev, disk->disk.raid_disk, MAP_1) != idx))
- 			ret = st->ss->write_init_ppl(st, info, d->fd);
- 		else
- 			info->mismatch_cnt++;
+@@ -7756,6 +7756,9 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 						map->blocks_per_strip;
+ 				info_d->ppl_sector = this->ppl_sector;
+ 				info_d->ppl_size = this->ppl_size;
++				if (this->consistency_policy == CONSISTENCY_POLICY_PPL &&
++				    recovery_start == 0)
++					this->resync_start = 0;
+ 			} else {
+ 				info_d->component_size = blocks_per_member(map);
+ 			}
 -- 
 2.13.5
 
