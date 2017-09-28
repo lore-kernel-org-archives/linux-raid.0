@@ -1,77 +1,99 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 0/3] md: retry bailed bio
-Date: Thu, 28 Sep 2017 12:47:41 +1000
-Message-ID: <87ing35yk2.fsf@notabene.neil.brown.name>
-References: <cover.1506015297.git.shli@fb.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Resolved? ServeRAID-BR10i (LSI SAS1068E) strageness
+Date: Thu, 28 Sep 2017 15:03:23 +1000
+Message-ID: <f1ba566f-9caf-358b-9815-57f7116750ae@eyal.emu.id.au>
+References: <74846504-299c-1d75-d6e9-8fbe8b603f52@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1506015297.git.shli@fb.com>
+In-Reply-To: <74846504-299c-1d75-d6e9-8fbe8b603f52@eyal.emu.id.au>
+Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>
+To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 22/09/17 18:11, Eyal Lebedinsky wrote:
+> This is an IBM ServeRAID-BR10i. Identified at boot time as
+>      LSISAS1068E B3, FwRev=011b5600h
+> I was using another controller (HighPoint RocketRAID 2720SGL) which gives me grief
+> so decided to re-commission my old (slow) controller. It worked perfectly until retired
+> 4 years ago.
+> 
+> I want to use this old controller, to confirm that my recent problems are from my controller,
+> and if so acquire a reliable one.
+> 
+> The LSI controller POST messages indicated it seed all 7 disks, and they are also
+> present in the linux messages, but the partitions are not there. I did not enter
+> the controller's configuration dialogue.
+> 
+> Each disk has one (unformatted, created with gparted) partition which is a member of
+> a RAID6.
+> 
+> The messages in the log are these:
+> 
+> Sep 22 14:59:18 e7 kernel: mptsas: ioc0: attaching sata device: fw_channel 0, fw_id 20, phy 0, sas_addr 0x70944e23a5c4b492
+> Sep 22 14:59:18 e7 kernel: scsi 6:0:0:0: Direct-Access     ATA      WDC WD4003FZEX-0 1A01 PQ: 0 ANSI: 5
+> Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: Attached scsi generic sg2 type 0
+> Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: [sdc] 4294967294 512-byte logical blocks: (2.20 TB/2.00 TiB)
+> Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: [sdc] Write Protect is off
+> Sep 22 14:59:18 e7 kernel: sd 6:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
-On Thu, Sep 21 2017, Shaohua Li wrote:
+Re-reading the messages I now notice that the disks are identified as
+	4294967294 512-byte logical blocks: (2.20 TB/2.00 TiB)
+which is wrong (these are 4TB disks, as shown below).
 
-> From: Shaohua Li <shli@fb.com>
->
-> With cc27b0c78c79(md: fix deadlock between mddev_suspend() and
-> md_write_start()), pers->make_request could bail out without handling the=
- bio.
-> If that happens, we should retry. There are two call sites we don't do the
-> retry and cause problems. This set fixes the issues.
+I guess this controller, being a SATA-II, is not suitable for disks larger that 2TB?
 
-All look good to me, thanks.
-Reviewed-by: NeilBrown <neilb@suse.com>
+Regards
 
-NeilBrown
+> Unlike the usual messages:
+> 
+> Sep 23 01:05:17 e7 kernel: ata7.00: ATA-8: WDC WD4001FAEX-00MJRA0, 01.01L01, max UDMA/133
+> Sep 23 01:05:17 e7 kernel: ata7.00: 7814037168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> Sep 23 01:05:17 e7 kernel: ata7.00: configured for UDMA/133
+> Sep 23 01:05:17 e7 kernel: scsi 6:0:0:0: Direct-Access     ATA      WDC WD4001FAEX-0 1L01 PQ: 0 ANSI: 5
+> Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: Attached scsi generic sg2 type 0
+> Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] 7814037168 512-byte logical blocks: (4.00 TB/3.64 TiB)
+> Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] Write Protect is off
+> Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> Sep 23 01:05:19 e7 kernel: sdc: sdc1
+> Sep 23 01:05:19 e7 kernel: sd 6:0:0:0: [sdc] Attached SCSI disk
+> 
+> In short, no ata?.00 devices and no 'sdc: sdc1' partition list.
+> 
+> As an aside, I notice that the messages from parted are a bit different from what I have recorded.
+> My records are from when I was running f19 (now on f26) so maybe the utilities changed.
+> 
+> The old record (from f19):
+> 
+> $ sudo parted /dev/sdj print
+> Model: ATA WDC WD4001FAEX-0 (scsi)
+> Disk /dev/sdj: 4001GB
+> Sector size (logical/physical): 512B/512B
+> Partition Table: gpt
+> Disk Flags:
+> 
+> Number  Start   End     Size    File system  Name  Flags
+>   1      1049kB  4001GB  4001GB
+> 
+> What I see now (from f26):
+> 
+> $ sudo parted /dev/sdc print
+> Model: ATA WDC WD4001FAEX-0 (scsi)
+> Disk /dev/sdc: 4001GB
+> Sector size (logical/physical): 512B/512B
+> Partition Table: gpt
+> Disk Flags:
+> 
+> Number  Start   End     Size    File system  Name  Flags
+>   1      1049kB  4001GB  4001GB                     msftdata
+> 
+> The partition is now showing a flag 'msftdata'.
+> Is this a utility change (fdisk is also slightly different) or did the LSI touch the partition table?
+> 
+> TIA
+> 
 
->
-> Thanks,
-> Shaohua
->
-> Shaohua Li (3):
->   md: separate request handling
->   md: fix a race condition for flush request handling
->   dm-raid: fix a race condition in request handling
->
->  drivers/md/dm-raid.c |  2 +-
->  drivers/md/md.c      | 72 +++++++++++++++++++++++++++++++---------------=
-------
->  drivers/md/md.h      |  1 +
->  3 files changed, 45 insertions(+), 30 deletions(-)
->
-> --=20
-> 2.11.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnMYs4ACgkQOeye3VZi
-gbl0ExAAi1cvLxCFELTBMCJp9dA5g2+fV3X4/m0vONYZj+3pHPKPTgyeW26bkZRC
-U1jBZX/tB6zpOR+DwApl0ex8jX7JZAszMxZL3yUz8cA299mWrCFZWd0wTCR6TnCk
-HDaNomrrM4Q/bO0O0o0MqZdboFpmSZeBjwB/S0U6Zod8t8eQ9TojTBL7lSvibXUS
-LtXN/wJu2Tj15gpaK3gyizveszWMweQYju2kjzwMXCu5osOyH7HWXUBHrpgWdvwu
-vkFd1WmNY60XlIeYEcP2hlugTjPBft1NIIqFKWsvryWQJKwdvui+tm/kpNi3XS+y
-TVwqLmRNcM+HrtGWuInRIddulGGJY8Xj6A0NvCVKJQ+8JU2+wnRUtkGlaZCWMcG1
-swSEDZenJC2t8mTXeWT/cDZRDU/i3A4lvXPt6ONiS39pAvqFTQox4LnzYmFmjeBu
-OaOWPBNPGNV0ieXltil/oQ6ZFbUMmz2JcJUVTyXe7f8UXuaufe3SoEAzDIQET8oU
-fdcyh9keuSpRtQz3TSH93aVHmdufrdVX3eXHgBTs9YMA6apIlsWV9dS98YTmw9D1
-OMwXGhc5hWetSb2HYoedNzshhqs2WV3AFhJNG4vBkxXjhnrLDLkW2ZNOBMVIH75v
-Z04ZhYQGpSMwbFvsrnep5TOeqIC1Trt/SjFnbs22QH43wWIWiIo=
-=j3HX
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
