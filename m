@@ -1,139 +1,68 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH 05/12] Zeroout whole ppl space during creation/force assemble
-Date: Thu, 28 Sep 2017 14:41:11 +0200
-Message-ID: <20170928124118.23361-6-pawel.baldysiak@intel.com>
+Subject: [PATCH 08/12] imsm: don't skip resync when an invalid ppl header is found
+Date: Thu, 28 Sep 2017 14:41:14 +0200
+Message-ID: <20170928124118.23361-9-pawel.baldysiak@intel.com>
 References: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170928124118.23361-1-pawel.baldysiak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-PPL area should be cleared before creation/force assemble.
-If the drive was used in other RAID array, it might contains PPL from it.
-There is a risk that mdadm recognizes those PPLs and
-refuses to assemble the RAID due to PPL conflict with created
-array.
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+If validate_ppl_imsm() detects an invalid ppl header it will be
+overwritten with a valid, empty ppl header. But if we are assembling an
+array after unclean shutdown this will cause the kernel to skip resync
+after ppl recovery. We don't want that because if there was an invalid
+ppl it's best to assume that the ppl recovery is not enough to make the
+array consistent and a full resync should be performed. So when
+overwriting the invalid ppl add one ppl_header_entry with a wrong
+checksum. This will prevent the kernel from skipping resync after ppl
+recovery.
+
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- mdadm.h       |  1 +
- super-intel.c |  7 ++++++-
- super1.c      |  5 +++++
- util.c        | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 61 insertions(+), 1 deletion(-)
+ super-intel.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/mdadm.h b/mdadm.h
-index 191ae8f7..8f802e50 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -687,6 +687,7 @@ extern int sysfs_unique_holder(char *devnm, long rdev);
- extern int sysfs_freeze_array(struct mdinfo *sra);
- extern int sysfs_wait(int fd, int *msec);
- extern int load_sys(char *path, char *buf, int len);
-+extern int zero_disk_range(int fd, unsigned long long sector, size_t count);
- extern int reshape_prepare_fdlist(char *devname,
- 				  struct mdinfo *sra,
- 				  int raid_disks,
 diff --git a/super-intel.c b/super-intel.c
-index d11ddae4..e1862d4a 100644
+index 6c48725d..016a6028 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6065,7 +6065,12 @@ static int write_init_ppl_imsm(struct supertype *st, struct mdinfo *info, int fd
- 	struct ppl_header *ppl_hdr;
- 	int ret;
- 
--	ret = posix_memalign(&buf, 4096, PPL_HEADER_SIZE);
-+	/* first clear entire ppl space */
-+	ret = zero_disk_range(fd, info->ppl_sector, info->ppl_size);
-+	if (ret)
-+		return ret;
+@@ -6080,6 +6080,16 @@ static int write_init_ppl_imsm(struct supertype *st, struct mdinfo *info, int fd
+ 	ppl_hdr = buf;
+ 	memset(ppl_hdr->reserved, 0xff, PPL_HDR_RESERVED);
+ 	ppl_hdr->signature = __cpu_to_le32(super->anchor->orig_family_num);
 +
-+	ret = posix_memalign(&buf, MAX_SECTOR_SIZE, PPL_HEADER_SIZE);
- 	if (ret) {
- 		pr_err("Failed to allocate PPL header buffer\n");
- 		return ret;
-diff --git a/super1.c b/super1.c
-index b31f8450..6b821525 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1823,6 +1823,11 @@ static int write_init_ppl1(struct supertype *st, struct mdinfo *info, int fd)
- 	struct ppl_header *ppl_hdr;
- 	int ret;
- 
-+	/* first clear entire ppl space */
-+	ret = zero_disk_range(fd, info->ppl_sector, info->ppl_size);
-+	if (ret)
-+		return ret;
++	if (info->mismatch_cnt) {
++		/*
++		 * We are overwriting an invalid ppl. Make one entry with wrong
++		 * checksum to prevent the kernel from skipping resync.
++		 */
++		ppl_hdr->entries_count = __cpu_to_le32(1);
++		ppl_hdr->entries[0].checksum = ~0;
++	}
 +
- 	ret = posix_memalign(&buf, 4096, PPL_HEADER_SIZE);
- 	if (ret) {
- 		pr_err("Failed to allocate PPL header buffer\n");
-diff --git a/util.c b/util.c
-index c1c85095..bab7d6c1 100644
---- a/util.c
-+++ b/util.c
-@@ -30,6 +30,7 @@
- #include	<sys/un.h>
- #include	<sys/resource.h>
- #include	<sys/vfs.h>
-+#include	<sys/mman.h>
- #include	<linux/magic.h>
- #include	<poll.h>
- #include	<ctype.h>
-@@ -2325,3 +2326,51 @@ void set_hooks(void)
- 	set_dlm_hooks();
- 	set_cmap_hooks();
+ 	ppl_hdr->checksum = __cpu_to_le32(~crc32c_le(~0, buf, PPL_HEADER_SIZE));
+ 
+ 	if (lseek64(fd, info->ppl_sector * 512, SEEK_SET) < 0) {
+@@ -6214,8 +6224,12 @@ out:
+ 		}
+ 	}
+ 
+-	if (ret == 1 && map->map_state == IMSM_T_STATE_UNINITIALIZED)
+-		return st->ss->write_init_ppl(st, info, d->fd);
++	if (ret == 1) {
++		if (map->map_state == IMSM_T_STATE_UNINITIALIZED)
++			ret = st->ss->write_init_ppl(st, info, d->fd);
++		else
++			info->mismatch_cnt++;
++	}
+ 
+ 	return ret;
  }
-+
-+int zero_disk_range(int fd, unsigned long long sector, size_t count)
-+{
-+	int ret = 0;
-+	int fd_zero;
-+	void *addr = NULL;
-+	size_t written = 0;
-+	size_t len = count * 512;
-+	ssize_t n;
-+
-+	fd_zero = open("/dev/zero", O_RDONLY);
-+	if (fd_zero < 0) {
-+		pr_err("Cannot open /dev/zero\n");
-+		return -1;
-+	}
-+
-+	if (lseek64(fd, sector * 512, SEEK_SET) < 0) {
-+		ret = -errno;
-+		pr_err("Failed to seek offset for zeroing\n");
-+		goto out;
-+	}
-+
-+	addr = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd_zero, 0);
-+
-+	if (addr == MAP_FAILED) {
-+		ret = -errno;
-+		pr_err("Mapping /dev/zero failed\n");
-+		goto out;
-+	}
-+
-+	do {
-+		n = write(fd, addr + written, len - written);
-+		if (n < 0) {
-+			if (errno == EINTR)
-+				continue;
-+			ret = -errno;
-+			pr_err("Zeroing disk range failed\n");
-+			break;
-+		}
-+		written += n;
-+	} while (written != len);
-+
-+	munmap(addr, len);
-+
-+out:
-+	close(fd_zero);
-+	return ret;
-+}
 -- 
 2.13.5
 
