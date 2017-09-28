@@ -1,91 +1,75 @@
-From: Xuesong LU <disluxs@nus.edu.sg>
-Subject: Re: Need Help for Raid Recovery
-Date: Thu, 28 Sep 2017 13:31:04 +0800
-Message-ID: <5d0b41c1-57e7-b2df-ea13-ca7242e036e1@nus.edu.sg>
-References: <ccba6492-26b7-c084-aa1e-6d69c7f48785@nus.edu.sg>
- <59C94393.8010405@youngman.org.uk>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: What is the proper way to start an array with many failed (but good)
+ disks
+Date: Thu, 28 Sep 2017 17:48:50 +1000
+Message-ID: <6dba3e31-5c37-5a53-09a5-df8c95991a7a@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59C94393.8010405@youngman.org.uk>
-Content-Language: en-US
+Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+I have a raid6 with 7 disks and the controller had a bad cable connection
+so 4 disks failed concurrently. They were now marked (S) as expected.
 
-I got the problem solved with some luck.
+I had to power the server down to adjust the cabling then all 7 disks
+were seen and available, and naturally the array was not started.
+	md: kicking non-fresh sde1 from array!
+	md: kicking non-fresh sdf1 from array!
+	md: kicking non-fresh sdc1 from array!
+	md: kicking non-fresh sdd1 from array!
+	md/raid:md127: device sdi1 operational as raid disk 6
+	md/raid:md127: device sdg1 operational as raid disk 4
+	md/raid:md127: device sdh1 operational as raid disk 5
+	md/raid:md127: not enough operational devices (4/7 failed)
+	md/raid:md127: failed to run raid set.
 
-I am not sure how the problem came out. The thing was that the server
-suffered from a sudden power-off and went into the emergency mode
-(centos 7) after power resumed. In the emergency mode, I could not
-assemble md0 and also could not see some of the physical volumes (which
-actually had made me panic), and the system could not enter the default
-mode after reboot.
+No array in /proc/mdstat.
 
-Then after a few tries I simply ran 'mount -a' as suggested on the web.
-It said /dev/sdd1 could not be found, though I could see sdd1 by running
-'ls /dev'. So I commented out sdd1 in /etc/fstab, and had the system
-enter the default mode after rebooting twice. Surprisingly and
-differently from what I saw under emergency mode, all the filesystems
-including md0 were just fine, even if I had deleted the line about md0
-array in mdadm.conf file.
+--examin'ing the disks was as expected, sd[c-f]1 have 7139731 events and
+sd[g-i] have 7140079. There was not much activity on this device then.
 
-I am not quite sure about what actually happened, but what I learned is
-that the filesystems one can see under emergency mode are different from
-that under default mode (probably because of the minimum load). So don't
-panic if one finds some pvs, lvs or even raids disappear for no reason
-under emergency mode. Try to find which filesystem is actually missing
-(e.g., run 'mount -a') and comment it out in the fstab file. Then try to
-boot into the default mode, and most probably, all files are just as
-good as what they were.
+Q) What is the correct way to re-add all the disks?
+When I have only one disk fail, I simply --fail/--remove then --re-add it.
 
-Thank Wol and Hank anyway for the reply:)
+I re-read the doco and it seems that there is an option for
+	mdadm --re-add /dev/md127 missing
 
-Best,
-Xuesong
+Q) Will this find all the failed members? Can it run on an array that does
+not yet exist?
 
-On 9/26/2017 1:57 AM, Wols Lists wrote:
-> On 25/09/17 08:53, Xuesong LU wrote:
->> mdadm --examine /dev/sd[g-p] prints raid partition information for
->> sd[h,i,j,l,m,n]. No superblock detected on sd[g,k,o,p].
->>
->> mdadm --examine /dev/sd[g-p]1 prints raid partition information for
->> sd[h,i,j,l,m,n]1. The event counts are the same. It also prints 'No
->> superblock detected' for sdg1, and 'no such files' for sd[k,o,p]1.
->> (Gone? Can still recover?)
->>
->> I have UUID for md0 in the mdadm.conf file.
->>
->> Is there still hope to recover my raid? Thank you!
-> Go to the raid wiki, and post the requested info to the list.
->
-> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
->
-> Make sure you're using the latest mdadm.
->
-> This looks a little familiar to me, but so long as nothing has written
-> to the disk, and/or the only thing that has been damaged is the
-> superblocks, this looks rather hopeful.
->
-> Bear in mind, though, if the superblocks ARE gone, then it's going to be
-> a hassle to get it back. A fair bit of trial and error is on the cards
-> (read up on overlays). But as long as nothing has actually stomped on
-> the data itself, you should be able to get it back.
->
-> Do an "fdisk -l" on k, o, p. I remember a problem a while back when
-> something stamped on the partition table ...
->
-> Cheers,
-> Wol
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In this case I needed to somehow assemble the array. Should
 
+I ended doing these two:
+	# mdadm --assemble --force /dev/md127
+This did not do what I expected, which was to assemble the array with 4
+spare (or failed) members, ready to be revived.
+It instead said that the event count was raised on the failed disks to
+the level of the good ones but did not assemble the array.
+I thought that changing the event count is bad since it forgets important
+status information (unless the log has this info).
 
-________________________________
+	# mdadm --assemble /dev/md127
+This started the array. No recovery in /proc/mdstat:
+	md127 : active raid6 sdc1[14] sdi1[8] sdh1[12] sdg1[13] sdf1[7] sde1[9] sdd1[10]
+	      19534425600 blocks super 1.2 level 6, 512k chunk, algorithm 2 [7/7] [UUUUUUU]
+	      bitmap: 0/30 pages [0KB], 65536KB chunk
 
-Important: This email is confidential and may be privileged. If you are not the intended recipient, please delete it and notify us immediately; you should not copy or use it for any purpose, nor disclose its contents to any other person. Thank you.
+The messages log had:
+	md127: bitmap file is out of date (7139731 < 7140079) -- forcing full recovery
+	md127: bitmap file is out of date, doing full recovery
+	md127: detected capacity change from 0 to 20003251814400
+and I do not know which of the two command provoked this, I assume the second one.
+
+Q) What does "forcing/doing full recovery" mean?
+
+My current controller is unstable so after I install a new controller
+I will do an array 'check'.
+
+TIA
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
