@@ -1,47 +1,41 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Accidentally resized array to 9
-Date: Fri, 29 Sep 2017 17:55:24 +0500
-Message-ID: <20170929175524.57fea3b5@natsu>
-References: <0e59cefd-662f-bf77-0c32-49424d504c77@benshoshan.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: occasional hard lockup on raid on nvme disks (fio processes hung)
+Date: Fri, 29 Sep 2017 16:05:10 +0200
+Message-ID: <1f1b255a-1ce5-d135-a962-2c16d4ac29a5@intel.com>
+References: <CAMNNMLE-bx55Q_8eCjwm0aOD2J0wo9X1puTNWgeHKhOBP2WXmA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0e59cefd-662f-bf77-0c32-49424d504c77@benshoshan.com>
+In-Reply-To: <CAMNNMLE-bx55Q_8eCjwm0aOD2J0wo9X1puTNWgeHKhOBP2WXmA@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Eli Ben-Shoshan <eli@benshoshan.com>
-Cc: linux-raid@vger.kernel.org, John Stoffel <john@stoffel.org>
+To: Nikhil Kshirsagar <nkshirsa@redhat.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 29 Sep 2017 00:23:28 -0400
-Eli Ben-Shoshan <eli@benshoshan.com> wrote:
-
-> This was a RAID6 with 8 devices. Instead of using --grow with 
-> --raid-devices set to 9, I did the following:
+On 08/28/2017 08:18 AM, Nikhil Kshirsagar wrote:
+> Hello,
 > 
-> mdadm --grow /dev/md128 --size 9
+> I'm referring to this old email I found in the linux-raid history. Can
+> anyone comment on if this issue has had further discussion, or
+> analysis ?
 > 
-> This happily returned without any errors so I went to go look at 
-> /proc/mdstat and did not see a resize operation going. So I shook my 
-> head and read the output of --grow --help and did the right thing which is:
+> I see subsequent follow ups at spinics.net/lists/raid/msg52994.html and
 > 
-> mdadm --grow /dev/md128 --raid-devices=9
+> spinics.net/lists/raid/msg52970.html
+> 
+> spinics.net/lists/raid/msg53461.html
+> 
+> but no further discussion.
+> 
+> I was wondering if this has been reported in RHEL or has any
+> associated bz's or investigation.
 
-The output of the first command is:
+It appears that this was recently fixed by:
+184a09eb9a2f ("md/raid5: preserve STRIPE_ON_UNPLUG_LIST in break_stripe_batch_list")
 
-  # mdadm --grow /dev/md0 --size 9
-  mdadm: component size of /dev/md0 has been set to 9K
-  unfreeze
+I submitted a RHEL BZ for this:
+https://bugzilla.redhat.com/show_bug.cgi?id=1497215
 
-It didn't occur to you that you FIRST need to restore the "component size" back
-to what it was previously?...
-
-And yes as John says there should be a confirmation request on reducing the
-array size. In fact I couldn't believe there isn't one already, that's why I
-went checking. But nope, there are no warnings or confirmation requests
-neither for reducing --size, nor --array-size. I might be remembering that
-there were some, from LVM, not MD.
-
--- 
-With respect,
-Roman
+Regards,
+Artur
