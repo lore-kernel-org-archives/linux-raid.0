@@ -1,70 +1,59 @@
 From: Eli Ben-Shoshan <eli@benshoshan.com>
 Subject: Re: Accidentally resized array to 9
-Date: Fri, 29 Sep 2017 10:47:57 -0400
-Message-ID: <3760f13b-4f8f-4d9c-8382-96ee4f08d511@benshoshan.com>
+Date: Fri, 29 Sep 2017 10:53:57 -0400
+Message-ID: <fec79486-8f23-74dd-9c62-4f89ac00b95d@benshoshan.com>
 References: <0e59cefd-662f-bf77-0c32-49424d504c77@benshoshan.com>
- <22990.16096.295333.439814@quad.stoffel.home>
+ <20170929175524.57fea3b5@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22990.16096.295333.439814@quad.stoffel.home>
+In-Reply-To: <20170929175524.57fea3b5@natsu>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>
+Cc: linux-raid@vger.kernel.org, John Stoffel <john@stoffel.org>
 List-Id: linux-raid.ids
 
-On 09/29/2017 08:38 AM, John Stoffel wrote:
->>>>>> "Eli" == Eli Ben-Shoshan <eli@benshoshan.com> writes:
+On 09/29/2017 08:55 AM, Roman Mamedov wrote:
+> On Fri, 29 Sep 2017 00:23:28 -0400
+> Eli Ben-Shoshan <eli@benshoshan.com> wrote:
 > 
-> Eli> I need to add another disk to my array (/dev/md128) when I accidentally
-> Eli> did an array resize to 9 with the following command:
+>> This was a RAID6 with 8 devices. Instead of using --grow with
+>> --raid-devices set to 9, I did the following:
+>>
+>> mdadm --grow /dev/md128 --size 9
+>>
+>> This happily returned without any errors so I went to go look at
+>> /proc/mdstat and did not see a resize operation going. So I shook my
+>> head and read the output of --grow --help and did the right thing which is:
+>>
+>> mdadm --grow /dev/md128 --raid-devices=9
 > 
-> Eli> First I add the disk to the array with the following:
+> The output of the first command is:
 > 
-> Eli> mdadm --manage /dev/md128 --add /dev/sdl
+>    # mdadm --grow /dev/md0 --size 9
+>    mdadm: component size of /dev/md0 has been set to 9K
+>    unfreeze
 > 
-> Eli> This was a RAID6 with 8 devices. Instead of using --grow with
-> Eli> --raid-devices set to 9, I did the following:
-> 
-> Eli> mdadm --grow /dev/md128 --size 9
-> 
-> Eli> This happily returned without any errors so I went to go look at
-> Eli> /proc/mdstat and did not see a resize operation going. So I shook my
-> Eli> head and read the output of --grow --help and did the right thing which is:
-> 
-> Eli> mdadm --grow /dev/md128 --raid-devices=9
-> 
-> Eli> Right after that everything hit the fan. dmesg reported a lot of
-> Eli> filesystem errors. I quickly stopped all processes that were using this
-> Eli> device and unmounted the filesystems. I then, stupidly, decided to
-> Eli> reboot before looking around.
-> 
-> 
-> I think you *might* be able to fix this with just a simple:
-> 
->     mdadm --grow /dev/md128 --size max
-> 
-> And then try to scan for your LVM configuration, then fsck your volume
-> on there.  I hope you had backups.
-> 
-> And maybe there should be a warning when re-sizing raid array elements
-> without a --force option if going smaller than the current size?
+> It didn't occur to you that you FIRST need to restore the "component size" back
+> to what it was previously?...
 
-I just tried that and got the following error:
+I am not sure that I actually got any response at all from setting 
+--size. I am running version:
 
-mdadm: Cannot set device size in this type of array
+mdadm - v3.4 - 28th January 2016
 
-Trying to go further down this path, I also tried to set the size 
-explicitly with:
+If I did get output, I totally missed it. I get that this is my fault 
+for using the wrong commmand and any data loss is totally due to my 
+stupidity. I am just hoping that there might be a way that I can get the 
+data back.
 
-mdadm --grow /dev/md150 --size 1953383512
+> 
+> And yes as John says there should be a confirmation request on reducing the
+> array size. In fact I couldn't believe there isn't one already, that's why I
+> went checking. But nope, there are no warnings or confirmation requests
+> neither for reducing --size, nor --array-size. I might be remembering that
+> there were some, from LVM, not MD.
+> 
 
-but got:
-
-mdadm: Cannot set device size in this type of array
-
-I am curious if my data is actually still there on disk.
-
-What does the --size with --grow actually do?
