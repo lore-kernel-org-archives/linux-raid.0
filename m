@@ -1,41 +1,70 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: occasional hard lockup on raid on nvme disks (fio processes hung)
-Date: Fri, 29 Sep 2017 16:05:10 +0200
-Message-ID: <1f1b255a-1ce5-d135-a962-2c16d4ac29a5@intel.com>
-References: <CAMNNMLE-bx55Q_8eCjwm0aOD2J0wo9X1puTNWgeHKhOBP2WXmA@mail.gmail.com>
+From: Eli Ben-Shoshan <eli@benshoshan.com>
+Subject: Re: Accidentally resized array to 9
+Date: Fri, 29 Sep 2017 10:47:57 -0400
+Message-ID: <3760f13b-4f8f-4d9c-8382-96ee4f08d511@benshoshan.com>
+References: <0e59cefd-662f-bf77-0c32-49424d504c77@benshoshan.com>
+ <22990.16096.295333.439814@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMNNMLE-bx55Q_8eCjwm0aOD2J0wo9X1puTNWgeHKhOBP2WXmA@mail.gmail.com>
+In-Reply-To: <22990.16096.295333.439814@quad.stoffel.home>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Nikhil Kshirsagar <nkshirsa@redhat.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: John Stoffel <john@stoffel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/28/2017 08:18 AM, Nikhil Kshirsagar wrote:
-> Hello,
+On 09/29/2017 08:38 AM, John Stoffel wrote:
+>>>>>> "Eli" == Eli Ben-Shoshan <eli@benshoshan.com> writes:
 > 
-> I'm referring to this old email I found in the linux-raid history. Can
-> anyone comment on if this issue has had further discussion, or
-> analysis ?
+> Eli> I need to add another disk to my array (/dev/md128) when I accidentally
+> Eli> did an array resize to 9 with the following command:
 > 
-> I see subsequent follow ups at spinics.net/lists/raid/msg52994.html and
+> Eli> First I add the disk to the array with the following:
 > 
-> spinics.net/lists/raid/msg52970.html
+> Eli> mdadm --manage /dev/md128 --add /dev/sdl
 > 
-> spinics.net/lists/raid/msg53461.html
+> Eli> This was a RAID6 with 8 devices. Instead of using --grow with
+> Eli> --raid-devices set to 9, I did the following:
 > 
-> but no further discussion.
+> Eli> mdadm --grow /dev/md128 --size 9
 > 
-> I was wondering if this has been reported in RHEL or has any
-> associated bz's or investigation.
+> Eli> This happily returned without any errors so I went to go look at
+> Eli> /proc/mdstat and did not see a resize operation going. So I shook my
+> Eli> head and read the output of --grow --help and did the right thing which is:
+> 
+> Eli> mdadm --grow /dev/md128 --raid-devices=9
+> 
+> Eli> Right after that everything hit the fan. dmesg reported a lot of
+> Eli> filesystem errors. I quickly stopped all processes that were using this
+> Eli> device and unmounted the filesystems. I then, stupidly, decided to
+> Eli> reboot before looking around.
+> 
+> 
+> I think you *might* be able to fix this with just a simple:
+> 
+>     mdadm --grow /dev/md128 --size max
+> 
+> And then try to scan for your LVM configuration, then fsck your volume
+> on there.  I hope you had backups.
+> 
+> And maybe there should be a warning when re-sizing raid array elements
+> without a --force option if going smaller than the current size?
 
-It appears that this was recently fixed by:
-184a09eb9a2f ("md/raid5: preserve STRIPE_ON_UNPLUG_LIST in break_stripe_batch_list")
+I just tried that and got the following error:
 
-I submitted a RHEL BZ for this:
-https://bugzilla.redhat.com/show_bug.cgi?id=1497215
+mdadm: Cannot set device size in this type of array
 
-Regards,
-Artur
+Trying to go further down this path, I also tried to set the size 
+explicitly with:
+
+mdadm --grow /dev/md150 --size 1953383512
+
+but got:
+
+mdadm: Cannot set device size in this type of array
+
+I am curious if my data is actually still there on disk.
+
+What does the --size with --grow actually do?
