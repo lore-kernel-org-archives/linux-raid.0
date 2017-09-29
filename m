@@ -1,43 +1,58 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: Is the LSI SAS9211-8i still the go to HBA?
-Date: Fri, 29 Sep 2017 12:37:11 -0500
-Message-ID: <5819b1af-1da3-7c64-31d0-574395faa31b@gmail.com>
-References: <1d014bd9-7946-ba3e-f5fb-f64a92ccc769@eyal.emu.id.au>
- <77d0cd80-40b3-acb2-ba8a-e3650ad1b734@aei.mpg.de>
- <20170928085255.i6ogmdyf6xwic5kv@vault.lan>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/2] md-cluster: fix wrong condition check in
+ raid1_write_request
+Date: Fri, 29 Sep 2017 10:54:26 -0700
+Message-ID: <20170929175426.3azxndx7mxoiynh7@kernel.org>
+References: <1506647804-469-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20170928085255.i6ogmdyf6xwic5kv@vault.lan>
+Content-Disposition: inline
+In-Reply-To: <1506647804-469-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johannes Truschnigg <johannes@truschnigg.info>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, list linux-raid <linux-raid@vger.kernel.org>
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, shli@fb.com
 List-Id: linux-raid.ids
 
-On 09/28/2017 03:52 AM, Johannes Truschnigg wrote:
-> On Thu, Sep 28, 2017 at 10:40:43AM +0200, Carsten Aulbert wrote:
->> Hi
->>
->> On 09/28/17 10:34, Eyal Lebedinsky wrote:
->>> [...]
->>> So, is there another candidate for 8 way HBA for use with linux software
->>> raid?
->> We operate a couple of SAS3008 based cards from Broadcom formerly known
->> as Avago formerly known as LSI ;)
->>
->> E.g. the 9300-8i card which we flashed ourselves from IR to IT mode work
->> quite nicely without any complain at the moment.
-> Same here - just make sure to flash a recent-ish firmware image. The 3008 was
-> unusable garbage before the (iirc) "P8" release for us.
->
-I have 9211 (for about 9 months). Had to flash IT firmware. It is a bit 
-slow in enumerrating attached disks and sometimes kernel misses a disk 
-or two at boot up that shows up afterwards.  This kind of messes up md. 
-I suspect this is more of the problem with ubuntu 14.04 I have, rather 
-than md or 9211 problem. However, simple re-add fixes it. Since upgrade 
-to newer version is a problem for me, I am just dealing with it. So, you 
-may not even have this problem.
+On Fri, Sep 29, 2017 at 09:16:43AM +0800, Guoqing Jiang wrote:
+> The check used here is to avoid conflict between write and
+> resync, however we used the wrong logic, it should be the
+> inverse of the checking inside "if".
+> 
+> Fixes: 589a1c4 ("Suspend writes in RAID1 if within range")
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
-Ramesh
-
+applied, thanks!
+> ---
+>  drivers/md/raid1.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index f3f3e40..35264ad 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1325,12 +1325,12 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>  			sigset_t full, old;
+>  			prepare_to_wait(&conf->wait_barrier,
+>  					&w, TASK_INTERRUPTIBLE);
+> -			if (bio_end_sector(bio) <= mddev->suspend_lo ||
+> -			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
+> -			    (mddev_is_clustered(mddev) &&
+> +			if ((bio_end_sector(bio) <= mddev->suspend_lo ||
+> +			     bio->bi_iter.bi_sector >= mddev->suspend_hi) &&
+> +			    (!mddev_is_clustered(mddev) ||
+>  			     !md_cluster_ops->area_resyncing(mddev, WRITE,
+> -				     bio->bi_iter.bi_sector,
+> -				     bio_end_sector(bio))))
+> +							bio->bi_iter.bi_sector,
+> +							bio_end_sector(bio))))
+>  				break;
+>  			sigfillset(&full);
+>  			sigprocmask(SIG_BLOCK, &full, &old);
+> -- 
+> 2.6.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
