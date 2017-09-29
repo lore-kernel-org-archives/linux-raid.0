@@ -1,66 +1,43 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: Latest on SSD Raid
-Date: Fri, 29 Sep 2017 12:22:04 -0400
-Message-ID: <5d1bbdd8-5d28-f01b-9000-f245ab9d5c84@gmail.com>
-References: <2931220.pImEXletoV@dag.newtech.fi>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: Is the LSI SAS9211-8i still the go to HBA?
+Date: Fri, 29 Sep 2017 12:37:11 -0500
+Message-ID: <5819b1af-1da3-7c64-31d0-574395faa31b@gmail.com>
+References: <1d014bd9-7946-ba3e-f5fb-f64a92ccc769@eyal.emu.id.au>
+ <77d0cd80-40b3-acb2-ba8a-e3650ad1b734@aei.mpg.de>
+ <20170928085255.i6ogmdyf6xwic5kv@vault.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2931220.pImEXletoV@dag.newtech.fi>
-Content-Language: en-US
+In-Reply-To: <20170928085255.i6ogmdyf6xwic5kv@vault.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dag Nygren <dag@newtech.fi>, linux-raid@vger.kernel.org
+To: Johannes Truschnigg <johannes@truschnigg.info>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-On 09/29/2017 11:53 AM, Dag Nygren wrote:
-> Hi all!
+On 09/28/2017 03:52 AM, Johannes Truschnigg wrote:
+> On Thu, Sep 28, 2017 at 10:40:43AM +0200, Carsten Aulbert wrote:
+>> Hi
+>>
+>> On 09/28/17 10:34, Eyal Lebedinsky wrote:
+>>> [...]
+>>> So, is there another candidate for 8 way HBA for use with linux software
+>>> raid?
+>> We operate a couple of SAS3008 based cards from Broadcom formerly known
+>> as Avago formerly known as LSI ;)
+>>
+>> E.g. the 9300-8i card which we flashed ourselves from IR to IT mode work
+>> quite nicely without any complain at the moment.
+> Same here - just make sure to flash a recent-ish firmware image. The 3008 was
+> unusable garbage before the (iirc) "P8" release for us.
 >
-> Would like to tap some experience out of all here
-> with the question:
->
-> Any good hints and advice when setting up a RAID5 SSD with
-> 3 disks to start with?
+I have 9211 (for about 9 months). Had to flash IT firmware. It is a bit 
+slow in enumerrating attached disks and sometimes kernel misses a disk 
+or two at boot up that shows up afterwards.  This kind of messes up md. 
+I suspect this is more of the problem with ubuntu 14.04 I have, rather 
+than md or 9211 problem. However, simple re-add fixes it. Since upgrade 
+to newer version is a problem for me, I am just dealing with it. So, you 
+may not even have this problem.
 
-You would need to worry about write amplification due to R5.  So if you 
-do this, use SSDs with higher DWPD (drive writes per day).  Aim for 
-3DWPD if you can, so you don't burn out the SSDs early.  Don't do this 
-with consumer grade SSDs (anything 0.5 DWPD or less).  They do burn out 
-(sometimes much) faster.  The little extra money spent on the enterprise 
-SATA (or SAS) with higher DWPD is worth it.
-
-Precondition the SSDs.  If you don't know how, I wrote a nice little 
-util here: https://github.com/joelandman/disk_test_setup that helps you 
-do it ... uses fio to drive 128k seqeuential writes to fill drives.  
-Drive life appears well correlated with preconditioning and write loads.
-
-Use a chunk size of 128k or so (larger better).  You want the chunk size 
-at the same size as the erase block size.  Reduces write amplification.
-
-You still have to worry about the whole RMW cycle for RAID5.  This 
-means, for small IO (below chunk/erase block size), you have to 
-read-modify-write at least 2 blocks back for every block written. If 
-your writes are small (4k -> 32k) you'll want to invest in even higher 
-quality (e.g. more DWPD).
-
-If you can get enough drives, I'd actually recommend a RAID10.  Much 
-lower write amplification -> longer lifetime.
-
->
-> Best
-> Dag
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Joe Landman
-e: joe.landman@gmail.com
-t: @hpcjoe
-w: https://scalability.org
-g: https://github.com/joelandman
-l: https://www.linkedin.com/in/joelandman
+Ramesh
 
