@@ -1,80 +1,41 @@
-From: "John Stoffel" <john@stoffel.org>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: Accidentally resized array to 9
-Date: Fri, 29 Sep 2017 15:33:21 -0400
-Message-ID: <22990.40961.77727.460505@quad.stoffel.home>
+Date: Sat, 30 Sep 2017 00:50:05 +0500
+Message-ID: <20170930005005.68beae8b@natsu>
 References: <0e59cefd-662f-bf77-0c32-49424d504c77@benshoshan.com>
-        <22990.16096.295333.439814@quad.stoffel.home>
-        <3760f13b-4f8f-4d9c-8382-96ee4f08d511@benshoshan.com>
+        <20170929175524.57fea3b5@natsu>
+        <fec79486-8f23-74dd-9c62-4f89ac00b95d@benshoshan.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3760f13b-4f8f-4d9c-8382-96ee4f08d511@benshoshan.com>
+In-Reply-To: <fec79486-8f23-74dd-9c62-4f89ac00b95d@benshoshan.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Eli Ben-Shoshan <eli@benshoshan.com>
-Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, John Stoffel <john@stoffel.org>
 List-Id: linux-raid.ids
 
->>>>> "Eli" == Eli Ben-Shoshan <eli@benshoshan.com> writes:
+On Fri, 29 Sep 2017 10:53:57 -0400
+Eli Ben-Shoshan <eli@benshoshan.com> wrote:
 
-Eli> On 09/29/2017 08:38 AM, John Stoffel wrote:
->>>>>>> "Eli" == Eli Ben-Shoshan <eli@benshoshan.com> writes:
->> 
-Eli> I need to add another disk to my array (/dev/md128) when I accidentally
-Eli> did an array resize to 9 with the following command:
->> 
-Eli> First I add the disk to the array with the following:
->> 
-Eli> mdadm --manage /dev/md128 --add /dev/sdl
->> 
-Eli> This was a RAID6 with 8 devices. Instead of using --grow with
-Eli> --raid-devices set to 9, I did the following:
->> 
-Eli> mdadm --grow /dev/md128 --size 9
->> 
-Eli> This happily returned without any errors so I went to go look at
-Eli> /proc/mdstat and did not see a resize operation going. So I shook my
-Eli> head and read the output of --grow --help and did the right thing which is:
->> 
-Eli> mdadm --grow /dev/md128 --raid-devices=9
->> 
-Eli> Right after that everything hit the fan. dmesg reported a lot of
-Eli> filesystem errors. I quickly stopped all processes that were using this
-Eli> device and unmounted the filesystems. I then, stupidly, decided to
-Eli> reboot before looking around.
->> 
->> 
->> I think you *might* be able to fix this with just a simple:
->> 
->> mdadm --grow /dev/md128 --size max
->> 
->> And then try to scan for your LVM configuration, then fsck your volume
->> on there.  I hope you had backups.
->> 
->> And maybe there should be a warning when re-sizing raid array elements
->> without a --force option if going smaller than the current size?
+> I am just hoping that there might be a way that I can get the 
+> data back.
 
-Eli> I just tried that and got the following error:
+In theory what you did was cut the array size to only use 9 KB of each device,
+then reshaped THAT tiny array from 8 to 9 devices, with the rest left
+completely untouched.
 
-Eli> mdadm: Cannot set device size in this type of array
+So you could try removing the "new" disk, then try --create --assume-clean
+with old devices only and --raid-devices=8.
 
-Eli> Trying to go further down this path, I also tried to set the size 
-Eli> explicitly with:
+But I'm not sure how you would get the device order right.
 
-Eli> mdadm --grow /dev/md150 --size 1953383512
+Ideally what you can hope for, is you would get the bulk of array data intact,
+only with the first 9 KB of each device *(8-2), so about the first 54 KB of
+data on the md array, corrupted and unusable. It is likely the LVM and
+filesystem tools will not recognize anything due to that, so you will need to
+use some data recovery software to look for and save the data.
 
-Eli> but got:
-
-Eli> mdadm: Cannot set device size in this type of array
-
-Eli> I am curious if my data is actually still there on disk.
-
-Eli> What does the --size with --grow actually do?
-
-It changes the size of each member of the array.  The man page
-explains it, though not ... obviously.
-
-Are you still running with the overlays?  That would explain why it
-can't resize them bigger.  But I'm also behind on email today...
-
-John
+-- 
+With respect,
+Roman
