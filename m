@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 1/2] raid5-ppl: don't resync after rebuild
-Date: Fri, 29 Sep 2017 22:54:18 +0200
-Message-ID: <20170929205419.16715-2-artur.paszkiewicz@intel.com>
+Subject: [PATCH 2/2] raid5-ppl: check recovery_offset when performing ppl recovery
+Date: Fri, 29 Sep 2017 22:54:19 +0200
+Message-ID: <20170929205419.16715-3-artur.paszkiewicz@intel.com>
 References: <20170929205419.16715-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20170929205419.16715-1-artur.paszkiewicz@intel.com>
@@ -10,29 +10,29 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-The check for degraded array is unnecessary and causes a resync to be
-performed after ppl recovery and rebuild when restarting an array during
-rebuilding after unclean shutdown.
+If starting an array that is undergoing rebuild, make ppl recovery honor
+the recovery_offset of a member disk and don't read data that is not yet
+in-sync.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- drivers/md/raid5-ppl.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/md/raid5-ppl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index a98ef172f8e8..2c6513777f68 100644
+index 2c6513777f68..c3e1899d5986 100644
 --- a/drivers/md/raid5-ppl.c
 +++ b/drivers/md/raid5-ppl.c
-@@ -1296,8 +1296,7 @@ int ppl_init_log(struct r5conf *conf)
+@@ -758,7 +758,8 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
+ 				 (unsigned long long)sector);
  
- 	if (ret) {
- 		goto err;
--	} else if (!mddev->pers &&
--		   mddev->recovery_cp == 0 && !mddev->degraded &&
-+	} else if (!mddev->pers && mddev->recovery_cp == 0 &&
- 		   ppl_conf->recovered_entries > 0 &&
- 		   ppl_conf->mismatch_count == 0) {
- 		/*
+ 			rdev = conf->disks[dd_idx].rdev;
+-			if (!rdev) {
++			if (!rdev || (!test_bit(In_sync, &rdev->flags) &&
++				      sector >= rdev->recovery_offset)) {
+ 				pr_debug("%s:%*s data member disk %d missing\n",
+ 					 __func__, indent, "", dd_idx);
+ 				update_parity = false;
 -- 
 2.14.1
 
