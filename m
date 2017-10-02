@@ -1,34 +1,52 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Is the LSI SAS9211-8i still the go to HBA?
-Date: Mon, 2 Oct 2017 15:41:17 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1710021533340.31961@uplift.swm.pp.se>
-References: <1d014bd9-7946-ba3e-f5fb-f64a92ccc769@eyal.emu.id.au> <edaf46e4-8f70-1471-3353-d67deeb4d03a@eyal.emu.id.au>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v4 1/7] md: Make md resync and reshape threads freezable
+Date: Mon, 2 Oct 2017 15:39:35 +0000
+Message-ID: <1506958773.3368.12.camel@wdc.com>
+References: <20170925202924.16603-1-bart.vanassche@wdc.com>
+         <20170925202924.16603-2-bart.vanassche@wdc.com>
+         <20170926111747.GA16794@ming.t460p> <1506436926.3787.24.camel@wdc.com>
+         <20170926145919.GC31449@ming.t460p> <1506481915.2822.9.camel@wdc.com>
+         <20170927110006.GB1994@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <edaf46e4-8f70-1471-3353-d67deeb4d03a@eyal.emu.id.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: list linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170927110006.GB1994@ming.t460p>
+Content-Language: en-US
+Content-ID: <C65DB0861BF18B4BB78C89AFFAFF5D20@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 2 Oct 2017, Eyal Lebedinsky wrote:
-
-> I will not use SSDs with the card, so handling 8 HDDs should not be a 
-> stretch for either one?
-
-I know people who use 9211-8i with 36 drives via SAS expanders. With HDDs, 
-this isn't typically a problem, it's mostly a bandwidth problem than IOPS 
-problem.
-
-If I were to deploy an 8 drive machine, 9211-8i or cards with similar LSI 
-2008 chips, would be my first choice (since it's cheap and is widely 
-used).
-
-There has been some firmware trouble with it. I believe P20 had trouble. 
-P19 seems to work fine.
-
-https://www.centos.org/forums/viewtopic.php?t=50032
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+T24gV2VkLCAyMDE3LTA5LTI3IGF0IDE5OjAwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gV2l0
+aCBjdXJyZW50IGxpbnVzIHRyZWUsIFNDU0kgSS9PIGlzIHByZXZlbnRlZCBmcm9tIGJlaW5nIGRp
+c3BhdGNoIHRvDQo+IGRldmljZSBkdXJpbmcgc3VzcGVuZCBieSBTQ1NJIHF1aWVzY2UsIGFuZCB3
+aWxsIGJlIGRpc3BhdGNoZWQgYWdhaW4NCj4gaW4gcmVzdW1lLiBXaXRoIFNhZmUgU0NTSSBxdWll
+c2NlWzFdLCBhbnkgdW5kZXJseWluZyBJTyByZXF1ZXN0IHdpbGwNCj4gc3RvcCBhdCBibGtfcXVl
+dWVfZW50ZXIoKSBkdXJpbmcgc3VzcGVuZCwgYW5kIHJlc3RhcnQgZnJvbSB0aGVyZSBkdXJpbmcN
+Cj4gcmVzdW1lLg0KPiANCj4gRm9yIG90aGVyIG5vbi1TQ1NJIGRyaXZlciwgdGhlaXIgLnN1c3Bl
+bmQvLnJlc3VtZSBvZnRlbg0KPiBoYW5kbGVzIEkvTyBpbiBzaW1pbGFyIHdheSwgZm9yIGV4YW1w
+bGUsIE5WTWUgcXVldWUgd2lsbA0KPiBiZSBmcm96ZW4gaW4gLnN1c3BlbmQsIGFuZCB1bmZyZWV6
+ZSBpbiAucmVzdW1lLg0KPiANCj4gU28gY291bGQgeW91IGV4cGxhaW4gYSBiaXQgd2hpY2gga2lu
+ZCBvZiBidWcgdGhpcyBwYXRjaCBmaXhlcz8NCg0KSXQgc2VlbXMgbGlrZSB5b3UgZG8gbm90IGZ1
+bGx5IHVuZGVyc3RhbmQgdGhlIG1vdGl2YXRpb24gYmVoaW5kIHF1aWVzY2luZyBhbmQNCnJlc3Vt
+aW5nIEkvTyBmcm9tIGluc2lkZSB0aGUgU0NTSSBhbmQgTlZNZSBmcmVlemUgYW5kIHRoYXcgcG93
+ZXIgbWFuYWdlbWVudA0KY2FsbGJhY2tzLiBIaWJlcm5hdGlvbiBjYW4gb25seSB3b3JrIHJlbGlh
+Ymx5IGlmIG5vIEkvTyBpcyBzdWJtaXR0ZWQgYWZ0ZXINCmNyZWF0aW9uIG9mIHRoZSBoaWJlcm5h
+dGlvbiBpbWFnZSBoYXMgYmVlbiBzdGFydGVkLiBJZiBhbnkgSS9PIGlzIHN1Ym1pdHRlZA0KdGhh
+dCBpcyBub3QgcmVsYXRlZCB0byB0aGUgaGliZXJuYXRpb24gcHJvY2VzcyBpdHNlbGYgYnkgYW55
+IGRyaXZlciBhZnRlcg0KdXNlciBzcGFjZSBwcm9jZXNzZXMgYW5kIGtlcm5lbCB0aHJlYWRzIGhh
+dmUgYmVlbiBmcm96ZW4gdGhlbiB0aGF0J3MgYSAqYnVnKg0KaW4gdGhlIGNvbXBvbmVudCB0aGF0
+IHN1Ym1pdHRlZCB0aGUgSS9PLiBUaGUgZnJlZXppbmcgYW5kIHN1c3BlbmRpbmcgb2YgSS9PDQpm
+cm9tIGluc2lkZSB0aGUgU0NTSSBhbmQgTlZNZSBkcml2ZXJzIGlzIGEgKndvcmthcm91bmQqIGZv
+ciB0aGVzZSBidWdzIGJ1dCBpcw0Kbm90IGEgZnVsbCBzb2x1dGlvbi4gQmVmb3JlIHRoZSBoaWJl
+cm5hdGlvbiBpbWFnZSBpcyB3cml0dGVuIHRvIGRpc2sgSS9PIGlzDQpyZXN1bWVkIGFuZCB0aGUg
+SS9PIHJlcXVlc3RzIHRoYXQgZ290IGRlZmVycmVkIHdpbGwgYmUgZXhlY3V0ZWQgYXQgdGhhdCB0
+aW1lLg0KSW4gb3RoZXIgd29yZHMsIHN1c3BlbmRpbmcgYW5kIHJlc3VtaW5nIEkvTyBmcm9tIGlu
+c2lkZSB0aGUgU0NTSSBhbmQgTlZNZQ0KZHJpdmVycyBpcyBhIHdvcmthcm91bmQgYW5kIG5vdCBh
+IGZ1bGwgc29sdXRpb24uIFRoZSBmb2xsb3dpbmcgcXVvdGUgZnJvbQ0KRG9jdW1lbnRhdGlvbi9w
+b3dlci9zd3N1c3AudHh0IGlsbHVzdHJhdGVzIHRoaXM6DQoNCiAqIEJJRyBGQVQgV0FSTklORyAq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioN
+CiAqDQogKiBJZiB5b3UgdG91Y2ggYW55dGhpbmcgb24gZGlzayBiZXR3ZWVuIHN1c3BlbmQgYW5k
+IHJlc3VtZS4uLg0KICoJCQkJLi4ua2lzcyB5b3VyIGRhdGEgZ29vZGJ5ZS4NCg0KQmFydC4=
