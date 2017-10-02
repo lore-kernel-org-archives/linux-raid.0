@@ -1,33 +1,27 @@
 From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] Grow: stop previous reshape process first
-Date: Mon, 2 Oct 2017 15:42:14 -0400
-Message-ID: <dd80fc9c-589f-da34-d221-da1ddbae87e6@gmail.com>
-References: <1504782076-1664-1-git-send-email-tomasz.majchrzak@intel.com>
+Subject: Re: [PATCH] imsm: New disk controller domains
+Date: Mon, 2 Oct 2017 15:43:11 -0400
+Message-ID: <f9cce2f5-dba1-4d50-34a3-f4660ae90be1@gmail.com>
+References: <1504793109-16291-1-git-send-email-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1504782076-1664-1-git-send-email-tomasz.majchrzak@intel.com>
+In-Reply-To: <1504793109-16291-1-git-send-email-mariusz.tkaczyk@intel.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
+To: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/07/2017 07:01 AM, Tomasz Majchrzak wrote:
-> If array is stopped during reshape and assembled again straight away,
-> reshape process in a background might still be running. systemd doesn't
-> start a new service if one already exists. If there is a race, previous
-> process might terminate and new one is not created. Reshape doesn't
-> continue after assemble.
+On 09/07/2017 10:05 AM, Mariusz Tkaczyk wrote:
+> Add disk controller domain for nvme and vmd devices to prevent moving
+> spares between different domains.
 > 
-> Tell systemd to restart the service rather than just start it. It will
-> assure previous service is stopped first. If it's not running, stopping
-> has no effect and only new process is started.
-> 
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 > ---
->   Grow.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+>   super-intel.c | 4 ++++
+>   1 file changed, 4 insertions(+)
 
 Applied!
 
