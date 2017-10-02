@@ -1,34 +1,48 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 0/2] Two fixes for PPL recovery
-Date: Fri, 29 Sep 2017 23:05:26 -0700
-Message-ID: <20170930060526.kpbjk6na6lmegkxh@kernel.org>
-References: <20170929205419.16715-1-artur.paszkiewicz@intel.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
+Date: Mon, 2 Oct 2017 07:35:54 +0200
+Message-ID: <20171002053554.GA28743@kroah.com>
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+ <20171001220131.GA11812@eros>
+ <20171001205220.10b78086@blatinox-laptop.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <20170929205419.16715-1-artur.paszkiewicz@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20171001205220.10b78086@blatinox-laptop.localdomain>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: =?iso-8859-1?B?Suly6W15?= Lefaure <jeremy.lefaure@lse.epita.fr>
+Cc: alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org, "Tobin C. Harding" <me@tobin.cc>
 List-Id: linux-raid.ids
 
-On Fri, Sep 29, 2017 at 10:54:17PM +0200, Artur Paszkiewicz wrote:
-> These patches fix some issues that can occur when array rebuild starts after
-> ppl recovery.
-> 
-> Artur Paszkiewicz (2):
->   raid5-ppl: don't resync after rebuild
->   raid5-ppl: check recovery_offset when performing ppl recovery
-
-applied, thanks! 
->  drivers/md/raid5-ppl.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> -- 
-> 2.14.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gU3VuLCBPY3QgMDEsIDIwMTcgYXQgMDg6NTI6MjBQTSAtMDQwMCwgSsOpcsOpbXkgTGVmYXVy
+ZSB3cm90ZToKPiBPbiBNb24sIDIgT2N0IDIwMTcgMDk6MDE6MzEgKzExMDAKPiAiVG9iaW4gQy4g
+SGFyZGluZyIgPG1lQHRvYmluLmNjPiB3cm90ZToKPiAKPiA+ID4gSW4gb3JkZXIgdG8gcmVkdWNl
+IHRoZSBzaXplIG9mIHRoZSBUbzogYW5kIENjOiBsaW5lcywgZWFjaCBwYXRjaCBvZiB0aGUKPiA+
+ID4gc2VyaWVzIGlzIHNlbnQgb25seSB0byB0aGUgbWFpbnRhaW5lcnMgYW5kIGxpc3RzIGNvbmNl
+cm5lZCBieSB0aGUgcGF0Y2guCj4gPiA+IFRoaXMgY292ZXIgbGV0dGVyIGlzIHNlbnQgdG8gZXZl
+cnkgbGlzdCBjb25jZXJuZWQgYnkgdGhpcyBzZXJpZXMuICAKPiA+IAo+ID4gV2h5IGRvbid0IHlv
+dSBqdXN0IHNlbmQgaW5kaXZpZHVhbCBwYXRjaGVzIGZvciBlYWNoIHN1YnN5c3RlbT8gSSdtIG5v
+dCBhIG1haW50YWluZXIgYnV0IEkgZG9uJ3Qgc2VlCj4gPiBob3cgYW55IG9uZSBwZXJzb24gaXMg
+Z29pbmcgdG8gYmUgYWJsZSB0byBhcHBseSB0aGlzIHdob2xlIHNlcmllcywgaXQgaXMgbWFraW5n
+IGl0IGhhcmQgZm9yCj4gPiBtYWludGFpbmVycyBpZiB0aGV5IGhhdmUgdG8gcGljayBwYXRjaGVz
+IG91dCBmcm9tIGFtb25nIHRoZSBzZXJpZXMgKGlmIGluZGVlZCBhbnkgd2lsbCBib3RoZXIKPiA+
+IGRvaW5nIHRoYXQpLgo+IFllYWgsIG1heWJlIGl0IHdvdWxkIGhhdmUgYmVlbiBiZXR0ZXIgdG8g
+c2VuZCBpbmRpdmlkdWFsIHBhdGNoZXMuCj4gCj4gRnJvbSBteSBwb2ludCBvZiB2aWV3IGl0J3Mg
+YSBzZXJpZXMgYmVjYXVzZSB0aGUgcGF0Y2hlcyBhcmUgcmVsYXRlZCAoSQo+IGRpZCBhIGdpdCBm
+b3JtYXQtcGF0Y2ggZnJvbSBteSBsb2NhbCBicmFuY2gpLiBCdXQgZm9yIHRoZSBtYWludGFpbmVy
+cwo+IHBvaW50IG9mIHZpZXcsIHRoZXkgYXJlIGluZGl2aWR1YWwgcGF0Y2hlcy4KCkFuZCB0aGUg
+bWFpbnRhaW5lcnMgdmlldyBpcyB3aGF0IG1hdHRlcnMgaGVyZSwgaWYgeW91IHdpc2ggdG8gZ2V0
+IHlvdXIKcGF0Y2hlcyByZXZpZXdlZCBhbmQgYWNjZXB0ZWQuLi4KCnRoYW5rcywKCmdyZWcgay1o
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZl
+bCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xp
+c3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
