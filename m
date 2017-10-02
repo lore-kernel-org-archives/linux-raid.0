@@ -1,20 +1,34 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 1/7] md: Make md resync and reshape threads freezable
-Date: Mon, 2 Oct 2017 15:26:38 +0200
-Message-ID: <20171002132638.GA7129@lst.de>
-References: <20170925202924.16603-1-bart.vanassche@wdc.com> <20170925202924.16603-2-bart.vanassche@wdc.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Is the LSI SAS9211-8i still the go to HBA?
+Date: Mon, 2 Oct 2017 15:41:17 +0200 (CEST)
+Message-ID: <alpine.DEB.2.20.1710021533340.31961@uplift.swm.pp.se>
+References: <1d014bd9-7946-ba3e-f5fb-f64a92ccc769@eyal.emu.id.au> <edaf46e4-8f70-1471-3353-d67deeb4d03a@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170925202924.16603-2-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <edaf46e4-8f70-1471-3353-d67deeb4d03a@eyal.emu.id.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Independent of whether this should be required to make scsi quience
-safe or not making the dm thread freeze aware is the right thing
-to do, and this patch looks correct to me:
+On Mon, 2 Oct 2017, Eyal Lebedinsky wrote:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> I will not use SSDs with the card, so handling 8 HDDs should not be a 
+> stretch for either one?
+
+I know people who use 9211-8i with 36 drives via SAS expanders. With HDDs, 
+this isn't typically a problem, it's mostly a bandwidth problem than IOPS 
+problem.
+
+If I were to deploy an 8 drive machine, 9211-8i or cards with similar LSI 
+2008 chips, would be my first choice (since it's cheap and is widely 
+used).
+
+There has been some firmware trouble with it. I believe P20 had trouble. 
+P19 seems to work fine.
+
+https://www.centos.org/forums/viewtopic.php?t=50032
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
