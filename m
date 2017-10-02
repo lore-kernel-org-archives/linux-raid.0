@@ -1,49 +1,36 @@
-From: bfields@fieldses.org (J. Bruce Fields)
-Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
-Date: Mon, 2 Oct 2017 15:22:24 -0400
-Message-ID: <20171002192224.GD1903@fieldses.org>
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
- <20171001220131.GA11812@eros>
- <20171001205220.10b78086@blatinox-laptop.localdomain>
- <20171002053554.GA28743@kroah.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] Grow: stop previous reshape process first
+Date: Mon, 2 Oct 2017 15:42:14 -0400
+Message-ID: <dd80fc9c-589f-da34-d221-da1ddbae87e6@gmail.com>
+References: <1504782076-1664-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171002053554.GA28743@kroah.com>
-Sender: netdev-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: =?utf-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>, "Tobin C. Harding" <me@tobin.cc>, alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, brcm80211-dev-list.pdl@broadcom.com, netde
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1504782076-1664-1-git-send-email-tomasz.majchrzak@intel.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 02, 2017 at 07:35:54AM +0200, Greg KH wrote:
-> On Sun, Oct 01, 2017 at 08:52:20PM -0400, Jérémy Lefaure wrote:
-> > On Mon, 2 Oct 2017 09:01:31 +1100
-> > "Tobin C. Harding" <me@tobin.cc> wrote:
-> > 
-> > > > In order to reduce the size of the To: and Cc: lines, each patch of the
-> > > > series is sent only to the maintainers and lists concerned by the patch.
-> > > > This cover letter is sent to every list concerned by this series.  
-> > > 
-> > > Why don't you just send individual patches for each subsystem? I'm not a maintainer but I don't see
-> > > how any one person is going to be able to apply this whole series, it is making it hard for
-> > > maintainers if they have to pick patches out from among the series (if indeed any will bother
-> > > doing that).
-> > Yeah, maybe it would have been better to send individual patches.
-> > 
-> > From my point of view it's a series because the patches are related (I
-> > did a git format-patch from my local branch). But for the maintainers
-> > point of view, they are individual patches.
+On 09/07/2017 07:01 AM, Tomasz Majchrzak wrote:
+> If array is stopped during reshape and assembled again straight away,
+> reshape process in a background might still be running. systemd doesn't
+> start a new service if one already exists. If there is a race, previous
+> process might terminate and new one is not created. Reshape doesn't
+> continue after assemble.
 > 
-> And the maintainers view is what matters here, if you wish to get your
-> patches reviewed and accepted...
+> Tell systemd to restart the service rather than just start it. It will
+> assure previous service is stopped first. If it's not running, stopping
+> has no effect and only new process is started.
+> 
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> ---
+>   Grow.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 
-Mainly I'd just like to know which you're asking for.  Do you want me to
-apply this, or to ACK it so someone else can?  If it's sent as a series
-I tend to assume the latter.
+Applied!
 
-But in this case I'm assuming it's the former, so I'll pick up the nfsd
-one....
+Thanks,
+Jes
 
---b.
