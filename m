@@ -1,57 +1,44 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: Is the LSI SAS9211-8i still the go to HBA?
-Date: Tue, 3 Oct 2017 10:06:11 +1100
-Message-ID: <b421f5f2-16fe-1115-02cb-0575454eb2d7@eyal.emu.id.au>
-References: <1d014bd9-7946-ba3e-f5fb-f64a92ccc769@eyal.emu.id.au>
- <edaf46e4-8f70-1471-3353-d67deeb4d03a@eyal.emu.id.au>
- <alpine.DEB.2.20.1710021533340.31961@uplift.swm.pp.se>
+From: =?UTF-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
+Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
+Date: Mon, 2 Oct 2017 21:33:12 -0400
+Message-ID: <20171002213312.3f904290@blatinox-laptop.localdomain>
+References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
+ <20171001220131.GA11812@eros>
+ <20171001205220.10b78086@blatinox-laptop.localdomain>
+ <20171002053554.GA28743@kroah.com>
+ <20171002192224.GD1903@fieldses.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.20.1710021533340.31961@uplift.swm.pp.se>
-Content-Language: en-AU
-Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, list linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <openipmi-developer-bounces@lists.sourceforge.net>
+In-Reply-To: <20171002192224.GD1903@fieldses.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/options/openipmi-developer>,
+ <mailto:openipmi-developer-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=openipmi-developer>
+List-Post: <mailto:openipmi-developer@lists.sourceforge.net>
+List-Help: <mailto:openipmi-developer-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/openipmi-developer>,
+ <mailto:openipmi-developer-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: openipmi-developer-bounces@lists.sourceforge.net
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, Greg KH <greg@kroah.com>, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, linux-nfs@vger.kernel.org, jlayton@redhat.com, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-integrity@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/10/17 00:41, Mikael Abrahamsson wrote:
-> On Mon, 2 Oct 2017, Eyal Lebedinsky wrote:
-> 
->> I will not use SSDs with the card, so handling 8 HDDs should not be a stretch for either one?
-> 
-> I know people who use 9211-8i with 36 drives via SAS expanders. With HDDs, this isn't typically a problem, it's mostly a bandwidth problem than IOPS problem.
-> 
-> If I were to deploy an 8 drive machine, 9211-8i or cards with similar LSI 2008 chips, would be my first choice (since it's cheap and is widely used).
-> 
-> There has been some firmware trouble with it. I believe P20 had trouble. P19 seems to work fine.
-> 
-> https://www.centos.org/forums/viewtopic.php?t=50032
-
-Thanks Mikael,
-
-Read it and did more searching. The latest I found is this (a year old):
-   https://forums.servethehome.com/index.php?threads/tutorial-updating-ibm-m1015-lsi-9211-8i-firmware-on-uefi-systems.11462/
-and it closes by saying:
-   P20 Myth
-     There are many revisions of the P20 firmware. The first few had lots of bugs
-     so people suggest avoiding it. However, someone pointed out that all versions
-     that are 20.00.04 and after are fine. I using the current latest version 20.00.07
-     and have had no problems. Did a full scrub, bonnie benchmark, copied large files
-     and played them back with no errors.
-
-I was looking for a URL to download the necessary files but the official sites removed
-them. The one linked from the above blog contains the files, is it reliable?
-   https://www.mediafire.com/download/6mtie10d9ud6675/LSI-9211-8i.zip
-It contains:
-   $ strings -a 2118it.bin | head -n 1
-   @(#)MPTFW-20.00.07.00-IT
-   $ md5sum 2118it.bin
-   8d8cd74b8080bbe100aedb8dff092301  2118it.bin
-
-Is there a known good/safe site for these files?
-
-Regards
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+T24gTW9uLCAyIE9jdCAyMDE3IDE1OjIyOjI0IC0wNDAwCmJmaWVsZHNAZmllbGRzZXMub3JnIChK
+LiBCcnVjZSBGaWVsZHMpIHdyb3RlOgoKPiBNYWlubHkgSSdkIGp1c3QgbGlrZSB0byBrbm93IHdo
+aWNoIHlvdSdyZSBhc2tpbmcgZm9yLiAgRG8geW91IHdhbnQgbWUgdG8KPiBhcHBseSB0aGlzLCBv
+ciB0byBBQ0sgaXQgc28gc29tZW9uZSBlbHNlIGNhbj8gIElmIGl0J3Mgc2VudCBhcyBhIHNlcmll
+cwo+IEkgdGVuZCB0byBhc3N1bWUgdGhlIGxhdHRlci4KPiAKPiBCdXQgaW4gdGhpcyBjYXNlIEkn
+bSBhc3N1bWluZyBpdCdzIHRoZSBmb3JtZXIsIHNvIEknbGwgcGljayB1cCB0aGUgbmZzZAo+IG9u
+ZS4uLi4KQ291bGQgeW91IHRvIGFwcGx5IHRoZSBORlNEIHBhdGNoICgibmZzZDogdXNlIEFSUkFZ
+X1NJWkUiKSB3aXRoIHRoZQpSZXZpZXdlZC1ieTogSmVmZiBMYXl0b24gPGpsYXl0b25AcmVkaGF0
+LmNvbT4pIHRhZyBwbGVhc2UgPwoKVGhpcyBwYXRjaCBpcyBhbiBpbmRpdmlkdWFsIHBhdGNoIGFu
+ZCBpdCBzaG91bGQgbm90IGhhdmUgYmVlbiBzZW50IGluIGEKc2VyaWVzIChzb3JyeSBhYm91dCB0
+aGF0KS4KClRoYW5rIHlvdSwKSsOpcsOpbXkKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpDaGVjayBv
+dXQgdGhlIHZpYnJhbnQgdGVjaCBjb21tdW5pdHkgb24gb25lIG9mIHRoZSB3b3JsZCdzIG1vc3QK
+ZW5nYWdpbmcgdGVjaCBzaXRlcywgU2xhc2hkb3Qub3JnISBodHRwOi8vc2RtLmxpbmsvc2xhc2hk
+b3QKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KT3Blbmlw
+bWktZGV2ZWxvcGVyIG1haWxpbmcgbGlzdApPcGVuaXBtaS1kZXZlbG9wZXJAbGlzdHMuc291cmNl
+Zm9yZ2UubmV0Cmh0dHBzOi8vbGlzdHMuc291cmNlZm9yZ2UubmV0L2xpc3RzL2xpc3RpbmZvL29w
+ZW5pcG1pLWRldmVsb3Blcgo=
