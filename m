@@ -1,41 +1,83 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] md-cluster: make function cluster_check_sync_size static
-Date: Tue,  3 Oct 2017 10:51:17 +0100
-Message-ID: <20171003095117.25539-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] mdmon: get safe mode delay file descriptor early
+Date: Tue,  3 Oct 2017 12:34:29 +0200
+Message-ID: <1507026869-6415-1-git-send-email-tomasz.majchrzak@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-From: Colin Ian King <colin.king@canonical.com>
+After switch root new mdmon is started. It sends initrd mdmon a signal
+to terminate. initrd mdmon receives it and switches the safe mode delay
+to 1 ms in order to get array to clean state and flush last version of
+metadata. The problem is sysfs filesystem is not available to initrd mdmon
+after switch root so the original safe mode delay is unchanged. The delay
+is set to few seconds - if there is a lot of traffic on the filesystem,
+initrd mdmon doesn't terminate for a long time (no clean state). There
+are 2 instances of mdmon. initrd mdmon flushes metadata when array goes
+to clean state but this metadata might be already outdated.
 
-The function cluster_check_sync_size is local to the source and does
-not need to be in global scope, so make it static.
+Use file descriptor obtained on mdmon start to change safe mode delay.
 
-Cleans up sparse warning:
-symbol 'cluster_check_sync_size' was not declared. Should it be static?
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
- drivers/md/md-cluster.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ managemon.c | 15 ++++++++++++---
+ mdmon.h     |  1 +
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 03082e17c65c..bf41492a2cb0 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1094,7 +1094,7 @@ static void metadata_update_cancel(struct mddev *mddev)
- /*
-  * return 0 if all the bitmaps have the same sync_size
-  */
--int cluster_check_sync_size(struct mddev *mddev)
-+static int cluster_check_sync_size(struct mddev *mddev)
- {
- 	int i, rv;
- 	bitmap_super_t *sb;
+diff --git a/managemon.c b/managemon.c
+index 222e9ad..1c80510 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -129,6 +129,8 @@ static void close_aa(struct active_array *aa)
+ 		close(aa->metadata_fd);
+ 	if (aa->sync_completed_fd >= 0)
+ 		close(aa->sync_completed_fd);
++	if (aa->safe_mode_delay_fd >= 0)
++		close(aa->safe_mode_delay_fd);
+ }
+ 
+ static void free_aa(struct active_array *aa)
+@@ -532,9 +534,14 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 	if (a->container == NULL)
+ 		return;
+ 
+-	if (sigterm && a->info.safe_mode_delay != 1) {
+-		sysfs_set_safemode(&a->info, 1);
+-		a->info.safe_mode_delay = 1;
++	if (sigterm && a->info.safe_mode_delay != 1 &&
++	    a->safe_mode_delay_fd >= 0) {
++		long int new_delay = 1;
++		char delay[10];
++
++		snprintf(delay, sizeof(delay), "0.%03ld\n", new_delay);
++		if (write(a->safe_mode_delay_fd, delay, strlen(delay)))
++			a->info.safe_mode_delay = new_delay;
+ 	}
+ 
+ 	/* We don't check the array while any update is pending, as it
+@@ -734,6 +741,8 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 	new->resync_start_fd = sysfs_open2(new->info.sys_name, NULL, "resync_start");
+ 	new->metadata_fd = sysfs_open2(new->info.sys_name, NULL, "metadata_version");
+ 	new->sync_completed_fd = sysfs_open2(new->info.sys_name, NULL, "sync_completed");
++	new->safe_mode_delay_fd = sysfs_open2(new->info.sys_name, NULL,
++					      "safe_mode_delay");
+ 
+ 	dprintf("inst: %s action: %d state: %d\n", inst,
+ 		new->action_fd, new->info.state_fd);
+diff --git a/mdmon.h b/mdmon.h
+index 0b08c3d..818367c 100644
+--- a/mdmon.h
++++ b/mdmon.h
+@@ -35,6 +35,7 @@ struct active_array {
+ 	int resync_start_fd;
+ 	int metadata_fd; /* for monitoring rw/ro status */
+ 	int sync_completed_fd; /* for checkpoint notification events */
++	int safe_mode_delay_fd;
+ 	unsigned long long last_checkpoint; /* sync_completed fires for many
+ 					     * reasons this field makes sure the
+ 					     * kernel has made progress before
 -- 
-2.14.1
+1.8.3.1
+
