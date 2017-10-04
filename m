@@ -1,300 +1,183 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Linux Plumbers MD BOF discussion notes
-Date: Thu, 05 Oct 2017 08:41:52 +1100
-Message-ID: <87d162380v.fsf@notabene.neil.brown.name>
-References: <20170915142737.qafwl3vgl6vhfi5q@kernel.org> <871sn78pzt.fsf@notabene.neil.brown.name> <alpine.DEB.2.20.1709180852450.29378@uplift.swm.pp.se> <874ls0s7un.fsf@notabene.neil.brown.name> <alpine.DEB.2.20.1710010730210.31961@uplift.swm.pp.se> <87lgkr3fgj.fsf@notabene.neil.brown.name> <619758c0-9ca4-c25d-c61b-f411b095041d@intel.com>
+Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
+Date: Thu, 05 Oct 2017 08:50:57 +1100
+Message-ID: <87a81637lq.fsf@notabene.neil.brown.name>
+References: <22997.8664.67459.119616@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <619758c0-9ca4-c25d-c61b-f411b095041d@intel.com>
+In-Reply-To: <22997.8664.67459.119616@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>John Stoffel <john@stoffel.org>
+Cc: Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 04 2017, Artur Paszkiewicz wrote:
+On Wed, Oct 04 2017, John Stoffel wrote:
 
+> Since Eli had such a horrible experience where he shrunk the
+> individual component raid device size, instead of growing the overall
+> raid by adding a device, I came up with this hacky patch to warn you
+> when you are about to shoot yourself in the foot.
 >
-> Also, our customers are asking specifically for an option to "hide" the
-> member drives. Making it impossible to write to the devices is ok, but
-> they would like to see only the md device, "like hardware raid". One of
-> the reasons is that some monitoring or inventory scan applications treat
-> md arrays and their components as separate storage devices. They should
-> probably modify their software but maybe that's not possible.
-
-What exactly is meant by "hide".  How, exactly, does this software scan
-all devices?  /proc/partitions? /sys/block? /sys/class/block?
-/dev/disks?  All of the above.
-
-Modifying their application *must* be on the table, else modify the
-kernel is *not* on the table.  I'm certainly open to enhancing the
-kernel so that it is easy to skip a particular class of devices, but if
-their application chooses to ignore the information the kernel provides,
-then the fact that the application doesn't work is their problem, not
-ours.
-
-
+> The idea is it will warn you and exit unless you pass in the --force
+> (or -f) switch when using the command.  For example, on a set of loop
+> devices:
 >
-> I've been experimenting with different solutions and here is a patch
-> that allows to "hide" disk devices and their partitions by writing to a
-> sysfs attribute. It removes the device nodes (on devtmpfs), links in
-> /sys/block/ and removes the devices from the block class list, so they
-> won't be included in places like /proc/partitions, /sys/class/block/,
-> lsblk and so on. The device's "real" sysfs directory under /sys/devices/
-> is still available, also the links in /sys/dev/block/ are preserved.
-> Applications like mdadm can use this to hide/unhide their component
-> devices.
+>     # cat /proc/mdstat
+>     Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+>     [raid4] [multipath] [faulty]
+>     md99 : active raid6 loop4p1[4] loop3p1[3] loop2p1[2] loop1p1[1]
+>     loop0p1[0]
+> 	  606720 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5]
+> 	  [UUUUU]
+>
+>     # ./mdadm --grow /dev/md99 --size 128
+>     mdadm: Cannot set device size smaller than current component_size of =
+/dev/md99 array.  Use -f to force change.
+>
+>     # ./mdadm --grow /dev/md99 --size 128 -f
+>     mdadm: component size of /dev/md99 has been set to 0K
+>
 
-Can you confirm that this addresses the customer problem?  Do you know
-which of these lists their code looks at?
+I'm not sure I like this.
+The reason that mdadm will quietly accept a size change like this is
+that it is trivial to revert - just set the same to a big number and all
+your data is still there.
+
+Eli's problem was that he made a harmless mistake, realized that he had
+made a mistake, but didn't address the mistake before continuing!
+
+If you really want to make this a two-step process, an approach that
+would be more consistent with other aspects of mdadm is to require that
+=2D-array-size be reduced first.  i.e. setting --size mustn't reduce the
+size of the array.
+I think that separating the two steps (resize array, resize component)
+gives the user a better picture of what is happening, where as requiring
+=2Df just causes people to use -f more often.
 
 Thanks,
 NeilBrown
 
 
 >
-> Thanks,
-> Artur
+> I suspect I could do a better job of showing the original component
+> size, so that you have a chance of recovering even then.
 >
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 7f520fa25d16..58b8e3eb14af 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -685,6 +685,55 @@ void del_gendisk(struct gendisk *disk)
->  }
->  EXPORT_SYMBOL(del_gendisk);
+> But the patch:
+>
+> diff --git a/Grow.c b/Grow.c
+> index 455c5f9..701590f 100755
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1561,7 +1561,7 @@ static int reshape_container(char *container, char =
+*devname,
+>  			     char *backup_file, int verbose,
+>  			     int forked, int restart, int freeze_reshape);
 >=20=20
-> +static int hide_disk(struct gendisk *disk)
-> +{
-> +	struct device *ddev =3D disk_to_dev(disk);
-> +	struct disk_part_iter piter;
-> +	struct hd_struct *part;
-> +	int ret;
-> +
-> +	ret =3D device_hide(ddev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	disk_part_iter_init(&piter, disk,
-> +			     DISK_PITER_INCL_EMPTY | DISK_PITER_REVERSE);
-> +	while ((part =3D disk_part_iter_next(&piter)))
-> +		device_hide(part_to_dev(part));
-> +	disk_part_iter_exit(&piter);
-> +
-> +	if (!sysfs_deprecated)
-> +		sysfs_remove_link(block_depr, dev_name(ddev));
-> +
-> +	return ret;
-> +}
-> +
-> +static int unhide_disk(struct gendisk *disk)
-> +{
-> +	struct device *ddev =3D disk_to_dev(disk);
-> +	struct disk_part_iter piter;
-> +	struct hd_struct *part;
-> +	int ret;
-> +
-> +	ret =3D device_unhide(ddev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
-> +	while ((part =3D disk_part_iter_next(&piter)))
-> +		device_unhide(part_to_dev(part));
-> +	disk_part_iter_exit(&piter);
-> +
-> +	if (!sysfs_deprecated) {
-> +		if (sysfs_create_link(block_depr, &ddev->kobj,
-> +				      kobject_name(&ddev->kobj)))
-> +			pr_warn("%s: failed to restore /sys/block link\n",
-> +				disk->disk_name);
+> -int Grow_reshape(char *devname, int fd,
+> +int Grow_reshape(char *devname, int fd, int force,
+>  		 struct mddev_dev *devlist,
+>  		 unsigned long long data_offset,
+>  		 struct context *c, struct shape *s)
+> @@ -1574,6 +1574,7 @@ int Grow_reshape(char *devname, int fd,
+>  	 * requested everything (if kernel supports freezing - 2.6.30).
+>  	 * The steps are:
+>  	 *  - change size (i.e. component_size)
+> +         *    - when shrinking, you must force the change=20
+>  	 *  - change level
+>  	 *  - change layout/chunksize/ndisks
+>  	 *
+> @@ -1617,6 +1618,11 @@ int Grow_reshape(char *devname, int fd,
+>  		return 1;
+>  	}
+>=20=20
+> +	if ((s->size < (unsigned)array.size) && !force) {
+> +	    pr_err("Cannot set device size smaller than current component_size =
+of %s array.  Use -f to force change.\n",devname);
+> +	    return 1;
 > +	}
 > +
-> +	return ret;
-> +}
-> +
->  /* sysfs access to bad-blocks list. */
->  static ssize_t disk_badblocks_show(struct device *dev,
->  					struct device_attribute *attr,
-> @@ -1017,6 +1066,31 @@ static ssize_t disk_discard_alignment_show(struct =
-device *dev,
->  	return sprintf(buf, "%d\n", queue_discard_alignment(disk->queue));
->  }
+>  	if (s->raiddisks && s->raiddisks < array.raid_disks && array.level > 1 =
+&&
+>  	    get_linux_version() < 2006032 &&
+>  	    !check_env("MDADM_FORCE_FEWER")) {
+> diff --git a/ReadMe.c b/ReadMe.c
+> index 50d3807..46988ae 100644
+> --- a/ReadMe.c
+> +++ b/ReadMe.c
+> @@ -203,6 +203,7 @@ struct option long_options[] =3D {
+>      {"invalid-backup",0,0,InvalidBackup},
+>      {"array-size", 1, 0, 'Z'},
+>      {"continue", 0, 0, Continue},
+> +    {"force",	  0, 0, Force},
 >=20=20
-> +static ssize_t disk_hidden_show(struct device *dev,
-> +				struct device_attribute *attr,
-> +				char *buf)
-> +{
-> +	return sprintf(buf, "%d\n", device_is_hidden(dev));
-> +}
-> +
-> +static ssize_t disk_hidden_store(struct device *dev,
-> +				 struct device_attribute *attr,
-> +				 const char *buf, size_t len)
-> +{
-> +	struct gendisk *disk =3D dev_to_disk(dev);
-> +	bool hide;
-> +	int ret;
-> +
-> +	ret =3D kstrtobool(buf, &hide);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (hide !=3D device_is_hidden(dev))
-> +		ret =3D hide ? hide_disk(disk) : unhide_disk(disk);
-> +
-> +	return ret ?: len;
-> +}
-> +
->  static DEVICE_ATTR(range, S_IRUGO, disk_range_show, NULL);
->  static DEVICE_ATTR(ext_range, S_IRUGO, disk_ext_range_show, NULL);
->  static DEVICE_ATTR(removable, S_IRUGO, disk_removable_show, NULL);
-> @@ -1030,6 +1104,8 @@ static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, N=
-ULL);
->  static DEVICE_ATTR(inflight, S_IRUGO, part_inflight_show, NULL);
->  static DEVICE_ATTR(badblocks, S_IRUGO | S_IWUSR, disk_badblocks_show,
->  		disk_badblocks_store);
-> +static DEVICE_ATTR(hidden, S_IRUGO | S_IWUSR, disk_hidden_show,
-> +		   disk_hidden_store);
->  #ifdef CONFIG_FAIL_MAKE_REQUEST
->  static struct device_attribute dev_attr_fail =3D
->  	__ATTR(make-it-fail, S_IRUGO|S_IWUSR, part_fail_show, part_fail_store);
-> @@ -1058,6 +1134,7 @@ static struct attribute *disk_attrs[] =3D {
->  #ifdef CONFIG_FAIL_IO_TIMEOUT
->  	&dev_attr_fail_timeout.attr,
->  #endif
-> +	&dev_attr_hidden.attr,
->  	NULL
->  };
->=20=20
-> diff --git a/block/partition-generic.c b/block/partition-generic.c
-> index c5ec8246e25e..0223a37c7a8c 100644
-> --- a/block/partition-generic.c
-> +++ b/block/partition-generic.c
-> @@ -350,6 +350,9 @@ struct hd_struct *add_partition(struct gendisk *disk,=
- int partno,
->  	if (err)
->  		goto out_put;
->=20=20
-> +	if (device_is_hidden(ddev))
-> +		device_hide(pdev);
-> +
->  	err =3D -ENOMEM;
->  	p->holder_dir =3D kobject_create_and_add("holders", &pdev->kobj);
->  	if (!p->holder_dir)
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 755451f684bc..0804a45b8fbf 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -1871,6 +1871,71 @@ void device_del(struct device *dev)
->  }
->  EXPORT_SYMBOL_GPL(device_del);
->=20=20
-> +DEFINE_KLIST(klist_hidden_devices, NULL, NULL);
-> +
-> +bool device_is_hidden(struct device *dev)
-> +{
-> +	bool ret =3D false;
-> +
-> +	if (dev->class) {
-> +		mutex_lock(&dev->class->p->mutex);
-> +		ret =3D (dev->knode_class.n_klist =3D=3D &klist_hidden_devices);
-> +		mutex_unlock(&dev->class->p->mutex);
-> +	}
-> +	return ret;
-> +}
-> +
-> +int device_hide(struct device *dev)
-> +{
-> +	char *envp[] =3D { "EVENT=3Dhide", NULL };
-> +
-> +	if (!dev->class)
-> +		return -EINVAL;
-> +
-> +	if (MAJOR(dev->devt))
-> +		devtmpfs_delete_node(dev);
-> +
-> +	device_remove_class_symlinks(dev);
-> +
-> +	mutex_lock(&dev->class->p->mutex);
-> +	/* remove the device from the class list */
-> +	klist_remove(&dev->knode_class);
-> +	/* add to the hidden devices list */
-> +	klist_add_tail(&dev->knode_class, &klist_hidden_devices);
-> +	mutex_unlock(&dev->class->p->mutex);
-> +
-> +	kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
-> +
-> +	return 0;
-> +}
-> +
-> +int device_unhide(struct device *dev)
-> +{
-> +	char *envp[] =3D { "EVENT=3Dunhide", NULL };
-> +	int err;
-> +
-> +	if (!dev->class)
-> +		return -EINVAL;
-> +
-> +	err =3D device_add_class_symlinks(dev);
-> +	if (err)
-> +		return err;
-> +
-> +	if (MAJOR(dev->devt))
-> +		devtmpfs_create_node(dev);
-> +
-> +	mutex_lock(&dev->class->p->mutex);
-> +	/* remove the device from the hidden devices list */
-> +	klist_remove(&dev->knode_class);
-> +	/* tie the class to the device */
-> +	klist_add_tail(&dev->knode_class, &dev->class->p->klist_devices);
-> +	mutex_unlock(&dev->class->p->mutex);
-> +
-> +	kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
-> +
-> +	return err;
-> +}
-> +
->  /**
->   * device_unregister - unregister device from system.
->   * @dev: device going away.
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index beabdbc08420..90ab1e6b63c6 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -1118,6 +1118,9 @@ extern void device_unregister(struct device *dev);
->  extern void device_initialize(struct device *dev);
->  extern int __must_check device_add(struct device *dev);
->  extern void device_del(struct device *dev);
-> +extern bool device_is_hidden(struct device *dev);
-> +extern int device_hide(struct device *dev);
-> +extern int device_unhide(struct device *dev);
->  extern int device_for_each_child(struct device *dev, void *data,
->  		     int (*fn)(struct device *dev, void *data));
->  extern int device_for_each_child_reverse(struct device *dev, void *data,
+>      /* For Incremental */
+>      {"rebuild-map", 0, 0, RebuildMapOpt},
+> @@ -563,6 +564,7 @@ char Help_grow[] =3D
+>  "                      : This is useful if all devices have been replace=
+d\n"
+>  "                      : with larger devices.   Value is in Kilobytes, o=
+r\n"
+>  "                      : the special word 'max' meaning 'as large as pos=
+sible'.\n"
+> +"  --force       -f    : Override normal checks and be more forceful\n"
+>  "  --assume-clean      : When increasing the --size, this flag will avoi=
+d\n"
+>  "                      : a resync of the new space\n"
+>  "  --chunk=3D       -c   : Change the chunksize of the array\n"
+> diff --git a/mdadm.c b/mdadm.c
+> index c3a265b..821658a 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1617,7 +1617,7 @@ int main(int argc, char *argv[])
+>  		else if (s.size > 0 || s.raiddisks || s.layout_str ||
+>  			 s.chunk !=3D 0 || s.level !=3D UnSet ||
+>  			 data_offset !=3D INVALID_SECTORS) {
+> -			rv =3D Grow_reshape(devlist->devname, mdfd,
+> +		    rv =3D Grow_reshape(devlist->devname, mdfd, c.force,
+>  					  devlist->next,
+>  					  data_offset, &c, &s);
+>  		} else if (array_size =3D=3D 0)
+> diff --git a/mdadm.h b/mdadm.h
+> index 71b8afb..9e00f05 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1300,7 +1300,7 @@ extern int autodetect(void);
+>  extern int Grow_Add_device(char *devname, int fd, char *newdev);
+>  extern int Grow_addbitmap(char *devname, int fd,
+>  			  struct context *c, struct shape *s);
+> -extern int Grow_reshape(char *devname, int fd,
+> +extern int Grow_reshape(char *devname, int fd, int force,
+>  			struct mddev_dev *devlist,
+>  			unsigned long long data_offset,
+>  			struct context *c, struct shape *s);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnVVaEACgkQOeye3VZi
-gbn/ug/9Gnvk5dwx6XM+6K3hiGdc9AEs9LubOWzeJugCu+euQ44FPnOQzgeLa1dm
-VgGeaU9Q7zvpC6U6srwIm+Ci7yNYIyLh9N8NV5FkBJiHEFxAxHDC5E5EkTOtlf4K
-7VzAbgC6WVAEEXd3gYgzjejH2Few4V61eWY6H9pc2WQUg44f/6kKuQjoCw7B4SxY
-4gwoxgEhiJ46nMi2M8Ub6UaG8J8bU1CDuTLoSsZNgMcn8mwNHMqyC0Eh3VTDZM61
-8qMm+5FSQ+jHExp0f6GPLsQ3OlMtZwzFSG7W6NO08F/bYu9cClCA/ef7Xk8mAsK1
-9CsiUoMbg2ilx0NM9rJauhyI6wl2vr3WT0gFTV7mJp3xGcEE3G3SsNjBVkwY8W9/
-7Ght2vsz/RInWYIbjJp72tETQ1UD+rPKAi3Ce8VupBWOLXe58J4wuGWX6CJZkxQY
-sqe5CWCQcSNLTK8UbQF0FM+6OYQvh5viVNTBLlJbxmmViBGBHXW8a6EkRpOLfECr
-3cJLobEvFK2sdzGU+LMhZ8fjbttm+dA/ssPN7kXlOoV2UG+sgUk/O7wOSWeTOLfC
-X7jSv6v9KdjeoC/Xmid/0nx3BQxKeV8Pvxw8fMVX5SDs77xbX3pVoN4X+B0Rzyrl
-aYqYphiGcOInZFnoQlbpV4UduSN7SmhYejEvxzZ1ZPD1hYGoSgk=
-=ATFl
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnVV8EACgkQOeye3VZi
+gbn9OBAAnvUnR9/Vy7LY0FVJn2jm6+cNcpWZ7wXGz0GwCIvN3eNiyU001+nWC9bG
+K/VSMoks5PQYO59wwE7iV3aN8TPbe0weOmRQeM94yntXfOIsnLFXZDMSM4aHDCvv
+AKdbc1OYF4Usqb6K0rVt1OKY71+KR8EV9WgdsPkMo5EZemtw2bWVI1kLAUykcxBp
+RFvVTkKpRHtFFfTJ54fy/6OdvWzeJatOuMnysXk43qje75WclaP0iqP566+d5wH8
+NMjxKnK3UG+6dUfnjRhCabqkvyBfe0OZTVxb4IV7vMLap/NzoWeC0FGMnJDUs3UG
+VYECIz7TZYxt5wS9xZFwvRhO0yNbLX2VvYTS+G6Z6/nwvwRFr7qip4mfK2KEc3PX
+AB2VgEqVM9qs0suHhJ1C73FWC78VSaXMnsq/NBpsxl9LzC170b2PYwuql7wicpUr
+B9D9hW50x4IfXSPM5vqunfUBgk6JEE7NV39FTlEr2iM/LlWruJY+IfieNN8DddSd
+MffHbbSf3ctHGDmdW8L2PP0aKcQuAJ0o8sAgy77DOQEUvpQXOu1HuNg9vCqv8xwU
+qGrcKIque3Kl6R4ZDM3AdQUq5MsA0+ixdmqhHwJZJvDBaoGkSMWJg3BFnt906/lQ
+4W5kJFSEt+55w41ORWB9e9k7UoIepWpbg+WMwFDdLTafPcMsFTQ=
+=Mmwp
 -----END PGP SIGNATURE-----
 --=-=-=--
