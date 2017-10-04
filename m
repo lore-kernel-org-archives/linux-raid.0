@@ -1,44 +1,41 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v5 2/8] md: Neither resync nor reshape while the system
- is frozen
-Date: Wed, 4 Oct 2017 19:30:22 +0800
-Message-ID: <20171004113021.GC17729@ming.t460p>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v5 2/8] md: Neither resync nor reshape while the system is
+ frozen
+Date: Wed, 4 Oct 2017 15:38:25 +0000
+Message-ID: <1507131503.3583.24.camel@wdc.com>
 References: <20171002225218.18548-1-bart.vanassche@wdc.com>
- <20171002225218.18548-3-bart.vanassche@wdc.com>
+         <20171002225218.18548-3-bart.vanassche@wdc.com>
+         <20171004113021.GC17729@ming.t460p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171002225218.18548-3-bart.vanassche@wdc.com>
+In-Reply-To: <20171004113021.GC17729@ming.t460p>
+Content-Language: en-US
+Content-ID: <431F38D50B172B459577AE2B836B2748@namprd04.prod.outlook.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+To: "ming.lei@redhat.com" <ming.lei@redhat.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "mcgrof@kernel.org" <mcgrof@kernel.org>, "shli@kernel.org" <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Oct 02, 2017 at 03:52:12PM -0700, Bart Van Assche wrote:
-> Some people use the md driver on laptops and use the suspend and
-> resume functionality. Since it is essential that submitting of
-> new I/O requests stops before a hibernation image is created,
-> interrupt the md resync and reshape actions if the system is
-> being frozen. Note: the resync and reshape will restart after
-> the system is resumed and a message similar to the following
-> will appear in the system log:
-> 
-> md: md0: data-check interrupted.
-> 
-> Additionally, only allow resync or reshape activity to be
-> started after system freezing is over.
-
-Last time, I asked which issue is fixed by this patch, but
-never get answered, so again, what is issue fixed by
-this patch?
-
-Given the following patches for making SCSI quiesce safe
-is required in either PM suspend/resume or other path
-of transport_spi revalidate. So once theses patches are
-in, I don't see any I/O hang in suspend/resume given
-the SCSI quiesce issue is very specific one, and not
-see this issue on other kind of device.
-
-Thanks,
-Ming
+T24gV2VkLCAyMDE3LTEwLTA0IGF0IDE5OjMwICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gTGFz
+dCB0aW1lLCBJIGFza2VkIHdoaWNoIGlzc3VlIGlzIGZpeGVkIGJ5IHRoaXMgcGF0Y2gsIGJ1dA0K
+PiBuZXZlciBnZXQgYW5zd2VyZWQsIHNvIGFnYWluLCB3aGF0IGlzIGlzc3VlIGZpeGVkIGJ5DQo+
+IHRoaXMgcGF0Y2g/DQoNClRoYXQncyBub3QgY29ycmVjdC4gSSBkaWQgYW5zd2VyIHlvdXIgcXVl
+c3Rpb24uIFNlZSBlLmcuDQpodHRwczovL21hcmMuaW5mby8/bD1saW51eC1ibG9jayZtPTE1MDY5
+NTg3OTMwOTYwNi4NCg0KPiBHaXZlbiB0aGUgZm9sbG93aW5nIHBhdGNoZXMgZm9yIG1ha2luZyBT
+Q1NJIHF1aWVzY2Ugc2FmZQ0KPiBpcyByZXF1aXJlZCBpbiBlaXRoZXIgUE0gc3VzcGVuZC9yZXN1
+bWUgb3Igb3RoZXIgcGF0aA0KPiBvZiB0cmFuc3BvcnRfc3BpIHJldmFsaWRhdGUuIFNvIG9uY2Ug
+dGhlc2VzIHBhdGNoZXMgYXJlDQo+IGluLCBJIGRvbid0IHNlZSBhbnkgSS9PIGhhbmcgaW4gc3Vz
+cGVuZC9yZXN1bWUgZ2l2ZW4NCj4gdGhlIFNDU0kgcXVpZXNjZSBpc3N1ZSBpcyB2ZXJ5IHNwZWNp
+ZmljIG9uZSwgYW5kIG5vdA0KPiBzZWUgdGhpcyBpc3N1ZSBvbiBvdGhlciBraW5kIG9mIGRldmlj
+ZS4NCg0KVGhlcmUgYXJlIG1hbnkgbW9yZSBzdG9yYWdlIGRyaXZlcnMgYW5kIGZpbGVzeXN0ZW1z
+IHRoYW4gdGhlIG1kIGRyaXZlciB0aGF0DQpjYW4gc3VibWl0IEkvTyBhZnRlciB1c2VyIHNwYWNl
+IHByb2Nlc3NlcyBoYXZlIGJlZW4gZnJvemVuLCBlLmcuIHRoZSBCVFJGUw0KUkFJRCBhbmQgc2Ny
+dWIgZnVuY3Rpb25hbGl0aWVzLiBJdCB3aWxsIHRha2UgdGltZSB0byBmaXggYWxsIHRoZXNlIGRy
+aXZlcnMNCmFuZCBhbHNvIHRvIGFkZCBmaWxlc3lzdGVtIGZyZWV6ZS90aGF3IGZ1bmN0aW9uYWxp
+dHkgdG8gdGhlIHN1c3BlbmQgYW5kDQpyZXN1bWUgc2VxdWVuY2VzLiBBcyBsb25nIGFzIG5vdCBh
+bGwgZHJpdmVycyBoYXZlIGJlZW4gZml4ZWQgd2Ugd2lsbCBuZWVkDQpTQ1NJIGRldmljZSBxdWll
+c2NpbmcgYW5kIHJlc3VtaW5nIGFzIGEgd29ya2Fyb3VuZCB0byBhdm9pZCB0aGF0IGFueSBJL08N
+Cm9jY3VycyB3aGlsZSBhIGhpYmVybmF0aW9uIGltYWdlIGlzIGJlaW5nIGNyZWF0ZWQuDQoNCkJh
+cnQu
