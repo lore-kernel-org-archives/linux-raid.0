@@ -1,59 +1,45 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Linux Plumbers MD BOF discussion notes
-Date: Wed, 4 Oct 2017 19:30:59 +0200
-Message-ID: <20171004173059.GB3181@lazy.lzy>
-References: <20170915142737.qafwl3vgl6vhfi5q@kernel.org>
- <871sn78pzt.fsf@notabene.neil.brown.name>
- <alpine.DEB.2.20.1709180852450.29378@uplift.swm.pp.se>
- <874ls0s7un.fsf@notabene.neil.brown.name>
- <alpine.DEB.2.20.1710010730210.31961@uplift.swm.pp.se>
- <87lgkr3fgj.fsf@notabene.neil.brown.name>
- <619758c0-9ca4-c25d-c61b-f411b095041d@intel.com>
- <076977d4-dfae-e8d3-7606-29e838f422ec@intel.com>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: hung grow
+Date: Wed, 4 Oct 2017 18:51:25 +0100
+Message-ID: <a528459f-8bf5-3e47-9c9a-7c040ad7ab81@youngman.org.uk>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <076977d4-dfae-e8d3-7606-29e838f422ec@intel.com>
+In-Reply-To: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: NeilBrown <neilb@suse.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: Curt <lightspd@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 04, 2017 at 01:23:02PM +0200, Artur Paszkiewicz wrote:
-> On 10/04/2017 01:02 PM, Artur Paszkiewicz wrote:
-> > Applications like mdadm can use this to hide/unhide their component
-> > devices.
-> 
-> And here is an example patch for mdadm. It adds options to manually hide
-> or unhide the component devices:
-> 
-> mdadm --hide-components /dev/md0
-> mdadm --unhide-components /dev/md0
+On 04/10/17 18:18, Curt wrote:
+> Is my raid completely fucked or can I still recover some data with
+> doing the create assume clean?
 
-This seems to me already quite sensible.
+PLEASE PLEASE PLEASE DON'T !!!!!!
 
-> 
-> And an option for mdadm.conf that automatically hides the array's member
-> disks when assembling and when new disks are added:
-> 
-> ARRAY /dev/md/0  metadata=1.2 UUID=c2c4f8c6:cd775924:9cb2cc62:88fa45bd
-> 	name=linux-ns31:0 hide-components=yes
-> 
-> Hidden disks (by mdadm --hide-components or by config) should unhide
-> when the array is stopped or disks are removed. It only works for whole
-> devices, not partitions.
+I take it you haven't read the raid wiki?
 
-Well, this, on the other hands, it makes
-it not really useful.
+https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
 
-Furthermore, how about "cat /proc/mdstat"?
-Will this show what? In case of hidden components.
+The bad news is your array is well borked. The good news is I don't 
+think you have - YET - managed to bork it irretrievably. A create will 
+almost certainly trash it beyond recovery!!!
 
-Thanks,
+I think we can stop/revert the grow, and get the array back to a usable 
+state, where we can force an assemble. If a bit of data gets lost, sorry.
 
-bye,
+Do you have spare SATA ports? So you have the bad drives you replaced 
+(can you ddrescue them on to new drives?). What was the original 
+configuration of the raid - you say you lost three drives, but how many 
+did you have to start with?
 
--- 
+I'll let the experts talk you through the actual recovery, but the steps 
+need to be to revert the grow, ddrescue the best of your failed drives, 
+force an assembly, and then replace the other two failed drives. No 
+guarantees as to how much data will be left at the end, although 
+hopefully we'll save most of it.
 
-piergiorgio
+Cheers,
+Wol
