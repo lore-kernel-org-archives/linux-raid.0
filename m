@@ -1,42 +1,125 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [PATCH v5 2/8] md: Neither resync nor reshape while the system is
- frozen
-Date: Wed, 4 Oct 2017 16:58:33 +0000
-Message-ID: <1507136311.3583.35.camel@wdc.com>
-References: <20171002225218.18548-1-bart.vanassche@wdc.com>
-         <20171002225218.18548-3-bart.vanassche@wdc.com>
-         <20171004011610.GP2294@wotan.suse.de>
+From: Curt <lightspd@gmail.com>
+Subject: hung grow
+Date: Wed, 4 Oct 2017 13:18:14 -0400
+Message-ID: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20171004011610.GP2294@wotan.suse.de>
-Content-Language: en-US
-Content-ID: <A9136D4B40129C47A6513B34B775895D@namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: "mcgrof@kernel.org" <mcgrof@kernel.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>, "shli@kernel.org" <shli@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gV2VkLCAyMDE3LTEwLTA0IGF0IDAzOjE2ICswMjAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
-ZToNCj4gT24gTW9uLCBPY3QgMDIsIDIwMTcgYXQgMDM6NTI6MTJQTSAtMDcwMCwgQmFydCBWYW4g
-QXNzY2hlIHdyb3RlOg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL21kL21kLmMgYi9kcml2ZXJz
-L21kL21kLmMNCj4gPiBpbmRleCAzZjc0MjYxMjBhM2IuLmEyY2YyYTkzYjBjYiAxMDA2NDQNCj4g
-PiAtLS0gYS9kcml2ZXJzL21kL21kLmMNCj4gPiArKysgYi9kcml2ZXJzL21kL21kLmMNCj4gPiBA
-QCAtODk2MSw2ICs4OTYzLDM3IEBAIHN0YXRpYyB2b2lkIG1kX3N0b3BfYWxsX3dyaXRlcyh2b2lk
-KQ0KPiA+ICAJCW1kZWxheSgxMDAwKjEpOw0KPiA+ICB9DQo+ID4gIA0KPiA+ICsvKg0KPiA+ICsg
-KiBFbnN1cmUgdGhhdCBuZWl0aGVyIHJlc3luY2luZyBub3IgcmVzaGFwaW5nIG9jY3VycyB3aGls
-ZSB0aGUgc3lzdGVtIGlzDQo+ID4gKyAqIGZyb3plbi4NCj4gPiArICovDQo+ID4gK3N0YXRpYyBp
-bnQgbWRfbm90aWZ5X3BtKHN0cnVjdCBub3RpZmllcl9ibG9jayAqYmwsIHVuc2lnbmVkIGxvbmcg
-c3RhdGUsDQo+ID4gKwkJCXZvaWQgKnVudXNlZCkNCj4gPiArew0KPiA+ICsJc3RydWN0IG1kZGV2
-ICptZGRldjsNCj4gPiArCXN0cnVjdCBsaXN0X2hlYWQgKnRtcDsNCj4gPiArDQo+ID4gKwlwcl9k
-ZWJ1ZygiJXM6IHN0YXRlID0gJWxkOyBzeXN0ZW1fZnJlZXppbmdfY250ID0gJWRcbiIsIF9fZnVu
-Y19fLCBzdGF0ZSwNCj4gPiArCQkgYXRvbWljX3JlYWQoJnN5c3RlbV9mcmVlemluZ19jbnQpKTsN
-Cj4gPiArDQo+ID4gKwlzd2l0Y2ggKHN0YXRlKSB7DQo+ID4gKwljYXNlIFBNX0hJQkVSTkFUSU9O
-X1BSRVBBUkU6DQo+IA0KPiBIbSwgd2h5IG5vdCBhbHNvIGluY2x1ZGUgYW5kIHVzZSB0aGlzIGZv
-ciBQTV9TVVNQRU5EX1BSRVBBUkUgYW5kL29yDQo+IGEgUE1fUkVTVE9SRV9QUkVQQVJFLg0KPiAN
-Cj4gICAgICAgICBjYXNlIFBNX0hJQkVSTkFUSU9OX1BSRVBBUkU6DQo+ICAgICAgICAgY2FzZSBQ
-TV9TVVNQRU5EX1BSRVBBUkU6DQo+ICAgICAgICAgY2FzZSBQTV9SRVNUT1JFX1BSRVBBUkU6DQoN
-ClRoYW5rcyBmb3IgdGhlIGZlZWRiYWNrIEx1aXMuIEkgd2lsbCBtYWtlIHN1cmUgdGhhdCByZXN5
-bmMgYWN0aXZpdHkgaXMgYWxzbw0Kc3RvcHBlZCBmb3IgdGhlIFBNX1NVU1BFTkRfUFJFUEFSRSBh
-bmQgUE1fUkVTVE9SRV9QUkVQQVJFIGNhc2VzLg0KDQpCYXJ0Lg==
+Hello all,
+
+So, I got my raid6 is a half fucked state you could say. My raid6 lost
+3 drives and then starting throwing I/O errors on the mount point.  If
+I tried to restart with the good drives, I got too few to start raid.
+So one that got marked faulty, almost matched the even count of the
+others, only off by a few.  So I did a assemble force, which seemed to
+work and I could see my data.  I should have just pulled it off at
+that point and saved what I could, but no.
+
+So I replaced 2 of the bad drives and added them to the raid, it went
+through recovery, but only marked the 2 new drives as spares and
+showed the bad removed, 2 spares, and it marked one faulty aging, see
+the below.
+
+uname -a
+Linux dev 3.10.0-229.el7.x86_64 #1 SMP Fri Mar 6 11:36:42 UTC 2015
+x86_64 x86_64 x86_64 GNU/Linux
+
+mdadm --detail /dev/md127
+/dev/md127:
+           Version : 0.90
+     Creation Time : Fri Jun 15 15:52:05 2012
+        Raid Level : raid6
+        Array Size : 9767519360 (9315.03 GiB 10001.94 GB)
+     Used Dev Size : 1953503872 (1863.01 GiB 2000.39 GB)
+      Raid Devices : 7
+     Total Devices : 7
+   Preferred Minor : 127
+       Persistence : Superblock is persistent
+
+       Update Time : Tue Oct  3 22:22:06 2017
+             State : clean, FAILED
+    Active Devices : 4
+   Working Devices : 6
+    Failed Devices : 1
+     Spare Devices : 2
+
+            Layout : left-symmetric
+        Chunk Size : 64K
+
+Consistency Policy : unknown
+
+              UUID : 714a612d:9bd35197:36c91ae3:c168144d
+            Events : 0.11559613
+
+    Number   Major   Minor   RaidDevice State
+       0       8       97        0      active sync   /dev/sdg1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8        1        3      active sync   /dev/sda1
+       -       0        0        4      removed
+       -       0        0        5      removed
+       -       0        0        6      removed
+
+       7       8       80        -      spare   /dev/sdf
+       8       8       16        -      spare   /dev/sdb
+       9       8       65        -      faulty   /dev/sde1
+
+after several tries to reassemble, the spares wouldn't got active.  So
+on the advice of somenone, I set the raid to grow to 8, the theory
+being it would make on spare active. Which somewhat worked, but grow
+froze at 0% and when I do a detail on md127 it just hangs, it returned
+once when this first started and showed the spare in spare rebuilding
+status, but sync_action showed reshape and mdstat.
+
+
+examine returns this, it's the same for all as far as I can see
+mdadm --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 0.91.00
+           UUID : 714a612d:9bd35197:36c91ae3:c168144d
+  Creation Time : Fri Jun 15 15:52:05 2012
+     Raid Level : raid6
+  Used Dev Size : 1953503872 (1863.01 GiB 2000.39 GB)
+     Array Size : 11721023232 (11178.04 GiB 12002.33 GB)
+   Raid Devices : 8
+  Total Devices : 6
+Preferred Minor : 127
+
+  Reshape pos'n : 3799296 (3.62 GiB 3.89 GB)
+  Delta Devices : 1 (7->8)
+
+    Update Time : Wed Oct  4 10:10:37 2017
+          State : clean
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : ce71846f - correct
+         Events : 11559679
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8        1        3      active sync   /dev/sda1
+
+   0     0       8       97        0      active sync   /dev/sdg1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       0        0        5      faulty removed
+   6     6       8       16        6      active   /dev/sdb
+   7     7       0        0        7      faulty removed
+
+
+Is my raid completely fucked or can I still recover some data with
+doing the create assume clean?
+
+Cheers,
+Curt
