@@ -1,102 +1,86 @@
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v5 2/8] md: Neither resync nor reshape while the system
- is frozen
-Date: Wed, 4 Oct 2017 03:16:10 +0200
-Message-ID: <20171004011610.GP2294@wotan.suse.de>
-References: <20171002225218.18548-1-bart.vanassche@wdc.com>
- <20171002225218.18548-3-bart.vanassche@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171002225218.18548-3-bart.vanassche@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, =Oleksandr Natalenko <oleksandr@natalenko.name>, "Luis R . Rodriguez" <mcgrof@kernel.org>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v2] mdmon: get safe mode delay file descriptor early
+Date: Wed,  4 Oct 2017 10:18:21 +0200
+Message-ID: <1507105101-19475-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <f223d535-5fed-0c97-a7b2-6c4eb9e46484@gmail.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <f223d535-5fed-0c97-a7b2-6c4eb9e46484@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, Oct 02, 2017 at 03:52:12PM -0700, Bart Van Assche wrote:
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 3f7426120a3b..a2cf2a93b0cb 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8961,6 +8963,37 @@ static void md_stop_all_writes(void)
->  		mdelay(1000*1);
->  }
->  
-> +/*
-> + * Ensure that neither resyncing nor reshaping occurs while the system is
-> + * frozen.
-> + */
-> +static int md_notify_pm(struct notifier_block *bl, unsigned long state,
-> +			void *unused)
-> +{
-> +	struct mddev *mddev;
-> +	struct list_head *tmp;
-> +
-> +	pr_debug("%s: state = %ld; system_freezing_cnt = %d\n", __func__, state,
-> +		 atomic_read(&system_freezing_cnt));
-> +
-> +	switch (state) {
-> +	case PM_HIBERNATION_PREPARE:
+After switch root new mdmon is started. It sends initrd mdmon a signal
+to terminate. initrd mdmon receives it and switches the safe mode delay
+to 1 ms in order to get array to clean state and flush last version of
+metadata. The problem is sysfs filesystem is not available to initrd mdmon
+after switch root so the original safe mode delay is unchanged. The delay
+is set to few seconds - if there is a lot of traffic on the filesystem,
+initrd mdmon doesn't terminate for a long time (no clean state). There
+are 2 instances of mdmon. initrd mdmon flushes metadata when array goes
+to clean state but this metadata might be already outdated.
 
-Hm, why not also include and use this for PM_SUSPEND_PREPARE and/or
-a PM_RESTORE_PREPARE.
+Use file descriptor obtained on mdmon start to change safe mode delay.
 
-        case PM_HIBERNATION_PREPARE:
-        case PM_SUSPEND_PREPARE:
-        case PM_RESTORE_PREPARE:
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ managemon.c | 16 +++++++++++++---
+ mdmon.h     |  1 +
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
-> +		md_stop_all_writes();
-> +		break;
-> +	case PM_POST_HIBERNATION:
+diff --git a/managemon.c b/managemon.c
+index cc3c6f1..4e85398 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -129,6 +129,8 @@ static void close_aa(struct active_array *aa)
+ 		close(aa->metadata_fd);
+ 	if (aa->sync_completed_fd >= 0)
+ 		close(aa->sync_completed_fd);
++	if (aa->safe_mode_delay_fd >= 0)
++		close(aa->safe_mode_delay_fd);
+ }
+ 
+ static void free_aa(struct active_array *aa)
+@@ -532,9 +534,15 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 	if (a->container == NULL)
+ 		return;
+ 
+-	if (sigterm && a->info.safe_mode_delay != 1) {
+-		sysfs_set_safemode(&a->info, 1);
+-		a->info.safe_mode_delay = 1;
++	if (sigterm && a->info.safe_mode_delay != 1 &&
++	    a->safe_mode_delay_fd >= 0) {
++		long int new_delay = 1;
++		char delay[10];
++		ssize_t len;
++
++		len = snprintf(delay, sizeof(delay), "0.%03ld\n", new_delay);
++		if (write(a->safe_mode_delay_fd, delay, len) == len)
++			a->info.safe_mode_delay = new_delay;
+ 	}
+ 
+ 	/* We don't check the array while any update is pending, as it
+@@ -734,6 +742,8 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 	new->resync_start_fd = sysfs_open2(new->info.sys_name, NULL, "resync_start");
+ 	new->metadata_fd = sysfs_open2(new->info.sys_name, NULL, "metadata_version");
+ 	new->sync_completed_fd = sysfs_open2(new->info.sys_name, NULL, "sync_completed");
++	new->safe_mode_delay_fd = sysfs_open2(new->info.sys_name, NULL,
++					      "safe_mode_delay");
+ 
+ 	dprintf("inst: %s action: %d state: %d\n", inst,
+ 		new->action_fd, new->info.state_fd);
+diff --git a/mdmon.h b/mdmon.h
+index 0b08c3d..818367c 100644
+--- a/mdmon.h
++++ b/mdmon.h
+@@ -35,6 +35,7 @@ struct active_array {
+ 	int resync_start_fd;
+ 	int metadata_fd; /* for monitoring rw/ro status */
+ 	int sync_completed_fd; /* for checkpoint notification events */
++	int safe_mode_delay_fd;
+ 	unsigned long long last_checkpoint; /* sync_completed fires for many
+ 					     * reasons this field makes sure the
+ 					     * kernel has made progress before
+-- 
+1.8.3.1
 
-Likewise here:
-
-        case PM_POST_SUSPEND:
-        case PM_POST_HIBERNATION:
-        case PM_POST_RESTORE:
-
-I have revised the kernel suspend ordering and indeed things issued
-with the pm notifier should suffice to be processed given we actually
-call the pm ops (dpm_prepare()) for device drivers *after* the notifier
-is called and then after userspace is frozen. That is:
-
-   pm_suspend() --> enter_state() -->
-     sys_sync()
-     suspend_prepare() -->
-             __pm_notifier_call_chain(PM_SUSPEND_PREPARE, ...);
-             suspend_freeze_processes() -->
-                     freeze_processes() -->
-                             __usermodehelper_set_disable_depth(UMH_DISABLED);
-                             freeze all tasks ...
-                     freeze_kernel_threads()
-     suspend_devices_and_enter() -->
-             dpm_suspend_start() -->
-                             dpm_prepare()
-                             dpm_suspend()
-             suspend_enter()  -->
-                     platform_suspend_prepare()
-                     dpm_suspend_late()
-                     freeze_enter()
-                     syscore_suspend()
-
-On our way back up:
-
-     enter_state() -->
-     suspend_devices_and_enter() --> (bail from loop)
-             dpm_resume_end() -->
-                     dpm_resume()
-                     dpm_complete()
-     suspend_finish() -->
-             suspend_thaw_processes() -->
-                     thaw_processes() -->
-                             __usermodehelper_set_disable_depth(UMH_FREEZING);
-                             thaw_workqueues();
-                             thaw all processes ...
-                             usermodehelper_enable();
-             pm_notifier_call_chain(PM_POST_SUSPEND);
-
-So notifier would indeed be the right tooling to use here.
-
-  Luis
