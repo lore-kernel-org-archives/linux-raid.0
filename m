@@ -1,125 +1,51 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
-Date: Wed, 4 Oct 2017 14:11:40 -0400
-Message-ID: <576ad3c5-1c23-39d3-1631-d18ed0a3323a@gmail.com>
-References: <22997.8664.67459.119616@quad.stoffel.home>
+From: Anthony Youngman <antlists@youngman.org.uk>
+Subject: Re: Linux Plumbers MD BOF discussion notes
+Date: Wed, 4 Oct 2017 19:13:54 +0100
+Message-ID: <db85eda5-5c5a-7d44-be51-d6c6ab7df2f2@youngman.org.uk>
+References: <20170915142737.qafwl3vgl6vhfi5q@kernel.org>
+ <871sn78pzt.fsf@notabene.neil.brown.name>
+ <alpine.DEB.2.20.1709180852450.29378@uplift.swm.pp.se>
+ <874ls0s7un.fsf@notabene.neil.brown.name>
+ <alpine.DEB.2.20.1710010730210.31961@uplift.swm.pp.se>
+ <87lgkr3fgj.fsf@notabene.neil.brown.name> <20171004172819.GA3181@lazy.lzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22997.8664.67459.119616@quad.stoffel.home>
+In-Reply-To: <20171004172819.GA3181@lazy.lzy>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Eli Ben-Shoshan <eli@benshoshan.com>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, NeilBrown <neilb@suse.com>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/04/2017 02:00 PM, John Stoffel wrote:
+On 04/10/17 18:28, Piergiorgio Sartor wrote:
+> In order to conclude, please decide kernel vs.
+> user space approaches*before*  making changes.
 > 
-> Since Eli had such a horrible experience where he shrunk the
-> individual component raid device size, instead of growing the overall
-> raid by adding a device, I came up with this hacky patch to warn you
-> when you are about to shoot yourself in the foot.
+> Thanks!
 > 
-> The idea is it will warn you and exit unless you pass in the --force
-> (or -f) switch when using the command.  For example, on a set of loop
-> devices:
-> 
->      # cat /proc/mdstat
->      Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
->      [raid4] [multipath] [faulty]
->      md99 : active raid6 loop4p1[4] loop3p1[3] loop2p1[2] loop1p1[1]
->      loop0p1[0]
-> 	  606720 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5]
-> 	  [UUUUU]
-> 
->      # ./mdadm --grow /dev/md99 --size 128
->      mdadm: Cannot set device size smaller than current component_size of /dev/md99 array.  Use -f to force change.
-> 
->      # ./mdadm --grow /dev/md99 --size 128 -f
->      mdadm: component size of /dev/md99 has been set to 0K
-> 
-> 
-> I suspect I could do a better job of showing the original component
-> size, so that you have a chance of recovering even then.
-> 
-> But the patch:
+>> Still... maybe it is a starting point for thinking about the problem.
+> Yes, you're right,
 
-Before looking at the actual code, some cosmetics
+Throwing a few ideas into the mix - shoot them down if they seem too 
+outrageous :-)
 
+1) Can we apply xattrs to devices in /dev?
 
-> diff --git a/Grow.c b/Grow.c
-> index 455c5f9..701590f 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1561,7 +1561,7 @@ static int reshape_container(char *container, char *devname,
->   			     char *backup_file, int verbose,
->   			     int forked, int restart, int freeze_reshape);
->   
-> -int Grow_reshape(char *devname, int fd,
-> +int Grow_reshape(char *devname, int fd, int force,
->   		 struct mddev_dev *devlist,
->   		 unsigned long long data_offset,
->   		 struct context *c, struct shape *s)
-> @@ -1574,6 +1574,7 @@ int Grow_reshape(char *devname, int fd,
->   	 * requested everything (if kernel supports freezing - 2.6.30).
->   	 * The steps are:
->   	 *  - change size (i.e. component_size)
-> +         *    - when shrinking, you must force the change
+2) Does xattrs lock out root?
 
-Code is indented by tabs, not spaces.
+Okay, this won't necessarily hide component devices, but if assembling 
+an array (optionally) applies xattrs to them, and makes them writeable 
+*only* by user "mdadm", then that will help prevent a load of damage. Of 
+course, that doesn't protect a partition against be overwritten by a 
+write to the underlying drive, but that's a whole 'nother can of worms...
 
->   	 *  - change level
->   	 *  - change layout/chunksize/ndisks
->   	 *
-> @@ -1617,6 +1618,11 @@ int Grow_reshape(char *devname, int fd,
->   		return 1;
->   	}
->   
-> +	if ((s->size < (unsigned)array.size) && !force) {
-> +	    pr_err("Cannot set device size smaller than current component_size of %s array.  Use -f to force change.\n",devname);
-> +	    return 1;
-> +	}
-> +
+And of course, the question is will this lock out the operations we 
+don't want, while allowing stuff that we do ...
 
-Again, tabs, and they are 8 characters wide.
+Provided xattrs does lock out root from user space, this looks to me to 
+be the obvious route to try to go down, but what do I know?
 
-if (s->raiddisks && s->raiddisks < array.raid_disks && array.level > 1 &&
->   	    get_linux_version() < 2006032 &&
->   	    !check_env("MDADM_FORCE_FEWER")) {
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 50d3807..46988ae 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -203,6 +203,7 @@ struct option long_options[] = {
->       {"invalid-backup",0,0,InvalidBackup},
->       {"array-size", 1, 0, 'Z'},
->       {"continue", 0, 0, Continue},
-> +    {"force",	  0, 0, Force},
->   
->       /* For Incremental */
->       {"rebuild-map", 0, 0, RebuildMapOpt},
-> @@ -563,6 +564,7 @@ char Help_grow[] =
->   "                      : This is useful if all devices have been replaced\n"
->   "                      : with larger devices.   Value is in Kilobytes, or\n"
->   "                      : the special word 'max' meaning 'as large as possible'.\n"
-> +"  --force       -f    : Override normal checks and be more forceful\n"
->   "  --assume-clean      : When increasing the --size, this flag will avoid\n"
->   "                      : a resync of the new space\n"
->   "  --chunk=       -c   : Change the chunksize of the array\n"
-> diff --git a/mdadm.c b/mdadm.c
-> index c3a265b..821658a 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1617,7 +1617,7 @@ int main(int argc, char *argv[])
->   		else if (s.size > 0 || s.raiddisks || s.layout_str ||
->   			 s.chunk != 0 || s.level != UnSet ||
->   			 data_offset != INVALID_SECTORS) {
-> -			rv = Grow_reshape(devlist->devname, mdfd,
-> +		    rv = Grow_reshape(devlist->devname, mdfd, c.force,
-
-Yikes!
-
-Thanks,
-Jes
-
+Cheers,
+Wol
