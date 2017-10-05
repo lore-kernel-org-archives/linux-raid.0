@@ -1,109 +1,128 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Linux Plumbers MD BOF discussion notes
-Date: Fri, 06 Oct 2017 10:39:50 +1100
-Message-ID: <87mv5517w9.fsf@notabene.neil.brown.name>
-References: <20170915142737.qafwl3vgl6vhfi5q@kernel.org> <871sn78pzt.fsf@notabene.neil.brown.name> <alpine.DEB.2.20.1709180852450.29378@uplift.swm.pp.se> <874ls0s7un.fsf@notabene.neil.brown.name> <alpine.DEB.2.20.1710010730210.31961@uplift.swm.pp.se> <87lgkr3fgj.fsf@notabene.neil.brown.name> <619758c0-9ca4-c25d-c61b-f411b095041d@intel.com> <87d162380v.fsf@notabene.neil.brown.name> <4bc99226-0843-351b-dca6-7d0a083de925@intel.com>
+Subject: Re: [PATCH] md: raid10: remove VLAIS
+Date: Fri, 06 Oct 2017 10:58:59 +1100
+Message-ID: <87k209170c.fsf@notabene.neil.brown.name>
+References: <20171005182847.3368-1-mka@chromium.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4bc99226-0843-351b-dca6-7d0a083de925@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171005182847.3368-1-mka@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Michael Davidson <md@google.com>, Guenter Roeck <groeck@chromium.org>, Matthias Kaehlcke <mka@chromium.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Oct 05 2017, Artur Paszkiewicz wrote:
+On Thu, Oct 05 2017, Matthias Kaehlcke wrote:
 
-> On 10/04/2017 11:41 PM, NeilBrown wrote:
->> On Wed, Oct 04 2017, Artur Paszkiewicz wrote:
->>=20
->>>
->>> Also, our customers are asking specifically for an option to "hide" the
->>> member drives. Making it impossible to write to the devices is ok, but
->>> they would like to see only the md device, "like hardware raid". One of
->>> the reasons is that some monitoring or inventory scan applications treat
->>> md arrays and their components as separate storage devices. They should
->>> probably modify their software but maybe that's not possible.
->>=20
->> What exactly is meant by "hide".  How, exactly, does this software scan
->> all devices?  /proc/partitions? /sys/block? /sys/class/block?
->> /dev/disks?  All of the above.
->>=20
->> Modifying their application *must* be on the table, else modify the
->> kernel is *not* on the table.  I'm certainly open to enhancing the
->> kernel so that it is easy to skip a particular class of devices, but if
->> their application chooses to ignore the information the kernel provides,
->> then the fact that the application doesn't work is their problem, not
->> ours.
->>=20
->>=20
->>>
->>> I've been experimenting with different solutions and here is a patch
->>> that allows to "hide" disk devices and their partitions by writing to a
->>> sysfs attribute. It removes the device nodes (on devtmpfs), links in
->>> /sys/block/ and removes the devices from the block class list, so they
->>> won't be included in places like /proc/partitions, /sys/class/block/,
->>> lsblk and so on. The device's "real" sysfs directory under /sys/devices/
->>> is still available, also the links in /sys/dev/block/ are preserved.
->>> Applications like mdadm can use this to hide/unhide their component
->>> devices.
->>=20
->> Can you confirm that this addresses the customer problem?  Do you know
->> which of these lists their code looks at?
+> The raid10 driver can't be built with clang since it uses a variable
+> length array in a structure (VLAIS):
 >
-> Yes, this is what they asked for. I know that at least /proc/partitions
-> and /sys/class/block are used. But this is not a single customer (or
-> application) case, this keeps coming up again and again... Of course
-> educating users about the specifics of md and that not hiding the drives
-> is actually an advantage always comes first. Some get it and would be ok
-> with just blocking write access to the drives, but others really want
-> this hiding approach.
+> drivers/md/raid10.c:4583:17: error: fields must have a constant size:
+>   'variable length array in structure' extension will never be supported
 >
+> Allocate the r10bio struct with kmalloc instead of using the VLAIS
+> construct.
+>
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> ---
+>  drivers/md/raid10.c | 13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 374df5796649..9616163eaf8c 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -4578,15 +4578,16 @@ static int handle_reshape_read_error(struct mddev=
+ *mddev,
+>  	/* Use sync reads to get the blocks from somewhere else */
+>  	int sectors =3D r10_bio->sectors;
+>  	struct r10conf *conf =3D mddev->private;
+> -	struct {
+> -		struct r10bio r10_bio;
+> -		struct r10dev devs[conf->copies];
+> -	} on_stack;
+> -	struct r10bio *r10b =3D &on_stack.r10_bio;
+> +	struct r10bio *r10b;
+>  	int slot =3D 0;
+>  	int idx =3D 0;
+>  	struct page **pages;
+>=20=20
+> +	r10b =3D kmalloc(sizeof(*r10b) +
+> +	       sizeof(struct r10dev) * conf->copies, GFP_KERNEL);
 
-Hmmm.. interesting that it is multiple applications.
-Given that both md and dm have been around for years and have layered on
-top of exiting devices without hiding them, it is hard to see how these
-applications have not run into problem before.
+GFP_KERNEL isn't a good idea here.
+This could wait for writeback, and if writeback tries to write to the
+region of the array which is being reshaped, it might deadlock.
 
-There is some precedent for hiding things from /proc/partitions.
-removable devices like CDROMs are hidden, and you can easily hide
-individual devices by setting GENHD_FL_SUPPRESS_PARTITION_INFO.
-We might be able to get that through.  It is certainly worth writing a
-patch and letting people experiment with it.
+GFP_NOIO is safer.
 
-Removing things from /sys/class/block is much less likely to be
-acceptable.  Code really shouldn't be digging around in there without
-knowing what it is doing.  It should be trivial to ignore any entry in
-/sys/class/block where the 'holders' directory is not empty, and that
-should achieve the goal.  For users of /sys/class/block I think you
-really need to push back on the customers and tell them their
-application is broken.
+given that conf->copies is almost always 2 it might be nicer to
+have
+
+	struct {
+		struct r10bio r10_bio;
+		struct r10dev devs[2];
+	} on_stack;
+
+        struct r10bio *r10b;
+
+	if (conf->copies <=3D ARRAY_SIZE(on_stack.devs))
+        	r10b =3D &on_stack.r10_bio;
+        else
+        	r10b =3D kmalloc(sizeof(*r10b) +
+			       sizeof(struct r10dev) * conf->copies, GFP_NOIO);
+
 
 Thanks,
 NeilBrown
+
+
+> +	if (!r10b)
+> +		return -ENOMEM;
+> +
+>  	/* reshape IOs share pages from .devs[0].bio */
+>  	pages =3D get_resync_pages(r10_bio->devs[0].bio)->pages;
+>=20=20
+> @@ -4635,11 +4636,13 @@ static int handle_reshape_read_error(struct mddev=
+ *mddev,
+>  			/* couldn't read this block, must give up */
+>  			set_bit(MD_RECOVERY_INTR,
+>  				&mddev->recovery);
+> +			kfree(r10b);
+>  			return -EIO;
+>  		}
+>  		sectors -=3D s;
+>  		idx++;
+>  	}
+> +	kfree(r10b);
+>  	return 0;
+>  }
+>=20=20
+> --=20
+> 2.14.2.920.gcf0c67979c-goog
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnWwscACgkQOeye3VZi
-gbme1w//f0e+iNyArBxedzV4f/CQPUoPjwYu40rtvSRjvDVFMlYUEdHCDIqMd4uW
-yDkGEe4pjO8EgXgXF+T8ZtD8DOm7mofT0kRnmTLPXJ9HZhwTE+y8ym5s9jU/M46g
-63vLRg+yE/qNiQs0TyT8oBQyyDTJtADpjSHp1ICXIbpM2YPdmnkBmK73PQPzg7Gk
-jT2iMcmjIR924z7ImJfnS4AeYOpPFOIFwu5xWHn7WprWMAT10tYFQayki+tQ444k
-TDxeUYAxrmyjSdlbshaLb9F4dQqtg97KXS/Eo4v9VQxSQtnvPf63Wi0S+PM4/zl8
-KTvl9hFMHBML+9CCi9vFWkt6idZ1Jep9mBAQ4SajvsWbc1RXochetvCS6gTEs6x1
-aitrLZJMUbkLU0DgtFSgh7PG5nvduntYXTtNP4xFwegfgfgTLjMpp8/sxLaPlAC7
-ljharFpWSKLPJkkToxi96x1e6D0sDNzj8lGLhA6QGKRCNp+fplK3Zmjx2QJFScSn
-gtJiu+KVbF9rtXbEOoo6fxv4xrigYF+MGopDN/TKPjm8NE3jpGckbZTZMJE0qU3I
-oBixMuQpqHY8g6f2RNDVFp2e84LtZvfvigFj3549nS/wBWdvnoD8he81wG/KwXYr
-DOE/LIjzCIKWU8Ra7CBWAqyyoc8OF7zv8yORY0JZg+uQBXBXfHc=
-=K6/k
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnWx0MACgkQOeye3VZi
+gbnpUQ/+MZDAM47UJtmd2IYpUksyzWgzkhqx8cQCg5QssmsWBEluZL8aTFFYEw5p
+5kRt+iKctRyp2Zygkfr8eP6kur2kSmDUiPBPNvejhNw9Why7PqLibmvfyaot15X0
+mogDFC0Hp+XYlmLHxJarlHzbV+CkkrOdtf/SyNaTuMh2Q4V+g5tnUijv6ZOgIhb1
++AtCzypa7DZHycCUZY8Q3ZxnMjWPLQ00QPXj50M4jj0TmlM3iRPMJbyVpKGJLBDz
+EPwEGuxER+OYXB3eNF4jLINT6zqm+72sTTJvRCCOrM7Xc/if37fYgyFRS/SqrJ0s
+PHrViVashKpjL+CiGOy6rX2LvSvw6U3/H4dv9T40mcHagSpTBnMVT+ezgHgY72VN
+6yUxnn+v1pvdynhk1egdMRZcWzofW6IaP0hTsqU4rcsneW7ywbE7x3kJSrcPGE22
+Urya/ET80h0VbIIJnsvOwZl7Nt0Bx4r9nsiF/vnt+GhcA3PlzPgSOrwlTXX0+IXB
+d5pIv0n9u4qNqHwPpn0atvpxKGdbA7qljFpgT+FzNMKNYAx52KOi7b9+VxMqjlM0
+a23bQ4SmZ1p6aTkpAdinSAFxzD9oTSiapdhzDDlgvcbl25+E22tSQgUssF4Dn/3g
+57TLxyUhw2/cnRZtWr1PnO2ZlROtpNgcOns9YmUkTNUNVzxt6PQ=
+=BKjd
 -----END PGP SIGNATURE-----
 --=-=-=--
