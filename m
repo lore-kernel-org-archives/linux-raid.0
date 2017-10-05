@@ -1,38 +1,66 @@
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 00/18] use ARRAY_SIZE macro
-Date: Thu, 5 Oct 2017 13:57:15 -0400
-Message-ID: <20171005175715.GA19093@fieldses.org>
-References: <20171001193101.8898-1-jeremy.lefaure@lse.epita.fr>
- <20171001220131.GA11812@eros>
- <20171001205220.10b78086@blatinox-laptop.localdomain>
- <20171002053554.GA28743@kroah.com>
- <20171002192224.GD1903@fieldses.org>
- <20171002213312.3f904290@blatinox-laptop.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171002213312.3f904290@blatinox-laptop.localdomain>
-Sender: netdev-owner@vger.kernel.org
-To: =?utf-8?B?SsOpcsOpbXk=?= Lefaure <jeremy.lefaure@lse.epita.fr>
-Cc: Greg KH <greg@kroah.com>, "Tobin C. Harding" <me@tobin.cc>, alsa-devel@alsa-project.org, nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org, dm-devel@redhat.com, brcm80211-dev-list@cypress.com, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-acpi@vger.kernel.org, linux-video@atrey.karlin.mff.cuni.cz, intel-wired-lan@lists.osuosl.org, linux-media@vger.kernel.org, intel-gfx@lists.freedesktop.org, ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, openipmi-developer@lists.sourceforge.net, intel-gvt-dev@lists.freedesktop.org, devel@acpica.org, brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org, linux-usb@v
+From: Matthias Kaehlcke <mka@chromium.org>
+Subject: [PATCH] md: raid10: remove VLAIS
+Date: Thu,  5 Oct 2017 11:28:47 -0700
+Message-ID: <20171005182847.3368-1-mka@chromium.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Michael Davidson <md@google.com>, Guenter Roeck <groeck@chromium.org>, Matthias Kaehlcke <mka@chromium.org>
 List-Id: linux-raid.ids
 
-On Mon, Oct 02, 2017 at 09:33:12PM -0400, Jérémy Lefaure wrote:
-> On Mon, 2 Oct 2017 15:22:24 -0400
-> bfields@fieldses.org (J. Bruce Fields) wrote:
-> 
-> > Mainly I'd just like to know which you're asking for.  Do you want me to
-> > apply this, or to ACK it so someone else can?  If it's sent as a series
-> > I tend to assume the latter.
-> > 
-> > But in this case I'm assuming it's the former, so I'll pick up the nfsd
-> > one....
-> Could you to apply the NFSD patch ("nfsd: use ARRAY_SIZE") with the
-> Reviewed-by: Jeff Layton <jlayton@redhat.com>) tag please ?
-> 
-> This patch is an individual patch and it should not have been sent in a
-> series (sorry about that).
+The raid10 driver can't be built with clang since it uses a variable
+length array in a structure (VLAIS):
 
-Applying for 4.15, thanks.--b.
+drivers/md/raid10.c:4583:17: error: fields must have a constant size:
+  'variable length array in structure' extension will never be supported
+
+Allocate the r10bio struct with kmalloc instead of using the VLAIS
+construct.
+
+Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+---
+ drivers/md/raid10.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 374df5796649..9616163eaf8c 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4578,15 +4578,16 @@ static int handle_reshape_read_error(struct mddev *mddev,
+ 	/* Use sync reads to get the blocks from somewhere else */
+ 	int sectors = r10_bio->sectors;
+ 	struct r10conf *conf = mddev->private;
+-	struct {
+-		struct r10bio r10_bio;
+-		struct r10dev devs[conf->copies];
+-	} on_stack;
+-	struct r10bio *r10b = &on_stack.r10_bio;
++	struct r10bio *r10b;
+ 	int slot = 0;
+ 	int idx = 0;
+ 	struct page **pages;
+ 
++	r10b = kmalloc(sizeof(*r10b) +
++	       sizeof(struct r10dev) * conf->copies, GFP_KERNEL);
++	if (!r10b)
++		return -ENOMEM;
++
+ 	/* reshape IOs share pages from .devs[0].bio */
+ 	pages = get_resync_pages(r10_bio->devs[0].bio)->pages;
+ 
+@@ -4635,11 +4636,13 @@ static int handle_reshape_read_error(struct mddev *mddev,
+ 			/* couldn't read this block, must give up */
+ 			set_bit(MD_RECOVERY_INTR,
+ 				&mddev->recovery);
++			kfree(r10b);
+ 			return -EIO;
+ 		}
+ 		sectors -= s;
+ 		idx++;
+ 	}
++	kfree(r10b);
+ 	return 0;
+ }
+ 
+-- 
+2.14.2.920.gcf0c67979c-goog
