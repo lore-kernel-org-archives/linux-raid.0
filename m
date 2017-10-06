@@ -1,7 +1,7 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: hung grow
-Date: Fri, 6 Oct 2017 12:16:25 +0100
-Message-ID: <59D76609.8080905@youngman.org.uk>
+Date: Fri, 6 Oct 2017 09:13:24 -0400
+Message-ID: <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org>
 References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
  <a528459f-8bf5-3e47-9c9a-7c040ad7ab81@youngman.org.uk>
  <CADg2FGYPENaUb7oDhOUu08VMhzygE365mqw=Lw332jBGbe1dGQ@mail.gmail.com>
@@ -15,28 +15,39 @@ References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
  <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk>
  <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org>
  <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com>
- <CADg2FGZ+u8ZLnGhBDY-947P9jQpB=jTnC73c5inOqMxCzdiWxA@mail.gmail.com>
+ <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADg2FGZ+u8ZLnGhBDY-947P9jQpB=jTnC73c5inOqMxCzdiWxA@mail.gmail.com>
+In-Reply-To: <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
 To: Curt <lightspd@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/10/17 02:25, Curt wrote:
-> Requested info pasted below, at least the info I got.
+Hi Curt,
 
-Seagate Barracudas, WD Blacks. NOT good raid drives, sorry. Once you get
-it all working, then you need that timeout script configured to run
-every boot, at which point your array should be safe.
+Sorry about the delay /-:
 
-Once it's all fine, if you're in the market for more drives look at
-Seagate NAS or Ironwolf or Constellation, WD Reds, or Hitachi Ultrastar.
-They're all advertised (Constellation excepted, but that's reported as
-supporting ERC) as being suitable for raid. Expect to pay a 30-50%
-premium over what a Barracuda will cost.
+{ Convention on kernel.org lists is reply to all, bottom replies (or
+interleaved, and trim unnecessary quoted material. Please help those
+of us who follow many threads. }
 
-Cheers,
-Wol
+On 10/05/2017 07:40 PM, Curt wrote:
+> Hey Phil,
+> 
+> I got the drive mentioned ddrescued, I wanted to make sure you didn't see
+> anything odd from my pastes before I try the revert.
+
+Only one:
+
+> # smartctl -iA -l scterc /dev/sde
+> 197 Current_Pending_Sector  0x0032   200   200   000    Old_age
+> Always       -       2
+> 198 Offline_Uncorrectable   0x0030   200   200   000    Old_age
+> Offline      -       2
+
+You'll have to ddrescue /dev/sde1 as well.  Do that before proceeding.
+
+Phil
