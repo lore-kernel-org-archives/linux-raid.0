@@ -1,11 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH 1/2] mdcheck: add some logging.
-Date: Fri, 06 Oct 2017 12:33:36 +1100
-Message-ID: <87h8vd12mn.fsf@notabene.neil.brown.name>
+Subject: [mdadm PATCH 2/2] mdcheck: improve cleanup
+Date: Fri, 06 Oct 2017 12:34:40 +1100
+Message-ID: <87d16112kv.fsf@notabene.neil.brown.name>
+References: <87h8vd12mn.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87h8vd12mn.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes.Sorensen@gmail.com
 Cc: Linux Raid <linux-raid@vger.kernel.org>
@@ -16,70 +18,26 @@ Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-Use 'logger' to report when mdcheck starts, stops, or continues
-the check on an array.
+We should remove the tmp file on signals as well as on exit.
 
 Signed-off-by: NeilBrown <neilb@suse.com>
 =2D--
- misc/mdcheck | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ misc/mdcheck | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/misc/mdcheck b/misc/mdcheck
-index 2c8f54d6e4cf..589d038eed9b 100644
+index 589d038eed9b..42d4094a2754 100644
 =2D-- a/misc/mdcheck
 +++ b/misc/mdcheck
-@@ -1,6 +1,6 @@
- #!/bin/bash
+@@ -66,7 +66,7 @@ shift
 =20
-=2D# Copyright (C) 2014 Neil Brown <neilb@suse.de>
-+# Copyright (C) 2014-2017 Neil Brown <neilb@suse.de>
- #
- #
- #    This program is free software; you can redistribute it and/or modify
-@@ -14,7 +14,7 @@
- #    GNU General Public License for more details.
- #
- #    Author: Neil Brown
-=2D#    Email: <neilb@suse.de>
-+#    Email: <neilb@suse.com>
+ # We need a temp file occasionally...
+ tmp=3D/var/lib/mdcheck/.md-check-$$
+=2Dtrap 'rm -f "$tmp"' 0
++trap 'rm -f "$tmp"' 0 2 3 15
 =20
- # This script should be run periodically to automatically
- # perform a 'check' on any md arrays.
-@@ -94,17 +94,20 @@ do
- 	if [ -z "$cont" ]
- 	then
- 		start=3D0
-+		logger -p daemon.info mdcheck start checking $dev
- 	elif [ -z "$MD_UUID" -o ! -f "$fl" ]
- 	then
- 		# Nothing to continue here
- 		continue
- 	else
- 		start=3D`cat "$fl"`
-+		logger -p daemon.info mdcheck continue checking $dev from $start
- 	fi
 =20
- 	cnt=3D$[cnt+1]
- 	eval MD_${cnt}_fl=3D\$fl
- 	eval MD_${cnt}_sys=3D\$sys
-+	eval MD_${cnt}_dev=3D\$dev
- 	echo $start > $fl
- 	echo $start > $sys/md/sync_min
- 	echo check > $sys/md/sync_action
-@@ -145,6 +148,7 @@ for i in `eval echo {1..$cnt}`
- do
- 	eval fl=3D\$MD_${i}_fl
- 	eval sys=3D\$MD_${i}_sys
-+	eval dev=3D\$MD_${i}_dev
-=20
- 	if [ -z "$fl" ]; then continue; fi
-=20
-@@ -156,4 +160,5 @@ do
- 	fi
- 	echo idle > $sys/md/sync_action
- 	cat $sys/md/sync_min > $fl
-+	logger -p daemon.info pause checking $dev at `cat $fl`
- done
+ # firstly, clean out really old state files
 =2D-=20
 2.14.0.rc0.dirty
 
@@ -89,18 +47,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnW3XIACgkQOeye3VZi
-gbkEhxAAouG3foPORyx+0CYwrdlI2yOmEVjsm6zjMwiYqA7BxcL2lAzr7FYcWO4E
-I4wS5C0zN40B47SCceruKzD8vJWWs+Z0skJ6C7Loh0NrQaNDpVRXaCzTzFgero70
-Y39UFTcdJ2Kjb1gR5+l2i2YacYsuVeRBjO2sevkRnn6vSUICuuoLtm/mbxefDxkh
-2ju10BlzK56M1Y59l4HJhHQMUf6DgJW4guG5pxF9EAJGPphI96nbjqfsmv8sy6z5
-hCj6rq4Zp8gZHvxyHuXe93bFQy2+erl8Hmi66384YPI+Ubx6u6LveGn9LE36hHIg
-uNJLGCZQBiIVRaDuYhP10QEkGiN2kXpAFCG+wl3Cu11nrSPgBdCo+jfkX4fOC9Fh
-RGEib7KVJRho0d4+EuPXIImLveoBwxRIz06RIea1Jz6F04XWq0EZkOEcSTq+WPC3
-wjT56lXXN+p4duEUzjHW2/3meP+mAAQnkt3NuBAP3sRvgZmnGr53f2n4ng5mj6gi
-hTd9b91ugXu7O4lm0qYYB28YPPJsffxRRn7gBBr1tW463cPAXKNTWGeMl1HPxYCz
-CM3pzyvqSew9RgqaeY91xk9PsTPuuJe3T55Or4vK26xVK6RY/igUmLGouA6Z90DA
-SG2ol9ICRyC3Py+/CQgHz7cJlGp9f2xY961O4pTXffnXs+l4m1w=
-=/aVF
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnW3bAACgkQOeye3VZi
+gbn0RQ//URrP5TLbvKWCDg7FsBYHqmh/5owmrIUzZyxioK9mYtgDYZ59xpMnz0F5
+2fnYK2YBPU7QMSK6/tCiauDbBdNplZ9bX3llYKFWwG8H9fvF2n4B/wct347DH5Oz
+dzvWKyCwGFIfuZFh0ZY0pC4gs9Re9V1bJpWCP790YujNIYCTxY8oRF8Z7rWgaI3Q
+uiattxNGf250Lq2JYTl/ptY4daEjCxLq7g+D60TBHyPMgcbiVqL6fazmdWsCrelc
+ygyG91xcuFCV3EvwYfhYi6yVZmezuSoP5hmf+vX+tSfNqCgi5QdHSmky5cGITuHr
+aL0mHtFSLbaxwsTFaIZLgI1xEU1cCiNOpkQ+jpAXE6iohG+TguUp6k/GetVVU3Kd
+eTJQmHiXFT5KUBh68l1+kB9aXImjwekpGPveaJ0WYmf7JOXBtcQoIU7DVvUO/JLh
+p8LeGb0xiHB4SPc/4GhEcISPuds1N49ZIFsLt1vFCCH0c2GZy4Pjp7uaFScKD+Xs
+lDCd1M6w4Gph7hqpVrS190JMGgQ4bK0M6/5xoR8klO6m4zmX8zmGV2M9ji8Bv2bi
+hNIFQrpJuAIN33g+JdwwrapnS3X3Nhnt88WmN7p0P4xn5iZBspekloqV6Q7nKtJK
+NDRPcSBb57Ng3a++tjQqYT7zeJfg85B5ugSStFojbea3wRPSYP8=
+=wPNy
 -----END PGP SIGNATURE-----
 --=-=-=--
