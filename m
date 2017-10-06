@@ -1,49 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: hung grow
-Date: Fri, 6 Oct 2017 10:27:40 -0400
-Message-ID: <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org>
-References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
- <a528459f-8bf5-3e47-9c9a-7c040ad7ab81@youngman.org.uk>
- <CADg2FGYPENaUb7oDhOUu08VMhzygE365mqw=Lw332jBGbe1dGQ@mail.gmail.com>
- <0001704a-fe2f-e164-7694-f294a427ed83@gmail.com>
- <CADg2FGYRGYww6fTCYJCYRQvnrW70nZx-tTYpBP1+cyvzvTSpgA@mail.gmail.com>
- <cdf0fd70-ec6d-8e9d-6abd-6d9937b6a709@gmail.com>
- <d1bd0e82-9415-b6f4-2ffa-6e17bf636f34@youngman.org.uk>
- <CADg2FGaNtjN7=wYe6f07xEZ=mW2QFZdjtBFjQLDthn9w3Jw=NA@mail.gmail.com>
- <3173c10a-fbd9-f563-4c90-a9f63e020773@youngman.org.uk>
- <CADg2FGbSyvLykThXBpMd4MOuHgh2Q_-zPGm-HFxdYW2z4qsNDQ@mail.gmail.com>
- <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk>
- <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org>
- <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com>
- <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
- <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org>
- <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
-Content-Language: en-GB
-Sender: linux-raid-owner@vger.kernel.org
-To: Curt <lightspd@gmail.com>
-Cc: linux-raid@vger.kernel.org
+From: Matthias Kaehlcke <mka@chromium.org>
+Subject: [PATCH] bcache: Remove nested function from sysfs
+Date: Fri,  6 Oct 2017 14:35:00 -0700
+Message-ID: <20171006213500.88230-1-mka@chromium.org>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Coly Li <colyli@suse.de>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, q^Center Roeck <groeck@chromium.org>, Behan Webster <behanw@converseincode.com>, Matthias Kaehlcke <mka@chromium.org>
 List-Id: linux-raid.ids
 
-On 10/06/2017 10:07 AM, Curt wrote:
-> Ok, I will ddrescue that drive today, which should take about 10
-> hours.  I'm just doing a ddrescue -f -n /dev/bad /dev/new logFile.  Is
-> there any other suggested flags?
+From: Behan Webster <behanw@converseincode.com>
 
-No, that should do.  You can ddrescue just the partition if you like.
+Replace the use of nested functions where a normal function will
+suffice.
 
-> Once that is done, I'll run the before mentioned, mdadm assemble force
-> revert sda/c/d/g + rescued e and z.
+Nested functions are not liked by upstream kernel developers in
+general. Their use breaks the use of clang as a compiler, and
+doesn't make the code any better.
 
-Yes, just make sure you are at the MD member level, whether whole device
-or partition for each component.  Your new devices were added as whole
-devices, an inconsistency that could burn you later.
+This code now works for both gcc and clang.
 
-> Then start pulling whatever data
-> I can off it.
+From: Behan Webster <behanw@converseincode.com>
+Signed-off-by: Behan Webster <behanw@converseincode.com>
+Reviewed-by: Mark Charlebois <charlebm@gmail.com>
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+---
+ drivers/md/bcache/sysfs.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Yes.
+diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+index 104c57cd666c..440c3906f852 100644
+--- a/drivers/md/bcache/sysfs.c
++++ b/drivers/md/bcache/sysfs.c
+@@ -745,6 +745,11 @@ static struct attribute *bch_cache_set_internal_files[] = {
+ };
+ KTYPE(bch_cache_set_internal);
+ 
++static int __bch_cache_cmp(const void *l, const void *r)
++{
++	return *((uint16_t *) r) - *((uint16_t *) l);
++}
++
+ SHOW(__bch_cache)
+ {
+ 	struct cache *ca = container_of(kobj, struct cache, kobj);
+@@ -769,9 +774,6 @@ SHOW(__bch_cache)
+ 					       CACHE_REPLACEMENT(&ca->sb));
+ 
+ 	if (attr == &sysfs_priority_stats) {
+-		int cmp(const void *l, const void *r)
+-		{	return *((uint16_t *) r) - *((uint16_t *) l); }
+-
+ 		struct bucket *b;
+ 		size_t n = ca->sb.nbuckets, i;
+ 		size_t unused = 0, available = 0, dirty = 0, meta = 0;
+@@ -800,7 +802,7 @@ SHOW(__bch_cache)
+ 			p[i] = ca->buckets[i].prio;
+ 		mutex_unlock(&ca->set->bucket_lock);
+ 
+-		sort(p, n, sizeof(uint16_t), cmp, NULL);
++		sort(p, n, sizeof(uint16_t), __bch_cache_cmp, NULL);
+ 
+ 		while (n &&
+ 		       !cached[n - 1])
+-- 
+2.14.2.920.gcf0c67979c-goog
