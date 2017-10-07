@@ -1,67 +1,45 @@
-From: Gilad Ben-Yossef <gilad@benyossef.com>
-Subject: Re: [PATCH v8 01/20] crypto: change transient busy return code to -EAGAIN
-Date: Sat, 7 Oct 2017 10:51:42 +0300
-Message-ID: <CAOtvUMd=vtju=VJkCYFRrvANbRRYj+95cdgDoMMfBvmPaPbsAA@mail.gmail.com>
-References: <1504615144-29770-1-git-send-email-gilad@benyossef.com>
- <1504615144-29770-2-git-send-email-gilad@benyossef.com> <20171007030541.GA29421@gondor.apana.org.au>
+From: Carsten Aulbert <carsten.aulbert@aei.mpg.de>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Sat, 7 Oct 2017 10:21:22 +0200
+Message-ID: <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <20171007030541.GA29421@gondor.apana.org.au>
-Sender: owner-linux-security-module@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, Jonathan Corbet <corbet@lwn.net>, David Howells <dhowells@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>, Gary Hook <gary.hook@amd.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Arnaud Ebalard <arno@natisbad.org>, Matthias Brugger <matthias.bgg@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, device-mapper development <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, Steve French <sfrench@samba.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Steffen Klassert <steffen.klassert@secunet.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>, Dmitry
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Alexander Shenkin <al@shenkin.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Oct 7, 2017 at 6:05 AM, Herbert Xu <herbert@gondor.apana.org.au> wrote:
-> On Tue, Sep 05, 2017 at 03:38:40PM +0300, Gilad Ben-Yossef wrote:
->>
->> diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
->> index 5e92bd2..3b3c154 100644
->> --- a/crypto/algif_hash.c
->> +++ b/crypto/algif_hash.c
->> @@ -39,6 +39,20 @@ struct algif_hash_tfm {
->>       bool has_key;
->>  };
->>
->> +/* Previous versions of crypto_* ops used to return -EBUSY
->> + * rather than -EAGAIN to indicate being tied up. The in
->> + * kernel API changed but we don't want to break the user
->> + * space API. As only the hash user interface exposed this
->> + * error ever to the user, do the translation here.
->> + */
->> +static inline int crypto_user_err(int err)
->> +{
->> +     if (err == -EAGAIN)
->> +             return -EBUSY;
->> +
->> +     return err;
->
-> I don't see the need to carry along this baggage.  Does anyone
-> in user-space actually rely on EBUSY?
+Hi
 
+On 10/07/17 09:48, Alexander Shenkin wrote:
+> My SMART monitoring has picked up some pending sectors on one of my
+> RAID0 + RAID5 drives (it's one of the infamous 3TB seagate drives... my
+> other 3 failed earlier... this is the last of them, that finally has
+> gone as well...).  I've just ordered a replacement (Toshiba P300) that
+> will arrive tomorrow... but the question is, what to do in the meantime?
+>  Should I take the drive offline?  I suspect so, but would like to
+> double check before taking action.  Thanks in advance for any advice.
 
-I am not aware of anyone who does. I was just trying to avoid
-changing the user ABI.
+Given this is "only" a single sector error I would keep it running as
+long as you can physically install the new drive and only then take it
+offline.
 
-Shall I roll a new revision without this patch?
+At least theoretically, it may be possible to force the rewrite of this
+sector and use the spare sectors of the disk, but I'm not 100% sure if a
+simple md check would already trigger it - usually you need to write
+"new" data to defective sectors to force the drive's firmware to use the
+spare sectors.
 
-Thanks,
-Gilad
+But given the replacement disk should arrive soon, I would not act
+before that and run with a degraded RAID5 until then.
 
->
-> Cheers,
-> --
-> Email: Herbert Xu <herbert@gondor.apana.org.au>
-> Home Page: http://gondor.apana.org.au/~herbert/
-> PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+I'm a bit more worried about the RAID0 here, do you run RAID0 on top of
+RAID5 or what is the exact set-up?
 
+cheers
 
-
--- 
-Gilad Ben-Yossef
-Chief Coffee Drinker
-
-"If you take a class in large-scale robotics, can you end up in a
-situation where the homework eats your dog?"
- -- Jean-Baptiste Queru
+Carsten
