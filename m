@@ -1,66 +1,105 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Sat, 7 Oct 2017 18:29:57 +0100
-Message-ID: <59D90F15.1040203@youngman.org.uk>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
- <4ebf4f1c-34af-2b7d-20b3-77dd49086d94@shenkin.org>
+From: Curt <lightspd@gmail.com>
+Subject: Re: hung grow
+Date: Sat, 7 Oct 2017 16:45:53 -0400
+Message-ID: <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
+ <a528459f-8bf5-3e47-9c9a-7c040ad7ab81@youngman.org.uk> <CADg2FGYPENaUb7oDhOUu08VMhzygE365mqw=Lw332jBGbe1dGQ@mail.gmail.com>
+ <0001704a-fe2f-e164-7694-f294a427ed83@gmail.com> <CADg2FGYRGYww6fTCYJCYRQvnrW70nZx-tTYpBP1+cyvzvTSpgA@mail.gmail.com>
+ <cdf0fd70-ec6d-8e9d-6abd-6d9937b6a709@gmail.com> <d1bd0e82-9415-b6f4-2ffa-6e17bf636f34@youngman.org.uk>
+ <CADg2FGaNtjN7=wYe6f07xEZ=mW2QFZdjtBFjQLDthn9w3Jw=NA@mail.gmail.com>
+ <3173c10a-fbd9-f563-4c90-a9f63e020773@youngman.org.uk> <CADg2FGbSyvLykThXBpMd4MOuHgh2Q_-zPGm-HFxdYW2z4qsNDQ@mail.gmail.com>
+ <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk> <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org>
+ <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com>
+ <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
+ <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org> <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
+ <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
+ <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4ebf4f1c-34af-2b7d-20b3-77dd49086d94@shenkin.org>
+In-Reply-To: <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/10/17 11:05, Alexander Shenkin wrote:
-> Thanks Carsten,
-> 
-> I was mistaken, it's a RAID1, not RAID0.  I have /boot mounted on a
-> RAID0, and / mounted on RAID5.  They both split across 4 drives.
+Here's the output of -E for sdf1 and one other, in case it's needed.
+As I understand it the UUID is what has to do with the superblock, but
+UUID's match between them.
 
-How big is each partition that makes up /boot? If that's raid0, surely
-that's not wise? A single disk failure will render the machine
-unbootable. Surely that should be raid1, so you can boot off any disk.
-> 
-> Appreciate the advice - i'll just keep it running until the drive
-> arrives tomorrow...
+mdadm -E /dev/sdf1
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 714a612d:9bd35197:36c91ae3:c168144d
+  Creation Time : Fri Jun 15 15:52:05 2012
+     Raid Level : raid6
+  Used Dev Size : 1953503872 (1863.01 GiB 2000.39 GB)
+     Array Size : 9767519360 (9315.03 GiB 10001.94 GB)
+   Raid Devices : 7
+  Total Devices : 7
+Preferred Minor : 127
 
-I'd keep it running ...
-> 
-> Thanks,
-> Allie
-> 
-> On 10/7/2017 9:21 AM, Carsten Aulbert wrote:
->> Hi
->>
+    Update Time : Sat Sep  2 01:00:37 2017
+          State : active
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : cd217ebc - correct
+         Events : 11559404
 
->>
->> Given this is "only" a single sector error I would keep it running as
->> long as you can physically install the new drive and only then take it
->> offline.
->>
->> At least theoretically, it may be possible to force the rewrite of this
->> sector and use the spare sectors of the disk, but I'm not 100% sure if a
->> simple md check would already trigger it - usually you need to write
->> "new" data to defective sectors to force the drive's firmware to use the
->> spare sectors.
->>
-How serious is a "pending sector"? I think doing a scrub will fix it.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-If it's not serious I'd look at using the extra drive to convert it to
-raid6. I doubt the infamous 3TB drives were a "bad batch", but given the
-press they got I would have expected Seagate to fix the problem. If
-these drives are newer than the ones that got the bad press, they might
-be fine.
+      Number   Major   Minor   RaidDevice State
+this     5       8       65        5      active sync   /dev/sde1
 
-There's always the argument "do you ditch a disk on the first error, or
-do you wait until it's definitely dying". But iirc a "pending sector" is
-just one of those things that happens every now and then. If this goes
-away with a scrub, and you don't get a batch of new ones, then the drive
-is probably fine (until the next *random* problem shows up).
+   0     0       8       81        0      active sync   /dev/sdf1
+   1     1       8       33        1      active sync   /dev/sdc1
+   2     2       8       17        2      active sync
+   3     3      65      129        3      active sync   /dev/sdy1
+   4     4       8       49        4      active sync   /dev/sdd1
+   5     5       8       65        5      active sync   /dev/sde1
+   6     6       0        0        6      faulty removed
 
-Cheers,
-Wol
+*****************************
+mdadm -E /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 0.91.00
+           UUID : 714a612d:9bd35197:36c91ae3:c168144d
+  Creation Time : Fri Jun 15 15:52:05 2012
+     Raid Level : raid6
+  Used Dev Size : 1953503872 (1863.01 GiB 2000.39 GB)
+     Array Size : 11721023232 (11178.04 GiB 12002.33 GB)
+   Raid Devices : 8
+  Total Devices : 6
+Preferred Minor : 127
 
+  Reshape pos'n : 3799296 (3.62 GiB 3.89 GB)
+  Delta Devices : 1 (7->8)
+
+    Update Time : Wed Oct  4 12:49:57 2017
+          State : clean
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : ce71a9cb - correct
+         Events : 11559681
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8        1        3      active sync   /dev/sda1
+
+   0     0       8       97        0      active sync   /dev/sdg1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       0        0        5      faulty removed
+   6     6       8       16        6      active   /dev/sdb
+   7     7       0        0        7      faulty removed
