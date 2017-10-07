@@ -1,59 +1,84 @@
-From: Alexander Shenkin <al@shenkin.org>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Sat, 7 Oct 2017 11:05:29 +0100
-Message-ID: <4ebf4f1c-34af-2b7d-20b3-77dd49086d94@shenkin.org>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH 1/3] mdadm/grow: Component size must be larger than chunk size
+Date: Sat, 7 Oct 2017 20:17:55 +0800
+Message-ID: <3677C02D-4005-4E30-B3C7-46EF8BED6C9A@suse.com>
+References: <1504604498-26048-1-git-send-email-zlliu@suse.com> <1504604498-26048-2-git-send-email-zlliu@suse.com> <20171005114430.GA24654@proton.igk.intel.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=gb2312
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
-Content-Language: en-US
+In-Reply-To: <20171005114430.GA24654@proton.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: linux-raid@vger.kernel.org, Jes Sorensen <Jes.Sorensen@gmail.com>
 List-Id: linux-raid.ids
 
-Thanks Carsten,
 
-I was mistaken, it's a RAID1, not RAID0.  I have /boot mounted on a
-RAID0, and / mounted on RAID5.  They both split across 4 drives.
 
-Appreciate the advice - i'll just keep it running until the drive
-arrives tomorrow...
+> 在 2017年10月5日，19:44，Tomasz Majchrzak <tomasz.majchrzak@intel.com> 写道：
+> 
+>> On Tue, Sep 05, 2017 at 05:41:36PM +0800, Zhilong Liu wrote:
+>> Grow: Changing component size must be larger than current
+>> chunk size against stripe raids, otherwise Grow_reshape()
+>> would set s->size to '0'.
+>> 
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>> ---
+>> Grow.c | 6 ++++++
+>> 1 file changed, 6 insertions(+)
+>> 
+>> diff --git a/Grow.c b/Grow.c
+>> index 534ba80..f0a21ff 100644
+>> --- a/Grow.c
+>> +++ b/Grow.c
+>> @@ -1816,6 +1816,12 @@ int Grow_reshape(char *devname, int fd,
+>>        return 1;
+>>    }
+>> 
+>> +    if (array.level > 1 &&
+>> +       (array.chunk_size / 1024) > (int)s->size) {
+>> +        pr_err("component size must be larger than chunk size.\n");
+>> +        return 1;
+>> +    }
+>> +
+>>    st = super_by_fd(fd, &subarray);
+>>    if (!st) {
+>>        pr_err("Unable to determine metadata format for %s\n", devname);
+>> -- 
+>> 2.6.6
+> 
+> 
+> Hi Zhilong Liu,
+> 
+> Above patch has broken RAID level conversion:
+> 
+> Before the patch:
+> 
+> mdadm --create /dev/md/raid --level=10 --raid-devices=4 /dev/nvme0n1
+> /dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1 --run --assume-clean
+> MDADM_EXPERIMENTAL=1 mdadm --grow /dev/md/raid --level=0
+> mdadm: level of /dev/md/raid changed to raid0
+> 
+> After the patch:
+> 
+> mdadm --create /dev/md/raid --level=10 --raid-devices=4 /dev/nvme0n1
+> /dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1 --run --assume-clean
+> MDADM_EXPERIMENTAL=1 mdadm --grow /dev/md/raid --level=0
+> mdadm: component size must be larger than chunk size.
+> 
+> Could you take a look at it, please?
+> 
 
-Thanks,
-Allie
+Hi, Tomek;
+   Thanks for your information. I would verify it when I'm back from vacation.
+  Yes, this condition should be proper only in create mode.
 
-On 10/7/2017 9:21 AM, Carsten Aulbert wrote:
-> Hi
+Thanks very much,
+Zhilong
+
+> Thanks,
 > 
-> On 10/07/17 09:48, Alexander Shenkin wrote:
->> My SMART monitoring has picked up some pending sectors on one of my
->> RAID0 + RAID5 drives (it's one of the infamous 3TB seagate drives... my
->> other 3 failed earlier... this is the last of them, that finally has
->> gone as well...).  I've just ordered a replacement (Toshiba P300) that
->> will arrive tomorrow... but the question is, what to do in the meantime?
->>  Should I take the drive offline?  I suspect so, but would like to
->> double check before taking action.  Thanks in advance for any advice.
+> Tomek
 > 
-> Given this is "only" a single sector error I would keep it running as
-> long as you can physically install the new drive and only then take it
-> offline.
-> 
-> At least theoretically, it may be possible to force the rewrite of this
-> sector and use the spare sectors of the disk, but I'm not 100% sure if a
-> simple md check would already trigger it - usually you need to write
-> "new" data to defective sectors to force the drive's firmware to use the
-> spare sectors.
-> 
-> But given the replacement disk should arrive soon, I would not act
-> before that and run with a degraded RAID5 until then.
-> 
-> I'm a bit more worried about the RAID0 here, do you run RAID0 on top of
-> RAID5 or what is the exact set-up?
-> 
-> cheers
-> 
-> Carsten
-> 
+
