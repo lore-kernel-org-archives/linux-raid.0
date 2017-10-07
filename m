@@ -1,7 +1,7 @@
 From: Curt <lightspd@gmail.com>
 Subject: Re: hung grow
-Date: Fri, 6 Oct 2017 23:09:06 -0400
-Message-ID: <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
+Date: Fri, 6 Oct 2017 23:15:01 -0400
+Message-ID: <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
 References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
  <a528459f-8bf5-3e47-9c9a-7c040ad7ab81@youngman.org.uk> <CADg2FGYPENaUb7oDhOUu08VMhzygE365mqw=Lw332jBGbe1dGQ@mail.gmail.com>
  <0001704a-fe2f-e164-7694-f294a427ed83@gmail.com> <CADg2FGYRGYww6fTCYJCYRQvnrW70nZx-tTYpBP1+cyvzvTSpgA@mail.gmail.com>
@@ -12,29 +12,22 @@ References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
  <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com>
  <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
  <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org> <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
- <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org>
+ <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org>
+In-Reply-To: <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 6, 2017 at 10:27 AM, Phil Turmel <philip@turmel.org> wrote:
-> On 10/06/2017 10:07 AM, Curt wrote:
->> Once that is done, I'll run the before mentioned, mdadm assemble force
->> revert sda/c/d/g + rescued e and z.
+> Ok, I tried to do an assemble including the failed drive I ddrescued
+> and get superblock on /dev/sdf1 doesn't match others assembly aborted.
+> Does that mean I won't be able to revert or recovery any data?  I hope
+> not.
 >
-> Yes, just make sure you are at the MD member level, whether whole device
-> or partition for each component.  Your new devices were added as whole
-> devices, an inconsistency that could burn you later.
+> Cheers,
+> Curt
 
-Ok, I tried to do an assemble including the failed drive I ddrescued
-and get superblock on /dev/sdf1 doesn't match others assembly aborted.
-Does that mean I won't be able to revert or recovery any data?  I hope
-not.
-
-Cheers,
-Curt
+Just to clarify, sdf1 is the ddrescue of the failed drive.
