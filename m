@@ -1,48 +1,40 @@
-From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Subject: Re: [PATCH v8 01/20] crypto: change transient busy return code to
- -EAGAIN
-Date: Sat, 7 Oct 2017 11:05:41 +0800
-Message-ID: <20171007030541.GA29421@gondor.apana.org.au>
-References: <1504615144-29770-1-git-send-email-gilad@benyossef.com>
- <1504615144-29770-2-git-send-email-gilad@benyossef.com>
+From: Curt <lightspd@gmail.com>
+Subject: Re: hung grow
+Date: Fri, 6 Oct 2017 23:09:06 -0400
+Message-ID: <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
+ <a528459f-8bf5-3e47-9c9a-7c040ad7ab81@youngman.org.uk> <CADg2FGYPENaUb7oDhOUu08VMhzygE365mqw=Lw332jBGbe1dGQ@mail.gmail.com>
+ <0001704a-fe2f-e164-7694-f294a427ed83@gmail.com> <CADg2FGYRGYww6fTCYJCYRQvnrW70nZx-tTYpBP1+cyvzvTSpgA@mail.gmail.com>
+ <cdf0fd70-ec6d-8e9d-6abd-6d9937b6a709@gmail.com> <d1bd0e82-9415-b6f4-2ffa-6e17bf636f34@youngman.org.uk>
+ <CADg2FGaNtjN7=wYe6f07xEZ=mW2QFZdjtBFjQLDthn9w3Jw=NA@mail.gmail.com>
+ <3173c10a-fbd9-f563-4c90-a9f63e020773@youngman.org.uk> <CADg2FGbSyvLykThXBpMd4MOuHgh2Q_-zPGm-HFxdYW2z4qsNDQ@mail.gmail.com>
+ <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk> <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org>
+ <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com>
+ <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
+ <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org> <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
+ <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1504615144-29770-2-git-send-email-gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Gilad Ben-Yossef <gilad-6S/DczAoZh3WXxRugSxzZg@public.gmane.org>
-Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Gary Hook <gary.hook-5C7GfCeVMHo@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Arnaud Ebalard <arno-LkuqDEemtHBg9hUCZPvPmw@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steve French <sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, "Theodore Y. Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Steffen Klassert <steffen.klassert-opNxpl+3fjRBDgjK7y7TUQ@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, Mimi Zohar <zohar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Dmitry Kasatkin <dmitry.kasatkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 05, 2017 at 03:38:40PM +0300, Gilad Ben-Yossef wrote:
+On Fri, Oct 6, 2017 at 10:27 AM, Phil Turmel <philip@turmel.org> wrote:
+> On 10/06/2017 10:07 AM, Curt wrote:
+>> Once that is done, I'll run the before mentioned, mdadm assemble force
+>> revert sda/c/d/g + rescued e and z.
 >
-> diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
-> index 5e92bd2..3b3c154 100644
-> --- a/crypto/algif_hash.c
-> +++ b/crypto/algif_hash.c
-> @@ -39,6 +39,20 @@ struct algif_hash_tfm {
->  	bool has_key;
->  };
->  
-> +/* Previous versions of crypto_* ops used to return -EBUSY
-> + * rather than -EAGAIN to indicate being tied up. The in
-> + * kernel API changed but we don't want to break the user
-> + * space API. As only the hash user interface exposed this
-> + * error ever to the user, do the translation here.
-> + */
-> +static inline int crypto_user_err(int err)
-> +{
-> +	if (err == -EAGAIN)
-> +		return -EBUSY;
-> +
-> +	return err;
+> Yes, just make sure you are at the MD member level, whether whole device
+> or partition for each component.  Your new devices were added as whole
+> devices, an inconsistency that could burn you later.
 
-I don't see the need to carry along this baggage.  Does anyone
-in user-space actually rely on EBUSY?
+Ok, I tried to do an assemble including the failed drive I ddrescued
+and get superblock on /dev/sdf1 doesn't match others assembly aborted.
+Does that mean I won't be able to revert or recovery any data?  I hope
+not.
 
 Cheers,
--- 
-Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Curt
