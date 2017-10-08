@@ -1,131 +1,80 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
-Date: Sat, 7 Oct 2017 18:46:02 -0400
-Message-ID: <23001.22826.412907.998141@quad.stoffel.home>
-References: <22997.8664.67459.119616@quad.stoffel.home>
-        <87a81637lq.fsf@notabene.neil.brown.name>
-        <F48A217B-C892-4EA7-8451-6056BE92AD02@stoffel.org>
-        <59D94FFD.9060404@youngman.org.uk>
-        <23001.21117.685622.668977@quad.stoffel.home>
-        <59D9571E.8060208@youngman.org.uk>
+From: Alexander Shenkin <al@shenkin.org>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Sun, 8 Oct 2017 10:19:42 +0100
+Message-ID: <b07a6092-9127-8a7b-a889-858df80ce803@shenkin.org>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+ <4ebf4f1c-34af-2b7d-20b3-77dd49086d94@shenkin.org>
+ <59D90F15.1040203@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59D9571E.8060208@youngman.org.uk>
+In-Reply-To: <59D90F15.1040203@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: John Stoffel <john@stoffel.org>, NeilBrown <neilb@suse.com>, Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Wols" == Wols Lists <antlists@youngman.org.uk> writes:
+Thanks Wol; that's *2* mistakes I've made; ugh.  /boot is on RAID1.  I
+have no RAID0's in the machine.
 
-Wols> On 07/10/17 23:17, John Stoffel wrote:
->>>>>>> "Wols" == Wols Lists <antlists@youngman.org.uk> writes:
->> 
-Wols> On 05/10/17 02:26, John Stoffel wrote:
->>>> It's trivial to revert if you know the starting size!  And I would argue that the --size option is misnamed, since is is a per-component resize.  
->>>> 
->>>> In any case, would it be better to print a message which said something like: array md## devices resized from <orig> to <new size>
->>>> 
->> 
-Wols> I think a message like "You are setting array space available to
-Wols> less than array space used. Use --force if you really want to do
-Wols> this".
->> 
->> I think changing the message to say: "Resizing array component size
->> from X to Y." would address a bunch of comments on this thread.  And
->> would give people a way to get back to where they were more easily. 
+These 3TB seagates are old ones, and were sitting in their original
+boxes for a few years unused.  3 others have already died, and one
+during a rebuild, causing tons of grief.  So, random or not, this one is
+going in the trash.  Seagate should refund me, but they never will.
 
-Wols> Except it does NOT tell the user WHY they are being stupid ...
+Thanks,
+Allie
 
-Ok.  But how much hand holding can we do here?  I see where Neil is
-coming from in terms of not stopping people from being stupid.  I just
-want to give them help in not making stupid mistakes.
-
->>>> When the user does this?  But again, I think the --force option is good to have when reducing the size of component devices, sine I would hope the message gives people a pause and hopefully makes them think.
->>>> 
->> 
-Wols> I'm with Neil in that you should never have to use force if
-Wols> you're doing something sensible. As soon as mdadm says "you need
-Wols> to use --force" it should be a warning that something is
-Wols> amiss. So only require it if the array needs the space that
-Wols> you're reducing away. If you're using 6TB with 3 x 3TB drives,
-Wols> then reducing component size to 2.1TB shouldn't trigger a
-Wols> warning ...
->> 
->> You're taking both sides of the arguement here!  The question in my
->> mind is really if it's *ever* a good idea to reduce the size of
->> components of an array without an explicit command.  For growing,
->> sure, that's not a problem.  But since we can shrink component (not
->> just the array size!) sizes without warning and destroy people's data,
->> it's upon the tool to at least make some effort to notify them.
-
-Wols> But it's also possible to reduce the size of an array WITHOUT destroying
-Wols> peoples' data, and making them use --force here is a bad idea. (See
-Wols> below - I've just realised I don't think this is possible.)
-
-But how does mdadm *know* that people won't be destroying their data?
-Yes, if they resize the filesystem(s), the logical volumes, the volume
-groups, or any upper layers to be smaller, then you can reduce the
-component sizes.  But that's a *really* unusual step to take with
-RAID1,5 or 6, don't you think?
-
->>>> So I really don't think we're holding people back, we're educating them with this warning.  
->>>> 
->> 
-Wols> Good idea - I just think that the message as you've phrased it
-Wols> isn't that educative, sorry.
->> 
->> That's okay, the message needs to be tweaked for sure.  I was just
->> getting out a proof of concept patch.
->> 
-Wols> Looking at your current message, it sounds like you're comparing
-Wols> current array usage with future array size so that's right - you
-Wols> just need a warning that sends a clear "you are about to shoot
-Wols> yourself in the foot" message, not just a "use --force to
-Wols> suppress this warning".
->> 
->> I agree that both A) the message needs to be improved, and B) the --force
->> option needs to be there when you are shrinking.  Neil didn't like B
->> as much, but I still think that when shrinkinking, we need to be very
->> hesitant to do something without explicit statement from the user,
->> because it's too easy without the new message (to be done still!) to
->> mess up and break things horribly.
->> 
-Wols> Let me give a worked explanation of what I'm getting at. A bit
-Wols> contrived, and I've suddenly realised I may be muddling my layers of the
-Wols> stack, but ...
-
-Wols> What I was thinking was let's say the user created an array with 3 x 2TB
-Wols> drives. He then replaces the drives with 3TB drives. So the array is
-Wols> only using some of the space available.
-
-Wols> So he increases the component size from 2TB to 3TB - and then changes
-Wols> his mind! To me, it makes sense that he should be able to revert that
-Wols> change *without* getting a warning. However, as I've just said above,
-Wols> I've just realised that might not be possible :-( as mdadm has no way of
-Wols> knowing - inbetween the increase and decrease of size - whether the user
-Wols> has used other commands to use the new space available.
-
-Exactly!!!!
-
-Wols> So if mdadm can tell that the user is only using 2TB, it shouldn't warn
-Wols> when size is reduced. I just don't think it can tell :-(
-
-Correct, it can't know.  So that's why the --force is good in that case.
-
-Wols> So yes, your approach of requiring --force to reduce the component size
-Wols> does seem a sensible approach - we just need a clear message. Going on
-Wols> about component devices muddies the water imho. Maybe something like
-Wols> "WARNING: this command will shrink your array. Have you shrunk the
-Wols> contents accordingly? Use --force to apply the change." Bear in mind Eli
-Wols> thought he was growing the array (which is what most people will
-Wols> expect), a warning that the array is going to shrink should trigger a
-Wols> "what the!?" response.
-
-Yes, the message needs to be improved, I agree 100%.  I'll try to whip
-up something and send it out for comments.
-
-John
-
+On 10/7/2017 6:29 PM, Wols Lists wrote:
+> On 07/10/17 11:05, Alexander Shenkin wrote:
+>> Thanks Carsten,
+>>
+>> I was mistaken, it's a RAID1, not RAID0.  I have /boot mounted on a
+>> RAID0, and / mounted on RAID5.  They both split across 4 drives.
+> 
+> How big is each partition that makes up /boot? If that's raid0, surely
+> that's not wise? A single disk failure will render the machine
+> unbootable. Surely that should be raid1, so you can boot off any disk.
+>>
+>> Appreciate the advice - i'll just keep it running until the drive
+>> arrives tomorrow...
+> 
+> I'd keep it running ...
+>>
+>> Thanks,
+>> Allie
+>>
+>> On 10/7/2017 9:21 AM, Carsten Aulbert wrote:
+>>> Hi
+>>>
+> 
+>>>
+>>> Given this is "only" a single sector error I would keep it running as
+>>> long as you can physically install the new drive and only then take it
+>>> offline.
+>>>
+>>> At least theoretically, it may be possible to force the rewrite of this
+>>> sector and use the spare sectors of the disk, but I'm not 100% sure if a
+>>> simple md check would already trigger it - usually you need to write
+>>> "new" data to defective sectors to force the drive's firmware to use the
+>>> spare sectors.
+>>>
+> How serious is a "pending sector"? I think doing a scrub will fix it.
+> 
+> If it's not serious I'd look at using the extra drive to convert it to
+> raid6. I doubt the infamous 3TB drives were a "bad batch", but given the
+> press they got I would have expected Seagate to fix the problem. If
+> these drives are newer than the ones that got the bad press, they might
+> be fine.
+> 
+> There's always the argument "do you ditch a disk on the first error, or
+> do you wait until it's definitely dying". But iirc a "pending sector" is
+> just one of those things that happens every now and then. If this goes
+> away with a scrub, and you don't get a batch of new ones, then the drive
+> is probably fine (until the next *random* problem shows up).
+> 
+> Cheers,
+> Wol
+> 
