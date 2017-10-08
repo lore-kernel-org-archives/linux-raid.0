@@ -1,75 +1,95 @@
-From: Joshua Kinard <kumba@gentoo.org>
-Subject: commit 8031c3ddc70a breaks RAID5 on MIPS kernel where PAGE_SIZE ==
- 64K
-Date: Sun, 8 Oct 2017 16:34:52 -0400
-Message-ID: <db0e511c-f5db-99fe-70ac-150864432db0@gentoo.org>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
+Date: Sun, 8 Oct 2017 16:57:45 -0400
+Message-ID: <23002.37193.492253.120639@quad.stoffel.home>
+References: <22997.8664.67459.119616@quad.stoffel.home>
+        <87a81637lq.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Language: en-US
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: linux-raid@vger.kernel.org
-Cc: Linux/MIPS <linux-mips@linux-mips.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87a81637lq.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: John Stoffel <john@stoffel.org>, Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+>>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
 
-Testing 4.13.5 out on my SGI Octane, I discovered that my RAID5 arrays were no
-longer auto-assembling.  The error being thrown was an "attempt to access
-beyond the end of the device".  I've hand-transcribed a block of these errors
-from a manual attempt to assemble the array via mdadm from a netboot image:
+NeilBrown> On Wed, Oct 04 2017, John Stoffel wrote:
+>> Since Eli had such a horrible experience where he shrunk the
+>> individual component raid device size, instead of growing the overall
+>> raid by adding a device, I came up with this hacky patch to warn you
+>> when you are about to shoot yourself in the foot.
+>> 
+>> The idea is it will warn you and exit unless you pass in the --force
+>> (or -f) switch when using the command.  For example, on a set of loop
+>> devices:
+>> 
+>> # cat /proc/mdstat
+>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+>> [raid4] [multipath] [faulty]
+>> md99 : active raid6 loop4p1[4] loop3p1[3] loop2p1[2] loop1p1[1]
+>> loop0p1[0]
+>> 606720 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5]
+>> [UUUUU]
+>> 
+>> # ./mdadm --grow /dev/md99 --size 128
+>> mdadm: Cannot set device size smaller than current component_size of /dev/md99 array.  Use -f to force change.
+>> 
+>> # ./mdadm --grow /dev/md99 --size 128 -f
+>> mdadm: component size of /dev/md99 has been set to 0K
+>> 
 
-/ # mdadm -A /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1
-[   56.303339] md: md0 stopped.
-[   56.323565] md/raid:md0: device sda1 operational as raid disk 0
-[   56.334556] md/raid:md0: device sdb1 operational as raid disk 2
-[   56.345396] md/raid:md0: device sdc1 operational as raid disk 1
-[   56.350750] md/raid:md0: raid level 5 active with 3 out of 3 devices,
-algorithm 2
-[   56.369529] attempt to access beyond end of device
-[   56.380149] sda1: rw=2048, want=4194312, limit=4194305
-[   56.390823] attempt to access beyond end of device
-[   56.401500] sdc1: rw=2048, want=4194312, limit=4194305
-[   56.412313] attempt to access beyond end of device
-[   56.423146] sdb1: rw=2048, want=4194312, limit=4194305
-[   56.433985] md0: failed to create bitmap (-5)
-mdadm: failed to RUN_ARRAY /dev/md0: input/output error
-[   56.457979] md: md0 stopped.
-/ #
+NeilBrown> I'm not sure I like this.
+NeilBrown> The reason that mdadm will quietly accept a size change like this is
+NeilBrown> that it is trivial to revert - just set the same to a big number and all
+NeilBrown> your data is still there.
 
-I've traced the offending commit down to 8031c3ddc70a ("md/bitmap: copy correct
-data for bitmap super"):
+This is wrong, because if you use --grow --size ### with a small
+enough number, it destroys the MD raid superblock.  So again, I think
+the --force option is *critical* here.  Or we need to block the size
+change from going smaller than the superblock size.  Here's my test,
+where I just warn if the size is going to be smaller:
 
-https://git.linux-mips.org/cgit/ralf/linux.git/commit/?id=8031c3ddc70ab93099e7d1814382dba39f57b43e
+    # ./mdadm --grow /dev/md99 --size 128
+    mdadm: setting raid component device size from 202240 to 128 in array /dev/md99,
+    this may need to be reverted if new size is smaller.
+    mdadm: component size of /dev/md99 has been set to 0K
 
-Per the commit message, it makes an assumption that PAGE_SIZE is 4K.  MIPS
-kernels allow you to change the value of PAGE_SIZE at compile time to something
-other than 4K.  It appears that 4K and 16K both work, while 64K, which is what
-I use on this machine, is broken with this commit applied.
+    # ./mdadm --grow /dev/md99 --size 202240
+    mdadm: setting raid component device size from 0 to 202240 in array /dev/md99,
+    this may need to be reverted if new size is smaller.
+    mdadm: Cannot set device size in this type of array.
 
-Reverting this patch or setting PAGE_SIZE to 4K or 16K will resolve the issue,
-but there are advantages to using 64K PAGE_SIZEs on these platforms.  I am not
-sure that 16K is wholly safe either, FWIW, given the assumption made in the commit.
+    # mdadm -E /dev/md99
+    mdadm: No md superblock detected on /dev/md99.
 
-Thoughts?
+So I think this argues for a much stronger check, and/or the --force
+option when shrinking.  I'll re-spin my patch series into two chunks,
+one just the message if changing size.  The second to require the
+--force option.
 
--- 
-Joshua Kinard
-Gentoo/MIPS
-kumba@gentoo.org
-6144R/F5C6C943 2015-04-27
-177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
+And I think we need a third option to make sure the size can't be
+smaller than the array superblock size as well.  Otherwise a simple
+mistake trashes your array.
 
-"The past tempts us, the present confuses us, the future frightens us.  And our
-lives slip away, moment by moment, lost in that vast, terrible in-between."
+My current warning only patch (with whitespace damage...)
 
---Emperor Turhan, Centauri Republic
+> git diff
+diff --git a/Grow.c b/Grow.c
+index 455c5f9..18aea63 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -1625,6 +1625,10 @@ int Grow_reshape(char *devname, int fd,
+                return 1;
+		        }
+
++       if (s->size != (unsigned)array.size) {
++               pr_err("setting raid component device size from %u to %llu in array %s,\nthis may need to be reverted if new size is smaller.\n",(unsigned)array.size,s->size,devname);
++       }
++
+        st = super_by_fd(fd, &subarray);
+	        if (!st) {
+		                pr_err("Unable to determine metadata format for %s\n", devname);
+				
