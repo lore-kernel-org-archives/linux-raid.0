@@ -1,43 +1,55 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
-Date: Mon, 9 Oct 2017 16:04:10 -0400
-Message-ID: <c476e0a8-ff57-e38d-f3d7-0c59242cc0b9@turmel.org>
-References: <22997.8664.67459.119616@quad.stoffel.home>
- <87a81637lq.fsf@notabene.neil.brown.name>
- <23002.37193.492253.120639@quad.stoffel.home>
- <87shetz207.fsf@notabene.neil.brown.name>
- <23002.53075.413063.6948@quad.stoffel.home>
- <87h8v9yn91.fsf@notabene.neil.brown.name>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Mon, 9 Oct 2017 16:16:38 -0400
+Message-ID: <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87h8v9yn91.fsf@notabene.neil.brown.name>
+In-Reply-To: <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
 Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, John Stoffel <john@stoffel.org>
-Cc: Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
+To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Alexander Shenkin <al@shenkin.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/09/2017 12:10 AM, NeilBrown wrote:
+On 10/07/2017 04:21 AM, Carsten Aulbert wrote:
+> Hi
+> 
+> On 10/07/17 09:48, Alexander Shenkin wrote:
+>> My SMART monitoring has picked up some pending sectors on one of my
+>> RAID0 + RAID5 drives (it's one of the infamous 3TB seagate drives... my
+>> other 3 failed earlier... this is the last of them, that finally has
+>> gone as well...).  I've just ordered a replacement (Toshiba P300) that
+>> will arrive tomorrow... but the question is, what to do in the meantime?
+>>  Should I take the drive offline?  I suspect so, but would like to
+>> double check before taking action.  Thanks in advance for any advice.
+> 
+> Given this is "only" a single sector error I would keep it running as
+> long as you can physically install the new drive and only then take it
+> offline.
+> 
+> At least theoretically, it may be possible to force the rewrite of this
+> sector and use the spare sectors of the disk, but I'm not 100% sure if a
+> simple md check would already trigger it - usually you need to write
+> "new" data to defective sectors to force the drive's firmware to use the
+> spare sectors.
+> 
+> But given the replacement disk should arrive soon, I would not act
+> before that and run with a degraded RAID5 until then.
+> 
+> I'm a bit more worried about the RAID0 here, do you run RAID0 on top of
+> RAID5 or what is the exact set-up?
 
-> If there is some action that mdadm can currently be told to perform, and
-> when it tries to perform that action it corrupts the array, then
-> it is certainly appropriate to teach mdadm not to perform that action.
-> It shouldn't even perform that action with --force.   I agree that
-> changing mdadm like this is complementary to changing the kernel.  Both
-> are useful.
+So, no regular "check" scrubs.  Check scrubs fix pending sectors by
+writing back to such sectors when the error is hit.  As long as there is
+redundancy to obtain the data from, and the drive in question actually
+returns a read error.
 
-A certain amount of the trouble with all of this is the english meaning
-of "grow" doesn't really match what mdadm allows.
+Since this is a desktop drive that is known to not have SCTERC support,
+you *must* reset your driver timeouts to 180 seconds for a check scrub
+to succeed.  You will also have to do so with your P300 drive, as
+Toshiba's website says that drive is not NAS optimized.
 
-Might it be reasonable to reject "--grow" operations that reduce the
-final array size, and introduce the complementary "--reduce" operation
-that rejects array size increases?
-
-Both operations would share the current code, just apply a different
-sanity check before proceeding.
-
-mdadm would then at least not violate the rule of least surprise.
-
-Phil
+Please read up on "timeout mismatch" before your array blows up.
