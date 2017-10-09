@@ -1,72 +1,103 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
-Date: Sun, 8 Oct 2017 21:22:27 -0400
-Message-ID: <23002.53075.413063.6948@quad.stoffel.home>
-References: <22997.8664.67459.119616@quad.stoffel.home>
-        <87a81637lq.fsf@notabene.neil.brown.name>
-        <23002.37193.492253.120639@quad.stoffel.home>
-        <87shetz207.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: hung grow
+Date: Mon, 09 Oct 2017 12:23:00 +1100
+Message-ID: <87po9xyv0r.fsf@notabene.neil.brown.name>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com> <cdf0fd70-ec6d-8e9d-6abd-6d9937b6a709@gmail.com> <d1bd0e82-9415-b6f4-2ffa-6e17bf636f34@youngman.org.uk> <CADg2FGaNtjN7=wYe6f07xEZ=mW2QFZdjtBFjQLDthn9w3Jw=NA@mail.gmail.com> <3173c10a-fbd9-f563-4c90-a9f63e020773@youngman.org.uk> <CADg2FGbSyvLykThXBpMd4MOuHgh2Q_-zPGm-HFxdYW2z4qsNDQ@mail.gmail.com> <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk> <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org> <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com> <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com> <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org> <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com> <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaP
+ FTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com> <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com> <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com> <
+ 74fde85a-2bf0-a627-239d-b12721f0cc32@turmel.org> <CADg2FGY97NYLYPk9W3XL_WgbVdCvOWamF6gjbw9zqwPON5h2og@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87shetz207.fsf@notabene.neil.brown.name>
+In-Reply-To: <CADg2FGY97NYLYPk9W3XL_WgbVdCvOWamF6gjbw9zqwPON5h2og@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: John Stoffel <john@stoffel.org>, Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
+To: Curt <lightspd@gmail.com>, Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
+--=-=-=
+Content-Type: text/plain
 
-NeilBrown> On Sun, Oct 08 2017, John Stoffel wrote:
->>>>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
->> 
-NeilBrown> On Wed, Oct 04 2017, John Stoffel wrote:
->>>> Since Eli had such a horrible experience where he shrunk the
->>>> individual component raid device size, instead of growing the overall
->>>> raid by adding a device, I came up with this hacky patch to warn you
->>>> when you are about to shoot yourself in the foot.
->>>> 
->>>> The idea is it will warn you and exit unless you pass in the --force
->>>> (or -f) switch when using the command.  For example, on a set of loop
->>>> devices:
->>>> 
->>>> # cat /proc/mdstat
->>>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
->>>> [raid4] [multipath] [faulty]
->>>> md99 : active raid6 loop4p1[4] loop3p1[3] loop2p1[2] loop1p1[1]
->>>> loop0p1[0]
->>>> 606720 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5]
->>>> [UUUUU]
->>>> 
->>>> # ./mdadm --grow /dev/md99 --size 128
->>>> mdadm: Cannot set device size smaller than current component_size of /dev/md99 array.  Use -f to force change.
->>>> 
->>>> # ./mdadm --grow /dev/md99 --size 128 -f
->>>> mdadm: component size of /dev/md99 has been set to 0K
->>>> 
->> 
-NeilBrown> I'm not sure I like this.
-NeilBrown> The reason that mdadm will quietly accept a size change like this is
-NeilBrown> that it is trivial to revert - just set the same to a big number and all
-NeilBrown> your data is still there.
->> 
->> This is wrong, because if you use --grow --size ### with a small
->> enough number, it destroys the MD raid superblock.
+On Sun, Oct 08 2017, Curt wrote:
 
-NeilBrown> If that is true, then it is a kernel bug and should be fixed in the kernel.
+> On Sat, Oct 7, 2017 at 5:29 PM, Phil Turmel <philip@turmel.org> wrote:
+>> On 10/07/2017 04:45 PM, Curt wrote:
+>>
+>> Hmm.  Please run the assemble again, with the --verbose option, and
+>> paste all the output here so we can see what's happening.
+>>
+>> Also grab the corresponding tail of dmesg (however many lines cover the
+>> assembly attempt).
+>>
+>> Phil
+>
+> You wouldn't think reply all would be such a hard thing to remember to do.
+>
+> verbose didn't really add anything, here's my full command, maybe I
+> miss typed something and didn't notice.
+>
+> # mdadm --assemble --force --update=revert-reshape --verbose
+> /dev/md127 /dev/sda1 /dev/sdc1 /dev/sdd1 /dev/sdg1 /dev/sdf1 /dev/sdz1
+> mdadm: looking for devices for /dev/md127
+> mdadm: superblock on /dev/sdf1 doesn't match others - assembly aborted
 
-I just remembered another point I wanted to make.  The earliest we get
-such a change into the kernel is 4.15, and then maybe back ported into
-some number of stable kernels.  But by putting this check into mdadm
-as well, we can protect people running older kernels as well.  It
-seems to me like a good arguement for fixing mdadm to:
+You get this because sdf1 says:
 
-- adding the --grow --Force ... option.
-- fixing the size check so you don't destroy the MD superblock even
-  with --Force.
-- reporting to the user the pre- and post- size of array components
-  when using --grow --size ##
+   Raid Devices : 7
+  Total Devices : 7
 
-Thanks,
-John
+while sda1 (for example) says:
+
+   Raid Devices : 8
+  Total Devices : 6
+Preferred Minor : 127
+
+  Reshape pos'n : 3799296 (3.62 GiB 3.89 GB)
+  Delta Devices : 1 (7->8)
+
+mdadm cannot reconcile this difference.
+
+It appears that sdf1 was never involved in any reshape.
+So you need to revert the reshape before trying to include sdf1 into the
+array.  Clearly you need at least 6 devices that were involved in
+the reshape to do this.
+I haven't been following closely ... do you have 6 such devices?
+
+NeilBrown
+
+
+>
+> I've got nothing in dmesg or messages
+>
+> If I can't get the old drive to work.  Is there any chance to still
+> getting some data from the other drives? Either running the above
+> without sdf or worse comes to worse the assume clean someone mentioned
+> before.
+>
+> Cheers,
+> Curt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnaz3UACgkQOeye3VZi
+gbn6nxAAgNURUDAUDtwNT21g2rl4cilLFebRJPRjXnzQNZB2x9UzIcoNM8sypTcY
+AM5bzlzmebS0L4d7zemE22M+ts1rfhXJ0Ajl6u4fHSayYPRW8aQmHEUTL7t+vfhv
+8sZbTBsg3oU0JtnUI+I7CLSJww8rbbkqiQSpZbwSqt4W9AVZqoDwq7tsEz1Yneok
+pTe0qggdy4FVs913ndGiJjV/s1kvq0OBSDRC/Y+gGE8+xF5NFY+rdQXakdGcyxjT
+B9ce5fcKrsTrUfIUXk8eLMN7WRaQmV4FfieeAcTYM2GiOG+Ov06/lGfwdc9G7UFc
+eMG0jwiH/LWOvQdtWVODi5W1De1tCzfhcRuz7mxZxQSXixkBRWETvWRu/APXxLmW
+TaVfpZyW96F7nUeEaHUbwh6ygVKqtOZxUu1VvqsdKVve7GbEgk5W1h64G+SfSAOS
+JwBybZO+JS+5+konqcmf4jZXXnERRpOOh07ee7OSITHCUyOuPjrGjsM3OEzgv5QJ
+TG3a4SjPKVGDWRdBeTwhFKZgfvU2jZlsQeOZUHBp6UCAvHkAaYY4goUcjJBpH4Ei
+hK205dT2U7UBF5JS/SUtOWBc45hwKs2Fo8R3nUEZAQnVRFixGbjfizVyKAaBYpE/
+F1iIYnRMnkCRfvgJDLGbyVsgqnCQzUWl9A0X6Suk94gNgaSy4jI=
+=Xf4c
+-----END PGP SIGNATURE-----
+--=-=-=--
