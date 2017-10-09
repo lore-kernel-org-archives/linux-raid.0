@@ -1,55 +1,86 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Mon, 9 Oct 2017 16:16:38 -0400
-Message-ID: <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: commit 8031c3ddc70a breaks RAID5 on MIPS kernel where PAGE_SIZE
+ == 64K
+Date: Mon, 9 Oct 2017 13:38:30 -0700
+Message-ID: <20171009203830.qu75s3i6ghdaf6s2@kernel.org>
+References: <db0e511c-f5db-99fe-70ac-150864432db0@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
-Content-Language: en-GB
+Content-Disposition: inline
+In-Reply-To: <db0e511c-f5db-99fe-70ac-150864432db0@gentoo.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Alexander Shenkin <al@shenkin.org>, linux-raid@vger.kernel.org
+To: Joshua Kinard <kumba@gentoo.org>
+Cc: linux-raid@vger.kernel.org, Linux/MIPS <linux-mips@linux-mips.org>
 List-Id: linux-raid.ids
 
-On 10/07/2017 04:21 AM, Carsten Aulbert wrote:
-> Hi
+On Sun, Oct 08, 2017 at 04:34:52PM -0400, Joshua Kinard wrote:
+> Hi,
 > 
-> On 10/07/17 09:48, Alexander Shenkin wrote:
->> My SMART monitoring has picked up some pending sectors on one of my
->> RAID0 + RAID5 drives (it's one of the infamous 3TB seagate drives... my
->> other 3 failed earlier... this is the last of them, that finally has
->> gone as well...).  I've just ordered a replacement (Toshiba P300) that
->> will arrive tomorrow... but the question is, what to do in the meantime?
->>  Should I take the drive offline?  I suspect so, but would like to
->> double check before taking action.  Thanks in advance for any advice.
+> Testing 4.13.5 out on my SGI Octane, I discovered that my RAID5 arrays were no
+> longer auto-assembling.  The error being thrown was an "attempt to access
+> beyond the end of the device".  I've hand-transcribed a block of these errors
+> from a manual attempt to assemble the array via mdadm from a netboot image:
 > 
-> Given this is "only" a single sector error I would keep it running as
-> long as you can physically install the new drive and only then take it
-> offline.
+> / # mdadm -A /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1
+> [   56.303339] md: md0 stopped.
+> [   56.323565] md/raid:md0: device sda1 operational as raid disk 0
+> [   56.334556] md/raid:md0: device sdb1 operational as raid disk 2
+> [   56.345396] md/raid:md0: device sdc1 operational as raid disk 1
+> [   56.350750] md/raid:md0: raid level 5 active with 3 out of 3 devices,
+> algorithm 2
+> [   56.369529] attempt to access beyond end of device
+> [   56.380149] sda1: rw=2048, want=4194312, limit=4194305
+> [   56.390823] attempt to access beyond end of device
+> [   56.401500] sdc1: rw=2048, want=4194312, limit=4194305
+> [   56.412313] attempt to access beyond end of device
+> [   56.423146] sdb1: rw=2048, want=4194312, limit=4194305
+> [   56.433985] md0: failed to create bitmap (-5)
+> mdadm: failed to RUN_ARRAY /dev/md0: input/output error
+> [   56.457979] md: md0 stopped.
+> / #
 > 
-> At least theoretically, it may be possible to force the rewrite of this
-> sector and use the spare sectors of the disk, but I'm not 100% sure if a
-> simple md check would already trigger it - usually you need to write
-> "new" data to defective sectors to force the drive's firmware to use the
-> spare sectors.
+> I've traced the offending commit down to 8031c3ddc70a ("md/bitmap: copy correct
+> data for bitmap super"):
 > 
-> But given the replacement disk should arrive soon, I would not act
-> before that and run with a degraded RAID5 until then.
+> https://git.linux-mips.org/cgit/ralf/linux.git/commit/?id=8031c3ddc70ab93099e7d1814382dba39f57b43e
 > 
-> I'm a bit more worried about the RAID0 here, do you run RAID0 on top of
-> RAID5 or what is the exact set-up?
+> Per the commit message, it makes an assumption that PAGE_SIZE is 4K.  MIPS
+> kernels allow you to change the value of PAGE_SIZE at compile time to something
+> other than 4K.  It appears that 4K and 16K both work, while 64K, which is what
+> I use on this machine, is broken with this commit applied.
+> 
+> Reverting this patch or setting PAGE_SIZE to 4K or 16K will resolve the issue,
+> but there are advantages to using 64K PAGE_SIZEs on these platforms.  I am not
+> sure that 16K is wholly safe either, FWIW, given the assumption made in the commit.
 
-So, no regular "check" scrubs.  Check scrubs fix pending sectors by
-writing back to such sectors when the error is hit.  As long as there is
-redundancy to obtain the data from, and the drive in question actually
-returns a read error.
+Can you try below one?
 
-Since this is a desktop drive that is known to not have SCTERC support,
-you *must* reset your driver timeouts to 180 seconds for a check scrub
-to succeed.  You will also have to do so with your P300 drive, as
-Toshiba's website says that drive is not NAS optimized.
 
-Please read up on "timeout mismatch" before your array blows up.
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index d2121637b4ab..f68ec973fbdd 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -153,6 +153,7 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
+ 
+ 	struct md_rdev *rdev;
+ 	sector_t target;
++	int target_size;
+ 
+ 	rdev_for_each(rdev, mddev) {
+ 		if (! test_bit(In_sync, &rdev->flags)
+@@ -161,9 +162,12 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
+ 			continue;
+ 
+ 		target = offset + index * (PAGE_SIZE/512);
++		target_size = min_t(u64, size, i_size_read(rdev->bdev->bd_inode) -
++			((target + rdev->sb_start) << 9));
++		target_size = roundup(target_size,
++			bdev_logical_block_size(rdev->bdev));
+ 
+-		if (sync_page_io(rdev, target,
+-				 roundup(size, bdev_logical_block_size(rdev->bdev)),
++		if (sync_page_io(rdev, target, target_size,
+ 				 page, REQ_OP_READ, 0, true)) {
+ 			page->index = index;
+ 			return 0;
