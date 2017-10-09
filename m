@@ -1,81 +1,191 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: hung grow
-Date: Mon, 09 Oct 2017 12:23:00 +1100
-Message-ID: <87po9xyv0r.fsf@notabene.neil.brown.name>
-References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com> <cdf0fd70-ec6d-8e9d-6abd-6d9937b6a709@gmail.com> <d1bd0e82-9415-b6f4-2ffa-6e17bf636f34@youngman.org.uk> <CADg2FGaNtjN7=wYe6f07xEZ=mW2QFZdjtBFjQLDthn9w3Jw=NA@mail.gmail.com> <3173c10a-fbd9-f563-4c90-a9f63e020773@youngman.org.uk> <CADg2FGbSyvLykThXBpMd4MOuHgh2Q_-zPGm-HFxdYW2z4qsNDQ@mail.gmail.com> <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk> <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org> <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com> <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com> <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org> <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com> <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaP
- FTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com> <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com> <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com> <
- 74fde85a-2bf0-a627-239d-b12721f0cc32@turmel.org> <CADg2FGY97NYLYPk9W3XL_WgbVdCvOWamF6gjbw9zqwPON5h2og@mail.gmail.com>
+Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
+Date: Mon, 09 Oct 2017 12:36:53 +1100
+Message-ID: <87mv51yudm.fsf@notabene.neil.brown.name>
+References: <22997.8664.67459.119616@quad.stoffel.home> <87a81637lq.fsf@notabene.neil.brown.name> <23002.37193.492253.120639@quad.stoffel.home> <87shetz207.fsf@notabene.neil.brown.name> <23002.52854.478610.499870@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADg2FGY97NYLYPk9W3XL_WgbVdCvOWamF6gjbw9zqwPON5h2og@mail.gmail.com>
+In-Reply-To: <23002.52854.478610.499870@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Curt <lightspd@gmail.com>, Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+Cc: John Stoffel <john@stoffel.org>, Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, Oct 08 2017, Curt wrote:
+On Sun, Oct 08 2017, John Stoffel wrote:
 
-> On Sat, Oct 7, 2017 at 5:29 PM, Phil Turmel <philip@turmel.org> wrote:
->> On 10/07/2017 04:45 PM, Curt wrote:
->>
->> Hmm.  Please run the assemble again, with the --verbose option, and
->> paste all the output here so we can see what's happening.
->>
->> Also grab the corresponding tail of dmesg (however many lines cover the
->> assembly attempt).
->>
->> Phil
+>>>>>> "NeilBrown" =3D=3D NeilBrown  <neilb@suse.com> writes:
 >
-> You wouldn't think reply all would be such a hard thing to remember to do.
+> NeilBrown> On Sun, Oct 08 2017, John Stoffel wrote:
+>>>>>>>> "NeilBrown" =3D=3D NeilBrown  <neilb@suse.com> writes:
+>>>=20
+> NeilBrown> On Wed, Oct 04 2017, John Stoffel wrote:
+>>>>> Since Eli had such a horrible experience where he shrunk the
+>>>>> individual component raid device size, instead of growing the overall
+>>>>> raid by adding a device, I came up with this hacky patch to warn you
+>>>>> when you are about to shoot yourself in the foot.
+>>>>>=20
+>>>>> The idea is it will warn you and exit unless you pass in the --force
+>>>>> (or -f) switch when using the command.  For example, on a set of loop
+>>>>> devices:
+>>>>>=20
+>>>>> # cat /proc/mdstat
+>>>>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+>>>>> [raid4] [multipath] [faulty]
+>>>>> md99 : active raid6 loop4p1[4] loop3p1[3] loop2p1[2] loop1p1[1]
+>>>>> loop0p1[0]
+>>>>> 606720 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5]
+>>>>> [UUUUU]
+>>>>>=20
+>>>>> # ./mdadm --grow /dev/md99 --size 128
+>>>>> mdadm: Cannot set device size smaller than current component_size of =
+/dev/md99 array.  Use -f to force change.
+>>>>>=20
+>>>>> # ./mdadm --grow /dev/md99 --size 128 -f
+>>>>> mdadm: component size of /dev/md99 has been set to 0K
+>>>>>=20
+>>>=20
+> NeilBrown> I'm not sure I like this.
+> NeilBrown> The reason that mdadm will quietly accept a size change like t=
+his is
+> NeilBrown> that it is trivial to revert - just set the same to a big numb=
+er and all
+> NeilBrown> your data is still there.
+>>>=20
+>>> This is wrong, because if you use --grow --size ### with a small
+>>> enough number, it destroys the MD raid superblock.
 >
-> verbose didn't really add anything, here's my full command, maybe I
-> miss typed something and didn't notice.
+> NeilBrown> If that is true, then it is a kernel bug and should be fixed i=
+n the kernel.
 >
-> # mdadm --assemble --force --update=revert-reshape --verbose
-> /dev/md127 /dev/sda1 /dev/sdc1 /dev/sdd1 /dev/sdg1 /dev/sdf1 /dev/sdz1
-> mdadm: looking for devices for /dev/md127
-> mdadm: superblock on /dev/sdf1 doesn't match others - assembly aborted
+> That's a better solution of course.  I'll see if I can figure this
+> out, but my testing will be slower... :-)
+>
+>>> So again, I think
+>>> the --force option is *critical* here.  Or we need to block the size
+>>> change from going smaller than the superblock size.  Here's my test,
+>>> where I just warn if the size is going to be smaller:
+>>>=20
+>>> # ./mdadm --grow /dev/md99 --size 128
+>>> mdadm: setting raid component device size from 202240 to 128 in array /=
+dev/md99,
+>>> this may need to be reverted if new size is smaller.
+>>> mdadm: component size of /dev/md99 has been set to 0K
+>>>=20
+>>> # ./mdadm --grow /dev/md99 --size 202240
+>>> mdadm: setting raid component device size from 0 to 202240 in array /de=
+v/md99,
+>>> this may need to be reverted if new size is smaller.
+>>> mdadm: Cannot set device size in this type of array.
+>>>=20
+>>> # mdadm -E /dev/md99
+>>> mdadm: No md superblock detected on /dev/md99.
+>>>=20
+>>> So I think this argues for a much stronger check, and/or the --force
+>>> option when shrinking.  I'll re-spin my patch series into two chunks,
+>>> one just the message if changing size.  The second to require the
+>>> --force option.
+>
+> NeilBrown> Why don't you like my suggestion that you should need to reduc=
+e the
+> NeilBrown> --array-size first?
+>
+> Ok, so assuming at RAID6 with 4 x 100mb loop devices:
+>
+>   mdadm --create /dev/md99 --name md99 --level 6 -n 4 /dev/loop?p1
+>
+> Now we have a 200mb visible size array, using 100mb on each disk.  I
+> want to shrink them by 50mb each:
+>
+>   mdadm --grow md## --array-size 100m=20=20
+>
+> So now the array should be just using the first 50mb on each loop device.
+>
+>   mdadm --grow md## --size 50m
+>
+> Then we've shrunk each loop device to 50m.  So since the docs say that
+> the --array-size does't change anything, the only way to make a
+> --array-size change permanent is using --size ## correct?
 
-You get this because sdf1 says:
+Yes.
 
-   Raid Devices : 7
-  Total Devices : 7
+>
+> But doesn't
+>
+>   mdadm --grow md99 -size 0
+>
+> imply that we *exapand* the array component sizes, along with the
+> --array_size of the array?
 
-while sda1 (for example) says:
+Does it?  "mdadm --grow .. --size max" certainly means that.
+Maybe "--size 0" has the same effect, but in then "0" is a special case.
 
-   Raid Devices : 8
-  Total Devices : 6
-Preferred Minor : 127
 
-  Reshape pos'n : 3799296 (3.62 GiB 3.89 GB)
-  Delta Devices : 1 (7->8)
+>                              When does that change become permanent?
 
-mdadm cannot reconcile this difference.
+As you say, when you set "--size".
 
-It appears that sdf1 was never involved in any reshape.
-So you need to revert the reshape before trying to include sdf1 into the
-array.  Clearly you need at least 6 devices that were involved in
-the reshape to do this.
-I haven't been following closely ... do you have 6 such devices?
+> This is the part of mdadm management that gets wonky in my mind.  We
+> make it too difficult for the SysAdmin to know what has to happen
+> here.
+>
+> And looking at the mdadm man page:
+>
+>        -z, --size=3D Amount (in Kibibytes) of space to use from each
+> 		   drive in RAID levels 1/4/5/6.  This must be a multiple of the chunk
+> 		   size, and must leave about 128Kb of space at the end of the drive for
+> 		   the RAID superblock.  If this is not specified (as it normally is no=
+t)
+> 		   the smallest drive (or partition) sets the size, though if there is a
+> 		   vari=E2=80=90 ance among the drives of greater than 1%, a warning is=
+ issued.
+>
+> This is the possible error we're seeing, since setting a --size of 128
+> is *way* too small.  We need at least 128k * num_devices.
+
+Why is this "*way* too small"?? It is too small precisely if there is a
+meaningful chunk size, and if the chunk size is > 128k.
+num_devices has nothing to do with this.
+
+Where it says "leave 128K as the end of the drive" it means that the
+given size should be at least 128K less than that actual size of the
+partition/device.
+
+
+>                                                             So now I
+> know what to check in the kernel...  The _about_ is the worrying
+> phrase, we should be able to be more precise here, and show how to
+> figure this number from the mdadm -E or -D commands.
+
+The 128K is for 0.90 metadata.
+The precise number here is "size of device/partition, rounded down to a
+multiple of 64K, with 64K then subtracted".
+For 1.0, the hard number if like that but with 4K, except that it is
+nice to leave extra space for bitmaps etc.
+If you ask mdadm to make the --size larger than it can support -
+i.e. large enough that there would be no space for the metadata - mdadm
+will not let you.
+
+So I don't think there is a need to spell out a precise number.
+Anything that works should be acceptable.
 
 NeilBrown
 
 
 >
-> I've got nothing in dmesg or messages
+> Thanks again for all your work on this Neil, you've been amazing,
+> truly!
 >
-> If I can't get the old drive to work.  Is there any chance to still
-> getting some data from the other drives? Either running the above
-> without sdf or worse comes to worse the assume clean someone mentioned
-> before.
+> Thanks,
+> John
 >
-> Cheers,
-> Curt
+>
+>
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
@@ -86,18 +196,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnaz3UACgkQOeye3VZi
-gbn6nxAAgNURUDAUDtwNT21g2rl4cilLFebRJPRjXnzQNZB2x9UzIcoNM8sypTcY
-AM5bzlzmebS0L4d7zemE22M+ts1rfhXJ0Ajl6u4fHSayYPRW8aQmHEUTL7t+vfhv
-8sZbTBsg3oU0JtnUI+I7CLSJww8rbbkqiQSpZbwSqt4W9AVZqoDwq7tsEz1Yneok
-pTe0qggdy4FVs913ndGiJjV/s1kvq0OBSDRC/Y+gGE8+xF5NFY+rdQXakdGcyxjT
-B9ce5fcKrsTrUfIUXk8eLMN7WRaQmV4FfieeAcTYM2GiOG+Ov06/lGfwdc9G7UFc
-eMG0jwiH/LWOvQdtWVODi5W1De1tCzfhcRuz7mxZxQSXixkBRWETvWRu/APXxLmW
-TaVfpZyW96F7nUeEaHUbwh6ygVKqtOZxUu1VvqsdKVve7GbEgk5W1h64G+SfSAOS
-JwBybZO+JS+5+konqcmf4jZXXnERRpOOh07ee7OSITHCUyOuPjrGjsM3OEzgv5QJ
-TG3a4SjPKVGDWRdBeTwhFKZgfvU2jZlsQeOZUHBp6UCAvHkAaYY4goUcjJBpH4Ei
-hK205dT2U7UBF5JS/SUtOWBc45hwKs2Fo8R3nUEZAQnVRFixGbjfizVyKAaBYpE/
-F1iIYnRMnkCRfvgJDLGbyVsgqnCQzUWl9A0X6Suk94gNgaSy4jI=
-=Xf4c
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlna0rUACgkQOeye3VZi
+gbmBWw//a3kFI6LS4SeEqLzOqaot8HqmTUJ2JgTdXpZD+6hSNH/tLhmDLdqcwYhy
+JykRKRVLBzt/HBetJOsdVJiRiQYmPaSeqgfpLlb8W/ciG/28WJhY5XK42CRQipVB
+BldcogUvZM+y6Uzb6mJ+doVFPg2665VDb91vCvqxh/VJkUJS606SuF6HmHdXHGk5
+l8X0eUdSGudiCibC+yGJ3v3do0JKfO6DQbhfgwtv+7l6QemLxojJpR/UnxDK58SO
+fnCk5vJ8G1Uo5/MKiaYZCNMIWxm/OVbNZayNQvPIZiOtPmqZOcWTiUndUUCOrOhO
+nMMObCHEfdql8bpOmMKe0/SursKXor+q11dBoc110+78w10p+cqR/jzdXLhgJ0rh
+rMsskg9Uj5qmW6QcOpFx0BgXkcxTfMJwaZZuBLq7ORUnvQzsFulFc7vqd4pPSikZ
+HV3SSsQR3tr7jmc7RGO/4xH+HpwXbpUN0qxYMSFz9KYWogYIf3zCfQ4Tg6oADfPe
+96hvs9aP5wFddlKfM6PkYjkogrfzX/Jr5y0dDgVLG28pa96UdBAisk0w+85r7SPm
+9wGsDqgseTESWmNrdEhU5lZP+whpD7P0TBkp0T+4CVa4t0eiFW+tY0BS1UXychmy
+KvHHXTU7j1jhYP5JA3mHwmgvLlu2tN7+DHhk/nnQfqMwR0EuMAE=
+=2GbX
 -----END PGP SIGNATURE-----
 --=-=-=--
