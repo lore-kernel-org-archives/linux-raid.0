@@ -1,71 +1,45 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [MDADM PATCH -v5 1/1] mdadm/test: Add one test case for raid5 reshape
-Date: Tue, 10 Oct 2017 19:32:52 +0800
-Message-ID: <1507635172-7407-2-git-send-email-xni@redhat.com>
-References: <1507635172-7407-1-git-send-email-xni@redhat.com>
+From: Curt <lightspd@gmail.com>
+Subject: Re: hung grow
+Date: Tue, 10 Oct 2017 08:08:07 -0400
+Message-ID: <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
+ <cdf0fd70-ec6d-8e9d-6abd-6d9937b6a709@gmail.com> <d1bd0e82-9415-b6f4-2ffa-6e17bf636f34@youngman.org.uk>
+ <CADg2FGaNtjN7=wYe6f07xEZ=mW2QFZdjtBFjQLDthn9w3Jw=NA@mail.gmail.com>
+ <3173c10a-fbd9-f563-4c90-a9f63e020773@youngman.org.uk> <CADg2FGbSyvLykThXBpMd4MOuHgh2Q_-zPGm-HFxdYW2z4qsNDQ@mail.gmail.com>
+ <c583e62d-f4c1-755e-3985-a37164910c2e@youngman.org.uk> <d21f169e-0546-aa00-ce19-b6688ba74da6@turmel.org>
+ <CADg2FGbnMzLBqWthKY5Uo__ANC2kAqH_8B1G23nhW+7hWJ=KeA@mail.gmail.com>
+ <CADg2FGYc-sPjwukuhonoUUCr3ze3PQWv8gtZPnUT=E4CvsQftg@mail.gmail.com>
+ <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org> <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
+ <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
+ <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
+ <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com>
+ <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com>
+ <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1507635172-7407-1-git-send-email-xni@redhat.com>
+In-Reply-To: <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, zlliu@suse.com
+To: NeilBrown <neilb@suse.com>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This case tries to allow raid5 reshape to use backwards direction.
-It changes chunksize after reshape and stops the raid. Then starts
-the raid again.
+On Mon, Oct 9, 2017 at 8:41 AM, Curt <lightspd@gmail.com> wrote:
+> On Mon, Oct 9, 2017 at 12:28 AM, NeilBrown <neilb@suse.com> wrote:
+>> What happens if you run the --assemble --update=revert-reshape command on
+>> these 6 devices (without --force)??
+>
+> Here's the output
+> mdadm --assemble --verbose --update=revert-reshape /dev/md127
+> /dev/sda1 /dev/sdc1 /dev/sdd1 /dev/sdb /dev/sdg1 /dev/sdz1
+> mdadm: looking for devices for /dev/md127
+> mdadm: Reshape position is not suitably aligned.
+> mdadm: Try normal assembly and stop again
+>
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
-Suggested-by:  Jes Sorensen <jes.sorensen@gmail.com>
-Suggested-by:  Zhilong Liu <zlliu@suse.com>
-Suggested-by:  Paul Menzel <pmenzel@molgen.mpg.de>
----
- test           |  7 +++++++
- tests/02r5grow | 17 +++++++++++++++++
- 2 files changed, 24 insertions(+)
+What are the steps I need to take to resume the grow, but just enough
+to get it to the point I can revert it and see what data I have on the
+drives? Or can I force the revert?
 
-diff --git a/test b/test
-index 25268a0..e74bbe5 100755
---- a/test
-+++ b/test
-@@ -320,6 +320,13 @@ check() {
- 		grep -sq "inactive" /proc/mdstat ||
- 			die "array is not inactive!"
- 		;;
-+	# It only can be used when there is only one raid
-+	chunk )
-+		chunk_size=`awk -F',' '/chunk/{print $2}' /proc/mdstat | awk -F'[a-z]' '{print $1}'`
-+		if [ "$chunk_size" -ne "$2" ] ; then
-+			die "chunksize should be $2, but it's $chunk_size"
-+		fi
-+		;;
- 	* )
- 		die "unknown check $1"
- 		;;
-diff --git a/tests/02r5grow b/tests/02r5grow
-index 386e82e..bb9bd6d 100644
---- a/tests/02r5grow
-+++ b/tests/02r5grow
-@@ -34,3 +34,20 @@ check nosync
- sh tests/testdev $md0 3 $[size/2] 128
- 
- mdadm -S $md0
-+
-+# create a raid5 array and change the chunk
-+mdadm -CR $md0 --level raid5 --metadata=1.1 --chunk=32 --raid-disks 3 --size $[size/2] $dev1 $dev2 $dev3
-+check wait
-+check state UUU
-+check chunk 32
-+
-+mdadm $md0 --grow --chunk=64
-+check reshape
-+check wait
-+check chunk 64
-+
-+mdadm -S $md0
-+mdadm -A $md0 $dev1 $dev2 $dev3
-+check state UUU
-+check chunk 64
-+mdadm -S $md0
--- 
-2.7.4
-
+Cheers,
+Curt
