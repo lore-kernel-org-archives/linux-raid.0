@@ -1,77 +1,120 @@
-From: josh <poddmo@gmail.com>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Wed, 11 Oct 2017 09:23:42 +1100
-Message-ID: <CAC5BxnO9URNuE556Mi0DD=1knf7p0qb3frAGTJa=FK8TvJNxpw@mail.gmail.com>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de> <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
- <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org> <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
- <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Tue, 10 Oct 2017 15:30:25 -0700
+Message-ID: <20171010223025.tda3lx64rdmugm54@kernel.org>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+ <20171010210346.14574-4-bart.vanassche@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>
-Cc: Reindl Harald <h.reindl@thelounge.net>, Phil Turmel <philip@turmel.org>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171010210346.14574-4-bart.vanassche@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-raid.ids
 
-Hello Alexander,
+On Tue, Oct 10, 2017 at 02:03:39PM -0700, Bart Van Assche wrote:
+> Some people use the md driver on laptops and use the suspend and
+> resume functionality. Since it is essential that submitting of
+> new I/O requests stops before a hibernation image is created,
+> interrupt the md resync and reshape actions if the system is
+> being frozen. Note: the resync and reshape will restart after
+> the system is resumed and a message similar to the following
+> will appear in the system log:
+> 
+> md: md0: data-check interrupted.
 
-On 10 October 2017 at 20:56, Alexander Shenkin <al@shenkin.org> wrote:
-> On 10/10/2017 10:11 AM, Reindl Harald wrote:
->>
->>
->>
->> Am 10.10.2017 um 11:00 schrieb Alexander Shenkin:
->>>
->>> Thanks... I know nothing about "check scrubs".  Could you point me to a
->>> good resource?  I've found https://raid.wiki.kernel.org/index.php/Scrubbing
->>> and https://raid.wiki.kernel.org/index.php/Scrubbing_the_drives, but it's
->>> hard to tell exactly how the system should be configured in order to run
->>> these regularly.  A weekly cron perhaps?  And, should it be just check, or
->>> repair?  etc...  Any help you could offer would be welcome.
->>
->>
->> if your distribution don't install a cronjob for that you should blame
->> them because RAID without regular scrub is asking for troubles
->>
->> [root@srv-rhsoft:~]$ rpm -q --file /etc/cron.d/raid-check
->> mdadm-4.0-1.fc26.x86_64
->>
->> [root@srv-rhsoft:~]$ cat /etc/cron.d/raid-check
->> 30 4 * * Mon root /usr/sbin/raid-check
->
->
-> Thanks Reindl.  Here's what I have installed (no evidence of raid-check
-> available on my system):
->
-> $ cat /etc/cron.d/mdadm
-> 57 0 * * 0 root if [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%d) -le
-> 7 ]; then /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi
->
-
-
-This is indicative of a Debian/Ubuntu distribution. The cron entry is
-not enough to enable md array checks, you have to edit
-/etc/default/mdadm and set AUTOCHECK=true
-
-
-
-
-
-
-
->>> Is this something I should run now?  I figure it's a bad idea to push an
->>> array that is starting to degrade... haven't had a chance to replace the
->>> drive yet, but will get to it this week.  Probably best to start the
->>> scrubbing routines once I have 4 good drives in there I figure...
->>
->>
->> NO - never put any load you can avoid on degraded arrays
->
->
-> thanks, i won't.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Where do we restart resync and reshape?
+ 
+> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/md/md.c | 30 +++++++++++++++++++++++++++++-
+>  1 file changed, 29 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index b99584e5d6b1..d712d3320c1d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -66,6 +66,8 @@
+>  #include <linux/raid/md_u.h>
+>  #include <linux/slab.h>
+>  #include <linux/percpu-refcount.h>
+> +#include <linux/freezer.h>
+> +#include <linux/suspend.h>
+>  
+>  #include <trace/events/block.h>
+>  #include "md.h"
+> @@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
+>  	 */
+>  
+>  	allow_signal(SIGKILL);
+> +	set_freezable();
+>  	while (!kthread_should_stop()) {
+>  
+>  		/* We need to wait INTERRUPTIBLE so that
+> @@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
+>  		if (signal_pending(current))
+>  			flush_signals(current);
+>  
+> -		wait_event_interruptible_timeout
+> +		wait_event_freezable_timeout
+>  			(thread->wqueue,
+>  			 test_bit(THREAD_WAKEUP, &thread->flags)
+>  			 || kthread_should_stop() || kthread_should_park(),
+> @@ -8963,6 +8966,29 @@ static void md_stop_all_writes(void)
+>  		mdelay(1000*1);
+>  }
+>  
+> +/*
+> + * Ensure that neither resyncing nor reshaping occurs while the system is
+> + * frozen.
+> + */
+> +static int md_notify_pm(struct notifier_block *bl, unsigned long state,
+> +			void *unused)
+> +{
+> +	pr_debug("%s: state = %ld\n", __func__, state);
+> +
+> +	switch (state) {
+> +	case PM_HIBERNATION_PREPARE:
+> +	case PM_SUSPEND_PREPARE:
+> +	case PM_RESTORE_PREPARE:
+> +		md_stop_all_writes();
+> +		break;
+> +	}
+> +	return NOTIFY_DONE;
+> +}
+> +
+> +static struct notifier_block md_pm_notifier = {
+> +	.notifier_call	= md_notify_pm,
+> +};
+> +
+>  static int md_notify_reboot(struct notifier_block *this,
+>  			    unsigned long code, void *x)
+>  {
+> @@ -9009,6 +9035,7 @@ static int __init md_init(void)
+>  			    md_probe, NULL, NULL);
+>  
+>  	register_reboot_notifier(&md_reboot_notifier);
+> +	register_pm_notifier(&md_pm_notifier);
+>  	raid_table_header = register_sysctl_table(raid_root_table);
+>  
+>  	md_geninit();
+> @@ -9248,6 +9275,7 @@ static __exit void md_exit(void)
+>  
+>  	unregister_blkdev(MD_MAJOR,"md");
+>  	unregister_blkdev(mdp_major, "mdp");
+> +	unregister_pm_notifier(&md_pm_notifier);
+>  	unregister_reboot_notifier(&md_reboot_notifier);
+>  	unregister_sysctl_table(raid_table_header);
+>  
+> -- 
+> 2.14.2
+> 
