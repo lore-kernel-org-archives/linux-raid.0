@@ -1,7 +1,7 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: hung grow
-Date: Tue, 10 Oct 2017 16:14:35 +0200
-Message-ID: <ec2edc76-1922-356b-cebb-9c965952c718@thelounge.net>
+Date: Tue, 10 Oct 2017 10:15:07 -0400
+Message-ID: <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org>
 References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
  <7e23d39b-aebb-0852-c98f-758bd99d3eb9@turmel.org>
  <CADg2FGZatpLPHbuJUEuitbipfX77T1XXduEpLTQjPzq2e56fgg@mail.gmail.com>
@@ -19,25 +19,49 @@ References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
  <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org>
  <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
-Content-Language: de-CH
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Curt <lightspd@gmail.com>, Phil Turmel <philip@turmel.org>
+To: Curt <lightspd@gmail.com>
 Cc: Anthony Youngman <antlists@youngman.org.uk>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 10/10/2017 10:11 AM, Curt wrote:
+>>
+>> I've never seen this before, and don't have time at the moment
+>> to read the code to understand what it means.
+> I did a search and here's the comment before the code I found spits
+> out that error message.  I don't know if it's useful to you
+> /* reshape_position is a little messy.
+> * Its value must be a multiple of the larger
+> * chunk size, and of the "after" data disks.
+> * So when reverting we need to change it to
+> * be a multiple of the new "after" data disks,
+> * which is the old "before".
+> * If it isn't already a multiple of 'before',
+> * the only thing we could do would be
+> * copy some block around on the disks, which
+> * is easy to get wrong.
+> * So we reject a revert-reshape unless the
+> * alignment is good.
+> */
+> if (reshape_sectors % reshape_chunk)
+> 
+> That doesn't read good for me.
 
+Yup.
 
-Am 10.10.2017 um 16:11 schrieb Curt:
+>> Probably.  But yeah, "fit state".  That's the magic. /-:
+>>
 > What are the chances if I just do an assemble and let it try to grow
 > again that it will complete without issue? Then assuming it completes,
 > that I will have most my data still?
 
-low
+Yeah, try without the revert.  You don't have to wait for the reshape to
+finish to grab your critical files off of it.  In fact, you might want
+to freeze the reshape to minimize the chance of hitting a not-yet-found URE.
 
-what is "most of my data" in case of an array when your data are on top 
-of that array in a filesystem which don't know anything about what 
-happened with the phyiscal stuff underlying?
+Phil
