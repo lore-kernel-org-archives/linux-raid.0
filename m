@@ -1,258 +1,111 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH] md: rename some drivers/md/ files to have an "md-" prefix
-Date: Tue, 10 Oct 2017 17:02:41 -0400
-Message-ID: <20171010210241.2332-1-snitzer@redhat.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+From: Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH v8 03/10] md: Neither resync nor reshape while the system is frozen
+Date: Tue, 10 Oct 2017 14:03:39 -0700
+Message-ID: <20171010210346.14574-4-bart.vanassche@wdc.com>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171010210346.14574-1-bart.vanassche@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Ming Lei <ming.lei@redhat.com>, Bart Van Assche <bart.vanassche@wdc.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-raid.ids
 
-Motivated by the desire to illiminate the imprecise nature of
-DM-specific patches being unnecessarily sent to both the MD maintainer
-and mailing-list.  Which is born out of the fact that DM files also
-reside in drivers/md/
+Some people use the md driver on laptops and use the suspend and
+resume functionality. Since it is essential that submitting of
+new I/O requests stops before a hibernation image is created,
+interrupt the md resync and reshape actions if the system is
+being frozen. Note: the resync and reshape will restart after
+the system is resumed and a message similar to the following
+will appear in the system log:
 
-Now all MD-specific files in drivers/md/ start with either "raid" or
-"md-" and the MAINTAINERS file has been updated accordingly.
+md: md0: data-check interrupted.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- MAINTAINERS                                | 7 ++++++-
- drivers/md/Makefile                        | 8 ++++----
- drivers/md/dm-raid.c                       | 2 +-
- drivers/md/{bitmap.c => md-bitmap.c}       | 2 +-
- drivers/md/{bitmap.h => md-bitmap.h}       | 0
- drivers/md/md-cluster.c                    | 2 +-
- drivers/md/{faulty.c => md-faulty.c}       | 0
- drivers/md/{linear.c => md-linear.c}       | 2 +-
- drivers/md/{linear.h => md-linear.h}       | 0
- drivers/md/{multipath.c => md-multipath.c} | 2 +-
- drivers/md/{multipath.h => md-multipath.h} | 0
- drivers/md/md.c                            | 2 +-
- drivers/md/raid1.c                         | 2 +-
- drivers/md/raid10.c                        | 2 +-
- drivers/md/raid5-cache.c                   | 2 +-
- drivers/md/raid5.c                         | 2 +-
- 16 files changed, 20 insertions(+), 15 deletions(-)
- rename drivers/md/{bitmap.c => md-bitmap.c} (99%)
- rename drivers/md/{bitmap.h => md-bitmap.h} (100%)
- rename drivers/md/{faulty.c => md-faulty.c} (100%)
- rename drivers/md/{linear.c => md-linear.c} (99%)
- rename drivers/md/{linear.h => md-linear.h} (100%)
- rename drivers/md/{multipath.c => md-multipath.c} (99%)
- rename drivers/md/{multipath.h => md-multipath.h} (100%)
+ drivers/md/md.c | 30 +++++++++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2d3d750..6e96848 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4091,6 +4091,8 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git
- T:	quilt http://people.redhat.com/agk/patches/linux/editing/
- S:	Maintained
- F:	Documentation/device-mapper/
-+F:	drivers/md/Makefile
-+F:	drivers/md/Kconfig
- F:	drivers/md/dm*
- F:	drivers/md/persistent-data/
- F:	include/linux/device-mapper.h
-@@ -12453,7 +12455,10 @@ M:	Shaohua Li <shli@kernel.org>
- L:	linux-raid@vger.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git
- S:	Supported
--F:	drivers/md/
-+F:	drivers/md/Makefile
-+F:	drivers/md/Kconfig
-+F:	drivers/md/md*
-+F:	drivers/md/raid*
- F:	include/linux/raid/
- F:	include/uapi/linux/raid/
- 
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index 786ec9e..d8e5f9c 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -18,7 +18,7 @@ dm-cache-y	+= dm-cache-target.o dm-cache-metadata.o dm-cache-policy.o \
- dm-cache-smq-y   += dm-cache-policy-smq.o
- dm-era-y	+= dm-era-target.o
- dm-verity-y	+= dm-verity-target.o
--md-mod-y	+= md.o bitmap.o
-+md-mod-y	+= md.o md-bitmap.o
- raid456-y	+= raid5.o raid5-cache.o raid5-ppl.o
- dm-zoned-y	+= dm-zoned-target.o dm-zoned-metadata.o dm-zoned-reclaim.o
- 
-@@ -27,13 +27,13 @@ dm-zoned-y	+= dm-zoned-target.o dm-zoned-metadata.o dm-zoned-reclaim.o
- # themselves, and md.o may use the personalities when it 
- # auto-initialised.
- 
--obj-$(CONFIG_MD_LINEAR)		+= linear.o
-+obj-$(CONFIG_MD_LINEAR)		+= md-linear.o
- obj-$(CONFIG_MD_RAID0)		+= raid0.o
- obj-$(CONFIG_MD_RAID1)		+= raid1.o
- obj-$(CONFIG_MD_RAID10)		+= raid10.o
- obj-$(CONFIG_MD_RAID456)	+= raid456.o
--obj-$(CONFIG_MD_MULTIPATH)	+= multipath.o
--obj-$(CONFIG_MD_FAULTY)		+= faulty.o
-+obj-$(CONFIG_MD_MULTIPATH)	+= md-multipath.o
-+obj-$(CONFIG_MD_FAULTY)		+= md-faulty.o
- obj-$(CONFIG_MD_CLUSTER)	+= md-cluster.o
- obj-$(CONFIG_BCACHE)		+= bcache/
- obj-$(CONFIG_BLK_DEV_MD)	+= md-mod.o
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 2245d06..9856667 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -12,7 +12,7 @@
- #include "raid1.h"
- #include "raid5.h"
- #include "raid10.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
- 
- #include <linux/device-mapper.h>
- 
-diff --git a/drivers/md/bitmap.c b/drivers/md/md-bitmap.c
-similarity index 99%
-rename from drivers/md/bitmap.c
-rename to drivers/md/md-bitmap.c
-index d212163..298f72a 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -29,7 +29,7 @@
- #include <linux/seq_file.h>
- #include <trace/events/block.h>
- #include "md.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
- 
- static inline char *bmname(struct bitmap *bitmap)
- {
-diff --git a/drivers/md/bitmap.h b/drivers/md/md-bitmap.h
-similarity index 100%
-rename from drivers/md/bitmap.h
-rename to drivers/md/md-bitmap.h
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 03082e1..0754573 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -15,7 +15,7 @@
- #include <linux/sched.h>
- #include <linux/raid/md_p.h>
- #include "md.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
- #include "md-cluster.h"
- 
- #define LVB_SIZE	64
-diff --git a/drivers/md/faulty.c b/drivers/md/md-faulty.c
-similarity index 100%
-rename from drivers/md/faulty.c
-rename to drivers/md/md-faulty.c
-diff --git a/drivers/md/linear.c b/drivers/md/md-linear.c
-similarity index 99%
-rename from drivers/md/linear.c
-rename to drivers/md/md-linear.c
-index c464fb4..773fc70 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/md-linear.c
-@@ -23,7 +23,7 @@
- #include <linux/slab.h>
- #include <trace/events/block.h>
- #include "md.h"
--#include "linear.h"
-+#include "md-linear.h"
- 
- /*
-  * find which device holds a particular offset
-diff --git a/drivers/md/linear.h b/drivers/md/md-linear.h
-similarity index 100%
-rename from drivers/md/linear.h
-rename to drivers/md/md-linear.h
-diff --git a/drivers/md/multipath.c b/drivers/md/md-multipath.c
-similarity index 99%
-rename from drivers/md/multipath.c
-rename to drivers/md/md-multipath.c
-index b68e066..5c70176 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/md-multipath.c
-@@ -25,7 +25,7 @@
- #include <linux/seq_file.h>
- #include <linux/slab.h>
- #include "md.h"
--#include "multipath.h"
-+#include "md-multipath.h"
- 
- #define MAX_WORK_PER_DISK 128
- 
-diff --git a/drivers/md/multipath.h b/drivers/md/md-multipath.h
-similarity index 100%
-rename from drivers/md/multipath.h
-rename to drivers/md/md-multipath.h
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0ff1bbf..b64fe10 100644
+index b99584e5d6b1..d712d3320c1d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -69,7 +69,7 @@
+@@ -66,6 +66,8 @@
+ #include <linux/raid/md_u.h>
+ #include <linux/slab.h>
+ #include <linux/percpu-refcount.h>
++#include <linux/freezer.h>
++#include <linux/suspend.h>
  
  #include <trace/events/block.h>
  #include "md.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
- #include "md-cluster.h"
+@@ -7439,6 +7441,7 @@ static int md_thread(void *arg)
+ 	 */
  
- #ifndef MODULE
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f3f3e40..d2c2368 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -43,7 +43,7 @@
+ 	allow_signal(SIGKILL);
++	set_freezable();
+ 	while (!kthread_should_stop()) {
  
- #include "md.h"
- #include "raid1.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
+ 		/* We need to wait INTERRUPTIBLE so that
+@@ -7449,7 +7452,7 @@ static int md_thread(void *arg)
+ 		if (signal_pending(current))
+ 			flush_signals(current);
  
- #define UNSUPPORTED_MDDEV_FLAGS		\
- 	((1L << MD_HAS_JOURNAL) |	\
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 374df57..4dac10e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -29,7 +29,7 @@
- #include "md.h"
- #include "raid10.h"
- #include "raid0.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
+-		wait_event_interruptible_timeout
++		wait_event_freezable_timeout
+ 			(thread->wqueue,
+ 			 test_bit(THREAD_WAKEUP, &thread->flags)
+ 			 || kthread_should_stop() || kthread_should_park(),
+@@ -8963,6 +8966,29 @@ static void md_stop_all_writes(void)
+ 		mdelay(1000*1);
+ }
  
- /*
-  * RAID10 provides a combination of RAID0 and RAID1 functionality.
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 0b7406a..2b450ee 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -23,7 +23,7 @@
- #include <linux/types.h>
- #include "md.h"
- #include "raid5.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
- #include "raid5-log.h"
++/*
++ * Ensure that neither resyncing nor reshaping occurs while the system is
++ * frozen.
++ */
++static int md_notify_pm(struct notifier_block *bl, unsigned long state,
++			void *unused)
++{
++	pr_debug("%s: state = %ld\n", __func__, state);
++
++	switch (state) {
++	case PM_HIBERNATION_PREPARE:
++	case PM_SUSPEND_PREPARE:
++	case PM_RESTORE_PREPARE:
++		md_stop_all_writes();
++		break;
++	}
++	return NOTIFY_DONE;
++}
++
++static struct notifier_block md_pm_notifier = {
++	.notifier_call	= md_notify_pm,
++};
++
+ static int md_notify_reboot(struct notifier_block *this,
+ 			    unsigned long code, void *x)
+ {
+@@ -9009,6 +9035,7 @@ static int __init md_init(void)
+ 			    md_probe, NULL, NULL);
  
- /*
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 928e24a..10c0d87 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -63,7 +63,7 @@
- #include "md.h"
- #include "raid5.h"
- #include "raid0.h"
--#include "bitmap.h"
-+#include "md-bitmap.h"
- #include "raid5-log.h"
+ 	register_reboot_notifier(&md_reboot_notifier);
++	register_pm_notifier(&md_pm_notifier);
+ 	raid_table_header = register_sysctl_table(raid_root_table);
  
- #define UNSUPPORTED_MDDEV_FLAGS	(1L << MD_FAILFAST_SUPPORTED)
+ 	md_geninit();
+@@ -9248,6 +9275,7 @@ static __exit void md_exit(void)
+ 
+ 	unregister_blkdev(MD_MAJOR,"md");
+ 	unregister_blkdev(mdp_major, "mdp");
++	unregister_pm_notifier(&md_pm_notifier);
+ 	unregister_reboot_notifier(&md_reboot_notifier);
+ 	unregister_sysctl_table(raid_table_header);
+ 
 -- 
-2.10.1
-
+2.14.2
