@@ -1,199 +1,58 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 1/3] mdadm/Grow: fix the broken raid level conversion
-Date: Wed, 11 Oct 2017 07:31:50 +1100
-Message-ID: <878tgiycax.fsf@notabene.neil.brown.name>
-References: <1507537274-29350-1-git-send-email-zlliu@suse.com> <1507537274-29350-2-git-send-email-zlliu@suse.com> <87shesy4sy.fsf@notabene.neil.brown.name> <7fe518ce-d68b-687b-f1f2-cd16616dbba9@suse.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: hung grow
+Date: Tue, 10 Oct 2017 16:31:42 -0400
+Message-ID: <5d26e2e9-90e0-cac1-2c61-d953e9d0cc6e@turmel.org>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
+ <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
+ <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com>
+ <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org>
+ <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk>
+ <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org>
+ <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
+ <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org>
+ <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com>
+ <5a3fb3ec-299a-67c9-9d1c-ef28ca2164dd@turmel.org>
+ <CADg2FGYQti9hFAqtRMEH8B-i4kwJJ3fYRdrRauD5F3OSZ_Q0vw@mail.gmail.com>
+ <91ef85f8-4644-4918-1dbd-013e26050e4b@turmel.org>
+ <CADg2FGZR-44hQ5fhy3QzByCWbfDUaXkQg2BismN0WztEOk6YnQ@mail.gmail.com>
+ <CADg2FGZNRk_v4KRZ-6Qmvn3u9ByYLoHrBydjKY6rEw7pNZ0w5A@mail.gmail.com>
+ <4033a13e-3ea2-e32a-90a3-a5c86e24ed69@turmel.org>
+ <CADg2FGZpeLc5bOPnVb2O0Z=-KjdCv6BRSO0MUHrMMHaDBLVmCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7fe518ce-d68b-687b-f1f2-cd16616dbba9@suse.com>
+In-Reply-To: <CADg2FGZpeLc5bOPnVb2O0Z=-KjdCv6BRSO0MUHrMMHaDBLVmCg@mail.gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>, Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: Curt <lightspd@gmail.com>
+Cc: Anthony Youngman <antlists@youngman.org.uk>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Oct 10 2017, Zhilong Liu wrote:
-
-> On 10/09/2017 06:49 PM, NeilBrown wrote:
->> On Mon, Oct 09 2017, Zhilong Liu wrote:
+On 10/10/2017 04:29 PM, Curt wrote:
 >>
->>> To fix the commit: 4b74a905a67e
->>> (mdadm/grow: Component size must be larger than chunk size)
->>> Since cannot change component size at the same time as other
->>> changes, ensure the 'level' is UnSet when changing component
->>> size, and also not affect the raid level conversion.
->>>
->>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
->>> ---
->>>   Grow.c | 3 ++-
->>>   1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/Grow.c b/Grow.c
->>> index 1149753..180fd78 100644
->>> --- a/Grow.c
->>> +++ b/Grow.c
->>> @@ -1814,7 +1814,8 @@ int Grow_reshape(char *devname, int fd,
->>>   	}
->>>=20=20=20
->>>   	if (array.level > 1 &&
->>> -	   (array.chunk_size / 1024) > (int)s->size) {
->>> +	   (array.chunk_size / 1024) > (int)s->size &&
->>> +	    s->level =3D=3D UnSet) {
->>>   		pr_err("component size must be larger than chunk size.\n");
->>>   		return 1;
->>>   	}
->> This patch doesn't make any sense to me.
->
-> Hi, Neil;
->    Sorry for the later reply due to meetings.
->
-> I do agree your suggestion that adding test "s->size > 0" is more=20
-> comfortable than
-> adding "s->level =3D=3D UnSet".
->
-> This patch mainly wanna ensure that changing new component size must be=20
-> ">=3D" current
-> chunk size, otherwise the mddev->pers->resize would set the=20
-> mddev->dev_sectors as '0'.
->
-> array.level > 1       ---> only against the raids which the chunk size=20
-> is meaningful.
-> (array.chunk_size / 1024) > (int)s->size     ----> ensure the=20
-> explanation above.
-> s->size > 0    ----> to ensure that valid re-size has required.
->
->> If the chunk_size is meaningful, then is must be less than the new
->> s->size.
->
-> Yes here.
->> This is true whether the level is being changed or not.
+>> No, that's not good. And blocking the mount process is a disaster.
 >>
->> Why do you think that the component size cannot be changed at the same
->> time as other changes?
->
-> Both user space and kernel space have codes to verify only one change=20
-> happens.
->
-> in mdadm/Grow.c:   Grow_reshape()
-> ...
-> 1801         if (s->size > 0 &&
-> 1802             (s->chunk || s->level!=3D UnSet || s->layout_str ||=20
-> s->raiddisks)) {
-> 1803                 pr_err("cannot change component size at the same=20
-> time as other changes.\n"
-> 1804                         "   Change size first, then check data is=20
-> intact before making other changes.\n");
-> 1805                 return 1;
-> 1806         }
-> ...
+>> Please take notes on all device serials vs. MD device # and consider
+>> trying everything with rescue distro.  I generally use SystemRescueCD,
+>> but anything with the latest stable kernel and mdadm might help.
+>>
+>> Phil
+>>
+> 
+> Figured.  Doesn't seem like it's really doing anything, outside taking
+> 100% cpu. Doing a cat of /proc/pid/io shows all 0's.
+> 
+> Anyway.  Should I just run an mdadm --stop on the md127 or doing you
+> think I'll have to do a reboot?
 
-Ahhh, yes.  I had forgotten about that.  There was probably a good
-reason.
-Thanks.
+Use --stop.  It might work and would be good if it did.
 
->
-> in md.c:  update_array_info()
-> ...
-> 6833         /* Check there is only one change */
+> After it's stopped. I'm guessing just boot with a rescue CD and try to
+> do an assemble and then mount and hope it doesn't do the same thing?
 
-This isn't directly relevant.  mdadm could send multiple change
-commands, one after the other.
+Yes.  Device letters might change -- that's why you need serial numbers
+before you shut down.
 
+Phil
 
-> 6834         if (info->size >=3D 0 && mddev->dev_sectors / 2 !=3D info->s=
-ize)
-> 6835                 cnt++;
-> 6836         if (mddev->raid_disks !=3D info->raid_disks)
-> 6837                 cnt++;
-> 6838         if (mddev->layout !=3D info->layout)
-> 6839                 cnt++;
-> 6840         if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT))
-> 6841                 cnt++;
-> 6842         if (cnt =3D=3D 0)
-> 6843                 return 0;
-> 6844         if (cnt > 1)
-> 6845                 return -EINVAL;
-> ...
->
-> Here I give a test to explain more details.
->
-> Steps:
-> 1. create a raid5 array.
-> ./mdadm -CR /dev/md0 -l5 -b internal -n2 -x1 /dev/loop10 /dev/loop11=20
-> /dev/loop12
-> 2. changing component size:
-> ./mdadm -G /dev/md0 --size 511
->
-> Currently, the /sys/block/md0/md/chunk_size is default by 512*1024, and=20
-> we required to
-> set new component size as 511K.
->
-> in mdadm:
-> it goes Grow_reshape() and sent a ioctl command of SET_ARRAY_INFO.
->
-> in md:
-> ioctl parses the command and goes to update_array_info  --> update_size=20
-> --> mddev->pers->resize;
-> in raid5.c:
-> cut piece of code from raid5_resize().
-> ...
-> 7719         sectors &=3D ~((sector_t)conf->chunk_sectors - 1);
-> 7720         newsize =3D raid5_size(mddev, sectors, mddev->raid_disks);
-> ...
->
-> the line 7719 shows the valid sectors should be the integer times of=20
-> conf->chunk_sectors,
-> but sectors would be '0' when sectors <=3D conf->chunk_sectors.
-> At this time, the raid5 array is still on-line, but it's not meaningful=20
-> any more due to the new
-> component size has set as '0'.
->
-> Thus, firstly I expose this patch to user space and require some ideas,=20
-> would you suggest
-> that add something in kernel space? such as ensure "sectors >=20
-> conf->chunk_sectors"?
-
-I would suggest
-   if (sectors =3D=3D 0)
-       return -EINVAL;
-
-between lines 7719 abd 7720.
-
-raid10.c needs a similar change.  Probably raid1.c too.
-
-Thanks,
-NeilBrown
-
->
-> Thanks for your patience to correct me if any wrong here.
->
-> Best regards,
-> -Zhilong
->
->> NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlndLjcACgkQOeye3VZi
-gbmLsQ/+LPFz+CH/JSoxoxqXyRatEQaMBWLJmPMoMpOpSVCGQ0pJtwrAekBxGeQ+
-uZsQy6wscRgm5OsY5gCYubZA8t93Svmr5Asxi2HZSirr8Anx2n8oJxDbEOQ9TWLT
-5E9kwtW32rhuanwwbbaVI/bJKbGVMkXdXJaetpW5beupptrgN4s13Eaw1GRTujqu
-oUEk1KE1iJ//wFSpzXRoQ+4syCZ4wITbBNa3HJAy1rKbe2oDnFQnTJTvhXwAXxI8
-u7M5FdXpngnNTYz/Mjwmc4icm0cn+D6NdGwy0RB/40N91SGTXgV3VEs8wQhnUb1q
-so+H+R12C9RLwKu9B0W5g+ihZP4MVsOpHq6LD9GticolrXkOWmO8u3APuYkHF5J2
-4MujclibjK5/2h9ulLOc9xAUaeyIXga/3+VDF9aSxtmfgudYkeojDNlG7gTBdRoz
-61jT36ChElDjK4GyYmeXVFcpsQNwn+9aqDgqllE7MNBvnwNtANe1eM9N5gW2rWox
-ZkK6UJuP0KXi21YsJs7yZzQq/K1jZNLS189giXvb9DtNOt8s32Gr7oIa9DfdTMNk
-pd8bfD00nfG8m3U/S3sK4cSccCd8uBVvPUIyZGigNK6NqRA7oRSs2MubnGSVoo4B
-KuC85dC3dFn+VBNAndhs9eqePFTZkVquYXhu7ekc0CWPyykhphs=
-=ZgBK
------END PGP SIGNATURE-----
---=-=-=--
