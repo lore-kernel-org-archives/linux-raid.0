@@ -1,29 +1,58 @@
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
-Subject: Re: [dm-devel] [PATCH] md: rename some drivers/md/ files to have an
- "md-" prefix
-Date: Tue, 10 Oct 2017 21:29:53 +0000
-Message-ID: <1507670992.2815.59.camel@wdc.com>
-References: <20171010210241.2332-1-snitzer@redhat.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: hung grow
+Date: Wed, 11 Oct 2017 08:56:58 +1100
+Message-ID: <87po9uwtsl.fsf@notabene.neil.brown.name>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com> <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com> <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com> <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com> <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com> <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com> <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com> <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org> <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk> <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org> <CADg2FGad+Tpu-4
+ Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com> <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org> <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com> <CADg2FGYQti9hFAqtRMEH8B-i
+ 4kwJJ3fYRdrRauD5F3OSZ_Q0vw@mail.gmail.com> <874lr6ybll.fsf@notabene.neil.brown.name> <CADg2FGbjqzFvrptLkM9LGYABZWDcmQC_rqEceo44yzADGhFGzw@mail.gmail.com> <CADg2FGbJHbPaPeBdetTGuC-S2e17BWHOchEeiBjevibjH0pHGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171010210241.2332-1-snitzer@redhat.com>
-Content-Language: en-US
-Content-ID: <E38FEA18F6D9C240B872EEFE702EEDB3@namprd04.prod.outlook.com>
+In-Reply-To: <CADg2FGbJHbPaPeBdetTGuC-S2e17BWHOchEeiBjevibjH0pHGg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "shli@kernel.org" <shli@kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+To: Curt <lightspd@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE3LTEwLTEwIGF0IDE3OjAyIC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
-IE1vdGl2YXRlZCBieSB0aGUgZGVzaXJlIHRvIGlsbGltaW5hdGUgdGhlIGltcHJlY2lzZSBuYXR1
-cmUgb2YNCj4gRE0tc3BlY2lmaWMgcGF0Y2hlcyBiZWluZyB1bm5lY2Vzc2FyaWx5IHNlbnQgdG8g
-Ym90aCB0aGUgTUQgbWFpbnRhaW5lcg0KPiBhbmQgbWFpbGluZy1saXN0LiAgV2hpY2ggaXMgYm9y
-biBvdXQgb2YgdGhlIGZhY3QgdGhhdCBETSBmaWxlcyBhbHNvDQo+IHJlc2lkZSBpbiBkcml2ZXJz
-L21kLw0KPiANCj4gTm93IGFsbCBNRC1zcGVjaWZpYyBmaWxlcyBpbiBkcml2ZXJzL21kLyBzdGFy
-dCB3aXRoIGVpdGhlciAicmFpZCIgb3INCj4gIm1kLSIgYW5kIHRoZSBNQUlOVEFJTkVSUyBmaWxl
-IGhhcyBiZWVuIHVwZGF0ZWQgYWNjb3JkaW5nbHkuDQoNCkhlbGxvIE1pa2UsDQoNCkFsdGhvdWdo
-IHRoaXMgcGF0Y2ggbG9va3MgZmluZSB0byBtZTogaGFzIGl0IGJlZW4gY29uc2lkZXJlZCB0byBt
-b3ZlIHRoZQ0KZGV2aWNlIG1hcHBlciBmaWxlcyBpbnRvIGEgbmV3IHN1YmRpcmVjdG9yeSwgZS5n
-LiBkcml2ZXJzL2RtPw0KDQpUaGFua3MsDQoNCkJhcnQu
+--=-=-=
+Content-Type: text/plain
+
+On Tue, Oct 10 2017, Curt wrote:
+
+> On Tue, Oct 10, 2017 at 4:58 PM, Curt <lightspd@gmail.com> wrote:
+>
+>>> Can you please
+>>>   mkdir /tmp/dump
+>>>   mdadm --dump=/dev/dump /dev...list.all.devices.in.the.array
+>>>   tar czf --sparse /tmp/dump.tgz /tmp/dump
+>>>
+>>  Yeah, I will get that for you once I reboot the server.
+>>
+> Quick question.  Is that supposed to be mdadm --dump=/dev/dump or /tmp/dump?
+
+"/tmp/dump" - yes,  I typed the wrong thing.
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlndQioACgkQOeye3VZi
+gbnMRA/7BCY0mj4P6oUUqLdCL0MFU+QQHsFbcD4XjdupTILadRcqozfmPN0yAdCM
+FpfP/tkB28RTkKowYKu5j/c7IldOljoTyunjMDCvSw+RgYvwH0ikiIb0t5FvkCy1
+YLQHBH1gOONtAjj/iyS6Uy6E1hd4qKrP3rwo39OzZX405Y5bhsqg0PiX07isNeRM
+kwduP0LgWxuXlPNuSTZiyyvlPk+PTNJJWCwNQbOphHeX/znE2CyzCYUn6B4WqJmU
+um8QUmkqLoeXIbdymlB7phvZs90gr972Tn2YwtEfroot4APqvZTJpvWnQHDwXY7d
+8AUPFtUtu4C75cXQ9fqkRWXd/Nql2p9X+9qFzZ1vxNtPVry9lCmOrhr824SqhQMo
+QoOPEozjNpcRdgg7y2N6eKBp9ApL7DurJz9/PzUgFjOPAHqj0AHWaE6YCw3Saadq
+MPEvnFVeNVQ4NxQs0ExmsnBVZ4dkHnGcfH0WCivabLmPeHDrJ0zXBkgMFOVpBjFB
+au4m5kJYlZgkcjfUY1KUS409JOblTznkEB4e0fPHbWFJfYxHFt1xAPv+11fgGQr6
+DwwdIU5kF8EAiJWWMJryQ2iOsEX+Cr29IsX0FLC7ZjIveNuPnaf76DuiRjDrtjce
+Q4Q2e3r2Qi9O4ufIMbNuF/LZ9Ejmn8y3ZsQqoFSVxLNaibsZ0uQ=
+=KDeX
+-----END PGP SIGNATURE-----
+--=-=-=--
