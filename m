@@ -1,27 +1,28 @@
 From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH 3/3] mdadm/mdstat: correct the strncmp number 4 as 6
-Date: Tue, 10 Oct 2017 16:38:17 -0400
-Message-ID: <e747024a-d0fc-53d4-77b9-8440c3466461@gmail.com>
-References: <1507537274-29350-1-git-send-email-zlliu@suse.com>
- <1507537274-29350-4-git-send-email-zlliu@suse.com>
+Subject: Re: [mdadm PATCH 1/2] mdcheck: add some logging.
+Date: Tue, 10 Oct 2017 16:41:57 -0400
+Message-ID: <356bb61a-61d8-37b4-26a4-e400b4b574a1@gmail.com>
+References: <87h8vd12mn.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1507537274-29350-4-git-send-email-zlliu@suse.com>
+In-Reply-To: <87h8vd12mn.fsf@notabene.neil.brown.name>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/09/2017 04:21 AM, Zhilong Liu wrote:
-> mdstat: it should be corrected as 6 when strncmp 'resync'.
+On 10/05/2017 09:33 PM, NeilBrown wrote:
 > 
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> Use 'logger' to report when mdcheck starts, stops, or continues
+> the check on an array.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
 > ---
->   mdstat.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   misc/mdcheck | 9 +++++++--
+>   1 file changed, 7 insertions(+), 2 deletions(-)
 
 Applied!
 
