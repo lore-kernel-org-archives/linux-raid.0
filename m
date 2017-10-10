@@ -1,48 +1,140 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
-Date: Tue, 10 Oct 2017 16:09:37 -0400
-Message-ID: <7b231d36-1434-0de0-2f7a-195a4f649d35@gmail.com>
-References: <22997.8664.67459.119616@quad.stoffel.home>
- <87a81637lq.fsf@notabene.neil.brown.name>
- <23002.37193.492253.120639@quad.stoffel.home>
- <87shetz207.fsf@notabene.neil.brown.name>
- <23002.53075.413063.6948@quad.stoffel.home>
- <87h8v9yn91.fsf@notabene.neil.brown.name>
- <c476e0a8-ff57-e38d-f3d7-0c59242cc0b9@turmel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be needed.
+Date: Wed, 11 Oct 2017 07:16:13 +1100
+Message-ID: <87bmleyd0y.fsf@notabene.neil.brown.name>
+References: <87y3p372b0.fsf@notabene.neil.brown.name> <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c476e0a8-ff57-e38d-f3d7-0c59242cc0b9@turmel.org>
-Content-Language: en-US
+In-Reply-To: <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>, John Stoffel <john@stoffel.org>
-Cc: Eli Ben-Shoshan <eli@benshoshan.com>, linux-raid@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/09/2017 04:04 PM, Phil Turmel wrote:
-> On 10/09/2017 12:10 AM, NeilBrown wrote:
-> 
->> If there is some action that mdadm can currently be told to perform, and
->> when it tries to perform that action it corrupts the array, then
->> it is certainly appropriate to teach mdadm not to perform that action.
->> It shouldn't even perform that action with --force.   I agree that
->> changing mdadm like this is complementary to changing the kernel.  Both
->> are useful.
-> 
-> A certain amount of the trouble with all of this is the english meaning
-> of "grow" doesn't really match what mdadm allows.
-> 
-> Might it be reasonable to reject "--grow" operations that reduce the
-> final array size, and introduce the complementary "--reduce" operation
-> that rejects array size increases?
-> 
-> Both operations would share the current code, just apply a different
-> sanity check before proceeding.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-"grow" in mdadmlish translates to reshape/resize in English. Starting to 
-introduce new keywords for this really makes no sense and just cause 
-confusion, so I am not going to support that.
+On Tue, Oct 10 2017, Zhilong Liu wrote:
 
-Jes
+> On 09/25/2017 01:52 PM, NeilBrown wrote:
+>> Creating an array by opening a block-device with major number of 9
+>> will transparently load the md module if needed.
+>> Creating an array by opening
+>>     /sys/module/md_mod/parameters/new_array
+>> and writing to it won't, it will just fail if md_mod isn't loaded.
+>>
+>> So when opening that file fails with ENOENT, run "modprobe md_mod" and
+>> try again.
+>>
+>> This fixes a bug whereby if you have "CREATE names=3Dyes" in mdadm.conf,
+>> and the md modules isn't loaded, then creating or assembling an
+>> array will not honor the "names=3Dyes" configuration.
+>>
+>> Signed-off-by: NeilBrown <neilb@suse.com>
+>> ---
+>>   mdopen.c | 4 ++++
+>>   1 file changed, 4 insertions(+)
+>>
+>> diff --git a/mdopen.c b/mdopen.c
+>> index 3c0052f2db23..dcdc6f23e6c1 100644
+>> --- a/mdopen.c
+>> +++ b/mdopen.c
+>> @@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof, =
+int trustworthy,
+>>   		if (block_udev)
+>>   			udev_block(devnm);
+>>   		fd =3D open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+>> +		if (fd < 0 && errno =3D=3D ENOENT) {
+>> +			system("modprobe md_mod");
+>
+> Hi, Neil;
+> this system() line would be treated warning as error when issue
+> make everything-test.
+> It complains:
+> ... ...
+> mdopen.c: In function =E2=80=98create_mddev=E2=80=99:
+> mdopen.c:316:10: error: ignoring return value of =E2=80=98system=E2=80=99=
+, declared with=20
+> attribute warn_unused_result [-Werror=3Dunused-result]
+>      system("modprobe md_mod");
+>            ^
+> cc1: all warnings being treated as errors
+> Makefile:196: recipe for target 'mdadm.O2' failed
+> make: *** [mdadm.O2] Error 1
+> ... ...
+>
+> It shows that mdadm cannot assume that "system" will always succeed. The=
+=20
+> code becomes
+> unreliable in this way.
+>
+> It should meets three conditions at the same time to ensure system is=20
+> successful.
+> 1. -1 !=3D status
+> 2. WIFEXITED(status) is true
+> 3. 0 =3D=3D WEXITSTATUS(status)
+>
+> Maybe add a test like this?
+>
+> diff --git a/mdopen.c b/mdopen.c
+> index dcdc6f2..51bf2d3 100644
+> --- a/mdopen.c
+> +++ b/mdopen.c
+> @@ -313,7 +313,10 @@ int create_mddev(char *dev, char *name, int autof,=20
+> int trustworthy,
+>                          udev_block(devnm);
+>                  fd =3D open("/sys/module/md_mod/parameters/new_array",=20
+> O_WRONLY);
+>                  if (fd < 0 && errno =3D=3D ENOENT) {
+> -                       system("modprobe md_mod");
+> +                       int ret =3D system("modprobe md_mod");
+> +                       if (ret) {
+> +                               pr_err("modprobe md_mod got failed!\n");
+> +                       }
+>                          fd =3D=20
+> open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+>                  }
+>                  if (fd >=3D 0) {
+>
 
+Hmmm.. that's annoying.  I wonder why "system" is marked
+"warn_unused_result".
+In this case I really don't care - I'm not convinced an extra error
+message will really help.
+Maybe
+   if (system("modprobe md_mod") =3D=3D 0)
+        fd =3D open("/sys/......", O_WRONLY);
+
+
+We do what a better error message, then it should be based on 'fd < 0'.
+e.g.
+  if (fd < 0 || n !=3D strlen(devnm))
+      pr_err("Fail create array using /sys/module/md_mod/parameters/new_arr=
+ay\n");
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlndKo4ACgkQOeye3VZi
+gblu7A/9E1c1iNTx3wu+W2vtfrqDOdIQCzUHRKaRDX04VmtyIsyi4ArfKm/40tMs
+b0jETR7wLzIME2/rSjV3AQvwO7sxSYskSPUbClleei1UB7vXx33rGLX5oOeOolaX
+L77Id+JJhDYDq01pTWTv+0mxkRUVewxh/speyCNy2Y6xs+H1TJaL1Jm0d3k+clrI
+4mb7y9axkO9Cr6NNw/58A0JUENSDLA/jnBweoOZ3VX1nPzT6lijx8ZW20A0M6kcS
+1FHbmUx3giJ/sCdV5Xmctf9sHq31Qh/IHnpc7bBuBGTPUl+LSjCNT6dqqeHz65S3
+ANF9Wy3zqWGos4dfgOWVbLQMy21yvNpgFsepE3dUXzym4o9wi9rwOT4VB0v5xzoa
+QB8KnsO2thXB8hwoKN1drAosGmOoPN+FIAF95+u/Otk6Mwc9eyq+GUPuNMzVnJAX
+C1QUy5rR5X6Wcljvdyf10bEgDH4Qs8p/OL+4ielpAdhHcn/FS/gDAlWtRVbFE/RK
+CMj+VJWvF26g0jjf+pi7N15fXj3kJy9FaJoIfWshibLtb/vAAmeRhR1gYD1W8vYo
+57qpPwygfg/wL5mHZn9F3F+HJo2lDeHxTYblMmBtyFsJ+uZ1f5jTgHdJTS4vXgWc
+TaXd40JYtRvcVXOTS+RABqjEIPkTQgKhKBuButYyEjYaWxMho+c=
+=oFM1
+-----END PGP SIGNATURE-----
+--=-=-=--
