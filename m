@@ -1,46 +1,44 @@
-From: Curt <lightspd@gmail.com>
-Subject: Re: hung grow
-Date: Tue, 10 Oct 2017 16:58:24 -0400
-Message-ID: <CADg2FGbjqzFvrptLkM9LGYABZWDcmQC_rqEceo44yzADGhFGzw@mail.gmail.com>
-References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
- <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
- <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
- <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com>
- <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com>
- <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
- <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com>
- <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org> <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk>
- <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org> <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
- <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org> <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com>
- <CADg2FGYQti9hFAqtRMEH8B-i4kwJJ3fYRdrRauD5F3OSZ_Q0vw@mail.gmail.com> <874lr6ybll.fsf@notabene.neil.brown.name>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
+Date: Tue, 10 Oct 2017 16:58:14 -0400
+Message-ID: <52f93e96-ae12-4131-b6db-ac33877cfbda@turmel.org>
+References: <22997.8664.67459.119616@quad.stoffel.home>
+ <87a81637lq.fsf@notabene.neil.brown.name>
+ <23002.37193.492253.120639@quad.stoffel.home>
+ <87shetz207.fsf@notabene.neil.brown.name>
+ <23002.53075.413063.6948@quad.stoffel.home>
+ <87h8v9yn91.fsf@notabene.neil.brown.name>
+ <c476e0a8-ff57-e38d-f3d7-0c59242cc0b9@turmel.org>
+ <871smaybig.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874lr6ybll.fsf@notabene.neil.brown.name>
+In-Reply-To: <871smaybig.fsf@notabene.neil.brown.name>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Phil Turmel <philip@turmel.org>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, John Stoffel <john@stoffel.org>
+Cc: Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 10, 2017 at 4:47 PM, NeilBrown <neilb@suse.com> wrote:
+On 10/10/2017 04:48 PM, NeilBrown wrote:
+> On Mon, Oct 09 2017, Phil Turmel wrote:
 
->
-> Clearly a kernel bug.
-> What kernel are you using?  Can you try a newer one easily?
+>> Might it be reasonable to reject "--grow" operations that reduce the
+>> final array size, and introduce the complementary "--reduce" operation
+>> that rejects array size increases?
+> 
+> While there is a lot to like about this approach, one problem is that
+> some "grow" operations do not change the size. They might, e.g., just change
+> the chunksize.
 
-3.10.0-229.el7.x86_64.  I could either update the OS or transfer to a
-new server and use a rescue cd as mentioned before.
->
-> Can you please
->   mkdir /tmp/dump
->   mdadm --dump=/dev/dump /dev...list.all.devices.in.the.array
->   tar czf --sparse /tmp/dump.tgz /tmp/dump
->
- Yeah, I will get that for you once I reboot the server.
+I tried to word my proposal to address that -- either keyword could
+accept operations that didn't change the size.
 
-> and send me /tmp/dump.tgz.  It will only contains the metadata.
-> I can then create an identical looking array and experiment.
->
-> I doubt if letting it run will bring benefits.
->
-> NeilBrown
+> I guess you could have --grow --reduce --reshape.
+> 
+> I wouldn't object to such a change.
+
+Jes has weighed in as opposed.  Sigh.
+
+Phil
