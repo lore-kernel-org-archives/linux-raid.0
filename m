@@ -1,58 +1,77 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: hung grow
-Date: Wed, 11 Oct 2017 08:56:58 +1100
-Message-ID: <87po9uwtsl.fsf@notabene.neil.brown.name>
-References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com> <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com> <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com> <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com> <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com> <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com> <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com> <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org> <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk> <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org> <CADg2FGad+Tpu-4
- Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com> <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org> <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com> <CADg2FGYQti9hFAqtRMEH8B-i
- 4kwJJ3fYRdrRauD5F3OSZ_Q0vw@mail.gmail.com> <874lr6ybll.fsf@notabene.neil.brown.name> <CADg2FGbjqzFvrptLkM9LGYABZWDcmQC_rqEceo44yzADGhFGzw@mail.gmail.com> <CADg2FGbJHbPaPeBdetTGuC-S2e17BWHOchEeiBjevibjH0pHGg@mail.gmail.com>
+From: josh <poddmo@gmail.com>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Wed, 11 Oct 2017 09:23:42 +1100
+Message-ID: <CAC5BxnO9URNuE556Mi0DD=1knf7p0qb3frAGTJa=FK8TvJNxpw@mail.gmail.com>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de> <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
+ <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org> <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
+ <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADg2FGbJHbPaPeBdetTGuC-S2e17BWHOchEeiBjevibjH0pHGg@mail.gmail.com>
+In-Reply-To: <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Curt <lightspd@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Alexander Shenkin <al@shenkin.org>
+Cc: Reindl Harald <h.reindl@thelounge.net>, Phil Turmel <philip@turmel.org>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Hello Alexander,
 
-On Tue, Oct 10 2017, Curt wrote:
-
-> On Tue, Oct 10, 2017 at 4:58 PM, Curt <lightspd@gmail.com> wrote:
->
->>> Can you please
->>>   mkdir /tmp/dump
->>>   mdadm --dump=/dev/dump /dev...list.all.devices.in.the.array
->>>   tar czf --sparse /tmp/dump.tgz /tmp/dump
->>>
->>  Yeah, I will get that for you once I reboot the server.
+On 10 October 2017 at 20:56, Alexander Shenkin <al@shenkin.org> wrote:
+> On 10/10/2017 10:11 AM, Reindl Harald wrote:
 >>
-> Quick question.  Is that supposed to be mdadm --dump=/dev/dump or /tmp/dump?
+>>
+>>
+>> Am 10.10.2017 um 11:00 schrieb Alexander Shenkin:
+>>>
+>>> Thanks... I know nothing about "check scrubs".  Could you point me to a
+>>> good resource?  I've found https://raid.wiki.kernel.org/index.php/Scrubbing
+>>> and https://raid.wiki.kernel.org/index.php/Scrubbing_the_drives, but it's
+>>> hard to tell exactly how the system should be configured in order to run
+>>> these regularly.  A weekly cron perhaps?  And, should it be just check, or
+>>> repair?  etc...  Any help you could offer would be welcome.
+>>
+>>
+>> if your distribution don't install a cronjob for that you should blame
+>> them because RAID without regular scrub is asking for troubles
+>>
+>> [root@srv-rhsoft:~]$ rpm -q --file /etc/cron.d/raid-check
+>> mdadm-4.0-1.fc26.x86_64
+>>
+>> [root@srv-rhsoft:~]$ cat /etc/cron.d/raid-check
+>> 30 4 * * Mon root /usr/sbin/raid-check
+>
+>
+> Thanks Reindl.  Here's what I have installed (no evidence of raid-check
+> available on my system):
+>
+> $ cat /etc/cron.d/mdadm
+> 57 0 * * 0 root if [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%d) -le
+> 7 ]; then /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi
+>
 
-"/tmp/dump" - yes,  I typed the wrong thing.
 
-Thanks,
-NeilBrown
+This is indicative of a Debian/Ubuntu distribution. The cron entry is
+not enough to enable md array checks, you have to edit
+/etc/default/mdadm and set AUTOCHECK=true
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlndQioACgkQOeye3VZi
-gbnMRA/7BCY0mj4P6oUUqLdCL0MFU+QQHsFbcD4XjdupTILadRcqozfmPN0yAdCM
-FpfP/tkB28RTkKowYKu5j/c7IldOljoTyunjMDCvSw+RgYvwH0ikiIb0t5FvkCy1
-YLQHBH1gOONtAjj/iyS6Uy6E1hd4qKrP3rwo39OzZX405Y5bhsqg0PiX07isNeRM
-kwduP0LgWxuXlPNuSTZiyyvlPk+PTNJJWCwNQbOphHeX/znE2CyzCYUn6B4WqJmU
-um8QUmkqLoeXIbdymlB7phvZs90gr972Tn2YwtEfroot4APqvZTJpvWnQHDwXY7d
-8AUPFtUtu4C75cXQ9fqkRWXd/Nql2p9X+9qFzZ1vxNtPVry9lCmOrhr824SqhQMo
-QoOPEozjNpcRdgg7y2N6eKBp9ApL7DurJz9/PzUgFjOPAHqj0AHWaE6YCw3Saadq
-MPEvnFVeNVQ4NxQs0ExmsnBVZ4dkHnGcfH0WCivabLmPeHDrJ0zXBkgMFOVpBjFB
-au4m5kJYlZgkcjfUY1KUS409JOblTznkEB4e0fPHbWFJfYxHFt1xAPv+11fgGQr6
-DwwdIU5kF8EAiJWWMJryQ2iOsEX+Cr29IsX0FLC7ZjIveNuPnaf76DuiRjDrtjce
-Q4Q2e3r2Qi9O4ufIMbNuF/LZ9Ejmn8y3ZsQqoFSVxLNaibsZ0uQ=
-=KDeX
------END PGP SIGNATURE-----
---=-=-=--
+
+
+
+
+>>> Is this something I should run now?  I figure it's a bad idea to push an
+>>> array that is starting to degrade... haven't had a chance to replace the
+>>> drive yet, but will get to it this week.  Probably best to start the
+>>> scrubbing routines once I have 4 good drives in there I figure...
+>>
+>>
+>> NO - never put any load you can avoid on degraded arrays
+>
+>
+> thanks, i won't.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
