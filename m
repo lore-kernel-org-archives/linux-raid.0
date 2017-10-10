@@ -1,7 +1,7 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Wakko Warner <wakko@animx.eu.org>
 Subject: Re: mdadm: Patch to restrict --size when shrinking unless forced
-Date: Tue, 10 Oct 2017 21:54:25 +0100
-Message-ID: <59DD3381.8050303@youngman.org.uk>
+Date: Tue, 10 Oct 2017 16:55:57 -0400
+Message-ID: <20171010205557.GA11500@animx.eu.org>
 References: <22997.8664.67459.119616@quad.stoffel.home>
  <87a81637lq.fsf@notabene.neil.brown.name>
  <23002.37193.492253.120639@quad.stoffel.home>
@@ -9,48 +9,61 @@ References: <22997.8664.67459.119616@quad.stoffel.home>
  <23002.53075.413063.6948@quad.stoffel.home>
  <87h8v9yn91.fsf@notabene.neil.brown.name>
  <c476e0a8-ff57-e38d-f3d7-0c59242cc0b9@turmel.org>
- <7b231d36-1434-0de0-2f7a-195a4f649d35@gmail.com>
+ <20171010000702.GA6038@animx.eu.org>
+ <87y3oiwws3.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7b231d36-1434-0de0-2f7a-195a4f649d35@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87y3oiwws3.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>, Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>, John Stoffel <john@stoffel.org>
-Cc: Eli Ben-Shoshan <eli@benshoshan.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Phil Turmel <philip@turmel.org>, John Stoffel <john@stoffel.org>, Eli Ben-Shoshan <eli@benshoshan.com>, Jes.Sorensen@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/10/17 21:09, Jes Sorensen wrote:
->> Both operations would share the current code, just apply a different
->> sanity check before proceeding.
+NeilBrown wrote:
+> On Mon, Oct 09 2017, Wakko Warner wrote:
 > 
-> "grow" in mdadmlish translates to reshape/resize in English. Starting to
-> introduce new keywords for this really makes no sense and just cause
-> confusion, so I am not going to support that.
+> > Phil Turmel wrote:
+> >> A certain amount of the trouble with all of this is the english meaning
+> >> of "grow" doesn't really match what mdadm allows.
+> >> 
+> >> Might it be reasonable to reject "--grow" operations that reduce the
+> >> final array size, and introduce the complementary "--reduce" operation
+> >> that rejects array size increases?
+> >> 
+> >> Both operations would share the current code, just apply a different
+> >> sanity check before proceeding.
+> >> 
+> >> mdadm would then at least not violate the rule of least surprise.
+> >
+> > As a general user of md raid and as a reader of the list, I would agree that
+> > this would be a better solution.  Thinking in terms of lvm, there's lvreduce
+> > and lvextend.  IMO, --force wouldn't be needed for --reduce (I was orginally
+> > thinking of --shrink)
+> >
+> > On a side note, is it possible for the lower layers to know what the last
+> > used sector is?  IE lvm ontop of raid and has 10% allocated and the last
+> > sector is around the 10% mark.  (If this were possible --force would be,
+> > required if shrinking would result in inaccessible data)
+> 
+> No it isn't.  I've occasionally thought of adding functionality so that
+> the a device could ask its client (e.g. filesystem, lvm, etc) if
+> shrinking is OK - but it hasn't happened yet.
 
-But saying "grow" when the result is a shrink also causes confusion.
-Would you accept changing "grow" to "resize"?
+That's what I thought but wasn't sure.  Thanks.
 
-But personally I think adding a new keyword is sensible. Firstly, in
-normal use no-one is ever going to want to shrink an array, so this is
-rarely going to be used.
+> > I recently did a shrink of 4x 2tb drives so that I could replace the 2tb
+> > drives with 80gb drives (yes, big shrink!)  Would have been nice for mdadm
+> > to know the smallest size was that wouldn't destroy my lvm volumes that were
+> > on top.
+> 
+> Guess, try, see if data is still accessible.  If not, revert the change.
+> If you have a filesystem on the raid, fsck will complain if you made it
+> too small.  I don't know what you would try with lvm.  pvscan?
 
-And secondly, if you use "grow" to grow an array, it's a "safe"
-operation (unless something goes wrong). If you use "grow" to *shrink*
-an array, as Eli found out, it's very dangerous.
+Fortunately for me, my first try worked.
 
-I think abusing the English language is far more dangerous than adding a
-new keyword. No disrespect to them, but you forget your average sysadmin
-is, well, average. Handing them a loaded foot-gun with no safety-catch
-is *not* a good idea. (And even a good sysadmin will spend little time
-with mdadm. Even if they know this now, there's a good chance they'll
-forget before they need it again, and it becomes a land-mine waiting to
-go off ...)
-
-One only has to look at the "hung grow" thread to see what the lack of
-safety-catches can do - if anybody wants another little project, might
-it be an idea to make a load of operations (like resize for example)
-block on a degraded array?
-
-Cheers,
-Wol
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
