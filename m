@@ -1,60 +1,54 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH v2] mdadm/grow: adding a test to ensure resize was
- required
-Date: Wed, 11 Oct 2017 13:31:34 -0400
-Message-ID: <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
-References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
- <1507711992-11548-1-git-send-email-zlliu@suse.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: Can't mount /dev/md0 Raid5
+Date: Thu, 12 Oct 2017 06:13:21 +1100
+Message-ID: <e9bcdb2b-6ffe-285d-5d59-313438db61ac@websitemanagers.com.au>
+References: <59DDF18A.9060800@gmail.com>
+ <8628ddba-8cec-24d8-e07a-195d47f579be@grumpydevil.homelinux.org>
+ <59DDFD19.1040700@gmail.com>
+ <e6566c4a-2476-4554-549a-12b6c90b152f@websitemanagers.com.au>
+ <59DE0705.502@gmail.com>
+ <d6f39002-7120-3613-8163-7fb80b5434a1@websitemanagers.com.au>
+ <59DE1E38.8080604@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1507711992-11548-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <59DE1E38.8080604@gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Joseba Ibarra <wajalotnet@gmail.com>, list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/11/2017 04:53 AM, Zhilong Liu wrote:
-> To fix the commit: 4b74a905a67e
-> (mdadm/grow: Component size must be larger than chunk size)
-> 
-> array.level > 1 : against the raids which chunk_size is meaningful.
-> s->size > 0 : ensure that changing component size has required.
-> array.chunk_size / 1024 > s->size : ensure component size should
-> be always >= current chunk_size when requires resize, otherwise,
-> mddev->pers->resize would be set mddev->dev_sectors as '0'.
-> 
-> Reported-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> Suggested-by: NeilBrown <neilb@suse.com>
-> Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> ---
-> 
-> v1: [PATCH 1/3] mdadm/Grow: fix the broken raid level conversion
-> 
-> changes:
->    correct the test 's->level == UnSet' as 's->size > 0'
-> 
->   Grow.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 4d79d83..8c2d50c 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1810,6 +1810,7 @@ int Grow_reshape(char *devname, int fd,
->   	}
->   
->   	if (array.level > 1 &&
-> +	    s->size > 0 &&
->   	   (array.chunk_size / 1024) > (int)s->size) {
->   		pr_err("component size must be larger than chunk size.\n");
->   		return 1;
+What is the output of cat /proc/mdstat after running the readwrite below?
 
-Applied, however I fixed the broken formatting in the process.
+Did you try the --run option?
 
-Thanks,
-Jes
+You need to make sure the array is active/running before you try to 
+mount it.
 
+BTW, has anything else happened to the array, other than the drive that 
+failed?
+
+Probably should have asked for this before, but what is the full output 
+of smartctl for each drive, also mdadm --misc --examine /dev/sd[bcd]1 
+(or all three relevant devices)?
+
+Regards,
+Adam
+
+
+On 12/10/17 00:35, Joseba Ibarra wrote:
+> Still the same. Nothing seems to have changed.
+>
+>
+> Same answers for mount commands.
+>
+> Adam Goryachev escribió:
+>> mdadm --manage /dev/md0 --readwrite 
+>
+> Jose Ibarra
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
