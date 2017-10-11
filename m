@@ -1,138 +1,73 @@
-From: Joseba Ibarra <wajalotnet@gmail.com>
-Subject: Re: Can't mount /dev/md0 Raid5
-Date: Wed, 11 Oct 2017 13:56:53 +0200
-Message-ID: <59DE0705.502@gmail.com>
-References: <59DDF18A.9060800@gmail.com> <8628ddba-8cec-24d8-e07a-195d47f579be@grumpydevil.homelinux.org> <59DDFD19.1040700@gmail.com> <e6566c4a-2476-4554-549a-12b6c90b152f@websitemanagers.com.au>
+From: Joshua Kinard <kumba@gentoo.org>
+Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
+Date: Wed, 11 Oct 2017 08:41:43 -0400
+Message-ID: <7c6240ee-bed5-b020-db17-bd02df5467eb@gentoo.org>
+References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e6566c4a-2476-4554-549a-12b6c90b152f@websitemanagers.com.au>
+In-Reply-To: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <adam@websitemanagers.com.au>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, list linux-raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: Shaohua Li <shli@fb.com>, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Hi Adam
+On 10/10/2017 17:20, Shaohua Li wrote:
+> From: Shaohua Li <shli@fb.com>
+> 
+> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary. Limit
+> the read size to the end of disk. Write path already has similar limitation.
+> 
+> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
+> Reported-by: Joshua Kinard <kumba@gentoo.org>
+> Tested-by: Joshua Kinard <kumba@gentoo.org>
+> Cc: Song Liu <songliubraving@fb.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/bitmap.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index d2121637b4ab..f68ec973fbdd 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -153,6 +153,7 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
+>  
+>  	struct md_rdev *rdev;
+>  	sector_t target;
+> +	int target_size;
+>  
+>  	rdev_for_each(rdev, mddev) {
+>  		if (! test_bit(In_sync, &rdev->flags)
+> @@ -161,9 +162,12 @@ static int read_sb_page(struct mddev *mddev, loff_t offset,
+>  			continue;
+>  
+>  		target = offset + index * (PAGE_SIZE/512);
+> +		target_size = min_t(u64, size, i_size_read(rdev->bdev->bd_inode) -
+> +			((target + rdev->sb_start) << 9));
+> +		target_size = roundup(target_size,
+> +			bdev_logical_block_size(rdev->bdev));
+>  
+> -		if (sync_page_io(rdev, target,
+> -				 roundup(size, bdev_logical_block_size(rdev->bdev)),
+> +		if (sync_page_io(rdev, target, target_size,
+>  				 page, REQ_OP_READ, 0, true)) {
+>  			page->index = index;
+>  			return 0;
+> 
 
-root@grafico:/mnt# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md0 : inactive sdd1[3] sdb1[1] sdc1[2]
-       2929889280 blocks super 1.2
+Acked-by: Joshua Kinard <kumba@gentoo.org>
 
-unused devices: <none>
+-- 
+Joshua Kinard
+Gentoo/MIPS
+kumba@gentoo.org
+6144R/F5C6C943 2015-04-27
+177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
 
+"The past tempts us, the present confuses us, the future frightens us.  And our
+lives slip away, moment by moment, lost in that vast, terrible in-between."
 
-root@grafico:/mnt# mdadm --manage /dev/md0 --stop
-mdadm: stopped /dev/md0
-
-
-root@grafico:/mnt# mdadm --assemble /dev/md0 /dev/sd[bcd]1
-mdadm: /dev/md0 assembled from 3 drives - not enough to start the array 
-while not clean - consider --force.
-
-
-
-root@grafico:/mnt# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-unused devices: <none>
-
-At this point I´ve followed the advise using --force
-
-root@grafico:/mnt# mdadm --assemble --force /dev/md0 /dev/sd[bcd]1
-mdadm: Marking array /dev/md0 as 'clean'
-mdadm: /dev/md0 has been started with 3 drives (out of 4).
-
-
-root@grafico:/mnt# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md0 : active (auto-read-only) raid5 sdb1[1] sdd1[3] sdc1[2]
-       2929889280 blocks super 1.2 level 5, 512k chunk, algorithm 2 
-[4/3] [_UUU]
-       bitmap: 0/8 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-
-
-Now I see the RAID, however can't be mounted. So, I'm not sure how to 
-backup the data. Gparted shows the partition /dev/md0p1 with the used 
-and free space.
-
-
-If I try
-
-mount /dev/md0 /mnt
-
-again the output is
-
-mount: wrong file system, bad option, bad superblock in /dev/md0, 
-missing codepage or helper program, or other error
-
-     In some cases useful info is found in syslog - try dmesg | tail or 
-something like that.
-
-I do dmesg | tail
-
-If I try root@grafico:/mnt# mount /dev/md0p1 /mnt
-mount: /dev/md0p1: can't read superblock
-
-And
-
-
-root@grafico:/mnt# dmesg | tail
-[ 3263.411724] VFS: Dirty inode writeback failed for block device md0p1 
-(err=-5).
-[ 3280.486813]  md0: p1
-[ 3280.514024]  md0: p1
-[ 3452.496811] UDF-fs: warning (device md0): udf_fill_super: No 
-partition found (2)
-[ 3463.731052] JBD2: Invalid checksum recovering block 630194476 in log
-[ 3464.933960] Buffer I/O error on dev md0p1, logical block 630194474, 
-lost async page write
-[ 3464.933971] Buffer I/O error on dev md0p1, logical block 630194475, 
-lost async page write
-[ 3465.928066] JBD2: recovery failed
-[ 3465.928070] EXT4-fs (md0p1): error loading journal
-[ 3465.936852] VFS: Dirty inode writeback failed for block device md0p1 
-(err=-5).
-
-
-Thanks a lot for your time
-
-
-Joseba Ibarra
-> Adam Goryachev <mailto:adam@websitemanagers.com.au>
-> 11 de octubre de 2017, 13:29
-> Hi Rudy,
->
-> Please send the output of all of the following commands:
->
-> cat /proc/mdstat
->
-> mdadm --manage /dev/md0 --stop
->
-> mdadm --assemble /dev/md0 /dev/sd[bcd]1
->
-> cat /proc/mdstat
->
-> mdadm --manage /dev/md0 --run
->
-> mdadm --manage /dev/md0 --readwrite
->
-> cat /proc/mdstat
->
->
-> Basically the above is just looking at what the system has done 
-> currently, stopping/clearing that, and then trying to assemble it 
-> again, finally, we try to start it, even if it has one faulty disk.
->
-> At this stage, chances look good for recovering all your data, though 
-> I would advise to get yourself a replacement disk for the dead one so 
-> that you can restore redundancy as soon as possible.
->
-> Regards,Adam
->
->
-
+--Emperor Turhan, Centauri Republic
