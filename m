@@ -1,70 +1,121 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH v8 01/20] crypto: change transient busy return code to
- -EAGAIN
-Date: Wed, 11 Oct 2017 14:26:51 +0800
-Message-ID: <20171011062651.GA18664@gondor.apana.org.au>
-References: <1504615144-29770-1-git-send-email-gilad@benyossef.com>
- <1504615144-29770-2-git-send-email-gilad@benyossef.com>
- <20171007030541.GA29421@gondor.apana.org.au>
- <CAOtvUMd=vtju=VJkCYFRrvANbRRYj+95cdgDoMMfBvmPaPbsAA@mail.gmail.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be
+ needed.
+Date: Wed, 11 Oct 2017 15:39:25 +0800
+Message-ID: <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
+References: <87y3p372b0.fsf@notabene.neil.brown.name>
+ <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
+ <87bmleyd0y.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <CAOtvUMd=vtju=VJkCYFRrvANbRRYj+95cdgDoMMfBvmPaPbsAA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Gilad Ben-Yossef <gilad@benyossef.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, Gary Hook <gary.hook@amd.com>, David Howells <dhowells@redhat.com>, device-mapper development <dm-devel@redhat.com>, keyrings@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, Alasdair Kergon <agk@redhat.com>, Steffen Klassert <steffen.klassert@secunet.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Mimi Zohar <zohar@linux.vnet.ibm.com>, "Serge E. Hallyn" <serge@hallyn.com>, Tom Lendacky <thomas.lendacky@amd.com>, linux-cifs@vger.kernel.org, linux-ima-user@lists.sourceforge.net, Arnaud Ebalard <arno@natisbad.org>, linux-raid@vger.kernel.org, linux-fscrypt@vger.kernel.org, linux-mediatek@lists.infradead.org, James Morris <james.l.morris@oracle.com>, Matthias Brugger <matthias.bgg@gmail.com>, Jaegeuk Kim <jaegeuk@kernel.o>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87bmleyd0y.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Oct 07, 2017 at 10:51:42AM +0300, Gilad Ben-Yossef wrote:
-> On Sat, Oct 7, 2017 at 6:05 AM, Herbert Xu <herbert@gondor.apana.org.au> wrote:
-> > On Tue, Sep 05, 2017 at 03:38:40PM +0300, Gilad Ben-Yossef wrote:
-> >>
-> >> diff --git a/crypto/algif_hash.c b/crypto/algif_hash.c
-> >> index 5e92bd2..3b3c154 100644
-> >> --- a/crypto/algif_hash.c
-> >> +++ b/crypto/algif_hash.c
-> >> @@ -39,6 +39,20 @@ struct algif_hash_tfm {
-> >>       bool has_key;
-> >>  };
-> >>
-> >> +/* Previous versions of crypto_* ops used to return -EBUSY
-> >> + * rather than -EAGAIN to indicate being tied up. The in
-> >> + * kernel API changed but we don't want to break the user
-> >> + * space API. As only the hash user interface exposed this
-> >> + * error ever to the user, do the translation here.
-> >> + */
-> >> +static inline int crypto_user_err(int err)
-> >> +{
-> >> +     if (err == -EAGAIN)
-> >> +             return -EBUSY;
-> >> +
-> >> +     return err;
-> >
-> > I don't see the need to carry along this baggage.  Does anyone
-> > in user-space actually rely on EBUSY?
-> 
-> 
-> I am not aware of anyone who does. I was just trying to avoid
-> changing the user ABI.
-> 
-> Shall I roll a new revision without this patch?
 
-Yes please.  I'd rather not carry this around for eternity unless
-it was actually required.
+
+On 10/11/2017 04:16 AM, NeilBrown wrote:
+> On Tue, Oct 10 2017, Zhilong Liu wrote:
+>
+>> On 09/25/2017 01:52 PM, NeilBrown wrote:
+>>> Creating an array by opening a block-device with major number of 9
+>>> will transparently load the md module if needed.
+>>> Creating an array by opening
+>>>      /sys/module/md_mod/parameters/new_array
+>>> and writing to it won't, it will just fail if md_mod isn't loaded.
+>>>
+>>> So when opening that file fails with ENOENT, run "modprobe md_mod" and
+>>> try again.
+>>>
+>>> This fixes a bug whereby if you have "CREATE names=yes" in mdadm.conf,
+>>> and the md modules isn't loaded, then creating or assembling an
+>>> array will not honor the "names=yes" configuration.
+>>>
+>>> Signed-off-by: NeilBrown <neilb@suse.com>
+>>> ---
+>>>    mdopen.c | 4 ++++
+>>>    1 file changed, 4 insertions(+)
+>>>
+>>> diff --git a/mdopen.c b/mdopen.c
+>>> index 3c0052f2db23..dcdc6f23e6c1 100644
+>>> --- a/mdopen.c
+>>> +++ b/mdopen.c
+>>> @@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
+>>>    		if (block_udev)
+>>>    			udev_block(devnm);
+>>>    		fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+>>> +		if (fd < 0 && errno == ENOENT) {
+>>> +			system("modprobe md_mod");
+[nip]
+> Hmmm.. that's annoying.  I wonder why "system" is marked
+> "warn_unused_result".
+
+in /usr/include/stdlib.h:
+...
+712 /* Execute the given line as a shell command.
+713
+714    This function is a cancellation point and therefore not marked with
+715    __THROW.  */
+716 extern int system (const char *__command) __wur;
+...
+
+the "warn_unused_result" is from the __wur parameter, re-compile mdadm 
+after delete the '__wur',
+it works.
+
+> In this case I really don't care - I'm not convinced an extra error
+> message will really help.
+> Maybe
+>     if (system("modprobe md_mod") == 0)
+>          fd = open("/sys/......", O_WRONLY);
+
+Agree.
+>
+> We do what a better error message, then it should be based on 'fd < 0'.
+> e.g.
+>    if (fd < 0 || n != strlen(devnm))
+>        pr_err("Fail create array using /sys/module/md_mod/parameters/new_array\n");
+
+you mean something like this?
+
+diff --git a/mdopen.c b/mdopen.c
+index dcdc6f2..9de347e 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -313,14 +313,17 @@ int create_mddev(char *dev, char *name, int autof, 
+int trustworthy,
+                         udev_block(devnm);
+                 fd = open("/sys/module/md_mod/parameters/new_array", 
+O_WRONLY);
+                 if (fd < 0 && errno == ENOENT) {
+-                       system("modprobe md_mod");
+-                       fd = 
+open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
++                       if (system("modprobe md_mod") == 0)
++                               fd = 
+open("/sys/module/md_mod/parameters/new_array",
++                                         O_WRONLY);
+                 }
+                 if (fd >= 0) {
+                         n = write(fd, devnm, strlen(devnm));
+                         close(fd);
+                 }
+-               if (n < 0) {
++               if (fd < 0 || n != strlen(devnm)) {
++                       pr_err("Fail create array using "
++ "/sys/module/md_mod/parameters/new_array\n");
+                         devnm[0] = 0;
+                         udev_unblock();
+                 }
+
 
 Thanks,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+-Zhilong
+
+> Thanks,
+> NeilBrown
+
