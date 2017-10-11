@@ -1,38 +1,60 @@
-From: Curt <lightspd@gmail.com>
-Subject: Re: hung grow
-Date: Wed, 11 Oct 2017 11:38:34 -0400
-Message-ID: <CADg2FGaGF0wg5P075HwLNEE_zNQETRQNmO9KfxGgTvTMP2nMdQ@mail.gmail.com>
-References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
- <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
- <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
- <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com>
- <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com>
- <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
- <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com>
- <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org> <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk>
- <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org> <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
- <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org> <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com>
- <874lr6ybll.fsf@notabene.neil.brown.name> <CADg2FGb4uG5omeQaC7OVVYhvecRJ6z1DzhSDkUqN-ZrS=K_Q-g@mail.gmail.com>
- <87k202wapp.fsf@notabene.neil.brown.name>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Wed, 11 Oct 2017 13:10:00 -0400
+Message-ID: <7b011b63-4de6-44ec-1f74-9f33c6466795@turmel.org>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+ <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
+ <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org>
+ <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
+ <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
+ <8da0ac59-d83b-671c-b088-8e04b13d685e@turmel.org>
+ <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87k202wapp.fsf@notabene.neil.brown.name>
+In-Reply-To: <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Phil Turmel <philip@turmel.org>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Alexander Shenkin <al@shenkin.org>, Reindl Harald <h.reindl@thelounge.net>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 11, 2017 at 12:49 AM, NeilBrown <neilb@suse.com> wrote:
->
-> Nope.  It is a kernel bug that is still present.  I can easily reproduce
-> it on the mainline kernel now that I have your metadata.
-> I know generally what the problem is.  I'll try to craft a fix tomorrow.
-> You'll need to build and run a new kernel to be able to fix you array.
-> That might seem scary, but it really isn't that hard.
->
-> NeilBrown
- Awesome thanks.  Just let me know what I need to do.
+On 10/11/2017 06:31 AM, Alexander Shenkin wrote:
+> On 10/10/2017 1:55 PM, Phil Turmel wrote:
 
-Cheers,
-Curt
+>> Which means the pending sector found by a smartctl background scan is
+>> likely in a non-array data area.  And if not, the next scrub will fix
+>> it.  You can run checkarray yourself if you don't want to wait.
+> 
+> Thanks Phil.  I ran checkarray --all --idle, and it completed fine, with
+> no Rebuild messages as far as I could see (looked in dmesg &
+> /var/log/syslog, see below).
+> 
+> [4444093.042246] md: data-check of RAID array md0
+> [4444093.042252] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [4444093.042254] md: using maximum available idle IO bandwidth (but not
+> more than 200000 KB/sec) for data-check.
+> [4444093.042262] md: using 128k window, over a total of 1950656k.
+> [4444093.192032] md: delaying data-check of md2 until md0 has finished
+> (they share one or more physical units)
+> [4444106.854418] md: md0: data-check done.
+> [4444106.863292] md: data-check of RAID array md2
+> [4444106.863295] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [4444106.863298] md: using maximum available idle IO bandwidth (but not
+> more than 200000 KB/sec) for data-check.
+> [4444106.863304] md: using 128k window, over a total of 2920188928k.
+> [4475376.852520] md: md2: data-check done.
+> 
+> SMART still shows those 8 unreadable sectors.  dmesg has a bunch of
+> related errors, copied below.
+
+Uh-oh.  Your kernel has a hangcheck timer that is shorter (120 seconds)
+than the URE timeout of your crappy Seagate drive (w/ driver times out
+at 180 seconds).  So the writeback that would fix the URE isn't happening.
+
+You'll need to set your hangcheck timer to 180 seconds, too.  I'm not
+sure how to do that.  (I've never seen this particular combination, but
+it would be another black mark on desktop drives in raid arrays.)
+
+Phil
