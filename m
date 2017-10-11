@@ -1,54 +1,54 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Can't mount /dev/md0 Raid5
-Date: Thu, 12 Oct 2017 06:13:21 +1100
-Message-ID: <e9bcdb2b-6ffe-285d-5d59-313438db61ac@websitemanagers.com.au>
-References: <59DDF18A.9060800@gmail.com>
- <8628ddba-8cec-24d8-e07a-195d47f579be@grumpydevil.homelinux.org>
- <59DDFD19.1040700@gmail.com>
- <e6566c4a-2476-4554-549a-12b6c90b152f@websitemanagers.com.au>
- <59DE0705.502@gmail.com>
- <d6f39002-7120-3613-8163-7fb80b5434a1@websitemanagers.com.au>
- <59DE1E38.8080604@gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Wed, 11 Oct 2017 12:32:21 -0700
+Message-ID: <20171011193221.hkwvcysv6hahsncd@kernel.org>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+ <20171010210346.14574-4-bart.vanassche@wdc.com>
+ <20171010223025.tda3lx64rdmugm54@kernel.org>
+ <1507678384.2815.80.camel@wdc.com>
+ <20171011014830.ps3v3yxny27wv7mc@kernel.org>
+ <1507742275.2477.20.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59DE1E38.8080604@gmail.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Joseba Ibarra <wajalotnet@gmail.com>, list linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1507742275.2477.20.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
 List-Id: linux-raid.ids
 
-What is the output of cat /proc/mdstat after running the readwrite below?
+On Wed, Oct 11, 2017 at 05:17:56PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-10-10 at 18:48 -0700, Shaohua Li wrote:
+> > The problem is __md_stop_writes set some bit like MD_RECOVERY_FROZEN, which
+> > will prevent md_check_recovery restarting resync/reshape. I think we need
+> > preserve mddev->recovery in suspend prepare and restore after resume
+> 
+> Hello Shaohua,
+> 
+> As far as I can see __md_stop_writes() sets MD_RECOVERY_FROZEN and can set
+> MD_RECOVERY_INTR. Since md_check_recovery() clears MD_RECOVERY_INTR I think
+> it should be sufficient to save and restore the state of the
+> MD_RECOVERY_FROZEN flag. However, when I ran the following test:
+> * echo frozen > /sys/block/md0/md/sync_action
+> * cat /sys/block/md0/md/sync_action
+> * systemctl hibernate
+> * (power on system again)
+> * cat /sys/block/md0/md/sync_action
+> 
+> the output that appeared was as follows:
+> 
+> frozen
+> idle 
+> Does that mean that a hibernate or suspend followed by a resume is sufficient
+> to clear the MD_RECOVERY_FROZEN flag for the md drivers and hence that the
+> patch at the start of this e-mail thread does not need any further
+> modifications?
 
-Did you try the --run option?
+Have no idea why it shows 'idle'. From my understanding, after resume, previous
+memory is stored and MD_RECOVERY_FROZEN bit should be set. Was trying to
+understand what happens.
 
-You need to make sure the array is active/running before you try to 
-mount it.
-
-BTW, has anything else happened to the array, other than the drive that 
-failed?
-
-Probably should have asked for this before, but what is the full output 
-of smartctl for each drive, also mdadm --misc --examine /dev/sd[bcd]1 
-(or all three relevant devices)?
-
-Regards,
-Adam
-
-
-On 12/10/17 00:35, Joseba Ibarra wrote:
-> Still the same. Nothing seems to have changed.
->
->
-> Same answers for mount commands.
->
-> Adam Goryachev escribió:
->> mdadm --manage /dev/md0 --readwrite 
->
-> Jose Ibarra
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Thanks,
+Shaohua
