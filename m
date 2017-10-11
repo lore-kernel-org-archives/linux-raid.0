@@ -1,60 +1,41 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Wed, 11 Oct 2017 13:10:00 -0400
-Message-ID: <7b011b63-4de6-44ec-1f74-9f33c6466795@turmel.org>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
- <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
- <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org>
- <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
- <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
- <8da0ac59-d83b-671c-b088-8e04b13d685e@turmel.org>
- <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Wed, 11 Oct 2017 17:17:56 +0000
+Message-ID: <1507742275.2477.20.camel@wdc.com>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+         <20171010210346.14574-4-bart.vanassche@wdc.com>
+         <20171010223025.tda3lx64rdmugm54@kernel.org>
+         <1507678384.2815.80.camel@wdc.com>
+         <20171011014830.ps3v3yxny27wv7mc@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
-Content-Language: en-GB
-Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>, Reindl Harald <h.reindl@thelounge.net>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20171011014830.ps3v3yxny27wv7mc@kernel.org>
+Content-Language: en-US
+Content-ID: <347DA52F3C7B1C4792D780206E349584@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "shli@kernel.org" <shli@kernel.org>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
 List-Id: linux-raid.ids
 
-On 10/11/2017 06:31 AM, Alexander Shenkin wrote:
-> On 10/10/2017 1:55 PM, Phil Turmel wrote:
-
->> Which means the pending sector found by a smartctl background scan is
->> likely in a non-array data area.  And if not, the next scrub will fix
->> it.  You can run checkarray yourself if you don't want to wait.
-> 
-> Thanks Phil.  I ran checkarray --all --idle, and it completed fine, with
-> no Rebuild messages as far as I could see (looked in dmesg &
-> /var/log/syslog, see below).
-> 
-> [4444093.042246] md: data-check of RAID array md0
-> [4444093.042252] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> [4444093.042254] md: using maximum available idle IO bandwidth (but not
-> more than 200000 KB/sec) for data-check.
-> [4444093.042262] md: using 128k window, over a total of 1950656k.
-> [4444093.192032] md: delaying data-check of md2 until md0 has finished
-> (they share one or more physical units)
-> [4444106.854418] md: md0: data-check done.
-> [4444106.863292] md: data-check of RAID array md2
-> [4444106.863295] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> [4444106.863298] md: using maximum available idle IO bandwidth (but not
-> more than 200000 KB/sec) for data-check.
-> [4444106.863304] md: using 128k window, over a total of 2920188928k.
-> [4475376.852520] md: md2: data-check done.
-> 
-> SMART still shows those 8 unreadable sectors.  dmesg has a bunch of
-> related errors, copied below.
-
-Uh-oh.  Your kernel has a hangcheck timer that is shorter (120 seconds)
-than the URE timeout of your crappy Seagate drive (w/ driver times out
-at 180 seconds).  So the writeback that would fix the URE isn't happening.
-
-You'll need to set your hangcheck timer to 180 seconds, too.  I'm not
-sure how to do that.  (I've never seen this particular combination, but
-it would be another black mark on desktop drives in raid arrays.)
-
-Phil
+T24gVHVlLCAyMDE3LTEwLTEwIGF0IDE4OjQ4IC0wNzAwLCBTaGFvaHVhIExpIHdyb3RlOg0KPiBU
+aGUgcHJvYmxlbSBpcyBfX21kX3N0b3Bfd3JpdGVzIHNldCBzb21lIGJpdCBsaWtlIE1EX1JFQ09W
+RVJZX0ZST1pFTiwgd2hpY2gNCj4gd2lsbCBwcmV2ZW50IG1kX2NoZWNrX3JlY292ZXJ5IHJlc3Rh
+cnRpbmcgcmVzeW5jL3Jlc2hhcGUuIEkgdGhpbmsgd2UgbmVlZA0KPiBwcmVzZXJ2ZSBtZGRldi0+
+cmVjb3ZlcnkgaW4gc3VzcGVuZCBwcmVwYXJlIGFuZCByZXN0b3JlIGFmdGVyIHJlc3VtZQ0KDQpI
+ZWxsbyBTaGFvaHVhLA0KDQpBcyBmYXIgYXMgSSBjYW4gc2VlIF9fbWRfc3RvcF93cml0ZXMoKSBz
+ZXRzIE1EX1JFQ09WRVJZX0ZST1pFTiBhbmQgY2FuIHNldA0KTURfUkVDT1ZFUllfSU5UUi4gU2lu
+Y2UgbWRfY2hlY2tfcmVjb3ZlcnkoKSBjbGVhcnMgTURfUkVDT1ZFUllfSU5UUiBJIHRoaW5rDQpp
+dCBzaG91bGQgYmUgc3VmZmljaWVudCB0byBzYXZlIGFuZCByZXN0b3JlIHRoZSBzdGF0ZSBvZiB0
+aGUNCk1EX1JFQ09WRVJZX0ZST1pFTiBmbGFnLiBIb3dldmVyLCB3aGVuIEkgcmFuIHRoZSBmb2xs
+b3dpbmcgdGVzdDoNCiogZWNobyBmcm96ZW4gPiAvc3lzL2Jsb2NrL21kMC9tZC9zeW5jX2FjdGlv
+bg0KKiBjYXQgL3N5cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCiogc3lzdGVtY3RsIGhpYmVy
+bmF0ZQ0KKiAocG93ZXIgb24gc3lzdGVtIGFnYWluKQ0KKiBjYXQgL3N5cy9ibG9jay9tZDAvbWQv
+c3luY19hY3Rpb24NCg0KdGhlIG91dHB1dCB0aGF0IGFwcGVhcmVkIHdhcyBhcyBmb2xsb3dzOg0K
+DQpmcm96ZW4NCmlkbGUNCg0KRG9lcyB0aGF0IG1lYW4gdGhhdCBhIGhpYmVybmF0ZSBvciBzdXNw
+ZW5kIGZvbGxvd2VkIGJ5IGEgcmVzdW1lIGlzIHN1ZmZpY2llbnQNCnRvIGNsZWFyIHRoZSBNRF9S
+RUNPVkVSWV9GUk9aRU4gZmxhZyBmb3IgdGhlIG1kIGRyaXZlcnMgYW5kIGhlbmNlIHRoYXQgdGhl
+DQpwYXRjaCBhdCB0aGUgc3RhcnQgb2YgdGhpcyBlLW1haWwgdGhyZWFkIGRvZXMgbm90IG5lZWQg
+YW55IGZ1cnRoZXINCm1vZGlmaWNhdGlvbnM/DQoNClRoYW5rcywNCg0KQmFydC4=
