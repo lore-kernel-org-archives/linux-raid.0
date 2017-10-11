@@ -1,121 +1,49 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be
- needed.
-Date: Wed, 11 Oct 2017 15:39:25 +0800
-Message-ID: <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
-References: <87y3p372b0.fsf@notabene.neil.brown.name>
- <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
- <87bmleyd0y.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v2] mdadm/grow: adding a test to ensure resize was required
+Date: Wed, 11 Oct 2017 16:53:12 +0800
+Message-ID: <1507711992-11548-1-git-send-email-zlliu@suse.com>
+References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87bmleyd0y.fsf@notabene.neil.brown.name>
+In-Reply-To: <1507537274-29350-2-git-send-email-zlliu@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
+To fix the commit: 4b74a905a67e
+(mdadm/grow: Component size must be larger than chunk size)
 
+array.level > 1 : against the raids which chunk_size is meaningful.
+s->size > 0 : ensure that changing component size has required.
+array.chunk_size / 1024 > s->size : ensure component size should
+be always >= current chunk_size when requires resize, otherwise,
+mddev->pers->resize would be set mddev->dev_sectors as '0'.
 
-On 10/11/2017 04:16 AM, NeilBrown wrote:
-> On Tue, Oct 10 2017, Zhilong Liu wrote:
->
->> On 09/25/2017 01:52 PM, NeilBrown wrote:
->>> Creating an array by opening a block-device with major number of 9
->>> will transparently load the md module if needed.
->>> Creating an array by opening
->>>      /sys/module/md_mod/parameters/new_array
->>> and writing to it won't, it will just fail if md_mod isn't loaded.
->>>
->>> So when opening that file fails with ENOENT, run "modprobe md_mod" and
->>> try again.
->>>
->>> This fixes a bug whereby if you have "CREATE names=yes" in mdadm.conf,
->>> and the md modules isn't loaded, then creating or assembling an
->>> array will not honor the "names=yes" configuration.
->>>
->>> Signed-off-by: NeilBrown <neilb@suse.com>
->>> ---
->>>    mdopen.c | 4 ++++
->>>    1 file changed, 4 insertions(+)
->>>
->>> diff --git a/mdopen.c b/mdopen.c
->>> index 3c0052f2db23..dcdc6f23e6c1 100644
->>> --- a/mdopen.c
->>> +++ b/mdopen.c
->>> @@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
->>>    		if (block_udev)
->>>    			udev_block(devnm);
->>>    		fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
->>> +		if (fd < 0 && errno == ENOENT) {
->>> +			system("modprobe md_mod");
-[nip]
-> Hmmm.. that's annoying.  I wonder why "system" is marked
-> "warn_unused_result".
+Reported-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Suggested-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Zhilong Liu <zlliu@suse.com>
+---
 
-in /usr/include/stdlib.h:
-...
-712 /* Execute the given line as a shell command.
-713
-714    This function is a cancellation point and therefore not marked with
-715    __THROW.  */
-716 extern int system (const char *__command) __wur;
-...
+v1: [PATCH 1/3] mdadm/Grow: fix the broken raid level conversion
 
-the "warn_unused_result" is from the __wur parameter, re-compile mdadm 
-after delete the '__wur',
-it works.
+changes:
+  correct the test 's->level == UnSet' as 's->size > 0'
 
-> In this case I really don't care - I'm not convinced an extra error
-> message will really help.
-> Maybe
->     if (system("modprobe md_mod") == 0)
->          fd = open("/sys/......", O_WRONLY);
+ Grow.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Agree.
->
-> We do what a better error message, then it should be based on 'fd < 0'.
-> e.g.
->    if (fd < 0 || n != strlen(devnm))
->        pr_err("Fail create array using /sys/module/md_mod/parameters/new_array\n");
-
-you mean something like this?
-
-diff --git a/mdopen.c b/mdopen.c
-index dcdc6f2..9de347e 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -313,14 +313,17 @@ int create_mddev(char *dev, char *name, int autof, 
-int trustworthy,
-                         udev_block(devnm);
-                 fd = open("/sys/module/md_mod/parameters/new_array", 
-O_WRONLY);
-                 if (fd < 0 && errno == ENOENT) {
--                       system("modprobe md_mod");
--                       fd = 
-open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
-+                       if (system("modprobe md_mod") == 0)
-+                               fd = 
-open("/sys/module/md_mod/parameters/new_array",
-+                                         O_WRONLY);
-                 }
-                 if (fd >= 0) {
-                         n = write(fd, devnm, strlen(devnm));
-                         close(fd);
-                 }
--               if (n < 0) {
-+               if (fd < 0 || n != strlen(devnm)) {
-+                       pr_err("Fail create array using "
-+ "/sys/module/md_mod/parameters/new_array\n");
-                         devnm[0] = 0;
-                         udev_unblock();
-                 }
-
-
-Thanks,
--Zhilong
-
-> Thanks,
-> NeilBrown
+diff --git a/Grow.c b/Grow.c
+index 4d79d83..8c2d50c 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1810,6 +1810,7 @@ int Grow_reshape(char *devname, int fd,
+ 	}
+ 
+ 	if (array.level > 1 &&
++	    s->size > 0 &&
+ 	   (array.chunk_size / 1024) > (int)s->size) {
+ 		pr_err("component size must be larger than chunk size.\n");
+ 		return 1;
+-- 
+2.6.6
 
