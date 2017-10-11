@@ -1,41 +1,49 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: md: rename some drivers/md/ files to have an "md-" prefix
-Date: Tue, 10 Oct 2017 20:01:02 -0400
-Message-ID: <20171011000102.GB15061@redhat.com>
-References: <20171010210241.2332-1-snitzer@redhat.com>
- <1507670992.2815.59.camel@wdc.com>
+From: Curt <lightspd@gmail.com>
+Subject: Re: hung grow
+Date: Tue, 10 Oct 2017 20:26:39 -0400
+Message-ID: <CADg2FGZVgEFddKBAkRX6AbMxYGHpX8o5z=2i0JHNQ9tSZ_VZWQ@mail.gmail.com>
+References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
+ <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
+ <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
+ <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com>
+ <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com>
+ <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
+ <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com>
+ <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org> <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk>
+ <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org> <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
+ <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org> <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com>
+ <874lr6ybll.fsf@notabene.neil.brown.name> <CADg2FGbjqzFvrptLkM9LGYABZWDcmQC_rqEceo44yzADGhFGzw@mail.gmail.com>
+ <CADg2FGbJHbPaPeBdetTGuC-S2e17BWHOchEeiBjevibjH0pHGg@mail.gmail.com> <87po9uwtsl.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1507670992.2815.59.camel@wdc.com>
+In-Reply-To: <87po9uwtsl.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "shli@kernel.org" <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+To: NeilBrown <neilb@suse.com>
+Cc: Phil Turmel <philip@turmel.org>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 10 2017 at  5:29pm -0400,
-Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+On Tue, Oct 10, 2017 at 5:56 PM, NeilBrown <neilb@suse.com> wrote:
+> On Tue, Oct 10 2017, Curt wrote:
+>
+>> On Tue, Oct 10, 2017 at 4:58 PM, Curt <lightspd@gmail.com> wrote:
+>>
+>>>> Can you please
+>>>>   mkdir /tmp/dump
+>>>>   mdadm --dump=/dev/dump /dev...list.all.devices.in.the.array
+>>>>   tar czf --sparse /tmp/dump.tgz /tmp/dump
+>>>>
+>>>  Yeah, I will get that for you once I reboot the server.
+>>>
+>> Quick question.  Is that supposed to be mdadm --dump=/dev/dump or /tmp/dump?
+>
+> "/tmp/dump" - yes,  I typed the wrong thing.
+>
+> Thanks,
+> NeilBrown
 
-> On Tue, 2017-10-10 at 17:02 -0400, Mike Snitzer wrote:
-> > Motivated by the desire to illiminate the imprecise nature of
-> > DM-specific patches being unnecessarily sent to both the MD maintainer
-> > and mailing-list.  Which is born out of the fact that DM files also
-> > reside in drivers/md/
-> > 
-> > Now all MD-specific files in drivers/md/ start with either "raid" or
-> > "md-" and the MAINTAINERS file has been updated accordingly.
-> 
-> Hello Mike,
-> 
-> Although this patch looks fine to me: has it been considered to move the
-> device mapper files into a new subdirectory, e.g. drivers/dm?
-
-I did think about it briefly.  But there is some sharing between DM and
-MD (due to dm-raid.c) -- so I figured it easiest to leave well enough
-alone.
-
-This patch will be perfectly fine so long as we just add the appropriate
-prefixes to new DM and MD source files.
-
-Mike
+Out of curiosity, how long should it take to tar these files?  I get
+the system reports them as 1.9T and there not really that big, hence
+the sparse switch. I've just never tarred a sparse file file before.
+It's been churning away for about 2 hours, which I'm going to assume
+is normal.
