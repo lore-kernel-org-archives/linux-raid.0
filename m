@@ -1,49 +1,62 @@
-From: Curt <lightspd@gmail.com>
-Subject: Re: hung grow
-Date: Tue, 10 Oct 2017 20:26:39 -0400
-Message-ID: <CADg2FGZVgEFddKBAkRX6AbMxYGHpX8o5z=2i0JHNQ9tSZ_VZWQ@mail.gmail.com>
-References: <CADg2FGbgdgHWbaJN94p36-SUjfDEKNi2VYuyHXJN1pDJ9Kdg7w@mail.gmail.com>
- <89992d1f-172f-9fc6-3a1e-50df34e11d3b@turmel.org> <CADg2FGaPFTNLuQPussL=YFDCRndRDFX99D-KjnWfD93MqGJXmg@mail.gmail.com>
- <CADg2FGZNs9KmkKGvbCf-dwsqxYN5ftJd5v7RTJ1M=rLP=v6wJg@mail.gmail.com>
- <CADg2FGa5iUGVqVvy5MrJf00fCqH4NEVXrODPHS6Dc=jsrBx2PQ@mail.gmail.com>
- <87po9xyv0r.fsf@notabene.neil.brown.name> <CADg2FGaeuptaWRnM5+Z_aAR08vG-311s8p6OrBwZUNeCrNGu1g@mail.gmail.com>
- <87d15xymgc.fsf@notabene.neil.brown.name> <CADg2FGbzr_JcrGfvU6kpGc_5vJ=+L2gXx3PcfpOTsst8BeNA-Q@mail.gmail.com>
- <CADg2FGaFt4_4UHPUSnY8tr=LeJMKKojR_QrPE-YoXvWmgXXZxQ@mail.gmail.com>
- <0d4987d9-e8ff-0cdb-6e45-7f962b75c189@turmel.org> <3e5766b0-1437-2857-4806-264386d1633f@youngman.org.uk>
- <6d4b7055-c26c-951e-b63c-273a7fe447b8@turmel.org> <CADg2FGad+Tpu-4Z4rx1Kx_U1Tw64nQ_FqGuPRn5ODV=_pYFuDw@mail.gmail.com>
- <e8dce17e-d231-0004-e9a1-511abacfcfda@turmel.org> <CADg2FGZ-=VP2Q++qkKqfQ06zeBho1TR3=biqbdxT7-4pMCcLLQ@mail.gmail.com>
- <874lr6ybll.fsf@notabene.neil.brown.name> <CADg2FGbjqzFvrptLkM9LGYABZWDcmQC_rqEceo44yzADGhFGzw@mail.gmail.com>
- <CADg2FGbJHbPaPeBdetTGuC-S2e17BWHOchEeiBjevibjH0pHGg@mail.gmail.com> <87po9uwtsl.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v8 03/10] md: Neither resync nor reshape while the system
+ is frozen
+Date: Tue, 10 Oct 2017 18:48:30 -0700
+Message-ID: <20171011014830.ps3v3yxny27wv7mc@kernel.org>
+References: <20171010210346.14574-1-bart.vanassche@wdc.com>
+ <20171010210346.14574-4-bart.vanassche@wdc.com>
+ <20171010223025.tda3lx64rdmugm54@kernel.org>
+ <1507678384.2815.80.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87po9uwtsl.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Phil Turmel <philip@turmel.org>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1507678384.2815.80.camel@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "ming.lei@redhat.com" <ming.lei@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, "hare@suse.com" <hare@suse.com>
 List-Id: linux-raid.ids
 
-On Tue, Oct 10, 2017 at 5:56 PM, NeilBrown <neilb@suse.com> wrote:
-> On Tue, Oct 10 2017, Curt wrote:
->
->> On Tue, Oct 10, 2017 at 4:58 PM, Curt <lightspd@gmail.com> wrote:
->>
->>>> Can you please
->>>>   mkdir /tmp/dump
->>>>   mdadm --dump=/dev/dump /dev...list.all.devices.in.the.array
->>>>   tar czf --sparse /tmp/dump.tgz /tmp/dump
->>>>
->>>  Yeah, I will get that for you once I reboot the server.
->>>
->> Quick question.  Is that supposed to be mdadm --dump=/dev/dump or /tmp/dump?
->
-> "/tmp/dump" - yes,  I typed the wrong thing.
->
-> Thanks,
-> NeilBrown
+On Tue, Oct 10, 2017 at 11:33:06PM +0000, Bart Van Assche wrote:
+> On Tue, 2017-10-10 at 15:30 -0700, Shaohua Li wrote:
+> > On Tue, Oct 10, 2017 at 02:03:39PM -0700, Bart Van Assche wrote:
+> > > Some people use the md driver on laptops and use the suspend and
+> > > resume functionality. Since it is essential that submitting of
+> > > new I/O requests stops before a hibernation image is created,
+> > > interrupt the md resync and reshape actions if the system is
+> > > being frozen. Note: the resync and reshape will restart after
+> > > the system is resumed and a message similar to the following
+> > > will appear in the system log:
+> > > 
+> > > md: md0: data-check interrupted.
+> > 
+> > Where do we restart resync and reshape?
+> 
+> Hello Shaohua,
+> 
+> My understanding of the md driver is as follows:
+> - Before any write occurs, md_write_start() is called. That function clears
+>   mddev->safemode and checks mddev->in_sync. If that variable is set, it is
+>   cleared and md_write_start() wakes up mddev->thread and waits until the
+>   superblock has been written to disk.
+> - All mddev->thread implementations call md_check_recovery(). That function
+>   updates the superblock by calling md_update_sb() if needed.
+>   md_check_recovery() also starts a resync thread if the array is not in
+>   sync. See also the comment block above md_check_recovery().
+> - md_do_sync() performs the resync. If it completes successfully the
+>   "in_sync" state is set (set_in_sync()). If it is interrupted the "in_sync"
+>   state is not modified.
+> - super_90_sync() sets the MD_SB_CLEAN flag in the on-disk superblock if the
+>   "in_sync" flag is set.
+> 
+> In other words: if the array is in sync the MD_SB_CLEAN flag is set in the
+> on-disk superblock. If a resync is needed that flag is not set. The
+> MD_SB_CLEAN flag is checked when the superblock is loaded. If that flag is
+> not set a resync is started.
 
-Out of curiosity, how long should it take to tar these files?  I get
-the system reports them as 1.9T and there not really that big, hence
-the sparse switch. I've just never tarred a sparse file file before.
-It's been churning away for about 2 hours, which I'm going to assume
-is normal.
+The problem is __md_stop_writes set some bit like MD_RECOVERY_FROZEN, which
+will prevent md_check_recovery restarting resync/reshape. I think we need
+preserve mddev->recovery in suspend prepare and restore after resume
+
+Thanks,
+Shaohua
