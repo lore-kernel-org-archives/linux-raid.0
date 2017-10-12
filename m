@@ -1,51 +1,34 @@
-From: Edward Kuns <eddie.kuns@gmail.com>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Thu, 12 Oct 2017 10:52:50 -0500
-Message-ID: <CACsGCyS9-K4ZJPKauRZkGFRPd0cvShYLViE87i47=RCY1UkbnQ@mail.gmail.com>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de> <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
- <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org> <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
- <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org> <8da0ac59-d83b-671c-b088-8e04b13d685e@turmel.org>
- <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org> <7b011b63-4de6-44ec-1f74-9f33c6466795@turmel.org>
- <2ab868eb-3ce3-f01b-ac9e-23358563040c@shenkin.org> <59DF4B80.5010807@youngman.org.uk>
- <ecbbf0ae-3bf8-fe66-79e1-e8207bc09dcc@turmel.org> <5b28b0fc-5e4d-9ac3-9a82-7e36f25c5108@shenkin.org>
- <CAK2H+ecT1Psph5Wm9LrPgYOba6PHKzAs55H1LWiqLD+kaBUQZQ@mail.gmail.com> <CACsGCyQGZxhfT1A_ojXaBRvB4wgNOH7fqqh8afsQksAeGdKmjg@mail.gmail.com>
+From: Reindl Harald <h.reindl@thelounge.net>
+Subject: Re: raid1 missing disk
+Date: Thu, 12 Oct 2017 18:48:30 +0200
+Message-ID: <e3ac851f-347f-ee63-c58d-02d8a1afb4c7@thelounge.net>
+References: <85523B4D-6691-44F1-A609-A5280224E352@jjd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCyQGZxhfT1A_ojXaBRvB4wgNOH7fqqh8afsQksAeGdKmjg@mail.gmail.com>
+In-Reply-To: <85523B4D-6691-44F1-A609-A5280224E352@jjd.com>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Alexander Shenkin <al@shenkin.org>, Phil Turmel <philip@turmel.org>, Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: James J Dempsey <jjd@jjd.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 12, 2017 at 10:16 AM, Edward Kuns <eddie.kuns@gmail.com> wrote:
-> All y'all referring to a whole separate kernel module, hangcheck-timer.ko?
 
-Looking back at the original messages:
+Am 12.10.2017 um 16:58 schrieb James J Dempsey:
+> I have a simple problem with a 2-disk raid-1 configuration that I can’t find the solution for on the internet so I hope someone can help.
+> 
+> One disk failed on my 2-disk raid-1 and I foolishly (physically) removed the disk before software removing it from the array.
+> 
+> The current state is that the array is running degraded with 1 disk.  My goal is to add a new disk and return it to a non-degraded 2-disk array
 
-[4038193.380403] INFO: task md2_raid5:247 blocked for more than 120 seconds.
-[4038193.380473]       Not tainted 4.4.0-81-generic #104~14.04.1-Ubuntu
-[4038193.380526] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-disables this message.
+what do you mean by "I foolishly (physically) removed the disk before 
+software removing it from the array"?
 
-it looks like you're dealing with this part of the kernel:
+if a disk explodes it also disappears unannounced
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/hung_task.c
-
-The timer is configurable with sysctl and defaults to 120 seconds.
-You can check with this command:
-
-$ sudo sysctl kernel.hung_task_timeout_secs
-kernel.hung_task_timeout_secs = 120
-
-You can adjust it temporarily (e.g. to make it longer):
-
-$ sudo sysctl -w kernel.hung_task_timeout_secs=150
-
-Or you can adjust it permanently by modifying your sysctl configuration.
-
-It looks like by default it will only warn ten times.  After that it
-will stop complaining.  That is also configurable via sysctl.
-
-              Eddie
+"My theory of this is that the computer switched it?s idea of which disk 
+was /dev/sda and which was /dev/sdb as a result of the original removal" 
+does not matter at all since you need the botaloader anyways on both 
+(grub-install) and on a RAID1 it must not matter at all which is sda and 
+wich is sdb, both can die at any point in time and both need to be 
+bootable at any point in time
