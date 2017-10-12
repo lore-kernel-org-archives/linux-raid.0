@@ -1,36 +1,56 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be
- needed.
-Date: Thu, 12 Oct 2017 10:55:14 +0100
-Message-ID: <59DF3C02.6080104@youngman.org.uk>
-References: <87y3p372b0.fsf@notabene.neil.brown.name>
- <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
- <87bmleyd0y.fsf@notabene.neil.brown.name>
- <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
- <87h8v5nsa6.fsf@notabene.neil.brown.name>
+From: "Majchrzak, Tomasz" <tomasz.majchrzak@intel.com>
+Subject: RE: [PATCH v2] mdadm/grow: adding a test to ensure resize was
+ required
+Date: Thu, 12 Oct 2017 10:55:32 +0000
+Message-ID: <3039B97CB1D6E5428A50E8AC3F7BE0E477357D9C@IRSMSX104.ger.corp.intel.com>
+References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
+ <1507711992-11548-1-git-send-email-zlliu@suse.com>
+ <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87h8v5nsa6.fsf@notabene.neil.brown.name>
+In-Reply-To: <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Zhilong Liu <zlliu@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Jes Sorensen <jes.sorensen@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/10/17 01:06, NeilBrown wrote:
-> Yes - exactly like that except that I wouldn't wrap the long string.
-> Lines longer than 80 chars are good to avoid, but breaking string
-> literals is worse than having long lines.  e.g. it makes searching for
-> the string hard.
-
-Isn't that the kernel standard anyway?
-
-"Wrap at 80 chars *unless* that would mean breaking a string literal".
-
-Iirc an lwn story or something about how all subsystems tended to follow
-this rule except one, so they were going to try and standardise across
-everything.
-
-Cheers,
-Wol
+SGkgSmVzLA0KDQpJIHdvbmRlciBpZiBpdCB3b3VsZCBiZSBhIGxvdCBvZiBpbmNvbnZlbmllbmNl
+IGZvciB5b3UgdG8gcHVzaCBjb21taXRzIG9uIG1vcmUgcmVndWxhciBiYXNpcyAob3B0aW1hbGx5
+IG9uY2UgYWNjZXB0ZWQpLiBXZSBydW4gZGFpbHkgcmVncmVzc2lvbiB0ZXN0cyBvbiB1cHN0cmVh
+bSBtZGFkbSBhbmQgZnJlcXVlbnQgcHVzaGVzIHdvdWxkIGFsbG93IHVzIHRvIHNlZSBwcm9ibGVt
+cyBzb29uZXIuDQoNClRvbWVrDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBs
+aW51eC1yYWlkLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtb3duZXJA
+dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmVzIFNvcmVuc2VuDQpTZW50OiBXZWRuZXNk
+YXksIE9jdG9iZXIgMTEsIDIwMTcgNzozMiBQTQ0KVG86IFpoaWxvbmcgTGl1IDx6bGxpdUBzdXNl
+LmNvbT4NCkNjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRD
+SCB2Ml0gbWRhZG0vZ3JvdzogYWRkaW5nIGEgdGVzdCB0byBlbnN1cmUgcmVzaXplIHdhcyByZXF1
+aXJlZA0KDQpPbiAxMC8xMS8yMDE3IDA0OjUzIEFNLCBaaGlsb25nIExpdSB3cm90ZToNCj4gVG8g
+Zml4IHRoZSBjb21taXQ6IDRiNzRhOTA1YTY3ZQ0KPiAobWRhZG0vZ3JvdzogQ29tcG9uZW50IHNp
+emUgbXVzdCBiZSBsYXJnZXIgdGhhbiBjaHVuayBzaXplKQ0KPiANCj4gYXJyYXkubGV2ZWwgPiAx
+IDogYWdhaW5zdCB0aGUgcmFpZHMgd2hpY2ggY2h1bmtfc2l6ZSBpcyBtZWFuaW5nZnVsLg0KPiBz
+LT5zaXplID4gMCA6IGVuc3VyZSB0aGF0IGNoYW5naW5nIGNvbXBvbmVudCBzaXplIGhhcyByZXF1
+aXJlZC4NCj4gYXJyYXkuY2h1bmtfc2l6ZSAvIDEwMjQgPiBzLT5zaXplIDogZW5zdXJlIGNvbXBv
+bmVudCBzaXplIHNob3VsZA0KPiBiZSBhbHdheXMgPj0gY3VycmVudCBjaHVua19zaXplIHdoZW4g
+cmVxdWlyZXMgcmVzaXplLCBvdGhlcndpc2UsDQo+IG1kZGV2LT5wZXJzLT5yZXNpemUgd291bGQg
+YmUgc2V0IG1kZGV2LT5kZXZfc2VjdG9ycyBhcyAnMCcuDQo+IA0KPiBSZXBvcnRlZC1ieTogVG9t
+YXN6IE1hamNocnphayA8dG9tYXN6Lm1hamNocnpha0BpbnRlbC5jb20+DQo+IFN1Z2dlc3RlZC1i
+eTogTmVpbEJyb3duIDxuZWlsYkBzdXNlLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogWmhpbG9uZyBM
+aXUgPHpsbGl1QHN1c2UuY29tPg0KPiAtLS0NCj4gDQo+IHYxOiBbUEFUQ0ggMS8zXSBtZGFkbS9H
+cm93OiBmaXggdGhlIGJyb2tlbiByYWlkIGxldmVsIGNvbnZlcnNpb24NCj4gDQo+IGNoYW5nZXM6
+DQo+ICAgIGNvcnJlY3QgdGhlIHRlc3QgJ3MtPmxldmVsID09IFVuU2V0JyBhcyAncy0+c2l6ZSA+
+IDAnDQo+IA0KPiAgIEdyb3cuYyB8IDEgKw0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlv
+bigrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL0dyb3cuYyBiL0dyb3cuYw0KPiBpbmRleCA0ZDc5ZDgz
+Li44YzJkNTBjIDEwMDY0NA0KPiAtLS0gYS9Hcm93LmMNCj4gKysrIGIvR3Jvdy5jDQo+IEBAIC0x
+ODEwLDYgKzE4MTAsNyBAQCBpbnQgR3Jvd19yZXNoYXBlKGNoYXIgKmRldm5hbWUsIGludCBmZCwN
+Cj4gICAJfQ0KPiAgIA0KPiAgIAlpZiAoYXJyYXkubGV2ZWwgPiAxICYmDQo+ICsJICAgIHMtPnNp
+emUgPiAwICYmDQo+ICAgCSAgIChhcnJheS5jaHVua19zaXplIC8gMTAyNCkgPiAoaW50KXMtPnNp
+emUpIHsNCj4gICAJCXByX2VycigiY29tcG9uZW50IHNpemUgbXVzdCBiZSBsYXJnZXIgdGhhbiBj
+aHVuayBzaXplLlxuIik7DQo+ICAgCQlyZXR1cm4gMTsNCg0KQXBwbGllZCwgaG93ZXZlciBJIGZp
+eGVkIHRoZSBicm9rZW4gZm9ybWF0dGluZyBpbiB0aGUgcHJvY2Vzcy4NCg0KVGhhbmtzLA0KSmVz
+DQoNCg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
+bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
+ZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
+Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
