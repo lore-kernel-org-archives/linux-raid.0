@@ -1,148 +1,118 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be needed.
-Date: Thu, 12 Oct 2017 11:06:41 +1100
-Message-ID: <87h8v5nsa6.fsf@notabene.neil.brown.name>
-References: <87y3p372b0.fsf@notabene.neil.brown.name> <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com> <87bmleyd0y.fsf@notabene.neil.brown.name> <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
+Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
+Date: Thu, 12 Oct 2017 14:09:21 +1100
+Message-ID: <87bmldnjtq.fsf@notabene.neil.brown.name>
+References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
+In-Reply-To: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: kumba@gentoo.org, Shaohua Li <shli@fb.com>, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 11 2017, Zhilong Liu wrote:
+On Tue, Oct 10 2017, Shaohua Li wrote:
 
-> On 10/11/2017 04:16 AM, NeilBrown wrote:
->> On Tue, Oct 10 2017, Zhilong Liu wrote:
->>
->>> On 09/25/2017 01:52 PM, NeilBrown wrote:
->>>> Creating an array by opening a block-device with major number of 9
->>>> will transparently load the md module if needed.
->>>> Creating an array by opening
->>>>      /sys/module/md_mod/parameters/new_array
->>>> and writing to it won't, it will just fail if md_mod isn't loaded.
->>>>
->>>> So when opening that file fails with ENOENT, run "modprobe md_mod" and
->>>> try again.
->>>>
->>>> This fixes a bug whereby if you have "CREATE names=3Dyes" in mdadm.con=
-f,
->>>> and the md modules isn't loaded, then creating or assembling an
->>>> array will not honor the "names=3Dyes" configuration.
->>>>
->>>> Signed-off-by: NeilBrown <neilb@suse.com>
->>>> ---
->>>>    mdopen.c | 4 ++++
->>>>    1 file changed, 4 insertions(+)
->>>>
->>>> diff --git a/mdopen.c b/mdopen.c
->>>> index 3c0052f2db23..dcdc6f23e6c1 100644
->>>> --- a/mdopen.c
->>>> +++ b/mdopen.c
->>>> @@ -312,6 +312,10 @@ int create_mddev(char *dev, char *name, int autof=
-, int trustworthy,
->>>>    		if (block_udev)
->>>>    			udev_block(devnm);
->>>>    		fd =3D open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
->>>> +		if (fd < 0 && errno =3D=3D ENOENT) {
->>>> +			system("modprobe md_mod");
-> [nip]
->> Hmmm.. that's annoying.  I wonder why "system" is marked
->> "warn_unused_result".
+> From: Shaohua Li <shli@fb.com>
 >
-> in /usr/include/stdlib.h:
-> ...
-> 712 /* Execute the given line as a shell command.
-> 713
-> 714    This function is a cancellation point and therefore not marked with
-> 715    __THROW.  */
-> 716 extern int system (const char *__command) __wur;
-> ...
+> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary. L=
+imit
+> the read size to the end of disk. Write path already has similar limitati=
+on.
 >
-> the "warn_unused_result" is from the __wur parameter, re-compile mdadm=20
-> after delete the '__wur',
-> it works.
->
->> In this case I really don't care - I'm not convinced an extra error
->> message will really help.
->> Maybe
->>     if (system("modprobe md_mod") =3D=3D 0)
->>          fd =3D open("/sys/......", O_WRONLY);
->
-> Agree.
->>
->> We do what a better error message, then it should be based on 'fd < 0'.
->> e.g.
->>    if (fd < 0 || n !=3D strlen(devnm))
->>        pr_err("Fail create array using /sys/module/md_mod/parameters/new=
-_array\n");
->
-> you mean something like this?
->
-> diff --git a/mdopen.c b/mdopen.c
-> index dcdc6f2..9de347e 100644
-> --- a/mdopen.c
-> +++ b/mdopen.c
-> @@ -313,14 +313,17 @@ int create_mddev(char *dev, char *name, int autof,=
-=20
-> int trustworthy,
->                          udev_block(devnm);
->                  fd =3D open("/sys/module/md_mod/parameters/new_array",=20
-> O_WRONLY);
->                  if (fd < 0 && errno =3D=3D ENOENT) {
-> -                       system("modprobe md_mod");
-> -                       fd =3D=20
-> open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
-> +                       if (system("modprobe md_mod") =3D=3D 0)
-> +                               fd =3D=20
-> open("/sys/module/md_mod/parameters/new_array",
-> +                                         O_WRONLY);
->                  }
->                  if (fd >=3D 0) {
->                          n =3D write(fd, devnm, strlen(devnm));
->                          close(fd);
->                  }
-> -               if (n < 0) {
-> +               if (fd < 0 || n !=3D strlen(devnm)) {
-> +                       pr_err("Fail create array using "
-> + "/sys/module/md_mod/parameters/new_array\n");
->                          devnm[0] =3D 0;
->                          udev_unblock();
->                  }
->
+> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
+> Reported-by: Joshua Kinard <kumba@gentoo.org>
+> Tested-by: Joshua Kinard <kumba@gentoo.org>
+> Cc: Song Liu <songliubraving@fb.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
 
-Yes - exactly like that except that I wouldn't wrap the long string.
-Lines longer than 80 chars are good to avoid, but breaking string
-literals is worse than having long lines.  e.g. it makes searching for
-the string hard.
+Given that this bug was introduced by
+Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
+
+and that patch is markted:
+
+    Cc: stable@vger.kernel.org (4.10+)
+
+I think this patch should be tagged "CC: stable" too.
+
+However ... that earlier patch looks strange to me.
+Why is it that "raid5 cache could write bitmap superblock before bitmap sup=
+erblock is
+initialized."  Can we just get raid5 cache *not* to write the bitmap
+superblock too early?
+I think that would better than breaking code that previously worked.
+
+We really need to stop assuming that PAGE_SIZE is 4K.  I'm probably as
+guilty as anyone else, but it would be good to stop.
 
 Thanks,
 NeilBrown
+
+
+> ---
+>  drivers/md/bitmap.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index d2121637b4ab..f68ec973fbdd 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -153,6 +153,7 @@ static int read_sb_page(struct mddev *mddev, loff_t o=
+ffset,
+>=20=20
+>  	struct md_rdev *rdev;
+>  	sector_t target;
+> +	int target_size;
+>=20=20
+>  	rdev_for_each(rdev, mddev) {
+>  		if (! test_bit(In_sync, &rdev->flags)
+> @@ -161,9 +162,12 @@ static int read_sb_page(struct mddev *mddev, loff_t =
+offset,
+>  			continue;
+>=20=20
+>  		target =3D offset + index * (PAGE_SIZE/512);
+> +		target_size =3D min_t(u64, size, i_size_read(rdev->bdev->bd_inode) -
+> +			((target + rdev->sb_start) << 9));
+> +		target_size =3D roundup(target_size,
+> +			bdev_logical_block_size(rdev->bdev));
+>=20=20
+> -		if (sync_page_io(rdev, target,
+> -				 roundup(size, bdev_logical_block_size(rdev->bdev)),
+> +		if (sync_page_io(rdev, target, target_size,
+>  				 page, REQ_OP_READ, 0, true)) {
+>  			page->index =3D index;
+>  			return 0;
+> --=20
+> 2.11.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlneshIACgkQOeye3VZi
-gbmLiA//YIRn5lZejLycX5LXGhRKOJ+pxOnGzVE/11YQuvmW2UmwZxvH3whN4SWj
-caVl/2l3tHnyxunQDQS5qXl1n8hvX+nJxihKlZUq0+iUUxQzv+s05L6qvdLD38iF
-pilp4GdhIOnLPE/iHLwVs3DxTl5LZCVE6gC7BQ6g9A0Qgfx1p2aPKK21ilfsgxzW
-d8iA3Pq1b5j1fvYxDIW3ZckOUj9Y7hTbknrmTPx98o7jKJ9W5I+hVLlrUniSU67D
-5uCFw3L1XHSg9uTsYkleY7zOff4xOo0Cfl7r2XZmlz2OMjEwRS93CNAoI3QZIYkl
-OBVVd+J/uGsuY+FBVs9Chx6oCqMM8dLoTCRv0S/TOh0ndBR8J7KnOCRLA19d0j9y
-2TyI5aD9mNH4wnRZqs52GKTY+Ah0QhWSz9Fy+i4gLgT4uRomC83rtO9anj/GZnnx
-oDZw2jCsmcJeT4c18vh/JJM9yd8BFh+npvrpy1KWokUasCz2CrOTMDx+SQaq5IkL
-iSEDpvtymzh3mkWhE9uFXgdUbweDqk5exN0qBerQwCyFjnlcmkrAsM2VIcAyMWO3
-vXeY+cYmT1Ek9+VebHPtJO0mKXWfyEGACFCSZMW/EBwTyRHo92TyLSqVXyEIlmEi
-dF/kcoOVoliSUy7upjDlyqwXfreso/FgYhzqE92vGtMUZGPOb2Q=
-=qny+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlne3OIACgkQOeye3VZi
+gblKpw//UiB42Vz+nXbGtwag1hjp7FXP0KWjGkKb5+HM1MajMuu42zSRtCl3XSl4
+vGzPheXOiamWgbGxkrG3QFemZLQCiTX+IDhRqtfE1JeUy/bYTvtehRCys0DXgF+F
+YwOLCayw7sj5uh03tI16pCko9c9QifhhStsVgFcHlgu1kV6N3JkN7/tqHH9/GGJQ
+bJ74V2daWXO3EsgSU+Xg/fD1JjJ0RVCFrnNmtJHbVNSN+6TZkGLGqpDrLVO2tF0B
+o89pH+ABRBaOnIipuw9m5qb6xCxsKphD63+bexOA81TOD0v0JO6Xl2JKvDOS/Oxv
+5Q1my/Uq9bxK709R/f2D4rqAf03p+OSypdLcOKMzZifPYWQZnhEAIE+/j1zSKPYw
+wh7kzNpNGfAfUmJ5Rv1S2v+oUk8b0VLlUz+OXwkB/uMI6HqZ2MRUXgKskkPN0fhF
+IScG80EAc7agxlVUXMxFNg69iHoZbgSe3XVrN9/O528H/vxghVv7fAroytcOCWIj
+XBsViUaVsJVECKgG1sgFSHuksiQG+HV1tjmGIlCVDLok+Saec6sUSQM666T14Mmv
+KMuc+S6uu1ZYEeRCAq7bxtc1VE0Aw64VOmDdfsnh3CqmnF2PDQK22NkNO5BB1lIp
+6fGb07RiITSlCYnzpyNeJCiiskwXMIrGzAIyl9U/eFcdmkbo1+s=
+=cgk4
 -----END PGP SIGNATURE-----
 --=-=-=--
