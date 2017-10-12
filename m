@@ -1,56 +1,53 @@
-From: "Majchrzak, Tomasz" <tomasz.majchrzak@intel.com>
-Subject: RE: [PATCH v2] mdadm/grow: adding a test to ensure resize was
- required
-Date: Thu, 12 Oct 2017 10:55:32 +0000
-Message-ID: <3039B97CB1D6E5428A50E8AC3F7BE0E477357D9C@IRSMSX104.ger.corp.intel.com>
-References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
- <1507711992-11548-1-git-send-email-zlliu@suse.com>
- <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Thu, 12 Oct 2017 12:01:20 +0100
+Message-ID: <59DF4B80.5010807@youngman.org.uk>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+ <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
+ <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org>
+ <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
+ <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
+ <8da0ac59-d83b-671c-b088-8e04b13d685e@turmel.org>
+ <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
+ <7b011b63-4de6-44ec-1f74-9f33c6466795@turmel.org>
+ <2ab868eb-3ce3-f01b-ac9e-23358563040c@shenkin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
-Content-Language: en-US
+In-Reply-To: <2ab868eb-3ce3-f01b-ac9e-23358563040c@shenkin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Alexander Shenkin <al@shenkin.org>, Phil Turmel <philip@turmel.org>, Reindl Harald <h.reindl@thelounge.net>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkgSmVzLA0KDQpJIHdvbmRlciBpZiBpdCB3b3VsZCBiZSBhIGxvdCBvZiBpbmNvbnZlbmllbmNl
-IGZvciB5b3UgdG8gcHVzaCBjb21taXRzIG9uIG1vcmUgcmVndWxhciBiYXNpcyAob3B0aW1hbGx5
-IG9uY2UgYWNjZXB0ZWQpLiBXZSBydW4gZGFpbHkgcmVncmVzc2lvbiB0ZXN0cyBvbiB1cHN0cmVh
-bSBtZGFkbSBhbmQgZnJlcXVlbnQgcHVzaGVzIHdvdWxkIGFsbG93IHVzIHRvIHNlZSBwcm9ibGVt
-cyBzb29uZXIuDQoNClRvbWVrDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBs
-aW51eC1yYWlkLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtb3duZXJA
-dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmVzIFNvcmVuc2VuDQpTZW50OiBXZWRuZXNk
-YXksIE9jdG9iZXIgMTEsIDIwMTcgNzozMiBQTQ0KVG86IFpoaWxvbmcgTGl1IDx6bGxpdUBzdXNl
-LmNvbT4NCkNjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRD
-SCB2Ml0gbWRhZG0vZ3JvdzogYWRkaW5nIGEgdGVzdCB0byBlbnN1cmUgcmVzaXplIHdhcyByZXF1
-aXJlZA0KDQpPbiAxMC8xMS8yMDE3IDA0OjUzIEFNLCBaaGlsb25nIExpdSB3cm90ZToNCj4gVG8g
-Zml4IHRoZSBjb21taXQ6IDRiNzRhOTA1YTY3ZQ0KPiAobWRhZG0vZ3JvdzogQ29tcG9uZW50IHNp
-emUgbXVzdCBiZSBsYXJnZXIgdGhhbiBjaHVuayBzaXplKQ0KPiANCj4gYXJyYXkubGV2ZWwgPiAx
-IDogYWdhaW5zdCB0aGUgcmFpZHMgd2hpY2ggY2h1bmtfc2l6ZSBpcyBtZWFuaW5nZnVsLg0KPiBz
-LT5zaXplID4gMCA6IGVuc3VyZSB0aGF0IGNoYW5naW5nIGNvbXBvbmVudCBzaXplIGhhcyByZXF1
-aXJlZC4NCj4gYXJyYXkuY2h1bmtfc2l6ZSAvIDEwMjQgPiBzLT5zaXplIDogZW5zdXJlIGNvbXBv
-bmVudCBzaXplIHNob3VsZA0KPiBiZSBhbHdheXMgPj0gY3VycmVudCBjaHVua19zaXplIHdoZW4g
-cmVxdWlyZXMgcmVzaXplLCBvdGhlcndpc2UsDQo+IG1kZGV2LT5wZXJzLT5yZXNpemUgd291bGQg
-YmUgc2V0IG1kZGV2LT5kZXZfc2VjdG9ycyBhcyAnMCcuDQo+IA0KPiBSZXBvcnRlZC1ieTogVG9t
-YXN6IE1hamNocnphayA8dG9tYXN6Lm1hamNocnpha0BpbnRlbC5jb20+DQo+IFN1Z2dlc3RlZC1i
-eTogTmVpbEJyb3duIDxuZWlsYkBzdXNlLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogWmhpbG9uZyBM
-aXUgPHpsbGl1QHN1c2UuY29tPg0KPiAtLS0NCj4gDQo+IHYxOiBbUEFUQ0ggMS8zXSBtZGFkbS9H
-cm93OiBmaXggdGhlIGJyb2tlbiByYWlkIGxldmVsIGNvbnZlcnNpb24NCj4gDQo+IGNoYW5nZXM6
-DQo+ICAgIGNvcnJlY3QgdGhlIHRlc3QgJ3MtPmxldmVsID09IFVuU2V0JyBhcyAncy0+c2l6ZSA+
-IDAnDQo+IA0KPiAgIEdyb3cuYyB8IDEgKw0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlv
-bigrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL0dyb3cuYyBiL0dyb3cuYw0KPiBpbmRleCA0ZDc5ZDgz
-Li44YzJkNTBjIDEwMDY0NA0KPiAtLS0gYS9Hcm93LmMNCj4gKysrIGIvR3Jvdy5jDQo+IEBAIC0x
-ODEwLDYgKzE4MTAsNyBAQCBpbnQgR3Jvd19yZXNoYXBlKGNoYXIgKmRldm5hbWUsIGludCBmZCwN
-Cj4gICAJfQ0KPiAgIA0KPiAgIAlpZiAoYXJyYXkubGV2ZWwgPiAxICYmDQo+ICsJICAgIHMtPnNp
-emUgPiAwICYmDQo+ICAgCSAgIChhcnJheS5jaHVua19zaXplIC8gMTAyNCkgPiAoaW50KXMtPnNp
-emUpIHsNCj4gICAJCXByX2VycigiY29tcG9uZW50IHNpemUgbXVzdCBiZSBsYXJnZXIgdGhhbiBj
-aHVuayBzaXplLlxuIik7DQo+ICAgCQlyZXR1cm4gMTsNCg0KQXBwbGllZCwgaG93ZXZlciBJIGZp
-eGVkIHRoZSBicm9rZW4gZm9ybWF0dGluZyBpbiB0aGUgcHJvY2Vzcy4NCg0KVGhhbmtzLA0KSmVz
-DQoNCg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
-bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
-ZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
-Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+On 12/10/17 10:50, Alexander Shenkin wrote:
+> Thanks Phil... Googling around, I haven't found a way to change it
+> either, but then again, I'm not really sure what to search for.
+> 
+> What about changing my default disk timeout to something less than 120
+> secs?  Say, 100 secs instead of 180?
+> 
+> Seems like this issue should probably make it into the timeout wiki
+> page, no?  Perhaps some instructions on how to query your system's
+> hangcheck timeout, and thus making sure that you set your drive timeouts
+> to less than that?
+
+Very much so. What is a "hangcheck timeout"?
+
+My wife has kindly bought the basics I need for a new PC for my birthday
+(yeah! :-) and I've ordered two Seagate Ironwolfs to go with it, so I
+will be setting this up from scratch. Raid, KVM, LVM, the works. So
+hangcheck timeouts, documenting on the wiki, all the other bits, the
+important thing is I'll have a brand new system I can play with that's
+not got anything important on it and if the system (software side only,
+of course :-) gets trashed, so what. I can try stuff out without
+worrying about putting my live system at risk.
+
+But back to topic. I know we have the disk timeout (on desktop drives,
+any random number up to 180secs :-). We have the linux i/o wait timeout
+- by default 30 secs. And now we have the hangcheck timeout, whatever
+that is ...
+
+Cheers,
+Wol
