@@ -1,143 +1,48 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be
- needed.
-Date: Fri, 13 Oct 2017 17:16:17 +0800
-Message-ID: <4bfc741e-c9e6-1645-fc2b-f90da1c7cc20@suse.com>
-References: <87y3p372b0.fsf@notabene.neil.brown.name>
- <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
- <87bmleyd0y.fsf@notabene.neil.brown.name>
- <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
- <87h8v5nsa6.fsf@notabene.neil.brown.name>
- <7631f4ae-bcc5-b36d-bb63-678515109f05@suse.com>
- <87zi8wn44l.fsf@notabene.neil.brown.name>
+From: Hou Tao <houtao1@huawei.com>
+Subject: [PATCH] md/bitmap: clear BITMAP_WRITE_ERROR bit after reading it from sb
+Date: Fri, 13 Oct 2017 18:36:31 +0800
+Message-ID: <1507890991-27425-1-git-send-email-houtao1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87zi8wn44l.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
+For a RAID1 device using a file-based bitmap, if a bitmap write error
+occurs and the later writes succeed, it's possible both BITMAP_STALE
+and BITMAP_WRITE_ERROR bit will be written to the bitmap super block,
+and the BITMAP_WRITE_ERROR bit in sb->flags will make bitmap_create()
+to fail.
 
+So clear it to protect against the write failure-success case.
 
-On 10/12/2017 04:48 PM, NeilBrown wrote:
->> On 10/12/2017 08:06 AM, NeilBrown wrote:
-> I wouldn't worry too much about checkpatch.pl.
-> It is worth looking at what it reports, but if you don't agree or the
-> maintainer doesn't agree, then feel free to ignore it.
->
->
->> Is this changing ok to you?
->>
->> diff --git a/mdopen.c b/mdopen.c
->> index dcdc6f2..da8d9d1 100644
->> --- a/mdopen.c
->> +++ b/mdopen.c
->> @@ -26,6 +26,8 @@
->>    #include "md_p.h"
->>    #include <ctype.h>
->>
->> +#define NEW_ARRAY_FILE "/sys/module/md_mod/parameters/new_array"
->> +
-> Splitting this out into a separate string does make sense.
-> However I would use
->    static const char new_array_file[] = ....;
-> rather than #define.
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ drivers/md/bitmap.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Maybe "const char *" is enough for this long string? Because this file 
-only used when
-creating named array, not global using.
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index d212163..97c423a 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -688,8 +688,13 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 		}
+ 	}
+ 
+-	/* assign fields using values from superblock */
+-	bitmap->flags |= le32_to_cpu(sb->state);
++	/*
++	 * assign fields using values from superblock
++	 * clear BITMAP_WRITE_ERROR bit to protect against the case that
++	 * a bitmap write error had occurred and the later writes had
++	 * succeeded.
++	 */
++	bitmap->flags |= (le32_to_cpu(sb->state) & ~BIT(BITMAP_WRITE_ERROR));
+ 	if (le32_to_cpu(sb->version) == BITMAP_MAJOR_HOSTENDIAN)
+ 		set_bit(BITMAP_HOSTENDIAN, &bitmap->flags);
+ 	bitmap->events_cleared = le64_to_cpu(sb->events_cleared);
+-- 
+2.5.0
 
-> I hadn't noticed that there are two places where we write to new_array.
-> Maybe that should be split out into a function.
-> Both should use modprobe if the open fails.
-
-how about this changing? Thanks for your patience to have a look at it.
-
-
-diff --git a/mdopen.c b/mdopen.c
-index dcdc6f2..6d8402d 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -100,6 +100,29 @@ void make_parts(char *dev, int cnt)
-         free(name);
-  }
-
-+int create_named_array(char *devnm)
-+{
-+       const char *file = "/sys/module/md_mod/parameters/new_array";
-+       int fd;
-+       int n = -1;
-+
-+       fd = open(file, O_WRONLY);
-+       if (fd < 0 && errno == ENOENT) {
-+               if (system("modprobe md_mod") == 0)
-+                       fd = open(file, O_WRONLY);
-+       }
-+       if (fd >= 0) {
-+               n = write(fd, devnm, strlen(devnm));
-+               close(fd);
-+       }
-+       if (fd < 0 || n != (int)strlen(devnm)) {
-+               pr_err("Fail create %s when using %s\n", devnm, file);
-+               return 0;
-+       }
-+
-+       return 1;
-+}
-+
-  /*
-   * We need a new md device to assemble/build/create an array.
-   * 'dev' is a name given us by the user (command line or mdadm.conf)
-@@ -306,37 +329,19 @@ int create_mddev(char *dev, char *name, int autof, 
-int trustworthy,
-
-         devnm[0] = 0;
-         if (num < 0 && cname && ci->names) {
--               int fd;
--               int n = -1;
-                 sprintf(devnm, "md_%s", cname);
-                 if (block_udev)
-                         udev_block(devnm);
--               fd = open("/sys/module/md_mod/parameters/new_array", 
-O_WRONLY);
--               if (fd < 0 && errno == ENOENT) {
--                       system("modprobe md_mod");
--                       fd = 
-open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
--               }
--               if (fd >= 0) {
--                       n = write(fd, devnm, strlen(devnm));
--                       close(fd);
--               }
--               if (n < 0) {
-+               if (!create_named_array(devnm)) {
-                         devnm[0] = 0;
-                         udev_unblock();
-                 }
-         }
-         if (num >= 0) {
--               int fd;
--               int n = -1;
-                 sprintf(devnm, "md%d", num);
-                 if (block_udev)
-                         udev_block(devnm);
--               fd = open("/sys/module/md_mod/parameters/new_array", 
-O_WRONLY);
--               if (fd >= 0) {
--                       n = write(fd, devnm, strlen(devnm));
--                       close(fd);
--               }
--               if (n < 0) {
-+               if (!create_named_array(devnm)) {
-                         devnm[0] = 0;
-                         udev_unblock();
-                 }
-
-Thanks,
--Zhilong
-
-> Thanks,
-> NeilBrown
