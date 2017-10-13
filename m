@@ -1,130 +1,143 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
-Date: Fri, 13 Oct 2017 16:16:33 +1100
-Message-ID: <87wp3zlj9q.fsf@notabene.neil.brown.name>
-References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com> <87bmldnjtq.fsf@notabene.neil.brown.name> <20171012173019.c2bbfyz3hgudjbhz@kernel.org> <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [mdadm PATCH] mdopen: call "modprobe md_mod" if it might be
+ needed.
+Date: Fri, 13 Oct 2017 17:16:17 +0800
+Message-ID: <4bfc741e-c9e6-1645-fc2b-f90da1c7cc20@suse.com>
+References: <87y3p372b0.fsf@notabene.neil.brown.name>
+ <cba5f77f-d6de-7a6b-35b0-70b7c56eb3f7@suse.com>
+ <87bmleyd0y.fsf@notabene.neil.brown.name>
+ <375cf2fb-bd4b-abef-5012-1361c224d254@suse.com>
+ <87h8v5nsa6.fsf@notabene.neil.brown.name>
+ <7631f4ae-bcc5-b36d-bb63-678515109f05@suse.com>
+ <87zi8wn44l.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
+In-Reply-To: <87zi8wn44l.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>, Shaohua Li <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
+To: NeilBrown <neilb@suse.com>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Oct 12 2017, Song Liu wrote:
 
->> On Oct 12, 2017, at 10:30 AM, Shaohua Li <shli@kernel.org> wrote:
->>=20
->> On Thu, Oct 12, 2017 at 02:09:21PM +1100, Neil Brown wrote:
->>> On Tue, Oct 10 2017, Shaohua Li wrote:
->>>=20
->>>> From: Shaohua Li <shli@fb.com>
->>>>=20
->>>> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary=
-. Limit
->>>> the read size to the end of disk. Write path already has similar limit=
-ation.
->>>>=20
->>>> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
->>>> Reported-by: Joshua Kinard <kumba@gentoo.org>
->>>> Tested-by: Joshua Kinard <kumba@gentoo.org>
->>>> Cc: Song Liu <songliubraving@fb.com>
->>>> Signed-off-by: Shaohua Li <shli@fb.com>
->>>=20
->>> Given that this bug was introduced by
->>> Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
->>>=20
->>> and that patch is markted:
->>>=20
->>>    Cc: stable@vger.kernel.org (4.10+)
->>>=20
->>> I think this patch should be tagged "CC: stable" too.
->>=20
->> I thought the Fix tag is enough, but I'll add the stable=20
->>> However ... that earlier patch looks strange to me.
->>> Why is it that "raid5 cache could write bitmap superblock before bitmap=
- superblock is
->>> initialized."  Can we just get raid5 cache *not* to write the bitmap
->>> superblock too early?
->>> I think that would better than breaking code that previously worked.
->>=20
->> That's the log reply code, which must update superblock and hence bitmap
->> superblock, because reply happens very earlier. I agree the reply might =
-still
->> have problem with bitmap. We'd better defer reply after the raid is fully
->> initialized. Song, any idea?
->>=20
+On 10/12/2017 04:48 PM, NeilBrown wrote:
+>> On 10/12/2017 08:06 AM, NeilBrown wrote:
+> I wouldn't worry too much about checkpatch.pl.
+> It is worth looking at what it reports, but if you don't agree or the
+> maintainer doesn't agree, then feel free to ignore it.
 >
-> With write back cache, there are two different types of stripes in recove=
-ry:
-> data-parity, and data-only. For data-parity stripes, we can simply replay=
- data
-> from the journal. But for data-only stripes, we need to do rcw or rmw to =
-update
-> parities. Currently, the writes are handled with raid5 state machine. The=
-refore,
-> we wake up mddev->thread in r5l_recovery_log(). It is necessary to finish=
- these=20
-> stripes before we fully initialize the array, because these stripes need =
-to be=20
-> handled with write back state machine; while we we always start the array=
- with=20
-> write through journal_mode.=20
 >
-> Maybe we can fix this by change the order of initialization in md_run(),=
-=20
-> specifically, moving bitmap_create() before pers->run().=20
+>> Is this changing ok to you?
+>>
+>> diff --git a/mdopen.c b/mdopen.c
+>> index dcdc6f2..da8d9d1 100644
+>> --- a/mdopen.c
+>> +++ b/mdopen.c
+>> @@ -26,6 +26,8 @@
+>>    #include "md_p.h"
+>>    #include <ctype.h>
+>>
+>> +#define NEW_ARRAY_FILE "/sys/module/md_mod/parameters/new_array"
+>> +
+> Splitting this out into a separate string does make sense.
+> However I would use
+>    static const char new_array_file[] = ....;
+> rather than #define.
 
-I've looked at some of the details here now.
+Maybe "const char *" is enough for this long string? Because this file 
+only used when
+creating named array, not global using.
 
-I think I would like raid5-cache to not perform any recovery until we
-reach
+> I hadn't noticed that there are two places where we write to new_array.
+> Maybe that should be split out into a function.
+> Both should use modprobe if the open fails.
+
+how about this changing? Thanks for your patience to have a look at it.
 
 
-	md_wakeup_thread(mddev->thread);
-	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+diff --git a/mdopen.c b/mdopen.c
+index dcdc6f2..6d8402d 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -100,6 +100,29 @@ void make_parts(char *dev, int cnt)
+         free(name);
+  }
 
++int create_named_array(char *devnm)
++{
++       const char *file = "/sys/module/md_mod/parameters/new_array";
++       int fd;
++       int n = -1;
++
++       fd = open(file, O_WRONLY);
++       if (fd < 0 && errno == ENOENT) {
++               if (system("modprobe md_mod") == 0)
++                       fd = open(file, O_WRONLY);
++       }
++       if (fd >= 0) {
++               n = write(fd, devnm, strlen(devnm));
++               close(fd);
++       }
++       if (fd < 0 || n != (int)strlen(devnm)) {
++               pr_err("Fail create %s when using %s\n", devnm, file);
++               return 0;
++       }
++
++       return 1;
++}
++
+  /*
+   * We need a new md device to assemble/build/create an array.
+   * 'dev' is a name given us by the user (command line or mdadm.conf)
+@@ -306,37 +329,19 @@ int create_mddev(char *dev, char *name, int autof, 
+int trustworthy,
 
-in do_md_run().  Before that point it is possible to fail and abort -
-e.g. if bitmap_load() fails.
-
-Possibly we could insert another personality call here "->start()" ??
-That could then do whatever is needed before
-
-	set_capacity(mddev->gendisk, mddev->array_sectors);
-	revalidate_disk(mddev->gendisk);
-
-makes the array accessible.
-
-Might that be reasonable?
+         devnm[0] = 0;
+         if (num < 0 && cname && ci->names) {
+-               int fd;
+-               int n = -1;
+                 sprintf(devnm, "md_%s", cname);
+                 if (block_udev)
+                         udev_block(devnm);
+-               fd = open("/sys/module/md_mod/parameters/new_array", 
+O_WRONLY);
+-               if (fd < 0 && errno == ENOENT) {
+-                       system("modprobe md_mod");
+-                       fd = 
+open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+-               }
+-               if (fd >= 0) {
+-                       n = write(fd, devnm, strlen(devnm));
+-                       close(fd);
+-               }
+-               if (n < 0) {
++               if (!create_named_array(devnm)) {
+                         devnm[0] = 0;
+                         udev_unblock();
+                 }
+         }
+         if (num >= 0) {
+-               int fd;
+-               int n = -1;
+                 sprintf(devnm, "md%d", num);
+                 if (block_udev)
+                         udev_block(devnm);
+-               fd = open("/sys/module/md_mod/parameters/new_array", 
+O_WRONLY);
+-               if (fd >= 0) {
+-                       n = write(fd, devnm, strlen(devnm));
+-                       close(fd);
+-               }
+-               if (n < 0) {
++               if (!create_named_array(devnm)) {
+                         devnm[0] = 0;
+                         udev_unblock();
+                 }
 
 Thanks,
-NeilBrown
+-Zhilong
 
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlngTDMACgkQOeye3VZi
-gbmcGA/+M/ECmfNPut1RTLxI5LMtJvvj2q2YAcfLlsNi/3Bq4o85sIYNsFu3xYDB
-WgnwkGh7ddf/wCfYNC7rKsE3noYTX5KkaivtBFZnWvsOD75hLR5o31suDa0EbP1/
-G7+ngBk1gH0kuBK61o5CBzho2BdA8umr0snFKX+c8EFDUVqpbarjDJaijj7tdAXH
-eCRrA40owUjLMDaM/eynx8wO6STQleIMl/M4DX+Kinoj2KUrRj03aV5BBVbjXfC4
-jByp5WV8iYqXP1AcPyw1Ab7p7y7NCnIVFoKSG8EFyzj0VrhDtLPtLfaLESx9Rhg0
-Gpz3pQrhU4QhKb+oqlY9AQvYeehG6CKhN4kYHOWtNxNho03Y0z24actJJZNR2fxH
-0r3rtntUfgihUqaN4wI5WOBQbVdtVZAOyUnrTxlm4MqK/JRkHLUNbex9I1v1jKYc
-s9PiqOjz74AjFnQnfx0x9vCKq0lZnJn9+sWbw1rU0HXmkEwaJGE5qK86FNRcRgvO
-j3qL/tmy9qCCJuep0tFAXwOsnMf0PDTHlK1H29aHhnr0lNQuNNfVYFUk27tGC1EQ
-s5CIjm4XggWYD4r5VbF8OaJnGq0MwHBsnWn1+FsEh3DjGyo0yD1fp3WDxzbeNTEM
-KFlnTrM3EhjW8XaES5ZFfUk/WWGoCwGQkYibc9IE6SPM+/pRl1Y=
-=BKgn
------END PGP SIGNATURE-----
---=-=-=--
+> Thanks,
+> NeilBrown
