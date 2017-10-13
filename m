@@ -1,87 +1,98 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
-Date: Thu, 12 Oct 2017 15:51:06 -0700
-Message-ID: <20171012225106.wodh2g255bt6aqar@kernel.org>
-References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
- <87bmldnjtq.fsf@notabene.neil.brown.name>
- <20171012173019.c2bbfyz3hgudjbhz@kernel.org>
- <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
- <87r2u8m43o.fsf@notabene.neil.brown.name>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH] md: ensure sectors is nonzero when change component size
+Date: Fri, 13 Oct 2017 10:47:29 +0800
+Message-ID: <111b18f3-4db6-bf53-3a9f-15db452192ba@suse.com>
+References: <1507797051-18545-1-git-send-email-zlliu@suse.com>
+ <20171012173743.nocrm6ejov3pvhjd@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87r2u8m43o.fsf@notabene.neil.brown.name>
+In-Reply-To: <20171012173743.nocrm6ejov3pvhjd@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Fri, Oct 13, 2017 at 08:46:35AM +1100, Neil Brown wrote:
-> On Thu, Oct 12 2017, Song Liu wrote:
-> 
-> >> On Oct 12, 2017, at 10:30 AM, Shaohua Li <shli@kernel.org> wrote:
-> >> 
-> >> On Thu, Oct 12, 2017 at 02:09:21PM +1100, Neil Brown wrote:
-> >>> On Tue, Oct 10 2017, Shaohua Li wrote:
-> >>> 
-> >>>> From: Shaohua Li <shli@fb.com>
-> >>>> 
-> >>>> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary. Limit
-> >>>> the read size to the end of disk. Write path already has similar limitation.
-> >>>> 
-> >>>> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
-> >>>> Reported-by: Joshua Kinard <kumba@gentoo.org>
-> >>>> Tested-by: Joshua Kinard <kumba@gentoo.org>
-> >>>> Cc: Song Liu <songliubraving@fb.com>
-> >>>> Signed-off-by: Shaohua Li <shli@fb.com>
-> >>> 
-> >>> Given that this bug was introduced by
-> >>> Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
-> >>> 
-> >>> and that patch is markted:
-> >>> 
-> >>>    Cc: stable@vger.kernel.org (4.10+)
-> >>> 
-> >>> I think this patch should be tagged "CC: stable" too.
-> >> 
-> >> I thought the Fix tag is enough, but I'll add the stable 
-> >>> However ... that earlier patch looks strange to me.
-> >>> Why is it that "raid5 cache could write bitmap superblock before bitmap superblock is
-> >>> initialized."  Can we just get raid5 cache *not* to write the bitmap
-> >>> superblock too early?
-> >>> I think that would better than breaking code that previously worked.
-> >> 
-> >> That's the log reply code, which must update superblock and hence bitmap
-> >> superblock, because reply happens very earlier. I agree the reply might still
-> >> have problem with bitmap. We'd better defer reply after the raid is fully
-> >> initialized. Song, any idea?
-> >> 
-> >
-> > With write back cache, there are two different types of stripes in recovery:
-> > data-parity, and data-only. For data-parity stripes, we can simply replay data
-> > from the journal. But for data-only stripes, we need to do rcw or rmw to update
-> > parities. Currently, the writes are handled with raid5 state machine. Therefore,
-> > we wake up mddev->thread in r5l_recovery_log(). It is necessary to finish these 
-> > stripes before we fully initialize the array, because these stripes need to be 
-> > handled with write back state machine; while we we always start the array with 
-> > write through journal_mode. 
-> >
-> > Maybe we can fix this by change the order of initialization in md_run(), 
-> > specifically, moving bitmap_create() before pers->run(). 
-> 
-> I was thinking exactly this as I was looking at the code.  ->run can
-> start recovery happening, and having that happen before the bitmap is
-> ready is wrong.
-> Maybe there is enough locking that things won't happen in the wrong
-> order, but it does look a bit odd.
-> Thanks for the explanation about the interaction between the journal and
-> the bitmaps.  I'll dig into the code and see what I find.  Then maybe we
-> can compare notes.
 
-On the other hand, is there any value to let bitmap and journal co-exist?
-Sounds not to me, if journal is enabled, bitmap is useless. Should we just not
-allow array with both bitmap and journal enabled?
+
+On 10/13/2017 01:37 AM, Shaohua Li wrote:
+> On Thu, Oct 12, 2017 at 04:30:51PM +0800, Zhilong Liu wrote:
+>> Against the raids which chunk_size is meaningful, the component_size
+>> must be >= chunk_size when require resize. If "new_size < chunk_size"
+>> has required, the "mddev->pers->resize" will set sectors as '0', and
+>> then the raids isn't meaningful any more due to mddev->dev_sectors is
+>> '0'.
+>>
+>> Cc: Neil Brown <neilb@suse.com>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+> Not sure about this, does size 0 disk really harm?
+>
+
+ From my site, I think changing the component size as '0' should be avoided.
+When resize changing required and new_size < current_chunk_size, such as
+raid5:
+
+raid5.c: raid5_resize()
+...
+7727         sectors &= ~((sector_t)conf->chunk_sectors - 1);
+...
+
+'sectors' got '0'.
+
+then:
+...
+7743         mddev->dev_sectors = sectors;
+...
+
+the dev_sectors(the component size) got '0'.
+same scenario happens in raid10.
+
+So, it's really not meaningful if changing the raid component_size to 
+'0', md
+should give this scenario a test, otherwise, it's a trouble thing to 
+restore after
+doing such invalid re-size.
 
 Thanks,
-Shaohua
+-Zhilong
+
+>> ---
+>>   drivers/md/raid10.c | 2 ++
+>>   drivers/md/raid5.c  | 2 ++
+>>   2 files changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 374df57..f3891f6 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -3871,6 +3871,8 @@ static int raid10_resize(struct mddev *mddev, sector_t sectors)
+>>   
+>>   	oldsize = raid10_size(mddev, 0, 0);
+>>   	size = raid10_size(mddev, sectors, 0);
+>> +	if (size == 0)
+>> +		return -EINVAL;
+>>   	if (mddev->external_size &&
+>>   	    mddev->array_sectors > size)
+>>   		return -EINVAL;
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 928e24a..768767c 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -7725,6 +7725,8 @@ static int raid5_resize(struct mddev *mddev, sector_t sectors)
+>>   	if (conf->log || raid5_has_ppl(conf))
+>>   		return -EINVAL;
+>>   	sectors &= ~((sector_t)conf->chunk_sectors - 1);
+>> +	if (sectors == 0)
+>> +		return -EINVAL;
+>>   	newsize = raid5_size(mddev, sectors, mddev->raid_disks);
+>>   	if (mddev->external_size &&
+>>   	    mddev->array_sectors > newsize)
+>> -- 
+>> 2.6.6
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
