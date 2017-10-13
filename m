@@ -1,196 +1,111 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 0/4] RFC: attempt to remove md deadlocks with metadata without
-Date: Fri, 13 Oct 2017 14:48:41 +1100
-Message-ID: <87376nn1wm.fsf@notabene.neil.brown.name>
-References: <150518076229.32691.13542756562323866921.stgit@noble> <874lrc28x8.fsf@notabene.neil.brown.name> <1345780738.18087591.1507512089744.JavaMail.zimbra@redhat.com> <87a810zznc.fsf@notabene.neil.brown.name> <441ae9fe-fd73-2aac-8bb1-c64da28cda27@redhat.com> <871smczx4j.fsf@notabene.neil.brown.name> <ebf97c38-c8e0-aa87-be84-efc8d56802f0@redhat.com> <87vajmwvgn.fsf@notabene.neil.brown.name> <960568852.19225619.1507689864371.JavaMail.zimbra@redhat.com>
+Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
+Date: Fri, 13 Oct 2017 16:16:33 +1100
+Message-ID: <87wp3zlj9q.fsf@notabene.neil.brown.name>
+References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com> <87bmldnjtq.fsf@notabene.neil.brown.name> <20171012173019.c2bbfyz3hgudjbhz@kernel.org> <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <960568852.19225619.1507689864371.JavaMail.zimbra@redhat.com>
+In-Reply-To: <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 10 2017, Xiao Ni wrote:
->
-> I added the stack traces as an attachment.=20
->
+On Thu, Oct 12 2017, Song Liu wrote:
 
-Thanks.  very helpful.
-I think I can see the problem.  The following patch might
-fix it.
-Thanks for your ongoing testing!
+>> On Oct 12, 2017, at 10:30 AM, Shaohua Li <shli@kernel.org> wrote:
+>>=20
+>> On Thu, Oct 12, 2017 at 02:09:21PM +1100, Neil Brown wrote:
+>>> On Tue, Oct 10 2017, Shaohua Li wrote:
+>>>=20
+>>>> From: Shaohua Li <shli@fb.com>
+>>>>=20
+>>>> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary=
+. Limit
+>>>> the read size to the end of disk. Write path already has similar limit=
+ation.
+>>>>=20
+>>>> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
+>>>> Reported-by: Joshua Kinard <kumba@gentoo.org>
+>>>> Tested-by: Joshua Kinard <kumba@gentoo.org>
+>>>> Cc: Song Liu <songliubraving@fb.com>
+>>>> Signed-off-by: Shaohua Li <shli@fb.com>
+>>>=20
+>>> Given that this bug was introduced by
+>>> Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
+>>>=20
+>>> and that patch is markted:
+>>>=20
+>>>    Cc: stable@vger.kernel.org (4.10+)
+>>>=20
+>>> I think this patch should be tagged "CC: stable" too.
+>>=20
+>> I thought the Fix tag is enough, but I'll add the stable=20
+>>> However ... that earlier patch looks strange to me.
+>>> Why is it that "raid5 cache could write bitmap superblock before bitmap=
+ superblock is
+>>> initialized."  Can we just get raid5 cache *not* to write the bitmap
+>>> superblock too early?
+>>> I think that would better than breaking code that previously worked.
+>>=20
+>> That's the log reply code, which must update superblock and hence bitmap
+>> superblock, because reply happens very earlier. I agree the reply might =
+still
+>> have problem with bitmap. We'd better defer reply after the raid is fully
+>> initialized. Song, any idea?
+>>=20
+>
+> With write back cache, there are two different types of stripes in recove=
+ry:
+> data-parity, and data-only. For data-parity stripes, we can simply replay=
+ data
+> from the journal. But for data-only stripes, we need to do rcw or rmw to =
+update
+> parities. Currently, the writes are handled with raid5 state machine. The=
+refore,
+> we wake up mddev->thread in r5l_recovery_log(). It is necessary to finish=
+ these=20
+> stripes before we fully initialize the array, because these stripes need =
+to be=20
+> handled with write back state machine; while we we always start the array=
+ with=20
+> write through journal_mode.=20
+>
+> Maybe we can fix this by change the order of initialization in md_run(),=
+=20
+> specifically, moving bitmap_create() before pers->run().=20
 
+I've looked at some of the details here now.
+
+I think I would like raid5-cache to not perform any recovery until we
+reach
+
+
+	md_wakeup_thread(mddev->thread);
+	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+
+
+in do_md_run().  Before that point it is possible to fail and abort -
+e.g. if bitmap_load() fails.
+
+Possibly we could insert another personality call here "->start()" ??
+That could then do whatever is needed before
+
+	set_capacity(mddev->gendisk, mddev->array_sectors);
+	revalidate_disk(mddev->gendisk);
+
+makes the array accessible.
+
+Might that be reasonable?
+
+Thanks,
 NeilBrown
-
-From: NeilBrown <neilb@suse.com>
-Date: Fri, 13 Oct 2017 14:46:37 +1100
-Subject: [PATCH] md: move suspend_hi/lo handling into core md code
-
-responding to ->suspend_lo and ->suspend_hi is similar
-to responding to ->suspended.  It is best to wait in
-the common core code without incrementing ->active_io.
-This allows mddev_suspend()/mddev_resume() to work while
-requesting are waiting for suspend_lo/hi to change.
-This is particularly important as the code to update these
-values now uses mddev_suspend().
-
-So move the code for testing suspend_lo/hi out of raid1.c
-and raid5.c, and place it in md.c
-
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- drivers/md/md.c    | 29 +++++++++++++++++++++++------
- drivers/md/raid1.c | 12 ++++--------
- drivers/md/raid5.c | 22 ----------------------
- 3 files changed, 27 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ae531666f127..93ba3a526718 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -266,16 +266,31 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
-  * call has finished, the bio has been linked into some internal structure
-  * and so is visible to ->quiesce(), so we don't need the refcount any mor=
-e.
-  */
-+static bool is_suspended(struct mddev *mddev, struct bio *bio)
-+{
-+	if (mddev->suspended)
-+		return true;
-+	if (bio_data_dir(bio) !=3D WRITE)
-+		return false;
-+	if (mddev->suspend_lo >=3D mddev->suspend_hi)
-+		return false;
-+	if (bio->bi_iter.bi_sector >=3D mddev->suspend_hi)
-+		return false;
-+	if (bio_end_sector(bio) < mddev->suspend_lo)
-+		return false;
-+	return true;
-+}
-+
- void md_handle_request(struct mddev *mddev, struct bio *bio)
- {
- check_suspended:
- 	rcu_read_lock();
-=2D	if (mddev->suspended) {
-+	if (is_suspended(mddev, bio)) {
- 		DEFINE_WAIT(__wait);
- 		for (;;) {
- 			prepare_to_wait(&mddev->sb_wait, &__wait,
- 					TASK_UNINTERRUPTIBLE);
-=2D			if (!mddev->suspended)
-+			if (!is_suspended(mddev, bio))
- 				break;
- 			rcu_read_unlock();
- 			schedule();
-@@ -4854,10 +4869,11 @@ suspend_lo_store(struct mddev *mddev, const char *b=
-uf, size_t len)
- 		goto unlock;
- 	old =3D mddev->suspend_lo;
- 	mddev->suspend_lo =3D new;
-=2D	if (new >=3D old)
-+	if (new >=3D old) {
- 		/* Shrinking suspended region */
-+		wake_up(&mddev->sb_wait);
- 		mddev->pers->quiesce(mddev, 2);
-=2D	else {
-+	} else {
- 		/* Expanding suspended region - need to wait */
- 		mddev_suspend(mddev);
- 		mddev_resume(mddev);
-@@ -4897,10 +4913,11 @@ suspend_hi_store(struct mddev *mddev, const char *b=
-uf, size_t len)
- 		goto unlock;
- 	old =3D mddev->suspend_hi;
- 	mddev->suspend_hi =3D new;
-=2D	if (new <=3D old)
-+	if (new <=3D old) {
- 		/* Shrinking suspended region */
-+		wake_up(&mddev->sb_wait);
- 		mddev->pers->quiesce(mddev, 2);
-=2D	else {
-+	} else {
- 		/* Expanding suspended region - need to wait */
- 		mddev_suspend(mddev);
- 		mddev_resume(mddev);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f3f3e40dc9d8..277a145b3ff5 100644
-=2D-- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1310,11 +1310,9 @@ static void raid1_write_request(struct mddev *mddev,=
- struct bio *bio,
- 	 */
-=20
-=20
-=2D	if ((bio_end_sector(bio) > mddev->suspend_lo &&
-=2D	    bio->bi_iter.bi_sector < mddev->suspend_hi) ||
-=2D	    (mddev_is_clustered(mddev) &&
-+	if (mddev_is_clustered(mddev) &&
- 	     md_cluster_ops->area_resyncing(mddev, WRITE,
-=2D		     bio->bi_iter.bi_sector, bio_end_sector(bio)))) {
-+		     bio->bi_iter.bi_sector, bio_end_sector(bio))) {
-=20
- 		/*
- 		 * As the suspend_* range is controlled by userspace, we want
-@@ -1325,12 +1323,10 @@ static void raid1_write_request(struct mddev *mddev=
-, struct bio *bio,
- 			sigset_t full, old;
- 			prepare_to_wait(&conf->wait_barrier,
- 					&w, TASK_INTERRUPTIBLE);
-=2D			if (bio_end_sector(bio) <=3D mddev->suspend_lo ||
-=2D			    bio->bi_iter.bi_sector >=3D mddev->suspend_hi ||
-=2D			    (mddev_is_clustered(mddev) &&
-+			if (mddev_is_clustered(mddev) &&
- 			     !md_cluster_ops->area_resyncing(mddev, WRITE,
- 				     bio->bi_iter.bi_sector,
-=2D				     bio_end_sector(bio))))
-+				     bio_end_sector(bio)))
- 				break;
- 			sigfillset(&full);
- 			sigprocmask(SIG_BLOCK, &full, &old);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 51c9dac6e744..1f9f2d80c004 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5685,28 +5685,6 @@ static bool raid5_make_request(struct mddev *mddev, =
-struct bio * bi)
- 				goto retry;
- 			}
-=20
-=2D			if (rw =3D=3D WRITE &&
-=2D			    logical_sector >=3D mddev->suspend_lo &&
-=2D			    logical_sector < mddev->suspend_hi) {
-=2D				raid5_release_stripe(sh);
-=2D				/* As the suspend_* range is controlled by
-=2D				 * userspace, we want an interruptible
-=2D				 * wait.
-=2D				 */
-=2D				prepare_to_wait(&conf->wait_for_overlap,
-=2D						&w, TASK_INTERRUPTIBLE);
-=2D				if (logical_sector >=3D mddev->suspend_lo &&
-=2D				    logical_sector < mddev->suspend_hi) {
-=2D					sigset_t full, old;
-=2D					sigfillset(&full);
-=2D					sigprocmask(SIG_BLOCK, &full, &old);
-=2D					schedule();
-=2D					sigprocmask(SIG_SETMASK, &old, NULL);
-=2D					do_prepare =3D true;
-=2D				}
-=2D				goto retry;
-=2D			}
-=2D
- 			if (test_bit(STRIPE_EXPANDING, &sh->state) ||
- 			    !add_stripe_bio(sh, bi, dd_idx, rw, previous)) {
- 				/* Stripe is busy expanding or
-=2D-=20
-2.14.0.rc0.dirty
 
 
 --=-=-=
@@ -198,18 +113,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlngN5sACgkQOeye3VZi
-gbnsrRAAr2WaQjnqNuGLw9DaGOBQCP0Vd82oj3i4t7tXNs7mw+5Qqpiulj9xtcpK
-ynbBmwH2wpxl8uAZ7tvqQyMWocY6V4dLt9FlVQZIZZ5bDtJvHcS5T/RHuiYwovLF
-DlMutIPaeiZGGFxxvALBDoR5mJVDwj7t6jaUXIgZPuJfanCVL/eMLowcA0nwZUv4
-SCC2IfiG6Q1bqRMQbK/3Q6CbcMhNuxDvVaYsdF9BrQjOqklPTZ+XMI3dZyaBVVN3
-w0cu/pQxYYTatNBXcXCBEWEMJMeub+jqGSLCm71zNRkz9gAcNFO1S0mA07/c4u+e
-D2G6ubbZ940s/abHDGDm9vrm3kS+42i83DZRoPd46mUvjB6Jm8Kty2ougO3m6/KW
-AaZkBods0vrVzeRrixIEa0SHVYbszSj/kxfhM6vuYceIKPbF8bJQf/HSymoH8j14
-KoqJYMT0VNh2v7IYU1shKRSkOVlV5XAtX711H4DUBOrMeAPpLGnv0RG8/fMi7WsO
-vrbLGy4alYylqrArJdJ/RVUz0XsxyMpj10tTlw3IEUx+qWuh5QNHuamFcUgmbi5C
-/F1xBubGfRo2lYg4u7vhOvi/zB8Ai3DP/cc/ghJhwB8nQDyT5g563579ikIYxmNc
-ySb985fdbd9o2xNUYchz6N437+ST3q+hlk90tTZTraw6N2H0oCk=
-=4uz+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlngTDMACgkQOeye3VZi
+gbmcGA/+M/ECmfNPut1RTLxI5LMtJvvj2q2YAcfLlsNi/3Bq4o85sIYNsFu3xYDB
+WgnwkGh7ddf/wCfYNC7rKsE3noYTX5KkaivtBFZnWvsOD75hLR5o31suDa0EbP1/
+G7+ngBk1gH0kuBK61o5CBzho2BdA8umr0snFKX+c8EFDUVqpbarjDJaijj7tdAXH
+eCRrA40owUjLMDaM/eynx8wO6STQleIMl/M4DX+Kinoj2KUrRj03aV5BBVbjXfC4
+jByp5WV8iYqXP1AcPyw1Ab7p7y7NCnIVFoKSG8EFyzj0VrhDtLPtLfaLESx9Rhg0
+Gpz3pQrhU4QhKb+oqlY9AQvYeehG6CKhN4kYHOWtNxNho03Y0z24actJJZNR2fxH
+0r3rtntUfgihUqaN4wI5WOBQbVdtVZAOyUnrTxlm4MqK/JRkHLUNbex9I1v1jKYc
+s9PiqOjz74AjFnQnfx0x9vCKq0lZnJn9+sWbw1rU0HXmkEwaJGE5qK86FNRcRgvO
+j3qL/tmy9qCCJuep0tFAXwOsnMf0PDTHlK1H29aHhnr0lNQuNNfVYFUk27tGC1EQ
+s5CIjm4XggWYD4r5VbF8OaJnGq0MwHBsnWn1+FsEh3DjGyo0yD1fp3WDxzbeNTEM
+KFlnTrM3EhjW8XaES5ZFfUk/WWGoCwGQkYibc9IE6SPM+/pRl1Y=
+=BKgn
 -----END PGP SIGNATURE-----
 --=-=-=--
