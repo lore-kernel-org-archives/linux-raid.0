@@ -1,64 +1,55 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: ensure sectors is nonzero when change component size
-Date: Fri, 13 Oct 2017 12:05:58 -0700
-Message-ID: <20171013190558.svbyj35i7xtls4wr@kernel.org>
-References: <1507797051-18545-1-git-send-email-zlliu@suse.com>
- <20171012173743.nocrm6ejov3pvhjd@kernel.org>
- <111b18f3-4db6-bf53-3a9f-15db452192ba@suse.com>
+Subject: Re: [PATCH] md/bitmap: clear BITMAP_WRITE_ERROR bit after reading it
+ from sb
+Date: Fri, 13 Oct 2017 12:21:27 -0700
+Message-ID: <20171013192127.5a4oznnkljfpv7ca@kernel.org>
+References: <1507890991-27425-1-git-send-email-houtao1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <111b18f3-4db6-bf53-3a9f-15db452192ba@suse.com>
+In-Reply-To: <1507890991-27425-1-git-send-email-houtao1@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhilong Liu <zlliu@suse.com>
+To: Hou Tao <houtao1@huawei.com>
 Cc: linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Fri, Oct 13, 2017 at 10:47:29AM +0800, Zhilong Liu wrote:
-> 
-> 
-> On 10/13/2017 01:37 AM, Shaohua Li wrote:
-> > On Thu, Oct 12, 2017 at 04:30:51PM +0800, Zhilong Liu wrote:
-> > > Against the raids which chunk_size is meaningful, the component_size
-> > > must be >= chunk_size when require resize. If "new_size < chunk_size"
-> > > has required, the "mddev->pers->resize" will set sectors as '0', and
-> > > then the raids isn't meaningful any more due to mddev->dev_sectors is
-> > > '0'.
-> > > 
-> > > Cc: Neil Brown <neilb@suse.com>
-> > > Signed-off-by: Zhilong Liu <zlliu@suse.com>
-> > Not sure about this, does size 0 disk really harm?
-> > 
-> 
-> From my site, I think changing the component size as '0' should be avoided.
-> When resize changing required and new_size < current_chunk_size, such as
-> raid5:
-> 
-> raid5.c: raid5_resize()
-> ...
-> 7727         sectors &= ~((sector_t)conf->chunk_sectors - 1);
-> ...
-> 
-> 'sectors' got '0'.
-> 
-> then:
-> ...
-> 7743         mddev->dev_sectors = sectors;
-> ...
-> 
-> the dev_sectors(the component size) got '0'.
-> same scenario happens in raid10.
-> 
-> So, it's really not meaningful if changing the raid component_size to '0',
-> md
-> should give this scenario a test, otherwise, it's a trouble thing to restore
-> after
-> doing such invalid re-size.
+On Fri, Oct 13, 2017 at 06:36:31PM +0800, Hou Tao wrote:
+> For a RAID1 device using a file-based bitmap, if a bitmap write error
+> occurs and the later writes succeed, it's possible both BITMAP_STALE
+> and BITMAP_WRITE_ERROR bit will be written to the bitmap super block,
+> and the BITMAP_WRITE_ERROR bit in sb->flags will make bitmap_create()
+> to fail.
 
-Yes, I understand how it could be 0. My question is what's wrong with a size-0
-disk? For example, if you don't setup file for a loop block device, its size is
-0.
-
-Thanks,
-Shaohua
+Why don't clear the bit in the 'latter succeeded write'?
+ 
+> So clear it to protect against the write failure-success case.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> ---
+>  drivers/md/bitmap.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index d212163..97c423a 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -688,8 +688,13 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+>  		}
+>  	}
+>  
+> -	/* assign fields using values from superblock */
+> -	bitmap->flags |= le32_to_cpu(sb->state);
+> +	/*
+> +	 * assign fields using values from superblock
+> +	 * clear BITMAP_WRITE_ERROR bit to protect against the case that
+> +	 * a bitmap write error had occurred and the later writes had
+> +	 * succeeded.
+> +	 */
+> +	bitmap->flags |= (le32_to_cpu(sb->state) & ~BIT(BITMAP_WRITE_ERROR));
+>  	if (le32_to_cpu(sb->version) == BITMAP_MAJOR_HOSTENDIAN)
+>  		set_bit(BITMAP_HOSTENDIAN, &bitmap->flags);
+>  	bitmap->events_cleared = le64_to_cpu(sb->events_cleared);
+> -- 
+> 2.5.0
+> 
