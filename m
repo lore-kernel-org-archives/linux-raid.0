@@ -1,101 +1,117 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
-Date: Fri, 13 Oct 2017 12:51:22 -0700
-Message-ID: <20171013195122.mi7gr4xxm77odx7t@kernel.org>
-References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
- <87bmldnjtq.fsf@notabene.neil.brown.name>
- <20171012173019.c2bbfyz3hgudjbhz@kernel.org>
- <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
- <87wp3zlj9q.fsf@notabene.neil.brown.name>
+From: Coly Li <colyli@suse.de>
+Subject: Re: raid1: freeze_array/wait_all_barriers deadlock
+Date: Sun, 15 Oct 2017 05:45:12 +0800
+Message-ID: <c63d6d36-b155-2e47-8b0d-d03d0916f410@suse.de>
+References: <2e2fb33a-12a6-763a-bd8e-8dc4aa05fc13@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87wp3zlj9q.fsf@notabene.neil.brown.name>
+In-Reply-To: <2e2fb33a-12a6-763a-bd8e-8dc4aa05fc13@stratus.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
+To: Nate Dailey <nate.dailey@stratus.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 13, 2017 at 04:16:33PM +1100, Neil Brown wrote:
-> On Thu, Oct 12 2017, Song Liu wrote:
+On 2017/10/14 上午2:32, Nate Dailey wrote:
+> I hit the following deadlock:
 > 
-> >> On Oct 12, 2017, at 10:30 AM, Shaohua Li <shli@kernel.org> wrote:
-> >> 
-> >> On Thu, Oct 12, 2017 at 02:09:21PM +1100, Neil Brown wrote:
-> >>> On Tue, Oct 10 2017, Shaohua Li wrote:
-> >>> 
-> >>>> From: Shaohua Li <shli@fb.com>
-> >>>> 
-> >>>> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary. Limit
-> >>>> the read size to the end of disk. Write path already has similar limitation.
-> >>>> 
-> >>>> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
-> >>>> Reported-by: Joshua Kinard <kumba@gentoo.org>
-> >>>> Tested-by: Joshua Kinard <kumba@gentoo.org>
-> >>>> Cc: Song Liu <songliubraving@fb.com>
-> >>>> Signed-off-by: Shaohua Li <shli@fb.com>
-> >>> 
-> >>> Given that this bug was introduced by
-> >>> Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
-> >>> 
-> >>> and that patch is markted:
-> >>> 
-> >>>    Cc: stable@vger.kernel.org (4.10+)
-> >>> 
-> >>> I think this patch should be tagged "CC: stable" too.
-> >> 
-> >> I thought the Fix tag is enough, but I'll add the stable 
-> >>> However ... that earlier patch looks strange to me.
-> >>> Why is it that "raid5 cache could write bitmap superblock before bitmap superblock is
-> >>> initialized."  Can we just get raid5 cache *not* to write the bitmap
-> >>> superblock too early?
-> >>> I think that would better than breaking code that previously worked.
-> >> 
-> >> That's the log reply code, which must update superblock and hence bitmap
-> >> superblock, because reply happens very earlier. I agree the reply might still
-> >> have problem with bitmap. We'd better defer reply after the raid is fully
-> >> initialized. Song, any idea?
-> >> 
-> >
-> > With write back cache, there are two different types of stripes in recovery:
-> > data-parity, and data-only. For data-parity stripes, we can simply replay data
-> > from the journal. But for data-only stripes, we need to do rcw or rmw to update
-> > parities. Currently, the writes are handled with raid5 state machine. Therefore,
-> > we wake up mddev->thread in r5l_recovery_log(). It is necessary to finish these 
-> > stripes before we fully initialize the array, because these stripes need to be 
-> > handled with write back state machine; while we we always start the array with 
-> > write through journal_mode. 
-> >
-> > Maybe we can fix this by change the order of initialization in md_run(), 
-> > specifically, moving bitmap_create() before pers->run(). 
+> PID: 1819   TASK: ffff9ca137dd42c0  CPU: 35 COMMAND: "md125_raid1"
+>  #0 [ffffaba8c988fc18] __schedule at ffffffff8df6a84d
+>  #1 [ffffaba8c988fca8] schedule at ffffffff8df6ae86
+>  #2 [ffffaba8c988fcc0] freeze_array at ffffffffc017d866 [raid1]
+>  #3 [ffffaba8c988fd20] handle_read_error at ffffffffc017fda1 [raid1]
+>  #4 [ffffaba8c988fdd0] raid1d at ffffffffc01807d0 [raid1]
+>  #5 [ffffaba8c988fea0] md_thread at ffffffff8ddc2e92
+>  #6 [ffffaba8c988ff08] kthread at ffffffff8d8af739
+>  #7 [ffffaba8c988ff50] ret_from_fork at ffffffff8df70485
 > 
-> I've looked at some of the details here now.
+> PID: 7812   TASK: ffff9ca11f451640  CPU: 3 COMMAND: "md125_resync"
+>  #0 [ffffaba8cb5d3b38] __schedule at ffffffff8df6a84d
+>  #1 [ffffaba8cb5d3bc8] schedule at ffffffff8df6ae86
+>  #2 [ffffaba8cb5d3be0] _wait_barrier at ffffffffc017cc81 [raid1]
+>  #3 [ffffaba8cb5d3c40] raid1_sync_request at ffffffffc017db5e [raid1]
+>  #4 [ffffaba8cb5d3d10] md_do_sync at ffffffff8ddc9799
+>  #5 [ffffaba8cb5d3ea0] md_thread at ffffffff8ddc2e92
+>  #6 [ffffaba8cb5d3f08] kthread at ffffffff8d8af739
+>  #7 [ffffaba8cb5d3f50] ret_from_fork at ffffffff8df70485
 > 
-> I think I would like raid5-cache to not perform any recovery until we
-> reach
+> The second one is actually raid1_sync_request -> close_sync ->
+> wait_all_barriers.
 > 
+> The problem is that wait_all_barriers increments all nr_pending buckets,
+> but those have no corresponding nr_queued. If freeze_array is called in
+> the middle of wait_all_barriers, it hangs waiting for nr_pending and
+> nr_queued to line up. This never happens because an in-progress
+> _wait_barrier also gets stuck due to the freeze.
 > 
-> 	md_wakeup_thread(mddev->thread);
-> 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
-> 
-> 
-> in do_md_run().  Before that point it is possible to fail and abort -
-> e.g. if bitmap_load() fails.
-> 
-> Possibly we could insert another personality call here "->start()" ??
-> That could then do whatever is needed before
-> 
-> 	set_capacity(mddev->gendisk, mddev->array_sectors);
-> 	revalidate_disk(mddev->gendisk);
-> 
-> makes the array accessible.
-> 
-> Might that be reasonable?
+> This was originally hit organically, but I was able to make it easier by
+> inserting a 10ms delay before each _wait_barrier_call in
+> wait_all_barriers, and a 4 sec delay before handle_read_error's call to
+> freeze_array. Then, I start 2 dd processes reading from a raid1, start
+> up a check, and pull a disk. Usually within 2 or 3 pulls I can hit the
+> deadlock.
 
-Looks good. I think we should call the ->start before
-md_wakeup_thread(mddev->thread); because we don't want to start recovery before
-log is recovered.
+Hi Nate,
 
-Thanks,
-Shaohua
+Nice catch! Thanks for the debug, I agree with your analysis for the
+deadlock, neat :-)
+
+> 
+> I came up with a change that seems to avoid this, by manipulating
+> nr_queued in wait/allow_all_barriers (not suggesting that this is the
+> best way, but it seems safe at least):
+> 
+
+At first glance, I feel your fix works. But I worry about increasing and
+decreasing nr_pending[idx] may introduce other race related to
+"get_unqueued_pending() == extra" in freeze_array().
+
+A solution I used when I wrote the barrier buckets, was to add a new
+wait_event_* routine called wait_event_lock_irq_cmd_timeout(), which
+wakes up freeze_array() after a timeout, to avoid a deadlock.
+
+The reason whey I didn't use it in finally version was,
+- the routine name is too long
+- some hidden deadlock will not be trigger because freeze_array() will
+be self-waken up.
+
+For now, it seems maybe wait_event_lock_irq_cmd_timeout() has to be
+used, again. Could you like to compose a patch with new
+wait_event_lock_irq_cmd_timeout() and add a loop-after-timeout in
+freeze_array() ? or if you are busy, I can handle this.
+
+Thanks in advance.
+
+Coly Li
+
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index f3f3e40dc9d8..e34dfda1c629 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -994,8 +994,11 @@ static void wait_all_barriers(struct r1conf *conf)
+>  {
+>      int idx;
+> 
+> -    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
+>          _wait_barrier(conf, idx);
+> +        atomic_inc(&conf->nr_queued[idx]);
+> +        wake_up(&conf->wait_barrier);
+> +    }
+>  }
+> 
+>  static void _allow_barrier(struct r1conf *conf, int idx)
+> @@ -1015,8 +1018,10 @@ static void allow_all_barriers(struct r1conf *conf)
+>  {
+>      int idx;
+> 
+> -    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
+> +        atomic_dec(&conf->nr_queued[idx]);
+>          _allow_barrier(conf, idx);
+> +    }
+>  }
+> 
+>  /* conf->resync_lock should be held */
