@@ -1,117 +1,77 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: raid1: freeze_array/wait_all_barriers deadlock
-Date: Sun, 15 Oct 2017 05:45:12 +0800
-Message-ID: <c63d6d36-b155-2e47-8b0d-d03d0916f410@suse.de>
-References: <2e2fb33a-12a6-763a-bd8e-8dc4aa05fc13@stratus.com>
+From: Alexander Shenkin <al@shenkin.org>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Sun, 15 Oct 2017 15:41:38 +0100
+Message-ID: <88ba676c-74cf-a3d1-021e-c8e0a488c386@shenkin.org>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+ <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
+ <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org>
+ <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
+ <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
+ <8da0ac59-d83b-671c-b088-8e04b13d685e@turmel.org>
+ <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
+ <7b011b63-4de6-44ec-1f74-9f33c6466795@turmel.org>
+ <2ab868eb-3ce3-f01b-ac9e-23358563040c@shenkin.org>
+ <59DF4B80.5010807@youngman.org.uk>
+ <ecbbf0ae-3bf8-fe66-79e1-e8207bc09dcc@turmel.org>
+ <5b28b0fc-5e4d-9ac3-9a82-7e36f25c5108@shenkin.org>
+ <CAK2H+ecT1Psph5Wm9LrPgYOba6PHKzAs55H1LWiqLD+kaBUQZQ@mail.gmail.com>
+ <CACsGCyQGZxhfT1A_ojXaBRvB4wgNOH7fqqh8afsQksAeGdKmjg@mail.gmail.com>
+ <CACsGCyS9-K4ZJPKauRZkGFRPd0cvShYLViE87i47=RCY1UkbnQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2e2fb33a-12a6-763a-bd8e-8dc4aa05fc13@stratus.com>
+In-Reply-To: <CACsGCyS9-K4ZJPKauRZkGFRPd0cvShYLViE87i47=RCY1UkbnQ@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>
-Cc: linux-raid@vger.kernel.org
+To: Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2017/10/14 上午2:32, Nate Dailey wrote:
-> I hit the following deadlock:
-> 
-> PID: 1819   TASK: ffff9ca137dd42c0  CPU: 35 COMMAND: "md125_raid1"
->  #0 [ffffaba8c988fc18] __schedule at ffffffff8df6a84d
->  #1 [ffffaba8c988fca8] schedule at ffffffff8df6ae86
->  #2 [ffffaba8c988fcc0] freeze_array at ffffffffc017d866 [raid1]
->  #3 [ffffaba8c988fd20] handle_read_error at ffffffffc017fda1 [raid1]
->  #4 [ffffaba8c988fdd0] raid1d at ffffffffc01807d0 [raid1]
->  #5 [ffffaba8c988fea0] md_thread at ffffffff8ddc2e92
->  #6 [ffffaba8c988ff08] kthread at ffffffff8d8af739
->  #7 [ffffaba8c988ff50] ret_from_fork at ffffffff8df70485
-> 
-> PID: 7812   TASK: ffff9ca11f451640  CPU: 3 COMMAND: "md125_resync"
->  #0 [ffffaba8cb5d3b38] __schedule at ffffffff8df6a84d
->  #1 [ffffaba8cb5d3bc8] schedule at ffffffff8df6ae86
->  #2 [ffffaba8cb5d3be0] _wait_barrier at ffffffffc017cc81 [raid1]
->  #3 [ffffaba8cb5d3c40] raid1_sync_request at ffffffffc017db5e [raid1]
->  #4 [ffffaba8cb5d3d10] md_do_sync at ffffffff8ddc9799
->  #5 [ffffaba8cb5d3ea0] md_thread at ffffffff8ddc2e92
->  #6 [ffffaba8cb5d3f08] kthread at ffffffff8d8af739
->  #7 [ffffaba8cb5d3f50] ret_from_fork at ffffffff8df70485
-> 
-> The second one is actually raid1_sync_request -> close_sync ->
-> wait_all_barriers.
-> 
-> The problem is that wait_all_barriers increments all nr_pending buckets,
-> but those have no corresponding nr_queued. If freeze_array is called in
-> the middle of wait_all_barriers, it hangs waiting for nr_pending and
-> nr_queued to line up. This never happens because an in-progress
-> _wait_barrier also gets stuck due to the freeze.
-> 
-> This was originally hit organically, but I was able to make it easier by
-> inserting a 10ms delay before each _wait_barrier_call in
-> wait_all_barriers, and a 4 sec delay before handle_read_error's call to
-> freeze_array. Then, I start 2 dd processes reading from a raid1, start
-> up a check, and pull a disk. Usually within 2 or 3 pulls I can hit the
-> deadlock.
+Hi all,
 
-Hi Nate,
+Thanks for all the feedback on this issue.  I'm wondering if there's any
+consensus about what should be done here...  Should I push the kernel
+timeout to something more than the 180 seconds set in the timeout
+script?  I'm not clear on all the timers in play here (drive timeout,
+kernel timeout, others?), so not sure how the config should be set so
+they don't end up conflicting...  Hopefully the minds gathered here can
+chart the best path forward.  Thanks again for all the attention...
+hopefully this can help others in the future...
 
-Nice catch! Thanks for the debug, I agree with your analysis for the
-deadlock, neat :-)
+thanks,
+allie
 
+On 10/12/2017 4:52 PM, Edward Kuns wrote:
+> On Thu, Oct 12, 2017 at 10:16 AM, Edward Kuns <eddie.kuns@gmail.com> wrote:
+>> All y'all referring to a whole separate kernel module, hangcheck-timer.ko?
 > 
-> I came up with a change that seems to avoid this, by manipulating
-> nr_queued in wait/allow_all_barriers (not suggesting that this is the
-> best way, but it seems safe at least):
+> Looking back at the original messages:
 > 
-
-At first glance, I feel your fix works. But I worry about increasing and
-decreasing nr_pending[idx] may introduce other race related to
-"get_unqueued_pending() == extra" in freeze_array().
-
-A solution I used when I wrote the barrier buckets, was to add a new
-wait_event_* routine called wait_event_lock_irq_cmd_timeout(), which
-wakes up freeze_array() after a timeout, to avoid a deadlock.
-
-The reason whey I didn't use it in finally version was,
-- the routine name is too long
-- some hidden deadlock will not be trigger because freeze_array() will
-be self-waken up.
-
-For now, it seems maybe wait_event_lock_irq_cmd_timeout() has to be
-used, again. Could you like to compose a patch with new
-wait_event_lock_irq_cmd_timeout() and add a loop-after-timeout in
-freeze_array() ? or if you are busy, I can handle this.
-
-Thanks in advance.
-
-Coly Li
-
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index f3f3e40dc9d8..e34dfda1c629 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -994,8 +994,11 @@ static void wait_all_barriers(struct r1conf *conf)
->  {
->      int idx;
+> [4038193.380403] INFO: task md2_raid5:247 blocked for more than 120 seconds.
+> [4038193.380473]       Not tainted 4.4.0-81-generic #104~14.04.1-Ubuntu
+> [4038193.380526] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
 > 
-> -    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
-> +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
->          _wait_barrier(conf, idx);
-> +        atomic_inc(&conf->nr_queued[idx]);
-> +        wake_up(&conf->wait_barrier);
-> +    }
->  }
+> it looks like you're dealing with this part of the kernel:
 > 
->  static void _allow_barrier(struct r1conf *conf, int idx)
-> @@ -1015,8 +1018,10 @@ static void allow_all_barriers(struct r1conf *conf)
->  {
->      int idx;
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/hung_task.c
 > 
-> -    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
-> +    for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
-> +        atomic_dec(&conf->nr_queued[idx]);
->          _allow_barrier(conf, idx);
-> +    }
->  }
+> The timer is configurable with sysctl and defaults to 120 seconds.
+> You can check with this command:
 > 
->  /* conf->resync_lock should be held */
+> $ sudo sysctl kernel.hung_task_timeout_secs
+> kernel.hung_task_timeout_secs = 120
+> 
+> You can adjust it temporarily (e.g. to make it longer):
+> 
+> $ sudo sysctl -w kernel.hung_task_timeout_secs=150
+> 
+> Or you can adjust it permanently by modifying your sysctl configuration.
+> 
+> It looks like by default it will only warn ten times.  After that it
+> will stop complaining.  That is also configurable via sysctl.
+> 
+>               Eddie
+> 
