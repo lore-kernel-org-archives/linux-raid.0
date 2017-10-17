@@ -1,36 +1,59 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 0/2] Fix problems with reshape on degraded raid5/6
+Subject: [md PATCH 1/2] raid5: Set R5_Expanded on parity devices as well as
+ data.
 Date: Tue, 17 Oct 2017 16:18:36 +1100
-Message-ID: <150821741376.9754.10397416458024667409.stgit@noble>
+Message-ID: <150821751627.9754.1466588923778618880.stgit@noble>
+References: <150821741376.9754.10397416458024667409.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <150821741376.9754.10397416458024667409.stgit@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Reshape on a degraded array is supposed to work, but it
-obviously hasn't been tested.
-These two patches make at least one test case (reported by
-Curt <lightspd@gmail.com>) to work.
+When reshaping a fully degraded raid5/raid6 to a larger
+nubmer of devices, the new device(s) are not in-sync
+and so that can make the newly grown stripe appear to be
+"failed".
+To avoid this, we set the R5_Expanded flag to say "Even though
+this device is not fully in-sync, this block is safe so
+don't treat the device as failed for this stripe".
+This flag is set for data devices, not not for parity devices.
 
-Thanks,
-NeilBrown
+Consequently, if you have a RAID6 with two devices that are partly
+recovered and a spare, and start a reshape to include the spare,
+then when the reshape gets past the point where the recovery was
+up to, it will think the stripes are failed and will get into
+an infinite loop, failing to make progress.
 
+So when contructing parity on an EXPAND_READY stripe,
+set R5_Expanded.
 
+Reported-by: Curt <lightspd@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.com>
 ---
+ drivers/md/raid5.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-NeilBrown (2):
-      raid5: Set R5_Expanded on parity devices as well as data.
-      md: be cautious about using ->curr_resync_completed for ->recovery_offset
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e070e5c68801..a8df52130f8a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1818,8 +1818,11 @@ static void ops_complete_reconstruct(void *stripe_head_ref)
+ 		struct r5dev *dev = &sh->dev[i];
+ 
+ 		if (dev->written || i == pd_idx || i == qd_idx) {
+-			if (!discard && !test_bit(R5_SkipCopy, &dev->flags))
++			if (!discard && !test_bit(R5_SkipCopy, &dev->flags)) {
+ 				set_bit(R5_UPTODATE, &dev->flags);
++				if (test_bit(STRIPE_EXPAND_READY, &sh->state))
++					set_bit(R5_Expanded, &dev->flags);
++			}
+ 			if (fua)
+ 				set_bit(R5_WantFUA, &dev->flags);
+ 			if (sync)
 
-
- drivers/md/md.c    |   32 +++++++++++++++++++++-----------
- drivers/md/raid5.c |   23 ++++++++++++++++++++++-
- 2 files changed, 43 insertions(+), 12 deletions(-)
-
---
-Signature
 
