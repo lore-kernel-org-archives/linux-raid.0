@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 5/5] md: allow metadata update while suspending.
+Subject: [md PATCH 4/5] md: use mddev_suspend/resume instead of ->quiesce()
 Date: Tue, 17 Oct 2017 13:46:43 +1100
-Message-ID: <150820840357.1646.7614695852624244815.stgit@noble>
+Message-ID: <150820840353.1646.9951955640818765437.stgit@noble>
 References: <150820826980.1646.6380214598725492144.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,82 +13,94 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There are various deadlocks that can occur
-when a thread holds reconfig_mutex and calls
-->quiesce(mddev, 1).
-As some write request block waiting for
-metadata to be updated (e.g. to record device
-failure), and as the md thread updates the metadata
-while the reconfig mutex is held, holding the mutex
-can stop write requests completing, and this prevents
-->quiesce(mddev, 1) from completing.
+mddev_suspend() is a more general interface than
+calling ->quiesce() and is so more extensible.  A
+future patch will make use of this.
 
-->quiesce() is now usually called from mddev_suspend(),
-and it is always called with reconfig_mutex held.  So
-at this time it is safe for the thread to update metadata
-without explicitly taking the lock.
-
-So add 2 new flags, one which says the unlocked updates is
-allowed, and one which ways it is happening.  Then allow it
-while the quiesce completes, and then wait for it to finish.
-
-Reported-and-tested-by: Xiao Ni <xni@redhat.com>
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/md.c |   14 ++++++++++++++
- drivers/md/md.h |    6 ++++++
- 2 files changed, 20 insertions(+)
+ drivers/md/md.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 60a5022bd9bb..63ecfb063b76 100644
+index f8d0e41120cb..60a5022bd9bb 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -364,8 +364,12 @@ void mddev_suspend(struct mddev *mddev)
- 		return;
- 	synchronize_rcu();
- 	wake_up(&mddev->sb_wait);
-+	set_bit(MD_ALLOW_SB_UPDATE, &mddev->flags);
-+	smp_mb__after_atomic();
- 	wait_event(mddev->sb_wait, atomic_read(&mddev->active_io) == 0);
- 	mddev->pers->quiesce(mddev, 1);
-+	clear_bit_unlock(MD_ALLOW_SB_UPDATE, &mddev->flags);
-+	wait_event(mddev->sb_wait, !test_bit(MD_UPDATING_SB, &mddev->flags));
- 
- 	del_timer_sync(&mddev->safemode_timer);
- }
-@@ -8835,6 +8839,16 @@ void md_check_recovery(struct mddev *mddev)
- 	unlock:
- 		wake_up(&mddev->sb_wait);
- 		mddev_unlock(mddev);
-+	} else if (test_bit(MD_ALLOW_SB_UPDATE, &mddev->flags) && mddev->sb_flags) {
-+		/* Write superblock - thread that called mddev_suspend()
-+		 * holds reconfig_mutex for us.
-+		 */
-+		set_bit(MD_UPDATING_SB, &mddev->flags);
-+		smp_mb__after_atomic();
-+		if (test_bit(MD_ALLOW_SB_UPDATE, &mddev->flags))
-+			md_update_sb(mddev, 0);
-+		clear_bit_unlock(MD_UPDATING_SB, &mddev->flags);
-+		wake_up(&mddev->sb_wait);
+@@ -4864,8 +4864,8 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+ 		mddev->pers->quiesce(mddev, 2);
+ 	} else {
+ 		/* Expanding suspended region - need to wait */
+-		mddev->pers->quiesce(mddev, 1);
+-		mddev->pers->quiesce(mddev, 0);
++		mddev_suspend(mddev);
++		mddev_resume(mddev);
  	}
- }
- EXPORT_SYMBOL(md_check_recovery);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d8287d3cd1bf..03fc641e5da1 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -237,6 +237,12 @@ enum mddev_flags {
- 				 */
- 	MD_HAS_PPL,		/* The raid array has PPL feature set */
- 	MD_HAS_MULTIPLE_PPLS,	/* The raid array has multiple PPLs feature set */
-+	MD_ALLOW_SB_UPDATE,	/* md_check_recovery is allowed to update
-+				 * the metadata without taking reconfig_mutex.
-+				 */
-+	MD_UPDATING_SB,		/* md_check_recovery is updating the metadata
-+				 * without explicitly holding reconfig_mutex.
-+				 */
- };
+ 	err = 0;
+ unlock:
+@@ -4908,8 +4908,8 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
+ 		mddev->pers->quiesce(mddev, 2);
+ 	} else {
+ 		/* Expanding suspended region - need to wait */
+-		mddev->pers->quiesce(mddev, 1);
+-		mddev->pers->quiesce(mddev, 0);
++		mddev_suspend(mddev);
++		mddev_resume(mddev);
+ 	}
+ 	err = 0;
+ unlock:
+@@ -6640,7 +6640,7 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+ 			struct bitmap *bitmap;
  
- enum mddev_sb_flags {
+ 			bitmap = bitmap_create(mddev, -1);
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			if (!IS_ERR(bitmap)) {
+ 				mddev->bitmap = bitmap;
+ 				err = bitmap_load(mddev);
+@@ -6650,11 +6650,11 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+ 				bitmap_destroy(mddev);
+ 				fd = -1;
+ 			}
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 		} else if (fd < 0) {
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			bitmap_destroy(mddev);
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 		}
+ 	}
+ 	if (fd < 0) {
+@@ -6940,7 +6940,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 			mddev->bitmap_info.space =
+ 				mddev->bitmap_info.default_space;
+ 			bitmap = bitmap_create(mddev, -1);
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			if (!IS_ERR(bitmap)) {
+ 				mddev->bitmap = bitmap;
+ 				rv = bitmap_load(mddev);
+@@ -6948,7 +6948,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				rv = PTR_ERR(bitmap);
+ 			if (rv)
+ 				bitmap_destroy(mddev);
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 		} else {
+ 			/* remove the bitmap */
+ 			if (!mddev->bitmap) {
+@@ -6971,9 +6971,9 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				mddev->bitmap_info.nodes = 0;
+ 				md_cluster_ops->leave(mddev);
+ 			}
+-			mddev->pers->quiesce(mddev, 1);
++			mddev_suspend(mddev);
+ 			bitmap_destroy(mddev);
+-			mddev->pers->quiesce(mddev, 0);
++			mddev_resume(mddev);
+ 			mddev->bitmap_info.offset = 0;
+ 		}
+ 	}
 
 
