@@ -1,126 +1,197 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/bitmap: avoid read out of the disk
-Date: Mon, 16 Oct 2017 16:56:09 -0700
-Message-ID: <20171016235609.mmo3vbqiekr4li5c@kernel.org>
-References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
- <87bmldnjtq.fsf@notabene.neil.brown.name>
- <20171012173019.c2bbfyz3hgudjbhz@kernel.org>
- <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
- <87wp3zlj9q.fsf@notabene.neil.brown.name>
- <20171013195122.mi7gr4xxm77odx7t@kernel.org>
- <608CE47A-1C46-4087-B7D3-6FA5936C1DAF@fb.com>
- <877evulrpm.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH] md: Convert timers to use timer_setup()
+Date: Mon, 16 Oct 2017 19:12:00 -0700
+Message-ID: <20171017021200.nyay3tzuk3gez6to@kernel.org>
+References: <20171017000148.GA102867@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-bcache-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <877evulrpm.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
+In-Reply-To: <20171017000148.GA102867@beast>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Shaohua Li <shli@fb.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 17, 2017 at 08:15:33AM +1100, Neil Brown wrote:
-> On Mon, Oct 16 2017, Song Liu wrote:
-> 
-> >> On Oct 13, 2017, at 12:51 PM, Shaohua Li <shli@kernel.org> wrote:
-> >> 
-> >> On Fri, Oct 13, 2017 at 04:16:33PM +1100, Neil Brown wrote:
-> >>> On Thu, Oct 12 2017, Song Liu wrote:
-> >>> 
-> >>>>> On Oct 12, 2017, at 10:30 AM, Shaohua Li <shli@kernel.org> wrote:
-> >>>>> 
-> >>>>> On Thu, Oct 12, 2017 at 02:09:21PM +1100, Neil Brown wrote:
-> >>>>>> On Tue, Oct 10 2017, Shaohua Li wrote:
-> >>>>>> 
-> >>>>>>> From: Shaohua Li <shli@fb.com>
-> >>>>>>> 
-> >>>>>>> If PAGE_SIZE is bigger than 4k, we could read out of the disk boundary. Limit
-> >>>>>>> the read size to the end of disk. Write path already has similar limitation.
-> >>>>>>> 
-> >>>>>>> Fix: 8031c3ddc70a(md/bitmap: copy correct data for bitmap super)
-> >>>>>>> Reported-by: Joshua Kinard <kumba@gentoo.org>
-> >>>>>>> Tested-by: Joshua Kinard <kumba@gentoo.org>
-> >>>>>>> Cc: Song Liu <songliubraving@fb.com>
-> >>>>>>> Signed-off-by: Shaohua Li <shli@fb.com>
-> >>>>>> 
-> >>>>>> Given that this bug was introduced by
-> >>>>>> Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
-> >>>>>> 
-> >>>>>> and that patch is markted:
-> >>>>>> 
-> >>>>>>   Cc: stable@vger.kernel.org (4.10+)
-> >>>>>> 
-> >>>>>> I think this patch should be tagged "CC: stable" too.
-> >>>>> 
-> >>>>> I thought the Fix tag is enough, but I'll add the stable 
-> >>>>>> However ... that earlier patch looks strange to me.
-> >>>>>> Why is it that "raid5 cache could write bitmap superblock before bitmap superblock is
-> >>>>>> initialized."  Can we just get raid5 cache *not* to write the bitmap
-> >>>>>> superblock too early?
-> >>>>>> I think that would better than breaking code that previously worked.
-> >>>>> 
-> >>>>> That's the log reply code, which must update superblock and hence bitmap
-> >>>>> superblock, because reply happens very earlier. I agree the reply might still
-> >>>>> have problem with bitmap. We'd better defer reply after the raid is fully
-> >>>>> initialized. Song, any idea?
-> >>>>> 
-> >>>> 
-> >>>> With write back cache, there are two different types of stripes in recovery:
-> >>>> data-parity, and data-only. For data-parity stripes, we can simply replay data
-> >>>> from the journal. But for data-only stripes, we need to do rcw or rmw to update
-> >>>> parities. Currently, the writes are handled with raid5 state machine. Therefore,
-> >>>> we wake up mddev->thread in r5l_recovery_log(). It is necessary to finish these 
-> >>>> stripes before we fully initialize the array, because these stripes need to be 
-> >>>> handled with write back state machine; while we we always start the array with 
-> >>>> write through journal_mode. 
-> >>>> 
-> >>>> Maybe we can fix this by change the order of initialization in md_run(), 
-> >>>> specifically, moving bitmap_create() before pers->run(). 
-> >>> 
-> >>> I've looked at some of the details here now.
-> >>> 
-> >>> I think I would like raid5-cache to not perform any recovery until we
-> >>> reach
-> >>> 
-> >>> 
-> >>> 	md_wakeup_thread(mddev->thread);
-> >>> 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
-> >>> 
-> >>> 
-> >>> in do_md_run().  Before that point it is possible to fail and abort -
-> >>> e.g. if bitmap_load() fails.
-> >>> 
-> >>> Possibly we could insert another personality call here "->start()" ??
-> >>> That could then do whatever is needed before
-> >>> 
-> >>> 	set_capacity(mddev->gendisk, mddev->array_sectors);
-> >>> 	revalidate_disk(mddev->gendisk);
-> >>> 
-> >>> makes the array accessible.
-> >>> 
-> >>> Might that be reasonable?
-> >> 
-> >> Looks good. I think we should call the ->start before
-> >> md_wakeup_thread(mddev->thread); because we don't want to start recovery before
-> >> log is recovered.
-> >
-> > I also like this idea. In the coming month, I won't have much bandwidth to 
-> > implement this. Please let me know if you want to make the change. Otherwise, 
-> > I will do it later (in December, I guess). 
-> 
-> It isn't something we should rush so take your time.
-> However I think we need to clean up the patches that have gone to
-> -stable.
-> I think
->  Commit: 8031c3ddc70a ("md/bitmap: copy correct data for bitmap super")
-> should be reverted (in -stable too) and possibly be replaced by a patch
-> which refuses any attempt to combine a bitmap with a journal.
-> As Shaohua pointed that, that shouldn't really be needed anyway.
-> That would address the issue that 8031c3ddc70a was meant to fix.
-> I can write that patch if necessary.
+On Mon, Oct 16, 2017 at 05:01:48PM -0700, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly.
 
-Sounds good to me. Appreciate if you write the patch.
+If you send the md.c part along, I'll apply. Or if you want this merged in
+other tree, you can add my 'reviewed-by: Shaohua Li <shli@fb.com>' for md.c
+part.
 
-Thanks,
-Shaohua
+> Cc: Kent Overstreet <kent.overstreet@gmail.com>
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: Alasdair Kergon <agk@redhat.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Cc: dm-devel@redhat.com
+> Cc: linux-bcache@vger.kernel.org
+> Cc: linux-raid@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/md/bcache/stats.c | 8 +++-----
+>  drivers/md/dm-delay.c     | 6 +++---
+>  drivers/md/dm-integrity.c | 6 +++---
+>  drivers/md/dm-raid1.c     | 8 +++-----
+>  drivers/md/md.c           | 9 ++++-----
+>  5 files changed, 16 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/md/bcache/stats.c b/drivers/md/bcache/stats.c
+> index 0ca072c20d0d..93a89c528760 100644
+> --- a/drivers/md/bcache/stats.c
+> +++ b/drivers/md/bcache/stats.c
+> @@ -146,9 +146,9 @@ static void scale_stats(struct cache_stats *stats, unsigned long rescale_at)
+>  	}
+>  }
+>  
+> -static void scale_accounting(unsigned long data)
+> +static void scale_accounting(struct timer_list *t)
+>  {
+> -	struct cache_accounting *acc = (struct cache_accounting *) data;
+> +	struct cache_accounting *acc = from_timer(acc, t, timer);
+>  
+>  #define move_stat(name) do {						\
+>  	unsigned t = atomic_xchg(&acc->collector.name, 0);		\
+> @@ -233,9 +233,7 @@ void bch_cache_accounting_init(struct cache_accounting *acc,
+>  	kobject_init(&acc->day.kobj,		&bch_stats_ktype);
+>  
+>  	closure_init(&acc->cl, parent);
+> -	init_timer(&acc->timer);
+> +	timer_setup(&acc->timer, scale_accounting, 0);
+>  	acc->timer.expires	= jiffies + accounting_delay;
+> -	acc->timer.data		= (unsigned long) acc;
+> -	acc->timer.function	= scale_accounting;
+>  	add_timer(&acc->timer);
+>  }
+> diff --git a/drivers/md/dm-delay.c b/drivers/md/dm-delay.c
+> index 2209a9700acd..288386bfbfb5 100644
+> --- a/drivers/md/dm-delay.c
+> +++ b/drivers/md/dm-delay.c
+> @@ -44,9 +44,9 @@ struct dm_delay_info {
+>  
+>  static DEFINE_MUTEX(delayed_bios_lock);
+>  
+> -static void handle_delayed_timer(unsigned long data)
+> +static void handle_delayed_timer(struct timer_list *t)
+>  {
+> -	struct delay_c *dc = (struct delay_c *)data;
+> +	struct delay_c *dc = from_timer(dc, t, delay_timer);
+>  
+>  	queue_work(dc->kdelayd_wq, &dc->flush_expired_bios);
+>  }
+> @@ -195,7 +195,7 @@ static int delay_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+>  		goto bad_queue;
+>  	}
+>  
+> -	setup_timer(&dc->delay_timer, handle_delayed_timer, (unsigned long)dc);
+> +	timer_setup(&dc->delay_timer, handle_delayed_timer, 0);
+>  
+>  	INIT_WORK(&dc->flush_expired_bios, flush_expired_bios);
+>  	INIT_LIST_HEAD(&dc->delayed_bios);
+> diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+> index 096fe9b66c50..98f0b645b839 100644
+> --- a/drivers/md/dm-integrity.c
+> +++ b/drivers/md/dm-integrity.c
+> @@ -1093,9 +1093,9 @@ static void sleep_on_endio_wait(struct dm_integrity_c *ic)
+>  	__remove_wait_queue(&ic->endio_wait, &wait);
+>  }
+>  
+> -static void autocommit_fn(unsigned long data)
+> +static void autocommit_fn(struct timer_list *t)
+>  {
+> -	struct dm_integrity_c *ic = (struct dm_integrity_c *)data;
+> +	struct dm_integrity_c *ic = from_timer(ic, t, autocommit_timer);
+>  
+>  	if (likely(!dm_integrity_failed(ic)))
+>  		queue_work(ic->commit_wq, &ic->commit_work);
+> @@ -2941,7 +2941,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>  
+>  	ic->autocommit_jiffies = msecs_to_jiffies(sync_msec);
+>  	ic->autocommit_msec = sync_msec;
+> -	setup_timer(&ic->autocommit_timer, autocommit_fn, (unsigned long)ic);
+> +	timer_setup(&ic->autocommit_timer, autocommit_fn, 0);
+>  
+>  	ic->io = dm_io_client_create();
+>  	if (IS_ERR(ic->io)) {
+> diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
+> index c0b82136b2d1..580c49cc8079 100644
+> --- a/drivers/md/dm-raid1.c
+> +++ b/drivers/md/dm-raid1.c
+> @@ -94,9 +94,9 @@ static void wakeup_mirrord(void *context)
+>  	queue_work(ms->kmirrord_wq, &ms->kmirrord_work);
+>  }
+>  
+> -static void delayed_wake_fn(unsigned long data)
+> +static void delayed_wake_fn(struct timer_list *t)
+>  {
+> -	struct mirror_set *ms = (struct mirror_set *) data;
+> +	struct mirror_set *ms = from_timer(ms, t, timer);
+>  
+>  	clear_bit(0, &ms->timer_pending);
+>  	wakeup_mirrord(ms);
+> @@ -108,8 +108,6 @@ static void delayed_wake(struct mirror_set *ms)
+>  		return;
+>  
+>  	ms->timer.expires = jiffies + HZ / 5;
+> -	ms->timer.data = (unsigned long) ms;
+> -	ms->timer.function = delayed_wake_fn;
+>  	add_timer(&ms->timer);
+>  }
+>  
+> @@ -1133,7 +1131,7 @@ static int mirror_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+>  		goto err_free_context;
+>  	}
+>  	INIT_WORK(&ms->kmirrord_work, do_mirror);
+> -	init_timer(&ms->timer);
+> +	timer_setup(&ms->timer, delayed_wake_fn, 0);
+>  	ms->timer_pending = 0;
+>  	INIT_WORK(&ms->trigger_event, trigger_event);
+>  
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 97afb28c6f51..873a20f44197 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -520,7 +520,7 @@ static void mddev_put(struct mddev *mddev)
+>  		bioset_free(sync_bs);
+>  }
+>  
+> -static void md_safemode_timeout(unsigned long data);
+> +static void md_safemode_timeout(struct timer_list *t);
+>  
+>  void mddev_init(struct mddev *mddev)
+>  {
+> @@ -529,8 +529,7 @@ void mddev_init(struct mddev *mddev)
+>  	mutex_init(&mddev->bitmap_info.mutex);
+>  	INIT_LIST_HEAD(&mddev->disks);
+>  	INIT_LIST_HEAD(&mddev->all_mddevs);
+> -	setup_timer(&mddev->safemode_timer, md_safemode_timeout,
+> -		    (unsigned long) mddev);
+> +	timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
+>  	atomic_set(&mddev->active, 1);
+>  	atomic_set(&mddev->openers, 0);
+>  	atomic_set(&mddev->active_io, 0);
+> @@ -5386,9 +5385,9 @@ static int add_named_array(const char *val, struct kernel_param *kp)
+>  	return -EINVAL;
+>  }
+>  
+> -static void md_safemode_timeout(unsigned long data)
+> +static void md_safemode_timeout(struct timer_list *t)
+>  {
+> -	struct mddev *mddev = (struct mddev *) data;
+> +	struct mddev *mddev = from_timer(mddev, t, safemode_timer);
+>  
+>  	mddev->safemode = 1;
+>  	if (mddev->external)
+> -- 
+> 2.7.4
+> 
+> 
+> -- 
+> Kees Cook
+> Pixel Security
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
