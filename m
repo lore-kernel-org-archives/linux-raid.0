@@ -1,186 +1,124 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] md: Convert timers to use timer_setup()
-Date: Mon, 16 Oct 2017 17:01:48 -0700
-Message-ID: <20171017000148.GA102867@beast>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md: ensure sectors is nonzero when change component size
+Date: Tue, 17 Oct 2017 11:21:31 +1100
+Message-ID: <871sm2lj3o.fsf@notabene.neil.brown.name>
+References: <1507797051-18545-1-git-send-email-zlliu@suse.com> <20171012173743.nocrm6ejov3pvhjd@kernel.org> <111b18f3-4db6-bf53-3a9f-15db452192ba@suse.com> <20171013190558.svbyj35i7xtls4wr@kernel.org> <31970279-37d7-e8bc-b37f-955f23434f7f@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <31970279-37d7-e8bc-b37f-955f23434f7f@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Zhilong Liu <zlliu@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In preparation for unconditionally passing the struct timer_list pointer to
-all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Cc: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Shaohua Li <shli@kernel.org>
-Cc: Alasdair Kergon <agk@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com
-Cc: linux-bcache@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/md/bcache/stats.c | 8 +++-----
- drivers/md/dm-delay.c     | 6 +++---
- drivers/md/dm-integrity.c | 6 +++---
- drivers/md/dm-raid1.c     | 8 +++-----
- drivers/md/md.c           | 9 ++++-----
- 5 files changed, 16 insertions(+), 21 deletions(-)
+On Mon, Oct 16 2017, Zhilong Liu wrote:
 
-diff --git a/drivers/md/bcache/stats.c b/drivers/md/bcache/stats.c
-index 0ca072c20d0d..93a89c528760 100644
---- a/drivers/md/bcache/stats.c
-+++ b/drivers/md/bcache/stats.c
-@@ -146,9 +146,9 @@ static void scale_stats(struct cache_stats *stats, unsigned long rescale_at)
- 	}
- }
- 
--static void scale_accounting(unsigned long data)
-+static void scale_accounting(struct timer_list *t)
- {
--	struct cache_accounting *acc = (struct cache_accounting *) data;
-+	struct cache_accounting *acc = from_timer(acc, t, timer);
- 
- #define move_stat(name) do {						\
- 	unsigned t = atomic_xchg(&acc->collector.name, 0);		\
-@@ -233,9 +233,7 @@ void bch_cache_accounting_init(struct cache_accounting *acc,
- 	kobject_init(&acc->day.kobj,		&bch_stats_ktype);
- 
- 	closure_init(&acc->cl, parent);
--	init_timer(&acc->timer);
-+	timer_setup(&acc->timer, scale_accounting, 0);
- 	acc->timer.expires	= jiffies + accounting_delay;
--	acc->timer.data		= (unsigned long) acc;
--	acc->timer.function	= scale_accounting;
- 	add_timer(&acc->timer);
- }
-diff --git a/drivers/md/dm-delay.c b/drivers/md/dm-delay.c
-index 2209a9700acd..288386bfbfb5 100644
---- a/drivers/md/dm-delay.c
-+++ b/drivers/md/dm-delay.c
-@@ -44,9 +44,9 @@ struct dm_delay_info {
- 
- static DEFINE_MUTEX(delayed_bios_lock);
- 
--static void handle_delayed_timer(unsigned long data)
-+static void handle_delayed_timer(struct timer_list *t)
- {
--	struct delay_c *dc = (struct delay_c *)data;
-+	struct delay_c *dc = from_timer(dc, t, delay_timer);
- 
- 	queue_work(dc->kdelayd_wq, &dc->flush_expired_bios);
- }
-@@ -195,7 +195,7 @@ static int delay_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		goto bad_queue;
- 	}
- 
--	setup_timer(&dc->delay_timer, handle_delayed_timer, (unsigned long)dc);
-+	timer_setup(&dc->delay_timer, handle_delayed_timer, 0);
- 
- 	INIT_WORK(&dc->flush_expired_bios, flush_expired_bios);
- 	INIT_LIST_HEAD(&dc->delayed_bios);
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 096fe9b66c50..98f0b645b839 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -1093,9 +1093,9 @@ static void sleep_on_endio_wait(struct dm_integrity_c *ic)
- 	__remove_wait_queue(&ic->endio_wait, &wait);
- }
- 
--static void autocommit_fn(unsigned long data)
-+static void autocommit_fn(struct timer_list *t)
- {
--	struct dm_integrity_c *ic = (struct dm_integrity_c *)data;
-+	struct dm_integrity_c *ic = from_timer(ic, t, autocommit_timer);
- 
- 	if (likely(!dm_integrity_failed(ic)))
- 		queue_work(ic->commit_wq, &ic->commit_work);
-@@ -2941,7 +2941,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 
- 	ic->autocommit_jiffies = msecs_to_jiffies(sync_msec);
- 	ic->autocommit_msec = sync_msec;
--	setup_timer(&ic->autocommit_timer, autocommit_fn, (unsigned long)ic);
-+	timer_setup(&ic->autocommit_timer, autocommit_fn, 0);
- 
- 	ic->io = dm_io_client_create();
- 	if (IS_ERR(ic->io)) {
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index c0b82136b2d1..580c49cc8079 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -94,9 +94,9 @@ static void wakeup_mirrord(void *context)
- 	queue_work(ms->kmirrord_wq, &ms->kmirrord_work);
- }
- 
--static void delayed_wake_fn(unsigned long data)
-+static void delayed_wake_fn(struct timer_list *t)
- {
--	struct mirror_set *ms = (struct mirror_set *) data;
-+	struct mirror_set *ms = from_timer(ms, t, timer);
- 
- 	clear_bit(0, &ms->timer_pending);
- 	wakeup_mirrord(ms);
-@@ -108,8 +108,6 @@ static void delayed_wake(struct mirror_set *ms)
- 		return;
- 
- 	ms->timer.expires = jiffies + HZ / 5;
--	ms->timer.data = (unsigned long) ms;
--	ms->timer.function = delayed_wake_fn;
- 	add_timer(&ms->timer);
- }
- 
-@@ -1133,7 +1131,7 @@ static int mirror_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		goto err_free_context;
- 	}
- 	INIT_WORK(&ms->kmirrord_work, do_mirror);
--	init_timer(&ms->timer);
-+	timer_setup(&ms->timer, delayed_wake_fn, 0);
- 	ms->timer_pending = 0;
- 	INIT_WORK(&ms->trigger_event, trigger_event);
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 97afb28c6f51..873a20f44197 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -520,7 +520,7 @@ static void mddev_put(struct mddev *mddev)
- 		bioset_free(sync_bs);
- }
- 
--static void md_safemode_timeout(unsigned long data);
-+static void md_safemode_timeout(struct timer_list *t);
- 
- void mddev_init(struct mddev *mddev)
- {
-@@ -529,8 +529,7 @@ void mddev_init(struct mddev *mddev)
- 	mutex_init(&mddev->bitmap_info.mutex);
- 	INIT_LIST_HEAD(&mddev->disks);
- 	INIT_LIST_HEAD(&mddev->all_mddevs);
--	setup_timer(&mddev->safemode_timer, md_safemode_timeout,
--		    (unsigned long) mddev);
-+	timer_setup(&mddev->safemode_timer, md_safemode_timeout, 0);
- 	atomic_set(&mddev->active, 1);
- 	atomic_set(&mddev->openers, 0);
- 	atomic_set(&mddev->active_io, 0);
-@@ -5386,9 +5385,9 @@ static int add_named_array(const char *val, struct kernel_param *kp)
- 	return -EINVAL;
- }
- 
--static void md_safemode_timeout(unsigned long data)
-+static void md_safemode_timeout(struct timer_list *t)
- {
--	struct mddev *mddev = (struct mddev *) data;
-+	struct mddev *mddev = from_timer(mddev, t, safemode_timer);
- 
- 	mddev->safemode = 1;
- 	if (mddev->external)
--- 
-2.7.4
+> On 10/14/2017 03:05 AM, Shaohua Li wrote:
+>> On Fri, Oct 13, 2017 at 10:47:29AM +0800, Zhilong Liu wrote:
+>>>
+>>> On 10/13/2017 01:37 AM, Shaohua Li wrote:
+>>>> On Thu, Oct 12, 2017 at 04:30:51PM +0800, Zhilong Liu wrote:
+>>>>> Against the raids which chunk_size is meaningful, the component_size
+>>>>> must be >=3D chunk_size when require resize. If "new_size < chunk_siz=
+e"
+>>>>> has required, the "mddev->pers->resize" will set sectors as '0', and
+>>>>> then the raids isn't meaningful any more due to mddev->dev_sectors is
+>>>>> '0'.
+>>>>>
+>>>>> Cc: Neil Brown <neilb@suse.com>
+>>>>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>>>> Not sure about this, does size 0 disk really harm?
+>>>>
+>>>  From my site, I think changing the component size as '0' should be avo=
+ided.
+>>> When resize changing required and new_size < current_chunk_size, such as
+>>> raid5:
+>>>
+>>> raid5.c: raid5_resize()
+>>> ...
+>>> 7727         sectors &=3D ~((sector_t)conf->chunk_sectors - 1);
+>>> ...
+>>>
+>>> 'sectors' got '0'.
+>>>
+>>> then:
+>>> ...
+>>> 7743         mddev->dev_sectors =3D sectors;
+>>> ...
+>>>
+>>> the dev_sectors(the component size) got '0'.
+>>> same scenario happens in raid10.
+>>>
+>>> So, it's really not meaningful if changing the raid component_size to '=
+0',
+>>> md
+>>> should give this scenario a test, otherwise, it's a trouble thing to re=
+store
+>>> after
+>>> doing such invalid re-size.
+>> Yes, I understand how it could be 0. My question is what's wrong with a =
+size-0
+>> disk? For example, if you don't setup file for a loop block device, its =
+size is
+>> 0.
+> I'm sorry I'm not very clear with your question, I try to describe more=20
+> on this scenario.
+> the 0-component_size isn't a 0-size disk. resize doesn't change=20
+> raid_member_disk size
+> to 0.
+>
+> For example: mdadm -CR /dev/md0 -b internal -l5 -n2 -x1 /dev/sd[b-d]
+> if set the component_size to 0, how would the 'internal bitmap' be? And=20
+> if I want to make
+> a file-system on this raid, how would it be? it's out of my control.
+>
+> I would continue to provide infos for you if any questions needs further=
+=20
+> discussion.
+>
+> Hope this information is useful for you.
+> Here is piece of dmesg for the following steps:
+> 1. mdadm -CR /dev/md0 -b internal -l5 -n2 -x1 /dev/sd[b-d]
+> 2. mdadm -G /dev/md0 --size 511
+> 3. mkfs.ext3 /dev/md0
+> the mkfs would be stuck all time, cannot kill the mkfs process and have to
+> force to reboot, then lots of same call trace prints in dmesg.
 
+I think the cause of this problem is that raid5_size() treats zero
+values for 'sectors' and 'raid_disks' as "don't change".
 
--- 
-Kees Cook
-Pixel Security
+So setting the size to zero will change mddev->dev_sectors but not
+mddev->array_size.
+This causes internal confusion.
+Maybe we should use a different number of "don't change" ??
+
+This could affect any of the ->size() functions.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnlTQ0ACgkQOeye3VZi
+gbm5vA//SPUG0Y5G2+ZYVt4usGxc6rKI6cQ3ewp6yarN09HUyozCyMvalbFtTMP+
+Waf6qxT2tBYFgsKb0pLfWO2iwL+DghjWECYdZdaVy9+ais1ZqvBYA6zkycLxZqI0
+drbykZt33xK2v5fFaCbtHuDX+XeVCvcWhOCMFpD0uN3gnMhsb27N8DueFM/xGMgo
+Cl7vI+EnTqj5xw3ppLBRYRmP6eePZQugyUA2uwdwSaLzrFlhloDvDN9gsjRspav1
+YoQJwIchQ1b1wP2tyFyy3hsJTaBBZ6SQxdvIyhinvLn3yqzAxAzC/+78m1/r6dzV
+fKOMe9Uly8wUzgz1Sjjl0NDsoxZlBlWtY05kvFkUxQMwc2LFsJGHQ74vrchuC3H1
+n16SKdgiOrnARGPj9YBrX15yqvif+L2kS8v+9GsiWsPHSBlM0rKIyGoCfyh2h1f2
+lfBEEns4ITTdfQtM0+ysN0S5Es2mD/UBmwYowsaDrCX3PHZtz+KRHaIAvxXLRxvi
+EsM6wKsZ0nJHiBOL7WCasQPcfhKZMgaQG5qruGT8MGwOVb/IzOcP8bwR38hIfFtJ
+DdToYgEKexbb0riQBJKVlwFc0omzZFMWvj4YcDSWkCm2juTP2RhDvHe6Q7HlWqKi
+5U2Hgm+UgtsLfq/1bEdkyuDvT0eSu6GGe8BPCQ26SZZaTELkwmw=
+=5q0w
+-----END PGP SIGNATURE-----
+--=-=-=--
