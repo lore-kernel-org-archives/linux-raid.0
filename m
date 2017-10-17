@@ -1,40 +1,96 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID6: Reducing to Grow
-Date: Tue, 17 Oct 2017 10:39:56 -0400
-Message-ID: <ba94e811-1ae4-a8a3-5907-bde289b44754@turmel.org>
-References: <CAPE0SYzB49Vk-QcKWGzVDCqwYjnatGYWrFVeb+jdMF-5wry9Lg@mail.gmail.com>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [PATCH] raid1: prevent freeze_array/wait_all_barriers deadlock
+Date: Wed, 18 Oct 2017 00:31:31 +0800
+Message-ID: <6fc9ddf3-8c65-aee1-06da-e56692826899@suse.de>
+References: <20171017121703.7915-1-nate.dailey@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPE0SYzB49Vk-QcKWGzVDCqwYjnatGYWrFVeb+jdMF-5wry9Lg@mail.gmail.com>
-Content-Language: en-GB
+In-Reply-To: <20171017121703.7915-1-nate.dailey@stratus.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Liwei <xieliwei@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Nate Dailey <nate.dailey@stratus.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Liwei,
+On 2017/10/17 下午8:17, Nate Dailey wrote:
+> If freeze_array is attempted in the middle of close_sync/
+> wait_all_barriers, deadlock can occur.
+> 
+> freeze_array will wait for nr_pending and nr_queued to line up.
+> wait_all_barriers increments nr_pending for each barrier bucket, one
+> at a time, but doesn't actually issue IO that could be counted in
+> nr_queued. So freeze_array is blocked until wait_all_barriers
+> completes and allow_all_barriers runs. At the same time, when
+> _wait_barrier sees array_frozen == 1, it stops and waits for
+> freeze_array to complete.
+> 
+> Prevent the deadlock by making close_sync call _wait_barrier and
+> _allow_barrier for one bucket at a time, instead of deferring the
+> _allow_barrier calls until after all _wait_barriers are complete.
+> 
+> Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
 
-On 10/17/2017 01:09 AM, Liwei wrote:
-> Hi list, tldr: Have a mixed-sized (2TB and 6TB) RAID6 array, realised
-> there is now more potential space (using only 6TB drives) than
-> running the array based on the 2TB "smallest-drive" size. Is there a
-> way to convert to using only the 6TB drives, without a rebuild?
+Reviewed-by: Coly Li <colyli@suse.de>
 
-It depends. /-:
+Thank you for the great effort on analyzing this deadlock, and provide a
+simpler and clean fix :-)
 
-Certainly not in one step.  If you are running LVM on top of your array,
-and have the space split up into various LVs, none extremely large,
-there are some possibilities.
+Coly Li
 
-You might need one more 6TB drive to help with the juggling.
+> ---
+>  drivers/md/raid1.c | 24 ++++++------------------
+>  1 file changed, 6 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index f3f3e40dc9d8..e4e8f9e565b7 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -990,14 +990,6 @@ static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
+>  	_wait_barrier(conf, idx);
+>  }
+>  
+> -static void wait_all_barriers(struct r1conf *conf)
+> -{
+> -	int idx;
+> -
+> -	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> -		_wait_barrier(conf, idx);
+> -}
+> -
+>  static void _allow_barrier(struct r1conf *conf, int idx)
+>  {
+>  	atomic_dec(&conf->nr_pending[idx]);
+> @@ -1011,14 +1003,6 @@ static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
+>  	_allow_barrier(conf, idx);
+>  }
+>  
+> -static void allow_all_barriers(struct r1conf *conf)
+> -{
+> -	int idx;
+> -
+> -	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> -		_allow_barrier(conf, idx);
+> -}
+> -
+>  /* conf->resync_lock should be held */
+>  static int get_unqueued_pending(struct r1conf *conf)
+>  {
+> @@ -1654,8 +1638,12 @@ static void print_conf(struct r1conf *conf)
+>  
+>  static void close_sync(struct r1conf *conf)
+>  {
+> -	wait_all_barriers(conf);
+> -	allow_all_barriers(conf);
+> +	int idx;
+> +
+> +	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
+> +		_wait_barrier(conf, idx);
+> +		_allow_barrier(conf, idx);
+> +	}
+>  
+>  	mempool_destroy(conf->r1buf_pool);
+>  	conf->r1buf_pool = NULL;
+> 
 
-Please use lsdrv[1] to document your running setup so we can see what
-might be possible.  Past the output into your reply in *text* mode, with
-line wrapping turned off.  (It would help if you composed your mails in
-Thunderbird or some client that handles text mode properly -- TBird
-supports gmail accounts.)
-
-Phil
-
-[1] https://github.com/pturmel/lsdrv
