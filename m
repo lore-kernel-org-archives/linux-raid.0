@@ -1,93 +1,108 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: Wiki, raid 10, and my new system :-)
-Date: Wed, 18 Oct 2017 07:14:06 +1100
-Message-ID: <87bml5jzw1.fsf@notabene.neil.brown.name>
-References: <59E4BA29.4050907@youngman.org.uk> <e3ee3a5d-a6b0-49aa-1949-18a248e1397f@thelounge.net> <87y3oak3zj.fsf@notabene.neil.brown.name> <67a81e49-37b6-b0f7-f9e2-16301ecd4f9a@youngman.org.uk>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: [PATCH] md: forbid a RAID5 from having both a bitmap and a journal.
+Date: Tue, 17 Oct 2017 16:41:16 -0400
+Message-ID: <23014.27372.306872.143938@quad.stoffel.home>
+References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
+        <87bmldnjtq.fsf@notabene.neil.brown.name>
+        <20171012173019.c2bbfyz3hgudjbhz@kernel.org>
+        <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
+        <87wp3zlj9q.fsf@notabene.neil.brown.name>
+        <20171013195122.mi7gr4xxm77odx7t@kernel.org>
+        <608CE47A-1C46-4087-B7D3-6FA5936C1DAF@fb.com>
+        <877evulrpm.fsf@notabene.neil.brown.name>
+        <20171016235609.mmo3vbqiekr4li5c@kernel.org>
+        <87sheijw2u.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <67a81e49-37b6-b0f7-f9e2-16301ecd4f9a@youngman.org.uk>
+In-Reply-To: <87sheijw2u.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anthony Youngman <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@kernel.org>, Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
 
-On Tue, Oct 17 2017, Anthony Youngman wrote:
+NeilBrown> Having both a bitmap and a journal is pointless.
+NeilBrown> Attempting to do so can corrupt the bitmap if the journal
+NeilBrown> replay happens before the bitmap is initialized.
+NeilBrown> Rather than try to avoid this corruption, simply
+NeilBrown> refuse to allow arrays with both a bitmap and a journal.
+NeilBrown> So:
+NeilBrown>  - if raid5_run sees both are present, fail.
 
-> On 17/10/17 01:33, NeilBrown wrote:
->> On Mon, Oct 16 2017, Reindl Harald wrote:
->>=20
->>> Am 16.10.2017 um 15:54 schrieb Wols Lists:
->>>> Raid 10 is a complicated subject what with near and far, and whether it
->>>> will grow, etc etc.
->>>>
->>>> I'm planning to raid-10 my swap partition, and while it doesn't matter
->>>> in the slightest because destroying and recreating will be no hassle f=
-or
->>>> swap, I'd like to understand what's going on.
->>>>
->>>> If I remember correctly, there was a thread a little while back on
->>>> growing a raid-10? And you can't (for certain values of "can't" :-) do=
- it?
->>>>
->>>> Where's the best place to find info about near, far and offset layouts?
->>>
->>> http://xmodulo.com/setup-raid10-linux.html
->>=20
->> This patch has some good stuff, but
->>=20
->>    Chunk Size, as per the Linux RAID wiki, is the smallest unit of data
->>    that can be written to the devices
->>=20
->> I wonder where the Linux RAID wiki say that.  It is wrong.
->> The smallest unit of data that can be written to the devices is the
->> block size, which is hardware dependant and typically 512bytes or 4K.
->> This is not the same as the chunk size.
->>=20
-> https://raid.wiki.kernel.org/index.php/RAID_setup#Chunk_sizes
->
-> I understand what it's saying - this is the smallest size passed down to=
-=20
-> the disk, not the smallest size that the disk can write ... :-)
+So what happens if there's someone out there with an array setup with
+both already?  Should the journal or the bitmap be removed at this
+time?  
 
-Well that is wrong too.  It is not the smallest size passed down to the
-disk. That is also 512b or 4K.  Maybe it is the largest size that might
-be passed down to a single disk.
+NeilBrown>  - if adding a bitmap finds a journal is present, fail
+NeilBrown>  - if adding a journal finds a bitmap is present, fail.
 
-It is the granularity at which the address-space of the array is divided
-up before being shared around the address space of the member devices.
-It has (almost) nothing to do with the size of IO requests.
+NeilBrown> Cc: stable@vger.kernel.org (4.10+)
+NeilBrown> Signed-off-by: NeilBrown <neilb@suse.com>
+NeilBrown> ---
 
-NeilBrown
+NeilBrown> This patch should replace 8031c3ddc70ab, which should be reverted.
 
->
-> This page has made it into the archaeology section so I don't plan to=20
-> update it. And in context, it's reasonably clear what it means.
->
-> Cheers,
-> Wol
+NeilBrown> Thanks,
+NeilBrown> NeilBrown
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
+NeilBrown>  drivers/md/bitmap.c | 6 ++++++
+NeilBrown>  drivers/md/md.c     | 2 +-
+NeilBrown>  drivers/md/raid5.c  | 7 +++++++
+NeilBrown>  3 files changed, 14 insertions(+), 1 deletion(-)
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnmZI8ACgkQOeye3VZi
-gbnC+g/+PIMRJqHKr/ephWSQR1ffPUNRxXylFjcHS6nrkcLqCsEt3jSwjKg+COiX
-HvSHGshSRU/mAPzOu8TXAUlbedmdf6Gf/hY8tpH+31iEe4XEHgNaDhCwOJyDBZKh
-UEjbS/TxtERgWkYtr41z2NZfIs/c6Zz88kksH0dIkVLJm/LC9XLhLAlnNAkns+I7
-V0iAo7XkrD1CUUULJg4Ou7UXl2inNDNqr8c6fr+HjqcJK8K+eDsyiuVT4k1i0ZQv
-v28Z+VplNHoAPvuBIP9Ud0XRlmZ2FzbUNZEE8rEZdYCbeqgiHgSeVwdUPg4uMQww
-dfcYt+o/7bWdwr2v68kYi0byUcTbgPcpk/2XJ+FMzMdA1oXkVd9woN6T5ZCKNpWz
-rq818uI1fdw2JaOC+EpVduHD45xD6hVbnvpvUrHY3+x50XfhALPcu/x7GHSPD+4f
-AJw0F9apPblPali0HlnfuxBgrjmEIPValeUJr9CmCY10YLBiwtuETfwr1QiYlQdv
-tpj9s04z8kiqhylzfBWGrnrBrwSSfvBn2lT2dOeaXt6uLPMycqiHPy9xDULyaoRz
-my1VyJ3mdnFcRkHwDL65sS5tZqXhtvd3TcMqLHMTW1Fu0dUc/bGsYJbXbXI/1gcX
-HfZRFaGK3KrK7bQpK7zx+GtGEzVZIzQp7KPLfaHCALy10NtEWGE=
-=VBvH
------END PGP SIGNATURE-----
---=-=-=--
+NeilBrown> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+NeilBrown> index cae57b5be817..f425905c97fa 100644
+NeilBrown> --- a/drivers/md/bitmap.c
+NeilBrown> +++ b/drivers/md/bitmap.c
+NeilBrown> @@ -1816,6 +1816,12 @@ struct bitmap *bitmap_create(struct mddev *mddev, int slot)
+ 
+NeilBrown>  	BUG_ON(file && mddev->bitmap_info.offset);
+ 
+NeilBrown> +	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
+NeilBrown> +		pr_notice("md/raid:%s: array with journal cannot have bitmap\n",
+NeilBrown> +			  mdname(mddev));
+NeilBrown> +		return ERR_PTR(-EBUSY);
+NeilBrown> +	}
+NeilBrown> +
+NeilBrown>  	bitmap = kzalloc(sizeof(*bitmap), GFP_KERNEL);
+NeilBrown>  	if (!bitmap)
+NeilBrown>  		return ERR_PTR(-ENOMEM);
+NeilBrown> diff --git a/drivers/md/md.c b/drivers/md/md.c
+NeilBrown> index 63ecfb063b76..bf06ff017eda 100644
+NeilBrown> --- a/drivers/md/md.c
+NeilBrown> +++ b/drivers/md/md.c
+NeilBrown> @@ -6384,7 +6384,7 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+NeilBrown>  					break;
+NeilBrown>  				}
+NeilBrown>  			}
+NeilBrown> -			if (has_journal) {
+NeilBrown> +			if (has_journal || mddev->bitmap) {
+NeilBrown>  				export_rdev(rdev);
+NeilBrown>  				return -EBUSY;
+NeilBrown>  			}
+NeilBrown> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+NeilBrown> index 4f40ccd21cbb..e070e5c68801 100644
+NeilBrown> --- a/drivers/md/raid5.c
+NeilBrown> +++ b/drivers/md/raid5.c
+NeilBrown> @@ -7134,6 +7134,13 @@ static int raid5_run(struct mddev *mddev)
+NeilBrown>  			min_offset_diff = diff;
+NeilBrown>  	}
+ 
+NeilBrown> +	if ((test_bit(MD_HAS_JOURNAL, &mddev->flags) || journal_dev) &&
+NeilBrown> +	    (mddev->bitmap_info.offset || mddev->bitmap_info.file)) {
+NeilBrown> +		pr_notice("md/raid:%s: array cannot have both journal and bitmap\n",
+NeilBrown> +			  mdname(mddev));
+NeilBrown> +		return -EINVAL;
+NeilBrown> +	}
+NeilBrown> +
+NeilBrown>  	if (mddev->reshape_position != MaxSector) {
+NeilBrown>  		/* Check that we can continue the reshape.
+NeilBrown>  		 * Difficulties arise if the stripe we would write to
+NeilBrown> -- 
+NeilBrown> 2.14.0.rc0.dirty
+
+NeilBrown> [DELETED ATTACHMENT signature.asc, application/pgp-signature]
