@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 1/2] raid5: Set R5_Expanded on parity devices as well as
- data.
+Subject: [md PATCH 2/2] md: be cautious about using ->curr_resync_completed
+ for ->recovery_offset
 Date: Tue, 17 Oct 2017 16:18:36 +1100
-Message-ID: <150821751627.9754.1466588923778618880.stgit@noble>
+Message-ID: <150821751632.9754.9103449859789225425.stgit@noble>
 References: <150821741376.9754.10397416458024667409.stgit@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,46 +14,124 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When reshaping a fully degraded raid5/raid6 to a larger
-nubmer of devices, the new device(s) are not in-sync
-and so that can make the newly grown stripe appear to be
-"failed".
-To avoid this, we set the R5_Expanded flag to say "Even though
-this device is not fully in-sync, this block is safe so
-don't treat the device as failed for this stripe".
-This flag is set for data devices, not not for parity devices.
+The ->recovery_offset shows how much of a non-InSync device is actually
+in sync - how much has been recoveryed.
 
-Consequently, if you have a RAID6 with two devices that are partly
-recovered and a spare, and start a reshape to include the spare,
-then when the reshape gets past the point where the recovery was
-up to, it will think the stripes are failed and will get into
-an infinite loop, failing to make progress.
+When performing a recovery, ->curr_resync and ->curr_resync_completed
+follow the device address being recovered and so can be used to update
+->recovery_offset.
 
-So when contructing parity on an EXPAND_READY stripe,
-set R5_Expanded.
+When performing a reshape, ->curr_resync* might follow the device
+addresses (raid5) or might follow array addresses (raid10), so cannot
+in general be used to set ->recovery_offset.  When reshaping backwards,
+->curre_resync* measures from the *end* of the array-or-device, so is
+particularly unhelpful.
 
-Reported-by: Curt <lightspd@gmail.com>
+So change the common code in md.c to only use ->curr_resync_complete
+for the simple recovery case, and add code to raid5.c to update
+->recovery_offset during a forwards reshape.
+
 Signed-off-by: NeilBrown <neilb@suse.com>
 ---
- drivers/md/raid5.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/md/md.c    |   32 +++++++++++++++++++++-----------
+ drivers/md/raid5.c |   18 ++++++++++++++++++
+ 2 files changed, 39 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a9f1352b3849..d1dfc9879368 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2453,10 +2453,17 @@ void md_update_sb(struct mddev *mddev, int force_change)
+ 		}
+ 	}
+ 
+-	/* First make sure individual recovery_offsets are correct */
++	/* First make sure individual recovery_offsets are correct
++	 * curr_resync_completed can only be used during recovery.
++	 * During reshape/resync it might use array-addresses rather
++	 * that device addresses.
++	 */
+ 	rdev_for_each(rdev, mddev) {
+ 		if (rdev->raid_disk >= 0 &&
+ 		    mddev->delta_disks >= 0 &&
++		    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
++		    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
++		    !test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
+ 		    !test_bit(Journal, &rdev->flags) &&
+ 		    !test_bit(In_sync, &rdev->flags) &&
+ 		    mddev->curr_resync_completed > rdev->recovery_offset)
+@@ -8507,16 +8514,19 @@ void md_do_sync(struct md_thread *thread)
+ 		} else {
+ 			if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+ 				mddev->curr_resync = MaxSector;
+-			rcu_read_lock();
+-			rdev_for_each_rcu(rdev, mddev)
+-				if (rdev->raid_disk >= 0 &&
+-				    mddev->delta_disks >= 0 &&
+-				    !test_bit(Journal, &rdev->flags) &&
+-				    !test_bit(Faulty, &rdev->flags) &&
+-				    !test_bit(In_sync, &rdev->flags) &&
+-				    rdev->recovery_offset < mddev->curr_resync)
+-					rdev->recovery_offset = mddev->curr_resync;
+-			rcu_read_unlock();
++			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
++			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
++				rcu_read_lock();
++				rdev_for_each_rcu(rdev, mddev)
++					if (rdev->raid_disk >= 0 &&
++					    mddev->delta_disks >= 0 &&
++					    !test_bit(Journal, &rdev->flags) &&
++					    !test_bit(Faulty, &rdev->flags) &&
++					    !test_bit(In_sync, &rdev->flags) &&
++					    rdev->recovery_offset < mddev->curr_resync)
++						rdev->recovery_offset = mddev->curr_resync;
++				rcu_read_unlock();
++			}
+ 		}
+ 	}
+  skip:
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e070e5c68801..a8df52130f8a 100644
+index a8df52130f8a..89ad79614309 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1818,8 +1818,11 @@ static void ops_complete_reconstruct(void *stripe_head_ref)
- 		struct r5dev *dev = &sh->dev[i];
- 
- 		if (dev->written || i == pd_idx || i == qd_idx) {
--			if (!discard && !test_bit(R5_SkipCopy, &dev->flags))
-+			if (!discard && !test_bit(R5_SkipCopy, &dev->flags)) {
- 				set_bit(R5_UPTODATE, &dev->flags);
-+				if (test_bit(STRIPE_EXPAND_READY, &sh->state))
-+					set_bit(R5_Expanded, &dev->flags);
-+			}
- 			if (fua)
- 				set_bit(R5_WantFUA, &dev->flags);
- 			if (sync)
+@@ -5739,6 +5739,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 	 */
+ 	struct r5conf *conf = mddev->private;
+ 	struct stripe_head *sh;
++	struct md_rdev *rdev;
+ 	sector_t first_sector, last_sector;
+ 	int raid_disks = conf->previous_raid_disks;
+ 	int data_disks = raid_disks - conf->max_degraded;
+@@ -5861,6 +5862,15 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 			return 0;
+ 		mddev->reshape_position = conf->reshape_progress;
+ 		mddev->curr_resync_completed = sector_nr;
++		if (!mddev->reshape_backwards)
++			/* Can update recovery_offset */
++			rdev_for_each(rdev, mddev)
++				if (rdev->raid_disk >= 0 &&
++				    !test_bit(Journal, &rdev->flags) &&
++				    !test_bit(In_sync, &rdev->flags) &&
++				    rdev->recovery_offset < sector_nr)
++					rdev->recovery_offset = sector_nr;
++
+ 		conf->reshape_checkpoint = jiffies;
+ 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 		md_wakeup_thread(mddev->thread);
+@@ -5959,6 +5969,14 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *sk
+ 			goto ret;
+ 		mddev->reshape_position = conf->reshape_progress;
+ 		mddev->curr_resync_completed = sector_nr;
++		if (!mddev->reshape_backwards)
++			/* Can update recovery_offset */
++			rdev_for_each(rdev, mddev)
++				if (rdev->raid_disk >= 0 &&
++				    !test_bit(Journal, &rdev->flags) &&
++				    !test_bit(In_sync, &rdev->flags) &&
++				    rdev->recovery_offset < sector_nr)
++					rdev->recovery_offset = sector_nr;
+ 		conf->reshape_checkpoint = jiffies;
+ 		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 		md_wakeup_thread(mddev->thread);
 
 
