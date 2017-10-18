@@ -1,208 +1,62 @@
-From: dfc <chernoff@astro.cornell.edu>
-Subject: USB chasis fails, fate of the software raid?
-Date: Wed, 18 Oct 2017 15:04:41 -0400
-Message-ID: <1508353481.2692.9.camel@astro.cornell.edu>
+From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Subject: Re: USB chasis fails, fate of the software raid?
+Date: Wed, 18 Oct 2017 22:28:49 +0200
+Message-ID: <17362074-5ca8-acc4-ab3b-0f5a41875416@grumpydevil.homelinux.org>
+References: <1508353481.2692.9.camel@astro.cornell.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1508353481.2692.9.camel@astro.cornell.edu>
+Content-Language: nl
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: dfc <chernoff@astro.cornell.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have an Orico (3559SUSJ3) external 5 bay
-hard disk drive enclosure attached via
-USB to my desktop computer.
+Hi David,
 
-It holds 5 * 4 TB disks in raid5 and
-has functioned for a couple of years.
 
-Then the power supply (or fan
-or some internal component of the chasis)
-failed and -- from one boot to the next -- 
-the chasis is DOA, i.e. it does not even power
-on the disks. 
+Op 18/10/2017 om 21:04 schreef dfc:
+> I have an Orico (3559SUSJ3) external 5 bay
+> hard disk drive enclosure attached via
+> USB to my desktop computer.
+USB is indeed not the best choice.
 
-When last used, the drives were all active and 
-in good shape; I copy below the output of the
-mdadm --detail list
-just a short time before the failure.
+> It holds 5 * 4 TB disks in raid5 and
+> has functioned for a couple of years.
+<snip>
+> My main question is whether inserting
+> the 5 disks into another JBOD chasis
+> is likely to work?
+Yes, this should work. With a little luck you would not even need to 
+force it, as with a component failure all disks should have lost 
+connection at the same time.
+The biggest risk is that the failure caused spikes before final death, 
+causing damage on the HDD. But without knowing the actual failure that 
+is pure conjecture.
+You could test each disk separately -- as long as you only read from 
+them. Only reading is to ensure that no changes are done that make later 
+re-build of the raid difficult.
+> In particular is
+> mdadm "smart enough" to find all
+> the components and/or do I need to do
+> something to help it along? In fact,
+> our IT person has suggested that the
+> data may well be lost.
+Your IT person apparently either thinks the HW failure caused extensive 
+damage, or wants you to do something different, or... is not very 
+knowledgeable about this type of setup.
 
-My main question is whether inserting
-the 5 disks into another JBOD chasis
-is likely to work? In particular is
-mdadm "smart enough" to find all
-the components and/or do I need to do
-something to help it along? In fact,
-our IT person has suggested that the
-data may well be lost.
+<snip>
+> Also, since I first used the JBOD with software
+> raid I came to realize that the usb connection
+> is not a good choice (though I have never had
+> problems). What sort of connection (at the low
+> price end of the market for HDD enclosures)
+> would be better? eSata or something else?
+eSATA would work. But depends on the type of enclusure you can get. I 
+leave that to people based in USA, who know what is available there.
 
-Details: 
-raid5 (no spares)
-20 TB
-XFS filesystem
-Debian 3.16.0-4-amd64
+Cheers
 
-Also, since I first used the JBOD with software
-raid I came to realize that the usb connection
-is not a good choice (though I have never had
-problems). What sort of connection (at the low
-price end of the market for HDD enclosures)
-would be better? eSata or something else?
-
-Many thanks for answers/suggestions.
-David
------------------------------------------------------------
-OUTPUT of mdadm --detail list
-
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
-           Name : impala:0
-  Creation Time : Fri May 22 15:32:31 2015
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
-     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=0 sectors
-          State : clean
-    Device UUID : f0cda836:8c1c28d1:53710d20:db8d088a
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Sep  2 18:54:20 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 3d0d8085 - correct
-         Events : 197036
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 4
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
-           Name : impala:0
-  Creation Time : Fri May 22 15:32:31 2015
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
-     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=0 sectors
-          State : clean
-    Device UUID : 2e1a57ff:f892fb23:1f698390:53dd98e3
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Sep  2 18:54:20 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 22958a72 - correct
-         Events : 197036
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
-           Name : impala:0
-  Creation Time : Fri May 22 15:32:31 2015
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
-     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=0 sectors
-          State : clean
-    Device UUID : 3be7bbb4:4e5f07e3:f78f3c31:5bd6df6b
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Sep  2 18:54:20 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : c00643b3 - correct
-         Events : 197036
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sdg1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
-           Name : impala:0
-  Creation Time : Fri May 22 15:32:31 2015
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
-     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=0 sectors
-          State : clean
-    Device UUID : 2b09eed0:0a6ead54:48671d28:0abd1b6e
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Sep  2 18:54:20 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 46fb325e - correct
-         Events : 197036
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
-replacing)
-/dev/sdh1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
-           Name : impala:0
-  Creation Time : Fri May 22 15:32:31 2015
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
-     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=0 sectors
-          State : clean
-    Device UUID : 324b49de:233d8769:7f75afad:dddb0ec8
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Sep  2 18:54:20 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 48b57088 - correct
-         Events : 197036
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
-replacing)
-             
+Rudy
