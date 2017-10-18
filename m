@@ -1,182 +1,236 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 3/5] md: move suspend_hi/lo handling into core md code
-Date: Tue, 17 Oct 2017 23:16:20 -0700
-Message-ID: <20171018061620.alka3npi6pyd76py@kernel.org>
-References: <150820826980.1646.6380214598725492144.stgit@noble>
- <150820840349.1646.9916811766142195995.stgit@noble>
+Subject: Re: [PATCH] md: create new workqueue for object destruction
+Date: Tue, 17 Oct 2017 23:21:37 -0700
+Message-ID: <20171018062137.ssdhwkeoy6fdp7yq@kernel.org>
+References: <87mv4qjrez.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <150820840349.1646.9916811766142195995.stgit@noble>
+In-Reply-To: <87mv4qjrez.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Oct 17, 2017 at 01:46:43PM +1100, Neil Brown wrote:
-> responding to ->suspend_lo and ->suspend_hi is similar
-> to responding to ->suspended.  It is best to wait in
-> the common core code without incrementing ->active_io.
-> This allows mddev_suspend()/mddev_resume() to work while
-> requests are waiting for suspend_lo/hi to change.
-> This is will be important after a subsequent patch
-> which uses mddev_suspend() to synchronize updating for
-> suspend_lo/hi.
+On Tue, Oct 17, 2017 at 04:04:52PM +1100, Neil Brown wrote:
 > 
-> So move the code for testing suspend_lo/hi out of raid1.c
-> and raid5.c, and place it in md.c
+> lockdep currently complains about a potential deadlock
+> with sysfs access taking reconfig_mutex, and that
+> waiting for a work queue to complete.
 > 
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  drivers/md/md.c    |   29 +++++++++++++++++++++++------
->  drivers/md/raid1.c |   12 ++++--------
->  drivers/md/raid5.c |   22 ----------------------
->  3 files changed, 27 insertions(+), 36 deletions(-)
+> The cause is inappropriate overloading of work-items
+> on work-queues.
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 308456842d3e..f8d0e41120cb 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -266,16 +266,31 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
->   * call has finished, the bio has been linked into some internal structure
->   * and so is visible to ->quiesce(), so we don't need the refcount any more.
->   */
-> +static bool is_suspended(struct mddev *mddev, struct bio *bio)
-> +{
-> +	if (mddev->suspended)
-> +		return true;
-> +	if (bio_data_dir(bio) != WRITE)
-> +		return false;
-> +	if (mddev->suspend_lo >= mddev->suspend_hi)
-> +		return false;
-> +	if (bio->bi_iter.bi_sector >= mddev->suspend_hi)
-> +		return false;
-> +	if (bio_end_sector(bio) < mddev->suspend_lo)
-> +		return false;
-> +	return true;
-> +}
-> +
->  void md_handle_request(struct mddev *mddev, struct bio *bio)
->  {
->  check_suspended:
->  	rcu_read_lock();
-> -	if (mddev->suspended) {
-> +	if (is_suspended(mddev, bio)) {
->  		DEFINE_WAIT(__wait);
->  		for (;;) {
->  			prepare_to_wait(&mddev->sb_wait, &__wait,
->  					TASK_UNINTERRUPTIBLE);
-> -			if (!mddev->suspended)
-> +			if (!is_suspended(mddev, bio))
->  				break;
->  			rcu_read_unlock();
->  			schedule();
-> @@ -4843,10 +4858,11 @@ suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
->  		goto unlock;
->  	old = mddev->suspend_lo;
->  	mddev->suspend_lo = new;
-> -	if (new >= old)
-> +	if (new >= old) {
->  		/* Shrinking suspended region */
-> +		wake_up(&mddev->sb_wait);
->  		mddev->pers->quiesce(mddev, 2);
+> We currently have two work-queues: md_wq and md_misc_wq.
+> They service 5 different tasks:
+> 
+>   mddev->flush_work                       md_wq
+>   mddev->event_work (for dm-raid)         md_misc_wq
+>   mddev->del_work (mddev_delayed_delete)  md_misc_wq
+>   mddev->del_work (md_start_sync)         md_misc_wq
+>   rdev->del_work                          md_misc_wq
+> 
+> We need to call flush_workqueue() for md_start_sync and ->event_work
+> while holding reconfig_mutex, but mustn't hold it when
+> flushing mddev_delayed_delete or rdev->del_work.
+> 
+> md_wq is a bit special as it has WQ_MEM_RECLAIM so it is
+> best to leave that alone.
+> 
+> So create a new workqueue, md_del_wq, and a new work_struct,
+> mddev->sync_work, so we can keep two classes of work separate.
+> 
+> md_del_wq and ->del_work are used only for destroying rdev
+> and mddev.
+> md_misc_wq is used for event_work and sync_work.
+> 
+> Also document the purpose of each flush_workqueue() call.
+> 
+> This removes the lockdep warning.
 
-Do we still need the quiesce(mddev, 2)? sounds not to me.
-
-> -	else {
-> +	} else {
->  		/* Expanding suspended region - need to wait */
->  		mddev->pers->quiesce(mddev, 1);
->  		mddev->pers->quiesce(mddev, 0);
-> @@ -4886,10 +4902,11 @@ suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
->  		goto unlock;
->  	old = mddev->suspend_hi;
->  	mddev->suspend_hi = new;
-> -	if (new <= old)
-> +	if (new <= old) {
->  		/* Shrinking suspended region */
-> +		wake_up(&mddev->sb_wait);
->  		mddev->pers->quiesce(mddev, 2);
-> -	else {
-> +	} else {
->  		/* Expanding suspended region - need to wait */
->  		mddev->pers->quiesce(mddev, 1);
->  		mddev->pers->quiesce(mddev, 0);
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index f3f3e40dc9d8..277a145b3ff5 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1310,11 +1310,9 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->  	 */
->  
->  
-> -	if ((bio_end_sector(bio) > mddev->suspend_lo &&
-> -	    bio->bi_iter.bi_sector < mddev->suspend_hi) ||
-> -	    (mddev_is_clustered(mddev) &&
-> +	if (mddev_is_clustered(mddev) &&
->  	     md_cluster_ops->area_resyncing(mddev, WRITE,
-> -		     bio->bi_iter.bi_sector, bio_end_sector(bio)))) {
-> +		     bio->bi_iter.bi_sector, bio_end_sector(bio))) {
->  
->  		/*
->  		 * As the suspend_* range is controlled by userspace, we want
-> @@ -1325,12 +1323,10 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->  			sigset_t full, old;
->  			prepare_to_wait(&conf->wait_barrier,
->  					&w, TASK_INTERRUPTIBLE);
-> -			if (bio_end_sector(bio) <= mddev->suspend_lo ||
-> -			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
-> -			    (mddev_is_clustered(mddev) &&
-> +			if (mddev_is_clustered(mddev) &&
->  			     !md_cluster_ops->area_resyncing(mddev, WRITE,
->  				     bio->bi_iter.bi_sector,
-> -				     bio_end_sector(bio))))
-> +				     bio_end_sector(bio)))
->  				break;
->  			sigfillset(&full);
->  			sigprocmask(SIG_BLOCK, &full, &old);
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 928e24a07133..4f40ccd21cbb 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5682,28 +5682,6 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->  				goto retry;
->  			}
->  
-> -			if (rw == WRITE &&
-> -			    logical_sector >= mddev->suspend_lo &&
-> -			    logical_sector < mddev->suspend_hi) {
-> -				raid5_release_stripe(sh);
-> -				/* As the suspend_* range is controlled by
-> -				 * userspace, we want an interruptible
-> -				 * wait.
-> -				 */
-> -				prepare_to_wait(&conf->wait_for_overlap,
-> -						&w, TASK_INTERRUPTIBLE);
-> -				if (logical_sector >= mddev->suspend_lo &&
-> -				    logical_sector < mddev->suspend_hi) {
-> -					sigset_t full, old;
-> -					sigfillset(&full);
-> -					sigprocmask(SIG_BLOCK, &full, &old);
-> -					schedule();
-> -					sigprocmask(SIG_SETMASK, &old, NULL);
-> -					do_prepare = true;
-> -				}
-> -				goto retry;
-> -			}
-> -
->  			if (test_bit(STRIPE_EXPANDING, &sh->state) ||
->  			    !add_stripe_bio(sh, bi, dd_idx, rw, previous)) {
->  				/* Stripe is busy expanding or
-
-I think we can remove the state == 2 branch in raid5_quiesce().
-
-This leaves only raid1 and md-cluster needs the quiesce(2) calls. In the
-future, we probably should abstract that md-cluster logic to separate API and
-let raid1 use it for waitting. The quiesce(2) is a strange name for the wait
-purpose.
+I had the exactly same patch queued internally, but the mdadm test suite still
+shows lockdep warnning. I haven't time to check further.
 
 Thanks,
-Shaohua
+Shaohua 
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  drivers/md/md.c | 51 ++++++++++++++++++++++++++++-----------------------
+>  drivers/md/md.h |  1 +
+>  2 files changed, 29 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index bf06ff017eda..a9f1352b3849 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -91,6 +91,7 @@ EXPORT_SYMBOL(md_cluster_mod);
+>  
+>  static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
+>  static struct workqueue_struct *md_wq;
+> +static struct workqueue_struct *md_del_wq;
+>  static struct workqueue_struct *md_misc_wq;
+>  
+>  static int remove_and_add_spares(struct mddev *mddev,
+> @@ -529,7 +530,7 @@ static void mddev_put(struct mddev *mddev)
+>  			 * succeed in waiting for the work to be done.
+>  			 */
+>  			INIT_WORK(&mddev->del_work, mddev_delayed_delete);
+> -			queue_work(md_misc_wq, &mddev->del_work);
+> +			queue_work(md_del_wq, &mddev->del_work);
+>  		} else
+>  			kfree(mddev);
+>  	}
+> @@ -2264,7 +2265,7 @@ static void unbind_rdev_from_array(struct md_rdev *rdev)
+>  	synchronize_rcu();
+>  	INIT_WORK(&rdev->del_work, md_delayed_delete);
+>  	kobject_get(&rdev->kobj);
+> -	queue_work(md_misc_wq, &rdev->del_work);
+> +	queue_work(md_del_wq, &rdev->del_work);
+>  }
+>  
+>  /*
+> @@ -4298,7 +4299,8 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
+>  	    minor != MINOR(dev))
+>  		return -EOVERFLOW;
+>  
+> -	flush_workqueue(md_misc_wq);
+> +	/* Ensure old devices are fully deleted (rdev->del_work) */
+> +	flush_workqueue(md_del_wq);
+>  
+>  	err = mddev_lock(mddev);
+>  	if (err)
+> @@ -4537,6 +4539,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+>  			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+>  		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+>  		    mddev_lock(mddev) == 0) {
+> +			/* Ensure sync/recovery has fully started (mddev->sync_work) */
+>  			flush_workqueue(md_misc_wq);
+>  			if (mddev->sync_thread) {
+>  				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> @@ -5280,9 +5283,9 @@ static int md_alloc(dev_t dev, char *name)
+>  	unit = MINOR(mddev->unit) >> shift;
+>  
+>  	/* wait for any previous instance of this device to be
+> -	 * completely removed (mddev_delayed_delete).
+> +	 * completely removed (mddev_delayed_delete, mddev->del_work).
+>  	 */
+> -	flush_workqueue(md_misc_wq);
+> +	flush_workqueue(md_del_wq);
+>  
+>  	mutex_lock(&disks_mutex);
+>  	error = -EEXIST;
+> @@ -5788,6 +5791,7 @@ static void md_clean(struct mddev *mddev)
+>  static void __md_stop_writes(struct mddev *mddev)
+>  {
+>  	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+> +	/* Ensure any sync/recovery has fully started (mddev->sync_work) */
+>  	flush_workqueue(md_misc_wq);
+>  	if (mddev->sync_thread) {
+>  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> @@ -7128,8 +7132,8 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
+>  	}
+>  
+>  	if (cmd == ADD_NEW_DISK)
+> -		/* need to ensure md_delayed_delete() has completed */
+> -		flush_workqueue(md_misc_wq);
+> +		/* need to ensure md_delayed_delete() has completed (rdev->del_work) */
+> +		flush_workqueue(md_del_wq);
+>  
+>  	if (cmd == HOT_REMOVE_DISK)
+>  		/* need to ensure recovery thread has run */
+> @@ -7383,8 +7387,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
+>  		 * bd_disk.
+>  		 */
+>  		mddev_put(mddev);
+> -		/* Wait until bdev->bd_disk is definitely gone */
+> -		flush_workqueue(md_misc_wq);
+> +		/* Wait until bdev->bd_disk is definitely gone (mddev->del_work) */
+> +		flush_workqueue(md_del_wq);
+>  		/* Then retry the open from the top */
+>  		return -ERESTARTSYS;
+>  	}
+> @@ -8631,7 +8635,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+>  
+>  static void md_start_sync(struct work_struct *ws)
+>  {
+> -	struct mddev *mddev = container_of(ws, struct mddev, del_work);
+> +	struct mddev *mddev = container_of(ws, struct mddev, sync_work);
+>  
+>  	mddev->sync_thread = md_register_thread(md_do_sync,
+>  						mddev,
+> @@ -8823,8 +8827,8 @@ void md_check_recovery(struct mddev *mddev)
+>  				 */
+>  				bitmap_write_all(mddev->bitmap);
+>  			}
+> -			INIT_WORK(&mddev->del_work, md_start_sync);
+> -			queue_work(md_misc_wq, &mddev->del_work);
+> +			INIT_WORK(&mddev->sync_work, md_start_sync);
+> +			queue_work(md_misc_wq, &mddev->sync_work);
+>  			goto unlock;
+>  		}
+>  	not_running:
+> @@ -9018,15 +9022,13 @@ static int __init md_init(void)
+>  	int ret = -ENOMEM;
+>  
+>  	md_wq = alloc_workqueue("md", WQ_MEM_RECLAIM, 0);
+> -	if (!md_wq)
+> -		goto err_wq;
+> -
+> +	md_del_wq = alloc_workqueue("md_del", 0, 0);
+>  	md_misc_wq = alloc_workqueue("md_misc", 0, 0);
+> -	if (!md_misc_wq)
+> -		goto err_misc_wq;
+> +	if (!md_wq || !md_del_wq || !md_misc_wq)
+> +		goto err;
+>  
+>  	if ((ret = register_blkdev(MD_MAJOR, "md")) < 0)
+> -		goto err_md;
+> +		goto err;
+>  
+>  	if ((ret = register_blkdev(0, "mdp")) < 0)
+>  		goto err_mdp;
+> @@ -9045,11 +9047,13 @@ static int __init md_init(void)
+>  
+>  err_mdp:
+>  	unregister_blkdev(MD_MAJOR, "md");
+> -err_md:
+> -	destroy_workqueue(md_misc_wq);
+> -err_misc_wq:
+> -	destroy_workqueue(md_wq);
+> -err_wq:
+> +err:
+> +	if (md_wq)
+> +		destroy_workqueue(md_wq);
+> +	if (md_del_wq)
+> +		destroy_workqueue(md_del_wq);
+> +	if (md_misc_wq)
+> +		destroy_workqueue(md_misc_wq);
+>  	return ret;
+>  }
+>  
+> @@ -9304,6 +9308,7 @@ static __exit void md_exit(void)
+>  		 */
+>  	}
+>  	destroy_workqueue(md_misc_wq);
+> +	destroy_workqueue(md_del_wq);
+>  	destroy_workqueue(md_wq);
+>  }
+>  
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 03fc641e5da1..8c2158f3bd59 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -397,6 +397,7 @@ struct mddev {
+>  	struct kernfs_node		*sysfs_action;  /* handle for 'sync_action' */
+>  
+>  	struct work_struct del_work;	/* used for delayed sysfs removal */
+> +	struct work_struct sync_work;	/* used for async starting of md_do_sync */
+>  
+>  	/* "lock" protects:
+>  	 *   flush_bio transition from NULL to !NULL
+> -- 
+> 2.14.0.rc0.dirty
+> 
+
 
