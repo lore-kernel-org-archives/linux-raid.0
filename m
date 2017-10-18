@@ -1,225 +1,76 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 3/5] md: move suspend_hi/lo handling into core md code
-Date: Wed, 18 Oct 2017 18:40:55 +1100
-Message-ID: <87bml4j43c.fsf@notabene.neil.brown.name>
-References: <150820826980.1646.6380214598725492144.stgit@noble> <150820840349.1646.9916811766142195995.stgit@noble> <20171018061620.alka3npi6pyd76py@kernel.org>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH v2] mdadm/grow: adding a test to ensure resize was
+ required
+Date: Wed, 18 Oct 2017 16:01:43 +0800
+Message-ID: <c3ec4c9d-f7ff-db9a-325c-ff107bdd6690@suse.com>
+References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
+ <1507711992-11548-1-git-send-email-zlliu@suse.com>
+ <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171018061620.alka3npi6pyd76py@kernel.org>
+In-Reply-To: <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: Jes Sorensen <jes.sorensen@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 17 2017, Shaohua Li wrote:
 
-> On Tue, Oct 17, 2017 at 01:46:43PM +1100, Neil Brown wrote:
->> responding to ->suspend_lo and ->suspend_hi is similar
->> to responding to ->suspended.  It is best to wait in
->> the common core code without incrementing ->active_io.
->> This allows mddev_suspend()/mddev_resume() to work while
->> requests are waiting for suspend_lo/hi to change.
->> This is will be important after a subsequent patch
->> which uses mddev_suspend() to synchronize updating for
->> suspend_lo/hi.
->>=20
->> So move the code for testing suspend_lo/hi out of raid1.c
->> and raid5.c, and place it in md.c
->>=20
->> Signed-off-by: NeilBrown <neilb@suse.com>
+On 10/12/2017 01:31 AM, Jes Sorensen wrote:
+> On 10/11/2017 04:53 AM, Zhilong Liu wrote:
+>> To fix the commit: 4b74a905a67e
+>> (mdadm/grow: Component size must be larger than chunk size)
+>>
+>> array.level > 1 : against the raids which chunk_size is meaningful.
+>> s->size > 0 : ensure that changing component size has required.
+>> array.chunk_size / 1024 > s->size : ensure component size should
+>> be always >= current chunk_size when requires resize, otherwise,
+>> mddev->pers->resize would be set mddev->dev_sectors as '0'.
+>>
+>> Reported-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+>> Suggested-by: NeilBrown <neilb@suse.com>
+>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
 >> ---
->>  drivers/md/md.c    |   29 +++++++++++++++++++++++------
->>  drivers/md/raid1.c |   12 ++++--------
->>  drivers/md/raid5.c |   22 ----------------------
->>  3 files changed, 27 insertions(+), 36 deletions(-)
->>=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 308456842d3e..f8d0e41120cb 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -266,16 +266,31 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
->>   * call has finished, the bio has been linked into some internal struct=
-ure
->>   * and so is visible to ->quiesce(), so we don't need the refcount any =
-more.
->>   */
->> +static bool is_suspended(struct mddev *mddev, struct bio *bio)
->> +{
->> +	if (mddev->suspended)
->> +		return true;
->> +	if (bio_data_dir(bio) !=3D WRITE)
->> +		return false;
->> +	if (mddev->suspend_lo >=3D mddev->suspend_hi)
->> +		return false;
->> +	if (bio->bi_iter.bi_sector >=3D mddev->suspend_hi)
->> +		return false;
->> +	if (bio_end_sector(bio) < mddev->suspend_lo)
->> +		return false;
->> +	return true;
->> +}
->> +
->>  void md_handle_request(struct mddev *mddev, struct bio *bio)
->>  {
->>  check_suspended:
->>  	rcu_read_lock();
->> -	if (mddev->suspended) {
->> +	if (is_suspended(mddev, bio)) {
->>  		DEFINE_WAIT(__wait);
->>  		for (;;) {
->>  			prepare_to_wait(&mddev->sb_wait, &__wait,
->>  					TASK_UNINTERRUPTIBLE);
->> -			if (!mddev->suspended)
->> +			if (!is_suspended(mddev, bio))
->>  				break;
->>  			rcu_read_unlock();
->>  			schedule();
->> @@ -4843,10 +4858,11 @@ suspend_lo_store(struct mddev *mddev, const char=
- *buf, size_t len)
->>  		goto unlock;
->>  	old =3D mddev->suspend_lo;
->>  	mddev->suspend_lo =3D new;
->> -	if (new >=3D old)
->> +	if (new >=3D old) {
->>  		/* Shrinking suspended region */
->> +		wake_up(&mddev->sb_wait);
->>  		mddev->pers->quiesce(mddev, 2);
+>>
+>> v1: [PATCH 1/3] mdadm/Grow: fix the broken raid level conversion
+>>
+>> changes:
+>>    correct the test 's->level == UnSet' as 's->size > 0'
+>>
+>>   Grow.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/Grow.c b/Grow.c
+>> index 4d79d83..8c2d50c 100644
+>> --- a/Grow.c
+>> +++ b/Grow.c
+>> @@ -1810,6 +1810,7 @@ int Grow_reshape(char *devname, int fd,
+>>       }
+>>         if (array.level > 1 &&
+>> +        s->size > 0 &&
+>>          (array.chunk_size / 1024) > (int)s->size) {
+>>           pr_err("component size must be larger than chunk size.\n");
+>>           return 1;
 >
-> Do we still need the quiesce(mddev, 2)? sounds not to me.
-
-No, I don't think we do - thanks for noticing that;.
-
->
->> -	else {
->> +	} else {
->>  		/* Expanding suspended region - need to wait */
->>  		mddev->pers->quiesce(mddev, 1);
->>  		mddev->pers->quiesce(mddev, 0);
->> @@ -4886,10 +4902,11 @@ suspend_hi_store(struct mddev *mddev, const char=
- *buf, size_t len)
->>  		goto unlock;
->>  	old =3D mddev->suspend_hi;
->>  	mddev->suspend_hi =3D new;
->> -	if (new <=3D old)
->> +	if (new <=3D old) {
->>  		/* Shrinking suspended region */
->> +		wake_up(&mddev->sb_wait);
->>  		mddev->pers->quiesce(mddev, 2);
->> -	else {
->> +	} else {
->>  		/* Expanding suspended region - need to wait */
->>  		mddev->pers->quiesce(mddev, 1);
->>  		mddev->pers->quiesce(mddev, 0);
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index f3f3e40dc9d8..277a145b3ff5 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -1310,11 +1310,9 @@ static void raid1_write_request(struct mddev *mdd=
-ev, struct bio *bio,
->>  	 */
->>=20=20
->>=20=20
->> -	if ((bio_end_sector(bio) > mddev->suspend_lo &&
->> -	    bio->bi_iter.bi_sector < mddev->suspend_hi) ||
->> -	    (mddev_is_clustered(mddev) &&
->> +	if (mddev_is_clustered(mddev) &&
->>  	     md_cluster_ops->area_resyncing(mddev, WRITE,
->> -		     bio->bi_iter.bi_sector, bio_end_sector(bio)))) {
->> +		     bio->bi_iter.bi_sector, bio_end_sector(bio))) {
->>=20=20
->>  		/*
->>  		 * As the suspend_* range is controlled by userspace, we want
->> @@ -1325,12 +1323,10 @@ static void raid1_write_request(struct mddev *md=
-dev, struct bio *bio,
->>  			sigset_t full, old;
->>  			prepare_to_wait(&conf->wait_barrier,
->>  					&w, TASK_INTERRUPTIBLE);
->> -			if (bio_end_sector(bio) <=3D mddev->suspend_lo ||
->> -			    bio->bi_iter.bi_sector >=3D mddev->suspend_hi ||
->> -			    (mddev_is_clustered(mddev) &&
->> +			if (mddev_is_clustered(mddev) &&
->>  			     !md_cluster_ops->area_resyncing(mddev, WRITE,
->>  				     bio->bi_iter.bi_sector,
->> -				     bio_end_sector(bio))))
->> +				     bio_end_sector(bio)))
->>  				break;
->>  			sigfillset(&full);
->>  			sigprocmask(SIG_BLOCK, &full, &old);
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 928e24a07133..4f40ccd21cbb 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -5682,28 +5682,6 @@ static bool raid5_make_request(struct mddev *mdde=
-v, struct bio * bi)
->>  				goto retry;
->>  			}
->>=20=20
->> -			if (rw =3D=3D WRITE &&
->> -			    logical_sector >=3D mddev->suspend_lo &&
->> -			    logical_sector < mddev->suspend_hi) {
->> -				raid5_release_stripe(sh);
->> -				/* As the suspend_* range is controlled by
->> -				 * userspace, we want an interruptible
->> -				 * wait.
->> -				 */
->> -				prepare_to_wait(&conf->wait_for_overlap,
->> -						&w, TASK_INTERRUPTIBLE);
->> -				if (logical_sector >=3D mddev->suspend_lo &&
->> -				    logical_sector < mddev->suspend_hi) {
->> -					sigset_t full, old;
->> -					sigfillset(&full);
->> -					sigprocmask(SIG_BLOCK, &full, &old);
->> -					schedule();
->> -					sigprocmask(SIG_SETMASK, &old, NULL);
->> -					do_prepare =3D true;
->> -				}
->> -				goto retry;
->> -			}
->> -
->>  			if (test_bit(STRIPE_EXPANDING, &sh->state) ||
->>  			    !add_stripe_bio(sh, bi, dd_idx, rw, previous)) {
->>  				/* Stripe is busy expanding or
->
-> I think we can remove the state =3D=3D 2 branch in raid5_quiesce().
+> Applied, however I fixed the broken formatting in the process.
 >
 
-Yes.
-
-
-> This leaves only raid1 and md-cluster needs the quiesce(2) calls. In the
-> future, we probably should abstract that md-cluster logic to separate API=
- and
-> let raid1 use it for waitting. The quiesce(2) is a strange name for the w=
-ait
-> purpose.
-
-Agreed.  I'll try to find a nice solution.
+I'm sorry that I have re-checked the code, this patch is buggy.
+The correct fix should be "s->size > 1" or "s->level == UnSet",
+I forgot the parameter of "--size max".
 
 Thanks,
-NeilBrown
+-Zhilong
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+> Thanks,
+> Jes
+>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnnBYgACgkQOeye3VZi
-gbl6Kg/+JTM0aJYSBbQ+LDBevrA/ZvcZdQveaw18IBpaWZGBHDvLIXz/cxF5rfvb
-0mOCUFHJcdBe2sTZCYYJAX7ooWFlqsJKnR+m3GMI7DhtjnM0Lb/AEaFPx+4itkj/
-7Sefd43aK59tISeUENgupOqTlb7IqSyc3n/BxyCp7jIIA3FWnuzFlZVvT7a1tJo2
-c6N0Zc8LZyxJ6fmxBcmUuvYh3w1ley+tcnZJijrQJKIEvtLpr8XNasFiCAMzP+OF
-hUKiWwMdEiqGIX97nSjPkKmk777YvMkkV68KnxVc3MPCZJvosOqtxPt4Sru94Wtz
-q2DnryZjh9kIksk0v21cfmEFfShspnTwkQmEK5AXW0DdZiBR92x+tbHPxaD7GCOp
-mwRrMd81y98luDCwLXVlFx2latUrj8yMinjVLiEbcmfFGFHUgCQwbks+Oh1Pmn2N
-2OfWHMn5prNtBSSC7I+2hGatGrkyNkZNy5lJCZXvNCTvo+H+Okod6YTbt1qeTH7d
-tUGEPEb1RxDxkRrD68d8OjOghG2xrRQS0597TE3mRE15pC2KnteX/Oz6XvKurPBs
-4vj4LFs13osThmtr9KL5Fv+sl+3dx8LXdP6uxoDBjJitaLE0yKT1SFptrI4BOxSp
-vDxG2HSuJN+ilT0NLDt/DvkT91GYMYoGKjlofJ560ezPteVZAq8=
-=sVlm
------END PGP SIGNATURE-----
---=-=-=--
