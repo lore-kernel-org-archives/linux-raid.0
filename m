@@ -1,52 +1,84 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH] md: forbid a RAID5 from having both a bitmap and a journal.
-Date: Wed, 18 Oct 2017 10:48:36 -0400
-Message-ID: <23015.27076.469924.191613@quad.stoffel.home>
-References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
-        <87bmldnjtq.fsf@notabene.neil.brown.name>
-        <20171012173019.c2bbfyz3hgudjbhz@kernel.org>
-        <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
-        <87wp3zlj9q.fsf@notabene.neil.brown.name>
-        <20171013195122.mi7gr4xxm77odx7t@kernel.org>
-        <608CE47A-1C46-4087-B7D3-6FA5936C1DAF@fb.com>
-        <877evulrpm.fsf@notabene.neil.brown.name>
-        <20171016235609.mmo3vbqiekr4li5c@kernel.org>
-        <87sheijw2u.fsf@notabene.neil.brown.name>
-        <23014.27372.306872.143938@quad.stoffel.home>
-        <8760bdjxl0.fsf@notabene.neil.brown.name>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID6: Reducing to Grow
+Date: Wed, 18 Oct 2017 14:02:03 -0400
+Message-ID: <0f2b759f-3f4d-127a-242a-74c3f8abdea4@turmel.org>
+References: <CAPE0SYzB49Vk-QcKWGzVDCqwYjnatGYWrFVeb+jdMF-5wry9Lg@mail.gmail.com>
+ <ba94e811-1ae4-a8a3-5907-bde289b44754@turmel.org>
+ <9ef8359d-7da9-de5a-d939-46a3c51cc68d@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8760bdjxl0.fsf@notabene.neil.brown.name>
+In-Reply-To: <9ef8359d-7da9-de5a-d939-46a3c51cc68d@gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: John Stoffel <john@stoffel.org>, Shaohua Li <shli@kernel.org>, Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
+To: Liwei <xieliwei@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
+On 10/18/2017 01:20 AM, Liwei wrote:
+> Hi Phil,
 
-NeilBrown> On Tue, Oct 17 2017, John Stoffel wrote:
->>>>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
->> 
-NeilBrown> Having both a bitmap and a journal is pointless.
-NeilBrown> Attempting to do so can corrupt the bitmap if the journal
-NeilBrown> replay happens before the bitmap is initialized.
-NeilBrown> Rather than try to avoid this corruption, simply
-NeilBrown> refuse to allow arrays with both a bitmap and a journal.
-NeilBrown> So:
-NeilBrown> - if raid5_run sees both are present, fail.
->> 
->> So what happens if there's someone out there with an array setup with
->> both already?  Should the journal or the bitmap be removed at this
->> time?  
 
-NeilBrown> If someone has an array like that they can assemble it with
-NeilBrown>   --update=no-bitmap
+> Whoops, we do run LVM on top, but currently it is one gigantic LV. (We
+> converted to btrfs and started using subvolumes instead) My guess is
+> you're thinking of creating another array with the unused space, and
+> then migrating LVs over?
 
-NeilBrown> I'd rather not automatically disable things.
+Yes.  With temporary ~4T partitions.
 
-That works for me, assuming there's a useful message in the logs
-explaining what's gone wrong here.  Either mdadm emits the message, or
-the kernel does.
+> The lsdrv output follows, with a lot of irrelevant/empty nodes removed.
+> Also, I realised I misread the storage size of two of the 2TB drives, so
+> we're actually at 9x 2TB and 4x 6TB.
 
+Very helpful.
+
+> _However_, I do have one 6TB "hot spare" plugged in, and 3 proper 6TB
+> SAS drives arriving next week, so there may still be a way to do this,
+> perhaps?
+
+Makes it easy, actually.
+
+So, here's what I recommend:
+
+1) Set long timeouts on your desktop drives, the WD*EARS and WD*FASS:
+
+for x in a b j l ; do echo 180 > /sys/block/sd$x/device/timeout ; done
+
+2) Scrub your array (and wait for it to finish):
+
+echo check >/sys/block/md126/md/sync_action
+
+3) After installing the new drives, fail one of your 6T drives out of
+the array, then use it, the hot spare, the new drives, and one 'missing'
+to set up a new degraded 6-drive raid6.  Consider using a smaller chunk
+size unless you are storing very large media files.  (I use 16k or 32k
+for my parity arrays.)
+
+4) Add the new array as a physical volume to your existing volume group.
+
+5) Use lvconvert to change LV Wonderland to a mirror.  You could just use
+pvmove if you don't mind the reduced redundancy.  Let it get fully
+mirrored or moved.  Skip to step #8 if you used pvmove.
+
+6) Fail another 6T drive from the existing array and add it to the new
+array.  Let it rebuild.
+
+7) Use lvconvert to change LV Wonderland back into an unmirrored LV on
+the new array.  Be careful to specify the new array!
+
+8) Remove the old array from your volume group with vgreduce.  Shut down
+the old array and use mdadm --zero-superblock on its prior members.
+Get rid of the desktop drives.
+
+9) Add all the newly available 6T drives to the new array.  Let it
+rebuild if necessary.
+
+10) Grow the new array to occupy all of the space on all of the devices,
+or maybe leave one hot spare.  (I wouldn't, but it depends on your
+application and your supply chain.)
+
+11) Enjoy all that space!
+
+Note that all of the above can be executed while using your mounted LV.
+
+Phil
