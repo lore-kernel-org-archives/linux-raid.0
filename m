@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 1/5] md: always hold reconfig_mutex when calling mddev_suspend()
-Date: Wed, 18 Oct 2017 18:35:05 +1100
-Message-ID: <87efq0j4d2.fsf@notabene.neil.brown.name>
-References: <150820826980.1646.6380214598725492144.stgit@noble> <150820840340.1646.12365558035859364361.stgit@noble> <20171018061107.42kpztc3nbnhbavi@kernel.org>
+Subject: Re: [md PATCH 3/5] md: move suspend_hi/lo handling into core md code
+Date: Wed, 18 Oct 2017 18:40:55 +1100
+Message-ID: <87bml4j43c.fsf@notabene.neil.brown.name>
+References: <150820826980.1646.6380214598725492144.stgit@noble> <150820840349.1646.9916811766142195995.stgit@noble> <20171018061620.alka3npi6pyd76py@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171018061107.42kpztc3nbnhbavi@kernel.org>
+In-Reply-To: <20171018061620.alka3npi6pyd76py@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
@@ -20,162 +20,206 @@ Content-Transfer-Encoding: quoted-printable
 On Tue, Oct 17 2017, Shaohua Li wrote:
 
 > On Tue, Oct 17, 2017 at 01:46:43PM +1100, Neil Brown wrote:
->> Most often mddev_suspend() is called with
->> reconfig_mutex held.  Make this a requirement in
->> preparation a subsequent patch.
->
-> can we do further, eg, make mddev_resumed() called with the mutex held. T=
-hat's
-> symmetrical. It appears only dm-raid.c doesn't hold the mutext for mddev_=
-resume
-> in a quick scan.
->=20=20
->> Taking the mutex in r5c_disable_writeback_async() is
->> a little tricky as this is called from a work queue
->> via log->disable_writeback_work, and flush_work()
->> is called on that while holding ->reconfig_mutex.
->> If the work item hasn't run before flush_work()
->> is called, the work function will not be able to
->> get the mutex.
+>> responding to ->suspend_lo and ->suspend_hi is similar
+>> to responding to ->suspended.  It is best to wait in
+>> the common core code without incrementing ->active_io.
+>> This allows mddev_suspend()/mddev_resume() to work while
+>> requests are waiting for suspend_lo/hi to change.
+>> This is will be important after a subsequent patch
+>> which uses mddev_suspend() to synchronize updating for
+>> suspend_lo/hi.
 >>=20
->> So we use mddev_trylock() inside the wait_event() call, and have that
->> abort when conf->log is set to NULL, which happens before
->> flush_work() is called.
+>> So move the code for testing suspend_lo/hi out of raid1.c
+>> and raid5.c, and place it in md.c
 >>=20
 >> Signed-off-by: NeilBrown <neilb@suse.com>
 >> ---
->>  drivers/md/dm-raid.c     |    5 ++++-
->>  drivers/md/md.c          |    1 +
->>  drivers/md/raid5-cache.c |   18 +++++++++++++-----
->>  3 files changed, 18 insertions(+), 6 deletions(-)
+>>  drivers/md/md.c    |   29 +++++++++++++++++++++++------
+>>  drivers/md/raid1.c |   12 ++++--------
+>>  drivers/md/raid5.c |   22 ----------------------
+>>  3 files changed, 27 insertions(+), 36 deletions(-)
 >>=20
->> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
->> index 2245d06d2045..cc2fed784a5f 100644
->> --- a/drivers/md/dm-raid.c
->> +++ b/drivers/md/dm-raid.c
->> @@ -3629,8 +3629,11 @@ static void raid_postsuspend(struct dm_target *ti)
->>  {
->>  	struct raid_set *rs =3D ti->private;
->>=20=20
->> -	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags))
->> +	if (!test_and_set_bit(RT_FLAG_RS_SUSPENDED, &rs->runtime_flags)) {
->> +		mddev_lock_nointr(&rs->md);
->>  		mddev_suspend(&rs->md);
->> +		mddev_unlock(&rs->md);
->> +	}
->>=20=20
->>  	rs->md.ro =3D 1;
->>  }
 >> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 0ff1bbf6c90e..04538b60f8f3 100644
+>> index 308456842d3e..f8d0e41120cb 100644
 >> --- a/drivers/md/md.c
 >> +++ b/drivers/md/md.c
->> @@ -344,6 +344,7 @@ static blk_qc_t md_make_request(struct request_queue=
- *q, struct bio *bio)
->>  void mddev_suspend(struct mddev *mddev)
+>> @@ -266,16 +266,31 @@ static DEFINE_SPINLOCK(all_mddevs_lock);
+>>   * call has finished, the bio has been linked into some internal struct=
+ure
+>>   * and so is visible to ->quiesce(), so we don't need the refcount any =
+more.
+>>   */
+>> +static bool is_suspended(struct mddev *mddev, struct bio *bio)
+>> +{
+>> +	if (mddev->suspended)
+>> +		return true;
+>> +	if (bio_data_dir(bio) !=3D WRITE)
+>> +		return false;
+>> +	if (mddev->suspend_lo >=3D mddev->suspend_hi)
+>> +		return false;
+>> +	if (bio->bi_iter.bi_sector >=3D mddev->suspend_hi)
+>> +		return false;
+>> +	if (bio_end_sector(bio) < mddev->suspend_lo)
+>> +		return false;
+>> +	return true;
+>> +}
+>> +
+>>  void md_handle_request(struct mddev *mddev, struct bio *bio)
 >>  {
->>  	WARN_ON_ONCE(mddev->thread && current =3D=3D mddev->thread->tsk);
->> +	lockdep_assert_held(&mddev->reconfig_mutex);
->>  	if (mddev->suspended++)
->>  		return;
->>  	synchronize_rcu();
->> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
->> index 0b7406ac8ce1..6a631dd21f0b 100644
->> --- a/drivers/md/raid5-cache.c
->> +++ b/drivers/md/raid5-cache.c
->> @@ -693,6 +693,8 @@ static void r5c_disable_writeback_async(struct work_=
-struct *work)
->>  	struct r5l_log *log =3D container_of(work, struct r5l_log,
->>  					   disable_writeback_work);
->>  	struct mddev *mddev =3D log->rdev->mddev;
->> +	struct r5conf *conf =3D mddev->private;
->> +	int locked =3D 0;
+>>  check_suspended:
+>>  	rcu_read_lock();
+>> -	if (mddev->suspended) {
+>> +	if (is_suspended(mddev, bio)) {
+>>  		DEFINE_WAIT(__wait);
+>>  		for (;;) {
+>>  			prepare_to_wait(&mddev->sb_wait, &__wait,
+>>  					TASK_UNINTERRUPTIBLE);
+>> -			if (!mddev->suspended)
+>> +			if (!is_suspended(mddev, bio))
+>>  				break;
+>>  			rcu_read_unlock();
+>>  			schedule();
+>> @@ -4843,10 +4858,11 @@ suspend_lo_store(struct mddev *mddev, const char=
+ *buf, size_t len)
+>>  		goto unlock;
+>>  	old =3D mddev->suspend_lo;
+>>  	mddev->suspend_lo =3D new;
+>> -	if (new >=3D old)
+>> +	if (new >=3D old) {
+>>  		/* Shrinking suspended region */
+>> +		wake_up(&mddev->sb_wait);
+>>  		mddev->pers->quiesce(mddev, 2);
+>
+> Do we still need the quiesce(mddev, 2)? sounds not to me.
+
+No, I don't think we do - thanks for noticing that;.
+
+>
+>> -	else {
+>> +	} else {
+>>  		/* Expanding suspended region - need to wait */
+>>  		mddev->pers->quiesce(mddev, 1);
+>>  		mddev->pers->quiesce(mddev, 0);
+>> @@ -4886,10 +4902,11 @@ suspend_hi_store(struct mddev *mddev, const char=
+ *buf, size_t len)
+>>  		goto unlock;
+>>  	old =3D mddev->suspend_hi;
+>>  	mddev->suspend_hi =3D new;
+>> -	if (new <=3D old)
+>> +	if (new <=3D old) {
+>>  		/* Shrinking suspended region */
+>> +		wake_up(&mddev->sb_wait);
+>>  		mddev->pers->quiesce(mddev, 2);
+>> -	else {
+>> +	} else {
+>>  		/* Expanding suspended region - need to wait */
+>>  		mddev->pers->quiesce(mddev, 1);
+>>  		mddev->pers->quiesce(mddev, 0);
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index f3f3e40dc9d8..277a145b3ff5 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -1310,11 +1310,9 @@ static void raid1_write_request(struct mddev *mdd=
+ev, struct bio *bio,
+>>  	 */
 >>=20=20
->>  	if (log->r5c_journal_mode =3D=3D R5C_JOURNAL_MODE_WRITE_THROUGH)
->>  		return;
->> @@ -701,11 +703,15 @@ static void r5c_disable_writeback_async(struct wor=
-k_struct *work)
 >>=20=20
->>  	/* wait superblock change before suspend */
->>  	wait_event(mddev->sb_wait,
->> -		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+>> -	if ((bio_end_sector(bio) > mddev->suspend_lo &&
+>> -	    bio->bi_iter.bi_sector < mddev->suspend_hi) ||
+>> -	    (mddev_is_clustered(mddev) &&
+>> +	if (mddev_is_clustered(mddev) &&
+>>  	     md_cluster_ops->area_resyncing(mddev, WRITE,
+>> -		     bio->bi_iter.bi_sector, bio_end_sector(bio)))) {
+>> +		     bio->bi_iter.bi_sector, bio_end_sector(bio))) {
+>>=20=20
+>>  		/*
+>>  		 * As the suspend_* range is controlled by userspace, we want
+>> @@ -1325,12 +1323,10 @@ static void raid1_write_request(struct mddev *md=
+dev, struct bio *bio,
+>>  			sigset_t full, old;
+>>  			prepare_to_wait(&conf->wait_barrier,
+>>  					&w, TASK_INTERRUPTIBLE);
+>> -			if (bio_end_sector(bio) <=3D mddev->suspend_lo ||
+>> -			    bio->bi_iter.bi_sector >=3D mddev->suspend_hi ||
+>> -			    (mddev_is_clustered(mddev) &&
+>> +			if (mddev_is_clustered(mddev) &&
+>>  			     !md_cluster_ops->area_resyncing(mddev, WRITE,
+>>  				     bio->bi_iter.bi_sector,
+>> -				     bio_end_sector(bio))))
+>> +				     bio_end_sector(bio)))
+>>  				break;
+>>  			sigfillset(&full);
+>>  			sigprocmask(SIG_BLOCK, &full, &old);
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 928e24a07133..4f40ccd21cbb 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -5682,28 +5682,6 @@ static bool raid5_make_request(struct mddev *mdde=
+v, struct bio * bi)
+>>  				goto retry;
+>>  			}
+>>=20=20
+>> -			if (rw =3D=3D WRITE &&
+>> -			    logical_sector >=3D mddev->suspend_lo &&
+>> -			    logical_sector < mddev->suspend_hi) {
+>> -				raid5_release_stripe(sh);
+>> -				/* As the suspend_* range is controlled by
+>> -				 * userspace, we want an interruptible
+>> -				 * wait.
+>> -				 */
+>> -				prepare_to_wait(&conf->wait_for_overlap,
+>> -						&w, TASK_INTERRUPTIBLE);
+>> -				if (logical_sector >=3D mddev->suspend_lo &&
+>> -				    logical_sector < mddev->suspend_hi) {
+>> -					sigset_t full, old;
+>> -					sigfillset(&full);
+>> -					sigprocmask(SIG_BLOCK, &full, &old);
+>> -					schedule();
+>> -					sigprocmask(SIG_SETMASK, &old, NULL);
+>> -					do_prepare =3D true;
+>> -				}
+>> -				goto retry;
+>> -			}
 >> -
->> -	mddev_suspend(mddev);
->> -	log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
->> -	mddev_resume(mddev);
->> +		   conf->log =3D=3D NULL ||
->> +		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
->> +		    (locked =3D mddev_trylock(mddev))));
+>>  			if (test_bit(STRIPE_EXPANDING, &sh->state) ||
+>>  			    !add_stripe_bio(sh, bi, dd_idx, rw, previous)) {
+>>  				/* Stripe is busy expanding or
 >
-> Probably we just bail out if conf->log =3D=3D NULL.
+> I think we can remove the state =3D=3D 2 branch in raid5_quiesce().
+>
 
-That is exactly what this code does.  If ->log is NULL or ever becomes
-NULL, we bail out.
+Yes.
 
->                                                  The whole trylock point =
-is for
-> the exit case, we can handle it separately. The bonus is
-> r5c_disable_writeback_async will not magically do nothing if the mutex is
-> already held by others.
 
-I don't understand... the try_lock is so we can wait for the lock, or
-for other things.  The "wait_event()" waits until it can get the lock,
-or it doesn't need to. r5c_disable_writeback_async
-will not "do nothing if the mutex is already held by others"
+> This leaves only raid1 and md-cluster needs the quiesce(2) calls. In the
+> future, we probably should abstract that md-cluster logic to separate API=
+ and
+> let raid1 use it for waitting. The quiesce(2) is a strange name for the w=
+ait
+> purpose.
 
-Though I just noticed ->sb_wait doesn't get woken when the mddev is
-unlocked.=20
-I could just add a wake_up in mddev_unlock but that probably isn't
-a good idea.  I'll have a proper look...
+Agreed.  I'll try to find a nice solution.
 
-So drop this patch for now, thanks.
-
+Thanks,
 NeilBrown
-
-
-
->
-> Thanks,
-> Shaohua
->
->> +	if (locked) {
->> +		mddev_suspend(mddev);
->> +		log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
->> +		mddev_resume(mddev);
->> +		mddev_unlock(mddev);
->> +	}
->>  }
->>=20=20
->>  static void r5l_submit_current_io(struct r5l_log *log)
->> @@ -3165,6 +3171,8 @@ void r5l_exit_log(struct r5conf *conf)
->>  	conf->log =3D NULL;
->>  	synchronize_rcu();
->>=20=20
->> +	/* Ensure disable_writeback_work wakes up and exits */
->> +	wake_up(&conf->mddev->sb_wait);
->>  	flush_work(&log->disable_writeback_work);
->>  	md_unregister_thread(&log->reclaim_thread);
->>  	mempool_destroy(log->meta_pool);
->>=20
->>=20
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnnBCsACgkQOeye3VZi
-gbnNyQ//f7vWljgpBs4n3ZYyeSK+3LmD/a/74vhxPpbe1j0fCrpilxZlmbk0Taw1
-gNWBXwqthLwJ0Sy2B6XBOwMd+4SWK4FpwsepEa2uYWEaW7wcLveKuQvz4PIeu8lm
-WemZnIkJT1UuAbD1Pi6v/bgfQ8tLkJZ7PfecgVr1MpyxDnqFcIn+gbN7Lg0wuGu1
-FOXi7rqDhJhAhc5CFkXkszUMSebAMpb4/kCBHa9LpLSfGPwMJoFKT5LquwS9cqQc
-dPJ3y/QVlXE29aDqPHW5cOggduIUZsePgxQO2brgRB4CK1HJ11fS39ida16ODojD
-+u4nEKL3Pu6fnduukWOvt8p8A4y7TWJvl6vg4KBvRiXRP6YsaJE8qqB3cwq7+Nkl
-CJqgbvNW0RmgFLe7YZ5bcsT/x5wjJadoL+LCy+sUt2qTBF3OJqVrlzSvR5xMnLSi
-txNG2LkZWZm/HYKVpAf3777VRB1Hme2FAyhWp6DpNSFm/md8dPkB0W29lScWUl13
-7Ad93mbvZQxJex0SwmX+dr+51r1RQ6ZHQZE+pYIkFV4zVKhoM/crZbo9jewT/kN5
-7hMTxPPgrq0OQWvZ4CO4CaXUzdbH1pz5UfsHlmvv2QY3x//cYtKu4qrOFbEWxBwQ
-fSUP3RtD7W+qDJ/qvXG8+WnoTN4tvBagPBd2Q06ofqLwjHjEPAQ=
-=h7ds
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnnBYgACgkQOeye3VZi
+gbl6Kg/+JTM0aJYSBbQ+LDBevrA/ZvcZdQveaw18IBpaWZGBHDvLIXz/cxF5rfvb
+0mOCUFHJcdBe2sTZCYYJAX7ooWFlqsJKnR+m3GMI7DhtjnM0Lb/AEaFPx+4itkj/
+7Sefd43aK59tISeUENgupOqTlb7IqSyc3n/BxyCp7jIIA3FWnuzFlZVvT7a1tJo2
+c6N0Zc8LZyxJ6fmxBcmUuvYh3w1ley+tcnZJijrQJKIEvtLpr8XNasFiCAMzP+OF
+hUKiWwMdEiqGIX97nSjPkKmk777YvMkkV68KnxVc3MPCZJvosOqtxPt4Sru94Wtz
+q2DnryZjh9kIksk0v21cfmEFfShspnTwkQmEK5AXW0DdZiBR92x+tbHPxaD7GCOp
+mwRrMd81y98luDCwLXVlFx2latUrj8yMinjVLiEbcmfFGFHUgCQwbks+Oh1Pmn2N
+2OfWHMn5prNtBSSC7I+2hGatGrkyNkZNy5lJCZXvNCTvo+H+Okod6YTbt1qeTH7d
+tUGEPEb1RxDxkRrD68d8OjOghG2xrRQS0597TE3mRE15pC2KnteX/Oz6XvKurPBs
+4vj4LFs13osThmtr9KL5Fv+sl+3dx8LXdP6uxoDBjJitaLE0yKT1SFptrI4BOxSp
+vDxG2HSuJN+ilT0NLDt/DvkT91GYMYoGKjlofJ560ezPteVZAq8=
+=sVlm
 -----END PGP SIGNATURE-----
 --=-=-=--
