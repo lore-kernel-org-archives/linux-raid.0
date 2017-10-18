@@ -1,175 +1,93 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md: create new workqueue for object destruction
-Date: Thu, 19 Oct 2017 09:36:27 +1100
-Message-ID: <87376ghyms.fsf@notabene.neil.brown.name>
-References: <87mv4qjrez.fsf@notabene.neil.brown.name> <20171018062137.ssdhwkeoy6fdp7yq@kernel.org> <87h8uwj4mz.fsf@notabene.neil.brown.name> <6454f28e-4728-a10d-f3c3-b68afedec8d9@intel.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] md: use TASK_IDLE instead of blocking signals
+Date: Wed, 18 Oct 2017 19:01:11 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6454f28e-4728-a10d-f3c3-b68afedec8d9@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Shaohua Li <shli@kernel.org>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi - I submit this patch for the next merge window:
 
-On Wed, Oct 18 2017, Artur Paszkiewicz wrote:
 
-> On 10/18/2017 09:29 AM, NeilBrown wrote:
->> On Tue, Oct 17 2017, Shaohua Li wrote:
->>=20
->>> On Tue, Oct 17, 2017 at 04:04:52PM +1100, Neil Brown wrote:
->>>>
->>>> lockdep currently complains about a potential deadlock
->>>> with sysfs access taking reconfig_mutex, and that
->>>> waiting for a work queue to complete.
->>>>
->>>> The cause is inappropriate overloading of work-items
->>>> on work-queues.
->>>>
->>>> We currently have two work-queues: md_wq and md_misc_wq.
->>>> They service 5 different tasks:
->>>>
->>>>   mddev->flush_work                       md_wq
->>>>   mddev->event_work (for dm-raid)         md_misc_wq
->>>>   mddev->del_work (mddev_delayed_delete)  md_misc_wq
->>>>   mddev->del_work (md_start_sync)         md_misc_wq
->>>>   rdev->del_work                          md_misc_wq
->>>>
->>>> We need to call flush_workqueue() for md_start_sync and ->event_work
->>>> while holding reconfig_mutex, but mustn't hold it when
->>>> flushing mddev_delayed_delete or rdev->del_work.
->>>>
->>>> md_wq is a bit special as it has WQ_MEM_RECLAIM so it is
->>>> best to leave that alone.
->>>>
->>>> So create a new workqueue, md_del_wq, and a new work_struct,
->>>> mddev->sync_work, so we can keep two classes of work separate.
->>>>
->>>> md_del_wq and ->del_work are used only for destroying rdev
->>>> and mddev.
->>>> md_misc_wq is used for event_work and sync_work.
->>>>
->>>> Also document the purpose of each flush_workqueue() call.
->>>>
->>>> This removes the lockdep warning.
->>>
->>> I had the exactly same patch queued internally,
->>=20
->> Cool :-)
->>=20
->>>                                                   but the mdadm test su=
-ite still
->>> shows lockdep warnning. I haven't time to check further.
->>>
->>=20
->> The only other lockdep I've seen later was some ext4 thing, though I
->> haven't tried the full test suite.  I might have a look tomorrow.
->
-> I'm also seeing a lockdep warning with or without this patch,
-> reproducible with:
->
+Some times ago, I made a patch f9c79bc05a2a that blocks signals around the
+schedule() calls in MD. The MD subsystem needs to do an uninterruptible
+sleep that is not accounted in load average - so we block signals and use
+interruptible sleep.
 
-Thanks!
-Looks like using one workqueue for mddev->del_work and rdev->del_work
-causes problems.
-Can you try with this addition please?
+The kernel has a special TASK_IDLE state for this purpose, so we can use
+it instead of blocking signals. This patch doesn't fix any bug, it just
+makes the code simpler.
 
-Thanks,
-NeilBrown
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d1dfc9879368..b3192943de7d 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -92,6 +92,7 @@ EXPORT_SYMBOL(md_cluster_mod);
- static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
- static struct workqueue_struct *md_wq;
- static struct workqueue_struct *md_del_wq;
-+static struct workqueue_struct *rdev_del_wq;
- static struct workqueue_struct *md_misc_wq;
-=20
- static int remove_and_add_spares(struct mddev *mddev,
-@@ -2265,7 +2266,7 @@ static void unbind_rdev_from_array(struct md_rdev *rd=
-ev)
- 	synchronize_rcu();
- 	INIT_WORK(&rdev->del_work, md_delayed_delete);
- 	kobject_get(&rdev->kobj);
-=2D	queue_work(md_del_wq, &rdev->del_work);
-+	queue_work(rdev_del_wq, &rdev->del_work);
- }
-=20
- /*
-@@ -4307,7 +4308,7 @@ new_dev_store(struct mddev *mddev, const char *buf, s=
-ize_t len)
- 		return -EOVERFLOW;
-=20
- 	/* Ensure old devices are fully deleted (rdev->del_work) */
-=2D	flush_workqueue(md_del_wq);
-+	flush_workqueue(rdev_del_wq);
-=20
- 	err =3D mddev_lock(mddev);
- 	if (err)
-@@ -7140,7 +7141,7 @@ static int md_ioctl(struct block_device *bdev, fmode_=
-t mode,
-=20
- 	if (cmd =3D=3D ADD_NEW_DISK)
- 		/* need to ensure md_delayed_delete() has completed (rdev->del_work) */
-=2D		flush_workqueue(md_del_wq);
-+		flush_workqueue(rdev_del_wq);
-=20
- 	if (cmd =3D=3D HOT_REMOVE_DISK)
- 		/* need to ensure recovery thread has run */
-@@ -9033,8 +9034,9 @@ static int __init md_init(void)
-=20
- 	md_wq =3D alloc_workqueue("md", WQ_MEM_RECLAIM, 0);
- 	md_del_wq =3D alloc_workqueue("md_del", 0, 0);
-+	rdev_del_wq =3D alloc_workqueue("md_rdev_del", 0, 0);
- 	md_misc_wq =3D alloc_workqueue("md_misc", 0, 0);
-=2D	if (!md_wq || !md_del_wq || !md_misc_wq)
-+	if (!md_wq || !md_del_wq || !rdev_del_wq || !md_misc_wq)
- 		goto err;
-=20
- 	if ((ret =3D register_blkdev(MD_MAJOR, "md")) < 0)
-@@ -9062,6 +9064,8 @@ static int __init md_init(void)
- 		destroy_workqueue(md_wq);
- 	if (md_del_wq)
- 		destroy_workqueue(md_del_wq);
-+	if (rdev_del_wq)
-+		destroy_workqueue(rdev_del_wq);
- 	if (md_misc_wq)
- 		destroy_workqueue(md_misc_wq);
- 	return ret;
-@@ -9319,6 +9323,7 @@ static __exit void md_exit(void)
+---
+ drivers/md/raid1.c |    7 +------
+ drivers/md/raid5.c |    7 +------
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+Index: linux-2.6/drivers/md/raid1.c
+===================================================================
+--- linux-2.6.orig/drivers/md/raid1.c
++++ linux-2.6/drivers/md/raid1.c
+@@ -37,7 +37,6 @@
+ #include <linux/module.h>
+ #include <linux/seq_file.h>
+ #include <linux/ratelimit.h>
+-#include <linux/sched/signal.h>
+ 
+ #include <trace/events/block.h>
+ 
+@@ -1322,9 +1321,8 @@ static void raid1_write_request(struct m
+ 		 */
+ 		DEFINE_WAIT(w);
+ 		for (;;) {
+-			sigset_t full, old;
+ 			prepare_to_wait(&conf->wait_barrier,
+-					&w, TASK_INTERRUPTIBLE);
++					&w, TASK_IDLE);
+ 			if (bio_end_sector(bio) <= mddev->suspend_lo ||
+ 			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
+ 			    (mddev_is_clustered(mddev) &&
+@@ -1332,10 +1330,7 @@ static void raid1_write_request(struct m
+ 				     bio->bi_iter.bi_sector,
+ 				     bio_end_sector(bio))))
+ 				break;
+-			sigfillset(&full);
+-			sigprocmask(SIG_BLOCK, &full, &old);
+ 			schedule();
+-			sigprocmask(SIG_SETMASK, &old, NULL);
+ 		}
+ 		finish_wait(&conf->wait_barrier, &w);
  	}
- 	destroy_workqueue(md_misc_wq);
- 	destroy_workqueue(md_del_wq);
-+	destroy_workqueue(rdev_del_wq);
- 	destroy_workqueue(md_wq);
- }
-=20
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnn120ACgkQOeye3VZi
-gbkX9xAAjG5cyICTwjGkw5CNiJ+3wKSRT59/F0x80MJDZEU7fKoD5Nyke6kl0ox2
-nMXlb7X6OMY8iQ47/JYtiZyoFawCjhXm240F9pxoFqp3AL5/rTKgyLkPMzs2aeva
-VE87EzccuFtCIDYjN+PudKDDZPcErgAFA+q2GG4z+dgUKsktjGBtInBIvnMcSEbH
-VP5ctPFtPxW++dKgRKcEdAQid2SbHpa2cP9w9ht56EfK9mCfCbU4YxcOCzZ26Gal
-aq3xHYoGK9SJyRnRDOWlrOvXBOjMnK5dy3ItgcrX0YBAyzaSNf1rf4ZD3+yDfJTo
-S+W7cT3QsS8vJzRIwIzbDa8QX/aA82Ustm+Y7rVHDXeAAMtZkqqDFc6ICfnph0cm
-55D8zN7dGNgTqjMYwULrAzQJmfPaN3ffg8UcYXg2M6uV6oZjF2/Y+UbO5u6Z+OHf
-ZiRSK3lCcB8yswoQevV4XZQuslEc2WOBLh1Un3ZJ7tXnncWg3cxPx9kz1BYMaqLi
-wMIPA9XXd/VOhKaWdsXWkUDYCeeLlkQkZaxIE0LQ/y0PxGIw6F0Cm1PXRfM2aBWx
-RsWMjEGdXIUQDlARVHsm7G1niAEbwOfVd0lI61Qn9zaZRL4o/VJ3kCk8xwdNOr/k
-/Hlo/a0Btkg4wpjOam9rulrjrrV99wAyan9f2O5A+56LH8teLtc=
-=i8Qu
------END PGP SIGNATURE-----
---=-=-=--
+Index: linux-2.6/drivers/md/raid5.c
+===================================================================
+--- linux-2.6.orig/drivers/md/raid5.c
++++ linux-2.6/drivers/md/raid5.c
+@@ -55,7 +55,6 @@
+ #include <linux/ratelimit.h>
+ #include <linux/nodemask.h>
+ #include <linux/flex_array.h>
+-#include <linux/sched/signal.h>
+ 
+ #include <trace/events/block.h>
+ #include <linux/list_sort.h>
+@@ -5691,14 +5690,10 @@ static bool raid5_make_request(struct md
+ 				 * wait.
+ 				 */
+ 				prepare_to_wait(&conf->wait_for_overlap,
+-						&w, TASK_INTERRUPTIBLE);
++						&w, TASK_IDLE);
+ 				if (logical_sector >= mddev->suspend_lo &&
+ 				    logical_sector < mddev->suspend_hi) {
+-					sigset_t full, old;
+-					sigfillset(&full);
+-					sigprocmask(SIG_BLOCK, &full, &old);
+ 					schedule();
+-					sigprocmask(SIG_SETMASK, &old, NULL);
+ 					do_prepare = true;
+ 				}
+ 				goto retry;
