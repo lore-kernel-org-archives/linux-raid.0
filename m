@@ -1,89 +1,208 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: MDADM RAID 6 Bad Superblock after reboot
-Date: Wed, 18 Oct 2017 20:40:59 +0100
-Message-ID: <59E7AE4B.5000903@youngman.org.uk>
-References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com>
- <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com>
+From: dfc <chernoff@astro.cornell.edu>
+Subject: USB chasis fails, fate of the software raid?
+Date: Wed, 18 Oct 2017 15:04:41 -0400
+Message-ID: <1508353481.2692.9.camel@astro.cornell.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Sean R. Funk" <sfunk1x@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 18/10/17 19:14, Sean R. Funk wrote:
-> 
-> 
-> Hi there,
+I have an Orico (3559SUSJ3) external 5 bay
+hard disk drive enclosure attached via
+USB to my desktop computer.
 
-Hi,
+It holds 5 * 4 TB disks in raid5 and
+has functioned for a couple of years.
 
-First responding ...
-> 
-> After attempting to add a GPU to a VM running on a CentOS 7 KVM host I
-> have, the machine forcibly rebooted. Upon reboot, my /dev/md0 raid 6 XFS
-> array would not start.
-> 
-> Background:
-> 
-> Approximately 3 weeks ago I added 3 additional 3TB HDD's to my existing
-> 5 disk array, and grew it using the *raw* disks as opposed to the
-> partitions. Everything appeared to be working fine (raw disk was my
-> mistake, as it had been a year since I had expanded this array
-> previously, simply forgot steps) until last night. WHen I added the GPU
-> via VMM, the host itself rebooted.
+Then the power supply (or fan
+or some internal component of the chasis)
+failed and -- from one boot to the next -- 
+the chasis is DOA, i.e. it does not even power
+on the disks. 
 
-Raw disk shouldn't make any difference - mdadm/raid couldn't care less.
-Mixing is not recommended primarily because it confuses the sysadmin -
-not a good idea.
-> 
-> Unfortunately, the machine has no network access at the moment and I can
-> only provide pictures of text from whats displayed on the screen. The
-> system is booting into emergency mode and its failing because the
-> /dev/md0 array isn't starting (and then NFS fails, etc).
-> 
-I'm guessing :-) that that means the array is degraded, therefore it
-won't assemble/run and that obviously is knocking out the system.
+When last used, the drives were all active and 
+in good shape; I copy below the output of the
+mdadm --detail list
+just a short time before the failure.
 
-> Smartctl shows no errors with any of the disks, and mdadm examine shows
-> no superblocks on the 3 disks I added before. The array is in the
-> inactive state, and it shows only 5 disks.
+My main question is whether inserting
+the 5 disks into another JBOD chasis
+is likely to work? In particular is
+mdadm "smart enough" to find all
+the components and/or do I need to do
+something to help it along? In fact,
+our IT person has suggested that the
+data may well be lost.
 
-What does --detail tell us about the array?
-> 
-> To add to that, apparently I had grown the cluster while SELinux had
-> been enabled as opposed to permissive - so there was a audit log of
-> mdadm trying to modify /etc/mdadm.conf. I'm guessing it was trying to
-> update the configuration file as to the drive configuration.
+Details: 
+raid5 (no spares)
+20 TB
+XFS filesystem
+Debian 3.16.0-4-amd64
 
-Are you sure the three drives were added? SELinux has a habit of causing
-havoc. Did the available space on the array increase? Did you check?
-> 
-> Smartctl shows each drive is fine, and the first 5 drives have equal
-> numbers of events. I'm presuming the data is all still intact.
-> 
-> Any advice on how to proceed? Thanks!
+Also, since I first used the JBOD with software
+raid I came to realize that the usb connection
+is not a good choice (though I have never had
+problems). What sort of connection (at the low
+price end of the market for HDD enclosures)
+would be better? eSata or something else?
 
-Firstly, make sure SELinux didn't interfere with the grow. My guess is
-the add failed because SELinux blocked it, and in reality you've still
-got a five-drive array, it just thinks it's an eight-drive array, so
-when the system rebooted it said "five drives of eight? Not enough!" and
-stopped.
+Many thanks for answers/suggestions.
+David
+-----------------------------------------------------------
+OUTPUT of mdadm --detail list
 
-The experts will chime in with more info, but
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
+           Name : impala:0
+  Creation Time : Fri May 22 15:32:31 2015
+     Raid Level : raid5
+   Raid Devices : 5
 
-(a) don't do anything that alters the disks ...
+ Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
+     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : f0cda836:8c1c28d1:53710d20:db8d088a
 
-(b) investigate that scenario, ie SELinux prevented the grow from
-actually occurring.
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Sep  2 18:54:20 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 3d0d8085 - correct
+         Events : 197036
 
-If I'm right, recovery is hopefully a simple matter of disabling
-SELinux, and re-assembling the array with either reverting the grow, or
-firing it off so it can actually run and complete.
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-It certainly doesn't look a disastrous scenario at the moment.
+   Device Role : Active device 4
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
+replacing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
+           Name : impala:0
+  Creation Time : Fri May 22 15:32:31 2015
+     Raid Level : raid5
+   Raid Devices : 5
 
-Cheers,
-Wol
+ Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
+     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : 2e1a57ff:f892fb23:1f698390:53dd98e3
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Sep  2 18:54:20 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 22958a72 - correct
+         Events : 197036
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
+replacing)
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
+           Name : impala:0
+  Creation Time : Fri May 22 15:32:31 2015
+     Raid Level : raid5
+   Raid Devices : 5
+
+ Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
+     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : 3be7bbb4:4e5f07e3:f78f3c31:5bd6df6b
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Sep  2 18:54:20 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : c00643b3 - correct
+         Events : 197036
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
+replacing)
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
+           Name : impala:0
+  Creation Time : Fri May 22 15:32:31 2015
+     Raid Level : raid5
+   Raid Devices : 5
+
+ Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
+     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : 2b09eed0:0a6ead54:48671d28:0abd1b6e
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Sep  2 18:54:20 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 46fb325e - correct
+         Events : 197036
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
+replacing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 954b2546:5c467e9c:a4eb74e3:27dad837
+           Name : impala:0
+  Creation Time : Fri May 22 15:32:31 2015
+     Raid Level : raid5
+   Raid Devices : 5
+
+ Avail Dev Size : 7813771264 (3725.90 GiB 4000.65 GB)
+     Array Size : 15627542528 (14903.59 GiB 16002.60 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : clean
+    Device UUID : 324b49de:233d8769:7f75afad:dddb0ec8
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Sep  2 18:54:20 2017
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 48b57088 - correct
+         Events : 197036
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAA ('A' == active, '.' == missing, 'R' ==
+replacing)
+             
