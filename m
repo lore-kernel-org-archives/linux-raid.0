@@ -1,84 +1,50 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID6: Reducing to Grow
-Date: Wed, 18 Oct 2017 14:02:03 -0400
-Message-ID: <0f2b759f-3f4d-127a-242a-74c3f8abdea4@turmel.org>
-References: <CAPE0SYzB49Vk-QcKWGzVDCqwYjnatGYWrFVeb+jdMF-5wry9Lg@mail.gmail.com>
- <ba94e811-1ae4-a8a3-5907-bde289b44754@turmel.org>
- <9ef8359d-7da9-de5a-d939-46a3c51cc68d@gmail.com>
+From: "Sean R. Funk" <sfunk1x@gmail.com>
+Subject: MDADM RAID 6 Bad Superblock after reboot
+Date: Wed, 18 Oct 2017 18:14:36 +0000
+Message-ID: <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com>
+References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9ef8359d-7da9-de5a-d939-46a3c51cc68d@gmail.com>
-Content-Language: en-GB
+In-Reply-To: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Liwei <xieliwei@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/18/2017 01:20 AM, Liwei wrote:
-> Hi Phil,
 
 
-> Whoops, we do run LVM on top, but currently it is one gigantic LV. (We
-> converted to btrfs and started using subvolumes instead) My guess is
-> you're thinking of creating another array with the unused space, and
-> then migrating LVs over?
+Hi there,
 
-Yes.  With temporary ~4T partitions.
+After attempting to add a GPU to a VM running on a CentOS 7 KVM host I
+have, the machine forcibly rebooted=2E Upon reboot, my /dev/md0 raid 6 XFS
+array would not start=2E
 
-> The lsdrv output follows, with a lot of irrelevant/empty nodes removed.
-> Also, I realised I misread the storage size of two of the 2TB drives, so
-> we're actually at 9x 2TB and 4x 6TB.
+Background:
 
-Very helpful.
+Approximately 3 weeks ago I added 3 additional 3TB HDD's to my existing
+5 disk array, and grew it using the *raw* disks as opposed to the
+partitions=2E Everything appeared to be working fine (raw disk was my
+mistake, as it had been a year since I had expanded this array
+previously, simply forgot steps) until last night=2E WHen I added the GPU
+via VMM, the host itself rebooted=2E
 
-> _However_, I do have one 6TB "hot spare" plugged in, and 3 proper 6TB
-> SAS drives arriving next week, so there may still be a way to do this,
-> perhaps?
+Unfortunately, the machine has no network access at the moment and I can
+only provide pictures of text from whats displayed on the screen=2E The
+system is booting into emergency mode and its failing because the
+/dev/md0 array isn't starting (and then NFS fails, etc)=2E
 
-Makes it easy, actually.
+Smartctl shows no errors with any of the disks, and mdadm examine shows
+no superblocks on the 3 disks I added before=2E The array is in the
+inactive state, and it shows only 5 disks=2E
 
-So, here's what I recommend:
+To add to that, apparently I had grown the cluster while SELinux had
+been enabled as opposed to permissive - so there was a audit log of
+mdadm trying to modify /etc/mdadm=2Econf=2E I'm guessing it was trying to
+update the configuration file as to the drive configuration=2E
 
-1) Set long timeouts on your desktop drives, the WD*EARS and WD*FASS:
+Smartctl shows each drive is fine, and the first 5 drives have equal
+numbers of events=2E I'm presuming the data is all still intact=2E
 
-for x in a b j l ; do echo 180 > /sys/block/sd$x/device/timeout ; done
-
-2) Scrub your array (and wait for it to finish):
-
-echo check >/sys/block/md126/md/sync_action
-
-3) After installing the new drives, fail one of your 6T drives out of
-the array, then use it, the hot spare, the new drives, and one 'missing'
-to set up a new degraded 6-drive raid6.  Consider using a smaller chunk
-size unless you are storing very large media files.  (I use 16k or 32k
-for my parity arrays.)
-
-4) Add the new array as a physical volume to your existing volume group.
-
-5) Use lvconvert to change LV Wonderland to a mirror.  You could just use
-pvmove if you don't mind the reduced redundancy.  Let it get fully
-mirrored or moved.  Skip to step #8 if you used pvmove.
-
-6) Fail another 6T drive from the existing array and add it to the new
-array.  Let it rebuild.
-
-7) Use lvconvert to change LV Wonderland back into an unmirrored LV on
-the new array.  Be careful to specify the new array!
-
-8) Remove the old array from your volume group with vgreduce.  Shut down
-the old array and use mdadm --zero-superblock on its prior members.
-Get rid of the desktop drives.
-
-9) Add all the newly available 6T drives to the new array.  Let it
-rebuild if necessary.
-
-10) Grow the new array to occupy all of the space on all of the devices,
-or maybe leave one hot spare.  (I wouldn't, but it depends on your
-application and your supply chain.)
-
-11) Enjoy all that space!
-
-Note that all of the above can be executed while using your mounted LV.
-
-Phil
+Any advice on how to proceed? Thanks!
