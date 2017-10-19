@@ -1,138 +1,85 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md: use TASK_IDLE instead of blocking signals
-Date: Thu, 19 Oct 2017 10:22:03 +1100
-Message-ID: <87o9p4ghyc.fsf@notabene.neil.brown.name>
-References: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
+From: dfc <chernoff@astro.cornell.edu>
+Subject: Re: USB chasis fails, fate of the software raid?
+Date: Wed, 18 Oct 2017 20:06:18 -0400
+Message-ID: <1508371578.2692.34.camel@astro.cornell.edu>
+References: <1508353481.2692.9.camel@astro.cornell.edu>
+         <17362074-5ca8-acc4-ab3b-0f5a41875416@grumpydevil.homelinux.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <17362074-5ca8-acc4-ab3b-0f5a41875416@grumpydevil.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>, Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org
+To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2017-10-18 at 22:28 +0200, Rudy Zijlstra wrote:
+> Hi David,
+> 
+> 
 
-On Wed, Oct 18 2017, Mikulas Patocka wrote:
+Hi Rudy,
 
-> Hi - I submit this patch for the next merge window:
->
->
-> Some times ago, I made a patch f9c79bc05a2a that blocks signals around the
-> schedule() calls in MD. The MD subsystem needs to do an uninterruptible
-> sleep that is not accounted in load average - so we block signals and use
-> interruptible sleep.
->
-> The kernel has a special TASK_IDLE state for this purpose, so we can use
-> it instead of blocking signals. This patch doesn't fix any bug, it just
-> makes the code simpler.
->
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Op 18/10/2017 om 21:04 schreef dfc:
+> > I have an Orico (3559SUSJ3) external 5 bay
+> > hard disk drive enclosure attached via
+> > USB to my desktop computer.
+> 
+> USB is indeed not the best choice.
+> 
+> > It holds 5 * 4 TB disks in raid5 and
+> > has functioned for a couple of years.
+> 
+> <snip>
+> > My main question is whether inserting
+> > the 5 disks into another JBOD chasis
+> > is likely to work?
+> 
+> Yes, this should work. With a little luck you would not even need to 
+> force it, as with a component failure all disks should have lost 
+> connection at the same time.
+> The biggest risk is that the failure caused spikes before final
+> death, 
+> causing damage on the HDD. But without knowing the actual failure
+> that 
+> is pure conjecture.
+> You could test each disk separately -- as long as you only read from 
+> them. Only reading is to ensure that no changes are done that make
+> later 
 
-Thanks for doing this!  It has been on my mind to look at exactly this
-possibility for a while but it never quite happened.  Now I don't need
-to :-)
+Thanks, I will try reading disks and then install in a new
+chasis.
 
-Acked-by: NeilBrown <neilb@suse.com>
-
-Thanks,
-NeilBrown
-
-
->
-> ---
->  drivers/md/raid1.c |    7 +------
->  drivers/md/raid5.c |    7 +------
->  2 files changed, 2 insertions(+), 12 deletions(-)
->
-> Index: linux-2.6/drivers/md/raid1.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/drivers/md/raid1.c
-> +++ linux-2.6/drivers/md/raid1.c
-> @@ -37,7 +37,6 @@
->  #include <linux/module.h>
->  #include <linux/seq_file.h>
->  #include <linux/ratelimit.h>
-> -#include <linux/sched/signal.h>
->=20=20
->  #include <trace/events/block.h>
->=20=20
-> @@ -1322,9 +1321,8 @@ static void raid1_write_request(struct m
->  		 */
->  		DEFINE_WAIT(w);
->  		for (;;) {
-> -			sigset_t full, old;
->  			prepare_to_wait(&conf->wait_barrier,
-> -					&w, TASK_INTERRUPTIBLE);
-> +					&w, TASK_IDLE);
->  			if (bio_end_sector(bio) <=3D mddev->suspend_lo ||
->  			    bio->bi_iter.bi_sector >=3D mddev->suspend_hi ||
->  			    (mddev_is_clustered(mddev) &&
-> @@ -1332,10 +1330,7 @@ static void raid1_write_request(struct m
->  				     bio->bi_iter.bi_sector,
->  				     bio_end_sector(bio))))
->  				break;
-> -			sigfillset(&full);
-> -			sigprocmask(SIG_BLOCK, &full, &old);
->  			schedule();
-> -			sigprocmask(SIG_SETMASK, &old, NULL);
->  		}
->  		finish_wait(&conf->wait_barrier, &w);
->  	}
-> Index: linux-2.6/drivers/md/raid5.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/drivers/md/raid5.c
-> +++ linux-2.6/drivers/md/raid5.c
-> @@ -55,7 +55,6 @@
->  #include <linux/ratelimit.h>
->  #include <linux/nodemask.h>
->  #include <linux/flex_array.h>
-> -#include <linux/sched/signal.h>
->=20=20
->  #include <trace/events/block.h>
->  #include <linux/list_sort.h>
-> @@ -5691,14 +5690,10 @@ static bool raid5_make_request(struct md
->  				 * wait.
->  				 */
->  				prepare_to_wait(&conf->wait_for_overlap,
-> -						&w, TASK_INTERRUPTIBLE);
-> +						&w, TASK_IDLE);
->  				if (logical_sector >=3D mddev->suspend_lo &&
->  				    logical_sector < mddev->suspend_hi) {
-> -					sigset_t full, old;
-> -					sigfillset(&full);
-> -					sigprocmask(SIG_BLOCK, &full, &old);
->  					schedule();
-> -					sigprocmask(SIG_SETMASK, &old, NULL);
->  					do_prepare =3D true;
->  				}
->  				goto retry;
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnn4hwACgkQOeye3VZi
-gbmFJQ//UleUfdXIwRtC5IEwcpxBNHvXQIxfHC05PCaa66W5EI9kfSoupfG4vz9U
-eXNl3SdrVHJf//z9hqNfxczgfNmoXSucYCpz2y5P0kugoe/HEs6XOheB3bznD8ss
-4lcXb0I1J5ORltp16cvheN9f7Rn7fKFOP0RGu/pXdS/zKqtKxXobnZWZG2MoglMS
-Dw5t7xYAiB3p9ePQFdBglfEamEECiuI0U8anxlEuBAFIHPTDP3GuFbyrPGSE7te0
-eb1A2nG4o+UTg1rOP1nsXQOlZt3yF6f1NI+BVTm1svn3TPbXMtMC+BuJFlquwkGU
-ZotuhU2dsoEnycRq3bcwJhUifY8WjtZsoMr2TamiSWs4zqwJmY46P7ep27yyhrez
-tJvDGRqWq3Kpa5sB68Gg5BXcmXEAVuxE3ZOYQnvMFWW103x56gh7ZLQswQjPkypE
-icY95rKxMlC1YJFzJcKllD5SqFNsDCt2M6IM7yiRPilx2/KDdgjjynkKhh1VxPGu
-ifiS9k8tYq9wGdDukrg9rC3+VdWIokgsHrBf8IBysWVZ1xgNi8S/RHQhv1Gp1j9u
-N4Cdcolf/XyE9hfTxm2WUoQsBzyCDklhmseFpVaIwqVXTI6uAL7njIPBW4uS3yJO
-kYYAhFiyNwxnzyVsbwDDPXOY9A8Wz755OuFIr4NdzvR5puSB0QQ=
-=Ojcu
------END PGP SIGNATURE-----
---=-=-=--
+> re-build of the raid difficult.
+> > In particular is
+> > mdadm "smart enough" to find all
+> > the components and/or do I need to do
+> > something to help it along? In fact,
+> > our IT person has suggested that the
+> > data may well be lost.
+> 
+> Your IT person apparently either thinks the HW failure caused
+> extensive 
+> damage, or wants you to do something different, or... is not very 
+> knowledgeable about this type of setup.
+> 
+> <snip>
+> > Also, since I first used the JBOD with software
+> > raid I came to realize that the usb connection
+> > is not a good choice (though I have never had
+> > problems). What sort of connection (at the low
+> > price end of the market for HDD enclosures)
+> > would be better? eSata or something else?
+> 
+> eSATA would work. But depends on the type of enclusure you can get.
+> I 
+> leave that to people based in USA, who know what is available there.
+> 
+> Cheers
+> 
+> Rudy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
