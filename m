@@ -1,105 +1,113 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: forbid a RAID5 from having both a bitmap and a
- journal.
-Date: Wed, 18 Oct 2017 20:16:39 -0700
-Message-ID: <20171019031639.5guxwtrlenwjgzns@kernel.org>
-References: <a9a406f5f751d39620d5e4907992ccb1bdbfb5a7.1507670143.git.shli@fb.com>
- <87bmldnjtq.fsf@notabene.neil.brown.name>
- <20171012173019.c2bbfyz3hgudjbhz@kernel.org>
- <ED3BAA5A-9A7B-4FA1-BC4E-299F1A69D9E7@fb.com>
- <87wp3zlj9q.fsf@notabene.neil.brown.name>
- <20171013195122.mi7gr4xxm77odx7t@kernel.org>
- <608CE47A-1C46-4087-B7D3-6FA5936C1DAF@fb.com>
- <877evulrpm.fsf@notabene.neil.brown.name>
- <20171016235609.mmo3vbqiekr4li5c@kernel.org>
- <87sheijw2u.fsf@notabene.neil.brown.name>
+Subject: Re: [md PATCH 1/5 v2] md: always hold reconfig_mutex when calling
+ mddev_suspend()
+Date: Wed, 18 Oct 2017 20:45:38 -0700
+Message-ID: <20171019034420.sdxvirpv454vgx4h@kernel.org>
+References: <150820826980.1646.6380214598725492144.stgit@noble>
+ <150820840340.1646.12365558035859364361.stgit@noble>
+ <20171018061107.42kpztc3nbnhbavi@kernel.org>
+ <87efq0j4d2.fsf@notabene.neil.brown.name>
+ <87lgk8gcmb.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87sheijw2u.fsf@notabene.neil.brown.name>
+In-Reply-To: <87lgk8gcmb.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, "kumba@gentoo.org" <kumba@gentoo.org>, Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 17, 2017 at 02:24:09PM +1100, Neil Brown wrote:
+On Thu, Oct 19, 2017 at 12:17:16PM +1100, Neil Brown wrote:
 > 
-> Having both a bitmap and a journal is pointless.
-> Attempting to do so can corrupt the bitmap if the journal
-> replay happens before the bitmap is initialized.
-> Rather than try to avoid this corruption, simply
-> refuse to allow arrays with both a bitmap and a journal.
-> So:
->  - if raid5_run sees both are present, fail.
->  - if adding a bitmap finds a journal is present, fail
->  - if adding a journal finds a bitmap is present, fail.
+> Most often mddev_suspend() is called with
+> reconfig_mutex held.  Make this a requirement in
+> preparation a subsequent patch.  Also require
+> reconfig_mutex to be held for mddev_resume(),
+> partly for symmetry and partly to guarantee
+> no races with incr/decr of mddev->suspend.
 > 
-> Cc: stable@vger.kernel.org (4.10+)
+> Taking the mutex in r5c_disable_writeback_async() is
+> a little tricky as this is called from a work queue
+> via log->disable_writeback_work, and flush_work()
+> is called on that while holding ->reconfig_mutex.
+> If the work item hasn't run before flush_work()
+> is called, the work function will not be able to
+> get the mutex.
+> 
+> So we use mddev_trylock() inside the wait_event() call, and have that
+> abort when conf->log is set to NULL, which happens before
+> flush_work() is called.
+> We wait in mddev->sb_wait and ensure this is woken
+> when any of the conditions change.  This requires
+> waking mddev->sb_wait in mddev_unlock().  This is only
+> like to trigger extra wake_ups of threads that needn't
+> be woken when metadata is being written, and that
+> doesn't happen often enough that the cost would be
+> noticeable.
+> 
 > Signed-off-by: NeilBrown <neilb@suse.com>
 
-Applied, thanks!
-> ---
-> 
-> This patch should replace 8031c3ddc70ab, which should be reverted.
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
->  drivers/md/bitmap.c | 6 ++++++
->  drivers/md/md.c     | 2 +-
->  drivers/md/raid5.c  | 7 +++++++
->  3 files changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index cae57b5be817..f425905c97fa 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -1816,6 +1816,12 @@ struct bitmap *bitmap_create(struct mddev *mddev, int slot)
+--snip--
+
+Applied the other patches in the series including the 'remove quiesce(2)' one.
+
+> index 0b7406ac8ce1..6a631dd21f0b 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -693,6 +693,8 @@ static void r5c_disable_writeback_async(struct work_struct *work)
+>  	struct r5l_log *log = container_of(work, struct r5l_log,
+>  					   disable_writeback_work);
+>  	struct mddev *mddev = log->rdev->mddev;
+> +	struct r5conf *conf = mddev->private;
+> +	int locked = 0;
 >  
->  	BUG_ON(file && mddev->bitmap_info.offset);
+>  	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH)
+>  		return;
+> @@ -701,11 +703,15 @@ static void r5c_disable_writeback_async(struct work_struct *work)
 >  
-> +	if (test_bit(MD_HAS_JOURNAL, &mddev->flags)) {
-> +		pr_notice("md/raid:%s: array with journal cannot have bitmap\n",
-> +			  mdname(mddev));
-> +		return ERR_PTR(-EBUSY);
+>  	/* wait superblock change before suspend */
+>  	wait_event(mddev->sb_wait,
+> -		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+> -
+> -	mddev_suspend(mddev);
+> -	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+> -	mddev_resume(mddev);
+> +		   conf->log == NULL ||
+> +		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
+> +		    (locked = mddev_trylock(mddev))));
+> +	if (locked) {
+> +		mddev_suspend(mddev);
+> +		log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+> +		mddev_resume(mddev);
+> +		mddev_unlock(mddev);
 > +	}
-> +
->  	bitmap = kzalloc(sizeof(*bitmap), GFP_KERNEL);
->  	if (!bitmap)
->  		return ERR_PTR(-ENOMEM);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 63ecfb063b76..bf06ff017eda 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6384,7 +6384,7 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
->  					break;
->  				}
->  			}
-> -			if (has_journal) {
-> +			if (has_journal || mddev->bitmap) {
->  				export_rdev(rdev);
->  				return -EBUSY;
->  			}
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 4f40ccd21cbb..e070e5c68801 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7134,6 +7134,13 @@ static int raid5_run(struct mddev *mddev)
->  			min_offset_diff = diff;
->  	}
+
+For this one, my point is:
+
+	wait_event(mddev->sb_wait, conf->log == NULL ||
+		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+	if (conf->log == NULL)
+		return;
+
+	mddev_suspend(mddev);
+	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
+	mddev_resume(mddev);
+
+does it work?
+
+>  }
 >  
-> +	if ((test_bit(MD_HAS_JOURNAL, &mddev->flags) || journal_dev) &&
-> +	    (mddev->bitmap_info.offset || mddev->bitmap_info.file)) {
-> +		pr_notice("md/raid:%s: array cannot have both journal and bitmap\n",
-> +			  mdname(mddev));
-> +		return -EINVAL;
-> +	}
-> +
->  	if (mddev->reshape_position != MaxSector) {
->  		/* Check that we can continue the reshape.
->  		 * Difficulties arise if the stripe we would write to
+>  static void r5l_submit_current_io(struct r5l_log *log)
+> @@ -3165,6 +3171,8 @@ void r5l_exit_log(struct r5conf *conf)
+>  	conf->log = NULL;
+>  	synchronize_rcu();
+>  
+> +	/* Ensure disable_writeback_work wakes up and exits */
+> +	wake_up(&conf->mddev->sb_wait);
+>  	flush_work(&log->disable_writeback_work);
+>  	md_unregister_thread(&log->reclaim_thread);
+>  	mempool_destroy(log->meta_pool);
 > -- 
 > 2.14.0.rc0.dirty
 > 
