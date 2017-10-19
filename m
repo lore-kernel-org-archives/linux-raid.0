@@ -1,115 +1,102 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 1/5 v2] md: always hold reconfig_mutex when calling
- mddev_suspend()
-Date: Wed, 18 Oct 2017 20:45:38 -0700
-Message-ID: <20171019034420.sdxvirpv454vgx4h@kernel.org>
-References: <150820826980.1646.6380214598725492144.stgit@noble>
- <150820840340.1646.12365558035859364361.stgit@noble>
- <20171018061107.42kpztc3nbnhbavi@kernel.org>
- <87efq0j4d2.fsf@notabene.neil.brown.name>
- <87lgk8gcmb.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH] md: use TASK_IDLE instead of blocking signals
+Date: Wed, 18 Oct 2017 20:48:47 -0700
+Message-ID: <20171019034847.zpbzai2kcv3jezrk@kernel.org>
+References: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87lgk8gcmb.fsf@notabene.neil.brown.name>
+In-Reply-To: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 19, 2017 at 12:17:16PM +1100, Neil Brown wrote:
+On Wed, Oct 18, 2017 at 07:01:11PM -0400, Mikulas Patocka wrote:
+> Hi - I submit this patch for the next merge window:
 > 
-> Most often mddev_suspend() is called with
-> reconfig_mutex held.  Make this a requirement in
-> preparation a subsequent patch.  Also require
-> reconfig_mutex to be held for mddev_resume(),
-> partly for symmetry and partly to guarantee
-> no races with incr/decr of mddev->suspend.
 > 
-> Taking the mutex in r5c_disable_writeback_async() is
-> a little tricky as this is called from a work queue
-> via log->disable_writeback_work, and flush_work()
-> is called on that while holding ->reconfig_mutex.
-> If the work item hasn't run before flush_work()
-> is called, the work function will not be able to
-> get the mutex.
+> Some times ago, I made a patch f9c79bc05a2a that blocks signals around the
+> schedule() calls in MD. The MD subsystem needs to do an uninterruptible
+> sleep that is not accounted in load average - so we block signals and use
+> interruptible sleep.
 > 
-> So we use mddev_trylock() inside the wait_event() call, and have that
-> abort when conf->log is set to NULL, which happens before
-> flush_work() is called.
-> We wait in mddev->sb_wait and ensure this is woken
-> when any of the conditions change.  This requires
-> waking mddev->sb_wait in mddev_unlock().  This is only
-> like to trigger extra wake_ups of threads that needn't
-> be woken when metadata is being written, and that
-> doesn't happen often enough that the cost would be
-> noticeable.
-> 
-> Signed-off-by: NeilBrown <neilb@suse.com>
+> The kernel has a special TASK_IDLE state for this purpose, so we can use
+> it instead of blocking signals. This patch doesn't fix any bug, it just
+> makes the code simpler.
 
---snip--
-
-Applied the other patches in the series including the 'remove quiesce(2)' one.
-
-> index 0b7406ac8ce1..6a631dd21f0b 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -693,6 +693,8 @@ static void r5c_disable_writeback_async(struct work_struct *work)
->  	struct r5l_log *log = container_of(work, struct r5l_log,
->  					   disable_writeback_work);
->  	struct mddev *mddev = log->rdev->mddev;
-> +	struct r5conf *conf = mddev->private;
-> +	int locked = 0;
+thanks, applied! 
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> 
+> ---
+>  drivers/md/raid1.c |    7 +------
+>  drivers/md/raid5.c |    7 +------
+>  2 files changed, 2 insertions(+), 12 deletions(-)
+> 
+> Index: linux-2.6/drivers/md/raid1.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/md/raid1.c
+> +++ linux-2.6/drivers/md/raid1.c
+> @@ -37,7 +37,6 @@
+>  #include <linux/module.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/ratelimit.h>
+> -#include <linux/sched/signal.h>
 >  
->  	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH)
->  		return;
-> @@ -701,11 +703,15 @@ static void r5c_disable_writeback_async(struct work_struct *work)
+>  #include <trace/events/block.h>
 >  
->  	/* wait superblock change before suspend */
->  	wait_event(mddev->sb_wait,
-> -		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-> -
-> -	mddev_suspend(mddev);
-> -	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-> -	mddev_resume(mddev);
-> +		   conf->log == NULL ||
-> +		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
-> +		    (locked = mddev_trylock(mddev))));
-> +	if (locked) {
-> +		mddev_suspend(mddev);
-> +		log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-> +		mddev_resume(mddev);
-> +		mddev_unlock(mddev);
-> +	}
-
-For this one, my point is:
-
-	wait_event(mddev->sb_wait, conf->log == NULL ||
-		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-	if (conf->log == NULL)
-		return;
-
-	mddev_suspend(mddev);
-	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-	mddev_resume(mddev);
-
-does it work?
-
->  }
+> @@ -1322,9 +1321,8 @@ static void raid1_write_request(struct m
+>  		 */
+>  		DEFINE_WAIT(w);
+>  		for (;;) {
+> -			sigset_t full, old;
+>  			prepare_to_wait(&conf->wait_barrier,
+> -					&w, TASK_INTERRUPTIBLE);
+> +					&w, TASK_IDLE);
+>  			if (bio_end_sector(bio) <= mddev->suspend_lo ||
+>  			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
+>  			    (mddev_is_clustered(mddev) &&
+> @@ -1332,10 +1330,7 @@ static void raid1_write_request(struct m
+>  				     bio->bi_iter.bi_sector,
+>  				     bio_end_sector(bio))))
+>  				break;
+> -			sigfillset(&full);
+> -			sigprocmask(SIG_BLOCK, &full, &old);
+>  			schedule();
+> -			sigprocmask(SIG_SETMASK, &old, NULL);
+>  		}
+>  		finish_wait(&conf->wait_barrier, &w);
+>  	}
+> Index: linux-2.6/drivers/md/raid5.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/md/raid5.c
+> +++ linux-2.6/drivers/md/raid5.c
+> @@ -55,7 +55,6 @@
+>  #include <linux/ratelimit.h>
+>  #include <linux/nodemask.h>
+>  #include <linux/flex_array.h>
+> -#include <linux/sched/signal.h>
 >  
->  static void r5l_submit_current_io(struct r5l_log *log)
-> @@ -3165,6 +3171,8 @@ void r5l_exit_log(struct r5conf *conf)
->  	conf->log = NULL;
->  	synchronize_rcu();
->  
-> +	/* Ensure disable_writeback_work wakes up and exits */
-> +	wake_up(&conf->mddev->sb_wait);
->  	flush_work(&log->disable_writeback_work);
->  	md_unregister_thread(&log->reclaim_thread);
->  	mempool_destroy(log->meta_pool);
-> -- 
-> 2.14.0.rc0.dirty
-> 
-
-
+>  #include <trace/events/block.h>
+>  #include <linux/list_sort.h>
+> @@ -5691,14 +5690,10 @@ static bool raid5_make_request(struct md
+>  				 * wait.
+>  				 */
+>  				prepare_to_wait(&conf->wait_for_overlap,
+> -						&w, TASK_INTERRUPTIBLE);
+> +						&w, TASK_IDLE);
+>  				if (logical_sector >= mddev->suspend_lo &&
+>  				    logical_sector < mddev->suspend_hi) {
+> -					sigset_t full, old;
+> -					sigfillset(&full);
+> -					sigprocmask(SIG_BLOCK, &full, &old);
+>  					schedule();
+> -					sigprocmask(SIG_SETMASK, &old, NULL);
+>  					do_prepare = true;
+>  				}
+>  				goto retry;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
