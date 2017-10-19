@@ -1,43 +1,56 @@
-From: =?UTF-8?Q?Bj=C3=B8rnar_Ness?= <bjornar.ness@gmail.com>
-Subject: mdadm segfault with incremental
-Date: Thu, 19 Oct 2017 13:24:17 +0200
-Message-ID: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com>
+From: "Sean R. Funk" <sfunk1x@gmail.com>
+Subject: Re: MDADM RAID 6 Bad Superblock after reboot
+Date: Thu, 19 Oct 2017 14:11:40 +0000
+Message-ID: <E62B1CBC-E39C-41A2-9795-623CF4FFE95F@gmail.com>
+References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com> <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com> <59E7AE4B.5000903@youngman.org.uk> <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com> <59E88568.6060108@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <59E88568.6060108@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-While working with mdadm policy/udev to add slaves when they are
-inserted, I notices
-mdadm is segfaulting if it gets a blank drive and action is set to
-spare or above.
 
-Looking into the code, this segfault is caused by the following code:
 
-Incremental.c line 965
+On October 19, 2017 3:58:48 AM PDT, Wols Lists <antlists@youngman=2Eorg=2E=
+uk> wrote:
 
-                     st2->ss->avail_size(st2, devsize,
-                                         sra->devs
-                                         ? sra->devs->data_offset
-                                         : INVALID_SECTORS)
+>
+>Okay=2E First thing I'd try is temporarily get rid of mdadm=2Econf=2E You
+>don't actually need it=2E Then do "mdadm --stop /dev/md0" followed by
+>"mdadm --assemble --scan"=2E
+>
 
-avail_size in my case is super1.c avail_size1
+Ok, so doing the stop, then assemble scan gets me :
 
-and here the code sets:
+/Dev/MD/0 assembled from 5 drives - not enough to start the array=2E
+No arrays found in config file or automatically=2E
 
-struct mdp_superblock_1 *super = st->sb;
+This was after moving the mdadm=2Econf temporarily=2E
 
-and later tries accessing i.e super->feature_map, where it segfaults
-because in the case
-of an empty drive, st2 is created in super1.c/match_metadata_desc1
-where it sets:
 
-        st->sb = NULL;
 
-I am not entirely sure how this is supposed to work, but atleast
-currently it segfaults.
+>If that doesn't work, then try assembling the array explicitly, ie
+>listing all the drives=2E I can't remember whether order is important -
+>so
+>long as you don't specify --force it'll either work or fail, it won't
+>do
+>any damage=2E
 
--- 
-Bj(/)rnar
+Looks like it's failed=2E  I ran:
+
+mdadm --assemble /dev/md0 /dev/[abcde]1 /dev/sd[fgh]=20
+
+Due to having to use a cell phone to respond I didn't type everything out =
+here, but that's the idea=2E Running that, I got:
+
+No superblock find on sdf expected magic a92b4efc, got 00000000
+No raid superblock on sdf
+Sdf has no superblock assembly aborted
+
+This is where I've been stuck=2E I read a post a couple nights ago about z=
+eroing the superblock on the drives that report no superblock, but it seems=
+ they are already zeroed? My lack of experience here isn't helping=2E
