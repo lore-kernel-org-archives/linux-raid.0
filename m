@@ -1,94 +1,80 @@
-From: dfc <chernoff@astro.cornell.edu>
-Subject: Re: USB chasis fails, fate of the software raid?
-Date: Thu, 19 Oct 2017 13:04:14 -0400
-Message-ID: <1508432654.2579.5.camel@astro.cornell.edu>
-References: <1508353481.2692.9.camel@astro.cornell.edu>
-         <17362074-5ca8-acc4-ab3b-0f5a41875416@grumpydevil.homelinux.org>
-         <1508371578.2692.34.camel@astro.cornell.edu>
-         <9158b8e4-5b1a-7e06-e19e-a30bcedba334@turmel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: MDADM RAID 6 Bad Superblock after reboot
+Date: Fri, 20 Oct 2017 08:17:25 +1100
+Message-ID: <87zi8mg7mi.fsf@notabene.neil.brown.name>
+References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com> <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com> <59E7AE4B.5000903@youngman.org.uk> <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9158b8e4-5b1a-7e06-e19e-a30bcedba334@turmel.org>
+In-Reply-To: <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid@vger.kernel.org
+To: sfunk1x <sfunk1x@gmail.com>, Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Phil, Thanks for your comments below.
+--=-=-=
+Content-Type: text/plain
 
-On Wed, 2017-10-18 at 20:44 -0400, Phil Turmel wrote:
-> On 10/18/2017 08:06 PM, dfc wrote:
-> > On Wed, 2017-10-18 at 22:28 +0200, Rudy Zijlstra wrote:
-> > > USB is indeed not the best choice.
-> 
-> Rudy, you master of understatement!
-> 
-> > > > My main question is whether inserting the 5 disks into another 
-> > > > JBOD chasis is likely to work?
-> > > 
-> > > Yes, this should work. With a little luck you would not even
-> > > need 
-> > > to force it, as with a component failure all disks should have
-> > > lost connection at the same time.
-> 
-> I would be shocked if these disk *won't* assemble.  Assembly might
-> need
-> --force if any writes were in flight, but I doubt it.
-> 
-> > > You could test each disk separately -- as long as you only read 
-> > > from them. Only reading is to ensure that no changes are done
-> > > that 
-> > > make later
-> > 
-> > Thanks, I will try reading disks and then install in a new chasis.
-> 
-> Just put them in a chassis and try to assemble.  If it succeeds, you
-> are
-> done.  If assembly fails, report what mdadm had to say.
+On Wed, Oct 18 2017, sfunk1x wrote:
 
-Will do
+> On 10/18/2017 12:40 PM, Wols Lists wrote:
+>> What does --detail tell us about the array?
+>
+> https://imgur.com/a/Own0W
+>
+> Apologies for the imgur link, but this was the easiest way to
+> communicate --detail.
 
-> 
-> > > re-build of the raid difficult.
-> > > > In particular is mdadm "smart enough" to find all the
-> > > > components 
-> > > > and/or do I need to do something to help it along? In fact,
-> > > > our 
-> > > > IT person has suggested that the data may well be lost.
-> > > 
-> > > Your IT person apparently either thinks the HW failure caused 
-> > > extensive damage, or wants you to do something different, or...
-> > > is 
-> > > not very knowledgeable about this type of setup.
-> 
-> Yeah, it does sound like somebody is out of their depth.
-> 
-> > > > Also, since I first used the JBOD with software raid I came to 
-> > > > realize that the usb connection is not a good choice (though I 
-> > > > have never had problems). What sort of connection (at the low 
-> > > > price end of the market for HDD enclosures) would be better? 
-> > > > eSata or something else?
-> > > 
-> > > eSATA would work. But depends on the type of enclusure you can
-> > > get.
-> > > I leave that to people based in USA, who know what is available
-> > > there.
-> 
-> eSATA with a port multiplier should be fine.  It's spend a bit more
-> for
-> a JBOD with a SAS port and a suitable PCIe adapter.
+Anything is better than nothing..  Can we get a photo of "mdadm
+--examine" output on one of the devices (e.g. /dev/sda1) ??
 
-Thank you, I will hunt for JBOD+SAS.
-I need 5 or perhaps 6 disks in the array and am
-still searching for a suitable unit.
+Also, what mdadm version (mdadm -V) and kernel version (uname -r)?
 
-David
+>
+>> Are you sure the three drives were added? SELinux has a habit of causing
+>> havoc. Did the available space on the array increase? Did you check?
+>
+> Yeah. The array took about 17 hours to rebuild with the three drives
+> added (I had expected over 24 as that had been my experience with adding
+> the 5th drive long ago), and I had immediately started using the extra
+> space. The extra 8+ TB showed up in --details, as well as df, and my
+> guests could see the extra space.
+>
+> The SELinux audit log, however, was very clear about mdadm not being
+> able to edit the conf. And it's true - the conf file did not have the
+> extra drives added. I've since audited and applied a rule to allow the
+> editing of the conf file, but the system is currently in permissive mode
+> until the array is back online. I can disable if needed.
 
-> 
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+mdadm never tries to edit mdadm.conf.
+It does modify files in /run/mdadm (or maybe /var/run/mdadm).
+Can we get a photo of that audit log?
+
+I'm very suspicious of these new drives appearing to have not metadata.
+Can you
+   od -x /dev/sdf | head
+   od -x /dev/sdf | grep a92b
+and provide a photo of the output?
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnpFmYACgkQOeye3VZi
+gbmsHw/+IhAy79IzOf0rbpwISlZVfCMWvMcK5FUB0B5btI/Yxd4juPSBvvurW0YZ
+YJF5vXQ2sG/ZPixs+T6JzLURFvNGfAaLX/8DAg1U48OMfDKXcGG1McNYckRYMsaW
+yR2NFR69zQaIvLl0OB9tuCGXGaJStIxBYN3qIJu0iLJh4u+N1Eg6dUa94gsP1m8Y
+M8kLK8q2Rk4sqmgGOxR1oXrhGAQjyvVwDlhd0scQviVQQ3eB4vjSl8uACZ7hYER+
+JbabaBIqnHlDZjfZ+hQB2K56v88RiHvGS/hmTOtaM9M97e+PkXU7PawF4wFSWao4
+CkvD3716FUHcX4HPHUoypfX3mFlbXJXtc7+bYyoIklbCjjX7L3WKzvlUhyQUw9qR
+A0dh+1dD4PQY4FGb2EFMWwsyEqy7gdYkZFo9xr6EOhSPiX8ZogkYQD9KoNvtwwI/
+lxGE8V699OK4bJwWyr21Wa+r5q/eLJ07oBK5re67KcaaMTkyhWjqpllgfkU6X6d8
+8V6md0icXPbZHGHdkLHQhFsqOK9hsfrZEk0m/vQPZeOstXSous1VYuUnZfrHX2YQ
+kFd+H/yOyLJdSX+6tWl11dbEieeLdhcC0cgADN3o14aSC1+/ata0SImQP3mPsPR8
+2nHCiQMM4aAlIWek/7BpXR1AKnL16pCN+cjLavvPEQ0pQnyYN7Y=
+=I+8v
+-----END PGP SIGNATURE-----
+--=-=-=--
