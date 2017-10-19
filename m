@@ -1,105 +1,120 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] raid1: prevent freeze_array/wait_all_barriers deadlock
-Date: Wed, 18 Oct 2017 21:10:30 -0700
-Message-ID: <20171019041030.jaonyeadhlovkgf5@kernel.org>
-References: <20171017121703.7915-1-nate.dailey@stratus.com>
- <6fc9ddf3-8c65-aee1-06da-e56692826899@suse.de>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH] md: use lockdep_assert_held
+Date: Wed, 18 Oct 2017 22:08:13 -0700
+Message-ID: <bd2a7444017882f62ccd503a5f0585ab8570660f.1508389646.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <6fc9ddf3-8c65-aee1-06da-e56692826899@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: Nate Dailey <nate.dailey@stratus.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 18, 2017 at 12:31:31AM +0800, Coly Li wrote:
-> On 2017/10/17 下午8:17, Nate Dailey wrote:
-> > If freeze_array is attempted in the middle of close_sync/
-> > wait_all_barriers, deadlock can occur.
-> > 
-> > freeze_array will wait for nr_pending and nr_queued to line up.
-> > wait_all_barriers increments nr_pending for each barrier bucket, one
-> > at a time, but doesn't actually issue IO that could be counted in
-> > nr_queued. So freeze_array is blocked until wait_all_barriers
-> > completes and allow_all_barriers runs. At the same time, when
-> > _wait_barrier sees array_frozen == 1, it stops and waits for
-> > freeze_array to complete.
-> > 
-> > Prevent the deadlock by making close_sync call _wait_barrier and
-> > _allow_barrier for one bucket at a time, instead of deferring the
-> > _allow_barrier calls until after all _wait_barriers are complete.
-> > 
-> > Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-> 
-> Reviewed-by: Coly Li <colyli@suse.de>
-> 
-> Thank you for the great effort on analyzing this deadlock, and provide a
-> simpler and clean fix :-)
+lockdep_assert_held is a better way to assert lock held, and it works
+for UP.
 
-Nice catch, thanks Nate and Coly! I'll mark this for-stable.
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/md.c          |  4 ++--
+ drivers/md/md.h          |  5 -----
+ drivers/md/raid5-cache.c | 12 ++++++------
+ 3 files changed, 8 insertions(+), 13 deletions(-)
 
-> 
-> Coly Li
-> 
-> > ---
-> >  drivers/md/raid1.c | 24 ++++++------------------
-> >  1 file changed, 6 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > index f3f3e40dc9d8..e4e8f9e565b7 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -990,14 +990,6 @@ static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
-> >  	_wait_barrier(conf, idx);
-> >  }
-> >  
-> > -static void wait_all_barriers(struct r1conf *conf)
-> > -{
-> > -	int idx;
-> > -
-> > -	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
-> > -		_wait_barrier(conf, idx);
-> > -}
-> > -
-> >  static void _allow_barrier(struct r1conf *conf, int idx)
-> >  {
-> >  	atomic_dec(&conf->nr_pending[idx]);
-> > @@ -1011,14 +1003,6 @@ static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
-> >  	_allow_barrier(conf, idx);
-> >  }
-> >  
-> > -static void allow_all_barriers(struct r1conf *conf)
-> > -{
-> > -	int idx;
-> > -
-> > -	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
-> > -		_allow_barrier(conf, idx);
-> > -}
-> > -
-> >  /* conf->resync_lock should be held */
-> >  static int get_unqueued_pending(struct r1conf *conf)
-> >  {
-> > @@ -1654,8 +1638,12 @@ static void print_conf(struct r1conf *conf)
-> >  
-> >  static void close_sync(struct r1conf *conf)
-> >  {
-> > -	wait_all_barriers(conf);
-> > -	allow_all_barriers(conf);
-> > +	int idx;
-> > +
-> > +	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
-> > +		_wait_barrier(conf, idx);
-> > +		_allow_barrier(conf, idx);
-> > +	}
-> >  
-> >  	mempool_destroy(conf->r1buf_pool);
-> >  	conf->r1buf_pool = NULL;
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8b2eb0f..f92de43 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2313,7 +2313,7 @@ static void export_array(struct mddev *mddev)
+ 
+ static bool set_in_sync(struct mddev *mddev)
+ {
+-	WARN_ON_ONCE(NR_CPUS != 1 && !spin_is_locked(&mddev->lock));
++	lockdep_assert_held(&mddev->lock);
+ 	if (!mddev->in_sync) {
+ 		mddev->sync_checkers++;
+ 		spin_unlock(&mddev->lock);
+@@ -6735,7 +6735,7 @@ static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 
+ void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors)
+ {
+-	WARN(!mddev_is_locked(mddev), "%s: unlocked mddev!\n", __func__);
++	lockdep_assert_held(&mddev->reconfig_mutex);
+ 
+ 	if (mddev->external_size)
+ 		return;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index d8287d3..7f3e77e 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -494,11 +494,6 @@ static inline void mddev_lock_nointr(struct mddev *mddev)
+ 	mutex_lock(&mddev->reconfig_mutex);
+ }
+ 
+-static inline int mddev_is_locked(struct mddev *mddev)
+-{
+-	return mutex_is_locked(&mddev->reconfig_mutex);
+-}
+-
+ static inline int mddev_trylock(struct mddev *mddev)
+ {
+ 	return mutex_trylock(&mddev->reconfig_mutex);
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 0b7406a..1a60fc5 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -539,7 +539,7 @@ static void r5l_log_run_stripes(struct r5l_log *log)
+ {
+ 	struct r5l_io_unit *io, *next;
+ 
+-	assert_spin_locked(&log->io_list_lock);
++	lockdep_assert_held(&log->io_list_lock);
+ 
+ 	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
+ 		/* don't change list order */
+@@ -555,7 +555,7 @@ static void r5l_move_to_end_ios(struct r5l_log *log)
+ {
+ 	struct r5l_io_unit *io, *next;
+ 
+-	assert_spin_locked(&log->io_list_lock);
++	lockdep_assert_held(&log->io_list_lock);
+ 
+ 	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
+ 		/* don't change list order */
+@@ -1194,7 +1194,7 @@ static void r5l_run_no_mem_stripe(struct r5l_log *log)
+ {
+ 	struct stripe_head *sh;
+ 
+-	assert_spin_locked(&log->io_list_lock);
++	lockdep_assert_held(&log->io_list_lock);
+ 
+ 	if (!list_empty(&log->no_mem_stripes)) {
+ 		sh = list_first_entry(&log->no_mem_stripes,
+@@ -1210,7 +1210,7 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ 	struct r5l_io_unit *io, *next;
+ 	bool found = false;
+ 
+-	assert_spin_locked(&log->io_list_lock);
++	lockdep_assert_held(&log->io_list_lock);
+ 
+ 	list_for_each_entry_safe(io, next, &log->finished_ios, log_sibling) {
+ 		/* don't change list order */
+@@ -1382,7 +1382,7 @@ static void r5c_flush_stripe(struct r5conf *conf, struct stripe_head *sh)
+ 	 * raid5_release_stripe() while holding conf->device_lock
+ 	 */
+ 	BUG_ON(test_bit(STRIPE_ON_RELEASE_LIST, &sh->state));
+-	assert_spin_locked(&conf->device_lock);
++	lockdep_assert_held(&conf->device_lock);
+ 
+ 	list_del_init(&sh->lru);
+ 	atomic_inc(&sh->count);
+@@ -1409,7 +1409,7 @@ void r5c_flush_cache(struct r5conf *conf, int num)
+ 	int count;
+ 	struct stripe_head *sh, *next;
+ 
+-	assert_spin_locked(&conf->device_lock);
++	lockdep_assert_held(&conf->device_lock);
+ 	if (!conf->log)
+ 		return;
+ 
+-- 
+2.9.5
+
