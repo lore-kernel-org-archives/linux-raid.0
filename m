@@ -1,46 +1,43 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: MDADM RAID 6 Bad Superblock after reboot
-Date: Thu, 19 Oct 2017 11:58:48 +0100
-Message-ID: <59E88568.6060108@youngman.org.uk>
-References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com>
- <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com>
- <59E7AE4B.5000903@youngman.org.uk>
- <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com>
+From: =?UTF-8?Q?Bj=C3=B8rnar_Ness?= <bjornar.ness@gmail.com>
+Subject: mdadm segfault with incremental
+Date: Thu, 19 Oct 2017 13:24:17 +0200
+Message-ID: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: sfunk1x <sfunk1x@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/10/17 02:52, sfunk1x wrote:
-> Thanks for the vote of confidence in not losing data here. As I
-> mentioned above, I've set SELinux into permissive mode. I'm sort of at a
-> loss as to what to do next. Since sd[fgh] don't have any superblock
-> data, can I try to bring the array back online with 5 drives, then
-> re-add the last three, with the hope that they sync? There obviously
-> hasn't been any writes to the last three drives since the hard system
-> reboot, so I'd hope their event numbers would be in sync?
+While working with mdadm policy/udev to add slaves when they are
+inserted, I notices
+mdadm is segfaulting if it gets a blank drive and action is set to
+spare or above.
 
-Okay. First thing I'd try is temporarily get rid of mdadm.conf. You
-don't actually need it. Then do "mdadm --stop /dev/md0" followed by
-"mdadm --assemble --scan".
+Looking into the code, this segfault is caused by the following code:
 
-That'll tell mdadm to do a "best effort" to get everything running.
-*Always* do an mdadm --stop between every attempt, because the quickest
-way to mess up recovery attempts is to have the wreckage of a previous
-attempt lying around.
+Incremental.c line 965
 
-If that doesn't work, then try assembling the array explicitly, ie
-listing all the drives. I can't remember whether order is important - so
-long as you don't specify --force it'll either work or fail, it won't do
-any damage.
+                     st2->ss->avail_size(st2, devsize,
+                                         sra->devs
+                                         ? sra->devs->data_offset
+                                         : INVALID_SECTORS)
 
-Beyond this point I'm getting out of my depth, I don't have the broad
-experience so I'll have to step back and let others chime in, but
-there's a good chance this will get your array back.
+avail_size in my case is super1.c avail_size1
 
-Cheers,
-Wol
+and here the code sets:
+
+struct mdp_superblock_1 *super = st->sb;
+
+and later tries accessing i.e super->feature_map, where it segfaults
+because in the case
+of an empty drive, st2 is created in super1.c/match_metadata_desc1
+where it sets:
+
+        st->sb = NULL;
+
+I am not entirely sure how this is supposed to work, but atleast
+currently it segfaults.
+
+-- 
+Bj(/)rnar
