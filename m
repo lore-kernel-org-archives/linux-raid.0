@@ -1,101 +1,104 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: use TASK_IDLE instead of blocking signals
-Date: Wed, 18 Oct 2017 20:48:47 -0700
-Message-ID: <20171019034847.zpbzai2kcv3jezrk@kernel.org>
-References: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: Re: [PATCH] raid1: prevent freeze_array/wait_all_barriers deadlock
+Date: Wed, 18 Oct 2017 21:10:30 -0700
+Message-ID: <20171019041030.jaonyeadhlovkgf5@kernel.org>
+References: <20171017121703.7915-1-nate.dailey@stratus.com>
+ <6fc9ddf3-8c65-aee1-06da-e56692826899@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1710181858530.32003@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <6fc9ddf3-8c65-aee1-06da-e56692826899@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Shaohua Li <shli@fb.com>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Nate Dailey <nate.dailey@stratus.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 18, 2017 at 07:01:11PM -0400, Mikulas Patocka wrote:
-> Hi - I submit this patch for the next merge window:
+On Wed, Oct 18, 2017 at 12:31:31AM +0800, Coly Li wrote:
+> On 2017/10/17 下午8:17, Nate Dailey wrote:
+> > If freeze_array is attempted in the middle of close_sync/
+> > wait_all_barriers, deadlock can occur.
+> > 
+> > freeze_array will wait for nr_pending and nr_queued to line up.
+> > wait_all_barriers increments nr_pending for each barrier bucket, one
+> > at a time, but doesn't actually issue IO that could be counted in
+> > nr_queued. So freeze_array is blocked until wait_all_barriers
+> > completes and allow_all_barriers runs. At the same time, when
+> > _wait_barrier sees array_frozen == 1, it stops and waits for
+> > freeze_array to complete.
+> > 
+> > Prevent the deadlock by making close_sync call _wait_barrier and
+> > _allow_barrier for one bucket at a time, instead of deferring the
+> > _allow_barrier calls until after all _wait_barriers are complete.
+> > 
+> > Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
 > 
+> Reviewed-by: Coly Li <colyli@suse.de>
 > 
-> Some times ago, I made a patch f9c79bc05a2a that blocks signals around the
-> schedule() calls in MD. The MD subsystem needs to do an uninterruptible
-> sleep that is not accounted in load average - so we block signals and use
-> interruptible sleep.
-> 
-> The kernel has a special TASK_IDLE state for this purpose, so we can use
-> it instead of blocking signals. This patch doesn't fix any bug, it just
-> makes the code simpler.
+> Thank you for the great effort on analyzing this deadlock, and provide a
+> simpler and clean fix :-)
 
-thanks, applied! 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Nice catch, thanks Nate and Coly! I'll mark this for-stable.
+
 > 
-> ---
->  drivers/md/raid1.c |    7 +------
->  drivers/md/raid5.c |    7 +------
->  2 files changed, 2 insertions(+), 12 deletions(-)
+> Coly Li
 > 
-> Index: linux-2.6/drivers/md/raid1.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/md/raid1.c
-> +++ linux-2.6/drivers/md/raid1.c
-> @@ -37,7 +37,6 @@
->  #include <linux/module.h>
->  #include <linux/seq_file.h>
->  #include <linux/ratelimit.h>
-> -#include <linux/sched/signal.h>
->  
->  #include <trace/events/block.h>
->  
-> @@ -1322,9 +1321,8 @@ static void raid1_write_request(struct m
->  		 */
->  		DEFINE_WAIT(w);
->  		for (;;) {
-> -			sigset_t full, old;
->  			prepare_to_wait(&conf->wait_barrier,
-> -					&w, TASK_INTERRUPTIBLE);
-> +					&w, TASK_IDLE);
->  			if (bio_end_sector(bio) <= mddev->suspend_lo ||
->  			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
->  			    (mddev_is_clustered(mddev) &&
-> @@ -1332,10 +1330,7 @@ static void raid1_write_request(struct m
->  				     bio->bi_iter.bi_sector,
->  				     bio_end_sector(bio))))
->  				break;
-> -			sigfillset(&full);
-> -			sigprocmask(SIG_BLOCK, &full, &old);
->  			schedule();
-> -			sigprocmask(SIG_SETMASK, &old, NULL);
->  		}
->  		finish_wait(&conf->wait_barrier, &w);
->  	}
-> Index: linux-2.6/drivers/md/raid5.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/md/raid5.c
-> +++ linux-2.6/drivers/md/raid5.c
-> @@ -55,7 +55,6 @@
->  #include <linux/ratelimit.h>
->  #include <linux/nodemask.h>
->  #include <linux/flex_array.h>
-> -#include <linux/sched/signal.h>
->  
->  #include <trace/events/block.h>
->  #include <linux/list_sort.h>
-> @@ -5691,14 +5690,10 @@ static bool raid5_make_request(struct md
->  				 * wait.
->  				 */
->  				prepare_to_wait(&conf->wait_for_overlap,
-> -						&w, TASK_INTERRUPTIBLE);
-> +						&w, TASK_IDLE);
->  				if (logical_sector >= mddev->suspend_lo &&
->  				    logical_sector < mddev->suspend_hi) {
-> -					sigset_t full, old;
-> -					sigfillset(&full);
-> -					sigprocmask(SIG_BLOCK, &full, &old);
->  					schedule();
-> -					sigprocmask(SIG_SETMASK, &old, NULL);
->  					do_prepare = true;
->  				}
->  				goto retry;
+> > ---
+> >  drivers/md/raid1.c | 24 ++++++------------------
+> >  1 file changed, 6 insertions(+), 18 deletions(-)
+> > 
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index f3f3e40dc9d8..e4e8f9e565b7 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -990,14 +990,6 @@ static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
+> >  	_wait_barrier(conf, idx);
+> >  }
+> >  
+> > -static void wait_all_barriers(struct r1conf *conf)
+> > -{
+> > -	int idx;
+> > -
+> > -	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> > -		_wait_barrier(conf, idx);
+> > -}
+> > -
+> >  static void _allow_barrier(struct r1conf *conf, int idx)
+> >  {
+> >  	atomic_dec(&conf->nr_pending[idx]);
+> > @@ -1011,14 +1003,6 @@ static void allow_barrier(struct r1conf *conf, sector_t sector_nr)
+> >  	_allow_barrier(conf, idx);
+> >  }
+> >  
+> > -static void allow_all_barriers(struct r1conf *conf)
+> > -{
+> > -	int idx;
+> > -
+> > -	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++)
+> > -		_allow_barrier(conf, idx);
+> > -}
+> > -
+> >  /* conf->resync_lock should be held */
+> >  static int get_unqueued_pending(struct r1conf *conf)
+> >  {
+> > @@ -1654,8 +1638,12 @@ static void print_conf(struct r1conf *conf)
+> >  
+> >  static void close_sync(struct r1conf *conf)
+> >  {
+> > -	wait_all_barriers(conf);
+> > -	allow_all_barriers(conf);
+> > +	int idx;
+> > +
+> > +	for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
+> > +		_wait_barrier(conf, idx);
+> > +		_allow_barrier(conf, idx);
+> > +	}
+> >  
+> >  	mempool_destroy(conf->r1buf_pool);
+> >  	conf->r1buf_pool = NULL;
+> > 
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
