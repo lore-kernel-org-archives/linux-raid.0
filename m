@@ -1,120 +1,137 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] md: use lockdep_assert_held
-Date: Wed, 18 Oct 2017 22:08:13 -0700
-Message-ID: <bd2a7444017882f62ccd503a5f0585ab8570660f.1508389646.git.shli@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [md PATCH 1/5 v2] md: always hold reconfig_mutex when calling mddev_suspend()
+Date: Thu, 19 Oct 2017 17:29:22 +1100
+Message-ID: <8760bbhcql.fsf@notabene.neil.brown.name>
+References: <150820826980.1646.6380214598725492144.stgit@noble> <150820840340.1646.12365558035859364361.stgit@noble> <20171018061107.42kpztc3nbnhbavi@kernel.org> <87efq0j4d2.fsf@notabene.neil.brown.name> <87lgk8gcmb.fsf@notabene.neil.brown.name> <20171019034420.sdxvirpv454vgx4h@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20171019034420.sdxvirpv454vgx4h@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-lockdep_assert_held is a better way to assert lock held, and it works
-for UP.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/md.c          |  4 ++--
- drivers/md/md.h          |  5 -----
- drivers/md/raid5-cache.c | 12 ++++++------
- 3 files changed, 8 insertions(+), 13 deletions(-)
+On Wed, Oct 18 2017, Shaohua Li wrote:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8b2eb0f..f92de43 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2313,7 +2313,7 @@ static void export_array(struct mddev *mddev)
- 
- static bool set_in_sync(struct mddev *mddev)
- {
--	WARN_ON_ONCE(NR_CPUS != 1 && !spin_is_locked(&mddev->lock));
-+	lockdep_assert_held(&mddev->lock);
- 	if (!mddev->in_sync) {
- 		mddev->sync_checkers++;
- 		spin_unlock(&mddev->lock);
-@@ -6735,7 +6735,7 @@ static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 
- void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors)
- {
--	WARN(!mddev_is_locked(mddev), "%s: unlocked mddev!\n", __func__);
-+	lockdep_assert_held(&mddev->reconfig_mutex);
- 
- 	if (mddev->external_size)
- 		return;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d8287d3..7f3e77e 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -494,11 +494,6 @@ static inline void mddev_lock_nointr(struct mddev *mddev)
- 	mutex_lock(&mddev->reconfig_mutex);
- }
- 
--static inline int mddev_is_locked(struct mddev *mddev)
--{
--	return mutex_is_locked(&mddev->reconfig_mutex);
--}
--
- static inline int mddev_trylock(struct mddev *mddev)
- {
- 	return mutex_trylock(&mddev->reconfig_mutex);
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 0b7406a..1a60fc5 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -539,7 +539,7 @@ static void r5l_log_run_stripes(struct r5l_log *log)
- {
- 	struct r5l_io_unit *io, *next;
- 
--	assert_spin_locked(&log->io_list_lock);
-+	lockdep_assert_held(&log->io_list_lock);
- 
- 	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
- 		/* don't change list order */
-@@ -555,7 +555,7 @@ static void r5l_move_to_end_ios(struct r5l_log *log)
- {
- 	struct r5l_io_unit *io, *next;
- 
--	assert_spin_locked(&log->io_list_lock);
-+	lockdep_assert_held(&log->io_list_lock);
- 
- 	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
- 		/* don't change list order */
-@@ -1194,7 +1194,7 @@ static void r5l_run_no_mem_stripe(struct r5l_log *log)
- {
- 	struct stripe_head *sh;
- 
--	assert_spin_locked(&log->io_list_lock);
-+	lockdep_assert_held(&log->io_list_lock);
- 
- 	if (!list_empty(&log->no_mem_stripes)) {
- 		sh = list_first_entry(&log->no_mem_stripes,
-@@ -1210,7 +1210,7 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
- 	struct r5l_io_unit *io, *next;
- 	bool found = false;
- 
--	assert_spin_locked(&log->io_list_lock);
-+	lockdep_assert_held(&log->io_list_lock);
- 
- 	list_for_each_entry_safe(io, next, &log->finished_ios, log_sibling) {
- 		/* don't change list order */
-@@ -1382,7 +1382,7 @@ static void r5c_flush_stripe(struct r5conf *conf, struct stripe_head *sh)
- 	 * raid5_release_stripe() while holding conf->device_lock
- 	 */
- 	BUG_ON(test_bit(STRIPE_ON_RELEASE_LIST, &sh->state));
--	assert_spin_locked(&conf->device_lock);
-+	lockdep_assert_held(&conf->device_lock);
- 
- 	list_del_init(&sh->lru);
- 	atomic_inc(&sh->count);
-@@ -1409,7 +1409,7 @@ void r5c_flush_cache(struct r5conf *conf, int num)
- 	int count;
- 	struct stripe_head *sh, *next;
- 
--	assert_spin_locked(&conf->device_lock);
-+	lockdep_assert_held(&conf->device_lock);
- 	if (!conf->log)
- 		return;
- 
--- 
-2.9.5
+> On Thu, Oct 19, 2017 at 12:17:16PM +1100, Neil Brown wrote:
+>>=20
+>> Most often mddev_suspend() is called with
+>> reconfig_mutex held.  Make this a requirement in
+>> preparation a subsequent patch.  Also require
+>> reconfig_mutex to be held for mddev_resume(),
+>> partly for symmetry and partly to guarantee
+>> no races with incr/decr of mddev->suspend.
+>>=20
+>> Taking the mutex in r5c_disable_writeback_async() is
+>> a little tricky as this is called from a work queue
+>> via log->disable_writeback_work, and flush_work()
+>> is called on that while holding ->reconfig_mutex.
+>> If the work item hasn't run before flush_work()
+>> is called, the work function will not be able to
+>> get the mutex.
+>>=20
+>> So we use mddev_trylock() inside the wait_event() call, and have that
+>> abort when conf->log is set to NULL, which happens before
+>> flush_work() is called.
+>> We wait in mddev->sb_wait and ensure this is woken
+>> when any of the conditions change.  This requires
+>> waking mddev->sb_wait in mddev_unlock().  This is only
+>> like to trigger extra wake_ups of threads that needn't
+>> be woken when metadata is being written, and that
+>> doesn't happen often enough that the cost would be
+>> noticeable.
+>>=20
+>> Signed-off-by: NeilBrown <neilb@suse.com>
+>
+> --snip--
+>
+> Applied the other patches in the series including the 'remove quiesce(2)'=
+ one.
 
+Thanks.
+
+>
+>> index 0b7406ac8ce1..6a631dd21f0b 100644
+>> --- a/drivers/md/raid5-cache.c
+>> +++ b/drivers/md/raid5-cache.c
+>> @@ -693,6 +693,8 @@ static void r5c_disable_writeback_async(struct work_=
+struct *work)
+>>  	struct r5l_log *log =3D container_of(work, struct r5l_log,
+>>  					   disable_writeback_work);
+>>  	struct mddev *mddev =3D log->rdev->mddev;
+>> +	struct r5conf *conf =3D mddev->private;
+>> +	int locked =3D 0;
+>>=20=20
+>>  	if (log->r5c_journal_mode =3D=3D R5C_JOURNAL_MODE_WRITE_THROUGH)
+>>  		return;
+>> @@ -701,11 +703,15 @@ static void r5c_disable_writeback_async(struct wor=
+k_struct *work)
+>>=20=20
+>>  	/* wait superblock change before suspend */
+>>  	wait_event(mddev->sb_wait,
+>> -		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+>> -
+>> -	mddev_suspend(mddev);
+>> -	log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
+>> -	mddev_resume(mddev);
+>> +		   conf->log =3D=3D NULL ||
+>> +		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
+>> +		    (locked =3D mddev_trylock(mddev))));
+>> +	if (locked) {
+>> +		mddev_suspend(mddev);
+>> +		log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
+>> +		mddev_resume(mddev);
+>> +		mddev_unlock(mddev);
+>> +	}
+>
+> For this one, my point is:
+>
+> 	wait_event(mddev->sb_wait, conf->log =3D=3D NULL ||
+> 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
+> 	if (conf->log =3D=3D NULL)
+> 		return;
+>
+> 	mddev_suspend(mddev);
+> 	log->r5c_journal_mode =3D R5C_JOURNAL_MODE_WRITE_THROUGH;
+> 	mddev_resume(mddev);
+>
+> does it work?
+
+The
+	lockdep_assert_held(&mddev->reconfig_mutex);
+in mddev_suspend() will complain.
+
+If you put an mddev_lock() call in there to stop the complaint, and if
+the work item doesn't start before the reconfig_mutex is taken prior to
+stopping the array, then r5l_exit_log() can deadlock at
+	flush_work(&log->disable_writeback_work);
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnoRkQACgkQOeye3VZi
+gbl4/BAAhsy5eh4RnBdkGKZQHkNK4e3y8YqXicJbFGRbNv9vKlqWndop+J4x32k0
+XVGm1GkILLKCDkEUTbHiIffjrzuaMoi3nowobvwyMr6b5kHWMkKdx7TaqxlpTgXr
+dLPGmQrKukMDp4wiEm2HPyb3U10XNwdH2BpFdEIetOxZfyIndD1xv6Y6YiKuKO6a
+W0ltCr6wYjgWzF24MRFSibFpElLGQni+ySr4xDx07ZWR6xzEsxNaPT2mMSQI+ZA7
+5elGju4syGRPWEl+yhWiMDrPxh4x4ArhFOmEVgz0UCQeZnY8nGUECA9Ov7QAC12D
+038BZbj0UY4NmRScRE/KOQ6Gh7zPnKpDSOl+ZMCryJYBX2rcJJJG3wtb17RIxQ6k
+fb/00Gz7VFnRRUHiqpEBoRYrk7a6+WdyiRG0yKhU+Ne1UOKocS5bu0nnEC4TqHbX
+nUWzgR+DdHIHLGML0kPQYDtZPTsdFrx5X9TcxW8qGOGEk7irxpRtXaLEFGrcm/tz
+v2oRXmQMbmMR1WrkRNitznDPyQhYrohfNfbODyGiqFQRnhFwCVWirKztqta5P71J
+/VXkiSXu86+SI40VKggEkefVG7XHszADQg4pegXb7A9loMf9bQ7NogWt7PcqiTZj
+AI3BgJvF6sRIyzOhRaJplQgXmmL1DYVKTIEwC3AGSLp0hDFr498=
+=gKe7
+-----END PGP SIGNATURE-----
+--=-=-=--
