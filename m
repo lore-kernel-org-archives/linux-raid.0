@@ -1,122 +1,120 @@
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 1/4] bcache: convert cached_dev.count from atomic_t to refcount_t
-Date: Fri, 20 Oct 2017 10:37:36 +0300
-Message-ID: <1508485059-21881-2-git-send-email-elena.reshetova@intel.com>
-References: <1508485059-21881-1-git-send-email-elena.reshetova@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1508485059-21881-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dm-devel@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, kent.overstreet@gmail.com, koverstreet@google.com, ejt@redhat.comg, snitzer@redhat.com, shli@kernel.org, agk@redhat.com, peterz@infradead.org, keescook@chromium.org, Elena Reshetova <elena.reshetova@intel.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] md: create new workqueue for object destruction
+Date: Fri, 20 Oct 2017 16:00:35 +0200
+Message-ID: <06d5ab0c-f669-6c9f-3f0a-930cea5c893b@intel.com>
+References: <87mv4qjrez.fsf@notabene.neil.brown.name>
+ <20171018062137.ssdhwkeoy6fdp7yq@kernel.org>
+ <87h8uwj4mz.fsf@notabene.neil.brown.name>
+ <6454f28e-4728-a10d-f3c3-b68afedec8d9@intel.com>
+ <87376ghyms.fsf@notabene.neil.brown.name>
+ <9759b574-2d3f-de45-0840-c84d9cc10528@intel.com>
+ <87wp3qg4bi.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87wp3qg4bi.fsf@notabene.neil.brown.name>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-atomic_t variables are currently used to implement reference
-counters with the following properties:
- - counter is initialized to 1 using atomic_set()
- - a resource is freed upon counter reaching zero
- - once counter reaches zero, its further
-   increments aren't allowed
- - counter schema uses basic atomic operations
-   (set, inc, inc_not_zero, dec_and_test, etc.)
+On 10/20/2017 12:28 AM, NeilBrown wrote:
+> On Thu, Oct 19 2017, Artur Paszkiewicz wrote:
+> 
+>> On 10/19/2017 12:36 AM, NeilBrown wrote:
+>>> On Wed, Oct 18 2017, Artur Paszkiewicz wrote:
+>>>
+>>>> On 10/18/2017 09:29 AM, NeilBrown wrote:
+>>>>> On Tue, Oct 17 2017, Shaohua Li wrote:
+>>>>>
+>>>>>> On Tue, Oct 17, 2017 at 04:04:52PM +1100, Neil Brown wrote:
+>>>>>>>
+>>>>>>> lockdep currently complains about a potential deadlock
+>>>>>>> with sysfs access taking reconfig_mutex, and that
+>>>>>>> waiting for a work queue to complete.
+>>>>>>>
+>>>>>>> The cause is inappropriate overloading of work-items
+>>>>>>> on work-queues.
+>>>>>>>
+>>>>>>> We currently have two work-queues: md_wq and md_misc_wq.
+>>>>>>> They service 5 different tasks:
+>>>>>>>
+>>>>>>>   mddev->flush_work                       md_wq
+>>>>>>>   mddev->event_work (for dm-raid)         md_misc_wq
+>>>>>>>   mddev->del_work (mddev_delayed_delete)  md_misc_wq
+>>>>>>>   mddev->del_work (md_start_sync)         md_misc_wq
+>>>>>>>   rdev->del_work                          md_misc_wq
+>>>>>>>
+>>>>>>> We need to call flush_workqueue() for md_start_sync and ->event_work
+>>>>>>> while holding reconfig_mutex, but mustn't hold it when
+>>>>>>> flushing mddev_delayed_delete or rdev->del_work.
+>>>>>>>
+>>>>>>> md_wq is a bit special as it has WQ_MEM_RECLAIM so it is
+>>>>>>> best to leave that alone.
+>>>>>>>
+>>>>>>> So create a new workqueue, md_del_wq, and a new work_struct,
+>>>>>>> mddev->sync_work, so we can keep two classes of work separate.
+>>>>>>>
+>>>>>>> md_del_wq and ->del_work are used only for destroying rdev
+>>>>>>> and mddev.
+>>>>>>> md_misc_wq is used for event_work and sync_work.
+>>>>>>>
+>>>>>>> Also document the purpose of each flush_workqueue() call.
+>>>>>>>
+>>>>>>> This removes the lockdep warning.
+>>>>>>
+>>>>>> I had the exactly same patch queued internally,
+>>>>>
+>>>>> Cool :-)
+>>>>>
+>>>>>>                                                   but the mdadm test suite still
+>>>>>> shows lockdep warnning. I haven't time to check further.
+>>>>>>
+>>>>>
+>>>>> The only other lockdep I've seen later was some ext4 thing, though I
+>>>>> haven't tried the full test suite.  I might have a look tomorrow.
+>>>>
+>>>> I'm also seeing a lockdep warning with or without this patch,
+>>>> reproducible with:
+>>>>
+>>>
+>>> Thanks!
+>>> Looks like using one workqueue for mddev->del_work and rdev->del_work
+>>> causes problems.
+>>> Can you try with this addition please?
+>>
+>> It helped for that case but now there is another warning triggered by:
+>>
+>> export IMSM_NO_PLATFORM=1 # for platforms without IMSM
+>> mdadm -C /dev/md/imsm0 -eimsm -n4 /dev/sd[a-d] -R
+>> mdadm -C /dev/md/vol0 -l5 -n4 /dev/sd[a-d] -R --assume-clean
+>> mdadm -If sda
+>> mdadm -a /dev/md127 /dev/sda
+>> mdadm -Ss
+> 
+> I tried that ... and mdmon gets a SIGSEGV.
+> imsm_set_disk() calls get_imsm_disk() and gets a NULL back.
+> It then passes the NULL to mark_failure() and that dereferences it.
 
-Such atomic variables should be converted to a newly provided
-refcount_t type and API that prevents accidental counter overflows
-and underflows. This is important since overflows and underflows
-can lead to use-after-free situation and be exploitable.
+Interesting... I can't reproduce this. Can you show the output from
+mdadm -E for all disks after mdmon crashes? And maybe a debug log from
+mdmon?
 
-The variable cached_dev.count is used as pure reference counter.
-Convert it to refcount_t and fix up the operations.
+> (even worse things happen if "CREATE names=yes" appears in mdadm.conf.
+> I should fix that).
+> 
+> I added
+>   if (!disk)
+>      return;
+> 
+> and ran it in a loop, and got the lockdep warning.
+> 
+> This patch gets rid of it for me.  I need to think about it some more
+> before I commit to it though.
 
-Suggested-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: David Windsor <dwindsor@gmail.com>
-Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
----
- drivers/md/bcache/bcache.h    | 7 ++++---
- drivers/md/bcache/super.c     | 6 +++---
- drivers/md/bcache/writeback.h | 2 +-
- 3 files changed, 8 insertions(+), 7 deletions(-)
+This fixes the warning for me too. No other issues so far.
 
-diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
-index 2ed9bd2..8ed8ad6 100644
---- a/drivers/md/bcache/bcache.h
-+++ b/drivers/md/bcache/bcache.h
-@@ -184,6 +184,7 @@
- #include <linux/mutex.h>
- #include <linux/rbtree.h>
- #include <linux/rwsem.h>
-+#include <linux/refcount.h>
- #include <linux/types.h>
- #include <linux/workqueue.h>
- 
-@@ -299,7 +300,7 @@ struct cached_dev {
- 	struct semaphore	sb_write_mutex;
- 
- 	/* Refcount on the cache set. Always nonzero when we're caching. */
--	atomic_t		count;
-+	refcount_t		count;
- 	struct work_struct	detach;
- 
- 	/*
-@@ -806,13 +807,13 @@ do {									\
- 
- static inline void cached_dev_put(struct cached_dev *dc)
- {
--	if (atomic_dec_and_test(&dc->count))
-+	if (refcount_dec_and_test(&dc->count))
- 		schedule_work(&dc->detach);
- }
- 
- static inline bool cached_dev_get(struct cached_dev *dc)
- {
--	if (!atomic_inc_not_zero(&dc->count))
-+	if (!refcount_inc_not_zero(&dc->count))
- 		return false;
- 
- 	/* Paired with the mb in cached_dev_attach */
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index fc0a31b..676e6f4 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -889,7 +889,7 @@ static void cached_dev_detach_finish(struct work_struct *w)
- 	closure_init_stack(&cl);
- 
- 	BUG_ON(!test_bit(BCACHE_DEV_DETACHING, &dc->disk.flags));
--	BUG_ON(atomic_read(&dc->count));
-+	BUG_ON(refcount_read(&dc->count));
- 
- 	mutex_lock(&bch_register_lock);
- 
-@@ -1016,7 +1016,7 @@ int bch_cached_dev_attach(struct cached_dev *dc, struct cache_set *c)
- 	 * dc->c must be set before dc->count != 0 - paired with the mb in
- 	 * cached_dev_get()
- 	 */
--	atomic_set(&dc->count, 1);
-+	refcount_set(&dc->count, 1);
- 
- 	/* Block writeback thread, but spawn it */
- 	down_write(&dc->writeback_lock);
-@@ -1028,7 +1028,7 @@ int bch_cached_dev_attach(struct cached_dev *dc, struct cache_set *c)
- 	if (BDEV_STATE(&dc->sb) == BDEV_STATE_DIRTY) {
- 		bch_sectors_dirty_init(&dc->disk);
- 		atomic_set(&dc->has_dirty, 1);
--		atomic_inc(&dc->count);
-+		refcount_inc(&dc->count);
- 		bch_writeback_queue(dc);
- 	}
- 
-diff --git a/drivers/md/bcache/writeback.h b/drivers/md/bcache/writeback.h
-index e35421d..5937e0d 100644
---- a/drivers/md/bcache/writeback.h
-+++ b/drivers/md/bcache/writeback.h
-@@ -89,7 +89,7 @@ static inline void bch_writeback_add(struct cached_dev *dc)
- {
- 	if (!atomic_read(&dc->has_dirty) &&
- 	    !atomic_xchg(&dc->has_dirty, 1)) {
--		atomic_inc(&dc->count);
-+		refcount_inc(&dc->count);
- 
- 		if (BDEV_STATE(&dc->sb) != BDEV_STATE_DIRTY) {
- 			SET_BDEV_STATE(&dc->sb, BDEV_STATE_DIRTY);
--- 
-2.7.4
+Thanks,
+Artur
