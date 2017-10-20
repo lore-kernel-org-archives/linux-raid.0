@@ -1,124 +1,113 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 1/5 v2] md: always hold reconfig_mutex when calling
- mddev_suspend()
-Date: Thu, 19 Oct 2017 21:37:57 -0700
-Message-ID: <20171020042820.iredht4f7lvatdst@kernel.org>
-References: <150820826980.1646.6380214598725492144.stgit@noble>
- <150820840340.1646.12365558035859364361.stgit@noble>
- <20171018061107.42kpztc3nbnhbavi@kernel.org>
- <87efq0j4d2.fsf@notabene.neil.brown.name>
- <87lgk8gcmb.fsf@notabene.neil.brown.name>
- <20171019034420.sdxvirpv454vgx4h@kernel.org>
- <8760bbhcql.fsf@notabene.neil.brown.name>
+From: Liwei <xieliwei@gmail.com>
+Subject: Re: RAID6: Reducing to Grow
+Date: Fri, 20 Oct 2017 13:04:38 +0800
+Message-ID: <CAPE0SYxOnzhEwaxBipUsMVrgtfNPyFRRMOa-Zg4fA+O0Zmk=CQ@mail.gmail.com>
+References: <CAPE0SYzB49Vk-QcKWGzVDCqwYjnatGYWrFVeb+jdMF-5wry9Lg@mail.gmail.com>
+ <ba94e811-1ae4-a8a3-5907-bde289b44754@turmel.org> <9ef8359d-7da9-de5a-d939-46a3c51cc68d@gmail.com>
+ <0f2b759f-3f4d-127a-242a-74c3f8abdea4@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8760bbhcql.fsf@notabene.neil.brown.name>
+In-Reply-To: <0f2b759f-3f4d-127a-242a-74c3f8abdea4@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Oct 19, 2017 at 05:29:22PM +1100, Neil Brown wrote:
-> On Wed, Oct 18 2017, Shaohua Li wrote:
-> 
-> > On Thu, Oct 19, 2017 at 12:17:16PM +1100, Neil Brown wrote:
-> >> 
-> >> Most often mddev_suspend() is called with
-> >> reconfig_mutex held.  Make this a requirement in
-> >> preparation a subsequent patch.  Also require
-> >> reconfig_mutex to be held for mddev_resume(),
-> >> partly for symmetry and partly to guarantee
-> >> no races with incr/decr of mddev->suspend.
-> >> 
-> >> Taking the mutex in r5c_disable_writeback_async() is
-> >> a little tricky as this is called from a work queue
-> >> via log->disable_writeback_work, and flush_work()
-> >> is called on that while holding ->reconfig_mutex.
-> >> If the work item hasn't run before flush_work()
-> >> is called, the work function will not be able to
-> >> get the mutex.
-> >> 
-> >> So we use mddev_trylock() inside the wait_event() call, and have that
-> >> abort when conf->log is set to NULL, which happens before
-> >> flush_work() is called.
-> >> We wait in mddev->sb_wait and ensure this is woken
-> >> when any of the conditions change.  This requires
-> >> waking mddev->sb_wait in mddev_unlock().  This is only
-> >> like to trigger extra wake_ups of threads that needn't
-> >> be woken when metadata is being written, and that
-> >> doesn't happen often enough that the cost would be
-> >> noticeable.
-> >> 
-> >> Signed-off-by: NeilBrown <neilb@suse.com>
-> >
-> > --snip--
-> >
-> > Applied the other patches in the series including the 'remove quiesce(2)' one.
-> 
-> Thanks.
-> 
-> >
-> >> index 0b7406ac8ce1..6a631dd21f0b 100644
-> >> --- a/drivers/md/raid5-cache.c
-> >> +++ b/drivers/md/raid5-cache.c
-> >> @@ -693,6 +693,8 @@ static void r5c_disable_writeback_async(struct work_struct *work)
-> >>  	struct r5l_log *log = container_of(work, struct r5l_log,
-> >>  					   disable_writeback_work);
-> >>  	struct mddev *mddev = log->rdev->mddev;
-> >> +	struct r5conf *conf = mddev->private;
-> >> +	int locked = 0;
-> >>  
-> >>  	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH)
-> >>  		return;
-> >> @@ -701,11 +703,15 @@ static void r5c_disable_writeback_async(struct work_struct *work)
-> >>  
-> >>  	/* wait superblock change before suspend */
-> >>  	wait_event(mddev->sb_wait,
-> >> -		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-> >> -
-> >> -	mddev_suspend(mddev);
-> >> -	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-> >> -	mddev_resume(mddev);
-> >> +		   conf->log == NULL ||
-> >> +		   (!test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) &&
-> >> +		    (locked = mddev_trylock(mddev))));
-> >> +	if (locked) {
-> >> +		mddev_suspend(mddev);
-> >> +		log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-> >> +		mddev_resume(mddev);
-> >> +		mddev_unlock(mddev);
-> >> +	}
-> >
-> > For this one, my point is:
-> >
-> > 	wait_event(mddev->sb_wait, conf->log == NULL ||
-> > 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-> > 	if (conf->log == NULL)
-> > 		return;
-> >
-> > 	mddev_suspend(mddev);
-> > 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-> > 	mddev_resume(mddev);
-> >
-> > does it work?
-> 
-> The
-> 	lockdep_assert_held(&mddev->reconfig_mutex);
-> in mddev_suspend() will complain.
-> 
-> If you put an mddev_lock() call in there to stop the complaint, and if
-> the work item doesn't start before the reconfig_mutex is taken prior to
-> stopping the array, then r5l_exit_log() can deadlock at
-> 	flush_work(&log->disable_writeback_work);
+Hi Phil,
 
-Ok, got it now. But really don't like this patch. The mddev_unlock is strange,
-r5c_disable_writeback_async could skip disabling writeback too. Could we add a
-new callback like .prepare_free, and flush workqueue there. After we drop the
-reconfig_mutex in do_md_stop, we call the prepare_free. We can probably set a
-flag, so later r5c_disable_writeback_async will bail out doing nothing. I think
-this should work, right?
+On 19 October 2017 at 02:02, Phil Turmel <philip@turmel.org> wrote:
+> On 10/18/2017 01:20 AM, Liwei wrote:
+>> Hi Phil,
+>
+>
+>> Whoops, we do run LVM on top, but currently it is one gigantic LV. (We
+>> converted to btrfs and started using subvolumes instead) My guess is
+>> you're thinking of creating another array with the unused space, and
+>> then migrating LVs over?
+>
+> Yes.  With temporary ~4T partitions.
+>
+>> The lsdrv output follows, with a lot of irrelevant/empty nodes removed.
+>> Also, I realised I misread the storage size of two of the 2TB drives, so
+>> we're actually at 9x 2TB and 4x 6TB.
+>
+> Very helpful.
+>
+>> _However_, I do have one 6TB "hot spare" plugged in, and 3 proper 6TB
+>> SAS drives arriving next week, so there may still be a way to do this,
+>> perhaps?
+>
+> Makes it easy, actually.
+>
+> So, here's what I recommend:
+>
+> 1) Set long timeouts on your desktop drives, the WD*EARS and WD*FASS:
+>
+> for x in a b j l ; do echo 180 > /sys/block/sd$x/device/timeout ; done
+>
+> 2) Scrub your array (and wait for it to finish):
+>
+> echo check >/sys/block/md126/md/sync_action
+>
+> 3) After installing the new drives, fail one of your 6T drives out of
+> the array, then use it, the hot spare, the new drives, and one 'missing'
+> to set up a new degraded 6-drive raid6.  Consider using a smaller chunk
+> size unless you are storing very large media files.  (I use 16k or 32k
+> for my parity arrays.)
+>
+> 4) Add the new array as a physical volume to your existing volume group.
+>
+> 5) Use lvconvert to change LV Wonderland to a mirror.  You could just use
+> pvmove if you don't mind the reduced redundancy.  Let it get fully
+> mirrored or moved.  Skip to step #8 if you used pvmove.
+>
+> 6) Fail another 6T drive from the existing array and add it to the new
+> array.  Let it rebuild.
+>
+> 7) Use lvconvert to change LV Wonderland back into an unmirrored LV on
+> the new array.  Be careful to specify the new array!
+>
+> 8) Remove the old array from your volume group with vgreduce.  Shut down
+> the old array and use mdadm --zero-superblock on its prior members.
+> Get rid of the desktop drives.
+>
+> 9) Add all the newly available 6T drives to the new array.  Let it
+> rebuild if necessary.
+>
+> 10) Grow the new array to occupy all of the space on all of the devices,
+> or maybe leave one hot spare.  (I wouldn't, but it depends on your
+> application and your supply chain.)
+>
+> 11) Enjoy all that space!
+>
+> Note that all of the above can be executed while using your mounted LV.
+>
+> Phil
 
-Thanks,
-Shaohua
+Great! I'm done with the scrub, now waiting for the new drives to arrive.
+
+I anticipate there'll be quite a bit of downtime involved though. Our
+chassis only has 16 cages, so we probably have to temporarily move one
+or two of the 2TB drives onto the internal SATA connectors and hang
+them around. Power might be an issue too, but we'll figure it out,
+hopefully without frying any drives. ;)
+
+My guess is I should probably scrub again after relocating the drives,
+just to be sure they work under load.
+
+Regarding the chunk size, my predecessor initially chose 512k based on
+some reading about performance boost with raw video files and 4k/AF
+drives, not sure whether it holds water. Something along the lines of:
+we're dealing with multi gigabyte files anyway, what's wastage of half
+a meg here and there? Supposedly RW performance increases with chunk
+size - provided they're properly aligned, but it is a diminishing
+return.
+
+We're using this NAS to ingest the raw video files from our HD and 4K
+cameras so they can be accessed remotely for editing, does 512k chunk
+size make sense or should I go down to 16/32k?
+
+Thank you for the assistance so far!
+
+Liwei
