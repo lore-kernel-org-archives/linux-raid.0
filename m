@@ -1,113 +1,155 @@
-From: Liwei <xieliwei@gmail.com>
-Subject: Re: RAID6: Reducing to Grow
-Date: Fri, 20 Oct 2017 13:04:38 +0800
-Message-ID: <CAPE0SYxOnzhEwaxBipUsMVrgtfNPyFRRMOa-Zg4fA+O0Zmk=CQ@mail.gmail.com>
-References: <CAPE0SYzB49Vk-QcKWGzVDCqwYjnatGYWrFVeb+jdMF-5wry9Lg@mail.gmail.com>
- <ba94e811-1ae4-a8a3-5907-bde289b44754@turmel.org> <9ef8359d-7da9-de5a-d939-46a3c51cc68d@gmail.com>
- <0f2b759f-3f4d-127a-242a-74c3f8abdea4@turmel.org>
+From: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [PATCH 1/2] dm log writes: Add support for inline data buffers
+Date: Thu, 19 Oct 2017 23:24:03 -0600
+Message-ID: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0f2b759f-3f4d-127a-242a-74c3f8abdea4@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Josef Bacik <jbacik-b10kYP2dOMg@public.gmane.org>
+Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-Hi Phil,
+Currently dm-log-writes supports writing filesystem data via BIOs, and
+writing internal metadata from a flat buffer via write_metadata().
 
-On 19 October 2017 at 02:02, Phil Turmel <philip@turmel.org> wrote:
-> On 10/18/2017 01:20 AM, Liwei wrote:
->> Hi Phil,
->
->
->> Whoops, we do run LVM on top, but currently it is one gigantic LV. (We
->> converted to btrfs and started using subvolumes instead) My guess is
->> you're thinking of creating another array with the unused space, and
->> then migrating LVs over?
->
-> Yes.  With temporary ~4T partitions.
->
->> The lsdrv output follows, with a lot of irrelevant/empty nodes removed.
->> Also, I realised I misread the storage size of two of the 2TB drives, so
->> we're actually at 9x 2TB and 4x 6TB.
->
-> Very helpful.
->
->> _However_, I do have one 6TB "hot spare" plugged in, and 3 proper 6TB
->> SAS drives arriving next week, so there may still be a way to do this,
->> perhaps?
->
-> Makes it easy, actually.
->
-> So, here's what I recommend:
->
-> 1) Set long timeouts on your desktop drives, the WD*EARS and WD*FASS:
->
-> for x in a b j l ; do echo 180 > /sys/block/sd$x/device/timeout ; done
->
-> 2) Scrub your array (and wait for it to finish):
->
-> echo check >/sys/block/md126/md/sync_action
->
-> 3) After installing the new drives, fail one of your 6T drives out of
-> the array, then use it, the hot spare, the new drives, and one 'missing'
-> to set up a new degraded 6-drive raid6.  Consider using a smaller chunk
-> size unless you are storing very large media files.  (I use 16k or 32k
-> for my parity arrays.)
->
-> 4) Add the new array as a physical volume to your existing volume group.
->
-> 5) Use lvconvert to change LV Wonderland to a mirror.  You could just use
-> pvmove if you don't mind the reduced redundancy.  Let it get fully
-> mirrored or moved.  Skip to step #8 if you used pvmove.
->
-> 6) Fail another 6T drive from the existing array and add it to the new
-> array.  Let it rebuild.
->
-> 7) Use lvconvert to change LV Wonderland back into an unmirrored LV on
-> the new array.  Be careful to specify the new array!
->
-> 8) Remove the old array from your volume group with vgreduce.  Shut down
-> the old array and use mdadm --zero-superblock on its prior members.
-> Get rid of the desktop drives.
->
-> 9) Add all the newly available 6T drives to the new array.  Let it
-> rebuild if necessary.
->
-> 10) Grow the new array to occupy all of the space on all of the devices,
-> or maybe leave one hot spare.  (I wouldn't, but it depends on your
-> application and your supply chain.)
->
-> 11) Enjoy all that space!
->
-> Note that all of the above can be executed while using your mounted LV.
->
-> Phil
+For DAX writes, though, we won't have a BIO, but will instead have an
+iterator that we'll want to use to fill a flat data buffer.
 
-Great! I'm done with the scrub, now waiting for the new drives to arrive.
+So, create write_inline_data() which allows us to write filesystem data
+using a flat buffer as a source, and wire it up in log_one_block().
 
-I anticipate there'll be quite a bit of downtime involved though. Our
-chassis only has 16 cages, so we probably have to temporarily move one
-or two of the 2TB drives onto the internal SATA connectors and hang
-them around. Power might be an issue too, but we'll figure it out,
-hopefully without frying any drives. ;)
+Signed-off-by: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+---
+ drivers/md/dm-log-writes.c | 90 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 86 insertions(+), 4 deletions(-)
 
-My guess is I should probably scrub again after relocating the drives,
-just to be sure they work under load.
-
-Regarding the chunk size, my predecessor initially chose 512k based on
-some reading about performance boost with raw video files and 4k/AF
-drives, not sure whether it holds water. Something along the lines of:
-we're dealing with multi gigabyte files anyway, what's wastage of half
-a meg here and there? Supposedly RW performance increases with chunk
-size - provided they're properly aligned, but it is a diminishing
-return.
-
-We're using this NAS to ingest the raw video files from our HD and 4K
-cameras so they can be accessed remotely for editing, does 512k chunk
-size make sense or should I go down to 16/32k?
-
-Thank you for the assistance so far!
-
-Liwei
+diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
+index 8b80a9c..c65f9d1 100644
+--- a/drivers/md/dm-log-writes.c
++++ b/drivers/md/dm-log-writes.c
+@@ -246,27 +246,109 @@ static int write_metadata(struct log_writes_c *lc, void *entry,
+ 	return -1;
+ }
+ 
++static int write_inline_data(struct log_writes_c *lc, void *entry,
++			  size_t entrylen, void *data, size_t datalen,
++			  sector_t sector)
++{
++	int num_pages, bio_pages, pg_datalen, pg_sectorlen, i;
++	struct page *page;
++	struct bio *bio;
++	size_t ret;
++	void *ptr;
++
++	while (datalen) {
++		num_pages = ALIGN(datalen, PAGE_SIZE) >> PAGE_SHIFT;
++		bio_pages = min(num_pages, BIO_MAX_PAGES);
++
++		atomic_inc(&lc->io_blocks);
++
++		bio = bio_alloc(GFP_KERNEL, bio_pages);
++		if (!bio) {
++			DMERR("Couldn't alloc inline data bio");
++			goto error;
++		}
++
++		bio->bi_iter.bi_size = 0;
++		bio->bi_iter.bi_sector = sector;
++		bio_set_dev(bio, lc->logdev->bdev);
++		bio->bi_end_io = log_end_io;
++		bio->bi_private = lc;
++		bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
++
++		for (i = 0; i < bio_pages; i++) {
++			pg_datalen = min(datalen, PAGE_SIZE);
++			pg_sectorlen = ALIGN(pg_datalen, lc->sectorsize);
++
++			page = alloc_page(GFP_KERNEL);
++			if (!page) {
++				DMERR("Couldn't alloc inline data page");
++				goto error_bio;
++			}
++
++			ptr = kmap_atomic(page);
++			memcpy(ptr, data, pg_datalen);
++			if (pg_sectorlen > pg_datalen)
++				memset(ptr + pg_datalen, 0,
++						pg_sectorlen - pg_datalen);
++			kunmap_atomic(ptr);
++
++			ret = bio_add_page(bio, page, pg_sectorlen, 0);
++			if (ret != pg_sectorlen) {
++				DMERR("Couldn't add page of inline data");
++				__free_page(page);
++				goto error_bio;
++			}
++
++			datalen -= pg_datalen;
++			data	+= pg_datalen;
++		}
++		submit_bio(bio);
++
++		sector += bio_pages * PAGE_SECTORS;
++	}
++	return 0;
++error_bio:
++	bio_free_pages(bio);
++	bio_put(bio);
++error:
++	put_io_block(lc);
++	return -1;
++}
++
+ static int log_one_block(struct log_writes_c *lc,
+ 			 struct pending_block *block, sector_t sector)
+ {
+ 	struct bio *bio;
+ 	struct log_write_entry entry;
+-	size_t ret;
++	size_t metadlen, ret;
+ 	int i;
+ 
+ 	entry.sector = cpu_to_le64(block->sector);
+ 	entry.nr_sectors = cpu_to_le64(block->nr_sectors);
+ 	entry.flags = cpu_to_le64(block->flags);
+ 	entry.data_len = cpu_to_le64(block->datalen);
+-	if (write_metadata(lc, &entry, sizeof(entry), block->data,
+-			   block->datalen, sector)) {
++
++	metadlen = (block->flags & LOG_MARK_FLAG) ?  block->datalen : 0;
++	if (write_metadata(lc, &entry, sizeof(entry), block->data, metadlen,
++				sector)) {
+ 		free_pending_block(lc, block);
+ 		return -1;
+ 	}
+ 
++	sector += dev_to_bio_sectors(lc, 1);
++
++	if (block->datalen && metadlen == 0) {
++		if (write_inline_data(lc, &entry, sizeof(entry), block->data,
++					block->datalen, sector)) {
++			free_pending_block(lc, block);
++			return -1;
++		}
++		/* we don't support both inline data & bio data */
++		goto out;
++	}
++
+ 	if (!block->vec_cnt)
+ 		goto out;
+-	sector += dev_to_bio_sectors(lc, 1);
+ 
+ 	atomic_inc(&lc->io_blocks);
+ 	bio = bio_alloc(GFP_KERNEL, min(block->vec_cnt, BIO_MAX_PAGES));
+-- 
+2.9.5
