@@ -1,47 +1,41 @@
-From: Michael Lyle <mlyle@lyle.org>
-Subject: Re: [PATCH 1/4] bcache: convert cached_dev.count from atomic_t to
- refcount_t
-Date: Fri, 20 Oct 2017 11:39:42 -0700
-Message-ID: <8bd05fae-d41f-24e7-4e58-bf07d9a09a99@lyle.org>
-References: <1508485059-21881-1-git-send-email-elena.reshetova@intel.com>
- <1508485059-21881-2-git-send-email-elena.reshetova@intel.com>
+From: Alex Elder <elder@ieee.org>
+Subject: 3-disk RAID5 won't assemble
+Date: Fri, 20 Oct 2017 14:51:02 -0500
+Message-ID: <03ddf14a-845d-a6a6-714d-e4bacb77dd7a@ieee.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1508485059-21881-2-git-send-email-elena.reshetova@intel.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Elena Reshetova <elena.reshetova@intel.com>, dm-devel@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, kent.overstreet@gmail.com, koverstreet@google.com, ejt@redhat.comg, snitzer@redhat.com, shli@kernel.org, agk@redhat.com, peterz@infradead.org, keescook@chromium.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-CA
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/20/2017 12:37 AM, Elena Reshetova wrote:
-> atomic_t variables are currently used to implement reference
-> counters with the following properties:
->  - counter is initialized to 1 using atomic_set()
->  - a resource is freed upon counter reaching zero
->  - once counter reaches zero, its further
->    increments aren't allowed
->  - counter schema uses basic atomic operations
->    (set, inc, inc_not_zero, dec_and_test, etc.)
-> 
-> Such atomic variables should be converted to a newly provided
-> refcount_t type and API that prevents accidental counter overflows
-> and underflows. This is important since overflows and underflows
-> can lead to use-after-free situation and be exploitable.
-> 
-> The variable cached_dev.count is used as pure reference counter.
-> Convert it to refcount_t and fix up the operations.
-> 
-> Suggested-by: Kees Cook <keescook@chromium.org>
-> Reviewed-by: David Windsor <dwindsor@gmail.com>
-> Reviewed-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+I have a 3-disk RAID5 with identical drives that won't assemble.
 
-Reviewed-by: Michael Lyle <mlyle@lyle.org>
+The event counts on two of them are the same (20592) and one is
+quite a bit less (20466).  I do not expect failing hardware.
 
-Thanks for this-- I'm including it in my tree for possible inclusion in
-4.15 (I've already sent my main chunk of changes upwards).
+The problem occurred while I was copying some large files to
+the XFS volume on the device, while doing something else that
+ate up all my memory.  (It was a long time ago so I that's
+about as much detail as I can provide--I assumed the OOM killer
+ultimately was to blame, somehow.)
 
-Mike
+It *sounds* like the two drives with the same event count should
+be enough to recover my volume.  But forcibly doing that is scary
+so I'm writing here for encouragement and guidance.
+
+  {1156} root@meat-> mdadm --stop /dev/md0
+  mdadm: stopped /dev/md0
+  {1157} root@meat-> mdadm --assemble /dev/md0 /dev/sd[bcd]1
+  mdadm: /dev/md0 assembled from 2 drives - not enough to start the
+array  while not clean - consider --force.
+  {1158} root@meat->
+
+I can provide plenty more information, but thought I'd start by
+introducing the problem.
+
+How should I proceed?  Thanks.
+
+					-Alex
