@@ -1,43 +1,30 @@
-From: Anthony Youngman <antmbox@youngman.org.uk>
-Subject: Re: ***UNCHECKED*** Re: 3-disk RAID5 won't assemble
-Date: Sat, 21 Oct 2017 10:36:05 +0100
-Message-ID: <68dd7a9a-228b-ecc9-dbf9-3c3cb0f251bd@youngman.org.uk>
-References: <03ddf14a-845d-a6a6-714d-e4bacb77dd7a@ieee.org>
- <59EA5DDB.2020400@youngman.org.uk>
- <9323bcbf-17ba-00d8-159a-38563562d472@ieee.org>
- <8a8ffdc8-4bad-4d99-2fc4-5457556f40f7@youngman.org.uk>
- <e1ef35a5-220f-bef5-6bc9-0b2108ebe630@turmel.org>
- <7db1f2fc-3018-5a0a-89a1-74d6762df463@ieee.org>
+From: Francesco Tomadin <inamaru94@gmail.com>
+Subject: WD nas broke can't accessmy files on RAID 1
+Date: Sat, 21 Oct 2017 12:46:36 +0200
+Message-ID: <CAKNaYNuY8gNn+u4uMK8U+AnnYMmH8GNPDJGWTG1SNrQpDG4kjA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7db1f2fc-3018-5a0a-89a1-74d6762df463@ieee.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex Elder <elder@ieee.or>, Anthony Youngman <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/10/17 04:40, Alex Elder wrote:
-> You guys are really great.  I am back running again.  Thank you
-> for taking the time to help me out.  It saved me a LOT of time
-> trying to chase down what I needed to do, and most importantly
-> you gave me the confidence to proceed with only a modest level
-> of anxiety...  The hardest thing was creating a new systemd
-> service to run the script at boot time (also a first for me).
-> 
->> Buy NAS drives in the future, though.
+As title says, due to a bug in the WD nas, it started creating
+infinite shares folder.
+At the moment I can't access my NAS anymore, so I decided to try
+ubuntu to recover my data.
+I tried to follow some guides and to check stuff but seems like
+(especially for my NAS) stuff like this doesn't exist.
+I don't even wanna try to do stuff on my own since as you can clearly
+see I'm not a linux user I don't even understand what's going on.
 
-> Hey, they were never going to fail!  RAID solves all problems.
+PS: My nas had 4 slot, one of them was in JBOD format, and with ubuntu
+I could easily access the data without problem.
 
-Even the alleged experts (definitely "alleged" in my case :-) don't 
-always do the right thing :-) I'm currently running two Seagate 
-Barracudas - *without* the timeout script! - in a mirror configuration. 
-But over the next few days I'll be building a new pc and I've got two 
-raid-capable drives. It'll be a big learning experience because I use 
-gentoo ... learning systemd, learning QEMU, learning KVM, learning...
-> 
-> But yeah, I'll look more closely at that next time.
-> 
-Cheers,
-Wol
+Tried to use some mdadm command but It gave me some "strange" errors
+which I would ever try to "fix" on my own.
+Tried to give a last chance to my nas yesterday but it's stuck at boot.
+Please if someone could really help me task to task because I really
+really don't know what to do anymore.
+
+Sorry for my poor english It's not my first language.
