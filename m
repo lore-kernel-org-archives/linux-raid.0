@@ -1,293 +1,75 @@
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [fstests PATCH v2] generic: add test for DAX MAP_SYNC support
-Date: Sun, 22 Oct 2017 09:56:02 +0300
-Message-ID: <CAOQ4uxjWp3khOix__jqfsiyjhNehGtkqXXv1o7EuGB1j3b2moQ@mail.gmail.com>
-References: <20171020052943.15104-1-ross.zwisler@linux.intel.com> <20171020212556.30816-1-ross.zwisler@linux.intel.com>
+From: sfunk1x <sfunk1x@gmail.com>
+Subject: Re: MDADM RAID 6 Bad Superblock after reboot
+Date: Sun, 22 Oct 2017 14:00:48 -0700
+Message-ID: <78c21efa-2587-6ff3-5572-2d1a1b6d428d@gmail.com>
+References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com>
+ <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com>
+ <59E7AE4B.5000903@youngman.org.uk>
+ <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com>
+ <87zi8mg7mi.fsf@notabene.neil.brown.name>
+ <e257fcc8-9773-a8a2-42bd-6030aef6329e@gmail.com>
+ <87efpyfuz6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <fstests-owner@vger.kernel.org>
-In-Reply-To: <20171020212556.30816-1-ross.zwisler@linux.intel.com>
-Sender: fstests-owner@vger.kernel.org
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87efpyfuz6.fsf@notabene.neil.brown.name>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Oct 21, 2017 at 12:25 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> Add a test that exercises DAX's new MAP_SYNC flag.
->
-> This test creates a file and writes to it via an mmap(), but never syncs
-> via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
->
-> If MAP_SYNC is working the dm-log-writes replay will show the test file
-> with 1MiB of on-media block allocations.  This is because each allocating
-> page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-> (which you can test by fiddling with the parameters to mmap()) the file
-> will be smaller or missing entirely.
->
-> Note that dm-log-writes doesn't track the data that we write via the
-> mmap(), so we can't do any data integrity checking.  We can only verify
-> that the metadata writes for the page faults happened.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
->
-> ---
->
-> Changes since v1:
->  - Addressed review feedback from Amir.  Thank you for the review!
 
-Looks good.
 
->
-> ---
->  .gitignore            |  1 +
->  common/dmlogwrites    |  1 -
->  src/Makefile          |  3 +-
->  src/t_map_sync.c      | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/466     | 76 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/466.out |  3 ++
->  tests/generic/group   |  1 +
->  7 files changed, 175 insertions(+), 2 deletions(-)
->  create mode 100644 src/t_map_sync.c
->  create mode 100755 tests/generic/466
->  create mode 100644 tests/generic/466.out
->
-> diff --git a/.gitignore b/.gitignore
-> index 2014c08..9fc0695 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -119,6 +119,7 @@
->  /src/t_getcwd
->  /src/t_holes
->  /src/t_immutable
-> +/src/t_map_sync
->  /src/t_mmap_cow_race
->  /src/t_mmap_dio
->  /src/t_mmap_fallocate
-> diff --git a/common/dmlogwrites b/common/dmlogwrites
-> index 247c744..5b57df9 100644
-> --- a/common/dmlogwrites
-> +++ b/common/dmlogwrites
-> @@ -23,7 +23,6 @@ _require_log_writes()
->         [ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
->                 _notrun "This test requires a valid \$LOGWRITES_DEV"
->
-> -       _exclude_scratch_mount_option dax
->         _require_dm_target log-writes
->         _require_test_program "log-writes/replay-log"
->  }
-> diff --git a/src/Makefile b/src/Makefile
-> index 3eb25b1..af7e7e9 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -13,7 +13,8 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
->         multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
->         t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
->         holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
-> -       t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro
-> +       t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro \
-> +       t_map_sync
->
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->         preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> diff --git a/src/t_map_sync.c b/src/t_map_sync.c
-> new file mode 100644
-> index 0000000..29b546a
-> --- /dev/null
-> +++ b/src/t_map_sync.c
-> @@ -0,0 +1,92 @@
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <sys/mman.h>
-> +#include <sys/stat.h>
-> +#include <sys/types.h>
-> +#include <unistd.h>
-> +
-> +#define MiB(a) ((a)*1024*1024)
-> +
-> +/*
-> + * These two defines were added to the kernel via commits entitled
-> + * "mm: Define MAP_SYNC and VM_SYNC flags" and
-> + * "mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap
-> + * flags", respectively.
-> + */
-> +#ifndef MAP_SYNC
-> +#define MAP_SYNC 0x80000
-> +#endif
-> +
-> +#ifndef MAP_SHARED_VALIDATE
-> +#define MAP_SHARED_VALIDATE 0x3
-> +#endif
-> +
-> +void err_exit(char *op)
-> +{
-> +       fprintf(stderr, "%s: %s\n", op, strerror(errno));
-> +       exit(1);
-> +}
-> +
-> +void mark_log(char *logwrites_name, char *mark_name)
-> +{
-> +       char command[256];
-> +
-> +       snprintf(command, 256, "dmsetup message %s 0 mark %s",
-> +                       logwrites_name, mark_name);
-> +
-> +       if (system(command))
-> +               err_exit("mark_log");
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +       int page_size = getpagesize();
-> +       int len = MiB(1);
-> +       int i, fd, err;
-> +       char *data;
-> +
-> +       if (argc < 4) {
-> +               printf("Usage: %s <file> <logwrites_name> <mark_name>\n",
-> +                               basename(argv[0]));
-> +               exit(0);
-> +       }
-> +
-> +       fd = open(argv[1], O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
-> +       if (fd < 0)
-> +               err_exit("fd");
-> +
-> +       ftruncate(fd, len);
-> +
-> +       data = mmap(NULL, len, PROT_READ|PROT_WRITE,
-> +                       MAP_SHARED_VALIDATE|MAP_SYNC, fd, 0);
-> +       if (data == MAP_FAILED)
-> +               err_exit("mmap");
-> +
-> +       /*
-> +        * We intentionally don't sync 'fd' manually.  If MAP_SYNC is working
-> +        * these allocating page faults will cause the filesystem to sync its
-> +        * metadata so that when we replay the dm-log-writes log the test file
-> +        * will have 1 MiB worth of block allocations.
-> +        *
-> +        * dm-log-writes doesn't track the data that we write via the mmap(),
-> +        * so we can't check that, we can only verify that the metadata writes
-> +        * happened.
-> +        */
-> +       for (i = 0; i < len; i+=page_size)
-> +               data[i] = 0xff;
-> +
-> +       mark_log(argv[2], argv[3]);
-> +
-> +       err = munmap(data, len);
-> +       if (err < 0)
-> +               err_exit("munmap");
-> +
-> +       err = close(fd);
-> +       if (err < 0)
-> +               err_exit("close");
-> +
-> +       return 0;
-> +}
-> diff --git a/tests/generic/466 b/tests/generic/466
-> new file mode 100755
-> index 0000000..592213f
-> --- /dev/null
-> +++ b/tests/generic/466
-> @@ -0,0 +1,76 @@
-> +#! /bin/bash
-> +# FS QA Test No. 466
-> +#
-> +# Use md_log_writes to verify that MAP_SYNC actually syncs metadata during
-> +# page faults.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +status=1       # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +       _log_writes_cleanup
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/dmlogwrites
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_log_writes
-> +_require_scratch_dax
-> +_require_test_program "t_map_sync"
-> +
-> +_log_writes_init
-> +_log_writes_mkfs >> $seqres.full 2>&1
-> +_log_writes_mount -o dax
-> +
-> +src/t_map_sync $SCRATCH_MNT/test $LOGWRITES_NAME pre_unmap
-> +
-> +# Unmount the scratch dir and tear down the log writes target
-> +_log_writes_unmount
-> +_log_writes_remove
-> +_check_scratch_fs
-> +
-> +# check pre-unmap state
-> +_log_writes_replay_log pre_unmap
-> +_scratch_mount
-> +
-> +# We should see $SCRATCH_MNT/test as having 1MiB in block allocations
-> +du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-> +
-> +_scratch_unmount
-> +_check_scratch_fs
-> +
-> +echo "Silence is golden"
-> +status=0
-> +exit
-> diff --git a/tests/generic/466.out b/tests/generic/466.out
-> new file mode 100644
-> index 0000000..4c54d7a
-> --- /dev/null
-> +++ b/tests/generic/466.out
-> @@ -0,0 +1,3 @@
-> +QA output created by 466
-> +1.0M SCRATCH_MNT/test
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index fbe0a7f..65328c6 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -468,3 +468,4 @@
->  463 auto quick clone dangerous
->  464 auto rw
->  465 auto rw quick aio
-> +466 auto quick dax
-> --
-> 2.9.5
->
+On 10/19/2017 06:50 PM, NeilBrown wrote:
+
+> Thanks.  sdf looks like it might have a gpt partition
+> table on it.  The "od -x" supports that.  What does "fdisk -l /dev/sdf"
+> show? What about 
+>   mdadm --examine /dev/sdf*
+> ??
+
+fdisk -l /dev/sdf:
+
+Disk /dev/sdf: 3000.6 GB, 3000592982016 bytes, 5860533168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk label type: gpt
+Disk identifier: 5B742241-93F1-4FE1-9CA6-525F759E38B1
+
+
+#         Start          End    Size  Type            Name
+ 1         2048   5860533134    2.7T  Linux RAID
+
+
+mdadm --examine /dev/sdf*
+
+/dev/sdf:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+mdadm: No md superblock detected on /dev/sdf1.
+
+
+
+> 
+> I should have suggested " | head" at the end of the 'grep'
+> command.  Maybe make it
+>   od -x /dev/sdf | grep '4efc a92b' | head
+> That will look for md metadata.
+
+It's actually still running, but this is the output so far:
+
+[root@hemlock ~]# od -x /dev/sdf | grep '4efc a92b' | head
+142401762260 7984 d854 643a 3c8f dd3a a8de 4efc a92b
+156441541400 48f9 9523 3539 de0a d1f4 4efc a92b 60a8
+214717071120 ac68 a62e 441c c0f8 85c1 cab7 4efc a92b
+367526264660 dc8f 4f52 4efc a92b fd99 4744 1d6e c59f
+515240166540 4f6a c1eb 5309 4efc a92b d0ad b3ee 11a0
+575452271660 b669 7eeb 4efc a92b ebf5 c069 c78d 82d3
+1026007653000 913f 4efc a92b 0b3d 5e94 9f7a 80a5 6e0c
+1104130763160 7267 f0e5 e9a4 a9e0 0b85 5b3b 4efc a92b
+1107535224640 cde4 efa8 557c 01a1 1abb b885 4efc a92b
+1167200747300 49dd f3e2 4efc a92b a6e7 f1af 7af1 e6c6
+
+
