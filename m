@@ -1,116 +1,314 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: MDADM RAID 6 Bad Superblock after reboot
-Date: Mon, 23 Oct 2017 09:40:58 +1100
-Message-ID: <8760b6g611.fsf@notabene.neil.brown.name>
-References: <6a0f0e0b-6b03-8ec1-b02f-b17b0447aff8@gmail.com> <AA5FDF15-8966-4793-9215-2814C1A6848D@gmail.com> <59E7AE4B.5000903@youngman.org.uk> <63c30fde-d2df-bb92-d6c9-d231a955b5ce@gmail.com> <87zi8mg7mi.fsf@notabene.neil.brown.name> <e257fcc8-9773-a8a2-42bd-6030aef6329e@gmail.com> <87efpyfuz6.fsf@notabene.neil.brown.name> <78c21efa-2587-6ff3-5572-2d1a1b6d428d@gmail.com>
+Subject: Re: [PATCH] md: create new workqueue for object destruction
+Date: Mon, 23 Oct 2017 10:31:03 +1100
+Message-ID: <87y3o2ep54.fsf@notabene.neil.brown.name>
+References: <87mv4qjrez.fsf@notabene.neil.brown.name> <20171018062137.ssdhwkeoy6fdp7yq@kernel.org> <87h8uwj4mz.fsf@notabene.neil.brown.name> <6454f28e-4728-a10d-f3c3-b68afedec8d9@intel.com> <87376ghyms.fsf@notabene.neil.brown.name> <9759b574-2d3f-de45-0840-c84d9cc10528@intel.com> <87wp3qg4bi.fsf@notabene.neil.brown.name> <06d5ab0c-f669-6c9f-3f0a-930cea5c893b@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <78c21efa-2587-6ff3-5572-2d1a1b6d428d@gmail.com>
+In-Reply-To: <06d5ab0c-f669-6c9f-3f0a-930cea5c893b@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: sfunk1x <sfunk1x@gmail.com>, Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Shaohua Li <shli@kernel.org>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Oct 22 2017, sfunk1x wrote:
+On Fri, Oct 20 2017, Artur Paszkiewicz wrote:
 
-> On 10/19/2017 06:50 PM, NeilBrown wrote:
->
->> Thanks.  sdf looks like it might have a gpt partition
->> table on it.  The "od -x" supports that.  What does "fdisk -l /dev/sdf"
->> show? What about=20
->>   mdadm --examine /dev/sdf*
->> ??
->
-> fdisk -l /dev/sdf:
->
-> Disk /dev/sdf: 3000.6 GB, 3000592982016 bytes, 5860533168 sectors
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 4096 bytes
-> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-> Disk label type: gpt
-> Disk identifier: 5B742241-93F1-4FE1-9CA6-525F759E38B1
->
->
-> #         Start          End    Size  Type            Name
->  1         2048   5860533134    2.7T  Linux RAID
->
-
-This seems to suggest that you did prepare to use sdf1 (rather than sdf)
-in the array, but it isn't conclusive proof.
-
->
-> mdadm --examine /dev/sdf*
->
-> /dev/sdf:
->    MBR Magic : aa55
-> Partition[0] :   4294967295 sectors at            1 (type ee)
-> mdadm: No md superblock detected on /dev/sdf1.
-
-No metadata on sdf1 - sad.  That is what I was hoping for.
-
->
->
->
+> On 10/20/2017 12:28 AM, NeilBrown wrote:
+>> On Thu, Oct 19 2017, Artur Paszkiewicz wrote:
 >>=20
->> I should have suggested " | head" at the end of the 'grep'
->> command.  Maybe make it
->>   od -x /dev/sdf | grep '4efc a92b' | head
->> That will look for md metadata.
+>>> On 10/19/2017 12:36 AM, NeilBrown wrote:
+>>>> On Wed, Oct 18 2017, Artur Paszkiewicz wrote:
+>>>>
+>>>>> On 10/18/2017 09:29 AM, NeilBrown wrote:
+>>>>>> On Tue, Oct 17 2017, Shaohua Li wrote:
+>>>>>>
+>>>>>>> On Tue, Oct 17, 2017 at 04:04:52PM +1100, Neil Brown wrote:
+>>>>>>>>
+>>>>>>>> lockdep currently complains about a potential deadlock
+>>>>>>>> with sysfs access taking reconfig_mutex, and that
+>>>>>>>> waiting for a work queue to complete.
+>>>>>>>>
+>>>>>>>> The cause is inappropriate overloading of work-items
+>>>>>>>> on work-queues.
+>>>>>>>>
+>>>>>>>> We currently have two work-queues: md_wq and md_misc_wq.
+>>>>>>>> They service 5 different tasks:
+>>>>>>>>
+>>>>>>>>   mddev->flush_work                       md_wq
+>>>>>>>>   mddev->event_work (for dm-raid)         md_misc_wq
+>>>>>>>>   mddev->del_work (mddev_delayed_delete)  md_misc_wq
+>>>>>>>>   mddev->del_work (md_start_sync)         md_misc_wq
+>>>>>>>>   rdev->del_work                          md_misc_wq
+>>>>>>>>
+>>>>>>>> We need to call flush_workqueue() for md_start_sync and ->event_wo=
+rk
+>>>>>>>> while holding reconfig_mutex, but mustn't hold it when
+>>>>>>>> flushing mddev_delayed_delete or rdev->del_work.
+>>>>>>>>
+>>>>>>>> md_wq is a bit special as it has WQ_MEM_RECLAIM so it is
+>>>>>>>> best to leave that alone.
+>>>>>>>>
+>>>>>>>> So create a new workqueue, md_del_wq, and a new work_struct,
+>>>>>>>> mddev->sync_work, so we can keep two classes of work separate.
+>>>>>>>>
+>>>>>>>> md_del_wq and ->del_work are used only for destroying rdev
+>>>>>>>> and mddev.
+>>>>>>>> md_misc_wq is used for event_work and sync_work.
+>>>>>>>>
+>>>>>>>> Also document the purpose of each flush_workqueue() call.
+>>>>>>>>
+>>>>>>>> This removes the lockdep warning.
+>>>>>>>
+>>>>>>> I had the exactly same patch queued internally,
+>>>>>>
+>>>>>> Cool :-)
+>>>>>>
+>>>>>>>                                                   but the mdadm tes=
+t suite still
+>>>>>>> shows lockdep warnning. I haven't time to check further.
+>>>>>>>
+>>>>>>
+>>>>>> The only other lockdep I've seen later was some ext4 thing, though I
+>>>>>> haven't tried the full test suite.  I might have a look tomorrow.
+>>>>>
+>>>>> I'm also seeing a lockdep warning with or without this patch,
+>>>>> reproducible with:
+>>>>>
+>>>>
+>>>> Thanks!
+>>>> Looks like using one workqueue for mddev->del_work and rdev->del_work
+>>>> causes problems.
+>>>> Can you try with this addition please?
+>>>
+>>> It helped for that case but now there is another warning triggered by:
+>>>
+>>> export IMSM_NO_PLATFORM=3D1 # for platforms without IMSM
+>>> mdadm -C /dev/md/imsm0 -eimsm -n4 /dev/sd[a-d] -R
+>>> mdadm -C /dev/md/vol0 -l5 -n4 /dev/sd[a-d] -R --assume-clean
+>>> mdadm -If sda
+>>> mdadm -a /dev/md127 /dev/sda
+>>> mdadm -Ss
+>>=20
+>> I tried that ... and mdmon gets a SIGSEGV.
+>> imsm_set_disk() calls get_imsm_disk() and gets a NULL back.
+>> It then passes the NULL to mark_failure() and that dereferences it.
 >
-> It's actually still running, but this is the output so far:
->
-> [root@hemlock ~]# od -x /dev/sdf | grep '4efc a92b' | head
-> 142401762260 7984 d854 643a 3c8f dd3a a8de 4efc a92b
-> 156441541400 48f9 9523 3539 de0a d1f4 4efc a92b 60a8
-> 214717071120 ac68 a62e 441c c0f8 85c1 cab7 4efc a92b
-> 367526264660 dc8f 4f52 4efc a92b fd99 4744 1d6e c59f
-> 515240166540 4f6a c1eb 5309 4efc a92b d0ad b3ee 11a0
-> 575452271660 b669 7eeb 4efc a92b ebf5 c069 c78d 82d3
-> 1026007653000 913f 4efc a92b 0b3d 5e94 9f7a 80a5 6e0c
-> 1104130763160 7267 f0e5 e9a4 a9e0 0b85 5b3b 4efc a92b
-> 1107535224640 cde4 efa8 557c 01a1 1abb b885 4efc a92b
-> 1167200747300 49dd f3e2 4efc a92b a6e7 f1af 7af1 e6c6
+> Interesting... I can't reproduce this. Can you show the output from
+> mdadm -E for all disks after mdmon crashes? And maybe a debug log from
+> mdmon?
 
-No md metadata to be found at all.
-We would need to see a line with an address ending "000" and data
-starting  4efc a92b 0001 0000 ....
-Nothing like that here.
+The crash happens when I run "mdadm -If sda".
+gdb tell me:
 
-Maybe this isn't really the drive you think it is?  Could  someone or
-something have swapped drives?
-Maybe you or someone zeroed the metadata (mdadm --zero-super /dev/sdf1).
+Thread 2 "mdmon" received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7f5526c24700 (LWP 4757)]
+0x000000000041601c in is_failed (disk=3D0x0) at super-intel.c:1324
+1324		return (disk->status & FAILED_DISK) =3D=3D FAILED_DISK;
+(gdb) where
+#0  0x000000000041601c in is_failed (disk=3D0x0) at super-intel.c:1324
+#1  0x00000000004255a2 in mark_failure (super=3D0x65fa30, dev=3D0x660ba0,=20
+    disk=3D0x0, idx=3D0) at super-intel.c:7973
+#2  0x00000000004260e8 in imsm_set_disk (a=3D0x6635d0, n=3D0, state=3D17)
+    at super-intel.c:8357
+#3  0x0000000000405069 in read_and_act (a=3D0x6635d0, fds=3D0x7f5526c23e10)
+    at monitor.c:551
+#4  0x0000000000405c8e in wait_and_act (container=3D0x65f010, nowait=3D0)
+    at monitor.c:875
+#5  0x0000000000405dc7 in do_monitor (container=3D0x65f010) at monitor.c:906
+#6  0x0000000000403037 in run_child (v=3D0x65f010) at mdmon.c:85
+#7  0x00007f5526fcb494 in start_thread (arg=3D0x7f5526c24700)
+    at pthread_create.c:333
+#8  0x00007f5526d0daff in clone ()
+    at ../sysdeps/unix/sysv/linux/x86_64/clone.S:97
 
-There is no way that md or mdadm could have mis-behaved, even when
-affected by selinux, to produce this result.  Something else must have
-happened.  Maybe something you don't know about, or something you don't
-think it relevant.  But there must be something.
+The super-disks list that get_imsm_dl_disk() looks through contains
+sdc, sdd, sde, but not sda - so get_imsm_disk() returns NULL.
+(the 4 devices I use are sda sdc sde sde).
+ mdadm --examine of sda and sdc after the crash are below.
+ mdmon debug output is below that.
 
-Sorry I cannot be more helpful.
-
+Thanks,
 NeilBrown
+
+
+/dev/sda:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.02
+    Orig Family : 0a44d090
+         Family : 0a44d090
+     Generation : 00000002
+     Attributes : All supported
+           UUID : 9897925b:e497e1d9:9af0a04a:88429b8b
+       Checksum : 56aeb059 correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 1
+
+[vol0]:
+           UUID : 89a43a61:a39615db:fe4a4210:021acc13
+     RAID Level : 5
+        Members : 4
+          Slots : [UUUU]
+    Failed disk : none
+      This Slot : ?
+    Sector Size : 512
+     Array Size : 36864 (18.00 MiB 18.87 MB)
+   Per Dev Size : 12288 (6.00 MiB 6.29 MB)
+  Sector Offset : 0
+    Num Stripes : 48
+     Chunk Size : 128 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : clean
+     RWH Policy : off
+
+  Disk00 Serial :=20
+          State : active
+             Id : 00000000
+    Usable Size : 36028797018957662
+
+  Disk01 Serial : QM00002
+          State : active
+             Id : 01000100
+    Usable Size : 14174 (6.92 MiB 7.26 MB)
+
+  Disk02 Serial : QM00003
+          State : active
+             Id : 02000000
+    Usable Size : 14174 (6.92 MiB 7.26 MB)
+
+  Disk03 Serial : QM00004
+          State : active
+             Id : 02000100
+    Usable Size : 14174 (6.92 MiB 7.26 MB)
+
+/dev/sdc:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.02
+    Orig Family : 0a44d090
+         Family : 0a44d090
+     Generation : 00000004
+     Attributes : All supported
+           UUID : 9897925b:e497e1d9:9af0a04a:88429b8b
+       Checksum : 56b1b08e correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 1
+
+  Disk01 Serial : QM00002
+          State : active
+             Id : 01000100
+    Usable Size : 14174 (6.92 MiB 7.26 MB)
+
+[vol0]:
+           UUID : 89a43a61:a39615db:fe4a4210:021acc13
+     RAID Level : 5
+        Members : 4
+          Slots : [_UUU]
+    Failed disk : 0
+      This Slot : 1
+    Sector Size : 512
+     Array Size : 36864 (18.00 MiB 18.87 MB)
+   Per Dev Size : 12288 (6.00 MiB 6.29 MB)
+  Sector Offset : 0
+    Num Stripes : 48
+     Chunk Size : 128 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : degraded
+    Dirty State : clean
+     RWH Policy : off
+
+  Disk00 Serial : 0
+          State : active failed
+             Id : ffffffff
+    Usable Size : 36028797018957662
+
+  Disk02 Serial : QM00003
+          State : active
+             Id : 02000000
+    Usable Size : 14174 (6.92 MiB 7.26 MB)
+
+  Disk03 Serial : QM00004
+          State : active
+             Id : 02000100
+    Usable Size : 14174 (6.92 MiB 7.26 MB)
+
+mdmon: mdmon: starting mdmon for md127
+mdmon: __prep_thunderdome: mpb from 8:0 prefer 8:48
+mdmon: __prep_thunderdome: mpb from 8:32 matches 8:48
+mdmon: __prep_thunderdome: mpb from 8:64 matches 8:32
+monitor: wake ( )
+monitor: wake ( )
+....
+monitor: wake ( )
+monitor: wake ( )
+monitor: wake ( )
+mdmon: manage_new: inst: 0 action: 25 state: 26
+mdmon: imsm_open_new: imsm: open_new 0
+
+mdmon: wait_and_act: monitor: caught signal
+mdmon: read_and_act: (0): 1508714952.508532 state:write-pending prev:inacti=
+ve action:idle prev: idle start:18446744073709551615
+mdmon: imsm_set_array_state: imsm: mark 'dirty'
+mdmon: imsm_set_disk: imsm: set_disk 0:11
+
+Thread 2 "mdmon" received signal SIGSEGV, Segmentation fault.
+0x00000000004168f1 in is_failed (disk=3D0x0) at super-intel.c:1324
+1324		return (disk->status & FAILED_DISK) =3D=3D FAILED_DISK;
+(gdb) where
+#0  0x00000000004168f1 in is_failed (disk=3D0x0) at super-intel.c:1324
+#1  0x0000000000426bec in mark_failure (super=3D0x667a30, dev=3D0x668ba0,=20
+    disk=3D0x0, idx=3D0) at super-intel.c:7973
+#2  0x000000000042784b in imsm_set_disk (a=3D0x66b9b0, n=3D0, state=3D17)
+    at super-intel.c:8357
+#3  0x000000000040520c in read_and_act (a=3D0x66b9b0, fds=3D0x7ffff7617e10)
+    at monitor.c:551
+#4  0x00000000004061aa in wait_and_act (container=3D0x667010, nowait=3D0)
+    at monitor.c:875
+#5  0x00000000004062e3 in do_monitor (container=3D0x667010) at monitor.c:906
+#6  0x0000000000403037 in run_child (v=3D0x667010) at mdmon.c:85
+#7  0x00007ffff79bf494 in start_thread (arg=3D0x7ffff7618700)
+    at pthread_create.c:333
+#8  0x00007ffff7701aff in clone ()
+    at ../sysdeps/unix/sysv/linux/x86_64/clone.S:97
+(gdb) quit
+A debugging session is active.
+
+	Inferior 1 [process 5774] will be killed.
+
+Quit anyway? (y or n) ty
+Please answer y or n.
+A debugging session is active.
+
+	Inferior 1 [process 5774] will be killed.
+
+Quit anyway? (y or n) y
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlntHnsACgkQOeye3VZi
-gbmiOA/7BsrjwixxIL+GZ8yENUbOriyBco+5r/lzFT8/0zAbtmVQwUaa25/W5rNx
-udxM/tjCDOpyqCLSYMeC4NMomtAxFw81dDyxsNFBLXCxvcZD25E/GWEE+4H2/wCB
-CCkI89gMRTJuwVithpWjth1G9XbhK4rpZFODnTFEnsFzSHc7E/Pgxhnhnc9yYqiW
-MdpwTwQYlSezUBxLPZZvBmalU2wyS3SzovzzXWo4ohR7cYqHNGwBrXAvtIC7aYHB
-cue4GUE3LjxVYNwGTjLH1MJW5KjKHmji9zxfcIGJthvAImpVp0mqUw02FnCfnAXe
-H4uqJ41HSKInG5Dr0IPSPJCpNWQOdgFtVAzFJKSC7dg2gpvWVYrHjq3afNiDoRT/
-AEhz7Wq2hP71LzgMw1yzSxBu1Q+RVaakuwoUUN9p0l9qv/lWBh50iJVivDyh+zvZ
-/ma8rKZGfA7AZgKyJ9q+SCKAGwmujvjCBSvm0w3sMUxTrYXCq37vnogNhNJ+/uE8
-4K9s/efvscpHHyKCU0+jZQkA1aFdQ/M65eJZ1xSMfqmbnKB5S+9nBgckkLeq9AAv
-fczz74iX31T04T+JFSOUFxf1LTeYenr9wHst5QMHH8NgUYwa67/iJgUaFfYPxljK
-6mUL+cyi9lkLwJBW9bY129tDzf2fCfshO8vu01e8BBOKGq+fHoQ=
-=lu3y
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlntKjgACgkQOeye3VZi
+gbl+cw//an8b3Do0YrlTIe1p0OCpQgr2Pi2dmZ0mZWQks3gt04AHwpnUqN/omLgq
+/Kbo3AqBFG7NSz+7Qj1LjeLxxglAm6Nlf3TCZ/zzEfLgUzEFy/kTpwmnHo4nF4AJ
+P8xXHab9+lBrxffPLOGZ3PMMXNxg8ObgOjBgFuO1c97O3B52miuqBk7NvwdFt1vr
+V6D+2nzIFvR02Edy7eZ7jk6liG5r9MPhtOPa9RAHSs6m2fVhCeMfi9hXebEh2awv
+/vvGjOnZxhKtOPBMJY6tGKdO9WXXsROmwqtZSzGb8eB0vpXDEGks09M3aNDA4GH2
+bnjAr/CodTB3sGD4pUimwSAkzmlCH7jBVlk1ZDqo/hQtuc3529hgoPMo0t23mHWB
+G4YDq4bJbmAIRIpgCaGUVrIUyUO/7CM1wCEaht4ZxYRl6Ouln7yyb+70KhhnLfvK
+ZvifY8cniiOWyYRaFzDVBfIFcVH+CRMeuBT6rZC0f1AvROia2cFzTJp9nooVuOq9
+3kmjTkMWtOqTzRvFm0cU32Vzn468E8TEav4/1W26fce4maRRZ52jief/acTR3tSl
+j7q9NrExk57WNHUT/DJe+gMbyH400ft9q7FfnoSGuz2/14AiYdyI1g4UtPhZ0EKg
+webylU8+00IV+RGH7urRhK24nL/WbhRII7oZ0hKaEHme5klIxXs=
+=oKGj
 -----END PGP SIGNATURE-----
 --=-=-=--
