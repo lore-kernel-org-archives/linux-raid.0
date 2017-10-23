@@ -1,86 +1,119 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [md PATCH 1/5 v2] md: always hold reconfig_mutex when calling
- mddev_suspend()
-Date: Sun, 22 Oct 2017 18:48:35 -0700
-Message-ID: <20171023014835.6qlu4cpzimjuxgpu@kernel.org>
-References: <150820826980.1646.6380214598725492144.stgit@noble>
- <150820840340.1646.12365558035859364361.stgit@noble>
- <20171018061107.42kpztc3nbnhbavi@kernel.org>
- <87efq0j4d2.fsf@notabene.neil.brown.name>
- <87lgk8gcmb.fsf@notabene.neil.brown.name>
- <20171019034420.sdxvirpv454vgx4h@kernel.org>
- <8760bbhcql.fsf@notabene.neil.brown.name>
- <20171020042820.iredht4f7lvatdst@kernel.org>
- <87sheaenow.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: mdadm segfault with incremental
+Date: Mon, 23 Oct 2017 13:12:06 +1100
+Message-ID: <87mv4iehop.fsf@notabene.neil.brown.name>
+References: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87sheaenow.fsf@notabene.neil.brown.name>
+In-Reply-To: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: =?utf-8?Q?Bj=C3=B8rnar?= Ness <bjornar.ness@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 23, 2017 at 11:02:23AM +1100, Neil Brown wrote:
-> On Thu, Oct 19 2017, Shaohua Li wrote:
-> >> >
-> >> > For this one, my point is:
-> >> >
-> >> > 	wait_event(mddev->sb_wait, conf->log == NULL ||
-> >> > 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
-> >> > 	if (conf->log == NULL)
-> >> > 		return;
-> >> >
-> >> > 	mddev_suspend(mddev);
-> >> > 	log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH;
-> >> > 	mddev_resume(mddev);
-> >> >
-> >> > does it work?
-> >> 
-> >> The
-> >> 	lockdep_assert_held(&mddev->reconfig_mutex);
-> >> in mddev_suspend() will complain.
-> >> 
-> >> If you put an mddev_lock() call in there to stop the complaint, and if
-> >> the work item doesn't start before the reconfig_mutex is taken prior to
-> >> stopping the array, then r5l_exit_log() can deadlock at
-> >> 	flush_work(&log->disable_writeback_work);
-> >
-> > Ok, got it now. But really don't like this patch. The mddev_unlock is strange,
-> > r5c_disable_writeback_async could skip disabling writeback too. Could we add a
-> > new callback like .prepare_free, and flush workqueue there. After we drop the
-> > reconfig_mutex in do_md_stop, we call the prepare_free. We can probably set a
-> > flag, so later r5c_disable_writeback_async will bail out doing nothing. I think
-> > this should work, right?
-> 
-> Might work, though it sounds more messy to me (assuming I understand).
-> 
-> I would like to get rid of disable_writeback_work altogether.
-> Just set  log->r5c_journal_mode = R5C_JOURNAL_MODE_WRITE_THROUGH in
-> r5c_update_on_rdev_error(), and make sure that does the right thing.
-> 
-> The distinction between write-through and write-back should be able to
-> be a per-stripe_head distinction.  Once we set r5c_journal_mode, new
-> stripe_heads will get the new mode, old ones are allowed to continue how
-> they are.
-> Maybe we could keep a counter of how many stripes are in WRITE_BACK
-> mode, and test that counter in r5c_is_writeback()??
-> 
-> I don't know what all the issues are so it would need careful review,
-> preferably by someone familiar with the code.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-We check the writeback in several steps, would be problematical, but I didn't
-take a close look yet.
+On Thu, Oct 19 2017, Bj=C3=B8rnar Ness wrote:
 
-> Short of that, I think my current patch is the best interim step.  I
-> agree that it isn't the most elegant thing ever, but it is localized and
-> I believe it works correctly.
-> The "mddev_unlock()" shouldn't look too strange, it perfectly balances
-> he mddev_try_lock().
+> While working with mdadm policy/udev to add slaves when they are
+> inserted, I notices
+> mdadm is segfaulting if it gets a blank drive and action is set to
+> spare or above.
+>
+> Looking into the code, this segfault is caused by the following code:
+>
+> Incremental.c line 965
+>
+>                      st2->ss->avail_size(st2, devsize,
+>                                          sra->devs
+>                                          ? sra->devs->data_offset
+>                                          : INVALID_SECTORS)
+>
+> avail_size in my case is super1.c avail_size1
+>
+> and here the code sets:
+>
+> struct mdp_superblock_1 *super =3D st->sb;
+>
+> and later tries accessing i.e super->feature_map, where it segfaults
+> because in the case
+> of an empty drive, st2 is created in super1.c/match_metadata_desc1
+> where it sets:
+>
+>         st->sb =3D NULL;
+>
+> I am not entirely sure how this is supposed to work, but atleast
+> currently it segfaults.
 
-Alright, we need this patch to avoid the lockdep warning, so I queued the patch
-now. Once I got time, I'll check if the proposal works.
+Hi Bj=C3=B8rnar,
+ thanks for the report.
+
+This was broken by
+Commit: 641da7459192 ("super1: separate to version of _avail_space1().")
+
+in mdadm-3.3.  The code in Incremental.c should really be using
+=2D>validate_geometry, rather than ->avail_size.
+
+This patch should fix it.  Could you please try and report?
 
 Thanks,
-Shaohua
+NeilBrown
+
+
+diff --git a/Incremental.c b/Incremental.c
+index 91301eb5e609..baea9761cee1 100644
+=2D-- a/Incremental.c
++++ b/Incremental.c
+@@ -870,7 +870,7 @@ static int array_try_spare(char *devname, int *dfdp, st=
+ruct dev_policy *pol,
+ 		struct supertype *st2;
+ 		struct domainlist *dl =3D NULL;
+ 		struct mdinfo *sra;
+=2D		unsigned long long devsize;
++		unsigned long long devsize, freesize =3D 0;
+ 		struct spare_criteria sc =3D {0, 0};
+=20
+ 		if (is_subarray(mp->metadata))
+@@ -942,10 +942,13 @@ static int array_try_spare(char *devname, int *dfdp, =
+struct dev_policy *pol,
+ 			close(mdfd);
+ 		}
+ 		if ((sra->component_size > 0 &&
+=2D		     st2->ss->avail_size(st2, devsize,
+=2D					 sra->devs ? sra->devs->data_offset :
+=2D					 INVALID_SECTORS) <
+=2D		     sra->component_size) ||
++		     st2->ss->validate_geometry(st2, sra->array.level, sra->array.layout,
++						sra->array.raid_disks, &sra->array.chunk_size,
++						sra->component_size,
++						sra->devs ? sra->devs->data_offset : INVALID_SECTORS,
++						devname, &freesize, sra->consistency_policy,
++						0) &&
++		     freesize < sra->component_size) ||
+ 		    (sra->component_size =3D=3D 0 && devsize < sc.min_size)) {
+ 			if (verbose > 1)
+ 				pr_err("not adding %s to %s as it is too small\n",
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlntT/cACgkQOeye3VZi
+gbnngRAAk50KglK64ThpzsLzD03h9UnHIQJeIWcjeD0WEpWzBd993m9pz42YCSzd
+Ij0VjNf8nvtk+WaaV93zjaWcENuJsm2SuZcwq7X1ayVKdu3NDuVMRW8pROy/PWCb
+fVvgGSF9d1dVHmUzLYKtvG2LKjPhyBV2RnpyIHr7+cMfqhm4churcAqbquxwEXjI
+pm2RBpZmU8qXtoAQTl0CVuNVv7Vc+Qnb1d8Uyy9tX+gY2dhADssMCZK/gbQ8KL/E
+nIh2t+KXVbQbcXideby0EYmmHDoYtZyM7bKwi/kw6UMktGgijbFS8F7oLfmMxYYn
+8A2dHvNZ6xNBy7+Ch+qBDSd6tmU8RqVS5Jiu1aWH3xBFLyBKAYuoUPmMCLP5Sh2N
+2y6eOIrwxfZZr08hGOAfpq40VkknFdGYHRdHMWeZWb8VfuhQV/4liUy9M3/Nvi00
+so3tCbujla8o55jLWrc79NxZDB/jAUbxt1J9Do/wIZO9TAmRW5vYvgn5fC8HOabX
+WWXBR12ZEAwUKdfPhNEPOIPbvyRiVyeKuClMzNzBi5Nh1Y+JFTRrHQioKNhSukcg
+AE3XESSlRrLpxUhZf9yDYxDpTGQ8pEFw68GlOKxkWNafwtVHcLJUDOFg6KnZXlgX
+bAugy4/RqJa1cgH0CA5X1aXRMgiX1HQEtGCMXILcli01kdI3p5M=
+=vgOE
+-----END PGP SIGNATURE-----
+--=-=-=--
