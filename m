@@ -1,34 +1,43 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH v2] mdadm/grow: adding a test to ensure resize was
- required
-Date: Mon, 23 Oct 2017 12:43:47 -0400
-Message-ID: <aea29bdc-f71f-2e11-bfac-d1c4ffb01d06@gmail.com>
-References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
- <1507711992-11548-1-git-send-email-zlliu@suse.com>
- <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
- <3039B97CB1D6E5428A50E8AC3F7BE0E477357D9C@IRSMSX104.ger.corp.intel.com>
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH 2/2] dm log writes: add support for DAX
+Date: Mon, 23 Oct 2017 13:34:09 -0400
+Message-ID: <20171023173408.z6gog67bdp5s7jzy@destiny>
+References: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
+ <20171020052404.13762-2-ross.zwisler@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3039B97CB1D6E5428A50E8AC3F7BE0E477357D9C@IRSMSX104.ger.corp.intel.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "Majchrzak, Tomasz" <tomasz.majchrzak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171020052404.13762-2-ross.zwisler@linux.intel.com>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Josef Bacik <jbacik@fb.com>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On 10/12/2017 06:55 AM, Majchrzak, Tomasz wrote:
-> Hi Jes,
+On Thu, Oct 19, 2017 at 11:24:04PM -0600, Ross Zwisler wrote:
+> Now that we have the ability log filesystem writes using a flat buffer, add
+> support for DAX.  Unfortunately we can't easily track data that has been
+> written via mmap() now that the dax_flush() abstraction was removed by this
+> commit:
 > 
-> I wonder if it would be a lot of inconvenience for you to push commits on more regular basis (optimally once accepted). We run daily regression tests on upstream mdadm and frequent pushes would allow us to see problems sooner.
+> commit c3ca015fab6d ("dax: remove the pmem_dax_ops->flush abstraction")
+> 
+> Otherwise we could just treat each flush as a big write, and store the data
+> that is being synced to media.  It may be worthwhile to add the dax_flush()
+> entry point back, just as a notifier so we can do this logging.
+> 
+> The motivation for this support is the need for an xfstest that can test
+> the new MAP_SYNC DAX flag.  By logging the filesystem activity with
+> dm-log-writes we can show that the MAP_SYNC page faults are writing out
+> their metadata as they happen, instead of requiring an explicit
+> msync/fsync.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
 
-Hi Tomek,
+Ok this is just my ignorance of how DAX works shining through, but do we need a
+new flag to indicate this is DAX data?  You are logging it like it's just normal
+data going to a certain sector, is that good enough?  If it is then hooray this
+looks fine to me, I'm just slightly confused.  Thanks,
 
-I generally try to push when I apply patches. It happens I miss it, 
-especially if it's just a single smaller patch.
-
-I just pushed the tree now.
-
-Cheers,
-Jes
+Josef
