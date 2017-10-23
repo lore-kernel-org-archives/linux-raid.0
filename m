@@ -1,55 +1,109 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH v3] mdadm/grow: adding a test to ensure resize was required
-Date: Mon, 23 Oct 2017 17:13:41 +0800
-Message-ID: <1508750021-4919-1-git-send-email-zlliu@suse.com>
-References: <1507711992-11548-1-git-send-email-zlliu@suse.com>
+Subject: Re: [PATCH] md: ensure sectors is nonzero when change component size
+Date: Mon, 23 Oct 2017 17:23:10 +0800
+Message-ID: <54ff0bef-e6f3-a94b-af94-5014db2143a0@suse.com>
+References: <1507797051-18545-1-git-send-email-zlliu@suse.com>
+ <20171012173743.nocrm6ejov3pvhjd@kernel.org>
+ <111b18f3-4db6-bf53-3a9f-15db452192ba@suse.com>
+ <20171013190558.svbyj35i7xtls4wr@kernel.org>
+ <31970279-37d7-e8bc-b37f-955f23434f7f@suse.com>
+ <871sm2lj3o.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1507711992-11548-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <871sm2lj3o.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-To fix the commit: 4b74a905a67e
-(mdadm/grow: Component size must be larger than chunk size)
 
-array.level > 1 : against the raids which chunk_size is meaningful.
-s->size > 1 : ensure changing component size has required, s->size
-is '1' when '--grow --size max' parameter is specified.
-array.chunk_size / 1024 > s->size : ensure component size should
-be always >= current chunk_size when requires resize, otherwise,
-mddev->pers->resize would be set mddev->dev_sectors as '0'.
 
-Reported-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Suggested-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
+On 10/17/2017 08:21 AM, NeilBrown wrote:
+> On Mon, Oct 16 2017, Zhilong Liu wrote:
+>
+>> On 10/14/2017 03:05 AM, Shaohua Li wrote:
+>>> On Fri, Oct 13, 2017 at 10:47:29AM +0800, Zhilong Liu wrote:
+>>>> On 10/13/2017 01:37 AM, Shaohua Li wrote:
+>>>>> On Thu, Oct 12, 2017 at 04:30:51PM +0800, Zhilong Liu wrote:
+>>>>>> Against the raids which chunk_size is meaningful, the component_size
+>>>>>> must be >= chunk_size when require resize. If "new_size < chunk_size"
+>>>>>> has required, the "mddev->pers->resize" will set sectors as '0', and
+>>>>>> then the raids isn't meaningful any more due to mddev->dev_sectors is
+>>>>>> '0'.
+>>>>>>
+>>>>>> Cc: Neil Brown <neilb@suse.com>
+>>>>>> Signed-off-by: Zhilong Liu <zlliu@suse.com>
+>>>>> Not sure about this, does size 0 disk really harm?
+>>>>>
+>>>>   From my site, I think changing the component size as '0' should be avoided.
+>>>> When resize changing required and new_size < current_chunk_size, such as
+>>>> raid5:
+>>>>
+>>>> raid5.c: raid5_resize()
+>>>> ...
+>>>> 7727         sectors &= ~((sector_t)conf->chunk_sectors - 1);
+>>>> ...
+>>>>
+>>>> 'sectors' got '0'.
+>>>>
+>>>> then:
+>>>> ...
+>>>> 7743         mddev->dev_sectors = sectors;
+>>>> ...
+>>>>
+>>>> the dev_sectors(the component size) got '0'.
+>>>> same scenario happens in raid10.
+>>>>
+>>>> So, it's really not meaningful if changing the raid component_size to '0',
+>>>> md
+>>>> should give this scenario a test, otherwise, it's a trouble thing to restore
+>>>> after
+>>>> doing such invalid re-size.
+>>> Yes, I understand how it could be 0. My question is what's wrong with a size-0
+>>> disk? For example, if you don't setup file for a loop block device, its size is
+>>> 0.
+>> I'm sorry I'm not very clear with your question, I try to describe more
+>> on this scenario.
+>> the 0-component_size isn't a 0-size disk. resize doesn't change
+>> raid_member_disk size
+>> to 0.
+>>
+>> For example: mdadm -CR /dev/md0 -b internal -l5 -n2 -x1 /dev/sd[b-d]
+>> if set the component_size to 0, how would the 'internal bitmap' be? And
+>> if I want to make
+>> a file-system on this raid, how would it be? it's out of my control.
+>>
+>> I would continue to provide infos for you if any questions needs further
+>> discussion.
+>>
+>> Hope this information is useful for you.
+>> Here is piece of dmesg for the following steps:
+>> 1. mdadm -CR /dev/md0 -b internal -l5 -n2 -x1 /dev/sd[b-d]
+>> 2. mdadm -G /dev/md0 --size 511
+>> 3. mkfs.ext3 /dev/md0
+>> the mkfs would be stuck all time, cannot kill the mkfs process and have to
+>> force to reboot, then lots of same call trace prints in dmesg.
+> I think the cause of this problem is that raid5_size() treats zero
+> values for 'sectors' and 'raid_disks' as "don't change".
+>
+> So setting the size to zero will change mddev->dev_sectors but not
+> mddev->array_size.
+> This causes internal confusion.
+> Maybe we should use a different number of "don't change" ??
+>
+> This could affect any of the ->size() functions.
 
-v1: [PATCH 1/3] mdadm/Grow: fix the broken raid level conversion
-v2: [PATCH v2] mdadm/grow: adding a test to ensure resize was required
+Thanks for the clarification, yes, this causes the array unusable, such 
+as the mkfs
+causes the process stuck or continue to resize the array refused by 
+mdadm due to
+the component_size is '0', .etc.
 
-changes:
-  v2: correct the test 's->level == UnSet' as 's->size > 0' against v1
-  v3: correct 's->size > 0' as 's->size > 1' against v2, s->size is '1'
-      when '--grow --size max' parameter is specified.
+Thanks,
+-Zhilong
 
- Grow.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/Grow.c b/Grow.c
-index 4d79d83..e14c921 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1810,7 +1810,8 @@ int Grow_reshape(char *devname, int fd,
- 	}
- 
- 	if (array.level > 1 &&
--	   (array.chunk_size / 1024) > (int)s->size) {
-+	    s->size > 1 &&
-+	    (array.chunk_size / 1024) > (int)s->size) {
- 		pr_err("component size must be larger than chunk size.\n");
- 		return 1;
- 	}
--- 
-2.6.6
+>
+> NeilBrown
 
