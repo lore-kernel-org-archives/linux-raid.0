@@ -1,53 +1,60 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: upgrading LSI SAS9211-8i fw IR->IT
-Date: Tue, 24 Oct 2017 22:59:26 +0500
-Message-ID: <20171024225926.48873932@natsu>
-References: <08feefcc-14d0-e7ec-aa23-927ecbb63ac3@eyal.emu.id.au>
- <20171024171457.563fbb2a@natsu>
- <fd16035d-adaa-ddc5-1726-7b3873871853@eyal.emu.id.au>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: md: Convert timers to use timer_setup()
+Date: Tue, 24 Oct 2017 14:15:55 -0400
+Message-ID: <20171024181555.GA22647@redhat.com>
+References: <20171017000148.GA102867@beast>
+	<390e7ce2-fda1-ad11-6c96-0ea44615c845@lyle.org>
+	<CAGXu5jLQVmS_7wA3z3W8590d-adNHMNY5yp5WsiSx3EiwTsfRQ@mail.gmail.com>
+	<D294B3CB-45BC-49B2-A9DD-AB0A01CCB444@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd16035d-adaa-ddc5-1726-7b3873871853@eyal.emu.id.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: list linux-raid <linux-raid@vger.kernel.org>
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <D294B3CB-45BC-49B2-A9DD-AB0A01CCB444@kernel.dk>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Michael Lyle <mlyle@lyle.org>, Kees Cook <keescook@chromium.org>, dm-devel@redhat.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Shaohua Li <shli@fb.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, 25 Oct 2017 00:04:37 +1100
-Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
+On Wed, Oct 18 2017 at 11:12pm -0400,
+Jens Axboe <axboe@kernel.dk> wrote:
 
-> I want to avoid the risk of the IR fw writing any metadata to the disks which already
-> hold a software RAID.
 > 
-> Is it not the case that the IR fw may mess with the disks (I read a comment suggesting it might)?
+> > On Oct 18, 2017, at 9:06 PM, Kees Cook <keescook@chromium.org> wrote:
+> > 
+> >> On Mon, Oct 16, 2017 at 8:06 PM, Michael Lyle <mlyle@lyle.org> wrote:
+> >>> On 10/16/2017 05:01 PM, Kees Cook wrote:
+> >>> In preparation for unconditionally passing the struct timer_list pointer to
+> >>> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> >>> to pass the timer pointer explicitly.
+> >>> 
+> >>> Cc: Kent Overstreet <kent.overstreet@gmail.com>
+> >>> Cc: Shaohua Li <shli@kernel.org>
+> >>> Cc: Alasdair Kergon <agk@redhat.com>
+> >>> Cc: Mike Snitzer <snitzer@redhat.com>
+> >>> Cc: dm-devel@redhat.com
+> >>> Cc: linux-bcache@vger.kernel.org
+> >>> Cc: linux-raid@vger.kernel.org
+> >>> Signed-off-by: Kees Cook <keescook@chromium.org>
+> >> 
+> >> This looks good to me-- I'm fine with Jens or someone else picking this
+> >> up directly, or would take a bcache-specific one to apply to my tree.
+> >> 
+> >> Reviewed-by: Michael Lyle <mlyle@lyle.org>
+> > 
+> > Jens, can you pick this up, or would you prefer I split it up?
 
-I believe when HW RAID controllers do that, they set up HPA to reserve a small
-area at the end, and write the metadata there. But just checked, there is no
-HPA on any of the 3 disks that I have connected.
+Jens, would you be OK picking it up from patchwork?  If so, see:
+https://patchwork.kernel.org/patch/10010303/
 
-
-$ sudo hdparm -N /dev/sdi
-
-/dev/sdi:
- max sectors   = 3907029168/3907029168, HPA is disabled
-
-$ sudo hdparm -N /dev/sdh
-
-/dev/sdh:
- max sectors   = 3907029168/3907029168, HPA is disabled
-
-$ sudo hdparm -N /dev/sdg
-
-/dev/sdg:
- max sectors   = 3907029168/3907029168, HPA is disabled
-
-
-You can test by connecting some disk with data you don't care about, and
-checking if its contents get modified (especially at the end), or if it gets
-HPA enabled.
-
--- 
-With respect,
-Roman
+You can add mine too:
+Reviewed-by: Mike Snitzer <snitzer@redhat.com>
