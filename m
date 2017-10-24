@@ -1,33 +1,36 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Kernel preventing (extra) spare disk in array from entering
- standby
-Date: Tue, 24 Oct 2017 14:30:43 -0400
-Message-ID: <f656c779-f376-82a2-cf2f-769767b478d6@turmel.org>
-References: <CAJO99TkXsobN3EszoPM37y=Eth-URQeLTSd8fBDpATHg1x-tmQ@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/2] dm log writes: Add support for inline data buffers
+Date: Tue, 24 Oct 2017 15:14:32 -0400
+Message-ID: <20171024191431.GA22902@redhat.com>
+References: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJO99TkXsobN3EszoPM37y=Eth-URQeLTSd8fBDpATHg1x-tmQ@mail.gmail.com>
-Content-Language: en-GB
-Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Bj=c3=b8rnar_Ness?= <bjornar.ness@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171020052404.13762-1-ross.zwisler@linux.intel.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Josef Bacik <jbacik@fb.com>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On 10/24/2017 10:32 AM, Bjørnar Ness wrote:
-> When looking into disk power-save, I notice that all spare disks attached
-> to a rebuilding array is sent some type of write request every around 5 second.
-> 
-> In my case, where I have perhaps 12 spares attached to an array, it
-> unnecessary prevents the remaining 11 spares from entering standby
-> mode when a rebuild is happening.
-> 
-> Is it possible to do something about this?
-> 
-That sounds like writes to the write-intent bitmap, which happens to all
-devices in an array while degraded.
+On Fri, Oct 20 2017 at  1:24am -0400,
+Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 
-Why do you have 12 spares attached to the array?  That seems a bit
-excessive.
+> Currently dm-log-writes supports writing filesystem data via BIOs, and
+> writing internal metadata from a flat buffer via write_metadata().
+> 
+> For DAX writes, though, we won't have a BIO, but will instead have an
+> iterator that we'll want to use to fill a flat data buffer.
+> 
+> So, create write_inline_data() which allows us to write filesystem data
+> using a flat buffer as a source, and wire it up in log_one_block().
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Phil
+Hi,
+
+I picked this up but tweaked some whitespace and couple style nits, see:
+https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-4.15/dm&id=6a697d036324c7fbe63fb49599027269006161e7
+
+Thanks,
+Mike
