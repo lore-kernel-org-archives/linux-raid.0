@@ -1,55 +1,62 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH v2] mdadm/grow: adding a test to ensure resize was
- required
-Date: Tue, 24 Oct 2017 14:21:09 +0800
-Message-ID: <bd70cdaa-c109-5d2b-1a06-8a07554de284@suse.com>
-References: <1507537274-29350-2-git-send-email-zlliu@suse.com>
- <1507711992-11548-1-git-send-email-zlliu@suse.com>
- <1c66e9b1-59fd-cfe6-bc03-df735421b7a5@gmail.com>
- <3039B97CB1D6E5428A50E8AC3F7BE0E477357D9C@IRSMSX104.ger.corp.intel.com>
- <aea29bdc-f71f-2e11-bfac-d1c4ffb01d06@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 2/4] md-cluster: Suspend writes in RAID10 if within range
+Date: Tue, 24 Oct 2017 15:11:51 +0800
+Message-ID: <20171024071153.5275-3-gqjiang@suse.com>
+References: <20171024071153.5275-1-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aea29bdc-f71f-2e11-bfac-d1c4ffb01d06@gmail.com>
+In-Reply-To: <20171024071153.5275-1-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: "Majchrzak, Tomasz" <tomasz.majchrzak@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: shli@fb.com
+Cc: linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
+If there is a resync going on, all nodes must suspend
+writes to the range. This is recorded in suspend_info
+and suspend_list.
 
+If there is an I/O within the ranges of any of the
+suspend_info, area_resyncing will return 1.
 
-On 10/24/2017 12:43 AM, Jes Sorensen wrote:
-> On 10/12/2017 06:55 AM, Majchrzak, Tomasz wrote:
->> Hi Jes,
->>
->> I wonder if it would be a lot of inconvenience for you to push 
->> commits on more regular basis (optimally once accepted). We run daily 
->> regression tests on upstream mdadm and frequent pushes would allow us 
->> to see problems sooner.
->
-> Hi Tomek,
->
-> I generally try to push when I apply patches. It happens I miss it, 
-> especially if it's just a single smaller patch.
->
-> I just pushed the tree now.
->
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/raid10.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-Hi Jes,
-   Yesterday I sent a v3 version in-reply-to v2 in this mail tree, maybe 
-I shall re-send another commit
-based on current head-commit?
-
-Thanks,
--Zhilong
-
-> Cheers,
-> Jes
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 61890231972e..5a32f6749d1c 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -25,6 +25,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/ratelimit.h>
+ #include <linux/kthread.h>
++#include <linux/sched/signal.h>
+ #include <trace/events/block.h>
+ #include "md.h"
+ #include "raid10.h"
+@@ -1294,6 +1295,22 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	sector_t sectors;
+ 	int max_sectors;
+ 
++	if ((mddev_is_clustered(mddev) &&
++	     md_cluster_ops->area_resyncing(mddev, WRITE,
++					    bio->bi_iter.bi_sector,
++					    bio_end_sector(bio)))) {
++		DEFINE_WAIT(w);
++		for (;;) {
++			prepare_to_wait(&conf->wait_barrier,
++					&w, TASK_IDLE);
++			if (!md_cluster_ops->area_resyncing(mddev, WRITE,
++				 bio->bi_iter.bi_sector, bio_end_sector(bio)))
++				break;
++			schedule();
++		}
++		finish_wait(&conf->wait_barrier, &w);
++	}
++
+ 	/*
+ 	 * Register the new request and wait if the reconstruction
+ 	 * thread has put up a bar for new requests.
+-- 
+2.10.0
 
