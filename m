@@ -1,71 +1,21 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] raid1: remove obsolete code in raid1_write_request
-Date: Tue, 24 Oct 2017 15:33:33 +0800
-Message-ID: <20171024073333.7902-1-gqjiang@suse.com>
+From: =?UTF-8?Q?Bj=C3=B8rnar_Ness?= <bjornar.ness@gmail.com>
+Subject: Re: mdadm segfault with incremental
+Date: Tue, 24 Oct 2017 12:30:57 +0200
+Message-ID: <CAJO99Tnd0dB-90yqrhVseENpsCp4b9tDAFkNSbr+NzGgxT68qA@mail.gmail.com>
+References: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com>
+ <87mv4iehop.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87mv4iehop.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@fb.com
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There are some lines could be removed due to recent
-change for raid1 such as commit 3956df15d634 ("md:
-move suspend_hi/lo handling into core md code").
+Hello, Neil.
 
-Also, seems some comments are put to wrong place,
-move them before wait_barrier.
+This patch seems to solve the issues I am experiencing. So fine to apply.
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/raid1.c | 20 +++++++-------------
- 1 file changed, 7 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 038f5eb299ce..cc9d337a1ed3 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1286,27 +1286,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	int first_clone;
- 	int max_sectors;
- 
--	/*
--	 * Register the new request and wait if the reconstruction
--	 * thread has put up a bar for new requests.
--	 * Continue immediately if no resync is active currently.
--	 */
--
--
- 	if (mddev_is_clustered(mddev) &&
- 	     md_cluster_ops->area_resyncing(mddev, WRITE,
- 		     bio->bi_iter.bi_sector, bio_end_sector(bio))) {
- 
--		/*
--		 * As the suspend_* range is controlled by userspace, we want
--		 * an interruptible wait.
--		 */
- 		DEFINE_WAIT(w);
- 		for (;;) {
- 			prepare_to_wait(&conf->wait_barrier,
- 					&w, TASK_IDLE);
--			if (!mddev_is_clustered(mddev) ||
--			    !md_cluster_ops->area_resyncing(mddev, WRITE,
-+			if (!md_cluster_ops->area_resyncing(mddev, WRITE,
- 							bio->bi_iter.bi_sector,
- 							bio_end_sector(bio)))
- 				break;
-@@ -1314,6 +1302,12 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 		}
- 		finish_wait(&conf->wait_barrier, &w);
- 	}
-+
-+	/*
-+	 * Register the new request and wait if the reconstruction
-+	 * thread has put up a bar for new requests.
-+	 * Continue immediately if no resync is active currently.
-+	 */
- 	wait_barrier(conf, bio->bi_iter.bi_sector);
- 
- 	r1_bio = alloc_r1bio(mddev, bio);
 -- 
-2.10.0
-
+Bj(/)rnar
