@@ -1,308 +1,216 @@
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
-Date: Wed, 25 Oct 2017 14:47:04 -0600
-Message-ID: <20171025204704.3382-1-ross.zwisler@linux.intel.com>
-References: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: [Solved] Trouble creating/assembling/mounting Ver 1.0 raid1 disk in
+ another box to recover data
+Date: Wed, 25 Oct 2017 16:05:23 -0500
+Message-ID: <72e0b049-2575-fd98-fbe4-39898f4704e4@suddenlinkmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Add a test that exercises DAX's new MAP_SYNC flag.
+Neil, All,
 
-This test creates a file and writes to it via an mmap(), but never syncs
-via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
+(sometimes it's the painfully obvious that just slips right by... I was going
+to ask for help, but discovered my problem while going through and composing
+the information for this e-mail -- kind of funny, so I thought I would pass it
+along... and maybe help someone else in the future)
 
-If MAP_SYNC is working the dm-log-writes replay will show the test file
-with 1MiB of on-media block allocations.  This is because each allocating
-page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-(which you can test by fiddling with the parameters to mmap()) the file
-will be smaller or missing entirely.
+  One of my long time boxes finally reached end of life due to a capacitor
+issue a couple of days ago. I had "almost" everything I needed off the raid1
+array before it finally died, but I missed getting the faxes out of the
+hylafax/avantfax folder and I need to recover that data.
 
-Note that dm-log-writes doesn't track the data that we write via the
-mmap(), so we can't do any data integrity checking.  We can only verify
-that the metadata writes for the page faults happened.
+  I have the drive attached to another box via a ATA/usb cable and the drive
+is recognized, etc., but when I try to create an array with the drive (and
+missing) to be able to mount it somewhere, it always fails with "Device Busy".
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+(I don't know what "Busy" means here, but I suspect that when I try and
+create/assemble it, it used to be a md0, md1, or md2 on the old box and this
+current box has a md0-4 already. -- I don't know if that makes any sense, but
+that is all I could think of off-hand)
 
----
+<addendum -- I was wrong, keep reading :)>
 
-Changes since v2:
- - Fixed _require_log_writes() so that DAX will be disallowed if the
-   version of the dm-log-writes target is older than v1.1.0.  (Amir)
+  The drive is an older ATA drive and I don't have a box with ATA anymore, but
+I do have a ATA/usb adapter from the time when laptop drives were ATA.
+Unfortunately the power supply for the laptop drive won't spin the 3.5 inch
+disk, so I have the power-supply from another computer sitting on the table,
+plugged in, with the green and back wire from the 24-pin connector jumped to
+start the power supply. The drive is sde in the current partition list:
 
----
- .gitignore            |  1 +
- common/dmlogwrites    |  4 ++-
- common/rc             |  6 ++--
- src/Makefile          |  3 +-
- src/t_map_sync.c      | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/466     | 76 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/466.out |  3 ++
- tests/generic/group   |  1 +
- 8 files changed, 182 insertions(+), 4 deletions(-)
- create mode 100644 src/t_map_sync.c
- create mode 100755 tests/generic/466
- create mode 100644 tests/generic/466.out
+# cat /proc/partitions
+major minor  #blocks  name
 
-diff --git a/.gitignore b/.gitignore
-index 2014c08..9fc0695 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -119,6 +119,7 @@
- /src/t_getcwd
- /src/t_holes
- /src/t_immutable
-+/src/t_map_sync
- /src/t_mmap_cow_race
- /src/t_mmap_dio
- /src/t_mmap_fallocate
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index 247c744..71d008d 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -23,8 +23,10 @@ _require_log_writes()
- 	[ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
- 		_notrun "This test requires a valid \$LOGWRITES_DEV"
- 
--	_exclude_scratch_mount_option dax
- 	_require_dm_target log-writes
-+	if [[ ${DMTARGET_VER[0]} == 1 && ${DMTARGET_VER[1]} < 1 ]]; then
-+		_exclude_scratch_mount_option dax
-+	fi
- 	_require_test_program "log-writes/replay-log"
- }
- 
-diff --git a/common/rc b/common/rc
-index e2a8229..df438c3 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1792,8 +1792,10 @@ _require_dm_target()
- 
- 	modprobe dm-$_target >/dev/null 2>&1
- 
--	$DMSETUP_PROG targets 2>&1 | grep -q ^$_target
--	if [ $? -ne 0 ]; then
-+	_version=$($DMSETUP_PROG targets 2>&1 | grep ^$_target)
-+	if [[ $_version =~ .*v([0-9]+).([0-9]+).([0-9]+) ]]; then
-+		DMTARGET_VER=(${BASH_REMATCH[@]:1})
-+	else
- 		_notrun "This test requires dm $_target support"
- 	fi
- }
-diff --git a/src/Makefile b/src/Makefile
-index 3eb25b1..af7e7e9 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -13,7 +13,8 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
- 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
- 	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
--	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro
-+	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro \
-+	t_map_sync
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/t_map_sync.c b/src/t_map_sync.c
-new file mode 100644
-index 0000000..29b546a
---- /dev/null
-+++ b/src/t_map_sync.c
-@@ -0,0 +1,92 @@
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <sys/stat.h>
-+#include <sys/types.h>
-+#include <unistd.h>
-+
-+#define MiB(a) ((a)*1024*1024)
-+
-+/*
-+ * These two defines were added to the kernel via commits entitled
-+ * "mm: Define MAP_SYNC and VM_SYNC flags" and
-+ * "mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap
-+ * flags", respectively.
-+ */
-+#ifndef MAP_SYNC
-+#define MAP_SYNC 0x80000
-+#endif
-+
-+#ifndef MAP_SHARED_VALIDATE
-+#define MAP_SHARED_VALIDATE 0x3
-+#endif
-+
-+void err_exit(char *op)
-+{
-+	fprintf(stderr, "%s: %s\n", op, strerror(errno));
-+	exit(1);
-+}
-+
-+void mark_log(char *logwrites_name, char *mark_name)
-+{
-+	char command[256];
-+
-+	snprintf(command, 256, "dmsetup message %s 0 mark %s",
-+			logwrites_name, mark_name);
-+
-+	if (system(command))
-+		err_exit("mark_log");
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int page_size = getpagesize();
-+	int len = MiB(1);
-+	int i, fd, err;
-+	char *data;
-+
-+	if (argc < 4) {
-+		printf("Usage: %s <file> <logwrites_name> <mark_name>\n",
-+				basename(argv[0]));
-+		exit(0);
-+	}
-+
-+	fd = open(argv[1], O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
-+	if (fd < 0)
-+		err_exit("fd");
-+
-+	ftruncate(fd, len);
-+
-+	data = mmap(NULL, len, PROT_READ|PROT_WRITE,
-+			MAP_SHARED_VALIDATE|MAP_SYNC, fd, 0);
-+	if (data == MAP_FAILED)
-+		err_exit("mmap");
-+
-+	/*
-+	 * We intentionally don't sync 'fd' manually.  If MAP_SYNC is working
-+	 * these allocating page faults will cause the filesystem to sync its
-+	 * metadata so that when we replay the dm-log-writes log the test file
-+	 * will have 1 MiB worth of block allocations.
-+	 *
-+	 * dm-log-writes doesn't track the data that we write via the mmap(),
-+	 * so we can't check that, we can only verify that the metadata writes
-+	 * happened.
-+	 */
-+	for (i = 0; i < len; i+=page_size)
-+		data[i] = 0xff;
-+
-+	mark_log(argv[2], argv[3]);
-+
-+	err = munmap(data, len);
-+	if (err < 0)
-+		err_exit("munmap");
-+
-+	err = close(fd);
-+	if (err < 0)
-+		err_exit("close");
-+
-+	return 0;
-+}
-diff --git a/tests/generic/466 b/tests/generic/466
-new file mode 100755
-index 0000000..592213f
---- /dev/null
-+++ b/tests/generic/466
-@@ -0,0 +1,76 @@
-+#! /bin/bash
-+# FS QA Test No. 466
-+#
-+# Use md_log_writes to verify that MAP_SYNC actually syncs metadata during
-+# page faults.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Intel Corporation.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	_log_writes_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmlogwrites
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_log_writes
-+_require_scratch_dax
-+_require_test_program "t_map_sync"
-+
-+_log_writes_init
-+_log_writes_mkfs >> $seqres.full 2>&1
-+_log_writes_mount -o dax
-+
-+src/t_map_sync $SCRATCH_MNT/test $LOGWRITES_NAME pre_unmap
-+
-+# Unmount the scratch dir and tear down the log writes target
-+_log_writes_unmount
-+_log_writes_remove
-+_check_scratch_fs
-+
-+# check pre-unmap state
-+_log_writes_replay_log pre_unmap
-+_scratch_mount
-+
-+# We should see $SCRATCH_MNT/test as having 1MiB in block allocations
-+du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-+
-+_scratch_unmount
-+_check_scratch_fs
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/generic/466.out b/tests/generic/466.out
-new file mode 100644
-index 0000000..4c54d7a
---- /dev/null
-+++ b/tests/generic/466.out
-@@ -0,0 +1,3 @@
-+QA output created by 466
-+1.0M SCRATCH_MNT/test
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index fbe0a7f..65328c6 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -468,3 +468,4 @@
- 463 auto quick clone dangerous
- 464 auto rw
- 465 auto rw quick aio
-+466 auto quick dax
+  11        0    1048575 sr0
+   8        0  976762584 sda
+   8        1          1 sda1
+   8        5     512000 sda5
+   8        6   52428800 sda6
+   8        7  921161728 sda7
+   8        8    2117632 sda8
+   8       16  976762584 sdb
+   8       17          1 sdb1
+   8       21     512000 sdb5
+   8       22   52428800 sdb6
+   8       23  921161728 sdb7
+   8       24    2117632 sdb8
+   8       32 2930266584 sdc
+   8       48 2930266584 sdd
+   9        4 2930135488 md4
+   9        3    2115584 md3
+   9        1   52396032 md1
+   9        2  921030656 md2
+   9        0     511680 md0
+   8       64  245117376 sde
+   8       65     104391 sde1
+   8       66          1 sde2
+   8       69   20972826 sde5
+   8       70    2104483 sde6
+   8       71  221929911 sde7
+
+
+  The drive data is all in tact from the motherboard's time of death on Oct
+20, e.g.
+
+$ mdadm -E /dev/sde5
+/dev/sde5:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : e45cfbeb:77c2b93b:43d3d214:390d0f25
+           Name : 1
+  Creation Time : Thu Aug 21 01:43:22 2008
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 41945504 (20.00 GiB 21.48 GB)
+     Array Size : 20972752 (20.00 GiB 21.48 GB)
+   Super Offset : 41945632 sectors
+   Unused Space : before=0 sectors, after=47 sectors
+          State : clean
+    Device UUID : e0c1c580:db4d853e:6fac1c8f:fb5399d7
+
+Internal Bitmap : -81 sectors from superblock
+    Update Time : Fri Oct 20 15:55:58 2017
+       Checksum : db3d3417 - correct
+         Events : 19154344
+
+
+   Device Role : Active device 0
+   Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+
+  When I try and create a new array (say md20) out of this drive, it just says
+"Device Busy", e.g.
+
+# mdadm --verbose --create /dev/md20 --level=1 --raid-devices=2 /dev/sde5 missing
+mdadm: super1.x cannot open /dev/sde5: Device or resource busy
+mdadm: ddf: Cannot use /dev/sde5: Device or resource busy
+mdadm: Cannot use /dev/sde5: It is busy
+mdadm: cannot open /dev/sde5: Device or resource busy
+
+  There is no md20 to conflict with:
+
+# l /dev/md20
+ls: cannot access '/dev/md20': No such file or directory
+
+  The only md devices on this current system are:
+
+l /dev/md*
+brw-rw---- 1 root disk 9,   0 Oct 23 01:25 /dev/md0
+brw-rw---- 1 root disk 9,   1 Oct 23 01:25 /dev/md1
+brw-rw---- 1 root disk 9, 125 Oct 25 14:26 /dev/md125
+brw-rw---- 1 root disk 9, 126 Oct 25 14:26 /dev/md126
+brw-rw---- 1 root disk 9, 127 Oct 25 14:26 /dev/md127
+brw-rw---- 1 root disk 9,   2 Oct 23 01:25 /dev/md2
+brw-rw---- 1 root disk 9,   3 Oct 23 01:25 /dev/md3
+brw-rw---- 1 root disk 9,   4 Oct 23 01:25 /dev/md4
+
+
+...SMACKS SELF FOR BEING SO DUMB... (will place the pointy hat on head, and
+turn and face the corner when this message is done)
+
+  Duh! Where did md125-127 come from? Those are not normally there. Crap! When
+I plugged the usb in, since mdadm was already running on the box, it saw the
+drive at the end of my usb cable as an array and had already assembled -- but
+not started the array --> which explains the "Device Busy" error.
+
+# mdadm -D /dev/md126
+/dev/md126:
+        Version : 1.0
+     Raid Level : raid0
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+          State : inactive
+
+           Name : 1
+           UUID : e45cfbeb:77c2b93b:43d3d214:390d0f25
+         Events : 19154344
+
+    Number   Major   Minor   RaidDevice
+
+       -       8       69        -        /dev/sde5
+
+
+  I can't believe I wasted 20 minutes dorking with the getting the darn thing
+assembled, but didn't snap to the fact it might already be assembled. Nothing
+in my wildest expectations said plugging a usb cable from a bare drive laying
+on the table powered by a jump-started PS would automatically be recognized as
+an array and assembled -- but it did. Damn good job guys!
+
+# mdadm --verbose --readonly --run /dev/md126
+mdadm: started array /dev/md/1_0
+
+  Hah! good!
+
+# mdadm -D /dev/md126
+/dev/md126:
+        Version : 1.0
+  Creation Time : Thu Aug 21 01:43:22 2008
+     Raid Level : raid1
+     Array Size : 20972752 (20.00 GiB 21.48 GB)
+  Used Dev Size : 20972752 (20.00 GiB 21.48 GB)
+   Raid Devices : 2
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Fri Oct 20 15:55:58 2017
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : 1
+           UUID : e45cfbeb:77c2b93b:43d3d214:390d0f25
+         Events : 19154344
+
+    Number   Major   Minor   RaidDevice State
+       0       8       69        0      active sync   /dev/sde5
+       -       0        0        1      removed
+
+  Hah! Double Good!
+
+# mount /dev/md126 /mnt/af/
+# md /home/data/nemesis/srv/
+# cd /mnt/af/srv/
+# cp -a avantfax/faxes /home/data/nemesis/srv/
+# cp -a avantfax/tmp /home/data/nemesis/srv/
+
+  Bingo! Done!
+
+  Thanks a lot for all the help -- really. If I hadn't been toiling through
+the process of collecting all the information to prepare a well thought out
+post for the list, who knows how long it would have taken me to stumble across
+the fact that the arrays had already been assembled.
+
+  So hopefully this brings a chuckle to all, and maybe some help to someone
+similarly situated in the future (dunce hat and all)
+
 -- 
-2.9.5
+David C. Rankin, J.D.,P.E.
