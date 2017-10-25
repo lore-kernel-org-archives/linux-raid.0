@@ -1,14 +1,12 @@
-From: yaeceh01 <yael.chemla@foss.arm.com>
+From: Yael Chemla <yael.chemla@foss.arm.com>
 Subject: [PATCH] md: dm-verity: aggregate crypto API calls
-Date: Wed, 25 Oct 2017 09:28:41 +0100
-Message-ID: <1508920121-23772-1-git-send-email-yael.chemla@foss.arm.com>
+Date: Wed, 25 Oct 2017 09:56:14 +0100
+Message-ID: <1508921774-24642-1-git-send-email-yael.chemla@foss.arm.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Yael Chemla <yael.chemla@foss.arm.com>
 List-Id: linux-raid.ids
-
-From: Yael Chemla <yael.chemla@foss.arm.com>
 
 Current implementation makes multiple crypto API calls for a single
 block, forcing underlying crypto tfm implementation to "stop & go",
