@@ -1,136 +1,53 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
-Date: Thu, 26 Oct 2017 08:56:38 +1100
-Message-ID: <20171025215638.GA30335@dastard>
-References: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
- <20171025204704.3382-1-ross.zwisler@linux.intel.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: mdadm segfault with incremental
+Date: Thu, 26 Oct 2017 09:00:10 +1100
+Message-ID: <871slqevmd.fsf@notabene.neil.brown.name>
+References: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com> <87mv4iehop.fsf@notabene.neil.brown.name> <CAJO99Tnd0dB-90yqrhVseENpsCp4b9tDAFkNSbr+NzGgxT68qA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <fstests-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171025204704.3382-1-ross.zwisler@linux.intel.com>
-Sender: fstests-owner@vger.kernel.org
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Josef Bacik <jbacik@fb.com>, Eryu Guan <eguan@redhat.com>, fstests <fstests@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alasdair Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Shaohua Li <shli@kernel.org>, dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAJO99Tnd0dB-90yqrhVseENpsCp4b9tDAFkNSbr+NzGgxT68qA@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?utf-8?Q?Bj=C3=B8rnar?= Ness <bjornar.ness@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 25, 2017 at 02:47:04PM -0600, Ross Zwisler wrote:
-> Add a test that exercises DAX's new MAP_SYNC flag.
-> 
-> This test creates a file and writes to it via an mmap(), but never syncs
-> via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
-> 
-> If MAP_SYNC is working the dm-log-writes replay will show the test file
-> with 1MiB of on-media block allocations.  This is because each allocating
-> page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-> (which you can test by fiddling with the parameters to mmap()) the file
-> will be smaller or missing entirely.
-> 
-> Note that dm-log-writes doesn't track the data that we write via the
-> mmap(), so we can't do any data integrity checking.  We can only verify
-> that the metadata writes for the page faults happened.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-.....
-> --- /dev/null
-> +++ b/src/t_map_sync.c
-> @@ -0,0 +1,92 @@
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <sys/mman.h>
-> +#include <sys/stat.h>
-> +#include <sys/types.h>
-> +#include <unistd.h>
-> +
-> +#define MiB(a) ((a)*1024*1024)
-> +
-> +/*
-> + * These two defines were added to the kernel via commits entitled
-> + * "mm: Define MAP_SYNC and VM_SYNC flags" and
-> + * "mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap
-> + * flags", respectively.
-> + */
-> +#ifndef MAP_SYNC
-> +#define MAP_SYNC 0x80000
-> +#endif
-> +
-> +#ifndef MAP_SHARED_VALIDATE
-> +#define MAP_SHARED_VALIDATE 0x3
-> +#endif
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Autoconf rules for detecting supported functionality, please...
+On Tue, Oct 24 2017, Bj=C3=B8rnar Ness wrote:
 
-> +
-> +void err_exit(char *op)
-> +{
-> +	fprintf(stderr, "%s: %s\n", op, strerror(errno));
-> +	exit(1);
-> +}
-> +
-> +void mark_log(char *logwrites_name, char *mark_name)
-> +{
-> +	char command[256];
-> +
-> +	snprintf(command, 256, "dmsetup message %s 0 mark %s",
-> +			logwrites_name, mark_name);
-> +
-> +	if (system(command))
-> +		err_exit("mark_log");
-> +}
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	int page_size = getpagesize();
-> +	int len = MiB(1);
-> +	int i, fd, err;
-> +	char *data;
-> +
-> +	if (argc < 4) {
-> +		printf("Usage: %s <file> <logwrites_name> <mark_name>\n",
-> +				basename(argv[0]));
-> +		exit(0);
-> +	}
-> +
-> +	fd = open(argv[1], O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
-> +	if (fd < 0)
-> +		err_exit("fd");
-> +
-> +	ftruncate(fd, len);
-> +
-> +	data = mmap(NULL, len, PROT_READ|PROT_WRITE,
-> +			MAP_SHARED_VALIDATE|MAP_SYNC, fd, 0);
-> +	if (data == MAP_FAILED)
-> +		err_exit("mmap");
+> Hello, Neil.
+>
+> This patch seems to solve the issues I am experiencing. So fine to apply.
+>
 
-As I say to all these sorts of one-off test prgrams: please add the
-new MAP_SYNC flag to xfs_io rather than writing a one-off
-test program to set it and write some data.
+Thanks for testing and confirming.  I'll turn it into a proper patch and
+send it upstream. There might be other places where validate_geometry
+should be used instead of avail_size.
 
-And if we're going to be adding special custom tests just because
-we need to insert dm-log marks, add that functionality to xfs_io,
-too.
+Thanks,
+NeilBrown
 
-That way we can create complex custom dm logwrite tests without
-needing one-off test programs for them all...
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> +#! /bin/bash
-> +# FS QA Test No. 466
-> +#
-> +# Use md_log_writes to verify that MAP_SYNC actually syncs metadata during
+-----BEGIN PGP SIGNATURE-----
 
-dm_log_writes?
-
-> +# We should see $SCRATCH_MNT/test as having 1MiB in block allocations
-> +du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-
-Perhaps stat -c %b $SCRATCH_MNT/test ?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnxCWsACgkQOeye3VZi
+gblFqw//XfVfBlHUlgLURsnQ9VbiiXcOxZO2V/cG695FLVvGmRomOjp5fdA/P9nG
+kvEkL5i9i/UZFPqeoJ/qUd31GKNxuYkLhKYchen4dH//PkewiaKX4IGHiUq/lo/D
+lA855tTxivB1m5NKSoNLfY6nJz4Z4lrGvMPdZYz6W5pc4qFwhCkkMPbNUZy5xTUw
+W/mEwEQW7RqANx7bKJwQ8scy4pFMRbOCI7d+I07tPLCzmx7FxikdUuujLN6HAcwB
+FhHS9ok/jnkjaoU7ZjnYhwjAVEkldhbp/Ed3E90qJuUn2GmFbYLLqWxtPEB/o0+q
+tJtccb1IlX/z03iz1LQ0s0VKgIHS28sHFY5dj4B02UhtaYGeH8956d5ZuhAzAgPZ
+5N+ccwwyw9h/1L2b4MU6NfuOOL3+l8sjjNzhUWVwYWk3BLUilywfsb9wFlyCI0AD
+elMgx5W3eGuYG7nTQ0C54JGMX7W49V/M4u/K8yXWQPYa00VBVIxSktK+ydP7wM9y
+p19td3xId5HKmAF71Y8F70pdyKr6QFBrJmuZjHvdzvirgYT1C9JPOV7QAebiofca
+TUcDIJOZb0Q63UN66Oi8mCbb5YVRGSfM4koZp4IKCCQ+DUea/3AZwgI1rGXB0yA2
+8+3G3vq1KJ34ZgFkDcqF3audLHtLdObC6Svmteh/paCGWR2D+sQ=
+=DWNs
+-----END PGP SIGNATURE-----
+--=-=-=--
