@@ -1,99 +1,65 @@
-From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
-Date: Thu, 26 Oct 2017 07:59:39 +0300
-Message-ID: <CAOQ4uxjAnMed7-BTZWe6JUC4Fa-nApKvx9-_PzewmfcZ48cP7g@mail.gmail.com>
-References: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
- <20171025204704.3382-1-ross.zwisler@linux.intel.com>
+From: Vic Wang <VicWang@zhaoxin.com>
+Subject: PROBLEM: [RAID5 BUG] the reading rate after writing is lower than
+ reading rate before writing in raid5.
+Date: Thu, 26 Oct 2017 06:22:17 +0000
+Message-ID: <FDBBB9A3A4FD244FAE380E1C59AE40D2028C7B22@ZXBJMBX01.zhaoxin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-In-Reply-To: <20171025204704.3382-1-ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Eryu Guan <eguan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Josef Bacik <jbacik-b10kYP2dOMg@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fstests <fstests-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ext4 <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: zh-CN
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Oct 25, 2017 at 11:47 PM, Ross Zwisler
-<ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
-> Add a test that exercises DAX's new MAP_SYNC flag.
->
-> This test creates a file and writes to it via an mmap(), but never syncs
-> via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
->
-> If MAP_SYNC is working the dm-log-writes replay will show the test file
-> with 1MiB of on-media block allocations.  This is because each allocating
-> page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-> (which you can test by fiddling with the parameters to mmap()) the file
-> will be smaller or missing entirely.
->
-> Note that dm-log-writes doesn't track the data that we write via the
-> mmap(), so we can't do any data integrity checking.  We can only verify
-> that the metadata writes for the page faults happened.
->
-> Signed-off-by: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
->
-> ---
->
-> Changes since v2:
->  - Fixed _require_log_writes() so that DAX will be disallowed if the
->    version of the dm-log-writes target is older than v1.1.0.  (Amir)
-
-It seems like your kernel patch bumped the version to 1.0.1...
-
->
-> ---
->  .gitignore            |  1 +
->  common/dmlogwrites    |  4 ++-
->  common/rc             |  6 ++--
->  src/Makefile          |  3 +-
->  src/t_map_sync.c      | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/466     | 76 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/466.out |  3 ++
->  tests/generic/group   |  1 +
->  8 files changed, 182 insertions(+), 4 deletions(-)
->  create mode 100644 src/t_map_sync.c
->  create mode 100755 tests/generic/466
->  create mode 100644 tests/generic/466.out
->
-> diff --git a/.gitignore b/.gitignore
-> index 2014c08..9fc0695 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -119,6 +119,7 @@
->  /src/t_getcwd
->  /src/t_holes
->  /src/t_immutable
-> +/src/t_map_sync
->  /src/t_mmap_cow_race
->  /src/t_mmap_dio
->  /src/t_mmap_fallocate
-> diff --git a/common/dmlogwrites b/common/dmlogwrites
-> index 247c744..71d008d 100644
-> --- a/common/dmlogwrites
-> +++ b/common/dmlogwrites
-> @@ -23,8 +23,10 @@ _require_log_writes()
->         [ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
->                 _notrun "This test requires a valid \$LOGWRITES_DEV"
->
-> -       _exclude_scratch_mount_option dax
->         _require_dm_target log-writes
-> +       if [[ ${DMTARGET_VER[0]} == 1 && ${DMTARGET_VER[1]} < 1 ]]; then
-> +               _exclude_scratch_mount_option dax
-> +       fi
-
-IMO, this would be better as:
-
-        local z=0
-        _scratch_has_mount_option dax && z=1
-        _require_dm_target log-writes 1 0 $z
-
-Or something like that
+SGkgTWFpbnRhaW5lcu+8mg0K44CA44CAU29ycnkgdG8gZGlzdHVyYiB5b3UuIEkgaGVhcmQgeW91
+IGFyZSB0aGUgbWFpbnRhaW5lciBvZiBSQUlENSBmcm9tIE5laWxCcm93bi4NCuOAgOOAgFsxLiBd
+IEkgZm91bmQgdGhlIHJlYWRpbmcgcmF0ZSBhZnRlciB3cml0aW5nIGlzIGxvd2VyIHRoYW4gcmVh
+ZGluZyByYXRlIGJlZm9yZSB3cml0aW5nIC4NCuOAgOOAgFsyLiBdIFRoZSBmb2xsb3dpbmcgaXMg
+d2hhdCBJIGZvdW5kIGFib3V0IHRoZSBwZXJmb3JtYW5jZSBvZiBSQUlENS4gSXQgc2VlbXMgYXMg
+YSBidWcgYWJvdXQgUkFJRDUuIEFsbCBvZiBteSBleHBlcmltZW50cyBhcmUgYmFzZWQgb24gS2Vy
+bmVsIDMuMTYuNCBVYnVudHUgMTQuMDQuDQogICAgICAgIEZpcnN0LCBJIG1ha2UgYSByYWlkNSBk
+ZXZpY2UgdXNpbmcgdGhlIENPTU1BTkQg4oCcbWRhZG0g4oCTQyAvZGV2L21kNSDigJNsNSDigJNu
+OCDigJNhc3N1bWUtY2xlYW4gL2Rldi9zZFtiY2RlZmdoaV3igJ0uDQogICAgICAgIFRoZW4sIHVz
+aW5nIGRkIGZvciB0aGUgZmlyc3QgcmVhZGluZzogZGQgaWY9L2Rldi9tZDUgb2Y9L2Rldi9udWxs
+IGJzPTFNIGNvdW50PTMwMDAwLiBSZWNvcmQgdGhlIHJlYWRpbmcgcmF0ZSBhcyBBIC4NCiAgICAg
+ICAgVGhlbiwgdXNpbmcgZGQgZm9yIHdyaXRpbmc6IGRkIGlmPS9kZXYvemVybyBvZj0vZGV2L21k
+NSBicz0xTSBjb3VudD0zMDAwMC4NCiAgICAgICAgVGhlbiwgdXNpbmcgZGQgZm9yIHRoZSBzZWNv
+bmQgcmVhZGluZzogZGQgaWY9L2Rldi9tZDUgb2Y9L2Rldi9udWxsIGJzPTFNIGNvdW50PTMwMDAw
+LiBSZWNvcmQgdGhlIHJlYWRpbmcgcmF0ZSBhcyBCLg0KICAgICAgICAgSSBmb3VuZCBhZnRlciB3
+cml0aW5nIHRoZSByYXRlIG9mIEIgZm9yIHRoZSBzZWNvbmQgcmVhZGluZyBpcyBsb3dlciB0aGFu
+IEEuDQoNCiAgICAgICAgIFszLiBdVGhlIGFuYWx5c2lzIGlzLCB3aGVuIHRoZSBmaXJzdCByZWFk
+aW5nLCB0aGUgdmFyaWFibGUgY29uZi0+ZW1wdHlfaW5hY3RpdmVfbGlzdF9uciBpbiBmdW5jdGlv
+biBtZF9yYWlkNV9jb25nZXN0ZWQgaXMgemVybywgdGhlbiBtZF9yYWlkNV9jb25nZXN0ZWQgd2ls
+bCByZXR1cm4gemVybyBhbmQgdGhlIHJlYWRhaGVhZCBpbiByZWFkaW5nIGlzIHVzaW5nIHBhZ2Vf
+Y2FjaGVfYXN5bmNfcmVhZGFoZWFkLg0K44CA44CAVm9pZCBwYWdlX2NhY2hlX2FzeW5jX3JlYWRh
+aGVhZCgpew0K44CA44CAICAgICAgICAgLyoNCuOAgOOAgCAgICAgICAgICogRGVmZXIgYXN5bmNo
+cm9ub3VzIHJlYWQtYWhlYWQgb24gSU8gY29uZ2VzdGlvbi4NCuOAgOOAgCAgICAgICAgICovDQrj
+gIDjgIAgICAgICAgICBJZihiZGlfcmVhZF9jb25nZXN0ZWQobWFwcGluZy0+YmFja2luZ19kZXZf
+aW5mbykpDQrjgIDjgIAgICAgICAgICAgICAgICAgICAgUmV0dXJuOw0K44CA44CAICAgICAgICAg
+LyogZG8gcmVhZC1haGVhZCAqLw0K44CA44CAICAgICAgICAgb25kZW1hbmRfcmVhZGFoZWFkKG1h
+cHBpbmcsIHJhLCBmaWxwLCB0cnVlLCBvZmZzZXQsIHJlcV9zaXplKTsNCuOAgOOAgH0NCiAgICAg
+ICAgIEluIFJhaWQ1LCB0aGUgYmRpX3JlYWRfY29uZ2VzdGVkIHdpbGwgZmluYWxseSBjYWxsIG1k
+X3JhaWQ1X2Nvbmdlc3RlZC4NCiAgICAgICAgIEJ1dCBhZnRlciB3cml0aW5nLCB0aGUgdmFyaWFi
+bGUgY29uZi0+ZW1wdHlfaW5hY3RpdmVfbGlzdF9uciBpcyBub3QgemVybywgdGhlbiBmb3IgdGhl
+IHNlY29uZCByZWFkaW5nLCB3aGVuIGNhbGwgcGFnZV9jYWNoZV9hc3luY19yZWFkYWhlYWQsIGl0
+IHdpbGwgcmV0dXJuIGF0IHRoZSBiaWRfcmVhZF9jb25nZXN0ZWQuIEl0IGRvZXNu4oCZdCBkbyB0
+aGUgcmVhbCByZWFkYWhlYWQgYW5kIGV2ZXJ5IHJlYWQgd2lsbCBiZSBhIHBhZ2VfY2FjaGVfc3lu
+Y19yZWFkYWhlYWQuIFNvIGl0IHJlc3VsdHMgdGhhdCB0aGUgc2Vjb25kIHJlYWRpbmcgcmF0ZSBC
+IGlzIGxvd2VyIHRoYW4gdGhlIGZpcnN0IHJlYWRpbmcgQS4NCg0K44CA44CAWzQuIF1JIHRoaW5r
+IHRoZSB2YXJpYWJsZSBjb25mLT5lbXB0eV9pbmFjdGl2ZV9saXN0X25yIHNob3VsZCBiZSBiYWxh
+bmNlIGFmdGVyIHJlYWRpbmcgb3Igd3JpdGluZy4gQnV0IHRoZSByZXN1bHQgaXMgdGhhdCBpdCBi
+cmVhayB0aGUgYmFsYW5jZSh0aGUgdmFsdWUgaXMgbm90IHplcm8pIGFmdGVyIHdyaXRpbmcsIGFu
+ZCBlYWNoIHdyaXRpbmcgd2lsbCBtYWtlIHRoZSB2YXJpYWJsZSBjb25mLT5lbXB0eV9pbmFjdGl2
+ZV9saXN0X25yIGJpZ2dlci4gQnV0IEkgZG9u4oCZdCBmaW5kIHdoYXQgbWFrZXMgdGhlIHZhcmlh
+YmxlIG5vbi16ZXJvIGFmdGVyIHdyaXRpbmcuIElmIHlvdSBzb2x2ZSB0aGlzIHByb2JsZW0gb3Ig
+aGF2ZSBzb21lIGRpc2NvdmVyaWVzLCBwbGVhc2UgbGV0IG1lIGtub3cuIFRoYW5rIHlvdSB2ZXJ5
+IG11Y2guDQoNCg0KQmVzdCBSZWdhcmRzIQ0KVmljV2FuZyB8IEJlaWppbmcsQ2hpbmENCis4NjE4
+NTE2ODkwMTIxDQoNCg0K5L+d5a+G5aOw5piO77yaDQrmnKzpgq7ku7blkKvmnInkv53lr4bmiJbk
+uJPmnInkv6Hmga/vvIzku4XkvpvmjIflrprmlLbku7bkurrkvb/nlKjjgILkuKXnpoHlr7nmnKzp
+gq7ku7bmiJblhbblhoXlrrnlgZrku7vkvZXmnKrnu4/mjojmnYPnmoTmn6XpmIXjgIHkvb/nlKjj
+gIHlpI3liLbmiJbovazlj5HjgIINCkNPTkZJREVOVElBTCBOT1RFOg0KVGhpcyBlbWFpbCBjb250
+YWlucyBjb25maWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIGFuZCBp
+cyBmb3IgdGhlIHNvbGUgdXNlIG9mIGl0cyBpbnRlbmRlZCByZWNpcGllbnQuIEFueSB1bmF1dGhv
+cml6ZWQgcmV2aWV3LCB1c2UsIGNvcHlpbmcgb3IgZm9yd2FyZGluZyBvZiB0aGlzIGVtYWlsIG9y
+IHRoZSBjb250ZW50IG9mIHRoaXMgZW1haWwgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4NCg==
