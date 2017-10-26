@@ -1,53 +1,51 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: mdadm segfault with incremental
-Date: Thu, 26 Oct 2017 09:00:10 +1100
-Message-ID: <871slqevmd.fsf@notabene.neil.brown.name>
-References: <CAJO99Tk=at4gXNgEHKmq1=iDip+vt2LT-T8d+FSQYGJquH5C2g@mail.gmail.com> <87mv4iehop.fsf@notabene.neil.brown.name> <CAJO99Tnd0dB-90yqrhVseENpsCp4b9tDAFkNSbr+NzGgxT68qA@mail.gmail.com>
+From: Zhilong Liu <zlliu@suse.com>
+Subject: Re: [PATCH] mdadm/mdopen: check system("modprobe ...") return
+Date: Thu, 26 Oct 2017 10:47:52 +0800
+Message-ID: <b81c490a-d0ae-9533-48f4-724a9586c29d@suse.com>
+References: <f1f0eba1-d5d6-b128-5fa5-8531f5ea984a@digitalgarden.no>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJO99Tnd0dB-90yqrhVseENpsCp4b9tDAFkNSbr+NzGgxT68qA@mail.gmail.com>
+In-Reply-To: <f1f0eba1-d5d6-b128-5fa5-8531f5ea984a@digitalgarden.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?Q?Bj=C3=B8rnar?= Ness <bjornar.ness@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Erik Berg <erik.berg@digitalgarden.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 24 2017, Bj=C3=B8rnar Ness wrote:
 
-> Hello, Neil.
->
-> This patch seems to solve the issues I am experiencing. So fine to apply.
->
+On 10/25/2017 06:35 PM, Erik Berg wrote:
+> Build system gives an error with warn_unused_result, this should fix
+> that.
 
-Thanks for testing and confirming.  I'll turn it into a proper patch and
-send it upstream. There might be other places where validate_geometry
-should be used instead of avail_size.
+Hi, Erik;
+    According to some suggestions from Neil Brown, I have sent the patch 
+in 16th Oct.
+please refer to the mail:
+[PATCH] mdadm/mdopen: create new function create_named_array for writing 
+to new_array
+
 
 Thanks,
-NeilBrown
+-Zhilong
+> ---
+>   mdopen.c | 5 ++++-
+>   1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/mdopen.c b/mdopen.c
+> index dcdc6f2..8cd8507 100644
+> --- a/mdopen.c
+> +++ b/mdopen.c
+> @@ -313,7 +313,10 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
+>   			udev_block(devnm);
+>   		fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+>   		if (fd < 0 && errno == ENOENT) {
+> -			system("modprobe md_mod");
+> +			if(system("modprobe md_mod")) {
+> +				pr_err("check modprobe md_mod results\n");
+> +				return -1;
+> +			}
+>   			fd = open("/sys/module/md_mod/parameters/new_array", O_WRONLY);
+>   		}
+>   		if (fd >= 0) {
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlnxCWsACgkQOeye3VZi
-gblFqw//XfVfBlHUlgLURsnQ9VbiiXcOxZO2V/cG695FLVvGmRomOjp5fdA/P9nG
-kvEkL5i9i/UZFPqeoJ/qUd31GKNxuYkLhKYchen4dH//PkewiaKX4IGHiUq/lo/D
-lA855tTxivB1m5NKSoNLfY6nJz4Z4lrGvMPdZYz6W5pc4qFwhCkkMPbNUZy5xTUw
-W/mEwEQW7RqANx7bKJwQ8scy4pFMRbOCI7d+I07tPLCzmx7FxikdUuujLN6HAcwB
-FhHS9ok/jnkjaoU7ZjnYhwjAVEkldhbp/Ed3E90qJuUn2GmFbYLLqWxtPEB/o0+q
-tJtccb1IlX/z03iz1LQ0s0VKgIHS28sHFY5dj4B02UhtaYGeH8956d5ZuhAzAgPZ
-5N+ccwwyw9h/1L2b4MU6NfuOOL3+l8sjjNzhUWVwYWk3BLUilywfsb9wFlyCI0AD
-elMgx5W3eGuYG7nTQ0C54JGMX7W49V/M4u/K8yXWQPYa00VBVIxSktK+ydP7wM9y
-p19td3xId5HKmAF71Y8F70pdyKr6QFBrJmuZjHvdzvirgYT1C9JPOV7QAebiofca
-TUcDIJOZb0Q63UN66Oi8mCbb5YVRGSfM4koZp4IKCCQ+DUea/3AZwgI1rGXB0yA2
-8+3G3vq1KJ34ZgFkDcqF3audLHtLdObC6Svmteh/paCGWR2D+sQ=
-=DWNs
------END PGP SIGNATURE-----
---=-=-=--
