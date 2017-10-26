@@ -1,105 +1,99 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: [sucess?] upgrading LSI SAS9211-8i fw IR->IT
-Date: Thu, 26 Oct 2017 14:31:33 +1100
-Message-ID: <f268a7a1-6a73-8c9f-b4c8-1e8190f54850@eyal.emu.id.au>
-References: <08feefcc-14d0-e7ec-aa23-927ecbb63ac3@eyal.emu.id.au>
+From: Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
+Date: Thu, 26 Oct 2017 07:59:39 +0300
+Message-ID: <CAOQ4uxjAnMed7-BTZWe6JUC4Fa-nApKvx9-_PzewmfcZ48cP7g@mail.gmail.com>
+References: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
+ <20171025204704.3382-1-ross.zwisler@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <08feefcc-14d0-e7ec-aa23-927ecbb63ac3@eyal.emu.id.au>
-Content-Language: en-AU
-Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+In-Reply-To: <20171025204704.3382-1-ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
+List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
+ <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
+Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
+To: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Eryu Guan <eguan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Josef Bacik <jbacik-b10kYP2dOMg@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fstests <fstests-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ext4 <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-On 24/10/17 22:47, Eyal Lebedinsky wrote:
-> [This is a resend, as plain text and with reduced size attachment...]
-> 
-> Following some excitement with my 4yo+ controller I acquires a new one.
-> I now want to upgrade the fw from IR to IT.
-> 
-> I did some reading, which suggests the process is simple and straight forward - if I am lucky.
-> The issue seems to be that the flashing program does not run on all mobos.
-> 
-> I think that my server (Intel BOXDH77KC) is not booting UEFI.
-> Anyway, I plan to do the upgrade elsewhere, probably on my workstation (Gigabyte GA-G33M-DS2R).
-> Both are rather old and will be upgraded within a year. I decided to give it a test.
-> 
-> I disconnected the (only) disk it has and installed the LSI controller.
-> [No problem here except that using the on-board VGA video (until now I used an add-on video card)
-> I see that the letters q-z do not show properly in FreeDOS, but are OK during POST]
-> 
-> I started reading here:
->     https://forums.servethehome.com/index.php?threads/tutorial-updating-ibm-m1015-lsi-9211-8i-firmware-on-uefi-systems.11462/
-> where one needs to switch between UEFI and DOS mode. Probably unsuitable for me.
-> 
-> I then proceeded here
->     http://brycv.com/blog/2012/flashing-it-firmware-to-lsi-sas9211-8i/
-> where the blog mentions some hurdles along the way.
-> 
-> I used files from two packages:
->     LSI-9211-8i.zip
->     9211-8i_Package_P20_IR_IT_FW_BIOS_for_MSDOS_Windows.zip
-> 
-> Booted OK from a FreeDOS 1.2 USB disk. Ran 'sas2flsh.exe -list' and got the attached screen.
-> Seems to me that this worked. At least I did not get the
->       ERROR: Failed to initialize PAL. Exiting program.
-> message, in which case I would need to use the efi mode flasher.
-> 
-> Q1) Does this mean that I am clear to proceed?
-> 
-> Now I am ready to do a flash erase followed by a flash program.
-> However, LSI warns that a failure after the erase and before the program will leave a dead (unrecoverable) card.
-> 
-> Q2) How do I check that I can safely do BOTH steps?
-> 
-> TIA
+On Wed, Oct 25, 2017 at 11:47 PM, Ross Zwisler
+<ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
+> Add a test that exercises DAX's new MAP_SYNC flag.
+>
+> This test creates a file and writes to it via an mmap(), but never syncs
+> via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
+>
+> If MAP_SYNC is working the dm-log-writes replay will show the test file
+> with 1MiB of on-media block allocations.  This is because each allocating
+> page fault included an implicit metadata sync.  If MAP_SYNC isn't working
+> (which you can test by fiddling with the parameters to mmap()) the file
+> will be smaller or missing entirely.
+>
+> Note that dm-log-writes doesn't track the data that we write via the
+> mmap(), so we can't do any data integrity checking.  We can only verify
+> that the metadata writes for the page faults happened.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>
+> ---
+>
+> Changes since v2:
+>  - Fixed _require_log_writes() so that DAX will be disallowed if the
+>    version of the dm-log-writes target is older than v1.1.0.  (Amir)
 
-I progressed slowly and I think that I finally succeeded.
+It seems like your kernel patch bumped the version to 1.0.1...
 
-1) Prepared a bootable USB disk (full FreeDOS 1.2)
-2) Copied the required files to the USB disk.
-3) Installed the LSI card in a PC after disconnecting all the disks
-4) Booted from the USB and tried
-	sas2flsh -list
-    It worked.
-5) Upgraded from fw IR 18 to IR 20
-	sas2flsh -o -f 2118ir.bin -b mptsas2.rom
-    It worked again, so now I was ready to attempt a flash clear and upgrade to IT
-6) Cleared the flash
-	sas2flsh -o -e 6
-    After it said that it is clearing I got no more messages for over 10 minutes.
-    This was my worst worry as the card would be bricked.
-    ^C had no effect. Ctl-Alt-Del had no effect. The machine was deal.
-    Is this proof that there IS a God?
+>
+> ---
+>  .gitignore            |  1 +
+>  common/dmlogwrites    |  4 ++-
+>  common/rc             |  6 ++--
+>  src/Makefile          |  3 +-
+>  src/t_map_sync.c      | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/466     | 76 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/466.out |  3 ++
+>  tests/generic/group   |  1 +
+>  8 files changed, 182 insertions(+), 4 deletions(-)
+>  create mode 100644 src/t_map_sync.c
+>  create mode 100755 tests/generic/466
+>  create mode 100644 tests/generic/466.out
+>
+> diff --git a/.gitignore b/.gitignore
+> index 2014c08..9fc0695 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -119,6 +119,7 @@
+>  /src/t_getcwd
+>  /src/t_holes
+>  /src/t_immutable
+> +/src/t_map_sync
+>  /src/t_mmap_cow_race
+>  /src/t_mmap_dio
+>  /src/t_mmap_fallocate
+> diff --git a/common/dmlogwrites b/common/dmlogwrites
+> index 247c744..71d008d 100644
+> --- a/common/dmlogwrites
+> +++ b/common/dmlogwrites
+> @@ -23,8 +23,10 @@ _require_log_writes()
+>         [ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
+>                 _notrun "This test requires a valid \$LOGWRITES_DEV"
+>
+> -       _exclude_scratch_mount_option dax
+>         _require_dm_target log-writes
+> +       if [[ ${DMTARGET_VER[0]} == 1 && ${DMTARGET_VER[1]} < 1 ]]; then
+> +               _exclude_scratch_mount_option dax
+> +       fi
 
-[BTW, this machine was known to lock up at times, I thought it was the system (linux)
-  but it now seems to be a more fundamental issue]
+IMO, this would be better as:
 
-7) Re-booted from the USB and ran
-	sas2flsh -list
-    A message came up saying the card is not operational, but surprisingly
-    it proceeded to say a firmware is required and asked for a file name.
-    I entered '2118it.bin' and it succeeded in flashing it as a '-list' proved.
+        local z=0
+        _scratch_has_mount_option dax && z=1
+        _require_dm_target log-writes 1 0 $z
 
-At the end I rebooted once more and all looked good. Naturally there is no BIOS
-programmed (I could flash it but decided that the IT fw probably does not require it)
-	Q1) is this correct?
-
-Comparing the '-list' details before and after the process, on top of the new fw
-(and no BIOS) I noticed that the "SAS Address" changed.
-	Q2) Should I reconfigure the card with the original address with
-		sas2flsh -o -sasadd 500605B-#-####-####
-	    I assume it is only used as a global unique ID.
-
-As a final test I plan to boot the actual server with this card and 3 sacrificial
-disks (now all zeroed) attached, to confirm that nothing is written to the disks.
-
-As an aside, I now do not see the text corruption I mentioned earlier, so it was
-probably the BIOS causing it and not FreeDOS.
-
-cheers
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+Or something like that
