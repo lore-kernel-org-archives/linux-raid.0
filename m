@@ -1,65 +1,99 @@
-From: Vic Wang <VicWang@zhaoxin.com>
-Subject: PROBLEM: [RAID5 BUG] the reading rate after writing is lower than
+From: Zhengyuan Liu <liuzhengyuang521@gmail.com>
+Subject: Re: PROBLEM: [RAID5 BUG] the reading rate after writing is lower than
  reading rate before writing in raid5.
-Date: Thu, 26 Oct 2017 06:22:17 +0000
-Message-ID: <FDBBB9A3A4FD244FAE380E1C59AE40D2028C7B22@ZXBJMBX01.zhaoxin.com>
+Date: Thu, 26 Oct 2017 15:11:16 +0800
+Message-ID: <CAOOPZo5g3r9trLTm8jZ79O7j3WzvsjE_wxSAuj4=UhF-8P4B2g@mail.gmail.com>
+References: <FDBBB9A3A4FD244FAE380E1C59AE40D2028C7B22@ZXBJMBX01.zhaoxin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: zh-CN
+In-Reply-To: <FDBBB9A3A4FD244FAE380E1C59AE40D2028C7B22@ZXBJMBX01.zhaoxin.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Vic Wang <VicWang@zhaoxin.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SGkgTWFpbnRhaW5lcu+8mg0K44CA44CAU29ycnkgdG8gZGlzdHVyYiB5b3UuIEkgaGVhcmQgeW91
-IGFyZSB0aGUgbWFpbnRhaW5lciBvZiBSQUlENSBmcm9tIE5laWxCcm93bi4NCuOAgOOAgFsxLiBd
-IEkgZm91bmQgdGhlIHJlYWRpbmcgcmF0ZSBhZnRlciB3cml0aW5nIGlzIGxvd2VyIHRoYW4gcmVh
-ZGluZyByYXRlIGJlZm9yZSB3cml0aW5nIC4NCuOAgOOAgFsyLiBdIFRoZSBmb2xsb3dpbmcgaXMg
-d2hhdCBJIGZvdW5kIGFib3V0IHRoZSBwZXJmb3JtYW5jZSBvZiBSQUlENS4gSXQgc2VlbXMgYXMg
-YSBidWcgYWJvdXQgUkFJRDUuIEFsbCBvZiBteSBleHBlcmltZW50cyBhcmUgYmFzZWQgb24gS2Vy
-bmVsIDMuMTYuNCBVYnVudHUgMTQuMDQuDQogICAgICAgIEZpcnN0LCBJIG1ha2UgYSByYWlkNSBk
-ZXZpY2UgdXNpbmcgdGhlIENPTU1BTkQg4oCcbWRhZG0g4oCTQyAvZGV2L21kNSDigJNsNSDigJNu
-OCDigJNhc3N1bWUtY2xlYW4gL2Rldi9zZFtiY2RlZmdoaV3igJ0uDQogICAgICAgIFRoZW4sIHVz
-aW5nIGRkIGZvciB0aGUgZmlyc3QgcmVhZGluZzogZGQgaWY9L2Rldi9tZDUgb2Y9L2Rldi9udWxs
-IGJzPTFNIGNvdW50PTMwMDAwLiBSZWNvcmQgdGhlIHJlYWRpbmcgcmF0ZSBhcyBBIC4NCiAgICAg
-ICAgVGhlbiwgdXNpbmcgZGQgZm9yIHdyaXRpbmc6IGRkIGlmPS9kZXYvemVybyBvZj0vZGV2L21k
-NSBicz0xTSBjb3VudD0zMDAwMC4NCiAgICAgICAgVGhlbiwgdXNpbmcgZGQgZm9yIHRoZSBzZWNv
-bmQgcmVhZGluZzogZGQgaWY9L2Rldi9tZDUgb2Y9L2Rldi9udWxsIGJzPTFNIGNvdW50PTMwMDAw
-LiBSZWNvcmQgdGhlIHJlYWRpbmcgcmF0ZSBhcyBCLg0KICAgICAgICAgSSBmb3VuZCBhZnRlciB3
-cml0aW5nIHRoZSByYXRlIG9mIEIgZm9yIHRoZSBzZWNvbmQgcmVhZGluZyBpcyBsb3dlciB0aGFu
-IEEuDQoNCiAgICAgICAgIFszLiBdVGhlIGFuYWx5c2lzIGlzLCB3aGVuIHRoZSBmaXJzdCByZWFk
-aW5nLCB0aGUgdmFyaWFibGUgY29uZi0+ZW1wdHlfaW5hY3RpdmVfbGlzdF9uciBpbiBmdW5jdGlv
-biBtZF9yYWlkNV9jb25nZXN0ZWQgaXMgemVybywgdGhlbiBtZF9yYWlkNV9jb25nZXN0ZWQgd2ls
-bCByZXR1cm4gemVybyBhbmQgdGhlIHJlYWRhaGVhZCBpbiByZWFkaW5nIGlzIHVzaW5nIHBhZ2Vf
-Y2FjaGVfYXN5bmNfcmVhZGFoZWFkLg0K44CA44CAVm9pZCBwYWdlX2NhY2hlX2FzeW5jX3JlYWRh
-aGVhZCgpew0K44CA44CAICAgICAgICAgLyoNCuOAgOOAgCAgICAgICAgICogRGVmZXIgYXN5bmNo
-cm9ub3VzIHJlYWQtYWhlYWQgb24gSU8gY29uZ2VzdGlvbi4NCuOAgOOAgCAgICAgICAgICovDQrj
-gIDjgIAgICAgICAgICBJZihiZGlfcmVhZF9jb25nZXN0ZWQobWFwcGluZy0+YmFja2luZ19kZXZf
-aW5mbykpDQrjgIDjgIAgICAgICAgICAgICAgICAgICAgUmV0dXJuOw0K44CA44CAICAgICAgICAg
-LyogZG8gcmVhZC1haGVhZCAqLw0K44CA44CAICAgICAgICAgb25kZW1hbmRfcmVhZGFoZWFkKG1h
-cHBpbmcsIHJhLCBmaWxwLCB0cnVlLCBvZmZzZXQsIHJlcV9zaXplKTsNCuOAgOOAgH0NCiAgICAg
-ICAgIEluIFJhaWQ1LCB0aGUgYmRpX3JlYWRfY29uZ2VzdGVkIHdpbGwgZmluYWxseSBjYWxsIG1k
-X3JhaWQ1X2Nvbmdlc3RlZC4NCiAgICAgICAgIEJ1dCBhZnRlciB3cml0aW5nLCB0aGUgdmFyaWFi
-bGUgY29uZi0+ZW1wdHlfaW5hY3RpdmVfbGlzdF9uciBpcyBub3QgemVybywgdGhlbiBmb3IgdGhl
-IHNlY29uZCByZWFkaW5nLCB3aGVuIGNhbGwgcGFnZV9jYWNoZV9hc3luY19yZWFkYWhlYWQsIGl0
-IHdpbGwgcmV0dXJuIGF0IHRoZSBiaWRfcmVhZF9jb25nZXN0ZWQuIEl0IGRvZXNu4oCZdCBkbyB0
-aGUgcmVhbCByZWFkYWhlYWQgYW5kIGV2ZXJ5IHJlYWQgd2lsbCBiZSBhIHBhZ2VfY2FjaGVfc3lu
-Y19yZWFkYWhlYWQuIFNvIGl0IHJlc3VsdHMgdGhhdCB0aGUgc2Vjb25kIHJlYWRpbmcgcmF0ZSBC
-IGlzIGxvd2VyIHRoYW4gdGhlIGZpcnN0IHJlYWRpbmcgQS4NCg0K44CA44CAWzQuIF1JIHRoaW5r
-IHRoZSB2YXJpYWJsZSBjb25mLT5lbXB0eV9pbmFjdGl2ZV9saXN0X25yIHNob3VsZCBiZSBiYWxh
-bmNlIGFmdGVyIHJlYWRpbmcgb3Igd3JpdGluZy4gQnV0IHRoZSByZXN1bHQgaXMgdGhhdCBpdCBi
-cmVhayB0aGUgYmFsYW5jZSh0aGUgdmFsdWUgaXMgbm90IHplcm8pIGFmdGVyIHdyaXRpbmcsIGFu
-ZCBlYWNoIHdyaXRpbmcgd2lsbCBtYWtlIHRoZSB2YXJpYWJsZSBjb25mLT5lbXB0eV9pbmFjdGl2
-ZV9saXN0X25yIGJpZ2dlci4gQnV0IEkgZG9u4oCZdCBmaW5kIHdoYXQgbWFrZXMgdGhlIHZhcmlh
-YmxlIG5vbi16ZXJvIGFmdGVyIHdyaXRpbmcuIElmIHlvdSBzb2x2ZSB0aGlzIHByb2JsZW0gb3Ig
-aGF2ZSBzb21lIGRpc2NvdmVyaWVzLCBwbGVhc2UgbGV0IG1lIGtub3cuIFRoYW5rIHlvdSB2ZXJ5
-IG11Y2guDQoNCg0KQmVzdCBSZWdhcmRzIQ0KVmljV2FuZyB8IEJlaWppbmcsQ2hpbmENCis4NjE4
-NTE2ODkwMTIxDQoNCg0K5L+d5a+G5aOw5piO77yaDQrmnKzpgq7ku7blkKvmnInkv53lr4bmiJbk
-uJPmnInkv6Hmga/vvIzku4XkvpvmjIflrprmlLbku7bkurrkvb/nlKjjgILkuKXnpoHlr7nmnKzp
-gq7ku7bmiJblhbblhoXlrrnlgZrku7vkvZXmnKrnu4/mjojmnYPnmoTmn6XpmIXjgIHkvb/nlKjj
-gIHlpI3liLbmiJbovazlj5HjgIINCkNPTkZJREVOVElBTCBOT1RFOg0KVGhpcyBlbWFpbCBjb250
-YWlucyBjb25maWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIGFuZCBp
-cyBmb3IgdGhlIHNvbGUgdXNlIG9mIGl0cyBpbnRlbmRlZCByZWNpcGllbnQuIEFueSB1bmF1dGhv
-cml6ZWQgcmV2aWV3LCB1c2UsIGNvcHlpbmcgb3IgZm9yd2FyZGluZyBvZiB0aGlzIGVtYWlsIG9y
-IHRoZSBjb250ZW50IG9mIHRoaXMgZW1haWwgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4NCg==
+Hi,
+I have met the same problem as you, there is indeed a bug with the
+variable referring to conf->empty_inactive_list_nr and I have sent a
+patch to upstream to fix it:
+    ff00d3b ("raid5: fix incorrectly counter of conf->empty_inactive_list_n=
+r")
+The patch was intergrated since release 4.8-rc4, so try it and it's
+should be helpful.
+
+Thanks,
+Zhengyuan
+
+2017-10-26 14:22 GMT+08:00 Vic Wang <VicWang@zhaoxin.com>:
+> Hi Maintainer=EF=BC=9A
+> =E3=80=80=E3=80=80Sorry to disturb you. I heard you are the maintainer of=
+ RAID5 from NeilBrown.
+> =E3=80=80=E3=80=80[1. ] I found the reading rate after writing is lower t=
+han reading rate before writing .
+> =E3=80=80=E3=80=80[2. ] The following is what I found about the performan=
+ce of RAID5. It seems as a bug about RAID5. All of my experiments are based=
+ on Kernel 3.16.4 Ubuntu 14.04.
+>         First, I make a raid5 device using the COMMAND =E2=80=9Cmdadm =E2=
+=80=93C /dev/md5 =E2=80=93l5 =E2=80=93n8 =E2=80=93assume-clean /dev/sd[bcde=
+fghi]=E2=80=9D.
+>         Then, using dd for the first reading: dd if=3D/dev/md5 of=3D/dev/=
+null bs=3D1M count=3D30000. Record the reading rate as A .
+>         Then, using dd for writing: dd if=3D/dev/zero of=3D/dev/md5 bs=3D=
+1M count=3D30000.
+>         Then, using dd for the second reading: dd if=3D/dev/md5 of=3D/dev=
+/null bs=3D1M count=3D30000. Record the reading rate as B.
+>          I found after writing the rate of B for the second reading is lo=
+wer than A.
+>
+>          [3. ]The analysis is, when the first reading, the variable conf-=
+>empty_inactive_list_nr in function md_raid5_congested is zero, then md_rai=
+d5_congested will return zero and the readahead in reading is using page_ca=
+che_async_readahead.
+> =E3=80=80=E3=80=80Void page_cache_async_readahead(){
+> =E3=80=80=E3=80=80         /*
+> =E3=80=80=E3=80=80         * Defer asynchronous read-ahead on IO congesti=
+on.
+> =E3=80=80=E3=80=80         */
+> =E3=80=80=E3=80=80         If(bdi_read_congested(mapping->backing_dev_inf=
+o))
+> =E3=80=80=E3=80=80                   Return;
+> =E3=80=80=E3=80=80         /* do read-ahead */
+> =E3=80=80=E3=80=80         ondemand_readahead(mapping, ra, filp, true, of=
+fset, req_size);
+> =E3=80=80=E3=80=80}
+>          In Raid5, the bdi_read_congested will finally call md_raid5_cong=
+ested.
+>          But after writing, the variable conf->empty_inactive_list_nr is =
+not zero, then for the second reading, when call page_cache_async_readahead=
+, it will return at the bid_read_congested. It doesn=E2=80=99t do the real =
+readahead and every read will be a page_cache_sync_readahead. So it results=
+ that the second reading rate B is lower than the first reading A.
+>
+> =E3=80=80=E3=80=80[4. ]I think the variable conf->empty_inactive_list_nr =
+should be balance after reading or writing. But the result is that it break=
+ the balance(the value is not zero) after writing, and each writing will ma=
+ke the variable conf->empty_inactive_list_nr bigger. But I don=E2=80=99t fi=
+nd what makes the variable non-zero after writing. If you solve this proble=
+m or have some discoveries, please let me know. Thank you very much.
+>
+>
+> Best Regards!
+> VicWang | Beijing,China
+> +8618516890121
+>
+>
+> =E4=BF=9D=E5=AF=86=E5=A3=B0=E6=98=8E=EF=BC=9A
+> =E6=9C=AC=E9=82=AE=E4=BB=B6=E5=90=AB=E6=9C=89=E4=BF=9D=E5=AF=86=E6=88=96=
+=E4=B8=93=E6=9C=89=E4=BF=A1=E6=81=AF=EF=BC=8C=E4=BB=85=E4=BE=9B=E6=8C=87=E5=
+=AE=9A=E6=94=B6=E4=BB=B6=E4=BA=BA=E4=BD=BF=E7=94=A8=E3=80=82=E4=B8=A5=E7=A6=
+=81=E5=AF=B9=E6=9C=AC=E9=82=AE=E4=BB=B6=E6=88=96=E5=85=B6=E5=86=85=E5=AE=B9=
+=E5=81=9A=E4=BB=BB=E4=BD=95=E6=9C=AA=E7=BB=8F=E6=8E=88=E6=9D=83=E7=9A=84=E6=
+=9F=A5=E9=98=85=E3=80=81=E4=BD=BF=E7=94=A8=E3=80=81=E5=A4=8D=E5=88=B6=E6=88=
+=96=E8=BD=AC=E5=8F=91=E3=80=82
+> CONFIDENTIAL NOTE:
+> This email contains confidential or legally privileged information and is=
+ for the sole use of its intended recipient. Any unauthorized review, use, =
+copying or forwarding of this email or the content of this email is strictl=
+y prohibited.
