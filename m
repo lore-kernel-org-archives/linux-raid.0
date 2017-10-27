@@ -1,69 +1,53 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: mount(2) system call failed: Structure needs cleaning?
-Date: Thu, 26 Oct 2017 19:59:47 -0500
-Message-ID: <5a939404-9405-1721-99c9-0884dc978702@suddenlinkmail.com>
+Date: Fri, 27 Oct 2017 10:45:09 +0100
+Message-ID: <59F30025.5020803@youngman.org.uk>
 References: <021c3df6-536c-73bc-84e2-281d4bd8099d@suddenlinkmail.com>
+ <5a939404-9405-1721-99c9-0884dc978702@suddenlinkmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <021c3df6-536c-73bc-84e2-281d4bd8099d@suddenlinkmail.com>
+In-Reply-To: <5a939404-9405-1721-99c9-0884dc978702@suddenlinkmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: "David C. Rankin" <drankinatty@suddenlinkmail.com>, mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/26/2017 07:32 PM, David C. Rankin wrote:
-> All,
+On 27/10/17 01:59, David C. Rankin wrote:
+> Yes, it looks like something on the array was corrupted. When I attempt to set
+> the --size to the exact size of the array, it says I have 4 less bytes than
+> the original array size:
 > 
-<snip>
-> This is the original array detail:
+> # mdadm --verbose --create /dev/md126 --level=1 --raid-devices=2
+> --metadata=1.0 --bitmap=internal --size=20972752 --readonly
+> --uuid=e45cfbeb:77c2b93b:43d3d214:390d0f25 /dev/sdf5 missing
+> mdadm: /dev/sdf5 is smaller than given size. 20972748K < 20972752K + metadata
+> mdadm: create aborted
 > 
-> # mdadm -D /dev/md126
-> /dev/md126:
->         Version : 1.0
->   Creation Time : Thu Aug 21 01:43:22 2008
->      Raid Level : raid1
->      Array Size : 20972752 (20.00 GiB 21.48 GB)
->   Used Dev Size : 20972752 (20.00 GiB 21.48 GB)
->    Raid Devices : 2
->   Total Devices : 1
->     Persistence : Superblock is persistent
+> (this is an old ATA drive, so I wonder if the 4096 block size is messing
+> things up?)
 > 
->   Intent Bitmap : Internal
-> 
->     Update Time : Fri Oct 20 15:55:58 2017
->           State : clean, degraded
->  Active Devices : 1
-> Working Devices : 1
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->            Name : 1
->            UUID : e45cfbeb:77c2b93b:43d3d214:390d0f25
->          Events : 19154344
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8       69        0      active sync   /dev/sde5
->        -       0        0        1      removed
-> 
-<snip>
->   Sigh... I knew that usb cable rig was just asking for trouble...
-> 
+> Is there a way out of this conundrum?
 
-Yes, it looks like something on the array was corrupted. When I attempt to set
-the --size to the exact size of the array, it says I have 4 less bytes than
-the original array size:
+Quite likely, but there's a good chance you'll need a disk hex editor :-(
 
-# mdadm --verbose --create /dev/md126 --level=1 --raid-devices=2
---metadata=1.0 --bitmap=internal --size=20972752 --readonly
---uuid=e45cfbeb:77c2b93b:43d3d214:390d0f25 /dev/sdf5 missing
-mdadm: /dev/sdf5 is smaller than given size. 20972748K < 20972752K + metadata
-mdadm: create aborted
+You say you ran "mdadm --create" over the array? Oh dear oh dear oh
+dear! :-(
 
-(this is an old ATA drive, so I wonder if the 4096 block size is messing
-things up?)
+If the array was originally 1.0, and the re-create created it as 1.2, it
+just stomped all over your data.
 
-Is there a way out of this conundrum?
+And now it's probably having problems re-assembling because it's finding
+two superblocks and doesn't know what to do with them.
 
--- 
-David C. Rankin, J.D.,P.E.
+Bottom line, yes I suspect your array is recoverable. But your
+filesystem is ALSO damaged, and trying to fix two problems has probably
+squared the workload ... :-(
+
+The only good news I can see is it's a mirror. Your best bet is probably
+to destroy both superblocks, and try and mount the partition directly
+not as a mirror. That way, your only problem will be a damaged
+filesystem. Don't try this until you've had better advice than mine, though!
+
+Cheers,
+Wol (the bringer of bad news :-(
