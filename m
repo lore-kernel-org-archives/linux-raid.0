@@ -1,149 +1,39 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: Raid 5 array down/missing - went through wiki steps
-Date: Sat, 28 Oct 2017 16:41:13 -0700
-Message-ID: <CAK2H+ec8RdHJZ+Gvdp=zo3GshqZ=VyrSQ_s7hRyzyM9n7sDzbA@mail.gmail.com>
+Date: Sun, 29 Oct 2017 01:18:04 +0100
+Message-ID: <59F51E3C.1050509@youngman.org.uk>
 References: <CAA4aoFardnK8fOck4kkCWeYNZc=8-03FJzn6KxS6K9wuYN5bdg@mail.gmail.com>
- <e917e077-a87e-5322-68dd-e25b53bf7678@youngman.org.uk> <CAA4aoFatrJQFPHOUm9C6LjUAeNkSE9eH08T8xphuYNPErVg=QQ@mail.gmail.com>
+ <e917e077-a87e-5322-68dd-e25b53bf7678@youngman.org.uk>
+ <CAA4aoFatrJQFPHOUm9C6LjUAeNkSE9eH08T8xphuYNPErVg=QQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAA4aoFatrJQFPHOUm9C6LjUAeNkSE9eH08T8xphuYNPErVg=QQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jun-Kai Teoh <kai.teoh@gmail.com>
-Cc: Anthony Youngman <antlists@youngman.org.uk>, mdraid <linux-raid@vger.kernel.org>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Oct 28, 2017 at 3:15 PM, Jun-Kai Teoh <kai.teoh@gmail.com> wrote:
+On 28/10/17 23:15, Jun-Kai Teoh wrote:
 > Thanks for the response Anthony & Mark, really appreciate how helpful
 > both of you are.
->
+> 
 > I did try to reassemble last night (before I found the wiki and all)
 > and it would assemble, but then it'll say it can't bring the array up
 > 6 drives with 1 rebuilding, and the array thinks that there should be
 > 8 drives. Does that mean I'm... screwed?
->
-> mdadm version (mdadm --version)
-> mdadm - v3.3 - 3rd September 2013
->
-> kernel (uname -mrsn)
-> Linux livingrm-server 4.4.0-97-generic x86_64
->
-> distro
-> Ubuntu 16.04 LTS
->
-> On Sat, Oct 28, 2017 at 3:04 PM, Anthony Youngman
-> <antlists@youngman.org.uk> wrote:
->> On 28/10/17 19:36, Jun-Kai Teoh wrote:
->>>
->>> Hi all,
->>>
->>> Hope this email is going to the right place.
->>>
->>> I'll cut to the chase - I added a drive to my RAID 5 and was resyncing
->>> when my machine was abruptly powered down. Upon booting it up again,
->>> my RAID array is now missing.
->>>
->>
->> I've seen Mark's replies, so ...
->>
->>> I've followed the instructions that I've found on the wiki, and it
->>> hasn't solved my issues, but it's given me a sense of the things that
->>> I'm hoping can help you guys help me troubleshoot.
->>>
->> Found where? Did you look at the front page? Did you look at "When things go
->> wrogn"?
->>
->>> My array can't be assembled. It tells me that the superblock on
->>> /dev/sda doesn't match the others.
->>>
->>> /dev/sda thinks the array has 7 drives
->>> /dev/sd[bcefghi] thinks the array has 8 drives
->>>
->> The event count tells me sda was kicked out of the array a LONG time ago -
->> you were running a degraded array, sorry.
->>
->>> /dev/sda was not being reshaped
->>> /dev/sd[bcefghi] has reshape position data in the raid.status file
->>>
->>> both /dev/sda and /dev/sdh think their device role is Active device 2
->>>
->>> I can't bring /dev/md126 back up with sd[bcefghi] as it'll tell me
->>> that there are 6 drives and 1 rebuilding, not enough to start the
->>> array
->>>
->>> My mdadm.conf shows a /dev/dev/127 with very minimal info in it - does
->>> not look right to me.
->>>
->>> I haven't zeroed the superblock, nor have I tried a clean-assemble
->>> either. I saw the wiki say I should email the group if I've gotten
->>> that far and I'm panicking and nothing's working. So...
->>>
->>> Help me out, pretty please?
->>
->>
->> Okay, I *think* you're going to be okay. The powerfail brought the machine
->> down, and because the array was degraded, it wouldn't re-assemble. Like
->> Mark, I'd wait for the experts to get on the case on Monday, but what I
->> think they will advise is
->>
->> One - --assemble --force [bcdefghi] - note do NOT include the failed drive
->> a. This will fire off the reshape again. BUT. On a degraded array you have
->> no redundancy!!!
->>
->> Two - ADD ANOTHER DRIVE TO REPLACE SDA !!!
->>
->> I don't know how to read the smartctl statistics (and I don't know which one
->> is sda!), but if I were you I would fire off a self-test on sda to find out
->> whether it's bad or not. It may have been kicked out by a harmless glitch,
->> or it may be ready to fail permanently. But be prepared to shell out for a
->> replacement. In fact, I'd go out and get another drive right now. If sda
->> turns out to be okay, you can go to a 9-drive raid-6.
->>
->> To cut a long story short, I think you've been running with a degraded array
->> for a long time. You should be able to force-assemble it no problem but you
->> need to fix it asap. And then you should go raid-6 to give you a bit extra
->> safety and set up scrubbing! Again, I'll let the experts confirm, but I
->> think going from 8-drives-degraded to 9-drive-raid-6 in one step is probably
->> better than recovering your raid 5 and then adding another drive to go raid
->> 6.
->>
->> Just wait for the experts to confirm this and then I think you'll be okay.
->> On the good side, you do have proper raid drives - WD Reds :-)
->>
->> Cheers,
->> Wol
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I think Anthony is completely correct. sda dropped out a long time ago. The
-event count is very low. Had you been scrubbing your drives on a regular
-basis you would likely have discovered this, but had you even looked
+Nope! Definitely not.
 
-cat /proc/mdstat
+Six drives, one rebuilding, array of 8.
 
-it would have shown that sda wasn't in the array.
+That means you have seven *working* drives out of eight. That's enough.
+Get the array working, it will continue rebuilding, and will leave you
+with seven drives out of eight. In other words, everything is CURRENTLY
+okay. But YOU HAVE NO REDUNDANCY. One more problem, and yes you are
+screwed. Which is why I say "wait for the experts". But, hardware
+permitting, I think this is an easy situation to recover.
 
-Without sda you would have had (I think) no redundancy in a RAID5. That
-said, the array would have continued to work, which it apparently did
-because you didn't notice any problems.
-
-NOTE: sda might not be bad - don't throw it away. you might have had
-a weird power event or on some reboot it started up late and didn't get
-included. From there on it's out of sync and until you take action I don't
-think it would ever get added back in automatically, but that doesn't mean
-the drive is actually bad. (When bad things happen to good people...) ;-)
-
-The trick now is to find the right set of commands to assemble without
-losing data. Anthony is more experienced than me and I have no reason
-to distrust his suggestions. Whether a 9-drive RAID6 would fit your enclosure
-is another issue. As this array seemed to say 'Living Room' in one form or
-another there are issues I'm not clear about. Power consumption, noise
-etc.
-
-- Mark
+Cheers,
+Wol
