@@ -1,42 +1,85 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [mdadm PATCH] mdadm: make create clustered raid10 possible
-Date: Sun, 29 Oct 2017 22:57:17 -0700
-Message-ID: <20171030055717.x5rgvkymaygitzfn@kernel.org>
-References: <20171024073124.7751-1-gqjiang@suse.com>
+From: Hou Tao <houtao1@huawei.com>
+Subject: Re: [PATCH] md/bitmap: clear BITMAP_WRITE_ERROR bit after reading it
+ from sb
+Date: Mon, 30 Oct 2017 14:13:14 +0800
+Message-ID: <e699abe9-4268-4368-178b-7fc7712fc03b@huawei.com>
+References: <1507890991-27425-1-git-send-email-houtao1@huawei.com>
+ <20171013192127.5a4oznnkljfpv7ca@kernel.org>
+ <0fc40746-61f7-ba5e-90f2-a7dd98e13eef@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171024073124.7751-1-gqjiang@suse.com>
+In-Reply-To: <0fc40746-61f7-ba5e-90f2-a7dd98e13eef@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: jsorensen@fb.com, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Tue, Oct 24, 2017 at 03:31:24PM +0800, Guoqing Jiang wrote:
-> This change to make we can create a clustered
-> raid10 array as well.
-> 
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  mdadm.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mdadm.c b/mdadm.c
-> index 7cdcdba7c652..60d80e0103f4 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1542,8 +1542,9 @@ int main(int argc, char *argv[])
->  				break;
->  			}
->  
-> -			if (s.level != 1) {
-> -				pr_err("--bitmap=clustered is currently supported with RAID mirror only\n");
-> +			if (s.level != 1 && s.level != 10) {
-> +				pr_err("--bitmap=clustered is currently "
-> +				       "supported with raid1/10 only\n");
->  				rv = 1;
->  				break;
+Hi Shaohua,
 
-Since kernel only supports near layout for raid10 cluster, probably check the
-layout in mdadm too?
+On 2017/10/16 11:22, Hou Tao wrote:
+> Hi,
+> 
+> On 2017/10/14 3:21, Shaohua Li wrote:
+>> On Fri, Oct 13, 2017 at 06:36:31PM +0800, Hou Tao wrote:
+>>> For a RAID1 device using a file-based bitmap, if a bitmap write error
+>>> occurs and the later writes succeed, it's possible both BITMAP_STALE
+>>> and BITMAP_WRITE_ERROR bit will be written to the bitmap super block,
+>>> and the BITMAP_WRITE_ERROR bit in sb->flags will make bitmap_create()
+>>> to fail.
+>>
+>> Why don't clear the bit in the 'latter succeeded write'?
+> 
+> It will work too. Cleaning after read can ensure that after upgrading the
+> kernel we can activate the RAID1 successfully event if the write error
+> bit had been written to the bitmap.
+
+If you are OK with the fix which clears BITMAP_WRITE_ERROR before write, I
+will send a v2 patch.
+
+Regards,
+
+Tao
+>>> So clear it to protect against the write failure-success case.
+>>>
+>>> Signed-off-by: Hou Tao <houtao1@huawei.com>
+>>> ---
+>>>  drivers/md/bitmap.c | 9 +++++++--
+>>>  1 file changed, 7 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+>>> index d212163..97c423a 100644
+>>> --- a/drivers/md/bitmap.c
+>>> +++ b/drivers/md/bitmap.c
+>>> @@ -688,8 +688,13 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+>>>  		}
+>>>  	}
+>>>  
+>>> -	/* assign fields using values from superblock */
+>>> -	bitmap->flags |= le32_to_cpu(sb->state);
+>>> +	/*
+>>> +	 * assign fields using values from superblock
+>>> +	 * clear BITMAP_WRITE_ERROR bit to protect against the case that
+>>> +	 * a bitmap write error had occurred and the later writes had
+>>> +	 * succeeded.
+>>> +	 */
+>>> +	bitmap->flags |= (le32_to_cpu(sb->state) & ~BIT(BITMAP_WRITE_ERROR));
+>>>  	if (le32_to_cpu(sb->version) == BITMAP_MAJOR_HOSTENDIAN)
+>>>  		set_bit(BITMAP_HOSTENDIAN, &bitmap->flags);
+>>>  	bitmap->events_cleared = le64_to_cpu(sb->events_cleared);
+>>> -- 
+>>> 2.5.0
+>>>
+>>
+>> .
+>>
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
