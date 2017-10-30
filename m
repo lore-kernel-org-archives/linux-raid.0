@@ -1,97 +1,83 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [mdadm PATCH v3] To support clustered raid10
-Date: Mon, 30 Oct 2017 17:09:51 +0800
-Message-ID: <1509354591-28264-1-git-send-email-gqjiang@suse.com>
+From: Ron Leach <ronleach@tesco.net>
+Subject: Additional RAID1 not assembling on reboot
+Date: Mon, 30 Oct 2017 10:50:13 +0000
+Message-ID: <59F703E5.6030105@tesco.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: jsorensen@fb.com
-Cc: linux-raid@vger.kernel.org, shli@kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We are now considering to extend clustered raid to
-support raid10. But only near layout is supported,
-so make the check when create the array or switch
-the bitmap from internal to clustered.
+List, good morning,
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- Grow.c  |  6 ++++++
- mdadm.c |  9 +++++++--
- mdadm.h |  1 +
- util.c  | 11 +++++++++++
- 4 files changed, 25 insertions(+), 2 deletions(-)
+A RAID1 array that we recently created is not assembling automatically 
+on system restart (other RAID1 arrays are assembling correctly).  I 
+can re-assemble it using
 
-diff --git a/Grow.c b/Grow.c
-index 0f9e89bcc5ba..80176e32c52f 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -359,6 +359,12 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 
- 		ncopies = (array.layout & 255) * ((array.layout >> 8) & 255);
- 		bitmapsize = bitmapsize * array.raid_disks / ncopies;
-+
-+		if (strcmp(s->bitmap_file, "clustered") == 0 &&
-+		    !is_near_layout_10(array.layout)) {
-+			pr_err("only near layout is supported with clustered raid10\n");
-+			return 1;
-+		}
- 	}
- 
- 	st = super_by_fd(fd, &subarray);
-diff --git a/mdadm.c b/mdadm.c
-index 7cdcdba7c652..87cb33f84ac2 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1542,8 +1542,13 @@ int main(int argc, char *argv[])
- 				break;
- 			}
- 
--			if (s.level != 1) {
--				pr_err("--bitmap=clustered is currently supported with RAID mirror only\n");
-+			if (s.level != 1 && s.level != 10) {
-+				pr_err("--bitmap=clustered is currently supported with raid1/10 only\n");
-+				rv = 1;
-+				break;
-+			}
-+			if (s.level == 10 && !is_near_layout_10(s.layout)) {
-+				pr_err("only near layout is supported with clustered raid10\n");
- 				rv = 1;
- 				break;
- 			}
-diff --git a/mdadm.h b/mdadm.h
-index 85947bf62ff0..3cbf82f18d9e 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1434,6 +1434,7 @@ extern int get_linux_version(void);
- extern int mdadm_version(char *version);
- extern unsigned long long parse_size(char *size);
- extern int parse_uuid(char *str, int uuid[4]);
-+extern int is_near_layout_10(int layout);
- extern int parse_layout_10(char *layout);
- extern int parse_layout_faulty(char *layout);
- extern long parse_num(char *num);
-diff --git a/util.c b/util.c
-index c11729e3260e..543ec6cf46ef 100644
---- a/util.c
-+++ b/util.c
-@@ -397,6 +397,17 @@ unsigned long long parse_size(char *size)
- 	return s;
- }
- 
-+int is_near_layout_10(int layout)
-+{
-+	int fc, fo;
-+
-+	fc = (layout >> 8) & 255;
-+	fo = layout & (1 << 16);
-+	if (fc > 1 || fo > 0)
-+		return 0;
-+	return 1;
-+}
-+
- int parse_layout_10(char *layout)
- {
- 	int copies, rv;
--- 
-2.6.6
+# mdadm --assemble md5 -u <- the long hex uid ->
 
+mdadm.conf does not list this additional ARRAY, and I wondered whether 
+this might be why the array is not automatically assembling.  May I 
+ask whether it would be safe to add an ARRAY line in mdadm.conf for 
+this new RAID1?  mdadm.conf appears to have been automatically created 
+and I am concerned whether any manual entries I make might 
+subsequently be overwritten.
+
+In case the answer is either 'it depends', or 'no', I'll add the 
+background and detail here, but please skip it if the answer is 'yes'.
+
+Background
+
+We added another disk pair to a machine that already had a disc pair 
+(sda, sdc) providing RAID1 arrays (md0, md1, md2) for mounting on 
+boot, /, and /srv.  Another RAID1 array was created (md5) on a new 
+disc pair (sdb, sdd; 2 x 4TB) which is mounted as /4T and used purely 
+for our information (no system programs, logs, etc).  Both the 
+existing disk contents and the new disk contents are regularly backed 
+up.  So far, so good, but -
+
+The new RAID1 array, md5, does not 'appear' when the machine is 
+restarted (eg, reboot, or cold boot after extended power outage). 
+(The original RAID1 arrays do appear on restart, so the system has 
+/boot, /, and /srv.)  If we login and execute:
+
+# mdadm --assemble md5 -u <- the long hex uid ->
+
+md5 does 'appear', and we can then mount /dev/md5 on /4T.
+
+I've checked /proc/partitions, and mdadm.conf.
+
+/proc/partitions contains
+
+all the sd[abcd]
+all the sda[12345] (not all of these are RAID)
+all the sdb[12345] (not all RAID)
+all the sdc[12345] (not all RAID)
+all the sdd[12345] (not all RAID)
+md[012] (the 'original' RAID1 arrays for /boot, /, and /srv)
+md5 (but is not being assembled automatically)
+
+So, /proc/partitions seems to mention everything.
+
+mdadm.conf contains a comment that it was auto-generated in April 2017 
+by mkconf 3.2.5-5.  More to the point, that was when the server's 
+first 3 RAID1 arrays were created; the additional RAID1 array (which 
+is not being auto-assembled) was only created during September 2017, 5 
+months after that.  Incidentally, this machine is running Debian Wheezy.
+
+mdadm.conf appears to be mostly 'standard' other than for a stanza 
+where it lists the definitions of existing MD arrays.  The list of 
+existing arrays only includes
+/dev/md0
+/dev/md1
+/dev/md2
+(all are metadata 1.2)
+
+/dev/md5 is not listed.  So I wondered whether it would be safe to 
+simply add an ARRAY statement for /dev/md5?
+
+Grateful for any opinions,
+
+regards, Ron
