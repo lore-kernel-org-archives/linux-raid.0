@@ -1,43 +1,40 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Raid 5 array down/missing - went through wiki steps
-Date: Mon, 30 Oct 2017 11:18:05 -0700
-Message-ID: <CAK2H+efxSWfJ9ehoOr-tRazDNMzhR=ZdsfRS1z4dziDz23kf0A@mail.gmail.com>
-References: <CAA4aoFardnK8fOck4kkCWeYNZc=8-03FJzn6KxS6K9wuYN5bdg@mail.gmail.com>
- <e917e077-a87e-5322-68dd-e25b53bf7678@youngman.org.uk> <CAA4aoFatrJQFPHOUm9C6LjUAeNkSE9eH08T8xphuYNPErVg=QQ@mail.gmail.com>
- <59F51E3C.1050509@youngman.org.uk> <CAA4aoFb-QoHoL0ucTPXiCJMPXfxTtXOF51UjzRC+ViLHEvkW1g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: wuzhouhui <wuzhouhui14@mails.ucas.ac.cn>
+Subject: Pointer compare in md driver
+Date: Tue, 31 Oct 2017 07:55:43 +0800
+Message-ID: <0D106300-EF8D-45D0-9F7B-392FD9D8E824@mails.ucas.ac.cn>
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA4aoFb-QoHoL0ucTPXiCJMPXfxTtXOF51UjzRC+ViLHEvkW1g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jun-Kai Teoh <kai.teoh@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, mdraid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 30, 2017 at 11:08 AM, Jun-Kai Teoh <kai.teoh@gmail.com> wrote:
-> Thanks for all the responses, Mark, Anthony and Wol.
->
-> I have another hard drive on the way, just in case sda is truly dead.
-> I had no idea that when a drive "dies" in a RAID5 array - nothing
-> would notify me. I obviously have much to learn, really appreciate all
-> the input from folks so far.
->
-> I think I've provided the details of my setup (kernel, mdadm ver,
-> distro, smartctl output, and mdadm -E output) - do let me know if I've
-> left anything out. Left the machine alone this weekend and did not do
-> anything with it.
->
-> Kai Teoh
->
+Hi,
 
-Kai Teoh,
-   I don't think it's fair to say 'nothing will warn you' as there are ways to
-get messages about this stuff. More fair to say that different distros will
-better automate some of this stuff but it's always up to the sys admin to
-ensure the system does what you want.
+Sorry for disturbing, but I have consider this problem for several days.
+I have a question when reading md driver. Following is the code from
+linux/drivers/md/md.c, function md_do_sync():
 
-   Someone will likely give you input in the next day or two. Give folks
-a chance to catch up.
+>                for_each_mddev(mddev2, tmp) {
+>                        if (mddev2 == mddev)
+>                                continue;
+>                        if (!mddev->parallel_resync
+>                        &&  mddev2->curr_resync
+>                        &&  match_mddev_units(mddev, mddev2)) {
+>                                DEFINE_WAIT(wq);
+>                                if (mddev < mddev2 && mddev->curr_resync == 2) {
+>                                        /* arbitrarily yield */
+>                                        mddev->curr_resync = 1;
+>                                        wake_up(&resync_wait);
+>                                }
+>                                if (mddev > mddev2 && mddev->curr_resync == 1)
+>                                        /* no need to wait here, we can wait the next
+>                                         * time 'round when curr_resync == 2
+>                                         */
+>                                        continue;
+>                                /* We need to wait 'interruptible' so as not to
 
-Good luck,
-Mark
+The type of mddev2 and mddev both are struct mddev *, so what's the
+meaning of comparing these two variables?
+
