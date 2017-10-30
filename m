@@ -1,62 +1,84 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [mdadm PATCH] systemd: add %I to description of mdadm-last-resort services.
-Date: Mon, 30 Oct 2017 11:42:15 +1100
-Message-ID: <87tvyhbh5k.fsf@notabene.neil.brown.name>
+Subject: [mdadm PATCH] Incremental: Use ->validate_geometry instead of ->avail_size
+Date: Mon, 30 Oct 2017 15:43:41 +1100
+Message-ID: <87k1zdb5z6.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>, Andrei Borzenkov <arvidjaar@gmail.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>, =?utf-8?Q?Bj=C3=B8rnar?= Ness <bjornar.ness@gmail.com>
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 
-Just like the other template services, include the instance
-name (I%) in the description of
- mdadm-last-resort@.service
- mdadm-last-resort@.timer
+Since mdadm 3.3 is has not been correct to call ->avail_size if
+metadata hasn't been read from the device.  ->validate_geometry
+should be used instead.
 
-so that it is clear from the logs which array is affected.
+Unfortunately array_try_spare() didn't get the memo, and it can crash
+when adding a spare with no metdata.
 
-Reported-by: Andrei Borzenkov <arvidjaar@gmail.com>
-Link: http://bugzilla.opensuse.org/show_bug.cgi?id=3D1064915
+So change it to use ->validate_geometry().
+
+Only one place remains that uses ->avail_size(), and that is safe.
+
+Also fix a comment with a typo.
+
+Reported-and-tested-by: Bj=C3=B8rnar Ness <bjornar.ness@gmail.com>
+Fixes: 641da7459192 ("super1: separate to version of _avail_space1().")
 Signed-off-by: NeilBrown <neilb@suse.com>
 =2D--
- systemd/mdadm-last-resort@.service | 2 +-
- systemd/mdadm-last-resort@.timer   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ Incremental.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/systemd/mdadm-last-resort@.service b/systemd/mdadm-last-resort=
-@.service
-index f9d4d12738a3..efeb3f639193 100644
-=2D-- a/systemd/mdadm-last-resort@.service
-+++ b/systemd/mdadm-last-resort@.service
-@@ -1,5 +1,5 @@
- [Unit]
-=2DDescription=3DActivate md array even though degraded
-+Description=3DActivate md array %I even though degraded
- DefaultDependencies=3Dno
- ConditionPathExists=3D!/sys/devices/virtual/block/%i/md/sync_action
+diff --git a/Incremental.c b/Incremental.c
+index 91301eb5e609..0beab163e642 100644
+=2D-- a/Incremental.c
++++ b/Incremental.c
+@@ -870,7 +870,7 @@ static int array_try_spare(char *devname, int *dfdp, st=
+ruct dev_policy *pol,
+ 		struct supertype *st2;
+ 		struct domainlist *dl =3D NULL;
+ 		struct mdinfo *sra;
+=2D		unsigned long long devsize;
++		unsigned long long devsize, freesize =3D 0;
+ 		struct spare_criteria sc =3D {0, 0};
 =20
-diff --git a/systemd/mdadm-last-resort@.timer b/systemd/mdadm-last-resort@.=
-timer
-index 52b3f227b05d..45ad223083eb 100644
-=2D-- a/systemd/mdadm-last-resort@.timer
-+++ b/systemd/mdadm-last-resort@.timer
-@@ -1,5 +1,5 @@
- [Unit]
-=2DDescription=3DTimer to wait for more drives before activating degraded a=
-rray.
-+Description=3DTimer to wait for more drives before activating degraded arr=
-ay %I.
- DefaultDependencies=3Dno
- Conflicts=3Dsys-devices-virtual-block-%i.device
-=20
+ 		if (is_subarray(mp->metadata))
+@@ -942,10 +942,13 @@ static int array_try_spare(char *devname, int *dfdp, =
+struct dev_policy *pol,
+ 			close(mdfd);
+ 		}
+ 		if ((sra->component_size > 0 &&
+=2D		     st2->ss->avail_size(st2, devsize,
+=2D					 sra->devs ? sra->devs->data_offset :
+=2D					 INVALID_SECTORS) <
+=2D		     sra->component_size) ||
++		     st2->ss->validate_geometry(st2, sra->array.level, sra->array.layout,
++						sra->array.raid_disks, &sra->array.chunk_size,
++						sra->component_size,
++						sra->devs ? sra->devs->data_offset : INVALID_SECTORS,
++						devname, &freesize, sra->consistency_policy,
++						0) &&
++		     freesize < sra->component_size) ||
+ 		    (sra->component_size =3D=3D 0 && devsize < sc.min_size)) {
+ 			if (verbose > 1)
+ 				pr_err("not adding %s to %s as it is too small\n",
+@@ -1265,7 +1268,7 @@ static int try_spare(char *devname, int *dfdp, struct=
+ dev_policy *pol,
+ 	 * what arrays might be candidates.
+ 	 */
+ 	if (st) {
+=2D		/* just try try 'array' or 'partition' based on this metadata */
++		/* just try to add 'array' or 'partition' based on this metadata */
+ 		if (st->ss->add_to_super)
+ 			return array_try_spare(devname, dfdp, pol, target, bare,
+ 					       st, verbose);
 =2D-=20
 2.14.0.rc0.dirty
 
@@ -66,18 +88,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAln2dWgACgkQOeye3VZi
-gblG7Q//csFFb3Z2huymb24dBHv8arInASZOjQFsN3BsT/ai+UkePEHqy0s4/tBo
-OngbMoFeTqnNtwpSXypYW4QXJQAuSy+4AhUoVXMdhqzbMA0pMFp4mt5RyO3rxQ0i
-nK9JX8y5BPO3ysTAFlcnTNY+5xe2Ti2peI7+SaEfaEkKeV4b9hJJOoAJ5mCo3tD7
-lmZBQ6QxegTZvWNkwQKfNN/RhpyhTchIYiA/A9m/pYsqV9DJ/d4ThL8ZG8D7zRcg
-mvsb7DreaP4SbIhQQNfIozZaMHPDCuSJocdadpSYVYV8nBGQSbMlbAyHaJ5oLHdl
-i/oUZCziEXKl4g4VZDZ56AN/4E2+9LpfneH5w49g63SjXtwxt1SgxeVk6OFa2tM4
-cMrNvdewpZZ1qZMdqoSEtZt2MyrWUzZ0g8Tnrqkz/keHOrhECO1W2pfjN9kKYxb8
-RFx+x1A9W3BXMJGpXJvseCN0E/86jnqBB8bnB0dWVxeNsAD2i6+cEUSyFyuBmAFj
-3u7sQrmj4bBvJyorneoUa8AHnUjD7NoVC0RH6qvYUilY4a2uy2QSu35iW1us73GN
-m9GbfVFnjFtfRbeqg2Dgxgr1gA14LRz6cgZHeduR1fCWalZcxcwFdUljOFfXR4pM
-aOOsMEuc7X5DaKWx5Ft5t8rLOvFBTmB9tEL5BF7yrD3Ddsg/4p0=
-=u/Ut
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAln2rf8ACgkQOeye3VZi
+gbmIKhAAiQglUy0CaGpsknohLZQISoIt7en3peBk4uuMDbCMJU9QtS5amH6jRu7n
+52DNacBwFjRBMPJmhiDNcBeThgprl3uIS+jqAQzjw03qJ61pQ89V8kAk03LRBgw4
+2E3IP1wQggEwIJ8DBsDr4+TmSxuSVFMtz/2OHLPmGt+zVtO+4Nsj17gETf8r9i0q
+SpkBYkB9YWKBmkEYyNPn72E4Z8xJUk9dGHOE59417V5i6LOCqr2C7xK/XtmNCVQP
+PoziJvAMqAowKxuWlkza8IGeG+vUUiTM9cAehBG5w9/gj4NPm9KOlx5eTkP0BigW
+dyOdjyiChtkNEAv1TCmeR0tc0gIgtvmJ0lAoQGMWhJ7vc6e2QJlP52703cp/ItqX
+Ms/Xn3k9iXWhVnoNGZKmrvEQwS8TrFMwf1mX3d2cTeBJKsQR3iR7eQSfhdtiW5mn
+Y5HTOgt7UNxPaC5emZQwCpM27UReUgdHChyOdQlU4uLnriRU51rhwOR5IKPzc9Az
+1GtpwqxpF4OuVIg85haqLkF+7k+A+kA22dr1lZFGTIwEQpCLEvhQ2im4dRhSfg11
+UQ0SJl677i/2+LpfQTnnhqozQe1lb8ioB0N5J06hGMjgfvtCMU5Un7WFpSDLGbwV
+oO9a87iBQ8Wk7jklQwQDSItDhHXZtxP/iXtZ5UL5ZRgIf/wZILg=
+=dUn4
 -----END PGP SIGNATURE-----
 --=-=-=--
