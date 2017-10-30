@@ -1,83 +1,54 @@
-From: Ron Leach <ronleach@tesco.net>
-Subject: Additional RAID1 not assembling on reboot
-Date: Mon, 30 Oct 2017 10:50:13 +0000
-Message-ID: <59F703E5.6030105@tesco.net>
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: New disk in active container
+Date: Mon, 30 Oct 2017 11:58:04 +0100
+Message-ID: <20171030105804.GA31198@proton.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com
 List-Id: linux-raid.ids
 
-List, good morning,
+Hi all,
 
-A RAID1 array that we recently created is not assembling automatically 
-on system restart (other RAID1 arrays are assembling correctly).  I 
-can re-assemble it using
+I'm looking what happens to the disk when it's added to active container
+(mdmon already running).
 
-# mdadm --assemble md5 -u <- the long hex uid ->
+In mdadm in add_disk_to_container there is this piece of code:
 
-mdadm.conf does not list this additional ARRAY, and I wondered whether 
-this might be why the array is not automatically assembling.  May I 
-ask whether it would be safe to add an ARRAY line in mdadm.conf for 
-this new RAID1?  mdadm.conf appears to have been automatically created 
-and I am concerned whether any manual entries I make might 
-subsequently be overwritten.
+	if (st2->ss->load_super(st2, dfd, NULL) == 0) {
+		st2->ss->getinfo_super(st2, &info, NULL);
+		if (st->ss->compare_super(st, st2) == 0 &&
+		    info.disk.raid_disk >= 0) {
+			/* Looks like a good member of array.
+			 * Just accept it.
+			 * mdadm will incorporate any parts into
+			 * active arrays.
+			 */
+			st2->ss->free_super(st2);
+			return;
+		}
+	}
 
-In case the answer is either 'it depends', or 'no', I'll add the 
-background and detail here, but please skip it if the answer is 'yes'.
+A change has been recently introduced to IMSM code (changeset 20dc76d15b40
+imsm: Set disk slot number) which sets raid_disk in getinfo_super. Prior to
+this change this code had had no effect on IMSM. Now if out-of-date disk
+(e.g. removed with mdadm -If some time ago) appears in the system, the code
+above tries to bring it back to the array. compare_super doesn't check if
+metadata on the disk is out-of-date (it just checks uuid, family number and
+basic parameters, not disk state). The metadata on new disk doesn't indicate
+it's out-out-date. The disk is added to container. I don't think it's
+correct behaviour as such disk is not "a good member of array".
 
-Background
+I wonder how it could be fixed. I have had a look at compare_super for
+native metadata and it doesn't check disk state so I'm not sure if it should
+be introduced there. I think we should not trust new disk regarding its
+state (the fact it believes it belongs to array is not enough) but rely on
+the disk state in the metadata of the container.
 
-We added another disk pair to a machine that already had a disc pair 
-(sda, sdc) providing RAID1 arrays (md0, md1, md2) for mounting on 
-boot, /, and /srv.  Another RAID1 array was created (md5) on a new 
-disc pair (sdb, sdd; 2 x 4TB) which is mounted as /4T and used purely 
-for our information (no system programs, logs, etc).  Both the 
-existing disk contents and the new disk contents are regularly backed 
-up.  So far, so good, but -
+What are your thoughts?
 
-The new RAID1 array, md5, does not 'appear' when the machine is 
-restarted (eg, reboot, or cold boot after extended power outage). 
-(The original RAID1 arrays do appear on restart, so the system has 
-/boot, /, and /srv.)  If we login and execute:
+Tomek
 
-# mdadm --assemble md5 -u <- the long hex uid ->
-
-md5 does 'appear', and we can then mount /dev/md5 on /4T.
-
-I've checked /proc/partitions, and mdadm.conf.
-
-/proc/partitions contains
-
-all the sd[abcd]
-all the sda[12345] (not all of these are RAID)
-all the sdb[12345] (not all RAID)
-all the sdc[12345] (not all RAID)
-all the sdd[12345] (not all RAID)
-md[012] (the 'original' RAID1 arrays for /boot, /, and /srv)
-md5 (but is not being assembled automatically)
-
-So, /proc/partitions seems to mention everything.
-
-mdadm.conf contains a comment that it was auto-generated in April 2017 
-by mkconf 3.2.5-5.  More to the point, that was when the server's 
-first 3 RAID1 arrays were created; the additional RAID1 array (which 
-is not being auto-assembled) was only created during September 2017, 5 
-months after that.  Incidentally, this machine is running Debian Wheezy.
-
-mdadm.conf appears to be mostly 'standard' other than for a stanza 
-where it lists the definitions of existing MD arrays.  The list of 
-existing arrays only includes
-/dev/md0
-/dev/md1
-/dev/md2
-(all are metadata 1.2)
-
-/dev/md5 is not listed.  So I wondered whether it would be safe to 
-simply add an ARRAY statement for /dev/md5?
-
-Grateful for any opinions,
-
-regards, Ron
