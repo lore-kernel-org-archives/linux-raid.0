@@ -1,243 +1,157 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [md PATCH 2/2] md: be cautious about using ->curr_resync_completed for ->recovery_offset
-Date: Wed, 01 Nov 2017 12:13:22 +1100
-Message-ID: <87375yx0lp.fsf@notabene.neil.brown.name>
-References: <150821741376.9754.10397416458024667409.stgit@noble> <150821751632.9754.9103449859789225425.stgit@noble> <20171031144231.GA16181@proton.igk.intel.com>
+Subject: Re: [PATCH] Monitor: Allow taking spare from rebuilding array
+Date: Wed, 01 Nov 2017 12:30:36 +1100
+Message-ID: <87y3nqvl8j.fsf@notabene.neil.brown.name>
+References: <eddc14d2-8210-a73d-d879-7d709de4fde1@digitalgarden.no>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171031144231.GA16181@proton.igk.intel.com>
+In-Reply-To: <eddc14d2-8210-a73d-d879-7d709de4fde1@digitalgarden.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: Erik Berg <erikberg@digitalgarden.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 31 2017, Tomasz Majchrzak wrote:
+On Wed, Oct 25 2017, Erik Berg wrote:
 
-> On Tue, Oct 17, 2017 at 04:18:36PM +1100, NeilBrown wrote:
->> The ->recovery_offset shows how much of a non-InSync device is actually
->> in sync - how much has been recoveryed.
->>=20
->> When performing a recovery, ->curr_resync and ->curr_resync_completed
->> follow the device address being recovered and so can be used to update
->> ->recovery_offset.
->>=20
->> When performing a reshape, ->curr_resync* might follow the device
->> addresses (raid5) or might follow array addresses (raid10), so cannot
->> in general be used to set ->recovery_offset.  When reshaping backwards,
->> ->curre_resync* measures from the *end* of the array-or-device, so is
->> particularly unhelpful.
->>=20
->> So change the common code in md.c to only use ->curr_resync_complete
->> for the simple recovery case, and add code to raid5.c to update
->> ->recovery_offset during a forwards reshape.
->>=20
->> Signed-off-by: NeilBrown <neilb@suse.com>
->> ---
->>  drivers/md/md.c    |   32 +++++++++++++++++++++-----------
->>  drivers/md/raid5.c |   18 ++++++++++++++++++
->>  2 files changed, 39 insertions(+), 11 deletions(-)
->>=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index a9f1352b3849..d1dfc9879368 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -2453,10 +2453,17 @@ void md_update_sb(struct mddev *mddev, int force=
-_change)
->>  		}
->>  	}
->>=20=20
->> -	/* First make sure individual recovery_offsets are correct */
->> +	/* First make sure individual recovery_offsets are correct
->> +	 * curr_resync_completed can only be used during recovery.
->> +	 * During reshape/resync it might use array-addresses rather
->> +	 * that device addresses.
->> +	 */
->>  	rdev_for_each(rdev, mddev) {
->>  		if (rdev->raid_disk >=3D 0 &&
->>  		    mddev->delta_disks >=3D 0 &&
->> +		    test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
->> +		    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery) &&
->> +		    !test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->>  		    !test_bit(Journal, &rdev->flags) &&
->>  		    !test_bit(In_sync, &rdev->flags) &&
->>  		    mddev->curr_resync_completed > rdev->recovery_offset)
->> @@ -8507,16 +8514,19 @@ void md_do_sync(struct md_thread *thread)
->>  		} else {
->>  			if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery))
->>  				mddev->curr_resync =3D MaxSector;
->> -			rcu_read_lock();
->> -			rdev_for_each_rcu(rdev, mddev)
->> -				if (rdev->raid_disk >=3D 0 &&
->> -				    mddev->delta_disks >=3D 0 &&
->> -				    !test_bit(Journal, &rdev->flags) &&
->> -				    !test_bit(Faulty, &rdev->flags) &&
->> -				    !test_bit(In_sync, &rdev->flags) &&
->> -				    rdev->recovery_offset < mddev->curr_resync)
->> -					rdev->recovery_offset =3D mddev->curr_resync;
->> -			rcu_read_unlock();
->> +			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->> +			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
->> +				rcu_read_lock();
->> +				rdev_for_each_rcu(rdev, mddev)
->> +					if (rdev->raid_disk >=3D 0 &&
->> +					    mddev->delta_disks >=3D 0 &&
->> +					    !test_bit(Journal, &rdev->flags) &&
->> +					    !test_bit(Faulty, &rdev->flags) &&
->> +					    !test_bit(In_sync, &rdev->flags) &&
->> +					    rdev->recovery_offset < mddev->curr_resync)
->> +						rdev->recovery_offset =3D mddev->curr_resync;
->> +				rcu_read_unlock();
->> +			}
->>  		}
->>  	}
->>   skip:
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index a8df52130f8a..89ad79614309 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -5739,6 +5739,7 @@ static sector_t reshape_request(struct mddev *mdde=
-v, sector_t sector_nr, int *sk
->>  	 */
->>  	struct r5conf *conf =3D mddev->private;
->>  	struct stripe_head *sh;
->> +	struct md_rdev *rdev;
->>  	sector_t first_sector, last_sector;
->>  	int raid_disks =3D conf->previous_raid_disks;
->>  	int data_disks =3D raid_disks - conf->max_degraded;
->> @@ -5861,6 +5862,15 @@ static sector_t reshape_request(struct mddev *mdd=
-ev, sector_t sector_nr, int *sk
->>  			return 0;
->>  		mddev->reshape_position =3D conf->reshape_progress;
->>  		mddev->curr_resync_completed =3D sector_nr;
->> +		if (!mddev->reshape_backwards)
->> +			/* Can update recovery_offset */
->> +			rdev_for_each(rdev, mddev)
->> +				if (rdev->raid_disk >=3D 0 &&
->> +				    !test_bit(Journal, &rdev->flags) &&
->> +				    !test_bit(In_sync, &rdev->flags) &&
->> +				    rdev->recovery_offset < sector_nr)
->> +					rdev->recovery_offset =3D sector_nr;
->> +
->>  		conf->reshape_checkpoint =3D jiffies;
->>  		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->>  		md_wakeup_thread(mddev->thread);
->> @@ -5959,6 +5969,14 @@ static sector_t reshape_request(struct mddev *mdd=
-ev, sector_t sector_nr, int *sk
->>  			goto ret;
->>  		mddev->reshape_position =3D conf->reshape_progress;
->>  		mddev->curr_resync_completed =3D sector_nr;
->> +		if (!mddev->reshape_backwards)
->> +			/* Can update recovery_offset */
->> +			rdev_for_each(rdev, mddev)
->> +				if (rdev->raid_disk >=3D 0 &&
->> +				    !test_bit(Journal, &rdev->flags) &&
->> +				    !test_bit(In_sync, &rdev->flags) &&
->> +				    rdev->recovery_offset < sector_nr)
->> +					rdev->recovery_offset =3D sector_nr;
->>  		conf->reshape_checkpoint =3D jiffies;
->>  		set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->>  		md_wakeup_thread(mddev->thread);
->>=20
->>=20
->> --
->
-> Hi,
->
-> This patch has caused a regression in following IMSM RAID scenario:
+> When you have a box with 60 8TB drives, 8 RAID6 sets and 12 spares
+> assigned to the first set, and the first set has a failed disk and is
+> rebuilding, spares aren't given to other sets with failing disks.
+> Waiting 2-3 days for a rebuild to complete before giving out spares to
+> other failing sets seems excessive.
 
-That's unfortunate.
-
->
-> mdadm --create /dev/md/imsm0 --metadata=3Dimsm --raid-devices=3D4 /dev/nv=
-me[0-3]n1 --run
-> mdadm --create /dev/md/r10 --level=3D10 --size=3D100M --raid-devices=3D4 =
-/dev/nvme[0-3]n1 --run --assume-clean
->
-> MDADM_EXPERIMENTAL=3D1 mdadm --grow /dev/md/r10 --level=3D0
-> MDADM_EXPERIMENTAL=3D1 mdadm --grow /dev/md/imsm0 --raid-devices=3D4
->
-> cat /proc/mdstat=20
-> Personalities : [raid10] [raid0] [raid6] [raid5] [raid4]=20
-> md126 : active raid4 nvme0n1[3] nvme2n1[2] nvme1n1[1]
->       409600 blocks super external:/md127/0 level 4, 128k chunk, algorith=
-m 0 [5/3] [UU_U_]
->=20=20=20=20=20=20=20
-> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
->       4420 blocks super external:imsm
-
-Why isn't nvme3n1 in md126?  Did it not get added, or did it get removed
-for some reason?
-If it wasn't added, raid5_start_reshape() would have failed, so I guess
-it must have been removed??
+True.
+One way around this is to have an inactive array that just contains
+spares.
+It is probably awkward to create such an array with current mdadm
+thought :-(
 
 
+> ---
+>  Monitor.c | 36 ++++++++++++++++++++++++++++++++----
+>  1 file changed, 32 insertions(+), 4 deletions(-)
 >
-> The array should have been reshaped to 4-disk RAID0 but it has failed in
-> the middle of reshape as RAID4.
->
-> Following condition is not true for above scenario:
->
->> +			if (!test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->> +			    test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
+> diff --git a/Monitor.c b/Monitor.c
+> index b60996b..b1178fd 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -781,14 +781,41 @@ static int check_donor(struct state *from, struct s=
+tate *to)
+>  		 */
+>  		if (sub->active < sub->raid)
+>  			return 0;
+> -	if (from->metadata->ss->external =3D=3D 0)
+> -		if (from->active < from->raid)
+> -			return 0;
+>  	if (from->spare <=3D 0)
+>  		return 0;
+>  	return 1;
+>  }
+>=20=20
+> +int spare_rebuilding(struct state *dev)
+> +{
+> +	mdu_disk_info_t disk;
+> +	mdu_array_info_t array;
+> +
+> +	int fd =3D open(dev->devname, O_RDONLY);
+> +	if (fd < 0) {
+> +		pr_err("cannot open %s: %s\n",
+> +			dev->devname, strerror(errno));
+> +		return 1;
+> +	}
+> +
+> +	md_get_disk_info(fd, &disk);
 
-No, it isn't meant to be.  This code doesn't work reliably in the
-reshape case. When reshaping raid5 (or raid4), reshape_request updates
-rdev->recovery_offset. ... maybe end_reshape needs to update it too.
+This is wrong. md_get_disk_info requires that disk.number be set,
+and it returns the info for that disk.
 
-If you add this patch, does it help?
+You need to pass 'd' from choose_spare() into  spare_rebuilding(),
+and set
+ disk.number =3D d;
+
+Did you test your code? :-)
+
+> +	md_get_array_info(fd, &array);
+
+You only use 'array' to get 'array.raid_disks', and that should be the
+same as dev->raid.
+
+> +
+> +	close(fd);
+> +
+> +	if ((disk.state &
+> +	     ((1 << MD_DISK_ACTIVE) | (1 << MD_DISK_SYNC) |
+> +	      (1 << MD_DISK_REMOVED) | (1 << MD_DISK_FAULTY) |
+> +	      (1 << MD_DISK_JOURNAL))) =3D=3D 0) {
+
+dev->devstate[d] already contains disk.state, and has be tested against
+zero, so the above is not needed.
+
+> +
+> +		if (disk.raid_disk < array.raid_disks &&
+> +		    disk.raid_disk >=3D 0)
+> +			return 1;
+
+This is the important test. If raid_disk is -1, the device is really a
+spare.  If >=3D 0, it isn't.
+
+Maybe it would be better to add a 'devrole' array to 'struct state', and
+collect this information in check_array().  Then spare_rebuilding() would
+become trivial.
+
+So I don't much like the code, but the concept seems sound.
 
 Thanks,
 NeilBrown
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 89ad79614309..a99ae1be9175 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7964,6 +7964,7 @@ static void end_reshape(struct r5conf *conf)
- {
-=20
- 	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
-+		struct md_rdev *rdev;
-=20
- 		spin_lock_irq(&conf->device_lock);
- 		conf->previous_raid_disks =3D conf->raid_disks;
-@@ -7971,6 +7972,12 @@ static void end_reshape(struct r5conf *conf)
- 		smp_wmb();
- 		conf->reshape_progress =3D MaxSector;
- 		conf->mddev->reshape_position =3D MaxSector;
-+		rdev_for_each(rdev, conf->mddev)
-+			if (rdev->raid_disk >=3D 0 &&
-+			    !test_bit(Journal, &rdev->flags) &&
-+			    !test_bit(In_sync, &rdev->flags))
-+				rdev->recovery_offset =3D MaxSector;
-+
- 		spin_unlock_irq(&conf->device_lock);
- 		wake_up(&conf->wait_for_overlap);
-=20
+
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static dev_t choose_spare(struct state *from, struct state *to,
+>  			  struct domainlist *domlist, struct spare_criteria *sc)
+>  {
+> @@ -821,7 +848,8 @@ static dev_t choose_spare(struct state *from, struct =
+state *to,
+>  				pol_add(&pol, pol_domain,
+>  					from->spare_group, NULL);
+>  			if (domain_test(domlist, pol,
+> -					to->metadata->ss->name) =3D=3D 1)
+> +					to->metadata->ss->name) =3D=3D 1 &&
+> +			    !spare_rebuilding(from))
+>  			    dev =3D from->devid[d];
+>  			dev_policy_free(pol);
+>  		}
+> --=20
+> 2.14.1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAln5H7QACgkQOeye3VZi
-gbmXNw//Veh9zawQMMcey+ASl4CONiqCmbgv618WTXr9rxbZG4Bjbb+dN9gRed5O
-uluc/sHzf0kCI7GD801IqqBaR7Rk7VQ11nCPEN1tODd1Feo0FH/vdIVvZj7Zh58L
-jhbLim7C+JUgFWl5lCgvjHjw+PgikdqOpvEH7gFctvAAcoVxwrQa2RUwr+XXaOVf
-eCratryq6WdT6Mc136wlHPahAKisPRlXd7TMaCvUiKNUj1WU1tCnlCHiqoT3xoMn
-ibeG2aSbyxmyAOyAomXB+9hi092vsOTvKXgf4RRzP15aCzjGnBlC2/J+sS/EZnr3
-ree6GvWFIUufAu9iD4Uc2u/zTlnG3C4w8W7Qzeud2my37sldc7k4DPTPClC8Dnre
-TbmcRTzZaTmQiuImnbzOC/peYle7Qh0lrq8W2yvuthOVWmZW1ZDgHy6KFlkXhVke
-Zkw9H+CPaSnJvQaeQWRJjgAIMWw37zUjEw0rUECROx/fFI1jePjt2oPmEgjzDi+n
-Fs1GfKGE6DxDAqsFV7TaOJ5W3Y3iVCTWVesLde/+jRyU3XKFrRHoy1XqObvMbmPg
-mbA+uENWBpBFzioFOdL1a6dCIA2/hxLKaBcEgD35HgHMMD9LQOrpzVylTt5gSX8I
-eYrnbXS/MGqufPY1ioWUoTYctfnCVwpWONWUegIf6pz91sbwRXA=
-=0DtR
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAln5I74ACgkQOeye3VZi
+gbnM1RAAvIW8vtbqD5bAITc3CPw4gWNn3rS9fMihSeKbWHadcXqCnTHitm/h7AiG
++ADWjKNc3kbdcUiv7umIT/oxcHRxHNpmJ2LYQ1VoSb09jFSrbhUnlJRDzrPn3XN9
+ueIzoF38SkYLuIx/FuKld6ESeQchnzrFZbOeFB7rXn+M9RkZmvZLu1OqJuHebI+G
+3ILyN3tT1D+BKjGOtOAxdiaRUX43FeUlfk4zn8b0i97GTsNcJNvnNe8KZ0iDD4X+
+XrGn1oO6u3WIjX2kT0F39BL9auJqPTei/ktV+0ckdSpx37ehn6wRZ4xQVzTQ2KSn
+XRzbD4dhiiS+4EM4uohEWKYm7ESDUjZvZYYPMfdubDCyZXaOLtcOLmemY+4yK5VH
+eJdMmfrtJslGCA6BBB3OMWei8Uj6LaWWo7dClQ7akRAoJxCB748IhRXlJ9+qNjK5
+qFluco+fkA1LXzVj/f7PM58ObMffgWDGMImzZtCkfNIpnioox6kMmv6RpwA3ldFI
+nysjFZsC5I5vwA1+c+EYQeKcnrsuOjqFo+OLdMklAagwQnYFBXnt5ZhINLG2sOLV
+wuUE312Rb9uFbnQ5kWdLb98iPvHawiBIobUfj7fVFFxPh65J21WZssiQXpXN7hU+
+5X6WNJEJy/Y1XyFOOpf7felwDoARHcv8kMr5van7qSfd6PoyoUE=
+=8qwk
 -----END PGP SIGNATURE-----
 --=-=-=--
