@@ -1,50 +1,40 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: [sucess] upgrading LSI SAS9211-8i fw IR->IT
-Date: Thu, 2 Nov 2017 21:51:05 +1100
-Message-ID: <34e5cc74-2cb2-5059-0e11-8f26a8bee223@eyal.emu.id.au>
-References: <08feefcc-14d0-e7ec-aa23-927ecbb63ac3@eyal.emu.id.au>
- <f268a7a1-6a73-8c9f-b4c8-1e8190f54850@eyal.emu.id.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] imsm: fix reading scsi serial
+Date: Thu,  2 Nov 2017 16:10:57 +0100
+Message-ID: <20171102151057.3398-1-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f268a7a1-6a73-8c9f-b4c8-1e8190f54850@eyal.emu.id.au>
-Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On 26/10/17 14:31, Eyal Lebedinsky wrote:
-> On 24/10/17 22:47, Eyal Lebedinsky wrote:
+Improve error detection after SG_IO ioctl. Checking only the return
+value and response length is insufficient and leads to anomalies if a
+drive does not have a serial number.
 
-[trimmed the story of reflashing the LSI to the latest IT fw]
+Reported-by: NeilBrown <neilb@suse.com>
+Tested-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+Mailing list discussion: https://marc.info/?l=linux-raid&m=150950864700415&w=2
 
-> As a final test I plan to boot the actual server with this card and 3 sacrificial
-> disks (now all zeroed) attached, to confirm that nothing is written to the disks.
+ sg_io.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-For the record, in closing this thread:
-- I did the above test and confirmed that the disks are not written to by the driver.
-- I replaced the HighPoint HBA with the LSI and simply moved the SFF-8087 across.
-   The array came up without issue.
-- I ran a full raid 'check' - zero mismatches.
-   This was a good surprise because I had three cases of full array failures with the HighPoint and
-   expected some corruption.
-
-What I noted so far:
-- the heat sink feels very hot even after short usage.
-- the disks were now in a different order, pretty much reverse order.
-   I am not sure the order will remain fixed (by port number?) or variable (as the disks spin up).
-
-I thank all who responded, I found it very helpful.
-
-cheers
-	Eyal
-
-> As an aside, I now do not see the text corruption I mentioned earlier, so it was
-> probably the BIOS causing it and not FreeDOS.
-> 
-> cheers
- >	Eyal
-
+diff --git a/sg_io.c b/sg_io.c
+index 42c91e1e..7889a95e 100644
+--- a/sg_io.c
++++ b/sg_io.c
+@@ -46,6 +46,9 @@ int scsi_get_serial(int fd, void *buf, size_t buf_len)
+ 	if (rv)
+ 		return rv;
+ 
++	if ((io_hdr.info & SG_INFO_OK_MASK) != SG_INFO_OK)
++		return -1;
++
+ 	rsp_len = rsp_buf[3];
+ 
+ 	if (!rsp_len || buf_len < rsp_len)
 -- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+2.14.2
+
