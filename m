@@ -1,35 +1,29 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] imsm: fix reading scsi serial
-Date: Thu, 2 Nov 2017 11:33:26 -0400
-Message-ID: <d890f7d5-ff5c-8c59-47e1-764c46f8799b@gmail.com>
-References: <20171102151057.3398-1-artur.paszkiewicz@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Raid 6 recovery
+Date: Thu, 2 Nov 2017 23:47:33 +0000
+Message-ID: <59FBAE95.6010206@youngman.org.uk>
+References: <cf135ab9-1111-65cd-1074-5259a7eb133d@safeandsoundit.co.uk>
+ <59F8A47E.2000405@youngman.org.uk>
+ <1f997b50-f271-a238-2d7e-1684a0c64e66@safeandsoundit.co.uk>
+ <59F8BCE9.1070607@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171102151057.3398-1-artur.paszkiewicz@intel.com>
-Content-Language: en-US
+In-Reply-To: <59F8BCE9.1070607@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com
+To: John Crisp <jcrisp@safeandsoundit.co.uk>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 11/02/2017 11:10 AM, Artur Paszkiewicz wrote:
-> Improve error detection after SG_IO ioctl. Checking only the return
-> value and response length is insufficient and leads to anomalies if a
-> drive does not have a serial number.
-> 
-> Reported-by: NeilBrown <neilb@suse.com>
-> Tested-by: NeilBrown <neilb@suse.com>
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
-> Mailing list discussion: https://marc.info/?l=linux-raid&m=150950864700415&w=2
-> 
->  sg_io.c | 3 +++
->  1 file changed, 3 insertions(+)
+On 31/10/17 18:11, Wols Lists wrote:
+> It's possible - I wouldn't know - that the existence of the MBR stops
+> mdadm looking for a superblock that applies to the whole drive, which
+> could explain why those drives have disappeared.
 
-Seems reasonable - applied!
+Just been digging in the code - function check_raid - I think if you
+pass a drive to mdadm it checks the drive for a superblock, and doesn't
+look for whether a partition table exists. So I think that's that
+explanation blown out the water ... :-(
 
-Thanks,
-Jes
-
+Cheers,
+Wol
