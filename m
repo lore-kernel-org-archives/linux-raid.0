@@ -1,93 +1,87 @@
-From: NeilBrown <neil@brown.name>
-Subject: Re: [neilbrown/mdadm] Add udev-md-raid-safe-timeouts.rules (#32)
-Date: Fri, 03 Nov 2017 17:37:31 +1100
-Message-ID: <87h8ubsw9g.fsf@notabene.neil.brown.name>
-References: <neilbrown/mdadm/pull/32@github.com>
+From: John Crisp <jcrisp@safeandsoundit.co.uk>
+Subject: Re: Raid 6 recovery
+Date: Fri, 3 Nov 2017 11:44:44 +0100
+Message-ID: <778940c7-cd7c-bda7-4db6-1e1b605a9557@safeandsoundit.co.uk>
+References: <cf135ab9-1111-65cd-1074-5259a7eb133d@safeandsoundit.co.uk>
+ <59F8A47E.2000405@youngman.org.uk>
+ <1f997b50-f271-a238-2d7e-1684a0c64e66@safeandsoundit.co.uk>
+ <59F8BCE9.1070607@youngman.org.uk> <59FBAE95.6010206@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="bini0GiOIOtlFBFCO1tK7VmPmglVGumOC"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <neilbrown/mdadm/pull/32@github.com>
+In-Reply-To: <59FBAE95.6010206@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--bini0GiOIOtlFBFCO1tK7VmPmglVGumOC
+Content-Type: multipart/mixed; boundary="5aGbPBkgW6G8Gr9dABCJnQ6dlveIEiVIK";
+ protected-headers="v1"
+From: John Crisp <jcrisp@safeandsoundit.co.uk>
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org,
+ Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
+Message-ID: <778940c7-cd7c-bda7-4db6-1e1b605a9557@safeandsoundit.co.uk>
+Subject: Re: Raid 6 recovery
+References: <cf135ab9-1111-65cd-1074-5259a7eb133d@safeandsoundit.co.uk>
+ <59F8A47E.2000405@youngman.org.uk>
+ <1f997b50-f271-a238-2d7e-1684a0c64e66@safeandsoundit.co.uk>
+ <59F8BCE9.1070607@youngman.org.uk> <59FBAE95.6010206@youngman.org.uk>
+In-Reply-To: <59FBAE95.6010206@youngman.org.uk>
+
+--5aGbPBkgW6G8Gr9dABCJnQ6dlveIEiVIK
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
 Content-Transfer-Encoding: quoted-printable
 
+On 03/11/17 00:47, Wols Lists wrote:
+> On 31/10/17 18:11, Wols Lists wrote:
+>> It's possible - I wouldn't know - that the existence of the MBR stops
+>> mdadm looking for a superblock that applies to the whole drive, which
+>> could explain why those drives have disappeared.
+>=20
+> Just been digging in the code - function check_raid - I think if you
+> pass a drive to mdadm it checks the drive for a superblock, and doesn't=
 
-This pull request appeared on my github mdadm ... thing.
+> look for whether a partition table exists. So I think that's that
+> explanation blown out the water ... :-(
+>=20
 
-I haven't looked in detail.  If someone would like to review it
-or something, that would be nice.
+:-) Thanks for looking.
 
-Thanks,
-NeilBrown
+As I mentioned, I think I created the array via Xubuntu.
 
-On Fri, Nov 03 2017, jonathanunderwood wrote:
+As far as I remember I didn't partition any of the drives - just added
+them to the array and I think it effectively created one partition
+across the whole array (which would make sense why you can't see
+partitions on individual drives)
 
-> These udev rules attempt to set a safe kernel controller
-> timeout for disks containing RAID level 1 or higher
-> partitions for commodity disks which do not have SCTERC
-> capability, or do have it but it is disabled.
->
-> No attempt is made to change the STCERC settings on devices
-> which support it.
->
-> This attempts to mitigate the problem described here:
->
->     https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
->     http://strugglers.net/~andy/blog/2015/11/09/linux-software-raid-and-d=
-rive-timeouts/
->
-> where the kernel controller may timeout on a read from a
-> disk after the default timeout of 30 seconds and consequently
-> cause mdraid to regard the disk as dead and eject it from the
-> RAID array.
->
-> The mitigation is to set the timeout to 180 seconds for disks
-> which contain a RAID level 1 or higher partition.
-> You can view, comment on, or merge this pull request online at:
->
->   https://github.com/neilbrown/mdadm/pull/32
->
-> -- Commit Summary --
->
->   * Add udev-md-raid-safe-timeouts.rules
->
-> -- File Changes --
->
->     A udev-md-raid-safe-timeouts.rules (61)
->
-> -- Patch Links --
->
-> https://github.com/neilbrown/mdadm/pull/32.patch
-> https://github.com/neilbrown/mdadm/pull/32.diff
->
-> --=20
-> You are receiving this because you are subscribed to this thread.
-> Reply to this email directly or view it on GitHub:
-> https://github.com/neilbrown/mdadm/pull/32
+I am pretty sure that is trashed, but I like to try and understand these
+things !
 
---=-=-=
+B. Rgds
+John
+
+
+--5aGbPBkgW6G8Gr9dABCJnQ6dlveIEiVIK--
+
+--bini0GiOIOtlFBFCO1tK7VmPmglVGumOC
 Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAln8Dq0ACgkQOeye3VZi
-gbmSKQ//VdE16Jyc+lfLjzyV3jNQUN2JTU53qCgBVxuro5S/PoqeP583ihyfXf6y
-MDkhVNR7UDZ4sPHLijkhdNc2KAMWsbWjsWQQliBMACNb+ss1rG1QOslSCJqOAlo0
-eNr7kOKirjwcGJE3kf+4zOSzNQWsasXj0OWbuWMj5fkBM6EeSiLHi3RB94ZaYqGl
-GIGgZbuCFWANBgVRa7HLKh8lGo7oNbYHcwLTfGuOR9VRZcjfbAPh4jW7tjX5JYaG
-ugiCbxr+6XzIIMSHT9lXUuDS/tQAGDn00rCtyRNa66vS3qNR8IV++2XbFrfSOuKj
-wCJsOnVHUmvSjTOtML9DpBLNwjeXW2dMEqcxr7TpzFBjT+yxmVz1eP9ezzGZ5IUf
-EWPNjThr4iHgRP17yPeRjN2YgQHx8QRvsh9LF2sbL1GlZv1L27wRytRIPXH7oALp
-ReC7IN9s56p5UQADfuDI293t3U1PdJIxvp4lt67G5QEJVaI7nV1sc7eY76ygeU1n
-phaosSDnyL0t5MKn+zACHCsIfgNXm7CreEYYDfAigUv2VzwpQ8yUGCvhZLJUx9Mc
-ftkhzFeAyhKqsvTUsupKIUu3ORTxxqhCOvSXAEg3MsKoydC4A8LcbU08yqwg9rEq
-wxRD9fXoFcX/jLeJ2HI3vgWbyJSc6tivWrcrUJDcdri8qVmAnzU=
-=lEl+
+iQEcBAEBAgAGBQJZ/EicAAoJEE8bo8Tv0FrJVGsH/3LUrLVNBgQw2tlyuogcDHjw
+A5akfCbOcgBlTrgQk1CTUGhyKsYldvjDqIo6YvSF2sLdhOIZfFoO5VXlI0PqszPD
+ykN9qd+AfK898y570m+VdOeClee7rA+TcAj6a8mpEzpuDcNzuNiCXjlNzVYUrtzU
+rQFeEN4TKtKwq56xeymcF5dfVmIMDRh3a467W+GVoHEbVuQD51YGt/m/bEFHvaF6
+oA9DvTORRBls8aN4T/gRuBC+GBW3i21YF1+8trQVRKgaZ++maMaNHpJ7keyzgwzS
+BMhEAs0K1mEnsipOlthpC/AL17Mi1xZNrM9Keac+48YLqqNylj4Bkeh5iIpmhAc=
+=G2WE
 -----END PGP SIGNATURE-----
---=-=-=--
+
+--bini0GiOIOtlFBFCO1tK7VmPmglVGumOC--
