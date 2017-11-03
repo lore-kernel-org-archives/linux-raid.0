@@ -1,72 +1,45 @@
-From: Chris Walker <cwalker@cray.com>
-Subject: FW: change in disk failure policy for non-BBL arrays?
-Date: Fri, 3 Nov 2017 19:58:28 +0000
-Message-ID: <294F8C1D-AFB2-4445-9F7B-18D761A6D846@cray.com>
+From: Sarah Newman <srn@prgmr.com>
+Subject: Re: FW: change in disk failure policy for non-BBL arrays?
+Date: Fri, 3 Nov 2017 13:19:28 -0700
+Message-ID: <2bd80694-a168-2ae7-c1db-e9b8d3b29657@prgmr.com>
 References: <ebc61f38-b401-c01a-5c2a-4671287f6eee@cray.com>
+ <294F8C1D-AFB2-4445-9F7B-18D761A6D846@cray.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ebc61f38-b401-c01a-5c2a-4671287f6eee@cray.com>
+In-Reply-To: <294F8C1D-AFB2-4445-9F7B-18D761A6D846@cray.com>
 Content-Language: en-US
-Content-ID: <4826CB5F5729D64F8159430B49368B1F@namprd11.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Chris Walker <cwalker@cray.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SGVsbG8sDQpJIHdhcyBsb29raW5nIGF0IHRoaXMgYWdhaW4gdG9kYXkgYW5kIGl0IGFwcGVhcnMg
-dGhhdCB3aXRoIHRoaXMgY2hhbmdlLCBlcnJvciBoYW5kbGluZyBubyBsb25nZXIgd29ya3MgY29y
-cmVjdGx5IGluIFJBSUQxMCAoSSBoYXZlbid0IGNoZWNrZWQgdGhlIG90aGVyIGxldmVscyB5ZXQp
-LiAgV2l0aG91dCBhIEJCTCBjb25maWd1cmVkLCBhbiBlcnJvciBjeWNsZXMgdGhyb3VnaCBmaXhf
-cmVhZF9lcnJvciB1bnRpbCBtYXhfcmVhZF9lcnJvcnMgaXMgZXhjZWVkZWQsIGFuZCBvbmx5IHRo
-ZW4gaXMgdGhlIGRyaXZlIGtpY2tlZCBvdXQgb2YgdGhlIGFycmF5LiAgRm9yIGV4YW1wbGUsIGlm
-IEkgaW5qZWN0IGVycm9ycyBpbiByZXNwb25zZSB0byBib3RoIHJlYWQgYW5kIHdyaXRlIGNvbW1h
-bmRzIGF0IHNlY3RvciAxNjM5MiBvZiAvZGV2L3NkYSwgbG9ncyBpbiByZXNwb25zZSB0byBhIHJl
-YWQgb2YgdGhlIGNvcnJlc3BvbmRpbmcgbWQwIHNlY3RvciBsb29rIGxpa2U6DQogDQoobWFueSBy
-ZXBlYXRzKQ0KT2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogdW5hYmxl
-IHRvIHJlYWQgYmFjayBjb3JyZWN0ZWQgc2VjdG9ycyAoOCBzZWN0b3JzIGF0IDE2MzkyIG9uIHNk
-YSkNCk9jdCAyNyAxNjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogZmFpbGlu
-ZyBkcml2ZQ0KT2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogcmVhZCBj
-b3JyZWN0aW9uIHdyaXRlIGZhaWxlZCAoOCBzZWN0b3JzIGF0IDE2MzkyIG9uIHNkYSkNCk9jdCAy
-NyAxNjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogZmFpbGluZyBkcml2ZQ0K
-T2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogdW5hYmxlIHRvIHJlYWQg
-YmFjayBjb3JyZWN0ZWQgc2VjdG9ycyAoOCBzZWN0b3JzIGF0IDE2MzkyIG9uIHNkYSkNCk9jdCAy
-NyAxNjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogZmFpbGluZyBkcml2ZQ0K
-T2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogc2RhOiBSYWlkIGRldmlj
-ZSBleGNlZWRlZCByZWFkX2Vycm9yIHRocmVzaG9sZCBbY3VyIDIxOm1heCAyMF0NCk9jdCAyNyAx
-NjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogRmFpbGluZyByYWlkIGRldmlj
-ZQ0KT2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogRGlzayBmYWlsdXJl
-IG9uIHNkYSwgZGlzYWJsaW5nIGRldmljZS4NCg0KUHJldmlvdXNseSwgdGhlIGRyaXZlIHdvdWxk
-IGhhdmUgYmVlbiBmYWlsZWQgb3V0IG9mIHRoZSBhcnJheSBieSB0aGUgY2FsbCBvZiBtZF9lcnJv
-ciBhdCB0aGUgZW5kIG9mIHIxMF9zeW5jX3BhZ2VfaW8uDQoNCklzIHRoZXJlIGFuIGFwcGV0aXRl
-IGZvciBhIHBhdGNoIHRoYXQgdGFrZXMgdGhlIGVhc3kgd2F5IG91dCBieSByZXZlcnRpbmcgdG8g
-dGhlIHByZXZpb3VzIGJlaGF2aW9yIHdpdGggY2hhbmdlcyBsaWtlDQoNCi0gICAgICAgaWYgKCFy
-ZGV2X3NldF9iYWRibG9ja3MocmRldiwgc2VjdG9yLCBzZWN0b3JzLCAwKSkNCisgICAgICAgaWYg
-KCFyZGV2X3NldF9iYWRibG9ja3MocmRldiwgc2VjdG9yLCBzZWN0b3JzLCAwKSB8fCByZGV2LT5i
-YWRibG9ja3Muc2hpZnQgPCAwKQ0KDQpUaGFua3MsDQpDaHJpcw0KDQoNCk9uIDEwLzIzLzE3LCA1
-OjIzIFBNLCAiQ2hyaXMgV2Fsa2VyIiA8Y3dhbGtlckBjcmF5LmNvbT4gd3JvdGU6DQoNCiAgICBI
-ZWxsbywNCiAgICANCiAgICBXZSd2ZSBub3RpY2VkIHRoYXQgZm9yIGFuIGFycmF5IG9uIHdoaWNo
-IHRoZSBiYWQgYmxvY2sgbGlzdCBoYXMgYmVlbiANCiAgICBkaXNhYmxlZCwgYSBmYWlsZWQgd3Jp
-dGUgZnJvbSBhICdjaGVjaycgb3BlcmF0aW9uIG5vIGxvbmdlciBjYXVzZXMgdGhlIA0KICAgIG9m
-ZmVuZGluZyBkaXNrIHRvIGJlIGZhaWxlZCBvdXQgb2YgdGhlIGFycmF5LiAgQXMgZmFyIGFzIEkg
-Y2FuIHRlbGwsIA0KICAgIHRoaXMgYmVoYXZpb3IgY2hhbmdlZCB3aXRoIGNvbW1pdA0KICAgIGh0
-dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9jb21taXQvZmM5NzRlZTJiZmZkZGU0N2Qx
-ZTRiMjIwY2YzMjY5NTJjYzJjNDc5NCwgDQogICAgd2hpY2ggYWRvcHRlZCB0aGUgYmxvY2sgbGF5
-ZXIgYmFkYmxvY2tzIGNvZGUgYW5kIGRlcHJlY2F0ZWQgdGhlIA0KICAgIE1ELXNwZWNpZmljIGNv
-ZGUuDQogICAgDQogICAgSXQgbG9va3MgbGlrZSB0aGlzIGNvbW1pdCBjaGFuZ2VkIHVuZGVybHlp
-bmcgY29kZSB0aGF0IGFkZHMgYSByYW5nZSBvZiANCiAgICBiYWQgYmxvY2tzIHRvIHRoZSBCQiB0
-YWJsZSAobWRfc2V0X2JhZGJsb2NrcyAtLT4gYmFkYmxvY2tzX3NldCkgc3VjaCANCiAgICB0aGF0
-IHRoZSBzZW5zZSBvZiB0aGUgcmV0dXJuIGNvZGUgcmV2ZXJzZWQsIGZyb20gMCBtZWFuaW5nIGFu
-IGVycm9yIA0KICAgIG9jY3VycmVkIHRvIDAgbWVhbmluZyBzdWNjZXNzLCBidXQgdGhlIHJldHVy
-biBjb2RlIGR1ZSB0byBhIGRpc2FibGVkIEJCIA0KICAgIHdhcyBsZWZ0IGF0IDAuICBXaXRoIHRo
-aXMgY2hhbmdlLCB0aGVyZWZvcmUsIGZvciBhcnJheXMgd2l0aG91dCBhIEJCTCwgDQogICAgY2Fs
-bHMgdG8gJ3JkZXZfc2V0X2JhZGJsb2NrcycgY2hhbmdlZCBmcm9tIGFsd2F5cyBhIGZhaWx1cmUg
-dG8gYWx3YXlzIGEgDQogICAgc3VjY2VzcywgYW5kIGNvZGUgc3VjaCBhcw0KICAgIA0KICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChyZGV2X3NldF9iYWRibG9ja3MoDQog
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcmRldiwNCiAg
-ICByMTBfYmlvLT5kZXZzW21dLmFkZHIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgcjEwX2Jpby0+c2VjdG9ycywgMCkpDQogICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBtZF9lcnJvcihjb25mLT5tZGRldiwgcmRldik7
-DQogICAgDQogICAgdGhhdCBwcmV2aW91c2x5IHdvdWxkIGhhdmUgZmFpbGVkIHRoZSBkaXNrIG5v
-IGxvbmdlciBkby4gIFdhcyB0aGlzIA0KICAgIGNoYW5nZSBpbiBwb2xpY3kgZGVsaWJlcmF0ZT8N
-CiAgICANCiAgICBUaGFua3MsDQogICAgQ2hyaXMNCiAgICANCg0K
+On 11/03/2017 12:58 PM, Chris Walker wrote:
+> Hello,
+> I was looking at this again today and it appears that with this change, error handling no longer works correctly in RAID10 (I haven't checked the other levels yet).  Without a BBL configured, an error cycles through fix_read_error until max_read_errors is exceeded, and only then is the drive kicked out of the array.  For example, if I inject errors in response to both read and write commands at sector 16392 of /dev/sda, logs in response to a read of the corresponding md0 sector look like:
+>  
+> (many repeats)
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: unable to read back corrected sectors (8 sectors at 16392 on sda)
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: sda: failing drive
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: read correction write failed (8 sectors at 16392 on sda)
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: sda: failing drive
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: unable to read back corrected sectors (8 sectors at 16392 on sda)
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: sda: failing drive
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: sda: Raid device exceeded read_error threshold [cur 21:max 20]
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: sda: Failing raid device
+> Oct 27 16:15:16 c1 kernel: md/raid10:md0: Disk failure on sda, disabling device.
+> 
+> Previously, the drive would have been failed out of the array by the call of md_error at the end of r10_sync_page_io.
+> 
+> Is there an appetite for a patch that takes the easy way out by reverting to the previous behavior with changes like
+> 
+> -       if (!rdev_set_badblocks(rdev, sector, sectors, 0))
+> +       if (!rdev_set_badblocks(rdev, sector, sectors, 0) || rdev->badblocks.shift < 0)
+> 
+> Thanks,
+> Chris
+> 
+
+As a RAID10 user that seems like the right thing to do, thank you.
+
+--Sarah
