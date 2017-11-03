@@ -1,87 +1,72 @@
-From: John Crisp <jcrisp@safeandsoundit.co.uk>
-Subject: Re: Raid 6 recovery
-Date: Fri, 3 Nov 2017 11:44:44 +0100
-Message-ID: <778940c7-cd7c-bda7-4db6-1e1b605a9557@safeandsoundit.co.uk>
-References: <cf135ab9-1111-65cd-1074-5259a7eb133d@safeandsoundit.co.uk>
- <59F8A47E.2000405@youngman.org.uk>
- <1f997b50-f271-a238-2d7e-1684a0c64e66@safeandsoundit.co.uk>
- <59F8BCE9.1070607@youngman.org.uk> <59FBAE95.6010206@youngman.org.uk>
+From: Chris Walker <cwalker@cray.com>
+Subject: FW: change in disk failure policy for non-BBL arrays?
+Date: Fri, 3 Nov 2017 19:58:28 +0000
+Message-ID: <294F8C1D-AFB2-4445-9F7B-18D761A6D846@cray.com>
+References: <ebc61f38-b401-c01a-5c2a-4671287f6eee@cray.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="bini0GiOIOtlFBFCO1tK7VmPmglVGumOC"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59FBAE95.6010206@youngman.org.uk>
+In-Reply-To: <ebc61f38-b401-c01a-5c2a-4671287f6eee@cray.com>
+Content-Language: en-US
+Content-ID: <4826CB5F5729D64F8159430B49368B1F@namprd11.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---bini0GiOIOtlFBFCO1tK7VmPmglVGumOC
-Content-Type: multipart/mixed; boundary="5aGbPBkgW6G8Gr9dABCJnQ6dlveIEiVIK";
- protected-headers="v1"
-From: John Crisp <jcrisp@safeandsoundit.co.uk>
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org,
- Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
-Message-ID: <778940c7-cd7c-bda7-4db6-1e1b605a9557@safeandsoundit.co.uk>
-Subject: Re: Raid 6 recovery
-References: <cf135ab9-1111-65cd-1074-5259a7eb133d@safeandsoundit.co.uk>
- <59F8A47E.2000405@youngman.org.uk>
- <1f997b50-f271-a238-2d7e-1684a0c64e66@safeandsoundit.co.uk>
- <59F8BCE9.1070607@youngman.org.uk> <59FBAE95.6010206@youngman.org.uk>
-In-Reply-To: <59FBAE95.6010206@youngman.org.uk>
-
---5aGbPBkgW6G8Gr9dABCJnQ6dlveIEiVIK
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: quoted-printable
-
-On 03/11/17 00:47, Wols Lists wrote:
-> On 31/10/17 18:11, Wols Lists wrote:
->> It's possible - I wouldn't know - that the existence of the MBR stops
->> mdadm looking for a superblock that applies to the whole drive, which
->> could explain why those drives have disappeared.
->=20
-> Just been digging in the code - function check_raid - I think if you
-> pass a drive to mdadm it checks the drive for a superblock, and doesn't=
-
-> look for whether a partition table exists. So I think that's that
-> explanation blown out the water ... :-(
->=20
-
-:-) Thanks for looking.
-
-As I mentioned, I think I created the array via Xubuntu.
-
-As far as I remember I didn't partition any of the drives - just added
-them to the array and I think it effectively created one partition
-across the whole array (which would make sense why you can't see
-partitions on individual drives)
-
-I am pretty sure that is trashed, but I like to try and understand these
-things !
-
-B. Rgds
-John
-
-
---5aGbPBkgW6G8Gr9dABCJnQ6dlveIEiVIK--
-
---bini0GiOIOtlFBFCO1tK7VmPmglVGumOC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQEcBAEBAgAGBQJZ/EicAAoJEE8bo8Tv0FrJVGsH/3LUrLVNBgQw2tlyuogcDHjw
-A5akfCbOcgBlTrgQk1CTUGhyKsYldvjDqIo6YvSF2sLdhOIZfFoO5VXlI0PqszPD
-ykN9qd+AfK898y570m+VdOeClee7rA+TcAj6a8mpEzpuDcNzuNiCXjlNzVYUrtzU
-rQFeEN4TKtKwq56xeymcF5dfVmIMDRh3a467W+GVoHEbVuQD51YGt/m/bEFHvaF6
-oA9DvTORRBls8aN4T/gRuBC+GBW3i21YF1+8trQVRKgaZ++maMaNHpJ7keyzgwzS
-BMhEAs0K1mEnsipOlthpC/AL17Mi1xZNrM9Keac+48YLqqNylj4Bkeh5iIpmhAc=
-=G2WE
------END PGP SIGNATURE-----
-
---bini0GiOIOtlFBFCO1tK7VmPmglVGumOC--
+SGVsbG8sDQpJIHdhcyBsb29raW5nIGF0IHRoaXMgYWdhaW4gdG9kYXkgYW5kIGl0IGFwcGVhcnMg
+dGhhdCB3aXRoIHRoaXMgY2hhbmdlLCBlcnJvciBoYW5kbGluZyBubyBsb25nZXIgd29ya3MgY29y
+cmVjdGx5IGluIFJBSUQxMCAoSSBoYXZlbid0IGNoZWNrZWQgdGhlIG90aGVyIGxldmVscyB5ZXQp
+LiAgV2l0aG91dCBhIEJCTCBjb25maWd1cmVkLCBhbiBlcnJvciBjeWNsZXMgdGhyb3VnaCBmaXhf
+cmVhZF9lcnJvciB1bnRpbCBtYXhfcmVhZF9lcnJvcnMgaXMgZXhjZWVkZWQsIGFuZCBvbmx5IHRo
+ZW4gaXMgdGhlIGRyaXZlIGtpY2tlZCBvdXQgb2YgdGhlIGFycmF5LiAgRm9yIGV4YW1wbGUsIGlm
+IEkgaW5qZWN0IGVycm9ycyBpbiByZXNwb25zZSB0byBib3RoIHJlYWQgYW5kIHdyaXRlIGNvbW1h
+bmRzIGF0IHNlY3RvciAxNjM5MiBvZiAvZGV2L3NkYSwgbG9ncyBpbiByZXNwb25zZSB0byBhIHJl
+YWQgb2YgdGhlIGNvcnJlc3BvbmRpbmcgbWQwIHNlY3RvciBsb29rIGxpa2U6DQogDQoobWFueSBy
+ZXBlYXRzKQ0KT2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogdW5hYmxl
+IHRvIHJlYWQgYmFjayBjb3JyZWN0ZWQgc2VjdG9ycyAoOCBzZWN0b3JzIGF0IDE2MzkyIG9uIHNk
+YSkNCk9jdCAyNyAxNjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogZmFpbGlu
+ZyBkcml2ZQ0KT2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogcmVhZCBj
+b3JyZWN0aW9uIHdyaXRlIGZhaWxlZCAoOCBzZWN0b3JzIGF0IDE2MzkyIG9uIHNkYSkNCk9jdCAy
+NyAxNjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogZmFpbGluZyBkcml2ZQ0K
+T2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogdW5hYmxlIHRvIHJlYWQg
+YmFjayBjb3JyZWN0ZWQgc2VjdG9ycyAoOCBzZWN0b3JzIGF0IDE2MzkyIG9uIHNkYSkNCk9jdCAy
+NyAxNjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogZmFpbGluZyBkcml2ZQ0K
+T2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogc2RhOiBSYWlkIGRldmlj
+ZSBleGNlZWRlZCByZWFkX2Vycm9yIHRocmVzaG9sZCBbY3VyIDIxOm1heCAyMF0NCk9jdCAyNyAx
+NjoxNToxNiBjMSBrZXJuZWw6IG1kL3JhaWQxMDptZDA6IHNkYTogRmFpbGluZyByYWlkIGRldmlj
+ZQ0KT2N0IDI3IDE2OjE1OjE2IGMxIGtlcm5lbDogbWQvcmFpZDEwOm1kMDogRGlzayBmYWlsdXJl
+IG9uIHNkYSwgZGlzYWJsaW5nIGRldmljZS4NCg0KUHJldmlvdXNseSwgdGhlIGRyaXZlIHdvdWxk
+IGhhdmUgYmVlbiBmYWlsZWQgb3V0IG9mIHRoZSBhcnJheSBieSB0aGUgY2FsbCBvZiBtZF9lcnJv
+ciBhdCB0aGUgZW5kIG9mIHIxMF9zeW5jX3BhZ2VfaW8uDQoNCklzIHRoZXJlIGFuIGFwcGV0aXRl
+IGZvciBhIHBhdGNoIHRoYXQgdGFrZXMgdGhlIGVhc3kgd2F5IG91dCBieSByZXZlcnRpbmcgdG8g
+dGhlIHByZXZpb3VzIGJlaGF2aW9yIHdpdGggY2hhbmdlcyBsaWtlDQoNCi0gICAgICAgaWYgKCFy
+ZGV2X3NldF9iYWRibG9ja3MocmRldiwgc2VjdG9yLCBzZWN0b3JzLCAwKSkNCisgICAgICAgaWYg
+KCFyZGV2X3NldF9iYWRibG9ja3MocmRldiwgc2VjdG9yLCBzZWN0b3JzLCAwKSB8fCByZGV2LT5i
+YWRibG9ja3Muc2hpZnQgPCAwKQ0KDQpUaGFua3MsDQpDaHJpcw0KDQoNCk9uIDEwLzIzLzE3LCA1
+OjIzIFBNLCAiQ2hyaXMgV2Fsa2VyIiA8Y3dhbGtlckBjcmF5LmNvbT4gd3JvdGU6DQoNCiAgICBI
+ZWxsbywNCiAgICANCiAgICBXZSd2ZSBub3RpY2VkIHRoYXQgZm9yIGFuIGFycmF5IG9uIHdoaWNo
+IHRoZSBiYWQgYmxvY2sgbGlzdCBoYXMgYmVlbiANCiAgICBkaXNhYmxlZCwgYSBmYWlsZWQgd3Jp
+dGUgZnJvbSBhICdjaGVjaycgb3BlcmF0aW9uIG5vIGxvbmdlciBjYXVzZXMgdGhlIA0KICAgIG9m
+ZmVuZGluZyBkaXNrIHRvIGJlIGZhaWxlZCBvdXQgb2YgdGhlIGFycmF5LiAgQXMgZmFyIGFzIEkg
+Y2FuIHRlbGwsIA0KICAgIHRoaXMgYmVoYXZpb3IgY2hhbmdlZCB3aXRoIGNvbW1pdA0KICAgIGh0
+dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9jb21taXQvZmM5NzRlZTJiZmZkZGU0N2Qx
+ZTRiMjIwY2YzMjY5NTJjYzJjNDc5NCwgDQogICAgd2hpY2ggYWRvcHRlZCB0aGUgYmxvY2sgbGF5
+ZXIgYmFkYmxvY2tzIGNvZGUgYW5kIGRlcHJlY2F0ZWQgdGhlIA0KICAgIE1ELXNwZWNpZmljIGNv
+ZGUuDQogICAgDQogICAgSXQgbG9va3MgbGlrZSB0aGlzIGNvbW1pdCBjaGFuZ2VkIHVuZGVybHlp
+bmcgY29kZSB0aGF0IGFkZHMgYSByYW5nZSBvZiANCiAgICBiYWQgYmxvY2tzIHRvIHRoZSBCQiB0
+YWJsZSAobWRfc2V0X2JhZGJsb2NrcyAtLT4gYmFkYmxvY2tzX3NldCkgc3VjaCANCiAgICB0aGF0
+IHRoZSBzZW5zZSBvZiB0aGUgcmV0dXJuIGNvZGUgcmV2ZXJzZWQsIGZyb20gMCBtZWFuaW5nIGFu
+IGVycm9yIA0KICAgIG9jY3VycmVkIHRvIDAgbWVhbmluZyBzdWNjZXNzLCBidXQgdGhlIHJldHVy
+biBjb2RlIGR1ZSB0byBhIGRpc2FibGVkIEJCIA0KICAgIHdhcyBsZWZ0IGF0IDAuICBXaXRoIHRo
+aXMgY2hhbmdlLCB0aGVyZWZvcmUsIGZvciBhcnJheXMgd2l0aG91dCBhIEJCTCwgDQogICAgY2Fs
+bHMgdG8gJ3JkZXZfc2V0X2JhZGJsb2NrcycgY2hhbmdlZCBmcm9tIGFsd2F5cyBhIGZhaWx1cmUg
+dG8gYWx3YXlzIGEgDQogICAgc3VjY2VzcywgYW5kIGNvZGUgc3VjaCBhcw0KICAgIA0KICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChyZGV2X3NldF9iYWRibG9ja3MoDQog
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcmRldiwNCiAg
+ICByMTBfYmlvLT5kZXZzW21dLmFkZHIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgcjEwX2Jpby0+c2VjdG9ycywgMCkpDQogICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBtZF9lcnJvcihjb25mLT5tZGRldiwgcmRldik7
+DQogICAgDQogICAgdGhhdCBwcmV2aW91c2x5IHdvdWxkIGhhdmUgZmFpbGVkIHRoZSBkaXNrIG5v
+IGxvbmdlciBkby4gIFdhcyB0aGlzIA0KICAgIGNoYW5nZSBpbiBwb2xpY3kgZGVsaWJlcmF0ZT8N
+CiAgICANCiAgICBUaGFua3MsDQogICAgQ2hyaXMNCiAgICANCg0K
