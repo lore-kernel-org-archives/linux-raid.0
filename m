@@ -1,62 +1,75 @@
-From: Larkin Lowrey <llowrey@gmail.com>
-Subject: Re: raid5-cache: Cannot get enough stripes due to memory pressure.
- Recovery failed.
-Date: Sun, 5 Nov 2017 10:20:05 -0500
-Message-ID: <7545b7cd-8b8d-6264-d6d7-eeed6b852ee9@gmail.com>
-References: <e4b20202-95e8-c31c-c37b-3da3109537d2@gmail.com>
- <59FDFEBE.3000904@youngman.org.uk>
+From: "David F." <df7729@gmail.com>
+Subject: Re: RAID header in XFS area?
+Date: Sun, 5 Nov 2017 07:59:31 -0800
+Message-ID: <CAGRSmLub52sWS8NbeXcD4R=VbfbDX6xNJNiqQzxcnpAqACc5yw@mail.gmail.com>
+References: <CAGRSmLv2HqyZmf-nR4SqnPaw2HNxDAaOSMA-QXVyiekF4Q5x5w@mail.gmail.com>
+ <59FE0739.8020400@youngman.org.uk> <CAGRSmLuoauKaSZ5Z73+Tg19e_1q9Tc-A0ZjqMgr4Lv9Tfer6QQ@mail.gmail.com>
+ <5cffac57-7e37-b8cb-ee77-cb9cb6c0f616@youngman.org.uk> <CAGRSmLvou+yEb2VLJoounbuiEdfrPSEC+8xBtdp9nfOpj8y-8Q@mail.gmail.com>
+ <CAGRSmLuBEUynKNirFi9FuoJz82F4hDimmJWZSSfpQhoOi_9Rog@mail.gmail.com>
+ <CAGRSmLtSLQzL01EEnGnafbnTYeC55aK1UEcJBfazoCgTsFXcXw@mail.gmail.com> <59FED6DB.9040303@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59FDFEBE.3000904@youngman.org.uk>
-Content-Language: en-US
+In-Reply-To: <59FED6DB.9040303@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The rescue shell had the full kernel loaded and all 16GB was available 
-so that's not the issue.
+would be good if when building the RAID with sb at 4K that they clear
+the first 4K when within a partition.
 
-I booted off a USB drive and was able to get both arrays to assemble. 
-The kernel was much older, 4.11.8-300.fc26.x86_64.
-
-After a clean shutdown and reboot to a 4.13.X kernel I no longer get 
-dumped into the recovery shell but the boot process hangs. The 8 drive 
-array gets assembled but the hang happens immediately after all of the 
-drives for the 12 drive array are detected so I suspect the hang happens 
-during the assembly of the 12 drive array.
-
-When I go back to boot off the USB drive (4.11.8 kernel) both assemble 
-just fine. Could there be regression between 4.11.8 and 4.13.X?
-
-I no longer have full boot images with older kernels than 4.13 so I 
-can't easily test to identify the point of regression.
-
---Larkin
-
-On 11/4/2017 1:54 PM, Wols Lists wrote:
-> On 04/11/17 16:13, Larkin Lowrey wrote:
->> The prior shutdown could have been unclean for the array. The shutdown
->> process got stuck and I eventually had to use the reset button.
+On Sun, Nov 5, 2017 at 1:16 AM, Wols Lists <antlists@youngman.org.uk> wrote:
+> On 05/11/17 02:12, David F. wrote:
+>> gmail started doing private replies for some reason..
 >>
->> I have a second (8 drive) raid6 array on this host that has a 2GB
->> journal and it won't assemble either.
+>> Anyway, looking deeper found it.  That partition xfs information was
+>> old left over items.  Searching for another header was found further
+>> up, at byte offset 22000h (sector 110h), and looking at the RAID
+>> header area, found bytes for 110h which must be a pointer to to where
+>> the data starts (don't have the mdadm struct available).   Does anyone
+>> have the RAID structure available using signature A92B4EFCh ?
 >>
->> Kernel: 4.13.10-100.fc25.x86_64
+>> So the old XFS information was confusing the whole situation.
 >>
->> What can I do? Do I need more RAM?
-> You're in the recovery shell ... does/can that use all available ram?
-> (Like DOS needed special drivers to use ram above 1MB). So I doubt you
-> need more ram.
+> No surprise. Old data does that :-( Why I always prefer "dd if=/dev/zero
+> of=/dev/sdx" to clear a device. It just takes so long ...
 >
-> Get a rescue disk of some sort, boot into that, so you've got a full
-> working linux off DVD/CD, and see if you can assemble the arrays from there.
+> What really worried me was if they'd created the array over the
+> partitions, then accidentally created XFS on the partitions. That would
+> have crashed at the first reboot, but there's a good chance that if they
+> didn't reboot it would have run and run until ...
+>
+> If you want the raid structure, download mdadm and read the source. I'll
+> probably document it on the wiki, but I need to read and understand the
+> source first, too.
+>
+> As for accessing the data, md2 and md/2 are the same thing :-) Raid is
+> moving to named arrays rather than default numbers. Can they run a fsck
+> equivalent over the filesystem? Read-only of course, just to see whether
+> it's minimally damaged or there's something more seriously wrong.
 >
 > Cheers,
 > Wol
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+>>
+>> On Sat, Nov 4, 2017 at 6:58 PM, David F. <df7729@gmail.com> wrote:
+>>> Oh shoot, forgot to mention.  The customer did the mdadm --run --force
+>>> /dev/md2 (or may have been /dev/md/2) but when trying to access it
+>>> read errors. ?
+>>>
+>>> On Sat, Nov 4, 2017 at 6:55 PM, David F. <df7729@gmail.com> wrote:
+>>>> That's what I would expect, which is why it's weird that that
+>>>> signature for metadata 1.2 was 4K within the XFS partition itself (the
+>>>> XFS partition started after a bunch of other partitions at LBA 6474176
+>>>> and the xfs superblock is there (the RAID data is at LBA 6474184).
+>>>> The information in that report also show that when it looked at
+>>>> /dev/sdb4 it found metadata 1.2 ?? I'll see if there is another xfs
+>>>> header after that location.
+>>>>
+>>>> ARRAY /dev/md0 UUID=06ba2d0c:8282ab7e:3b6d8c49:0838e6b9
+>>>> ARRAY /dev/md1 UUID=5972f4e9:22fa2576:3b6d8c49:0838e6b9
+>>>> ARRAY /dev/md3 UUID=f18a5702:7247eda1:3b6d8c49:0838e6b9
+>>>> ARRAY /dev/md/2  metadata=1.2 UUID=38c9c38c:589967cd:80324986:f1f5e32a
+>>>> name=MyBook:2
+>>>>
+>
