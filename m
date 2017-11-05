@@ -1,74 +1,62 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: RAID header in XFS area?
-Date: Sun, 5 Nov 2017 04:34:19 +0100
-Message-ID: <f79ecb93-f005-c03f-d255-5b28a5e9d385@thelounge.net>
-References: <CAGRSmLv2HqyZmf-nR4SqnPaw2HNxDAaOSMA-QXVyiekF4Q5x5w@mail.gmail.com>
- <59FE0739.8020400@youngman.org.uk>
- <63581b55-f7bc-4408-aa72-a8a5c7cc37bf@thelounge.net>
- <0fc91932-1fda-7361-f0e6-1121ae502819@youngman.org.uk>
- <df1cda5a-57c3-7f9a-2f93-54ef01c19a30@thelounge.net>
- <59FE36FE.4070705@youngman.org.uk>
+From: Larkin Lowrey <llowrey@gmail.com>
+Subject: Re: raid5-cache: Cannot get enough stripes due to memory pressure.
+ Recovery failed.
+Date: Sun, 5 Nov 2017 10:20:05 -0500
+Message-ID: <7545b7cd-8b8d-6264-d6d7-eeed6b852ee9@gmail.com>
+References: <e4b20202-95e8-c31c-c37b-3da3109537d2@gmail.com>
+ <59FDFEBE.3000904@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59FE36FE.4070705@youngman.org.uk>
-Content-Language: de-CH
+In-Reply-To: <59FDFEBE.3000904@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+The rescue shell had the full kernel loaded and all 16GB was available 
+so that's not the issue.
 
+I booted off a USB drive and was able to get both arrays to assemble. 
+The kernel was much older, 4.11.8-300.fc26.x86_64.
 
-Am 04.11.2017 um 22:54 schrieb Wols Lists:
-> On 04/11/17 20:36, Reindl Harald wrote:
->>>
->>> While the system is RUNNING, yes. But if the array is STOPPED, mdadm
->>> will refuse to start it. At least, that's certainly how I understand
->>> it works ...
->>>
->>> Do you REALLY want the system to be running, and give you no clue that
->>> it's not working properly?
+After a clean shutdown and reboot to a 4.13.X kernel I no longer get 
+dumped into the recovery shell but the boot process hangs. The 8 drive 
+array gets assembled but the hang happens immediately after all of the 
+drives for the 12 drive array are detected so I suspect the hang happens 
+during the assembly of the 12 drive array.
+
+When I go back to boot off the USB drive (4.11.8 kernel) both assemble 
+just fine. Could there be regression between 4.11.8 and 4.13.X?
+
+I no longer have full boot images with older kernels than 4.13 so I 
+can't easily test to identify the point of regression.
+
+--Larkin
+
+On 11/4/2017 1:54 PM, Wols Lists wrote:
+> On 04/11/17 16:13, Larkin Lowrey wrote:
+>> The prior shutdown could have been unclean for the array. The shutdown
+>> process got stuck and I eventually had to use the reset button.
 >>
->> mdmon typically writes a mail about a degraded array - so far away from
->> "no clue"
-> 
-> mdmon? What's that? Yes, I know, it's the monitor. But how do you know
-> whether or not it's running? It certainly isn't on my system.
+>> I have a second (8 drive) raid6 array on this host that has a 2GB
+>> journal and it won't assemble either.
+>>
+>> Kernel: 4.13.10-100.fc25.x86_64
+>>
+>> What can I do? Do I need more RAM?
+> You're in the recovery shell ... does/can that use all available ram?
+> (Like DOS needed special drivers to use ram above 1MB). So I doubt you
+> need more ram.
+>
+> Get a rescue disk of some sort, boot into that, so you've got a full
+> working linux off DVD/CD, and see if you can assemble the arrays from there.
+>
+> Cheers,
+> Wol
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-but it should and it#s the responsibility of the admin to ensue it runs 
-and it#s mails are properly routed so that you receive them
-
--------- Weitergeleitete Nachricht --------
-Betreff: Fail event on /dev/md0:srv-rhsoft.rhsoft.net
-Datum: Wed,  3 Dec 2014 11:32:35 +0100 (CET)
-Von: mdadm monitoring <root@srv-rhsoft.rhsoft.net>
-An: root@srv-rhsoft.rhsoft.net
-
-This is an automatically generated mail message from mdadm
-running on srv-rhsoft.rhsoft.net
-
-A Fail event had been detected on md device /dev/md0.
-
-It could be related to component device /dev/sdb1.
-
-Faithfully yours, etc.
-
-P.S. The /proc/mdstat file currently contains the following:
-
-md0 : active raid1 sda1[4] sdb1[3](F) sdd1[0] sdc1[5]
-       511988 blocks super 1.0 [4/3] [UUU_]
-       unused devices: <none>
-
-> Anyways, as I said, as far as I am aware, "mdadm --run" does NOT work on
-> a degraded array unless either the previous --run was on a degraded
-> array, or you use --force.
-> 
-> Which means if you remove a disk from an array, and then try to restart
-> the array, the restart will fail. Which is exactly the OP's scenario
-
-and that's what i do not get in general - why should a array not start 
-in whatever situation if it has enough drives to do so?
-
-i don't get why a mirrored array should stop at all just becsue it is 
-degraded but maybe we talk about completly different things
