@@ -1,180 +1,73 @@
-From: Duane <duane@evenson.tk>
-Subject: Re: RAID5 devices assemble into RAID0 array
-Date: Thu, 30 Nov 2017 14:39:43 -0700
-Message-ID: <ae2695e2-5fdd-b6a8-bb58-75ab3fe0d027@evenson.tk>
-References: <c1ae7110-8f62-9afd-2e4c-092256212153@evenson.tk>
- <5A1AADCF.8090405@youngman.org.uk>
- <3d9c7310-ffe9-d79e-ff75-0a95b5c5170a@evenson.tk>
- <5A1B2DFC.6090702@youngman.org.uk>
- <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: RAID header in XFS area?
+Date: Sun, 5 Nov 2017 09:16:11 +0000
+Message-ID: <59FED6DB.9040303@youngman.org.uk>
+References: <CAGRSmLv2HqyZmf-nR4SqnPaw2HNxDAaOSMA-QXVyiekF4Q5x5w@mail.gmail.com>
+ <59FE0739.8020400@youngman.org.uk>
+ <CAGRSmLuoauKaSZ5Z73+Tg19e_1q9Tc-A0ZjqMgr4Lv9Tfer6QQ@mail.gmail.com>
+ <5cffac57-7e37-b8cb-ee77-cb9cb6c0f616@youngman.org.uk>
+ <CAGRSmLvou+yEb2VLJoounbuiEdfrPSEC+8xBtdp9nfOpj8y-8Q@mail.gmail.com>
+ <CAGRSmLuBEUynKNirFi9FuoJz82F4hDimmJWZSSfpQhoOi_9Rog@mail.gmail.com>
+ <CAGRSmLtSLQzL01EEnGnafbnTYeC55aK1UEcJBfazoCgTsFXcXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------571DB6C76265C13C60F4FE8D"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
-Content-Language: en-CA
+In-Reply-To: <CAGRSmLtSLQzL01EEnGnafbnTYeC55aK1UEcJBfazoCgTsFXcXw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "David F." <df7729@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------571DB6C76265C13C60F4FE8D
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+On 05/11/17 02:12, David F. wrote:
+> gmail started doing private replies for some reason..
+> 
+> Anyway, looking deeper found it.  That partition xfs information was
+> old left over items.  Searching for another header was found further
+> up, at byte offset 22000h (sector 110h), and looking at the RAID
+> header area, found bytes for 110h which must be a pointer to to where
+> the data starts (don't have the mdadm struct available).   Does anyone
+> have the RAID structure available using signature A92B4EFCh ?
+> 
+> So the old XFS information was confusing the whole situation.
+> 
+No surprise. Old data does that :-( Why I always prefer "dd if=/dev/zero
+of=/dev/sdx" to clear a device. It just takes so long ...
 
-I need to tie off this thread.
+What really worried me was if they'd created the array over the
+partitions, then accidentally created XFS on the partitions. That would
+have crashed at the first reboot, but there's a good chance that if they
+didn't reboot it would have run and run until ...
 
-I got my data. I ended up manually (scriptly) merging all the strips.
+If you want the raid structure, download mdadm and read the source. I'll
+probably document it on the wiki, but I need to read and understand the
+source first, too.
 
-On later test RAID5 arrays, I removed all the devices. Then I recorded 
-the configuration of the array from the metadata in the devices. I 
-cleared the superblocks on the devices and then recreated the array. Of 
-importance were level, chunk size, and device order. Data offset and 
-layout were the default so I didn't specify them. The data area was not 
-changed and, with the same configuration as the last array, was in a 
-sane format.
+As for accessing the data, md2 and md/2 are the same thing :-) Raid is
+moving to named arrays rather than default numbers. Can they run a fsck
+equivalent over the filesystem? Read-only of course, just to see whether
+it's minimally damaged or there's something more seriously wrong.
 
-
-************************************************************
-
-Therefore, from my experience, the best way to recover a FAILED array is 
-to recreate a new array with the same devices and settings.
-
-************************************************************
-
-If anyone less noobish can give a better answer, I welcome it.
-
-
-PS
-
-Of course, this only works if the RAID devices were manually marked as 
-failed and really are still good.
-
-
-
-
-On 2017-11-27 07:52 PM, Duane wrote:
-> OK trying to re-add got me this problem.
->
-> # mdadm  -A /dev/md0 /dev/sdc2
-> mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
->
-> # mdadm  /dev/md0 --re-add /dev/sdd
-> mdadm: Cannot get array info for /dev/md0
->
-> Looking at the array,
->
-> # mdadm -D /dev/md0
-> /dev/md0:
->         Version : 1.2
->      Raid Level : raid0
->   Total Devices : 1
->     Persistence : Superblock is persistent
->
->           State : inactive
->
->            Name : dave:0  (local to host dave)
->            UUID : f8c0d29d:9b5986a4:050ca914:3a2fb8c8
->          Events : 51526
->
->     Number   Major   Minor   RaidDevice
->
->        -       8       34        -        /dev/sdc2
->
-> I cannot re-add the missing devices.
->
-> Doing "mdadm -A /dev/md0 -s" gets me the same array configuration as I 
-> showed in my original post.
->
-> Does anyone know why it insists on going to RAID0?
-> Does anyone know how I can re-add the devices?
-> Thank you,
-> Duane
->
->
->
-> On 2017-11-26 02:11 PM, Wols Lists wrote:
->> On 26/11/17 17:29, Duane wrote:
->>> You're right I failed and removed device 3, then failed and removed
->>> device 2, which broke my array.
+Cheers,
+Wol
+> 
+> On Sat, Nov 4, 2017 at 6:58 PM, David F. <df7729@gmail.com> wrote:
+>> Oh shoot, forgot to mention.  The customer did the mdadm --run --force
+>> /dev/md2 (or may have been /dev/md/2) but when trying to access it
+>> read errors. ?
+>>
+>> On Sat, Nov 4, 2017 at 6:55 PM, David F. <df7729@gmail.com> wrote:
+>>> That's what I would expect, which is why it's weird that that
+>>> signature for metadata 1.2 was 4K within the XFS partition itself (the
+>>> XFS partition started after a bunch of other partitions at LBA 6474176
+>>> and the xfs superblock is there (the RAID data is at LBA 6474184).
+>>> The information in that report also show that when it looked at
+>>> /dev/sdb4 it found metadata 1.2 ?? I'll see if there is another xfs
+>>> header after that location.
 >>>
->>> Let's assume I haven't messed things up any more than I already have.
+>>> ARRAY /dev/md0 UUID=06ba2d0c:8282ab7e:3b6d8c49:0838e6b9
+>>> ARRAY /dev/md1 UUID=5972f4e9:22fa2576:3b6d8c49:0838e6b9
+>>> ARRAY /dev/md3 UUID=f18a5702:7247eda1:3b6d8c49:0838e6b9
+>>> ARRAY /dev/md/2  metadata=1.2 UUID=38c9c38c:589967cd:80324986:f1f5e32a
+>>> name=MyBook:2
 >>>
->>> Is there a method to reverse the above operations for device 2 and
->>> device 3?
->>>
->>> Thanks, Duane
->>>
->> My raid-fu is mostly theoretical, but what I would try is as follows.
->>
->> It's assembled the broken array as md0, so
->>
->> mdadm /dev/md0 --re-add /dev/device2
->>
->> followed by
->>
->> mdadm /dev/md0 --re-add /dev/device3
->>
->> That won't cause any further damage, and may work fine.
->>
->> Beyond that, I wouldn't like to suggest anything - if it doesn't work
->> you'll probably need to use things like --force, which could easily
->> break stuff. But re-add will probably work. And my syntax might not work
->> - you might need to specify the mode like --grow or --manage, I don't 
->> know.
->>
->> Suck it and see, at least this won't do any damage, and if it doesn't
->> work we'll have to wait for further advice.
->>
->> Cheers,
->> Wol
->>>
->>> On 2017-11-26 05:04 AM, Wols Lists wrote:
->>>> On 26/11/17 01:50, Duane wrote:
->>>>> I have 3 RAID5 devices. When I assemble them, I end up with a RAID0
->>>>> device.
->>>>>
->>>>> What is the cause? What is the solution?
->>>>>
->>>>> All I can think of is the fact that there is only 1 active device. 
->>>>> I had
->>>>> 2 but then manually failed it. I want to reassemble a RAID5 array and
->>>>> then re-add the second device.
->>>>>
->>>> OUCH!
->>>>
->>>> Sorry. You have a 3-device raid-5. You only have 1 working device. 
->>>> Your
->>>> array is well broken.
->>>>
->>>> You can't "reassemble raid5 then readd the second device". You need to
->>>> readd the second device in order to get your raid5 back. I'll let
->>>> someone else tell you how, but you need a MINIMUM of two devices to 
->>>> get
->>>> your raid working again. Then you need to get your third device added
->>>> back otherwise your raid 5 is broken.
->>>>
->>>> DON'T DO ANYTHING WITHOUT ADVICE. I'm sorry, but your message says you
->>>> don't understand how raid works, and you are on the verge of 
->>>> destroying
->>>> your array irrevocably. It should be a simple recovery, *provided* you
->>>> don't make any mistakes.
->>>>
->>>> Cheers,
->>>> Wol
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
 
-
---------------571DB6C76265C13C60F4FE8D
-Content-Type: text/x-vcard;
- name="duane.vcf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="duane.vcf"
-
-bnVsbA==
---------------571DB6C76265C13C60F4FE8D--
