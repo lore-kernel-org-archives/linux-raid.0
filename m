@@ -1,145 +1,74 @@
-From: "David F." <df7729@gmail.com>
+From: Reindl Harald <h.reindl@thelounge.net>
 Subject: Re: RAID header in XFS area?
-Date: Sat, 4 Nov 2017 19:12:04 -0700
-Message-ID: <CAGRSmLtSLQzL01EEnGnafbnTYeC55aK1UEcJBfazoCgTsFXcXw@mail.gmail.com>
+Date: Sun, 5 Nov 2017 04:34:19 +0100
+Message-ID: <f79ecb93-f005-c03f-d255-5b28a5e9d385@thelounge.net>
 References: <CAGRSmLv2HqyZmf-nR4SqnPaw2HNxDAaOSMA-QXVyiekF4Q5x5w@mail.gmail.com>
- <59FE0739.8020400@youngman.org.uk> <CAGRSmLuoauKaSZ5Z73+Tg19e_1q9Tc-A0ZjqMgr4Lv9Tfer6QQ@mail.gmail.com>
- <5cffac57-7e37-b8cb-ee77-cb9cb6c0f616@youngman.org.uk> <CAGRSmLvou+yEb2VLJoounbuiEdfrPSEC+8xBtdp9nfOpj8y-8Q@mail.gmail.com>
- <CAGRSmLuBEUynKNirFi9FuoJz82F4hDimmJWZSSfpQhoOi_9Rog@mail.gmail.com>
+ <59FE0739.8020400@youngman.org.uk>
+ <63581b55-f7bc-4408-aa72-a8a5c7cc37bf@thelounge.net>
+ <0fc91932-1fda-7361-f0e6-1121ae502819@youngman.org.uk>
+ <df1cda5a-57c3-7f9a-2f93-54ef01c19a30@thelounge.net>
+ <59FE36FE.4070705@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLuBEUynKNirFi9FuoJz82F4hDimmJWZSSfpQhoOi_9Rog@mail.gmail.com>
+In-Reply-To: <59FE36FE.4070705@youngman.org.uk>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-gmail started doing private replies for some reason..
-
-Anyway, looking deeper found it.  That partition xfs information was
-old left over items.  Searching for another header was found further
-up, at byte offset 22000h (sector 110h), and looking at the RAID
-header area, found bytes for 110h which must be a pointer to to where
-the data starts (don't have the mdadm struct available).   Does anyone
-have the RAID structure available using signature A92B4EFCh ?
-
-So the old XFS information was confusing the whole situation.
 
 
-On Sat, Nov 4, 2017 at 6:58 PM, David F. <df7729@gmail.com> wrote:
-> Oh shoot, forgot to mention.  The customer did the mdadm --run --force
-> /dev/md2 (or may have been /dev/md/2) but when trying to access it
-> read errors. ?
->
-> On Sat, Nov 4, 2017 at 6:55 PM, David F. <df7729@gmail.com> wrote:
->> That's what I would expect, which is why it's weird that that
->> signature for metadata 1.2 was 4K within the XFS partition itself (the
->> XFS partition started after a bunch of other partitions at LBA 6474176
->> and the xfs superblock is there (the RAID data is at LBA 6474184).
->> The information in that report also show that when it looked at
->> /dev/sdb4 it found metadata 1.2 ?? I'll see if there is another xfs
->> header after that location.
+Am 04.11.2017 um 22:54 schrieb Wols Lists:
+> On 04/11/17 20:36, Reindl Harald wrote:
+>>>
+>>> While the system is RUNNING, yes. But if the array is STOPPED, mdadm
+>>> will refuse to start it. At least, that's certainly how I understand
+>>> it works ...
+>>>
+>>> Do you REALLY want the system to be running, and give you no clue that
+>>> it's not working properly?
 >>
->> ARRAY /dev/md0 UUID=06ba2d0c:8282ab7e:3b6d8c49:0838e6b9
->> ARRAY /dev/md1 UUID=5972f4e9:22fa2576:3b6d8c49:0838e6b9
->> ARRAY /dev/md3 UUID=f18a5702:7247eda1:3b6d8c49:0838e6b9
->> ARRAY /dev/md/2  metadata=1.2 UUID=38c9c38c:589967cd:80324986:f1f5e32a
->> name=MyBook:2
->>
->>
->> On Sat, Nov 4, 2017 at 3:55 PM, Wol's lists <antlists@youngman.org.uk> wrote:
->>> On 04/11/17 21:53, David F. wrote:
->>>>
->>>> thanks, but what about the RAID header being in the file system area?
->>>> What happened to the actual sector data that belongs there (is there a
->>>> way to find it from the raid header?) when not a md device?
->>>>
->>> Sorry but I don't think You've quite grasped what a device is.
->>>
->>> Let's start with sdb, the drive you're concerned about. The first 1MB is
->>> reserved space, the very first 512B is special because it contains the MBR,
->>> which defines the sub-devices sdb1, sdb2, sdb3 and sdb4.
->>>
->>> Then mdadm comes along, and is given sdb1 and sd?1. It reserves the first
->>> few megs of the devices it's given (just like fdisk reserves the first meg),
->>> writes the superblock at position 4K (just like fdisk writes the MBR at
->>> position 0), and then just like the MBR defines sdb1 as starting at sector
->>> 2049 of sdb, so the superblock defines md0 as starting at a certain offset
->>> into sdb1. So that superblock will tell you where on the disk your
->>> filesystem actually starts.
->>>
->>> WARNING - unless your superblock is 1.0 (and maybe even then) the start of
->>> your filesystem will move around if you add or remove devices.
->>>
->>> In other words, just as on a normal disk the filesystem doesn't start at the
->>> beginning of the disk because the MBR is in the way, an array does not start
->>> at the beginning of the partition because the superblock is in the way.
->>>
->>> You'll either need to use your knowledge of XFS internals to find the start
->>> of the filesystem, look at mdadm and work out how to read the superblock so
->>> it tells you, or just force-assemble the array!
->>>
->>> But I think I'm on very safe ground saying your filesystem is safely there.
->>> It's just not where you think it is because you haven't grasped how raid
->>> works at the disk level.
->>>
->>> Cheers,
->>> Wol
->>>
->>>>
->>>> On Sat, Nov 4, 2017 at 11:30 AM, Wols Lists <antlists@youngman.org.uk>
->>>> wrote:
->>>>>
->>>>> On 04/11/17 18:10, David F. wrote:
->>>>>>
->>>>>> Question,  We had a customer remove a drive from a NAS device that as
->>>>>> mirrored using mdadm, the file system id for the partitions were 0xFD
->>>>>> (linux raid automount). The put it on a USB port and booted Linux
->>>>>> which attempts to mount any RAID devices.  The XFS had some issues, so
->>>>>> looking at it I see some type of RAID header for MyBook:2 at offset
->>>>>> 4K.   Searching Internet on mdadm found:
->>>>>
->>>>>
->>>>> First things first. DO NOT mount the array read/write over a USB
->>>>> connection. There's a good chance you'll regret it (raid and USB don't
->>>>> like each other).
->>>>>>
->>>>>>
->>>>>> Version 1.2: The superblock is 4 KiB after the beginning of the device.
->>>>>>
->>>>>> I wouldn't think the RAID area would be available to the file system,
->>>>>> but assuming so, there must be some type of way to find out where the
->>>>>> real data for that went?   Or perhaps mdadm messed it up when trying
->>>>>> to mount and the other drive didn't exist.  Here details of it.
->>>>>
->>>>>
->>>>> mdadm did exactly what it is supposed to do. A mirror with one drive is
->>>>> degraded, so it assembled the array AND STOPPED. Once you force it past
->>>>> this point, I think it will happily go past again no problem, but it's
->>>>> designed to refuse to proceed with a damaged array, if the array was
->>>>> fully okay previous time.
->>>>>
->>>>> So, in other words, the disk and everything else is fine.
->>>>>
->>>>> What's happened is that mdadm has assembled the array, realised a disk
->>>>> is missing, AND STOPPED.
->>>>>
->>>>> What should happen next is that the array runs, so you need to do
->>>>> mdadm --run /dev/md0
->>>>> or something like that. You may well need to add the --force option.
->>>>>
->>>>> Finally you need to mount the array
->>>>> mount /dev/md0 /mnt READ ONLY !!!
->>>>> Sorry, I don't know the correct option for read only
->>>>>
->>>>> At this point, your filesystem should be available for access.
->>>>> Everything's fine, mdadm is just playing it safe, because all it knows
->>>>> is that a disk has disappeared.
->>>>>
->>>>> And you need to play it safe, because USB places the array in danger.
->>>>>
->>>>> Cheers,
->>>>> Wol
->>>>
->>>>
->>>
+>> mdmon typically writes a mail about a degraded array - so far away from
+>> "no clue"
+> 
+> mdmon? What's that? Yes, I know, it's the monitor. But how do you know
+> whether or not it's running? It certainly isn't on my system.
+
+but it should and it#s the responsibility of the admin to ensue it runs 
+and it#s mails are properly routed so that you receive them
+
+-------- Weitergeleitete Nachricht --------
+Betreff: Fail event on /dev/md0:srv-rhsoft.rhsoft.net
+Datum: Wed,  3 Dec 2014 11:32:35 +0100 (CET)
+Von: mdadm monitoring <root@srv-rhsoft.rhsoft.net>
+An: root@srv-rhsoft.rhsoft.net
+
+This is an automatically generated mail message from mdadm
+running on srv-rhsoft.rhsoft.net
+
+A Fail event had been detected on md device /dev/md0.
+
+It could be related to component device /dev/sdb1.
+
+Faithfully yours, etc.
+
+P.S. The /proc/mdstat file currently contains the following:
+
+md0 : active raid1 sda1[4] sdb1[3](F) sdd1[0] sdc1[5]
+       511988 blocks super 1.0 [4/3] [UUU_]
+       unused devices: <none>
+
+> Anyways, as I said, as far as I am aware, "mdadm --run" does NOT work on
+> a degraded array unless either the previous --run was on a degraded
+> array, or you use --force.
+> 
+> Which means if you remove a disk from an array, and then try to restart
+> the array, the restart will fail. Which is exactly the OP's scenario
+
+and that's what i do not get in general - why should a array not start 
+in whatever situation if it has enough drives to do so?
+
+i don't get why a mirrored array should stop at all just becsue it is 
+degraded but maybe we talk about completly different things
