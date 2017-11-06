@@ -1,35 +1,52 @@
-From: Wol's lists <antlists@youngman.org.uk>
-Subject: Re: Raid 6 recovery
-Date: Sun, 5 Nov 2017 18:08:35 +0000
-Message-ID: <b4423065-0ccb-a451-0d38-cee62a27a8ee@youngman.org.uk>
-References: <cf135ab9-1111-65cd-1074-5259a7eb133d@safeandsoundit.co.uk>
- <59F8A47E.2000405@youngman.org.uk>
- <1f997b50-f271-a238-2d7e-1684a0c64e66@safeandsoundit.co.uk>
- <59F8BCE9.1070607@youngman.org.uk> <59FBAE95.6010206@youngman.org.uk>
- <778940c7-cd7c-bda7-4db6-1e1b605a9557@safeandsoundit.co.uk>
- <59FDB6C2.1040800@youngman.org.uk>
- <0969e349-4744-d2a2-8b00-b80566302287@safeandsoundit.co.uk>
+From: Hou Tao <houtao1@huawei.com>
+Subject: [PATCH v2] md/bitmap: clear BITMAP_WRITE_ERROR bit before writing it to sb
+Date: Mon, 6 Nov 2017 10:11:25 +0800
+Message-ID: <20171106021125.40619-1-houtao1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0969e349-4744-d2a2-8b00-b80566302287@safeandsoundit.co.uk>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: John Crisp <jcrisp@safeandsoundit.co.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On 05/11/17 17:13, John Crisp wrote:
-> PS - I seem to remember I should do reply to all on this list but can't
-> see where I might have read that ! Please let me know if that is wrong
+For a RAID1 device using a file-based bitmap, if a bitmap write error
+occurs but the later writes succeed, it's possible both BITMAP_STALE
+and BITMAP_WRITE_ERROR bits will be written to the bitmap super block,
+the BITMAP_STALE bit will be handled properly and be cleared, but the
+BITMAP_WRITE_ERROR bit in sb->flags will make bitmap_create() to fail.
 
-It's standard procedure on LKML, and the list allows posts by people who 
-are not subscribed, so yes that is standard procedure. I put that on the 
-wiki.
+So clear it to protect against the write failure-and-then-recovery case.
 
-HOWEVER. Just like you should trim the message body appropriately, you 
-should also trim the respondents appropriately. I probably ought to put 
-that on the wiki, too :-)
+Signed-off-by: Hou Tao <houtao1@huawei.com>
 
-Cheers,
-Wol
+---
+v2:
+	* clear the BITMAP_WRITE_ERROR bit before writing sb, not after
+	reading sb
+v1:
+	* http://www.spinics.net/lists/raid/msg59590.html
+---
+ drivers/md/bitmap.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index d212163..30e503d 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -459,7 +459,11 @@ void bitmap_update_sb(struct bitmap *bitmap)
+ 		/* rocking back to read-only */
+ 		bitmap->events_cleared = bitmap->mddev->events;
+ 	sb->events_cleared = cpu_to_le64(bitmap->events_cleared);
+-	sb->state = cpu_to_le32(bitmap->flags);
++	/*
++	 * clear BITMAP_WRITE_ERROR bit to protect against the case that
++	 * a bitmap write error occurred but the later writes succeeded.
++	 */
++	sb->state = cpu_to_le32(bitmap->flags & ~BIT(BITMAP_WRITE_ERROR));
+ 	/* Just in case these have been changed via sysfs: */
+ 	sb->daemon_sleep = cpu_to_le32(bitmap->mddev->bitmap_info.daemon_sleep/HZ);
+ 	sb->write_behind = cpu_to_le32(bitmap->mddev->bitmap_info.max_write_behind);
+-- 
+2.9.5
+
