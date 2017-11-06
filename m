@@ -1,45 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID header in XFS area?
-Date: Mon, 6 Nov 2017 16:31:40 -0500
-Message-ID: <658161d3-8229-9df8-5f37-bbb807040847@turmel.org>
-References: <CAGRSmLv2HqyZmf-nR4SqnPaw2HNxDAaOSMA-QXVyiekF4Q5x5w@mail.gmail.com>
- <59FE0739.8020400@youngman.org.uk>
- <63581b55-f7bc-4408-aa72-a8a5c7cc37bf@thelounge.net>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: [sucess] upgrading LSI SAS9211-8i fw IR->IT
+Date: Tue, 7 Nov 2017 08:38:05 +1100
+Message-ID: <5006e53f-5df1-df17-732f-73a5a7d3349e@eyal.emu.id.au>
+References: <08feefcc-14d0-e7ec-aa23-927ecbb63ac3@eyal.emu.id.au>
+ <f268a7a1-6a73-8c9f-b4c8-1e8190f54850@eyal.emu.id.au>
+ <34e5cc74-2cb2-5059-0e11-8f26a8bee223@eyal.emu.id.au>
+ <31706ffc-3a81-b844-261e-a84dd8c01deb@fnarfbargle.com>
+ <c12a2a32-2321-1ed7-e1de-ce0e408552e1@eyal.emu.id.au>
+ <20171106201556.C02DA120495@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <63581b55-f7bc-4408-aa72-a8a5c7cc37bf@thelounge.net>
-Content-Language: en-GB
+In-Reply-To: <20171106201556.C02DA120495@gemini.denx.de>
+Content-Language: en-AU
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>, Wols Lists <antlists@youngman.org.uk>, "David F." <df7729@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: list linux-raid <linux-raid@vger.kernel.org>
+Cc: Wolfgang Denk <wd@denx.de>, Brad Campbell <lists2009@fnarfbargle.com>
 List-Id: linux-raid.ids
 
-On 11/04/2017 02:34 PM, Reindl Harald wrote:
-> Am 04.11.2017 um 19:30 schrieb Wols Lists:
-
->> What's happened is that mdadm has assembled the array, realised a 
->> disk is missing, AND STOPPED.
+On 07/11/17 07:15, Wolfgang Denk wrote:
+> Dear Eyal,
 > 
-> why would it be supposed that a simple mirror with a mising disk is 
-> stopped while the whole point of mirroring is to not care about one 
-> of the disks dying?
+> In message <c12a2a32-2321-1ed7-e1de-ce0e408552e1@eyal.emu.id.au> you wrote:
+>>
+>> (I had many disk failures/replacements in the 4 years life of this array).
+> 
+> Reading this makes me wonder if you checked your environment for
+> other influences.  there must be some reason for an exceptional high
+> number of failures.
+> 
+> I remeber we also had a nighmare of disk errors in the rack in the
+> 2nd floor of our building - which disappeared after moving the rack
+> into the basement.  I can't prove it, but I blame it on vibrations.
+> We have a heavy traffic train line less than 50 meters away, and
+> disks (classic, magnetic ones) definitely do not like vibrations -
+> see [1].  Maybe you have other influences you did not check for yet?
 
-When a member device dies or is kicked out while running, the remaining
-devices' superblocks are updated with that status.  (Can't update the
-superblock on the one that died cause it's, you know, dead.)
+Interesting Wolfgang,
 
-If the system is rebooted at this point, mdadm can see on the
-still-running drive that the missing drive is known to be failed and
-will happily start up.
+- This array is at  home, a relatively quiet place.
+- I monitor the disks temperatures and it is OK.
+- The machine runs off a UPS which can be a source of bad power
+   (if the PS does not filter it out).
+- The HBA may be somehow bothering the disks?
 
-If for some reason the *other* drive wakes up and works on reboot, and
-only that drive is working, mdadm sees that a drive is missing for an
-unknown reason and stops.  This is to avoid the disaster known as "split
-brain".
+The disks are under warranty until late next year so there is
+time to see if the disks do better with the LSI.
 
-Split brain cannot be distinguished from the situation where a
-previously non-degraded array is missing device(s) at startup, so mdadm
-stops. Administrator input is needed to safely proceed.
+BTW, two of the RMAs were for disks that arrived DOA (as RMAs).
+I  do not have high regard for the WD blacks. The failures were
+spread across the last 4 years (so not infant mortality).
 
-Phil
+If nothing else, this experience made me comfortable with software
+raid, and encouraged me to stick to my backup schedule.
+
+cheers
+
+> [1] https://www.youtube.com/watch?v=tDacjrSCeq4
+> 
+> Best regards,
+> 
+> Wolfgang Denk
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
