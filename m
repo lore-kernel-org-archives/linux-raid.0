@@ -1,17 +1,36 @@
-From: "David F." <df7729@gmail.com>
-Subject: When will Linux support new RAID controllers
-Date: Thu, 9 Nov 2017 10:24:54 -0800
-Message-ID: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
+From: Jes Sorensen <jsorensen@fb.com>
+Subject: Re: [PATCH] sysfs: include faulty drive in disk count
+Date: Thu, 9 Nov 2017 15:46:08 -0500
+Message-ID: <f8739ccc-3ca5-ed7a-4b3b-30e867a4f5de@fb.com>
+References: <1510069796-17515-1-git-send-email-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1510069796-17515-1-git-send-email-mariusz.tkaczyk@intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It seems that Linux will not see any HD on Intel's 100 Series or newer
-chipsets (Z170, etc.) when in RAID mode.  (typically these systems
-have M2 NVMe devices ). This is problematic when wanting to use Linux
-on the system without having to disable RAID and when on their with
-Windows.   Maybe not a linux-raid issue, but is Linux RAID issue
-within the kernel device support.
+On 11/07/2017 10:49 AM, Mariusz Tkaczyk wrote:
+> When the disk fails, it goes into faulty state first and it is removed
+> from the array in a while. It gives mdadm monitor a chance to see the disk
+> has failed and notify an event (e.g. FailSpare). It doesn't work when 
+> sysfs is used to get a number of disks in the array as it skips faulty
+> disk. ioctl implementation doesn't differentiate between active and
+> faulty disk. Do the same for sysfs then. It should not matter that number
+> of disks reported is greater than list of disk structures returned by the
+> call because the same approach already takes place for offline disks.
+> 
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+> ---
+>  sysfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+Applied!
+
+Thanks,
+Jes
+
