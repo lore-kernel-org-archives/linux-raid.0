@@ -1,48 +1,30 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: RAID5 up, but one drive removed, one says spare building, what now?
-Date: Fri, 10 Nov 2017 06:13:20 -0700
-Message-ID: <CAK2H+ec6DxBE_Mxq9skOa3XNGMc2BW8Q4+ieoA13uG+UhE4nZg@mail.gmail.com>
-References: <CAA4aoFaEwv=EPcotAbjzkgXWoOFwxo2XAoMzN1Zfb62k4Fngxw@mail.gmail.com>
- <5A058E25.1020608@youngman.org.uk> <34b72bc9-9a72-3143-bd1e-d00f90493d04@turmel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: When will Linux support new RAID controllers
+Date: Fri, 10 Nov 2017 05:19:37 -0800
+Message-ID: <20171110131937.GA26181@infradead.org>
+References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <34b72bc9-9a72-3143-bd1e-d00f90493d04@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Wols Lists <antlists@youngman.org.uk>, Jun-Kai Teoh <kai.teoh@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: "David F." <df7729@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, Nov 10, 2017 at 6:01 AM, Phil Turmel <philip@turmel.org> wrote:
-> Hi Jun-Kai,
->
-> On 11/10/2017 06:31 AM, Wols Lists wrote:
->> On 10/11/17 03:09, Jun-Kai Teoh wrote:
->>> Hi all,
->>>
->>> I managed to get my RAID drive back up, content looks like it's still
->>> there, but it's not resyncing or reshaping and my parity drive was
->>> removed (I did it when I tried to get it back up).
->
-> If you can see your content (mounted read-only, I hope), backup up
-> everything, in order from most critical to least critical.
->
->>> So what should I do now? I'm afraid of doing anything else at this point.
->
-> Well, you need to provide more information.  At least the mdadm -E
-> reports for all of the member devices.  Including the "parity" device
-> you removed.  (Parity is spread among all devices in a normal raid5
-> layout, so you may be suffering from a misunderstanding.)
->
+On Thu, Nov 09, 2017 at 10:24:54AM -0800, David F. wrote:
+> It seems that Linux will not see any HD on Intel's 100 Series or newer
+> chipsets (Z170, etc.) when in RAID mode.  (typically these systems
+> have M2 NVMe devices ). This is problematic when wanting to use Linux
+> on the system without having to disable RAID and when on their with
+> Windows.   Maybe not a linux-raid issue, but is Linux RAID issue
+> within the kernel device support.
 
-Phil,
-   Please reference the thread entitled
+Dan (on Cc) posted some patches to support the awkwared so called
+"RAID" mode (it really should be Intel landgrab mode) in the client
+chipsets more than a year ago.
 
-"Raid 5 array down/missing - went through wiki steps"
-
-All the mdadm -E info and much more was reported there a week
-ago. Wols and I helped get him that far but neither of us was confident
-in giving instructions to get him further.
-
-Cheers,
-Mark
+It needed a bit of a rework to be present as a fake PCIe root port
+instead of the platform driver magic, so I wonder what happened to
+it - Dan any chance to get back to it?
