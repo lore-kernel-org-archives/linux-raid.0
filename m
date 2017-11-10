@@ -1,75 +1,80 @@
-From: Zdenek Kabelac <zkabelac@redhat.com>
-Subject: Re: [PATCH 1/2] md: release allocated bitset sync_set
-Date: Fri, 10 Nov 2017 11:03:14 +0100
-Message-ID: <ebbcc070-bbac-b0a6-660b-4592656440f8@redhat.com>
-References: <cover.1510144853.git.zkabelac@redhat.com>
- <83671199e7b9095fece2671521b7a34ad5d92b0a.1510144853.git.zkabelac@redhat.com>
- <20171109233206.hp6o57u5gkwbjlu4@kernel.org>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: RAID5 up, but one drive removed, one says spare building, what
+ now?
+Date: Fri, 10 Nov 2017 11:31:49 +0000
+Message-ID: <5A058E25.1020608@youngman.org.uk>
+References: <CAA4aoFaEwv=EPcotAbjzkgXWoOFwxo2XAoMzN1Zfb62k4Fngxw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171109233206.hp6o57u5gkwbjlu4@kernel.org>
-Content-Language: en-US
+In-Reply-To: <CAA4aoFaEwv=EPcotAbjzkgXWoOFwxo2XAoMzN1Zfb62k4Fngxw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: Jun-Kai Teoh <kai.teoh@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>, Phil Turmel <philip@turmel.org>
 List-Id: linux-raid.ids
 
-Dne 10.11.2017 v 00:32 Shaohua Li napsal(a):
-> On Wed, Nov 08, 2017 at 01:44:55PM +0100, Zdenek Kabelac wrote:
->> Patch fixes kmemleak on md_stop() path used likely only by dm-raid
->> wrapper. Code of md is using  mddev_put() where both  bitsets
->> are released however this bitmap freeing is not shared.
+On 10/11/17 03:09, Jun-Kai Teoh wrote:
+> Hi all,
 > 
-> what did you mean 'bitmap freeing is not shared' ? The patch doesn't handle
-> bitmap either.
+> I managed to get my RAID drive back up, content looks like it's still
+> there, but it's not resyncing or reshaping and my parity drive was
+> removed (I did it when I tried to get it back up).
 > 
+> So what should I do now? I'm afraid of doing anything else at this point.
+> 
+> /dev/md126:
+>         Version : 1.2
+>   Creation Time : Thu Jun 30 07:57:36 2016
+>      Raid Level : raid5
+>      Array Size : 23441323008 (22355.39 GiB 24003.91 GB)
+>   Used Dev Size : 3906887168 (3725.90 GiB 4000.65 GB)
+>    Raid Devices : 8
+>   Total Devices : 7
+>     Persistence : Superblock is persistent
+> 
+>   Intent Bitmap : Internal
+> 
+>     Update Time : Thu Nov  9 18:57:18 2017
+>           State : clean, FAILED
+>  Active Devices : 6
+> Working Devices : 7
+>  Failed Devices : 0
+>   Spare Devices : 1
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+> 
+>   Delta Devices : 1, (7->8)
+> 
+>            Name : livingrm-server:2  (local to host livingrm-server)
+>            UUID : f7333d4f:8300969d:55148d64:93c8afc8
+>          Events : 650582
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8      112        0      active sync   /dev/sdh
+>        1       8       48        1      active sync   /dev/sdd
+>        7       8       64        2      spare rebuilding   /dev/sde
+>        3       8       96        3      active sync   /dev/sdg
+>        4       8       32        4      active sync   /dev/sdc
+>        5       8       80        5      active sync   /dev/sdf
+>        6       8       16        6      active sync   /dev/sdb
+>       14       0        0       14      removed
 
-It only means there is some code to teardown md device which is not shared
-between 'md'  and  'dm' wrapper - thus whenever mddev_put() is updated
-in some way (adding freeing another object)  same code should be
-duplicated into  md_stop()  which is used only by 'dm' (from my
-understanding of comment in the source).
+Okay. I was hoping someone else would chime in, but I'd say this looks
+well promising. You have seven drives of eight so you have no redundancy :-(
 
-IMHO this is not ideal - the code for freeing resources should be sharing more 
-code lines...
+You say your data is still there - does that mean you've mounted it, and
+it looks okay?
 
-But as of now - patch works and does exactly what is needed...
+sde is rebuilding, which means the array is sorting itself out.
 
->> Also set NULL to bio_set and sync_set pointers just like mddev_put is
->> doing.
->>
->> Signed-off-by: Zdenek Kabelac <zkabelac@redhat.com>
->> ---
->>   drivers/md/md.c | 8 +++++++-
->>   1 file changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 0ff1bbf6c90e..635ad7c38f67 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -5834,8 +5834,14 @@ void md_stop(struct mddev *mddev)
->>   	 * This is called from dm-raid
->>   	 */
->>   	__md_stop(mddev);
->> -	if (mddev->bio_set)
->> +	if (mddev->bio_set) {
->>   		bioset_free(mddev->bio_set);
->> +		mddev->bio_set = NULL;
->> +	}
->> +	if (mddev->sync_set) {
->> +		bioset_free(mddev->sync_set);
->> +		mddev->sync_set = NULL;
->> +	}
->>   }
->>   
->>   EXPORT_SYMBOL_GPL(md_stop);
->> -- 
->> 2.15.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You need that eighth drive. If a fsck says you have no (or almost no)
+filesystem corruption, and you have a known-good drive, add it in. The
+array will then sort itself out.
+
+I would NOT recommend mounting it read-write until it comes back and
+says "eight drives of eight working".
+
+Cheers,
+Wol
 
