@@ -1,49 +1,60 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: RAID5 up, but one drive removed, one says spare building, what
- now?
-Date: Fri, 10 Nov 2017 23:22:22 +0000
-Message-ID: <5A0634AE.5090002@youngman.org.uk>
-References: <CAA4aoFaEwv=EPcotAbjzkgXWoOFwxo2XAoMzN1Zfb62k4Fngxw@mail.gmail.com>
- <5A058E25.1020608@youngman.org.uk>
- <34b72bc9-9a72-3143-bd1e-d00f90493d04@turmel.org>
- <CAK2H+ec6DxBE_Mxq9skOa3XNGMc2BW8Q4+ieoA13uG+UhE4nZg@mail.gmail.com>
- <CAA4aoFbOnCtj_+qbfuzz7qS6xrt5HB9XJK-E+h0_eEu=vLdftg@mail.gmail.com>
- <3fa05723-8275-8840-7fbc-397801fa17de@turmel.org>
- <0B536D2C-1919-4704-94D3-6EB733B73E9D@gmail.com>
- <8822270a-a88b-fe9a-daae-22df155f5062@turmel.org>
- <66C593A3-D4BD-4B80-AF7D-B1693F8271CA@gmail.com>
- <e23f4047-9e7d-73b5-0dad-81575a04649c@turmel.org>
- <5A063392.4060809@youngman.org.uk>
+From: Hou Tao <houtao1@huawei.com>
+Subject: Re: [PATCH v2] md/bitmap: clear BITMAP_WRITE_ERROR bit before writing
+ it to sb
+Date: Mon, 13 Nov 2017 10:18:14 +0800
+Message-ID: <c30552cb-f913-63e9-c2ca-9443e0d76e5f@huawei.com>
+References: <20171106021125.40619-1-houtao1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5A063392.4060809@youngman.org.uk>
+In-Reply-To: <20171106021125.40619-1-houtao1@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jun-Kai Teoh <kai.teoh@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On 10/11/17 23:17, Wols Lists wrote:
-> If you take the wiki slowly, you'll hopefully grasp what's going on.
-> 
-> https://raid.wiki.kernel.org/index.php/Linux_Raid#Overview
-> 
-> Especially the bit about setting up a new system or converting an
-> existing system. Okay, they're not at all about what you're doing, but
-> if you work your way through and get what's happening there straight in
-> your head, you'll then be able to apply it to your setup.
-> 
-> Note that they're written from my perspective as a gentoo user, so I
-> have to do everything from scratch - boot into a live/rescue CD, and
-> then configure/setup the system from there.
+Hi,
 
-Just checked those two pages (should have done that before I hit send
-:-) and they're not quite as appropriate as I thought. Still worth
-reading, though.
+Any comments ?
 
-But that's given me an idea for more detail in the wiki, so this should
-lead to further improvement :-)
+On 2017/11/6 10:11, Hou Tao wrote:
+> For a RAID1 device using a file-based bitmap, if a bitmap write error
+> occurs but the later writes succeed, it's possible both BITMAP_STALE
+> and BITMAP_WRITE_ERROR bits will be written to the bitmap super block,
+> the BITMAP_STALE bit will be handled properly and be cleared, but the
+> BITMAP_WRITE_ERROR bit in sb->flags will make bitmap_create() to fail.
+> 
+> So clear it to protect against the write failure-and-then-recovery case.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> 
+> ---
+> v2:
+> 	* clear the BITMAP_WRITE_ERROR bit before writing sb, not after
+> 	reading sb
+> v1:
+> 	* http://www.spinics.net/lists/raid/msg59590.html
+> ---
+>  drivers/md/bitmap.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index d212163..30e503d 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -459,7 +459,11 @@ void bitmap_update_sb(struct bitmap *bitmap)
+>  		/* rocking back to read-only */
+>  		bitmap->events_cleared = bitmap->mddev->events;
+>  	sb->events_cleared = cpu_to_le64(bitmap->events_cleared);
+> -	sb->state = cpu_to_le32(bitmap->flags);
+> +	/*
+> +	 * clear BITMAP_WRITE_ERROR bit to protect against the case that
+> +	 * a bitmap write error occurred but the later writes succeeded.
+> +	 */
+> +	sb->state = cpu_to_le32(bitmap->flags & ~BIT(BITMAP_WRITE_ERROR));
+>  	/* Just in case these have been changed via sysfs: */
+>  	sb->daemon_sleep = cpu_to_le32(bitmap->mddev->bitmap_info.daemon_sleep/HZ);
+>  	sb->write_behind = cpu_to_le32(bitmap->mddev->bitmap_info.max_write_behind);
+> 
 
-Cheers,
-Wol
