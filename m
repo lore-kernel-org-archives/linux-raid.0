@@ -1,122 +1,49 @@
-From: Maksymilian Kunt <maksymilian.kunt@intel.com>
-Subject: [PATCH] imsm: continue resync on 3-disk RAID10
-Date: Mon, 13 Nov 2017 12:30:49 +0100
-Message-ID: <20171113113049.23388-1-maksymilian.kunt@intel.com>
+From: "M,Shakour Rosarita" <hassantara789@gmail.com>
+Subject: Hello Dear...
+Date: Mon, 13 Nov 2017 12:08:18 +0000
+Message-ID: <CAMyxZDE63FQAQ=JTZN_2Ks1T4PC7+RQ2oo6+S3vs4Q0Mp-K2iQ__18951.3846919455$1510574914$gmane$org@mail.gmail.com>
+Reply-To: mshakourrosarita22@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jsorensen@fb.com, Maksymilian Kunt <maksymilian.kunt@intel.com>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-If RAID10 gets degraded during resync and is stopped, it doesn't continue
-resync after automatic assemble and it is reported to be in sync. Resync
-is blocked because the disk is missing. It should not happen for RAID10 as
-it can still continue with 3 disks.
+Hello Dear...
 
-Count missing disks. Block resync only if number of missing disks exceeds
-limit for given RAID level (only different for RAID10). Check if the
-disk under recovery is present. If not, resync should be allowed to run.
+I know that this message will come to you as a surprise. I hoped that
+you will not expose or betray this trust and confident that I am about
+to repose on you, my name is M, Shakour Rosarita. I am 19 years old
+Girl, female, from Tartu Syria, (never married) 61 kg, white in
+complexion, and I am currently living in the refugee camp here in
+Abidjan Ivory Coast, My late beloved father M,Shakour Hassin was a
+renowned businessman and owner of Natour Petrol Station in Syria, he
+was killed in a stampede riot in Tartu, Syria.
+When I got the news about my parents. I fled to a nearby country
+Jordan before I joined a ferry to Africa and came to Abidjan capital
+city Ivory Coast West Africa find safety here.
+I came in 2015 to Abidjan and I now live in refugee camps here as
+refugees are allowed freely to enter here without, My late father
+deposited (US$6.200.000.00m) My late father kept the money at the bank
+of Africa, I want you to help me transfer the money to your hand so
+that you will help me bring me into your country for my continue
+education.
 
-Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
-Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
----
- super-intel.c | 41 +++++++++++++++++++++++++++++++++--------
- 1 file changed, 33 insertions(+), 8 deletions(-)
+I sent my pictures here for you to see. Who I am seriously looking for
+a good-person in my life, so I want to hear from you soon and learn
+more about you.
 
-diff --git a/super-intel.c b/super-intel.c
-index 2f912f2..c55802f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1342,6 +1342,20 @@ static unsigned long long round_size_to_mb(unsigned long long size, unsigned int
- 	return size;
- }
- 
-+static int able_to_resync(int raid_level, int missing_disks)
-+{
-+	int max_missing_disks = 0;
-+
-+	switch (raid_level) {
-+	case 10:
-+		max_missing_disks = 1;
-+		break;
-+	default:
-+		max_missing_disks = 0;
-+	}
-+	return missing_disks <= max_missing_disks;
-+}
-+
- /* try to determine how much space is reserved for metadata from
-  * the last get_extents() entry on the smallest active disk,
-  * otherwise fallback to the default
-@@ -7645,6 +7659,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 		int slot;
- 		int chunk;
- 		char *ep;
-+		int level;
- 
- 		if (subarray &&
- 		    (i != strtoul(subarray, &ep, 10) || *ep != '\0'))
-@@ -7653,6 +7668,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 		dev = get_imsm_dev(super, i);
- 		map = get_imsm_map(dev, MAP_0);
- 		map2 = get_imsm_map(dev, MAP_1);
-+		level = get_imsm_raid_level(map);
- 
- 		/* do not publish arrays that are in the middle of an
- 		 * unsupported migration
-@@ -7675,8 +7691,8 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 		chunk = __le16_to_cpu(map->blocks_per_strip) >> 1;
- 		/* mdadm does not support all metadata features- set the bit in all arrays state */
- 		if (!validate_geometry_imsm_orom(super,
--						 get_imsm_raid_level(map), /* RAID level */
--						 imsm_level_to_layout(get_imsm_raid_level(map)),
-+						 level, /* RAID level */
-+						 imsm_level_to_layout(level),
- 						 map->num_members, /* raid disks */
- 						 &chunk, join_u32(dev->size_low, dev->size_high),
- 						 1 /* verbose */)) {
-@@ -7700,6 +7716,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 			int idx;
- 			int skip;
- 			__u32 ord;
-+			int missing = 0;
- 
- 			skip = 0;
- 			idx = get_imsm_disk_idx(dev, slot, MAP_0);
-@@ -7713,19 +7730,27 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 				skip = 1;
- 			if (d && is_failed(&d->disk))
- 				skip = 1;
--			if (ord & IMSM_ORD_REBUILD)
-+			if (!skip && (ord & IMSM_ORD_REBUILD))
- 				recovery_start = 0;
- 
- 			/*
- 			 * if we skip some disks the array will be assmebled degraded;
- 			 * reset resync start to avoid a dirty-degraded
- 			 * situation when performing the intial sync
--			 *
--			 * FIXME handle dirty degraded
- 			 */
--			if ((skip || recovery_start == 0) &&
--			    !(dev->vol.dirty & RAIDVOL_DIRTY))
--				this->resync_start = MaxSector;
-+			if (skip)
-+				missing++;
-+
-+			if (!(dev->vol.dirty & RAIDVOL_DIRTY)) {
-+				if ((!able_to_resync(level, missing) ||
-+				     recovery_start == 0))
-+					this->resync_start = MaxSector;
-+			} else {
-+				/*
-+				 * FIXME handle dirty degraded
-+				 */
-+			}
-+
- 			if (skip)
- 				continue;
- 
--- 
-1.8.3.1
-
+I am an open-minded and friendly girl to share a good time with you
+and have fun and enjoy on the go, bird watching, the rest of our
+lives. My Hobbies, tourism books, dance, music, soccer, tennis,
+swimming and cinema.
+I would just think about you, including your dose and doesn=E2=80=99t .I
+believe we will do well together, and live like one family.
+Thank you and God bless you, for you in your promise to help me here,
+looking forward to your reply by the grace of God and have a good day.
+I hope you send me your photos as well? I await your next reply in
+faith please reply through my private email at
+(mshakourrosarita22@gmail.com):
+Thanks.
+Ms Rosarita
