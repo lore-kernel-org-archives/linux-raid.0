@@ -1,54 +1,70 @@
-From: Jes Sorensen <jsorensen@fb.com>
-Subject: Re: [PATCH] sysfs: include faulty drive in disk count
-Date: Mon, 13 Nov 2017 08:14:34 -0500
-Message-ID: <9348bd61-145e-cb3e-33a0-ddaa231d5cc8@fb.com>
-References: <1510069796-17515-1-git-send-email-mariusz.tkaczyk@intel.com>
- <f8739ccc-3ca5-ed7a-4b3b-30e867a4f5de@fb.com>
- <20171113080919.GA8293@proton.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] managemon: Don't add disk to the array after it has started
+Date: Mon, 13 Nov 2017 14:16:52 +0100
+Message-ID: <1510579012-3909-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171113080919.GA8293@proton.igk.intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jsorensen@fb.com, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 11/13/2017 03:09 AM, Tomasz Majchrzak wrote:
-> On Thu, Nov 09, 2017 at 03:46:08PM -0500, Jes Sorensen wrote:
->> On 11/07/2017 10:49 AM, Mariusz Tkaczyk wrote:
->>> When the disk fails, it goes into faulty state first and it is removed
->>> from the array in a while. It gives mdadm monitor a chance to see the disk
->>> has failed and notify an event (e.g. FailSpare). It doesn't work when 
->>> sysfs is used to get a number of disks in the array as it skips faulty
->>> disk. ioctl implementation doesn't differentiate between active and
->>> faulty disk. Do the same for sysfs then. It should not matter that number
->>> of disks reported is greater than list of disk structures returned by the
->>> call because the same approach already takes place for offline disks.
->>>
->>> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
->>> ---
->>>  sysfs.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> Applied!
->>
->> Thanks,
->> Jes
-> 
-> Hi Jes,
-> 
-> Have you applied this patch? I don't see it on the repository. I see you
-> applied "imsm: More precise message when spanned raid is created" but you
-> haven't confirmed it by email.
+If disk has disappeared from the system and appears again, it is added to the
+corresponding container as long the metadata matches and disk number is set.
+This code had no effect on imsm until commit 20dc76d15b40 ("imsm: Set disk slot
+number"). Now the disk is added to container but not to the array - it is
+correct as the disk is out-of-sync. Rebuild should start for the disk but it
+doesn't. There is the same behaviour for both imsm and ddf metadata.
 
-Hi Tomek,
+There is no point to handle out-of-sync disk as "good member of array" so
+remove that part of code. There are no scenarios when monitor is already
+running and disk can be safely added to the array. Just write initial metadata
+to the disk so it's taken for rebuild.
 
-It was there, but I had forgotten to push it. It should be in the public
-repo now.
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ managemon.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-Cheers,
-Jes
+diff --git a/managemon.c b/managemon.c
+index 4e85398..101231c 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -266,9 +266,7 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
+ {
+ 	int dfd;
+ 	char nm[20];
+-	struct supertype *st2;
+ 	struct metadata_update *update = NULL;
+-	struct mdinfo info;
+ 	mdu_disk_info_t dk = {
+ 		.number = -1,
+ 		.major = sd->disk.major,
+@@ -287,25 +285,6 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
+ 	if (dfd < 0)
+ 		return;
+ 
+-	/* Check the metadata and see if it is already part of this
+-	 * array
+-	 */
+-	st2 = dup_super(st);
+-	if (st2->ss->load_super(st2, dfd, NULL) == 0) {
+-		st2->ss->getinfo_super(st2, &info, NULL);
+-		if (st->ss->compare_super(st, st2) == 0 &&
+-		    info.disk.raid_disk >= 0) {
+-			/* Looks like a good member of array.
+-			 * Just accept it.
+-			 * mdadm will incorporate any parts into
+-			 * active arrays.
+-			 */
+-			st2->ss->free_super(st2);
+-			return;
+-		}
+-	}
+-	st2->ss->free_super(st2);
+-
+ 	st->update_tail = &update;
+ 	st->ss->add_to_super(st, &dk, dfd, NULL, INVALID_SECTORS);
+ 	st->ss->write_init_super(st);
+-- 
+1.8.3.1
 
