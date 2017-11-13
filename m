@@ -1,44 +1,122 @@
-From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Subject: Re: [PATCH] sysfs: include faulty drive in disk count
-Date: Mon, 13 Nov 2017 09:09:19 +0100
-Message-ID: <20171113080919.GA8293@proton.igk.intel.com>
-References: <1510069796-17515-1-git-send-email-mariusz.tkaczyk@intel.com>
- <f8739ccc-3ca5-ed7a-4b3b-30e867a4f5de@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Maksymilian Kunt <maksymilian.kunt@intel.com>
+Subject: [PATCH] imsm: continue resync on 3-disk RAID10
+Date: Mon, 13 Nov 2017 12:30:49 +0100
+Message-ID: <20171113113049.23388-1-maksymilian.kunt@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f8739ccc-3ca5-ed7a-4b3b-30e867a4f5de@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jsorensen@fb.com>
-Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jsorensen@fb.com, Maksymilian Kunt <maksymilian.kunt@intel.com>, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, Nov 09, 2017 at 03:46:08PM -0500, Jes Sorensen wrote:
-> On 11/07/2017 10:49 AM, Mariusz Tkaczyk wrote:
-> > When the disk fails, it goes into faulty state first and it is removed
-> > from the array in a while. It gives mdadm monitor a chance to see the disk
-> > has failed and notify an event (e.g. FailSpare). It doesn't work when 
-> > sysfs is used to get a number of disks in the array as it skips faulty
-> > disk. ioctl implementation doesn't differentiate between active and
-> > faulty disk. Do the same for sysfs then. It should not matter that number
-> > of disks reported is greater than list of disk structures returned by the
-> > call because the same approach already takes place for offline disks.
-> > 
-> > Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-> > ---
-> >  sysfs.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Applied!
-> 
-> Thanks,
-> Jes
+If RAID10 gets degraded during resync and is stopped, it doesn't continue
+resync after automatic assemble and it is reported to be in sync. Resync
+is blocked because the disk is missing. It should not happen for RAID10 as
+it can still continue with 3 disks.
 
-Hi Jes,
+Count missing disks. Block resync only if number of missing disks exceeds
+limit for given RAID level (only different for RAID10). Check if the
+disk under recovery is present. If not, resync should be allowed to run.
 
-Have you applied this patch? I don't see it on the repository. I see you
-applied "imsm: More precise message when spanned raid is created" but you
-haven't confirmed it by email.
+Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ super-intel.c | 41 +++++++++++++++++++++++++++++++++--------
+ 1 file changed, 33 insertions(+), 8 deletions(-)
 
-Tomek
+diff --git a/super-intel.c b/super-intel.c
+index 2f912f2..c55802f 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1342,6 +1342,20 @@ static unsigned long long round_size_to_mb(unsigned long long size, unsigned int
+ 	return size;
+ }
+ 
++static int able_to_resync(int raid_level, int missing_disks)
++{
++	int max_missing_disks = 0;
++
++	switch (raid_level) {
++	case 10:
++		max_missing_disks = 1;
++		break;
++	default:
++		max_missing_disks = 0;
++	}
++	return missing_disks <= max_missing_disks;
++}
++
+ /* try to determine how much space is reserved for metadata from
+  * the last get_extents() entry on the smallest active disk,
+  * otherwise fallback to the default
+@@ -7645,6 +7659,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 		int slot;
+ 		int chunk;
+ 		char *ep;
++		int level;
+ 
+ 		if (subarray &&
+ 		    (i != strtoul(subarray, &ep, 10) || *ep != '\0'))
+@@ -7653,6 +7668,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 		dev = get_imsm_dev(super, i);
+ 		map = get_imsm_map(dev, MAP_0);
+ 		map2 = get_imsm_map(dev, MAP_1);
++		level = get_imsm_raid_level(map);
+ 
+ 		/* do not publish arrays that are in the middle of an
+ 		 * unsupported migration
+@@ -7675,8 +7691,8 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 		chunk = __le16_to_cpu(map->blocks_per_strip) >> 1;
+ 		/* mdadm does not support all metadata features- set the bit in all arrays state */
+ 		if (!validate_geometry_imsm_orom(super,
+-						 get_imsm_raid_level(map), /* RAID level */
+-						 imsm_level_to_layout(get_imsm_raid_level(map)),
++						 level, /* RAID level */
++						 imsm_level_to_layout(level),
+ 						 map->num_members, /* raid disks */
+ 						 &chunk, join_u32(dev->size_low, dev->size_high),
+ 						 1 /* verbose */)) {
+@@ -7700,6 +7716,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 			int idx;
+ 			int skip;
+ 			__u32 ord;
++			int missing = 0;
+ 
+ 			skip = 0;
+ 			idx = get_imsm_disk_idx(dev, slot, MAP_0);
+@@ -7713,19 +7730,27 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 				skip = 1;
+ 			if (d && is_failed(&d->disk))
+ 				skip = 1;
+-			if (ord & IMSM_ORD_REBUILD)
++			if (!skip && (ord & IMSM_ORD_REBUILD))
+ 				recovery_start = 0;
+ 
+ 			/*
+ 			 * if we skip some disks the array will be assmebled degraded;
+ 			 * reset resync start to avoid a dirty-degraded
+ 			 * situation when performing the intial sync
+-			 *
+-			 * FIXME handle dirty degraded
+ 			 */
+-			if ((skip || recovery_start == 0) &&
+-			    !(dev->vol.dirty & RAIDVOL_DIRTY))
+-				this->resync_start = MaxSector;
++			if (skip)
++				missing++;
++
++			if (!(dev->vol.dirty & RAIDVOL_DIRTY)) {
++				if ((!able_to_resync(level, missing) ||
++				     recovery_start == 0))
++					this->resync_start = MaxSector;
++			} else {
++				/*
++				 * FIXME handle dirty degraded
++				 */
++			}
++
+ 			if (skip)
+ 				continue;
+ 
+-- 
+1.8.3.1
+
