@@ -1,49 +1,54 @@
-From: "M,Shakour Rosarita" <hassantara789@gmail.com>
-Subject: Hello Dear...
-Date: Mon, 13 Nov 2017 12:08:18 +0000
-Message-ID: <CAMyxZDE63FQAQ=JTZN_2Ks1T4PC7+RQ2oo6+S3vs4Q0Mp-K2iQ__18951.3846919455$1510574914$gmane$org@mail.gmail.com>
-Reply-To: mshakourrosarita22@gmail.com
+From: Jes Sorensen <jsorensen@fb.com>
+Subject: Re: [PATCH] sysfs: include faulty drive in disk count
+Date: Mon, 13 Nov 2017 08:14:34 -0500
+Message-ID: <9348bd61-145e-cb3e-33a0-ddaa231d5cc8@fb.com>
+References: <1510069796-17515-1-git-send-email-mariusz.tkaczyk@intel.com>
+ <f8739ccc-3ca5-ed7a-4b3b-30e867a4f5de@fb.com>
+ <20171113080919.GA8293@proton.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20171113080919.GA8293@proton.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Dear...
+On 11/13/2017 03:09 AM, Tomasz Majchrzak wrote:
+> On Thu, Nov 09, 2017 at 03:46:08PM -0500, Jes Sorensen wrote:
+>> On 11/07/2017 10:49 AM, Mariusz Tkaczyk wrote:
+>>> When the disk fails, it goes into faulty state first and it is removed
+>>> from the array in a while. It gives mdadm monitor a chance to see the disk
+>>> has failed and notify an event (e.g. FailSpare). It doesn't work when 
+>>> sysfs is used to get a number of disks in the array as it skips faulty
+>>> disk. ioctl implementation doesn't differentiate between active and
+>>> faulty disk. Do the same for sysfs then. It should not matter that number
+>>> of disks reported is greater than list of disk structures returned by the
+>>> call because the same approach already takes place for offline disks.
+>>>
+>>> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+>>> ---
+>>>  sysfs.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> Applied!
+>>
+>> Thanks,
+>> Jes
+> 
+> Hi Jes,
+> 
+> Have you applied this patch? I don't see it on the repository. I see you
+> applied "imsm: More precise message when spanned raid is created" but you
+> haven't confirmed it by email.
 
-I know that this message will come to you as a surprise. I hoped that
-you will not expose or betray this trust and confident that I am about
-to repose on you, my name is M, Shakour Rosarita. I am 19 years old
-Girl, female, from Tartu Syria, (never married) 61 kg, white in
-complexion, and I am currently living in the refugee camp here in
-Abidjan Ivory Coast, My late beloved father M,Shakour Hassin was a
-renowned businessman and owner of Natour Petrol Station in Syria, he
-was killed in a stampede riot in Tartu, Syria.
-When I got the news about my parents. I fled to a nearby country
-Jordan before I joined a ferry to Africa and came to Abidjan capital
-city Ivory Coast West Africa find safety here.
-I came in 2015 to Abidjan and I now live in refugee camps here as
-refugees are allowed freely to enter here without, My late father
-deposited (US$6.200.000.00m) My late father kept the money at the bank
-of Africa, I want you to help me transfer the money to your hand so
-that you will help me bring me into your country for my continue
-education.
+Hi Tomek,
 
-I sent my pictures here for you to see. Who I am seriously looking for
-a good-person in my life, so I want to hear from you soon and learn
-more about you.
+It was there, but I had forgotten to push it. It should be in the public
+repo now.
 
-I am an open-minded and friendly girl to share a good time with you
-and have fun and enjoy on the go, bird watching, the rest of our
-lives. My Hobbies, tourism books, dance, music, soccer, tennis,
-swimming and cinema.
-I would just think about you, including your dose and doesn=E2=80=99t .I
-believe we will do well together, and live like one family.
-Thank you and God bless you, for you in your promise to help me here,
-looking forward to your reply by the grace of God and have a good day.
-I hope you send me your photos as well? I await your next reply in
-faith please reply through my private email at
-(mshakourrosarita22@gmail.com):
-Thanks.
-Ms Rosarita
+Cheers,
+Jes
+
