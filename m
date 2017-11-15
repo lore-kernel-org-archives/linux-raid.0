@@ -1,191 +1,41 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH] md: introduce new personality funciton start()
-Date: Tue, 14 Nov 2017 15:00:10 -0800
-Message-ID: <20171114230010.1593130-1-songliubraving@fb.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] MD update for 4.15-rc1
+Date: Tue, 14 Nov 2017 16:14:44 -0800
+Message-ID: <CA+55aFy5r9cz=28G8G6pjY5mfGFRdwKatPJJ+DULOUvEFsokGw@mail.gmail.com>
+References: <20171114195651.zxo3hz3odpc2j24d@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20171114195651.zxo3hz3odpc2j24d@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: kernel-team@fb.com, shli@kernel.org, neilb@suse.com, Song Liu <songliubraving@fb.com>
+To: Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In do_md_run(), md threads should not wake up until the array is fully
-initialized in md_run(). However, in raid5_run(), raid5-cache may wake
-up mddev->thread to flush stripes that need to be written back. This
-design doesn't break badly right now. But it could lead to bad bug in
-the future.
+So I've pulled this, but have a question:
 
-This patch tries to resolve this problem by splitting start up work
-into two personality functions, run() and start(). Tasks that do not
-require the md threads should go into run(), while task that require
-the md threads go into start().
+On Tue, Nov 14, 2017 at 11:56 AM, Shaohua Li <shli@kernel.org> wrote:
+>
+> Mike Snitzer (1):
+>       md: rename some drivers/md/ files to have an "md-" prefix
 
-r5l_load_log() is moved to raid5_start(), so it is not called until
-the md threads are started in do_md_run().
+is this really sensible? I know I absolutely hate what things like
+this does to tab-completion, because everything now has the same
+prefix.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/md.c          | 14 +++++++++-----
- drivers/md/md.h          |  5 +++++
- drivers/md/raid5-cache.c | 22 +++++++++++++++++-----
- drivers/md/raid5-log.h   |  1 +
- drivers/md/raid5.c       | 10 ++++++++++
- 5 files changed, 42 insertions(+), 10 deletions(-)
+And it's not like it adds any value - the "md" is already there in the
+directory name.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e014d39..6e816db 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5561,11 +5561,6 @@ int md_run(struct mddev *mddev)
- 	if (start_readonly && mddev->ro == 0)
- 		mddev->ro = 2; /* read-only, but switch on first write */
- 
--	/*
--	 * NOTE: some pers->run(), for example r5l_recovery_log(), wakes
--	 * up mddev->thread. It is important to initialize critical
--	 * resources for mddev->thread BEFORE calling pers->run().
--	 */
- 	err = pers->run(mddev);
- 	if (err)
- 		pr_warn("md: pers->run() failed ...\n");
-@@ -5682,6 +5677,15 @@ static int do_md_run(struct mddev *mddev)
- 	md_wakeup_thread(mddev->thread);
- 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
- 
-+	/* run start up tasks that require md threads */
-+	if (mddev->pers->start) {
-+		err = mddev->pers->start(mddev);
-+		if (err) {
-+			bitmap_destroy(mddev);
-+			goto out;
-+		}
-+	}
-+
- 	set_capacity(mddev->gendisk, mddev->array_sectors);
- 	revalidate_disk(mddev->gendisk);
- 	mddev->changed = 1;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 7d6bcf0..34fefcb 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -523,7 +523,12 @@ struct md_personality
- 	struct list_head list;
- 	struct module *owner;
- 	bool (*make_request)(struct mddev *mddev, struct bio *bio);
-+	/* start up works that do NOT require md threads. tasks that
-+	 * requires md threads should go into start()
-+	 */
- 	int (*run)(struct mddev *mddev);
-+	/* start up works that require md threads */
-+	int (*start)(struct mddev *mddev);
- 	void (*free)(struct mddev *mddev, void *priv);
- 	void (*status)(struct seq_file *seq, struct mddev *mddev);
- 	/* error_handler must set ->faulty and clear ->in_sync
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index f1c86d9..6e28adc 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2448,7 +2448,6 @@ static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
- 		raid5_release_stripe(sh);
- 	}
- 
--	md_wakeup_thread(conf->mddev->thread);
- 	/* reuse conf->wait_for_quiescent in recovery */
- 	wait_event(conf->wait_for_quiescent,
- 		   atomic_read(&conf->active_stripes) == 0);
-@@ -3040,6 +3039,23 @@ static int r5l_load_log(struct r5l_log *log)
- 	return ret;
- }
- 
-+int r5l_start(struct r5l_log *log)
-+{
-+	int ret;
-+
-+	if (!log)
-+		return 0;
-+
-+	ret = r5l_load_log(log);
-+	if (ret) {
-+		struct mddev *mddev = log->rdev->mddev;
-+		struct r5conf *conf = mddev->private;
-+
-+		r5l_exit_log(conf);
-+	}
-+	return ret;
-+}
-+
- void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -3142,13 +3158,9 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 
- 	rcu_assign_pointer(conf->log, log);
- 
--	if (r5l_load_log(log))
--		goto error;
--
- 	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
- 	return 0;
- 
--error:
- 	rcu_assign_pointer(conf->log, NULL);
- 	md_unregister_thread(&log->reclaim_thread);
- reclaim_thread:
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index c3596a2..d8577b0 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -31,6 +31,7 @@ extern struct md_sysfs_entry r5c_journal_mode;
- extern void r5c_update_on_rdev_error(struct mddev *mddev,
- 				     struct md_rdev *rdev);
- extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
-+extern int r5l_start(struct r5l_log *log);
- 
- extern struct dma_async_tx_descriptor *
- ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1649e82..39cdd78 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8364,6 +8364,13 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 	return err;
- }
- 
-+static int raid5_start(struct mddev *mddev)
-+{
-+	struct r5conf *conf = mddev->private;
-+
-+	return r5l_start(conf->log);
-+}
-+
- static struct md_personality raid6_personality =
- {
- 	.name		= "raid6",
-@@ -8371,6 +8378,7 @@ static struct md_personality raid6_personality =
- 	.owner		= THIS_MODULE,
- 	.make_request	= raid5_make_request,
- 	.run		= raid5_run,
-+	.start		= raid5_start,
- 	.free		= raid5_free,
- 	.status		= raid5_status,
- 	.error_handler	= raid5_error,
-@@ -8395,6 +8403,7 @@ static struct md_personality raid5_personality =
- 	.owner		= THIS_MODULE,
- 	.make_request	= raid5_make_request,
- 	.run		= raid5_run,
-+	.start		= raid5_start,
- 	.free		= raid5_free,
- 	.status		= raid5_status,
- 	.error_handler	= raid5_error,
-@@ -8420,6 +8429,7 @@ static struct md_personality raid4_personality =
- 	.owner		= THIS_MODULE,
- 	.make_request	= raid5_make_request,
- 	.run		= raid5_run,
-+	.start		= raid5_start,
- 	.free		= raid5_free,
- 	.status		= raid5_status,
- 	.error_handler	= raid5_error,
--- 
-2.9.5
+So honestly, if this was code that I regularly looked at (it isn't),
+I'd probably not be happy. As it is, I don't really care all that
+much, just wanted to check.
 
+Why is it "md-faulty,c", but "raid5.c", for example?
+
+And if it's to try to separate the "dm-xyz" vs "md-xyz" ones, maybe
+making this an actual directory structure rather than a prefix would
+be better?
+
+Just throwing this out.
+
+              Linus
