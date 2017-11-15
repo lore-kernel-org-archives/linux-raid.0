@@ -1,261 +1,161 @@
-From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Subject: [RFC] md: make queue limits depending on limits of RAID members
-Date: Wed, 15 Nov 2017 11:25:12 +0100
-Message-ID: <20171115102512.18269-1-mariusz.dabrowski@intel.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, linux-block@vger.kernel.org, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+From: Santiago DIEZ <santiago.diez@caoba.fr>
+Subject: Impossibly level change request for RAID1
+Date: Wed, 15 Nov 2017 17:52:32 +0100
+Message-ID: <CAJh8RqV84uXJ9hV4uSAK-GsnN=FP4fT-S0VNNkSVOay5xZqt8w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux Raid LIST <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+Hi,
 
-In order to be compliant with a pass-throug drive behavior, RAID queue
-limits should be calculated in a way that minimal io, optimal io and
-discard granularity size will be met from a single drive perspective.
-Currently MD driver is ignoring queue limits reported by members and all
-calculations are based on chunk (stripe) size. I am working on patch which
-changes this. Since kernel 4.13 drives which support streams (write hints)
-might report discard_alignment or discard_granularity bigger than array
-stripe (for more details view NVMe 1.3 specification, chapter 9.3 Streams)
-so result of current calculation is not optimal for those drives. For 
-example for 4 disk RAID 0 with chunk size smaller than discard_granularity
-of member drives, discard_granularity of RAID array should be equal to
-4*member_discard_granularity.
+I started by mistake a raid as RAID1 with 5 disks when my desire was
+to start it as RAID5. Technically, there is no data at all so I could
+entirely recreate the raid but this is NOT what I want. I'm taking
+this opportunity as an exercise to change a raid level.
 
-The problem is that for some drives there is a risk that result of this
-calculation exceeds unsigned int range. Current implementation of function
-nvme_config_discard in NVMe driver can also suffer the same problem:
+The initial state of the raid is:
+md9 : active raid1 sda9[0] sdb9[1] sdc9[2] sdd9[3] sde9[4]
+      5846755328 blocks super 1.2 [5/5] [UUUUU]
+      bitmap: 0/44 pages [0KB], 65536KB chunk
 
-	if (ctrl->nr_streams && ns->sws && ns->sgs) {
-		unsigned int sz = logical_block_size * ns->sws * ns->sgs;
+# I tried to change the level with:
+mdadm /dev/md9 --grow --level=5
+# But got the error :
+mdadm: Impossibly level change request for RAID1
 
-		ns->queue->limits.discard_alignment = sz;
-		ns->queue->limits.discard_granularity = sz;
-	}
+# I followed a howto and did:
 
-One potential solution for that is to change type of some queue limits
-(at least discard_granularity and discard_alignment, maybe more, like
-max_discard_sectors?) from 32 bits to 64 bits.
+# Fail and remove one disk and reduce the size of the raid:
+mdadm /dev/md9 --fail /dev/sde9
+mdadm /dev/md9 --remove /dev/sde9
+mdadm /dev/md9 --remove /dev/sde9
 
-What are your thoughts about this? Do you expect any troubles with 
-changing this in block layer? Would you be willing to do such change?
+# The status is now
+/dev/md9:
+        Version : 1.2
+  Creation Time : Thu Aug 31 13:21:32 2017
+     Raid Level : raid1
+     Array Size : 5846755328 (5575.90 GiB 5987.08 GB)
+  Used Dev Size : 5846755328 (5575.90 GiB 5987.08 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
----
+  Intent Bitmap : Internal
 
- drivers/md/md.c     | 24 ++++++++++++++++++++++++
- drivers/md/md.h     |  1 +
- drivers/md/raid0.c  | 23 ++++++++++++++++++++---
- drivers/md/raid10.c | 30 +++++++++++++++++++++++++-----
- drivers/md/raid5.c  | 25 +++++++++++++++++++------
- 5 files changed, 89 insertions(+), 14 deletions(-)
+    Update Time : Wed Nov 15 16:52:42 2017
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0ff1bbf6c90e..e0dc114cab19 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -66,6 +66,7 @@
- #include <linux/raid/md_u.h>
- #include <linux/slab.h>
- #include <linux/percpu-refcount.h>
-+#include <linux/lcm.h>
- 
- #include <trace/events/block.h>
- #include "md.h"
-@@ -679,6 +680,29 @@ struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr)
- }
- EXPORT_SYMBOL_GPL(md_find_rdev_nr_rcu);
- 
-+void md_rdev_get_queue_limits(struct mddev *mddev, struct queue_limits *limits)
-+{
-+	struct md_rdev *rdev;
-+
-+	memset(limits, 0, sizeof(struct queue_limits));
-+
-+	rdev_for_each(rdev, mddev) {
-+		struct queue_limits *rdev_limits;
-+
-+		rdev_limits = &rdev->bdev->bd_queue->limits;
-+		limits->io_min = max(limits->io_min, rdev_limits->io_min);
-+		limits->io_opt = lcm_not_zero(limits->io_opt,
-+					      rdev_limits->io_opt);
-+		limits->discard_granularity =
-+			max(limits->discard_granularity,
-+			    rdev_limits->discard_granularity);
-+		limits->discard_alignment =
-+			max(limits->discard_alignment,
-+			    rdev_limits->discard_alignment);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(md_rdev_get_queue_limits);
-+
- static struct md_rdev *find_rdev(struct mddev *mddev, dev_t dev)
- {
- 	struct md_rdev *rdev;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d8287d3cd1bf..5b514b9bb535 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -702,6 +702,7 @@ extern void md_reload_sb(struct mddev *mddev, int raid_disk);
- extern void md_update_sb(struct mddev *mddev, int force);
- extern void md_kick_rdev_from_array(struct md_rdev * rdev);
- struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
-+void md_rdev_get_queue_limits(struct mddev *mddev, struct queue_limits *limits);
- 
- static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
- {
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 5a00fc118470..f1dcf7fd3eb1 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -382,15 +382,31 @@ static int raid0_run(struct mddev *mddev)
- 	if (mddev->queue) {
- 		struct md_rdev *rdev;
- 		bool discard_supported = false;
-+		struct queue_limits limits;
-+		unsigned int io_min, io_opt;
-+		unsigned int granularity, alignment;
-+		unsigned int chunk_size = mddev->chunk_sectors << 9;
- 
-+		md_rdev_get_queue_limits(mddev, &limits);
- 		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
- 		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
- 		blk_queue_max_write_zeroes_sectors(mddev->queue, mddev->chunk_sectors);
- 		blk_queue_max_discard_sectors(mddev->queue, UINT_MAX);
- 
--		blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
--		blk_queue_io_opt(mddev->queue,
--				 (mddev->chunk_sectors << 9) * mddev->raid_disks);
-+		io_min = chunk_size > limits.io_min ?
-+			 chunk_size : limits.io_min * mddev->raid_disks;
-+		io_opt = max(chunk_size, limits.io_min) * mddev->raid_disks;
-+		granularity = chunk_size > limits.discard_granularity ?
-+			      limits.discard_granularity :
-+			      limits.discard_granularity * mddev->raid_disks;
-+		alignment = chunk_size > limits.discard_granularity ?
-+			    limits.discard_alignment :
-+			    limits.discard_alignment * mddev->raid_disks;
-+
-+		blk_queue_io_min(mddev->queue, io_min);
-+		blk_queue_io_opt(mddev->queue, io_opt);
-+		mddev->queue->limits.discard_granularity = granularity;
-+		mddev->queue->limits.discard_alignment = alignment;
- 
- 		rdev_for_each(rdev, mddev) {
- 			disk_stack_limits(mddev->gendisk, rdev->bdev,
-@@ -398,6 +414,7 @@ static int raid0_run(struct mddev *mddev)
- 			if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
- 				discard_supported = true;
- 		}
-+
- 		if (!discard_supported)
- 			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
- 		else
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 374df5796649..5ff1635a2551 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3623,7 +3623,10 @@ static struct r10conf *setup_conf(struct mddev *mddev)
- static int raid10_run(struct mddev *mddev)
- {
- 	struct r10conf *conf;
--	int i, disk_idx, chunk_size;
-+	int i, disk_idx;
-+	unsigned int chunk_size, io_min, io_opt;
-+	unsigned int granularity, alignment;
-+	struct queue_limits limits;
- 	struct raid10_info *disk;
- 	struct md_rdev *rdev;
- 	sector_t size;
-@@ -3649,16 +3652,33 @@ static int raid10_run(struct mddev *mddev)
- 
- 	chunk_size = mddev->chunk_sectors << 9;
- 	if (mddev->queue) {
-+		int factor;
-+
-+		md_rdev_get_queue_limits(mddev, &limits);
- 		blk_queue_max_discard_sectors(mddev->queue,
- 					      mddev->chunk_sectors);
- 		blk_queue_max_write_same_sectors(mddev->queue, 0);
- 		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
--		blk_queue_io_min(mddev->queue, chunk_size);
-+
- 		if (conf->geo.raid_disks % conf->geo.near_copies)
--			blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
-+			factor = conf->geo.raid_disks;
- 		else
--			blk_queue_io_opt(mddev->queue, chunk_size *
--					 (conf->geo.raid_disks / conf->geo.near_copies));
-+			factor = conf->geo.raid_disks / conf->geo.near_copies;
-+
-+		io_min = chunk_size > limits.io_min ?
-+				 chunk_size : limits.io_min * factor;
-+		io_opt = max(chunk_size, limits.io_min) * factor;
-+		granularity = chunk_size > limits.discard_granularity ?
-+				      limits.discard_granularity :
-+				      limits.discard_granularity * factor;
-+		alignment = chunk_size > limits.discard_alignment ?
-+				    limits.discard_alignment :
-+				    limits.discard_alignment * factor;
-+
-+		blk_queue_io_min(mddev->queue, io_min);
-+		blk_queue_io_opt(mddev->queue, io_opt);
-+		mddev->queue->limits.discard_granularity = granularity;
-+		mddev->queue->limits.discard_alignment = alignment;
- 	}
- 
- 	rdev_for_each(rdev, mddev) {
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 4fd34ff2e830..adbbe979c363 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7508,7 +7508,10 @@ static int raid5_run(struct mddev *mddev)
- 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
- 
- 	if (mddev->queue) {
--		int chunk_size;
-+		unsigned int chunk_size, io_min, io_opt;
-+		unsigned int granularity, alignment;
-+		struct queue_limits limits;
-+
- 		/* read-ahead size must cover two whole stripes, which
- 		 * is 2 * (datadisks) * chunksize where 'n' is the
- 		 * number of raid devices
-@@ -7519,10 +7522,14 @@ static int raid5_run(struct mddev *mddev)
- 		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
- 			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
- 
-+		md_rdev_get_queue_limits(mddev, &limits);
- 		chunk_size = mddev->chunk_sectors << 9;
--		blk_queue_io_min(mddev->queue, chunk_size);
--		blk_queue_io_opt(mddev->queue, chunk_size *
--				 (conf->raid_disks - conf->max_degraded));
-+		io_min = chunk_size > limits.io_min ?
-+				chunk_size : limits.io_min * data_disks;
-+		io_opt = max(chunk_size, limits.io_min) * data_disks;
-+		blk_queue_io_min(mddev->queue, io_min);
-+		blk_queue_io_opt(mddev->queue, io_opt);
-+
- 		mddev->queue->limits.raid_partial_stripes_expensive = 1;
- 		/*
- 		 * We can only discard a whole stripe. It doesn't make sense to
-@@ -7533,8 +7540,14 @@ static int raid5_run(struct mddev *mddev)
- 		 * currently assumes that */
- 		while ((stripe-1) & stripe)
- 			stripe = (stripe | (stripe-1)) + 1;
--		mddev->queue->limits.discard_alignment = stripe;
--		mddev->queue->limits.discard_granularity = stripe;
-+		granularity = chunk_size > limits.discard_granularity ?
-+			      stripe :
-+			      limits.discard_granularity * data_disks;
-+		alignment = chunk_size > limits.discard_granularity ?
-+			    stripe :
-+			    limits.discard_alignment * data_disks;
-+		mddev->queue->limits.discard_alignment = granularity;
-+		mddev->queue->limits.discard_granularity = alignment;
- 
- 		blk_queue_max_write_same_sectors(mddev->queue, 0);
- 		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
--- 
-2.15.0
+           Name : rescue.ovh.net:9
+           UUID : ff7df55b:357263cd:009f3a94:89293230
+         Events : 24
+
+    Number   Major   Minor   RaidDevice State
+       0       8        9        0      active sync   /dev/sda9
+       1       8       25        1      active sync   /dev/sdb9
+       2       8       41        2      active sync   /dev/sdc9
+       3       8       57        3      active sync   /dev/sdd9
+
+
+
+# I re-added sde9 hopping it would become spare:
+mdadm /dev/md9 --add /dev/sde9
+
+# But surprisingly, sda9 became faulty at the same time:
+/dev/md9:
+        Version : 1.2
+  Creation Time : Thu Aug 31 13:21:32 2017
+     Raid Level : raid1
+     Array Size : 5846755328 (5575.90 GiB 5987.08 GB)
+  Used Dev Size : 5846755328 (5575.90 GiB 5987.08 GB)
+   Raid Devices : 4
+  Total Devices : 5
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Wed Nov 15 17:10:29 2017
+          State : clean, degraded
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 0
+
+           Name : rescue.ovh.net:9
+           UUID : ff7df55b:357263cd:009f3a94:89293230
+         Events : 29
+
+    Number   Major   Minor   RaidDevice State
+       -       0        0        0      removed
+            <<< What's that?!!!
+       1       8       25        1      active sync   /dev/sdb9
+       2       8       41        2      active sync   /dev/sdc9
+       3       8       57        3      active sync   /dev/sdd9
+       0       8        9        -      faulty   /dev/sda9
+          <<< sda9 is faulty
+       4       8       73        4      active sync   /dev/sde9
+
+
+
+# So I removed and re-added sda9 like this:
+mdadm /dev/md9 --remove /dev/sda9
+mdadm /dev/md9 --add /dev/sda9
+
+# It was succesfully added as spare but I still have a weird line:
+/dev/md9:
+        Version : 1.2
+  Creation Time : Thu Aug 31 13:21:32 2017
+     Raid Level : raid1
+     Array Size : 5846755328 (5575.90 GiB 5987.08 GB)
+  Used Dev Size : 5846755328 (5575.90 GiB 5987.08 GB)
+   Raid Devices : 4
+  Total Devices : 5
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Wed Nov 15 17:34:10 2017
+          State : clean, degraded
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 1
+
+           Name : rescue.ovh.net:9
+           UUID : ff7df55b:357263cd:009f3a94:89293230
+         Events : 31
+
+    Number   Major   Minor   RaidDevice State
+       -       0        0        0      removed
+            <<< What's that?!!!
+       1       8       25        1      active sync   /dev/sdb9
+       2       8       41        2      active sync   /dev/sdc9
+       3       8       57        3      active sync   /dev/sdd9
+       0       8        9        -      spare   /dev/sda9
+       4       8       73        4      active sync   /dev/sde9
+
+
+
+# Then I eventually tried again to change the level:
+sudo mdadm /dev/md9 --grow --level=5 --raid-devices=5
+
+# But still got the same issue:
+mdadm: Impossibly level change request for RAID1
+
+
+
+Any clue ?
+
+Regards
+-------------------------
+Santiago DIEZ
+Quark Systems & CAOBA
+23 rue du Buisson Saint-Louis, 75010 Paris
+-------------------------
