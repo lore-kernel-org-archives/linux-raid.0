@@ -1,41 +1,49 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] MD update for 4.15-rc1
-Date: Tue, 14 Nov 2017 16:14:44 -0800
-Message-ID: <CA+55aFy5r9cz=28G8G6pjY5mfGFRdwKatPJJ+DULOUvEFsokGw@mail.gmail.com>
-References: <20171114195651.zxo3hz3odpc2j24d@kernel.org>
+From: Song Liu <liu.song.a23@gmail.com>
+Subject: Re: RAID 5 array with journal device does not automatically assemble
+ at boot
+Date: Tue, 14 Nov 2017 16:38:09 -0800
+Message-ID: <CAPhsuW59ti8Sj+coZtsrZn0VRP-EEoTauxsmZnvBzV1tswcy3Q@mail.gmail.com>
+References: <23ACD985-211C-442C-AAE4-19F53F577849@tobx.de> <CAPhsuW6rtE6AcW2aVP6SLdBihrN=STmgiNg9qB5XJWCk8_rfUw@mail.gmail.com>
+ <E972B38E-F9BD-4D8D-92EC-F7697EBC69AB@tobx.de> <fd434281-609c-4999-18e1-3401d48e1d50@grumpydevil.homelinux.org>
+ <86F8F078-A7B4-4AF6-AE7B-6929161850FA@tobx.de> <7c1129bf-22eb-dbb2-7f3b-d3b8844dc92d@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171114195651.zxo3hz3odpc2j24d@kernel.org>
+In-Reply-To: <7c1129bf-22eb-dbb2-7f3b-d3b8844dc92d@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Larkin Lowrey <llowrey@gmail.com>
+Cc: Tobx <net@tobx.de>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-So I've pulled this, but have a question:
+Tobi,
 
-On Tue, Nov 14, 2017 at 11:56 AM, Shaohua Li <shli@kernel.org> wrote:
+Your mdadm is a little old. Could you please try rebuild it from
+latest source code?
+
+Thanks,
+Song
+
+On Tue, Nov 14, 2017 at 2:49 PM, Larkin Lowrey <llowrey@gmail.com> wrote:
+> On 11/14/2017 5:28 PM, Tobx wrote:
+>>
+>> Rudy Zijlstra wrote:
+>>>
+>>> What is in your mdadm.conf? Usually found in either /etc/ or in
+>>> /etc/mdadm/
+>>
+>> Created with /usr/share/mdadm/mkconf:
+>>
+>> HOMEHOST <system>
+>> MAILADDR root
+>> ARRAY /dev/md/test  metadata=1.2 UUID=d59de5cc:02f560ed:ebcb9400:491955d7
+>> name=debian:test
+>>     spares=1
+>>
 >
-> Mike Snitzer (1):
->       md: rename some drivers/md/ files to have an "md-" prefix
-
-is this really sensible? I know I absolutely hate what things like
-this does to tab-completion, because everything now has the same
-prefix.
-
-And it's not like it adds any value - the "md" is already there in the
-directory name.
-
-So honestly, if this was code that I regularly looked at (it isn't),
-I'd probably not be happy. As it is, I don't really care all that
-much, just wanted to check.
-
-Why is it "md-faulty,c", but "raid5.c", for example?
-
-And if it's to try to separate the "dm-xyz" vs "md-xyz" ones, maybe
-making this an actual directory structure rather than a prefix would
-be better?
-
-Just throwing this out.
-
-              Linus
+> The "spares=1" is for the journal device. The "mdadm --examine --scan"
+> command produced that for me as well but since it seemed odd I deleted that
+> part. Since there isn't actually a spare it seems incorrect. I've never
+> tried to boot with "spares=1" so I don't know if removing it will make any
+> difference.
+>
+> --Larkin
