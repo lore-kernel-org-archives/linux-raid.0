@@ -1,49 +1,58 @@
-From: Song Liu <liu.song.a23@gmail.com>
-Subject: Re: RAID 5 array with journal device does not automatically assemble
- at boot
-Date: Tue, 14 Nov 2017 16:38:09 -0800
-Message-ID: <CAPhsuW59ti8Sj+coZtsrZn0VRP-EEoTauxsmZnvBzV1tswcy3Q@mail.gmail.com>
-References: <23ACD985-211C-442C-AAE4-19F53F577849@tobx.de> <CAPhsuW6rtE6AcW2aVP6SLdBihrN=STmgiNg9qB5XJWCk8_rfUw@mail.gmail.com>
- <E972B38E-F9BD-4D8D-92EC-F7697EBC69AB@tobx.de> <fd434281-609c-4999-18e1-3401d48e1d50@grumpydevil.homelinux.org>
- <86F8F078-A7B4-4AF6-AE7B-6929161850FA@tobx.de> <7c1129bf-22eb-dbb2-7f3b-d3b8844dc92d@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [GIT PULL] MD update for 4.15-rc1
+Date: Tue, 14 Nov 2017 20:14:26 -0500
+Message-ID: <20171115011426.GA3179@redhat.com>
+References: <20171114195651.zxo3hz3odpc2j24d@kernel.org>
+ <CA+55aFy5r9cz=28G8G6pjY5mfGFRdwKatPJJ+DULOUvEFsokGw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7c1129bf-22eb-dbb2-7f3b-d3b8844dc92d@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFy5r9cz=28G8G6pjY5mfGFRdwKatPJJ+DULOUvEFsokGw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Larkin Lowrey <llowrey@gmail.com>
-Cc: Tobx <net@tobx.de>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Shaohua Li <shli@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Tobi,
+On Tue, Nov 14 2017 at  7:14pm -0500,
+Linus Torvalds <torvalds@linux-foundation.org> wrote:
 
-Your mdadm is a little old. Could you please try rebuild it from
-latest source code?
+> So I've pulled this, but have a question:
+> 
+> On Tue, Nov 14, 2017 at 11:56 AM, Shaohua Li <shli@kernel.org> wrote:
+> >
+> > Mike Snitzer (1):
+> >       md: rename some drivers/md/ files to have an "md-" prefix
+> 
+> is this really sensible? I know I absolutely hate what things like
+> this does to tab-completion, because everything now has the same
+> prefix.
+> 
+> And it's not like it adds any value - the "md" is already there in the
+> directory name.
+> 
+> So honestly, if this was code that I regularly looked at (it isn't),
+> I'd probably not be happy. As it is, I don't really care all that
+> much, just wanted to check.
+> 
+> Why is it "md-faulty,c", but "raid5.c", for example?
+> 
+> And if it's to try to separate the "dm-xyz" vs "md-xyz" ones, maybe
+> making this an actual directory structure rather than a prefix would
+> be better?
+> 
+> Just throwing this out.
 
-Thanks,
-Song
+I see you already took the change; but regardless the idea of splitting
+MD and DM files into separate directories was explored briefly (by me).
+I stopped short of that because dm-raid.c does share code with md (see
+all the md includes at the top of dm-raid.c).
 
-On Tue, Nov 14, 2017 at 2:49 PM, Larkin Lowrey <llowrey@gmail.com> wrote:
-> On 11/14/2017 5:28 PM, Tobx wrote:
->>
->> Rudy Zijlstra wrote:
->>>
->>> What is in your mdadm.conf? Usually found in either /etc/ or in
->>> /etc/mdadm/
->>
->> Created with /usr/share/mdadm/mkconf:
->>
->> HOMEHOST <system>
->> MAILADDR root
->> ARRAY /dev/md/test  metadata=1.2 UUID=d59de5cc:02f560ed:ebcb9400:491955d7
->> name=debian:test
->>     spares=1
->>
->
-> The "spares=1" is for the journal device. The "mdadm --examine --scan"
-> command produced that for me as well but since it seemed odd I deleted that
-> part. Since there isn't actually a spare it seems incorrect. I've never
-> tried to boot with "spares=1" so I don't know if removing it will make any
-> difference.
->
-> --Larkin
+Would require more extensive work to formalize the MD interfaces through
+include/linux/ which wasn't a priority to tackle.  I was just after
+stopping the various janitor DM patch submissions from spamming
+linux-raid and shli.  So went with the quickest way to express discrete
+MD and DM files within the MAINTAINERS file.
+
+Mike
+
