@@ -1,155 +1,104 @@
-From: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [fstests PATCH v3] generic: add test for DAX MAP_SYNC support
-Date: Thu, 16 Nov 2017 14:28:15 -0700
-Message-ID: <20171116212815.GA27448@linux.intel.com>
-References: <CAOQ4uxh25JmAv3DjCp11fAfpHVP=d2sp+=Gk4SxYfBtmOgaUPw@mail.gmail.com>
- <20171025204704.3382-1-ross.zwisler@linux.intel.com>
- <20171025215638.GA30335@dastard>
+From: Larkin Lowrey <llowrey@gmail.com>
+Subject: Arrays with journals read-only on boot
+Date: Thu, 16 Nov 2017 16:29:17 -0500
+Message-ID: <02c58752-6d35-1346-a1f6-587707ae1921@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20171025215638.GA30335@dastard>
-List-Unsubscribe: <https://lists.01.org/mailman/options/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.01.org/pipermail/linux-nvdimm/>
-List-Post: <mailto:linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.01.org/mailman/listinfo/linux-nvdimm>,
- <mailto:linux-nvdimm-request-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org?subject=subscribe>
-Errors-To: linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-Sender: "Linux-nvdimm" <linux-nvdimm-bounces-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org>
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Eryu Guan <eguan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Josef Bacik <jbacik-b10kYP2dOMg@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fstests <fstests-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ext4 <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Oct 26, 2017 at 08:56:38AM +1100, Dave Chinner wrote:
-> On Wed, Oct 25, 2017 at 02:47:04PM -0600, Ross Zwisler wrote:
-> > Add a test that exercises DAX's new MAP_SYNC flag.
-> > 
-> > This test creates a file and writes to it via an mmap(), but never syncs
-> > via fsync/msync.  This process is tracked via dm-log-writes, then replayed.
-> > 
-> > If MAP_SYNC is working the dm-log-writes replay will show the test file
-> > with 1MiB of on-media block allocations.  This is because each allocating
-> > page fault included an implicit metadata sync.  If MAP_SYNC isn't working
-> > (which you can test by fiddling with the parameters to mmap()) the file
-> > will be smaller or missing entirely.
-> > 
-> > Note that dm-log-writes doesn't track the data that we write via the
-> > mmap(), so we can't do any data integrity checking.  We can only verify
-> > that the metadata writes for the page faults happened.
-> > 
-> > Signed-off-by: Ross Zwisler <ross.zwisler-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> .....
-> > --- /dev/null
-> > +++ b/src/t_map_sync.c
-> > @@ -0,0 +1,92 @@
-> > +#include <errno.h>
-> > +#include <fcntl.h>
-> > +#include <stdio.h>
-> > +#include <stdlib.h>
-> > +#include <string.h>
-> > +#include <sys/mman.h>
-> > +#include <sys/stat.h>
-> > +#include <sys/types.h>
-> > +#include <unistd.h>
-> > +
-> > +#define MiB(a) ((a)*1024*1024)
-> > +
-> > +/*
-> > + * These two defines were added to the kernel via commits entitled
-> > + * "mm: Define MAP_SYNC and VM_SYNC flags" and
-> > + * "mm: introduce MAP_SHARED_VALIDATE, a mechanism to safely define new mmap
-> > + * flags", respectively.
-> > + */
-> > +#ifndef MAP_SYNC
-> > +#define MAP_SYNC 0x80000
-> > +#endif
-> > +
-> > +#ifndef MAP_SHARED_VALIDATE
-> > +#define MAP_SHARED_VALIDATE 0x3
-> > +#endif
-> 
-> Autoconf rules for detecting supported functionality, please...
+I have a system with two arrays that have journals. When booting, the 
+arrays assemble in read-only mode because the journal devices can't be 
+found. The journal devices are in fact present and activated very early 
+in the boot sequence. Since one of the arrays is root I end up at the 
+dracut recovery shell. I am able to stop the arrays and assemble them 
+successfully via 'mdadm --assemble --scan'.
 
-Yep, that's better.  As you've suggested down below I'm adding this
-functionality to xfs_io instead, and I've added autoconf rules there.
+Is it a bad idea to use md partitions for the journals? I initially used 
+LVM volumes but the shutdown procedure didn't like that since it wanted 
+to deactivate all LVs before stopping the arrays but couldn't since the 
+arrays depended on the LVs. So, I moved the journals to md partitions so 
+I didn't need to have multiple raid10 arrays (one per journal).
 
-> > +
-> > +void err_exit(char *op)
-> > +{
-> > +	fprintf(stderr, "%s: %s\n", op, strerror(errno));
-> > +	exit(1);
-> > +}
-> > +
-> > +void mark_log(char *logwrites_name, char *mark_name)
-> > +{
-> > +	char command[256];
-> > +
-> > +	snprintf(command, 256, "dmsetup message %s 0 mark %s",
-> > +			logwrites_name, mark_name);
-> > +
-> > +	if (system(command))
-> > +		err_exit("mark_log");
-> > +}
-> > +
-> > +int main(int argc, char *argv[])
-> > +{
-> > +	int page_size = getpagesize();
-> > +	int len = MiB(1);
-> > +	int i, fd, err;
-> > +	char *data;
-> > +
-> > +	if (argc < 4) {
-> > +		printf("Usage: %s <file> <logwrites_name> <mark_name>\n",
-> > +				basename(argv[0]));
-> > +		exit(0);
-> > +	}
-> > +
-> > +	fd = open(argv[1], O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
-> > +	if (fd < 0)
-> > +		err_exit("fd");
-> > +
-> > +	ftruncate(fd, len);
-> > +
-> > +	data = mmap(NULL, len, PROT_READ|PROT_WRITE,
-> > +			MAP_SHARED_VALIDATE|MAP_SYNC, fd, 0);
-> > +	if (data == MAP_FAILED)
-> > +		err_exit("mmap");
-> 
-> As I say to all these sorts of one-off test prgrams: please add the
-> new MAP_SYNC flag to xfs_io rather than writing a one-off
-> test program to set it and write some data.
-> 
-> And if we're going to be adding special custom tests just because
-> we need to insert dm-log marks, add that functionality to xfs_io,
-> too.
-> 
-> That way we can create complex custom dm logwrite tests without
-> needing one-off test programs for them all...
+### journal devices are p3 and p4 below
+md0: detected capacity change from 0 to 68652367872
+md0: p1 p2 p3 p4
 
-Yep, that was a better path.  I've got things working - need to clean up and
-I'll send out soon.
+### much later in the boot...
 
-> > +#! /bin/bash
-> > +# FS QA Test No. 466
-> > +#
-> > +# Use md_log_writes to verify that MAP_SYNC actually syncs metadata during
-> 
-> dm_log_writes?
+md/raid:md2: journal disk is missing, force array readonly
+md/raid:md2: raid level 6 active with 8 out of 8 devices, algorithm 2
+md2: detected capacity change from 0 to 6000417177600
 
-Fixed.
+md/raid:md3: journal disk is missing, force array readonly
+md/raid:md3: raid level 5 active with 9 out of 9 devices, algorithm 2
+md3: detected capacity change from 0 to 64009348841472
 
-> > +# We should see $SCRATCH_MNT/test as having 1MiB in block allocations
-> > +du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-> 
-> Perhaps stat -c %b $SCRATCH_MNT/test ?
+dracut:/# mdadm --version
+mdadm - v4.0-218-gfe05dc4 - 2017-11-09
 
-Maybe, but doesn't the output of 'stat -c %b' depend on the block size the
-filesystem is using?  I think to use stat I'd have to check both %b and %B,
-and account for different block sizes, or do some shell math.  I think it may
-be easier to just use du.
+dracut:/# cat /proc/mdstat
+Personalities : [raid10] [raid0] [raid6] [raid5] [raid4]
+md2 : active (read-only) raid6 sdv1[4] sdy1[7] sdu1[3] sdx1[6] sdw1[5] 
+sdt1[2] sds1[1] sdr1[0]
+       5859782400 blocks super 1.2 level 6, 128k chunk, algorithm 2 
+[8/8] [UUUUUUUU]
 
-Thank you for the review, sorry for the delayed response.
+md11 : active raid0 sdn1[0] sdi1[1]
+       7813772288 blocks super 1.2 512k chunks
+
+md10 : active raid0 sdm1[0] sdh1[1]
+       7813772288 blocks super 1.2 512k chunks
+
+md3 : active (read-only) raid5 md10[6] md11[7] sdg1[12] sdf1[11] sdq1[9] 
+sdp1[13] sdl1[10] sdj1[8] sdo1[14]
+       62509129728 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[9/9] [UUUUUUUUU]
+
+md0 : active raid10 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+       67043328 blocks super 1.2 128K chunks 2 far-copies [4/4] [UUUU]
+
+### I can stop and assemble the arrays just fine
+
+dracut:/# mdadm --stop /dev/md2 /dev/md3
+md2: detected capacity change from 6000417177600 to 0
+md: md2 stopped.
+mdadm: stopped /dev/md2
+md3: detected capacity change from 64009348841472 to 0
+md: md3 stopped.
+mdadm: stopped /dev/md3
+
+dracut:/# mdadm --assemble --scan
+md: md2 stopped.
+md/raid:md2: device sdr1 operational as raid disk 0
+md/raid:md2: device sdy1 operational as raid disk 7
+md/raid:md2: device sdx1 operational as raid disk 6
+md/raid:md2: device sdw1 operational as raid disk 5
+md/raid:md2: device sdv1 operational as raid disk 4
+md/raid:md2: device sdu1 operational as raid disk 3
+md/raid:md2: device sdt1 operational as raid disk 2
+md/raid:md2: device sds1 operational as raid disk 1
+md/raid:md2: raid level 6 active with 8 out of 8 devices, algorithm 2
+md2: detected capacity change from 0 to 6000417177600
+mdadm: /dev/md/2 has been started with 8 drives and 1 journal.
+md: md3 stopped.
+md/raid:md3: device md11 operational as raid disk 0
+md/raid:md3: device sdp1 operational as raid disk 8
+md/raid:md3: device sdl1 operational as raid disk 7
+md/raid:md3: device sdg1 operational as raid disk 6
+md/raid:md3: device sdf1 operational as raid disk 5
+md/raid:md3: device sdo1 operational as raid disk 4
+md/raid:md3: device sdj1 operational as raid disk 3
+md/raid:md3: device sdq1 operational as raid disk 2
+md/raid:md3: device md10 operational as raid disk 1
+md/raid:md3: raid level 5 active with 9 out of 9 devices, algorithm 2
+md3: detected capacity change from 0 to 64009348841472
+mdadm: /dev/md/3 has been started with 9 drives and 1 journal.
+
+Kernel: 4.13.12-100.fc25.x86_64
+
+--Larkin
