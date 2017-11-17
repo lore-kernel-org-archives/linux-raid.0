@@ -1,142 +1,98 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] [RFC] md raid10: use rcu to avoid NULL dereference in
- raid10d()
-Date: Fri, 17 Nov 2017 12:03:26 -0800
-Message-ID: <20171117200326.xqchu3r3elzvkg7z@kernel.org>
-References: <20171017163637.17132-1-colyli@suse.de>
- <87efq1k0ef.fsf@notabene.neil.brown.name>
- <87zi8oginj.fsf@notabene.neil.brown.name>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH v2] md: introduce new personality funciton start()
+Date: Fri, 17 Nov 2017 20:23:59 +0000
+Message-ID: <E959CA9E-E05D-407C-A1A7-DD09A9C8E765@fb.com>
+References: <20171116181244.3552262-1-songliubraving@fb.com>
+ <20171117192122.ewxsumxakb2rkzt7@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87zi8oginj.fsf@notabene.neil.brown.name>
+In-Reply-To: <20171117192122.ewxsumxakb2rkzt7@kernel.org>
+Content-Language: en-US
+Content-ID: <C6F8930EEA97834DB2B6F825BDD09B68@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, NeilBrown <neilb@suse.com>, "artur.paszkiewicz@intel.com" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, Oct 19, 2017 at 10:06:56AM +1100, Neil Brown wrote:
-> On Wed, Oct 18 2017, NeilBrown wrote:
-> 
-> > On Wed, Oct 18 2017, Coly Li wrote:
-> >
-> >> We have a bug report about NULL dereference in md raid10 code. The
-> >> operations are,
-> >>  - Create a raid10 device
-> >>  - add a spare disk
-> >>  - disconnect one of the online disks from the raid10 device
-> >>  - wait to the recovery happens on the spare disk
-> >>  - remove the spare disk which is recovering
-> >> And sometimes a kernel oops of NULL dereference in md raid10 module can
-> >> be observed, and crash tool reports the following information:
-> >>> (gdb) list *(raid10d+0xad6)
-> >>> 0x5de6 is in raid10d (../drivers/md/raid10.c:2300).
-> >>> 2295		 * the latter is free to free wbio2.
-> >>> 2296		 */
-> >>> 2297		if (wbio2 && !wbio2->bi_end_io)
-> >>> 2298			wbio2 = NULL;
-> >>> 2299		if (wbio->bi_end_io) {
-> >>> 2300			atomic_inc(&conf->mirrors[d].rdev->nr_pending);
-> >>> 2301			md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(wbio));
-> >>> 2302			generic_make_request(wbio);
-> >>> 2303		}
-> >>> 2304		if (wbio2) {
-> >> At line 2300, conf->mirrors[d].rdev is NULL, this causes a NULL pointer
-> >> dereference to conf->mirrors[d].rdev->nr_pending. After reading previous
-> >> raid10 patches, I find conf->mirrors[d].rdev can be NULL at any point
-> >> unless,
-> >>  - a counted reference is held
-> >>  - ->reconfig_mutex is held, or
-> >>  - rcu_read_lock() is held
-> >
-> > There is one other condition: MD_RECOVERY_RUNNING is set (without
-> > MD_RECOVERY_DONE).
-> > mirrors[d].rdev is only set to NULL by ->hot_remove_disk() which is only
-> > called from remove_and_add_spares(), and that is never called while
-> > resync/recovery/reshape is happening.
-> > So there is no need for RCU protection here.
-> >
-> > Only ... remove_and_add_spares() *can* sometimes be called during
-> > resync -
-> > Commit: 8430e7e0af9a ("md: disconnect device from personality before trying to remove it.")
-> > added a called to remove_and_add_spares() when "remove" is written to
-> > the device/state attribute.  That was wrong.
-> > This:
-> >
-> >  	} else if (cmd_match(buf, "remove")) {
-> > -		if (rdev->mddev->pers) {
-> > +		if (rdev->mddev->pers &&
-> > +		    !test_bit(MD_RECOVERY_RECOVER, &mddev->recovery)) {
-> >  			clear_bit(Blocked, &rdev->flags);
-> >  			remove_and_add_spares(rdev->mddev, rdev);
-> >
-> > should fix it.
-> 
-> Actually, that doesn't even compile :-(
-> 
-> I think this is a better fix.
-> Thanks,
-> NeilBrown
-> 
-> From: NeilBrown <neilb@suse.com>
-> Date: Thu, 19 Oct 2017 09:58:19 +1100
-> Subject: [PATCH] md: only allow remove_and_add_spares() when no sync_thread running.
-> 
-> The locking protocols in md assume that a device will
-> never be removed from an array during resync/recovery/reshape.
-> When that isn't happening, rcu or reconfig_mutex is needed
-> to protect an rdev pointer while taking a refcount.  When
-> it is happening, that protection isn't needed.
-> 
-> Unfortuantely there is a case were remove_and_add_spares() is
-> called when recovery might be happening: when "remove" is
-> written to the device/state sysfs attribute.
-> 
-> This call is an optimization and not essential so it doesn't
-> matter if it fails.
-> So change remove_and_add_spares() to abort early if
-> resync/recovery/reshape is happening.
-> 
-> As this can result in a NULL dereference, the fix is suitable
-> for -stable.
-> 
-> Cc: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-> Fixes: 8430e7e0af9a ("md: disconnect device from personality before trying to remove it.")
-> Cc: stable@ver.kernel.org (v4.8+)
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  drivers/md/md.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index b3192943de7d..01eac0dbca98 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8563,6 +8563,10 @@ static int remove_and_add_spares(struct mddev *mddev,
->  	int removed = 0;
->  	bool remove_some = false;
 
-Sorry, I missed this patch.
+> On Nov 17, 2017, at 11:21 AM, Shaohua Li <shli@kernel.org> wrote:
+>=20
+> On Thu, Nov 16, 2017 at 10:12:44AM -0800, Song Liu wrote:
+>> In do_md_run(), md threads should not wake up until the array is fully
+>> initialized in md_run(). However, in raid5_run(), raid5-cache may wake
+>> up mddev->thread to flush stripes that need to be written back. This
+>> design doesn't break badly right now. But it could lead to bad bug in
+>> the future.
+>>=20
+>> This patch tries to resolve this problem by splitting start up work
+>> into two personality functions, run() and start(). Tasks that do not
+>> require the md threads should go into run(), while task that require
+>> the md threads go into start().
+>>=20
+>> r5l_load_log() is moved to raid5_start(), so it is not called until
+>> the md threads are started in do_md_run().
+>>=20
+>> Signed-off-by: Song Liu <songliubraving@fb.com>
+>> ---
+>> drivers/md/md.c          | 13 ++++++++-----
+>> drivers/md/md.h          |  5 +++++
+>> drivers/md/raid5-cache.c | 22 +++++++++++++++++-----
+>> drivers/md/raid5-log.h   |  1 +
+>> drivers/md/raid5.c       | 10 ++++++++++
+>> 5 files changed, 41 insertions(+), 10 deletions(-)
+>>=20
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index e014d39..afeab7b 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -5561,11 +5561,6 @@ int md_run(struct mddev *mddev)
+>> 	if (start_readonly && mddev->ro =3D=3D 0)
+>> 		mddev->ro =3D 2; /* read-only, but switch on first write */
+>>=20
+>> -	/*
+>> -	 * NOTE: some pers->run(), for example r5l_recovery_log(), wakes
+>> -	 * up mddev->thread. It is important to initialize critical
+>> -	 * resources for mddev->thread BEFORE calling pers->run().
+>> -	 */
+>> 	err =3D pers->run(mddev);
+>> 	if (err)
+>> 		pr_warn("md: pers->run() failed ...\n");
+>> @@ -5680,6 +5675,14 @@ static int do_md_run(struct mddev *mddev)
+>> 		md_allow_write(mddev);
+>>=20
+>> 	md_wakeup_thread(mddev->thread);
+>> +	/* run start up tasks that require md_thread */
+>> +	if (mddev->pers->start) {
+>> +		err =3D mddev->pers->start(mddev);
+>> +		if (err) {
+>> +			bitmap_destroy(mddev);
+>> +			goto out;
+>> +		}
+>> +	}
+>=20
+> Looks there is one thing left. dm-raid.c calls md_run but not do_md_run,
+> dm-raid supports raid5-cache too. So we need export a wrap for ->start an=
+d let
+> dm-raid use it.
 
-I'd really appreciate if you can add the locking protocol into comments here,
-digging changelog is much painful.
-  
-> +	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-> +		/* Mustn't remove devices when resync thread is running */
-> +		return 0;
-> +
+I can add this.=20
 
-This will bypass hotadd too, is it what we want?
+
+> This doesn't seem to prevent reshape happening. mddev->thread calls
+> check_recovery which can create and wakeup sync_thread. Probably we shoul=
+d
+> preserve ->recovery and set it 0, do log load and then set it back, this =
+way we
+> should prevent the reshape for sure.
+
+Maybe we need some systematic way to gate both threads (md_thread and=20
+sync_thread). Maybe some extra flags like:
+
+MD_THREAD_ENABLED
+SYNC_THREAD_ENABLED
 
 Thanks,
-Shaohua
->  	rdev_for_each(rdev, mddev) {
->  		if ((this == NULL || rdev == this) &&
->  		    rdev->raid_disk >= 0 &&
-> -- 
-> 2.14.0.rc0.dirty
-> 
-> 
-
+Song
 
