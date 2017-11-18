@@ -1,262 +1,48 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v3 2/2] md: introduce new personality funciton start()
-Date: Fri, 17 Nov 2017 17:23:12 -0800
-Message-ID: <20171118012312.2562038-2-songliubraving@fb.com>
-References: <20171118012312.2562038-1-songliubraving@fb.com>
+From: Matthias Walther <matthias@walther.xyz>
+Subject: Unexpected mdadm behavior with old replugged disc
+Date: Sat, 18 Nov 2017 15:35:35 +0100
+Message-ID: <239f7f18-00d3-254a-e460-24b40e9db5e1@walther.xyz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171118012312.2562038-1-songliubraving@fb.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: kernel-team@fb.com, shli@kernel.org, neilb@suse.com, artur.paszkiewicz@intel.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-In do_md_run(), md threads should not wake up until the array is fully
-initialized in md_run(). However, in raid5_run(), raid5-cache may wake
-up mddev->thread to flush stripes that need to be written back. This
-design doesn't break badly right now. But it could lead to bad bug in
-the future.
+Hello,
 
-This patch tries to resolve this problem by splitting start up work
-into two personality functions, run() and start(). Tasks that do not
-require the md threads should go into run(), while task that require
-the md threads go into start().
+I just signed up for this mailing list to discuss the following,
+unexpected behavior:
 
-r5l_load_log() is moved to raid5_start(), so it is not called until
-the md threads are started in do_md_run().
+Situation: Raid6 with 6 discs. For some reasons, which are unimportant,
+I had replaced a disc before, which was fully functional. This disc was
+never changed or written to in between.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/dm-raid.c     |  8 ++++++++
- drivers/md/md.c          | 32 ++++++++++++++++++++++++++------
- drivers/md/md.h          |  7 +++++++
- drivers/md/raid5-cache.c | 22 +++++++++++++++++-----
- drivers/md/raid5-log.h   |  1 +
- drivers/md/raid5.c       | 10 ++++++++++
- 6 files changed, 69 insertions(+), 11 deletions(-)
+Today I replugged this particular disc additionally as 7th disc to the
+server (cold plug, server was switched off).
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 8b1d931..83dc6ba 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3156,6 +3156,14 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		goto bad;
- 	}
- 
-+	r = md_start(&rs->md);
-+
-+	if (r) {
-+		ti->error = "Failed to start raid array";
-+		mddev_unlock(&rs->md);
-+		goto bad;
-+	}
-+
- 	rs->callbacks.congested_fn = raid_is_congested;
- 	dm_table_add_target_callbacks(ti->table, &rs->callbacks);
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e014d39..f930449 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5561,11 +5561,6 @@ int md_run(struct mddev *mddev)
- 	if (start_readonly && mddev->ro == 0)
- 		mddev->ro = 2; /* read-only, but switch on first write */
- 
--	/*
--	 * NOTE: some pers->run(), for example r5l_recovery_log(), wakes
--	 * up mddev->thread. It is important to initialize critical
--	 * resources for mddev->thread BEFORE calling pers->run().
--	 */
- 	err = pers->run(mddev);
- 	if (err)
- 		pr_warn("md: pers->run() failed ...\n");
-@@ -5679,7 +5674,17 @@ static int do_md_run(struct mddev *mddev)
- 	if (mddev_is_clustered(mddev))
- 		md_allow_write(mddev);
- 
-+	set_bit(MD_RECOVERY_WAIT, &mddev->recovery);
- 	md_wakeup_thread(mddev->thread);
-+	/* run start up tasks that require md_thread */
-+	if (mddev->pers->start) {
-+		err = mddev->pers->start(mddev);
-+		if (err) {
-+			bitmap_destroy(mddev);
-+			goto out;
-+		}
-+	}
-+	clear_bit(MD_RECOVERY_WAIT, &mddev->recovery);
- 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
- 
- 	set_capacity(mddev->gendisk, mddev->array_sectors);
-@@ -5690,6 +5695,20 @@ static int do_md_run(struct mddev *mddev)
- 	return err;
- }
- 
-+int md_start(struct mddev *mddev)
-+{
-+	int ret;
-+
-+	if (mddev->pers->start) {
-+		set_bit(MD_RECOVERY_WAIT, &mddev->recovery);
-+		ret = mddev->pers->start(mddev);
-+		clear_bit(MD_RECOVERY_WAIT, &mddev->recovery);
-+		return ret;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(md_start);
-+
- static int restart_array(struct mddev *mddev)
- {
- 	struct gendisk *disk = mddev->gendisk;
-@@ -8168,7 +8187,8 @@ void md_do_sync(struct md_thread *thread)
- 	int ret;
- 
- 	/* just incase thread restarts... */
--	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-+	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
-+	    test_bit(MD_RECOVERY_WAIT, &mddev->recovery))
- 		return;
- 	if (mddev->ro) {/* never try to sync a read-only array */
- 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 7d6bcf0..7dcc7e6 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -485,6 +485,7 @@ enum recovery_flags {
- 	MD_RECOVERY_RESHAPE,	/* A reshape is happening */
- 	MD_RECOVERY_FROZEN,	/* User request to abort, and not restart, any action */
- 	MD_RECOVERY_ERROR,	/* sync-action interrupted because io-error */
-+	MD_RECOVERY_WAIT,	/* waiting for pers->start() to finish */
- };
- 
- static inline int __must_check mddev_lock(struct mddev *mddev)
-@@ -523,7 +524,12 @@ struct md_personality
- 	struct list_head list;
- 	struct module *owner;
- 	bool (*make_request)(struct mddev *mddev, struct bio *bio);
-+	/* start up works that do NOT require md_thread. tasks that
-+	 * requires md_thread should go into start()
-+	 */
- 	int (*run)(struct mddev *mddev);
-+	/* start up works that require md threads */
-+	int (*start)(struct mddev *mddev);
- 	void (*free)(struct mddev *mddev, void *priv);
- 	void (*status)(struct seq_file *seq, struct mddev *mddev);
- 	/* error_handler must set ->faulty and clear ->in_sync
-@@ -687,6 +693,7 @@ extern int strict_strtoul_scaled(const char *cp, unsigned long *res, int scale);
- 
- extern void mddev_init(struct mddev *mddev);
- extern int md_run(struct mddev *mddev);
-+extern int md_start(struct mddev *mddev);
- extern void md_stop(struct mddev *mddev);
- extern void md_stop_writes(struct mddev *mddev);
- extern int md_rdev_init(struct md_rdev *rdev);
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index e01f229..2e1978c 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2448,7 +2448,6 @@ static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
- 		raid5_release_stripe(sh);
- 	}
- 
--	md_wakeup_thread(conf->mddev->thread);
- 	/* reuse conf->wait_for_quiescent in recovery */
- 	wait_event(conf->wait_for_quiescent,
- 		   atomic_read(&conf->active_stripes) == 0);
-@@ -3037,6 +3036,23 @@ static int r5l_load_log(struct r5l_log *log)
- 	return ret;
- }
- 
-+int r5l_start(struct r5l_log *log)
-+{
-+	int ret;
-+
-+	if (!log)
-+		return 0;
-+
-+	ret = r5l_load_log(log);
-+	if (ret) {
-+		struct mddev *mddev = log->rdev->mddev;
-+		struct r5conf *conf = mddev->private;
-+
-+		r5l_exit_log(conf);
-+	}
-+	return ret;
-+}
-+
- void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -3139,13 +3155,9 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 
- 	rcu_assign_pointer(conf->log, log);
- 
--	if (r5l_load_log(log))
--		goto error;
--
- 	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
- 	return 0;
- 
--error:
- 	rcu_assign_pointer(conf->log, NULL);
- 	md_unregister_thread(&log->reclaim_thread);
- reclaim_thread:
-diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-index c3596a2..d8577b0 100644
---- a/drivers/md/raid5-log.h
-+++ b/drivers/md/raid5-log.h
-@@ -31,6 +31,7 @@ extern struct md_sysfs_entry r5c_journal_mode;
- extern void r5c_update_on_rdev_error(struct mddev *mddev,
- 				     struct md_rdev *rdev);
- extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
-+extern int r5l_start(struct r5l_log *log);
- 
- extern struct dma_async_tx_descriptor *
- ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1649e82..39cdd78 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -8364,6 +8364,13 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
- 	return err;
- }
- 
-+static int raid5_start(struct mddev *mddev)
-+{
-+	struct r5conf *conf = mddev->private;
-+
-+	return r5l_start(conf->log);
-+}
-+
- static struct md_personality raid6_personality =
- {
- 	.name		= "raid6",
-@@ -8371,6 +8378,7 @@ static struct md_personality raid6_personality =
- 	.owner		= THIS_MODULE,
- 	.make_request	= raid5_make_request,
- 	.run		= raid5_run,
-+	.start		= raid5_start,
- 	.free		= raid5_free,
- 	.status		= raid5_status,
- 	.error_handler	= raid5_error,
-@@ -8395,6 +8403,7 @@ static struct md_personality raid5_personality =
- 	.owner		= THIS_MODULE,
- 	.make_request	= raid5_make_request,
- 	.run		= raid5_run,
-+	.start		= raid5_start,
- 	.free		= raid5_free,
- 	.status		= raid5_status,
- 	.error_handler	= raid5_error,
-@@ -8420,6 +8429,7 @@ static struct md_personality raid4_personality =
- 	.owner		= THIS_MODULE,
- 	.make_request	= raid5_make_request,
- 	.run		= raid5_run,
-+	.start		= raid5_start,
- 	.free		= raid5_free,
- 	.status		= raid5_status,
- 	.error_handler	= raid5_error,
--- 
-2.9.5
+Unexpectedly mdadm broke up my fully synced raid6 and now syncs back to
+this old disc dropping one of the newer discs from the raid.
 
+This might be because it has its uuid still stored with higher rank than
+the newer disc or because the old disc got a lower sdX slot. I don't
+know that in detail.
+
+Anyway, I wouldn't expect mdadm to act like this. It might use the old,
+now plugged in again disc as hot spare or ignore it at all. But it
+shouldn't break a fully synced raid. I have reduced redundancy for about
+24 hours now - without any rational reason.
+
+Especially as this isn't a usual use case. In general, you'd only
+replace broken discs. So this behavior makes even less sense to me,
+because it shouldn't try to use a potentially broken disc.
+
+Is this a bug? Or maybe something the developer's haven thought of, or
+is this just unprecedented?
+
+The kernel version is 4.14 mainline on Ubuntu 16.04 LTS.
+
+Regards,
+Matthias
