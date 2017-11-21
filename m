@@ -1,270 +1,113 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH v4 2/2] md: introduce new personality funciton start()
-Date: Mon, 20 Nov 2017 08:59:18 -0800
-Message-ID: <20171120165918.eucss4cvxgwp44w4@kernel.org>
-References: <20171120061701.2235294-1-songliubraving@fb.com>
- <20171120061701.2235294-2-songliubraving@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: [PATCH] Monitor/msg: Don't print error message if mdmon doesn't run
+Date: Tue, 21 Nov 2017 11:30:20 +0100
+Message-ID: <1511260220-26759-1-git-send-email-mariusz.tkaczyk@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171120061701.2235294-2-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid@vger.kernel.org, kernel-team@fb.com, neilb@suse.com, artur.paszkiewicz@intel.com
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 List-Id: linux-raid.ids
 
-On Sun, Nov 19, 2017 at 10:17:01PM -0800, Song Liu wrote:
-> In do_md_run(), md threads should not wake up until the array is fully
-> initialized in md_run(). However, in raid5_run(), raid5-cache may wake
-> up mddev->thread to flush stripes that need to be written back. This
-> design doesn't break badly right now. But it could lead to bad bug in
-> the future.
-> 
-> This patch tries to resolve this problem by splitting start up work
-> into two personality functions, run() and start(). Tasks that do not
-> require the md threads should go into run(), while task that require
-> the md threads go into start().
-> 
-> r5l_load_log() is moved to raid5_start(), so it is not called until
-> the md threads are started in do_md_run().
-> 
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  drivers/md/dm-raid.c     |  9 +++++++++
->  drivers/md/md.c          | 25 +++++++++++++++++++------
->  drivers/md/md.h          |  8 ++++++++
->  drivers/md/raid5-cache.c | 22 +++++++++++++++++-----
->  drivers/md/raid5-log.h   |  1 +
->  drivers/md/raid5.c       | 10 ++++++++++
->  6 files changed, 64 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-> index 8b1d931..d96cb31 100644
-> --- a/drivers/md/dm-raid.c
-> +++ b/drivers/md/dm-raid.c
-> @@ -3156,6 +3156,14 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
->  		goto bad;
->  	}
->  
-> +	r = md_start(&rs->md);
-> +
-> +	if (r) {
-> +		ti->error = "Failed to start raid array";
-> +		mddev_unlock(&rs->md);
-> +		goto bad_md_start;
-> +	}
-> +
->  	rs->callbacks.congested_fn = raid_is_congested;
->  	dm_table_add_target_callbacks(ti->table, &rs->callbacks);
->  
-> @@ -3203,6 +3211,7 @@ static int raid_ctr(struct dm_target *ti, unsigned int argc, char **argv)
->  	mddev_unlock(&rs->md);
->  	return 0;
->  
-> +bad_md_start:
->  bad_journal_mode_set:
->  bad_stripe_cache:
->  bad_check_reshape:
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e014d39..f850600 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5561,11 +5561,6 @@ int md_run(struct mddev *mddev)
->  	if (start_readonly && mddev->ro == 0)
->  		mddev->ro = 2; /* read-only, but switch on first write */
->  
-> -	/*
-> -	 * NOTE: some pers->run(), for example r5l_recovery_log(), wakes
-> -	 * up mddev->thread. It is important to initialize critical
-> -	 * resources for mddev->thread BEFORE calling pers->run().
-> -	 */
->  	err = pers->run(mddev);
->  	if (err)
->  		pr_warn("md: pers->run() failed ...\n");
-> @@ -5679,6 +5674,9 @@ static int do_md_run(struct mddev *mddev)
->  	if (mddev_is_clustered(mddev))
->  		md_allow_write(mddev);
->  
-> +	/* run start up tasks that require md_thread */
-> +	md_start(mddev);
-> +
->  	md_wakeup_thread(mddev->thread);
->  	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
->  
-> @@ -5690,6 +5688,20 @@ static int do_md_run(struct mddev *mddev)
->  	return err;
->  }
->  
-> +int md_start(struct mddev *mddev)
-> +{
-> +	int ret = 0;
-> +
-> +	if (mddev->pers->start) {
-> +		set_bit(MD_RECOVERY_WAIT, &mddev->recovery);
-> +		md_wakeup_thread(mddev->thread);
-> +		ret = mddev->pers->start(mddev);
-> +		clear_bit(MD_RECOVERY_WAIT, &mddev->recovery);
+Commit 4515fb28a53a ("Add detail information when can not connect
+monitor") was added to warn about failed connection to monitor in 
+WaitClean function (see link below).
 
-Applied the two patches, thanks!
-I added md_wakeup_thread(mddev->sync_thread); here in case dm-raid requires it.
+Mdmon runs for IMSM containers when they have array with redundancy so
+if mdmon doesn't run, mdadm prints this error. This is misleading and
+unnecessary. Just print it in WaitClean function.
 
-> +	}
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(md_start);
-> +
->  static int restart_array(struct mddev *mddev)
->  {
->  	struct gendisk *disk = mddev->gendisk;
-> @@ -8168,7 +8180,8 @@ void md_do_sync(struct md_thread *thread)
->  	int ret;
->  
->  	/* just incase thread restarts... */
-> -	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> +	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
-> +	    test_bit(MD_RECOVERY_WAIT, &mddev->recovery))
->  		return;
->  	if (mddev->ro) {/* never try to sync a read-only array */
->  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 7d6bcf0..be8f72a 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -485,6 +485,7 @@ enum recovery_flags {
->  	MD_RECOVERY_RESHAPE,	/* A reshape is happening */
->  	MD_RECOVERY_FROZEN,	/* User request to abort, and not restart, any action */
->  	MD_RECOVERY_ERROR,	/* sync-action interrupted because io-error */
-> +	MD_RECOVERY_WAIT,	/* waiting for pers->start() to finish */
->  };
->  
->  static inline int __must_check mddev_lock(struct mddev *mddev)
-> @@ -523,7 +524,13 @@ struct md_personality
->  	struct list_head list;
->  	struct module *owner;
->  	bool (*make_request)(struct mddev *mddev, struct bio *bio);
-> +	/*
-> +	 * start up works that do NOT require md_thread. tasks that
-> +	 * requires md_thread should go into start()
-> +	 */
->  	int (*run)(struct mddev *mddev);
-> +	/* start up works that require md threads */
-> +	int (*start)(struct mddev *mddev);
->  	void (*free)(struct mddev *mddev, void *priv);
->  	void (*status)(struct seq_file *seq, struct mddev *mddev);
->  	/* error_handler must set ->faulty and clear ->in_sync
-> @@ -687,6 +694,7 @@ extern int strict_strtoul_scaled(const char *cp, unsigned long *res, int scale);
->  
->  extern void mddev_init(struct mddev *mddev);
->  extern int md_run(struct mddev *mddev);
-> +extern int md_start(struct mddev *mddev);
->  extern void md_stop(struct mddev *mddev);
->  extern void md_stop_writes(struct mddev *mddev);
->  extern int md_rdev_init(struct md_rdev *rdev);
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 39f31f0..f259a5f 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -2448,7 +2448,6 @@ static void r5c_recovery_flush_data_only_stripes(struct r5l_log *log,
->  		raid5_release_stripe(sh);
->  	}
->  
-> -	md_wakeup_thread(conf->mddev->thread);
->  	/* reuse conf->wait_for_quiescent in recovery */
->  	wait_event(conf->wait_for_quiescent,
->  		   atomic_read(&conf->active_stripes) == 0);
-> @@ -3036,6 +3035,23 @@ static int r5l_load_log(struct r5l_log *log)
->  	return ret;
->  }
->  
-> +int r5l_start(struct r5l_log *log)
-> +{
-> +	int ret;
-> +
-> +	if (!log)
-> +		return 0;
-> +
-> +	ret = r5l_load_log(log);
-> +	if (ret) {
-> +		struct mddev *mddev = log->rdev->mddev;
-> +		struct r5conf *conf = mddev->private;
-> +
-> +		r5l_exit_log(conf);
-> +	}
-> +	return ret;
-> +}
-> +
->  void r5c_update_on_rdev_error(struct mddev *mddev, struct md_rdev *rdev)
->  {
->  	struct r5conf *conf = mddev->private;
-> @@ -3138,13 +3154,9 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
->  
->  	rcu_assign_pointer(conf->log, log);
->  
-> -	if (r5l_load_log(log))
-> -		goto error;
-> -
->  	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
->  	return 0;
->  
-> -error:
->  	rcu_assign_pointer(conf->log, NULL);
->  	md_unregister_thread(&log->reclaim_thread);
->  reclaim_thread:
-> diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
-> index c3596a2..d8577b0 100644
-> --- a/drivers/md/raid5-log.h
-> +++ b/drivers/md/raid5-log.h
-> @@ -31,6 +31,7 @@ extern struct md_sysfs_entry r5c_journal_mode;
->  extern void r5c_update_on_rdev_error(struct mddev *mddev,
->  				     struct md_rdev *rdev);
->  extern bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect);
-> +extern int r5l_start(struct r5l_log *log);
->  
->  extern struct dma_async_tx_descriptor *
->  ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 1649e82..39cdd78 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8364,6 +8364,13 @@ static int raid5_change_consistency_policy(struct mddev *mddev, const char *buf)
->  	return err;
->  }
->  
-> +static int raid5_start(struct mddev *mddev)
-> +{
-> +	struct r5conf *conf = mddev->private;
-> +
-> +	return r5l_start(conf->log);
-> +}
-> +
->  static struct md_personality raid6_personality =
->  {
->  	.name		= "raid6",
-> @@ -8371,6 +8378,7 @@ static struct md_personality raid6_personality =
->  	.owner		= THIS_MODULE,
->  	.make_request	= raid5_make_request,
->  	.run		= raid5_run,
-> +	.start		= raid5_start,
->  	.free		= raid5_free,
->  	.status		= raid5_status,
->  	.error_handler	= raid5_error,
-> @@ -8395,6 +8403,7 @@ static struct md_personality raid5_personality =
->  	.owner		= THIS_MODULE,
->  	.make_request	= raid5_make_request,
->  	.run		= raid5_run,
-> +	.start		= raid5_start,
->  	.free		= raid5_free,
->  	.status		= raid5_status,
->  	.error_handler	= raid5_error,
-> @@ -8420,6 +8429,7 @@ static struct md_personality raid4_personality =
->  	.owner		= THIS_MODULE,
->  	.make_request	= raid5_make_request,
->  	.run		= raid5_run,
-> +	.start		= raid5_start,
->  	.free		= raid5_free,
->  	.status		= raid5_status,
->  	.error_handler	= raid5_error,
-> -- 
-> 2.9.5
-> 
+The sock in WaitClean is deprecated so it is removed.
+
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=1375002
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+---
+ Monitor.c | 9 +++++----
+ mdadm.c   | 4 ++--
+ mdadm.h   | 2 +-
+ msg.c     | 2 --
+ 4 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/Monitor.c b/Monitor.c
+index b60996b..c7c05d2 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -1058,7 +1058,7 @@ int Wait(char *dev)
+ static char *clean_states[] = {
+ 	"clear", "inactive", "readonly", "read-auto", "clean", NULL };
+ 
+-int WaitClean(char *dev, int sock, int verbose)
++int WaitClean(char *dev, int verbose)
+ {
+ 	int fd;
+ 	struct mdinfo *mdi;
+@@ -1125,15 +1125,16 @@ int WaitClean(char *dev, int sock, int verbose)
+ 		}
+ 		if (rv < 0)
+ 			rv = 1;
+-		else if (fping_monitor(sock) == 0 ||
+-			 ping_monitor(mdi->text_version) == 0) {
++		else if (ping_monitor(mdi->text_version) == 0) {
+ 			/* we need to ping to close the window between array
+ 			 * state transitioning to clean and the metadata being
+ 			 * marked clean
+ 			 */
+ 			rv = 0;
+-		} else
++		} else {
+ 			rv = 1;
++			pr_err("Error connecting monitor with %s\n", dev);
++		}
+ 		if (rv && verbose)
+ 			pr_err("Error waiting for %s to be clean\n", dev);
+ 
+diff --git a/mdadm.c b/mdadm.c
+index 87cb33f..62d7ec3 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1863,7 +1863,7 @@ static int misc_scan(char devmode, struct context *c)
+ 			if (devmode == 'D')
+ 				rv |= Detail(name, c);
+ 			else
+-				rv |= WaitClean(name, -1, c->verbose);
++				rv |= WaitClean(name, c->verbose);
+ 			put_md_name(name);
+ 		}
+ 	}
+@@ -1954,7 +1954,7 @@ static int misc_list(struct mddev_dev *devlist,
+ 			rv |= Wait(dv->devname);
+ 			continue;
+ 		case Waitclean:
+-			rv |= WaitClean(dv->devname, -1, c->verbose);
++			rv |= WaitClean(dv->devname, c->verbose);
+ 			continue;
+ 		case KillSubarray:
+ 			rv |= Kill_subarray(dv->devname, c->subarray, c->verbose);
+diff --git a/mdadm.h b/mdadm.h
+index 3cbf82f..cf4721a 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1395,7 +1395,7 @@ extern int Kill(char *dev, struct supertype *st, int force, int verbose, int noe
+ extern int Kill_subarray(char *dev, char *subarray, int verbose);
+ extern int Update_subarray(char *dev, char *subarray, char *update, struct mddev_ident *ident, int quiet);
+ extern int Wait(char *dev);
+-extern int WaitClean(char *dev, int sock, int verbose);
++extern int WaitClean(char *dev, int verbose);
+ extern int SetAction(char *dev, char *action);
+ 
+ extern int Incremental(struct mddev_dev *devlist, struct context *c,
+diff --git a/msg.c b/msg.c
+index c66b0a1..45cd450 100644
+--- a/msg.c
++++ b/msg.c
+@@ -171,8 +171,6 @@ int connect_monitor(char *devname)
+ 	addr.sun_family = PF_LOCAL;
+ 	strcpy(addr.sun_path, path);
+ 	if (connect(sfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+-		pr_err("Error connecting monitor with %s: %s\n",
+-			addr.sun_path, strerror(errno));
+ 		close(sfd);
+ 		return -1;
+ 	}
+-- 
+1.8.3.1
+
