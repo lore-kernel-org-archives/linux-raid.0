@@ -1,38 +1,31 @@
-From: Jes Sorensen <jsorensen@fb.com>
-Subject: Re: [PATCH] imsm: continue resync on 3-disk RAID10
-Date: Tue, 21 Nov 2017 13:31:52 -0500
-Message-ID: <bdd9e417-49f5-d038-be24-1a9b570856e6@fb.com>
-References: <20171113113049.23388-1-maksymilian.kunt@intel.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH V2] mdadm: make create clustered raid10 possible
+Date: Tue, 21 Nov 2017 13:34:55 -0500
+Message-ID: <cac28382-c8b7-570c-236e-dce6ae6068fc@gmail.com>
+References: <20171025011913.16870-1-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171113113049.23388-1-maksymilian.kunt@intel.com>
+In-Reply-To: <20171025011913.16870-1-gqjiang@suse.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Maksymilian Kunt <maksymilian.kunt@intel.com>, linux-raid@vger.kernel.org
-Cc: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/13/2017 06:30 AM, Maksymilian Kunt wrote:
-> If RAID10 gets degraded during resync and is stopped, it doesn't continue
-> resync after automatic assemble and it is reported to be in sync. Resync
-> is blocked because the disk is missing. It should not happen for RAID10 as
-> it can still continue with 3 disks.
+On 10/24/2017 09:19 PM, Guoqing Jiang wrote:
+> This change to make we can create a clustered
+> raid10 array as well.
 > 
-> Count missing disks. Block resync only if number of missing disks exceeds
-> limit for given RAID level (only different for RAID10). Check if the
-> disk under recovery is present. If not, resync should be allowed to run.
-> 
-> Signed-off-by: Maksymilian Kunt <maksymilian.kunt@intel.com>
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > ---
->  super-intel.c | 41 +++++++++++++++++++++++++++++++++--------
->  1 file changed, 33 insertions(+), 8 deletions(-)
+>  mdadm.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-Applied!
+I think I missed this one, however it doesn't apply anymore.
+
+If it's still needed, could you please post an updated version.
 
 Thanks,
 Jes
-
-
