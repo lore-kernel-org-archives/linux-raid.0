@@ -1,54 +1,48 @@
 From: Paul Chambers <paul@bod.org>
 Subject: Re: Fwd: problems attempting to grow raid5 to raid6 - advice sought
-Date: Sat, 25 Nov 2017 16:24:24 -0800
-Message-ID: <CALfMqR5gXj7LjJ-ROOWc8aRwzwmjh9mWmLNGj_uTO5khTzT=jA@mail.gmail.com>
+Date: Sat, 25 Nov 2017 16:17:30 -0800
+Message-ID: <CALfMqR5CRXVXeDtwysXdH_t28Ns41e8coP+sUQUmksGdqGT2Gw@mail.gmail.com>
 References: <CALfMqR47A=5usN-=6v3vUHAPYe-dFQ1Zxhuef0zZzRhXPcQQnQ@mail.gmail.com>
- <CALfMqR5DVqMOwNQwTPwb3y3OH7S-mKy-i=N1_SgvWfbRxbtarw@mail.gmail.com> <20171125152304.GN20756@reaktio.net>
+ <CALfMqR5DVqMOwNQwTPwb3y3OH7S-mKy-i=N1_SgvWfbRxbtarw@mail.gmail.com>
+ <f182bf54-3942-2cac-bb19-2b31684c5760@youngman.org.uk> <45ae5d62-c9f3-1e3c-6edc-8ece1cc83db8@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171125152304.GN20756@reaktio.net>
+In-Reply-To: <45ae5d62-c9f3-1e3c-6edc-8ece1cc83db8@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?UGFzaSBLw6Rya2vDpGluZW4=?= <pasik@iki.fi>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Anthony Youngman <antmbox@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Typo in my email, sorry. I did add the partitions, not the drives, to
-the array, i.e.:
+I'd already tweaked it to invoke Python 2.7 on my system - first thing
+I did. The issues I'm seeing are not a trivial python versioning
+issue.
 
-~# mdadm --add /dev/md0 /dev/sdi1 /dev/sdk1 /dev/sdl1
-
-The detailed info dump at the end of the email confirms that.
+For example, it assumes that logical volumes can be found at
+/dev/<vg>/<lv>, a path that's not present on this system. I tweaked it
+to use /dev/mapper/<vg>-<lv> path instead, which is present in my
+system (Proxmox VE, which is debian-based), and then immediately ran
+into another issue. Since that was the third non-trivial issue I'd run
+into, I decided to cut my losses at that point - recovering this array
+is my first priority. I may come back and file bugs later. Maybe even
+learn a little bit of python and submit pull requests :)
 - Paul
 -- 
 http://about.me/paul.chambers
 
 
-On Sat, Nov 25, 2017 at 7:23 AM, Pasi Kärkkäinen <pasik@iki.fi> wrote:
-> On Fri, Nov 24, 2017 at 06:54:43PM -0800, Paul Chambers wrote:
->> (all the detailed info is at the end of this email)
+On Sat, Nov 25, 2017 at 3:47 PM, Phil Turmel <philip@turmel.org> wrote:
+> On 11/25/2017 11:14 AM, Anthony Youngman wrote:
+>> On 25/11/17 02:54, Paul Chambers wrote:
+>>> Following this script is its output on the system in question. It's
+>>> missing the output of lsdrv (sorry), but it has multiple problems
+>>> running on my system, and I'm not proficient enough with python to fix
+>>> them all.
 >>
->> I could use some expert help...
+>> What's your default Python? 3? Then yes it will blow
+>> up.
 >>
->> I started with a RAID-5 array of 5 x 6TB WD RED drives, and 1 x 6TB
->> Seagate Ironwolf drive. This has been running well for a long time as
->> a 5-drive array, and was grown to a 6 drive array a few months ago by
->> the addition of the ironwolf drive. No known issues.
->>
->>   ### devices in order: 0   1   2   3   4   5
->>   DRIVES="sdj sdg sdf sdq sdc sdh"
->>
->> I purchased 3 x 8TB WD Red drives, and used parted to set them up as
->> GPT, with a single partition that fills the drive.
->>
->> I then added them to the array in the usual fashion:
->>
->> ~# mdadm --add /dev/md0 /dev/sdi /dev/sdk /dev/sdl
->>
+>> I had exactly that problem, and all I did was change the shebang line to
+>> explicitly invoke Python 2.7. It worked perfectly.
 >
-> Hmm.. what was the point of creating the partitions if you added the whole disk to the array anyway?
->
->
-> -- Pasi
->
+> Yeah, making it compatible with python3 is on my to-do list.
