@@ -1,89 +1,103 @@
-From: Dennis Yang <shinrairis@gmail.com>
-Subject: Calling block ops when !TASK_RUNNING warning in raid1
-Date: Tue, 28 Nov 2017 16:51:25 +0800
-Message-ID: <CAKTMprOTWf04=433GAhpUYs_UXsw1qgiqpRCRs9zEU0K-GP8Hw@mail.gmail.com>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [dm-devel] [PATCH 3/4] dm: convert dm_dev_internal.count from
+ atomic_t to refcount_t
+Date: Tue, 28 Nov 2017 10:07:08 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B802C3EDA@IRSMSX102.ger.corp.intel.com>
+References: <1508485059-21881-1-git-send-email-elena.reshetova@intel.com>
+ <1508485059-21881-4-git-send-email-elena.reshetova@intel.com>
+ <20171123154941.GA15790@agk-dp.fab.redhat.com>
+ <2236FBA76BA1254E88B949DDB74E612B802C1F07@IRSMSX102.ger.corp.intel.com>
+ <CAMM=eLfrnQqBH06pPnNKfmeF=AjScAxjR1WD7Ur9NAEY=4Sxog@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed;
+        boundary="_002_2236FBA76BA1254E88B949DDB74E612B802C3EDAIRSMSX102gercor_"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAMM=eLfrnQqBH06pPnNKfmeF=AjScAxjR1WD7Ur9NAEY=4Sxog@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Alasdair G Kergon <agk@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "keescook@chromium.org" <keescook@chromium.org>, "peterz@infradead.org" <peterz@infradead.org>, "shli@kernel.org" <shli@kernel.org>, "koverstreet@google.com" <koverstreet@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, "ejt@redhat.comg" <ejt@redhat.comg>, "kent.overstreet@gmail.com" <kent.overstreet@gmail.com>, Zdenek Kabelac <zkabelac@redhat.com>
 List-Id: linux-raid.ids
 
-Hi,
+--_002_2236FBA76BA1254E88B949DDB74E612B802C3EDAIRSMSX102gercor_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-We recently see the following kernel dump on raid1 with some kernel
-debug option on.
+DQo+IE9uIEZyaSwgTm92IDI0LCAyMDE3IGF0IDI6MzYgQU0sIFJlc2hldG92YSwgRWxlbmENCj4g
+PGVsZW5hLnJlc2hldG92YUBpbnRlbC5jb20+IHdyb3RlOg0KPiA+PiBPbiBGcmksIE9jdCAyMCwg
+MjAxNyBhdCAxMDozNzozOEFNICswMzAwLCBFbGVuYSBSZXNoZXRvdmEgd3JvdGU6DQo+ID4+ID4g
+ICAgIH0gZWxzZSBpZiAoZGQtPmRtX2Rldi0+bW9kZSAhPSAobW9kZSB8IGRkLT5kbV9kZXYtPm1v
+ZGUpKSB7DQo+ID4+ID4gICAgICAgICAgICAgciA9IHVwZ3JhZGVfbW9kZShkZCwgbW9kZSwgdC0+
+bWQpOw0KPiA+PiA+ICAgICAgICAgICAgIGlmIChyKQ0KPiA+PiA+ICAgICAgICAgICAgICAgICAg
+ICAgcmV0dXJuIHI7DQo+ID4+ID4gKyAgICAgICAgICAgcmVmY291bnRfaW5jKCZkZC0+Y291bnQp
+Ow0KPiA+PiA+ICAgICB9DQo+ID4+DQo+ID4+IE1pc3NpbmcgaGVyZToNCj4gPj4NCj4gPj4gICAg
+ICAgICBlbHNlDQo+ID4+ICAgICAgICAgICAgICAgcmVmY291bnRfaW5jKCZkZC0+Y291bnQpOw0K
+PiA+Pg0KPiA+PiA/DQo+ID4NCj4gPiBPaCwgeWVzLCB0aGFua3MgZm9yIGNhdGNoaW5nIHRoaXMh
+IEkgdGhpbmsgdGhpcyBnb3QgdW5ub3RpY2VkIHNvIGZhciBhbmQgcGF0Y2ggd2FzDQo+IG1lcmdl
+ZCwgc28gSSBhbSBnb2luZyB0byBzZW5kIGEgZm9sbG93dXAgcGF0Y2ggbm93Lg0KPiANCj4gSSBw
+dXNoZWQgdGhpcyBmaXggYW5kIHdpbGwgc2VuZCB0byBMaW51cyBuZXh0IHdlZWs6DQo+IGh0dHBz
+Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2RldmljZS1tYXBwZXIv
+bGludXgtDQo+IGRtLmdpdC9jb21taXQvP2g9ZG0tNC4xNSZpZD1kOTA4YWY4MmQwNmNjNDIwZjk1
+ODFjOTdjNmRiOTQxY2I4N2U0NDM0DQoNCg0KSSBndWVzcyB5b3UgbWVhbiB0aGlzIGNvbW1pdDoN
+Cmh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2RldmljZS1t
+YXBwZXIvbGludXgtZG0uZ2l0L2NvbW1pdC8/aD1mb3ItbmV4dCZpZD1jMjMxOGQwN2VhZDg3MWYw
+NThkZGE2MmU5NDJlZDdiNmIxYzFjZmNmDQoNClVuZm9ydHVuYXRlbHkgaXQgaXMgbm90IGNvcnJl
+Y3Q6DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL2RtLXRhYmxlLmMgYi9kcml2ZXJzL21kL2Rt
+LXRhYmxlLmMNCmluZGV4IDg4MTMwYjUuLmY2ZDMyZWUgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL21k
+L2RtLXRhYmxlLmMNCisrKyBiL2RyaXZlcnMvbWQvZG0tdGFibGUuYw0KQEAgLTQ1MSwxNSArNDUx
+LDE1IEBAIGludCBkbV9nZXRfZGV2aWNlKHN0cnVjdCBkbV90YXJnZXQgKnRpLCBjb25zdCBjaGFy
+ICpwYXRoLCBmbW9kZV90IG1vZGUsDQogCQkJcmV0dXJuIHI7DQogCQl9DQogDQotCQlyZWZjb3Vu
+dF9zZXQoJmRkLT5jb3VudCwgMSk7DQorCQlyZWZjb3VudF9zZXQoJmRkLT5jb3VudCwgMCk7DQog
+CQlsaXN0X2FkZCgmZGQtPmxpc3QsICZ0LT5kZXZpY2VzKTsNCiANCiAJfSBlbHNlIGlmIChkZC0+
+ZG1fZGV2LT5tb2RlICE9IChtb2RlIHwgZGQtPmRtX2Rldi0+bW9kZSkpIHsNCiAJCXIgPSB1cGdy
+YWRlX21vZGUoZGQsIG1vZGUsIHQtPm1kKTsNCiAJCWlmIChyKQ0KIAkJCXJldHVybiByOw0KLQkJ
+cmVmY291bnRfaW5jKCZkZC0+Y291bnQpOw0KIAl9DQorCXJlZmNvdW50X2luYygmZGQtPmNvdW50
+KTsNCiANClByb2JsZW0gd2lsbCBiZSBoZXJlIGlmIHlvdSBoaXQgdGhpcyByZWZjb3VudF9pbmMo
+KSBhZnRlciB0aGUgcmVmY291bnRfc2V0KCZkZC0+Y291bnQsIDApIGVhcmxpZXIuIA0KcmVmY291
+bnRfaW5jKCkgZG9lcyBub3QgaW5jcmVtZW50IG9uIHplcm8gdmFsdWUgKmV2ZXIqIGZvciBzZWN1
+cml0eSByZWFzb25zIGFuZCBpbnN0ZWFkIHBlb3BsZQ0Kc2hvdWxkIGluaXRpYWxpemUgcmVmY291
+bnRlcnMgdG8gMSBhbHdheXMgYW5kIGRvIGluY3JlbWVudHMgZnJvbSB0aGVyZSBpZiBuZWVkZWQu
+IA0KVGhpcyB3YXMgdGhlIHJlYXNvbiBmb3IgdGhlIGluaXRpYWwgY2hhbmdlIEkgZGlkLCBteSBt
+aXN0YWtlIHdhcyBqdXN0IHRvIGZvcmdldCB0byBpbmNyZW1lbnQgaXQgYWxzbw0KaW4gY2FzZSBj
+b25kaXRpb24gKGRkLT5kbV9kZXYtPm1vZGUgIT0gKG1vZGUgfCBkZC0+ZG1fZGV2LT5tb2RlKSkg
+ZmFpbHMuIA0KDQpJIGhhdmUgaXNzdWVzIHdpdGggbXkgaW50ZWwgc21wdCBzZXJ2ZXIgZm9yIHNl
+bmRpbmcgcGF0Y2hlcyAoSSB3aWxsIGdldCBpdCBmaXhlZCB0b21vcnJvdyBmcm9tIGludGVybmFs
+IG5ldHdvcmspLA0Kc28gSSBhbSBhdHRhY2hpbmcgdGhlIHBhdGNoIEkgZGlkIGVuZCBvZiBsYXN0
+IHdlZWsgdG8gdGhpcyB0aHJlYWQgaW5zdGVhZCAob3IgYWx0ZXJuYXRpdmVseSBjYW4gcHJvcGVy
+bHkgc2VuZCBpdCB0b21vcnJvdyBhZnRlciBmaXgpLiANClNvcnJ5IGZvciB0aGUgZGVsYXkhDQoN
+CkJlc3QgUmVnYXJkcywNCkVsZW5hLg0KDQo=
 
-<4>[   40.501369] ------------[ cut here ]------------
-<4>[   40.501375] WARNING: CPU: 7 PID: 7477 at
-kernel/sched/core.c:7404 __might_sleep+0xa2/0xb0()
-<4>[   40.501378] do not call blocking ops when !TASK_RUNNING; state=2
-set at [<ffffffff810c28d8>] prepare_to_wait_event+0x58/0x100
-<4>[   40.501379] Modules linked in: dm_c2f(O) pl2303 usbserial
-qm2_i2c(O) intel_ips drbd(O) flashcache(O) dm_tier_hro_algo
-dm_thin_pool dm_bio_prison dm_persistent_data hal_netlink(O) k10temp
-coretemp mlx4_en(O) mlx4_core(O) mlx_compat(O) igb e1000e(O)
-mpt3sas(O) mpt2sas scsi_transport_sas raid_class usb_storage xhci_pci
-xhci_hcd usblp uhci_hcd ehci_pci ehci_hcd
-<4>[   40.501395] CPU: 7 PID: 7477 Comm: md321_resync Tainted: G
-    O    4.2.8 #1
-<4>[   40.501396] Hardware name: INSYDE QV96/Type2 - Board Product
-Name1, BIOS QV96IR23 10/21/2015
-<4>[   40.501397]  ffffffff8219aff7 ffff880092f7b868 ffffffff81c86c4b
-ffffffff810dfb59
-<4>[   40.501399]  ffff880092f7b8b8 ffff880092f7b8a8 ffffffff81079fa5
-ffff880092f7b8e8
-<4>[   40.501401]  ffffffff821a4f6d 0000000000000140 0000000000000000
-0000000000000001
-<4>[   40.501403] Call Trace:
-<4>[   40.501407]  [<ffffffff81c86c4b>] dump_stack+0x4c/0x65
-<4>[   40.501409]  [<ffffffff810dfb59>] ? console_unlock+0x279/0x4f0
-<4>[   40.501411]  [<ffffffff81079fa5>] warn_slowpath_common+0x85/0xc0
-<4>[   40.501412]  [<ffffffff8107a021>] warn_slowpath_fmt+0x41/0x50
-<4>[   40.501414]  [<ffffffff810c28d8>] ? prepare_to_wait_event+0x58/0x100
-<4>[   40.501415]  [<ffffffff810c28d8>] ? prepare_to_wait_event+0x58/0x100
-<4>[   40.501416]  [<ffffffff810a4f72>] __might_sleep+0xa2/0xb0
-<4>[   40.501419]  [<ffffffff8117bb7c>] mempool_alloc+0x7c/0x150
-<4>[   40.501422]  [<ffffffff8101442a>] ? save_stack_trace+0x2a/0x50
-<4>[   40.501425]  [<ffffffff8145b589>] bio_alloc_bioset+0xb9/0x260
-<4>[   40.501428]  [<ffffffff816cb6da>] bio_alloc_mddev+0x1a/0x30
-<4>[   40.501429]  [<ffffffff816d22a2>] md_super_write+0x32/0x90
-<4>[   40.501431]  [<ffffffff816db9b2>] write_page+0x2d2/0x480
-<4>[   40.501432]  [<ffffffff816db808>] ? write_page+0x128/0x480
-<4>[   40.501434]  [<ffffffff816a45cc>] ? flush_pending_writes+0x1c/0xe0
-<4>[   40.501435]  [<ffffffff816dc2a6>] bitmap_unplug+0x156/0x170
-<4>[   40.501437]  [<ffffffff810caa2d>] ? trace_hardirqs_on+0xd/0x10
-<4>[   40.501439]  [<ffffffff81c94b4b>] ? _raw_spin_unlock_irq+0x2b/0x40
-<4>[   40.501440]  [<ffffffff816a4613>] flush_pending_writes+0x63/0xe0
-<4>[   40.501442]  [<ffffffff816a4aff>] freeze_array+0x6f/0xc0
-<4>[   40.501443]  [<ffffffff810c27e0>] ? wait_woken+0xb0/0xb0
-<4>[   40.501444]  [<ffffffff816a4b8f>] raid1_quiesce+0x3f/0x50
-<4>[   40.501446]  [<ffffffff816d2254>] md_do_sync+0x1394/0x13b0
-<4>[   40.501447]  [<ffffffff816d1531>] ? md_do_sync+0x671/0x13b0
-<4>[   40.501449]  [<ffffffff810cb680>] ? __lock_acquire+0x990/0x23a0
-<4>[   40.501451]  [<ffffffff810bade7>] ? pick_next_task_fair+0x707/0xc30
-<4>[   40.501453]  [<ffffffff8108783c>] ? kernel_sigaction+0x2c/0xc0
-<4>[   40.501455]  [<ffffffff81c94b4b>] ? _raw_spin_unlock_irq+0x2b/0x40
-<4>[   40.501456]  [<ffffffff816cac80>] ? find_pers+0x80/0x80
-<4>[   40.501457]  [<ffffffff816cadbe>] md_thread+0x13e/0x150
-<4>[   40.501458]  [<ffffffff816cac80>] ? find_pers+0x80/0x80
-<4>[   40.501460]  [<ffffffff816cac80>] ? find_pers+0x80/0x80
-<4>[   40.501462]  [<ffffffff8109ded5>] kthread+0x105/0x120
-<4>[   40.501463]  [<ffffffff81c94b4b>] ? _raw_spin_unlock_irq+0x2b/0x40
-<4>[   40.501465]  [<ffffffff8109ddd0>] ? kthread_create_on_node+0x220/0x220
-<4>[   40.501467]  [<ffffffff81c956cf>] ret_from_fork+0x3f/0x70
-<4>[   40.501468]  [<ffffffff8109ddd0>] ? kthread_create_on_node+0x220/0x220
-<4>[   40.501469] ---[ end trace bd085fb137be2a87 ]---
+--_002_2236FBA76BA1254E88B949DDB74E612B802C3EDAIRSMSX102gercor_
+Content-Type: application/octet-stream;
+	name="0001-dm-fix-the-missing-increment-for-dm_dev_internal.cou.patch"
+Content-Description: 0001-dm-fix-the-missing-increment-for-dm_dev_internal.cou.patch
+Content-Disposition: attachment;
+	filename="0001-dm-fix-the-missing-increment-for-dm_dev_internal.cou.patch";
+	size=1210; creation-date="Tue, 28 Nov 2017 10:05:02 GMT";
+	modification-date="Tue, 28 Nov 2017 10:05:02 GMT"
+Content-Transfer-Encoding: base64
 
-It looks like raid1_quiesce() creates a nested sleeping primitives by
-calling wait_event_lock_irq_cmd()
-first to change the state to TASK_UNINTERRUPTIBLE and
-flush_pending_writes() could eventually try
-to allocate bio for bitmap update with GFP_NOIO which might sleep and
-triggers this warning.
-I am not sure if this warning is just a false-positive or should we
-change the bio allocation
-gfp flag to GFP_NOWAIT to prevent it from blocking?
+RnJvbSA3MTU5NzdhYzAwOTBjZjNlZThkZGMzMzljMjkyNDM0ZTIwYTljOTNkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBFbGVuYSBSZXNoZXRvdmEgPGVsZW5hLnJlc2hldG92YUBpbnRl
+bC5jb20+CkRhdGU6IEZyaSwgMjQgTm92IDIwMTcgMTA6MDI6NDggKzAyMDAKU3ViamVjdDogW1BB
+VENIXSBkbTogZml4IHRoZSBtaXNzaW5nIGluY3JlbWVudCBmb3IgZG1fZGV2X2ludGVybmFsLmNv
+dW50CgpUaGUgY29tbWl0IDJhMGI0NjgyZTA5ZDc2NDY2ZjdiOGY1ZTM0N2FlMmZmMDJmMDMzYWYK
+bWlzdGFrZW5seSBmb3Jnb3R0ZW4gb25lIGNhc2Ugd2hlcmUgcmVmY291bnQgbXVzdCBiZQppbmNy
+ZW1lbnRlZC4gRml4IHRoaXMuCgpSZXBvcnRlZC1ieTogQWxhc2RhaXIgRyBLZXJnb24gPGFna0By
+ZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBFbGVuYSBSZXNoZXRvdmEgPGVsZW5hLnJlc2hldG92
+YUBpbnRlbC5jb20+Ci0tLQogZHJpdmVycy9tZC9kbS10YWJsZS5jIHwgOSArKysrKysrLS0KIDEg
+ZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9tZC9kbS10YWJsZS5jIGIvZHJpdmVycy9tZC9kbS10YWJsZS5jCmluZGV4IDg4
+MTMwYjUuLmViMGJhMmEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWQvZG0tdGFibGUuYworKysgYi9k
+cml2ZXJzL21kL2RtLXRhYmxlLmMKQEAgLTQ1MywxNCArNDUzLDE5IEBAIGludCBkbV9nZXRfZGV2
+aWNlKHN0cnVjdCBkbV90YXJnZXQgKnRpLCBjb25zdCBjaGFyICpwYXRoLCBmbW9kZV90IG1vZGUs
+CiAKIAkJcmVmY291bnRfc2V0KCZkZC0+Y291bnQsIDEpOwogCQlsaXN0X2FkZCgmZGQtPmxpc3Qs
+ICZ0LT5kZXZpY2VzKTsKKwkJKnJlc3VsdCA9IGRkLT5kbV9kZXY7CisJCXJldHVybiAwOworCisJ
+fQogCi0JfSBlbHNlIGlmIChkZC0+ZG1fZGV2LT5tb2RlICE9IChtb2RlIHwgZGQtPmRtX2Rldi0+
+bW9kZSkpIHsKKwlpZiAoZGQtPmRtX2Rldi0+bW9kZSAhPSAobW9kZSB8IGRkLT5kbV9kZXYtPm1v
+ZGUpKSB7CiAJCXIgPSB1cGdyYWRlX21vZGUoZGQsIG1vZGUsIHQtPm1kKTsKIAkJaWYgKHIpCiAJ
+CQlyZXR1cm4gcjsKLQkJcmVmY291bnRfaW5jKCZkZC0+Y291bnQpOwogCX0KIAorCXJlZmNvdW50
+X2luYygmZGQtPmNvdW50KTsKKwogCSpyZXN1bHQgPSBkZC0+ZG1fZGV2OwogCXJldHVybiAwOwog
+fQotLSAKMi43LjQKCg==
 
-Thank you for your patience.
-Dennis
+--_002_2236FBA76BA1254E88B949DDB74E612B802C3EDAIRSMSX102gercor_--
