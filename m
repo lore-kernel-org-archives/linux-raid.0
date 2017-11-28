@@ -1,161 +1,141 @@
-From: Larkin Lowrey <llowrey@gmail.com>
-Subject: Re: Stopping raid6 (with journal) hangs w/ 100%CPU
-Date: Mon, 27 Nov 2017 21:42:48 -0500
-Message-ID: <fc41e1a4-2b58-cda4-c873-a4760fc09857@gmail.com>
-References: <6fb7c56a-a78d-ebe6-e569-0d68f69469ce@gmail.com>
- <97c88343-8f46-28a4-3590-82465312bcb5@gmail.com>
+From: Duane <duane@evenson.tk>
+Subject: Re: RAID5 devices assemble into RAID0 array
+Date: Mon, 27 Nov 2017 19:52:01 -0700
+Message-ID: <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
+References: <c1ae7110-8f62-9afd-2e4c-092256212153@evenson.tk>
+ <5A1AADCF.8090405@youngman.org.uk>
+ <3d9c7310-ffe9-d79e-ff75-0a95b5c5170a@evenson.tk>
+ <5A1B2DFC.6090702@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed;
+ boundary="------------FE0BE6D132630FFF92016991"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <97c88343-8f46-28a4-3590-82465312bcb5@gmail.com>
-Content-Language: en-US
+In-Reply-To: <5A1B2DFC.6090702@youngman.org.uk>
+Content-Language: en-CA
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The kernel thread is spending a lot of time in handle_active_stripes but 
-not staying in there since I see it calling handle_stripe and then I 
-also see calls to __release_stripe then back to handle_stripe again. So, 
-it's clearly exiting handle_active_stripes but getting dumped right back 
-in there. Presumably, handle_active_stripes is not completing the 
-necessary work and the kernel thread keeps calling it expecting the 
-pending work to be completed.
+This is a multi-part message in MIME format.
+--------------FE0BE6D132630FFF92016991
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-When the system boots up an mdadm process runs at near 100% CPU with 
-sporadic reads of the journal device. After ~30s or so, the IO stops, 
-the mdadm process disappears, and the mdX_raid6 kernel thread starts 
-taking 100% CPU.
+OK trying to re-add got me this problem.
 
-> RIP: 0010:do_release_stripe+0x52/0x410 [raid456]
-> RSP: 0018:ffffbb7d41dcbcc0 EFLAGS: 00000017
-> RAX: 0000000002000000 RBX: ffff8f10c819bf20 RCX: 0000000000000000
-> RDX: 0000000000000002 RSI: ffff8f10c819bf20 RDI: ffff8f114a2ad400
-> RBP: ffffbb7d41dcbce8 R08: ffff8f113e3dd888 R09: 0000000000000000
-> R10: 00000000ffffffff R11: 0000000000000000 R12: ffff8f10c819bf30
-> R13: ffff8f113e3ddb58 R14: ffff8f113e3dd800 R15: 0000000000000003
-> FS:  0000000000000000(0000) GS:ffff8f115ed40000(0000) 
-> knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007fb7675e1000 CR3: 0000000412cf5000 CR4: 00000000000406e0
-> Call Trace:
-> __release_stripe+0x16/0x20 [raid456]
-> handle_active_stripes.isra.60+0x44e/0x5a0 [raid456]
-> raid5d+0x42e/0x630 [raid456]
+# mdadm  -A /dev/md0 /dev/sdc2
+mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
 
---Larkin
+# mdadm  /dev/md0 --re-add /dev/sdd
+mdadm: Cannot get array info for /dev/md0
+
+Looking at the array,
+
+# mdadm -D /dev/md0
+/dev/md0:
+         Version : 1.2
+      Raid Level : raid0
+   Total Devices : 1
+     Persistence : Superblock is persistent
+
+           State : inactive
+
+            Name : dave:0  (local to host dave)
+            UUID : f8c0d29d:9b5986a4:050ca914:3a2fb8c8
+          Events : 51526
+
+     Number   Major   Minor   RaidDevice
+
+        -       8       34        -        /dev/sdc2
+
+I cannot re-add the missing devices.
+
+Doing "mdadm -A /dev/md0 -s" gets me the same array configuration as I 
+showed in my original post.
+
+Does anyone know why it insists on going to RAID0?
+Does anyone know how I can re-add the devices?
+Thank you,
+Duane
 
 
-On 11/24/2017 2:20 PM, Larkin Lowrey wrote:
-> After hard-rebooting, this instance (stripe_cache_active: 2) assembled 
-> just fine on boot. The next time I encountered this the array was 
-> 'inactive' on boot. There was a flurry of I/O initially (which seems 
-> to indicate journal re-play, then the array becoming 'active') but the 
-> I/O ceased without the array becoming active.
+
+On 2017-11-26 02:11 PM, Wols Lists wrote:
+> On 26/11/17 17:29, Duane wrote:
+>> You're right I failed and removed device 3, then failed and removed
+>> device 2, which broke my array.
+>>
+>> Let's assume I haven't messed things up any more than I already have.
+>>
+>> Is there a method to reverse the above operations for device 2 and
+>> device 3?
+>>
+>> Thanks, Duane
+>>
+> My raid-fu is mostly theoretical, but what I would try is as follows.
 >
-> This time...
+> It's assembled the broken array as md0, so
 >
-> stripe_cache_active: 2376
+> mdadm /dev/md0 --re-add /dev/device2
 >
->> md125 : inactive md127p4[9](J) sdk1[2] sdl1[3] sdn1[5] sdo1[6] 
->> sdm1[4] sdj1[1] sdq1[8] sdp1[7]
->>       31258219068 blocks super 1.2
+> followed by
 >
+> mdadm /dev/md0 --re-add /dev/device3
 >
->> # mdadm -D /dev/md125
->> /dev/md125:
->>            Version : 1.2
->>      Creation Time : Thu Oct 19 10:11:35 2017
->>         Raid Level : raid6
->>      Used Dev Size : 18446744073709551615
->>       Raid Devices : 8
->>      Total Devices : 9
->>        Persistence : Superblock is persistent
->>
->>        Update Time : Fri Nov 24 13:41:38 2017
->>              State : active, FAILED, Not Started
->>     Active Devices : 8
->>    Working Devices : 9
->>     Failed Devices : 0
->>      Spare Devices : 0
->>
->>             Layout : left-symmetric
->>         Chunk Size : 64K
->>
->> Consistency Policy : journal
->>
->>               Name : ########:3
->>               UUID : de6a2ce0:1a4c510f:d7c89da4:1215a312
->>             Events : 156844
->>
->>     Number   Major   Minor   RaidDevice State
->>        -       0        0        0      removed
->>        -       0        0        1      removed
->>        -       0        0        2      removed
->>        -       0        0        3      removed
->>        -       0        0        4      removed
->>        -       0        0        5      removed
->>        -       0        0        6      removed
->>        -       0        0        7      removed
->>
->>        -     259        3        -      spare   /dev/md127p4
->>        -       8      225        5      sync   /dev/sdo1
->>        -       8      209        4      sync   /dev/sdn1
->>        -       8      193        3      sync   /dev/sdm1
->>        -       8      177        2      sync   /dev/sdl1
->>        -       8      161        1      sync   /dev/sdk1
->>        -       8      145        0      sync   /dev/sdj1
->>        -      65        1        7      sync   /dev/sdq1
->>        -       8      241        6      sync   /dev/sdp1
+> That won't cause any further damage, and may work fine.
 >
-> --Larkin
+> Beyond that, I wouldn't like to suggest anything - if it doesn't work
+> you'll probably need to use things like --force, which could easily
+> break stuff. But re-add will probably work. And my syntax might not work
+> - you might need to specify the mode like --grow or --manage, I don't know.
 >
-> On 11/23/2017 1:22 PM, Larkin Lowrey wrote:
->> Sometimes, stopping a raid6 array (with journal) hangs, the mdX_raid6 
->> process pegs at 100% CPU, and there is no I/O. Looks like it's stuck 
->> in an infinite loop.
->>
->> Kernel: 4.13.13-200.fc26.x86_64
->>
->> The stack trace (echo l > /proc/sysrq-trigger) is always the same:
->>
->>> handle_stripe+0x10c/0x2140 [raid456]
->>> ? pick_next_task_fair+0x491/0x550
->>> handle_active_stripes.isra.60+0x3e5/0x5a0 [raid456]
->>> raid5d+0x42e/0x630 [raid456]
->>> ? prepare_to_wait_event+0x79/0x160
->>> md_thread+0x125/0x170
->>> ? md_thread+0x125/0x170
->>> ? finish_wait+0x80/0x80
->>> kthread+0x125/0x140
->>> ? state_show+0x2f0/0x2f0
->>> ? kthread_park+0x60/0x60
->>> ? do_syscall_64+0x67/0x140
->>> ret_from_fork+0x25/0x30
->>
->> The array is healthy, has a journal, and writes were idle for several 
->> minutes prior to running 'mdadm --stop'.
->>
->>> md124 : active raid6 sdt1[6] sds1[5] sdw1[1] sdx1[2] sdy1[3] sdu1[7] 
->>> sdv1[8] sdz1[4] md125p4[9](J)
->>>       23442092928 blocks super 1.2 level 6, 64k chunk, algorithm 2 
->>> [8/8] [UUUUUUUU]
->>
->> stripe_cache_active: 2
->> stripe_cache_size: 32768
->> array_state: write-pending
->> journal_mode: write-through [write-back]
->> consistency_policy: journal
->>
->> --Larkin
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> Suck it and see, at least this won't do any damage, and if it doesn't
+> work we'll have to wait for further advice.
 >
-> -- 
+> Cheers,
+> Wol
+>>
+>> On 2017-11-26 05:04 AM, Wols Lists wrote:
+>>> On 26/11/17 01:50, Duane wrote:
+>>>> I have 3 RAID5 devices. When I assemble them, I end up with a RAID0
+>>>> device.
+>>>>
+>>>> What is the cause? What is the solution?
+>>>>
+>>>> All I can think of is the fact that there is only 1 active device. I had
+>>>> 2 but then manually failed it. I want to reassemble a RAID5 array and
+>>>> then re-add the second device.
+>>>>
+>>> OUCH!
+>>>
+>>> Sorry. You have a 3-device raid-5. You only have 1 working device. Your
+>>> array is well broken.
+>>>
+>>> You can't "reassemble raid5 then readd the second device". You need to
+>>> readd the second device in order to get your raid5 back. I'll let
+>>> someone else tell you how, but you need a MINIMUM of two devices to get
+>>> your raid working again. Then you need to get your third device added
+>>> back otherwise your raid 5 is broken.
+>>>
+>>> DON'T DO ANYTHING WITHOUT ADVICE. I'm sorry, but your message says you
+>>> don't understand how raid works, and you are on the verge of destroying
+>>> your array irrevocably. It should be a simple recovery, *provided* you
+>>> don't make any mistakes.
+>>>
+>>> Cheers,
+>>> Wol
+> --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+
+--------------FE0BE6D132630FFF92016991
+Content-Type: text/x-vcard;
+ name="duane.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="duane.vcf"
+
+bnVsbA==
+--------------FE0BE6D132630FFF92016991--
