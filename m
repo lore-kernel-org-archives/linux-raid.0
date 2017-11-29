@@ -1,52 +1,45 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: New setup: partitions or raw devices
-Date: Wed, 29 Nov 2017 23:02:57 +0100
-Message-ID: <CAJH6TXhVb2EFJm6jWUcW_6cLfegna-ft7rvm++EECSY2aRTP1A@mail.gmail.com>
+Date: Wed, 29 Nov 2017 15:10:01 -0700
+Message-ID: <CAJCQCtRdXJkaLdzDi4JuDJbjkSqX-mUj+kjrHtH6JNTLCenuuQ@mail.gmail.com>
 References: <CAJH6TXj4wp-k2QQ0O8W2PDQEg9QHcWwPkOEOSzMgvtbV6b21Cw@mail.gmail.com>
- <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net> <CAJH6TXjbAFjP66HN54kiUffd=zt0HUgyQmcvsU-mYpJRUaQafw@mail.gmail.com>
- <e62ea493-3fae-5c3e-5578-f426dc3d254e@thelounge.net> <CAJH6TXgtn7Gqryvs1HKfFCodEqXCaHvy+kXX8kRxWgS25ZUDYQ@mail.gmail.com>
- <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
+ <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net> <1cf640fc-c6ee-25e8-8aee-9cf8025f9f4d@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
+In-Reply-To: <1cf640fc-c6ee-25e8-8aee-9cf8025f9f4d@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Reindl Harald <h.reindl@thelounge.net>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2017-11-29 21:02 GMT+01:00 Reindl Harald <h.reindl@thelounge.net>:
-> in case of 2 TB disks it's 40 GB per disk
+On Wed, Nov 29, 2017 at 9:52 AM, Phil Turmel <philip@turmel.org> wrote:
 
-Yes
+> These are good reasons.  I have also seen reports of NAS devices/distros
+> unconditionally partitioning devices that don't have one.  Although I
+> have in the past used raw devices with mdadm, I don't plan to do so with
+> any future systems.
 
-> because 100 MB IMHO don't help that much for SSD overprovisioning and given
-> how it may extend the lifetime versus the price and you don't have your
-> disks typically filled completly
+I'm in this same boat. Historically I've used raw devices, no
+partitioning, but I'm going to GPT partition everything from here on
+out, even if it's just a single partition.
 
-I'm talking about multi-tera disks, I don't think i'll ever (in the
-near future) replace them
-with SSDs....
+a. It makes it unambiguous this drive has had some purpose, it's not a
+blank slate.
+b. GPT is unambiguous, checksummed, has redundancy, and a user
+definable partition name 72 bytes UTF-16E to make it even more
+unambiguous
+c. The MBR had too few type codes, leading to a lot of ambiguity as to
+a partition's contents, so on Linux the idea was for libblkid to have
+a thorough understanding of (most) every conceivable volume format
+signature. But GPT solves this in a more standard way, and the
+explosion of undefined volume formats and binary blobs installed on
+partitions has made keeping up with their identification in blkid
+increasingly challenging.
 
-> in a 4 drive RAID10 it's 80 GB missing useable disk space for
-> overprovisioning out of around 3.6 TB (1000 versus 1024) while you have a
-> lightning fast array which should last as long as possible without replace
-> terrible expensive drives
+So anyway... GPT is good. And when LUKS2 gets a little farther along
+the torture testing I'll move to that as well, as it too has redundant
+metadata.
 
-Yes, but you are talking about SSD...
-Here I have many HDD....
-
-> why not RAID5/6? besides
-> https://www.askdbmgt.com/why-raid5-should-be-avoided-at-all-costs.html the
-> parity data are additional writes wearing out the drives
-
-I think exactly the opposite.
-I will never ever run anything with redundancy level lower than 2.
-I'm totally againt RAID10, after i've loose (4 times!) the whole RAID due to
-double failure on the same mirror.
-
-Now, I'm only using RAID-6 on very small arrays (6 disks maximum)
-If I need more space, I'll create a RAID-60
-
-My newer server with SSD are running with 4 SSD in RAID-6 (or RAID-Z2,
-it depends)
+-- 
+Chris Murphy
