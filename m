@@ -1,59 +1,56 @@
 From: Reindl Harald <h.reindl@thelounge.net>
 Subject: Re: New setup: partitions or raw devices
-Date: Wed, 29 Nov 2017 23:27:53 +0100
-Message-ID: <14078b47-29dd-6c07-f680-77ac9445be32@thelounge.net>
+Date: Wed, 29 Nov 2017 23:34:17 +0100
+Message-ID: <46648c36-3a63-1524-995d-786620dc716e@thelounge.net>
 References: <CAJH6TXj4wp-k2QQ0O8W2PDQEg9QHcWwPkOEOSzMgvtbV6b21Cw@mail.gmail.com>
  <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net>
  <CAJH6TXjbAFjP66HN54kiUffd=zt0HUgyQmcvsU-mYpJRUaQafw@mail.gmail.com>
  <e62ea493-3fae-5c3e-5578-f426dc3d254e@thelounge.net>
  <CAJH6TXgtn7Gqryvs1HKfFCodEqXCaHvy+kXX8kRxWgS25ZUDYQ@mail.gmail.com>
  <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
- <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
+ <CAJH6TXhVb2EFJm6jWUcW_6cLfegna-ft7rvm++EECSY2aRTP1A@mail.gmail.com>
+ <34e548a3-111a-909f-9683-8eae3efafdcc@thelounge.net>
+ <CAJH6TXh2RH6WwWa-11bZqEtDiOwXTv5yhjFUciP4zyb-YY49TA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
+In-Reply-To: <CAJH6TXh2RH6WwWa-11bZqEtDiOwXTv5yhjFUciP4zyb-YY49TA@mail.gmail.com>
 Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Wol's lists <antlists@youngman.org.uk>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
 
-Am 29.11.2017 um 23:20 schrieb Wol's lists:
-> On 29/11/17 20:02, Reindl Harald wrote:
->> why not RAID5/6? besides 
->> https://www.askdbmgt.com/why-raid5-should-be-avoided-at-all-costs.html 
->> the parity data are additional writes wearing out the drives
+Am 29.11.2017 um 23:25 schrieb Gandalf Corvotempesta:
+> 2017-11-29 23:10 GMT+01:00 Reindl Harald <h.reindl@thelounge.net>:
+>> [0:0:0:0]    disk    ATA      Samsung SSD 850  2B6Q  /dev/sda
+>> [1:0:0:0]    disk    ATA      Samsung SSD 850  2B6Q  /dev/sdb
 > 
-> So, if I have a four-drive raid 5, for every 3 blocks of data I write I 
-> write 1 parity block. But with raid 1 or 10, for every 3 blocks of data 
-> I write, I write *3* "parity" blocks!
-> 
-> What was that about "the additional writes wearing out the drives" then?
-> 
-> (Yes, I get the write amplification thing - but if you are writing a lot 
-> of data, then raid 5 needs far *fewer* writes.)
+> these are consumer SSDs
 
-RAID10 has a lot of other benefits:
+so what
 
-* better performance at all
-* lower CPU usage
-* only 1 disk is affected with reads at rebuild
-* you can clone a whole phyiscal machine easily by just move
-   half of the drives to a new machine and start rebuild on
-   both - in the past years i cloned multiple machines that
-   way which are after that in sync with "synch-machine.sh push/get"
+> Even the "PRO" is consumer and a 2TB is priced about 800 USD
 
-especially the clone thing saves a lot of time when you collected over 
-time machines with all sorts of use-cases and storage sizes and you just 
-need to consider which one has the most similar setip to the new one
+in doubt - so what too - nothing you buy every day and in case of a 
+RAID10 i put out the drives holding the OS and data and move them to the 
+next machine, change the MAC of the internal NIC in the config and i am 
+done (the other network cards and the wireless card are move too)
 
-before i drive home from the office "synch-machine.sh push && power off" 
-and when i arrive at the office -> CTL+ALT+F" -> Login as root -> 
-"synch-machine.sh get", CTRL+ALT+F1 -> grapical login
+> Look at one of Intel DC SSD, the S3610 1.6TB is about 1500 USD. Twice
+> the price, 40% less capacity
 
-that way of work is BTW a great backup for human mistakes :-)
+and do you really need them?
+for what usecase?
 
+performance?
+
+well, the RAID10 versus RAID1 with two nearly double priced achieves the 
+same or at least nothing different you could notice in real world usage 
+and if one dies that's what RAID is for (the I is for inexpensive) and a 
+few years later you get a "consumer SSD" with the same size probably 
+much cheaper while a ton of tests prove that the consumer SSD's suck a 
+lot of writes over a long time too
