@@ -1,57 +1,59 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Reindl Harald <h.reindl@thelounge.net>
 Subject: Re: New setup: partitions or raw devices
-Date: Wed, 29 Nov 2017 15:27:49 -0700
-Message-ID: <CAJCQCtTTRcR-2TsS8YHDVQvVzYCR0G5dYTv8bB2RwWEk-gTxuw@mail.gmail.com>
+Date: Wed, 29 Nov 2017 23:27:53 +0100
+Message-ID: <14078b47-29dd-6c07-f680-77ac9445be32@thelounge.net>
 References: <CAJH6TXj4wp-k2QQ0O8W2PDQEg9QHcWwPkOEOSzMgvtbV6b21Cw@mail.gmail.com>
- <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net> <1cf640fc-c6ee-25e8-8aee-9cf8025f9f4d@turmel.org>
- <CAJCQCtRdXJkaLdzDi4JuDJbjkSqX-mUj+kjrHtH6JNTLCenuuQ@mail.gmail.com> <CAJH6TXjF+vuBwGboM8HVMa88bZdn=GhgTumwJXH6qOZUso_Sjw@mail.gmail.com>
+ <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net>
+ <CAJH6TXjbAFjP66HN54kiUffd=zt0HUgyQmcvsU-mYpJRUaQafw@mail.gmail.com>
+ <e62ea493-3fae-5c3e-5578-f426dc3d254e@thelounge.net>
+ <CAJH6TXgtn7Gqryvs1HKfFCodEqXCaHvy+kXX8kRxWgS25ZUDYQ@mail.gmail.com>
+ <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
+ <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJH6TXjF+vuBwGboM8HVMa88bZdn=GhgTumwJXH6qOZUso_Sjw@mail.gmail.com>
+In-Reply-To: <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
+Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Cc: Chris Murphy <lists@colorremedies.com>, Phil Turmel <philip@turmel.org>, Reindl Harald <h.reindl@thelounge.net>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Wol's lists <antlists@youngman.org.uk>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Nov 29, 2017 at 3:14 PM, Gandalf Corvotempesta
-<gandalf.corvotempesta@gmail.com> wrote:
 
->
-> So, if you where me, how many gpt partition and which types would you make ?
 
-What's the complete use case scenario? I can't really tell from the first post.
+Am 29.11.2017 um 23:20 schrieb Wol's lists:
+> On 29/11/17 20:02, Reindl Harald wrote:
+>> why not RAID5/6? besides 
+>> https://www.askdbmgt.com/why-raid5-should-be-avoided-at-all-costs.html 
+>> the parity data are additional writes wearing out the drives
+> 
+> So, if I have a four-drive raid 5, for every 3 blocks of data I write I 
+> write 1 parity block. But with raid 1 or 10, for every 3 blocks of data 
+> I write, I write *3* "parity" blocks!
+> 
+> What was that about "the additional writes wearing out the drives" then?
+> 
+> (Yes, I get the write amplification thing - but if you are writing a lot 
+> of data, then raid 5 needs far *fewer* writes.)
 
-What I do is use gdisk type code 8300 (generic linux partition), and
-then format that partition as LUKS1. And then I open the LUKS device
-and make it a PV, create VG, and do that on every physical device.
+RAID10 has a lot of other benefits:
 
-Now you can make however many LV's you want, any size you want, in
-arbitrary order, with whatever raid level you want. LVM's
-raid0,1,10,5,6 use the md driver in the kernel, same as mdadm, but
-it's LVM metadata which means everything is managed with LVM (disk
-replacement and so forth). And there are still features mdadm has that
-LVM raid does not implement. So you it's not a question of which is
-better overall, it's a question of which one fits your use case best,
-and the tools with which you're most familiar.
+* better performance at all
+* lower CPU usage
+* only 1 disk is affected with reads at rebuild
+* you can clone a whole phyiscal machine easily by just move
+   half of the drives to a new machine and start rebuild on
+   both - in the past years i cloned multiple machines that
+   way which are after that in sync with "synch-machine.sh push/get"
 
-But it's pretty neat to be able to have one big VG, and to be able to
-arbitrarily create LV's that themselves have the raid type. It's a lot
-easier to manage in the case where you need different levels of
-redundancy but you're not completely certain what the utilization of
-those volumes will be, you can leave some unallocated space in the VG
-"pool" so you can increase the size of any LV on demand whenever you
-want.
+especially the clone thing saves a lot of time when you collected over 
+time machines with all sorts of use-cases and storage sizes and you just 
+need to consider which one has the most similar setip to the new one
 
-If you're more comfortable with a conventional approach: GPT > LUKS >
-mdadm > LVM > file system is just fine. I pretty much always start out
-with LUKS for data drives because it's the only way to be certain
-you're not leaking data should the drive need to be repurposed or
-returned under warranty and won't spin up. It's also too easy to just
-luksErase or luksFormat to obliterate everything on the drive, rather
-than have to do a complete tear down of each layer's signature, and
-you really shouldn't leave stale storage stack layers behind when
-repurposing drives, it can cause confusion later.
+before i drive home from the office "synch-machine.sh push && power off" 
+and when i arrive at the office -> CTL+ALT+F" -> Login as root -> 
+"synch-machine.sh get", CTRL+ALT+F1 -> grapical login
 
--- 
-Chris Murphy
+that way of work is BTW a great backup for human mistakes :-)
+
