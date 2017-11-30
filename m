@@ -1,82 +1,180 @@
-From: Michael Lyle <mlyle@lyle.org>
-Subject: =?UTF-8?B?UmU6IOWbnuWkje+8mltQQVRDSF0gYmNhY2hlOiBGaXggYmRldiBsZWFr?=
- =?UTF-8?Q?_during_backing_device_registering?=
-Date: Thu, 30 Nov 2017 10:48:54 -0800
-Message-ID: <eb5e502c-bf2a-ca47-4b18-ce2ddf00c45d@lyle.org>
-References: <fd806bd1-6537-42a7-8af3-d8dee9cb8fb9.liangyan.ply@alibaba-inc.com>
+From: Duane <duane@evenson.tk>
+Subject: Re: RAID5 devices assemble into RAID0 array
+Date: Thu, 30 Nov 2017 14:39:43 -0700
+Message-ID: <ae2695e2-5fdd-b6a8-bb58-75ab3fe0d027@evenson.tk>
+References: <c1ae7110-8f62-9afd-2e4c-092256212153@evenson.tk>
+ <5A1AADCF.8090405@youngman.org.uk>
+ <3d9c7310-ffe9-d79e-ff75-0a95b5c5170a@evenson.tk>
+ <5A1B2DFC.6090702@youngman.org.uk>
+ <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <fd806bd1-6537-42a7-8af3-d8dee9cb8fb9.liangyan.ply@alibaba-inc.com>
-Content-Language: en-US
-Sender: linux-bcache-owner@vger.kernel.org
-To: =?UTF-8?B?5b2t6Imv5b2m?= <liangyan.ply@alibaba-inc.com>, linux-bcache <linux-bcache@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Coly Li <colyli@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?5Y2V5Zu95paHKOa4oeazoik=?= <dubo.sgw@alibaba-inc.com>, =?UTF-8?B?56em5om/5YiaKOaJv+WImik=?= <chenggang.qcg@alibaba-inc.com>
+Content-Type: multipart/mixed;
+ boundary="------------571DB6C76265C13C60F4FE8D"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
+Content-Language: en-CA
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi--
+This is a multi-part message in MIME format.
+--------------571DB6C76265C13C60F4FE8D
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 11/30/2017 04:00 AM, 彭良彦 wrote:
-> On 17/11/23 上午8:42, 彭良彦 wrote:
->> If the backing device hasn't been detached due to exceptional stop
->> like power outage, the BDEV_STATE in super block can't be reset,
->> it will fail to register this backing device in next time, but the
->> opened bdev will be hold, this makes the backing device unaccessable
->> because of FMODE_EXCL until reboot.
+I need to tie off this thread.
+
+I got my data. I ended up manually (scriptly) merging all the strips.
+
+On later test RAID5 arrays, I removed all the devices. Then I recorded 
+the configuration of the array from the metadata in the devices. I 
+cleared the superblocks on the devices and then recreated the array. Of 
+importance were level, chunk size, and device order. Data offset and 
+layout were the default so I didn't specify them. The data area was not 
+changed and, with the same configuration as the last array, was in a 
+sane format.
+
+
+************************************************************
+
+Therefore, from my experience, the best way to recover a FAILED array is 
+to recreate a new array with the same devices and settings.
+
+************************************************************
+
+If anyone less noobish can give a better answer, I welcome it.
+
+
+PS
+
+Of course, this only works if the RAID devices were manually marked as 
+failed and really are still good.
+
+
+
+
+On 2017-11-27 07:52 PM, Duane wrote:
+> OK trying to re-add got me this problem.
+>
+> # mdadm  -A /dev/md0 /dev/sdc2
+> mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
+>
+> # mdadm  /dev/md0 --re-add /dev/sdd
+> mdadm: Cannot get array info for /dev/md0
+>
+> Looking at the array,
+>
+> # mdadm -D /dev/md0
+> /dev/md0:
+>         Version : 1.2
+>      Raid Level : raid0
+>   Total Devices : 1
+>     Persistence : Superblock is persistent
+>
+>           State : inactive
+>
+>            Name : dave:0  (local to host dave)
+>            UUID : f8c0d29d:9b5986a4:050ca914:3a2fb8c8
+>          Events : 51526
+>
+>     Number   Major   Minor   RaidDevice
+>
+>        -       8       34        -        /dev/sdc2
+>
+> I cannot re-add the missing devices.
+>
+> Doing "mdadm -A /dev/md0 -s" gets me the same array configuration as I 
+> showed in my original post.
+>
+> Does anyone know why it insists on going to RAID0?
+> Does anyone know how I can re-add the devices?
+> Thank you,
+> Duane
+>
+>
+>
+> On 2017-11-26 02:11 PM, Wols Lists wrote:
+>> On 26/11/17 17:29, Duane wrote:
+>>> You're right I failed and removed device 3, then failed and removed
+>>> device 2, which broke my array.
+>>>
+>>> Let's assume I haven't messed things up any more than I already have.
+>>>
+>>> Is there a method to reverse the above operations for device 2 and
+>>> device 3?
+>>>
+>>> Thanks, Duane
+>>>
+>> My raid-fu is mostly theoretical, but what I would try is as follows.
 >>
->> Signed-off-by: Liangyan Peng <liangyan.ply@alibaba-inc.com>
-
-This doesn't seem correct.
-
-What is the exact problem you're seeing?  Is it, if the cache device is
-missing, the backing device "leaks"?  I think this is intentional-- it
-is waiting there for an appropriate cache device to be attached that
-lets it leave the STATE_DIRTY and run.  That is, either the backing
-device or cache device can be registered first, and if the backing
-device is registered first it is supposed to "wait" and not run until
-the cache shows up.
-
->> ---
->>  drivers/md/bcache/super.c | 15 +++++++++++----
->>  1 file changed, 11 insertions(+), 4 deletions(-)
+>> It's assembled the broken array as md0, so
 >>
->> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
->> index 66669c8f4161..0b95a594c12e 100644
->> --- a/drivers/md/bcache/super.c
->> +++ b/drivers/md/bcache/super.c
->> @@ -1174,9 +1174,7 @@ static void register_bdev(struct cache_sb *sb, struct page *sb_page,
->>  	list_for_each_entry(c, &bch_cache_sets, list)
->>  		bch_cached_dev_attach(dc, c);
->>  
->> -	if (BDEV_STATE(&dc->sb) == BDEV_STATE_NONE ||
->> -	    BDEV_STATE(&dc->sb) == BDEV_STATE_STALE)
->> -		bch_cached_dev_run(dc);
->> +	bch_cached_dev_run(dc);
+>> mdadm /dev/md0 --re-add /dev/device2
+>>
+>> followed by
+>>
+>> mdadm /dev/md0 --re-add /dev/device3
+>>
+>> That won't cause any further damage, and may work fine.
+>>
+>> Beyond that, I wouldn't like to suggest anything - if it doesn't work
+>> you'll probably need to use things like --force, which could easily
+>> break stuff. But re-add will probably work. And my syntax might not work
+>> - you might need to specify the mode like --grow or --manage, I don't 
+>> know.
+>>
+>> Suck it and see, at least this won't do any damage, and if it doesn't
+>> work we'll have to wait for further advice.
+>>
+>> Cheers,
+>> Wol
+>>>
+>>> On 2017-11-26 05:04 AM, Wols Lists wrote:
+>>>> On 26/11/17 01:50, Duane wrote:
+>>>>> I have 3 RAID5 devices. When I assemble them, I end up with a RAID0
+>>>>> device.
+>>>>>
+>>>>> What is the cause? What is the solution?
+>>>>>
+>>>>> All I can think of is the fact that there is only 1 active device. 
+>>>>> I had
+>>>>> 2 but then manually failed it. I want to reassemble a RAID5 array and
+>>>>> then re-add the second device.
+>>>>>
+>>>> OUCH!
+>>>>
+>>>> Sorry. You have a 3-device raid-5. You only have 1 working device. 
+>>>> Your
+>>>> array is well broken.
+>>>>
+>>>> You can't "reassemble raid5 then readd the second device". You need to
+>>>> readd the second device in order to get your raid5 back. I'll let
+>>>> someone else tell you how, but you need a MINIMUM of two devices to 
+>>>> get
+>>>> your raid working again. Then you need to get your third device added
+>>>> back otherwise your raid 5 is broken.
+>>>>
+>>>> DON'T DO ANYTHING WITHOUT ADVICE. I'm sorry, but your message says you
+>>>> don't understand how raid works, and you are on the verge of 
+>>>> destroying
+>>>> your array irrevocably. It should be a simple recovery, *provided* you
+>>>> don't make any mistakes.
+>>>>
+>>>> Cheers,
+>>>> Wol
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
-You've moved the check out of here into the enclosing...
 
->>  
->>  	return;
->>  err:
->> @@ -1982,7 +1980,16 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
->>  		goto err_close;
->>  
->>  	if (SB_IS_BDEV(sb)) {
->> -		struct cached_dev *dc = kzalloc(sizeof(*dc), GFP_KERNEL);
->> +		struct cached_dev *dc = NULL;
->> +
->> +		if (BDEV_STATE(sb) != BDEV_STATE_NONE &&
->> +			BDEV_STATE(sb) != BDEV_STATE_STALE) {
->> +			blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
->> +			err = "invalid super block";
->> +			pr_info("Failed to register %s: %s", path, err);
->> +			goto out;
->> +		}
+--------------571DB6C76265C13C60F4FE8D
+Content-Type: text/x-vcard;
+ name="duane.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="duane.vcf"
 
-Here we check the state-- before bch_cached_dev_attach is called.  So if
-the state is BDEV_STATE_DIRTY or BDEV_STATE_CLEAN there is no chance to
-ever transition to _NONE/_STALE and run the cache.  This will make it
-impossible to ever start up the cache after power failure.
-
-Mike
+bnVsbA==
+--------------571DB6C76265C13C60F4FE8D--
