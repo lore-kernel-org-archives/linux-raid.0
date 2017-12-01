@@ -1,85 +1,44 @@
-From: Nate Dailey <nate.dailey@stratus.com>
-Subject: Re: [PATCH] md: limit mdstat resync progress to max_sectors
-Date: Fri, 1 Dec 2017 08:36:07 -0500
-Message-ID: <fa9d87b0-8bea-9670-a5d6-38a50ce09a10@stratus.com>
-References: <20171130163330.26309-1-nate.dailey@stratus.com>
- <1ef7fb87-65a9-1008-5c5d-43012f078a16@suse.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: New setup: partitions or raw devices
+Date: Fri, 01 Dec 2017 16:19:43 +0000
+Message-ID: <87tvxazahs.fsf@esperi.org.uk>
+References: <CAJH6TXj4wp-k2QQ0O8W2PDQEg9QHcWwPkOEOSzMgvtbV6b21Cw@mail.gmail.com>
+        <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net>
+        <CAJH6TXjbAFjP66HN54kiUffd=zt0HUgyQmcvsU-mYpJRUaQafw@mail.gmail.com>
+        <e62ea493-3fae-5c3e-5578-f426dc3d254e@thelounge.net>
+        <CAJH6TXgtn7Gqryvs1HKfFCodEqXCaHvy+kXX8kRxWgS25ZUDYQ@mail.gmail.com>
+        <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
+        <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
+        <14078b47-29dd-6c07-f680-77ac9445be32@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1ef7fb87-65a9-1008-5c5d-43012f078a16@suse.com>
-Content-Language: en-US
+In-Reply-To: <14078b47-29dd-6c07-f680-77ac9445be32@thelounge.net> (Reindl
+        Harald's message of "Wed, 29 Nov 2017 23:27:53 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>
+Cc: Wol's lists <antlists@youngman.org.uk>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Yes, I also wondered if setting curr_resync to MaxSector could be changed... but 
-not understanding why it's done, it seemed safer to just catch this in 
-status_resync.
+On 29 Nov 2017, Reindl Harald said:
 
-Nate
+> Am 29.11.2017 um 23:20 schrieb Wol's lists:
+>> On 29/11/17 20:02, Reindl Harald wrote:
+>>> why not RAID5/6? besides https://www.askdbmgt.com/why-raid5-should-be-avoided-at-all-costs.html the parity data are additional
+>>> writes wearing out the drives
+>>
+>> So, if I have a four-drive raid 5, for every 3 blocks of data I write I write 1 parity block. But with raid 1 or 10, for every 3
+>> blocks of data I write, I write *3* "parity" blocks!
+>>
+>> What was that about "the additional writes wearing out the drives" then?
+>>
+>> (Yes, I get the write amplification thing - but if you are writing a lot of data, then raid 5 needs far *fewer* writes.)
+>
+> RAID10 has a lot of other benefits:
 
+That's not actually answering the question that was asked, y'know. If
+you're against RAID 5 because the parity writes wear the drives out, you
+should be much more strongly against RAID 10 for the same reason.
 
-
-On 12/01/2017 03:37 AM, Guoqing Jiang wrote:
-> Actually, it is recovery :).
->
->
-> On 12/01/2017 12:33 AM, Nate Dailey wrote:
-> > There is a small window near the end of md_do_sync where mddev->curr_resync
-> > can be equal to MaxSector.
->
-> I am curious about the purpose of set it to MaxSector, maybe the setting
-> is not
-> necessary.
->
-> Acked-by: Guoqing Jiang <gqjiang@suse.com>
->
-> Thanks,
-> Guoqing
->
-> > If status_resync is called during this window, the resulting /proc/mdstat
-> > output contains a HUGE number of = signs due to the very large curr_resync:
-> >
-> > Personalities : [raid1]
-> > md123 : active raid1 sdd3[2] sdb3[0]
-> > 204736 blocks super 1.0 [2/1] [U_]
-> > [=====================================================================
-> > ... (82 MB more) ...
-> > ================>] recovery =429496729.3% (9223372036854775807/204736)
-> > finish=0.2min speed=12796K/sec
-> > bitmap: 0/1 pages [0KB], 65536KB chunk
-> >
-> > Modify status_resync to ensure the resync variable doesn't exceed
-> > the array's max_sectors.
-> >
-> > Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-> > ---
-> > drivers/md/md.c | 4 +++-
-> > 1 file changed, 3 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 41c050b59ec4..4e4dee0ec2de 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -7605,7 +7605,9 @@ static int status_resync(struct seq_file *seq, struct 
-> mddev *mddev)
-> > if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> > /* Still cleaning up */
-> > resync = max_sectors;
-> > - } else
-> > + } else if (resync > max_sectors)
-> > + resync = max_sectors;
-> > + else
-> > resync -= atomic_read(&mddev->recovery_active);
-> >
-> > if (resync == 0) {
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html 
-> <http://vger.kernel.org/majordomo-info.html>
-
-
+-- 
+NULL && (void)
