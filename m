@@ -1,75 +1,38 @@
-From: "=?UTF-8?B?5b2t6Imv5b2m?=" <liangyan.ply@alibaba-inc.com>
-Subject: =?UTF-8?B?5Zue5aSN77ya5Zue5aSN77yaW1BBVENIXSBiY2FjaGU6IEZpeCBiZGV2IGxlYWsgZHVyaW5n?=
-  =?UTF-8?B?IGJhY2tpbmcgZGV2aWNlIHJlZ2lzdGVyaW5n?=
-Date: Fri, 01 Dec 2017 09:54:10 +0800
-Message-ID: <77a964ce-696e-4736-8dd9-c23969c7b567.liangyan.ply@alibaba-inc.com>
-References: <fd806bd1-6537-42a7-8af3-d8dee9cb8fb9.liangyan.ply@alibaba-inc.com>,eb5e502c-bf2a-ca47-4b18-ce2ddf00c45d@lyle.org
-Reply-To: "=?UTF-8?B?5b2t6Imv5b2m?=" <liangyan.ply@alibaba-inc.com>
+From: Michael Lyle <mlyle@lyle.org>
+Subject: =?UTF-8?B?UmU6IOWbnuWkje+8muWbnuWkje+8mltQQVRDSF0gYmNhY2hlOiBGaXgg?=
+ =?UTF-8?Q?bdev_leak_during_backing_device_registering?=
+Date: Thu, 30 Nov 2017 18:13:55 -0800
+Message-ID: <8e876c3b-c1e6-c281-04e6-b9467a0d25a7@lyle.org>
+References: <fd806bd1-6537-42a7-8af3-d8dee9cb8fb9.liangyan.ply@alibaba-inc.com>
+ <77a964ce-696e-4736-8dd9-c23969c7b567.liangyan.ply@alibaba-inc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: eb5e502c-bf2a-ca47-4b18-ce2ddf00c45d@lyle.org
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-bcache <linux-bcache@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Michael Lyle <mlyle@lyle.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <77a964ce-696e-4736-8dd9-c23969c7b567.liangyan.ply@alibaba-inc.com>
+Content-Language: en-US
+Sender: linux-bcache-owner@vger.kernel.org
+To: =?UTF-8?B?5b2t6Imv5b2m?= <liangyan.ply@alibaba-inc.com>, linux-bcache <linux-bcache@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 Cc: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Coly Li <colyli@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?5Y2V5Zu95paHKOa4oeazoik=?= <dubo.sgw@alibaba-inc.com>, =?UTF-8?B?56em5om/5YiaKOaJv+WImik=?= <chenggang.qcg@alibaba-inc.com>
 List-Id: linux-raid.ids
 
-T24gMTcvMTIvMSDkuIrljYgyOjQ4LCBNaWNoYWVsIEx5bGUgd3JvdGU6Cj4gSGktLQo+Cj4gT24g
-MTEvMzAvMjAxNyAwNDowMCBBTSwg5b2t6Imv5b2mIHdyb3RlOgo+PiBPbiAxNy8xMS8yMyDkuIrl
-jYg4OjQyLCDlva3oia/lvaYgd3JvdGU6Cj4+PiBJZiB0aGUgYmFja2luZyBkZXZpY2UgaGFzbid0
-IGJlZW4gZGV0YWNoZWQgZHVlIHRvIGV4Y2VwdGlvbmFsIHN0b3AKPj4+IGxpa2UgcG93ZXIgb3V0
-YWdlLCB0aGUgQkRFVl9TVEFURSBpbiBzdXBlciBibG9jayBjYW4ndCBiZSByZXNldCwKPj4+IGl0
-IHdpbGwgZmFpbCB0byByZWdpc3RlciB0aGlzIGJhY2tpbmcgZGV2aWNlIGluIG5leHQgdGltZSwg
-YnV0IHRoZQo+Pj4gb3BlbmVkIGJkZXYgd2lsbCBiZSBob2xkLCB0aGlzIG1ha2VzIHRoZSBiYWNr
-aW5nIGRldmljZSB1bmFjY2Vzc2FibGUKPj4+IGJlY2F1c2Ugb2YgRk1PREVfRVhDTCB1bnRpbCBy
-ZWJvb3QuCj4+Pgo+Pj4gU2lnbmVkLW9mZi1ieTogTGlhbmd5YW4gUGVuZyA8bGlhbmd5YW4ucGx5
-QGFsaWJhYmEtaW5jLmNvbT4KPgo+IFRoaXMgZG9lc24ndCBzZWVtIGNvcnJlY3QuCj4KPiBXaGF0
-IGlzIHRoZSBleGFjdCBwcm9ibGVtIHlvdSdyZSBzZWVpbmc/ICBJcyBpdCwgaWYgdGhlIGNhY2hl
-IGRldmljZSBpcwo+IG1pc3NpbmcsIHRoZSBiYWNraW5nIGRldmljZSAibGVha3MiPyAgSSB0aGlu
-ayB0aGlzIGlzIGludGVudGlvbmFsLS0gaXQKPiBpcyB3YWl0aW5nIHRoZXJlIGZvciBhbiBhcHBy
-b3ByaWF0ZSBjYWNoZSBkZXZpY2UgdG8gYmUgYXR0YWNoZWQgdGhhdAo+IGxldHMgaXQgbGVhdmUg
-dGhlIFNUQVRFX0RJUlRZIGFuZCBydW4uICBUaGF0IGlzLCBlaXRoZXIgdGhlIGJhY2tpbmcKPiBk
-ZXZpY2Ugb3IgY2FjaGUgZGV2aWNlIGNhbiBiZSByZWdpc3RlcmVkIGZpcnN0LCBhbmQgaWYgdGhl
-IGJhY2tpbmcKPiBkZXZpY2UgaXMgcmVnaXN0ZXJlZCBmaXJzdCBpdCBpcyBzdXBwb3NlZCB0byAi
-d2FpdCIgYW5kIG5vdCBydW4gdW50aWwKPiB0aGUgY2FjaGUgc2hvd3MgdXAuCj4KVGhhbmtzIE1p
-a2UuCgpIZXJlIGlzIHRoZSBpc3N1ZSByZXByb2R1Y2Ugc3RlcC4KMS4gY3JlYXRlIGEgYmxvY2sg
-ZGV2aWNlIHNkYiBieSBpU0NTSQoyLiBlY2hvIC9kZXYvc2RiID4gL3N5cy9mcy9iY2FjaGUvcmVn
-aXN0ZXIgYW5kIHN1Y2NlZWQgdG8gcmVnaXN0ZXIgLy9zZGIgaXMgdGhlIGJsb2NrIGRldiBjcmVh
-dGUgYnkgaVNDU0kKMy4gZGlzY29ubmVjdCBuZXR3b3JrIGFuZCByZWJvb3QgIC8vIHdpdGhvdXQg
-bmV0d29yaywgU0VUX0JERVZfU1RBVEUoJmRjLT5zYiwgQkRFVl9TVEFURV9OT05FKSB3aWxsIGZh
-aWwKNC4gY3JlYXRlIGEgYmxvY2sgZGV2aWNlIHNkYiBieSBpU0NTSQo1LiBlY2hvIC9kZXYvc2Ri
-ID4gL3N5cy9mcy9iY2FjaGUvcmVnaXN0ZXIgYW5kIGZhaWwgdG8gcmVnaXN0ZXIgc2luY2UgYmRl
-diBzdGF0ZSBpcyBub3QgcmVzZXQgdG8gQkRFVl9TVEFURV9OT05FCjYuIG1ha2UtYmNhY2hlIC1C
-IC9kZXYvc2RiIC0td3JpdGViYWNrIC0td2lwZS1iY2FjaGUKdGhlIGxhc3Qgc3RlcCB3aWxsIGZh
-aWwgaW4gb3JpZ2luYWwgdmVyc2lvbiBzaW5jZSBiZGV2IGhhbmRsZSBpcyBub3QgcmVsZWFzZWQg
-ZHVyaW5nIHJlZ2lzdGVyIGFuZCBvcGVuKCkgaXMgZmFpbGVkIGluIG1ha2UtYmNhY2hlLCB3aXRo
-IHRoaXMgcGF0Y2gsIGl0IHdpbGwgc3VjY2VlZAoKPj4+IC0tLQo+Pj4gIGRyaXZlcnMvbWQvYmNh
-Y2hlL3N1cGVyLmMgfCAxNSArKysrKysrKysrKy0tLS0KPj4+ICAxIGZpbGUgY2hhbmdlZCwgMTEg
-aW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKPj4+Cj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9tZC9iY2FjaGUvc3VwZXIuYyBiL2RyaXZlcnMvbWQvYmNhY2hlL3N1cGVyLmMKPj4+IGluZGV4
-IDY2NjY5YzhmNDE2MS4uMGI5NWE1OTRjMTJlIDEwMDY0NAo+Pj4gLS0tIGEvZHJpdmVycy9tZC9i
-Y2FjaGUvc3VwZXIuYwo+Pj4gKysrIGIvZHJpdmVycy9tZC9iY2FjaGUvc3VwZXIuYwo+Pj4gQEAg
-LTExNzQsOSArMTE3NCw3IEBAIHN0YXRpYyB2b2lkIHJlZ2lzdGVyX2JkZXYoc3RydWN0IGNhY2hl
-X3NiICpzYiwgc3RydWN0IHBhZ2UgKnNiX3BhZ2UsCj4+PiAgCWxpc3RfZm9yX2VhY2hfZW50cnko
-YywgJmJjaF9jYWNoZV9zZXRzLCBsaXN0KQo+Pj4gIAkJYmNoX2NhY2hlZF9kZXZfYXR0YWNoKGRj
-LCBjKTsKPj4+ICAKPj4+IC0JaWYgKEJERVZfU1RBVEUoJmRjLT5zYikgPT0gQkRFVl9TVEFURV9O
-T05FIHx8Cj4+PiAtCSAgICBCREVWX1NUQVRFKCZkYy0+c2IpID09IEJERVZfU1RBVEVfU1RBTEUp
-Cj4+PiAtCQliY2hfY2FjaGVkX2Rldl9ydW4oZGMpOwo+Pj4gKwliY2hfY2FjaGVkX2Rldl9ydW4o
-ZGMpOwo+Cj4gWW91J3ZlIG1vdmVkIHRoZSBjaGVjayBvdXQgb2YgaGVyZSBpbnRvIHRoZSBlbmNs
-b3NpbmcuLi4KPgo+Pj4gIAo+Pj4gIAlyZXR1cm47Cj4+PiAgZXJyOgo+Pj4gQEAgLTE5ODIsNyAr
-MTk4MCwxNiBAQCBzdGF0aWMgc3NpemVfdCByZWdpc3Rlcl9iY2FjaGUoc3RydWN0IGtvYmplY3Qg
-KmssIHN0cnVjdCBrb2JqX2F0dHJpYnV0ZSAqYXR0ciwKPj4+ICAJCWdvdG8gZXJyX2Nsb3NlOwo+
-Pj4gIAo+Pj4gIAlpZiAoU0JfSVNfQkRFVihzYikpIHsKPj4+IC0JCXN0cnVjdCBjYWNoZWRfZGV2
-ICpkYyA9IGt6YWxsb2Moc2l6ZW9mKCpkYyksIEdGUF9LRVJORUwpOwo+Pj4gKwkJc3RydWN0IGNh
-Y2hlZF9kZXYgKmRjID0gTlVMTDsKPj4+ICsKPj4+ICsJCWlmIChCREVWX1NUQVRFKHNiKSAhPSBC
-REVWX1NUQVRFX05PTkUgJiYKPj4+ICsJCQlCREVWX1NUQVRFKHNiKSAhPSBCREVWX1NUQVRFX1NU
-QUxFKSB7Cj4+PiArCQkJYmxrZGV2X3B1dChiZGV2LCBGTU9ERV9SRUFEfEZNT0RFX1dSSVRFfEZN
-T0RFX0VYQ0wpOwo+Pj4gKwkJCWVyciA9ICJpbnZhbGlkIHN1cGVyIGJsb2NrIjsKPj4+ICsJCQlw
-cl9pbmZvKCJGYWlsZWQgdG8gcmVnaXN0ZXIgJXM6ICVzIiwgcGF0aCwgZXJyKTsKPj4+ICsJCQln
-b3RvIG91dDsKPj4+ICsJCX0KPgo+IEhlcmUgd2UgY2hlY2sgdGhlIHN0YXRlLS0gYmVmb3JlIGJj
-aF9jYWNoZWRfZGV2X2F0dGFjaCBpcyBjYWxsZWQuICBTbyBpZgo+IHRoZSBzdGF0ZSBpcyBCREVW
-X1NUQVRFX0RJUlRZIG9yIEJERVZfU1RBVEVfQ0xFQU4gdGhlcmUgaXMgbm8gY2hhbmNlIHRvCj4g
-ZXZlciB0cmFuc2l0aW9uIHRvIF9OT05FL19TVEFMRSBhbmQgcnVuIHRoZSBjYWNoZS4gIFRoaXMg
-d2lsbCBtYWtlIGl0Cj4gaW1wb3NzaWJsZSB0byBldmVyIHN0YXJ0IHVwIHRoZSBjYWNoZSBhZnRl
-ciBwb3dlciBmYWlsdXJlLgo+Cj4gTWlrZQ==
+On 11/30/2017 05:54 PM, 彭良彦 wrote:
+
+> Here is the issue reproduce step.
+> 1. create a block device sdb by iSCSI
+> 2. echo /dev/sdb > /sys/fs/bcache/register and succeed to register //sdb is the block dev create by iSCSI
+> 3. disconnect network and reboot  // without network, SET_BDEV_STATE(&dc->sb, BDEV_STATE_NONE) will fail
+> 4. create a block device sdb by iSCSI
+> 5. echo /dev/sdb > /sys/fs/bcache/register and fail to register since bdev state is not reset to BDEV_STATE_NONE
+> 6. make-bcache -B /dev/sdb --writeback --wipe-bcache
+> the last step will fail in original version since bdev handle is not released during register and open() is failed in make-bcache, with this patch, it will succeed
+
+But it is supposed to fail / wait in this case, if the cache device is
+not registered.  It needs the cache device metadata in order to know the
+correct state of each piece of data.
+
+That is, when you are using writeback mode, you need the cache device,
+because some of the writes will go to the cache device and some to the
+backing device.
+
+Mike
