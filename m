@@ -1,41 +1,67 @@
-From: Michael Lyle <mlyle@lyle.org>
-Subject: =?UTF-8?B?UmU6IOWbnuWkje+8muWbnuWkje+8muWbnuWkje+8muWbnuWkje+8mltQ?=
- =?UTF-8?Q?ATCH]_bcache:_Fix_bdev_leak_during_backing_device_registering?=
-Date: Thu, 30 Nov 2017 20:25:02 -0800
-Message-ID: <963775f5-a0e1-e727-defe-c123ae299028@lyle.org>
-References: <fd806bd1-6537-42a7-8af3-d8dee9cb8fb9.liangyan.ply@alibaba-inc.com>
- <77a964ce-696e-4736-8dd9-c23969c7b567.liangyan.ply@alibaba-inc.com>
- <22f7350f-4251-443f-b346-9cd98d98d1ed.liangyan.ply@alibaba-inc.com>
- <86da49cd-a506-4fd7-8b8e-5d142106a007.liangyan.ply@alibaba-inc.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: [PATCH] md: limit mdstat resync progress to max_sectors
+Date: Fri, 1 Dec 2017 16:37:36 +0800
+Message-ID: <1ef7fb87-65a9-1008-5c5d-43012f078a16@suse.com>
+References: <20171130163330.26309-1-nate.dailey@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <86da49cd-a506-4fd7-8b8e-5d142106a007.liangyan.ply@alibaba-inc.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20171130163330.26309-1-nate.dailey@stratus.com>
 Content-Language: en-US
-Sender: linux-bcache-owner@vger.kernel.org
-To: =?UTF-8?B?5b2t6Imv5b2m?= <liangyan.ply@alibaba-inc.com>, linux-bcache <linux-bcache@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Coly Li <colyli@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?5Y2V5Zu95paHKOa4oeazoik=?= <dubo.sgw@alibaba-inc.com>, =?UTF-8?B?56em5om/5YiaKOaJv+WImik=?= <chenggang.qcg@alibaba-inc.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Nate Dailey <nate.dailey@stratus.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/30/2017 07:38 PM, 彭良彦 wrote:
-> On 17/12/1 上午10:38, Michael Lyle wrote:
->> On 11/30/2017 06:30 PM, 彭良彦 wrote:
->>> If the cache device is not persistent like ramdisk,  all data will be lost after reboot. We have to use make-bcache to fix the inconsistent super block of backing device.
->>
->> Using a non-persistent writeback cache is guaranteed to lose data.
->> (Writes will only go to the cache device and not make it to the
->> persistent volume).
->>
->> Mike
-> 
-> If we use ramdisk as a writethrough cache to improve the read performance, the backing device is a network disk, the super block state of backing device still has chance to be inconsistent due to disconnected network. Like in above reproduce steps, i didn't use a cache device. :-)N�����r��y���b�X��ǧv�^�)޺{.n�+����{�mƜ�觶��ܨ}���Ơz�&j:+v�������zZ+��+zf���h���~����i���z��w���?����&�)ߢfl===
-> 
+Actually, it is recovery :).
 
-I cannot accept this patch.  It is guaranteed to corrupt data, by
-starting the client device when the cache is in a bad state.
 
-If you use 'writeback', you must have a cache device and the cache
-device must be present to start the bcache client device.
+On 12/01/2017 12:33 AM, Nate Dailey wrote:
+> There is a small window near the end of md_do_sync where mddev->curr_resync
+> can be equal to MaxSector.
 
-Mike
+I am curious about the purpose of set it to MaxSector, maybe the setting 
+is not
+necessary.
+
+Acked-by: Guoqing Jiang <gqjiang@suse.com>
+
+Thanks,
+Guoqing
+
+> If status_resync is called during this window, the resulting /proc/mdstat
+> output contains a HUGE number of = signs due to the very large curr_resync:
+>
+> Personalities : [raid1]
+> md123 : active raid1 sdd3[2] sdb3[0]
+>    204736 blocks super 1.0 [2/1] [U_]
+>    [=====================================================================
+>     ... (82 MB more) ...
+>     ================>]  recovery =429496729.3% (9223372036854775807/204736)
+>     finish=0.2min speed=12796K/sec
+>    bitmap: 0/1 pages [0KB], 65536KB chunk
+>
+> Modify status_resync to ensure the resync variable doesn't exceed
+> the array's max_sectors.
+>
+> Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
+> ---
+>   drivers/md/md.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 41c050b59ec4..4e4dee0ec2de 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7605,7 +7605,9 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
+>   		if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+>   			/* Still cleaning up */
+>   			resync = max_sectors;
+> -	} else
+> +	} else if (resync > max_sectors)
+> +		resync = max_sectors;
+> +	else
+>   		resync -= atomic_read(&mddev->recovery_active);
+>   
+>   	if (resync == 0) {
+
