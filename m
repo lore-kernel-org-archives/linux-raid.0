@@ -1,75 +1,85 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 13/13] mdadm/test: Change check nosync as check recovery in 05r1-re-add-nosuper
-Date: Fri,  1 Dec 2017 17:48:14 +0800
-Message-ID: <1512121694-18168-14-git-send-email-zlliu@suse.com>
-References: <1512121694-18168-1-git-send-email-zlliu@suse.com>
+From: Nate Dailey <nate.dailey@stratus.com>
+Subject: Re: [PATCH] md: limit mdstat resync progress to max_sectors
+Date: Fri, 1 Dec 2017 08:36:07 -0500
+Message-ID: <fa9d87b0-8bea-9670-a5d6-38a50ce09a10@stratus.com>
+References: <20171130163330.26309-1-nate.dailey@stratus.com>
+ <1ef7fb87-65a9-1008-5c5d-43012f078a16@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1512121694-18168-1-git-send-email-zlliu@suse.com>
+In-Reply-To: <1ef7fb87-65a9-1008-5c5d-43012f078a16@suse.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: jsorensen@fb.com
-Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
+To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The commit: 091e8e6e061a (Manage: Remove all references
-to md_get_version()) has been result in the case failure
-due to deprecate the API md_get_version(). So modify the
-test case to check recovery when execute re-add.
+Yes, I also wondered if setting curr_resync to MaxSector could be changed... but 
+not understanding why it's done, it seemed safer to just catch this in 
+status_resync.
 
-Signed-off-by: Zhilong Liu <zlliu@suse.com>
----
- tests/05r1-re-add-nosuper | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+Nate
 
-diff --git a/tests/05r1-re-add-nosuper b/tests/05r1-re-add-nosuper
-index 058d602..030acdf 100644
---- a/tests/05r1-re-add-nosuper
-+++ b/tests/05r1-re-add-nosuper
-@@ -9,6 +9,8 @@ rm -f $bmf
- mdadm -B $md0 -l1 -n2 -b$bmf -d1 $dev1 $dev2
- check resync
- check wait
-+check state UU
-+check raid1
- testdev $md0 1 $size 1
- sleep 4
- 
-@@ -16,7 +18,11 @@ mdadm $md0 -f $dev2
- sleep 1
- mdadm $md0 -r $dev2
- mdadm $md0 --re-add $dev2
--check nosync
-+sleep 1
-+check recovery
-+check wait
-+check state UU
-+check raid1
- 
- mdadm $md0 -f $dev2
- sleep 1
-@@ -24,6 +30,8 @@ mdadm $md0 -r $dev2
- testdev $md0 1 $size 1
- mdadm $md0 --re-add $dev2
- check wait
-+check state UU
-+check raid1
- cmp --bytes=$[$mdsize0*1024] $dev1 $dev2
- 
- mdadm $md0 -f $dev2; sleep 1
-@@ -31,8 +39,14 @@ mdadm $md0 -r $dev2
- if dd if=/dev/zero of=$md0 ; then : ; fi
- blockdev --flushbufs $md0 # make sure writes have been sent
- mdadm $md0 --re-add $dev2
-+sleep 1
- check recovery
- check wait
-+check state UU
-+check raid1
- # should BLKFLSBUF and then read $dev1/$dev2...
- cmp --bytes=$[$mdsize0*1024] $file1 $file2
- mdadm -S $md0
-+rm -f $bmf
-+
-+exit 0
--- 
-1.8.5.6
+
+
+On 12/01/2017 03:37 AM, Guoqing Jiang wrote:
+> Actually, it is recovery :).
+>
+>
+> On 12/01/2017 12:33 AM, Nate Dailey wrote:
+> > There is a small window near the end of md_do_sync where mddev->curr_resync
+> > can be equal to MaxSector.
+>
+> I am curious about the purpose of set it to MaxSector, maybe the setting
+> is not
+> necessary.
+>
+> Acked-by: Guoqing Jiang <gqjiang@suse.com>
+>
+> Thanks,
+> Guoqing
+>
+> > If status_resync is called during this window, the resulting /proc/mdstat
+> > output contains a HUGE number of = signs due to the very large curr_resync:
+> >
+> > Personalities : [raid1]
+> > md123 : active raid1 sdd3[2] sdb3[0]
+> > 204736 blocks super 1.0 [2/1] [U_]
+> > [=====================================================================
+> > ... (82 MB more) ...
+> > ================>] recovery =429496729.3% (9223372036854775807/204736)
+> > finish=0.2min speed=12796K/sec
+> > bitmap: 0/1 pages [0KB], 65536KB chunk
+> >
+> > Modify status_resync to ensure the resync variable doesn't exceed
+> > the array's max_sectors.
+> >
+> > Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
+> > ---
+> > drivers/md/md.c | 4 +++-
+> > 1 file changed, 3 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 41c050b59ec4..4e4dee0ec2de 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -7605,7 +7605,9 @@ static int status_resync(struct seq_file *seq, struct 
+> mddev *mddev)
+> > if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+> > /* Still cleaning up */
+> > resync = max_sectors;
+> > - } else
+> > + } else if (resync > max_sectors)
+> > + resync = max_sectors;
+> > + else
+> > resync -= atomic_read(&mddev->recovery_active);
+> >
+> > if (resync == 0) {
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html 
+> <http://vger.kernel.org/majordomo-info.html>
+
 
