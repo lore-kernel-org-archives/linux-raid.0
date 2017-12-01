@@ -1,73 +1,75 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: RAID header in XFS area?
-Date: Sun, 5 Nov 2017 09:16:11 +0000
-Message-ID: <59FED6DB.9040303@youngman.org.uk>
-References: <CAGRSmLv2HqyZmf-nR4SqnPaw2HNxDAaOSMA-QXVyiekF4Q5x5w@mail.gmail.com>
- <59FE0739.8020400@youngman.org.uk>
- <CAGRSmLuoauKaSZ5Z73+Tg19e_1q9Tc-A0ZjqMgr4Lv9Tfer6QQ@mail.gmail.com>
- <5cffac57-7e37-b8cb-ee77-cb9cb6c0f616@youngman.org.uk>
- <CAGRSmLvou+yEb2VLJoounbuiEdfrPSEC+8xBtdp9nfOpj8y-8Q@mail.gmail.com>
- <CAGRSmLuBEUynKNirFi9FuoJz82F4hDimmJWZSSfpQhoOi_9Rog@mail.gmail.com>
- <CAGRSmLtSLQzL01EEnGnafbnTYeC55aK1UEcJBfazoCgTsFXcXw@mail.gmail.com>
+From: "=?UTF-8?B?5b2t6Imv5b2m?=" <liangyan.ply@alibaba-inc.com>
+Subject: =?UTF-8?B?5Zue5aSN77ya5Zue5aSN77yaW1BBVENIXSBiY2FjaGU6IEZpeCBiZGV2IGxlYWsgZHVyaW5n?=
+  =?UTF-8?B?IGJhY2tpbmcgZGV2aWNlIHJlZ2lzdGVyaW5n?=
+Date: Fri, 01 Dec 2017 09:54:10 +0800
+Message-ID: <77a964ce-696e-4736-8dd9-c23969c7b567.liangyan.ply@alibaba-inc.com>
+References: <fd806bd1-6537-42a7-8af3-d8dee9cb8fb9.liangyan.ply@alibaba-inc.com>,eb5e502c-bf2a-ca47-4b18-ce2ddf00c45d@lyle.org
+Reply-To: "=?UTF-8?B?5b2t6Imv5b2m?=" <liangyan.ply@alibaba-inc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLtSLQzL01EEnGnafbnTYeC55aK1UEcJBfazoCgTsFXcXw@mail.gmail.com>
+In-Reply-To: eb5e502c-bf2a-ca47-4b18-ce2ddf00c45d@lyle.org
 Sender: linux-raid-owner@vger.kernel.org
-To: "David F." <df7729@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-bcache <linux-bcache@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Michael Lyle <mlyle@lyle.org>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, Coly Li <colyli@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?5Y2V5Zu95paHKOa4oeazoik=?= <dubo.sgw@alibaba-inc.com>, =?UTF-8?B?56em5om/5YiaKOaJv+WImik=?= <chenggang.qcg@alibaba-inc.com>
 List-Id: linux-raid.ids
 
-On 05/11/17 02:12, David F. wrote:
-> gmail started doing private replies for some reason..
-> 
-> Anyway, looking deeper found it.  That partition xfs information was
-> old left over items.  Searching for another header was found further
-> up, at byte offset 22000h (sector 110h), and looking at the RAID
-> header area, found bytes for 110h which must be a pointer to to where
-> the data starts (don't have the mdadm struct available).   Does anyone
-> have the RAID structure available using signature A92B4EFCh ?
-> 
-> So the old XFS information was confusing the whole situation.
-> 
-No surprise. Old data does that :-( Why I always prefer "dd if=/dev/zero
-of=/dev/sdx" to clear a device. It just takes so long ...
-
-What really worried me was if they'd created the array over the
-partitions, then accidentally created XFS on the partitions. That would
-have crashed at the first reboot, but there's a good chance that if they
-didn't reboot it would have run and run until ...
-
-If you want the raid structure, download mdadm and read the source. I'll
-probably document it on the wiki, but I need to read and understand the
-source first, too.
-
-As for accessing the data, md2 and md/2 are the same thing :-) Raid is
-moving to named arrays rather than default numbers. Can they run a fsck
-equivalent over the filesystem? Read-only of course, just to see whether
-it's minimally damaged or there's something more seriously wrong.
-
-Cheers,
-Wol
-> 
-> On Sat, Nov 4, 2017 at 6:58 PM, David F. <df7729@gmail.com> wrote:
->> Oh shoot, forgot to mention.  The customer did the mdadm --run --force
->> /dev/md2 (or may have been /dev/md/2) but when trying to access it
->> read errors. ?
->>
->> On Sat, Nov 4, 2017 at 6:55 PM, David F. <df7729@gmail.com> wrote:
->>> That's what I would expect, which is why it's weird that that
->>> signature for metadata 1.2 was 4K within the XFS partition itself (the
->>> XFS partition started after a bunch of other partitions at LBA 6474176
->>> and the xfs superblock is there (the RAID data is at LBA 6474184).
->>> The information in that report also show that when it looked at
->>> /dev/sdb4 it found metadata 1.2 ?? I'll see if there is another xfs
->>> header after that location.
->>>
->>> ARRAY /dev/md0 UUID=06ba2d0c:8282ab7e:3b6d8c49:0838e6b9
->>> ARRAY /dev/md1 UUID=5972f4e9:22fa2576:3b6d8c49:0838e6b9
->>> ARRAY /dev/md3 UUID=f18a5702:7247eda1:3b6d8c49:0838e6b9
->>> ARRAY /dev/md/2  metadata=1.2 UUID=38c9c38c:589967cd:80324986:f1f5e32a
->>> name=MyBook:2
->>>
-
+T24gMTcvMTIvMSDkuIrljYgyOjQ4LCBNaWNoYWVsIEx5bGUgd3JvdGU6Cj4gSGktLQo+Cj4gT24g
+MTEvMzAvMjAxNyAwNDowMCBBTSwg5b2t6Imv5b2mIHdyb3RlOgo+PiBPbiAxNy8xMS8yMyDkuIrl
+jYg4OjQyLCDlva3oia/lvaYgd3JvdGU6Cj4+PiBJZiB0aGUgYmFja2luZyBkZXZpY2UgaGFzbid0
+IGJlZW4gZGV0YWNoZWQgZHVlIHRvIGV4Y2VwdGlvbmFsIHN0b3AKPj4+IGxpa2UgcG93ZXIgb3V0
+YWdlLCB0aGUgQkRFVl9TVEFURSBpbiBzdXBlciBibG9jayBjYW4ndCBiZSByZXNldCwKPj4+IGl0
+IHdpbGwgZmFpbCB0byByZWdpc3RlciB0aGlzIGJhY2tpbmcgZGV2aWNlIGluIG5leHQgdGltZSwg
+YnV0IHRoZQo+Pj4gb3BlbmVkIGJkZXYgd2lsbCBiZSBob2xkLCB0aGlzIG1ha2VzIHRoZSBiYWNr
+aW5nIGRldmljZSB1bmFjY2Vzc2FibGUKPj4+IGJlY2F1c2Ugb2YgRk1PREVfRVhDTCB1bnRpbCBy
+ZWJvb3QuCj4+Pgo+Pj4gU2lnbmVkLW9mZi1ieTogTGlhbmd5YW4gUGVuZyA8bGlhbmd5YW4ucGx5
+QGFsaWJhYmEtaW5jLmNvbT4KPgo+IFRoaXMgZG9lc24ndCBzZWVtIGNvcnJlY3QuCj4KPiBXaGF0
+IGlzIHRoZSBleGFjdCBwcm9ibGVtIHlvdSdyZSBzZWVpbmc/ICBJcyBpdCwgaWYgdGhlIGNhY2hl
+IGRldmljZSBpcwo+IG1pc3NpbmcsIHRoZSBiYWNraW5nIGRldmljZSAibGVha3MiPyAgSSB0aGlu
+ayB0aGlzIGlzIGludGVudGlvbmFsLS0gaXQKPiBpcyB3YWl0aW5nIHRoZXJlIGZvciBhbiBhcHBy
+b3ByaWF0ZSBjYWNoZSBkZXZpY2UgdG8gYmUgYXR0YWNoZWQgdGhhdAo+IGxldHMgaXQgbGVhdmUg
+dGhlIFNUQVRFX0RJUlRZIGFuZCBydW4uICBUaGF0IGlzLCBlaXRoZXIgdGhlIGJhY2tpbmcKPiBk
+ZXZpY2Ugb3IgY2FjaGUgZGV2aWNlIGNhbiBiZSByZWdpc3RlcmVkIGZpcnN0LCBhbmQgaWYgdGhl
+IGJhY2tpbmcKPiBkZXZpY2UgaXMgcmVnaXN0ZXJlZCBmaXJzdCBpdCBpcyBzdXBwb3NlZCB0byAi
+d2FpdCIgYW5kIG5vdCBydW4gdW50aWwKPiB0aGUgY2FjaGUgc2hvd3MgdXAuCj4KVGhhbmtzIE1p
+a2UuCgpIZXJlIGlzIHRoZSBpc3N1ZSByZXByb2R1Y2Ugc3RlcC4KMS4gY3JlYXRlIGEgYmxvY2sg
+ZGV2aWNlIHNkYiBieSBpU0NTSQoyLiBlY2hvIC9kZXYvc2RiID4gL3N5cy9mcy9iY2FjaGUvcmVn
+aXN0ZXIgYW5kIHN1Y2NlZWQgdG8gcmVnaXN0ZXIgLy9zZGIgaXMgdGhlIGJsb2NrIGRldiBjcmVh
+dGUgYnkgaVNDU0kKMy4gZGlzY29ubmVjdCBuZXR3b3JrIGFuZCByZWJvb3QgIC8vIHdpdGhvdXQg
+bmV0d29yaywgU0VUX0JERVZfU1RBVEUoJmRjLT5zYiwgQkRFVl9TVEFURV9OT05FKSB3aWxsIGZh
+aWwKNC4gY3JlYXRlIGEgYmxvY2sgZGV2aWNlIHNkYiBieSBpU0NTSQo1LiBlY2hvIC9kZXYvc2Ri
+ID4gL3N5cy9mcy9iY2FjaGUvcmVnaXN0ZXIgYW5kIGZhaWwgdG8gcmVnaXN0ZXIgc2luY2UgYmRl
+diBzdGF0ZSBpcyBub3QgcmVzZXQgdG8gQkRFVl9TVEFURV9OT05FCjYuIG1ha2UtYmNhY2hlIC1C
+IC9kZXYvc2RiIC0td3JpdGViYWNrIC0td2lwZS1iY2FjaGUKdGhlIGxhc3Qgc3RlcCB3aWxsIGZh
+aWwgaW4gb3JpZ2luYWwgdmVyc2lvbiBzaW5jZSBiZGV2IGhhbmRsZSBpcyBub3QgcmVsZWFzZWQg
+ZHVyaW5nIHJlZ2lzdGVyIGFuZCBvcGVuKCkgaXMgZmFpbGVkIGluIG1ha2UtYmNhY2hlLCB3aXRo
+IHRoaXMgcGF0Y2gsIGl0IHdpbGwgc3VjY2VlZAoKPj4+IC0tLQo+Pj4gIGRyaXZlcnMvbWQvYmNh
+Y2hlL3N1cGVyLmMgfCAxNSArKysrKysrKysrKy0tLS0KPj4+ICAxIGZpbGUgY2hhbmdlZCwgMTEg
+aW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKPj4+Cj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9tZC9iY2FjaGUvc3VwZXIuYyBiL2RyaXZlcnMvbWQvYmNhY2hlL3N1cGVyLmMKPj4+IGluZGV4
+IDY2NjY5YzhmNDE2MS4uMGI5NWE1OTRjMTJlIDEwMDY0NAo+Pj4gLS0tIGEvZHJpdmVycy9tZC9i
+Y2FjaGUvc3VwZXIuYwo+Pj4gKysrIGIvZHJpdmVycy9tZC9iY2FjaGUvc3VwZXIuYwo+Pj4gQEAg
+LTExNzQsOSArMTE3NCw3IEBAIHN0YXRpYyB2b2lkIHJlZ2lzdGVyX2JkZXYoc3RydWN0IGNhY2hl
+X3NiICpzYiwgc3RydWN0IHBhZ2UgKnNiX3BhZ2UsCj4+PiAgCWxpc3RfZm9yX2VhY2hfZW50cnko
+YywgJmJjaF9jYWNoZV9zZXRzLCBsaXN0KQo+Pj4gIAkJYmNoX2NhY2hlZF9kZXZfYXR0YWNoKGRj
+LCBjKTsKPj4+ICAKPj4+IC0JaWYgKEJERVZfU1RBVEUoJmRjLT5zYikgPT0gQkRFVl9TVEFURV9O
+T05FIHx8Cj4+PiAtCSAgICBCREVWX1NUQVRFKCZkYy0+c2IpID09IEJERVZfU1RBVEVfU1RBTEUp
+Cj4+PiAtCQliY2hfY2FjaGVkX2Rldl9ydW4oZGMpOwo+Pj4gKwliY2hfY2FjaGVkX2Rldl9ydW4o
+ZGMpOwo+Cj4gWW91J3ZlIG1vdmVkIHRoZSBjaGVjayBvdXQgb2YgaGVyZSBpbnRvIHRoZSBlbmNs
+b3NpbmcuLi4KPgo+Pj4gIAo+Pj4gIAlyZXR1cm47Cj4+PiAgZXJyOgo+Pj4gQEAgLTE5ODIsNyAr
+MTk4MCwxNiBAQCBzdGF0aWMgc3NpemVfdCByZWdpc3Rlcl9iY2FjaGUoc3RydWN0IGtvYmplY3Qg
+KmssIHN0cnVjdCBrb2JqX2F0dHJpYnV0ZSAqYXR0ciwKPj4+ICAJCWdvdG8gZXJyX2Nsb3NlOwo+
+Pj4gIAo+Pj4gIAlpZiAoU0JfSVNfQkRFVihzYikpIHsKPj4+IC0JCXN0cnVjdCBjYWNoZWRfZGV2
+ICpkYyA9IGt6YWxsb2Moc2l6ZW9mKCpkYyksIEdGUF9LRVJORUwpOwo+Pj4gKwkJc3RydWN0IGNh
+Y2hlZF9kZXYgKmRjID0gTlVMTDsKPj4+ICsKPj4+ICsJCWlmIChCREVWX1NUQVRFKHNiKSAhPSBC
+REVWX1NUQVRFX05PTkUgJiYKPj4+ICsJCQlCREVWX1NUQVRFKHNiKSAhPSBCREVWX1NUQVRFX1NU
+QUxFKSB7Cj4+PiArCQkJYmxrZGV2X3B1dChiZGV2LCBGTU9ERV9SRUFEfEZNT0RFX1dSSVRFfEZN
+T0RFX0VYQ0wpOwo+Pj4gKwkJCWVyciA9ICJpbnZhbGlkIHN1cGVyIGJsb2NrIjsKPj4+ICsJCQlw
+cl9pbmZvKCJGYWlsZWQgdG8gcmVnaXN0ZXIgJXM6ICVzIiwgcGF0aCwgZXJyKTsKPj4+ICsJCQln
+b3RvIG91dDsKPj4+ICsJCX0KPgo+IEhlcmUgd2UgY2hlY2sgdGhlIHN0YXRlLS0gYmVmb3JlIGJj
+aF9jYWNoZWRfZGV2X2F0dGFjaCBpcyBjYWxsZWQuICBTbyBpZgo+IHRoZSBzdGF0ZSBpcyBCREVW
+X1NUQVRFX0RJUlRZIG9yIEJERVZfU1RBVEVfQ0xFQU4gdGhlcmUgaXMgbm8gY2hhbmNlIHRvCj4g
+ZXZlciB0cmFuc2l0aW9uIHRvIF9OT05FL19TVEFMRSBhbmQgcnVuIHRoZSBjYWNoZS4gIFRoaXMg
+d2lsbCBtYWtlIGl0Cj4gaW1wb3NzaWJsZSB0byBldmVyIHN0YXJ0IHVwIHRoZSBjYWNoZSBhZnRl
+ciBwb3dlciBmYWlsdXJlLgo+Cj4gTWlrZQ==
