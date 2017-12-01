@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 04/13] mdadm/test: redraft 00raid4 test case
-Date: Fri,  1 Dec 2017 17:48:05 +0800
-Message-ID: <1512121694-18168-5-git-send-email-zlliu@suse.com>
+Subject: [PATCH 07/13] mdadm/test: redraft the 00raid10 test case
+Date: Fri,  1 Dec 2017 17:48:08 +0800
+Message-ID: <1512121694-18168-8-git-send-email-zlliu@suse.com>
 References: <1512121694-18168-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1512121694-18168-1-git-send-email-zlliu@suse.com>
@@ -10,54 +10,66 @@ To: jsorensen@fb.com
 Cc: linux-raid@vger.kernel.org, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-make it cover different metadata and bitmap.
+make it cover different bitmap, metadata and
+"near, far, offset" layouts.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- tests/00raid4 | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
+ tests/00raid10 | 41 +++++++++++++++++++++++++++++------------
+ 1 file changed, 29 insertions(+), 12 deletions(-)
 
-diff --git a/tests/00raid4 b/tests/00raid4
-index 00a14f2..36606b0 100644
---- a/tests/00raid4
-+++ b/tests/00raid4
-@@ -1,16 +1,30 @@
+diff --git a/tests/00raid10 b/tests/00raid10
+index 796b970..9929ee7 100644
+--- a/tests/00raid10
++++ b/tests/00raid10
+@@ -1,18 +1,35 @@
  
- # create a simple raid4 set
-+bmf=$targetdir/bmf
+ # Create some raid10 arrays, all with 6 devices and one spare
+ devs="$dev0 $dev1 $dev2 $dev3 $dev4 $dev5 $dev6"
++bmf=$targetdir/bm
  
--mdadm -CfR $md0 -l 4 -n3 $dev0 $dev1 $dev2
--check resync ; check raid[45]
--testdev $md0 2 $mdsize1 512
--mdadm -S $md0
+-for lo in n2 n3 f2 f3
 +for bm in $bmf internal none
-+do
-+	for metadata in 0.90 1.0 1.1 1.2 default
+ do
+- cm=1
+- case $lo in
+-   f2 ) m=3 cm=2;;
+-   f3 ) m=2 cm=3;;
+-   n2 ) m=3;;
+-   n3 ) m=2;;
+- esac
+- mdadm --create --run --level=raid10 --layout $lo --raid-disks 6 -x 1 $md0 $devs
+- check resync ; check raid10
+- testdev $md0 $m $mdsize1 $[512*cm]
+- mdadm -S $md0
++	for metadata in 0.90 1.1 1.2 default
 +	do
-+		[ "$bm" == "$bmf" -a -f "$bmf" ] && rm $bmf
-+		mdadm -CfR $md0 -l 4 -b $bm -e $metadata -n3 $dev0 $dev1 $dev2
-+		check resync
-+		check raid4
-+		check wait
-+		check state UUU
-+		testdev $md0 2 $mdsize1 512
-+		mdadm -S $md0
++		for lo in n2 n3 f2 f3 o2 o3
++		do
++			cm=1
++			case $lo in
++				f2 ) m=3 cm=2;;
++				f3 ) m=2 cm=3;;
++				n2 ) m=3;;
++				n3 ) m=2;;
++				o3 ) m=2;;
++				o2 ) m=3;;
++			esac
++			[ "$bm" == "$bmf" -a -f $bmf ] && rm $bmf
++			mdadm --create --run --level=raid10 -e $metadata -b $bm --layout $lo --raid-disks 6 -x 1 $md0 $devs
++			check resync
++			check raid10
++			check wait
++			check state UUUUUU
++			check spares 1
++			testdev $md0 $m $mdsize1 $[512*cm]
++			mdadm -S $md0
++		done
 +	done
-+done
-+rm $bmf
- 
- # now with version-1 superblock
- mdadm -CR $md0 -e1 --level=raid4 -n4 $dev0 $dev1 $dev2 $dev3
--check recovery; check raid[45]
-+check recovery
-+check raid4
-+check wait
-+check state UUUU
- testdev $md0 3 $mdsize1 512
- mdadm -S $md0
- 
--
- exit 0
+ done
++[ -f $bmf ] && rm $bmf
++
++exit 0
 -- 
 1.8.5.6
 
