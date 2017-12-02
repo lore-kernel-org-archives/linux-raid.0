@@ -1,60 +1,62 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: New setup: partitions or raw devices
-Date: Sat, 2 Dec 2017 15:01:13 +0100
-Message-ID: <7b1c8f3c-08dd-771f-eab3-b75c11f3ea35@thelounge.net>
-References: <CAJH6TXj4wp-k2QQ0O8W2PDQEg9QHcWwPkOEOSzMgvtbV6b21Cw@mail.gmail.com>
- <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net>
- <CAJH6TXjbAFjP66HN54kiUffd=zt0HUgyQmcvsU-mYpJRUaQafw@mail.gmail.com>
- <e62ea493-3fae-5c3e-5578-f426dc3d254e@thelounge.net>
- <CAJH6TXgtn7Gqryvs1HKfFCodEqXCaHvy+kXX8kRxWgS25ZUDYQ@mail.gmail.com>
- <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
- <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
- <14078b47-29dd-6c07-f680-77ac9445be32@thelounge.net>
- <87tvxazahs.fsf@esperi.org.uk>
- <e44e21ec-a2b3-8441-5ad3-190b4c0a8670@thelounge.net>
- <5A218EDB.6030909@youngman.org.uk>
- <1d3830e8-9e5e-681c-d556-1b8b6524dda2@thelounge.net>
- <87po7xw9lh.fsf@esperi.org.uk>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID5 devices assemble into RAID0 array
+Date: Sat, 2 Dec 2017 11:52:01 -0500
+Message-ID: <59cff63b-a81c-5e1a-8821-e956d17d8b9e@turmel.org>
+References: <c1ae7110-8f62-9afd-2e4c-092256212153@evenson.tk>
+ <5A1AADCF.8090405@youngman.org.uk>
+ <3d9c7310-ffe9-d79e-ff75-0a95b5c5170a@evenson.tk>
+ <5A1B2DFC.6090702@youngman.org.uk>
+ <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
+ <ae2695e2-5fdd-b6a8-bb58-75ab3fe0d027@evenson.tk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87po7xw9lh.fsf@esperi.org.uk>
-Content-Language: de-CH
+In-Reply-To: <ae2695e2-5fdd-b6a8-bb58-75ab3fe0d027@evenson.tk>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Nix <nix@esperi.org.uk>
-Cc: Wols Lists <antlists@youngman.org.uk>, Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Duane <duane@evenson.tk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-Am 02.12.2017 um 14:19 schrieb Nix:
-> On 1 Dec 2017, Reindl Harald said:
+On 11/30/2017 04:39 PM, Duane wrote:
+> I need to tie off this thread.
 > 
->> RAID5 has *zero* benefits against RAID10 except costs while RAID6 is
->> terrible for performance and wear out of disks
+> I got my data. I ended up manually (scriptly) merging all the strips.
 > 
-> You still haven't explained why RAID-6 wears out disks more than RAID-10
-> does.
+> On later test RAID5 arrays, I removed all the devices. Then I recorded
+> the configuration of the array from the metadata in the devices. I
+> cleared the superblocks on the devices and then recreated the array. Of
+> importance were level, chunk size, and device order. Data offset and
+> layout were the default so I didn't specify them. The data area was not
+> changed and, with the same configuration as the last array, was in a
+> sane format.
 
-what about common sense?
-double parity anyone?
+Well done.  Based on your OP, this was the correct solution.  { Sorry I
+couldn't contribute this week -- business travel. }
 
-a write goes at least to 3 disks of the array instead two in case of a 4 
-meber RAID10
+> ************************************************************
+> 
+> Therefore, from my experience, the best way to recover a FAILED array is
+> to recreate a new array with the same devices and settings.
 
-> RAID-5 has one huge benefit over RAID-10: more accessible storage for a
-> given number of disks, and, given that power is not free, that means
-> lower running costs as well, as well as lower noise, lower vibration,
-> lower maintenance costs (since having more disks does mean you have to
-> replace disks more often, even if the chance of losing data when one
-> fails is reduced by RAID).
+No, most people don't deliberately fail a device out of an array that's
+already degraded.  That's an operator error that deleted the device role
+information needed for any variation of --assemble.
 
-the more accessible storage is the only real one
+Manual --assemble in its various forms is always preferred over
+--create, and if there was any reshape in progress, the only way to succeed.
 
-> If RAID-5 and RAID-6 had no benefits at all over RAID-10 it is unlikely
-> they would still be in wide use. They are, even for new installations,
-> because they truly do offer benefits for some use cases. They may not
-> for yours, but that doesn't mean they don't for anyone
+The key to successful use of --create --assume-clean is to fully
+understand all of the array settings and member device order, in a
+situation where the layout is unmixed.  You were paranoid enough to
+collect and use these details.  You didn't have a reshape in progress.
+You are extremely rare.
 
-yes, when you need far more than 8 TB...
+This mailing list is full of horror stories from people who ask for help
+*after* using --create --assume-clean in their recovery attempts, and
+who had *not* collected the necessary details.  --create blows away the
+prior superblocks, preventing collection of those details after the fact.
+
+So NO, --create is rarely the "best way" to recover a failed array.
+
+Phil
