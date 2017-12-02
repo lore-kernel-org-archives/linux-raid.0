@@ -1,62 +1,67 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID5 devices assemble into RAID0 array
-Date: Sat, 2 Dec 2017 11:52:01 -0500
-Message-ID: <59cff63b-a81c-5e1a-8821-e956d17d8b9e@turmel.org>
-References: <c1ae7110-8f62-9afd-2e4c-092256212153@evenson.tk>
- <5A1AADCF.8090405@youngman.org.uk>
- <3d9c7310-ffe9-d79e-ff75-0a95b5c5170a@evenson.tk>
- <5A1B2DFC.6090702@youngman.org.uk>
- <449af583-e7d6-236e-3ac2-d5da1bd7caf6@evenson.tk>
- <ae2695e2-5fdd-b6a8-bb58-75ab3fe0d027@evenson.tk>
+Subject: Re: New setup: partitions or raw devices
+Date: Sat, 2 Dec 2017 12:12:10 -0500
+Message-ID: <16db34f1-34a7-bf48-9800-6f9891d1e933@turmel.org>
+References: <CAJH6TXj4wp-k2QQ0O8W2PDQEg9QHcWwPkOEOSzMgvtbV6b21Cw@mail.gmail.com>
+ <7f6abcbc-7dfa-0252-e9df-984e7e637936@thelounge.net>
+ <CAJH6TXjbAFjP66HN54kiUffd=zt0HUgyQmcvsU-mYpJRUaQafw@mail.gmail.com>
+ <e62ea493-3fae-5c3e-5578-f426dc3d254e@thelounge.net>
+ <CAJH6TXgtn7Gqryvs1HKfFCodEqXCaHvy+kXX8kRxWgS25ZUDYQ@mail.gmail.com>
+ <3654cb70-9d7c-dfc0-f57d-c57004f11f92@thelounge.net>
+ <253c22a2-8f77-2737-b3b4-6beef107c28c@youngman.org.uk>
+ <14078b47-29dd-6c07-f680-77ac9445be32@thelounge.net>
+ <87tvxazahs.fsf@esperi.org.uk>
+ <e44e21ec-a2b3-8441-5ad3-190b4c0a8670@thelounge.net>
+ <5A218EDB.6030909@youngman.org.uk>
+ <1d3830e8-9e5e-681c-d556-1b8b6524dda2@thelounge.net>
+ <6066a947-2a4e-d8d5-239d-dccb80e39ac0@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ae2695e2-5fdd-b6a8-bb58-75ab3fe0d027@evenson.tk>
+In-Reply-To: <6066a947-2a4e-d8d5-239d-dccb80e39ac0@gmail.com>
 Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Duane <duane@evenson.tk>, linux-raid@vger.kernel.org
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, Reindl Harald <h.reindl@thelounge.net>, Wols Lists <antlists@youngman.org.uk>, Nix <nix@esperi.org.uk>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/30/2017 04:39 PM, Duane wrote:
-> I need to tie off this thread.
-> 
-> I got my data. I ended up manually (scriptly) merging all the strips.
-> 
-> On later test RAID5 arrays, I removed all the devices. Then I recorded
-> the configuration of the array from the metadata in the devices. I
-> cleared the superblocks on the devices and then recreated the array. Of
-> importance were level, chunk size, and device order. Data offset and
-> layout were the default so I didn't specify them. The data area was not
-> changed and, with the same configuration as the last array, was in a
-> sane format.
+Hi Gandalf,
 
-Well done.  Based on your OP, this was the correct solution.  { Sorry I
-couldn't contribute this week -- business travel. }
+You and Reindl are both wrong. (-:
 
-> ************************************************************
-> 
-> Therefore, from my experience, the best way to recover a FAILED array is
-> to recreate a new array with the same devices and settings.
+On 12/02/2017 08:14 AM, Gandalf Corvotempesta wrote:
+> Il 02/12/2017 00:44, Reindl Harald ha scritto:
+>> a RAID10 can survive two faile disks while a RAID5 is for sure dead
+> Absolutely not.
+> This is a common misconception.
+> RAID-10 can survive two failed disks IF AND ONLY IF these disks are on
+> different mirrors.
 
-No, most people don't deliberately fail a device out of an array that's
-already degraded.  That's an operator error that deleted the device role
-information needed for any variation of --assemble.
+You (Gandalf) are ignoring the ability of raid10 to use multiple copies
+across device counts that aren't multiples of the number of copies.  A
+raid10,n3 array on five devices provides a total capacity of 1-2/3 the
+capacity of one member, but can fail any two members just like a raid6.
 
-Manual --assemble in its various forms is always preferred over
---create, and if there was any reshape in progress, the only way to succeed.
+It has blistering fast read performance, especially for parallel loads.
+It has the same write performance as as similarly capacity raid0.  It
+has terrible write amplification on SSDs, but is very low CPU
+utilization (no parity computation and never any Read-Modify-Write cycles).
 
-The key to successful use of --create --assume-clean is to fully
-understand all of the array settings and member device order, in a
-situation where the layout is unmixed.  You were paranoid enough to
-collect and use these details.  You didn't have a reshape in progress.
-You are extremely rare.
+Raid10 has an valuable role to play in high performance systems, and I
+use LVM on top of raid10,n3 for my own home directories, general purpose
+user partitions, and the root LVs for performance-critical VMs.  I use
+LVM on top of raid6 for media files, large capacity databases, and
+not-so-critical VMs.
 
-This mailing list is full of horror stories from people who ask for help
-*after* using --create --assume-clean in their recovery attempts, and
-who had *not* collected the necessary details.  --create blows away the
-prior superblocks, preventing collection of those details after the fact.
+> RAID-6 is *much* more safe than RAID-1/RAID-10 as it can survive ANY TWO
+> disks failure,
+> you will loose data on the third failure.
 
-So NO, --create is rarely the "best way" to recover a failed array.
+You (Reindl) are crazy to argue about can-vs-will on a raid10,n2 layout.
+ You're crazy to rely on any single mirror layout for data you care
+about.  It is a disaster waiting to happen (during rebuild) in exactly
+the same way raid5 is vulnerable during rebuild.  But raid10,n3 is just
+as safe as raid6.
 
 Phil
