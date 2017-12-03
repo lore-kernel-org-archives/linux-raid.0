@@ -1,124 +1,223 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: ERC for raid [forked from "mdadm reshaping stuck problem"]
-Date: Sun, 3 Dec 2017 16:23:15 -0500
-Message-ID: <d5e02aca-bad3-7fe7-49ea-0b1d422401f1@turmel.org>
-References: <73f07f38fb71986fe71be67f00c77698@posteo.de>
- <fed720e2-fd55-6458-2d68-9b87c96254fc@turmel.org>
- <83ee590a545d4de7938b535b952729b7@posteo.de>
- <b795ed1f-cfcb-4b8f-c25c-a46297bf2614@turmel.org>
- <ff1c0581-c901-e4d5-df14-943845ef7dd9@walther.xyz>
+From: Larkin Lowrey <llowrey@gmail.com>
+Subject: Re: Stopping raid6 (with journal) hangs w/ 100%CPU
+Date: Sun, 3 Dec 2017 16:58:45 -0500
+Message-ID: <ec5c1c11-a7d0-2b37-ed36-bb294f0fe34f@gmail.com>
+References: <6fb7c56a-a78d-ebe6-e569-0d68f69469ce@gmail.com>
+ <97c88343-8f46-28a4-3590-82465312bcb5@gmail.com>
+ <fc41e1a4-2b58-cda4-c873-a4760fc09857@gmail.com>
+ <223a82cc-a475-3322-0d3a-326b5829dc48@gmail.com>
+ <20171201203408.qtncrubmqqyxcb6s@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ff1c0581-c901-e4d5-df14-943845ef7dd9@walther.xyz>
-Content-Language: en-GB
+In-Reply-To: <20171201203408.qtncrubmqqyxcb6s@kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Walther <matthias@walther.xyz>, rene.feistle@posteo.de
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Matthias,
-
-On 12/03/2017 01:14 PM, Matthias Walther wrote:
-> Hello,
-> 
-> Am 03.12.2017 um 18:20 schrieb Phil Turmel:
->> Very good.  At some point you need to replace the desktop drive -- it's
->> unsafe to use in a raid array -- but it doesn't look like it's blowing
->> up at the moment.  Use the following workaround on every boot until you
->> replace it:
+On 12/1/2017 3:34 PM, Shaohua Li wrote:
+> On Thu, Nov 30, 2017 at 11:22:23AM -0500, Larkin Lowrey wrote:
+>> Seems locks are involved, and in a not so nice way.
 >>
->> echo 180 > /sys/block/sde/device/timeout
+>> I had been chasing a problem that I thought was with the SAS controllers
+>> where the IO for the drives would stall for extended periods of time. The
+>> data from iostat would show 100% utilization but zero I/O and 1 or 2
+>> avgqu-sz. Once the IO would resume the await value would be exactly the
+>> amount of time the IO had been stalled. I was sure it was the SAS controller
+>> or driver but it turns out it was the raid6 journal! During the periods of
+>> stalled IO, the mdX_raid6 process would go to 100% CPU and when the IO
+>> resumed that process would be back down at ~50%. When I switched back to
+>> resync (disabled the journal), those IO stalls went away. It appears to me
+>> that the bad locking behavior is the culprit.
 >>
->> Search the archives for "timeout mismatch" to see many discussions on
->> why that drive is a time bomb.
-> 
-> this is an interesting point. As far as I understand it, there's no
-> difference between a) the device tells the kernel, that an error
-> occurred (ERC) or b) the kernel just waits three minutes.
+>> My priority now is to disable the journals on my two remaining arrays which
+>> boot up with mdX_raid6 at 100% CPU. Because of their state mdadm is unable
+>> to act on them at all. How can I disable the journal of these arrays which
+>> are 'inactive'?
+> I think we should fix the journal bug. Can you describe how you trigger this?
+> anything abnormal happens?
+>
+> Thanks,
+> Shaohua
 
-From MD raid's perspective, as long as the link doesn't time out, no.
-Many services that one might want to use with such a server will have
-problems with a 3-minute filesystem freeze, which is why I highly
-recommend replacing the drives with something that'll respond quicker.
+My tests were all with jounral_mode set to write-back. I didn't do any 
+testing in write-through mode since that's not very interesting to me. 
+The tests I ran were for various failure modes like sudden power off and 
+physically pulling multiple drives from the array simultaneously all 
+while writing to the array as fast as possible. The problem would be 
+apparent on boot. It looks like mdadm would read the journal and use it 
+to populate the stripe cache with dirty data. Once mdadm was done the 
+mdX_raid6 process would go to 100% and I would no longer be able to 
+control the array. All mdadm commands would hang and writes to 
+/sys/block/mdX/md/XYZ would hang. The array would remain 'inactive' 
+according to /prod/mdstat.
 
-> From my point of understanding, I see no reason to avoid those disks.
-> Just raise this timeout to 180 on all disks. Even those with ERC can be
-> set to 180 seconds, because on some mainboards the order of sdX changes
-> every boot. On your home nas it doesn't really matter if there's an
-> access delay. This is of course not acceptable on enterprise systems.
+The mdadm v4.0-218-gfe05dc4 - 2017-11-09.
 
-No, lots of protocols can't wait that long.  Lots of humans can't wait
-that long either, and will start physical interventions.
+This happened with a 4.13 kernel. I did not have easy access to a 4.12 
+kernel or a 4.14. When I booted with 4.11.8 the array assembled just 
+fine. So, there was regression somewhere between 4.11.8 and 4.13.X.
 
-> By the way, the kernel doesn't just easily throw the device out. From my
-> experiences it hard resets the link and completely reinitializes the
-> device. Only if that fails, the raid will be degraded and if this fails,> the device probably has a problem and should be replaced.
+The two machines I've been using for testing are no longer available to 
+me but I'll work on creating a VM I can use to try to reproduce this.
 
-MD raid tries to fix read errors.  When a read returns an error, MD
-retrieves the data from a mirror (raid1, raid10) or reconstructs it from
-parity and/or syndrome (raid4,5,6) and then writes it back to the
-problem sector.  This is entirely appropriate as large modern hard
-drives do occassionally experience transient read errors.  Transient
-read errors are fixable by writing new content to that sector location.
-Even if the error is not transient, modern drives use the write
-operation to verify that problem and then relocate the sector.
+--Larkin
 
-If the link resets because the driver timed out before the device
-responded, then MD gets another error message *while* the link is
-resetting.  The follow-up write to correct the sector fails immediately
-because the link is down.  The *write error* kicks the drive out.
+>> --Larkin
+>>
+>> On 11/27/2017 9:42 PM, Larkin Lowrey wrote:
+>>> The kernel thread is spending a lot of time in handle_active_stripes but
+>>> not staying in there since I see it calling handle_stripe and then I
+>>> also see calls to __release_stripe then back to handle_stripe again. So,
+>>> it's clearly exiting handle_active_stripes but getting dumped right back
+>>> in there. Presumably, handle_active_stripes is not completing the
+>>> necessary work and the kernel thread keeps calling it expecting the
+>>> pending work to be completed.
+>>>
+>>> When the system boots up an mdadm process runs at near 100% CPU with
+>>> sporadic reads of the journal device. After ~30s or so, the IO stops,
+>>> the mdadm process disappears, and the mdX_raid6 kernel thread starts
+>>> taking 100% CPU.
+>>>
+>>>> RIP: 0010:do_release_stripe+0x52/0x410 [raid456]
+>>>> RSP: 0018:ffffbb7d41dcbcc0 EFLAGS: 00000017
+>>>> RAX: 0000000002000000 RBX: ffff8f10c819bf20 RCX: 0000000000000000
+>>>> RDX: 0000000000000002 RSI: ffff8f10c819bf20 RDI: ffff8f114a2ad400
+>>>> RBP: ffffbb7d41dcbce8 R08: ffff8f113e3dd888 R09: 0000000000000000
+>>>> R10: 00000000ffffffff R11: 0000000000000000 R12: ffff8f10c819bf30
+>>>> R13: ffff8f113e3ddb58 R14: ffff8f113e3dd800 R15: 0000000000000003
+>>>> FS:  0000000000000000(0000) GS:ffff8f115ed40000(0000)
+>>>> knlGS:0000000000000000
+>>>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>>> CR2: 00007fb7675e1000 CR3: 0000000412cf5000 CR4: 00000000000406e0
+>>>> Call Trace:
+>>>> __release_stripe+0x16/0x20 [raid456]
+>>>> handle_active_stripes.isra.60+0x44e/0x5a0 [raid456]
+>>>> raid5d+0x42e/0x630 [raid456]
+>>> --Larkin
+>>>
+>>>
+>>> On 11/24/2017 2:20 PM, Larkin Lowrey wrote:
+>>>> After hard-rebooting, this instance (stripe_cache_active: 2)
+>>>> assembled just fine on boot. The next time I encountered this the
+>>>> array was 'inactive' on boot. There was a flurry of I/O initially
+>>>> (which seems to indicate journal re-play, then the array becoming
+>>>> 'active') but the I/O ceased without the array becoming active.
+>>>>
+>>>> This time...
+>>>>
+>>>> stripe_cache_active: 2376
+>>>>
+>>>>> md125 : inactive md127p4[9](J) sdk1[2] sdl1[3] sdn1[5] sdo1[6]
+>>>>> sdm1[4] sdj1[1] sdq1[8] sdp1[7]
+>>>>>        31258219068 blocks super 1.2
+>>>>
+>>>>> # mdadm -D /dev/md125
+>>>>> /dev/md125:
+>>>>>             Version : 1.2
+>>>>>       Creation Time : Thu Oct 19 10:11:35 2017
+>>>>>          Raid Level : raid6
+>>>>>       Used Dev Size : 18446744073709551615
+>>>>>        Raid Devices : 8
+>>>>>       Total Devices : 9
+>>>>>         Persistence : Superblock is persistent
+>>>>>
+>>>>>         Update Time : Fri Nov 24 13:41:38 2017
+>>>>>               State : active, FAILED, Not Started
+>>>>>      Active Devices : 8
+>>>>>     Working Devices : 9
+>>>>>      Failed Devices : 0
+>>>>>       Spare Devices : 0
+>>>>>
+>>>>>              Layout : left-symmetric
+>>>>>          Chunk Size : 64K
+>>>>>
+>>>>> Consistency Policy : journal
+>>>>>
+>>>>>                Name : ########:3
+>>>>>                UUID : de6a2ce0:1a4c510f:d7c89da4:1215a312
+>>>>>              Events : 156844
+>>>>>
+>>>>>      Number   Major   Minor   RaidDevice State
+>>>>>         -       0        0        0      removed
+>>>>>         -       0        0        1      removed
+>>>>>         -       0        0        2      removed
+>>>>>         -       0        0        3      removed
+>>>>>         -       0        0        4      removed
+>>>>>         -       0        0        5      removed
+>>>>>         -       0        0        6      removed
+>>>>>         -       0        0        7      removed
+>>>>>
+>>>>>         -     259        3        -      spare   /dev/md127p4
+>>>>>         -       8      225        5      sync   /dev/sdo1
+>>>>>         -       8      209        4      sync   /dev/sdn1
+>>>>>         -       8      193        3      sync   /dev/sdm1
+>>>>>         -       8      177        2      sync   /dev/sdl1
+>>>>>         -       8      161        1      sync   /dev/sdk1
+>>>>>         -       8      145        0      sync   /dev/sdj1
+>>>>>         -      65        1        7      sync   /dev/sdq1
+>>>>>         -       8      241        6      sync   /dev/sdp1
+>>>> --Larkin
+>>>>
+>>>> On 11/23/2017 1:22 PM, Larkin Lowrey wrote:
+>>>>> Sometimes, stopping a raid6 array (with journal) hangs, the
+>>>>> mdX_raid6 process pegs at 100% CPU, and there is no I/O. Looks
+>>>>> like it's stuck in an infinite loop.
+>>>>>
+>>>>> Kernel: 4.13.13-200.fc26.x86_64
+>>>>>
+>>>>> The stack trace (echo l > /proc/sysrq-trigger) is always the same:
+>>>>>
+>>>>>> handle_stripe+0x10c/0x2140 [raid456]
+>>>>>> ? pick_next_task_fair+0x491/0x550
+>>>>>> handle_active_stripes.isra.60+0x3e5/0x5a0 [raid456]
+>>>>>> raid5d+0x42e/0x630 [raid456]
+>>>>>> ? prepare_to_wait_event+0x79/0x160
+>>>>>> md_thread+0x125/0x170
+>>>>>> ? md_thread+0x125/0x170
+>>>>>> ? finish_wait+0x80/0x80
+>>>>>> kthread+0x125/0x140
+>>>>>> ? state_show+0x2f0/0x2f0
+>>>>>> ? kthread_park+0x60/0x60
+>>>>>> ? do_syscall_64+0x67/0x140
+>>>>>> ret_from_fork+0x25/0x30
+>>>>> The array is healthy, has a journal, and writes were idle for
+>>>>> several minutes prior to running 'mdadm --stop'.
+>>>>>
+>>>>>> md124 : active raid6 sdt1[6] sds1[5] sdw1[1] sdx1[2] sdy1[3]
+>>>>>> sdu1[7] sdv1[8] sdz1[4] md125p4[9](J)
+>>>>>>        23442092928 blocks super 1.2 level 6, 64k chunk,
+>>>>>> algorithm 2 [8/8] [UUUUUUUU]
+>>>>> stripe_cache_active: 2
+>>>>> stripe_cache_size: 32768
+>>>>> array_state: write-pending
+>>>>> journal_mode: write-through [write-back]
+>>>>> consistency_policy: journal
+>>>>>
+>>>>> --Larkin
+>>>>>
+>>>>> -- 
+>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>> linux-raid" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>>> -- 
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-A quick burst of read errors will kick out a drive (20 in one hour), or
-a steady stream of read errors (10 per hour sustained), or *any* write
-error.
-
-> I run a raid-6 on six really cheap old second hand 4 TB drives and never
-> had an issue with that in the past two years. I had no real failures and
-> no accidentally or prematurely dropped devices. Mdadm just runs. And
-> this raid writes about 50 GB each and every single day and never goes to
-> sleep. This is what differs mdadm from hardware raid controllers, which
-> really shouldn't used with non ERC drives due to exactly that timing
-> problem.
-
-If you are using the driver timeout workaround, of course you would see
-your array collapse.  And for household use, you probably don't care if
-your movie playback freezes for the occassional minute or two.
-
-> Though I run a check every month, where all data is read, just to make
-> sure it doesn't rot on the discs.
-
-During scrubs, the long timeout on a URE won't impact the filesystem, so
-your users are even less likely to notice.  This is very good practice.
-
-> In my opinion a (monitored) raid-6 on
-> old, cheap non ERC drives is safer, than a raid-5 on „premium
-> overpriced“ drives.
-
-No question about it.  Raid6 is *always* safer than raid5.  That doesn't
-mean non-ERC drives are a good idea.
-
-> Never forget, it's call raid - random array of
-> inexpensive disks.
-
-The original name is "Redundant Array of Inexpensive Disks".  The
-current standard uses "Independent" instead of "Inexpensive" because the
-standards body is made up of manufacturers.  /-:
-
-> In cynical words, I see it this way: The hdd and nas manufactures came
-> together and found a way to push the prices up.
-
-Oh, I'm pretty cynical.  You should read my posts in 2011 when I worked
-all this out -- after Seagate screwed me by taking scterc out of their
-desktop drives.
-
-But timeout mismatch is a real problem.  The NAS drives didn't exist as
-an option back then, and I'm sure it was complaints like ours that
-caused that niche to come into existence.  At a 10% or so price premium.
- (Vs. 2x pricing for enterprise drives.)
-
-> Regards,
-> Matthias
-
-Phil
