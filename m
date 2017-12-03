@@ -1,331 +1,113 @@
-From: val <valkoles@gmail.com>
-Subject: raid6 problem
-Date: Sat, 2 Dec 2017 15:25:55 -0800
-Message-ID: <CAAVX1adjSKT-G9-h0J1Ly7QTpMqJ+jQ4Luqi_+WDC1aThMCYdg@mail.gmail.com>
+From: rene.feistle@posteo.de
+Subject: mdadm reshaping stuck problem
+Date: Sun, 03 Dec 2017 13:47:09 +0100
+Message-ID: <73f07f38fb71986fe71be67f00c77698@posteo.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello,
 
-I have (or had? :-( ) raid6 with 5 drives (sd[echdg]).
-Status was good and I decided to replace working 3TB drive with 5TB drive:
+after hours and hours of googling and trying out things, I gave up on=20
+this. This email is my last hope of getting my data back.
 
-mdadm /dev/md127 --fail /dev/sdd --remove /dev/sdd
-# replaced hdd and rebooted (shouldn't have done next two lines - now
-I know that)
-cryptsetup luksOpen /dev/md127 en_r6
-mount /dev/mapper/en_r6 /mnt/en_r6/
-smartctl -t short /dev/sdd
-# waited for short test to finish
-smartctl -t long /dev/sdd
-mdadm  /dev/md127 --add /dev/sdd
+I have 4*4TB drives installed and want to create a raid 5 with them.
 
-After an hour (7% done) there was long error chunk in
-/var/log/messages.  Here is the end of it:
-Dec  2 02:55:14 vision kernel: sd 7:0:0:0: [sdh] tag#2 FAILED Result:
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-Dec  2 02:55:14 vision kernel: sd 7:0:0:0: [sdh] tag#2 CDB: Read(16)
-88 00 00 00 00 00 21 53 03 28 00 00 00 18 00 00
-Dec  2 02:55:14 vision kernel: blk_update_request: I/O error, dev sdh,
-sector 559088424
-Dec  2 02:55:14 vision kernel: blk_update_request: I/O error, dev sdg,
-sector 559088424
-Dec  2 02:55:14 vision kernel: md: super_written gets error=-5
-Dec  2 02:55:14 vision kernel: md/raid:md127: Disk failure on sdh,
-disabling device.\x0amd/raid:md127: Operation continuing on 3 devices.
-Dec  2 02:55:14 vision kernel: md: super_written gets error=-5
-Dec  2 02:55:14 vision kernel: md/raid:md127: Disk failure on sde,
-disabling device.\x0amd/raid:md127: Operation continuing on 2 devices.
-Dec  2 02:55:14 vision kernel: md: super_written gets error=-5
-Dec  2 02:55:14 vision kernel: md/raid:md127: Disk failure on sdg,
-disabling device.\x0amd/raid:md127: Operation continuing on 1 devices.
-Dec  2 02:55:14 vision kernel: md/raid:md127: read error not
-correctable (sector 559128928 on sde).
-Dec  2 02:55:14 vision kernel: md/raid:md127: read error not
-correctable (sector 559128928 on sdg).
-Dec  2 02:55:14 vision kernel: md/raid:md127: read error not
-correctable (sector 559128928 on sdh).
-Dec  2 02:56:32 vision kernel: md: md127: recovery interrupted.
-Dec  2 10:59:01 vision CROND[4393]: (root) CMD (rm -f
-/var/spool/cron/lastrun/cron.hourly)
-Dec  2 11:00:01 vision CROND[4403]: (root) CMD (test -x
-/usr/sbin/run-crons && /usr/sbin/run-crons)
-Dec  2 03:06:15 vision kernel: Buffer I/O error on dev dm-0, logical
-block 0, lost sync page write
-Dec  2 03:06:15 vision kernel: VFS: Dirty inode writeback failed for
-block device dm-0 (err=-5).
-Dec  2 03:06:55 vision shutdown[4482]: shutting down for system reboot
+So what I did is create an array of 3 disks (raid 5), copy the data from=20
+the 4th drive (I don't have more space available) to the raid and then I=20
+wanted to add the last drive to the raid.
+I made a mistake here. I accidentally grew the raid to 4 disks with
 
-# before shutdown I did:
-umount /mnt/en_r6/
-cryptsetup luksClose /dev/mapper/en_r6
+sudo mdadm --grow --raid-devices=3D4 /dev/md0 --backup-file=3D/tmp/md0.bak
 
+BEFORE adding the last drive as a hot spare. Mdadm immediately started a=20
+reshape and says that it failed - because it consists of 4 drives but=20
+only 3 drives are available.
 
-rebooted and now I have:
-vision ~ # mdadm --detail /dev/md127
-/dev/md127:
-        Version : 1.2
-     Raid Level : raid0
-  Total Devices : 5
-    Persistence : Superblock is persistent
+I thought okay, let him complete the reshape and everything will be=20
+okay. But no - the reshape is stuck at 34.3%.
 
-          State : inactive
+What I have tried:
 
-           Name : vision:0  (local to host vision)
-           UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-         Events : 189186
+- Reboot ( about a 100 times)
+- increase stripe cache size up to 32768
 
-    Number   Major   Minor   RaidDevice
+mdadm --assemble --invalid-backup --backup-file=3D/root/mdadm0.bak=20
+/dev/md0 /dev/sdc1 /dev/sde1 /dev/sdf1
 
-       -       8       64        -        /dev/sde
-       -       8       32        -        /dev/sdc
-       -       8      112        -        /dev/sdh
-       -       8       48        -        /dev/sdd
-       -       8       96        -        /dev/sdg
-vision ~ # cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md127 : inactive sde[5](S) sdg[4](S) sdh[6](S) sdc[0](S) sdd[7](S)
-      20511189560 blocks super 1.2
+And some other things.
+
+The raid is not mountable. When I try to mount it, the mount command=20
+just hungs and nothing happens. That means that I had to edit my fstab=20
+with a rescue cd because it would never boot again.
+That also means that I have no access to my data.
+
+When I shutdown or reboot the computer, it also hungs at shutdown, I can=20
+only hard reset it.
+
+cat /proc/mdstat:
+
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]=20
+[raid4] [r$
+md0 : active raid5 sdc1[0] sdf1[3] sde1[1]
+       7813771264 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3]=
+=20
+[UU__]
+       [=3D=3D=3D=3D=3D=3D>..............]  reshape =3D 34.3% (1340465664/3=
+906885632)=20
+finish=3D3$
+       bitmap: 3/30 pages [12KB], 65536KB chunk
 
 unused devices: <none>
 
-timeout output:
-/dev/sdc  is good Device Model:     TOSHIBA DT01ACA300
-/dev/sdd  is good Device Model:     TOSHIBA HDWE150
-/dev/sde  is good Device Model:     TOSHIBA MD04ACA500
-/dev/sdg  is good Device Model:     TOSHIBA MD04ACA500
-/dev/sdh  is  bad Device Model:     ST3000DM008-2DM166
 
-* /dev/sdc:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-           Name : vision:0  (local to host vision)
-  Creation Time : Mon Feb  1 10:20:56 2016
-     Raid Level : raid6
-   Raid Devices : 5
-
- Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
-  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=944 sectors
-          State : clean
-    Device UUID : 41ce7046:7ebdceea:65d19621:f1ca61e4
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Dec  2 03:06:16 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 11fe1830 - correct
-         Events : 191432
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : A.... ('A' == active, '.' == missing, 'R' == replacing)
-
-* /dev/sdd:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x9
-     Array UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-           Name : vision:0  (local to host vision)
-  Creation Time : Mon Feb  1 10:20:56 2016
-     Raid Level : raid6
-   Raid Devices : 5
-
- Avail Dev Size : 9767279024 (4657.40 GiB 5000.85 GB)
-     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
-  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=3907008944 sectors
-          State : clean
-    Device UUID : 886a5eec:9e849621:21abfb4e:a369cd89
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Dec  2 03:06:16 2017
-  Bad Block Log : 512 entries available at offset 72 sectors - bad
-blocks present.
-       Checksum : aa642a14 - correct
-         Events : 191432
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : spare
-   Array State : A.... ('A' == active, '.' == missing, 'R' == replacing)
-
-* /dev/sde:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-           Name : vision:0  (local to host vision)
-  Creation Time : Mon Feb  1 10:20:56 2016
-     Raid Level : raid6
-   Raid Devices : 5
-
- Avail Dev Size : 9767279024 (4657.40 GiB 5000.85 GB)
-     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
-  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=3907008944 sectors
-          State : clean
-    Device UUID : 115d79b4:69962035:97d4e787:9111f3d9
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Dec  2 02:53:46 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : f1ff417 - correct
-         Events : 189186
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-* /dev/sdg:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-           Name : vision:0  (local to host vision)
-  Creation Time : Mon Feb  1 10:20:56 2016
-     Raid Level : raid6
-   Raid Devices : 5
-
- Avail Dev Size : 9767279024 (4657.40 GiB 5000.85 GB)
-     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
-  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=3907008944 sectors
-          State : clean
-    Device UUID : 488e865c:38b2a55d:98af3012:b923d816
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Dec  2 02:53:46 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : a6e02e43 - correct
-         Events : 189186
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-* /dev/sdh:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-           Name : vision:0  (local to host vision)
-  Creation Time : Mon Feb  1 10:20:56 2016
-     Raid Level : raid6
-   Raid Devices : 5
-
- Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
-     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
-  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=262056 sectors, after=944 sectors
-          State : clean
-    Device UUID : 9e72158d:5129c8d1:50a2f7a5:0e8b8ed1
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Sat Dec  2 02:53:46 2017
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : b12eadc2 - correct
-         Events : 189186
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 4
-   Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
+mdadm --detail /dev/md0
 
 
-# trying to assemble raid6 with all drives
-vision ~ # mdadm --assemble --no-degraded --readonly /dev/md127
-/dev/sde /dev/sdc /dev/sdh /dev/sdd /dev/sdg
-mdadm: /dev/md127 assembled from 1 drive (out of 5), but not started.
-vision ~ # mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
+/dev/md0:
+         Version : 1.2
+   Creation Time : Fri Dec  1 02:10:06 2017
+      Raid Level : raid5
+      Array Size : 7813771264 (7451.79 GiB 8001.30 GB)
+   Used Dev Size : 3906885632 (3725.90 GiB 4000.65 GB)
+    Raid Devices : 4
+   Total Devices : 3
+     Persistence : Superblock is persistent
 
-# trying to assemble raid6 without newly added drive
-vision ~ # mdadm --assemble --no-degraded --readonly /dev/md127
-/dev/sde /dev/sdc /dev/sdh /dev/sdg
-mdadm: /dev/md127 assembled from 1 drive (out of 5), but not started.
-vision ~ # mdadm --detail /dev/md127
-/dev/md127:
-        Version : 1.2
-     Raid Level : raid0
-  Total Devices : 4
-    Persistence : Superblock is persistent
+   Intent Bitmap : Internal
 
-          State : inactive
+     Update Time : Sun Dec  3 13:34:43 2017
+           State : active, FAILED, reshaping
+  Active Devices : 2
+Working Devices : 3
+  Failed Devices : 0
+   Spare Devices : 1
 
-           Name : vision:0  (local to host vision)
-           UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-         Events : 189186
+          Layout : left-symmetric
+      Chunk Size : 512K
 
-    Number   Major   Minor   RaidDevice
+  Reshape Status : 34% complete
+   Delta Devices : 1, (3->4)
 
-       -       8       64        -        /dev/sde
-       -       8       32        -        /dev/sdc
-       -       8      112        -        /dev/sdh
-       -       8       96        -        /dev/sdg
-vision ~ # mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
+            Name : nas-server:0  (local to host nas-server)
+            UUID : e410e68d:76460b65:69c056c0:d2645d55
+          Events : 28155
 
-# trying to assemble raid6 with three drives with Array State : AAAAA
-vision ~ # mdadm --assemble --no-degraded --readonly /dev/md127
-/dev/sde /dev/sdh /dev/sdg
-mdadm: /dev/md127 assembled from 3 drives (out of 5), but not started.
-vision ~ # mdadm --detail /dev/md127
-/dev/md127:
-        Version : 1.2
-     Raid Level : raid0
-  Total Devices : 3
-    Persistence : Superblock is persistent
-
-          State : inactive
-
-           Name : vision:0  (local to host vision)
-           UUID : 4eab7c9d:75996247:fc6cdd24:15002f0b
-         Events : 189186
-
-    Number   Major   Minor   RaidDevice
-
-       -       8       64        -        /dev/sde
-       -       8      112        -        /dev/sdh
-       -       8       96        -        /dev/sdg
-vision ~ # mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
+     Number   Major   Minor   RaidDevice State
+        0       8       33        0      active sync   /dev/sdc1
+        1       8       65        1      active sync   /dev/sde1
+        3       8       81        2      spare rebuilding   /dev/sdf1
+        6       0        0        6      removed
 
 
-Don't want to loose my data, so asking for the help.
-Haven't had any new suspicious lines in /var/log/messages since the
-accident (though raid6 wasn't used either)
 
-Is my data lost or is there a hope?
+Any help is appreciated, I'm lost.
 
-Why mdadm insists that it's raid0, while --examine has correct raid6
-for all drives?
+Kind Regards
 
-How can I save info from raid?  (Restoring raid with it would be
-preferred though)
-
-Thank you in advance
+Ren=C3=A9
