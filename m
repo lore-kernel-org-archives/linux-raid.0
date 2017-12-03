@@ -1,448 +1,65 @@
-From: rene.feistle@posteo.de
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: mdadm reshaping stuck problem
-Date: Sun, 03 Dec 2017 15:59:27 +0100
-Message-ID: <83ee590a545d4de7938b535b952729b7@posteo.de>
+Date: Sun, 3 Dec 2017 12:20:43 -0500
+Message-ID: <b795ed1f-cfcb-4b8f-c25c-a46297bf2614@turmel.org>
 References: <73f07f38fb71986fe71be67f00c77698@posteo.de>
  <fed720e2-fd55-6458-2d68-9b87c96254fc@turmel.org>
+ <83ee590a545d4de7938b535b952729b7@posteo.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_835c58eb4fd0963c29a1374fe30b4b28"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fed720e2-fd55-6458-2d68-9b87c96254fc@turmel.org>
+In-Reply-To: <83ee590a545d4de7938b535b952729b7@posteo.de>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: rene.feistle@posteo.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=_835c58eb4fd0963c29a1374fe30b4b28
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Hi Rene,
 
-Hello Phil,
+{ Convention on kernel.org is to trim replies & either bottom post or
+interleave.  Please do. }
 
-Thanks for your fast reply.
+On 12/03/2017 09:59 AM, rene.feistle@posteo.de wrote:
+> Hello Phil,
+> 
+> Thanks for your fast reply.
+> 
+> I did run your commands and the results are attached to this email and
+> on pastebin here:
+> 
+> https://pastebin.com/EVpLfmAe
+> https://pastebin.com/ZMBYB5CW
 
-I did run your commands and the results are attached to this email and=20
-on pastebin here:
+Very good.  At some point you need to replace the desktop drive -- it's
+unsafe to use in a raid array -- but it doesn't look like it's blowing
+up at the moment.  Use the following workaround on every boot until you
+replace it:
 
-https://pastebin.com/EVpLfmAe
-https://pastebin.com/ZMBYB5CW
+echo 180 > /sys/block/sde/device/timeout
 
+Search the archives for "timeout mismatch" to see many discussions on
+why that drive is a time bomb.
 
-The drive names have changed because I deinstalled one drive that was=20
-not in the raid. I had a copy of all data on this drive so I'm trying to=20
-recover my data with that drive now. The chances are good because I did=20
-overwrite the partition table only.
+> The drive names have changed because I deinstalled one drive that was
+> not in the raid. I had a copy of all data on this drive so I'm trying to
+> recover my data with that drive now. The chances are good because I did
+> overwrite the partition table only.
 
+Ok.
 
+Based on the mdadm -E reports, I recommend stopping the array, booting
+with a rescue CD that has mdadm tools (I recommend SystemRescueCD, btw)
+and a recent kernel.  Your situation sounds like a kernel bug and your
+best bet to get out of this is to use a more recent kernel for the
+duration of the reshape and rebuild.
 
-Am 03.12.2017 15:17 schrieb Phil Turmel:
-> Hi Rene,
->=20
-> On 12/03/2017 07:47 AM, rene.feistle@posteo.de wrote:
->> Hello,
->>=20
->> after hours and hours of googling and trying out things, I gave up on
->> this. This email is my last hope of getting my data back.
->=20
-> I'm worried for you -- "trying out things" can be dangerous.
->=20
->> I have 4*4TB drives installed and want to create a raid 5 with them.
->>=20
->> So what I did is create an array of 3 disks (raid 5), copy the data=20
->> from
->> the 4th drive (I don't have more space available) to the raid and then=
-=20
->> I
->> wanted to add the last drive to the raid.
->=20
-> Ok.
->=20
->> I made a mistake here. I accidentally grew the raid to 4 disks with
->>=20
->> sudo mdadm --grow --raid-devices=3D4 /dev/md0 --backup-file=3D/tmp/md0=
-=2Ebak
->>=20
->> BEFORE adding the last drive as a hot spare. Mdadm immediately started=
-=20
->> a
->> reshape and says that it failed - because it consists of 4 drives but
->> only 3 drives are available.
->=20
-> Adding the fourth drive at this point should have enabled the reshape=20
-> to
-> resume.
->=20
->> I thought okay, let him complete the reshape and everything will be
->> okay. But no - the reshape is stuck at 34.3%.
->>=20
->> What I have tried:
->>=20
->> - Reboot ( about a 100 times)
->> - increase stripe cache size up to 32768
->>=20
->> mdadm --assemble --invalid-backup --backup-file=3D/root/mdadm0.bak
->> /dev/md0 /dev/sdc1 /dev/sde1 /dev/sdf1
->>=20
->> And some other things.
->=20
-> We will probably need you to detail "some other things".
->=20
->> The raid is not mountable. When I try to mount it, the mount command
->> just hungs and nothing happens. That means that I had to edit my fstab
->> with a rescue cd because it would never boot again.
->> That also means that I have no access to my data.
->>=20
->> When I shutdown or reboot the computer, it also hungs at shutdown, I=20
->> can
->> only hard reset it.
->>=20
->> cat /proc/mdstat:
->>=20
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]=20
->> [raid4] [r$
->> md0 : active raid5 sdc1[0] sdf1[3] sde1[1]
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 7813771264 blocks super 1.2 level 5, 512k=
- chunk, algorithm 2=20
->> [4/3] [UU__]
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 [=3D=3D=3D=3D=3D=3D>..............]=C2=A0=
- reshape =3D 34.3% (1340465664/3906885632)=20
->> finish=3D3$
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bitmap: 3/30 pages [12KB], 65536KB chunk
->>=20
->> unused devices: <none>
->=20
-> Note the "UU__".  That means as some point your three-drive array lost=20
-> a
-> drive, and the reshape is showing another missing drive.  A
-> doubly-degraded array cannot run.
->=20
->> mdadm --detail /dev/md0
->>=20
->>=20
->> /dev/md0:
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Version : 1.2
->> =C2=A0 Creation Time : Fri Dec=C2=A0 1 02:10:06 2017
->> =C2=A0=C2=A0=C2=A0=C2=A0 Raid Level : raid5
->> =C2=A0=C2=A0=C2=A0=C2=A0 Array Size : 7813771264 (7451.79 GiB 8001.30 GB=
-)
->> =C2=A0 Used Dev Size : 3906885632 (3725.90 GiB 4000.65 GB)
->> =C2=A0=C2=A0 Raid Devices : 4
->> =C2=A0 Total Devices : 3
->> =C2=A0=C2=A0=C2=A0 Persistence : Superblock is persistent
->>=20
->> =C2=A0 Intent Bitmap : Internal
->>=20
->> =C2=A0=C2=A0=C2=A0 Update Time : Sun Dec=C2=A0 3 13:34:43 2017
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 State : active, F=
-AILED, reshaping
->> =C2=A0Active Devices : 2
->> Working Devices : 3
->> =C2=A0Failed Devices : 0
->> =C2=A0 Spare Devices : 1
->>=20
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Layout : left-symmetric
->> =C2=A0=C2=A0=C2=A0=C2=A0 Chunk Size : 512K
->>=20
->> =C2=A0Reshape Status : 34% complete
->> =C2=A0 Delta Devices : 1, (3->4)
->>=20
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Name : nas-=
-server:0=C2=A0 (local to host nas-server)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 UUID : e410=
-e68d:76460b65:69c056c0:d2645d55
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Events : 28155
->>=20
->> =C2=A0=C2=A0=C2=A0 Number=C2=A0=C2=A0 Major=C2=A0=C2=A0 Minor=C2=A0=C2=
-=A0 RaidDevice State
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 33=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 active sync=C2=A0=C2=A0 /dev/s=
-dc1
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 65=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 1=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 active sync=C2=A0=C2=A0 /dev/s=
-de1
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 3=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 8=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 81=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 2=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spare rebuilding=C2=A0=C2=A0 /=
-dev/sdf1
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 6=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 6=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 removed
->=20
-> Note the "spare rebuilding" on sdf1.  That means at some point sdf1 was
-> ejected from your array and you --added it back.  A supposition
-> buttressed by its slot number displayed in mdstat.  sdf1 was already a
-> critical device, so --add destroyed important data on it.
->=20
->> Any help is appreciated, I'm lost.
->=20
-> With the current status of the array, doubly-degraded with a reshape
-> quite far along, I am not optimistic for you.  However, you have not
-> provided all the information that might be helpful here.  Please supply
-> the output (cat'd to a file, not copied from a narrow terminal, please)
-> of these commands:
->=20
-> for x in /dev/sd[cef]1 ; do echo $x ; mdadm -E $x ; done
->=20
-> for x in /dev/sd[cef] ; do echo $x ; smartctl -iA -l scterc $x ; done
->=20
-> Please make sure your mailer is in plain text mode with line wrap
-> disabled to ensure the content isn't corrupted when you paste it into
-> your reply.
->=20
-> Regards,
->=20
-> Phil
---=_835c58eb4fd0963c29a1374fe30b4b28
-Content-Transfer-Encoding: base64
-Content-Type: text/plain;
- name=mdadm.txt
-Content-Disposition: attachment;
- filename=mdadm.txt;
- size=3204
+So, in the rescue environment, use --assemble --force with these three
+drives.  Then --add your fourth drive, and wait for both rebuild and
+reshape to complete.
 
-L2Rldi9zZGIxCi9kZXYvc2RiMToKICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBW
-ZXJzaW9uIDogMS4yCiAgICBGZWF0dXJlIE1hcCA6IDB4NQogICAgIEFycmF5IFVVSUQgOiBlNDEw
-ZTY4ZDo3NjQ2MGI2NTo2OWMwNTZjMDpkMjY0NWQ1NQogICAgICAgICAgIE5hbWUgOiBuYXMtc2Vy
-dmVyOjAgIChsb2NhbCB0byBob3N0IG5hcy1zZXJ2ZXIpCiAgQ3JlYXRpb24gVGltZSA6IEZyaSBE
-ZWMgIDEgMDI6MTA6MDYgMjAxNwogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogICBSYWlkIERldmlj
-ZXMgOiA0CgogQXZhaWwgRGV2IFNpemUgOiA3ODEzNzcxMjY0ICgzNzI1LjkwIEdpQiA0MDAwLjY1
-IEdCKQogICAgIEFycmF5IFNpemUgOiAxMTcyMDY1Njg5NiAoMTExNzcuNjkgR2lCIDEyMDAxLjk1
-IEdCKQogICAgRGF0YSBPZmZzZXQgOiAyNjIxNDQgc2VjdG9ycwogICBTdXBlciBPZmZzZXQgOiA4
-IHNlY3RvcnMKICAgVW51c2VkIFNwYWNlIDogYmVmb3JlPTI2MjA1NiBzZWN0b3JzLCBhZnRlcj0w
-IHNlY3RvcnMKICAgICAgICAgIFN0YXRlIDogYWN0aXZlCiAgICBEZXZpY2UgVVVJRCA6IGY0NDkw
-YjlmOjQ3NWFjYTgzOjJmZjkzZDY1OmE0ZmFiZjhjCgpJbnRlcm5hbCBCaXRtYXAgOiA4IHNlY3Rv
-cnMgZnJvbSBzdXBlcmJsb2NrCiAgUmVzaGFwZSBwb3MnbiA6IDQwMjExNjgxMjggKDM4MzQuODgg
-R2lCIDQxMTcuNjggR0IpCiAgRGVsdGEgRGV2aWNlcyA6IDEgKDMtPjQpCgogICAgVXBkYXRlIFRp
-bWUgOiBTdW4gRGVjICAzIDEzOjM0OjQzIDIwMTcKICBCYWQgQmxvY2sgTG9nIDogNTEyIGVudHJp
-ZXMgYXZhaWxhYmxlIGF0IG9mZnNldCA3MiBzZWN0b3JzCiAgICAgICBDaGVja3N1bSA6IGQxYjE1
-ZWVkIC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAyODE1NQoKICAgICAgICAgTGF5b3V0IDog
-bGVmdC1zeW1tZXRyaWMKICAgICBDaHVuayBTaXplIDogNTEySwoKICAgRGV2aWNlIFJvbGUgOiBB
-Y3RpdmUgZGV2aWNlIDAKICAgQXJyYXkgU3RhdGUgOiBBQUEuICgnQScgPT0gYWN0aXZlLCAnLicg
-PT0gbWlzc2luZywgJ1InID09IHJlcGxhY2luZykKL2Rldi9zZGQxCi9kZXYvc2RkMToKICAgICAg
-ICAgIE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDogMS4yCiAgICBGZWF0dXJlIE1h
-cCA6IDB4NQogICAgIEFycmF5IFVVSUQgOiBlNDEwZTY4ZDo3NjQ2MGI2NTo2OWMwNTZjMDpkMjY0
-NWQ1NQogICAgICAgICAgIE5hbWUgOiBuYXMtc2VydmVyOjAgIChsb2NhbCB0byBob3N0IG5hcy1z
-ZXJ2ZXIpCiAgQ3JlYXRpb24gVGltZSA6IEZyaSBEZWMgIDEgMDI6MTA6MDYgMjAxNwogICAgIFJh
-aWQgTGV2ZWwgOiByYWlkNQogICBSYWlkIERldmljZXMgOiA0CgogQXZhaWwgRGV2IFNpemUgOiA3
-ODEzNzcxMjY0ICgzNzI1LjkwIEdpQiA0MDAwLjY1IEdCKQogICAgIEFycmF5IFNpemUgOiAxMTcy
-MDY1Njg5NiAoMTExNzcuNjkgR2lCIDEyMDAxLjk1IEdCKQogICAgRGF0YSBPZmZzZXQgOiAyNjIx
-NDQgc2VjdG9ycwogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMKICAgVW51c2VkIFNwYWNlIDog
-YmVmb3JlPTI2MjA1NiBzZWN0b3JzLCBhZnRlcj0wIHNlY3RvcnMKICAgICAgICAgIFN0YXRlIDog
-YWN0aXZlCiAgICBEZXZpY2UgVVVJRCA6IGViNjc5NzY1OjU3NzFjYzFhOjY1MWY1YTg2OmUxNjY0
-MjRiCgpJbnRlcm5hbCBCaXRtYXAgOiA4IHNlY3RvcnMgZnJvbSBzdXBlcmJsb2NrCiAgUmVzaGFw
-ZSBwb3MnbiA6IDQwMjExNjgxMjggKDM4MzQuODggR2lCIDQxMTcuNjggR0IpCiAgRGVsdGEgRGV2
-aWNlcyA6IDEgKDMtPjQpCgogICAgVXBkYXRlIFRpbWUgOiBTdW4gRGVjICAzIDEzOjM0OjQzIDIw
-MTcKICBCYWQgQmxvY2sgTG9nIDogNTEyIGVudHJpZXMgYXZhaWxhYmxlIGF0IG9mZnNldCA3MiBz
-ZWN0b3JzCiAgICAgICBDaGVja3N1bSA6IGVkZTI2NjggLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50
-cyA6IDI4MTU1CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYwogICAgIENodW5rIFNp
-emUgOiA1MTJLCgogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMQogICBBcnJheSBTdGF0
-ZSA6IEFBQS4gKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nLCAnUicgPT0gcmVwbGFjaW5n
-KQovZGV2L3NkZTEKL2Rldi9zZGUxOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAg
-IFZlcnNpb24gOiAxLjIKICAgIEZlYXR1cmUgTWFwIDogMHg3CiAgICAgQXJyYXkgVVVJRCA6IGU0
-MTBlNjhkOjc2NDYwYjY1OjY5YzA1NmMwOmQyNjQ1ZDU1CiAgICAgICAgICAgTmFtZSA6IG5hcy1z
-ZXJ2ZXI6MCAgKGxvY2FsIHRvIGhvc3QgbmFzLXNlcnZlcikKICBDcmVhdGlvbiBUaW1lIDogRnJp
-IERlYyAgMSAwMjoxMDowNiAyMDE3CiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1CiAgIFJhaWQgRGV2
-aWNlcyA6IDQKCiBBdmFpbCBEZXYgU2l6ZSA6IDc4MTM3NzEyNjQgKDM3MjUuOTAgR2lCIDQwMDAu
-NjUgR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDExNzIwNjU2ODk2ICgxMTE3Ny42OSBHaUIgMTIwMDEu
-OTUgR0IpCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzCiAgIFN1cGVyIE9mZnNldCA6
-IDggc2VjdG9ycwpSZWNvdmVyeSBPZmZzZXQgOiAyNjgwOTA5NDI0IHNlY3RvcnMKICAgVW51c2Vk
-IFNwYWNlIDogYmVmb3JlPTI2MjA1NiBzZWN0b3JzLCBhZnRlcj0wIHNlY3RvcnMKICAgICAgICAg
-IFN0YXRlIDogYWN0aXZlCiAgICBEZXZpY2UgVVVJRCA6IDJjNWM1MTBkOjNkZGQ5Y2IzOjg1Nzgy
-ODI5OmNkY2UxYjg5CgpJbnRlcm5hbCBCaXRtYXAgOiA4IHNlY3RvcnMgZnJvbSBzdXBlcmJsb2Nr
-CiAgUmVzaGFwZSBwb3MnbiA6IDQwMjExNjgxMjggKDM4MzQuODggR2lCIDQxMTcuNjggR0IpCiAg
-RGVsdGEgRGV2aWNlcyA6IDEgKDMtPjQpCgogICAgVXBkYXRlIFRpbWUgOiBTdW4gRGVjICAzIDEz
-OjM0OjQzIDIwMTcKICBCYWQgQmxvY2sgTG9nIDogNTEyIGVudHJpZXMgYXZhaWxhYmxlIGF0IG9m
-ZnNldCA3MiBzZWN0b3JzCiAgICAgICBDaGVja3N1bSA6IGNmZGJiNjBmIC0gY29ycmVjdAogICAg
-ICAgICBFdmVudHMgOiAyODE1NQoKICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKICAg
-ICBDaHVuayBTaXplIDogNTEySwoKICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDIKICAg
-QXJyYXkgU3RhdGUgOiBBQUEuICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZywgJ1InID09
-IHJlcGxhY2luZykK
---=_835c58eb4fd0963c29a1374fe30b4b28
-Content-Transfer-Encoding: base64
-Content-Type: text/plain;
- name=smart.txt
-Content-Disposition: attachment;
- filename=smart.txt;
- size=9933
+Be sure to explicitly --stop the array before leaving the rescue
+environment.
 
-L2Rldi9zZGIKc21hcnRjdGwgNi41IDIwMTYtMDEtMjQgcjQyMTQgW3g4Nl82NC1saW51eC00LjEw
-LjAtNDAtZ2VuZXJpY10gKGxvY2FsIGJ1aWxkKQpDb3B5cmlnaHQgKEMpIDIwMDItMTYsIEJydWNl
-IEFsbGVuLCBDaHJpc3RpYW4gRnJhbmtlLCB3d3cuc21hcnRtb250b29scy5vcmcKCj09PSBTVEFS
-VCBPRiBJTkZPUk1BVElPTiBTRUNUSU9OID09PQpEZXZpY2UgTW9kZWw6ICAgICBTVDQwMDBWTjAw
-OC0yRFIxNjYKU2VyaWFsIE51bWJlcjogICAgWkRIMk0yUFYKTFUgV1dOIERldmljZSBJZDogNSAw
-MDBjNTAgMGE1NjkwOTg2CkZpcm13YXJlIFZlcnNpb246IFNDNjAKVXNlciBDYXBhY2l0eTogICAg
-NC4wMDAuNzg3LjAzMC4wMTYgYnl0ZXMgWzQsMDAgVEJdClNlY3RvciBTaXplczogICAgIDUxMiBi
-eXRlcyBsb2dpY2FsLCA0MDk2IGJ5dGVzIHBoeXNpY2FsClJvdGF0aW9uIFJhdGU6ICAgIDU5ODAg
-cnBtCkZvcm0gRmFjdG9yOiAgICAgIDMuNSBpbmNoZXMKRGV2aWNlIGlzOiAgICAgICAgTm90IGlu
-IHNtYXJ0Y3RsIGRhdGFiYXNlIFtmb3IgZGV0YWlscyB1c2U6IC1QIHNob3dhbGxdCkFUQSBWZXJz
-aW9uIGlzOiAgIEFDUy0zIFQxMy8yMTYxLUQgcmV2aXNpb24gNQpTQVRBIFZlcnNpb24gaXM6ICBT
-QVRBIDMuMSwgNi4wIEdiL3MgKGN1cnJlbnQ6IDYuMCBHYi9zKQpMb2NhbCBUaW1lIGlzOiAgICBT
-dW4gRGVjICAzIDE1OjQ4OjE1IDIwMTcgQ0VUClNNQVJUIHN1cHBvcnQgaXM6IEF2YWlsYWJsZSAt
-IGRldmljZSBoYXMgU01BUlQgY2FwYWJpbGl0eS4KU01BUlQgc3VwcG9ydCBpczogRW5hYmxlZAoK
-PT09IFNUQVJUIE9GIFJFQUQgU01BUlQgREFUQSBTRUNUSU9OID09PQpTTUFSVCBBdHRyaWJ1dGVz
-IERhdGEgU3RydWN0dXJlIHJldmlzaW9uIG51bWJlcjogMTAKVmVuZG9yIFNwZWNpZmljIFNNQVJU
-IEF0dHJpYnV0ZXMgd2l0aCBUaHJlc2hvbGRzOgpJRCMgQVRUUklCVVRFX05BTUUgICAgICAgICAg
-RkxBRyAgICAgVkFMVUUgV09SU1QgVEhSRVNIIFRZUEUgICAgICBVUERBVEVEICBXSEVOX0ZBSUxF
-RCBSQVdfVkFMVUUKICAxIFJhd19SZWFkX0Vycm9yX1JhdGUgICAgIDB4MDAwZiAgIDA3MyAgIDA2
-NCAgIDA0NCAgICBQcmUtZmFpbCAgQWx3YXlzICAgICAgIC0gICAgICAgMTk4OTA0OTQKICAzIFNw
-aW5fVXBfVGltZSAgICAgICAgICAgIDB4MDAwMyAgIDA5NCAgIDA5NCAgIDAwMCAgICBQcmUtZmFp
-bCAgQWx3YXlzICAgICAgIC0gICAgICAgMAogIDQgU3RhcnRfU3RvcF9Db3VudCAgICAgICAgMHgw
-MDMyICAgMTAwICAgMTAwICAgMDIwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICA4
-CiAgNSBSZWFsbG9jYXRlZF9TZWN0b3JfQ3QgICAweDAwMzMgICAxMDAgICAxMDAgICAwMTAgICAg
-UHJlLWZhaWwgIEFsd2F5cyAgICAgICAtICAgICAgIDAKICA3IFNlZWtfRXJyb3JfUmF0ZSAgICAg
-ICAgIDB4MDAwZiAgIDA3MyAgIDA2MCAgIDA0NSAgICBQcmUtZmFpbCAgQWx3YXlzICAgICAgIC0g
-ICAgICAgMjEyNTEzOTkKICA5IFBvd2VyX09uX0hvdXJzICAgICAgICAgIDB4MDAzMiAgIDEwMCAg
-IDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMTM0ICgyMjQgMjIz
-IDApCiAxMCBTcGluX1JldHJ5X0NvdW50ICAgICAgICAweDAwMTMgICAxMDAgICAxMDAgICAwOTcg
-ICAgUHJlLWZhaWwgIEFsd2F5cyAgICAgICAtICAgICAgIDAKIDEyIFBvd2VyX0N5Y2xlX0NvdW50
-ICAgICAgIDB4MDAzMiAgIDEwMCAgIDEwMCAgIDAyMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAg
-IC0gICAgICAgOAoxODQgRW5kLXRvLUVuZF9FcnJvciAgICAgICAgMHgwMDMyICAgMTAwICAgMTAw
-ICAgMDk5ICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjE4NyBSZXBvcnRlZF9V
-bmNvcnJlY3QgICAgICAweDAwMzIgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5
-cyAgICAgICAtICAgICAgIDAKMTg4IENvbW1hbmRfVGltZW91dCAgICAgICAgIDB4MDAzMiAgIDEw
-MCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMAoxODkgSGln
-aF9GbHlfV3JpdGVzICAgICAgICAgMHgwMDNhICAgMTAwICAgMTAwICAgMDAwICAgIE9sZF9hZ2Ug
-ICBBbHdheXMgICAgICAgLSAgICAgICAwCjE5MCBBaXJmbG93X1RlbXBlcmF0dXJlX0NlbCAweDAw
-MjIgICAwNjcgICAwNTQgICAwNDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDMz
-IChNaW4vTWF4IDMzLzM0KQoxOTEgRy1TZW5zZV9FcnJvcl9SYXRlICAgICAgMHgwMDMyICAgMTAw
-ICAgMTAwICAgMDAwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjE5MiBQb3dl
-ci1PZmZfUmV0cmFjdF9Db3VudCAweDAwMzIgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAg
-IEFsd2F5cyAgICAgICAtICAgICAgIDMKMTkzIExvYWRfQ3ljbGVfQ291bnQgICAgICAgIDB4MDAz
-MiAgIDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgNTMK
-MTk0IFRlbXBlcmF0dXJlX0NlbHNpdXMgICAgIDB4MDAyMiAgIDAzMyAgIDA0NiAgIDAwMCAgICBP
-bGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMzMgKDAgMjAgMCAwIDApCjE5NyBDdXJyZW50
-X1BlbmRpbmdfU2VjdG9yICAweDAwMTIgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFs
-d2F5cyAgICAgICAtICAgICAgIDAKMTk4IE9mZmxpbmVfVW5jb3JyZWN0YWJsZSAgIDB4MDAxMCAg
-IDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgT2ZmbGluZSAgICAgIC0gICAgICAgMAoxOTkg
-VURNQV9DUkNfRXJyb3JfQ291bnQgICAgMHgwMDNlICAgMjAwICAgMjAwICAgMDAwICAgIE9sZF9h
-Z2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjI0MCBIZWFkX0ZseWluZ19Ib3VycyAgICAgICAw
-eDAwMDAgICAxMDAgICAyNTMgICAwMDAgICAgT2xkX2FnZSAgIE9mZmxpbmUgICAgICAtICAgICAg
-IDEzMiAoMjE1IDE2MyAwKQoyNDEgVG90YWxfTEJBc19Xcml0dGVuICAgICAgMHgwMDAwICAgMTAw
-ICAgMjUzICAgMDAwICAgIE9sZF9hZ2UgICBPZmZsaW5lICAgICAgLSAgICAgICAyODEyNjc2MTY0
-OQoyNDIgVG90YWxfTEJBc19SZWFkICAgICAgICAgMHgwMDAwICAgMTAwICAgMjUzICAgMDAwICAg
-IE9sZF9hZ2UgICBPZmZsaW5lICAgICAgLSAgICAgICAxMzY3MDg1NzE4OAoKU0NUIEVycm9yIFJl
-Y292ZXJ5IENvbnRyb2w6CiAgICAgICAgICAgUmVhZDogICAgIDcwICg3LDAgc2Vjb25kcykKICAg
-ICAgICAgIFdyaXRlOiAgICAgNzAgKDcsMCBzZWNvbmRzKQoKL2Rldi9zZGQKc21hcnRjdGwgNi41
-IDIwMTYtMDEtMjQgcjQyMTQgW3g4Nl82NC1saW51eC00LjEwLjAtNDAtZ2VuZXJpY10gKGxvY2Fs
-IGJ1aWxkKQpDb3B5cmlnaHQgKEMpIDIwMDItMTYsIEJydWNlIEFsbGVuLCBDaHJpc3RpYW4gRnJh
-bmtlLCB3d3cuc21hcnRtb250b29scy5vcmcKCj09PSBTVEFSVCBPRiBJTkZPUk1BVElPTiBTRUNU
-SU9OID09PQpEZXZpY2UgTW9kZWw6ICAgICBTVDQwMDBWTjAwOC0yRFIxNjYKU2VyaWFsIE51bWJl
-cjogICAgWkRIMkdSTkYKTFUgV1dOIERldmljZSBJZDogNSAwMDBjNTAgMGE1NTZlZWY2CkZpcm13
-YXJlIFZlcnNpb246IFNDNjAKVXNlciBDYXBhY2l0eTogICAgNC4wMDAuNzg3LjAzMC4wMTYgYnl0
-ZXMgWzQsMDAgVEJdClNlY3RvciBTaXplczogICAgIDUxMiBieXRlcyBsb2dpY2FsLCA0MDk2IGJ5
-dGVzIHBoeXNpY2FsClJvdGF0aW9uIFJhdGU6ICAgIDU5ODAgcnBtCkZvcm0gRmFjdG9yOiAgICAg
-IDMuNSBpbmNoZXMKRGV2aWNlIGlzOiAgICAgICAgTm90IGluIHNtYXJ0Y3RsIGRhdGFiYXNlIFtm
-b3IgZGV0YWlscyB1c2U6IC1QIHNob3dhbGxdCkFUQSBWZXJzaW9uIGlzOiAgIEFDUy0zIFQxMy8y
-MTYxLUQgcmV2aXNpb24gNQpTQVRBIFZlcnNpb24gaXM6ICBTQVRBIDMuMSwgNi4wIEdiL3MgKGN1
-cnJlbnQ6IDYuMCBHYi9zKQpMb2NhbCBUaW1lIGlzOiAgICBTdW4gRGVjICAzIDE1OjQ4OjE1IDIw
-MTcgQ0VUClNNQVJUIHN1cHBvcnQgaXM6IEF2YWlsYWJsZSAtIGRldmljZSBoYXMgU01BUlQgY2Fw
-YWJpbGl0eS4KU01BUlQgc3VwcG9ydCBpczogRW5hYmxlZAoKPT09IFNUQVJUIE9GIFJFQUQgU01B
-UlQgREFUQSBTRUNUSU9OID09PQpTTUFSVCBBdHRyaWJ1dGVzIERhdGEgU3RydWN0dXJlIHJldmlz
-aW9uIG51bWJlcjogMTAKVmVuZG9yIFNwZWNpZmljIFNNQVJUIEF0dHJpYnV0ZXMgd2l0aCBUaHJl
-c2hvbGRzOgpJRCMgQVRUUklCVVRFX05BTUUgICAgICAgICAgRkxBRyAgICAgVkFMVUUgV09SU1Qg
-VEhSRVNIIFRZUEUgICAgICBVUERBVEVEICBXSEVOX0ZBSUxFRCBSQVdfVkFMVUUKICAxIFJhd19S
-ZWFkX0Vycm9yX1JhdGUgICAgIDB4MDAwZiAgIDA3OSAgIDA2NiAgIDA0NCAgICBQcmUtZmFpbCAg
-QWx3YXlzICAgICAgIC0gICAgICAgODM1NTQ4MjQKICAzIFNwaW5fVXBfVGltZSAgICAgICAgICAg
-IDB4MDAwMyAgIDA5NCAgIDA5NCAgIDAwMCAgICBQcmUtZmFpbCAgQWx3YXlzICAgICAgIC0gICAg
-ICAgMAogIDQgU3RhcnRfU3RvcF9Db3VudCAgICAgICAgMHgwMDMyICAgMTAwICAgMTAwICAgMDIw
-ICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICA4CiAgNSBSZWFsbG9jYXRlZF9TZWN0
-b3JfQ3QgICAweDAwMzMgICAxMDAgICAxMDAgICAwMTAgICAgUHJlLWZhaWwgIEFsd2F5cyAgICAg
-ICAtICAgICAgIDAKICA3IFNlZWtfRXJyb3JfUmF0ZSAgICAgICAgIDB4MDAwZiAgIDA3MiAgIDA2
-MCAgIDA0NSAgICBQcmUtZmFpbCAgQWx3YXlzICAgICAgIC0gICAgICAgMTY1MzE0MjAKICA5IFBv
-d2VyX09uX0hvdXJzICAgICAgICAgIDB4MDAzMiAgIDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdl
-ICAgQWx3YXlzICAgICAgIC0gICAgICAgMTM0ICgzMCAyMDUgMCkKIDEwIFNwaW5fUmV0cnlfQ291
-bnQgICAgICAgIDB4MDAxMyAgIDEwMCAgIDEwMCAgIDA5NyAgICBQcmUtZmFpbCAgQWx3YXlzICAg
-ICAgIC0gICAgICAgMAogMTIgUG93ZXJfQ3ljbGVfQ291bnQgICAgICAgMHgwMDMyICAgMTAwICAg
-MTAwICAgMDIwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICA4CjE4NCBFbmQtdG8t
-RW5kX0Vycm9yICAgICAgICAweDAwMzIgICAxMDAgICAxMDAgICAwOTkgICAgT2xkX2FnZSAgIEFs
-d2F5cyAgICAgICAtICAgICAgIDAKMTg3IFJlcG9ydGVkX1VuY29ycmVjdCAgICAgIDB4MDAzMiAg
-IDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMAoxODgg
-Q29tbWFuZF9UaW1lb3V0ICAgICAgICAgMHgwMDMyICAgMTAwICAgMTAwICAgMDAwICAgIE9sZF9h
-Z2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjE4OSBIaWdoX0ZseV9Xcml0ZXMgICAgICAgICAw
-eDAwM2EgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAg
-IDAKMTkwIEFpcmZsb3dfVGVtcGVyYXR1cmVfQ2VsIDB4MDAyMiAgIDA2NyAgIDA1OCAgIDA0MCAg
-ICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMzMgKE1pbi9NYXggMzMvMzMpCjE5MSBH
-LVNlbnNlX0Vycm9yX1JhdGUgICAgICAweDAwMzIgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2Fn
-ZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDAKMTkyIFBvd2VyLU9mZl9SZXRyYWN0X0NvdW50IDB4
-MDAzMiAgIDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAg
-MwoxOTMgTG9hZF9DeWNsZV9Db3VudCAgICAgICAgMHgwMDMyICAgMTAwICAgMTAwICAgMDAwICAg
-IE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICA3OQoxOTQgVGVtcGVyYXR1cmVfQ2Vsc2l1
-cyAgICAgMHgwMDIyICAgMDMzICAgMDQyICAgMDAwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAg
-LSAgICAgICAzMyAoMCAxOCAwIDAgMCkKMTk3IEN1cnJlbnRfUGVuZGluZ19TZWN0b3IgIDB4MDAx
-MiAgIDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMAox
-OTggT2ZmbGluZV9VbmNvcnJlY3RhYmxlICAgMHgwMDEwICAgMTAwICAgMTAwICAgMDAwICAgIE9s
-ZF9hZ2UgICBPZmZsaW5lICAgICAgLSAgICAgICAwCjE5OSBVRE1BX0NSQ19FcnJvcl9Db3VudCAg
-ICAweDAwM2UgICAyMDAgICAyMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAg
-ICAgIDAKMjQwIEhlYWRfRmx5aW5nX0hvdXJzICAgICAgIDB4MDAwMCAgIDEwMCAgIDI1MyAgIDAw
-MCAgICBPbGRfYWdlICAgT2ZmbGluZSAgICAgIC0gICAgICAgMTMyICgyNTEgMjMxIDApCjI0MSBU
-b3RhbF9MQkFzX1dyaXR0ZW4gICAgICAweDAwMDAgICAxMDAgICAyNTMgICAwMDAgICAgT2xkX2Fn
-ZSAgIE9mZmxpbmUgICAgICAtICAgICAgIDE2MDM2NjcxMjE3CjI0MiBUb3RhbF9MQkFzX1JlYWQg
-ICAgICAgICAweDAwMDAgICAxMDAgICAyNTMgICAwMDAgICAgT2xkX2FnZSAgIE9mZmxpbmUgICAg
-ICAtICAgICAgIDEzMjQ4OTg3OTgzCgpTQ1QgRXJyb3IgUmVjb3ZlcnkgQ29udHJvbDoKICAgICAg
-ICAgICBSZWFkOiAgICAgNzAgKDcsMCBzZWNvbmRzKQogICAgICAgICAgV3JpdGU6ICAgICA3MCAo
-NywwIHNlY29uZHMpCgovZGV2L3NkZQpzbWFydGN0bCA2LjUgMjAxNi0wMS0yNCByNDIxNCBbeDg2
-XzY0LWxpbnV4LTQuMTAuMC00MC1nZW5lcmljXSAobG9jYWwgYnVpbGQpCkNvcHlyaWdodCAoQykg
-MjAwMi0xNiwgQnJ1Y2UgQWxsZW4sIENocmlzdGlhbiBGcmFua2UsIHd3dy5zbWFydG1vbnRvb2xz
-Lm9yZwoKPT09IFNUQVJUIE9GIElORk9STUFUSU9OIFNFQ1RJT04gPT09Ck1vZGVsIEZhbWlseTog
-ICAgIFNlYWdhdGUgRGVza3RvcCBIREQuMTUKRGV2aWNlIE1vZGVsOiAgICAgU1Q0MDAwRE0wMDAt
-MUYyMTY4ClNlcmlhbCBOdW1iZXI6ICAgIFozMDE4WFRUCkxVIFdXTiBEZXZpY2UgSWQ6IDUgMDAw
-YzUwIDA2NWIxMjM0NQpGaXJtd2FyZSBWZXJzaW9uOiBDQzU0ClVzZXIgQ2FwYWNpdHk6ICAgIDQu
-MDAwLjc4Ny4wMzAuMDE2IGJ5dGVzIFs0LDAwIFRCXQpTZWN0b3IgU2l6ZXM6ICAgICA1MTIgYnl0
-ZXMgbG9naWNhbCwgNDA5NiBieXRlcyBwaHlzaWNhbApSb3RhdGlvbiBSYXRlOiAgICA1OTAwIHJw
-bQpGb3JtIEZhY3RvcjogICAgICAzLjUgaW5jaGVzCkRldmljZSBpczogICAgICAgIEluIHNtYXJ0
-Y3RsIGRhdGFiYXNlIFtmb3IgZGV0YWlscyB1c2U6IC1QIHNob3ddCkFUQSBWZXJzaW9uIGlzOiAg
-IEFDUy0yLCBBQ1MtMyBUMTMvMjE2MS1EIHJldmlzaW9uIDNiClNBVEEgVmVyc2lvbiBpczogIFNB
-VEEgMy4xLCA2LjAgR2IvcyAoY3VycmVudDogNi4wIEdiL3MpCkxvY2FsIFRpbWUgaXM6ICAgIFN1
-biBEZWMgIDMgMTU6NDg6MTUgMjAxNyBDRVQKU01BUlQgc3VwcG9ydCBpczogQXZhaWxhYmxlIC0g
-ZGV2aWNlIGhhcyBTTUFSVCBjYXBhYmlsaXR5LgpTTUFSVCBzdXBwb3J0IGlzOiBFbmFibGVkCgo9
-PT0gU1RBUlQgT0YgUkVBRCBTTUFSVCBEQVRBIFNFQ1RJT04gPT09ClNNQVJUIEF0dHJpYnV0ZXMg
-RGF0YSBTdHJ1Y3R1cmUgcmV2aXNpb24gbnVtYmVyOiAxMApWZW5kb3IgU3BlY2lmaWMgU01BUlQg
-QXR0cmlidXRlcyB3aXRoIFRocmVzaG9sZHM6CklEIyBBVFRSSUJVVEVfTkFNRSAgICAgICAgICBG
-TEFHICAgICBWQUxVRSBXT1JTVCBUSFJFU0ggVFlQRSAgICAgIFVQREFURUQgIFdIRU5fRkFJTEVE
-IFJBV19WQUxVRQogIDEgUmF3X1JlYWRfRXJyb3JfUmF0ZSAgICAgMHgwMDBmICAgMTEzICAgMDk5
-ICAgMDA2ICAgIFByZS1mYWlsICBBbHdheXMgICAgICAgLSAgICAgICA1NjkyMDE1MgogIDMgU3Bp
-bl9VcF9UaW1lICAgICAgICAgICAgMHgwMDAzICAgMDkyICAgMDkxICAgMDAwICAgIFByZS1mYWls
-ICBBbHdheXMgICAgICAgLSAgICAgICAwCiAgNCBTdGFydF9TdG9wX0NvdW50ICAgICAgICAweDAw
-MzIgICAwOTggICAwOTggICAwMjAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDIx
-NzkKICA1IFJlYWxsb2NhdGVkX1NlY3Rvcl9DdCAgIDB4MDAzMyAgIDEwMCAgIDEwMCAgIDAxMCAg
-ICBQcmUtZmFpbCAgQWx3YXlzICAgICAgIC0gICAgICAgMAogIDcgU2Vla19FcnJvcl9SYXRlICAg
-ICAgICAgMHgwMDBmICAgMDY2ICAgMDYwICAgMDMwICAgIFByZS1mYWlsICBBbHdheXMgICAgICAg
-LSAgICAgICA0NDU3ODc1CiAgOSBQb3dlcl9Pbl9Ib3VycyAgICAgICAgICAweDAwMzIgICAwNzkg
-ICAwNzkgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDE4NDc3CiAxMCBT
-cGluX1JldHJ5X0NvdW50ICAgICAgICAweDAwMTMgICAxMDAgICAxMDAgICAwOTcgICAgUHJlLWZh
-aWwgIEFsd2F5cyAgICAgICAtICAgICAgIDAKIDEyIFBvd2VyX0N5Y2xlX0NvdW50ICAgICAgIDB4
-MDAzMiAgIDEwMCAgIDEwMCAgIDAyMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAg
-MTM2CjE4MyBSdW50aW1lX0JhZF9CbG9jayAgICAgICAweDAwMzIgICAwOTkgICAwOTkgICAwMDAg
-ICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDEKMTg0IEVuZC10by1FbmRfRXJyb3Ig
-ICAgICAgIDB4MDAzMiAgIDEwMCAgIDEwMCAgIDA5OSAgICBPbGRfYWdlICAgQWx3YXlzICAgICAg
-IC0gICAgICAgMAoxODcgUmVwb3J0ZWRfVW5jb3JyZWN0ICAgICAgMHgwMDMyICAgMTAwICAgMTAw
-ICAgMDAwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAgICAgICAwCjE4OCBDb21tYW5kX1Rp
-bWVvdXQgICAgICAgICAweDAwMzIgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5
-cyAgICAgICAtICAgICAgIDAgMCAwCjE4OSBIaWdoX0ZseV9Xcml0ZXMgICAgICAgICAweDAwM2Eg
-ICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAgIDAKMTkw
-IEFpcmZsb3dfVGVtcGVyYXR1cmVfQ2VsIDB4MDAyMiAgIDA2NiAgIDA1MSAgIDA0NSAgICBPbGRf
-YWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMzQgKE1pbi9NYXggMzMvMzQpCjE5MSBHLVNlbnNl
-X0Vycm9yX1JhdGUgICAgICAweDAwMzIgICAxMDAgICAxMDAgICAwMDAgICAgT2xkX2FnZSAgIEFs
-d2F5cyAgICAgICAtICAgICAgIDAKMTkyIFBvd2VyLU9mZl9SZXRyYWN0X0NvdW50IDB4MDAzMiAg
-IDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgNAoxOTMg
-TG9hZF9DeWNsZV9Db3VudCAgICAgICAgMHgwMDMyICAgMDg1ICAgMDg1ICAgMDAwICAgIE9sZF9h
-Z2UgICBBbHdheXMgICAgICAgLSAgICAgICAzMTg0MgoxOTQgVGVtcGVyYXR1cmVfQ2Vsc2l1cyAg
-ICAgMHgwMDIyICAgMDM0ICAgMDQ5ICAgMDAwICAgIE9sZF9hZ2UgICBBbHdheXMgICAgICAgLSAg
-ICAgICAzNCAoMCAxMCAwIDAgMCkKMTk3IEN1cnJlbnRfUGVuZGluZ19TZWN0b3IgIDB4MDAxMiAg
-IDEwMCAgIDEwMCAgIDAwMCAgICBPbGRfYWdlICAgQWx3YXlzICAgICAgIC0gICAgICAgMAoxOTgg
-T2ZmbGluZV9VbmNvcnJlY3RhYmxlICAgMHgwMDEwICAgMTAwICAgMTAwICAgMDAwICAgIE9sZF9h
-Z2UgICBPZmZsaW5lICAgICAgLSAgICAgICAwCjE5OSBVRE1BX0NSQ19FcnJvcl9Db3VudCAgICAw
-eDAwM2UgICAyMDAgICAyMDAgICAwMDAgICAgT2xkX2FnZSAgIEFsd2F5cyAgICAgICAtICAgICAg
-IDAKMjQwIEhlYWRfRmx5aW5nX0hvdXJzICAgICAgIDB4MDAwMCAgIDEwMCAgIDI1MyAgIDAwMCAg
-ICBPbGRfYWdlICAgT2ZmbGluZSAgICAgIC0gICAgICAgNTkzNmgrNTltKzE1LjQ0NXMKMjQxIFRv
-dGFsX0xCQXNfV3JpdHRlbiAgICAgIDB4MDAwMCAgIDEwMCAgIDI1MyAgIDAwMCAgICBPbGRfYWdl
-ICAgT2ZmbGluZSAgICAgIC0gICAgICAgMzQ2NjMwNDg2NDMKMjQyIFRvdGFsX0xCQXNfUmVhZCAg
-ICAgICAgIDB4MDAwMCAgIDEwMCAgIDI1MyAgIDAwMCAgICBPbGRfYWdlICAgT2ZmbGluZSAgICAg
-IC0gICAgICAgMTQzMzE1OTQ2NjkKClNDVCBFcnJvciBSZWNvdmVyeSBDb250cm9sIGNvbW1hbmQg
-bm90IHN1cHBvcnRlZAoK
---=_835c58eb4fd0963c29a1374fe30b4b28--
-
+Phil
