@@ -1,59 +1,56 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: mdadm: using ioctl to set disk faulty instead of sysfs
-Date: Mon, 04 Dec 2017 11:34:42 +1100
-Message-ID: <87shcrtjod.fsf@notabene.neil.brown.name>
-References: <33BB30F4-F2A1-437B-ABFE-6A03E9563F01@mails.ucas.ac.cn>
+Subject: Re: very large data-offset?
+Date: Mon, 04 Dec 2017 11:51:41 +1100
+Message-ID: <87po7vtiw2.fsf@notabene.neil.brown.name>
+References: <f5ff4798-5717-8b00-a293-463f202259b1@evenson.tk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <33BB30F4-F2A1-437B-ABFE-6A03E9563F01@mails.ucas.ac.cn>
+In-Reply-To: <f5ff4798-5717-8b00-a293-463f202259b1@evenson.tk>
 Sender: linux-raid-owner@vger.kernel.org
-To: wuzhouhui <wuzhouhui14@mails.ucas.ac.cn>, linux-raid@vger.kernel.org
+To: Duane <duane@evenson.tk>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 21 2017, wuzhouhui wrote:
+On Thu, Nov 30 2017, Duane wrote:
 
-> Hi, I have a suggest about mdadm to set disk faulty. Since commit 1ca69c4=
-bc4b1ef
-> (md: avoid taking the mutex on some ioctls) removes lock when set disk fa=
-ulty,
-> so we'd better using ioctl(SET_DISK_FAULTY) to set disk faulty, instead o=
-f=20
-> echo faulty > /sys/block/<md>/md/dev-<disk>/state, because caller of stat=
-e's
-> handler would lock mddev. Like following:
+> Why is the data offset set so big? I created a 3x4TB RAID5 array and the=
+=20
+> data offset was 128MB. Chunk size was the default 512kB.
+
+It is less than 0.1% of the device...
+
 >
-> Index: mdadm-4.0/Manage.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- mdadm-4.0.orig/Manage.c
-> +++ mdadm-4.0/Manage.c
-> @@ -1662,9 +1662,7 @@ int Manage_subdevs(char *devname, int fd
->=20=20
->  		case 'f': /* set faulty */
->  			/* FIXME check current member */
-> -			if ((sysfd >=3D 0 && write(sysfd, "faulty", 6) !=3D 6) ||
-> -			    (sysfd < 0 && ioctl(fd, SET_DISK_FAULTY,
-> -						rdev))) {
-> +			if (ioctl(fd, SET_DISK_FAULTY, rdev)) {
->  				if (errno =3D=3D EBUSY)
->  					busy =3D 1;
->  				pr_err("set device faulty failed for %s:  %s\n",
+> I cannot see why such a large offset is used. I would think the data=20
+> offset need only be at most the chunk size plus the space (1 sector) for=
+=20
+> the superblock and bitmap.
+
+It is insurance.  If you want to change the chunksize later, having a
+lot of head-room will allow the reshape to go much faster.
+
 >
+> When reshaping the array, I am prompted to use an external file, so I=20
+> don't see that mdadm ever uses the space.
 
-This isn't just a debatable optimization.  It is wrong and would
-introduce a regression.
-Please make sure you understand code *before* trying to change it.
+Citation needed.... what version of mdadm, what kernel?  What reshape
+command?
 
-Please look at the git history for this code and find the patch where
-writing "faulty" was added as an alternative.  That might help you to
-understand what is happening here.
+>
+>
+> I tried making some test arrays and got much smaller sizes. A 3x1GB=20
+> RAID5 array with 64k chunks had a 1MB data offset.
+>
+>
+> If I make a 7x4TB RAID5 array with 64kB chunks, is there a problem with=20
+> setting the data offset to around 2MB?
+
+Only that it might reduce your options in the future, though probably
+not by much.
 
 NeilBrown
 
@@ -62,18 +59,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlokmCQACgkQOeye3VZi
-gbkTJxAAuqK+JvbXTLjTQlzOAtS2mLFNlLMd95p+PDG4cdwx4IjIw2oSjHgumLZL
-9f3cgG1tbwxEGWA4tjJmZlzcixx9YeInz5/SmPQn6heT6yM2xY681bYq/XwfSi9Y
-tJbuCFx4voX19X9B8950eudOShDk7nFlRZjoIqbg9c02w2vHOOTjKUzqDZBvPANQ
-NC9cCnuxcUC+KjhFHV9gh/g5YQIg/HghSeuOo2L0nIy+kV8ERSGxXEGfNHipp//Z
-8ShR40GFgQtjSJrnhb3wNyqNJWuMiV6dgRpReMfjmA/keQrNiTOnrnP3qEKknndS
-9Br08z9+3ayCKUReI/Ei/2n02BD2HUSbMASC8TGb8ybaM3Fc/IgvP2U/RVycPLrX
-ypL3F8gj9VzCcZZSxr5wVz85bHvR7VOh0hpYrAJS/qfzmiX+K8fBUrSNsRpAmeI3
-UcIwAg3gqAkKfWqQStJYsL4QIdWDm8nfiR3OclAkeHdEasqinjDYlzilGLVaqgAH
-ZRavoijB1Ir4bOXAha9hONnlQAOuku1kA+IMtjBJthQdPgoNprvtVf313jvR0bUq
-VNYv0g+FebG4lub+WypUR9rynZUKlXiOA8S+CvXXSG3Yju0TcbNZ7NE7XLEUgzUB
-QfiVUEZsSdX7WuxeoI90PbZ5k3M70V8BOWko9HszxhAXSUTGRFg=
-=cGpx
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAloknB0ACgkQOeye3VZi
+gblzKQ/+P65rCrOXYjdZb07kUBzCdGUYHah7wa5WEqU6g9zLLnrLTQJuVlES0/Cr
+g1L4JmT+gn1mpYgtVdyyXLUz5H3iGVJ6BhoUpWpOLg5k3fxWDrwZJZdrxQ75rL0q
+cWqNmTvgRNQV9l68LKdbYLjQFgyCXvQ9seJad//r18OJJlakCDwerKmAaJfONowd
+KFCHCd8hFNxAyk+gNUEmljj6sadBZEtrOP4DxmU0xUtan/2uWTA9JhB5Nyth+6yK
+SM3RoiFNQiiqghMbzGeOsejb2mo+Y2lxp7YcCvikmaox/OLrnZduBkCkZthD1HcF
+gdg8Ec+uCsHtVxlziWZk2OYlDc4IbK5tv/StIgzGCaanIKnhopwKkwhnvttryImJ
+vZhrb0ZyVPoq5n2UkBR3r1JfH78keX9trFP5sMts73o7lb/nJgpYm0YJmdo7yta2
+pfIy19rzT0oKSO/iHAVzrMcmSG3Fjv00Fb0Ib7WQnL1xMTOgUqMVjHSL1urqwNDL
+FJ4VKsDSR7PLUkUVa8Q0SXkdVED/FF44q/SnZ+6E7G5wHOUUi9+hntOoAjvxr2rC
+nOKiEZVLYNVuhra7R0AP3DC/ZkHOoqXxiK4e692lx/KKGcu8675wrcCpB3fUufmt
+lfLBDbClK+zyMMH2FswFKUF3+92/Sr3Fn9Ws2jyLhhLaUKa0aJ8=
+=Apg8
 -----END PGP SIGNATURE-----
 --=-=-=--
