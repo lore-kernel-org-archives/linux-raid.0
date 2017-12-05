@@ -1,61 +1,85 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: When will Linux support new RAID controllers
-Date: Mon, 4 Dec 2017 18:01:10 -0800
-Message-ID: <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
-References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
- <20171110131937.GA26181@infradead.org> <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
- <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
+From: Duane <duane@evenson.tk>
+Subject: Re: very large data-offset?
+Date: Mon, 4 Dec 2017 20:26:19 -0700
+Message-ID: <90b20eae-9e2a-749f-abd7-36f4c8f252c2@evenson.tk>
+References: <f5ff4798-5717-8b00-a293-463f202259b1@evenson.tk>
+ <5A1FE135.8090000@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed;
+ boundary="------------FB786407F8C4966FBEC84EC2"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
+In-Reply-To: <5A1FE135.8090000@youngman.org.uk>
+Content-Language: en-CA
 Sender: linux-raid-owner@vger.kernel.org
-To: Dennis Mungai <dmngaie@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+This is a multi-part message in MIME format.
+--------------FB786407F8C4966FBEC84EC2
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Any word if the patch is available?
-
-Is this going mainline anytime soon?
 
 
-On Fri, Nov 10, 2017 at 11:06 AM, David F. <df7729@gmail.com> wrote:
-> A patch would be great.  There has been several cases where no option
-> to use AHCI mode available, or where a box seller would offer Linux as
-> an alternate boot option against Windows in RAID mode (on the mobo)
-> but could no longer provide Linux with their systems (without
-> additional costs for add-in raid controller).
+On 2017-11-30 03:45 AM, Wols Lists wrote:
+> On 30/11/17 10:26, Duane wrote:
+>> Why is the data offset set so big? I created a 3x4TB RAID5 array and the
+>> data offset was 128MB. Chunk size was the default 512kB.
+>>
+>> I cannot see why such a large offset is used. I would think the data
+>> offset need only be at most the chunk size plus the space (1 sector) for
+>> the superblock and bitmap.
+>>
+>> When reshaping the array, I am prompted to use an external file, so I
+>> don't see that mdadm ever uses the space.
+>>
+> Do you mean the manual tells you, or that mdadm refuses to run otherwise?
 >
-> On Fri, Nov 10, 2017 at 5:31 AM, Dennis Mungai <dmngaie@gmail.com> wrote:
->> That feature would be especially important on systems where the
->> BIOS/UEFI environment offers no option to toggle back the AHCI mode.
->> This "RAID" Intel features is also known as "Intel Premium RST mode"
->> on all current Clevo systems, and on such a platform (the Clevo
->> P751DM2-G, marketed by the likes of Schenker and Origin PC) is based
->> on this platform.
+> Certainly with a new array on larger disks, a backup file should be
+> totally unnecessary.
+>
+> Run a reshape of some sort, and see if the offset changes :-)
+Reshaping won't run and suggests the use of the backup file.
+I like the way mdadm gives helpful hints rather than fails quietly. :)
+
+I don't have the space right now to grow the array device sizes and 
+watch for changes in the data offset.
+It is going on my todo list for when I've quit reshaping my filesystem 
+and things have stabilized.
+>> I tried making some test arrays and got much smaller sizes. A 3x1GB
+>> RAID5 array with 64k chunks had a 1MB data offset.
 >>
->> -Dennis.
 >>
->> On 10 November 2017 at 16:19, Christoph Hellwig <hch@infradead.org> wrote:
->>> On Thu, Nov 09, 2017 at 10:24:54AM -0800, David F. wrote:
->>>> It seems that Linux will not see any HD on Intel's 100 Series or newer
->>>> chipsets (Z170, etc.) when in RAID mode.  (typically these systems
->>>> have M2 NVMe devices ). This is problematic when wanting to use Linux
->>>> on the system without having to disable RAID and when on their with
->>>> Windows.   Maybe not a linux-raid issue, but is Linux RAID issue
->>>> within the kernel device support.
->>>
->>> Dan (on Cc) posted some patches to support the awkwared so called
->>> "RAID" mode (it really should be Intel landgrab mode) in the client
->>> chipsets more than a year ago.
->>>
->>> It needed a bit of a rework to be present as a fake PCIe root port
->>> instead of the platform driver magic, so I wonder what happened to
->>> it - Dan any chance to get back to it?
->>>
->>> _______________________________________________
->>> Linux-nvme mailing list
->>> Linux-nvme@lists.infradead.org
->>> http://lists.infradead.org/mailman/listinfo/linux-nvme
+>> If I make a 7x4TB RAID5 array with 64kB chunks, is there a problem with
+>> setting the data offset to around 2MB?
+>>
+> Dunno. How do you know the bitmap is "just one block"? I haven't dug in
+> to it so I don't know, but it makes sense to me that as the disks get
+> bigger, so does the bitmap.
+I misspoke. I wasn't paying too much attention to bitmaps: just saw a 
+value for bitmap offset in the header and assumed I had a bitmap. 
+Further investigation due to your question showed that I don't have a 
+bitmap by default.
+>
+> What's the point of fighting the defaults, anyway? Just add
+> another/bigger disk if you need more space.
+I'm poor; 5, now 6 disks are my budget's limit. :(
+>
+> Cheers,
+> Wol
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--------------FB786407F8C4966FBEC84EC2
+Content-Type: text/x-vcard;
+ name="duane.vcf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="duane.vcf"
+
+bnVsbA==
+--------------FB786407F8C4966FBEC84EC2--
