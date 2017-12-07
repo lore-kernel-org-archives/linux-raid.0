@@ -1,38 +1,62 @@
-From: Jes Sorensen <jsorensen@fb.com>
-Subject: Re: [PATCH][RESEND] managemon: Don't add disk to the array after it
- has started
-Date: Thu, 7 Dec 2017 09:20:35 -0500
-Message-ID: <40585df8-a529-455e-d4bb-bcb194394416@fb.com>
-References: <1510579012-3909-1-git-send-email-tomasz.majchrzak@intel.com>
- <1512638634-12436-1-git-send-email-tomasz.majchrzak@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: mdadm stuck at 0% reshape after grow
+Date: Thu, 7 Dec 2017 17:06:50 +0000
+Message-ID: <5A29752A.9060007@youngman.org.uk>
+References: <CAGx2nv6cZ85YCrUQsCBWfojFxOyqW4=+5OaCqU1Gf0UX=T3Gbg@mail.gmail.com>
+ <1865221512489329@web5g.yandex.ru>
+ <d34ebd38-47e5-35bc-5ee6-0da194ce1901@turmel.org>
+ <CAGx2nv6YAc5jBL36K0oNG=tE5J3TNXGMvTvD9ZvcZYthXe9Y5g@mail.gmail.com>
+ <20171206104905.GA4383@metamorpher.de>
+ <61c9e4bd-1605-5b17-80ce-c738b80b7058@turmel.org>
+ <20171206160346.GA5806@metamorpher.de>
+ <1b43be27-f21a-1fba-f983-01c5356a654d@turmel.org>
+ <CACsGCyTZaqRxWFJ1NxN3jVktRcQv3_AdjRTT+3OfuYMuFYdr_w@mail.gmail.com>
+ <20171207135832.GA4858@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1512638634-12436-1-git-send-email-tomasz.majchrzak@intel.com>
-Content-Language: en-US
+In-Reply-To: <20171207135832.GA4858@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/07/2017 04:23 AM, Tomasz Majchrzak wrote:
-> If disk has disappeared from the system and appears again, it is added to the
-> corresponding container as long the metadata matches and disk number is set.
-> This code had no effect on imsm until commit 20dc76d15b40 ("imsm: Set disk slot
-> number"). Now the disk is added to container but not to the array - it is
-> correct as the disk is out-of-sync. Rebuild should start for the disk but it
-> doesn't. There is the same behaviour for both imsm and ddf metadata.
+On 07/12/17 13:58, Andreas Klauer wrote:
+> On Wed, Dec 06, 2017 at 02:19:17PM -0600, Edward Kuns wrote:
+>> 1) If I have bad blocks lists configured, how do I safely remove them?
 > 
-> There is no point to handle out-of-sync disk as "good member of array" so
-> remove that part of code. There are no scenarios when monitor is already
-> running and disk can be safely added to the array. Just write initial metadata
-> to the disk so it's taken for rebuild.
+> --assemble with --update=no-bbl is safe, since it only removes if empty.
+> If not empty, likely you'll end up doing --update=force-no-bbl anyway.
+>  
+>> # smartctl -l scterc,70,70 /dev/sdb ; echo $?
+>> smartctl 6.5 2016-05-07 r4318 [x86_64-linux-4.8.13-100.fc23.x86_64]
+>> (local build)
+>> Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
+>>
+>> SCT Commands not supported
+>>
+>> 0
 > 
-> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+> It'd be hilarious if the timeout FUD on this list came with advice that 
+> didn't even do anything for most people, and nobody ever noticed...
+> 
+> Unfortunately, it returns 4 here. And there are years old posts that 
+> explicitely check for it returning 4, so this shouldn't be new at all.
+> 
+> Perhaps it's an intermittent error specific to your smartctl version?
+> 
+> You can just set the timeouts unconditionally, if you really want them.
+> 
+Except bash is back-to-front. True is 0, anything else is false.
 
-Applied!
+So I'm guessing the above drive you've quoted DOES support erc,
+therefore it's returned 0 (true) to say everything's okay.
 
-Thanks,
-Jes
+Does your drive support erc? I guess not? So an error code of 4 is
+*correct*, and in the sameple script on the wiki will trigger the code
+that sets the *kernel* timeout to 180. My Barracudas return 4 ...
 
+Cheers,
+Wol
 
