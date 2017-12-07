@@ -1,46 +1,52 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: mdadm stuck at 0% reshape after grow
-Date: Thu, 7 Dec 2017 20:31:59 +0000
-Message-ID: <5A29A53F.9090004@youngman.org.uk>
-References: <CAGx2nv6cZ85YCrUQsCBWfojFxOyqW4=+5OaCqU1Gf0UX=T3Gbg@mail.gmail.com>
- <1865221512489329@web5g.yandex.ru>
- <d34ebd38-47e5-35bc-5ee6-0da194ce1901@turmel.org>
- <CAGx2nv6YAc5jBL36K0oNG=tE5J3TNXGMvTvD9ZvcZYthXe9Y5g@mail.gmail.com>
- <20171206104905.GA4383@metamorpher.de>
- <61c9e4bd-1605-5b17-80ce-c738b80b7058@turmel.org>
- <20171206160346.GA5806@metamorpher.de>
- <1b43be27-f21a-1fba-f983-01c5356a654d@turmel.org>
- <CACsGCyTZaqRxWFJ1NxN3jVktRcQv3_AdjRTT+3OfuYMuFYdr_w@mail.gmail.com>
- <20171207135832.GA4858@metamorpher.de> <20171207174048.GA6428@metamorpher.de>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.15-rc2
+Date: Thu, 7 Dec 2017 15:21:05 -0800
+Message-ID: <20171207232105.m5dnahcd5n2ifsys@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171207174048.GA6428@metamorpher.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/12/17 17:40, Andreas Klauer wrote:
-> On Thu, Dec 07, 2017 at 02:58:32PM +0100, Andreas Klauer wrote:
->> Perhaps it's an intermittent error specific to your smartctl version?
-> 
-> Looking at the source code, it seems to be a case of:
-> 
->     sct supported, erc unsupported - exit 4 (fail)
+Hi,
 
-That's fine - fail is detected, kernel timeout is set to 180
+Please pull some MD fixes. The notable one is a raid5-cache deadlock bug with
+dm-raid, others are not significant.
 
->     sct unsupported as a whole     - exit 0 (success)
+Thanks,
+Shaohua
 
-WHOOPS. Setting erc fails, so the command reports success!
-> 
-> So some drives will give the wrong exit code for this command.
-> 
-> Should probably be reported as a bug to smartmontools.
+The following changes since commit a0651c7fa2c088a605f63792279859608ed7f2c8:
 
-Sounds about right.
+  Merge tag 'powerpc-4.15-3' of git://git.kernel.org/pub/scm/linux/kernel/git/powerpc/linux (2017-12-01 08:40:17 -0500)
 
-Cheers,
-Wol
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.15-rc2
+
+for you to fetch changes up to 18022a1bd3709b74ca31ef0b28fccd52bcd6c504:
+
+  md/raid1/10: add missed blk plug (2017-12-01 12:19:48 -0800)
+
+----------------------------------------------------------------
+Nate Dailey (1):
+      md: limit mdstat resync progress to max_sectors
+
+Shaohua Li (1):
+      md/raid1/10: add missed blk plug
+
+Song Liu (1):
+      md/r5cache: move mddev_lock() out of r5c_journal_mode_set()
+
+bingjingc (1):
+      md/raid5: correct degraded calculation in raid5_error
+
+ drivers/md/md.c          |  4 +++-
+ drivers/md/raid1.c       |  4 ++++
+ drivers/md/raid10.c      |  4 ++++
+ drivers/md/raid5-cache.c | 22 +++++++++-------------
+ drivers/md/raid5.c       |  2 +-
+ 5 files changed, 21 insertions(+), 15 deletions(-)
