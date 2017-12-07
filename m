@@ -1,42 +1,38 @@
-From: Dennis Mungai <dmngaie@gmail.com>
-Subject: Re: When will Linux support new RAID controllers
-Date: Thu, 7 Dec 2017 17:18:54 +0300
-Message-ID: <CAKKYfmGbz5wpU3pAY2rTsuY=e9DsDW=FgTqrbf-shu7TDg1mnA@mail.gmail.com>
-References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
- <20171110131937.GA26181@infradead.org> <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
- <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
- <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com> <20171207141612.2653a0fb@alans-desktop>
+From: Jes Sorensen <jsorensen@fb.com>
+Subject: Re: [PATCH][RESEND] managemon: Don't add disk to the array after it
+ has started
+Date: Thu, 7 Dec 2017 09:20:35 -0500
+Message-ID: <40585df8-a529-455e-d4bb-bcb194394416@fb.com>
+References: <1510579012-3909-1-git-send-email-tomasz.majchrzak@intel.com>
+ <1512638634-12436-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20171207141612.2653a0fb@alans-desktop>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Cc: "David F." <df7729@gmail.com>, Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1512638634-12436-1-git-send-email-tomasz.majchrzak@intel.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Tomasz Majchrzak <tomasz.majchrzak@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Eventually, a driver will roll out. The question is when.
+On 12/07/2017 04:23 AM, Tomasz Majchrzak wrote:
+> If disk has disappeared from the system and appears again, it is added to the
+> corresponding container as long the metadata matches and disk number is set.
+> This code had no effect on imsm until commit 20dc76d15b40 ("imsm: Set disk slot
+> number"). Now the disk is added to container but not to the array - it is
+> correct as the disk is out-of-sync. Rebuild should start for the disk but it
+> doesn't. There is the same behaviour for both imsm and ddf metadata.
+> 
+> There is no point to handle out-of-sync disk as "good member of array" so
+> remove that part of code. There are no scenarios when monitor is already
+> running and disk can be safely added to the array. Just write initial metadata
+> to the disk so it's taken for rebuild.
+> 
+> Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+
+Applied!
+
+Thanks,
+Jes
 
 
-
-On 7 December 2017 at 17:16, Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
-> On Mon, 4 Dec 2017 18:01:10 -0800
-> "David F." <df7729@gmail.com> wrote:
->
->> Hi,
->>
->> Any word if the patch is available?
->>
->> Is this going mainline anytime soon?
->
-> I am not aware of anyone in Intel working on it or planning to work on it
-> at this point. Nothing stops someone outside of Intel doing that from the
-> code that was released.
->
-> For things that need BIOS changes whatever the vendor my experience has
-> always been that you make the most impact by talking to the actual system
-> vendor (who controls the BIOS), including telling them why you didn't buy
-> their machine. At the end of the day businesses make decisions based on
-> dollars.
->
-> Alan
