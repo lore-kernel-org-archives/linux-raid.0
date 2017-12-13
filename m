@@ -1,37 +1,201 @@
-From: Edward Kuns <eddie.kuns@gmail.com>
-Subject: Re: mdadm stuck at 0% reshape after grow
-Date: Fri, 8 Dec 2017 18:20:44 -0600
-Message-ID: <CACsGCyQ1vSy9f-uPc7X_m09AN1-Og_A3_eT0S=dbjBKE=R+RNA@mail.gmail.com>
-References: <CAGx2nv6cZ85YCrUQsCBWfojFxOyqW4=+5OaCqU1Gf0UX=T3Gbg@mail.gmail.com>
- <1865221512489329@web5g.yandex.ru> <d34ebd38-47e5-35bc-5ee6-0da194ce1901@turmel.org>
- <CAGx2nv6YAc5jBL36K0oNG=tE5J3TNXGMvTvD9ZvcZYthXe9Y5g@mail.gmail.com>
- <20171206104905.GA4383@metamorpher.de> <61c9e4bd-1605-5b17-80ce-c738b80b7058@turmel.org>
- <20171206160346.GA5806@metamorpher.de> <1b43be27-f21a-1fba-f983-01c5356a654d@turmel.org>
- <CACsGCyTZaqRxWFJ1NxN3jVktRcQv3_AdjRTT+3OfuYMuFYdr_w@mail.gmail.com>
- <20171207135832.GA4858@metamorpher.de> <20171207174048.GA6428@metamorpher.de> <5A29D169.4000203@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 3/3] Assemble: cleanup the failure path
+Date: Wed, 13 Dec 2017 10:00:40 +0800
+Message-ID: <20171213020040.3603-4-gqjiang@suse.com>
+References: <20171213020040.3603-1-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5A29D169.4000203@youngman.org.uk>
+In-Reply-To: <20171213020040.3603-1-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Andreas Klauer <Andreas.Klauer@metamorpher.de>, smartmontools-support@listi.jpberlin.de, Linux-RAID <linux-raid@vger.kernel.org>
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On Thu, Dec 7, 2017 at 5:40 PM, Wols Lists <antlists@youngman.org.uk> wrote:
-> But if this is true, for a drive that doesn't support sct (I don't have
-> one to test), the command will fail but return 0!!! So the script
-> doesn't realise anything is wrong, doesn't fix the defaults, and leaves
-> the raid array in the dangerous situation where linux will time out long
-> before the drive does.
->
-> So does smartctl return 0 if the drive doesn't support sct? If so why?
-> And what's the easiest way to detect such a drive if so?
+There are some failure paths which share common codes
+before return, so simplify them by move common codes
+to the end of function, and just goto out in case
+failure happened.
 
-I can reproduce this on a Samsung 830 SSD (released in 2011, probably
-purchased in 2012).  I also have an 840 Pro SSD which does not have
-this problem -- it fully supports SCTERC being set.  I don't know how
-representative of SSD models these two are, but that gives a time
-frame for this support appearing in SSD drives.
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ Assemble.c | 66 ++++++++++++++++++++++++--------------------------------------
+ 1 file changed, 25 insertions(+), 41 deletions(-)
 
-               Eddie
+diff --git a/Assemble.c b/Assemble.c
+index 51d5350354ad..eeaaef930147 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1295,13 +1295,13 @@ int Assemble(struct supertype *st, char *mddev,
+ 	 *    START_ARRAY
+ 	 *
+ 	 */
+-	int rv;
+-	int mdfd;
++	int rv = -1;
++	int mdfd = -1;
+ 	int clean;
+ 	int auto_assem = (mddev == NULL && !ident->uuid_set &&
+ 			  ident->super_minor == UnSet && ident->name[0] == 0 &&
+ 			  (ident->container == NULL || ident->member == NULL));
+-	struct devs *devices;
++	struct devs *devices = NULL;
+ 	char *devmap;
+ 	int *best = NULL; /* indexed by raid_disk */
+ 	int bestcnt = 0;
+@@ -1416,9 +1416,7 @@ try_again:
+ 			pr_err("Found some drive for an array that is already active: %s\n",
+ 			       mp->path);
+ 			pr_err("giving up.\n");
+-			if (locked == 1)
+-				unlock_cluster();
+-			return 1;
++			goto out;
+ 		}
+ 		for (dv = pre_exist->devs; dv; dv = dv->next) {
+ 			/* We want to add this device to our list,
+@@ -1491,9 +1489,7 @@ try_again:
+ 		st->ss->free_super(st);
+ 		if (auto_assem)
+ 			goto try_again;
+-		if (locked == 1)
+-			unlock_cluster();
+-		return 1;
++		goto out;
+ 	}
+ 	mddev = chosen_name;
+ 	if (pre_exist == NULL) {
+@@ -1512,9 +1508,7 @@ try_again:
+ 			st->ss->free_super(st);
+ 			if (auto_assem)
+ 				goto try_again;
+-			if (locked == 1)
+-				unlock_cluster();
+-			return 1;
++			goto out;
+ 		}
+ 		/* just incase it was started but has no content */
+ 		ioctl(mdfd, STOP_ARRAY, NULL);
+@@ -1538,9 +1532,8 @@ try_again:
+ 			      c, content, mdfd, mddev,
+ 			      &most_recent, &bestcnt, &best, inargv);
+ 	if (devcnt < 0) {
+-		if (locked == 1)
+-			unlock_cluster();
+-		return 1;
++		mdfd = -3;
++		goto out;
+ 	}
+ 
+ 	if (devcnt == 0) {
+@@ -1548,10 +1541,8 @@ try_again:
+ 		       mddev);
+ 		if (st)
+ 			st->ss->free_super(st);
+-		close(mdfd);
+-		free(devices);
+ 		free(devmap);
+-		return 1;
++		goto out;
+ 	}
+ 
+ 	if (c->update && strcmp(c->update, "byteorder")==0)
+@@ -1665,32 +1656,24 @@ try_again:
+ 				 : (O_RDONLY|O_EXCL)))< 0) {
+ 			pr_err("Cannot open %s: %s\n",
+ 			       devices[j].devname, strerror(errno));
+-			close(mdfd);
+-			free(devices);
+-			return 1;
++			goto out;
+ 		}
+ 		if (st->ss->load_super(st,fd, NULL)) {
+ 			close(fd);
+ 			pr_err("RAID superblock has disappeared from %s\n",
+ 			       devices[j].devname);
+-			close(mdfd);
+-			free(devices);
+-			return 1;
++			goto out;
+ 		}
+ 		close(fd);
+ 	}
+ 	if (st->sb == NULL) {
+ 		pr_err("No suitable drives found for %s\n", mddev);
+-		close(mdfd);
+-		free(devices);
+-		return 1;
++		goto out;
+ 	}
+ 	st->ss->getinfo_super(st, content, NULL);
+ 	if (sysfs_init(content, mdfd, NULL)) {
+ 		pr_err("Unable to initialize sysfs\n");
+-		close(mdfd);
+-		free(devices);
+-		return 1;
++		goto out;
+ 	}
+ 
+ 	/* after reload context, store journal_clean in context */
+@@ -1756,17 +1739,13 @@ try_again:
+ 		if (fd < 0) {
+ 			pr_err("Could not open %s for write - cannot Assemble array.\n",
+ 			       devices[chosen_drive].devname);
+-			close(mdfd);
+-			free(devices);
+-			return 1;
++			goto out;
+ 		}
+ 		if (st->ss->store_super(st, fd)) {
+ 			close(fd);
+ 			pr_err("Could not re-write superblock on %s\n",
+ 			       devices[chosen_drive].devname);
+-			close(mdfd);
+-			free(devices);
+-			return 1;
++			goto out;
+ 		}
+ 		if (c->verbose >= 0)
+ 			pr_err("Marking array %s as 'clean'\n",
+@@ -1824,9 +1803,7 @@ try_again:
+ 			pr_err("Failed to restore critical section for reshape, sorry.\n");
+ 			if (c->backup_file == NULL)
+ 				cont_err("Possibly you needed to specify the --backup-file\n");
+-			close(mdfd);
+-			free(devices);
+-			return err;
++			goto out;
+ 		}
+ 	}
+ 
+@@ -1855,6 +1832,7 @@ try_again:
+ 		ioctl(mdfd, STOP_ARRAY, NULL);
+ 	free(devices);
+ 	map_unlock(&map);
++out:
+ 	if (rv == 0) {
+ 		wait_for(chosen_name, mdfd);
+ 		close(mdfd);
+@@ -1884,12 +1862,18 @@ try_again:
+ 				usecs <<= 1;
+ 			}
+ 		}
+-	} else
+-		close(mdfd);
++	} else {
++		if (mdfd >= 0)
++			close(mdfd);
++	}
+ 
+ 	/* '2' means 'OK, but not started yet' */
+ 	if (locked == 1)
+ 		unlock_cluster();
++	if (rv == -1) {
++		free(devices);
++		return 1;
++	}
+ 	return rv == 2 ? 0 : rv;
+ }
+ 
+-- 
+2.13.6
+
