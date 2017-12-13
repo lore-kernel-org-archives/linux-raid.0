@@ -1,44 +1,51 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Will mdadm make a backup if it takes two steps to covert raid5 to
- raid6?
-Date: Wed, 13 Dec 2017 13:54:57 +0000
-Message-ID: <5A313131.9070709@youngman.org.uk>
-References: <CAJtTb3EwgaAPCW+xKeNLxViWt2OixTLtW9Zeh3WZQY4q59x6hQ@mail.gmail.com>
+From: "David F." <df7729@gmail.com>
+Subject: Re: When will Linux support new RAID controllers
+Date: Wed, 13 Dec 2017 12:20:32 -0800
+Message-ID: <CAGRSmLvGiL_OfT+N42DcNf8xdar__HTWDVnNvA=L=sa5Hx-VMw@mail.gmail.com>
+References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
+ <20171110131937.GA26181@infradead.org> <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
+ <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
+ <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
+ <20171207141612.2653a0fb@alans-desktop> <CAKKYfmGbz5wpU3pAY2rTsuY=e9DsDW=FgTqrbf-shu7TDg1mnA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJtTb3EwgaAPCW+xKeNLxViWt2OixTLtW9Zeh3WZQY4q59x6hQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Amy Chiang <amychiang@qnap.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAKKYfmGbz5wpU3pAY2rTsuY=e9DsDW=FgTqrbf-shu7TDg1mnA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dennis Mungai <dmngaie@gmail.com>
+Cc: Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
 List-Id: linux-raid.ids
 
-On 13/12/17 03:57, Amy Chiang wrote:
-> my question is,
-> 1. "mdadm --grow /dev/md0 --level=6 --layout=preserve" will this
-> command create Q even though it degrades the array?
-> 2. Is backup happening in second step (reshaping)? if it's happening,
-> why don't I need a backup file?
+Where is the code/patch that was released?  If nobody knows about it,
+nobody can work on it.
 
-mdadm normally does not need a backup file. I don't know what
---layout=preserve is doing, but the reshape always happens as an
-independent step, even if everything is specified at once.
+"I am not aware of anyone in Intel working on it or planning to work on it
+at this point. Nothing stops someone outside of Intel doing that from the
+code that was released."
 
-If the space is available (and mdadm by default always reserves spare
-space if it is given enough - I think a 2GB array will trigger a reserve
-allocation) a reshape always starts writing in the reserved space. It
-will lock and read stripe 1, and write it to reserved space. It will
-then lock and read stripe 2, stripe 3 etc until it runs out of reserved
-space. It will then use a window to make the new stripes active, unlock
-them, and then reserve the space those stripes used to occupy for the
-next bit of the reshape.
-
-So, at all times, the bit of the array being reshaped is locked and has
-multiple copies, and there's a window setting telling the management
-layer where to find the active bits of the array.
-
-Backup files are prone to cause trouble for novices, and this means they
-are not necessary. Great news.
-
-Cheers,
-Wol
+On Thu, Dec 7, 2017 at 6:18 AM, Dennis Mungai <dmngaie@gmail.com> wrote:
+> Eventually, a driver will roll out. The question is when.
+>
+>
+>
+> On 7 December 2017 at 17:16, Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
+>> On Mon, 4 Dec 2017 18:01:10 -0800
+>> "David F." <df7729@gmail.com> wrote:
+>>
+>>> Hi,
+>>>
+>>> Any word if the patch is available?
+>>>
+>>> Is this going mainline anytime soon?
+>>
+>> I am not aware of anyone in Intel working on it or planning to work on it
+>> at this point. Nothing stops someone outside of Intel doing that from the
+>> code that was released.
+>>
+>> For things that need BIOS changes whatever the vendor my experience has
+>> always been that you make the most impact by talking to the actual system
+>> vendor (who controls the BIOS), including telling them why you didn't buy
+>> their machine. At the end of the day businesses make decisions based on
+>> dollars.
+>>
+>> Alan
