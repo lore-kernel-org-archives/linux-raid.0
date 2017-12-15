@@ -1,59 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Is there any lazy initialization mechanism in linux-raid?
-Date: Fri, 15 Dec 2017 07:34:01 -0500
-Message-ID: <698d56e7-8edb-fd85-1037-3a365002da02@turmel.org>
-References: <46a50eb1-7836-9ec5-109a-59d223708547@bwstor.com.cn>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <46a50eb1-7836-9ec5-109a-59d223708547@bwstor.com.cn>
-Content-Language: en-GB
-Sender: linux-raid-owner@vger.kernel.org
-To: guomingyang <guomingyang@bwstor.com.cn>, linux-raid@vger.kernel.org
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v5 40/78] mm: Convert khugepaged_scan_shmem to XArray
+Date: Fri, 15 Dec 2017 14:04:12 -0800
+Message-ID: <20171215220450.7899-41-willy@infradead.org>
+References: <20171215220450.7899-1-willy@infradead.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20171215220450.7899-1-willy@infradead.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning,
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-On 12/15/2017 06:50 AM, guomingyang wrote:
-> Hi all:
-> 
->       Today's disk is becoming larger and larger, and the recovery time
-> is becoming longer. I'm thinking about a lazy initialization mechanism
-> in linux raid5 to speed up recovery, which contains an un-initializing
-> bitmap and a backend thread for initializing stripes lazily only after a
-> stripe is write. The major difference is as follows:
-> 
->       (1)When a raid4 or raid5 device is created, we don't recovery a
-> disk as usual, instead we just set all the bit in un-initialize bitmap.
-> 
->       (2)When a write happens and the corresponding un-initializing bit
-> is set, we must first clean the bit, then wake up the backend thread to
-> resync the stripe, and only do RCW in corresponding stripe before the
-> resync is done.
+Slightly shorter and easier to read code.
 
-It is interesting, and opens further possibilities.  I'm not sure a
-bitmap is the best data structure, but that's be an implementation detail.
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ mm/khugepaged.c | 17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
->      The major advantage of this mechanism is that when a disk is
-> replaced, we can only recovery the stripes which have been initialized,
-> so as to speed up recovery.
-
-There's a time penalty added on any operation on the disk to determine
-whether the location is initialized or not.  What should reads do when
-accessing uninitialized areas?
-
->      Does linux-raid have similar mechanism today? Or is there anyone
-> who has already working on similar mechanism?
-
-By itself I don't think its worth the effort.  However, the accounting
-logic could also be used to support trim at the md layer, and the
-reduction in actual I/O (supply zeroes when reading uninitialized) might
-justify the performance impact of the logic.
-
-I haven't seen any action on anything like this, so I would assume you'd
-have to start with some patches.
-
-Regards,
-
-Phil
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 9f49d0cd61c2..15f1b2d81a69 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1534,8 +1534,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 		pgoff_t start, struct page **hpage)
+ {
+ 	struct page *page = NULL;
+-	struct radix_tree_iter iter;
+-	void **slot;
++	XA_STATE(xas, &mapping->pages, start);
+ 	int present, swap;
+ 	int node = NUMA_NO_NODE;
+ 	int result = SCAN_SUCCEED;
+@@ -1544,17 +1543,11 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 	swap = 0;
+ 	memset(khugepaged_node_load, 0, sizeof(khugepaged_node_load));
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+-		if (iter.index >= start + HPAGE_PMD_NR)
+-			break;
+-
+-		page = radix_tree_deref_slot(slot);
+-		if (radix_tree_deref_retry(page)) {
+-			slot = radix_tree_iter_retry(&iter);
++	xas_for_each(&xas, page, start + HPAGE_PMD_NR - 1) {
++		if (xas_retry(&xas, page))
+ 			continue;
+-		}
+ 
+-		if (radix_tree_exception(page)) {
++		if (xa_is_value(page)) {
+ 			if (++swap > khugepaged_max_ptes_swap) {
+ 				result = SCAN_EXCEED_SWAP_PTE;
+ 				break;
+@@ -1593,7 +1586,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 		present++;
+ 
+ 		if (need_resched()) {
+-			slot = radix_tree_iter_resume(slot, &iter);
++			xas_pause(&xas);
+ 			cond_resched_rcu();
+ 		}
+ 	}
+-- 
+2.15.1
