@@ -1,7 +1,8 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 67/78] page cache: Finish XArray conversion
-Date: Fri, 15 Dec 2017 14:04:39 -0800
-Message-ID: <20171215220450.7899-68-willy@infradead.org>
+Subject: [PATCH v5 64/78] dax: Convert dax_insert_mapping_entry
+ to XArray
+Date: Fri, 15 Dec 2017 14:04:36 -0800
+Message-ID: <20171215220450.7899-65-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,55 +23,61 @@ List-Id: linux-raid.ids
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-With no more radix tree API users left, we can drop the GFP flags
-and use xa_init() instead of INIT_RADIX_TREE().
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/inode.c         | 2 +-
- include/linux/fs.h | 2 +-
- mm/swap_state.c    | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ fs/dax.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index c7b00573c10d..2046ff6dd1b3 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -348,7 +348,7 @@ EXPORT_SYMBOL(inc_nlink);
- void address_space_init_once(struct address_space *mapping)
+diff --git a/fs/dax.c b/fs/dax.c
+index 9cfd4fcc0b0d..a3e795ad2493 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -498,9 +498,9 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 				      void *entry, sector_t sector,
+ 				      unsigned long flags, bool dirty)
  {
- 	memset(mapping, 0, sizeof(*mapping));
--	INIT_RADIX_TREE(&mapping->pages, GFP_ATOMIC | __GFP_ACCOUNT);
-+	xa_init(&mapping->pages);
- 	init_rwsem(&mapping->i_mmap_rwsem);
- 	INIT_LIST_HEAD(&mapping->private_list);
- 	spin_lock_init(&mapping->private_lock);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c58bc3c619bf..b459bf4ddb62 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -410,7 +410,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
-  */
- struct address_space {
- 	struct inode		*host;
--	struct radix_tree_root	pages;
-+	struct xarray		pages;
- 	gfp_t			gfp_mask;
- 	atomic_t		i_mmap_writable;
- 	struct rb_root_cached	i_mmap;
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 219e3b4f09e6..6ee5b17d7e79 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -573,7 +573,7 @@ int init_swap_address_space(unsigned int type, unsigned long nr_pages)
- 		return -ENOMEM;
- 	for (i = 0; i < nr; i++) {
- 		space = spaces + i;
--		INIT_RADIX_TREE(&space->pages, GFP_ATOMIC|__GFP_NOWARN);
-+		xa_init(&space->pages);
- 		atomic_set(&space->i_mmap_writable, 0);
- 		space->a_ops = &swap_aops;
- 		/* swap cache doesn't use writeback related tags */
+-	struct radix_tree_root *pages = &mapping->pages;
+ 	void *new_entry;
+ 	pgoff_t index = vmf->pgoff;
++	XA_STATE(xas, &mapping->pages, index);
+ 
+ 	if (dirty)
+ 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+@@ -516,7 +516,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 					PAGE_SIZE, 0);
+ 	}
+ 
+-	xa_lock_irq(&mapping->pages);
++	xas_lock_irq(&xas);
+ 	new_entry = dax_radix_locked_entry(sector, flags);
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+@@ -528,21 +528,15 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 		 * existing entry is a PMD, we will just leave the PMD in the
+ 		 * tree and dirty it if necessary.
+ 		 */
+-		struct radix_tree_node *node;
+-		void **slot;
+-		void *ret;
+-
+-		ret = __radix_tree_lookup(pages, index, &node, &slot);
+-		WARN_ON_ONCE(ret != entry);
+-		__radix_tree_replace(pages, node, slot,
+-				     new_entry, NULL);
++		void *prev = xas_store(&xas, new_entry);
++		WARN_ON_ONCE(prev != entry);
+ 		entry = new_entry;
+ 	}
+ 
+ 	if (dirty)
+-		radix_tree_tag_set(pages, index, PAGECACHE_TAG_DIRTY);
++		xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
+ 
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
+ 	return entry;
+ }
+ 
 -- 
 2.15.1
 
