@@ -1,7 +1,8 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 41/78] pagevec: Use xa_tag_t
-Date: Fri, 15 Dec 2017 14:04:13 -0800
-Message-ID: <20171215220450.7899-42-willy@infradead.org>
+Subject: [PATCH v5 16/78] xarray: Add xa_get_entries,
+ xa_get_tagged and xa_get_maybe_tag
+Date: Fri, 15 Dec 2017 14:03:48 -0800
+Message-ID: <20171215220450.7899-17-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,130 +23,152 @@ List-Id: linux-raid.ids
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Removes sparse warnings.
+These functions allow a range of xarray entries to be extracted into a
+compact normal array.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/btrfs/extent_io.c    | 4 ++--
- fs/ext4/inode.c         | 2 +-
- fs/f2fs/data.c          | 2 +-
- fs/gfs2/aops.c          | 2 +-
- include/linux/pagevec.h | 8 +++++---
- mm/swap.c               | 4 ++--
- 6 files changed, 12 insertions(+), 10 deletions(-)
+ include/linux/xarray.h | 27 ++++++++++++++++
+ lib/xarray.c           | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 115 insertions(+)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 22948f4febe7..4301cbf4e31f 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -3795,7 +3795,7 @@ int btree_write_cache_pages(struct address_space *mapping,
- 	pgoff_t index;
- 	pgoff_t end;		/* Inclusive */
- 	int scanned = 0;
--	int tag;
-+	xa_tag_t tag;
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 85a319463e46..1367d694eebd 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -140,6 +140,33 @@ void xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
  
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-@@ -3922,7 +3922,7 @@ static int extent_write_cache_pages(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int range_whole = 0;
- 	int scanned = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	/*
- 	 * We have to hold onto the inode so that ordered extents can do their
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 7df2c5644e59..2534304daec3 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -2605,7 +2605,7 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
- 	long left = mpd->wbc->nr_to_write;
- 	pgoff_t index = mpd->first_page;
- 	pgoff_t end = mpd->last_page;
--	int tag;
-+	xa_tag_t tag;
- 	int i, err = 0;
- 	int blkbits = mpd->inode->i_blkbits;
- 	ext4_lblk_t lblk;
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 8f51ac47b77f..c8f6d9806896 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -1640,7 +1640,7 @@ static int f2fs_write_cache_pages(struct address_space *mapping,
- 	pgoff_t last_idx = ULONG_MAX;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 
-diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-index 1daf15a1f00c..c78ecd008191 100644
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -369,7 +369,7 @@ static int gfs2_write_cache_jdata(struct address_space *mapping,
- 	pgoff_t done_index;
- 	int cycled;
- 	int range_whole = 0;
--	int tag;
-+	xa_tag_t tag;
- 
- 	pagevec_init(&pvec);
- 	if (wbc->range_cyclic) {
-diff --git a/include/linux/pagevec.h b/include/linux/pagevec.h
-index 5fb6580f7f23..5168901bf06d 100644
---- a/include/linux/pagevec.h
-+++ b/include/linux/pagevec.h
-@@ -9,6 +9,8 @@
- #ifndef _LINUX_PAGEVEC_H
- #define _LINUX_PAGEVEC_H
- 
-+#include <linux/xarray.h>
+ void *xa_find(struct xarray *xa, unsigned long *index, unsigned long max);
+ void *xa_find_after(struct xarray *xa, unsigned long *index, unsigned long max);
++int xa_get_entries(struct xarray *, void **dst, unsigned long start,
++			unsigned long max, unsigned int n);
++int xa_get_tagged(struct xarray *, void **dst, unsigned long start,
++			unsigned long max, unsigned int n, xa_tag_t);
 +
- /* 14 pointers + two long's align the pagevec structure to a power of two */
- #define PAGEVEC_SIZE	14
++/**
++ * xa_get_maybe_tag() - Copy entries from the XArray into a normal array.
++ * @xa: The source XArray to copy from.
++ * @dst: The buffer to copy pointers into.
++ * @start: The first index in the XArray eligible to be copied from.
++ * @max: The last index in the XArray eligible to be copied from.
++ * @n: The maximum number of entries to copy.
++ * @tag: Tag number.
++ *
++ * If you specify %XA_NO_TAG as the tag number, this is the same as
++ * xa_get_entries().  Otherwise, it is the same as xa_get_tagged().
++ *
++ * Return: The number of entries copied.
++ */
++static inline int xa_get_maybe_tag(struct xarray *xa, void **dst,
++			unsigned long start, unsigned long max,
++			unsigned int n, xa_tag_t tag)
++{
++	if (tag == XA_NO_TAG)
++		return xa_get_entries(xa, dst, start, max, n);
++	return xa_get_tagged(xa, dst, start, max, n, tag);
++}
  
-@@ -40,12 +42,12 @@ static inline unsigned pagevec_lookup(struct pagevec *pvec,
- 
- unsigned pagevec_lookup_range_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag);
-+		xa_tag_t tag);
- unsigned pagevec_lookup_range_nr_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag, unsigned max_pages);
-+		xa_tag_t tag, unsigned max_pages);
- static inline unsigned pagevec_lookup_tag(struct pagevec *pvec,
--		struct address_space *mapping, pgoff_t *index, int tag)
-+		struct address_space *mapping, pgoff_t *index, xa_tag_t tag)
- {
- 	return pagevec_lookup_range_tag(pvec, mapping, index, (pgoff_t)-1, tag);
+ /**
+  * xa_for_each() - Iterate over a portion of an XArray.
+diff --git a/lib/xarray.c b/lib/xarray.c
+index 9ac1e9730c24..e73ae7b57fc9 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -1330,6 +1330,94 @@ void *xa_find_after(struct xarray *xa, unsigned long *indexp, unsigned long max)
  }
-diff --git a/mm/swap.c b/mm/swap.c
-index 8d7773cb2c3f..31d79479dacf 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -991,7 +991,7 @@ EXPORT_SYMBOL(pagevec_lookup_range);
+ EXPORT_SYMBOL(xa_find_after);
  
- unsigned pagevec_lookup_range_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag)
-+		xa_tag_t tag)
++/**
++ * xa_get_entries() - Copy entries from the XArray into a normal array.
++ * @xa: The source XArray to copy from.
++ * @dst: The buffer to copy pointers into.
++ * @start: The first index in the XArray eligible to be copied from.
++ * @max: The last index in the XArray eligible to be copied from.
++ * @n: The maximum number of entries to copy.
++ *
++ * Copies up to @n non-NULL entries from the XArray.  The copied entries will
++ * have indices between @start and @max, inclusive.
++ *
++ * This function uses the RCU lock to protect itself.  That means that the
++ * entries returned may not represent a snapshot of the XArray at a moment
++ * in time.  For example, if index 5 is stored to, then index 10 is stored to,
++ * calling xa_get_entries() may return the old contents of index 5 and the
++ * new contents of index 10.  Indices not modified while this function is
++ * running will not be skipped.
++ *
++ * If you need stronger guarantees, holding the xa_lock across calls to this
++ * function will prevent concurrent modification.
++ *
++ * Return: The number of entries copied.
++ */
++int xa_get_entries(struct xarray *xa, void **dst, unsigned long start,
++			unsigned long max, unsigned int n)
++{
++	XA_STATE(xas, xa, start);
++	void *entry;
++	unsigned int i = 0;
++
++	if (!n)
++		return 0;
++
++	rcu_read_lock();
++	xas_for_each(&xas, entry, max) {
++		if (xas_retry(&xas, entry))
++			continue;
++		dst[i++] = entry;
++		if (i == n)
++			break;
++	}
++	rcu_read_unlock();
++
++	return i;
++}
++EXPORT_SYMBOL(xa_get_entries);
++
++/**
++ * xa_get_tagged() - Copy tagged entries from the XArray into a normal array.
++ * @xa: The source XArray to copy from.
++ * @dst: The buffer to copy pointers into.
++ * @start: The first index in the XArray eligible to be copied from.
++ * @max: The last index in the XArray eligible to be copied from
++ * @n: The maximum number of entries to copy.
++ * @tag: Tag number.
++ *
++ * Copies up to @n non-NULL entries that have @tag set from the XArray.  The
++ * copied entries will have indices between @start and @max, inclusive.
++ *
++ * See the xa_get_entries() documentation for the consistency guarantees
++ * provided.
++ *
++ * Return: The number of entries copied.
++ */
++int xa_get_tagged(struct xarray *xa, void **dst, unsigned long start,
++			unsigned long max, unsigned int n, xa_tag_t tag)
++{
++	XA_STATE(xas, xa, start);
++	void *entry;
++	unsigned int i = 0;
++
++	if (!n)
++		return 0;
++
++	rcu_read_lock();
++	xas_for_each_tag(&xas, entry, max, tag) {
++		if (xas_retry(&xas, entry))
++			continue;
++		dst[i++] = entry;
++		if (i == n)
++			break;
++	}
++	rcu_read_unlock();
++
++	return i;
++}
++EXPORT_SYMBOL(xa_get_tagged);
++
+ #ifdef XA_DEBUG
+ void xa_dump_node(const struct xa_node *node)
  {
- 	pvec->nr = find_get_pages_range_tag(mapping, index, end, tag,
- 					PAGEVEC_SIZE, pvec->pages);
-@@ -1001,7 +1001,7 @@ EXPORT_SYMBOL(pagevec_lookup_range_tag);
- 
- unsigned pagevec_lookup_range_nr_tag(struct pagevec *pvec,
- 		struct address_space *mapping, pgoff_t *index, pgoff_t end,
--		int tag, unsigned max_pages)
-+		xa_tag_t tag, unsigned max_pages)
- {
- 	pvec->nr = find_get_pages_range_tag(mapping, index, end, tag,
- 		min_t(unsigned int, max_pages, PAGEVEC_SIZE), pvec->pages);
 -- 
 2.15.1
 
