@@ -1,68 +1,40 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Help needed: Recovering a failed RAID-6 array
-Date: Thu, 14 Dec 2017 14:10:11 -0500
-Message-ID: <87748829-ae83-a9de-108c-d1c462eec8bc@turmel.org>
-References: <ab609d12-801c-f283-19e0-b68a72b79238@3de.com.pl>
+From: guomingyang <guomingyang@bwstor.com.cn>
+Subject: Is there any lazy initialization mechanism in linux-raid?
+Date: Fri, 15 Dec 2017 19:50:45 +0800
+Message-ID: <46a50eb1-7836-9ec5-109a-59d223708547@bwstor.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ab609d12-801c-f283-19e0-b68a72b79238@3de.com.pl>
-Content-Language: en-GB
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryszard Harasimowicz <rharasimowicz@3de.com.pl>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Ryszard,
+Hi all:
 
-On 12/14/2017 01:30 PM, Ryszard Harasimowicz wrote:
-> A friend of mine has got a serious problem after replacing a failed disk
-> in a RAID-6 array.
+       Today's disk is becoming larger and larger, and the recovery time 
+is becoming longer. I'm thinking about a lazy initialization mechanism 
+in linux raid5 to speed up recovery, which contains an un-initializing 
+bitmap and a backend thread for initializing stripes lazily only after a 
+stripe is write. The major difference is as follows:
 
-[trim /]
+       (1)When a raid4 or raid5 device is created, we don't recovery a 
+disk as usual, instead we just set all the bit in un-initialize bitmap.
 
-> When the Raid Device number 9 has failed the system was shutdown and the
-> drive was replaced.
+       (2)When a write happens and the corresponding un-initializing bit 
+is set, we must first clean the bit, then wake up the backend thread to 
+resync the stripe, and only do RCW in corresponding stripe before the 
+resync is done.
 
-The event counts are surprising considering the short time between first
-failure and the other two devices dropping out.  Those two *think* they
-are OK, and they both show the other still running.  So, a common reason
-took them out.
+      The major advantage of this mechanism is that when a disk is 
+replaced, we can only recovery the stripes which have been initialized, 
+so as to speed up recovery.
 
-The event counts might mean the OMV kit is trying to assemble this over
-and over again.  You'll have to disable that.
+      Does linux-raid have similar mechanism today? Or is there anyone 
+who has already working on similar mechanism?
 
-> Then the system was started - but the array did not rebuild (as was
-> expected). It showed up as FAILED with 3 drives marked as "removed".
-> 
-> The current state is:
 
-[trim /]
-
-> What would be the safest strategy to try to recover data from this
-> array? Is it still possible?
-
-First, stop the array:
-
-mdadm --stop /dev/md127
-
-Then, assemble the array with --force to get past the bad event counts:
-
-mdadm -Afv /dev/mdX /dev/sd[abcdghijklmnop]
-
-If that succeeds, run fsck on the filesystem(s) and then backup any
-irreplaceable files.  If it fails, paste the output here.
-
-> I send attached the status report for all the drives in the array
-> (except for the replaced one).
-
-It would be good to know *why* this happened.  Consider supplying
-"smartctl -iA -l scterc" reports.  I suspect your distro's boot time
-limits are too short, or some device didn't get recognized in the initramfs.
-
-The output of lsdrv[1] would help identifying odd circumstances.
-
-Phil
-
-[1] https://github.com/pturmel/lsdrv
+-- 
+Mingyang Guo
 
