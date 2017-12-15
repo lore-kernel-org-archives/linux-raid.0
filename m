@@ -1,8 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 46/78] shmem: Convert shmem_wait_for_pins to
- XArray
-Date: Fri, 15 Dec 2017 14:04:18 -0800
-Message-ID: <20171215220450.7899-47-willy@infradead.org>
+Subject: [PATCH v5 54/78] fs: Convert writeback to XArray
+Date: Fri, 15 Dec 2017 14:04:26 -0800
+Message-ID: <20171215220450.7899-55-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,106 +22,62 @@ List-Id: linux-raid.ids
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-As with shmem_tag_pins(), hold the lock around the entire loop instead
-of acquiring & dropping it for each entry we're going to untag.
+A couple of short loops.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/shmem.c | 59 ++++++++++++++++++++++++-----------------------------------
- 1 file changed, 24 insertions(+), 35 deletions(-)
+ fs/fs-writeback.c | 25 +++++++++----------------
+ 1 file changed, 9 insertions(+), 16 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 2f41c7ceea18..e4a2eb1336be 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -2636,9 +2636,7 @@ static void shmem_tag_pins(struct address_space *mapping)
-  */
- static int shmem_wait_for_pins(struct address_space *mapping)
- {
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index e2c1ca667d9a..897a89489fe9 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -339,9 +339,9 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct bdi_writeback *old_wb = inode->i_wb;
+ 	struct bdi_writeback *new_wb = isw->new_wb;
 -	struct radix_tree_iter iter;
--	void **slot;
--	pgoff_t start;
 +	XA_STATE(xas, &mapping->pages, 0);
- 	struct page *page;
- 	int error, scan;
++	struct page *page;
+ 	bool switched = false;
+-	void **slot;
  
-@@ -2646,7 +2644,9 @@ static int shmem_wait_for_pins(struct address_space *mapping)
- 
- 	error = 0;
- 	for (scan = 0; scan <= LAST_SCAN; scan++) {
--		if (!radix_tree_tagged(&mapping->pages, SHMEM_TAG_PINNED))
-+		unsigned int tagged = 0;
-+
-+		if (!xas_tagged(&xas, SHMEM_TAG_PINNED))
- 			break;
- 
- 		if (!scan)
-@@ -2654,45 +2654,34 @@ static int shmem_wait_for_pins(struct address_space *mapping)
- 		else if (schedule_timeout_killable((HZ << scan) / 200))
- 			scan = LAST_SCAN;
- 
--		start = 0;
--		rcu_read_lock();
--		radix_tree_for_each_tagged(slot, &mapping->pages, &iter,
--					   start, SHMEM_TAG_PINNED) {
--
--			page = radix_tree_deref_slot(slot);
--			if (radix_tree_exception(page)) {
--				if (radix_tree_deref_retry(page)) {
--					slot = radix_tree_iter_retry(&iter);
--					continue;
--				}
--
--				page = NULL;
--			}
--
--			if (page &&
--			    page_count(page) - page_mapcount(page) != 1) {
--				if (scan < LAST_SCAN)
--					goto continue_resched;
--
-+		xas_set(&xas, 0);
-+		xas_lock_irq(&xas);
-+		xas_for_each_tag(&xas, page, ULONG_MAX, SHMEM_TAG_PINNED) {
-+			bool clear = true;
-+			if (xa_is_value(page))
-+				continue;
-+			if (page_count(page) - page_mapcount(page) != 1) {
- 				/*
- 				 * On the last scan, we clean up all those tags
- 				 * we inserted; but make a note that we still
- 				 * found pages pinned.
- 				 */
--				error = -EBUSY;
-+				if (scan == LAST_SCAN)
-+					error = -EBUSY;
-+				else
-+					clear = false;
- 			}
-+			if (clear)
-+				xas_clear_tag(&xas, SHMEM_TAG_PINNED);
-+			if (++tagged % XA_CHECK_SCHED)
-+				continue;
- 
--			xa_lock_irq(&mapping->pages);
--			radix_tree_tag_clear(&mapping->pages,
--					     iter.index, SHMEM_TAG_PINNED);
--			xa_unlock_irq(&mapping->pages);
--continue_resched:
--			if (need_resched()) {
--				slot = radix_tree_iter_resume(slot, &iter);
--				cond_resched_rcu();
--			}
-+			xas_pause(&xas);
-+			xas_unlock_irq(&xas);
-+			cond_resched();
-+			xas_lock_irq(&xas);
+ 	/*
+ 	 * By the time control reaches here, RCU grace period has passed
+@@ -375,25 +375,18 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	 * to possibly dirty pages while PAGECACHE_TAG_WRITEBACK points to
+ 	 * pages actually under writeback.
+ 	 */
+-	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
+-				   PAGECACHE_TAG_DIRTY) {
+-		struct page *page = radix_tree_deref_slot_protected(slot,
+-						&mapping->pages.xa_lock);
+-		if (likely(page) && PageDirty(page)) {
++	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_DIRTY) {
++		if (PageDirty(page)) {
+ 			dec_wb_stat(old_wb, WB_RECLAIMABLE);
+ 			inc_wb_stat(new_wb, WB_RECLAIMABLE);
  		}
--		rcu_read_unlock();
-+		xas_unlock_irq(&xas);
  	}
  
- 	return error;
+-	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
+-				   PAGECACHE_TAG_WRITEBACK) {
+-		struct page *page = radix_tree_deref_slot_protected(slot,
+-						&mapping->pages.xa_lock);
+-		if (likely(page)) {
+-			WARN_ON_ONCE(!PageWriteback(page));
+-			dec_wb_stat(old_wb, WB_WRITEBACK);
+-			inc_wb_stat(new_wb, WB_WRITEBACK);
+-		}
++	xas_set(&xas, 0);
++	xas_for_each_tag(&xas, page, ULONG_MAX, PAGECACHE_TAG_WRITEBACK) {
++		WARN_ON_ONCE(!PageWriteback(page));
++		dec_wb_stat(old_wb, WB_WRITEBACK);
++		inc_wb_stat(new_wb, WB_WRITEBACK);
+ 	}
+ 
+ 	wb_get(new_wb);
 -- 
 2.15.1
 
