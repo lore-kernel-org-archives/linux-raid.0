@@ -1,7 +1,7 @@
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v5 75/78] usb: Convert xhci-mem to XArray
-Date: Fri, 15 Dec 2017 14:04:47 -0800
-Message-ID: <20171215220450.7899-76-willy@infradead.org>
+Subject: [PATCH v5 31/78] mm: Convert page-writeback to XArray
+Date: Fri, 15 Dec 2017 14:04:03 -0800
+Message-ID: <20171215220450.7899-32-willy@infradead.org>
 References: <20171215220450.7899-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,178 +22,187 @@ List-Id: linux-raid.ids
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-The XArray API is a slightly better fit for xhci_insert_segment_mapping()
-than the radix tree API was.
+Includes moving mapping_tagged() to fs.h as a static inline, and
+changing it to return bool.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/usb/host/xhci-mem.c | 68 +++++++++++++++++++--------------------------
- drivers/usb/host/xhci.h     |  6 ++--
- 2 files changed, 32 insertions(+), 42 deletions(-)
+ include/linux/fs.h  | 17 +++++++++------
+ mm/page-writeback.c | 62 +++++++++++++++++++----------------------------------
+ 2 files changed, 32 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/usb/host/xhci-mem.c b/drivers/usb/host/xhci-mem.c
-index 15f7d422885f..9a2a02d244b0 100644
---- a/drivers/usb/host/xhci-mem.c
-+++ b/drivers/usb/host/xhci-mem.c
-@@ -149,70 +149,60 @@ static void xhci_link_rings(struct xhci_hcd *xhci, struct xhci_ring *ring,
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index e4345c13e237..c58bc3c619bf 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -470,15 +470,18 @@ struct block_device {
+ 	struct mutex		bd_fsfreeze_mutex;
+ } __randomize_layout;
+ 
++/* XArray tags, for tagging dirty and writeback pages in the pagecache. */
++#define PAGECACHE_TAG_DIRTY	XA_TAG_0
++#define PAGECACHE_TAG_WRITEBACK	XA_TAG_1
++#define PAGECACHE_TAG_TOWRITE	XA_TAG_2
++
+ /*
+- * Radix-tree tags, for tagging dirty and writeback pages within the pagecache
+- * radix trees
++ * Returns true if any of the pages in the mapping are marked with the tag.
+  */
+-#define PAGECACHE_TAG_DIRTY	0
+-#define PAGECACHE_TAG_WRITEBACK	1
+-#define PAGECACHE_TAG_TOWRITE	2
+-
+-int mapping_tagged(struct address_space *mapping, int tag);
++static inline bool mapping_tagged(struct address_space *mapping, xa_tag_t tag)
++{
++	return xa_tagged(&mapping->pages, tag);
++}
+ 
+ static inline void i_mmap_lock_write(struct address_space *mapping)
+ {
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 588ce729d199..0407436a8305 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2098,33 +2098,25 @@ void __init page_writeback_init(void)
+  * dirty pages in the file (thus it is important for this function to be quick
+  * so that it can tag pages faster than a dirtying process can create them).
+  */
+-/*
+- * We tag pages in batches of WRITEBACK_TAG_BATCH to reduce xa_lock latency.
+- */
+ void tag_pages_for_writeback(struct address_space *mapping,
+ 			     pgoff_t start, pgoff_t end)
+ {
+-#define WRITEBACK_TAG_BATCH 4096
+-	unsigned long tagged = 0;
+-	struct radix_tree_iter iter;
+-	void **slot;
++	XA_STATE(xas, &mapping->pages, start);
++	unsigned int tagged = 0;
++	void *page;
+ 
+-	xa_lock_irq(&mapping->pages);
+-	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, start,
+-							PAGECACHE_TAG_DIRTY) {
+-		if (iter.index > end)
+-			break;
+-		radix_tree_iter_tag_set(&mapping->pages, &iter,
+-							PAGECACHE_TAG_TOWRITE);
+-		tagged++;
+-		if ((tagged % WRITEBACK_TAG_BATCH) != 0)
++	xas_lock_irq(&xas);
++	xas_for_each_tag(&xas, page, end, PAGECACHE_TAG_DIRTY) {
++		xas_set_tag(&xas, PAGECACHE_TAG_TOWRITE);
++		if (++tagged % XA_CHECK_SCHED)
+ 			continue;
+-		slot = radix_tree_iter_resume(slot, &iter);
+-		xa_unlock_irq(&mapping->pages);
++
++		xas_pause(&xas);
++		xas_unlock_irq(&xas);
+ 		cond_resched();
+-		xa_lock_irq(&mapping->pages);
++		xas_lock_irq(&xas);
+ 	}
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
  }
+ EXPORT_SYMBOL(tag_pages_for_writeback);
+ 
+@@ -2164,7 +2156,7 @@ int write_cache_pages(struct address_space *mapping,
+ 	pgoff_t done_index;
+ 	int cycled;
+ 	int range_whole = 0;
+-	int tag;
++	xa_tag_t tag;
+ 
+ 	pagevec_init(&pvec);
+ 	if (wbc->range_cyclic) {
+@@ -2445,7 +2437,7 @@ void account_page_cleaned(struct page *page, struct address_space *mapping,
  
  /*
-- * We need a radix tree for mapping physical addresses of TRBs to which stream
-- * ID they belong to.  We need to do this because the host controller won't tell
-+ * We need to map physical addresses of TRBs to the stream ID they belong to.
-+ * We need to do this because the host controller won't tell
-  * us which stream ring the TRB came from.  We could store the stream ID in an
-  * event data TRB, but that doesn't help us for the cancellation case, since the
-  * endpoint may stop before it reaches that event data TRB.
+  * For address_spaces which do not use buffers.  Just tag the page as dirty in
+- * its radix tree.
++ * the xarray.
   *
-- * The radix tree maps the upper portion of the TRB DMA address to a ring
-+ * The xarray maps the upper portion of the TRB DMA address to a ring
-  * segment that has the same upper portion of DMA addresses.  For example, say I
-  * have segments of size 1KB, that are always 1KB aligned.  A segment may
-  * start at 0x10c91000 and end at 0x10c913f0.  If I use the upper 10 bits, the
-- * key to the stream ID is 0x43244.  I can use the DMA address of the TRB to
-- * pass the radix tree a key to get the right stream ID:
-+ * index of the stream ID is 0x43244.  I can use the DMA address of the TRB as
-+ * the xarray index to get the right stream ID:
+  * This is also used when a single buffer is being dirtied: we want to set the
+  * page dirty in that case, but not all the buffers.  This is a "bottom-up"
+@@ -2471,7 +2463,7 @@ int __set_page_dirty_nobuffers(struct page *page)
+ 		BUG_ON(page_mapping(page) != mapping);
+ 		WARN_ON_ONCE(!PagePrivate(page) && !PageUptodate(page));
+ 		account_page_dirtied(page, mapping);
+-		radix_tree_tag_set(&mapping->pages, page_index(page),
++		__xa_set_tag(&mapping->pages, page_index(page),
+ 				   PAGECACHE_TAG_DIRTY);
+ 		xa_unlock_irqrestore(&mapping->pages, flags);
+ 		unlock_page_memcg(page);
+@@ -2634,13 +2626,13 @@ EXPORT_SYMBOL(__cancel_dirty_page);
+  * Returns true if the page was previously dirty.
   *
-  *	0x10c90fff >> 10 = 0x43243
-  *	0x10c912c0 >> 10 = 0x43244
-  *	0x10c91400 >> 10 = 0x43245
+  * This is for preparing to put the page under writeout.  We leave the page
+- * tagged as dirty in the radix tree so that a concurrent write-for-sync
++ * tagged as dirty in the xarray so that a concurrent write-for-sync
+  * can discover it via a PAGECACHE_TAG_DIRTY walk.  The ->writepage
+  * implementation will run either set_page_writeback() or set_page_dirty(),
+- * at which stage we bring the page's dirty flag and radix-tree dirty tag
++ * at which stage we bring the page's dirty flag and xarray dirty tag
+  * back into sync.
   *
-  * Obviously, only those TRBs with DMA addresses that are within the segment
-- * will make the radix tree return the stream ID for that ring.
-+ * will make the xarray return the stream ID for that ring.
-  *
-- * Caveats for the radix tree:
-+ * Caveats for the xarray:
-  *
-- * The radix tree uses an unsigned long as a key pair.  On 32-bit systems, an
-+ * The xarray uses an unsigned long for the index.  On 32-bit systems, an
-  * unsigned long will be 32-bits; on a 64-bit system an unsigned long will be
-  * 64-bits.  Since we only request 32-bit DMA addresses, we can use that as the
-- * key on 32-bit or 64-bit systems (it would also be fine if we asked for 64-bit
-- * PCI DMA addresses on a 64-bit system).  There might be a problem on 32-bit
-- * extended systems (where the DMA address can be bigger than 32-bits),
-+ * index on 32-bit or 64-bit systems (it would also be fine if we asked for
-+ * 64-bit PCI DMA addresses on a 64-bit system).  There might be a problem on
-+ * 32-bit extended systems (where the DMA address can be bigger than 32-bits),
-  * if we allow the PCI dma mask to be bigger than 32-bits.  So don't do that.
+- * This incoherency between the page's dirty flag and radix-tree tag is
++ * This incoherency between the page's dirty flag and xarray tag is
+  * unfortunate, but it only exists while the page is locked.
   */
--static int xhci_insert_segment_mapping(struct radix_tree_root *trb_address_map,
-+
-+static unsigned long trb_index(dma_addr_t dma)
-+{
-+	return (unsigned long)(dma >> TRB_SEGMENT_SHIFT);
-+}
-+
-+static int xhci_insert_segment_mapping(struct xarray *trb_address_map,
- 		struct xhci_ring *ring,
- 		struct xhci_segment *seg,
--		gfp_t mem_flags)
-+		gfp_t gfp)
- {
--	unsigned long key;
--	int ret;
--
--	key = (unsigned long)(seg->dma >> TRB_SEGMENT_SHIFT);
- 	/* Skip any segments that were already added. */
--	if (radix_tree_lookup(trb_address_map, key))
--		return 0;
--
--	ret = radix_tree_maybe_preload(mem_flags);
--	if (ret)
--		return ret;
--	ret = radix_tree_insert(trb_address_map,
--			key, ring);
--	radix_tree_preload_end();
--	return ret;
-+	return xa_err(xa_cmpxchg(trb_address_map, trb_index(seg->dma), NULL,
-+								ring, gfp));
+ int clear_page_dirty_for_io(struct page *page)
+@@ -2721,7 +2713,7 @@ int test_clear_page_writeback(struct page *page)
+ 		xa_lock_irqsave(&mapping->pages, flags);
+ 		ret = TestClearPageWriteback(page);
+ 		if (ret) {
+-			radix_tree_tag_clear(&mapping->pages, page_index(page),
++			__xa_clear_tag(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+ 			if (bdi_cap_account_writeback(bdi)) {
+ 				struct bdi_writeback *wb = inode_to_wb(inode);
+@@ -2773,7 +2765,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 			on_wblist = mapping_tagged(mapping,
+ 						   PAGECACHE_TAG_WRITEBACK);
+ 
+-			radix_tree_tag_set(&mapping->pages, page_index(page),
++			__xa_set_tag(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+ 			if (bdi_cap_account_writeback(bdi))
+ 				inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
+@@ -2787,10 +2779,10 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 				sb_mark_inode_writeback(mapping->host);
+ 		}
+ 		if (!PageDirty(page))
+-			radix_tree_tag_clear(&mapping->pages, page_index(page),
++			__xa_clear_tag(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_DIRTY);
+ 		if (!keep_write)
+-			radix_tree_tag_clear(&mapping->pages, page_index(page),
++			__xa_clear_tag(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_TOWRITE);
+ 		xa_unlock_irqrestore(&mapping->pages, flags);
+ 	} else {
+@@ -2806,16 +2798,6 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
  }
+ EXPORT_SYMBOL(__test_set_page_writeback);
  
--static void xhci_remove_segment_mapping(struct radix_tree_root *trb_address_map,
-+static void xhci_remove_segment_mapping(struct xarray *trb_address_map,
- 		struct xhci_segment *seg)
- {
--	unsigned long key;
+-/*
+- * Return true if any of the pages in the mapping are marked with the
+- * passed tag.
+- */
+-int mapping_tagged(struct address_space *mapping, int tag)
+-{
+-	return radix_tree_tagged(&mapping->pages, tag);
+-}
+-EXPORT_SYMBOL(mapping_tagged);
 -
--	key = (unsigned long)(seg->dma >> TRB_SEGMENT_SHIFT);
--	if (radix_tree_lookup(trb_address_map, key))
--		radix_tree_delete(trb_address_map, key);
-+	xa_erase(trb_address_map, trb_index(seg->dma));
- }
- 
- static int xhci_update_stream_segment_mapping(
--		struct radix_tree_root *trb_address_map,
-+		struct xarray *trb_address_map,
- 		struct xhci_ring *ring,
- 		struct xhci_segment *first_seg,
- 		struct xhci_segment *last_seg,
-@@ -574,8 +564,8 @@ struct xhci_ring *xhci_dma_to_transfer_ring(
- 		u64 address)
- {
- 	if (ep->ep_state & EP_HAS_STREAMS)
--		return radix_tree_lookup(&ep->stream_info->trb_address_map,
--				address >> TRB_SEGMENT_SHIFT);
-+		return xa_load(&ep->stream_info->trb_address_map,
-+				trb_index(address));
- 	return ep->ring;
- }
- 
-@@ -654,10 +644,10 @@ struct xhci_stream_info *xhci_alloc_stream_info(struct xhci_hcd *xhci,
- 	if (!stream_info->free_streams_command)
- 		goto cleanup_ctx;
- 
--	INIT_RADIX_TREE(&stream_info->trb_address_map, GFP_ATOMIC);
-+	xa_init(&stream_info->trb_address_map);
- 
- 	/* Allocate rings for all the streams that the driver will use,
--	 * and add their segment DMA addresses to the radix tree.
-+	 * and add their segment DMA addresses to the map.
- 	 * Stream 0 is reserved.
- 	 */
- 
-@@ -2369,7 +2359,7 @@ int xhci_mem_init(struct xhci_hcd *xhci, gfp_t flags)
- 	 * Initialize the ring segment pool.  The ring must be a contiguous
- 	 * structure comprised of TRBs.  The TRBs must be 16 byte aligned,
- 	 * however, the command ring segment needs 64-byte aligned segments
--	 * and our use of dma addresses in the trb_address_map radix tree needs
-+	 * and our use of dma addresses in the trb_address_map xarray needs
- 	 * TRB_SEGMENT_SIZE alignment, so we pick the greater alignment need.
- 	 */
- 	xhci->segment_pool = dma_pool_create("xHCI ring segments", dev,
-diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
-index 054ce74524af..e8208a3eee3c 100644
---- a/drivers/usb/host/xhci.h
-+++ b/drivers/usb/host/xhci.h
-@@ -15,7 +15,7 @@
- #include <linux/usb.h>
- #include <linux/timer.h>
- #include <linux/kernel.h>
--#include <linux/radix-tree.h>
-+#include <linux/xarray.h>
- #include <linux/usb/hcd.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- 
-@@ -837,7 +837,7 @@ struct xhci_stream_info {
- 	unsigned int			num_stream_ctxs;
- 	dma_addr_t			ctx_array_dma;
- 	/* For mapping physical TRB addresses to segments in stream rings */
--	struct radix_tree_root		trb_address_map;
-+	struct xarray			trb_address_map;
- 	struct xhci_command		*free_streams_command;
- };
- 
-@@ -1584,7 +1584,7 @@ struct xhci_ring {
- 	unsigned int		bounce_buf_len;
- 	enum xhci_ring_type	type;
- 	bool			last_td_was_short;
--	struct radix_tree_root	*trb_address_map;
-+	struct xarray		*trb_address_map;
- };
- 
- struct xhci_erst_entry {
+ /**
+  * wait_for_stable_page() - wait for writeback to finish, if necessary.
+  * @page:	The page to wait on.
 -- 
 2.15.1
 
