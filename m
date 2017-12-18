@@ -1,189 +1,482 @@
-From: Dark Penguin <darkpenguin@yandex.ru>
-Subject: Re: Wrong array assembly on boot?
-Date: Sun, 17 Dec 2017 14:38:37 +0300
-Message-ID: <5A36573D.8040101@yandex.ru>
-References: <59739BDD.30307@yandex.ru> <597608BD.7080108@youngman.org.uk>
- <597611F6.20500@yandex.ru> <59764C40.4020503@youngman.org.uk>
- <59765183.1030508@yandex.ru> <5976569A.5040504@youngman.org.uk>
- <5A351458.1050303@yandex.ru>
- <9c2e2d2f-53bc-bae7-8b41-eab09944f109@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH] raid5-ppl: PPL support for disks with write-back cache enabled
+Date: Mon, 18 Dec 2017 14:45:00 +0100
+Message-ID: <1513604700-1826-1-git-send-email-tomasz.majchrzak@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9c2e2d2f-53bc-bae7-8b41-eab09944f109@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wol's lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
-On 16/12/17 23:27, Wol's lists wrote:
-> On 16/12/17 12:40, Dark Penguin wrote:
->> On 24/07/17 23:20, Wols Lists wrote:
->>> On 24/07/17 20:58, Dark Penguin wrote:
->>>> On 24/07/17 22:36, Wols Lists wrote:
->>>>> On 24/07/17 16:27, Dark Penguin wrote:
->>>>>> On 24/07/17 17:48, Wols Lists wrote:
->>>>>>>> On 22/07/17 19:39, Dark Penguin wrote:
->>>>>>>>>> Greetings!
->>>>>>>>>>
->>>>>>>>>> I have a mirror RAID with two devices (sdc1 and sde1). It's not a root
->>>>>>>>>> partition, just a RAID with some data for services running on this
->>>>>>>>>> server. (I'm running Debian Jessie x86_64 with a 4.1.18 kernel.) The
->>>>>>>>>> RAID is listed in /etc/mdadm, and it has an external bitmap in /RAID .
->>>>>>>>
->>>>>>>> As an absolute minimum, can you please give us your version of mdadm.
->>>>>> Oh, right, sorry. I thought the "absolute minimum" would be the kernel
->>>>>> version and the distribution. :)
->>>>>>
->>>>>> mdadm - v3.3.2 - 21st August 2014
->>>>>>
->>>>>>
->>>>> I was afraid it might be that ...
->>>>>
->>>>> You've hit a known bug in mdadm. It doesn't always successfully assemble
->>>>> a mirror. I had exactly that problem - I created one mirror and when I
->>>>> rebooted I had two ...
->>
->> I think this is not the same problem (see below).
->>
->>
->>>>> Can't offer any advice about how to fix your damaged mirror, but you
->>>>> need to upgrade mdadm! That's two minor versions out of date - 3.4 and 4.0.
->>
->> It's 3.4-4 in Ubuntu 17.10 and 3.4-4 in Debian Stretch, so I assume 4.0
->> must be "not there yet"...
->>
-> https://raid.wiki.kernel.org/index.php/Linux_Raid#Help_wanted
-> 
-> mdadm 4.0 is nearly a year old ...
->>
->>>> My mirror is not damaged anymore - it's quite healthy and cleanly
->>>> missing some information I've overwritten. :) Of course, there's no way
->>>> to help that now - that's what backups are for. I just wanted to learn
->>>> how to avoid this situation in the future. And learn how is it really
->>>> supposed to handle such things.
->>>>
->>>> Is this bug fixed in the newer mdadm? Or is it "known, but not fixed yet"?
->>>>
->>>>
->>> Long fixed :-)
->>
->> No, this is still not fixed in Ubuntu Artful (17.10) with mdadm v3.4-4 .
->>
->> My problem is the following (tested just now on Ubuntu 17.10):
->>
->>
->> - I create a RAID1 on two devices: /dev/sda1 and /dev/sdb1 (writemostly)
->> - I use it
->> - I pull /dev/sda1 out (bad cable, exactly the same situation as I had)
->> - I continue using the degraded array:
->>
->> $ sudo mdadm --detail /dev/md0
->> /dev/md0:
->> <...>
->>      Number   Major   Minor   RaidDevice State
->>         -       0        0        0      removed
->>         1       8       17        1      active sync writemostly   /dev/sdb1
->>
->>
->> - I shut down the machine and replace the cable, then boot it up again
->> - I see the following:
->>
->> mdadm: ignoring /dev/sdb1 as it reports /dev/sda1 as failed
->> mdadm: /dev/md/0 has been started with 1 drive (out of 2).
->> mdadm: Found some drive for an array that is already active: /dev/md/0
->> mdadm: giving up.
->>
->> $ sudo mdadm --detail /dev/md0
->> /dev/md0:
->> <...>
->>      Number   Major   Minor   RaidDevice State
->>         0       8        1        0      active sync   /dev/sda1
->>         -       0        0        1      removed
->>
->>
->> So, when assembling the arrays, mdadm sees two devices:
->> - one that fell off and reports a clean array
->> - one that knows that the first one fell off and reports it as faulty
->>
->> And it decides to use the one that obviously fell off, which it knows
->> about from the second device.
-> 
-> Except that it does NOT know about the second device !!! (At least, not 
-> to start with.)
->>
->> Seriously? Is there a reason for this chosen behaviour, "ignoring the
->> device that knows about problems"? It seems obviously wrong, but they
->> know about it and even put the message to explain what's going on! There
->> must be a reason that makes this "the lesser evil", but I can't imagine
->> that situation.
->>
-> Read the mdadm manual, especially about booting and "mdadm --assemble 
-> --incremental".
-> 
-> udev detects sda, and passes it to mdadm, which starts building the array.
-> 
-> udev then detects sdb, and passes it to madam, WHICH HITS A BUG IN 3.4 
-> AND MESSES UP THE ASSEMBLY.
-> 
-> Standard advice for fixing any problems is always "upgrade to the latest 
-> version and see if you can reproduce the problem". I don't remember 
-> which version(s) of mdadm had this bug, but I know there were a LOT of 
-> fixes like this that went into v4.
-> 
-> Cheers,
-> Wol
+In order to provide data consistency with PPL for disks with write-back
+cache enabled all data has to be flushed to disks before next PPL
+entry.
 
+With write-back cache disabled next PPL entry is submitted when data write
+for current one completes. Data flush defers next log submission so trigger
+it when there are no stripes for handling found.
 
-I was wrong - I was actually testing it on Ubuntu 16.10 that has mdadm
-3.4-4 (I assumed "long fixed" means more than a year ago). Now I tried
-it on 17.10, which of course has mdadm 4.0-2. And the problem is still
-there. Bug I gathered more data this time, including situations in which
-the problem goes away.
+As PPL assures all data is flushed to disk at request completion, just
+acknowledge flush request when PPL is enabled.
 
-To reproduce the problem:
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+---
+ Documentation/md/raid5-ppl.txt |   4 -
+ drivers/md/md.c                |   5 +-
+ drivers/md/md.h                |   1 +
+ drivers/md/raid5-cache.c       |   5 --
+ drivers/md/raid5-log.h         |  29 +++++++
+ drivers/md/raid5-ppl.c         | 166 ++++++++++++++++++++++++++++++++++++++---
+ drivers/md/raid5.c             |   6 +-
+ 7 files changed, 190 insertions(+), 26 deletions(-)
 
-- Boot into Ubuntu 17.10 LiveCD and install mdadm (4.0-2 in the repos).
-- Create a RAID1 array from two drives and wait for rebuild.
-
-* The first one MUST be earlier in alphabetical order,
-i.e. sda1 and sdb1, NOT sdb1 and sda1 !
-
-* The second device (sdb1) MUST be write-mostly!
-
-- Create a filesystem, mount the array and put something on it.
-- Disconnect the SATA cable on the FIRST device (NOT writemostly)
-- Put more data on the array (to easily see if it's there later).
-- Shut down the machine, connect the cable, boot back, install mdadm
-- Do mdadm --assemble --scan
-
-$ sudo mdadm --assemble --scan
-mdadm: ignoring /dev/sdb1 as it reports /dev/sda1 as failed
-mdadm: /dev/md/0 has been started with 1 drive (out of 2).
-
-You can confirm that your "new" data is NOT on the array.
-
-WHAT'S MORE, now do:
-$ mdadm --add /dev/md0 --write-mostly /dev/sdb1
-mdadm: *re-added* /dev/sdb1
-
-"Re-added"?! But there is no write-intent bitmap!..
-
-
-Experimenting with different situations gets more results. For example.
-I had a situation when mdadm automatically re-added the device to the
-array, so after a reboot I got a "clean" array (I don't remember if it
-was assembled correctly or wrongly). If the second device is not
-write-mostly, then the problem goes away. If you disconnect the second
-device and not the first one, the problem goes away.
-
-What I don't understand is the logic in ignoring the device that reports
-others as faulty. In what situation could it possibly be sane to ignore
-it instead of using it and ignoring all others? On the other hand, I
-don't see this message when the "faulty" drive happens to be the second
-one - the array just assembles without any errors, with the device that
-reports others as faulty.
-
-
+diff --git a/Documentation/md/raid5-ppl.txt b/Documentation/md/raid5-ppl.txt
+index 127072b..2df5cb1 100644
+--- a/Documentation/md/raid5-ppl.txt
++++ b/Documentation/md/raid5-ppl.txt
+@@ -38,7 +38,3 @@ case the behavior is the same as in plain raid5.
+ 
+ PPL is available for md version-1 metadata and external (specifically IMSM)
+ metadata arrays. It can be enabled using mdadm option --consistency-policy=ppl.
+-
+-Currently, volatile write-back cache should be disabled on all member drives
+-when using PPL. Otherwise it cannot guarantee consistency in case of power
+-failure.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a71adb3..1b5c9af2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -711,7 +711,7 @@ static struct md_rdev *find_rdev(struct mddev *mddev, dev_t dev)
+ 	return NULL;
+ }
+ 
+-static struct md_rdev *find_rdev_rcu(struct mddev *mddev, dev_t dev)
++struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev)
+ {
+ 	struct md_rdev *rdev;
+ 
+@@ -721,6 +721,7 @@ static struct md_rdev *find_rdev_rcu(struct mddev *mddev, dev_t dev)
+ 
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(md_find_rdev_rcu);
+ 
+ static struct md_personality *find_pers(int level, char *clevel)
+ {
+@@ -7010,7 +7011,7 @@ static int set_disk_faulty(struct mddev *mddev, dev_t dev)
+ 		return -ENODEV;
+ 
+ 	rcu_read_lock();
+-	rdev = find_rdev_rcu(mddev, dev);
++	rdev = md_find_rdev_rcu(mddev, dev);
+ 	if (!rdev)
+ 		err =  -ENODEV;
+ 	else {
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index be8f72a..58cd20a 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -710,6 +710,7 @@ extern struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ extern void md_update_sb(struct mddev *mddev, int force);
+ extern void md_kick_rdev_from_array(struct md_rdev * rdev);
+ struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
++struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
+ 
+ static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
+ {
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index f259a5f..3b1f3d6 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1111,9 +1111,6 @@ void r5l_write_stripe_run(struct r5l_log *log)
+ 
+ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
+ {
+-	if (!log)
+-		return -ENODEV;
+-
+ 	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
+ 		/*
+ 		 * in write through (journal only)
+@@ -1592,8 +1589,6 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
+ void r5l_quiesce(struct r5l_log *log, int quiesce)
+ {
+ 	struct mddev *mddev;
+-	if (!log)
+-		return;
+ 
+ 	if (quiesce) {
+ 		/* make sure r5l_write_super_and_discard_space exits */
+diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
+index 3860041..d5b3965 100644
+--- a/drivers/md/raid5-log.h
++++ b/drivers/md/raid5-log.h
+@@ -43,6 +43,7 @@ extern void r5c_update_on_rdev_error(struct mddev *mddev,
+ extern void ppl_write_stripe_run(struct r5conf *conf);
+ extern void ppl_stripe_write_finished(struct stripe_head *sh);
+ extern int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add);
++extern void ppl_quiesce(struct r5conf *conf, int quiesce);
+ 
+ static inline bool raid5_has_ppl(struct r5conf *conf)
+ {
+@@ -88,6 +89,34 @@ static inline void log_write_stripe_run(struct r5conf *conf)
+ 		ppl_write_stripe_run(conf);
+ }
+ 
++static inline void log_flush_stripe_to_raid(struct r5conf *conf)
++{
++	if (conf->log)
++		r5l_flush_stripe_to_raid(conf->log);
++	else if (raid5_has_ppl(conf))
++		ppl_write_stripe_run(conf);
++}
++
++static inline int log_handle_flush_request(struct r5conf *conf, struct bio *bio)
++{
++	int ret = -ENODEV;
++
++	if (conf->log)
++		ret = r5l_handle_flush_request(conf->log, bio);
++	else if (raid5_has_ppl(conf))
++		ret = 0;
++
++	return ret;
++}
++
++static inline void log_quiesce(struct r5conf *conf, int quiesce)
++{
++	if (conf->log)
++		r5l_quiesce(conf->log, quiesce);
++	else if (raid5_has_ppl(conf))
++		ppl_quiesce(conf, quiesce);
++}
++
+ static inline void log_exit(struct r5conf *conf)
+ {
+ 	if (conf->log)
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 628c0bf..50fc2ca 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -85,6 +85,9 @@
+  * (for a single member disk). New io_units are added to the end of the list
+  * and the first io_unit is submitted, if it is not submitted already.
+  * The current io_unit accepting new stripes is always at the end of the list.
++ *
++ * If write-back cache is enabled for any of the disks in the array, its data
++ * must be flushed before next io_unit is submitted.
+  */
+ 
+ #define PPL_SPACE_SIZE (128 * 1024)
+@@ -104,6 +107,7 @@ struct ppl_conf {
+ 	struct kmem_cache *io_kc;
+ 	mempool_t *io_pool;
+ 	struct bio_set *bs;
++	struct bio_set *flush_bs;
+ 
+ 	/* used only for recovery */
+ 	int recovered_entries;
+@@ -128,6 +132,8 @@ struct ppl_log {
+ 	sector_t next_io_sector;
+ 	unsigned int entry_space;
+ 	bool use_multippl;
++	bool wb_cache_on;
++	unsigned long disk_flush_bitmap;
+ };
+ 
+ #define PPL_IO_INLINE_BVECS 32
+@@ -145,6 +151,7 @@ struct ppl_io_unit {
+ 
+ 	struct list_head stripe_list;	/* stripes added to the io_unit */
+ 	atomic_t pending_stripes;	/* how many stripes not written to raid */
++	atomic_t pending_flushes;	/* how many disk flushes are in progress */
+ 
+ 	bool submitted;			/* true if write to log started */
+ 
+@@ -249,6 +256,7 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
+ 	INIT_LIST_HEAD(&io->log_sibling);
+ 	INIT_LIST_HEAD(&io->stripe_list);
+ 	atomic_set(&io->pending_stripes, 0);
++	atomic_set(&io->pending_flushes, 0);
+ 	bio_init(&io->bio, io->biovec, PPL_IO_INLINE_BVECS);
+ 
+ 	pplhdr = page_address(io->header_page);
+@@ -475,7 +483,18 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
+ 	if (log->use_multippl)
+ 		log->next_io_sector += (PPL_HEADER_SIZE + io->pp_size) >> 9;
+ 
++	WARN_ON(log->disk_flush_bitmap != 0);
++
+ 	list_for_each_entry(sh, &io->stripe_list, log_list) {
++		for (i = 0; i < sh->disks; i++) {
++			struct r5dev *dev = &sh->dev[i];
++
++			if ((ppl_conf->child_logs[i].wb_cache_on) &&
++			    (test_bit(R5_Wantwrite, &dev->flags))) {
++				set_bit(i, &log->disk_flush_bitmap);
++			}
++		}
++
+ 		/* entries for full stripe writes have no partial parity */
+ 		if (test_bit(STRIPE_FULL_WRITE, &sh->state))
+ 			continue;
+@@ -540,6 +559,7 @@ static void ppl_io_unit_finished(struct ppl_io_unit *io)
+ {
+ 	struct ppl_log *log = io->log;
+ 	struct ppl_conf *ppl_conf = log->ppl_conf;
++	struct r5conf *conf = ppl_conf->mddev->private;
+ 	unsigned long flags;
+ 
+ 	pr_debug("%s: seq: %llu\n", __func__, io->seq);
+@@ -565,6 +585,111 @@ static void ppl_io_unit_finished(struct ppl_io_unit *io)
+ 	spin_unlock(&ppl_conf->no_mem_stripes_lock);
+ 
+ 	local_irq_restore(flags);
++
++	wake_up(&conf->wait_for_quiescent);
++}
++
++static void ppl_flush_endio(struct bio *bio)
++{
++	struct ppl_io_unit *io = bio->bi_private;
++	struct ppl_log *log = io->log;
++	struct ppl_conf *ppl_conf = log->ppl_conf;
++	struct r5conf *conf = ppl_conf->mddev->private;
++	char b[BDEVNAME_SIZE];
++
++	pr_debug("%s: dev: %s\n", __func__, bio_devname(bio, b));
++
++	if (bio->bi_status) {
++		struct md_rdev *rdev;
++
++		rcu_read_lock();
++		rdev = md_find_rdev_rcu(conf->mddev, bio_dev(bio));
++		if (rdev)
++			md_error(rdev->mddev, rdev);
++		rcu_read_unlock();
++	}
++
++	bio_put(bio);
++
++	if (atomic_dec_and_test(&io->pending_flushes)) {
++		ppl_io_unit_finished(io);
++		md_wakeup_thread(conf->mddev->thread);
++	}
++}
++
++static void ppl_do_flush(struct ppl_io_unit *io)
++{
++	struct ppl_log *log = io->log;
++	struct ppl_conf *ppl_conf = log->ppl_conf;
++	struct r5conf *conf = ppl_conf->mddev->private;
++	int raid_disks = conf->raid_disks;
++	int flushed_disks = 0;
++	int i;
++
++	atomic_set(&io->pending_flushes, raid_disks);
++
++	for_each_set_bit(i, &log->disk_flush_bitmap, raid_disks) {
++		struct md_rdev *rdev;
++
++		rcu_read_lock();
++		rdev = rcu_dereference(conf->disks[i].rdev);
++		if (rdev && test_bit(Faulty, &rdev->flags))
++			rdev = NULL;
++		rcu_read_unlock();
++
++		if (rdev) {
++			struct bio *bio;
++			char b[BDEVNAME_SIZE];
++
++			bio = bio_alloc_bioset(GFP_NOIO, 0, ppl_conf->flush_bs);
++			bio_set_dev(bio, rdev->bdev);
++			bio->bi_private = io;
++			bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
++			bio->bi_end_io = ppl_flush_endio;
++
++			pr_debug("%s: dev: %s\n", __func__,
++				 bio_devname(bio, b));
++
++			submit_bio(bio);
++			flushed_disks++;
++		}
++	}
++
++	log->disk_flush_bitmap = 0;
++
++	for (i = flushed_disks ; i < raid_disks; i++) {
++		if (atomic_dec_and_test(&io->pending_flushes))
++			ppl_io_unit_finished(io);
++	}
++}
++
++static inline bool ppl_no_io_unit_submitted(struct r5conf *conf,
++					    struct ppl_log *log)
++{
++	struct ppl_io_unit *io;
++
++	io = list_first_entry_or_null(&log->io_list, struct ppl_io_unit,
++				      log_sibling);
++
++	return !io || !io->submitted;
++}
++
++void ppl_quiesce(struct r5conf *conf, int quiesce)
++{
++	struct ppl_conf *ppl_conf = conf->log_private;
++	int i;
++
++	if (quiesce) {
++		for (i = 0; i < ppl_conf->count; i++) {
++			struct ppl_log *log = &ppl_conf->child_logs[i];
++
++			spin_lock_irq(&log->io_list_lock);
++			wait_event_lock_irq(conf->wait_for_quiescent,
++					    ppl_no_io_unit_submitted(conf, log),
++					    log->io_list_lock);
++			spin_unlock_irq(&log->io_list_lock);
++		}
++	}
+ }
+ 
+ void ppl_stripe_write_finished(struct stripe_head *sh)
+@@ -574,8 +699,12 @@ void ppl_stripe_write_finished(struct stripe_head *sh)
+ 	io = sh->ppl_io;
+ 	sh->ppl_io = NULL;
+ 
+-	if (io && atomic_dec_and_test(&io->pending_stripes))
+-		ppl_io_unit_finished(io);
++	if (io && atomic_dec_and_test(&io->pending_stripes)) {
++		if (io->log->disk_flush_bitmap)
++			ppl_do_flush(io);
++		else
++			ppl_io_unit_finished(io);
++	}
+ }
+ 
+ static void ppl_xor(int size, struct page *page1, struct page *page2)
+@@ -1108,6 +1237,8 @@ static void __ppl_exit_log(struct ppl_conf *ppl_conf)
+ 
+ 	if (ppl_conf->bs)
+ 		bioset_free(ppl_conf->bs);
++	if (ppl_conf->flush_bs)
++		bioset_free(ppl_conf->flush_bs);
+ 	mempool_destroy(ppl_conf->io_pool);
+ 	kmem_cache_destroy(ppl_conf->io_kc);
+ 
+@@ -1173,6 +1304,8 @@ static int ppl_validate_rdev(struct md_rdev *rdev)
+ 
+ static void ppl_init_child_log(struct ppl_log *log, struct md_rdev *rdev)
+ {
++	struct request_queue *q;
++
+ 	if ((rdev->ppl.size << 9) >= (PPL_SPACE_SIZE +
+ 				      PPL_HEADER_SIZE) * 2) {
+ 		log->use_multippl = true;
+@@ -1185,6 +1318,10 @@ static void ppl_init_child_log(struct ppl_log *log, struct md_rdev *rdev)
+ 				   PPL_HEADER_SIZE;
+ 	}
+ 	log->next_io_sector = rdev->ppl.sector;
++
++	q = bdev_get_queue(rdev->bdev);
++	if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
++		log->wb_cache_on = true;
+ }
+ 
+ int ppl_init_log(struct r5conf *conf)
+@@ -1192,8 +1329,8 @@ int ppl_init_log(struct r5conf *conf)
+ 	struct ppl_conf *ppl_conf;
+ 	struct mddev *mddev = conf->mddev;
+ 	int ret = 0;
++	int max_disks;
+ 	int i;
+-	bool need_cache_flush = false;
+ 
+ 	pr_debug("md/raid:%s: enabling distributed Partial Parity Log\n",
+ 		 mdname(conf->mddev));
+@@ -1219,6 +1356,14 @@ int ppl_init_log(struct r5conf *conf)
+ 		return -EINVAL;
+ 	}
+ 
++	max_disks = FIELD_SIZEOF(struct ppl_log, disk_flush_bitmap) *
++		BITS_PER_BYTE;
++	if (conf->raid_disks > max_disks) {
++		pr_warn("md/raid:%s PPL doesn't support over %d disks in the array\n",
++			mdname(mddev), max_disks);
++		return -EINVAL;
++	}
++
+ 	ppl_conf = kzalloc(sizeof(struct ppl_conf), GFP_KERNEL);
+ 	if (!ppl_conf)
+ 		return -ENOMEM;
+@@ -1244,6 +1389,12 @@ int ppl_init_log(struct r5conf *conf)
+ 		goto err;
+ 	}
+ 
++	ppl_conf->flush_bs = bioset_create(conf->raid_disks, 0, 0);
++	if (!ppl_conf->flush_bs) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
+ 	ppl_conf->count = conf->raid_disks;
+ 	ppl_conf->child_logs = kcalloc(ppl_conf->count, sizeof(struct ppl_log),
+ 				       GFP_KERNEL);
+@@ -1275,23 +1426,14 @@ int ppl_init_log(struct r5conf *conf)
+ 		log->rdev = rdev;
+ 
+ 		if (rdev) {
+-			struct request_queue *q;
+-
+ 			ret = ppl_validate_rdev(rdev);
+ 			if (ret)
+ 				goto err;
+ 
+-			q = bdev_get_queue(rdev->bdev);
+-			if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+-				need_cache_flush = true;
+ 			ppl_init_child_log(log, rdev);
+ 		}
+ 	}
+ 
+-	if (need_cache_flush)
+-		pr_warn("md/raid:%s: Volatile write-back cache should be disabled on all member drives when using PPL!\n",
+-			mdname(mddev));
+-
+ 	/* load and possibly recover the logs from the member disks */
+ 	ret = ppl_load(ppl_conf);
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5a2a29b..50d0114 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5563,7 +5563,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	bool do_flush = false;
+ 
+ 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
+-		int ret = r5l_handle_flush_request(conf->log, bi);
++		int ret = log_handle_flush_request(conf, bi);
+ 
+ 		if (ret == 0)
+ 			return true;
+@@ -6168,7 +6168,7 @@ static int handle_active_stripes(struct r5conf *conf, int group,
+ 				break;
+ 		if (i == NR_STRIPE_HASH_LOCKS) {
+ 			spin_unlock_irq(&conf->device_lock);
+-			r5l_flush_stripe_to_raid(conf->log);
++			log_flush_stripe_to_raid(conf);
+ 			spin_lock_irq(&conf->device_lock);
+ 			return batch_size;
+ 		}
+@@ -8060,7 +8060,7 @@ static void raid5_quiesce(struct mddev *mddev, int quiesce)
+ 		wake_up(&conf->wait_for_overlap);
+ 		unlock_all_device_hash_locks_irq(conf);
+ 	}
+-	r5l_quiesce(conf->log, quiesce);
++	log_quiesce(conf, quiesce);
+ }
+ 
+ static void *raid45_takeover_raid0(struct mddev *mddev, int level)
 -- 
-darkpenguin
+1.8.3.1
+
