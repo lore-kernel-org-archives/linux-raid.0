@@ -1,140 +1,85 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH 1/3] mdadm: improve the dlm locking mechanism for
- clustered raid
-Date: Mon, 18 Dec 2017 10:42:29 -0500
-Message-ID: <59c96891-1e6e-30de-8881-52c357c30fd3@gmail.com>
-References: <20171213020040.3603-1-gqjiang@suse.com>
- <20171213020040.3603-2-gqjiang@suse.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: SMART detects pending sectors; take offline?
+Date: Mon, 18 Dec 2017 11:09:52 -0500
+Message-ID: <7bf0a71e-6cb7-59bc-695b-54ed6b08112b@turmel.org>
+References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
+ <aae31b06-f0b7-5d58-8dee-02867fcd23ec@aei.mpg.de>
+ <8caa4fe1-c51f-6f3a-e16b-8795cf1b4071@turmel.org>
+ <dd9d09ef-5191-a955-5b99-0fbcaea30665@shenkin.org>
+ <8cb4bb54-fadc-30c3-58b9-16e1ca460e83@thelounge.net>
+ <a7a4d586-5641-80e4-06e1-5dc1b772182b@shenkin.org>
+ <8da0ac59-d83b-671c-b088-8e04b13d685e@turmel.org>
+ <afaa1020-652d-911c-16e0-12ed87f2197a@shenkin.org>
+ <7b011b63-4de6-44ec-1f74-9f33c6466795@turmel.org>
+ <2ab868eb-3ce3-f01b-ac9e-23358563040c@shenkin.org>
+ <59DF4B80.5010807@youngman.org.uk>
+ <ecbbf0ae-3bf8-fe66-79e1-e8207bc09dcc@turmel.org>
+ <5b28b0fc-5e4d-9ac3-9a82-7e36f25c5108@shenkin.org>
+ <CAK2H+ecT1Psph5Wm9LrPgYOba6PHKzAs55H1LWiqLD+kaBUQZQ@mail.gmail.com>
+ <CACsGCyQGZxhfT1A_ojXaBRvB4wgNOH7fqqh8afsQksAeGdKmjg@mail.gmail.com>
+ <CACsGCyS9-K4ZJPKauRZkGFRPd0cvShYLViE87i47=RCY1UkbnQ@mail.gmail.com>
+ <fcb32200-19f7-5513-24a0-70ca15ca6297@shenkin.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20171213020040.3603-2-gqjiang@suse.com>
-Content-Language: en-US
+In-Reply-To: <fcb32200-19f7-5513-24a0-70ca15ca6297@shenkin.org>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Alexander Shenkin <al@shenkin.org>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/12/2017 09:00 PM, Guoqing Jiang wrote:
-> Previously, the dlm locking only protects several
-> functions which writes to superblock (update_super,
-> add_to_super and store_super), and we missed other
-> funcs such as add_internal_bitmap. We also need to
-> call the funcs which read superblock under the
-> locking protection to avoid consistent issue.
-> 
-> So let's remove the dlm stuffs from super1.c, and
-> provide the locking mechanism to the main() except
-> assemble mode which will be handled in next commit.
-> And since we can identify it is a clustered raid or
-> not based on check the different conditions of each
-> mode, so the change should not have effect on native
-> array.
-> 
-> And we improve the existed locking stuffs as follows:
-> 
-> 1. replace ls_unlock with ls_unlock_wait since we
-> should return when unlock operation is complete.
-> 
-> 2. inspired by lvm, let's also try to use the existed
-> lockspace first before creat a lockspace blindly if
-> the lockspace not released for some reason.
-> 
-> 3. try more times before quit if EAGAIN happened for
-> locking.
-> 
-> Reviewed-by: NeilBrown <neilb@suse.com>
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  mdadm.c  | 20 ++++++++++++++++++++
->  mdadm.h  |  8 +++++---
->  super1.c | 42 -----------------------------------------
->  util.c   | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++++----------
->  4 files changed, 80 insertions(+), 55 deletions(-)
-> 
-> diff --git a/mdadm.c b/mdadm.c
-> index 62d7ec34a17f..895a9706b1d9 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -57,6 +57,7 @@ int main(int argc, char *argv[])
->  	struct mddev_dev *devlist = NULL;
->  	struct mddev_dev **devlistend = & devlist;
->  	struct mddev_dev *dv;
-> +	mdu_array_info_t array;
->  	int devs_found = 0;
->  	char *symlinks = NULL;
->  	int grow_continue = 0;
-> @@ -103,6 +104,7 @@ int main(int argc, char *argv[])
->  	FILE *outf;
->  
->  	int mdfd = -1;
-> +	int locked = 0;
->  
->  	srandom(time(0) ^ getpid());
->  
-> @@ -1434,6 +1436,22 @@ int main(int argc, char *argv[])
->  		/* --scan implied --brief unless -vv */
->  		c.brief = 1;
->  
-> +	if (mode == CREATE) {
-> +		if (s.bitmap_file && strcmp(s.bitmap_file, "clustered") == 0) {
-> +			locked = lock_cluster();
-> +			if (locked != 1)
-> +				exit(1);
-> +		}
-> +	} else if (mode == MANAGE || mode == GROW || mode == INCREMENTAL) {
-> +		if (!md_get_array_info(mdfd, &array)) {
-> +			if (array.state & (1 << MD_SB_CLUSTERED)) {
-> +				locked = lock_cluster();
-> +				if (locked != 1)
-> +					exit(1);
-> +			}
-> +		}
-> +	}
-> +
+Hi Alexander,
 
-I like the switch to having more generic functions handling this rather
-than open coding things too much. However the above still seems to be a
-lot of multi case backwards hoops jumping. Anything we can do to
-simplify this?
-
-> +static int dlm_lockid = 0;
-> +int lock_cluster(void)
-> +{
-> +	if (dlm_funs_ready()) {
-> +		int rv;
-> +
-> +		rv = cluster_get_dlmlock(&dlm_lockid);
-> +		if (rv) {
-> +			pr_err("failed to lock cluster\n");
-> +			return -1;
-> +		}
-> +		return 1;
-> +	}
-> +	pr_err("Something wrong with dlm library (libdlm_lt.so.3)\n");
-
-Please don't refer explicitly to the soname of a library like this. It
-is not a good error message.
-
-> +	return 0;
-> +}
-> +
-> +void unlock_cluster(void)
-> +{
-> +	if (dlm_lockid != 0 && dlm_funs_ready()) {
-> +		int rv;
-> +
-> +		rv = cluster_release_dlmlock(dlm_lockid);
-> +		if (rv)
-> +			pr_err("failed to unlock cluster\n");
-> +	}
-> +}
+On 12/18/2017 10:51 AM, Alexander Shenkin wrote:
+> Hi all,
 > 
+> I'm getting back to this now that I'll have time, apologies for the 
+> delay.  So, is the following correct in the case of a read error?
 
-In addition, I don't like the use of a global variable to store this.
-While the app isn't multithreaded it's still ugly, why not just return
-the lockid itself as an indicator? There must be a known error value for it.
+Not quite.
 
-Thanks,
-Jes
+> 1) System tries to read an unreadable sector
+
+> 2) Drive timeout reports unreadable based on drive timeout setting.
+
+> 2a) In this case, mdadm sees the sector is unreadable and rewrites it
+> elsewhere on that drive.
+
+No.  MD reconstructs the sector from redundancy (mirror or reverse
+parity calc or reverse P+Q syndrome) and writes it back to the *same*
+sector.  Since the drive firmware reported an error here, it knows to
+verify the write as well.  If the verification fails, the drive firmware
+will relocate the sector in the background, invisible to the upper
+layers.  As far as MD is concerned, that sector address is fixed either
+way.  Relocations are handled entirely within the drive.  MD does not
+perform or track relocations.
+
+> 3) If linux hangcheck timer runs out before the drive timeout, then 
+> linux aborts the read, logs an error, and mdadm isn't given a chance
+> to rewrite elsewhere based on checksums.
+
+No.  The hangcheck timer issue described in your forwarded email is
+unrelated.  And MD doesn't use checksums.
+
+Each drive has a device driver timeout, as you note below, found at
+/sys/block/*/device/timeout, that linux's ATA/SCSI stack uses to cut off
+non-responsive controller cards and/or drives.  If that timer runs out
+on a read before the drive reports the read error, the low level
+*driver* reports a read error to the MD layer.  MD treats it the same as
+any other read error, locating or recomputing the sector from redundancy
+as above.  The difference in this case is that the physical drive isn't
+talking to the controller (link reset in progress, typically) and the
+corrective rewrite of the sector (to fix or relocate within the drive)
+is refused, and that write error causes MD to kick out the drive.  And
+the pending sector is also left unfixed.
+
+> Given all this, it seems to me that I should now set the hangcheck
+> timer to something greater than drive timeout (180 seconds).  Does
+> that sound right?  Otherwise, linux will kill the rewrite again, no?
+
+In and of itself, waiting on I/O is not a hang.  So it should not be
+applicable.
+
+Phil
