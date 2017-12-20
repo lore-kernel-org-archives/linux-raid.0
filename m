@@ -1,160 +1,86 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH 1/3] mdadm: improve the dlm locking mechanism for
- clustered raid
-Date: Wed, 20 Dec 2017 11:25:35 +0800
-Message-ID: <9fb897c4-921a-a63d-0e8b-b002aa439116@suse.com>
-References: <20171213020040.3603-1-gqjiang@suse.com>
- <20171213020040.3603-2-gqjiang@suse.com>
- <59c96891-1e6e-30de-8881-52c357c30fd3@gmail.com>
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH] raid5-ppl: PPL support for disks with write-back cache
+ enabled
+Date: Thu, 21 Dec 2017 00:35:21 +0800
+Message-ID: <201712210051.48XorsHT%fengguang.wu@intel.com>
+References: <1513604700-1826-1-git-send-email-tomasz.majchrzak@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59c96891-1e6e-30de-8881-52c357c30fd3@gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <1513604700-1826-1-git-send-email-tomasz.majchrzak@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Cc: kbuild-all@01.org, linux-raid@vger.kernel.org, shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
+Hi Tomasz,
+
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on linus/master]
+[also build test WARNING on v4.15-rc4 next-20171220]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Tomasz-Majchrzak/raid5-ppl-PPL-support-for-disks-with-write-back-cache-enabled/20171220-181528
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
 
-On 12/18/2017 11:42 PM, Jes Sorensen wrote:
-> On 12/12/2017 09:00 PM, Guoqing Jiang wrote:
->> Previously, the dlm locking only protects several
->> functions which writes to superblock (update_super,
->> add_to_super and store_super), and we missed other
->> funcs such as add_internal_bitmap. We also need to
->> call the funcs which read superblock under the
->> locking protection to avoid consistent issue.
->>
->> So let's remove the dlm stuffs from super1.c, and
->> provide the locking mechanism to the main() except
->> assemble mode which will be handled in next commit.
->> And since we can identify it is a clustered raid or
->> not based on check the different conditions of each
->> mode, so the change should not have effect on native
->> array.
->>
->> And we improve the existed locking stuffs as follows:
->>
->> 1. replace ls_unlock with ls_unlock_wait since we
->> should return when unlock operation is complete.
->>
->> 2. inspired by lvm, let's also try to use the existed
->> lockspace first before creat a lockspace blindly if
->> the lockspace not released for some reason.
->>
->> 3. try more times before quit if EAGAIN happened for
->> locking.
->>
->> Reviewed-by: NeilBrown <neilb@suse.com>
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->> ---
->>   mdadm.c  | 20 ++++++++++++++++++++
->>   mdadm.h  |  8 +++++---
->>   super1.c | 42 -----------------------------------------
->>   util.c   | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++++----------
->>   4 files changed, 80 insertions(+), 55 deletions(-)
->>
->> diff --git a/mdadm.c b/mdadm.c
->> index 62d7ec34a17f..895a9706b1d9 100644
->> --- a/mdadm.c
->> +++ b/mdadm.c
->> @@ -57,6 +57,7 @@ int main(int argc, char *argv[])
->>   	struct mddev_dev *devlist = NULL;
->>   	struct mddev_dev **devlistend = & devlist;
->>   	struct mddev_dev *dv;
->> +	mdu_array_info_t array;
->>   	int devs_found = 0;
->>   	char *symlinks = NULL;
->>   	int grow_continue = 0;
->> @@ -103,6 +104,7 @@ int main(int argc, char *argv[])
->>   	FILE *outf;
->>   
->>   	int mdfd = -1;
->> +	int locked = 0;
->>   
->>   	srandom(time(0) ^ getpid());
->>   
->> @@ -1434,6 +1436,22 @@ int main(int argc, char *argv[])
->>   		/* --scan implied --brief unless -vv */
->>   		c.brief = 1;
->>   
->> +	if (mode == CREATE) {
->> +		if (s.bitmap_file && strcmp(s.bitmap_file, "clustered") == 0) {
->> +			locked = lock_cluster();
->> +			if (locked != 1)
->> +				exit(1);
->> +		}
->> +	} else if (mode == MANAGE || mode == GROW || mode == INCREMENTAL) {
->> +		if (!md_get_array_info(mdfd, &array)) {
->> +			if (array.state & (1 << MD_SB_CLUSTERED)) {
->> +				locked = lock_cluster();
->> +				if (locked != 1)
->> +					exit(1);
->> +			}
->> +		}
->> +	}
->> +
-> I like the switch to having more generic functions handling this rather
-> than open coding things too much. However the above still seems to be a
-> lot of multi case backwards hoops jumping.
+sparse warnings: (new ones prefixed by >>)
 
-Yes as you said,  we can't earn more benefit by change it to switch.
 
-> Anything we can do to simplify this?
+vim +635 drivers/md/raid5-ppl.c
 
-I find we already have the switch part after them.
+   619	
+   620	static void ppl_do_flush(struct ppl_io_unit *io)
+   621	{
+   622		struct ppl_log *log = io->log;
+   623		struct ppl_conf *ppl_conf = log->ppl_conf;
+   624		struct r5conf *conf = ppl_conf->mddev->private;
+   625		int raid_disks = conf->raid_disks;
+   626		int flushed_disks = 0;
+   627		int i;
+   628	
+   629		atomic_set(&io->pending_flushes, raid_disks);
+   630	
+   631		for_each_set_bit(i, &log->disk_flush_bitmap, raid_disks) {
+   632			struct md_rdev *rdev;
+   633	
+   634			rcu_read_lock();
+ > 635			rdev = rcu_dereference(conf->disks[i].rdev);
+   636			if (rdev && test_bit(Faulty, &rdev->flags))
+   637				rdev = NULL;
+   638			rcu_read_unlock();
+   639	
+   640			if (rdev) {
+   641				struct bio *bio;
+   642				char b[BDEVNAME_SIZE];
+   643	
+   644				bio = bio_alloc_bioset(GFP_NOIO, 0, ppl_conf->flush_bs);
+   645				bio_set_dev(bio, rdev->bdev);
+   646				bio->bi_private = io;
+   647				bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
+   648				bio->bi_end_io = ppl_flush_endio;
+   649	
+   650				pr_debug("%s: dev: %s\n", __func__,
+   651					 bio_devname(bio, b));
+   652	
+   653				submit_bio(bio);
+   654				flushed_disks++;
+   655			}
+   656		}
+   657	
+   658		log->disk_flush_bitmap = 0;
+   659	
+   660		for (i = flushed_disks ; i < raid_disks; i++) {
+   661			if (atomic_dec_and_test(&io->pending_flushes))
+   662				ppl_io_unit_finished(io);
+   663		}
+   664	}
+   665	
 
-  	switch(mode) {
-  	case MANAGE:
-  		/* readonly, add/remove, readwrite, runstop */
-
-Maybe it is better to move them to above existed switch section,
-what do you think about it?
-
->> +static int dlm_lockid = 0;
->> +int lock_cluster(void)
->> +{
->> +	if (dlm_funs_ready()) {
->> +		int rv;
->> +
->> +		rv = cluster_get_dlmlock(&dlm_lockid);
->> +		if (rv) {
->> +			pr_err("failed to lock cluster\n");
->> +			return -1;
->> +		}
->> +		return 1;
->> +	}
->> +	pr_err("Something wrong with dlm library (libdlm_lt.so.3)\n");
-> Please don't refer explicitly to the soname of a library like this. It
-> is not a good error message.
-
-NP, I will remove it.
-
->
->> +	return 0;
->> +}
->> +
->> +void unlock_cluster(void)
->> +{
->> +	if (dlm_lockid != 0 && dlm_funs_ready()) {
->> +		int rv;
->> +
->> +		rv = cluster_release_dlmlock(dlm_lockid);
->> +		if (rv)
->> +			pr_err("failed to unlock cluster\n");
->> +	}
->> +}
->>
-> In addition, I don't like the use of a global variable to store this.
-> While the app isn't multithreaded it's still ugly, why not just return
-> the lockid itself as an indicator? There must be a known error value for it.
-
-Hmm, since the lockid just get the value from dlm_lock_res->lksb.sb_lkid,
-so perhaps we can remove it by just use sb_lkid directly.
-
-Thanks & Regards,
-Guoqing
-
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
