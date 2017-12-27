@@ -1,118 +1,499 @@
-From: bingjingc <bingjingc@synology.com>
-Subject: [PATCH] md/md: replace confusing resync progress 99.9% with new
- wording
-Date: Wed, 27 Dec 2017 13:50:42 +0800
-Message-ID: <e70cb5ce6103a49b765fb1f93a197342@synology.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
+Subject: [PATCH v2] raid5-ppl: PPL support for disks with write-back cache enabled
+Date: Wed, 27 Dec 2017 10:31:40 +0100
+Message-ID: <1514367100-24494-1-git-send-email-tomasz.majchrzak@intel.com>
+References: <20171222180913.ky6wmxjnswjs4a4s@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20171222180913.ky6wmxjnswjs4a4s@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org
+Cc: shli@kernel.org, Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 List-Id: linux-raid.ids
 
+In order to provide data consistency with PPL for disks with write-back
+cache enabled all data has to be flushed to disks before next PPL
+entry. The disks to be flushed are marked in the bitmap. It's modified
+under a mutex and it's only read after PPL io unit is submitted.
 
-When any sync action is finishing or interrupted, the progress will
-show 99.9% before the sync thread is reaped. Many reporters has asked
-what happened to the last blocks. It might be a confusing meaning for
-users because the progress will be backward after the interrupted task
-is restarted.
+A limitation of 64 disks in the array has been introduced to keep data
+structures and implementation simple. RAID5 arrays with so many disks are
+not likely due to high risk of multiple disks failure. Such restriction
+should not be a real life limitation.
 
-Take a raid5 reshape for example:
-mdadm -C --assume-clean /dev/md0 -l5 -n3 /dev/loop[012]
-echo 2000 > /proc/sys/dev/raid/speed_limit_max
-echo 1000 > /proc/sys/dev/raid/speed_limit_min # slow down the speed
-mdadm /dev/md0 -a /dev/loop3
-mdadm /dev/md0 --grow -n4
-while true
-do
-	mdadm -S /dev/md0
-	sleep 3
-	mdadm -A /dev/md0 /dev/loop[0123]
-done
+With write-back cache disabled next PPL entry is submitted when data write
+for current one completes. Data flush defers next log submission so trigger
+it when there are no stripes for handling found.
 
-And you can see the fake 99.9% progress by the following command:
-> while true; do cat /proc/mdstat | grep reshape; done
+As PPL assures all data is flushed to disk at request completion, just
+acknowledge flush request when PPL is enabled.
 
-This confusing state can be fixed by exposing the real state to users.
-And I also correct the sync action type for display.
-
-Reported-by: Edwin Lin <edwinlin@synology.com>
-Reviewed-by: Allen Peng <allenpeng@synology.com>
-Signed-off-by: BingJing Chang <bingjingc@synology.com>
+Signed-off-by: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
 ---
-  drivers/md/md.c | 25 +++++++++++++++----------
-  1 file changed, 15 insertions(+), 10 deletions(-)
+ Documentation/md/raid5-ppl.txt |   7 +-
+ drivers/md/md.c                |   5 +-
+ drivers/md/md.h                |   1 +
+ drivers/md/raid5-cache.c       |   5 --
+ drivers/md/raid5-log.h         |  29 +++++++
+ drivers/md/raid5-ppl.c         | 167 ++++++++++++++++++++++++++++++++++++++---
+ drivers/md/raid5.c             |   6 +-
+ 7 files changed, 195 insertions(+), 25 deletions(-)
 
+v2:
+	rdev not used outside of rcu lock
+	locking explained in commit message
+	disk number limitation explained in doc and commit message
+
+diff --git a/Documentation/md/raid5-ppl.txt b/Documentation/md/raid5-ppl.txt
+index 127072b..bfa0925 100644
+--- a/Documentation/md/raid5-ppl.txt
++++ b/Documentation/md/raid5-ppl.txt
+@@ -39,6 +39,7 @@ case the behavior is the same as in plain raid5.
+ PPL is available for md version-1 metadata and external (specifically IMSM)
+ metadata arrays. It can be enabled using mdadm option --consistency-policy=ppl.
+ 
+-Currently, volatile write-back cache should be disabled on all member drives
+-when using PPL. Otherwise it cannot guarantee consistency in case of power
+-failure.
++There is a limitation of maximum 64 disks in the array for PPL. It allows to
++keep data structures and implementation simple. RAID5 arrays with so many disks
++are not likely due to high risk of multiple disks failure. Such restriction
++should not be a real life limitation.
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4e4dee0..74106c7 100644
+index a71adb3..1b5c9af2 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7593,6 +7593,14 @@ static int status_resync(struct seq_file *seq, 
-struct mddev *mddev)
-  	sector_t rt;
-  	int scale;
-  	unsigned int per_milli;
-+	char *sync_action;
+@@ -711,7 +711,7 @@ static struct md_rdev *find_rdev(struct mddev *mddev, dev_t dev)
+ 	return NULL;
+ }
+ 
+-static struct md_rdev *find_rdev_rcu(struct mddev *mddev, dev_t dev)
++struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev)
+ {
+ 	struct md_rdev *rdev;
+ 
+@@ -721,6 +721,7 @@ static struct md_rdev *find_rdev_rcu(struct mddev *mddev, dev_t dev)
+ 
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(md_find_rdev_rcu);
+ 
+ static struct md_personality *find_pers(int level, char *clevel)
+ {
+@@ -7010,7 +7011,7 @@ static int set_disk_faulty(struct mddev *mddev, dev_t dev)
+ 		return -ENODEV;
+ 
+ 	rcu_read_lock();
+-	rdev = find_rdev_rcu(mddev, dev);
++	rdev = md_find_rdev_rcu(mddev, dev);
+ 	if (!rdev)
+ 		err =  -ENODEV;
+ 	else {
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index be8f72a..58cd20a 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -710,6 +710,7 @@ extern struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ extern void md_update_sb(struct mddev *mddev, int force);
+ extern void md_kick_rdev_from_array(struct md_rdev * rdev);
+ struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
++struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
+ 
+ static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
+ {
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index f259a5f..3b1f3d6 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1111,9 +1111,6 @@ void r5l_write_stripe_run(struct r5l_log *log)
+ 
+ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
+ {
+-	if (!log)
+-		return -ENODEV;
+-
+ 	if (log->r5c_journal_mode == R5C_JOURNAL_MODE_WRITE_THROUGH) {
+ 		/*
+ 		 * in write through (journal only)
+@@ -1592,8 +1589,6 @@ void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
+ void r5l_quiesce(struct r5l_log *log, int quiesce)
+ {
+ 	struct mddev *mddev;
+-	if (!log)
+-		return;
+ 
+ 	if (quiesce) {
+ 		/* make sure r5l_write_super_and_discard_space exits */
+diff --git a/drivers/md/raid5-log.h b/drivers/md/raid5-log.h
+index 3860041..0c76bce 100644
+--- a/drivers/md/raid5-log.h
++++ b/drivers/md/raid5-log.h
+@@ -43,6 +43,7 @@ extern void r5c_update_on_rdev_error(struct mddev *mddev,
+ extern void ppl_write_stripe_run(struct r5conf *conf);
+ extern void ppl_stripe_write_finished(struct stripe_head *sh);
+ extern int ppl_modify_log(struct r5conf *conf, struct md_rdev *rdev, bool add);
++extern void ppl_quiesce(struct r5conf *conf, int quiesce);
+ 
+ static inline bool raid5_has_ppl(struct r5conf *conf)
+ {
+@@ -88,6 +89,34 @@ static inline void log_write_stripe_run(struct r5conf *conf)
+ 		ppl_write_stripe_run(conf);
+ }
+ 
++static inline void log_flush_stripe_to_raid(struct r5conf *conf)
++{
++	if (conf->log)
++		r5l_flush_stripe_to_raid(conf->log);
++	else if (raid5_has_ppl(conf))
++		ppl_write_stripe_run(conf);
++}
 +
-+	sync_action = (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
-+		"reshape" :
-+		(test_bit(MD_RECOVERY_CHECK, &mddev->recovery) ?
-+		"check" :
-+		(test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
-+		"resync" : "recovery")));
-
-  	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
-  	    test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-@@ -7602,9 +7610,11 @@ static int status_resync(struct seq_file *seq, 
-struct mddev *mddev)
-
-  	resync = mddev->curr_resync;
-  	if (resync <= 3) {
--		if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-+		if (test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
-  			/* Still cleaning up */
--			resync = max_sectors;
-+			seq_printf(seq, "\t%s=CLEANING UP", sync_action);
-+			return 1;
++static inline int log_handle_flush_request(struct r5conf *conf, struct bio *bio)
++{
++	int ret = -ENODEV;
++
++	if (conf->log)
++		ret = r5l_handle_flush_request(conf->log, bio);
++	else if (raid5_has_ppl(conf))
++		ret = 0;
++
++	return ret;
++}
++
++static inline void log_quiesce(struct r5conf *conf, int quiesce)
++{
++	if (conf->log)
++		r5l_quiesce(conf->log, quiesce);
++	else if (raid5_has_ppl(conf))
++		ppl_quiesce(conf, quiesce);
++}
++
+ static inline void log_exit(struct r5conf *conf)
+ {
+ 	if (conf->log)
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 628c0bf..2764c22 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -85,6 +85,9 @@
+  * (for a single member disk). New io_units are added to the end of the list
+  * and the first io_unit is submitted, if it is not submitted already.
+  * The current io_unit accepting new stripes is always at the end of the list.
++ *
++ * If write-back cache is enabled for any of the disks in the array, its data
++ * must be flushed before next io_unit is submitted.
+  */
+ 
+ #define PPL_SPACE_SIZE (128 * 1024)
+@@ -104,6 +107,7 @@ struct ppl_conf {
+ 	struct kmem_cache *io_kc;
+ 	mempool_t *io_pool;
+ 	struct bio_set *bs;
++	struct bio_set *flush_bs;
+ 
+ 	/* used only for recovery */
+ 	int recovered_entries;
+@@ -128,6 +132,8 @@ struct ppl_log {
+ 	sector_t next_io_sector;
+ 	unsigned int entry_space;
+ 	bool use_multippl;
++	bool wb_cache_on;
++	unsigned long disk_flush_bitmap;
+ };
+ 
+ #define PPL_IO_INLINE_BVECS 32
+@@ -145,6 +151,7 @@ struct ppl_io_unit {
+ 
+ 	struct list_head stripe_list;	/* stripes added to the io_unit */
+ 	atomic_t pending_stripes;	/* how many stripes not written to raid */
++	atomic_t pending_flushes;	/* how many disk flushes are in progress */
+ 
+ 	bool submitted;			/* true if write to log started */
+ 
+@@ -249,6 +256,7 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
+ 	INIT_LIST_HEAD(&io->log_sibling);
+ 	INIT_LIST_HEAD(&io->stripe_list);
+ 	atomic_set(&io->pending_stripes, 0);
++	atomic_set(&io->pending_flushes, 0);
+ 	bio_init(&io->bio, io->biovec, PPL_IO_INLINE_BVECS);
+ 
+ 	pplhdr = page_address(io->header_page);
+@@ -475,7 +483,18 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
+ 	if (log->use_multippl)
+ 		log->next_io_sector += (PPL_HEADER_SIZE + io->pp_size) >> 9;
+ 
++	WARN_ON(log->disk_flush_bitmap != 0);
++
+ 	list_for_each_entry(sh, &io->stripe_list, log_list) {
++		for (i = 0; i < sh->disks; i++) {
++			struct r5dev *dev = &sh->dev[i];
++
++			if ((ppl_conf->child_logs[i].wb_cache_on) &&
++			    (test_bit(R5_Wantwrite, &dev->flags))) {
++				set_bit(i, &log->disk_flush_bitmap);
++			}
 +		}
-  	} else if (resync > max_sectors)
-  		resync = max_sectors;
-  	else
-@@ -7612,13 +7622,13 @@ static int status_resync(struct seq_file *seq, 
-struct mddev *mddev)
-
-  	if (resync == 0) {
-  		if (mddev->recovery_cp < MaxSector) {
--			seq_printf(seq, "\tresync=PENDING");
-+			seq_printf(seq, "\t%s=PENDING", sync_action);
-  			return 1;
-  		}
-  		return 0;
-  	}
-  	if (resync < 3) {
--		seq_printf(seq, "\tresync=DELAYED");
-+		seq_printf(seq, "\t%s=DELAYED", sync_action);
-  		return 1;
-  	}
-
-@@ -7648,12 +7658,7 @@ static int status_resync(struct seq_file *seq, 
-struct mddev *mddev)
-  		seq_printf(seq, "] ");
-  	}
-  	seq_printf(seq, " %s =%3u.%u%% (%llu/%llu)",
--		   (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)?
--		    "reshape" :
--		    (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)?
--		     "check" :
--		     (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
--		      "resync" : "recovery"))),
-+		   sync_action,
-  		   per_milli/10, per_milli % 10,
-  		   (unsigned long long) resync/2,
-  		   (unsigned long long) max_sectors/2);
++
+ 		/* entries for full stripe writes have no partial parity */
+ 		if (test_bit(STRIPE_FULL_WRITE, &sh->state))
+ 			continue;
+@@ -540,6 +559,7 @@ static void ppl_io_unit_finished(struct ppl_io_unit *io)
+ {
+ 	struct ppl_log *log = io->log;
+ 	struct ppl_conf *ppl_conf = log->ppl_conf;
++	struct r5conf *conf = ppl_conf->mddev->private;
+ 	unsigned long flags;
+ 
+ 	pr_debug("%s: seq: %llu\n", __func__, io->seq);
+@@ -565,6 +585,112 @@ static void ppl_io_unit_finished(struct ppl_io_unit *io)
+ 	spin_unlock(&ppl_conf->no_mem_stripes_lock);
+ 
+ 	local_irq_restore(flags);
++
++	wake_up(&conf->wait_for_quiescent);
++}
++
++static void ppl_flush_endio(struct bio *bio)
++{
++	struct ppl_io_unit *io = bio->bi_private;
++	struct ppl_log *log = io->log;
++	struct ppl_conf *ppl_conf = log->ppl_conf;
++	struct r5conf *conf = ppl_conf->mddev->private;
++	char b[BDEVNAME_SIZE];
++
++	pr_debug("%s: dev: %s\n", __func__, bio_devname(bio, b));
++
++	if (bio->bi_status) {
++		struct md_rdev *rdev;
++
++		rcu_read_lock();
++		rdev = md_find_rdev_rcu(conf->mddev, bio_dev(bio));
++		if (rdev)
++			md_error(rdev->mddev, rdev);
++		rcu_read_unlock();
++	}
++
++	bio_put(bio);
++
++	if (atomic_dec_and_test(&io->pending_flushes)) {
++		ppl_io_unit_finished(io);
++		md_wakeup_thread(conf->mddev->thread);
++	}
++}
++
++static void ppl_do_flush(struct ppl_io_unit *io)
++{
++	struct ppl_log *log = io->log;
++	struct ppl_conf *ppl_conf = log->ppl_conf;
++	struct r5conf *conf = ppl_conf->mddev->private;
++	int raid_disks = conf->raid_disks;
++	int flushed_disks = 0;
++	int i;
++
++	atomic_set(&io->pending_flushes, raid_disks);
++
++	for_each_set_bit(i, &log->disk_flush_bitmap, raid_disks) {
++		struct md_rdev *rdev;
++		struct block_device *bdev = NULL;
++
++		rcu_read_lock();
++		rdev = rcu_dereference(conf->disks[i].rdev);
++		if (rdev && !test_bit(Faulty, &rdev->flags))
++			bdev = rdev->bdev;
++		rcu_read_unlock();
++
++		if (bdev) {
++			struct bio *bio;
++			char b[BDEVNAME_SIZE];
++
++			bio = bio_alloc_bioset(GFP_NOIO, 0, ppl_conf->flush_bs);
++			bio_set_dev(bio, bdev);
++			bio->bi_private = io;
++			bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
++			bio->bi_end_io = ppl_flush_endio;
++
++			pr_debug("%s: dev: %s\n", __func__,
++				 bio_devname(bio, b));
++
++			submit_bio(bio);
++			flushed_disks++;
++		}
++	}
++
++	log->disk_flush_bitmap = 0;
++
++	for (i = flushed_disks ; i < raid_disks; i++) {
++		if (atomic_dec_and_test(&io->pending_flushes))
++			ppl_io_unit_finished(io);
++	}
++}
++
++static inline bool ppl_no_io_unit_submitted(struct r5conf *conf,
++					    struct ppl_log *log)
++{
++	struct ppl_io_unit *io;
++
++	io = list_first_entry_or_null(&log->io_list, struct ppl_io_unit,
++				      log_sibling);
++
++	return !io || !io->submitted;
++}
++
++void ppl_quiesce(struct r5conf *conf, int quiesce)
++{
++	struct ppl_conf *ppl_conf = conf->log_private;
++	int i;
++
++	if (quiesce) {
++		for (i = 0; i < ppl_conf->count; i++) {
++			struct ppl_log *log = &ppl_conf->child_logs[i];
++
++			spin_lock_irq(&log->io_list_lock);
++			wait_event_lock_irq(conf->wait_for_quiescent,
++					    ppl_no_io_unit_submitted(conf, log),
++					    log->io_list_lock);
++			spin_unlock_irq(&log->io_list_lock);
++		}
++	}
+ }
+ 
+ void ppl_stripe_write_finished(struct stripe_head *sh)
+@@ -574,8 +700,12 @@ void ppl_stripe_write_finished(struct stripe_head *sh)
+ 	io = sh->ppl_io;
+ 	sh->ppl_io = NULL;
+ 
+-	if (io && atomic_dec_and_test(&io->pending_stripes))
+-		ppl_io_unit_finished(io);
++	if (io && atomic_dec_and_test(&io->pending_stripes)) {
++		if (io->log->disk_flush_bitmap)
++			ppl_do_flush(io);
++		else
++			ppl_io_unit_finished(io);
++	}
+ }
+ 
+ static void ppl_xor(int size, struct page *page1, struct page *page2)
+@@ -1108,6 +1238,8 @@ static void __ppl_exit_log(struct ppl_conf *ppl_conf)
+ 
+ 	if (ppl_conf->bs)
+ 		bioset_free(ppl_conf->bs);
++	if (ppl_conf->flush_bs)
++		bioset_free(ppl_conf->flush_bs);
+ 	mempool_destroy(ppl_conf->io_pool);
+ 	kmem_cache_destroy(ppl_conf->io_kc);
+ 
+@@ -1173,6 +1305,8 @@ static int ppl_validate_rdev(struct md_rdev *rdev)
+ 
+ static void ppl_init_child_log(struct ppl_log *log, struct md_rdev *rdev)
+ {
++	struct request_queue *q;
++
+ 	if ((rdev->ppl.size << 9) >= (PPL_SPACE_SIZE +
+ 				      PPL_HEADER_SIZE) * 2) {
+ 		log->use_multippl = true;
+@@ -1185,6 +1319,10 @@ static void ppl_init_child_log(struct ppl_log *log, struct md_rdev *rdev)
+ 				   PPL_HEADER_SIZE;
+ 	}
+ 	log->next_io_sector = rdev->ppl.sector;
++
++	q = bdev_get_queue(rdev->bdev);
++	if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
++		log->wb_cache_on = true;
+ }
+ 
+ int ppl_init_log(struct r5conf *conf)
+@@ -1192,8 +1330,8 @@ int ppl_init_log(struct r5conf *conf)
+ 	struct ppl_conf *ppl_conf;
+ 	struct mddev *mddev = conf->mddev;
+ 	int ret = 0;
++	int max_disks;
+ 	int i;
+-	bool need_cache_flush = false;
+ 
+ 	pr_debug("md/raid:%s: enabling distributed Partial Parity Log\n",
+ 		 mdname(conf->mddev));
+@@ -1219,6 +1357,14 @@ int ppl_init_log(struct r5conf *conf)
+ 		return -EINVAL;
+ 	}
+ 
++	max_disks = FIELD_SIZEOF(struct ppl_log, disk_flush_bitmap) *
++		BITS_PER_BYTE;
++	if (conf->raid_disks > max_disks) {
++		pr_warn("md/raid:%s PPL doesn't support over %d disks in the array\n",
++			mdname(mddev), max_disks);
++		return -EINVAL;
++	}
++
+ 	ppl_conf = kzalloc(sizeof(struct ppl_conf), GFP_KERNEL);
+ 	if (!ppl_conf)
+ 		return -ENOMEM;
+@@ -1244,6 +1390,12 @@ int ppl_init_log(struct r5conf *conf)
+ 		goto err;
+ 	}
+ 
++	ppl_conf->flush_bs = bioset_create(conf->raid_disks, 0, 0);
++	if (!ppl_conf->flush_bs) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
+ 	ppl_conf->count = conf->raid_disks;
+ 	ppl_conf->child_logs = kcalloc(ppl_conf->count, sizeof(struct ppl_log),
+ 				       GFP_KERNEL);
+@@ -1275,23 +1427,14 @@ int ppl_init_log(struct r5conf *conf)
+ 		log->rdev = rdev;
+ 
+ 		if (rdev) {
+-			struct request_queue *q;
+-
+ 			ret = ppl_validate_rdev(rdev);
+ 			if (ret)
+ 				goto err;
+ 
+-			q = bdev_get_queue(rdev->bdev);
+-			if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+-				need_cache_flush = true;
+ 			ppl_init_child_log(log, rdev);
+ 		}
+ 	}
+ 
+-	if (need_cache_flush)
+-		pr_warn("md/raid:%s: Volatile write-back cache should be disabled on all member drives when using PPL!\n",
+-			mdname(mddev));
+-
+ 	/* load and possibly recover the logs from the member disks */
+ 	ret = ppl_load(ppl_conf);
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5a2a29b..50d0114 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5563,7 +5563,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	bool do_flush = false;
+ 
+ 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
+-		int ret = r5l_handle_flush_request(conf->log, bi);
++		int ret = log_handle_flush_request(conf, bi);
+ 
+ 		if (ret == 0)
+ 			return true;
+@@ -6168,7 +6168,7 @@ static int handle_active_stripes(struct r5conf *conf, int group,
+ 				break;
+ 		if (i == NR_STRIPE_HASH_LOCKS) {
+ 			spin_unlock_irq(&conf->device_lock);
+-			r5l_flush_stripe_to_raid(conf->log);
++			log_flush_stripe_to_raid(conf);
+ 			spin_lock_irq(&conf->device_lock);
+ 			return batch_size;
+ 		}
+@@ -8060,7 +8060,7 @@ static void raid5_quiesce(struct mddev *mddev, int quiesce)
+ 		wake_up(&conf->wait_for_overlap);
+ 		unlock_all_device_hash_locks_irq(conf);
+ 	}
+-	r5l_quiesce(conf->log, quiesce);
++	log_quiesce(conf, quiesce);
+ }
+ 
+ static void *raid45_takeover_raid0(struct mddev *mddev, int level)
 -- 
-2.7.4
+1.8.3.1
 
