@@ -1,48 +1,99 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v5 03/78] xarray: Add the xa_lock to the radix_tree_root
-Date: Tue, 26 Dec 2017 19:58:15 -0800
-Message-ID: <20171227035815.GD24828@bombadil.infradead.org>
-References: <20171215220450.7899-1-willy@infradead.org>
- <20171215220450.7899-4-willy@infradead.org>
- <20171226165440.tv6inwa2fgk3bfy6@node.shutemov.name>
- <20171227034340.GC24828@bombadil.infradead.org>
+From: bingjingc <bingjingc@synology.com>
+Subject: [PATCH] md/raid5: fix a potential deadlock of raid5 reshape
+Date: Wed, 27 Dec 2017 13:47:56 +0800
+Message-ID: <612ff962d2c31459a88fedad314f19da@synology.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20171227034340.GC24828@bombadil.infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: shli@kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 26, 2017 at 07:43:40PM -0800, Matthew Wilcox wrote:
->     Also add the xa_lock() and xa_unlock() family of wrappers to make it
->     easier to use the lock.  If we could rely on -fplan9-extensions in
->     the compiler, we could avoid all of this syntactic sugar, but that
->     wasn't added until gcc 4.6.
 
-Oh, in case anyone's wondering, here's how I'd do it with plan9 extensions:
+There is a potential deadlock if mount/umount happens when
+raid5_finish_reshape() tries to grow the size of emulated disk.
 
-struct xarray {
-        spinlock_t;
-        int xa_flags;
-        void *xa_head;
-};
+How the deadlock happens?
+1) The raid5 resync thread finished reshape (expanding array).
+2) The mount or umount thread holds VFS sb->s_umount lock and tries to
+    write through critical data into raid5 emulated block device. So it
+    waits for raid5 kernel thread handling stripes in order to finish it
+    I/Os.
+3) In the routine of raid5 kernel thread, md_check_recovery() will be
+    called first in order to reap the raid5 resync thread. That is,
+    raid5_finish_reshape() will be called. In this function, it will try
+    to update conf and call VFS revalidate_disk() to grow the raid5
+    emulated block device. It will try to acquire VFS sb->s_umount lock.
+The raid5 kernel thread cannot continue, so no one can handle mount/
+umount I/Os (stripes). Once the write-through I/Os cannot be finished,
+mount/umount will not release sb->s_umount lock. The deadlock happens.
 
-...
-        spin_lock_irqsave(&mapping->pages, flags);
-        __delete_from_page_cache(page, NULL);
-        spin_unlock_irqrestore(&mapping->pages, flags);
-...
+The raid5 kernel thread is an emulated block device. It is responible to
+handle I/Os (stripes) from upper layers. The emulated block device
+should not request any I/Os on itself. That is, it should not call VFS
+layer functions. (If it did, it will try to acquire VFS locks to
+guarantee the I/Os sequence.) So we have the resync thread to send
+resync I/O requests and to wait for the results.
 
-The plan9 extensions permit passing a pointer to a struct which has an
-unnamed element to a function which is expecting a pointer to the type
-of that element.  The compiler does any necessary arithmetic to produce 
-a pointer.  It's exactly as if I had written:
+For solving this potential deadlock, we can put the size growth of the
+emulated block device as the final step of reshape thread.
 
-        spin_lock_irqsave(&mapping->pages.xa_lock, flags);
-        __delete_from_page_cache(page, NULL);
-        spin_unlock_irqrestore(&mapping->pages.xa_lock, flags);
+Reported-by: Alex Wu <alexwu@synology.com>
+Reviewed-by: Alex Wu <alexwu@synology.com>
+Reviewed-by: Chung-Chiang Cheng <cccheng@synology.com>
+Signed-off-by: BingJing Chang <bingjingc@synology.com>
+---
+  drivers/md/md.c    | 13 +++++++++++++
+  drivers/md/raid5.c |  8 +-------
+  2 files changed, 14 insertions(+), 7 deletions(-)
 
-More details here: https://9p.io/sys/doc/compiler.html
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4e4dee0..77d6d85 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8527,6 +8527,19 @@ void md_do_sync(struct md_thread *thread)
+  	 * raid */
+  	set_mask_bits(&mddev->sb_flags, 0,
+  		      BIT(MD_SB_CHANGE_PENDING) | BIT(MD_SB_CHANGE_DEVS));
++
++	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
++			!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
++			mddev->delta_disks > 0 &&
++			mddev->pers->finish_reshape &&
++			mddev->pers->size &&
++			mddev->queue) {
++		mddev_lock_nointr(mddev);
++		md_set_array_sectors(mddev, mddev->pers->size(mddev, 0, 0));
++		mddev_unlock(mddev);
++		set_capacity(mddev->gendisk, mddev->array_sectors);
++		revalidate_disk(mddev->gendisk);
++	}
+
+  	spin_lock(&mddev->lock);
+  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 98ce427..0f68faa 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8001,13 +8001,7 @@ static void raid5_finish_reshape(struct mddev 
+*mddev)
+
+  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+
+-		if (mddev->delta_disks > 0) {
+-			md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
+-			if (mddev->queue) {
+-				set_capacity(mddev->gendisk, mddev->array_sectors);
+-				revalidate_disk(mddev->gendisk);
+-			}
+-		} else {
++		if (mddev->delta_disks <= 0) {
+  			int d;
+  			spin_lock_irq(&conf->device_lock);
+  			mddev->degraded = raid5_calc_degraded(conf);
+-- 
+2.7.4
+
