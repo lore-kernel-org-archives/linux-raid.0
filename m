@@ -1,45 +1,73 @@
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH v5 06/78] xarray: Change definition of sibling entries
-Date: Wed, 27 Dec 2017 13:26:00 +0300
-Message-ID: <20171227102600.vruihaqugwxa25sp@node.shutemov.name>
-References: <20171215220450.7899-1-willy@infradead.org>
- <20171215220450.7899-7-willy@infradead.org>
- <20171226172153.pylgdefajcrthe3b@node.shutemov.name>
- <20171227031326.GB24828@bombadil.infradead.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: 3-way mirror to RAID-6
+Date: Wed, 27 Dec 2017 09:28:50 -0500
+Message-ID: <063586b9-6b63-9afe-9edc-dd3a73adf1b4@turmel.org>
+References: <CAJH6TXg=uCQMmzSQPHC885naZj3cFOZx2oyx462mCBof9NeU+w@mail.gmail.com>
+ <87incu79uw.fsf@notabene.neil.brown.name>
+ <CAJH6TXh_u08K+w-na_YQDh0WZWOQ8o14=SEzQmwPVrGPbkWasA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20171227031326.GB24828@bombadil.infradead.org>
-Sender: owner-linux-mm@kvack.org
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAJH6TXh_u08K+w-na_YQDh0WZWOQ8o14=SEzQmwPVrGPbkWasA@mail.gmail.com>
+Content-Language: en-GB
+Sender: linux-raid-owner@vger.kernel.org
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, NeilBrown <neilb@suse.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 26, 2017 at 07:13:26PM -0800, Matthew Wilcox wrote:
-> On Tue, Dec 26, 2017 at 08:21:53PM +0300, Kirill A. Shutemov wrote:
-> > > +/**
-> > > + * xa_is_internal() - Is the entry an internal entry?
-> > > + * @entry: Entry retrieved from the XArray
-> > > + *
-> > > + * Return: %true if the entry is an internal entry.
-> > > + */
-> > 
-> > What does it mean "internal entry"? Is it just a term for non-value and
-> > non-data pointer entry? Do we allow anybody besides xarray implementation to
-> > use internal entires?
-> > 
-> > Do we have it documented?
+On 12/27/2017 05:13 AM, Gandalf Corvotempesta wrote:
+> 2017-12-25 22:53 GMT+01:00 NeilBrown <neilb@suse.com>:
+>> I suggest you add the new device with "mdadm --add", then try the
+>> reshape with "mdadm --grow /dev/mdXXX --level=6 --raid-devices-4".
 > 
-> We do!  include/linux/radix-tree.h has it documented right now:
+> Ok.
 
-Looks good. Thanks.
+If that works, you're done.  But the designer of the code thinks it
+won't, so don't hold your breath.
 
--- 
- Kirill A. Shutemov
+>> It might not work quite that easily - I think you need to first convert
+>> the raid1 to a 2-way mirror, but that is easy enough
+>>
+>>  mdadm --grow /dev/mdxxx --raid-devices=2
+> 
+> Moving from a 3-way mirror to a 2-way mirror is not an issue.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I think you mean "is an issue" ....
+
+> What do you suggest ? Adding 3 more disks and creating a striped 3-way
+> mirror or reshaping to a 4-disks RAID-6?
+> 
+> Keep in mind that i'll never run anything with redundancy level < 2
+> and a simple mirror has only "1" as redundancy level (a striped mirror
+> is the same: only one disks could be lost in each mirror pair)
+
+.... based on this requirement of yours.
+
+You can't get there from here, at least not while running.  Converting
+from raid1 n=2 to any parity-based layout takes advantage of the fact
+that the data content of a simple mirror is identical to the data
+content of a raid4/5 n=2, since parity of one bit is the same bit.
+
+With some downtime, you could do the following:
+
+1) Unmount and/or deactivate your array (but leave the array running).
+
+2) Reduce your mirror from n=3 to n=2 and *remove* the newly spared
+member -- holding it in reserve in case of disaster.
+
+3) Add the new drive as a spare, then --grow to raid6 n=3.  *Wait* for
+the reshape to complete (restoring your desired redundancy within the
+array).
+
+4) Remount or re-activate your array and resume normal operations.
+
+5) Add the drive from (2) back as a spare (may have to
+--zero-superblock) and reshape from raid6 n=3 to raid6 n=4.
+
+There are no-downtime options possible if you have LVM on top of your
+array, and if you can add at least a fifth drive to the mix.
+
+Phil
+
+5) Wi
