@@ -1,34 +1,60 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Subject: Re: 3-way mirror to RAID-6
-Date: Wed, 27 Dec 2017 11:13:55 +0100
-Message-ID: <CAJH6TXh_u08K+w-na_YQDh0WZWOQ8o14=SEzQmwPVrGPbkWasA@mail.gmail.com>
-References: <CAJH6TXg=uCQMmzSQPHC885naZj3cFOZx2oyx462mCBof9NeU+w@mail.gmail.com>
- <87incu79uw.fsf@notabene.neil.brown.name>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH v5 03/78] xarray: Add the xa_lock to the radix_tree_root
+Date: Wed, 27 Dec 2017 13:17:18 +0300
+Message-ID: <20171227101718.o7ucns4garbsm5ju@node.shutemov.name>
+References: <20171215220450.7899-1-willy@infradead.org>
+ <20171215220450.7899-4-willy@infradead.org>
+ <20171226165440.tv6inwa2fgk3bfy6@node.shutemov.name>
+ <20171227034340.GC24828@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87incu79uw.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20171227034340.GC24828@bombadil.infradead.org>
+Sender: owner-linux-mm@kvack.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2017-12-25 22:53 GMT+01:00 NeilBrown <neilb@suse.com>:
-> I suggest you add the new device with "mdadm --add", then try the
-> reshape with "mdadm --grow /dev/mdXXX --level=6 --raid-devices-4".
+On Tue, Dec 26, 2017 at 07:43:40PM -0800, Matthew Wilcox wrote:
+> On Tue, Dec 26, 2017 at 07:54:40PM +0300, Kirill A. Shutemov wrote:
+> > On Fri, Dec 15, 2017 at 02:03:35PM -0800, Matthew Wilcox wrote:
+> > > From: Matthew Wilcox <mawilcox@microsoft.com>
+> > > 
+> > > This results in no change in structure size on 64-bit x86 as it fits in
+> > > the padding between the gfp_t and the void *.
+> > 
+> > The patch does more than described in the subject and commit message. At first
+> > I was confused why do you need to touch idr here. It took few minutes to figure
+> > it out.
+> > 
+> > Could you please add more into commit message about lockname and xa_ locking
+> > interface since you introduce it here?
+> 
+> Sure!  How's this?
+> 
+>     xarray: Add the xa_lock to the radix_tree_root
+>     
+>     This results in no change in structure size on 64-bit x86 as it fits in
+>     the padding between the gfp_t and the void *.
+>     
+>     Initialising the spinlock requires a name for the benefit of lockdep,
+>     so RADIX_TREE_INIT() now needs to know the name of the radix tree it's
+>     initialising, and so do IDR_INIT() and IDA_INIT().
+>     
+>     Also add the xa_lock() and xa_unlock() family of wrappers to make it
+>     easier to use the lock.  If we could rely on -fplan9-extensions in
+>     the compiler, we could avoid all of this syntactic sugar, but that
+>     wasn't added until gcc 4.6.
+> 
 
-Ok.
+Looks great, thanks.
 
-> It might not work quite that easily - I think you need to first convert
-> the raid1 to a 2-way mirror, but that is easy enough
->
->  mdadm --grow /dev/mdxxx --raid-devices=2
+-- 
+ Kirill A. Shutemov
 
-Moving from a 3-way mirror to a 2-way mirror is not an issue.
-
-What do you suggest ? Adding 3 more disks and creating a striped 3-way
-mirror or reshaping to a 4-disks RAID-6?
-
-Keep in mind that i'll never run anything with redundancy level < 2
-and a simple mirror has only "1" as redundancy level (a striped mirror
-is the same: only one disks could be lost in each mirror pair)
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
