@@ -1,13 +1,14 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH] md/raid5: fix a potential deadlock of raid5 reshape
-Date: Thu, 28 Dec 2017 15:59:10 +0800
-Message-ID: <3321c473-5d17-3065-08bc-b5e51f906383@suse.com>
-References: <612ff962d2c31459a88fedad314f19da@synology.com>
+Subject: Re: [PATCH] md/md: replace confusing resync progress 99.9% with new
+ wording
+Date: Thu, 28 Dec 2017 16:11:43 +0800
+Message-ID: <d861dbb9-cbac-1b96-9172-19e61e9ea318@suse.com>
+References: <e70cb5ce6103a49b765fb1f93a197342@synology.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <612ff962d2c31459a88fedad314f19da@synology.com>
+In-Reply-To: <e70cb5ce6103a49b765fb1f93a197342@synology.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: bingjingc <bingjingc@synology.com>, linux-raid@vger.kernel.org
@@ -16,101 +17,113 @@ List-Id: linux-raid.ids
 
 
 
-On 12/27/2017 01:47 PM, bingjingc wrote:
+On 12/27/2017 01:50 PM, bingjingc wrote:
 >
-> There is a potential deadlock if mount/umount happens when
-> raid5_finish_reshape() tries to grow the size of emulated disk.
+> When any sync action is finishing or interrupted, the progress will
+> show 99.9% before the sync thread is reaped. Many reporters has asked
+> what happened to the last blocks. It might be a confusing meaning for
+> users because the progress will be backward after the interrupted task
+> is restarted.
 >
-> How the deadlock happens?
-> 1) The raid5 resync thread finished reshape (expanding array).
-> 2) The mount or umount thread holds VFS sb->s_umount lock and tries to
->    write through critical data into raid5 emulated block device. So it
->    waits for raid5 kernel thread handling stripes in order to finish it
->    I/Os.
-> 3) In the routine of raid5 kernel thread, md_check_recovery() will be
->    called first in order to reap the raid5 resync thread. That is,
->    raid5_finish_reshape() will be called. In this function, it will try
->    to update conf and call VFS revalidate_disk() to grow the raid5
->    emulated block device. It will try to acquire VFS sb->s_umount lock.
-> The raid5 kernel thread cannot continue, so no one can handle mount/
-> umount I/Os (stripes). Once the write-through I/Os cannot be finished,
-> mount/umount will not release sb->s_umount lock. The deadlock happens.
+> Take a raid5 reshape for example:
+> mdadm -C --assume-clean /dev/md0 -l5 -n3 /dev/loop[012]
+> echo 2000 > /proc/sys/dev/raid/speed_limit_max
+> echo 1000 > /proc/sys/dev/raid/speed_limit_min # slow down the speed
+> mdadm /dev/md0 -a /dev/loop3
+> mdadm /dev/md0 --grow -n4
+> while true
+> do
+>     mdadm -S /dev/md0
+>     sleep 3
+>     mdadm -A /dev/md0 /dev/loop[0123]
+> done
 >
-> The raid5 kernel thread is an emulated block device. It is responible to
-> handle I/Os (stripes) from upper layers. The emulated block device
-> should not request any I/Os on itself. That is, it should not call VFS
-> layer functions. (If it did, it will try to acquire VFS locks to
-> guarantee the I/Os sequence.) So we have the resync thread to send
-> resync I/O requests and to wait for the results.
->
-> For solving this potential deadlock, we can put the size growth of the
-> emulated block device as the final step of reshape thread.
+> And you can see the fake 99.9% progress by the following command:
+>> while true; do cat /proc/mdstat | grep reshape; done
 
-Maybe another way to avoid the deadlock is to ensure the reshaping array
-can't be mount at all. One reason is, if the reshaping is finished, but 
-fs still
-don't know about  the new array size since metadata is not refreshed. Just
-my $0.02.
-
->
-> Reported-by: Alex Wu <alexwu@synology.com>
-> Reviewed-by: Alex Wu <alexwu@synology.com>
-> Reviewed-by: Chung-Chiang Cheng <cccheng@synology.com>
-> Signed-off-by: BingJing Chang <bingjingc@synology.com>
-> ---
->  drivers/md/md.c    | 13 +++++++++++++
->  drivers/md/raid5.c |  8 +-------
->  2 files changed, 14 insertions(+), 7 deletions(-)
-
-I think raid10 has the similar issue, so at least you need to change 
-raid10 either.
+Seems it happened when the reshaping is interrupted by issue stop array cmd,
+if so, why not just check MD_RECOVERY_INTR in status_resync()?
 
 Thanks,
 Guoqing
 
+>>
+>
+> This confusing state can be fixed by exposing the real state to users.
+> And I also correct the sync action type for display.
+>
+> Reported-by: Edwin Lin <edwinlin@synology.com>
+> Reviewed-by: Allen Peng <allenpeng@synology.com>
+> Signed-off-by: BingJing Chang <bingjingc@synology.com>
+> ---
+>  drivers/md/md.c | 25 +++++++++++++++----------
+>  1 file changed, 15 insertions(+), 10 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4e4dee0..77d6d85 100644
+> index 4e4dee0..74106c7 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -8527,6 +8527,19 @@ void md_do_sync(struct md_thread *thread)
->       * raid */
->      set_mask_bits(&mddev->sb_flags, 0,
->                BIT(MD_SB_CHANGE_PENDING) | BIT(MD_SB_CHANGE_DEVS));
+> @@ -7593,6 +7593,14 @@ static int status_resync(struct seq_file *seq, 
+> struct mddev *mddev)
+>      sector_t rt;
+>      int scale;
+>      unsigned int per_milli;
+> +    char *sync_action;
 > +
-> +    if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-> +            !test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-> +            mddev->delta_disks > 0 &&
-> +            mddev->pers->finish_reshape &&
-> +            mddev->pers->size &&
-> +            mddev->queue) {
-> +        mddev_lock_nointr(mddev);
-> +        md_set_array_sectors(mddev, mddev->pers->size(mddev, 0, 0));
-> +        mddev_unlock(mddev);
-> +        set_capacity(mddev->gendisk, mddev->array_sectors);
-> +        revalidate_disk(mddev->gendisk);
-> +    }
+> +    sync_action = (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
+> +        "reshape" :
+> +        (test_bit(MD_RECOVERY_CHECK, &mddev->recovery) ?
+> +        "check" :
+> +        (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
+> +        "resync" : "recovery")));
 >
->      spin_lock(&mddev->lock);
->      if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 98ce427..0f68faa 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8001,13 +8001,7 @@ static void raid5_finish_reshape(struct mddev 
-> *mddev)
+>      if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
+>          test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
+> @@ -7602,9 +7610,11 @@ static int status_resync(struct seq_file *seq, 
+> struct mddev *mddev)
 >
->      if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+>      resync = mddev->curr_resync;
+>      if (resync <= 3) {
+> -        if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+> +        if (test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
+>              /* Still cleaning up */
+> -            resync = max_sectors;
+> +            seq_printf(seq, "\t%s=CLEANING UP", sync_action);
+> +            return 1;
+> +        }
+>      } else if (resync > max_sectors)
+>          resync = max_sectors;
+>      else
+> @@ -7612,13 +7622,13 @@ static int status_resync(struct seq_file *seq, 
+> struct mddev *mddev)
 >
-> -        if (mddev->delta_disks > 0) {
-> -            md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
-> -            if (mddev->queue) {
-> -                set_capacity(mddev->gendisk, mddev->array_sectors);
-> -                revalidate_disk(mddev->gendisk);
-> -            }
-> -        } else {
-> +        if (mddev->delta_disks <= 0) {
->              int d;
->              spin_lock_irq(&conf->device_lock);
->              mddev->degraded = raid5_calc_degraded(conf);
+>      if (resync == 0) {
+>          if (mddev->recovery_cp < MaxSector) {
+> -            seq_printf(seq, "\tresync=PENDING");
+> +            seq_printf(seq, "\t%s=PENDING", sync_action);
+>              return 1;
+>          }
+>          return 0;
+>      }
+>      if (resync < 3) {
+> -        seq_printf(seq, "\tresync=DELAYED");
+> +        seq_printf(seq, "\t%s=DELAYED", sync_action);
+>          return 1;
+>      }
+>
+> @@ -7648,12 +7658,7 @@ static int status_resync(struct seq_file *seq, 
+> struct mddev *mddev)
+>          seq_printf(seq, "] ");
+>      }
+>      seq_printf(seq, " %s =%3u.%u%% (%llu/%llu)",
+> -           (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)?
+> -            "reshape" :
+> -            (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)?
+> -             "check" :
+> -             (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
+> -              "resync" : "recovery"))),
+> +           sync_action,
+>             per_milli/10, per_milli % 10,
+>             (unsigned long long) resync/2,
+>             (unsigned long long) max_sectors/2);
 
