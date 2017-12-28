@@ -1,129 +1,59 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH] md/md: replace confusing resync progress 99.9% with new
- wording
-Date: Thu, 28 Dec 2017 16:11:43 +0800
-Message-ID: <d861dbb9-cbac-1b96-9172-19e61e9ea318@suse.com>
-References: <e70cb5ce6103a49b765fb1f93a197342@synology.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: 3-way mirror to RAID-6
+Date: Thu, 28 Dec 2017 07:34:00 -0500
+Message-ID: <1f497643-0ad1-5037-207a-9c999dc79ccd@turmel.org>
+References: <CAJH6TXg=uCQMmzSQPHC885naZj3cFOZx2oyx462mCBof9NeU+w@mail.gmail.com>
+ <87incu79uw.fsf@notabene.neil.brown.name>
+ <CAJH6TXh_u08K+w-na_YQDh0WZWOQ8o14=SEzQmwPVrGPbkWasA@mail.gmail.com>
+ <063586b9-6b63-9afe-9edc-dd3a73adf1b4@turmel.org>
+ <CAJH6TXiqsd=Zs4t5qAEe19shJFgSAZ1W-95yT041H6OyLbKvfA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e70cb5ce6103a49b765fb1f93a197342@synology.com>
-Content-Language: en-US
+In-Reply-To: <CAJH6TXiqsd=Zs4t5qAEe19shJFgSAZ1W-95yT041H6OyLbKvfA@mail.gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: bingjingc <bingjingc@synology.com>, linux-raid@vger.kernel.org
-Cc: shli@kernel.org
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Cc: NeilBrown <neilb@suse.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 12/28/2017 03:33 AM, Gandalf Corvotempesta wrote:
+> Il mercoledì 27 dicembre 2017, Phil Turmel <philip@turmel.org
+> <mailto:philip@turmel.org>> ha scritto:
+> 
+>     I think you mean "is an issue" ....
+> 
+> 
+> No, is not an issue as long it's a temporary step...
 
+Ok.  Then:
 
-On 12/27/2017 01:50 PM, bingjingc wrote:
->
-> When any sync action is finishing or interrupted, the progress will
-> show 99.9% before the sync thread is reaped. Many reporters has asked
-> what happened to the last blocks. It might be a confusing meaning for
-> users because the progress will be backward after the interrupted task
-> is restarted.
->
-> Take a raid5 reshape for example:
-> mdadm -C --assume-clean /dev/md0 -l5 -n3 /dev/loop[012]
-> echo 2000 > /proc/sys/dev/raid/speed_limit_max
-> echo 1000 > /proc/sys/dev/raid/speed_limit_min # slow down the speed
-> mdadm /dev/md0 -a /dev/loop3
-> mdadm /dev/md0 --grow -n4
-> while true
-> do
->     mdadm -S /dev/md0
->     sleep 3
->     mdadm -A /dev/md0 /dev/loop[0123]
-> done
->
-> And you can see the fake 99.9% progress by the following command:
->> while true; do cat /proc/mdstat | grep reshape; done
+> I can remove one disk from the 3way mirror for this operation, after
+> that, growing from a 2way mirror to a raid6 should be possible, right ?
 
-Seems it happened when the reshaping is interrupted by issue stop array cmd,
-if so, why not just check MD_RECOVERY_INTR in status_resync()?
+Yes, I think so.  A quick test with some loop devices on your kernel
+will tell you for sure, and if it will take only one step.
 
-Thanks,
-Guoqing
+> Yes I have LVM and I can add a fifth drive, but I prefer to only add a
+> fourth drive and move from current 3way mirror to raid 6
 
->>
->
-> This confusing state can be fixed by exposing the real state to users.
-> And I also correct the sync action type for display.
->
-> Reported-by: Edwin Lin <edwinlin@synology.com>
-> Reviewed-by: Allen Peng <allenpeng@synology.com>
-> Signed-off-by: BingJing Chang <bingjingc@synology.com>
-> ---
->  drivers/md/md.c | 25 +++++++++++++++----------
->  1 file changed, 15 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4e4dee0..74106c7 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7593,6 +7593,14 @@ static int status_resync(struct seq_file *seq, 
-> struct mddev *mddev)
->      sector_t rt;
->      int scale;
->      unsigned int per_milli;
-> +    char *sync_action;
-> +
-> +    sync_action = (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) ?
-> +        "reshape" :
-> +        (test_bit(MD_RECOVERY_CHECK, &mddev->recovery) ?
-> +        "check" :
-> +        (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
-> +        "resync" : "recovery")));
->
->      if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
->          test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-> @@ -7602,9 +7610,11 @@ static int status_resync(struct seq_file *seq, 
-> struct mddev *mddev)
->
->      resync = mddev->curr_resync;
->      if (resync <= 3) {
-> -        if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
-> +        if (test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
->              /* Still cleaning up */
-> -            resync = max_sectors;
-> +            seq_printf(seq, "\t%s=CLEANING UP", sync_action);
-> +            return 1;
-> +        }
->      } else if (resync > max_sectors)
->          resync = max_sectors;
->      else
-> @@ -7612,13 +7622,13 @@ static int status_resync(struct seq_file *seq, 
-> struct mddev *mddev)
->
->      if (resync == 0) {
->          if (mddev->recovery_cp < MaxSector) {
-> -            seq_printf(seq, "\tresync=PENDING");
-> +            seq_printf(seq, "\t%s=PENDING", sync_action);
->              return 1;
->          }
->          return 0;
->      }
->      if (resync < 3) {
-> -        seq_printf(seq, "\tresync=DELAYED");
-> +        seq_printf(seq, "\t%s=DELAYED", sync_action);
->          return 1;
->      }
->
-> @@ -7648,12 +7658,7 @@ static int status_resync(struct seq_file *seq, 
-> struct mddev *mddev)
->          seq_printf(seq, "] ");
->      }
->      seq_printf(seq, " %s =%3u.%u%% (%llu/%llu)",
-> -           (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)?
-> -            "reshape" :
-> -            (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)?
-> -             "check" :
-> -             (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
-> -              "resync" : "recovery"))),
-> +           sync_action,
->             per_milli/10, per_milli % 10,
->             (unsigned long long) resync/2,
->             (unsigned long long) max_sectors/2);
+With LVM, it is always possible to set up new drives in an entirely new
+raid of the desired configuration, possibly with a "missing" or two, add
+it as a physical volume to the same VG, then mirror the LVs across both
+arrays.  (Or just pvmove if the target array's redundancy is
+sufficient.)  Move redundant drives from old array to new if needed,
+then vgreduce to drop the old array.
 
+> It's a mailserver, is a raid6 a performance killer? 
+
+I've never put a mail archive on raid6.  I'd be concerned.  It's
+basically a random access workload with small reads and writes.  That is
+a recipe that'll maximize the write-amplification slowdown of raid6.
+
+Consider converting to raid10,near3 n=4, or raid10,near3 n=5 to get a
+little more capacity but keep the high performance of mirroring.  Raid10
+doesn't require the array's member count be a multiple of the number of
+copies.
+
+Phil
