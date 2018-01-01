@@ -1,15 +1,30 @@
-From: foundation@gmail.com
-Subject: =?utf-8?q?Spende_von_=E2=82=AC_3=2E400=2E000=2C00_EUR?=
-Date: Sun, 31 Dec 2017 09:32:08 +0200
-Message-ID: <20171231075253.2EF882704403@wsbmail01.wsb.wroclaw.pl>
-Reply-To: roycockrumpovertyfoundation@gmail.com
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] doc: md: Fix a file name to md-fault.c in
+ fault-injection.txt
+Date: Mon, 1 Jan 2018 12:43:30 -0700
+Message-ID: <20180101124330.1002d804@lwn.net>
+References: <20171222164121.18054-1-standby24x7@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
-Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <foundation@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171222164121.18054-1-standby24x7@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: snitzer@redhat.com, shli@fb.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-doc@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hallo, ich Roy Cockrum, 58, aus Knoxville, Tennessee Vereinigte Staaten von Amerika, du hast eine Wohltätigkeitsspende von € 3.400.000,00 EUR, ich gewann die America Lotterie in Amerika im Wert von $ 259,9 Millionen, und ich gebe einen Teil davon Zu fünf glücklichen Leuten und Wohltätigkeitshäusern in Gelübde, um die Armut vor dieser Welt zu beseitigen, ich kämpfe gegen die Armut. Kontaktieren Sie mich für weitere Details: roycockrumpovertyfoundation@gmail.com
+On Sat, 23 Dec 2017 01:41:21 +0900
+Masanari Iida <standby24x7@gmail.com> wrote:
+
+> drivers/md/faulty.c has been renamed to md-faulty.c after
+> following commit merged int to the main line.
+> 
+>   935fe0983e09f4f7331ebf5ea4ae2124f6e9f9e8 .
+> 
+> But the file name in fault-injection.txt has not been changed.
+> Now the actual file name and document are in sync.
+> 
+Applied to the docs tree, thanks.
+
+jon
