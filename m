@@ -1,34 +1,41 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
-Date: Tue, 2 Jan 2018 04:13:48 +0100
-Message-ID: <cc833a06-70c9-f979-00b7-4b62e6730c7f@thelounge.net>
-References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
+From: Amy Chiang <amychiang@qnap.com>
+Subject: conf->min_offset_diff calculation timing of growing raid5
+Date: Tue, 2 Jan 2018 11:49:48 +0800
+Message-ID: <CAJtTb3GYuEL-tco3Uy7L0G3ssTFez3=Qwghd5DzqTU5y-snh3Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
-Content-Language: de-CH
 Sender: linux-raid-owner@vger.kernel.org
-To: RQM <rqm@protonmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+I was trying to find a way to make rehape fast but safe. Since growing
+a 3-SSD raid5 array to 4-SSD raid6 with backup file specified takes
+180 minutes and it only takes 30 minutes if there's no backup file.
+I tried to do it with command
+          mdadm --grow /dev/md0 --level=6 --raid-device=4
 
+I didn't specify --backup-file because I thought mdadm would give me a
+warning if there's a possibility that I might lose my data if this
+operation crash.
+From the trace I added in function reshape_request in kernel I found
+        1. metadata only updated every 10 seconds
+        2. conf->min_offset_diff is always 0 thus makes no difference
+to write/safe/readpos calculation.
 
-Am 02.01.2018 um 03:46 schrieb RQM:
-> I hope this list is the right place to ask the following:
-> 
-> I've got a 5-disk RAID-5 array that's been built by a QNAP NAS device, which has recently failed (I suspect a faulty SATA controller or backplane).
-> I migrated the disks to a desktop computer that runs Debian stretch (kernel 4.9.65-3+deb9u1 amd64) and mdadm version 3.4. Although the array can be assembled, I encountered the following error in my dmesg output ([1], recorded directly after a recent reboot and fsck attempt) when running fsck:
-> 
-> Buffer I/O error on dev md0, logical block 1598030208, async page read
-> 
-> I can reliably reproduce that error by trying to read from the md0 device. It's always the same block, also across reboots
+Then I made a test, I cut off the power before the first metadata
+update but the new stripe has been overlapped with the old data. The
+reshape started from the beginning after I turn on the power and the
+array started again. This sudden power loss actually crashed my data.
 
-i had the same message on my testserver VM running within VMware 
-Workstation after upgrade to one of the first 4.14 kernels on Fedora for 
-/dev/sdb1 (rootfs) and it went away as it came
+And if I calculate conf->min_offset_diff before reshape started, none
+of the problem mentioned above would happen and it takes only around
+30 minutes for doing reshape.
 
-in case of a virtual disk faulty hardware is even impossible or at least 
-would i expect such message on the underlying raid10 and not in a random 
-guest
+So I was wondering if calculating conf->min_offset_diff before doing
+reshape can keep data safe when there's no backup file, and if it can,
+why did kernel calculate this value when array starts instead of
+before doing reshape.
+
+Thanks,
