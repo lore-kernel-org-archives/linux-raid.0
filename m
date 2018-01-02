@@ -1,71 +1,38 @@
-From: RQM <rqm@protonmail.com>
-Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
-Date: Tue, 02 Jan 2018 05:40:12 -0500
-Message-ID: <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com>
-References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
- <87373og9z9.fsf@notabene.neil.brown.name>
-Reply-To: RQM <rqm@protonmail.com>
+From: Nix <nix@esperi.org.uk>
+Subject: insane md check latencies with multiple devices on one disk
+Date: Tue, 02 Jan 2018 11:05:03 +0000
+Message-ID: <87r2r8ed28.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87373og9z9.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: "linux-raid\\@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+So I have a triplet of RAID arrays (md0 and md6) on 6x modern rotating
+storage (read speeds for contiguous reads nearly 200MiB/s: much much
+slower when seeking, naturally). There are three arrays on one set of
+disks, md0 at the start and two md6 later on (one of them is backing a
+bcache, the other is not). Most non-archival data is on the bcached
+array.
 
-thanks for the quick and helpful responses! Answers inline:
+A routine every-N-months RAID check of the md6 arrays has just kicked
+in, and I'm being murdered by latencies: even writing this email is
+painful due to massive blocking (latencytop shows routine 20s latencies,
+which is just appalling).
 
-=E2=80=8B> Step one is confirm that it is easy to reproduce.
-> Does
-> dd if=3D/dev/md0 bs=3D4K skip=3D1598030208 count=3D1 of=3D/dev/null
->
-> trigger the message reliably?
-> To check that "4K" is the correct blocksize, run
-> blockdev --getbsz /dev/md0
->
-> use whatever number if gives as 'bs=3D'.
+The md device that's syncing right now is for archival storage: the one
+for the OS and $HOME and the like is not syncing, and the sync speed
+is sitting at the max for the disk, not dropping when user-requested I/O
+takes place.
 
-
-blockdev does indeed report a blocksize of 4096, and the dd line does relia=
-bly trigger
-dd: error reading '/dev/md0': Input/output error
-and the same line in dmesg as before.
-
-> Once you can reproduce with minimal IO, do
-> echo file:raid5.c +p > /sys/kernel/debug/dynamic_debug/control
->repeat experiment
->
->echo file:raid5.c -p > /sys/kernel/debug/dynamic_debug/control
->
-> and report the messages that appear in 'dmesg'.
-
-I had to replace the colon with a space in those two lines (otherwise I wou=
-ld get "bash: echo: write error: Invalid argument"), but after that, this i=
-s what I got in dmesg:
-https://paste.ubuntu.com/26305369/
-
-> Also report "mdadm -E" of each member device, and kernel version (though
-> I see that is in the serverfault report :  4.9.30-2+deb9u5).
-
-mdadm -E says: https://paste.ubuntu.com/26305379/
-The kernel has been updated between the serverfault post and my first mail =
-to this list to 4.9.65-3+deb9u1. No changes since.
-
->
-> Then run
-> blktrace /dev/md0 /dev/sd[acdef]
-> in one window while reproducing the error again in another window.
-> Then interrupt the blktrace.  This will produce several blocktrace*
-> files.  create a tar.gz of these and put them somewhere that I can get
-> them - hopefully they won't be too big.
-
-I had to adjust the last blktrace argument to /dev/sd[b-f] since after the =
-last reboot the names of the drives have changed, but here's the output:
-https://filebin.ca/3mnjUz1OIXqm/blktrace-out.tar.gz
-I also included the blktrace terminal output in there.
-
-Thank you so much for the effort! Please let me know if you need anything.
+The problem, I think, is that while md realizes that all three devices
+are on one disk for the purpose of serializing checks, it doesn't
+realize that md devices sharing disks also implies that I/O to every
+such device should reduce the sync speed of every md device syncing on
+that disk, not just the one to which the I/O is directed. Not knowing
+anything about that part of the code, I'm wondering how hard that would
+be to add... I'll have a look. (This is obviously not urgent since I
+can't improve performance for this check, since it would require a
+reboot to do so :) I'll just knock down sync_speed_max for now and live
+with that).
