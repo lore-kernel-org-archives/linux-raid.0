@@ -1,170 +1,71 @@
-From: Sean Fu <fxinrong@gmail.com>
-Subject: Re: [PATCH 3/3] md: bitmap: Support circular buffer list.
-Date: Tue, 2 Jan 2018 15:34:36 +0800
-Message-ID: <20180102073435.GA12496@linux-zmni.apac.novell.com>
-References: <cover.1514867850.git.fxinrong@gmail.com>
- <694be2a2fa9aba6955a11c9ce5556705431d4528.1514867850.git.fxinrong@gmail.com>
+From: RQM <rqm@protonmail.com>
+Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
+Date: Tue, 02 Jan 2018 05:40:12 -0500
+Message-ID: <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com>
+References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
+ <87373og9z9.fsf@notabene.neil.brown.name>
+Reply-To: RQM <rqm@protonmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <694be2a2fa9aba6955a11c9ce5556705431d4528.1514867850.git.fxinrong@gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: shli@kernel.org, viro@zeniv.linux.org.uk, anton@tuxera.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87373og9z9.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: "linux-raid\\@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jan 02, 2018 at 02:54:49PM +0800, Sean Fu wrote:
-> Modify write_page free_buffers and read_page to support circular buffer
-> list.
-> 
-> Signed-off-by: Sean Fu <fxinrong@gmail.com>
-> ---
->  drivers/md/md-bitmap.c | 36 +++++++++++++++++++-----------------
->  1 file changed, 19 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 239c7bb..b8412c2 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -286,7 +286,7 @@ static void bitmap_file_kick(struct bitmap *bitmap);
->   */
->  static void write_page(struct bitmap *bitmap, struct page *page, int wait)
->  {
-> -	struct buffer_head *bh;
-> +	struct buffer_head *bh, *head;
->  
->  	if (bitmap->storage.file == NULL) {
->  		switch (write_sb_page(bitmap, page, wait)) {
-> @@ -295,15 +295,16 @@ static void write_page(struct bitmap *bitmap, struct page *page, int wait)
->  		}
->  	} else {
->  
-> -		bh = page_buffers(page);
-> +		bh = head = page_buffers(page);
->  
-> -		while (bh && bh->b_blocknr) {
-> -			atomic_inc(&bitmap->pending_writes);
-> -			set_buffer_locked(bh);
-> -			set_buffer_mapped(bh);
-> -			submit_bh(REQ_OP_WRITE, REQ_SYNC, bh);
-> -			bh = bh->b_this_page;
-> -		}
-> +		do {
-> +			if (bh && bh->b_blocknr) {
-> +				atomic_inc(&bitmap->pending_writes);
-> +				set_buffer_locked(bh);
-> +				set_buffer_mapped(bh);
-> +				submit_bh(REQ_OP_WRITE, REQ_SYNC, bh);
-> +			}
-> +		} while ((bh = bh->b_this_page) != head);
->  
->  		if (wait)
->  			wait_event(bitmap->write_wait,
-> @@ -333,17 +334,18 @@ __clear_page_buffers(struct page *page)
->  }
->  static void free_buffers(struct page *page)
->  {
-> -	struct buffer_head *bh;
-> +	struct buffer_head *bh, *head;
->  
->  	if (!PagePrivate(page))
->  		return;
->  
-> -	bh = page_buffers(page);
-> -	while (bh) {
-> +	bh = head = page_buffers(page);
-> +	do {
->  		struct buffer_head *next = bh->b_this_page;
->  		free_buffer_head(bh);
->  		bh = next;
-> -	}
-> +	} while (bh != head);
-> +
->  	__clear_page_buffers(page);
->  	put_page(page);
->  }
-> @@ -362,20 +364,20 @@ static int read_page(struct file *file, unsigned long index,
->  {
->  	int ret = 0;
->  	struct inode *inode = file_inode(file);
-> -	struct buffer_head *bh;
-> +	struct buffer_head *bh, *head;
->  	sector_t block;
->  
->  	pr_debug("read bitmap file (%dB @ %llu)\n", (int)PAGE_SIZE,
->  		 (unsigned long long)index << PAGE_SHIFT);
->  
-> -	bh = alloc_page_buffers(page, 1<<inode->i_blkbits, false);
-> +	bh = head = alloc_page_buffers(page, 1<<inode->i_blkbits, false);
->  	if (!bh) {
->  		ret = -ENOMEM;
->  		goto out;
->  	}
->  	attach_page_buffers(page, bh);
->  	block = index << (PAGE_SHIFT - inode->i_blkbits);
-> -	while (bh) {
-> +	do {
->  		if (count == 0)
->  			bh->b_blocknr = 0;
->  		else {
-> @@ -400,7 +402,7 @@ static int read_page(struct file *file, unsigned long index,
->  		}
->  		block++;
->  		bh = bh->b_this_page;
-> -	}
-> +	} while (bh != head);
->  	page->index = index;
->  
->  	wait_event(bitmap->write_wait,
-> -- 
-> 2.6.2
+Hello,
+
+thanks for the quick and helpful responses! Answers inline:
+
+=E2=80=8B> Step one is confirm that it is easy to reproduce.
+> Does
+> dd if=3D/dev/md0 bs=3D4K skip=3D1598030208 count=3D1 of=3D/dev/null
 >
-Before
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size fs/buffer.o
-   text	   data	    bss	    dec	    hex	filename
-  33693	   1466	     16	  35175	   8967	fs/buffer.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size drivers/md/md-bitmap.o
-   text	   data	    bss	    dec	    hex	filename
-  28149	   2168	      0	  30317	   766d	drivers/md/md-bitmap.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size fs/ntfs/mft.o 
-   text	   data	    bss	    dec	    hex	filename
-   2133	     36	      0	   2169	    879	fs/ntfs/mft.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size fs/ntfs/aops.o
-   text	   data	    bss	    dec	    hex	filename
-   6125	    168	      0	   6293	   1895	fs/ntfs/aops.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size vmlinux
-   text	   data	    bss	    dec	    hex	filename
-11480260	5730762	1646084	18857106	11fbc92	vmlinux
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size ./arch/x86/boot/bzImage
-size: ./arch/x86/boot/bzImage: Warning: Ignoring section flag IMAGE_SCN_MEM_NOT_PAGED in section .bss
-   text	   data	    bss	    dec	    hex	filename
-6571744	      0	16975648	23547392	1674e00	./arch/x86/boot/bzImage
+> trigger the message reliably?
+> To check that "4K" is the correct blocksize, run
+> blockdev --getbsz /dev/md0
+>
+> use whatever number if gives as 'bs=3D'.
 
 
-After
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size fs/buffer.o 
-   text	   data	    bss	    dec	    hex	filename
-  33687	   1466	     16	  35169	   8961	fs/buffer.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size drivers/md/md-bitmap.o 
-   text	   data	    bss	    dec	    hex	filename
-  28221	   2168	      0	  30389	   76b5	drivers/md/md-bitmap.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size fs/ntfs/mft.o 
-   text	   data	    bss	    dec	    hex	filename
-   2133	     36	      0	   2169	    879	fs/ntfs/mft.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size fs/ntfs/aops.o
-   text	   data	    bss	    dec	    hex	filename
-   6125	    168	      0	   6293	   1895	fs/ntfs/aops.o
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size vmlinux
-   text	   data	    bss	    dec	    hex	filename
-11480270	5730762	1646084	18857116	11fbc9c	vmlinux
-sean@linux-zmni:~/sda5/source/linus_repo/linux> size ./arch/x86/boot/bzImage
-size: ./arch/x86/boot/bzImage: Warning: Ignoring section flag IMAGE_SCN_MEM_NOT_PAGED in section .bss
-   text	   data	    bss	    dec	    hex	filename
-6571488	      0	16975904	23547392	1674e00	./arch/x86/boot/bzImage
+blockdev does indeed report a blocksize of 4096, and the dd line does relia=
+bly trigger
+dd: error reading '/dev/md0': Input/output error
+and the same line in dmesg as before.
 
-Only patch #3 increases the text section size of drivers/md/md-bitmap.o
-The actual text section increment should be several bytes. Duo to compiler align-functions option, the total increment is increased to 72 bytes.
+> Once you can reproduce with minimal IO, do
+> echo file:raid5.c +p > /sys/kernel/debug/dynamic_debug/control
+>repeat experiment
+>
+>echo file:raid5.c -p > /sys/kernel/debug/dynamic_debug/control
+>
+> and report the messages that appear in 'dmesg'.
 
-Why is circular list traversal more complex than linear list traversal in this situation?  
-How to optimize it? 
+I had to replace the colon with a space in those two lines (otherwise I wou=
+ld get "bash: echo: write error: Invalid argument"), but after that, this i=
+s what I got in dmesg:
+https://paste.ubuntu.com/26305369/
+
+> Also report "mdadm -E" of each member device, and kernel version (though
+> I see that is in the serverfault report :  4.9.30-2+deb9u5).
+
+mdadm -E says: https://paste.ubuntu.com/26305379/
+The kernel has been updated between the serverfault post and my first mail =
+to this list to 4.9.65-3+deb9u1. No changes since.
+
+>
+> Then run
+> blktrace /dev/md0 /dev/sd[acdef]
+> in one window while reproducing the error again in another window.
+> Then interrupt the blktrace.  This will produce several blocktrace*
+> files.  create a tar.gz of these and put them somewhere that I can get
+> them - hopefully they won't be too big.
+
+I had to adjust the last blktrace argument to /dev/sd[b-f] since after the =
+last reboot the names of the drives have changed, but here's the output:
+https://filebin.ca/3mnjUz1OIXqm/blktrace-out.tar.gz
+I also included the blktrace terminal output in there.
+
+Thank you so much for the effort! Please let me know if you need anything.
