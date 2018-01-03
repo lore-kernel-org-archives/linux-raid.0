@@ -1,131 +1,49 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V2 2/3] Assemble: provide protection when clustered raid do assemble
-Date: Wed,  3 Jan 2018 16:19:10 +0800
-Message-ID: <20180103081911.7380-3-gqjiang@suse.com>
-References: <20180103081911.7380-1-gqjiang@suse.com>
+Subject: [PATCH V2 0/3] Make dlm lock more reliable for cluster-md
+Date: Wed,  3 Jan 2018 16:19:08 +0800
+Message-ID: <20180103081911.7380-1-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180103081911.7380-1-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: jes.sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-The previous patch provides protection for other modes
-such as CREATE, MANAGE, GROW and INCREMENTAL. And for
-ASSEMBLE mode, we also need to protect during the process
-of assemble clustered raid.
+For V2, there are some change in the first patch.
 
-However, we can only know the array is clustered or not
-when the metadata is ready, so the lock_cluster is called
-after select_devices(). And we could re-read the metadata
-when doing auto-assembly, so refresh the locking.
+1. confirm a device in slave node doen't need to get lock.
+2. remove the explicitly name of dlm library.
+3. delete a global variable which was used for store lockid.
 
-Reviewed-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- Assemble.c | 32 +++++++++++++++++++++++++++++++-
- 1 file changed, 31 insertions(+), 1 deletion(-)
+However, I am not able to simplify the checks before call lock_cluster
+in the first patch ...
 
-diff --git a/Assemble.c b/Assemble.c
-index 3c10b6cd27c2..51d5350354ad 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1326,6 +1326,9 @@ int Assemble(struct supertype *st, char *mddev,
- 	char chosen_name[1024];
- 	struct map_ent *map = NULL;
- 	struct map_ent *mp;
-+	int locked = 0;
-+	struct mdp_superblock_1 *sb;
-+	bitmap_super_t *bms;
- 
- 	/*
- 	 * If any subdevs are listed, then any that don't
-@@ -1356,6 +1359,12 @@ try_again:
- 	 * set of devices failed.  Those are now marked as ->used==2 and
- 	 * we ignore them and try again
- 	 */
-+	if (locked)
-+		/*
-+		 * if come back try_again is called, then need to unlock first,
-+		 * and lock again since the metadate is re-read.
-+		 */
-+		unlock_cluster();
- 	if (!st && ident->st)
- 		st = ident->st;
- 	if (c->verbose>0)
-@@ -1373,6 +1382,14 @@ try_again:
- 	if (!st || !st->sb || !content)
- 		return 2;
- 
-+	sb = st->sb;
-+	bms = (bitmap_super_t*)(((char*)sb) + 4096);
-+	if (sb && bms->version == BITMAP_MAJOR_CLUSTERED) {
-+		locked = lock_cluster();
-+		if (locked != 1)
-+			return 1;
-+	}
-+
- 	/* We have a full set of devices - we now need to find the
- 	 * array device.
- 	 * However there is a risk that we are racing with "mdadm -I"
-@@ -1399,6 +1416,8 @@ try_again:
- 			pr_err("Found some drive for an array that is already active: %s\n",
- 			       mp->path);
- 			pr_err("giving up.\n");
-+			if (locked == 1)
-+				unlock_cluster();
- 			return 1;
- 		}
- 		for (dv = pre_exist->devs; dv; dv = dv->next) {
-@@ -1472,6 +1491,8 @@ try_again:
- 		st->ss->free_super(st);
- 		if (auto_assem)
- 			goto try_again;
-+		if (locked == 1)
-+			unlock_cluster();
- 		return 1;
- 	}
- 	mddev = chosen_name;
-@@ -1491,6 +1512,8 @@ try_again:
- 			st->ss->free_super(st);
- 			if (auto_assem)
- 				goto try_again;
-+			if (locked == 1)
-+				unlock_cluster();
- 			return 1;
- 		}
- 		/* just incase it was started but has no content */
-@@ -1503,6 +1526,8 @@ try_again:
- 		err = assemble_container_content(st, mdfd, content, c,
- 						 chosen_name, NULL);
- 		close(mdfd);
-+		if (locked == 1)
-+			unlock_cluster();
- 		return err;
- 	}
- 
-@@ -1512,8 +1537,11 @@ try_again:
- 	devcnt = load_devices(devices, devmap, ident, &st, devlist,
- 			      c, content, mdfd, mddev,
- 			      &most_recent, &bestcnt, &best, inargv);
--	if (devcnt < 0)
-+	if (devcnt < 0) {
-+		if (locked == 1)
-+			unlock_cluster();
- 		return 1;
-+	}
- 
- 	if (devcnt == 0) {
- 		pr_err("no devices found for %s\n",
-@@ -1860,6 +1888,8 @@ try_again:
- 		close(mdfd);
- 
- 	/* '2' means 'OK, but not started yet' */
-+	if (locked == 1)
-+		unlock_cluster();
- 	return rv == 2 ? 0 : rv;
- }
- 
+Thanks,
+Guoqing
+---------------------------------------------------------------------
+Currently, only a few functions which change superblock are protected
+by dlm lock, but to avoid consistent issue we need to protect those
+funcs which read superblock.
+
+And call dlm locking interface inside super1.c is really clumsy since
+each func which accesses superblock should be protected by dlm lock,
+so we call lock_cluster/unlock_cluster in mdadm.c.
+
+The first patch provides dlm locking support for CREATE, MANAGE, GROW
+and INCREMENTAL mode, then the second patch provides the support for
+ASSEMBLE mode. The last patch cleanup the failure path in Assemble().
+
+Guoqing Jiang (3):
+  mdadm: improve the dlm locking mechanism for clustered raid
+  Assemble: provide protection when clustered raid do assemble
+  Assemble: cleanup the failure path
+
+ Assemble.c | 82 ++++++++++++++++++++++++++++++++++++--------------------------
+ mdadm.c    | 20 +++++++++++++++
+ mdadm.h    | 12 +++++----
+ super1.c   | 42 --------------------------------
+ util.c     | 73 +++++++++++++++++++++++++++++++++++++++++++++----------
+ 5 files changed, 135 insertions(+), 94 deletions(-)
+
 -- 
 2.13.6
 
