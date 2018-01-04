@@ -1,9 +1,8 @@
-From: Alexander Shenkin <al@shenkin.org>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: SMART detects pending sectors; take offline?
-Date: Thu, 4 Jan 2018 12:28:06 +0000
-Message-ID: <c24ffbc6-6ba6-ef04-76f3-2217fe5f4926@shenkin.org>
+Date: Thu, 4 Jan 2018 21:16:27 +0800
+Message-ID: <97c75be5-1988-0e66-0d50-f06188418b3b@fnarfbargle.com>
 References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <CAK2H+ecT1Psph5Wm9LrPgYOba6PHKzAs55H1LWiqLD+kaBUQZQ@mail.gmail.com>
  <CACsGCyQGZxhfT1A_ojXaBRvB4wgNOH7fqqh8afsQksAeGdKmjg@mail.gmail.com>
  <CACsGCyS9-K4ZJPKauRZkGFRPd0cvShYLViE87i47=RCY1UkbnQ@mail.gmail.com>
  <fcb32200-19f7-5513-24a0-70ca15ca6297@shenkin.org>
@@ -20,60 +19,60 @@ References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
  <ae183814-248b-2d45-8074-85787fcd0d61@shenkin.org>
  <6572ed42-8559-84eb-0468-7823786c3001@turmel.org>
  <7bce6228-0695-ff30-7cc0-60486be128ff@shenkin.org>
+ <c24ffbc6-6ba6-ef04-76f3-2217fe5f4926@shenkin.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7bce6228-0695-ff30-7cc0-60486be128ff@shenkin.org>
-Content-Language: en-US
+In-Reply-To: <c24ffbc6-6ba6-ef04-76f3-2217fe5f4926@shenkin.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Brad Campbell <lists2009@fnarfbargle.com>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
+To: Alexander Shenkin <al@shenkin.org>, Phil Turmel <philip@turmel.org>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
 Cc: Wols Lists <antlists@youngman.org.uk>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>> On 1/3/2018 3:53 PM, Phil Turmel wrote:
->>>> On 01/03/2018 08:50 AM, Alexander Shenkin wrote:
->>>>> On 1/3/2018 1:26 PM, Brad Campbell wrote:
->>>>
->>>>>> Nope. Your pending is still at 8, so you've got bad sectors in an 
->>>>>> area
->>>>>> of the drive that hasn't been dealt with. What is "interesting" is
->>>>>> that your SMART test results don't list the LBA of the first failure.
->>>>>> Disappointing behaviour on the part of the disk. They are within the
->>>>>> 1st 10% of the drive however, so it wouldn't surprise me if they were
->>>>>> in an unused portion of the RAID superblock area.
->>>>>
->>>>> Thanks Brad.  So, to theoretically get these sectors remapped so I 
->>>>> don't
->>>>> keep getting errors, I would have to somehow try to write to those
->>>>> sectors.  That's tough given that the LBA's aren't reported as you
->>>>> mention.  Perhaps my best course of action then is to:
->>>>
->>>> No, just use dd to read that device -- it'll bail out with read error
->>>> when it hits the trouble spot, which will report the affected sector.
->>>> Then you can rewrite it with the appropriate seek= value.  (Assuming it
->>>> really is in an unused part of the member device.)
+On 04/01/18 20:28, Alexander Shenkin wrote:
 
+>
+>
+> Ok, an update.  Writing with bs=512 had issues, as it was failing on a 
+> read, and reallocating was failing.  I think this is because the 
+> physical sector size is 4096b, and it needs to read the other 7 512b 
+> logical sectors if it wants to write just 1 512b logical sector.  So, 
+> I ran:
+>
+> sudo dd if=/dev/zero of=/dev/sda seek=732230414 count=1 bs=4096
+>
+> This seems to have worked.  In syslog, I just now saw:
+>
+> Jan  4 12:12:07 machinename smartd[2203]: Device: /dev/sda [SAT], No 
+> more Currently unreadable (pending) sectors, warning condition reset 
+> after 90 emails
+> Jan  4 12:12:07 machinename smartd[2203]: Device: /dev/sda [SAT], No 
+> more Offline uncorrectable sectors, warning condition reset after 90 
+> emails
+> Jan  4 12:12:07 machinename smartd[2203]: Device: /dev/sda [SAT], 
+> SMART Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 113 to 117
+>
+> I'm now running a checkarray and will report back final results, and 
+> whether the SMART warnings return.  Thanks all for the help, hope this 
+> marks the end of this issues...
+>
+> Allie
+>
 
-Ok, an update.  Writing with bs=512 had issues, as it was failing on a 
-read, and reallocating was failing.  I think this is because the 
-physical sector size is 4096b, and it needs to read the other 7 512b 
-logical sectors if it wants to write just 1 512b logical sector.  So, I ran:
+Damn. I saw your initial mail, but I was out and nowhere near a device I 
+could use to reply sensibly.
+You should *really* check by looking at the mdadm --examine output and 
+calculating the position of the sectors in question to be absolutely 
+sure the area you just wrote over was not in the active array area. If 
+it was then you should stop the checkarray *now* and come back for advice.
 
-sudo dd if=/dev/zero of=/dev/sda seek=732230414 count=1 bs=4096
+Sorry I don't have time right now to elaborate.
 
-This seems to have worked.  In syslog, I just now saw:
+Regards,
+-- 
 
-Jan  4 12:12:07 machinename smartd[2203]: Device: /dev/sda [SAT], No 
-more Currently unreadable (pending) sectors, warning condition reset 
-after 90 emails
-Jan  4 12:12:07 machinename smartd[2203]: Device: /dev/sda [SAT], No 
-more Offline uncorrectable sectors, warning condition reset after 90 emails
-Jan  4 12:12:07 machinename smartd[2203]: Device: /dev/sda [SAT], SMART 
-Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 113 to 117
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
 
-I'm now running a checkarray and will report back final results, and 
-whether the SMART warnings return.  Thanks all for the help, hope this 
-marks the end of this issues...
-
-Allie
