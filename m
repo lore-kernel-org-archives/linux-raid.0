@@ -1,7 +1,7 @@
-From: Phil Turmel <philip@turmel.org>
+From: Alexander Shenkin <al@shenkin.org>
 Subject: Re: SMART detects pending sectors; take offline?
-Date: Fri, 5 Jan 2018 08:50:20 -0500
-Message-ID: <6b7ed6c2-497a-2b8d-4cd4-d7a8620bba75@turmel.org>
+Date: Fri, 5 Jan 2018 14:01:30 +0000
+Message-ID: <5c351837-10c3-1b1e-56f0-aef143289505@shenkin.org>
 References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
  <a5487193-24e6-879b-bd09-caf5f75c8fcc@turmel.org>
  <05e4489d-98ea-4d12-02d6-f13a98e3d5d4@shenkin.org>
@@ -20,59 +20,33 @@ References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
  <bc2e597b-1585-f9b6-ef1a-f1aa3e1f39a0@fnarfbargle.com>
  <85891f3d-eaf6-9127-b55a-dea9d21d180b@fnarfbargle.com>
  <35f51be7-7dbd-88f8-e743-3976bef51de2@shenkin.org>
+ <6b7ed6c2-497a-2b8d-4cd4-d7a8620bba75@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <35f51be7-7dbd-88f8-e743-3976bef51de2@shenkin.org>
-Content-Language: en-GB
+In-Reply-To: <6b7ed6c2-497a-2b8d-4cd4-d7a8620bba75@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>, Brad Campbell <brad@fnarfbargle.com>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
+To: Phil Turmel <philip@turmel.org>, Brad Campbell <brad@fnarfbargle.com>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
 Cc: Wols Lists <antlists@youngman.org.uk>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Alex,
+On 1/5/2018 1:50 PM, Phil Turmel wrote:
+> No. Parity is interleaved with data on all devices, chunk by chunk, on
+> all default raid5/6 layouts.
 
-On 01/05/2018 05:10 AM, Alexander Shenkin wrote:
-> On 1/5/2018 5:25 AM, Brad Campbell wrote:
+Thanks Phil.  So, I suppose then the final diagnosis of my issue was 
+that the bad sector occurred in a non-raid portion of the drive, which 
+is why it was never read from or written to, and hence never corrected.
 
->> I'm going to go and write a letter of apology to my primary school
->> maths teacher now.
+BTW, my reallocated sector count remains at 0 on that drive, but 
+whatever - maybe that's because there was no data to reallocate (though 
+i would think it would physically reallocate some sectors regardless). 
+Also, I keep getting Rebuild99 events on /dev/md0.  But, I think that, 
+when I have time, I'll add a drive for raid6, fail out sda, write it 
+with 0's, update it's firmware (apparently seagate released one for 
+these drives), and re-add it.
 
-> Thanks much, Brad.  fdisk & parted output are below.  I have swap space
-> mounted on /dev/sda4, 15,984,640 sectors long, after the partitions used
-> for raid.  I'm not sure where exactly the parity data sits... Looks to
-> me like this happened in swap space, no?  Currently, swapon reports
-> 552,272 kb (= 1,104,544 sectors) in use (i think).  If that's
-> contiguous, then the write should have happened after the used space
-> (13,297,904 > 1,104,544). But I'm not sure swap is contiguous.  In this
-> case, regardless, I suspect I should just reboot, and then run
-> checkarray to be safe?
-
-The output of fdisk is invalid on your system, see the warning it
-printed.  Use gdisk or parted instead.  Don't use '*'.
-
-> One followup: is parity info stored in a separate area than data info on
-> the disk?  If the write *had* fallen within the raid partition area,
-> would you indeed be able to tell if it overwrote data vs parity vs both?
->  Google wouldn't tell me...
-
-No. Parity is interleaved with data on all devices, chunk by chunk, on
-all default raid5/6 layouts.  In raid4, the last device is all of the
-parity.  There are optional layouts for raid5 that do the same, and
-variants for raid6 that place various combinations of parity and
-syndrome at either end.  See the --layout option in the mdadm man page.
-
-The non-data area of member devices contains at least the superblock,
-and optionally a write-intent bitmap and/or a bad-block list.  Most of
-the non-data space is reserved for optimizing future --grow operations.
-
-> user@machinename:~$ sudo fdisk -l /dev/sda*
-> 
-> WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
-> fdisk doesn't support GPT. Use GNU Parted.
-
-All of the partition data following this warning is bogus -- it is the
-"protective" MBR record.
-
-Phil
+Thanks,
+allie
