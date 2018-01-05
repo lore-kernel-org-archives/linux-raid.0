@@ -1,51 +1,55 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Re: SMART detects pending sectors; take offline?
-Date: Fri, 5 Jan 2018 13:25:58 +0800
-Message-ID: <85891f3d-eaf6-9127-b55a-dea9d21d180b@fnarfbargle.com>
-References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
- <fcb32200-19f7-5513-24a0-70ca15ca6297@shenkin.org>
- <7bf0a71e-6cb7-59bc-695b-54ed6b08112b@turmel.org>
- <d86c80ba-7703-1591-7816-00d0d9408386@shenkin.org>
- <a5487193-24e6-879b-bd09-caf5f75c8fcc@turmel.org>
- <05e4489d-98ea-4d12-02d6-f13a98e3d5d4@shenkin.org>
- <201ea04e-1a03-fc83-c31c-146b50bb8624@thelounge.net>
- <47ec07c3-25ae-9595-78a2-8420c106f2a0@fnarfbargle.com>
- <20497c70-140d-c4dd-0201-816477bd467f@shenkin.org>
- <14f1fce1-2959-e051-f7c8-1d98951d744a@fnarfbargle.com>
- <07170cf8-d951-013b-7e67-eee54aa60c65@shenkin.org>
- <61e91b55-5b96-143e-15c8-4a320f89eeb2@turmel.org>
- <ae183814-248b-2d45-8074-85787fcd0d61@shenkin.org>
- <6572ed42-8559-84eb-0468-7823786c3001@turmel.org>
- <7bce6228-0695-ff30-7cc0-60486be128ff@shenkin.org>
- <c24ffbc6-6ba6-ef04-76f3-2217fe5f4926@shenkin.org>
- <97c75be5-1988-0e66-0d50-f06188418b3b@fnarfbargle.com>
- <cd34964a-e269-6dd7-3c36-73a9c8dbb61d@shenkin.org>
- <bc2e597b-1585-f9b6-ef1a-f1aa3e1f39a0@fnarfbargle.com>
+From: 43280196@mylife.unisa.ac.za
+Subject: Hallo mein lieber Freund,
+Date: Fri, 05 Jan 2018 14:08:27 +0530
+Message-ID: <AM6PR0102MB3623F18A6DB38EBD4161FAE1BC1C0@AM6PR0102MB3623.eurprd01.prod.exchangelabs.com>
+Reply-To: verahollin88@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bc2e597b-1585-f9b6-ef1a-f1aa3e1f39a0@fnarfbargle.com>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>, Phil Turmel <philip@turmel.org>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Recipients <43280196@mylife.unisa.ac.za>
 List-Id: linux-raid.ids
 
-On 05/01/18 13:20, Brad Campbell wrote:
+Hallo mein lieber Freund,
 
-> You re-wrote Sectors 5857843312+7 on the disk.
+Ich schreibe dir diese Post mit schweren Tr=E4nen In meinen Augen und gro=
+=DFem Kummer in meinem Herzen, Mein Name ist Vera Hollin Kvan, und ich kont=
+aktiere dich aus meinem Land Indien Ich m=F6chte dir das sagen, weil ich ke=
+ine habe Eine andere M=F6glichkeit, als Ihnen zu sagen, wie ich ber=FChrt w=
+ar, um Sie zu =F6ffnen, heiratete ich mit Herrn Hollin Kvan, der f=FCr neun=
+ Jahre mit der tunesischen Botschaft in Madrid Spanien arbeitete, bevor er =
+im Jahr 2005 starb. Wir waren elf Jahre ohne verheiratet Kind.
 
-> Add those two and we get 5844545408 sectors. So if my maths is any good
-> you wrote a block 13297904 sectors from the end of the data area.
+Er starb nach einer kurzen Krankheit, die nur f=FCnf Tage dauerte. Seit sei=
+nem Tod entschied ich mich, nicht wieder zu heiraten. Als mein verstorbener=
+ Mann noch am Leben war, hinterlegte er die Summe von $ 4.850.000,00USD (Vi=
+er Millionen achthundertundf=FCnfzigtausend Dollar) in einer Bank hier in I=
+ndien Neu-Delhi, der Hauptstadt Indiens, gegenw=E4rtig dieses Geld ist imme=
+r noch in der Bank.
 
-I can't believe I did that. No, you wrote a block ~6M *after* the data 
-area and you should be fine.
+Er stellte dieses Geld f=FCr den Export von Gold aus dem Minenfactory in Ma=
+drid Spanien zur Verf=FCgung. In letzter Zeit sagte mir mein Doktor, dass i=
+ch wegen der Krebserkrankung f=FCr die Dauer von sieben Monaten nicht =FCbe=
+rleben w=FCrde. Derjenige, der mich am meisten st=F6rt, ist meine Schlaganf=
+all-Krankheit. Nachdem ich meinen Zustand gekannt habe, habe ich beschlosse=
+n, dir dieses Geld auszuh=E4ndigen, um auf die weniger privilegierten Mensc=
+hen aufzupassen, du wirst dieses Geld auf die Art und Weise benutzen, wie i=
+ch es hier unterrichten werde.
 
-I'm going to go and write a letter of apology to my primary school maths 
-teacher now.
+Ich m=F6chte, dass Sie 30 Prozent des gesamten Geldes f=FCr Ihren pers=F6nl=
+ichen Gebrauch aufwenden, w=E4hrend 70% des Geldes an wohlt=E4tige Zwecke g=
+ehen, Menschen auf der Stra=DFe und dem Waisenhaus helfen. Ich bin als Wais=
+e aufgewachsen und habe keinen K=F6rper als mein Familienmitglied, nur um z=
+u beenden, dass das Haus Gottes auch erhalten wird. Mache dies, damit Gott =
+meine S=FCnden vergibt und meine Seele akzeptiert, weil diese Krankheiten m=
+ich so sehr leiden. Sobald ich Ihre Antwort erhalten habe, werde ich Ihnen =
+den Kontakt der Bank hier in Delhi Indien geben und ich werde auch den Bank=
+manager beauftragen, Ihnen einen Vollmachtenbrief auszustellen, der Ihnen d=
+en gegenw=E4rtigen Beg=FCnstigten des Geldes in der Bank beweisen wird, wen=
+n Sie versichern mir, dass Sie entsprechend handeln werden, wie ich hier an=
+gegeben habe.
 
-
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+Ich hoffe auf Ihre Antwort.
+Von Vera Hollin kVan
