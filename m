@@ -1,7 +1,7 @@
-From: Alexander Shenkin <al@shenkin.org>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: SMART detects pending sectors; take offline?
-Date: Fri, 5 Jan 2018 14:01:30 +0000
-Message-ID: <5c351837-10c3-1b1e-56f0-aef143289505@shenkin.org>
+Date: Fri, 5 Jan 2018 15:59:51 +0000
+Message-ID: <5A4FA0F7.40007@youngman.org.uk>
 References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
  <a5487193-24e6-879b-bd09-caf5f75c8fcc@turmel.org>
  <05e4489d-98ea-4d12-02d6-f13a98e3d5d4@shenkin.org>
@@ -22,31 +22,50 @@ References: <629d29b4-a3ae-533f-bdba-f115e99d8ce4@shenkin.org>
  <35f51be7-7dbd-88f8-e743-3976bef51de2@shenkin.org>
  <6b7ed6c2-497a-2b8d-4cd4-d7a8620bba75@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <6b7ed6c2-497a-2b8d-4cd4-d7a8620bba75@turmel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Brad Campbell <brad@fnarfbargle.com>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>, Alexander Shenkin <al@shenkin.org>, Brad Campbell <brad@fnarfbargle.com>, Reindl Harald <h.reindl@thelounge.net>, Edward Kuns <eddie.kuns@gmail.com>, Mark Knecht <markknecht@gmail.com>
+Cc: Carsten Aulbert <carsten.aulbert@aei.mpg.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/5/2018 1:50 PM, Phil Turmel wrote:
-> No. Parity is interleaved with data on all devices, chunk by chunk, on
-> all default raid5/6 layouts.
+On 05/01/18 13:50, Phil Turmel wrote:
+> The output of fdisk is invalid on your system, see the warning it
+> printed.  Use gdisk or parted instead.  Don't use '*'.
 
-Thanks Phil.  So, I suppose then the final diagnosis of my issue was 
-that the bad sector occurred in a non-raid portion of the drive, which 
-is why it was never read from or written to, and hence never corrected.
+It used to be so simple - fdisk for MBR disks, gdisk et al for GPT.
 
-BTW, my reallocated sector count remains at 0 on that drive, but 
-whatever - maybe that's because there was no data to reallocate (though 
-i would think it would physically reallocate some sectors regardless). 
-Also, I keep getting Rebuild99 events on /dev/md0.  But, I think that, 
-when I have time, I'll add a drive for raid6, fail out sda, write it 
-with 0's, update it's firmware (apparently seagate released one for 
-these drives), and re-add it.
+ashdown src # fdisk /dev/sda
 
-Thanks,
-allie
+Welcome to fdisk (util-linux 2.26.2).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help): p
+Disk /dev/sda: 2.7 TiB, 3000592982016 bytes, 5860533168 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disklabel type: gpt
+Disk identifier: 47915407-BA7E-4869-8D3E-3CB44F5FDA12
+
+Device         Start        End    Sectors  Size Type
+/dev/sda1       2048    1050623    1048576  512M BIOS boot
+/dev/sda2    1312768   68421631   67108864   32G Linux swap
+/dev/sda3   68683776  270010367  201326592   96G Linux filesystem
+/dev/sda4  270272512  471599103  201326592   96G Linux filesystem
+/dev/sda5  471861248 5860533134 5388671887  2.5T Linux filesystem
+
+Command (m for help): q
+
+ashdown src #
+
+Modern fdisk now supports GPT. So yes, in this case the warning is
+correct, but we need to watch out that people will be using fdisk, and
+it's okay. Dunno when this happened, but I've only very recently noticed it.
+
+Cheers,
+Wol
