@@ -1,225 +1,205 @@
-From: Dave Chinner <david@fromorbit.com>
+From: mdraid.pkoch@dfgh.net
 Subject: Re: Growing RAID10 with active XFS filesystem
-Date: Tue, 9 Jan 2018 09:01:39 +1100
-Message-ID: <20180108220139.GB16421@dastard>
+Date: Tue, 9 Jan 2018 00:44:57 +0100
+Message-ID: <81974a30-7cc7-8a84-7823-b17b6222bb90@gmail.com>
 References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia>
+ <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180108192607.GS5602@magnolia>
+In-Reply-To: <20180108220139.GB16421@dastard>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs.pkoch@dfgh.net, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, xfs.pkoch.f85f873813.linux-xfs#vger.linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[cc linux-raid, like the OP intended to do]
+Hi Dave and Derrick:
 
-[For XFS folk, the original linux-raid thread is here:
- https://marc.info/?l=linux-raid&m=151525346428531&w=2 ]
+Thanks for answers - seems like my interpretation of the
+blocknumber was wrong.
 
-On Mon, Jan 08, 2018 at 11:26:07AM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 08, 2018 at 08:08:09PM +0100, xfs.pkoch@dfgh.net wrote:
-> > Dear Linux-Raid and Linux-XFS experts:
-> > 
-> > I'm posting this on both the linux-raid and linux-xfs
-> > mailing list as it's not clear at this point wether
-> > this is a MD- od XFS-problem.
-> > 
-> > I have described my problem in a recent posting on
-> > linux-raid and Wol's conclusion was:
-> > 
-> > >In other words, one or more of the following three are true :-
-> > >1) The OP has been caught by some random act of God
-> > >2) There's a serious flaw in "mdadm --grow"
-> > >3) There's a serious flaw in xfs
-> > >
-> > >Cheers,
-> > >Wol
-> > 
-> > There's very important data on our RAID10 device but I doubt
-> > it's important enough for God to take a hand into our storage.
-> > 
-> > But let me first summarize what happened and why I believe that
-> > this is an XFS-problem:
+So the culprit is the md-driver again. It's producing I/O-errors
+without any hardware-errors.
 
-The evidence doesn't support that claim.
+The machine was setup in 2013 so everything is 5 years old
+besides the xfsprogs which I compiled yesterday.
 
-tl;dr: block device IO errors occurred immediately after a MD
-reshape started and the filesystem simply reported and responded
-appropriately to those MD device IO errors.
+xfs_repair output is very long and my impression is that things
+were getting worse with every invocation. xfs_repair itself seemed
+to have problems. I don't remeber the exact message but
+xfs_repair was complainig a lot about a failed write verifier test.
 
-> > Machine running Linux 3.14.69 with no kernel-patches.
+I will copy as much data as I can from the corrupt filesystem to
+our new system. For most files we have md5 checksums so I
+can test wether their contents are OK or not.
 
-So really old kernel....
+I started xfs_repair -n 20 minutes ago an it has already printed
+1165088 lines of messages
 
-> > XFS filesystem was created with XFS userutils 3.1.11.
+Here are some of these lines:
 
-And a really old userspace, too.
+Phase 1 - find and verify superblock...
+         - reporting progress in intervals of 15 minutes
+Phase 2 - using internal log
+         - zero log...
+         - scan filesystem freespace and inode maps...
+block (30,18106993-18106993) multiply claimed by cnt space tree, state - 2
+block (30,18892669-18892669) multiply claimed by cnt space tree, state - 2
+block (30,18904839-18904839) multiply claimed by cnt space tree, state - 2
+block (30,19815542-19815542) multiply claimed by cnt space tree, state - 2
+block (30,15440783-15440783) multiply claimed by cnt space tree, state - 2
+block (30,17658438-17658438) multiply claimed by cnt space tree, state - 2
+block (30,18749167-18749167) multiply claimed by cnt space tree, state - 2
+block (30,19778684-19778684) multiply claimed by cnt space tree, state - 2
+block (30,19951864-19951864) multiply claimed by cnt space tree, state - 2
+block (30,19816441-19816441) multiply claimed by cnt space tree, state - 2
+block (30,18742154-18742154) multiply claimed by cnt space tree, state - 2
+block (30,18132613-18132613) multiply claimed by cnt space tree, state - 2
+block (30,15502870-15502870) multiply claimed by cnt space tree, state - 2
+agf_freeblks 12543116, counted 12543086 in ag 9
+block (30,18168170-18168170) multiply claimed by cnt space tree, state - 2
+agf_freeblks 6317001, counted 6316991 in ag 25
+agf_freeblks 8962131, counted 8962128 in ag 0
+block (1,6142-6142) multiply claimed by cnt space tree, state - 2
+block (1,6150-6150) multiply claimed by cnt space tree, state - 2
+agf_freeblks 8043945, counted 8043942 in ag 21
+agf_freeblks 6833504, counted 6833499 in ag 24
+block (1,5777-5777) multiply claimed by cnt space tree, state - 2
+agf_freeblks 9032166, counted 9032109 in ag 19
+agf_freeblks 16877231, counted 16874747 in ag 30
+agf_freeblks 6645873, counted 6645861 in ag 27
+block (1,8388992-8388992) multiply claimed by cnt space tree, state - 2
+agf_freeblks 21229271, counted 21234873 in ag 1
+agf_freeblks 11090766, counted 11090638 in ag 14
+agf_freeblks 8424280, counted 8424279 in ag 13
+agf_freeblks 1618763, counted 1618764 in ag 16
+agf_freeblks 5380834, counted 5380831 in ag 15
+agf_freeblks 11211636, counted 11211543 in ag 12
+agf_freeblks 14135461, counted 14135434 in ag 11
+sb_fdblocks 344528311, counted 344530989
+         - 00:51:27: scanning filesystem freespace - 32 of 32 allocation 
+groups done
+         - found root inode chunk
+Phase 3 - for each AG...
+         - scan (but don't clear) agi unlinked lists...
+         - 00:51:27: scanning agi unlinked lists - 32 of 32 allocation 
+groups done
+         - process known inodes and perform inode discovery...
+         - agno = 0
+         - agno = 30
+         - agno = 15
+bad nblocks 17 for inode 64425222202, would reset to 18
+bad nextents 12 for inode 64425222202, would reset to 13
+Invalid inode number 0xfeffffffffffffff
+xfs_dir_ino_validate: XFS_ERROR_REPORT
+Metadata corruption detected at xfs_dir3_data block 0x4438f5c60/0x1000
+entry "/463380382.M621183P10446.mail,S=2075,W=2116" at block 12 offset 
+2192 in directory inode 64425222202 references invalid inode 
+18374686479671623679
+         would clear inode number in entry at offset 2192...
+entry at block 12 offset 2192 in directory inode 64425222202 has illegal 
+name "/463380382.M621183P10446.mail,S=2075,W=2116": would clear entry
+entry "/463466963.M420615P6276.mail,S=2202,W=2261" at block 12 offset 
+2472 in directory inode 64425222202 references invalid inode 
+18374686479671623679
+         would clear inode number in entry at offset 2472...
+entry at block 12 offset 2472 in directory inode 64425222202 has illegal 
+name "/463466963.M420615P6276.mail,S=2202,W=2261": would clear entry
+entry "/463980159.M342359P4014.mail,S=3285,W=3378" at block 12 offset 
+3376 in directory inode 64425222202 references invalid inode 
+18374686479671623679
+         would clear inode number in entry at offset 3376...
+entry at block 12 offset 3376 in directory inode 64425222202 has illegal 
+name "/463980159.M342359P4014.mail,S=3285,W=3378": would clear entry
+entry "/463984373.M513992P19720.mail,S=10818,W=11143" at block 12 offset 
+3432 in directory inode 64425222202 references invalid inode 
+18374686479671623679
+.....
+..... thousends of messages about direcotry inodes referencing inode 
+0xfeffffffffffffff
+..... and illegal names where first character has been replaced by /
+..... most agno have these messages, but some agnos are fine
+.....
+Phase 4 - check for duplicate blocks...
+         - setting up duplicate extent list...
+         - 01:10:03: setting up duplicate extent list - 32 of 32 
+allocation groups done
+         - check for inodes claiming duplicate blocks...
+         - agno = 15
+         - agno = 30
+         - agno = 0
+entry ".." at block 0 offset 32 in directory inode 128849025043 
+references non-existent inode 124835665944
+entry ".." at block 0 offset 32 in directory inode 128849348634 
+references non-existent inode 124554268735
+entry ".." at block 0 offset 32 in directory inode 128849348643 
+references non-existent inode 124554274826
+entry ".." at block 0 offset 32 in directory inode 128849350697 
+references non-existent inode 4295153945
+entry ".." at block 0 offset 32 in directory inode 128849352738 
+references non-existent inode 124554268679
+entry ".." at block 0 offset 32 in directory inode 128849352744 
+references non-existent inode 124554268687
+entry ".." at block 0 offset 32 in directory inode 128849393697 
+references non-existent inode 124554315786
+entry ".." at block 0 offset 32 in directory inode 128849397786 
+references non-existent inode 124678412289
+entry ".." at block 0 offset 32 in directory inode 128849397815 
+references non-existent inode 124678412340
+entry ".." at block 0 offset 32 in directory inode 128849397821 
+references non-existent inode 4295878668
+entry ".." at block 0 offset 32 in directory inode 128849399852 
+references non-existent inode 124554274851
+entry ".." at block 0 offset 32 in directory inode 128849399867 
+references non-existent inode 4295020775
+entry ".." at block 0 offset 32 in directory inode 128849403936 
+references non-existent inode 124554340368
+entry ".." at block 0 offset 32 in directory inode 128849412109 
+references non-existent inode 124554403877
+entry ".." at block 0 offset 32 in directory inode 64425142305 
+references non-existent inode 4295153925
+bad nblocks 17 for inode 64425222202, would reset to 18
+bad nextents 12 for inode 64425222202, would reset to 13
+Invalid inode number 0xfeffffffffffffff
+xfs_dir_ino_validate: XFS_ERROR_REPORT
+Metadata corruption detected at xfs_dir3_data block 0x4438f5c60/0x1000
+would clear entry
+would clear entry
+would clear entry
+.....
+..... entry ".." at block 0 offset 32 - messages repeat over and over 
+with differnt inodes
+.....
 
-> > I did a fresh compile of xfsprogs-4.9.0 yesterday when
-> > I realized that the 3.1.11 xfs_repair did not help.
-> > 
-> > mdadm is V3.3
-> > 
-> > /dev/md5 is a RAID10-device that was created in Feb 2013
-> > with 10 2TB disks and an ext3 filesystem on it. Once in a
-> > while I added two more 2TB disks. Reshaping was done
-> > while the ext3 filesystem was mounted. Then the ext3
-> > filesystem was unmounted resized and mounted again. That
-> > worked until I resized the RAID10 from 16 to 20 disks and
-> > realized that ext3 does not support filesystems >16TB.
-> > 
-> > I switched to XFS and created a 20TB filesystem. Here are
-> > the details:
-> > 
-> > # xfs_info /dev/md5
-> > meta-data=/dev/md5               isize=256    agcount=32, agsize=152608128 blks
-> >           =                       sectsz=512   attr=2
-> > data     =                       bsize=4096   blocks=4883457280, imaxpct=5
-> >           =                       sunit=128    swidth=1280 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =internal               bsize=4096   blocks=521728, version=2
-> >           =                       sectsz=512   sunit=8 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > Please notice: Ths XFS-filesystem has a size of
-> > 4883457280*4K = 19,533,829,120K
-> > 
-> > On saturday I tried to add two more 2TB disks to the RAID10
-> > and the XFS filesystem was mounted (and in medium use) at that
-> > time. Commands were:
-> > 
-> > # mdadm /dev/md5 --add /dev/sdo
-> > # mdadm --grow /dev/md5 --raid-devices=21
+Phase 5 which produced a lot of messages as well is missing
+when the -n option is used.
 
-You added one device, not two. That's a recipe for a reshape that
-moves every block of data in the device to a different location.
+> You added one device, not two. That's a recipe for a reshape that
+> moves every block of data in the device to a different location.
+Of course I was planning to add another one. If I add both in one
+step I cannot predict which disk will end up in disk set-A and which
+will end up in disk set-B. Since both disk sets are at different location
+I have to add the additional disk at location-A first and then the second
+disk at location B. Adding two disks in one step does move every
+piece of data as well.
 
-> > # mdadm -D /dev/md5
-> > /dev/md5:
-> >          Version : 1.2
-> >    Creation Time : Sun Feb 10 16:58:10 2013
-> >       Raid Level : raid10
-> >       Array Size : 19533829120 (18628.91 GiB 20002.64 GB)
-> >    Used Dev Size : 1953382912 (1862.89 GiB 2000.26 GB)
-> >     Raid Devices : 21
-> >    Total Devices : 21
-> >      Persistence : Superblock is persistent
-> > 
-> >      Update Time : Sat Jan  6 15:08:37 2018
-> >            State : clean, reshaping
-> >   Active Devices : 21
-> > Working Devices : 21
-> >   Failed Devices : 0
-> >    Spare Devices : 0
-> > 
-> >           Layout : near=2
-> >       Chunk Size : 512K
-> > 
-> >   Reshape Status : 1% complete
-> >    Delta Devices : 1, (20->21)
+> IOWs, within /a second/ of the reshape starting, the active, error
+> free XFS filesystem received hundreds of IO errors on both read and
+> write IOs from the MD device and shut down the filesystem.
+>
+> XFS is just the messenger here - something has gone badly wrong at
+> the MD layer when the reshape kicked off.
+You are right - and this has happened without hardware-problems.
+> Yeah, I'd like to see that output (from 4.9.0) too, but experience
+> tells me it did nothing helpful w.r.t data recovery from a badly
+> corrupted device.... :/
+You are right again.
 
-Yup, 21 devices in a RAID 10. That's a really nasty config for
-RAID10 which requires an even number of disks to mirror correctly.
-Why does MD even allow this sort of whacky, sub-optimal
-configuration?
+>> This looks like a severe XFS-problem to me.
+> I'll say this again: tHe evidence does not support that conclusion.
+So let's see  what the MD-experts have to say.
 
-[....]
+Kind regards
 
-> > Immediately after the RAID10 reshape operation started the
-> > XFS-filesystem reported I/O-errors and was severly damaged.
-> > I waited for the reshape operation to finish and tried to repair
-> > the filesystem with xfs_repair (version 3.1.11) but xfs_repair
-> > crashed, so I tried 4.9.0-version aif xfs_reapair with no luck
-> > either.
+Peter
 
-[...]
-
-> > Here are the relevant log messages:
-> > 
-> > >Jan  6 14:45:00 backup kernel: md: reshape of RAID array md5
-> > >Jan  6 14:45:00 backup kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > >Jan  6 14:45:00 backup kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
-> > >Jan  6 14:45:00 backup kernel: md: using 128k window, over a total of 19533829120k.
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): metadata I/O error: block 0x12c08f360 ("xfs_trans_read_buf_map") error 5 numblks 16
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): xfs_imap_to_bp: xfs_trans_read_buf() returned error 5.
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): metadata I/O error: block 0x12c08f360 ("xfs_trans_read_buf_map") error 5 numblks 16
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): xfs_imap_to_bp: xfs_trans_read_buf() returned error 5.
-> > >... hundreds of the above XFS-messages deleted
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): Log I/O Error Detected.  Shutting down filesystem
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): Please umount the filesystem and rectify the problem(s)
-
-IOWs, within /a second/ of the reshape starting, the active, error
-free XFS filesystem received hundreds of IO errors on both read and
-write IOs from the MD device and shut down the filesystem.
-
-XFS is just the messenger here - something has gone badly wrong at
-the MD layer when the reshape kicked off.
-
-> > Please notice: no error message about hardware-problems.
-> > All 21 disks are fine and the next messages from the
-> > md-driver was:
-> > 
-> > >Jan  7 02:28:02 backup kernel: md: md5: reshape done.
-> > >Jan  7 02:28:03 backup kernel: md5: detected capacity change from 20002641018880 to 21002772807680
-
-Ok, so the reshape took about 12 hours to run, and it grew to 21TB.
-A 12 hour long operation is what I'd expect for a major
-rearrangement of every block in the MD device....
-
-> > I'm wondering about one thing: the first xfs message is about a
-> > meatadata I/O error on block 0x12c08f360. Since the xfs filesystem
-> 
-> I'm sure Dave will have more to say about this, but...
-> 
-> "block 0x12c08f360" == units of sectors, not fs blocks.
-> 
-> IOWs, this IO error happened at offset 2,577,280,712,704 (~2.5TB)
-
-That's correct, Darrick - it's well within the known fileysetm
-bounds.
-
-> XFS doesn't change the fs size until you tell it to (via growfs);
-> even if the underlying storage geometry changes, XFS won't act on it
-> until the admin tells it to.
-> 
-> What did xfs_repair do?
-
-Yeah, I'd like to see that output (from 4.9.0) too, but experience
-tells me it did nothing helpful w.r.t data recovery from a badly
-corrupted device.... :/
-
-> > This looks like a severe XFS-problem to me.
-
-I'll say this again: tHe evidence does not support that conclusion.
-
-XFS has done exactly the right thing to protect the filesystem when
-fatal IO errors started occurring at the block layer: it shut down
-and stopped trying to modify the filesystem.  What caused those
-errors and any filesystem and/or data corruption to occur, OTOH, has
-nothing to do with XFS.
-
-> > But my hope is that all the data taht was within the filesystem
-> > before Jan 6 14:45 is not involved in the corruption. If xfs
-> > started to use space beyond the end of the underlying raid
-> > device this should have affected only data that was created,
-> > modified or deleted after Jan 6 14:45.
-
-Experience tells me that you cannot trust a single byte of data in
-that block device now, regardless of it's age and when it was last
-modified. The MD reshape may have completed, but what it did is
-highly questionable and you need to verify the contents of every
-single directory and file.
-
-When this sort of things happens, often the best data recovery
-strategy (i.e. fastest and most reliable) is to simply throw
-everything away and restore from known good backups...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
