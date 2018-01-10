@@ -1,36 +1,58 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Guoqing Jiang <gqjiang@suse.com>
 Subject: Re: Growing RAID10 with active XFS filesystem
-Date: Tue, 9 Jan 2018 23:32:07 +0100
-Message-ID: <540ae436-b3d2-9fbc-f38c-1cc3fede7728@thelounge.net>
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
+Date: Wed, 10 Jan 2018 09:57:49 +0800
+Message-ID: <39ae6b22-2404-1675-d007-b59702089b02@suse.com>
+References: <4892a03d-018c-8281-13d3-4fcc7acd2bb8@gmail.com>
+ <232deaaa-7306-a01b-567f-ca5c74dc6077@suse.com>
+ <5A538B30.4080601@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180109222523.GJ16421@dastard>
-Content-Language: de-CH
+In-Reply-To: <5A538B30.4080601@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>, Wols Lists <antlists@youngman.org.uk>
-Cc: linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, mdraid.pkoch@dfgh.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-Am 09.01.2018 um 23:25 schrieb Dave Chinner:
-> On Tue, Jan 09, 2018 at 09:36:49AM +0000, Wols Lists wrote:
->> Just to point out - if this is raid-10 (and not raid-1+0 which is a
->> completely different beast) this is actually a normal linux config. I'm
->> planning to set up a raid-10 across 3 devices. What happens is that is
->> that raid-10 writes X copies across Y devices. If X = Y then it's a
->> normal mirror config, if X > Y it makes good use of space (and if X < Y
->> it doesn't make sense :-)
+On 01/08/2018 11:16 PM, Wols Lists wrote:
+> On 08/01/18 07:31, Guoqing Jiang wrote:
 >>
-> IMO, odd-numbered disks in RAID-10 should be considered harmful and
-> never used....
+>> On 01/06/2018 11:44 PM, mdraid.pkoch@dfgh.net wrote:
+>>> Dear MD-experts:
+>>>
+>>> I was under the impression that growing a RAID10 device could be done
+>>> with an active filesystem running on the device.
+>> It depends on whether the specific filesystem provides related tool or
+>> not, eg,
+>> resize2fs can serve ext fs:
+> Sorry Guoqing, but I think you've *completely* missed the point :-(
 
-agreed and then "writemostly" could work without the lame excues that 
-one could have a crazy RAID10 layout.....
+Yes, I just want to point is it is more safer to umount fs first, then 
+do the reshape.
+There is another deadlock issue which mentioned by BingJing, it happened 
+during
+reshape stage while some I/O come from vfs layer, though it is not the 
+same issue,
 
-https://www.spinics.net/lists/raid/msg55797.html
+>> https://raid.wiki.kernel.org/index.php/Growing#Extending_the_filesystem
+>>
+>> And you can use xfs_growfs for your purpose.
+> You extend the filesystem *after* you've grown the array. The act of
+> growing the array has caused the filesystem to crash. That should NOT
+> happen - the act of growing the array should be *invisible* to the
+> filesystem.
+>
+> In other words, one or more of the following three are true :-
+> 1) The OP has been caught by some random act of God
+> 2) There's a serious flaw in "mdadm --grow"
+> 3) There's a serious flaw in xfs
+
+IMHO, there could be potential issue inside raid10/5, so I choose 2. 
+Anyway, I will
+try to simulate the scenario and see what will happen ...
+
+Thanks,
+Guoqing
