@@ -1,60 +1,44 @@
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Growing RAID10 with active XFS filesystem
-Date: Thu, 11 Jan 2018 13:14:41 +1100
-Message-ID: <20180111021441.GT16421@dastard>
+Date: Thu, 11 Jan 2018 14:07:23 +1100
+Message-ID: <20180111030723.GU16421@dastard>
 References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
  <20180108192607.GS5602@magnolia>
  <20180108220139.GB16421@dastard>
  <5A548D31.4000002@youngman.org.uk>
  <20180109222523.GJ16421@dastard>
- <5A55AFE7.3080500@youngman.org.uk>
+ <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5A55AFE7.3080500@youngman.org.uk>
+In-Reply-To: <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 10, 2018 at 06:17:11AM +0000, Wols Lists wrote:
-> On 09/01/18 22:25, Dave Chinner wrote:
-> > On Tue, Jan 09, 2018 at 09:36:49AM +0000, Wols Lists wrote:
-> >> On 08/01/18 22:01, Dave Chinner wrote:
-> >>> Yup, 21 devices in a RAID 10. That's a really nasty config for
-> >>> RAID10 which requires an even number of disks to mirror correctly.
-> >>> Why does MD even allow this sort of whacky, sub-optimal
-> >>> configuration?
-> >>
-> >> Just to point out - if this is raid-10 (and not raid-1+0 which is a
-> >> completely different beast) this is actually a normal linux config. I'm
-> >> planning to set up a raid-10 across 3 devices. What happens is that is
-> >> that raid-10 writes X copies across Y devices. If X = Y then it's a
-> >> normal mirror config, if X > Y it makes good use of space (and if X < Y
-> >> it doesn't make sense :-)
-> >>
-> >> SDA: 1, 2, 4, 5
-> >>
-> >> SDB: 1, 3, 4, 6
-> >>
-> >> SDC: 2, 3, 5, 6
-> > 
+on Wed, Jan 10, 2018 at 09:10:55AM -0500, Phil Turmel wrote:
+> On 01/09/2018 05:25 PM, Dave Chinner wrote:
+> 
 > > It's nice to know that MD has redefined RAID-10 to be different to
 > > the industry standard definition that has been used for 20 years and
 > > optimised filesystem layouts for.  Rotoring data across odd numbers
 > > of disks like this is going to really, really suck on filesystems
 > > that are stripe layout aware..
 > 
-> Actually, I thought that the industry standard definition referred to
-> Raid-1+0. It's just colloquially referred to as raid-10.
+> You're a bit late to this party, Dave.  MD has implemented raid10 like
+> this as far back as I can remember, and it is especially valuable when
+> running more than two copies.  Running raid10,n3 across four or five
+> devices is a nice capacity boost without giving up triple copies (when
+> multiples of three aren't available) or giving up the performance of
+> mirrored raid.
 
-https://en.wikipedia.org/wiki/Nested_RAID_levels#RAID_10
-
-"However, a nonstandard definition of "RAID 10" was created for the
-Linux MD driver"
-
-So it's not just me who thinks what MD is doing is non-standard.
+XFS comes from a different background - high performance, high
+reliability and hardware RAID storage. Think hundreds of drives in a
+filesystem, not a handful. i.e. The XFS world is largely enterprise
+and HPC storage, not small DIY solutions for a home or back-room
+office.  We live in a different world, and MD rarely enters mine.
 
 > > For example, XFS has hot-spot prevention algorithms in it's
 > > internal physical layout for striped devices. It aligns AGs across
@@ -64,134 +48,63 @@ So it's not just me who thinks what MD is doing is non-standard.
 > > the same position we started with - multiple AGs aligned to the
 > > same disk.
 > 
-> Are you telling me that xfs is aware of the internal structure of an
-> md-raid array?
+> All of MD's default raid5 and raid6 layouts rotate stripes, too, so that
+> parity and syndrome are distributed uniformly.
 
-It's aware of the /alignment/ characteristics of block devices, and
-these alignment characteristics are exported by MD. e.g.  These are
-exported in /sys/block/<dev>/queue in
+Well, yes, but it appears you haven't thought through what that
+typically means.  Take a 4+1, chunk size 128k, stripe width 512k
 
-	minimum_io_size
-		- typically the stripe chunk size
-	optimal_io_size
-		- typically the stripe width
+A	B	C	D	E
+0	0	0	0	P
+P	1	1	1	1
+2	P	2	2	2
+3	3	P	3	3
+4	4	4	P	4
 
-We get this stuff from DM and MD devices, hardware raid (via scsi
-code pages), thinp devices (i.e. to tell us the allocation
-granularity so we can align/size IO to match it) and any other block
-device that wants to tell us about optimal IO geometry. libblkid
-provides us with this information, and it's not just mkfs.xfs that
-uses it. e.g. mkfs.ext4 also uses it for the exact same purpose as
-XFS....
+For every 5 stripe widths, each disk holds one stripe unit of
+parity. Hence 80% of data accesses aligned to a specific data offset
+hit that disk. i.e. disk A is hit by 0-128k, parity for 512-1024k,
+1024-1152k, 1536-1664k and 2048-2176k. IOWs, if we align stuff to
+512k, we're going to hit disk A 80% of the time and disk B 20% of
+the time.
 
-> Given that md-raid is an abstraction layer, this seems
-> rather dangerous to me - you're breaking the abstraction and this could
-> explain the OP's problem. Md-raid changed underneath the filesystem, on
-> the assumption that the filesystem wouldn't notice, and the filesystem
-> *did*. BANG!
+So, if mkfs.xfs ends up aligning all AGs to a multiple of 512k, then
+all our static AG metadata is aligned to disk A. Further, all the
+AGs will align their first stripe unit in a stripe width to Disk A,
+too.  Hence this results in a major IO hotspot on disk A, and
+smaller hotspot on disk B. Disks C, D, and E will have the least IO
+load on them.
 
-No, we aren't breaking any abstractions. It's always been that case
-that the filesystem needs to be correctly aligned to the underlying
-storage geometry if performance is desired. Think about old skool
-filesystems that were aware of the old C/H/S layout of drives back
-in the 80s. Optimising layouts for "cylinder groups" in the hardware
-gave major performance improvements and we can trace ext4's block
-group concept all the way back to those specific hardware geometry
-requirements.
+By telling XFS that the stripe unit is 128k and the stripe width is
+512k, we can avoid this problem. mkfs.xfs will rotor it's AG
+alignment by some number of stripe units at a time. i.e. AG 0 aligns
+to disk A, AG 1 aligns to disk B, AG 2 aligns to disk 3, and so on.
 
-I suspect that the problem here is that realtively few people
-understand why alignment to the underlying storage geometry is
-necessary and don't realise the lengths the storage stack goes to
-ensuring alignment is optimal.  It's mostly hidden and automatic
-these days because most users lack the knowledge to be able to set
-this sort of stuff up correctly.
+The result is that base alignment used by the filesystem is now
+distributed evenly across all disks in the RAID array and so all
+disks get loaded evenly. The hot spots go away because the
+filesystem has aligned it's layout appropriately for the underlying
+storage geometry.  This applies to any RAID geometry that stripes
+data across multiple disks in a regular/predictable pattern.
 
-> > The result is that many XFS workloads are going to hotspot disks and
-> > result in unbalanced load when there are an odd number of disks in a
-> > RAID-10 array.  Actually, it's probably worse than having no
-> > alignment, because it makes hotspot occurrence and behaviour very
-> > unpredictable.
-> > 
-> > Worse is the fact that there's absolutely nothing we can do to
-> > optimise allocation alignment or IO behaviour at the filesystem
-> > level. We'll have to make mkfs.xfs aware of this clusterfuck and
-> > turn off stripe alignment when we detect such a layout, but that
-> > doesn't help all the existing user installations out there right
-> > now.
-> 
-> So you're telling me that mkfs.xfs *IS* aware of the underlying raid
-> structure. OOPS! What happens when that structure changes for instance a
-> raid-5 is converted to raid-6, or another disk is added?
-
-RAID-5 to RAID-6 doesn't change the stripe alignment. That's still
-N data disks per stripe, so the geometry and alignment is unchanged
-and has no impact on the layout.
-
-But changing the stripe geometry (i.e. number of data disks)
-completely fucks IO alignment and that impacts overall storage
-performance.  None of the existing data in the filesystem is aligned
-to the underlying storage anymore so overwrites will cause all sorts
-of RMW storms, you'll get IO hotspots because what used to be on
-separate disks is now all on the same disk, etc. And the filesystem
-won't be able to fix this because unless you increase the number
-data disks by an integer multiple, the alignment cannot be changed
-due to fixed locations of metadata in the filesystem.
-
-> If you have to
-> have special code to deal with md-raid and changes in said raid, where's
-> the problem with more code for raid-10?
-
-I didn't stay we had code to handle "changes in said raid". That's
-explicitly what we /don't have/. To handle a geometry/alignment
-change in the underlying storage we have to *resilver the entire
-filesystem*. And, well, we can't easily do that because that means
-we'd have to completely rewrite and re-index the filesystem. It's
-faster, easier and more reliable to dump/mkfs/restore the filesystem
-than it is to resilver it.
-
-There's many, many reasons why RAID reshaping is considered harmful
-and is not recommended by anyone who understands the whole storage
-stack intimately.
+[ I'd cite an internal SGI paper written in 1999 that measured and
+analysed all this on RAID0 in real world workloads and industry
+standard benchmarks like AIM7 and SpecSFS and lead to the mkfs.xfs
+changes I described above, but, well, I haven't had access to that
+since I left SGI 10 years ago... ]
 
 > > IMO, odd-numbered disks in RAID-10 should be considered harmful and
 > > never used....
-> > 
-> What about when you have an odd number of mirrors? :-)
+> 
+> Users are perfectly able to layer raid1+0 or raid0+1 if they don't want
+> the features of raid10.  Given the advantages of MD's raid10, a pedant
+> could say XFS's lack of support for it should be considered harmful and
+> XFS never used.  (-:
 
-Be a smart-ass all you want, but it doesn't change the fact that the
-"grow-by-one-disk" clusterfuck occurs when you have an odd number of
-mirrors, too.
-
-> Seriously, can't you just make sure that xfs rotates the stripe units
-> using a number that is relatively prime to the number of disks?
-
-Who said we don't already rotate through stripe units?
-
-And, well, there are situations where ignoring geometry is good
-(e.g. delayed allocation allows us to pack lots of small files
-together so they aggregate into full stripe writes and avoid RMW
-cycles) and there are situations where stripe width rather than
-stripe unit alignment is desirable for a single allocation (e.g.
-large sequential direct IO writes so we avoid RMW cycles due to
-partial stripe overlaps in IO).
-
-These IO alignment optimisations are all done on-the-fly by
-filesystems.  Filesystems do far more than you realise with the
-geometry information they are provided with and that's why assuming
-that you can transparently change the storage geometry without the
-filesystem (and hence users) caring about such changes is
-fundamentally wrong.
-
-> (Just so's you know who I am, I've taken over editorship of the raid
-> wiki. This is exactly the stuff that belongs on there, so as soon as I
-> understand what's going on I'll write it up, and I'm happy to be
-> educated :-) But I do like to really grasp what's going on, so expect
-> lots of naive questions ... There's not a lot of information on how raid
-> and filesystems interact, and I haven't really got to grips wioth any of
-> that at the moment, and I don't use xfs. I use ext4 on gentoo, and the
-> default btrfs on SUSE.)
-
-You've got an awful lot of learning to do, then.
+MD RAID is fine with XFS as long as you use a sane layout and avoid
+doing stupid things that require reshaping and changing the geometry
+of the underlying device. Reshaping is where the trouble all
+starts...
 
 Cheers,
 
