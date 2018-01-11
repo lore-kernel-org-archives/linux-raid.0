@@ -1,114 +1,156 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Growing RAID10 with active XFS filesystem
-Date: Thu, 11 Jan 2018 14:07:23 +1100
-Message-ID: <20180111030723.GU16421@dastard>
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia>
- <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk>
- <20180109222523.GJ16421@dastard>
- <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
+From: "Jason Herring" <jaherring@usa.net>
+Subject: Lost a mirror disk, md array wouldn't start,  vg's are missing
+Date: Wed, 10 Jan 2018 22:33:01 -0800
+Message-ID: <496wakgGB9904S08.1515652381@web08.cms.usa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Wols Lists <antlists@youngman.org.uk>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-on Wed, Jan 10, 2018 at 09:10:55AM -0500, Phil Turmel wrote:
-> On 01/09/2018 05:25 PM, Dave Chinner wrote:
-> 
-> > It's nice to know that MD has redefined RAID-10 to be different to
-> > the industry standard definition that has been used for 20 years and
-> > optimised filesystem layouts for.  Rotoring data across odd numbers
-> > of disks like this is going to really, really suck on filesystems
-> > that are stripe layout aware..
-> 
-> You're a bit late to this party, Dave.  MD has implemented raid10 like
-> this as far back as I can remember, and it is especially valuable when
-> running more than two copies.  Running raid10,n3 across four or five
-> devices is a nice capacity boost without giving up triple copies (when
-> multiples of three aren't available) or giving up the performance of
-> mirrored raid.
+I have a crashed mirror array on Fedora 27. One disk is clicky-clicking, the
+the other seems fine but the array won't assemble.  The machine may have
+crashed during this time, causing the additional problems.  I can see the
+partition fine and the details about this disk but mdadm scanning didn't find
+it.
 
-XFS comes from a different background - high performance, high
-reliability and hardware RAID storage. Think hundreds of drives in a
-filesystem, not a handful. i.e. The XFS world is largely enterprise
-and HPC storage, not small DIY solutions for a home or back-room
-office.  We live in a different world, and MD rarely enters mine.
+cat /proc/mdstat did not show the array.
 
-> > For example, XFS has hot-spot prevention algorithms in it's
-> > internal physical layout for striped devices. It aligns AGs across
-> > different stripe units so that metadata and data doesn't all get
-> > aligned to the one disk in a RAID0/5/6 stripe. If the stripes are
-> > rotoring across disks themselves, then we're going to end up back in
-> > the same position we started with - multiple AGs aligned to the
-> > same disk.
-> 
-> All of MD's default raid5 and raid6 layouts rotate stripes, too, so that
-> parity and syndrome are distributed uniformly.
+Looking at the disk:
 
-Well, yes, but it appears you haven't thought through what that
-typically means.  Take a 4+1, chunk size 128k, stripe width 512k
+# mdadm --examine /dev/sds 
+/dev/sds:
+      Magic : a92b4efc
+    Version : 1.2
+Feature Map : 0x0
+ Array UUID : 9746d015:9e39eeea:334aa92e:bfa480bb
+       Name : pangea:2  (local to host pangea)
+  Creation Time : Tue Oct 11 09:33:16 2011
+Raid Level : raid1
+Raid Devices : 2
 
-A	B	C	D	E
-0	0	0	0	P
-P	1	1	1	1
-2	P	2	2	2
-3	3	P	3	3
-4	4	4	P	4
+Avail Dev Size : 2930275121 (1397.26 GiB 1500.30 GB)
+Array Size : 1465137424 (1397.26 GiB 1500.30 GB)
+Used Dev Size : 2930274848 (1397.26 GiB 1500.30 GB)
+Data Offset : 2048 sectors
+Super Offset : 8 sectors
+Unused Space : before=1968 sectors, after=271 sectors
+      State : clean
+Device UUID : 0c044478:d64fa3be:815fbaef:8a0f9988
 
-For every 5 stripe widths, each disk holds one stripe unit of
-parity. Hence 80% of data accesses aligned to a specific data offset
-hit that disk. i.e. disk A is hit by 0-128k, parity for 512-1024k,
-1024-1152k, 1536-1664k and 2048-2176k. IOWs, if we align stuff to
-512k, we're going to hit disk A 80% of the time and disk B 20% of
-the time.
+Update Time : Sun Jan  8 10:34:51 2012
+   Checksum : d72883e9 - expected d4419587
+     Events : 72
 
-So, if mkfs.xfs ends up aligning all AGs to a multiple of 512k, then
-all our static AG metadata is aligned to disk A. Further, all the
-AGs will align their first stripe unit in a stripe width to Disk A,
-too.  Hence this results in a major IO hotspot on disk A, and
-smaller hotspot on disk B. Disks C, D, and E will have the least IO
-load on them.
 
-By telling XFS that the stripe unit is 128k and the stripe width is
-512k, we can avoid this problem. mkfs.xfs will rotor it's AG
-alignment by some number of stripe units at a time. i.e. AG 0 aligns
-to disk A, AG 1 aligns to disk B, AG 2 aligns to disk 3, and so on.
+Device Role : Active device 0
+Array State : ?? ('A' == active, '.' == missing, 'R' == replacing)
 
-The result is that base alignment used by the filesystem is now
-distributed evenly across all disks in the RAID array and so all
-disks get loaded evenly. The hot spots go away because the
-filesystem has aligned it's layout appropriately for the underlying
-storage geometry.  This applies to any RAID geometry that stripes
-data across multiple disks in a regular/predictable pattern.
+It may be that it thinks the array is created on the entire disk, not a
+partition. However, if I look at the disk I see:
 
-[ I'd cite an internal SGI paper written in 1999 that measured and
-analysed all this on RAID0 in real world workloads and industry
-standard benchmarks like AIM7 and SpecSFS and lead to the mkfs.xfs
-changes I described above, but, well, I haven't had access to that
-since I left SGI 10 years ago... ]
+# fdisk -l /dev/sds
+Disk /dev/sds: 1.4 TiB, 1500301909504 bytes, 2930277167 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x39fa8c19
 
-> > IMO, odd-numbered disks in RAID-10 should be considered harmful and
-> > never used....
-> 
-> Users are perfectly able to layer raid1+0 or raid0+1 if they don't want
-> the features of raid10.  Given the advantages of MD's raid10, a pedant
-> could say XFS's lack of support for it should be considered harmful and
-> XFS never used.  (-:
+Device     Boot Start        End    Sectors  Size Id Type
+/dev/sds1           1 2930277168 2930277168  1.4T fd Linux raid autodetect
 
-MD RAID is fine with XFS as long as you use a sane layout and avoid
-doing stupid things that require reshaping and changing the geometry
-of the underlying device. Reshaping is where the trouble all
-starts...
+The array refused to start and gave me the above "??" array state. OK, so
+looking around I found some problems mentioning it did not have a valid
+superblock and something about the disk size being incorrect. I wish I still
+had that message, but the GUI crashed and it's lost to history.
 
-Cheers,
+Next, I found some reference to using --update=devicesize to fix the incorrect
+disk size, but I didn't know what to call this array. So, I used the UUID to
+assemble it per a suggestion:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+mdadm --assemble --update=devicesize  --uuid
+9746d015:9e39eeea:334aa92e:bfa480bb /dev/md125
+
+And this sort of worked.. (though could this be my mistake?) ...  I say that
+because now it assembles:
+
+# cat /proc/mdstat
+Personalities : [raid1] 
+md125 : active (auto-read-only) raid1 sds[0]
+  1465137424 blocks super 1.2 [2/1] [U_]
+
+But it shows up with a name the same as another array (this server has several
+arrays):
+
+# mdadm --examine --scan --verbose
+ARRAY /dev/md/2  level=raid1 metadata=1.2 num-devices=2
+UUID=2dae5fb0:bcce83e4:2855f921:1b3bb460 name=pangea:2
+devices=/dev/sdj7,/dev/sdg7
+ARRAY /dev/md/2  level=raid1 metadata=1.2 num-devices=2
+UUID=9746d015:9e39eeea:334aa92e:bfa480bb name=pangea:2
+devices=/dev/sds
+
+Listing the devices, there are two entries for md/2, kind of, but mdadm can't
+differentiate them? Seems like a bug?
+
+# ls -l /dev/md/ 
+lrwxrwxrwx. 1 root root 6 Jan 9 12:51 2 -> ../md2 
+lrwxrwxrwx. 1 root root 8 Jan 9 19:13 2_0 -> ../md125
+
+Next, I see it's assembled, and the PV is visible:
+
+# pvs
+/dev/md125               lvm2 ---    1.36t   1.36t
+
+Note, it finds it at /dev/md125, not /dev/md/2 or md/2_0. So, there is some
+confusion by mdadm.
+
+There are no volume groups listed above, and lvs and the various tools to look
+at them find nothing.
+
+Finally, I rant "testdisk" to see what's in there. Selecting /dev/md125 ->
+Intel partition table -> Analyse
+
+I first see:
+
+Disk /dev/md125 - 1500 GB / 1397 GiB - CHS 366284356 2 4
+Current partition structure:
+  Partition                  Start        End    Size in sectors
+
+
+Partition sector doesn't have the endmark 0xAA55
+
+I then do a "quick search" and get the below message:
+
+Disk /dev/md125 - 1500 GB / 1397 GiB - CHS 366284356 2 4
+
+Warning: the current number of heads per cylinder is 2
+but the correct value may be 128.
+You can use the Geometry menu to change this value.
+It's something to try if
+- some partitions are not found by TestDisk
+- or the partition table can not be written because partitions overlaps.
+
+I then hit "continue":
+
+Disk /dev/md125 - 1500 GB / 1397 GiB - CHS 366284356 2 4
+
+     Partition                  Start        End    Size in sectors
+
+ 1 * Linux                  256   0  1 366284031   1  4 2930270208
+
+At this point I stop as I could start to do some real damage here and need
+some help as to how to proceed to get my volume group and logical volume
+back.. and save the filesystem.
+
+Issues that need addressing:
+
+1) conflicting /dev/md### numbers 
+2) partition /dev/sds or /dev/sds1 
+3) missing volume group and logical volume
+
+Thanks for any thoughts on the best way forward!
+
