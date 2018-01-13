@@ -1,37 +1,99 @@
-From: RQM <rqm@protonmail.com>
-Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
-Date: Sat, 13 Jan 2018 07:18:46 -0500
-Message-ID: <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
-References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
- <87373og9z9.fsf@notabene.neil.brown.name>
- <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com>
- <87r2r8dk80.fsf@notabene.neil.brown.name>
- <f92IIdV_PSMtdilVnQDOaLSxzvpTkAa6D0nxpuplzzdnaP9km9JveoXfzOlygcXD5Y_HpN49Fh0x4nOZFhXPfv5VyPrT6CgFO-nsULq6wn0=@protonmail.com>
- <871sj5dsiv.fsf@notabene.neil.brown.name>
- <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com>
-Reply-To: RQM <rqm@protonmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Growing RAID10 with active XFS filesystem
+Date: Sat, 13 Jan 2018 20:30:01 +0800
+Message-ID: <268a13e5-5075-7fb9-caae-8ab281737ff2@fnarfbargle.com>
+References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
+ <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
+ <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
+ <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
+ <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
+ <20180112152538.2c4d8cd4@harpe.intellique.com>
+ <5A58F5FB.7000101@youngman.org.uk>
+ <20180112193710.1369f4ad@harpe.intellique.com>
+ <8a8f7b91-80b5-3600-a82b-b55691d0ac6b@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com>
+In-Reply-To: <8a8f7b91-80b5-3600-a82b-b55691d0ac6b@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: "linux-raid\\\\\\\\\\\\\\@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Wol's lists <antlists@youngman.org.uk>, Emmanuel Florac <eflorac@intellique.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On 13/01/18 03:35, Wol's lists wrote:
 
-I have been made aware that the link I had supplied previously does not wor=
-k anymore.
-Here's another attempt at uploading the `mdadm --dump /dev/sd[bcdef]3` outp=
-ut:
+> I'll get round to writing all this up soon, so the wiki will try and 
+> persuade people that resizing arrays is not actually the brightest of 
+> ideas.
 
-https://filebin.net/i0olmgzg52obnp0f/dump.tgz
-=E2=80=8B
-Any help is greatly appreciated. Please do let me know whether you plan on =
-working on this issue in the near future, because otherwise I will have to =
-re-create a new array on these disks in order to put them into production a=
-gain.
+Now hang on. Don't go tarring every use case with the same brush.
 
-Thank you so much!
+There are many use cases for a bucket of disks and high performance is 
+but one of them.
+
+Leaving aside XFS, let's look at EXT3/4 as they seem to be generally the 
+most common filesystems in use for your average "install it and run it" 
+user (ie *ME*).
+
+If you read the mke2fs man page and check out stripe and stride (which 
+you *used* to have to specify manually), both of them imply they are 
+important for letting the filesystem know the construction of your RAID 
+for *performance* reasons.
+
+Nowhere does *anything* make any mention of changing geometry, and if 
+you gave a 10 second thought to those parameters and their explanations 
+you'd have to think "This filesystem was optimised for the RAID geometry 
+it was built with. If I change that, then I won't have the same 
+performance I did have at the time of creation". Or maybe that was only 
+obvious to me.
+
+Anyway, I happily grew several large arrays over the years *knowing* 
+that there would be a performance impact, because for my use case I 
+didn't actually care.
+
+"Enterprise" don't grow arrays. They build a storage solution that is 
+often extremely finely tuned for exactly their workload and they use it. 
+If they need more storage they either replicate or build another (with 
+the consequential months of tests/tuning) storage configuration. I see 
+Stan Hoeppner replied. If you want a good read, get him going on 
+workload specific XFS tuning.
+
+It's only hacks like me that tack disks onto built arrays, but I did it 
+*knowing* it wasn't going to affect my workload as all I wanted was a 
+huge bucket of storage with quick reads. Writes don't happen often 
+enough to matter.
+
+Exposing the geometry to the filesystem is there to give the filesystem 
+a chance of performing operations in a manner least likely to create a 
+performance hotspot (as pointed out by Dave Chinner). They are hints. 
+Change the geometry after the fact and all bets are off.
+
+On another note, personally I've used XFS in a couple of performance 
+sensitive roles over the years (when it *really* mattered), but as I 
+don't often wade into that end of the pool I tend to stick with the ext 
+series.
+
+e2fsck has gotten me out of some really tight spots and I can rely on it 
+making the best of a really bad mess. With XFS I've never had the 
+pleasure of running it on anything other than top of the line hardware, 
+so it never had to clean up after me. It does go like a stung cat though 
+when it's tuned up.
+
+If I were to suggest an addition to the RAID wiki, it'd be to elaborate 
+on the *creation* time tuning a filesystem create tool does with the 
+RAID geometry, and to point out that once you grow the RAID, all 
+performance bets are off. I've never met a filesystem that would break 
+however.
+
+I've grown RAID 1, 5 & 6. Growing RAID10 with anything other than a near 
+configuration and adding another set of disks just feels like a disaster 
+waiting to happen. Even I'm not that game.
+
+I do have a staging machine now with a few spare disks, so I might have 
+a crack at it, but I won't be using a kernel and userspace as old as the 
+thread initiator.
+
+Regards,
+Brad
