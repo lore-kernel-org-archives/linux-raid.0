@@ -1,160 +1,251 @@
-From: Stan Hoeppner <stan@hardwarefreak.org>
-Subject: Re: Growing RAID10 with active XFS filesystem
-Date: Fri, 12 Jan 2018 18:20:22 -0600
-Message-ID: <09819eb5-b342-01ca-1b96-cf5395dcd2e2@hardwarefreak.org>
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
- <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
- <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
- <20180112152538.2c4d8cd4@harpe.intellique.com>
- <5A58F5FB.7000101@youngman.org.uk>
+From: Eric Wheeler <drbd-dev@lists.ewheeler.net>
+Subject: Re: [Drbd-dev] [PATCH 23/27] drbd: make intelligent use of
+ blkdev_issue_zeroout
+Date: Sat, 13 Jan 2018 00:46:40 +0000 (UTC)
+Message-ID: <alpine.LRH.2.11.1801130035010.13147@mail.ewheeler.net>
+References: <20170405172125.22600-1-hch@lst.de> <20170405172125.22600-24-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5A58F5FB.7000101@youngman.org.uk>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Emmanuel Florac <eflorac@intellique.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20170405172125.22600-24-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, agk@redhat.com, snitzer@redhat.com, shli@kernel.org, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-raid.ids
 
-On 01/12/2018 11:52 AM, Wols Lists wrote:
-> On 12/01/18 14:25, Emmanuel Florac wrote:
->> Le Fri, 12 Jan 2018 13:32:49 +0000
->> Wols Lists <antlists@youngman.org.uk> écrivait:
->>
->>> On 11/01/18 03:07, Dave Chinner wrote:
->>>> XFS comes from a different background - high performance, high
->>>> reliability and hardware RAID storage. Think hundreds of drives in a
->>>> filesystem, not a handful. i.e. The XFS world is largely enterprise
->>>> and HPC storage, not small DIY solutions for a home or back-room
->>>> office.  We live in a different world, and MD rarely enters mine.
->>> So what happens when the hardware raid structure changes?
->> hardware RAID controllers don't expose RAID structure to the software.
->> So As far as XFS knows, a hardware RAID is just a very large disk.
->> That's when using stripe unit and stripe width options make sense in
->> mkfs_xfs.
-> Umm... So you can't partially populate a chassis and add more disks as
-> you need them? So you have to manually pass stripe unit and width at
-> creation time and then they are set in stone? Sorry that doesn't sound
-> that enterprisey to me :-(
+Hello All,
 
-It's not set in stone.  If the RAID geometry changes one can specify the 
-new geometry at mount say in fstab.  New writes to the filesystem will 
-obey the new specified geometry.
->>> Ext allows you to grow a filesystem. Btrfs allows you to grow a
->>> filesystem. Reiser allows you to grow a file system. Can you add more
->>> disks to XFS and grow the filesystem?
->> Of course. xfs_growfs is your friend. Worked with online filesystems
->> many years before that functionality came to other filesystems.
->>
->>> My point is that all this causes geometries to change, and ext and
->>> btrfs amongst others can clearly handle this. Can XFS?
->> Neither XFS, ext4 or btrfs can handle this. That's why Dave mentioned
->> the fact that growing your RAID is almost always the wrong solution.
->> A much better solution is to add a new array and use LVM to aggregate
->> it with the existing ones.
-> Isn't this what btrfs does with a rebalance? And I may well be wrong,
-> but I got the impression that some file systems could change stripe
-> geometries dynamically.
->
-> Adding a new array imho breaks the KISS principle. So I now have
-> multiple arrays sitting on the hard drives (wasting parity disks if I
-> have raid5/6), multiple instances of LVM on top of that, and then the
-> filesystem sitting on top of multiple volumes.
->
-> As a hobbyist I want one array, with one LVM on top of that, and one
-> filesystem per volume. Anything else starts to get confusing. And if I'm
-> a professional sys-admin I would want that in spades! It's all very well
-> expecting a sys-admin to cope, but the fewer boobytraps and landmines
-> left lying around, the better!
->
-> Squaring the circle, again :-(
->> Basically growing an array then the filesystem on it generally works
->> OK, BUT it may kill performance (or not). YMMV. At least, you *probably
->> won't* get the performance gain that the difference of stripe width
->> would permit when starting anew.
->>
-> Point taken - but how are you going to backup your huge petabyte XFS
-> filesystem to get the performance on your bigger array? Catch 22 ...
->
->>> Because if it can, it seems to me the obvious solution to changing
->>> raid geometries is that you need to grow the filesystem, and get that
->>> to adjust its geometries.
->> Unfortunately that's nigh impossible. No filesystem in existence does
->> that. The closest thing is ZFS ability to dynamically change stripe
->> sizes, but when you extend a ZFS zpool it doesn't rebalance existing
->> files and data (and offers absolutely no way to do it). Sorry, no pony.
->>
-> Well, how does raid get away with it, rebalancing and restriping
-> everything :-)
->
-> Yes I know, it's a major change if the original file system design
-> didn't allow for it, and major file system changes can be extremely
-> destructive to user data ...
->
->>> Bear in mind, SUSE has now adopted XFS as the default filesystem for
->>> partitions other than /. This means you are going to get a lot of
->>> "hobbyist" systems running XFS on top of MD and LVM. Are you telling
->>> me that XFS is actually very badly suited to be a default filesystem
->>> for SUSE?
->> Doesn't seem so. In fact XFS is less permissive than other filesystems,
->> and it's a *darn good thing* IMO. It's better having frightening error
->> messages "XFS force shutdown" than corrupted data, isn't it?
-> False dichotomy, I'm afraid. Do you really want a filesystem that
-> guarantees integrity, but trashes performance when you want to take
-> advantage of features such as resizing? I'd rather have integrity,
-> performance *and* features :-) (Pick any two, I know :-)
->>> What concerns me here is, not having a clue how LVM handles changing
->>> partition sizes, what effect this will have on filesystems ... The
->>> problem is the Unix philosophy of "do one thing and do it well".
->>> Sometimes that's just not practical.
->> LVM volumes changes are propagated to upper levels.
-> And what does the filesystem do with them? If LVM is sat on MD, what then?
->> If you don't like Unix principles, use Windows then :)
->>
-> The phrase "a rock and a hard place" comes to mind. Neither were
-> designed with commercial solidity and integrity and reliability in mind.
-> And having used commercial systems I get the impression NIH is alive and
-> kicking far too much. Both Linux and Windows are much more reliable and
-> solid than they were, but too many of those features are bolt-ons, and
-> they feel like it ...
->
->>> The Unix philosophy says "leave
->>> partition management to lvm, leave redundancy to md, leave the files
->>> to the filesystem, ..." and then the filesystem comes along and says
->>> "hey, I can't do my job very well, if I don't have a clue about the
->>> physical disk layout". It's a hard circle to square ... :-)
->> Yeah, that was apparently the very same thinking that brought us ZFS.
->>
->>> (Anecdotes about btrfs are that it's made a right pigs ear of trying
->>> to do everything itself.)
->>>
->> Not so sure. Btrfs is excellent, taking into account how little love it
->> received for many years at Oracle.
->>
-> Yep. The solid features are just that - solid. Snag is, a lot of the
-> nice features are still experimental, and dangerous! Parity raid, for
-> example ... and I've heard rumours that the flaws could be unfixable, at
-> least not until btrfs-2 whenever that gets started ...
->
-> When MD adds disks, it rewrites the array from top to bottom or the
-> other way round, moving everything over to the new layout. Is there no
-> way a file system can do the same sort of thing? Okay, it would probably
-> need to be a defrag-like utility and linux prides itself on not needing
-> defrag :-)
->
-> Or could it simply switch over to optimising for the new geometry,
-> accept the fact that the reshape will have caused hotspots, and every
-> time it rewrites (meta)data, it adjusts it to the new geometry to
-> reduce/remove hotspots over time?
->
-> Cheers,
-> Wol
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We just noticed that discards to DRBD devices backed by dm-thin devices 
+are fully allocating the thin blocks.
 
+This behavior does not exist before 
+ee472d83 block: add a flags argument to (__)blkdev_issue_zeroout
+
+The problem exists somewhere between
+[working] c20cfc27 block: stop using blkdev_issue_write_same for zeroing
+  and
+[broken]  45c21793 drbd: implement REQ_OP_WRITE_ZEROES
+
+Note that c20cfc27 works as expected, but 45c21793 discards blocks 
+being zeroed on the dm-thin backing device. All commits between those two 
+produce the following error:
+
+blkdiscard: /dev/drbd/by-res/test: BLKDISCARD ioctl failed: Input/output error
+
+Also note that issuing a blkdiscard to the backing device directly 
+discards as you would expect. This is just a problem when sending discards 
+through DRBD.
+
+Is there an easy way to solve this in the short term, even if the ultimate 
+fix is more involved?
+
+Thank you for your help!
+
+-Eric
+
+--
+Eric Wheeler
+
+On Wed, 5 Apr 2017, Christoph Hellwig wrote:
+
+> drbd always wants its discard wire operations to zero the blocks, so
+> use blkdev_issue_zeroout with the BLKDEV_ZERO_UNMAP flag instead of
+> reinventing it poorly.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/block/drbd/drbd_debugfs.c  |   3 --
+>  drivers/block/drbd/drbd_int.h      |   6 ---
+>  drivers/block/drbd/drbd_receiver.c | 102 ++-----------------------------------
+>  drivers/block/drbd/drbd_req.c      |   6 +--
+>  4 files changed, 7 insertions(+), 110 deletions(-)
+> 
+> diff --git a/drivers/block/drbd/drbd_debugfs.c b/drivers/block/drbd/drbd_debugfs.c
+> index de5c3ee8a790..494837e59f23 100644
+> --- a/drivers/block/drbd/drbd_debugfs.c
+> +++ b/drivers/block/drbd/drbd_debugfs.c
+> @@ -236,9 +236,6 @@ static void seq_print_peer_request_flags(struct seq_file *m, struct drbd_peer_re
+>  	seq_print_rq_state_bit(m, f & EE_CALL_AL_COMPLETE_IO, &sep, "in-AL");
+>  	seq_print_rq_state_bit(m, f & EE_SEND_WRITE_ACK, &sep, "C");
+>  	seq_print_rq_state_bit(m, f & EE_MAY_SET_IN_SYNC, &sep, "set-in-sync");
+> -
+> -	if (f & EE_IS_TRIM)
+> -		__seq_print_rq_state_bit(m, f & EE_IS_TRIM_USE_ZEROOUT, &sep, "zero-out", "trim");
+>  	seq_print_rq_state_bit(m, f & EE_WRITE_SAME, &sep, "write-same");
+>  	seq_putc(m, '\n');
+>  }
+> diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
+> index 724d1c50fc52..d5da45bb03a6 100644
+> --- a/drivers/block/drbd/drbd_int.h
+> +++ b/drivers/block/drbd/drbd_int.h
+> @@ -437,9 +437,6 @@ enum {
+>  
+>  	/* is this a TRIM aka REQ_DISCARD? */
+>  	__EE_IS_TRIM,
+> -	/* our lower level cannot handle trim,
+> -	 * and we want to fall back to zeroout instead */
+> -	__EE_IS_TRIM_USE_ZEROOUT,
+>  
+>  	/* In case a barrier failed,
+>  	 * we need to resubmit without the barrier flag. */
+> @@ -482,7 +479,6 @@ enum {
+>  #define EE_CALL_AL_COMPLETE_IO (1<<__EE_CALL_AL_COMPLETE_IO)
+>  #define EE_MAY_SET_IN_SYNC     (1<<__EE_MAY_SET_IN_SYNC)
+>  #define EE_IS_TRIM             (1<<__EE_IS_TRIM)
+> -#define EE_IS_TRIM_USE_ZEROOUT (1<<__EE_IS_TRIM_USE_ZEROOUT)
+>  #define EE_RESUBMITTED         (1<<__EE_RESUBMITTED)
+>  #define EE_WAS_ERROR           (1<<__EE_WAS_ERROR)
+>  #define EE_HAS_DIGEST          (1<<__EE_HAS_DIGEST)
+> @@ -1561,8 +1557,6 @@ extern void start_resync_timer_fn(unsigned long data);
+>  extern void drbd_endio_write_sec_final(struct drbd_peer_request *peer_req);
+>  
+>  /* drbd_receiver.c */
+> -extern int drbd_issue_discard_or_zero_out(struct drbd_device *device,
+> -		sector_t start, unsigned int nr_sectors, bool discard);
+>  extern int drbd_receiver(struct drbd_thread *thi);
+>  extern int drbd_ack_receiver(struct drbd_thread *thi);
+>  extern void drbd_send_ping_wf(struct work_struct *ws);
+> diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
+> index dc9a6dcd431c..bc1d296581f9 100644
+> --- a/drivers/block/drbd/drbd_receiver.c
+> +++ b/drivers/block/drbd/drbd_receiver.c
+> @@ -1448,108 +1448,14 @@ void drbd_bump_write_ordering(struct drbd_resource *resource, struct drbd_backin
+>  		drbd_info(resource, "Method to ensure write ordering: %s\n", write_ordering_str[resource->write_ordering]);
+>  }
+>  
+> -/*
+> - * We *may* ignore the discard-zeroes-data setting, if so configured.
+> - *
+> - * Assumption is that it "discard_zeroes_data=0" is only because the backend
+> - * may ignore partial unaligned discards.
+> - *
+> - * LVM/DM thin as of at least
+> - *   LVM version:     2.02.115(2)-RHEL7 (2015-01-28)
+> - *   Library version: 1.02.93-RHEL7 (2015-01-28)
+> - *   Driver version:  4.29.0
+> - * still behaves this way.
+> - *
+> - * For unaligned (wrt. alignment and granularity) or too small discards,
+> - * we zero-out the initial (and/or) trailing unaligned partial chunks,
+> - * but discard all the aligned full chunks.
+> - *
+> - * At least for LVM/DM thin, the result is effectively "discard_zeroes_data=1".
+> - */
+> -int drbd_issue_discard_or_zero_out(struct drbd_device *device, sector_t start, unsigned int nr_sectors, bool discard)
+> -{
+> -	struct block_device *bdev = device->ldev->backing_bdev;
+> -	struct request_queue *q = bdev_get_queue(bdev);
+> -	sector_t tmp, nr;
+> -	unsigned int max_discard_sectors, granularity;
+> -	int alignment;
+> -	int err = 0;
+> -
+> -	if (!discard)
+> -		goto zero_out;
+> -
+> -	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+> -	granularity = max(q->limits.discard_granularity >> 9, 1U);
+> -	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
+> -
+> -	max_discard_sectors = min(q->limits.max_discard_sectors, (1U << 22));
+> -	max_discard_sectors -= max_discard_sectors % granularity;
+> -	if (unlikely(!max_discard_sectors))
+> -		goto zero_out;
+> -
+> -	if (nr_sectors < granularity)
+> -		goto zero_out;
+> -
+> -	tmp = start;
+> -	if (sector_div(tmp, granularity) != alignment) {
+> -		if (nr_sectors < 2*granularity)
+> -			goto zero_out;
+> -		/* start + gran - (start + gran - align) % gran */
+> -		tmp = start + granularity - alignment;
+> -		tmp = start + granularity - sector_div(tmp, granularity);
+> -
+> -		nr = tmp - start;
+> -		err |= blkdev_issue_zeroout(bdev, start, nr, GFP_NOIO,
+> -				BLKDEV_ZERO_NOUNMAP);
+> -		nr_sectors -= nr;
+> -		start = tmp;
+> -	}
+> -	while (nr_sectors >= granularity) {
+> -		nr = min_t(sector_t, nr_sectors, max_discard_sectors);
+> -		err |= blkdev_issue_discard(bdev, start, nr, GFP_NOIO,
+> -				BLKDEV_ZERO_NOUNMAP);
+> -		nr_sectors -= nr;
+> -		start += nr;
+> -	}
+> - zero_out:
+> -	if (nr_sectors) {
+> -		err |= blkdev_issue_zeroout(bdev, start, nr_sectors, GFP_NOIO,
+> -				BLKDEV_ZERO_NOUNMAP);
+> -	}
+> -	return err != 0;
+> -}
+> -
+> -static bool can_do_reliable_discards(struct drbd_device *device)
+> -{
+> -	struct request_queue *q = bdev_get_queue(device->ldev->backing_bdev);
+> -	struct disk_conf *dc;
+> -	bool can_do;
+> -
+> -	if (!blk_queue_discard(q))
+> -		return false;
+> -
+> -	if (q->limits.discard_zeroes_data)
+> -		return true;
+> -
+> -	rcu_read_lock();
+> -	dc = rcu_dereference(device->ldev->disk_conf);
+> -	can_do = dc->discard_zeroes_if_aligned;
+> -	rcu_read_unlock();
+> -	return can_do;
+> -}
+> -
+>  static void drbd_issue_peer_discard(struct drbd_device *device, struct drbd_peer_request *peer_req)
+>  {
+> -	/* If the backend cannot discard, or does not guarantee
+> -	 * read-back zeroes in discarded ranges, we fall back to
+> -	 * zero-out.  Unless configuration specifically requested
+> -	 * otherwise. */
+> -	if (!can_do_reliable_discards(device))
+> -		peer_req->flags |= EE_IS_TRIM_USE_ZEROOUT;
+> +	struct block_device *bdev = device->ldev->backing_bdev;
+>  
+> -	if (drbd_issue_discard_or_zero_out(device, peer_req->i.sector,
+> -	    peer_req->i.size >> 9, !(peer_req->flags & EE_IS_TRIM_USE_ZEROOUT)))
+> +	if (blkdev_issue_zeroout(bdev, peer_req->i.sector, peer_req->i.size >> 9,
+> +			GFP_NOIO, 0))
+>  		peer_req->flags |= EE_WAS_ERROR;
+> +
+>  	drbd_endio_write_sec_final(peer_req);
+>  }
+>  
+> diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
+> index 652114ae1a8a..6da9ea8c48b6 100644
+> --- a/drivers/block/drbd/drbd_req.c
+> +++ b/drivers/block/drbd/drbd_req.c
+> @@ -1148,10 +1148,10 @@ static int drbd_process_write_request(struct drbd_request *req)
+>  
+>  static void drbd_process_discard_req(struct drbd_request *req)
+>  {
+> -	int err = drbd_issue_discard_or_zero_out(req->device,
+> -				req->i.sector, req->i.size >> 9, true);
+> +	struct block_device *bdev = req->device->ldev->backing_bdev;
+>  
+> -	if (err)
+> +	if (blkdev_issue_zeroout(bdev, req->i.sector, req->i.size >> 9,
+> +			GFP_NOIO, 0))
+>  		req->private_bio->bi_error = -EIO;
+>  	bio_endio(req->private_bio);
+>  }
+> -- 
+> 2.11.0
+> 
+> _______________________________________________
+> drbd-dev mailing list
+> drbd-dev@lists.linbit.com
+> http://lists.linbit.com/mailman/listinfo/drbd-dev
+> 
