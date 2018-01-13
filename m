@@ -1,47 +1,37 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH v2] md-multipath: Use seq_putc() in multipath_status()
-Date: Sat, 13 Jan 2018 09:55:08 +0100
-Message-ID: <0b59904d-1be7-7a76-9c32-3f7f9696ff2d@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <4a31d7a7-f70c-12f7-202f-963bd8706066@users.sourceforge.net>
- <6e70a1a7-fd86-914e-84ab-bd5c7facb235@users.sourceforge.net>
+From: RQM <rqm@protonmail.com>
+Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
+Date: Sat, 13 Jan 2018 07:18:46 -0500
+Message-ID: <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
+References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com>
+ <87373og9z9.fsf@notabene.neil.brown.name>
+ <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com>
+ <87r2r8dk80.fsf@notabene.neil.brown.name>
+ <f92IIdV_PSMtdilVnQDOaLSxzvpTkAa6D0nxpuplzzdnaP9km9JveoXfzOlygcXD5Y_HpN49Fh0x4nOZFhXPfv5VyPrT6CgFO-nsULq6wn0=@protonmail.com>
+ <871sj5dsiv.fsf@notabene.neil.brown.name>
+ <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com>
+Reply-To: RQM <rqm@protonmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <6e70a1a7-fd86-914e-84ab-bd5c7facb235@users.sourceforge.net>
-Content-Language: en-GB
-Sender: kernel-janitors-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: "linux-raid\\\\\\\\\\\\\\@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 13 Jan 2018 09:49:03 +0100
+Hello,
 
-A single character (closing square bracket) should be put into a sequence.
-Thus use the corresponding function "seq_putc".
+I have been made aware that the link I had supplied previously does not wor=
+k anymore.
+Here's another attempt at uploading the `mdadm --dump /dev/sd[bcdef]3` outp=
+ut:
 
-This issue was detected by using the Coccinelle software.
+https://filebin.net/i0olmgzg52obnp0f/dump.tgz
+=E2=80=8B
+Any help is greatly appreciated. Please do let me know whether you plan on =
+working on this issue in the near future, because otherwise I will have to =
+re-create a new array on these disks in order to put them into production a=
+gain.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/md/md-multipath.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
-index e40065bdbfc8..0a7e99d62c69 100644
---- a/drivers/md/md-multipath.c
-+++ b/drivers/md/md-multipath.c
-@@ -157,7 +157,7 @@ static void multipath_status(struct seq_file *seq, struct mddev *mddev)
- 		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
- 	}
- 	rcu_read_unlock();
--	seq_printf (seq, "]");
-+	seq_putc(seq, ']');
- }
- 
- static int multipath_congested(struct mddev *mddev, int bits)
--- 
-2.15.1
-
+Thank you so much!
