@@ -1,34 +1,46 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH] imsm: update name in --detail-platform
-Date: Tue, 16 Jan 2018 12:23:09 +0100
-Message-ID: <20180116112309.22450-1-artur.paszkiewicz@intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+From: Luis de Bethencourt <luisbg@kernel.org>
+Subject: [PATCH] md/raid1: Fix trailing semicolon
+Date: Wed, 17 Jan 2018 13:38:02 +0000
+Message-ID: <20180117133802.8879-1-luisbg@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Joe Perches <joe@perches.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Luis de Bethencourt <luisbg@kernel.org>
 List-Id: linux-raid.ids
 
-For IMSM enterprise firmware starting with major version 6, present the
-platform name as Intel VROC.
+The trailing semicolon is an empty statement that does no operation.
+Removing it since it doesn't do anything.
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Signed-off-by: Luis de Bethencourt <luisbg@kernel.org>
 ---
- super-intel.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/super-intel.c b/super-intel.c
-index c55802f1..c4a5a1be 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2369,6 +2369,8 @@ static void print_imsm_capability(const struct imsm_orom *orom)
- 	printf("       Platform : Intel(R) ");
- 	if (orom->capabilities == 0 && orom->driver_features == 0)
- 		printf("Matrix Storage Manager\n");
-+	else if (imsm_orom_is_enterprise(orom) && orom->major_ver >= 6)
-+		printf("Virtual RAID on CPU\n");
- 	else
- 		printf("Rapid Storage Technology%s\n",
- 			imsm_orom_is_enterprise(orom) ? " enterprise" : "");
+Hi,
+
+After fixing the same thing in drivers/staging/rtl8723bs/, Joe Perches
+suggested I fix it treewide [0].
+
+Best regards,
+Luis
+
+
+[0] http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2018-January/115410.html
+[1] http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2018-January/115390.html
+
+ drivers/md/raid1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index b2eae332e1a2..f978eddc7a21 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1108,7 +1108,7 @@ static void alloc_behind_master_bio(struct r1bio *r1_bio,
+ 
+ 	bio_copy_data(behind_bio, bio);
+ skip_copy:
+-	r1_bio->behind_master_bio = behind_bio;;
++	r1_bio->behind_master_bio = behind_bio;
+ 	set_bit(R1BIO_BehindIO, &r1_bio->state);
+ 
+ 	return;
 -- 
 2.15.1
-
