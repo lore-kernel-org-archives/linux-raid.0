@@ -1,45 +1,36 @@
 From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] imsm: update name in --detail-platform
-Date: Sun, 21 Jan 2018 16:17:38 -0500
-Message-ID: <b75e156d-ea74-4f00-b458-c0b203e1f128@gmail.com>
-References: <20180116112309.22450-1-artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] policy.c: Avoid to take spare without defined domain by
+ imsm
+Date: Sun, 21 Jan 2018 16:19:39 -0500
+Message-ID: <7ce74f86-3346-0d72-bbb5-15c544fe7b27@gmail.com>
+References: <1515670789-30835-1-git-send-email-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180116112309.22450-1-artur.paszkiewicz@intel.com>
+In-Reply-To: <1515670789-30835-1-git-send-email-mariusz.tkaczyk@intel.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/16/2018 06:23 AM, Artur Paszkiewicz wrote:
-> For IMSM enterprise firmware starting with major version 6, present the
-> platform name as Intel VROC.
+On 01/11/2018 06:39 AM, Mariusz Tkaczyk wrote:
+> Only Imsm get_disk_controller_domain returns disk controller domain for
+> each disk. It causes that mdadm automatically creates disk controller
+> domain policy for imsm metadata, and imsm containers in the same disk
+> controller domain can take spare for recovery.
 > 
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Ignore spares if only one imsm domain is matched.
+> 
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 > ---
->  super-intel.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  policy.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
 Applied!
 
 Thanks,
 Jes
 
-> diff --git a/super-intel.c b/super-intel.c
-> index c55802f1..c4a5a1be 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2369,6 +2369,8 @@ static void print_imsm_capability(const struct imsm_orom *orom)
->  	printf("       Platform : Intel(R) ");
->  	if (orom->capabilities == 0 && orom->driver_features == 0)
->  		printf("Matrix Storage Manager\n");
-> +	else if (imsm_orom_is_enterprise(orom) && orom->major_ver >= 6)
-> +		printf("Virtual RAID on CPU\n");
->  	else
->  		printf("Rapid Storage Technology%s\n",
->  			imsm_orom_is_enterprise(orom) ? " enterprise" : "");
-> 
 
