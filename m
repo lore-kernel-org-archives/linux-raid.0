@@ -1,21 +1,31 @@
-From: Adam Finzel <afinzel@gmail.com>
-Subject: Nice Job
-Date: Sun, 21 Jan 2018 14:22:28 +0000
-Message-ID: <CAAiP-cU8z=BzsFBAcWS1jSMS6kSup+_d+XmbTDWaqnrHHp10-g@mail.gmail.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] mdadm: allow clustered raid10 to be created with default
+ layout
+Date: Sun, 21 Jan 2018 15:56:40 -0500
+Message-ID: <a4ac1fd6-4a71-f373-46c3-bbba94882a38@gmail.com>
+References: <20180103070122.5195-1-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20180103070122.5195-1-gqjiang@suse.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hey guys,
+On 01/03/2018 02:01 AM, Guoqing Jiang wrote:
+> Since the default layout of raid10 is n2, so we
+> should allow the behavior.
+> 
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  mdadm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-I have recently moved my raid between machines and then expanded it by
-adding a new drive.  I was dreading doing both these tasks but was
-surprised at how easy it was to do.  I just wanted to say well done
-and thank you on making an easy to use system.
+Applied!
 
-Regards
+Thanks,
+Jes
 
-Adam
