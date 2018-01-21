@@ -1,36 +1,21 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH] raid10: change the size of resync window for clustered raid
-Date: Fri, 19 Jan 2018 11:37:56 +0800
-Message-ID: <20180119033756.15340-1-gqjiang@suse.com>
+From: Adam Finzel <afinzel@gmail.com>
+Subject: Nice Job
+Date: Sun, 21 Jan 2018 14:22:28 +0000
+Message-ID: <CAAiP-cU8z=BzsFBAcWS1jSMS6kSup+_d+XmbTDWaqnrHHp10-g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: shli@kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-To align with raid1's resync window, we need to
-set the resync window of raid10 to 32M as well.
+Hey guys,
 
-Fixes: 8db87912c9a8 ("md-cluster: Use a small window for raid10 resync")
-Reported-by: Zhilong Liu <zlliu@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/raid10.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have recently moved my raid between machines and then expanded it by
+adding a new drive.  I was dreading doing both these tasks but was
+surprised at how easy it was to do.  I just wanted to say well done
+and thank you on making an easy to use system.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 99c9207899a7..8d7ddc947d9d 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -141,7 +141,7 @@ static void r10bio_pool_free(void *r10_bio, void *data)
- #define RESYNC_WINDOW (1024*1024)
- /* maximum number of concurrent requests, memory permitting */
- #define RESYNC_DEPTH (32*1024*1024/RESYNC_BLOCK_SIZE)
--#define CLUSTER_RESYNC_WINDOW (16 * RESYNC_WINDOW)
-+#define CLUSTER_RESYNC_WINDOW (32 * RESYNC_WINDOW)
- #define CLUSTER_RESYNC_WINDOW_SECTORS (CLUSTER_RESYNC_WINDOW >> 9)
- 
- /*
--- 
-2.13.6
+Regards
 
+Adam
