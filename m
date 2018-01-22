@@ -1,89 +1,131 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: Re: [PATCH V2 1/3] mdadm: improve the dlm locking mechanism for
- clustered raid
-Date: Mon, 22 Jan 2018 11:18:39 +0800
-Message-ID: <2ee14501-9d69-ffa0-4d50-27996440ae4e@suse.com>
-References: <20180103081911.7380-1-gqjiang@suse.com>
- <20180103081911.7380-2-gqjiang@suse.com>
- <a0866324-08b1-177a-a64d-448ddee3b9cc@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH V3 2/3] Assemble: provide protection when clustered raid do assemble
+Date: Mon, 22 Jan 2018 17:12:09 +0800
+Message-ID: <20180122091210.29910-3-gqjiang@suse.com>
+References: <20180122091210.29910-1-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a0866324-08b1-177a-a64d-448ddee3b9cc@gmail.com>
-Content-Language: en-US
+In-Reply-To: <20180122091210.29910-1-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>, Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: jes.sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
+The previous patch provides protection for other modes
+such as CREATE, MANAGE, GROW and INCREMENTAL. And for
+ASSEMBLE mode, we also need to protect during the process
+of assemble clustered raid.
 
+However, we can only know the array is clustered or not
+when the metadata is ready, so the lock_cluster is called
+after select_devices(). And we could re-read the metadata
+when doing auto-assembly, so refresh the locking.
 
-On 01/22/2018 05:08 AM, Jes Sorensen wrote:
-> On 01/03/2018 03:19 AM, Guoqing Jiang wrote:
->> Previously, the dlm locking only protects several
->> functions which writes to superblock (update_super,
->> add_to_super and store_super), and we missed other
->> funcs such as add_internal_bitmap. We also need to
->> call the funcs which read superblock under the
->> locking protection to avoid consistent issue.
->>
->> So let's remove the dlm stuffs from super1.c, and
->> provide the locking mechanism to the main() except
->> assemble mode which will be handled in next commit.
->> And since we can identify it is a clustered raid or
->> not based on check the different conditions of each
->> mode, so the change should not have effect on native
->> array.
-> Hi,
->
-> Sorry for not getting to this earlier, it's been a little hectic that
-> last couple of months.
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ Assemble.c | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
 
-Understood, after all it was the end of year.
+diff --git a/Assemble.c b/Assemble.c
+index 3c10b6cd27c2..894ff361cf30 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1326,6 +1326,9 @@ int Assemble(struct supertype *st, char *mddev,
+ 	char chosen_name[1024];
+ 	struct map_ent *map = NULL;
+ 	struct map_ent *mp;
++	int locked = 0;
++	struct mdp_superblock_1 *sb;
++	bitmap_super_t *bms;
+ 
+ 	/*
+ 	 * If any subdevs are listed, then any that don't
+@@ -1356,6 +1359,12 @@ try_again:
+ 	 * set of devices failed.  Those are now marked as ->used==2 and
+ 	 * we ignore them and try again
+ 	 */
++	if (locked)
++		/*
++		 * if come back try_again is called, then need to unlock first,
++		 * and lock again since the metadate is re-read.
++		 */
++		cluster_release_dlmlock();
+ 	if (!st && ident->st)
+ 		st = ident->st;
+ 	if (c->verbose>0)
+@@ -1373,6 +1382,14 @@ try_again:
+ 	if (!st || !st->sb || !content)
+ 		return 2;
+ 
++	sb = st->sb;
++	bms = (bitmap_super_t*)(((char*)sb) + 4096);
++	if (sb && bms->version == BITMAP_MAJOR_CLUSTERED) {
++		locked = cluster_get_dlmlock();
++		if (locked != 1)
++			return 1;
++	}
++
+ 	/* We have a full set of devices - we now need to find the
+ 	 * array device.
+ 	 * However there is a risk that we are racing with "mdadm -I"
+@@ -1399,6 +1416,8 @@ try_again:
+ 			pr_err("Found some drive for an array that is already active: %s\n",
+ 			       mp->path);
+ 			pr_err("giving up.\n");
++			if (locked == 1)
++				cluster_release_dlmlock();
+ 			return 1;
+ 		}
+ 		for (dv = pre_exist->devs; dv; dv = dv->next) {
+@@ -1472,6 +1491,8 @@ try_again:
+ 		st->ss->free_super(st);
+ 		if (auto_assem)
+ 			goto try_again;
++		if (locked == 1)
++			cluster_release_dlmlock();
+ 		return 1;
+ 	}
+ 	mddev = chosen_name;
+@@ -1491,6 +1512,8 @@ try_again:
+ 			st->ss->free_super(st);
+ 			if (auto_assem)
+ 				goto try_again;
++			if (locked == 1)
++				cluster_release_dlmlock();
+ 			return 1;
+ 		}
+ 		/* just incase it was started but has no content */
+@@ -1503,6 +1526,8 @@ try_again:
+ 		err = assemble_container_content(st, mdfd, content, c,
+ 						 chosen_name, NULL);
+ 		close(mdfd);
++		if (locked == 1)
++			cluster_release_dlmlock();
+ 		return err;
+ 	}
+ 
+@@ -1512,8 +1537,11 @@ try_again:
+ 	devcnt = load_devices(devices, devmap, ident, &st, devlist,
+ 			      c, content, mdfd, mddev,
+ 			      &most_recent, &bestcnt, &best, inargv);
+-	if (devcnt < 0)
++	if (devcnt < 0) {
++		if (locked == 1)
++			cluster_release_dlmlock();
+ 		return 1;
++	}
+ 
+ 	if (devcnt == 0) {
+ 		pr_err("no devices found for %s\n",
+@@ -1860,6 +1888,8 @@ try_again:
+ 		close(mdfd);
+ 
+ 	/* '2' means 'OK, but not started yet' */
++	if (locked == 1)
++		cluster_release_dlmlock();
+ 	return rv == 2 ? 0 : rv;
+ }
+ 
+-- 
+2.13.6
 
-> I am still not happy with the lock_cluster() stuff.
->
-> In super1.c every time you call cluster_get_dlmlock() it includes a
-> prior call to dlm_funs_ready():
->
->          if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
->                  rv = cluster_get_dlmlock(&lockid);
->                  if (rv) {
->                          pr_err("Cannot get dlmlock in %s return %d\n",
->                                 __func__, rv);
->                          cluster_release_dlmlock(lockid);
->                          return rv;
->                  }
->          }
->
-> You only call lock_cluster() in one place, and lock cluster does exactly
-> the same:
->
-> +int lock_cluster(void)
-> +{
-> +	if (dlm_funs_ready()) {
-> +		int rv;
-> +
-> +		rv = cluster_get_dlmlock();
-> +		if (rv) {
-> +			pr_err("failed to lock cluster\n");
-> +			return -1;
-> +		}
-> +		return 1;
-> +	}
-> +	pr_err("Something wrong with dlm library\n");
-> +	return 0;
-> +}
->
-> If you stick the dlm_funs_ready() check into cluster_get_dlmlock() and
-> call it directly it will simplify the code by not introducing the
-> unnecessary lock_cluster()/unclock_cluster() functions and in super1.c.
-> I really hate this introducing a new silly state 0/1 returned from
-> lock_cluster(), just check whether you got a valid lock back or not.
-
-Good point, I will remove lock_cluster()/unclock_cluster() and call
-cluster_get_dlmlock/cluster_release_dlmlock directly.
-
-Thanks,
-Guoqing
