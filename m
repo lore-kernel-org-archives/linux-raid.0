@@ -1,90 +1,80 @@
-From: =?UTF-8?B?Vm9qdMSbY2ggS2xldGXEjWth?= <vojta.kletecka@gmail.com>
-Subject: Re: USB-to-SATA and RAID
-Date: Tue, 23 Jan 2018 23:23:03 +0100
-Message-ID: <CAEmSg0_ERGs7uZnsp45-O61C4+hVT=4OZEaUHyY5wqEKnj4Cbw@mail.gmail.com>
-References: <20180123201614.GI23784@otheros> <3b12354d-d8bb-9593-8bee-489574caf84f@youngman.org.uk>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Recovering Partial Data From Re-Added Drive
+Date: Tue, 23 Jan 2018 23:46:10 +0100
+Message-ID: <20180123224610.GA8114@metamorpher.de>
+References: <CAPE0SYx2Pf=hVe46NVLqTC3g9WQd1MckceS818bWzeNYdOVkNQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3b12354d-d8bb-9593-8bee-489574caf84f@youngman.org.uk>
+Content-Disposition: inline
+In-Reply-To: <CAPE0SYx2Pf=hVe46NVLqTC3g9WQd1MckceS818bWzeNYdOVkNQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wol's lists <antlists@youngman.org.uk>
-Cc: =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>, linux-raid@vger.kernel.org
+To: Liwei <xieliwei@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Wed, Jan 24, 2018 at 01:16:43AM +0800, Liwei wrote:
+> I have a RAID6 running degraded (12 out of 13 drives).
+[...]
+> thus I decided not to order a replacement for the drive that died.
 
-I have only a little technical insight into this topic, however, I
-have some (terrible) personal experience with USB raid and I would
-point out another aspect.
-Although USBs are good for occasional connections of simple drives
-they have quite a strong tendency to wear out. This becomes a problem
-especially if you plan to connect raid often and means that wires
-might not connect or lose connection during the transition of data.
-I happened to have raid connected to older USB ports and connection
-was pretty unstable. Multiple times unexpected disconnection due to
-wires losing contact caused a problem and the disconnected disk
-(although almost perfectly valid) had to be completely rebuilt. I
-thought it was not that bad but later it caused sort of desync and I
-was unable to connect any two of three disks so the data was lost. My
-only luck was that I had all the data (at least important data) backed
-up.
+A gamble that kicked you straight into Murphy's lawnmower.
 
-So if you're considering raid over USB I suggest you don't do that. It
-will probably save you a lot of troubles.
+> I imaged the drive with pending sectors
 
-With kind regards,
+Do you have the ddrescue log/map to go with that?
+If you did not use ddrescue - what did you use exactly?
 
-2018-01-23 21:46 GMT+01:00 Wol's lists <antlists@youngman.org.uk>:
-> On 23/01/18 20:16, Linus L=C3=BCssing wrote:
->>
->> Hi,
->>
->> By chance I found this statement in the Linux RAID Wiki:
->>
->> "Do NOT use [USB devices] as part of your array. They have
->>   a timeout/disconnect mechanism which interacts very
->>   badly with the raid code." [0]
->
->
-> That was me that wrote that on the wiki. However, I'm just editing stuff =
-so
-> I don't actually have any experience of it.
->>
->>
->> Could someone elaborate further on this? Does "interacts very
->> badly" mean that there will be potential data loss / data
->> corruption? Or does "very badly" just mean short, temporary
->> performance issues / lags upon a disk failure?
->>
-> The wiki also mentions the timeout problem. As far as I can make out - an=
-d
-> bear in mind as I said above I don't have personal experience - it seems =
-to
-> me from what I've picked up that USB suffers this problem in spades.
->
-> In other words, what I *think* happens, from what I've picked up, is that
-> the USB bus times out. And when the raid comes along to use the disk, the
-> USB bus is no longer responding ... BOOM!
->
->> Regards, Linus
->>
-> I hope that's helpful, and maybe people who know more will chime in, but
-> that's it as I understand it.
->
-> Cheers,
-> Wol
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If you know what the bad sectors were you can try fill those gaps 
+with data from the other drives if it wasn't synced over.
 
+If you still have the drive and sectors still bad, you can produce 
+the map belatedly by copying it again... if you wiped it and 
+sectors were reallocated, no such luck.
 
+> When that didn't work out, I absent-mindedly decided to re-add the
+> drive that glitched out and the raid started to re-sync things.
+[...]
+> I think it only managed to sync the initial few GBs before I stopped it.
 
---=20
-Pokud tento mail obsahuje tautologii, pak z=C5=99ejm=C4=9B tautologii skute=
-=C4=8Dn=C4=9B obsahuje.
+Do we know where the bad sectors were located, 
+and where the metadata btrfs needs is located?
 
-Vojt=C4=9Bch Klete=C4=8Dka
+If either is at the start of the device, then it's probably gone.
+
+> I realised what I should have done
+
+Add a drive the moment it was degraded. (not order and wait to ship. 
+go out yourself and buy one same day. pilfer one if you must.)
+
+Also replace drives before degraded if SMART shows it has a bad sector. 
+And run regular selftests for SMART to be able to test for those.
+
+And once you're in a data recovery situation, stop writing altogether.
+That means no assemble, no add, no fsck, no mount, nothing.
+Create copies or use snapshots/overlays.
+
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+
+As long as you use only the overlays, you can experiment without worry, 
+unless there is still faulty hardware that should be replaced first.
+Don't use overlays on drives that are about to go bad. ddrescue those.
+
+> But now that I have re-added the drive, can I still do something similar,
+> maybe manually?
+
+You can try that (with overlays).
+
+Also, it's possible for the device role to have changed when you added it, 
+as you had two free slots and adding would make it pick one of them...
+
+If you have old examine info or system logs, it would be good to verify 
+that first, if role changed, you'd have a role conflict within a single 
+drive and no matter what you do with it, it won't be right anymore.
+
+In the end there is no surefire way to fix this, you just have to trial 
+and error and it comes down to luck whether you'll be able to make btrfs 
+happy again.
+
+Good luck,
+Andreas Klauer
