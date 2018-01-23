@@ -1,16 +1,33 @@
-From: Andrew <zhaopin@cmpbook.com>
-Subject: Reply
-Date: Tue, 23 Jan 2018 16:53:35 +0200
-Message-ID: <20b88155-55aa-46ac-9e73-f6c2cb1fae63__28562.3564538129$1516719124$gmane$org@ad.cmpbook.com>
-Reply-To: <andrewwetkas@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+From: Lidong Zhong <lzhong@suse.com>
+Subject: [PATCH] md-cluster: choose correct label when clustered layout is not supported
+Date: Tue, 23 Jan 2018 23:06:12 +0800
+Message-ID: <20180123150612.7325-1-lzhong@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: gqjiang@suse.com
 List-Id: linux-raid.ids
 
-Dear Sir,
-I am Andrew Wetkas.Personal Assistant to a former Governor in Nigeria.  We need your assistance to  invest a huge sum in your country. I will give you further details once I hear from you.
-Regards
-Andrew
+r10conf is already successfully allocated before checking the layout
+
+Signed-off-by: Lidong Zhong <lzhong@suse.com>
+---
+ drivers/md/raid10.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index c131835cf008..c2b2fbeec7b2 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3770,7 +3770,7 @@ static int raid10_run(struct mddev *mddev)
+ 		if (fc > 1 || fo > 0) {
+ 			pr_err("only near layout is supported by clustered"
+ 				" raid10\n");
+-			goto out;
++			goto out_free_conf;
+ 		}
+ 	}
+ 
+-- 
+2.13.6
+
