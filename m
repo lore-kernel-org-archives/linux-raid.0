@@ -1,59 +1,264 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Recovering Partial Data From Re-Added Drive
-Date: Wed, 24 Jan 2018 11:00:31 +0100
-Message-ID: <20180124100031.GA4073@metamorpher.de>
-References: <CAPE0SYx2Pf=hVe46NVLqTC3g9WQd1MckceS818bWzeNYdOVkNQ@mail.gmail.com>
- <20180123224610.GA8114@metamorpher.de>
- <CAPE0SYy8VWazr9SDVqr7tpV7oRxG23Dgpkmp-96wOa2=E0EoNQ@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [RFC PATCH] MD: fix lock contention for flush bios
+Date: Wed, 24 Jan 2018 08:41:00 -0500 (EST)
+Message-ID: <248662549.3536363.1516801260103.JavaMail.zimbra@redhat.com>
+References: <1516761834-4701-1-git-send-email-xni@redhat.com> <c3b38c2f-e139-85e2-b78b-17f20b6622b3@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPE0SYy8VWazr9SDVqr7tpV7oRxG23Dgpkmp-96wOa2=E0EoNQ@mail.gmail.com>
+In-Reply-To: <c3b38c2f-e139-85e2-b78b-17f20b6622b3@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Liwei <xieliwei@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, shli@kernel.org, neilb@suse.com, ming lei <ming.lei@redhat.com>, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, Jan 24, 2018 at 03:34:31PM +0800, Liwei wrote:
-> However, how do I get mdadm to accept the re-added drive without
-> trying to sync?
 
-There is --freeze-reshape as well as --action=frozen or you could 
-also go to /sys/block/mdX/md/ and set sync speeds to near zero, 
-but with overlay, sync won't cause damage other than filling up 
-your overlay backing device. If something goes wrong on top of 
-the overlays, you just stop everything, reset the overlays and 
-start over with a new experiment.
 
-On overlays, you can also play with mdadm --create --assume-clean 
-(which you should never do on bare drives, as it's easy to get 
-the RAID settings and drive order wrong) so you can re-create 
-using only the drives you want (use 'missing' otherwise).
+----- Original Message -----
+> From: "Guoqing Jiang" <gqjiang@suse.com>
+> To: "Xiao Ni" <xni@redhat.com>, linux-raid@vger.kernel.org
+> Cc: shli@kernel.org, neilb@suse.com, "ming lei" <ming.lei@redhat.com>, ncroxon@redhat.com
+> Sent: Wednesday, January 24, 2018 5:02:57 PM
+> Subject: Re: [RFC PATCH] MD: fix lock contention for flush bios
+> 
+> 
+> 
+> On 01/24/2018 10:43 AM, Xiao Ni wrote:
+> > There is a lock contention when there are many processes which send flush
+> > bios
+> > to md device. eg. Create many lvs on one raid device and mkfs.xfs on each
+> > lv.
+> >
+> > Now it just can handle flush request sequentially. It needs to wait
+> > mddev->flush_bio
+> > to be NULL, otherwise get mddev->lock.
+> 
+> With the new approach, can we still keep the synchronization across all
+> devices?
+> I found the previous commit a2826aa92e2e ("md: support barrier requests
+> on all
+> personalities") did want to keep synchronization.
 
-Recreating with mdadm usually looks something like:
 
-    mdadm --create /dev/md42 --assume-clean \
-    --level=5 --chunk=512 --metadata=1.2 --data-offset=2048 \
-    --raid-devices=3 missing /dev/mapper/overlay-sd{y,z}1
+When one flush bio is sumbitted to md, it creates one bio for each rdev to send flush request.
+If it must waits for all the flush requests to return, my patch breaks the rule.
 
-i.e. you have to specify everything, in particular level, 
-chunksize, offsets, metadata version, layout, drive order, ... 
-according to your existing RAID. Compare mdadm --examine 
-before / after the re-create to see if properties match 
-(creation time, uuid etc. change, chunksize/layout/offset 
-/ device role etc. has to stay the same).
+Process A submits a flush bio to md, we call this flush bio bio-a.
+Process B submits a flush bio to md, we call this flush bio bio-b.
 
-One thing of note is that a sync action doesn't just affect the 
-current progress of the sync, but the entire drive - the sync 
-progress can only be at one place at a time, but the RAID has to 
-stay in sync as a whole as well, so - if there are any writes 
-during a sync, they also immediately go to the resyncing drive.
+Before my patch there is only one process can handle flush bio. Process B waits for the returning
+of bio-b from Process B. After my patch it can handle the flush bios from all processes. Can't 
+we handle flush bios from different processes at the same time?
 
-It's different during a grow reshape - new drive only used in 
-the region that has already been reshaped onto it, everything 
-else still mapped to the old drives - but a resync affects 
-the whole drive immediately, if there are any writes.
+Xiao
 
-Regards
-Andreas Klauer
+> 
+> [snip]
+> 
+> > Suggested-by: Ming Lei <ming.lei@redhat.com>
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >   drivers/md/md.c | 105
+> >   +++++++++++++++++++++++++-------------------------------
+> >   drivers/md/md.h |  14 ++++----
+> >   2 files changed, 54 insertions(+), 65 deletions(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 4e4dee0..1e562f5 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -409,33 +409,61 @@ static int md_congested(void *data, int bits)
+> >   	return mddev_congested(mddev, bits);
+> >   }
+> >   
+> > -/*
+> > - * Generic flush handling for md
+> > - */
+> > +static void submit_flushes(struct work_struct *ws)
+> > +{
+> > +	struct flush_info *fi = container_of(ws, struct flush_info, flush_work);
+> > +	struct mddev *mddev = fi->mddev;
+> > +	struct bio *bio = fi->bio;
+> > +
+> > +	bio->bi_opf &= ~REQ_PREFLUSH;
+> > +	md_handle_request(mddev, bio);
+> >   
+> > -static void md_end_flush(struct bio *bio)
+> > +	kfree(fi);
+> > +}
+> > +
+> > +
+> 
+> An extra blank line above.
+> 
+> > +static void md_end_flush(struct bio *flush_bio)
+> >   {
+> > -	struct md_rdev *rdev = bio->bi_private;
+> > -	struct mddev *mddev = rdev->mddev;
+> > +	struct flush_info *fi = flush_bio->bi_private;
+> > +	struct bio *bio = fi->bio;
+> > +	struct mddev *mddev = fi->mddev;
+> > +	struct md_rdev *rdev;
+> >   
+> > -	rdev_dec_pending(rdev, mddev);
+> > +	rcu_read_lock();
+> > +		rdev_for_each_rcu(rdev, mddev)
+> > +			rdev_dec_pending(rdev, mddev);
+> 
+> Unnecessary indentation.
+> 
+> > +	rcu_read_unlock();
+> >   
+> > -	if (atomic_dec_and_test(&mddev->flush_pending)) {
+> > -		/* The pre-request flush has finished */
+> > -		queue_work(md_wq, &mddev->flush_work);
+> > +	if (bio->bi_iter.bi_size == 0)
+> > +		/* an empty barrier - all done */
+> > +		bio_endio(bio);
+> > +	else {
+> > +		INIT_WORK(&fi->flush_work, submit_flushes);
+> > +		queue_work(md_wq, &fi->flush_work);
+> >   	}
+> > -	bio_put(bio);
+> >   }
+> >   
+> > -static void md_submit_flush_data(struct work_struct *ws);
+> > -
+> > -static void submit_flushes(struct work_struct *ws)
+> > +void md_flush_request(struct mddev *mddev, struct bio *bio)
+> >   {
+> > -	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
+> >   	struct md_rdev *rdev;
+> > +	struct flush_info *fi;
+> > +	struct bio *f_bio;
+> > +
+> > +	fi = kmalloc(sizeof(*fi), GFP_NOIO);
+> > +	if (fi == NULL) {
+> > +		pr_err("md: %s failed to alloc memory for flush bio\n",
+> > +		       mdname(mddev));
+> > +		bio->bi_status = BLK_STS_IOERR;
+> > +		bio_endio(bio);
+> 
+> Maybe you missed "return" here.
+> 
+> Thanks,
+> Guoqing
+> 
+> > +	}
+> > +
+> > +	fi->bio = bio;
+> > +	fi->mddev = mddev;
+> > +	f_bio = &fi->flush_bio;
+> > +	bio_init(f_bio, NULL, 0);
+> > +	f_bio->bi_private = fi;
+> > +	f_bio->bi_end_io = md_end_flush;
+> >   
+> > -	INIT_WORK(&mddev->flush_work, md_submit_flush_data);
+> > -	atomic_set(&mddev->flush_pending, 1);
+> >   	rcu_read_lock();
+> >   	rdev_for_each_rcu(rdev, mddev)
+> >   		if (rdev->raid_disk >= 0 &&
+> > @@ -449,54 +477,16 @@ static void submit_flushes(struct work_struct *ws)
+> >   			atomic_inc(&rdev->nr_pending);
+> >   			rcu_read_unlock();
+> >   			bi = bio_alloc_mddev(GFP_NOIO, 0, mddev);
+> > -			bi->bi_end_io = md_end_flush;
+> > -			bi->bi_private = rdev;
+> >   			bio_set_dev(bi, rdev->bdev);
+> >   			bi->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
+> > -			atomic_inc(&mddev->flush_pending);
+> > +			bio_chain(bi, f_bio);
+> >   			submit_bio(bi);
+> >   			rcu_read_lock();
+> >   			rdev_dec_pending(rdev, mddev);
+> >   		}
+> >   	rcu_read_unlock();
+> > -	if (atomic_dec_and_test(&mddev->flush_pending))
+> > -		queue_work(md_wq, &mddev->flush_work);
+> > -}
+> > -
+> > -static void md_submit_flush_data(struct work_struct *ws)
+> > -{
+> > -	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
+> > -	struct bio *bio = mddev->flush_bio;
+> > -
+> > -	/*
+> > -	 * must reset flush_bio before calling into md_handle_request to avoid a
+> > -	 * deadlock, because other bios passed md_handle_request suspend check
+> > -	 * could wait for this and below md_handle_request could wait for those
+> > -	 * bios because of suspend check
+> > -	 */
+> > -	mddev->flush_bio = NULL;
+> > -	wake_up(&mddev->sb_wait);
+> > -
+> > -	if (bio->bi_iter.bi_size == 0)
+> > -		/* an empty barrier - all done */
+> > -		bio_endio(bio);
+> > -	else {
+> > -		bio->bi_opf &= ~REQ_PREFLUSH;
+> > -		md_handle_request(mddev, bio);
+> > -	}
+> > -}
+> > -
+> > -void md_flush_request(struct mddev *mddev, struct bio *bio)
+> > -{
+> > -	spin_lock_irq(&mddev->lock);
+> > -	wait_event_lock_irq(mddev->sb_wait,
+> > -			    !mddev->flush_bio,
+> > -			    mddev->lock);
+> > -	mddev->flush_bio = bio;
+> > -	spin_unlock_irq(&mddev->lock);
+> >   
+> > -	INIT_WORK(&mddev->flush_work, submit_flushes);
+> > -	queue_work(md_wq, &mddev->flush_work);
+> > +	bio_endio(f_bio);
+> >   }
+> >   EXPORT_SYMBOL(md_flush_request);
+> >   
+> > @@ -555,7 +545,6 @@ void mddev_init(struct mddev *mddev)
+> >   	atomic_set(&mddev->openers, 0);
+> >   	atomic_set(&mddev->active_io, 0);
+> >   	spin_lock_init(&mddev->lock);
+> > -	atomic_set(&mddev->flush_pending, 0);
+> >   	init_waitqueue_head(&mddev->sb_wait);
+> >   	init_waitqueue_head(&mddev->recovery_wait);
+> >   	mddev->reshape_position = MaxSector;
+> > diff --git a/drivers/md/md.h b/drivers/md/md.h
+> > index 7d6bcf0..16e7f03 100644
+> > --- a/drivers/md/md.h
+> > +++ b/drivers/md/md.h
+> > @@ -252,6 +252,13 @@ enum mddev_sb_flags {
+> >   	MD_SB_NEED_REWRITE,	/* metadata write needs to be repeated */
+> >   };
+> >   
+> > +struct flush_info {
+> > +	struct bio *bio;
+> > +	struct bio flush_bio;
+> > +	struct mddev *mddev;
+> > +	struct work_struct flush_work;
+> > +};
+> > +
+> >   struct mddev {
+> >   	void				*private;
+> >   	struct md_personality		*pers;
+> > @@ -457,13 +464,6 @@ struct mddev {
+> >   						   * metadata and bitmap writes
+> >   						   */
+> >   
+> > -	/* Generic flush handling.
+> > -	 * The last to finish preflush schedules a worker to submit
+> > -	 * the rest of the request (without the REQ_PREFLUSH flag).
+> > -	 */
+> > -	struct bio *flush_bio;
+> > -	atomic_t flush_pending;
+> > -	struct work_struct flush_work;
+> >   	struct work_struct event_work;	/* used by dm to report failure event */
+> >   	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+> >   	struct md_cluster_info		*cluster_info;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
