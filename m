@@ -1,33 +1,50 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
 Subject: Re: USB-to-SATA and RAID
-Date: Wed, 24 Jan 2018 15:46:19 +0000
-Message-ID: <5A68AA4B.6070402@youngman.org.uk>
+Date: Thu, 25 Jan 2018 01:36:28 +0100
+Message-ID: <20180125003628.GB1756@otheros>
 References: <20180123201614.GI23784@otheros>
- <3b12354d-d8bb-9593-8bee-489574caf84f@youngman.org.uk>
- <CAEmSg0_ERGs7uZnsp45-O61C4+hVT=4OZEaUHyY5wqEKnj4Cbw@mail.gmail.com>
+ <ea8286c7-d5de-610a-8bd0-40481dfa2cd4@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEmSg0_ERGs7uZnsp45-O61C4+hVT=4OZEaUHyY5wqEKnj4Cbw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <ea8286c7-d5de-610a-8bd0-40481dfa2cd4@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?Vm9qdMSbY2ggS2xldGXEjWth?= <vojta.kletecka@gmail.com>
-Cc: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>, linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23/01/18 22:23, Vojtěch Kletečka wrote:
-> Although USBs are good for occasional connections of simple drives
-> they have quite a strong tendency to wear out. This becomes a problem
-> especially if you plan to connect raid often and means that wires
-> might not connect or lose connection during the transition of data.
+Hi,
 
-Something else I came across recently. Cooling in most enclosures ranges
-from poor to non-existent. This leads to overheating drives as a matter
-of course, and from that to failure.
+Many thanks for all the quick and helpful responses so far!
 
-(Personally, I have two enclosures that appear to have failed, and I
-need to investigate to see if the drives themselves are dead. Two out of
-two in the space of a few months is pretty bad going.)
 
-Cheers,
-Wol
+On Tue, Jan 23, 2018 at 06:40:14PM -0600, Stan Hoeppner wrote:
+> > Could someone elaborate further on this? Does "interacts very
+> > badly" mean that there will be potential data loss / data
+> > corruption? Or does "very badly" just mean short, temporary
+> > performance issues / lags upon a disk failure?
+> 
+> Potential data loss / data corruption.  Don't use USB.  Use eSATA instead. 
+> The list archives of linux-raid and linux-xfs are dotted with USB disk
+> horror stories.
+
+Interesting. Do you know what they could be attributed to
+technically? Were they usually similar to what Vojtěch had
+described, so connectivity issues due to the poor connectors and
+thin cables which can often be found with USB? And things then
+fell over when for a brief moment connectivity issues occured for
+more disks than redundant disks were configured? Or do the extra
+latencies with USB create an extended exposure to the write loop
+hole in RAID5? Or something else?
+
+Would you guys say that ARM boards with a SATA connector
+internally weird to USB (for instance the Ordoid HC2[*]), and then
+maybe some SATA Port Multiplier are similarly affected? Or would say
+that those are mainly unaffected of the common issues with RAIDs
+via SATA over USB?
+
+Regards, Linus
+
+[*]: http://www.hardkernel.com/main/products/prdt_info.php?g_code=G151505170472&tab_idx=2
