@@ -1,33 +1,32 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH mdadm] Subdevs can't be all missing when create raid device
-Date: Fri, 26 Jan 2018 16:42:16 +0800
-Message-ID: <1516956136-4803-1-git-send-email-xni@redhat.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: USB-to-SATA and RAID
+Date: Fri, 26 Jan 2018 11:10:54 +0000
+Message-ID: <5A6B0CBE.8030406@youngman.org.uk>
+References: <20180123201614.GI23784@otheros>
+ <ea8286c7-d5de-610a-8bd0-40481dfa2cd4@hardwarefreak.com>
+ <20180125003628.GB1756@otheros>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20180125003628.GB1756@otheros>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com
+To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>, Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- Create.c | 4 ++++
- 1 file changed, 4 insertions(+)
+On 25/01/18 00:36, Linus Lüssing wrote:
+> Hi,
+> 
+> Many thanks for all the quick and helpful responses so far!
+> 
+> 
+Okay, I've written this up and summarised it in a short page on the wiki.
 
-diff --git a/Create.c b/Create.c
-index 239545f..50142d8 100644
---- a/Create.c
-+++ b/Create.c
-@@ -475,6 +475,10 @@ int Create(struct supertype *st, char *mddev,
- 			close(fd);
- 		}
- 	}
-+	if (missing_disks == dnum) {
-+		pr_err("Subdevs can't be all missing\n");
-+		return 1;
-+	}
- 	if (s->raiddisks + s->sparedisks > st->max_devs) {
- 		pr_err("Too many devices: %s metadata only supports %d\n",
- 			st->ss->name, st->max_devs);
--- 
-2.7.4
+https://raid.wiki.kernel.org/index.php/What's_all_this_with_USB%3F
+
+Does that seem a fair enough summary?
+
+Cheers,
+Wol
 
