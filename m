@@ -1,31 +1,77 @@
-From: Jes Sorensen <jes.sorensen@gmail.com>
-Subject: Re: [PATCH] Grow.c: Block any level migration with chunk size change
-Date: Thu, 25 Jan 2018 14:32:35 -0500
-Message-ID: <979ac127-3b88-55ba-35e7-d4cdf4e910bb@gmail.com>
-References: <1516889570-16742-1-git-send-email-mariusz.tkaczyk@intel.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [RFC PATCH] MD: fix lock contention for flush bios
+Date: Fri, 26 Jan 2018 10:07:01 +0800
+Message-ID: <20180126020655.GA8197@ming.t460p>
+References: <1516761834-4701-1-git-send-email-xni@redhat.com>
+ <c3b38c2f-e139-85e2-b78b-17f20b6622b3@suse.com>
+ <248662549.3536363.1516801260103.JavaMail.zimbra@redhat.com>
+ <3b9cdab1-c6ac-c40c-4cd8-4a6ea20b5547@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1516889570-16742-1-git-send-email-mariusz.tkaczyk@intel.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <3b9cdab1-c6ac-c40c-4cd8-4a6ea20b5547@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org, shli@kernel.org, neilb@suse.com, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-On 01/25/2018 09:12 AM, Mariusz Tkaczyk wrote:
-> Mixing level and chunk changes in one grow operation is not supported.
-> Mdadm performs level migration correctly and ignores new chunk, but
-> after migration it tries to write this chunk to sysfs properties.
-> This is dangerous and can cause unexpected behaviours.
-> 
-> Block it before level migration starts.
-> 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Hi Guoqing,
 
-Applied!
+On Fri, Jan 26, 2018 at 09:10:11AM +0800, Guoqing Jiang wrote:
+> 
+> 
+> On 01/24/2018 09:41 PM, Xiao Ni wrote:
+> > ----- Original Message -----
+> > > From: "Guoqing Jiang"<gqjiang@suse.com>
+> > > To: "Xiao Ni"<xni@redhat.com>,linux-raid@vger.kernel.org
+> > > Cc:shli@kernel.org,neilb@suse.com, "ming lei"<ming.lei@redhat.com>,ncroxon@redhat.com
+> > > Sent: Wednesday, January 24, 2018 5:02:57 PM
+> > > Subject: Re: [RFC PATCH] MD: fix lock contention for flush bios
+> > > 
+> > > 
+> > > 
+> > > On 01/24/2018 10:43 AM, Xiao Ni wrote:
+> > > > There is a lock contention when there are many processes which send flush
+> > > > bios
+> > > > to md device. eg. Create many lvs on one raid device and mkfs.xfs on each
+> > > > lv.
+> > > > 
+> > > > Now it just can handle flush request sequentially. It needs to wait
+> > > > mddev->flush_bio
+> > > > to be NULL, otherwise get mddev->lock.
+> > > With the new approach, can we still keep the synchronization across all
+> > > devices?
+> > > I found the previous commit a2826aa92e2e ("md: support barrier requests
+> > > on all
+> > > personalities") did want to keep synchronization.
+> > When one flush bio is sumbitted to md, it creates one bio for each rdev to send flush request.
+> > If it must waits for all the flush requests to return, my patch breaks the rule.
+> > 
+> > Process A submits a flush bio to md, we call this flush bio bio-a.
+> > Process B submits a flush bio to md, we call this flush bio bio-b.
+> > 
+> > Before my patch there is only one process can handle flush bio. Process B waits for the returning
+> > of bio-b from Process B. After my patch it can handle the flush bios from all processes. Can't
+> > we handle flush bios from different processes at the same time?
+> 
+> Hmm, barrier does need the synchronization though it caused the contention.
+
+Seems this patch only touches code of handling MD flush request, not related
+with barrier, could you explain a bit if it is?
+
+> For flush/fua, I guess
+> we may not need it since fs need to ensure that certain requests are
+> executed in order, but I am not
+> so sure about it.
+
+From block layer's view, there isn't order in handling flush request
+among different IOs, and it is just a command sent to hardware for flushing
+the internal cache in drive.
+
+The current strictly serialized style of handling MD flush request does hurt
+performance, and IMO, the idea of the patch should be correct, at least from
+the view of handling flush request.
 
 Thanks,
-Jes
-
+Ming
