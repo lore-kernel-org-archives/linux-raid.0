@@ -1,38 +1,33 @@
-From: Peter Schuster <femi.ageuh@gmail.com>
-Subject: =?UTF-8?Q?Darlehen_Geld_f=C3=BCr_Einzelpersonen_und_Fachleute_in_w?=
-        =?UTF-8?Q?eniger_als_72_Stunden?=
-Date: Fri, 26 Jan 2018 08:22:47 +0100
-Message-ID: <CACKcKZ-YTVoO8xO=VcRR-F_91T=fQ=MZa2wBTk_EaRT7GRz52Q__11581.806818913$1516951300$gmane$org@mail.gmail.com>
-Reply-To: klaus.peterschuster@outlook.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Xiao Ni <xni@redhat.com>
+Subject: [PATCH mdadm] Subdevs can't be all missing when create raid device
+Date: Fri, 26 Jan 2018 16:42:16 +0800
+Message-ID: <1516956136-4803-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-Hallo,
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ Create.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Sind Sie in einer schwierigen Situation, f=C3=BCr die Sie sich f=C3=BCr ein
-Darlehen suchen? Ben=C3=B6tigen Sie eine Finanzierung, um eine Schuld zu
-begleichen oder eine Aktivit=C3=A4t zu finanzieren? Haben Sie einen
-Verbraucherkredit, eine Hypothek, einen pers=C3=B6nlichen Kredit, eine
-Hypothek, Investition Darlehen, Schuldenkonsolidierung Darlehen oder
-andere braucht?
+diff --git a/Create.c b/Create.c
+index 239545f..50142d8 100644
+--- a/Create.c
++++ b/Create.c
+@@ -475,6 +475,10 @@ int Create(struct supertype *st, char *mddev,
+ 			close(fd);
+ 		}
+ 	}
++	if (missing_disks == dnum) {
++		pr_err("Subdevs can't be all missing\n");
++		return 1;
++	}
+ 	if (s->raiddisks + s->sparedisks > st->max_devs) {
+ 		pr_err("Too many devices: %s metadata only supports %d\n",
+ 			st->ss->name, st->max_devs);
+-- 
+2.7.4
 
-Ich bin ein einzelner Investor. I zur Verf=C3=BCgung stellen die Kredit
-kurz-, mittel- und langfristige. Ihr Finanzierungsbedingungen sind
-sehr einfach und meine Zinssatz betr=C3=A4gt 3% pro Jahr.
-
-F=C3=BCr alle Anfragen, bleibe ich zur Verf=C3=BCgung, um Ihre Fragen zu be=
-antworten.
-
-Danke, dass Sie mir per E-Mail an Sie von  :   klaus.peterschuster@outlook.=
-de
-
-Mit freundlichen Gr=C3=BC=C3=9Fen.
-
-Peter Schuster
-
-Financial Bank
-https://firstfinancialsa.com/de
