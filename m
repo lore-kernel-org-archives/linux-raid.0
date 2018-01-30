@@ -1,86 +1,57 @@
-From: Wol's lists <antlists@youngman.org.uk>
-Subject: Re: [LSF/MM TOPIC] De-clustered RAID with MD
-Date: Tue, 30 Jan 2018 17:40:02 +0000
-Message-ID: <337d2541-e8d1-1c2e-e61b-bcca1e7c7388@youngman.org.uk>
-References: <mqdvafkhep0.fsf@linux-x5ow.site>
- <5A6F4CA6.5060802@youngman.org.uk> <87fu6o5o83.fsf@notabene.neil.brown.name>
- <5A704C59.4000705@youngman.org.uk> <87372n613s.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.16-rc1
+Date: Tue, 30 Jan 2018 13:34:35 -0800
+Message-ID: <20180130213435.m2c4x7m6csnp5ls5@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87372n613s.fsf@notabene.neil.brown.name>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, lsf-pc@lists.linux-foundation.org
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/01/18 11:24, NeilBrown wrote:
-> On Tue, Jan 30 2018, Wols Lists wrote:
-> 
->> On 29/01/18 21:50, NeilBrown wrote:
->>> By doing declustered parity you can sanely do raid6 on 100 drives, using
->>> a logical stripe size that is much smaller than 100.
->>> When recovering a single drive, the 10-groups-of-10 would put heavy load
->>> on 9 other drives, while the decluster approach puts light load on 99
->>> other drives.  No matter how clever md is at throttling recovery, I
->>> would still rather distribute the load so that md has an easier job.
->>
->> Not offering to do it ... :-)
->>
->> But that sounds a bit like linux raid-10. Could a simple approach be to
->> do something like "raid-6,11,100", ie raid-6 with 9 data chunks, two
->> parity, striped across 100 drives? Okay, it's not as good as the
->> decluster approach, but it would spread the stress of a rebuild across
->> 20 drives, not 10. And probably be fairly easy to implement.
-> 
-> If you did that, I think you would be about 80% of the way to fully
-> declustered-parity RAID.
-> If you then tweak the math a bit so that one stripe would was
-> 
-> A1 A2 A3 A4 B1 B2 B3 B4 C1 C2 C3 C4 ....
-> 
-> and the next
-> 
-> A1 C1 A2 C2 A3 C3 A4 C4 B1 D1 B2 D2 ....
-> 
-> and then
-> 
-> A1 B1 C1 D1 A2 B2 C2 D2 A3 B3 C3 D3 ....
-> 
->                    XX
->                    
-> When Ax are a logical stripe and Bx are the next,  then you have a
-> slightly better distribution.  If device XX fails then the reads needed
-> for the first stripe mostly come from different drives than those for
-> the second stripe, which are mostly different again for the 3rd stripe.
-> 
-> Presumably the CRUSH algorithm (which I only skim-read once about a year
-> ago) formalizes how to do this, and does it better.
-> Once you have the data handling in place for your proposal, it should be
-> little more than replacing a couple of calculations to get the full
-> solution.
-> 
-Okay. I think I have it - a definition for raid-16 (or is it raid-61). 
-But I need a bit of help with the maths. And it might need a look-up 
-table :-(
+Hi,
+Some small fixes for MD 4.16:
+- Fix raid5-cache potential problems if raid5 cache isn't fully recovered
+- Fix a wait-within-wait warning in raid1/10
+- Make raid5-PPL support disks with writeback cache enabled
+Please pull!
 
-Okay. Like raid-10, raid-16 would be spec'd as "--level 16,3,8", ie 3 
-mirrors, emulating an 8-drive raid-6.
+Thanks,
+Shaohua
 
-What I'm looking for is a PRNG that has the "bug" that it repeats over a 
-short period, and over that period is guaranteed to repeat each number 
-the same number of times. I saw a wonderful video demonstration of this 
-years ago - if you plot the generated number against the number of times 
-it was generated, after a few rows it "filled up" a rectangle on the graph.
+The following changes since commit 50c4c4e268a2d7a3e58ebb698ac74da0de40ae36:
 
-At which point the maths becomes very simple. I just need at least as 
-many real drives as "mirrors times emulated".
+  Linux 4.15-rc3 (2017-12-10 17:56:26 -0800)
 
-If somebody can come up with the algorithm I want, I can spec it, and 
-then maybe someone can implement it? It'll be fun testing - I'll need my 
-new machine when I get it working :-)
+are available in the git repository at:
 
-Cheers,
-Wol
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
+
+for you to fetch changes up to 1532d9e87e8b2377f12929f9e40724d5fbe6ecc5:
+
+  raid5-ppl: PPL support for disks with write-back cache enabled (2018-01-15 14:29:42 -0800)
+
+----------------------------------------------------------------
+NeilBrown (1):
+      md/raid1,raid10: silence warning about wait-within-wait
+
+Song Liu (2):
+      md: introduce new personality funciton start()
+      md/r5cache: print more info of log recovery
+
+Tomasz Majchrzak (1):
+      raid5-ppl: PPL support for disks with write-back cache enabled
+
+ Documentation/md/raid5-ppl.txt |   7 +-
+ drivers/md/dm-raid.c           |   9 +++
+ drivers/md/md.c                |  31 ++++++--
+ drivers/md/md.h                |   9 +++
+ drivers/md/raid1.c             |  11 +++
+ drivers/md/raid10.c            |  12 +++
+ drivers/md/raid5-cache.c       |  31 +++++---
+ drivers/md/raid5-log.h         |  30 ++++++++
+ drivers/md/raid5-ppl.c         | 167 ++++++++++++++++++++++++++++++++++++++---
+ drivers/md/raid5.c             |  16 +++-
+ 10 files changed, 285 insertions(+), 38 deletions(-)
