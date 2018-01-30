@@ -1,135 +1,54 @@
 From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Implementing Global Parity Codes
-Date: Tue, 30 Jan 2018 16:14:21 +0100
-Message-ID: <5A708BCD.10205@hesbynett.no>
-References: <CACm9mdUJLczo8zSB5UfU9Fd_6VK3+sGCYJYdaEaX0qW1cMLtYA@mail.gmail.com> <5A6C3A43.6030701@youngman.org.uk> <CACm9mdWs0d+Fo32AQ3prMuJhfsmECK2jBw-0O7D-KR=LNWtyvw@mail.gmail.com> <5A6C972C.8070401@youngman.org.uk> <bcd4cf40-dba6-1c52-ab8a-6884290215fa@hesbynett.no> <CACm9mdV4pjCLcPmmVRmwsXACoSZCUe7pCvwXBSTnhX5mH9kCVg@mail.gmail.com>
+Subject: Multi-layer raid status
+Date: Tue, 30 Jan 2018 16:30:22 +0100
+Message-ID: <5A708F8E.2040604@hesbynett.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACm9mdV4pjCLcPmmVRmwsXACoSZCUe7pCvwXBSTnhX5mH9kCVg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mostafa kishani <mostafa.kishani@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/01/18 12:30, mostafa kishani wrote:
-> David what you pointed about employment of PMDS codes is correct. We
-> have no access to what happens in the SSD firmware (such as FTL). But
-> why this code cannot be implemented in the software layer (similar to
-> RAID5/6...) ? I also thank you for pointing out very interesting
-> subjects.
-> 
+Does anyone know the current state of multi-layer raid (in the Linux md
+layer) for recovery?
 
-I must admit that I haven't dug through the mathematical details of the
-paper.  It looks to be at a level that I /could/ understand, but would
-need to put in quite a bit of time and effort.  And the paper does not
-strike me as being particularly outstanding or special - there are many,
-many such papers published about new ideas in error detection and
-correction.
+I am thinking of a setup like this (hypothetical example - it is not a
+real setup):
 
-While it is not clear to me exactly how these additional "global" parity
-blocks are intended to help correct errors in the paper, I can see a way
-to handle it.
+md0 = sda + sdb, raid1
+md1 = sdc + sdd, raid1
+md2 = sde + sdf, raid1
+md3 = sdg + sdh, raid1
 
-d d d d d P
-d d d d d P
-d d d d d P
-d d d S S P
-
-Where the "d" blocks are normal data blocks, "P" are raid-5 parity
-blocks (another column for raid-6 Q blocks could be added), and "S" are
-these "global" parity blocks.
-
-If a row has more errors than the normal parity block(s) can correct,
-then it is possible to use wider parity blocks to help.  If you have one
-S that is defined in the same way as raid-6 Q parity, then it can be
-used to correct an extra error in a stripe.  That relies on all the
-other stripes having at most P-correctable errors.
-
-The maths gets quite hairy.  Two parity blocks are well-defined at the
-moment - raid-5 (xor) and raid-6 (using powers of 2 weights on the data
-blocks, over GF(8)).  To provide recovery here, the S parities would
-have to fit within the same scheme.  A third parity block is relatively
-easy to calculate using powers of 4 weights - but that is not scalable
-(a fourth parity using powers of 8 does not work beyond 21 data blocks).
- An alternative multi-parity scheme is possible using significantly more
-complex maths.
-
-However it is done, it would be hard.  I am also not convinced that it
-would work for extra errors distributed throughout the block, rather
-than just in one row.
-
-A much simpler system could be done using vertical parities:
-
-d d d d d P
-d d d d d P
-d d d d d P
-V V V V V P
-
-Here, the V is just a raid-5 parity of the column of blocks.  You now
-effectively have a raid-5-5 layered setup, but distributed within the
-one set of disks.  Recovery would be straight-forward - if a block could
-not be re-created from a horizontal parity, then the vertical parity
-would be used.  You would have some write amplification, but it would
-perhaps not be too bad (you could have many rows per vertical parity
-block), and it would be fine for read-mostly applications.  It bears a
-certain resemblance to raid-10 layouts.  Of course, raid-5-6, raid-6-5
-and raid-6-6 would also be possible.
+md4 = md0 + md1 + md2 + md3, raid5
 
 
->>
->> Other things to consider on big arrays are redundancy of controllers, or
->> even servers (for SAN arrays).  Consider the pros and cons of spreading your
->> redundancy across blocks.  For example, if your server has two controllers
->> then you might want your low-level block to be Raid-1 pairs with one disk on
->> each controller.  That could give you a better spread of bandwidths and give
->> you resistance to a broken controller.
->>
->> You could also talk about asymmetric raid setups, such as having a
->> write-only redundant copy on a second server over a network, or as a cheap
->> hard disk copy of your fast SSDs.
->>
->> And you could also discuss strategies for disk replacement - after failures,
->> or for growing the array.
-> 
-> The disk replacement strategy has a significant effect on both
-> reliability and performance. The occurrence of human errors in desk
-> replacement can result in data unavailability and data loss. In the
-> following paper I've briefly discussed this subject and how a good
-> disk replacement policy can improve reliability by orders of magnitude
-> (a more detailed version of this paper is on the way!):
-> https://dl.acm.org/citation.cfm?id=3130452
+If you have an error reading a sector in sda, the raid1 pair finds the
+mirror copy on sdb, re-writes the data to sda (which re-locates the bad
+sector) and passes the good data on to the raid5 layer.  Everyone is
+happy, and the error is corrected quickly.
 
-In my experience, human error leads to more data loss than mechanical
-errors - and you really need to take it into account.
-
-> 
-> you can download it using sci-hub if you don't have ACM access.
-> 
->>
->> It is also worth emphasising that RAID is /not/ a backup solution - that
->> cannot be said often enough!
->>
->> Discuss failure recovery - how to find and remove bad disks, how to deal
->> with recovering disks from a different machine after the first one has died,
->> etc.  Emphasise the importance of labelling disks in your machines and being
->> sure you pull the right disk!
-> 
-> I really appreciate if you can share your experience about pulling
-> wrong disk and any statistics. This is an interesting subject to
-> discuss.
-> 
-
-My server systems are too small in size, and too few in numbers, for
-statistics.  I haven't actually pulled the wrong disk, but I did come
-/very/ close before deciding to have one last double-check.
-
-I have also tripped over the USB wire to an external disk and thrown it
-across the room - I am now a lot more careful about draping wires around!
+Rebuilds are fast as single disk copies.
 
 
-mvh.,
+However, if you have an error reading a sector in sda /and/ when reading
+the mirror copy in sdb, then the raid1 pair has no data to give to the
+raid5 layer.  The raid5 layer will then read the rest of the stripe and
+calculate the missing data.  I presume it will then re-write the
+calculated data to md0, which will in turn write it to sda and sdb, and
+all will be well again.
 
-David
+
+But what about rebuilds?  A rebuild or recovery of the raid1 layer is
+not triggered by a read from the raid5 level - it will be handled at the
+raid1 level.  If sda is replaced, then the raid1 level will build it by
+copying from sdb.  If a read error is encountered while copying, is
+there any way for the recovery code to know that it can get the missing
+data by asking the raid5 level?  Is it possible to mark the matching sda
+sector as bad, so that a future raid5 read (such as from a scrub) will
+see that md0 stripe as bad, and re-write it?
+
+
+
 
