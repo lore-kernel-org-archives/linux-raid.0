@@ -1,20 +1,20 @@
 From: David Brown <david.brown@hesbynett.no>
 Subject: Re: [LSF/MM TOPIC] De-clustered RAID with MD
-Date: Wed, 31 Jan 2018 09:03:29 +0100
-Message-ID: <5A717851.2020909@hesbynett.no>
-References: <mqdvafkhep0.fsf@linux-x5ow.site>        <5A6F4CA6.5060802@youngman.org.uk> <mqd607jn0pq.fsf@linux-x5ow.site>
+Date: Wed, 31 Jan 2018 10:58:19 +0100
+Message-ID: <5A71933B.1050908@hesbynett.no>
+References: <mqdvafkhep0.fsf@linux-x5ow.site> <5A6F4CA6.5060802@youngman.org.uk> <87fu6o5o83.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <mqd607jn0pq.fsf@linux-x5ow.site>
-Sender: linux-raid-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, Wols Lists <antlists@youngman.org.uk>
-Cc: lsf-pc@lists.linux-foundation.org, linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.de>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <87fu6o5o83.fsf@notabene.neil.brown.name>
+Sender: linux-block-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Wols Lists <antlists@youngman.org.uk>, Johannes Thumshirn <jthumshirn@suse.de>, lsf-pc@lists.linux-foundation.org
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 30/01/18 10:40, Johannes Thumshirn wrote:
-> Wols Lists <antlists@youngman.org.uk> writes:
+On 29/01/18 22:50, NeilBrown wrote:
+> On Mon, Jan 29 2018, Wols Lists wrote:
 > 
 >> On 29/01/18 15:23, Johannes Thumshirn wrote:
 >>> Hi linux-raid, lsf-pc
@@ -42,51 +42,46 @@ On 30/01/18 10:40, Johannes Thumshirn wrote:
 >>
 >> Again, that's throttling, so that's not a problem ...
 > 
-> And throttling in a production environment is not exactly
-> desired. Imagine a 500 disk array (and yes this is something we've seen
-> with MD) and you have to replace disks. While the array is rebuilt you
-> have to throttle all I/O because with raid-{1,5,6,10} all data is
-> striped across all disks.
-
-You definitely don't want a stripe across 500 disks!  I'd be inclined to
-have raid1 pairs as the basic block, or perhaps 6-8 drive raid6 if you
-want higher space efficiency.  Then you build your full array on top of
-that, along with a file system that can take advantage of the layout.
-If you have an XFS over a linear concat of these sets, then you have a
-system that can quickly server many parallel loads - but that could be
-poor distribution if you are storing massive streaming data.  And
-rebuilds only delay data from the one block that is involved in the rebuild.
-
-(I have no experience with anything bigger than about 6 disks - this is
-just theory on my part.)
-
+> Imagine an array with 100 drives on which we store data in sets of
+> (say) 6 data chunks and 2 parity chunks.
+> Each group of 8 chunks is distributed over the 100 drives in a
+> different way so that (e.g) 600 data chunks and 200 parity chunks are
+> distributed over 8 physical stripes using some clever distribution
+> function.
+> If (when) one drive fails, the 8 chunks in this set of 8 physical
+> stripes can be recovered by reading 6*8 == 48 chunks which will each be
+> on a different drive.  Half the drives deliver only one chunk (in an ideal
+> distribution) and the other half deliver none.  Maybe they will deliver
+> some for the next set of 100 logical stripes.
 > 
-> With a parity declustered RAID (or DDP like Dell, NetApp or Huawei call
-> it) you don't have to as the I/O is replicated in parity groups across a
-> subset of disks. All I/O targeting disks which aren't needed to recover
-> the data from the failed disks aren't affected by the throttling at all.
+> You would probably say that even doing raid6 on 100 drives is crazy.
+> Better to make, e.g. 10 groups of 10 and do raid6 on each of the 10,
+> then LVM them together.
 > 
->>> 2) an efficient mapping function can improve parallel I/O submission, as
->>>    two different I/Os are not necessarily going to the same disks in the
->>>    array. 
->>>
->>> For the mapping function used a hashing algorithm like Ceph's CRUSH [2]
->>> would be ideal, as it provides a pseudo random but deterministic mapping
->>> for the I/O onto the drives.
->>>
->>> This whole declustering of cause only makes sense for more than (at
->>> least) 4 drives but we do have customers with several orders of
->>> magnitude more drivers in an MD array.
->>
->> If you have four drives or more - especially if they are multi-terabyte
->> drives - you should NOT be using raid-5 ...
-> 
-> raid-6 won't help you much in above scenario.
+> By doing declustered parity you can sanely do raid6 on 100 drives, using
+> a logical stripe size that is much smaller than 100.
+> When recovering a single drive, the 10-groups-of-10 would put heavy load
+> on 9 other drives, while the decluster approach puts light load on 99
+> other drives.  No matter how clever md is at throttling recovery, I
+> would still rather distribute the load so that md has an easier job.
 > 
 
-Raid-6 is still a great deal better than raid-5 :-)
+That sounds smart.  I don't see that you need anything particularly
+complicated for how you distribute your data and parity drives across
+the 100 disks - you just need a fairly even spread.
 
-And for your declustered raid or distributed parity, you can have two
-parities rather than just one.
+I would be more concerned with how you could deal with resizing such an
+array.  In particular, I think it is not unlikely that someone with a
+100 drive array will one day want to add another bank of 24 disks (or
+whatever fits in a cabinet).  Making that work nicely would, I believe,
+be more important than making sure the rebuild load distribution is
+balanced evenly across 99 drives.
 
-
+I would also be interested in how the data and parities are distributed
+across cabinets and disk controllers.  When you manually build from
+smaller raid sets, you can ensure that in set the data disks and the
+parity are all in different cabinets - that way if an entire cabinet
+goes up in smoke, you have lost one drive from each set, and your data
+is still there.  With a pseudo random layout, you have lost that.  (I
+don't know how often entire cabinets of disks die, but I once lost both
+disks of a raid1 mirror when the disk controller card died.)
