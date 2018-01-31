@@ -1,69 +1,151 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: [LSF/MM TOPIC] De-clustered RAID with MD
-Date: Wed, 31 Jan 2018 15:41:11 +0100
-Message-ID: <5A71D587.2070409@hesbynett.no>
-References: <mqdvafkhep0.fsf@linux-x5ow.site> <5A6F4CA6.5060802@youngman.org.uk> <87fu6o5o83.fsf@notabene.neil.brown.name> <5A71933B.1050908@hesbynett.no> <5A71D24F.9090604@youngman.org.uk>
+From: mostafa kishani <mostafa.kishani@gmail.com>
+Subject: Re: Implementing Global Parity Codes
+Date: Wed, 31 Jan 2018 19:33:54 +0330
+Message-ID: <CACm9mdU_Ljdxy1bTp3qBpD4EeeVteA0qBiep+9_=_1bWoxdXjg@mail.gmail.com>
+References: <CACm9mdUJLczo8zSB5UfU9Fd_6VK3+sGCYJYdaEaX0qW1cMLtYA@mail.gmail.com>
+ <5A6C3A43.6030701@youngman.org.uk> <CACm9mdWs0d+Fo32AQ3prMuJhfsmECK2jBw-0O7D-KR=LNWtyvw@mail.gmail.com>
+ <5A6C972C.8070401@youngman.org.uk> <bcd4cf40-dba6-1c52-ab8a-6884290215fa@hesbynett.no>
+ <CACm9mdV4pjCLcPmmVRmwsXACoSZCUe7pCvwXBSTnhX5mH9kCVg@mail.gmail.com> <5A708BCD.10205@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <5A71D24F.9090604@youngman.org.uk>
-Sender: linux-block-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, NeilBrown <neilb@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, lsf-pc@lists.linux-foundation.org
-Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5A708BCD.10205@hesbynett.no>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31/01/18 15:27, Wols Lists wrote:
-> On 31/01/18 09:58, David Brown wrote:
->> I would also be interested in how the data and parities are distributed
->> across cabinets and disk controllers.  When you manually build from
->> smaller raid sets, you can ensure that in set the data disks and the
->> parity are all in different cabinets - that way if an entire cabinet
->> goes up in smoke, you have lost one drive from each set, and your data
->> is still there.  With a pseudo random layout, you have lost that.  (I
->> don't know how often entire cabinets of disks die, but I once lost both
->> disks of a raid1 mirror when the disk controller card died.)
-> 
-> The more I think about how I plan to spec raid-61, the more a modulo
-> approach seems to make sense. That way, it'll be fairly easy to predict
-> what ends up where, and make sure your disks are evenly scattered.
-> 
-> I think both your and my approach might have problems with losing an
-> entire cabinet, however. Depends on how many drives per cabinet ...
+Yes that's exactly what the code does. Here the math of
+encoding/decoding is not as important of IO overhead. Upon a stripe
+update, it needs to update the Global parity as well (that is probably
+in another stripe). This should result in a terrible performance in
+random-write workloads. But in sequential-write workloads this code
+may have a performance near to RAID5 and slightly better than RAID6.
+The 2D codes (as you suggested) also suffer a huge IO penalty and this
+is why the're barely employed even is fast memory structure such as
+SRAM/DRAM.
 
-Exactly.  I don't know how many cabinets are used on such systems.
+Bests,
+Mostafa
 
-> 
-> Anyways, my second thoughts are ...
-> 
-> We have what I will call a stripe-block. The lowest common multiple of
-> "disks needed" ie number of mirrors times number of drives in the
-> raid-6, and the disks available.
-> 
-> Assuming my blocks are all stored sequentially I can then quickly
-> calculate their position in this stripe-block. But this will fall foul
-> of just hammering the drives nearest to the failed drive. But if I
-> pseudo-randomise this position with "position * prime mod drives" where
-> "prime" is not common to either the number of drives or the number or
-> mirrors or the number of raid-drives, then this should achieve my aim of
-> uniquely shuffling the location of all the blocks without collisions.
-> 
-> Pretty simple maths, for efficiency, that smears the data over all the
-> drives. Does that sound feasible? All the heavy lifting, calculating the
-> least common multiple, finding the prime, etc etc can be done at array
-> set-up time.
-
-Something like that should work, and be convenient to implement.  I am
-not sure off the top of my head if such a simple modulo system is valid,
-but it won't be difficult to check.
-
-> 
-> (If this then allows feasible 100-drive arrays, we won't just need an
-> incremental assemble mode, we might need an incremental build mode :-)
-> 
-
-You really want to track which stripes are valid here, and which are not
-yet made consistent.  A blank array will start with everything marked
-invalid or inconsistent - build mode is just a matter of writing the
-metadata.  You only need to make stripes consistent when you first write
-to them.
+On Tue, Jan 30, 2018 at 6:44 PM, David Brown <david.brown@hesbynett.no> wrote:
+> On 30/01/18 12:30, mostafa kishani wrote:
+>> David what you pointed about employment of PMDS codes is correct. We
+>> have no access to what happens in the SSD firmware (such as FTL). But
+>> why this code cannot be implemented in the software layer (similar to
+>> RAID5/6...) ? I also thank you for pointing out very interesting
+>> subjects.
+>>
+>
+> I must admit that I haven't dug through the mathematical details of the
+> paper.  It looks to be at a level that I /could/ understand, but would
+> need to put in quite a bit of time and effort.  And the paper does not
+> strike me as being particularly outstanding or special - there are many,
+> many such papers published about new ideas in error detection and
+> correction.
+>
+> While it is not clear to me exactly how these additional "global" parity
+> blocks are intended to help correct errors in the paper, I can see a way
+> to handle it.
+>
+> d d d d d P
+> d d d d d P
+> d d d d d P
+> d d d S S P
+>
+> Where the "d" blocks are normal data blocks, "P" are raid-5 parity
+> blocks (another column for raid-6 Q blocks could be added), and "S" are
+> these "global" parity blocks.
+>
+> If a row has more errors than the normal parity block(s) can correct,
+> then it is possible to use wider parity blocks to help.  If you have one
+> S that is defined in the same way as raid-6 Q parity, then it can be
+> used to correct an extra error in a stripe.  That relies on all the
+> other stripes having at most P-correctable errors.
+>
+> The maths gets quite hairy.  Two parity blocks are well-defined at the
+> moment - raid-5 (xor) and raid-6 (using powers of 2 weights on the data
+> blocks, over GF(8)).  To provide recovery here, the S parities would
+> have to fit within the same scheme.  A third parity block is relatively
+> easy to calculate using powers of 4 weights - but that is not scalable
+> (a fourth parity using powers of 8 does not work beyond 21 data blocks).
+>  An alternative multi-parity scheme is possible using significantly more
+> complex maths.
+>
+> However it is done, it would be hard.  I am also not convinced that it
+> would work for extra errors distributed throughout the block, rather
+> than just in one row.
+>
+> A much simpler system could be done using vertical parities:
+>
+> d d d d d P
+> d d d d d P
+> d d d d d P
+> V V V V V P
+>
+> Here, the V is just a raid-5 parity of the column of blocks.  You now
+> effectively have a raid-5-5 layered setup, but distributed within the
+> one set of disks.  Recovery would be straight-forward - if a block could
+> not be re-created from a horizontal parity, then the vertical parity
+> would be used.  You would have some write amplification, but it would
+> perhaps not be too bad (you could have many rows per vertical parity
+> block), and it would be fine for read-mostly applications.  It bears a
+> certain resemblance to raid-10 layouts.  Of course, raid-5-6, raid-6-5
+> and raid-6-6 would also be possible.
+>
+>
+>>>
+>>> Other things to consider on big arrays are redundancy of controllers, or
+>>> even servers (for SAN arrays).  Consider the pros and cons of spreading your
+>>> redundancy across blocks.  For example, if your server has two controllers
+>>> then you might want your low-level block to be Raid-1 pairs with one disk on
+>>> each controller.  That could give you a better spread of bandwidths and give
+>>> you resistance to a broken controller.
+>>>
+>>> You could also talk about asymmetric raid setups, such as having a
+>>> write-only redundant copy on a second server over a network, or as a cheap
+>>> hard disk copy of your fast SSDs.
+>>>
+>>> And you could also discuss strategies for disk replacement - after failures,
+>>> or for growing the array.
+>>
+>> The disk replacement strategy has a significant effect on both
+>> reliability and performance. The occurrence of human errors in desk
+>> replacement can result in data unavailability and data loss. In the
+>> following paper I've briefly discussed this subject and how a good
+>> disk replacement policy can improve reliability by orders of magnitude
+>> (a more detailed version of this paper is on the way!):
+>> https://dl.acm.org/citation.cfm?id=3130452
+>
+> In my experience, human error leads to more data loss than mechanical
+> errors - and you really need to take it into account.
+>
+>>
+>> you can download it using sci-hub if you don't have ACM access.
+>>
+>>>
+>>> It is also worth emphasising that RAID is /not/ a backup solution - that
+>>> cannot be said often enough!
+>>>
+>>> Discuss failure recovery - how to find and remove bad disks, how to deal
+>>> with recovering disks from a different machine after the first one has died,
+>>> etc.  Emphasise the importance of labelling disks in your machines and being
+>>> sure you pull the right disk!
+>>
+>> I really appreciate if you can share your experience about pulling
+>> wrong disk and any statistics. This is an interesting subject to
+>> discuss.
+>>
+>
+> My server systems are too small in size, and too few in numbers, for
+> statistics.  I haven't actually pulled the wrong disk, but I did come
+> /very/ close before deciding to have one last double-check.
+>
+> I have also tripped over the USB wire to an external disk and thrown it
+> across the room - I am now a lot more careful about draping wires around!
+>
+>
+> mvh.,
+>
+> David
+>
