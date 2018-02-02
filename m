@@ -1,103 +1,89 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: [PATCH] md: fix md_write_start() deadlock w/o metadata
-	devices
-Date: Fri,  2 Feb 2018 23:13:19 +0100
-Message-ID: <054eff295e0cd2df2b11a3f9ba3b3d66e89beb47.1517609290.git.heinzm@redhat.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] [RFC] md raid10: use rcu to avoid NULL dereference in raid10d()
+Date: Sat, 03 Feb 2018 09:14:34 +1100
+Message-ID: <87zi4rjayd.fsf@notabene.neil.brown.name>
+References: <20171117200326.xqchu3r3elzvkg7z@kernel.org> <45cfa4a5-fe04-8b02-531d-c642ad6e7b4c@huawei.com> <7b5cb7fa-2dfa-0fab-752d-16cdfedffbca@huawei.com> <87o9l82vun.fsf@notabene.neil.brown.name> <2d7921ce-6ebf-fad5-2029-f54bb896863f@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: heinzm@redhat.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, shli@kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2d7921ce-6ebf-fad5-2029-f54bb896863f@huawei.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: yuyufen <yuyufen@huawei.com>, colyli@suse.de, shli@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If no metadata devices are configured on raid1/4/5/6/10
-(e.g. via dm-raid), md_write_start() unconditionally waits
-for superblocks to be written thus deadlocking.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Fix introduces mddev->has_superblocks bool, defines it in md_run()
-and checks for it in md_write_start() to conditionally avoid waiting.
+On Fri, Feb 02 2018, yuyufen@huawei.com wrote:
 
-Once on it, check for non-existing superblocks in md_super_write().
+>> I had forgotten about this patch and will resend.  However I think the
+>> only change needs is adding some comments.  I still think the code is
+>> correct.
+> (1) When raid10 create, there are 4 disks in raid and 2 spare disks=20
+> (sda5, sdd5)
+>
+> [  100.473118] RAID10 conf printout:
+> [  100.473121]  --- wd:3 rd:4
+> [  100.473123]  disk 0, wo:0, o:1, dev:sdb5
+> [  100.473124]  disk 1, wo:1, o:0, dev:sdc5
+> [  100.473126]  disk 2, wo:0, o:1, dev:sde5
+> [  100.473127]  disk 3, wo:0, o:1, dev:sdf5
+>
+> (2) mdadm: hot removed /dev/sdc5 from /dev/md5
+> [  100.473118] RAID10 conf printout:
+> [  110.390027]  --- wd:3 rd:4
+> [  110.390028]  disk 0, wo:0, o:1, dev:sdb5
+> [  110.390029]  disk 2, wo:0, o:1, dev:sde5
+> [  110.390030]  disk 3, wo:0, o:1, dev:sdf5
+>
+> However, as there are 2 spare disks, we expect raid10 can hot add a disk.
+>
+> (3)
+> mdadm: added /dev/sdc5
+> mdadm: hot removed /dev/sdc5 from /dev/md5
+> [  148.680032] RAID10 conf printout:
+> [  148.680035]  --- wd:2 rd:4
+> [  148.680037]  disk 0, wo:0, o:1, dev:sdb5
+> [  148.680038]  disk 2, wo:0, o:1, dev:sde5
+>
+> Now, there are 3 spare disks (sda5, sdc5, sdd5)
+> Also, we expect hot add 2 disk, not just 2 disk in raid10.
+>
+> I try to explain, but not sure:
+> The only place of the runtime to invoke mddev->pers->hot_add_disk(mddev,=
+=20
+> rdev) is md_check_recovery().
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=198647
-Fixes: cc27b0c78c796 ("md: fix deadlock between mddev_suspend() and md_write_start()")
+> But, it will set MD_RECOVERY_RUNNING before invoking=20
+> remove_and_add_spares():
 
-Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
----
- drivers/md/md.c | 10 ++++++++++
- drivers/md/md.h |  2 ++
- 2 files changed, 12 insertions(+)
+This is the piece I was missing.  Thanks for pointing that out,
+definitely a bug in my patch.  I'll send a new patch which tests 'this'
+as well as the flag.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0081ace39a64..8a7e7034962c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -801,6 +801,9 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
- 	struct bio *bio;
- 	int ff = 0;
- 
-+	if (!page)
-+		return;
-+
- 	if (test_bit(Faulty, &rdev->flags))
- 		return;
- 
-@@ -5452,6 +5455,7 @@ int md_run(struct mddev *mddev)
- 	 * the only valid external interface is through the md
- 	 * device.
- 	 */
-+	mddev->has_superblocks = false;
- 	rdev_for_each(rdev, mddev) {
- 		if (test_bit(Faulty, &rdev->flags))
- 			continue;
-@@ -5465,6 +5469,9 @@ int md_run(struct mddev *mddev)
- 				set_disk_ro(mddev->gendisk, 1);
- 		}
- 
-+		if (rdev->sb_page)
-+			mddev->has_superblocks = true;
-+
- 		/* perform some consistency tests on the device.
- 		 * We don't want the data to overlap the metadata,
- 		 * Internal Bitmap issues have been handled elsewhere.
-@@ -8049,6 +8056,7 @@ EXPORT_SYMBOL(md_done_sync);
- bool md_write_start(struct mddev *mddev, struct bio *bi)
- {
- 	int did_change = 0;
-+
- 	if (bio_data_dir(bi) != WRITE)
- 		return true;
- 
-@@ -8081,6 +8089,8 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
- 	rcu_read_unlock();
- 	if (did_change)
- 		sysfs_notify_dirent_safe(mddev->sysfs_state);
-+	if (!mddev->has_superblocks)
-+		return true;
- 	wait_event(mddev->sb_wait,
- 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
- 		   mddev->suspended);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 58cd20a5e85e..fbc925cce810 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -468,6 +468,8 @@ struct mddev {
- 	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
- 	struct md_cluster_info		*cluster_info;
- 	unsigned int			good_device_nr;	/* good device num within cluster raid */
-+
-+	bool	has_superblocks:1;
- };
- 
- enum recovery_flags {
--- 
-2.14.3
+Thanks a lot,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlp04soACgkQOeye3VZi
+gbkF+A/9EVqr29aSOruoEtQvr8NBkYDigqI5F7ow4NuejdoLHrJPDQme7xJIQW4X
+dN02PSn8DpQjEk0KN+77cHDsl8V5zPS7e1V7QrMW5oDTYMTTtJikTdpTfEIF6PCl
+UVzsPylA9dKc1x9LrxQh7AZ5cVrOOYUvMJlglCo7TIKh/rdQ4eLtU5MfHOLY/is2
+BN/4NnKcYGpLBzEpyk9gcCsiIRddltWTd4xS5UaAZZLPdFsNPRDO6APViy288Qem
+QBN9RAqunw4ICtYVOj6kaa1V+l8Ae4hoN2GX/gZAKfpsREvtZqISRZ7SQUgqr/F1
+YazmnaqrTwwpOt5lL2SFGe4K/3cmMWn2IkC3VX2D0EDpQmeQCG/sYfZ9GYyFijWR
+L6rbxmdk67b5fhB7Xlwm1qF/TrudxEPlbwok49l5jSbR52cGFOUx17/GxjjQXYvg
+WoZb4YVJsoNrDSKJu5Ob1CSJnR+ZUpaMGjIRCEMDGP/WPWLwq6wINCgyFeI3i0Qs
+bv1JL9qlSzzl1PqYbt7YT9sJXEiJ62Tf1+rlrBvyU82ooII1ILxV9XmPhAbxyr9m
+Xdwpv45QEbyU2P717CP3RRhgFbjn0u1soSrvm/TyGsd3ctAyxdMFqpimQnJTAZ35
+BmZ+mMVmPt3mXfxKeBwbKmvLJu2ChLeYJvB5z7/u9yRYqwOWHBc=
+=j4hZ
+-----END PGP SIGNATURE-----
+--=-=-=--
