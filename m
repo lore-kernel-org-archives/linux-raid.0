@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 07/19] clustermd_tests: add test case to test switching bitmap against cluster-raid1
-Date: Fri,  2 Feb 2018 14:10:51 +0800
-Message-ID: <1517551863-1511-8-git-send-email-zlliu@suse.com>
+Subject: [PATCH 10/19] clustermd_tests: add test case to test manage_add against cluster-raid1
+Date: Fri,  2 Feb 2018 14:10:54 +0800
+Message-ID: <1517551863-1511-11-git-send-email-zlliu@suse.com>
 References: <1517551863-1511-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1517551863-1511-1-git-send-email-zlliu@suse.com>
@@ -10,23 +10,24 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, gqjiang@suse.com, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-01r1_Grow_bitmap-switch:
-It tests switching bitmap during three modes include of
-clustered, none and internal, this case is testing the
-clustered raid1.
+02r1_Manage_add: it covers testing 2 scenarios against manage_add.
+1. 2 active disks in md array, set 1 disk 'fail' and 'remove' it
+   from array, then add 1 pure disk into array.
+2. 2 active disks in array, add 1 new disk into array directly, now
+   the 'add' in equal to 'add-spare'.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- clustermd_tests/01r1_Grow_bitmap-switch | 51 +++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
- create mode 100644 clustermd_tests/01r1_Grow_bitmap-switch
+ clustermd_tests/02r1_Manage_add | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 clustermd_tests/02r1_Manage_add
 
-diff --git a/clustermd_tests/01r1_Grow_bitmap-switch b/clustermd_tests/01r1_Grow_bitmap-switch
+diff --git a/clustermd_tests/02r1_Manage_add b/clustermd_tests/02r1_Manage_add
 new file mode 100644
-index 0000000..3b363d9
+index 0000000..ab2751c
 --- /dev/null
-+++ b/clustermd_tests/01r1_Grow_bitmap-switch
-@@ -0,0 +1,51 @@
++++ b/clustermd_tests/02r1_Manage_add
+@@ -0,0 +1,33 @@
 +#!/bin/bash
 +
 +mdadm -CR $md0 -l1 -b clustered -n2 $dev0 $dev1 --assume-clean
@@ -35,44 +36,26 @@ index 0000000..3b363d9
 +check all raid1
 +check all bitmap
 +check all state UU
++check all dmesg
++mdadm --manage $md0 --fail $dev0 --remove $dev0
++mdadm --zero $dev2
++mdadm --manage $md0 --add $dev2
++sleep 0.3
++check $NODE1 recovery
++check $NODE1 wait
++check all state UU
++check all dmesg
++stop_md all $md0
 +
-+# switch 'clustered' bitmap to 'none', and then 'none' to 'internal'
-+stop_md $NODE2 $md0
-+mdadm --grow $md0 --bitmap=none
-+[ $? -eq '0' ] ||
-+	die "$NODE1: change bitmap 'clustered' to 'none' failed."
-+mdadm -X $dev0 $dev1 &> /dev/null
-+[ $? -eq '0' ] &&
-+	die "$NODE1: bitmap still exists in member_disks."
-+check all nobitmap
-+mdadm --grow $md0 --bitmap=internal
-+[ $? -eq '0' ] ||
-+	die "$NODE1: change bitmap 'none' to 'internal' failed."
-+sleep 2
-+mdadm -X $dev0 $dev1 &> /dev/null
-+[ $? -eq '0' ] ||
-+	die "$NODE1: create 'internal' bitmap failed."
-+check $NODE1 bitmap
-+
-+# switch 'internal' bitmap to 'none', and then 'none' to 'clustered'
-+mdadm --grow $md0 --bitmap=none
-+[ $? -eq '0' ] ||
-+	die "$NODE1: change bitmap 'internal' to 'none' failed."
-+mdadm -X $dev0 $dev1 &> /dev/null
-+[ $? -eq '0' ] &&
-+	die "$NODE1: bitmap still exists in member_disks."
-+check $NODE1 nobitmap
-+mdadm --grow $md0 --bitmap=clustered
-+[ $? -eq '0' ] ||
-+	die "$NODE1: change bitmap 'none' to 'clustered' failed."
++mdadm -CR $md0 -l1 -b clustered -n2 $dev0 $dev1 --assume-clean
 +ssh $NODE2 mdadm -A $md0 $dev0 $dev1
-+sleep 2
-+for ip in $NODES
-+do
-+	ssh $ip "mdadm -X $dev0 $dev1 | grep -q 'Cluster name'" ||
-+		die "$ip: create 'clustered' bitmap failed."
-+done
++check all nosync
++check all raid1
 +check all bitmap
++check all state UU
++check all dmesg
++mdadm --manage $md0 --add $dev2
++check all spares 1
 +check all state UU
 +check all dmesg
 +stop_md all $md0
