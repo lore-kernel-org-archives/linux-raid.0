@@ -1,128 +1,45 @@
-From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Subject: [PATCH 3/5] raid5: sysfs attribute for write hint policy
-Date: Fri,  2 Feb 2018 14:50:37 +0100
-Message-ID: <20180202135039.32086-4-mariusz.dabrowski@intel.com>
-References: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Multi-layer raid status
+Date: Fri, 2 Feb 2018 14:24:49 +0000
+Message-ID: <5A7474B1.1020807@youngman.org.uk>
+References: <5A708F8E.2040604@hesbynett.no>
+ <87372k2aix.fsf@notabene.neil.brown.name> <5A744054.4060305@hesbynett.no>
+ <5A7448AF.3050108@youngman.org.uk> <5A744C4B.7030704@hesbynett.no>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
+In-Reply-To: <5A744C4B.7030704@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
-Cc: linux-raid@vger.kernel.org, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+To: David Brown <david.brown@hesbynett.no>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Added new sysfs attribute to change write hint classification for parity
+On 02/02/18 11:32, David Brown wrote:
+> You already do that during a scrub.  You don't want to do it during
+> normal operations - unless you have a usage pattern with mostly big
+> reads, you will cripple performance.  A small performance drop is
+> acceptable if it can be shown to significantly improve reliability - but
+> making every read a full stripe read will give you random read
+> performance closer to that of a single disk than a raid array.
 
-Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- drivers/md/raid5.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid5.h |  5 +++++
- 2 files changed, 67 insertions(+)
+Unless integrity is more important than speed?
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index bd99f1651b66..088b97bbcbe2 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6631,6 +6631,67 @@ raid5_group_thread_cnt = __ATTR(group_thread_cnt, S_IRUGO | S_IWUSR,
- 				raid5_show_group_thread_cnt,
- 				raid5_store_group_thread_cnt);
- 
-+static ssize_t
-+raid5_show_write_hint_policy(struct mddev *mddev, char *buf)
-+{
-+	char *sep = ",";
-+	size_t len = 0;
-+	unsigned long flags = 0;
-+	struct r5conf *conf;
-+
-+	spin_lock(&mddev->lock);
-+	conf = mddev->private;
-+	if (conf) {
-+		flags = conf->write_hint_flags;
-+
-+		if (!flags) {
-+			len = sprintf(buf, "off");
-+		} else {
-+			if (test_bit(WH_POLICY_PARITY, &flags))
-+				len += sprintf(buf+len, "parity%s", sep);
-+			len -= strlen(sep);
-+		}
-+	}
-+	spin_unlock(&mddev->lock);
-+	len += sprintf(buf + len, "\n");
-+
-+	return len;
-+}
-+
-+static ssize_t
-+raid5_store_write_hint_policy(struct mddev *mddev, const char *page, size_t len)
-+{
-+	struct r5conf *conf;
-+	int err = 0;
-+
-+	err = mddev_lock(mddev);
-+	if (err)
-+		return err;
-+
-+	conf = mddev->private;
-+	if (!conf) {
-+		err = -ENODEV;
-+	} else {
-+		if (strncmp(page, "parity", 6) == 0)
-+			set_bit(WH_POLICY_PARITY, &conf->write_hint_flags);
-+		else if (strncmp(page, "-parity", 7) == 0)
-+			clear_bit(WH_POLICY_PARITY, &conf->write_hint_flags);
-+		else if (strncmp(page, "off", 3) == 0)
-+			conf->write_hint_flags = 0;
-+		else
-+			err = -EINVAL;
-+	}
-+
-+	mddev_unlock(mddev);
-+
-+	return err ?: len;
-+}
-+
-+static struct md_sysfs_entry
-+raid5_write_hint_policy = __ATTR(write_hint_policy, S_IRUGO | S_IWUSR,
-+				 raid5_show_write_hint_policy,
-+				 raid5_store_write_hint_policy);
-+
- static struct attribute *raid5_attrs[] =  {
- 	&raid5_stripecache_size.attr,
- 	&raid5_stripecache_active.attr,
-@@ -6639,6 +6700,7 @@ static struct attribute *raid5_attrs[] =  {
- 	&raid5_skip_copy.attr,
- 	&raid5_rmw_level.attr,
- 	&r5c_journal_mode.attr,
-+	&raid5_write_hint_policy.attr,
- 	NULL,
- };
- static struct attribute_group raid5_attrs_group = {
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 69686616d2ca..e08071dc4202 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -195,6 +195,10 @@ enum reconstruct_states {
- 	reconstruct_state_result,
- };
- 
-+enum write_hint_flags {
-+	WH_POLICY_PARITY = 0,
-+};
-+
- struct stripe_head {
- 	struct hlist_node	hash;
- 	struct list_head	lru;	      /* inactive_list or handle_list */
-@@ -565,6 +569,7 @@ struct r5conf {
- 	int			raid_disks;
- 	int			max_nr_stripes;
- 	int			min_nr_stripes;
-+	unsigned long		write_hint_flags;
- 
- 	/* reshape_progress is the leading edge of a 'reshape'
- 	 * It has value MaxSector when no reshape is happening
--- 
-2.16.1
+Unless (like in your own example) you know there's a problem and you
+want to find it?
 
+Yup I know it will knacker performance - I said so. But there are plenty
+of use cases where it would actually be very useful, and probably the
+lesser of two evils.
+
+(Actually, re-reading your original email, it actually sounds like the
+right thing to do would be to call hdparm to mark the sector bad on sda,
+rather than use badblocks, so it will rewrite and clear itself. And this
+is also a perfect example of where my technique would be useful - it's
+probably not the raid-5 parity block that gets corrupted, therefore the
+data itself has been corrupted, therefore my utility would find the
+damaged file for you so you could recover from backup. A scrub at the
+raid-5 level would just "fix" the parity and leave you with a corrupted
+file waiting to blow up on you.)
+
+Cheers,
+Wol
