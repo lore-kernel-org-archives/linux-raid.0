@@ -1,7 +1,7 @@
 From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Subject: [PATCH 5/5] raid5: set write hint for PPL
-Date: Fri,  2 Feb 2018 14:50:39 +0100
-Message-ID: <20180202135039.32086-6-mariusz.dabrowski@intel.com>
+Subject: [PATCH 4/5] raid5: set write hint for parity
+Date: Fri,  2 Feb 2018 14:50:38 +0100
+Message-ID: <20180202135039.32086-5-mariusz.dabrowski@intel.com>
 References: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
@@ -10,124 +10,145 @@ To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 List-Id: linux-raid.ids
 
-When the Partial Parity Log is enabled, each write overwrites the old PPL
-entry on the drive so set WRITE_LIFE_SHORT write hint for all PPL writes.
+During sequential workload, if no full-stripe write occurs, each parity
+will be written data_disks (raid_disks-max_degraded) times. The lifetime
+of the parity written before the data_disks update will be short, so
+RWH_WRITE_LIFE_SHORT write hint can be assigned to those writes.
 
-Change write hint policy for parity to WRITE_LIFE_MEDIUM because its
-lifetime for single write is longer than PPL. It might cause a slightly
-higher write amplification, but data with different lifetime will not be
-mixed.
-
-Introduce new policy "sharing" to use same write hint for both PPL and
-parity when the workload is predominantly sequential (similar lifetime
-for parity and PPL data).
+New counter has been added to the stripe_head struct to count number of
+parity updates in a stripe. If this counter is equal to data_disks or this
+is the full stripe write, a write hint from the original bio is assigned.
+Otherwise RWH_WRITE_LIFE_SHORT write hint will be set.
 
 Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 ---
- Documentation/admin-guide/md.rst | 16 ++++++++++++++++
- drivers/md/raid5-ppl.c           |  4 ++++
- drivers/md/raid5.c               | 18 +++++++++++++++++-
- drivers/md/raid5.h               |  2 ++
- 4 files changed, 39 insertions(+), 1 deletion(-)
+ drivers/md/raid5.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++++++----
+ drivers/md/raid5.h |  2 ++
+ 2 files changed, 65 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/admin-guide/md.rst b/Documentation/admin-guide/md.rst
-index 84de718f24a4..b3adab6ed960 100644
---- a/Documentation/admin-guide/md.rst
-+++ b/Documentation/admin-guide/md.rst
-@@ -756,3 +756,19 @@ These currently include:
-       The cache mode for raid5. raid5 could include an extra disk for
-       caching. The mode can be "write-throuth" and "write-back". The
-       default is "write-through".
-+
-+  write_hint_policy (raid4, raid5 and raid6 only)
-+      Write lifetime hint policy for raid 4/5/6. This file lists all active
-+      policies separated by commas. Policy can be changed by writing:
-+
-+        ``parity`` set write hint for all parity requests which will be
-+                   overwritten in a moment.
-+
-+        ``ppl`` set write lifetime hint for all requests containing PPL data.
-+
-+        ``sharing`` set the same write hint for PPL and parity. If not set, use
-+                    longer lifetime write hint for parity. Applicable only if
-+                    ``parity`` and ``ppl`` policies are enabled.
-+
-+      To disable specific policy, use ``-`` prefix. To disable all policies use
-+      ``off`` value.
-\ No newline at end of file
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index 2764c2290062..d98855281254 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -424,6 +424,10 @@ static void ppl_log_endio(struct bio *bio)
- static void ppl_submit_iounit_bio(struct ppl_io_unit *io, struct bio *bio)
- {
- 	char b[BDEVNAME_SIZE];
-+	struct r5conf *conf = io->log->ppl_conf->mddev->private;
-+
-+	if (test_bit(WH_POLICY_PPL, &conf->write_hint_flags))
-+		bio->bi_write_hint = WRITE_LIFE_SHORT;
- 
- 	pr_debug("%s: seq: %llu size: %u sector: %llu dev: %s\n",
- 		 __func__, io->seq, bio->bi_iter.bi_size,
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1c581b0bbc44..2236103b7306 100644
+index 088b97bbcbe2..1c581b0bbc44 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -992,7 +992,11 @@ static void raid5_set_parity_write_hint(struct bio *bio,
+@@ -978,6 +978,36 @@ static void defer_issue_bios(struct r5conf *conf, sector_t sector,
+ 	dispatch_bio_list(&tmp);
+ }
  
- 	if (!test_bit(STRIPE_FULL_WRITE, &sh->state) &&
- 	    (++*updates_cnt < data_disks)) {
--		hint = WRITE_LIFE_SHORT;
-+		if (test_bit(WH_POLICY_SHARING, &conf->write_hint_flags) &&
-+		    test_bit(WH_POLICY_PPL, &conf->write_hint_flags))
-+			hint = WRITE_LIFE_SHORT;
-+		else
-+			hint = WRITE_LIFE_MEDIUM;
- 	} else {
- 		int i;
++static void raid5_set_parity_write_hint(struct bio *bio,
++					 struct stripe_head *sh,
++					 int *updates_cnt)
++{
++	enum rw_hint hint = WRITE_LIFE_NOT_SET;
++	struct r5conf *conf = sh->raid_conf;
++	int data_disks = conf->raid_disks - conf->max_degraded;
++
++	if (!test_bit(STRIPE_FULL_WRITE, &sh->state) &&
++	    (++*updates_cnt < data_disks)) {
++		hint = WRITE_LIFE_SHORT;
++	} else {
++		int i;
++
++		for (i = 0; i < sh->disks; i++) {
++			if ((i != sh->pd_idx) && (i != sh->qd_idx)) {
++				if (sh->dev[i].req.bi_write_hint > 0)
++					hint = sh->dev[i].req.bi_write_hint;
++				else if (sh->dev[i].write_hint > 0)
++					hint = sh->dev[i].write_hint;
++				if (hint)
++					break;
++			}
++		}
++
++		*updates_cnt = 0;
++	}
++	bio->bi_write_hint = hint;
++}
++
+ static void
+ raid5_end_read_request(struct bio *bi);
+ static void
+@@ -1003,6 +1037,9 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 		int replace_only = 0;
+ 		struct bio *bi, *rbi;
+ 		struct md_rdev *rdev, *rrdev = NULL;
++		int sh_syncing = s->syncing || s->expanding ||
++				 s->expanded || s->replacing;
++
  
-@@ -6708,6 +6712,10 @@ raid5_show_write_hint_policy(struct mddev *mddev, char *buf)
- 		} else {
- 			if (test_bit(WH_POLICY_PARITY, &flags))
- 				len += sprintf(buf+len, "parity%s", sep);
-+			if (test_bit(WH_POLICY_PPL, &flags))
-+				len += sprintf(buf+len, "ppl%s", sep);
-+			if (test_bit(WH_POLICY_SHARING, &flags))
-+				len += sprintf(buf+len, "sharing%s", sep);
- 			len -= strlen(sep);
+ 		sh = head_sh;
+ 		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags)) {
+@@ -1094,8 +1131,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
  		}
- 	}
-@@ -6735,6 +6743,14 @@ raid5_store_write_hint_policy(struct mddev *mddev, const char *page, size_t len)
- 			set_bit(WH_POLICY_PARITY, &conf->write_hint_flags);
- 		else if (strncmp(page, "-parity", 7) == 0)
- 			clear_bit(WH_POLICY_PARITY, &conf->write_hint_flags);
-+		else if (strncmp(page, "ppl", 3) == 0)
-+			set_bit(WH_POLICY_PPL, &conf->write_hint_flags);
-+		else if (strncmp(page, "-ppl", 4) == 0)
-+			clear_bit(WH_POLICY_PPL, &conf->write_hint_flags);
-+		else if (strncmp(page, "sharing", 7) == 0)
-+			set_bit(WH_POLICY_SHARING, &conf->write_hint_flags);
-+		else if (strncmp(page, "-sharing", 8) == 0)
-+			clear_bit(WH_POLICY_SHARING, &conf->write_hint_flags);
- 		else if (strncmp(page, "off", 3) == 0)
- 			conf->write_hint_flags = 0;
- 		else
+ 
+ 		if (rdev) {
+-			if (s->syncing || s->expanding || s->expanded
+-			    || s->replacing)
++			if (sh_syncing)
+ 				md_sync_acct(rdev->bdev, STRIPE_SECTORS);
+ 
+ 			set_bit(STRIPE_IO_STARTED, &sh->state);
+@@ -1155,14 +1191,25 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				trace_block_bio_remap(bi->bi_disk->queue,
+ 						      bi, disk_devt(conf->mddev->gendisk),
+ 						      sh->dev[i].sector);
++
++			if (op_is_write(op) && !sh_syncing &&
++			    test_bit(WH_POLICY_PARITY,
++				     &conf->write_hint_flags)) {
++				if (i == sh->pd_idx)
++					raid5_set_parity_write_hint(bi, sh,
++							&sh->p_updates);
++				else if (i == sh->qd_idx)
++					raid5_set_parity_write_hint(bi, sh,
++							&sh->q_updates);
++			}
++
+ 			if (should_defer && op_is_write(op))
+ 				bio_list_add(&pending_bios, bi);
+ 			else
+ 				generic_make_request(bi);
+ 		}
+ 		if (rrdev) {
+-			if (s->syncing || s->expanding || s->expanded
+-			    || s->replacing)
++			if (sh_syncing)
+ 				md_sync_acct(rrdev->bdev, STRIPE_SECTORS);
+ 
+ 			set_bit(STRIPE_IO_STARTED, &sh->state);
+@@ -1205,6 +1252,18 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				trace_block_bio_remap(rbi->bi_disk->queue,
+ 						      rbi, disk_devt(conf->mddev->gendisk),
+ 						      sh->dev[i].sector);
++
++			if (op_is_write(op) && !sh_syncing &&
++			    test_bit(WH_POLICY_PARITY,
++				     &conf->write_hint_flags)) {
++				if (i == sh->pd_idx)
++					raid5_set_parity_write_hint(rbi, sh,
++							&sh->p_updates);
++				else if (i == sh->qd_idx)
++					raid5_set_parity_write_hint(rbi, sh,
++							&sh->q_updates);
++			}
++
+ 			if (should_defer && op_is_write(op))
+ 				bio_list_add(&pending_bios, rbi);
+ 			else
 diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 4a5fa44ffecf..ca7233dacdf1 100644
+index e08071dc4202..4a5fa44ffecf 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
-@@ -197,6 +197,8 @@ enum reconstruct_states {
- 
- enum write_hint_flags {
- 	WH_POLICY_PARITY = 0,
-+	WH_POLICY_PPL,
-+	WH_POLICY_SHARING,
- };
- 
- struct stripe_head {
+@@ -219,6 +219,8 @@ struct stripe_head {
+ 						  * this is only checked when stripe
+ 						  * has STRIPE_BATCH_READY
+ 						  */
++	int p_updates;
++	int q_updates;
+ 	enum check_states	check_state;
+ 	enum reconstruct_states reconstruct_state;
+ 	spinlock_t		stripe_lock;
 -- 
 2.16.1
 
