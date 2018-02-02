@@ -1,123 +1,88 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: Troubleshooting "Buffer I/O error" on reading md device
-Date: Fri, 02 Feb 2018 12:55:53 +1100
-Message-ID: <87inbg2lzq.fsf@notabene.neil.brown.name>
-References: <1z_MZ4Xqld_IRMUbGJE66v2VUhXkBhlHnWJEfLASWNcv5s3Wo3A1YeuQBJBuksxJtFPpmsPbg1_F8PC3Sj4HrzL6Go3aIanVihzcC-4ZHEQ=@protonmail.com> <87373og9z9.fsf@notabene.neil.brown.name> <XUhdgUHMsoit8A9Qw13P1q6NQUxsgqNZCsgx6us_8kHu50GPOvQoOBwP-ryQz54CBi6Js7J2xwC8jgKQ5geXi5AdVLT27YlucQ4tWH-8xlM=@protonmail.com> <87r2r8dk80.fsf@notabene.neil.brown.name> <f92IIdV_PSMtdilVnQDOaLSxzvpTkAa6D0nxpuplzzdnaP9km9JveoXfzOlygcXD5Y_HpN49Fh0x4nOZFhXPfv5VyPrT6CgFO-nsULq6wn0=@protonmail.com> <871sj5dsiv.fsf@notabene.neil.brown.name> <M1riU2VdgyXq3ozdVUjaSDLksJfD8z3lZEy7D8JWIMb9mJk8A6CFz7Q1_tA_wFkVGC1lyTI7yTMb8DXv7T6JDGvKzUFGHbY7mZ9vLNqlowo=@protonmail.com> <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
+Subject: Re: Implementing Global Parity Codes
+Date: Fri, 02 Feb 2018 16:24:18 +1100
+Message-ID: <87d11o2ccd.fsf@notabene.neil.brown.name>
+References: <CACm9mdUJLczo8zSB5UfU9Fd_6VK3+sGCYJYdaEaX0qW1cMLtYA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
         micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F_VxJAwrrEFTHG3fvMDQYPLKrS0w9yabmLk-nyrGRf3UQV-QxsnRSzojv6XQtCiKN7YMZ3sSOlbLduUL_apbYN25g7ouW-Th2S_fbMDgAEM=@protonmail.com>
+In-Reply-To: <CACm9mdUJLczo8zSB5UfU9Fd_6VK3+sGCYJYdaEaX0qW1cMLtYA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: RQM <rqm@protonmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: mostafa kishani <mostafa.kishani@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 
-On Sat, Jan 13 2018, RQM wrote:
+On Sat, Jan 27 2018, mostafa kishani wrote:
 
-> Hello,
+> Dear All,
 >
-> I have been made aware that the link I had supplied previously does not w=
-ork anymore.
-> Here's another attempt at uploading the `mdadm --dump /dev/sd[bcdef]3` ou=
-tput:
->
-> https://filebin.net/i0olmgzg52obnp0f/dump.tgz
-> =E2=80=8B
-> Any help is greatly appreciated. Please do let me know whether you plan o=
-n working on this issue in the near future, because otherwise I will have t=
-o re-create a new array on these disks in order to put them into production=
- again.
->
-> Thank you so much!
+> I am going to make some modifications to RAID protocol to make it more
+> reliable for my case (for a scientific, and maybe later, industrial
+> purpose). For example, I'm going to hold a Global Parity (a parity
+> taken across the whole data stripe rather than a row) alongside normal
+> row-wise parities, to cope with an extra sector/page failure per
+> stripe. Do you have any suggestion how can I implement this with a
+> moderate effort (I mean what functions should be modified)? have any
+> of you had any similar effort?
 
-Sorry that is has taken me so long to get to this - January was a bit
-crazy.
+In raid5.c the is a "struct stripe_head" which represents a stripe that
+is one-page (normally 4K) wide across all devices.  All the data for any
+parity calculation can all be found in a 'stripe_head'.
+You would probably need to modify the stripe_head to represent several
+more blocks so that all the Data and Parity for any computation are
+always attached to the one stripe_head.
 
-Short answer is that if you use
-  --assemble --force-no-bbl
-it will really truly get rid of the bad block log.  I really should add
-that to the man page.
+> I also appreciate if you guide me how can I enable DEBUG mode in mdadm.
 
-Longer answer:
-If you assemble the array (without force-no-bbl) and
+I assume you mean debug mode on "md".
+mdadm is the management tool.
+md is the kernel driver.
 
-  grep . /sys/block/md0/md/rd*/bad_blocks
+mdadm doesn't have a debug mode.
 
-you'll get
+md has a number of pr_debug() calls which can each be turned on or off
+independently using dynamic debugging
 
- /sys/block/md0/md/rd2/bad_blocks:3196060416 8
- /sys/block/md0/md/rd3/bad_blocks:3196060416 8
+https://www.kernel.org/doc/html/v4.15/admin-guide/dynamic-debug-howto.html
 
-So that is a 4K block that is bad at the same location on 2 devices.
-There is no data offset, and the chunk size is 64K, so using bc:
+To turn on all pr_debug commands in raid5.c use
 
-% bc
-3196060416/(64*2)
-24969222
-3196060416%(64*2)
-0
+   echo file raid5.c +p > /sys/kernel/debug/dynamic_debug/control
 
-the blocks are at the start of stripe 24969222.
-Each stripe is 4 date chunks, and a chunk is 64K or 16 4K blocks.
-So the block offset is close to
+to turn them off again:
 
-% bc
-24969222*4*16
-1598030208
-
-which is exactly the "logical block" which was reported.
-
-There are 5 devices, so the parity block rotates through the pattern
-
-D0 D1 D2 D3 P
-D1 D2 D3 P  D0
-D2 D3 P  D0 D1
-D3 P  D0 D1 D2
-P  D0 D1 D2 D3
-
-% bc
-24969222%5
-2
-
-So this should be row 2 (counting from 0)
-D2 D3 P  D0 D1
-
-rd2 and rd2 are bad, so that is 'P' and 'D0'.
-
-So this confirms that it is just the first 4K block of that stripe which
-is bad.
-Writing should fix it... but it doesn't.  The write gets an IO error.
-
-Looking at the code I can see why.  The fix isn't completely
-trivial. I'll have think about it carefully.
-
-But for now --update=3Dforce-no-bbl should get you going.
+   echo file raid5.c -p > /sys/kernel/debug/dynamic_debug/control
 
 NeilBrown
 
+>
+> Bests,
+> Mostafa
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlpzxSoACgkQOeye3VZi
-gblYWhAAn32lYiQxNFIgDPXGvNpcy6nlf/YKb/ev4gctqG1oTwoz/OtjmsP9h6p1
-hU0oE27n//QDgjQubKVp9N7DX0VjtPUQpVB48XEgb7kKNHlM9u1zF7mna5AD+DxJ
-xtOEcvJdMxc3R+B2Q0tSonTJtoDF8L3CvCHSesVva5urhse+X2EUtfB507Ka3ng7
-944cXw8GYVT12cp+UvpTqT7YlxnP5mbJmtPFYfGa042tiRVK4oyq17tBbEVh4LaT
-w09Vxpqq+aOZBeLDTTNOIA8bFVRCGIZaVPBkbaKBKzS0lK0/lqMx1E2zJjP028A+
-qIbmKBfDwNvR9695acWQq9bHMOzOzcfr6S4RjAV46FYPmE+ML7NzRWKGUGBXqHYl
-tMpn4n+wlTDX/ow3m0R7juSL3LED1tyDjh/I5bvjH5gI6/PXxffNL1/h3Ma26nYk
-MazNDAOiC1m9VXvdjtP5yRI/BogVWyVKJGS0c8FqSr5v5C4r/5vzGlVLMt1VuceX
-HkqgaLcSl7NRrxKsd4GSp37JymCaR3ZUInVKYSpIT2S5R0IimF8DZpKjnkANuo69
-G5+v2GGMhGmExAZtPBKC1+aSJoDwblyPxJGvlDSYzx+/RYpwSxkNXRbNAhvrXAAz
-hMLbcAUPAWwMaq2OW/BHlnhfGPP5dXsoQPcGP2WqCmVdqEpvD9A=
-=XM2G
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlpz9gIACgkQOeye3VZi
+gbm1FA//U1ZJcsGFLhGqWZgeciO6qvBEgsDLwb0hJ2J/Dxiu9Wd2X1woWGsttnuK
+qWl9IX0EqcUvAwpooTkrJMEqdnA2WvFZN5JIOJ9s4BDTnSW8g9ctTiRb1KOx6lBT
+Yuv++WL0u5oaZAS1yY7ykvaBJpjqYDFOeo7bu9L40jJb8LzJ0iGdcJY5QUED0SAe
+7Rx8Rbw3EwilXQSPpszMuJkj5791rvU+QuDuyTcIVO7TL/qGm8zkW5naFeC+j7rZ
+KWE49DVvsjypz+BR8MrIJBXdlbx8FkgtIzh0MzJTvcJlqD7BD8+7uRucqXSOIw+w
+m5lAMVZy20mBAYMfBO+FLKW0lgfrvit9cvu2Jt3agBf0yOe2o56S/vmmvuVIQiVa
+Otu4Cn2ivzWQo2UZtR8ddc96nEegmLDrdAjHkv20uUPojOi+ePqp2tQRqZOjrlDF
+tcVeqsMWX/1I5ddALP3kErMxfVrfpZHTgI7tY5kdvGW+FvBFSpfzfNkIwMnuThPP
+u9dl5L95dl96AwrtFNmxUJZK2wYexywtkimcsA3dMewlH9sj+YVE9xeToiJ6uGBY
+mZN3FwNlm+k42TBkneYZ+IIRxZkkQ51m7+/yFLoooKf2N3qIpTg6LAxjlikulLTw
+G+EOvpe5014akJRJtY8Z+Rzp2+6Swh+BaWcZOw5G5Zpvogdt20c=
+=VINW
 -----END PGP SIGNATURE-----
 --=-=-=--
