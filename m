@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 02/19] mdadm/test: add disk metadata infos in save_log
-Date: Fri,  2 Feb 2018 14:10:46 +0800
-Message-ID: <1517551863-1511-3-git-send-email-zlliu@suse.com>
+Subject: [PATCH 01/19] mdadm/test: improve filtering r10 from raid1 in raidtype
+Date: Fri,  2 Feb 2018 14:10:45 +0800
+Message-ID: <1517551863-1511-2-git-send-email-zlliu@suse.com>
 References: <1517551863-1511-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1517551863-1511-1-git-send-email-zlliu@suse.com>
@@ -12,36 +12,22 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- clustermd_tests/func.sh | 2 ++
- tests/func.sh           | 2 ++
- 2 files changed, 4 insertions(+)
+ test | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/clustermd_tests/func.sh b/clustermd_tests/func.sh
-index 2387424..8ac5921 100644
---- a/clustermd_tests/func.sh
-+++ b/clustermd_tests/func.sh
-@@ -178,6 +178,8 @@ save_log()
- 			then
- 				echo "##$ip: mdadm -X ${md_disks[@]}" >> $logdir/$logfile
- 				ssh $ip "mdadm -X ${md_disks[@]}" >> $logdir/$logfile
-+				echo "##$ip: mdadm -E ${md_disks[@]}" >> $logdir/$logfile
-+				ssh $ip "mdadm -E ${md_disks[@]}" >> $logdir/$logfile
- 			fi
- 		else
- 			echo "##$ip: no array assembled!" >> $logdir/$logfile
-diff --git a/tests/func.sh b/tests/func.sh
-index 40c6026..6bfdafe 100644
---- a/tests/func.sh
-+++ b/tests/func.sh
-@@ -55,6 +55,8 @@ save_log() {
- 			then
- 				echo "## $HOSTNAME: mdadm -X ${md_disks[@]}" >> $logdir/$logfile
- 				$mdadm -X ${md_disks[@]} >> $logdir/$logfile
-+				echo "## $HOSTNAME: mdadm -E ${md_disks[@]}" >> $logdir/$logfile
-+				$mdadm -E ${md_disks[@]} >> $logdir/$logfile
- 			fi
- 		else
- 			echo "## $HOSTNAME: no array assembled!" >> $logdir/$logfile
+diff --git a/test b/test
+index 4ddef38..024cb63 100755
+--- a/test
++++ b/test
+@@ -183,7 +183,7 @@ parse_args() {
+ 				TESTLIST=($(ls $testdir | grep "linear"))
+ 				;;
+ 			raid1 )
+-				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r1\|raid1" | grep -vi raid10))
++				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r1\|raid1" | grep -vi "r10\|raid10"))
+ 				;;
+ 			raid456 )
+ 				TESTLIST=($(ls $testdir | grep "[0-9][0-9]r[4-6]\|raid[4-6]"))
 -- 
 2.6.6
 
