@@ -1,7 +1,7 @@
 From: Zhilong Liu <zlliu@suse.com>
-Subject: [PATCH 08/19] clustermd_tests: add test case to test switching bitmap against cluster-raid10
-Date: Fri,  2 Feb 2018 14:10:52 +0800
-Message-ID: <1517551863-1511-9-git-send-email-zlliu@suse.com>
+Subject: [PATCH 07/19] clustermd_tests: add test case to test switching bitmap against cluster-raid1
+Date: Fri,  2 Feb 2018 14:10:51 +0800
+Message-ID: <1517551863-1511-8-git-send-email-zlliu@suse.com>
 References: <1517551863-1511-1-git-send-email-zlliu@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1517551863-1511-1-git-send-email-zlliu@suse.com>
@@ -10,29 +10,29 @@ To: Jes.Sorensen@gmail.com
 Cc: linux-raid@vger.kernel.org, gqjiang@suse.com, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-01r10_Grow_bitmap-switch:
+01r1_Grow_bitmap-switch:
 It tests switching bitmap during three modes include of
 clustered, none and internal, this case is testing the
-clustered raid10.
+clustered raid1.
 
 Signed-off-by: Zhilong Liu <zlliu@suse.com>
 ---
- clustermd_tests/01r10_Grow_bitmap-switch | 51 ++++++++++++++++++++++++++++++++
+ clustermd_tests/01r1_Grow_bitmap-switch | 51 +++++++++++++++++++++++++++++++++
  1 file changed, 51 insertions(+)
- create mode 100644 clustermd_tests/01r10_Grow_bitmap-switch
+ create mode 100644 clustermd_tests/01r1_Grow_bitmap-switch
 
-diff --git a/clustermd_tests/01r10_Grow_bitmap-switch b/clustermd_tests/01r10_Grow_bitmap-switch
+diff --git a/clustermd_tests/01r1_Grow_bitmap-switch b/clustermd_tests/01r1_Grow_bitmap-switch
 new file mode 100644
-index 0000000..1794719
+index 0000000..3b363d9
 --- /dev/null
-+++ b/clustermd_tests/01r10_Grow_bitmap-switch
++++ b/clustermd_tests/01r1_Grow_bitmap-switch
 @@ -0,0 +1,51 @@
 +#!/bin/bash
 +
-+mdadm -CR $md0 -l10 -b clustered --layout n2 -n2 $dev0 $dev1 --assume-clean
++mdadm -CR $md0 -l1 -b clustered -n2 $dev0 $dev1 --assume-clean
 +ssh $NODE2 mdadm -A $md0 $dev0 $dev1
 +check all nosync
-+check all raid10
++check all raid1
 +check all bitmap
 +check all state UU
 +
@@ -48,7 +48,7 @@ index 0000000..1794719
 +mdadm --grow $md0 --bitmap=internal
 +[ $? -eq '0' ] ||
 +	die "$NODE1: change bitmap 'none' to 'internal' failed."
-+sleep 1
++sleep 2
 +mdadm -X $dev0 $dev1 &> /dev/null
 +[ $? -eq '0' ] ||
 +	die "$NODE1: create 'internal' bitmap failed."
@@ -66,7 +66,7 @@ index 0000000..1794719
 +[ $? -eq '0' ] ||
 +	die "$NODE1: change bitmap 'none' to 'clustered' failed."
 +ssh $NODE2 mdadm -A $md0 $dev0 $dev1
-+sleep 1
++sleep 2
 +for ip in $NODES
 +do
 +	ssh $ip "mdadm -X $dev0 $dev1 | grep -q 'Cluster name'" ||
