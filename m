@@ -1,104 +1,103 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Multi-layer raid status
-Date: Fri, 2 Feb 2018 16:49:09 +0000
-Message-ID: <5A749685.20107@youngman.org.uk>
-References: <5A708F8E.2040604@hesbynett.no>
- <87372k2aix.fsf@notabene.neil.brown.name> <5A744054.4060305@hesbynett.no>
- <5A7448AF.3050108@youngman.org.uk> <5A744C4B.7030704@hesbynett.no>
- <5A7474B1.1020807@youngman.org.uk> <5A747AC1.8030206@hesbynett.no>
- <5A747DA5.2030801@youngman.org.uk> <5A748662.3030608@hesbynett.no>
+From: Heinz Mauelshagen <heinzm@redhat.com>
+Subject: [PATCH] md: fix md_write_start() deadlock w/o metadata
+	devices
+Date: Fri,  2 Feb 2018 23:13:19 +0100
+Message-ID: <054eff295e0cd2df2b11a3f9ba3b3d66e89beb47.1517609290.git.heinzm@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5A748662.3030608@hesbynett.no>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: heinzm@redhat.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, shli@kernel.org
 List-Id: linux-raid.ids
 
-On 02/02/18 15:40, David Brown wrote:
-> On 02/02/18 16:03, Wols Lists wrote:
->> On 02/02/18 14:50, David Brown wrote:
->>> What are these cases?  We have already eliminated the rebuild situation
->>> I described.  And in particular, which use-cases are you thinking of
->>> where you not be better off with alternative integrity improvements
->>> (like higher redundancy levels) without killing performance?
->>>
->> In particular, when you KNOW you've got a damaged raid, and you want to
->> know which files are affected. The whole point of my technique is that
->> either it uses the raid to recover (if it can) or it propagates a read
->> error back to the application. It does NOT "fix" the data and leave a
->> corrupted file behind.
-> 
-> If you read a block and the read fails, the raid system will already
-> read the whole stripe to re-create the missing data.  If it can
-> re-create it, it writes the new data back to the disk and returns it to
-> the application.  If it cannot, it gives the read error back to the
-> application.
-> 
-> I cannot imagine a situation where you would have a disk that you know
-> has incorrect data, as part of your array and in normal use for a file
-> system. 
+If no metadata devices are configured on raid1/4/5/6/10
+(e.g. via dm-raid), md_write_start() unconditionally waits
+for superblocks to be written thus deadlocking.
 
-Can't you? When I was discussing this originally I had a bunch of
-examples given to me.
+Fix introduces mddev->has_superblocks bool, defines it in md_run()
+and checks for it in md_write_start() to conditionally avoid waiting.
 
-Let's take just one, which as far as I can tell is real, and is probably
-far more common than system developers would like to admit. A drive
-glitches, and writes a load of data - intended for let's say track 1398
-- to track 1938 by mistake. Okay, that particular example is a decimal
-blunder, and a drive would probably make a bit-flip mistake instead, but
-writing data to the wrong place is apparently a well-recognised
-intermittent failure mode. (And it's not even always hardware to blame -
-just an unfortunate cosmic ray incident.)
+Once on it, check for non-existing superblocks in md_super_write().
 
-Or - and it was reported on this list - a drive suffers a power glitch
-and dumps the entire contents of its write buffer.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=198647
+Fixes: cc27b0c78c796 ("md: fix deadlock between mddev_suspend() and md_write_start()")
 
-Either way, we now have a raid array which APPEARS to be functioning
-normally, and a bunch of stripes are corrupt. If you're lucky (and yes,
-this does seem to be the normal state of affairs) then it's just the
-parity which has been corrupted, which a scrub will fix. But if it's not
-the parity, then raid-1 and raid-5 you can kiss your data bye-bye, and
-if it's raid-6, a scrub will send your data to data heaven.
+Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
+---
+ drivers/md/md.c | 10 ++++++++++
+ drivers/md/md.h |  2 ++
+ 2 files changed, 12 insertions(+)
 
-And saying "it's never happened to me" doesn't mean it's never happened
-to anyone else.
-
-
-Let's go back a few years, to the development of the ext file system
-from version 2, to version 4. I can't remember the exact saying, but
-it's something along the lines of "premature optimisation is the root of
-all evil". When an ext2 system crashed, you could easily spend hours
-running fsck before the system was usable.
-
-So the developers developed ext3, with a journal. By chance, this always
-wrote the data blocks before the journal, so when the system crashed,
-the journal fixed the file system, and the users were very happy they
-didn't need a fsck.
-
-Then the developers decided to optimise further into ext4 and broke the
-link between data and journal! So now, an ext4 system might boot faster
-after a crash, shaving seconds off journal replay time. But the system
-took MUCH LONGER to be available to users, because now the filesystem
-corrupted user data, and instead of running the system level fsck, users
-had to replace it with an application data integrity tool.
-
-
-So yes, my "integrity checking raid" might be slow. Which is why it
-would be disabled by default, and require flipping a runtime switch to
-enable it. But it's a hell of a lot faster than an "mkfs and reload from
-backup", which is the alternative if your disk is corrupt (as opposed to
-crashed and dead).
-
-And my way gives you a list of corrupted files that need restoring, as
-opposed to "scrub, fix, and cross your fingers".
-
-And one last question - if my idea is stupid, why did somebody think it
-worthwhile to write raid6check?
-
-Why is it that so many kernel level guys seem to treat user data
-integrity with contempt?
-
-Cheers,
-Wol
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0081ace39a64..8a7e7034962c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -801,6 +801,9 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+ 	struct bio *bio;
+ 	int ff = 0;
+ 
++	if (!page)
++		return;
++
+ 	if (test_bit(Faulty, &rdev->flags))
+ 		return;
+ 
+@@ -5452,6 +5455,7 @@ int md_run(struct mddev *mddev)
+ 	 * the only valid external interface is through the md
+ 	 * device.
+ 	 */
++	mddev->has_superblocks = false;
+ 	rdev_for_each(rdev, mddev) {
+ 		if (test_bit(Faulty, &rdev->flags))
+ 			continue;
+@@ -5465,6 +5469,9 @@ int md_run(struct mddev *mddev)
+ 				set_disk_ro(mddev->gendisk, 1);
+ 		}
+ 
++		if (rdev->sb_page)
++			mddev->has_superblocks = true;
++
+ 		/* perform some consistency tests on the device.
+ 		 * We don't want the data to overlap the metadata,
+ 		 * Internal Bitmap issues have been handled elsewhere.
+@@ -8049,6 +8056,7 @@ EXPORT_SYMBOL(md_done_sync);
+ bool md_write_start(struct mddev *mddev, struct bio *bi)
+ {
+ 	int did_change = 0;
++
+ 	if (bio_data_dir(bi) != WRITE)
+ 		return true;
+ 
+@@ -8081,6 +8089,8 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
+ 	rcu_read_unlock();
+ 	if (did_change)
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
++	if (!mddev->has_superblocks)
++		return true;
+ 	wait_event(mddev->sb_wait,
+ 		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
+ 		   mddev->suspended);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 58cd20a5e85e..fbc925cce810 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -468,6 +468,8 @@ struct mddev {
+ 	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+ 	struct md_cluster_info		*cluster_info;
+ 	unsigned int			good_device_nr;	/* good device num within cluster raid */
++
++	bool	has_superblocks:1;
+ };
+ 
+ enum recovery_flags {
+-- 
+2.14.3
