@@ -1,46 +1,35 @@
 From: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
-Subject: [PATCH 0/5] Setting write hint in MD RAID
-Date: Fri,  2 Feb 2018 14:50:34 +0100
-Message-ID: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
+Subject: [PATCH 1/5] raid1: copy write hint from master bio to behind bio
+Date: Fri,  2 Feb 2018 14:50:35 +0100
+Message-ID: <20180202135039.32086-2-mariusz.dabrowski@intel.com>
+References: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20180202135039.32086-1-mariusz.dabrowski@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: shli@kernel.org
 Cc: linux-raid@vger.kernel.org, Mariusz Dabrowski <mariusz.dabrowski@intel.com>
 List-Id: linux-raid.ids
 
-This patchset adds support for write hints in MD driver. This is a new
-feature for NVMe drives compliant to 1.3 specification and introduced to
-Linux in kernel 4.13. Write hint has to be copied from bio containing user
-data to bios sent to RAID members. Additionally, write hint can be set for
-internal data like parity and PPL in RAID 5.
+Signed-off-by: Mariusz Dabrowski <mariusz.dabrowski@intel.com>
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ drivers/md/raid1.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Setting write hint for parity is done with simple classification algorithm
-which works for sequential IO workload. It tries to predict which parity
-request are going to be overwritten in a moment and sets write hint for
-them. This algorithm uses stripe cache to count updates of each parity
-chunk. Parity request will be predicted as "soon-overwritten" if nubmer of
-parity updates is smaller than number of data chunks in stripe.
-
-For PPL there is no special algorithm. It is updated very frequently so we
-can set write hint for each PPL write.
-
-We have performed our internal tests which prove that setting write hint
-for parity and PPL can significantly reduce write amplification.
-
-Mariusz Dabrowski (5):
-  raid1: copy write hint from master bio to behind bio
-  raid5: copy write hint from origin bio to stripe
-  raid5: sysfs attribute for write hint policy
-  raid5: set write hint for parity
-  raid5: set write hint for PPL
-
- Documentation/admin-guide/md.rst |  16 +++++
- drivers/md/raid1.c               |   2 +
- drivers/md/raid5-ppl.c           |   4 ++
- drivers/md/raid5.c               | 147 +++++++++++++++++++++++++++++++++++++--
- drivers/md/raid5.h               |  10 +++
- 5 files changed, 175 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index b2eae332e1a2..c512926a5193 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1092,6 +1092,8 @@ static void alloc_behind_master_bio(struct r1bio *r1_bio,
+ 		goto skip_copy;
+ 	}
+ 
++	behind_bio->bi_write_hint = bio->bi_write_hint;
++
+ 	while (i < vcnt && size) {
+ 		struct page *page;
+ 		int len = min_t(int, PAGE_SIZE, size);
 -- 
 2.16.1
 
