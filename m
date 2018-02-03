@@ -1,85 +1,60 @@
-From: Azat Khuzhin <a3at.mail@gmail.com>
-Subject: [PATCH] Since changing number of devices in RAID10 is possible fix man and add a test (RFC)
-Date: Sat,  3 Feb 2018 20:00:06 +0300
-Message-ID: <20180203170006.5750-1-a3at.mail@gmail.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Azat Khuzhin <a3at.mail@gmail.com>, NeilBrown <neilb@suse.com>, Zhilong Liu <zlliu@suse.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [LSF/MM TOPIC] De-clustered RAID with MD
+Date: Sat, 3 Feb 2018 17:16:19 +0000
+Message-ID: <5A75EE63.8040606@youngman.org.uk>
+References: <mqdvafkhep0.fsf@linux-x5ow.site>
+ <5A6F4CA6.5060802@youngman.org.uk> <87fu6o5o83.fsf@notabene.neil.brown.name>
+ <5A704C59.4000705@youngman.org.uk> <87372n613s.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <87372n613s.fsf@notabene.neil.brown.name>
+Sender: linux-block-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Johannes Thumshirn <jthumshirn@suse.de>, lsf-pc@lists.linux-foundation.org
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-It requires patch from, otherwise it fails anyway:
-  "mdadm/grow: adding a test to ensure resize was required"
-  https://www.spinics.net/lists/raid/msg59743.html
+On 30/01/18 11:24, NeilBrown wrote:
+> When Ax are a logical stripe and Bx are the next,  then you have a
+> slightly better distribution.  If device XX fails then the reads needed
+> for the first stripe mostly come from different drives than those for
+> the second stripe, which are mostly different again for the 3rd stripe.
 
-Since: 19ceb16dafb7df98ff90298008d4488dc93b370a ("Grow: add raid10
-reshape.") # mdadm mdadm-3.2.5-120-g19ceb16
-Since: 3ea7daa5d7fde47cd41f4d56c2deb949114da9d6 ("md/raid10: add reshape
-support")  # linux v3.4-rc5-15-g3ea7daa5d7fd
-Tested-on: linux 4.13+
+Having got myself thoroughly confused, I think I've got my head
+straight. There's actually an incredibly simple algorithm for this, I think.
 
-Signed-off-by: Azat Khuzhin <a3at.mail@gmail.com>
-Cc: NeilBrown <neilb@suse.com>
-Cc: Zhilong Liu <zlliu@suse.com>
----
-Any thoughts?
+First of all, let's state that we're defining a new complex raid here,
+people get confused between linux-raid-10 and raid-1+0, so ...
 
- mdadm.8.in      |  2 +-
- tests/02r10grow | 32 ++++++++++++++++++++++++++++++++
- 2 files changed, 33 insertions(+), 1 deletion(-)
- create mode 100644 tests/02r10grow
+I was originally thinking about about raid-61, mirroring raid-6 across a
+random number of drives. I think here we're actually talking about
+raid-60 - doing a raid-6 across a random number of drives. Can we prefix
+whatever raid level we call it with an "L" so it's not confused with
+standard raid-6+0?
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index f0fd1fc..62da7b1 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -123,7 +123,7 @@ missing, spare, or failed drives, so there is nothing to monitor.
- Grow (or shrink) an array, or otherwise reshape it in some way.
- Currently supported growth options including changing the active size
- of component devices and changing the number of active devices in
--Linear and RAID levels 0/1/4/5/6,
-+Linear and RAID levels 0/1/4/5/6/10,
- changing the RAID level between 0, 1, 5, and 6, and between 0 and 10,
- changing the chunk size and layout for RAID 0,4,5,6,10 as well as adding or
- removing a write-intent bitmap and changing the array's consistency policy.
-diff --git a/tests/02r10grow b/tests/02r10grow
-new file mode 100644
-index 0000000..0b177fe
---- /dev/null
-+++ b/tests/02r10grow
-@@ -0,0 +1,32 @@
-+
-+# create a 4-disk raid10 array, make it 8-disk array.
-+#
-+# This SHOULD fail:
-+# - before mdadm 3.3 and linux 3.5
-+# - with metadata v0.90
-+#
-+# This also fails:
-+# - with metadata 1.0 with "mdadm: Insufficient head-space for reshape on /dev/loop1" error
-+
-+m=2
-+cm=1
-+
-+for metadata in 1.1 1.2; do
-+    # 4 disks
-+    mdadm -CR $md0 --metadata $metadata --level raid10 --raid-disks 4 $dev1 $dev2 $dev3 $dev4
-+    check wait
-+    check state UUUU
-+    check raid10
-+    testdev $md0 $m $mdsize1 $[512*cm]
-+
-+    # 8 disks
-+    mdadm $md0 --add $dev8 $dev9 $dev10 $dev11
-+    mdadm $md0 --grow --raid-devices 8
-+    check wait
-+    check state UUUUUUUU
-+    check raid10
-+    testdev $md0 $m $[mdsize1*2] $[512*cm]
-+
-+
-+    mdadm -S $md0
-+done
--- 
-2.16.1
+Okay. Let's say we have a five-disk raid-6 smeared across seven drives.
+Let's call it Raid-L60. That gives us 35 blocks per disk stripe.
 
+A1 A2 A3 A4 A5 B1 B2
+B3 B4 B5 C1 C2 C3 C4
+C5 D1 D2 D3 D4 D5 E1
+E2 E3 E4 E5 F1 F2 F3
+F4 F5 G1 G2 G3 G4 G5
+
+That gives us a logical disk stripe 35 wide, that we just need to scramble.
+
+Position * Prime mod Disks.
+
+The problem, of course, is that this is going to scramble each logical
+stripe the same. So as we've got 5 stripes, can we use a table of 5
+different primes? The snag, of course, is that we mustn't use a prime
+that is a factor of the number of disks, as this will blow up with a
+vengeance. It makes sense also to avoid a prime that's a factor of the
+logical disks, I suspect. So here, I'd use 2,3,11,13,17
+
+I'd like to add the logical stripe number in rather than use multiple
+primes, but I don't think that'll work ...
+
+Cheers,
+Wol
