@@ -1,88 +1,73 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [md PATCH 2/2] md: only allow remove_and_add_spares when no
- sync_thread running.
-Date: Sat, 03 Feb 2018 09:19:30 +1100
-Message-ID: <151760997028.5944.10292479373004611829.stgit@noble>
-References: <151760990726.5944.15903931975424856346.stgit@noble>
+From: mostafa kishani <mostafa.kishani@gmail.com>
+Subject: Re: Implementing Global Parity Codes
+Date: Sat, 3 Feb 2018 09:31:34 +0330
+Message-ID: <CACm9mdUtHRc9x42UQR_jTMDAgNv+KruAQHRM7Xzq=e1XQhbKhQ@mail.gmail.com>
+References: <CACm9mdUJLczo8zSB5UfU9Fd_6VK3+sGCYJYdaEaX0qW1cMLtYA@mail.gmail.com>
+ <87d11o2ccd.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <151760990726.5944.15903931975424856346.stgit@noble>
+In-Reply-To: <87d11o2ccd.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, yuyufen <yuyufen@huawei.com>, colyli@suse.de
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The locking protocols in md assume that a device will
-never be removed from an array during resync/recovery/reshape.
-When that isn't happening, rcu or reconfig_mutex is needed
-to protect an rdev pointer while taking a refcount.  When
-it is happening, that protection isn't needed.
+Dear Neil,
 
-Unfortunately there are cases were remove_and_add_spares() is
-called when recovery might be happening: is state_store(),
-slot_store() and hot_remove_disk().
-In each case, this is just an optimization, to try to expedite
-removal from the personality so the device can be removed from
-the array.  If resync etc is happening, we just have to wait
-for md_check_recover to find a suitable time to call
-remove_and_add_spares().
+Sincere thanks for the useful information. I really appreciate your help.
 
-This optimization and not essential so it doesn't
-matter if it fails.
-So change remove_and_add_spares() to abort early if
-resync/recovery/reshape is happening, unless it is called
-from md_check_recovery() as part of a newly started recovery.
-The parameter "this" is only NULL when called from
-md_check_recovery() so when it is NULL, there is no need to abort.
+Bests,
+Mostafa
 
-As this can result in a NULL dereference, the fix is suitable
-for -stable.
-
-cc: yuyufen <yuyufen@huawei.com>
-Cc: Tomasz Majchrzak <tomasz.majchrzak@intel.com>
-Fixes: 8430e7e0af9a ("md: disconnect device from personality before trying to remove it.")
-Cc: stable@ver.kernel.org (v4.8+)
-Signed-off-by: NeilBrown <neilb@suse.com>
----
- drivers/md/md.c    |    4 ++++
- drivers/md/raid5.c |    4 ++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4e4dee0ec2de..926542fbc892 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8554,6 +8554,10 @@ static int remove_and_add_spares(struct mddev *mddev,
- 	int removed = 0;
- 	bool remove_some = false;
- 
-+	if (this && test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-+		/* Mustn't remove devices when resync thread is running */
-+		return 0;
-+
- 	rdev_for_each(rdev, mddev) {
- 		if ((this == NULL || rdev == this) &&
- 		    rdev->raid_disk >= 0 &&
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 98ce4272ace9..3fa97dad3837 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4448,12 +4448,12 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 		else if (is_bad) {
- 			/* also not in-sync */
- 			if (!test_bit(WriteErrorSeen, &rdev->flags) &&
--			    test_bit(R5_UPTODATE, &dev->flags)) {
-+			    (test_bit(R5_UPTODATE, &dev->flags) || test_bit(R5_OVERWRITE, &dev->flags))) {
- 				/* treat as in-sync, but with a read error
- 				 * which we can now try to correct
- 				 */
- 				set_bit(R5_Insync, &dev->flags);
--				set_bit(R5_ReadError, &dev->flags);
-+				//set_bit(R5_ReadError, &dev->flags);
- 			}
- 		} else if (test_bit(In_sync, &rdev->flags))
- 			set_bit(R5_Insync, &dev->flags);
-
-
+On Fri, Feb 2, 2018 at 8:54 AM, NeilBrown <neilb@suse.com> wrote:
+> On Sat, Jan 27 2018, mostafa kishani wrote:
+>
+>> Dear All,
+>>
+>> I am going to make some modifications to RAID protocol to make it more
+>> reliable for my case (for a scientific, and maybe later, industrial
+>> purpose). For example, I'm going to hold a Global Parity (a parity
+>> taken across the whole data stripe rather than a row) alongside normal
+>> row-wise parities, to cope with an extra sector/page failure per
+>> stripe. Do you have any suggestion how can I implement this with a
+>> moderate effort (I mean what functions should be modified)? have any
+>> of you had any similar effort?
+>
+> In raid5.c the is a "struct stripe_head" which represents a stripe that
+> is one-page (normally 4K) wide across all devices.  All the data for any
+> parity calculation can all be found in a 'stripe_head'.
+> You would probably need to modify the stripe_head to represent several
+> more blocks so that all the Data and Parity for any computation are
+> always attached to the one stripe_head.
+>
+>> I also appreciate if you guide me how can I enable DEBUG mode in mdadm.
+>
+> I assume you mean debug mode on "md".
+> mdadm is the management tool.
+> md is the kernel driver.
+>
+> mdadm doesn't have a debug mode.
+>
+> md has a number of pr_debug() calls which can each be turned on or off
+> independently using dynamic debugging
+>
+> https://www.kernel.org/doc/html/v4.15/admin-guide/dynamic-debug-howto.html
+>
+> To turn on all pr_debug commands in raid5.c use
+>
+>    echo file raid5.c +p > /sys/kernel/debug/dynamic_debug/control
+>
+> to turn them off again:
+>
+>    echo file raid5.c -p > /sys/kernel/debug/dynamic_debug/control
+>
+> NeilBrown
+>
+>>
+>> Bests,
+>> Mostafa
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
