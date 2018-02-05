@@ -1,81 +1,60 @@
-From: Liwei <xieliwei@gmail.com>
-Subject: Buffer I/O error... async page read
-Date: Tue, 6 Feb 2018 03:10:12 +0800
-Message-ID: <CAPE0SYxDgs6NY_ZALVY5kB5a-vrpK1GQvqqtf60gjCCmn2eP8g@mail.gmail.com>
+From: =?UTF-8?B?SsOpcsO0bWUgQ2hhcmFvdWk=?= <jcharaoui@cmaisonneuve.qc.ca>
+Subject: 4k random writes initially quite slow on raid10 md device
+Date: Mon, 5 Feb 2018 14:15:37 -0500
+Message-ID: <4ecac452-4fbc-7ccf-331e-a100c18cbaaf@cmaisonneuve.qc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: fr
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi list,
-
-tl;dr: Array seems to be remembering bad blocks from recovered drive,
-even though drive the image is on is fine. Is there a way to make
-array forget the blocks? Is it safe?
+[apologies for cross-posting this from the fio mailing list, but it was 
+suggested to me that this may be of interest to the linux-raid list]
 
 
-    We had a raid6 array that went down because 2 drives went down and
-1 drive encountered bad sectors.
-    We managed to recover the 1 drive with bad sectors (we engaged a
-recovery lab), and the remaining drives in the array report neither
-pending nor re-allocated sectors (from smartctl).
+Hello,
 
-    After re-integrating the (image of the) recovered drive with bad
-sectors and starting the array in degraded mode, we realised we are
-still unable to read from some sectors in the md device. I believe
-they correspond to where the bad sectors were previously.
+I've been running some tests on a bunch of disks lately and came across 
+a strange test result that I'm struggling to explain.
 
-    When trying to read from said sectors, this comes up in dmesg:
+I built a 20-device raid10 md array with SSDs and ran several fio tests 
+on it. The 4k-randwrite test really stands out because the IOPS starts 
+out fairly low, around 800 IOPS, but within a few seconds climbs up to 
+about 70K IOPS, which is nearly three times higher than the IOPS I'm 
+getting with the randread test (25K).
 
-[Feb 6 02:05] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[  +0.000458] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[ +13.297834] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[  +0.000438] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[Feb 6 02:06] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[  +0.000390] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[ +13.284550] Buffer I/O error on dev dm-26, logical block 5166102915,
-async page read
-[  +0.000448] Buffer I/O error on dev dm-26, logical block 5166102915,
-async page read
-[Feb 6 02:17] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[  +0.000341] Buffer I/O error on dev dm-26, logical block 5166101891,
-async page read
-[Feb 6 02:24] Buffer I/O error on dev dm-26, logical block 5166118804,
-async page read
-[  +0.002417] Buffer I/O error on dev dm-26, logical block 5166118804,
-async page read
-[  +2.972446] Buffer I/O error on dev dm-26, logical block 5166118804,
-async page read
-[  +0.002172] Buffer I/O error on dev dm-26, logical block 5166118804,
-async page read
-[Feb 6 02:25] Buffer I/O error on dev dm-26, logical block 5166118804,
-async page read
-[  +0.002130] Buffer I/O error on dev dm-26, logical block 5166118804,
-async page read
+I tried disabling the drive caches using hdparm -W 0, and also disabling 
+the internal write-intent bitmap on the md array, but the results are 
+the same. I've also tried disabling front_merges, also to no effect. 
+Disabling hyper-threading and switching the CPU scaling governor to 
+'performance' helped gain a few extra IOPS, but the curve still remains.
 
-    However, I've checked smartctl and ran a pass of (read-only)
-badblocks over the drives, all sectors are readable, there are no
-pending sectors, and no reallocated sectors.
+Here are the test parameters:
 
-    So what is generating these buffer I/O errors?
+ioengine=libaio
+invalidate=1
+ramp_time=10
+iodepth=4
+runtime=60
+time_based
+direct=1
+randrepeat=0
+filename=/dev/md1
+bs=4k
+rw=randwrite
 
-    Also, upon investigating, I'm astonished to find a non-empty list when I do:
-        /sys/block/md126/md/dev-*/bad_blocks
+I generated some gnuplot graphs from the logs:
 
-    Almost every drive in the array has a few entries. That's not
-normal isn't it? My theory is that since these are consumer-grade SATA
-drives, some odd read/write timeout must have occurred at some point,
-causing md to think that the sectors are bad? Is there a way to make
-md forget about these blocks? Is it safe to do so?
+randread test: https://imgur.com/dj25FFH
+randwrite test: https://imgur.com/BuZVNmh
 
-Warm regards,
-Liwei
+Any idea what could be causing this delay in random write speeds? There 
+is no other IO going on on this machine.
+
+Thanks,
+
+-- Jerome
+
