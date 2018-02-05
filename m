@@ -1,125 +1,81 @@
-From: Azat Khuzhin <a3at.mail@gmail.com>
-Subject: [PATCH v4] Since changing number of devices in RAID10 is possible fix man and add a test
-Date: Mon,  5 Feb 2018 14:03:32 +0300
-Message-ID: <20180205110332.27059-1-a3at.mail@gmail.com>
-References: <502e2189-0804-a9d2-dac3-14adb142f6d4@suse.com>
+From: Liwei <xieliwei@gmail.com>
+Subject: Buffer I/O error... async page read
+Date: Tue, 6 Feb 2018 03:10:12 +0800
+Message-ID: <CAPE0SYxDgs6NY_ZALVY5kB5a-vrpK1GQvqqtf60gjCCmn2eP8g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <502e2189-0804-a9d2-dac3-14adb142f6d4@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Azat Khuzhin <a3at.mail@gmail.com>, NeilBrown <neilb@suse.com>, Zhilong Liu <zlliu@suse.com>
 List-Id: linux-raid.ids
 
-It requires patch from, otherwise it fails anyway:
-  "mdadm/grow: adding a test to ensure resize was required"
-  https://www.spinics.net/lists/raid/msg59743.html
+Hi list,
 
-Since: 19ceb16dafb7df98ff90298008d4488dc93b370a ("Grow: add raid10
-reshape.") # mdadm mdadm-3.2.5-120-g19ceb16
-Since: 3ea7daa5d7fde47cd41f4d56c2deb949114da9d6 ("md/raid10: add reshape
-support")  # linux v3.4-rc5-15-g3ea7daa5d7fd
-Tested-on: linux 4.4
+tl;dr: Array seems to be remembering bad blocks from recovered drive,
+even though drive the image is on is fine. Is there a way to make
+array forget the blocks? Is it safe?
 
-v2: update man about layouts and add more test cases (with reducing
-    number of devices) as suggested by NeilBrown
-v4: cover internal bitmap mode as suggested by Zhilong Liu
 
-Signed-off-by: Azat Khuzhin <a3at.mail@gmail.com>
-Cc: NeilBrown <neilb@suse.com>
-Cc: Zhilong Liu <zlliu@suse.com>
-Link: https://www.spinics.net/lists/raid/msg60522.html
----
- mdadm.8.in         |  3 ++-
- tests/02r10reshape | 66 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 68 insertions(+), 1 deletion(-)
- create mode 100644 tests/02r10reshape
+    We had a raid6 array that went down because 2 drives went down and
+1 drive encountered bad sectors.
+    We managed to recover the 1 drive with bad sectors (we engaged a
+recovery lab), and the remaining drives in the array report neither
+pending nor re-allocated sectors (from smartctl).
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index f0fd1fc..0a1907c 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -123,7 +123,8 @@ missing, spare, or failed drives, so there is nothing to monitor.
- Grow (or shrink) an array, or otherwise reshape it in some way.
- Currently supported growth options including changing the active size
- of component devices and changing the number of active devices in
--Linear and RAID levels 0/1/4/5/6,
-+Linear and RAID levels 0/1/4/5/6 and 10 (but only with 'offset' or 'near'
-+layout),
- changing the RAID level between 0, 1, 5, and 6, and between 0 and 10,
- changing the chunk size and layout for RAID 0,4,5,6,10 as well as adding or
- removing a write-intent bitmap and changing the array's consistency policy.
-diff --git a/tests/02r10reshape b/tests/02r10reshape
-new file mode 100644
-index 0000000..15bf879
---- /dev/null
-+++ b/tests/02r10reshape
-@@ -0,0 +1,66 @@
-+
-+# create a 4-disk raid10 array, make it 8-disk array and than shrink it back
-+#
-+# This SHOULD fail:
-+# - before mdadm 3.3 and linux 3.5
-+# - with metadata v0.90
-+#
-+# This also fails:
-+# - with metadata 1.0 with "mdadm: Insufficient head-space for reshape on /dev/loop1" error
-+# - and external bitmap mode
-+
-+function get_component_size() { cat /sys/block/$1/md/component_size; }
-+
-+function raid10_reshape()
-+{
-+    local layout=$1 metadata=$2 bitmap=$3
-+    shift 3
-+
-+    local m=2 cm=1
-+
-+    echo "Checking layout=$layout/metadata=$metadata"
-+
-+    # 4 disks
-+    mdadm -CR $md0 --bitmap $bitmap --metadata $metadata --level raid10 --layout $layout --raid-disks 4 $dev1 $dev2 $dev3 $dev4
-+    check wait
-+    check state UUUU
-+    check raid10
-+    testdev $md0 $m $mdsize1 $[512*cm]
-+
-+    # growing array to 8 disks
-+    mdadm $md0 --add $dev8 $dev9 $dev10 $dev11
-+    mdadm $md0 --grow --raid-devices 8
-+    check wait
-+    check state UUUUUUUU
-+    check raid10
-+    testdev $md0 $m $[mdsize1*2] $[512*cm]
-+
-+    # reducing array to 4 disks again
-+    dsize=$(get_component_size md0)
-+    mdadm $md0 --grow --array-size $[dsize*2]
-+    mdadm $md0 --grow --raid-devices 4
-+    check wait
-+    mdadm $md0 --remove $dev8 $dev9 $dev10 $dev11
-+    check state UUUU
-+    check raid10
-+    testdev $md0 $m $mdsize1 $[512*cm]
-+}
-+
-+function run_test()
-+{
-+    "$@"
-+    mdadm -S $md0
-+}
-+function main()
-+{
-+    local layout metadata bitmap
-+
-+    for layout in n2 o2; do
-+        for metadata in 1.1 1.2; do
-+            for bitmap in none internal; do
-+                run_test raid10_reshape $layout $metadata $bitmap
-+            done
-+        done
-+    done
-+}
-+main "$@"
--- 
-2.16.1
+    After re-integrating the (image of the) recovered drive with bad
+sectors and starting the array in degraded mode, we realised we are
+still unable to read from some sectors in the md device. I believe
+they correspond to where the bad sectors were previously.
 
+    When trying to read from said sectors, this comes up in dmesg:
+
+[Feb 6 02:05] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[  +0.000458] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[ +13.297834] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[  +0.000438] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[Feb 6 02:06] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[  +0.000390] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[ +13.284550] Buffer I/O error on dev dm-26, logical block 5166102915,
+async page read
+[  +0.000448] Buffer I/O error on dev dm-26, logical block 5166102915,
+async page read
+[Feb 6 02:17] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[  +0.000341] Buffer I/O error on dev dm-26, logical block 5166101891,
+async page read
+[Feb 6 02:24] Buffer I/O error on dev dm-26, logical block 5166118804,
+async page read
+[  +0.002417] Buffer I/O error on dev dm-26, logical block 5166118804,
+async page read
+[  +2.972446] Buffer I/O error on dev dm-26, logical block 5166118804,
+async page read
+[  +0.002172] Buffer I/O error on dev dm-26, logical block 5166118804,
+async page read
+[Feb 6 02:25] Buffer I/O error on dev dm-26, logical block 5166118804,
+async page read
+[  +0.002130] Buffer I/O error on dev dm-26, logical block 5166118804,
+async page read
+
+    However, I've checked smartctl and ran a pass of (read-only)
+badblocks over the drives, all sectors are readable, there are no
+pending sectors, and no reallocated sectors.
+
+    So what is generating these buffer I/O errors?
+
+    Also, upon investigating, I'm astonished to find a non-empty list when I do:
+        /sys/block/md126/md/dev-*/bad_blocks
+
+    Almost every drive in the array has a few entries. That's not
+normal isn't it? My theory is that since these are consumer-grade SATA
+drives, some odd read/write timeout must have occurred at some point,
+causing md to think that the sectors are bad? Is there a way to make
+md forget about these blocks? Is it safe to do so?
+
+Warm regards,
+Liwei
