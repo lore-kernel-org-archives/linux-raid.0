@@ -1,155 +1,98 @@
-From: Zhilong Liu <zlliu@suse.com>
-Subject: Re: [PATCH v3] Since changing number of devices in RAID10 is possible
- fix man and add a test
-Date: Mon, 5 Feb 2018 14:45:45 +0800
-Message-ID: <502e2189-0804-a9d2-dac3-14adb142f6d4@suse.com>
-References: <20180204213409.4872-1-a3at.mail@gmail.com>
- <20180204215012.14745-1-a3at.mail@gmail.com>
+From: yuyufen <yuyufen@huawei.com>
+Subject: Re: [RFC PATCH] md raid10: fix NULL deference in
+ handle_write_completed()
+Date: Mon, 5 Feb 2018 17:01:43 +0800
+Message-ID: <96ac22a2-5dae-9bcf-45c5-3c726e2644a1@huawei.com>
+References: <20180205042343.17235-1-yuyufen@huawei.com>
+ <87d11kovgg.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180204215012.14745-1-a3at.mail@gmail.com>
+In-Reply-To: <87d11kovgg.fsf@notabene.neil.brown.name>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Azat Khuzhin <a3at.mail@gmail.com>, linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.com>
+To: NeilBrown <neilb@suse.com>, shli@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 02/05/2018 05:50 AM, Azat Khuzhin wrote:
-> It requires patch from, otherwise it fails anyway:
->    "mdadm/grow: adding a test to ensure resize was required"
->    https://www.spinics.net/lists/raid/msg59743.html
+On 2018/2/5 13:29, NeilBrown wrote:
+> On Mon, Feb 05 2018, Yufen Yu wrote:
 >
-> Since: 19ceb16dafb7df98ff90298008d4488dc93b370a ("Grow: add raid10
-> reshape.") # mdadm mdadm-3.2.5-120-g19ceb16
-> Since: 3ea7daa5d7fde47cd41f4d56c2deb949114da9d6 ("md/raid10: add reshape
-> support")  # linux v3.4-rc5-15-g3ea7daa5d7fd
-> Tested-on: linux 4.4
+>> When an io error in recovery, end_sync_write will set R10BIO_WriteError.
+>> After reschedule_retry(), this r10_bio will be inserted to retry_list,
+>> and progressed by handle_write_completed(), which will traverse all
+>> r10_bio->devs[]. If devs[m].repl_bio != NULL, it thinks
+>> conf->mirrors[dev].replacement is also not NULL.
+>> In fact, it is not true, resulting in replacement NULL deference.
+>>
+>> For example,
+>> in raid10, only rdev[1] has replacement, rdev[0], rdev[2] and rdev[3]
+>> don't have replacement. And, r10buf_pool_alloc() will allocate
+>> repl_bio for every r10bio. raid10_sync_request() gets a r10bio from
+>> the pool. But, it doesn't pay attention to repl_bio for
+>> read bio(r10bio->devs[0], rdev[2]), or sets repl_bio=NULL in
+>> write bio(r10bio->devs[1], rdev[3]), if replacement == NULL.
+>>
+>> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+> Thanks for this.  You're analysis is correct.
+> This bug was introduced when replacement support for raid10 was added
+> in Linux 3.3, so
 >
-> v2: update man about layouts and add more test cases (with reducing
->      number of devices) as suggested by NeilBrown
+> Fixes: 9ad1aefc8ae8 ("md/raid10:  Handle replacement devices during resync.")
 >
-> Signed-off-by: Azat Khuzhin <a3at.mail@gmail.com>
-> Cc: NeilBrown <neilb@suse.com>
-> Cc: Zhilong Liu <zlliu@suse.com>
-> Link: https://www.spinics.net/lists/raid/msg60522.html
-> ---
-> Please ignore v2 patch, since it has bug with --remove in test case, and
-> sorry for the noise. Thanks, Azat.
-
-Hi,
-Thanks for catching this, appreciate your test case. I'm adding comment 
-below.
-
+> I'm not sure you patch is correct though.  Just because rdev is not NULL
+> and bio is not NULL, that doesn't mean we tried to write - particularly
+> in the 'recover' case.
 >
->   mdadm.8.in         |  3 ++-
->   tests/02r10reshape | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->   2 files changed, 65 insertions(+), 1 deletion(-)
->   create mode 100644 tests/02r10reshape
+> Elsewhere the determination of "is this device part of the
+> resync/recovery" is made by resting bio->bi_end_io.
+> If this is end_sync_write, then we tried to write here.
+> If it is NULL, then we didn't try to write.
 >
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index f0fd1fc..0a1907c 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -123,7 +123,8 @@ missing, spare, or failed drives, so there is nothing to monitor.
->   Grow (or shrink) an array, or otherwise reshape it in some way.
->   Currently supported growth options including changing the active size
->   of component devices and changing the number of active devices in
-> -Linear and RAID levels 0/1/4/5/6,
-> +Linear and RAID levels 0/1/4/5/6 and 10 (but only with 'offset' or 'near'
-> +layout),
->   changing the RAID level between 0, 1, 5, and 6, and between 0 and 10,
->   changing the chunk size and layout for RAID 0,4,5,6,10 as well as adding or
->   removing a write-intent bitmap and changing the array's consistency policy.
-> diff --git a/tests/02r10reshape b/tests/02r10reshape
-> new file mode 100644
-> index 0000000..a8b2e47
-> --- /dev/null
-> +++ b/tests/02r10reshape
-> @@ -0,0 +1,63 @@
-> +
-> +# create a 4-disk raid10 array, make it 8-disk array and than shrink it back
-> +#
-> +# This SHOULD fail:
-> +# - before mdadm 3.3 and linux 3.5
-> +# - with metadata v0.90
-> +#
-> +# This also fails:
-> +# - with metadata 1.0 with "mdadm: Insufficient head-space for reshape on /dev/loop1" error
+> So I think a correct patch would be more like.
+>
+>   if (r10_bio->devs[m].bio == NULL ||
+>       r10_bio->devs[m].bio->bi_end_io == NULL)
+>           continue;
+Thanks for your suggest. I think you are right and I will resend a patch.
 
- From my opinion, I'd recommend to cover bitmap situations. Refer to the 
-commit in md:
-e8a27f836f16 (md/bitmap: disable bitmap_resize for file-backed bitmaps.)
-This test case covers 'none' bitmap mode, and it still has 'internal', 
-'external' and 'clustered'
-bitmap mode. For grow_add_device scenario, it isn't supported by 
-external and clustered
-bitmap mode(for clustered mode, I have mentioned in the cluster-md test 
-suite). Thus here
-add a comment:
+Thanks a lot,
+Yufen Yu
 
-+ This also fails by external bitmap mode.
-
-And in test case, I would suggest to cover testing 'internal' bitmap at 
-least.
-
-Thanks,
--Zhilong
-
-> +
-> +function get_component_size() { cat /sys/block/$1/md/component_size; }
-> +
-> +function raid10_reshape()
-> +{
-> +    local layout=$1 metadata=$2
-> +    shift 2
-> +
-> +    local m=2 cm=1
-> +
-> +    echo "Checking layout=$layout/metadata=$metadata"
-> +
-> +    # 4 disks
-> +    mdadm -CR $md0 --metadata $metadata --level raid10 --layout $layout --raid-disks 4 $dev1 $dev2 $dev3 $dev4
-> +    check wait
-> +    check state UUUU
-> +    check raid10
-> +    testdev $md0 $m $mdsize1 $[512*cm]
-> +
-> +    # growing array to 8 disks
-> +    mdadm $md0 --add $dev8 $dev9 $dev10 $dev11
-> +    mdadm $md0 --grow --raid-devices 8
-> +    check wait
-> +    check state UUUUUUUU
-> +    check raid10
-> +    testdev $md0 $m $[mdsize1*2] $[512*cm]
-> +
-> +    # reducing array to 4 disks again
-> +    dsize=$(get_component_size md0)
-> +    mdadm $md0 --grow --array-size $[dsize*2]
-> +    mdadm $md0 --grow --raid-devices 4
-> +    check wait
-> +    mdadm $md0 --remove $dev8 $dev9 $dev10 $dev11
-> +    check state UUUU
-> +    check raid10
-> +    testdev $md0 $m $mdsize1 $[512*cm]
-> +}
-> +
-> +function run_test()
-> +{
-> +    "$@"
-> +    mdadm -S $md0
-> +}
-> +function main()
-> +{
-> +    local layout metadata
-> +
-> +    for layout in n2 o2; do
-> +        for metadata in 1.1 1.2; do
-> +            run_test raid10_reshape $layout $metadata
-> +        done
-> +    done
-> +}
-> +main "$@"
+> Thanks,
+> NeilBrown
+>
+>
+>> ---
+>>   drivers/md/raid10.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 99c9207899a7..9cbc1a193c8e 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -2655,7 +2655,7 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+>>   		for (m = 0; m < conf->copies; m++) {
+>>   			int dev = r10_bio->devs[m].devnum;
+>>   			rdev = conf->mirrors[dev].rdev;
+>> -			if (r10_bio->devs[m].bio == NULL)
+>> +			if (rdev == NULL || r10_bio->devs[m].bio == NULL)
+>>   				continue;
+>>   			if (!r10_bio->devs[m].bio->bi_status) {
+>>   				rdev_clear_badblocks(
+>> @@ -2670,7 +2670,7 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+>>   					md_error(conf->mddev, rdev);
+>>   			}
+>>   			rdev = conf->mirrors[dev].replacement;
+>> -			if (r10_bio->devs[m].repl_bio == NULL)
+>> +			if (rdev == NULL || r10_bio->devs[m].repl_bio == NULL)
+>>   				continue;
+>>   
+>>   			if (!r10_bio->devs[m].repl_bio->bi_status) {
+>> -- 
+>> 2.13.6
+.
 
