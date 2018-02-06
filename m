@@ -1,84 +1,59 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: Marc MERLIN <marc@merlins.org>
 Subject: Re: force remapping a pending sector in sw raid5 array
-Date: Wed, 7 Feb 2018 08:51:15 +1100
-Message-ID: <d764a824-fe3e-583a-10ef-040bc32dc78e@websitemanagers.com.au>
-References: <20180206181416.amo6geclrvc6ylrf@merlins.org>
+Date: Tue, 6 Feb 2018 14:02:25 -0800
+Message-ID: <20180206220225.GE9565@merlins.org>
+References: <20180206181416.amo6geclrvc6ylrf@merlins.org> <d764a824-fe3e-583a-10ef-040bc32dc78e@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180206181416.amo6geclrvc6ylrf@merlins.org>
-Content-Language: en-CA
+Content-Disposition: inline
+In-Reply-To: <d764a824-fe3e-583a-10ef-040bc32dc78e@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>, linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/02/18 05:14, Marc MERLIN wrote:
-> So, I have 2 drives on a 5x6TB array that have respectively 1 and 8
-> pending sectors in smart.
->
-> Currently, I have a check running, but it will take a while...
->
-> echo check > /sys/block/md7/md/sync_action
-> md7 : active raid5 sdf1[0] sdg1[5] sdd1[3] sdh1[2] sde1[1]
->        23441561600 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
->        [==>..................]  check = 10.5% (615972996/5860390400) finish=4822.1min speed=18125K/sec
->        bitmap: 3/44 pages [12KB], 65536KB chunk
->
-> My understanding is that eventually it will find the bad sectors that can't be read
-> and rewrite new ones (block remapping) after reading the remaining 4 drives.
->
-> But that may take up to 3 days, just due to how long the check will take and size of the drives
-> (they are on a SATA port multiplier, so I don't get a lot of speed).
->
-> Now, I was trying to see if I could just manually remap the block if I can read it at
-> least once.
-> Smart shows:
-> # 3  Extended offline    Completed: read failure       90%       289         1287409520
-> 197 Current_Pending_Sector  0x0032   200   200   000    Old_age   Always       -       1
->
-> So, trying to read the block until it reads ok and gets remapped, would be great
-> but that didn't work:
->
-> Does that sound like a good plan, or is there another better way to fix my issue?
+On Wed, Feb 07, 2018 at 08:51:15AM +1100, Adam Goryachev wrote:
+> I think instead of reading the sector from the drive and relying on the 
+> drive to determine the correct data (it's already telling you it can't). 
 
-I think instead of reading the sector from the drive and relying on the 
-drive to determine the correct data (it's already telling you it can't). 
-What you need to do is find out where on md7 drive x sector y maps to 
-and read that sector from md7, which will get md to (possibly) notice 
-the read error, and then read the data from the other drives, and then 
-re-write the faulty sector with correct calculated data (or do the 
-resync on that area of md7 only).
+Just on that point, it's not that simple. A drive will only try to read the
+data a few times before giving up and marking the sector as pending a
+re-write with new data (so that it can be re-mapped).
+You can however re-read it in different ways and sometimes get the data
+back, which _should_ then cause an immediate re-writing of the data on a new
+block and turn the pending into a reallocated block
+However, this does not seem to have happened on my drive, either because the
+bad data didn't really get read by hdparm --read-sector, or because the
+firmware isn't doing its remapping job, or something else I don't understand
 
-You could probably take a rough guess as follows (note, my math is 
-probably totally bogus as I don't really know the physical / logical 
-mapping for raid5, but I'm guessing)
-You have 5 drives in raid5, and we know one drive (capacity) is used for 
-checksum, so four drives of data. So sector 1287409520 of one drive 
-would be approx 4 x sector 1287409520 of the md array.
+> What you need to do is find out where on md7 drive x sector y maps to 
+> and read that sector from md7, which will get md to (possibly) notice 
+> the read error, and then read the data from the other drives, and then 
+> re-write the faulty sector with correct calculated data (or do the 
+> resync on that area of md7 only).
 
-So try setting something like 1287000000 * 4 as the start of the resync 
-up to 1288000000 * 4 and see if that finds and fixes it for you.
+Yeah, I got that part.
 
-If nothing else, it should finish fairly quickly. You might need to 
-start earlier, but you could just keep reducing the "window" until you 
-find the right spot. Or, someone who knows a lot more about this mapping 
-might jump in and answer the question, though they might need to see the 
-raid details to see the actual physical layout/order of drives/etc.
+> So try setting something like 1287000000 * 4 as the start of the resync 
+> up to 1288000000 * 4 and see if that finds and fixes it for you.
+> 
+> If nothing else, it should finish fairly quickly. You might need to 
+> start earlier, but you could just keep reducing the "window" until you 
+> find the right spot. Or, someone who knows a lot more about this mapping 
+> might jump in and answer the question, though they might need to see the 
+> raid details to see the actual physical layout/order of drives/etc.
 
-Hope that helps anyway....
+I did however (indeed) miss that I can narrow the check range, so I'll try
+playing with that until I can narrow it down to the right bit.
 
-Regards,
-Adam
+I'm still curious as to why the hdparm bit didn't work, but oh well at this
+point.
 
+Thanks,
+Marc
 -- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
--- 
-The information in this e-mail is confidential and may be legally privileged.
-It is intended solely for the addressee. Access to this e-mail by anyone else
-is unauthorised. If you are not the intended recipient, any disclosure,
-copying, distribution or any action taken or omitted to be taken in reliance
-on it, is prohibited and may be unlawful. If you have received this message
-in error, please notify us immediately. Please also destroy and delete the
-message from your computer. Viruses - Any loss/damage incurred by receiving
-this email is not the sender's responsibility.
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
