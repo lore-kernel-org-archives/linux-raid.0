@@ -1,91 +1,66 @@
-From: bingjingc <bingjingc@synology.com>
-Subject: [PATCH] mdadm: prevent out-of-date reshaping devices from force
- assemble
-Date: Tue, 06 Feb 2018 17:09:47 +0800
-Message-ID: <e04a8ec7b4b5f8e8cefac05997c781c1@synology.com>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH] md raid10: fix NULL deference in handle_write_completed()
+Date: Tue, 6 Feb 2018 17:24:08 +0800
+Message-ID: <20180206092408.2817-1-yuyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: shli@kernel.org, neilb@suse.com
+Cc: linux-raid@vger.kernel.org, Yufen Yu <yuyufen@huawei.com>
 List-Id: linux-raid.ids
 
+In the case of 'recover', an r10bio with R10BIO_WriteError &
+R10BIO_IsRecover will be progressed by handle_write_completed().
+This function traverses all r10bio->devs[copies]. 
+If devs[m].repl_bio != NULL, it thinks conf->mirrors[dev].replacement
+is also not NULL. However, this is not always true.
 
-With "--force", we can assemble the array even if some superblocks
-appear out-of-date. But their data layout is regarded to make sense.
-In reshape cases, if two devices claims different reshape progresses,
-we cannot forcely assemble them back to array. Kernel will treat only
-one of them as reshape progress. However, their data is still laid on
-different layouts. It may lead to disaster if reshape goes on.
+When there is an rdev of raid10 has replacement, then each r10bio
+->devs[m].repl_bio != NULL in conf->r10buf_pool. However, in 'recover',
+even if corresponded replacement is NULL, it doesn't clear r10bio
+->devs[m].repl_bio, resulting in replacement NULL deference.
 
-Reproducible Steps:
-mdadm -C /dev/md0 --assume-clean -l5 -n3 /dev/loop[012]
-mdadm -a /dev/md0 /dev/loop3
-mdadm -G /dev/md0 -n4
-mdadm -f /dev/md0 /dev/loop0 # after a period
-mdadm -S /dev/md0 # after another period
-mdadm -E /dev/loop[01] # make sure that they claims different ones
+This bug was introduced when replacement support for raid10 was
+added in Linux 3.3, 9ad1aefc8ae8 ("md/raid10:  Handle replacement
+devices during resync.")
 
-mdadm -Af -R /dev/md0 /dev/loop[023] # give no enough devices for
-force_array() to pick non-fresh devices
-cat /sys/block/md0/md/reshape_position # You can see that Kernel resume
-reshape the from any progress of them.
+As NeilBrown suggested:
+	Elsewhere the determination of "is this device part of the
+	resync/recovery" is made by resting bio->bi_end_io.
+	If this is end_sync_write, then we tried to write here.
+	If it is NULL, then we didn't try to write.
 
-Note: The unit of mdadm -E is KB, but reshape_position's is sector.
-
-In order to prevent disaster, we add logics to prevent devices with
-different reshape progress from being added into the array.
-
-Reported-by: Allen Peng <allenpeng@synology.com>
-Reviewed-by: Alex Wu <alexwu@synology.com>
-Signed-off-by: BingJing Chang <bingjingc@synology.com>
+Suggested-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
-  Assemble.c | 22 ++++++++++++++++++++--
-  1 file changed, 20 insertions(+), 2 deletions(-)
+ drivers/md/raid10.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 9e19246..9f33c61 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -846,7 +846,19 @@ static int force_array(struct mdinfo *content,
-  					/* OK */;
-  				else
-  					continue;
--			}
-+			} else if (devices[j].i.reshape_active !=
-+			    content->reshape_active ||
-+			    (devices[j].i.reshape_active &&
-+			    devices[j].i.reshape_progress !=
-+			    content->reshape_progress))
-+				/* Here, it may be a source of data. If two
-+				 * devices claim different progresses, it
-+				 * means that reshape boundaries differ for
-+				 * their own devices. Kernel will only treat
-+				 * the first one as reshape progress and
-+				 * go on. It may cause disaster, so avoid it.
-+				 */
-+				continue;
-  			if (chosen_drive < 0 ||
-  			     devices[j].i.events
-  			    > devices[chosen_drive].i.events)
-@@ -908,7 +920,13 @@ static int force_array(struct mdinfo *content,
-  			if (j >= 0 &&
-  			    !devices[j].uptodate &&
-  			    devices[j].i.recovery_start == MaxSector &&
--			    devices[j].i.events == current_events) {
-+			    devices[j].i.events == current_events &&
-+			    ((!devices[j].i.reshape_active &&
-+			    !content->reshape_active) ||
-+			    (devices[j].i.reshape_active ==
-+			    content->reshape_active &&
-+			    devices[j].i.reshape_progress ==
-+			    content->reshape_progress))) {
-  				chosen_drive = j;
-  				goto add_another;
-  			}
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index abb539c47d3b..5e13df4caec2 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2732,7 +2732,8 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ 		for (m = 0; m < conf->copies; m++) {
+ 			int dev = r10_bio->devs[m].devnum;
+ 			rdev = conf->mirrors[dev].rdev;
+-			if (r10_bio->devs[m].bio == NULL)
++			if (r10_bio->devs[m].bio == NULL ||
++				r10_bio->devs[m].bio->bi_end_io == NULL)
+ 				continue;
+ 			if (test_bit(BIO_UPTODATE,
+ 				     &r10_bio->devs[m].bio->bi_flags)) {
+@@ -2748,7 +2749,8 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ 					md_error(conf->mddev, rdev);
+ 			}
+ 			rdev = conf->mirrors[dev].replacement;
+-			if (r10_bio->devs[m].repl_bio == NULL)
++			if (r10_bio->devs[m].repl_bio == NULL ||
++				r10_bio->devs[m].repl_bio->bi_end_io == NULL)
+ 				continue;
+ 			if (test_bit(BIO_UPTODATE,
+ 				     &r10_bio->devs[m].repl_bio->bi_flags)) {
 -- 
-2.7.4
+2.13.6
 
