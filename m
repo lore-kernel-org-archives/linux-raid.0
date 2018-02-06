@@ -1,66 +1,97 @@
-From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v2] md raid10: fix NULL deference in handle_write_completed()
-Date: Tue, 6 Feb 2018 17:39:15 +0800
-Message-ID: <20180206093915.11017-1-yuyufen@huawei.com>
+From: Liwei <xieliwei@gmail.com>
+Subject: Re: Buffer I/O error... async page read
+Date: Tue, 6 Feb 2018 21:55:30 +0800
+Message-ID: <CAPE0SYxdUMivzCv++RaHWt90QkMBBV-oCAiGjMUxVsWdezS0mg@mail.gmail.com>
+References: <CAPE0SYxDgs6NY_ZALVY5kB5a-vrpK1GQvqqtf60gjCCmn2eP8g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPE0SYxDgs6NY_ZALVY5kB5a-vrpK1GQvqqtf60gjCCmn2eP8g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org, neilb@suse.com
-Cc: linux-raid@vger.kernel.org, Yufen Yu <yuyufen@huawei.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In the case of 'recover', an r10bio with R10BIO_WriteError &
-R10BIO_IsRecover will be progressed by handle_write_completed().
-This function traverses all r10bio->devs[copies]. 
-If devs[m].repl_bio != NULL, it thinks conf->mirrors[dev].replacement
-is also not NULL. However, this is not always true.
+On 6 February 2018 at 03:10, Liwei <xieliwei@gmail.com> wrote:
+> Hi list,
+>
+> tl;dr: Array seems to be remembering bad blocks from recovered drive,
+> even though drive the image is on is fine. Is there a way to make
+> array forget the blocks? Is it safe?
+>
+>
+>     We had a raid6 array that went down because 2 drives went down and
+> 1 drive encountered bad sectors.
+>     We managed to recover the 1 drive with bad sectors (we engaged a
+> recovery lab), and the remaining drives in the array report neither
+> pending nor re-allocated sectors (from smartctl).
+>
+>     After re-integrating the (image of the) recovered drive with bad
+> sectors and starting the array in degraded mode, we realised we are
+> still unable to read from some sectors in the md device. I believe
+> they correspond to where the bad sectors were previously.
+>
+>     When trying to read from said sectors, this comes up in dmesg:
+>
+> [Feb 6 02:05] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [  +0.000458] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [ +13.297834] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [  +0.000438] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [Feb 6 02:06] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [  +0.000390] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [ +13.284550] Buffer I/O error on dev dm-26, logical block 5166102915,
+> async page read
+> [  +0.000448] Buffer I/O error on dev dm-26, logical block 5166102915,
+> async page read
+> [Feb 6 02:17] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [  +0.000341] Buffer I/O error on dev dm-26, logical block 5166101891,
+> async page read
+> [Feb 6 02:24] Buffer I/O error on dev dm-26, logical block 5166118804,
+> async page read
+> [  +0.002417] Buffer I/O error on dev dm-26, logical block 5166118804,
+> async page read
+> [  +2.972446] Buffer I/O error on dev dm-26, logical block 5166118804,
+> async page read
+> [  +0.002172] Buffer I/O error on dev dm-26, logical block 5166118804,
+> async page read
+> [Feb 6 02:25] Buffer I/O error on dev dm-26, logical block 5166118804,
+> async page read
+> [  +0.002130] Buffer I/O error on dev dm-26, logical block 5166118804,
+> async page read
+>
+>     However, I've checked smartctl and ran a pass of (read-only)
+> badblocks over the drives, all sectors are readable, there are no
+> pending sectors, and no reallocated sectors.
+>
+>     So what is generating these buffer I/O errors?
+>
+>     Also, upon investigating, I'm astonished to find a non-empty list when I do:
+>         /sys/block/md126/md/dev-*/bad_blocks
+>
+>     Almost every drive in the array has a few entries. That's not
+> normal isn't it? My theory is that since these are consumer-grade SATA
+> drives, some odd read/write timeout must have occurred at some point,
+> causing md to think that the sectors are bad? Is there a way to make
+> md forget about these blocks? Is it safe to do so?
+>
+> Warm regards,
+> Liwei
 
-When there is an rdev of raid10 has replacement, then each r10bio
-->devs[m].repl_bio != NULL in conf->r10buf_pool. However, in 'recover',
-even if corresponded replacement is NULL, it doesn't clear r10bio
-->devs[m].repl_bio, resulting in replacement NULL deference.
+Just answering my question. Turns out the I/O errors are caused by the
+MD bad blocks log. There wasn't an easy way to clear the log unless I
+wrote over the supposedly bad blocks.
 
-This bug was introduced when replacement support for raid10 was
-added in Linux 3.3.
+But turns out since the log is in the superblock, I dd-ed it out,
+edited the log entries to all FF, cleared the bad blocks feature bit
+in the header, updated the checksum, dd-ed the edited superblock back
+in, and viola, no more read errors and I have access to my data!
 
-As NeilBrown suggested:
-	Elsewhere the determination of "is this device part of the
-	resync/recovery" is made by resting bio->bi_end_io.
-	If this is end_sync_write, then we tried to write here.
-	If it is NULL, then we didn't try to write.
-
-Fixes: 9ad1aefc8ae8 ("md/raid10:  Handle replacement devices during resync.") 
-Suggested-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Yufen Yu <yuyufen@huawei.com>
----
- drivers/md/raid10.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index abb539c47d3b..5e13df4caec2 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2732,7 +2732,8 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
- 		for (m = 0; m < conf->copies; m++) {
- 			int dev = r10_bio->devs[m].devnum;
- 			rdev = conf->mirrors[dev].rdev;
--			if (r10_bio->devs[m].bio == NULL)
-+			if (r10_bio->devs[m].bio == NULL ||
-+				r10_bio->devs[m].bio->bi_end_io == NULL)
- 				continue;
- 			if (test_bit(BIO_UPTODATE,
- 				     &r10_bio->devs[m].bio->bi_flags)) {
-@@ -2748,7 +2749,8 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
- 					md_error(conf->mddev, rdev);
- 			}
- 			rdev = conf->mirrors[dev].replacement;
--			if (r10_bio->devs[m].repl_bio == NULL)
-+			if (r10_bio->devs[m].repl_bio == NULL ||
-+				r10_bio->devs[m].repl_bio->bi_end_io == NULL)
- 				continue;
- 			if (test_bit(BIO_UPTODATE,
- 				     &r10_bio->devs[m].repl_bio->bi_flags)) {
--- 
-2.13.6
-
+Disclaimer: I had offline backup of the drive images and a write
+overlay, please ensure there's a way back if anyone tries something
+like this.
