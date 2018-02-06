@@ -1,60 +1,91 @@
-From: =?UTF-8?B?SsOpcsO0bWUgQ2hhcmFvdWk=?= <jcharaoui@cmaisonneuve.qc.ca>
-Subject: 4k random writes initially quite slow on raid10 md device
-Date: Mon, 5 Feb 2018 14:15:37 -0500
-Message-ID: <4ecac452-4fbc-7ccf-331e-a100c18cbaaf@cmaisonneuve.qc.ca>
+From: bingjingc <bingjingc@synology.com>
+Subject: [PATCH] mdadm: prevent out-of-date reshaping devices from force
+ assemble
+Date: Tue, 06 Feb 2018 17:09:47 +0800
+Message-ID: <e04a8ec7b4b5f8e8cefac05997c781c1@synology.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: fr
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes.Sorensen@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[apologies for cross-posting this from the fio mailing list, but it was 
-suggested to me that this may be of interest to the linux-raid list]
 
+With "--force", we can assemble the array even if some superblocks
+appear out-of-date. But their data layout is regarded to make sense.
+In reshape cases, if two devices claims different reshape progresses,
+we cannot forcely assemble them back to array. Kernel will treat only
+one of them as reshape progress. However, their data is still laid on
+different layouts. It may lead to disaster if reshape goes on.
 
-Hello,
+Reproducible Steps:
+mdadm -C /dev/md0 --assume-clean -l5 -n3 /dev/loop[012]
+mdadm -a /dev/md0 /dev/loop3
+mdadm -G /dev/md0 -n4
+mdadm -f /dev/md0 /dev/loop0 # after a period
+mdadm -S /dev/md0 # after another period
+mdadm -E /dev/loop[01] # make sure that they claims different ones
 
-I've been running some tests on a bunch of disks lately and came across 
-a strange test result that I'm struggling to explain.
+mdadm -Af -R /dev/md0 /dev/loop[023] # give no enough devices for
+force_array() to pick non-fresh devices
+cat /sys/block/md0/md/reshape_position # You can see that Kernel resume
+reshape the from any progress of them.
 
-I built a 20-device raid10 md array with SSDs and ran several fio tests 
-on it. The 4k-randwrite test really stands out because the IOPS starts 
-out fairly low, around 800 IOPS, but within a few seconds climbs up to 
-about 70K IOPS, which is nearly three times higher than the IOPS I'm 
-getting with the randread test (25K).
+Note: The unit of mdadm -E is KB, but reshape_position's is sector.
 
-I tried disabling the drive caches using hdparm -W 0, and also disabling 
-the internal write-intent bitmap on the md array, but the results are 
-the same. I've also tried disabling front_merges, also to no effect. 
-Disabling hyper-threading and switching the CPU scaling governor to 
-'performance' helped gain a few extra IOPS, but the curve still remains.
+In order to prevent disaster, we add logics to prevent devices with
+different reshape progress from being added into the array.
 
-Here are the test parameters:
+Reported-by: Allen Peng <allenpeng@synology.com>
+Reviewed-by: Alex Wu <alexwu@synology.com>
+Signed-off-by: BingJing Chang <bingjingc@synology.com>
+---
+  Assemble.c | 22 ++++++++++++++++++++--
+  1 file changed, 20 insertions(+), 2 deletions(-)
 
-ioengine=libaio
-invalidate=1
-ramp_time=10
-iodepth=4
-runtime=60
-time_based
-direct=1
-randrepeat=0
-filename=/dev/md1
-bs=4k
-rw=randwrite
-
-I generated some gnuplot graphs from the logs:
-
-randread test: https://imgur.com/dj25FFH
-randwrite test: https://imgur.com/BuZVNmh
-
-Any idea what could be causing this delay in random write speeds? There 
-is no other IO going on on this machine.
-
-Thanks,
-
--- Jerome
+diff --git a/Assemble.c b/Assemble.c
+index 9e19246..9f33c61 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -846,7 +846,19 @@ static int force_array(struct mdinfo *content,
+  					/* OK */;
+  				else
+  					continue;
+-			}
++			} else if (devices[j].i.reshape_active !=
++			    content->reshape_active ||
++			    (devices[j].i.reshape_active &&
++			    devices[j].i.reshape_progress !=
++			    content->reshape_progress))
++				/* Here, it may be a source of data. If two
++				 * devices claim different progresses, it
++				 * means that reshape boundaries differ for
++				 * their own devices. Kernel will only treat
++				 * the first one as reshape progress and
++				 * go on. It may cause disaster, so avoid it.
++				 */
++				continue;
+  			if (chosen_drive < 0 ||
+  			     devices[j].i.events
+  			    > devices[chosen_drive].i.events)
+@@ -908,7 +920,13 @@ static int force_array(struct mdinfo *content,
+  			if (j >= 0 &&
+  			    !devices[j].uptodate &&
+  			    devices[j].i.recovery_start == MaxSector &&
+-			    devices[j].i.events == current_events) {
++			    devices[j].i.events == current_events &&
++			    ((!devices[j].i.reshape_active &&
++			    !content->reshape_active) ||
++			    (devices[j].i.reshape_active ==
++			    content->reshape_active &&
++			    devices[j].i.reshape_progress ==
++			    content->reshape_progress))) {
+  				chosen_drive = j;
+  				goto add_another;
+  			}
+-- 
+2.7.4
 
