@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH] md raid10: fix NULL deference in handle_write_completed()
-Date: Tue, 6 Feb 2018 17:24:08 +0800
-Message-ID: <20180206092408.2817-1-yuyufen@huawei.com>
+Subject: [PATCH v2] md raid10: fix NULL deference in handle_write_completed()
+Date: Tue, 6 Feb 2018 17:39:15 +0800
+Message-ID: <20180206093915.11017-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -22,8 +22,7 @@ even if corresponded replacement is NULL, it doesn't clear r10bio
 ->devs[m].repl_bio, resulting in replacement NULL deference.
 
 This bug was introduced when replacement support for raid10 was
-added in Linux 3.3, 9ad1aefc8ae8 ("md/raid10:  Handle replacement
-devices during resync.")
+added in Linux 3.3.
 
 As NeilBrown suggested:
 	Elsewhere the determination of "is this device part of the
@@ -31,6 +30,7 @@ As NeilBrown suggested:
 	If this is end_sync_write, then we tried to write here.
 	If it is NULL, then we didn't try to write.
 
+Fixes: 9ad1aefc8ae8 ("md/raid10:  Handle replacement devices during resync.") 
 Suggested-by: NeilBrown <neilb@suse.com>
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
