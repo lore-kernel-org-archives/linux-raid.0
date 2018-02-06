@@ -1,45 +1,51 @@
-From: Marc MERLIN <marc@merlins.org>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
 Subject: Re: force remapping a pending sector in sw raid5 array
-Date: Tue, 6 Feb 2018 11:36:25 -0800
-Message-ID: <20180206193625.GD9565@merlins.org>
-References: <20180206181416.amo6geclrvc6ylrf@merlins.org> <c8be73cb-7dce-0b37-c498-19bf350a6c91@thelounge.net>
+Date: Tue, 6 Feb 2018 21:03:12 +0100
+Message-ID: <20180206200312.GA20708@metamorpher.de>
+References: <20180206181416.amo6geclrvc6ylrf@merlins.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <c8be73cb-7dce-0b37-c498-19bf350a6c91@thelounge.net>
+In-Reply-To: <20180206181416.amo6geclrvc6ylrf@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>
+To: Marc MERLIN <marc@merlins.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 06, 2018 at 07:59:32PM +0100, Reindl Harald wrote:
-> but 18125K/sec is a joke given that you should run a scrub every week
- 
-I know it's bad. Right now it's a bit slower than normal because I'm also
-copying data to the drives.
+On Tue, Feb 06, 2018 at 10:14:16AM -0800, Marc MERLIN wrote:
+> echo check > /sys/block/md7/md/sync_action 
+> md7 : active raid5 sdf1[0] sdg1[5] sdd1[3] sdh1[2] sde1[1]
+>       23441561600 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
+>       [==>..................]  check = 10.5% (615972996/5860390400) finish=4822.1min speed=18125K/sec
+>       bitmap: 3/44 pages [12KB], 65536KB chunk
+> 
+> My understanding is that eventually it will find the bad sectors that can't be read
+> and rewrite new ones (block remapping) after reading the remaining 4 drives.
 
-> did you try to play around with sysctl.conf?
+You can do selective area checks, with /sys/block/mdX/md/sync_{min,max}.
 
-Yes, I set it to 300,000, but obviously it won't make the hardware go faster
-than it can.
+Documented here:
 
-I totally understand the performance is crap, but it's a backup array that I
-only bring up and power on once a week and scrub once a month, so it's ok
-enough for the use in question.
+https://www.kernel.org/doc/html/latest/admin-guide/md.html#md-devices-in-sysfs
 
-For now, it's more about me learning how to manually force a block remap,
-not because I absolutely have to, but because it's always good to know and
-learn low level tools and how things work.
+Also see if increasing the stripe cache size helps with speeds.
 
-I have used hdrecover in the past which reads all the blocks low level and
-re-reads a bad block many times to force a successful read and auto remap,
-but sadly it doesn't take a block offset, so it would only work if I let it
-run on the whole drive, which would be slow.
+> Should I stick this data into a 512 byte file and write it back with dd in the right place?
 
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+Most hard drives have 4K sectors these days. Writing 512 byte into a bad 
+physical 4K sector is probably not a good idea. So at minimum, write 4K 
+(aligned). If in doubt, write more...
+
+However, leaving it to the md check should be the much safer option. 
+Easy to make mistakes when messing with drives directly.
+
+> Does that sound like a good plan, or is there another better way to fix my issue?
+
+mdadm --replace the drive entirely with a new one is not an option?
+
+Then you could do a full badblocks write test on the removed/faulty drive 
+and make a more informed decision as to whether it can be trusted at all.
+
+Regards
+Andreas Klauer
