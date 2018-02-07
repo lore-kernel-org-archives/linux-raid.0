@@ -1,54 +1,35 @@
-From: John Pittman <jpittman@redhat.com>
-Subject: Re: [PATCH] mdadm: Expose Kill() return codes to user
-Date: Wed, 7 Feb 2018 15:07:12 -0500
-Message-ID: <CA+RJvhy3bWL7MLtzkn0bwFMsd2x2-zLvcK-bwPB1Zz-oBTxAVA@mail.gmail.com>
-References: <1517587617-2978-1-git-send-email-jpittman@redhat.com> <821a08de-bbe9-d775-acec-0c0f07de2b84@gmail.com>
+From: Wol's lists <antlists@youngman.org.uk>
+Subject: Re: [OT] C programming problem
+Date: Wed, 7 Feb 2018 20:22:01 +0000
+Message-ID: <7b976e5c-cb0a-ded2-e812-fd3cdddfe864@youngman.org.uk>
+References: <2a2e28ad-20bd-d369-d65f-19d79f1871fb@youngman.org.uk>
+ <46a82977-bb58-8ac5-bbde-ba027339f31e@fritscher.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <821a08de-bbe9-d775-acec-0c0f07de2b84@gmail.com>
+In-Reply-To: <46a82977-bb58-8ac5-bbde-ba027339f31e@fritscher.net>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Michael Fritscher <michael@fritscher.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Terribly sorry Jes, got pulled away and did not get back.
-Unfortunately this patch is incorrect.  Please revert.
-It causes the return value of even a successful wipe to be 2.
-If I can figure out why, I will re-submit.  Apologies again.
+On 07/02/18 20:00, Michael Fritscher wrote:
+> Hello,
+> 
+>> main.c:20:5: warning: incompatible implicit declaration of built-in
+>> function ‘memset’ [enabled by default]
+>>      memset( &array, 0, blocks * sizeof(int) );
+> 
+> at least my compiler says something about
+>> a.c:21:5: note: include ‘<string.h>’ or provide a declaration of ‘memset’
+> 
+> And yes, the first recipe does indeed help :-P
+> 
+Thank you both! Perfect!
 
-On Wed, Feb 7, 2018 at 2:51 PM, Jes Sorensen <jes.sorensen@gmail.com> wrote:
-> On 02/02/2018 11:06 AM, John Pittman wrote:
->> In misc_list(), case KillOpt, the return values from the Kill()
->> function are saved, but soon after cleared with a bitwise OR
->> assignment.  Expose these return values to the user, indicating
->> success of the zeroing operation or an error value to accompany
->> the error message printed to the console.
->>
->> Before:
->>
->>    # mdadm -C /dev/md0 -l 1 -n 2 -e 1.2 /dev/sda /dev/sdb
->>    mdadm: array /dev/md0 started.
->>    # mdadm --zero-superblock /dev/sdb
->>    mdadm: Couldn't open /dev/sdb for write - not zeroing
->>    # echo $?
->>    0
->>
->> After:
->>
->>    # mdadm -C /dev/md0 -l 1 -n 2 -e 1.2 /dev/sda /dev/sdb
->>    mdadm: array /dev/md0 started.
->>    # mdadm --zero-superblock /dev/sdb
->>    mdadm: Couldn't open /dev/sdb for write - not zeroing
->>    # echo $?
->>    2
->>
->> Signed-off-by: John Pittman <jpittman@redhat.com>
->
-> Seems reasonable to me!
->
-> Applied!
->
-> Thanks,
-> Jes
->
+I think actually stdlib had fixed the malloc problem, but I missed it 
+because the memset problem was still there.
+
+Cheers,
+Wol
