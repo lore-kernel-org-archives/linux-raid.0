@@ -1,34 +1,56 @@
-From: Liwei <xieliwei@gmail.com>
-Subject: Re: Buffer I/O error... async page read
-Date: Wed, 7 Feb 2018 15:02:37 +0800
-Message-ID: <CAPE0SYzi53vnV-rPtRcfqphpO-KTNwEuP+3yYcsk+Cmu9p-hGg@mail.gmail.com>
-References: <CAPE0SYxDgs6NY_ZALVY5kB5a-vrpK1GQvqqtf60gjCCmn2eP8g@mail.gmail.com>
- <CAPE0SYxdUMivzCv++RaHWt90QkMBBV-oCAiGjMUxVsWdezS0mg@mail.gmail.com> <0a503f71-72ff-7744-f513-ecccccd30782@gmail.com>
+From: Kay Diederichs <kay.diederichs@uni-konstanz.de>
+Subject: Re: force remapping a pending sector in sw raid5 array
+Date: Wed, 7 Feb 2018 10:42:39 +0100
+Message-ID: <aedfc1ac-a95f-b20f-2713-87cf412afdf4@uni-konstanz.de>
+References: <20180206181416.amo6geclrvc6ylrf@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0a503f71-72ff-7744-f513-ecccccd30782@gmail.com>
+In-Reply-To: <20180206181416.amo6geclrvc6ylrf@merlins.org>
+Content-Language: en-MW
 Sender: linux-raid-owner@vger.kernel.org
-To: Weedy <weedy2887@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7 February 2018 at 14:27, Weedy <weedy2887@gmail.com> wrote:
-> On 2018-02-06 08:55 AM, Liwei wrote:
->> Just answering my question. Turns out the I/O errors are caused by the
->> MD bad blocks log. There wasn't an easy way to clear the log unless I
->> wrote over the supposedly bad blocks.
->>
->
-> All you needed to do was "--assemble --update=no-bbl".
->
-> Neil just posted to the list a couple days ago about this for someone else.
+On 02/06/2018 07:14 PM, Marc MERLIN wrote:
+> So, I have 2 drives on a 5x6TB array that have respectively 1 and 8
+> pending sectors in smart.
+> 
+...
+> # 3  Extended offline    Completed: read failure       90%       289
+      1287409520
 
-*Facepalms* Clearly my google-fu isn't good enough. Maybe someone with
-access to the wiki can add a page on the bad blocks list?
+I have successfully used "badblocks" to overwrite bad sectors.
 
-I was referring to the metadata formats
-"https://raid.wiki.kernel.org/index.php/RAID_superblock_formats" page
-while trying to figure things out and noticed that it too is outdated.
-I'm willing to help update the wiki in whatever ways I can if someone
-can approve my account.
+The variety of badblocks that comes with RHEL (there may be others!)
+could be used with e.g.
+ badblocks -svnb512 /dev/sdh 1287409599 1287409400
+where
+-n     Use non-destructive read-write mode.  By default only a
+non-destructive read-only test is done.  This option  must  not  be
+combined  with  the  -w option, as they are mutually exclusive.
+
+I've adjusted the last-block and first-block numbers in the command
+above so that they
+a) encompass the known bad blocks
+b) start and end on 4k-boundaries
+
+This command leaves those blocks intact that still can be read.
+
+After that, use a destructive-write badblocks e.g.
+
+badblocks -sfvwb512 /dev/sdh <x> <y>
+You'll have to adjust x and y to match just those blocks that cannot be
+read, based on the output of the first badblocks run.
+
+Afterwards, "smartctl -t short /dev/sdh" may clean up the SMART statistics.
+
+HTH,
+
+Kay
+
+
+
+
+
