@@ -1,62 +1,50 @@
-From: Wol's lists <antlists@youngman.org.uk>
-Subject: [OT] C programming problem
-Date: Wed, 7 Feb 2018 19:46:13 +0000
-Message-ID: <2a2e28ad-20bd-d369-d65f-19d79f1871fb@youngman.org.uk>
+From: Jes Sorensen <jes.sorensen@gmail.com>
+Subject: Re: [PATCH] mdadm: Expose Kill() return codes to user
+Date: Wed, 7 Feb 2018 14:51:34 -0500
+Message-ID: <821a08de-bbe9-d775-acec-0c0f07de2b84@gmail.com>
+References: <1517587617-2978-1-git-send-email-jpittman@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1517587617-2978-1-git-send-email-jpittman@redhat.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: John Pittman <jpittman@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is for raid, honest :-)
+On 02/02/2018 11:06 AM, John Pittman wrote:
+> In misc_list(), case KillOpt, the return values from the Kill()
+> function are saved, but soon after cleared with a bitwise OR 
+> assignment.  Expose these return values to the user, indicating 
+> success of the zeroing operation or an error value to accompany 
+> the error message printed to the console.
+> 
+> Before:
+> 
+>    # mdadm -C /dev/md0 -l 1 -n 2 -e 1.2 /dev/sda /dev/sdb
+>    mdadm: array /dev/md0 started.
+>    # mdadm --zero-superblock /dev/sdb
+>    mdadm: Couldn't open /dev/sdb for write - not zeroing
+>    # echo $?
+>    0
+> 
+> After:
+> 
+>    # mdadm -C /dev/md0 -l 1 -n 2 -e 1.2 /dev/sda /dev/sdb
+>    mdadm: array /dev/md0 started.
+>    # mdadm --zero-superblock /dev/sdb
+>    mdadm: Couldn't open /dev/sdb for write - not zeroing
+>    # echo $?
+>    2
+> 
+> Signed-off-by: John Pittman <jpittman@redhat.com>
 
-My C is so rusty it's jammed solid :-) but I'm trying to prototype a 
-simple algorithm for "de-clustering" a raid-60/61 array.
+Seems reasonable to me!
 
-Googling for my error -
+Applied!
 
-main.c:20:5: warning: incompatible implicit declaration of built-in 
-function ‘memset’ [enabled by default]
-      memset( &array, 0, blocks * sizeof(int) );
+Thanks,
+Jes
 
-says "you need to include stdlib.h" - but I have!
-
-(I'm getting the same error on the malloc ...)
-
-#include <stdio.h>
-#include <stdlib.h>
-
-void main()
-{
-     int disks, logdisks, mirrors, prime;
-
-     printf( "%s", "Enter the number of disks ");
-     scanf( "%d", &disks);
-     printf( "%s", "Enter the number of logical disks ");
-     scanf( "%d", &logdisks);
-     printf( "%s", "Enter the number of mirrors ");
-     scanf( "%d", &mirrors);
-     printf( "%s", "Enter the prime ");
-     scanf( "%d", &prime);
-
-     int blocks, *array;
-
-     blocks = logdisks * mirrors * disks;
-     array = (int *) malloc( sizeof(int) * blocks );
-     memset( &array, 0, blocks * sizeof(int) );
-
-     int i;
-
-     for (i=0; i < blocks; i++) {
-         array[i] = (i * prime) % blocks;
-     }
-
-     for (i=0; i < blocks; i++) {
-         if ( (i % disks) == 0)
-             printf( "\n");
-         printf( "%4d", array[i]);
-     }
-}
