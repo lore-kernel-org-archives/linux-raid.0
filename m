@@ -1,114 +1,41 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [MDADM PATCH] A sanity check for missing device
-Date: Thu, 8 Feb 2018 02:20:16 -0500 (EST)
-Message-ID: <878020727.1507060.1518074416349.JavaMail.zimbra@redhat.com>
-References: <1517543858-6937-1-git-send-email-xni@redhat.com> <958b9892-1b64-03f7-e47e-0d4f9de36c31@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RFC - de-clustered raid 60 or 61 algorithm
+Date: Thu, 8 Feb 2018 07:56:10 -0500
+Message-ID: <e7c2c26c-c59b-ebab-423d-683a05ddfd8c@turmel.org>
+References: <9f9e737c-d6d1-5cce-8190-14d970320265@youngman.org.uk>
+ <876078maui.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <958b9892-1b64-03f7-e47e-0d4f9de36c31@gmail.com>
+In-Reply-To: <876078maui.fsf@notabene.neil.brown.name>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes.sorensen@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Wol's lists <antlists@youngman.org.uk>, mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 02/07/2018 10:14 PM, NeilBrown wrote:
+> On Thu, Feb 08 2018, Wol's lists wrote:
 
+>> I've been playing with a mirror setup, and if we have two mirrors, we 
+>> can rebuild any failed disk by coping from two other drives. I think 
+>> also (I haven't looked at it) that you could do a fast rebuild without 
+>> impacting other users of the system too much provided you don't swamp 
+>> i/o bandwidth, as half of the requests for data on the three drives 
+>> being used for rebuilding could actually be satisfied from other drives.
+> 
+> I think that ends up being much the same result as a current raid10
+> where the number of copies doesn't divide the number of devices.
+> Reconstruction reads come from 2 different devices, and half the reads
+> that would go to them now go elsewhere.
 
------ Original Message -----
-> From: "Jes Sorensen" <jes.sorensen@gmail.com>
-> To: "Xiao Ni" <xni@redhat.com>, linux-raid@vger.kernel.org
-> Sent: Thursday, February 8, 2018 3:53:15 AM
-> Subject: Re: [MDADM PATCH] A sanity check for missing device
-> 
-> On 02/01/2018 10:57 PM, Xiao Ni wrote:
-> > If we don't check the number of missing devices and create raid device
-> > with all missing devices, it gives the error message:
-> > [root@storageqe-15 mdadm]# ./test --tests=00raid1
-> > Testing on linux-3.10.0-830.el7.x86_64 kernel
-> > tests/00raid1...
-> > ERROR: dmesg prints errors when testing 00raid1!
-> > 
-> > FAILED - see /var/tmp/00raid1.log and /var/tmp/fail00raid1.log for details
-> > 
-> > After checking the missing devices number, the test case can pass. And it
-> > gives a error log in log file:
-> > ++ /root/mdadm/mdadm --quiet -CR /dev/md0 -l 1 -n2 missing missing
-> > --auto=yes
-> > ++ rv=1
-> > ++ case  in
-> > ++ cat /var/tmp/stderr
-> > mdadm: Subdevs can't be all missing
-> > 
-> > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > ---
-> >  tests/00raid1 | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/tests/00raid1 b/tests/00raid1
-> > index c93465d..752bbbf 100644
-> > --- a/tests/00raid1
-> > +++ b/tests/00raid1
-> > @@ -3,6 +3,9 @@
-> >  # test version0, version1, and no super
-> >  # test resync and recovery.
-> >  
-> > +# It's just a sanity check. This command shouldn't run successfully
-> > +mdadm -CR $md0 -l 1 -n2 missing missing
-> > +
-> >  mdadm -CR $md0 -l 1 -n2 $dev0 $dev1
-> >  check resync
-> >  check raid1
-> 
-> I think we need to test the opposite here - the test shouldn't report an
-> error in the log, but rather success if this sanity test passes.
+This begs the question:
 
-Hi Jes
+Why not just use the raid10,near striping algorithm?  Say one wants
+raid6 n=6 inside raid60 n=25.  Use the raid10,near6 n=25 striping
+algorithm, but within each near6 inner stripe place data and P and Q
+using the existing raid6 rotation.
 
-Is it ok like this:
+What is the more complex placement algorithm providing?
 
-diff --git a/tests/00raid1 b/tests/00raid1
-index c93465d..f6b8be1 100644
---- a/tests/00raid1
-+++ b/tests/00raid1
-@@ -3,6 +3,10 @@
- # test version0, version1, and no super
- # test resync and recovery.
- 
-+# It's just a sanity check. This command shouldn't run successfully
-+mdadm -CR $md0 -l 1 -n2 missing missing
-+check opposite_result
-+
- mdadm -CR $md0 -l 1 -n2 $dev0 $dev1
- check resync
- check raid1
-diff --git a/tests/func.sh b/tests/func.sh
-index 40c6026..af08b60 100644
---- a/tests/func.sh
-+++ b/tests/func.sh
-@@ -219,6 +219,10 @@ do_setup() {
- # check various things
- check() {
-        case $1 in
-+       opposite_result )
-+               if [ $? -eq 0 ]; then
-+                       die "This command shouldn't run successfully"
-+               fi
-        spares )
-                spares=$(tr '] ' '\012\012' < /proc/mdstat | grep -c '(S)' || exit 0)
-                [ $spares -ne $2 ] &&
-
-Regards
-Xiao
-
-> 
-> Cheers,
-> Jes
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Phil
