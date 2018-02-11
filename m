@@ -1,39 +1,47 @@
-From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
+From: Marc MERLIN <marc@merlins.org>
 Subject: Re: force remapping a pending sector in sw raid5 array
-Date: Sat, 10 Feb 2018 22:43:04 +0100
-Message-ID: <1934212.TzpEgCIeIR@matkor-lenovo>
-References: <20180206181416.amo6geclrvc6ylrf@merlins.org> <20180209192928.vliiwkv6q76jf6jp@merlins.org> <1227ce39-31af-22f2-f4fa-de85466f05c7@turmel.org>
+Date: Sun, 11 Feb 2018 07:41:58 -0800
+Message-ID: <20180211154158.qiddefzyhm7y2p42@merlins.org>
+References: <20180206181416.amo6geclrvc6ylrf@merlins.org>
+ <20180209192928.vliiwkv6q76jf6jp@merlins.org>
+ <1227ce39-31af-22f2-f4fa-de85466f05c7@turmel.org>
+ <1934212.TzpEgCIeIR@matkor-lenovo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1227ce39-31af-22f2-f4fa-de85466f05c7@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <1934212.TzpEgCIeIR@matkor-lenovo>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Marc MERLIN <marc@merlins.org>, Kay Diederichs <kay.diederichs@uni-konstanz.de>, Andreas Klauer <Andreas.Klauer@metamorpher.de>, Adam Goryachev <mailinglists@websitemanagers.com.au>, Roger Heflin <rogerheflin@gmail.com>, linux-raid@vger.kernel.org
+To: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
+Cc: Phil Turmel <philip@turmel.org>, Kay Diederichs <kay.diederichs@uni-konstanz.de>, Andreas Klauer <Andreas.Klauer@metamorpher.de>, Adam Goryachev <mailinglists@websitemanagers.com.au>, Roger Heflin <rogerheflin@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 09 of February 2018 15:13:26 Phil Turmel wrote:
-> If you have bad block lists enabled in your array, MD will *never* tr=
-y
-> to fix the underlying sectors
+As a last update on those drives, sadly they seem to have real problems
+with SMART, which is why I was confused when using them.
 
-As far I was able to find, failed write marks sector in BBL.=20
-Does data is saved under different location when such write fails for l=
-ater=20
-reads?
-Failed read marks sector in BBL too?=20
+myth:~# badblocks -fsvn -b512 /dev/sdf
+/dev/sdf is apparently in use by the system; badblocks forced anyway.
+Checking for bad blocks in non-destructive read-write mode
+From block 0 to 3131110575
+Checking for bad blocks (non-destructive read-write test)
+Testing with random pattern: done                                                 
+Pass completed, 0 bad blocks found. (0/0/0 errors)
 
-I am surprised to notice that I have plenty of sectors in BBL in some a=
-rrays=20
-which SMART reports be quite healthy, and all members passing short/lon=
-g SMART=20
-tests ... =20
-=20
---=20
-Mateusz Korniak
-"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
-=BCni=C5=9B,
- =09kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
-=09=09=09=09Nikos Kazantzakis - "Grek Zorba"
+That means a full read/write scan ran ok.
+Yet:
+196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
+197 Current_Pending_Sector  0x0032   200   200   000    Old_age   Always       -       7
 
+7 sectors still marked as pending. This makes no sense...
+
+As far as I can tell, SMART is just broken on those drives, and they're
+going back to where I got them from.
+
+Thanks all for the replies and helping me confirm this.
+
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                       | PGP 7F55D5F27AAF9D08
