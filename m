@@ -1,49 +1,34 @@
-From: Phil Turmel <philip@turmel.org>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Automatically start two-level mdadm RAID arrays (i.e. RAID 60) on
  boot?
-Date: Thu, 15 Feb 2018 16:51:22 -0500
-Message-ID: <4ebbb6bf-70a9-fb85-1b9f-82850a187e47@turmel.org>
+Date: Fri, 16 Feb 2018 09:41:56 +0800
+Message-ID: <39e0bf6b-4280-590c-9d96-013c70d4e0a4@fnarfbargle.com>
 References: <CAA43vkUG8LrMUjazeYFtGVKVuTvrYRPe-UcPb21r=xeYpctpmg@mail.gmail.com>
  <20180216020217.2a9c7690@natsu>
+ <4ebbb6bf-70a9-fb85-1b9f-82850a187e47@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20180216020217.2a9c7690@natsu>
-Content-Language: en-GB
+In-Reply-To: <4ebbb6bf-70a9-fb85-1b9f-82850a187e47@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>, Sean Caron <scaron@umich.edu>
+To: Phil Turmel <philip@turmel.org>, Roman Mamedov <rm@romanrm.net>, Sean Caron <scaron@umich.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/15/2018 04:02 PM, Roman Mamedov wrote:
-> On Thu, 15 Feb 2018 15:41:37 -0500
-> Sean Caron <scaron@umich.edu> wrote:
+On 16/02/18 05:51, Phil Turmel wrote:
 > 
->> Hi all,
->>
->> My site is very happily using MD RAID arrays constructed in two
->> levels. That is to say, we do RAID 60 by constructing an mdadm RAID 0
->> out of a number of mdadm RAID 6 strings.
->>
->> These work great but one thing we have found and been living with is
->> that, when the system boots, mdadm will automatically start all the
->> RAID 6 strings, but it will not automatically start the top level RAID
->> 0 container. The machine pauses on boot ("Hit S to skip, M to manually
->> resolve") trying to mount the RAID because the device is not
->> available, and a sys admin needs to manually go to the console and
->> start the top level RAID 0 to continue the boot.
-> 
-> I had RAID5/6 with some members being RAID0s. IIRC it was a simple matter of
-> listing them in the correct order of initialization in mdadm.conf. Not sure if
-> this was strictly required, just that I did so right away (expecting that it
-> would be), and everything simply worked.
-> 
-> On the other hand, these days you likely have systemd, and it never misses its
-> chance to make people's lives much more interesting than that.
-> 
+> No, it sounds like an old distro that isn't using udev and incremental
+> assembly.  I don't know of a solution.
 
-No, it sounds like an old distro that isn't using udev and incremental
-assembly.  I don't know of a solution.
+I use several of those (old distros that is). In the initramfs mdadm 
+waits for the devices to become available, the starts the arrays in 
+order as listed in the mdadm.conf. I've never had an issue failing to 
+start a stacked array and I don't use incremental assembly.
 
-Phil
+You do need to make sure they are listed in the correct order in the 
+config file, but even mdadm --detail --scan seems to spit out the arrays 
+in the correct order (or maybe I just get lucky).
+
+Brad
