@@ -1,91 +1,267 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] MD: Free bioset when md_run fails
-Date: Sat, 17 Feb 2018 13:08:41 -0800
-Message-ID: <20180217210841.2ognsi2mwwu5wk65@kernel.org>
-References: <1516767458-6542-1-git-send-email-xni@redhat.com>
+Subject: Re: [RFC PATCH] MD: fix lock contention for flush bios
+Date: Sat, 17 Feb 2018 13:22:06 -0800
+Message-ID: <20180217212206.lkmkym4aelpvn2no@kernel.org>
+References: <1516761834-4701-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1516767458-6542-1-git-send-email-xni@redhat.com>
+In-Reply-To: <1516761834-4701-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, ming.lei@redhat.com, ncroxon@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, Jan 24, 2018 at 12:17:38PM +0800, Xiao Ni wrote:
+On Wed, Jan 24, 2018 at 10:43:54AM +0800, Xiao Ni wrote:
+> There is a lock contention when there are many processes which send flush bios
+> to md device. eg. Create many lvs on one raid device and mkfs.xfs on each lv.
+> 
+> Now it just can handle flush request sequentially. It needs to wait mddev->flush_bio
+> to be NULL, otherwise get mddev->lock.
+> 
+> This patch remove mddev->flush_bio and allocat one bio for each flush bio.
+> I did a test with command dbench -s 128 -t 4800. This is the test result:
+> 
+> =================Before the patch============================
+> 
+>  Operation      Count    AvgLat    MaxLat
+>  ----------------------------------------
+>  NTCreateX     124271     5.128 12752.344
+>  Close          96922     0.645  6250.826
+>  Rename          5141     1.556  6747.033
+>  Unlink         20283     5.045 12752.294
+>  Qpathinfo     111872     0.012   250.069
+>  Qfileinfo      25684     0.004     0.293
+>  Qfsinfo        18535     0.007     0.646
+>  Sfileinfo      11763     0.014     0.571
+>  Find           41018     0.026     0.869
+>  WriteX         88616  6750.094 80740.875
+>  ReadX         179250     0.018  1749.302
+>  LockX            328     0.008     0.042
+>  UnlockX          328     0.004     0.023
+>  Flush           9650  1688.288 38998.814
+> 
+> Throughput 1.01668 MB/sec (sync open)  128 clients  128 procs  max_latency=80740.883 ms
+> 
+> ========================after patch============================
+>  128  cleanup 600 sec
+>    0  cleanup 600 sec
+> 
+>  Operation      Count    AvgLat    MaxLat
+>  ----------------------------------------
+>  NTCreateX      52444     1.403  1499.920
+>  Close          45740     0.035  1000.301
+>  Rename          2090     0.073     1.591
+>  Unlink          5032     5.855  1251.375
+>  Qpathinfo      44493     0.167   501.498
+>  Qfileinfo      16261     0.004     0.577
+>  Qfsinfo         5887     0.011     1.133
+>  Sfileinfo       6303     0.022     1.277
+>  Find           15321     0.034     1.041
+>  WriteX         62730  1197.684  3247.813
+>  ReadX          60379     0.013     2.408
+>  LockX             48     0.010     0.039
+>  UnlockX           48     0.004     0.006
+>  Flush           4370   382.070   999.735
+> 
+> Throughput 5.06007 MB/sec (sync open)  128 clients  128 procs  max_latency=3247.823 ms
+> 
+> The test was did on one raid10 with 4 SSDs.
+> 
+> Suggested-by: Ming Lei <ming.lei@redhat.com>
 > Signed-off-by: Xiao Ni <xni@redhat.com>
-applied, thanks
-
 > ---
->  drivers/md/md.c | 26 +++++++++++++++++++++-----
->  1 file changed, 21 insertions(+), 5 deletions(-)
+>  drivers/md/md.c | 105 +++++++++++++++++++++++++-------------------------------
+>  drivers/md/md.h |  14 ++++----
+>  2 files changed, 54 insertions(+), 65 deletions(-)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1e562f5..f57b3a9 100644
+> index 4e4dee0..1e562f5 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -5485,8 +5485,10 @@ int md_run(struct mddev *mddev)
->  	}
->  	if (mddev->sync_set == NULL) {
->  		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
-> -		if (!mddev->sync_set)
-> -			return -ENOMEM;
-> +		if (!mddev->sync_set) {
-> +			err = -ENOMEM;
-> +			goto abort;
-> +		}
->  	}
->  
->  	spin_lock(&pers_lock);
-> @@ -5499,7 +5501,8 @@ int md_run(struct mddev *mddev)
->  		else
->  			pr_warn("md: personality for level %s is not loaded!\n",
->  				mddev->clevel);
-> -		return -EINVAL;
-> +		err = -EINVAL;
-> +		goto abort;
->  	}
->  	spin_unlock(&pers_lock);
->  	if (mddev->level != pers->level) {
-> @@ -5512,7 +5515,8 @@ int md_run(struct mddev *mddev)
->  	    pers->start_reshape == NULL) {
->  		/* This personality cannot handle reshaping... */
->  		module_put(pers->owner);
-> -		return -EINVAL;
-> +		err = -EINVAL;
-> +		goto abort;
->  	}
->  
->  	if (pers->sync_request) {
-> @@ -5586,7 +5590,7 @@ int md_run(struct mddev *mddev)
->  		mddev->private = NULL;
->  		module_put(pers->owner);
->  		bitmap_destroy(mddev);
-> -		return err;
-> +		goto abort;
->  	}
->  	if (mddev->queue) {
->  		bool nonrot = true;
-> @@ -5648,6 +5652,18 @@ int md_run(struct mddev *mddev)
->  	sysfs_notify_dirent_safe(mddev->sysfs_action);
->  	sysfs_notify(&mddev->kobj, NULL, "degraded");
->  	return 0;
-> +
-> +abort:
-> +	if (mddev->bio_set) {
-> +		bioset_free(mddev->bio_set);
-> +		mddev->bio_set = NULL;
-> +	}
-> +	if (mddev->sync_set) {
-> +		bioset_free(mddev->sync_set);
-> +		mddev->sync_set = NULL;
-> +	}
-> +
-> +	return err;
+> @@ -409,33 +409,61 @@ static int md_congested(void *data, int bits)
+>  	return mddev_congested(mddev, bits);
 >  }
->  EXPORT_SYMBOL_GPL(md_run);
 >  
+> -/*
+> - * Generic flush handling for md
+> - */
+> +static void submit_flushes(struct work_struct *ws)
+> +{
+> +	struct flush_info *fi = container_of(ws, struct flush_info, flush_work);
+> +	struct mddev *mddev = fi->mddev;
+> +	struct bio *bio = fi->bio;
+> +
+> +	bio->bi_opf &= ~REQ_PREFLUSH;
+> +	md_handle_request(mddev, bio);
+>  
+> -static void md_end_flush(struct bio *bio)
+> +	kfree(fi);
+> +}
+> +
+> +
+> +static void md_end_flush(struct bio *flush_bio)
+>  {
+> -	struct md_rdev *rdev = bio->bi_private;
+> -	struct mddev *mddev = rdev->mddev;
+> +	struct flush_info *fi = flush_bio->bi_private;
+> +	struct bio *bio = fi->bio;
+> +	struct mddev *mddev = fi->mddev;
+> +	struct md_rdev *rdev;
+>  
+> -	rdev_dec_pending(rdev, mddev);
+> +	rcu_read_lock();
+> +		rdev_for_each_rcu(rdev, mddev)
+> +			rdev_dec_pending(rdev, mddev);
+> +	rcu_read_unlock();
+>  
+> -	if (atomic_dec_and_test(&mddev->flush_pending)) {
+> -		/* The pre-request flush has finished */
+> -		queue_work(md_wq, &mddev->flush_work);
+> +	if (bio->bi_iter.bi_size == 0)
+> +		/* an empty barrier - all done */
+> +		bio_endio(bio);
+> +	else {
+> +		INIT_WORK(&fi->flush_work, submit_flushes);
+> +		queue_work(md_wq, &fi->flush_work);
+>  	}
+> -	bio_put(bio);
+>  }
+>  
+> -static void md_submit_flush_data(struct work_struct *ws);
+> -
+> -static void submit_flushes(struct work_struct *ws)
+> +void md_flush_request(struct mddev *mddev, struct bio *bio)
+>  {
+> -	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
+>  	struct md_rdev *rdev;
+> +	struct flush_info *fi;
+> +	struct bio *f_bio;
+> +
+> +	fi = kmalloc(sizeof(*fi), GFP_NOIO);
+> +	if (fi == NULL) {
+> +		pr_err("md: %s failed to alloc memory for flush bio\n",
+> +		       mdname(mddev));
+> +		bio->bi_status = BLK_STS_IOERR;
+> +		bio_endio(bio);
+> +	}
+
+So we allocate flush_info for each thread which calling into flush. This is a
+little concern to me. I'm wondering if this optimization is really necessary.
+In practice, flush is called very rare.
+
+Thanks,
+Shaohua
+> +	fi->bio = bio;
+> +	fi->mddev = mddev;
+> +	f_bio = &fi->flush_bio;
+> +	bio_init(f_bio, NULL, 0);
+> +	f_bio->bi_private = fi;
+> +	f_bio->bi_end_io = md_end_flush;
+>  
+> -	INIT_WORK(&mddev->flush_work, md_submit_flush_data);
+> -	atomic_set(&mddev->flush_pending, 1);
+>  	rcu_read_lock();
+>  	rdev_for_each_rcu(rdev, mddev)
+>  		if (rdev->raid_disk >= 0 &&
+> @@ -449,54 +477,16 @@ static void submit_flushes(struct work_struct *ws)
+>  			atomic_inc(&rdev->nr_pending);
+>  			rcu_read_unlock();
+>  			bi = bio_alloc_mddev(GFP_NOIO, 0, mddev);
+> -			bi->bi_end_io = md_end_flush;
+> -			bi->bi_private = rdev;
+>  			bio_set_dev(bi, rdev->bdev);
+>  			bi->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
+> -			atomic_inc(&mddev->flush_pending);
+> +			bio_chain(bi, f_bio);
+>  			submit_bio(bi);
+>  			rcu_read_lock();
+>  			rdev_dec_pending(rdev, mddev);
+>  		}
+>  	rcu_read_unlock();
+> -	if (atomic_dec_and_test(&mddev->flush_pending))
+> -		queue_work(md_wq, &mddev->flush_work);
+> -}
+> -
+> -static void md_submit_flush_data(struct work_struct *ws)
+> -{
+> -	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
+> -	struct bio *bio = mddev->flush_bio;
+> -
+> -	/*
+> -	 * must reset flush_bio before calling into md_handle_request to avoid a
+> -	 * deadlock, because other bios passed md_handle_request suspend check
+> -	 * could wait for this and below md_handle_request could wait for those
+> -	 * bios because of suspend check
+> -	 */
+> -	mddev->flush_bio = NULL;
+> -	wake_up(&mddev->sb_wait);
+> -
+> -	if (bio->bi_iter.bi_size == 0)
+> -		/* an empty barrier - all done */
+> -		bio_endio(bio);
+> -	else {
+> -		bio->bi_opf &= ~REQ_PREFLUSH;
+> -		md_handle_request(mddev, bio);
+> -	}
+> -}
+> -
+> -void md_flush_request(struct mddev *mddev, struct bio *bio)
+> -{
+> -	spin_lock_irq(&mddev->lock);
+> -	wait_event_lock_irq(mddev->sb_wait,
+> -			    !mddev->flush_bio,
+> -			    mddev->lock);
+> -	mddev->flush_bio = bio;
+> -	spin_unlock_irq(&mddev->lock);
+>  
+> -	INIT_WORK(&mddev->flush_work, submit_flushes);
+> -	queue_work(md_wq, &mddev->flush_work);
+> +	bio_endio(f_bio);
+>  }
+>  EXPORT_SYMBOL(md_flush_request);
+>  
+> @@ -555,7 +545,6 @@ void mddev_init(struct mddev *mddev)
+>  	atomic_set(&mddev->openers, 0);
+>  	atomic_set(&mddev->active_io, 0);
+>  	spin_lock_init(&mddev->lock);
+> -	atomic_set(&mddev->flush_pending, 0);
+>  	init_waitqueue_head(&mddev->sb_wait);
+>  	init_waitqueue_head(&mddev->recovery_wait);
+>  	mddev->reshape_position = MaxSector;
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 7d6bcf0..16e7f03 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -252,6 +252,13 @@ enum mddev_sb_flags {
+>  	MD_SB_NEED_REWRITE,	/* metadata write needs to be repeated */
+>  };
+>  
+> +struct flush_info {
+> +	struct bio *bio;
+> +	struct bio flush_bio;
+> +	struct mddev *mddev;
+> +	struct work_struct flush_work;
+> +};
+> +
+>  struct mddev {
+>  	void				*private;
+>  	struct md_personality		*pers;
+> @@ -457,13 +464,6 @@ struct mddev {
+>  						   * metadata and bitmap writes
+>  						   */
+>  
+> -	/* Generic flush handling.
+> -	 * The last to finish preflush schedules a worker to submit
+> -	 * the rest of the request (without the REQ_PREFLUSH flag).
+> -	 */
+> -	struct bio *flush_bio;
+> -	atomic_t flush_pending;
+> -	struct work_struct flush_work;
+>  	struct work_struct event_work;	/* used by dm to report failure event */
+>  	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
+>  	struct md_cluster_info		*cluster_info;
 > -- 
 > 2.7.4
 > 
