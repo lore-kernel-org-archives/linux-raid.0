@@ -1,267 +1,110 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: Re: [RFC PATCH] MD: fix lock contention for flush bios
-Date: Sat, 17 Feb 2018 13:22:06 -0800
-Message-ID: <20180217212206.lkmkym4aelpvn2no@kernel.org>
-References: <1516761834-4701-1-git-send-email-xni@redhat.com>
+Subject: Re: [PATCH] md: fix md_write_start() deadlock w/o
+	metadata devices
+Date: Sun, 18 Feb 2018 10:12:21 -0800
+Message-ID: <20180218181221.a5l5nzgav7s6smor@kernel.org>
+References: <054eff295e0cd2df2b11a3f9ba3b3d66e89beb47.1517609290.git.heinzm@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <1516761834-4701-1-git-send-email-xni@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, ming.lei@redhat.com, ncroxon@redhat.com
+In-Reply-To: <054eff295e0cd2df2b11a3f9ba3b3d66e89beb47.1517609290.git.heinzm@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Heinz Mauelshagen <heinzm@redhat.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 24, 2018 at 10:43:54AM +0800, Xiao Ni wrote:
-> There is a lock contention when there are many processes which send flush bios
-> to md device. eg. Create many lvs on one raid device and mkfs.xfs on each lv.
+On Fri, Feb 02, 2018 at 11:13:19PM +0100, Heinz Mauelshagen wrote:
+> If no metadata devices are configured on raid1/4/5/6/10
+> (e.g. via dm-raid), md_write_start() unconditionally waits
+> for superblocks to be written thus deadlocking.
 > 
-> Now it just can handle flush request sequentially. It needs to wait mddev->flush_bio
-> to be NULL, otherwise get mddev->lock.
+> Fix introduces mddev->has_superblocks bool, defines it in md_run()
+> and checks for it in md_write_start() to conditionally avoid waiting.
 > 
-> This patch remove mddev->flush_bio and allocat one bio for each flush bio.
-> I did a test with command dbench -s 128 -t 4800. This is the test result:
+> Once on it, check for non-existing superblocks in md_super_write().
 > 
-> =================Before the patch============================
-> 
->  Operation      Count    AvgLat    MaxLat
->  ----------------------------------------
->  NTCreateX     124271     5.128 12752.344
->  Close          96922     0.645  6250.826
->  Rename          5141     1.556  6747.033
->  Unlink         20283     5.045 12752.294
->  Qpathinfo     111872     0.012   250.069
->  Qfileinfo      25684     0.004     0.293
->  Qfsinfo        18535     0.007     0.646
->  Sfileinfo      11763     0.014     0.571
->  Find           41018     0.026     0.869
->  WriteX         88616  6750.094 80740.875
->  ReadX         179250     0.018  1749.302
->  LockX            328     0.008     0.042
->  UnlockX          328     0.004     0.023
->  Flush           9650  1688.288 38998.814
-> 
-> Throughput 1.01668 MB/sec (sync open)  128 clients  128 procs  max_latency=80740.883 ms
-> 
-> ========================after patch============================
->  128  cleanup 600 sec
->    0  cleanup 600 sec
-> 
->  Operation      Count    AvgLat    MaxLat
->  ----------------------------------------
->  NTCreateX      52444     1.403  1499.920
->  Close          45740     0.035  1000.301
->  Rename          2090     0.073     1.591
->  Unlink          5032     5.855  1251.375
->  Qpathinfo      44493     0.167   501.498
->  Qfileinfo      16261     0.004     0.577
->  Qfsinfo         5887     0.011     1.133
->  Sfileinfo       6303     0.022     1.277
->  Find           15321     0.034     1.041
->  WriteX         62730  1197.684  3247.813
->  ReadX          60379     0.013     2.408
->  LockX             48     0.010     0.039
->  UnlockX           48     0.004     0.006
->  Flush           4370   382.070   999.735
-> 
-> Throughput 5.06007 MB/sec (sync open)  128 clients  128 procs  max_latency=3247.823 ms
-> 
-> The test was did on one raid10 with 4 SSDs.
-> 
-> Suggested-by: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Xiao Ni <xni@redhat.com>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=198647
+> Fixes: cc27b0c78c796 ("md: fix deadlock between mddev_suspend() and md_write_start()")
+
+Applied, thanks! 
+> Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
 > ---
->  drivers/md/md.c | 105 +++++++++++++++++++++++++-------------------------------
->  drivers/md/md.h |  14 ++++----
->  2 files changed, 54 insertions(+), 65 deletions(-)
+>  drivers/md/md.c | 10 ++++++++++
+>  drivers/md/md.h |  2 ++
+>  2 files changed, 12 insertions(+)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4e4dee0..1e562f5 100644
+> index 0081ace39a64..8a7e7034962c 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -409,33 +409,61 @@ static int md_congested(void *data, int bits)
->  	return mddev_congested(mddev, bits);
->  }
+> @@ -801,6 +801,9 @@ void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
+>  	struct bio *bio;
+>  	int ff = 0;
 >  
-> -/*
-> - * Generic flush handling for md
-> - */
-> +static void submit_flushes(struct work_struct *ws)
-> +{
-> +	struct flush_info *fi = container_of(ws, struct flush_info, flush_work);
-> +	struct mddev *mddev = fi->mddev;
-> +	struct bio *bio = fi->bio;
+> +	if (!page)
+> +		return;
 > +
-> +	bio->bi_opf &= ~REQ_PREFLUSH;
-> +	md_handle_request(mddev, bio);
+>  	if (test_bit(Faulty, &rdev->flags))
+>  		return;
 >  
-> -static void md_end_flush(struct bio *bio)
-> +	kfree(fi);
-> +}
-> +
-> +
-> +static void md_end_flush(struct bio *flush_bio)
->  {
-> -	struct md_rdev *rdev = bio->bi_private;
-> -	struct mddev *mddev = rdev->mddev;
-> +	struct flush_info *fi = flush_bio->bi_private;
-> +	struct bio *bio = fi->bio;
-> +	struct mddev *mddev = fi->mddev;
-> +	struct md_rdev *rdev;
->  
-> -	rdev_dec_pending(rdev, mddev);
-> +	rcu_read_lock();
-> +		rdev_for_each_rcu(rdev, mddev)
-> +			rdev_dec_pending(rdev, mddev);
-> +	rcu_read_unlock();
->  
-> -	if (atomic_dec_and_test(&mddev->flush_pending)) {
-> -		/* The pre-request flush has finished */
-> -		queue_work(md_wq, &mddev->flush_work);
-> +	if (bio->bi_iter.bi_size == 0)
-> +		/* an empty barrier - all done */
-> +		bio_endio(bio);
-> +	else {
-> +		INIT_WORK(&fi->flush_work, submit_flushes);
-> +		queue_work(md_wq, &fi->flush_work);
->  	}
-> -	bio_put(bio);
->  }
->  
-> -static void md_submit_flush_data(struct work_struct *ws);
-> -
-> -static void submit_flushes(struct work_struct *ws)
-> +void md_flush_request(struct mddev *mddev, struct bio *bio)
->  {
-> -	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
->  	struct md_rdev *rdev;
-> +	struct flush_info *fi;
-> +	struct bio *f_bio;
-> +
-> +	fi = kmalloc(sizeof(*fi), GFP_NOIO);
-> +	if (fi == NULL) {
-> +		pr_err("md: %s failed to alloc memory for flush bio\n",
-> +		       mdname(mddev));
-> +		bio->bi_status = BLK_STS_IOERR;
-> +		bio_endio(bio);
-> +	}
-
-So we allocate flush_info for each thread which calling into flush. This is a
-little concern to me. I'm wondering if this optimization is really necessary.
-In practice, flush is called very rare.
-
-Thanks,
-Shaohua
-> +	fi->bio = bio;
-> +	fi->mddev = mddev;
-> +	f_bio = &fi->flush_bio;
-> +	bio_init(f_bio, NULL, 0);
-> +	f_bio->bi_private = fi;
-> +	f_bio->bi_end_io = md_end_flush;
->  
-> -	INIT_WORK(&mddev->flush_work, md_submit_flush_data);
-> -	atomic_set(&mddev->flush_pending, 1);
->  	rcu_read_lock();
->  	rdev_for_each_rcu(rdev, mddev)
->  		if (rdev->raid_disk >= 0 &&
-> @@ -449,54 +477,16 @@ static void submit_flushes(struct work_struct *ws)
->  			atomic_inc(&rdev->nr_pending);
->  			rcu_read_unlock();
->  			bi = bio_alloc_mddev(GFP_NOIO, 0, mddev);
-> -			bi->bi_end_io = md_end_flush;
-> -			bi->bi_private = rdev;
->  			bio_set_dev(bi, rdev->bdev);
->  			bi->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
-> -			atomic_inc(&mddev->flush_pending);
-> +			bio_chain(bi, f_bio);
->  			submit_bio(bi);
->  			rcu_read_lock();
->  			rdev_dec_pending(rdev, mddev);
+> @@ -5452,6 +5455,7 @@ int md_run(struct mddev *mddev)
+>  	 * the only valid external interface is through the md
+>  	 * device.
+>  	 */
+> +	mddev->has_superblocks = false;
+>  	rdev_for_each(rdev, mddev) {
+>  		if (test_bit(Faulty, &rdev->flags))
+>  			continue;
+> @@ -5465,6 +5469,9 @@ int md_run(struct mddev *mddev)
+>  				set_disk_ro(mddev->gendisk, 1);
 >  		}
+>  
+> +		if (rdev->sb_page)
+> +			mddev->has_superblocks = true;
+> +
+>  		/* perform some consistency tests on the device.
+>  		 * We don't want the data to overlap the metadata,
+>  		 * Internal Bitmap issues have been handled elsewhere.
+> @@ -8049,6 +8056,7 @@ EXPORT_SYMBOL(md_done_sync);
+>  bool md_write_start(struct mddev *mddev, struct bio *bi)
+>  {
+>  	int did_change = 0;
+> +
+>  	if (bio_data_dir(bi) != WRITE)
+>  		return true;
+>  
+> @@ -8081,6 +8089,8 @@ bool md_write_start(struct mddev *mddev, struct bio *bi)
 >  	rcu_read_unlock();
-> -	if (atomic_dec_and_test(&mddev->flush_pending))
-> -		queue_work(md_wq, &mddev->flush_work);
-> -}
-> -
-> -static void md_submit_flush_data(struct work_struct *ws)
-> -{
-> -	struct mddev *mddev = container_of(ws, struct mddev, flush_work);
-> -	struct bio *bio = mddev->flush_bio;
-> -
-> -	/*
-> -	 * must reset flush_bio before calling into md_handle_request to avoid a
-> -	 * deadlock, because other bios passed md_handle_request suspend check
-> -	 * could wait for this and below md_handle_request could wait for those
-> -	 * bios because of suspend check
-> -	 */
-> -	mddev->flush_bio = NULL;
-> -	wake_up(&mddev->sb_wait);
-> -
-> -	if (bio->bi_iter.bi_size == 0)
-> -		/* an empty barrier - all done */
-> -		bio_endio(bio);
-> -	else {
-> -		bio->bi_opf &= ~REQ_PREFLUSH;
-> -		md_handle_request(mddev, bio);
-> -	}
-> -}
-> -
-> -void md_flush_request(struct mddev *mddev, struct bio *bio)
-> -{
-> -	spin_lock_irq(&mddev->lock);
-> -	wait_event_lock_irq(mddev->sb_wait,
-> -			    !mddev->flush_bio,
-> -			    mddev->lock);
-> -	mddev->flush_bio = bio;
-> -	spin_unlock_irq(&mddev->lock);
->  
-> -	INIT_WORK(&mddev->flush_work, submit_flushes);
-> -	queue_work(md_wq, &mddev->flush_work);
-> +	bio_endio(f_bio);
->  }
->  EXPORT_SYMBOL(md_flush_request);
->  
-> @@ -555,7 +545,6 @@ void mddev_init(struct mddev *mddev)
->  	atomic_set(&mddev->openers, 0);
->  	atomic_set(&mddev->active_io, 0);
->  	spin_lock_init(&mddev->lock);
-> -	atomic_set(&mddev->flush_pending, 0);
->  	init_waitqueue_head(&mddev->sb_wait);
->  	init_waitqueue_head(&mddev->recovery_wait);
->  	mddev->reshape_position = MaxSector;
+>  	if (did_change)
+>  		sysfs_notify_dirent_safe(mddev->sysfs_state);
+> +	if (!mddev->has_superblocks)
+> +		return true;
+>  	wait_event(mddev->sb_wait,
+>  		   !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags) ||
+>  		   mddev->suspended);
 > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 7d6bcf0..16e7f03 100644
+> index 58cd20a5e85e..fbc925cce810 100644
 > --- a/drivers/md/md.h
 > +++ b/drivers/md/md.h
-> @@ -252,6 +252,13 @@ enum mddev_sb_flags {
->  	MD_SB_NEED_REWRITE,	/* metadata write needs to be repeated */
->  };
->  
-> +struct flush_info {
-> +	struct bio *bio;
-> +	struct bio flush_bio;
-> +	struct mddev *mddev;
-> +	struct work_struct flush_work;
-> +};
-> +
->  struct mddev {
->  	void				*private;
->  	struct md_personality		*pers;
-> @@ -457,13 +464,6 @@ struct mddev {
->  						   * metadata and bitmap writes
->  						   */
->  
-> -	/* Generic flush handling.
-> -	 * The last to finish preflush schedules a worker to submit
-> -	 * the rest of the request (without the REQ_PREFLUSH flag).
-> -	 */
-> -	struct bio *flush_bio;
-> -	atomic_t flush_pending;
-> -	struct work_struct flush_work;
->  	struct work_struct event_work;	/* used by dm to report failure event */
+> @@ -468,6 +468,8 @@ struct mddev {
 >  	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
 >  	struct md_cluster_info		*cluster_info;
+>  	unsigned int			good_device_nr;	/* good device num within cluster raid */
+> +
+> +	bool	has_superblocks:1;
+>  };
+>  
+>  enum recovery_flags {
 > -- 
-> 2.7.4
+> 2.14.3
 > 
