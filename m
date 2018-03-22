@@ -1,67 +1,101 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 00/47] arch-removal: device drivers
-Date: Thu, 15 Mar 2018 10:09:43 +0100
-Message-ID: <CAK8P3a151M35ywHyABt2KFypPaiZROYuL10ztChwjSwqS9haHg@mail.gmail.com>
-References: <20180314153603.3127932-1-arnd@arndb.de>
- <20180315063238.3303b8d1@bbrezillon>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
-In-Reply-To: <20180315063238.3303b8d1@bbrezillon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
-List-Post: <mailto:linux-mtd@lists.infradead.org>
-List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
-Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
-To: Boris Brezillon <boris.brezillon@bootlin.com>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>, linux-usb@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>, linux-iio@vger.kernel.org, Viresh Kumar <viresh.kumar@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, Alexandre Belloni <alexandre.belloni@bootlin.com>, IDE-ML <linux-ide@vger.kernel.org>, Networking <netdev@vger.kernel.org>, linux-mtd <linux-mtd@lists.infradead.org>, linux-i2c@vger.kernel.org, linux-rtc@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>, Herbert Xu <herbert@gondor.apana.org.au>, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, linux-mmc <linux-mmc@vger.kernel.org>, Shaohua Li <shli@kernel.org>, wg@grandegger.com, "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" <linux-crypto@vger.kernel.org>, linux-pwm@vger
+From: =?utf-8?Q?Javier_Gonz=C3=A1lez?= <javier@javigon.com>
+Subject: problem with bio handling on raid5 and pblk
+Date: Thu, 22 Mar 2018 15:34:37 +0100
+Message-ID: <66350920-EC5E-447F-B5DF-0F3C2CDEAA65@javigon.com>
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Content-Type: multipart/signed;
+        boundary="Apple-Mail=_7E61F688-60F6-4A74-827F-1A88F10C6422";
+        protocol="application/pgp-signature";
+        micalg=pgp-sha512
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, shli@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Huaicheng Li <huaicheng@cs.uchicago.edu>
 List-Id: linux-raid.ids
 
-On Thu, Mar 15, 2018 at 6:32 AM, Boris Brezillon
-<boris.brezillon@bootlin.com> wrote:
-> Hi Arnd,
->
-> On Wed, 14 Mar 2018 16:35:13 +0100
-> Arnd Bergmann <arnd@arndb.de> wrote:
->
->> Hi driver maintainers,
->>
->> I just posted one series with the removal of eight architectures,
->> see https://lkml.org/lkml/2018/3/14/505 for details, or
->> https://lwn.net/Articles/748074/ for more background.
->>
->> These are the device drivers that go along with them. I have already
->> picked up the drivers for arch/metag/ into my tree, they were reviewed
->> earlier.
->>
->> Please let me know if you have any concerns with the patch, or if you
->> prefer to pick up the patches in your respective trees.  I created
->> the patches with 'git format-patch -D', so they will not apply without
->> manually removing those files.
->>
->> For anything else, I'd keep the removal patches in my asm-generic tree
->> and will send a pull request for 4.17 along with the actual arch removal.
->>
 
->
-> If you don't mind, I'd like to take the mtd patches through the MTD
-> tree. As you've probably noticed, nand code has been moved around and
-> it's easier for me to carry those 2 simple changes in my tree than
-> creating an immutable branch.
->
-> Let me know if this is a problem.
+--Apple-Mail=_7E61F688-60F6-4A74-827F-1A88F10C6422
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
 
-Sounds good, I've removed the two patches from my tree now.
-I've already sent a version of those that is based on your latest tree to
-you for inclusion.
+Hi,
 
-      Arnd
+I have been looking into a bug report when using pblk and raid5 on top
+and I am having problems understanding if the problem is in pblk's bio
+handling or on raid5's bio assumptions on the completion path.
 
-______________________________________________________
-Linux MTD discussion mailing list
-http://lists.infradead.org/mailman/listinfo/linux-mtd/
+The problem occurs on the read path. In pblk, we take a reference to
+every read bio as it enters, and release it after completing the bio.
+
+   generic_make_request()
+   pblk_submit_read()
+     bio_get()
+     ...
+     bio_endio()
+     bio_put()
+
+The problem seems to be that on raid5's bi_end_io completion path,
+raid5_end_read_request(), bio_reset() is called. When put together
+with pblk's bio handling:
+
+   generic_make_request()
+   pblk_submit_read()
+     bio_get()
+     ...
+     bio_endio()
+     raid5_end_read_request()
+       bio_reset()
+     bio_put()
+
+it results in the newly reset bio being put immediately, thus freed.
+When the bio is reused then, we have an invalid pointer. In the report
+we received things crash at BUG_ON(bio->bi_next) at
+generic_make_request().
+
+As far as I understand, it is part of the bio normal operation for
+drivers under generic_make_request() to be able to take references and
+release them after bio completion. Thus, in this case, the assumption
+made by raid5, that it can issue a bio_reset() is incorrect. But I might
+be missing an implicit cross layer rule that we are violating in pblk.
+Any ideas?
+
+This said, after analyzing the problem from pblk's perspective, I see
+not reason to use bio_get()/bio_put() in the read path as it is at the
+pblk level that we are submitting bio_endio(), thus we cannot risk the
+bio being freed underneath us. Is this reasoning correct? I remember I
+introduced these at the time there was a bug on the aio path, which was
+not cleaning up correctly and could trigger an early bio free, but
+revisiting it now, it seems unnecessary.
+
+Thanks for the help!
+
+Javier
+
+
+--Apple-Mail=_7E61F688-60F6-4A74-827F-1A88F10C6422
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEU1dMZpvMIkj0jATvPEYBfS0leOAFAlqzvv0ACgkQPEYBfS0l
+eOCKNw//QmOPW7HQftRvCqGo7EGFfnFPmtDbwrSwFBAKMv3QJtgONYGlw/jfGW5w
+w9Gm9smOTGzcpDNjZR6sYwgO28Tdg+dkce+CbR99tsLgxhlvVUQD7lDDD9g7elow
+N0Nf5O7o8Zrm2jks3fMIf6tkPMcJry/35wF1xtZX1ZQ25e3RwK0qzmhovkFuW9Od
+rfLlOrW32/pYjt5VeIy4JTiidmEhq86gpdF6gdU7adPqBoiCBSD0Xw44izkw0Ewh
+J8MvYO11dCwmBjAsufaqnUYc2nswqoP8/rCBSdYjCUBU71dCSp+65fSp8NhqKcfl
+ZlKmzf3WoflvExIp5lZnHgRIzLYILzHlQVrdotnM/qz3M5OHw1Sg9om3bfWR7Qwq
+9c3Q73U4m7Wsl99idrItSDjNFESUQoT+Zp1UIxF48CiA2uRdYC8o4ldI90IFxyeS
+7j0fDjtZZjXnDla5d1rlIAVIZr9Ehhl4O3zLldrKxfdNz9XrqiOhgFJAc27heCW3
+g1+ENKmojNrYmtONpV2i4466ieAShPd6ZhsYZM3VubuAhJebvsy6XHamuW5+TQvk
+k43stHv9NYXl1S6d9Z6kDt2I1GnZxk6hpDNqfEge8jAnG1+3y4trfr7Q8E1r4tE1
+7oqEuzpWFRZwJbsw66Rb3N01hVokQuW832j+RsU4/pXqIqTy8VM=
+=6EuD
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_7E61F688-60F6-4A74-827F-1A88F10C6422--
