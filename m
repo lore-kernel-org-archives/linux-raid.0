@@ -1,46 +1,96 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.17-rc1
-Date: Thu, 19 Apr 2018 09:13:21 -0700
-Message-ID: <20180419161321.y46imb6tt65i4zyk@kernel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: [PATCH] md: fix two problems with setting the "re-add" device state.
+Date: Thu, 26 Apr 2018 14:46:29 +1000
+Message-ID: <87efj2mv6i.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-3 small fixes for MD:
-- md-cluster fix for faulty device from Guoqing
-- writehint fix for writebehind IO for raid1 from Mariusz
-- a live lock fix for interrupted recovery from Yufen
-Please pull!
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-The following changes since commit f8cf2f16a7c95acce497bfafa90e7c6d8397d653:
+If "re-add" is written to the "state" file for a device
+which is faulty, this has an effect similar to removing
+and re-adding the device.  It should take up the
+same slot in the array that it previously had, and
+an accelerated (e.g. bitmap-based) rebuild should happen.
 
-  Merge branch 'next-integrity' of git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/linux-security (2018-04-07 16:53:59 -0700)
+The slot that "it previously had" is determined by
+rdev->saved_raid_disk.
+However this is not set when a device fails (only when a device
+is added), and it is cleared when resync completes.
+This means that "re-add" will normally work once, but may not work a
+second time.
 
-are available in the git repository at:
+This patch includes two fixes.
+1/ when a device fails, record the ->raid_disk value in
+    ->saved_raid_disk before clearing ->raid_disk
+2/ when "re-add" is written to a device for which
+    ->saved_raid_disk is not set, fail.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.17-rc1
+I think this is suitable for stable as it can
+cause re-adding a device to be forced to do a full
+resync which takes a lot longer and so puts data at
+more risk.
 
-for you to fetch changes up to dba40d46ebf41e3f7ac9480609529bb6037a918d:
+Cc: <stable@vger.kernel.org> (v4.1)
+Fixes: 97f6cd39da22 ("md-cluster: re-add capabilities")
+Signed-off-by: NeilBrown <neilb@suse.com>
+=2D--
+ drivers/md/md.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-  raid1: copy write hint from master bio to behind bio (2018-04-09 08:54:34 -0700)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3bea45e8ccff..ecd4235c6e30 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2853,7 +2853,8 @@ state_store(struct md_rdev *rdev, const char *buf, si=
+ze_t len)
+ 			err =3D 0;
+ 		}
+ 	} else if (cmd_match(buf, "re-add")) {
+=2D		if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk =3D=3D -1)) {
++		if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk =3D=3D -1) &&
++			rdev->saved_raid_disk >=3D 0) {
+ 			/* clear_bit is performed _after_ all the devices
+ 			 * have their local Faulty bit cleared. If any writes
+ 			 * happen in the meantime in the local node, they
+@@ -8641,6 +8642,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 			if (mddev->pers->hot_remove_disk(
+ 				    mddev, rdev) =3D=3D 0) {
+ 				sysfs_unlink_rdev(mddev, rdev);
++				rdev->saved_raid_disk =3D rdev->raid_disk;
+ 				rdev->raid_disk =3D -1;
+ 				removed++;
+ 			}
+=2D-=20
+2.14.0.rc0.dirty
 
-----------------------------------------------------------------
-Guoqing Jiang (1):
-      md-cluster: don't update recovery_offset for faulty device
 
-Mariusz Dabrowski (1):
-      raid1: copy write hint from master bio to behind bio
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Yufen Yu (1):
-      md/raid1: exit sync request if MD_RECOVERY_INTR is set
+-----BEGIN PGP SIGNATURE-----
 
- drivers/md/md.c    |  6 ++++--
- drivers/md/raid1.c | 25 ++++++++++++++++++++-----
- 2 files changed, 24 insertions(+), 7 deletions(-)
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlrhWacACgkQOeye3VZi
+gbnh6xAAwFgySWHCe6ljmhD+Qu/+qbFw9MJIWlp0SoyjpZJ+ruH1Uxpa4GV7XCH4
+HrP/M5esTbd2+IjjuMzIGYYCLSdIpaO09COFTJGJwI1oaQ3Ia14kBskLYrlEoAhS
+i8UtWMOrdzUWaamcn6kc6dtCRd73U39jiZLykq0n5QBxAibTBWP/Kb0nFjx6Utw5
+SBesdJMdExYv0sI+3MiF2vrcHWgapfzOYrQtQqXGK7BemwZ0fEaN3D9us4S1LwPE
+s43rJ/N0DNlW9yBYMPTE6yMuIPm3xvXzBUM00GUDwPDDQcvwMYTNkX2neQRJQfZT
+cu0fkgs//1/ZvNp+P6LjpSuNbd0QrtKX6+YWhX9GyCsM09DXbU5cSSRGifd+PPV/
+3710Gt7LurjrubsBwUnJxR5fpYMzGIpcaOaGv/bVNNe4bTecIe/PB522ONN+MKoc
+UwITKhXScmyZ11Me4Tz0KrWU8CMRonOM6dpIGuB2JPs6hh+KEFvIrmSD6Q7DGezr
+JqvNwsy6DK/fLeeTgtAHndJKNLR3cD21tW7YN5PK9LByVQbxAB4AeRBoMiCrdK79
+zv67lsm5Y0LcIumZ2wJT7CT8Fj1VvQHEBt/uHa3IK22fzWNDfS/tHk5rCFxQa7L9
+SFooTamiJ6mCY+wjGyecv9kIgLyD2+X7Pf53VJ1VSnMvBVvBzwA=
+=cysZ
+-----END PGP SIGNATURE-----
+--=-=-=--
