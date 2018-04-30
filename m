@@ -1,83 +1,109 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH] md: fix two problems with setting the "re-add" device
- state.
-Date: Sun, 29 Apr 2018 04:44:13 -0500
-Message-ID: <2f8d2066-8b2e-dab9-d1b9-b750055d6937@suse.de>
-References: <87efj2mv6i.fsf@notabene.neil.brown.name>
+From: syzbot <syzbot+1e46a0864c1a6e9bd3d8@syzkaller.appspotmail.com>
+Subject: WARNING in md_ioctl
+Date: Sun, 29 Apr 2018 18:00:02 -0700
+Message-ID: <000000000000a52337056b065fb3@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87efj2mv6i.fsf@notabene.neil.brown.name>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, shli@kernel.org, syzkaller-bugs@googlegroups.com
 List-Id: linux-raid.ids
 
+Hello,
+
+syzbot hit the following crash on upstream commit
+c61a56ababa404961fa769a2b24229f18e461961 (Sun Apr 29 17:06:05 2018 +0000)
+Merge branch 'x86-urgent-for-linus' of  
+git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+syzbot dashboard link:  
+https://syzkaller.appspot.com/bug?extid=1e46a0864c1a6e9bd3d8
+
+C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5771999158730752
+syzkaller reproducer:  
+https://syzkaller.appspot.com/x/repro.syz?id=6399853584187392
+Raw console output:  
+https://syzkaller.appspot.com/x/log.txt?id=6389218171420672
+Kernel config:  
+https://syzkaller.appspot.com/x/.config?id=4617060493481910265
+compiler: gcc (GCC) 8.0.1 20180413 (experimental)
+
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+1e46a0864c1a6e9bd3d8@syzkaller.appspotmail.com
+It will help syzbot understand when the bug is fixed. See footer for  
+details.
+If you forward the report, please keep this part and the footer.
+
+random: sshd: uninitialized urandom read (32 bytes read)
+random: sshd: uninitialized urandom read (32 bytes read)
+random: sshd: uninitialized urandom read (32 bytes read)
+md: md0 stopped.
+md: md0 stopped.
+WARNING: CPU: 1 PID: 4511 at drivers/md/md.c:7188 md_ioctl+0x3427/0x6360  
+drivers/md/md.c:7188
+Kernel panic - not syncing: panic_on_warn set ...
+
+CPU: 1 PID: 4511 Comm: syz-executor107 Not tainted 4.17.0-rc2+ #24
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x1b9/0x294 lib/dump_stack.c:113
+  panic+0x22f/0x4de kernel/panic.c:184
+  __warn.cold.8+0x163/0x1b3 kernel/panic.c:536
+  report_bug+0x252/0x2d0 lib/bug.c:186
+  fixup_bug arch/x86/kernel/traps.c:178 [inline]
+  do_error_trap+0x1de/0x490 arch/x86/kernel/traps.c:296
+  do_invalid_op+0x1b/0x20 arch/x86/kernel/traps.c:315
+  invalid_op+0x14/0x20 arch/x86/entry/entry_64.S:992
+RIP: 0010:md_ioctl+0x3427/0x6360 drivers/md/md.c:7188
+RSP: 0018:ffff8801ad9b7400 EFLAGS: 00010293
+RAX: ffff8801acf7a540 RBX: 0000000000000932 RCX: ffffffff8565f354
+RDX: 0000000000000000 RSI: ffffffff85661c37 RDI: 0000000000000007
+RBP: ffff8801ad9b79c0 R08: ffff8801acf7a540 R09: ffffed0039894699
+R10: ffff8801ad9b73f0 R11: ffff8801cc4a34cf R12: 0000000000000932
+R13: ffff8801cc4a3328 R14: ffff8801ad9b7998 R15: 0000000000000001
+  __blkdev_driver_ioctl block/ioctl.c:303 [inline]
+  blkdev_ioctl+0x9b6/0x2020 block/ioctl.c:601
+  block_ioctl+0xee/0x130 fs/block_dev.c:1877
+  vfs_ioctl fs/ioctl.c:46 [inline]
+  file_ioctl fs/ioctl.c:500 [inline]
+  do_vfs_ioctl+0x1cf/0x16a0 fs/ioctl.c:684
+  ksys_ioctl+0xa9/0xd0 fs/ioctl.c:701
+  __do_sys_ioctl fs/ioctl.c:708 [inline]
+  __se_sys_ioctl fs/ioctl.c:706 [inline]
+  __x64_sys_ioctl+0x73/0xb0 fs/ioctl.c:706
+  do_syscall_64+0x1b1/0x800 arch/x86/entry/common.c:287
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x445a59
+RSP: 002b:00007f00dd147da8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 0000000000445a59
+RDX: 0000000020000080 RSI: 0000000000000932 RDI: 0000000000000003
+RBP: 00000000006dac3c R08: 00007f00dd148700 R09: 0000000000000000
+R10: 00007f00dd148700 R11: 0000000000000246 R12: 00000000006dac38
+R13: 30646d2f7665642f R14: 00007f00dd1489c0 R15: 0000000000000003
+Dumping ftrace buffer:
+    (ftrace buffer empty)
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
 
 
-On 04/25/2018 11:46 PM, NeilBrown wrote:
-> 
-> If "re-add" is written to the "state" file for a device
-> which is faulty, this has an effect similar to removing
-> and re-adding the device.  It should take up the
-> same slot in the array that it previously had, and
-> an accelerated (e.g. bitmap-based) rebuild should happen.
-> 
-> The slot that "it previously had" is determined by
-> rdev->saved_raid_disk.
-> However this is not set when a device fails (only when a device
-> is added), and it is cleared when resync completes.
-> This means that "re-add" will normally work once, but may not work a
-> second time.
-> 
-> This patch includes two fixes.
-> 1/ when a device fails, record the ->raid_disk value in
->     ->saved_raid_disk before clearing ->raid_disk
-> 2/ when "re-add" is written to a device for which
->     ->saved_raid_disk is not set, fail.
-> 
-> I think this is suitable for stable as it can
-> cause re-adding a device to be forced to do a full
-> resync which takes a lot longer and so puts data at
-> more risk.
-> 
-> Cc: <stable@vger.kernel.org> (v4.1)
-> Fixes: 97f6cd39da22 ("md-cluster: re-add capabilities")
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  drivers/md/md.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 3bea45e8ccff..ecd4235c6e30 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2853,7 +2853,8 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
->  			err = 0;
->  		}
->  	} else if (cmd_match(buf, "re-add")) {
-> -		if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk == -1)) {
-> +		if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk == -1) &&
-> +			rdev->saved_raid_disk >= 0) {
->  			/* clear_bit is performed _after_ all the devices
->  			 * have their local Faulty bit cleared. If any writes
->  			 * happen in the meantime in the local node, they
-> @@ -8641,6 +8642,7 @@ static int remove_and_add_spares(struct mddev *mddev,
->  			if (mddev->pers->hot_remove_disk(
->  				    mddev, rdev) == 0) {
->  				sysfs_unlink_rdev(mddev, rdev);
-> +				rdev->saved_raid_disk = rdev->raid_disk;
->  				rdev->raid_disk = -1;
->  				removed++;
->  			}
-> 
+---
+This bug is generated by a dumb bot. It may contain errors.
+See https://goo.gl/tpsmEJ for details.
+Direct all questions to syzkaller@googlegroups.com.
 
-Performing a partial resync as opposed to full resync is always better
-and less time consuming. Thanks!
-
-Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-
--- 
-Goldwyn
+syzbot will keep track of this bug report.
+If you forgot to add the Reported-by tag, once the fix for this bug is  
+merged
+into any tree, please reply to this email with:
+#syz fix: exact-commit-title
+If you want to test a patch for this bug, please reply with:
+#syz test: git://repo/address.git branch
+and provide the patch inline or as an attachment.
+To mark this as a duplicate of another syzbot report, please reply with:
+#syz dup: exact-subject-of-another-report
+If it's a one-off invalid bug report, please reply with:
+#syz invalid
+Note: if the crash happens again, it will cause creation of a new bug  
+report.
+Note: all commands must start from beginning of the line in the email body.
