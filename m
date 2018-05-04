@@ -1,7 +1,7 @@
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 1/5] spinlock: atomic_dec_and_lock: Add an irqsave variant
-Date: Fri,  4 May 2018 17:45:29 +0200
-Message-ID: <20180504154533.8833-2-bigeasy@linutronix.de>
+Subject: [PATCH 4/5] drivers/md/raid5: Use irqsave variant of atomic_dec_and_lock()
+Date: Fri,  4 May 2018 17:45:32 +0200
+Message-ID: <20180504154533.8833-5-bigeasy@linutronix.de>
 References: <20180504154533.8833-1-bigeasy@linutronix.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
@@ -14,64 +14,38 @@ List-Id: linux-raid.ids
 
 From: Anna-Maria Gleixner <anna-maria@linutronix.de>
 
-There are in-tree users of atomic_dec_and_lock() which must acquire the
-spin lock with interrupts disabled. To workaround the lack of an irqsave
-variant of atomic_dec_and_lock() they use local_irq_save() at the call
-site. This causes extra code and creates in some places unneeded long
-interrupt disabled times. These places need also extra treatment for
-PREEMPT_RT due to the disconnect of the irq disabling and the lock
-function.
-
-Implement the missing irqsave variant of the function.
+The irqsave variant of atomic_dec_and_lock handles irqsave/restore when
+taking/releasing the spin lock. With this variant the call of
+local_irq_save is no longer required.
 
 Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- include/linux/spinlock.h |  5 +++++
- lib/dec_and_lock.c       | 16 ++++++++++++++++
- 2 files changed, 21 insertions(+)
+ drivers/md/raid5.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 4894d322d258..803536c992f5 100644
---- a/include/linux/spinlock.h
-+++ b/include/linux/spinlock.h
-@@ -409,6 +409,11 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spin=
-lock_t *lock);
- #define atomic_dec_and_lock(atomic, lock) \
- 		__cond_lock(lock, _atomic_dec_and_lock(atomic, lock))
-=20
-+extern int _atomic_dec_and_lock_irqsave(atomic_t *atomic, spinlock_t *lock,
-+					unsigned long *flags);
-+#define atomic_dec_and_lock_irqsave(atomic, lock, flags) \
-+		__cond_lock(lock, _atomic_dec_and_lock_irqsave(atomic, lock, &(flags)))
-+
- int alloc_bucket_spinlocks(spinlock_t **locks, unsigned int *lock_mask,
- 			   size_t max_size, unsigned int cpu_mult,
- 			   gfp_t gfp);
-diff --git a/lib/dec_and_lock.c b/lib/dec_and_lock.c
-index 347fa7ac2e8a..9555b68bb774 100644
---- a/lib/dec_and_lock.c
-+++ b/lib/dec_and_lock.c
-@@ -33,3 +33,19 @@ int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *l=
-ock)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index be117d0a65a8..0a5e6f5d271d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -409,16 +409,15 @@ void raid5_release_stripe(struct stripe_head *sh)
+ 		md_wakeup_thread(conf->mddev->thread);
+ 	return;
+ slow_path:
+-	local_irq_save(flags);
+ 	/* we are ok here if STRIPE_ON_RELEASE_LIST is set or not */
+-	if (atomic_dec_and_lock(&sh->count, &conf->device_lock)) {
++	if (atomic_dec_and_lock_irqsave(&sh->count, &conf->device_lock, flags)) {
+ 		INIT_LIST_HEAD(&list);
+ 		hash =3D sh->hash_lock_index;
+ 		do_release_stripe(conf, sh, &list);
+ 		spin_unlock(&conf->device_lock);
+ 		release_inactive_stripe_list(conf, &list, hash);
++		local_irq_restore(flags);
+ 	}
+-	local_irq_restore(flags);
  }
 =20
- EXPORT_SYMBOL(_atomic_dec_and_lock);
-+
-+int _atomic_dec_and_lock_irqsave(atomic_t *atomic, spinlock_t *lock,
-+				 unsigned long *flags)
-+{
-+	/* Subtract 1 from counter unless that drops it to 0 (ie. it was 1) */
-+	if (atomic_add_unless(atomic, -1, 1))
-+		return 0;
-+
-+	/* Otherwise do it the slow way */
-+	spin_lock_irqsave(lock, *flags);
-+	if (atomic_dec_and_test(atomic))
-+		return 1;
-+	spin_unlock_irqrestore(lock, *flags);
-+	return 0;
-+}
-+EXPORT_SYMBOL(_atomic_dec_and_lock_irqsave);
+ static inline void remove_hash(struct stripe_head *sh)
 --=20
 2.17.0
