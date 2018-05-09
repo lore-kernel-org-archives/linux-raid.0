@@ -1,43 +1,26 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: Introduce atomic_dec_and_lock_irqsave()
-Date: Fri, 4 May 2018 18:38:26 +0200
-Message-ID: <20180504163826.GR12217@hirez.programming.kicks-ass.net>
-References: <20180504154533.8833-1-bigeasy@linutronix.de>
- <20180504155446.GP12217@hirez.programming.kicks-ass.net>
- <20180504160726.ikotgmd5fbix7b6b@linutronix.de>
- <20180504162102.GQ12217@hirez.programming.kicks-ass.net>
- <20180504162640.GH30522@ZenIV.linux.org.uk>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH v2 0/8] Introduce refcount_dec_and_lock_irqsave()
+Date: Wed,  9 May 2018 21:36:37 +0200
+Message-ID: <20180509193645.830-1-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180504162640.GH30522@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-kernel@vger.kernel.org, tglx@linutronix.de, Ingo Molnar <mingo@redhat.com>, linux-mm@kvack.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, linux-mm@kvack.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Anna-Maria Gleixner <anna-maria@linutronix.de>
 List-Id: linux-raid.ids
 
-On Fri, May 04, 2018 at 05:26:40PM +0100, Al Viro wrote:
-> On Fri, May 04, 2018 at 06:21:02PM +0200, Peter Zijlstra wrote:
-> > On Fri, May 04, 2018 at 06:07:26PM +0200, Sebastian Andrzej Siewior wrote:
-> > 
-> > > do you intend to kill refcount_dec_and_lock() in the longterm?
-> > 
-> > You meant to say atomic_dec_and_lock() ? Dunno if we ever get there, but
-> > typically dec_and_lock is fairly refcounty, but I suppose it is possible
-> > to have !refcount users, in which case we're eternally stuck with it.
-> 
-> Yes, there are - consider e.g.
-> 
-> void iput(struct inode *inode)
-> { 
->         if (!inode)
->                 return;
->         BUG_ON(inode->i_state & I_CLEAR);
-> retry:
->         if (atomic_dec_and_lock(&inode->i_count, &inode->i_lock)) {
-> 
-> inode->i_count sure as hell isn't refcount_t fodder...
+This series is a v2 of the atomic_dec_and_lock_irqsave(). Now refcount_*
+is used instead of atomic_* as suggested by Peter Zijlstra.
 
-Yeah, I should've remembered, I tried to convert that once ;-) i_count is
-a usage count, not a refcount.
+Patch
+- 1-3 converts the user from atomic_* API to refcount_* API
+- 4 implements refcount_dec_and_lock_irqsave
+- 5-8 converts the local_irq_save() + refcount_dec_and_lock() users to
+  refcount_dec_and_lock_irqsave()
+
+The whole series sits also at
+  git://git.kernel.org/pub/scm/linux/kernel/git/bigeasy/staging.git refcoun=
+t_t_irqsave
+
+Sebastian
