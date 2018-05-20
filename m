@@ -1,103 +1,170 @@
 From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-Date: Sun, 20 May 2018 18:25:46 -0400
-Message-ID: <20180520222558.7053-1-kent.overstreet@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 03/12] pktcdvd: convert to bioset_init()/mempool_init()
+Date: Sun, 20 May 2018 18:25:49 -0400
+Message-ID: <20180520222558.7053-4-kent.overstreet@gmail.com>
+References: <20180520222558.7053-1-kent.overstreet@gmail.com>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <20180520222558.7053-1-kent.overstreet@gmail.com>
+Sender: linux-btrfs-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, colyli@suse.de, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 Cc: Kent Overstreet <kent.overstreet@gmail.com>
 List-Id: linux-raid.ids
 
-Jens - this series does the rest of the conversions that Christoph wanted, and
-drops bioset_create().
+Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+---
+ drivers/block/pktcdvd.c | 50 ++++++++++++++++++++---------------------
+ include/linux/pktcdvd.h |  2 +-
+ 2 files changed, 26 insertions(+), 26 deletions(-)
 
-Only lightly tested, but the changes are pretty mechanical. Based on your
-for-next tree.
-
-It's also in the for-jens branch at https://evilpiepirate.org/git/bcachefs.git
-
-Kent Overstreet (12):
-  block: convert bounce, q->bio_split to bioset_init()/mempool_init()
-  drbd: convert to bioset_init()/mempool_init()
-  pktcdvd: convert to bioset_init()/mempool_init()
-  lightnvm: convert to bioset_init()/mempool_init()
-  bcache: convert to bioset_init()/mempool_init()
-  md: convert to bioset_init()/mempool_init()
-  dm: convert to bioset_init()/mempool_init()
-  target: convert to bioset_init()/mempool_init()
-  fs: convert block_dev.c to bioset_init()
-  btrfs: convert to bioset_init()/mempool_init()
-  xfs: convert to bioset_init()/mempool_init()
-  block: Drop bioset_create()
-
- block/bio.c                         | 61 +++++------------------
- block/blk-core.c                    |  7 +--
- block/blk-merge.c                   |  8 +--
- block/blk-sysfs.c                   |  3 +-
- block/bounce.c                      | 47 +++++++++---------
- drivers/block/drbd/drbd_bitmap.c    |  4 +-
- drivers/block/drbd/drbd_int.h       | 10 ++--
- drivers/block/drbd/drbd_main.c      | 71 ++++++++++-----------------
- drivers/block/drbd/drbd_receiver.c  |  6 +--
- drivers/block/drbd/drbd_req.c       |  4 +-
- drivers/block/drbd/drbd_req.h       |  2 +-
- drivers/block/pktcdvd.c             | 50 +++++++++----------
- drivers/lightnvm/pblk-core.c        | 30 ++++++------
- drivers/lightnvm/pblk-init.c        | 72 +++++++++++++--------------
- drivers/lightnvm/pblk-read.c        |  4 +-
- drivers/lightnvm/pblk-recovery.c    |  2 +-
- drivers/lightnvm/pblk-write.c       |  8 +--
- drivers/lightnvm/pblk.h             | 14 +++---
- drivers/md/bcache/bcache.h          | 10 ++--
- drivers/md/bcache/bset.c            | 13 ++---
- drivers/md/bcache/bset.h            |  2 +-
- drivers/md/bcache/btree.c           |  4 +-
- drivers/md/bcache/io.c              |  4 +-
- drivers/md/bcache/request.c         | 18 +++----
- drivers/md/bcache/super.c           | 38 ++++++---------
- drivers/md/dm-bio-prison-v1.c       | 13 ++---
- drivers/md/dm-bio-prison-v2.c       | 13 ++---
- drivers/md/dm-cache-target.c        | 25 +++++-----
- drivers/md/dm-core.h                |  4 +-
- drivers/md/dm-crypt.c               | 60 +++++++++++------------
- drivers/md/dm-integrity.c           | 15 +++---
- drivers/md/dm-io.c                  | 29 +++++------
- drivers/md/dm-kcopyd.c              | 22 +++++----
- drivers/md/dm-log-userspace-base.c  | 19 ++++----
- drivers/md/dm-region-hash.c         | 23 ++++-----
- drivers/md/dm-rq.c                  |  2 +-
- drivers/md/dm-snap.c                | 17 +++----
- drivers/md/dm-thin.c                | 32 ++++++------
- drivers/md/dm-verity-fec.c          | 55 +++++++++++----------
- drivers/md/dm-verity-fec.h          |  8 +--
- drivers/md/dm-zoned-target.c        | 13 +++--
- drivers/md/dm.c                     | 55 +++++++++------------
- drivers/md/md-faulty.c              |  2 +-
- drivers/md/md-linear.c              |  2 +-
- drivers/md/md-multipath.c           | 17 ++++---
- drivers/md/md-multipath.h           |  2 +-
- drivers/md/md.c                     | 61 +++++++++--------------
- drivers/md/md.h                     |  4 +-
- drivers/md/raid0.c                  |  5 +-
- drivers/md/raid1.c                  | 76 ++++++++++++++---------------
- drivers/md/raid1.h                  |  6 +--
- drivers/md/raid10.c                 | 60 +++++++++++------------
- drivers/md/raid10.h                 |  6 +--
- drivers/md/raid5-cache.c            | 43 ++++++++--------
- drivers/md/raid5-ppl.c              | 42 +++++++---------
- drivers/md/raid5.c                  | 12 ++---
- drivers/md/raid5.h                  |  2 +-
- drivers/target/target_core_iblock.c | 14 +++---
- drivers/target/target_core_iblock.h |  2 +-
- fs/block_dev.c                      |  9 ++--
- fs/btrfs/extent_io.c                | 25 +++++-----
- fs/xfs/xfs_aops.c                   |  2 +-
- fs/xfs/xfs_aops.h                   |  2 +-
- fs/xfs/xfs_super.c                  | 11 ++---
- include/linux/bio.h                 | 11 +++--
- include/linux/blkdev.h              |  2 +-
- include/linux/pktcdvd.h             |  2 +-
- 67 files changed, 606 insertions(+), 711 deletions(-)
-
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index d8aff7f325..69875f5580 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -97,8 +97,8 @@ static int pktdev_major;
+ static int write_congestion_on  = PKT_WRITE_CONGESTION_ON;
+ static int write_congestion_off = PKT_WRITE_CONGESTION_OFF;
+ static struct mutex ctl_mutex;	/* Serialize open/close/setup/teardown */
+-static mempool_t *psd_pool;
+-static struct bio_set *pkt_bio_set;
++static mempool_t psd_pool;
++static struct bio_set pkt_bio_set;
+ 
+ static struct class	*class_pktcdvd = NULL;    /* /sys/class/pktcdvd */
+ static struct dentry	*pkt_debugfs_root = NULL; /* /sys/kernel/debug/pktcdvd */
+@@ -631,7 +631,7 @@ static inline struct pkt_rb_node *pkt_rbtree_next(struct pkt_rb_node *node)
+ static void pkt_rbtree_erase(struct pktcdvd_device *pd, struct pkt_rb_node *node)
+ {
+ 	rb_erase(&node->rb_node, &pd->bio_queue);
+-	mempool_free(node, pd->rb_pool);
++	mempool_free(node, &pd->rb_pool);
+ 	pd->bio_queue_size--;
+ 	BUG_ON(pd->bio_queue_size < 0);
+ }
+@@ -2303,14 +2303,14 @@ static void pkt_end_io_read_cloned(struct bio *bio)
+ 	psd->bio->bi_status = bio->bi_status;
+ 	bio_put(bio);
+ 	bio_endio(psd->bio);
+-	mempool_free(psd, psd_pool);
++	mempool_free(psd, &psd_pool);
+ 	pkt_bio_finished(pd);
+ }
+ 
+ static void pkt_make_request_read(struct pktcdvd_device *pd, struct bio *bio)
+ {
+-	struct bio *cloned_bio = bio_clone_fast(bio, GFP_NOIO, pkt_bio_set);
+-	struct packet_stacked_data *psd = mempool_alloc(psd_pool, GFP_NOIO);
++	struct bio *cloned_bio = bio_clone_fast(bio, GFP_NOIO, &pkt_bio_set);
++	struct packet_stacked_data *psd = mempool_alloc(&psd_pool, GFP_NOIO);
+ 
+ 	psd->pd = pd;
+ 	psd->bio = bio;
+@@ -2381,7 +2381,7 @@ static void pkt_make_request_write(struct request_queue *q, struct bio *bio)
+ 	/*
+ 	 * No matching packet found. Store the bio in the work queue.
+ 	 */
+-	node = mempool_alloc(pd->rb_pool, GFP_NOIO);
++	node = mempool_alloc(&pd->rb_pool, GFP_NOIO);
+ 	node->bio = bio;
+ 	spin_lock(&pd->lock);
+ 	BUG_ON(pd->bio_queue_size < 0);
+@@ -2451,7 +2451,7 @@ static blk_qc_t pkt_make_request(struct request_queue *q, struct bio *bio)
+ 
+ 			split = bio_split(bio, last_zone -
+ 					  bio->bi_iter.bi_sector,
+-					  GFP_NOIO, pkt_bio_set);
++					  GFP_NOIO, &pkt_bio_set);
+ 			bio_chain(split, bio);
+ 		} else {
+ 			split = bio;
+@@ -2707,9 +2707,9 @@ static int pkt_setup_dev(dev_t dev, dev_t* pkt_dev)
+ 	if (!pd)
+ 		goto out_mutex;
+ 
+-	pd->rb_pool = mempool_create_kmalloc_pool(PKT_RB_POOL_SIZE,
+-						  sizeof(struct pkt_rb_node));
+-	if (!pd->rb_pool)
++	ret = mempool_init_kmalloc_pool(&pd->rb_pool, PKT_RB_POOL_SIZE,
++					sizeof(struct pkt_rb_node));
++	if (ret)
+ 		goto out_mem;
+ 
+ 	INIT_LIST_HEAD(&pd->cdrw.pkt_free_list);
+@@ -2766,7 +2766,7 @@ static int pkt_setup_dev(dev_t dev, dev_t* pkt_dev)
+ out_mem2:
+ 	put_disk(disk);
+ out_mem:
+-	mempool_destroy(pd->rb_pool);
++	mempool_exit(&pd->rb_pool);
+ 	kfree(pd);
+ out_mutex:
+ 	mutex_unlock(&ctl_mutex);
+@@ -2817,7 +2817,7 @@ static int pkt_remove_dev(dev_t pkt_dev)
+ 	blk_cleanup_queue(pd->disk->queue);
+ 	put_disk(pd->disk);
+ 
+-	mempool_destroy(pd->rb_pool);
++	mempool_exit(&pd->rb_pool);
+ 	kfree(pd);
+ 
+ 	/* This is safe: open() is still holding a reference. */
+@@ -2914,14 +2914,14 @@ static int __init pkt_init(void)
+ 
+ 	mutex_init(&ctl_mutex);
+ 
+-	psd_pool = mempool_create_kmalloc_pool(PSD_POOL_SIZE,
+-					sizeof(struct packet_stacked_data));
+-	if (!psd_pool)
+-		return -ENOMEM;
+-	pkt_bio_set = bioset_create(BIO_POOL_SIZE, 0, 0);
+-	if (!pkt_bio_set) {
+-		mempool_destroy(psd_pool);
+-		return -ENOMEM;
++	ret = mempool_init_kmalloc_pool(&psd_pool, PSD_POOL_SIZE,
++				    sizeof(struct packet_stacked_data));
++	if (ret)
++		return ret;
++	ret = bioset_init(&pkt_bio_set, BIO_POOL_SIZE, 0, 0);
++	if (ret) {
++		mempool_exit(&psd_pool);
++		return ret;
+ 	}
+ 
+ 	ret = register_blkdev(pktdev_major, DRIVER_NAME);
+@@ -2954,8 +2954,8 @@ static int __init pkt_init(void)
+ out:
+ 	unregister_blkdev(pktdev_major, DRIVER_NAME);
+ out2:
+-	mempool_destroy(psd_pool);
+-	bioset_free(pkt_bio_set);
++	mempool_exit(&psd_pool);
++	bioset_exit(&pkt_bio_set);
+ 	return ret;
+ }
+ 
+@@ -2968,8 +2968,8 @@ static void __exit pkt_exit(void)
+ 	pkt_sysfs_cleanup();
+ 
+ 	unregister_blkdev(pktdev_major, DRIVER_NAME);
+-	mempool_destroy(psd_pool);
+-	bioset_free(pkt_bio_set);
++	mempool_exit(&psd_pool);
++	bioset_exit(&pkt_bio_set);
+ }
+ 
+ MODULE_DESCRIPTION("Packet writing layer for CD/DVD drives");
+diff --git a/include/linux/pktcdvd.h b/include/linux/pktcdvd.h
+index 93d142ad15..174601554b 100644
+--- a/include/linux/pktcdvd.h
++++ b/include/linux/pktcdvd.h
+@@ -186,7 +186,7 @@ struct pktcdvd_device
+ 	sector_t		current_sector;	/* Keep track of where the elevator is */
+ 	atomic_t		scan_queue;	/* Set to non-zero when pkt_handle_queue */
+ 						/* needs to be run. */
+-	mempool_t		*rb_pool;	/* mempool for pkt_rb_node allocations */
++	mempool_t		rb_pool;	/* mempool for pkt_rb_node allocations */
+ 
+ 	struct packet_iosched   iosched;
+ 	struct gendisk		*disk;
 -- 
 2.17.0
+
