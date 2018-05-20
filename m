@@ -1,114 +1,103 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: zero the original position of sb for 0.90 and 1.0
-Date: Thu, 17 May 2018 09:21:28 -0700
-Message-ID: <20180517162128.74fd5scca2yo3nep@kernel.org>
-References: <1526462319-14222-1-git-send-email-jianchao.w.wang@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
+Date: Sun, 20 May 2018 18:25:46 -0400
+Message-ID: <20180520222558.7053-1-kent.overstreet@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1526462319-14222-1-git-send-email-jianchao.w.wang@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jianchao Wang <jianchao.w.wang@oracle.com>
-Cc: robert.butera@oracle.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, colyli@suse.de, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
 List-Id: linux-raid.ids
 
-On Wed, May 16, 2018 at 05:18:39PM +0800, Jianchao Wang wrote:
-> For sb version 0.90 and 1.0 which locates after data, when we increase
-> the spindle volume size and grow the raid arry size, the older sb which is
-> different between spindles will be left there. Due to this left sb, the
-> spindle volume cannot be grown with zero filled part with  --asume-clean.
-> applications have to take some workarounds such as sync_min/max to avoid
-> resync.
-> 
-> It is easy and convevient for md to zero the older sb position after
-> write sb to new position, so do it here.
+Jens - this series does the rest of the conversions that Christoph wanted, and
+drops bioset_create().
 
-From the description, this looks easy to do in userspace, eg, you can zero the
-super before increase the spindle volume. Convenience isn't a reason we should
-put these code into kernel space.
+Only lightly tested, but the changes are pretty mechanical. Based on your
+for-next tree.
 
-Thanks,
-Shaohua 
-> Cc: robert.butera@oracle.com
-> Signed-off-by: Jianchao Wang <jianchao.w.wang@oracle.com>
-> ---
->  drivers/md/md.c | 27 +++++++++++++++++++++++++++
->  1 file changed, 27 insertions(+)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c208c01..a042add 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1020,6 +1020,23 @@ int md_check_no_bitmap(struct mddev *mddev)
->  }
->  EXPORT_SYMBOL(md_check_no_bitmap);
->  
-> +static void md_zero_original_sb_position(struct md_rdev *rdev, sector_t old_pos)
-> +{
-> +	struct page *zero_pg;
-> +
-> +	zero_pg = alloc_pages(GFP_KERNEL | __GFP_ZERO, 0);
-> +	if (!zero_pg) {
-> +		pr_warn("%s: failed to get page for zero original sb position",
-> +				mdname(rdev->mddev));
-> +		return;
-> +	}
-> +	md_super_write(rdev->mddev, rdev, old_pos, rdev->sb_size,
-> +		       zero_pg);
-> +	wait_event(rdev->mddev->sb_wait,
-> +			(atomic_read(&rdev->mddev->pending_writes) == 0));
-> +	__free_pages(zero_pg, 0);
-> +}
-> +
->  /*
->   * load_super for 0.90.0
->   */
-> @@ -1394,6 +1411,8 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
->  static unsigned long long
->  super_90_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
->  {
-> +	sector_t old_pos = rdev->sb_start;
-> +
->  	if (num_sectors && num_sectors < rdev->mddev->dev_sectors)
->  		return 0; /* component must fit device */
->  	if (rdev->mddev->bitmap_info.offset)
-> @@ -1411,6 +1430,8 @@ super_90_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
->  		md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
->  		       rdev->sb_page);
->  	} while (md_super_wait(rdev->mddev) < 0);
-> +
-> +	md_zero_original_sb_position(rdev, old_pos);
->  	return num_sectors;
->  }
->  
-> @@ -1953,6 +1974,8 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
->  {
->  	struct mdp_superblock_1 *sb;
->  	sector_t max_sectors;
-> +	sector_t old_pos = 0;
-> +
->  	if (num_sectors && num_sectors < rdev->mddev->dev_sectors)
->  		return 0; /* component must fit device */
->  	if (rdev->data_offset != rdev->new_data_offset)
-> @@ -1969,6 +1992,7 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
->  	} else {
->  		/* minor version 0; superblock after data */
->  		sector_t sb_start;
-> +		old_pos = rdev->sb_start;
->  		sb_start = (i_size_read(rdev->bdev->bd_inode) >> 9) - 8*2;
->  		sb_start &= ~(sector_t)(4*2 - 1);
->  		max_sectors = rdev->sectors + sb_start - rdev->sb_start;
-> @@ -1984,6 +2008,9 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
->  		md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
->  			       rdev->sb_page);
->  	} while (md_super_wait(rdev->mddev) < 0);
-> +
-> +	if (old_pos)
-> +		md_zero_original_sb_position(rdev, old_pos);
->  	return num_sectors;
->  
->  }
-> -- 
-> 2.7.4
-> 
+It's also in the for-jens branch at https://evilpiepirate.org/git/bcachefs.git
+
+Kent Overstreet (12):
+  block: convert bounce, q->bio_split to bioset_init()/mempool_init()
+  drbd: convert to bioset_init()/mempool_init()
+  pktcdvd: convert to bioset_init()/mempool_init()
+  lightnvm: convert to bioset_init()/mempool_init()
+  bcache: convert to bioset_init()/mempool_init()
+  md: convert to bioset_init()/mempool_init()
+  dm: convert to bioset_init()/mempool_init()
+  target: convert to bioset_init()/mempool_init()
+  fs: convert block_dev.c to bioset_init()
+  btrfs: convert to bioset_init()/mempool_init()
+  xfs: convert to bioset_init()/mempool_init()
+  block: Drop bioset_create()
+
+ block/bio.c                         | 61 +++++------------------
+ block/blk-core.c                    |  7 +--
+ block/blk-merge.c                   |  8 +--
+ block/blk-sysfs.c                   |  3 +-
+ block/bounce.c                      | 47 +++++++++---------
+ drivers/block/drbd/drbd_bitmap.c    |  4 +-
+ drivers/block/drbd/drbd_int.h       | 10 ++--
+ drivers/block/drbd/drbd_main.c      | 71 ++++++++++-----------------
+ drivers/block/drbd/drbd_receiver.c  |  6 +--
+ drivers/block/drbd/drbd_req.c       |  4 +-
+ drivers/block/drbd/drbd_req.h       |  2 +-
+ drivers/block/pktcdvd.c             | 50 +++++++++----------
+ drivers/lightnvm/pblk-core.c        | 30 ++++++------
+ drivers/lightnvm/pblk-init.c        | 72 +++++++++++++--------------
+ drivers/lightnvm/pblk-read.c        |  4 +-
+ drivers/lightnvm/pblk-recovery.c    |  2 +-
+ drivers/lightnvm/pblk-write.c       |  8 +--
+ drivers/lightnvm/pblk.h             | 14 +++---
+ drivers/md/bcache/bcache.h          | 10 ++--
+ drivers/md/bcache/bset.c            | 13 ++---
+ drivers/md/bcache/bset.h            |  2 +-
+ drivers/md/bcache/btree.c           |  4 +-
+ drivers/md/bcache/io.c              |  4 +-
+ drivers/md/bcache/request.c         | 18 +++----
+ drivers/md/bcache/super.c           | 38 ++++++---------
+ drivers/md/dm-bio-prison-v1.c       | 13 ++---
+ drivers/md/dm-bio-prison-v2.c       | 13 ++---
+ drivers/md/dm-cache-target.c        | 25 +++++-----
+ drivers/md/dm-core.h                |  4 +-
+ drivers/md/dm-crypt.c               | 60 +++++++++++------------
+ drivers/md/dm-integrity.c           | 15 +++---
+ drivers/md/dm-io.c                  | 29 +++++------
+ drivers/md/dm-kcopyd.c              | 22 +++++----
+ drivers/md/dm-log-userspace-base.c  | 19 ++++----
+ drivers/md/dm-region-hash.c         | 23 ++++-----
+ drivers/md/dm-rq.c                  |  2 +-
+ drivers/md/dm-snap.c                | 17 +++----
+ drivers/md/dm-thin.c                | 32 ++++++------
+ drivers/md/dm-verity-fec.c          | 55 +++++++++++----------
+ drivers/md/dm-verity-fec.h          |  8 +--
+ drivers/md/dm-zoned-target.c        | 13 +++--
+ drivers/md/dm.c                     | 55 +++++++++------------
+ drivers/md/md-faulty.c              |  2 +-
+ drivers/md/md-linear.c              |  2 +-
+ drivers/md/md-multipath.c           | 17 ++++---
+ drivers/md/md-multipath.h           |  2 +-
+ drivers/md/md.c                     | 61 +++++++++--------------
+ drivers/md/md.h                     |  4 +-
+ drivers/md/raid0.c                  |  5 +-
+ drivers/md/raid1.c                  | 76 ++++++++++++++---------------
+ drivers/md/raid1.h                  |  6 +--
+ drivers/md/raid10.c                 | 60 +++++++++++------------
+ drivers/md/raid10.h                 |  6 +--
+ drivers/md/raid5-cache.c            | 43 ++++++++--------
+ drivers/md/raid5-ppl.c              | 42 +++++++---------
+ drivers/md/raid5.c                  | 12 ++---
+ drivers/md/raid5.h                  |  2 +-
+ drivers/target/target_core_iblock.c | 14 +++---
+ drivers/target/target_core_iblock.h |  2 +-
+ fs/block_dev.c                      |  9 ++--
+ fs/btrfs/extent_io.c                | 25 +++++-----
+ fs/xfs/xfs_aops.c                   |  2 +-
+ fs/xfs/xfs_aops.h                   |  2 +-
+ fs/xfs/xfs_super.c                  | 11 ++---
+ include/linux/bio.h                 | 11 +++--
+ include/linux/blkdev.h              |  2 +-
+ include/linux/pktcdvd.h             |  2 +-
+ 67 files changed, 606 insertions(+), 711 deletions(-)
+
+-- 
+2.17.0
