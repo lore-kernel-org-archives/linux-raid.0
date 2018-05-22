@@ -1,42 +1,20 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-Date: Mon, 21 May 2018 23:41:18 -0700
-Message-ID: <20180522064118.GA18704@infradead.org>
-References: <20180521144703.GA19303@redhat.com>
- <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
- <20180521150439.GA19379@redhat.com>
- <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
- <20180521151817.GA19454@redhat.com>
- <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
- <20180521160907.GA19553@redhat.com>
- <20180521173724.GG11495@kmo-pixel>
- <20180521182427.GA20013@redhat.com>
- <20180521233855.GI11495@kmo-pixel>
+Subject: Re: [PATCH 01/12] block: convert bounce, q->bio_split to
+ bioset_init()/mempool_init()
+Date: Tue, 22 May 2018 03:08:45 -0700
+Message-ID: <20180522100845.GA4477@infradead.org>
+References: <20180520222558.7053-1-kent.overstreet@gmail.com>
+ <20180520222558.7053-2-kent.overstreet@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180521233855.GI11495@kmo-pixel>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180520222558.7053-2-kent.overstreet@gmail.com>
+Sender: linux-btrfs-owner@vger.kernel.org
 To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, colyli@suse.de, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Mon, May 21, 2018 at 07:38:55PM -0400, Kent Overstreet wrote:
-> On Mon, May 21, 2018 at 02:24:32PM -0400, Mike Snitzer wrote:
-> > Every single data structure change in this series should be reviewed for
-> > unforeseen alignment consequences.  Jens seemed to say that is
-> > worthwhile.  Not sure if he'll do it or we divide it up.  If we divide
-> > it up a temp topic branch should be published for others to inspect.
-> > 
-> > Could be alignment hasn't been a historic concern for a bunch of the
-> > data structures changed in this series.. if so then all we can do is fix
-> > up any obvious potential for false sharing.
-> 
-> Honestly, I almost never worry about alignment... the very few times I do care,
-> I use __cacheline_aligned_in_smp.
+Looks good,
 
-And that generally is the right stratgey.  If Mike really doesn't want
-a change we can just open code the kmalloc for the bio set there, the
-important point is that we should not keep the old API around for no
-good reason.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
