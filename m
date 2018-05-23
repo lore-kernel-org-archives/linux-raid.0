@@ -1,33 +1,71 @@
-From: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 6/6] Drop flex_arrays
-Date: Wed, 23 May 2018 10:24:18 -0700
-Message-ID: <0fb1b28b-12da-5d2b-2308-283af9fe6ae4@intel.com>
-References: <20180523011821.12165-1-kent.overstreet@gmail.com>
-	<20180523011821.12165-6-kent.overstreet@gmail.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 3/8] md: raid5: use refcount_t for reference counting
+ instead atomic_t
+Date: Wed, 23 May 2018 19:49:04 +0200
+Message-ID: <20180523174904.GY12198@hirez.programming.kicks-ass.net>
+References: <20180509193645.830-1-bigeasy@linutronix.de>
+ <20180509193645.830-4-bigeasy@linutronix.de>
+ <20180523132119.GC19987@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-In-Reply-To: <20180523011821.12165-6-kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://mail.openvswitch.org/mailman/options/ovs-dev>,
-	<mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://mail.openvswitch.org/pipermail/ovs-dev/>
-List-Post: <mailto:ovs-dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-List-Help: <mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=help>
-List-Subscribe: <https://mail.openvswitch.org/mailman/listinfo/ovs-dev>,
-	<mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=subscribe>
-Sender: ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-Errors-To: ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-To: Kent Overstreet <kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20180523132119.GC19987@bombadil.infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-kernel@vger.kernel.org, tglx@linutronix.de, Ingo Molnar <mingo@redhat.com>, linux-mm@kvack.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Anna-Maria Gleixner <anna-maria@linutronix.de>
 List-Id: linux-raid.ids
 
-Thanks for the heads-up, Matthew!
+On Wed, May 23, 2018 at 06:21:19AM -0700, Matthew Wilcox wrote:
+> On Wed, May 09, 2018 at 09:36:40PM +0200, Sebastian Andrzej Siewior wrote:
+> > refcount_t type and corresponding API should be used instead of atomic_t when
+> > the variable is used as a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free situations.
+> > 
+> > Most changes are 1:1 replacements except for
+> > 	BUG_ON(atomic_inc_return(&sh->count) != 1);
+> > 
+> > which has been turned into
+> >         refcount_inc(&sh->count);
+> >         BUG_ON(refcount_read(&sh->count) != 1);
+> 
+> @@ -5387,7 +5387,8 @@ static struct stripe_head *__get_priority_stripe(struct
+> +r5conf *conf, int group)
+>                 sh->group = NULL;
+>         }
+>         list_del_init(&sh->lru);
+> -       BUG_ON(atomic_inc_return(&sh->count) != 1);
+> +       refcount_inc(&sh->count);
+> +	BUG_ON(refcount_read(&sh->count) != 1);
+>         return sh;
+>  }
+> 
+> 
+> That's the only problematic usage.  And I think what it's really saying is:
+> 
+> 	BUG_ON(refcount_read(&sh->count) != 0);
+> 	refcount_set(&sh->count, 1);
+> 
+> With that, this looks like a reasonable use of refcount_t to me.
 
-On 05/22/2018 06:18 PM, Kent Overstreet wrote:
-> All existing users have been converted to generic radix trees
+I'm not so sure, look at:
 
-Well, flex_arrays had a good run, and the new radix trees do look quite
-a bit nicer.
+  r5c_do_reclaim():
 
-Feel free to add my ack.
+	if (!list_empty(&sh->lru) &&
+	    !test_bit(STRIPE_HANDLE, &sh->state) &&
+	    atomic_read(&sh->count) == 0) {
+	      r5c_flush_stripe(cond, sh)
+
+Which does:
+
+  r5c_flush_stripe():
+
+	atomic_inc(&sh->count);
+
+Which is another inc-from-zero. Also, having sh's with count==0 in a
+list is counter to the concept of refcounts and smells like usage-counts
+to me. For refcount 0 really means deads and gone.
+
+If this really is supposed to be a refcount, someone more familiar with
+the raid5 should do the patch and write a comprehensive changelog on it.
