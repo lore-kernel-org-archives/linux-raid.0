@@ -1,41 +1,41 @@
-From: Kent Overstreet <kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/6] Generic radix trees
-Date: Sat, 26 May 2018 01:56:01 -0400
-Message-ID: <20180526055601.GA26155@kmo-pixel>
-References: <20180523011821.12165-1-kent.overstreet@gmail.com>
-	<CANQeFDCLc56thuuGYBMdb_qvw_O=t7sLkJiP-LNYfKwgz74H_w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CANQeFDCLc56thuuGYBMdb_qvw_O=t7sLkJiP-LNYfKwgz74H_w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://mail.openvswitch.org/mailman/options/ovs-dev>,
-	<mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://mail.openvswitch.org/pipermail/ovs-dev/>
-List-Post: <mailto:ovs-dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-List-Help: <mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=help>
-List-Subscribe: <https://mail.openvswitch.org/mailman/listinfo/ovs-dev>,
-	<mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=subscribe>
-Sender: ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-Errors-To: ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-To: Liu Bo <obuil.liubo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] dm: writecache: add DAX dependency
+Date: Mon, 28 May 2018 17:38:10 +0200
+Message-ID: <20180528153834.2268557-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Dan Williams <dan.j.williams@intel.com>, Heinz Mauelshagen <heinzm@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 26, 2018 at 11:16:42AM +0800, Liu Bo wrote:
-> > +/*
-> > + * Returns pointer to the specified byte @offset within @radix, allocating it if
-> > + * necessary - newly allocated slots are always zeroed out:
-> > + */
-> > +void *__genradix_ptr_alloc(struct __genradix *radix, size_t offset,
-> > +                          gfp_t gfp_mask)
-> > +{
-> > +       struct genradix_node **n;
-> 
-> Any reason that " struct genradix_node ** " is used here instead of "
-> struct genradix_node * "?
-> 
-> Looks like this function only manipulates *n, am I missing something?
+The new dm-writecache driver inconditionally uses the dax
+subsystem, leading to link errors in some configurations:
 
-It stores to *n, when it has to allocate a node (including the root)
+drivers/md/dm-writecache.o: In function `writecache_ctr':
+dm-writecache.c:(.text+0x1fdc): undefined reference to `dax_read_lock'
+dm-writecache.c:(.text+0x2004): undefined reference to `dax_direct_access'
+dm-writecache.c:(.text+0x21cc): undefined reference to `dax_read_unlock'
+
+It seems wrong to require DAX in order to build the writecache
+driver, but that at least avoids randconfig build errors.
+
+Fixes: bb15b431d650 ("dm: add writecache target")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/md/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 852c7ebe2902..f8ecf2da1edf 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -338,6 +338,7 @@ config DM_CACHE_SMQ
+ config DM_WRITECACHE
+ 	tristate "Writecache target"
+ 	depends on BLK_DEV_DM
++	depends on DAX
+ 	---help---
+ 	   The writecache target caches writes on persistent memory or SSD.
+ 	   It is intended for databases or other programs that need extremely
+-- 
+2.9.0
