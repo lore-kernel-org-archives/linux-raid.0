@@ -1,55 +1,60 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-writecache: fix compilation issue with !DAX
-Date: Tue, 29 May 2018 15:57:40 -0400
-Message-ID: <20180529195740.GA386@redhat.com>
-References: <20180528153834.2268557-1-arnd@arndb.de>
- <20180529175216.24937-1-ross.zwisler@linux.intel.com>
- <20180529180823.GA32763@redhat.com>
- <CAPcyv4iF8oAGDKcWP++-bw5OcfmkSTPHCAw1XZvVRTz4evJvGw@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2] async_pq: Remove VLA usage
+Date: Tue, 29 May 2018 15:37:20 -0700
+Message-ID: <CAPcyv4i__AQmCxM1rVBrLqXreMxQ5u9uRHRyJ=XZjDELxxJTzw@mail.gmail.com>
+References: <20180505075854.192237-1-ksspiers@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4iF8oAGDKcWP++-bw5OcfmkSTPHCAw1XZvVRTz4evJvGw@mail.gmail.com>
+In-Reply-To: <20180505075854.192237-1-ksspiers@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, Mikulas Patocka <mpatocka@redhat.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, device-mapper development <dm-devel@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Heinz Mauelshagen <heinzm@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Kyle Spiers <ksspiers@google.com>
+Cc: David Miller <davem@davemloft.net>, Kees Cook <keescook@chromium.org>, Vinod Koul <vinod.koul@intel.com>, ray.jui@broadcom.com, linux-crypto@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, May 29 2018 at  2:40pm -0400,
-Dan Williams <dan.j.williams@intel.com> wrote:
+[ adding linux-raid ]
 
-> On Tue, May 29, 2018 at 11:08 AM, Mike Snitzer <snitzer@redhat.com> wrote:
-> > On Tue, May 29 2018 at  1:52pm -0400,
-> > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> >
-> >> As reported by Arnd (https://lkml.org/lkml/2018/5/28/1697), dm-writecache
-> >> will fail with link errors in configs where DAX isn't present:
-> >>
-> >> drivers/md/dm-writecache.o: In function `writecache_ctr':
-> >> dm-writecache.c:(.text+0x1fdc): undefined reference to `dax_read_lock'
-> >> dm-writecache.c:(.text+0x2004): undefined reference to `dax_direct_access'
-> >> dm-writecache.c:(.text+0x21cc): undefined reference to `dax_read_unlock'
-> >>
-> >> Fix this by following the lead of the other DM modules and wrapping calls
-> >> to the generic DAX code in #if IS_ENABLED(CONFIG_DAX_DRIVER) blocks.
-> >>
-> >> We also expand the failure case for the 'p' (persistent memory) flag so
-> >> that fails on both architectures that don't support persistent memory and
-> >> on kernels that don't have DAX support configured.  This prevents us from
-> >> ever hitting the BUG() in the persistent_memory_claim() stub.
-> >>
-> >> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> >> Reported-by: Arnd Bergmann <arnd@arndb.de>
-> >
-> > Thanks, I've picked this up.
-> 
-> ...I assume you're also going to let the 'pmem api' discussion resolve
-> before this all goes upstream?
+Apologies for the delay, the recent ping from Kees made me take a closer look.
 
-Yeah, I'm going to pivot back to that and put time to it shortly.  If
-dm-writecache has to wait another cycle (so 4.19 inclusion), while
-unfortunate, it wouldn't be the end of the world.
+On Sat, May 5, 2018 at 12:58 AM, Kyle Spiers <ksspiers@google.com> wrote:
+> In the quest to remove VLAs from the kernel[1], this moves the
+> allocation of coefs and blocks from the stack to being kmalloc()ed.
+>
+> [1] https://lkml.org/lkml/2018/3/7/621
+>
+> Signed-off-by: Kyle Spiers <ksspiers@google.com>
+> ---
+> Forgot to add slab.h
+> ---
+>  crypto/async_tx/async_pq.c  | 18 ++++++++++++++----
+>  crypto/async_tx/raid6test.c |  9 ++++++++-
+>  2 files changed, 22 insertions(+), 5 deletions(-)
+>
+> diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
+> index 56bd612927ab..af1912313a23 100644
+> --- a/crypto/async_tx/async_pq.c
+> +++ b/crypto/async_tx/async_pq.c
+> @@ -194,9 +194,9 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+>             (src_cnt <= dma_maxpq(device, 0) ||
+>              dma_maxpq(device, DMA_PREP_CONTINUE) > 0) &&
+>             is_dma_pq_aligned(device, offset, 0, len)) {
+> -               struct dma_async_tx_descriptor *tx;
+> +               struct dma_async_tx_descriptor *tx = NULL;
+>                 enum dma_ctrl_flags dma_flags = 0;
+> -               unsigned char coefs[src_cnt];
+> +               unsigned char *coefs;
+>                 int i, j;
+>
+>                 /* run the p+q asynchronously */
+> @@ -207,6 +207,9 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+>                  * sources and update the coefficients accordingly
+>                  */
+>                 unmap->len = len;
+> +               coefs = kmalloc_array(src_cnt, sizeof(*coefs), GFP_KERNEL);
 
-I look forward to your continued help, thanks.
-Mike
+At a minimum this needs to be GFP_NOIO since raid may be in the
+page-reclaim path.
+
+However, I think it may be better to allocate this with the rest of
+the stripe resources and pass it in as a scratch buffer. See the usage
+/ implementation of scribble_alloc() in drivers/md/raid5.c.
