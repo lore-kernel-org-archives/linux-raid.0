@@ -1,48 +1,53 @@
-From: Liu Bo <obuil.liubo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/6] Generic radix trees
-Date: Tue, 29 May 2018 09:48:20 +0800
-Message-ID: <CANQeFDBGzxF0r-+dxp5jcRnOCe8NgEzRgmc-84bGRBqiYg5KhA@mail.gmail.com>
-References: <20180523011821.12165-1-kent.overstreet@gmail.com>
-	<CANQeFDCLc56thuuGYBMdb_qvw_O=t7sLkJiP-LNYfKwgz74H_w@mail.gmail.com>
-	<20180526055601.GA26155@kmo-pixel>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm: writecache: add DAX dependency
+Date: Tue, 29 May 2018 09:06:01 -0400
+Message-ID: <20180529130601.GA31628@redhat.com>
+References: <20180528153834.2268557-1-arnd@arndb.de>
+ <CAPcyv4gpMhBaUdy=UY9M0-2QomycGZCo+K6o+Dzjdc4jmPjrkg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-In-Reply-To: <20180526055601.GA26155@kmo-pixel>
-List-Unsubscribe: <https://mail.openvswitch.org/mailman/options/ovs-dev>,
-	<mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://mail.openvswitch.org/pipermail/ovs-dev/>
-List-Post: <mailto:ovs-dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org>
-List-Help: <mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=help>
-List-Subscribe: <https://mail.openvswitch.org/mailman/listinfo/ovs-dev>,
-	<mailto:ovs-dev-request-yBygre7rU0TnMu66kgdUjQ@public.gmane.org?subject=subscribe>
-Sender: ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-Errors-To: ovs-dev-bounces-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
-To: Kent Overstreet <kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gpMhBaUdy=UY9M0-2QomycGZCo+K6o+Dzjdc4jmPjrkg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Mikulas Patocka <mpatocka@redhat.com>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, device-mapper development <dm-devel@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Heinz Mauelshagen <heinzm@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, May 26, 2018 at 1:56 PM, Kent Overstreet
-<kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> On Sat, May 26, 2018 at 11:16:42AM +0800, Liu Bo wrote:
->> > +/*
->> > + * Returns pointer to the specified byte @offset within @radix, allocating it if
->> > + * necessary - newly allocated slots are always zeroed out:
->> > + */
->> > +void *__genradix_ptr_alloc(struct __genradix *radix, size_t offset,
->> > +                          gfp_t gfp_mask)
->> > +{
->> > +       struct genradix_node **n;
->>
->> Any reason that " struct genradix_node ** " is used here instead of "
->> struct genradix_node * "?
->>
->> Looks like this function only manipulates *n, am I missing something?
->
-> It stores to *n, when it has to allocate a node (including the root)
+On Mon, May 28 2018 at  2:18pm -0400,
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-I see, thanks for the explanation.
+> On Mon, May 28, 2018 at 8:38 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > The new dm-writecache driver inconditionally uses the dax
+> > subsystem, leading to link errors in some configurations:
+> >
+> > drivers/md/dm-writecache.o: In function `writecache_ctr':
+> > dm-writecache.c:(.text+0x1fdc): undefined reference to `dax_read_lock'
+> > dm-writecache.c:(.text+0x2004): undefined reference to `dax_direct_access'
+> > dm-writecache.c:(.text+0x21cc): undefined reference to `dax_read_unlock'
+> >
+> > It seems wrong to require DAX in order to build the writecache
+> > driver, but that at least avoids randconfig build errors.
+> >
+> > Fixes: bb15b431d650 ("dm: add writecache target")
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> >  drivers/md/Kconfig | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> > index 852c7ebe2902..f8ecf2da1edf 100644
+> > --- a/drivers/md/Kconfig
+> > +++ b/drivers/md/Kconfig
+> > @@ -338,6 +338,7 @@ config DM_CACHE_SMQ
+> >  config DM_WRITECACHE
+> >         tristate "Writecache target"
+> >         depends on BLK_DEV_DM
+> > +       depends on DAX
+> 
+> This should probably be depends on DAX && DAX_DRIVER as we at least
+> need pmem or dcssblk enabled to provide a dax capable block device for
+> DM to claim.
 
-thanks,
-liubo
+But dm-writecache is meant to be used for normal SSD even if PMEM isn't
+available in the kernel.
