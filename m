@@ -1,97 +1,66 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] dm-writecache: fix compilation issue with !DAX
-Date: Wed, 30 May 2018 08:22:47 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1805300821510.24812@file01.intranet.prod.int.rdu2.redhat.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-writecache: fix compilation issue with !DAX
+Date: Wed, 30 May 2018 09:13:27 -0400
+Message-ID: <20180530131326.GA2106@redhat.com>
 References: <20180529175216.24937-1-ross.zwisler@linux.intel.com>
+ <alpine.LRH.2.02.1805300821510.24812@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180529175216.24937-1-ross.zwisler@linux.intel.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.02.1805300821510.24812@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Matthew Wilcox <mawilcox@microsoft.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Heinz Mauelshagen <heinzm@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Matthew Wilcox <mawilcox@microsoft.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Heinz Mauelshagen <heinzm@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, May 30 2018 at  8:22am -0400,
+Mikulas Patocka <mpatocka@redhat.com> wrote:
 
-
-On Tue, 29 May 2018, Ross Zwisler wrote:
-
-> As reported by Arnd (https://lkml.org/lkml/2018/5/28/1697), dm-writecache
-> will fail with link errors in configs where DAX isn't present:
 > 
-> drivers/md/dm-writecache.o: In function `writecache_ctr':
-> dm-writecache.c:(.text+0x1fdc): undefined reference to `dax_read_lock'
-> dm-writecache.c:(.text+0x2004): undefined reference to `dax_direct_access'
-> dm-writecache.c:(.text+0x21cc): undefined reference to `dax_read_unlock'
 > 
-> Fix this by following the lead of the other DM modules and wrapping calls
-> to the generic DAX code in #if IS_ENABLED(CONFIG_DAX_DRIVER) blocks.
+> On Tue, 29 May 2018, Ross Zwisler wrote:
 > 
-> We also expand the failure case for the 'p' (persistent memory) flag so
-> that fails on both architectures that don't support persistent memory and
-> on kernels that don't have DAX support configured.  This prevents us from
-> ever hitting the BUG() in the persistent_memory_claim() stub.
+> > As reported by Arnd (https://lkml.org/lkml/2018/5/28/1697), dm-writecache
+> > will fail with link errors in configs where DAX isn't present:
+> > 
+> > drivers/md/dm-writecache.o: In function `writecache_ctr':
+> > dm-writecache.c:(.text+0x1fdc): undefined reference to `dax_read_lock'
+> > dm-writecache.c:(.text+0x2004): undefined reference to `dax_direct_access'
+> > dm-writecache.c:(.text+0x21cc): undefined reference to `dax_read_unlock'
+> > 
+> > Fix this by following the lead of the other DM modules and wrapping calls
+> > to the generic DAX code in #if IS_ENABLED(CONFIG_DAX_DRIVER) blocks.
+> > 
+> > We also expand the failure case for the 'p' (persistent memory) flag so
+> > that fails on both architectures that don't support persistent memory and
+> > on kernels that don't have DAX support configured.  This prevents us from
+> > ever hitting the BUG() in the persistent_memory_claim() stub.
+> > 
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Reported-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> >  drivers/md/dm-writecache.c | 16 ++++++++++++----
+> >  1 file changed, 12 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/md/dm-writecache.c b/drivers/md/dm-writecache.c
+> > index 92af65fdf4af..1c2b53ae1a96 100644
+> > --- a/drivers/md/dm-writecache.c
+> > +++ b/drivers/md/dm-writecache.c
+> > @@ -253,6 +253,7 @@ static void wc_unlock(struct dm_writecache *wc)
+> >  	mutex_unlock(&wc->lock);
+> >  }
+> >  
+> > +#if IS_ENABLED(CONFIG_DAX_DRIVER)
 > 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reported-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/md/dm-writecache.c | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
+> We already have #if(n)def DM_WRITECACHE_ONLY_SSD
 > 
-> diff --git a/drivers/md/dm-writecache.c b/drivers/md/dm-writecache.c
-> index 92af65fdf4af..1c2b53ae1a96 100644
-> --- a/drivers/md/dm-writecache.c
-> +++ b/drivers/md/dm-writecache.c
-> @@ -253,6 +253,7 @@ static void wc_unlock(struct dm_writecache *wc)
->  	mutex_unlock(&wc->lock);
->  }
->  
-> +#if IS_ENABLED(CONFIG_DAX_DRIVER)
+> There is no need to use another macro for the same purpose.
 
-We already have #if(n)def DM_WRITECACHE_ONLY_SSD
+I removed DM_WRITECACHE_ONLY_SSD because it wasn't needed, this is the
+split out commit that I have since folded in:
+https://git.kernel.org/pub/scm/linux/kernel/git/snitzer/linux.git/commit/?h=dm-4.18-writecache-wip&id=e7fd3d1c05659f7e1295178290fbdaebf36becdc
 
-There is no need to use another macro for the same purpose.
+Ross's patch effectively builds ontop of that.
 
-Mikulas
-
->  static int persistent_memory_claim(struct dm_writecache *wc)
->  {
->  	int r;
-> @@ -337,6 +338,12 @@ static int persistent_memory_claim(struct dm_writecache *wc)
->  err1:
->  	return r;
->  }
-> +#else
-> +static int persistent_memory_claim(struct dm_writecache *wc)
-> +{
-> +	BUG();
-> +}
-> +#endif
->  
->  static void persistent_memory_release(struct dm_writecache *wc)
->  {
-> @@ -1901,16 +1908,17 @@ static int writecache_ctr(struct dm_target *ti, unsigned argc, char **argv)
->  	if (!strcasecmp(string, "s")) {
->  		wc->pmem_mode = false;
->  	} else if (!strcasecmp(string, "p")) {
-> -#ifdef CONFIG_ARCH_HAS_PMEM_API
-> +#if defined(CONFIG_ARCH_HAS_PMEM_API) && IS_ENABLED(CONFIG_DAX_DRIVER)
->  		wc->pmem_mode = true;
->  		wc->writeback_fua = true;
->  #else
->  		/*
-> -		 * If the architecture doesn't support persistent memory, this
-> -		 * driver can only be used in SSD-only mode.
-> +		 * If the architecture doesn't support persistent memory or
-> +		 * the kernel doesn't support any DAX drivers, this driver can
-> +		 * only be used in SSD-only mode.
->  		 */
->  		r = -EOPNOTSUPP;
-> -		ti->error = "Persistent memory not supported on this architecture";
-> +		ti->error = "Persistent memory or DAX not supported on this system";
->  		goto bad;
->  #endif
->  	} else {
-> -- 
-> 2.14.3
-> 
+Mike
