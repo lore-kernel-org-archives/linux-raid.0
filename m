@@ -1,63 +1,32 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2] async_pq: Remove VLA usage
-Date: Tue, 29 May 2018 15:40:50 -0700
-Message-ID: <CAPcyv4jrUwXFrF7aB-bKqfZ=17T5ie27KEO0JYWD=ETAqOqA4g@mail.gmail.com>
-References: <20180505075854.192237-1-ksspiers@google.com> <CAPcyv4i__AQmCxM1rVBrLqXreMxQ5u9uRHRyJ=XZjDELxxJTzw@mail.gmail.com>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: Introduce atomic_dec_and_lock_irqsave()
+Date: Wed, 30 May 2018 11:26:14 +0200
+Message-ID: <20180530092614.wch377xtjrjgovnl@linutronix.de>
+References: <20180504154533.8833-1-bigeasy@linutronix.de>
+ <20180523130241.GA12217@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4i__AQmCxM1rVBrLqXreMxQ5u9uRHRyJ=XZjDELxxJTzw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20180523130241.GA12217@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kyle Spiers <ksspiers@google.com>
-Cc: David Miller <davem@davemloft.net>, Kees Cook <keescook@chromium.org>, ray.jui@broadcom.com, linux-crypto@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, vkoul@kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de, Ingo Molnar <mingo@redhat.com>, linux-mm@kvack.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ add Vinod's korg address ]
+On 2018-05-23 15:02:41 [+0200], Peter Zijlstra wrote:
+> 1,5-6:
+> Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 
-On Tue, May 29, 2018 at 3:37 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> [ adding linux-raid ]
->
-> Apologies for the delay, the recent ping from Kees made me take a closer look.
->
-> On Sat, May 5, 2018 at 12:58 AM, Kyle Spiers <ksspiers@google.com> wrote:
->> In the quest to remove VLAs from the kernel[1], this moves the
->> allocation of coefs and blocks from the stack to being kmalloc()ed.
->>
->> [1] https://lkml.org/lkml/2018/3/7/621
->>
->> Signed-off-by: Kyle Spiers <ksspiers@google.com>
->> ---
->> Forgot to add slab.h
->> ---
->>  crypto/async_tx/async_pq.c  | 18 ++++++++++++++----
->>  crypto/async_tx/raid6test.c |  9 ++++++++-
->>  2 files changed, 22 insertions(+), 5 deletions(-)
->>
->> diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
->> index 56bd612927ab..af1912313a23 100644
->> --- a/crypto/async_tx/async_pq.c
->> +++ b/crypto/async_tx/async_pq.c
->> @@ -194,9 +194,9 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
->>             (src_cnt <= dma_maxpq(device, 0) ||
->>              dma_maxpq(device, DMA_PREP_CONTINUE) > 0) &&
->>             is_dma_pq_aligned(device, offset, 0, len)) {
->> -               struct dma_async_tx_descriptor *tx;
->> +               struct dma_async_tx_descriptor *tx = NULL;
->>                 enum dma_ctrl_flags dma_flags = 0;
->> -               unsigned char coefs[src_cnt];
->> +               unsigned char *coefs;
->>                 int i, j;
->>
->>                 /* run the p+q asynchronously */
->> @@ -207,6 +207,9 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
->>                  * sources and update the coefficients accordingly
->>                  */
->>                 unmap->len = len;
->> +               coefs = kmalloc_array(src_cnt, sizeof(*coefs), GFP_KERNEL);
->
-> At a minimum this needs to be GFP_NOIO since raid may be in the
-> page-reclaim path.
->
-> However, I think it may be better to allocate this with the rest of
-> the stripe resources and pass it in as a scratch buffer. See the usage
-> / implementation of scribble_alloc() in drivers/md/raid5.c.
+I sucked them into my try tree an noticed this off by one, I applied the
+tags to 1,4-5:
+*┬─>[PATCH 1/5] spinlock: atomic_dec_and_lock: Add an irqsave variant
+ ├─>[PATCH 2/5] mm/backing-dev: Use irqsave variant of atomic_dec_and_lock()
+ ├─>[PATCH 3/5] kernel/user: Use irqsave variant of atomic_dec_and_lock()
+*├─>[PATCH 4/5] drivers/md/raid5: Use irqsave variant of atomic_dec_and_lock()
+*├─>[PATCH 5/5] drivers/md/raid5: Do not disable irq on release_inactive_stripe_list() call
+
+as we talked about it.
+
+Sebastian
