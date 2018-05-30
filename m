@@ -1,32 +1,59 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: Introduce atomic_dec_and_lock_irqsave()
-Date: Wed, 30 May 2018 11:26:14 +0200
-Message-ID: <20180530092614.wch377xtjrjgovnl@linutronix.de>
-References: <20180504154533.8833-1-bigeasy@linutronix.de>
- <20180523130241.GA12217@hirez.programming.kicks-ass.net>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH] dm: writecache: add DAX dependency
+Date: Wed, 30 May 2018 08:21:24 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1805300820230.24812@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20180528153834.2268557-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180523130241.GA12217@hirez.programming.kicks-ass.net>
+In-Reply-To: <20180528153834.2268557-1-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de, Ingo Molnar <mingo@redhat.com>, linux-mm@kvack.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Heinz Mauelshagen <heinzm@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2018-05-23 15:02:41 [+0200], Peter Zijlstra wrote:
-> 1,5-6:
-> Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 
-I sucked them into my try tree an noticed this off by one, I applied the
-tags to 1,4-5:
-*┬─>[PATCH 1/5] spinlock: atomic_dec_and_lock: Add an irqsave variant
- ├─>[PATCH 2/5] mm/backing-dev: Use irqsave variant of atomic_dec_and_lock()
- ├─>[PATCH 3/5] kernel/user: Use irqsave variant of atomic_dec_and_lock()
-*├─>[PATCH 4/5] drivers/md/raid5: Use irqsave variant of atomic_dec_and_lock()
-*├─>[PATCH 5/5] drivers/md/raid5: Do not disable irq on release_inactive_stripe_list() call
 
-as we talked about it.
+On Mon, 28 May 2018, Arnd Bergmann wrote:
 
-Sebastian
+> The new dm-writecache driver inconditionally uses the dax
+> subsystem, leading to link errors in some configurations:
+> 
+> drivers/md/dm-writecache.o: In function `writecache_ctr':
+> dm-writecache.c:(.text+0x1fdc): undefined reference to `dax_read_lock'
+> dm-writecache.c:(.text+0x2004): undefined reference to `dax_direct_access'
+> dm-writecache.c:(.text+0x21cc): undefined reference to `dax_read_unlock'
+> 
+> It seems wrong to require DAX in order to build the writecache
+> driver, but that at least avoids randconfig build errors.
+> 
+> Fixes: bb15b431d650 ("dm: add writecache target")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/md/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index 852c7ebe2902..f8ecf2da1edf 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -338,6 +338,7 @@ config DM_CACHE_SMQ
+>  config DM_WRITECACHE
+>  	tristate "Writecache target"
+>  	depends on BLK_DEV_DM
+> +	depends on DAX
+>  	---help---
+>  	   The writecache target caches writes on persistent memory or SSD.
+>  	   It is intended for databases or other programs that need extremely
+> -- 
+> 2.9.0
+
+dm-writecache may be used without DAX in SSD-only mode.
+
+So, I'd fix this by changing the code in dm-writecache.c to
+
+#if !defined(CONFIG_ARCH_HAS_PMEM_API) || !defined(CONFIG_DAX)
+#define DM_WRITECACHE_ONLY_SSD
+#endif
+
+Mikulas
