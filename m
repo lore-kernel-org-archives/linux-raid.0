@@ -1,135 +1,170 @@
-From: Adam Hamsik <adam.hamsik@chillisys.com>
-Subject: mdadm raid soft lock-ups ubuntu kernel 4.13.0-36
-Date: Fri, 8 Jun 2018 15:20:57 +0200
-Message-ID: <CAOmBuBNmzD9PpGhKA6PdrqNLMFsXZ9GcbNiL8mxqkUNmGvYmsw@mail.gmail.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.18-rc
+Date: Sat, 9 Jun 2018 10:32:35 -0700
+Message-ID: <20180609173235.GA110796@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============7230033806818592108=="
-Return-path: <kernel-team-bounces@lists.ubuntu.com>
-List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
- <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
-List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
-List-Post: <mailto:kernel-team@lists.ubuntu.com>
-List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
-List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
- <mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
-Errors-To: kernel-team-bounces@lists.ubuntu.com
-Sender: "kernel-team" <kernel-team-bounces@lists.ubuntu.com>
-To: linux-raid@vger.kernel.org
-Cc: kernel-team@lists.ubuntu.com, =?UTF-8?B?S29yYmVsw6HFmSBKYWt1Yg==?= <j.korbelar@radiokomunikace.cz>, =?UTF-8?B?S291xZlpbCBQxZllbXlzbA==?= <P.Kouril@radiokomunikace.cz>, cra@elitecode.cz
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---===============7230033806818592108==
-Content-Type: multipart/alternative; boundary="0000000000003f19ee056e214503"
-
---0000000000003f19ee056e214503
-Content-Type: text/plain; charset="UTF-8"
-
 Hi,
+A few fixes of MD for this merge window. Mostly bug fixes:
+- raid5 stripe batch fix from Amy
+- Read error handling for raid1 FailFast device from Gioh
+- raid10 recovery NULL pointer dereference fix from Guoqing
+- Support write hint for raid5 stripe cache from Mariusz
+- Fixes for device hot add/remove from Neil and Yufen
+- Improve flush bio scalability from Xiao
 
-we're running Ubuntu 16.04.4, mdadm - v3.3 and Kernel 4.13.0-36.
-We have created raid10 using 22 960GB SSDs [1] . The problem we're
-experiencing is that /usr/share/mdadm/checkarray
-(executed by cron, included in a mdadm pkg) results in (soft?)
-deadlock - load on the node spikes up to 500-700 and all I/O operations
-are blocked for a period of time. We can see traces liek these [2] in
-our kernel log.
+There is a merge conflict, I attached the fix below. Please pull!
 
-e.g. it ends up in static state like
+Thanks,
+Shaohua
 
-test@os-node1:~$ cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md1 : active raid10 dm-23[9] dm-22[8] dm-21[7] dm-20[6] dm-18[4] dm-19[5]
-dm-17[3]
-                    dm-16[21] dm-15[20] dm-14[2] dm-13[19] dm-12[18]
-dm-11[17]
-                    dm-10[16] dm-9[15] dm-8[14] dm-7[13] dm-6[12] dm-5[11]
-dm-4[10] dm-3[1] dm-2[0]
-      10313171968 blocks super 1.2 512K chunks 2 near-copies [22/22]
-[UUUUUUUUUUUUUUUUUUUUUU]
-      [===>.................]  check = 19.0% (1965748032/10313171968)
-finish=1034728.8min speed=134K/sec
-      bitmap: 0/39 pages [0KB], 131072KB chunk
-unused devices: <none>
+The following changes since commit 83beed7b2b26f232d782127792dd0cd4362fdc41:
 
-and the only solution is to hard reboot the node. What we found out is that
-it
-doesn't happen on idle raid, we have to generate some significant load
-(10 VMs running fio[3] with 500GB HDDs.) to be able to reproduce the issue.
+  Merge branch 'fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/evalenti/linux-soc-thermal (2018-04-20 10:56:32 -0700)
 
-Anyone ever experienced similar issues? Do you have any suggestions how to
-better trouble shoot this issue and maybe identify if disks or software
-layer
-is responsible for this behaviour
+are available in the Git repository at:
 
-[1] http://www.samsung.com/us/dell/pdfs/PM1633a_Flyer_2016_v4.pdf
-[2] https://gist.github.com/haad/09213bab1bc30a00c7d255c0bc60897b
-[3] https://github.com/axboe/fio
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
 
+for you to fetch changes up to 5a409b4f56d50b212334f338cb8465d65550cd85:
 
+  MD: fix lock contention for flush bios (2018-05-21 09:30:26 -0700)
 
+----------------------------------------------------------------
+Amy Chiang (1):
+      md/raid5: Assigning NULL to sh->batch_head before testing bit R5_Overlap of a stripe
 
+Gioh Kim (1):
+      md/raid1: add error handling of read error from FailFast device
 
-Regards
-Adam.
+Guoqing Jiang (1):
+      raid10: check bio in r10buf_pool_free to void NULL pointer dereference
 
-Adam Hamsik
-00421 904 937 495
-adam.hamsik@chillisys.com
-haad@netbsd.org
+Mariusz Dabrowski (1):
+      raid5: copy write hint from origin bio to stripe
 
---0000000000003f19ee056e214503
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+NeilBrown (1):
+      md: fix two problems with setting the "re-add" device state.
 
-<div dir=3D"ltr"><div>Hi,<br><br>we&#39;re running Ubuntu 16.04.4, mdadm - =
-v3.3 and Kernel 4.13.0-36.<br>We have created raid10 using 22 960GB SSDs [1=
-] . The problem we&#39;re<br>experiencing is that /usr/share/mdadm/checkarr=
-ay<br>(executed by cron, included in a mdadm pkg) results in (soft?)<br>dea=
-dlock - load on the node spikes up to 500-700 and all I/O operations<br>are=
- blocked for a period of time. We can see traces liek these [2] in<br>our k=
-ernel log.<br><br>e.g. it ends up in static state like<br><br>test@os-node1=
-:~$ cat /proc/mdstat<br>Personalities : [linear] [multipath] [raid0] [raid1=
-] [raid6] [raid5] [raid4] [raid10]<br>md1 : active raid10 dm-23[9] dm-22[8]=
- dm-21[7] dm-20[6] dm-18[4] dm-19[5] dm-17[3]<br>=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 dm-16[21] dm-15[20] dm-14[2] dm-13[19] dm-12[18] dm-11[17]<=
-br>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dm-10[16] dm-9[15] dm-8[14] dm-7=
-[13] dm-6[12] dm-5[11] dm-4[10] dm-3[1] dm-2[0]<br>=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 10313171968 blocks super 1.2 512K chunks 2 near-copies [22/22] [UUUU=
-UUUUUUUUUUUUUUUUUU]<br>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 [=3D=3D=3D&gt;.......=
-..........]=C2=A0 check =3D 19.0% (1965748032/10313171968) finish=3D1034728=
-.8min speed=3D134K/sec<br>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bitmap: 0/39 pages=
- [0KB], 131072KB chunk<br>unused devices: &lt;none&gt;<br><br>and the only =
-solution is to hard reboot the node. What we found out is that it<br>doesn&=
-#39;t happen on idle raid, we have to generate some significant load<br>(10=
- VMs running fio[3] with 500GB HDDs.) to be able to reproduce the issue.<br=
-><br>Anyone ever experienced similar issues? Do you have any suggestions ho=
-w to<br>better trouble shoot this issue and maybe identify if disks or soft=
-ware layer<br>is responsible for this behaviour<br><br>[1] <a href=3D"http:=
-//www.samsung.com/us/dell/pdfs/PM1633a_Flyer_2016_v4.pdf">http://www.samsun=
-g.com/us/dell/pdfs/PM1633a_Flyer_2016_v4.pdf</a><br>[2] <a href=3D"https://=
-gist.github.com/haad/09213bab1bc30a00c7d255c0bc60897b">https://gist.github.=
-com/haad/09213bab1bc30a00c7d255c0bc60897b</a><br>[3] <a href=3D"https://git=
-hub.com/axboe/fio">https://github.com/axboe/fio</a><br></div><div><br></div=
-><div><br></div><div><br></div><div><br></div><div><br></div><div><div clas=
-s=3D"gmail_signature">Regards<br>Adam.<br><br>Adam Hamsik<br>00421 904 937 =
-495<br><a href=3D"mailto:adam.hamsik@chillisys.com" target=3D"_blank">adam.=
-hamsik@chillisys.com</a><br><a href=3D"mailto:haad@netbsd.org" target=3D"_b=
-lank">haad@netbsd.org</a></div></div>
-</div>
+Xiao Ni (1):
+      MD: fix lock contention for flush bios
 
---0000000000003f19ee056e214503--
+Yufen Yu (2):
+      md: fix an error code format and remove unsed bio_sector
+      md: fix NULL dereference of mddev->pers in remove_and_add_spares()
+
+ drivers/md/md.c     | 165 +++++++++++++++++++++++++++++++++++-----------------
+ drivers/md/md.h     |  22 ++++---
+ drivers/md/raid1.c  |   4 +-
+ drivers/md/raid10.c |  10 ++--
+ drivers/md/raid5.c  |  12 +++-
+ drivers/md/raid5.h  |   1 +
+ 6 files changed, 144 insertions(+), 70 deletions(-)
 
 
---===============7230033806818592108==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
-
-LS0gCmtlcm5lbC10ZWFtIG1haWxpbmcgbGlzdAprZXJuZWwtdGVhbUBsaXN0cy51YnVudHUuY29t
-Cmh0dHBzOi8vbGlzdHMudWJ1bnR1LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2tlcm5lbC10ZWFtCg==
-
---===============7230033806818592108==--
+diff --cc drivers/md/md.c
+index 22203eba1e6e,6b4e2f29fe4e..000000000000
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@@ -5489,16 -5518,34 +5510,32 @@@ int md_run(struct mddev *mddev
+  		sysfs_notify_dirent_safe(rdev->sysfs_state);
+  	}
+  
+ -	if (mddev->bio_set == NULL) {
+ -		mddev->bio_set = bioset_create(BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ -		if (!mddev->bio_set)
+ -			return -ENOMEM;
+ +	if (!bioset_initialized(&mddev->bio_set)) {
+ +		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ +		if (err)
+ +			return err;
+  	}
+ -	if (mddev->sync_set == NULL) {
+ -		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ -		if (!mddev->sync_set) {
+ -			err = -ENOMEM;
+ -			goto abort;
+ -		}
+ +	if (!bioset_initialized(&mddev->sync_set)) {
+ +		err = bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ +		if (err)
+ +			return err;
+  	}
++ 	if (mddev->flush_pool == NULL) {
++ 		mddev->flush_pool = mempool_create(NR_FLUSH_INFOS, flush_info_alloc,
++ 						flush_info_free, mddev);
++ 		if (!mddev->flush_pool) {
++ 			err = -ENOMEM;
++ 			goto abort;
++ 		}
++ 	}
++ 	if (mddev->flush_bio_pool == NULL) {
++ 		mddev->flush_bio_pool = mempool_create(NR_FLUSH_BIOS, flush_bio_alloc,
++ 						flush_bio_free, mddev);
++ 		if (!mddev->flush_bio_pool) {
++ 			err = -ENOMEM;
++ 			goto abort;
++ 		}
++ 	}
+  
+  	spin_lock(&pers_lock);
+  	pers = find_pers(mddev->level, mddev->clevel);
+@@@ -5654,6 -5703,26 +5693,17 @@@
+  	sysfs_notify_dirent_safe(mddev->sysfs_action);
+  	sysfs_notify(&mddev->kobj, NULL, "degraded");
+  	return 0;
+ -
++ abort:
++ 	if (mddev->flush_bio_pool) {
++ 		mempool_destroy(mddev->flush_bio_pool);
++ 		mddev->flush_bio_pool = NULL;
++ 	}
++ 	if (mddev->flush_pool){
++ 		mempool_destroy(mddev->flush_pool);
++ 		mddev->flush_pool = NULL;
++ 	}
+ -	if (mddev->bio_set) {
+ -		bioset_free(mddev->bio_set);
+ -		mddev->bio_set = NULL;
+ -	}
+ -	if (mddev->sync_set) {
+ -		bioset_free(mddev->sync_set);
+ -		mddev->sync_set = NULL;
+ -	}
++ 
++ 	return err;
+  }
+  EXPORT_SYMBOL_GPL(md_run);
+  
+@@@ -5864,8 -5933,22 +5914,16 @@@ void md_stop(struct mddev *mddev
+  	 * This is called from dm-raid
+  	 */
+  	__md_stop(mddev);
++ 	if (mddev->flush_bio_pool) {
++ 		mempool_destroy(mddev->flush_bio_pool);
++ 		mddev->flush_bio_pool = NULL;
++ 	}
++ 	if (mddev->flush_pool) {
++ 		mempool_destroy(mddev->flush_pool);
++ 		mddev->flush_pool = NULL;
++ 	}
+ -	if (mddev->bio_set) {
+ -		bioset_free(mddev->bio_set);
+ -		mddev->bio_set = NULL;
+ -	}
+ -	if (mddev->sync_set) {
+ -		bioset_free(mddev->sync_set);
+ -		mddev->sync_set = NULL;
+ -	}
+ +	bioset_exit(&mddev->bio_set);
+ +	bioset_exit(&mddev->sync_set);
+  }
+  
+  EXPORT_SYMBOL_GPL(md_stop);
