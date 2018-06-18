@@ -1,62 +1,112 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 0/5] bitmap: Introduce alloc/free helpers
-Date: Mon, 18 Jun 2018 16:09:58 +0300
-Message-ID: <20180618131003.88110-1-andriy.shevchenko@linux.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2 1/5] md: Avoid namespace collision with bitmap API
+Date: Mon, 18 Jun 2018 09:36:37 -0400
+Message-ID: <20180618133637.GB25400@redhat.com>
+References: <20180615132017.23889-2-andriy.shevchenko@linux.intel.com>
+ <201806152251.xRJyWhS2%fengguang.wu@intel.com>
+ <e4524ae9650c308245ecf398a0c27c6f7924be03.camel@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <e4524ae9650c308245ecf398a0c27c6f7924be03.camel@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yury Norov <ynorov@caviumnetworks.com>, linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com, Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: kbuild test robot <lkp@intel.com>, mika.westerberg@linux.intel.com, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Yury Norov <ynorov@caviumnetworks.com>, kbuild-all@01.org, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-A lot of code is using allocation of bitmaps using BITS_PER_LONG() macro and
-sizeof(unsigned long) operator. The readability suffers because of this.
+On Fri, Jun 15 2018 at 10:58am -0400,
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-The series introduces three helpers, i.e. bitmap_alloc(), bitmap_zalloc() and
-bitmap_free(), to make it more cleaner.
+> On Fri, 2018-06-15 at 23:09 +0800, kbuild test robot wrote:
+> > Hi Andy,
+> > 
+> > I love your patch! Yet something to improve:
+> 
+> Thanks!
+> 
+> I fixed that locally (definitely that module wasn't compiled by
+> default). Though I would wait to gather more comments before sending v3.
+> 
 
-Patch 1 is a preparatory to avoid namespace collisions between bitmap API and
-MD bitmap. No functional changes intended.
+Hi,
 
-Patch 2 is just orphaned from previous release cycle.
+DM is not MD.  drivers/md/persistent-data/* is only used by DM.
 
-Patch 3 introduces new helpers.
+Please rename all the drivers/md/persistent-data/ changes to use a
+"dm_bitmap" prefix.
 
-Patches 4 and 5 is just an example how to use new helpers. Locally I have like
-dozen of them against different subsystems and drivers.
+Thanks,
+Mike
 
-Ideally it would go through Input subsystem, thus, needs an Ack from MD maintainer(s).
-
-Since v2:
-- fix compilation issue in MD bitmap code
-- elaborate changes in commit message of patch 5
-
-Since v1:
-- added namespace fix patch against MD bitmap API
-- moved functions to lib/bitmap.c to avoid circular dependencies
-- appended Dmitry's tags
-
-Andy Shevchenko (5):
-  md: Avoid namespace collision with bitmap API
-  bitmap: Drop unnecessary 0 check for u32 array operations
-  bitmap: Add bitmap_alloc(), bitmap_zalloc() and bitmap_free()
-  Input: gpio-keys - Switch to bitmap_zalloc()
-  Input: evdev - Switch to bitmap API
-
- drivers/input/evdev.c                         |  16 +-
- drivers/input/keyboard/gpio_keys.c            |   8 +-
- drivers/md/dm-raid.c                          |   6 +-
- drivers/md/md-bitmap.c                        | 301 +++++++++---------
- drivers/md/md-bitmap.h                        |  46 +--
- drivers/md/md-cluster.c                       |  16 +-
- drivers/md/md.c                               |  44 +--
- .../md/persistent-data/dm-space-map-common.c  |  12 +-
- drivers/md/raid1.c                            |  20 +-
- drivers/md/raid10.c                           |  26 +-
- drivers/md/raid5-cache.c                      |   2 +-
- drivers/md/raid5.c                            |  24 +-
- include/linux/bitmap.h                        |   8 +
- lib/bitmap.c                                  |  28 +-
- 14 files changed, 283 insertions(+), 274 deletions(-)
-
--- 
-2.17.1
+> > [auto build test ERROR on next-20180615]
+> > [also build test ERROR on v4.17]
+> > [cannot apply to md/for-next linus/master dm/for-next v4.17 v4.17-rc7
+> > v4.17-rc6]
+> > [if your patch is applied to the wrong git tree, please drop us a note
+> > to help improve the system]
+> > 
+> > url:    https://github.com/0day-ci/linux/commits/Andy-Shevchenko/bitma
+> > p-Introduce-alloc-free-helpers/20180615-214724
+> > config: i386-randconfig-b0-06141412 (attached as .config)
+> > compiler: gcc-4.9 (Debian 4.9.4-2) 4.9.4
+> > reproduce:
+> >         # save the attached .config to linux build tree
+> >         make ARCH=i386 
+> > 
+> > All errors (new ones prefixed by >>):
+> > 
+> > > > drivers/md/persistent-data/dm-space-map-common.c:111:23: error:
+> > > > 'bitmap_prepare_for_write' undeclared here (not in a function)
+> > 
+> >      .prepare_for_write = bitmap_prepare_for_write,
+> >                           ^
+> > > > drivers/md/persistent-data/dm-space-map-common.c:112:11: error:
+> > > > 'bitmap_check' undeclared here (not in a function)
+> > 
+> >      .check = bitmap_check
+> >               ^
+> >    drivers/md/persistent-data/dm-space-map-common.c:72:13: warning:
+> > 'md_bitmap_prepare_for_write' defined but not used [-Wunused-function]
+> >     static void md_bitmap_prepare_for_write(struct dm_block_validator
+> > *v,
+> >                 ^
+> >    drivers/md/persistent-data/dm-space-map-common.c:84:12: warning:
+> > 'md_bitmap_check' defined but not used [-Wunused-function]
+> >     static int md_bitmap_check(struct dm_block_validator *v,
+> >                ^
+> > 
+> > vim +/bitmap_prepare_for_write +111 drivers/md/persistent-data/dm-
+> > space-map-common.c
+> > 
+> > 3241b1d3 Joe Thornber 2011-10-31  108  
+> > 3241b1d3 Joe Thornber 2011-10-31  109  static struct
+> > dm_block_validator dm_sm_bitmap_validator = {
+> > 3241b1d3 Joe Thornber 2011-10-31  110  	.name = "sm_bitmap",
+> > 3241b1d3 Joe Thornber 2011-10-31 @111  	.prepare_for_write =
+> > bitmap_prepare_for_write,
+> > 3241b1d3 Joe Thornber 2011-10-31 @112  	.check = bitmap_check
+> > 3241b1d3 Joe Thornber 2011-10-31  113  };
+> > 3241b1d3 Joe Thornber 2011-10-31  114  
+> > 
+> > :::::: The code at line 111 was first introduced by commit
+> > :::::: 3241b1d3e0aaafbfcd320f4d71ade629728cc4f4 dm: add persistent
+> > data library
+> > 
+> > :::::: TO: Joe Thornber <thornber@redhat.com>
+> > :::::: CC: Alasdair G Kergon <agk@redhat.com>
+> > 
+> > ---
+> > 0-DAY kernel test infrastructure                Open Source Technology
+> > Center
+> > https://lists.01.org/pipermail/kbuild-all                   Intel
+> > Corporation
+> 
+> -- 
+> Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Intel Finland Oy
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
