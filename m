@@ -1,71 +1,99 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH v3 3/5] bitmap: Add bitmap_alloc(), bitmap_zalloc() and bitmap_free()
-Date: Tue, 19 Jun 2018 02:18:48 +0300
-Message-ID: <CAHp75VcQWO36SVmYOJQyVo8uCoA2Wec_CWw2sjRyCd73TfCpTQ@mail.gmail.com>
-References: <20180618131003.88110-1-andriy.shevchenko@linux.intel.com>
- <20180618131003.88110-4-andriy.shevchenko@linux.intel.com>
- <20180618141404.68124daab97bd0f3a3051544@linux-foundation.org>
- <CAKdAkRTHOORds7aEauv4rp3_=PnGi=Nv-VS3-nAb9MztJPKG=Q@mail.gmail.com> <20180618161056.e52efd0e8bd36211e60705a2@linux-foundation.org>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH v2 5/5] Input: evdev - Switch to bitmap_zalloc()
+Date: Tue, 19 Jun 2018 11:33:16 -0700
+Message-ID: <20180619183316.GI71788@dtor-ws>
+References: <20180615132017.23889-1-andriy.shevchenko@linux.intel.com>
+ <20180615132017.23889-6-andriy.shevchenko@linux.intel.com>
+ <20180615214231.GA371@yury-thinkpad>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180618161056.e52efd0e8bd36211e60705a2@linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20180615214231.GA371@yury-thinkpad>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, agk@redhat.com, Mike Snitzer <snitzer@redhat.com>, device-mapper development <dm-devel@redhat.com>, shli@kernel.org, linux-raid@vger.kernel.org, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, Yury Norov <ynorov@caviumnetworks.com>, lkml <linux-kernel@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Joe Perches <joe@perches.com>
+To: Yury Norov <ynorov@caviumnetworks.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com
 List-Id: linux-raid.ids
 
-On Tue, Jun 19, 2018 at 2:10 AM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> On Mon, 18 Jun 2018 15:01:43 -0700 Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
->
->> > > +unsigned long *bitmap_alloc(unsigned int nbits, gfp_t flags)
->> > > +{
->> > > +     return kmalloc_array(BITS_TO_LONGS(nbits), sizeof(unsigned long), flags);
->> > > +}
->> > > +EXPORT_SYMBOL(bitmap_alloc);
->> > > +
->> > > +unsigned long *bitmap_zalloc(unsigned int nbits, gfp_t flags)
->> > > +{
->> > > +     return bitmap_alloc(nbits, flags | __GFP_ZERO);
->> > > +}
->> > > +EXPORT_SYMBOL(bitmap_zalloc);
->> > > +
->> > > +void bitmap_free(const unsigned long *bitmap)
->> > > +{
->> > > +     kfree(bitmap);
->> > > +}
->> > > +EXPORT_SYMBOL(bitmap_free);
->> > > +
->> >
->> > I suggest these functions are small and simple enough to justify
->> > inlining them.
->> >
->>
->> We can't as we end up including bitmap.h (by the way of cpumask.h)
->> form slab.h, so we gen circular dependency.
->
-> That info should have been in the changelog,
+On Sat, Jun 16, 2018 at 12:42:31AM +0300, Yury Norov wrote:
+> Hi Andy,
+> 
+> On Fri, Jun 15, 2018 at 04:20:17PM +0300, Andy Shevchenko wrote:
+> > Switch to bitmap_zalloc() to show clearly what we are allocating.
+> > Besides that it returns pointer of bitmap type instead of opaque void *.
+> > 
+> > Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > ---
+> >  drivers/input/evdev.c | 16 +++++++---------
+> >  1 file changed, 7 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/drivers/input/evdev.c b/drivers/input/evdev.c
+> > index c81c79d01d93..370206f987f9 100644
+> > --- a/drivers/input/evdev.c
+> > +++ b/drivers/input/evdev.c
+> > @@ -481,7 +481,7 @@ static int evdev_release(struct inode *inode, struct file *file)
+> >         evdev_detach_client(evdev, client);
+> > 
+> >         for (i = 0; i < EV_CNT; ++i)
+> > -               kfree(client->evmasks[i]);
+> > +               bitmap_free(client->evmasks[i]);
+> > 
+> >         kvfree(client);
+> > 
+> > @@ -925,17 +925,15 @@ static int evdev_handle_get_val(struct evdev_client *client,
+> >  {
+> >         int ret;
+> >         unsigned long *mem;
+> > -       size_t len;
+> > 
+> > -       len = BITS_TO_LONGS(maxbit) * sizeof(unsigned long);
+> > -       mem = kmalloc(len, GFP_KERNEL);
+> > +       mem = bitmap_alloc(maxbit, GFP_KERNEL);
+> >         if (!mem)
+> >                 return -ENOMEM;
+> 
+> But in commit message you say you switch to bitmap_zalloc(). IIUC
+> bitmap_alloc() is OK here. But could you please update comment to
+> avoid confusing.
+> 
+> > 
+> >         spin_lock_irq(&dev->event_lock);
+> >         spin_lock(&client->buffer_lock);
+> > 
+> > -       memcpy(mem, bits, len);
+> > +       bitmap_copy(mem, bits, maxbit);
+> > 
+> >         spin_unlock(&dev->event_lock);
+> > 
+> > @@ -947,7 +945,7 @@ static int evdev_handle_get_val(struct evdev_client *client,
+> >         if (ret < 0)
+> >                 evdev_queue_syn_dropped(client);
+> > 
+> > -       kfree(mem);
+> > +       bitmap_free(mem);
+> > 
+> >         return ret;
+> >  }
+> > @@ -1003,13 +1001,13 @@ static int evdev_set_mask(struct evdev_client *client,
+> >         if (!cnt)
+> >                 return 0;
+> > 
+> > -       mask = kcalloc(sizeof(unsigned long), BITS_TO_LONGS(cnt), GFP_KERNEL);
+> > +       mask = bitmap_zalloc(cnt, GFP_KERNEL);
+> >         if (!mask)
+> >                 return -ENOMEM;
+> > 
+> >         error = bits_from_user(mask, cnt - 1, codes_size, codes, compat);
+> 
+> If my understanding of bits_from_user() correct, here you can also use
+> bitmap_alloc(), true?
 
-I put it in cover letter, though it perhaps better to have in commit
-message itself.
+bits_from_user() copies as much as user supplied, we want to zero out
+the tail to make sure there is no garbage, so we want to use
+kcalloc/kzalloc/bitmap_zalloc here.
 
-> and probably a code
-> comment.
-
-This is done in header file. You meant C-file?
-
-
->> Maybe if we removed memcg
->> stuff from slab.h so we do not need to include workqueue.h...
->
-> Or move the basic slab API stuff out of slab.h into a new header.  Or
-> create a new, standalone work_struct.h - that looks pretty simple.
-
-Latter one seems requires least effort without potentially breaking things.
-I take it as your suggestion, though I would still give a glance if it
-is possible to split exactly memcg part out of slab.
+Thanks.
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Dmitry
