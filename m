@@ -1,75 +1,86 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v3 3/5] bitmap: Add bitmap_alloc(), bitmap_zalloc() and
- bitmap_free()
-Date: Tue, 26 Jun 2018 14:13:42 +0300
-Message-ID: <c5756465375e091a528b8c68fae3d8f3061454bf.camel@linux.intel.com>
-References: <20180618131003.88110-1-andriy.shevchenko@linux.intel.com>
-         <20180618131003.88110-4-andriy.shevchenko@linux.intel.com>
-         <20180618141404.68124daab97bd0f3a3051544@linux-foundation.org>
-         <CAKdAkRTHOORds7aEauv4rp3_=PnGi=Nv-VS3-nAb9MztJPKG=Q@mail.gmail.com>
-         <20180618161056.e52efd0e8bd36211e60705a2@linux-foundation.org>
-         <CAHp75Vei2_V7h4oKAU+uoCG2gUJH6uXtg9zVqQ_vnyr5KEmNYw@mail.gmail.com>
-         <20180622184613.GC92912@dtor-ws>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v4 1/5] dm: Avoid namespace collision with bitmap API
+Date: Sat, 30 Jun 2018 23:17:46 +0300
+Message-ID: <20180630201750.2588-2-andriy.shevchenko@linux.intel.com>
+References: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180622184613.GC92912@dtor-ws>
+In-Reply-To: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, agk@redhat.com, Mike Snitzer <snitzer@redhat.com>, device-mapper development <dm-devel@redhat.com>, shli@kernel.org, linux-raid@vger.kernel.org, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, Yury Norov <ynorov@caviumnetworks.com>, lkml <linux-kernel@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Joe Perches <joe@perches.com>
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yury Norov <ynorov@caviumnetworks.com>, linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com, Joe Perches <joe@perches.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-raid.ids
 
-On Fri, 2018-06-22 at 11:46 -0700, Dmitry Torokhov wrote:
-> On Thu, Jun 21, 2018 at 05:13:39AM +0300, Andy Shevchenko wrote:
-> > On Tue, Jun 19, 2018 at 2:10 AM, Andrew Morton
-> > <akpm@linux-foundation.org> wrote:
-> > > On Mon, 18 Jun 2018 15:01:43 -0700 Dmitry Torokhov <dmitry.torokho
-> > > v@gmail.com> wrote:
-> > > > We can't as we end up including bitmap.h (by the way of
-> > > > cpumask.h)
-> > > > form slab.h, so we gen circular dependency.
-> > 
-> > It's not just so easy. See below.
-> > 
-> > > That info should have been in the changelog, and probably a code
-> > > comment.
-> > > 
-> > > > Maybe if we removed memcg
-> > > > stuff from slab.h so we do not need to include workqueue.h...
-> > > 
-> > > Or move the basic slab API stuff out of slab.h into a new
-> > > header.  Or
-> > > create a new, standalone work_struct.h - that looks pretty simple.
-> > 
-> > I tried to move out work_struct, it didn't help. There are actually
-> > several circular dependencies that ends in bitmap.h either way or
-> > another.
-> > 
-> > First one is
-> > 
-> > slab.h -> gfp.h -> mmzone.h -> nodemask.h -> bitmap.h
-> > 
-> > And so on...
-> > 
-> > Splitting out kXalloc stuff to a separate header won't help, I
-> > think,
-> > because of the above.
-> > Splitting out struct work_struct is just a tip of an iceberg.
-> > Splitting out memcg stuff won't help in the similar way.
-> > 
-> > I'm all ears for (a better) solution.
-> 
-> I think ultimately we'd want to untangle this, but allocating bitmaps
-> is
-> not in any hot paths so having them as non-inlined functions should
-> not
-> hurt us that much for time being.
+bitmap API (include/linux/bitmap.h) has 'bitmap' prefix for its methods.
 
-Perhaps I can elaborate a bit in a commit message.
+On the other hand DM bitmap API is special case.
+Adding 'dm' prefix to it to avoid potential name space collision.
 
-Thanks for review!
+No functional changes intended.
 
+Suggested-by: Mike Snitzer <snitzer@redhat.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ .../md/persistent-data/dm-space-map-common.c  | 20 +++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/persistent-data/dm-space-map-common.c b/drivers/md/persistent-data/dm-space-map-common.c
+index 829b4ce057d8..0a3b8ae4a29c 100644
+--- a/drivers/md/persistent-data/dm-space-map-common.c
++++ b/drivers/md/persistent-data/dm-space-map-common.c
+@@ -69,9 +69,9 @@ static struct dm_block_validator index_validator = {
+  */
+ #define BITMAP_CSUM_XOR 240779
+ 
+-static void bitmap_prepare_for_write(struct dm_block_validator *v,
+-				     struct dm_block *b,
+-				     size_t block_size)
++static void dm_bitmap_prepare_for_write(struct dm_block_validator *v,
++					struct dm_block *b,
++					size_t block_size)
+ {
+ 	struct disk_bitmap_header *disk_header = dm_block_data(b);
+ 
+@@ -81,9 +81,9 @@ static void bitmap_prepare_for_write(struct dm_block_validator *v,
+ 						       BITMAP_CSUM_XOR));
+ }
+ 
+-static int bitmap_check(struct dm_block_validator *v,
+-			struct dm_block *b,
+-			size_t block_size)
++static int dm_bitmap_check(struct dm_block_validator *v,
++			   struct dm_block *b,
++			   size_t block_size)
+ {
+ 	struct disk_bitmap_header *disk_header = dm_block_data(b);
+ 	__le32 csum_disk;
+@@ -108,8 +108,8 @@ static int bitmap_check(struct dm_block_validator *v,
+ 
+ static struct dm_block_validator dm_sm_bitmap_validator = {
+ 	.name = "sm_bitmap",
+-	.prepare_for_write = bitmap_prepare_for_write,
+-	.check = bitmap_check
++	.prepare_for_write = dm_bitmap_prepare_for_write,
++	.check = dm_bitmap_check,
+ };
+ 
+ /*----------------------------------------------------------------*/
+@@ -124,7 +124,7 @@ static void *dm_bitmap_data(struct dm_block *b)
+ 
+ #define WORD_MASK_HIGH 0xAAAAAAAAAAAAAAAAULL
+ 
+-static unsigned bitmap_word_used(void *addr, unsigned b)
++static unsigned dm_bitmap_word_used(void *addr, unsigned b)
+ {
+ 	__le64 *words_le = addr;
+ 	__le64 *w_le = words_le + (b >> ENTRIES_SHIFT);
+@@ -170,7 +170,7 @@ static int sm_find_free(void *addr, unsigned begin, unsigned end,
+ {
+ 	while (begin < end) {
+ 		if (!(begin & (ENTRIES_PER_WORD - 1)) &&
+-		    bitmap_word_used(addr, begin)) {
++		    dm_bitmap_word_used(addr, begin)) {
+ 			begin += ENTRIES_PER_WORD;
+ 			continue;
+ 		}
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.18.0
