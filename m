@@ -1,63 +1,45 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v4 4/5] Input: gpio-keys - Switch to bitmap_zalloc()
-Date: Sat, 30 Jun 2018 23:17:49 +0300
-Message-ID: <20180630201750.2588-5-andriy.shevchenko@linux.intel.com>
-References: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.18-rc3
+Date: Mon, 2 Jul 2018 09:47:50 -0700
+Message-ID: <20180702164750.GA24121@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yury Norov <ynorov@caviumnetworks.com>, linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com, Joe Perches <joe@perches.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Switch to bitmap_zalloc() to show clearly what we are allocating.
-Besides that it returns pointer of bitmap type instead of opaque void *.
+Hi,
+Two small fixes for MD:
+- An error handling fix from me
+- A recover bug fix for raid10 from BingJing
+please pull!
 
-Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/input/keyboard/gpio_keys.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Thanks,
+Shaohua
 
-diff --git a/drivers/input/keyboard/gpio_keys.c b/drivers/input/keyboard/gpio_keys.c
-index 052e37675086..492a971b95b5 100644
---- a/drivers/input/keyboard/gpio_keys.c
-+++ b/drivers/input/keyboard/gpio_keys.c
-@@ -196,7 +196,7 @@ static ssize_t gpio_keys_attr_show_helper(struct gpio_keys_drvdata *ddata,
- 	ssize_t ret;
- 	int i;
- 
--	bits = kcalloc(BITS_TO_LONGS(n_events), sizeof(*bits), GFP_KERNEL);
-+	bits = bitmap_zalloc(n_events, GFP_KERNEL);
- 	if (!bits)
- 		return -ENOMEM;
- 
-@@ -216,7 +216,7 @@ static ssize_t gpio_keys_attr_show_helper(struct gpio_keys_drvdata *ddata,
- 	buf[ret++] = '\n';
- 	buf[ret] = '\0';
- 
--	kfree(bits);
-+	bitmap_free(bits);
- 
- 	return ret;
- }
-@@ -240,7 +240,7 @@ static ssize_t gpio_keys_attr_store_helper(struct gpio_keys_drvdata *ddata,
- 	ssize_t error;
- 	int i;
- 
--	bits = kcalloc(BITS_TO_LONGS(n_events), sizeof(*bits), GFP_KERNEL);
-+	bits = bitmap_zalloc(n_events, GFP_KERNEL);
- 	if (!bits)
- 		return -ENOMEM;
- 
-@@ -284,7 +284,7 @@ static ssize_t gpio_keys_attr_store_helper(struct gpio_keys_drvdata *ddata,
- 	mutex_unlock(&ddata->disable_lock);
- 
- out:
--	kfree(bits);
-+	bitmap_free(bits);
- 	return error;
- }
- 
--- 
-2.18.0
+
+The following changes since commit 9ffc59d57228d74809700be6f7ecb1db10292f05:
+
+  Merge tag '4.18-rc1-more-smb3-fixes' of git://git.samba.org/sfrench/cifs-2.6 (2018-06-18 14:28:19 +0900)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
+
+for you to fetch changes up to bda3153998f3eb2cafa4a6311971143628eacdbc:
+
+  md/raid10: fix that replacement cannot complete recovery after reassemble (2018-06-28 13:04:49 -0700)
+
+----------------------------------------------------------------
+BingJing Chang (1):
+      md/raid10: fix that replacement cannot complete recovery after reassemble
+
+Shaohua Li (1):
+      MD: cleanup resources in failure
+
+ drivers/md/md.c     | 8 +++++---
+ drivers/md/raid10.c | 7 +++++++
+ 2 files changed, 12 insertions(+), 3 deletions(-)
