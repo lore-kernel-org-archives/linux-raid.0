@@ -1,30 +1,48 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v4 1/5] dm: Avoid namespace collision with bitmap API
-Date: Mon, 2 Jul 2018 15:11:47 -0400
-Message-ID: <20180702191146.GA22796@redhat.com>
-References: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
- <20180630201750.2588-2-andriy.shevchenko@linux.intel.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] md/r5cache: remove redundant pointer bio
+Date: Tue,  3 Jul 2018 07:51:09 +0100
+Message-ID: <20180703065109.23620-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180630201750.2588-2-andriy.shevchenko@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yury Norov <ynorov@caviumnetworks.com>, linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com, Joe Perches <joe@perches.com>
+To: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jun 30 2018 at  4:17pm -0400,
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> bitmap API (include/linux/bitmap.h) has 'bitmap' prefix for its methods.
-> 
-> On the other hand DM bitmap API is special case.
-> Adding 'dm' prefix to it to avoid potential name space collision.
-> 
-> No functional changes intended.
-> 
-> Suggested-by: Mike Snitzer <snitzer@redhat.com>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Pointer bio is being assigned but is never used hence it is redundant
+and can be removed.
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+Cleans up clang warning:
+warning: variable 'bio' set but not used [-Wunused-but-set-variable]
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/md/raid5-cache.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 2b775abf377b..7416db70c6cc 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -717,7 +717,6 @@ static void r5c_disable_writeback_async(struct work_struct *work)
+ static void r5l_submit_current_io(struct r5l_log *log)
+ {
+ 	struct r5l_io_unit *io = log->current_io;
+-	struct bio *bio;
+ 	struct r5l_meta_block *block;
+ 	unsigned long flags;
+ 	u32 crc;
+@@ -730,7 +729,6 @@ static void r5l_submit_current_io(struct r5l_log *log)
+ 	block->meta_size = cpu_to_le32(io->meta_offset);
+ 	crc = crc32c_le(log->uuid_checksum, block, PAGE_SIZE);
+ 	block->checksum = cpu_to_le32(crc);
+-	bio = io->current_bio;
+ 
+ 	log->current_io = NULL;
+ 	spin_lock_irqsave(&log->io_list_lock, flags);
+-- 
+2.17.1
