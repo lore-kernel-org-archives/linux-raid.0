@@ -1,48 +1,88 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 2/6] drivers/md/raid5: Do not disable irq on release_inactive_stripe_list() call
-Date: Tue,  3 Jul 2018 22:01:37 +0200
-Message-ID: <20180703200141.28415-3-bigeasy@linutronix.de>
-References: <20180703200141.28415-1-bigeasy@linutronix.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v4 0/5] bitmap: Introduce alloc/free helpers
+Date: Thu, 5 Jul 2018 00:30:06 +0300
+Message-ID: <CAHp75Vd9RSxVsYrbiAFJKLPL4wNzAtS9qAPjCNJJ4E=QbeTP8A@mail.gmail.com>
+References: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180703200141.28415-1-bigeasy@linutronix.de>
+In-Reply-To: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Anna-Maria Gleixner <anna-maria@linutronix.de>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, device-mapper development <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input <linux-input@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Yury Norov <ynorov@caviumnetworks.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Joe Perches <joe@perches.com>
 List-Id: linux-raid.ids
 
-From: Anna-Maria Gleixner <anna-maria@linutronix.de>
+On Sat, Jun 30, 2018 at 11:17 PM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> A lot of code is using allocation of bitmaps using BITS_PER_LONG() macro and
+> sizeof(unsigned long) operator. The readability suffers because of this.
+>
+> The series introduces three helpers, i.e. bitmap_alloc(), bitmap_zalloc() and
+> bitmap_free(), to make it more cleaner.
+>
 
-There is no need to invoke release_inactive_stripe_list() with interrupts
-disabled. All call sites, except raid5_release_stripe(), unlock
-->device_lock and enable interrupts before invoking the function.
+Dmitry, it seems we are all set now and if you have no objections
+against this version, it would be nice to see it in your tree followed
+by upstream.
 
-Make it consistent.
+> Patches 1 and 2 are preparatory to avoid namespace collisions between
+> bitmap API and DM / MD bitmap. No functional changes intended.
+>
+> Patch 3 introduces new helpers.
+>
+> Patches 4 and 5 is just an example how to use new helpers. Locally I have
+> like dozen of them against different subsystems and drivers.
+>
+> Taking above into consideration it might make sense to have
+> an immutable branch for this cycle.
+>
+> Ideally it would go through Input subsystem, thus, needs an Ack
+> from MD / DM maintainer(s).
+>
+> Since v3:
+> - split DM part and do rename accordingly (Mike)
+> - explain better in the commit message why we can't make helpers as
+>   inliners (Dmitry, Andrew)
+> - drop applied orphaned patch
+>
+> Since v2:
+> - fix compilation issue in MD bitmap code
+> - elaborate changes in commit message of patch 5
+>
+> Since v1:
+> - added namespace fix patch against MD bitmap API
+> - moved functions to lib/bitmap.c to avoid circular dependencies
+> - appended Dmitry's tags
+>
+> Andy Shevchenko (5):
+>   dm: Avoid namespace collision with bitmap API
+>   md: Avoid namespace collision with bitmap API
+>   bitmap: Add bitmap_alloc(), bitmap_zalloc() and bitmap_free()
+>   Input: gpio-keys - Switch to bitmap_zalloc()
+>   Input: evdev - Switch to bitmap API
+>
+>  drivers/input/evdev.c                         |  16 +-
+>  drivers/input/keyboard/gpio_keys.c            |   8 +-
+>  drivers/md/dm-raid.c                          |   6 +-
+>  drivers/md/md-bitmap.c                        | 305 +++++++++---------
+>  drivers/md/md-bitmap.h                        |  60 ++--
+>  drivers/md/md-cluster.c                       |  18 +-
+>  drivers/md/md.c                               |  44 +--
+>  .../md/persistent-data/dm-space-map-common.c  |  20 +-
+>  drivers/md/raid1.c                            |  35 +-
+>  drivers/md/raid10.c                           |  52 ++-
+>  drivers/md/raid5-cache.c                      |   8 +-
+>  drivers/md/raid5.c                            |  44 +--
+>  include/linux/bitmap.h                        |   8 +
+>  lib/bitmap.c                                  |  19 ++
+>  14 files changed, 326 insertions(+), 317 deletions(-)
+>
+> --
+> 2.18.0
+>
 
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-Signed-off-by: Anna-Maria Gleixner <anna-maria@linutronix.de>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- drivers/md/raid5.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e933bff9459e..ca1dd0cb04c5 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -414,9 +414,8 @@ void raid5_release_stripe(struct stripe_head *sh)
- 		INIT_LIST_HEAD(&list);
- 		hash =3D sh->hash_lock_index;
- 		do_release_stripe(conf, sh, &list);
--		spin_unlock(&conf->device_lock);
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
- 		release_inactive_stripe_list(conf, &list, hash);
--		local_irq_restore(flags);
- 	}
- }
-=20
---=20
-2.18.0
+
+-- 
+With Best Regards,
+Andy Shevchenko
