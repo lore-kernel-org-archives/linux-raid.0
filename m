@@ -1,89 +1,49 @@
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [PATCH 2/6] md: convert to kvmalloc
-Date: Fri, 7 Sep 2018 14:16:10 -0400
-Message-ID: <20180907181610.GB29485@kmo-pixel>
-References: <20180907165635.8469-1-kent.overstreet@gmail.com>
- <20180907165635.8469-3-kent.overstreet@gmail.com>
- <20180907174942.GB3425@bombadil.infradead.org>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD update for 4.19-rc2
+Date: Fri, 7 Sep 2018 11:36:50 -0700
+Message-ID: <20180907183650.GA54020@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180907174942.GB3425@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Dave Hansen <dave.hansen@intel.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Sep 07, 2018 at 10:49:42AM -0700, Matthew Wilcox wrote:
-> On Fri, Sep 07, 2018 at 12:56:31PM -0400, Kent Overstreet wrote:
-> > @@ -165,7 +164,7 @@ ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-> >  		       struct dma_async_tx_descriptor *tx)
-> >  {
-> >  	int disks = sh->disks;
-> > -	struct page **srcs = flex_array_get(percpu->scribble, 0);
-> > +	struct page **srcs = percpu->scribble;
-> >  	int count = 0, pd_idx = sh->pd_idx, i;
-> >  	struct async_submit_ctl submit;
-> >  
-> > @@ -196,8 +195,8 @@ ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
-> >  	}
-> >  
-> >  	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, tx,
-> > -			  NULL, sh, flex_array_get(percpu->scribble, 0)
-> > -			  + sizeof(struct page *) * (sh->disks + 2));
-> > +			  NULL, sh, percpu->scribble +
-> > +			  sizeof(struct page *) * (sh->disks + 2));
-> 
-> I think this would read better written as:
-> 
-> 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, tx,
-> 			  NULL, sh, srcs + sh->disks + 2);
-> 
-> >  static addr_conv_t *to_addr_conv(struct stripe_head *sh,
-> >  				 struct raid5_percpu *percpu, int i)
-> >  {
-> > -	void *addr;
-> > -
-> > -	addr = flex_array_get(percpu->scribble, i);
-> > -	return addr + sizeof(struct page *) * (sh->disks + 2);
-> > +	return percpu->scribble + i * percpu->scribble_obj_size +
-> > +		sizeof(struct page *) * (sh->disks + 2);
-> >  }
-> >  
-> >  /* return a pointer to the address conversion region of the scribble buffer */
-> >  static struct page **to_addr_page(struct raid5_percpu *percpu, int i)
-> >  {
-> > -	void *addr;
-> > -
-> > -	addr = flex_array_get(percpu->scribble, i);
-> > -	return addr;
-> > +	return percpu->scribble + i * percpu->scribble_obj_size;
-> >  }
-> 
-> Perhaps this would be better as ...
-> 
->  static struct page **to_addr_page(struct raid5_percpu *percpu, int i)
->  {
-> -	void *addr;
-> -
-> -	addr = flex_array_get(percpu->scribble, i);
-> -	return addr;
-> +	return percpu->scribble + i * percpu->scribble_obj_size;
->  }
-> 
->  static addr_conv_t *to_addr_conv(struct stripe_head *sh,
->  				 struct raid5_percpu *percpu, int i)
->  {
-> -	void *addr;
-> -
-> -	addr = flex_array_get(percpu->scribble, i);
-> -	return addr + sizeof(struct page *) * (sh->disks + 2);
-> +	return to_addr_page(percpu, i) + sh->disks + 2;
->  }
-> 
-> 
-> The rest looks good.
+Hi,
+Please pull MD fixes for 4.19-rc2:
+- Fix a locking issue for md-cluster from Guoqing
+- Fix a sync crash for raid10 from Ni
+- Fix a reshape bug with raid5 cache enabled from Me
 
-Need some casts (to void * or addr_conv_t *) but yeah, I suppose that's a bit
-cleaner.
+Thanks,
+Shaohua
+
+The following changes since commit 420f51f4ab6bce6e580390729fadb89c31123636:
+
+  Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux (2018-08-31 09:20:30 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git tags/md/4.19-rc2
+
+for you to fetch changes up to 41a95041126522a921fb73df22cbdd520dfdebad:
+
+  md-cluster: release RESYNC lock after the last resync message (2018-08-31 17:38:10 -0700)
+
+----------------------------------------------------------------
+Guoqing Jiang (1):
+      md-cluster: release RESYNC lock after the last resync message
+
+Shaohua Li (1):
+      md/raid5-cache: disable reshape completely
+
+Xiao Ni (1):
+      RAID10 BUG_ON in raise_barrier when force is true and conf->barrier is 0
+
+ drivers/md/md-cluster.c | 10 +++++-----
+ drivers/md/raid10.c     |  5 ++++-
+ drivers/md/raid5-log.h  |  5 +++++
+ drivers/md/raid5.c      |  6 +++---
+ 4 files changed, 17 insertions(+), 9 deletions(-)
