@@ -1,85 +1,52 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: [PATCH] md: bitmap: use mddev_suspend/resume instead of ->quiesce()
-Date: Thu, 13 Sep 2018 17:35:30 +0200
-Message-ID: <1536852930-18926-1-git-send-email-jinpuwang@gmail.com>
+From: Gi-Oh Kim <gi-oh.kim@profitbricks.com>
+Subject: Re: [PATCH] md: bitmap: use mddev_suspend/resume instead of ->quiesce()
+Date: Tue, 18 Sep 2018 10:34:50 +0200
+Message-ID: <CAJX1YtapSbc3OZM+S3eqvOJRO6h1NG1tfxD-We8R81BLoLk7nw@mail.gmail.com>
+References: <1536852930-18926-1-git-send-email-jinpuwang@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1536852930-18926-1-git-send-email-jinpuwang@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: shli@kernel.org, neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Jack Wang <jinpu.wang@profitbricks.com>
+To: Jack Wang <xjtuwjp@gmail.com>
+Cc: shli@kernel.org, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
-From: Jack Wang <jinpu.wang@profitbricks.com>
+On Thu, Sep 13, 2018 at 5:35 PM, Jack Wang <xjtuwjp@gmail.com> wrote:
+> From: Jack Wang <jinpu.wang@profitbricks.com>
+>
+> After 9e1cc0a54556 ("md: use mddev_suspend/resume instead of ->quiesce()"=
+)
+> We still have similar left in bitmap functions.
+>
+> Replace quiesce() with mddev_suspend/resume.
+>
+> Also move md_bitmap_create out of mddev_suspend. and move mddev_resume
+> after md_bitmap_destroy. as we did in set_bitmap_file.
+>
+> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
 
-After 9e1cc0a54556 ("md: use mddev_suspend/resume instead of ->quiesce()")
-We still have similar left in bitmap functions.
+Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
 
-Replace quiesce() with mddev_suspend/resume.
 
-Also move md_bitmap_create out of mddev_suspend. and move mddev_resume
-after md_bitmap_destroy. as we did in set_bitmap_file.
 
-Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
----
- drivers/md/md-bitmap.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 2fc8c113977f..c369f1753ea6 100644
---- a/drivers/md/md-bitmap.c
-+++ b/drivers/md/md-bitmap.c
-@@ -2123,7 +2123,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 	}
- 
- 	if (!init)
--		bitmap->mddev->pers->quiesce(bitmap->mddev, 1);
-+		mddev_suspend(bitmap->mddev);
- 
- 	store.file = bitmap->storage.file;
- 	bitmap->storage.file = NULL;
-@@ -2239,7 +2239,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 
- 	if (!init) {
- 		md_bitmap_unplug(bitmap);
--		bitmap->mddev->pers->quiesce(bitmap->mddev, 0);
-+		mddev_resume(bitmap->mddev);
- 	}
- 	ret = 0;
- err:
-@@ -2288,9 +2288,9 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 			goto out;
- 		}
- 		if (mddev->pers) {
--			mddev->pers->quiesce(mddev, 1);
-+			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
--			mddev->pers->quiesce(mddev, 0);
-+			mddev_resume(mddev);
- 		}
- 		mddev->bitmap_info.offset = 0;
- 		if (mddev->bitmap_info.file) {
-@@ -2327,8 +2327,8 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 			mddev->bitmap_info.offset = offset;
- 			if (mddev->pers) {
- 				struct bitmap *bitmap;
--				mddev->pers->quiesce(mddev, 1);
- 				bitmap = md_bitmap_create(mddev, -1);
-+				mddev_suspend(mddev);
- 				if (IS_ERR(bitmap))
- 					rv = PTR_ERR(bitmap);
- 				else {
-@@ -2337,11 +2337,12 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
- 					if (rv)
- 						mddev->bitmap_info.offset = 0;
- 				}
--				mddev->pers->quiesce(mddev, 0);
- 				if (rv) {
- 					md_bitmap_destroy(mddev);
-+					mddev_resume(mddev);
- 					goto out;
- 				}
-+				mddev_resume(mddev);
- 			}
- 		}
- 	}
--- 
-2.7.4
+
+--=20
+GIOH KIM
+Linux Kernel Entwickler
+
+ProfitBricks GmbH
+Greifswalder Str. 207
+D - 10405 Berlin
+
+Tel:       +49 176 2697 8962
+Fax:      +49 30 577 008 299
+Email:    gi-oh.kim@profitbricks.com
+URL:      https://www.profitbricks.de
+
+Sitz der Gesellschaft: Berlin
+Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
+Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss, Matthias Steinberg, Christoph Steff=
+ens
