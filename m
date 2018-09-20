@@ -1,52 +1,36 @@
-From: Gi-Oh Kim <gi-oh.kim@profitbricks.com>
-Subject: Re: [PATCH] md: bitmap: use mddev_suspend/resume instead of ->quiesce()
-Date: Tue, 18 Sep 2018 10:34:50 +0200
-Message-ID: <CAJX1YtapSbc3OZM+S3eqvOJRO6h1NG1tfxD-We8R81BLoLk7nw@mail.gmail.com>
-References: <1536852930-18926-1-git-send-email-jinpuwang@gmail.com>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Subject: md: dead code in md_alloc()
+Date: Thu, 20 Sep 2018 19:03:57 +0300
+Message-ID: <3003e71d-ede0-0d55-973d-47c1c06e05ba@virtuozzo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1536852930-18926-1-git-send-email-jinpuwang@gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: shli@kernel.org, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>
+Cc: Kirill Tkhai <ktkhai@virtuozzo.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 13, 2018 at 5:35 PM, Jack Wang <xjtuwjp@gmail.com> wrote:
-> From: Jack Wang <jinpu.wang@profitbricks.com>
->
-> After 9e1cc0a54556 ("md: use mddev_suspend/resume instead of ->quiesce()"=
-)
-> We still have similar left in bitmap functions.
->
-> Replace quiesce() with mddev_suspend/resume.
->
-> Also move md_bitmap_create out of mddev_suspend. and move mddev_resume
-> after md_bitmap_destroy. as we did in set_bitmap_file.
->
-> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+Hi,
+Kirill noticed that the following piece of code from md_alloc(dev, name)
+is dead:
+	if (name && dev)
+		/*
+		 * Creating /dev/mdNNN via "newarray", so adjust hold_active.
+		 */
+		mddev->hold_active = UNTIL_STOP;
 
-Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
+md_alloc() is always called with either dev == 0 or name == NULL.
 
+Judging from the commit that added this code:
 
+039b7225e6e98783a7a7e79c52b29c437f29967d
+Author: NeilBrown <neilb@suse.com>
+Date:   Wed Apr 12 16:26:13 2017 +1000
 
+    md: allow creation of mdNNN arrays via md_mod/parameters/new_array
 
-
---=20
-GIOH KIM
-Linux Kernel Entwickler
-
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
-
-Tel:       +49 176 2697 8962
-Fax:      +49 30 577 008 299
-Email:    gi-oh.kim@profitbricks.com
-URL:      https://www.profitbricks.de
-
-Sitz der Gesellschaft: Berlin
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss, Matthias Steinberg, Christoph Steff=
-ens
+and from the comment, it seems should be "if (!name && dev)".
+But that would also change ->hold_active for created-by-open md devices,
+and I'm not sure whether that would be a desirable change or not.
