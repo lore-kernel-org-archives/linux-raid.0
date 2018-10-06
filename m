@@ -1,103 +1,37 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md/bitmap: use mddev_suspend/resume instead of
- ->quiesce()
-Date: Fri, 28 Sep 2018 11:30:44 -0700
-Message-ID: <20180928183044.GA12491@kernel.org>
-References: <1538035677-20770-1-git-send-email-jinpuwang@gmail.com>
+From: Eugene Syromiatnikov <esyr@redhat.com>
+Subject: [PATCH 0/2] Fix typo in RWH_WRITE_LIFE_NOT_SET constant name
+Date: Sat, 6 Oct 2018 19:51:14 +0200
+Message-ID: <20181006175114.GA10435@asgard.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1538035677-20770-1-git-send-email-jinpuwang@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: neilb@suse.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jeff Layton <jlayton@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 27, 2018 at 10:07:57AM +0200, Jack Wang wrote:
-> From: Jack Wang <jinpu.wang@profitbricks.com>
-> 
-> After 9e1cc0a54556 ("md: use mddev_suspend/resume instead of ->quiesce()")
-> We still have similar left in bitmap functions.
-> 
-> Replace quiesce() with mddev_suspend/resume.
-> 
-> Also move md_bitmap_create out of mddev_suspend. and move mddev_resume
-> after md_bitmap_destroy. as we did in set_bitmap_file.
-> 
-> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-> Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
-> 
-> ---
-> v2->v1: add reviewed-by.
-> ---
->  drivers/md/md-bitmap.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 2fc8c113977f..c369f1753ea6 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -2123,7 +2123,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->  	}
->  
->  	if (!init)
-> -		bitmap->mddev->pers->quiesce(bitmap->mddev, 1);
-> +		mddev_suspend(bitmap->mddev);
+Hello.
 
+This is a small fix of a typo (or, more specifically, some remnant of
+the old patch version spelling) in RWH_WRITE_LIFE_NOT_SET constant,
+which is named as RWF_WRITE_LIFE_NOT_SET currently.  Since the name
+with "H" is used in man page and everywhere else, it's probably worth
+to make the name used in the fcntl.h UAPI header in line with it.
+Second follow-up patch updates (the sole) usage site of this constant
+in kernel to use the new spelling.
 
-mddev_suspend is supposed to be called with reconfig_mutex hold. At least one
-place this isn't true with this change, for example, raid_preresume doesn't
-call md_bitmap_resize with the lock hold. Could you please double check the
-lock usage?
- 
->  	store.file = bitmap->storage.file;
->  	bitmap->storage.file = NULL;
-> @@ -2239,7 +2239,7 @@ int md_bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->  
->  	if (!init) {
->  		md_bitmap_unplug(bitmap);
-> -		bitmap->mddev->pers->quiesce(bitmap->mddev, 0);
-> +		mddev_resume(bitmap->mddev);
->  	}
->  	ret = 0;
->  err:
-> @@ -2288,9 +2288,9 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  			goto out;
->  		}
->  		if (mddev->pers) {
-> -			mddev->pers->quiesce(mddev, 1);
-> +			mddev_suspend(mddev);
->  			md_bitmap_destroy(mddev);
-> -			mddev->pers->quiesce(mddev, 0);
-> +			mddev_resume(mddev);
->  		}
->  		mddev->bitmap_info.offset = 0;
->  		if (mddev->bitmap_info.file) {
-> @@ -2327,8 +2327,8 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  			mddev->bitmap_info.offset = offset;
->  			if (mddev->pers) {
->  				struct bitmap *bitmap;
-> -				mddev->pers->quiesce(mddev, 1);
->  				bitmap = md_bitmap_create(mddev, -1);
-> +				mddev_suspend(mddev);
->  				if (IS_ERR(bitmap))
->  					rv = PTR_ERR(bitmap);
->  				else {
-> @@ -2337,11 +2337,12 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
->  					if (rv)
->  						mddev->bitmap_info.offset = 0;
->  				}
-> -				mddev->pers->quiesce(mddev, 0);
->  				if (rv) {
->  					md_bitmap_destroy(mddev);
-> +					mddev_resume(mddev);
->  					goto out;
->  				}
-> +				mddev_resume(mddev);
->  			}
->  		}
->  	}
-> -- 
-> 2.7.4
-> 
+The old name is retained as it is part of UAPI now.
+
+Eugene Syromiatnikov (2):
+  fcntl: fix typo in RWH_WRITE_LIFE_NOT_SET r/w hint
+  drivers/md/raid5.c: use the new spelling of RWH_WRITE_LIFE_NOT_SET
+
+ drivers/md/raid5.c               | 4 ++--
+ fs/fcntl.c                       | 2 +-
+ include/uapi/linux/fcntl.h       | 9 ++++++++-
+ tools/include/uapi/linux/fcntl.h | 9 ++++++++-
+ 4 files changed, 19 insertions(+), 5 deletions(-)
+
+-- 
+2.1.4
