@@ -1,58 +1,166 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCH] md/bitmap: use mddev_suspend/resume instead of ->quiesce()
-Date: Mon, 15 Oct 2018 13:53:31 +0200
-Message-ID: <CAMGffEkBzPEUPveXbJRVT8YsfBNgq1LJwj4Tc1RTqok23bUHjQ@mail.gmail.com>
-References: <1539012243-7489-1-git-send-email-jinpuwang@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm: add secdel target
+Date: Thu, 18 Oct 2018 16:01:25 -0400
+Message-ID: <20181018200124.GA6996@redhat.com>
+References: <20181014112439.8119-1-vt@altlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1539012243-7489-1-git-send-email-jinpuwang@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20181014112439.8119-1-vt@altlinux.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wang Jinpu <xjtuwjp@gmail.com>
-Cc: Shaohua Li <shli@kernel.org>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vitaly Chikunov <vt@altlinux.org>
+Cc: Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Jonathan Corbet <corbet@lwn.net>, Shaohua Li <shli@kernel.org>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 8, 2018 at 5:24 PM Jack Wang <xjtuwjp@gmail.com> wrote:
->
-> From: Jack Wang <jinpu.wang@profitbricks.com>
->
-> After 9e1cc0a54556 ("md: use mddev_suspend/resume instead of ->quiesce()"=
-)
-> We still have similar left in bitmap functions.
->
-> Replace quiesce() with mddev_suspend/resume.
->
-> Also move md_bitmap_create out of mddev_suspend. and move mddev_resume
-> after md_bitmap_destroy. as we did in set_bitmap_file.
->
-> Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
-> Reviewed-by: Gioh Kim <gi-oh.kim@profitbricks.com>
->
+On Sun, Oct 14 2018 at  7:24am -0400,
+Vitaly Chikunov <vt@altlinux.org> wrote:
+
+> Report to the upper level ability to discard, and translate arriving
+> discards to the writes of random or zero data to the underlying level.
+> 
+> Signed-off-by: Vitaly Chikunov <vt@altlinux.org>
 > ---
-> v3->v2: Drop the change in md_bitmap_resize, as Shaohua noticed
-> mddev_suspend/resume is supposed to be called with reconfig_mutex hold, i=
-t's not
-> the case here.
-> v2->v1: add reviewed-by.
+>   This target is the same as the linear target except that is reports ability to
+>   discard to the upper level and translates arriving discards into sector
+>   overwrites with random (or zero) data.
 
-ping?
+There is a fair amount of code duplication between dm-linear.c and this
+new target.
 
+Something needs to give, ideally you'd factor out methods that are
+shared by both targets, but those methods must _not_ introduce overhead
+to dm-linear.
 
---=20
-Jack Wang
-Linux Kernel Developer
+Could be that dm-linear methods just get called by the wrapper
+dm-sec-erase target (more on the "dm-sec-erase" name below).
+ 
+>   The target does not try to determine if the underlying drive reliably supports
+>   data overwrites, this decision is solely on the discretion of a user.
+> 
+>   It may be useful to create a secure deletion setup when filesystem when
+>   unlinking a file sends discards to its sectors, in this target they are
+>   translated to writes that wipe deleted data on the underlying drive.
+> 
+>   Tested on x86.
 
-ProfitBricks GmbH
-Greifswalder Str. 207
-D - 10405 Berlin
+All of this extra context and explanation needs to be captured in the
+actual patch header.  Not as a tangent in that "cut" section of your
+patch header.
+ 
+>  Documentation/device-mapper/dm-secdel.txt |  24 ++
+>  drivers/md/Kconfig                        |  14 ++
+>  drivers/md/Makefile                       |   2 +
+>  drivers/md/dm-secdel.c                    | 399 ++++++++++++++++++++++++++++++
+>  4 files changed, 439 insertions(+)
+>  create mode 100644 Documentation/device-mapper/dm-secdel.txt
+>  create mode 100644 drivers/md/dm-secdel.c
 
-Tel:       +49 30 577 008  042
-Fax:      +49 30 577 008 299
-Email:    jinpu.wang@profitbricks.com
-URL:      https://www.profitbricks.de
+<snip>
 
-Sitz der Gesellschaft: Berlin
-Registergericht: Amtsgericht Charlottenburg, HRB 125506 B
-Gesch=C3=A4ftsf=C3=BChrer: Achim Weiss, Matthias Steinberg, Christoph Steff=
-ens
+Shouldn't this target be implementing all that is needed for
+REQ_OP_SECURE_ERASE support?  And the resulting DM device would
+advertise its capability using QUEUE_FLAG_SECERASE?
+
+And this is why I think the target should be named "dm-sec-erase" or
+even "dm-secure-erase".
+
+> diff --git a/drivers/md/dm-secdel.c b/drivers/md/dm-secdel.c
+> new file mode 100644
+> index 000000000000..9aeaf3f243c0
+> --- /dev/null
+> +++ b/drivers/md/dm-secdel.c
+
+<snip>
+
+> +/*
+> + * Send amount of masking data to the device
+> + * @mode: 0 to write zeros, otherwise to write random data
+> + */
+> +static int issue_erase(struct block_device *bdev, sector_t sector,
+> +		       sector_t nr_sects, gfp_t gfp_mask, enum secdel_mode mode)
+> +{
+> +	int ret = 0;
+> +
+> +	while (nr_sects) {
+> +		struct bio *bio;
+> +		unsigned int nrvecs = min(nr_sects,
+> +					  (sector_t)BIO_MAX_PAGES >> 3);
+> +
+> +		bio = bio_alloc(gfp_mask, nrvecs);
+
+You should probably be using your own bioset to allocate these bios.
+
+> +		if (!bio) {
+> +			DMERR("%s %lu[%lu]: no memory to allocate bio (%u)",
+> +			      __func__, sector, nr_sects, nrvecs);
+> +			ret = -ENOMEM;
+> +			break;
+> +		}
+> +
+> +		bio->bi_iter.bi_sector = sector;
+> +		bio_set_dev(bio, bdev);
+> +		bio->bi_end_io = bio_end_erase;
+> +
+> +		while (nr_sects != 0) {
+> +			unsigned int sn;
+> +			struct page *page = NULL;
+> +
+> +			sn = min((sector_t)PAGE_SIZE >> 9, nr_sects);
+> +			if (mode == SECDEL_MODE_RAND) {
+> +				page = alloc_page(gfp_mask);
+> +				if (!page) {
+> +					DMERR("%s %lu[%lu]: no memory to allocate page for random data",
+> +					      __func__, sector, nr_sects);
+> +					/* will fallback to zero filling */
+
+In general, performing memory allocations to service IO is something all
+DM core and DM targets must work to avoid.  This smells bad.
+
+...
+
+> +
+> +/* convert discards into writes */
+> +static int secdel_map_discard(struct dm_target *ti, struct bio *sbio)
+> +{
+> +	struct secdel_c *lc = ti->private;
+> +	struct block_device *bdev = lc->dev->bdev;
+> +	sector_t sector = sbio->bi_iter.bi_sector;
+> +	sector_t nr_sects = bio_sectors(sbio);
+> +
+> +	lc->requests++;
+> +	if (!bio_sectors(sbio))
+> +		return 0;
+> +	if (!op_discard(sbio))
+> +		return 0;
+> +	lc->discards++;
+> +	if (WARN_ON(sbio->bi_vcnt != 0))
+> +		return -1;
+> +	DMDEBUG("DISCARD %lu: %u sectors M%d", sbio->bi_iter.bi_sector,
+> +		bio_sectors(sbio), lc->mode);
+> +	bio_endio(sbio);
+> +
+> +	if (issue_erase(bdev, sector, nr_sects, GFP_NOFS, lc->mode))
+
+At a minimum this should be GFP_NOIO.  You don't want to recurse into
+block (and potentially yourself) in the face of low memory.
+
+> +static int secdel_end_io(struct dm_target *ti, struct bio *bio,
+> +			 blk_status_t *error)
+> +{
+> +	struct secdel_c *lc = ti->private;
+> +
+> +	if (!*error && bio_op(bio) == REQ_OP_ZONE_REPORT)
+> +		dm_remap_zone_report(ti, bio, lc->start);
+> +
+> +	return DM_ENDIO_DONE;
+> +}
+
+Perfect example of why this new target shouldn't be doing a point in
+time copy of dm-linear code.
+
+With 4.20's upcoming zoned device changes dm-linear no longer even has
+an end_io hook (which was introduced purely for REQ_OP_ZONE_REPORT's
+benefit).
+
+Mike
