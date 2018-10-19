@@ -1,62 +1,71 @@
-From: Vitaly Chikunov <vt@altlinux.org>
-Subject: Re: [dm-devel] [PATCH] dm: add secdel target
-Date: Fri, 19 Oct 2018 15:11:21 +0300
-Message-ID: <20181019121121.k6nv6we37y52ymuc@sole.flsd.net>
-References: <20181014112439.8119-1-vt@altlinux.org>
- <20181019061945.GA7403@infradead.org>
- <20181019114944.syemvziebwfuruof@sole.flsd.net>
- <20181019120033.GA7869@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: [PATCH] md: fix memleak for mempool
+Date: Fri, 19 Oct 2018 16:21:31 +0200
+Message-ID: <1539958891-12412-1-git-send-email-jinpuwang@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181019120033.GA7869@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Jonathan Corbet <corbet@lwn.net>, Shaohua Li <shli@kernel.org>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: shli@fb.com, linux-raid@vger.kernel.org
+Cc: xni@redhat.com, linux-kernel@vger.kernel.org, Jack Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-raid.ids
 
-On Fri, Oct 19, 2018 at 05:00:33AM -0700, Christoph Hellwig wrote:
-> On Fri, Oct 19, 2018 at 02:49:44PM +0300, Vitaly Chikunov wrote:
-> > On Thu, Oct 18, 2018 at 11:19:45PM -0700, Christoph Hellwig wrote:
-> > > Just as a note:  the name is a complete misowner, a couple overwrite
-> > > are not in any way secure deletion.  So naming it this way and exposing
-> > > this as erase is a problem that is going to get back to bite us.
-> > 
-> > In what way it's not secure deletion?
-> > 
-> > It's secure deletion by overwriting discarded data instead of leaving it
-> > as is.
-> 
-> Overwriting data does not delete data.  Most certainly not in Flash based
-> SSDs, but also not in many storage arrays, or for that matter many modern
-> disks that have sectore remapping and various kinds of non-volatile
-> caches.  There is a reason why devices tend to have special commands to
-> perform secure erase - depending on the media they might or might not
-> overwrite internally, but at least they do it in a way that actually
-> works for the given media and device configuration.
+From: Jack Wang <jinpu.wang@profitbricks.com>
 
-I know that. This is why it says "The target does not try to determine
-if the underlying drive reliably support data overwrites, this decision
-is solely on the discretion of a user. Please note that not all drivers
-support this ability."
+I noticed kmemleak report memory leak when run create/stop
+md in a loop, backtrace:
+[<000000001ca975e7>] mempool_create_node+0x86/0xd0
+[<0000000095576bcd>] md_run+0x1057/0x1410 [md_mod]
+[<000000007b45c5fc>] do_md_run+0x15/0x130 [md_mod]
+[<000000001ede9ec0>] md_ioctl+0x1f49/0x25d0 [md_mod]
+[<000000004142cacf>] blkdev_ioctl+0x680/0xd00
 
+The root cause is we alloc mddev->flush_pool and
+mddev->flush_bio_pool in md_run, but from do_md_stop
+will not call into md_stop but __md_stop, move the
+mempool_destroy to __md_stop fixes the problem for me.
 
-> > dm-erase or dm-wipe? dm-discerase?
-> 
-> dm-overwrite?
+The bug was introduced in 5a409b4f56d5, the fixes should go to
+4.18+
 
-These are all good to me.
+Cc: Xiao Ni <xni@redhat.com>
+Fixes: 5a409b4f56d5 ("MD: fix lock contention for flush bios")
+Signed-off-by: Jack Wang <jinpu.wang@profitbricks.com>
+---
+ drivers/md/md.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-> 
-> > But still provide REQ_OP_SECURE_ERASE support?
-> 
-> On the one hand that is highly misleading and would warrant a warning
-> (see above), on the other hand discard is purely advisory and can be
-> skipped any time, including by intermediate layers.  So I don't think
-> you can actually do what you want without major changes to the whole
-> I/O stack.
-
-Probably, a concerned user should test his setup to be sure discards
-reach dm-secdel (after that they go as writes), and data he thinks
-should be erased is erased.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4c0f3e0331d5..feb6145097da 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5904,14 +5904,6 @@ static void __md_stop(struct mddev *mddev)
+ 		mddev->to_remove = &md_redundancy_group;
+ 	module_put(pers->owner);
+ 	clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-}
+-
+-void md_stop(struct mddev *mddev)
+-{
+-	/* stop the array and free an attached data structures.
+-	 * This is called from dm-raid
+-	 */
+-	__md_stop(mddev);
+ 	if (mddev->flush_bio_pool) {
+ 		mempool_destroy(mddev->flush_bio_pool);
+ 		mddev->flush_bio_pool = NULL;
+@@ -5920,6 +5912,14 @@ void md_stop(struct mddev *mddev)
+ 		mempool_destroy(mddev->flush_pool);
+ 		mddev->flush_pool = NULL;
+ 	}
++}
++
++void md_stop(struct mddev *mddev)
++{
++	/* stop the array and free an attached data structures.
++	 * This is called from dm-raid
++	 */
++	__md_stop(mddev);
+ 	bioset_exit(&mddev->bio_set);
+ 	bioset_exit(&mddev->sync_set);
+ }
+-- 
+2.7.4
