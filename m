@@ -1,7 +1,8 @@
 From: Eugene Syromiatnikov <esyr@redhat.com>
-Subject: [PATCH RESEND 1/2] fcntl: fix typo in RWH_WRITE_LIFE_NOT_SET r/w hint
-Date: Thu, 25 Oct 2018 23:54:46 +0200
-Message-ID: <d3f2c6b14ebf020a07dff5e79410ac1c1fef6023.1540504380.git.evgsyr@gmail.com>
+Subject: [PATCH RESEND 2/2] drivers/md/raid5.c: use the new spelling of
+ RWH_WRITE_LIFE_NOT_SET
+Date: Thu, 25 Oct 2018 23:54:52 +0200
+Message-ID: <effee6298f42c044a512864bc306bb8510e0ee9d.1540504380.git.evgsyr@gmail.com>
 References: <8acaf8d7-17c9-e8ec-c60a-18a011b4c34f@kernel.dk>
  <cover.1540504380.git.evgsyr@gmail.com>
 Mime-Version: 1.0
@@ -14,92 +15,35 @@ To: linux-kernel@vger.kernel.org
 Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jeff Layton <jlayton@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-According to commit message in the original commit v4.13-rc1~212^2~51,
-as well as userspace library[1] and man page update[2], R/W hint constants
-are intended to have RWH_* prefix. However, RWF_WRITE_LIFE_NOT_SET retained
-"RWF_*" prefix used in earlyy versions of the proposed patch set[3].
-Rename it and provide the old name as a synonym for the new one
-for backward compatibility.
+As it is consistent with prefixes of other write life time hints.
 
-[1] https://github.com/axboe/fio/commit/bd553af6c849
-[2] https://github.com/mkerrisk/man-pages/commit/580082a186fd
-[3] https://www.mail-archive.com/linux-block@vger.kernel.org/msg09638.html
-
-Fixes: c75b1d9421f8 ("fs: add fcntl() interface for setting/getting write life time hints")
 Signed-off-by: Eugene Syromiatnikov <esyr@redhat.com>
 Signed-off-by: Eugene Syromyatnikov <evgsyr@gmail.com>
 ---
- fs/fcntl.c                       | 2 +-
- include/uapi/linux/fcntl.h       | 9 ++++++++-
- tools/include/uapi/linux/fcntl.h | 9 ++++++++-
- 3 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/md/raid5.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index 0831851..9f7f57e 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -261,7 +261,7 @@ static int f_getowner_uids(struct file *filp, unsigned long arg)
- static bool rw_hint_valid(enum rw_hint hint)
- {
- 	switch (hint) {
--	case RWF_WRITE_LIFE_NOT_SET:
-+	case RWH_WRITE_LIFE_NOT_SET:
- 	case RWH_WRITE_LIFE_NONE:
- 	case RWH_WRITE_LIFE_SHORT:
- 	case RWH_WRITE_LIFE_MEDIUM:
-diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
-index 6448cdd..e8f878a 100644
---- a/include/uapi/linux/fcntl.h
-+++ b/include/uapi/linux/fcntl.h
-@@ -57,7 +57,7 @@
-  * Valid hint values for F_{GET,SET}_RW_HINT. 0 is "not set", or can be
-  * used to clear any hints previously set.
-  */
--#define RWF_WRITE_LIFE_NOT_SET	0
-+#define RWH_WRITE_LIFE_NOT_SET	0
- #define RWH_WRITE_LIFE_NONE	1
- #define RWH_WRITE_LIFE_SHORT	2
- #define RWH_WRITE_LIFE_MEDIUM	3
-@@ -65,6 +65,13 @@
- #define RWH_WRITE_LIFE_EXTREME	5
- 
- /*
-+ * The originally introduced spelling remained from the first
-+ * versions of the patch set that introduced the feature,
-+ * v4.13-rc1~212^2~51.
-+ */
-+#define RWF_WRITE_LIFE_NOT_SET	RWH_WRITE_LIFE_NOT_SET
-+
-+/*
-  * Types of directory notifications that may be requested.
-  */
- #define DN_ACCESS	0x00000001	/* File accessed */
-diff --git a/tools/include/uapi/linux/fcntl.h b/tools/include/uapi/linux/fcntl.h
-index 6448cdd..e8f878a 100644
---- a/tools/include/uapi/linux/fcntl.h
-+++ b/tools/include/uapi/linux/fcntl.h
-@@ -57,7 +57,7 @@
-  * Valid hint values for F_{GET,SET}_RW_HINT. 0 is "not set", or can be
-  * used to clear any hints previously set.
-  */
--#define RWF_WRITE_LIFE_NOT_SET	0
-+#define RWH_WRITE_LIFE_NOT_SET	0
- #define RWH_WRITE_LIFE_NONE	1
- #define RWH_WRITE_LIFE_SHORT	2
- #define RWH_WRITE_LIFE_MEDIUM	3
-@@ -65,6 +65,13 @@
- #define RWH_WRITE_LIFE_EXTREME	5
- 
- /*
-+ * The originally introduced spelling remained from the first
-+ * versions of the patch set that introduced the feature,
-+ * v4.13-rc1~212^2~51.
-+ */
-+#define RWF_WRITE_LIFE_NOT_SET	RWH_WRITE_LIFE_NOT_SET
-+
-+/*
-  * Types of directory notifications that may be requested.
-  */
- #define DN_ACCESS	0x00000001	/* File accessed */
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e4e98f4..0bcfbd3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1139,7 +1139,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			bi->bi_iter.bi_size = STRIPE_SIZE;
+ 			bi->bi_write_hint = sh->dev[i].write_hint;
+ 			if (!rrdev)
+-				sh->dev[i].write_hint = RWF_WRITE_LIFE_NOT_SET;
++				sh->dev[i].write_hint = RWH_WRITE_LIFE_NOT_SET;
+ 			/*
+ 			 * If this is discard request, set bi_vcnt 0. We don't
+ 			 * want to confuse SCSI because SCSI will replace payload
+@@ -1192,7 +1192,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			rbi->bi_io_vec[0].bv_offset = 0;
+ 			rbi->bi_iter.bi_size = STRIPE_SIZE;
+ 			rbi->bi_write_hint = sh->dev[i].write_hint;
+-			sh->dev[i].write_hint = RWF_WRITE_LIFE_NOT_SET;
++			sh->dev[i].write_hint = RWH_WRITE_LIFE_NOT_SET;
+ 			/*
+ 			 * If this is discard request, set bi_vcnt 0. We don't
+ 			 * want to confuse SCSI because SCSI will replace payload
 -- 
 2.1.4
