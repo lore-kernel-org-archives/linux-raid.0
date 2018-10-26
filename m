@@ -1,83 +1,61 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD update for 4.20
-Date: Fri, 26 Oct 2018 11:27:13 -0700
-Message-ID: <20181026182713.GA93048@kernel.org>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] [RFC] dm-bow working prototype
+Date: Fri, 26 Oct 2018 16:03:10 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1810261558460.28906@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20181023212358.60292-1-paullawrence@google.com> <20181023221819.GB17552@agk-dp.fab.redhat.com> <296148c2-f2d9-5818-ea76-d71a0d6f5cd4@google.com> <alpine.LRH.2.02.1810241514310.4080@file01.intranet.prod.int.rdu2.redhat.com>
+ <4a934593-1bd1-be5f-35c0-945c42762627@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4a934593-1bd1-be5f-35c0-945c42762627@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Paul Lawrence <paullawrence@google.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, kernel-team@android.com, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-Please pull MD update for 4.20. This pull mainly improves raid10 cluster and
-fixes some bugs.
-- raid10 cluster improvements from Guoqing
-- Memory leak fixes from Jack and Xiao
-- raid10 hang fix from Alex
-- raid5 block faulty device fix from Mariusz
-- metadata update fix from Neil
-- Invalid disk role fix from Me
-- Other clearnups
 
-Thanks,
-Shaohua
 
-The following changes since commit f151f57bfd97fb8c76bbef9e181ecba5dd750f2a:
+On Thu, 25 Oct 2018, Paul Lawrence wrote:
 
-  Merge tag 'drm-fixes-2018-09-28' of git://anongit.freedesktop.org/drm/drm (2018-09-28 18:55:17 +0200)
+> Thank you for the suggestion. I spent part of yesterday experimenting with
+> this idea, and it is certainly very promising. However, it does have some
+> disadvantages as compared to dm-bow, if I am understanding the setup
+> correctly:
+> 
+> 1) Since dm-snap has no concept of the free space on the underlying file
+> system any write into the free space will trigger a backup, so using twice the
+> space of dm-bow. Changing existing data will create a backup with both
+> drivers, but since we have to reserve the space for the backups up-front with
+> dm-snap, we would likely only have half the space for that. Either way, it
+> seems that dm-bow is likely to double the amount of changes we could make.
+> 
+> (Might it be possible to dynamically resize the backup file if it is mostly
+> used up? This would fix the problem of only having half the space for changing
 
-are available in the Git repository at:
+Yes - the snapshot store can be extended while the snapshot is active.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-next
+> existing data. The documentation seems to indicate that you can increase the
+> size of the snapshot partition, and it seems like it should be possible to
+> grow the underlying file without triggering a lot of writes. OTOH this would
+> have to happen in userspace which creates other issues.)
+> 
+> 2) Similarly, since writes into free space do not trigger a backup in dm-bow,
+> dm-bow is likely to have a lower performance overhead in many circumstances.
+> On the flip side, dm-bow's backup is in free space and will collide with other
+> writes, so this advantage will reduce as free space fills up. But by choosing
+> a suitable algorithm for how we use free space we might be able to retain most
+> of this advantage.
+> 
+> I intend to put together a fully working prototype of your suggestion next to
+> better compare with dm-bow. But I do believe there is value in tracking free
+> space and utilizing it in any such solution.
 
-for you to fetch changes up to af9b926de9c5986ab009e64917de87c9758bab10:
+The snapshot target could be hacked so that it remembers space trimmed 
+with REQ_OP_DISCARD and won't reallocate these blocks.
 
-  MD: Memory leak when flush bio size is zero (2018-10-22 09:15:26 -0700)
+But I suspect that running discard over the whole device would degrade 
+performance more than copying some unneeded data.
 
-----------------------------------------------------------------
-Alex Wu (1):
-      md/raid10: Fix raid10 replace hang when new added disk faulty
+How much data do you intend to backup with this solution?
 
-Colin Ian King (1):
-      md: remove redundant code that is no longer reachable
-
-Guoqing Jiang (8):
-      md-cluster/raid10: resize all the bitmaps before start reshape
-      md-cluster/raid10: support add disk under grow mode
-      md-cluster: introduce resync_info_get interface for sanity check
-      md-cluster/raid10: call update_size in md_reap_sync_thread
-      md-cluster/raid10: don't call remove_and_add_spares during reshaping stage
-      md-cluster/bitmap: don't call md_bitmap_sync_with_cluster during reshaping stage
-      md-cluster: send BITMAP_NEEDS_SYNC message if reshaping is interrupted
-      md-cluster: remove suspend_info
-
-Jack Wang (2):
-      md/bitmap: use mddev_suspend/resume instead of ->quiesce()
-      md: fix memleak for mempool
-
-Mariusz Tkaczyk (1):
-      raid5: block failing device if raid will be failed
-
-NeilBrown (1):
-      md: allow metadata updates while suspending an array - fix
-
-Shaohua Li (2):
-      MD: fix invalid stored role for a disk
-      MD: fix invalid stored role for a disk - try2
-
-Xiao Ni (1):
-      MD: Memory leak when flush bio size is zero
-
- drivers/md/md-bitmap.c   |   9 +-
- drivers/md/md-cluster.c  | 234 ++++++++++++++++++++++++++++++++---------------
- drivers/md/md-cluster.h  |   2 +
- drivers/md/md.c          | 113 +++++++++++++++++------
- drivers/md/md.h          |   1 +
- drivers/md/raid1.c       |   1 +
- drivers/md/raid10.c      | 109 ++++++++++++++++++----
- drivers/md/raid5-cache.c |   2 -
- drivers/md/raid5.c       |  12 +++
- 9 files changed, 356 insertions(+), 127 deletions(-)
+Mikulas
