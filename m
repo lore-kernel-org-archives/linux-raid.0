@@ -1,61 +1,45 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [dm-devel] [RFC] dm-bow working prototype
-Date: Fri, 26 Oct 2018 16:03:10 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1810261558460.28906@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20181023212358.60292-1-paullawrence@google.com> <20181023221819.GB17552@agk-dp.fab.redhat.com> <296148c2-f2d9-5818-ea76-d71a0d6f5cd4@google.com> <alpine.LRH.2.02.1810241514310.4080@file01.intranet.prod.int.rdu2.redhat.com>
- <4a934593-1bd1-be5f-35c0-945c42762627@google.com>
+From: Eugene Syromiatnikov <esyr@redhat.com>
+Subject: Re: [PATCH RESEND 1/2] fcntl: fix typo in RWH_WRITE_LIFE_NOT_SET r/w
+ hint
+Date: Mon, 29 Oct 2018 20:55:13 +0100
+Message-ID: <20181029195509.GL1535@asgard.redhat.com>
+References: <8acaf8d7-17c9-e8ec-c60a-18a011b4c34f@kernel.dk>
+ <cover.1540504380.git.evgsyr@gmail.com>
+ <d3f2c6b14ebf020a07dff5e79410ac1c1fef6023.1540504380.git.evgsyr@gmail.com>
+ <cdbbf807-4df6-58c9-7d9c-2aeb1727c157@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4a934593-1bd1-be5f-35c0-945c42762627@google.com>
+Content-Disposition: inline
+In-Reply-To: <cdbbf807-4df6-58c9-7d9c-2aeb1727c157@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Lawrence <paullawrence@google.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-doc@vger.kernel.org, kernel-team@android.com, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jeff Layton <jlayton@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On Thu, 25 Oct 2018, Paul Lawrence wrote:
-
-> Thank you for the suggestion. I spent part of yesterday experimenting with
-> this idea, and it is certainly very promising. However, it does have some
-> disadvantages as compared to dm-bow, if I am understanding the setup
-> correctly:
+On Fri, Oct 26, 2018 at 08:44:35AM -0600, Jens Axboe wrote:
+> On 10/25/18 3:54 PM, Eugene Syromiatnikov wrote:
+> > According to commit message in the original commit v4.13-rc1~212^2~51,
+> > as well as userspace library[1] and man page update[2], R/W hint constants
+> > are intended to have RWH_* prefix. However, RWF_WRITE_LIFE_NOT_SET retained
+> > "RWF_*" prefix used in earlyy versions of the proposed patch set[3].
+> > Rename it and provide the old name as a synonym for the new one
+> > for backward compatibility.
+> > 
+> > [1] https://github.com/axboe/fio/commit/bd553af6c849
+> > [2] https://github.com/mkerrisk/man-pages/commit/580082a186fd
+> > [3] https://www.mail-archive.com/linux-block@vger.kernel.org/msg09638.html
 > 
-> 1) Since dm-snap has no concept of the free space on the underlying file
-> system any write into the free space will trigger a backup, so using twice the
-> space of dm-bow. Changing existing data will create a backup with both
-> drivers, but since we have to reserve the space for the backups up-front with
-> dm-snap, we would likely only have half the space for that. Either way, it
-> seems that dm-bow is likely to double the amount of changes we could make.
+> Looks good, thanks for catching this. One note:
 > 
-> (Might it be possible to dynamically resize the backup file if it is mostly
-> used up? This would fix the problem of only having half the space for changing
-
-Yes - the snapshot store can be extended while the snapshot is active.
-
-> existing data. The documentation seems to indicate that you can increase the
-> size of the snapshot partition, and it seems like it should be possible to
-> grow the underlying file without triggering a lot of writes. OTOH this would
-> have to happen in userspace which creates other issues.)
+> > Fixes: c75b1d9421f8 ("fs: add fcntl() interface for setting/getting write life time hints")
+> > Signed-off-by: Eugene Syromiatnikov <esyr@redhat.com>
+> > Signed-off-by: Eugene Syromyatnikov <evgsyr@gmail.com>
 > 
-> 2) Similarly, since writes into free space do not trigger a backup in dm-bow,
-> dm-bow is likely to have a lower performance overhead in many circumstances.
-> On the flip side, dm-bow's backup is in free space and will collide with other
-> writes, so this advantage will reduce as free space fills up. But by choosing
-> a suitable algorithm for how we use free space we might be able to retain most
-> of this advantage.
+> Why do you have two separate sign-offs?
+
+Uh, sorry, I've messed up format-patch flags again.
+
+> -- 
+> Jens Axboe
 > 
-> I intend to put together a fully working prototype of your suggestion next to
-> better compare with dm-bow. But I do believe there is value in tracking free
-> space and utilizing it in any such solution.
-
-The snapshot target could be hacked so that it remembers space trimmed 
-with REQ_OP_DISCARD and won't reallocate these blocks.
-
-But I suspect that running discard over the whole device would degrade 
-performance more than copying some unneeded data.
-
-How much data do you intend to backup with this solution?
-
-Mikulas
