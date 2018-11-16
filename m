@@ -1,38 +1,30 @@
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 18/19] block: kill QUEUE_FLAG_NO_SG_MERGE
-Date: Thu, 15 Nov 2018 18:18:11 -0800
-Message-ID: <20181116021811.GM23828@vader>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-19-ming.lei@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V10 03/19] block: use bio_for_each_bvec() to compute
+ multi-page bvec count
+Date: Fri, 16 Nov 2018 10:19:56 +0100
+Message-ID: <20181116091956.GA17604@lst.de>
+References: <20181115085306.9910-1-ming.lei@redhat.com> <20181115085306.9910-4-ming.lei@redhat.com> <20181115202028.GC9348@vader> <20181115210510.GA24908@redhat.com> <20181115221847.GD9348@vader>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-19-ming.lei@redhat.com>
+In-Reply-To: <20181115221847.GD9348@vader>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@r>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>
 List-Id: linux-raid.ids
 
-On Thu, Nov 15, 2018 at 04:53:05PM +0800, Ming Lei wrote:
-> Since bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting"),
-> physical segment number is mainly figured out in blk_queue_split() for
-> fast path, and the flag of BIO_SEG_VALID is set there too.
+On Thu, Nov 15, 2018 at 02:18:47PM -0800, Omar Sandoval wrote:
+> My only reason to prefer unsigned int is consistency. unsigned int is
+> much more common in the kernel:
 > 
-> Now only blk_recount_segments() and blk_recalc_rq_segments() use this
-> flag.
+> $ ag --cc -s 'unsigned\s+int' | wc -l
+> 129632
+> $ ag --cc -s 'unsigned\s+(?!char|short|int|long)' | wc -l
+> 22435
 > 
-> Basically blk_recount_segments() is bypassed in fast path given BIO_SEG_VALID
-> is set in blk_queue_split().
-> 
-> For another user of blk_recalc_rq_segments():
-> 
-> - run in partial completion branch of blk_update_request, which is an unusual case
-> 
-> - run in blk_cloned_rq_check_limits(), still not a big problem if the flag is killed
-> since dm-rq is the only user.
-> 
-> Multi-page bvec is enabled now, QUEUE_FLAG_NO_SG_MERGE doesn't make sense any more.
+> checkpatch also warns on plain unsigned.
 
-This commit message wasn't very clear. Is it the case that
-QUEUE_FLAG_NO_SG_MERGE is no longer set by any drivers?
+Talk about chicken and egg.  unsigned is perfectly valid C, and being
+shorter often helps being more readable.  checkpath is as so often
+wrongly opinionated..
