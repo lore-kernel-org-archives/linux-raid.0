@@ -1,59 +1,27 @@
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 19/19] block: kill BLK_MQ_F_SG_MERGE
-Date: Fri, 16 Nov 2018 08:40:51 -0800
-Message-ID: <20181116164051.GX23828@vader>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V10 00/19] block: support multi-page bvec
+Date: Sat, 17 Nov 2018 10:42:11 +0800
+Message-ID: <20181117024209.GD8872@ming.t460p>
 References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-20-ming.lei@redhat.com>
+ <20181116140314.GA7735@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-20-ming.lei@redhat.com>
+In-Reply-To: <20181116140314.GA7735@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@r>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat
 List-Id: linux-raid.ids
 
-On Thu, Nov 15, 2018 at 04:53:06PM +0800, Ming Lei wrote:
-> QUEUE_FLAG_NO_SG_MERGE has been killed, so kill BLK_MQ_F_SG_MERGE too.
-> 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
+On Fri, Nov 16, 2018 at 03:03:14PM +0100, Christoph Hellwig wrote:
+> It seems like bi_phys_segments is still around of this series.
+> Shouldn't it be superflous now?
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+Even though multi-page bvec is supported, the segment number doesn't
+equal to the actual bvec count yet, for example, one bvec may be too
+bigger to be held in one single segment.
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/blk-mq-debugfs.c       | 1 -
->  drivers/block/loop.c         | 2 +-
->  drivers/block/nbd.c          | 2 +-
->  drivers/block/rbd.c          | 2 +-
->  drivers/block/skd_main.c     | 1 -
->  drivers/block/xen-blkfront.c | 2 +-
->  drivers/md/dm-rq.c           | 2 +-
->  drivers/mmc/core/queue.c     | 3 +--
->  drivers/scsi/scsi_lib.c      | 2 +-
->  include/linux/blk-mq.h       | 1 -
->  10 files changed, 7 insertions(+), 11 deletions(-)
 
-[snip]
+Thanks,
+Ming
