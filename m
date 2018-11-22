@@ -1,54 +1,59 @@
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V11 03/19] block: introduce bio_for_each_bvec()
-Date: Thu, 22 Nov 2018 09:17:06 +0800
-Message-ID: <20181122011705.GC20814@ming.t460p>
+Subject: Re: [PATCH V11 14/19] block: handle non-cluster bio out of
+ blk_bio_segment_split
+Date: Thu, 22 Nov 2018 17:33:00 +0800
+Message-ID: <20181122093259.GA27007@ming.t460p>
 References: <20181121032327.8434-1-ming.lei@redhat.com>
- <20181121032327.8434-4-ming.lei@redhat.com>
- <20181121133244.GB1640@lst.de>
- <20181121153135.GB19111@ming.t460p>
- <20181121161025.GB4977@lst.de>
+ <20181121032327.8434-15-ming.lei@redhat.com>
+ <20181121143355.GB2594@lst.de>
+ <20181121153726.GC19111@ming.t460p>
+ <20181121174621.GA6961@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-btrfs-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20181121161025.GB4977@lst.de>
-Sender: linux-btrfs-owner@vger.kernel.org
+In-Reply-To: <20181121174621.GA6961@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob
 List-Id: linux-raid.ids
 
-On Wed, Nov 21, 2018 at 05:10:25PM +0100, Christoph Hellwig wrote:
-> On Wed, Nov 21, 2018 at 11:31:36PM +0800, Ming Lei wrote:
-> > > But while looking over this I wonder why we even need the max_seg_len
-> > > here.  The only thing __bvec_iter_advance does it to move bi_bvec_done
-> > > and bi_idx forward, with corresponding decrements of bi_size.  As far
-> > > as I can tell the only thing that max_seg_len does is that we need
-> > > to more iterations of the while loop to archive the same thing.
-> > > 
-> > > And actual bvec used by the caller will be obtained using
-> > > bvec_iter_bvec or segment_iter_bvec depending on if they want multi-page
-> > > or single-page variants.
-> > 
-> > Right, we let __bvec_iter_advance() serve for both multi-page and single-page
-> > case, then we have to tell it via one way or another, now we use the constant
-> > of 'max_seg_len'.
-> > 
-> > Or you suggest to implement two versions of __bvec_iter_advance()?
+On Wed, Nov 21, 2018 at 06:46:21PM +0100, Christoph Hellwig wrote:
+> Actually..
 > 
-> No - I think we can always use the code without any segment in
-> bvec_iter_advance.  Because bvec_iter_advance only operates on the
-> iteractor, the generation of an actual single-page or multi-page
-> bvec is left to the caller using the bvec_iter_bvec or segment_iter_bvec
-> helpers.  The only difference is how many bytes you can move the
-> iterator forward in a single loop iteration - so if you pass in
-> PAGE_SIZE as the max_seg_len you just will have to loop more often
-> for a large enough bytes, but not actually do anything different.
+> I think we can kill this code entirely.  If we look at what the
+> clustering setting is really about it is to avoid ever merging a
+> segement that spans a page boundary.  And we should be able to do
+> that with something like this before your series:
+> 
+> ---
+> From 0d46fa76c376493a74ea0dbe77305bd5fa2cf011 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Wed, 21 Nov 2018 18:39:47 +0100
+> Subject: block: remove the "cluster" flag
+> 
+> The cluster flag implements some very old SCSI behavior.  As far as I
+> can tell the original intent was to enable or disable any kind of
+> segment merging.  But the actually visible effect to the LLDD is that
+> it limits each segments to be inside a single page, which we can
+> also affect by setting the maximum segment size and the virt
+> boundary.
 
-Yeah, I see that.
+This approach is pretty good given we can do post-split during mapping
+sg.
 
-The difference is made by bio_iter_iovec()/bio_iter_mp_iovec() in
-__bio_for_each_segment()/__bio_for_each_bvec().
+However, using virt boundary limit on non-cluster seems over-kill,
+because the bio will be over-split(each small bvec may be split as one bio)
+if it includes lots of small segment.
+
+What we want to do is just to avoid to merge bvecs to segment, which
+should have been done by NO_SG_MERGE simply. However, after multi-page
+is enabled, two adjacent bvecs won't be merged any more, I just forget
+to remove the bvec merge code in V11.
+
+So seems we can simply avoid to use virt boundary limit for non-cluster
+after multipage bvec is enabled?
 
 
-Thanks,
+thanks,
 Ming
