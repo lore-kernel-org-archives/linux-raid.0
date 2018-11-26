@@ -1,56 +1,49 @@
-From: Jack Wang <jack.wang.usish@gmail.com>
-Subject: Re: LVM RAID: task mdX_raid1:221 blocked for more than
- 120 seconds
-Date: Mon, 26 Nov 2018 08:25:21 +0100
-Message-ID: <CA+res+RFOnZczi4_jWess1JabXr-yOO9O4O95EP6VzYqUK9hNw@mail.gmail.com>
-References: <90473b46-274c-55af-3887-f058f2cf05dd@gmail.com>
-Reply-To: LVM general discussion and development <linux-lvm@redhat.com>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Subject: Re: [PATCH V12 06/20] block: rename bvec helpers
+Date: Mon, 26 Nov 2018 09:17:16 +0100
+Message-ID: <CANiq72nSa-=n2WUvmQOieDRtf+gC1wg2YuRvKDniSAtDn8=U8g@mail.gmail.com>
+References: <20181126021720.19471-1-ming.lei@redhat.com> <20181126021720.19471-7-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-lvm-bounces@redhat.com>
-In-Reply-To: <90473b46-274c-55af-3887-f058f2cf05dd@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/linux-lvm>
-List-Post: <mailto:linux-lvm@redhat.com>
-List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
-Sender: linux-lvm-bounces@redhat.com
-Errors-To: linux-lvm-bounces@redhat.com
-To: LVM general discussion and development <linux-lvm@redhat.com>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181126021720.19471-7-ming.lei@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: ming.lei@redhat.com
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Ted Ts'o <tytso@mit.edu>, osandov@fb.com, sagi@grimberg.me, dchinner@redhat.com, kent.overstreet@gmail.com, snitzer@redhat.com, dm-devel@redhat.com, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, shli@kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, Linux Btrfs <linux-btrfs@vger.kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, gaoxiang25@huawei.com, hch@lst.de, Ext4 Developers List <linux-ext4@vger.kernel.org>, colyli@suse.de, linux-bcache@vger.kernel.org, ooo@electrozaur.com, rpeterso@redhat.com, cluster-devel@redhat.com
 List-Id: linux-raid.ids
 
-K2NjIGxpbnV4LXJhaWQKClRoZSBjYWxsIHRyYWNlIGxvb2tzIGtpbmRzIG9mIGRlYWRsb2NrIGlu
-IHJhaWQKQ2VzYXJlIExlb25hcmRpIDxjZWxlb25hckBnbWFpbC5jb20+IOS6jjIwMTjlubQxMeac
-iDI15pel5ZGo5pelIOS4iuWNiDEyOjMx5YaZ6YGT77yaCj4KPiBTaW5jZSBteSBtZXNzYWdlIGRp
-ZCBub3QgcmVhY2ggdGhlIGxpc3QsIEknbSByZXNlbmRpbmcsIGJ1dCBmaXJzdCBJJ3ZlCj4gc3Vi
-c2NyaWJlZCBteXNlbGYuCj4KPiAtLS0tLS0tLS0tLS0tLS0tLS0KPiBIZWxsbywgSSdtIHdyaXRp
-bmcgaGVyZSB0byBoYXZlIHlvdXIgb3BpbmlvbiBhbmQgcG9zc2libHkgc29tZSBhZHZpY2UKPiBh
-Ym91dCBzb21lIERlYmlhbiBidWdzIHJlbGF0ZWQgdG8gTFZNIFJBSUQgdGhhdCBhcmUgc3RpbGwg
-dW5yZXNvbHZlZDoKPiBodHRwczovL2J1Z3MuZGViaWFuLm9yZy9jZ2ktYmluL2J1Z3JlcG9ydC5j
-Z2k/YnVnPTkxMzExOQo+IGh0dHBzOi8vYnVncy5kZWJpYW4ub3JnL2NnaS1iaW4vYnVncmVwb3J0
-LmNnaT9idWc9OTEzMTM4Cj4gaHR0cHM6Ly9idWdzLmRlYmlhbi5vcmcvY2dpLWJpbi9idWdyZXBv
-cnQuY2dpP2J1Zz05MDQ4MjIKPgo+IEJ1ZyAjOTEzMTE5IHdhcyBmaWxlZCBieSBtZSwgc28gSSBj
-YW4gcGVyc29uYWxseSBwcm92aWRlIHNvbWUgbW9yZQo+IGluZm9ybWF0aW9uIGFuZCBkbyB0ZXN0
-cy4KPgo+IFByZW1pc2VzIHJlbGF0ZWQgZGkgRGViaWFuIHVuc3RhYmxlOgo+ICogRGViaWFuJ3Mg
-a2VybmVsIGlzIGN1cnJlbnRseSA0LjE4LjIwLgo+ICogRnJvbSBrZXJuZWwgNC4xN35yYzcgRGVi
-aWFuIGVuYWJsZWQgU0NTSV9NUV9ERUZBVUxUIGFuZCBETV9NUV9ERUZBVUxULgo+ICogRGViaWFu
-J3MgTFZNIHVzZXJsYW5kIGlzIDIuMDIuMTc2Cj4KPiBUaGUgYWJvdmUgcmVwb3J0cyBzaG93cyBi
-bG9ja2VkIEkvTyB3aXRoIGRpZmZlcmVudCB0eXBlIG9mIExWTSBSQUlEIGFuZAo+IHdpdGggIzkx
-MzExOSBJJ3ZlIHN1Y2Nlc2Z1bGx5IHdvcmthcm91bmRlZCBwYXNzaW5nIHRoZSBmb2xsb3dpbmcg
-a2VybmVsCj4gcGFyYW1ldGVyczoKPiBzY3NpX21vZC51c2VfYmxrX21xPTAgZG1fbW9kLnVzZV9i
-bGtfbXE9MAo+Cj4gSSd2ZSByZWFkIHRoYXQgUkhFTCB3aWxsIGRlZmF1bHQgdG8gZW5hYmxpbmcg
-U0NTSV9NUV9ERUZBVUxUIGFuZAo+IERNX01RX0RFRkFVTFQgYW5kIHdpbGwgdXNlIGtlcm5lbCA0
-LjE4LiBNYXliZSB5b3UgaGF2ZSBhbHJlYWR5Cj4gZW5jb3VudGVyZWQgdGhpcyBidWcgYW5kIGl0
-J3MgYWxyZWFkeSByZXNvbHZlZC4gT3IgdGhlcmUgYXJlIHBhdGNoZXMKPiBwZW5kaW5nLgo+Cj4g
-V2hhdCBkbyB5b3UgdGhpbms/IFNob3VsZCBJIGZpbGUgYSBidWcgaW4gUmVkIEhhdCBidWcgdHJh
-Y2tlcj8KPgo+IENlc2FyZS4KPgo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCj4gbGludXgtbHZtIG1haWxpbmcgbGlzdAo+IGxpbnV4LWx2bUByZWRoYXQu
-Y29tCj4gaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWx2bQo+
-IHJlYWQgdGhlIExWTSBIT1ctVE8gYXQgaHR0cDovL3RsZHAub3JnL0hPV1RPL0xWTS1IT1dUTy8K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWx2
-bSBtYWlsaW5nIGxpc3QKbGludXgtbHZtQHJlZGhhdC5jb20KaHR0cHM6Ly93d3cucmVkaGF0LmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWx2bQpyZWFkIHRoZSBMVk0gSE9XLVRPIGF0IGh0dHA6
-Ly90bGRwLm9yZy9IT1dUTy9MVk0tSE9XVE8v
+On Mon, Nov 26, 2018 at 3:20 AM Ming Lei <ming.lei@redhat.com> wrote:
+>
+> We will support multi-page bvec soon, and have to deal with
+> single-page vs multi-page bvec. This patch follows Christoph's
+> suggestion to rename all the following helpers:
+>
+>         for_each_bvec
+>         bvec_iter_bvec
+>         bvec_iter_len
+>         bvec_iter_page
+>         bvec_iter_offset
+>
+> into:
+>         for_each_segment
+>         segment_iter_bvec
+>         segment_iter_len
+>         segment_iter_page
+>         segment_iter_offset
+>
+> so that these helpers named with 'segment' only deal with single-page
+> bvec, or called segment. We will introduce helpers named with 'bvec'
+> for multi-page bvec.
+>
+> bvec_iter_advance() isn't renamed becasue this helper is always operated
+> on real bvec even though multi-page bvec is supported.
+>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  .clang-format                  |  2 +-
+
+Acked-by: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+
+Cheers,
+Miguel
