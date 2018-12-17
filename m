@@ -1,48 +1,225 @@
-From: Eugene Syromiatnikov <esyr@redhat.com>
-Subject: Re: [PATCH v2 0/2] Fix typo in RWH_WRITE_LIFE_NOT_SET constant name
-Date: Mon, 17 Dec 2018 12:39:49 +0100
-Message-ID: <20181217113944.GG24150@asgard.redhat.com>
-References: <cdbbf807-4df6-58c9-7d9c-2aeb1727c157@kernel.dk>
- <cover.1540843065.git.esyr@redhat.com>
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: [PATCH 2/7] md: convert to kvmalloc
+Date: Mon, 17 Dec 2018 08:19:24 -0500
+Message-ID: <20181217131929.11727-3-kent.overstreet@gmail.com>
+References: <20181217131929.11727-1-kent.overstreet@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1540843065.git.esyr@redhat.com>
+In-Reply-To: <20181217131929.11727-1-kent.overstreet@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jeff Layton <jlayton@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: akpm@linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Matthew Wilcox <willy@infradead.org>
 List-Id: linux-raid.ids
 
-On Mon, Oct 29, 2018 at 09:00:45PM +0100, Eugene Syromiatnikov wrote:
-> This is a small fix of a typo (or, more specifically, some remnant of
-> the old patch version spelling) in RWH_WRITE_LIFE_NOT_SET constant,
-> which is named as RWF_WRITE_LIFE_NOT_SET currently.  Since the name
-> with "H" is used in man page and everywhere else, it's probably worth
-> to make the name used in the fcntl.h UAPI header in line with it.
-> Second follow-up patch updates (the sole) usage site of this constant
-> in kernel to use the new spelling.
-> 
-> The old name is retained as it is part of UAPI now.
+The code really just wants a big flat buffer, so just do that.
 
-Hello.
+Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Reviewed-by: Matthew Wilcox <willy@infradead.org>
+---
+ drivers/md/raid5-ppl.c |  6 +--
+ drivers/md/raid5.c     | 87 +++++++++++++++++++-----------------------
+ drivers/md/raid5.h     |  9 +++--
+ 3 files changed, 46 insertions(+), 56 deletions(-)
 
-Are there any issues with this version of the series?
-
-> Changes since v1:
->  * Changed format of the commit ID in the commit message of the first patch.
->  * Removed bogus Signed-off-by that snuck into the resend of the series.
-> 
-> Eugene Syromiatnikov (2):
->   fcntl: fix typo in RWH_WRITE_LIFE_NOT_SET r/w hint
->   drivers/md/raid5.c: use the new spelling of RWH_WRITE_LIFE_NOT_SET
-> 
->  drivers/md/raid5.c               | 4 ++--
->  fs/fcntl.c                       | 2 +-
->  include/uapi/linux/fcntl.h       | 9 ++++++++-
->  tools/include/uapi/linux/fcntl.h | 9 ++++++++-
->  4 files changed, 19 insertions(+), 5 deletions(-)
-> 
-> -- 
-> 2.1.4
-> 
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 3a7c363265..0b096ddc9c 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -16,7 +16,6 @@
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
+ #include <linux/crc32c.h>
+-#include <linux/flex_array.h>
+ #include <linux/async_tx.h>
+ #include <linux/raid/md_p.h>
+ #include "md.h"
+@@ -165,7 +164,7 @@ ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 		       struct dma_async_tx_descriptor *tx)
+ {
+ 	int disks = sh->disks;
+-	struct page **srcs = flex_array_get(percpu->scribble, 0);
++	struct page **srcs = percpu->scribble;
+ 	int count = 0, pd_idx = sh->pd_idx, i;
+ 	struct async_submit_ctl submit;
+ 
+@@ -196,8 +195,7 @@ ops_run_partial_parity(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	}
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, tx,
+-			  NULL, sh, flex_array_get(percpu->scribble, 0)
+-			  + sizeof(struct page *) * (sh->disks + 2));
++			  NULL, sh, (void *) (srcs + sh->disks + 2));
+ 
+ 	if (count == 1)
+ 		tx = async_memcpy(sh->ppl_page, srcs[0], 0, 0, PAGE_SIZE,
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4990f0319f..c92e26fbcd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -54,7 +54,6 @@
+ #include <linux/slab.h>
+ #include <linux/ratelimit.h>
+ #include <linux/nodemask.h>
+-#include <linux/flex_array.h>
+ 
+ #include <trace/events/block.h>
+ #include <linux/list_sort.h>
+@@ -1394,22 +1393,16 @@ static void ops_complete_compute(void *stripe_head_ref)
+ }
+ 
+ /* return a pointer to the address conversion region of the scribble buffer */
+-static addr_conv_t *to_addr_conv(struct stripe_head *sh,
+-				 struct raid5_percpu *percpu, int i)
++static struct page **to_addr_page(struct raid5_percpu *percpu, int i)
+ {
+-	void *addr;
+-
+-	addr = flex_array_get(percpu->scribble, i);
+-	return addr + sizeof(struct page *) * (sh->disks + 2);
++	return percpu->scribble + i * percpu->scribble_obj_size;
+ }
+ 
+ /* return a pointer to the address conversion region of the scribble buffer */
+-static struct page **to_addr_page(struct raid5_percpu *percpu, int i)
++static addr_conv_t *to_addr_conv(struct stripe_head *sh,
++				 struct raid5_percpu *percpu, int i)
+ {
+-	void *addr;
+-
+-	addr = flex_array_get(percpu->scribble, i);
+-	return addr;
++	return (void *) (to_addr_page(percpu, i) + sh->disks + 2);
+ }
+ 
+ static struct dma_async_tx_descriptor *
+@@ -2238,21 +2231,23 @@ static int grow_stripes(struct r5conf *conf, int num)
+  * calculate over all devices (not just the data blocks), using zeros in place
+  * of the P and Q blocks.
+  */
+-static struct flex_array *scribble_alloc(int num, int cnt, gfp_t flags)
++static int scribble_alloc(struct raid5_percpu *percpu,
++			  int num, int cnt, gfp_t flags)
+ {
+-	struct flex_array *ret;
+-	size_t len;
++	size_t obj_size =
++		sizeof(struct page *) * (num+2) +
++		sizeof(addr_conv_t) * (num+2);
++	void *scribble;
+ 
+-	len = sizeof(struct page *) * (num+2) + sizeof(addr_conv_t) * (num+2);
+-	ret = flex_array_alloc(len, cnt, flags);
+-	if (!ret)
+-		return NULL;
+-	/* always prealloc all elements, so no locking is required */
+-	if (flex_array_prealloc(ret, 0, cnt, flags)) {
+-		flex_array_free(ret);
+-		return NULL;
+-	}
+-	return ret;
++	scribble = kvmalloc_array(cnt, obj_size, flags);
++	if (!scribble)
++		return -ENOMEM;
++
++	kvfree(percpu->scribble);
++
++	percpu->scribble = scribble;
++	percpu->scribble_obj_size = obj_size;
++	return 0;
+ }
+ 
+ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+@@ -2270,23 +2265,18 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+ 		return 0;
+ 	mddev_suspend(conf->mddev);
+ 	get_online_cpus();
++
+ 	for_each_present_cpu(cpu) {
+ 		struct raid5_percpu *percpu;
+-		struct flex_array *scribble;
+ 
+ 		percpu = per_cpu_ptr(conf->percpu, cpu);
+-		scribble = scribble_alloc(new_disks,
+-					  new_sectors / STRIPE_SECTORS,
+-					  GFP_NOIO);
+-
+-		if (scribble) {
+-			flex_array_free(percpu->scribble);
+-			percpu->scribble = scribble;
+-		} else {
+-			err = -ENOMEM;
++		err = scribble_alloc(percpu, new_disks,
++				     new_sectors / STRIPE_SECTORS,
++				     GFP_NOIO);
++		if (err)
+ 			break;
+-		}
+ 	}
++
+ 	put_online_cpus();
+ 	mddev_resume(conf->mddev);
+ 	if (!err) {
+@@ -6738,25 +6728,26 @@ raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks)
+ static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
+ {
+ 	safe_put_page(percpu->spare_page);
+-	if (percpu->scribble)
+-		flex_array_free(percpu->scribble);
+ 	percpu->spare_page = NULL;
++	kvfree(percpu->scribble);
+ 	percpu->scribble = NULL;
+ }
+ 
+ static int alloc_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
+ {
+-	if (conf->level == 6 && !percpu->spare_page)
++	if (conf->level == 6 && !percpu->spare_page) {
+ 		percpu->spare_page = alloc_page(GFP_KERNEL);
+-	if (!percpu->scribble)
+-		percpu->scribble = scribble_alloc(max(conf->raid_disks,
+-						      conf->previous_raid_disks),
+-						  max(conf->chunk_sectors,
+-						      conf->prev_chunk_sectors)
+-						   / STRIPE_SECTORS,
+-						  GFP_KERNEL);
+-
+-	if (!percpu->scribble || (conf->level == 6 && !percpu->spare_page)) {
++		if (!percpu->spare_page)
++			return -ENOMEM;
++	}
++
++	if (scribble_alloc(percpu,
++			   max(conf->raid_disks,
++			       conf->previous_raid_disks),
++			   max(conf->chunk_sectors,
++			       conf->prev_chunk_sectors)
++			   / STRIPE_SECTORS,
++			   GFP_KERNEL)) {
+ 		free_scratch_buffer(conf, percpu);
+ 		return -ENOMEM;
+ 	}
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 8474c22412..cf991f1340 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -638,10 +638,11 @@ struct r5conf {
+ 	/* per cpu variables */
+ 	struct raid5_percpu {
+ 		struct page	*spare_page; /* Used when checking P/Q in raid6 */
+-		struct flex_array *scribble;   /* space for constructing buffer
+-					      * lists and performing address
+-					      * conversions
+-					      */
++		void		*scribble;  /* space for constructing buffer
++					     * lists and performing address
++					     * conversions
++					     */
++		int scribble_obj_size;
+ 	} __percpu *percpu;
+ 	int scribble_disks;
+ 	int scribble_sectors;
+-- 
+2.20.1
