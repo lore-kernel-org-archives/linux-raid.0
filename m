@@ -1,34 +1,48 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V12 00/20] block: support multi-page bvec
-Date: Thu, 29 Nov 2018 11:30:47 +0800
-Message-ID: <20181129033046.GE23390@ming.t460p>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
- <7096bc4e-0617-29d0-a90d-ae7caf09a16d@kernel.dk>
- <20181129012959.GC23249@ming.t460p>
- <1983a2f5-07be-4102-fedc-54e2ad2e16dc@kernel.dk>
+From: Eugene Syromiatnikov <esyr@redhat.com>
+Subject: Re: [PATCH v2 0/2] Fix typo in RWH_WRITE_LIFE_NOT_SET constant name
+Date: Mon, 17 Dec 2018 12:39:49 +0100
+Message-ID: <20181217113944.GG24150@asgard.redhat.com>
+References: <cdbbf807-4df6-58c9-7d9c-2aeb1727c157@kernel.dk>
+ <cover.1540843065.git.esyr@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1983a2f5-07be-4102-fedc-54e2ad2e16dc@kernel.dk>
+In-Reply-To: <cover.1540843065.git.esyr@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Mike Snitzer <snitzer@redhat.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jeff Layton <jlayton@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 28, 2018 at 07:20:51PM -0700, Jens Axboe wrote:
-> On 11/28/18 6:30 PM, Ming Lei wrote:
-> >> I'm going back and forth on those one a bit. Any concerns with
-> >> pushing this to 4.22?
-> > 
-> > My only one concern is about the warning of
-> > "blk_cloned_rq_check_limits: over max segments limit" on dm multipath,
-> > and seems Ewan and Mike is waiting for this fix.
+On Mon, Oct 29, 2018 at 09:00:45PM +0100, Eugene Syromiatnikov wrote:
+> This is a small fix of a typo (or, more specifically, some remnant of
+> the old patch version spelling) in RWH_WRITE_LIFE_NOT_SET constant,
+> which is named as RWF_WRITE_LIFE_NOT_SET currently.  Since the name
+> with "H" is used in man page and everywhere else, it's probably worth
+> to make the name used in the fcntl.h UAPI header in line with it.
+> Second follow-up patch updates (the sole) usage site of this constant
+> in kernel to use the new spelling.
 > 
-> Not familiar with this issue, can you post a link to it? I'd be fine
-> working around anything until 4.22, it's not going to be a new issue.
+> The old name is retained as it is part of UAPI now.
 
-https://marc.info/?t=153303425700002&r=1&w=2
+Hello.
 
-thanks,
-Ming
+Are there any issues with this version of the series?
+
+> Changes since v1:
+>  * Changed format of the commit ID in the commit message of the first patch.
+>  * Removed bogus Signed-off-by that snuck into the resend of the series.
+> 
+> Eugene Syromiatnikov (2):
+>   fcntl: fix typo in RWH_WRITE_LIFE_NOT_SET r/w hint
+>   drivers/md/raid5.c: use the new spelling of RWH_WRITE_LIFE_NOT_SET
+> 
+>  drivers/md/raid5.c               | 4 ++--
+>  fs/fcntl.c                       | 2 +-
+>  include/uapi/linux/fcntl.h       | 9 ++++++++-
+>  tools/include/uapi/linux/fcntl.h | 9 ++++++++-
+>  4 files changed, 19 insertions(+), 5 deletions(-)
+> 
+> -- 
+> 2.1.4
+> 
