@@ -1,26 +1,41 @@
-From: Kai Heng Feng <kai.heng.feng@canonical.com>
-Subject: BUG_ON() hit in drivers/md/raid5.c
-Date: Wed, 19 Dec 2018 16:46:31 +0800
-Message-ID: <BFD51561-092F-4791-A42E-72F1373AEB50@canonical.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Subject: [PATCH] drivers/md.c: Make bio_alloc_mddev return bio_alloc_bioset
+Date: Sat, 22 Dec 2018 08:08:45 -0200
+Message-ID: <20181222100845.566772-1-marcos.souza.org@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dan.j.williams@intel.com
-Cc: Steve Kowalik <steven@wedontsleep.org>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: shli@kernel.org, marcos.souza.org@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Dan,
+bio_alloc_bioset return a bio pointer or NULL, so we can avoid storing
+the returned data into a new variable.
 
-There are two different BUG_ON() incidents get recently reported on Launchpad [1].
+Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+---
+ drivers/md/md.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-The first one is BUG_ON(dev->written) in ops_run_biodrain().
-The second one (comment #23) is BUG_ON(!test_bit(R5_UPTODATE, &dev->flags)) in handle_parity_checks5().
-
-I am not familiar with raid 5 so I am not sure these BUG_ON() are expected to be hit.
-
-[1] https://bugs.launchpad.net/bugs/1780628
-
-Kai-Heng
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index fc488cb30a94..42e018f014cb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -207,15 +207,10 @@ static bool create_on_open = true;
+ struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ 			    struct mddev *mddev)
+ {
+-	struct bio *b;
+-
+ 	if (!mddev || !bioset_initialized(&mddev->bio_set))
+ 		return bio_alloc(gfp_mask, nr_iovecs);
+ 
+-	b = bio_alloc_bioset(gfp_mask, nr_iovecs, &mddev->bio_set);
+-	if (!b)
+-		return NULL;
+-	return b;
++	return bio_alloc_bioset(gfp_mask, nr_iovecs, &mddev->bio_set);
+ }
+ EXPORT_SYMBOL_GPL(bio_alloc_mddev);
+ 
+-- 
+2.16.4
