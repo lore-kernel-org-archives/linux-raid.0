@@ -1,41 +1,99 @@
-From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: [PATCH] drivers/md.c: Make bio_alloc_mddev return bio_alloc_bioset
-Date: Sat, 22 Dec 2018 08:08:45 -0200
-Message-ID: <20181222100845.566772-1-marcos.souza.org@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: shli@kernel.org, marcos.souza.org@gmail.com, linux-raid@vger.kernel.org
+From: Timofey Titovets <nefelim4ag@gmail.com>
+Subject: Re: [RFC PATCH] raid6_pq: Add module options to prefer algorithm
+Date: Wed, 2 Jan 2019 05:34:46 +0300
+Message-ID: <CAGqmi74gL=urkvKuSGpDF05f6BpTC0zdf1vDSVDZ-9qr+2q5Tw@mail.gmail.com>
+References: <20180504001541.2068-1-nefelim4ag@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <20180504001541.2068-1-nefelim4ag@gmail.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-btrfs <linux-btrfs@vger.kernel.org>
 List-Id: linux-raid.ids
 
-bio_alloc_bioset return a bio pointer or NULL, so we can avoid storing
-the returned data into a new variable.
+Gentle ping.
 
-Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
----
- drivers/md/md.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+=D0=BF=D1=82, 4 =D0=BC=D0=B0=D1=8F 2018 =D0=B3. =D0=B2 03:15, Timofey Titov=
+ets <nefelim4ag@gmail.com>:
+>
+> Skip testing unnecessary algorithms to speedup module initialization
+>
+> For my systems:
+>   Before: 1.510s (initrd)
+>   After:  977ms  (initrd) # I set prefer to fastest algorithm
+>
+> Dmesg after patch:
+> [    1.190042] raid6: avx2x4   gen() 28153 MB/s
+> [    1.246683] raid6: avx2x4   xor() 19440 MB/s
+> [    1.246684] raid6: using algorithm avx2x4 gen() 28153 MB/s
+> [    1.246684] raid6: .... xor() 19440 MB/s, rmw enabled
+> [    1.246685] raid6: using avx2x2 recovery algorithm
+>
+> Signed-off-by: Timofey Titovets <nefelim4ag@gmail.com>
+> CC: linux-btrfs@vger.kernel.org
+> ---
+>  lib/raid6/algos.c | 28 +++++++++++++++++++++++++---
+>  1 file changed, 25 insertions(+), 3 deletions(-)
+>
+> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+> index 5065b1e7e327..abfcb4107fc3 100644
+> --- a/lib/raid6/algos.c
+> +++ b/lib/raid6/algos.c
+> @@ -30,6 +30,11 @@ EXPORT_SYMBOL(raid6_empty_zero_page);
+>  #endif
+>  #endif
+>
+> +static char *prefer_name;
+> +
+> +module_param(prefer_name, charp, 0);
+> +MODULE_PARM_DESC(prefer_name, "Prefer gen/xor() algorithm");
+> +
+>  struct raid6_calls raid6_call;
+>  EXPORT_SYMBOL_GPL(raid6_call);
+>
+> @@ -155,10 +160,27 @@ static inline const struct raid6_calls *raid6_choos=
+e_gen(
+>  {
+>         unsigned long perf, bestgenperf, bestxorperf, j0, j1;
+>         int start =3D (disks>>1)-1, stop =3D disks-3;       /* work on th=
+e second half of the disks */
+> -       const struct raid6_calls *const *algo;
+> -       const struct raid6_calls *best;
+> +       const struct raid6_calls *const *algo =3D NULL;
+> +       const struct raid6_calls *best =3D NULL;
+> +
+> +       if (strlen(prefer_name)) {
+> +               for (algo =3D raid6_algos; strlen(prefer_name) && *algo; =
+algo++) {
+> +                       if (!strncmp(prefer_name, (*algo)->name, 8)) {
+> +                               best =3D *algo;
+> +                               break;
+> +                       }
+> +               }
+> +               if (!best)
+> +                       pr_info("raid6: %-8s prefer not found\n", prefer_=
+name);
+> +       }
+> +
+> +
+> +
+> +       if (!algo) {
+> +               algo =3D raid6_algos;
+> +       }
+>
+> -       for (bestgenperf =3D 0, bestxorperf =3D 0, best =3D NULL, algo =
+=3D raid6_algos; *algo; algo++) {
+> +       for (bestgenperf =3D 0, bestxorperf =3D 0; *algo; algo++) {
+>                 if (!best || (*algo)->prefer >=3D best->prefer) {
+>                         if ((*algo)->valid && !(*algo)->valid())
+>                                 continue;
+> --
+> 2.17.0
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index fc488cb30a94..42e018f014cb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -207,15 +207,10 @@ static bool create_on_open = true;
- struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
- 			    struct mddev *mddev)
- {
--	struct bio *b;
--
- 	if (!mddev || !bioset_initialized(&mddev->bio_set))
- 		return bio_alloc(gfp_mask, nr_iovecs);
- 
--	b = bio_alloc_bioset(gfp_mask, nr_iovecs, &mddev->bio_set);
--	if (!b)
--		return NULL;
--	return b;
-+	return bio_alloc_bioset(gfp_mask, nr_iovecs, &mddev->bio_set);
- }
- EXPORT_SYMBOL_GPL(bio_alloc_mddev);
- 
--- 
-2.16.4
+
+
+--=20
+Have a nice day,
+Timofey.
