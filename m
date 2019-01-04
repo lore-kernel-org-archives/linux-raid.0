@@ -1,40 +1,52 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Shaohua Li
-Date: Thu, 3 Jan 2019 09:44:53 -0700
-Message-ID: <86273f7b-f036-cb31-1da1-e3d65e593ee6@kernel.dk>
-References: <398a74fa-6566-8d0d-6434-e68ff3763656@kernel.dk>
- <af940531-2535-2777-8c09-e9d1e6c16e82@suse.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] md/raid10: Use struct_size() in kmalloc()
+Date: Fri, 4 Jan 2019 15:11:28 -0600
+Message-ID: <20190104211128.GA13343@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <af940531-2535-2777-8c09-e9d1e6c16e82@suse.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, linux-raid@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-raid.ids
 
-On 1/2/19 7:38 PM, Guoqing Jiang wrote:
->> As you know, Shaohua acted as the maintainer for md. He remained
->> dedicated to that through the difficult times. With his passing, we
->> obviously have a void that needs to be filled.
-> 
-> It is better if there is a small team to maintain md in future since nobody
-> have broad/deep knowledge as Neil or Shaohua, also people in the team
-> can cover/backup each other, see [1].
+One of the more common cases of allocation size calculations is finding
+the size of a structure that has a zero-sized array at the end, along
+with memory for some number of elements for that array. For example:
 
-Certainly, whatever the community deems the best solution.
+struct foo {
+    int stuff;
+    void *entry[];
+};
 
->> For now, I'll act as interim maintainer for md until we can find a good
->> permanent solution. I'll queue up reviewed patches in a separate branch,
->> in the block tree, and help review fixes. I'm subscribed to linux-raid,
->> but please do CC me as well.
-> 
-> Thanks, I think there are some patches in shli/md/for-next which supposed
-> to be merge to 4.21, could you please help to merge them to your branch?
-> And I suppose you will send a patch to CREDITS for Shaohua.
+instance = kmalloc(sizeof(struct foo) + sizeof(void *) * count, GFP_KERNEL);
 
-I have picked them up and will send them in for this merge window.
+Instead of leaving these open-coded and prone to type mistakes, we can
+now use the new struct_size() helper:
 
+instance = kmalloc(struct_size(instance, entry, count), GFP_KERNEL);
+
+This code was detected with the help of Coccinelle.
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/md/raid10.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index abb5d382f64d..320cb430cca6 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4788,8 +4788,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
+ 	int idx = 0;
+ 	struct page **pages;
+ 
+-	r10b = kmalloc(sizeof(*r10b) +
+-	       sizeof(struct r10dev) * conf->copies, GFP_NOIO);
++	r10b = kmalloc(struct_size(r10b, devs, conf->copies), GFP_NOIO);
+ 	if (!r10b) {
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 		return -ENOMEM;
 -- 
-Jens Axboe
+2.20.1
