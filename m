@@ -1,14 +1,14 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 245/304] md: fix raid10 hang issue caused by barrier
-Date: Mon, 28 Jan 2019 10:42:42 -0500
-Message-ID: <20190128154341.47195-245-sashal@kernel.org>
-References: <20190128154341.47195-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 205/258] md: fix raid10 hang issue caused by barrier
+Date: Mon, 28 Jan 2019 10:58:31 -0500
+Message-ID: <20190128155924.51521-205-sashal@kernel.org>
+References: <20190128155924.51521-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -108,10 +108,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index b98e746e7fc4..12cf8a04e839 100644
+index 811427e53126..7033a2880771 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1209,7 +1209,9 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+@@ -1208,7 +1208,9 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
  		struct bio *split = bio_split(bio, max_sectors,
  					      gfp, &conf->bio_split);
  		bio_chain(split, bio);
@@ -121,7 +121,7 @@ index b98e746e7fc4..12cf8a04e839 100644
  		bio = split;
  		r10_bio->master_bio = bio;
  		r10_bio->sectors = max_sectors;
-@@ -1514,7 +1516,9 @@ retry_write:
+@@ -1513,7 +1515,9 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
  		struct bio *split = bio_split(bio, r10_bio->sectors,
  					      GFP_NOIO, &conf->bio_split);
  		bio_chain(split, bio);
