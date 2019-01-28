@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 205/258] md: fix raid10 hang issue caused by barrier
-Date: Mon, 28 Jan 2019 10:58:31 -0500
-Message-ID: <20190128155924.51521-205-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 128/170] md: fix raid10 hang issue caused by barrier
+Date: Mon, 28 Jan 2019 11:11:18 -0500
+Message-ID: <20190128161200.55107-128-sashal@kernel.org>
+References: <20190128161200.55107-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128161200.55107-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
@@ -108,12 +108,12 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 811427e53126..7033a2880771 100644
+index 52ddfa0fca94..2ce079a0b0bd 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1208,7 +1208,9 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+@@ -1190,7 +1190,9 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
  		struct bio *split = bio_split(bio, max_sectors,
- 					      gfp, &conf->bio_split);
+ 					      gfp, conf->bio_split);
  		bio_chain(split, bio);
 +		allow_barrier(conf);
  		generic_make_request(bio);
@@ -121,9 +121,9 @@ index 811427e53126..7033a2880771 100644
  		bio = split;
  		r10_bio->master_bio = bio;
  		r10_bio->sectors = max_sectors;
-@@ -1513,7 +1515,9 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+@@ -1479,7 +1481,9 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
  		struct bio *split = bio_split(bio, r10_bio->sectors,
- 					      GFP_NOIO, &conf->bio_split);
+ 					      GFP_NOIO, conf->bio_split);
  		bio_chain(split, bio);
 +		allow_barrier(conf);
  		generic_make_request(bio);
