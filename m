@@ -1,55 +1,135 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V14 00/18] block: support multi-page bvec
-Date: Tue, 22 Jan 2019 10:01:30 +0800
-Message-ID: <20190122020128.GB2490@ming.t460p>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
-	<61dfaa1e-e7bf-75f1-410b-ed32f97d0782@grimberg.me>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 245/304] md: fix raid10 hang issue caused by barrier
+Date: Mon, 28 Jan 2019 10:42:42 -0500
+Message-ID: <20190128154341.47195-245-sashal@kernel.org>
+References: <20190128154341.47195-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <cluster-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <61dfaa1e-e7bf-75f1-410b-ed32f97d0782@grimberg.me>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/cluster-devel>
-List-Post: <mailto:cluster-devel@redhat.com>
-List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
-Sender: cluster-devel-bounces@redhat.com
-Errors-To: cluster-devel-bounces@redhat.com
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@fb.com>, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, Gao Xiang <gaoxiang25@huawei.com>, Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, David Sterba <dsterba@suse.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Guoqing Jiang <gqjiang@suse.com>, Shaohua Li <shli@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 21, 2019 at 01:43:21AM -0800, Sagi Grimberg wrote:
-> 
-> > V14:
-> > 	- drop patch(patch 4 in V13) for renaming bvec helpers, as suggested by Jens
-> > 	- use mp_bvec_* as multi-page bvec helper name
-> > 	- fix one build issue, which is caused by missing one converion of
-> > 	bio_for_each_segment_all in fs/gfs2
-> > 	- fix one 32bit ARCH specific issue caused by segment boundary mask
-> > 	overflow
-> 
-> Hey Ming,
-> 
-> So is nvme-tcp also affected here? The only point where I see nvme-tcp
-> can be affected is when initializing a bvec iter using bio_segments() as
-> everywhere else we use iters which should transparently work..
-> 
-> I see that loop was converted, does it mean that nvme-tcp needs to
-> call something like?
-> --
-> 	bio_for_each_mp_bvec(bv, bio, iter)
-> 		nr_bvecs++;
+From: Guoqing Jiang <gqjiang@suse.com>
 
-bio_for_each_segment()/bio_segments() still works, just not as efficient
-as bio_for_each_mp_bvec() given each multi-page bvec(very similar with scatterlist)
-is returned in each loop.
+[ Upstream commit e820d55cb99dd93ac2dc949cf486bb187e5cd70d ]
 
-I don't look at nvme-tcp code yet. But if nvme-tcp supports this way,
-it can benefit from bio_for_each_mp_bvec().
+When both regular IO and resync IO happen at the same time,
+and if we also need to split regular. Then we can see tasks
+hang due to barrier.
 
-Thanks,
-Ming
+1. resync thread
+[ 1463.757205] INFO: task md1_resync:5215 blocked for more than 480 seconds.
+[ 1463.757207]       Not tainted 4.19.5-1-default #1
+[ 1463.757209] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 1463.757212] md1_resync      D    0  5215      2 0x80000000
+[ 1463.757216] Call Trace:
+[ 1463.757223]  ? __schedule+0x29a/0x880
+[ 1463.757231]  ? raise_barrier+0x8d/0x140 [raid10]
+[ 1463.757236]  schedule+0x78/0x110
+[ 1463.757243]  raise_barrier+0x8d/0x140 [raid10]
+[ 1463.757248]  ? wait_woken+0x80/0x80
+[ 1463.757257]  raid10_sync_request+0x1f6/0x1e30 [raid10]
+[ 1463.757265]  ? _raw_spin_unlock_irq+0x22/0x40
+[ 1463.757284]  ? is_mddev_idle+0x125/0x137 [md_mod]
+[ 1463.757302]  md_do_sync.cold.78+0x404/0x969 [md_mod]
+[ 1463.757311]  ? wait_woken+0x80/0x80
+[ 1463.757336]  ? md_rdev_init+0xb0/0xb0 [md_mod]
+[ 1463.757351]  md_thread+0xe9/0x140 [md_mod]
+[ 1463.757358]  ? _raw_spin_unlock_irqrestore+0x2e/0x60
+[ 1463.757364]  ? __kthread_parkme+0x4c/0x70
+[ 1463.757369]  kthread+0x112/0x130
+[ 1463.757374]  ? kthread_create_worker_on_cpu+0x40/0x40
+[ 1463.757380]  ret_from_fork+0x3a/0x50
+
+2. regular IO
+[ 1463.760679] INFO: task kworker/0:8:5367 blocked for more than 480 seconds.
+[ 1463.760683]       Not tainted 4.19.5-1-default #1
+[ 1463.760684] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 1463.760687] kworker/0:8     D    0  5367      2 0x80000000
+[ 1463.760718] Workqueue: md submit_flushes [md_mod]
+[ 1463.760721] Call Trace:
+[ 1463.760731]  ? __schedule+0x29a/0x880
+[ 1463.760741]  ? wait_barrier+0xdd/0x170 [raid10]
+[ 1463.760746]  schedule+0x78/0x110
+[ 1463.760753]  wait_barrier+0xdd/0x170 [raid10]
+[ 1463.760761]  ? wait_woken+0x80/0x80
+[ 1463.760768]  raid10_write_request+0xf2/0x900 [raid10]
+[ 1463.760774]  ? wait_woken+0x80/0x80
+[ 1463.760778]  ? mempool_alloc+0x55/0x160
+[ 1463.760795]  ? md_write_start+0xa9/0x270 [md_mod]
+[ 1463.760801]  ? try_to_wake_up+0x44/0x470
+[ 1463.760810]  raid10_make_request+0xc1/0x120 [raid10]
+[ 1463.760816]  ? wait_woken+0x80/0x80
+[ 1463.760831]  md_handle_request+0x121/0x190 [md_mod]
+[ 1463.760851]  md_make_request+0x78/0x190 [md_mod]
+[ 1463.760860]  generic_make_request+0x1c6/0x470
+[ 1463.760870]  raid10_write_request+0x77a/0x900 [raid10]
+[ 1463.760875]  ? wait_woken+0x80/0x80
+[ 1463.760879]  ? mempool_alloc+0x55/0x160
+[ 1463.760895]  ? md_write_start+0xa9/0x270 [md_mod]
+[ 1463.760904]  raid10_make_request+0xc1/0x120 [raid10]
+[ 1463.760910]  ? wait_woken+0x80/0x80
+[ 1463.760926]  md_handle_request+0x121/0x190 [md_mod]
+[ 1463.760931]  ? _raw_spin_unlock_irq+0x22/0x40
+[ 1463.760936]  ? finish_task_switch+0x74/0x260
+[ 1463.760954]  submit_flushes+0x21/0x40 [md_mod]
+
+So resync io is waiting for regular write io to complete to
+decrease nr_pending (conf->barrier++ is called before waiting).
+The regular write io splits another bio after call wait_barrier
+which call nr_pending++, then the splitted bio would continue
+with raid10_write_request -> wait_barrier, so the splitted bio
+has to wait for barrier to be zero, then deadlock happens as
+follows.
+
+	resync io		regular io
+
+	raise_barrier
+				wait_barrier
+				generic_make_request
+				wait_barrier
+
+To resolve the issue, we need to call allow_barrier to decrease
+nr_pending before generic_make_request since regular IO is not
+issued to underlying devices, and wait_barrier is called again
+to ensure no internal IO happening.
+
+Fixes: fc9977dd069e ("md/raid10: simplify the splitting of requests.")
+Reported-and-tested-by: Siniša Bandin <sinisa@4net.rs>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/raid10.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index b98e746e7fc4..12cf8a04e839 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1209,7 +1209,9 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 		struct bio *split = bio_split(bio, max_sectors,
+ 					      gfp, &conf->bio_split);
+ 		bio_chain(split, bio);
++		allow_barrier(conf);
+ 		generic_make_request(bio);
++		wait_barrier(conf);
+ 		bio = split;
+ 		r10_bio->master_bio = bio;
+ 		r10_bio->sectors = max_sectors;
+@@ -1514,7 +1516,9 @@ retry_write:
+ 		struct bio *split = bio_split(bio, r10_bio->sectors,
+ 					      GFP_NOIO, &conf->bio_split);
+ 		bio_chain(split, bio);
++		allow_barrier(conf);
+ 		generic_make_request(bio);
++		wait_barrier(conf);
+ 		bio = split;
+ 		r10_bio->master_bio = bio;
+ 	}
+-- 
+2.19.1
