@@ -1,19 +1,19 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.14 43/46] md/raid5: fix out of memory during raid cache recovery
-Date: Mon,  4 Feb 2019 11:37:14 +0100
-Message-ID: <20190204103616.284210828@linuxfoundation.org>
-References: <20190204103608.651205056@linuxfoundation.org>
+Subject: [PATCH 4.19 73/74] md/raid5: fix out of memory during raid cache recovery
+Date: Mon,  4 Feb 2019 11:37:26 +0100
+Message-ID: <20190204103629.472242251@linuxfoundation.org>
+References: <20190204103619.714714157@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190204103608.651205056@linuxfoundation.org>
+In-Reply-To: <20190204103619.714714157@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Alexei Naberezhnov <anaberezhnov@fb.com>, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-4.14-stable review patch.  If anyone has any objections, please let me know.
+4.19-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -46,7 +46,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1942,12 +1942,14 @@ out:
+@@ -1935,12 +1935,14 @@ out:
  }
  
  static struct stripe_head *
@@ -64,7 +64,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	if (!sh)
  		return NULL;  /* no more stripe available */
  
-@@ -2157,7 +2159,7 @@ r5c_recovery_analyze_meta_block(struct r
+@@ -2150,7 +2152,7 @@ r5c_recovery_analyze_meta_block(struct r
  						stripe_sect);
  
  		if (!sh) {
@@ -73,7 +73,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  			/*
  			 * cannot get stripe from raid5_get_active_stripe
  			 * try replay some stripes
-@@ -2166,20 +2168,29 @@ r5c_recovery_analyze_meta_block(struct r
+@@ -2159,20 +2161,29 @@ r5c_recovery_analyze_meta_block(struct r
  				r5c_recovery_replay_stripes(
  					cached_stripe_list, ctx);
  				sh = r5c_recovery_alloc_stripe(
@@ -112,7 +112,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  			list_add_tail(&sh->lru, cached_stripe_list);
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6336,6 +6336,7 @@ raid5_show_stripe_cache_size(struct mdde
+@@ -6357,6 +6357,7 @@ raid5_show_stripe_cache_size(struct mdde
  int
  raid5_set_cache_size(struct mddev *mddev, int size)
  {
@@ -120,7 +120,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	struct r5conf *conf = mddev->private;
  
  	if (size <= 16 || size > 32768)
-@@ -6352,11 +6353,14 @@ raid5_set_cache_size(struct mddev *mddev
+@@ -6373,11 +6374,14 @@ raid5_set_cache_size(struct mddev *mddev
  
  	mutex_lock(&conf->cache_size_mutex);
  	while (size > conf->max_nr_stripes)
