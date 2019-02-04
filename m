@@ -1,19 +1,19 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.19 73/74] md/raid5: fix out of memory during raid cache recovery
-Date: Mon,  4 Feb 2019 11:37:26 +0100
-Message-ID: <20190204103629.472242251@linuxfoundation.org>
-References: <20190204103619.714714157@linuxfoundation.org>
+Subject: [PATCH 4.20 79/80] md/raid5: fix out of memory during raid cache recovery
+Date: Mon,  4 Feb 2019 11:37:39 +0100
+Message-ID: <20190204103630.918464985@linuxfoundation.org>
+References: <20190204103620.287366543@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190204103619.714714157@linuxfoundation.org>
+In-Reply-To: <20190204103620.287366543@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Alexei Naberezhnov <anaberezhnov@fb.com>, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-4.19-stable review patch.  If anyone has any objections, please let me know.
+4.20-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -112,7 +112,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  			list_add_tail(&sh->lru, cached_stripe_list);
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -6357,6 +6357,7 @@ raid5_show_stripe_cache_size(struct mdde
+@@ -6369,6 +6369,7 @@ raid5_show_stripe_cache_size(struct mdde
  int
  raid5_set_cache_size(struct mddev *mddev, int size)
  {
@@ -120,7 +120,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	struct r5conf *conf = mddev->private;
  
  	if (size <= 16 || size > 32768)
-@@ -6373,11 +6374,14 @@ raid5_set_cache_size(struct mddev *mddev
+@@ -6385,11 +6386,14 @@ raid5_set_cache_size(struct mddev *mddev
  
  	mutex_lock(&conf->cache_size_mutex);
  	while (size > conf->max_nr_stripes)
