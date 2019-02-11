@@ -1,139 +1,92 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.20 79/80] md/raid5: fix out of memory during raid cache recovery
-Date: Mon,  4 Feb 2019 11:37:39 +0100
-Message-ID: <20190204103630.918464985@linuxfoundation.org>
-References: <20190204103620.287366543@linuxfoundation.org>
+From: Wolfgang Walter <linux@stwm.de>
+Subject: linux 4.19.19: md0_raid:1317 blocked for more than 120 seconds.
+Date: Mon, 11 Feb 2019 16:12:56 +0100
+Message-ID: <2131016.q2kFhguZXe@stwm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190204103620.287366543@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Alexei Naberezhnov <anaberezhnov@fb.com>, Song Liu <songliubraving@fb.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-4.20-stable review patch.  If anyone has any objections, please let me know.
+With 4.19.19 we see sometimes the following issue (practically only wit=
+h blk_mq, though):
 
-------------------
+Feb  4 20:04:46 tettnang kernel: [252300.060165] INFO: task md0_raid1:3=
+17 blocked for more than 120 seconds.
+Feb  4 20:04:46 tettnang kernel: [252300.060188]       Not tainted 4.19=
+.19-debian64.all+1.1 #1
+Feb  4 20:04:46 tettnang kernel: [252300.060197] "echo 0 > /proc/sys/ke=
+rnel/hung_task_timeout_secs" disables this message.
+Feb  4 20:04:46 tettnang kernel: [252300.060207] md0_raid1       D    0=
+   317      2 0x80000000
+Feb  4 20:04:46 tettnang kernel: [252300.060211] Call Trace:
+Feb  4 20:04:46 tettnang kernel: [252300.060222]  ? __schedule+0x2a2/0x=
+8c0
+Feb  4 20:04:46 tettnang kernel: [252300.060226]  ? _raw_spin_unlock_ir=
+qrestore+0x20/0x40
+Feb  4 20:04:46 tettnang kernel: [252300.060229]  schedule+0x32/0x90
+Feb  4 20:04:46 tettnang kernel: [252300.060241]  md_super_wait+0x69/0x=
+a0 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060247]  ? finish_wait+0x80/0x=
+80
+Feb  4 20:04:46 tettnang kernel: [252300.060255]  md_bitmap_wait_writes=
++0x8e/0xa0 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060263]  ? md_bitmap_get_count=
+er+0x42/0xd0 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060271]  md_bitmap_daemon_work=
++0x1e8/0x380 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060278]  ? md_rdev_init+0xb0/0=
+xb0 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060285]  md_check_recovery+0x2=
+6/0x540 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060290]  raid1d+0x5c/0xf00 [ra=
+id1]
+Feb  4 20:04:46 tettnang kernel: [252300.060294]  ? preempt_count_add+0=
+x79/0xb0
+Feb  4 20:04:46 tettnang kernel: [252300.060298]  ? lock_timer_base+0x6=
+7/0x80
+Feb  4 20:04:46 tettnang kernel: [252300.060302]  ? _raw_spin_unlock_ir=
+qrestore+0x20/0x40
+Feb  4 20:04:46 tettnang kernel: [252300.060304]  ? try_to_del_timer_sy=
+nc+0x4d/0x80
+Feb  4 20:04:46 tettnang kernel: [252300.060306]  ? del_timer_sync+0x35=
+/0x40
+Feb  4 20:04:46 tettnang kernel: [252300.060309]  ? schedule_timeout+0x=
+17a/0x3b0
+Feb  4 20:04:46 tettnang kernel: [252300.060312]  ? preempt_count_add+0=
+x79/0xb0
+Feb  4 20:04:46 tettnang kernel: [252300.060315]  ? _raw_spin_lock_irqs=
+ave+0x25/0x50
+Feb  4 20:04:46 tettnang kernel: [252300.060321]  ? md_rdev_init+0xb0/0=
+xb0 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060327]  ? md_thread+0xf9/0x16=
+0 [md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060330]  ? r1bio_pool_alloc+0x=
+20/0x20 [raid1]
+Feb  4 20:04:46 tettnang kernel: [252300.060336]  md_thread+0xf9/0x160 =
+[md_mod]
+Feb  4 20:04:46 tettnang kernel: [252300.060340]  ? finish_wait+0x80/0x=
+80
+Feb  4 20:04:46 tettnang kernel: [252300.060344]  kthread+0x112/0x130
+Feb  4 20:04:46 tettnang kernel: [252300.060346]  ? kthread_create_work=
+er_on_cpu+0x70/0x70
+Feb  4 20:04:46 tettnang kernel: [252300.060350]  ret_from_fork+0x35/0x=
+40
 
-From: Alexei Naberezhnov <anaberezhnov@fb.com>
+I saw that there was a similar problem with raid10 and an upstream patc=
+h
 
-commit 483cbbeddd5fe2c80fd4141ff0748fa06c4ff146 upstream.
+e820d55cb99dd93ac2dc949cf486bb187e5cd70d
+md: fix raid10 hang issue caused by barrier
+by  Guoqing Jiang
 
-This fixes the case when md array assembly fails because of raid cache recovery
-unable to allocate a stripe, despite attempts to replay stripes and increase
-cache size. This happens because stripes released by r5c_recovery_replay_stripes
-and raid5_set_cache_size don't become available for allocation immediately.
-Released stripes first are placed on conf->released_stripes list and require
-md thread to merge them on conf->inactive_list before they can be allocated.
+I wonder if there is a similar fix needed for raid1?
 
-Patch allows final allocation attempt during cache recovery to wait for
-new stripes to become availabe for allocation.
-
-Cc: linux-raid@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-stable <stable@vger.kernel.org> # 4.10+
-Fixes: b4c625c67362 ("md/r5cache: r5cache recovery: part 1")
-Signed-off-by: Alexei Naberezhnov <anaberezhnov@fb.com>
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/md/raid5-cache.c |   33 ++++++++++++++++++++++-----------
- drivers/md/raid5.c       |    8 ++++++--
- 2 files changed, 28 insertions(+), 13 deletions(-)
-
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -1935,12 +1935,14 @@ out:
- }
- 
- static struct stripe_head *
--r5c_recovery_alloc_stripe(struct r5conf *conf,
--			  sector_t stripe_sect)
-+r5c_recovery_alloc_stripe(
-+		struct r5conf *conf,
-+		sector_t stripe_sect,
-+		int noblock)
- {
- 	struct stripe_head *sh;
- 
--	sh = raid5_get_active_stripe(conf, stripe_sect, 0, 1, 0);
-+	sh = raid5_get_active_stripe(conf, stripe_sect, 0, noblock, 0);
- 	if (!sh)
- 		return NULL;  /* no more stripe available */
- 
-@@ -2150,7 +2152,7 @@ r5c_recovery_analyze_meta_block(struct r
- 						stripe_sect);
- 
- 		if (!sh) {
--			sh = r5c_recovery_alloc_stripe(conf, stripe_sect);
-+			sh = r5c_recovery_alloc_stripe(conf, stripe_sect, 1);
- 			/*
- 			 * cannot get stripe from raid5_get_active_stripe
- 			 * try replay some stripes
-@@ -2159,20 +2161,29 @@ r5c_recovery_analyze_meta_block(struct r
- 				r5c_recovery_replay_stripes(
- 					cached_stripe_list, ctx);
- 				sh = r5c_recovery_alloc_stripe(
--					conf, stripe_sect);
-+					conf, stripe_sect, 1);
- 			}
- 			if (!sh) {
-+				int new_size = conf->min_nr_stripes * 2;
- 				pr_debug("md/raid:%s: Increasing stripe cache size to %d to recovery data on journal.\n",
- 					mdname(mddev),
--					conf->min_nr_stripes * 2);
--				raid5_set_cache_size(mddev,
--						     conf->min_nr_stripes * 2);
--				sh = r5c_recovery_alloc_stripe(conf,
--							       stripe_sect);
-+					new_size);
-+				ret = raid5_set_cache_size(mddev, new_size);
-+				if (conf->min_nr_stripes <= new_size / 2) {
-+					pr_err("md/raid:%s: Cannot increase cache size, ret=%d, new_size=%d, min_nr_stripes=%d, max_nr_stripes=%d\n",
-+						mdname(mddev),
-+						ret,
-+						new_size,
-+						conf->min_nr_stripes,
-+						conf->max_nr_stripes);
-+					return -ENOMEM;
-+				}
-+				sh = r5c_recovery_alloc_stripe(
-+					conf, stripe_sect, 0);
- 			}
- 			if (!sh) {
- 				pr_err("md/raid:%s: Cannot get enough stripes due to memory pressure. Recovery failed.\n",
--				       mdname(mddev));
-+					mdname(mddev));
- 				return -ENOMEM;
- 			}
- 			list_add_tail(&sh->lru, cached_stripe_list);
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6369,6 +6369,7 @@ raid5_show_stripe_cache_size(struct mdde
- int
- raid5_set_cache_size(struct mddev *mddev, int size)
- {
-+	int result = 0;
- 	struct r5conf *conf = mddev->private;
- 
- 	if (size <= 16 || size > 32768)
-@@ -6385,11 +6386,14 @@ raid5_set_cache_size(struct mddev *mddev
- 
- 	mutex_lock(&conf->cache_size_mutex);
- 	while (size > conf->max_nr_stripes)
--		if (!grow_one_stripe(conf, GFP_KERNEL))
-+		if (!grow_one_stripe(conf, GFP_KERNEL)) {
-+			conf->min_nr_stripes = conf->max_nr_stripes;
-+			result = -ENOMEM;
- 			break;
-+		}
- 	mutex_unlock(&conf->cache_size_mutex);
- 
--	return 0;
-+	return result;
- }
- EXPORT_SYMBOL(raid5_set_cache_size);
- 
+Regards,
+--=20
+Wolfgang Walter
+Studentenwerk M=FCnchen
+Anstalt des =F6ffentlichen Rechts
