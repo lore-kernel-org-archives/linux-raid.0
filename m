@@ -1,48 +1,105 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [LSF/MM TOPIC] (again) THP for file systems
-Date: Thu, 14 Feb 2019 17:10:25 +0000
-Message-ID: <5C65A101.4010909@youngman.org.uk>
-References: <77A00946-D70D-469D-963D-4C4EA20AE4FA@fb.com>
- <20190213235959.GX12668@bombadil.infradead.org>
- <843818E0-C7E8-451E-A5B1-DAF0F120BD5A@fb.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: Re: linux 4.19.19: md0_raid:1317 blocked for more than 120 seconds.
+Date: Fri, 15 Feb 2019 15:57:02 +0800
+Message-ID: <4703e846-d01b-ee2f-3306-958845a01d05@suse.com>
+References: <2131016.q2kFhguZXe@stwm.de> <3057098.nBgIypvgED@stwm.de>
+ <0c832f67-de10-8872-d3db-6a9f11c97454@suse.com> <3877135.KJXZSZYZ1L@stwm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <843818E0-C7E8-451E-A5B1-DAF0F120BD5A@fb.com>
+In-Reply-To: <3877135.KJXZSZYZ1L@stwm.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>, Matthew Wilcox <willy@infradead.org>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, "bpf@vger.kernel.org" <bpf@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Kirill A. Shutemov" <kirill@shutemov.name>
+To: Wolfgang Walter <linux@stwm.de>
+Cc: Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14/02/19 01:59, Song Liu wrote:
->> I believe the direction is clear.  It needs people to do the work.
->> > We're critically short of reviewers.  I got precious little review of
->> > the original XArray work, which made Andrew nervous and delayed its
->> > integration.  Now I'm getting little review of the followup patches
->> > to lay the groundwork for filesystems to support larger page sizes.
->> > I have very little patience for this situation.
 
-> I don't feel I am a qualified reviewer for MM patches, yet. But I will 
-> try my best to catch up. 
 
-Then just dive in!
+On 2/14/19 11:27 PM, Wolfgang Walter wrote:
+> Am Donnerstag, 14. Februar 2019, 10:09:56 schrieb Guoqing Jiang:
+>> On 2/12/19 7:20 PM, Wolfgang Walter wrote:
+>>> Am Dienstag, 12. Februar 2019, 16:20:11 schrieb Guoqing Jiang:
+>>>> On 2/11/19 11:12 PM, Wolfgang Walter wrote:
+>>>>> With 4.19.19 we see sometimes the following issue (practically only with
+>>>>> blk_mq, though):
+>>>>>
+>>>>> Feb  4 20:04:46 tettnang kernel: [252300.060165] INFO: task
+>>>>> md0_raid1:317
+>>>>> blocked for more than 120 seconds. Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060188]       Not tainted 4.19.19-debian64.all+1.1 #1 Feb  4
+>>>>> 20:04:46 tettnang kernel: [252300.060197] "echo 0 >
+>>>>> /proc/sys/kernel/hung_task_timeout_secs" disables this message. Feb  4
+>>>>> 20:04:46 tettnang kernel: [252300.060207] md0_raid1       D    0   317
+>>>>>
+>>>>>     2 0x80000000 Feb  4 20:04:46 tettnang kernel: [252300.060211] Call
+>>>>>
+>>>>> Trace:
+>>>>> Feb  4 20:04:46 tettnang kernel: [252300.060222]  ?
+>>>>> __schedule+0x2a2/0x8c0
+>>>>> Feb  4 20:04:46 tettnang kernel: [252300.060226]  ?
+>>>>> _raw_spin_unlock_irqrestore+0x20/0x40 Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060229]  schedule+0x32/0x90 Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060241]  md_super_wait+0x69/0xa0 [md_mod] Feb  4 20:04:46
+>>>>> tettnang kernel: [252300.060247]  ? finish_wait+0x80/0x80 Feb  4
+>>>>> 20:04:46
+>>>>> tettnang kernel: [252300.060255]  md_bitmap_wait_writes+0x8e/0xa0
+>>>>> [md_mod] Feb  4 20:04:46 tettnang kernel: [252300.060263]  ?
+>>>>> md_bitmap_get_counter+0x42/0xd0 [md_mod] Feb  4 20:04:46 tettnang
+>>>>> kernel:
+>>>>> [252300.060271]  md_bitmap_daemon_work+0x1e8/0x380 [md_mod] Feb  4
+>>>>> 20:04:46 tettnang kernel: [252300.060278]  ? md_rdev_init+0xb0/0xb0
+>>>>> [md_mod] Feb  4 20:04:46 tettnang kernel: [252300.060285]
+>>>>> md_check_recovery+0x26/0x540 [md_mod] Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060290]  raid1d+0x5c/0xf00 [raid1] Feb  4 20:04:46 tettnang
+>>>>> kernel: [252300.060294]  ? preempt_count_add+0x79/0xb0 Feb  4 20:04:46
+>>>>> tettnang kernel: [252300.060298]  ? lock_timer_base+0x67/0x80 Feb  4
+>>>>> 20:04:46 tettnang kernel: [252300.060302]  ?
+>>>>> _raw_spin_unlock_irqrestore+0x20/0x40 Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060304]  ? try_to_del_timer_sync+0x4d/0x80 Feb  4 20:04:46
+>>>>> tettnang kernel: [252300.060306]  ? del_timer_sync+0x35/0x40 Feb  4
+>>>>> 20:04:46 tettnang kernel: [252300.060309]  ?
+>>>>> schedule_timeout+0x17a/0x3b0
+>>>>> Feb  4 20:04:46 tettnang kernel: [252300.060312]  ?
+>>>>> preempt_count_add+0x79/0xb0 Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060315]  ? _raw_spin_lock_irqsave+0x25/0x50 Feb  4 20:04:46
+>>>>> tettnang kernel: [252300.060321]  ? md_rdev_init+0xb0/0xb0 [md_mod] Feb
+>>>>> 4 20:04:46 tettnang kernel: [252300.060327]  ? md_thread+0xf9/0x160
+>>>>> [md_mod] Feb  4 20:04:46 tettnang kernel: [252300.060330]  ?
+>>>>> r1bio_pool_alloc+0x20/0x20 [raid1] Feb  4 20:04:46 tettnang kernel:
+>>>>> [252300.060336]  md_thread+0xf9/0x160 [md_mod] Feb  4 20:04:46 tettnang
+>>>>> kernel: [252300.060340]  ? finish_wait+0x80/0x80 Feb  4 20:04:46
+>>>>> tettnang
+>>>>> kernel: [252300.060344]  kthread+0x112/0x130 Feb  4 20:04:46 tettnang
+>>>>> kernel: [252300.060346]  ? kthread_create_worker_on_cpu+0x70/0x70 Feb  4
+>>>>> 20:04:46 tettnang kernel: [252300.060350]  ret_from_fork+0x35/0x40
+>>>>>
+>>>>> I saw that there was a similar problem with raid10 and an upstream patch
+>>>>>
+>>>>> e820d55cb99dd93ac2dc949cf486bb187e5cd70d
+>>>>> md: fix raid10 hang issue caused by barrier
+>>>>> by  Guoqing Jiang
+>>>>>
+>>>>> I wonder if there is a similar fix needed for raid1?
+>>>> Seems not, the calltrace tells the previous write superblock IO was not
+>>>> finish as expected,
+>>>> there is a report for raid5 which has similar problem with md_super_wait
+>>>> in the link [1]. Maybe
+>>>> you can disable blk-mq to narrow down the issue as well.
+>>> I already did for 4 weeks. I didn't saw this with blk-mq disabled (for
+>>> scsi
+>>> and md), though this may be by luck.
+>> Then I guess it maybe related to blk-mq, which scheduler are you used
+>> with blk-mq?
+>> And maybe you can switch it to see if it is caused by specified
+>> scheduler or not.
+> mq-deadline for SCSI and none for md and dm.
 
-Ask questions - "what does this do?", "please explain this, I don't
-understand", "I'm new here, please teach me".
+Can you try with the patch [1]? In case the block was caused by flush.
 
-Okay, some people are too busy to help much, but I've found looking
-after the raid wiki that people are happy to help, *especially* if they
-know that their time is going to be rewarded. If I ask for help it
-usually results in an update to the wiki.
+[1]: https://patchwork.kernel.org/patch/10787903/
 
-If they know you are reading through the patch asking them to explain it
-helps two ways - you are another set of eyes to spot something wrong,
-and your questions will make them look at their code in a new light.
-Even if you don't understand what you're looking at, you can still spot
-stuff that looks weird, and if you ask them to explain then it will mean
-that code gets an extra check. Anything that slips through that is
-probably fine.
 
-Cheers,
-Wol
+Thanks,
+Guoqing
