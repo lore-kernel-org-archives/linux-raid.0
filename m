@@ -1,120 +1,89 @@
-From: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: Re: [PATCH] md: properly lock and unlock in rdev_attr_store()
-Date: Mon, 6 May 2019 07:03:00 +0200 (CEST)
-Message-ID: <alpine.DEB.2.21.1905060657010.2480@felia>
-References: <20190428104041.11262-1-lukas.bulwahn@gmail.com> <877ebd693t.fsf@notabene.neil.brown.name>
+From: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+Subject: Re: [RFC] [PATCH V2 0/1] Introduce emergency raid0 stop
+ for mounted arrays
+Date: Tue, 30 Apr 2019 19:41:11 -0300
+Message-ID: <b39b96ea-2540-a407-2232-1af91e3e6658@canonical.com>
+References: <20190418220448.7219-1-gpiccoli@canonical.com>
+	<CAPhsuW4k5zz2pJBPL60VzjTcj6NTnhBh-RjvWASLcOxAk+yDEw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <877ebd693t.fsf@notabene.neil.brown.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Lukas Bulwahn <lukas.bulwahn@gmail.com>, Shaohua Li <shli@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Himanshu Jha <himanshujha199639@gmail.com>, clang-built-linux@googlegroups.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAPhsuW4k5zz2pJBPL60VzjTcj6NTnhBh-RjvWASLcOxAk+yDEw@mail.gmail.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Song Liu <liu.song.a23@gmail.com>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, kernel@gpiccoli.net, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, jay.vosburgh@canonical.com, gavin.guo@canonical.com
 List-Id: linux-raid.ids
 
+> On 19/04/2019 14:08, Song Liu wrote:
+> [...]
+> I read through the discussion in V1, and I would agree with Neil that
+> current behavior is reasonable.
+> 
+> For the following example:
+> 
+> fd = open("file", "w");
+> write(fd, buf, size);
+> ret = fsync(fd);
+> 
+> If "size" is big enough, the write is not expected to be atomic for
+> md or other drives. If we remove the underlining block device
+> after write() and before fsync(), the file could get corrupted. This
+> is the same for md or NVMe/SCSI drives.
+> 
+> The application need to check "ret" from fsync(), the data is safe
+> only when fsync() returns 0.
+> 
+> Does this make sense?
+> 
+
+Hi Song, thanks for your quick response, and sorry for my delay.
+I've noticed after v4.18 kernel started to crash when we remove one
+raid0 member while writing, so I was investigating this
+before perform your test (in fact, found 2 issues [0]), hence my delay.
+
+Your test does make sense; in fact I've tested your scenario with the
+following code (with the patches from [0]):
+https://pastebin.ubuntu.com/p/cyqpDqpM7x/
+
+Indeed, fsync returns -1 in this case.
+Interestingly, when I do a "dd if=<some_file> of=<raid0_mount>" and try
+to "sync -f <some_file>" and "sync", it succeeds and the file is
+written, although corrupted.
+
+Do you think this behavior is correct? In other devices, like a pure
+SCSI disk or NVMe, the 'dd' write fails.
+Also, what about the status of the raid0 array in mdadm - it shows as
+"clean" even after the member is removed, should we change that?
 
 
-On Mon, 29 Apr 2019, NeilBrown wrote:
+> Also, could you please highlight changes from V1 (if more than
+> just rebase)?
 
-> On Sun, Apr 28 2019, Lukas Bulwahn wrote:
-> 
-> > rdev_attr_store() should lock and unlock mddev->reconfig_mutex in a
-> > balanced way with mddev_lock() and mddev_unlock().
-> 
-> It does.
-> 
-> >
-> > But when rdev->mddev is NULL, rdev_attr_store() would try to unlock
-> > without locking before. Resolve this locking issue..
-> 
-> This is incorrect.
-> 
-> >
-> > This locking issue was detected with Clang Thread Safety Analyser:
-> 
-> Either the Clang Thread Safety Analyser is broken, or you used it
-> incorrectly.
->
+No changes other than rebase. Worth mentioning here that a kernel bot
+(and Julia Lawall) found an issue in my patch; I forgot a
+"mutex_lock(&mddev->open_mutex);" in line 6053, which caused the first
+caveat (hung mdadm and persistent device in /dev). Thanks for pointing
+this silly mistake from me! in case this patch gets some traction, I'll
+re-submit with that fixed.
 
-Please ignore this patch.
+Cheers,
 
-Clang Thread Safety Analyser cannot handle the original code, but can
-handle my semantically equivalent code. I did not get that at first, and
-thought I fixed an issue, but I did not.
 
-Sorry for the noise.
+Guilherme
 
-Lukas
- 
-> >
-> > drivers/md/md.c:3393:3: warning: releasing mutex 'mddev->reconfig_mutex' that was not held [-Wthread-safety-analysis]
-> >                 mddev_unlock(mddev);
-> >                 ^
-> >
-> > This warning was reported after annotating mutex functions and
-> > mddev_lock() and mddev_unlock().
-> >
-> > Fixes: 27c529bb8e90 ("md: lock access to rdev attributes properly")
-> > Link: https://groups.google.com/d/topic/clang-built-linux/CvBiiQLB0H4/discussion
-> > Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-> > ---
-> > Arnd, Neil, here a proposal to fix lock and unlocking asymmetry.
-> >
-> > I quite sure that if mddev is NULL, it should just return.
+[0] https://marc.info/?l=linux-block&m=155666385707413
+
 > 
-> If mddev is NULL, the code does return (with -EBUSY).  All you've done
-> is change things so it returns from a different part of the code.  You
-> haven't changed the behaviour at all.
-> 
-> >
-> > I am still puzzled if the return value from mddev_lock() should be really
-> > return by rdev_attr_store() when it is not 0. But that was the behaviour
-> > before, so I will keep it that way.
-> 
-> Certainly it should. mddev_lock() either returns 0 to indicate success
-> or -EINTR if it received a signal.
-> If it was interrupted by a signal, then rdev_attr_store() should return
-> -EINTR as well.
-> 
-> As Arnd tried to explain, the only possible problem here is that the C
-> compiler is allowed to assume that rdev->mddev never changes value, so
-> in
->    rv = mddev ? mddev_lock(mddev) : =EBUSY
-> 
-> it could load rdev->mddev, test if it is NULL, then load it again and
-> pass that value to mddev_lock() - the new value might be NULL which
-> would cause problems.
-> 
-> This could be fixed by changing
-> 
-> 	struct mddev *mddev = rdev->mddev;
-> to
-> 	struct mddev *mddev = READ_ONCE(rdev->mddev);
-> 
-> That is the only change that might be useful here.
-> 
-> NeilBrown
-> 
-> 
-> >
-> >  drivers/md/md.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 05ffffb8b769..a9735d8f1e70 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -3384,7 +3384,9 @@ rdev_attr_store(struct kobject *kobj, struct attribute *attr,
-> >  		return -EIO;
-> >  	if (!capable(CAP_SYS_ADMIN))
-> >  		return -EACCES;
-> > -	rv = mddev ? mddev_lock(mddev): -EBUSY;
-> > +	if (!mddev)
-> > +		return -EBUSY;
-> > +	rv = mddev_lock(mddev);
-> >  	if (!rv) {
-> >  		if (rdev->mddev == NULL)
-> >  			rv = -EBUSY;
-> > -- 
-> > 2.17.1
+> Thanks,
+> Song
 > 
