@@ -1,133 +1,79 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md: properly lock and unlock in rdev_attr_store()
-Date: Mon, 29 Apr 2019 08:47:02 +1000
-Message-ID: <877ebd693t.fsf@notabene.neil.brown.name>
-References: <20190428104041.11262-1-lukas.bulwahn@gmail.com>
+From: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+Subject: [PATCH 1/2] block: Fix a NULL pointer dereference in  generic_make_request()
+Date: Tue, 30 Apr 2019 19:37:21 -0300
+Message-ID: <20190430223722.20845-1-gpiccoli@canonical.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190428104041.11262-1-lukas.bulwahn@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Himanshu Jha <himanshujha199639@gmail.com>
-Cc: clang-built-linux@googlegroups.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-block@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: dm-devel@redhat.com, axboe@kernel.dk, gavin.guo@canonical.com, jay.vosburgh@canonical.com, gpiccoli@canonical.com, kernel@gpiccoli.net, Bart Van Assche <bvanassche@acm.org>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Commit 37f9579f4c31 ("blk-mq: Avoid that submitting a bio concurrently
+with device removal triggers a crash") introduced a NULL pointer
+dereference in generic_make_request(). The patch sets q to NULL and
+enter_succeeded to false; right after, there's an 'if (enter_succeeded)'
+which is not taken, and then the 'else' will dereference q in
+blk_queue_dying(q).
 
-On Sun, Apr 28 2019, Lukas Bulwahn wrote:
+This patch just moves the 'q = NULL' to a point in which it won't trigger
+the oops, although the semantics of this NULLification remains untouched.
 
-> rdev_attr_store() should lock and unlock mddev->reconfig_mutex in a
-> balanced way with mddev_lock() and mddev_unlock().
+A simple test case/reproducer is as follows:
+a) Build kernel v5.1-rc7 with CONFIG_BLK_CGROUP=n.
 
-It does.
+b) Create a raid0 md array with 2 NVMe devices as members, and mount it
+with an ext4 filesystem.
 
->
-> But when rdev->mddev is NULL, rdev_attr_store() would try to unlock
-> without locking before. Resolve this locking issue..
+c) Run the following oneliner (supposing the raid0 is mounted in /mnt):
+(dd of=/mnt/tmp if=/dev/zero bs=1M count=999 &); sleep 0.3;
+echo 1 > /sys/block/nvme0n1/device/device/remove
+(whereas nvme0n1 is the 2nd array member)
 
-This is incorrect.
+This will trigger the following oops:
 
->
-> This locking issue was detected with Clang Thread Safety Analyser:
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
+PGD 0 P4D 0
+Oops: 0000 [#1] SMP PTI
+RIP: 0010:generic_make_request+0x32b/0x400
+Call Trace:
+ submit_bio+0x73/0x140
+ ext4_io_submit+0x4d/0x60
+ ext4_writepages+0x626/0xe90
+ do_writepages+0x4b/0xe0
+[...]
 
-Either the Clang Thread Safety Analyser is broken, or you used it
-incorrectly.
+This patch has no functional changes and preserves the md/raid0 behavior
+when a member is removed before kernel v4.17.
 
->
-> drivers/md/md.c:3393:3: warning: releasing mutex 'mddev->reconfig_mutex' =
-that was not held [-Wthread-safety-analysis]
->                 mddev_unlock(mddev);
->                 ^
->
-> This warning was reported after annotating mutex functions and
-> mddev_lock() and mddev_unlock().
->
-> Fixes: 27c529bb8e90 ("md: lock access to rdev attributes properly")
-> Link: https://groups.google.com/d/topic/clang-built-linux/CvBiiQLB0H4/dis=
-cussion
-> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-> ---
-> Arnd, Neil, here a proposal to fix lock and unlocking asymmetry.
->
-> I quite sure that if mddev is NULL, it should just return.
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: stable@vger.kernel.org # v4.17
+Fixes: 37f9579f4c31 ("blk-mq: Avoid that submitting a bio concurrently with device removal triggers a crash")
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
+---
+ block/blk-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If mddev is NULL, the code does return (with -EBUSY).  All you've done
-is change things so it returns from a different part of the code.  You
-haven't changed the behaviour at all.
-
->
-> I am still puzzled if the return value from mddev_lock() should be really
-> return by rdev_attr_store() when it is not 0. But that was the behaviour
-> before, so I will keep it that way.
-
-Certainly it should. mddev_lock() either returns 0 to indicate success
-or -EINTR if it received a signal.
-If it was interrupted by a signal, then rdev_attr_store() should return
-=2DEINTR as well.
-
-As Arnd tried to explain, the only possible problem here is that the C
-compiler is allowed to assume that rdev->mddev never changes value, so
-in
-   rv =3D mddev ? mddev_lock(mddev) : =3DEBUSY
-
-it could load rdev->mddev, test if it is NULL, then load it again and
-pass that value to mddev_lock() - the new value might be NULL which
-would cause problems.
-
-This could be fixed by changing
-
-	struct mddev *mddev =3D rdev->mddev;
-to
-	struct mddev *mddev =3D READ_ONCE(rdev->mddev);
-
-That is the only change that might be useful here.
-
-NeilBrown
-
-
->
->  drivers/md/md.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 05ffffb8b769..a9735d8f1e70 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3384,7 +3384,9 @@ rdev_attr_store(struct kobject *kobj, struct attrib=
-ute *attr,
->  		return -EIO;
->  	if (!capable(CAP_SYS_ADMIN))
->  		return -EACCES;
-> -	rv =3D mddev ? mddev_lock(mddev): -EBUSY;
-> +	if (!mddev)
-> +		return -EBUSY;
-> +	rv =3D mddev_lock(mddev);
->  	if (!rv) {
->  		if (rdev->mddev =3D=3D NULL)
->  			rv =3D -EBUSY;
-> --=20
-> 2.17.1
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAlzGLWYACgkQOeye3VZi
-gbkBWw//VvIj0hYlq+pmpcJXle/rFe9qJHKo9IgWyI3BO8tZ/T4qaUQN3YFBvXtd
-OxduNlDF3F+T3o/0GzQXPHCHxq/WHHR9Ju/m9DpZoa7jFAGzdSaZYoJENM4dkZhj
-4CBqZ87ZDw3zU2YNrOYSMioU9W1yTKuVO3GNR917sMNDxJZyN/0gRh/as7UckBgz
-M/Ki41vyLUDdJKS4wx2nJKl9A1nULqknO4dfQlxIybSj68LtGHeTpJzn6bAKFTWa
-YKI9AcsBz0fonw/I6MRunP3yXy4DI7IqW7jY0ZY+5hyETw4knmlQl+vqa6Sh9AIC
-UPTkypaeWWTJ1jN/mFPR8gWv78dUUrIpDLGDghYWwLIivHC0Q9qCvk75KqkPF1Ii
-fQg/GGNAtdp0cAhWGiPc0o3XC7Q1+gkPsdDdxHKMq2L0HxKLWEKPFwV6D2w8CTTB
-HIgXFbfcb7uQGfByjLQfBT/O90D5v7qDrlRlNcw0sF6nFzBaAJJCSX86fWIPrSo2
-OQ37gahhy9Af1oC19hXeM37sny7WMRsFTfM4AJ8rNuXQBdjKAcrM9RO0WSFeeheR
-ZQoK4SooN6pBits+PxKB1QDc/xCC+AiV64TQ5tqCiKPJ7uw1Uuz8kmpsdPVZ0H0E
-G8XdolzszybZ3AoQ6yai0ls0eHeCC/R7rbpfhhg3D/BVJCZaIZU=
-=tVLb
------END PGP SIGNATURE-----
---=-=-=--
+diff --git a/block/blk-core.c b/block/blk-core.c
+index a55389ba8779..e21856a7f3fa 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1076,7 +1076,6 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 				flags = BLK_MQ_REQ_NOWAIT;
+ 			if (blk_queue_enter(q, flags) < 0) {
+ 				enter_succeeded = false;
+-				q = NULL;
+ 			}
+ 		}
+ 
+@@ -1108,6 +1107,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 				bio_wouldblock_error(bio);
+ 			else
+ 				bio_io_error(bio);
++			q = NULL;
+ 		}
+ 		bio = bio_list_pop(&bio_list_on_stack[0]);
+ 	} while (bio);
+-- 
+2.21.0
