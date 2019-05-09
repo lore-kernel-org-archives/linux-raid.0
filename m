@@ -1,54 +1,159 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH 2/2] md/raid0: Do not bypass blocking queue entered for
- raid0 bios
-Date: Wed, 8 May 2019 17:52:59 +0100
-Message-ID: <5CD3096B.4030302@youngman.org.uk>
-References: <20190430223722.20845-1-gpiccoli@canonical.com>
- <20190430223722.20845-2-gpiccoli@canonical.com>
- <CAPhsuW4SeUhNOJJkEf9wcLjbbc9qX0=C8zqbyCtC7Q8fdL91hw@mail.gmail.com>
- <c8721ba3-5d38-7906-5049-e2b16e967ecf@canonical.com>
- <CAPhsuW6ahmkUhCgns=9WHPXSvYefB0Gmr1oB7gdZiD86sKyHFg@mail.gmail.com>
- <5CD2A172.4010302@youngman.org.uk>
- <0ad36b2f-ec36-6930-b587-da0526613567@gpiccoli.net>
+From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Subject: [PATCH] drivers: md: Unify common definitions of raid1 and raid10
+Date: Thu,  9 May 2019 08:18:49 -0300
+Message-ID: <20190509111849.22927-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <0ad36b2f-ec36-6930-b587-da0526613567@gpiccoli.net>
-Sender: stable-owner@vger.kernel.org
-To: "Guilherme G. Piccoli" <guilherme@gpiccoli.net>, Song Liu <liu.song.a23@gmail.com>
-Cc: "Guilherme G. Piccoli" <gpiccoli@canonical.com>, linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com, axboe@kernel.dk, Gavin Guo <gavin.guo@canonical.com>, Jay Vosburgh <jay.vosburgh@canonical.com>, kernel@gpiccoli.net, Ming Lei <ming.lei@redhat.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, stable@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: neilb@suse.com, Marcos Paulo de Souza <marcos.souza.org@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+        SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/05/19 15:52, Guilherme G. Piccoli wrote:
-> Hi, I understand your concern. But all other raid levels contains
-> failure-event mechanisms. For example, in all my tests with raid5 or
-> raid1, it first complained the device was removed, then it failed in
-> super_written() when no other available device was present.
-> On the other hand, raid0 does "blind-writes": it just selects the device
-> in which that bio should be written (given the stripe math) and change
-> the bio's device, sending it back via generic_make_request(). It's
-> dummy, but not in a bad way, but rather for performance reasons. It has
-> no "intelligence" for failures, as all other raid levels.
-> 
-> That said, we could fix md.c for all raid levels, but I personally think
-> it's a bazooka shot, only raid0 shows consistently this issue.
-> 
-The academic in me says we should push that error handling into
-generic_make_request() or some raid function in md.c that deals with
-those problems. Sounds like there's a fair bit of duplicate
-functionality that could be re-factored out.
->>
->> Academic purity versus engineering practicality :-)
-> 
-> Heheh you have good points here! Thanks for the input =)
-> Cheers,
-> 
-Doesn't help when there's not an architect to design an overall "grand
-scheme", but my usual way of working is to design top down academically,
-and then ask myself "what do I need" before implementing bottom-up.
-Hopefully with a load of documentation saying "I haven't done this
-because I don't need it, but this is where it goes".
+These definitions are being moved to raid1-10.c.
 
-Cheers,
-Wol
+Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+---
+ drivers/md/raid1-10.c | 25 +++++++++++++++++++++++++
+ drivers/md/raid1.c    | 29 ++---------------------------
+ drivers/md/raid10.c   | 27 +--------------------------
+ 3 files changed, 28 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 400001b815db..7d968bf08e54 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -3,6 +3,31 @@
+ #define RESYNC_BLOCK_SIZE (64*1024)
+ #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+ 
++/*
++ * Number of guaranteed raid bios in case of extreme VM load:
++ */
++#define	NR_RAID_BIOS 256
++
++/* when we get a read error on a read-only array, we redirect to another
++ * device without failing the first device, or trying to over-write to
++ * correct the read error.  To keep track of bad blocks on a per-bio
++ * level, we store IO_BLOCKED in the appropriate 'bios' pointer
++ */
++#define IO_BLOCKED ((struct bio *)1)
++/* When we successfully write to a known bad-block, we need to remove the
++ * bad-block marking which must be done from process context.  So we record
++ * the success by setting devs[n].bio to IO_MADE_GOOD
++ */
++#define IO_MADE_GOOD ((struct bio *)2)
++
++#define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
++
++/* When there are this many requests queue to be written by
++ * the raid thread, we become 'congested' to provide back-pressure
++ * for writeback.
++ */
++static int max_queued_requests = 1024;
++
+ /* for managing resync I/O pages */
+ struct resync_pages {
+ 	void		*raid_bio;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 0c8a098d220e..bb052c35bf29 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -50,31 +50,6 @@
+ 	 (1L << MD_HAS_PPL) |		\
+ 	 (1L << MD_HAS_MULTIPLE_PPLS))
+ 
+-/*
+- * Number of guaranteed r1bios in case of extreme VM load:
+- */
+-#define	NR_RAID1_BIOS 256
+-
+-/* when we get a read error on a read-only array, we redirect to another
+- * device without failing the first device, or trying to over-write to
+- * correct the read error.  To keep track of bad blocks on a per-bio
+- * level, we store IO_BLOCKED in the appropriate 'bios' pointer
+- */
+-#define IO_BLOCKED ((struct bio *)1)
+-/* When we successfully write to a known bad-block, we need to remove the
+- * bad-block marking which must be done from process context.  So we record
+- * the success by setting devs[n].bio to IO_MADE_GOOD
+- */
+-#define IO_MADE_GOOD ((struct bio *)2)
+-
+-#define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
+-
+-/* When there are this many requests queue to be written by
+- * the raid1 thread, we become 'congested' to provide back-pressure
+- * for writeback.
+- */
+-static int max_queued_requests = 1024;
+-
+ static void allow_barrier(struct r1conf *conf, sector_t sector_nr);
+ static void lower_barrier(struct r1conf *conf, sector_t sector_nr);
+ 
+@@ -2955,7 +2930,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	if (!conf->poolinfo)
+ 		goto abort;
+ 	conf->poolinfo->raid_disks = mddev->raid_disks * 2;
+-	err = mempool_init(&conf->r1bio_pool, NR_RAID1_BIOS, r1bio_pool_alloc,
++	err = mempool_init(&conf->r1bio_pool, NR_RAID_BIOS, r1bio_pool_alloc,
+ 			   r1bio_pool_free, conf->poolinfo);
+ 	if (err)
+ 		goto abort;
+@@ -3240,7 +3215,7 @@ static int raid1_reshape(struct mddev *mddev)
+ 	newpoolinfo->mddev = mddev;
+ 	newpoolinfo->raid_disks = raid_disks * 2;
+ 
+-	ret = mempool_init(&newpool, NR_RAID1_BIOS, r1bio_pool_alloc,
++	ret = mempool_init(&newpool, NR_RAID_BIOS, r1bio_pool_alloc,
+ 			   r1bio_pool_free, newpoolinfo);
+ 	if (ret) {
+ 		kfree(newpoolinfo);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 3b6880dd648d..24cb116d950f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -73,31 +73,6 @@
+  *    [B A] [D C]    [B A] [E C D]
+  */
+ 
+-/*
+- * Number of guaranteed r10bios in case of extreme VM load:
+- */
+-#define	NR_RAID10_BIOS 256
+-
+-/* when we get a read error on a read-only array, we redirect to another
+- * device without failing the first device, or trying to over-write to
+- * correct the read error.  To keep track of bad blocks on a per-bio
+- * level, we store IO_BLOCKED in the appropriate 'bios' pointer
+- */
+-#define IO_BLOCKED ((struct bio *)1)
+-/* When we successfully write to a known bad-block, we need to remove the
+- * bad-block marking which must be done from process context.  So we record
+- * the success by setting devs[n].bio to IO_MADE_GOOD
+- */
+-#define IO_MADE_GOOD ((struct bio *)2)
+-
+-#define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
+-
+-/* When there are this many requests queued to be written by
+- * the raid10 thread, we become 'congested' to provide back-pressure
+- * for writeback.
+- */
+-static int max_queued_requests = 1024;
+-
+ static void allow_barrier(struct r10conf *conf);
+ static void lower_barrier(struct r10conf *conf);
+ static int _enough(struct r10conf *conf, int previous, int ignore);
+@@ -3684,7 +3659,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 
+ 	conf->geo = geo;
+ 	conf->copies = copies;
+-	err = mempool_init(&conf->r10bio_pool, NR_RAID10_BIOS, r10bio_pool_alloc,
++	err = mempool_init(&conf->r10bio_pool, NR_RAID_BIOS, r10bio_pool_alloc,
+ 			   r10bio_pool_free, conf);
+ 	if (err)
+ 		goto out;
+-- 
+2.21.0
