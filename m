@@ -1,7 +1,7 @@
 From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: [PATCH 2/4] md: raid0: Remove return statement from void function
-Date: Mon, 20 May 2019 18:44:25 -0300
-Message-ID: <20190520214427.18729-3-marcos.souza.org@gmail.com>
+Subject: [PATCH 3/4] md: raid0: Return md_integrity_register result directly
+Date: Mon, 20 May 2019 18:44:26 -0300
+Message-ID: <20190520214427.18729-4-marcos.souza.org@gmail.com>
 References: <20190520214427.18729-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -13,26 +13,30 @@ Cc: Marcos Paulo de Souza <marcos.souza.org@gmail.com>, Shaohua Li <shli@kernel.
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This return statement was introduced in commit
-1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 ("Linux-2.6.12-rc2") and can be
-safely removed.
+Commit 0c35bd4723e4a39ba2da4c13a22cb97986ee10c8
+("md: fix problems with freeing private data after ->run failure")
+removed the check for the result of md_integrity_register, so we don't
+need to store it anymore, so return it directly.
 
 Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
 ---
- drivers/md/raid0.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/md/raid0.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index f3fb5bb8c82a..42b0287104bd 100644
+index 42b0287104bd..e72255464c09 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -609,7 +609,6 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
- static void raid0_status(struct seq_file *seq, struct mddev *mddev)
- {
- 	seq_printf(seq, " %dk chunks", mddev->chunk_sectors / 2);
--	return;
+@@ -431,9 +431,7 @@ static int raid0_run(struct mddev *mddev)
+ 
+ 	dump_zones(mddev);
+ 
+-	ret = md_integrity_register(mddev);
+-
+-	return ret;
++	return md_integrity_register(mddev);
  }
  
- static void *raid0_takeover_raid45(struct mddev *mddev)
+ static void raid0_free(struct mddev *mddev, void *priv)
 -- 
 2.21.0
