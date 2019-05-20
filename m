@@ -1,7 +1,7 @@
 From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: [PATCH 3/4] md: raid0: Return md_integrity_register result directly
-Date: Mon, 20 May 2019 18:44:26 -0300
-Message-ID: <20190520214427.18729-4-marcos.souza.org@gmail.com>
+Subject: [PATCH 4/4] md: raid0: Make ret local in raid0_run
+Date: Mon, 20 May 2019 18:44:27 -0300
+Message-ID: <20190520214427.18729-5-marcos.souza.org@gmail.com>
 References: <20190520214427.18729-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -13,30 +13,34 @@ Cc: Marcos Paulo de Souza <marcos.souza.org@gmail.com>, Shaohua Li <shli@kernel.
         SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Commit 0c35bd4723e4a39ba2da4c13a22cb97986ee10c8
-("md: fix problems with freeing private data after ->run failure")
-removed the check for the result of md_integrity_register, so we don't
-need to store it anymore, so return it directly.
+ret variable is only used in a specific situation, so make it local
+instead of global.
 
 Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
 ---
- drivers/md/raid0.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/md/raid0.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 42b0287104bd..e72255464c09 100644
+index e72255464c09..b28dbb797f76 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -431,9 +431,7 @@ static int raid0_run(struct mddev *mddev)
+@@ -364,7 +364,6 @@ static void raid0_free(struct mddev *mddev, void *priv);
+ static int raid0_run(struct mddev *mddev)
+ {
+ 	struct r0conf *conf;
+-	int ret;
  
- 	dump_zones(mddev);
+ 	if (mddev->chunk_sectors == 0) {
+ 		pr_warn("md/raid0:%s: chunk size must be set.\n", mdname(mddev));
+@@ -375,7 +374,7 @@ static int raid0_run(struct mddev *mddev)
  
--	ret = md_integrity_register(mddev);
--
--	return ret;
-+	return md_integrity_register(mddev);
- }
- 
- static void raid0_free(struct mddev *mddev, void *priv)
+ 	/* if private is not null, we are here after takeover */
+ 	if (mddev->private == NULL) {
+-		ret = create_strip_zones(mddev, &conf);
++		int ret = create_strip_zones(mddev, &conf);
+ 		if (ret < 0)
+ 			return ret;
+ 		mddev->private = conf;
 -- 
 2.21.0
