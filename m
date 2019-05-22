@@ -1,45 +1,32 @@
-From: Guilherme Piccoli <gpiccoli@canonical.com>
-Subject: Re: [PATCH V2 2/2] md/raid0: Do not bypass blocking queue entered for
- raid0 bios
-Date: Tue, 21 May 2019 14:37:36 -0300
-Message-ID: <CAHD1Q_zgBxE-nD6zY4koJGJC9K53+6d6-xGpEpA6W4sudu0Pgg@mail.gmail.com>
-References: <20190520220911.25192-1-gpiccoli@canonical.com>
- <20190520220911.25192-2-gpiccoli@canonical.com> <20190521125634.GB16799@infradead.org>
- <CAHD1Q_z23AO+NRid1xYTeke_5GAe6hPianEZKBf5P30FrfZGFg@mail.gmail.com> <20190521172258.GA32702@infradead.org>
+From: Song Liu <songliubraving@fb.com>
+Subject: Fix bad backport to stable v3.16+
+Date: Wed, 22 May 2019 16:30:33 +0000
+Message-ID: <5F8253BF-1167-4A48-A3AC-E0728E1EE6CB@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190521172258.GA32702@infradead.org>
+Content-Language: en-US
+Content-ID: <62B578430C9F4E4F908C9E2FD76DD80D@namprd15.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com, axboe@kernel.dk, Gavin Guo <gavin.guo@canonical.com>, Jay Vosburgh <jay.vosburgh@canonical.com>, "Guilherme G. Piccoli" <kernel@gpiccoli.net>, Ming Lei <ming.lei@redhat.com>, Song Liu <liu.song.a23@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, stable@vger.kernel.org
+To: "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>, "linux@thorsten-knabe.de" <linux@thorsten-knabe.de>
 List-Id: linux-raid.ids
 
-On Tue, May 21, 2019 at 2:23 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Tue, May 21, 2019 at 11:10:05AM -0300, Guilherme Piccoli wrote:
-> > Hi Christoph, thanks for looking into this.
-> > You're right, this series fixes both issues. The problem I see though
-> > is that it relies
-> > on legacy IO path removal - for v5.0 and beyond, all fine. But
-> > backporting that to
-> > v4.17-v4.20 stable series will be quite painful.
-> >
-> > My fixes are mostly "oneliners". If we could get both approaches upstream,
-> > that'd be perfect!
->
-> But they basically just fix code that otherwise gets removed.  And the way
-> this patches uses the ENTERED flag from the md code looks slightly
-> sketchy to me.  Maybe we want them as stable only patches.
+Hi,=20
 
-OK, it makes sense to me, if that is a possibility. The fist one is
-clearly a small
-and non-intrusive fix. The 2nd indeed is more invasive heh
+As reported by Thorsten Knabe <linux@thorsten-knabe.de>.=20
 
-Please let me know how to proceed to have that added at least in stable trees;
-this would help a lot the distro side of the world hehe
+commit 4f4fd7c5798b ("Don't jump to compute_result state from check_result =
+state") =20
+was back ported to v3.16+. However, this fix was wrong. =20
 
-Cheers,
+Please back port the following two commits to fix this issue.=20
 
+commit a25d8c327bb4 ("Revert "Don't jump to compute_result state from check=
+_result state"")
+commit b2176a1dfb51 ("md/raid: raid5 preserve the writeback action after th=
+e parity check")
 
-Guilherme
+Thanks,
+Song=
