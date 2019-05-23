@@ -1,106 +1,100 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/2] md/raid0: Do not bypass blocking queue entered for raid0 bios
-Date: Thu, 23 May 2019 10:23:45 -0700
-Message-ID: <20190523172345.1861077-2-songliubraving@fb.com>
+From: Song Liu <liu.song.a23@gmail.com>
+Subject: Re: [PATCH 1/2] block: Fix a NULL pointer dereference in generic_make_request()
+Date: Thu, 23 May 2019 10:25:38 -0700
+Message-ID: <CAPhsuW5GghbT5XOJgNx0AM+HCD0kLcDdFV1YRRg3rHo+iU4gyQ@mail.gmail.com>
 References: <20190523172345.1861077-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20190523172345.1861077-1-songliubraving@fb.com>
 Sender: stable-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, stable@vger.kernel.org
-Cc: axboe@kernel.dk, "Guilherme G. Piccoli" <gpiccoli@canonical.com>, Ming Lei <ming.lei@redhat.com>, Song Liu <liu.song.a23@gmail.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Song Liu <songliubraving@fb.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "Guilherme G. Piccoli" <gpiccoli@canonical.com>
 List-Id: linux-raid.ids
 
-From: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+On Thu, May 23, 2019 at 10:24 AM Song Liu <songliubraving@fb.com> wrote:
+>
+> From: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+>
+> Commit 37f9579f4c31 ("blk-mq: Avoid that submitting a bio concurrently
+> with device removal triggers a crash") introduced a NULL pointer
+> dereference in generic_make_request(). The patch sets q to NULL and
+> enter_succeeded to false; right after, there's an 'if (enter_succeeded)'
+> which is not taken, and then the 'else' will dereference q in
+> blk_queue_dying(q).
+>
+> This patch just moves the 'q = NULL' to a point in which it won't trigger
+> the oops, although the semantics of this NULLification remains untouched.
+>
+> A simple test case/reproducer is as follows:
+> a) Build kernel v5.2-rc1 with CONFIG_BLK_CGROUP=n.
+>
+> b) Create a raid0 md array with 2 NVMe devices as members, and mount it
+> with an ext4 filesystem.
+>
+> c) Run the following oneliner (supposing the raid0 is mounted in /mnt):
+> (dd of=/mnt/tmp if=/dev/zero bs=1M count=999 &); sleep 0.3;
+> echo 1 > /sys/block/nvme0n1/device/device/remove
+> (whereas nvme0n1 is the 2nd array member)
+>
+> This will trigger the following oops:
+>
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
+> PGD 0 P4D 0
+> Oops: 0000 [#1] SMP PTI
+> RIP: 0010:generic_make_request+0x32b/0x400
+> Call Trace:
+>  submit_bio+0x73/0x140
+>  ext4_io_submit+0x4d/0x60
+>  ext4_writepages+0x626/0xe90
+>  do_writepages+0x4b/0xe0
+> [...]
+>
+> This patch has no functional changes and preserves the md/raid0 behavior
+> when a member is removed before kernel v4.17.
+>
+> Cc: stable@vger.kernel.org # v4.17
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Tested-by: Eric Ren <renzhengeek@gmail.com>
+> Fixes: 37f9579f4c31 ("blk-mq: Avoid that submitting a bio concurrently with device removal triggers a crash")
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
 
-Commit cd4a4ae4683d ("block: don't use blocking queue entered for
-recursive bio submits") introduced the flag BIO_QUEUE_ENTERED in order
-split bios bypass the blocking queue entering routine and use the live
-non-blocking version. It was a result of an extensive discussion in
-a linux-block thread[0], and the purpose of this change was to prevent
-a hung task waiting on a reference to drop.
+Please note this patchset is only for stable.
 
-Happens that md raid0 split bios all the time, and more important,
-it changes their underlying device to the raid member. After the change
-introduced by this flag's usage, we experience various crashes if a raid0
-member is removed during a large write. This happens because the bio
-reaches the live queue entering function when the queue of the raid0
-member is dying.
+Thanks,
+Song
 
-A simple reproducer of this behavior is presented below:
-a) Build kernel v5.2-rc1 with CONFIG_BLK_DEV_THROTTLING=y.
-
-b) Create a raid0 md array with 2 NVMe devices as members, and mount it
-with an ext4 filesystem.
-
-c) Run the following oneliner (supposing the raid0 is mounted in /mnt):
-(dd of=/mnt/tmp if=/dev/zero bs=1M count=999 &); sleep 0.3;
-echo 1 > /sys/block/nvme0n1/device/device/remove
-(whereas nvme0n1 is the 2nd array member)
-
-This will trigger the following warning/oops:
-
-------------[ cut here ]------------
-no blkg associated for bio on block-device: nvme0n1
-WARNING: CPU: 9 PID: 184 at ./include/linux/blk-cgroup.h:785
-generic_make_request_checks+0x4dd/0x690
-[...]
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000155
-PGD 0 P4D 0
-Oops: 0000 [#1] SMP PTI
-RIP: 0010:blk_throtl_bio+0x45/0x970
-[...]
-Call Trace:
- generic_make_request_checks+0x1bf/0x690
- generic_make_request+0x64/0x3f0
- raid0_make_request+0x184/0x620 [raid0]
- ? raid0_make_request+0x184/0x620 [raid0]
- ? blk_queue_split+0x384/0x6d0
- md_handle_request+0x126/0x1a0
- md_make_request+0x7b/0x180
- generic_make_request+0x19e/0x3f0
- submit_bio+0x73/0x140
-[...]
-
-This patch changes raid0 driver to fallback to the "old" blocking queue
-entering procedure, by clearing the BIO_QUEUE_ENTERED from raid0 bios.
-This prevents the crashes and restores the regular behavior of raid0
-arrays when a member is removed during a large write.
-
-[0] https://marc.info/?l=linux-block&m=152638475806811
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Song Liu <liu.song.a23@gmail.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: stable@vger.kernel.org # v4.18
-Fixes: cd4a4ae4683d ("block: don't use blocking queue entered for recursive bio submits")
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- drivers/md/raid0.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index f3fb5bb8c82a..d5bdc79e0835 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -547,6 +547,7 @@ static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
- 			trace_block_bio_remap(bdev_get_queue(rdev->bdev),
- 				discard_bio, disk_devt(mddev->gendisk),
- 				bio->bi_iter.bi_sector);
-+		bio_clear_flag(bio, BIO_QUEUE_ENTERED);
- 		generic_make_request(discard_bio);
- 	}
- 	bio_endio(bio);
-@@ -602,6 +603,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
- 				disk_devt(mddev->gendisk), bio_sector);
- 	mddev_check_writesame(mddev, bio);
- 	mddev_check_write_zeroes(mddev, bio);
-+	bio_clear_flag(bio, BIO_QUEUE_ENTERED);
- 	generic_make_request(bio);
- 	return true;
- }
--- 
-2.17.1
+> ---
+>  block/blk-core.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index a55389ba8779..d24a29244cb8 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1074,10 +1074,8 @@ blk_qc_t generic_make_request(struct bio *bio)
+>                         flags = 0;
+>                         if (bio->bi_opf & REQ_NOWAIT)
+>                                 flags = BLK_MQ_REQ_NOWAIT;
+> -                       if (blk_queue_enter(q, flags) < 0) {
+> +                       if (blk_queue_enter(q, flags) < 0)
+>                                 enter_succeeded = false;
+> -                               q = NULL;
+> -                       }
+>                 }
+>
+>                 if (enter_succeeded) {
+> @@ -1108,6 +1106,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+>                                 bio_wouldblock_error(bio);
+>                         else
+>                                 bio_io_error(bio);
+> +                       q = NULL;
+>                 }
+>                 bio = bio_list_pop(&bio_list_on_stack[0]);
+>         } while (bio);
+> --
+> 2.17.1
+>
