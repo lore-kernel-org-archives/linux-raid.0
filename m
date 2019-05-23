@@ -1,32 +1,38 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Fix bad backport to stable v3.16+
-Date: Wed, 22 May 2019 16:30:33 +0000
-Message-ID: <5F8253BF-1167-4A48-A3AC-E0728E1EE6CB@fb.com>
+From: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+Subject: Re: [PATCH V2 1/2] block: Fix a NULL pointer dereference in
+ generic_make_request()
+Date: Thu, 23 May 2019 11:33:21 -0300
+Message-ID: <3e583b2d-742a-3238-69ed-7a2e6cce417b@canonical.com>
+References: <20190520220911.25192-1-gpiccoli@canonical.com>
+ <CAPhsuW6KayaNR-0eFHpvPG-LVuPFL_1OFjvZpOcnapVFe2vC9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW6KayaNR-0eFHpvPG-LVuPFL_1OFjvZpOcnapVFe2vC9Q@mail.gmail.com>
 Content-Language: en-US
-Content-ID: <62B578430C9F4E4F908C9E2FD76DD80D@namprd15.prod.outlook.com>
 Sender: stable-owner@vger.kernel.org
-To: "stable@vger.kernel.org" <stable@vger.kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>, "linux@thorsten-knabe.de" <linux@thorsten-knabe.de>
+To: Song Liu <liu.song.a23@gmail.com>
+Cc: linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com, axboe@kernel.dk, Gavin Guo <gavin.guo@canonical.com>, Jay Vosburgh <jay.vosburgh@canonical.com>, "Guilherme G. Piccoli" <kernel@gpiccoli.net>, stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>, Eric Ren <renzhengeek@gmail.com>, hch@infradead.org
 List-Id: linux-raid.ids
 
-Hi,=20
+On 21/05/2019 02:59, Song Liu wrote:
+> 
+> Applied both patches! Thanks for the fix!
 
-As reported by Thorsten Knabe <linux@thorsten-knabe.de>.=20
+Hi Song, sorry for the annoyance, but the situation of both patches is a
+bit confused for me heheh
 
-commit 4f4fd7c5798b ("Don't jump to compute_result state from check_result =
-state") =20
-was back ported to v3.16+. However, this fix was wrong. =20
+You mention you've applied both patches - I couldn't find your tree.
+Also, Christoph noticed Ming's series fixes both issues and suggested to
+drop both my patches in favor of Ming's clean-up, or at least make them
+-stable only.
 
-Please back port the following two commits to fix this issue.=20
+So, what is the current status of the patches? Can we have them on
+-stable trees at least? If so, how should I proceed?
 
-commit a25d8c327bb4 ("Revert "Don't jump to compute_result state from check=
-_result state"")
-commit b2176a1dfb51 ("md/raid: raid5 preserve the writeback action after th=
-e parity check")
+Thanks in advance for the clarification!
+Cheers,
 
-Thanks,
-Song=
+
+Guilherme
