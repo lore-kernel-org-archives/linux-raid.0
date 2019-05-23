@@ -1,47 +1,29 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: Fix bad backport to stable v3.16+
-Date: Thu, 23 May 2019 18:11:20 +0000
-Message-ID: <C62D2B83-3773-42FA-8918-53C31AB56F97@fb.com>
-References: <5F8253BF-1167-4A48-A3AC-E0728E1EE6CB@fb.com>
- <20190523174433.GB29438@kroah.com>
+From: Guilherme Piccoli <gpiccoli@canonical.com>
+Subject: Re: [PATCH V2 1/2] block: Fix a NULL pointer dereference in generic_make_request()
+Date: Thu, 23 May 2019 17:30:52 -0300
+Message-ID: <CAHD1Q_zCkmiDN24Njjr5Nfuc11hSxN5fgw98MX9j5LJoiwgXPA@mail.gmail.com>
+References: <20190520220911.25192-1-gpiccoli@canonical.com>
+ <CAPhsuW6KayaNR-0eFHpvPG-LVuPFL_1OFjvZpOcnapVFe2vC9Q@mail.gmail.com>
+ <3e583b2d-742a-3238-69ed-7a2e6cce417b@canonical.com> <CAPhsuW7o9bj5DYnUDkCqDeW7NnfNTSBBWJC5_ZVxhoomDEEJcg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190523174433.GB29438@kroah.com>
-Content-Language: en-US
-Content-ID: <C1251FEDB522C04F96DCE9A4F6B0936A@namprd15.prod.outlook.com>
+In-Reply-To: <CAPhsuW7o9bj5DYnUDkCqDeW7NnfNTSBBWJC5_ZVxhoomDEEJcg@mail.gmail.com>
 Sender: stable-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>, "linux@thorsten-knabe.de" <linux@thorsten-knabe.de>
+To: Song Liu <liu.song.a23@gmail.com>
+Cc: linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com, Jens Axboe <axboe@kernel.dk>, Gavin Guo <gavin.guo@canonical.com>, Jay Vosburgh <jay.vosburgh@canonical.com>, "Guilherme G. Piccoli" <kernel@gpiccoli.net>, stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>, Eric Ren <renzhengeek@gmail.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
+On Thu, May 23, 2019 at 2:06 PM Song Liu <liu.song.a23@gmail.com> wrote:
+>
+>
+> Sorry for the confusion and delay. I will send patches to stable@.
+>
+> Song
 
 
-> On May 23, 2019, at 10:44 AM, Greg KH <greg@kroah.com> wrote:
->=20
-> On Wed, May 22, 2019 at 04:30:33PM +0000, Song Liu wrote:
->> Hi,=20
->>=20
->> As reported by Thorsten Knabe <linux@thorsten-knabe.de>.=20
->>=20
->> commit 4f4fd7c5798b ("Don't jump to compute_result state from check_resu=
-lt state") =20
->> was back ported to v3.16+. However, this fix was wrong. =20
->>=20
->> Please back port the following two commits to fix this issue.=20
->>=20
->> commit a25d8c327bb4 ("Revert "Don't jump to compute_result state from ch=
-eck_result state"")
->> commit b2176a1dfb51 ("md/raid: raid5 preserve the writeback action after=
- the parity check")
->=20
-> Added to 4.4+ for now.
->=20
-> thanks,
->=20
-> greg k-h
+Hi Song, no problem at all! Thanks a lot for the clarification.
+Cheers,
 
-Thanks Greg!!
 
-Song=
+Guilherme
