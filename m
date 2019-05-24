@@ -1,29 +1,37 @@
-From: Guilherme Piccoli <gpiccoli@canonical.com>
-Subject: Re: [PATCH V2 1/2] block: Fix a NULL pointer dereference in generic_make_request()
-Date: Thu, 23 May 2019 17:30:52 -0300
-Message-ID: <CAHD1Q_zCkmiDN24Njjr5Nfuc11hSxN5fgw98MX9j5LJoiwgXPA@mail.gmail.com>
-References: <20190520220911.25192-1-gpiccoli@canonical.com>
- <CAPhsuW6KayaNR-0eFHpvPG-LVuPFL_1OFjvZpOcnapVFe2vC9Q@mail.gmail.com>
- <3e583b2d-742a-3238-69ed-7a2e6cce417b@canonical.com> <CAPhsuW7o9bj5DYnUDkCqDeW7NnfNTSBBWJC5_ZVxhoomDEEJcg@mail.gmail.com>
+From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+Subject: [PATCH] md: md.c: Return -ENODEV when mddev is NULL in rdev_attr_show
+Date: Thu, 23 May 2019 23:44:59 -0300
+Message-ID: <20190524024459.6875-1-marcos.souza.org@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW7o9bj5DYnUDkCqDeW7NnfNTSBBWJC5_ZVxhoomDEEJcg@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Song Liu <liu.song.a23@gmail.com>
-Cc: linux-block@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com, Jens Axboe <axboe@kernel.dk>, Gavin Guo <gavin.guo@canonical.com>, Jay Vosburgh <jay.vosburgh@canonical.com>, "Guilherme G. Piccoli" <kernel@gpiccoli.net>, stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>, Eric Ren <renzhengeek@gmail.com>, Christoph Hellwig <hch@infradead.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: liu.song.a23@gmail.com, Marcos Paulo de Souza <marcos.souza.org@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
+        SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, May 23, 2019 at 2:06 PM Song Liu <liu.song.a23@gmail.com> wrote:
->
->
-> Sorry for the confusion and delay. I will send patches to stable@.
->
-> Song
+Commit c42d3240990814eec1e4b2b93fa0487fc4873aed
+("md: return -ENODEV if rdev has no mddev assigned") changed rdev_attr_store to
+return -ENODEV when rdev->mddev is NULL, now do the same to rdev_attr_show.
 
+Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hi Song, no problem at all! Thanks a lot for the clarification.
-Cheers,
-
-
-Guilherme
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 45ffa23fa85d..0b391e7e063b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3363,7 +3363,7 @@ rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+ 	if (!entry->show)
+ 		return -EIO;
+ 	if (!rdev->mddev)
+-		return -EBUSY;
++		return -ENODEV;
+ 	return entry->show(rdev, page);
+ }
+ 
+-- 
+2.21.0
