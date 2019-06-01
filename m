@@ -1,37 +1,53 @@
-From: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Subject: [PATCH] md: md.c: Return -ENODEV when mddev is NULL in rdev_attr_show
-Date: Thu, 23 May 2019 23:44:59 -0300
-Message-ID: <20190524024459.6875-1-marcos.souza.org@gmail.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 38/56] md: add mddev->pers to avoid potential NULL pointer dereference
+Date: Sat,  1 Jun 2019 09:25:42 -0400
+Message-ID: <20190601132600.27427-38-sashal@kernel.org>
+References: <20190601132600.27427-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190601132600.27427-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: liu.song.a23@gmail.com, Marcos Paulo de Souza <marcos.souza.org@gmail.com>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID Multiple Disks
-        SUPPORT" <linux-raid@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Yufen Yu <yuyufen@huawei.com>, Xiao Ni <xni@redhat.com>, NeilBrown <neilb@suse.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Commit c42d3240990814eec1e4b2b93fa0487fc4873aed
-("md: return -ENODEV if rdev has no mddev assigned") changed rdev_attr_store to
-return -ENODEV when rdev->mddev is NULL, now do the same to rdev_attr_show.
+From: Yufen Yu <yuyufen@huawei.com>
 
-Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
+[ Upstream commit ee37e62191a59d253fc916b9fc763deb777211e2 ]
+
+When doing re-add, we need to ensure rdev->mddev->pers is not NULL,
+which can avoid potential NULL pointer derefence in fallowing
+add_bound_rdev().
+
+Fixes: a6da4ef85cef ("md: re-add a failed disk")
+Cc: Xiao Ni <xni@redhat.com>
+Cc: NeilBrown <neilb@suse.com>
+Cc: <stable@vger.kernel.org> # 4.4+
+Reviewed-by: NeilBrown <neilb@suse.com>
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/md.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 45ffa23fa85d..0b391e7e063b 100644
+index 07f307402351b..f71cca28dddac 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -3363,7 +3363,7 @@ rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
- 	if (!entry->show)
- 		return -EIO;
- 	if (!rdev->mddev)
--		return -EBUSY;
-+		return -ENODEV;
- 	return entry->show(rdev, page);
- }
- 
+@@ -2690,8 +2690,10 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 			err = 0;
+ 		}
+ 	} else if (cmd_match(buf, "re-add")) {
+-		if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk == -1) &&
+-			rdev->saved_raid_disk >= 0) {
++		if (!rdev->mddev->pers)
++			err = -EINVAL;
++		else if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk == -1) &&
++				rdev->saved_raid_disk >= 0) {
+ 			/* clear_bit is performed _after_ all the devices
+ 			 * have their local Faulty bit cleared. If any writes
+ 			 * happen in the meantime in the local node, they
 -- 
-2.21.0
+2.20.1
