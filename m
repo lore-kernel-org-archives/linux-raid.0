@@ -1,53 +1,52 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 38/56] md: add mddev->pers to avoid potential NULL pointer dereference
-Date: Sat,  1 Jun 2019 09:25:42 -0400
-Message-ID: <20190601132600.27427-38-sashal@kernel.org>
-References: <20190601132600.27427-1-sashal@kernel.org>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] md: raid10: Use struct_size() in kmalloc()
+Date: Tue, 4 Jun 2019 17:44:18 -0500
+Message-ID: <20190604224418.GA23187@embeddedor>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190601132600.27427-1-sashal@kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yufen Yu <yuyufen@huawei.com>, Xiao Ni <xni@redhat.com>, NeilBrown <neilb@suse.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-raid.ids
 
-From: Yufen Yu <yuyufen@huawei.com>
+One of the more common cases of allocation size calculations is finding
+the size of a structure that has a zero-sized array at the end, along
+with memory for some number of elements for that array. For example:
 
-[ Upstream commit ee37e62191a59d253fc916b9fc763deb777211e2 ]
+struct foo {
+   int stuff;
+   struct boo entry[];
+};
 
-When doing re-add, we need to ensure rdev->mddev->pers is not NULL,
-which can avoid potential NULL pointer derefence in fallowing
-add_bound_rdev().
+instance = kmalloc(size, GFP_KERNEL);
 
-Fixes: a6da4ef85cef ("md: re-add a failed disk")
-Cc: Xiao Ni <xni@redhat.com>
-Cc: NeilBrown <neilb@suse.com>
-Cc: <stable@vger.kernel.org> # 4.4+
-Reviewed-by: NeilBrown <neilb@suse.com>
-Signed-off-by: Yufen Yu <yuyufen@huawei.com>
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Instead of leaving these open-coded and prone to type mistakes, we can
+now use the new struct_size() helper:
+
+instance = kmalloc(struct_size(instance, entry, count), GFP_KERNEL);
+
+This code was detected with the help of Coccinelle.
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/md/md.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/md/raid10.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 07f307402351b..f71cca28dddac 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2690,8 +2690,10 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 			err = 0;
- 		}
- 	} else if (cmd_match(buf, "re-add")) {
--		if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk == -1) &&
--			rdev->saved_raid_disk >= 0) {
-+		if (!rdev->mddev->pers)
-+			err = -EINVAL;
-+		else if (test_bit(Faulty, &rdev->flags) && (rdev->raid_disk == -1) &&
-+				rdev->saved_raid_disk >= 0) {
- 			/* clear_bit is performed _after_ all the devices
- 			 * have their local Faulty bit cleared. If any writes
- 			 * happen in the meantime in the local node, they
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index aea11476fee6..3caafd433163 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4780,8 +4780,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
+ 	int idx = 0;
+ 	struct page **pages;
+ 
+-	r10b = kmalloc(sizeof(*r10b) +
+-	       sizeof(struct r10dev) * conf->copies, GFP_NOIO);
++	r10b = kmalloc(struct_size(r10b, devs, conf->copies), GFP_NOIO);
+ 	if (!r10b) {
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 		return -ENOMEM;
 -- 
-2.20.1
+2.21.0
