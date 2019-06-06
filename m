@@ -1,55 +1,63 @@
 From: Song Liu <liu.song.a23@gmail.com>
-Subject: Re: [PATCH] md: md.c: Return -ENODEV when mddev is NULL in rdev_attr_show
-Date: Thu, 6 Jun 2019 09:41:11 -0700
-Message-ID: <CAPhsuW5Ea_bDRwoE7=AamzOsvLMdfQRTPh00iFHNrx8iU5ZOZw@mail.gmail.com>
-References: <20190524024459.6875-1-marcos.souza.org@gmail.com>
+Subject: Re: [PATCH] md: raid10: Use struct_size() in kmalloc()
+Date: Thu, 6 Jun 2019 09:51:09 -0700
+Message-ID: <CAPhsuW5cBSsQemfBOyJ_kPLFbaiES8Koh2cvpy9AV4dMB68OJA@mail.gmail.com>
+References: <20190604224418.GA23187@embeddedor>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190524024459.6875-1-marcos.souza.org@gmail.com>
+In-Reply-To: <20190604224418.GA23187@embeddedor>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-Cc: open list <linux-kernel@vger.kernel.org>, Shaohua Li <shli@kernel.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, May 23, 2019 at 7:45 PM Marcos Paulo de Souza
-<marcos.souza.org@gmail.com> wrote:
+On Tue, Jun 4, 2019 at 3:47 PM Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
 >
-> Commit c42d3240990814eec1e4b2b93fa0487fc4873aed
-> ("md: return -ENODEV if rdev has no mddev assigned") changed rdev_attr_store to
-> return -ENODEV when rdev->mddev is NULL, now do the same to rdev_attr_show.
+> One of the more common cases of allocation size calculations is finding
+> the size of a structure that has a zero-sized array at the end, along
+> with memory for some number of elements for that array. For example:
+>
+> struct foo {
+>    int stuff;
+>    struct boo entry[];
+> };
+>
+> instance = kmalloc(size, GFP_KERNEL);
+>
+> Instead of leaving these open-coded and prone to type mistakes, we can
+> now use the new struct_size() helper:
+>
+> instance = kmalloc(struct_size(instance, entry, count), GFP_KERNEL);
+>
+> This code was detected with the help of Coccinelle.
+>
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-nit: checkpatch.pl complains
-
-WARNING: Possible unwrapped commit description (prefer a maximum 75
-chars per line)
-#84:
-("md: return -ENODEV if rdev has no mddev assigned") changed rdev_attr_store to
-
-I fixed this in my tree, so no need to resend.
+Applied to my md-next tree.
 
 Thanks,
 Song
 
->
-> Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
 > ---
->  drivers/md/md.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/md/raid10.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 45ffa23fa85d..0b391e7e063b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3363,7 +3363,7 @@ rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
->         if (!entry->show)
->                 return -EIO;
->         if (!rdev->mddev)
-> -               return -EBUSY;
-> +               return -ENODEV;
->         return entry->show(rdev, page);
->  }
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index aea11476fee6..3caafd433163 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -4780,8 +4780,7 @@ static int handle_reshape_read_error(struct mddev *mddev,
+>         int idx = 0;
+>         struct page **pages;
 >
+> -       r10b = kmalloc(sizeof(*r10b) +
+> -              sizeof(struct r10dev) * conf->copies, GFP_NOIO);
+> +       r10b = kmalloc(struct_size(r10b, devs, conf->copies), GFP_NOIO);
+>         if (!r10b) {
+>                 set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>                 return -ENOMEM;
 > --
 > 2.21.0
 >
