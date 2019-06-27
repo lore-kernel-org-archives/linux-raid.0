@@ -1,64 +1,101 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/8] raid5-cache: Need to do start() part job after adding journal device
-Date: Fri, 14 Jun 2019 15:41:05 -0700
-Message-ID: <20190614224111.3485077-3-songliubraving@fb.com>
-References: <20190614224111.3485077-1-songliubraving@fb.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 83/95] md: fix for divide error in status_resync
+Date: Wed, 26 Jun 2019 20:30:08 -0400
+Message-ID: <20190627003021.19867-83-sashal@kernel.org>
+References: <20190627003021.19867-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190614224111.3485077-1-songliubraving@fb.com>
+In-Reply-To: <20190627003021.19867-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: axboe@kernel.dk, kernel-team@fb.com, Xiao Ni <xni@redhat.com>, stable@vger.kernel.org, Song Liu <songliubraving@fb.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Xiao Ni <xni@redhat.com>
+From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 
-commit d5d885fd514f ("md: introduce new personality funciton start()")
-splits the init job to two parts. The first part run() does the jobs that
-do not require the md threads. The second part start() does the jobs that
-require the md threads.
+[ Upstream commit 9642fa73d073527b0cbc337cc17a47d545d82cd2 ]
 
-Now it just does run() in adding new journal device. It needs to do the
-second part start() too.
+Stopping external metadata arrays during resync/recovery causes
+retries, loop of interrupting and starting reconstruction, until it
+hit at good moment to stop completely. While these retries
+curr_mark_cnt can be small- especially on HDD drives, so subtraction
+result can be smaller than 0. However it is casted to uint without
+checking. As a result of it the status bar in /proc/mdstat while stopping
+is strange (it jumps between 0% and 99%).
 
-Fixes: d5d885fd514f ("md: introduce new personality funciton start()")
-Cc: stable@vger.kernel.org #v4.9+
-Reported-by: Michal Soltys <soltys@ziu.info>
-Signed-off-by: Xiao Ni <xni@redhat.com>
+The real problem occurs here after commit 72deb455b5ec ("block: remove
+CONFIG_LBDAF"). Sector_div() macro has been changed, now the
+divisor is casted to uint32. For db = -8 the divisior(db/32-1) becomes 0.
+
+Check if db value can be really counted and replace these macro by
+div64_u64() inline.
+
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid5.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/md/md.c | 36 ++++++++++++++++++++++--------------
+ 1 file changed, 22 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b83bce2beb66..da94cbaa1a9e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7672,7 +7672,7 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 295ff09cff4c..84aec3647994 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7617,9 +7617,9 @@ static void status_unused(struct seq_file *seq)
+ static int status_resync(struct seq_file *seq, struct mddev *mddev)
  {
- 	struct r5conf *conf = mddev->private;
--	int err = -EEXIST;
-+	int ret, err = -EEXIST;
- 	int disk;
- 	struct disk_info *p;
- 	int first = 0;
-@@ -7687,7 +7687,14 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		 * The array is in readonly mode if journal is missing, so no
- 		 * write requests running. We should be safe
- 		 */
--		log_init(conf, rdev, false);
-+		ret = log_init(conf, rdev, false);
-+		if (ret)
-+			return ret;
+ 	sector_t max_sectors, resync, res;
+-	unsigned long dt, db;
+-	sector_t rt;
+-	int scale;
++	unsigned long dt, db = 0;
++	sector_t rt, curr_mark_cnt, resync_mark_cnt;
++	int scale, recovery_active;
+ 	unsigned int per_milli;
+ 
+ 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
+@@ -7708,22 +7708,30 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
+ 	 * db: blocks written from mark until now
+ 	 * rt: remaining time
+ 	 *
+-	 * rt is a sector_t, so could be 32bit or 64bit.
+-	 * So we divide before multiply in case it is 32bit and close
+-	 * to the limit.
+-	 * We scale the divisor (db) by 32 to avoid losing precision
+-	 * near the end of resync when the number of remaining sectors
+-	 * is close to 'db'.
+-	 * We then divide rt by 32 after multiplying by db to compensate.
+-	 * The '+1' avoids division by zero if db is very small.
++	 * rt is a sector_t, which is always 64bit now. We are keeping
++	 * the original algorithm, but it is not really necessary.
++	 *
++	 * Original algorithm:
++	 *   So we divide before multiply in case it is 32bit and close
++	 *   to the limit.
++	 *   We scale the divisor (db) by 32 to avoid losing precision
++	 *   near the end of resync when the number of remaining sectors
++	 *   is close to 'db'.
++	 *   We then divide rt by 32 after multiplying by db to compensate.
++	 *   The '+1' avoids division by zero if db is very small.
+ 	 */
+ 	dt = ((jiffies - mddev->resync_mark) / HZ);
+ 	if (!dt) dt++;
+-	db = (mddev->curr_mark_cnt - atomic_read(&mddev->recovery_active))
+-		- mddev->resync_mark_cnt;
 +
-+		ret = r5l_start(conf->log);
-+		if (ret)
-+			return ret;
++	curr_mark_cnt = mddev->curr_mark_cnt;
++	recovery_active = atomic_read(&mddev->recovery_active);
++	resync_mark_cnt = mddev->resync_mark_cnt;
 +
- 		return 0;
- 	}
- 	if (mddev->recovery_disabled == conf->recovery_disabled)
++	if (curr_mark_cnt >= (recovery_active + resync_mark_cnt))
++		db = curr_mark_cnt - (recovery_active + resync_mark_cnt);
+ 
+ 	rt = max_sectors - resync;    /* number of remaining sectors */
+-	sector_div(rt, db/32+1);
++	rt = div64_u64(rt, db/32+1);
+ 	rt *= dt;
+ 	rt >>= 5;
+ 
 -- 
-2.17.1
+2.20.1
