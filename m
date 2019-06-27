@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 18/21] md: fix for divide error in status_resync
-Date: Wed, 26 Jun 2019 20:41:18 -0400
-Message-ID: <20190627004122.21671-18-sashal@kernel.org>
-References: <20190627004122.21671-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 11/12] md: fix for divide error in status_resync
+Date: Wed, 26 Jun 2019 20:42:33 -0400
+Message-ID: <20190627004236.21909-11-sashal@kernel.org>
+References: <20190627004236.21909-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190627004122.21671-1-sashal@kernel.org>
+In-Reply-To: <20190627004236.21909-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
@@ -39,10 +39,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 22 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 21698eb671d7..765a16dab2e5 100644
+index f71cca28ddda..067af77bb729 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7296,9 +7296,9 @@ static void status_unused(struct seq_file *seq)
+@@ -7226,9 +7226,9 @@ static void status_unused(struct seq_file *seq)
  static int status_resync(struct seq_file *seq, struct mddev *mddev)
  {
  	sector_t max_sectors, resync, res;
@@ -55,7 +55,7 @@ index 21698eb671d7..765a16dab2e5 100644
  	unsigned int per_milli;
  
  	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ||
-@@ -7368,22 +7368,30 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
+@@ -7298,22 +7298,30 @@ static int status_resync(struct seq_file *seq, struct mddev *mddev)
  	 * db: blocks written from mark until now
  	 * rt: remaining time
  	 *
