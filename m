@@ -1,291 +1,124 @@
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH 14/39] docs: device-mapper: move it to the
-	admin-guide
-Date: Fri, 28 Jun 2019 09:30:07 -0300
-Message-ID: <69039a9ae8c5327e14e9fc3dbc9e810f92091b52.1561724493.git.mchehab+samsung@kernel.org>
-References: <cover.1561724493.git.mchehab+samsung@kernel.org>
+From: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
+Subject: [4.19.y PATCH 1/2] block: Fix a NULL pointer dereference in generic_make_request()
+Date: Fri, 28 Jun 2019 19:17:58 -0300
+Message-ID: <20190628221759.18274-1-gpiccoli@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <cover.1561724493.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mike Snitzer <snitzer@redhat.com>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Shaohua Li <shli@kernel.org>, Alasdair Kergon <agk@redhat.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, sashal@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, gpiccoli@canonical.com, jay.vosburgh@canonical.com, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Song Liu <songliubraving@fb.com>, Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>, Eric Ren <renzhengeek@gmail.com>
 List-Id: linux-raid.ids
 
-The DM support describes lots of aspects related to mapped
-disk partitions from the userspace PoV.
+-----------------------------------------------------------------
+This patch is not on mainline and is meant to 4.19 stable *only*.
+After the patch description there's a reasoning about that.
+-----------------------------------------------------------------
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Commit 37f9579f4c31 ("blk-mq: Avoid that submitting a bio concurrently
+with device removal triggers a crash") introduced a NULL pointer
+dereference in generic_make_request(). The patch sets q to NULL and
+enter_succeeded to false; right after, there's an 'if (enter_succeeded)'
+which is not taken, and then the 'else' will dereference q in
+blk_queue_dying(q).
+
+This patch just moves the 'q = NULL' to a point in which it won't trigger
+the oops, although the semantics of this NULLification remains untouched.
+
+A simple test case/reproducer is as follows:
+a) Build kernel v4.19.56-stable with CONFIG_BLK_CGROUP=n.
+
+b) Create a raid0 md array with 2 NVMe devices as members, and mount
+it with an ext4 filesystem.
+
+c) Run the following oneliner (supposing the raid0 is mounted in /mnt):
+(dd of=/mnt/tmp if=/dev/zero bs=1M count=999 &); sleep 0.3;
+echo 1 > /sys/block/nvme1n1/device/device/remove
+(whereas nvme1n1 is the 2nd array member)
+
+This will trigger the following oops:
+
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
+PGD 0 P4D 0
+Oops: 0000 [#1] SMP PTI
+RIP: 0010:generic_make_request+0x32b/0x400
+Call Trace:
+ submit_bio+0x73/0x140
+ ext4_io_submit+0x4d/0x60
+ ext4_writepages+0x626/0xe90
+ do_writepages+0x4b/0xe0
+[...]
+
+This patch has no functional changes and preserves the md/raid0 behavior
+when a member is removed before kernel v4.17.
+
+----------------------------
+Why this is not on mainline?
+----------------------------
+
+The patch was originally submitted upstream in linux-raid and
+linux-block mailing-lists - it was initially accepted by Song Liu,
+but Christoph Hellwig[0] observed that there was a clean-up series
+ready to be accepted from Ming Lei[1] that fixed the same issue.
+
+The accepted patches from Ming's series in upstream are: commit
+47cdee29ef9d ("block: move blk_exit_queue into __blk_release_queue") and
+commit fe2008640ae3 ("block: don't protect generic_make_request_checks
+with blk_queue_enter"). Those patches basically do a clean-up in the
+block layer involving:
+
+1) Putting back blk_exit_queue() logic into __blk_release_queue(); that
+path was changed in the past and the logic from blk_exit_queue() was
+added to blk_cleanup_queue().
+
+2) Removing the guard/protection in generic_make_request_checks() with
+blk_queue_enter().
+
+The problem with Ming's series for -stable is that it relies in the
+legacy request IO path removal. So it's "backport-able" to v5.0+,
+but doing that for early versions (like 4.19) would incur in complex
+code changes. Hence, it was suggested by Christoph and Song Liu that
+this patch was submitted to stable only; otherwise merging it upstream
+would add code to fix a path removed in a subsequent commit.
+
+[0] lore.kernel.org/linux-block/20190521172258.GA32702@infradead.org
+[1] lore.kernel.org/linux-block/20190515030310.20393-1-ming.lei@redhat.com
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <songliubraving@fb.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Tested-by: Eric Ren <renzhengeek@gmail.com>
+Fixes: 37f9579f4c31 ("blk-mq: Avoid that submitting a bio concurrently with device removal triggers a crash")
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
 ---
- .../{ => admin-guide}/device-mapper/cache-policies.rst          | 0
- Documentation/{ => admin-guide}/device-mapper/cache.rst         | 0
- Documentation/{ => admin-guide}/device-mapper/delay.rst         | 0
- Documentation/{ => admin-guide}/device-mapper/dm-crypt.rst      | 0
- Documentation/{ => admin-guide}/device-mapper/dm-dust.txt       | 0
- Documentation/{ => admin-guide}/device-mapper/dm-flakey.rst     | 0
- Documentation/{ => admin-guide}/device-mapper/dm-init.rst       | 0
- Documentation/{ => admin-guide}/device-mapper/dm-integrity.rst  | 0
- Documentation/{ => admin-guide}/device-mapper/dm-io.rst         | 0
- Documentation/{ => admin-guide}/device-mapper/dm-log.rst        | 0
- .../{ => admin-guide}/device-mapper/dm-queue-length.rst         | 0
- Documentation/{ => admin-guide}/device-mapper/dm-raid.rst       | 0
- .../{ => admin-guide}/device-mapper/dm-service-time.rst         | 0
- Documentation/{ => admin-guide}/device-mapper/dm-uevent.rst     | 0
- Documentation/{ => admin-guide}/device-mapper/dm-zoned.rst      | 0
- Documentation/{ => admin-guide}/device-mapper/era.rst           | 0
- Documentation/{ => admin-guide}/device-mapper/index.rst         | 2 --
- Documentation/{ => admin-guide}/device-mapper/kcopyd.rst        | 0
- Documentation/{ => admin-guide}/device-mapper/linear.rst        | 0
- Documentation/{ => admin-guide}/device-mapper/log-writes.rst    | 0
- .../{ => admin-guide}/device-mapper/persistent-data.rst         | 0
- Documentation/{ => admin-guide}/device-mapper/snapshot.rst      | 0
- Documentation/{ => admin-guide}/device-mapper/statistics.rst    | 0
- Documentation/{ => admin-guide}/device-mapper/striped.rst       | 0
- Documentation/{ => admin-guide}/device-mapper/switch.rst        | 0
- .../{ => admin-guide}/device-mapper/thin-provisioning.rst       | 0
- Documentation/{ => admin-guide}/device-mapper/unstriped.rst     | 0
- Documentation/{ => admin-guide}/device-mapper/verity.rst        | 0
- Documentation/{ => admin-guide}/device-mapper/writecache.rst    | 0
- Documentation/{ => admin-guide}/device-mapper/zero.rst          | 0
- Documentation/admin-guide/index.rst                             | 1 +
- MAINTAINERS                                                     | 2 +-
- drivers/md/Kconfig                                              | 2 +-
- drivers/md/dm-init.c                                            | 2 +-
- drivers/md/dm-raid.c                                            | 2 +-
- 35 files changed, 5 insertions(+), 6 deletions(-)
- rename Documentation/{ => admin-guide}/device-mapper/cache-policies.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/cache.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/delay.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-crypt.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-dust.txt (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-flakey.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-init.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-integrity.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-io.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-log.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-queue-length.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-raid.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-service-time.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-uevent.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/dm-zoned.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/era.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/index.rst (98%)
- rename Documentation/{ => admin-guide}/device-mapper/kcopyd.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/linear.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/log-writes.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/persistent-data.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/snapshot.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/statistics.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/striped.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/switch.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/thin-provisioning.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/unstriped.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/verity.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/writecache.rst (100%)
- rename Documentation/{ => admin-guide}/device-mapper/zero.rst (100%)
+ block/blk-core.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/device-mapper/cache-policies.rst b/Documentation/admin-guide/device-mapper/cache-policies.rst
-similarity index 100%
-rename from Documentation/device-mapper/cache-policies.rst
-rename to Documentation/admin-guide/device-mapper/cache-policies.rst
-diff --git a/Documentation/device-mapper/cache.rst b/Documentation/admin-guide/device-mapper/cache.rst
-similarity index 100%
-rename from Documentation/device-mapper/cache.rst
-rename to Documentation/admin-guide/device-mapper/cache.rst
-diff --git a/Documentation/device-mapper/delay.rst b/Documentation/admin-guide/device-mapper/delay.rst
-similarity index 100%
-rename from Documentation/device-mapper/delay.rst
-rename to Documentation/admin-guide/device-mapper/delay.rst
-diff --git a/Documentation/device-mapper/dm-crypt.rst b/Documentation/admin-guide/device-mapper/dm-crypt.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-crypt.rst
-rename to Documentation/admin-guide/device-mapper/dm-crypt.rst
-diff --git a/Documentation/device-mapper/dm-dust.txt b/Documentation/admin-guide/device-mapper/dm-dust.txt
-similarity index 100%
-rename from Documentation/device-mapper/dm-dust.txt
-rename to Documentation/admin-guide/device-mapper/dm-dust.txt
-diff --git a/Documentation/device-mapper/dm-flakey.rst b/Documentation/admin-guide/device-mapper/dm-flakey.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-flakey.rst
-rename to Documentation/admin-guide/device-mapper/dm-flakey.rst
-diff --git a/Documentation/device-mapper/dm-init.rst b/Documentation/admin-guide/device-mapper/dm-init.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-init.rst
-rename to Documentation/admin-guide/device-mapper/dm-init.rst
-diff --git a/Documentation/device-mapper/dm-integrity.rst b/Documentation/admin-guide/device-mapper/dm-integrity.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-integrity.rst
-rename to Documentation/admin-guide/device-mapper/dm-integrity.rst
-diff --git a/Documentation/device-mapper/dm-io.rst b/Documentation/admin-guide/device-mapper/dm-io.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-io.rst
-rename to Documentation/admin-guide/device-mapper/dm-io.rst
-diff --git a/Documentation/device-mapper/dm-log.rst b/Documentation/admin-guide/device-mapper/dm-log.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-log.rst
-rename to Documentation/admin-guide/device-mapper/dm-log.rst
-diff --git a/Documentation/device-mapper/dm-queue-length.rst b/Documentation/admin-guide/device-mapper/dm-queue-length.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-queue-length.rst
-rename to Documentation/admin-guide/device-mapper/dm-queue-length.rst
-diff --git a/Documentation/device-mapper/dm-raid.rst b/Documentation/admin-guide/device-mapper/dm-raid.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-raid.rst
-rename to Documentation/admin-guide/device-mapper/dm-raid.rst
-diff --git a/Documentation/device-mapper/dm-service-time.rst b/Documentation/admin-guide/device-mapper/dm-service-time.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-service-time.rst
-rename to Documentation/admin-guide/device-mapper/dm-service-time.rst
-diff --git a/Documentation/device-mapper/dm-uevent.rst b/Documentation/admin-guide/device-mapper/dm-uevent.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-uevent.rst
-rename to Documentation/admin-guide/device-mapper/dm-uevent.rst
-diff --git a/Documentation/device-mapper/dm-zoned.rst b/Documentation/admin-guide/device-mapper/dm-zoned.rst
-similarity index 100%
-rename from Documentation/device-mapper/dm-zoned.rst
-rename to Documentation/admin-guide/device-mapper/dm-zoned.rst
-diff --git a/Documentation/device-mapper/era.rst b/Documentation/admin-guide/device-mapper/era.rst
-similarity index 100%
-rename from Documentation/device-mapper/era.rst
-rename to Documentation/admin-guide/device-mapper/era.rst
-diff --git a/Documentation/device-mapper/index.rst b/Documentation/admin-guide/device-mapper/index.rst
-similarity index 98%
-rename from Documentation/device-mapper/index.rst
-rename to Documentation/admin-guide/device-mapper/index.rst
-index 105e253bc231..c77c58b8f67b 100644
---- a/Documentation/device-mapper/index.rst
-+++ b/Documentation/admin-guide/device-mapper/index.rst
-@@ -1,5 +1,3 @@
--:orphan:
--
- =============
- Device Mapper
- =============
-diff --git a/Documentation/device-mapper/kcopyd.rst b/Documentation/admin-guide/device-mapper/kcopyd.rst
-similarity index 100%
-rename from Documentation/device-mapper/kcopyd.rst
-rename to Documentation/admin-guide/device-mapper/kcopyd.rst
-diff --git a/Documentation/device-mapper/linear.rst b/Documentation/admin-guide/device-mapper/linear.rst
-similarity index 100%
-rename from Documentation/device-mapper/linear.rst
-rename to Documentation/admin-guide/device-mapper/linear.rst
-diff --git a/Documentation/device-mapper/log-writes.rst b/Documentation/admin-guide/device-mapper/log-writes.rst
-similarity index 100%
-rename from Documentation/device-mapper/log-writes.rst
-rename to Documentation/admin-guide/device-mapper/log-writes.rst
-diff --git a/Documentation/device-mapper/persistent-data.rst b/Documentation/admin-guide/device-mapper/persistent-data.rst
-similarity index 100%
-rename from Documentation/device-mapper/persistent-data.rst
-rename to Documentation/admin-guide/device-mapper/persistent-data.rst
-diff --git a/Documentation/device-mapper/snapshot.rst b/Documentation/admin-guide/device-mapper/snapshot.rst
-similarity index 100%
-rename from Documentation/device-mapper/snapshot.rst
-rename to Documentation/admin-guide/device-mapper/snapshot.rst
-diff --git a/Documentation/device-mapper/statistics.rst b/Documentation/admin-guide/device-mapper/statistics.rst
-similarity index 100%
-rename from Documentation/device-mapper/statistics.rst
-rename to Documentation/admin-guide/device-mapper/statistics.rst
-diff --git a/Documentation/device-mapper/striped.rst b/Documentation/admin-guide/device-mapper/striped.rst
-similarity index 100%
-rename from Documentation/device-mapper/striped.rst
-rename to Documentation/admin-guide/device-mapper/striped.rst
-diff --git a/Documentation/device-mapper/switch.rst b/Documentation/admin-guide/device-mapper/switch.rst
-similarity index 100%
-rename from Documentation/device-mapper/switch.rst
-rename to Documentation/admin-guide/device-mapper/switch.rst
-diff --git a/Documentation/device-mapper/thin-provisioning.rst b/Documentation/admin-guide/device-mapper/thin-provisioning.rst
-similarity index 100%
-rename from Documentation/device-mapper/thin-provisioning.rst
-rename to Documentation/admin-guide/device-mapper/thin-provisioning.rst
-diff --git a/Documentation/device-mapper/unstriped.rst b/Documentation/admin-guide/device-mapper/unstriped.rst
-similarity index 100%
-rename from Documentation/device-mapper/unstriped.rst
-rename to Documentation/admin-guide/device-mapper/unstriped.rst
-diff --git a/Documentation/device-mapper/verity.rst b/Documentation/admin-guide/device-mapper/verity.rst
-similarity index 100%
-rename from Documentation/device-mapper/verity.rst
-rename to Documentation/admin-guide/device-mapper/verity.rst
-diff --git a/Documentation/device-mapper/writecache.rst b/Documentation/admin-guide/device-mapper/writecache.rst
-similarity index 100%
-rename from Documentation/device-mapper/writecache.rst
-rename to Documentation/admin-guide/device-mapper/writecache.rst
-diff --git a/Documentation/device-mapper/zero.rst b/Documentation/admin-guide/device-mapper/zero.rst
-similarity index 100%
-rename from Documentation/device-mapper/zero.rst
-rename to Documentation/admin-guide/device-mapper/zero.rst
-diff --git a/Documentation/admin-guide/index.rst b/Documentation/admin-guide/index.rst
-index 42819addebc6..e0763c51b024 100644
---- a/Documentation/admin-guide/index.rst
-+++ b/Documentation/admin-guide/index.rst
-@@ -79,6 +79,7 @@ configure specific aspects of kernel behavior to your liking.
-    namespaces/index
-    perf-security
-    acpi/index
-+   device-mapper/index
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 6eed5d84c2ef..682bc561b77b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2445,10 +2445,8 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 			flags = 0;
+ 			if (bio->bi_opf & REQ_NOWAIT)
+ 				flags = BLK_MQ_REQ_NOWAIT;
+-			if (blk_queue_enter(q, flags) < 0) {
++			if (blk_queue_enter(q, flags) < 0)
+ 				enter_succeeded = false;
+-				q = NULL;
+-			}
+ 		}
  
- .. only::  subproject and html
- 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 524e2c4300dc..40d057631004 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4703,7 +4703,7 @@ Q:	http://patchwork.kernel.org/project/dm-devel/list/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git
- T:	quilt http://people.redhat.com/agk/patches/linux/editing/
- S:	Maintained
--F:	Documentation/device-mapper/
-+F:	Documentation/admin-guide/device-mapper/
- F:	drivers/md/Makefile
- F:	drivers/md/Kconfig
- F:	drivers/md/dm*
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 5ccac0b77f17..3834332f4963 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -453,7 +453,7 @@ config DM_INIT
- 	Enable "dm-mod.create=" parameter to create mapped devices at init time.
- 	This option is useful to allow mounting rootfs without requiring an
- 	initramfs.
--	See Documentation/device-mapper/dm-init.rst for dm-mod.create="..."
-+	See Documentation/admin-guide/device-mapper/dm-init.rst for dm-mod.create="..."
- 	format.
- 
- 	If unsure, say N.
-diff --git a/drivers/md/dm-init.c b/drivers/md/dm-init.c
-index b65faef2c4b5..b869316d3722 100644
---- a/drivers/md/dm-init.c
-+++ b/drivers/md/dm-init.c
-@@ -25,7 +25,7 @@ static char *create;
-  * Format: dm-mod.create=<name>,<uuid>,<minor>,<flags>,<table>[,<table>+][;<name>,<uuid>,<minor>,<flags>,<table>[,<table>+]+]
-  * Table format: <start_sector> <num_sectors> <target_type> <target_args>
-  *
-- * See Documentation/device-mapper/dm-init.rst for dm-mod.create="..." format
-+ * See Documentation/admin-guide/device-mapper/dm-init.rst for dm-mod.create="..." format
-  * details.
-  */
- 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 7a87a640f8ba..8a60a4a070ac 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3558,7 +3558,7 @@ static void raid_status(struct dm_target *ti, status_type_t type,
- 		 * v1.5.0+:
- 		 *
- 		 * Sync action:
--		 *   See Documentation/device-mapper/dm-raid.rst for
-+		 *   See Documentation/admin-guide/device-mapper/dm-raid.rst for
- 		 *   information on each of these states.
- 		 */
- 		DMEMIT(" %s", sync_action);
+ 		if (enter_succeeded) {
+@@ -2479,6 +2477,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 				bio_wouldblock_error(bio);
+ 			else
+ 				bio_io_error(bio);
++			q = NULL;
+ 		}
+ 		bio = bio_list_pop(&bio_list_on_stack[0]);
+ 	} while (bio);
 -- 
-2.21.0
+2.22.0
