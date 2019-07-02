@@ -1,78 +1,165 @@
-From: Markus Elfring <Markus.Elfring@web.de>
-Subject: [PATCH] md/raid: Replace a seq_printf() call by seq_putc() in three
- functions
-Date: Mon, 1 Jul 2019 17:28:13 +0200
-Message-ID: <50f0f51c-16c6-8d31-b265-8a007e6f7251@web.de>
+From: Hou Tao <houtao1@huawei.com>
+Subject: [RFC PATCH 2/3] md: export inflight io counters and internal stats in debugfs
+Date: Tue, 2 Jul 2019 21:29:17 +0800
+Message-ID: <20190702132918.114818-3-houtao1@huawei.com>
+References: <20190702132918.114818-1-houtao1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20190702132918.114818-1-houtao1@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+To: linux-raid@vger.kernel.org, songliubraving@fb.com
+Cc: neilb@suse.com, linux-block@vger.kernel.org, snitzer@redhat.com, agk@redhat.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org, houtao1@huawei.com
 List-Id: linux-raid.ids
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 1 Jul 2019 17:10:13 +0200
+There are so many io counters and stats/flags in md, so I think
+export these info in debugfs will be helpful for online-debugging,
+especially when the vmlinux and crash utility are not available.
+And these files can also be utilized during code understanding.
 
-A single character (depending on a condition check) should be put
-into a sequence. Thus use the corresponding function =E2=80=9Cseq_putc=E2=
-=80=9D.
+Debug info are divided into two debugfs files:
+* iostat
+  contains io counters and io related stats (e.g., mddev->pending_writes
+  and the active status of mddev->sb_wait)
+* stat
+  contains internal stats or flags (e.g., mddev->sb_flags)
 
-This issue was detected by using the Coccinelle software.
+These two debugfs files will be created both by md-core and the used
+md-personality for each md device. This patch creates debug files
+for md-core under /sys/kernel/debug/block/mdX, and the following patch
+will creates these files for RAID1. The following lines show the hierarchy
+of debugfs files created for a RAID1 device:
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-=2D--
- drivers/md/raid1.c  | 4 ++--
- drivers/md/raid10.c | 3 ++-
- drivers/md/raid5.c  | 3 ++-
- 3 files changed, 6 insertions(+), 4 deletions(-)
+  $ pwd
+  /sys/kernel/debug/block/md0
+  $ tree
+  .
+  ├── iostat
+  ├── raid1
+  │   ├── iostat
+  │   └── stat
+  └── stat
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 34e26834ad28..769d79a1d2cf 100644
-=2D-- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1597,7 +1597,7 @@ static void raid1_status(struct seq_file *seq, struc=
-t mddev *mddev)
- 	rcu_read_lock();
- 	for (i =3D 0; i < conf->raid_disks; i++) {
- 		struct md_rdev *rdev =3D rcu_dereference(conf->mirrors[i].rdev);
--		seq_printf(seq, "%s",
--			   rdev && test_bit(In_sync, &rdev->flags) ? "U" : "_");
-+		seq_putc(seq,
-+			 rdev && test_bit(In_sync, &rdev->flags) ? 'U' : '_');
- 	}
- 	rcu_read_unlock();
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 8a1354a08a1a..4e7da5dcbf86 100644
-=2D-- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1572,6 +1572,7 @@ static void raid10_status(struct seq_file *seq, stru=
-ct mddev *mddev)
- 	rcu_read_lock();
- 	for (i =3D 0; i < conf->geo.raid_disks; i++) {
- 		struct md_rdev *rdev =3D rcu_dereference(conf->mirrors[i].rdev);
--		seq_printf(seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : "=
-_");
-+		seq_putc(seq,
-+			 rdev && test_bit(In_sync, &rdev->flags) ? 'U' : '_');
- 	}
- 	rcu_read_unlock();
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3de4e13bde98..4b0e93869801 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7510,6 +7510,7 @@ static void raid5_status(struct seq_file *seq, struc=
-t mddev *mddev)
- 	rcu_read_lock();
- 	for (i =3D 0; i < conf->raid_disks; i++) {
- 		struct md_rdev *rdev =3D rcu_dereference(conf->disks[i].rdev);
--		seq_printf (seq, "%s", rdev && test_bit(In_sync, &rdev->flags) ? "U" : =
-"_");
-+		seq_putc(seq,
-+			 rdev && test_bit(In_sync, &rdev->flags) ? 'U' : '_');
- 	}
- 	rcu_read_unlock();
-=2D-
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ drivers/md/md.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/md.h |  1 +
+ 2 files changed, 66 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 9801d540fea1..dceb8fd59ba0 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -64,11 +64,14 @@
+ #include "md.h"
+ #include "md-bitmap.h"
+ #include "md-cluster.h"
++#include "md-debugfs.h"
+ 
+ #ifndef MODULE
+ static void autostart_arrays(int part);
+ #endif
+ 
++extern struct dentry *blk_debugfs_root;
++
+ /* pers_list is a list of registered personalities protected
+  * by pers_lock.
+  * pers_lock does extra service to protect accesses to
+@@ -5191,6 +5194,65 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+ 	return rv;
+ }
+ 
++static int md_dbg_iostat_show(struct seq_file *m, void *data)
++{
++	struct mddev *mddev = m->private;
++	int active_bm_io = 0;
++
++	spin_lock(&mddev->lock);
++	if (mddev->bitmap)
++		active_bm_io = atomic_read(&mddev->bitmap->pending_writes);
++	spin_unlock(&mddev->lock);
++
++	seq_printf(m, "active_io %d\n",
++			atomic_read(&mddev->active_io));
++	seq_printf(m, "sb_wait %d pending_writes %d\n",
++			waitqueue_active(&mddev->sb_wait),
++			atomic_read(&mddev->pending_writes));
++	seq_printf(m, "recovery_active %d\n",
++			atomic_read(&mddev->recovery_active));
++	seq_printf(m, "bitmap pending_writes %d\n", active_bm_io);
++
++	return 0;
++}
++
++static int md_dbg_stat_show(struct seq_file *m, void *data)
++{
++	struct mddev *mddev = m->private;
++
++	seq_printf(m, "flags 0x%lx\n", mddev->flags);
++	seq_printf(m, "sb_flags 0x%lx\n", mddev->sb_flags);
++	seq_printf(m, "recovery 0x%lx\n", mddev->recovery);
++
++	return 0;
++}
++
++static const struct md_debugfs_file md_dbg_files[] = {
++	{.name = "iostat", .show = md_dbg_iostat_show},
++	{.name = "stat", .show = md_dbg_stat_show},
++	{},
++};
++
++static void md_unregister_debugfs(struct mddev *mddev)
++{
++	debugfs_remove_recursive(mddev->debugfs_dir);
++}
++
++static void md_register_debugfs(struct mddev *mddev)
++{
++	const char *name;
++	struct dentry *dir;
++
++	name = kobject_name(&disk_to_dev(mddev->gendisk)->kobj);
++	dir = debugfs_create_dir(name, blk_debugfs_root);
++	if (!IS_ERR_OR_NULL(dir)) {
++		md_debugfs_create_files(dir, mddev, md_dbg_files);
++		mddev->debugfs_dir = dir;
++	} else {
++		mddev->debugfs_dir = NULL;
++	}
++}
++
+ static void md_free(struct kobject *ko)
+ {
+ 	struct mddev *mddev = container_of(ko, struct mddev, kobj);
+@@ -5227,6 +5289,7 @@ static void mddev_delayed_delete(struct work_struct *ws)
+ {
+ 	struct mddev *mddev = container_of(ws, struct mddev, del_work);
+ 
++	md_unregister_debugfs(mddev);
+ 	sysfs_remove_group(&mddev->kobj, &md_bitmap_group);
+ 	kobject_del(&mddev->kobj);
+ 	kobject_put(&mddev->kobj);
+@@ -5353,6 +5416,8 @@ static int md_alloc(dev_t dev, char *name)
+ 	if (mddev->kobj.sd &&
+ 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
+ 		pr_debug("pointless warning\n");
++
++	md_register_debugfs(mddev);
+ 	mutex_unlock(&mddev->open_mutex);
+  abort:
+ 	mutex_unlock(&disks_mutex);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 7c930c091193..e79ef2101c45 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -466,6 +466,7 @@ struct mddev {
+ 	unsigned int			good_device_nr;	/* good device num within cluster raid */
+ 
+ 	bool	has_superblocks:1;
++	struct dentry *debugfs_dir;
+ };
+ 
+ enum recovery_flags {
+-- 
 2.22.0
