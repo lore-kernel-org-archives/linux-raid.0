@@ -1,86 +1,36 @@
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH] raid1: factor out a common routine to handle the completion of sync write
-Date: Sat, 27 Jul 2019 14:02:58 +0800
-Message-ID: <20190727060258.63036-1-houtao1@huawei.com>
+From: syzbot <syzbot+03e5c8ebd22cc6c3a8cb@syzkaller.appspotmail.com>
+Subject: Re: memory leak in bio_copy_user_iov
+Date: Sun, 28 Jul 2019 17:38:00 -0700
+Message-ID: <000000000000aec4ec058ec71a3d@google.com>
+References: <000000000000c75fb7058ba0c0e4@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: songliubraving@fb.com, linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <000000000000c75fb7058ba0c0e4@google.com>
+Sender: netdev-owner@vger.kernel.org
+To: agk@redhat.com, axboe@kernel.dk, coreteam@netfilter.org, davem@davemloft.net, dm-devel@redhat.com, hdanton@sina.com, kaber@trash.net, kadlec@blackhole.kfki.hu, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, pablo@netfilter.org, shli@kernel.org, snitzer@redhat.com, syzkaller-bugs@googlegroups.com
 List-Id: linux-raid.ids
 
-It's just code clean-up.
+syzbot has bisected this bug to:
 
-Signed-off-by: Hou Tao <houtao1@huawei.com>
----
- drivers/md/raid1.c | 39 ++++++++++++++++++---------------------
- 1 file changed, 18 insertions(+), 21 deletions(-)
+commit 664820265d70a759dceca87b6eb200cd2b93cda8
+Author: Mike Snitzer <snitzer@redhat.com>
+Date:   Thu Feb 18 20:44:39 2016 +0000
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 1755d2233e4d..d73ed94764c1 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1904,6 +1904,22 @@ static void abort_sync_write(struct mddev *mddev, struct r1bio *r1_bio)
- 	} while (sectors_to_go > 0);
- }
- 
-+static void put_sync_write_buf(struct r1bio *r1_bio, int uptodate)
-+{
-+	if (atomic_dec_and_test(&r1_bio->remaining)) {
-+		struct mddev *mddev = r1_bio->mddev;
-+		int s = r1_bio->sectors;
-+
-+		if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
-+		    test_bit(R1BIO_WriteError, &r1_bio->state))
-+			reschedule_retry(r1_bio);
-+		else {
-+			put_buf(r1_bio);
-+			md_done_sync(mddev, s, uptodate);
-+		}
-+	}
-+}
-+
- static void end_sync_write(struct bio *bio)
- {
- 	int uptodate = !bio->bi_status;
-@@ -1930,16 +1946,7 @@ static void end_sync_write(struct bio *bio)
- 		)
- 		set_bit(R1BIO_MadeGood, &r1_bio->state);
- 
--	if (atomic_dec_and_test(&r1_bio->remaining)) {
--		int s = r1_bio->sectors;
--		if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
--		    test_bit(R1BIO_WriteError, &r1_bio->state))
--			reschedule_retry(r1_bio);
--		else {
--			put_buf(r1_bio);
--			md_done_sync(mddev, s, uptodate);
--		}
--	}
-+	put_sync_write_buf(r1_bio, uptodate);
- }
- 
- static int r1_sync_page_io(struct md_rdev *rdev, sector_t sector,
-@@ -2222,17 +2229,7 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
- 		generic_make_request(wbio);
- 	}
- 
--	if (atomic_dec_and_test(&r1_bio->remaining)) {
--		/* if we're here, all write(s) have completed, so clean up */
--		int s = r1_bio->sectors;
--		if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
--		    test_bit(R1BIO_WriteError, &r1_bio->state))
--			reschedule_retry(r1_bio);
--		else {
--			put_buf(r1_bio);
--			md_done_sync(mddev, s, 1);
--		}
--	}
-+	put_sync_write_buf(r1_bio, 1);
- }
- 
- /*
--- 
-2.22.0
+     dm: do not return target from dm_get_live_table_for_ioctl()
+
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13f4eb64600000
+start commit:   0011572c Merge branch 'for-5.2-fixes' of git://git.kernel...
+git tree:       upstream
+final crash:    https://syzkaller.appspot.com/x/report.txt?x=100ceb64600000
+console output: https://syzkaller.appspot.com/x/log.txt?x=17f4eb64600000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=cb38d33cd06d8d48
+dashboard link: https://syzkaller.appspot.com/bug?extid=03e5c8ebd22cc6c3a8cb
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13244221a00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=117b2432a00000
+
+Reported-by: syzbot+03e5c8ebd22cc6c3a8cb@syzkaller.appspotmail.com
+Fixes: 664820265d70 ("dm: do not return target from  
+dm_get_live_table_for_ioctl()")
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
