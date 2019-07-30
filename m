@@ -1,76 +1,179 @@
-From: Bob Liu <bob.liu@oracle.com>
-Subject: Re: memory leak in bio_copy_user_iov
-Date: Mon, 29 Jul 2019 09:03:21 +0800
-Message-ID: <81dcfa59-152c-4f22-2054-615662364394@oracle.com>
-References: <000000000000aec4ec058ec71a3d@google.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md/raid0: Fail BIOs if their underlying
+	block device is gone
+Date: Tue, 30 Jul 2019 10:08:45 +1000
+Message-ID: <87zhkwl6ya.fsf@notabene.neil.brown.name>
+References: <20190729193359.11040-1-gpiccoli@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <000000000000aec4ec058ec71a3d@google.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: syzbot <syzbot+03e5c8ebd22cc6c3a8cb@syzkaller.appspotmail.com>, agk@redhat.com, axboe@kernel.dk, coreteam@netfilter.org, davem@davemloft.net, dm-devel@redhat.com, hdanton@sina.com, kaber@trash.net, kadlec@blackhole.kfki.hu, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, pablo@netfilter.org, shli@kernel.org, snitzer@redhat.com, syzkaller-bugs@googlegroups.com
+Content-Type: multipart/mixed; boundary="===============3965283299856440800=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20190729193359.11040-1-gpiccoli@canonical.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>, linux-raid@vger.kernel.org
+Cc: linux-block@vger.kernel.org, jay.vosburgh@canonical.com, Song Liu <songliubraving@fb.com>, dm-devel@redhat.com, Neil F Brown <nfbrown@suse.com>
 List-Id: linux-raid.ids
 
-On 7/29/19 8:38 AM, syzbot wrote:
-> syzbot has bisected this bug to:
-> 
-> commit 664820265d70a759dceca87b6eb200cd2b93cda8
-> Author: Mike Snitzer <snitzer@redhat.com>
-> Date:   Thu Feb 18 20:44:39 2016 +0000
-> 
->     dm: do not return target from dm_get_live_table_for_ioctl()
-> 
+--===============3965283299856440800==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 
-This(and previous bisection) look not related to the reported leak.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Jul 29 2019,  Guilherme G. Piccoli  wrote:
+
+> Currently md/raid0 is not provided with any mechanism to validate if
+> an array member got removed or failed. The driver keeps sending BIOs
+> regardless of the state of array members. This leads to the following
+> situation: if a raid0 array member is removed and the array is mounted,
+> some user writing to this array won't realize that errors are happening
+> unless they check kernel log or perform one fsync per written file.
+>
+> In other words, no -EIO is returned and writes (except direct ones) appear
+> normal. Meaning the user might think the wrote data is correctly stored in
+> the array, but instead garbage was written given that raid0 does stripping
+> (and so, it requires all its members to be working in order to not corrupt
+> data).
+>
+> This patch proposes a small change in this behavior: we check if the block
+> device's gendisk is UP when submitting the BIO to the array member, and if
+> it isn't, we flag the md device as broken and fail subsequent I/Os. In ca=
+se
+> the array is restored (i.e., the missing array member is back), the flag =
+is
+> cleared and we can submit BIOs normally.
+>
+> With this patch, the filesystem reacts much faster to the event of missing
+> array member: after some I/O errors, ext4 for instance aborts the journal
+> and prevents corruption. Without this change, we're able to keep writing
+> in the disk and after a machine reboot, e2fsck shows some severe fs errors
+> that demand fixing. This patch was tested in both ext4 and xfs
+> filesystems.
+>
+> Cc: NeilBrown <neilb@suse.com>
+> Cc: Song Liu <songliubraving@fb.com>
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
+> ---
+>
+> After an attempt to change the way md/raid0 fails in case one of its
+> members gets removed (see [0]), we got not so great feedback from the
+> community and also, the change was complex and had corner cases.
+> One of the points which seemed to be a consensus in that attempt was
+> that raid0 could benefit from a way of failing faster in case a member
+> gets removed. This patch aims for that, in a simpler way than earlier
+> proposed. Any feedbacks are welcome, thanks in advance!
+>
+>
+> Guilherme
+>
+>
+> [0] lore.kernel.org/linux-block/20190418220448.7219-1-gpiccoli@canonical.=
+com
+>
+>
+>  drivers/md/md.c    | 5 +++++
+>  drivers/md/md.h    | 3 +++
+>  drivers/md/raid0.c | 8 ++++++++
+>  3 files changed, 16 insertions(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 24638ccedce4..fba49918d591 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -376,6 +376,11 @@ static blk_qc_t md_make_request(struct request_queue=
+ *q, struct bio *bio)
+>  	struct mddev *mddev =3D q->queuedata;
+>  	unsigned int sectors;
+>=20=20
+> +	if (unlikely(test_bit(MD_BROKEN, &mddev->flags))) {
+> +		bio_io_error(bio);
+> +		return BLK_QC_T_NONE;
+> +	}
+
+I think this should only fail WRITE requests, not READ requests.
+
+Otherwise the patch is probably reasonable.
+
+NeilBrown
 
 
-A possible reason may be KASAN can't recognize the failure path of bio_alloc_bioset()
-where mempool_free() is called but not kmalloc(p).
+> +
+>  	blk_queue_split(q, &bio);
+>=20=20
+>  	if (mddev =3D=3D NULL || mddev->pers =3D=3D NULL) {
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 10f98200e2f8..41552e615c4c 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -248,6 +248,9 @@ enum mddev_flags {
+>  	MD_UPDATING_SB,		/* md_check_recovery is updating the metadata
+>  				 * without explicitly holding reconfig_mutex.
+>  				 */
+> +	MD_BROKEN,              /* This is used in RAID-0 only, to stop I/O
+> +				 * in case an array member is gone/failed.
+> +				 */
+>  };
+>=20=20
+>  enum mddev_sb_flags {
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index bf5cf184a260..58a9cc5193bf 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -586,6 +586,14 @@ static bool raid0_make_request(struct mddev *mddev, =
+struct bio *bio)
+>=20=20
+>  	zone =3D find_zone(mddev->private, &sector);
+>  	tmp_dev =3D map_sector(mddev, zone, sector, &sector);
+> +
+> +	if (unlikely(!(tmp_dev->bdev->bd_disk->flags & GENHD_FL_UP))) {
+> +		set_bit(MD_BROKEN, &mddev->flags);
+> +		bio_io_error(bio);
+> +		return true;
+> +	}
+> +
+> +	clear_bit(MD_BROKEN, &mddev->flags);
+>  	bio_set_dev(bio, tmp_dev->bdev);
+>  	bio->bi_iter.bi_sector =3D sector + zone->dev_start +
+>  		tmp_dev->data_offset;
+> --=20
+> 2.22.0
 
-But it's not a real bug, because we have the condition if (nr_iovecs > inline_vecs).
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Below fix may avoid the syzbot bug report..
+-----BEGIN PGP SIGNATURE-----
 
-diff --git a/block/bio.c b/block/bio.c
-index 4db1008..04a7879 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -513,8 +513,10 @@ struct bio *bio_alloc_bioset(gfp_t gfp_mask, unsigned int nr_iovecs,
-                        bvl = bvec_alloc(gfp_mask, nr_iovecs, &idx, &bs->bvec_pool);
-                }
- 
--               if (unlikely(!bvl))
--                       goto err_free;
-+               if (unlikely(!bvl)) {
-+                       mempool_free(p, &bs->bio_pool);
-+                       return NULL;
-+               }
- 
-                bio->bi_flags |= idx << BVEC_POOL_OFFSET;
-        } else if (nr_iovecs) {
-@@ -525,10 +527,6 @@ struct bio *bio_alloc_bioset(gfp_t gfp_mask, unsigned int nr_iovecs,
-        bio->bi_max_vecs = nr_iovecs;
-        bio->bi_io_vec = bvl;
-        return bio;
--
--err_free:
--       mempool_free(p, &bs->bio_pool);
--       return NULL;
- }
- EXPORT_SYMBOL(bio_alloc_bioset);
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAl0/io4ACgkQOeye3VZi
+gbkPnw//ZDAHleCZDsGZjuID2XCXBfEvuRDbTSMrk2NaIj/z/DlsSQOkNDYYGP5m
+H4g7AssCnA49f67+F8sfkH/Fy+crnjR9p0e22bzKdXSi3O0HOGvkHkqHLjtWt7Pu
++atITqeUB/riI/v0b9y9whdFO1P3itEuZ+Nv+3hf3AlQ7P01Pv3v9ntpFycztqgG
+VN0EkaGudLA5lkCphHmajgUUfLWF4GmP0dLsCHvd9GYCqpKGChImrHLrqgVPXTKz
+T5BLp5l+icj59dM7Gn1iF3Hmub46QkGlfF0Flfp0jduqADB/khx7+smapYcBPXBu
+pVsCV/fZtnWE/82CjYQiGeU+z6YZ2mFQRnRmgUFGE/Da6Te51DdyipU1NwYRRHB4
+EgBOO76o9EaKBfqPzWMmxAuBUbdvZI2Dk1ZvYhSL0tZ2kFHXmlQwlY98VOc+D8WK
+0bEMNJYmiiNkQzIqS3W1BiNFfG+ZDAgw6gC2quVlTVXgMpW205QpN1CbyRpC4Ayi
+MSEHFyMDUQMLeehZ5HWK/51PvyvXlrWTjGWvv13EdqhROjzQ0TykR4RbPcrVK/00
+ZPxKUZWwk9lh/ko6vfh1ZzcmPEnZ6Ft1pnvbdrH0wd3WOM7cRgjOYMqo/O7nHOQX
+PkZVA3CNUYC4Y6oZNTXX9Re8W87Ola4kh00+jT2qddVprwuiaOQ=
+=0n/S
+-----END PGP SIGNATURE-----
+--=-=-=--
 
 
-Regards, -Bob
+--===============3965283299856440800==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> bisection log:  https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_x_bisect.txt-3Fx-3D13f4eb64600000&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=MNjYy_nft_s0ErmK2n89p7y2yhKmeWlxWch0z7_dsm8&e=start commit:   0011572c Merge branch 'for-5.2-fixes' of git://git.kernel...
-> git tree:       upstream
-> final crash:    https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_x_report.txt-3Fx-3D100ceb64600000&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=iviPOQNPEIjkuqBma_VWEQ9l1Ve3eOiTwads42E4ZPo&e=console output: https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_x_log.txt-3Fx-3D17f4eb64600000&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=MBwnFwjEcSQfYymfv8EYt_EawVdK9vD-OAqDMutO-YY&e=kernel config:  https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_x_.config-3Fx-3Dcb38d33cd06d8d48&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZ
- h8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=SqmDUenNFS-961PGgiMW5mIUv0nIBrf0oBrzUxYZ8Do&e=dashboard link:
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_bug-3Fextid-3D03e5c8ebd22cc6c3a8cb&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=jKd2ocY5X94uyB8Or-OC3yffbOgClPQPlXqFnLzvvSY&e=syz repro:      https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_x_repro.syz-3Fx-3D13244221a00000&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=K-C39Kcd1oEOtJKwnby-s1EyEZZA10mr9bcXZ0J9Kh0&e=C reproducer:   https://urldefense.proofpoint.com/v2/url?u=https-3A__syzkaller.appspot.com_x_repro.c-3Fx-3D117b2432a00000&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB6
- 5eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=7J685CwQN6_FA2KgO3Vgy1msF0zi5O0OqZj_bgvEqBE&e=
-> Reported-by: syzbot+03e5c8ebd22cc6c3a8cb@syzkaller.appspotmail.com
-> Fixes: 664820265d70 ("dm: do not return target from dm_get_live_table_for_ioctl()")
-> 
-> For information about bisection process see: https://urldefense.proofpoint.com/v2/url?u=https-3A__goo.gl_tpsmEJ-23bisection&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=1ktT0U2YS_I8Zz2o-MS1YcCAzWZ6hFGtyTgvVMGM7gI&m=NfGQRVxYCfZacAKiml9Wue-G1r2h8qkuAhAMOx_uFcc&s=rs52TkiEQCrV4V8YQa2wT55HD8E-0AX9pn7MNIDcje4&e=
+
+--===============3965283299856440800==--
