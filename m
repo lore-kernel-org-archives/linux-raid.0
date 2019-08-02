@@ -1,86 +1,112 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] md/raid0: Fail BIOs if their underlying
- block device is gone
-Date: Thu, 1 Aug 2019 22:43:48 +0000
-Message-ID: <72C166DF-3984-4330-8C60-BBDA07358771@fb.com>
-References: <20190729193359.11040-1-gpiccoli@canonical.com>
-	<87zhkwl6ya.fsf@notabene.neil.brown.name>
-	<6400083b-3cf3-cbc6-650a-c3ae6629b14c@canonical.com>
-	<CAPhsuW69YrpHqBCOob2b5wzzWS9FM087sfe3iC0odX8kZWRwmA@mail.gmail.com>
-	<CAPhsuW5zB=Kik4rq9YA-xBer7Z-h-23QV4WSCWe-jvhFgGc0Cw@mail.gmail.com>
-	<9674ca8f-4325-3023-8a1d-39782103f55d@canonical.com>
+From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Subject: Kernel 4.14 + has 100 times higher IO latency than Kernel 4.4 with raid1
+Date: Fri, 2 Aug 2019 16:48:53 +0200
+Message-ID: <CAMGffEkotpvVz8FA78vNFh0qZv3kEMNrXXfVPEUC=MhH0pMCZA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <9674ca8f-4325-3023-8a1d-39782103f55d@canonical.com>
-Content-Language: en-US
-Content-ID: <1DB28A5D09FE504C800002670C1FD648@namprd15.prod.outlook.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
-Cc: Neil F Brown <nfbrown@suse.com>, Song Liu <liu.song.a23@gmail.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Jay Vosburgh <jay.vosburgh@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
+Cc: Alexandr Iarygin <alexandr.iarygin@cloud.ionos.com>
 List-Id: linux-raid.ids
 
+Hi All,
 
+We found a problem regarding much higher IO latency when running
+kernel 4.4.131 compare to 4.14.133, tried with latest upstream
+5.3-rc2, same result.
 
-> On Aug 1, 2019, at 1:28 PM, Guilherme G. Piccoli <gpiccoli@canonical.com> wrote:
-> 
-> 
-> 
-> On 31/07/2019 16:56, Song Liu wrote:
->> On Wed, Jul 31, 2019 at 12:54 PM Song Liu <liu.song.a23@gmail.com> wrote:
->>> 
->>> On Tue, Jul 30, 2019 at 5:31 AM Guilherme G. Piccoli
->>> <gpiccoli@canonical.com> wrote:
->>>> 
->>>> On 29/07/2019 21:08, NeilBrown wrote:
->>>>> [...]
->>>>>> +    if (unlikely(test_bit(MD_BROKEN, &mddev->flags))) {
->>>>>> +            bio_io_error(bio);
->>>>>> +            return BLK_QC_T_NONE;
->>>>>> +    }
->>>>> 
->>>>> I think this should only fail WRITE requests, not READ requests.
->>>>> 
->>>>> Otherwise the patch is probably reasonable.
->>>>> 
->>>>> NeilBrown
->>>> 
->>>> Thanks for the feedback Neil! I thought about it; it seemed to me better
->>>> to deny/fail the reads instead of returning "wrong" reads, since a file
->>>> read in a raid0 will be incomplete if one member is missing.
->>>> But it's fine for me to change that in the next iteration of this patch.
->>> 
->>> For reads at block/page level, we will either get EIO or valid data, right?
->>> 
->>> If that's not the case, we should fail all writes.
->> 
->> Oops, I meant all _reads_.
-> 
-> Hi Song, thanks for the feedback! After changing the patch and testing a
-> bit, it behaves exactly as you said, we got either valid data read from
-> the healthy devices or -EIO for the data tentatively read from the
-> failed/missing array members.
+Reproducer:
+1 create md raid1 with 2 ram disks:
+sudo mdadm -C /dev/md0 -l1 -n2 -e1.2 --bitmap=internal /dev/ram[0-1]
+2 run fio command with rate_iops:
+fio  --rw=write --ioengine=libaio --iodepth=32  --size=1000MB
+--rate_iops=5000 --direct=1 --numjobs=1 --runtime=20 --time_based
+--name=write-test --filename=/dev/md0
 
-Thanks for testing this out. 
+result on 4.4 kernel:
+root@ib2:~# fio  --rw=write --ioengine=libaio --iodepth=32
+--size=1000MB --rate_iops=5000 --direct=1 --numjobs=1 --runtime=20
+--time_based --name=write-test --filename=/dev/md0
+write-test: (g=0): rw=write, bs=4K-4K/4K-4K/4K-4K, ioengine=libaio, iodepth=32
+fio-2.2.10
+Starting 1 process
+Jobs: 1 (f=1), CR=5000/0 IOPS: [W(1)] [100.0% done] [0KB/20008KB/0KB
+/s] [0/5002/0 iops] [eta 00m:00s]
+write-test: (groupid=0, jobs=1): err= 0: pid=3351: Fri Aug  2 15:31:26 2019
+  write: io=400004KB, bw=19999KB/s, iops=4999, runt= 20001msec
+    slat (usec): min=3, max=26, avg= 3.12, stdev= 0.36
+    clat (usec): min=0, max=116, avg= 2.04, stdev= 1.33
+     lat (usec): min=3, max=141, avg= 5.19, stdev= 1.39
+    clat percentiles (usec):
+     |  1.00th=[    1],  5.00th=[    2], 10.00th=[    2], 20.00th=[    2],
+     | 30.00th=[    2], 40.00th=[    2], 50.00th=[    2], 60.00th=[    2],
+     | 70.00th=[    2], 80.00th=[    2], 90.00th=[    2], 95.00th=[    3],
+     | 99.00th=[    3], 99.50th=[    3], 99.90th=[    3], 99.95th=[    3],
+     | 99.99th=[   86]
+    bw (KB  /s): min=20000, max=20008, per=100.00%, avg=20005.54, stdev= 3.74
+    lat (usec) : 2=3.37%, 4=96.60%, 10=0.01%, 20=0.01%, 50=0.01%
+    lat (usec) : 100=0.01%, 250=0.01%
+  cpu          : usr=4.25%, sys=0.00%, ctx=198550, majf=0, minf=11
+  IO depths    : 1=100.0%, 2=0.1%, 4=0.1%, 8=0.1%, 16=0.1%, 32=0.1%, >=64=0.0%
+     submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     issued    : total=r=0/w=100001/d=0, short=r=0/w=0/d=0, drop=r=0/w=0/d=0
+     latency   : target=0, window=0, percentile=100.00%, depth=32
 
-> 
-> So, I'll resubmit with that change. Also, I've noticed clearing the
-> BROKEN flag seem unnecessary, if user stops the array in order to fix
-> the missing member, it'll require a re-assembly and the array is gonna
-> work again.
-> 
-> Do you / Neil considers this fix relevant to md/linear too? If so, I can
-> also include that in the V2.
+Run status group 0 (all jobs):
+  WRITE: io=400004KB, aggrb=19999KB/s, minb=19999KB/s, maxb=19999KB/s,
+mint=20001msec, maxt=20001msec
 
-Yes, please also include fix for md/linear. 
+Disk stats (read/write):
+    md0: ios=61/99539, merge=0/0, ticks=0/0, in_queue=0, util=0.00%,
+aggrios=0/0, aggrmerge=0/0, aggrticks=0/0, aggrin_queue=0,
+aggrutil=0.00%
 
-Song
+result on 5.3 kernel
+root@ib1:/home/jwang# fio  --rw=write --ioengine=libaio --iodepth=32
+--size=1000MB --rate_iops=5 --direct=1 --numjobs=1 --runtime=20
+--time_based --name=write-test --filename=/dev/md0
+write-test: (g=0): rw=write, bs=4K-4K/4K-4K/4K-4K, ioengine=libaio, iodepth=32
+fio-2.2.10
+Starting 1 process
+Jobs: 1 (f=1), CR=5/0 IOPS: [W(1)] [100.0% done] [0KB/20KB/0KB /s]
+[0/5/0 iops] [eta 00m:00s]
+write-test: (groupid=0, jobs=1): err= 0: pid=1651: Fri Aug  2 17:16:18 2019
+  write: io=413696B, bw=20683B/s, iops=5, runt= 20001msec
+    slat (usec): min=2, max=51803, avg=1028.62, stdev=7250.96
+    clat (usec): min=0, max=91, avg=17.76, stdev=28.07
+     lat (usec): min=3, max=51892, avg=1046.50, stdev=7254.89
+    clat percentiles (usec):
+     |  1.00th=[    0],  5.00th=[    0], 10.00th=[    0], 20.00th=[    0],
+     | 30.00th=[    1], 40.00th=[    1], 50.00th=[    1], 60.00th=[    1],
+     | 70.00th=[   19], 80.00th=[   44], 90.00th=[   68], 95.00th=[   80],
+     | 99.00th=[   88], 99.50th=[   91], 99.90th=[   91], 99.95th=[   91],
+     | 99.99th=[   91]
+    bw (KB  /s): min=   20, max=   21, per=100.00%, avg=20.04, stdev= 0.21
+    lat (usec) : 2=67.33%, 10=0.99%, 20=1.98%, 50=11.88%, 100=17.82%
+  cpu          : usr=0.00%, sys=0.00%, ctx=77, majf=0, minf=10
+  IO depths    : 1=68.3%, 2=2.0%, 4=4.0%, 8=7.9%, 16=15.8%, 32=2.0%, >=64=0.0%
+     submit    : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     complete  : 0=0.0%, 4=100.0%, 8=0.0%, 16=0.0%, 32=0.0%, 64=0.0%, >=64=0.0%
+     issued    : total=r=0/w=101/d=0, short=r=0/w=0/d=0, drop=r=0/w=0/d=0
+     latency   : target=0, window=0, percentile=100.00%, depth=32
+
+Run status group 0 (all jobs):
+  WRITE: io=404KB, aggrb=20KB/s, minb=20KB/s, maxb=20KB/s,
+mint=20001msec, maxt=20001msec
+
+Disk stats (read/write):
+    md0: ios=0/100, merge=0/0, ticks=0/0, in_queue=0, util=0.00%,
+aggrios=0/0, aggrmerge=0/0, aggrticks=0/0, aggrin_queue=0,
+aggrutil=0.00%
+  ram0: ios=0/0, merge=0/0, ticks=0/0, in_queue=0, util=0.00%
+  ram1: ios=0/0, merge=0/0, ticks=0/0, in_queue=0, util=0.00%
+
+During the tests the following kernel parameters are applied:
+processor.max_cstate=0 idle=poll mitigations=off
+
+Could anyone give us a hint, what could lead to such a huge difference?
+
+Thank you!
+Jack Wang
