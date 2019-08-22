@@ -1,18 +1,15 @@
-From: Song Liu <songliubraving@fb.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 Subject: Re: [PATCH v2 1/2] md raid0/linear: Introduce new array
  state 'broken'
-Date: Mon, 19 Aug 2019 18:57:04 +0000
-Message-ID: <1725F15D-7CA2-4B8D-949A-4D8078D53AA9@fb.com>
+Date: Thu, 22 Aug 2019 10:49:52 +0200
+Message-ID: <ca2096ca-8cb2-468f-89d4-24cd059b8a6b@cloud.ionos.com>
 References: <20190816134059.29751-1-gpiccoli@canonical.com>
-	<CAPhsuW7aGze5p9DgNAe=KakJGXTNqRZpNCtvi8nKxzS2MPXrNQ@mail.gmail.com>
-	<1f16110b-b798-806f-638b-57bbbedfea49@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1f16110b-b798-806f-638b-57bbbedfea49@canonical.com>
+In-Reply-To: <20190816134059.29751-1-gpiccoli@canonical.com>
 Content-Language: en-US
-Content-ID: <551F59B2A4275A44AFBDA837E62AB277@namprd15.prod.outlook.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -22,39 +19,57 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Song Liu <liu.song.a23@gmail.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Jay Vosburgh <jay.vosburgh@canonical.com>
+To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>, linux-raid@vger.kernel.org
+Cc: linux-block@vger.kernel.org, jay.vosburgh@canonical.com, dm-devel@redhat.com, Song Liu <songliubraving@fb.com>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
+Hi,
 
+On 8/16/19 3:40 PM, Guilherme G. Piccoli wrote:
+> +static bool linear_is_missing_dev(struct mddev *mddev)
+> +{
+> +	struct md_rdev *rdev;
+> +	static int already_missing;
+> +	int def_disks, work_disks = 0;
+> +
+> +	def_disks = mddev->raid_disks;
+> +	rdev_for_each(rdev, mddev)
+> +		if (rdev->bdev->bd_disk->flags & GENHD_FL_UP)
+> +			work_disks++;
+> +
+> +	if (unlikely(def_disks - work_disks)) {
 
-> On Aug 19, 2019, at 11:30 AM, Guilherme G. Piccoli <gpiccoli@canonical.com> wrote:
-> 
-> On 19/08/2019 15:10, Song Liu wrote:
->> [...]
->> 
->> If we merge this with the MD_BROKEN patch, would the code look simpler?
->> 
->> Thanks,
->> Song
->> 
-> 
-> Hi Song, I don't believe it changes the complexity/"appearance" of the
-> code. Both patches are "relatives" in the ideas' realm, but their code
-> is different in nature. My goal in splitting them was to make more
-> bisect-able changes.
-> 
-> But feel free to merge them in a single patch or let me know if you
-> prefer that way and I can do it.
-> 
-> There's also a chance I haven't understood your statement/question
-> correctly heh - if that's the case, please clarify me!
+If my understanding is correct, after enter the branch,
 
-I was thinking, if we can set MD_BROKEN when the device fails, we can 
-just test MD_BROKEN in array_state_show() (instead of iterating through 
-all devices). 
+> +		if (already_missing < (def_disks - work_disks)) {
 
-Would this work?
+the above is always true since already_missing should be '0', right?
+If so, maybe the above checking is pointless.
+
+> +			already_missing = def_disks - work_disks;
+> +			pr_warn("md: %s: linear array has %d missing/failed members\n",
+> +				mdname(mddev), already_missing);
+> +		}
+> +		return true;
+> +	}
+> +
+> +	already_missing = 0;
+> +	return false;
+> +}
+> +.
+
+I'd suggest something like, just FYI.
+
+bool already_missing = false;
+int missing_disks;
+
+missing_disks = def_disks - work_disks;
+if (unlikely(missing_disks)) {
+	already_missing = true;
+	pr_warn("md: %s: linear array has %d missing/failed members\n", mdname(mddev), missing_disks);
+}
+return already_missing;
+
 
 Thanks,
-Song
+Guoqing
