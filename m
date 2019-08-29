@@ -1,66 +1,73 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH v3 1/2] md raid0/linear: Mark array as
- 'broken' and fail BIOs if a member is gone
-Date: Fri, 23 Aug 2019 17:51:18 +0000
-Message-ID: <F0E716F8-76EC-4315-933D-A547B52F1D27@fb.com>
-References: <20190822161318.26236-1-gpiccoli@canonical.com>
-	<73C4747E-7A9E-4833-8393-B6A06C935DBE@fb.com>
-	<8163258e-839c-e0b8-fc4b-74c94c9dae1d@canonical.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 02/29] Revert "dm bufio: fix deadlock with loop device"
+Date: Thu, 29 Aug 2019 06:49:42 -0400
+Message-ID: <20190829105009.2265-2-sashal@kernel.org>
+References: <20190829105009.2265-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <8163258e-839c-e0b8-fc4b-74c94c9dae1d@canonical.com>
-Content-Language: en-US
-Content-ID: <0674B3614E0FBC4BABE51F8D02901F68@namprd15.prod.outlook.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Song Liu <liu.song.a23@gmail.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Jay Vosburgh <jay.vosburgh@canonical.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190829105009.2265-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+From: Mikulas Patocka <mpatocka@redhat.com>
 
+[ Upstream commit cf3591ef832915892f2499b7e54b51d4c578b28c ]
 
-> On Aug 23, 2019, at 10:48 AM, Guilherme G. Piccoli <gpiccoli@canonical.com> wrote:
-> 
-> On 22/08/2019 18:55, Song Liu wrote:
->> [...] 
->>> +	if (unlikely(!(tmp_dev->rdev->bdev->bd_disk->flags & GENHD_FL_UP))) {
->>> +		if (!test_bit(MD_BROKEN, &mddev->flags))
->>> +			pr_warn("md: %s: linear array has a missing/failed member\n",
->>> +				mdname(mddev));
->>> +		set_bit(MD_BROKEN, &mddev->flags);
->>> +		bio_io_error(bio);
->>> +		return true;
->>> +	}
->>> +
->> 
->> Maybe we can somehow put this block in a helper and use it in both raid0
->> and linear code?
->> 
->> Otherwise, looks good to me. 
->> 
->> Thanks,
->> Song
->> 
-> 
-> OK, so something as a function with a prototype like
-> "void md_is_broken(struct md_rdev *rd, const char *md_type)"
-> is good for you?
-> Then we can use that as the check if a member failed and in positive
-> case, we can print the message (if not printed before) and return to the
-> raid0/linear driver in order it fails the bio and returns.
-> I'd prefer keeping the bio out of the helper, agreed?
-> 
+Revert the commit bd293d071ffe65e645b4d8104f9d8fe15ea13862. The proper
+fix has been made available with commit d0a255e795ab ("loop: set
+PF_MEMALLOC_NOIO for the worker thread").
 
-I guess md_is_broken() should return bool? Otherwise, looks good to me. 
+Note that the fix offered by commit bd293d071ffe doesn't really prevent
+the deadlock from occuring - if we look at the stacktrace reported by
+Junxiao Bi, we see that it hangs in bit_wait_io and not on the mutex -
+i.e. it has already successfully taken the mutex. Changing the mutex
+from mutex_lock to mutex_trylock won't help with deadlocks that happen
+afterwards.
 
-Thanks,
-Song
+PID: 474    TASK: ffff8813e11f4600  CPU: 10  COMMAND: "kswapd0"
+   #0 [ffff8813dedfb938] __schedule at ffffffff8173f405
+   #1 [ffff8813dedfb990] schedule at ffffffff8173fa27
+   #2 [ffff8813dedfb9b0] schedule_timeout at ffffffff81742fec
+   #3 [ffff8813dedfba60] io_schedule_timeout at ffffffff8173f186
+   #4 [ffff8813dedfbaa0] bit_wait_io at ffffffff8174034f
+   #5 [ffff8813dedfbac0] __wait_on_bit at ffffffff8173fec8
+   #6 [ffff8813dedfbb10] out_of_line_wait_on_bit at ffffffff8173ff81
+   #7 [ffff8813dedfbb90] __make_buffer_clean at ffffffffa038736f [dm_bufio]
+   #8 [ffff8813dedfbbb0] __try_evict_buffer at ffffffffa0387bb8 [dm_bufio]
+   #9 [ffff8813dedfbbd0] dm_bufio_shrink_scan at ffffffffa0387cc3 [dm_bufio]
+  #10 [ffff8813dedfbc40] shrink_slab at ffffffff811a87ce
+  #11 [ffff8813dedfbd30] shrink_zone at ffffffff811ad778
+  #12 [ffff8813dedfbdc0] kswapd at ffffffff811ae92f
+  #13 [ffff8813dedfbec0] kthread at ffffffff810a8428
+  #14 [ffff8813dedfbf50] ret_from_fork at ffffffff81745242
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: stable@vger.kernel.org
+Fixes: bd293d071ffe ("dm bufio: fix deadlock with loop device")
+Depends-on: d0a255e795ab ("loop: set PF_MEMALLOC_NOIO for the worker thread")
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/dm-bufio.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index b1d0ae2dbd3dd..dc385b70e4c33 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -1602,7 +1602,9 @@ dm_bufio_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ 	unsigned long freed;
+ 
+ 	c = container_of(shrink, struct dm_bufio_client, shrinker);
+-	if (!dm_bufio_trylock(c))
++	if (sc->gfp_mask & __GFP_FS)
++		dm_bufio_lock(c);
++	else if (!dm_bufio_trylock(c))
+ 		return SHRINK_STOP;
+ 
+ 	freed  = __scan(c, sc->nr_to_scan, sc->gfp_mask);
+-- 
+2.20.1
