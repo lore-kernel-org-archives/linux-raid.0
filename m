@@ -1,13 +1,11 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 02/29] Revert "dm bufio: fix deadlock with loop device"
-Date: Thu, 29 Aug 2019 06:49:42 -0400
-Message-ID: <20190829105009.2265-2-sashal@kernel.org>
-References: <20190829105009.2265-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 1/8] Revert "dm bufio: fix deadlock with loop device"
+Date: Thu, 29 Aug 2019 06:50:53 -0400
+Message-ID: <20190829105100.2649-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190829105009.2265-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -55,10 +53,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index b1d0ae2dbd3dd..dc385b70e4c33 100644
+index 673ce38735ff7..c837defb5e4dd 100644
 --- a/drivers/md/dm-bufio.c
 +++ b/drivers/md/dm-bufio.c
-@@ -1602,7 +1602,9 @@ dm_bufio_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+@@ -1585,7 +1585,9 @@ dm_bufio_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
  	unsigned long freed;
  
  	c = container_of(shrink, struct dm_bufio_client, shrinker);
