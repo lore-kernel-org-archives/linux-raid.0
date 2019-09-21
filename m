@@ -1,38 +1,38 @@
-From: Eugene Syromiatnikov <esyr@redhat.com>
-Subject: [PATCH v3 3/3] drivers/md/raid5-ppl.c: use the new spelling of
- RWH_WRITE_LIFE_NOT_SET
-Date: Fri, 20 Sep 2019 17:58:34 +0200
-Message-ID: <1632a3b1118b53d1ebebfcff2ea635681819c467.1568994792.git.esyr@redhat.com>
-References: <cover.1568994791.git.esyr@redhat.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] md/raid0: Fix an error message in raid0_make_request()
+Date: Sat, 21 Sep 2019 09:00:31 +0300
+Message-ID: <20190921060031.GB18726@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <cover.1568994791.git.esyr@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jeff Layton <jlayton@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Arnaldo Carvalho de Melo <acme@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ingo Molnar <mingo@kernel.org>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, Song Liu <song@kernel.org>, linux-fsdevel@vger.kernel.org
+To: Song Liu <song@kernel.org>, NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-As it is consistent with prefixes of other write life time hints.
+The first argument to WARN() is supposed to be a condition.  The
+original code will just print the mdname() instead of the full warning
+message.
 
-Signed-off-by: Eugene Syromiatnikov <esyr@redhat.com>
+Fixes: c84a1372df92 ("md/raid0: avoid RAID0 data corruption due to layout confusion.")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/md/raid5-ppl.c | 2 +-
+ drivers/md/raid0.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index 18a4064..cab5b13 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -1404,7 +1404,7 @@ int ppl_init_log(struct r5conf *conf)
- 	atomic64_set(&ppl_conf->seq, 0);
- 	INIT_LIST_HEAD(&ppl_conf->no_mem_stripes);
- 	spin_lock_init(&ppl_conf->no_mem_stripes_lock);
--	ppl_conf->write_hint = RWF_WRITE_LIFE_NOT_SET;
-+	ppl_conf->write_hint = RWH_WRITE_LIFE_NOT_SET;
- 
- 	if (!mddev->external) {
- 		ppl_conf->signature = ~crc32c_le(~0, mddev->uuid, sizeof(mddev->uuid));
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index f61693e59684..3956ea502f97 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -615,7 +615,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+ 		tmp_dev = map_sector(mddev, zone, sector, &sector);
+ 		break;
+ 	default:
+-		WARN("md/raid0:%s: Invalid layout\n", mdname(mddev));
++		WARN(1, "md/raid0:%s: Invalid layout\n", mdname(mddev));
+ 		bio_io_error(bio);
+ 		return true;
+ 	}
 -- 
-2.1.4
+2.20.1
