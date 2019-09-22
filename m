@@ -1,63 +1,54 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 21/60] md: don't set In_sync if array is frozen
-Date: Sun, 22 Sep 2019 14:58:54 -0400
-Message-ID: <20190922185934.4305-21-sashal@kernel.org>
-References: <20190922185934.4305-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 81/89] raid5: don't increment read_errors on EILSEQ return
+Date: Sun, 22 Sep 2019 14:57:09 -0400
+Message-ID: <20190922185717.3412-81-sashal@kernel.org>
+References: <20190922185717.3412-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190922185934.4305-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190922185717.3412-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Guoqing Jiang <jgq516@gmail.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Cc: Nigel Croxon <ncroxon@redhat.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Guoqing Jiang <jgq516@gmail.com>
+From: Nigel Croxon <ncroxon@redhat.com>
 
-[ Upstream commit 062f5b2ae12a153644c765e7ba3b0f825427be1d ]
+[ Upstream commit b76b4715eba0d0ed574f58918b29c1b2f0fa37a8 ]
 
-When a disk is added to array, the following path is called in mdadm.
+While MD continues to count read errors returned by the lower layer.
+If those errors are -EILSEQ, instead of -EIO, it should NOT increase
+the read_errors count.
 
-Manage_subdevs -> sysfs_freeze_array
-               -> Manage_add
-               -> sysfs_set_str(&info, NULL, "sync_action","idle")
+When RAID6 is set up on dm-integrity target that detects massive
+corruption, the leg will be ejected from the array.  Even if the
+issue is correctable with a sector re-write and the array has
+necessary redundancy to correct it.
 
-Then from kernel side, Manage_add invokes the path (add_new_disk ->
-validate_super = super_1_validate) to set In_sync flag.
+The leg is ejected because it runs up the rdev->read_errors beyond
+conf->max_nr_stripes.  The return status in dm-drypt when there is
+a data integrity error is -EILSEQ (BLK_STS_PROTECTION).
 
-Since In_sync means "device is in_sync with rest of array", and the new
-added disk need to resync thread to help the synchronization of data.
-And md_reap_sync_thread would call spare_active to set In_sync for the
-new added disk finally. So don't set In_sync if array is in frozen.
-
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
 Signed-off-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/md.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/md/raid5.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c1c514792457a..da8708b65356e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1662,8 +1662,15 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
- 				if (!(le32_to_cpu(sb->feature_map) &
- 				      MD_FEATURE_RECOVERY_BITMAP))
- 					rdev->saved_raid_disk = -1;
--			} else
--				set_bit(In_sync, &rdev->flags);
-+			} else {
-+				/*
-+				 * If the array is FROZEN, then the device can't
-+				 * be in_sync with rest of array.
-+				 */
-+				if (!test_bit(MD_RECOVERY_FROZEN,
-+					      &mddev->recovery))
-+					set_bit(In_sync, &rdev->flags);
-+			}
- 			rdev->raid_disk = role;
- 			break;
- 		}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index cc0bd528136db..9f2059e185f7f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2538,7 +2538,8 @@ static void raid5_end_read_request(struct bio * bi)
+ 		int set_bad = 0;
+ 
+ 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
+-		atomic_inc(&rdev->read_errors);
++		if (!(bi->bi_status == BLK_STS_PROTECTION))
++			atomic_inc(&rdev->read_errors);
+ 		if (test_bit(R5_ReadRepl, &sh->dev[i].flags))
+ 			pr_warn_ratelimited(
+ 				"md/raid:%s: read error on replacement device (sector %llu on %s).\n",
 -- 
 2.20.1
