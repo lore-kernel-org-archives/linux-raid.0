@@ -1,83 +1,54 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 031/128] md/raid1: end bio when the device faulty
-Date: Sun, 22 Sep 2019 14:52:41 -0400
-Message-ID: <20190922185418.2158-31-sashal@kernel.org>
-References: <20190922185418.2158-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 168/185] raid5: don't increment read_errors on EILSEQ return
+Date: Sun, 22 Sep 2019 14:49:06 -0400
+Message-ID: <20190922184924.32534-168-sashal@kernel.org>
+References: <20190922184924.32534-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190922185418.2158-1-sashal@kernel.org>
+In-Reply-To: <20190922184924.32534-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yufen Yu <yuyufen@huawei.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Cc: Nigel Croxon <ncroxon@redhat.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Yufen Yu <yuyufen@huawei.com>
+From: Nigel Croxon <ncroxon@redhat.com>
 
-[ Upstream commit eeba6809d8d58908b5ed1b5ceb5fcb09a98a7cad ]
+[ Upstream commit b76b4715eba0d0ed574f58918b29c1b2f0fa37a8 ]
 
-When write bio return error, it would be added to conf->retry_list
-and wait for raid1d thread to retry write and acknowledge badblocks.
+While MD continues to count read errors returned by the lower layer.
+If those errors are -EILSEQ, instead of -EIO, it should NOT increase
+the read_errors count.
 
-In narrow_write_error(), the error bio will be split in the unit of
-badblock shift (such as one sector) and raid1d thread issues them
-one by one. Until all of the splited bio has finished, raid1d thread
-can go on processing other things, which is time consuming.
+When RAID6 is set up on dm-integrity target that detects massive
+corruption, the leg will be ejected from the array.  Even if the
+issue is correctable with a sector re-write and the array has
+necessary redundancy to correct it.
 
-But, there is a scene for error handling that is not necessary.
-When the device has been set faulty, flush_bio_list() may end
-bios in pending_bio_list with error status. Since these bios
-has not been issued to the device actually, error handlding to
-retry write and acknowledge badblocks make no sense.
+The leg is ejected because it runs up the rdev->read_errors beyond
+conf->max_nr_stripes.  The return status in dm-drypt when there is
+a data integrity error is -EILSEQ (BLK_STS_PROTECTION).
 
-Even without that scene, when the device is faulty, badblocks info
-can not be written out to the device. Thus, we also no need to
-handle the error IO.
-
-Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
 Signed-off-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid1.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ drivers/md/raid5.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index fa47249fa3e42..54010675df9a5 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -434,19 +434,21 @@ static void raid1_end_write_request(struct bio *bio)
- 		    /* We never try FailFast to WriteMostly devices */
- 		    !test_bit(WriteMostly, &rdev->flags)) {
- 			md_error(r1_bio->mddev, rdev);
--			if (!test_bit(Faulty, &rdev->flags))
--				/* This is the only remaining device,
--				 * We need to retry the write without
--				 * FailFast
--				 */
--				set_bit(R1BIO_WriteError, &r1_bio->state);
--			else {
--				/* Finished with this branch */
--				r1_bio->bios[mirror] = NULL;
--				to_put = bio;
--			}
--		} else
-+		}
-+
-+		/*
-+		 * When the device is faulty, it is not necessary to
-+		 * handle write error.
-+		 * For failfast, this is the only remaining device,
-+		 * We need to retry the write without FailFast.
-+		 */
-+		if (!test_bit(Faulty, &rdev->flags))
- 			set_bit(R1BIO_WriteError, &r1_bio->state);
-+		else {
-+			/* Finished with this branch */
-+			r1_bio->bios[mirror] = NULL;
-+			to_put = bio;
-+		}
- 	} else {
- 		/*
- 		 * Set R1BIO_Uptodate in our master bio, so that we
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 8d2811e436b93..f04e867b38211 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2526,7 +2526,8 @@ static void raid5_end_read_request(struct bio * bi)
+ 		int set_bad = 0;
+ 
+ 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
+-		atomic_inc(&rdev->read_errors);
++		if (!(bi->bi_status == BLK_STS_PROTECTION))
++			atomic_inc(&rdev->read_errors);
+ 		if (test_bit(R5_ReadRepl, &sh->dev[i].flags))
+ 			pr_warn_ratelimited(
+ 				"md/raid:%s: read error on replacement device (sector %llu on %s).\n",
 -- 
 2.20.1
