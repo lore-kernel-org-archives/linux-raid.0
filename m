@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 20/60] md: don't call spare_active in md_reap_sync_thread if all member devices can't work
-Date: Sun, 22 Sep 2019 14:58:53 -0400
-Message-ID: <20190922185934.4305-20-sashal@kernel.org>
-References: <20190922185934.4305-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 17/44] md: don't call spare_active in md_reap_sync_thread if all member devices can't work
+Date: Sun, 22 Sep 2019 15:00:35 -0400
+Message-ID: <20190922190103.4906-17-sashal@kernel.org>
+References: <20190922190103.4906-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190922185934.4305-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190922190103.4906-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Guoqing Jiang <jgq516@gmail.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -36,10 +36,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 765a16dab2e5f..c1c514792457a 100644
+index 067af77bb729a..d1b09657c1939 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8573,7 +8573,8 @@ void md_reap_sync_thread(struct mddev *mddev)
+@@ -8445,7 +8445,8 @@ void md_reap_sync_thread(struct mddev *mddev)
  	/* resync has finished, collect result */
  	md_unregister_thread(&mddev->sync_thread);
  	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
