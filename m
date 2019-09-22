@@ -1,7 +1,7 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 78/89] raid5: don't set STRIPE_HANDLE to stripe which is in batch list
-Date: Sun, 22 Sep 2019 14:57:06 -0400
-Message-ID: <20190922185717.3412-78-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 71/89] md/raid1: fail run raid1 array when active disk less than one
+Date: Sun, 22 Sep 2019 14:56:59 -0400
+Message-ID: <20190922185717.3412-71-sashal@kernel.org>
 References: <20190922185717.3412-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,75 +9,78 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190922185717.3412-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Cc: Yufen Yu <yuyufen@huawei.com>, NeilBrown <neilb@suse.de>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+From: Yufen Yu <yuyufen@huawei.com>
 
-[ Upstream commit 6ce220dd2f8ea71d6afc29b9a7524c12e39f374a ]
+[ Upstream commit 07f1a6850c5d5a65c917c3165692b5179ac4cb6b ]
 
-If stripe in batch list is set with STRIPE_HANDLE flag, then the stripe
-could be set with STRIPE_ACTIVE by the handle_stripe function. And if
-error happens to the batch_head at the same time, break_stripe_batch_list
-is called, then below warning could happen (the same report in [1]), it
-means a member of batch list was set with STRIPE_ACTIVE.
+When run test case:
+  mdadm -CR /dev/md1 -l 1 -n 4 /dev/sd[a-d] --assume-clean --bitmap=internal
+  mdadm -S /dev/md1
+  mdadm -A /dev/md1 /dev/sd[b-c] --run --force
 
-[7028915.431770] stripe state: 2001
-[7028915.431815] ------------[ cut here ]------------
-[7028915.431828] WARNING: CPU: 18 PID: 29089 at drivers/md/raid5.c:4614 break_stripe_batch_list+0x203/0x240 [raid456]
-[...]
-[7028915.431879] CPU: 18 PID: 29089 Comm: kworker/u82:5 Tainted: G           O    4.14.86-1-storage #4.14.86-1.2~deb9
-[7028915.431881] Hardware name: Supermicro SSG-2028R-ACR24L/X10DRH-iT, BIOS 3.1 06/18/2018
-[7028915.431888] Workqueue: raid5wq raid5_do_work [raid456]
-[7028915.431890] task: ffff9ab0ef36d7c0 task.stack: ffffb72926f84000
-[7028915.431896] RIP: 0010:break_stripe_batch_list+0x203/0x240 [raid456]
-[7028915.431898] RSP: 0018:ffffb72926f87ba8 EFLAGS: 00010286
-[7028915.431900] RAX: 0000000000000012 RBX: ffff9aaa84a98000 RCX: 0000000000000000
-[7028915.431901] RDX: 0000000000000000 RSI: ffff9ab2bfa15458 RDI: ffff9ab2bfa15458
-[7028915.431902] RBP: ffff9aaa8fb4e900 R08: 0000000000000001 R09: 0000000000002eb4
-[7028915.431903] R10: 00000000ffffffff R11: 0000000000000000 R12: ffff9ab1736f1b00
-[7028915.431904] R13: 0000000000000000 R14: ffff9aaa8fb4e900 R15: 0000000000000001
-[7028915.431906] FS:  0000000000000000(0000) GS:ffff9ab2bfa00000(0000) knlGS:0000000000000000
-[7028915.431907] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[7028915.431908] CR2: 00007ff953b9f5d8 CR3: 0000000bf4009002 CR4: 00000000003606e0
-[7028915.431909] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[7028915.431910] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[7028915.431910] Call Trace:
-[7028915.431923]  handle_stripe+0x8e7/0x2020 [raid456]
-[7028915.431930]  ? __wake_up_common_lock+0x89/0xc0
-[7028915.431935]  handle_active_stripes.isra.58+0x35f/0x560 [raid456]
-[7028915.431939]  raid5_do_work+0xc6/0x1f0 [raid456]
+  mdadm --zero /dev/sda
+  mdadm /dev/md1 -a /dev/sda
 
-Also commit 59fc630b8b5f9f ("RAID5: batch adjacent full stripe write")
-said "If a stripe is added to batch list, then only the first stripe
-of the list should be put to handle_list and run handle_stripe."
+  echo offline > /sys/block/sdc/device/state
+  echo offline > /sys/block/sdb/device/state
+  sleep 5
+  mdadm -S /dev/md1
 
-So don't set STRIPE_HANDLE to stripe which is already in batch list,
-otherwise the stripe could be put to handle_list and run handle_stripe,
-then the above warning could be triggered.
+  echo running > /sys/block/sdb/device/state
+  echo running > /sys/block/sdc/device/state
+  mdadm -A /dev/md1 /dev/sd[a-c] --run --force
 
-[1]. https://www.spinics.net/lists/raid/msg62552.html
+mdadm run fail with kernel message as follow:
+[  172.986064] md: kicking non-fresh sdb from array!
+[  173.004210] md: kicking non-fresh sdc from array!
+[  173.022383] md/raid1:md1: active with 0 out of 4 mirrors
+[  173.022406] md1: failed to create bitmap (-5)
 
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+In fact, when active disk in raid1 array less than one, we
+need to return fail in raid1_run().
+
+Reviewed-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 Signed-off-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid5.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/md/raid1.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 65608c6b68361..cc0bd528136db 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5718,7 +5718,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 				do_flush = false;
- 			}
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 762d21c84774a..f46ac9db9edb2 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -3099,6 +3099,13 @@ static int raid1_run(struct mddev *mddev)
+ 		    !test_bit(In_sync, &conf->mirrors[i].rdev->flags) ||
+ 		    test_bit(Faulty, &conf->mirrors[i].rdev->flags))
+ 			mddev->degraded++;
++	/*
++	 * RAID1 needs at least one disk in active
++	 */
++	if (conf->raid_disks - mddev->degraded < 1) {
++		ret = -EINVAL;
++		goto abort;
++	}
  
--			set_bit(STRIPE_HANDLE, &sh->state);
-+			if (!sh->batch_head)
-+				set_bit(STRIPE_HANDLE, &sh->state);
- 			clear_bit(STRIPE_DELAYED, &sh->state);
- 			if ((!sh->batch_head || sh == sh->batch_head) &&
- 			    (bi->bi_opf & REQ_SYNC) &&
+ 	if (conf->raid_disks - mddev->degraded == 1)
+ 		mddev->recovery_cp = MaxSector;
+@@ -3132,8 +3139,12 @@ static int raid1_run(struct mddev *mddev)
+ 	ret =  md_integrity_register(mddev);
+ 	if (ret) {
+ 		md_unregister_thread(&mddev->thread);
+-		raid1_free(mddev, conf);
++		goto abort;
+ 	}
++	return 0;
++
++abort:
++	raid1_free(mddev, conf);
+ 	return ret;
+ }
+ 
 -- 
 2.20.1
