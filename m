@@ -1,38 +1,53 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] md/raid0: Fix an error message in raid0_make_request()
-Date: Sat, 21 Sep 2019 09:00:31 +0300
-Message-ID: <20190921060031.GB18726@mwanda>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 051/203] md: don't call spare_active in md_reap_sync_thread if all member devices can't work
+Date: Sun, 22 Sep 2019 14:41:17 -0400
+Message-ID: <20190922184350.30563-51-sashal@kernel.org>
+References: <20190922184350.30563-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>, NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190922184350.30563-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Guoqing Jiang <jgq516@gmail.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The first argument to WARN() is supposed to be a condition.  The
-original code will just print the mdname() instead of the full warning
-message.
+From: Guoqing Jiang <jgq516@gmail.com>
 
-Fixes: c84a1372df92 ("md/raid0: avoid RAID0 data corruption due to layout confusion.")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+[ Upstream commit 0d8ed0e9bf9643f27f4816dca61081784dedb38d ]
+
+When add one disk to array, the md_reap_sync_thread is responsible
+to activate the spare and set In_sync flag for the new member in
+spare_active().
+
+But if raid1 has one member disk A, and disk B is added to the array.
+Then we offline A before all the datas are synchronized from A to B,
+obviously B doesn't have the latest data as A, but B is still marked
+with In_sync flag.
+
+So let's not call spare_active under the condition, otherwise B is
+still showed with 'U' state which is not correct.
+
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/raid0.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index f61693e59684..3956ea502f97 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -615,7 +615,7 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
- 		tmp_dev = map_sector(mddev, zone, sector, &sector);
- 		break;
- 	default:
--		WARN("md/raid0:%s: Invalid layout\n", mdname(mddev));
-+		WARN(1, "md/raid0:%s: Invalid layout\n", mdname(mddev));
- 		bio_io_error(bio);
- 		return true;
- 	}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 24638ccedce42..fd62be3ca2871 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9043,7 +9043,8 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	/* resync has finished, collect result */
+ 	md_unregister_thread(&mddev->sync_thread);
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+-	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
++	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
++	    mddev->degraded != mddev->raid_disks) {
+ 		/* success...*/
+ 		/* activate any spares */
+ 		if (mddev->pers->spare_active(mddev)) {
 -- 
 2.20.1
