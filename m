@@ -1,17 +1,16 @@
-From: Song Liu <songliubraving@fb.com>
+From: Jes Sorensen <jes.sorensen@gmail.com>
 Subject: Re: [PATCH v4 2/2] mdadm: Introduce new array state
  'broken' for raid0/linear
-Date: Wed, 4 Sep 2019 15:51:51 +0000
-Message-ID: <A0D1B6AB-50CF-4B38-8452-A4E18AFDC8EB@fb.com>
+Date: Mon, 30 Sep 2019 15:36:15 -0400
+Message-ID: <608284db-7b82-6545-74bf-7a9f1d578c2f@gmail.com>
 References: <20190903194901.13524-1-gpiccoli@canonical.com>
 	<20190903194901.13524-2-gpiccoli@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <20190903194901.13524-2-gpiccoli@canonical.com>
 Content-Language: en-US
-Content-ID: <D616B14D23BF49478B91C4E7C7C5D6EC@namprd15.prod.outlook.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -21,14 +20,11 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>, Jes Sorensen <jsorensen@fb.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jes.sorensen@gmail.com" <jes.sorensen@gmail.com>, "nfbrown@suse.com" <nfbrown@suse.com>, "liu.song.a23@gmail.com" <liu.song.a23@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "jay.vosburgh@canonical.com" <jay.vosburgh@canonical.com>
+To: "Guilherme G. Piccoli" <gpiccoli@canonical.com>, linux-raid@vger.kernel.org
+Cc: nfbrown@suse.com, Song Liu <songliubraving@fb.com>, liu.song.a23@gmail.com, linux-block@vger.kernel.org, dm-devel@redhat.com, jay.vosburgh@canonical.com
 List-Id: linux-raid.ids
 
-
-
-> On Sep 3, 2019, at 12:49 PM, Guilherme G. Piccoli <gpiccoli@canonical.com> wrote:
-> 
+On 9/3/19 3:49 PM, Guilherme G. Piccoli wrote:
 > Currently if a md raid0/linear array gets one or more members removed while
 > being mounted, kernel keeps showing state 'clean' in the 'array_state'
 > sysfs attribute. Despite udev signaling the member device is gone, 'mdadm'
@@ -54,10 +50,29 @@ List-Id: linux-raid.ids
 > Cc: NeilBrown <neilb@suse.de>
 > Cc: Song Liu <songliubraving@fb.com>
 > Signed-off-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
+> ---
 
-Acked-by: Song Liu <songliubraving@fb.com>
+Applied thanks!
 
-Jes, does this look good?
+I fixed up one minor nit rather than having to do the merry-go-round by 
+email one more time:
 
-Thanks,
-Song
+> diff --git a/Monitor.c b/Monitor.c
+> index 036103f..cf0610b 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+[snip]
+
+> @@ -1116,7 +1119,8 @@ int WaitClean(char *dev, int verbose)
+>   			rv = read(state_fd, buf, sizeof(buf));
+>   			if (rv < 0)
+>   				break;
+> -			if (sysfs_match_word(buf, clean_states) <= 4)
+> +			if (sysfs_match_word(buf, clean_states)
+> +			    < (int)ARRAY_SIZE(clean_states)-1)
+
+I moved the < up to the correct line where it belongs, and added spaces 
+") - 1)"
+
+Cheers,
+Jes
