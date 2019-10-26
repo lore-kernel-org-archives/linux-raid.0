@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 26/33] md/raid0: fix warning message for parameter default_layout
-Date: Sat, 26 Oct 2019 09:21:03 -0400
-Message-ID: <20191026132110.4026-26-sashal@kernel.org>
-References: <20191026132110.4026-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 50/59] md/raid0: fix warning message for parameter default_layout
+Date: Sat, 26 Oct 2019 09:19:01 -0400
+Message-ID: <20191026131910.3435-50-sashal@kernel.org>
+References: <20191026131910.3435-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20191026132110.4026-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20191026131910.3435-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Song Liu <songliubraving@fb.com>, NeilBrown <neilb@suse.de>, Ivan Topolsky <doktor.yak@gmail.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -28,7 +28,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 28fb717217706..449c4dd060fcd 100644
+index 43fa7dbf844b0..3cafbfd655f5d 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
 @@ -158,7 +158,7 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
