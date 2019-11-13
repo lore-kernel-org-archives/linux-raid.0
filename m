@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 041/115] md: allow metadata updates while suspending an array - fix
-Date: Tue, 12 Nov 2019 20:55:08 -0500
-Message-ID: <20191113015622.11592-41-sashal@kernel.org>
-References: <20191113015622.11592-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 067/209] md: allow metadata updates while suspending an array - fix
+Date: Tue, 12 Nov 2019 20:48:03 -0500
+Message-ID: <20191113015025.9685-67-sashal@kernel.org>
+References: <20191113015025.9685-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191113015622.11592-1-sashal@kernel.org>
+In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, Shaohua Li <shli@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
@@ -39,10 +39,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e529cef5483a8..b942c74f1ce83 100644
+index a8fbaa384e9ae..2fe4f93d1d7d4 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8736,6 +8736,18 @@ static void md_start_sync(struct work_struct *ws)
+@@ -8778,6 +8778,18 @@ static void md_start_sync(struct work_struct *ws)
   */
  void md_check_recovery(struct mddev *mddev)
  {
@@ -61,7 +61,7 @@ index e529cef5483a8..b942c74f1ce83 100644
  	if (mddev->suspended)
  		return;
  
-@@ -8896,16 +8908,6 @@ void md_check_recovery(struct mddev *mddev)
+@@ -8938,16 +8950,6 @@ void md_check_recovery(struct mddev *mddev)
  	unlock:
  		wake_up(&mddev->sb_wait);
  		mddev_unlock(mddev);
