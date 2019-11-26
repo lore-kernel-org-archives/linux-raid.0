@@ -1,36 +1,60 @@
-From: syzbot <syzbot+1e46a0864c1a6e9bd3d8@syzkaller.appspotmail.com>
+From: Daniel Vetter <daniel@ffwll.ch>
 Subject: Re: WARNING in md_ioctl
-Date: Mon, 25 Nov 2019 14:37:01 -0800
-Message-ID: <000000000000f4160705983366e8@google.com>
+Date: Tue, 26 Nov 2019 09:42:53 +0100
+Message-ID: <20191126084253.GP29965@phenom.ffwll.local>
 References: <000000000000a52337056b065fb3@google.com>
+ <000000000000f4160705983366e8@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <000000000000a52337056b065fb3@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: airlied@linux.ie, chris@chris-wilson.co.uk, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, jani.nikula@linux.intel.com, joonas.lahtinen@linux.intel.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rafael.antognolli@intel.com, rodrigo.vivi@intel.com, shli@kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <000000000000f4160705983366e8@google.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: syzbot <syzbot+1e46a0864c1a6e9bd3d8@syzkaller.appspotmail.com>
+Cc: airlied@linux.ie, intel-gfx@lists.freedesktop.org, syzkaller-bugs@googlegroups.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dri-devel@lists.freedesktop.org, shli@kernel.org
 List-Id: linux-raid.ids
 
-syzbot has bisected this bug to:
-
-commit 4b6ce6810a5dc0af387a238e8c852e0d3822381f
-Author: Rafael Antognolli <rafael.antognolli@intel.com>
-Date:   Mon Feb 5 23:33:30 2018 +0000
-
-     drm/i915/cnl: WaPipeControlBefore3DStateSamplePattern
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13aeb522e00000
-start commit:   c61a56ab Merge branch 'x86-urgent-for-linus' of git://git...
-git tree:       upstream
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=106eb522e00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=17aeb522e00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=4013180e7c7a9ff9
-dashboard link: https://syzkaller.appspot.com/bug?extid=1e46a0864c1a6e9bd3d8
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16bca207800000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14819a47800000
-
-Reported-by: syzbot+1e46a0864c1a6e9bd3d8@syzkaller.appspotmail.com
-Fixes: 4b6ce6810a5d ("drm/i915/cnl:  
-WaPipeControlBefore3DStateSamplePattern")
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+T24gTW9uLCBOb3YgMjUsIDIwMTkgYXQgMDI6Mzc6MDFQTSAtMDgwMCwgc3l6Ym90IHdyb3RlOgo+
+IHN5emJvdCBoYXMgYmlzZWN0ZWQgdGhpcyBidWcgdG86Cj4gCj4gY29tbWl0IDRiNmNlNjgxMGE1
+ZGMwYWYzODdhMjM4ZThjODUyZTBkMzgyMjM4MWYKPiBBdXRob3I6IFJhZmFlbCBBbnRvZ25vbGxp
+IDxyYWZhZWwuYW50b2dub2xsaUBpbnRlbC5jb20+Cj4gRGF0ZTogICBNb24gRmViIDUgMjM6MzM6
+MzAgMjAxOCArMDAwMAo+IAo+ICAgICBkcm0vaTkxNS9jbmw6IFdhUGlwZUNvbnRyb2xCZWZvcmUz
+RFN0YXRlU2FtcGxlUGF0dGVybgoKVGhpcyBzZWVtcyB2ZXJ5IHVubGlrZWx5LCB0aGUgcmVwcm9k
+dWNlciBkb2Vzbid0IG9wZW4gYSBkcm0gZGV2aWNlLCBhbmQKSSdkIGJlIHN1cnByaXNlZCBpZiB5
+b3VyIGdjZCBpbnN0YW5jZXMgaGF2ZSBhbiBhY3R1YWwgaTkxNSBkZXZpY2UgaW4gdGhlbQooYnV0
+IEkgY2FuJ3QgY2hlY2sgYmVjYXVzZSBib290IGxvZyBpc24ndCBwcm92aWRlZCwgZGlkbid0IGZp
+bmQgaXQgb24gdGhlCmRhc2hib2FyZCBlaXRoZXIpLgoKU2luY2UgaTkxNSBpcyBidWlsdC1pbiBJ
+IHN1c3BlY3QgdGhpcyBzaW1wbHkgbW92ZWQgc29tZXRoaW5nIGVsc2UgaW4gdGhlCmtlcm5lbCBp
+bWFnZSBhcm91bmQgd2hpY2ggcHJvdm9rZXMgdGhlIGJ1Zy4KLURhbmllbAoKPiAKPiBiaXNlY3Rp
+b24gbG9nOiAgaHR0cHM6Ly9zeXprYWxsZXIuYXBwc3BvdC5jb20veC9iaXNlY3QudHh0P3g9MTNh
+ZWI1MjJlMDAwMDAKPiBzdGFydCBjb21taXQ6ICAgYzYxYTU2YWIgTWVyZ2UgYnJhbmNoICd4ODYt
+dXJnZW50LWZvci1saW51cycgb2YgZ2l0Oi8vZ2l0Li4uCj4gZ2l0IHRyZWU6ICAgICAgIHVwc3Ry
+ZWFtCj4gZmluYWwgY3Jhc2g6ICAgIGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3gvcmVw
+b3J0LnR4dD94PTEwNmViNTIyZTAwMDAwCj4gY29uc29sZSBvdXRwdXQ6IGh0dHBzOi8vc3l6a2Fs
+bGVyLmFwcHNwb3QuY29tL3gvbG9nLnR4dD94PTE3YWViNTIyZTAwMDAwCj4ga2VybmVsIGNvbmZp
+ZzogIGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL3gvLmNvbmZpZz94PTQwMTMxODBlN2M3
+YTlmZjkKPiBkYXNoYm9hcmQgbGluazogaHR0cHM6Ly9zeXprYWxsZXIuYXBwc3BvdC5jb20vYnVn
+P2V4dGlkPTFlNDZhMDg2NGMxYTZlOWJkM2Q4Cj4gc3l6IHJlcHJvOiAgICAgIGh0dHBzOi8vc3l6
+a2FsbGVyLmFwcHNwb3QuY29tL3gvcmVwcm8uc3l6P3g9MTZiY2EyMDc4MDAwMDAKPiBDIHJlcHJv
+ZHVjZXI6ICAgaHR0cHM6Ly9zeXprYWxsZXIuYXBwc3BvdC5jb20veC9yZXByby5jP3g9MTQ4MTlh
+NDc4MDAwMDAKPiAKPiBSZXBvcnRlZC1ieTogc3l6Ym90KzFlNDZhMDg2NGMxYTZlOWJkM2Q4QHN5
+emthbGxlci5hcHBzcG90bWFpbC5jb20KPiBGaXhlczogNGI2Y2U2ODEwYTVkICgiZHJtL2k5MTUv
+Y25sOgo+IFdhUGlwZUNvbnRyb2xCZWZvcmUzRFN0YXRlU2FtcGxlUGF0dGVybiIpCj4gCj4gRm9y
+IGluZm9ybWF0aW9uIGFib3V0IGJpc2VjdGlvbiBwcm9jZXNzIHNlZTogaHR0cHM6Ly9nb28uZ2wv
+dHBzbUVKI2Jpc2VjdGlvbgo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCj4gZHJpLWRldmVsIG1haWxpbmcgbGlzdAo+IGRyaS1kZXZlbEBsaXN0cy5mcmVl
+ZGVza3RvcC5vcmcKPiBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3Rp
+bmZvL2RyaS1kZXZlbAoKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5naW5lZXIsIEludGVs
+IENvcnBvcmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4
+QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWls
+bWFuL2xpc3RpbmZvL2ludGVsLWdmeA==
