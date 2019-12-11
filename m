@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4 25/37] bcache: at least try to shrink 1 node in bch_mca_scan()
-Date: Wed, 11 Dec 2019 10:38:01 -0500
-Message-ID: <20191211153813.24126-25-sashal@kernel.org>
-References: <20191211153813.24126-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 46/79] bcache: at least try to shrink 1 node in bch_mca_scan()
+Date: Wed, 11 Dec 2019 10:26:10 -0500
+Message-ID: <20191211152643.23056-46-sashal@kernel.org>
+References: <20191211152643.23056-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191211153813.24126-1-sashal@kernel.org>
+In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Coly Li <colyli@suse.de>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
@@ -44,10 +44,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-index 05aa3ac1381ba..5c93582c71cc6 100644
+index 45f684689c357..bb40bd66a10e4 100644
 --- a/drivers/md/bcache/btree.c
 +++ b/drivers/md/bcache/btree.c
-@@ -686,6 +686,8 @@ static unsigned long bch_mca_scan(struct shrinker *shrink,
+@@ -713,6 +713,8 @@ static unsigned long bch_mca_scan(struct shrinker *shrink,
  	 * IO can always make forward progress:
  	 */
  	nr /= c->btree_pages;
