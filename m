@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 08/14] md: raid1: check rdev before reference in raid1_sync_request func
-Date: Fri, 20 Dec 2019 09:46:52 -0500
-Message-ID: <20191220144658.10414-8-sashal@kernel.org>
-References: <20191220144658.10414-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 08/11] md: raid1: check rdev before reference in raid1_sync_request func
+Date: Fri, 20 Dec 2019 09:47:40 -0500
+Message-ID: <20191220144744.10565-8-sashal@kernel.org>
+References: <20191220144744.10565-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191220144658.10414-1-sashal@kernel.org>
+In-Reply-To: <20191220144744.10565-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Zhiqiang Liu <liuzhiqiang26@huawei.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
@@ -26,10 +26,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 9892c41de4419..8a50da4f148f9 100644
+index abb99515068b1..096f3a2ba5244 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -2633,7 +2633,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+@@ -2630,7 +2630,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int *skipp
  				write_targets++;
  			}
  		}
