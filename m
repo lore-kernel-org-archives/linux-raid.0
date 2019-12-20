@@ -1,76 +1,53 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH AUTOSEL 4.14 32/58] bcache: at least try to shrink 1 node
- in bch_mca_scan()
-Date: Wed, 11 Dec 2019 23:00:40 -0500
-Message-ID: <24049.47976.479357.312176@quad.stoffel.home>
-References: <20191211152831.23507-1-sashal@kernel.org>
-        <20191211152831.23507-32-sashal@kernel.org>
-        <24049.47251.286105.88377@quad.stoffel.home>
-        <3363848c-6422-31b7-4ec2-0899f605a7f5@suse.de>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 43/52] raid5: need to set STRIPE_HANDLE for batch head
+Date: Fri, 20 Dec 2019 09:29:45 -0500
+Message-ID: <20191220142954.9500-43-sashal@kernel.org>
+References: <20191220142954.9500-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <3363848c-6422-31b7-4ec2-0899f605a7f5@suse.de>
+In-Reply-To: <20191220142954.9500-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>
-Cc: John Stoffel <john@stoffel.org>, Sasha Levin <sashal@kernel.org>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Xiao Ni <xni@redhat.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Coly" == Coly Li <colyli@suse.de> writes:
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 
-Coly> On 2019/12/12 11:48 上午, John Stoffel wrote:
->>>>>>> "Sasha" == Sasha Levin <sashal@kernel.org> writes:
->> 
-Sasha> From: Coly Li <colyli@suse.de>
-Sasha> [ Upstream commit 9fcc34b1a6dd4b8e5337e2b6ef45e428897eca6b ]
->> 
-Sasha> In bch_mca_scan(), the number of shrinking btree node is calculated
-Sasha> by code like this,
-Sasha> unsigned long nr = sc->nr_to_scan;
->> 
-Sasha> nr /= c->btree_pages;
-Sasha> nr = min_t(unsigned long, nr, mca_can_free(c));
-Sasha> variable sc->nr_to_scan is number of objects (here is bcache B+tree
-Sasha> nodes' number) to shrink, and pointer variable sc is sent from memory
-Sasha> management code as parametr of a callback.
->> 
-Sasha> If sc->nr_to_scan is smaller than c->btree_pages, after the above
-Sasha> calculation, variable 'nr' will be 0 and nothing will be shrunk. It is
-Sasha> frequeently observed that only 1 or 2 is set to sc->nr_to_scan and make
-Sasha> nr to be zero. Then bch_mca_scan() will do nothing more then acquiring
-Sasha> and releasing mutex c->bucket_lock.
->> 
-Sasha> This patch checkes whether nr is 0 after the above calculation, if 0
-Sasha> is the result then set 1 to variable 'n'. Then at least bch_mca_scan()
-Sasha> will try to shrink a single B+tree node.
->> 
-Sasha> nr /= c->btree_pages;
-Sasha> +	if (nr == 0)
-Sasha> +		nr = 1;
->> 
->> 
->> Wouldn't it be even more clear with:
->> 
->> nr /= c->bree_pages || 1;
->> 
->> instead?
+[ Upstream commit a7ede3d16808b8f3915c8572d783530a82b2f027 ]
 
-Coly> No, it is not more clear. At least to me, I may confuse does it mean,
-Coly> - nr = (nr / c->btree_pages) || 1;
-Coly> - or nr = nr / (c->btree_pages || 1)
+With commit 6ce220dd2f8ea71d6afc29b9a7524c12e39f374a ("raid5: don't set
+STRIPE_HANDLE to stripe which is in batch list"), we don't want to set
+STRIPE_HANDLE flag for sh which is already in batch list.
 
-Coly> If I don't check C manual, I am not able to tell the correct
-Coly> calculate at first time.
+However, the stripe which is the head of batch list should set this flag,
+otherwise panic could happen inside init_stripe at BUG_ON(sh->batch_head),
+it is reproducible with raid5 on top of nvdimm devices per Xiao oberserved.
 
-You're right, it's not quite as clear, it needs proper parenthesis.
-But maybe instead of a (possibly) expensive division all the time, why
-not just shift and assume you have it shrink a node, or try to.
+Thanks for Xiao's effort to verify the change.
 
-I honestly haven't looked closely enough at the code to figure out the
-best shift to use here.  But isn't this calculation wrong anyway?  If
-you have lots of c->bree_pages, wouldn't you want to do more freeing?
+Fixes: 6ce220dd2f8ea ("raid5: don't set STRIPE_HANDLE to stripe which is in batch list")
+Reported-by: Xiao Ni <xni@redhat.com>
+Tested-by: Xiao Ni <xni@redhat.com>
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/raid5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'd need to read the code better, but I'm heading to bed now.  Sorry.
-
-John
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 12a8ce83786ea..36cd7c2fbf408 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5726,7 +5726,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 				do_flush = false;
+ 			}
+ 
+-			if (!sh->batch_head)
++			if (!sh->batch_head || sh == sh->batch_head)
+ 				set_bit(STRIPE_HANDLE, &sh->state);
+ 			clear_bit(STRIPE_DELAYED, &sh->state);
+ 			if ((!sh->batch_head || sh == sh->batch_head) &&
+-- 
+2.20.1
