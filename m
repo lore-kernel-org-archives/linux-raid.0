@@ -1,94 +1,43 @@
-From: Song Liu <liu.song.a23@gmail.com>
-Subject: Re: [PATCH] raid5: avoid add sh->lru to different list
-Date: Thu, 9 Jan 2020 17:06:30 -0800
-Message-ID: <CAPhsuW598WjeigzHPkAEO8YoHwBis8xO79UL8jfRfLUckkGCog@mail.gmail.com>
-References: <20200108163023.9301-1-guoqing.jiang@cloud.ionos.com>
+From: William Morgan <therealbrewer@gmail.com>
+Subject: Re: Two raid5 arrays are inactive and have changed UUIDs
+Date: Thu, 9 Jan 2020 19:19:08 -0600
+Message-ID: <CALc6PW7276uYYWpL7j2xsFJRy3ayZeeSJ9kNCGHvB6Ndb6m1-Q@mail.gmail.com>
+References: <CALc6PW4OKR2KVFgzoEbRJ0TRwvqi5EZAdC__HOx+vJKMT0TXYQ@mail.gmail.com>
+ <959ca414-0c97-2e8d-7715-a7cb75790fcd@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200108163023.9301-1-guoqing.jiang@cloud.ionos.com>
+In-Reply-To: <959ca414-0c97-2e8d-7715-a7cb75790fcd@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <jgq516@gmail.com>, Xiao Ni <xni@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To: Wol's lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Guoqing and Xiao,
+Thank you for the encouraging response. I think I would like to
+attempt to rescue the smaller array first as the data there is
+somewhat less crucial and I may learn something before working with
+the more important larger array.
 
-Thanks for looking into this. I am still looking into this. Some
-questions below...
-
-On Wed, Jan 8, 2020 at 8:30 AM <jgq516@gmail.com> wrote:
-[...]
+> > md1 consists of 4x 4TB drives:
+> >
+> > role drive events state
+> >   0    sdj    5948  AAAA
+> >   1    sdk   38643  .AAA
+> >   2    sdl   38643  .AAA
+> >   3    sdm   38643  .AAA
 >
->  drivers/md/raid5.c | 24 ++++++++++++++++++++++--
->  1 file changed, 22 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 223e97ab27e6..808b0bd18c8c 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -218,6 +218,25 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
->         BUG_ON(!list_empty(&sh->lru));
->         BUG_ON(atomic_read(&conf->active_stripes)==0);
->
-> +       /*
-> +        * If stripe is on unplug list then original caller of __release_stripe
-> +        * is not raid5_unplug, so sh->lru is still in cb->list, don't risk to
-> +        * add lru to another list in do_release_stripe.
-> +        */
+> This array *should* be easy to recover. Again, use overlays, and
+> force-assemble sdk, sdl, and sdm. DO NOT include sdj - this was ejected
+> from the array a long time ago, and including it will seriously mess up
+> your array. This means you've actually been running a 3-disk raid-0 for
+> quite a while, so provided nothing more goes wrong, you'll have a
+> perfect recovery, but any trouble and your data is toast. Is there any
+> way you can ddrescue these three drives before attempting a recovery?
 
-Can we do the check before calling into do_release_stripe()?
-
-> +       if (!test_and_set_bit_lock(STRIPE_ON_UNPLUG_LIST, &sh->state))
-> +               clear_bit_unlock(STRIPE_ON_UNPLUG_LIST, &sh->state);
-> +       else {
-> +               /*
-> +                * The sh is on unplug list, so increase count (because count
-> +                * is decrease before enter do_release_stripe), then trigger
-> +                * raid5d -> plug -> raid5_unplug -> __release_stripe to handle
-> +                * this stripe.
-> +                */
-> +               atomic_inc(&sh->count);
-> +               md_wakeup_thread(conf->mddev->thread);
-> +               return;
-> +       }
-> +
->         if (r5c_is_writeback(conf->log))
->                 for (i = sh->disks; i--; )
->                         if (test_bit(R5_InJournal, &sh->dev[i].flags))
-> @@ -5441,7 +5460,7 @@ static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
->                          * is still in our list
->                          */
->                         smp_mb__before_atomic();
-> -                       clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
-> +                       clear_bit_unlock(STRIPE_ON_UNPLUG_LIST, &sh->state);
->                         /*
->                          * STRIPE_ON_RELEASE_LIST could be set here. In that
->                          * case, the count is always > 1 here
-> @@ -5481,7 +5500,8 @@ static void release_stripe_plug(struct mddev *mddev,
->                         INIT_LIST_HEAD(cb->temp_inactive_list + i);
->         }
->
-> -       if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
-> +       if (!test_and_set_bit_lock(STRIPE_ON_UNPLUG_LIST, &sh->state) &&
-> +           (atomic_read(&sh->count) != 0))
-
-Do we really see sh->count == 0 here? If yes, I guess we should check
-sh->count first,
-so that we reduce the case where STRIPE_ON_UNPLUG_LIST is set, but the sh is
-not really on the unplug_list.
-
->                 list_add_tail(&sh->lru, &cb->list);
->         else
->                 raid5_release_stripe(sh);
->
-
-Overall, I think we should try our best to let STRIPE_ON_RELEASE_LIST
-means it is
-on release_list, and STRIPE_ON_UNPLUG_LIST means it is on unplug_list. I think
-there will be some exceptions, but we should try to minimize those cases.
-
-Does this make sense?
+I do have plenty of additional disk space. If I try ddrescue first,
+will that just give me a backup of the array in case something goes
+wrong with the force-assemble with overlays? Can you give me some
+guidance on what to do with ddrescue?
 
 Thanks,
-Song
+Bill
