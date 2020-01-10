@@ -1,42 +1,195 @@
 From: Kinga Tanska <kinga.tanska@intel.com>
-Subject: [PATCH, v2] Change warning message
-Date: Fri, 10 Jan 2020 12:10:26 +0100
-Message-ID: <20200110111026.1734-1-kinga.tanska@intel.com>
+Subject: [PATCH] Add support for Tebibytes
+Date: Fri, 10 Jan 2020 12:10:46 +0100
+Message-ID: <20200110111046.1802-1-kinga.tanska@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-In commit 039b7225e6 ("md: allow creation of mdNNN arrays via
-md_mod/parameters/new_array") support for name like mdNNN
-was added. Special warning, when kernel is unable to handle
-request, was added in commit 7105228e19
-("mdadm/mdopen: create new function create_named_array for
-writing to new_array"), but it was not adequate enough,
-because in this situation mdadm tries to do it in old way.
-This commit changes warning to be more relevant when
-creating RAID container with "/dev/mdNNN" name and mdadm
-back to old approach.
+Adding support for Tebibytes enables display size of
+volumes in Tebibytes and Terabytes when they are
+bigger than 2048 GiB (or GB).
 
 Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
 ---
- mdopen.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ mdadm.8.in | 20 ++++++++++----------
+ util.c     | 47 +++++++++++++++++++++++++++++++++--------------
+ 2 files changed, 43 insertions(+), 24 deletions(-)
 
-diff --git a/mdopen.c b/mdopen.c
-index 98c54e4..245be53 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -120,7 +120,8 @@ int create_named_array(char *devnm)
- 		close(fd);
- 	}
- 	if (fd < 0 || n != (int)strlen(devnm)) {
--		pr_err("Fail create %s when using %s\n", devnm, new_array_file);
-+		pr_err("Fail to create %s when using %s, fallback to creation via node\n",
-+			devnm, new_array_file);
- 		return 0;
- 	}
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 9aec9f4..ad7a0aa 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -467,8 +467,8 @@ If this is not specified
+ size, though if there is a variance among the drives of greater than 1%, a warning is
+ issued.
  
+-A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M', 'G' or 'T' can be given to indicate Kilobytes,
++Megabytes, Gigabytes or Terabytes respectively.
+ 
+ Sometimes a replacement drive can be a little smaller than the
+ original drives though this should be minimised by IDEMA standards.
+@@ -534,8 +534,8 @@ problems the array can be made bigger again with no loss with another
+ .B "\-\-grow \-\-array\-size="
+ command.
+ 
+-A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M', 'G' or 'T' can be given to indicate Kilobytes,
++Megabytes, Gigabytes or Terabytes respectively.
+ A value of
+ .B max
+ restores the apparent size of the array to be whatever the real
+@@ -553,8 +553,8 @@ This is only meaningful for RAID0, RAID4, RAID5, RAID6, and RAID10.
+ RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
+ of 2.  In any case it must be a multiple of 4KB.
+ 
+-A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M', 'G' or 'T' can be given to indicate Kilobytes,
++Megabytes, Gigabytes or Terabytes respectively.
+ 
+ .TP
+ .BR \-\-rounding=
+@@ -741,8 +741,8 @@ When using an
+ bitmap, the chunksize defaults to 64Meg, or larger if necessary to
+ fit the bitmap into the available space.
+ 
+-A suffix of 'K', 'M' or 'G' can be given to indicate Kilobytes, Megabytes or
+-Gigabytes respectively.
++A suffix of 'K', 'M', 'G' or 'T' can be given to indicate Kilobytes,
++Megabytes, Gigabytes or Terabytes respectively.
+ 
+ .TP
+ .BR \-W ", " \-\-write\-mostly
+@@ -831,8 +831,8 @@ an array which was originally created using a different version of
+ which computed a different offset.
+ 
+ Setting the offset explicitly over-rides the default.  The value given
+-is in Kilobytes unless a suffix of 'K', 'M' or 'G' is used to explicitly
+-indicate Kilobytes, Megabytes or Gigabytes respectively.
++is in Kilobytes unless a suffix of 'K', 'M', 'G' or 'T' is used to explicitly
++indicate Kilobytes, Megabytes, Gigabytes or Terabytes respectively.
+ 
+ Since Linux 3.4,
+ .B \-\-data\-offset
+diff --git a/util.c b/util.c
+index 64dd409..1986d9f 100644
+--- a/util.c
++++ b/util.c
+@@ -389,7 +389,7 @@ int mdadm_version(char *version)
+ unsigned long long parse_size(char *size)
+ {
+ 	/* parse 'size' which should be a number optionally
+-	 * followed by 'K', 'M', or 'G'.
++	 * followed by 'K', 'M'. 'G' or 'T'.
+ 	 * Without a suffix, K is assumed.
+ 	 * Number returned is in sectors (half-K)
+ 	 * INVALID_SECTORS returned on error.
+@@ -411,6 +411,10 @@ unsigned long long parse_size(char *size)
+ 			c++;
+ 			s *= 1024 * 1024 * 2;
+ 			break;
++		case 'T':
++			c++;
++			s *= 1024 * 1024 * 1024 * 2L;
++			break;
+ 		case 's': /* sectors */
+ 			c++;
+ 			break;
+@@ -893,13 +897,14 @@ char *human_size(long long bytes)
+ {
+ 	static char buf[47];
+ 
+-	/* We convert bytes to either centi-M{ega,ibi}bytes or
+-	 * centi-G{igi,ibi}bytes, with appropriate rounding,
+-	 * and then print 1/100th of those as a decimal.
++	/* We convert bytes to either centi-M{ega,ibi}bytes,
++	 * centi-G{igi,ibi}bytes or centi-T{era,ebi}bytes
++	 * with appropriate rounding, and then print
++	 * 1/100th of those as a decimal.
+ 	 * We allow upto 2048Megabytes before converting to
+-	 * gigabytes, as that shows more precision and isn't
++	 * gigabytes and 2048Gigabytes before converting to
++	 * terabytes, as that shows more precision and isn't
+ 	 * too large a number.
+-	 * Terabytes are not yet handled.
+ 	 */
+ 
+ 	if (bytes < 5000*1024)
+@@ -909,11 +914,16 @@ char *human_size(long long bytes)
+ 		long cMB  = (bytes / ( 1000000LL / 200LL ) +1) /2;
+ 		snprintf(buf, sizeof(buf), " (%ld.%02ld MiB %ld.%02ld MB)",
+ 			cMiB/100, cMiB % 100, cMB/100, cMB % 100);
+-	} else {
++	} else if (bytes < 2*1024LL*1024LL*1024LL*1024LL) {
+ 		long cGiB = (bytes * 200LL / (1LL<<30) +1) / 2;
+ 		long cGB  = (bytes / (1000000000LL/200LL ) +1) /2;
+ 		snprintf(buf, sizeof(buf), " (%ld.%02ld GiB %ld.%02ld GB)",
+ 			cGiB/100, cGiB % 100, cGB/100, cGB % 100);
++	} else {
++		long cTiB = (bytes * 200LL / (1LL<<40) + 1) / 2;
++		long cTB  = (bytes / (1000000000000LL / 200LL) + 1) / 2;
++		snprintf(buf, sizeof(buf), " (%ld.%02ld TiB %ld.%02ld TB)",
++			cTiB/100, cTiB % 100, cTB/100, cTB % 100);
+ 	}
+ 	return buf;
+ }
+@@ -922,13 +932,14 @@ char *human_size_brief(long long bytes, int prefix)
+ {
+ 	static char buf[30];
+ 
+-	/* We convert bytes to either centi-M{ega,ibi}bytes or
+-	 * centi-G{igi,ibi}bytes, with appropriate rounding,
+-	 * and then print 1/100th of those as a decimal.
++	/* We convert bytes to either centi-M{ega,ibi}bytes,
++	 * centi-G{igi,ibi}bytes or centi-T{era,ebi}bytes
++	 * with appropriate rounding, and then print
++	 * 1/100th of those as a decimal.
+ 	 * We allow upto 2048Megabytes before converting to
+-	 * gigabytes, as that shows more precision and isn't
++	 * gigabytes and 2048Gigabytes before converting to
++	 * terabytes, as that shows more precision and isn't
+ 	 * too large a number.
+-	 * Terabytes are not yet handled.
+ 	 *
+ 	 * If prefix == IEC, we mean prefixes like kibi,mebi,gibi etc.
+ 	 * If prefix == JEDEC, we mean prefixes like kilo,mega,giga etc.
+@@ -941,10 +952,14 @@ char *human_size_brief(long long bytes, int prefix)
+ 			long cMiB = (bytes * 200LL / (1LL<<20) +1) /2;
+ 			snprintf(buf, sizeof(buf), "%ld.%02ldMiB",
+ 				 cMiB/100, cMiB % 100);
+-		} else {
++		} else if (bytes < 2*1024LL*1024LL*1024LL*1024LL) {
+ 			long cGiB = (bytes * 200LL / (1LL<<30) +1) /2;
+ 			snprintf(buf, sizeof(buf), "%ld.%02ldGiB",
+ 				 cGiB/100, cGiB % 100);
++		} else {
++			long cTiB = (bytes * 200LL / (1LL<<40) + 1) / 2;
++			snprintf(buf, sizeof(buf), "%ld.%02ldTiB",
++				 cTiB/100, cTiB % 100);
+ 		}
+ 	}
+ 	else if (prefix == JEDEC) {
+@@ -952,10 +967,14 @@ char *human_size_brief(long long bytes, int prefix)
+ 			long cMB  = (bytes / ( 1000000LL / 200LL ) +1) /2;
+ 			snprintf(buf, sizeof(buf), "%ld.%02ldMB",
+ 				 cMB/100, cMB % 100);
+-		} else {
++		} else if (bytes < 2*1024LL*1024LL*1024LL*1024LL) {
+ 			long cGB  = (bytes / (1000000000LL/200LL ) +1) /2;
+ 			snprintf(buf, sizeof(buf), "%ld.%02ldGB",
+ 				 cGB/100, cGB % 100);
++		} else {
++			long cTB  = (bytes / (1000000000000LL / 200LL) + 1) / 2;
++			snprintf(buf, sizeof(buf), "%ld.%02ldTB",
++				 cTB/100, cTB % 100);
+ 		}
+ 	}
+ 	else
 -- 
 2.16.4
