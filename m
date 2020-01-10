@@ -1,72 +1,181 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Two raid5 arrays are inactive and have changed UUIDs
-Date: Fri, 10 Jan 2020 01:55:37 +0000
-Message-ID: <5E17D999.5010309@youngman.org.uk>
-References: <CALc6PW4OKR2KVFgzoEbRJ0TRwvqi5EZAdC__HOx+vJKMT0TXYQ@mail.gmail.com>
- <959ca414-0c97-2e8d-7715-a7cb75790fcd@youngman.org.uk>
- <CALc6PW7276uYYWpL7j2xsFJRy3ayZeeSJ9kNCGHvB6Ndb6m1-Q@mail.gmail.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [PATCH] raid5: avoid add sh->lru to different list
+Date: Fri, 10 Jan 2020 11:51:24 +0100
+Message-ID: <458d44b3-4908-367c-7fb6-8cf87043d93f@cloud.ionos.com>
+References: <20200108163023.9301-1-guoqing.jiang@cloud.ionos.com>
+ <CAPhsuW598WjeigzHPkAEO8YoHwBis8xO79UL8jfRfLUckkGCog@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALc6PW7276uYYWpL7j2xsFJRy3ayZeeSJ9kNCGHvB6Ndb6m1-Q@mail.gmail.com>
+In-Reply-To: <CAPhsuW598WjeigzHPkAEO8YoHwBis8xO79UL8jfRfLUckkGCog@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: William Morgan <therealbrewer@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Song Liu <liu.song.a23@gmail.com>, Guoqing Jiang <jgq516@gmail.com>, Xiao Ni <xni@redhat.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/01/20 01:19, William Morgan wrote:
-> Thank you for the encouraging response. I think I would like to
-> attempt to rescue the smaller array first as the data there is
-> somewhat less crucial and I may learn something before working with
-> the more important larger array.
-> 
->>> md1 consists of 4x 4TB drives:
->>>
->>> role drive events state
->>>   0    sdj    5948  AAAA
->>>   1    sdk   38643  .AAA
->>>   2    sdl   38643  .AAA
->>>   3    sdm   38643  .AAA
+Hi Song,
+
+On 1/10/20 2:06 AM, Song Liu wrote:
+> Hi Guoqing and Xiao,
+>
+> Thanks for looking into this. I am still looking into this. Some
+> questions below...
+
+Thanks for looking into it.
+
+> On Wed, Jan 8, 2020 at 8:30 AM <jgq516@gmail.com> wrote:
+> [...]
+>>   drivers/md/raid5.c | 24 ++++++++++++++++++++++--
+>>   1 file changed, 22 insertions(+), 2 deletions(-)
 >>
->> This array *should* be easy to recover. Again, use overlays, and
->> force-assemble sdk, sdl, and sdm. DO NOT include sdj - this was ejected
->> from the array a long time ago, and including it will seriously mess up
->> your array. This means you've actually been running a 3-disk raid-0 for
->> quite a while, so provided nothing more goes wrong, you'll have a
->> perfect recovery, but any trouble and your data is toast. Is there any
->> way you can ddrescue these three drives before attempting a recovery?
-> 
-> I do have plenty of additional disk space. If I try ddrescue first,
-> will that just give me a backup of the array in case something goes
-> wrong with the force-assemble with overlays? Can you give me some
-> guidance on what to do with ddrescue?
-> 
-Firstly, the whole point of overlays is to avoid damaging the arrays -
-done properly, any and all changes made to the array are actually
-diverted to files elsewhere so when you shut down all the changes are
-lost and you get the unaltered disks back. So the idea is you assemble
-the array with overlays, inspect the data, check the disk with fsck etc,
-and if it all looks good you know you can assemble the array without
-overlays and recover everything.
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index 223e97ab27e6..808b0bd18c8c 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -218,6 +218,25 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+>>          BUG_ON(!list_empty(&sh->lru));
+>>          BUG_ON(atomic_read(&conf->active_stripes)==0);
+>>
+>> +       /*
+>> +        * If stripe is on unplug list then original caller of __release_stripe
+>> +        * is not raid5_unplug, so sh->lru is still in cb->list, don't risk to
+>> +        * add lru to another list in do_release_stripe.
+>> +        */
+> Can we do the check before calling into do_release_stripe()?
 
-Of course, things can always go wrogn ... so ddrescue makes a backup.
-Depending on how you want to do it, just use ddrescue exactly as you
-would use dd. You can copy your disk, eg "dd if=/dev/sdm of=/dev/sdn" -
-just MAKE SURE you get the arguments right to avoid trashing your
-original disk by mistake, or you can copy the disk or partition to a
-file eg "dd if=/dev/sdj of=/home/rescue/copy_of_sdj".
+Then we need to add the check twice, one in raid5_release_stripe, 
+another in
+__release_stripe.
 
-If you're not happy using overlays, having ddrescue'd the disks you
-could always assemble the array directly from the copies and make sure
-everything's okay there, before trying it with the original disks.
+>
+>> +       if (!test_and_set_bit_lock(STRIPE_ON_UNPLUG_LIST, &sh->state))
+>> +               clear_bit_unlock(STRIPE_ON_UNPLUG_LIST, &sh->state);
+>> +       else {
+>> +               /*
+>> +                * The sh is on unplug list, so increase count (because count
+>> +                * is decrease before enter do_release_stripe), then trigger
+>> +                * raid5d -> plug -> raid5_unplug -> __release_stripe to handle
+>> +                * this stripe.
+>> +                */
+>> +               atomic_inc(&sh->count);
+>> +               md_wakeup_thread(conf->mddev->thread);
+>> +               return;
+>> +       }
+>> +
+>>          if (r5c_is_writeback(conf->log))
+>>                  for (i = sh->disks; i--; )
+>>                          if (test_bit(R5_InJournal, &sh->dev[i].flags))
+>> @@ -5441,7 +5460,7 @@ static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
+>>                           * is still in our list
+>>                           */
+>>                          smp_mb__before_atomic();
+>> -                       clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
+>> +                       clear_bit_unlock(STRIPE_ON_UNPLUG_LIST, &sh->state);
+>>                          /*
+>>                           * STRIPE_ON_RELEASE_LIST could be set here. In that
+>>                           * case, the count is always > 1 here
+>> @@ -5481,7 +5500,8 @@ static void release_stripe_plug(struct mddev *mddev,
+>>                          INIT_LIST_HEAD(cb->temp_inactive_list + i);
+>>          }
+>>
+>> -       if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
+>> +       if (!test_and_set_bit_lock(STRIPE_ON_UNPLUG_LIST, &sh->state) &&
+>> +           (atomic_read(&sh->count) != 0))
+> Do we really see sh->count == 0 here? If yes, I guess we should check
+> sh->count first,
+> so that we reduce the case where STRIPE_ON_UNPLUG_LIST is set, but the sh is
+> not really on the unplug_list.
 
-Note that there is no difference as far as the *user* is concerned
-between dd and ddrescue. Under the hood, there's a lot of difference -
-ddrescue is targeted at failing hardware so while it tries to just do a
-simple copy it doesn't fail on read errors and has a large repertoire of
-tricks to try and get the data off. It doesn't always succeed, though
-... :-)
+Yes, it could be, thanks. But with check count first, I am worried a 
+potential
+race window which causes sh->lru could be added to different lists as well.
 
-Cheers,
-Wol
+1. release_stripe_plug -> atomic_read(&sh->count) != 0
+
+2. do_release_stripe -> atomic_dec_and_test(&sh->count)
+!test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)
+                                      list_add_tail(&sh->lru, ***_list);
+
+3. release_stripe_plug -> !test_and_set_bit(STRIPE_ON_UNPLUG_LIST, 
+&sh->state)
+list_add_tail(&sh->lru, &cb->list);
+
+
+IMO, the difficult thing is we need kind of atomic operation to check both
+sh->count and ON_UNPLUG flag, but we do want lockless as much as possible.
+
+How about get an extra count before add add sh to cb->list? I am 
+thinking that
+atomic_inc(&sh->count) and atomic_dec(&sh->count) should be paired, right?
+Then do_release_stripe should not be triggered in theory. Something like.
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index d4d3b67ffbba..225bd9ca4e42 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -222,6 +222,24 @@ static void do_release_stripe(struct r5conf *conf, 
+struct stripe_head *sh,
+                 for (i = sh->disks; i--; )
+                         if (test_bit(R5_InJournal, &sh->dev[i].flags))
+                                 injournal++;
++
++       /*
++        * If stripe is on unplug list then original caller of 
+__release_stripe
++        * is not raid5_unplug, so sh->lru is still in cb->list, don't 
+risk to
++        * add lru to another list in do_release_stripe.
++        */
++       if (unlikely(test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))){
++               /*
++                * The sh is on unplug list, so increase count (because 
+count
++                * is decreased before entering do_release_stripe), then 
+trigger
++                * raid5d -> plug -> raid5_unplug -> __release_stripe to 
+handle
++                * this stripe.
++                */
++               atomic_inc(&sh->count);
++               md_wakeup_thread(conf->mddev->thread);
++               return;
++       }
++
+         /*
+          * In the following cases, the stripe cannot be released to cached
+          * lists. Therefore, we make the stripe write out and set
+@@ -5481,10 +5499,15 @@ static void release_stripe_plug(struct mddev 
+*mddev,
+                         INIT_LIST_HEAD(cb->temp_inactive_list + i);
+         }
+
+-       if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
++       /* hold extra count to avoid the running of do_release_stripe */
++       atomic_inc(&sh->count);
++       if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)) {
+                 list_add_tail(&sh->lru, &cb->list);
+-       else
++               atomic_dec(&sh->count);
++       } else {
++               atomic_dec(&sh->count);
+                 raid5_release_stripe(sh);
++       }
+  }
+
+>>                  list_add_tail(&sh->lru, &cb->list);
+>>          else
+>>                  raid5_release_stripe(sh);
+>>
+> Overall, I think we should try our best to let STRIPE_ON_RELEASE_LIST
+> means it is
+> on release_list, and STRIPE_ON_UNPLUG_LIST means it is on unplug_list. I think
+> there will be some exceptions, but we should try to minimize those cases.
+>
+> Does this make sense?
+
+Agreed, though I don't see there is code to do it unfortunately ...
+
+Thanks,
+Guoqing
