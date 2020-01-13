@@ -1,75 +1,31 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [GIT PULL] md-next 20200113
-Date: Mon, 13 Jan 2020 19:55:14 +0000
-Message-ID: <153C0E51-CDFC-430C-8125-486CCC73406D@fb.com>
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Subject: Re: dm-integrity
+Date: Mon, 13 Jan 2020 22:41:25 +0100
+Message-ID: <CAJH6TXjN8V4a4jE6AECCg=quMd9FPA=ST0_9ZtZcGKUzvY5wYg@mail.gmail.com>
+References: <CAJH6TXhnkB10BUENn0P+qXy4nunwY6QVtgDvaFVpfGDpvE-V=Q@mail.gmail.com>
+ <CAPhsuW6srGADYYD4dsUbVVBcz4bfJ-taoOy6ccpXjyU26jVTEg@mail.gmail.com>
+ <20200113181654.GA7645@lazy.lzy> <CAPhsuW6urOBa5s9od-znfn9J2jhz3cCOxmqu6tABvyoCEx5BHQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Content-ID: <174754EE23A24F40AF29649D288F0577@namprd15.prod.outlook.com>
+In-Reply-To: <CAPhsuW6urOBa5s9od-znfn9J2jhz3cCOxmqu6tABvyoCEx5BHQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Zhiqiang Liu <liuzhiqiang26@huawei.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, "liuzhengyuan@kylinos.cn" <liuzhengyuan@kylinos.cn>, Kernel Team <Kernel-team@fb.com>
+To: Song Liu <song@kernel.org>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, dm-devel@redhat.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Jens,=20
+Il giorno lun 13 gen 2020 alle ore 19:58 Song Liu <song@kernel.org> ha scritto:
+> Right now, md_done_sync() doesn't really print any message. I think this is
+> easy to add. However, md check/recovery is at block granularity, so we
+> probably cannot print exact which sector got fixed.
 
-Please consider pull the following changes for md-next on top of your for-5=
-.6/block=20
-branch (I didn't find for-5.6/drivers branch).=20
+Well, having the exact sector fixed is not mandatory, but really useful.
+Better than nothing would be md logging that has fixed "something" and
+it's location (a setor, a block, ....)
+9 times out of 10 the dm-integrity log would be just above the md log,
+so a match between dm-integrity sector and md block would be easy,
+just read the line below or above.
 
-Thanks,
-Song
-
-
-
-The following changes since commit 8e42d239cb027143915cae13eb2ecf1360ee24de=
-:
-
-  block: mark zone-mgmt bios with REQ_SYNC (2020-01-09 07:59:12 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-
-for you to fetch changes up to d0d2d8ba0494655a01b97542c083e51b29cf8637:
-
-  md/raid1: introduce wait_for_serialization (2020-01-13 11:44:10 -0800)
-
-----------------------------------------------------------------
-Guoqing Jiang (11):
-      raid5: remove worker_cnt_per_group argument from alloc_thread_groups
-      md: rename wb stuffs
-      md: fix a typo s/creat/create
-      md: prepare for enable raid1 io serialization
-      md: add serialize_policy sysfs node for raid1
-      md: reorgnize mddev_create/destroy_serial_pool
-      raid1: serialize the overlap write
-      md: don't destroy serial_info_pool if serialize_policy is true
-      md: introduce a new struct for IO serialization
-      md/raid1: use bucket based mechanism for IO serialization
-      md/raid1: introduce wait_for_serialization
-
-Zhengyuan Liu (3):
-      raid6/test: fix a compilation error
-      raid6/test: fix a compilation warning
-      md/raid6: fix algorithm choice under larger PAGE_SIZE
-
-Zhiqiang Liu (1):
-      md-bitmap: small cleanups
-
- drivers/md/md-bitmap.c  |  25 ++++++++++----------
- drivers/md/md.c         | 254 ++++++++++++++++++++++++++++++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++--------------------------------------=
------
- drivers/md/md.h         |  45 +++++++++++++++++++++---------------
- drivers/md/raid1.c      | 111 ++++++++++++++++++++++++++++++++++++++++++++=
-++++---------------------------------------
- drivers/md/raid5.c      |  21 ++++++-----------
- include/linux/raid/pq.h |   7 +++++-
- lib/raid6/algos.c       |  63 ++++++++++++++++++++++++++++++++------------=
-------
- lib/raid6/mktables.c    |   2 +-
- 8 files changed, 353 insertions(+), 175 deletions(-)=
+I think that md should be a little bit more verbose on certain
+actions. (in example, saying what was fixed, the last time of scrub
+and it's result, as per my previous thread and so on)
