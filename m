@@ -1,31 +1,44 @@
-From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
-Subject: Re: dm-integrity
-Date: Mon, 13 Jan 2020 22:41:25 +0100
-Message-ID: <CAJH6TXjN8V4a4jE6AECCg=quMd9FPA=ST0_9ZtZcGKUzvY5wYg@mail.gmail.com>
-References: <CAJH6TXhnkB10BUENn0P+qXy4nunwY6QVtgDvaFVpfGDpvE-V=Q@mail.gmail.com>
- <CAPhsuW6srGADYYD4dsUbVVBcz4bfJ-taoOy6ccpXjyU26jVTEg@mail.gmail.com>
- <20200113181654.GA7645@lazy.lzy> <CAPhsuW6urOBa5s9od-znfn9J2jhz3cCOxmqu6tABvyoCEx5BHQ@mail.gmail.com>
+From: William Morgan <therealbrewer@gmail.com>
+Subject: Re: Two raid5 arrays are inactive and have changed UUIDs
+Date: Mon, 13 Jan 2020 16:40:31 -0600
+Message-ID: <CALc6PW5DrTkVR7rLngDcJ5i8kTpqfT1-K+ki-WjnXAYP5TXXZg@mail.gmail.com>
+References: <CALc6PW4OKR2KVFgzoEbRJ0TRwvqi5EZAdC__HOx+vJKMT0TXYQ@mail.gmail.com>
+ <959ca414-0c97-2e8d-7715-a7cb75790fcd@youngman.org.uk> <CALc6PW7276uYYWpL7j2xsFJRy3ayZeeSJ9kNCGHvB6Ndb6m1-Q@mail.gmail.com>
+ <5E17D999.5010309@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW6urOBa5s9od-znfn9J2jhz3cCOxmqu6tABvyoCEx5BHQ@mail.gmail.com>
+In-Reply-To: <5E17D999.5010309@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, dm-devel@redhat.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Il giorno lun 13 gen 2020 alle ore 19:58 Song Liu <song@kernel.org> ha scritto:
-> Right now, md_done_sync() doesn't really print any message. I think this is
-> easy to add. However, md check/recovery is at block granularity, so we
-> probably cannot print exact which sector got fixed.
+> >>> md1 consists of 4x 4TB drives:
+> >>>
+> >>> role drive events state
+> >>>   0    sdj    5948  AAAA
+> >>>   1    sdk   38643  .AAA
+> >>>   2    sdl   38643  .AAA
+> >>>   3    sdm   38643  .AAA
 
-Well, having the exact sector fixed is not mandatory, but really useful.
-Better than nothing would be md logging that has fixed "something" and
-it's location (a setor, a block, ....)
-9 times out of 10 the dm-integrity log would be just above the md log,
-so a match between dm-integrity sector and md block would be easy,
-just read the line below or above.
+> If you're not happy using overlays, having ddrescue'd the disks you
+> could always assemble the array directly from the copies and make sure
+> everything's okay there, before trying it with the original disks.
 
-I think that md should be a little bit more verbose on certain
-actions. (in example, saying what was fixed, the last time of scrub
-and it's result, as per my previous thread and so on)
+I successfully ddrescued all four drives /dev/sd[j,k,l,m], each to new
+disk, with no errors reported. I have the copies on /dev/sd[n,o,p,q].
+
+Now if I want to force assemble the three copies with event counts
+that agree [o,p,q], should I just do:
+
+mdadm --assemble --force /dev/md1 /dev/sdo1 /dev/sdp1 /dev/sdq1
+
+Or should I assemble the copies into a new array, say /dev/md2?
+
+I'm worried that assembling the copies might merge them into the
+existing (inactive) array. Is that what's supposed to happen? I'm
+unclear here.
+
+Thanks for your help,
+Bill
