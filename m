@@ -1,59 +1,37 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: dm-integrity
-Date: Mon, 13 Jan 2020 19:16:54 +0100
-Message-ID: <20200113181654.GA7645@lazy.lzy>
-References: <CAJH6TXhnkB10BUENn0P+qXy4nunwY6QVtgDvaFVpfGDpvE-V=Q@mail.gmail.com>
- <CAPhsuW6srGADYYD4dsUbVVBcz4bfJ-taoOy6ccpXjyU26jVTEg@mail.gmail.com>
+From: Wol <antlists@youngman.org.uk>
+Subject: Re: Reassembling Raid5 in degraded state
+Date: Mon, 13 Jan 2020 18:46:40 +0000
+Message-ID: <7b7c8d20-6402-485b-5251-956637acb7db@youngman.org.uk>
+References: <54384251-9978-eb99-e7ec-2da35f41566c@inview.de>
+ <5E1C86F4.4070506@youngman.org.uk>
+ <CAPhsuW45052b5OjoWgQhs0r50CeisBS3ya3nGi74Jr0_8HDB5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPhsuW6srGADYYD4dsUbVVBcz4bfJ-taoOy6ccpXjyU26jVTEg@mail.gmail.com>
+In-Reply-To: <CAPhsuW45052b5OjoWgQhs0r50CeisBS3ya3nGi74Jr0_8HDB5A@mail.gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>, dm-devel@redhat.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Song Liu <liu.song.a23@gmail.com>
+Cc: Christian Deufel <christian.deufel@inview.de>, linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Mon, Jan 13, 2020 at 10:11:00AM -0800, Song Liu wrote:
-> + dm-devel
+On 13/01/2020 17:31, Song Liu wrote:
+>> Song, Neil,
+>>
+>> Just a guess as to what went wrong, but the array event count does not
+>> match the disk counts. Iirc this is one of the events that cause an
+> Which mismatch do you mean?
 > 
-> On Sun, Jan 12, 2020 at 5:43 AM Gandalf Corvotempesta
-> <gandalf.corvotempesta@gmail.com> wrote:
-> >
-> > I'm testing dm-integrity.
-> > Simple question: when corrupted data are found, repair is done
-> > immediately or on next scrub?
-> >
-> > This is what I have:
-> >
-> > [ 6727.395808] md: data-check of RAID array md0
-> > [ 6727.528589] device-mapper: integrity: Checksum failed at sector 0xe228
-> > [ 6727.938689] md: md0: data-check done.
-> > [ 6749.125075] md: data-check of RAID array md0
-> > [ 6749.664269] md: md0: data-check done.
-> >
-> > if repair is done immediatly, would be possible to add a single log
-> > line saying that ?
-> > something like:
-> > [ 6727.528589] md: md0: Repaired data at sector 0xe228
+>> assemble to stop. Is it possible that a crash at the wrong moment could
+>> interrupt an update and trigger this problem?
+> It looks like sdc1 failed first. Then sdd1 and sdf1 got events for sdc1 failed.
+> Based on super block on sdd1 and sdf1, we already have two failed drive,
+> so assemble stopped.
 > 
-> I guess this belongs to dm-integrity instead of md?
+> Does this answer the question?
+> 
+Sorry yes it does. My fault for mis-reading the logs the OP sent.
 
-Eh, well, no.
-He is asking about "md" in case the underlying
-layer, dm-integrity in this case, returns an error.
-
-This could be the case also if the HDD returns
-a read error which the RAID will correct and,
-if I get it right, rewrite.
-
-But I guess "md" already returns where the
-correction happened, isn't like that?
-I recall seeing in the logs something about
-it, but it was some time ago...
-
-bye,
-
--- 
-
-piergiorgio
+Cheers.,
+Wol
