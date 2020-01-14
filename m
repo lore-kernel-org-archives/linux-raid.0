@@ -1,98 +1,61 @@
-From: Christian Deufel <christian.deufel@inview.de>
-Subject: Re: Reassembling Raid5 in degraded state
-Date: Tue, 14 Jan 2020 12:28:06 +0100
-Message-ID: <13b11d17-a23a-3063-70cb-de63d9fa7d09@inview.de>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: RAID10, 3 copies, 3 disks
+Date: Tue, 14 Jan 2020 12:28:27 +0000
+Message-ID: <87sgki2pec.fsf@esperi.org.uk>
+References: <CAJH6TXhWd-AGi0_KnbnepxZXsOvpMQGwkisFuuX14dMe157jWw@mail.gmail.com>
+        <82a7d9ec-f991-ad25-bf1f-eee74be90b1b@youngman.org.uk>
+        <CAJH6TXji3e1Tp8xDDiqfqy36fpMC4kZTLaYj0Le9A6Cyg8EnGg@mail.gmail.com>
+        <5E1A3D4F.30205@youngman.org.uk>
+        <CAJH6TXjQ+vLSOJGH_7-mAeRREBSSTS5DTxXFtz2SU06wfhc4gA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAJH6TXjQ+vLSOJGH_7-mAeRREBSSTS5DTxXFtz2SU06wfhc4gA@mail.gmail.com>
+        (Gandalf Corvotempesta's message of "Sat, 11 Jan 2020 22:36:21 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Wols Lists <antlists@youngman.org.uk>
+To: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hey Wol
+On 11 Jan 2020, Gandalf Corvotempesta said:
 
- > My plan now would be to run mdadm --assemble --force /dev/md3 with 3
- > disk, to get the Raid going in a degraded state.
+> Il giorno sab 11 gen 2020 alle ore 22:25 Wols Lists
+> <antlists@youngman.org.uk> ha scritto:
+>> Multiple 3-way mirrors (1+0) requires disks in multiples of 3. Raid10
+>> simply requires "4 or more" disks. If you expect/want to expand your
+>> storage in small increments, then 10 is clearly better. BUT.
+>
+> I'll start with 8TB usable (more than enough for me atm) and would be ok
+> for at least 1 year, thus saving space is not a problem. Next year, if needed,
+> i'll add 3 disks more (or i'll grow the existing ones)
+>
+>> Depending on your filesystem - for example XFS - changing the disk
+>> layout underneath it can severely impact performance - when the
+>> filesystem is created it queries the layout and optimises for it. When I
+>> discussed it with one of the XFS guys he said "use 1+0 and add a fresh
+>> *set* of disks (or completely recreate the filesystem), because XFS
+>> optimises layout based on what disks it thinks its got."
+>
+> No XFS, i'll use ext4.
 
- >Yup, this would almost certainly work. I would recommend overlays and
- >running a fsck just to check it's all okay before actually doing it on
- >the actual disks. The event counts say to me that you'll probably lose
- >little to nothing.
+ext4 does the same thing. In both cases you can specify the layout by
+hand, and sometimes you have to because not all block device layers pass
+the layout up: e.g. my layering of md->lvm->bcache->cryptsetup->fs loses
+the layout at (at least) the bcache level.
 
-So as I was trying to reassemble my Raid it crashed again. But this time 
-sdc vanished.
+What I did when I knew I had a reshape coming up (because I was buying
+another disk a few months after buying a machine, and reshaping onto it)
+was to create the original array with the filesystem told about the
+*intended final* shape, and verify after reshaping that everything was
+fine (as with alignment, you can check this with blktrace's btrace tool,
+doing stuff and seeing if most changes come a whole stripe at a time or
+if all are misaligned and cross stripes). That way the fs starts off
+less than optimal and improves after the reshape -- if you got
+everything right, which sometimes feels like tightrope-walking.
 
-I get the following output:
+For ext4, the mkfs options to look for are -E stride=and -E
+stripe-width=, usually used together. For XFS, the options to look for
+are sunit and swidth (and often agcount is useful too).
 
-[root@dirvish ~]# mdadm --stop /dev/md3
-mdadm: stopped /dev/md3
-[root@dirvish ~]# mdadm --assemble --force /dev/md3 /dev/sdc1 /dev/sdd1 
-/dev/sdf            1
-mdadm: forcing event count in /dev/sdc1(2) from 5995154 upto 5995162
-mdadm: clearing FAULTY flag for device 0 in /dev/md3 for /dev/sdc1
-mdadm: failed to add /dev/sdc1 to /dev/md3: Invalid argument
-mdadm: /dev/md3 assembled from 2 drives - not enough to start the array.
-
-and when I checked with fdisk sdc wasn't there anymore.
-
-[root@dirvish ~]# fdisk -l
-
-Disk /dev/sda: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1          13      104391   fd  Linux raid 
-autodetect
-/dev/sda2              14         535     4192965   fd  Linux raid 
-autodetect
-/dev/sda3             536       30401   239898645   fd  Linux raid 
-autodetect
-
-Disk /dev/sdb: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1   *           1          13      104391   fd  Linux raid 
-autodetect
-/dev/sdb2              14         535     4192965   fd  Linux raid 
-autodetect
-/dev/sdb3             536       30401   239898645   fd  Linux raid 
-autodetect
-
-Disk /dev/sdd: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1   *           1      243201  1953512001   fd  Linux raid 
-autodetect
-
-Disk /dev/sde: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sde1   *           1      243201  1953512001   fd  Linux raid 
-autodetect
-
-Disk /dev/sdf: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdf1               1      243201  1953512001   83  Linux
-
-...
-
-After a reboot of the system sdc was back again but vanished again after 
-I retried the assembly.
-
-Would the assembly also work with my 4th HDD, sde1 although in the mdadm 
---eaxmine it is labeld as spare?
-
-Greetings
-
-Christian
+-- 
+NULL && (void)
