@@ -1,93 +1,88 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Debian Squeeze raid 1 0
-Date: Wed, 15 Jan 2020 00:06:48 +0000
-Message-ID: <5E1E5798.60406@youngman.org.uk>
-References: <CAC4UdkbjUVSpkBM88HB0UJMqXh+Pd7CRLaya=s81xMGs-9+m_Q@mail.gmail.com>
- <5E1D6C8E.8030607@youngman.org.uk>
- <CAC4UdkbwYvPHgufBPjNTWzcZW0FcGgGrbmFD_k_mc-Z7NVH9Pw@mail.gmail.com>
+From: Marco Heiming <myx00r@gmail.com>
+Subject: Re: Raid 5 cannot be re-assembled after disk was removed
+Date: Wed, 15 Jan 2020 08:31:01 +0100
+Message-ID: <CAEWf3EA4rG_Xa-xvDNTMuQLQhOh1RuDaogttfAZ1_CWvBb0zfQ@mail.gmail.com>
+References: <CAEWf3EDf-CwMz660RjRAtL==fa-Xc2XVpbrJL_Xqw24ZTZ18Zg@mail.gmail.com>
+ <20200108122538.GB16146@metamorpher.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC4UdkbwYvPHgufBPjNTWzcZW0FcGgGrbmFD_k_mc-Z7NVH9Pw@mail.gmail.com>
+In-Reply-To: <20200108122538.GB16146@metamorpher.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rickard Svensson <myhex2020@gmail.com>, linux-raid@vger.kernel.org
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14/01/20 23:11, Rickard Svensson wrote:
-> Hi, I'm very grateful for all  help!
-> 
-> The Debian 6  mdadm version is:
-> mdadm - v3.1.4 - 31st August 2010
+Thank you so far Andreas.
 
-Mmmmm ... yes using the new mdadm is very much advisable ...
-> 
-> I have avoided doing much with the server...
-> And the server is still running, did not want to stop it...  But I
-> should stop it now?
+I was able to re-assemble the array with the defective disk (sdd in
+this case) and the old spare (sde).
+It was rebuilding over night and now it looks like this:
 
-Have you got an esata port? Can you hook up the replacement drive(s) to
-it? That sounds a good plan. You could use USB, but that's probably
-going to be a LOT slower.
+mdadm --detail -v /dev/md0
+/dev/md0:
+           Version : 1.2
+     Creation Time : Wed Jan  7 18:14:37 2015
+        Raid Level : raid5
+        Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
+     Used Dev Size : 2930135040 (2794.39 GiB 3000.46 GB)
+      Raid Devices : 4
+     Total Devices : 4
+       Persistence : Superblock is persistent
 
-I can understand not wanting to shut the server down.
-> 
-> Attaches  below a summary in the log, /sde died by the 9th, but came
-> back as /sdf  ???
-> And the 12th /sdc dies, and the morning after I discover the problem.
-> What I've done since then is only.
-> * Remont drive as read only
-> * Unmounted ext4, to run fsck
-> And that's when I realized it might be even worse.
-> 
-Well, so long as nothing has written to the drives, and you can recover
-a copy, then you should be okay ... cross fingers ...
-> 
-> My idea is to make a ddrescue copy of the problem disks, and then in a
-> new Debian 10 with new mdadm, try to start the raid on the new hd
-> copy..?
+     Intent Bitmap : Internal
 
-Yup
-> 
-> Yes, backing up via ddrescue sounds right.
-> BTW it is gddrescue?  ddrescue in Debian 10 seems to be a Windows
-> rescue program.
-> 
-Never heard of gddrescue. ddrescue is supposed to be a drop-in
-replacement for dd, just that it doesn't error out on read failures and
-has a large repertoire of tricks to try and get round errors if it can.
+       Update Time : Thu Jan  9 19:37:16 2020
+             State : clean
+    Active Devices : 4
+   Working Devices : 4
+    Failed Devices : 0
+     Spare Devices : 0
 
-> I'm change to raid 1 now on the server later on, I have two new 10Tb
-> drives, so not the same setup.
-> But I have a 6 Tb drive, which I intend to use for this rescue.
-> 
-> A question about the copy. is it possible to copy to a different
-> partition, for example copy sdc2 TO (new 6 TB disk) sdx1,  and then
-> sde2 TO (same new disk!) sdx2...
+  Layout : left-symmetric
+  Chunk Size : 512K
 
-Not a problem - raid (and linux in general) doesn't care about where the
-data is, it just expects to be given a block device. It'll just slow
-things down a bit. Hopefully with multiple heads per drive, not too
-much, but I don't know in detail how these things work.
+Consistency Policy : bitmap
 
-> And mdadm should (with same luck) be able to put it to the same md0 device.
-> Or I'm asking, a copy of a partition will be the same, from what mdadm
-> is looking for?
-> 
-Probably /dev/md126. At the end of the day, you shouldn't care. All you
-want to do is assemble the array, see what it gives you as the array
-device, and mount that. That should give your ext filesystem back. Run a
-"no modify" fsck over it, and if it looks pretty clean (there might be a
-little bit of corruption) try mounting it ro and looking it over for
-problems.
+              Name : NAS:0  (local to host NAS)
+              UUID : 7b0eee59:07f87155:bdad1d0e:6e3cbad6
+            Events : 280445
 
-When you move over to your 10TB drives (will that be a straight raid-1?)
-look at dm-integrity (warning - it's experimental with raid but seems
-solid for raid-1). And look at using named, not numbered, arrays. My
-raid 1's are called /dev/root, /dev/home, and /dev/var.
+    Number   Major   Minor   RaidDevice State
+       4       8       64        0      active sync   /dev/sde
+       1       8       16        1      active sync   /dev/sdb
+       3       8       32        2      active sync   /dev/sdc
+       0       8       48        3      active sync   /dev/sdd
 
-(Fixed number raid arrays are deprecated - it counts down from 126 by
-default now.)
+I was able to mount the array in read-only and it looks like the data
+is fine; i also ran a btrfs check in read-only mode and it found no
+errors.
+So far so good :)
 
-Cheers,
-Wol
+Although disk sdd is still reporting an increasing read error rate via SMART:
+smartctl -a /dev/sdd | grep "Raw_Read_Error_Rate"
+  1 Raw_Read_Error_Rate     0x002f   200   200   051    Pre-fail
+Always       -       764
+therefore i need to replace this disk in the next days.
+
+Thank you so far for your help.
+
+
+Am Mi., 8. Jan. 2020 um 13:25 Uhr schrieb Andreas Klauer
+<Andreas.Klauer@metamorpher.de>:
+>
+> On Wed, Jan 08, 2020 at 10:31:28AM +0100, Marco Heiming wrote:
+> >        0       8        0        -      spare   /dev/sda
+>
+> Your spare was /dev/sda
+>
+> > mdadm --examine /dev/sd[b-z]
+>
+> Here you deliberately examine sdb-z, so what happened to sda?
+>
+> You mentioned drive letters changed, but is it really not there anymore?
+>
+> If you don't know which drives you synced in the array then who does...?
+>
+> Regards
+> Andreas Klauer
