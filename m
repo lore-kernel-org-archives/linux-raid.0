@@ -1,46 +1,44 @@
-From: Blazej Kucman <blazej.kucman@intel.com>
-Subject: [PATCH] imsm: Update grow manual.
-Date: Thu, 16 Jan 2020 09:34:44 +0100
-Message-ID: <20200116083444.4971-1-blazej.kucman@intel.com>
+From: Rickard Svensson <myhex2020@gmail.com>
+Subject: Re: Debian Squeeze raid 1 0
+Date: Thu, 16 Jan 2020 11:41:30 +0100
+Message-ID: <CAC4UdkazYkOq=Bj4BzU=amnQZJvWcA6KtySr424BOWPABhnQGA@mail.gmail.com>
+References: <CAC4UdkbjUVSpkBM88HB0UJMqXh+Pd7CRLaya=s81xMGs-9+m_Q@mail.gmail.com>
+ <5E1D6C8E.8030607@youngman.org.uk> <CAC4UdkbwYvPHgufBPjNTWzcZW0FcGgGrbmFD_k_mc-Z7NVH9Pw@mail.gmail.com>
+ <5E1E5798.60406@youngman.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5E1E5798.60406@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Update --grow option description in manual, according to
-the supported grow operations by IMSM.
+Hi, thanks again :)
 
-Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
----
- mdadm.8.in | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+The server is shut down, will copy the two broken disks.
+I think (and hope) there has been a small amount of writing since the
+problems occurred.
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 6b63bb41..ca02a338 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -481,9 +481,7 @@ still be larger than any replacement.
- This value can be set with
- .B \-\-grow
- for RAID level 1/4/5/6 though
--.B CONTAINER
--based arrays such as those with IMSM metadata may not be able to
--support this.
-+DDF arrays may not be able to support this.
- If the array was created with a size smaller than the currently
- active drives, the extra space can be accessed using
- .BR \-\-grow .
-@@ -2759,9 +2757,7 @@ container format.  The number of devices in a container can be
- increased - which affects all arrays in the container - or an array
- in a container can be converted between levels where those levels are
- supported by the container, and the conversion is on of those listed
--above.  Resizing arrays in an IMSM container with
--.B "--grow --size"
--is not yet supported.
-+above.
- 
- .PP
- Notes:
--- 
-2.16.4
+Unexpected problem with the names of ddrescue, but the apt-get package
+in Debian called gddrescue, the program is called ddrescue.
+I became uncertain because you mention that it works like dd, but it
+doesn't use  if=foo of=bar  like regular dd?
+Anyway the program  ddrescue --help  refers to the homepage
+http://www.gnu.org/software/ddrescue/ddrescue.html  which I assume is
+right one..?
+And there are a lot of options, any tips on some special ones I should use?
+
+I also wonder if it is right to let mdadm try to recover from all four
+disks, the first one to stop working where three days before I
+discovered it.
+Isn't it better to just use three disks, the two disks that are ok,
+and the last disk that got too many write errors the night before I
+discovered everything?
+
+Otherwise, you have confirmed/clarified that everything seems to work
+the way I hoped.
+And I will read up on all the news in mdadm, and dm-integrity sounds
+interesting. Thanks!
+
+Cheers Rickard
