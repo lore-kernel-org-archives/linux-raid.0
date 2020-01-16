@@ -1,44 +1,27 @@
-From: Rickard Svensson <myhex2020@gmail.com>
-Subject: Re: Debian Squeeze raid 1 0
-Date: Thu, 16 Jan 2020 11:41:30 +0100
-Message-ID: <CAC4UdkazYkOq=Bj4BzU=amnQZJvWcA6KtySr424BOWPABhnQGA@mail.gmail.com>
-References: <CAC4UdkbjUVSpkBM88HB0UJMqXh+Pd7CRLaya=s81xMGs-9+m_Q@mail.gmail.com>
- <5E1D6C8E.8030607@youngman.org.uk> <CAC4UdkbwYvPHgufBPjNTWzcZW0FcGgGrbmFD_k_mc-Z7NVH9Pw@mail.gmail.com>
- <5E1E5798.60406@youngman.org.uk>
+From: Jes Sorensen <jes@trained-monkey.org>
+Subject: Re: [mdadm PATCH 1/1] mdcheck service can't start succesfully because
+ of syntax error
+Date: Thu, 16 Jan 2020 13:52:38 -0500
+Message-ID: <a8e72def-0cfa-9574-2709-c6189e1fbcc8@trained-monkey.org>
+References: <1576651581-5135-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5E1E5798.60406@youngman.org.uk>
+In-Reply-To: <1576651581-5135-1-git-send-email-xni@redhat.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
+To: Xiao Ni <xni@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, thanks again :)
+On 12/18/19 1:46 AM, Xiao Ni wrote:
+> It reports error when starting mdcheck_start and mdcheck_continue service.
+> Invalid environment assignment, ignoring: MDADM_CHECK_DURATION="6 hours"
+> 
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 
-The server is shut down, will copy the two broken disks.
-I think (and hope) there has been a small amount of writing since the
-problems occurred.
+Applied!
 
-Unexpected problem with the names of ddrescue, but the apt-get package
-in Debian called gddrescue, the program is called ddrescue.
-I became uncertain because you mention that it works like dd, but it
-doesn't use  if=foo of=bar  like regular dd?
-Anyway the program  ddrescue --help  refers to the homepage
-http://www.gnu.org/software/ddrescue/ddrescue.html  which I assume is
-right one..?
-And there are a lot of options, any tips on some special ones I should use?
-
-I also wonder if it is right to let mdadm try to recover from all four
-disks, the first one to stop working where three days before I
-discovered it.
-Isn't it better to just use three disks, the two disks that are ok,
-and the last disk that got too many write errors the night before I
-discovered everything?
-
-Otherwise, you have confirmed/clarified that everything seems to work
-the way I hoped.
-And I will read up on all the news in mdadm, and dm-integrity sounds
-interesting. Thanks!
-
-Cheers Rickard
+Thanks,
+Jes
