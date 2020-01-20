@@ -1,50 +1,73 @@
-From: "Prof, William Roberts" <eco.bank1204@gmail.com>
-Subject: Contact Diplomatic Agent, Mr. Mcclaine John to receive your ATM CARD
- valued the sum of $12.8Million United States Dollars
-Date: Mon, 20 Jan 2020 20:32:40 +0100
-Message-ID: <CAOE+jABpcHQWZWhtskhDFbtTqfBe7h065WE2kC1G+jQD+tQiTA__33230.7652848371$1579548767$gmane$org@mail.gmail.com>
-Reply-To: mcclainejohn.13@gmail.com
+From: "Andrey ``Bass'' Shcheglov" <andrewbass@gmail.com>
+Subject: Re: Repairing a RAID1 with non-zero mismatch_cnt
+Date: Tue, 21 Jan 2020 01:30:41 +0300
+Message-ID: <CADSg1Jj3XmD_RmSedn3AT9uCXbHQGa6ATBK1UP33onS8Vi=60g@mail.gmail.com>
+References: <CADSg1Jh1i+OPq0_hWOvHxK0xroUbn_w0_ZjxjwcnrbSsBXGY5A@mail.gmail.com>
+ <5E25876A.1030004@youngman.org.uk>
+Reply-To: andrewbass@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5E25876A.1030004@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Attn: Dear Beneficiary,
+Many thanks for your response, Wol.
 
-I wish to inform you that the diplomatic agent conveying your ATM CARD
-valued the sum of $12.8Million United States Dollars has misplaced
-your address and he is currently stranded at (George Bush
-International Airport) Houston Texas USA now
-We required you to reconfirm the following information's below to him
-so that he can deliver your Payment CARD to you today or tomorrow
-morning as information provided with open communications via email and
-telephone for security reasons.
-HERE IS THE DETAILS  HE NEED FROM YOU URGENT
-YOUR FULL NAME:========
-ADDRESS:========
-MOBILE NO:========
-NAME OF YOUR NEAREST AIRPORT:========
-A COPY OF YOUR IDENTIFICATION :========
+On Mon, 20 Jan 2020 at 13:56, Wols Lists <antlists@youngman.org.uk> wrote:
+>
+> > The question is: is it possible to assemble an array in a read-only mode,
+> > so that the underlying block device is never written to,
+> > the metadata in the superblock remains intact and the event count is
+> > not incremented?
+> >
+> > My intention is to avoid the resync when my original /dev/md0 is
+> > reassembled from /dev/sda1 and /dev/sdb1.
+> >
+> Then how (assuming one drive is corrupt) are you going to re-assemble
+> the array without forcing a resync on that drive?
 
-Note; do contact the diplomatic agent immediately through the
-information's listed below
-Contact Person: Diplomatic Agent, Mr. Mcclaine John
-EMAIL: mcclainejohn.13@gmail.com
-Tel:(223) 777-7518
+Well, of course I will resync eventually, but
 
-Contact the diplomatic agent immediately
-because he is waiting to hear from you today with the needed information's.
+1. My original intention was to find the files residing on top of
+corrupted blocks and then restore (rewrite) them using the data
+recovered from the intact replica.
+2. From my experience, an MD array may start re-syncing automatically
+at system boot, and this is what I'd rather avoid -- I want to proceed
+through all the steps manually, fully understanding what I is being
+done.
 
-NOTE: The Diplomatic agent does not know that the content of the
-consignment box is $12.800,000,00 Million United States Dollars and on
-no circumstances should you let him know the content. The consignment
-was moved from here as family treasures, so never allow him to open
-the box. Please I have paid delivery fees for you but the only money
-you must send to Mcclaine John is your ATM CARD delivery fee $25.00
-only. text Him as you contact Him Immediately
+> >
+> > If you have any other recommendations on how to interactively repair
+> > the array (I want to be able to peek at the data being synced),
+> > I'd appreciate you sharing them.
+> >
+> My inclination (no warranty included!) would be to shut down the array,
+> then assemble it with "/dev/sda1 missing" and --force if necessary. fsck
+> that, then rinse and repeat with the second drive.
+>
+> Assuming neither drive has problems, you should then be able to assemble
+> --assume-clean, which will prevent the sync, otherwise you'll have to
+> just re-add the duff drive and let it resync.
+>
+> (In other words, why worry about the resync, because if you find the
+> problem then you're going to have to resync to fix it, anyway.)
 
-Thanks,
-with Regards.
-Prof, William Roberts
-Director DHL COURIER SERVICES-Benin
+Thanks, will try that.
+
+Does it make any sense to backup the superblocks of the replicas (e.
+g.: using `dd`)?
+And if so, then what precautions should be made before restoring the
+superblock from a backup?
+
+> Hint - look at dm-integrity. I believe you can put the integrity
+> information elsewhere (if you've got a spare bit of disk space) so this
+> issue won't arise again. It's new with raid, but apparently works fine
+> with raid-1. Don't try it with the higher raids - 5 or 6 - yet.
+
+Thanks, I'll give it a try.
+
+Regards,
+Andrey.
