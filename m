@@ -1,42 +1,33 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Two raid5 arrays are inactive and have changed UUIDs
-Date: Fri, 24 Jan 2020 14:10:00 +0000
-Message-ID: <87y2txvtc7.fsf@esperi.org.uk>
-References: <CALc6PW4OKR2KVFgzoEbRJ0TRwvqi5EZAdC__HOx+vJKMT0TXYQ@mail.gmail.com>
-        <959ca414-0c97-2e8d-7715-a7cb75790fcd@youngman.org.uk>
-        <CALc6PW7276uYYWpL7j2xsFJRy3ayZeeSJ9kNCGHvB6Ndb6m1-Q@mail.gmail.com>
-        <5E17D999.5010309@youngman.org.uk>
-        <CALc6PW5DrTkVR7rLngDcJ5i8kTpqfT1-K+ki-WjnXAYP5TXXZg@mail.gmail.com>
-        <CALc6PW7hwT9VDNyA8wfMzjMoUFmrFV5z=Ve+qvR-P7CPstegvw@mail.gmail.com>
-        <5E1DDCFC.1080105@youngman.org.uk>
-        <CALc6PW5Y-SvUZ5HOWZLk2YcggepUwK0N===G=42uMR88pDfAVA@mail.gmail.com>
-        <5E1FA3E6.2070303@youngman.org.uk>
-        <CALc6PW4-yMdprmube0bKku0FJVKghYt4tjhep26sy3F9Q5cB4g@mail.gmail.com>
-        <5E2494B3.9010006@youngman.org.uk>
-        <CALc6PW6r8jn7nJcq-ceTboRkP5TYj0863bo856SS3TAus0mTSA@mail.gmail.com>
-        <917bd12e-3b76-2f27-8340-686dd71b1408@youngman.org.uk>
+From: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
+Subject: [PATCH 0/2] Enable polling on stackable devices
+Date: Sat, 25 Jan 2020 21:41:36 -0700
+Message-ID: <20200126044138.5066-1-andrzej.jakowski@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <917bd12e-3b76-2f27-8340-686dd71b1408@youngman.org.uk> (Wol's
-        lists's message of "Sun, 19 Jan 2020 21:10:40 +0000")
-Sender: linux-raid-owner@vger.kernel.org
-To: Wol's lists <antlists@youngman.org.uk>
-Cc: William Morgan <therealbrewer@gmail.com>, linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: axboe@kernel.dk, song@kernel.org
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
 List-Id: linux-raid.ids
 
-On 19 Jan 2020, Wol's lists verbalised:
-> It would be nice if we had some decent docu on what all these assorted id's and uuid's and all that were, but I haven't managed to
-> find any. Probably somewhere in the info pages for grub - given that I really don't like hypertext the fact that grub docu is very
-> much hypertext is rather off-putting ...
+IO polling is available on blk-mq devices. Currently it is not possible to
+perform IO polling on stackable devices like MD. 
 
-It's just perfectly ordinary Texinfo. There are lots of non-hypertext
-output formats, e.g. plain text:
-<https://www.gnu.org/software/grub/manual/grub/grub.txt.gz> or DVI:
-<https://www.gnu.org/software/grub/manual/grub/grub.dvi.gz>. (Though the
-DVI, like the PDF, contains specials that can implement hyperlinks if
-your viewer can render them, I'm fairly sure the plain text version
-doesn't.)
+We have built a prototype exposing new function for bio devices to do IO
+polling on them. That function is in available on request_queue so bio based
+drivers can provide handler for it. 
+
+IO polling has been provided for RAID-0 level for MD.
+
+Andrzej Jakowski (2):
+  block: introduce polling on bio level
+  md: enable io polling
+
+ block/blk-core.c       |  3 ++-
+ block/blk-mq.c         | 26 ++++++++++++++++++++++++++
+ drivers/md/md.c        | 39 +++++++++++++++++++++++++++++++++++----
+ include/linux/blkdev.h |  2 ++
+ 4 files changed, 65 insertions(+), 5 deletions(-)
 
 -- 
-NULL && (void)
+2.20.1
