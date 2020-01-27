@@ -1,98 +1,72 @@
-From: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
-Subject: [PATCH 2/2] md: enable io polling
-Date: Sat, 25 Jan 2020 21:41:38 -0700
-Message-ID: <20200126044138.5066-3-andrzej.jakowski@linux.intel.com>
-References: <20200126044138.5066-1-andrzej.jakowski@linux.intel.com>
+From: Georgi Nikolov <gnikolov@icdsoft.com>
+Subject: Pausing md check hangs
+Date: Mon, 27 Jan 2020 11:52:03 +0200
+Message-ID: <01ea67c2-244c-0427-0be7-c565fac97092@icdsoft.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20200126044138.5066-1-andrzej.jakowski@linux.intel.com>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk, song@kernel.org
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@linux.intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Provide a callback for polling the mddev which in turn polls the active
-member devices. Activate it only if all members support polling.
+Hi,
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Signed-off-by: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
----
- drivers/md/md.c | 39 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 35 insertions(+), 4 deletions(-)
+I posted a kernel bug about this a month ago but it did not receive any 
+attention: https://bugzilla.kernel.org/show_bug.cgi?id=205929
+Here is a copy of the bug report and I hope that this is the correct 
+place to discuss this:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4e7c9f398bc6..95173cd4f8fd 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5421,6 +5421,27 @@ int mddev_init_writes_pending(struct mddev *mddev)
- }
- EXPORT_SYMBOL_GPL(mddev_init_writes_pending);
- 
-+static int md_poll(struct request_queue *q, blk_qc_t cookie)
-+{
-+	struct mddev *mddev = q->queuedata;
-+	struct md_rdev *rdev;
-+	int ret = 0;
-+	int rv;
-+
-+	rdev_for_each(rdev, mddev) {
-+		if (rdev->raid_disk >= 0 && !test_bit(Faulty, &rdev->flags)) {
-+			rv = blk_poll(bdev_get_queue(rdev->bdev), cookie, false);
-+			if (rv < 0) {
-+				ret = rv;
-+				break;
-+			}
-+			ret += rv;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
- static int md_alloc(dev_t dev, char *name)
- {
- 	/*
-@@ -5485,6 +5506,7 @@ static int md_alloc(dev_t dev, char *name)
- 
- 	blk_queue_make_request(mddev->queue, md_make_request);
- 	blk_set_stacking_limits(&mddev->queue->limits);
-+	mddev->queue->bio_poll_fn = md_poll;
- 
- 	disk = alloc_disk(1 << shift);
- 	if (!disk) {
-@@ -5789,12 +5811,17 @@ int md_run(struct mddev *mddev)
- 
- 	if (mddev->queue) {
- 		bool nonrot = true;
-+		bool poll = true;
- 
- 		rdev_for_each(rdev, mddev) {
--			if (rdev->raid_disk >= 0 &&
--			    !blk_queue_nonrot(bdev_get_queue(rdev->bdev))) {
--				nonrot = false;
--				break;
-+			if (rdev->raid_disk >= 0) {
-+				struct request_queue *q;
-+
-+				q = bdev_get_queue(rdev->bdev);
-+				if (!blk_queue_nonrot(q))
-+					nonrot = false;
-+				if (!test_bit(QUEUE_FLAG_POLL, &q->queue_flags))
-+					poll = false;
- 			}
- 		}
- 		if (mddev->degraded)
-@@ -5803,6 +5830,10 @@ int md_run(struct mddev *mddev)
- 			blk_queue_flag_set(QUEUE_FLAG_NONROT, mddev->queue);
- 		else
- 			blk_queue_flag_clear(QUEUE_FLAG_NONROT, mddev->queue);
-+		if (poll)
-+			blk_queue_flag_set(QUEUE_FLAG_POLL, mddev->queue);
-+		else
-+			blk_queue_flag_clear(QUEUE_FLAG_POLL, mddev->queue);
- 		mddev->queue->backing_dev_info->congested_data = mddev;
- 		mddev->queue->backing_dev_info->congested_fn = md_congested;
- 	}
--- 
-2.20.1
+I have a Supermicro server with 10 md raid6 arrays each consisting of 8 SATA drives. SATA drives are Hitachi/HGST Ultrastar 7K4000 8T.
+When i try to pause array check with "echo idle > "/sys/block/<md_dev>/md/sync_action" it randomly hangs at different md device.
+Process "mdX_raid6" is at 100% cpu usage. cat /sys/block/mdX/md/journal_mode hungs forever.
+
+Here is the state at the moment of crash for one of the md devices:
+
+root@supermicro:/sys/block/mdX/md# find -mindepth 1 -maxdepth 1 -type f|sort|grep -v journal_mode|xargs -r egrep .
+./array_size:default
+./array_state:write-pending
+grep: ./bitmap_set_bits: Permission denied
+./chunk_size:524288
+./component_size:7813895168
+./consistency_policy:resync
+./degraded:0
+./group_thread_cnt:4
+./last_sync_action:check
+./layout:2
+./level:raid6
+./max_read_errors:20
+./metadata_version:1.2
+./mismatch_cnt:0
+grep: ./new_dev: Permission denied
+./preread_bypass_threshold:1
+./raid_disks:8
+./reshape_direction:forwards
+./reshape_position:none
+./resync_start:none
+./rmw_level:1
+./safe_mode_delay:0.204
+./skip_copy:0
+./stripe_cache_active:13173
+./stripe_cache_size:8192
+./suspend_hi:0
+./suspend_lo:0
+./sync_action:check
+./sync_completed:3566405120 / 15627790336
+./sync_force_parallel:0
+./sync_max:max
+./sync_min:1821385984
+./sync_speed:126
+./sync_speed_max:1000 (local)
+./sync_speed_min:1000 (system)
+
+root@supermicro:~# cat /proc/mdstat
+Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4] [raid10]
+md4 : active raid6 sdaa[2] sdab[3] sdy[0] sdae[6] sdac[4] sdad[5] sdaf[7] sdz[1]
+       46883371008 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
+       [====>................]  check = 22.8% (1784112640/7813895168) finish=20571.7min speed=4884K/sec
+
+
+Regards,
+Georgi Nikolov
