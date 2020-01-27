@@ -1,14 +1,15 @@
 From: Georgi Nikolov <gnikolov@icdsoft.com>
 Subject: Pausing md check hangs
-Date: Mon, 27 Jan 2020 11:52:03 +0200
-Message-ID: <01ea67c2-244c-0427-0be7-c565fac97092@icdsoft.com>
+Date: Mon, 27 Jan 2020 15:42:48 +0200
+Message-ID: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: shli@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
@@ -18,13 +19,18 @@ attention: https://bugzilla.kernel.org/show_bug.cgi?id=205929
 Here is a copy of the bug report and I hope that this is the correct 
 place to discuss this:
 
-I have a Supermicro server with 10 md raid6 arrays each consisting of 8 SATA drives. SATA drives are Hitachi/HGST Ultrastar 7K4000 8T.
-When i try to pause array check with "echo idle > "/sys/block/<md_dev>/md/sync_action" it randomly hangs at different md device.
-Process "mdX_raid6" is at 100% cpu usage. cat /sys/block/mdX/md/journal_mode hungs forever.
+I have a Supermicro server with 10 md raid6 arrays each consisting of 8 
+SATA drives. SATA drives are Hitachi/HGST Ultrastar 7K4000 8T.
+When i try to pause array check with "echo idle > 
+"/sys/block/<md_dev>/md/sync_action" it randomly hangs at different md 
+device.
+Process "mdX_raid6" is at 100% cpu usage. cat 
+/sys/block/mdX/md/journal_mode hungs forever.
 
 Here is the state at the moment of crash for one of the md devices:
 
-root@supermicro:/sys/block/mdX/md# find -mindepth 1 -maxdepth 1 -type f|sort|grep -v journal_mode|xargs -r egrep .
+root@supermicro:/sys/block/mdX/md# find -mindepth 1 -maxdepth 1 -type 
+f|sort|grep -v journal_mode|xargs -r egrep .
 ./array_size:default
 ./array_state:write-pending
 grep: ./bitmap_set_bits: Permission denied
@@ -62,10 +68,14 @@ grep: ./new_dev: Permission denied
 ./sync_speed_min:1000 (system)
 
 root@supermicro:~# cat /proc/mdstat
-Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4] [raid10]
-md4 : active raid6 sdaa[2] sdab[3] sdy[0] sdae[6] sdac[4] sdad[5] sdaf[7] sdz[1]
-       46883371008 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
-       [====>................]  check = 22.8% (1784112640/7813895168) finish=20571.7min speed=4884K/sec
+Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] 
+[raid4] [raid10]
+md4 : active raid6 sdaa[2] sdab[3] sdy[0] sdae[6] sdac[4] sdad[5] 
+sdaf[7] sdz[1]
+       46883371008 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[8/8] [UUUUUUUU]
+       [====>................]  check = 22.8% (1784112640/7813895168) 
+finish=20571.7min speed=4884K/sec
 
 
 Regards,
