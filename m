@@ -1,84 +1,191 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH] md/raid1: release pending accounting for an I/O only
- after write-behind is also finished
-Date: Tue, 28 Jan 2020 11:08:23 -0800
-Message-ID: <CAPhsuW7XJzdWxkLDbRG9VS3BJB6qaAoEC_sDOtMRaw1ZvMj1dw@mail.gmail.com>
-References: <20200127152619.GA3596@redhat> <CAPhsuW628WHm_Rifm9uMPeH+mwmeH121p85KbgvLt+SQTngW4A@mail.gmail.com>
- <CA+-xHTGJr5M9Ge1MCPPZWueM56Ap5=qcsG0KkddBMJOCAOWWpw@mail.gmail.com>
+From: Rickard Svensson <myhex2020@gmail.com>
+Subject: Re: Debian Squeeze raid 1 0
+Date: Tue, 28 Jan 2020 22:57:00 +0100
+Message-ID: <CAC4UdkZkjGOhHK1LCNKn9pwQCq-bfcixJkjMWAZs0t-RU-hyug@mail.gmail.com>
+References: <CAC4UdkbjUVSpkBM88HB0UJMqXh+Pd7CRLaya=s81xMGs-9+m_Q@mail.gmail.com>
+ <5E1D6C8E.8030607@youngman.org.uk> <CAC4UdkbwYvPHgufBPjNTWzcZW0FcGgGrbmFD_k_mc-Z7NVH9Pw@mail.gmail.com>
+ <5E1E5798.60406@youngman.org.uk> <CAC4UdkazYkOq=Bj4BzU=amnQZJvWcA6KtySr424BOWPABhnQGA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+-xHTGJr5M9Ge1MCPPZWueM56Ap5=qcsG0KkddBMJOCAOWWpw@mail.gmail.com>
+In-Reply-To: <CAC4UdkazYkOq=Bj4BzU=amnQZJvWcA6KtySr424BOWPABhnQGA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Jeffery <djeffery@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 27, 2020 at 11:56 AM David Jeffery <djeffery@redhat.com> wrote:
+Hi again Wol and more :)
+
+Now I have succeeded, I hope.
+This has taken some time, and the disk that was broken I had to make
+different attempts with ddrescue.
+
+I have only copied 3 of the 4 disks, not the one who got the wrong
+three days before.
+Because I assumed it contained old data.
+Or am I think wrong, Is it better to add it to?
+
+Otherwise, I guess I need to start the raid, or something.
+Do I need a --forece maybe. I just don't want to do anything wrong
+after all this :)
+
+
+Debian 10   --  mdadm - v4.1 - 2018-10-01
+
+# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : inactive sda1[2](S) sdb1[0](S) sdb2[1](S)
+      8761499679 blocks super 1.2
+unused devices: <none>
+
+
+# mdadm --detail /dev/md0
+/dev/md0:
+           Version : 1.2
+        Raid Level : raid0
+     Total Devices : 3
+       Persistence : Superblock is persistent
+
+             State : inactive
+   Working Devices : 3
+
+              Name : ttserv:0
+              UUID : cb5bfe7a:3806324c:3c1e7030:e6267102
+            Events : 2719
+
+    Number   Major   Minor   RaidDevice
+
+       -       8        1        -        /dev/sda1
+       -       8       18        -        /dev/sdb2
+       -       8       17        -        /dev/sdb1
+
+
+# mdadm --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : cb5bfe7a:3806324c:3c1e7030:e6267102
+           Name : ttserv:0
+  Creation Time : Tue Oct  9 23:30:23 2012
+     Raid Level : raid10
+   Raid Devices : 4
+
+ Avail Dev Size : 5840999786 (2785.21 GiB 2990.59 GB)
+     Array Size : 5840999424 (5570.41 GiB 5981.18 GB)
+  Used Dev Size : 5840999424 (2785.21 GiB 2990.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=20538368 sectors
+          State : active
+    Device UUID : 23079ae3:c67969c2:13299e27:8ca3cf7f
+
+    Update Time : Sun Jan 12 00:11:05 2020
+       Checksum : ed375eb5 - correct
+         Events : 2719
+
+         Layout : near=2
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAA. ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+# mdadm --examine /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : cb5bfe7a:3806324c:3c1e7030:e6267102
+           Name : ttserv:0
+  Creation Time : Tue Oct  9 23:30:23 2012
+     Raid Level : raid10
+   Raid Devices : 4
+
+ Avail Dev Size : 5840999786 (2785.21 GiB 2990.59 GB)
+     Array Size : 5840999424 (5570.41 GiB 5981.18 GB)
+  Used Dev Size : 5840999424 (2785.21 GiB 2990.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=19520512 sectors
+          State : clean
+    Device UUID : f474ad64:6bb236d3:9f69f55c:eb9b8c27
+
+    Update Time : Tue Jan 14 22:49:49 2020
+       Checksum : 5c312015 - correct
+         Events : 2864
+
+         Layout : near=2
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AA.. ('A' == active, '.' == missing, 'R' == replacing)
+
+
+# mdadm --examine /dev/sdb2
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : cb5bfe7a:3806324c:3c1e7030:e6267102
+           Name : ttserv:0
+  Creation Time : Tue Oct  9 23:30:23 2012
+     Raid Level : raid10
+   Raid Devices : 4
+
+ Avail Dev Size : 5840999786 (2785.21 GiB 2990.59 GB)
+     Array Size : 5840999424 (5570.41 GiB 5981.18 GB)
+  Used Dev Size : 5840999424 (2785.21 GiB 2990.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=19519631 sectors
+          State : clean
+    Device UUID : 1a67153d:8d15019a:349926d5:e22dd321
+
+    Update Time : Tue Jan 14 22:49:49 2020
+       Checksum : 6ddb36ea - correct
+         Events : 2864
+
+         Layout : near=2
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AA.. ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+Cheers Rickard
+
+
+Den tors 16 jan. 2020 kl 11:41 skrev Rickard Svensson <myhex2020@gmail.com>:
 >
-> On Mon, Jan 27, 2020 at 12:29 PM Song Liu <song@kernel.org> wrote:
-> >
-> > On Mon, Jan 27, 2020 at 7:26 AM David Jeffery <djeffery@redhat.com> wrote:
-> > >
-> > > When using RAID1 and write-behind, md can deadlock when errors occur. With
-> > > write-behind, r1bio structs can be accounted by raid1 as queued but not
-> > > counted as pending. The pending count is dropped when the original bio is
-> > > returned complete but write-behind for the r1bio may still be active.
-> > >
-> > > This breaks the accounting used in some conditions to know when the raid1
-> > > md device has reached an idle state. It can result in calls to
-> > > freeze_array deadlocking. freeze_array will never complete from a negative
-> > > "unqueued" value being calculated due to a queued count larger than the
-> > > pending count.
-> > >
-> > > To properly account for write-behind, move the call to allow_barrier from
-> > > call_bio_endio to raid_end_bio_io. When using write-behind, md can call
-> > > call_bio_endio before all write-behind I/O is complete. Using
-> > > raid_end_bio_io for the point to call allow_barrier will release the
-> > > pending count at a point where all I/O for an r1bio, even write-behind, is
-> > > done.
-> > >
-> > > Signed-off-by: David Jeffery <djeffery@redhat.com>
-> > > ---
-> > >
-> > >  raid1.c |   13 +++++++------
-> > >  1 file changed, 7 insertions(+), 6 deletions(-)
-> > >
-> > >
-> > > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > > index 201fd8aec59a..0196a9d9f7e9 100644
-> > > --- a/drivers/md/raid1.c
-> > > +++ b/drivers/md/raid1.c
-> > > @@ -279,22 +279,17 @@ static void reschedule_retry(struct r1bio *r1_bio)
-> > >  static void call_bio_endio(struct r1bio *r1_bio)
-> > >  {
-> > >         struct bio *bio = r1_bio->master_bio;
-> > > -       struct r1conf *conf = r1_bio->mddev->private;
-> > >
-> > >         if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
-> > >                 bio->bi_status = BLK_STS_IOERR;
-> > >
-> > >         bio_endio(bio);
-> > > -       /*
-> > > -        * Wake up any possible resync thread that waits for the device
-> > > -        * to go idle.
-> > > -        */
-> > > -       allow_barrier(conf, r1_bio->sector);
-> >
-> > raid1_end_write_request() also calls call_bio_endio(). Do we need to fix
-> > that?
+> Hi, thanks again :)
 >
-> This basically is the problem the patch is fixing.  We don't want
-> allow_barrier() being called when call_bio_endio() is called directly
-> from raid1_end_write_request().  Write-behind can still be active here
-> so it was dropping the pending accounting too early.  We only want it
-> called when all I/O for the r1bio is complete, which shifting the
-> allow_barrier() call to raid_end_bio_io() does.
-
-Thanks for the explanation. This looks good to me. I will process it
-after the merge window.
-
-I will also re-evaluate whether we need it for stable.
-
-Thanks again,
-Song
+> The server is shut down, will copy the two broken disks.
+> I think (and hope) there has been a small amount of writing since the
+> problems occurred.
+>
+> Unexpected problem with the names of ddrescue, but the apt-get package
+> in Debian called gddrescue, the program is called ddrescue.
+> I became uncertain because you mention that it works like dd, but it
+> doesn't use  if=foo of=bar  like regular dd?
+> Anyway the program  ddrescue --help  refers to the homepage
+> http://www.gnu.org/software/ddrescue/ddrescue.html  which I assume is
+> right one..?
+> And there are a lot of options, any tips on some special ones I should use?
+>
+> I also wonder if it is right to let mdadm try to recover from all four
+> disks, the first one to stop working where three days before I
+> discovered it.
+> Isn't it better to just use three disks, the two disks that are ok,
+> and the last disk that got too many write errors the night before I
+> discovered everything?
+>
+> Otherwise, you have confirmed/clarified that everything seems to work
+> the way I hoped.
+> And I will read up on all the news in mdadm, and dm-integrity sounds
+> interesting. Thanks!
+>
+> Cheers Rickard
