@@ -1,94 +1,147 @@
-From: Georgi Nikolov <gnikolov@icdsoft.com>
-Subject: Re: Pausing md check hangs
-Date: Tue, 28 Jan 2020 10:11:21 +0200
-Message-ID: <ac3ae81d-8dad-8b4e-bc61-fc37514e3929@icdsoft.com>
-References: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
- <CAPhsuW4Jc-qef9uW-JSut90qOpDc_4VoAFpMU8KwqnK7EeT_xg@mail.gmail.com>
+From: Naresh Kamboju <naresh.kamboju@linaro.org>
+Subject: Re: [PATCH v4 3/5] bitmap: Add bitmap_alloc(), bitmap_zalloc() and bitmap_free()
+Date: Tue, 28 Jan 2020 17:08:27 +0530
+Message-ID: <CA+G9fYs3GPid5fcHEWp2i9NKR1hQGc5h0zKaUK5xr1RGJ83xLg@mail.gmail.com>
+References: <20180630201750.2588-1-andriy.shevchenko@linux.intel.com> <20180630201750.2588-4-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW4Jc-qef9uW-JSut90qOpDc_4VoAFpMU8KwqnK7EeT_xg@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-input-owner@vger.kernel.org>
+In-Reply-To: <20180630201750.2588-4-andriy.shevchenko@linux.intel.com>
+Sender: linux-input-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-input@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yury Norov <ynorov@caviumnetworks.com>, open list <linux-kernel@vger.kernel.org>, mika.westerberg@linux.intel.com, Joe Perches <joe@perches.com>, linux- stable <stable@vger.kernel.org>, lkft-triage@lists.linaro.org
 List-Id: linux-raid.ids
 
-Yes the kernel is 4.19.67-2+deb10u2. I have tried with 5.4.8-1~bpo10+1 
-and same thing happened.
-Before this i have used same thing for a long time with kernel 4.9.189-3.
-It happens most often when there is some heavy IO.
+On Sun, 1 Jul 2018 at 01:49, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+>
+> A lot of code become ugly because of open coding allocations for bitmaps.
+>
+> Introduce three helpers to allow users be more clear of intention
+> and keep their code neat.
+>
+> Note, due to multiple circular dependencies we may not provide
+> the helpers as inliners. For now we keep them exported and, perhaps,
+> at some point in the future we will sort out header inclusion and
+> inheritance.
+>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  include/linux/bitmap.h |  8 ++++++++
+>  lib/bitmap.c           | 19 +++++++++++++++++++
+>  2 files changed, 27 insertions(+)
+>
+> diff --git a/include/linux/bitmap.h b/include/linux/bitmap.h
+> index 1ee46f492267..acf5e8df3504 100644
+> --- a/include/linux/bitmap.h
+> +++ b/include/linux/bitmap.h
+> @@ -104,6 +104,14 @@
+>   * contain all bit positions from 0 to 'bits' - 1.
+>   */
+>
+> +/*
+> + * Allocation and deallocation of bitmap.
+> + * Provided in lib/bitmap.c to avoid circular dependency.
+> + */
+> +extern unsigned long *bitmap_alloc(unsigned int nbits, gfp_t flags);
+> +extern unsigned long *bitmap_zalloc(unsigned int nbits, gfp_t flags);
+> +extern void bitmap_free(const unsigned long *bitmap);
+> +
+>  /*
+>   * lib/bitmap.c provides these functions:
+>   */
+> diff --git a/lib/bitmap.c b/lib/bitmap.c
+> index 33e95cd359a2..09acf2fd6a35 100644
+> --- a/lib/bitmap.c
+> +++ b/lib/bitmap.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/bitops.h>
+>  #include <linux/bug.h>
+>  #include <linux/kernel.h>
+> +#include <linux/slab.h>
+>  #include <linux/string.h>
+>  #include <linux/uaccess.h>
+>
+> @@ -1125,6 +1126,24 @@ void bitmap_copy_le(unsigned long *dst, const unsigned long *src, unsigned int n
+>  EXPORT_SYMBOL(bitmap_copy_le);
+>  #endif
+>
+> +unsigned long *bitmap_alloc(unsigned int nbits, gfp_t flags)
+> +{
+> +       return kmalloc_array(BITS_TO_LONGS(nbits), sizeof(unsigned long), flags);
+> +}
+> +EXPORT_SYMBOL(bitmap_alloc);
+> +
+> +unsigned long *bitmap_zalloc(unsigned int nbits, gfp_t flags)
+> +{
+> +       return bitmap_alloc(nbits, flags | __GFP_ZERO);
+> +}
+> +EXPORT_SYMBOL(bitmap_zalloc);
+> +
+> +void bitmap_free(const unsigned long *bitmap)
+> +{
+> +       kfree(bitmap);
+> +}
+> +EXPORT_SYMBOL(bitmap_free);
+> +
+>  #if BITS_PER_LONG == 64
+>  /**
+>   * bitmap_from_arr32 - copy the contents of u32 array of bits to bitmap
 
-Georgi Nikolov
-> On Mon, Jan 27, 2020 at 5:44 AM Georgi Nikolov <gnikolov@icdsoft.com> wrote:
->> Hi,
->>
->> I posted a kernel bug about this a month ago but it did not receive any
->> attention: https://bugzilla.kernel.org/show_bug.cgi?id=205929
->> Here is a copy of the bug report and I hope that this is the correct
->> place to discuss this:
->>
->> I have a Supermicro server with 10 md raid6 arrays each consisting of 8
->> SATA drives. SATA drives are Hitachi/HGST Ultrastar 7K4000 8T.
->> When i try to pause array check with "echo idle >
->> "/sys/block/<md_dev>/md/sync_action" it randomly hangs at different md
->> device.
->> Process "mdX_raid6" is at 100% cpu usage. cat
->> /sys/block/mdX/md/journal_mode hungs forever.
->>
->> Here is the state at the moment of crash for one of the md devices:
->>
->> root@supermicro:/sys/block/mdX/md# find -mindepth 1 -maxdepth 1 -type
->> f|sort|grep -v journal_mode|xargs -r egrep .
->> ./array_size:default
->> ./array_state:write-pending
->> grep: ./bitmap_set_bits: Permission denied
->> ./chunk_size:524288
->> ./component_size:7813895168
->> ./consistency_policy:resync
->> ./degraded:0
->> ./group_thread_cnt:4
->> ./last_sync_action:check
->> ./layout:2
->> ./level:raid6
->> ./max_read_errors:20
->> ./metadata_version:1.2
->> ./mismatch_cnt:0
->> grep: ./new_dev: Permission denied
->> ./preread_bypass_threshold:1
->> ./raid_disks:8
->> ./reshape_direction:forwards
->> ./reshape_position:none
->> ./resync_start:none
->> ./rmw_level:1
->> ./safe_mode_delay:0.204
->> ./skip_copy:0
->> ./stripe_cache_active:13173
->> ./stripe_cache_size:8192
->> ./suspend_hi:0
->> ./suspend_lo:0
->> ./sync_action:check
->> ./sync_completed:3566405120 / 15627790336
->> ./sync_force_parallel:0
->> ./sync_max:max
->> ./sync_min:1821385984
->> ./sync_speed:126
->> ./sync_speed_max:1000 (local)
->> ./sync_speed_min:1000 (system)
->>
->> root@supermicro:~# cat /proc/mdstat
->> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5]
->> [raid4] [raid10]
->> md4 : active raid6 sdaa[2] sdab[3] sdy[0] sdae[6] sdac[4] sdad[5]
->> sdaf[7] sdz[1]
->>         46883371008 blocks super 1.2 level 6, 512k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>         [====>................]  check = 22.8% (1784112640/7813895168)
->> finish=20571.7min speed=4884K/sec
-> Thanks for the report.
->
-> Could you please confirm the kernel is 4.19.67-2+deb10u2 amd64?
-> Also, have you tried different kernels?
->
-> Song
+stable-rc 4.14 build failed due to these build error,
+
+lib/bitmap.c: In function 'bitmap_from_u32array':
+lib/bitmap.c:1133:1: warning: ISO C90 forbids mixed declarations and
+code [-Wdeclaration-after-statement]
+ unsigned long *bitmap_alloc(unsigned int nbits, gfp_t flags)
+ ^~~~~~~~
+In file included from
+/srv/oe/build/tmp-lkft-glibc/work-shared/intel-corei7-64/kernel-source/lib/bitmap.c:8:0:
+lib/bitmap.c:1138:15: error: non-static declaration of 'bitmap_alloc'
+follows static declaration
+ EXPORT_SYMBOL(bitmap_alloc);
+               ^
+include/linux/export.h:65:21: note: in definition of macro '___EXPORT_SYMBOL'
+  extern typeof(sym) sym;      \
+                     ^~~
+lib/bitmap.c:1138:1: note: in expansion of macro 'EXPORT_SYMBOL'
+ EXPORT_SYMBOL(bitmap_alloc);
+ ^~~~~~~~~~~~~
+lib/bitmap.c:1133:16: note: previous definition of 'bitmap_alloc' was here
+ unsigned long *bitmap_alloc(unsigned int nbits, gfp_t flags)
+                ^~~~~~~~~~~~
+In file included from
+/srv/oe/build/tmp-lkft-glibc/work-shared/intel-corei7-64/kernel-source/lib/bitmap.c:8:0:
+lib/bitmap.c:1144:15: error: non-static declaration of 'bitmap_zalloc'
+follows static declaration
+ EXPORT_SYMBOL(bitmap_zalloc);
+               ^
+include/linux/export.h:65:21: note: in definition of macro '___EXPORT_SYMBOL'
+  extern typeof(sym) sym;      \
+                     ^~~
+lib/bitmap.c:1144:1: note: in expansion of macro 'EXPORT_SYMBOL'
+ EXPORT_SYMBOL(bitmap_zalloc);
+ ^~~~~~~~~~~~~
+lib/bitmap.c:1140:16: note: previous definition of 'bitmap_zalloc' was here
+ unsigned long *bitmap_zalloc(unsigned int nbits, gfp_t flags)
+                ^~~~~~~~~~~~~
+In file included from
+/srv/oe/build/tmp-lkft-glibc/work-shared/intel-corei7-64/kernel-source/lib/bitmap.c:8:0:
+lib/bitmap.c:1150:15: error: non-static declaration of 'bitmap_free'
+follows static declaration
+ EXPORT_SYMBOL(bitmap_free);
+               ^
+include/linux/export.h:65:21: note: in definition of macro '___EXPORT_SYMBOL'
+  extern typeof(sym) sym;      \
+                     ^~~
+lib/bitmap.c:1150:1: note: in expansion of macro 'EXPORT_SYMBOL'
+ EXPORT_SYMBOL(bitmap_free);
+ ^~~~~~~~~~~~~
+lib/bitmap.c:1146:6: note: previous definition of 'bitmap_free' was here
+ void bitmap_free(const unsigned long *bitmap)
+      ^~~~~~~~~~~
+  CC      drivers/char/random.o
+scripts/Makefile.build:326: recipe for target 'lib/bitmap.o' failed
+make[3]: *** [lib/bitmap.o] Error 1
+Makefile:1052: recipe for target 'lib' failed
+make[2]: *** [lib] Error 2
