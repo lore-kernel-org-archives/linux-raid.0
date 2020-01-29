@@ -1,81 +1,138 @@
-From: Davidlohr Bueso <dave@stgolabs.net>
-Subject: [PATCH] md: optimize barrier usage for Rmw atomic bitops
-Date: Wed, 29 Jan 2020 10:14:37 -0800
-Message-ID: <20200129181437.25155-1-dave@stgolabs.net>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dave@stgolabs.net, Davidlohr Bueso <dbueso@suse.de>
+From: Leslie Rhorer <lesrhorer@att.net>
+Subject: Re: mdadm not sending email
+Date: Wed, 29 Jan 2020 14:46:29 -0600
+Message-ID: <4da133ff-f17f-cb49-20e0-7953808e54ec@att.net>
+References: <87skiztloo.fsf@hades.wkstn.nix>
+ <6c7766cb-8698-e44e-e767-000d5dea5833@att.net>
+ <24091.5497.253499.381022@quad.stoffel.home>
+ <381d32b6-eee7-63c6-7cb4-64a58a0f6796@att.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <381d32b6-eee7-63c6-7cb4-64a58a0f6796@att.net>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For both set and clear_bit, we can avoid the unnecessary barrier
-on non LL/SC architectures, such as x86. Instead, use the
-smp_mb__{before,after}_atomic() calls.
+     I believe I have fixed the problem.  For anyone else who runs 
+across this:
 
-Signed-off-by: Davidlohr Bueso <dbueso@suse.de>
----
- drivers/md/md.c     | 2 +-
- drivers/md/raid10.c | 7 ++++---
- drivers/md/raid5.c  | 9 +++++----
- 3 files changed, 10 insertions(+), 8 deletions(-)
+1. Add both the following ines into /etc/mdadm/mdadm.conf
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4824d50526fa..4ed2eb6933f7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2561,7 +2561,7 @@ static bool set_in_sync(struct mddev *mddev)
- 			 * Ensure ->in_sync is visible before we clear
- 			 * ->sync_checkers.
- 			 */
--			smp_mb();
-+			smp_mb__before_atomic();
- 			set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
- 			sysfs_notify_dirent_safe(mddev->sysfs_state);
- 		}
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ec136e44aef7..1993a1958c75 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1865,9 +1865,10 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		/* We must have just cleared 'rdev' */
- 		p->rdev = p->replacement;
- 		clear_bit(Replacement, &p->replacement->flags);
--		smp_mb(); /* Make sure other CPUs may see both as identical
--			   * but will never see neither -- if they are careful.
--			   */
-+		/* Make sure other CPUs may see both as identical
-+		 * but will never see neither -- if they are careful.
-+		 */
-+		smp_mb__after_atomic();
- 		p->replacement = NULL;
- 	}
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ba00e9877f02..3ad6209287cf 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -364,7 +364,7 @@ static int release_stripe_list(struct r5conf *conf,
- 		int hash;
- 
- 		/* sh could be readded after STRIPE_ON_RELEASE_LIST is cleard */
--		smp_mb();
-+		smp_mb__before_atomic();
- 		clear_bit(STRIPE_ON_RELEASE_LIST, &sh->state);
- 		/*
- 		 * Don't worry the bit is set here, because if the bit is set
-@@ -7654,9 +7654,10 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		/* We must have just cleared 'rdev' */
- 		p->rdev = p->replacement;
- 		clear_bit(Replacement, &p->replacement->flags);
--		smp_mb(); /* Make sure other CPUs may see both as identical
--			   * but will never see neither - if they are careful
--			   */
-+		/* Make sure other CPUs may see both as identical
-+		 * but will never see neither - if they are careful
-+		 */
-+		smp_mb__after_atomic();
- 		p->replacement = NULL;
- 
- 		if (!err)
--- 
-2.16.4
+MAILADDR <recipient>
+
+MAILFROM <sender>
+
+2. Create a symlink in /usr/sbin
+
+cd /usr/sbin
+
+ln -s ../bin/msmtp sendmail
+
+On 1/13/2020 8:00 AM, Leslie Rhorer wrote:
+>     I forgot to send this out to the list.  I apologize for any 
+> duplicates.
+>
+> On 1/12/2020 6:47 AM, John Stoffel wrote:
+>> Leslie>  ??? I recently upgraded one of my servers to Debian Buster.?
+>> Leslie> I have been using sSMTP as my MTA, but unfortunately it is no
+>> Leslie> longer maintained.? I installed msmtp, instead, but now my
+>> Leslie> mesages are no longer going out from mdadm.? I can run the
+>> Leslie> command:
+>>
+>> This is a problem with your mail setup, not with mdadm.  I suspect you
+>> need to configure msmtp to use TLS and/or to submit the email to port
+>     It is using TLS.
+>> 587 on att.net, where you do a full authenticated login.
+>
+>     Nope, 465, which by the way is the default for SSL/TLS, and I am 
+> doing a full authenticated login.  Now, it is certainly arguable, 
+> perhaps even likely, my mail setup has a problem, but without knowing 
+> specifically what mdadm is sending out, I am going to be hard pressed 
+> to know what I need to modify in my mail setup.
+>
+>     In the earlier version of mdadm, the mail utility (specified in 
+> /etc/mdadm/mdadm.conf) was the script /usr/bin/mdadm_notify.  I have 
+> no idea how or whatt he newer version f mdadm sends out.
+>
+>>
+>> Look at the examples here:
+>>
+>> https://wiki.alpinelinux.org/wiki/Relay_email_to_gmail_(msmtp,_mailx,_sendmail 
+>>
+>> https://wiki.debian.org/msmtp
+>
+>
+>     I had already looked at both of those, and although the 
+> configuration for att.net is different than for gmail, nothing jumps 
+> out at me.
+>
+>
+> Here is my configuration for msmtp:
+>
+> # Example for a system wide configuration file
+>
+> # A system wide configuration file is optional.
+> # If it exists, it usually defines a default account.
+> # This allows msmtp to be used like /usr/sbin/sendmail.
+> account default
+>
+> # The SMTP smarthost
+> host outbound.att.net
+>
+> # Use TLS on port 465
+> port 465
+> tls on
+> tls_starttls off
+>
+> # Construct envelope-from addresses of the form "user@oursite.example"
+> #auto_from on
+> #maildomain att.net
+>
+> from lesrhorer@att.net
+> user lesrhorer@att.net
+> auth on
+> password XXXXXXXXXXX
+>
+> # Syslog logging with facility LOG_MAIL instead of the default LOG_USER
+> syslog LOG_MAIL
+>
+> Mail is working on another server that still uses ssmtp.  Here is the 
+> configuration:
+>
+> # Config file for sSMTP sendmail
+> #
+> # The person who gets all mail for userids < 1000
+> # Make this empty to disable rewriting.
+> root=lesrhorer
+>
+> # The place where the mail goes. The actual machine name is required no
+> # MX records are consulted. Commonly mailhosts are named mail.domain.com
+> mailhub=outbound.att.net
+>
+> # Where will the mail seem to come from?
+> rewriteDomain=att.net
+>
+> # The full hostname
+> hostname=localhost
+>
+> # Are users allowed to set their own From: address?
+> # YES - Allow the user to specify their own From: address
+> # NO - Use the system generated From: address
+> FromLineOverride=YES
+>
+> AuthUser=lesrhorer@att.net
+> AuthPass=XXXXXXXXXXXXX
+> UseTLS=YES
+>
+>>
+>> And follow the debuging info these guides give.  Once you get email
+>
+>     I don't see any debugging recommendations in either document.
+>
+>
+>     One interesting thing: When I run the monitor / test command on 
+> the older system, sendmail complains about the mailbox being 
+> unavailable, but it still sends out the email.
