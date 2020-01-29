@@ -1,34 +1,81 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: Is it possible to break one full RAID-1 to two degraded RAID-1?
-Date: Wed, 29 Jan 2020 05:09:06 +0100
-Message-ID: <aa41492c-1ad7-070f-9bc6-646977364758@thelounge.net>
-References: <1120831b-13e6-6a5d-8908-ee6a312e7302@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1120831b-13e6-6a5d-8908-ee6a312e7302@gmail.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+From: Davidlohr Bueso <dave@stgolabs.net>
+Subject: [PATCH] md: optimize barrier usage for Rmw atomic bitops
+Date: Wed, 29 Jan 2020 10:14:37 -0800
+Message-ID: <20200129181437.25155-1-dave@stgolabs.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dave@stgolabs.net, Davidlohr Bueso <dbueso@suse.de>
 List-Id: linux-raid.ids
 
+For both set and clear_bit, we can avoid the unnecessary barrier
+on non LL/SC architectures, such as x86. Instead, use the
+smp_mb__{before,after}_atomic() calls.
 
+Signed-off-by: Davidlohr Bueso <dbueso@suse.de>
+---
+ drivers/md/md.c     | 2 +-
+ drivers/md/raid10.c | 7 ++++---
+ drivers/md/raid5.c  | 9 +++++----
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-Am 29.01.20 um 04:17 schrieb Ram Ramesh:
-> I have my entire debian 9.0 installation (root/usr/home etc) in two nvme
-> RAID-1 mirror. Is it possible to break them in to two degraded arrays?
-> 
-> Specifically I want to do this.
-> 
-> 1. Break current debian 9 full RAID1 into two degraded RAID1 A & RAID1  B
-> 2. Boot only A and upgrade to debian 10 and make sure it works
-> 3. If it works, add B back into A and get Debian 10 in fully complete RAID1
-> 4. If it does not work, I boot B and add A back and get back debian 9
->    in full working RAID1
-
-i would simply remove one disk completly and in case i want to keep the
-upgraded system wipe it and resync afterwards or when i want back to the
-old one put it back and wipe the modified
-
-full resync, done
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4824d50526fa..4ed2eb6933f7 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2561,7 +2561,7 @@ static bool set_in_sync(struct mddev *mddev)
+ 			 * Ensure ->in_sync is visible before we clear
+ 			 * ->sync_checkers.
+ 			 */
+-			smp_mb();
++			smp_mb__before_atomic();
+ 			set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+ 			sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 		}
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index ec136e44aef7..1993a1958c75 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1865,9 +1865,10 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		/* We must have just cleared 'rdev' */
+ 		p->rdev = p->replacement;
+ 		clear_bit(Replacement, &p->replacement->flags);
+-		smp_mb(); /* Make sure other CPUs may see both as identical
+-			   * but will never see neither -- if they are careful.
+-			   */
++		/* Make sure other CPUs may see both as identical
++		 * but will never see neither -- if they are careful.
++		 */
++		smp_mb__after_atomic();
+ 		p->replacement = NULL;
+ 	}
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ba00e9877f02..3ad6209287cf 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -364,7 +364,7 @@ static int release_stripe_list(struct r5conf *conf,
+ 		int hash;
+ 
+ 		/* sh could be readded after STRIPE_ON_RELEASE_LIST is cleard */
+-		smp_mb();
++		smp_mb__before_atomic();
+ 		clear_bit(STRIPE_ON_RELEASE_LIST, &sh->state);
+ 		/*
+ 		 * Don't worry the bit is set here, because if the bit is set
+@@ -7654,9 +7654,10 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		/* We must have just cleared 'rdev' */
+ 		p->rdev = p->replacement;
+ 		clear_bit(Replacement, &p->replacement->flags);
+-		smp_mb(); /* Make sure other CPUs may see both as identical
+-			   * but will never see neither - if they are careful
+-			   */
++		/* Make sure other CPUs may see both as identical
++		 * but will never see neither - if they are careful
++		 */
++		smp_mb__after_atomic();
+ 		p->replacement = NULL;
+ 
+ 		if (!err)
+-- 
+2.16.4
