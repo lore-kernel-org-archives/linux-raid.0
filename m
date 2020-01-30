@@ -1,39 +1,171 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Is it possible to break one full RAID-1 to two degraded RAID-1?
-Date: Thu, 30 Jan 2020 07:27:25 +0000
-Message-ID: <5E32855D.3020906@youngman.org.uk>
-References: <1120831b-13e6-6a5d-8908-ee6a312e7302@gmail.com>
- <aa41492c-1ad7-070f-9bc6-646977364758@thelounge.net>
- <2c4fedff-a1c9-6ca3-5385-72b542a4a0b4@gmail.com>
- <551449ed-49f9-e567-09d3-981f4cf9eea9@thelounge.net>
+From: Leslie Rhorer <lesrhorer@att.net>
+Subject: Re: mdadm not sending email
+Date: Thu, 30 Jan 2020 16:14:48 -0600
+Message-ID: <9e88200d-6c49-ce3b-8a5e-3406204194a6@att.net>
+References: <87skiztloo.fsf@hades.wkstn.nix>
+ <6c7766cb-8698-e44e-e767-000d5dea5833@att.net>
+ <24091.5497.253499.381022@quad.stoffel.home>
+ <381d32b6-eee7-63c6-7cb4-64a58a0f6796@att.net>
+ <4da133ff-f17f-cb49-20e0-7953808e54ec@att.net>
+ <CALc6PW4mf0kkU2y8mPvQsM3N-EMG2kLV3Y9-8EV-XQgLBmy_YA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <551449ed-49f9-e567-09d3-981f4cf9eea9@thelounge.net>
+In-Reply-To: <CALc6PW4mf0kkU2y8mPvQsM3N-EMG2kLV3Y9-8EV-XQgLBmy_YA@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Reindl Harald <h.reindl@thelounge.net>, Ram Ramesh <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
+To: William Morgan <therealbrewer@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/01/20 06:30, Reindl Harald wrote:
->> Thanks. I thought of this, but both disk in question are nvme ssd with
->> > manually added heat sink. It will be a hassle to remove and reinstall. I
->> > think I will go with the back up rather than remove disk physically. 
+mdadm /dev/mdX --monitor --test
 
-> why would you remove it phyiscally to remove it rom the array? seriously?
-
-Because if you physically remove it, BOTH disks will think they are the
-surviving copy. You could "assemble" either disk on its own and recover
-the array.
-
-But if you remove a disk with --fail --remove, does that tamper with the
-superblock? Would that prevent that disk being re-assembled on its own?
-Seriously. I don't know. And were I in the OP's shoes I would be asking
-the same question.
-
-This is where you want something COW in the stack. Lvm. Btrfs. Where you
-can just take a snapshot, upgrade the system, and if it all goes
-pear-shaped you throw the snapshot away.
-
-Cheers,
-Wol
+On 1/29/2020 4:56 PM, William Morgan wrote:
+> How do you test this? Is there a way to simulate an issue to see if 
+> the mail will be sent properly?
+>
+> Thanks,
+> Bill
+>
+> On Wed, Jan 29, 2020, 14:47 Leslie Rhorer <lesrhorer@att.net 
+> <mailto:lesrhorer@att.net>> wrote:
+>
+>          I believe I have fixed the problem.  For anyone else who runs
+>     across this:
+>
+>     1. Add both the following ines into /etc/mdadm/mdadm.conf
+>
+>     MAILADDR <recipient>
+>
+>     MAILFROM <sender>
+>
+>     2. Create a symlink in /usr/sbin
+>
+>     cd /usr/sbin
+>
+>     ln -s ../bin/msmtp sendmail
+>
+>     On 1/13/2020 8:00 AM, Leslie Rhorer wrote:
+>     >     I forgot to send this out to the list.  I apologize for any
+>     > duplicates.
+>     >
+>     > On 1/12/2020 6:47 AM, John Stoffel wrote:
+>     >> Leslie>  ??? I recently upgraded one of my servers to Debian
+>     Buster.?
+>     >> Leslie> I have been using sSMTP as my MTA, but unfortunately it
+>     is no
+>     >> Leslie> longer maintained.? I installed msmtp, instead, but now my
+>     >> Leslie> mesages are no longer going out from mdadm.? I can run the
+>     >> Leslie> command:
+>     >>
+>     >> This is a problem with your mail setup, not with mdadm.  I
+>     suspect you
+>     >> need to configure msmtp to use TLS and/or to submit the email
+>     to port
+>     >     It is using TLS.
+>     >> 587 on att.net <http://att.net>, where you do a full
+>     authenticated login.
+>     >
+>     >     Nope, 465, which by the way is the default for SSL/TLS, and
+>     I am
+>     > doing a full authenticated login.  Now, it is certainly arguable,
+>     > perhaps even likely, my mail setup has a problem, but without
+>     knowing
+>     > specifically what mdadm is sending out, I am going to be hard
+>     pressed
+>     > to know what I need to modify in my mail setup.
+>     >
+>     >     In the earlier version of mdadm, the mail utility (specified in
+>     > /etc/mdadm/mdadm.conf) was the script /usr/bin/mdadm_notify.  I
+>     have
+>     > no idea how or whatt he newer version f mdadm sends out.
+>     >
+>     >>
+>     >> Look at the examples here:
+>     >>
+>     >>
+>     https://wiki.alpinelinux.org/wiki/Relay_email_to_gmail_(msmtp,_mailx,_sendmail
+>
+>     >>
+>     >> https://wiki.debian.org/msmtp
+>     >
+>     >
+>     >     I had already looked at both of those, and although the
+>     > configuration for att.net <http://att.net> is different than for
+>     gmail, nothing jumps
+>     > out at me.
+>     >
+>     >
+>     > Here is my configuration for msmtp:
+>     >
+>     > # Example for a system wide configuration file
+>     >
+>     > # A system wide configuration file is optional.
+>     > # If it exists, it usually defines a default account.
+>     > # This allows msmtp to be used like /usr/sbin/sendmail.
+>     > account default
+>     >
+>     > # The SMTP smarthost
+>     > host outbound.att.net <http://outbound.att.net>
+>     >
+>     > # Use TLS on port 465
+>     > port 465
+>     > tls on
+>     > tls_starttls off
+>     >
+>     > # Construct envelope-from addresses of the form
+>     "user@oursite.example"
+>     > #auto_from on
+>     > #maildomain att.net <http://att.net>
+>     >
+>     > from lesrhorer@att.net <mailto:lesrhorer@att.net>
+>     > user lesrhorer@att.net <mailto:lesrhorer@att.net>
+>     > auth on
+>     > password XXXXXXXXXXX
+>     >
+>     > # Syslog logging with facility LOG_MAIL instead of the default
+>     LOG_USER
+>     > syslog LOG_MAIL
+>     >
+>     > Mail is working on another server that still uses ssmtp. Here is
+>     the
+>     > configuration:
+>     >
+>     > # Config file for sSMTP sendmail
+>     > #
+>     > # The person who gets all mail for userids < 1000
+>     > # Make this empty to disable rewriting.
+>     > root=lesrhorer
+>     >
+>     > # The place where the mail goes. The actual machine name is
+>     required no
+>     > # MX records are consulted. Commonly mailhosts are named
+>     mail.domain.com <http://mail.domain.com>
+>     > mailhub=outbound.att.net <http://outbound.att.net>
+>     >
+>     > # Where will the mail seem to come from?
+>     > rewriteDomain=att.net <http://att.net>
+>     >
+>     > # The full hostname
+>     > hostname=localhost
+>     >
+>     > # Are users allowed to set their own From: address?
+>     > # YES - Allow the user to specify their own From: address
+>     > # NO - Use the system generated From: address
+>     > FromLineOverride=YES
+>     >
+>     > AuthUser=lesrhorer@att.net <mailto:lesrhorer@att.net>
+>     > AuthPass=XXXXXXXXXXXXX
+>     > UseTLS=YES
+>     >
+>     >>
+>     >> And follow the debuging info these guides give.  Once you get email
+>     >
+>     >     I don't see any debugging recommendations in either document.
+>     >
+>     >
+>     >     One interesting thing: When I run the monitor / test command on
+>     > the older system, sendmail complains about the mailbox being
+>     > unavailable, but it still sends out the email.
+>
