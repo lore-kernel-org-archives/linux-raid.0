@@ -1,28 +1,22 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] block: introduce polling on bio level
-Date: Thu, 30 Jan 2020 22:35:27 -0800
-Message-ID: <20200131063527.GC6267@infradead.org>
+Subject: Re: [PATCH 2/2] md: enable io polling
+Date: Thu, 30 Jan 2020 22:36:53 -0800
+Message-ID: <20200131063653.GD6267@infradead.org>
 References: <20200126044138.5066-1-andrzej.jakowski@linux.intel.com>
- <20200126044138.5066-2-andrzej.jakowski@linux.intel.com>
- <de27b35e-a713-dc9d-5164-0397c0dff285@kernel.dk>
+ <20200126044138.5066-3-andrzej.jakowski@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <de27b35e-a713-dc9d-5164-0397c0dff285@kernel.dk>
+In-Reply-To: <20200126044138.5066-3-andrzej.jakowski@linux.intel.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
+Cc: axboe@kernel.dk, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, Jan 29, 2020 at 09:01:49PM -0700, Jens Axboe wrote:
-> blk_poll() used to be a pointer in the queue, but since we just had
-> one implementation, we got rid of it. Might make sense to
-> reintroduce that, and just make it an optimized indirect call. I
-> think that would be prettier than add the bio hack in the middle of
-> it, and you're having to add a queue pointer anyway.
+> +	rdev_for_each(rdev, mddev) {
+> +		if (rdev->raid_disk >= 0 && !test_bit(Faulty, &rdev->flags)) {
+> +			rv = blk_poll(bdev_get_queue(rdev->bdev), cookie, false);
 
-Well, the other reason is to avoid an indirect call for the blk-mq
-case, which are fairly expensive.  In fact I'm pretty sure we avoid
-indirect calls from the bio layer into blk-mq entirely for the fast
-path at the moment, and it would be great to keep it that way.
+This adds a > 80 char line.  But if you just use a continue to skip
+the not allicable ones you even clean up the code while avoiding that.
