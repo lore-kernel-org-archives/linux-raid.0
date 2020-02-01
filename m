@@ -1,42 +1,32 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 1/2] block: introduce polling on bio level
-Date: Fri, 31 Jan 2020 21:41:58 -0700
-Message-ID: <ffb832a5-e946-2575-d820-8c8831e2ed99@kernel.dk>
+Date: Sat, 1 Feb 2020 00:20:34 -0800
+Message-ID: <20200201082034.GA8423@infradead.org>
 References: <20200126044138.5066-1-andrzej.jakowski@linux.intel.com>
  <20200126044138.5066-2-andrzej.jakowski@linux.intel.com>
- <de27b35e-a713-dc9d-5164-0397c0dff285@kernel.dk>
- <20200131063527.GC6267@infradead.org>
+ <20200131063407.GB6267@infradead.org>
+ <081badca-ab0f-f666-1e5e-71992f93a157@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20200131063527.GC6267@infradead.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <081badca-ab0f-f666-1e5e-71992f93a157@linux.intel.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On 1/30/20 11:35 PM, Christoph Hellwig wrote:
-> On Wed, Jan 29, 2020 at 09:01:49PM -0700, Jens Axboe wrote:
->> blk_poll() used to be a pointer in the queue, but since we just had
->> one implementation, we got rid of it. Might make sense to
->> reintroduce that, and just make it an optimized indirect call. I
->> think that would be prettier than add the bio hack in the middle of
->> it, and you're having to add a queue pointer anyway.
+On Fri, Jan 31, 2020 at 11:51:43AM -0700, Andrzej Jakowski wrote:
+> On 1/30/20 11:34 PM, Christoph Hellwig wrote:
+> > Can you explain this check?  This looks weird to me  I think we need
+> > a generalized check if a make_request based driver supports REQ_NOWAIT
+> > instead (and as a separate patch / patchset).
 > 
-> Well, the other reason is to avoid an indirect call for the blk-mq
-> case, which are fairly expensive.  In fact I'm pretty sure we avoid
-> indirect calls from the bio layer into blk-mq entirely for the fast
-> path at the moment, and it would be great to keep it that way.
+> Original check used to reject polled IO for stackable block devices as "not
+> supported". To solve that situation I introduced additional check to reject
+> all non REQ_HIPRI requests. That check is not intended to generalize, like
+> you indicated, but to conservatively select which requests to accept.
+> Perhaps there is better way to do that. Any suggestions?
 
-Sure, my suggestion was to provide it as an alternative - if set,
-then call that. Though with the optimized indirect calls, at least
-it's just a branch, actual call is the same.
-
-This patch sets a bit in no mans land right now. It's duplicating
-the main loop, and it's shoved in the middle of the function. This
-has to get cleaned up.
-
--- 
-Jens Axboe
+REQ_NOWAIT and REQ_HIPRI are completley unrelated concepts and they need
+to be dealt with entirely separately.
