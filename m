@@ -1,32 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] block: introduce polling on bio level
-Date: Sat, 1 Feb 2020 00:20:34 -0800
-Message-ID: <20200201082034.GA8423@infradead.org>
-References: <20200126044138.5066-1-andrzej.jakowski@linux.intel.com>
- <20200126044138.5066-2-andrzej.jakowski@linux.intel.com>
- <20200131063407.GB6267@infradead.org>
- <081badca-ab0f-f666-1e5e-71992f93a157@linux.intel.com>
+From: Georgi Nikolov <gnikolov@icdsoft.com>
+Subject: Re: Pausing md check hangs
+Date: Sat, 1 Feb 2020 16:26:38 +0200
+Message-ID: <cc483055-45de-4bd2-8a4f-71e9c8ed6b90@icdsoft.com>
+References: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
+ <CAPhsuW4Jc-qef9uW-JSut90qOpDc_4VoAFpMU8KwqnK7EeT_xg@mail.gmail.com>
+ <ac3ae81d-8dad-8b4e-bc61-fc37514e3929@icdsoft.com>
+ <CAPhsuW4JJiDroE33m0=XE9PxtUOncK3--waY_zxxbAT9j+1m6g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <081badca-ab0f-f666-1e5e-71992f93a157@linux.intel.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW4JJiDroE33m0=XE9PxtUOncK3--waY_zxxbAT9j+1m6g@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 31, 2020 at 11:51:43AM -0700, Andrzej Jakowski wrote:
-> On 1/30/20 11:34 PM, Christoph Hellwig wrote:
-> > Can you explain this check?  This looks weird to me  I think we need
-> > a generalized check if a make_request based driver supports REQ_NOWAIT
-> > instead (and as a separate patch / patchset).
-> 
-> Original check used to reject polled IO for stackable block devices as "not
-> supported". To solve that situation I introduced additional check to reject
-> all non REQ_HIPRI requests. That check is not intended to generalize, like
-> you indicated, but to conservatively select which requests to accept.
-> Perhaps there is better way to do that. Any suggestions?
+The output of this command was empty:
 
-REQ_NOWAIT and REQ_HIPRI are completley unrelated concepts and they need
-to be dealt with entirely separately.
+cat /proc/$(pidof md2_raid6)/stack # md2_raid6 process was consuming 
+100% cpu
+
+> Thanks for the information. I suspect the hang is waiting for md_lock().
+>
+> Could you please dump the mdX_raid6 stack when the hang happens?
+> You can do it by:
+>
+>      cat /proc/$(pidof mdX_raid6)/stack
+>
+> Thanks,
+> Song
+
+
+Regards,
+
+Georgi Nikolov
