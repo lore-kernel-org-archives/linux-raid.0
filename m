@@ -1,38 +1,96 @@
-From: Georgi Nikolov <gnikolov@icdsoft.com>
-Subject: Re: Pausing md check hangs
-Date: Sat, 1 Feb 2020 16:26:38 +0200
-Message-ID: <cc483055-45de-4bd2-8a4f-71e9c8ed6b90@icdsoft.com>
-References: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
- <CAPhsuW4Jc-qef9uW-JSut90qOpDc_4VoAFpMU8KwqnK7EeT_xg@mail.gmail.com>
- <ac3ae81d-8dad-8b4e-bc61-fc37514e3929@icdsoft.com>
- <CAPhsuW4JJiDroE33m0=XE9PxtUOncK3--waY_zxxbAT9j+1m6g@mail.gmail.com>
+From: Rickard Svensson <myhex2020@gmail.com>
+Subject: Re: All disk ar reported as spare disks
+Date: Sun, 2 Feb 2020 17:30:22 +0100
+Message-ID: <CAC4UdkYqKQhehxZao3943jiWnDWK20T8SupEk_8+4jp1cd4Qvg@mail.gmail.com>
+References: <CAC4UdkZoo=B2c-XmRwPA19gEsUtHYVhq2=Sqgs54mf2ZHerDxw@mail.gmail.com>
+ <e6a3c4d6-bc2e-fe11-5ed5-310fa1b7526b@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW4JJiDroE33m0=XE9PxtUOncK3--waY_zxxbAT9j+1m6g@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <e6a3c4d6-bc2e-fe11-5ed5-310fa1b7526b@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The output of this command was empty:
+Hi Phil & Wol  and everyone else.
 
-cat /proc/$(pidof md2_raid6)/stack # md2_raid6 process was consuming 
-100% cpu
+I just wanted to say a big thank you, --assemble --force solved the
+problem and I got the raid running again :-D
 
-> Thanks for the information. I suspect the hang is waiting for md_lock().
+And now after a fsck I am copying all the data to my new raid1.
+And what I can see so far I don't seem to have lost anything :-)
+
+The new disks were purchased since before (WD Red NAS 10TB), but
+fortunately they have support for SCT "Error Recovery Control" ,
+"Feature Control" , "Data Table".
+And "Recovery Control" is set to 70.70, just as mentioned on:
+https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+
+But I will still put that script into the startup of my new server.
+
+
+Once again, a big thanks for all the help!
+
+Best regards Rickard
+
+Den fre 31 jan. 2020 kl 14:57 skrev Phil Turmel <philip@turmel.org>:
 >
-> Could you please dump the mdX_raid6 stack when the hang happens?
-> You can do it by:
+> Hi Rickard,
 >
->      cat /proc/$(pidof mdX_raid6)/stack
+> Good report.
 >
-> Thanks,
-> Song
-
-
-Regards,
-
-Georgi Nikolov
+> On 1/30/20 6:48 PM, Rickard Svensson wrote:
+> > Hello
+> >
+> > Excuse me for asking again.
+> >
+> > But this is a simpler(?) follow-up question to:
+> > https://marc.info/?t=157895855400002&r=1&w=2
+> >
+> > In short summary. I had a raid 1 0, there were too many write errors
+> > on one disk (I call it DiskError1), which I did not notice, and then
+> > two days later the same problem on another disk (I call it
+> > DiskError2).
+> >
+> > I got good help here, and copy the disk portions of the 2 working
+> > disks as well as disk DiskError2 with ddrescue to new disks.
+> > Later I'll create a new raid 1, so I don't plan reuse the same raid 1 0 again.
+> >
+> >
+> > My questions:
+> > 1) I haven't copied the disk DiskError1, because it is older data, and
+> > it shouldn't be needed.   Or is it better to add that one as well?
+> >
+> > 2) Everything looks pretty good :)
+> > But all disk ar reported as spare disks in /proc/mdstat
+> > A assume that is because "Events" count is not the same. It is same on
+> > the good disks(2864) but not DiskError2 (2719).
+>
+> No, the array isn't running, so /proc/mdstat isn't complete.  Your three
+> disks all have proper "Active device" roles per --examine.
+>
+> > I have been looking how I can "force add" disk DiskError2, use
+> > "--force" or "--- zero-superblock"?
+>
+> Neither --add nor --zero-superblock is appropriate.  They will break
+> your otherwise very good condition.
+>
+> > But would prefer to avoid making a mistake now,   what has the
+> > greatest chance of being right :)
+>
+> First, ensure you do not have a timeout mismatch as evidenced in your
+> original thread's smartctl output.  The wiki has some advice.  Hopefully
+> your new drives are "NAS" rated and you need no special action.
+>
+> Then you should simply use --assemble --force with those three devices.
+>
+> That should get you running degraded.  Then immediately backup the most
+> valuable data in the array before doing anything else.
+>
+> Finally, --add a fourth device and let your raid rebuild its redundancy.
+>
+> When all is safe, consider converting to a more durable redundancy
+> setup, like raid6, or raid10,near=3.
+>
+> Phil
