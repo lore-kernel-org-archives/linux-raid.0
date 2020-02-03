@@ -1,96 +1,18 @@
-From: Rickard Svensson <myhex2020@gmail.com>
-Subject: Re: All disk ar reported as spare disks
-Date: Sun, 2 Feb 2020 17:30:22 +0100
-Message-ID: <CAC4UdkYqKQhehxZao3943jiWnDWK20T8SupEk_8+4jp1cd4Qvg@mail.gmail.com>
-References: <CAC4UdkZoo=B2c-XmRwPA19gEsUtHYVhq2=Sqgs54mf2ZHerDxw@mail.gmail.com>
- <e6a3c4d6-bc2e-fe11-5ed5-310fa1b7526b@turmel.org>
+From: "M. M. Fridman" <info@web.com>
+Subject: Re: Precise..
+Date: Mon, 03 Feb 2020 12:39:31 +0200
+Message-ID: <202002031039.013AbGYa011183@verin.ula.ve>
+Reply-To: mkmfridman@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e6a3c4d6-bc2e-fe11-5ed5-310fa1b7526b@turmel.org>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: Recipients <info@web.com>
 List-Id: linux-raid.ids
 
-Hi Phil & Wol  and everyone else.
+I Mikhail Fridman picked you for $5,000,000 donation, Reply for more details.
 
-I just wanted to say a big thank you, --assemble --force solved the
-problem and I got the raid running again :-D
-
-And now after a fsck I am copying all the data to my new raid1.
-And what I can see so far I don't seem to have lost anything :-)
-
-The new disks were purchased since before (WD Red NAS 10TB), but
-fortunately they have support for SCT "Error Recovery Control" ,
-"Feature Control" , "Data Table".
-And "Recovery Control" is set to 70.70, just as mentioned on:
-https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-
-But I will still put that script into the startup of my new server.
-
-
-Once again, a big thanks for all the help!
-
-Best regards Rickard
-
-Den fre 31 jan. 2020 kl 14:57 skrev Phil Turmel <philip@turmel.org>:
->
-> Hi Rickard,
->
-> Good report.
->
-> On 1/30/20 6:48 PM, Rickard Svensson wrote:
-> > Hello
-> >
-> > Excuse me for asking again.
-> >
-> > But this is a simpler(?) follow-up question to:
-> > https://marc.info/?t=157895855400002&r=1&w=2
-> >
-> > In short summary. I had a raid 1 0, there were too many write errors
-> > on one disk (I call it DiskError1), which I did not notice, and then
-> > two days later the same problem on another disk (I call it
-> > DiskError2).
-> >
-> > I got good help here, and copy the disk portions of the 2 working
-> > disks as well as disk DiskError2 with ddrescue to new disks.
-> > Later I'll create a new raid 1, so I don't plan reuse the same raid 1 0 again.
-> >
-> >
-> > My questions:
-> > 1) I haven't copied the disk DiskError1, because it is older data, and
-> > it shouldn't be needed.   Or is it better to add that one as well?
-> >
-> > 2) Everything looks pretty good :)
-> > But all disk ar reported as spare disks in /proc/mdstat
-> > A assume that is because "Events" count is not the same. It is same on
-> > the good disks(2864) but not DiskError2 (2719).
->
-> No, the array isn't running, so /proc/mdstat isn't complete.  Your three
-> disks all have proper "Active device" roles per --examine.
->
-> > I have been looking how I can "force add" disk DiskError2, use
-> > "--force" or "--- zero-superblock"?
->
-> Neither --add nor --zero-superblock is appropriate.  They will break
-> your otherwise very good condition.
->
-> > But would prefer to avoid making a mistake now,   what has the
-> > greatest chance of being right :)
->
-> First, ensure you do not have a timeout mismatch as evidenced in your
-> original thread's smartctl output.  The wiki has some advice.  Hopefully
-> your new drives are "NAS" rated and you need no special action.
->
-> Then you should simply use --assemble --force with those three devices.
->
-> That should get you running degraded.  Then immediately backup the most
-> valuable data in the array before doing anything else.
->
-> Finally, --add a fourth device and let your raid rebuild its redundancy.
->
-> When all is safe, consider converting to a more durable redundancy
-> setup, like raid6, or raid10,near=3.
->
-> Phil
+Regards,
+Mikhail M. Fridman
