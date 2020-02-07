@@ -1,94 +1,60 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm RAID1 -> 5 conversion safety
-Date: Fri, 07 Feb 2020 09:41:47 +1100
-Message-ID: <87a75v8hjo.fsf@notabene.neil.brown.name>
-References: <CALZj-VqNACF+Dn5rBrLaVmvVE2weOAjqtvWpwKU7sE=72nyvXg@mail.gmail.com> <5E3B09A5.8010209@youngman.org.uk>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Re: Is it possible to break one full RAID-1 to two degraded RAID-1?
+Date: Fri, 7 Feb 2020 01:02:24 -0600
+Message-ID: <0c70c04f-d8d0-0c44-e603-46c101b21cc1@gmail.com>
+References: <1120831b-13e6-6a5d-8908-ee6a312e7302@gmail.com>
+ <aa41492c-1ad7-070f-9bc6-646977364758@thelounge.net>
+ <2c4fedff-a1c9-6ca3-5385-72b542a4a0b4@gmail.com>
+ <551449ed-49f9-e567-09d3-981f4cf9eea9@thelounge.net>
+ <5E32855D.3020906@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5E3B09A5.8010209@youngman.org.uk>
+In-Reply-To: <5E32855D.3020906@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Paul Dann <pdgiddie@gmail.com>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, Reindl Harald <h.reindl@thelounge.net>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I got no response on this and want to take a shot before going the 
+backup way.
 
-On Wed, Feb 05 2020, Wols Lists wrote:
+Assuming (hda1 and hdb1 in raid1 md0) Will the following work?
 
-> On 05/02/20 11:51, Paul Dann wrote:
->> Hi there,
->>=20
->> I've got a load of data on an md RAID 1 array assembled from 2x4TB
->> disks. I'm looking to expand this by adding a third 4TB disk and
->> converting the array to RAID 5. Now the required procedure is
->> documented on the wiki, but my question is:
->>=20
->> When I convert the RAID 1 array to RAID 5, the array will be in a
->> degraded state as it rebuilds onto the new disk. However, if one of
->> the original two disks were to fail during this procedure, is mdadm
->> smart enough to convert the array back to degraded RAID 1, or will my
->> array now be a broken RAID 5 with no path to recovery?
+ 1. Fail and remove hdb1
+ 2. Create new RAID1 md1 with hdb1 and missing
+ 3. dd md0 onto md1
+ 4. Make both bootable. (I suppose I need to change UUID of md1
+    partitions. I suppose that is easy)
+ 5. Boot both and double check
+ 6. Now upgrade md0 without fear.
+ 7. Boot and test the new system for a couple of days to make sure
+    everything is fine.
+ 8. If that fails, delete md0, and add hda1 to md1. If not delete md1
+    and add hdb1 to md0
+
+Regards
+Ramesh
+
+On 1/30/20 1:27 AM, Wols Lists wrote:
+> On 30/01/20 06:30, Reindl Harald wrote:
+>>> Thanks. I thought of this, but both disk in question are nvme ssd with
+>>>> manually added heat sink. It will be a hassle to remove and reinstall. I
+>>>> think I will go with the back up rather than remove disk physically.
+>> why would you remove it phyiscally to remove it rom the array? seriously?
+> Because if you physically remove it, BOTH disks will think they are the
+> surviving copy. You could "assemble" either disk on its own and recover
+> the array.
 >
-> There is a "revert reshape" option which will take you back to a raid 1.
-> This assumes, however, that it's the new disk that has failed.
+> But if you remove a disk with --fail --remove, does that tamper with the
+> superblock? Would that prevent that disk being re-assembled on its own?
+> Seriously. I don't know. And were I in the OP's shoes I would be asking
+> the same question.
 >
-> I'm pretty certain, however, that should one of the old disks fail
-> during the conversion you will end up with a degraded raid 5.
-
-This is correct.
-It is not true to say "the array will be in a degraded state as it
-rebuilds onto the new disk" as Paul did above.
-During the rebuild the array will be in 2 parts:
- - a non-degraded raid5 which starts small and grows
- - a non-degraded raid1 which starts large and shrinks.
-
-at no point in time is the array without full redundancy (unless a
-device fails of course).
-
-NeilBrown
-
-
+> This is where you want something COW in the stack. Lvm. Btrfs. Where you
+> can just take a snapshot, upgrade the system, and if it all goes
+> pear-shaped you throw the snapshot away.
 >
-> If you're worried, I would make sure you've done a SMART health check on
-> your two original drives, although that's no guarantee everything's okay.
->
-> If you really are that worried, get two new disks with the intention of
-> ending up at raid 6. Add a 3rd drive to the mirror, fail and remove one
-> of the originals, add the 4th to go raid 5, then add back the first to
-> go raid 6.
->
-> One thing I will say - MAKE SURE you have the latest mdadm, and if
-> possible make sure you're running a recent kernel. There have been
-> issues converting from 1 to 5. None of them serious, and all fixed by
-> upgrading mdadm/kernel, hence the advice to be running the latest/greates=
-t.
->>=20
->> Many thanks,
->> Paul
->>=20
 > Cheers,
 > Wol
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAl48li0ACgkQOeye3VZi
-gbk9Vw//ZKdqktaHGetpzhAfc0gQdCfj0Yd6DNtG7HoDDNW82N8v4ZMt6l75pi75
-zoGpKowibD4RJlxIGrZ/mnf7fPizGo5U0OYmMSDcd1FJE0h4DMf30e4Q6geS18IX
-Kx3DNI6WFK7CfWpLLLqpWUtKE6CJbHh9bEDLecnBTTe67neBJzu0v3/7tE+LoS12
-aVyAJxLb2YeOG2kujvLqelqhRn7sRwGN0z3IcrPSGdyUpnGY9n7yt2PF6/9LkNJF
-iQXciayDIdQAdik5aqs3htD144ekG1p9RYjHUQl/E0/JZ7C0Hjm7jgqfMPsBpLNN
-DNQ8qo8Yz7Qs6EQh4Uod7oNC7sTb5Kgto6rKuvyB0mZ8CDC81NZa9mflGg09bRIs
-TXUba7cssnXrW/bsyS1gho7IPvyVTK/yqXdlI24zcE5WE0Qt1Gv1mFB8Edh3vXqf
-o8L8wEEGqQ5JhNrz9jqbGmmfIcfs4tiMQiZ70LguXfqyyZ4HW5FI8MoRuWeJGwFC
-ZV0QhpvpPrHD86NyfqK3XO3+3UPnDfTb+/PgvZMDWybqrabC8sgZ3JOngDnbRVEo
-ytHj6Q2YtBXm1mNwSFnopt1RK6RdwXk+rbPwZhx2A1SUNy6Xxh3n4CEGUi7hT4bs
-JI1expr4dfYI+i3bGsKpPqLxBerlSiVk5Jhpco9DEK2KNhvHfCc=
-=fSvs
------END PGP SIGNATURE-----
---=-=-=--
