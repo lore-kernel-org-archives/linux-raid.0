@@ -1,28 +1,37 @@
-From: "Mr. Theophilus Odadudu" <cristinamedina0010@gmail.com>
-Subject: LETTER OF INQUIRY
-Date: Fri, 7 Feb 2020 15:44:08 -0500
-Message-ID: <CAPNvSTj-8q7w5QPmnH26+_3xCKjEWyE+9xcb8QyQs9Xie+iYgg__31626.2732770824$1581108260$gmane$org@mail.gmail.com>
-Reply-To: auch197722@gmail.com
+From: Sarah Newman <srn@prgmr.com>
+Subject: Re: Question
+Date: Fri, 7 Feb 2020 14:50:23 -0800
+Message-ID: <7af58e5b-7047-a3a8-f4b2-840ea6851dea@prgmr.com>
+References: <CAPpdf5-FJ0cP36pOLm40ESBOws8x5R6XbUOssFFCsY6xtb4_xw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPpdf5-FJ0cP36pOLm40ESBOws8x5R6XbUOssFFCsY6xtb4_xw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
+To: o1bigtenor <o1bigtenor@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good Day,
+On 2/7/20 7:49 AM, o1bigtenor wrote:
+> Greetings
+> 
+> Running a Raid-10 array made up of 4 - 1 TB drives on a debian testing
+> (11) system.
+> mdadm - v4.1 - 2018-10-01 is the version being used.
+> 
+> Some weirdness is happening - - - vis a vis - - - I have one directory
+> (not small) that has disappeared. I last accessed said directory
+> (still have the pdf open which is how I could get this information)
+> 'Last accessed 2020-01-19 6:32 A.M.'  as indicated in the 'Properties'
+> section of the file in question.
 
-I work as a clerk in a Bank here in Nigeria, I have a very
-confidential Business Proposition for you. There is a said amount of
-money floating in the bank unclaimed, belonging to the bank Foreign
-customer who die with his family in the Ethiopian Airline crash of
-March 11, 2019.
+I assume you've looked at lsof?
 
-I seek your good collaboration to move the fund for our benefit. we
-have agreed that 40% be yours once you help claim.
+https://www.linux.com/news/bring-back-deleted-files-lsof/
 
-Do get back to with 1) Your Full Name: (2) Residential Address: (3)
-Phone, Mobile  (4) Scan Copy of Your ID. to apply for claims of the
-funds.
+If it is a software problem, it just as likely, if not more likely, that it is a file system problem rather than a raid problem. You don't mention 
+what file system. You're possibly also actually looking at data in the in-memory disk cache rather than what's actually stored on disk given there's 
+been no reboot.
 
-Regards
-Theophilus Odadudu
+Is there anything suspicious in dmesg?
