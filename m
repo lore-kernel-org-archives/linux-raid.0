@@ -1,56 +1,69 @@
-From: o1bigtenor <o1bigtenor@gmail.com>
-Subject: Re: Was Re: Question - - - - now: issue resolved
-Date: Fri, 7 Feb 2020 20:16:31 -0600
-Message-ID: <CAPpdf5_6LgC4+R0smoMCMqhQ4KTx8q1_WAUfvZnsqUGBKkVPzw@mail.gmail.com>
-References: <CAPpdf5-FJ0cP36pOLm40ESBOws8x5R6XbUOssFFCsY6xtb4_xw@mail.gmail.com>
- <7af58e5b-7047-a3a8-f4b2-840ea6851dea@prgmr.com> <CAPpdf58BTV5duFoSfdC6_07+kqQy0zgfq4=PgErJHqVeikjgBA@mail.gmail.com>
- <1faaef72-62ed-2c36-19d7-f6995691779f@prgmr.com> <CAPpdf58wY2G4XpNhfnHG42fHkpT6Z_EtLnLdtTaGvhRG_N5KKA@mail.gmail.com>
- <1a4495cf-bd6a-7e56-46fa-87ed84d9a13c@prgmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Guoqing Jiang <guoqing.jiang@gmx.us>
+Subject: [PATCH] md: check arrays is suspended in mddev_detach before call quiesce operations
+Date: Tue, 11 Feb 2020 11:10:04 +0100
+Message-ID: <20200211101004.2993-1-guoqing.jiang@gmx.us>
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1a4495cf-bd6a-7e56-46fa-87ed84d9a13c@prgmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sarah Newman <srn@prgmr.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 List-Id: linux-raid.ids
 
-On Fri, Feb 7, 2020 at 7:24 PM Sarah Newman <srn@prgmr.com> wrote:
->
-> On 2/7/20 4:56 PM, o1bigtenor wrote:
-> > On Fri, Feb 7, 2020 at 5:41 PM Sarah Newman <srn@prgmr.com> wrote:
->
-> >> I said the command dmesg, not /var/log.
-> >>
-> >> If systemd-journald is broken, or your file system is broken, you could have tons of error messages in dmesg and nothing logged to disk.
-> >>
-> >
-> > Found one couplet - - - it might be applicable (please advise):
-> >
-> > [12458.717443] EXT4-fs (md0p1): warning: maximal mount count reached,
-> > running e2fsck is recommended
-> > [12459.215097] EXT4-fs (md0p1): mounted filesystem with ordered data
-> > mode. Opts: (null)
->
-> What it says. You might want to run fsck at some point. Don't do it while the file system is mounted. If fsck wants to make changes, back up your data
-> first.
->
-> >> just to make sure it hasn't been moved elsewhere on accident. That seems like the most likely scenario given the lack of error messages, unless no
-> >> messages at all have been logged due to previously mentioned issues.
-> >>
-> > Ran the suggested - - - - - well - - - - somehow I managed to drop the directory
-> > into a much smaller one. Dunno how that happened or any details (if someone
-> > cares to give method(s) and means for determining that I would be very
-> > grateful!) but I have now found the missing directory and its contents
-> > seem to be intact.
-> >
-> > I did understand that maybe asking on the linux-raid 'exchange' might not
-> > have been the 'best' place to do so but this seemed quite weird and the
-> > directory was on a raid-array and I thought that maybe this could be a signal
-> > that there were more issues brewing. That seems now not to be the case.
->
-> If something in hardware or the kernel is having issues, almost always you will see error messages.
->
-> It's also better to do quick and easy checks first even if you don't have a hypothesis for what would have lead to that state.
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 
-Thanks for the help!
+Don't call quiesce(1) and quiesce(0) if array is already suspended,
+otherwise in level_store, the array is writable after mddev_detach
+in below part though the intention is to make array writable after
+resume.
+
+	mddev_suspend(mddev);
+	mddev_detach(mddev);
+	...
+	mddev_resume(mddev);
+
+And it also causes calltrace as follows in [1].
+
+[48005.653834] WARNING: CPU: 1 PID: 45380 at kernel/kthread.c:510 kthread_=
+park+0x77/0x90
+[...]
+[48005.653976] CPU: 1 PID: 45380 Comm: mdadm Tainted: G           OE     5=
+.4.10-arch1-1 #1
+[48005.653979] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M=
+./J4105-ITX, BIOS P1.40 08/06/2018
+[48005.653984] RIP: 0010:kthread_park+0x77/0x90
+[48005.654015] Call Trace:
+[48005.654039]  r5l_quiesce+0x3c/0x70 [raid456]
+[48005.654052]  raid5_quiesce+0x228/0x2e0 [raid456]
+[48005.654073]  mddev_detach+0x30/0x70 [md_mod]
+[48005.654090]  level_store+0x202/0x670 [md_mod]
+[48005.654099]  ? security_capable+0x40/0x60
+[48005.654114]  md_attr_store+0x7b/0xc0 [md_mod]
+[48005.654123]  kernfs_fop_write+0xce/0x1b0
+[48005.654132]  vfs_write+0xb6/0x1a0
+[48005.654138]  ksys_write+0x67/0xe0
+[48005.654146]  do_syscall_64+0x4e/0x140
+[48005.654155]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[48005.654161] RIP: 0033:0x7fa0c8737497
+
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D206161
+
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+=2D--
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d3212d61e660..92c626b506d6 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6076,7 +6076,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+ static void mddev_detach(struct mddev *mddev)
+ {
+ 	md_bitmap_wait_behind_writes(mddev);
+-	if (mddev->pers && mddev->pers->quiesce) {
++	if (mddev->pers && mddev->pers->quiesce && !mddev->suspended) {
+ 		mddev->pers->quiesce(mddev, 1);
+ 		mddev->pers->quiesce(mddev, 0);
+ 	}
+=2D-
+2.17.1
