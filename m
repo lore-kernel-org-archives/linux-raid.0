@@ -1,62 +1,56 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH 1/1] Remove the legacy whitespace
-Date: Tue, 11 Feb 2020 21:44:15 +0800
-Message-ID: <1581428655-12316-1-git-send-email-xni@redhat.com>
+From: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
+Subject: [PATCH v2 0/2] Enable polling on stackable devices
+Date: Tue, 11 Feb 2020 12:17:27 -0700
+Message-ID: <20200211191729.4745-1-andrzej.jakowski@linux.intel.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes.sorensen@gmail.com
-Cc: ptoscano@redhat.com, ncroxon@redhat.com, linux-raid@vger.kernel.org
+To: axboe@kernel.dk, song@kernel.org
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
 List-Id: linux-raid.ids
 
-The whitespace between Environment= and the true value causes confusion.
-To avoid confusing other people in future, remove the whitespace to keep
-it a simple, unambiguous syntax
+Changes since v1:
+ - reintroduced original blk_poll() function that has been removed some time
+   ago (Jens)
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
+ - added fastpath calls to blk_mq_poll() in blk_poll() (Christoph, Jens)
+
+ - incorporated code style fixes into md patch (Christoph)
+ 
+[1]: https://lore.kernel.org/linux-block/20200126044138.5066-1-andrzej.jakowski@linux.intel.com/T/#t
+
 ---
- systemd/mdcheck_continue.service  | 2 +-
- systemd/mdcheck_start.service     | 2 +-
- systemd/mdmonitor-oneshot.service | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/systemd/mdcheck_continue.service b/systemd/mdcheck_continue.service
-index aa02dde..854317f 100644
---- a/systemd/mdcheck_continue.service
-+++ b/systemd/mdcheck_continue.service
-@@ -11,7 +11,7 @@ ConditionPathExistsGlob = /var/lib/mdcheck/MD_UUID_*
- 
- [Service]
- Type=oneshot
--Environment= "MDADM_CHECK_DURATION=6 hours"
-+Environment="MDADM_CHECK_DURATION=6 hours"
- EnvironmentFile=-/run/sysconfig/mdadm
- ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
- ExecStart=/usr/share/mdadm/mdcheck --continue --duration ${MDADM_CHECK_DURATION}
-diff --git a/systemd/mdcheck_start.service b/systemd/mdcheck_start.service
-index da62d5f..3bb3d13 100644
---- a/systemd/mdcheck_start.service
-+++ b/systemd/mdcheck_start.service
-@@ -11,7 +11,7 @@ Wants=mdcheck_continue.timer
- 
- [Service]
- Type=oneshot
--Environment= "MDADM_CHECK_DURATION=6 hours"
-+Environment="MDADM_CHECK_DURATION=6 hours"
- EnvironmentFile=-/run/sysconfig/mdadm
- ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
- ExecStart=/usr/share/mdadm/mdcheck --duration ${MDADM_CHECK_DURATION}
-diff --git a/systemd/mdmonitor-oneshot.service b/systemd/mdmonitor-oneshot.service
-index fd469b1..373955a 100644
---- a/systemd/mdmonitor-oneshot.service
-+++ b/systemd/mdmonitor-oneshot.service
-@@ -9,7 +9,7 @@
- Description=Reminder for degraded MD arrays
- 
- [Service]
--Environment=  MDADM_MONITOR_ARGS=--scan
-+Environment=MDADM_MONITOR_ARGS=--scan
- EnvironmentFile=-/run/sysconfig/mdadm
- ExecStartPre=-/usr/lib/mdadm/mdadm_env.sh
- ExecStart=BINDIR/mdadm --monitor --oneshot $MDADM_MONITOR_ARGS
+IO polling is available on blk-mq devices. It is not possible to perform IO
+polling on stackable devices like MD.
+
+In this patch series we propose to reintroduce blk_poll() function. blk_poll()
+when called on stackable block device that supports polling will invoke its
+polling handler. Otherwise it will call blk_mq_poll() directly for fast
+accesses.
+
+This patch set also includes example implemetation of polling on MD RAID-0
+volume.
+
+---
+
+TODO:
+ - introduce REQ_NOWAIT support for stackable devices in a separate patchset 
+   (Christoph)
+
+Andrzej Jakowski (1):
+  block: reintroduce polling on bio level
+
+Artur Paszkiewicz (1):
+  md: enable io polling
+
+ block/blk-core.c       | 28 ++++++++++++++++++++++++++++
+ block/blk-mq.c         | 23 ++---------------------
+ block/blk-mq.h         |  2 ++
+ drivers/md/md.c        | 40 ++++++++++++++++++++++++++++++++++++----
+ include/linux/blkdev.h |  2 ++
+ 5 files changed, 70 insertions(+), 25 deletions(-)
+
 -- 
-2.7.5
+2.20.1
