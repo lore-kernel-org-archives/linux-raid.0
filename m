@@ -1,38 +1,94 @@
-From: Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH v2 2/2] md: enable io polling
-Date: Thu, 13 Feb 2020 06:42:07 +0900
-Message-ID: <20200212214207.GA6409@redsun51.ssa.fujisawa.hgst.com>
-References: <20200211191729.4745-1-andrzej.jakowski@linux.intel.com>
- <20200211191729.4745-3-andrzej.jakowski@linux.intel.com>
- <20200211211334.GB3837@redsun51.ssa.fujisawa.hgst.com>
- <e9941d4d-c403-4177-526d-b3086207f31a@linux.intel.com>
+From: Maksym Planeta <mplaneta@os.inf.tu-dresden.de>
+Subject: [PATCH] Remove WQ_CPU_INTENSIVE flag from unbound wq's
+Date: Thu, 13 Feb 2020 15:18:23 +0100
+Message-ID: <20200213141823.2174236-1-mplaneta@os.inf.tu-dresden.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9941d4d-c403-4177-526d-b3086207f31a@linux.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
-Cc: axboe@kernel.dk, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: mplaneta@os.inf.tu-dresden.de, Zhou Wang <wangzhou1@hisilicon.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Song Liu <song@kernel.org>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 12, 2020 at 02:00:10PM -0700, Andrzej Jakowski wrote:
-> On 2/11/20 2:13 PM, Keith Busch wrote:
-> > I must be missing something: md's make_request_fn always returns
-> > BLK_QC_T_NONE for the cookie, and that couldn't get past blk_poll's
-> > blk_qc_t_valid(cookie) check. How does the initial blk_poll() caller get
-> > a valid cookie for an md backing device's request_queue? And how is the
-> > same cookie valid for more than one request_queue?
-> 
-> That's true md_make_request() always returns BLK_QC_T_NONE. md_make_request()
-> recursively calls generic_make_request() for the underlying device (e.g. nvme).
-> That block io request directed to member disk is added into bio_list and is 
-> processed later by top level generic_make_request(). generic_make_request() 
-> returns cookie that is returned by blk_mq_make_request().
-> That cookie is later used to poll for completion. 
+The documentation [1] says that WQ_CPU_INTENSIVE is "meaningless" for
+unbound wq. I remove this flag from places where unbound queue is
+allocated. This is supposed to improve code readability.
 
-Okay, that's a nice subtlety. But it means the original caller gets the
-cookie from the last submission in the chain. If md recieves a single
-request that has to be split among more than one member disk, the cookie
-you're using to control the polling is valid only for one of the
-request_queue's and may break others.
+1. https://www.kernel.org/doc/html/latest/core-api/workqueue.html#flags
+
+Signed-off-by: Maksym Planeta <mplaneta@os.inf.tu-dresden.de>
+---
+ drivers/crypto/hisilicon/qm.c | 3 +--
+ drivers/md/dm-crypt.c         | 2 +-
+ drivers/md/dm-verity-target.c | 2 +-
+ drivers/md/raid5.c            | 2 +-
+ fs/erofs/zdata.c              | 2 +-
+ 5 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/crypto/hisilicon/qm.c b/drivers/crypto/hisilicon/qm.c
+index b57da5ef8b5b..4a39cb2c6a0b 100644
+--- a/drivers/crypto/hisilicon/qm.c
++++ b/drivers/crypto/hisilicon/qm.c
+@@ -1148,8 +1148,7 @@ struct hisi_qp *hisi_qm_create_qp(struct hisi_qm *qm, u8 alg_type)
+ 	qp->qp_id = qp_id;
+ 	qp->alg_type = alg_type;
+ 	INIT_WORK(&qp->work, qm_qp_work_func);
+-	qp->wq = alloc_workqueue("hisi_qm", WQ_UNBOUND | WQ_HIGHPRI |
+-				 WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM, 0);
++	qp->wq = alloc_workqueue("hisi_qm", WQ_UNBOUND | WQ_HIGHPRI | WQ_MEM_RECLAIM, 0);
+ 	if (!qp->wq) {
+ 		ret = -EFAULT;
+ 		goto err_free_qp_mem;
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index c6a529873d0f..44d56325fa27 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -3032,7 +3032,7 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 						  1, devname);
+ 	else
+ 		cc->crypt_queue = alloc_workqueue("kcryptd/%s",
+-						  WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND,
++						  WQ_MEM_RECLAIM | WQ_UNBOUND,
+ 						  num_online_cpus(), devname);
+ 	if (!cc->crypt_queue) {
+ 		ti->error = "Couldn't create kcryptd queue";
+diff --git a/drivers/md/dm-verity-target.c b/drivers/md/dm-verity-target.c
+index 0d61e9c67986..20f92c7ea07e 100644
+--- a/drivers/md/dm-verity-target.c
++++ b/drivers/md/dm-verity-target.c
+@@ -1190,7 +1190,7 @@ static int verity_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 	}
+ 
+ 	/* WQ_UNBOUND greatly improves performance when running on ramdisk */
+-	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND, num_online_cpus());
++	v->verify_wq = alloc_workqueue("kverityd", WQ_MEM_RECLAIM | WQ_UNBOUND, num_online_cpus());
+ 	if (!v->verify_wq) {
+ 		ti->error = "Cannot allocate workqueue";
+ 		r = -ENOMEM;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ba00e9877f02..cd93a1731b82 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -8481,7 +8481,7 @@ static int __init raid5_init(void)
+ 	int ret;
+ 
+ 	raid5_wq = alloc_workqueue("raid5wq",
+-		WQ_UNBOUND|WQ_MEM_RECLAIM|WQ_CPU_INTENSIVE|WQ_SYSFS, 0);
++		WQ_UNBOUND|WQ_MEM_RECLAIM|WQ_SYSFS, 0);
+ 	if (!raid5_wq)
+ 		return -ENOMEM;
+ 
+diff --git a/fs/erofs/zdata.c b/fs/erofs/zdata.c
+index 80e47f07d946..b2a679f720e9 100644
+--- a/fs/erofs/zdata.c
++++ b/fs/erofs/zdata.c
+@@ -43,7 +43,7 @@ void z_erofs_exit_zip_subsystem(void)
+ static inline int z_erofs_init_workqueue(void)
+ {
+ 	const unsigned int onlinecpus = num_possible_cpus();
+-	const unsigned int flags = WQ_UNBOUND | WQ_HIGHPRI | WQ_CPU_INTENSIVE;
++	const unsigned int flags = WQ_UNBOUND | WQ_HIGHPRI;
+ 
+ 	/*
+ 	 * no need to spawn too many threads, limiting threads could minimum
+-- 
+2.24.1
