@@ -1,64 +1,51 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.5 067/542] raid6/test: fix a compilation error
-Date: Fri, 14 Feb 2020 10:40:59 -0500
-Message-ID: <20200214154854.6746-67-sashal@kernel.org>
-References: <20200214154854.6746-1-sashal@kernel.org>
+From: Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH v2 2/2] md: enable io polling
+Date: Sat, 15 Feb 2020 04:25:26 +0900
+Message-ID: <20200214192526.GA10991@redsun51.ssa.fujisawa.hgst.com>
+References: <20200211191729.4745-1-andrzej.jakowski@linux.intel.com>
+ <20200211191729.4745-3-andrzej.jakowski@linux.intel.com>
+ <20200211211334.GB3837@redsun51.ssa.fujisawa.hgst.com>
+ <e9941d4d-c403-4177-526d-b3086207f31a@linux.intel.com>
+ <20200212214207.GA6409@redsun51.ssa.fujisawa.hgst.com>
+ <f516e2b2-1988-03ca-f966-5f26771717ff@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Zhengyuan Liu <liuzhengyuan@kylinos.cn>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <f516e2b2-1988-03ca-f966-5f26771717ff@linux.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andrzej Jakowski <andrzej.jakowski@linux.intel.com>
+Cc: axboe@kernel.dk, song@kernel.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
+On Thu, Feb 13, 2020 at 01:19:42PM -0700, Andrzej Jakowski wrote:
+> On 2/12/20 2:42 PM, Keith Busch wrote:
+> > Okay, that's a nice subtlety. But it means the original caller gets the
+> > cookie from the last submission in the chain. If md recieves a single
+> > request that has to be split among more than one member disk, the cookie
+> > you're using to control the polling is valid only for one of the
+> > request_queue's and may break others.
+> 
+> Correct, I agree that it is an issue. I can see at least two ways how to solve it:
+>  1. Provide a mechanism in md accounting for outstanding IOs, storing cookie information 
+>     for them. md_poll() will then use valid cookie's
+>  2. Provide similar mechanism abstracted for stackable block devices and block layer could
+>     handle completions for subordinate bios in an abstracted way in blk_poll() routine.
+> How do you Guys see this going?
 
-[ Upstream commit 6b8651aac1dca6140dd7fb4c9fec2736ed3f6223 ]
+Honestly, I don't see how this is can be successful without a more
+significant change than you may be anticipating. I'd be happy to hear if
+there's a better solution, but here's what I'm thinking:
 
-The compilation error is redeclaration showed as following:
+You'd need each stacking layer to return a cookie that its poll function
+can turn into a list of { request_queue, blk_qc_t } tuples for each bio
+the stacking layer created so that it can chain the poll request to the
+next layers.
 
-        In file included from ../../../include/linux/limits.h:6,
-                         from /usr/include/x86_64-linux-gnu/bits/local_lim.h:38,
-                         from /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:161,
-                         from /usr/include/limits.h:183,
-                         from /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/limits.h:194,
-                         from /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/syslimits.h:7,
-                         from /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/limits.h:34,
-                         from ../../../include/linux/raid/pq.h:30,
-                         from algos.c:14:
-        ../../../include/linux/types.h:114:15: error: conflicting types for ‘int64_t’
-         typedef s64   int64_t;
-                       ^~~~~~~
-        In file included from /usr/include/stdint.h:34,
-                         from /usr/lib/gcc/x86_64-linux-gnu/8/include/stdint.h:9,
-                         from /usr/include/inttypes.h:27,
-                         from ../../../include/linux/raid/pq.h:29,
-                         from algos.c:14:
-        /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:27:19: note: previous \
-        declaration of ‘int64_t’ was here
-         typedef __int64_t int64_t;
+The problems are that the stacking layers don't get a cookie for the
+bio's it submits from within the same md_make_request() context. Even if
+you could get the cookie associated with those bios, you either allocate
+more memory to track these things, or need polling bio list link fields
+added 'struct bio', neither of which seem very appealing.
 
-Fixes: 54d50897d544 ("linux/kernel.h: split *_MAX and *_MIN macros into <linux/limits.h>")
-Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- include/linux/raid/pq.h | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index 0832c9b66852e..0b6e7ad9cd2a8 100644
---- a/include/linux/raid/pq.h
-+++ b/include/linux/raid/pq.h
-@@ -27,7 +27,6 @@ extern const char raid6_empty_zero_page[PAGE_SIZE];
- 
- #include <errno.h>
- #include <inttypes.h>
--#include <limits.h>
- #include <stddef.h>
- #include <sys/mman.h>
- #include <sys/time.h>
--- 
-2.20.1
+Do you have a better way in mind?
