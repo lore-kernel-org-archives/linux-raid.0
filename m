@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.5 338/542] raid6/test: fix a compilation warning
-Date: Fri, 14 Feb 2020 10:45:30 -0500
-Message-ID: <20200214154854.6746-338-sashal@kernel.org>
-References: <20200214154854.6746-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 294/459] raid6/test: fix a compilation warning
+Date: Fri, 14 Feb 2020 10:59:04 -0500
+Message-ID: <20200214160149.11681-294-sashal@kernel.org>
+References: <20200214160149.11681-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Zhengyuan Liu <liuzhengyuan@kylinos.cn>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
