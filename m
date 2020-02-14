@@ -1,103 +1,24 @@
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH] Remove WQ_CPU_INTENSIVE flag from unbound wq's
-Date: Fri, 14 Feb 2020 11:47:47 +0800
-Message-ID: <5E461863.3000004@hisilicon.com>
-References: <20200213141823.2174236-1-mplaneta@os.inf.tu-dresden.de>
+From: Leslie Rhorer <lesrhorer@att.net>
+Subject: mdadm not sending status on check
+Date: Fri, 14 Feb 2020 04:01:15 -0600
+Message-ID: <82922d71-cc13-dd3b-d75b-0bfa87883252@att.net>
+References: <82922d71-cc13-dd3b-d75b-0bfa87883252.ref@att.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200213141823.2174236-1-mplaneta@os.inf.tu-dresden.de>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Maksym Planeta <mplaneta@os.inf.tu-dresden.de>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Song Liu <song@kernel.org>, Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2020/2/13 22:18, Maksym Planeta wrote:
-> The documentation [1] says that WQ_CPU_INTENSIVE is "meaningless" for
-> unbound wq. I remove this flag from places where unbound queue is
-> allocated. This is supposed to improve code readability.
-> 
-> 1. https://www.kernel.org/doc/html/latest/core-api/workqueue.html#flags
-> 
-> Signed-off-by: Maksym Planeta <mplaneta@os.inf.tu-dresden.de>
-> ---
->  drivers/crypto/hisilicon/qm.c | 3 +--
->  drivers/md/dm-crypt.c         | 2 +-
->  drivers/md/dm-verity-target.c | 2 +-
->  drivers/md/raid5.c            | 2 +-
->  fs/erofs/zdata.c              | 2 +-
->  5 files changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/crypto/hisilicon/qm.c b/drivers/crypto/hisilicon/qm.c
-> index b57da5ef8b5b..4a39cb2c6a0b 100644
-> --- a/drivers/crypto/hisilicon/qm.c
-> +++ b/drivers/crypto/hisilicon/qm.c
-> @@ -1148,8 +1148,7 @@ struct hisi_qp *hisi_qm_create_qp(struct hisi_qm *qm, u8 alg_type)
->  	qp->qp_id = qp_id;
->  	qp->alg_type = alg_type;
->  	INIT_WORK(&qp->work, qm_qp_work_func);
-> -	qp->wq = alloc_workqueue("hisi_qm", WQ_UNBOUND | WQ_HIGHPRI |
-> -				 WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM, 0);
-> +	qp->wq = alloc_workqueue("hisi_qm", WQ_UNBOUND | WQ_HIGHPRI | WQ_MEM_RECLAIM, 0);
+     Ever since upgrading to Debian Buster, mdadm no longer sends out 
+status reports during the monthly array test.  I think the test is 
+running, but I am not certain.  Go can I check to make sure it is 
+configured to run, and if it is, how can I ensure it will send out 
+e-mail alerts?  Testing the system with
 
-I am OK with qm code.
+|mdadm --monitor --scan --||test| |-1|
 
-Thanks!
-Zhou
-
->  	if (!qp->wq) {
->  		ret = -EFAULT;
->  		goto err_free_qp_mem;
-> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-> index c6a529873d0f..44d56325fa27 100644
-> --- a/drivers/md/dm-crypt.c
-> +++ b/drivers/md/dm-crypt.c
-> @@ -3032,7 +3032,7 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
->  						  1, devname);
->  	else
->  		cc->crypt_queue = alloc_workqueue("kcryptd/%s",
-> -						  WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND,
-> +						  WQ_MEM_RECLAIM | WQ_UNBOUND,
->  						  num_online_cpus(), devname);
->  	if (!cc->crypt_queue) {
->  		ti->error = "Couldn't create kcryptd queue";
-> diff --git a/drivers/md/dm-verity-target.c b/drivers/md/dm-verity-target.c
-> index 0d61e9c67986..20f92c7ea07e 100644
-> --- a/drivers/md/dm-verity-target.c
-> +++ b/drivers/md/dm-verity-target.c
-> @@ -1190,7 +1190,7 @@ static int verity_ctr(struct dm_target *ti, unsigned argc, char **argv)
->  	}
->  
->  	/* WQ_UNBOUND greatly improves performance when running on ramdisk */
-> -	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND, num_online_cpus());
-> +	v->verify_wq = alloc_workqueue("kverityd", WQ_MEM_RECLAIM | WQ_UNBOUND, num_online_cpus());
->  	if (!v->verify_wq) {
->  		ti->error = "Cannot allocate workqueue";
->  		r = -ENOMEM;
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index ba00e9877f02..cd93a1731b82 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -8481,7 +8481,7 @@ static int __init raid5_init(void)
->  	int ret;
->  
->  	raid5_wq = alloc_workqueue("raid5wq",
-> -		WQ_UNBOUND|WQ_MEM_RECLAIM|WQ_CPU_INTENSIVE|WQ_SYSFS, 0);
-> +		WQ_UNBOUND|WQ_MEM_RECLAIM|WQ_SYSFS, 0);
->  	if (!raid5_wq)
->  		return -ENOMEM;
->  
-> diff --git a/fs/erofs/zdata.c b/fs/erofs/zdata.c
-> index 80e47f07d946..b2a679f720e9 100644
-> --- a/fs/erofs/zdata.c
-> +++ b/fs/erofs/zdata.c
-> @@ -43,7 +43,7 @@ void z_erofs_exit_zip_subsystem(void)
->  static inline int z_erofs_init_workqueue(void)
->  {
->  	const unsigned int onlinecpus = num_possible_cpus();
-> -	const unsigned int flags = WQ_UNBOUND | WQ_HIGHPRI | WQ_CPU_INTENSIVE;
-> +	const unsigned int flags = WQ_UNBOUND | WQ_HIGHPRI;
->  
->  	/*
->  	 * no need to spawn too many threads, limiting threads could minimum
-> 
+|    works properly.
+|
