@@ -1,67 +1,64 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 294/459] raid6/test: fix a compilation warning
-Date: Fri, 14 Feb 2020 10:59:04 -0500
-Message-ID: <20200214160149.11681-294-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 059/459] raid6/test: fix a compilation error
+Date: Fri, 14 Feb 2020 10:55:09 -0500
+Message-ID: <20200214160149.11681-59-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Zhengyuan Liu <liuzhengyuan@kylinos.cn>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 From: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 
-[ Upstream commit 5e5ac01c2b8802921fee680518a986011cb59820 ]
+[ Upstream commit 6b8651aac1dca6140dd7fb4c9fec2736ed3f6223 ]
 
-The compilation warning is redefination showed as following:
+The compilation error is redeclaration showed as following:
 
-        In file included from tables.c:2:
-        ../../../include/linux/export.h:180: warning: "EXPORT_SYMBOL" redefined
-         #define EXPORT_SYMBOL(sym)  __EXPORT_SYMBOL(sym, "")
+        In file included from ../../../include/linux/limits.h:6,
+                         from /usr/include/x86_64-linux-gnu/bits/local_lim.h:38,
+                         from /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:161,
+                         from /usr/include/limits.h:183,
+                         from /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/limits.h:194,
+                         from /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/syslimits.h:7,
+                         from /usr/lib/gcc/x86_64-linux-gnu/8/include-fixed/limits.h:34,
+                         from ../../../include/linux/raid/pq.h:30,
+                         from algos.c:14:
+        ../../../include/linux/types.h:114:15: error: conflicting types for ‘int64_t’
+         typedef s64   int64_t;
+                       ^~~~~~~
+        In file included from /usr/include/stdint.h:34,
+                         from /usr/lib/gcc/x86_64-linux-gnu/8/include/stdint.h:9,
+                         from /usr/include/inttypes.h:27,
+                         from ../../../include/linux/raid/pq.h:29,
+                         from algos.c:14:
+        /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:27:19: note: previous \
+        declaration of ‘int64_t’ was here
+         typedef __int64_t int64_t;
 
-        In file included from tables.c:1:
-        ../../../include/linux/raid/pq.h:61: note: this is the location of the previous definition
-         #define EXPORT_SYMBOL(sym)
-
-Fixes: 69a94abb82ee ("export.h, genksyms: do not make genksyms calculate CRC of trimmed symbols")
+Fixes: 54d50897d544 ("linux/kernel.h: split *_MAX and *_MIN macros into <linux/limits.h>")
 Signed-off-by: Zhengyuan Liu <liuzhengyuan@kylinos.cn>
 Signed-off-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/linux/raid/pq.h | 2 ++
- lib/raid6/mktables.c    | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ include/linux/raid/pq.h | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index 0b6e7ad9cd2a8..e0ddb47f44020 100644
+index 0832c9b66852e..0b6e7ad9cd2a8 100644
 --- a/include/linux/raid/pq.h
 +++ b/include/linux/raid/pq.h
-@@ -58,7 +58,9 @@ extern const char raid6_empty_zero_page[PAGE_SIZE];
- #define enable_kernel_altivec()
- #define disable_kernel_altivec()
+@@ -27,7 +27,6 @@ extern const char raid6_empty_zero_page[PAGE_SIZE];
  
-+#undef	EXPORT_SYMBOL
- #define EXPORT_SYMBOL(sym)
-+#undef	EXPORT_SYMBOL_GPL
- #define EXPORT_SYMBOL_GPL(sym)
- #define MODULE_LICENSE(licence)
- #define MODULE_DESCRIPTION(desc)
-diff --git a/lib/raid6/mktables.c b/lib/raid6/mktables.c
-index 9c485df1308fb..f02e10fa62381 100644
---- a/lib/raid6/mktables.c
-+++ b/lib/raid6/mktables.c
-@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
- 	uint8_t v;
- 	uint8_t exptbl[256], invtbl[256];
- 
--	printf("#include <linux/raid/pq.h>\n");
- 	printf("#include <linux/export.h>\n");
-+	printf("#include <linux/raid/pq.h>\n");
- 
- 	/* Compute multiplication table */
- 	printf("\nconst u8  __attribute__((aligned(256)))\n"
+ #include <errno.h>
+ #include <inttypes.h>
+-#include <limits.h>
+ #include <stddef.h>
+ #include <sys/mman.h>
+ #include <sys/time.h>
 -- 
 2.20.1
