@@ -1,7 +1,7 @@
 From: Georgi Nikolov <gnikolov@icdsoft.com>
 Subject: Re: Pausing md check hangs
-Date: Mon, 17 Feb 2020 14:14:40 +0200
-Message-ID: <88ecd551-f8ac-badc-9c62-1e3f7ee4f55d@icdsoft.com>
+Date: Mon, 17 Feb 2020 15:15:42 +0200
+Message-ID: <fbd369ff-e0ac-9db3-9c26-8cc0be7ff0d9@icdsoft.com>
 References: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
  <CAPhsuW4Jc-qef9uW-JSut90qOpDc_4VoAFpMU8KwqnK7EeT_xg@mail.gmail.com>
  <ac3ae81d-8dad-8b4e-bc61-fc37514e3929@icdsoft.com>
@@ -10,7 +10,7 @@ References: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
  <CAPhsuW6wZ_n1BVP6+nZ12MgnkM1OgmzSs+KeC0tGDvX-RG3KvA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------3A225A30193F7C0351014E22"
+ boundary="------------728BE3EF25B76081DD2CF359"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAPhsuW6wZ_n1BVP6+nZ12MgnkM1OgmzSs+KeC0tGDvX-RG3KvA@mail.gmail.com>
 Content-Language: en-US
@@ -20,645 +20,628 @@ Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------3A225A30193F7C0351014E22
+--------------728BE3EF25B76081DD2CF359
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-I found old log file with kernel prints. May be it will give more 
-insights of what was happening.
-In the meantime i will try to get more fresh info.
-> Hmm... This is weird. Could you try use perf or some other tools to get insights
-> on what the thread is doing?
->
-> Thanks,
-> Song
+I have managed to gather fresh data. Attached are logs from 'perf' and 
+'echo l > /proc/sysrq-trigger'.
+It seems that thread is locked in 'analyse_stripe'.
+
 Regards,
 Georgi Nikolov
 
---------------3A225A30193F7C0351014E22
+--------------728BE3EF25B76081DD2CF359
 Content-Type: text/x-log; charset=UTF-8;
- name="supermicro-03-12-2019.log"
+ name="supermicro-17-02-2020-perf.log"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
- filename="supermicro-03-12-2019.log"
+ filename="supermicro-17-02-2020-perf.log"
 
-Dec  3 11:42:17 supermicro kernel: [684461.491490] NMI backtrace for cpu 30
-Dec  3 11:42:17 supermicro kernel: [684461.491490] CPU: 30 PID: 67325 Comm: kworker/u146:9 Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 11:42:17 supermicro kernel: [684461.491490] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
-Dec  3 11:42:17 supermicro kernel: [684461.491491] Workqueue: raid5wq raid5_do_work [raid456]
-Dec  3 11:42:17 supermicro kernel: [684461.491491] RIP: 0010:native_queued_spin_lock_slowpath+0x15f/0x190
-Dec  3 11:42:17 supermicro kernel: [684461.491492] Code: c1 ee 12 83 e0 03 83 ee 01 48 c1 e0 04 48 63 f6 48 05 00 2d 02 00 48 03 04 f5 20 e7 ee a3 48 89 10 8b 42 08 85 c0 75 09 f3 90 <8b> 42 08 85 c0 74 f7 48 8b 02 48 85 c0 74 88 48 89 c6 0f 0d 08 eb
-Dec  3 11:42:17 supermicro kernel: [684461.491492] RSP: 0018:ffff9f787f503e18 EFLAGS: 00000046
-Dec  3 11:42:17 supermicro kernel: [684461.491493] RAX: 0000000000000000 RBX: 0000000000000086 RCX: 00000000007c0000
-Dec  3 11:42:17 supermicro kernel: [684461.491493] RDX: ffff9f787f522d00 RSI: 0000000000000034 RDI: ffff9f586c41a418
-Dec  3 11:42:17 supermicro kernel: [684461.491493] RBP: 0000000ffffda200 R08: 0000000000000000 R09: ffffffffa350cd00
-Dec  3 11:42:17 supermicro kernel: [684461.491494] R10: ffff9f774a2e1880 R11: 0000000000000001 R12: ffff9f586c41a418
-Dec  3 11:42:17 supermicro kernel: [684461.491494] R13: 0000000000dae786 R14: 0000000000000028 R15: ffffd4d77f9c3820
-Dec  3 11:42:17 supermicro kernel: [684461.491494] FS:  0000000000000000(0000) GS:ffff9f787f500000(0000) knlGS:0000000000000000
-Dec  3 11:42:17 supermicro kernel: [684461.491494] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-Dec  3 11:42:17 supermicro kernel: [684461.491495] CR2: 0000680c92fd4080 CR3: 00000004b820a003 CR4: 00000000007626e0
-Dec  3 11:42:17 supermicro kernel: [684461.491495] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Dec  3 11:42:17 supermicro kernel: [684461.491495] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Dec  3 11:42:17 supermicro kernel: [684461.491495] PKRU: 55555554
-Dec  3 11:42:17 supermicro kernel: [684461.491495] Call Trace:
-Dec  3 11:42:17 supermicro kernel: [684461.491496]  <IRQ>
-Dec  3 11:42:17 supermicro kernel: [684461.491496]  _raw_spin_lock_irqsave+0x32/0x40
-Dec  3 11:42:17 supermicro kernel: [684461.491496]  find_iova+0x14/0x40
-Dec  3 11:42:17 supermicro kernel: [684461.491496]  free_iova+0xe/0x20
-Dec  3 11:42:17 supermicro kernel: [684461.491496]  fq_ring_free+0x9c/0xd0
-Dec  3 11:42:17 supermicro kernel: [684461.491497]  fq_flush_timeout+0x5f/0x90
-Dec  3 11:42:17 supermicro kernel: [684461.491497]  ? fq_ring_free+0xd0/0xd0
-Dec  3 11:42:17 supermicro kernel: [684461.491497]  call_timer_fn+0x2b/0x130
-Dec  3 11:42:17 supermicro kernel: [684461.491497]  run_timer_softirq+0x3d1/0x410
-Dec  3 11:42:17 supermicro kernel: [684461.491498]  __do_softirq+0xde/0x2d8
-Dec  3 11:42:17 supermicro kernel: [684461.491498]  irq_exit+0xba/0xc0
-Dec  3 11:42:17 supermicro kernel: [684461.491498]  smp_apic_timer_interrupt+0x74/0x140
-Dec  3 11:42:17 supermicro kernel: [684461.491498]  apic_timer_interrupt+0xf/0x20
-Dec  3 11:42:17 supermicro kernel: [684461.491498]  </IRQ>
-Dec  3 11:42:17 supermicro kernel: [684461.491498] RIP: 0010:_raw_spin_unlock_irqrestore+0x11/0x20
-Dec  3 11:42:17 supermicro kernel: [684461.491499] Code: 40 5c 01 00 48 8b 12 83 e2 08 74 cc eb 9f 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 0f 1f 40 00 48 89 f7 57 9d <0f> 1f 44 00 00 c3 66 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 8b 07
-Dec  3 11:42:17 supermicro kernel: [684461.491499] RSP: 0018:ffffb4f7be317580 EFLAGS: 00000283 ORIG_RAX: ffffffffffffff13
-Dec  3 11:42:17 supermicro kernel: [684461.491500] RAX: ffff9f53939872c0 RBX: ffff9f586c41a418 RCX: ffff9f5844d3d201
-Dec  3 11:42:17 supermicro kernel: [684461.491500] RDX: ffff9f5865334340 RSI: 0000000000000283 RDI: 0000000000000283
-Dec  3 11:42:17 supermicro kernel: [684461.491500] RBP: 000000000000007d R08: 0000000001180000 R09: ffffffffa351ca94
-Dec  3 11:42:17 supermicro kernel: [684461.491501] R10: 0000000000000000 R11: 000000000000003b R12: ffff9f755823cd00
-Dec  3 11:42:17 supermicro kernel: [684461.491501] R13: 0000000000000080 R14: ffffffffffffff80 R15: ffffffffffffff80
-Dec  3 11:42:17 supermicro kernel: [684461.491501]  ? dmar_insert_one_dev_info+0xd4/0x4f0
-Dec  3 11:42:17 supermicro kernel: [684461.491501]  alloc_iova+0x11f/0x140
-Dec  3 11:42:17 supermicro kernel: [684461.491502]  alloc_iova_fast+0x56/0x242
-Dec  3 11:42:17 supermicro kernel: [684461.491502]  intel_alloc_iova+0xa7/0xc0
-Dec  3 11:42:17 supermicro kernel: [684461.491502]  intel_map_sg+0xb2/0x1c0
-Dec  3 11:42:17 supermicro kernel: [684461.491502]  scsi_dma_map+0x52/0x70 [scsi_mod]
-Dec  3 11:42:17 supermicro kernel: [684461.491502]  _base_build_sg_scmd_ieee+0x80/0x4f0 [mpt3sas]
-Dec  3 11:42:17 supermicro kernel: [684461.491503]  ? scsi_init_sgtable+0x42/0x80 [scsi_mod]
-Dec  3 11:42:17 supermicro kernel: [684461.491503]  ? scsi_init_io+0x48/0x1b0 [scsi_mod]
-Dec  3 11:42:17 supermicro kernel: [684461.491503]  scsih_qcmd+0x315/0x440 [mpt3sas]
-Dec  3 11:42:17 supermicro kernel: [684461.491503]  scsi_dispatch_cmd+0x95/0x230 [scsi_mod]
-Dec  3 11:42:17 supermicro kernel: [684461.491503]  scsi_queue_rq+0x527/0x610 [scsi_mod]
-Dec  3 11:42:17 supermicro kernel: [684461.491504]  blk_mq_dispatch_rq_list+0x38c/0x590
-Dec  3 11:42:17 supermicro kernel: [684461.491504]  ? elevator_find+0x41/0x60
-Dec  3 11:42:17 supermicro kernel: [684461.491504]  ? deadline_remove_request+0x55/0xc0
-Dec  3 11:42:17 supermicro kernel: [684461.491504]  ? dd_dispatch_request+0x1e1/0x260
-Dec  3 11:42:17 supermicro kernel: [684461.491504]  blk_mq_do_dispatch_sched+0x76/0x120
-Dec  3 11:42:17 supermicro kernel: [684461.491505]  blk_mq_sched_dispatch_requests+0x11e/0x170
-Dec  3 11:42:17 supermicro kernel: [684461.491505]  __blk_mq_run_hw_queue+0x4e/0xe0
-Dec  3 11:42:17 supermicro kernel: [684461.491505]  __blk_mq_delay_run_hw_queue+0x143/0x160
-Dec  3 11:42:17 supermicro kernel: [684461.491505]  blk_mq_run_hw_queue+0x88/0x110
-Dec  3 11:42:17 supermicro kernel: [684461.491506]  blk_mq_flush_plug_list+0x11e/0x280
-Dec  3 11:42:17 supermicro kernel: [684461.491506]  blk_flush_plug_list+0xe9/0x240
-Dec  3 11:42:17 supermicro kernel: [684461.491506]  blk_mq_make_request+0x3c0/0x530
-Dec  3 11:42:17 supermicro kernel: [684461.491506]  generic_make_request+0x1a4/0x400
-Dec  3 11:42:17 supermicro kernel: [684461.491506]  ? apic_timer_interrupt+0xa/0x20
-Dec  3 11:42:17 supermicro kernel: [684461.491507]  ops_run_io+0x7c3/0xd30 [raid456]
-Dec  3 11:42:17 supermicro kernel: [684461.491507]  ? ops_complete_check+0x50/0x50 [raid456]
-Dec  3 11:42:17 supermicro kernel: [684461.491507]  handle_stripe+0xc5a/0x1fb0 [raid456]
-Dec  3 11:42:17 supermicro kernel: [684461.491507]  handle_active_stripes.isra.72+0x3d2/0x5b0 [raid456]
-Dec  3 11:42:17 supermicro kernel: [684461.491507]  raid5_do_work+0x9f/0x1d0 [raid456]
-Dec  3 11:42:17 supermicro kernel: [684461.491508]  ? __switch_to_asm+0x35/0x70
-Dec  3 11:42:17 supermicro kernel: [684461.491508]  ? finish_wait+0x80/0x80
-Dec  3 11:42:17 supermicro kernel: [684461.491508]  process_one_work+0x1a7/0x3a0
-Dec  3 11:42:17 supermicro kernel: [684461.491508]  worker_thread+0x1fa/0x390
-Dec  3 11:42:17 supermicro kernel: [684461.491508]  ? create_worker+0x1a0/0x1a0
-Dec  3 11:42:17 supermicro kernel: [684461.491508]  kthread+0x112/0x130
-Dec  3 11:42:17 supermicro kernel: [684461.491509]  ? kthread_bind+0x30/0x30
-Dec  3 11:42:17 supermicro kernel: [684461.491509]  ret_from_fork+0x35/0x40
-Dec  3 12:05:34 supermicro kernel: [685858.818674] mpt3sas_cm0: log_info(0x30030101): originator(IOP), code(0x03), sub_code(0x0101)
-Dec  3 12:05:40 supermicro kernel: [685864.290471] mpt3sas_cm1: log_info(0x30030101): originator(IOP), code(0x03), sub_code(0x0101)
-Dec  3 12:10:27 supermicro kernel: [686151.620557] rcu: INFO: rcu_sched detected stalls on CPUs/tasks:
-Dec  3 12:10:27 supermicro kernel: [686151.620952] rcu: 	68-....: (257 ticks this GP) idle=61e/1/0x4000000000000000 softirq=6778540/6778540 fqs=2416 
-Dec  3 12:10:27 supermicro kernel: [686151.621312] rcu: 	(detected by 7, t=5252 jiffies, g=55048417, q=9937)
-Dec  3 12:10:27 supermicro kernel: [686151.621677] Sending NMI from CPU 7 to CPUs 68:
-Dec  3 12:10:27 supermicro kernel: [686151.623017] NMI backtrace for cpu 68
-Dec  3 12:10:27 supermicro kernel: [686151.623018] CPU: 68 PID: 354 Comm: ksoftirqd/68 Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 12:10:27 supermicro kernel: [686151.623018] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
-Dec  3 12:10:27 supermicro kernel: [686151.623018] RIP: 0010:native_queued_spin_lock_slowpath+0x15f/0x190
-Dec  3 12:10:27 supermicro kernel: [686151.623019] Code: c1 ee 12 83 e0 03 83 ee 01 48 c1 e0 04 48 63 f6 48 05 00 2d 02 00 48 03 04 f5 20 e7 ee a3 48 89 10 8b 42 08 85 c0 75 09 f3 90 <8b> 42 08 85 c0 74 f7 48 8b 02 48 85 c0 74 88 48 89 c6 0f 0d 08 eb
-Dec  3 12:10:27 supermicro kernel: [686151.623019] RSP: 0018:ffffb4f78d393d28 EFLAGS: 00000046
-Dec  3 12:10:27 supermicro kernel: [686151.623020] RAX: 0000000000000000 RBX: 0000000000000082 RCX: 0000000001140000
-Dec  3 12:10:27 supermicro kernel: [686151.623020] RDX: ffff9f787fa22d00 RSI: 0000000000000001 RDI: ffff9f586c41a418
-Dec  3 12:10:27 supermicro kernel: [686151.623021] RBP: 0000000ffffcf380 R08: 0000000000000000 R09: ffffffffa350cd00
-Dec  3 12:10:27 supermicro kernel: [686151.623021] R10: ffff9f7723a867c0 R11: 0000000000000001 R12: ffff9f586c41a418
-Dec  3 12:10:27 supermicro kernel: [686151.623021] R13: 0000000000dba141 R14: 00000000000000de R15: ffffd4f77f703820
-Dec  3 12:10:27 supermicro kernel: [686151.623022] FS:  0000000000000000(0000) GS:ffff9f787fa00000(0000) knlGS:0000000000000000
-Dec  3 12:10:27 supermicro kernel: [686151.623022] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-Dec  3 12:10:27 supermicro kernel: [686151.623022] CR2: 00007f8b55bec000 CR3: 00000004b820a004 CR4: 00000000007626e0
-Dec  3 12:10:27 supermicro kernel: [686151.623023] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Dec  3 12:10:27 supermicro kernel: [686151.623023] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Dec  3 12:10:27 supermicro kernel: [686151.623023] PKRU: 55555554
-Dec  3 12:10:27 supermicro kernel: [686151.623023] Call Trace:
-Dec  3 12:10:27 supermicro kernel: [686151.623023]  _raw_spin_lock_irqsave+0x32/0x40
-Dec  3 12:10:27 supermicro kernel: [686151.623024]  find_iova+0x14/0x40
-Dec  3 12:10:27 supermicro kernel: [686151.623024]  free_iova+0xe/0x20
-Dec  3 12:10:27 supermicro kernel: [686151.623024]  fq_ring_free+0x9c/0xd0
-Dec  3 12:10:27 supermicro kernel: [686151.623024]  fq_flush_timeout+0x5f/0x90
-Dec  3 12:10:27 supermicro kernel: [686151.623024]  ? fq_ring_free+0xd0/0xd0
-Dec  3 12:10:27 supermicro kernel: [686151.623025]  call_timer_fn+0x2b/0x130
-Dec  3 12:10:27 supermicro kernel: [686151.623025]  run_timer_softirq+0x3d1/0x410
-Dec  3 12:10:27 supermicro kernel: [686151.623025]  ? __switch_to_asm+0x35/0x70
-Dec  3 12:10:27 supermicro kernel: [686151.623025]  ? __switch_to_asm+0x41/0x70
-Dec  3 12:10:27 supermicro kernel: [686151.623025]  ? __switch_to_asm+0x35/0x70
-Dec  3 12:10:27 supermicro kernel: [686151.623026]  ? __switch_to_asm+0x41/0x70
-Dec  3 12:10:27 supermicro kernel: [686151.623026]  ? __switch_to+0x8c/0x440
-Dec  3 12:10:27 supermicro kernel: [686151.623026]  ? __switch_to_asm+0x41/0x70
-Dec  3 12:10:27 supermicro kernel: [686151.623026]  ? __switch_to_asm+0x35/0x70
-Dec  3 12:10:27 supermicro kernel: [686151.623026]  __do_softirq+0xde/0x2d8
-Dec  3 12:10:27 supermicro kernel: [686151.623026]  ? sort_range+0x20/0x20
-Dec  3 12:10:27 supermicro kernel: [686151.623027]  run_ksoftirqd+0x26/0x40
-Dec  3 12:10:27 supermicro kernel: [686151.623027]  smpboot_thread_fn+0xc5/0x160
-Dec  3 12:10:27 supermicro kernel: [686151.623027]  kthread+0x112/0x130
-Dec  3 12:10:27 supermicro kernel: [686151.623027]  ? kthread_bind+0x30/0x30
-Dec  3 12:10:27 supermicro kernel: [686151.623027]  ret_from_fork+0x35/0x40
-Dec  3 12:22:02 supermicro kernel: [686846.268562] rcu: INFO: rcu_sched self-detected stall on CPU
-Dec  3 12:22:02 supermicro kernel: [686846.268995] rcu: 	11-....: (1 GPs behind) idle=662/0/0x3 softirq=9077521/9077522 fqs=2438 
-Dec  3 12:22:02 supermicro kernel: [686846.269401] rcu: 	 (t=5250 jiffies g=55070037 q=1074)
-Dec  3 12:22:02 supermicro kernel: [686846.269835] NMI backtrace for cpu 11
-Dec  3 12:22:02 supermicro kernel: [686846.270218] CPU: 11 PID: 0 Comm: swapper/11 Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 12:22:02 supermicro kernel: [686846.270609] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
-Dec  3 12:22:02 supermicro kernel: [686846.271005] Call Trace:
-Dec  3 12:22:02 supermicro kernel: [686846.271382]  <IRQ>
-Dec  3 12:22:02 supermicro kernel: [686846.271750]  dump_stack+0x5c/0x80
-Dec  3 12:22:02 supermicro kernel: [686846.272105]  nmi_cpu_backtrace.cold.4+0x13/0x50
-Dec  3 12:22:02 supermicro kernel: [686846.272457]  ? lapic_can_unplug_cpu.cold.29+0x3b/0x3b
-Dec  3 12:22:02 supermicro kernel: [686846.272799]  nmi_trigger_cpumask_backtrace+0xf9/0xfb
-Dec  3 12:22:02 supermicro kernel: [686846.273129]  rcu_dump_cpu_stacks+0x9b/0xcb
-Dec  3 12:22:02 supermicro kernel: [686846.273468]  rcu_check_callbacks.cold.81+0x1db/0x335
-Dec  3 12:22:02 supermicro kernel: [686846.273799]  ? tick_sched_do_timer+0x60/0x60
-Dec  3 12:22:02 supermicro kernel: [686846.274128]  update_process_times+0x28/0x60
-Dec  3 12:22:02 supermicro kernel: [686846.274454]  tick_sched_handle+0x22/0x60
-Dec  3 12:22:02 supermicro kernel: [686846.274783]  tick_sched_timer+0x37/0x70
-Dec  3 12:22:02 supermicro kernel: [686846.275096]  __hrtimer_run_queues+0x100/0x280
-Dec  3 12:22:02 supermicro kernel: [686846.275405]  hrtimer_interrupt+0x100/0x220
-Dec  3 12:22:02 supermicro kernel: [686846.275710]  smp_apic_timer_interrupt+0x6a/0x140
-Dec  3 12:22:02 supermicro kernel: [686846.276011]  apic_timer_interrupt+0xf/0x20
-Dec  3 12:22:02 supermicro kernel: [686846.276312] RIP: 0010:_raw_spin_unlock_irqrestore+0x11/0x20
-Dec  3 12:22:02 supermicro kernel: [686846.276620] Code: 40 5c 01 00 48 8b 12 83 e2 08 74 cc eb 9f 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 c6 07 00 0f 1f 40 00 48 89 f7 57 9d <0f> 1f 44 00 00 c3 66 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 8b 07
-Dec  3 12:22:02 supermicro kernel: [686846.277281] RSP: 0018:ffff9f587f8c3e88 EFLAGS: 00000286 ORIG_RAX: ffffffffffffff13
-Dec  3 12:22:02 supermicro kernel: [686846.277625] RAX: 00000000000004e0 RBX: ffffd4d77fb41818 RCX: 000000000000000d
-Dec  3 12:22:02 supermicro kernel: [686846.277975] RDX: 0000000000000001 RSI: 0000000000000286 RDI: 0000000000000286
-Dec  3 12:22:02 supermicro kernel: [686846.278328] RBP: 000000000000000d R08: 00000000000255a0 R09: ffffffffa350d27c
-Dec  3 12:22:02 supermicro kernel: [686846.278683] R10: ffffeb7bd9e0b000 R11: 0000000000000001 R12: ffff9f586c41ab30
-Dec  3 12:22:02 supermicro kernel: [686846.279041] R13: 0000000000000286 R14: ffff9f586c41a418 R15: ffffd4d77fb43820
-Dec  3 12:22:02 supermicro kernel: [686846.279404]  ? apic_timer_interrupt+0xa/0x20
-Dec  3 12:22:02 supermicro kernel: [686846.279831]  ? fq_ring_free+0x9c/0xd0
-Dec  3 12:22:02 supermicro kernel: [686846.280212]  fq_flush_timeout+0x6a/0x90
-Dec  3 12:22:02 supermicro kernel: [686846.280591]  ? fq_ring_free+0xd0/0xd0
-Dec  3 12:22:02 supermicro kernel: [686846.280982]  call_timer_fn+0x2b/0x130
-Dec  3 12:22:02 supermicro kernel: [686846.281361]  run_timer_softirq+0x3d1/0x410
-Dec  3 12:22:02 supermicro kernel: [686846.281744]  ? __hrtimer_run_queues+0x130/0x280
-Dec  3 12:22:02 supermicro kernel: [686846.282130]  ? recalibrate_cpu_khz+0x10/0x10
-Dec  3 12:22:02 supermicro kernel: [686846.282518]  ? ktime_get+0x3a/0xa0
-Dec  3 12:22:02 supermicro kernel: [686846.282911]  __do_softirq+0xde/0x2d8
-Dec  3 12:22:02 supermicro kernel: [686846.283305]  irq_exit+0xba/0xc0
-Dec  3 12:22:02 supermicro kernel: [686846.283727]  smp_apic_timer_interrupt+0x74/0x140
-Dec  3 12:22:02 supermicro kernel: [686846.284137]  apic_timer_interrupt+0xf/0x20
-Dec  3 12:22:02 supermicro kernel: [686846.284561]  </IRQ>
-Dec  3 12:22:02 supermicro kernel: [686846.284960] RIP: 0010:cpuidle_enter_state+0xb9/0x320
-Dec  3 12:22:02 supermicro kernel: [686846.285364] Code: e8 1c d1 b0 ff 80 7c 24 0b 00 74 17 9c 58 0f 1f 44 00 00 f6 c4 02 0f 85 3b 02 00 00 31 ff e8 2e b6 b6 ff fb 66 0f 1f 44 00 00 <48> b8 ff ff ff ff f3 01 00 00 48 2b 1c 24 ba ff ff ff 7f 48 39 c3
-Dec  3 12:22:02 supermicro kernel: [686846.286223] RSP: 0018:ffffb4f78c713e90 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
-Dec  3 12:22:02 supermicro kernel: [686846.286657] RAX: ffff9f587f8e20c0 RBX: 000270a9f2cd7f68 RCX: 000000000000001f
-Dec  3 12:22:02 supermicro kernel: [686846.287088] RDX: 000270a9f2cd7f68 RSI: 0000000037a7018e RDI: 0000000000000000
-Dec  3 12:22:02 supermicro kernel: [686846.287519] RBP: ffff9f587f8eb100 R08: 0000000000000002 R09: 0000000000021980
-Dec  3 12:22:02 supermicro kernel: [686846.287941] R10: 007c33fa47129860 R11: ffff9f587f8e10a8 R12: 0000000000000001
-Dec  3 12:22:02 supermicro kernel: [686846.288356] R13: ffffffffa40b7258 R14: 0000000000000001 R15: 0000000000000000
-Dec  3 12:22:02 supermicro kernel: [686846.288771]  do_idle+0x236/0x280
-Dec  3 12:22:02 supermicro kernel: [686846.289188]  cpu_startup_entry+0x6f/0x80
-Dec  3 12:22:02 supermicro kernel: [686846.289643]  start_secondary+0x1a4/0x1f0
-Dec  3 12:22:02 supermicro kernel: [686846.290074]  secondary_startup_64+0xa4/0xb0
-Dec  3 12:31:04 supermicro kernel: [687388.374049] rcu: INFO: rcu_sched detected stalls on CPUs/tasks:
-Dec  3 12:31:04 supermicro kernel: [687388.374534] rcu: 	27-....: (1 GPs behind) idle=f42/1/0x4000000000000000 softirq=6918976/6918978 fqs=2489 
-Dec  3 12:31:04 supermicro kernel: [687388.375011] rcu: 	(detected by 4, t=5252 jiffies, g=55083373, q=2525)
-Dec  3 12:31:04 supermicro kernel: [687388.375459] Sending NMI from CPU 4 to CPUs 27:
-Dec  3 12:31:04 supermicro kernel: [687388.376867] NMI backtrace for cpu 27
-Dec  3 12:31:04 supermicro kernel: [687388.376867] CPU: 27 PID: 149 Comm: ksoftirqd/27 Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 12:31:04 supermicro kernel: [687388.376868] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
-Dec  3 12:31:04 supermicro kernel: [687388.376868] RIP: 0010:native_queued_spin_lock_slowpath+0x15f/0x190
-Dec  3 12:31:04 supermicro kernel: [687388.376869] Code: c1 ee 12 83 e0 03 83 ee 01 48 c1 e0 04 48 63 f6 48 05 00 2d 02 00 48 03 04 f5 20 e7 ee a3 48 89 10 8b 42 08 85 c0 75 09 f3 90 <8b> 42 08 85 c0 74 f7 48 8b 02 48 85 c0 74 88 48 89 c6 0f 0d 08 eb
-Dec  3 12:31:04 supermicro kernel: [687388.376869] RSP: 0018:ffffb4f78cd2bd38 EFLAGS: 00000046
-Dec  3 12:31:04 supermicro kernel: [687388.376870] RAX: 0000000000000000 RBX: 0000000000000082 RCX: 0000000000700000
-Dec  3 12:31:04 supermicro kernel: [687388.376870] RDX: ffff9f787f462d00 RSI: 0000000000000002 RDI: ffff9f586c41a418
-Dec  3 12:31:04 supermicro kernel: [687388.376871] RBP: ffffd4f77fc41818 R08: 00000000000c0000 R09: ffffffffa350cd01
-Dec  3 12:31:04 supermicro kernel: [687388.376871] R10: ffff9f7770ed2880 R11: 0000000000000001 R12: ffff9f7770ed2a80
-Dec  3 12:31:04 supermicro kernel: [687388.376871] R13: 0000000000dc002e R14: 00000000000000ba R15: ffffd4f77fc43820
-Dec  3 12:31:04 supermicro kernel: [687388.376872] FS:  0000000000000000(0000) GS:ffff9f787f440000(0000) knlGS:0000000000000000
-Dec  3 12:31:04 supermicro kernel: [687388.376872] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-Dec  3 12:31:04 supermicro kernel: [687388.376872] CR2: 00007f8b6dce78a0 CR3: 00000004b820a004 CR4: 00000000007626e0
-Dec  3 12:31:04 supermicro kernel: [687388.376873] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Dec  3 12:31:04 supermicro kernel: [687388.376873] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Dec  3 12:31:04 supermicro kernel: [687388.376873] PKRU: 55555554
-Dec  3 12:31:04 supermicro kernel: [687388.376873] Call Trace:
-Dec  3 12:31:04 supermicro kernel: [687388.376873]  _raw_spin_lock_irqsave+0x32/0x40
-Dec  3 12:31:04 supermicro kernel: [687388.376874]  __free_iova+0x14/0x40
-Dec  3 12:31:04 supermicro kernel: [687388.376874]  fq_ring_free+0x9c/0xd0
-Dec  3 12:31:04 supermicro kernel: [687388.376874]  fq_flush_timeout+0x5f/0x90
-Dec  3 12:31:04 supermicro kernel: [687388.376874]  ? fq_ring_free+0xd0/0xd0
-Dec  3 12:31:04 supermicro kernel: [687388.376874]  call_timer_fn+0x2b/0x130
-Dec  3 12:31:04 supermicro kernel: [687388.376875]  run_timer_softirq+0x3d1/0x410
-Dec  3 12:31:04 supermicro kernel: [687388.376875]  ? __switch_to_asm+0x35/0x70
-Dec  3 12:31:04 supermicro kernel: [687388.376875]  ? __switch_to_asm+0x41/0x70
-Dec  3 12:31:04 supermicro kernel: [687388.376875]  ? __switch_to_asm+0x35/0x70
-Dec  3 12:31:04 supermicro kernel: [687388.376875]  ? __switch_to_asm+0x41/0x70
-Dec  3 12:31:04 supermicro kernel: [687388.376876]  ? __switch_to+0x8c/0x440
-Dec  3 12:31:04 supermicro kernel: [687388.376876]  ? __switch_to_asm+0x41/0x70
-Dec  3 12:31:04 supermicro kernel: [687388.376876]  ? __switch_to_asm+0x35/0x70
-Dec  3 12:31:04 supermicro kernel: [687388.376876]  __do_softirq+0xde/0x2d8
-Dec  3 12:31:04 supermicro kernel: [687388.376876]  ? sort_range+0x20/0x20
-Dec  3 12:31:04 supermicro kernel: [687388.376877]  run_ksoftirqd+0x26/0x40
-Dec  3 12:31:04 supermicro kernel: [687388.376877]  smpboot_thread_fn+0xc5/0x160
-Dec  3 12:31:04 supermicro kernel: [687388.376877]  kthread+0x112/0x130
-Dec  3 12:31:04 supermicro kernel: [687388.376877]  ? kthread_bind+0x30/0x30
-Dec  3 12:31:04 supermicro kernel: [687388.376878]  ret_from_fork+0x35/0x40
-Dec  3 12:40:05 supermicro kernel: [687929.412330] rcu: INFO: rcu_sched detected stalls on CPUs/tasks:
-Dec  3 12:40:05 supermicro kernel: [687929.412780] rcu: 	20-....: (1 GPs behind) idle=942/0/0x1 softirq=7068858/7068859 fqs=2578 
-Dec  3 12:40:05 supermicro kernel: [687929.413191] rcu: 	(detected by 36, t=5252 jiffies, g=55089529, q=11835)
-Dec  3 12:40:05 supermicro kernel: [687929.413585] Sending NMI from CPU 36 to CPUs 20:
-Dec  3 12:40:05 supermicro kernel: [687929.414937] NMI backtrace for cpu 20
-Dec  3 12:40:05 supermicro kernel: [687929.414937] CPU: 20 PID: 0 Comm: swapper/20 Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 12:40:05 supermicro kernel: [687929.414938] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
-Dec  3 12:40:05 supermicro kernel: [687929.414938] RIP: 0010:native_queued_spin_lock_slowpath+0x15f/0x190
-Dec  3 12:40:05 supermicro kernel: [687929.414939] Code: c1 ee 12 83 e0 03 83 ee 01 48 c1 e0 04 48 63 f6 48 05 00 2d 02 00 48 03 04 f5 20 e7 ee a3 48 89 10 8b 42 08 85 c0 75 09 f3 90 <8b> 42 08 85 c0 74 f7 48 8b 02 48 85 c0 74 88 48 89 c6 0f 0d 08 eb
-Dec  3 12:40:05 supermicro kernel: [687929.414939] RSP: 0018:ffff9f787f283e28 EFLAGS: 00000046
-Dec  3 12:40:05 supermicro kernel: [687929.414939] RAX: 0000000000000000 RBX: 0000000000000086 RCX: 0000000000540000
-Dec  3 12:40:05 supermicro kernel: [687929.414940] RDX: ffff9f787f2a2d00 RSI: 0000000000000037 RDI: ffff9f586c41a418
-Dec  3 12:40:05 supermicro kernel: [687929.414940] RBP: ffffd4d77ff41818 R08: 0000000000200000 R09: ffff9f587f006d00
-Dec  3 12:40:05 supermicro kernel: [687929.414940] R10: ffff9f50d59b15c0 R11: 0000000000000001 R12: ffff9f50d59b13c0
-Dec  3 12:40:05 supermicro kernel: [687929.414941] R13: 0000000000dc1918 R14: 000000000000003d R15: ffffd4d77ff43820
-Dec  3 12:40:05 supermicro kernel: [687929.414941] FS:  0000000000000000(0000) GS:ffff9f787f280000(0000) knlGS:0000000000000000
-Dec  3 12:40:05 supermicro kernel: [687929.414941] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-Dec  3 12:40:05 supermicro kernel: [687929.414941] CR2: 0000148196e28000 CR3: 00000004b820a006 CR4: 00000000007626e0
-Dec  3 12:40:05 supermicro kernel: [687929.414942] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Dec  3 12:40:05 supermicro kernel: [687929.414942] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Dec  3 12:40:05 supermicro kernel: [687929.414942] PKRU: 55555554
-Dec  3 12:40:05 supermicro kernel: [687929.414942] Call Trace:
-Dec  3 12:40:05 supermicro kernel: [687929.414942]  <IRQ>
-Dec  3 12:40:05 supermicro kernel: [687929.414942]  _raw_spin_lock_irqsave+0x32/0x40
-Dec  3 12:40:05 supermicro kernel: [687929.414943]  __free_iova+0x14/0x40
-Dec  3 12:40:05 supermicro kernel: [687929.414943]  fq_ring_free+0x9c/0xd0
-Dec  3 12:40:05 supermicro kernel: [687929.414943]  fq_flush_timeout+0x5f/0x90
-Dec  3 12:40:05 supermicro kernel: [687929.414943]  ? fq_ring_free+0xd0/0xd0
-Dec  3 12:40:05 supermicro kernel: [687929.414943]  call_timer_fn+0x2b/0x130
-Dec  3 12:40:05 supermicro kernel: [687929.414944]  run_timer_softirq+0x3d1/0x410
-Dec  3 12:40:05 supermicro kernel: [687929.414944]  ? __hrtimer_run_queues+0x130/0x280
-Dec  3 12:40:05 supermicro kernel: [687929.414944]  ? recalibrate_cpu_khz+0x10/0x10
-Dec  3 12:40:05 supermicro kernel: [687929.414944]  ? ktime_get+0x3a/0xa0
-Dec  3 12:40:05 supermicro kernel: [687929.414944]  __do_softirq+0xde/0x2d8
-Dec  3 12:40:05 supermicro kernel: [687929.414945]  irq_exit+0xba/0xc0
-Dec  3 12:40:05 supermicro kernel: [687929.414945]  smp_apic_timer_interrupt+0x74/0x140
-Dec  3 12:40:05 supermicro kernel: [687929.414945]  apic_timer_interrupt+0xf/0x20
-Dec  3 12:40:05 supermicro kernel: [687929.414945]  </IRQ>
-Dec  3 12:40:05 supermicro kernel: [687929.414945] RIP: 0010:cpuidle_enter_state+0xb9/0x320
-Dec  3 12:40:05 supermicro kernel: [687929.414946] Code: e8 1c d1 b0 ff 80 7c 24 0b 00 74 17 9c 58 0f 1f 44 00 00 f6 c4 02 0f 85 3b 02 00 00 31 ff e8 2e b6 b6 ff fb 66 0f 1f 44 00 00 <48> b8 ff ff ff ff f3 01 00 00 48 2b 1c 24 ba ff ff ff 7f 48 39 c3
-Dec  3 12:40:05 supermicro kernel: [687929.414946] RSP: 0018:ffffb4f78c75be90 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
-Dec  3 12:40:05 supermicro kernel: [687929.414947] RAX: ffff9f787f2a20c0 RBX: 000271a620a13e77 RCX: 000000000000001f
-Dec  3 12:40:05 supermicro kernel: [687929.414947] RDX: 000271a620a13e77 RSI: 0000000037a7018e RDI: 0000000000000000
-Dec  3 12:40:05 supermicro kernel: [687929.414947] RBP: ffff9f787f2ab100 R08: 0000000000000002 R09: 0000000000021980
-Dec  3 12:40:05 supermicro kernel: [687929.414947] R10: 007c363e498f01be R11: ffff9f787f2a10a8 R12: 0000000000000003
-Dec  3 12:40:05 supermicro kernel: [687929.414948] R13: ffffffffa40b7318 R14: 0000000000000003 R15: 0000000000000000
-Dec  3 12:40:05 supermicro kernel: [687929.414948]  do_idle+0x236/0x280
-Dec  3 12:40:05 supermicro kernel: [687929.414948]  cpu_startup_entry+0x6f/0x80
-Dec  3 12:40:05 supermicro kernel: [687929.414948]  start_secondary+0x1a4/0x1f0
-Dec  3 12:40:05 supermicro kernel: [687929.414948]  secondary_startup_64+0xa4/0xb0
-Dec  3 12:55:29 supermicro kernel: [688853.462701] rcu: INFO: rcu_sched detected stalls on CPUs/tasks:
-Dec  3 12:55:29 supermicro kernel: [688853.463207] rcu: 	7-....: (1 GPs behind) idle=fc6/0/0x1 softirq=9039032/9039033 fqs=2418 
-Dec  3 12:55:29 supermicro kernel: [688853.463652] rcu: 	(detected by 46, t=5252 jiffies, g=55108589, q=6076)
-Dec  3 12:55:29 supermicro kernel: [688853.464094] Sending NMI from CPU 46 to CPUs 7:
-Dec  3 12:55:29 supermicro kernel: [688853.465494] NMI backtrace for cpu 7
-Dec  3 12:55:29 supermicro kernel: [688853.465495] CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 12:55:29 supermicro kernel: [688853.465495] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
-Dec  3 12:55:29 supermicro kernel: [688853.465495] RIP: 0010:native_queued_spin_lock_slowpath+0x15f/0x190
-Dec  3 12:55:29 supermicro kernel: [688853.465496] Code: c1 ee 12 83 e0 03 83 ee 01 48 c1 e0 04 48 63 f6 48 05 00 2d 02 00 48 03 04 f5 20 e7 ee a3 48 89 10 8b 42 08 85 c0 75 09 f3 90 <8b> 42 08 85 c0 74 f7 48 8b 02 48 85 c0 74 88 48 89 c6 0f 0d 08 eb
-Dec  3 12:55:29 supermicro kernel: [688853.465496] RSP: 0018:ffff9f587f7c3e28 EFLAGS: 00000046
-Dec  3 12:55:29 supermicro kernel: [688853.465497] RAX: 0000000000000000 RBX: 0000000000000086 RCX: 0000000000200000
-Dec  3 12:55:29 supermicro kernel: [688853.465497] RDX: ffff9f587f7e2d00 RSI: 0000000000000029 RDI: ffff9f586c41a418
-Dec  3 12:55:29 supermicro kernel: [688853.465497] RBP: ffffd4d780041818 R08: 0000000000100000 R09: ffffffffa350cd00
-Dec  3 12:55:29 supermicro kernel: [688853.465498] R10: ffff9f581d6954c0 R11: 0000000000000001 R12: ffff9f581d695000
-Dec  3 12:55:29 supermicro kernel: [688853.465498] R13: 0000000000dc574d R14: 00000000000000e5 R15: ffffd4d780043820
-Dec  3 12:55:29 supermicro kernel: [688853.465498] FS:  0000000000000000(0000) GS:ffff9f587f7c0000(0000) knlGS:0000000000000000
-Dec  3 12:55:29 supermicro kernel: [688853.465499] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-Dec  3 12:55:29 supermicro kernel: [688853.465499] CR2: 000070c6429657f0 CR3: 00000004b820a003 CR4: 00000000007626e0
-Dec  3 12:55:29 supermicro kernel: [688853.465499] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-Dec  3 12:55:29 supermicro kernel: [688853.465499] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Dec  3 12:55:29 supermicro kernel: [688853.465500] PKRU: 55555554
-Dec  3 12:55:29 supermicro kernel: [688853.465500] Call Trace:
-Dec  3 12:55:29 supermicro kernel: [688853.465500]  <IRQ>
-Dec  3 12:55:29 supermicro kernel: [688853.465500]  _raw_spin_lock_irqsave+0x32/0x40
-Dec  3 12:55:29 supermicro kernel: [688853.465500]  __free_iova+0x14/0x40
-Dec  3 12:55:29 supermicro kernel: [688853.465501]  fq_ring_free+0x9c/0xd0
-Dec  3 12:55:29 supermicro kernel: [688853.465501]  fq_flush_timeout+0x5f/0x90
-Dec  3 12:55:29 supermicro kernel: [688853.465501]  ? fq_ring_free+0xd0/0xd0
-Dec  3 12:55:29 supermicro kernel: [688853.465501]  call_timer_fn+0x2b/0x130
-Dec  3 12:55:29 supermicro kernel: [688853.465501]  run_timer_softirq+0x3d1/0x410
-Dec  3 12:55:29 supermicro kernel: [688853.465502]  ? __hrtimer_run_queues+0x130/0x280
-Dec  3 12:55:29 supermicro kernel: [688853.465502]  ? recalibrate_cpu_khz+0x10/0x10
-Dec  3 12:55:29 supermicro kernel: [688853.465502]  ? ktime_get+0x3a/0xa0
-Dec  3 12:55:29 supermicro kernel: [688853.465502]  __do_softirq+0xde/0x2d8
-Dec  3 12:55:29 supermicro kernel: [688853.465502]  irq_exit+0xba/0xc0
-Dec  3 12:55:29 supermicro kernel: [688853.465503]  smp_apic_timer_interrupt+0x74/0x140
-Dec  3 12:55:29 supermicro kernel: [688853.465503]  apic_timer_interrupt+0xf/0x20
-Dec  3 12:55:29 supermicro kernel: [688853.465503]  </IRQ>
-Dec  3 12:55:29 supermicro kernel: [688853.465503] RIP: 0010:cpuidle_enter_state+0xb9/0x320
-Dec  3 12:55:29 supermicro kernel: [688853.465504] Code: e8 1c d1 b0 ff 80 7c 24 0b 00 74 17 9c 58 0f 1f 44 00 00 f6 c4 02 0f 85 3b 02 00 00 31 ff e8 2e b6 b6 ff fb 66 0f 1f 44 00 00 <48> b8 ff ff ff ff f3 01 00 00 48 2b 1c 24 ba ff ff ff 7f 48 39 c3
-Dec  3 12:55:29 supermicro kernel: [688853.465504] RSP: 0018:ffffb4f78c6f3e90 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
-Dec  3 12:55:29 supermicro kernel: [688853.465505] RAX: ffff9f587f7e20c0 RBX: 0002727d48f34618 RCX: 000000000000001f
-Dec  3 12:55:29 supermicro kernel: [688853.465505] RDX: 0002727d48f34618 RSI: 0000000037a7018e RDI: 0000000000000000
-Dec  3 12:55:29 supermicro kernel: [688853.465505] RBP: ffff9f587f7eb100 R08: 0000000000000002 R09: 0000000000021980
-Dec  3 12:55:29 supermicro kernel: [688853.465505] R10: 007c382d25dae100 R11: ffff9f587f7e10a8 R12: 0000000000000003
-Dec  3 12:55:29 supermicro kernel: [688853.465506] R13: ffffffffa40b7318 R14: 0000000000000003 R15: 0000000000000000
-Dec  3 12:55:29 supermicro kernel: [688853.465506]  do_idle+0x236/0x280
-Dec  3 12:55:29 supermicro kernel: [688853.465506]  cpu_startup_entry+0x6f/0x80
-Dec  3 12:55:29 supermicro kernel: [688853.465506]  start_secondary+0x1a4/0x1f0
-Dec  3 12:55:29 supermicro kernel: [688853.465507]  secondary_startup_64+0xa4/0xb0
-Dec  3 13:05:13 supermicro kernel: [689437.845326] mpt3sas_cm0: log_info(0x30030101): originator(IOP), code(0x03), sub_code(0x0101)
-Dec  3 13:05:14 supermicro kernel: [689438.607808] mpt3sas_cm1: log_info(0x30030101): originator(IOP), code(0x03), sub_code(0x0101)
-Dec  3 14:05:07 supermicro kernel: [693032.368940] mpt3sas_cm0: log_info(0x30030101): originator(IOP), code(0x03), sub_code(0x0101)
-Dec  3 14:05:08 supermicro kernel: [693033.090980] mpt3sas_cm1: log_info(0x30030101): originator(IOP), code(0x03), sub_code(0x0101)
-Dec  3 14:15:31 supermicro kernel: [693655.666060] md: md2: data-check interrupted.
-Dec  3 14:15:33 supermicro kernel: [693657.746216] md: md3: data-check interrupted.
-Dec  3 14:15:35 supermicro kernel: [693660.047721] md: md4: data-check interrupted.
-Dec  3 14:18:55 supermicro kernel: [693860.191381] INFO: task qemu-system-x86:18753 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.191759]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.192128] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.192498] qemu-system-x86 D    0 18753      1 0x00000000
-Dec  3 14:18:55 supermicro kernel: [693860.192843] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.193181]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.193509]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.193834]  md_write_start+0x14b/0x220 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.194157]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.194547]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.194910]  raid5_make_request+0x83/0xb60 [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.195285]  ? try_to_wake_up+0x54/0x490
-Dec  3 14:18:55 supermicro kernel: [693860.195635]  ? kmem_cache_alloc+0x37/0x1c0
-Dec  3 14:18:55 supermicro kernel: [693860.195967]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.196296]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.196629]  md_handle_request+0x119/0x190 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.196954]  md_make_request+0x78/0x160 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.197281]  generic_make_request+0x1a4/0x400
-Dec  3 14:18:55 supermicro kernel: [693860.197607]  submit_bio+0x45/0x140
-Dec  3 14:18:55 supermicro kernel: [693860.197934]  blkdev_direct_IO+0x3b2/0x3f0
-Dec  3 14:18:55 supermicro kernel: [693860.198260]  ? aio_fsync_work+0x90/0x90
-Dec  3 14:18:55 supermicro kernel: [693860.198586]  generic_file_direct_write+0x96/0x160
-Dec  3 14:18:55 supermicro kernel: [693860.198914]  __generic_file_write_iter+0xb7/0x1c0
-Dec  3 14:18:55 supermicro kernel: [693860.199264]  blkdev_write_iter+0xa0/0x120
-Dec  3 14:18:55 supermicro kernel: [693860.199608]  ? common_file_perm+0x5b/0xf0
-Dec  3 14:18:55 supermicro kernel: [693860.199948]  aio_write+0x119/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.200286]  ? io_submit_one+0x90/0x7c0
-Dec  3 14:18:55 supermicro kernel: [693860.200625]  ? io_submit_one+0x90/0x7c0
-Dec  3 14:18:55 supermicro kernel: [693860.200959]  ? kmem_cache_alloc+0x192/0x1c0
-Dec  3 14:18:55 supermicro kernel: [693860.201293]  io_submit_one+0x5b3/0x7c0
-Dec  3 14:18:55 supermicro kernel: [693860.201595]  ? __wake_up_common+0x7a/0x190
-Dec  3 14:18:55 supermicro kernel: [693860.201890]  __x64_sys_io_submit+0xa2/0x180
-Dec  3 14:18:55 supermicro kernel: [693860.202181]  ? ksys_read+0xb7/0xd0
-Dec  3 14:18:55 supermicro kernel: [693860.202469]  do_syscall_64+0x53/0x110
-Dec  3 14:18:55 supermicro kernel: [693860.202756]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-Dec  3 14:18:55 supermicro kernel: [693860.203045] RIP: 0033:0x7fe06dea5f59
-Dec  3 14:18:55 supermicro kernel: [693860.203355] Code: Bad RIP value.
-Dec  3 14:18:55 supermicro kernel: [693860.203642] RSP: 002b:00007fe06b649f78 EFLAGS: 00000246 ORIG_RAX: 00000000000000d1
-Dec  3 14:18:55 supermicro kernel: [693860.203944] RAX: ffffffffffffffda RBX: 00007fe06b64b290 RCX: 00007fe06dea5f59
-Dec  3 14:18:55 supermicro kernel: [693860.204279] RDX: 00007fe06b649fc0 RSI: 0000000000000001 RDI: 00007fe068086000
-Dec  3 14:18:55 supermicro kernel: [693860.204619] RBP: 00007fe068086000 R08: 00007fe06b64b5c8 R09: 0000000000000001
-Dec  3 14:18:55 supermicro kernel: [693860.204951] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
-Dec  3 14:18:55 supermicro kernel: [693860.205286] R13: 000000000000000b R14: 00007fe06b649fc0 R15: 00007fe058250e50
-Dec  3 14:18:55 supermicro kernel: [693860.205623] INFO: task qemu-system-x86:18754 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.205933]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.206238] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.206555] qemu-system-x86 D    0 18754      1 0x00000000
-Dec  3 14:18:55 supermicro kernel: [693860.206879] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.207194]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.207533]  ? blk_flush_plug_list+0xcf/0x240
-Dec  3 14:18:55 supermicro kernel: [693860.207848]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.208156]  md_write_start+0x14b/0x220 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.208464]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.208780]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.209077]  raid5_make_request+0x83/0xb60 [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.209376]  ? try_to_wake_up+0x54/0x490
-Dec  3 14:18:55 supermicro kernel: [693860.209672]  ? kmem_cache_alloc+0x192/0x1c0
-Dec  3 14:18:55 supermicro kernel: [693860.209974]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.210296]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.210600]  md_handle_request+0x119/0x190 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.210908]  md_make_request+0x78/0x160 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.211229]  generic_make_request+0x1a4/0x400
-Dec  3 14:18:55 supermicro kernel: [693860.211558]  submit_bio+0x45/0x140
-Dec  3 14:18:55 supermicro kernel: [693860.211867]  blkdev_direct_IO+0x3b2/0x3f0
-Dec  3 14:18:55 supermicro kernel: [693860.212175]  ? aio_fsync_work+0x90/0x90
-Dec  3 14:18:55 supermicro kernel: [693860.212493]  generic_file_direct_write+0x96/0x160
-Dec  3 14:18:55 supermicro kernel: [693860.212794]  __generic_file_write_iter+0xb7/0x1c0
-Dec  3 14:18:55 supermicro kernel: [693860.213096]  blkdev_write_iter+0xa0/0x120
-Dec  3 14:18:55 supermicro kernel: [693860.213399]  ? common_file_perm+0x5b/0xf0
-Dec  3 14:18:55 supermicro kernel: [693860.213699]  aio_write+0x119/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.213999]  ? ttwu_do_wakeup+0x19/0x140
-Dec  3 14:18:55 supermicro kernel: [693860.214361]  ? kvm_arch_set_irq_inatomic+0x92/0xb0 [kvm]
-Dec  3 14:18:55 supermicro kernel: [693860.214704]  ? kmem_cache_alloc+0x170/0x1c0
-Dec  3 14:18:55 supermicro kernel: [693860.215046]  io_submit_one+0x5b3/0x7c0
-Dec  3 14:18:55 supermicro kernel: [693860.215400]  ? __wake_up_common+0x7a/0x190
-Dec  3 14:18:55 supermicro kernel: [693860.215717]  __x64_sys_io_submit+0xa2/0x180
-Dec  3 14:18:55 supermicro kernel: [693860.216034]  ? ksys_write+0xb7/0xd0
-Dec  3 14:18:55 supermicro kernel: [693860.216350]  do_syscall_64+0x53/0x110
-Dec  3 14:18:55 supermicro kernel: [693860.216673]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-Dec  3 14:18:55 supermicro kernel: [693860.216982] RIP: 0033:0x7fe06dea5f59
-Dec  3 14:18:55 supermicro kernel: [693860.217291] Code: Bad RIP value.
-Dec  3 14:18:55 supermicro kernel: [693860.217598] RSP: 002b:00007fe06ae48f58 EFLAGS: 00000246 ORIG_RAX: 00000000000000d1
-Dec  3 14:18:55 supermicro kernel: [693860.217918] RAX: ffffffffffffffda RBX: 00007fe06ae4a290 RCX: 00007fe06dea5f59
-Dec  3 14:18:55 supermicro kernel: [693860.218240] RDX: 00007fe06ae48fa0 RSI: 0000000000000050 RDI: 00007fe068081000
-Dec  3 14:18:55 supermicro kernel: [693860.218566] RBP: 00007fe068081000 R08: 00007fe06ae4a5c8 R09: 0000000000000050
-Dec  3 14:18:55 supermicro kernel: [693860.218886] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000050
-Dec  3 14:18:55 supermicro kernel: [693860.219201] R13: 000000000000000b R14: 00007fe06ae48fa0 R15: 000276dadbe7948f
-Dec  3 14:18:55 supermicro kernel: [693860.219553] INFO: task md4_resync:60178 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.219880]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.220210] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.220548] md4_resync      D    0 60178      2 0x80000000
-Dec  3 14:18:55 supermicro kernel: [693860.220884] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.221223]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.221536]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.221842]  md_do_sync.cold.86+0x7e8/0x911 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.222151]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.222459]  ? __switch_to_asm+0x35/0x70
-Dec  3 14:18:55 supermicro kernel: [693860.222769]  ? md_rdev_init+0xb0/0xb0 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.223078]  md_thread+0x94/0x150 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.223412]  kthread+0x112/0x130
-Dec  3 14:18:55 supermicro kernel: [693860.223733]  ? kthread_bind+0x30/0x30
-Dec  3 14:18:55 supermicro kernel: [693860.224052]  ret_from_fork+0x35/0x40
-Dec  3 14:18:55 supermicro kernel: [693860.224406] INFO: task kworker/u145:1:12075 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.224762]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.225123] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.225504] kworker/u145:1  D    0 12075      2 0x80000000
-Dec  3 14:18:55 supermicro kernel: [693860.225845] Workqueue: raid5wq raid5_do_work [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.226182] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.226516]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.226850]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.227183]  raid5_do_work+0xe7/0x1d0 [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.227550]  ? __switch_to_asm+0x41/0x70
-Dec  3 14:18:55 supermicro kernel: [693860.227896]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.228240]  process_one_work+0x1a7/0x3a0
-Dec  3 14:18:55 supermicro kernel: [693860.228585]  worker_thread+0x30/0x390
-Dec  3 14:18:55 supermicro kernel: [693860.228930]  ? create_worker+0x1a0/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.229262]  kthread+0x112/0x130
-Dec  3 14:18:55 supermicro kernel: [693860.229593]  ? kthread_bind+0x30/0x30
-Dec  3 14:18:55 supermicro kernel: [693860.229925]  ret_from_fork+0x35/0x40
-Dec  3 14:18:55 supermicro kernel: [693860.230280] INFO: task kworker/u145:5:26258 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.230628]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.230980] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.231343] kworker/u145:5  D    0 26258      2 0x80000000
-Dec  3 14:18:55 supermicro kernel: [693860.231710] Workqueue: raid5wq raid5_do_work [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.232075] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.232440]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.232806]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.233157]  raid5_do_work+0xe7/0x1d0 [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.233511]  ? __switch_to_asm+0x41/0x70
-Dec  3 14:18:55 supermicro kernel: [693860.233858]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.234199]  process_one_work+0x1a7/0x3a0
-Dec  3 14:18:55 supermicro kernel: [693860.234604]  worker_thread+0x30/0x390
-Dec  3 14:18:55 supermicro kernel: [693860.234985]  ? create_worker+0x1a0/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.235381]  kthread+0x112/0x130
-Dec  3 14:18:55 supermicro kernel: [693860.235726]  ? kthread_bind+0x30/0x30
-Dec  3 14:18:55 supermicro kernel: [693860.236066]  ret_from_fork+0x35/0x40
-Dec  3 14:18:55 supermicro kernel: [693860.236408] INFO: task kworker/u145:8:42676 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.236751]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.237077] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.237410] kworker/u145:8  D    0 42676      2 0x80000000
-Dec  3 14:18:55 supermicro kernel: [693860.237749] Workqueue: raid5wq raid5_do_work [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.238088] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.238424]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.238760]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.239096]  raid5_do_work+0xe7/0x1d0 [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.239459]  ? __switch_to_asm+0x41/0x70
-Dec  3 14:18:55 supermicro kernel: [693860.239806]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.240152]  process_one_work+0x1a7/0x3a0
-Dec  3 14:18:55 supermicro kernel: [693860.240499]  worker_thread+0x30/0x390
-Dec  3 14:18:55 supermicro kernel: [693860.240846]  ? create_worker+0x1a0/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.241199]  kthread+0x112/0x130
-Dec  3 14:18:55 supermicro kernel: [693860.241524]  ? kthread_bind+0x30/0x30
-Dec  3 14:18:55 supermicro kernel: [693860.241842]  ret_from_fork+0x35/0x40
-Dec  3 14:18:55 supermicro kernel: [693860.242191] INFO: task kworker/u145:13:61325 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.242512]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.242833] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.243164] kworker/u145:13 D    0 61325      2 0x80000000
-Dec  3 14:18:55 supermicro kernel: [693860.243528] Workqueue: raid5wq raid5_do_work [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.243874] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.244221]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.244630]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.245020]  raid5_do_work+0xe7/0x1d0 [raid456]
-Dec  3 14:18:55 supermicro kernel: [693860.245408]  ? __switch_to_asm+0x41/0x70
-Dec  3 14:18:55 supermicro kernel: [693860.245745]  ? finish_wait+0x80/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.246080]  process_one_work+0x1a7/0x3a0
-Dec  3 14:18:55 supermicro kernel: [693860.246443]  worker_thread+0x30/0x390
-Dec  3 14:18:55 supermicro kernel: [693860.246791]  ? create_worker+0x1a0/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.247132]  kthread+0x112/0x130
-Dec  3 14:18:55 supermicro kernel: [693860.247471]  ? kthread_bind+0x30/0x30
-Dec  3 14:18:55 supermicro kernel: [693860.247800]  ret_from_fork+0x35/0x40
-Dec  3 14:18:55 supermicro kernel: [693860.248128] INFO: task mdadm-checkarra:62221 blocked for more than 120 seconds.
-Dec  3 14:18:55 supermicro kernel: [693860.248457]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:18:55 supermicro kernel: [693860.248794] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:18:55 supermicro kernel: [693860.249125] mdadm-checkarra D    0 62221  61335 0x00000000
-Dec  3 14:18:55 supermicro kernel: [693860.249459] Call Trace:
-Dec  3 14:18:55 supermicro kernel: [693860.249790]  ? __schedule+0x2a2/0x870
-Dec  3 14:18:55 supermicro kernel: [693860.250141]  schedule+0x28/0x80
-Dec  3 14:18:55 supermicro kernel: [693860.250481]  schedule_timeout+0x26d/0x390
-Dec  3 14:18:55 supermicro kernel: [693860.250822]  ? complete+0x3b/0x50
-Dec  3 14:18:55 supermicro kernel: [693860.251161]  wait_for_completion+0x11f/0x190
-Dec  3 14:18:55 supermicro kernel: [693860.251534]  ? wake_up_q+0x70/0x70
-Dec  3 14:18:55 supermicro kernel: [693860.251884]  kthread_stop+0x42/0xf0
-Dec  3 14:18:55 supermicro kernel: [693860.252229]  md_unregister_thread+0x60/0x70 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.252578]  md_reap_sync_thread+0x15/0x170 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.252925]  action_store+0x142/0x2a0 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.253252]  md_attr_store+0x7c/0xc0 [md_mod]
-Dec  3 14:18:55 supermicro kernel: [693860.253573]  kernfs_fop_write+0x116/0x190
-Dec  3 14:18:55 supermicro kernel: [693860.253886]  vfs_write+0xa5/0x1a0
-Dec  3 14:18:55 supermicro kernel: [693860.254195]  ksys_write+0x57/0xd0
-Dec  3 14:18:55 supermicro kernel: [693860.254560]  do_syscall_64+0x53/0x110
-Dec  3 14:18:55 supermicro kernel: [693860.254906]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-Dec  3 14:18:55 supermicro kernel: [693860.255260] RIP: 0033:0x7fea75a86504
-Dec  3 14:18:55 supermicro kernel: [693860.255623] Code: Bad RIP value.
-Dec  3 14:18:55 supermicro kernel: [693860.255938] RSP: 002b:00007ffc9b9594f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-Dec  3 14:18:55 supermicro kernel: [693860.256268] RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 00007fea75a86504
-Dec  3 14:18:55 supermicro kernel: [693860.256607] RDX: 0000000000000005 RSI: 0000562beab4c2c0 RDI: 0000000000000001
-Dec  3 14:18:55 supermicro kernel: [693860.256934] RBP: 0000562beab4c2c0 R08: 000000000000000a R09: 00007fea75b16e80
-Dec  3 14:18:55 supermicro kernel: [693860.257264] R10: 000000000000000a R11: 0000000000000246 R12: 00007fea75b58760
-Dec  3 14:18:55 supermicro kernel: [693860.257594] R13: 0000000000000005 R14: 00007fea75b53760 R15: 0000000000000005
-Dec  3 14:20:56 supermicro kernel: [693981.028816] INFO: task qemu-system-x86:18753 blocked for more than 120 seconds.
-Dec  3 14:20:56 supermicro kernel: [693981.029818]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:20:56 supermicro kernel: [693981.030228] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:20:56 supermicro kernel: [693981.030610] qemu-system-x86 D    0 18753      1 0x00000000
-Dec  3 14:20:56 supermicro kernel: [693981.030950] Call Trace:
-Dec  3 14:20:56 supermicro kernel: [693981.031286]  ? __schedule+0x2a2/0x870
-Dec  3 14:20:56 supermicro kernel: [693981.031597]  schedule+0x28/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.031937]  md_write_start+0x14b/0x220 [md_mod]
-Dec  3 14:20:56 supermicro kernel: [693981.032274]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.032584]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.032928]  raid5_make_request+0x83/0xb60 [raid456]
-Dec  3 14:20:56 supermicro kernel: [693981.033280]  ? try_to_wake_up+0x54/0x490
-Dec  3 14:20:56 supermicro kernel: [693981.033615]  ? kmem_cache_alloc+0x37/0x1c0
-Dec  3 14:20:56 supermicro kernel: [693981.033950]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.034290]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.034615]  md_handle_request+0x119/0x190 [md_mod]
-Dec  3 14:20:56 supermicro kernel: [693981.034941]  md_make_request+0x78/0x160 [md_mod]
-Dec  3 14:20:56 supermicro kernel: [693981.035269]  generic_make_request+0x1a4/0x400
-Dec  3 14:20:56 supermicro kernel: [693981.035611]  submit_bio+0x45/0x140
-Dec  3 14:20:56 supermicro kernel: [693981.035932]  blkdev_direct_IO+0x3b2/0x3f0
-Dec  3 14:20:56 supermicro kernel: [693981.036248]  ? aio_fsync_work+0x90/0x90
-Dec  3 14:20:56 supermicro kernel: [693981.036558]  generic_file_direct_write+0x96/0x160
-Dec  3 14:20:56 supermicro kernel: [693981.036892]  __generic_file_write_iter+0xb7/0x1c0
-Dec  3 14:20:56 supermicro kernel: [693981.037205]  blkdev_write_iter+0xa0/0x120
-Dec  3 14:20:56 supermicro kernel: [693981.037519]  ? common_file_perm+0x5b/0xf0
-Dec  3 14:20:56 supermicro kernel: [693981.037832]  aio_write+0x119/0x1a0
-Dec  3 14:20:56 supermicro kernel: [693981.038154]  ? io_submit_one+0x90/0x7c0
-Dec  3 14:20:56 supermicro kernel: [693981.038458]  ? io_submit_one+0x90/0x7c0
-Dec  3 14:20:56 supermicro kernel: [693981.038758]  ? kmem_cache_alloc+0x192/0x1c0
-Dec  3 14:20:56 supermicro kernel: [693981.039057]  io_submit_one+0x5b3/0x7c0
-Dec  3 14:20:56 supermicro kernel: [693981.039357]  ? __wake_up_common+0x7a/0x190
-Dec  3 14:20:56 supermicro kernel: [693981.039657]  __x64_sys_io_submit+0xa2/0x180
-Dec  3 14:20:56 supermicro kernel: [693981.040011]  ? ksys_read+0xb7/0xd0
-Dec  3 14:20:56 supermicro kernel: [693981.040348]  do_syscall_64+0x53/0x110
-Dec  3 14:20:56 supermicro kernel: [693981.040687]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-Dec  3 14:20:56 supermicro kernel: [693981.041026] RIP: 0033:0x7fe06dea5f59
-Dec  3 14:20:56 supermicro kernel: [693981.041336] Code: Bad RIP value.
-Dec  3 14:20:56 supermicro kernel: [693981.041644] RSP: 002b:00007fe06b649f78 EFLAGS: 00000246 ORIG_RAX: 00000000000000d1
-Dec  3 14:20:56 supermicro kernel: [693981.041972] RAX: ffffffffffffffda RBX: 00007fe06b64b290 RCX: 00007fe06dea5f59
-Dec  3 14:20:56 supermicro kernel: [693981.042289] RDX: 00007fe06b649fc0 RSI: 0000000000000001 RDI: 00007fe068086000
-Dec  3 14:20:56 supermicro kernel: [693981.042606] RBP: 00007fe068086000 R08: 00007fe06b64b5c8 R09: 0000000000000001
-Dec  3 14:20:56 supermicro kernel: [693981.042925] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
-Dec  3 14:20:56 supermicro kernel: [693981.043238] R13: 000000000000000b R14: 00007fe06b649fc0 R15: 00007fe058250e50
-Dec  3 14:20:56 supermicro kernel: [693981.043549] INFO: task qemu-system-x86:18754 blocked for more than 120 seconds.
-Dec  3 14:20:56 supermicro kernel: [693981.043859]       Not tainted 4.19.0-6-amd64 #1 Debian 4.19.67-2+deb10u2
-Dec  3 14:20:56 supermicro kernel: [693981.044172] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Dec  3 14:20:56 supermicro kernel: [693981.044508] qemu-system-x86 D    0 18754      1 0x00000000
-Dec  3 14:20:56 supermicro kernel: [693981.044856] Call Trace:
-Dec  3 14:20:56 supermicro kernel: [693981.045187]  ? __schedule+0x2a2/0x870
-Dec  3 14:20:56 supermicro kernel: [693981.045516]  ? blk_flush_plug_list+0xcf/0x240
-Dec  3 14:20:56 supermicro kernel: [693981.045829]  schedule+0x28/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.046147]  md_write_start+0x14b/0x220 [md_mod]
-Dec  3 14:20:56 supermicro kernel: [693981.046446]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.046744]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.047040]  raid5_make_request+0x83/0xb60 [raid456]
-Dec  3 14:20:56 supermicro kernel: [693981.047339]  ? try_to_wake_up+0x54/0x490
-Dec  3 14:20:56 supermicro kernel: [693981.047635]  ? kmem_cache_alloc+0x192/0x1c0
-Dec  3 14:20:56 supermicro kernel: [693981.047936]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.048235]  ? finish_wait+0x80/0x80
-Dec  3 14:20:56 supermicro kernel: [693981.048529]  md_handle_request+0x119/0x190 [md_mod]
-Dec  3 14:20:56 supermicro kernel: [693981.048854]  md_make_request+0x78/0x160 [md_mod]
-Dec  3 14:20:56 supermicro kernel: [693981.049161]  generic_make_request+0x1a4/0x400
-Dec  3 14:20:56 supermicro kernel: [693981.049473]  submit_bio+0x45/0x140
-Dec  3 14:20:56 supermicro kernel: [693981.049808]  blkdev_direct_IO+0x3b2/0x3f0
-Dec  3 14:20:56 supermicro kernel: [693981.050147]  ? aio_fsync_work+0x90/0x90
-Dec  3 14:20:56 supermicro kernel: [693981.050485]  generic_file_direct_write+0x96/0x160
-Dec  3 14:20:56 supermicro kernel: [693981.050838]  __generic_file_write_iter+0xb7/0x1c0
-Dec  3 14:20:56 supermicro kernel: [693981.051139]  blkdev_write_iter+0xa0/0x120
-Dec  3 14:20:56 supermicro kernel: [693981.051441]  ? common_file_perm+0x5b/0xf0
-Dec  3 14:20:56 supermicro kernel: [693981.051742]  aio_write+0x119/0x1a0
-Dec  3 14:20:56 supermicro kernel: [693981.052041]  ? ttwu_do_wakeup+0x19/0x140
-Dec  3 14:20:56 supermicro kernel: [693981.052367]  ? kvm_arch_set_irq_inatomic+0x92/0xb0 [kvm]
-Dec  3 14:20:56 supermicro kernel: [693981.052690]  ? kmem_cache_alloc+0x170/0x1c0
-Dec  3 14:20:56 supermicro kernel: [693981.053001]  io_submit_one+0x5b3/0x7c0
-Dec  3 14:20:56 supermicro kernel: [693981.053313]  ? __wake_up_common+0x7a/0x190
-Dec  3 14:20:56 supermicro kernel: [693981.053630]  __x64_sys_io_submit+0xa2/0x180
-Dec  3 14:20:56 supermicro kernel: [693981.053957]  ? ksys_write+0xb7/0xd0
-Dec  3 14:20:56 supermicro kernel: [693981.054264]  do_syscall_64+0x53/0x110
-Dec  3 14:20:56 supermicro kernel: [693981.054570]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-Dec  3 14:20:56 supermicro kernel: [693981.054881] RIP: 0033:0x7fe06dea5f59
-Dec  3 14:20:56 supermicro kernel: [693981.055191] Code: Bad RIP value.
-Dec  3 14:20:56 supermicro kernel: [693981.055507] RSP: 002b:00007fe06ae48f58 EFLAGS: 00000246 ORIG_RAX: 00000000000000d1
-Dec  3 14:20:56 supermicro kernel: [693981.055828] RAX: ffffffffffffffda RBX: 00007fe06ae4a290 RCX: 00007fe06dea5f59
-Dec  3 14:20:56 supermicro kernel: [693981.056151] RDX: 00007fe06ae48fa0 RSI: 0000000000000050 RDI: 00007fe068081000
-Dec  3 14:20:56 supermicro kernel: [693981.056477] RBP: 00007fe068081000 R08: 00007fe06ae4a5c8 R09: 0000000000000050
-Dec  3 14:20:56 supermicro kernel: [693981.056804] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000050
-Dec  3 14:20:56 supermicro kernel: [693981.057146] R13: 000000000000000b R14: 00007fe06ae48fa0 R15: 000276dadbe7948f
+# perf top
+   5.53%  md10_raid6       [kernel]                      [k] analyse_stripe                                     1684:md10_raid6
+   2.12%  md10_raid6       [kernel]                      [k] ops_run_io                                         1684:md10_raid6
 
---------------3A225A30193F7C0351014E22--
+
+# perf top -p $(pidof md10_raid6)
+  51.01%  [kernel]  [k] analyse_stripe
+  20.31%  [kernel]  [k] ops_run_io
+   7.78%  [kernel]  [k] handle_stripe
+   7.05%  [kernel]  [k] __list_del_entry_valid
+   4.85%  [kernel]  [k] handle_active_stripes.isra.78
+   2.39%  [kernel]  [k] queue_work_on
+   1.92%  [kernel]  [k] do_release_stripe
+   1.88%  [kernel]  [k] raid5_wakeup_stripe_thread
+   1.20%  [kernel]  [k] __release_stripe
+   0.21%  [kernel]  [k] _raw_spin_lock_irq
+   0.17%  [kernel]  [k] release_stripe_list
+   0.16%  [kernel]  [k] r5c_is_writeback
+   0.15%  [kernel]  [k] r5l_log_disk_error
+   0.15%  [kernel]  [k] raid5d
+   0.10%  [kernel]  [k] release_inactive_stripe_list
+   0.10%  [kernel]  [k] md_check_recovery
+   0.09%  [kernel]  [k] __list_add_valid
+   0.08%  [kernel]  [k] rcu_all_qs
+   0.07%  [kernel]  [k] private_find_iova
+   0.06%  [kernel]  [k] _cond_resched
+   0.04%  [kernel]  [k] native_queued_spin_lock_slowpath
+   0.04%  [kernel]  [k] mutex_trylock
+   0.03%  [kernel]  [k] rb_erase
+   0.03%  [kernel]  [k] llist_reverse_order
+   0.02%  [kernel]  [k] _raw_spin_lock_irqsave
+   0.01%  [kernel]  [k] r5l_flush_stripe_to_raid
+   0.01%  [kernel]  [k] fq_ring_free
+   0.01%  [kernel]  [k] task_tick_fair
+   0.01%  [kernel]  [k] ktime_get
+   0.01%  [kernel]  [k] __slab_free
+   0.01%  [kernel]  [k] update_curr
+   0.01%  [kernel]  [k] rcu_sched_clock_irq
+   0.01%  [kernel]  [k] irq_exit
+   0.00%  [kernel]  [k] rb_next
+   0.00%  [kernel]  [k] unfreeze_partials.isra.82
+   0.00%  [kernel]  [k] qi_submit_sync
+   0.00%  [kernel]  [k] free_iova_fast
+   0.00%  [kernel]  [k] enqueue_task_fair
+   0.00%  [kernel]  [k] kmem_cache_free
+   0.00%  [kernel]  [k] run_timer_softirq
+   0.00%  [kernel]  [k] update_rq_clock
+   0.00%  [kernel]  [k] __update_load_avg_se
+   0.00%  [kernel]  [k] interrupt_entry
+
+
+--------------728BE3EF25B76081DD2CF359
+Content-Type: text/x-log; charset=UTF-8;
+ name="supermicro-17-02-2020.log"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="supermicro-17-02-2020.log"
+
+[1377726.075474] NMI backtrace for cpu 42
+[1377726.075693] NMI backtrace for cpu 18
+[1377726.075694] CPU: 18 PID: 1684 Comm: md10_raid6 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.075694] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.075694] RIP: 0010:ops_run_io+0x119/0xda0 [raid456]
+[1377726.075695] Code: f8 f0 48 0f ba 30 06 0f 82 4c 01 00 00 f0 48 0f ba 30 05 0f 82 58 0b 00 00 f0 48 0f ba 30 16 0f 82 1f 0b 00 00 83 6c 24 10 01 <83> 7c 24 10 ff 75 ad 44 8b 4c 24 2c 4d 89 e6 4c 8b 7c 24 70 45 85
+[1377726.075695] RSP: 0018:ffffa88420867b48 EFLAGS: 00000202
+[1377726.075696] RAX: ffff8e23eb980508 RBX: 0000000000000008 RCX: 00000000000002d0
+[1377726.075696] RDX: 0000000000000002 RSI: ffffa88420867c90 RDI: 0000000000000508
+[1377726.075696] RBP: ffffa88420867c90 R08: 0000000000000004 R09: 0000000000000000
+[1377726.075697] R10: 0000000000000000 R11: ffff8e10220be000 R12: ffff8e10220be000
+[1377726.075697] R13: ffff8e23eb980048 R14: ffff8e10220be000 R15: ffff8e23eb980000
+[1377726.075697] FS:  0000000000000000(0000) GS:ffff8e307f200000(0000) knlGS:0000000000000000
+[1377726.075697] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.075698] CR2: 00006da7ed7d8000 CR3: 000000018500a002 CR4: 00000000007626e0
+[1377726.075698] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.075698] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.075698] PKRU: 55555554
+[1377726.075698] Call Trace:
+[1377726.075699]  ? analyse_stripe+0x7c/0x730 [raid456]
+[1377726.075699]  handle_stripe+0xc32/0x2230 [raid456]
+[1377726.075699]  ? __switch_to_asm+0x40/0x70
+[1377726.075699]  ? __switch_to_asm+0x34/0x70
+[1377726.075700]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.075700]  raid5d+0x392/0x5b0 [raid456]
+[1377726.075700]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.075700]  ? schedule_timeout+0x20d/0x310
+[1377726.075700]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.075700]  md_thread+0x94/0x150 [md_mod]
+[1377726.075701]  ? finish_wait+0x80/0x80
+[1377726.075701]  kthread+0x112/0x130
+[1377726.075701]  ? kthread_park+0x80/0x80
+[1377726.075701]  ret_from_fork+0x35/0x40
+[1377726.086941] CPU: 42 PID: 70277 Comm: bash Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.087383] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.087810] Call Trace:
+[1377726.088261]  dump_stack+0x66/0x90
+[1377726.088685]  nmi_cpu_backtrace.cold.7+0x13/0x50
+[1377726.089111]  ? lapic_can_unplug_cpu.cold.31+0x37/0x37
+[1377726.089529]  nmi_trigger_cpumask_backtrace+0xf9/0xfb
+[1377726.089926]  __handle_sysrq.cold.12+0x66/0x11c
+[1377726.090322]  write_sysrq_trigger+0x30/0x40
+[1377726.090715]  proc_reg_write+0x39/0x60
+[1377726.091168]  vfs_write+0xa5/0x1a0
+[1377726.091652]  ksys_write+0x59/0xd0
+[1377726.092043]  do_syscall_64+0x52/0x160
+[1377726.092476]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[1377726.092903] RIP: 0033:0x7f5d93937504
+[1377726.093333] Code: 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b3 0f 1f 80 00 00 00 00 48 8d 05 f9 61 0d 00 8b 00 85 c0 75 13 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 54 c3 0f 1f 00 41 54 49 89 d4 55 48 89 f5 53
+[1377726.094200] RSP: 002b:00007ffc51f8e028 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[1377726.094606] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f5d93937504
+[1377726.095004] RDX: 0000000000000002 RSI: 000055ccc0fb3d00 RDI: 0000000000000001
+[1377726.095391] RBP: 000055ccc0fb3d00 R08: 000000000000000a R09: 00007f5d939c7e80
+[1377726.095798] R10: 000000000000000a R11: 0000000000000246 R12: 00007f5d93a09760
+[1377726.096230] R13: 0000000000000002 R14: 00007f5d93a04760 R15: 0000000000000002
+[1377726.096703] Sending NMI from CPU 42 to CPUs 0-17,19-41,43-71:
+[1377726.097192] NMI backtrace for cpu 0 skipped: idling at intel_idle+0x85/0x130
+[1377726.097285] NMI backtrace for cpu 1 skipped: idling at intel_idle+0x85/0x130
+[1377726.097383] NMI backtrace for cpu 2 skipped: idling at intel_idle+0x85/0x130
+[1377726.097483] NMI backtrace for cpu 3 skipped: idling at intel_idle+0x85/0x130
+[1377726.097579] NMI backtrace for cpu 4 skipped: idling at intel_idle+0x85/0x130
+[1377726.097679] NMI backtrace for cpu 5 skipped: idling at intel_idle+0x85/0x130
+[1377726.097681] NMI backtrace for cpu 6 skipped: idling at intel_idle+0x85/0x130
+[1377726.097782] NMI backtrace for cpu 7 skipped: idling at intel_idle+0x85/0x130
+[1377726.097880] NMI backtrace for cpu 8 skipped: idling at intel_idle+0x85/0x130
+[1377726.097980] NMI backtrace for cpu 9 skipped: idling at intel_idle+0x85/0x130
+[1377726.098078] NMI backtrace for cpu 10 skipped: idling at intel_idle+0x85/0x130
+[1377726.098270] NMI backtrace for cpu 11 skipped: idling at intel_idle+0x85/0x130
+[1377726.098351] NMI backtrace for cpu 12
+[1377726.098352] CPU: 12 PID: 0 Comm: swapper/12 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.098352] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.098352] RIP: 0010:__rq_qos_done_bio+0x0/0x30
+[1377726.098353] Code: 8b 40 10 48 85 c0 74 0e 48 89 ea 4c 89 e6 48 89 df e8 84 61 62 00 48 8b 5b 18 48 85 db 75 dd 5b 5d 41 5c c3 66 0f 1f 44 00 00 <0f> 1f 44 00 00 55 48 89 f5 53 48 89 fb 48 8b 03 48 8b 40 30 48 85
+[1377726.098354] RSP: 0018:ffffa8840cafce48 EFLAGS: 00000282
+[1377726.098354] RAX: ffff8e3037b262a0 RBX: ffff8e223339ac48 RCX: ffff8e223339ad48
+[1377726.098355] RDX: 0000000000000000 RSI: ffff8e223339ac48 RDI: ffff8e1076d25858
+[1377726.098355] RBP: 0000000000051000 R08: 0000000000001000 R09: ffff8e223339ad48
+[1377726.098355] R10: ffff8e3069196e00 R11: 0000000000000000 R12: 0000000000001000
+[1377726.098356] R13: ffff8e1026971f80 R14: 0000000000030000 R15: 0000000000000000
+[1377726.098356] FS:  0000000000000000(0000) GS:ffff8e107f900000(0000) knlGS:0000000000000000
+[1377726.098356] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.098356] CR2: 00007f4cc1973e60 CR3: 000000018500a002 CR4: 00000000007626e0
+[1377726.098357] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.098357] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.098357] PKRU: 55555554
+[1377726.098357] Call Trace:
+[1377726.098357]  <IRQ>
+[1377726.098358]  bio_endio+0x5c/0x170
+[1377726.098358]  blk_update_request+0xe4/0x2e0
+[1377726.098358]  scsi_end_request+0x29/0x150 [scsi_mod]
+[1377726.098358]  scsi_io_completion+0x78/0x520 [scsi_mod]
+[1377726.098359]  blk_done_softirq+0xa1/0xd0
+[1377726.098359]  __do_softirq+0xdf/0x2e5
+[1377726.098359]  irq_exit+0xa3/0xb0
+[1377726.098359]  do_IRQ+0x56/0xe0
+[1377726.098359]  common_interrupt+0xf/0xf
+[1377726.098359]  </IRQ>
+[1377726.098360] RIP: 0010:cpuidle_enter_state+0xbc/0x450
+[1377726.098360] Code: e8 e9 95 ad ff 80 7c 24 13 00 74 17 9c 58 0f 1f 44 00 00 f6 c4 02 0f 85 67 03 00 00 31 ff e8 bb be b3 ff fb 66 0f 1f 44 00 00 <45> 85 e4 0f 88 92 02 00 00 49 63 cc 4c 8b 3c 24 4c 2b 7c 24 08 48
+[1377726.098361] RSP: 0018:ffffa8840c71be78 EFLAGS: 00000246 ORIG_RAX: ffffffffffffffdd
+[1377726.098361] RAX: ffff8e107f92a6c0 RBX: ffffffffa3ab7800 RCX: 000000000000001f
+[1377726.098361] RDX: 0004e508daaeb465 RSI: 0000000037a6f674 RDI: 0000000000000000
+[1377726.098362] RBP: ffffc863fe733100 R08: 0000000000000002 R09: 0000000000029f40
+[1377726.098362] R10: 0115db11c0f998cc R11: ffff8e107f929580 R12: 0000000000000003
+[1377726.098362] R13: ffffffffa3ab7938 R14: 0000000000000003 R15: 0000000000000000
+[1377726.098362]  ? cpuidle_enter_state+0x97/0x450
+[1377726.098363]  cpuidle_enter+0x29/0x40
+[1377726.098363]  do_idle+0x228/0x270
+[1377726.098363]  cpu_startup_entry+0x19/0x20
+[1377726.098363]  start_secondary+0x15f/0x1b0
+[1377726.098363]  secondary_startup_64+0xa4/0xb0
+[1377726.098468] NMI backtrace for cpu 13 skipped: idling at intel_idle+0x85/0x130
+[1377726.098520] NMI backtrace for cpu 14 skipped: idling at intel_idle+0x85/0x130
+[1377726.098630] NMI backtrace for cpu 15
+[1377726.098631] CPU: 15 PID: 1512 Comm: md2_raid6 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.098631] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.098631] RIP: 0010:r5l_log_disk_error+0x27/0x30 [raid456]
+[1377726.098632] Code: 00 00 00 0f 1f 44 00 00 48 8b 87 30 05 00 00 48 85 c0 74 0e 48 8b 00 48 8b 80 b8 00 00 00 83 e0 01 c3 48 8b 47 28 48 8b 40 28 <48> c1 e8 03 83 e0 01 c3 90 0f 1f 44 00 00 41 57 41 56 41 55 41 54
+[1377726.098632] RSP: 0018:ffffa8840f997d40 EFLAGS: 00000046
+[1377726.098633] RAX: 0000000000000000 RBX: ffff8e106ec6e000 RCX: 0000000000000001
+[1377726.098633] RDX: ffffffffffffffff RSI: 00000000ffffffff RDI: ffff8e106ec6e000
+[1377726.098634] RBP: ffffa8840f997eb0 R08: 0000000000000002 R09: 0000000000029f40
+[1377726.098634] R10: 0115db11c1059786 R11: ffffffffa3a46958 R12: 0000000000000000
+[1377726.098634] R13: 0000000000000000 R14: ffff8e106ec6e0a8 R15: 0000000000000000
+[1377726.098635] FS:  0000000000000000(0000) GS:ffff8e107f9c0000(0000) knlGS:0000000000000000
+[1377726.098635] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.098636] CR2: 000074189ef82020 CR3: 00000039e55dc006 CR4: 00000000007626e0
+[1377726.098636] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.098637] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.098637] PKRU: 55555554
+[1377726.098637] Call Trace:
+[1377726.098637]  handle_active_stripes.isra.78+0x495/0x590 [raid456]
+[1377726.098638]  ? raid5_wakeup_stripe_thread+0x98/0x220 [raid456]
+[1377726.098638]  raid5d+0x392/0x5b0 [raid456]
+[1377726.098639]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.098639]  ? schedule_timeout+0x20d/0x310
+[1377726.098639]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.098639]  md_thread+0x94/0x150 [md_mod]
+[1377726.098640]  ? finish_wait+0x80/0x80
+[1377726.098640]  kthread+0x112/0x130
+[1377726.098640]  ? kthread_park+0x80/0x80
+[1377726.098640]  ret_from_fork+0x35/0x40
+[1377726.098675] NMI backtrace for cpu 16 skipped: idling at intel_idle+0x85/0x130
+[1377726.098774] NMI backtrace for cpu 17 skipped: idling at intel_idle+0x85/0x130
+[1377726.098871] NMI backtrace for cpu 19
+[1377726.098872] CPU: 19 PID: 29358 Comm: md2_resync Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.098872] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.098873] RIP: 0010:raid5_sync_request+0x174/0x3b0 [raid456]
+[1377726.098874] Code: 4c 89 e6 4c 89 f7 e8 0b b3 ff ff 48 89 c3 48 85 c0 0f 84 14 02 00 00 41 8b 46 44 85 c0 0f 8e 2c 02 00 00 49 8b 96 20 03 00 00 <83> e8 01 bf 01 00 00 00 48 8d 0c 40 48 8d 42 18 48 8d 34 c8 31 c9
+[1377726.098874] RSP: 0018:ffffa88420cc7cc8 EFLAGS: 00000202
+[1377726.098875] RAX: 0000000000000008 RBX: ffff8e24816c8000 RCX: ffffa88420cc79bc
+[1377726.098876] RDX: ffff8e30782ef440 RSI: 0000000000049694 RDI: 0000000000000000
+[1377726.098876] RBP: ffff8e3077cc9000 R08: ffffa88420cc79c0 R09: 0000000000000400
+[1377726.098877] R10: 0000000000000003 R11: 0000000000000000 R12: 00000000125a5028
+[1377726.098877] R13: ffffa88420cc7cc8 R14: ffff8e106ec6e000 R15: ffffa88420cc7d7c
+[1377726.098878] FS:  0000000000000000(0000) GS:ffff8e307f240000(0000) knlGS:0000000000000000
+[1377726.098878] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.098879] CR2: 0000172747c49b68 CR3: 000000018500a006 CR4: 00000000007626e0
+[1377726.098879] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.098880] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.098880] PKRU: 55555554
+[1377726.098880] Call Trace:
+[1377726.098881]  ? cpumask_next+0x16/0x20
+[1377726.098881]  ? is_mddev_idle+0xcc/0x12a [md_mod]
+[1377726.098881]  md_do_sync.cold.90+0x424/0x953 [md_mod]
+[1377726.098882]  ? update_load_avg+0x7c/0x610
+[1377726.098882]  ? sock_def_error_report+0x40/0x60
+[1377726.098882]  ? __switch_to_asm+0x34/0x70
+[1377726.098883]  ? finish_wait+0x80/0x80
+[1377726.098883]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.098883]  md_thread+0x94/0x150 [md_mod]
+[1377726.098884]  kthread+0x112/0x130
+[1377726.098884]  ? kthread_park+0x80/0x80
+[1377726.098884]  ret_from_fork+0x35/0x40
+[1377726.098885] NMI backtrace for cpu 20 skipped: idling at intel_idle+0x85/0x130
+[1377726.098973] NMI backtrace for cpu 21 skipped: idling at intel_idle+0x85/0x130
+[1377726.099022] NMI backtrace for cpu 22 skipped: idling at intel_idle+0x85/0x130
+[1377726.099126] NMI backtrace for cpu 24 skipped: idling at intel_idle+0x85/0x130
+[1377726.099144] NMI backtrace for cpu 23
+[1377726.099145] CPU: 23 PID: 58578 Comm: kworker/u146:15 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.099145] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.099145] Workqueue: raid5wq raid5_do_work [raid456]
+[1377726.099146] RIP: 0010:memcmp+0x16/0x40
+[1377726.099147] Code: 01 48 39 f8 75 f0 c3 48 89 f8 c3 66 0f 1f 84 00 00 00 00 00 48 85 d2 74 2e 0f b6 07 0f b6 0e 29 c8 75 23 b9 01 00 00 00 eb 13 <44> 0f b6 04 0f 44 0f b6 0c 0e 48 83 c1 01 45 29 c8 75 06 48 39 d1
+[1377726.099148] RSP: 0018:ffffa884221df958 EFLAGS: 00000287
+[1377726.099148] RAX: 0000000000000000 RBX: ffffe26cffa4ce80 RCX: 0000000000000259
+[1377726.099149] RDX: 0000000000001000 RSI: ffff8e306933a000 RDI: ffff8e0bc46fa000
+[1377726.099149] RBP: 0000000000000008 R08: 0000000000000000 R09: 00000000000000fe
+[1377726.099150] R10: ffff8e306933a000 R11: ffffffffc0382000 R12: ffffa884221dfb18
+[1377726.099150] R13: 0000000000000000 R14: ffff8e3035898030 R15: ffff8e3035898038
+[1377726.099151] FS:  0000000000000000(0000) GS:ffff8e307f340000(0000) knlGS:0000000000000000
+[1377726.099151] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.099151] CR2: 000077ec6ca912a0 CR3: 000000018500a006 CR4: 00000000007626e0
+[1377726.099152] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.099152] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.099152] PKRU: 55555554
+[1377726.099152] Call Trace:
+[1377726.099153]  async_syndrome_val+0x1de/0x707 [async_pq]
+[1377726.099153]  ? raid_run_ops+0x1460/0x1460 [raid456]
+[1377726.099153]  ? blk_account_io_start+0xb2/0x160
+[1377726.099153]  ? bio_attempt_back_merge+0x80/0xe0
+[1377726.099154]  ? blk_attempt_plug_merge+0x111/0x120
+[1377726.099154]  ? blk_mq_make_request+0x33f/0x5d0
+[1377726.099154]  ops_run_check_pq+0xa4/0x110 [raid456]
+[1377726.099154]  raid_run_ops+0x1d0/0x1460 [raid456]
+[1377726.099155]  handle_stripe+0xd12/0x2230 [raid456]
+[1377726.099155]  ? __blk_mq_delay_run_hw_queue+0x140/0x160
+[1377726.099155]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.099156]  raid5_do_work+0x9e/0x1d0 [raid456]
+[1377726.099156]  ? try_to_wake_up+0x215/0x640
+[1377726.099156]  process_one_work+0x1a7/0x360
+[1377726.099156]  worker_thread+0x30/0x390
+[1377726.099156]  ? create_worker+0x1a0/0x1a0
+[1377726.099157]  kthread+0x112/0x130
+[1377726.099157]  ? kthread_park+0x80/0x80
+[1377726.099157]  ret_from_fork+0x35/0x40
+[1377726.099174] NMI backtrace for cpu 25 skipped: idling at intel_idle+0x85/0x130
+[1377726.099249] NMI backtrace for cpu 26
+[1377726.099250] CPU: 26 PID: 29414 Comm: md6_resync Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.099251] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.099251] RIP: 0010:try_to_wake_up+0x553/0x640
+[1377726.099252] Code: a3 48 89 fe 4c 01 fa 48 81 c2 e0 0b 00 00 e8 04 66 34 00 84 c0 0f 84 c6 fc ff ff 48 8b 04 24 49 8b 8c 07 78 09 00 00 48 8b 11 <eb> 1c f6 c2 08 75 6a 48 89 d6 48 89 d0 48 83 ce 08 f0 48 0f b1 31
+[1377726.099253] RSP: 0018:ffffa88420f8fb40 EFLAGS: 00000002
+[1377726.099254] RAX: ffff8e107fc40000 RBX: ffff8e3036e15800 RCX: ffff8e1077e24200
+[1377726.099255] RDX: 0000000080204800 RSI: ffff8e3036e15830 RDI: ffff8e3036e15830
+[1377726.099256] RBP: 000000000000002b R08: 0000000000000002 R09: 0000000000029f40
+[1377726.099256] R10: 0115db11c11a940c R11: 0000000000000000 R12: 0000000000000000
+[1377726.099257] R13: ffff8e3036e15f6c R14: 0000000000000087 R15: 000000000002a6c0
+[1377726.099258] FS:  0000000000000000(0000) GS:ffff8e307f400000(0000) knlGS:0000000000000000
+[1377726.099258] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.099259] CR2: 00006edee52f6020 CR3: 000000018500a003 CR4: 00000000007626e0
+[1377726.099259] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.099259] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.099260] PKRU: 55555554
+[1377726.099260] Call Trace:
+[1377726.099261]  ? __switch_to_asm+0x40/0x70
+[1377726.099261]  ? __switch_to_asm+0x34/0x70
+[1377726.099261]  autoremove_wake_function+0x11/0x50
+[1377726.099262]  __wake_up_common+0x7a/0x180
+[1377726.099262]  __wake_up_common_lock+0x7a/0xc0
+[1377726.099263]  raid5_release_stripe+0x10f/0x120 [raid456]
+[1377726.099263]  raid5_sync_request+0x1e3/0x3b0 [raid456]
+[1377726.099264]  ? cpumask_next+0x16/0x20
+[1377726.099264]  ? is_mddev_idle+0xcc/0x12a [md_mod]
+[1377726.099264]  md_do_sync.cold.90+0x424/0x953 [md_mod]
+[1377726.099265]  ? update_load_avg+0x7c/0x610
+[1377726.099265]  ? sock_def_error_report+0x40/0x60
+[1377726.099266]  ? __switch_to_asm+0x34/0x70
+[1377726.099266]  ? finish_wait+0x80/0x80
+[1377726.099266]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.099267]  md_thread+0x94/0x150 [md_mod]
+[1377726.099267]  kthread+0x112/0x130
+[1377726.099268]  ? kthread_park+0x80/0x80
+[1377726.099268]  ret_from_fork+0x35/0x40
+[1377726.099278] NMI backtrace for cpu 27 skipped: idling at intel_idle+0x85/0x130
+[1377726.099311] NMI backtrace for cpu 28 skipped: idling at intel_idle+0x85/0x130
+[1377726.099371] NMI backtrace for cpu 30 skipped: idling at intel_idle+0x85/0x130
+[1377726.099374] NMI backtrace for cpu 29 skipped: idling at intel_idle+0x85/0x130
+[1377726.099523] NMI backtrace for cpu 31 skipped: idling at intel_idle+0x85/0x130
+[1377726.099541] NMI backtrace for cpu 32
+[1377726.099543] CPU: 32 PID: 11834 Comm: kworker/u146:27 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.099543] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.099544] Workqueue: raid5wq raid5_do_work [raid456]
+[1377726.099544] RIP: 0010:analyse_stripe+0x480/0x730 [raid456]
+[1377726.099546] Code: 0f 84 4b fc ff ff 41 83 44 24 18 01 e9 40 fc ff ff f0 41 80 65 02 df 49 8b 83 20 03 00 00 4c 01 f8 4c 8b 30 f0 41 80 65 02 f7 <4d> 85 f6 0f 85 cb fc ff ff 45 31 f6 31 c0 e9 eb fc ff ff 49 03 41
+[1377726.099546] RSP: 0018:ffffa8842118fbc8 EFLAGS: 00000246
+[1377726.099547] RAX: ffff8e30782ef4d0 RBX: 0000000000000006 RCX: 0000000000000000
+[1377726.099547] RDX: 0000000000000000 RSI: ffffa8842118fc90 RDI: ffff8e106ec6e000
+[1377726.099547] RBP: ffff8e1c535e54e0 R08: 0000000000000000 R09: 0000000000000000
+[1377726.099548] R10: 0000000000000006 R11: ffff8e106ec6e000 R12: ffffa8842118fc90
+[1377726.099548] R13: ffff8e1c535e5f88 R14: ffff8e3044d67e00 R15: 0000000000000090
+[1377726.099548] FS:  0000000000000000(0000) GS:ffff8e307f580000(0000) knlGS:0000000000000000
+[1377726.099549] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.099549] CR2: 000067954901b7f0 CR3: 000000018500a002 CR4: 00000000007626e0
+[1377726.099549] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.099550] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.099550] PKRU: 55555554
+[1377726.099550] Call Trace:
+[1377726.099550]  handle_stripe+0x136/0x2230 [raid456]
+[1377726.099551]  ? __blk_mq_delay_run_hw_queue+0x140/0x160
+[1377726.099551]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.099551]  ? raid5_wakeup_stripe_thread+0x98/0x220 [raid456]
+[1377726.099552]  raid5_do_work+0x9e/0x1d0 [raid456]
+[1377726.099552]  ? try_to_wake_up+0x215/0x640
+[1377726.099552]  process_one_work+0x1a7/0x360
+[1377726.099552]  worker_thread+0x1fa/0x390
+[1377726.099553]  ? create_worker+0x1a0/0x1a0
+[1377726.099553]  kthread+0x112/0x130
+[1377726.099553]  ? kthread_park+0x80/0x80
+[1377726.099553]  ret_from_fork+0x35/0x40
+[1377726.099573] NMI backtrace for cpu 34 skipped: idling at intel_idle+0x85/0x130
+[1377726.099580] NMI backtrace for cpu 33 skipped: idling at intel_idle+0x85/0x130
+[1377726.099671] NMI backtrace for cpu 36 skipped: idling at intel_idle+0x85/0x130
+[1377726.099673] NMI backtrace for cpu 35 skipped: idling at intel_idle+0x85/0x130
+[1377726.099809] NMI backtrace for cpu 37 skipped: idling at intel_idle+0x85/0x130
+[1377726.099908] NMI backtrace for cpu 38 skipped: idling at intel_idle+0x85/0x130
+[1377726.099971] NMI backtrace for cpu 39 skipped: idling at intel_idle+0x85/0x130
+[1377726.100067] NMI backtrace for cpu 40 skipped: idling at intel_idle+0x85/0x130
+[1377726.100169] NMI backtrace for cpu 41 skipped: idling at intel_idle+0x85/0x130
+[1377726.100226] NMI backtrace for cpu 43
+[1377726.100227] CPU: 43 PID: 1400 Comm: kworker/43:1H Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.100228] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.100228] Workqueue: kblockd blk_mq_run_work_fn
+[1377726.100229] RIP: 0010:blk_rq_map_sg+0x571/0x6e0
+[1377726.100230] Code: 48 8b 44 24 08 89 54 24 60 be 01 00 00 00 48 89 44 24 58 8b 04 24 89 44 24 64 4d 8b 12 4d 85 d2 0f 84 f1 00 00 00 41 8b 42 2c <45> 8b 72 28 45 8b 6a 30 89 44 24 1c e9 11 fb ff ff 89 c6 4d 8b 03
+[1377726.100230] RSP: 0018:ffffa88420263bd8 EFLAGS: 00000286
+[1377726.100231] RAX: 0000000000000000 RBX: ffff8e0f015d0e60 RCX: 0000000000001000
+[1377726.100231] RDX: 0000000000001000 RSI: 0000000000000001 RDI: ffff8e22e9a9a3f8
+[1377726.100232] RBP: 0000002427c98000 R08: 0000000000001000 R09: ffff8e3033808000
+[1377726.100232] R10: ffff8e1d4be18ab8 R11: 0000000000000001 R12: 00000032530be000
+[1377726.100232] R13: 0000000000000000 R14: 0000000000000000 R15: ffff8e10241bd800
+[1377726.100233] FS:  0000000000000000(0000) GS:ffff8e107fc40000(0000) knlGS:0000000000000000
+[1377726.100233] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.100233] CR2: 0000721583a47730 CR3: 000000018500a004 CR4: 00000000007626e0
+[1377726.100234] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.100234] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.100234] PKRU: 55555554
+[1377726.100234] Call Trace:
+[1377726.100235]  scsi_init_io+0x64/0x160 [scsi_mod]
+[1377726.100235]  sd_init_command+0x221/0xb10 [sd_mod]
+[1377726.100235]  scsi_queue_rq+0x31d/0x9f0 [scsi_mod]
+[1377726.100235]  blk_mq_dispatch_rq_list+0x41a/0x5b0
+[1377726.100236]  ? syscall_return_via_sysret+0x10/0x7f
+[1377726.100236]  ? __switch_to_asm+0x34/0x70
+[1377726.100236]  ? elv_rb_del+0x1f/0x30
+[1377726.100237]  ? deadline_remove_request+0x55/0xc0
+[1377726.100237]  blk_mq_do_dispatch_sched+0x76/0x110
+[1377726.100237]  blk_mq_sched_dispatch_requests+0x11b/0x170
+[1377726.100237]  __blk_mq_run_hw_queue+0x52/0x110
+[1377726.100238]  process_one_work+0x1a7/0x360
+[1377726.100238]  worker_thread+0x30/0x390
+[1377726.100238]  ? create_worker+0x1a0/0x1a0
+[1377726.100238]  kthread+0x112/0x130
+[1377726.100238]  ? kthread_park+0x80/0x80
+[1377726.100239]  ret_from_fork+0x35/0x40
+[1377726.100266] NMI backtrace for cpu 44 skipped: idling at intel_idle+0x85/0x130
+[1377726.100374] NMI backtrace for cpu 45 skipped: idling at intel_idle+0x85/0x130
+[1377726.100466] NMI backtrace for cpu 46 skipped: idling at intel_idle+0x85/0x130
+[1377726.100624] NMI backtrace for cpu 47 skipped: idling at intel_idle+0x85/0x130
+[1377726.100665] NMI backtrace for cpu 48 skipped: idling at intel_idle+0x85/0x130
+[1377726.100803] NMI backtrace for cpu 49 skipped: idling at intel_idle+0x85/0x130
+[1377726.100950] NMI backtrace for cpu 50
+[1377726.100951] CPU: 50 PID: 1511 Comm: md5_raid6 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.100952] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.100952] RIP: 0010:memcmp+0x29/0x40
+[1377726.100953] Code: 00 48 85 d2 74 2e 0f b6 07 0f b6 0e 29 c8 75 23 b9 01 00 00 00 eb 13 44 0f b6 04 0f 44 0f b6 0c 0e 48 83 c1 01 45 29 c8 75 06 <48> 39 d1 75 e8 c3 44 89 c0 c3 31 c0 c3 66 2e 0f 1f 84 00 00 00 00
+[1377726.100953] RSP: 0018:ffffa8840f967958 EFLAGS: 00000246
+[1377726.100954] RAX: 0000000000000000 RBX: 00000000dac1b5c0 RCX: 0000000000000248
+[1377726.100954] RDX: 0000000000001000 RSI: ffff8e303627a000 RDI: ffff8e27306d7000
+[1377726.100955] RBP: 0000000000000000 R08: 0000000000000000 R09: 000000000000005e
+[1377726.100955] R10: ffff8e1f9d62b000 R11: 0000000000000004 R12: ffffa8840f967b18
+[1377726.100955] R13: 0000000000000000 R14: ffff8e3036328030 R15: ffff8e3036328038
+[1377726.100956] FS:  0000000000000000(0000) GS:ffff8e107fe00000(0000) knlGS:0000000000000000
+[1377726.100956] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.100956] CR2: 00001b221a938a98 CR3: 000000018500a004 CR4: 00000000007626e0
+[1377726.100957] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.100957] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.100957] PKRU: 55555554
+[1377726.100957] Call Trace:
+[1377726.100958]  async_syndrome_val+0x2a0/0x707 [async_pq]
+[1377726.100958]  ? raid_run_ops+0x1460/0x1460 [raid456]
+[1377726.100958]  ? __switch_to_asm+0x40/0x70
+[1377726.100959]  ? __switch_to_asm+0x40/0x70
+[1377726.100959]  ? __switch_to_asm+0x34/0x70
+[1377726.100959]  ? __switch_to_asm+0x40/0x70
+[1377726.100959]  ? __switch_to_asm+0x34/0x70
+[1377726.100960]  ? __switch_to_asm+0x40/0x70
+[1377726.100960]  ? __switch_to_asm+0x34/0x70
+[1377726.100960]  ? __switch_to_asm+0x40/0x70
+[1377726.100960]  ? __switch_to_asm+0x34/0x70
+[1377726.100961]  ? __switch_to_asm+0x40/0x70
+[1377726.100961]  ? __switch_to_asm+0x34/0x70
+[1377726.100961]  ? __switch_to_asm+0x40/0x70
+[1377726.100962]  ? __switch_to_asm+0x34/0x70
+[1377726.100962]  ? __switch_to_asm+0x40/0x70
+[1377726.100962]  ? __switch_to_asm+0x34/0x70
+[1377726.100962]  ? __switch_to_asm+0x40/0x70
+[1377726.100962]  ? __switch_to_asm+0x34/0x70
+[1377726.100963]  ? __switch_to_asm+0x40/0x70
+[1377726.100963]  ? __switch_to_asm+0x34/0x70
+[1377726.100963]  ? __switch_to_asm+0x40/0x70
+[1377726.100963]  ? update_group_capacity+0x25/0x1b0
+[1377726.100964]  ? cpumask_next_and+0x19/0x20
+[1377726.100964]  ? update_sd_lb_stats+0x636/0x710
+[1377726.100964]  ops_run_check_pq+0xa4/0x110 [raid456]
+[1377726.100965]  raid_run_ops+0x1d0/0x1460 [raid456]
+[1377726.100965]  handle_stripe+0xd12/0x2230 [raid456]
+[1377726.100965]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.100965]  raid5d+0x392/0x5b0 [raid456]
+[1377726.100966]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.100966]  ? schedule_timeout+0x20d/0x310
+[1377726.100966]  ? md_register_thread+0xd0/0xd0 [md_mod]
+[1377726.100966]  md_thread+0x94/0x150 [md_mod]
+[1377726.100967]  ? finish_wait+0x80/0x80
+[1377726.100967]  kthread+0x112/0x130
+[1377726.100967]  ? kthread_park+0x80/0x80
+[1377726.100967]  ret_from_fork+0x35/0x40
+[1377726.100969] NMI backtrace for cpu 51 skipped: idling at intel_idle+0x85/0x130
+[1377726.101061] NMI backtrace for cpu 52 skipped: idling at intel_idle+0x85/0x130
+[1377726.101160] NMI backtrace for cpu 53 skipped: idling at intel_idle+0x85/0x130
+[1377726.101165] NMI backtrace for cpu 54 skipped: idling at intel_idle+0x85/0x130
+[1377726.101270] NMI backtrace for cpu 55 skipped: idling at intel_idle+0x85/0x130
+[1377726.101360] NMI backtrace for cpu 56 skipped: idling at intel_idle+0x85/0x130
+[1377726.101461] NMI backtrace for cpu 57 skipped: idling at intel_idle+0x85/0x130
+[1377726.101510] NMI backtrace for cpu 58 skipped: idling at intel_idle+0x85/0x130
+[1377726.101563] NMI backtrace for cpu 59 skipped: idling at intel_idle+0x85/0x130
+[1377726.101599] NMI backtrace for cpu 60 skipped: idling at intel_idle+0x85/0x130
+[1377726.101659] NMI backtrace for cpu 61 skipped: idling at intel_idle+0x85/0x130
+[1377726.101728] NMI backtrace for cpu 62
+[1377726.101729] CPU: 62 PID: 62874 Comm: kworker/u146:30 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.101729] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.101730] Workqueue: raid5wq raid5_do_work [raid456]
+[1377726.101731] RIP: 0010:memcmp+0x29/0x40
+[1377726.101732] Code: 00 48 85 d2 74 2e 0f b6 07 0f b6 0e 29 c8 75 23 b9 01 00 00 00 eb 13 44 0f b6 04 0f 44 0f b6 0c 0e 48 83 c1 01 45 29 c8 75 06 <48> 39 d1 75 e8 c3 44 89 c0 c3 31 c0 c3 66 2e 0f 1f 84 00 00 00 00
+[1377726.101732] RSP: 0018:ffffa8840fbe3958 EFLAGS: 00000246
+[1377726.101733] RAX: 0000000000000000 RBX: ffffe26cfedc0640 RCX: 00000000000004f5
+[1377726.101733] RDX: 0000000000001000 RSI: ffff8e3037019000 RDI: ffff8df644e2a000
+[1377726.101734] RBP: 0000000000000008 R08: 0000000000000000 R09: 00000000000000d2
+[1377726.101734] R10: ffff8e3037019000 R11: ffffffffc0382000 R12: ffffa8840fbe3b18
+[1377726.101735] R13: 0000000000000000 R14: ffff8e30359d8030 R15: ffff8e30359d8038
+[1377726.101735] FS:  0000000000000000(0000) GS:ffff8e307f880000(0000) knlGS:0000000000000000
+[1377726.101736] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.101736] CR2: 0000731dc3ee37f0 CR3: 000000018500a002 CR4: 00000000007626e0
+[1377726.101737] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.101738] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.101738] PKRU: 55555554
+[1377726.101738] Call Trace:
+[1377726.101739]  async_syndrome_val+0x1de/0x707 [async_pq]
+[1377726.101740]  ? raid_run_ops+0x1460/0x1460 [raid456]
+[1377726.101740]  ? blk_account_io_start+0xb2/0x160
+[1377726.101740]  ? bio_attempt_back_merge+0x80/0xe0
+[1377726.101741]  ? blk_attempt_plug_merge+0x111/0x120
+[1377726.101742]  ? blk_mq_make_request+0x33f/0x5d0
+[1377726.101742]  ops_run_check_pq+0xa4/0x110 [raid456]
+[1377726.101743]  raid_run_ops+0x1d0/0x1460 [raid456]
+[1377726.101743]  handle_stripe+0xd12/0x2230 [raid456]
+[1377726.101744]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.101744]  raid5_do_work+0x9e/0x1d0 [raid456]
+[1377726.101745]  ? try_to_wake_up+0x215/0x640
+[1377726.101745]  process_one_work+0x1a7/0x360
+[1377726.101745]  worker_thread+0x30/0x390
+[1377726.101746]  ? create_worker+0x1a0/0x1a0
+[1377726.101746]  kthread+0x112/0x130
+[1377726.101746]  ? kthread_park+0x80/0x80
+[1377726.101747]  ret_from_fork+0x35/0x40
+[1377726.101761] NMI backtrace for cpu 64 skipped: idling at intel_idle+0x85/0x130
+[1377726.101838] NMI backtrace for cpu 63
+[1377726.101839] CPU: 63 PID: 73502 Comm: kworker/u146:8 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.101839] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.101840] Workqueue: raid5wq raid5_do_work [raid456]
+[1377726.101840] RIP: 0010:raid6_avx5122_gen_syndrome+0x3c/0x160 [raid6_pq]
+[1377726.101841] Code: 49 89 d5 41 54 4c 8d 3c c5 00 00 00 00 49 89 f4 55 53 48 8b 1c c2 4a 8b 6c 3a 08 e8 ee 27 6f e2 62 f1 fd 48 6f 05 44 51 01 00 <62> f1 f5 48 ef c9 4d 85 e4 0f 84 ff 00 00 00 45 8d 5e fc 4f 8b 54
+[1377726.101842] RSP: 0018:ffffa88421c67770 EFLAGS: 00000202
+[1377726.101842] RAX: 0000000080000000 RBX: ffff8e10773db000 RCX: ffff8e1773df8000
+[1377726.101843] RDX: ffff8e30359e0050 RSI: 0000000000001000 RDI: 0000000000000008
+[1377726.101843] RBP: ffff8e303701a000 R08: ffff8e30359e0050 R09: ffffffffc0343200
+[1377726.101843] R10: 0000000000000007 R11: 0000000000000000 R12: 0000000000001000
+[1377726.101844] R13: ffff8e30359e0050 R14: 0000000000000008 R15: 0000000000000030
+[1377726.101844] FS:  0000000000000000(0000) GS:ffff8e307f8c0000(0000) knlGS:0000000000000000
+[1377726.101844] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.101845] CR2: 00007cadb309f5e0 CR3: 000000018500a004 CR4: 00000000007626e0
+[1377726.101845] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.101845] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.101846] PKRU: 55555554
+[1377726.101846] Call Trace:
+[1377726.101846]  async_gen_syndrome+0x353/0x750 [async_pq]
+[1377726.101846]  ? elv_rb_del+0x1f/0x30
+[1377726.101847]  ? deadline_remove_request+0x55/0xc0
+[1377726.101847]  ? elv_rb_del+0x1f/0x30
+[1377726.101847]  ? deadline_remove_request+0x55/0xc0
+[1377726.101847]  ? blk_mq_do_dispatch_sched+0xb1/0x110
+[1377726.101848]  ? xor_avx_5+0x2a/0x370 [xor]
+[1377726.101848]  ? xor_avx_3+0x20/0x250 [xor]
+[1377726.101848]  ? async_xor+0x28a/0x5b0 [async_xor]
+[1377726.101848]  ? alloc_iova+0xf2/0x140
+[1377726.101849]  async_syndrome_val+0x246/0x707 [async_pq]
+[1377726.101849]  ? raid_run_ops+0x1460/0x1460 [raid456]
+[1377726.101849]  ? bio_attempt_back_merge+0x80/0xe0
+[1377726.101849]  ? deadline_read_expire_show+0x30/0x30
+[1377726.101850]  ? elv_merged_request+0x40/0x50
+[1377726.101850]  ? blk_mq_sched_try_merge+0x157/0x180
+[1377726.101850]  ? dd_bio_merge+0x59/0xa0
+[1377726.101850]  ? blk_mq_make_request+0xe5/0x5d0
+[1377726.101851]  ops_run_check_pq+0xa4/0x110 [raid456]
+[1377726.101851]  raid_run_ops+0x1d0/0x1460 [raid456]
+[1377726.101851]  ? ops_complete_check+0x50/0x50 [raid456]
+[1377726.101852]  ? account_entity_enqueue+0x9c/0xd0
+[1377726.101852]  handle_stripe+0xd12/0x2230 [raid456]
+[1377726.101852]  ? enqueue_task_fair+0x94/0x4d0
+[1377726.101852]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.101853]  raid5_do_work+0x9e/0x1d0 [raid456]
+[1377726.101853]  ? try_to_wake_up+0x215/0x640
+[1377726.101853]  process_one_work+0x1a7/0x360
+[1377726.101853]  worker_thread+0x30/0x390
+[1377726.101854]  ? create_worker+0x1a0/0x1a0
+[1377726.101854]  kthread+0x112/0x130
+[1377726.101854]  ? kthread_park+0x80/0x80
+[1377726.101855]  ret_from_fork+0x35/0x40
+[1377726.101857] NMI backtrace for cpu 65 skipped: idling at intel_idle+0x85/0x130
+[1377726.101859] NMI backtrace for cpu 66 skipped: idling at intel_idle+0x85/0x130
+[1377726.101961] NMI backtrace for cpu 68 skipped: idling at intel_idle+0x85/0x130
+[1377726.102009] NMI backtrace for cpu 67 skipped: idling at intel_idle+0x85/0x130
+[1377726.102110] NMI backtrace for cpu 69 skipped: idling at intel_idle+0x85/0x130
+[1377726.102139] NMI backtrace for cpu 70
+[1377726.102140] CPU: 70 PID: 11558 Comm: kworker/u146:26 Tainted: G        W         5.4.0-0.bpo.2-amd64 #1 Debian 5.4.8-1~bpo10+1
+[1377726.102140] Hardware name: Supermicro Super Server/X11DPH-T, BIOS 2.1 06/15/2018
+[1377726.102141] Workqueue: raid5wq raid5_do_work [raid456]
+[1377726.102142] RIP: 0010:memcmp+0x16/0x40
+[1377726.102143] Code: 01 48 39 f8 75 f0 c3 48 89 f8 c3 66 0f 1f 84 00 00 00 00 00 48 85 d2 74 2e 0f b6 07 0f b6 0e 29 c8 75 23 b9 01 00 00 00 eb 13 <44> 0f b6 04 0f 44 0f b6 0c 0e 48 83 c1 01 45 29 c8 75 06 48 39 d1
+[1377726.102143] RSP: 0018:ffffa88421037958 EFLAGS: 00000283
+[1377726.102144] RAX: 0000000000000000 RBX: ffffe26cffbdd480 RCX: 0000000000000c58
+[1377726.102144] RDX: 0000000000001000 RSI: ffff8e306f752000 RDI: ffff8e1d12b31000
+[1377726.102145] RBP: 0000000000000008 R08: 0000000000000000 R09: 00000000000000c4
+[1377726.102145] R10: ffff8e306f752000 R11: ffffffffc0382000 R12: ffffa88421037b18
+[1377726.102145] R13: 0000000000000000 R14: ffff8e3031068030 R15: ffff8e3031068038
+[1377726.102146] FS:  0000000000000000(0000) GS:ffff8e307fa80000(0000) knlGS:0000000000000000
+[1377726.102146] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[1377726.102146] CR2: 000071cfdd5f6160 CR3: 000000018500a004 CR4: 00000000007626e0
+[1377726.102147] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[1377726.102147] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[1377726.102147] PKRU: 55555554
+[1377726.102147] Call Trace:
+[1377726.102148]  async_syndrome_val+0x1de/0x707 [async_pq]
+[1377726.102148]  ? raid_run_ops+0x1460/0x1460 [raid456]
+[1377726.102148]  ? bio_attempt_back_merge+0x80/0xe0
+[1377726.102148]  ? deadline_read_expire_show+0x30/0x30
+[1377726.102149]  ? elv_merged_request+0x40/0x50
+[1377726.102149]  ? blk_mq_sched_try_merge+0x157/0x180
+[1377726.102149]  ? dd_bio_merge+0x59/0xa0
+[1377726.102150]  ? blk_mq_make_request+0xe5/0x5d0
+[1377726.102150]  ops_run_check_pq+0xa4/0x110 [raid456]
+[1377726.102150]  raid_run_ops+0x1d0/0x1460 [raid456]
+[1377726.102150]  ? __update_load_avg_cfs_rq+0x1d5/0x2c0
+[1377726.102151]  ? account_entity_enqueue+0x9c/0xd0
+[1377726.102151]  handle_stripe+0xd12/0x2230 [raid456]
+[1377726.102151]  ? enqueue_task_fair+0x94/0x4d0
+[1377726.102152]  handle_active_stripes.isra.78+0x3b8/0x590 [raid456]
+[1377726.102152]  raid5_do_work+0x9e/0x1d0 [raid456]
+[1377726.102152]  ? try_to_wake_up+0x215/0x640
+[1377726.102153]  process_one_work+0x1a7/0x360
+[1377726.102153]  worker_thread+0x30/0x390
+[1377726.102153]  ? create_worker+0x1a0/0x1a0
+[1377726.102153]  kthread+0x112/0x130
+[1377726.102154]  ? kthread_park+0x80/0x80
+[1377726.102156]  ret_from_fork+0x35/0x40
+[1377726.102198] NMI backtrace for cpu 71 skipped: idling at intel_idle+0x85/0x130
+
+
+--------------728BE3EF25B76081DD2CF359--
