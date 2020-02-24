@@ -1,7 +1,7 @@
-From: Aymeric <mulx@aplu.fr>
+From: "Aymeric P." <aymeric@aplu.fr>
 Subject: Re: mdadm RAID1 with 3 disks active on 2 disks configuration
-Date: Mon, 24 Feb 2020 10:25:49 +0100
-Message-ID: <DDF3C0A3-0963-4C33-95EC-96D594AA74D7@aplu.fr>
+Date: Mon, 24 Feb 2020 10:23:18 +0100
+Message-ID: <CC9E4848-12C7-4DA3-9626-F083F20EF676@aplu.fr>
 References: <4cf4cbe7-989e-d7ec-cad9-cfde022bd4bf@aplu.fr> <1f5e671c-8d41-695b-2bc4-74df85361e75@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -85,4 +85,3 @@ Aymeric
 --=20
 Aymeric P=2E
 Phone: +33 685 674 843
-Aymeric
