@@ -1,41 +1,57 @@
-From: Petr Vorel <pvorel@suse.cz>
-Subject: [RESENT PATCH 1/1] Makefile: install mdadm_env.sh to /usr/lib/mdadm
-Date: Mon, 24 Feb 2020 14:36:25 +0100
-Message-ID: <20200224133625.16050-1-pvorel@suse.cz>
+From: Jes Sorensen <jes@trained-monkey.org>
+Subject: Re: [PATCH v2 1/1] mdadm.8: add note information for raid0 growing
+ operation
+Date: Mon, 24 Feb 2020 16:03:39 -0500
+Message-ID: <0ad0fd3a-b8bc-a47f-de8a-b991248d2e0b@trained-monkey.org>
+References: <20200224113409.11137-1-pvorel@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200224113409.11137-1-pvorel@suse.cz>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: colyli <colyli@suse.coly>, NeilBrown <neilb@suse.com>, Petr Vorel <pvorel@suse.cz>, Coly Li <colyli@suse.de>
+To: Petr Vorel <pvorel@suse.cz>, linux-raid@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>, NeilBrown <neilb@suse.de>, Paul Menzel <pmenzel@molgen.mpg.de>, Wols Lists <antlists@youngman.org.uk>, Nix <nix@esperi.org.uk>
 List-Id: linux-raid.ids
 
-From: colyli <colyli@suse.coly>
+On 2/24/20 6:34 AM, Petr Vorel wrote:
+> From: Coly Li <colyli@suse.de>
+> 
+> When growing a raid0 device, if the new component disk size is not
+> big enough, the grow operation may fail due to lack of backup space.
+> 
+> The minimum backup space should be larger than:
+>  LCM(old, new) * chunk-size * 2
+> 
+> where LCM() is the least common multiple of the old and new count of
+> component disks, and "* 2" comes from the fact that mdadm refuses to
+> use more than half of a spare device for backup space.
+> 
+> There are users reporting such failure when they grew a raid0 array
+> with small component disk. Neil Brown points out this is not a bug
+> and how the failure comes. This patch adds note information into
+> mdadm(8) man page in the Notes part of GROW MODE section to explain
+> the minimum size requirement of new component disk size or external
+> backup size.
+> 
+> Reviewed-by: Petr Vorel <pvorel@suse.cz>
+> Cc: NeilBrown <neilb@suse.de>
+> Cc: Jes Sorensen <jsorensen@fb.com>
+> Cc: Paul Menzel <pmenzel@molgen.mpg.de>
+> Cc: Wols Lists <antlists@youngman.org.uk>
+> Cc: Nix <nix@esperi.org.uk>
+> Signed-off-by: Coly Li <colyli@suse.de>
+> ---
+> Hi,
+> 
+> Coly haven't sent v2, but it's already prepared in openSUSE package [1],
+> therefore sending it on his behalf.
+> 
+> Kind regards,
+> Petr
 
-Current Makefile installs mdadm_env.sh to /usr/libexec/mdadm but calls it
-from /usr/lib/mdadm. This patch changes the installation directory to
-/usr/lib/mdadm to make things working.
+Applied!
 
-Fixes: f93b797 ("Move mdadm_env.sh out of /usr/lib/systemd")
-
-Reviewed-by: Petr Vorel <pvorel@suse.cz>
-Signed-off-by: Coly Li <colyli@suse.de>
----
- Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/Makefile b/Makefile
-index a33319a..0f2fffd 100644
---- a/Makefile
-+++ b/Makefile
-@@ -91,7 +91,7 @@ MDMON_DIR = $(RUN_DIR)
- # place for autoreplace cookies
- FAILED_SLOTS_DIR = $(RUN_DIR)/failed-slots
- SYSTEMD_DIR=/lib/systemd/system
--LIB_DIR=/usr/libexec/mdadm
-+LIB_DIR=/usr/lib/mdadm
- 
- COROSYNC:=$(shell [ -d /usr/include/corosync ] || echo -DNO_COROSYNC)
- DLM:=$(shell [ -f /usr/include/libdlm.h ] || echo -DNO_DLM)
--- 
-2.25.1
+Thanks,
+Jes
