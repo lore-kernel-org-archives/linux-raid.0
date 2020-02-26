@@ -1,162 +1,215 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: Pausing md check hangs
-Date: Tue, 25 Feb 2020 03:10:52 +0100
-Message-ID: <15519216-347d-c355-fa1e-e1ec29f7e996@cloud.ionos.com>
-References: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH][next] md: Replace zero-length array with flexible-array
+ member
+Date: Wed, 26 Feb 2020 16:18:04 -0600
+Message-ID: <20200226221804.GA8564@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2ce8813c-fd3e-5e78-39ac-049ddfa79ff6@icdsoft.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: gnikolov@icdsoft.com, song@kernel.org
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.comSong Liu" <song@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 List-Id: linux-raid.ids
 
+The current codebase makes use of the zero-length array language
+extension to the C90 standard, but the preferred mechanism to declare
+variable-length types such as these ones is a flexible array member[1][2],
+introduced in C99:
 
+struct foo {
+        int stuff;
+        struct boo array[];
+};
 
-On 1/27/20 2:42 PM, Georgi Nikolov wrote:
-> Hi,
-> 
-> I posted a kernel bug about this a month ago but it did not receive any attention: 
-> https://bugzilla.kernel.org/show_bug.cgi?id=205929
-> Here is a copy of the bug report and I hope that this is the correct place to discuss this:
-> 
-> I have a Supermicro server with 10 md raid6 arrays each consisting of 8 SATA drives. SATA drives are 
-> Hitachi/HGST Ultrastar 7K4000 8T.
-> When i try to pause array check with "echo idle > "/sys/block/<md_dev>/md/sync_action" it randomly 
-> hangs at different md device.
-> Process "mdX_raid6" is at 100% cpu usage.cat /sys/block/mdX/md/journal_mode hungs forever.
+By making use of the mechanism above, we will get a compiler warning
+in case the flexible array does not occur last in the structure, which
+will help us prevent some kind of undefined behavior bugs from being
+inadvertently introduced[3] to the codebase from now on.
 
-Hmm, "echo idle > /sys/block/<md_dev>/md/sync_action" can't get reconfig_mutex, but seems
-it should acquire mddev->lock instead of reconfig_mutex to align with other read functions
-of raid5_attrs. I think we need to change it.
+Also, notice that, dynamic memory allocations won't be affected by
+this change:
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9b6da759dca2..a961d8eed73e 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -2532,13 +2532,10 @@ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
-         struct r5conf *conf;
-         int ret;
+"Flexible array members have incomplete type, and so the sizeof operator
+may not be applied. As a quirk of the original implementation of
+zero-length arrays, sizeof evaluates to zero."[1]
 
--       ret = mddev_lock(mddev);
--       if (ret)
--               return ret;
--
-+       spin_lock(&mddev->lock);
-         conf = mddev->private;
-         if (!conf || !conf->log) {
--               mddev_unlock(mddev);
-+               spin_unlock(&mddev->lock);
-                 return 0;
-         }
+This issue was found with the help of Coccinelle.
 
-@@ -2558,7 +2555,7 @@ static ssize_t r5c_journal_mode_show(struct mddev *mddev, char *page)
-         default:
-                 ret = 0;
-         }
--       mddev_unlock(mddev);
-+       spin_unlock(&mddev->lock);
-         return ret;
-  }
+[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+[2] https://github.com/KSPP/linux/issues/21
+[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
 
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/md/dm-crypt.c                          | 2 +-
+ drivers/md/dm-integrity.c                      | 2 +-
+ drivers/md/dm-log-writes.c                     | 2 +-
+ drivers/md/dm-raid.c                           | 2 +-
+ drivers/md/dm-raid1.c                          | 2 +-
+ drivers/md/dm-stats.c                          | 2 +-
+ drivers/md/dm-stripe.c                         | 2 +-
+ drivers/md/dm-switch.c                         | 2 +-
+ drivers/md/md-linear.h                         | 2 +-
+ drivers/md/persistent-data/dm-btree-internal.h | 2 +-
+ drivers/md/raid1.h                             | 2 +-
+ drivers/md/raid10.h                            | 2 +-
+ 12 files changed, 12 insertions(+), 12 deletions(-)
 
-> 
-> Here is the state at the moment of crash for one of the md devices:
-> 
-> root@supermicro:/sys/block/mdX/md# find -mindepth 1 -maxdepth 1 -type f|sort|grep -v 
-> journal_mode|xargs -r egrep .
-> ./array_size:default
-> ./array_state:write-pending
-
-MD_SB_CHANGE_PENDING was set, so md_update_sb() didn't clear it yet.
-
-> grep: ./bitmap_set_bits: Permission denied
-> ./chunk_size:524288
-> ./component_size:7813895168
-> ./consistency_policy:resync
-> ./degraded:0
-> ./group_thread_cnt:4
-
-To narrow down the issue, I'd suggest to disable multiple raid5 workers.
-
-> ./last_sync_action:check
-> ./layout:2
-> ./level:raid6
-> ./max_read_errors:20
-> ./metadata_version:1.2
-> ./mismatch_cnt:0
-> grep: ./new_dev: Permission denied
-> ./preread_bypass_threshold:1
-> ./raid_disks:8
-> ./reshape_direction:forwards
-> ./reshape_position:none
-> ./resync_start:none
-> ./rmw_level:1
-> ./safe_mode_delay:0.204
-> ./skip_copy:0
-> ./stripe_cache_active:13173
-> ./stripe_cache_size:8192
-> ./suspend_hi:0
-> ./suspend_lo:0
-> ./sync_action:check
-
-Since it was 'check' for sync_action means the array was set with RECOVERY_RUNNING,
-RECOVERY_SYNC and RECOVERY_CHECK.
-
-> ./sync_completed:3566405120 / 15627790336
-> ./sync_force_parallel:0
-> ./sync_max:max
-> ./sync_min:1821385984
-> ./sync_speed:126
-> ./sync_speed_max:1000 (local)
-> ./sync_speed_min:1000 (system)
-
-The sync_speed is really low which means the system was under heavy pressure.
-
-> 
-> root@supermicro:~# cat /proc/mdstat
-> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4] [raid10]
-> md4 : active raid6 sdaa[2] sdab[3] sdy[0] sdae[6] sdac[4] sdad[5] sdaf[7] sdz[1]
->        46883371008 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
->        [====>................]  check = 22.8% (1784112640/7813895168) finish=20571.7min speed=4884K/sec
-> 
-
-When check was in progress, I guess write 'idle' to sync_action was not quit in below
-section. Specifically, I think it was waiting the completion of md_misc_wq, otherwise
-the check should be interrupted after set MD_RECOVERY_INTR.
-
-         if (cmd_match(page, "idle") || cmd_match(page, "frozen")) {
-                 if (cmd_match(page, "frozen"))
-                         set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-                 else
-                         clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-                 if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-                     mddev_lock(mddev) == 0) {
-                         flush_workqueue(md_misc_wq);
-                         if (mddev->sync_thread) {
-                                 set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-                                 md_reap_sync_thread(mddev);
-                         }
-                         mddev_unlock(mddev);
-
-
-
-But it is not clear to me why flush_workqueue was not finished. Maybe the below could
-help but I am not sure.
-
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4779,7 +4779,8 @@ action_store(struct mddev *mddev, const char *page, size_t len)
-                 if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-                     mddev_lock(mddev) == 0) {
-                         flush_workqueue(md_misc_wq);
--                       if (mddev->sync_thread) {
-+                       if (mddev->sync_thread ||
-+                           test_bit(MD_RECOVERY_RUNNING,&mddev->recovery)) {
-
-
-Thanks,
-Guoqing
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index 1c641efeeca7..bea260a82a2a 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -212,7 +212,7 @@ struct crypt_config {
+ 	struct mutex bio_alloc_lock;
+ 
+ 	u8 *authenc_key; /* space for keys in authenc() format (if used) */
+-	u8 key[0];
++	u8 key[];
+ };
+ 
+ #define MIN_IOS		64
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index b225b3e445fa..e22e6d65862a 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -89,7 +89,7 @@ struct journal_entry {
+ 		} s;
+ 		__u64 sector;
+ 	} u;
+-	commit_id_t last_bytes[0];
++	commit_id_t last_bytes[];
+ 	/* __u8 tag[0]; */
+ };
+ 
+diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
+index 99721c76225d..9e21df5bb998 100644
+--- a/drivers/md/dm-log-writes.c
++++ b/drivers/md/dm-log-writes.c
+@@ -127,7 +127,7 @@ struct pending_block {
+ 	char *data;
+ 	u32 datalen;
+ 	struct list_head list;
+-	struct bio_vec vecs[0];
++	struct bio_vec vecs[];
+ };
+ 
+ struct per_bio_data {
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 9a18bef0a5ff..10e8b2fe787b 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -254,7 +254,7 @@ struct raid_set {
+ 		int mode;
+ 	} journal_dev;
+ 
+-	struct raid_dev dev[0];
++	struct raid_dev dev[];
+ };
+ 
+ static void rs_config_backup(struct raid_set *rs, struct rs_layout *l)
+diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
+index 089aed57e083..2f655d9f4200 100644
+--- a/drivers/md/dm-raid1.c
++++ b/drivers/md/dm-raid1.c
+@@ -83,7 +83,7 @@ struct mirror_set {
+ 	struct work_struct trigger_event;
+ 
+ 	unsigned nr_mirrors;
+-	struct mirror mirror[0];
++	struct mirror mirror[];
+ };
+ 
+ DECLARE_DM_KCOPYD_THROTTLE_WITH_MODULE_PARM(raid1_resync_throttle,
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 71417048256a..35d368c418d0 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -56,7 +56,7 @@ struct dm_stat {
+ 	size_t percpu_alloc_size;
+ 	size_t histogram_alloc_size;
+ 	struct dm_stat_percpu *stat_percpu[NR_CPUS];
+-	struct dm_stat_shared stat_shared[0];
++	struct dm_stat_shared stat_shared[];
+ };
+ 
+ #define STAT_PRECISE_TIMESTAMPS		1
+diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
+index 63bbcc20f49a..51fbfcf8efa1 100644
+--- a/drivers/md/dm-stripe.c
++++ b/drivers/md/dm-stripe.c
+@@ -41,7 +41,7 @@ struct stripe_c {
+ 	/* Work struct used for triggering events*/
+ 	struct work_struct trigger_event;
+ 
+-	struct stripe stripe[0];
++	struct stripe stripe[];
+ };
+ 
+ /*
+diff --git a/drivers/md/dm-switch.c b/drivers/md/dm-switch.c
+index 8a0f057b8122..bff4c7fa1cd2 100644
+--- a/drivers/md/dm-switch.c
++++ b/drivers/md/dm-switch.c
+@@ -53,7 +53,7 @@ struct switch_ctx {
+ 	/*
+ 	 * Array of dm devices to switch between.
+ 	 */
+-	struct switch_path path_list[0];
++	struct switch_path path_list[];
+ };
+ 
+ static struct switch_ctx *alloc_switch_ctx(struct dm_target *ti, unsigned nr_paths,
+diff --git a/drivers/md/md-linear.h b/drivers/md/md-linear.h
+index 8381d651d4ed..24e97db50ebb 100644
+--- a/drivers/md/md-linear.h
++++ b/drivers/md/md-linear.h
+@@ -12,6 +12,6 @@ struct linear_conf
+ 	struct rcu_head		rcu;
+ 	sector_t		array_sectors;
+ 	int			raid_disks; /* a copy of mddev->raid_disks */
+-	struct dev_info		disks[0];
++	struct dev_info		disks[];
+ };
+ #endif
+diff --git a/drivers/md/persistent-data/dm-btree-internal.h b/drivers/md/persistent-data/dm-btree-internal.h
+index a240990a7f33..f4e644dd8101 100644
+--- a/drivers/md/persistent-data/dm-btree-internal.h
++++ b/drivers/md/persistent-data/dm-btree-internal.h
+@@ -38,7 +38,7 @@ struct node_header {
+ 
+ struct btree_node {
+ 	struct node_header header;
+-	__le64 keys[0];
++	__le64 keys[];
+ } __packed;
+ 
+ 
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index e7ccad898736..b7eb09e8c025 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -180,7 +180,7 @@ struct r1bio {
+ 	 * if the IO is in WRITE direction, then multiple bios are used.
+ 	 * We choose the number when they are allocated.
+ 	 */
+-	struct bio		*bios[0];
++	struct bio		*bios[];
+ 	/* DO NOT PUT ANY NEW FIELDS HERE - bios array is contiguously alloced*/
+ };
+ 
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index d3eaaf3eb1bc..79cd2b7d3128 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -153,7 +153,7 @@ struct r10bio {
+ 		};
+ 		sector_t	addr;
+ 		int		devnum;
+-	} devs[0];
++	} devs[];
+ };
+ 
+ /* bits for r10bio.state */
+-- 
+2.25.0
