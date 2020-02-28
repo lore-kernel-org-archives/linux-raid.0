@@ -1,215 +1,44 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH][next] md: Replace zero-length array with flexible-array
- member
-Date: Wed, 26 Feb 2020 16:18:04 -0600
-Message-ID: <20200226221804.GA8564@embeddedor>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCH] block: keep bdi->io_pages in sync with max_sectors_kb for
+ stacked devices
+Date: Fri, 28 Feb 2020 17:51:48 +0300
+Message-ID: <158290150891.4423.13566449569964563258.stgit@buzz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.comSong Liu" <song@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Song Liu <song@kernel.org>, Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
 List-Id: linux-raid.ids
 
-The current codebase makes use of the zero-length array language
-extension to the C90 standard, but the preferred mechanism to declare
-variable-length types such as these ones is a flexible array member[1][2],
-introduced in C99:
+Field bdi->io_pages added in commit 9491ae4aade6 ("mm: don't cap request
+size based on read-ahead setting") removes unneeded split of read requests.
 
-struct foo {
-        int stuff;
-        struct boo array[];
-};
+Stacked drivers do not call blk_queue_max_hw_sectors(). Instead they setup
+limits of their devices by blk_set_stacking_limits() + disk_stack_limits().
+Field bio->io_pages stays zero until user set max_sectors_kb via sysfs.
 
-By making use of the mechanism above, we will get a compiler warning
-in case the flexible array does not occur last in the structure, which
-will help us prevent some kind of undefined behavior bugs from being
-inadvertently introduced[3] to the codebase from now on.
+This patch updates io_pages after merging limits in disk_stack_limits().
 
-Also, notice that, dynamic memory allocations won't be affected by
-this change:
+Commit c6d6e9b0f6b4 ("dm: do not allow readahead to limit IO size") fixed
+the same problem for device-mapper devices, this one fixes MD RAIDs.
 
-"Flexible array members have incomplete type, and so the sizeof operator
-may not be applied. As a quirk of the original implementation of
-zero-length arrays, sizeof evaluates to zero."[1]
-
-This issue was found with the help of Coccinelle.
-
-[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
-[2] https://github.com/KSPP/linux/issues/21
-[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 ---
- drivers/md/dm-crypt.c                          | 2 +-
- drivers/md/dm-integrity.c                      | 2 +-
- drivers/md/dm-log-writes.c                     | 2 +-
- drivers/md/dm-raid.c                           | 2 +-
- drivers/md/dm-raid1.c                          | 2 +-
- drivers/md/dm-stats.c                          | 2 +-
- drivers/md/dm-stripe.c                         | 2 +-
- drivers/md/dm-switch.c                         | 2 +-
- drivers/md/md-linear.h                         | 2 +-
- drivers/md/persistent-data/dm-btree-internal.h | 2 +-
- drivers/md/raid1.h                             | 2 +-
- drivers/md/raid10.h                            | 2 +-
- 12 files changed, 12 insertions(+), 12 deletions(-)
+ block/blk-settings.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 1c641efeeca7..bea260a82a2a 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -212,7 +212,7 @@ struct crypt_config {
- 	struct mutex bio_alloc_lock;
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index c8eda2e7b91e..66c45fd79545 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -664,6 +664,8 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+ 		printk(KERN_NOTICE "%s: Warning: Device %s is misaligned\n",
+ 		       top, bottom);
+ 	}
++
++	t->backing_dev_info->io_pages = t->limits.max_sectors >> (PAGE_SHIFT-9);
+ }
+ EXPORT_SYMBOL(disk_stack_limits);
  
- 	u8 *authenc_key; /* space for keys in authenc() format (if used) */
--	u8 key[0];
-+	u8 key[];
- };
- 
- #define MIN_IOS		64
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index b225b3e445fa..e22e6d65862a 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -89,7 +89,7 @@ struct journal_entry {
- 		} s;
- 		__u64 sector;
- 	} u;
--	commit_id_t last_bytes[0];
-+	commit_id_t last_bytes[];
- 	/* __u8 tag[0]; */
- };
- 
-diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
-index 99721c76225d..9e21df5bb998 100644
---- a/drivers/md/dm-log-writes.c
-+++ b/drivers/md/dm-log-writes.c
-@@ -127,7 +127,7 @@ struct pending_block {
- 	char *data;
- 	u32 datalen;
- 	struct list_head list;
--	struct bio_vec vecs[0];
-+	struct bio_vec vecs[];
- };
- 
- struct per_bio_data {
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 9a18bef0a5ff..10e8b2fe787b 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -254,7 +254,7 @@ struct raid_set {
- 		int mode;
- 	} journal_dev;
- 
--	struct raid_dev dev[0];
-+	struct raid_dev dev[];
- };
- 
- static void rs_config_backup(struct raid_set *rs, struct rs_layout *l)
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index 089aed57e083..2f655d9f4200 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -83,7 +83,7 @@ struct mirror_set {
- 	struct work_struct trigger_event;
- 
- 	unsigned nr_mirrors;
--	struct mirror mirror[0];
-+	struct mirror mirror[];
- };
- 
- DECLARE_DM_KCOPYD_THROTTLE_WITH_MODULE_PARM(raid1_resync_throttle,
-diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
-index 71417048256a..35d368c418d0 100644
---- a/drivers/md/dm-stats.c
-+++ b/drivers/md/dm-stats.c
-@@ -56,7 +56,7 @@ struct dm_stat {
- 	size_t percpu_alloc_size;
- 	size_t histogram_alloc_size;
- 	struct dm_stat_percpu *stat_percpu[NR_CPUS];
--	struct dm_stat_shared stat_shared[0];
-+	struct dm_stat_shared stat_shared[];
- };
- 
- #define STAT_PRECISE_TIMESTAMPS		1
-diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
-index 63bbcc20f49a..51fbfcf8efa1 100644
---- a/drivers/md/dm-stripe.c
-+++ b/drivers/md/dm-stripe.c
-@@ -41,7 +41,7 @@ struct stripe_c {
- 	/* Work struct used for triggering events*/
- 	struct work_struct trigger_event;
- 
--	struct stripe stripe[0];
-+	struct stripe stripe[];
- };
- 
- /*
-diff --git a/drivers/md/dm-switch.c b/drivers/md/dm-switch.c
-index 8a0f057b8122..bff4c7fa1cd2 100644
---- a/drivers/md/dm-switch.c
-+++ b/drivers/md/dm-switch.c
-@@ -53,7 +53,7 @@ struct switch_ctx {
- 	/*
- 	 * Array of dm devices to switch between.
- 	 */
--	struct switch_path path_list[0];
-+	struct switch_path path_list[];
- };
- 
- static struct switch_ctx *alloc_switch_ctx(struct dm_target *ti, unsigned nr_paths,
-diff --git a/drivers/md/md-linear.h b/drivers/md/md-linear.h
-index 8381d651d4ed..24e97db50ebb 100644
---- a/drivers/md/md-linear.h
-+++ b/drivers/md/md-linear.h
-@@ -12,6 +12,6 @@ struct linear_conf
- 	struct rcu_head		rcu;
- 	sector_t		array_sectors;
- 	int			raid_disks; /* a copy of mddev->raid_disks */
--	struct dev_info		disks[0];
-+	struct dev_info		disks[];
- };
- #endif
-diff --git a/drivers/md/persistent-data/dm-btree-internal.h b/drivers/md/persistent-data/dm-btree-internal.h
-index a240990a7f33..f4e644dd8101 100644
---- a/drivers/md/persistent-data/dm-btree-internal.h
-+++ b/drivers/md/persistent-data/dm-btree-internal.h
-@@ -38,7 +38,7 @@ struct node_header {
- 
- struct btree_node {
- 	struct node_header header;
--	__le64 keys[0];
-+	__le64 keys[];
- } __packed;
- 
- 
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index e7ccad898736..b7eb09e8c025 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -180,7 +180,7 @@ struct r1bio {
- 	 * if the IO is in WRITE direction, then multiple bios are used.
- 	 * We choose the number when they are allocated.
- 	 */
--	struct bio		*bios[0];
-+	struct bio		*bios[];
- 	/* DO NOT PUT ANY NEW FIELDS HERE - bios array is contiguously alloced*/
- };
- 
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index d3eaaf3eb1bc..79cd2b7d3128 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -153,7 +153,7 @@ struct r10bio {
- 		};
- 		sector_t	addr;
- 		int		devnum;
--	} devs[0];
-+	} devs[];
- };
- 
- /* bits for r10bio.state */
--- 
-2.25.0
