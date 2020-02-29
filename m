@@ -1,111 +1,40 @@
-From: Lidong Zhong <lidong.zhong@suse.com>
-Subject: [PATCH] Monitor: remove autorebuild pidfile when it exits
-Date: Sat, 29 Feb 2020 08:11:42 +0800
-Message-ID: <20200229001142.26957-1-lidong.zhong@suse.com>
+From: Hans Malissa <hmalissa76@gmail.com>
+Subject: Choosing a SATA HD for RAID1
+Date: Fri, 28 Feb 2020 19:47:37 -0700
+Message-ID: <CAG6BYRzw4i6mtTfEVnMpwGAVW0r=BwODiN+0o-UggiaEyo4VSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Though the mdadm monitor is supposed to run in background and never
-exit, user may want to restart it and kill the daemon forcefully. If
-the pid stored in autorebuild.pid is taken by some other process, it
-reports that
-"mdadm: Only one autorebuild process allowed in scan mode, aborting"
-even though no autorebuild process exists. With this patch this file
-will be removed at the end to fix this error.
+I'm trying to select suitable SATA HD for RAID1 via mdadm. I've been
+reading through
+https://raid.wiki.kernel.org/index.php/Choosing_your_hardware,_and_what_is_a_device%3Fand
+https://raid.wiki.kernel.org/index.php/Timeout_Mismatch but I'm still
+confused. I understand that I can use smartctl in order to determine
+whether a drive is suitable, but what can I do to figure this out
+before I purchase the drives? I've looked at
+https://raid.wiki.kernel.org/index.php/Drive_Data_Sheets but I'm not
+sure which information I'm looking for.
+My planned mdadm RAID1 should serve to accommodate the /home
+directory, so I will not need to boot from the array, and the workload
+is going to be moderate. I just need to keep the data in /home secure
+- I'm doing regular backups anyway, but I want to make sure that the
+/home directory remains useable at all times.
+The drives will be used on an openSUSE 12.3 x86_64 system with kernel
+version 3.7.10 and mdadm version 3.2.6 on an Intel Desktop Board
+DH67BL with SATA 6.0 Gb/s or 3.0 Gb/s. I am aware that these are
+somewhat dated, but I have some specialized hardware and software
+installed, and I'm therefore hesitant to update the system with newer
+versions of the OS.
+I'm considering Western Digital WD Gold, either 2TB (WD2005FBYZ) or
+4TB (WD4003FRYZ). It says 'Enterprise Class', but I cannot find a
+definitive confirmation that the drive does not suffer from the TLER
+or SCT/ERC issue. Is it known whether these drives are suitable for
+mdadm RAID1? Are there drives that are more suitable for my
+application?
+Thanks a lot,
 
-Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
----
- Monitor.c | 39 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
-
-diff --git a/Monitor.c b/Monitor.c
-index b527165..4cb113d 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -62,6 +62,7 @@ struct alert_info {
- 	int dosyslog;
- };
- static int make_daemon(char *pidfile);
-+static int cleanup_sharer_pidfile();
- static int check_one_sharer(int scan);
- static void alert(char *event, char *dev, char *disc, struct alert_info *info);
- static int check_array(struct state *st, struct mdstat_ent *mdstat,
-@@ -71,6 +72,12 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
- 			  int test, struct alert_info *info);
- static void try_spare_migration(struct state *statelist, struct alert_info *info);
- static void link_containers_with_subarrays(struct state *list);
-+static volatile sig_atomic_t finished = 0;
-+
-+static void _exit_handler(int sig)                                                                                               
-+{
-+	finished= 1;
-+}
- 
- int Monitor(struct mddev_dev *devlist,
- 	    char *mailaddr, char *alert_cmd,
-@@ -123,7 +130,6 @@ int Monitor(struct mddev_dev *devlist,
- 
- 	struct state *statelist = NULL;
- 	struct state *st2;
--	int finished = 0;
- 	struct mdstat_ent *mdstat = NULL;
- 	char *mailfrom;
- 	struct alert_info info;
-@@ -157,6 +163,11 @@ int Monitor(struct mddev_dev *devlist,
- 		if (rv >= 0)
- 			return rv;
- 	}
-+	
-+	signal(SIGTERM, &_exit_handler);  
-+	signal(SIGKILL, &_exit_handler);  
-+	signal(SIGINT, &_exit_handler);
-+	signal(SIGQUIT, &_exit_handler);
- 
- 	if (share)
- 		if (check_one_sharer(c->scan))
-@@ -260,6 +271,8 @@ int Monitor(struct mddev_dev *devlist,
- 
- 	if (pidfile)
- 		unlink(pidfile);
-+	if (cleanup_sharer_pidfile())
-+		pr_err("Cannot remove autorebuild.pidfile\n");
- 	return 0;
- }
- 
-@@ -299,6 +312,30 @@ static int make_daemon(char *pidfile)
- 	return -1;
- }
- 
-+static int cleanup_sharer_pidfile()
-+{
-+	int pid, rv;
-+	FILE *fp;
-+	char path[100];
-+	char dir[20];
-+	struct stat buf;
-+	sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
-+	fp = fopen(path, "r");
-+	if (fp) {
-+		if (fscanf(fp, "%d", &pid) != 1)
-+			pid = -1;
-+		sprintf(dir, "/proc/%d", pid);
-+		rv = stat(dir, &buf);
-+		if (rv != -1) {
-+			fclose(fp);
-+			unlink(path);
-+		} else
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
- static int check_one_sharer(int scan)
- {
- 	int pid, rv;
--- 
-2.16.4
+Hans
