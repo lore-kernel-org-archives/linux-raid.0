@@ -1,44 +1,111 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH] block: keep bdi->io_pages in sync with max_sectors_kb for
- stacked devices
-Date: Fri, 28 Feb 2020 17:51:48 +0300
-Message-ID: <158290150891.4423.13566449569964563258.stgit@buzz>
+From: Lidong Zhong <lidong.zhong@suse.com>
+Subject: [PATCH] Monitor: remove autorebuild pidfile when it exits
+Date: Sat, 29 Feb 2020 08:11:42 +0800
+Message-ID: <20200229001142.26957-1-lidong.zhong@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, Song Liu <song@kernel.org>, Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Field bdi->io_pages added in commit 9491ae4aade6 ("mm: don't cap request
-size based on read-ahead setting") removes unneeded split of read requests.
+Though the mdadm monitor is supposed to run in background and never
+exit, user may want to restart it and kill the daemon forcefully. If
+the pid stored in autorebuild.pid is taken by some other process, it
+reports that
+"mdadm: Only one autorebuild process allowed in scan mode, aborting"
+even though no autorebuild process exists. With this patch this file
+will be removed at the end to fix this error.
 
-Stacked drivers do not call blk_queue_max_hw_sectors(). Instead they setup
-limits of their devices by blk_set_stacking_limits() + disk_stack_limits().
-Field bio->io_pages stays zero until user set max_sectors_kb via sysfs.
-
-This patch updates io_pages after merging limits in disk_stack_limits().
-
-Commit c6d6e9b0f6b4 ("dm: do not allow readahead to limit IO size") fixed
-the same problem for device-mapper devices, this one fixes MD RAIDs.
-
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
 ---
- block/blk-settings.c |    2 ++
- 1 file changed, 2 insertions(+)
+ Monitor.c | 39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index c8eda2e7b91e..66c45fd79545 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -664,6 +664,8 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
- 		printk(KERN_NOTICE "%s: Warning: Device %s is misaligned\n",
- 		       top, bottom);
- 	}
+diff --git a/Monitor.c b/Monitor.c
+index b527165..4cb113d 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -62,6 +62,7 @@ struct alert_info {
+ 	int dosyslog;
+ };
+ static int make_daemon(char *pidfile);
++static int cleanup_sharer_pidfile();
+ static int check_one_sharer(int scan);
+ static void alert(char *event, char *dev, char *disc, struct alert_info *info);
+ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+@@ -71,6 +72,12 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+ 			  int test, struct alert_info *info);
+ static void try_spare_migration(struct state *statelist, struct alert_info *info);
+ static void link_containers_with_subarrays(struct state *list);
++static volatile sig_atomic_t finished = 0;
 +
-+	t->backing_dev_info->io_pages = t->limits.max_sectors >> (PAGE_SHIFT-9);
- }
- EXPORT_SYMBOL(disk_stack_limits);
++static void _exit_handler(int sig)                                                                                               
++{
++	finished= 1;
++}
  
+ int Monitor(struct mddev_dev *devlist,
+ 	    char *mailaddr, char *alert_cmd,
+@@ -123,7 +130,6 @@ int Monitor(struct mddev_dev *devlist,
+ 
+ 	struct state *statelist = NULL;
+ 	struct state *st2;
+-	int finished = 0;
+ 	struct mdstat_ent *mdstat = NULL;
+ 	char *mailfrom;
+ 	struct alert_info info;
+@@ -157,6 +163,11 @@ int Monitor(struct mddev_dev *devlist,
+ 		if (rv >= 0)
+ 			return rv;
+ 	}
++	
++	signal(SIGTERM, &_exit_handler);  
++	signal(SIGKILL, &_exit_handler);  
++	signal(SIGINT, &_exit_handler);
++	signal(SIGQUIT, &_exit_handler);
+ 
+ 	if (share)
+ 		if (check_one_sharer(c->scan))
+@@ -260,6 +271,8 @@ int Monitor(struct mddev_dev *devlist,
+ 
+ 	if (pidfile)
+ 		unlink(pidfile);
++	if (cleanup_sharer_pidfile())
++		pr_err("Cannot remove autorebuild.pidfile\n");
+ 	return 0;
+ }
+ 
+@@ -299,6 +312,30 @@ static int make_daemon(char *pidfile)
+ 	return -1;
+ }
+ 
++static int cleanup_sharer_pidfile()
++{
++	int pid, rv;
++	FILE *fp;
++	char path[100];
++	char dir[20];
++	struct stat buf;
++	sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
++	fp = fopen(path, "r");
++	if (fp) {
++		if (fscanf(fp, "%d", &pid) != 1)
++			pid = -1;
++		sprintf(dir, "/proc/%d", pid);
++		rv = stat(dir, &buf);
++		if (rv != -1) {
++			fclose(fp);
++			unlink(path);
++		} else
++			return 1;
++	}
++
++	return 0;
++}
++
+ static int check_one_sharer(int scan)
+ {
+ 	int pid, rv;
+-- 
+2.16.4
