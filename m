@@ -1,73 +1,67 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Linux 5.5 Breaks Raid1 on Device instead of Partition, Unusable I/O
-Date: Mon, 2 Mar 2020 14:09:23 -0700
-Message-ID: <CAJCQCtSfGZ3BUt9+Si4iRWO5CwK1_Yi05ivDsGzAaBH4GAUa6g@mail.gmail.com>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: Re: Linux 5.5 Breaks Raid1 on Device instead of Partition, Unusable
+ I/O
+Date: Mon, 2 Mar 2020 15:21:16 -0600
+Message-ID: <eb7083d2-4bd6-975c-07ea-d5a432606d32@suddenlinkmail.com>
 References: <e46b2ae7-3b88-05f2-58d7-94ee3df449e4@suddenlinkmail.com>
- <20200302102542.309e2d19@natsu> <920df583-1d9e-6037-1d61-cbd5e1133d4d@suddenlinkmail.com>
- <20200302115141.1e796b7c@natsu> <c5d8e6d2-a572-5602-6562-795ea52168ac@suddenlinkmail.com>
- <CAJCQCtTOJrvm7BnyqSSuCUa82ehZbtHgSGaQo1bzcepgdtazSw@mail.gmail.com> <9e31d56a-a35d-2413-b6c7-4a97445d487d@suddenlinkmail.com>
+ <20200302102542.309e2d19@natsu>
+ <920df583-1d9e-6037-1d61-cbd5e1133d4d@suddenlinkmail.com>
+ <20200302115141.1e796b7c@natsu>
+ <c5d8e6d2-a572-5602-6562-795ea52168ac@suddenlinkmail.com>
+ <CAJCQCtTOJrvm7BnyqSSuCUa82ehZbtHgSGaQo1bzcepgdtazSw@mail.gmail.com>
+ <9e31d56a-a35d-2413-b6c7-4a97445d487d@suddenlinkmail.com>
+ <9b1ceff4-1299-8e8a-cbc9-da717c72bba3@turmel.org>
+ <5E5D0AFA.1030701@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9e31d56a-a35d-2413-b6c7-4a97445d487d@suddenlinkmail.com>
+In-Reply-To: <5E5D0AFA.1030701@youngman.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Cc: mdraid <linux-raid@vger.kernel.org>
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Mar 2, 2020 at 2:27 AM David C. Rankin
-<drankinatty@suddenlinkmail.com> wrote:
->
-> On 03/02/2020 01:08 AM, Chris Murphy wrote:
-> > smart also reports for /de/sdc
-> >
-> >   40 53 00 ff ff ff 0f  Error: UNC at LBA = 0x0fffffff = 268435455
-> >
-> >
-> > So I'm suspicious of timeout mismatch as well.
-> > https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-> >
-> >
-> > Chris Murphy
-> >
->
-> The strace between the virtualbox host and guess show and number of I/O waits
-> that would seem to fit some timeout issue like that. But according to the
-> page, both drives in this array provide:
->
-> SCT capabilities:              (0x1085) SCT Status supported.
->
+On 03/02/2020 07:32 AM, Wols Lists wrote:
+> It's a Seagate Barracuda ... nuff said
+> 
+> (For David, Barracudas don't support SCT/ERC - they are not recommended
+> for raid. Okay for 1 but definitely not anything else. Get an Ironwolf
+> to replace it.)
 
-Check the value 'smartctl -l scterc /dev/'
-Change the value 'smartctl -l scterc,70,70 /dev/'
+That's a good model!
 
-Of course no change needed if it's a value already below sysfs timeout
-value for each block device. Note that SCT ERC times are deciseconds.
+  It's a shame that drive manufacturers have stripped functionality from most
+of the drives over the past 20 years. 20+ years ago when you when you bought a
+drive, it had all the drive features standard. Even back to the RLL/MFM days,
+all features were supported. Now with the 4 flavors of drives from every
+manufacturer it seems to be a race to put out the cheapest stripped down
+drives they can make.
 
-This is on the host.
+  Then don't make 'em like they used to. Just checking the collection of old
+boxes still spinning, there is an ancient data drive hanging off one probably
+from the mid 2005 timeframe:
 
-> Which should be able to handle the correction without stumbling into the
-> timeout problem. Something is FUBAR. On a Archlinux guest running on that
-> array, At a text console when you type your user name and press [Enter], the
-> login may timeout before the password: prompt is ever displayed. So this is
-> really giving virtualbox fits.
+ === START OF INFORMATION SECTION ===
+Model Family:     Maxtor DiamondMax 10 (ATA/133 and SATA/150)
+Device Model:     Maxtor 6L300R0
+Serial Number:    L604P3MH
+Firmware Version: BAH41E00
+User Capacity:    300,090,728,448 bytes [300 GB]
+Sector Size:      512 bytes logical/physical
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   7
+ATA Standard is:  ATA/ATAPI-7 T13 1532D revision 0
+Local Time is:    Mon Mar  2 15:14:20 2020 CST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
 
-Weird, I'm not sure what's causing that kind of latency in a vbox guest.
+  It has probably been spinning continually for 12-15 years. So long the
+power-on hours are reported only as "17h+26m",
 
-
->
-> On the host itself, you don't really notice much, other than a bit of slowdown
-> with readline and tab-completion every once in a while, but apps looking to
-> that array -- all bets are off.
->
-> And still not a single error in the journal or mailed from mdadm. You would
-> think if it was going to take 26 days to scrub a 3T array, some error should
-> pop up somewhere :-)
-
-Yes. At the least the default SCSI command timer should spit back a
-hard link reset, both in the journal and to the device. I don't think
-mdadm will report that.
+  I'll update the thread when the new drives come in and the raid is rebuilt
+and let you know how it goes.
 
 
 -- 
-Chris Murphy
+David C. Rankin, J.D.,P.E.
