@@ -1,51 +1,52 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Linux 5.5 Breaks Raid1 on Device instead of Partition, Unusable
- I/O
-Date: Mon, 2 Mar 2020 06:44:13 -0500
-Message-ID: <9b1ceff4-1299-8e8a-cbc9-da717c72bba3@turmel.org>
-References: <e46b2ae7-3b88-05f2-58d7-94ee3df449e4@suddenlinkmail.com>
- <20200302102542.309e2d19@natsu>
- <920df583-1d9e-6037-1d61-cbd5e1133d4d@suddenlinkmail.com>
- <20200302115141.1e796b7c@natsu>
- <c5d8e6d2-a572-5602-6562-795ea52168ac@suddenlinkmail.com>
- <CAJCQCtTOJrvm7BnyqSSuCUa82ehZbtHgSGaQo1bzcepgdtazSw@mail.gmail.com>
- <9e31d56a-a35d-2413-b6c7-4a97445d487d@suddenlinkmail.com>
+From: Bob Liu <bob.liu@oracle.com>
+Subject: Re: [PATCH] block: keep bdi->io_pages in sync with max_sectors_kb for
+ stacked devices
+Date: Mon, 2 Mar 2020 20:16:53 +0800
+Message-ID: <7133c4fb-38d5-cf1f-e259-e12b50efcb32@oracle.com>
+References: <158290150891.4423.13566449569964563258.stgit@buzz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9e31d56a-a35d-2413-b6c7-4a97445d487d@suddenlinkmail.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <158290150891.4423.13566449569964563258.stgit@buzz>
 Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>, mdraid <linux-raid@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Song Liu <song@kernel.org>, Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
 List-Id: linux-raid.ids
 
-Hi David,
-
-On 3/2/20 4:27 AM, David C. Rankin wrote:
-> On 03/02/2020 01:08 AM, Chris Murphy wrote:
->> smart also reports for /de/sdc
->>
->>    40 53 00 ff ff ff 0f  Error: UNC at LBA = 0x0fffffff = 268435455
->>
->>
->> So I'm suspicious of timeout mismatch as well.
->> https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
->>
->>
->> Chris Murphy
->>
+On 2/28/20 10:51 PM, Konstantin Khlebnikov wrote:
+> Field bdi->io_pages added in commit 9491ae4aade6 ("mm: don't cap request
+> size based on read-ahead setting") removes unneeded split of read requests.
 > 
-> The strace between the virtualbox host and guess show and number of I/O waits
-> that would seem to fit some timeout issue like that. But according to the
-> page, both drives in this array provide:
+> Stacked drivers do not call blk_queue_max_hw_sectors(). Instead they setup
+> limits of their devices by blk_set_stacking_limits() + disk_stack_limits().
+> Field bio->io_pages stays zero until user set max_sectors_kb via sysfs.
 > 
-> SCT capabilities:              (0x1085) SCT Status supported.
+> This patch updates io_pages after merging limits in disk_stack_limits().
+> 
+> Commit c6d6e9b0f6b4 ("dm: do not allow readahead to limit IO size") fixed
+> the same problem for device-mapper devices, this one fixes MD RAIDs.
+> 
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+> ---
+>  block/blk-settings.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index c8eda2e7b91e..66c45fd79545 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -664,6 +664,8 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+>  		printk(KERN_NOTICE "%s: Warning: Device %s is misaligned\n",
+>  		       top, bottom);
+>  	}
+> +
+> +	t->backing_dev_info->io_pages = t->limits.max_sectors >> (PAGE_SHIFT-9);
+>  }
+>  EXPORT_SYMBOL(disk_stack_limits);
+>  
+> 
 
-SCT Status itself isn't sufficient.  You must have ERC "Error Recovery 
-Control", an optional part of SCT.
-
-smartctl -a doesn't expose that.  Use smartctl -x in general, or 
-smartctl -l scterc to specifically check the needed setting.
-
-Phil
+Nitpick.. (PAGE_SHIFT - 9)
+Reviewed-by: Bob Liu <bob.liu@oracle.com>
