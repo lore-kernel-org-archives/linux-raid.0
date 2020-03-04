@@ -1,163 +1,372 @@
-From: Vitaly Mayatskikh <vmayatskikh@digitalocean.com>
-Subject: [PATCH 0/1] Fix deadlock in raid10 recovery
-Date: Tue,  3 Mar 2020 13:14:39 -0500
-Message-ID: <1583259280-124995-1-git-send-email-vmayatskikh@digitalocean.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH] block: refactor duplicated macros
+Date: Wed, 4 Mar 2020 16:34:36 +0100
+Message-ID: <CAPDyKFrw+PHqcy_yDgj4V9WBy0b8+zbNugHvc4kBOCO2_FT6xg@mail.gmail.com>
+References: <20200223165724.23816-1-mcroce@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20200223165724.23816-1-mcroce@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Matteo Croce <mcroce@redhat.com>
+Cc: linux-block <linux-block@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm@lists.01.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, xen-devel@lists.xenproject.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-nfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Anna Schumaker <anna.schumaker@netapp.com>
 List-Id: linux-raid.ids
 
-We see a relatively high rate of RAID-10 array lockups on active drive
-failure with the following "blocked task" messages seen in logs:
+On Sun, 23 Feb 2020 at 17:57, Matteo Croce <mcroce@redhat.com> wrote:
+>
+> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
+> several times in different flavours across the whole tree.
+> Define them just once in a common header.
+>
+> Signed-off-by: Matteo Croce <mcroce@redhat.com>
 
-[74061.470754] blk_update_request: I/O error, dev sde, sector 37125 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[74061.470754] md/raid10:md0: sde: rescheduling sector 65797
-[74061.470757] md/raid10:md0: sde: rescheduling sector 65892
-[74061.485420] md/raid10:md0: read correction write failed (1 sectors at 4096 on sde)
-[74061.485422] md/raid10:md0: sde: failing drive
-[74061.485433] md/raid10:md0: sdc: redirecting sector 55899 to another mirror
-[74061.495539] md: super_written gets error=10
-[74061.496573] sd 6:0:0:1: [sde] Synchronizing SCSI cache
-[74061.497395] md/raid10:md0: Disk failure on sde, disabling device.
-               md/raid10:md0: Operation continuing on 3 devices.
-[74061.500270] md: super_written gets error=10
-[74061.509780] md: recovery of RAID array md0
-[74061.510141] md/raid10:md0: sdc: redirecting sector 55921 to another mirror
-[74218.192284] INFO: task md0_raid10:14069 blocked for more than 122 seconds.
-[74218.193000]       Not tainted 5.6.0-rc3+ #11
-[74218.193582] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[74218.194551] md0_raid10      D    0 14069      2 0x80004080
-[74218.194556] Call Trace:
-[74218.194564]  __schedule+0x2ca/0x6e0
-[74218.194567]  schedule+0x4f/0xc0
-[74218.194574]  wait_barrier+0x14e/0x1b0 [raid10]
-[74218.194578]  ? remove_wait_queue+0x60/0x60
-[74218.194582]  regular_request_wait.isra.36+0x39/0x180 [raid10]
-[74218.194585]  ? disk_name+0x9b/0xb0
-[74218.194588]  raid10_read_request+0x9d/0x3b0 [raid10]
-[74218.194592]  raid10d+0xca0/0x1700 [raid10]
-[74218.194594]  ? finish_task_switch+0x75/0x2a0
-[74218.194598]  ? __switch_to_asm+0x40/0x70
-[74218.194600]  ? schedule+0x4f/0xc0
-[74218.194601]  ? remove_wait_queue+0x60/0x60
-[74218.194606]  md_thread+0x138/0x180
-[74218.194607]  ? remove_wait_queue+0x60/0x60
-[74218.194610]  kthread+0x105/0x140
-[74218.194613]  ? md_rdev_clear+0x100/0x100
-[74218.194615]  ? kthread_bind+0x20/0x20
-[74218.194617]  ret_from_fork+0x22/0x40
-[74218.194622] INFO: task fio:14127 blocked for more than 122 seconds.
-[74218.195271]       Not tainted 5.6.0-rc3+ #11
-[74218.195831] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[74218.196811] fio             D    0 14127  14123 0x00004080
-[74218.196814] Call Trace:
-[74218.196819]  __schedule+0x2ca/0x6e0
-[74218.196823]  schedule+0x4f/0xc0
-[74218.196828]  wait_barrier+0x14e/0x1b0 [raid10]
-[74218.196830]  ? remove_wait_queue+0x60/0x60
-[74218.196833]  regular_request_wait.isra.36+0x39/0x180 [raid10]
-[74218.196836]  ? __kmalloc+0x186/0x270
-[74218.196839]  ? r10bio_pool_alloc+0x24/0x30 [raid10]
-[74218.196843]  raid10_read_request+0x37d/0x3b0 [raid10]
-[74218.196845]  ? mempool_alloc+0x73/0x170
-[74218.196848]  raid10_make_request+0x104/0x150 [raid10]
-[74218.196852]  md_handle_request+0xc4/0x130
-[74218.196855]  md_make_request+0x85/0x1d0
-[74218.196858]  generic_make_request+0x112/0x2e0
-[74218.196860]  submit_bio+0xaf/0x1a0
-[74218.196863]  ? set_page_dirty_lock+0x3c/0x60
-[74218.196866]  ? bio_set_pages_dirty+0x76/0xb0
-[74218.196869]  blkdev_direct_IO+0x3f3/0x4a0
-[74218.196873]  generic_file_read_iter+0xbf/0xdc0
-[74218.196877]  ? security_file_permission+0xbe/0x120
-[74218.196880]  blkdev_read_iter+0x37/0x40
-[74218.196883]  aio_read+0xf6/0x150
-[74218.196887]  ? __slab_alloc+0x50/0x5f
-[74218.196889]  ? io_submit_one+0x7e/0xbb0
-[74218.196892]  ? io_submit_one+0x7e/0xbb0
-[74218.196894]  io_submit_one+0x199/0xbb0
-[74218.196896]  ? remove_wait_queue+0x60/0x60
-[74218.196900]  __x64_sys_io_submit+0xb3/0x1a0
-[74218.196903]  ? __audit_syscall_exit+0x1e3/0x290
-[74218.196907]  do_syscall_64+0x60/0x1e0
-[74218.196909]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[74218.196912] RIP: 0033:0x7f7abbd41d0d
-[74218.196917] Code: Bad RIP value.
-[74218.196919] RSP: 002b:00007f7a8a32c3c8 EFLAGS: 00000246 ORIG_RAX: 00000000000000d1
-[74218.196921] RAX: ffffffffffffffda RBX: 00007f7a8a32db60 RCX: 00007f7abbd41d0d
-[74218.196922] RDX: 00007f7a84021bd0 RSI: 0000000000000001 RDI: 00007f7abe2a7000
-[74218.196923] RBP: 00007f7abe2a7000 R08: 00007f7a84013f60 R09: 0000000000000020
-[74218.196924] R10: 0000000000000001 R11: 0000000000000246 R12: 0000000000000001
-[74218.196925] R13: 0000000000000000 R14: 00007f7a84021bd0 R15: 00007f7a8ab31000
-[74218.200153] INFO: task mdadm:14139 blocked for more than 122 seconds.
-[74218.200439]       Not tainted 5.6.0-rc3+ #11
-[74218.200686] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[74218.201102] mdadm           D    0 14139  14138 0x000001a0
-[74218.201103] Call Trace:
-[74218.201105]  __schedule+0x2ca/0x6e0
-[74218.201106]  schedule+0x4f/0xc0
-[74218.201107]  md_set_readonly+0x20a/0x2c0
-[74218.201107]  ? remove_wait_queue+0x60/0x60
-[74218.201108]  array_state_store+0x2f7/0x360
-[74218.201109]  md_attr_store+0x85/0xd0
-[74218.201111]  sysfs_kf_write+0x3f/0x50
-[74218.201112]  kernfs_fop_write+0x130/0x1c0
-[74218.201113]  __vfs_write+0x1b/0x40
-[74218.201114]  vfs_write+0xb2/0x1b0
-[74218.201115]  ksys_write+0x61/0xd0
-[74218.201116]  __x64_sys_write+0x1a/0x20
-[74218.201117]  do_syscall_64+0x60/0x1e0
-[74218.201118]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[74218.201119] RIP: 0033:0x7fb834c87168
-[74218.201120] Code: Bad RIP value.
-[74218.201120] RSP: 002b:00007ffcc47fd258 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-[74218.201121] RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007fb834c87168
-[74218.201121] RDX: 0000000000000009 RSI: 00005652b38643dc RDI: 0000000000000003
-[74218.201122] RBP: 00005652b38643dc R08: 00005652b3864620 R09: 00007ffcc47fcbc0
-[74218.201122] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-[74218.201123] R13: 00007ffcc47fea91 R14: 00007ffcc47fd700 R15: 00007ffcc47fd340
-[74218.201124] INFO: task md0_resync:14140 blocked for more than 122 seconds.
-[74218.201415]       Not tainted 5.6.0-rc3+ #11
-[74218.201662] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[74218.202075] md0_resync      D    0 14140      2 0x80004080
-[74218.202076] Call Trace:
-[74218.202078]  __schedule+0x2ca/0x6e0
-[74218.202079]  schedule+0x4f/0xc0
-[74218.202080]  raise_barrier+0xa1/0x1a0 [raid10]
-[74218.202081]  ? remove_wait_queue+0x60/0x60
-[74218.202083]  raid10_sync_request+0x36c/0x16e0 [raid10]
-[74218.202084]  ? insert_work+0x87/0xa0
-[74218.202085]  md_do_sync+0x927/0x1050
-[74218.202086]  ? 0xffffffff81000000
-[74218.202087]  ? __switch_to_asm+0x34/0x70
-[74218.202088]  ? __switch_to_asm+0x40/0x70
-[74218.202089]  ? __switch_to_asm+0x34/0x70
-[74218.202090]  ? __switch_to_asm+0x40/0x70
-[74218.202091]  ? __switch_to_asm+0x34/0x70
-[74218.202091]  ? __switch_to_asm+0x40/0x70
-[74218.202093]  md_thread+0x138/0x180
-[74218.202094]  kthread+0x105/0x140
-[74218.202096]  ? md_rdev_clear+0x100/0x100
-[74218.202096]  ? kthread_bind+0x20/0x20
-[74218.202098]  ret_from_fork+0x22/0x40
+For mmc:
 
-Upon investigation it turned out that md resync thread deadlocks with
-md retry thread. Hang does not happen without a spare drive or when
-the failed drive is configured as failfast.
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-Steps to reproduce:
+Kind regards
+Uffe
 
-mdadm -C /dev/md0 --assume-clean -l 10 -n 4 /dev/sd[abcd]
-mdadm /dev/md0 --add /dev/sde
-mdadm --detail /dev/md0
-fio --thread --direct=1 --rw=randread --ioengine=libaio --bs=512 --iodepth=128 --numjobs=4 --name=foo --time_based --timeout=1500 --group_reporting --filename=/dev/md0
-echo 1 > /sys/block/sda/device/delete
 
-Vitaly Mayatskikh (1):
-  md/raid10: avoid deadlock on recovery.
-
- drivers/md/raid10.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
--- 
-1.8.3.1
+> ---
+>  block/blk-lib.c                  |  2 +-
+>  drivers/block/brd.c              |  3 ---
+>  drivers/block/null_blk_main.c    |  4 ----
+>  drivers/block/zram/zram_drv.c    |  8 ++++----
+>  drivers/block/zram/zram_drv.h    |  2 --
+>  drivers/dax/super.c              |  2 +-
+>  drivers/md/bcache/util.h         |  2 --
+>  drivers/md/dm-bufio.c            |  6 +++---
+>  drivers/md/dm-integrity.c        | 10 +++++-----
+>  drivers/md/md.c                  |  4 ++--
+>  drivers/md/raid1.c               |  2 +-
+>  drivers/mmc/core/host.c          |  3 ++-
+>  drivers/scsi/xen-scsifront.c     |  4 ++--
+>  fs/iomap/buffered-io.c           |  2 +-
+>  fs/nfs/blocklayout/blocklayout.h |  2 --
+>  include/linux/blkdev.h           |  4 ++++
+>  include/linux/device-mapper.h    |  1 -
+>  17 files changed, 26 insertions(+), 35 deletions(-)
+>
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 5f2c429d4378..f5e705d307e0 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -260,7 +260,7 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+>   */
+>  static unsigned int __blkdev_sectors_to_bio_pages(sector_t nr_sects)
+>  {
+> -       sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SIZE / 512);
+> +       sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SECTORS);
+>
+>         return min(pages, (sector_t)BIO_MAX_PAGES);
+>  }
+> diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+> index 220c5e18aba0..33e2cbe11400 100644
+> --- a/drivers/block/brd.c
+> +++ b/drivers/block/brd.c
+> @@ -25,9 +25,6 @@
+>
+>  #include <linux/uaccess.h>
+>
+> -#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> -#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> -
+>  /*
+>   * Each block ramdisk device has a radix_tree brd_pages of pages that stores
+>   * the pages containing the block device's contents. A brd page's ->index is
+> diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
+> index 16510795e377..c42af6cf0b97 100644
+> --- a/drivers/block/null_blk_main.c
+> +++ b/drivers/block/null_blk_main.c
+> @@ -11,10 +11,6 @@
+>  #include <linux/init.h>
+>  #include "null_blk.h"
+>
+> -#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> -#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> -#define SECTOR_MASK            (PAGE_SECTORS - 1)
+> -
+>  #define FREE_BATCH             16
+>
+>  #define TICKS_PER_SEC          50ULL
+> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+> index 1bdb5793842b..6ee59da4a6e2 100644
+> --- a/drivers/block/zram/zram_drv.c
+> +++ b/drivers/block/zram/zram_drv.c
+> @@ -1548,9 +1548,9 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
+>         struct bio_vec bvec;
+>         struct bvec_iter iter;
+>
+> -       index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
+> +       index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
+>         offset = (bio->bi_iter.bi_sector &
+> -                 (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
+> +                 SECTOR_MASK) << SECTOR_SHIFT;
+>
+>         switch (bio_op(bio)) {
+>         case REQ_OP_DISCARD:
+> @@ -1643,8 +1643,8 @@ static int zram_rw_page(struct block_device *bdev, sector_t sector,
+>                 goto out;
+>         }
+>
+> -       index = sector >> SECTORS_PER_PAGE_SHIFT;
+> -       offset = (sector & (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
+> +       index = sector >> PAGE_SECTORS_SHIFT;
+> +       offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
+>
+>         bv.bv_page = page;
+>         bv.bv_len = PAGE_SIZE;
+> diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
+> index f2fd46daa760..12309175d55e 100644
+> --- a/drivers/block/zram/zram_drv.h
+> +++ b/drivers/block/zram/zram_drv.h
+> @@ -21,8 +21,6 @@
+>
+>  #include "zcomp.h"
+>
+> -#define SECTORS_PER_PAGE_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
+> -#define SECTORS_PER_PAGE       (1 << SECTORS_PER_PAGE_SHIFT)
+>  #define ZRAM_LOGICAL_BLOCK_SHIFT 12
+>  #define ZRAM_LOGICAL_BLOCK_SIZE        (1 << ZRAM_LOGICAL_BLOCK_SHIFT)
+>  #define ZRAM_SECTOR_PER_LOGICAL_BLOCK  \
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 0aa4b6bc5101..7f7672f72085 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -92,7 +92,7 @@ bool __generic_fsdax_supported(struct dax_device *dax_dev,
+>                 return false;
+>         }
+>
+> -       last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SIZE / 512;
+> +       last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SECTORS;
+>         err = bdev_dax_pgoff(bdev, last_page, PAGE_SIZE, &pgoff_end);
+>         if (err) {
+>                 pr_debug("%s: error: unaligned partition for dax\n",
+> diff --git a/drivers/md/bcache/util.h b/drivers/md/bcache/util.h
+> index c029f7443190..55196e0f37c3 100644
+> --- a/drivers/md/bcache/util.h
+> +++ b/drivers/md/bcache/util.h
+> @@ -15,8 +15,6 @@
+>
+>  #include "closure.h"
+>
+> -#define PAGE_SECTORS           (PAGE_SIZE / 512)
+> -
+>  struct closure;
+>
+>  #ifdef CONFIG_BCACHE_DEBUG
+> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+> index 2d519c223562..f4496ce0d598 100644
+> --- a/drivers/md/dm-bufio.c
+> +++ b/drivers/md/dm-bufio.c
+> @@ -384,7 +384,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
+>             gfp_mask & __GFP_NORETRY) {
+>                 *data_mode = DATA_MODE_GET_FREE_PAGES;
+>                 return (void *)__get_free_pages(gfp_mask,
+> -                                               c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
+> +                                               c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
+>         }
+>
+>         *data_mode = DATA_MODE_VMALLOC;
+> @@ -422,7 +422,7 @@ static void free_buffer_data(struct dm_bufio_client *c,
+>
+>         case DATA_MODE_GET_FREE_PAGES:
+>                 free_pages((unsigned long)data,
+> -                          c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
+> +                          c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
+>                 break;
+>
+>         case DATA_MODE_VMALLOC:
+> @@ -597,7 +597,7 @@ static void use_bio(struct dm_buffer *b, int rw, sector_t sector,
+>         unsigned vec_size, len;
+>
+>         vec_size = b->c->block_size >> PAGE_SHIFT;
+> -       if (unlikely(b->c->sectors_per_block_bits < PAGE_SHIFT - SECTOR_SHIFT))
+> +       if (unlikely(b->c->sectors_per_block_bits < PAGE_SECTORS_SHIFT))
+>                 vec_size += 2;
+>
+>         bio = bio_kmalloc(GFP_NOWAIT | __GFP_NORETRY | __GFP_NOWARN, vec_size);
+> diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+> index b225b3e445fa..4e60cda465cc 100644
+> --- a/drivers/md/dm-integrity.c
+> +++ b/drivers/md/dm-integrity.c
+> @@ -652,7 +652,7 @@ static void page_list_location(struct dm_integrity_c *ic, unsigned section, unsi
+>
+>         sector = section * ic->journal_section_sectors + offset;
+>
+> -       *pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +       *pl_index = sector >> PAGE_SECTORS_SHIFT;
+>         *pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>  }
+>
+> @@ -951,7 +951,7 @@ static void rw_journal_sectors(struct dm_integrity_c *ic, int op, int op_flags,
+>                 return;
+>         }
+>
+> -       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +       pl_index = sector >> PAGE_SECTORS_SHIFT;
+>         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>
+>         io_req.bi_op = op;
+> @@ -1072,7 +1072,7 @@ static void copy_from_journal(struct dm_integrity_c *ic, unsigned section, unsig
+>
+>         sector = section * ic->journal_section_sectors + JOURNAL_BLOCK_SECTORS + offset;
+>
+> -       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +       pl_index = sector >> PAGE_SECTORS_SHIFT;
+>         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>
+>         io_req.bi_op = REQ_OP_WRITE;
+> @@ -3343,7 +3343,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+>         ic->commit_ids[3] = cpu_to_le64(0x4444444444444444ULL);
+>
+>         journal_pages = roundup((__u64)ic->journal_sections * ic->journal_section_sectors,
+> -                               PAGE_SIZE >> SECTOR_SHIFT) >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +                               PAGE_SIZE >> SECTOR_SHIFT) >> PAGE_SECTORS_SHIFT;
+>         journal_desc_size = journal_pages * sizeof(struct page_list);
+>         if (journal_pages >= totalram_pages() - totalhigh_pages() || journal_desc_size > ULONG_MAX) {
+>                 *error = "Journal doesn't fit into memory";
+> @@ -4075,7 +4075,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>                         spin_lock_init(&bbs->bio_queue_lock);
+>
+>                         sector = i * (BITMAP_BLOCK_SIZE >> SECTOR_SHIFT);
+> -                       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +                       pl_index = sector >> PAGE_SECTORS_SHIFT;
+>                         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>
+>                         bbs->bitmap = lowmem_page_address(ic->journal[pl_index].page) + pl_offset;
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 469f551863be..b28f9390608f 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1734,7 +1734,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+>                 __le64 *bbp;
+>                 int i;
+>                 int sectors = le16_to_cpu(sb->bblog_size);
+> -               if (sectors > (PAGE_SIZE / 512))
+> +               if (sectors > PAGE_SECTORS)
+>                         return -EINVAL;
+>                 offset = le32_to_cpu(sb->bblog_offset);
+>                 if (offset == 0)
+> @@ -8733,7 +8733,7 @@ void md_do_sync(struct md_thread *thread)
+>         /*
+>          * Tune reconstruction:
+>          */
+> -       window = 32 * (PAGE_SIZE / 512);
+> +       window = 32 * PAGE_SECTORS;
+>         pr_debug("md: using %dk window, over a total of %lluk.\n",
+>                  window/2, (unsigned long long)max_sectors/2);
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index cd810e195086..37a0b571903a 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2129,7 +2129,7 @@ static void process_checks(struct r1bio *r1_bio)
+>         int vcnt;
+>
+>         /* Fix variable parts of all bios */
+> -       vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+> +       vcnt = (r1_bio->sectors + PAGE_SECTORS - 1) >> (PAGE_SHIFT - 9);
+>         for (i = 0; i < conf->raid_disks * 2; i++) {
+>                 blk_status_t status;
+>                 struct bio *b = r1_bio->bios[i];
+> diff --git a/drivers/mmc/core/host.c b/drivers/mmc/core/host.c
+> index c8768726d925..4a23fb9d5642 100644
+> --- a/drivers/mmc/core/host.c
+> +++ b/drivers/mmc/core/host.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/export.h>
+>  #include <linux/leds.h>
+>  #include <linux/slab.h>
+> +#include <linux/blkdev.h>
+>
+>  #include <linux/mmc/host.h>
+>  #include <linux/mmc/card.h>
+> @@ -427,7 +428,7 @@ struct mmc_host *mmc_alloc_host(int extra, struct device *dev)
+>
+>         host->max_req_size = PAGE_SIZE;
+>         host->max_blk_size = 512;
+> -       host->max_blk_count = PAGE_SIZE / 512;
+> +       host->max_blk_count = PAGE_SECTORS;
+>
+>         host->fixed_drv_type = -EINVAL;
+>         host->ios.power_delay_ms = 10;
+> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+> index f0068e96a177..e6b29e54d07a 100644
+> --- a/drivers/scsi/xen-scsifront.c
+> +++ b/drivers/scsi/xen-scsifront.c
+> @@ -852,7 +852,7 @@ static int scsifront_probe(struct xenbus_device *dev,
+>         host->max_id      = VSCSIIF_MAX_TARGET;
+>         host->max_channel = 0;
+>         host->max_lun     = VSCSIIF_MAX_LUN;
+> -       host->max_sectors = (host->sg_tablesize - 1) * PAGE_SIZE / 512;
+> +       host->max_sectors = (host->sg_tablesize - 1) * PAGE_SECTORS;
+>         host->max_cmd_len = VSCSIIF_MAX_COMMAND_SIZE;
+>
+>         err = scsi_add_host(host, &dev->dev);
+> @@ -1073,7 +1073,7 @@ static void scsifront_read_backend_params(struct xenbus_device *dev,
+>                          host->sg_tablesize, nr_segs);
+>
+>         host->sg_tablesize = nr_segs;
+> -       host->max_sectors = (nr_segs - 1) * PAGE_SIZE / 512;
+> +       host->max_sectors = (nr_segs - 1) * PAGE_SECTORS;
+>  }
+>
+>  static void scsifront_backend_changed(struct xenbus_device *dev,
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 7c84c4c027c4..60505fc156c5 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -29,7 +29,7 @@ struct iomap_page {
+>         atomic_t                read_count;
+>         atomic_t                write_count;
+>         spinlock_t              uptodate_lock;
+> -       DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
+> +       DECLARE_BITMAP(uptodate, PAGE_SECTORS);
+>  };
+>
+>  static inline struct iomap_page *to_iomap_page(struct page *page)
+> diff --git a/fs/nfs/blocklayout/blocklayout.h b/fs/nfs/blocklayout/blocklayout.h
+> index 716bc75e9ed2..22407751e0fd 100644
+> --- a/fs/nfs/blocklayout/blocklayout.h
+> +++ b/fs/nfs/blocklayout/blocklayout.h
+> @@ -40,8 +40,6 @@
+>  #include "../pnfs.h"
+>  #include "../netns.h"
+>
+> -#define PAGE_CACHE_SECTORS (PAGE_SIZE >> SECTOR_SHIFT)
+> -#define PAGE_CACHE_SECTOR_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
+>  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
+>
+>  struct pnfs_block_dev;
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 053ea4b51988..b3c9be6906a0 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -910,6 +910,10 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
+>  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
+>  #endif
+>
+> +#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> +#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> +#define SECTOR_MASK            (PAGE_SECTORS - 1)
+> +
+>  /*
+>   * blk_rq_pos()                        : the current sector
+>   * blk_rq_bytes()              : bytes left in the entire request
+> diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+> index 475668c69dbc..c98a533f8ffa 100644
+> --- a/include/linux/device-mapper.h
+> +++ b/include/linux/device-mapper.h
+> @@ -141,7 +141,6 @@ typedef long (*dm_dax_direct_access_fn) (struct dm_target *ti, pgoff_t pgoff,
+>                 long nr_pages, void **kaddr, pfn_t *pfn);
+>  typedef size_t (*dm_dax_copy_iter_fn)(struct dm_target *ti, pgoff_t pgoff,
+>                 void *addr, size_t bytes, struct iov_iter *i);
+> -#define PAGE_SECTORS (PAGE_SIZE / 512)
+>
+>  void dm_error(const char *message);
+>
+> --
+> 2.24.1
+>
