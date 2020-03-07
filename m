@@ -1,79 +1,101 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH] md: check arrays is suspended in mddev_detach before call
- quiesce operations
-Date: Sat, 7 Mar 2020 17:56:54 +0100
-Message-ID: <3be8072d-cecc-d61c-6509-5094b1b24191@cloud.ionos.com>
-References: <20200211101004.2993-1-guoqing.jiang@gmx.us>
+From: Chris Green <cl@isbd.net>
+Subject: Failed SBOD RAID on old NAS, how to diagnose/resurrect?
+Date: Sat, 7 Mar 2020 21:58:11 +0000
+Message-ID: <20200307215811.GA27305@esprimo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200211101004.2993-1-guoqing.jiang@gmx.us>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ping ...
+I have an old (well, fairly old) WD NAS which has two 1Tb disk drives
+configured to be one big disk drive using RAID.  It's been sat on the
+shelf for two or three years at least so I was actually quite
+pleasantly surprised when it booted.
 
-On 2/11/20 11:10 AM, Guoqing Jiang wrote:
-> From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-> 
-> Don't call quiesce(1) and quiesce(0) if array is already suspended,
-> otherwise in level_store, the array is writable after mddev_detach
-> in below part though the intention is to make array writable after
-> resume.
-> 
-> 	mddev_suspend(mddev);
-> 	mddev_detach(mddev);
-> 	...
-> 	mddev_resume(mddev);
-> 
-> And it also causes calltrace as follows in [1].
-> 
-> [48005.653834] WARNING: CPU: 1 PID: 45380 at kernel/kthread.c:510 kthread_=
-> park+0x77/0x90
-> [...]
-> [48005.653976] CPU: 1 PID: 45380 Comm: mdadm Tainted: G           OE     5=
-> .4.10-arch1-1 #1
-> [48005.653979] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M=
-> ./J4105-ITX, BIOS P1.40 08/06/2018
-> [48005.653984] RIP: 0010:kthread_park+0x77/0x90
-> [48005.654015] Call Trace:
-> [48005.654039]  r5l_quiesce+0x3c/0x70 [raid456]
-> [48005.654052]  raid5_quiesce+0x228/0x2e0 [raid456]
-> [48005.654073]  mddev_detach+0x30/0x70 [md_mod]
-> [48005.654090]  level_store+0x202/0x670 [md_mod]
-> [48005.654099]  ? security_capable+0x40/0x60
-> [48005.654114]  md_attr_store+0x7b/0xc0 [md_mod]
-> [48005.654123]  kernfs_fop_write+0xce/0x1b0
-> [48005.654132]  vfs_write+0xb6/0x1a0
-> [48005.654138]  ksys_write+0x67/0xe0
-> [48005.654146]  do_syscall_64+0x4e/0x140
-> [48005.654155]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> [48005.654161] RIP: 0033:0x7fa0c8737497
-> 
-> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D206161
-> 
-> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-> =2D--
->   drivers/md/md.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index d3212d61e660..92c626b506d6 100644
-> =2D-- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6076,7 +6076,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
->   static void mddev_detach(struct mddev *mddev)
->   {
->   	md_bitmap_wait_behind_writes(mddev);
-> -	if (mddev->pers && mddev->pers->quiesce) {
-> +	if (mddev->pers && mddev->pers->quiesce && !mddev->suspended) {
->   		mddev->pers->quiesce(mddev, 1);
->   		mddev->pers->quiesce(mddev, 0);
->   	}
-> =2D-
-> 2.17.1
-> 
+However the RAID is broken, the second disk drive doesn't get added to
+the RAID array.  The NAS's configuration GUI says that both physical
+disk drives are healthy/ok but marks the second half of the single
+RAID virtual disk as 'failed'.
+
+I have ssh access to the NAS (and root) and I'm quite at home on the
+Unix/Linux command line and doing sysadmin type things but I'm a total
+newbie as regards RAID.
+
+So how can I set about diagnosing and fixing this?  I can't even find
+anything that tells me how the RAID is configured at the moment.  At
+the most basic level 'mount' shows:-
+
+    ~ # mount
+    /dev/root on / type ext3 (rw,noatime,data=ordered)
+    proc on /proc type proc (rw)
+    sys on /sys type sysfs (rw)
+    /dev/pts on /dev/pts type devpts (rw)
+    securityfs on /sys/kernel/security type securityfs (rw)
+    /dev/md3 on /var type ext3 (rw,noatime,data=ordered)
+    /dev/md2 on /DataVolume type xfs (rw,noatime,uqnoenforce)
+    /dev/ram0 on /mnt/ram type tmpfs (rw)
+    /dev/md2 on /shares/Public type xfs (rw,noatime,uqnoenforce)
+    /dev/md2 on /shares/Download type xfs (rw,noatime,uqnoenforce)
+    /dev/md2 on /shares/chris type xfs (rw,noatime,uqnoenforce)
+    /dev/md2 on /shares/laptop type xfs (rw,noatime,uqnoenforce)
+    /dev/md2 on /shares/dps type xfs (rw,noatime,uqnoenforce)
+    /dev/md2 on /shares/ben type xfs (rw,noatime,uqnoenforce)
+    ~ # 
+
+... and fdisk:-
+
+    ~ # fdisk -l
+
+    Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+    255 heads, 63 sectors/track, 121601 cylinders
+    Units = cylinders of 16065 * 512 = 8225280 bytes
+
+       Device Boot    Start       End    Blocks   Id  System
+    /dev/sda1               5         248     1959930   fd  Linux raid autodetect
+    /dev/sda2             249         280      257040   fd  Linux raid autodetect
+    /dev/sda3             281         403      987997+  fd  Linux raid autodetect
+    /dev/sda4             404      121601   973522935   fd  Linux raid autodetect
+
+    Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
+    255 heads, 63 sectors/track, 121601 cylinders
+    Units = cylinders of 16065 * 512 = 8225280 bytes
+
+       Device Boot    Start       End    Blocks   Id  System
+    /dev/sdb1               5         248     1959930   fd  Linux raid autodetect
+    /dev/sdb2             249         280      257040   fd  Linux raid autodetect
+    /dev/sdb3             281         403      987997+  fd  Linux raid autodetect
+    /dev/sdb4             404      121601   973522935   fd  Linux raid autodetect
+
+
+There should be a /dev/md4. :-
+
+    /proc # more mdstat
+    Personalities : [linear] [raid0] [raid1] 
+    md2 : active raid1 sda4[0]
+          973522816 blocks [2/1] [U_]
+          
+    md1 : active raid1 sdb2[1] sda2[0]
+          256960 blocks [2/2] [UU]
+          
+    md3 : active raid1 sdb3[1] sda3[0]
+          987904 blocks [2/2] [UU]
+          
+    md4 : active raid1 sdb4[0]
+          973522816 blocks [2/1] [U_]
+          
+    md0 : active raid1 sdb1[1] sda1[0]
+          1959808 blocks [2/2] [UU]
+          
+    unused devices: <none>
+
+
+
+Oh, and the kernel is:-
+
+    Linux WDbackup 2.6.24.4 #1 Thu Apr 1 16:43:58 CST 2010 armv5tejl unknown
+
+-- 
+Chris Green
