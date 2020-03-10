@@ -1,57 +1,100 @@
-From: Matteo Croce <mcroce@redhat.com>
-Subject: Re: [PATCH v2] block: refactor duplicated macros
-Date: Wed, 11 Mar 2020 00:18:21 +0100
-Message-ID: <CAGnkfhwjXN_T09MsD1e6P95gUqxCbWL7BcOLSy16_QOZsZKbgQ@mail.gmail.com>
-References: <20200310223516.102758-1-mcroce@redhat.com> <d473061b-688f-f4a6-c0e8-61c22b8a2b10@cloud.ionos.com>
+From: Song Liu <song@kernel.org>
+Subject: Re: Failed JBOD RAID on old NAS, how to diagnose/resurrect?
+Date: Tue, 10 Mar 2020 16:46:26 -0700
+Message-ID: <CAPhsuW588Hq4mgnuLLk4hHU_xmKJf=-U9fZTERrQgx12z1T2-w@mail.gmail.com>
+References: <20200307215811.GA27305@esprimo> <20200307220820.GA31559@esprimo>
+ <20200308141427.GA15739@esprimo> <CAPhsuW4Kh7YxxarBKNKtTh=3Kef7cBxtEMEzEB_6jPkAiAor1Q@mail.gmail.com>
+ <20200310221114.GA12719@esprimo>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d473061b-688f-f4a6-c0e8-61c22b8a2b10@cloud.ionos.com>
+In-Reply-To: <20200310221114.GA12719@esprimo>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc: linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, linux-bcache@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, linux-mmc@vger.kernel.org, xen-devel <xen-devel@lists.xenproject.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-nfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Ulf Hansson <ulf.hansson@linaro.org>, Anna Schumaker <anna.schumaker@netapp.com>, Dan Williams <dan.j.williams@intel.com>, Song Liu <song@kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Mar 11, 2020 at 12:10 AM Guoqing Jiang
-<guoqing.jiang@cloud.ionos.com> wrote:
+On Tue, Mar 10, 2020 at 3:11 PM Chris Green <cl@isbd.net> wrote:
 >
->
->
-> On 3/10/20 11:35 PM, Matteo Croce wrote:
-> > +++ b/drivers/md/raid1.c
-> > @@ -2129,7 +2129,7 @@ static void process_checks(struct r1bio *r1_bio)
-> >       int vcnt;
+> On Tue, Mar 10, 2020 at 02:20:02PM -0700, Song Liu wrote:
+> > On Sun, Mar 8, 2020 at 7:15 AM Chris Green <cl@isbd.net> wrote:
+> > >
+> > > Well I've got it working again but I'm very confused as to *why* it
+> > > failed the way it did.
+> > >
+> > > A 'cat /proc/mdstat' produced:-
+> > >
+> > >     Personalities : [linear] [raid0] [raid1]
+> > >     md4 : active raid1 sda4[0]
+> > >           973522816 blocks [2/1] [U_]
+> > >
+> > >     md1 : active raid1 sdb2[0] sda2[1]
+> > >           256960 blocks [2/2] [UU]
+> > >
+> > >     md3 : active raid1 sdb3[0] sda3[1]
+> > >           987904 blocks [2/2] [UU]
+> > >
+> > >     md2 : active raid1 sdb4[0]
+> > >           973522816 blocks [2/1] [U_]
+> > >
+> > >     md0 : active raid1 sdb1[0] sda1[1]
+> > >           1959808 blocks [2/2] [UU]
+> > >
+> > > So md2 and md4 (the main parts of the two 1Tb disk drives) seemed to
+> > > be OK from the RAID point of view.  But I noticed that the block
+> > > device for /dev/md4 didn't exist:-
+> > >
+> > >     ~ # ls -l /dev/md*
+> > >     brw-r-----    1 root     root       9,   0 Sep 29  2011 /dev/md0
+> > >     brw-r-----    1 root     root       9,   1 Sep 29  2011 /dev/md1
+> > >     brw-r-----    1 root     root       9,  10 Sep 29  2011 /dev/md10
+> > >     brw-r-----    1 root     root       9,  11 Sep 29  2011 /dev/md11
+> > >     brw-r-----    1 root     root       9,  12 Sep 29  2011 /dev/md12
+> > >     brw-r-----    1 root     root       9,  13 Sep 29  2011 /dev/md13
+> > >     brw-r-----    1 root     root       9,  14 Sep 29  2011 /dev/md14
+> > >     brw-r-----    1 root     root       9,  15 Sep 29  2011 /dev/md15
+> > >     brw-r-----    1 root     root       9,  16 Sep 29  2011 /dev/md16
+> > >     brw-r-----    1 root     root       9,  17 Sep 29  2011 /dev/md17
+> > >     brw-r-----    1 root     root       9,  18 Sep 29  2011 /dev/md18
+> > >     brw-r-----    1 root     root       9,  19 Sep 29  2011 /dev/md19
+> > >     brw-r-----    1 root     root       9,   2 Sep 29  2011 /dev/md2
+> > >     brw-r-----    1 root     root       9,  20 Sep 29  2011 /dev/md20
+> > >     brw-r-----    1 root     root       9,  21 Sep 29  2011 /dev/md21
+> > >     brw-r-----    1 root     root       9,  22 Sep 29  2011 /dev/md22
+> > >     brw-r-----    1 root     root       9,  23 Sep 29  2011 /dev/md23
+> > >     brw-r-----    1 root     root       9,  24 Sep 29  2011 /dev/md24
+> > >     brw-r-----    1 root     root       9,  25 Sep 29  2011 /dev/md25
+> > >     brw-r-----    1 root     root       9,  26 Sep 29  2011 /dev/md26
+> > >     brw-r-----    1 root     root       9,  27 Sep 29  2011 /dev/md27
+> > >     brw-r-----    1 root     root       9,  28 Sep 29  2011 /dev/md28
+> > >     brw-r-----    1 root     root       9,  29 Sep 29  2011 /dev/md29
+> > >     brw-r-----    1 root     root       9,   3 Sep 29  2011 /dev/md3
+> > >     brw-r-----    1 root     root       9,   5 Sep 29  2011 /dev/md5
+> > >     brw-r-----    1 root     root       9,   6 Sep 29  2011 /dev/md6
+> > >     brw-r-----    1 root     root       9,   7 Sep 29  2011 /dev/md7
+> > >     brw-r-----    1 root     root       9,   8 Sep 29  2011 /dev/md8
+> > >     brw-r-----    1 root     root       9,   9 Sep 29  2011 /dev/md9
+> > >
+> > >
+> > > The fix was simply to use 'mknod' to create the missing /dev/md4, now
+> > > I can mount the drive and see the data.
+> > >
+> > > What I don't understand is where /dev/md4 went, how would it have got
+> > > deleted?  I have yet to reboot the system to see if /dev/md4
+> > > disappears again but if it does it's not a big problem to create it
+> > > again.
+> > >
+> > > Should the RAID block devices get created as part of the RAID start
+> > > up? Maybe there's something gone awry there.
 > >
-> >       /* Fix variable parts of all bios */
-> > -     vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
-> > +     vcnt = (r1_bio->sectors + PAGE_SECTORS - 1) >> (PAGE_SHIFT - 9);
->
-> Maybe replace "PAGE_SHIFT - 9" with "PAGE_SECTORS_SHIFT" too.
->
-> Thanks,
-> Guoqing
->
+> > Do you have proper /etc/md.conf?
+> >
+> There is no /etc/md.conf or anything that I can see related to RAID
+> configuration anywhere in the system.
 
-Wow, there are a lot of them!
+Sorry, I meant mdadm.conf.
 
-$ git grep -c 'PAGE_SHIFT - 9'
-arch/ia64/include/asm/pgtable.h:2
-block/blk-settings.c:2
-block/partition-generic.c:1
-drivers/md/dm-table.c:1
-drivers/md/raid1.c:1
-drivers/md/raid10.c:1
-drivers/md/raid5-cache.c:5
-drivers/md/raid5.h:1
-drivers/nvme/host/fc.c:1
-drivers/nvme/target/loop.c:1
-fs/erofs/internal.h:1
-fs/ext2/dir.c:1
-fs/libfs.c:1
-fs/nilfs2/dir.c:1
-mm/page_io.c:2
-mm/swapfile.c:6
+Please refer to https://raid.wiki.kernel.org/index.php/RAID_setup for
+ways to set up the configuration.
 
--- 
-Matteo Croce
-per aspera ad upstream
+Thanks,
+Song
