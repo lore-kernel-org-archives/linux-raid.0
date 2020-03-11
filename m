@@ -1,28 +1,49 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3] block: refactor duplicated macros
-Date: Wed, 11 Mar 2020 06:58:39 -0600
-Message-ID: <7e03d359-f199-29d8-a75f-20c4b7ff3031@kernel.dk>
-References: <20200311002254.121365-1-mcroce@redhat.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: checkarray not running or emailing
+Date: Wed, 11 Mar 2020 20:50:54 +0800
+Message-ID: <10e2db3d-13e6-573f-18bd-1443d6a27884@fnarfbargle.com>
+References: <814aad65-fba3-334c-c4df-6b8f4bfc4193.ref@att.net>
+ <814aad65-fba3-334c-c4df-6b8f4bfc4193@att.net>
+ <0ef54c89-b486-eb0b-8d70-a043ef089c9f@att.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200311002254.121365-1-mcroce@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <0ef54c89-b486-eb0b-8d70-a043ef089c9f@att.net>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matteo Croce <mcroce@redhat.com>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>, Ulf Hansson <ulf.hansson@linaro.org>, Anna Schumaker <anna.schumaker@netapp.com>, Dan Williams <dan.j.williams@intel.com>, Song Liu <song@kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Leslie Rhorer <lesrhorer@att.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/10/20 6:22 PM, Matteo Croce wrote:
-> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
-> several times in different flavours across the whole tree.
-> Define them just once in a common header.
+On 11/3/20 09:11, Leslie Rhorer wrote:
+>      Is there seriously no one here who knows how checkarray was launched in previous versions?
 > 
-> While at it, replace replace "PAGE_SHIFT - 9" with "PAGE_SECTORS_SHIFT" too
-> and rename SECTOR_MASK to PAGE_SECTORS_MASK.
+> On 3/1/2020 3:03 PM, Leslie Rhorer wrote:
+>>     I have upgraded 2 of my servers to Debian Buster, and now neither one seems to be running checkarray automatically.  In addition, when I run checkarray manually, it isn't sending update emails on the status of the job.  Actually, I have never been able to figure out how checkarray runs.  One my older servers, there doesn't seem to be anything in /etc/crontab, /etc/cron.monthly, /etc/init.d/, /etc/mdadm/mdadm.conf, or /lib/systemd/system/ that would run checkarray.
+> 
 
-Applied, thanks.
+On mine it's in /etc/cron.d/mdadm
 
+brad@srv:/etc/cron.d$ cat mdadm
+#
+# cron.d/mdadm -- schedules periodic redundancy checks of MD devices
+#
+# Copyright © martin f. krafft <madduck@madduck.net>
+# distributed under the terms of the Artistic Licence 2.0
+#
+
+# By default, run at 00:57 on every Sunday, but do nothing unless the day of
+# the month is less than or equal to 7. Thus, only run on the first Sunday of
+# each month. crontab(5) sucks, unfortunately, in this regard; therefore this
+# hack (see #380425).
+57 0 * * 0 root if [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%d) -le 7 ]; then /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi
+
+dpkg -L mdadm gave me a list of files and I just checked the cron entries.
+
+I don't run anything that recent, but Debian is Debian.
+
+Brad
 -- 
-Jens Axboe
+An expert is a person who has found out by his own painful
+experience all the mistakes that one can make in a very
+narrow field. - Niels Bohr
