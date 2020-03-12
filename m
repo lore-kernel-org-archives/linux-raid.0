@@ -1,73 +1,459 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/21] partitions/msdos: remove LINUX_SWAP_PARTITION
-Date: Thu, 12 Mar 2020 16:19:37 +0100
-Message-ID: <20200312151939.645254-20-hch@lst.de>
+Subject: [PATCH 21/21] block: merge partition-generic.c and check.c
+Date: Thu, 12 Mar 2020 16:19:39 +0100
+Message-ID: <20200312151939.645254-22-hch@lst.de>
 References: <20200312151939.645254-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-ext4-owner@vger.kernel.org>
 In-Reply-To: <20200312151939.645254-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-ext4-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just always use NEW_SOLARIS_X86_PARTITION and explain the situation,
-as that is less confusing than two names for a single value.
+Merge block/partition-generic.c and block/partitions/check.c into
+a single block/partitions/core.c as the content is closely related
+and both files are tiny.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partitions/msdos.c        | 18 ++++++++++++------
- include/linux/msdos_partition.h |  3 +--
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ block/Makefile                                |   3 +-
+ block/partitions/Makefile                     |   3 +-
+ block/partitions/check.c                      | 179 ------------------
+ block/partitions/check.h                      |   5 -
+ .../core.c}                                   | 178 +++++++++++++++--
+ 5 files changed, 166 insertions(+), 202 deletions(-)
+ delete mode 100644 block/partitions/check.c
+ rename block/{partition-generic.c => partitions/core.c} (77%)
 
-diff --git a/block/partitions/msdos.c b/block/partitions/msdos.c
-index 88ee5ee7f442..e44e2f0a02cc 100644
---- a/block/partitions/msdos.c
-+++ b/block/partitions/msdos.c
-@@ -77,13 +77,19 @@ static int aix_magic_present(struct parsed_partitions *state, unsigned char *p)
- 		p[2] == AIX_LABEL_MAGIC3 &&
- 		p[3] == AIX_LABEL_MAGIC4))
- 		return 0;
--	/* Assume the partition table is valid if Linux partitions exists */
+diff --git a/block/Makefile b/block/Makefile
+index 1a43750f4b01..206b96e9387f 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -8,8 +8,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-sysfs.o \
+ 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
+ 			blk-lib.o blk-mq.o blk-mq-tag.o blk-stat.o \
+ 			blk-mq-sysfs.o blk-mq-cpumap.o blk-mq-sched.o ioctl.o \
+-			genhd.o partition-generic.o ioprio.o \
+-			badblocks.o partitions/ blk-rq-qos.o
++			genhd.o ioprio.o badblocks.o partitions/ blk-rq-qos.o
+ 
+ obj-$(CONFIG_BOUNCE)		+= bounce.o
+ obj-$(CONFIG_BLK_SCSI_REQUEST)	+= scsi_ioctl.o
+diff --git a/block/partitions/Makefile b/block/partitions/Makefile
+index 2f276b677c81..a7f05cdb02a8 100644
+--- a/block/partitions/Makefile
++++ b/block/partitions/Makefile
+@@ -3,8 +3,7 @@
+ # Makefile for the linux kernel.
+ #
+ 
+-obj-$(CONFIG_BLOCK) := check.o
+-
++obj-$(CONFIG_BLOCK) += core.o
+ obj-$(CONFIG_ACORN_PARTITION) += acorn.o
+ obj-$(CONFIG_AMIGA_PARTITION) += amiga.o
+ obj-$(CONFIG_ATARI_PARTITION) += atari.o
+diff --git a/block/partitions/check.c b/block/partitions/check.c
+deleted file mode 100644
+index 944c478b6f0b..000000000000
+--- a/block/partitions/check.c
++++ /dev/null
+@@ -1,179 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- *  fs/partitions/check.c
+- *
+- *  Code extracted from drivers/block/genhd.c
+- *  Copyright (C) 1991-1998  Linus Torvalds
+- *  Re-organised Feb 1998 Russell King
+- *
+- *  We now have independent partition support from the
+- *  block drivers, which allows all the partition code to
+- *  be grouped in one location, and it to be mostly self
+- *  contained.
+- *
+- *  Added needed MAJORS for new pairs, {hdi,hdj}, {hdk,hdl}
+- */
+-
+-#include <linux/slab.h>
+-#include <linux/vmalloc.h>
+-#include <linux/ctype.h>
+-#include <linux/genhd.h>
+-
+-#include "check.h"
+-
+-static int (*check_part[])(struct parsed_partitions *) = {
+-	/*
+-	 * Probe partition formats with tables at disk address 0
+-	 * that also have an ADFS boot block at 0xdc0.
+-	 */
+-#ifdef CONFIG_ACORN_PARTITION_ICS
+-	adfspart_check_ICS,
+-#endif
+-#ifdef CONFIG_ACORN_PARTITION_POWERTEC
+-	adfspart_check_POWERTEC,
+-#endif
+-#ifdef CONFIG_ACORN_PARTITION_EESOX
+-	adfspart_check_EESOX,
+-#endif
+-
+-	/*
+-	 * Now move on to formats that only have partition info at
+-	 * disk address 0xdc0.  Since these may also have stale
+-	 * PC/BIOS partition tables, they need to come before
+-	 * the msdos entry.
+-	 */
+-#ifdef CONFIG_ACORN_PARTITION_CUMANA
+-	adfspart_check_CUMANA,
+-#endif
+-#ifdef CONFIG_ACORN_PARTITION_ADFS
+-	adfspart_check_ADFS,
+-#endif
+-
+-#ifdef CONFIG_CMDLINE_PARTITION
+-	cmdline_partition,
+-#endif
+-#ifdef CONFIG_EFI_PARTITION
+-	efi_partition,		/* this must come before msdos */
+-#endif
+-#ifdef CONFIG_SGI_PARTITION
+-	sgi_partition,
+-#endif
+-#ifdef CONFIG_LDM_PARTITION
+-	ldm_partition,		/* this must come before msdos */
+-#endif
+-#ifdef CONFIG_MSDOS_PARTITION
+-	msdos_partition,
+-#endif
+-#ifdef CONFIG_OSF_PARTITION
+-	osf_partition,
+-#endif
+-#ifdef CONFIG_SUN_PARTITION
+-	sun_partition,
+-#endif
+-#ifdef CONFIG_AMIGA_PARTITION
+-	amiga_partition,
+-#endif
+-#ifdef CONFIG_ATARI_PARTITION
+-	atari_partition,
+-#endif
+-#ifdef CONFIG_MAC_PARTITION
+-	mac_partition,
+-#endif
+-#ifdef CONFIG_ULTRIX_PARTITION
+-	ultrix_partition,
+-#endif
+-#ifdef CONFIG_IBM_PARTITION
+-	ibm_partition,
+-#endif
+-#ifdef CONFIG_KARMA_PARTITION
+-	karma_partition,
+-#endif
+-#ifdef CONFIG_SYSV68_PARTITION
+-	sysv68_partition,
+-#endif
+-	NULL
+-};
+-
+-static struct parsed_partitions *allocate_partitions(struct gendisk *hd)
+-{
+-	struct parsed_partitions *state;
+-	int nr;
+-
+-	state = kzalloc(sizeof(*state), GFP_KERNEL);
+-	if (!state)
+-		return NULL;
+-
+-	nr = disk_max_parts(hd);
+-	state->parts = vzalloc(array_size(nr, sizeof(state->parts[0])));
+-	if (!state->parts) {
+-		kfree(state);
+-		return NULL;
+-	}
+-
+-	state->limit = nr;
+-
+-	return state;
+-}
+-
+-void free_partitions(struct parsed_partitions *state)
+-{
+-	vfree(state->parts);
+-	kfree(state);
+-}
+-
+-struct parsed_partitions *
+-check_partition(struct gendisk *hd, struct block_device *bdev)
+-{
+-	struct parsed_partitions *state;
+-	int i, res, err;
+-
+-	state = allocate_partitions(hd);
+-	if (!state)
+-		return NULL;
+-	state->pp_buf = (char *)__get_free_page(GFP_KERNEL);
+-	if (!state->pp_buf) {
+-		free_partitions(state);
+-		return NULL;
+-	}
+-	state->pp_buf[0] = '\0';
+-
+-	state->bdev = bdev;
+-	disk_name(hd, 0, state->name);
+-	snprintf(state->pp_buf, PAGE_SIZE, " %s:", state->name);
+-	if (isdigit(state->name[strlen(state->name)-1]))
+-		sprintf(state->name, "p");
+-
+-	i = res = err = 0;
+-	while (!res && check_part[i]) {
+-		memset(state->parts, 0, state->limit * sizeof(state->parts[0]));
+-		res = check_part[i++](state);
+-		if (res < 0) {
+-			/* We have hit an I/O error which we don't report now.
+-		 	* But record it, and let the others do their job.
+-		 	*/
+-			err = res;
+-			res = 0;
+-		}
+-
+-	}
+-	if (res > 0) {
+-		printk(KERN_INFO "%s", state->pp_buf);
+-
+-		free_page((unsigned long)state->pp_buf);
+-		return state;
+-	}
+-	if (state->access_beyond_eod)
+-		err = -ENOSPC;
+-	if (err)
+-	/* The partition is unrecognized. So report I/O errors if there were any */
+-		res = err;
+-	if (res) {
+-		strlcat(state->pp_buf,
+-			" unable to read partition table\n", PAGE_SIZE);
+-		printk(KERN_INFO "%s", state->pp_buf);
+-	}
+-
+-	free_page((unsigned long)state->pp_buf);
+-	free_partitions(state);
+-	return ERR_PTR(res);
+-}
+diff --git a/block/partitions/check.h b/block/partitions/check.h
+index 23e7adb79617..f845355489ec 100644
+--- a/block/partitions/check.h
++++ b/block/partitions/check.h
+@@ -23,11 +23,6 @@ struct parsed_partitions {
+ 	char *pp_buf;
+ };
+ 
+-void free_partitions(struct parsed_partitions *state);
+-
+-struct parsed_partitions *
+-check_partition(struct gendisk *, struct block_device *);
+-
+ typedef struct {
+ 	struct page *v;
+ } Sector;
+diff --git a/block/partition-generic.c b/block/partitions/core.c
+similarity index 77%
+rename from block/partition-generic.c
+rename to block/partitions/core.c
+index febfb8e96abb..682fe445c3ab 100644
+--- a/block/partition-generic.c
++++ b/block/partitions/core.c
+@@ -1,27 +1,177 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
+- *  Code extracted from drivers/block/genhd.c
+- *  Copyright (C) 1991-1998  Linus Torvalds
+- *  Re-organised Feb 1998 Russell King
+- *
+- *  We now have independent partition support from the
+- *  block drivers, which allows all the partition code to
+- *  be grouped in one location, and it to be mostly self
+- *  contained.
++ * Copyright (C) 1991-1998  Linus Torvalds
++ * Re-organised Feb 1998 Russell King
+  */
+-
+-#include <linux/init.h>
+-#include <linux/module.h>
+ #include <linux/fs.h>
+ #include <linux/slab.h>
+-#include <linux/kmod.h>
+ #include <linux/ctype.h>
+ #include <linux/genhd.h>
++#include <linux/vmalloc.h>
+ #include <linux/blktrace_api.h>
+ #include <linux/raid/detect.h>
+-#include "blk.h"
++#include "../blk.h"
++#include "check.h"
++
++static int (*check_part[])(struct parsed_partitions *) = {
++	/*
++	 * Probe partition formats with tables at disk address 0
++	 * that also have an ADFS boot block at 0xdc0.
++	 */
++#ifdef CONFIG_ACORN_PARTITION_ICS
++	adfspart_check_ICS,
++#endif
++#ifdef CONFIG_ACORN_PARTITION_POWERTEC
++	adfspart_check_POWERTEC,
++#endif
++#ifdef CONFIG_ACORN_PARTITION_EESOX
++	adfspart_check_EESOX,
++#endif
 +
 +	/*
-+	 * Assume the partition table is valid if Linux partitions exists.
-+	 * Note that old Solaris/x86 partitions use the same indicator as
-+	 * Linux swap partitions, so we consider that a Linux partition as
-+	 * well.
++	 * Now move on to formats that only have partition info at
++	 * disk address 0xdc0.  Since these may also have stale
++	 * PC/BIOS partition tables, they need to come before
++	 * the msdos entry.
 +	 */
- 	for (slot = 1; slot <= 4; slot++, pt++) {
--		if (pt->sys_ind == LINUX_SWAP_PARTITION ||
--			pt->sys_ind == LINUX_RAID_PARTITION ||
--			pt->sys_ind == LINUX_DATA_PARTITION ||
--			pt->sys_ind == LINUX_LVM_PARTITION ||
--			is_extended_partition(pt))
-+		if (pt->sys_ind == SOLARIS_X86_PARTITION ||
-+		    pt->sys_ind == LINUX_RAID_PARTITION ||
-+		    pt->sys_ind == LINUX_DATA_PARTITION ||
-+		    pt->sys_ind == LINUX_LVM_PARTITION ||
-+		    is_extended_partition(pt))
- 			return 0;
- 	}
- 	d = read_part_sector(state, 7, &sect);
-diff --git a/include/linux/msdos_partition.h b/include/linux/msdos_partition.h
-index e151af072cd1..2cb82db2a43c 100644
---- a/include/linux/msdos_partition.h
-+++ b/include/linux/msdos_partition.h
-@@ -27,12 +27,11 @@ enum msdos_sys_ind {
- 	LINUX_EXTENDED_PARTITION = 0x85,
- 	WIN98_EXTENDED_PARTITION = 0x0f,
++#ifdef CONFIG_ACORN_PARTITION_CUMANA
++	adfspart_check_CUMANA,
++#endif
++#ifdef CONFIG_ACORN_PARTITION_ADFS
++	adfspart_check_ADFS,
++#endif
++
++#ifdef CONFIG_CMDLINE_PARTITION
++	cmdline_partition,
++#endif
++#ifdef CONFIG_EFI_PARTITION
++	efi_partition,		/* this must come before msdos */
++#endif
++#ifdef CONFIG_SGI_PARTITION
++	sgi_partition,
++#endif
++#ifdef CONFIG_LDM_PARTITION
++	ldm_partition,		/* this must come before msdos */
++#endif
++#ifdef CONFIG_MSDOS_PARTITION
++	msdos_partition,
++#endif
++#ifdef CONFIG_OSF_PARTITION
++	osf_partition,
++#endif
++#ifdef CONFIG_SUN_PARTITION
++	sun_partition,
++#endif
++#ifdef CONFIG_AMIGA_PARTITION
++	amiga_partition,
++#endif
++#ifdef CONFIG_ATARI_PARTITION
++	atari_partition,
++#endif
++#ifdef CONFIG_MAC_PARTITION
++	mac_partition,
++#endif
++#ifdef CONFIG_ULTRIX_PARTITION
++	ultrix_partition,
++#endif
++#ifdef CONFIG_IBM_PARTITION
++	ibm_partition,
++#endif
++#ifdef CONFIG_KARMA_PARTITION
++	karma_partition,
++#endif
++#ifdef CONFIG_SYSV68_PARTITION
++	sysv68_partition,
++#endif
++	NULL
++};
++
++static struct parsed_partitions *allocate_partitions(struct gendisk *hd)
++{
++	struct parsed_partitions *state;
++	int nr;
  
--	LINUX_SWAP_PARTITION = 0x82,
- 	LINUX_DATA_PARTITION = 0x83,
- 	LINUX_LVM_PARTITION = 0x8e,
- 	LINUX_RAID_PARTITION = 0xfd,	/* autodetect RAID partition */
+-#include "partitions/check.h"
++	state = kzalloc(sizeof(*state), GFP_KERNEL);
++	if (!state)
++		return NULL;
++
++	nr = disk_max_parts(hd);
++	state->parts = vzalloc(array_size(nr, sizeof(state->parts[0])));
++	if (!state->parts) {
++		kfree(state);
++		return NULL;
++	}
++
++	state->limit = nr;
++
++	return state;
++}
++
++static void free_partitions(struct parsed_partitions *state)
++{
++	vfree(state->parts);
++	kfree(state);
++}
++
++static struct parsed_partitions *check_partition(struct gendisk *hd,
++		struct block_device *bdev)
++{
++	struct parsed_partitions *state;
++	int i, res, err;
++
++	state = allocate_partitions(hd);
++	if (!state)
++		return NULL;
++	state->pp_buf = (char *)__get_free_page(GFP_KERNEL);
++	if (!state->pp_buf) {
++		free_partitions(state);
++		return NULL;
++	}
++	state->pp_buf[0] = '\0';
++
++	state->bdev = bdev;
++	disk_name(hd, 0, state->name);
++	snprintf(state->pp_buf, PAGE_SIZE, " %s:", state->name);
++	if (isdigit(state->name[strlen(state->name)-1]))
++		sprintf(state->name, "p");
++
++	i = res = err = 0;
++	while (!res && check_part[i]) {
++		memset(state->parts, 0, state->limit * sizeof(state->parts[0]));
++		res = check_part[i++](state);
++		if (res < 0) {
++			/*
++			 * We have hit an I/O error which we don't report now.
++			 * But record it, and let the others do their job.
++			 */
++			err = res;
++			res = 0;
++		}
++
++	}
++	if (res > 0) {
++		printk(KERN_INFO "%s", state->pp_buf);
++
++		free_page((unsigned long)state->pp_buf);
++		return state;
++	}
++	if (state->access_beyond_eod)
++		err = -ENOSPC;
++	/*
++	 * The partition is unrecognized. So report I/O errors if there were any
++	 */
++	if (err)
++		res = err;
++	if (res) {
++		strlcat(state->pp_buf,
++			" unable to read partition table\n", PAGE_SIZE);
++		printk(KERN_INFO "%s", state->pp_buf);
++	}
++
++	free_page((unsigned long)state->pp_buf);
++	free_partitions(state);
++	return ERR_PTR(res);
++}
  
--	SOLARIS_X86_PARTITION =	LINUX_SWAP_PARTITION,
-+	SOLARIS_X86_PARTITION =	0x82,	/* also Linux swap partitions */
- 	NEW_SOLARIS_X86_PARTITION = 0xbf,
- 
- 	DM6_AUX1PARTITION = 0x51,	/* no DDO:  use xlated geom */
+ static ssize_t part_partition_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
 -- 
 2.24.1
