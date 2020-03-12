@@ -1,382 +1,326 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/21] block: declare all partition detection routines in check.h
-Date: Thu, 12 Mar 2020 16:19:30 +0100
-Message-ID: <20200312151939.645254-13-hch@lst.de>
+Subject: [PATCH 08/21] scsi: simplify scsi_partsize
+Date: Thu, 12 Mar 2020 16:19:26 +0100
+Message-ID: <20200312151939.645254-9-hch@lst.de>
 References: <20200312151939.645254-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <reiserfs-devel-owner@vger.kernel.org>
 In-Reply-To: <20200312151939.645254-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: reiserfs-devel-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is no good reason to include one header per partition type in
-core.c.  Instead move the prototypes for the detection routins to
-check.h, and remove all now empty headers in block/partitions/.
+Call scsi_bios_ptable from scsi_partsize instead of requiring boilerplate
+code in the callers.  Also switch the calling convention to match that
+of the ->bios_param instances calling this function, and use true/false
+for the return value instead of the weird -1 convention.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partitions/acorn.c   |  1 -
- block/partitions/acorn.h   | 15 ---------------
- block/partitions/aix.c     |  1 -
- block/partitions/aix.h     |  2 --
- block/partitions/amiga.c   |  1 -
- block/partitions/amiga.h   |  7 -------
- block/partitions/atari.h   |  1 -
- block/partitions/check.c   | 16 ----------------
- block/partitions/check.h   | 22 ++++++++++++++++++++++
- block/partitions/cmdline.c |  1 -
- block/partitions/cmdline.h |  3 ---
- block/partitions/efi.h     |  3 ---
- block/partitions/ibm.c     |  1 -
- block/partitions/ibm.h     |  2 --
- block/partitions/karma.h   |  3 ---
- block/partitions/ldm.h     |  2 --
- block/partitions/mac.h     |  1 -
- block/partitions/msdos.c   |  1 -
- block/partitions/msdos.h   |  1 -
- block/partitions/osf.h     |  1 -
- block/partitions/sgi.h     |  1 -
- block/partitions/sun.h     |  1 -
- block/partitions/sysv68.c  |  1 -
- block/partitions/sysv68.h  |  2 --
- block/partitions/ultrix.c  |  1 -
- block/partitions/ultrix.h  |  6 ------
- 26 files changed, 22 insertions(+), 75 deletions(-)
- delete mode 100644 block/partitions/acorn.h
- delete mode 100644 block/partitions/aix.h
- delete mode 100644 block/partitions/amiga.h
- delete mode 100644 block/partitions/cmdline.h
- delete mode 100644 block/partitions/ibm.h
- delete mode 100644 block/partitions/sysv68.h
- delete mode 100644 block/partitions/ultrix.h
+ Documentation/scsi/scsi_mid_low_api.txt | 21 ---------
+ drivers/scsi/aic7xxx/aic79xx_osm.c      | 13 ++----
+ drivers/scsi/aic7xxx/aic7xxx_osm.c      | 13 ++----
+ drivers/scsi/arcmsr/arcmsr_hba.c        | 13 ++----
+ drivers/scsi/megaraid.c                 | 13 +-----
+ drivers/scsi/scsicam.c                  | 61 +++++++++++++------------
+ include/scsi/scsicam.h                  |  7 ++-
+ 7 files changed, 46 insertions(+), 95 deletions(-)
 
-diff --git a/block/partitions/acorn.c b/block/partitions/acorn.c
-index 7587700fad4a..c64c57b958bf 100644
---- a/block/partitions/acorn.c
-+++ b/block/partitions/acorn.c
-@@ -11,7 +11,6 @@
- #include <linux/adfs_fs.h>
+diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
+index 2a4be1c3e6db..537f04728487 100644
+--- a/Documentation/scsi/scsi_mid_low_api.txt
++++ b/Documentation/scsi/scsi_mid_low_api.txt
+@@ -299,7 +299,6 @@ Summary:
+    scsi_host_alloc - return a new scsi_host instance whose refcount==1
+    scsi_host_get - increments Scsi_Host instance's refcount
+    scsi_host_put - decrements Scsi_Host instance's refcount (free if 0)
+-   scsi_partsize - parse partition table into cylinders, heads + sectors
+    scsi_register - create and register a scsi host adapter instance.
+    scsi_remove_device - detach and remove a SCSI device
+    scsi_remove_host - detach and remove all SCSI devices owned by host
+@@ -472,26 +471,6 @@ void scsi_host_get(struct Scsi_Host *shost)
+ void scsi_host_put(struct Scsi_Host *shost)
  
- #include "check.h"
--#include "acorn.h"
  
- /*
-  * Partition types. (Oh for reusability)
-diff --git a/block/partitions/acorn.h b/block/partitions/acorn.h
-deleted file mode 100644
-index 67b06601ca4c..000000000000
---- a/block/partitions/acorn.h
-+++ /dev/null
-@@ -1,15 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- * linux/fs/partitions/acorn.h
+-/**
+- * scsi_partsize - parse partition table into cylinders, heads + sectors
+- * @buf: pointer to partition table
+- * @capacity: size of (total) disk in 512 byte sectors
+- * @cyls: outputs number of cylinders calculated via this pointer
+- * @hds: outputs number of heads calculated via this pointer
+- * @secs: outputs number of sectors calculated via this pointer
 - *
-- * Copyright (C) 1996-2001 Russell King.
+- *      Returns 0 on success, -1 on failure
 - *
-- *  I _hate_ this partitioning mess - why can't we have one defined
-- *  format, and everyone stick to it?
-- */
+- *      Might block: no
+- *
+- *      Notes: Caller owns memory returned (free with kfree() )
+- *
+- *      Defined in: drivers/scsi/scsicam.c
+- **/
+-int scsi_partsize(unsigned char *buf, unsigned long capacity,
+-                  unsigned int *cyls, unsigned int *hds, unsigned int *secs)
 -
--int adfspart_check_CUMANA(struct parsed_partitions *state);
--int adfspart_check_ADFS(struct parsed_partitions *state);
--int adfspart_check_ICS(struct parsed_partitions *state);
--int adfspart_check_POWERTEC(struct parsed_partitions *state);
--int adfspart_check_EESOX(struct parsed_partitions *state);
-diff --git a/block/partitions/aix.c b/block/partitions/aix.c
-index 903f3ed175d0..c7b4fd1a4a97 100644
---- a/block/partitions/aix.c
-+++ b/block/partitions/aix.c
-@@ -6,7 +6,6 @@
-  */
- 
- #include "check.h"
--#include "aix.h"
- 
- struct lvm_rec {
- 	char lvm_id[4]; /* "_LVM" */
-diff --git a/block/partitions/aix.h b/block/partitions/aix.h
-deleted file mode 100644
-index b4449f0b9f2b..000000000000
---- a/block/partitions/aix.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--extern int aix_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/amiga.c b/block/partitions/amiga.c
-index 7fecc760b78f..9526491d9aed 100644
---- a/block/partitions/amiga.c
-+++ b/block/partitions/amiga.c
-@@ -14,7 +14,6 @@
- #include <linux/affs_hardblocks.h>
- 
- #include "check.h"
--#include "amiga.h"
- 
- static __inline__ u32
- checksum_block(__be32 *m, int size)
-diff --git a/block/partitions/amiga.h b/block/partitions/amiga.h
-deleted file mode 100644
-index 7e63f4d9d969..000000000000
---- a/block/partitions/amiga.h
-+++ /dev/null
-@@ -1,7 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- *  fs/partitions/amiga.h
-- */
 -
--int amiga_partition(struct parsed_partitions *state);
--
-diff --git a/block/partitions/atari.h b/block/partitions/atari.h
-index 01c2b9457394..678202442fd3 100644
---- a/block/partitions/atari.h
-+++ b/block/partitions/atari.h
-@@ -34,4 +34,3 @@ struct rootsector
-   u16 checksum;			/* checksum for bootable disks */
- } __packed;
- 
--int atari_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/check.c b/block/partitions/check.c
-index 8fe46881ef63..944c478b6f0b 100644
---- a/block/partitions/check.c
-+++ b/block/partitions/check.c
-@@ -21,22 +21,6 @@
- 
- #include "check.h"
- 
--#include "acorn.h"
--#include "amiga.h"
--#include "atari.h"
--#include "ldm.h"
--#include "mac.h"
--#include "msdos.h"
--#include "osf.h"
--#include "sgi.h"
--#include "sun.h"
--#include "ibm.h"
--#include "ultrix.h"
--#include "efi.h"
--#include "karma.h"
--#include "sysv68.h"
--#include "cmdline.h"
--
- static int (*check_part[])(struct parsed_partitions *) = {
- 	/*
- 	 * Probe partition formats with tables at disk address 0
-diff --git a/block/partitions/check.h b/block/partitions/check.h
-index 19852b494e93..23e7adb79617 100644
---- a/block/partitions/check.h
-+++ b/block/partitions/check.h
-@@ -50,3 +50,25 @@ put_partition(struct parsed_partitions *p, int n, sector_t from, sector_t size)
- 		strlcat(p->pp_buf, tmp, PAGE_SIZE);
- 	}
- }
-+
-+/* detection routines go here in alphabetical order: */
-+int adfspart_check_ADFS(struct parsed_partitions *state);
-+int adfspart_check_CUMANA(struct parsed_partitions *state);
-+int adfspart_check_EESOX(struct parsed_partitions *state);
-+int adfspart_check_ICS(struct parsed_partitions *state);
-+int adfspart_check_POWERTEC(struct parsed_partitions *state);
-+int aix_partition(struct parsed_partitions *state);
-+int amiga_partition(struct parsed_partitions *state);
-+int atari_partition(struct parsed_partitions *state);
-+int cmdline_partition(struct parsed_partitions *state);
-+int efi_partition(struct parsed_partitions *state);
-+int ibm_partition(struct parsed_partitions *);
-+int karma_partition(struct parsed_partitions *state);
-+int ldm_partition(struct parsed_partitions *state);
-+int mac_partition(struct parsed_partitions *state);
-+int msdos_partition(struct parsed_partitions *state);
-+int osf_partition(struct parsed_partitions *state);
-+int sgi_partition(struct parsed_partitions *state);
-+int sun_partition(struct parsed_partitions *state);
-+int sysv68_partition(struct parsed_partitions *state);
-+int ultrix_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/cmdline.c b/block/partitions/cmdline.c
-index f1edd5452249..8f545c36cde4 100644
---- a/block/partitions/cmdline.c
-+++ b/block/partitions/cmdline.c
-@@ -18,7 +18,6 @@
- #include <linux/cmdline-parser.h>
- 
- #include "check.h"
--#include "cmdline.h"
- 
- static char *cmdline;
- static struct cmdline_parts *bdev_parts;
-diff --git a/block/partitions/cmdline.h b/block/partitions/cmdline.h
-deleted file mode 100644
-index e64a31636a1f..000000000000
---- a/block/partitions/cmdline.h
-+++ /dev/null
-@@ -1,3 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--
--int cmdline_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/efi.h b/block/partitions/efi.h
-index 3e8576157575..907bac5ce8f7 100644
---- a/block/partitions/efi.h
-+++ b/block/partitions/efi.h
-@@ -113,7 +113,4 @@ typedef struct _legacy_mbr {
- 	__le16 signature;
- } __packed legacy_mbr;
- 
--/* Functions */
--extern int efi_partition(struct parsed_partitions *state);
--
- #endif
-diff --git a/block/partitions/ibm.c b/block/partitions/ibm.c
-index a5d480f807f3..073faa6a69b8 100644
---- a/block/partitions/ibm.c
-+++ b/block/partitions/ibm.c
-@@ -15,7 +15,6 @@
- #include <asm/vtoc.h>
- 
- #include "check.h"
--#include "ibm.h"
- 
- 
- union label_t {
-diff --git a/block/partitions/ibm.h b/block/partitions/ibm.h
-deleted file mode 100644
-index 8bf13febb2b6..000000000000
---- a/block/partitions/ibm.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--int ibm_partition(struct parsed_partitions *);
-diff --git a/block/partitions/karma.h b/block/partitions/karma.h
-index 48e074d417fb..1b5eec57ee0c 100644
---- a/block/partitions/karma.h
-+++ b/block/partitions/karma.h
-@@ -4,6 +4,3 @@
-  */
- 
- #define KARMA_LABEL_MAGIC		0xAB56
--
--int karma_partition(struct parsed_partitions *state);
--
-diff --git a/block/partitions/ldm.h b/block/partitions/ldm.h
-index 1ca63e97bccc..841580af7f9b 100644
---- a/block/partitions/ldm.h
-+++ b/block/partitions/ldm.h
-@@ -193,7 +193,5 @@ struct ldmdb {				/* Cache of the database */
- 	struct list_head v_part;
- };
- 
--int ldm_partition(struct parsed_partitions *state);
--
- #endif /* _FS_PT_LDM_H_ */
- 
-diff --git a/block/partitions/mac.h b/block/partitions/mac.h
-index 453ed2964804..0e41c9da7532 100644
---- a/block/partitions/mac.h
-+++ b/block/partitions/mac.h
-@@ -42,4 +42,3 @@ struct mac_driver_desc {
-     /* ... more stuff */
- };
- 
--int mac_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/msdos.c b/block/partitions/msdos.c
-index 82c44f7df911..c572022f3781 100644
---- a/block/partitions/msdos.c
-+++ b/block/partitions/msdos.c
-@@ -24,7 +24,6 @@
- #include "check.h"
- #include "msdos.h"
- #include "efi.h"
--#include "aix.h"
- 
- /*
-  * Many architectures don't like unaligned accesses, while
-diff --git a/block/partitions/msdos.h b/block/partitions/msdos.h
-index fcacfc486092..123e666bb932 100644
---- a/block/partitions/msdos.h
-+++ b/block/partitions/msdos.h
-@@ -5,5 +5,4 @@
- 
- #define MSDOS_LABEL_MAGIC		0xAA55
- 
--int msdos_partition(struct parsed_partitions *state);
- 
-diff --git a/block/partitions/osf.h b/block/partitions/osf.h
-index 4d8088e7ea8c..80a58c382b3f 100644
---- a/block/partitions/osf.h
-+++ b/block/partitions/osf.h
-@@ -5,4 +5,3 @@
- 
- #define DISKLABELMAGIC (0x82564557UL)
- 
--int osf_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/sgi.h b/block/partitions/sgi.h
-index a5b77c3987cf..372cdad19fea 100644
---- a/block/partitions/sgi.h
-+++ b/block/partitions/sgi.h
-@@ -3,7 +3,6 @@
-  *  fs/partitions/sgi.h
-  */
- 
--extern int sgi_partition(struct parsed_partitions *state);
- 
- #define SGI_LABEL_MAGIC 0x0be5a941
- 
-diff --git a/block/partitions/sun.h b/block/partitions/sun.h
-index ae1b9eed3fd7..4c8877a5b52d 100644
---- a/block/partitions/sun.h
-+++ b/block/partitions/sun.h
-@@ -6,4 +6,3 @@
- #define SUN_LABEL_MAGIC          0xDABE
- #define SUN_VTOC_SANITY          0x600DDEEE
- 
--int sun_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/sysv68.c b/block/partitions/sysv68.c
-index 92e810826b01..6f6257fd4eb4 100644
---- a/block/partitions/sysv68.c
-+++ b/block/partitions/sysv68.c
-@@ -6,7 +6,6 @@
-  */
- 
- #include "check.h"
--#include "sysv68.h"
- 
- /*
-  *	Volume ID structure: on first 256-bytes sector of disk
-diff --git a/block/partitions/sysv68.h b/block/partitions/sysv68.h
-deleted file mode 100644
-index 4fb6b8ec78ae..000000000000
---- a/block/partitions/sysv68.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--extern int sysv68_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/ultrix.c b/block/partitions/ultrix.c
-index ecd0d7346c3d..4aaa81043ca0 100644
---- a/block/partitions/ultrix.c
-+++ b/block/partitions/ultrix.c
-@@ -8,7 +8,6 @@
-  */
- 
- #include "check.h"
--#include "ultrix.h"
- 
- int ultrix_partition(struct parsed_partitions *state)
+ /**
+  * scsi_register - create and register a scsi host adapter instance.
+  * @sht:        pointer to scsi host template
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 57992519384e..dc4fe334efd0 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -723,24 +723,17 @@ static int
+ ahd_linux_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 		    sector_t capacity, int geom[])
  {
-diff --git a/block/partitions/ultrix.h b/block/partitions/ultrix.h
-deleted file mode 100644
-index 9f676cead222..000000000000
---- a/block/partitions/ultrix.h
-+++ /dev/null
-@@ -1,6 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- *  fs/partitions/ultrix.h
-- */
+-	uint8_t *bh;
+ 	int	 heads;
+ 	int	 sectors;
+ 	int	 cylinders;
+-	int	 ret;
+ 	int	 extended;
+ 	struct	 ahd_softc *ahd;
+ 
+ 	ahd = *((struct ahd_softc **)sdev->host->hostdata);
+ 
+-	bh = scsi_bios_ptable(bdev);
+-	if (bh) {
+-		ret = scsi_partsize(bh, capacity,
+-				    &geom[2], &geom[0], &geom[1]);
+-		kfree(bh);
+-		if (ret != -1)
+-			return (ret);
+-	}
++	if (scsi_partsize(bdev, capacity, geom))
++		return 0;
++
+ 	heads = 64;
+ 	sectors = 32;
+ 	cylinders = aic_sector_div(capacity, heads, sectors);
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index d5c4a0d23706..2edfa0594f18 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -695,11 +695,9 @@ static int
+ ahc_linux_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 		    sector_t capacity, int geom[])
+ {
+-	uint8_t *bh;
+ 	int	 heads;
+ 	int	 sectors;
+ 	int	 cylinders;
+-	int	 ret;
+ 	int	 extended;
+ 	struct	 ahc_softc *ahc;
+ 	u_int	 channel;
+@@ -707,14 +705,9 @@ ahc_linux_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 	ahc = *((struct ahc_softc **)sdev->host->hostdata);
+ 	channel = sdev_channel(sdev);
+ 
+-	bh = scsi_bios_ptable(bdev);
+-	if (bh) {
+-		ret = scsi_partsize(bh, capacity,
+-				    &geom[2], &geom[0], &geom[1]);
+-		kfree(bh);
+-		if (ret != -1)
+-			return (ret);
+-	}
++	if (scsi_partsize(bdev, capacity, geom))
++		return 0;
++
+ 	heads = 64;
+ 	sectors = 32;
+ 	cylinders = aic_sector_div(capacity, heads, sectors);
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 40dc8eac0e3a..c2c79a37a9ef 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -353,16 +353,11 @@ static irqreturn_t arcmsr_do_interrupt(int irq, void *dev_id)
+ static int arcmsr_bios_param(struct scsi_device *sdev,
+ 		struct block_device *bdev, sector_t capacity, int *geom)
+ {
+-	int ret, heads, sectors, cylinders, total_capacity;
+-	unsigned char *buffer;/* return copy of block device's partition table */
++	int heads, sectors, cylinders, total_capacity;
++
++	if (scsi_partsize(bdev, capacity, geom))
++		return 0;
+ 
+-	buffer = scsi_bios_ptable(bdev);
+-	if (buffer) {
+-		ret = scsi_partsize(buffer, capacity, &geom[2], &geom[0], &geom[1]);
+-		kfree(buffer);
+-		if (ret != -1)
+-			return ret;
+-	}
+ 	total_capacity = capacity;
+ 	heads = 64;
+ 	sectors = 32;
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index ff6d4aa92421..f27ffd088c8a 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2795,11 +2795,9 @@ megaraid_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 		    sector_t capacity, int geom[])
+ {
+ 	adapter_t	*adapter;
+-	unsigned char	*bh;
+ 	int	heads;
+ 	int	sectors;
+ 	int	cylinders;
+-	int	rval;
+ 
+ 	/* Get pointer to host config structure */
+ 	adapter = (adapter_t *)sdev->host->hostdata;
+@@ -2826,15 +2824,8 @@ megaraid_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 			geom[2] = cylinders;
+ 	}
+ 	else {
+-		bh = scsi_bios_ptable(bdev);
 -
--int ultrix_partition(struct parsed_partitions *state);
+-		if( bh ) {
+-			rval = scsi_partsize(bh, capacity,
+-					    &geom[2], &geom[0], &geom[1]);
+-			kfree(bh);
+-			if( rval != -1 )
+-				return rval;
+-		}
++		if (scsi_partsize(bdev, capacity, geom))
++			return 0;
+ 
+ 		dev_info(&adapter->dev->dev,
+ 			 "invalid partition on this disk on channel %d\n",
+diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
+index 248ab23d2e69..665d7db2f94c 100644
+--- a/drivers/scsi/scsicam.c
++++ b/drivers/scsi/scsicam.c
+@@ -48,29 +48,31 @@ EXPORT_SYMBOL(scsi_bios_ptable);
+ 
+ /**
+  * scsi_partsize - Parse cylinders/heads/sectors from PC partition table
+- * @buf: partition table, see scsi_bios_ptable()
++ * @bdev: block device to parse
+  * @capacity: size of the disk in sectors
+- * @cyls: put cylinders here
+- * @hds: put heads here
+- * @secs: put sectors here
++ * @geom: output in form of [hds, cylinders, sectors]
+  *
+  * Determine the BIOS mapping/geometry used to create the partition
+- * table, storing the results in @cyls, @hds, and @secs
++ * table, storing the results in @geom.
+  *
+- * Returns: -1 on failure, 0 on success.
++ * Returns: %false on failure, %true on success.
+  */
+-
+-int scsi_partsize(unsigned char *buf, unsigned long capacity,
+-	       unsigned int *cyls, unsigned int *hds, unsigned int *secs)
++bool scsi_partsize(struct block_device *bdev, sector_t capacity, int geom[3])
+ {
+-	struct partition *p = (struct partition *)buf, *largest = NULL;
+-	int i, largest_cyl;
+ 	int cyl, ext_cyl, end_head, end_cyl, end_sector;
+ 	unsigned int logical_end, physical_end, ext_physical_end;
++	struct partition *p, *largest = NULL;
++	void *buf;
++	int ret = false;
+ 
++	buf = scsi_bios_ptable(bdev);
++	if (!buf)
++		return false;
+ 
+ 	if (*(unsigned short *) (buf + 64) == 0xAA55) {
+-		for (largest_cyl = -1, i = 0; i < 4; ++i, ++p) {
++		int largest_cyl = -1, i;
++
++		for (i = 0, p = buf; i < 4; i++, p++) {
+ 			if (!p->sys_ind)
+ 				continue;
+ #ifdef DEBUG
+@@ -90,7 +92,7 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
+ 		end_sector = largest->end_sector & 0x3f;
+ 
+ 		if (end_head + 1 == 0 || end_sector == 0)
+-			return -1;
++			goto out_free_buf;
+ 
+ #ifdef DEBUG
+ 		printk("scsicam_bios_param : end at h = %d, c = %d, s = %d\n",
+@@ -115,19 +117,24 @@ int scsi_partsize(unsigned char *buf, unsigned long capacity,
+ 		  ,logical_end, physical_end, ext_physical_end, ext_cyl);
+ #endif
+ 
+-		if ((logical_end == physical_end) ||
+-		  (end_cyl == 1023 && ext_physical_end == logical_end)) {
+-			*secs = end_sector;
+-			*hds = end_head + 1;
+-			*cyls = capacity / ((end_head + 1) * end_sector);
+-			return 0;
++		if (logical_end == physical_end ||
++		    (end_cyl == 1023 && ext_physical_end == logical_end)) {
++			geom[0] = end_head + 1;
++			geom[1] = end_sector;
++			geom[2] = (unsigned long)capacity /
++				((end_head + 1) * end_sector);
++			ret = true;
++			goto out_free_buf;
+ 		}
+ #ifdef DEBUG
+ 		printk("scsicam_bios_param : logical (%u) != physical (%u)\n",
+ 		       logical_end, physical_end);
+ #endif
+ 	}
+-	return -1;
++
++out_free_buf:
++	kfree(buf);
++	return ret;
+ }
+ EXPORT_SYMBOL(scsi_partsize);
+ 
+@@ -210,20 +217,14 @@ static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds
+  */
+ int scsicam_bios_param(struct block_device *bdev, sector_t capacity, int *ip)
+ {
+-	unsigned char *p;
+ 	u64 capacity64 = capacity;	/* Suppress gcc warning */
+-	int ret;
+-
+-	p = scsi_bios_ptable(bdev);
+-	if (!p)
+-		return -1;
++	int ret = 0;
+ 
+ 	/* try to infer mapping from partition table */
+-	ret = scsi_partsize(p, (unsigned long)capacity, (unsigned int *)ip + 2,
+-			       (unsigned int *)ip + 0, (unsigned int *)ip + 1);
+-	kfree(p);
++	if (scsi_partsize(bdev, capacity, ip))
++		return 0;
+ 
+-	if (ret == -1 && capacity64 < (1ULL << 32)) {
++	if (capacity64 < (1ULL << 32)) {
+ 		/*
+ 		 * Pick some standard mapping with at most 1024 cylinders, and
+ 		 * at most 62 sectors per track - this works up to 7905 MB.
+diff --git a/include/scsi/scsicam.h b/include/scsi/scsicam.h
+index 57c729254569..08edd603e521 100644
+--- a/include/scsi/scsicam.h
++++ b/include/scsi/scsicam.h
+@@ -13,8 +13,7 @@
+ 
+ #ifndef SCSICAM_H
+ #define SCSICAM_H
+-extern int scsicam_bios_param (struct block_device *bdev, sector_t capacity, int *ip);
+-extern int scsi_partsize(unsigned char *buf, unsigned long capacity,
+-           unsigned int  *cyls, unsigned int *hds, unsigned int *secs);
+-extern unsigned char *scsi_bios_ptable(struct block_device *bdev);
++int scsicam_bios_param(struct block_device *bdev, sector_t capacity, int *ip);
++bool scsi_partsize(struct block_device *bdev, sector_t capacity, int geom[3]);
++unsigned char *scsi_bios_ptable(struct block_device *bdev);
+ #endif /* def SCSICAM_H */
 -- 
 2.24.1
