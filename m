@@ -1,7 +1,7 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: checkarray not running or emailing
-Date: Wed, 11 Mar 2020 23:53:49 -0500
-Message-ID: <f4d8ab8d-90cb-e9d0-3b15-ceab881dfcc1@gmail.com>
+Date: Thu, 12 Mar 2020 17:17:16 +0800
+Message-ID: <61f5fc7b-bd2a-a151-a228-3d2a6f4d3ee6@fnarfbargle.com>
 References: <814aad65-fba3-334c-c4df-6b8f4bfc4193.ref@att.net>
  <814aad65-fba3-334c-c4df-6b8f4bfc4193@att.net>
  <0ef54c89-b486-eb0b-8d70-a043ef089c9f@att.net>
@@ -14,69 +14,37 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <7ba840ec-74fd-96bf-5088-7f8479ddcba5@att.net>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lesrhorer@att.net>, Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
+To: Leslie Rhorer <lesrhorer@att.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This may be a silly question, but is email working in your system?
 
-I run debian, but a different version. Cron only sends me a message when 
-something is wrong. I mean if checkarray failed, I get a message. If my 
-array is degraded, I get a message. If everything is fine, no message. 
-May be that is the standard. I am not the authority, but that is what is 
-happening in my system.
-
-I believe cron emails stdout+stderr of the command run. May be 
-checkarray does not output anything in a successful run and therefore no 
-email.
-
-It is best to also query debian.user email: debian-user@lists.debian.org
-
-Ramesh
-
-On 3/11/20 8:41 PM, Leslie Rhorer wrote:
->     Aha! There it is, on both the old and new systems, so it probably 
-> is running.  The question remains, "Why isn't it posting to email?"
+On 12/3/20 09:41, Leslie Rhorer wrote:
+>     Aha! There it is, on both the old and new systems, so it probably is running.  The question remains, "Why isn't it posting to email?"
 >
-> On 3/11/2020 7:50 AM, Brad Campbell wrote:
->> On 11/3/20 09:11, Leslie Rhorer wrote:
->>>      Is there seriously no one here who knows how checkarray was 
->>> launched in previous versions?
->>>
->>> On 3/1/2020 3:03 PM, Leslie Rhorer wrote:
->>>>     I have upgraded 2 of my servers to Debian Buster, and now 
->>>> neither one seems to be running checkarray automatically.  In 
->>>> addition, when I run checkarray manually, it isn't sending update 
->>>> emails on the status of the job.  Actually, I have never been able 
->>>> to figure out how checkarray runs.  One my older servers, there 
->>>> doesn't seem to be anything in /etc/crontab, /etc/cron.monthly, 
->>>> /etc/init.d/, /etc/mdadm/mdadm.conf, or /lib/systemd/system/ that 
->>>> would run checkarray.
->>>
->>
->> On mine it's in /etc/cron.d/mdadm
->>
->> brad@srv:/etc/cron.d$ cat mdadm
->> #
->> # cron.d/mdadm -- schedules periodic redundancy checks of MD devices
->> #
->> # Copyright © martin f. krafft <madduck@madduck.net>
->> # distributed under the terms of the Artistic Licence 2.0
->> #
->>
->> # By default, run at 00:57 on every Sunday, but do nothing unless the 
->> day of
->> # the month is less than or equal to 7. Thus, only run on the first 
->> Sunday of
->> # each month. crontab(5) sucks, unfortunately, in this regard; 
->> therefore this
->> # hack (see #380425).
->> 57 0 * * 0 root if [ -x /usr/share/mdadm/checkarray ] && [ $(date 
->> +\%d) -le 7 ]; then /usr/share/mdadm/checkarray --cron --all --idle 
->> --quiet; fi
->>
->> dpkg -L mdadm gave me a list of files and I just checked the cron 
->> entries.
->>
->> I don't run anything that recent, but Debian is Debian.
->>
->> Brad
+root@srv:~# mdadm --monitor --test --oneshot /dev/md2
+mdadm: Monitor using email address "root" from config file
+
+And in the mail :
+
+This is an automatically generated mail message from mdadm
+running on srv
+
+A TestMessage event had been detected on md device /dev/md2.
+
+Faithfully yours, etc.
+
+P.S. The /proc/mdstat file currently contains the following:
+
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md2 : active raid1 nvme0n1[2] md5[3](W)
+       952696320 blocks super 1.2 [2/2] [UU]
+       bitmap: 6/8 pages [24KB], 65536KB chunk
+
+
+
+Brad
+
+-- 
+An expert is a person who has found out by his own painful
+experience all the mistakes that one can make in a very
+narrow field. - Niels Bohr
