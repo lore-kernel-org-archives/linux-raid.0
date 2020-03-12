@@ -1,53 +1,54 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/21] block: remove block/partitions/sgi.h
-Date: Thu, 12 Mar 2020 16:19:33 +0100
-Message-ID: <20200312151939.645254-16-hch@lst.de>
+Subject: [PATCH 16/21] block: remove block/partitions/sun.h
+Date: Thu, 12 Mar 2020 16:19:34 +0100
+Message-ID: <20200312151939.645254-17-hch@lst.de>
 References: <20200312151939.645254-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <reiserfs-devel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200312151939.645254-1-hch@lst.de>
-Sender: reiserfs-devel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just move the single define to block/partitions/sgi.c.
+Just move the two defines to block/partitions/sun.c.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partitions/sgi.c | 3 ++-
- block/partitions/sgi.h | 8 --------
- 2 files changed, 2 insertions(+), 9 deletions(-)
- delete mode 100644 block/partitions/sgi.h
+ block/partitions/sun.c | 4 +++-
+ block/partitions/sun.h | 8 --------
+ 2 files changed, 3 insertions(+), 9 deletions(-)
+ delete mode 100644 block/partitions/sun.h
 
-diff --git a/block/partitions/sgi.c b/block/partitions/sgi.c
-index d7b421c6e530..927cf501603e 100644
---- a/block/partitions/sgi.c
-+++ b/block/partitions/sgi.c
-@@ -6,7 +6,8 @@
+diff --git a/block/partitions/sun.c b/block/partitions/sun.c
+index 90f36724e796..28b44100f2b1 100644
+--- a/block/partitions/sun.c
++++ b/block/partitions/sun.c
+@@ -9,7 +9,9 @@
   */
  
  #include "check.h"
--#include "sgi.h"
+-#include "sun.h"
 +
-+#define SGI_LABEL_MAGIC 0x0be5a941
++#define SUN_LABEL_MAGIC          0xDABE
++#define SUN_VTOC_SANITY          0x600DDEEE
  
- struct sgi_disklabel {
- 	__be32 magic_mushroom;		/* Big fat spliff... */
-diff --git a/block/partitions/sgi.h b/block/partitions/sgi.h
+ int sun_partition(struct parsed_partitions *state)
+ {
+diff --git a/block/partitions/sun.h b/block/partitions/sun.h
 deleted file mode 100644
-index 372cdad19fea..000000000000
---- a/block/partitions/sgi.h
+index 4c8877a5b52d..000000000000
+--- a/block/partitions/sun.h
 +++ /dev/null
 @@ -1,8 +0,0 @@
 -/* SPDX-License-Identifier: GPL-2.0 */
 -/*
-- *  fs/partitions/sgi.h
+- *  fs/partitions/sun.h
 - */
 -
--
--#define SGI_LABEL_MAGIC 0x0be5a941
+-#define SUN_LABEL_MAGIC          0xDABE
+-#define SUN_VTOC_SANITY          0x600DDEEE
 -
 -- 
 2.24.1
