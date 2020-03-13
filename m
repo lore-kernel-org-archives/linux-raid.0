@@ -1,145 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/21] block: move the *_PARTITION enum out of genhd.h
-Date: Thu, 12 Mar 2020 16:19:36 +0100
-Message-ID: <20200312151939.645254-19-hch@lst.de>
-References: <20200312151939.645254-1-hch@lst.de>
+From: Leslie Rhorer <lesrhorer@att.net>
+Subject: Re: checkarray not running or emailing
+Date: Thu, 12 Mar 2020 19:13:19 -0500
+Message-ID: <baa6f582-e3ea-7668-568b-0b7da2b3a618@att.net>
+References: <814aad65-fba3-334c-c4df-6b8f4bfc4193.ref@att.net>
+ <814aad65-fba3-334c-c4df-6b8f4bfc4193@att.net>
+ <0ef54c89-b486-eb0b-8d70-a043ef089c9f@att.net>
+ <10e2db3d-13e6-573f-18bd-1443d6a27884@fnarfbargle.com>
+ <7ba840ec-74fd-96bf-5088-7f8479ddcba5@att.net>
+ <61f5fc7b-bd2a-a151-a228-3d2a6f4d3ee6@fnarfbargle.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <20200312151939.645254-1-hch@lst.de>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <61f5fc7b-bd2a-a151-a228-3d2a6f4d3ee6@fnarfbargle.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The enum containing the *_PARTITION symbolic names is only relevant
-for the partition parser.  More specifically most values are MSDOS
-partition table system indicators and thus should go straight into
-msdos.c.  One value is only used by the sun partition parser, and the
-sun and sgi partition parsers use the same value as the x86 Linux
-RAID indicator to also indicate RAID autodetection.  Duplicate them
-in sun.c and sgi.c given that the different partition types use
-entirely different values otherwise.
+     Yes, that works just fine, as does the daily email alert whenever 
+an array is degraded, but `checkarray --cron --all --idle` doesn't 
+produce an email.  It starts the array verification on all the arrays, 
+but no status on the processes are sent.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/partitions/sgi.c          |  4 ++++
- block/partitions/sun.c          |  5 +++++
- include/linux/genhd.h           | 30 ------------------------------
- include/linux/msdos_partition.h | 31 +++++++++++++++++++++++++++++++
- 4 files changed, 40 insertions(+), 30 deletions(-)
+     The normal execution for the script is to submit `echo check >  
+/sys/block/mdx/md/sync_action` and then exit.  Obviously, the rest of 
+the processes are handled by the scheduler and mdadm. I'm not seeing how 
+anything other than mdadm should be generating the status emails.
 
-diff --git a/block/partitions/sgi.c b/block/partitions/sgi.c
-index 927cf501603e..4273f1bb0515 100644
---- a/block/partitions/sgi.c
-+++ b/block/partitions/sgi.c
-@@ -9,6 +9,10 @@
- 
- #define SGI_LABEL_MAGIC 0x0be5a941
- 
-+enum {
-+	LINUX_RAID_PARTITION = 0xfd,	/* autodetect RAID partition */
-+};
-+
- struct sgi_disklabel {
- 	__be32 magic_mushroom;		/* Big fat spliff... */
- 	__be16 root_part_num;		/* Root partition number */
-diff --git a/block/partitions/sun.c b/block/partitions/sun.c
-index 28b44100f2b1..47dc53eccf77 100644
---- a/block/partitions/sun.c
-+++ b/block/partitions/sun.c
-@@ -13,6 +13,11 @@
- #define SUN_LABEL_MAGIC          0xDABE
- #define SUN_VTOC_SANITY          0x600DDEEE
- 
-+enum {
-+	SUN_WHOLE_DISK = 5,
-+	LINUX_RAID_PARTITION = 0xfd,	/* autodetect RAID partition */
-+};
-+
- int sun_partition(struct parsed_partitions *state)
- {
- 	int i;
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 81f21a7ad6f9..df809e91ad99 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -30,36 +30,6 @@ extern struct device_type part_type;
- extern struct kobject *block_depr;
- extern struct class block_class;
- 
--enum {
--/* These three have identical behaviour; use the second one if DOS FDISK gets
--   confused about extended/logical partitions starting past cylinder 1023. */
--	DOS_EXTENDED_PARTITION = 5,
--	LINUX_EXTENDED_PARTITION = 0x85,
--	WIN98_EXTENDED_PARTITION = 0x0f,
--
--	SUN_WHOLE_DISK = DOS_EXTENDED_PARTITION,
--
--	LINUX_SWAP_PARTITION = 0x82,
--	LINUX_DATA_PARTITION = 0x83,
--	LINUX_LVM_PARTITION = 0x8e,
--	LINUX_RAID_PARTITION = 0xfd,	/* autodetect RAID partition */
--
--	SOLARIS_X86_PARTITION =	LINUX_SWAP_PARTITION,
--	NEW_SOLARIS_X86_PARTITION = 0xbf,
--
--	DM6_AUX1PARTITION = 0x51,	/* no DDO:  use xlated geom */
--	DM6_AUX3PARTITION = 0x53,	/* no DDO:  use xlated geom */
--	DM6_PARTITION =	0x54,		/* has DDO: use xlated geom & offset */
--	EZD_PARTITION =	0x55,		/* EZ-DRIVE */
--
--	FREEBSD_PARTITION = 0xa5,	/* FreeBSD Partition ID */
--	OPENBSD_PARTITION = 0xa6,	/* OpenBSD Partition ID */
--	NETBSD_PARTITION = 0xa9,	/* NetBSD Partition ID */
--	BSDI_PARTITION = 0xb7,		/* BSDI Partition ID */
--	MINIX_PARTITION = 0x81,		/* Minix Partition ID */
--	UNIXWARE_PARTITION = 0x63,	/* Same as GNU_HURD and SCO Unix */
--};
--
- #define DISK_MAX_PARTS			256
- #define DISK_NAME_LEN			32
- 
-diff --git a/include/linux/msdos_partition.h b/include/linux/msdos_partition.h
-index a8e2c1b4bc66..e151af072cd1 100644
---- a/include/linux/msdos_partition.h
-+++ b/include/linux/msdos_partition.h
-@@ -17,4 +17,35 @@ struct msdos_partition {
- 	__le32 nr_sects;	/* nr of sectors in partition */
- } __packed;
- 
-+enum msdos_sys_ind {
-+	/*
-+	 * These three have identical behaviour; use the second one if DOS FDISK
-+	 * gets confused about extended/logical partitions starting past
-+	 * cylinder 1023.
-+	 */
-+	DOS_EXTENDED_PARTITION = 5,
-+	LINUX_EXTENDED_PARTITION = 0x85,
-+	WIN98_EXTENDED_PARTITION = 0x0f,
-+
-+	LINUX_SWAP_PARTITION = 0x82,
-+	LINUX_DATA_PARTITION = 0x83,
-+	LINUX_LVM_PARTITION = 0x8e,
-+	LINUX_RAID_PARTITION = 0xfd,	/* autodetect RAID partition */
-+
-+	SOLARIS_X86_PARTITION =	LINUX_SWAP_PARTITION,
-+	NEW_SOLARIS_X86_PARTITION = 0xbf,
-+
-+	DM6_AUX1PARTITION = 0x51,	/* no DDO:  use xlated geom */
-+	DM6_AUX3PARTITION = 0x53,	/* no DDO:  use xlated geom */
-+	DM6_PARTITION =	0x54,		/* has DDO: use xlated geom & offset */
-+	EZD_PARTITION =	0x55,		/* EZ-DRIVE */
-+
-+	FREEBSD_PARTITION = 0xa5,	/* FreeBSD Partition ID */
-+	OPENBSD_PARTITION = 0xa6,	/* OpenBSD Partition ID */
-+	NETBSD_PARTITION = 0xa9,	/* NetBSD Partition ID */
-+	BSDI_PARTITION = 0xb7,		/* BSDI Partition ID */
-+	MINIX_PARTITION = 0x81,		/* Minix Partition ID */
-+	UNIXWARE_PARTITION = 0x63,	/* Same as GNU_HURD and SCO Unix */
-+};
-+
- #endif /* LINUX_MSDOS_PARTITION_H */
--- 
-2.24.1
+     So why does `mdadm --monitor --test --oneshot /dev/mdx` produce an 
+email message when `echo check > /sys/block/mdx/md/sync_action` produces 
+none?  The "new" servers are running mdadm v4.1 under Debian Buster.  
+The "old" servers are running mdadm v3.3.2 under Debian Jessie.
+
+On 3/12/2020 4:17 AM, Brad Campbell wrote:
+>
+> On 12/3/20 09:41, Leslie Rhorer wrote:
+>>     Aha! There it is, on both the old and new systems, so it probably 
+>> is running.  The question remains, "Why isn't it posting to email?"
+>>
+> root@srv:~# mdadm --monitor --test --oneshot /dev/md2
+> mdadm: Monitor using email address "root" from config file
+>
+> And in the mail :
+>
+> This is an automatically generated mail message from mdadm
+> running on srv
+>
+> A TestMessage event had been detected on md device /dev/md2.
+>
+> Faithfully yours, etc.
+>
+> P.S. The /proc/mdstat file currently contains the following:
+>
+> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+> md2 : active raid1 nvme0n1[2] md5[3](W)
+>       952696320 blocks super 1.2 [2/2] [UU]
+>       bitmap: 6/8 pages [24KB], 65536KB chunk
+>
+>
+>
+> Brad
+>
