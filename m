@@ -1,27 +1,41 @@
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH 02/21] block: remove __bdevname
-Date: Fri, 13 Mar 2020 10:19:38 -0400
-Message-ID: <20200313141938.GD225435@mit.edu>
-References: <20200312151939.645254-1-hch@lst.de>
- <20200312151939.645254-3-hch@lst.de>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [PATCH] Detail: show correct bitmap info for cluster raid device
+Date: Fri, 13 Mar 2020 16:07:28 +0100
+Message-ID: <80a59a8e-c23e-4343-d930-4ac71399a50c@cloud.ionos.com>
+References: <20200313090504.13058-1-lidong.zhong@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200312151939.645254-3-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200313090504.13058-1-lidong.zhong@suse.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Lidong Zhong <lidong.zhong@suse.com>, jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 12, 2020 at 04:19:20PM +0100, Christoph Hellwig wrote:
-> There is no good reason for __bdevname to exist.  Just open code
-> printing the string in the callers.  For three of them the format
-> string can be trivially merged into existing printk statements,
-> and in init/do_mounts.c we can at least do the scnprintf once at
-> the start of the function, and unconditional of CONFIG_BLOCK to
-> make the output for tiny configfs a little more helpful.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi Lidong,
 
-Acked-by: Theodore Ts'o <tytso@mit.edu> # for ext4
+On 3/13/20 10:05 AM, Lidong Zhong wrote:
+> Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
+> ---
+>   Detail.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Detail.c b/Detail.c
+> index 832485f..39fce29 100644
+> --- a/Detail.c
+> +++ b/Detail.c
+> @@ -468,7 +468,9 @@ int Detail(char *dev, struct context *c)
+>   		if (ioctl(fd, GET_BITMAP_FILE, &bmf) == 0 && bmf.pathname[0]) {
+>   			printf("     Intent Bitmap : %s\n", bmf.pathname);
+>   			printf("\n");
+> -		} else if (array.state & (1<<MD_SB_BITMAP_PRESENT))
+> +		} else if (array.state & (1<<MD_SB_CLUSTERED))
+> +			printf("     Intent Bitmap : Clustered\n\n");
+
+Better to use "Internal (Clustered)" since it is a special internal bitmap.
+Anyway, Acked-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+
+Cheers,
+Guoqing
