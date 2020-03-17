@@ -1,29 +1,26 @@
 From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH] imsm: show Subarray and Volume ID in --examine output
-Date: Tue, 17 Mar 2020 17:12:49 -0400
-Message-ID: <6bf91263-04a7-b517-92df-640f94518ad2@trained-monkey.org>
-References: <20200317092103.7200-1-artur.paszkiewicz@intel.com>
+Subject: Time to think about mdadm-4.2?
+Date: Tue, 17 Mar 2020 17:15:45 -0400
+Message-ID: <4b3d6f4f-2f80-f290-beff-e303075ef5d9@trained-monkey.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200317092103.7200-1-artur.paszkiewicz@intel.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc: kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On 3/17/20 5:21 AM, Artur Paszkiewicz wrote:
-> Show the index of the subarray as 'Subarray' and the value of the
-> my_vol_raid_dev_num field as 'Volume ID'.
-> 
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  super-intel.c | 3 +++
->  1 file changed, 3 insertions(+)
+Hi,
 
-Applied!
+We have had a lot of changes since 4.1 and I am thinking it's time to
+start thinking about a 4.2 release.
 
-Thanks,
+No hard date set, but probably in about a month?
+
+If you have anything pending you would like to get in, now would be a
+good time to start posting those patches.
+
+Cheers,
 Jes
