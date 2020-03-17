@@ -1,26 +1,26 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Time to think about mdadm-4.2?
-Date: Tue, 17 Mar 2020 17:15:45 -0400
-Message-ID: <4b3d6f4f-2f80-f290-beff-e303075ef5d9@trained-monkey.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [GIT PULL] md-next 20200317
+Date: Tue, 17 Mar 2020 15:16:00 -0600
+Message-ID: <e1074b42-63b9-e263-c7d0-66e5ac109be2@kernel.dk>
+References: <7CD08FA9-5302-4885-98C5-CDF974CC225C@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7CD08FA9-5302-4885-98C5-CDF974CC225C@fb.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
-Cc: kernel-team@fb.com
+To: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Kernel Team <Kernel-team@fb.com>, Guoqing Jiang <jgq516@gmail.com>, "khlebnikov@yandex-team.ru" <khlebnikov@yandex-team.ru>
 List-Id: linux-raid.ids
 
-Hi,
+On 3/17/20 1:57 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following changes for md-next on top of your 
+> for-5.7/drivers branch. 
 
-We have had a lot of changes since 4.1 and I am thinking it's time to
-start thinking about a 4.2 release.
+Pulled, thanks.
 
-No hard date set, but probably in about a month?
-
-If you have anything pending you would like to get in, now would be a
-good time to start posting those patches.
-
-Cheers,
-Jes
+-- 
+Jens Axboe
