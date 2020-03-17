@@ -1,29 +1,71 @@
-From: David Ibe <ylawrence@uic.edu.hk>
-Subject: (unknown)
-Date: Tue, 17 Mar 2020 08:11:26 +0800 (CST)
-Message-ID: <2065446646.63699156.1584403886963.JavaMail.zimbra__16888.0654311337$1584403913$gmane$org@uic.edu.hk>
-Reply-To: David Ibe <davidibe718@gmail.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] imsm: support the Array Creation Time field in metadata
+Date: Tue, 17 Mar 2020 10:20:12 +0100
+Message-ID: <20200317092012.7093-1-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
+Also present its value in --examine and --examine --export.
 
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ super-intel.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-Good Day,                
-
-I am Mr. David Ibe, I work with the International Standards on Auditing, I have seen on records, that several times people has divert your funds into their own personal accounts.
-
-Now I am writing to you in respect of the amount which I have been able to send to you through our International United Nations accredited and approved Diplomat, who has arrived Africa, I want you to know that the diplomat would deliver the funds which I have packaged as a diplomatic compensation to you and the amount in the consignment is  $10,000,000.00 United State Dollars.
-
-I did not disclose the contents to the diplomat, but I told him that it is your compensation from the Auditing Corporate Governance and Stewardship, Auditing and Assurance Standards Board. I want you to know that these funds would help with your financial status as I have seen in records that you have spent a lot trying to receive these funds and I am not demanding so much from you but only 30% for my stress and logistics.
-
-I would like you to get back to me with your personal contact details, so that I can give you the contact information's of the diplomat who has arrived Africa and has been waiting to get your details so that he can proceed with the delivery to you.
-
-Yours Sincerely,
-Kindly forward your details to: mrdavidibe966@gmail.com
-Mr. David Ibe
-International Auditor,
-Corporate Governance and Stewardship
+diff --git a/super-intel.c b/super-intel.c
+index c9a1af5b..533becb2 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -260,8 +260,9 @@ struct imsm_super {
+ 					 * (starts at 1)
+ 					 */
+ 	__u16 filler1;			/* 0x4E - 0x4F */
+-#define IMSM_FILLERS 34
+-	__u32 filler[IMSM_FILLERS];	/* 0x50 - 0xD7 RAID_MPB_FILLERS */
++	__u64 creation_time;		/* 0x50 - 0x57 Array creation time */
++#define IMSM_FILLERS 32
++	__u32 filler[IMSM_FILLERS];	/* 0x58 - 0xD7 RAID_MPB_FILLERS */
+ 	struct imsm_disk disk[1];	/* 0xD8 diskTbl[numDisks] */
+ 	/* here comes imsm_dev[num_raid_devs] */
+ 	/* here comes BBM logs */
+@@ -2014,6 +2015,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	__u32 sum;
+ 	__u32 reserved = imsm_reserved_sectors(super, super->disks);
+ 	struct dl *dl;
++	time_t creation_time;
+ 
+ 	strncpy(str, (char *)mpb->sig, MPB_SIG_LEN);
+ 	str[MPB_SIG_LEN-1] = '\0';
+@@ -2022,6 +2024,9 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	printf("    Orig Family : %08x\n", __le32_to_cpu(mpb->orig_family_num));
+ 	printf("         Family : %08x\n", __le32_to_cpu(mpb->family_num));
+ 	printf("     Generation : %08x\n", __le32_to_cpu(mpb->generation_num));
++	creation_time = __le64_to_cpu(mpb->creation_time);
++	printf("  Creation Time : %.24s\n",
++		creation_time ? ctime(&creation_time) : "Unknown");
+ 	printf("     Attributes : ");
+ 	if (imsm_check_attributes(mpb->attributes))
+ 		printf("All supported\n");
+@@ -2126,6 +2131,7 @@ static void export_examine_super_imsm(struct supertype *st)
+ 	printf("MD_LEVEL=container\n");
+ 	printf("MD_UUID=%s\n", nbuf+5);
+ 	printf("MD_DEVICES=%u\n", mpb->num_disks);
++	printf("MD_CREATION_TIME=%llu\n", __le64_to_cpu(mpb->creation_time));
+ }
+ 
+ static void detail_super_imsm(struct supertype *st, char *homehost,
+@@ -5762,6 +5768,7 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
+ 		sum += __gen_imsm_checksum(mpb);
+ 		mpb->family_num = __cpu_to_le32(sum);
+ 		mpb->orig_family_num = mpb->family_num;
++		mpb->creation_time = __cpu_to_le64((__u64)time(NULL));
+ 	}
+ 	super->current_disk = dl;
+ 	return 0;
+-- 
+2.24.0
