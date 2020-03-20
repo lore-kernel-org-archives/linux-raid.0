@@ -1,77 +1,51 @@
-From: Patrick Dung <patdung100@gmail.com>
-Subject: Re: Please show descriptive message about degraded raid when booting
-Date: Sat, 21 Mar 2020 00:47:11 +0800
-Message-ID: <CAJTWkdtYbmSapP0cG+nknTQWcn1ut4NaF4v5rEtS0wwvkuMH=A@mail.gmail.com>
-References: <CAJTWkdvU3of87+-zyUPn7uDBen8ZBswujwMn8wYSiwZb=0V3EQ@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Raid6 recovery
+Date: Fri, 20 Mar 2020 19:15:07 +0000
+Message-ID: <5E75163B.2050602@youngman.org.uk>
+References: <CA+9eyijuUEJ7Y8BuxkKaZ=v8zbPpwixOezngPjtJzaLsBd+A4Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJTWkdvU3of87+-zyUPn7uDBen8ZBswujwMn8wYSiwZb=0V3EQ@mail.gmail.com>
+In-Reply-To: <CA+9eyijuUEJ7Y8BuxkKaZ=v8zbPpwixOezngPjtJzaLsBd+A4Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Glenn Greibesland <glenngreibesland@gmail.com>, linux-raid@vger.kernel.org
+Cc: Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-Hello,
+On 19/03/20 19:55, Glenn Greibesland wrote:
+> After a bit of digging in the manual and on different forums I have
+> concluded that the next step for me is to recreate the array using
+> –assume-clean and –data-offset=variable.
+> I have tried a dry run of the command (answering no to “Continue
+> creating array”), and mdadm accepts the parameters without any errors:
 
-Bump.
+Oh my god NO!!!
 
-Got a reply from Fedora support but asking me to find upstream.
-https://bugzilla.redhat.com/show_bug.cgi?id=1794139
+Do NOT use --create unless someone rather more experienced than me tells
+you to!!!
 
-Thanks,
-Patrick
+The obvious thing is to somehow get the sixteen drives that you know
+should be okay, re-assembled in a forced manner. The --re-add should not
+have done any real damage because, as mdadm keeps complaining, you
+didn't have enough drives so it won't have touched the data on that
+drive. Unfortunately, my fu isn't good enough to tell you how to get
+that drive back in.
 
-On Thu, Mar 5, 2020 at 10:57 PM Patrick Dung <patdung100@gmail.com> wrote:
->
-> Hello,
->
-> The system have Linux software raid (md) raid 1.
-> One of the disk is missing or have problem.
->
-> The raid is degraded.
-> When the OS boot, it hangs at the message for outputting to kernel at
-> about three seconds.
-> There is no descriptive message that the RAID is degraded.
-> I know the problem because I had wrote zero to one of the disk of the
-> raid 1. If I don't know the problem (maybe cable is loose or disk
-> failure), it is confusing.
->
-> Related log:
->
-> [    2.917387] sd 32:0:0:0: [sda] 56623104 512-byte logical blocks:
-> (29.0 GB/27.0 GiB)
-> [    2.917446] sd 32:0:1:0: [sdb] 56623104 512-byte logical blocks:
-> (29.0 GB/27.0 GiB)
-> [    2.917499] sd 32:0:0:0: [sda] Write Protect is off
-> [    2.917516] sd 32:0:0:0: [sda] Mode Sense: 61 00 00 00
-> [    2.917557] sd 32:0:1:0: [sdb] Write Protect is off
-> [    2.917575] sd 32:0:1:0: [sdb] Mode Sense: 61 00 00 00
-> [    2.917615] sd 32:0:0:0: [sda] Cache data unavailable
-> [    2.917636] sd 32:0:0:0: [sda] Assuming drive cache: write through
-> [    2.917661] sd 32:0:1:0: [sdb] Cache data unavailable
-> [    2.917677] sd 32:0:1:0: [sdb] Assuming drive cache: write through
-> [    2.927076] sd 32:0:0:0: [sda] Attached SCSI disk
-> [    2.927458]  sdb: sdb1 sdb2 sdb3 sdb4
-> [    2.929018] sd 32:0:1:0: [sdb] Attached SCSI disk
-> [    3.060855] vmxnet3 0000:0b:00.0 ens192: intr type 3, mode 0, 3
-> vectors allocated
-> [    3.061826] vmxnet3 0000:0b:00.0 ens192: NIC Link is Up 10000 Mbps
-> [  139.411464] md/raid1:md125: active with 1 out of 2 mirrors
-> [  139.412176] md125: detected capacity change from 0 to 1073676288
-> [  139.433441] md/raid1:md126: active with 1 out of 2 mirrors
-> [  139.434182] md126: detected capacity change from 0 to 314507264
-> [  139.436894]  md126:
-> [  139.455511] md/raid1:md127: active with 1 out of 2 mirrors
-> [  139.456739] md127: detected capacity change from 0 to 27582726144
->
-> So there are about 130 seconds without any descriptive messages. I
-> thought the system had hanged.
->
-> Could the kernel display more descriptive messages about the RAID?
->
-> If I use rd.debug boot parameters, I know the kernel is still running.
-> But it is scrolling very fast without actually knowing what is the the
-> problem.
->
-> Thanks,
-> Patrick
+What's wrong with the two failed drives? Can you ddrescue them? They
+might be enough to get you going again.
+
+You say you've read the web page "Raid recovery" - which says it's
+obsolete and points you at "When things go wrogn" - but you don't appear
+to have read that! PLEASE read "asking for help" and in particular you
+NEED to run lsdrv and give us that information. Without that, if you DO
+run --create, you will be in for a world of hurt.
+
+I know you may feel it's asking for loads of information, and the
+resulting email will be massive, but trust me - the experts will look at
+it and they will probably be able to come up with a plan of action. At
+present, they don't have much to go on, and nor will you if carry on as
+you're going ...
+
+Cheers,
+Wol
