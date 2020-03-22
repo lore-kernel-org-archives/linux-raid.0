@@ -1,61 +1,35 @@
-From: Glenn Greibesland <glenngreibesland@gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: Raid6 recovery
-Date: Sat, 21 Mar 2020 23:12:12 +0100
-Message-ID: <CA+9eyiicKrPh9YTrGN5FjOU7zMVMqO3=8yGszWkV67fJxrtKrw@mail.gmail.com>
+Date: Sun, 22 Mar 2020 00:05:06 +0000
+Message-ID: <5E76ABB2.9010506@youngman.org.uk>
 References: <CA+9eyijuUEJ7Y8BuxkKaZ=v8zbPpwixOezngPjtJzaLsBd+A4Q@mail.gmail.com>
- <5E75163B.2050602@youngman.org.uk> <CA+9eyigMV-E=FwtXDWZszSsV6JOxxFOFVh6WzmeH=OC3heMUHw@mail.gmail.com>
- <ab2a40b6-b4ab-9ff8-aef6-02d8cce8d587@youngman.org.uk> <CA+9eyig8U2Tzi1wF97k7eDu5vKg5Jc2sRXKaw0OCy7Cbc9HMog@mail.gmail.com>
+ <5E75163B.2050602@youngman.org.uk>
+ <CA+9eyigMV-E=FwtXDWZszSsV6JOxxFOFVh6WzmeH=OC3heMUHw@mail.gmail.com>
+ <ab2a40b6-b4ab-9ff8-aef6-02d8cce8d587@youngman.org.uk>
+ <CA+9eyig8U2Tzi1wF97k7eDu5vKg5Jc2sRXKaw0OCy7Cbc9HMog@mail.gmail.com>
  <c55be05d-22ee-4676-7878-5bf99ccc80f9@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <c55be05d-22ee-4676-7878-5bf99ccc80f9@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
+To: Phil Turmel <philip@turmel.org>, Glenn Greibesland <glenngreibesland@gmail.com>
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-l=C3=B8r. 21. mar. 2020 kl. 20:24 skrev Phil Turmel <philip@turmel.org>:
-> {Convention on kernel.org lists is to interleave replies or bottom post,
-> and to trim non-relevant quoted material.  Please do so in the future.}
+On 21/03/20 19:24, Phil Turmel wrote:
+> If UREs do break your array again, you will need to use an
+> error-ignoring copy tool (some flavor of ddrescue) to put the readable
+> data onto a new device, remove the old device from the system, and then
+> --assemble --force with the replacement.  Repeat as needed.
 
-Sorry about that.
+I would NOT recommend it at the moment - it's untested and reputedly
+breaks raids 5 & 6, but look at dm-integrity. If we could trust it, it
+would be a wonderful tool with ddrescue.
 
-> Since you seem comfortable reading source code, you might consider byte
-> editing that drive's superblock to restore it to "active device 10".
-> That is what I would do.  With that corrected, --assemble --force should
-> give you a running array.
+Hopefully I'm about to have a wonderful system with 6 or so drives I can
+play with as a raid test-bed, and I'm hoping to do a load of work on this.
 
-I did some more digging in the source code, but it looks like the
-superblock is replicated onto all drives and that I probably would
-have to edit the superblock of all disks, but I'm not sure.
-With newfound confidence (thanks) I decided to try the --create
---asume-clean option instead.
-It worked fine and I am now copying the data that is not already backed up.
-
-I'll wait until the data is copied onto other drives before I add the
-last two disks to the array and start rebuilding.
-
-> I also noted the drives with Error Recovery Control turned off.  That is
-> not an issue while your array has no redundancy, but is catastrophic in
-> any normal array.  It is as bad as having a drive that doesn't do ERC at
-> all.  Don't do that.  Do read the "Timeout Mismatch" documentation that
-> Anthony recommended, if you haven't yet.
-
-I'll read up on this documentation to ensure reliable operation in the
-future. Thanks Phil and Anthony.
-
-So to summarize what happened and what I've learned:
-I had a RAID6 array with only 16 out of 18 working drives.
-I received an email from mdadm saying another drive failed.
-I ran a full offline smart test that completed successfuly.
-
-The drive was in F (failed) state. I used --re-add and mdadm overwrote
-the superblock turning it into a spare drive instead of putting the
-drive back into slot 10.
-I should have used --assemble --force.
-
-Am I correct?
-
-Glenn
+Cheers,
+Wol
