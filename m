@@ -1,285 +1,83 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/21] block: move sysfs methods shared by disks and partitions to genhd.c
-Date: Tue, 24 Mar 2020 08:25:13 +0100
-Message-ID: <20200324072530.544483-5-hch@lst.de>
+Subject: [PATCH 05/21] block: remove alloc_part_info and free_part_info
+Date: Tue, 24 Mar 2020 08:25:14 +0100
+Message-ID: <20200324072530.544483-6-hch@lst.de>
 References: <20200324072530.544483-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20200324072530.544483-1-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, reiserfs-devel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Move the sysfs _show methods that are used both on the full disk and
-partition nodes to genhd.c instead of hiding them in the partitioning
-code.  Also move the declaration for these methods to block/blk.h so
-that we don't expose them to drivers.
+There isn't any good reason not to simply open code the allocation and
+freeing of the partition_meta_info structure.  Especially as one of
+the branches in alloc_part_info is entirely dead code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk.h               | 11 ++++++
- block/genhd.c             | 80 ++++++++++++++++++++++++++++++++++++++-
- block/partition-generic.c | 76 +------------------------------------
- include/linux/genhd.h     | 14 -------
- 4 files changed, 91 insertions(+), 90 deletions(-)
+ block/partition-generic.c |  6 ++++--
+ include/linux/genhd.h     | 15 +--------------
+ 2 files changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/block/blk.h b/block/blk.h
-index 670337b7cfa0..43df9dcb3d4e 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -214,6 +214,17 @@ static inline void elevator_exit(struct request_queue *q,
- 
- struct hd_struct *__disk_get_part(struct gendisk *disk, int partno);
- 
-+ssize_t part_size_show(struct device *dev, struct device_attribute *attr,
-+		char *buf);
-+ssize_t part_stat_show(struct device *dev, struct device_attribute *attr,
-+		char *buf);
-+ssize_t part_inflight_show(struct device *dev, struct device_attribute *attr,
-+		char *buf);
-+ssize_t part_fail_show(struct device *dev, struct device_attribute *attr,
-+		char *buf);
-+ssize_t part_fail_store(struct device *dev, struct device_attribute *attr,
-+		const char *buf, size_t count);
-+
- #ifdef CONFIG_FAIL_IO_TIMEOUT
- int blk_should_fake_timeout(struct request_queue *);
- ssize_t part_timeout_show(struct device *, struct device_attribute *, char *);
-diff --git a/block/genhd.c b/block/genhd.c
-index 2484348d1850..f7d60b620b97 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -4,6 +4,7 @@
-  */
- 
- #include <linux/module.h>
-+#include <linux/ctype.h>
- #include <linux/fs.h>
- #include <linux/genhd.h>
- #include <linux/kdev_t.h>
-@@ -1199,6 +1200,60 @@ static ssize_t disk_ro_show(struct device *dev,
- 	return sprintf(buf, "%d\n", get_disk_ro(disk) ? 1 : 0);
- }
- 
-+ssize_t part_size_show(struct device *dev,
-+		       struct device_attribute *attr, char *buf)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+
-+	return sprintf(buf, "%llu\n",
-+		(unsigned long long)part_nr_sects_read(p));
-+}
-+
-+ssize_t part_stat_show(struct device *dev,
-+		       struct device_attribute *attr, char *buf)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+	struct request_queue *q = part_to_disk(p)->queue;
-+	unsigned int inflight;
-+
-+	inflight = part_in_flight(q, p);
-+	return sprintf(buf,
-+		"%8lu %8lu %8llu %8u "
-+		"%8lu %8lu %8llu %8u "
-+		"%8u %8u %8u "
-+		"%8lu %8lu %8llu %8u "
-+		"%8lu %8u"
-+		"\n",
-+		part_stat_read(p, ios[STAT_READ]),
-+		part_stat_read(p, merges[STAT_READ]),
-+		(unsigned long long)part_stat_read(p, sectors[STAT_READ]),
-+		(unsigned int)part_stat_read_msecs(p, STAT_READ),
-+		part_stat_read(p, ios[STAT_WRITE]),
-+		part_stat_read(p, merges[STAT_WRITE]),
-+		(unsigned long long)part_stat_read(p, sectors[STAT_WRITE]),
-+		(unsigned int)part_stat_read_msecs(p, STAT_WRITE),
-+		inflight,
-+		jiffies_to_msecs(part_stat_read(p, io_ticks)),
-+		jiffies_to_msecs(part_stat_read(p, time_in_queue)),
-+		part_stat_read(p, ios[STAT_DISCARD]),
-+		part_stat_read(p, merges[STAT_DISCARD]),
-+		(unsigned long long)part_stat_read(p, sectors[STAT_DISCARD]),
-+		(unsigned int)part_stat_read_msecs(p, STAT_DISCARD),
-+		part_stat_read(p, ios[STAT_FLUSH]),
-+		(unsigned int)part_stat_read_msecs(p, STAT_FLUSH));
-+}
-+
-+ssize_t part_inflight_show(struct device *dev, struct device_attribute *attr,
-+			   char *buf)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+	struct request_queue *q = part_to_disk(p)->queue;
-+	unsigned int inflight[2];
-+
-+	part_in_flight_rw(q, p, inflight);
-+	return sprintf(buf, "%8u %8u\n", inflight[0], inflight[1]);
-+}
-+
- static ssize_t disk_capability_show(struct device *dev,
- 				    struct device_attribute *attr, char *buf)
- {
-@@ -1237,10 +1292,33 @@ static DEVICE_ATTR(capability, 0444, disk_capability_show, NULL);
- static DEVICE_ATTR(stat, 0444, part_stat_show, NULL);
- static DEVICE_ATTR(inflight, 0444, part_inflight_show, NULL);
- static DEVICE_ATTR(badblocks, 0644, disk_badblocks_show, disk_badblocks_store);
-+
- #ifdef CONFIG_FAIL_MAKE_REQUEST
-+ssize_t part_fail_show(struct device *dev,
-+		       struct device_attribute *attr, char *buf)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+
-+	return sprintf(buf, "%d\n", p->make_it_fail);
-+}
-+
-+ssize_t part_fail_store(struct device *dev,
-+			struct device_attribute *attr,
-+			const char *buf, size_t count)
-+{
-+	struct hd_struct *p = dev_to_part(dev);
-+	int i;
-+
-+	if (count > 0 && sscanf(buf, "%d", &i) > 0)
-+		p->make_it_fail = (i == 0) ? 0 : 1;
-+
-+	return count;
-+}
-+
- static struct device_attribute dev_attr_fail =
- 	__ATTR(make-it-fail, 0644, part_fail_show, part_fail_store);
--#endif
-+#endif /* CONFIG_FAIL_MAKE_REQUEST */
-+
- #ifdef CONFIG_FAIL_IO_TIMEOUT
- static struct device_attribute dev_attr_fail_timeout =
- 	__ATTR(io-timeout-fail, 0644, part_timeout_show, part_timeout_store);
 diff --git a/block/partition-generic.c b/block/partition-generic.c
-index 6bf5aec2a0dc..e6fd2226a639 100644
+index e6fd2226a639..f2004f3bd6f7 100644
 --- a/block/partition-generic.c
 +++ b/block/partition-generic.c
-@@ -18,6 +18,7 @@
- #include <linux/ctype.h>
- #include <linux/genhd.h>
- #include <linux/blktrace_api.h>
-+#include "blk.h"
+@@ -249,7 +249,9 @@ struct hd_struct *add_partition(struct gendisk *disk, int partno,
+ 	p->policy = get_disk_ro(disk);
  
- #include "partitions/check.h"
+ 	if (info) {
+-		struct partition_meta_info *pinfo = alloc_part_info(disk);
++		struct partition_meta_info *pinfo;
++
++		pinfo = kzalloc_node(sizeof(*pinfo), GFP_KERNEL, disk->node_id);
+ 		if (!pinfo) {
+ 			err = -ENOMEM;
+ 			goto out_free_stats;
+@@ -308,7 +310,7 @@ struct hd_struct *add_partition(struct gendisk *disk, int partno,
+ 	return p;
  
-@@ -41,13 +42,6 @@ static ssize_t part_start_show(struct device *dev,
- 	return sprintf(buf, "%llu\n",(unsigned long long)p->start_sect);
- }
- 
--ssize_t part_size_show(struct device *dev,
--		       struct device_attribute *attr, char *buf)
--{
--	struct hd_struct *p = dev_to_part(dev);
--	return sprintf(buf, "%llu\n",(unsigned long long)part_nr_sects_read(p));
--}
--
- static ssize_t part_ro_show(struct device *dev,
- 			    struct device_attribute *attr, char *buf)
- {
-@@ -69,74 +63,6 @@ static ssize_t part_discard_alignment_show(struct device *dev,
- 	return sprintf(buf, "%u\n", p->discard_alignment);
- }
- 
--ssize_t part_stat_show(struct device *dev,
--		       struct device_attribute *attr, char *buf)
--{
--	struct hd_struct *p = dev_to_part(dev);
--	struct request_queue *q = part_to_disk(p)->queue;
--	unsigned int inflight;
--
--	inflight = part_in_flight(q, p);
--	return sprintf(buf,
--		"%8lu %8lu %8llu %8u "
--		"%8lu %8lu %8llu %8u "
--		"%8u %8u %8u "
--		"%8lu %8lu %8llu %8u "
--		"%8lu %8u"
--		"\n",
--		part_stat_read(p, ios[STAT_READ]),
--		part_stat_read(p, merges[STAT_READ]),
--		(unsigned long long)part_stat_read(p, sectors[STAT_READ]),
--		(unsigned int)part_stat_read_msecs(p, STAT_READ),
--		part_stat_read(p, ios[STAT_WRITE]),
--		part_stat_read(p, merges[STAT_WRITE]),
--		(unsigned long long)part_stat_read(p, sectors[STAT_WRITE]),
--		(unsigned int)part_stat_read_msecs(p, STAT_WRITE),
--		inflight,
--		jiffies_to_msecs(part_stat_read(p, io_ticks)),
--		jiffies_to_msecs(part_stat_read(p, time_in_queue)),
--		part_stat_read(p, ios[STAT_DISCARD]),
--		part_stat_read(p, merges[STAT_DISCARD]),
--		(unsigned long long)part_stat_read(p, sectors[STAT_DISCARD]),
--		(unsigned int)part_stat_read_msecs(p, STAT_DISCARD),
--		part_stat_read(p, ios[STAT_FLUSH]),
--		(unsigned int)part_stat_read_msecs(p, STAT_FLUSH));
--}
--
--ssize_t part_inflight_show(struct device *dev, struct device_attribute *attr,
--			   char *buf)
--{
--	struct hd_struct *p = dev_to_part(dev);
--	struct request_queue *q = part_to_disk(p)->queue;
--	unsigned int inflight[2];
--
--	part_in_flight_rw(q, p, inflight);
--	return sprintf(buf, "%8u %8u\n", inflight[0], inflight[1]);
--}
--
--#ifdef CONFIG_FAIL_MAKE_REQUEST
--ssize_t part_fail_show(struct device *dev,
--		       struct device_attribute *attr, char *buf)
--{
--	struct hd_struct *p = dev_to_part(dev);
--
--	return sprintf(buf, "%d\n", p->make_it_fail);
--}
--
--ssize_t part_fail_store(struct device *dev,
--			struct device_attribute *attr,
--			const char *buf, size_t count)
--{
--	struct hd_struct *p = dev_to_part(dev);
--	int i;
--
--	if (count > 0 && sscanf(buf, "%d", &i) > 0)
--		p->make_it_fail = (i == 0) ? 0 : 1;
--
--	return count;
--}
--#endif
--
- static DEVICE_ATTR(partition, 0444, part_partition_show, NULL);
- static DEVICE_ATTR(start, 0444, part_start_show, NULL);
- static DEVICE_ATTR(size, 0444, part_size_show, NULL);
+ out_free_info:
+-	free_part_info(p);
++	kfree(p->info);
+ out_free_stats:
+ 	free_part_stats(p);
+ out_free:
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 3c1a816785c8..612d38fce55c 100644
+index 612d38fce55c..77f8bb8edfcd 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -706,20 +706,6 @@ extern void blk_register_region(dev_t devt, unsigned long range,
- 			void *data);
- extern void blk_unregister_region(dev_t devt, unsigned long range);
+@@ -465,19 +465,6 @@ void part_dec_in_flight(struct request_queue *q, struct hd_struct *part,
+ void part_inc_in_flight(struct request_queue *q, struct hd_struct *part,
+ 			int rw);
  
--extern ssize_t part_size_show(struct device *dev,
--			      struct device_attribute *attr, char *buf);
--extern ssize_t part_stat_show(struct device *dev,
--			      struct device_attribute *attr, char *buf);
--extern ssize_t part_inflight_show(struct device *dev,
--			      struct device_attribute *attr, char *buf);
--#ifdef CONFIG_FAIL_MAKE_REQUEST
--extern ssize_t part_fail_show(struct device *dev,
--			      struct device_attribute *attr, char *buf);
--extern ssize_t part_fail_store(struct device *dev,
--			       struct device_attribute *attr,
--			       const char *buf, size_t count);
--#endif /* CONFIG_FAIL_MAKE_REQUEST */
+-static inline struct partition_meta_info *alloc_part_info(struct gendisk *disk)
+-{
+-	if (disk)
+-		return kzalloc_node(sizeof(struct partition_meta_info),
+-				    GFP_KERNEL, disk->node_id);
+-	return kzalloc(sizeof(struct partition_meta_info), GFP_KERNEL);
+-}
 -
- #define alloc_disk_node(minors, node_id)				\
- ({									\
- 	static struct lock_class_key __key;				\
+-static inline void free_part_info(struct hd_struct *part)
+-{
+-	kfree(part->info);
+-}
+-
+ void update_io_ticks(struct hd_struct *part, unsigned long now);
+ 
+ /* block/genhd.c */
+@@ -755,7 +742,7 @@ static inline void hd_struct_kill(struct hd_struct *part)
+ static inline void hd_free_part(struct hd_struct *part)
+ {
+ 	free_part_stats(part);
+-	free_part_info(part);
++	kfree(part->info);
+ 	percpu_ref_exit(&part->ref);
+ }
+ 
 -- 
 2.25.1
