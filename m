@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/21] block: declare all partition detection routines in check.h
-Date: Tue, 24 Mar 2020 08:25:21 +0100
-Message-ID: <20200324072530.544483-13-hch@lst.de>
+Subject: [PATCH 17/21] block: move struct partition out of genhd.h
+Date: Tue, 24 Mar 2020 08:25:26 +0100
+Message-ID: <20200324072530.544483-18-hch@lst.de>
 References: <20200324072530.544483-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,371 +12,352 @@ To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, reiserfs-devel@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is no good reason to include one header per partition type in
-core.c.  Instead move the prototypes for the detection routins to
-check.h, and remove all now empty headers in block/partitions/.
+struct partition is the on-disk format of a MSDOS partition table entry.
+Move it out of genhd.h into a new msdos_partition.h header and give it
+a msdos_ prefix to avoid confusion.
+Also move the magic number from block/partitions/msdos.h to the new
+header so that it can be used by the SCSI drivers looking at the DOS
+partition tables.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partitions/acorn.c   |  1 -
- block/partitions/acorn.h   | 15 ---------------
- block/partitions/aix.c     |  1 -
- block/partitions/aix.h     |  2 --
- block/partitions/amiga.c   |  1 -
- block/partitions/amiga.h   |  7 -------
- block/partitions/atari.h   |  1 -
- block/partitions/check.c   | 16 ----------------
- block/partitions/check.h   | 22 ++++++++++++++++++++++
- block/partitions/cmdline.c |  1 -
- block/partitions/cmdline.h |  3 ---
- block/partitions/efi.h     |  3 ---
- block/partitions/ibm.c     |  1 -
- block/partitions/ibm.h     |  2 --
- block/partitions/karma.h   |  3 ---
- block/partitions/ldm.h     |  2 --
- block/partitions/mac.h     |  1 -
- block/partitions/msdos.c   |  1 -
- block/partitions/msdos.h   |  1 -
- block/partitions/osf.h     |  1 -
- block/partitions/sgi.h     |  1 -
- block/partitions/sun.h     |  1 -
- block/partitions/sysv68.c  |  1 -
- block/partitions/sysv68.h  |  2 --
- block/partitions/ultrix.c  |  1 -
- block/partitions/ultrix.h  |  6 ------
- 26 files changed, 22 insertions(+), 75 deletions(-)
- delete mode 100644 block/partitions/acorn.h
- delete mode 100644 block/partitions/aix.h
- delete mode 100644 block/partitions/amiga.h
- delete mode 100644 block/partitions/cmdline.h
- delete mode 100644 block/partitions/ibm.h
- delete mode 100644 block/partitions/sysv68.h
- delete mode 100644 block/partitions/ultrix.h
+ block/partitions/ldm.c          |  6 +++---
+ block/partitions/msdos.c        | 28 ++++++++++++++--------------
+ block/partitions/msdos.h        |  8 --------
+ drivers/scsi/BusLogic.c         |  8 +++++---
+ drivers/scsi/aacraid/linit.c    |  7 ++++---
+ drivers/scsi/scsi_debug.c       |  5 +++--
+ drivers/scsi/scsicam.c          |  3 ++-
+ include/linux/genhd.h           | 13 -------------
+ include/linux/msdos_partition.h | 20 ++++++++++++++++++++
+ 9 files changed, 51 insertions(+), 47 deletions(-)
+ delete mode 100644 block/partitions/msdos.h
+ create mode 100644 include/linux/msdos_partition.h
 
-diff --git a/block/partitions/acorn.c b/block/partitions/acorn.c
-index 7587700fad4a..c64c57b958bf 100644
---- a/block/partitions/acorn.c
-+++ b/block/partitions/acorn.c
-@@ -11,7 +11,6 @@
- #include <linux/adfs_fs.h>
+diff --git a/block/partitions/ldm.c b/block/partitions/ldm.c
+index a2d97ee1908c..6fdfcb40c537 100644
+--- a/block/partitions/ldm.c
++++ b/block/partitions/ldm.c
+@@ -14,10 +14,10 @@
+ #include <linux/stringify.h>
+ #include <linux/kernel.h>
+ #include <linux/uuid.h>
++#include <linux/msdos_partition.h>
  
+ #include "ldm.h"
  #include "check.h"
--#include "acorn.h"
+-#include "msdos.h"
  
  /*
-  * Partition types. (Oh for reusability)
-diff --git a/block/partitions/acorn.h b/block/partitions/acorn.h
-deleted file mode 100644
-index 67b06601ca4c..000000000000
---- a/block/partitions/acorn.h
-+++ /dev/null
-@@ -1,15 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- * linux/fs/partitions/acorn.h
-- *
-- * Copyright (C) 1996-2001 Russell King.
-- *
-- *  I _hate_ this partitioning mess - why can't we have one defined
-- *  format, and everyone stick to it?
-- */
--
--int adfspart_check_CUMANA(struct parsed_partitions *state);
--int adfspart_check_ADFS(struct parsed_partitions *state);
--int adfspart_check_ICS(struct parsed_partitions *state);
--int adfspart_check_POWERTEC(struct parsed_partitions *state);
--int adfspart_check_EESOX(struct parsed_partitions *state);
-diff --git a/block/partitions/aix.c b/block/partitions/aix.c
-index 903f3ed175d0..c7b4fd1a4a97 100644
---- a/block/partitions/aix.c
-+++ b/block/partitions/aix.c
-@@ -6,7 +6,6 @@
-  */
+  * ldm_debug/info/error/crit - Output an error message
+@@ -493,7 +493,7 @@ static bool ldm_validate_partition_table(struct parsed_partitions *state)
+ {
+ 	Sector sect;
+ 	u8 *data;
+-	struct partition *p;
++	struct msdos_partition *p;
+ 	int i;
+ 	bool result = false;
  
- #include "check.h"
--#include "aix.h"
+@@ -508,7 +508,7 @@ static bool ldm_validate_partition_table(struct parsed_partitions *state)
+ 	if (*(__le16*) (data + 0x01FE) != cpu_to_le16 (MSDOS_LABEL_MAGIC))
+ 		goto out;
  
- struct lvm_rec {
- 	char lvm_id[4]; /* "_LVM" */
-diff --git a/block/partitions/aix.h b/block/partitions/aix.h
-deleted file mode 100644
-index b4449f0b9f2b..000000000000
---- a/block/partitions/aix.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--extern int aix_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/amiga.c b/block/partitions/amiga.c
-index 7fecc760b78f..9526491d9aed 100644
---- a/block/partitions/amiga.c
-+++ b/block/partitions/amiga.c
-@@ -14,7 +14,6 @@
- #include <linux/affs_hardblocks.h>
- 
- #include "check.h"
--#include "amiga.h"
- 
- static __inline__ u32
- checksum_block(__be32 *m, int size)
-diff --git a/block/partitions/amiga.h b/block/partitions/amiga.h
-deleted file mode 100644
-index 7e63f4d9d969..000000000000
---- a/block/partitions/amiga.h
-+++ /dev/null
-@@ -1,7 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- *  fs/partitions/amiga.h
-- */
--
--int amiga_partition(struct parsed_partitions *state);
--
-diff --git a/block/partitions/atari.h b/block/partitions/atari.h
-index 01c2b9457394..678202442fd3 100644
---- a/block/partitions/atari.h
-+++ b/block/partitions/atari.h
-@@ -34,4 +34,3 @@ struct rootsector
-   u16 checksum;			/* checksum for bootable disks */
- } __packed;
- 
--int atari_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/check.c b/block/partitions/check.c
-index 8fe46881ef63..944c478b6f0b 100644
---- a/block/partitions/check.c
-+++ b/block/partitions/check.c
-@@ -21,22 +21,6 @@
- 
- #include "check.h"
- 
--#include "acorn.h"
--#include "amiga.h"
--#include "atari.h"
--#include "ldm.h"
--#include "mac.h"
--#include "msdos.h"
--#include "osf.h"
--#include "sgi.h"
--#include "sun.h"
--#include "ibm.h"
--#include "ultrix.h"
--#include "efi.h"
--#include "karma.h"
--#include "sysv68.h"
--#include "cmdline.h"
--
- static int (*check_part[])(struct parsed_partitions *) = {
- 	/*
- 	 * Probe partition formats with tables at disk address 0
-diff --git a/block/partitions/check.h b/block/partitions/check.h
-index 19852b494e93..23e7adb79617 100644
---- a/block/partitions/check.h
-+++ b/block/partitions/check.h
-@@ -50,3 +50,25 @@ put_partition(struct parsed_partitions *p, int n, sector_t from, sector_t size)
- 		strlcat(p->pp_buf, tmp, PAGE_SIZE);
- 	}
- }
-+
-+/* detection routines go here in alphabetical order: */
-+int adfspart_check_ADFS(struct parsed_partitions *state);
-+int adfspart_check_CUMANA(struct parsed_partitions *state);
-+int adfspart_check_EESOX(struct parsed_partitions *state);
-+int adfspart_check_ICS(struct parsed_partitions *state);
-+int adfspart_check_POWERTEC(struct parsed_partitions *state);
-+int aix_partition(struct parsed_partitions *state);
-+int amiga_partition(struct parsed_partitions *state);
-+int atari_partition(struct parsed_partitions *state);
-+int cmdline_partition(struct parsed_partitions *state);
-+int efi_partition(struct parsed_partitions *state);
-+int ibm_partition(struct parsed_partitions *);
-+int karma_partition(struct parsed_partitions *state);
-+int ldm_partition(struct parsed_partitions *state);
-+int mac_partition(struct parsed_partitions *state);
-+int msdos_partition(struct parsed_partitions *state);
-+int osf_partition(struct parsed_partitions *state);
-+int sgi_partition(struct parsed_partitions *state);
-+int sun_partition(struct parsed_partitions *state);
-+int sysv68_partition(struct parsed_partitions *state);
-+int ultrix_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/cmdline.c b/block/partitions/cmdline.c
-index f1edd5452249..8f545c36cde4 100644
---- a/block/partitions/cmdline.c
-+++ b/block/partitions/cmdline.c
-@@ -18,7 +18,6 @@
- #include <linux/cmdline-parser.h>
- 
- #include "check.h"
--#include "cmdline.h"
- 
- static char *cmdline;
- static struct cmdline_parts *bdev_parts;
-diff --git a/block/partitions/cmdline.h b/block/partitions/cmdline.h
-deleted file mode 100644
-index e64a31636a1f..000000000000
---- a/block/partitions/cmdline.h
-+++ /dev/null
-@@ -1,3 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--
--int cmdline_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/efi.h b/block/partitions/efi.h
-index 3e8576157575..907bac5ce8f7 100644
---- a/block/partitions/efi.h
-+++ b/block/partitions/efi.h
-@@ -113,7 +113,4 @@ typedef struct _legacy_mbr {
- 	__le16 signature;
- } __packed legacy_mbr;
- 
--/* Functions */
--extern int efi_partition(struct parsed_partitions *state);
--
- #endif
-diff --git a/block/partitions/ibm.c b/block/partitions/ibm.c
-index a5d480f807f3..073faa6a69b8 100644
---- a/block/partitions/ibm.c
-+++ b/block/partitions/ibm.c
-@@ -15,7 +15,6 @@
- #include <asm/vtoc.h>
- 
- #include "check.h"
--#include "ibm.h"
- 
- 
- union label_t {
-diff --git a/block/partitions/ibm.h b/block/partitions/ibm.h
-deleted file mode 100644
-index 8bf13febb2b6..000000000000
---- a/block/partitions/ibm.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--int ibm_partition(struct parsed_partitions *);
-diff --git a/block/partitions/karma.h b/block/partitions/karma.h
-index 48e074d417fb..1b5eec57ee0c 100644
---- a/block/partitions/karma.h
-+++ b/block/partitions/karma.h
-@@ -4,6 +4,3 @@
-  */
- 
- #define KARMA_LABEL_MAGIC		0xAB56
--
--int karma_partition(struct parsed_partitions *state);
--
-diff --git a/block/partitions/ldm.h b/block/partitions/ldm.h
-index 1ca63e97bccc..841580af7f9b 100644
---- a/block/partitions/ldm.h
-+++ b/block/partitions/ldm.h
-@@ -193,7 +193,5 @@ struct ldmdb {				/* Cache of the database */
- 	struct list_head v_part;
- };
- 
--int ldm_partition(struct parsed_partitions *state);
--
- #endif /* _FS_PT_LDM_H_ */
- 
-diff --git a/block/partitions/mac.h b/block/partitions/mac.h
-index 453ed2964804..0e41c9da7532 100644
---- a/block/partitions/mac.h
-+++ b/block/partitions/mac.h
-@@ -42,4 +42,3 @@ struct mac_driver_desc {
-     /* ... more stuff */
- };
- 
--int mac_partition(struct parsed_partitions *state);
+-	p = (struct partition*)(data + 0x01BE);
++	p = (struct msdos_partition *)(data + 0x01BE);
+ 	for (i = 0; i < 4; i++, p++)
+ 		if (SYS_IND (p) == LDM_PARTITION) {
+ 			result = true;
 diff --git a/block/partitions/msdos.c b/block/partitions/msdos.c
-index 82c44f7df911..c572022f3781 100644
+index c572022f3781..88ee5ee7f442 100644
 --- a/block/partitions/msdos.c
 +++ b/block/partitions/msdos.c
-@@ -24,7 +24,6 @@
+@@ -20,9 +20,9 @@
+  *  Re-organised Feb 1998 Russell King
+  */
+ #include <linux/msdos_fs.h>
++#include <linux/msdos_partition.h>
+ 
  #include "check.h"
- #include "msdos.h"
+-#include "msdos.h"
  #include "efi.h"
--#include "aix.h"
  
  /*
-  * Many architectures don't like unaligned accesses, while
-diff --git a/block/partitions/msdos.h b/block/partitions/msdos.h
-index fcacfc486092..123e666bb932 100644
---- a/block/partitions/msdos.h
-+++ b/block/partitions/msdos.h
-@@ -5,5 +5,4 @@
+@@ -34,17 +34,17 @@
  
- #define MSDOS_LABEL_MAGIC		0xAA55
+ #define SYS_IND(p)	get_unaligned(&p->sys_ind)
  
--int msdos_partition(struct parsed_partitions *state);
- 
-diff --git a/block/partitions/osf.h b/block/partitions/osf.h
-index 4d8088e7ea8c..80a58c382b3f 100644
---- a/block/partitions/osf.h
-+++ b/block/partitions/osf.h
-@@ -5,4 +5,3 @@
- 
- #define DISKLABELMAGIC (0x82564557UL)
- 
--int osf_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/sgi.h b/block/partitions/sgi.h
-index a5b77c3987cf..372cdad19fea 100644
---- a/block/partitions/sgi.h
-+++ b/block/partitions/sgi.h
-@@ -3,7 +3,6 @@
-  *  fs/partitions/sgi.h
-  */
- 
--extern int sgi_partition(struct parsed_partitions *state);
- 
- #define SGI_LABEL_MAGIC 0x0be5a941
- 
-diff --git a/block/partitions/sun.h b/block/partitions/sun.h
-index ae1b9eed3fd7..4c8877a5b52d 100644
---- a/block/partitions/sun.h
-+++ b/block/partitions/sun.h
-@@ -6,4 +6,3 @@
- #define SUN_LABEL_MAGIC          0xDABE
- #define SUN_VTOC_SANITY          0x600DDEEE
- 
--int sun_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/sysv68.c b/block/partitions/sysv68.c
-index 92e810826b01..6f6257fd4eb4 100644
---- a/block/partitions/sysv68.c
-+++ b/block/partitions/sysv68.c
-@@ -6,7 +6,6 @@
-  */
- 
- #include "check.h"
--#include "sysv68.h"
- 
- /*
-  *	Volume ID structure: on first 256-bytes sector of disk
-diff --git a/block/partitions/sysv68.h b/block/partitions/sysv68.h
-deleted file mode 100644
-index 4fb6b8ec78ae..000000000000
---- a/block/partitions/sysv68.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--extern int sysv68_partition(struct parsed_partitions *state);
-diff --git a/block/partitions/ultrix.c b/block/partitions/ultrix.c
-index ecd0d7346c3d..4aaa81043ca0 100644
---- a/block/partitions/ultrix.c
-+++ b/block/partitions/ultrix.c
-@@ -8,7 +8,6 @@
-  */
- 
- #include "check.h"
--#include "ultrix.h"
- 
- int ultrix_partition(struct parsed_partitions *state)
+-static inline sector_t nr_sects(struct partition *p)
++static inline sector_t nr_sects(struct msdos_partition *p)
  {
-diff --git a/block/partitions/ultrix.h b/block/partitions/ultrix.h
+ 	return (sector_t)get_unaligned_le32(&p->nr_sects);
+ }
+ 
+-static inline sector_t start_sect(struct partition *p)
++static inline sector_t start_sect(struct msdos_partition *p)
+ {
+ 	return (sector_t)get_unaligned_le32(&p->start_sect);
+ }
+ 
+-static inline int is_extended_partition(struct partition *p)
++static inline int is_extended_partition(struct msdos_partition *p)
+ {
+ 	return (SYS_IND(p) == DOS_EXTENDED_PARTITION ||
+ 		SYS_IND(p) == WIN98_EXTENDED_PARTITION ||
+@@ -67,7 +67,7 @@ msdos_magic_present(unsigned char *p)
+ #define AIX_LABEL_MAGIC4	0xC1
+ static int aix_magic_present(struct parsed_partitions *state, unsigned char *p)
+ {
+-	struct partition *pt = (struct partition *) (p + 0x1be);
++	struct msdos_partition *pt = (struct msdos_partition *) (p + 0x1be);
+ 	Sector sect;
+ 	unsigned char *d;
+ 	int slot, ret = 0;
+@@ -121,7 +121,7 @@ static void parse_extended(struct parsed_partitions *state,
+ 			   sector_t first_sector, sector_t first_size,
+ 			   u32 disksig)
+ {
+-	struct partition *p;
++	struct msdos_partition *p;
+ 	Sector sect;
+ 	unsigned char *data;
+ 	sector_t this_sector, this_size;
+@@ -145,7 +145,7 @@ static void parse_extended(struct parsed_partitions *state,
+ 		if (!msdos_magic_present(data + 510))
+ 			goto done;
+ 
+-		p = (struct partition *) (data + 0x1be);
++		p = (struct msdos_partition *) (data + 0x1be);
+ 
+ 		/*
+ 		 * Usually, the first entry is the real data partition,
+@@ -402,14 +402,14 @@ static void parse_minix(struct parsed_partitions *state,
+ #ifdef CONFIG_MINIX_SUBPARTITION
+ 	Sector sect;
+ 	unsigned char *data;
+-	struct partition *p;
++	struct msdos_partition *p;
+ 	int i;
+ 
+ 	data = read_part_sector(state, offset, &sect);
+ 	if (!data)
+ 		return;
+ 
+-	p = (struct partition *)(data + 0x1be);
++	p = (struct msdos_partition *)(data + 0x1be);
+ 
+ 	/* The first sector of a Minix partition can have either
+ 	 * a secondary MBR describing its subpartitions, or
+@@ -453,7 +453,7 @@ int msdos_partition(struct parsed_partitions *state)
+ 	sector_t sector_size = bdev_logical_block_size(state->bdev) / 512;
+ 	Sector sect;
+ 	unsigned char *data;
+-	struct partition *p;
++	struct msdos_partition *p;
+ 	struct fat_boot_sector *fb;
+ 	int slot;
+ 	u32 disksig;
+@@ -487,7 +487,7 @@ int msdos_partition(struct parsed_partitions *state)
+ 	 * partition table. Reject this in case the boot indicator
+ 	 * is not 0 or 0x80.
+ 	 */
+-	p = (struct partition *) (data + 0x1be);
++	p = (struct msdos_partition *) (data + 0x1be);
+ 	for (slot = 1; slot <= 4; slot++, p++) {
+ 		if (p->boot_ind != 0 && p->boot_ind != 0x80) {
+ 			/*
+@@ -509,7 +509,7 @@ int msdos_partition(struct parsed_partitions *state)
+ 	}
+ 
+ #ifdef CONFIG_EFI_PARTITION
+-	p = (struct partition *) (data + 0x1be);
++	p = (struct msdos_partition *) (data + 0x1be);
+ 	for (slot = 1 ; slot <= 4 ; slot++, p++) {
+ 		/* If this is an EFI GPT disk, msdos should ignore it. */
+ 		if (SYS_IND(p) == EFI_PMBR_OSTYPE_EFI_GPT) {
+@@ -518,7 +518,7 @@ int msdos_partition(struct parsed_partitions *state)
+ 		}
+ 	}
+ #endif
+-	p = (struct partition *) (data + 0x1be);
++	p = (struct msdos_partition *) (data + 0x1be);
+ 
+ 	disksig = le32_to_cpup((__le32 *)(data + 0x1b8));
+ 
+@@ -565,7 +565,7 @@ int msdos_partition(struct parsed_partitions *state)
+ 	strlcat(state->pp_buf, "\n", PAGE_SIZE);
+ 
+ 	/* second pass - output for each on a separate line */
+-	p = (struct partition *) (0x1be + data);
++	p = (struct msdos_partition *) (0x1be + data);
+ 	for (slot = 1 ; slot <= 4 ; slot++, p++) {
+ 		unsigned char id = SYS_IND(p);
+ 		int n;
+diff --git a/block/partitions/msdos.h b/block/partitions/msdos.h
 deleted file mode 100644
-index 9f676cead222..000000000000
---- a/block/partitions/ultrix.h
+index 123e666bb932..000000000000
+--- a/block/partitions/msdos.h
 +++ /dev/null
-@@ -1,6 +0,0 @@
+@@ -1,8 +0,0 @@
 -/* SPDX-License-Identifier: GPL-2.0 */
 -/*
-- *  fs/partitions/ultrix.h
+- *  fs/partitions/msdos.h
 - */
 -
--int ultrix_partition(struct parsed_partitions *state);
+-#define MSDOS_LABEL_MAGIC		0xAA55
+-
+-
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 3170b295a5da..186259417449 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -36,6 +36,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/slab.h>
++#include <linux/msdos_partition.h>
+ #include <scsi/scsicam.h>
+ 
+ #include <asm/dma.h>
+@@ -3410,9 +3411,10 @@ static int blogic_diskparam(struct scsi_device *sdev, struct block_device *dev,
+ 	   a partition table entry whose end_head matches one of the
+ 	   standard BusLogic geometry translations (64/32, 128/32, or 255/63).
+ 	 */
+-	if (*(unsigned short *) (buf + 64) == 0xAA55) {
+-		struct partition *part1_entry = (struct partition *) buf;
+-		struct partition *part_entry = part1_entry;
++	if (*(unsigned short *) (buf + 64) == MSDOS_LABEL_MAGIC) {
++		struct msdos_partition *part1_entry =
++				(struct msdos_partition *)buf;
++		struct msdos_partition *part_entry = part1_entry;
+ 		int saved_cyl = diskparam->cylinders, part_no;
+ 		unsigned char part_end_head = 0, part_end_sector = 0;
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index ee6bc2f9b80a..0443b74390cf 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -33,6 +33,7 @@
+ #include <linux/syscalls.h>
+ #include <linux/delay.h>
+ #include <linux/kthread.h>
++#include <linux/msdos_partition.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -328,9 +329,9 @@ static int aac_biosparm(struct scsi_device *sdev, struct block_device *bdev,
+ 	buf = scsi_bios_ptable(bdev);
+ 	if (!buf)
+ 		return 0;
+-	if(*(__le16 *)(buf + 0x40) == cpu_to_le16(0xaa55)) {
+-		struct partition *first = (struct partition * )buf;
+-		struct partition *entry = first;
++	if (*(__le16 *)(buf + 0x40) == cpu_to_le16(MSDOS_LABEL_MAGIC)) {
++		struct msdos_partition *first = (struct msdos_partition *)buf;
++		struct msdos_partition *entry = first;
+ 		int saved_cylinders = param->cylinders;
+ 		int num;
+ 		unsigned char end_head, end_sec;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 44cb054d5e66..4c6c448dc2df 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -38,6 +38,7 @@
+ #include <linux/hrtimer.h>
+ #include <linux/uuid.h>
+ #include <linux/t10-pi.h>
++#include <linux/msdos_partition.h>
+ 
+ #include <net/checksum.h>
+ 
+@@ -4146,7 +4147,7 @@ static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
+ static void __init sdebug_build_parts(unsigned char *ramp,
+ 				      unsigned long store_size)
+ {
+-	struct partition *pp;
++	struct msdos_partition *pp;
+ 	int starts[SDEBUG_MAX_PARTS + 2];
+ 	int sectors_per_part, num_sectors, k;
+ 	int heads_by_sects, start_sec, end_sec;
+@@ -4171,7 +4172,7 @@ static void __init sdebug_build_parts(unsigned char *ramp,
+ 
+ 	ramp[510] = 0x55;	/* magic partition markings */
+ 	ramp[511] = 0xAA;
+-	pp = (struct partition *)(ramp + 0x1be);
++	pp = (struct msdos_partition *)(ramp + 0x1be);
+ 	for (k = 0; starts[k + 1]; ++k, ++pp) {
+ 		start_sec = starts[k];
+ 		end_sec = starts[k + 1] - 1;
+diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
+index 665d7db2f94c..682cf08ab041 100644
+--- a/drivers/scsi/scsicam.c
++++ b/drivers/scsi/scsicam.c
+@@ -17,6 +17,7 @@
+ #include <linux/genhd.h>
+ #include <linux/kernel.h>
+ #include <linux/blkdev.h>
++#include <linux/msdos_partition.h>
+ #include <asm/unaligned.h>
+ 
+ #include <scsi/scsicam.h>
+@@ -61,7 +62,7 @@ bool scsi_partsize(struct block_device *bdev, sector_t capacity, int geom[3])
+ {
+ 	int cyl, ext_cyl, end_head, end_cyl, end_sector;
+ 	unsigned int logical_end, physical_end, ext_physical_end;
+-	struct partition *p, *largest = NULL;
++	struct msdos_partition *p, *largest = NULL;
+ 	void *buf;
+ 	int ret = false;
+ 
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 77f8bb8edfcd..3d84da9ec0fa 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -70,19 +70,6 @@ enum {
+ #include <linux/fs.h>
+ #include <linux/workqueue.h>
+ 
+-struct partition {
+-	unsigned char boot_ind;		/* 0x80 - active */
+-	unsigned char head;		/* starting head */
+-	unsigned char sector;		/* starting sector */
+-	unsigned char cyl;		/* starting cylinder */
+-	unsigned char sys_ind;		/* What partition type */
+-	unsigned char end_head;		/* end head */
+-	unsigned char end_sector;	/* end sector */
+-	unsigned char end_cyl;		/* end cylinder */
+-	__le32 start_sect;	/* starting sector counting from 0 */
+-	__le32 nr_sects;		/* nr of sectors in partition */
+-} __attribute__((packed));
+-
+ struct disk_stats {
+ 	u64 nsecs[NR_STAT_GROUPS];
+ 	unsigned long sectors[NR_STAT_GROUPS];
+diff --git a/include/linux/msdos_partition.h b/include/linux/msdos_partition.h
+new file mode 100644
+index 000000000000..a8e2c1b4bc66
+--- /dev/null
++++ b/include/linux/msdos_partition.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_MSDOS_PARTITION_H
++#define _LINUX_MSDOS_PARTITION_H
++
++#define MSDOS_LABEL_MAGIC		0xAA55
++
++struct msdos_partition {
++	u8 boot_ind;		/* 0x80 - active */
++	u8 head;		/* starting head */
++	u8 sector;		/* starting sector */
++	u8 cyl;			/* starting cylinder */
++	u8 sys_ind;		/* What partition type */
++	u8 end_head;		/* end head */
++	u8 end_sector;		/* end sector */
++	u8 end_cyl;		/* end cylinder */
++	__le32 start_sect;	/* starting sector counting from 0 */
++	__le32 nr_sects;	/* nr of sectors in partition */
++} __packed;
++
++#endif /* LINUX_MSDOS_PARTITION_H */
 -- 
 2.25.1
