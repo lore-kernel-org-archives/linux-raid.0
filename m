@@ -1,120 +1,84 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/21] block: unexport read_dev_sector and put_dev_sector
-Date: Tue, 24 Mar 2020 08:25:18 +0100
-Message-ID: <20200324072530.544483-10-hch@lst.de>
+Subject: [PATCH 10/21] block: cleanup how md_autodetect_dev is called
+Date: Tue, 24 Mar 2020 08:25:19 +0100
+Message-ID: <20200324072530.544483-11-hch@lst.de>
 References: <20200324072530.544483-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <reiserfs-devel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20200324072530.544483-1-hch@lst.de>
-Sender: reiserfs-devel-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, reiserfs-devel@vger.kernel.org
 List-Id: linux-raid.ids
 
-read_dev_sector and put_dev_sector are now only used by the partition
-parsing code.  Remove the export for read_dev_sector and merge it into
-the only caller.  Clean the mess up a bit by using goto labels and
-the SECTOR_SHIFT constant.
+Add a new include/linux/raid/detect.h header to declare the
+md_autodetect_dev prototype which can be shared between md and
+the partition code.  Then use IS_BUILTIN to call it instead of the
+ifdef magic.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partition-generic.c | 31 +++++++++++++++++++------------
- block/partitions/check.h  | 14 +++++++-------
- include/linux/blkdev.h    |  9 ---------
- 3 files changed, 26 insertions(+), 28 deletions(-)
+ block/partition-generic.c   | 11 ++++-------
+ drivers/md/md.c             |  1 +
+ include/linux/raid/detect.h |  3 +++
+ 3 files changed, 8 insertions(+), 7 deletions(-)
+ create mode 100644 include/linux/raid/detect.h
 
 diff --git a/block/partition-generic.c b/block/partition-generic.c
-index f2004f3bd6f7..fef6bacb2bbb 100644
+index fef6bacb2bbb..4d771ae835ed 100644
 --- a/block/partition-generic.c
 +++ b/block/partition-generic.c
-@@ -484,22 +484,29 @@ int blk_add_partitions(struct gendisk *disk, struct block_device *bdev)
- 	return ret;
- }
+@@ -18,14 +18,11 @@
+ #include <linux/ctype.h>
+ #include <linux/genhd.h>
+ #include <linux/blktrace_api.h>
++#include <linux/raid/detect.h>
+ #include "blk.h"
  
--unsigned char *read_dev_sector(struct block_device *bdev, sector_t n, Sector *p)
-+void *read_part_sector(struct parsed_partitions *state, sector_t n, Sector *p)
+ #include "partitions/check.h"
+ 
+-#ifdef CONFIG_BLK_DEV_MD
+-extern void md_autodetect_dev(dev_t dev);
+-#endif
+- 
+ static ssize_t part_partition_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
  {
--	struct address_space *mapping = bdev->bd_inode->i_mapping;
-+	struct address_space *mapping = state->bdev->bd_inode->i_mapping;
- 	struct page *page;
- 
--	page = read_mapping_page(mapping, (pgoff_t)(n >> (PAGE_SHIFT-9)), NULL);
--	if (!IS_ERR(page)) {
--		if (PageError(page))
--			goto fail;
--		p->v = page;
--		return (unsigned char *)page_address(page) +  ((n & ((1 << (PAGE_SHIFT - 9)) - 1)) << 9);
--fail:
--		put_page(page);
-+	if (n >= get_capacity(state->bdev->bd_disk)) {
-+		state->access_beyond_eod = true;
-+		return NULL;
+@@ -407,10 +404,10 @@ static bool blk_add_partition(struct gendisk *disk, struct block_device *bdev,
+ 		return true;
  	}
-+
-+	page = read_mapping_page(mapping,
-+			(pgoff_t)(n >> (PAGE_SHIFT - 9)), NULL);
-+	if (IS_ERR(page))
-+		goto out;
-+	if (PageError(page))
-+		goto out_put_page;
-+
-+	p->v = page;
-+	return (unsigned char *)page_address(page) +
-+			((n & ((1 << (PAGE_SHIFT - 9)) - 1)) << SECTOR_SHIFT);
-+out_put_page:
-+	put_page(page);
-+out:
- 	p->v = NULL;
- 	return NULL;
- }
--
--EXPORT_SYMBOL(read_dev_sector);
-diff --git a/block/partitions/check.h b/block/partitions/check.h
-index 6042f769471a..0fcf80117887 100644
---- a/block/partitions/check.h
-+++ b/block/partitions/check.h
-@@ -28,14 +28,14 @@ void free_partitions(struct parsed_partitions *state);
- struct parsed_partitions *
- check_partition(struct gendisk *, struct block_device *);
  
--static inline void *read_part_sector(struct parsed_partitions *state,
--				     sector_t n, Sector *p)
-+typedef struct {
-+	struct page *v;
-+} Sector;
+-#ifdef CONFIG_BLK_DEV_MD
+-	if (state->parts[p].flags & ADDPART_FLAG_RAID)
++	if (IS_BUILTIN(CONFIG_BLK_DEV_MD) &&
++	    (state->parts[p].flags & ADDPART_FLAG_RAID))
+ 		md_autodetect_dev(part_to_dev(part)->devt);
+-#endif
 +
-+void *read_part_sector(struct parsed_partitions *state, sector_t n, Sector *p);
-+static inline void put_dev_sector(Sector p)
- {
--	if (n >= get_capacity(state->bdev->bd_disk)) {
--		state->access_beyond_eod = true;
--		return NULL;
--	}
--	return read_dev_sector(state->bdev, n, p);
-+	put_page(p.v);
+ 	return true;
  }
  
- static inline void
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index f629d40c645c..53a1325efbc3 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1484,15 +1484,6 @@ static inline unsigned int block_size(struct block_device *bdev)
- 	return bdev->bd_block_size;
- }
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8238fb64f87f..1c7193715f07 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -58,6 +58,7 @@
+ #include <linux/delay.h>
+ #include <linux/raid/md_p.h>
+ #include <linux/raid/md_u.h>
++#include <linux/raid/detect.h>
+ #include <linux/slab.h>
+ #include <linux/percpu-refcount.h>
  
--typedef struct {struct page *v;} Sector;
--
--unsigned char *read_dev_sector(struct block_device *, sector_t, Sector *);
--
--static inline void put_dev_sector(Sector p)
--{
--	put_page(p.v);
--}
--
- int kblockd_schedule_work(struct work_struct *work);
- int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork, unsigned long delay);
- 
+diff --git a/include/linux/raid/detect.h b/include/linux/raid/detect.h
+new file mode 100644
+index 000000000000..37dd3f40cd31
+--- /dev/null
++++ b/include/linux/raid/detect.h
+@@ -0,0 +1,3 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++void md_autodetect_dev(dev_t dev);
 -- 
 2.25.1
