@@ -1,30 +1,32 @@
-From: Alexander Shenkin <al@shenkin.org>
-Subject: Raid-6 won't boot
-Date: Thu, 26 Mar 2020 17:07:54 +0000
-Message-ID: <7ce3a1b9-7b24-4666-860a-4c4b9325f671@shenkin.org>
+From: antlists <antlists@youngman.org.uk>
+Subject: Re: Raid-6 won't boot
+Date: Thu, 26 Mar 2020 22:00:57 +0000
+Message-ID: <3868d184-5e65-02e1-618a-2afeb7a80bab@youngman.org.uk>
+References: <7ce3a1b9-7b24-4666-860a-4c4b9325f671@shenkin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <7ce3a1b9-7b24-4666-860a-4c4b9325f671@shenkin.org>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Alexander Shenkin <al@shenkin.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+On 26/03/2020 17:07, Alexander Shenkin wrote:
+> I surely need to boot with a rescue disk of some sort, but from there,
+> I'm not sure exactly when I should do.  Any suggestions are very welcome!
 
-I have an older (14.04) Ubuntu system with / mounted on a raid6
-(/dev/md2) and /boot on a raid1 (/dev/md0).  I recently added my 7th
-disk, and everything seemed to be going well.  I added the partition to
-/dev/md0 and it resynced fine.  I added the partition to /dev/md2, and
-everything seemed fine there as well.  Then, while it was resyncing
-/dev/md2, the transfer speed got very slower, and started going slower. 
-7kb/sec... 4kb/sec... 1kb/sec... and then eventually the system just
-stopped responding.  Now, on power up, i just get a cursor on the screen.
+Okay. Find a liveCD that supports raid (hopefully something like 
+SystemRescueCD). Make sure it has a very recent kernel and the latest mdadm.
 
-I surely need to boot with a rescue disk of some sort, but from there,
-I'm not sure exactly when I should do.  Any suggestions are very welcome!
+All being well, the resync will restart, and when it's finished your 
+system will be fine. If it doesn't restart on its own, do an "mdadm 
+--stop array", followed by an "mdadm --assemble"
 
-Thanks,
+If that doesn't work, then
 
-Allie
+https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
+
+Cheers,
+Wol
