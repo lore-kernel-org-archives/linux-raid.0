@@ -1,54 +1,96 @@
-From: John Crisp <jcrisp@safeandsoundit.co.uk>
-Subject: Re: Requesting help repairing a RAID-6 array
-Date: Mon, 30 Mar 2020 01:01:27 +0200
-Message-ID: <20200330010127.21b9f723@ReetsLaptop>
-References: <etPan.5e80defb.10afc736.32ba@crowston.name>
-        <fc847f59-b221-c97c-28d6-813f8d79f15f@youngman.org.uk>
-        <20200330033539.6171d8a5@natsu>
+From: Andre Tomt <andre@tomt.net>
+Subject: Unable to fail/remove journal device
+Date: Mon, 30 Mar 2020 01:35:56 +0200
+Message-ID: <59985bfe-2786-b4a9-64a4-283f5de98f82@tomt.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- boundary="Sig_/kHY=Fibv/UMxa5qC=cVrVbo"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200330033539.6171d8a5@natsu>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/kHY=Fibv/UMxa5qC=cVrVbo
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm having a issue here where I am unable to get a journal device 
+removed from a raid6 array. From what I could gather from mailing list 
+posts and documentation, one should set the journal mode to 
+write-through, fail the journal and remove it, then restart the array 
+(perhaps with force).
 
-On Mon, 30 Mar 2020 03:35:39 +0500
-Roman Mamedov <rm@romanrm.net> wrote:
+But this isnt working. The journal just gets re-added on array startup. 
+I've done this successfully before, in the same way, I think.
 
-> Not suitable as a ...drive.
->=20
-> That model is literally the only hard drive in the world to get its
-> own Wikipedia article[1] for its awful reliability.
->=20
-> [1] https://en.wikipedia.org/wiki/ST3000DM001
->=20
+I also tried a bigger hammer, wipefs the journal device too, to "make 
+sure", the array will come up but refuse any writes.
 
-Up there with the Deathstar then
+For now, the journal device has been restored and the array is back to 
+read-write, but I really need to get it removed at some point 
+(preferably without re-building metadata with --assume-clean)
 
-https://en.wikipedia.org/wiki/Deskstar
+Any ideas? Is this way just out of date?
 
-Ahhh the click of doom....
+mdadm: 4.1-5ubuntu1
+kernel: 5.5.13
 
---Sig_/kHY=Fibv/UMxa5qC=cVrVbo
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+# cat /proc/mdstat
+md2 : active (auto-read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
+sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1] 
+nvme0n1p1[12](J)
 
------BEGIN PGP SIGNATURE-----
+       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[12/12] [UUUUUUUUUUUU]
 
-iQEzBAEBCgAdFiEEjK6/QfNffar/UqviTxujxO/QWskFAl6BKMcACgkQTxujxO/Q
-WsnhrAf8CvTRXMeBd0CSO2fyjPAEQ/eEekkjaluo0nLoSuFm6xdIofOAx5PvxSZS
-vaMK/Pc4KImVPTLzsbuyXC6jyXwLYGZ10vOvujNeXu1eutGnMYBFkek/OinT2USa
-I2W4QDrWoDWu4iRHCP1hZSgxZlEoBQq/OMwMtCmfAot3r0heJ6Z55FCV2kmdBaHq
-hXUIi71IgHyAK3sr+QAkPp4sMeeK8ne6T4XtZUYvtAEgCoUMURjMzXUlMzxU+FMy
-ebkKrYzOH0UKywT7x+eNHfMjH9NbAZDAGRyzGlp84azbKWKSm3xrdQvPEXLX+c/c
-mtHlRybAf70lR5gwePkhM6EL4q6Ffw==
-=Bk7l
------END PGP SIGNATURE-----
 
---Sig_/kHY=Fibv/UMxa5qC=cVrVbo--
+# echo write-through > /sys/block/md2/md/journal_mode
+# mdadm --fail /dev/md2 /dev/nvme0n1p1
+mdadm: set /dev/nvme0n1p1 faulty in /dev/md2
+
+# mdadm --remove /dev/md2 /dev/nvme0n1p1
+
+mdadm: hot removed /dev/nvme0n1p1 from /dev/md2
+
+# cat /proc/mdstat
+md2 : active (auto-read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
+sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1]
+
+       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[12/12] [UUUUUUUUUUUU]
+
+
+# mdadm --stop /dev/md2
+
+mdadm: stopped /dev/md2
+
+
+# mdadm --assemble /dev/md2 --force
+
+mdadm: /dev/md2 has been started with 12 drives and 1 journal.
+  <-- !?
+# cat /proc/mdstat
+md2 : active (auto-read-only) raid6 sdm1[0] nvme0n1p1[12](J) sde1[11] 
+sdk1[10] sdt1[9] sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] 
+sdd1[1]
+
+                                             ^^^
+       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[12/12] [UUUUUUUUUUUU]
+
+
+Okay then. Hammer time. Do all that again, wipefs the journal device, 
+force start the array:
+
+# mdadm --assemble /dev/md2 --force
+
+mdadm: Journal is missing or stale, starting array read only.
+
+mdadm: /dev/md2 has been started with 12 drives.
+
+# cat /proc/mdstat
+md2 : active (read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] sdl1[8] 
+sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1]
+
+       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[12/12] [UUUUUUUUUUUU]
+
+
+Then it is just stuck in read-only.
