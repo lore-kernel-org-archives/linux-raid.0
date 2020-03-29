@@ -1,68 +1,166 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Raid-6 won't boot
-Date: Sat, 28 Mar 2020 08:36:32 -0500
-Message-ID: <CAAMCDedj7TQAAGzSfQgAftKSmrjNmzHgQUs-X2mQZyFPG62_-A@mail.gmail.com>
-References: <7ce3a1b9-7b24-4666-860a-4c4b9325f671@shenkin.org>
- <3868d184-5e65-02e1-618a-2afeb7a80bab@youngman.org.uk> <ccab6f84-aab3-f483-e473-64d95cbeb7cc@shenkin.org>
- <CAAMCDee6TcJ_wR6rkQw5V02KyqPQ+xDf+bK+pQPbbfaptO_Tvg@mail.gmail.com> <1f393884-dc48-c03e-f734-f9880d9eed96@shenkin.org>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [BUG REPORT] suspicious deadlock when stopping md raid5 on
+ 5.6-rc7 kernel
+Date: Sun, 29 Mar 2020 01:30:26 +0100
+Message-ID: <84c00170-d564-8e1e-3bbc-6eebf27cfe31@cloud.ionos.com>
+References: <4a0ac66e-3deb-313a-60bb-ae1a2d45b751@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1f393884-dc48-c03e-f734-f9880d9eed96@shenkin.org>
+In-Reply-To: <4a0ac66e-3deb-313a-60bb-ae1a2d45b751@suse.de>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Shenkin <al@shenkin.org>
-Cc: antlists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Coly Li <colyli@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Try this grep:
-dmesg | grep "md/raid", if that returns nothing if you can just send
-the entire dmesg.
 
-On Sat, Mar 28, 2020 at 2:47 AM Alexander Shenkin <al@shenkin.org> wrote:
->
-> Thanks Roger.  dmesg has nothing in it referring to md126 or md127....
-> any other thoughts on how to investigate?
->
-> thanks,
-> allie
->
-> On 3/27/2020 3:55 PM, Roger Heflin wrote:
-> > A non-assembled array always reports raid1.
-> >
-> > I would run "dmesg | grep md126" to start with and see what it reports it saw.
-> >
-> > On Fri, Mar 27, 2020 at 10:29 AM Alexander Shenkin <al@shenkin.org> wrote:
-> >>
-> >> Thanks Wol,
-> >>
-> >> Booting in SystemRescueCD and looking in /proc/mdstat, two arrays are
-> >> reported.  The first (md126) in reported as inactive with all 7 disks
-> >> listed as spares.  The second (md127) is reported as active
-> >> auto-read-only with all 7 disks operational.  Also, the only
-> >> "personality" reported is Raid1.  I could go ahead with your suggestion
-> >> of mdadm --stop array and then mdadm --assemble, but I thought the
-> >> reporting of just the Raid1 personality was a bit strange, so wanted to
-> >> check in before doing that...
-> >>
-> >> Thanks,
-> >> Allie
-> >>
-> >> On 3/26/2020 10:00 PM, antlists wrote:
-> >>> On 26/03/2020 17:07, Alexander Shenkin wrote:
-> >>>> I surely need to boot with a rescue disk of some sort, but from there,
-> >>>> I'm not sure exactly when I should do.  Any suggestions are very welcome!
-> >>>
-> >>> Okay. Find a liveCD that supports raid (hopefully something like
-> >>> SystemRescueCD). Make sure it has a very recent kernel and the latest
-> >>> mdadm.
-> >>>
-> >>> All being well, the resync will restart, and when it's finished your
-> >>> system will be fine. If it doesn't restart on its own, do an "mdadm
-> >>> --stop array", followed by an "mdadm --assemble"
-> >>>
-> >>> If that doesn't work, then
-> >>>
-> >>> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
-> >>>
-> >>> Cheers,
-> >>> Wol
+
+On 3/26/20 3:26 AM, Coly Li wrote:
+> Hi Song and Guoqing,
+> 
+> Here is the step how I encounter the lockdep warning (yes lockdep engine
+> enabled),
+> 
+> export IMSM_NO_PLATFORM=1
+> mdadm -CR imsm0 -e imsm -n 4 /dev/nvme{0,1,2,3}n1
+> mdadm -CR vol5 -l 5 -n 3 /dev/nvme{0,1,2}n1 --assume-clean
+> mdadm --manage --stop /dev/md126
+> (The warning message shows up when I run the above line to stop md126)
+> mdadm --manage --stop /dev/md127
+> 
+> The kernel is just upstream Linux kernel with 5.6-rc7 tag. I use 4 NVMe
+> SSD to reproduce another issue, and encounter the following warning by
+> the above steps,
+> 
+> [ 1604.255664] ======================================================
+> [ 1604.329616] WARNING: possible circular locking dependency detected
+> [ 1604.403579] 5.6.0-rc7-default #5 Tainted: G            E
+> [ 1604.471295] ------------------------------------------------------
+> [ 1604.545253] kworker/5:0/843 is trying to acquire lock:
+> [ 1604.606731] ffff8889ff2d11e8 (kn->count#256){++++}, at:
+> kernfs_remove+0x1f/0x30
+> [ 1604.694230]
+> [ 1604.694230] but task is already holding lock:
+> [ 1604.764026] ffff888a1d3b7e10
+> ((work_completion)(&rdev->del_work)){+.+.}, at: process_one_work+0x42b/0xb30
+> [ 1604.878564]
+> [ 1604.878564] which lock already depends on the new lock.
+> [ 1604.878564]
+> [ 1604.976436]
+> [ 1604.976436] the existing dependency chain (in reverse order) is:
+> [ 1605.065993]
+> [ 1605.065993] -> #4 ((work_completion)(&rdev->del_work)){+.+.}:
+> [ 1605.152443]        process_one_work+0x4b5/0xb30
+> [ 1605.206643]        worker_thread+0x65/0x5a0
+> [ 1605.256688]        kthread+0x1d9/0x200
+> [ 1605.301535]        ret_from_fork+0x3a/0x50
+> [ 1605.350527]
+> [ 1605.350527] -> #3 ((wq_completion)md_misc){+.+.}:
+> [ 1605.424495]        flush_workqueue+0xfb/0x990
+> [ 1605.476653]        __md_stop_writes+0x34/0x1f0 [md_mod]
+> [ 1605.539206]        do_md_stop+0x2b8/0xb40 [md_mod]
+> [ 1605.596561]        array_state_store+0x297/0x450 [md_mod]
+> [ 1605.661196]        md_attr_store+0xb3/0x100 [md_mod]
+> [ 1605.720598]        kernfs_fop_write+0x1a0/0x240
+> [ 1605.774799]        vfs_write+0xff/0x280
+> [ 1605.820679]        ksys_write+0x120/0x170
+> [ 1605.868646]        do_syscall_64+0x78/0x330
+> [ 1605.918686]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> [ 1605.985361]
+> [ 1605.985361] -> #2 (&mddev->open_mutex){+.+.}:
+> [ 1606.055161]        __mutex_lock+0x12f/0xd20
+> [ 1606.105233]        do_md_stop+0x1ee/0xb40 [md_mod]
+> [ 1606.162587]        array_state_store+0x297/0x450 [md_mod]
+> [ 1606.227219]        md_attr_store+0xb3/0x100 [md_mod]
+> [ 1606.286618]        kernfs_fop_write+0x1a0/0x240
+> [ 1606.340822]        vfs_write+0xff/0x280
+> [ 1606.386703]        ksys_write+0x120/0x170
+> [ 1606.434660]        do_syscall_64+0x78/0x330
+> [ 1606.484704]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> [ 1606.551380]
+> [ 1606.551380] -> #1 (&mddev->reconfig_mutex){+.+.}:
+> [ 1606.625341]        __mutex_lock+0x12f/0xd20
+> [ 1606.675412]        rdev_attr_store+0x6f/0xf0 [md_mod]
+> [ 1606.735853]        kernfs_fop_write+0x1a0/0x240
+> [ 1606.790050]        vfs_write+0xff/0x280
+> [ 1606.835931]        ksys_write+0x120/0x170
+> [ 1606.883888]        do_syscall_64+0x78/0x330
+> [ 1606.933927]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> [ 1607.000604]
+> [ 1607.000604] -> #0 (kn->count#256){++++}:
+> [ 1607.065213]        __lock_acquire+0x1ba8/0x1f50
+> [ 1607.119413]        lock_acquire+0xf3/0x240
+> [ 1607.168408]        __kernfs_remove+0x45b/0x4f0
+> [ 1607.221563]        kernfs_remove+0x1f/0x30
+> [ 1607.270564]        kobject_del+0x50/0xa0
+> [ 1607.317515]        md_delayed_delete+0x15/0x20 [md_mod]
+> [ 1607.380035]        process_one_work+0x50c/0xb30
+> [ 1607.434238]        worker_thread+0x65/0x5a0
+> [ 1607.484279]        kthread+0x1d9/0x200
+> [ 1607.529116]        ret_from_fork+0x3a/0x50
+> [ 1607.578110]
+> [ 1607.578110] other info that might help us debug this:
+> [ 1607.578110]
+> [ 1607.673903] Chain exists of:
+> [ 1607.673903]   kn->count#256 --> (wq_completion)md_misc -->
+> (work_completion)(&rdev->del_work)
+> [ 1607.673903]
+> [ 1607.827946]  Possible unsafe locking scenario:
+> [ 1607.827946]
+> [ 1607.898780]        CPU0                    CPU1
+> [ 1607.952980]        ----                    ----
+> [ 1608.007173]   lock((work_completion)(&rdev->del_work));
+> [ 1608.069690]                                lock((wq_completion)md_misc);
+> [ 1608.149887]
+> lock((work_completion)(&rdev->del_work));
+> [ 1608.242563]   lock(kn->count#256);
+> [ 1608.283238]
+> [ 1608.283238]  *** DEADLOCK ***
+
+Seems lots of works are attached to md_misc_wq, I think the deadlock is caused by competing the same 
+work queue, need to investigate more. And I vaguely recall there was report about md check hang, 
+which I guess could be related to flush_workqueue as well.
+
+
+> [ 1608.283238]
+> [ 1608.354078] 2 locks held by kworker/5:0/843:
+> [ 1608.405152]  #0: ffff8889eecc9948 ((wq_completion)md_misc){+.+.}, at:
+> process_one_work+0x42b/0xb30
+> [ 1608.512399]  #1: ffff888a1d3b7e10
+> ((work_completion)(&rdev->del_work)){+.+.}, at: process_one_work+0x42b/0xb30
+> [ 1608.632130]
+> [ 1608.632130] stack backtrace:
+> [ 1608.684254] CPU: 5 PID: 843 Comm: kworker/5:0 Tainted: G            E
+>      5.6.0-rc7-default #5
+> [ 1608.787332] Hardware name: Lenovo ThinkSystem SR650
+> -[7X05CTO1WW]-/-[7X05CTO1WW]-, BIOS -[IVE148M-2.41]- 10/31/2019
+> [ 1608.912287] Workqueue: md_misc md_delayed_delete [md_mod]
+> [ 1608.976886] Call Trace:
+> [ 1609.006132]  dump_stack+0xb7/0x10b
+> [ 1609.046814]  check_noncircular+0x2c4/0x320
+> [ 1609.095818]  ? print_circular_bug.isra.36+0x240/0x240
+> [ 1609.156279]  ? __lockdep_free_key_range+0xb0/0xb0
+> [ 1609.212564]  ? __lock_acquire+0x1ba8/0x1f50
+> [ 1609.262606]  __lock_acquire+0x1ba8/0x1f50
+> [ 1609.310574]  ? register_lock_class+0x8c0/0x8c0
+> [ 1609.363741]  lock_acquire+0xf3/0x240
+> [ 1609.406501]  ? kernfs_remove+0x1f/0x30
+> [ 1609.451349]  __kernfs_remove+0x45b/0x4f0
+> [ 1609.498267]  ? kernfs_remove+0x1f/0x30
+> [ 1609.543106]  ? kernfs_fop_readdir+0x3b0/0x3b0
+> [ 1609.595240]  kernfs_remove+0x1f/0x30
+> [ 1609.638003]  kobject_del+0x50/0xa0
+> [ 1609.678721]  md_delayed_delete+0x15/0x20 [md_mod]
+> [ 1609.735005]  process_one_work+0x50c/0xb30
+> [ 1609.782974]  ? pwq_dec_nr_in_flight+0x120/0x120
+> [ 1609.837188]  worker_thread+0x65/0x5a0
+> [ 1609.880997]  ? process_one_work+0xb30/0xb30
+> [ 1609.931037]  kthread+0x1d9/0x200
+> [ 1609.969638]  ? kthread_create_worker_on_cpu+0xc0/0xc0
+> [ 1610.030080]  ret_from_fork+0x3a/0x50
+> [ 1809.448921] md: md127 stopped.
+> 
+
+Thanks,
+Guoqing
