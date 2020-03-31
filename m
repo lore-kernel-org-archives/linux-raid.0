@@ -1,62 +1,29 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: mdcheck: slow system issues
-Date: Tue, 31 Mar 2020 08:14:22 -0400
-Message-ID: <dbbd010e-3648-c72c-ce44-ed570f6eb8be@turmel.org>
-References: <2933dddc-8728-51ac-1c60-8a47874966e4@molgen.mpg.de>
- <24195.8467.378436.7747@base.ty.sabi.co.uk>
+From: Daniel Jones <dj@iowni.com>
+Subject: Re: Requesting assistance recovering RAID-5 array
+Date: Tue, 31 Mar 2020 07:36:42 -0600
+Message-ID: <CAB00BMiaqRcZsGu39ygop7G7yejAooFAkRdojkrrUvs6cyF7zA@mail.gmail.com>
+References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
+ <058b3f48-e69d-2783-8e08-693ad27693f6@youngman.org.uk> <CAB00BMgYmi+4XvdmJDWjQ8qGWa9m0mqj7yvrK3QSNH9SzYjypw@mail.gmail.com>
+ <1d6b3e00-e7dd-1b19-1379-afe665169d44@turmel.org> <CAB00BMg50zcerSLHShSjoOcaJ0JQSi2aSqTFfU2eQQrT12-qEg@mail.gmail.com>
+ <e77280ef-a5ac-f2d8-332c-dec032ddc842@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <24195.8467.378436.7747@base.ty.sabi.co.uk>
-Content-Language: en-US
+In-Reply-To: <e77280ef-a5ac-f2d8-332c-dec032ddc842@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@mdraid.list.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/31/20 6:53 AM, Peter Grandi wrote:
->> Dear Linux folks, When `mdcheck` runs on two 100 TB software
->> RAIDs our users complain about being unable to open files in a
->> reasonable time. [...]
->>        109394518016 blocks super 1.2 level 6, 512k chunk,
->> algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-> 
-> Unsurprisingly it is a 16-wide RAID6 of 8TB HDDs.
+Hi Phil,
 
-With a 512k chunk.  Definitely not suitable for anything but large media 
-file streaming.
+Thanks for the guidance.  I'll think this through and come back with
+any questions.
 
->> [...] The article *Software RAID check - slow system issues*
->> [1] recommends to lower `dev.raid.speed_limit_max`, but the
->> RAID should easily be able to do 200 MB/s as our tests show
->> over 600 MB/s during some benchmarks.
-> 
-> Many people have to find out the hard way that on HDDs
-> sequential and random IO rates differ by "up to" two orders of
-> magnitude, and that RAID6 gives an "interesting" tradeoff
-> between read and write speed with random vs. sequential access.
+It turns out that I do have a file in /etc/lvm/backup/ but I believe
+it is a red herring.  The file date is from 2016, well before this
+array was created, and must represent some long-ago configuration
+of this machine.
 
-The random/streaming threshold is proportional to the address stride on 
-one device--the raid sector number gap between one chunk and the next 
-chunk on that (approximately).  Which is basically chunk * (n-2).  With 
-so many member devices, the transition from random-access performance 
-and streaming performance requires that much larger accesses.
-
-I configure any raid6 that might have some random loads with a 16k or 
-32k chunk size.
-
-Finally, the stripe cache size should be optimized on the system in 
-question.  More is generally better, unless it starves the OS of 
-buffers.  Adjust and test, with real loads.
-
->> How do you run `mdcheck` in production without noticeably
->> affecting the system?
-> 
-> Fortunately the only solution that works well is quite simple:
-> replace the storage system with one with much increased
-> IOPS-per-TB (that is SSDs or much smaller HDDs, 1TB or less)
-> *and* switch from RAID6 to RAID10.
-
-These are good choices too, though not cheap.
-
-Phil
+Regards,
+DJ
