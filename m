@@ -1,63 +1,39 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] raid5: use kmalloc_array() for GFP_NOIO flag
-Date: Tue, 31 Mar 2020 19:05:14 +0800
-Message-ID: <191a9178-cd26-9de5-f0d3-64db9436d533@suse.de>
-References: <20200330154010.113469-1-colyli@suse.de>
+From: pg@mdraid.list.sabi.co.UK (Peter Grandi)
+Subject: Re: mdcheck: slow system issues
+Date: Tue, 31 Mar 2020 11:53:07 +0100
+Message-ID: <24195.8467.378436.7747@base.ty.sabi.co.uk>
+References: <2933dddc-8728-51ac-1c60-8a47874966e4@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200330154010.113469-1-colyli@suse.de>
-Content-Language: en-US
+In-Reply-To: <2933dddc-8728-51ac-1c60-8a47874966e4@molgen.mpg.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: songliubraving@fb.com
-Cc: linux-raid@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Michal Hocko <mhocko@suse.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2020/3/30 11:40 下午, Coly Li wrote:
-> Commit b330e6a49dc3 ("md: convert to kvmalloc") uses kvmalloc_array()
-> to allocate memory with GFP_NOIO flag in resize_chunks() via function
-> scribble_alloc(),
-> 2269	err = scribble_alloc(percpu, new_disks,
-> 2270			     new_sectors / STRIPE_SECTORS,
-> 2271			     GFP_NOIO);
-> 
-> Indeed kvmalloc() inside kvmalloc_array() does not accept non GFP_KERNEL
-> compatible flags, it means GFP_NOIO will make kvmalloc_node() call
-> kmalloc_node() instead, which is not the above listed code wants.
-> 
-> For md raid1 and raid10 code, such allocation just simply calls
-> kmalloc_array(), which is enough and works fine. This patch removes
-> the misleading kvmalloc_array() and simply uses kmalloc_array() as
-> md raid1 and raid10 code do.
-> 
-> Fixes: b330e6a49dc3 ("md: convert to kvmalloc")
-> Signed-off-by: Coly Li <colyli@suse.de>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Michal Hocko <mhocko@suse.com>
-> ---
->  drivers/md/raid5.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index ba00e9877f02..dda2701290bf 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2235,7 +2235,7 @@ static int scribble_alloc(struct raid5_percpu *percpu,
->  		sizeof(addr_conv_t) * (num+2);
->  	void *scribble;
->  
-> -	scribble = kvmalloc_array(cnt, obj_size, flags);
-> +	scribble = kmalloc_array(cnt, obj_size, flags);
->  	if (!scribble)
->  		return -ENOMEM;
->  
-> 
+> Dear Linux folks, When `mdcheck` runs on two 100 TB software
+> RAIDs our users complain about being unable to open files in a
+> reasonable time. [...]
+>       109394518016 blocks super 1.2 level 6, 512k chunk,
+> algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
 
-I will post another version to use memalloc_noio_save()/restore() scope
-APIs. Please ignore this patch.
+Unsurprisingly it is a 16-wide RAID6 of 8TB HDDs.
 
-Thanks.
--- 
+> [...] The article *Software RAID check - slow system issues*
+> [1] recommends to lower `dev.raid.speed_limit_max`, but the
+> RAID should easily be able to do 200 MB/s as our tests show
+> over 600 MB/s during some benchmarks.
 
-Coly Li
+Many people have to find out the hard way that on HDDs
+sequential and random IO rates differ by "up to" two orders of
+magnitude, and that RAID6 gives an "interesting" tradeoff
+between read and write speed with random vs. sequential access.
+
+> How do you run `mdcheck` in production without noticeably
+> affecting the system?
+
+Fortunately the only solution that works well is quite simple:
+replace the storage system with one with much increased
+IOPS-per-TB (that is SSDs or much smaller HDDs, 1TB or less)
+*and* switch from RAID6 to RAID10.
