@@ -1,39 +1,35 @@
-From: Daniel Jones <dj@iowni.com>
-Subject: Re: Requesting assistance recovering RAID-5 array
-Date: Mon, 30 Mar 2020 20:09:17 -0600
-Message-ID: <CAB00BMg50zcerSLHShSjoOcaJ0JQSi2aSqTFfU2eQQrT12-qEg@mail.gmail.com>
-References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
- <058b3f48-e69d-2783-8e08-693ad27693f6@youngman.org.uk> <CAB00BMgYmi+4XvdmJDWjQ8qGWa9m0mqj7yvrK3QSNH9SzYjypw@mail.gmail.com>
- <1d6b3e00-e7dd-1b19-1379-afe665169d44@turmel.org>
+From: antlists <antlists@youngman.org.uk>
+Subject: Re: Raid-6 won't boot
+Date: Tue, 31 Mar 2020 01:16:33 +0100
+Message-ID: <d52ac992-77a4-a980-5742-06a5a3f968d0@youngman.org.uk>
+References: <7ce3a1b9-7b24-4666-860a-4c4b9325f671@shenkin.org>
+ <3868d184-5e65-02e1-618a-2afeb7a80bab@youngman.org.uk>
+ <ccab6f84-aab3-f483-e473-64d95cbeb7cc@shenkin.org>
+ <CAAMCDee6TcJ_wR6rkQw5V02KyqPQ+xDf+bK+pQPbbfaptO_Tvg@mail.gmail.com>
+ <1f393884-dc48-c03e-f734-f9880d9eed96@shenkin.org>
+ <CAAMCDedj7TQAAGzSfQgAftKSmrjNmzHgQUs-X2mQZyFPG62_-A@mail.gmail.com>
+ <c8185f80-837e-9654-ee19-611a030a0d54@shenkin.org>
+ <CAAMCDefr2FakGTz5ok-qvTZiDNTj87vQSWP9ynM_bxtnB=-fkw@mail.gmail.com>
+ <fa7e9b6d-28f3-8c9f-0901-eeac761e382f@shenkin.org>
+ <CAAMCDefXygV4CZdxadfRFAV+HeEqnY8nWG1hpsVi4tBf1PYYww@mail.gmail.com>
+ <740b37a3-83fa-a03f-c253-785bb286cefc@shenkin.org>
+ <CAAMCDecv1-rY9Rt1puDn6WPYxGZ1=Qzje1ju=7aEOonBzkekVw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1d6b3e00-e7dd-1b19-1379-afe665169d44@turmel.org>
+In-Reply-To: <CAAMCDecv1-rY9Rt1puDn6WPYxGZ1=Qzje1ju=7aEOonBzkekVw@mail.gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Roger Heflin <rogerheflin@gmail.com>, Alexander Shenkin <al@shenkin.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Phil,
+On 30/03/2020 21:45, Roger Heflin wrote:
+> Is the raid456 module loaded (lsmod | grep raid)?
 
-> your new motherboard or your distro appears to have reacted to the presence of whole-disk raid members by establishing Gnu Partition Tables on them, blowing away those drives' superblocks.
 
-Yes, this was an unpleasant surprise.  Won't build them this way again.
-
-> In particular, knowledge of the filesystem or nested structure (LVM?) present on the array will be needed to identify the real data offsets of the three mangled members.
-
-I don't have the history of original creation, but I'm fairly certain
-it was something straightforward like:
-
-  mdadm --create /dev/md0 {parameters}
-  sudo mkfs.ext4 /dev/md0
-  mount /dev/md0 /mnt/raid5
-
-After the array was corrupted I needed to comment out the mount from
-my fstab, which was as follows (confirming ext4):
-
-    /dev/md0                                      /mnt/raid5
-   ext4    defaults        0       0
+Or "cat /proc/mdstat" iirc ...
 
 Cheers,
-DJ
+Wol
