@@ -1,199 +1,55 @@
-From: Alexander Shenkin <al@shenkin.org>
-Subject: Raid-6 cannot reshape
-Date: Wed, 1 Apr 2020 11:16:02 +0100
-Message-ID: <24a0ef04-46a9-13ee-b8cb-d1a0a5b939fb@shenkin.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Requesting assistance recovering RAID-5 array
+Date: Wed, 1 Apr 2020 08:55:02 -0400
+Message-ID: <9a303b9b-52b8-f0c6-4288-120338c6572f@turmel.org>
+References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
+ <058b3f48-e69d-2783-8e08-693ad27693f6@youngman.org.uk>
+ <CAB00BMgYmi+4XvdmJDWjQ8qGWa9m0mqj7yvrK3QSNH9SzYjypw@mail.gmail.com>
+ <1d6b3e00-e7dd-1b19-1379-afe665169d44@turmel.org>
+ <CAB00BMg50zcerSLHShSjoOcaJ0JQSi2aSqTFfU2eQQrT12-qEg@mail.gmail.com>
+ <e77280ef-a5ac-f2d8-332c-dec032ddc842@turmel.org>
+ <CAB00BMj5kihqwOY-FOXv-tqG1b2reMnUVkdmB9uyNAeE7ESasw@mail.gmail.com>
+ <061b695a-2406-fc00-dd6d-9198b85f3b1b@turmel.org>
+ <CAB00BMi3zhfVGpeE_AyyKiu1=MY2icYgfey0J3GeO8z9ZDAQbg@mail.gmail.com>
+ <5E8485DA.2050803@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------2301D93B7DE3E3B4D3D2576E"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5E8485DA.2050803@youngman.org.uk>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, Daniel Jones <dj@iowni.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------2301D93B7DE3E3B4D3D2576E
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+On 4/1/20 8:15 AM, Wols Lists wrote:
+> On 01/04/20 07:03, Daniel Jones wrote:
+>> Thanks Phil,
+>>
+>> I'll read this a couple of times and try some commands (likely on an
+>> overlay) tomorrow.
+> 
+> If you CAN overlay, then DO. If you can't back up the drives, the more
+> you can do to protect them from being accidentally written to, the better.
 
-Hi all,
+I have to admit that I pretty much never use overlays.  But then I'm 
+entirely confident of what any given mdadm/lvm/fdisk operation will do, 
+in regards to writing to devices.  And since it is burned into my psyche 
+that raid is *not* backup, only an uptime aid, I keep good external 
+backups. (:
 
-I had a problem that caused my Ubuntu Server 14 to go down, and it now
-will not boot.  I added a drive to my raid1 (/dev/md0 -> /boot) + raid6
-(/dev/md2 -> /) setup.  I was previously running with /dev/md0 (raid1)
-assembled from /dev/sd[a-f]1, and /dev/md2 (raid6) assembled
-/dev/sd[a-f]3.  Both partitions from the new drive were successfully
-added to the two md arrays, and the raid1 (the smaller of the two)
-resync'd successfully it seemed (I think that resync is the correct word
-to use, meaning that mdadm is spreading out the data amongst the drives
-once an array has been grown).  When resyncing the larger raid6,
-however, the sync speed was quite slow (kb's/sec), and got slower and
-slower (7kb/sec... 5kb/sec... 3kb/sec... 1kb/sec...) until the system
-entirely halted and I eventually turned the power off.  It now will not
-boot.
+Lacking confidence and lacking backups are both good reasons for using 
+overlays.  I'm not entirely sure the mental effort for a novice to learn 
+to use overlays is time better spent than learning enough about MD and 
+mdadm for confident use.
 
-Thanks to Roger Heflin's help, I've booted into a livecd environment
-(ubuntu server 18) with all the necessary raid personalities available.
+I do think initial recovery efforts with --assemble and --assemble 
+--force do not need to be done with overlays.  They are so safe and so 
+likely to quickly yield a working array that I think overlays should be 
+recommended only for invasive tasks needed after these --assemble 
+operations fail.
 
-When trying to --assemble md127 (raid6), i get the following error:
-"Failure to restore critical section for reshape, sorry.  Perhaps you
-needed to specify the --backup-file".  Needless to say, I didn't save a
-backup file when adding the drive.
+--create is a very invasive opertion.
 
-I have attached some diagnostic output here.  It seems that my raid6
-array is not being recognized as such.  I'm not sure what the next steps
-are - do I need to figure out how to get the resync up and running
-again?  Any help would be greatly appreciated.
-
-Many thanks,
-
-Allie
-
-
---------------2301D93B7DE3E3B4D3D2576E
-Content-Type: text/plain; charset=UTF-8;
- name="mdstat.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="mdstat.txt"
-
-UGVyc29uYWxpdGllcyA6IFtyYWlkMV0gW2xpbmVhcl0gW211bHRpcGF0aF0gW3JhaWQwXSBb
-cmFpZDZdIFtyYWlkNV0gW3JhaWQ0XSBbcmFpZDEwXSAKbWQxMjcgOiBpbmFjdGl2ZSBzZGQz
-WzVdKFMpIHNkZjNbOF0oUykgc2RjM1syXShTKSBzZGczWzldKFMpIHNkZTNbN10oUykgc2Ri
-M1s0XShTKSBzZGEzWzZdKFMpCiAgICAgIDIwNDQxMzIyNDk2IGJsb2NrcyBzdXBlciAxLjIK
-ICAgICAgIAptZDEyNiA6IGFjdGl2ZSAoYXV0by1yZWFkLW9ubHkpIHJhaWQxIHNkZjFbOF0g
-c2RlMVs3XSBzZGcxWzldIHNkYTFbNl0gc2RkMVs1XSBzZGMxWzJdIHNkYjFbNF0KICAgICAg
-MTk1MDY1NiBibG9ja3Mgc3VwZXIgMS4yIFs3LzddIFtVVVVVVVVVXQogICAgICAKdW51c2Vk
-IGRldmljZXM6IDxub25lPgo=
---------------2301D93B7DE3E3B4D3D2576E
-Content-Type: text/plain; charset=UTF-8;
- name="fdisk.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="fdisk.txt"
-
-RGlzayAvZGV2L2xvb3AwOiAyNjUuMyBNaUIsIDI3ODE0NzA3MiBieXRlcywgNTQzMjU2IHNl
-Y3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6
-ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJL08gc2l6ZSAo
-bWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlzayAvZGV2L2xv
-b3AxOiA3MC4xIE1pQiwgNzM1MzEzOTIgYnl0ZXMsIDE0MzYxNiBzZWN0b3JzClVuaXRzOiBz
-ZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
-c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1h
-bCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwoKCkRpc2sgL2Rldi9sb29wMjogNDkuNyBNaUIs
-IDUyMDYwMTYwIGJ5dGVzLCAxMDE2ODAgc2VjdG9ycwpVbml0czogc2VjdG9ycyBvZiAxICog
-NTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5
-dGVzIC8gNTEyIGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGltYWwpOiA1MTIgYnl0ZXMg
-LyA1MTIgYnl0ZXMKCgpEaXNrIC9kZXYvbG9vcDM6IDM2IE1pQiwgMzc3MDc3NzYgYnl0ZXMs
-IDczNjQ4IHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpT
-ZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJ
-L08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlz
-ayAvZGV2L2xvb3A0OiAyNy40IE1pQiwgMjg3MTcwNTYgYnl0ZXMsIDU2MDg4IHNlY3RvcnMK
-VW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9n
-aWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJL08gc2l6ZSAobWluaW11
-bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlzayAvZGV2L2xvb3A1OiA4
-OS4xIE1pQiwgOTM0MTc0NzIgYnl0ZXMsIDE4MjQ1NiBzZWN0b3JzClVuaXRzOiBzZWN0b3Jz
-IG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5c2ljYWwp
-OiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDUx
-MiBieXRlcyAvIDUxMiBieXRlcwoKCkRpc2sgL2Rldi9sb29wNjogNTEuOSBNaUIsIDU0MzU4
-MDE2IGJ5dGVzLCAxMDYxNjggc2VjdG9ycwpVbml0czogc2VjdG9ycyBvZiAxICogNTEyID0g
-NTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8g
-NTEyIGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGltYWwpOiA1MTIgYnl0ZXMgLyA1MTIg
-Ynl0ZXMKCgpEaXNrIC9kZXYvbG9vcDc6IDUxLjkgTWlCLCA1NDQwNzE2OCBieXRlcywgMTA2
-MjY0IHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0
-b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJL08g
-c2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlzayAv
-ZGV2L3NkYTogMi43IFRpQiwgMzAwMDU5Mjk4MjAxNiBieXRlcywgNTg2MDUzMzE2OCBzZWN0
-b3JzClVuaXRzOiBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUg
-KGxvZ2ljYWwvcGh5c2ljYWwpOiA1MTIgYnl0ZXMgLyA0MDk2IGJ5dGVzCkkvTyBzaXplICht
-aW5pbXVtL29wdGltYWwpOiA0MDk2IGJ5dGVzIC8gNDA5NiBieXRlcwpEaXNrbGFiZWwgdHlw
-ZTogZ3B0CkRpc2sgaWRlbnRpZmllcjogRDYwN0NEMkQtMDVGNC00MkM2LTkxNEMtQjk5Q0U1
-NkU5MzRGCgpEZXZpY2UgICAgICAgICAgU3RhcnQgICAgICAgIEVuZCAgICBTZWN0b3JzICBT
-aXplIFR5cGUKL2Rldi9zZGExICAgICAgICAyMDQ4ICAgIDM5MDU1MzUgICAgMzkwMzQ4OCAg
-MS45RyBMaW51eCBSQUlECi9kZXYvc2RhMiAgICAgMzkwNTUzNiAgICAzOTA3NTgzICAgICAg
-IDIwNDggICAgMU0gQklPUyBib290Ci9kZXYvc2RhMyAgICAgMzkwNzU4NCA1ODQ0NTQ3NTgz
-IDU4NDA2NDAwMDAgIDIuN1QgTGludXggUkFJRAovZGV2L3NkYTQgIDU4NDQ1NDc1ODQgNTg2
-MDUzMjIyMyAgIDE1OTg0NjQwICA3LjZHIExpbnV4IGZpbGVzeXN0ZW0KCgpEaXNrIC9kZXYv
-c2RiOiAyLjcgVGlCLCAzMDAwNTkyOTgyMDE2IGJ5dGVzLCA1ODYwNTMzMTY4IHNlY3RvcnMK
-VW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9n
-aWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDQwOTYgYnl0ZXMKSS9PIHNpemUgKG1pbmlt
-dW0vb3B0aW1hbCk6IDQwOTYgYnl0ZXMgLyA0MDk2IGJ5dGVzCkRpc2tsYWJlbCB0eXBlOiBn
-cHQKRGlzayBpZGVudGlmaWVyOiBEOTZENzUxMy0zRDc0LTQzNUItOEIyRi0yNkMyQTMyQjA1
-ODYKCkRldmljZSAgICAgICAgICBTdGFydCAgICAgICAgRW5kICAgIFNlY3RvcnMgIFNpemUg
-VHlwZQovZGV2L3NkYjEgICAgICAgIDIwNDggICAgMzkwNTUzNSAgICAzOTAzNDg4ICAxLjlH
-IExpbnV4IFJBSUQKL2Rldi9zZGIyICAgICAzOTA1NTM2ICAgIDM5MDc1ODMgICAgICAgMjA0
-OCAgICAxTSBCSU9TIGJvb3QKL2Rldi9zZGIzICAgICAzOTA3NTg0IDU4NDQ1NDc1ODMgNTg0
-MDY0MDAwMCAgMi43VCBMaW51eCBSQUlECi9kZXYvc2RiNCAgNTg0NDU0NzU4NCA1ODYwNTMy
-MjIzICAgMTU5ODQ2NDAgIDcuNkcgTGludXggZmlsZXN5c3RlbQoKCkRpc2sgL2Rldi9zZGM6
-IDIuNyBUaUIsIDMwMDA1OTI5ODIwMTYgYnl0ZXMsIDU4NjA1MzMxNjggc2VjdG9ycwpVbml0
-czogc2VjdG9ycyBvZiAxICogNTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2Fs
-L3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8gNDA5NiBieXRlcwpJL08gc2l6ZSAobWluaW11bS9v
-cHRpbWFsKTogNDA5NiBieXRlcyAvIDQwOTYgYnl0ZXMKRGlza2xhYmVsIHR5cGU6IGdwdApE
-aXNrIGlkZW50aWZpZXI6IDRCMzU2QUZBLThGNDgtNDIyNy04NkYwLTMyOTU2NTE0NkQ3QQoK
-RGV2aWNlICAgICAgICAgIFN0YXJ0ICAgICAgICBFbmQgICAgU2VjdG9ycyAgU2l6ZSBUeXBl
-Ci9kZXYvc2RjMSAgICAgICAgMjA0OCAgICAzOTA1NTM1ICAgIDM5MDM0ODggIDEuOUcgTGlu
-dXggUkFJRAovZGV2L3NkYzIgICAgIDM5MDU1MzYgICAgMzkwNzU4MyAgICAgICAyMDQ4ICAg
-IDFNIEJJT1MgYm9vdAovZGV2L3NkYzMgICAgIDM5MDc1ODQgNTg0NDU0NzU4MyA1ODQwNjQw
-MDAwICAyLjdUIExpbnV4IFJBSUQKL2Rldi9zZGM0ICA1ODQ0NTQ3NTg0IDU4NjA1MzIyMjMg
-ICAxNTk4NDY0MCAgNy42RyBMaW51eCBmaWxlc3lzdGVtCgoKRGlzayAvZGV2L3NkZDogMi43
-IFRpQiwgMzAwMDU5Mjk4MjAxNiBieXRlcywgNTg2MDUzMzE2OCBzZWN0b3JzClVuaXRzOiBz
-ZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
-c2ljYWwpOiA1MTIgYnl0ZXMgLyA0MDk2IGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGlt
-YWwpOiA0MDk2IGJ5dGVzIC8gNDA5NiBieXRlcwpEaXNrbGFiZWwgdHlwZTogZ3B0CkRpc2sg
-aWRlbnRpZmllcjogRDREMUUyRUItODUyMC00QjNFLTgyNjMtQUI1QjVCRDJEN0UyCgpEZXZp
-Y2UgICAgICAgICAgU3RhcnQgICAgICAgIEVuZCAgICBTZWN0b3JzICBTaXplIFR5cGUKL2Rl
-di9zZGQxICAgICAgICAyMDQ4ICAgIDM5MDU1MzUgICAgMzkwMzQ4OCAgMS45RyBMaW51eCBS
-QUlECi9kZXYvc2RkMiAgICAgMzkwNTUzNiAgICAzOTA3NTgzICAgICAgIDIwNDggICAgMU0g
-QklPUyBib290Ci9kZXYvc2RkMyAgICAgMzkwNzU4NCA1ODQ0NTQ3NTgzIDU4NDA2NDAwMDAg
-IDIuN1QgTGludXggUkFJRAovZGV2L3NkZDQgIDU4NDQ1NDc1ODQgNTg2MDUzMjIyMyAgIDE1
-OTg0NjQwICA3LjZHIExpbnV4IGZpbGVzeXN0ZW0KCgoKCgoKRGlzayAvZGV2L3NkZTogMi43
-IFRpQiwgMzAwMDU5Mjk4MjAxNiBieXRlcywgNTg2MDUzMzE2OCBzZWN0b3JzClVuaXRzOiBz
-ZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
-c2ljYWwpOiA1MTIgYnl0ZXMgLyA0MDk2IGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGlt
-YWwpOiA0MDk2IGJ5dGVzIC8gNDA5NiBieXRlcwpEaXNrbGFiZWwgdHlwZTogZ3B0CkRpc2sg
-aWRlbnRpZmllcjogNTJGMDQ0QUItOUQ1MC00MzYzLUJGNjAtNjUxQTg3MTU5QTE3CgpEZXZp
-Y2UgICAgICAgICAgU3RhcnQgICAgICAgIEVuZCAgICBTZWN0b3JzICBTaXplIFR5cGUKL2Rl
-di9zZGUxICAgICAgICAyMDQ4ICAgIDM5MDU1MzUgICAgMzkwMzQ4OCAgMS45RyBMaW51eCBS
-QUlECi9kZXYvc2RlMiAgICAgMzkwNTUzNiAgICAzOTA3NTgzICAgICAgIDIwNDggICAgMU0g
-QklPUyBib290Ci9kZXYvc2RlMyAgICAgMzkwNzU4NCA1ODQ0NTQ3NTgzIDU4NDA2NDAwMDAg
-IDIuN1QgTGludXggUkFJRAovZGV2L3NkZTQgIDU4NDQ1NDc1ODQgNTg2MDUzMjIyMyAgIDE1
-OTg0NjQwICA3LjZHIExpbnV4IGZpbGVzeXN0ZW0KCgpEaXNrIC9kZXYvc2RnOiAyLjcgVGlC
-LCAzMDAwNTkyOTgyMDE2IGJ5dGVzLCA1ODYwNTMzMTY4IHNlY3RvcnMKVW5pdHM6IHNlY3Rv
-cnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNh
-bCk6IDUxMiBieXRlcyAvIDQwOTYgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6
-IDQwOTYgYnl0ZXMgLyA0MDk2IGJ5dGVzCkRpc2tsYWJlbCB0eXBlOiBncHQKRGlzayBpZGVu
-dGlmaWVyOiBCRTJEREFCRS05MTA2LTQ0MzYtOEFCQy02QTkxOUVCRkIyRTYKCkRldmljZSAg
-ICAgICAgICBTdGFydCAgICAgICAgRW5kICAgIFNlY3RvcnMgIFNpemUgVHlwZQovZGV2L3Nk
-ZzEgICAgICAgIDIwNDggICAgMzkwNTUzNSAgICAzOTAzNDg4ICAxLjlHIExpbnV4IFJBSUQK
-L2Rldi9zZGcyICAgICAzOTA1NTM2ICAgIDM5MDc1ODMgICAgICAgMjA0OCAgICAxTSBCSU9T
-IGJvb3QKL2Rldi9zZGczICAgICAzOTA3NTg0IDU4NDQ1NDc1ODMgNTg0MDY0MDAwMCAgMi43
-VCBMaW51eCBSQUlECi9kZXYvc2RnNCAgNTg0NDU0NzU4NCA1ODYwNTMyMjIzICAgMTU5ODQ2
-NDAgIDcuNkcgTGludXggZmlsZXN5c3RlbQoKCkRpc2sgL2Rldi9zZGY6IDIuNyBUaUIsIDMw
-MDA1OTI5ODIwMTYgYnl0ZXMsIDU4NjA1MzMxNjggc2VjdG9ycwpVbml0czogc2VjdG9ycyBv
-ZiAxICogNTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTog
-NTEyIGJ5dGVzIC8gNDA5NiBieXRlcwpJL08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNDA5
-NiBieXRlcyAvIDQwOTYgYnl0ZXMKRGlza2xhYmVsIHR5cGU6IGdwdApEaXNrIGlkZW50aWZp
-ZXI6IDM2NjE1RjdELTk3NEYtNEEwQi1CNzlCLTE2NUQ4NzJFRjQxOAoKRGV2aWNlICAgICAg
-ICAgIFN0YXJ0ICAgICAgICBFbmQgICAgU2VjdG9ycyAgU2l6ZSBUeXBlCi9kZXYvc2RmMSAg
-ICAgICAgMjA0OCAgICAzOTA1NTM1ICAgIDM5MDM0ODggIDEuOUcgTGludXggUkFJRAovZGV2
-L3NkZjIgICAgIDM5MDU1MzYgICAgMzkwNzU4MyAgICAgICAyMDQ4ICAgIDFNIEJJT1MgYm9v
-dAovZGV2L3NkZjMgICAgIDM5MDc1ODQgNTg0NDU0NzU4MyA1ODQwNjQwMDAwICAyLjdUIExp
-bnV4IFJBSUQKL2Rldi9zZGY0ICA1ODQ0NTQ3NTg0IDU4NjA1MzIyMjMgICAxNTk4NDY0MCAg
-Ny42RyBMaW51eCBmaWxlc3lzdGVtCgoKRGlzayAvZGV2L21kMTI2OiAxLjkgR2lCLCAxOTk3
-NDcxNzQ0IGJ5dGVzLCAzOTAxMzEyIHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUx
-MiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRl
-cyAvIDQwOTYgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDQwOTYgYnl0ZXMg
-LyA0MDk2IGJ5dGVzCgoKRGlzayAvZGV2L3NkaDogMjkuMiBHaUIsIDMxMzc2NzA3MDcyIGJ5
-dGVzLCA2MTI4MjYzMSBzZWN0b3JzClVuaXRzOiBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIg
-Ynl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIg
-Ynl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDUxMiBieXRlcyAvIDUxMiBieXRl
-cwpEaXNrbGFiZWwgdHlwZTogZG9zCkRpc2sgaWRlbnRpZmllcjogMHgwMGY2NzRhNgoKRGV2
-aWNlICAgICBCb290IFN0YXJ0ICAgICAgRW5kICBTZWN0b3JzICBTaXplIElkIFR5cGUKL2Rl
-di9zZGgxICAqICAgICAyMDQ4IDYxMjgyNjMwIDYxMjgwNTgzIDI5LjJHICBjIFc5NSBGQVQz
-MiAoTEJBKQoKCkRpc2sgL2Rldi9zZGk6IDE1IEdpQiwgMTYxMDYxMjczNjAgYnl0ZXMsIDMx
-NDU3MjgwIHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpT
-ZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJ
-L08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCkRpc2ts
-YWJlbCB0eXBlOiBkb3MKRGlzayBpZGVudGlmaWVyOiAweDAwZTE5YmRjCgpEZXZpY2UgICAg
-IEJvb3QgU3RhcnQgICAgICBFbmQgIFNlY3RvcnMgU2l6ZSBJZCBUeXBlCi9kZXYvc2RpMSAg
-KiAgICAgMjA0OCAzMTQ1NzI3OSAzMTQ1NTIzMiAgMTVHICBjIFc5NSBGQVQzMiAoTEJBKQo=
---------------2301D93B7DE3E3B4D3D2576E--
+Phil
