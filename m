@@ -1,198 +1,199 @@
-From: Daniel Jones <dj@iowni.com>
-Subject: Re: Requesting assistance recovering RAID-5 array
-Date: Wed, 1 Apr 2020 00:03:55 -0600
-Message-ID: <CAB00BMi3zhfVGpeE_AyyKiu1=MY2icYgfey0J3GeO8z9ZDAQbg@mail.gmail.com>
-References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
- <058b3f48-e69d-2783-8e08-693ad27693f6@youngman.org.uk> <CAB00BMgYmi+4XvdmJDWjQ8qGWa9m0mqj7yvrK3QSNH9SzYjypw@mail.gmail.com>
- <1d6b3e00-e7dd-1b19-1379-afe665169d44@turmel.org> <CAB00BMg50zcerSLHShSjoOcaJ0JQSi2aSqTFfU2eQQrT12-qEg@mail.gmail.com>
- <e77280ef-a5ac-f2d8-332c-dec032ddc842@turmel.org> <CAB00BMj5kihqwOY-FOXv-tqG1b2reMnUVkdmB9uyNAeE7ESasw@mail.gmail.com>
- <061b695a-2406-fc00-dd6d-9198b85f3b1b@turmel.org>
+From: Alexander Shenkin <al@shenkin.org>
+Subject: Raid-6 cannot reshape
+Date: Wed, 1 Apr 2020 11:16:02 +0100
+Message-ID: <24a0ef04-46a9-13ee-b8cb-d1a0a5b939fb@shenkin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed;
+ boundary="------------2301D93B7DE3E3B4D3D2576E"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <061b695a-2406-fc00-dd6d-9198b85f3b1b@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks Phil,
+This is a multi-part message in MIME format.
+--------------2301D93B7DE3E3B4D3D2576E
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 
-I'll read this a couple of times and try some commands (likely on an
-overlay) tomorrow.
+Hi all,
 
-Regards,
-DJ
+I had a problem that caused my Ubuntu Server 14 to go down, and it now
+will not boot.  I added a drive to my raid1 (/dev/md0 -> /boot) + raid6
+(/dev/md2 -> /) setup.  I was previously running with /dev/md0 (raid1)
+assembled from /dev/sd[a-f]1, and /dev/md2 (raid6) assembled
+/dev/sd[a-f]3.  Both partitions from the new drive were successfully
+added to the two md arrays, and the raid1 (the smaller of the two)
+resync'd successfully it seemed (I think that resync is the correct word
+to use, meaning that mdadm is spreading out the data amongst the drives
+once an array has been grown).  When resyncing the larger raid6,
+however, the sync speed was quite slow (kb's/sec), and got slower and
+slower (7kb/sec... 5kb/sec... 3kb/sec... 1kb/sec...) until the system
+entirely halted and I eventually turned the power off.  It now will not
+boot.
 
-On Tue, Mar 31, 2020 at 10:45 PM Phil Turmel <philip@turmel.org> wrote:
->
-> Hi Daniel,
->
-> On 3/31/20 11:39 PM, Daniel Jones wrote:
-> > Hello Phil, et al.,
-> >
-> > Phil, after reading through your email I have some questions.
-> >
-> >> The array had bad block logging turned on.  We won't re-enable this
-> >> mis-feature.  It is default, so you must turn it off in your --create.
-> >
-> > Am I able to turn off during --create?  The man page for mdadm on my
-> > system (mdadm - v4.1 - 2018-10-01) suggests that --update=no-bbl can
-> > be used for --assemble and --manage but doesn't list it for --create.
->
-> Uhm, self compile and see what you get.  In these situations, relying on
-> a potentially buggy system mdadm is not recommended.  But if still not
-> available in create, fix it afterwards.  You definitely do not want this.
->
-> >> However, the one we know appears to be the typical you'd get from
-> >> one reshape after a modern default creation (262144).
-> >
-> >> You'll have to test four combinations: all at 261124 plus one at a
-> >> time at 262144.
-> >
-> > I'm confused by the offsets. The one remaining superblock I have
-> > reports "Data Offset : 261120 sectors".  Your email mentions 261124
-> > and 262144. I don't understand how these three values are related?
->
-> Yeah, doing math in one's head quickly sometimes yields a fail.  262144
-> is 128MB in sectors.  Minus 1024 sectors (your chunk size) yields
-> 261120.  /:
->
-> > I think it is most likely that my one existing superblock with 261120
-> > is one of the original three drives and not the fourth drive that was
-> > added later.  (Based on the position in drive bay).
-> >
-> > So possible offsets (I'm still not clear on this) could be:
-> >
-> > a) all 261120
->
-> Yes.
->
-> > b) all 261124
->
-> No.
->
-> > c) all 262144
->
-> No.
->
-> > d) three at 261120, one at 262144
->
-> Yes.
->
-> > e) three at 261120, one at 261124
-> > f) three at 261124, one at 261120
-> > g) three at 261124, one at 262144
->
-> No, no, and no.
->
-> > h) three at 262144, one at 261120
->
-> Extremely unlikely.  Not in my recommended combinations to check.
->
-> > i) three at 262144, one at 261124
->
-> No.
->
-> > ( this ignores the combinations of not knowing which drive gets the
-> > oddball offset )
-> > ( this also ignores for now the offsets of 259076 and 260100 mentioned below )
-> >
-> >> 2) Member order for the other drives.  Three drives taken three at a
-> >> time is six combinations.
-> >>
-> >> 3) Identity of the first drive kicked out. (Or do we know?)  If not
-> >> known, there's four more combinations: whether to leave out or one of
-> >> three left out.
-> >
-> > Can I make any tentative conclusions from this information:
-> >
-> >    Device Role : Active device 1
-> >    Array State : .AAA ('A' == active, '.' == missing, 'R' == replacing)
->
-> This device will always be listed as the 2nd member in all of your
-> --create commands, and always with the offset of 261120 - 2048.
->
-> > I know /dev/sde is the device that didn't initially respond to BIOS
-> > and suspect it is the "missing" drive from my superblock.
->
-> That eliminates the combinations of (3).  Section (2) becomes three
-> drives taken two at a time (since you don't know which device role
-> /dev/sde had).  But that is still six combinations.
->
-> > I know that /dev/sdc is the drive with a working superblock that
-> > reports itself as "Active device 1".
->
-> Right, as above.
->
-> > I don't know how mdadm counts things (starting at 0 or starting at 1,
-> > left to right or right to left, including or excluding the missing
-> > drive).
->
-> Active devices start with zero.
->
-> > Would it be reasonable for a first guess that:
-> >
-> > .AAA = sde sdd sdc sdb  (assuming the order is missing, active 0,
-> > active 1, active 2) ?
->
-> No.  Order is always active devices 0-3, with one of those replaced (in
-> order) with "missing".
->
-> > Procedure questions:
-> >
-> > If I understand all the above, attempted recovery is going to be along
-> > the lines of:
-> >
-> > mdadm --create /dev/md0 --force --assume-clean --readonly
-> > --data-offset=261120 --chunk=512K --level=5 --raid-devices=4 missing
-> > /dev/sdd /dev/sdc /dev/sdb
-> > fsck -n /dev/md0
->
-> Yes, but with the order above, and with --data-offset=variable when
-> mixing them.
->
-> > Subject to:
-> > Don't know if --force is desirable in this case?
->
-> Not applicable to --create.
->
-> > Might need to try different offsets from above.  Don't know how to set
-> > offsets if they are different per drive.
->
-> man page.
->
-> > Should I start with guessing "missing" for 1 or should I start with all 4?
-> > Might need to try all device orders.
-> >
-> >> Start by creating partitions on all devices, preferably at 2048 sectors.
-> >> (Should be the default offered.)  Use data offsets 259076 and 260100
-> >> instead of 261124 and 262144.
-> >
-> > If I understand, this is an alternative to recreating the whole-disk
-> > mdadm containing one partition. Instead it would involve creating new
-> > partition tables on each physical drive, creating one partition per
-> > table, writing superblocks to the new /dev/sd[bcde]1 with offsets
-> > adjusted by either 2044 or 2048 sectors, and then doing the fsck on
-> > the assembled RAID.
->
-> Yes, 2048.
->
-> > I think the advantage proposed here is that it prevents this
-> > "automated superblock overwrite" from happening again if/when I try
-> > the motherboard upgrade, but the risk I'm not comfortable with yet is
-> > going beyond "do the minimum to get it working again". Although it
-> > isn't practical for me to do a dd full backup of these drives, if I
-> > can get the array mounted again I can copy off the most important data
-> > before doing a grander repartitioning.
->
-> It's virtually impossible to correct at any time other than create, so
-> do it now.  The "minimum" is a rather brutal situation.  Fix it right.
->
-> > Can you advise on any of the above?
-> >
-> > Thanks,
-> > DJ
-> >
->
-> Phil
+Thanks to Roger Heflin's help, I've booted into a livecd environment
+(ubuntu server 18) with all the necessary raid personalities available.
+
+When trying to --assemble md127 (raid6), i get the following error:
+"Failure to restore critical section for reshape, sorry.  Perhaps you
+needed to specify the --backup-file".  Needless to say, I didn't save a
+backup file when adding the drive.
+
+I have attached some diagnostic output here.  It seems that my raid6
+array is not being recognized as such.  I'm not sure what the next steps
+are - do I need to figure out how to get the resync up and running
+again?  Any help would be greatly appreciated.
+
+Many thanks,
+
+Allie
+
+
+--------------2301D93B7DE3E3B4D3D2576E
+Content-Type: text/plain; charset=UTF-8;
+ name="mdstat.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="mdstat.txt"
+
+UGVyc29uYWxpdGllcyA6IFtyYWlkMV0gW2xpbmVhcl0gW211bHRpcGF0aF0gW3JhaWQwXSBb
+cmFpZDZdIFtyYWlkNV0gW3JhaWQ0XSBbcmFpZDEwXSAKbWQxMjcgOiBpbmFjdGl2ZSBzZGQz
+WzVdKFMpIHNkZjNbOF0oUykgc2RjM1syXShTKSBzZGczWzldKFMpIHNkZTNbN10oUykgc2Ri
+M1s0XShTKSBzZGEzWzZdKFMpCiAgICAgIDIwNDQxMzIyNDk2IGJsb2NrcyBzdXBlciAxLjIK
+ICAgICAgIAptZDEyNiA6IGFjdGl2ZSAoYXV0by1yZWFkLW9ubHkpIHJhaWQxIHNkZjFbOF0g
+c2RlMVs3XSBzZGcxWzldIHNkYTFbNl0gc2RkMVs1XSBzZGMxWzJdIHNkYjFbNF0KICAgICAg
+MTk1MDY1NiBibG9ja3Mgc3VwZXIgMS4yIFs3LzddIFtVVVVVVVVVXQogICAgICAKdW51c2Vk
+IGRldmljZXM6IDxub25lPgo=
+--------------2301D93B7DE3E3B4D3D2576E
+Content-Type: text/plain; charset=UTF-8;
+ name="fdisk.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="fdisk.txt"
+
+RGlzayAvZGV2L2xvb3AwOiAyNjUuMyBNaUIsIDI3ODE0NzA3MiBieXRlcywgNTQzMjU2IHNl
+Y3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6
+ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJL08gc2l6ZSAo
+bWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlzayAvZGV2L2xv
+b3AxOiA3MC4xIE1pQiwgNzM1MzEzOTIgYnl0ZXMsIDE0MzYxNiBzZWN0b3JzClVuaXRzOiBz
+ZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
+c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1h
+bCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwoKCkRpc2sgL2Rldi9sb29wMjogNDkuNyBNaUIs
+IDUyMDYwMTYwIGJ5dGVzLCAxMDE2ODAgc2VjdG9ycwpVbml0czogc2VjdG9ycyBvZiAxICog
+NTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5
+dGVzIC8gNTEyIGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGltYWwpOiA1MTIgYnl0ZXMg
+LyA1MTIgYnl0ZXMKCgpEaXNrIC9kZXYvbG9vcDM6IDM2IE1pQiwgMzc3MDc3NzYgYnl0ZXMs
+IDczNjQ4IHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpT
+ZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJ
+L08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlz
+ayAvZGV2L2xvb3A0OiAyNy40IE1pQiwgMjg3MTcwNTYgYnl0ZXMsIDU2MDg4IHNlY3RvcnMK
+VW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9n
+aWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJL08gc2l6ZSAobWluaW11
+bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlzayAvZGV2L2xvb3A1OiA4
+OS4xIE1pQiwgOTM0MTc0NzIgYnl0ZXMsIDE4MjQ1NiBzZWN0b3JzClVuaXRzOiBzZWN0b3Jz
+IG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5c2ljYWwp
+OiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDUx
+MiBieXRlcyAvIDUxMiBieXRlcwoKCkRpc2sgL2Rldi9sb29wNjogNTEuOSBNaUIsIDU0MzU4
+MDE2IGJ5dGVzLCAxMDYxNjggc2VjdG9ycwpVbml0czogc2VjdG9ycyBvZiAxICogNTEyID0g
+NTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8g
+NTEyIGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGltYWwpOiA1MTIgYnl0ZXMgLyA1MTIg
+Ynl0ZXMKCgpEaXNrIC9kZXYvbG9vcDc6IDUxLjkgTWlCLCA1NDQwNzE2OCBieXRlcywgMTA2
+MjY0IHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0
+b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJL08g
+c2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCgoKRGlzayAv
+ZGV2L3NkYTogMi43IFRpQiwgMzAwMDU5Mjk4MjAxNiBieXRlcywgNTg2MDUzMzE2OCBzZWN0
+b3JzClVuaXRzOiBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUg
+KGxvZ2ljYWwvcGh5c2ljYWwpOiA1MTIgYnl0ZXMgLyA0MDk2IGJ5dGVzCkkvTyBzaXplICht
+aW5pbXVtL29wdGltYWwpOiA0MDk2IGJ5dGVzIC8gNDA5NiBieXRlcwpEaXNrbGFiZWwgdHlw
+ZTogZ3B0CkRpc2sgaWRlbnRpZmllcjogRDYwN0NEMkQtMDVGNC00MkM2LTkxNEMtQjk5Q0U1
+NkU5MzRGCgpEZXZpY2UgICAgICAgICAgU3RhcnQgICAgICAgIEVuZCAgICBTZWN0b3JzICBT
+aXplIFR5cGUKL2Rldi9zZGExICAgICAgICAyMDQ4ICAgIDM5MDU1MzUgICAgMzkwMzQ4OCAg
+MS45RyBMaW51eCBSQUlECi9kZXYvc2RhMiAgICAgMzkwNTUzNiAgICAzOTA3NTgzICAgICAg
+IDIwNDggICAgMU0gQklPUyBib290Ci9kZXYvc2RhMyAgICAgMzkwNzU4NCA1ODQ0NTQ3NTgz
+IDU4NDA2NDAwMDAgIDIuN1QgTGludXggUkFJRAovZGV2L3NkYTQgIDU4NDQ1NDc1ODQgNTg2
+MDUzMjIyMyAgIDE1OTg0NjQwICA3LjZHIExpbnV4IGZpbGVzeXN0ZW0KCgpEaXNrIC9kZXYv
+c2RiOiAyLjcgVGlCLCAzMDAwNTkyOTgyMDE2IGJ5dGVzLCA1ODYwNTMzMTY4IHNlY3RvcnMK
+VW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9n
+aWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDQwOTYgYnl0ZXMKSS9PIHNpemUgKG1pbmlt
+dW0vb3B0aW1hbCk6IDQwOTYgYnl0ZXMgLyA0MDk2IGJ5dGVzCkRpc2tsYWJlbCB0eXBlOiBn
+cHQKRGlzayBpZGVudGlmaWVyOiBEOTZENzUxMy0zRDc0LTQzNUItOEIyRi0yNkMyQTMyQjA1
+ODYKCkRldmljZSAgICAgICAgICBTdGFydCAgICAgICAgRW5kICAgIFNlY3RvcnMgIFNpemUg
+VHlwZQovZGV2L3NkYjEgICAgICAgIDIwNDggICAgMzkwNTUzNSAgICAzOTAzNDg4ICAxLjlH
+IExpbnV4IFJBSUQKL2Rldi9zZGIyICAgICAzOTA1NTM2ICAgIDM5MDc1ODMgICAgICAgMjA0
+OCAgICAxTSBCSU9TIGJvb3QKL2Rldi9zZGIzICAgICAzOTA3NTg0IDU4NDQ1NDc1ODMgNTg0
+MDY0MDAwMCAgMi43VCBMaW51eCBSQUlECi9kZXYvc2RiNCAgNTg0NDU0NzU4NCA1ODYwNTMy
+MjIzICAgMTU5ODQ2NDAgIDcuNkcgTGludXggZmlsZXN5c3RlbQoKCkRpc2sgL2Rldi9zZGM6
+IDIuNyBUaUIsIDMwMDA1OTI5ODIwMTYgYnl0ZXMsIDU4NjA1MzMxNjggc2VjdG9ycwpVbml0
+czogc2VjdG9ycyBvZiAxICogNTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2Fs
+L3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8gNDA5NiBieXRlcwpJL08gc2l6ZSAobWluaW11bS9v
+cHRpbWFsKTogNDA5NiBieXRlcyAvIDQwOTYgYnl0ZXMKRGlza2xhYmVsIHR5cGU6IGdwdApE
+aXNrIGlkZW50aWZpZXI6IDRCMzU2QUZBLThGNDgtNDIyNy04NkYwLTMyOTU2NTE0NkQ3QQoK
+RGV2aWNlICAgICAgICAgIFN0YXJ0ICAgICAgICBFbmQgICAgU2VjdG9ycyAgU2l6ZSBUeXBl
+Ci9kZXYvc2RjMSAgICAgICAgMjA0OCAgICAzOTA1NTM1ICAgIDM5MDM0ODggIDEuOUcgTGlu
+dXggUkFJRAovZGV2L3NkYzIgICAgIDM5MDU1MzYgICAgMzkwNzU4MyAgICAgICAyMDQ4ICAg
+IDFNIEJJT1MgYm9vdAovZGV2L3NkYzMgICAgIDM5MDc1ODQgNTg0NDU0NzU4MyA1ODQwNjQw
+MDAwICAyLjdUIExpbnV4IFJBSUQKL2Rldi9zZGM0ICA1ODQ0NTQ3NTg0IDU4NjA1MzIyMjMg
+ICAxNTk4NDY0MCAgNy42RyBMaW51eCBmaWxlc3lzdGVtCgoKRGlzayAvZGV2L3NkZDogMi43
+IFRpQiwgMzAwMDU5Mjk4MjAxNiBieXRlcywgNTg2MDUzMzE2OCBzZWN0b3JzClVuaXRzOiBz
+ZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
+c2ljYWwpOiA1MTIgYnl0ZXMgLyA0MDk2IGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGlt
+YWwpOiA0MDk2IGJ5dGVzIC8gNDA5NiBieXRlcwpEaXNrbGFiZWwgdHlwZTogZ3B0CkRpc2sg
+aWRlbnRpZmllcjogRDREMUUyRUItODUyMC00QjNFLTgyNjMtQUI1QjVCRDJEN0UyCgpEZXZp
+Y2UgICAgICAgICAgU3RhcnQgICAgICAgIEVuZCAgICBTZWN0b3JzICBTaXplIFR5cGUKL2Rl
+di9zZGQxICAgICAgICAyMDQ4ICAgIDM5MDU1MzUgICAgMzkwMzQ4OCAgMS45RyBMaW51eCBS
+QUlECi9kZXYvc2RkMiAgICAgMzkwNTUzNiAgICAzOTA3NTgzICAgICAgIDIwNDggICAgMU0g
+QklPUyBib290Ci9kZXYvc2RkMyAgICAgMzkwNzU4NCA1ODQ0NTQ3NTgzIDU4NDA2NDAwMDAg
+IDIuN1QgTGludXggUkFJRAovZGV2L3NkZDQgIDU4NDQ1NDc1ODQgNTg2MDUzMjIyMyAgIDE1
+OTg0NjQwICA3LjZHIExpbnV4IGZpbGVzeXN0ZW0KCgoKCgoKRGlzayAvZGV2L3NkZTogMi43
+IFRpQiwgMzAwMDU5Mjk4MjAxNiBieXRlcywgNTg2MDUzMzE2OCBzZWN0b3JzClVuaXRzOiBz
+ZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
+c2ljYWwpOiA1MTIgYnl0ZXMgLyA0MDk2IGJ5dGVzCkkvTyBzaXplIChtaW5pbXVtL29wdGlt
+YWwpOiA0MDk2IGJ5dGVzIC8gNDA5NiBieXRlcwpEaXNrbGFiZWwgdHlwZTogZ3B0CkRpc2sg
+aWRlbnRpZmllcjogNTJGMDQ0QUItOUQ1MC00MzYzLUJGNjAtNjUxQTg3MTU5QTE3CgpEZXZp
+Y2UgICAgICAgICAgU3RhcnQgICAgICAgIEVuZCAgICBTZWN0b3JzICBTaXplIFR5cGUKL2Rl
+di9zZGUxICAgICAgICAyMDQ4ICAgIDM5MDU1MzUgICAgMzkwMzQ4OCAgMS45RyBMaW51eCBS
+QUlECi9kZXYvc2RlMiAgICAgMzkwNTUzNiAgICAzOTA3NTgzICAgICAgIDIwNDggICAgMU0g
+QklPUyBib290Ci9kZXYvc2RlMyAgICAgMzkwNzU4NCA1ODQ0NTQ3NTgzIDU4NDA2NDAwMDAg
+IDIuN1QgTGludXggUkFJRAovZGV2L3NkZTQgIDU4NDQ1NDc1ODQgNTg2MDUzMjIyMyAgIDE1
+OTg0NjQwICA3LjZHIExpbnV4IGZpbGVzeXN0ZW0KCgpEaXNrIC9kZXYvc2RnOiAyLjcgVGlC
+LCAzMDAwNTkyOTgyMDE2IGJ5dGVzLCA1ODYwNTMzMTY4IHNlY3RvcnMKVW5pdHM6IHNlY3Rv
+cnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNh
+bCk6IDUxMiBieXRlcyAvIDQwOTYgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6
+IDQwOTYgYnl0ZXMgLyA0MDk2IGJ5dGVzCkRpc2tsYWJlbCB0eXBlOiBncHQKRGlzayBpZGVu
+dGlmaWVyOiBCRTJEREFCRS05MTA2LTQ0MzYtOEFCQy02QTkxOUVCRkIyRTYKCkRldmljZSAg
+ICAgICAgICBTdGFydCAgICAgICAgRW5kICAgIFNlY3RvcnMgIFNpemUgVHlwZQovZGV2L3Nk
+ZzEgICAgICAgIDIwNDggICAgMzkwNTUzNSAgICAzOTAzNDg4ICAxLjlHIExpbnV4IFJBSUQK
+L2Rldi9zZGcyICAgICAzOTA1NTM2ICAgIDM5MDc1ODMgICAgICAgMjA0OCAgICAxTSBCSU9T
+IGJvb3QKL2Rldi9zZGczICAgICAzOTA3NTg0IDU4NDQ1NDc1ODMgNTg0MDY0MDAwMCAgMi43
+VCBMaW51eCBSQUlECi9kZXYvc2RnNCAgNTg0NDU0NzU4NCA1ODYwNTMyMjIzICAgMTU5ODQ2
+NDAgIDcuNkcgTGludXggZmlsZXN5c3RlbQoKCkRpc2sgL2Rldi9zZGY6IDIuNyBUaUIsIDMw
+MDA1OTI5ODIwMTYgYnl0ZXMsIDU4NjA1MzMxNjggc2VjdG9ycwpVbml0czogc2VjdG9ycyBv
+ZiAxICogNTEyID0gNTEyIGJ5dGVzClNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTog
+NTEyIGJ5dGVzIC8gNDA5NiBieXRlcwpJL08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNDA5
+NiBieXRlcyAvIDQwOTYgYnl0ZXMKRGlza2xhYmVsIHR5cGU6IGdwdApEaXNrIGlkZW50aWZp
+ZXI6IDM2NjE1RjdELTk3NEYtNEEwQi1CNzlCLTE2NUQ4NzJFRjQxOAoKRGV2aWNlICAgICAg
+ICAgIFN0YXJ0ICAgICAgICBFbmQgICAgU2VjdG9ycyAgU2l6ZSBUeXBlCi9kZXYvc2RmMSAg
+ICAgICAgMjA0OCAgICAzOTA1NTM1ICAgIDM5MDM0ODggIDEuOUcgTGludXggUkFJRAovZGV2
+L3NkZjIgICAgIDM5MDU1MzYgICAgMzkwNzU4MyAgICAgICAyMDQ4ICAgIDFNIEJJT1MgYm9v
+dAovZGV2L3NkZjMgICAgIDM5MDc1ODQgNTg0NDU0NzU4MyA1ODQwNjQwMDAwICAyLjdUIExp
+bnV4IFJBSUQKL2Rldi9zZGY0ICA1ODQ0NTQ3NTg0IDU4NjA1MzIyMjMgICAxNTk4NDY0MCAg
+Ny42RyBMaW51eCBmaWxlc3lzdGVtCgoKRGlzayAvZGV2L21kMTI2OiAxLjkgR2lCLCAxOTk3
+NDcxNzQ0IGJ5dGVzLCAzOTAxMzEyIHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUx
+MiA9IDUxMiBieXRlcwpTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRl
+cyAvIDQwOTYgYnl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDQwOTYgYnl0ZXMg
+LyA0MDk2IGJ5dGVzCgoKRGlzayAvZGV2L3NkaDogMjkuMiBHaUIsIDMxMzc2NzA3MDcyIGJ5
+dGVzLCA2MTI4MjYzMSBzZWN0b3JzClVuaXRzOiBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIg
+Ynl0ZXMKU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIg
+Ynl0ZXMKSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDUxMiBieXRlcyAvIDUxMiBieXRl
+cwpEaXNrbGFiZWwgdHlwZTogZG9zCkRpc2sgaWRlbnRpZmllcjogMHgwMGY2NzRhNgoKRGV2
+aWNlICAgICBCb290IFN0YXJ0ICAgICAgRW5kICBTZWN0b3JzICBTaXplIElkIFR5cGUKL2Rl
+di9zZGgxICAqICAgICAyMDQ4IDYxMjgyNjMwIDYxMjgwNTgzIDI5LjJHICBjIFc5NSBGQVQz
+MiAoTEJBKQoKCkRpc2sgL2Rldi9zZGk6IDE1IEdpQiwgMTYxMDYxMjczNjAgYnl0ZXMsIDMx
+NDU3MjgwIHNlY3RvcnMKVW5pdHM6IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcwpT
+ZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcwpJ
+L08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzCkRpc2ts
+YWJlbCB0eXBlOiBkb3MKRGlzayBpZGVudGlmaWVyOiAweDAwZTE5YmRjCgpEZXZpY2UgICAg
+IEJvb3QgU3RhcnQgICAgICBFbmQgIFNlY3RvcnMgU2l6ZSBJZCBUeXBlCi9kZXYvc2RpMSAg
+KiAgICAgMjA0OCAzMTQ1NzI3OSAzMTQ1NTIzMiAgMTVHICBjIFc5NSBGQVQzMiAoTEJBKQo=
+--------------2301D93B7DE3E3B4D3D2576E--
