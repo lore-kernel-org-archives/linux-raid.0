@@ -1,7 +1,7 @@
 From: Phil Turmel <philip@turmel.org>
 Subject: Re: Requesting assistance recovering RAID-5 array
-Date: Wed, 1 Apr 2020 11:38:25 -0400
-Message-ID: <1f4b8c74-4c38-6ea4-6868-b28f9e5c4a10@turmel.org>
+Date: Wed, 1 Apr 2020 11:39:33 -0400
+Message-ID: <e75f80f4-70d4-e283-b3bc-c78bd0d55a8a@turmel.org>
 References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
  <058b3f48-e69d-2783-8e08-693ad27693f6@youngman.org.uk>
  <CAB00BMgYmi+4XvdmJDWjQ8qGWa9m0mqj7yvrK3QSNH9SzYjypw@mail.gmail.com>
@@ -14,36 +14,31 @@ References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
  <5E8485DA.2050803@youngman.org.uk>
  <9a303b9b-52b8-f0c6-4288-120338c6572f@turmel.org>
  <CAB00BMig177NjEbBQgfjQ5gZE3QPTR-B6FD9i8oczHqf7mMqcg@mail.gmail.com>
+ <1f4b8c74-4c38-6ea4-6868-b28f9e5c4a10@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB00BMig177NjEbBQgfjQ5gZE3QPTR-B6FD9i8oczHqf7mMqcg@mail.gmail.com>
+In-Reply-To: <1f4b8c74-4c38-6ea4-6868-b28f9e5c4a10@turmel.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Daniel Jones <dj@iowni.com>
 Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/1/20 11:21 AM, Daniel Jones wrote:
-> Hi Phil, Wols,
+On 4/1/20 11:38 AM, Phil Turmel wrote:
+> On 4/1/20 11:21 AM, Daniel Jones wrote:
+>> Hi Phil, Wols,
 
-> A quick question on what I'm doing?
+>> My question is how to get the kernel to recognize the
+>> /dev/mapper/sd[bcde]1 partitions I have created?  Rebooting doesn't do
+>> anything as the overlay loop files aren't something that gets
+>> recognized during boot.
 > 
-> As per Phil's suggestion to put the array inside partitions, I have
-> created partitions inside each of /dev/mapper/sd[bcde].  The gdisk
-> operations end with the message:
-> 
->    Warning: The kernel is still using the old partition table.
->    The new table will be used at the next reboot.
->    The operation has completed successfully.
-> 
-> My question is how to get the kernel to recognize the
-> /dev/mapper/sd[bcde]1 partitions I have created?  Rebooting doesn't do
-> anything as the overlay loop files aren't something that gets
-> recognized during boot.
+> I would create the partition tables once on the live disks.  Then make 
+> overlays for the partitions on each test.
 
-I would create the partition tables once on the live disks.  Then make 
-overlays for the partitions on each test.
+And use partprobe if needed to tell the kernel to re-read the partition 
+tables.
 
 Phil
