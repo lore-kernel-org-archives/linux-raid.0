@@ -1,9 +1,8 @@
-From: Phil Turmel <philip@turmel.org>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
 Subject: Re: Requesting assistance recovering RAID-5 array
-Date: Fri, 3 Apr 2020 14:43:41 -0400
-Message-ID: <346301ce-505f-a2df-5cda-536f3ebb9b34@turmel.org>
+Date: Sat, 4 Apr 2020 07:13:56 +1100
+Message-ID: <3f771f84-1c0d-8617-faa7-22657d9de95e@websitemanagers.com.au>
 References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
- <1d6b3e00-e7dd-1b19-1379-afe665169d44@turmel.org>
  <CAB00BMg50zcerSLHShSjoOcaJ0JQSi2aSqTFfU2eQQrT12-qEg@mail.gmail.com>
  <e77280ef-a5ac-f2d8-332c-dec032ddc842@turmel.org>
  <CAB00BMj5kihqwOY-FOXv-tqG1b2reMnUVkdmB9uyNAeE7ESasw@mail.gmail.com>
@@ -19,21 +18,37 @@ References: <CAB00BMjPSg2wdq7pjt=AwmcDmr0ep2+Xr0EAy6CNnVhOsWk8pg@mail.gmail.com>
  <CAB00BMgwCbtGYJ_hX3_rZv3uaOd7vrHuEebqsPLHp3S96tJaRw@mail.gmail.com>
  <5985cc5b-a332-eb69-2d84-cb54f8f5b0fc@turmel.org>
  <CAB00BMjxywFn_K_D=Xn7ySHp404nvULTXarA7EwjxtuTJSOqQg@mail.gmail.com>
+ <346301ce-505f-a2df-5cda-536f3ebb9b34@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB00BMjxywFn_K_D=Xn7ySHp404nvULTXarA7EwjxtuTJSOqQg@mail.gmail.com>
+In-Reply-To: <346301ce-505f-a2df-5cda-536f3ebb9b34@turmel.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Jones <dj@iowni.com>
+To: Phil Turmel <philip@turmel.org>, Daniel Jones <dj@iowni.com>
 Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On 4/3/20 2:42 PM, Daniel Jones wrote:
-> After the "--create missing /dev/sdc1 /dev/sdd1 /dev/sde1"  and the
-> fsck, is "mdadm --manage /dev/md0 --add /dev/sdb" the correct syntax
-> for attempting to add?
+On 4/4/20 05:43, Phil Turmel wrote:
+>
+> On 4/3/20 2:42 PM, Daniel Jones wrote:
+>> After the "--create missing /dev/sdc1 /dev/sdd1 /dev/sde1"  and the
+>> fsck, is "mdadm --manage /dev/md0 --add /dev/sdb" the correct syntax
+>> for attempting to add?
+>
+> You can leave out "--manage".  But yes.
 
-You can leave out "--manage".  But yes.
+I was mostly following this, but might have missed something here so 
+this is just a suggestion to double check....
+
+If you are trying to use partitions instead of whole devices (to prevent 
+this happening again in future), then shouldn't you use:
+
+mdadm --manage /dev/md0 --add /dev/sdb1
+
+ie, sdb1 not sdb....
+
+Regards,
+Adam
