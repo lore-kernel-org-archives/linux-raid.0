@@ -1,7 +1,7 @@
 From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: [PATCH 2/5] md: add new workqueue for delete rdev
-Date: Sat,  4 Apr 2020 23:57:08 +0200
-Message-ID: <20200404215711.4272-3-guoqing.jiang@cloud.ionos.com>
+Subject: [PATCH 3/5] md: don't flush workqueue unconditionally in md_open
+Date: Sat,  4 Apr 2020 23:57:09 +0200
+Message-ID: <20200404215711.4272-4-guoqing.jiang@cloud.ionos.com>
 References: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
@@ -10,139 +10,154 @@ To: songliubraving@fb.com
 Cc: linux-raid@vger.kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 List-Id: linux-raid.ids
 
-Since the purpose of call flush_workqueue in new_dev_store is to ensure
-md_delayed_delete() has completed, so we should check rdev->del_work is
-pending or not.
+We need to check mddev->del_work before flush workqueu since the purpose
+of flush is to ensure the previous md is disappeared. Otherwise the similar
+deadlock appeared if LOCKDEP is enabled, it is due to md_open holds the
+bdev->bd_mutex before flush workqueue.
 
-To suppress lockdep warning, we have to check mddev->del_work while
-md_delayed_delete is attached to rdev->del_work, so it is not aligned
-to the purpose of flush workquee. So a new workqueue is needed to avoid
-the awkward situation, and introduce a new func flush_rdev_wq to flush
-the new workqueue after check if there was pending work.
+kernel: [  154.522645] ======================================================
+kernel: [  154.522647] WARNING: possible circular locking dependency detected
+kernel: [  154.522650] 5.6.0-rc7-lp151.27-default #25 Tainted: G           O
+kernel: [  154.522651] ------------------------------------------------------
+kernel: [  154.522653] mdadm/2482 is trying to acquire lock:
+kernel: [  154.522655] ffff888078529128 ((wq_completion)md_misc){+.+.}, at: flush_workqueue+0x84/0x4b0
+kernel: [  154.522673]
+kernel: [  154.522673] but task is already holding lock:
+kernel: [  154.522675] ffff88804efa9338 (&bdev->bd_mutex){+.+.}, at: __blkdev_get+0x79/0x590
+kernel: [  154.522691]
+kernel: [  154.522691] which lock already depends on the new lock.
+kernel: [  154.522691]
+kernel: [  154.522694]
+kernel: [  154.522694] the existing dependency chain (in reverse order) is:
+kernel: [  154.522696]
+kernel: [  154.522696] -> #4 (&bdev->bd_mutex){+.+.}:
+kernel: [  154.522704]        __mutex_lock+0x87/0x950
+kernel: [  154.522706]        __blkdev_get+0x79/0x590
+kernel: [  154.522708]        blkdev_get+0x65/0x140
+kernel: [  154.522709]        blkdev_get_by_dev+0x2f/0x40
+kernel: [  154.522716]        lock_rdev+0x3d/0x90 [md_mod]
+kernel: [  154.522719]        md_import_device+0xd6/0x1b0 [md_mod]
+kernel: [  154.522723]        new_dev_store+0x15e/0x210 [md_mod]
+kernel: [  154.522728]        md_attr_store+0x7a/0xc0 [md_mod]
+kernel: [  154.522732]        kernfs_fop_write+0x117/0x1b0
+kernel: [  154.522735]        vfs_write+0xad/0x1a0
+kernel: [  154.522737]        ksys_write+0xa4/0xe0
+kernel: [  154.522745]        do_syscall_64+0x64/0x2b0
+kernel: [  154.522748]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522749]
+kernel: [  154.522749] -> #3 (&mddev->reconfig_mutex){+.+.}:
+kernel: [  154.522752]        __mutex_lock+0x87/0x950
+kernel: [  154.522756]        new_dev_store+0xc9/0x210 [md_mod]
+kernel: [  154.522759]        md_attr_store+0x7a/0xc0 [md_mod]
+kernel: [  154.522761]        kernfs_fop_write+0x117/0x1b0
+kernel: [  154.522763]        vfs_write+0xad/0x1a0
+kernel: [  154.522765]        ksys_write+0xa4/0xe0
+kernel: [  154.522767]        do_syscall_64+0x64/0x2b0
+kernel: [  154.522769]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522770]
+kernel: [  154.522770] -> #2 (kn->count#253){++++}:
+kernel: [  154.522775]        __kernfs_remove+0x253/0x2c0
+kernel: [  154.522778]        kernfs_remove+0x1f/0x30
+kernel: [  154.522780]        kobject_del+0x28/0x60
+kernel: [  154.522783]        mddev_delayed_delete+0x24/0x30 [md_mod]
+kernel: [  154.522786]        process_one_work+0x2a7/0x5f0
+kernel: [  154.522788]        worker_thread+0x2d/0x3d0
+kernel: [  154.522793]        kthread+0x117/0x130
+kernel: [  154.522795]        ret_from_fork+0x3a/0x50
+kernel: [  154.522796]
+kernel: [  154.522796] -> #1 ((work_completion)(&mddev->del_work)){+.+.}:
+kernel: [  154.522800]        process_one_work+0x27e/0x5f0
+kernel: [  154.522802]        worker_thread+0x2d/0x3d0
+kernel: [  154.522804]        kthread+0x117/0x130
+kernel: [  154.522806]        ret_from_fork+0x3a/0x50
+kernel: [  154.522807]
+kernel: [  154.522807] -> #0 ((wq_completion)md_misc){+.+.}:
+kernel: [  154.522813]        __lock_acquire+0x1392/0x1690
+kernel: [  154.522816]        lock_acquire+0xb4/0x1a0
+kernel: [  154.522818]        flush_workqueue+0xab/0x4b0
+kernel: [  154.522821]        md_open+0xb6/0xc0 [md_mod]
+kernel: [  154.522823]        __blkdev_get+0xea/0x590
+kernel: [  154.522825]        blkdev_get+0x65/0x140
+kernel: [  154.522828]        do_dentry_open+0x1d1/0x380
+kernel: [  154.522831]        path_openat+0x567/0xcc0
+kernel: [  154.522834]        do_filp_open+0x9b/0x110
+kernel: [  154.522836]        do_sys_openat2+0x201/0x2a0
+kernel: [  154.522838]        do_sys_open+0x57/0x80
+kernel: [  154.522840]        do_syscall_64+0x64/0x2b0
+kernel: [  154.522842]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522844]
+kernel: [  154.522844] other info that might help us debug this:
+kernel: [  154.522844]
+kernel: [  154.522846] Chain exists of:
+kernel: [  154.522846]   (wq_completion)md_misc --> &mddev->reconfig_mutex --> &bdev->bd_mutex
+kernel: [  154.522846]
+kernel: [  154.522850]  Possible unsafe locking scenario:
+kernel: [  154.522850]
+kernel: [  154.522852]        CPU0                    CPU1
+kernel: [  154.522853]        ----                    ----
+kernel: [  154.522854]   lock(&bdev->bd_mutex);
+kernel: [  154.522856]                                lock(&mddev->reconfig_mutex);
+kernel: [  154.522858]                                lock(&bdev->bd_mutex);
+kernel: [  154.522860]   lock((wq_completion)md_misc);
+kernel: [  154.522861]
+kernel: [  154.522861]  *** DEADLOCK ***
+kernel: [  154.522861]
+kernel: [  154.522864] 1 lock held by mdadm/2482:
+kernel: [  154.522865]  #0: ffff88804efa9338 (&bdev->bd_mutex){+.+.}, at: __blkdev_get+0x79/0x590
+kernel: [  154.522868]
+kernel: [  154.522868] stack backtrace:
+kernel: [  154.522873] CPU: 1 PID: 2482 Comm: mdadm Tainted: G           O      5.6.0-rc7-lp151.27-default #25
+kernel: [  154.522875] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+kernel: [  154.522878] Call Trace:
+kernel: [  154.522881]  dump_stack+0x8f/0xcb
+kernel: [  154.522884]  check_noncircular+0x194/0x1b0
+kernel: [  154.522888]  ? __lock_acquire+0x1392/0x1690
+kernel: [  154.522890]  __lock_acquire+0x1392/0x1690
+kernel: [  154.522893]  lock_acquire+0xb4/0x1a0
+kernel: [  154.522895]  ? flush_workqueue+0x84/0x4b0
+kernel: [  154.522898]  flush_workqueue+0xab/0x4b0
+kernel: [  154.522900]  ? flush_workqueue+0x84/0x4b0
+kernel: [  154.522905]  ? md_open+0xb6/0xc0 [md_mod]
+kernel: [  154.522908]  md_open+0xb6/0xc0 [md_mod]
+kernel: [  154.522910]  __blkdev_get+0xea/0x590
+kernel: [  154.522912]  ? bd_acquire+0xc0/0xc0
+kernel: [  154.522914]  blkdev_get+0x65/0x140
+kernel: [  154.522916]  ? bd_acquire+0xc0/0xc0
+kernel: [  154.522918]  do_dentry_open+0x1d1/0x380
+kernel: [  154.522921]  path_openat+0x567/0xcc0
+kernel: [  154.522923]  ? __lock_acquire+0x380/0x1690
+kernel: [  154.522926]  do_filp_open+0x9b/0x110
+kernel: [  154.522929]  ? __alloc_fd+0xe5/0x1f0
+kernel: [  154.522935]  ? kmem_cache_alloc+0x28c/0x630
+kernel: [  154.522939]  ? do_sys_openat2+0x201/0x2a0
+kernel: [  154.522941]  do_sys_openat2+0x201/0x2a0
+kernel: [  154.522944]  do_sys_open+0x57/0x80
+kernel: [  154.522946]  do_syscall_64+0x64/0x2b0
+kernel: [  154.522948]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522951] RIP: 0033:0x7f98d279d9ae
 
-Also like new_dev_store, ADD_NEW_DISK ioctl has the same purpose to flush
-workqueue while it holds bdev->bd_mutex, so make the same change applies
-to the ioctl to avoid similar lock issue.
-
-And md_delayed_delete actually wants to delete rdev, so rename the function
-to rdev_delayed_delete.
+And md_alloc also flushed the same workqueue, but the thing is different
+here. Because all the paths call md_alloc don't hold bdev->bd_mutex, and
+the flush is necessary to avoid race condition, so leave it as it is.
 
 Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 ---
- drivers/md/md.c | 37 +++++++++++++++++++++++++++++--------
- 1 file changed, 29 insertions(+), 8 deletions(-)
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2c23046fca57..2202074ea98f 100644
+index 2202074ea98f..b4ea0f38ccd8 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -87,6 +87,7 @@ static struct module *md_cluster_mod;
- static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
- static struct workqueue_struct *md_wq;
- static struct workqueue_struct *md_misc_wq;
-+static struct workqueue_struct *md_rdev_misc_wq;
- 
- static int remove_and_add_spares(struct mddev *mddev,
- 				 struct md_rdev *this);
-@@ -2452,7 +2453,7 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- 	return err;
- }
- 
--static void md_delayed_delete(struct work_struct *ws)
-+static void rdev_delayed_delete(struct work_struct *ws)
- {
- 	struct md_rdev *rdev = container_of(ws, struct md_rdev, del_work);
- 	kobject_del(&rdev->kobj);
-@@ -2477,9 +2478,9 @@ static void unbind_rdev_from_array(struct md_rdev *rdev)
- 	 * to delay it due to rcu usage.
- 	 */
- 	synchronize_rcu();
--	INIT_WORK(&rdev->del_work, md_delayed_delete);
-+	INIT_WORK(&rdev->del_work, rdev_delayed_delete);
- 	kobject_get(&rdev->kobj);
--	queue_work(md_misc_wq, &rdev->del_work);
-+	queue_work(md_rdev_misc_wq, &rdev->del_work);
- }
- 
- /*
-@@ -4512,6 +4513,20 @@ null_show(struct mddev *mddev, char *page)
- 	return -EINVAL;
- }
- 
-+/* need to ensure rdev_delayed_delete() has completed */
-+static void flush_rdev_wq(struct mddev *mddev)
-+{
-+	struct md_rdev *rdev;
-+
-+	rcu_read_lock();
-+	rdev_for_each_rcu(rdev, mddev)
-+		if (work_pending(&rdev->del_work)) {
-+			flush_workqueue(md_rdev_misc_wq);
-+			break;
-+		}
-+	rcu_read_unlock();
-+}
-+
- static ssize_t
- new_dev_store(struct mddev *mddev, const char *buf, size_t len)
- {
-@@ -4539,8 +4554,7 @@ new_dev_store(struct mddev *mddev, const char *buf, size_t len)
- 	    minor != MINOR(dev))
- 		return -EOVERFLOW;
- 
--	flush_workqueue(md_misc_wq);
--
-+	flush_rdev_wq(mddev);
- 	err = mddev_lock(mddev);
- 	if (err)
- 		return err;
-@@ -4778,7 +4792,8 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
- 		    mddev_lock(mddev) == 0) {
--			flush_workqueue(md_misc_wq);
-+			if (work_pending(&mddev->del_work))
-+				flush_workqueue(md_misc_wq);
- 			if (mddev->sync_thread) {
- 				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 				md_reap_sync_thread(mddev);
-@@ -7497,8 +7512,7 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 	}
- 
- 	if (cmd == ADD_NEW_DISK)
--		/* need to ensure md_delayed_delete() has completed */
--		flush_workqueue(md_misc_wq);
-+		flush_rdev_wq(mddev);
- 
- 	if (cmd == HOT_REMOVE_DISK)
- 		/* need to ensure recovery thread has run */
-@@ -9470,6 +9484,10 @@ static int __init md_init(void)
- 	if (!md_misc_wq)
- 		goto err_misc_wq;
- 
-+	md_rdev_misc_wq = alloc_workqueue("md_rdev_misc", 0, 0);
-+	if (!md_misc_wq)
-+		goto err_rdev_misc_wq;
-+
- 	if ((ret = register_blkdev(MD_MAJOR, "md")) < 0)
- 		goto err_md;
- 
-@@ -9491,6 +9509,8 @@ static int __init md_init(void)
- err_mdp:
- 	unregister_blkdev(MD_MAJOR, "md");
- err_md:
-+	destroy_workqueue(md_rdev_misc_wq);
-+err_rdev_misc_wq:
- 	destroy_workqueue(md_misc_wq);
- err_misc_wq:
- 	destroy_workqueue(md_wq);
-@@ -9777,6 +9797,7 @@ static __exit void md_exit(void)
- 		 * destroy_workqueue() below will wait for that to complete.
+@@ -7767,7 +7767,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
  		 */
+ 		mddev_put(mddev);
+ 		/* Wait until bdev->bd_disk is definitely gone */
+-		flush_workqueue(md_misc_wq);
++		if (work_pending(&mddev->del_work))
++			flush_workqueue(md_misc_wq);
+ 		/* Then retry the open from the top */
+ 		return -ERESTARTSYS;
  	}
-+	destroy_workqueue(md_rdev_misc_wq);
- 	destroy_workqueue(md_misc_wq);
- 	destroy_workqueue(md_wq);
- }
 -- 
 2.17.1
