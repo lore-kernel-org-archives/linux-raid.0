@@ -1,163 +1,101 @@
 From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: [PATCH 3/5] md: don't flush workqueue unconditionally in md_open
-Date: Sat,  4 Apr 2020 23:57:09 +0200
-Message-ID: <20200404215711.4272-4-guoqing.jiang@cloud.ionos.com>
+Subject: [PATCH 1/5] md: add checkings before flush md_misc_wq
+Date: Sat,  4 Apr 2020 23:57:07 +0200
+Message-ID: <20200404215711.4272-2-guoqing.jiang@cloud.ionos.com>
 References: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: songliubraving@fb.com
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Coly Li <colyli@suse.de>
 List-Id: linux-raid.ids
 
-We need to check mddev->del_work before flush workqueu since the purpose
-of flush is to ensure the previous md is disappeared. Otherwise the similar
-deadlock appeared if LOCKDEP is enabled, it is due to md_open holds the
-bdev->bd_mutex before flush workqueue.
+Coly reported possible circular locking dependencyi with LOCKDEP enabled,
+quote the below info from the detailed report [1].
 
-kernel: [  154.522645] ======================================================
-kernel: [  154.522647] WARNING: possible circular locking dependency detected
-kernel: [  154.522650] 5.6.0-rc7-lp151.27-default #25 Tainted: G           O
-kernel: [  154.522651] ------------------------------------------------------
-kernel: [  154.522653] mdadm/2482 is trying to acquire lock:
-kernel: [  154.522655] ffff888078529128 ((wq_completion)md_misc){+.+.}, at: flush_workqueue+0x84/0x4b0
-kernel: [  154.522673]
-kernel: [  154.522673] but task is already holding lock:
-kernel: [  154.522675] ffff88804efa9338 (&bdev->bd_mutex){+.+.}, at: __blkdev_get+0x79/0x590
-kernel: [  154.522691]
-kernel: [  154.522691] which lock already depends on the new lock.
-kernel: [  154.522691]
-kernel: [  154.522694]
-kernel: [  154.522694] the existing dependency chain (in reverse order) is:
-kernel: [  154.522696]
-kernel: [  154.522696] -> #4 (&bdev->bd_mutex){+.+.}:
-kernel: [  154.522704]        __mutex_lock+0x87/0x950
-kernel: [  154.522706]        __blkdev_get+0x79/0x590
-kernel: [  154.522708]        blkdev_get+0x65/0x140
-kernel: [  154.522709]        blkdev_get_by_dev+0x2f/0x40
-kernel: [  154.522716]        lock_rdev+0x3d/0x90 [md_mod]
-kernel: [  154.522719]        md_import_device+0xd6/0x1b0 [md_mod]
-kernel: [  154.522723]        new_dev_store+0x15e/0x210 [md_mod]
-kernel: [  154.522728]        md_attr_store+0x7a/0xc0 [md_mod]
-kernel: [  154.522732]        kernfs_fop_write+0x117/0x1b0
-kernel: [  154.522735]        vfs_write+0xad/0x1a0
-kernel: [  154.522737]        ksys_write+0xa4/0xe0
-kernel: [  154.522745]        do_syscall_64+0x64/0x2b0
-kernel: [  154.522748]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
-kernel: [  154.522749]
-kernel: [  154.522749] -> #3 (&mddev->reconfig_mutex){+.+.}:
-kernel: [  154.522752]        __mutex_lock+0x87/0x950
-kernel: [  154.522756]        new_dev_store+0xc9/0x210 [md_mod]
-kernel: [  154.522759]        md_attr_store+0x7a/0xc0 [md_mod]
-kernel: [  154.522761]        kernfs_fop_write+0x117/0x1b0
-kernel: [  154.522763]        vfs_write+0xad/0x1a0
-kernel: [  154.522765]        ksys_write+0xa4/0xe0
-kernel: [  154.522767]        do_syscall_64+0x64/0x2b0
-kernel: [  154.522769]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
-kernel: [  154.522770]
-kernel: [  154.522770] -> #2 (kn->count#253){++++}:
-kernel: [  154.522775]        __kernfs_remove+0x253/0x2c0
-kernel: [  154.522778]        kernfs_remove+0x1f/0x30
-kernel: [  154.522780]        kobject_del+0x28/0x60
-kernel: [  154.522783]        mddev_delayed_delete+0x24/0x30 [md_mod]
-kernel: [  154.522786]        process_one_work+0x2a7/0x5f0
-kernel: [  154.522788]        worker_thread+0x2d/0x3d0
-kernel: [  154.522793]        kthread+0x117/0x130
-kernel: [  154.522795]        ret_from_fork+0x3a/0x50
-kernel: [  154.522796]
-kernel: [  154.522796] -> #1 ((work_completion)(&mddev->del_work)){+.+.}:
-kernel: [  154.522800]        process_one_work+0x27e/0x5f0
-kernel: [  154.522802]        worker_thread+0x2d/0x3d0
-kernel: [  154.522804]        kthread+0x117/0x130
-kernel: [  154.522806]        ret_from_fork+0x3a/0x50
-kernel: [  154.522807]
-kernel: [  154.522807] -> #0 ((wq_completion)md_misc){+.+.}:
-kernel: [  154.522813]        __lock_acquire+0x1392/0x1690
-kernel: [  154.522816]        lock_acquire+0xb4/0x1a0
-kernel: [  154.522818]        flush_workqueue+0xab/0x4b0
-kernel: [  154.522821]        md_open+0xb6/0xc0 [md_mod]
-kernel: [  154.522823]        __blkdev_get+0xea/0x590
-kernel: [  154.522825]        blkdev_get+0x65/0x140
-kernel: [  154.522828]        do_dentry_open+0x1d1/0x380
-kernel: [  154.522831]        path_openat+0x567/0xcc0
-kernel: [  154.522834]        do_filp_open+0x9b/0x110
-kernel: [  154.522836]        do_sys_openat2+0x201/0x2a0
-kernel: [  154.522838]        do_sys_open+0x57/0x80
-kernel: [  154.522840]        do_syscall_64+0x64/0x2b0
-kernel: [  154.522842]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
-kernel: [  154.522844]
-kernel: [  154.522844] other info that might help us debug this:
-kernel: [  154.522844]
-kernel: [  154.522846] Chain exists of:
-kernel: [  154.522846]   (wq_completion)md_misc --> &mddev->reconfig_mutex --> &bdev->bd_mutex
-kernel: [  154.522846]
-kernel: [  154.522850]  Possible unsafe locking scenario:
-kernel: [  154.522850]
-kernel: [  154.522852]        CPU0                    CPU1
-kernel: [  154.522853]        ----                    ----
-kernel: [  154.522854]   lock(&bdev->bd_mutex);
-kernel: [  154.522856]                                lock(&mddev->reconfig_mutex);
-kernel: [  154.522858]                                lock(&bdev->bd_mutex);
-kernel: [  154.522860]   lock((wq_completion)md_misc);
-kernel: [  154.522861]
-kernel: [  154.522861]  *** DEADLOCK ***
-kernel: [  154.522861]
-kernel: [  154.522864] 1 lock held by mdadm/2482:
-kernel: [  154.522865]  #0: ffff88804efa9338 (&bdev->bd_mutex){+.+.}, at: __blkdev_get+0x79/0x590
-kernel: [  154.522868]
-kernel: [  154.522868] stack backtrace:
-kernel: [  154.522873] CPU: 1 PID: 2482 Comm: mdadm Tainted: G           O      5.6.0-rc7-lp151.27-default #25
-kernel: [  154.522875] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
-kernel: [  154.522878] Call Trace:
-kernel: [  154.522881]  dump_stack+0x8f/0xcb
-kernel: [  154.522884]  check_noncircular+0x194/0x1b0
-kernel: [  154.522888]  ? __lock_acquire+0x1392/0x1690
-kernel: [  154.522890]  __lock_acquire+0x1392/0x1690
-kernel: [  154.522893]  lock_acquire+0xb4/0x1a0
-kernel: [  154.522895]  ? flush_workqueue+0x84/0x4b0
-kernel: [  154.522898]  flush_workqueue+0xab/0x4b0
-kernel: [  154.522900]  ? flush_workqueue+0x84/0x4b0
-kernel: [  154.522905]  ? md_open+0xb6/0xc0 [md_mod]
-kernel: [  154.522908]  md_open+0xb6/0xc0 [md_mod]
-kernel: [  154.522910]  __blkdev_get+0xea/0x590
-kernel: [  154.522912]  ? bd_acquire+0xc0/0xc0
-kernel: [  154.522914]  blkdev_get+0x65/0x140
-kernel: [  154.522916]  ? bd_acquire+0xc0/0xc0
-kernel: [  154.522918]  do_dentry_open+0x1d1/0x380
-kernel: [  154.522921]  path_openat+0x567/0xcc0
-kernel: [  154.522923]  ? __lock_acquire+0x380/0x1690
-kernel: [  154.522926]  do_filp_open+0x9b/0x110
-kernel: [  154.522929]  ? __alloc_fd+0xe5/0x1f0
-kernel: [  154.522935]  ? kmem_cache_alloc+0x28c/0x630
-kernel: [  154.522939]  ? do_sys_openat2+0x201/0x2a0
-kernel: [  154.522941]  do_sys_openat2+0x201/0x2a0
-kernel: [  154.522944]  do_sys_open+0x57/0x80
-kernel: [  154.522946]  do_syscall_64+0x64/0x2b0
-kernel: [  154.522948]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-kernel: [  154.522951] RIP: 0033:0x7f98d279d9ae
+[ 1607.673903] Chain exists of:
+[ 1607.673903]   kn->count#256 --> (wq_completion)md_misc -->
+(work_completion)(&rdev->del_work)
+[ 1607.673903]
+[ 1607.827946]  Possible unsafe locking scenario:
+[ 1607.827946]
+[ 1607.898780]        CPU0                    CPU1
+[ 1607.952980]        ----                    ----
+[ 1608.007173]   lock((work_completion)(&rdev->del_work));
+[ 1608.069690]                                lock((wq_completion)md_misc);
+[ 1608.149887]                                lock((work_completion)(&rdev->del_work));
+[ 1608.242563]   lock(kn->count#256);
+[ 1608.283238]
+[ 1608.283238]  *** DEADLOCK ***
+[ 1608.283238]
+[ 1608.354078] 2 locks held by kworker/5:0/843:
+[ 1608.405152]  #0: ffff8889eecc9948 ((wq_completion)md_misc){+.+.}, at:
+process_one_work+0x42b/0xb30
+[ 1608.512399]  #1: ffff888a1d3b7e10
+((work_completion)(&rdev->del_work)){+.+.}, at: process_one_work+0x42b/0xb30
+[ 1608.632130]
 
-And md_alloc also flushed the same workqueue, but the thing is different
-here. Because all the paths call md_alloc don't hold bdev->bd_mutex, and
-the flush is necessary to avoid race condition, so leave it as it is.
+Since works (rdev->del_work and mddev->del_work) are queued in md_misc_wq,
+then lockdep_map lock is held if either of them are running, then both of
+them try to hold kernfs lock by call kobject_del. Then if new_dev_store
+or array_state_store are triggered by write to the related sysfs node, so
+the write operation gets kernfs lock, but need the lockdep_map because all
+of them would trigger flush_workqueue(md_misc_wq) finally, then the same
+lockdep_map lock is needed.
 
+To suppress the lockdep warnning, we should flush the workqueue in case the
+related work is pending. And several works are attached to md_misc_wq, so
+we need to check which work should be checked:
+
+1. for __md_stop_writes, the purpose of call flush workqueue is ensure sync
+thread is started if it was starting, so check mddev->del_work is pending
+or not since md_start_sync is attached to mddev->del_work.
+
+2. __md_stop flushes md_misc_wq to ensure event_work is done, check the
+event_work is enough. Assume raid_{ctr,dtr} -> md_stop -> __md_stop doesn't
+need the kernfs lock.
+
+3. both new_dev_store (holds kernfs lock) and ADD_NEW_DISK ioctl (holds the
+bdev->bd_mutex) call flush_workqueue to ensure md_delayed_delete has
+completed, this case will be handled in next patch.
+
+4. md_open flushes workqueue to ensure the previous md is disappeared, but
+it holds bdev->bd_mutex then try to flush workqueue, so it is better to
+check mddev->del_work as well to avoid potential lock issue, this will be
+done in another patch.
+
+[1]: https://marc.info/?l=linux-raid&m=158518958031584&w=2
+
+Cc: Coly Li <colyli@suse.de>
+Reported-by: Coly Li <colyli@suse.de>
 Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 ---
- drivers/md/md.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/md/md.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2202074ea98f..b4ea0f38ccd8 100644
+index 469f551863be..2c23046fca57 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7767,7 +7767,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
- 		 */
- 		mddev_put(mddev);
- 		/* Wait until bdev->bd_disk is definitely gone */
--		flush_workqueue(md_misc_wq);
-+		if (work_pending(&mddev->del_work))
-+			flush_workqueue(md_misc_wq);
- 		/* Then retry the open from the top */
- 		return -ERESTARTSYS;
- 	}
+@@ -6146,7 +6146,8 @@ static void md_clean(struct mddev *mddev)
+ static void __md_stop_writes(struct mddev *mddev)
+ {
+ 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-	flush_workqueue(md_misc_wq);
++	if (work_pending(&mddev->del_work))
++		flush_workqueue(md_misc_wq);
+ 	if (mddev->sync_thread) {
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 		md_reap_sync_thread(mddev);
+@@ -6199,7 +6200,8 @@ static void __md_stop(struct mddev *mddev)
+ 	md_bitmap_destroy(mddev);
+ 	mddev_detach(mddev);
+ 	/* Ensure ->event_work is done */
+-	flush_workqueue(md_misc_wq);
++	if (mddev->event_work.func)
++		flush_workqueue(md_misc_wq);
+ 	spin_lock(&mddev->lock);
+ 	mddev->pers = NULL;
+ 	spin_unlock(&mddev->lock);
 -- 
 2.17.1
