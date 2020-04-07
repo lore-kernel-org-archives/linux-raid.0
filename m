@@ -1,38 +1,54 @@
-From: SANDRA DEWI <sdewisandra@gmail.com>
-Subject: whether this is your correct email address or not
-Date: Tue, 7 Apr 2020 05:15:12 +0000
-Message-ID: <CALe9-EdG2aBp2yBY=t79ZuBObzzfY6nuVfAsra6+wc2BAYMhcg__41305.6035454915$1586236524$gmane$org@mail.gmail.com>
+From: Alexander Shenkin <al@shenkin.org>
+Subject: Re: Raid-6 cannot reshape
+Date: Tue, 7 Apr 2020 11:25:13 +0100
+Message-ID: <945332b3-6a47-c2b3-7d1e-70a44f6fd370@shenkin.org>
+References: <24a0ef04-46a9-13ee-b8cb-d1a0a5b939fb@shenkin.org>
+ <6b9b6d37-6325-6515-f693-0ff3b641a67a@shenkin.org>
+ <3135fb29-cfaa-d8ac-264d-fd3110217370@shenkin.org>
+ <CAAMCDecyr4R_z3-E8HYwYM4CyQtAY_nBmXdvvMkTgZCcCp7MjQ@mail.gmail.com>
+ <5E8B5865.9060107@youngman.org.uk>
+ <08d66411-5045-56e1-cbad-7edefa94a363@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <08d66411-5045-56e1-cbad-7edefa94a363@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Wols Lists <antlists@youngman.org.uk>, Roger Heflin <rogerheflin@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear ,Pastor
 
 
+On 4/6/2020 9:34 PM, Phil Turmel wrote:
+> On 4/6/20 12:27 PM, Wols Lists wrote:
+>> On 06/04/20 17:12, Roger Heflin wrote:
+>>> When I looked at your detailed files you sent a few days ago, all of
+>>> the reshapes (on all disks) indicated that they were at position 0, so
+>>> it kind of appears that the reshape never actually started at all and
+>>> hung immediately which is probably why it cannot find the critical
+>>> section, it hung prior to that getting done.   Not entirely sure how
+>>> to undo a reshape that failed like this.
+>>
+>> This seems quite common. Search the archives - it's probably something
+>> like --assemble --revert-reshape.
+> 
+> Ah, yes.  I recall cases where mdmon wouldn't start or wouldn't open the
+> array to start moving the stripes, so the kernel wouldn't advance.
+> SystemD was one of the culprits, I believe, back then.
 
-I have a client who is an oil business man and he made a fixed deposit
-of $26 million USD in my bank, where I am the director of the branch,
-My client died with his entire family in Jordanian
+Thanks all.
 
-50% of the fund will be for the church  for the work of God,the
-balance 50% we share it in the ratio of 50/50. Meaning 50% to you and
-50% for me
+So, is the following safe to run, and a good idea to try?
 
-intervention in the Syrian Civil War 2014 leaving behind no next of
-kin. I Propose to present you as next of kin to claim the funds, if
-interested reply me for full details and how we are to
+mdadm --assemble --update=revert-reshape /dev/md127 /dev/sd[a-g]3
 
+And if that doesn't work, add a force?
 
+mdadm --assemble --force --update=revert-reshape /dev/md127 /dev/sd[a-g]3
 
-proceed to close this deal.
+And adding --invalid-backup if it complains about backup files?
 
-
-
-
-Mrs. Sandra Dewi
-
-
-
-Email  mrsdewi@gmx.com
+Thanks,
+Allie
