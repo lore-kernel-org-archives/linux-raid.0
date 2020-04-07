@@ -1,218 +1,94 @@
-From: Alexander Shenkin <al@shenkin.org>
-Subject: Re: Raid-6 cannot reshape
-Date: Tue, 7 Apr 2020 14:19:31 +0100
-Message-ID: <61e30bc4-469f-32ed-06e8-d1b4e1fd6740@shenkin.org>
-References: <24a0ef04-46a9-13ee-b8cb-d1a0a5b939fb@shenkin.org>
- <6b9b6d37-6325-6515-f693-0ff3b641a67a@shenkin.org>
- <3135fb29-cfaa-d8ac-264d-fd3110217370@shenkin.org>
- <CAAMCDecyr4R_z3-E8HYwYM4CyQtAY_nBmXdvvMkTgZCcCp7MjQ@mail.gmail.com>
- <5E8B5865.9060107@youngman.org.uk>
- <08d66411-5045-56e1-cbad-7edefa94a363@turmel.org>
- <945332b3-6a47-c2b3-7d1e-70a44f6fd370@shenkin.org>
- <b9bb796e-08cd-e10a-d345-992e5f3abea7@turmel.org>
- <618f5171-785f-09b0-8748-d2549d22c0ab@shenkin.org>
- <38852671-9c5a-3807-0284-41f902e5f81b@turmel.org>
- <44069d88-f838-2b8b-1002-a1fff5502d2d@turmel.org>
+From: Coly Li <colyli@suse.de>
+Subject: Re: [PATCH] raid5: use memalloc_noio_save()/restore in
+ resize_chunks()
+Date: Tue, 7 Apr 2020 22:42:48 +0800
+Message-ID: <ca40cbaa-ebf5-dcf2-1c4f-c3403ce9c63e@suse.de>
+References: <20200402081312.32709-1-colyli@suse.de>
+ <8A145C50-D9E8-4874-A365-576FC4578486@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------16CB947D7DB33DCE05C3D02F"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44069d88-f838-2b8b-1002-a1fff5502d2d@turmel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Wols Lists <antlists@youngman.org.uk>, Roger Heflin <rogerheflin@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
-List-Id: linux-raid.ids
-
-This is a multi-part message in MIME format.
---------------16CB947D7DB33DCE05C3D02F
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8A145C50-D9E8-4874-A365-576FC4578486@fb.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, "guoqing.jiang@cloud.ionos.com" <guoqing.jiang@cloud.ionos.com>, Kent Overstreet <kent.overstreet@gmail.com>, Michal Hocko <mhocko@suse.com>
+List-Id: linux-raid.ids
 
-On 4/7/2020 1:31 PM, Phil Turmel wrote:
-> On 4/7/20 8:28 AM, Phil Turmel wrote:
->>>
->>> Thanks Phil,
->>>
->>> The --invalid-backup parameter was necessary to get this up and running.
->>>   It's now up with the 7th disk as a spare.  Shall I run fsck now, or
->>> can
->>> I just try to grow again?
->>>
->>> proposed grow operation:
->>>> mdadm --grow -raid-devices=7 --backup-file=/dev/usb/grow_md127.bak
->>> /dev/md127
->>>> mdadm --stop /dev/md127
->>>> umount /dev/md127 # not sure if this is necessary
->>>> resize2fs /dev/md127
+On 2020/4/6 1:43 上午, Song Liu wrote:
+> Hi Coly,
+> 
+> Thanks for the patch!
+> 
+>> On Apr 2, 2020, at 1:13 AM, Coly Li <colyli@suse.de> wrote:
 >>
->> An fsck could help, if any blocks did get moved.
+>> Commit b330e6a49dc3 ("md: convert to kvmalloc") uses kvmalloc_array()
+>> to allocate memory with GFP_NOIO flag in resize_chunks() via function
+>> scribble_alloc(),
+>> 2269	err = scribble_alloc(percpu, new_disks,
+>> 2270			     new_sectors / STRIPE_SECTORS,
+>> 2271			     GFP_NOIO);
 >>
->> I would not attempt a grow again until you find out why the previous
->> attempt didn't make progress.  Check if mdmon is running, and/or
->> compile a fresh copy of mdadm from source.  If you don't figure it
->> out, you'll just end up in the same spot again.
+>> The purpose of GFP_NOIO flag to kvmalloc_array() is to allocate
+>> non-physically continuous pages and avoid extra I/Os of page reclaim
+>> which triggered by memory allocation. When system memory is under
+>> heavy pressure, non-physically continuous pages allocation is more
+>> probably to success than allocating physically continuous pages.
+>>
+>> But as a non GFP_KERNEL compatible flag, GFP_NOIO is not acceptible
+>> by kvmalloc_node() and the memory allocation indeed is handled with
+>> kmalloc_node() to allocate physically continuous pages. This is not
+>> the expected behavior of the original purpose when mistakenly using
+>> GFP_NOIO flag.
+>>
+>> In this patch, the memalloc scope APIs memalloc_noio_save() and
+>> memalloc_noio_restore() are used when calling scribble_alloc(). Then
+>> when calling kvmalloc_array() with GFP_KERNEL mask, the scope APIs
+>> may indicatet the allocating context to avoid memory reclaim related
+>> I/Os, to avoid recursive I/O deadlock on the md raid array itself
+>> which is calling scribble_alloc() to allocate non-physically continuous
+>> pages.
+>>
+>> This patch also removes gfp_t flags from scribble_alloc() parameters
+>> list, because the invalid GFP_NOIO is replaced by memalloc scope APIs.
+>>
+>> Fixes: b330e6a49dc3 ("md: convert to kvmalloc")
+>> Signed-off-by: Coly Li <colyli@suse.de>
+>> Cc: Kent Overstreet <kent.overstreet@gmail.com>
+>> Cc: Michal Hocko <mhocko@suse.com>
+>> ---
+>> drivers/md/raid5.c | 22 ++++++++++++++++------
+>> 1 file changed, 16 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index ba00e9877f02..6b23f8aba169 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -2228,14 +2228,15 @@ static int grow_stripes(struct r5conf *conf, int num)
+>>  * of the P and Q blocks.
+>>  */
 > 
-> 
-> Oh, one more point:  Don't use a backup file.  Let mdadm shift the data
-> offsets to get the temporary space needed.  (It'll run faster, too.)
-> 
-> (I don't see any mdadm --examine reports in the list thread.  Did you do
-> them and keep the complete output?)
-> 
-> Phil
+> I noticed the comment before scribble_alloc() is outdated. Maybe
+> fix also that as we are on it? 
 > 
 
-Thanks Phil,
+OK, I will do that.
 
-fsck is finding lots and lots of problems.  Figure I'll just run fsck -p
-and see what happens... not sure what choice i have...
+>> static int scribble_alloc(struct raid5_percpu *percpu,
+>> -			  int num, int cnt, gfp_t flags)
+>> +			  int num, int cnt)
+>> {
+>> 	size_t obj_size =
+>> 		sizeof(struct page *) * (num+2) +
+>> 		sizeof(addr_conv_t) * (num+2);
+>> 	void *scribble;
+>> +	unsigned int noio_flag;
+> I think we don't use noio_flag in scribble_alloc()? 
 
-examine output attached here...
+You are right of cause. It should not be here :-)
 
-Re re-growing, I was hoping that running on a newer mdadm (4.1) might
-fix the problem, and if i still encountered it, perhaps running the
-following might unstick it:
+Thanks.
+-- 
 
-echo frozen > /sys/block/md0/md/sync_action
-echo reshape > /sys/block/md0/md/sync_action
-
-But, I personally have no idea what happened (really), nor why... :-(
-
-thanks,
-allie
-
---------------16CB947D7DB33DCE05C3D02F
-Content-Type: text/plain; charset=UTF-8;
- name="examine.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="examine.txt"
-
-cm9vdEB1YnVudHUtc2VydmVyOi9ob21lL3VidW50dS1zZXJ2ZXIjIG1kYWRtIC0tZXhhbWlu
-ZSAvZGV2L3NkW2EtZ10zDQovZGV2L3NkYTM6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVm
-Yw0KICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAg
-QXJyYXkgVVVJRCA6IGM3MzAzZjYyOmQ4NDhkNDI0OjI2OTU4MWM4OjgzYTA0NWVjDQogICAg
-ICAgICAgIE5hbWUgOiB1YnVudHU6Mg0KICBDcmVhdGlvbiBUaW1lIDogU3VuIEZlYiAgNSAy
-MzozOTo1OCAyMDE3DQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2Vz
-IDogNg0KDQogQXZhaWwgRGV2IFNpemUgOiA1ODQwMzc3ODU2ICgyNzg0LjkxIEdpQiAyOTkw
-LjI3IEdCKQ0KICAgICBBcnJheSBTaXplIDogMTE2ODA3NTU3MTIgKDExMTM5LjY0IEdpQiAx
-MTk2MS4wOSBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzDQogICBTdXBl
-ciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9yZT0yNjIwNTYg
-c2VjdG9ycywgYWZ0ZXI9MCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAg
-IERldmljZSBVVUlEIDogMTBiZGJlZDU6Y2I3MGM4YTk6NTY2YzM4NGQ6ZWM0YzkyNmUNCg0K
-SW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3VwZXJibG9jaw0KICAgIFVwZGF0
-ZSBUaW1lIDogVHVlIEFwciAgNyAxMzoxNDoxMSAyMDIwDQogIEJhZCBCbG9jayBMb2cgOiA1
-MTIgZW50cmllcyBhdmFpbGFibGUgYXQgb2Zmc2V0IDcyIHNlY3RvcnMNCiAgICAgICBDaGVj
-a3N1bSA6IDMwN2NmZjE1IC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMzE2NDk4DQoN
-CiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiA1
-MTJLDQoNCiAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSAwDQogICBBcnJheSBTdGF0
-ZSA6IEFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcsICdSJyA9PSByZXBs
-YWNpbmcpDQovZGV2L3NkYjM6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAg
-ICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJ
-RCA6IGM3MzAzZjYyOmQ4NDhkNDI0OjI2OTU4MWM4OjgzYTA0NWVjDQogICAgICAgICAgIE5h
-bWUgOiB1YnVudHU6Mg0KICBDcmVhdGlvbiBUaW1lIDogU3VuIEZlYiAgNSAyMzozOTo1OCAy
-MDE3DQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNg0KDQog
-QXZhaWwgRGV2IFNpemUgOiA1ODQwMzc3ODU2ICgyNzg0LjkxIEdpQiAyOTkwLjI3IEdCKQ0K
-ICAgICBBcnJheSBTaXplIDogMTE2ODA3NTU3MTIgKDExMTM5LjY0IEdpQiAxMTk2MS4wOSBH
-QikNCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQg
-OiA4IHNlY3RvcnMNCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9yZT0yNjIwNTYgc2VjdG9ycywg
-YWZ0ZXI9MCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBV
-VUlEIDogY2Y3MGRhZDU6MGM5ZmY1ZjY6ZWRlNjg5ZjI6Y2NlZTJlYjANCg0KSW50ZXJuYWwg
-Qml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3VwZXJibG9jaw0KICAgIFVwZGF0ZSBUaW1lIDog
-VHVlIEFwciAgNyAxMzoxNDoxMSAyMDIwDQogIEJhZCBCbG9jayBMb2cgOiA1MTIgZW50cmll
-cyBhdmFpbGFibGUgYXQgb2Zmc2V0IDcyIHNlY3RvcnMNCiAgICAgICBDaGVja3N1bSA6IDY0
-YjNmZDhiIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMzE2NDk4DQoNCiAgICAgICAg
-IExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiA1MTJLDQoNCiAg
-IERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSAxDQogICBBcnJheSBTdGF0ZSA6IEFBQUFB
-QSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcsICdSJyA9PSByZXBsYWNpbmcpDQov
-ZGV2L3NkYzM6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9u
-IDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJRCA6IGM3MzAz
-ZjYyOmQ4NDhkNDI0OjI2OTU4MWM4OjgzYTA0NWVjDQogICAgICAgICAgIE5hbWUgOiB1YnVu
-dHU6Mg0KICBDcmVhdGlvbiBUaW1lIDogU3VuIEZlYiAgNSAyMzozOTo1OCAyMDE3DQogICAg
-IFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNg0KDQogQXZhaWwgRGV2
-IFNpemUgOiA1ODQwMzc3ODU2ICgyNzg0LjkxIEdpQiAyOTkwLjI3IEdCKQ0KICAgICBBcnJh
-eSBTaXplIDogMTE2ODA3NTU3MTIgKDExMTM5LjY0IEdpQiAxMTk2MS4wOSBHQikNCiAgICBE
-YXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiA4IHNlY3Rv
-cnMNCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9yZT0yNjIwNTYgc2VjdG9ycywgYWZ0ZXI9MCBz
-ZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBVVUlEIDogZjg4
-Mzk5NTI6ZWFiYTJlOWM6YzJjNDAxZDQ6M2UwNTkyYTUNCg0KSW50ZXJuYWwgQml0bWFwIDog
-OCBzZWN0b3JzIGZyb20gc3VwZXJibG9jaw0KICAgIFVwZGF0ZSBUaW1lIDogVHVlIEFwciAg
-NyAxMzoxNDoxMSAyMDIwDQogIEJhZCBCbG9jayBMb2cgOiA1MTIgZW50cmllcyBhdmFpbGFi
-bGUgYXQgb2Zmc2V0IDcyIHNlY3RvcnMNCiAgICAgICBDaGVja3N1bSA6IDVkODcyMGQ2IC0g
-Y29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMzE2NDk4DQoNCiAgICAgICAgIExheW91dCA6
-IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiA1MTJLDQoNCiAgIERldmljZSBS
-b2xlIDogQWN0aXZlIGRldmljZSAyDQogICBBcnJheSBTdGF0ZSA6IEFBQUFBQSAoJ0EnID09
-IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcsICdSJyA9PSByZXBsYWNpbmcpDQovZGV2L3NkZDM6
-DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9uIDogMS4yDQog
-ICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJRCA6IGM3MzAzZjYyOmQ4NDhk
-NDI0OjI2OTU4MWM4OjgzYTA0NWVjDQogICAgICAgICAgIE5hbWUgOiB1YnVudHU6Mg0KICBD
-cmVhdGlvbiBUaW1lIDogU3VuIEZlYiAgNSAyMzozOTo1OCAyMDE3DQogICAgIFJhaWQgTGV2
-ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNg0KDQogQXZhaWwgRGV2IFNpemUgOiA1
-ODQwMzc3ODU2ICgyNzg0LjkxIEdpQiAyOTkwLjI3IEdCKQ0KICAgICBBcnJheSBTaXplIDog
-MTE2ODA3NTU3MTIgKDExMTM5LjY0IEdpQiAxMTk2MS4wOSBHQikNCiAgICBEYXRhIE9mZnNl
-dCA6IDI2MjE0NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVu
-dXNlZCBTcGFjZSA6IGJlZm9yZT0yNjIwNTYgc2VjdG9ycywgYWZ0ZXI9MCBzZWN0b3JzDQog
-ICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBVVUlEIDogODc1YTBkYmQ6OTY1
-YTk5ODY6MWI3OGViM2Q6ZTE1ZmVlNTANCg0KSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3Jz
-IGZyb20gc3VwZXJibG9jaw0KICAgIFVwZGF0ZSBUaW1lIDogVHVlIEFwciAgNyAxMzoxNDox
-MSAyMDIwDQogIEJhZCBCbG9jayBMb2cgOiA1MTIgZW50cmllcyBhdmFpbGFibGUgYXQgb2Zm
-c2V0IDcyIHNlY3RvcnMNCiAgICAgICBDaGVja3N1bSA6IGM3YWJhNTBmIC0gY29ycmVjdA0K
-ICAgICAgICAgRXZlbnRzIDogMzE2NDk4DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3lt
-bWV0cmljDQogICAgIENodW5rIFNpemUgOiA1MTJLDQoNCiAgIERldmljZSBSb2xlIDogQWN0
-aXZlIGRldmljZSAzDQogICBBcnJheSBTdGF0ZSA6IEFBQUFBQSAoJ0EnID09IGFjdGl2ZSwg
-Jy4nID09IG1pc3NpbmcsICdSJyA9PSByZXBsYWNpbmcpDQovZGV2L3NkZTM6DQogICAgICAg
-ICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVy
-ZSBNYXAgOiAweDENCiAgICAgQXJyYXkgVVVJRCA6IGM3MzAzZjYyOmQ4NDhkNDI0OjI2OTU4
-MWM4OjgzYTA0NWVjDQogICAgICAgICAgIE5hbWUgOiB1YnVudHU6Mg0KICBDcmVhdGlvbiBU
-aW1lIDogU3VuIEZlYiAgNSAyMzozOTo1OCAyMDE3DQogICAgIFJhaWQgTGV2ZWwgOiByYWlk
-Ng0KICAgUmFpZCBEZXZpY2VzIDogNg0KDQogQXZhaWwgRGV2IFNpemUgOiA1ODQwMzc3ODU2
-ICgyNzg0LjkxIEdpQiAyOTkwLjI3IEdCKQ0KICAgICBBcnJheSBTaXplIDogMTE2ODA3NTU3
-MTIgKDExMTM5LjY0IEdpQiAxMTk2MS4wOSBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0
-NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVudXNlZCBTcGFj
-ZSA6IGJlZm9yZT0yNjIwNTYgc2VjdG9ycywgYWZ0ZXI9MCBzZWN0b3JzDQogICAgICAgICAg
-U3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBVVUlEIDogZGMwYmRhOGM6MjQ1N2ZiNGM6Zjg3
-YTRiZWM6OGQ1YjU4ZWQNCg0KSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3Vw
-ZXJibG9jaw0KICAgIFVwZGF0ZSBUaW1lIDogVHVlIEFwciAgNyAxMzoxNDoxMSAyMDIwDQog
-IEJhZCBCbG9jayBMb2cgOiA1MTIgZW50cmllcyBhdmFpbGFibGUgYXQgb2Zmc2V0IDcyIHNl
-Y3RvcnMNCiAgICAgICBDaGVja3N1bSA6IGE4YTQ1MTdlIC0gY29ycmVjdA0KICAgICAgICAg
-RXZlbnRzIDogMzE2NDk4DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQog
-ICAgIENodW5rIFNpemUgOiA1MTJLDQoNCiAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmlj
-ZSA1DQogICBBcnJheSBTdGF0ZSA6IEFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1p
-c3NpbmcsICdSJyA9PSByZXBsYWNpbmcpDQovZGV2L3NkZjM6DQogICAgICAgICAgTWFnaWMg
-OiBhOTJiNGVmYw0KICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAw
-eDENCiAgICAgQXJyYXkgVVVJRCA6IGM3MzAzZjYyOmQ4NDhkNDI0OjI2OTU4MWM4OjgzYTA0
-NWVjDQogICAgICAgICAgIE5hbWUgOiB1YnVudHU6Mg0KICBDcmVhdGlvbiBUaW1lIDogU3Vu
-IEZlYiAgNSAyMzozOTo1OCAyMDE3DQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFp
-ZCBEZXZpY2VzIDogNg0KDQogQXZhaWwgRGV2IFNpemUgOiA1ODQwMzc3ODU2ICgyNzg0Ljkx
-IEdpQiAyOTkwLjI3IEdCKQ0KICAgICBBcnJheSBTaXplIDogMTE2ODA3NTU3MTIgKDExMTM5
-LjY0IEdpQiAxMTk2MS4wOSBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3Jz
-DQogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9y
-ZT0yNjIwNTYgc2VjdG9ycywgYWZ0ZXI9MCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBj
-bGVhbg0KICAgIERldmljZSBVVUlEIDogZGM4NDJkYzM6MDljOTEwYzc6YzM1MWMzMDc6ZTIz
-ODNkMTMNCg0KSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3VwZXJibG9jaw0K
-ICAgIFVwZGF0ZSBUaW1lIDogVHVlIEFwciAgNyAxMzoxNDoxMSAyMDIwDQogIEJhZCBCbG9j
-ayBMb2cgOiA1MTIgZW50cmllcyBhdmFpbGFibGUgYXQgb2Zmc2V0IDcyIHNlY3RvcnMNCiAg
-ICAgICBDaGVja3N1bSA6IDlhNjlmMDgzIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDog
-MzE2NDk4DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5r
-IFNpemUgOiA1MTJLDQoNCiAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSA0DQogICBB
-cnJheSBTdGF0ZSA6IEFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcsICdS
-JyA9PSByZXBsYWNpbmcpDQovZGV2L3NkZzM6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVm
-Yw0KICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgRmVhdHVyZSBNYXAgOiAweDENCiAgICAg
-QXJyYXkgVVVJRCA6IGM3MzAzZjYyOmQ4NDhkNDI0OjI2OTU4MWM4OjgzYTA0NWVjDQogICAg
-ICAgICAgIE5hbWUgOiB1YnVudHU6Mg0KICBDcmVhdGlvbiBUaW1lIDogU3VuIEZlYiAgNSAy
-MzozOTo1OCAyMDE3DQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2Vz
-IDogNg0KDQogQXZhaWwgRGV2IFNpemUgOiA1ODQwMzc3ODU2ICgyNzg0LjkxIEdpQiAyOTkw
-LjI3IEdCKQ0KICAgICBBcnJheSBTaXplIDogMTE2ODA3NTU3MTIgKDExMTM5LjY0IEdpQiAx
-MTk2MS4wOSBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzDQogICBTdXBl
-ciBPZmZzZXQgOiA4IHNlY3RvcnMNCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9yZT0yNjIwNTYg
-c2VjdG9ycywgYWZ0ZXI9MCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAg
-IERldmljZSBVVUlEIDogNjM1ZWY3MWI6ZTRhZGQ5MjU6MzBhZTRmMGE6ZjZiNDY2MTENCg0K
-SW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZyb20gc3VwZXJibG9jaw0KICAgIFVwZGF0
-ZSBUaW1lIDogVHVlIEFwciAgNyAxMTozNzo0OSAyMDIwDQogIEJhZCBCbG9jayBMb2cgOiA1
-MTIgZW50cmllcyBhdmFpbGFibGUgYXQgb2Zmc2V0IDcyIHNlY3RvcnMNCiAgICAgICBDaGVj
-a3N1bSA6IDUyYjI3MGQwIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMzE2NDk4DQoN
-CiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiA1
-MTJLDQoNCiAgIERldmljZSBSb2xlIDogc3BhcmUNCiAgIEFycmF5IFN0YXRlIDogQUFBQUFB
-ICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZywgJ1InID09IHJlcGxhY2luZykNCg==
---------------16CB947D7DB33DCE05C3D02F--
+Coly Li
