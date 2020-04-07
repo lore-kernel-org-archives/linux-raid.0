@@ -1,94 +1,50 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] raid5: use memalloc_noio_save()/restore in
- resize_chunks()
-Date: Tue, 7 Apr 2020 22:42:48 +0800
-Message-ID: <ca40cbaa-ebf5-dcf2-1c4f-c3403ce9c63e@suse.de>
-References: <20200402081312.32709-1-colyli@suse.de>
- <8A145C50-D9E8-4874-A365-576FC4578486@fb.com>
+From: antlists <antlists@youngman.org.uk>
+Subject: Re: Raid-6 cannot reshape
+Date: Tue, 7 Apr 2020 16:08:55 +0100
+Message-ID: <572ec112-21ff-7da5-81d2-a91b08277a2c@youngman.org.uk>
+References: <24a0ef04-46a9-13ee-b8cb-d1a0a5b939fb@shenkin.org>
+ <6b9b6d37-6325-6515-f693-0ff3b641a67a@shenkin.org>
+ <3135fb29-cfaa-d8ac-264d-fd3110217370@shenkin.org>
+ <CAAMCDecyr4R_z3-E8HYwYM4CyQtAY_nBmXdvvMkTgZCcCp7MjQ@mail.gmail.com>
+ <5E8B5865.9060107@youngman.org.uk>
+ <08d66411-5045-56e1-cbad-7edefa94a363@turmel.org>
+ <945332b3-6a47-c2b3-7d1e-70a44f6fd370@shenkin.org>
+ <b9bb796e-08cd-e10a-d345-992e5f3abea7@turmel.org>
+ <618f5171-785f-09b0-8748-d2549d22c0ab@shenkin.org>
+ <38852671-9c5a-3807-0284-41f902e5f81b@turmel.org>
+ <44069d88-f838-2b8b-1002-a1fff5502d2d@turmel.org>
+ <61e30bc4-469f-32ed-06e8-d1b4e1fd6740@shenkin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8A145C50-D9E8-4874-A365-576FC4578486@fb.com>
-Content-Language: en-US
+In-Reply-To: <61e30bc4-469f-32ed-06e8-d1b4e1fd6740@shenkin.org>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, "guoqing.jiang@cloud.ionos.com" <guoqing.jiang@cloud.ionos.com>, Kent Overstreet <kent.overstreet@gmail.com>, Michal Hocko <mhocko@suse.com>
+To: Alexander Shenkin <al@shenkin.org>, Phil Turmel <philip@turmel.org>, Roger Heflin <rogerheflin@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2020/4/6 1:43 上午, Song Liu wrote:
-> Hi Coly,
+On 07/04/2020 14:19, Alexander Shenkin wrote:
+> Re re-growing, I was hoping that running on a newer mdadm (4.1) might
+> fix the problem, and if i still encountered it, perhaps running the
+> following might unstick it:
 > 
-> Thanks for the patch!
+> echo frozen > /sys/block/md0/md/sync_action
+> echo reshape > /sys/block/md0/md/sync_action
 > 
->> On Apr 2, 2020, at 1:13 AM, Coly Li <colyli@suse.de> wrote:
->>
->> Commit b330e6a49dc3 ("md: convert to kvmalloc") uses kvmalloc_array()
->> to allocate memory with GFP_NOIO flag in resize_chunks() via function
->> scribble_alloc(),
->> 2269	err = scribble_alloc(percpu, new_disks,
->> 2270			     new_sectors / STRIPE_SECTORS,
->> 2271			     GFP_NOIO);
->>
->> The purpose of GFP_NOIO flag to kvmalloc_array() is to allocate
->> non-physically continuous pages and avoid extra I/Os of page reclaim
->> which triggered by memory allocation. When system memory is under
->> heavy pressure, non-physically continuous pages allocation is more
->> probably to success than allocating physically continuous pages.
->>
->> But as a non GFP_KERNEL compatible flag, GFP_NOIO is not acceptible
->> by kvmalloc_node() and the memory allocation indeed is handled with
->> kmalloc_node() to allocate physically continuous pages. This is not
->> the expected behavior of the original purpose when mistakenly using
->> GFP_NOIO flag.
->>
->> In this patch, the memalloc scope APIs memalloc_noio_save() and
->> memalloc_noio_restore() are used when calling scribble_alloc(). Then
->> when calling kvmalloc_array() with GFP_KERNEL mask, the scope APIs
->> may indicatet the allocating context to avoid memory reclaim related
->> I/Os, to avoid recursive I/O deadlock on the md raid array itself
->> which is calling scribble_alloc() to allocate non-physically continuous
->> pages.
->>
->> This patch also removes gfp_t flags from scribble_alloc() parameters
->> list, because the invalid GFP_NOIO is replaced by memalloc scope APIs.
->>
->> Fixes: b330e6a49dc3 ("md: convert to kvmalloc")
->> Signed-off-by: Coly Li <colyli@suse.de>
->> Cc: Kent Overstreet <kent.overstreet@gmail.com>
->> Cc: Michal Hocko <mhocko@suse.com>
->> ---
->> drivers/md/raid5.c | 22 ++++++++++++++++------
->> 1 file changed, 16 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index ba00e9877f02..6b23f8aba169 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -2228,14 +2228,15 @@ static int grow_stripes(struct r5conf *conf, int num)
->>  * of the P and Q blocks.
->>  */
-> 
-> I noticed the comment before scribble_alloc() is outdated. Maybe
-> fix also that as we are on it? 
-> 
+> But, I personally have no idea what happened (really), nor why...:-(
 
-OK, I will do that.
+iirc pretty much all these reports come from oldish Ubuntu systems ...
 
->> static int scribble_alloc(struct raid5_percpu *percpu,
->> -			  int num, int cnt, gfp_t flags)
->> +			  int num, int cnt)
->> {
->> 	size_t obj_size =
->> 		sizeof(struct page *) * (num+2) +
->> 		sizeof(addr_conv_t) * (num+2);
->> 	void *scribble;
->> +	unsigned int noio_flag;
-> I think we don't use noio_flag in scribble_alloc()? 
+What happened *could* be that you have an updated franken-kernel, plus 
+an old mdadm, and the mess needs an Igor to stitch it all together...
 
-You are right of cause. It should not be here :-)
+If you ARE going to try the grow again, I'd use an up-to-date recovery 
+system to run the grow, and then reboot back in to the old Ubuntu once 
+your system is back.
 
-Thanks.
--- 
+And seriously think about upgrading your distro to the latest LTS.
 
-Coly Li
+Cheers,
+Wol
