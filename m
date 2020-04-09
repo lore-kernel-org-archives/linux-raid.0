@@ -1,47 +1,43 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH 0/4] md: fix lockdep warning
-Date: Thu, 9 Apr 2020 00:25:13 -0700
-Message-ID: <CAPhsuW4rWa_ZCX=3eW9Xk_jtZdu+uKX4HZtbfEJfS9ms4a+OSg@mail.gmail.com>
-References: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] md/r5cache: remove set but not used 'offset'
+Date: Thu, 9 Apr 2020 16:54:16 +0800
+Message-ID: <20200409085416.47724-1-yanaijie@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: song@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jason Yan <yanaijie@huawei.com>
 List-Id: linux-raid.ids
 
-Thanks for the fix!
+Fix the following gcc warning:
 
-On Sat, Apr 4, 2020 at 3:01 PM Guoqing Jiang
-<guoqing.jiang@cloud.ionos.com> wrote:
->
-> Hi,
->
-> After LOCKDEP is enabled, we can see some deadlock issues, this patchset
-> makes workqueue is flushed only necessary, and the last patch is a cleanup.
->
-> Thanks,
-> Guoqing
->
-> Guoqing Jiang (5):
->   md: add checkings before flush md_misc_wq
->   md: add new workqueue for delete rdev
->   md: don't flush workqueue unconditionally in md_open
->   md: flush md_rdev_misc_wq for HOT_ADD_DISK case
->   md: remove the extra line for ->hot_add_disk
+drivers/md/raid5-cache.c:198:11: warning: variable ‘offset’ set but not
+used [-Wunused-but-set-variable]
+  sector_t offset;
+           ^~~~~~
 
-I think we will need a new workqueue (2/5). But I am not sure about
-whether we should
-do 1/5 and 3/5. It feels like we are hiding errors from lock_dep. With
-some quick grep,
-I didn't find code pattern like
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/md/raid5-cache.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-       if (work_pending(XXX))
-               flush_workqueue(XXX);
-
-Is it possible to fix the issue without these workaround?
-
-Thanks,
-Song
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 9b6da759dca2..eea14fa9e59b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -195,9 +195,7 @@ struct r5l_log {
+ static inline sector_t r5c_tree_index(struct r5conf *conf,
+ 				      sector_t sect)
+ {
+-	sector_t offset;
+-
+-	offset = sector_div(sect, conf->chunk_sectors);
++	sector_div(sect, conf->chunk_sectors);
+ 	return sect;
+ }
+ 
+-- 
+2.17.2
