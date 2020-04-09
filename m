@@ -1,56 +1,43 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: MD Array 'stat' File - Sectors Read
-Date: Thu, 9 Apr 2020 00:11:30 -0700
-Message-ID: <CAPhsuW4UTJZHSQRHt3V2oPAkz8KD1YpG2YNBBg20cBujTCnzug@mail.gmail.com>
-References: <CAH6h+heYBA5RvBH7GPJ6JkPUYvjxT2A4f_gBVs=Pr-ps6rPRQw@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Repairing a RAID1 with non-zero mismatch_cnt, vol. 2
+Date: Thu, 9 Apr 2020 08:19:40 +0100
+Message-ID: <20200409071940.GA4072@cthulhu.home.robinhill.me.uk>
+References: <CADSg1Jh1i+OPq0_hWOvHxK0xroUbn_w0_ZjxjwcnrbSsBXGY5A@mail.gmail.com>
+ <5E25876A.1030004@youngman.org.uk>
+ <CADSg1Jj3XmD_RmSedn3AT9uCXbHQGa6ATBK1UP33onS8Vi=60g@mail.gmail.com>
+ <CADSg1Jh7=6XHXbDqWVWg=fa-+09Vd9E+KBuTy6AWucJesFkBmQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH6h+heYBA5RvBH7GPJ6JkPUYvjxT2A4f_gBVs=Pr-ps6rPRQw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CADSg1Jh7=6XHXbDqWVWg=fa-+09Vd9E+KBuTy6AWucJesFkBmQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Smith <msmith626@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Andrey ``Bass'' Shcheglov <andrewbass@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 30, 2020 at 1:55 PM Marc Smith <msmith626@gmail.com> wrote:
->
-> Hi,
->
-> Apologies in advance, as I'm sure this question has been asked many
-> times and there is a standard answer, but I can't seem to find it on
-> forums or this mailing list.
->
-> I've always observed this behavior using 'iostat', when looking at
-> READ throughput numbers, the value is about 4 times more than the real
-> throughput number. Knowing this, I typically look at the member
-> devices to determine what throughput is actually being achieved (or
-> from the application driving the I/O).
->
-> Looking at the sectors read field in the 'stat' file for an MD array
-> block device:
-> # cat /sys/block/md127/stat && sleep 1 && cat /sys/block/md127/stat
-> 93591416        0 55082801792        0       93        0        0
->   0        0        0        0        0        0        0        0
-> 93608938        0 55092996456        0       93        0        0
->   0        0        0        0        0        0        0        0
->
-> 55092996456 - 55082801792 = 10194664
-> 10194664 * 512 = 5219667968
-> 5219667968 / 1024 / 1024 = 4977
->
-> This device definitely isn't doing 4,977 MiB/s. So now my curiosity is
-> getting to me: Is this just known/expected behavior for the MD array
-> block devices? The numbers for WRITE sectors is always accurate as far
-> as I can tell. Or something configured strangely on my systems?
->
-> I'm using vanilla Linux 5.4.12.
+On Thu Apr 09, 2020 at 01:13:40AM +0300, Andrey ``Bass'' Shcheglov wrote:
 
-Thanks for the report. Could you please share output of
+> Now I have 3 empty ext4 partitions with only lost+found directories.
+> 
+> And the value of mismatch_cnt dropped to 384.
+> 
+> 
+> Okay, so far, so good. I don't have any data, so a repair action can't
+> possibly harm it.
+> 
+> > echo repair >>/sys/block/md4/md/sync_action
+> 
+> And the value of mismatch_cnt is still 384.
+> 
+The mismatch_cnt after repair indicates how many repairs were completed.
+You need to run a new repair/check to see whether there are any
+remaining mismatches.
 
-   mdadm --detial /dev/md127
-
-and
-
-   cat /proc/mdstat
-
-Song
+Cheers,
+    Robin
+-- 
+     ___        
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
