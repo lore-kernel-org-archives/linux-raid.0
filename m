@@ -1,7 +1,7 @@
 From: colyli@suse.de
-Subject: [PATCH v3 2/4] raid5: remove gfp flags from scribble_alloc()
-Date: Thu,  9 Apr 2020 22:17:21 +0800
-Message-ID: <20200409141723.24447-3-colyli@suse.de>
+Subject: [PATCH v3 3/4] raid5: update code comment of scribble_alloc()
+Date: Thu,  9 Apr 2020 22:17:22 +0800
+Message-ID: <20200409141723.24447-4-colyli@suse.de>
 References: <20200409141723.24447-1-colyli@suse.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,72 +14,34 @@ List-Id: linux-raid.ids
 
 From: Coly Li <colyli@suse.de>
 
-Using GFP_NOIO flag to call scribble_alloc() from resize_chunk() does
-not have the expected behavior. kvmalloc_array() inside scribble_alloc()
-which receives the GFP_NOIO flag will eventually call kmalloc_node() to
-allocate physically continuous pages.
+Code comments of scribble_alloc() is outdated for a while. This patch
+update the comments in function header for the new parameter list.
 
-Now we have memalloc scope APIs in mddev_suspend()/mddev_resume() to
-prevent memory reclaim I/Os during raid array suspend context, calling
-to kvmalloc_array() with GFP_KERNEL flag may avoid deadlock of recursive
-I/O as expected.
-
-This patch removes the useless gfp flags from parameters list of
-scribble_alloc(), and call kvmalloc_array() with GFP_KERNEL flag. The
-incorrect GFP_NOIO flag does not exist anymore.
-
-Fixes: b330e6a49dc3 ("md: convert to kvmalloc")
-Suggested-by: Michal Hocko <mhocko@suse.com>
+Suggested-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Coly Li <colyli@suse.de>
 ---
- drivers/md/raid5.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/md/raid5.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ba00e9877f02..190dd70db514 100644
+index 190dd70db514..ab8067f9ce8c 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2228,14 +2228,19 @@ static int grow_stripes(struct r5conf *conf, int num)
-  * of the P and Q blocks.
-  */
- static int scribble_alloc(struct raid5_percpu *percpu,
--			  int num, int cnt, gfp_t flags)
-+			  int num, int cnt)
- {
- 	size_t obj_size =
- 		sizeof(struct page *) * (num+2) +
- 		sizeof(addr_conv_t) * (num+2);
- 	void *scribble;
+@@ -2215,10 +2215,13 @@ static int grow_stripes(struct r5conf *conf, int num)
+ }
  
--	scribble = kvmalloc_array(cnt, obj_size, flags);
-+	/*
-+	 * If here is in raid array suspend context, it is in memalloc noio
-+	 * context as well, there is no potential recursive memory reclaim
-+	 * I/Os with the GFP_KERNEL flag.
-+	 */
-+	scribble = kvmalloc_array(cnt, obj_size, GFP_KERNEL);
- 	if (!scribble)
- 		return -ENOMEM;
- 
-@@ -2267,8 +2272,7 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
- 
- 		percpu = per_cpu_ptr(conf->percpu, cpu);
- 		err = scribble_alloc(percpu, new_disks,
--				     new_sectors / STRIPE_SECTORS,
--				     GFP_NOIO);
-+				     new_sectors / STRIPE_SECTORS);
- 		if (err)
- 			break;
- 	}
-@@ -6759,8 +6763,7 @@ static int alloc_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu
- 			       conf->previous_raid_disks),
- 			   max(conf->chunk_sectors,
- 			       conf->prev_chunk_sectors)
--			   / STRIPE_SECTORS,
--			   GFP_KERNEL)) {
-+			   / STRIPE_SECTORS)) {
- 		free_scratch_buffer(conf, percpu);
- 		return -ENOMEM;
- 	}
+ /**
+- * scribble_len - return the required size of the scribble region
++ * scribble_alloc - allocate percpu scribble buffer for required size
++ *		    of the scribble region
++ * @percpu - from for_each_present_cpu() of the caller
+  * @num - total number of disks in the array
++ * @cnt - scribble objs count for required size of the scribble region
+  *
+- * The size must be enough to contain:
++ * The scribble buffer size must be enough to contain:
+  * 1/ a struct page pointer for each device in the array +2
+  * 2/ room to convert each entry in (1) to its corresponding dma
+  *    (dma_map_page()) or page (page_address()) address.
 -- 
 2.25.0
