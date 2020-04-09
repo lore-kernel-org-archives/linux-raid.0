@@ -1,43 +1,45 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH] md/r5cache: remove set but not used 'offset'
-Date: Thu, 9 Apr 2020 16:54:16 +0800
-Message-ID: <20200409085416.47724-1-yanaijie@huawei.com>
+From: colyli@suse.de
+Subject: [PATCH v2 0/4] improve memalloc scope APIs usage
+Date: Thu,  9 Apr 2020 19:52:54 +0800
+Message-ID: <20200409115258.19330-1-colyli@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: song@kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Jason Yan <yanaijie@huawei.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: songliubraving@fb.com, linux-raid@vger.kernel.org
+Cc: mhocko@suse.com, kent.overstreet@gmail.com, guoqing.jiang@cloud.ionos.com, Coly Li <colyli@suse.de>
 List-Id: linux-raid.ids
 
-Fix the following gcc warning:
+From: Coly Li <colyli@suse.de>
 
-drivers/md/raid5-cache.c:198:11: warning: variable ‘offset’ set but not
-used [-Wunused-but-set-variable]
-  sector_t offset;
-           ^~~~~~
+Hi folks,
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+The motivation of this series is to fix the incorrect GFP_NOIO flag
+usage in drivers/md/raid5.c:resize_chunks(). I take the suggestion
+from Michal Hocko to use memalloc scope APIs in unified entry point
+mddev_suspend()/mddev_resume(). Also I get rid of the incorect GFP_NOIO
+usage for scribble_alloc(), and remove redundant memalloc scope APIs
+usage in mddev_create_serial_pool(), also as Song Liu suggested, update
+the code comments on the header of scribble_alloc().
+
+Thank you in advance for the review and comments.
+
+Coly Li
 ---
- drivers/md/raid5-cache.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Changelog:
+v2: Add memalloc scope APIs in raid array suspend context.
+v1: Original version to add memalloc scope APIs in resize_chunks().
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9b6da759dca2..eea14fa9e59b 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -195,9 +195,7 @@ struct r5l_log {
- static inline sector_t r5c_tree_index(struct r5conf *conf,
- 				      sector_t sect)
- {
--	sector_t offset;
--
--	offset = sector_div(sect, conf->chunk_sectors);
-+	sector_div(sect, conf->chunk_sectors);
- 	return sect;
- }
- 
+Coly Li (4):
+  md: use memalloc scope APIs in mddev_suspend()/mddev_resume()
+  raid5: remove gfp flags from scribble_alloc()
+  raid5: update code comment of scribble_alloc()
+  md: remove redundant memalloc scope API usage
+
+ drivers/md/md.c    |  6 ++++--
+ drivers/md/md.h    |  1 +
+ drivers/md/raid5.c | 22 ++++++++++++++--------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
+
 -- 
-2.17.2
+2.25.0
