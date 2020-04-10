@@ -1,104 +1,113 @@
 From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] raid5: use memalloc_noio_save()/restore in
- resize_chunks()
-Date: Fri, 10 Apr 2020 17:36:13 +0800
-Message-ID: <3c878bde-bba8-fa75-15d4-051d826dbcdc@suse.de>
-References: <20200402081312.32709-1-colyli@suse.de>
- <fa7e30b9-7480-6c03-0f43-d561fed912fb@cloud.ionos.com>
- <5f27365b-768f-eb69-36ec-f4ed0c292c60@suse.de>
- <204e9fd0-3712-4864-2bf5-38913511e658@cloud.ionos.com>
+Subject: [PATCH] Monitor: improve check_one_sharer() for checking duplicated process
+Date: Sat, 11 Apr 2020 00:24:46 +0800
+Message-ID: <20200410162446.6292-1-colyli@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <204e9fd0-3712-4864-2bf5-38913511e658@cloud.ionos.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc: songliubraving@fb.com, linux-raid@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Michal Hocko <mhocko@suse.com>
+To: jes@trained-monkey.org, linux-raid@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>, Shinkichi Yamazaki <shinkichi.yamazaki@suse.com>
 List-Id: linux-raid.ids
 
-On 2020/4/10 5:38 上午, Guoqing Jiang wrote:
-> On 07.04.20 17:09, Coly Li wrote:
->> On 2020/4/5 11:53 下午, Guoqing Jiang wrote:
->>> On 02.04.20 10:13, Coly Li wrote:
->>>> -    scribble = kvmalloc_array(cnt, obj_size, flags);
->>>> +    scribble = kvmalloc_array(cnt, obj_size, GFP_KERNEL);
->>> Maybe it is simpler to call kvmalloc_array between memalloc_noio_save
->>> and memalloc_noio_restore.
->>> And seems sched/mm.h need to be included per the report from LKP.
->> The falgs can be,
->> - GFP_KERNEL: when called from alloc_scratch_buffer()
->> - GFP_NOIO: when called from resize_chunks().
->>
->> If the scope APIs are used inside scribble_alloc(), the first call path
->> is restricted as noio, which is not expected. So I only use the scope
->> APIs around the location where GFP_NOIO is used.
-> 
-> Thanks for the explanation. I assume it can be distinguished by check
-> the flag,
-> eg, FYI.
-> 
-> if (flag == GFP_NOIO)
->     memalloc_noio_save();
-> kvmalloc_array();
-> if (flag == GFP_NOIO)
->     memalloc_noio_restore();
+When running mdadm monitor with scan mode, only one autorebuild process
+is allowed. check_one_sharer() checks duplicated process by following
+steps,
+1) Read autorebuild.pid file,
+   - if file does not exist, no duplicated process, go to 3).
+   - if file exists, continue to next step.
+2) Read pid number from autorebuild.pid file, then check procfs pid
+   directory /proc/<PID>,
+   - if the directory does not exist, no duplicated process, go to 3)
+   - if the directory exists, print error message for duplicated process
+     and exit this mdadm.
+3) Write current pid into autorebuild.pid file, continue to monitor in
+   scan mode.
 
-This was similar to my original idea, but finally I decide to accept
-Michal's suggestion to add them into mddev_suspend()/mddev_resume. Let
-me explain.
+The problem for the above step 2) is, if after system reboots and
+another different process happens to have exact same pid number which
+autorebuild.pid file records, check_one_sharer() will treat it as a
+duplicated mdadm process and returns error with message "Only one
+autorebuild process allowed in scan mode, aborting".
 
->> Anyway, Michal Hocko suggests to add the scope APIs in
->> mddev_suspend()/mddev_resume(). Then in the whole code path where md
->> raid array is suspend, we don't need to worry the recursive memory
->> reclaim I/Os onto the array. After checking the complicated raid5 code,
->> I come to realize this suggestion makes sense.
-> 
-> Hmm, mddev_suspend/resume are called at lots of places, then it's better to
-> check if all the places don't allocate memory with GFP_KERNEL.
-> 
+This patch tries to fix the above same-pid-but-different-process issue
+by one more step to check the process command name,
+1) Read autorebuild.pid file
+   - if file does not exist, no duplicated process, go to 4).
+   - if file exists, continue to next step.
+2) Read pid number from autorebuild.pid file, then check procfs file
+   comm with the specific pid directory /proc/<PID>/comm
+   - if the file does not exit, it means the directory /proc/<PID> does
+     not exist, go to 4)
+   - if the file exits, continue next step
+3) Read process command name from /proc/<PIC>/comm, compare the command
+   name with "mdadm" process name,
+   - if not equal, no duplicated process, goto 4)
+   - if strings are equal, print error message for duplicated process
+     and exit this mdadm.
+4) Write current pid into autorebuild.pid file, continue to monitor in
+   scan mode.
 
-When mddev_suspend() is called, then all I/Os on the suspending raid
-array have to wait until mddev_resume() is called. Inside the suspending
-region, all memory allocation should be careful to avoid memory reclaim
-I/Os going back to the suspending raid array. If such recursive I/Os
-happen, we will experience deadlock.
+Now check_one_sharer() returns error for duplicated process only when
+the recorded pid from autorebuild.pid exists, and the process has exact
+same command name as "mdadm".
 
-Therefore we should be very careful to use GFP_KERNEL to allocate memory
-during the period when the raid array is suspending. No matter
-physically continuous or virtually continuous pages.
+Reported-by: Shinkichi Yamazaki <shinkichi.yamazaki@suse.com>
+Signed-off-by: Coly Li <colyli@suse.de>
+---
+ Monitor.c | 32 ++++++++++++++++++++------------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
 
-> And seems In level_store(), sysfs_create_group could be called between
-> suspend
-> and resume, then the two functions (kstrdup_const(name, GFP_KERNEL) and
-> kmem_cache_zalloc(kernfs_node_cache, GFP_KERNEL)) could be triggered by the
-> path:
-> 
-> sysfs_create_group ->internal_create_group -> kernfs_create_dir_ns ->
-> kernfs_new_node -> __kernfs_new_node
-> 
-
-From your information, the above code path is suspicious. Although the
-deadlock might not happen in practice, unless the raid array is used as
-the only fs volume, and all memory writeback or swap I/Os will only go
-into this array.
-
-Checking all the location of memory allocation is trivial but possible,
-how to prevent new code with memory allocation to avoid the potential
-deadlock risk during the suspending period is still a problem.
-
-> Not know memalloc_noio_{save,restore} well, but I guess it is better to
-> use them
-> to mark a small scope, just my two cents.
-
-Since mddev_suspend() is the entry point to prevent I/Os on the array,
-it is the good location to restrict memory reclaim I/Os of memory
-allocation. Finally I realize this is a brilliant idea after Michal
-Hocko suggests me for a while.
-
-Thanks.
-
+diff --git a/Monitor.c b/Monitor.c
+index b527165..2d6b3b9 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -301,26 +301,34 @@ static int make_daemon(char *pidfile)
+ 
+ static int check_one_sharer(int scan)
+ {
+-	int pid, rv;
++	int pid;
++	FILE *comm_fp;
+ 	FILE *fp;
+-	char dir[20];
++	char comm_path[100];
+ 	char path[100];
+-	struct stat buf;
++	char comm[20];
++
+ 	sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
+ 	fp = fopen(path, "r");
+ 	if (fp) {
+ 		if (fscanf(fp, "%d", &pid) != 1)
+ 			pid = -1;
+-		sprintf(dir, "/proc/%d", pid);
+-		rv = stat(dir, &buf);
+-		if (rv != -1) {
+-			if (scan) {
+-				pr_err("Only one autorebuild process allowed in scan mode, aborting\n");
+-				fclose(fp);
+-				return 1;
+-			} else {
+-				pr_err("Warning: One autorebuild process already running.\n");
++		snprintf(comm_path, sizeof(comm_path),
++			 "/proc/%d/comm", pid);
++		comm_fp = fopen(comm_path, "r");
++		if (comm_fp) {
++			if (fscanf(comm_fp, "%s", comm) &&
++			    strncmp(basename(comm), Name, strlen(Name)) == 0) {
++				if (scan) {
++					pr_err("Only one autorebuild process allowed in scan mode, aborting\n");
++					fclose(comm_fp);
++					fclose(fp);
++					return 1;
++				} else {
++					pr_err("Warning: One autorebuild process already running.\n");
++				}
+ 			}
++			fclose(comm_fp);
+ 		}
+ 		fclose(fp);
+ 	}
 -- 
-
-Coly Li
+2.25.0
