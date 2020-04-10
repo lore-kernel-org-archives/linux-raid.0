@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 37/46] md: check arrays is suspended in mddev_detach before call quiesce operations
-Date: Thu,  9 Apr 2020 23:49:00 -0400
-Message-ID: <20200410034909.8922-37-sashal@kernel.org>
-References: <20200410034909.8922-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 47/56] md: check arrays is suspended in mddev_detach before call quiesce operations
+Date: Thu,  9 Apr 2020 23:47:51 -0400
+Message-ID: <20200410034800.8381-47-sashal@kernel.org>
+References: <20200410034800.8381-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200410034909.8922-1-sashal@kernel.org>
+In-Reply-To: <20200410034800.8381-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
