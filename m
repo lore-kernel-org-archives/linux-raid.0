@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 25/32] md: check arrays is suspended in mddev_detach before call quiesce operations
-Date: Thu,  9 Apr 2020 23:49:58 -0400
-Message-ID: <20200410035005.9371-25-sashal@kernel.org>
-References: <20200410035005.9371-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 37/46] md: check arrays is suspended in mddev_detach before call quiesce operations
+Date: Thu,  9 Apr 2020 23:49:00 -0400
+Message-ID: <20200410034909.8922-37-sashal@kernel.org>
+References: <20200410034909.8922-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20200410035005.9371-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200410034909.8922-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -57,10 +57,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 62f214d43e15a..9426976e0860d 100644
+index 4e7c9f398bc66..6b69a12ca2d80 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5874,7 +5874,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+@@ -6040,7 +6040,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
  static void mddev_detach(struct mddev *mddev)
  {
  	md_bitmap_wait_behind_writes(mddev);
