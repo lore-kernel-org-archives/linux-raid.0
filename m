@@ -1,28 +1,47 @@
-From: Jonas Fisher <fisherthepooh@protonmail.com>
-Subject: RAID0 with only one zone
-Date: Sun, 12 Apr 2020 07:41:16 +0000
-Message-ID: <U_VZCfOb6kXQkP0UHckeJnw9xb4SWfhBpSIccNq-gB0B1EugPbxRIKu2eFjpOucWClEneY__W8pBJHBdkfAK5KuNC3mHiN19knwIDOOQZdU=@protonmail.com>
-Reply-To: Jonas Fisher <fisherthepooh@protonmail.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: Is it possible to create a single zone RAID0 with different
+ size member disks?
+Date: Sun, 12 Apr 2020 14:12:59 +0500
+Message-ID: <20200412141259.14955b2e@natsu>
+References: <5ng5lZpZoJjtdf9Xkshn3CSzsLIErcNWAzPPARDbDdzNY9Kr-tgMjy6djUaqRVo9r9KmB2HMV0ZQuurdV7wNDYGOP4azAiw1jPkcoF10-SM=@protonmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5ng5lZpZoJjtdf9Xkshn3CSzsLIErcNWAzPPARDbDdzNY9Kr-tgMjy6djUaqRVo9r9KmB2HMV0ZQuurdV7wNDYGOP4azAiw1jPkcoF10-SM=@protonmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Fisher <fisherthepooh@protonmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+On Fri, 10 Apr 2020 09:29:19 +0000
+Fisher <fisherthepooh@protonmail.com> wrote:
 
-I got four disks with different size, and I want to create a raid0,
-I think I would expand it in the future, but the only way to expand
-a raid0 is to convert it to raid4 and convert it back to raid0.
-But there's a limitation that there should be only one zone in
-this raid0, I tried to specify --size on creation to limit
-the disk size to the smallest one, but I found it not working,
-I still got more than one zone.
+> Is there any way I can create a single zone raid0 with different size member disks?
 
-It seems weird that multi-zones are created even though I've
-specified the device size... Or, is there any way I can create
-a raid0 with only 1 zone if I use the disks with different size?
+I'm not sure about the actual zones issue, but the easiest workaround seems to
+be to just create a same-sized partition on each disk, and then do RAID0 of
+those partitions.
 
-Any enlightenment is appreciated. Thanks.
+It might be a good idea regardless (RAID of partitions instead of raw disks),
+because that way unrelated operating systems and LiveCDs you might boot on the
+machine will not see these as empty uninitialized drives, but will properly
+detect what they are used for, and to what extent.
+
+In fact you can even use the remaining space on each disk for partitions of
+other purposes -- or to make more RAIDs. Say, if you got disks of:
+
+  2TB
+  2TB
+  3TB
+  3TB
+
+You can make one 4x2TB RAID0, and one 2x1TB RAID0 from the tails of 3TB disks.
+
+Or 4x2TB RAID5 and 2x1TB RAID1.
+
+Then run LVM on top of it all to join both into one large volume.
+
+-- 
+With respect,
+Roman
