@@ -1,61 +1,89 @@
-From: Barrister Robert Richter UN-Attorney at Law Court-Benin
-        <info.zennitbankplcnigerian@gmail.com>
-Subject: I have already sent you first payment US$5000.00 this morning through
- MONEY Gram service.it is available to pick up in address now.
-Date: Mon, 13 Apr 2020 13:41:28 +0200
-Message-ID: <CABHzvrngm=rA5Ct9h+JGdbyDfHJmnfntceDPoyJToo8PZn+YZg__6183.40882226534$1586778612$gmane$org@mail.gmail.com>
-Reply-To: mgbenin903@gmail.com
+From: Lidong Zhong <lidong.zhong@suse.com>
+Subject: [PATCH] Detail: adding sync status for cluster device
+Date: Mon, 13 Apr 2020 22:41:28 +0800
+Message-ID: <20200413144128.26177-1-lidong.zhong@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: jes@trained-monkey.org, linux-raid@vger.kernel.org
+Cc: guoqing.jiang@cloud.ionos.com, Lidong Zhong <lidong.zhong@suse.com>
 List-Id: linux-raid.ids
 
-ATTN DEAR BENEFICIARY.
+On the node with /proc/mdstat is
 
-GOOD NEWS.
+Personalities : [raid1]
+md0 : active raid1 sdb[4] sdc[3] sdd[2]
+      1046528 blocks super 1.2 [3/2] [UU_]
+        recover=REMOTE
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
-I have already sent you first payment US$5000.00 this morning through
-MONEY Gram service.it is available to pick up in address now.
+the 'State' of 'mdadm -Q -D' is accordingly
+State : clean, degraded
+With this patch, it will be
+State : clean, degraded, recovering (REMOTE)
 
-So we advise you to Contact This Money Gram office to pick up your
-transfer $US5000.00 today.
+Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
+---
+ Detail.c | 9 ++++++---
+ mdadm.h  | 3 ++-
+ mdstat.c | 2 ++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-
-Note that your compensation payment funds is total amount $US2.800,000
-Million Dollars.We have instructed the Money Gram Agent,Mr. James
-Gadner to keep sending the transfer to you daily, but the maximum
-amount you will be receiving everyday is US$5000.00. Contact Agent now
-to pick up your first payment $US5000.00 immediately.
-
-Contact Person, Mr. James Gadner, Dir. Money Gram Benin.
-Email: mgbenin903@gmail.com
-Telephone Numbers: +229 62819378/ +229 98477762
-
-HERE IS YOUR PAYMENT DETAILS FOR THE FIRST =C2=A3US5000.00 SENT TODAY.
-
-Track View Website link:
-https://secure.moneygram.com/track
-Sender=E2=80=99s First name: David
-Sender=E2=80=99s Last Name: Joiner
-Money Transfer Control Number (MTCN) (REFERENCE)# 26046856
-
-Contact the Mmoney Gram Urgent and reconfirm your address to the
-office before, they will allow you to pick up the transfer today.
-
-HERE IS WHAT REQUIRED OF YOU.
-
-YOUR FULL NAME---------
-ADDRESS--------------
-COUNTRY-----------------------------
-TELEPHONE NUMBERS-----------------
-
-Note, I paid the transfer fee for you, but only you are required to
-send to the office is $75 only,Been Your Payment File activation fee,
-Send once you contact the office,before you can able to pick up your
-transfer today.
-
-Let me know once you pick up first payment today.
-
-Barrister Robert Richter UN-Attorney at Law Court-Benin
+diff --git a/Detail.c b/Detail.c
+index 832485f..03d5e04 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -496,17 +496,20 @@ int Detail(char *dev, struct context *c)
+ 			} else
+ 				arrayst = "active";
+ 
+-			printf("             State : %s%s%s%s%s%s \n",
++			printf("             State : %s%s%s%s%s%s%s \n",
+ 			       arrayst, st,
+ 			       (!e || (e->percent < 0 &&
+ 				       e->percent != RESYNC_PENDING &&
+-				       e->percent != RESYNC_DELAYED)) ?
++				       e->percent != RESYNC_DELAYED &&
++				       e->percent != RESYNC_REMOTE)) ?
+ 			       "" : sync_action[e->resync],
+ 			       larray_size ? "": ", Not Started",
+ 			       (e && e->percent == RESYNC_DELAYED) ?
+ 			       " (DELAYED)": "",
+ 			       (e && e->percent == RESYNC_PENDING) ?
+-			       " (PENDING)": "");
++			       " (PENDING)": "",
++			       (e && e->percent == RESYNC_REMOTE) ?
++			       " (REMOTE)": "");
+ 		} else if (inactive && !is_container) {
+ 			printf("             State : inactive\n");
+ 		}
+diff --git a/mdadm.h b/mdadm.h
+index d94569f..399478b 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1815,7 +1815,8 @@ enum r0layout {
+ #define RESYNC_NONE -1
+ #define RESYNC_DELAYED -2
+ #define RESYNC_PENDING -3
+-#define RESYNC_UNKNOWN -4
++#define RESYNC_REMOTE  -4
++#define RESYNC_UNKNOWN -5
+ 
+ /* When using "GET_DISK_INFO" it isn't certain how high
+  * we need to check.  So we impose an absolute limit of
+diff --git a/mdstat.c b/mdstat.c
+index 7e600d0..20577a3 100644
+--- a/mdstat.c
++++ b/mdstat.c
+@@ -257,6 +257,8 @@ struct mdstat_ent *mdstat_read(int hold, int start)
+ 					ent->percent = RESYNC_DELAYED;
+ 				if (l > 8 && strcmp(w+l-8, "=PENDING") == 0)
+ 					ent->percent = RESYNC_PENDING;
++				if (l > 7 && strcmp(w+l-7, "=REMOTE") == 0)
++					ent->percent = RESYNC_REMOTE;
+ 			} else if (ent->percent == RESYNC_NONE &&
+ 				   w[0] >= '0' &&
+ 				   w[0] <= '9' &&
+-- 
+2.16.4
