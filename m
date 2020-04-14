@@ -1,90 +1,57 @@
-From: Lidong Zhong <lidong.zhong@suse.com>
-Subject: [PATCH] Detail: adding sync status for cluster device
-Date: Tue, 14 Apr 2020 16:19:41 +0800
-Message-ID: <20200414081941.6577-1-lidong.zhong@suse.com>
+From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
+Subject: Setup Recommendation on UEFI/GRUB/RAID1/LVM
+Date: Tue, 14 Apr 2020 15:02:01 +0200
+Message-ID: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org, linux-raid@vger.kernel.org
-Cc: guoqing.jiang@cloud.ionos.com, Lidong Zhong <lidong.zhong@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On the node with /proc/mdstat is
+Hi List.
+I want to set up a new server. Data should be redundant that is why I 
+want to use RAID level 1 using 2 HDs, each having 1TB. Like suggested in 
+the wiki, I want to have the RAID running on a partition which has 
+TOTAL_SIZE - 100M allocated for smoother replacement of an array-disk in 
+case of failure.
 
-Personalities : [raid1]
-md0 : active raid1 sdb[4] sdc[3] sdd[2]
-      1046528 blocks super 1.2 [3/2] [UU_]
-        recover=REMOTE
-      bitmap: 1/1 pages [4KB], 65536KB chunk
+The firmware is UEFI, Partitioning will be made using GPT/gdisk.
 
-Let's change the 'State' of 'mdadm -Q -D' accordingly
-State : clean, degraded
-With this patch, it will be
-State : clean, degraded, recovering (REMOTE)
+Boot manager should be GRUB (not legacy).
 
-Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
-Acked-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
----
- Detail.c | 9 ++++++---
- mdadm.h  | 3 ++-
- mdstat.c | 2 ++
- 3 files changed, 10 insertions(+), 4 deletions(-)
+To be safe on system updates I want to use LVM snapshots. I like to make 
+a LVM-based snapshot when the system comes up, do the system updates, 
+perform the test and dicide either to go with the updates made or revert 
+to the original state.
 
-diff --git a/Detail.c b/Detail.c
-index 832485f..03d5e04 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -496,17 +496,20 @@ int Detail(char *dev, struct context *c)
- 			} else
- 				arrayst = "active";
- 
--			printf("             State : %s%s%s%s%s%s \n",
-+			printf("             State : %s%s%s%s%s%s%s \n",
- 			       arrayst, st,
- 			       (!e || (e->percent < 0 &&
- 				       e->percent != RESYNC_PENDING &&
--				       e->percent != RESYNC_DELAYED)) ?
-+				       e->percent != RESYNC_DELAYED &&
-+				       e->percent != RESYNC_REMOTE)) ?
- 			       "" : sync_action[e->resync],
- 			       larray_size ? "": ", Not Started",
- 			       (e && e->percent == RESYNC_DELAYED) ?
- 			       " (DELAYED)": "",
- 			       (e && e->percent == RESYNC_PENDING) ?
--			       " (PENDING)": "");
-+			       " (PENDING)": "",
-+			       (e && e->percent == RESYNC_REMOTE) ?
-+			       " (REMOTE)": "");
- 		} else if (inactive && !is_container) {
- 			printf("             State : inactive\n");
- 		}
-diff --git a/mdadm.h b/mdadm.h
-index d94569f..399478b 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1815,7 +1815,8 @@ enum r0layout {
- #define RESYNC_NONE -1
- #define RESYNC_DELAYED -2
- #define RESYNC_PENDING -3
--#define RESYNC_UNKNOWN -4
-+#define RESYNC_REMOTE  -4
-+#define RESYNC_UNKNOWN -5
- 
- /* When using "GET_DISK_INFO" it isn't certain how high
-  * we need to check.  So we impose an absolute limit of
-diff --git a/mdstat.c b/mdstat.c
-index 7e600d0..20577a3 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -257,6 +257,8 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 					ent->percent = RESYNC_DELAYED;
- 				if (l > 8 && strcmp(w+l-8, "=PENDING") == 0)
- 					ent->percent = RESYNC_PENDING;
-+				if (l > 7 && strcmp(w+l-7, "=REMOTE") == 0)
-+					ent->percent = RESYNC_REMOTE;
- 			} else if (ent->percent == RESYNC_NONE &&
- 				   w[0] >= '0' &&
- 				   w[0] <= '9' &&
--- 
-2.16.4
+I have read that - when using UEFI - the EFI-System-Partition (ESP) has 
+to reside in a own native partition, not in a RAID nor LVM block device.
+
+Also I read a recommendation to put SWAP in a seperate native partition 
+and raid it in case you want to avoid a software crash when 1 disk fails.
+
+I wonder, how I should build up this construct. I thought I could build 
+one partition with TOTAL_SIZE - 100M, Type FD00, on each device, take 
+these two (sda1 + sdb1) and build a RAID 1 array named md0. Next make 
+md0 the physical volume of my LVM (pvcreate /dev/md0) and after that add 
+a volume group in which I put my logical volumes:
+- swap - type EF00
+- /boot - with filesystem fat32 for uefi
+- /home - ext4
+- /tmp - ext4
+- / - ext4
+- /var/lib/mysql - ext4 with special mount options
+- /var/lib/vmimages - ext4 with special mount options
+
+Is this doable or is it not working since UEFI will not find my 
+bootimage, because in this config it is sitting not in an own native 
+partition?
+
+If it is not doable, do you see any suitable setup to archive my goals? 
+I do not want to use btrfs.
+
+Thanks,
+Steffi
