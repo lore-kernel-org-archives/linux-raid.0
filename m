@@ -1,40 +1,32 @@
-From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
-Date: Tue, 14 Apr 2020 21:13:45 +0200
-Message-ID: <fe996f6f-3b0a-4638-d74d-ae6dc99599df@peter-speer.de>
+Date: Tue, 14 Apr 2020 20:36:14 +0100
+Message-ID: <5E9610AE.3000507@youngman.org.uk>
 References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
  <5E95C698.1030307@youngman.org.uk>
  <13a3bc12-67f7-46d5-7e6a-c6880ace4b1c@peter-speer.de>
  <5E95F461.50209@youngman.org.uk>
+ <fe996f6f-3b0a-4638-d74d-ae6dc99599df@peter-speer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5E95F461.50209@youngman.org.uk>
-Content-Language: de-DE
+In-Reply-To: <fe996f6f-3b0a-4638-d74d-ae6dc99599df@peter-speer.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 14/04/20 20:13, Stefanie Leisestreichler wrote:
+>> I'd just use type linux ...
 
+> Could you please be a little more concrete on this one?
 
-On 14.04.20 19:35, Wols Lists wrote:
-> I prefer swap to be at least twice ram. A lot of people think I'm daft
-> for that, but it always used to be the rule things were better that way.
-Twice RAM means 32G here, no prob, will do so. Not afraid of DoS-Attacks 
-also - this machine operates in stealth mode and has got the most clean 
-logs one could have seen so far :-)
+The old scheme linux disks were 83. That makes it 8300 on gpt. Like 82
+is swap.
 
->> OK. Does this mean that I have to partition my both drives first and
->> after that create the raid arrays, which will end in /dev/md0 for ESP
->> (mount point /boot), /dev/md1 (swap), /dev/md2 for the rest?
-> Yup. Apart from the fact that they will probably be 126, 125 and 124 not
-> 0, 1, 2. And if I were you I'd name them, for example EFI, SWAP, MAIN or
-> LVM.
-I will do so, thanks for the hint.
+At the end of the day, linux doesn't care much. So why should you? In
+the old days you needed disk-type raid to tell the kernel to
+auto-assemble it, but you shouldn't be using that nowadays.
 
->> What Partition Type do I have to use for /dev/sd[a|b]3? Will it be LVM
->> or RAID?
->>
-> I'd just use type linux ...
-Could you please be a little more concrete on this one?
+Cheers,
+Wol
