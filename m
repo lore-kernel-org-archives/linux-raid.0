@@ -1,70 +1,40 @@
 From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
 Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
-Date: Tue, 14 Apr 2020 21:00:48 +0200
-Message-ID: <f415cfb3-9612-d29d-17c1-d34405233519@peter-speer.de>
+Date: Tue, 14 Apr 2020 21:13:45 +0200
+Message-ID: <fe996f6f-3b0a-4638-d74d-ae6dc99599df@peter-speer.de>
 References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
- <875ze23pfm.fsf@vps.thesusis.net>
+ <5E95C698.1030307@youngman.org.uk>
+ <13a3bc12-67f7-46d5-7e6a-c6880ace4b1c@peter-speer.de>
+ <5E95F461.50209@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <875ze23pfm.fsf@vps.thesusis.net>
+In-Reply-To: <5E95F461.50209@youngman.org.uk>
 Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <phill@thesusis.net>
-Cc: linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 14.04.20 20:14, Phillip Susi wrote:
-> 
-> Stefanie Leisestreichler writes:
-> 
->> To be safe on system updates I want to use LVM snapshots. I like to make
->> a LVM-based snapshot when the system comes up, do the system updates,
->> perform the test and dicide either to go with the updates made or revert
->> to the original state.
-> 
-> Tradditional LVM snapshots were not suitable for keeping multiple, long
-> lived snapshots around.  They were really only for temporary use, such
-> as taking a snapshot to do a dump of without having to shut down
-> services.  I seem to remember they were developing a new multi snapshot
-> dm backend that would address some of these shortcomings, but I can't
-> find anything about that now in the google machine.
-> 
-I could imagine living with this limitation since I
-- do not expect to have to revert to the original state at all
-- will have a decision about deleting/merging the snapshot pretty soon 
-after the tests.
+On 14.04.20 19:35, Wols Lists wrote:
+> I prefer swap to be at least twice ram. A lot of people think I'm daft
+> for that, but it always used to be the rule things were better that way.
+Twice RAM means 32G here, no prob, will do so. Not afraid of DoS-Attacks 
+also - this machine operates in stealth mode and has got the most clean 
+logs one could have seen so far :-)
 
->> I have read that - when using UEFI - the EFI-System-Partition (ESP) has
->> to reside in a own native partition, not in a RAID nor LVM block device.
-> 
-> Correct.
-This is exactly the point which I do not understand. So it is implicitly 
-saying that it makes no sense to raid the 2 EFI-System-Partitions (sda1 
-+ sdb1), i.e. as /dev/md124, as GRUB can not write to a RAID device and 
-instead uses /dev/sda1 and no automatic sync will happen?
+>> OK. Does this mean that I have to partition my both drives first and
+>> after that create the raid arrays, which will end in /dev/md0 for ESP
+>> (mount point /boot), /dev/md1 (swap), /dev/md2 for the rest?
+> Yup. Apart from the fact that they will probably be 126, 125 and 124 not
+> 0, 1, 2. And if I were you I'd name them, for example EFI, SWAP, MAIN or
+> LVM.
+I will do so, thanks for the hint.
 
-If that is true, I wonder how to setup a system using RAID 1 where you 
-can - frankly spoken - remove one or the other disk and boot it :-(
-
-> 
->> I wonder, how I should build up this construct. I thought I could build
->> one partition with TOTAL_SIZE - 100M, Type FD00, on each device, take
->> these two (sda1 + sdb1) and build a RAID 1 array named md0. Next make
->> md0 the physical volume of my LVM (pvcreate /dev/md0) and after that add
->> a volume group in which I put my logical volumes:
->> - swap - type EF00
-I was wrong with that, swap will be type 8200.
-
-
->> - /boot - with filesystem fat32 for uefi
-> 
-> Like you mentioned above, this needs to be a native partition, not a
-> logical volume.  Actually you only need /boot/EFI in a native fat32
-> partition, not all of /boot.
-> 
-> 
-OK, got it and will do so.
+>> What Partition Type do I have to use for /dev/sd[a|b]3? Will it be LVM
+>> or RAID?
+>>
+> I'd just use type linux ...
+Could you please be a little more concrete on this one?
