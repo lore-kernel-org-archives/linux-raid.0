@@ -1,89 +1,70 @@
-From: Lidong Zhong <lidong.zhong@suse.com>
-Subject: [PATCH] Detail: adding sync status for cluster device
-Date: Mon, 13 Apr 2020 22:41:28 +0800
-Message-ID: <20200413144128.26177-1-lidong.zhong@suse.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [PATCH 0/4] md: fix lockdep warning
+Date: Tue, 14 Apr 2020 09:20:31 +0200
+Message-ID: <c32c65e2-5803-7543-6ac9-e6f005d8ecb2@cloud.ionos.com>
+References: <20200404215711.4272-1-guoqing.jiang@cloud.ionos.com>
+ <CAPhsuW4rWa_ZCX=3eW9Xk_jtZdu+uKX4HZtbfEJfS9ms4a+OSg@mail.gmail.com>
+ <76835eb0-d3a7-c5ea-5245-4dcf21a40f7c@cloud.ionos.com>
+ <DA29BDF5-4B14-48AF-8B21-3B6A82857B7C@fb.com>
+ <11131DC5-A7DA-450B-86D9-803EAE8099A2@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <11131DC5-A7DA-450B-86D9-803EAE8099A2@fb.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org, linux-raid@vger.kernel.org
-Cc: guoqing.jiang@cloud.ionos.com, Lidong Zhong <lidong.zhong@suse.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On the node with /proc/mdstat is
+On 11.04.20 00:34, Song Liu wrote:
+>
+>> On Apr 9, 2020, at 5:32 PM, Song Liu <songliubraving@fb.com> wrote:
+>>
+>>
+>>
+>>> On Apr 9, 2020, at 2:47 PM, Guoqing Jiang <guoqing.jiang@cloud.ionos.com> wrote:
+>>>
+>>> On 09.04.20 09:25, Song Liu wrote:
+>>>> Thanks for the fix!
+>>>>
+>>>> On Sat, Apr 4, 2020 at 3:01 PM Guoqing Jiang
+>>>> <guoqing.jiang@cloud.ionos.com> wrote:
+>>>>> Hi,
+>>>>>
+>>>>> After LOCKDEP is enabled, we can see some deadlock issues, this patchset
+>>>>> makes workqueue is flushed only necessary, and the last patch is a cleanup.
+>>>>>
+>>>>> Thanks,
+>>>>> Guoqing
+>>>>>
+>>>>> Guoqing Jiang (5):
+>>>>>   md: add checkings before flush md_misc_wq
+>>>>>   md: add new workqueue for delete rdev
+>>>>>   md: don't flush workqueue unconditionally in md_open
+>>>>>   md: flush md_rdev_misc_wq for HOT_ADD_DISK case
+>>>>>   md: remove the extra line for ->hot_add_disk
+>>>> I think we will need a new workqueue (2/5). But I am not sure about
+>>>> whether we should
+>>>> do 1/5 and 3/5. It feels like we are hiding errors from lock_dep. With
+>>>> some quick grep,
+>>>> I didn't find code pattern like
+>>>>
+>>>>        if (work_pending(XXX))
+>>>>                flush_workqueue(XXX);
+>>> Maybe the way that md uses workqueue is quite different from other subsystems ...
+>>>
+>>> Because, this is the safest way to address the issue. Otherwise I suppose we have to
+>>> rearrange the lock order or introduce new lock, either of them is tricky and could
+>>> cause regression.
+>>>
+>>> Or maybe it is possible to  flush workqueue in md_check_recovery, but I would prefer
+>>> to make less change to avoid any potential risk.
+> After reading it a little more, I guess this might be the best solution for now.
+> I will keep it in a local branch for more tests.
 
-Personalities : [raid1]
-md0 : active raid1 sdb[4] sdc[3] sdd[2]
-      1046528 blocks super 1.2 [3/2] [UU_]
-        recover=REMOTE
-      bitmap: 1/1 pages [4KB], 65536KB chunk
+Thanks for your effort, if there is any issue then just let me know.
 
-the 'State' of 'mdadm -Q -D' is accordingly
-State : clean, degraded
-With this patch, it will be
-State : clean, degraded, recovering (REMOTE)
-
-Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
----
- Detail.c | 9 ++++++---
- mdadm.h  | 3 ++-
- mdstat.c | 2 ++
- 3 files changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/Detail.c b/Detail.c
-index 832485f..03d5e04 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -496,17 +496,20 @@ int Detail(char *dev, struct context *c)
- 			} else
- 				arrayst = "active";
- 
--			printf("             State : %s%s%s%s%s%s \n",
-+			printf("             State : %s%s%s%s%s%s%s \n",
- 			       arrayst, st,
- 			       (!e || (e->percent < 0 &&
- 				       e->percent != RESYNC_PENDING &&
--				       e->percent != RESYNC_DELAYED)) ?
-+				       e->percent != RESYNC_DELAYED &&
-+				       e->percent != RESYNC_REMOTE)) ?
- 			       "" : sync_action[e->resync],
- 			       larray_size ? "": ", Not Started",
- 			       (e && e->percent == RESYNC_DELAYED) ?
- 			       " (DELAYED)": "",
- 			       (e && e->percent == RESYNC_PENDING) ?
--			       " (PENDING)": "");
-+			       " (PENDING)": "",
-+			       (e && e->percent == RESYNC_REMOTE) ?
-+			       " (REMOTE)": "");
- 		} else if (inactive && !is_container) {
- 			printf("             State : inactive\n");
- 		}
-diff --git a/mdadm.h b/mdadm.h
-index d94569f..399478b 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1815,7 +1815,8 @@ enum r0layout {
- #define RESYNC_NONE -1
- #define RESYNC_DELAYED -2
- #define RESYNC_PENDING -3
--#define RESYNC_UNKNOWN -4
-+#define RESYNC_REMOTE  -4
-+#define RESYNC_UNKNOWN -5
- 
- /* When using "GET_DISK_INFO" it isn't certain how high
-  * we need to check.  So we impose an absolute limit of
-diff --git a/mdstat.c b/mdstat.c
-index 7e600d0..20577a3 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -257,6 +257,8 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 					ent->percent = RESYNC_DELAYED;
- 				if (l > 8 && strcmp(w+l-8, "=PENDING") == 0)
- 					ent->percent = RESYNC_PENDING;
-+				if (l > 7 && strcmp(w+l-7, "=REMOTE") == 0)
-+					ent->percent = RESYNC_REMOTE;
- 			} else if (ent->percent == RESYNC_NONE &&
- 				   w[0] >= '0' &&
- 				   w[0] <= '9' &&
--- 
-2.16.4
+Regards,
+Guoqing
