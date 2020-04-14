@@ -1,38 +1,36 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
 Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
-Date: Tue, 14 Apr 2020 18:20:07 +0200
-Message-ID: <f857fc03-d18b-a489-54c9-49c22ad19c39@thelounge.net>
+Date: Tue, 14 Apr 2020 18:41:01 +0200
+Message-ID: <bfb8fd04-0f6e-62af-44f8-c9336ef0dd66@peter-speer.de>
 References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
  <f9f2f479-2899-6774-eb20-bf81ed24bc7b@shaw.ca>
+ <f857fc03-d18b-a489-54c9-49c22ad19c39@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f9f2f479-2899-6774-eb20-bf81ed24bc7b@shaw.ca>
-Content-Language: en-US
+In-Reply-To: <f857fc03-d18b-a489-54c9-49c22ad19c39@thelounge.net>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: G <garboge@shaw.ca>, Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>, G <garboge@shaw.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-Am 14.04.20 um 18:00 schrieb G:
-> Since you are running disks less than 2TB I would suggest a more
-> rudimentary setup using legacy bios booting. This setup will not allow
-> disks greater than 2TB because they would not be partitioned GPT. There
-> would still be an ability to increase total storage using more disks.
-> There would be raid redundancy with the ability for grub to boot off
-> either disk.
+On 14.04.20 18:20, Reindl Harald wrote:
+> RAID machines are supposed to
+> live many many years and you just move the disks to your next machine
+> and boot as yesterday
 
-terrible idea in 2020
+This is exactly the idea behind that setup. My OS will be Arch Linux 
+which is a rolling distribution. I have some years of very good 
+experience with it on my development machine and I love to have the 
+newest and supported software/kernel/libs it is providing.
 
-Intel announced yeas ago that they itend to remove legacy bios booting
-in 2020 and even if it#s just in 2022: RAID machines are supposed to
-live many many years and you just move the disks to your next machine
-and boot as yesterday
-
-i argued like you in 2011 and now i have a 4x2 TB RAID10 and need to
-deal with EFI-partition on a USB stick with the replacement as soon as
-there are icelake or never serious desktop machines because there is no
-single reason to reinstall from scratch when you survived already 17
-fedora dist-upgrades
+For these very rare cases in which the system update will somehow hurt 
+something I need the LVM snapshots to get me running again pretty soon 
+if needed. I bought double hardware like motherboard/processor and will 
+change disks at latest after 5 years. The system is supposed to run for 
+10+ years and will host some virtual machines based on KVM (one of them 
+is from 2006 :-) running ubuntu LTS, totally outdated but always there, 
+when needed, guess the next 10 years, LOL).
