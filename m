@@ -1,62 +1,42 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH] raid5: use memalloc_noio_save()/restore in
- resize_chunks()
-Date: Wed, 15 Apr 2020 16:57:15 +0200
-Message-ID: <b7584395-6230-36a6-9d78-dd1e1b630bbd@cloud.ionos.com>
-References: <20200402081312.32709-1-colyli@suse.de>
- <fa7e30b9-7480-6c03-0f43-d561fed912fb@cloud.ionos.com>
- <5f27365b-768f-eb69-36ec-f4ed0c292c60@suse.de>
- <204e9fd0-3712-4864-2bf5-38913511e658@cloud.ionos.com>
- <20200415114814.GJ4629@dhcp22.suse.cz>
- <a1e83cb5-366c-17a7-3a4b-9cd8a54c3b48@cloud.ionos.com>
- <20200415142303.GN4629@dhcp22.suse.cz>
+From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
+Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
+Date: Wed, 15 Apr 2020 17:53:17 +0200
+Message-ID: <71886beb-495f-d7d5-75f2-f91a53ed4bd3@peter-speer.de>
+References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
+ <394a3255-251c-41d1-8a65-2451e5503ef9@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200415142303.GN4629@dhcp22.suse.cz>
-Content-Language: en-US
+In-Reply-To: <394a3255-251c-41d1-8a65-2451e5503ef9@teksavvy.com>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Coly Li <colyli@suse.de>, songliubraving@fb.com, linux-raid@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>
+To: "J. Brian Kelley" <jbk@teksavvy.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15.04.20 16:23, Michal Hocko wrote:
-> On Wed 15-04-20 16:10:08, Guoqing Jiang wrote:
->> On 15.04.20 13:48, Michal Hocko wrote:
->>> On Thu 09-04-20 23:38:13, Guoqing Jiang wrote:
->>> [...]
->>>> Not know memalloc_noio_{save,restore} well, but I guess it is better
->>>> to use them to mark a small scope, just my two cents.
->>> This would go against the intentio of the api. It is really meant to
->>> define reclaim recursion problematic scope.
->> Well, in current proposal, the scope is just when
->> scribble_allo/kvmalloc_array is called.
->>
->> memalloc_noio_save
->> scribble_allo/kvmalloc_array
->> memalloc_noio_restore
->>
->> With the new proposal, the marked scope would be bigger than current one
->> since there
->> are lots of places call mddev_suspend/resume.
->>
->> mddev_suspend
->> memalloc_noio_save
->> ...
->> memalloc_noio_restore
->> mddev_resume
->>
->> IMHO, if the current proposal works then what is the advantage to increase
->> the scope.
-> The advantage is twofold. It serves the documentation purpose because it
-> is clear _what_ and _why_ is the actual allocation restricted context.
-> In this case mddev_{suspend,resume} because XYZ and you do not have to
-> care about __GFP_IO for _any_ allocation inside the scope.
 
-Personally, I'd prefer fine grained protection scope, anyway just my own
-flavor. And I think Song has his opinion about the proposal, I will respect
-his decision.
 
-Thanks,
-Guoqing
+On 15.04.20 17:02, J. Brian Kelley wrote:
+> As for the final heresy, BTRFS, really not the time or place...
+> 
+>    - But it does provide a 'swap FILE' capability (more memory is still 
+> preferable).
+>    - RAID1 is not affected by the "write-hole".
+>    - extremely efficient snapshots
+>    - everything in the file system (no LVM, no MDADM)
+> 
+> The only concern is that you MUST instruct BTRFS to NOT use the entire 
+> available partition (btrfs shrink) to allow leeway for a resize.
+
+I was thinking about using btrfs too, but I am afraid of loosing data 
+and making inreversable faults which could cause data loss/fragmentation 
+(for databases and kvm-images, i.e.) and so on.
+
+I have found a lot of relevant information how to use it somewhere in 
+the net and how to do this and that but not the one place where all the 
+dos and donts are collected to start with :-(
+
+Your hint about btrfs is new to me also even I read the docs in their 
+wiki before. I bet I will find myself in a situation/environment which 
+will be hard to administrate because of a gap of information I was 
+overseeing when I took an action which I shouldn't.
