@@ -1,56 +1,47 @@
-From: Coly Li <colyli@suse.de>
-Subject: [BUG REPORT] md raid5 with write log does not start
-Date: Fri, 17 Apr 2020 00:30:25 +0800
-Message-ID: <4ad57f1f-a00f-3bc6-33d2-f30ca8e18c0d@suse.de>
+From: G <garboge@shaw.ca>
+Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
+Date: Thu, 16 Apr 2020 11:00:45 -0600
+Message-ID: <1142669d-1cda-b637-86d5-ddc0bee1497a@shaw.ca>
+References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
+ <f9f2f479-2899-6774-eb20-bf81ed24bc7b@shaw.ca>
+ <f857fc03-d18b-a489-54c9-49c22ad19c39@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <f857fc03-d18b-a489-54c9-49c22ad19c39@thelounge.net>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>, Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks,
+On 2020-04-14 10:20 a.m., Reindl Harald wrote:
+>
+> Am 14.04.20 um 18:00 schrieb G:
+>> Since you are running disks less than 2TB I would suggest a more
+>> rudimentary setup using legacy bios booting. This setup will not allow
+>> disks greater than 2TB because they would not be partitioned GPT. There
+>> would still be an ability to increase total storage using more disks.
+>> There would be raid redundancy with the ability for grub to boot off
+>> either disk.
+> terrible idea in 2020
+>
+> Intel announced yeas ago that they itend to remove legacy bios booting
+> in 2020 and even if it#s just in 2022: RAID machines are supposed to
+> live many many years and you just move the disks to your next machine
+> and boot as yesterday
+>
+> i argued like you in 2011 and now i have a 4x2 TB RAID10 and need to
+> deal with EFI-partition on a USB stick with the replacement as soon as
+> there are icelake or never serious desktop machines because there is no
+> single reason to reinstall from scratch when you survived already 17
+> fedora dist-upgrades
+>
+I guess my assumptions were that in using 2TB disks this was or would be 
+a relatively short-lived/limited situation possibly using an older 
+motherboard. ;-)
 
-When I try to create md raid5 array with 4 NVMe SSD (3 for raid array
-component disks, 1 for write log), the kernel is Linux v5.6 (not Linux
-v5.7-rc), I find the md raid5 array cannot start.
+Since the setup will be grub/UEFI on the 2TB disks what would be the 
+process in upgrading to larger disks?
 
-I use this command to create md raid5 with writelog,
-
-mdadm -C /dev/md0 -l 5 -n 3 /dev/nvme{0,1,2}n1 --write-journal /dev/nvme3n1
-
-From terminal I have the following 2 lines information,
-
-mdadm: Defaulting to version 1.2 metadata
-mdadm: RUN_ARRAY failed: Invalid argument
-
-From kernel message, I have the following dmesg lines,
-
-[13624.897066] md/raid:md0: array cannot have both journal and bitmap
-[13624.897068] md: pers->run() failed ...
-[13624.897105] md: md0 stopped.
-
-But from /proc/mdstat, it seems an inactive array is still created,
-
-/proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md127 : inactive nvme2n1[4](S) nvme0n1[0](S) nvme3n1[3](S)
-      11251818504 blocks super 1.2
-
-unused devices: <none>
-
-From all the information it seems when initialize raid5 cache the bitmap
-information is not cleared, so an error message shows up and raid5_run()
-fails.
-
-I don't have clear idea who to handle bitmap, journal and ppl properly,
-so I firstly report the problem here.
-
-So far I am not sure whether this is a bug or I do something wrong. Hope
-other people may reproduce the above failure too.
-
-Thanks.
-
-Coly Li
+Thanks
