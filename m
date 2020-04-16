@@ -1,49 +1,56 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
-Date: Thu, 16 Apr 2020 12:16:03 +0100
-Message-ID: <5E983E73.8010309@youngman.org.uk>
-References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
- <5E95C698.1030307@youngman.org.uk>
- <461be4bb-a86b-dca0-605f-cda13bc1602d@suddenlinkmail.com>
+From: Coly Li <colyli@suse.de>
+Subject: [BUG REPORT] md raid5 with write log does not start
+Date: Fri, 17 Apr 2020 00:30:25 +0800
+Message-ID: <4ad57f1f-a00f-3bc6-33d2-f30ca8e18c0d@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <461be4bb-a86b-dca0-605f-cda13bc1602d@suddenlinkmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>, mdraid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 16/04/20 02:50, David C. Rankin wrote:
-> On 04/14/2020 09:20 AM, Wols Lists wrote:
->> That's true, but is it worth it? RAM is cheap, max out your motherboard,
->> and try and avoid falling into swap at all. I have one swap partition
->> per disk, but simply set them up as equal priority so the kernel does
->> its own raid-0 stripe across them. Yes a disk failure would kill any
->> apps swapped on to that disk, but my system rarely swaps...
-> 
-> That's a neat approach, I do it just the opposite and care RAID1 partitions
-> for swap (though I rarely swap as well). I've never had an issue restarting
-> after a failure (or me doing something dumb like hitting the wrong button on
-> the UPS)
-> 
-> So that I'm understanding, you simply create a swap partition on each disk not
-> part of an array, swapon both and let the kernel decide?
-> 
-Don't forget the mount option "pri=1" ... the following is the relevant
-lines from my fstab ...
+Hi folks,
 
-# /dev/sda2             none            swap            sw,pri=1        0 0
-UUID=184b6322-eb42-405e-b958-e55014ce3691       none    swap    sw,pri=1
-       0 0
-# /dev/sdb2             none            swap            sw,pri=1        0 0
-UUID=48913c8d-e4c4-482d-9733-e44be3889f07       none    swap    sw,pri=1
-       0 0
-# /dev/sdc2             none            swap            sw,pri=1        0 0
+When I try to create md raid5 array with 4 NVMe SSD (3 for raid array
+component disks, 1 for write log), the kernel is Linux v5.6 (not Linux
+v5.7-rc), I find the md raid5 array cannot start.
 
-If you don't use the priority option, each partition is allocated a
-different priority and it fills them up one after the other (raid
-linear). Make them all equal priority, and it'll stripe them.
+I use this command to create md raid5 with writelog,
 
-Cheers,
-Wol
+mdadm -C /dev/md0 -l 5 -n 3 /dev/nvme{0,1,2}n1 --write-journal /dev/nvme3n1
+
+From terminal I have the following 2 lines information,
+
+mdadm: Defaulting to version 1.2 metadata
+mdadm: RUN_ARRAY failed: Invalid argument
+
+From kernel message, I have the following dmesg lines,
+
+[13624.897066] md/raid:md0: array cannot have both journal and bitmap
+[13624.897068] md: pers->run() failed ...
+[13624.897105] md: md0 stopped.
+
+But from /proc/mdstat, it seems an inactive array is still created,
+
+/proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md127 : inactive nvme2n1[4](S) nvme0n1[0](S) nvme3n1[3](S)
+      11251818504 blocks super 1.2
+
+unused devices: <none>
+
+From all the information it seems when initialize raid5 cache the bitmap
+information is not cleared, so an error message shows up and raid5_run()
+fails.
+
+I don't have clear idea who to handle bitmap, journal and ppl properly,
+so I firstly report the problem here.
+
+So far I am not sure whether this is a bug or I do something wrong. Hope
+other people may reproduce the above failure too.
+
+Thanks.
+
+Coly Li
