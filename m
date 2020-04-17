@@ -1,70 +1,171 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [BUG REPORT] md raid5 with write log does not start
-Date: Fri, 17 Apr 2020 12:28:40 +0200
-Message-ID: <fee374b7-0fc6-2cf9-6f36-be5c95ec3f60@intel.com>
-References: <4ad57f1f-a00f-3bc6-33d2-f30ca8e18c0d@suse.de>
+From: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+Subject: [PATCH v2] Manage, imsm: Write metadata before add
+Date: Fri, 17 Apr 2020 13:55:55 +0200
+Message-ID: <20200417115555.24080-1-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4ad57f1f-a00f-3bc6-33d2-f30ca8e18c0d@suse.de>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/16/20 6:30 PM, Coly Li wrote:
-> Hi folks,
-> 
-> When I try to create md raid5 array with 4 NVMe SSD (3 for raid array
-> component disks, 1 for write log), the kernel is Linux v5.6 (not Linux
-> v5.7-rc), I find the md raid5 array cannot start.
-> 
-> I use this command to create md raid5 with writelog,
-> 
-> mdadm -C /dev/md0 -l 5 -n 3 /dev/nvme{0,1,2}n1 --write-journal /dev/nvme3n1
-> 
-> From terminal I have the following 2 lines information,
-> 
-> mdadm: Defaulting to version 1.2 metadata
-> mdadm: RUN_ARRAY failed: Invalid argument
-> 
-> From kernel message, I have the following dmesg lines,
-> 
-> [13624.897066] md/raid:md0: array cannot have both journal and bitmap
-> [13624.897068] md: pers->run() failed ...
-> [13624.897105] md: md0 stopped.
-> 
-> But from /proc/mdstat, it seems an inactive array is still created,
-> 
-> /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md127 : inactive nvme2n1[4](S) nvme0n1[0](S) nvme3n1[3](S)
->       11251818504 blocks super 1.2
-> 
-> unused devices: <none>
-> 
-> From all the information it seems when initialize raid5 cache the bitmap
-> information is not cleared, so an error message shows up and raid5_run()
-> fails.
-> 
-> I don't have clear idea who to handle bitmap, journal and ppl properly,
-> so I firstly report the problem here.
-> 
-> So far I am not sure whether this is a bug or I do something wrong. Hope
-> other people may reproduce the above failure too.
+New drive in container always appears as spare. Manager is able to
+handle that, and queues appropriative update to monitor.
+No update from mdadm side has to be processed, just insert the drive and
+ping the mdmon. Metadata has to be written if no mdmon is running (case
+for Raid0 or container without arrays).
 
-Hi Coly,
+If bare drive is added very early on startup (by custom bare rule),
+there is possiblity that mdmon was not restarted after switch root. Old
+one is not able to handle new drive. New one fails because there is
+drive without metadata in container and metadata cannot be loaded.
 
-It looks like the mdadm that you're using added an internal bitmap
-despite creating the array with a journal. I think that was fixed some
-time ago. The kernel correctly does not allow starting the array with
-bitmap and journal (or ppl). You can assemble this now with:
+To prevent this, write spare metadata before adding device
+to container. Mdmon will overwrite it (same case as spare migration,
+if drive appears it writes the most recent metadata).
+Metadata has to be written only on new drive before sysfs_add_disk(),
+don't race with mdmon if running.
 
-mdadm -A /dev/md0 /dev/nvme[0-3]n1 --update=no-bitmap
+Signed-off-by: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+---
+v2: removed unused variable.
 
-You can also explicitly tell mdadm not to add a bitmap when creating an
-array using "--bitmap=none".
+ Manage.c      |  6 +----
+ super-intel.c | 66 +++++++++++++++++++++++++++++++++------------------
+ 2 files changed, 44 insertions(+), 28 deletions(-)
 
-Regards,
-Artur
+diff --git a/Manage.c b/Manage.c
+index b22c3969..0a5f09b3 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -994,17 +994,13 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+ 
+ 		Kill(dv->devname, NULL, 0, -1, 0);
+ 		dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
+-		if (mdmon_running(tst->container_devnm))
+-			tst->update_tail = &tst->updates;
+ 		if (tst->ss->add_to_super(tst, &disc, dfd,
+ 					  dv->devname, INVALID_SECTORS)) {
+ 			close(dfd);
+ 			close(container_fd);
+ 			return -1;
+ 		}
+-		if (tst->update_tail)
+-			flush_metadata_updates(tst);
+-		else
++		if (!mdmon_running(tst->container_devnm))
+ 			tst->ss->sync_metadata(tst);
+ 
+ 		sra = sysfs_read(container_fd, NULL, 0);
+diff --git a/super-intel.c b/super-intel.c
+index c9a1af5b..06fb5ac2 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5799,6 +5799,9 @@ int mark_spare(struct dl *disk)
+ 	return ret_val;
+ }
+ 
++
++static int write_super_imsm_spare(struct intel_super *super, struct dl *d);
++
+ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 			     int fd, char *devname,
+ 			     unsigned long long data_offset)
+@@ -5928,9 +5931,13 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 		dd->next = super->disk_mgmt_list;
+ 		super->disk_mgmt_list = dd;
+ 	} else {
++		/* this is called outside of mdmon
++		 * write initial spare metadata
++		 * mdmon will overwrite it.
++		 */
+ 		dd->next = super->disks;
+ 		super->disks = dd;
+-		super->updates_pending++;
++		write_super_imsm_spare(super, dd);
+ 	}
+ 
+ 	return 0;
+@@ -5969,15 +5976,15 @@ static union {
+ 	struct imsm_super anchor;
+ } spare_record __attribute__ ((aligned(MAX_SECTOR_SIZE)));
+ 
+-/* spare records have their own family number and do not have any defined raid
+- * devices
+- */
+-static int write_super_imsm_spares(struct intel_super *super, int doclose)
++
++static int write_super_imsm_spare(struct intel_super *super, struct dl *d)
+ {
+ 	struct imsm_super *mpb = super->anchor;
+ 	struct imsm_super *spare = &spare_record.anchor;
+ 	__u32 sum;
+-	struct dl *d;
++
++	if (d->index != -1)
++		return 1;
+ 
+ 	spare->mpb_size = __cpu_to_le32(sizeof(struct imsm_super));
+ 	spare->generation_num = __cpu_to_le32(1UL);
+@@ -5990,28 +5997,41 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
+ 	snprintf((char *) spare->sig, MAX_SIGNATURE_LENGTH,
+ 		 MPB_SIGNATURE MPB_VERSION_RAID0);
+ 
+-	for (d = super->disks; d; d = d->next) {
+-		if (d->index != -1)
+-			continue;
++	spare->disk[0] = d->disk;
++	if (__le32_to_cpu(d->disk.total_blocks_hi) > 0)
++		spare->attributes |= MPB_ATTRIB_2TB_DISK;
+ 
+-		spare->disk[0] = d->disk;
+-		if (__le32_to_cpu(d->disk.total_blocks_hi) > 0)
+-			spare->attributes |= MPB_ATTRIB_2TB_DISK;
++	if (super->sector_size == 4096)
++		convert_to_4k_imsm_disk(&spare->disk[0]);
+ 
+-		if (super->sector_size == 4096)
+-			convert_to_4k_imsm_disk(&spare->disk[0]);
++	sum = __gen_imsm_checksum(spare);
++	spare->family_num = __cpu_to_le32(sum);
++	spare->orig_family_num = 0;
++	sum = __gen_imsm_checksum(spare);
++	spare->check_sum = __cpu_to_le32(sum);
+ 
+-		sum = __gen_imsm_checksum(spare);
+-		spare->family_num = __cpu_to_le32(sum);
+-		spare->orig_family_num = 0;
+-		sum = __gen_imsm_checksum(spare);
+-		spare->check_sum = __cpu_to_le32(sum);
++	if (store_imsm_mpb(d->fd, spare)) {
++		pr_err("failed for device %d:%d %s\n",
++			d->major, d->minor, strerror(errno));
++		return 1;
++	}
++
++	return 0;
++}
++/* spare records have their own family number and do not have any defined raid
++ * devices
++ */
++static int write_super_imsm_spares(struct intel_super *super, int doclose)
++{
++	struct dl *d;
++
++	for (d = super->disks; d; d = d->next) {
++		if (d->index != -1)
++			continue;
+ 
+-		if (store_imsm_mpb(d->fd, spare)) {
+-			pr_err("failed for device %d:%d %s\n",
+-				d->major, d->minor, strerror(errno));
++		if (write_super_imsm_spare(super, d))
+ 			return 1;
+-		}
++
+ 		if (doclose) {
+ 			close(d->fd);
+ 			d->fd = -1;
+-- 
+2.25.0
