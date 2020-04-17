@@ -1,171 +1,108 @@
-From: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
-Subject: [PATCH v2] Manage, imsm: Write metadata before add
-Date: Fri, 17 Apr 2020 13:55:55 +0200
-Message-ID: <20200417115555.24080-1-mariusz.tkaczyk@intel.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: Unable to fail/remove journal device
+Date: Fri, 17 Apr 2020 15:59:52 +0200
+Message-ID: <3a352fcd-095e-5cab-ffbd-5394544fbcb8@cloud.ionos.com>
+References: <59985bfe-2786-b4a9-64a4-283f5de98f82@tomt.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <59985bfe-2786-b4a9-64a4-283f5de98f82@tomt.net>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org
+To: Andre Tomt <andre@tomt.net>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-New drive in container always appears as spare. Manager is able to
-handle that, and queues appropriative update to monitor.
-No update from mdadm side has to be processed, just insert the drive and
-ping the mdmon. Metadata has to be written if no mdmon is running (case
-for Raid0 or container without arrays).
+On 30.03.20 01:35, Andre Tomt wrote:
+> I'm having a issue here where I am unable to get a journal device 
+> removed from a raid6 array. From what I could gather from mailing list 
+> posts and documentation, one should set the journal mode to 
+> write-through, fail the journal and remove it, then restart the array 
+> (perhaps with force).
+>
+> But this isnt working. The journal just gets re-added on array 
+> startup. I've done this successfully before, in the same way, I think.
+>
+> I also tried a bigger hammer, wipefs the journal device too, to "make 
+> sure", the array will come up but refuse any writes.
+>
+> For now, the journal device has been restored and the array is back to 
+> read-write, but I really need to get it removed at some point 
+> (preferably without re-building metadata with --assume-clean)
+>
+> Any ideas? Is this way just out of date?
+>
+> mdadm: 4.1-5ubuntu1
+> kernel: 5.5.13
+>
+> # cat /proc/mdstat
+> md2 : active (auto-read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
+> sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1] 
+> nvme0n1p1[12](J)
+>
+>       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+> [12/12] [UUUUUUUUUUUU]
+>
+>
+> # echo write-through > /sys/block/md2/md/journal_mode
+> # mdadm --fail /dev/md2 /dev/nvme0n1p1
+> mdadm: set /dev/nvme0n1p1 faulty in /dev/md2
+>
+> # mdadm --remove /dev/md2 /dev/nvme0n1p1
+>
+> mdadm: hot removed /dev/nvme0n1p1 from /dev/md2
+>
+> # cat /proc/mdstat
+> md2 : active (auto-read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
+> sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1]
+>
+>       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+> [12/12] [UUUUUUUUUUUU]
+>
+>
 
-If bare drive is added very early on startup (by custom bare rule),
-there is possiblity that mdmon was not restarted after switch root. Old
-one is not able to handle new drive. New one fails because there is
-drive without metadata in container and metadata cannot be loaded.
+Not know journal well, but I guess it is better to change the 
+consistency_policy before stop array
+by "echo resync > /sys/block/md2/md/consistency_policy" since journal 
+device is not available.
 
-To prevent this, write spare metadata before adding device
-to container. Mdmon will overwrite it (same case as spare migration,
-if drive appears it writes the most recent metadata).
-Metadata has to be written only on new drive before sysfs_add_disk(),
-don't race with mdmon if running.
+Thanks,
+Guoqing
 
-Signed-off-by: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
----
-v2: removed unused variable.
-
- Manage.c      |  6 +----
- super-intel.c | 66 +++++++++++++++++++++++++++++++++------------------
- 2 files changed, 44 insertions(+), 28 deletions(-)
-
-diff --git a/Manage.c b/Manage.c
-index b22c3969..0a5f09b3 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -994,17 +994,13 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 
- 		Kill(dv->devname, NULL, 0, -1, 0);
- 		dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
--		if (mdmon_running(tst->container_devnm))
--			tst->update_tail = &tst->updates;
- 		if (tst->ss->add_to_super(tst, &disc, dfd,
- 					  dv->devname, INVALID_SECTORS)) {
- 			close(dfd);
- 			close(container_fd);
- 			return -1;
- 		}
--		if (tst->update_tail)
--			flush_metadata_updates(tst);
--		else
-+		if (!mdmon_running(tst->container_devnm))
- 			tst->ss->sync_metadata(tst);
- 
- 		sra = sysfs_read(container_fd, NULL, 0);
-diff --git a/super-intel.c b/super-intel.c
-index c9a1af5b..06fb5ac2 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5799,6 +5799,9 @@ int mark_spare(struct dl *disk)
- 	return ret_val;
- }
- 
-+
-+static int write_super_imsm_spare(struct intel_super *super, struct dl *d);
-+
- static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 			     int fd, char *devname,
- 			     unsigned long long data_offset)
-@@ -5928,9 +5931,13 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 		dd->next = super->disk_mgmt_list;
- 		super->disk_mgmt_list = dd;
- 	} else {
-+		/* this is called outside of mdmon
-+		 * write initial spare metadata
-+		 * mdmon will overwrite it.
-+		 */
- 		dd->next = super->disks;
- 		super->disks = dd;
--		super->updates_pending++;
-+		write_super_imsm_spare(super, dd);
- 	}
- 
- 	return 0;
-@@ -5969,15 +5976,15 @@ static union {
- 	struct imsm_super anchor;
- } spare_record __attribute__ ((aligned(MAX_SECTOR_SIZE)));
- 
--/* spare records have their own family number and do not have any defined raid
-- * devices
-- */
--static int write_super_imsm_spares(struct intel_super *super, int doclose)
-+
-+static int write_super_imsm_spare(struct intel_super *super, struct dl *d)
- {
- 	struct imsm_super *mpb = super->anchor;
- 	struct imsm_super *spare = &spare_record.anchor;
- 	__u32 sum;
--	struct dl *d;
-+
-+	if (d->index != -1)
-+		return 1;
- 
- 	spare->mpb_size = __cpu_to_le32(sizeof(struct imsm_super));
- 	spare->generation_num = __cpu_to_le32(1UL);
-@@ -5990,28 +5997,41 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
- 	snprintf((char *) spare->sig, MAX_SIGNATURE_LENGTH,
- 		 MPB_SIGNATURE MPB_VERSION_RAID0);
- 
--	for (d = super->disks; d; d = d->next) {
--		if (d->index != -1)
--			continue;
-+	spare->disk[0] = d->disk;
-+	if (__le32_to_cpu(d->disk.total_blocks_hi) > 0)
-+		spare->attributes |= MPB_ATTRIB_2TB_DISK;
- 
--		spare->disk[0] = d->disk;
--		if (__le32_to_cpu(d->disk.total_blocks_hi) > 0)
--			spare->attributes |= MPB_ATTRIB_2TB_DISK;
-+	if (super->sector_size == 4096)
-+		convert_to_4k_imsm_disk(&spare->disk[0]);
- 
--		if (super->sector_size == 4096)
--			convert_to_4k_imsm_disk(&spare->disk[0]);
-+	sum = __gen_imsm_checksum(spare);
-+	spare->family_num = __cpu_to_le32(sum);
-+	spare->orig_family_num = 0;
-+	sum = __gen_imsm_checksum(spare);
-+	spare->check_sum = __cpu_to_le32(sum);
- 
--		sum = __gen_imsm_checksum(spare);
--		spare->family_num = __cpu_to_le32(sum);
--		spare->orig_family_num = 0;
--		sum = __gen_imsm_checksum(spare);
--		spare->check_sum = __cpu_to_le32(sum);
-+	if (store_imsm_mpb(d->fd, spare)) {
-+		pr_err("failed for device %d:%d %s\n",
-+			d->major, d->minor, strerror(errno));
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+/* spare records have their own family number and do not have any defined raid
-+ * devices
-+ */
-+static int write_super_imsm_spares(struct intel_super *super, int doclose)
-+{
-+	struct dl *d;
-+
-+	for (d = super->disks; d; d = d->next) {
-+		if (d->index != -1)
-+			continue;
- 
--		if (store_imsm_mpb(d->fd, spare)) {
--			pr_err("failed for device %d:%d %s\n",
--				d->major, d->minor, strerror(errno));
-+		if (write_super_imsm_spare(super, d))
- 			return 1;
--		}
-+
- 		if (doclose) {
- 			close(d->fd);
- 			d->fd = -1;
--- 
-2.25.0
+> # mdadm --stop /dev/md2
+>
+> mdadm: stopped /dev/md2
+>
+>
+> # mdadm --assemble /dev/md2 --force
+>
+> mdadm: /dev/md2 has been started with 12 drives and 1 journal.
+>  <-- !?
+> # cat /proc/mdstat
+> md2 : active (auto-read-only) raid6 sdm1[0] nvme0n1p1[12](J) sde1[11] 
+> sdk1[10] sdt1[9] sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] 
+> sdr1[2] sdd1[1]
+>
+>                                             ^^^
+>       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+> [12/12] [UUUUUUUUUUUU]
+>
+>
+> Okay then. Hammer time. Do all that again, wipefs the journal device, 
+> force start the array:
+>
+> # mdadm --assemble /dev/md2 --force
+>
+> mdadm: Journal is missing or stale, starting array read only.
+>
+> mdadm: /dev/md2 has been started with 12 drives.
+>
+> # cat /proc/mdstat
+> md2 : active (read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
+> sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1]
+>
+>       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+> [12/12] [UUUUUUUUUUUU]
+>
+>
+> Then it is just stuck in read-only.
