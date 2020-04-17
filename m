@@ -1,108 +1,53 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: Unable to fail/remove journal device
-Date: Fri, 17 Apr 2020 15:59:52 +0200
-Message-ID: <3a352fcd-095e-5cab-ffbd-5394544fbcb8@cloud.ionos.com>
-References: <59985bfe-2786-b4a9-64a4-283f5de98f82@tomt.net>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
+Date: Sat, 18 Apr 2020 00:24:52 +0100
+Message-ID: <87d085elvf.fsf@esperi.org.uk>
+References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
+        <875ze23pfm.fsf@vps.thesusis.net>
+        <f415cfb3-9612-d29d-17c1-d34405233519@peter-speer.de>
+        <13d82398-337f-6dae-cfe8-5f23ae413c23@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59985bfe-2786-b4a9-64a4-283f5de98f82@tomt.net>
-Content-Language: en-US
+In-Reply-To: <13d82398-337f-6dae-cfe8-5f23ae413c23@youngman.org.uk>
+        (antlists@youngman.org.uk's message of "Tue, 14 Apr 2020 21:05:25
+        +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>, linux-raid <linux-raid@vger.kernel.org>
+To: antlists <antlists@youngman.org.uk>
+Cc: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30.03.20 01:35, Andre Tomt wrote:
-> I'm having a issue here where I am unable to get a journal device 
-> removed from a raid6 array. From what I could gather from mailing list 
-> posts and documentation, one should set the journal mode to 
-> write-through, fail the journal and remove it, then restart the array 
-> (perhaps with force).
->
-> But this isnt working. The journal just gets re-added on array 
-> startup. I've done this successfully before, in the same way, I think.
->
-> I also tried a bigger hammer, wipefs the journal device too, to "make 
-> sure", the array will come up but refuse any writes.
->
-> For now, the journal device has been restored and the array is back to 
-> read-write, but I really need to get it removed at some point 
-> (preferably without re-building metadata with --assume-clean)
->
-> Any ideas? Is this way just out of date?
->
-> mdadm: 4.1-5ubuntu1
-> kernel: 5.5.13
->
-> # cat /proc/mdstat
-> md2 : active (auto-read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
-> sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1] 
-> nvme0n1p1[12](J)
->
->       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
-> [12/12] [UUUUUUUUUUUU]
->
->
-> # echo write-through > /sys/block/md2/md/journal_mode
-> # mdadm --fail /dev/md2 /dev/nvme0n1p1
-> mdadm: set /dev/nvme0n1p1 faulty in /dev/md2
->
-> # mdadm --remove /dev/md2 /dev/nvme0n1p1
->
-> mdadm: hot removed /dev/nvme0n1p1 from /dev/md2
->
-> # cat /proc/mdstat
-> md2 : active (auto-read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
-> sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1]
->
->       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
-> [12/12] [UUUUUUUUUUUU]
->
->
+On 14 Apr 2020, antlists@youngman.org.uk stated:
 
-Not know journal well, but I guess it is better to change the 
-consistency_policy before stop array
-by "echo resync > /sys/block/md2/md/consistency_policy" since journal 
-device is not available.
+> The CPU starts, jumps into the mobo rom, and then looks for an EFI
+> partition on the disk. Because it understands VFAT, it then reads the
 
-Thanks,
-Guoqing
+Side note: technically it doesn't understand VFAT, exactly, and some
+vendors (e.g. Apple) provide entirely separate drivers to read the ESP.
+However, the fs is *very close* to VFAT (actually FAT32), and in
+practice Linux's vfat driver works fine.
 
-> # mdadm --stop /dev/md2
->
-> mdadm: stopped /dev/md2
->
->
-> # mdadm --assemble /dev/md2 --force
->
-> mdadm: /dev/md2 has been started with 12 drives and 1 journal.
->  <-- !?
-> # cat /proc/mdstat
-> md2 : active (auto-read-only) raid6 sdm1[0] nvme0n1p1[12](J) sde1[11] 
-> sdk1[10] sdt1[9] sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] 
-> sdr1[2] sdd1[1]
->
->                                             ^^^
->       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
-> [12/12] [UUUUUUUUUUUU]
->
->
-> Okay then. Hammer time. Do all that again, wipefs the journal device, 
-> force start the array:
->
-> # mdadm --assemble /dev/md2 --force
->
-> mdadm: Journal is missing or stale, starting array read only.
->
-> mdadm: /dev/md2 has been started with 12 drives.
->
-> # cat /proc/mdstat
-> md2 : active (read-only) raid6 sdm1[0] sde1[11] sdk1[10] sdt1[9] 
-> sdl1[8] sdc1[7] sdj1[6] sdb1[5] sdu1[4] sds1[3] sdr1[2] sdd1[1]
->
->       58603894400 blocks super 1.2 level 6, 64k chunk, algorithm 2 
-> [12/12] [UUUUUUUUUUUU]
->
->
-> Then it is just stuck in read-only.
+See s13.3 "File System Format" in
+<https://uefi.org/sites/default/files/resources/UEFI_Spec_2_8_final.pdf>
+(and similarly-named sections in earlier spec versions).
+
+> I don't quite get this myself, but this is where it gets confusing.
+> EFI I think offers you a choice of bootloaders, which CAN include
+> grub, which then offers you a choice of operating systems. But EFI can
+> offer you a list of operating systems, too, which is why I said why
+> did you want to use grub?
+
+... which is why I don't. In my experience grub(2) is just another thing
+to go horribly wrong on an EFI system, with yet *another* set of driver
+reimplementations, some of which are downright dangerous. (The XFS one,
+for instance, which at one point assumed it could just access the fs as
+it was on the disk, when you can't do any such thing without replaying
+the journal first: XFS explicitly does not flush the journal on shutdown
+because it's a waste of time, given that the journal must always be
+present to access the fs anyway: but this means that accessing the fs
+without going through the journal can omit any number of transactions,
+quite possibly including the transactions that wrote out the kernel you
+expected to be booting. Thankfully XFS has since evolved to the point
+where grub simply can't read the fs at all -- sparse inode allocation
+and CRC'd metadata both break it -- so the temptation to try to use it
+on such filesystems is removed.)
