@@ -1,120 +1,70 @@
-From: "elitetorrent1.com" <info@elitetorrent1.com>
-Subject: Download latest movies from elitetorrent1.com
-Date: Thu, 16 Apr 2020 19:23:19 -1100
-Message-ID: <C59EC4E8.80BE2406__27049.1982855432$1587107399$gmane$org@elitetorrent1.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [BUG REPORT] md raid5 with write log does not start
+Date: Fri, 17 Apr 2020 12:28:40 +0200
+Message-ID: <fee374b7-0fc6-2cf9-6f36-be5c95ec3f60@intel.com>
+References: <4ad57f1f-a00f-3bc6-33d2-f30ca8e18c0d@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----------=_5E995647.8A84BD53"
-To: linux-assembly@vger.kernel.org, linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4ad57f1f-a00f-3bc6-33d2-f30ca8e18c0d@suse.de>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+On 4/16/20 6:30 PM, Coly Li wrote:
+> Hi folks,
+> 
+> When I try to create md raid5 array with 4 NVMe SSD (3 for raid array
+> component disks, 1 for write log), the kernel is Linux v5.6 (not Linux
+> v5.7-rc), I find the md raid5 array cannot start.
+> 
+> I use this command to create md raid5 with writelog,
+> 
+> mdadm -C /dev/md0 -l 5 -n 3 /dev/nvme{0,1,2}n1 --write-journal /dev/nvme3n1
+> 
+> From terminal I have the following 2 lines information,
+> 
+> mdadm: Defaulting to version 1.2 metadata
+> mdadm: RUN_ARRAY failed: Invalid argument
+> 
+> From kernel message, I have the following dmesg lines,
+> 
+> [13624.897066] md/raid:md0: array cannot have both journal and bitmap
+> [13624.897068] md: pers->run() failed ...
+> [13624.897105] md: md0 stopped.
+> 
+> But from /proc/mdstat, it seems an inactive array is still created,
+> 
+> /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md127 : inactive nvme2n1[4](S) nvme0n1[0](S) nvme3n1[3](S)
+>       11251818504 blocks super 1.2
+> 
+> unused devices: <none>
+> 
+> From all the information it seems when initialize raid5 cache the bitmap
+> information is not cleared, so an error message shows up and raid5_run()
+> fails.
+> 
+> I don't have clear idea who to handle bitmap, journal and ppl properly,
+> so I firstly report the problem here.
+> 
+> So far I am not sure whether this is a bug or I do something wrong. Hope
+> other people may reproduce the above failure too.
 
-------------=_5E995647.8A84BD53
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Hi Coly,
 
-Spam detection software, running on the system "ciao.gmane.io",
-has identified this incoming email as possible spam.  The original
-message has been attached to this so you can view it or label
-similar future email.  If you have any questions, see
-@@CONTACT_ADDRESS@@ for details.
+It looks like the mdadm that you're using added an internal bitmap
+despite creating the array with a journal. I think that was fixed some
+time ago. The kernel correctly does not allow starting the array with
+bitmap and journal (or ppl). You can assemble this now with:
 
-Content preview:  While sitting home during the lock out, why not watch some
-   nice movies. All for free, makes sense? visit us now https://elitetorrent1.com/
-   
+mdadm -A /dev/md0 /dev/nvme[0-3]n1 --update=no-bitmap
 
-Content analysis details:   (12.7 points, 5.0 required)
+You can also explicitly tell mdadm not to add a bitmap when creating an
+array using "--bitmap=none".
 
- pts rule name              description
----- ---------------------- --------------------------------------------------
- 0.0 URIBL_BLOCKED          ADMINISTRATOR NOTICE: The query to URIBL was
-                            blocked.  See
-                            http://wiki.apache.org/spamassassin/DnsBlocklists#dnsbl-block
-                             for more information.
-                            [URIs: elitetorrent1.com]
- 3.6 RCVD_IN_SBL_CSS        RBL: Received via a relay in Spamhaus SBL-CSS
-                            [134.73.232.212 listed in zen.spamhaus.org]
- 1.2 RCVD_IN_BL_SPAMCOP_NET RBL: Received via a relay in
-                            bl.spamcop.net
-             [Blocked - see <https://www.spamcop.net/bl.shtml?134.73.232.212>]
- 0.0 TVD_RCVD_SPACE_BRACKET No description available.
--0.0 SPF_PASS               SPF: sender matches SPF record
--0.0 SPF_HELO_PASS          SPF: HELO matches SPF record
- 0.2 HEADER_FROM_DIFFERENT_DOMAINS From and EnvelopeFrom 2nd level
-                            mail domains are different
- 2.5 SUSPICIOUS_RECIPS      Similar addresses in recipient list
- 1.7 RAZOR2_CHECK           Listed in Razor2 (http://razor.sf.net/)
- 2.4 RAZOR2_CF_RANGE_51_100 Razor2 gives confidence level above 50%
-                            [cf: 100]
- 2.0 PYZOR_CHECK            Listed in Pyzor
-                            (https://pyzor.readthedocs.io/en/latest/)
- 0.0 DIGEST_MULTIPLE        Message hits more than one network digest check
--1.0 MAILING_LIST_MULTI     Multiple indicators imply a widely-seen list
-                            manager
- 0.0 UNPARSEABLE_RELAY      Informational: message has unparseable relay
-                            lines
-
-
-
-------------=_5E995647.8A84BD53
-Content-Type: message/rfc822; x-spam-type=original
-Content-Description: original message before SpamAssassin
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-
-Return-path: <linux-raid-owner@vger.kernel.org>
-Envelope-to: linux-raid@m.gmane-mx.org
-Received: from vger.kernel.org ([23.128.96.18])
-	by ciao.gmane.io with esmtp (Exim 4.92)
-	(envelope-from <linux-raid-owner@vger.kernel.org>)
-	id 1jPL8M-000BGa-5g
-	for linux-raid@m.gmane-mx.org; Fri, 17 Apr 2020 09:09:54 +0200
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728884AbgDQHJv (ORCPT <rfc822;linux-raid@m.gmane-mx.org>);
-        Fri, 17 Apr 2020 03:09:51 -0400
-Received: from baliza.dreformarra.com ([134.73.232.212]:3034 "HELO
-        elitetorrent1.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1728414AbgDQHJu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Apr 2020 03:09:50 -0400
-Received: from [184.69.250.35] by relay-x.misswldrs.com with SMTP; Thu, 16 Apr 2020 19:51:04 -1100
-Received: from mail.webhostings4u.com ([139.120.64.234]) by qnx.mdrost.com with NNFMP; Thu, 16 Apr 2020 19:41:49 -1100
-Received: from mmx09.tilkbans.com ([Thu, 16 Apr 2020 19:27:01 -1100])
-        by smtp.endend.nl with ASMTP; Thu, 16 Apr 2020 19:27:01 -1100
-Message-ID: <C59EC4E8.80BE2406@elitetorrent1.com>
-Date: Thu, 16 Apr 2020 19:23:19 -1100
-From: "elitetorrent1.com" <info@elitetorrent1.com>
-User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; fr; rv:1.8.1.16) Gecko/20080707 Thunderbird/2.0.0.16
-MIME-Version: 1.0
-To: <linux-assembly@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-msdos@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-Subject: Download latest movies from elitetorrent1.com
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Sender: linux-raid-owner@vger.kernel.org
-Precedence: bulk
-List-ID: <linux-raid.vger.kernel.org>
-X-Mailing-List: linux-raid@vger.kernel.org
-
-
-While sitting home during the lock out, why not watch some nice movies. 
-
-All for free, makes sense?
-
-visit us now
-https://elitetorrent1.com/
-
-
-
-
-
-Unsubscribe from our database here
-https://forms.icann.org/en/resources/compliance/complaints/registrars/stand
-ards-complaint-form
-
-
-
-
-------------=_5E995647.8A84BD53--
+Regards,
+Artur
