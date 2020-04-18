@@ -1,120 +1,116 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
-Date: Sat, 18 Apr 2020 00:06:16 +0100
-Message-ID: <87lfmtemqf.fsf@esperi.org.uk>
-References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
-        <5E95C698.1030307@youngman.org.uk>
-        <13a3bc12-67f7-46d5-7e6a-c6880ace4b1c@peter-speer.de>
-        <5E95F461.50209@youngman.org.uk>
+From: "elitetorrent1.com" <info@elitetorrent1.com>
+Subject: Download latest movies from elitetorrent1.com
+Date: Sat, 18 Apr 2020 14:37:46 +1100
+Message-ID: <4832DF0D.2995916F__17185.4162051872$1587183001$gmane$org@elitetorrent1.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5E95F461.50209@youngman.org.uk> (Wols Lists's message of "Tue,
-        14 Apr 2020 18:35:29 +0100")
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
+Content-Type: multipart/mixed; boundary="----------=_5E9A7D98.F8E5131E"
+To: linux-assembly@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14 Apr 2020, Wols Lists said:
+This is a multi-part message in MIME format.
 
-> On 14/04/20 16:12, Stefanie Leisestreichler wrote:
->> 
->> On 14.04.20 16:20, Wols Lists wrote:
->>> okay. sda1 is vfat for EFI and is your /boot. configure sdb the same,
->>> and you'll need to manually copy across every time you update (or make
->>> it a v0.9/v1.0 raid array and only change it from inside linux - tricky)
->
->> If I would like to stay with my intial thought and use GRUB, does this
->> mean, I have to have one native partition for the UEFI System Partition
->> formated with vfat on each disk? If this works and I will create an raid
->> array (mdadm --create ... level=1 /dev/sda1 /dev/sda2) from these 2
->> partitions, will I still have the need to cross copy after a kernel
->> update or not?
->> 
-> Everything else is mirrored - you should mirror your boot setup ... you
-> don't want disk 0 to die, and although (almost) everything is there on
-> disk 1 you can't boot the system because grub/efi/whatever isn't there...
+------------=_5E9A7D98.F8E5131E
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Yep.
+Spam detection software, running on the system "ciao.gmane.io",
+has identified this incoming email as possible spam.  The original
+message has been attached to this so you can view it or label
+similar future email.  If you have any questions, see
+@@CONTACT_ADDRESS@@ for details.
 
-> The crucial question is whether your updates to your efi partition
-> happen under the control of linux, or under the control of efi. If they
-> happen at the linux level, then they will happen to both disks together.
-> If they happen at the efi level, then they will only happen to disk 0,
-> and you will need to re-sync the mirror.
+Content preview:  While sitting home during the lock out, why not watch some
+   nice movies. All for free, makes sense? visit us now https://elitetorrent1.com/
+   
 
-Rather than trying to make some sort of clever mirroring setup work with
-the ESP, I just made one partition per disk, added all of them to the
-efibootmgr:
+Content analysis details:   (6.6 points, 5.0 required)
 
-Boot000B* Current kernel	HD(1,GPT,b6697409-a6ec-470d-994c-0d4828d08861,0x800,0x200000)/File(\efi\nix\current.efi)
-Boot000E* Current kernel (secondary disk)	HD(1,GPT,9f5912c7-46e7-45bf-a49d-969250f0a388,0x800,0x200000)/File(\efi\nix\current.efi)
-Boot0011* Current kernel (tertiary disk)	HD(1,GPT,8a5cf352-2e92-43ac-bb23-b0d9f27109e9,0x800,0x200000)/File(\efi\nix\current.efi)
-Boot0012* Current kernel (quaternary disk)	HD(1,GPT,83ec2441-79e9-4f3c-86ec-378545f776c6,0x800,0x200000)/File(\efi\nix\current.efi)
+ pts rule name              description
+---- ---------------------- --------------------------------------------------
+ 0.0 URIBL_BLOCKED          ADMINISTRATOR NOTICE: The query to URIBL was
+                            blocked.  See
+                            http://wiki.apache.org/spamassassin/DnsBlocklists#dnsbl-block
+                             for more information.
+                            [URIs: elitetorrent1.com]
+ 1.2 RCVD_IN_BL_SPAMCOP_NET RBL: Received via a relay in
+                            bl.spamcop.net
+             [Blocked - see <https://www.spamcop.net/bl.shtml?134.73.232.212>]
+-0.0 SPF_PASS               SPF: sender matches SPF record
+-0.0 SPF_HELO_PASS          SPF: HELO matches SPF record
+ 0.2 HEADER_FROM_DIFFERENT_DOMAINS From and EnvelopeFrom 2nd level
+                            mail domains are different
+ 1.7 RAZOR2_CHECK           Listed in Razor2 (http://razor.sf.net/)
+ 2.4 RAZOR2_CF_RANGE_51_100 Razor2 gives confidence level above 50%
+                            [cf: 100]
+ 2.0 PYZOR_CHECK            Listed in Pyzor
+                            (https://pyzor.readthedocs.io/en/latest/)
+ 0.0 DIGEST_MULTIPLE        Message hits more than one network digest check
+-1.0 MAILING_LIST_MULTI     Multiple indicators imply a widely-seen list
+                            manager
 
-... and used simple rsync at kernel install time to keep them in sync
-(the variables in here are specific to my autobuilder, but the general
-idea should be clear enough):
 
-    # For EFI, we install the kernel by hand.  /boot may be a mountpoint,
-    # kept unmounted in normal operation.
-    mountpoint -q /boot && mount /boot
-    KERNELVER="$(file $BUILDMAKEPATH/.o/arch/x86/boot/bzImage | sed 's,^.*version \([0-9\.]*\).*$,\1,g')"
-    install -o root -g root $BUILDMAKEPATH/.o/System.map /boot/System.map-$KERNELVER
-    install -o root -g root $BUILDMAKEPATH/.o/arch/x86/boot/bzImage /boot/efi/nix/vmlinux-$KERNELVER.efi
-    [[ -f /boot/efi/nix/current.efi ]] && mv /boot/efi/nix/current.efi /boot/efi/nix/old.efi
-    install -o root -g root $BUILDMAKEPATH/.o/arch/x86/boot/bzImage /boot/efi/nix/current.efi
-    for backup in 1 2 3; do
-        test -d /boot/backups/$backup || continue
-        mount /boot/backups/$backup
-        rsync -rtq --modify-window=2 --one-file-system /boot/ /boot/backups/$backup
-        umount /boot/backups/$backup
-    done
-    mountpoint -q /boot && umount /boot
 
-The firmware should automatically handle booting the first kernel that's
-on a disk that works. (I use CONFIG_EFI_STUB, so the kernel is itself
-bootable directly by the firmware and I can avoid all that boot manager
-rubbish and just let the firmware be my boot manager. I have 4 entries
-each in the boot manager menu for the current kernel, the previous one I
-installed, and a manually-copied 'stable kernel' that I update whenever
-I think a kernel was working well enough to do so.)
+------------=_5E9A7D98.F8E5131E
+Content-Type: message/rfc822; x-spam-type=original
+Content-Description: original message before SpamAssassin
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
->>> sda2 - swap. I'd make its size equal to ram - and as I said, same on sdb
->>> configured in linux as equal priority to give me a raid-0.
->
->> Thanks for this tip, I would prefer swap and application safety which
->> comes with raid1 in this case. Later I will try to optimize swappiness.
->> 
-> I prefer swap to be at least twice ram. A lot of people think I'm daft
-> for that, but it always used to be the rule things were better that way.
-> It's been pointed out to me that this can be used as a denial of service
-> (a fork bomb, for example, will crucify your system until the OOM killer
-> takes it out, which will take a LOOONNG time with gigs of VM). Horses
-> for courses.
+Return-path: <linux-raid-owner@vger.kernel.org>
+Envelope-to: linux-raid@m.gmane-mx.org
+Received: from vger.kernel.org ([23.128.96.18])
+	by ciao.gmane.io with esmtp (Exim 4.92)
+	(envelope-from <linux-raid-owner@vger.kernel.org>)
+	id 1jPenk-000NEs-CJ
+	for linux-raid@m.gmane-mx.org; Sat, 18 Apr 2020 06:09:56 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S1725877AbgDREJk (ORCPT <rfc822;linux-raid@m.gmane-mx.org>);
+        Sat, 18 Apr 2020 00:09:40 -0400
+Received: from baliza.dreformarra.com ([134.73.232.212]:3346 "HELO
+        elitetorrent1.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1725440AbgDREJk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 18 Apr 2020 00:09:40 -0400
+Received: from group21.345mail.com [82.117.139.154] by relay37.vosimerkam.net with NNFMP; Sat, 18 Apr 2020 15:06:20 +1100
+Received: from unknown (HELO external.newsubdomain.com) (Sat, 18 Apr 2020 15:04:56 +1100)
+        by smtp4.cyberemailings.com with NNFMP; Sat, 18 Apr 2020 15:04:56 +1100
+Received: from [177.129.137.138] by snmp.otwaloow.com with QMQP; Sat, 18 Apr 2020 15:04:06 +1100
+Message-ID: <4832DF0D.2995916F@elitetorrent1.com>
+Date: Sat, 18 Apr 2020 14:37:46 +1100
+From: "elitetorrent1.com" <info@elitetorrent1.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.8.1.12) Gecko/20080213 Thunderbird/2.0.0.12
+X-Accept-Language: en-us
+MIME-Version: 1.0
+To: <linux-assembly@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>, <linux-msdos@vger.kernel.org>,
+        <linux-raid@vger.kernel.org>
+Subject: Download latest movies from elitetorrent1.com
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Sender: linux-raid-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-raid.vger.kernel.org>
+X-Mailing-List: linux-raid@vger.kernel.org
 
-Frankly... I would make this stuff a lot simpler and just not make a
-swap partition at all. Instead, make a swapfile: RAID will just happen
-for you automatically, you can expand the thing (or shrink it!) with
-ease while the system is up, and it's exactly as fast as swap
-partitions: swapfiles have been as fast as raw partitions since the
-Linux 2.0 days.
 
->> What Partition Type do I have to use for /dev/sd[a|b]3? Will it be LVM
->> or RAID?
->> 
-> I'd just use type linux ...
+While sitting home during the lock out, why not watch some nice movies. 
 
-Literally nothing cares :) it's for documentation, mostly, to make sure
-that e.g. Windows won't randomly smash a Linux partition. So whatever
-feels right to you. The only type that really matters is the GUID of the
-EFI system partition, and fdisk gets that right these days so you don't
-have to care.
+All for free, makes sense?
 
- -- N., set up a system without RAID recently and felt so... dirty (it
-    has one NVMe device and nothing else). So everything important is
-    NFS-mounted from a RAID array, natch. With 10GbE the NFS mounts are
-    actually faster than the NVMe device until the server's huge write
-    cache fills and it has to actually write it to the array :) but how
-    often do you write a hundred gig to a disk at once, anyway?
+visit us now
+https://elitetorrent1.com/
+
+
+
+
+
+Unsubscribe from our database here
+https://forms.icann.org/en/resources/compliance/complaints/registrars/stand
+ards-complaint-form
+
+
+
+
+------------=_5E9A7D98.F8E5131E--
