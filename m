@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH RFC v2 1/8] md/raid5: add CONFIG_MD_RAID456_STRIPE_SIZE to set STRIPE_SIZE
-Date: Tue, 21 Apr 2020 20:39:45 +0800
-Message-ID: <20200421123952.49025-2-yuyufen@huawei.com>
+Subject: [PATCH RFC v2 6/8] md/raid5: add new xor function to support different page offset
+Date: Tue, 21 Apr 2020 20:39:50 +0800
+Message-ID: <20200421123952.49025-7-yuyufen@huawei.com>
 References: <20200421123952.49025-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,169 +13,272 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-In RAID5, if issued bio size is bigger than STRIPE_SIZE, it will be split
-in the unit of STRIPE_SIZE and process them one by one. Even for size
-less then STRIPE_SIZE, RAID5 also request data from disk at least of
-STRIPE_SIZE.
+RAID5 will call async_xor() and async_xor_val() to compute xor.
+However, both of them require common src/dst page offset. After
+introducing pages array of r5pages, we want these xor computer
+function to support different src/dst page offset.
 
-Nowdays, STRIPE_SIZE is equal to the value of PAGE_SIZE. Since filesystem
-usually issue bio in the unit of 4KB, there is no problem for PAGE_SIZE as
-4KB. But, for 64KB PAGE_SIZE, bio from filesystem requests 4KB data while
-RAID5 issue IO at least STRIPE_SIZE (64KB) each time. That will waste
-resource of disk bandwidth and compute xor.
-
-To avoding the waste, we want to add a new CONFIG option to adjust
-STREIPE_SIZE. Default value is 4096. User can also set the value bigger
-than 4KB for some special requirements, such as we know the issued io
-size is more than 4KB.
-
-To evaluate the new feature, we create raid5 device '/dev/md5' with
-4 SSD disk and test it on arm64 machine with 64KB PAGE_SIZE.
-
-1) We format /dev/md5 with mkfs.ext4 and mount ext4 with default
- configure on /mnt directory. Then, trying to test it by dbench with
- command: dbench -D /mnt -t 1000 10. Result show as:
-
- 'CONFIG_MD_RAID456_STRIPE_SIZE = 64K'
-
-  Operation      Count    AvgLat    MaxLat
-  ----------------------------------------
-  NTCreateX    9805011     0.021    64.728
-  Close        7202525     0.001     0.120
-  Rename        415213     0.051    44.681
-  Unlink       1980066     0.079    93.147
-  Deltree          240     1.793     6.516
-  Mkdir            120     0.004     0.007
-  Qpathinfo    8887512     0.007    37.114
-  Qfileinfo    1557262     0.001     0.030
-  Qfsinfo      1629582     0.012     0.152
-  Sfileinfo     798756     0.040    57.641
-  Find         3436004     0.019    57.782
-  WriteX       4887239     0.021    57.638
-  ReadX        15370483     0.005    37.818
-  LockX          31934     0.003     0.022
-  UnlockX        31933     0.001     0.021
-  Flush         687205    13.302   530.088
-
- Throughput 307.799 MB/sec  10 clients  10 procs  max_latency=530.091 ms
- -------------------------------------------------------
-
- 'STRIPE_SIZE = 4KB'
-
-  Operation      Count    AvgLat    MaxLat
-  ----------------------------------------
-  NTCreateX    11999166     0.021    36.380
-  Close        8814128     0.001     0.122
-  Rename        508113     0.051    29.169
-  Unlink       2423242     0.070    38.141
-  Deltree          300     1.885     7.155
-  Mkdir            150     0.004     0.006
-  Qpathinfo    10875921     0.007    35.485
-  Qfileinfo    1905837     0.001     0.032
-  Qfsinfo      1994304     0.012     0.125
-  Sfileinfo     977450     0.029    26.489
-  Find         4204952     0.019     9.361
-  WriteX       5981890     0.019    27.804
-  ReadX        18809742     0.004    33.491
-  LockX          39074     0.003     0.025
-  UnlockX        39074     0.001     0.014
-  Flush         841022    10.712   458.848
-
- Throughput 376.777 MB/sec  10 clients  10 procs  max_latency=458.852 ms
- -------------------------------------------------------
-
- It show that setting STREIP_SIZE as 4KB has higher thoughput, i.e.
- (376.777 vs 307.799) and has smaller latency (530.091 vs 458.852)
- than that setting as 64KB.
-
- 2) We try to evaluate IO throughput for /dev/md5 by fio with config:
-
- [4KB randwrite]
- direct=1
- numjob=2
- iodepth=64
- ioengine=libaio
- filename=/dev/md5
- bs=4KB
- rw=randwrite
-
- [64KB write]
- direct=1
- numjob=2
- iodepth=64
- ioengine=libaio
- filename=/dev/md5
- bs=1MB
- rw=write
-
- The result as follow:
-
-               +                   +
-               | STRIPE_SIZE(64KB) | STRIPE_SIZE(4KB)
- +----------------------------------------------------+
- 4KB randwrite |     15MB/s        |      100MB/s
- +----------------------------------------------------+
- 1MB write     |   1000MB/s        |      700MB/s
-
- The result show that when size of io is bigger than 4KB (64KB),
- 64KB STRIPE_SIZE has much higher IOPS. But for 4KB randwrite, that
- means, size of io issued to device are smaller, 4KB STRIPE_SIZE
- have better performance.
-
-Thus, we provide a configure to set STRIPE_SIZE when PAGE_SIZE is bigger
-than 4096. Normally, default value (4096) can get relatively good
-performance. But if each issued io is bigger than 4096, setting value more
-than 4096 may get better performance.
+For now, we just support RAID level less than 5 to use pages array,
+so old xor computer function need to be reserved for other raid
+level. Here, we add two new functions async_xor_offsets() and
+async_xor_val_offsets() respectively for async_xor() and async_xor_val().
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/Kconfig | 18 ++++++++++++++++++
- drivers/md/raid5.h |  4 +++-
- 2 files changed, 21 insertions(+), 1 deletion(-)
+ crypto/async_tx/async_xor.c | 120 +++++++++++++++++++++++++++++++-----
+ include/linux/async_tx.h    |  11 ++++
+ 2 files changed, 114 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index d6d5ab23c088..05c5a315358b 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -157,6 +157,24 @@ config MD_RAID456
+diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
+index 4e5eebe52e6a..29a979358332 100644
+--- a/crypto/async_tx/async_xor.c
++++ b/crypto/async_tx/async_xor.c
+@@ -97,7 +97,8 @@ do_async_xor(struct dma_chan *chan, struct dmaengine_unmap_data *unmap,
+ }
  
- 	  If unsure, say Y.
+ static void
+-do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
++do_sync_xor_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
+ 	    int src_cnt, size_t len, struct async_submit_ctl *submit)
+ {
+ 	int i;
+@@ -114,7 +115,8 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	/* convert to buffer pointers */
+ 	for (i = 0; i < src_cnt; i++)
+ 		if (src_list[i])
+-			srcs[xor_src_cnt++] = page_address(src_list[i]) + offset;
++			srcs[xor_src_cnt++] = page_address(src_list[i]) +
++				(src_offset ? src_offset[i] : offset);
+ 	src_cnt = xor_src_cnt;
+ 	/* set destination address */
+ 	dest_buf = page_address(dest) + offset;
+@@ -135,11 +137,31 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	async_tx_sync_epilog(submit);
+ }
  
-+config MD_RAID456_STRIPE_SIZE
-+	int "RAID4/RAID5/RAID6 stripe size"
-+	default "4096"
-+	depends on MD_RAID456
-+	help
-+	  The default value is 4096. Just setting a new value when PAGE_SIZE
-+	  is bigger than 4096.  In that case, you can set it as more than
-+	  4096, such as 8KB, 16K, 64K, which requires that be a multiple of
-+	  4K.
++static inline bool
++dma_xor_aligned_offsets(struct dma_device *device, unsigned int offset,
++		unsigned int *src_offset, int src_cnt, int len)
++{
++	int i;
 +
-+	  When you try to set a big value, likely 64KB on arm64, that means,
-+	  you know size of each io that issued to raid device is more than
-+	  4096. Otherwise just use default value.
++	if (!is_dma_xor_aligned(device, offset, 0, len))
++		return false;
 +
-+	  Normally, using default STRIPE_SIZE can get better performance.
-+	  Only change this value if you know what you are doing.
++	if (!src_offset)
++		return true;
 +
++	for (i = 0; i < src_cnt; i++) {
++		if (!is_dma_xor_aligned(device, src_offset[i], 0, len))
++			return false;
++	}
++	return true;
++}
 +
- config MD_MULTIPATH
- 	tristate "Multipath I/O support"
- 	depends on BLK_DEV_MD
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index f90e0704bed9..b0010991bdc8 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -472,7 +472,9 @@ struct disk_info {
+ /**
+- * async_xor - attempt to xor a set of blocks with a dma engine.
++ * async_xor_offsets - attempt to xor a set of blocks with a dma engine.
+  * @dest: destination page
++ * @offset: dst offset to start transaction
+  * @src_list: array of source pages
+- * @offset: common src/dst offset to start transaction
++ * @src_offset: array of source pages offset, NULL means common src/dst offset
+  * @src_cnt: number of source pages
+  * @len: length in bytes
+  * @submit: submission / completion modifiers
+@@ -157,8 +179,9 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+  * is not specified.
   */
+ struct dma_async_tx_descriptor *
+-async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+-	  int src_cnt, size_t len, struct async_submit_ctl *submit)
++async_xor_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, struct async_submit_ctl *submit)
+ {
+ 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR,
+ 						      &dest, 1, src_list,
+@@ -171,7 +194,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	if (device)
+ 		unmap = dmaengine_get_unmap_data(device->dev, src_cnt+1, GFP_NOWAIT);
  
- #define NR_STRIPES		256
--#define STRIPE_SIZE		PAGE_SIZE
-+#define STRIPE_SIZE	\
-+	((PAGE_SIZE > 4096 && (CONFIG_MD_RAID456_STRIPE_SIZE % 4096 == 0)) ? \
-+	 CONFIG_MD_RAID456_STRIPE_SIZE : PAGE_SIZE)
- #define STRIPE_SHIFT		(PAGE_SHIFT - 9)
- #define STRIPE_SECTORS		(STRIPE_SIZE>>9)
- #define	IO_THRESHOLD		1
+-	if (unmap && is_dma_xor_aligned(device, offset, 0, len)) {
++	if (unmap && dma_xor_aligned_offsets(device, offset,
++				src_offset, src_cnt, len)) {
+ 		struct dma_async_tx_descriptor *tx;
+ 		int i, j;
+ 
+@@ -184,7 +208,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 				continue;
+ 			unmap->to_cnt++;
+ 			unmap->addr[j++] = dma_map_page(device->dev, src_list[i],
+-							offset, len, DMA_TO_DEVICE);
++							(src_offset ? src_offset[i] : offset),
++							len, DMA_TO_DEVICE);
+ 		}
+ 
+ 		/* map it bidirectional as it may be re-used as a source */
+@@ -213,11 +238,42 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 		/* wait for any prerequisite operations */
+ 		async_tx_quiesce(&submit->depend_tx);
+ 
+-		do_sync_xor(dest, src_list, offset, src_cnt, len, submit);
++		do_sync_xor_offsets(dest, offset, src_list, src_offset,
++				src_cnt, len, submit);
+ 
+ 		return NULL;
+ 	}
+ }
++EXPORT_SYMBOL_GPL(async_xor_offsets);
++
++/**
++ * async_xor - attempt to xor a set of blocks with a dma engine.
++ * @dest: destination page
++ * @src_list: array of source pages
++ * @offset: common src/dst offset to start transaction
++ * @src_cnt: number of source pages
++ * @len: length in bytes
++ * @submit: submission / completion modifiers
++ *
++ * honored flags: ASYNC_TX_ACK, ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DST
++ *
++ * xor_blocks always uses the dest as a source so the
++ * ASYNC_TX_XOR_ZERO_DST flag must be set to not include dest data in
++ * the calculation.  The assumption with dma eninges is that they only
++ * use the destination buffer as a source when it is explicity specified
++ * in the source list.
++ *
++ * src_list note: if the dest is also a source it must be at index zero.
++ * The contents of this array will be overwritten if a scribble region
++ * is not specified.
++ */
++struct dma_async_tx_descriptor *
++async_xor(struct page *dest, struct page **src_list, unsigned int offset,
++	  int src_cnt, size_t len, struct async_submit_ctl *submit)
++{
++	return async_xor_offsets(dest, offset, src_list, NULL,
++			src_cnt, len, submit);
++}
+ EXPORT_SYMBOL_GPL(async_xor);
+ 
+ static int page_is_zero(struct page *p, unsigned int offset, size_t len)
+@@ -237,10 +293,11 @@ xor_val_chan(struct async_submit_ctl *submit, struct page *dest,
+ }
+ 
+ /**
+- * async_xor_val - attempt a xor parity check with a dma engine.
++ * async_xor_val_offsets - attempt a xor parity check with a dma engine.
+  * @dest: destination page used if the xor is performed synchronously
++ * @offset: des offset in pages to start transaction
+  * @src_list: array of source pages
+- * @offset: offset in pages to start transaction
++ * @src_offset: array of source pages offset, NULL means common src/det offset
+  * @src_cnt: number of source pages
+  * @len: length in bytes
+  * @result: 0 if sum == 0 else non-zero
+@@ -253,9 +310,10 @@ xor_val_chan(struct async_submit_ctl *submit, struct page *dest,
+  * is not specified.
+  */
+ struct dma_async_tx_descriptor *
+-async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+-	      int src_cnt, size_t len, enum sum_check_flags *result,
+-	      struct async_submit_ctl *submit)
++async_xor_val_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, enum sum_check_flags *result,
++		struct async_submit_ctl *submit)
+ {
+ 	struct dma_chan *chan = xor_val_chan(submit, dest, src_list, src_cnt, len);
+ 	struct dma_device *device = chan ? chan->device : NULL;
+@@ -268,7 +326,7 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 		unmap = dmaengine_get_unmap_data(device->dev, src_cnt, GFP_NOWAIT);
+ 
+ 	if (unmap && src_cnt <= device->max_xor &&
+-	    is_dma_xor_aligned(device, offset, 0, len)) {
++	    dma_xor_aligned_offsets(device, offset, src_offset, src_cnt, len)) {
+ 		unsigned long dma_prep_flags = 0;
+ 		int i;
+ 
+@@ -281,7 +339,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 
+ 		for (i = 0; i < src_cnt; i++) {
+ 			unmap->addr[i] = dma_map_page(device->dev, src_list[i],
+-						      offset, len, DMA_TO_DEVICE);
++						(src_offset ? src_offset[i] : offset),
++						len, DMA_TO_DEVICE);
+ 			unmap->to_cnt++;
+ 		}
+ 		unmap->len = len;
+@@ -312,7 +371,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 		submit->flags |= ASYNC_TX_XOR_DROP_DST;
+ 		submit->flags &= ~ASYNC_TX_ACK;
+ 
+-		tx = async_xor(dest, src_list, offset, src_cnt, len, submit);
++		tx = async_xor_offsets(dest, offset, src_list, src_offset,
++				src_cnt, len, submit);
+ 
+ 		async_tx_quiesce(&tx);
+ 
+@@ -325,6 +385,32 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 
+ 	return tx;
+ }
++EXPORT_SYMBOL_GPL(async_xor_val_offsets);
++
++/**
++ * async_xor_val - attempt a xor parity check with a dma engine.
++ * @dest: destination page used if the xor is performed synchronously
++ * @src_list: array of source pages
++ * @offset: offset in pages to start transaction
++ * @src_cnt: number of source pages
++ * @len: length in bytes
++ * @result: 0 if sum == 0 else non-zero
++ * @submit: submission / completion modifiers
++ *
++ * honored flags: ASYNC_TX_ACK
++ *
++ * src_list note: if the dest is also a source it must be at index zero.
++ * The contents of this array will be overwritten if a scribble region
++ * is not specified.
++ */
++struct dma_async_tx_descriptor *
++async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
++	      int src_cnt, size_t len, enum sum_check_flags *result,
++	      struct async_submit_ctl *submit)
++{
++	return async_xor_val_offsets(dest, offset, src_list, NULL, src_cnt,
++			len, result, submit);
++}
+ EXPORT_SYMBOL_GPL(async_xor_val);
+ 
+ MODULE_AUTHOR("Intel Corporation");
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index 75e582b8d2d9..8d79e2de06bd 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -162,11 +162,22 @@ struct dma_async_tx_descriptor *
+ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	  int src_cnt, size_t len, struct async_submit_ctl *submit);
+ 
++struct dma_async_tx_descriptor *
++async_xor_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, struct async_submit_ctl *submit);
++
+ struct dma_async_tx_descriptor *
+ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 	      int src_cnt, size_t len, enum sum_check_flags *result,
+ 	      struct async_submit_ctl *submit);
+ 
++struct dma_async_tx_descriptor *
++async_xor_val_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, enum sum_check_flags *result,
++		struct async_submit_ctl *submit);
++
+ struct dma_async_tx_descriptor *
+ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
+ 	     unsigned int src_offset, size_t len,
 -- 
 2.21.1
