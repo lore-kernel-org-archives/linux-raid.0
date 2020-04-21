@@ -1,63 +1,55 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: [PATCH RFC v2 0/8] md/raid5: set STRIPE_SIZE as a configurable
- value
-Date: Tue, 21 Apr 2020 14:56:07 +0200
-Message-ID: <67039bd4-1b24-a7f5-d82a-fabb3ebfce12@molgen.mpg.de>
-References: <20200421123952.49025-1-yuyufen@huawei.com>
+From: Leland Ball <lelandmball@gmail.com>
+Subject: Recovering From RAID5 Failure
+Date: Tue, 21 Apr 2020 12:13:32 -0400
+Message-ID: <CAM++EjGaFBh8ZChnyY0p=du0CKFT1WVikSNYyUUcJhuKwQf4sQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200421123952.49025-1-yuyufen@huawei.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Yufen Yu <yuyufen@huawei.com>, song@kernel.org
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Yufen,
+Hello,
 
+I have an old NAS device (Iomega StorCenter ix4-200d  2.1.48.30125)
+which has failed to warn me that things were going awry. The NAS is
+now in a state that appears unrecoverable from its limited GUI, and is
+asking for overwrite confirmation on all 4 drives (1.8TB WD drives).
+This smells of data loss, so I hopped on the box and did some
+investigating:
 
-Thank you for your patch set.
+I can "more" to find data on each of two partitions for each of the 4
+drives /dev/sd[abcd][12] so the drives are functioning in some
+capacity. I believe this is running in a RAID 5 configuration, at
+least that's what the settings state.
 
-Am 21.04.20 um 14:39 schrieb Yufen Yu:
+Here's what I'm working with...
+# mdadm --version
+mdadm - v2.6.7.2 - 14th November 2008
 
->   For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5 will
->   issus echo bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64. However,
+I believe the array was first created in 2011. Not sure if the disks
+have been replaced since then, as this array was given to me by a
+friend.
 
-issue
+I am unsure of how I should go about fixing this, and which (if any)
+drives truly needs replacing. My next step would be to try:
+# mdadm /dev/md1 --assemble /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2
+(and if that didn't work, maybe try the --force command?). Would this
+jeopardize data like the --create command can?
 
->   filesystem usually issue bio in the unit of 4KB. Then, RAID5 will waste resource
->   of disk bandwidth.
-> 
->   To solve the problem, this patchset provide a new config CONFIG_MD_RAID456_STRIPE_SIZE
->   to let user config STRIPE_SIZE. The default value is 4096.
-> 
->   Normally, using default STRIPE_SIZE can get better performance. And NeilBrown have
->   suggested just to fix the STRIPE_SIZE as 4096. But, out test result show that
->   big value of STRIPE_SIZE may have better performance when size of issued IOs are
->   mostly bigger than 4096. Thus, in this patchset, we still want to set STRIPE_SIZE
->   as a configureable value.
+I've compiled output from the following commands here:
+https://pastebin.com/EmqX3Tyq
+# fdisk -l
+# cat /etc/fstab
+# cat /proc/mdstat
+# mdadm -D /dev/md0
+# mdadm -D /dev/md1
+# mdadm --examine /dev/sd[abcd]1
+# mdadm --examine /dev/sd[abcd]2
+# cat /etc/lvm/backup/md1_vg
+# dmesg
+# cat /var/log/messages
 
-configurable
-
->   In current implementation, grow_buffers() uses alloc_page() to allocate the buffers
->   for each stripe_head. With the change, it means we allocate 64K buffers but just
->   use 4K of them. To save memory, we try to 'compress' multiple buffers of stripe_head
->   to only one real page. Detail shows in patch #2.
-> 
->   To evaluate the new feature, we create raid5 device '/dev/md5' with 4 SSD disk
->   and test it on arm64 machine with 64KB PAGE_SIZE.
-
-[…]
-
-So, what is affecting the performance? The size of the bio in the used 
-file system? Shouldn’t it then be a run-time option (Linux CLI parameter 
-and /proc) so the Linux kernel doesn’t need to be recompiled for 
-different servers? Should the option be even per RAID, as each RAID5 
-device might be using another filesystem?
-
-
-Kind regards,
-
-Paul
+I don't know if md0 needs to be fixed first (if it's even
+malfunctioning). I have never administered RAID volumes at this level
+before. Would appreciate any help you can provide. Thanks!
