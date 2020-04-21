@@ -1,147 +1,63 @@
-From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH RFC v2 2/8] md/raid5: add a member of r5pages for struct stripe_head
-Date: Tue, 21 Apr 2020 20:39:46 +0800
-Message-ID: <20200421123952.49025-3-yuyufen@huawei.com>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH RFC v2 0/8] md/raid5: set STRIPE_SIZE as a configurable
+ value
+Date: Tue, 21 Apr 2020 14:56:07 +0200
+Message-ID: <67039bd4-1b24-a7f5-d82a-fabb3ebfce12@molgen.mpg.de>
 References: <20200421123952.49025-1-yuyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200421123952.49025-1-yuyufen@huawei.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com, yuyufen@huawei.com
+To: Yufen Yu <yuyufen@huawei.com>, song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com
 List-Id: linux-raid.ids
 
-Since grow_buffers() uses alloc_page() allocate the buffers for each
-stripe_head(), means, it will allocate 64K buffers and just use 4K
-of them, after setting STRIPE_SIZE as 4096.
+Dear Yufen,
 
-To avoid waste memory, we try to contain multiple 'page' of sh->dev
-into one real page. That means, multiple sh->dev[i].page will point to
-the only page with different offset. Example of 64K PAGE_SIZE and
-4K STRIPE_SIZE as following:
 
-                    64K PAGE_SIZE
-          +---+---+---+---+------------------------------+
-          |   |   |   |   |
-          |   |   |   |   |
-          +-+-+-+-+-+-+-+-+------------------------------+
-            ^   ^   ^   ^
-            |   |   |   +----------------------------+
-            |   |   |                                |
-            |   |   +-------------------+            |
-            |   |                       |            |
-            |   +----------+            |            |
-            |              |            |            |
-            +-+            |            |            |
-              |            |            |            |
-        +-----+-----+------+-----+------+-----+------+------+
-sh      | offset(0) | offset(4K) | offset(8K) | offset(16K) |
- +      +-----------+------------+------------+-------------+
- +----> dev[0].page  dev[1].page  dev[2].page  dev[3].page
+Thank you for your patch set.
 
-After compressing pages, the users of sh->dev[i].page need to be take care:
+Am 21.04.20 um 14:39 schrieb Yufen Yu:
 
-  1) When issue bio of stripe_head, bi_io_vec.bv_page will point to
-     the page directly. So, we should make sure bv_offset been set with
-     correct offset.
+>   For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5 will
+>   issus echo bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64. However,
 
-  2) When compute xor, the page will be passed to computer function.
-     So, we also need to pass offset of that page to computer. Let it
-     compute correct location of each sh->dev[i].page.
+issue
 
-This patch will add a new member of r5pages in stripe_head to manage
-all pages needed by each sh->dev[i]. We also add 'offset' for each r5dev
-so that users can get related page offset easily. And add helper function
-to get page and it's index in r5pages array by disk index. This is patch
-in preparation for fallowing changes.
+>   filesystem usually issue bio in the unit of 4KB. Then, RAID5 will waste resource
+>   of disk bandwidth.
+> 
+>   To solve the problem, this patchset provide a new config CONFIG_MD_RAID456_STRIPE_SIZE
+>   to let user config STRIPE_SIZE. The default value is 4096.
+> 
+>   Normally, using default STRIPE_SIZE can get better performance. And NeilBrown have
+>   suggested just to fix the STRIPE_SIZE as 4096. But, out test result show that
+>   big value of STRIPE_SIZE may have better performance when size of issued IOs are
+>   mostly bigger than 4096. Thus, in this patchset, we still want to set STRIPE_SIZE
+>   as a configureable value.
 
-Signed-off-by: Yufen Yu <yuyufen@huawei.com>
----
- drivers/md/raid5.h | 56 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+configurable
 
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index b0010991bdc8..6296578e9585 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -246,6 +246,13 @@ struct stripe_head {
- 		int 		     target, target2;
- 		enum sum_check_flags zero_sum_result;
- 	} ops;
-+
-+	/* These pages will be used by bios in dev[i] */
-+	struct r5pages {
-+		struct page	**page;
-+		int	size; /* page array size */
-+	} pages;
-+
- 	struct r5dev {
- 		/* rreq and rvec are used for the replacement device when
- 		 * writing data to both devices.
-@@ -253,6 +260,7 @@ struct stripe_head {
- 		struct bio	req, rreq;
- 		struct bio_vec	vec, rvec;
- 		struct page	*page, *orig_page;
-+		unsigned int	offset;		/* offset of this page */
- 		struct bio	*toread, *read, *towrite, *written;
- 		sector_t	sector;			/* sector of this page */
- 		unsigned long	flags;
-@@ -754,6 +762,54 @@ static inline int algorithm_is_DDF(int layout)
- 	return layout >= 8 && layout <= 10;
- }
- 
-+/*
-+ * Return corresponding page index of r5pages array.
-+ */
-+static inline int raid5_get_page_index(struct stripe_head *sh, int disk_idx)
-+{
-+	WARN_ON(!sh->pages.page);
-+	if (disk_idx >= sh->raid_conf->pool_size)
-+		return -ENOENT;
-+
-+	return (disk_idx * STRIPE_SIZE) / PAGE_SIZE;
-+}
-+
-+/*
-+ * Return offset of the corresponding page for r5dev.
-+ */
-+static inline int raid5_get_page_offset(struct stripe_head *sh, int disk_idx)
-+{
-+	WARN_ON(!sh->pages.page);
-+	if (disk_idx >= sh->raid_conf->pool_size)
-+		return -ENOENT;
-+
-+	return (disk_idx * STRIPE_SIZE) % PAGE_SIZE;
-+}
-+
-+/*
-+ * Return corresponding page address for r5dev.
-+ */
-+static inline struct page *
-+raid5_get_dev_page(struct stripe_head *sh, int disk_idx)
-+{
-+	int idx;
-+
-+	WARN_ON(!sh->pages.page);
-+	idx = raid5_get_page_index(sh, disk_idx);
-+	return sh->pages.page[idx];
-+}
-+
-+/*
-+ * We want to 'compress' multiple buffers to one real page for
-+ * stripe_head when PAGE_SIZE is biggger than STRIPE_SIZE. If their
-+ * values are equal, no need to use this strategy. For now, it just
-+ * support raid level less than 5.
-+ */
-+static inline int raid5_compress_stripe_pages(struct r5conf *conf)
-+{
-+	return (PAGE_SIZE > STRIPE_SIZE) && (conf->level < 6);
-+}
-+
- extern void md_raid5_kick_device(struct r5conf *conf);
- extern int raid5_set_cache_size(struct mddev *mddev, int size);
- extern sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous);
--- 
-2.21.1
+>   In current implementation, grow_buffers() uses alloc_page() to allocate the buffers
+>   for each stripe_head. With the change, it means we allocate 64K buffers but just
+>   use 4K of them. To save memory, we try to 'compress' multiple buffers of stripe_head
+>   to only one real page. Detail shows in patch #2.
+> 
+>   To evaluate the new feature, we create raid5 device '/dev/md5' with 4 SSD disk
+>   and test it on arm64 machine with 64KB PAGE_SIZE.
+
+[…]
+
+So, what is affecting the performance? The size of the bio in the used 
+file system? Shouldn’t it then be a run-time option (Linux CLI parameter 
+and /proc) so the Linux kernel doesn’t need to be recompiled for 
+different servers? Should the option be even per RAID, as each RAID5 
+device might be using another filesystem?
+
+
+Kind regards,
+
+Paul
