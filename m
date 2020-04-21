@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH RFC v2 7/8] md/raid5: add offset array in scribble buffer
-Date: Tue, 21 Apr 2020 20:39:51 +0800
-Message-ID: <20200421123952.49025-8-yuyufen@huawei.com>
+Subject: [PATCH RFC v2 2/8] md/raid5: add a member of r5pages for struct stripe_head
+Date: Tue, 21 Apr 2020 20:39:46 +0800
+Message-ID: <20200421123952.49025-3-yuyufen@huawei.com>
 References: <20200421123952.49025-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,47 +13,135 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-When enable compresssion buffers for stripe_head, it need an offset
-array to record page offset to compute xor. To avoid repeatly allocate
-an new array each time, we add a memory region into scribble buffer
-to record offset.
+Since grow_buffers() uses alloc_page() allocate the buffers for each
+stripe_head(), means, it will allocate 64K buffers and just use 4K
+of them, after setting STRIPE_SIZE as 4096.
+
+To avoid waste memory, we try to contain multiple 'page' of sh->dev
+into one real page. That means, multiple sh->dev[i].page will point to
+the only page with different offset. Example of 64K PAGE_SIZE and
+4K STRIPE_SIZE as following:
+
+                    64K PAGE_SIZE
+          +---+---+---+---+------------------------------+
+          |   |   |   |   |
+          |   |   |   |   |
+          +-+-+-+-+-+-+-+-+------------------------------+
+            ^   ^   ^   ^
+            |   |   |   +----------------------------+
+            |   |   |                                |
+            |   |   +-------------------+            |
+            |   |                       |            |
+            |   +----------+            |            |
+            |              |            |            |
+            +-+            |            |            |
+              |            |            |            |
+        +-----+-----+------+-----+------+-----+------+------+
+sh      | offset(0) | offset(4K) | offset(8K) | offset(16K) |
+ +      +-----------+------------+------------+-------------+
+ +----> dev[0].page  dev[1].page  dev[2].page  dev[3].page
+
+After compressing pages, the users of sh->dev[i].page need to be take care:
+
+  1) When issue bio of stripe_head, bi_io_vec.bv_page will point to
+     the page directly. So, we should make sure bv_offset been set with
+     correct offset.
+
+  2) When compute xor, the page will be passed to computer function.
+     So, we also need to pass offset of that page to computer. Let it
+     compute correct location of each sh->dev[i].page.
+
+This patch will add a new member of r5pages in stripe_head to manage
+all pages needed by each sh->dev[i]. We also add 'offset' for each r5dev
+so that users can get related page offset easily. And add helper function
+to get page and it's index in r5pages array by disk index. This is patch
+in preparation for fallowing changes.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/raid5.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/md/raid5.h | 56 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 52efacd486ab..801491748043 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1467,6 +1467,15 @@ static addr_conv_t *to_addr_conv(struct stripe_head *sh,
- 	return (void *) (to_addr_page(percpu, i) + sh->disks + 2);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index b0010991bdc8..6296578e9585 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -246,6 +246,13 @@ struct stripe_head {
+ 		int 		     target, target2;
+ 		enum sum_check_flags zero_sum_result;
+ 	} ops;
++
++	/* These pages will be used by bios in dev[i] */
++	struct r5pages {
++		struct page	**page;
++		int	size; /* page array size */
++	} pages;
++
+ 	struct r5dev {
+ 		/* rreq and rvec are used for the replacement device when
+ 		 * writing data to both devices.
+@@ -253,6 +260,7 @@ struct stripe_head {
+ 		struct bio	req, rreq;
+ 		struct bio_vec	vec, rvec;
+ 		struct page	*page, *orig_page;
++		unsigned int	offset;		/* offset of this page */
+ 		struct bio	*toread, *read, *towrite, *written;
+ 		sector_t	sector;			/* sector of this page */
+ 		unsigned long	flags;
+@@ -754,6 +762,54 @@ static inline int algorithm_is_DDF(int layout)
+ 	return layout >= 8 && layout <= 10;
  }
  
 +/*
-+ * Return a pointer to record offset address.
++ * Return corresponding page index of r5pages array.
 + */
-+static unsigned int *
-+to_addr_offs(struct stripe_head *sh, struct raid5_percpu *percpu)
++static inline int raid5_get_page_index(struct stripe_head *sh, int disk_idx)
 +{
-+	return (unsigned int *) (to_addr_conv(sh, percpu, 0) + sh->disks + 2);
++	WARN_ON(!sh->pages.page);
++	if (disk_idx >= sh->raid_conf->pool_size)
++		return -ENOENT;
++
++	return (disk_idx * STRIPE_SIZE) / PAGE_SIZE;
 +}
 +
- static struct dma_async_tx_descriptor *
- ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
- {
-@@ -2315,8 +2324,9 @@ static int scribble_alloc(struct raid5_percpu *percpu,
- 			  int num, int cnt, gfp_t flags)
- {
- 	size_t obj_size =
--		sizeof(struct page *) * (num+2) +
--		sizeof(addr_conv_t) * (num+2);
-+		sizeof(struct page *) * (num + 2) +
-+		sizeof(addr_conv_t) * (num + 2) +
-+		sizeof(unsigned int) * (num + 2);
- 	void *scribble;
- 
- 	scribble = kvmalloc_array(cnt, obj_size, flags);
++/*
++ * Return offset of the corresponding page for r5dev.
++ */
++static inline int raid5_get_page_offset(struct stripe_head *sh, int disk_idx)
++{
++	WARN_ON(!sh->pages.page);
++	if (disk_idx >= sh->raid_conf->pool_size)
++		return -ENOENT;
++
++	return (disk_idx * STRIPE_SIZE) % PAGE_SIZE;
++}
++
++/*
++ * Return corresponding page address for r5dev.
++ */
++static inline struct page *
++raid5_get_dev_page(struct stripe_head *sh, int disk_idx)
++{
++	int idx;
++
++	WARN_ON(!sh->pages.page);
++	idx = raid5_get_page_index(sh, disk_idx);
++	return sh->pages.page[idx];
++}
++
++/*
++ * We want to 'compress' multiple buffers to one real page for
++ * stripe_head when PAGE_SIZE is biggger than STRIPE_SIZE. If their
++ * values are equal, no need to use this strategy. For now, it just
++ * support raid level less than 5.
++ */
++static inline int raid5_compress_stripe_pages(struct r5conf *conf)
++{
++	return (PAGE_SIZE > STRIPE_SIZE) && (conf->level < 6);
++}
++
+ extern void md_raid5_kick_device(struct r5conf *conf);
+ extern int raid5_set_cache_size(struct mddev *mddev, int size);
+ extern sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous);
 -- 
 2.21.1
