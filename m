@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH RFC v2 6/8] md/raid5: add new xor function to support different page offset
-Date: Tue, 21 Apr 2020 20:39:50 +0800
-Message-ID: <20200421123952.49025-7-yuyufen@huawei.com>
+Subject: [PATCH RFC v2 8/8] md/raid5: compute xor with correct page offset
+Date: Tue, 21 Apr 2020 20:39:52 +0800
+Message-ID: <20200421123952.49025-9-yuyufen@huawei.com>
 References: <20200421123952.49025-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,272 +13,214 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-RAID5 will call async_xor() and async_xor_val() to compute xor.
-However, both of them require common src/dst page offset. After
-introducing pages array of r5pages, we want these xor computer
-function to support different src/dst page offset.
+When compute xor, the pages address will be passed to computer function.
+After trying to use pages in r5pages, we also need to pass page offset
+to let it know correct location of each page.
 
-For now, we just support RAID level less than 5 to use pages array,
-so old xor computer function need to be reserved for other raid
-level. Here, we add two new functions async_xor_offsets() and
-async_xor_val_offsets() respectively for async_xor() and async_xor_val().
+For now raid5-cache and raid5-ppl are supported only when PAGE_SIZE is
+equal to 4096. In that case, r5pages will also not be used. So, we can
+just set offset as zero.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- crypto/async_tx/async_xor.c | 120 +++++++++++++++++++++++++++++++-----
- include/linux/async_tx.h    |  11 ++++
- 2 files changed, 114 insertions(+), 17 deletions(-)
+ drivers/md/raid5.c | 64 ++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 51 insertions(+), 13 deletions(-)
 
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 4e5eebe52e6a..29a979358332 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -97,7 +97,8 @@ do_async_xor(struct dma_chan *chan, struct dmaengine_unmap_data *unmap,
- }
- 
- static void
--do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
-+do_sync_xor_offsets(struct page *dest, unsigned int offset,
-+		struct page **src_list, unsigned int *src_offset,
- 	    int src_cnt, size_t len, struct async_submit_ctl *submit)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 801491748043..0c7056a46ba6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1481,6 +1481,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
  {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	int target = sh->ops.target;
+ 	struct r5dev *tgt = &sh->dev[target];
+ 	struct page *xor_dest = tgt->page;
+@@ -1488,6 +1489,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	struct dma_async_tx_descriptor *tx;
+ 	struct async_submit_ctl submit;
  	int i;
-@@ -114,7 +115,8 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	/* convert to buffer pointers */
- 	for (i = 0; i < src_cnt; i++)
- 		if (src_list[i])
--			srcs[xor_src_cnt++] = page_address(src_list[i]) + offset;
-+			srcs[xor_src_cnt++] = page_address(src_list[i]) +
-+				(src_offset ? src_offset[i] : offset);
- 	src_cnt = xor_src_cnt;
- 	/* set destination address */
- 	dest_buf = page_address(dest) + offset;
-@@ -135,11 +137,31 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	async_tx_sync_epilog(submit);
- }
++	unsigned int des_offset = tgt->offset;
  
-+static inline bool
-+dma_xor_aligned_offsets(struct dma_device *device, unsigned int offset,
-+		unsigned int *src_offset, int src_cnt, int len)
-+{
-+	int i;
-+
-+	if (!is_dma_xor_aligned(device, offset, 0, len))
-+		return false;
-+
-+	if (!src_offset)
-+		return true;
-+
-+	for (i = 0; i < src_cnt; i++) {
-+		if (!is_dma_xor_aligned(device, src_offset[i], 0, len))
-+			return false;
+ 	BUG_ON(sh->batch_head);
+ 
+@@ -1495,18 +1497,23 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 		__func__, (unsigned long long)sh->sector, target);
+ 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+ 
+-	for (i = disks; i--; )
+-		if (i != target)
++	for (i = disks; i--; ) {
++		if (i != target) {
++			offs[count] = sh->dev[i].offset;
+ 			xor_srcs[count++] = sh->dev[i].page;
++		}
 +	}
-+	return true;
-+}
-+
- /**
-- * async_xor - attempt to xor a set of blocks with a dma engine.
-+ * async_xor_offsets - attempt to xor a set of blocks with a dma engine.
-  * @dest: destination page
-+ * @offset: dst offset to start transaction
-  * @src_list: array of source pages
-- * @offset: common src/dst offset to start transaction
-+ * @src_offset: array of source pages offset, NULL means common src/dst offset
-  * @src_cnt: number of source pages
-  * @len: length in bytes
-  * @submit: submission / completion modifiers
-@@ -157,8 +179,9 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
-  * is not specified.
-  */
- struct dma_async_tx_descriptor *
--async_xor(struct page *dest, struct page **src_list, unsigned int offset,
--	  int src_cnt, size_t len, struct async_submit_ctl *submit)
-+async_xor_offsets(struct page *dest, unsigned int offset,
-+		struct page **src_list, unsigned int *src_offset,
-+		int src_cnt, size_t len, struct async_submit_ctl *submit)
- {
- 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR,
- 						      &dest, 1, src_list,
-@@ -171,7 +194,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	if (device)
- 		unmap = dmaengine_get_unmap_data(device->dev, src_cnt+1, GFP_NOWAIT);
  
--	if (unmap && is_dma_xor_aligned(device, offset, 0, len)) {
-+	if (unmap && dma_xor_aligned_offsets(device, offset,
-+				src_offset, src_cnt, len)) {
- 		struct dma_async_tx_descriptor *tx;
- 		int i, j;
+ 	atomic_inc(&sh->count);
  
-@@ -184,7 +208,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 				continue;
- 			unmap->to_cnt++;
- 			unmap->addr[j++] = dma_map_page(device->dev, src_list[i],
--							offset, len, DMA_TO_DEVICE);
-+							(src_offset ? src_offset[i] : offset),
-+							len, DMA_TO_DEVICE);
- 		}
- 
- 		/* map it bidirectional as it may be re-used as a source */
-@@ -213,11 +238,42 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 		/* wait for any prerequisite operations */
- 		async_tx_quiesce(&submit->depend_tx);
- 
--		do_sync_xor(dest, src_list, offset, src_cnt, len, submit);
-+		do_sync_xor_offsets(dest, offset, src_list, src_offset,
-+				src_cnt, len, submit);
- 
- 		return NULL;
- 	}
- }
-+EXPORT_SYMBOL_GPL(async_xor_offsets);
-+
-+/**
-+ * async_xor - attempt to xor a set of blocks with a dma engine.
-+ * @dest: destination page
-+ * @src_list: array of source pages
-+ * @offset: common src/dst offset to start transaction
-+ * @src_cnt: number of source pages
-+ * @len: length in bytes
-+ * @submit: submission / completion modifiers
-+ *
-+ * honored flags: ASYNC_TX_ACK, ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DST
-+ *
-+ * xor_blocks always uses the dest as a source so the
-+ * ASYNC_TX_XOR_ZERO_DST flag must be set to not include dest data in
-+ * the calculation.  The assumption with dma eninges is that they only
-+ * use the destination buffer as a source when it is explicity specified
-+ * in the source list.
-+ *
-+ * src_list note: if the dest is also a source it must be at index zero.
-+ * The contents of this array will be overwritten if a scribble region
-+ * is not specified.
-+ */
-+struct dma_async_tx_descriptor *
-+async_xor(struct page *dest, struct page **src_list, unsigned int offset,
-+	  int src_cnt, size_t len, struct async_submit_ctl *submit)
-+{
-+	return async_xor_offsets(dest, offset, src_list, NULL,
-+			src_cnt, len, submit);
-+}
- EXPORT_SYMBOL_GPL(async_xor);
- 
- static int page_is_zero(struct page *p, unsigned int offset, size_t len)
-@@ -237,10 +293,11 @@ xor_val_chan(struct async_submit_ctl *submit, struct page *dest,
- }
- 
- /**
-- * async_xor_val - attempt a xor parity check with a dma engine.
-+ * async_xor_val_offsets - attempt a xor parity check with a dma engine.
-  * @dest: destination page used if the xor is performed synchronously
-+ * @offset: des offset in pages to start transaction
-  * @src_list: array of source pages
-- * @offset: offset in pages to start transaction
-+ * @src_offset: array of source pages offset, NULL means common src/det offset
-  * @src_cnt: number of source pages
-  * @len: length in bytes
-  * @result: 0 if sum == 0 else non-zero
-@@ -253,9 +310,10 @@ xor_val_chan(struct async_submit_ctl *submit, struct page *dest,
-  * is not specified.
-  */
- struct dma_async_tx_descriptor *
--async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
--	      int src_cnt, size_t len, enum sum_check_flags *result,
--	      struct async_submit_ctl *submit)
-+async_xor_val_offsets(struct page *dest, unsigned int offset,
-+		struct page **src_list, unsigned int *src_offset,
-+		int src_cnt, size_t len, enum sum_check_flags *result,
-+		struct async_submit_ctl *submit)
- {
- 	struct dma_chan *chan = xor_val_chan(submit, dest, src_list, src_cnt, len);
- 	struct dma_device *device = chan ? chan->device : NULL;
-@@ -268,7 +326,7 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 		unmap = dmaengine_get_unmap_data(device->dev, src_cnt, GFP_NOWAIT);
- 
- 	if (unmap && src_cnt <= device->max_xor &&
--	    is_dma_xor_aligned(device, offset, 0, len)) {
-+	    dma_xor_aligned_offsets(device, offset, src_offset, src_cnt, len)) {
- 		unsigned long dma_prep_flags = 0;
- 		int i;
- 
-@@ -281,7 +339,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 
- 		for (i = 0; i < src_cnt; i++) {
- 			unmap->addr[i] = dma_map_page(device->dev, src_list[i],
--						      offset, len, DMA_TO_DEVICE);
-+						(src_offset ? src_offset[i] : offset),
-+						len, DMA_TO_DEVICE);
- 			unmap->to_cnt++;
- 		}
- 		unmap->len = len;
-@@ -312,7 +371,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 		submit->flags |= ASYNC_TX_XOR_DROP_DST;
- 		submit->flags &= ~ASYNC_TX_ACK;
- 
--		tx = async_xor(dest, src_list, offset, src_cnt, len, submit);
-+		tx = async_xor_offsets(dest, offset, src_list, src_offset,
-+				src_cnt, len, submit);
- 
- 		async_tx_quiesce(&tx);
- 
-@@ -325,6 +385,32 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL,
+ 			  ops_complete_compute, sh, to_addr_conv(sh, percpu, 0));
+ 	if (unlikely(count == 1))
+-		tx = async_memcpy(xor_dest, xor_srcs[0], 0, 0, STRIPE_SIZE, &submit);
++		tx = async_memcpy(xor_dest, xor_srcs[0], des_offset, offs[0],
++				STRIPE_SIZE, &submit);
+ 	else
+-		tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE, &submit);
++		tx = async_xor_offsets(xor_dest, des_offset, xor_srcs, offs,
++				count, STRIPE_SIZE, &submit);
  
  	return tx;
  }
-+EXPORT_SYMBOL_GPL(async_xor_val_offsets);
-+
-+/**
-+ * async_xor_val - attempt a xor parity check with a dma engine.
-+ * @dest: destination page used if the xor is performed synchronously
-+ * @src_list: array of source pages
-+ * @offset: offset in pages to start transaction
-+ * @src_cnt: number of source pages
-+ * @len: length in bytes
-+ * @result: 0 if sum == 0 else non-zero
-+ * @submit: submission / completion modifiers
-+ *
-+ * honored flags: ASYNC_TX_ACK
-+ *
-+ * src_list note: if the dest is also a source it must be at index zero.
-+ * The contents of this array will be overwritten if a scribble region
-+ * is not specified.
-+ */
-+struct dma_async_tx_descriptor *
-+async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
-+	      int src_cnt, size_t len, enum sum_check_flags *result,
-+	      struct async_submit_ctl *submit)
-+{
-+	return async_xor_val_offsets(dest, offset, src_list, NULL, src_cnt,
-+			len, result, submit);
-+}
- EXPORT_SYMBOL_GPL(async_xor_val);
+@@ -1745,10 +1752,12 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	int count = 0, pd_idx = sh->pd_idx, i;
+ 	struct async_submit_ctl submit;
  
- MODULE_AUTHOR("Intel Corporation");
-diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-index 75e582b8d2d9..8d79e2de06bd 100644
---- a/include/linux/async_tx.h
-+++ b/include/linux/async_tx.h
-@@ -162,11 +162,22 @@ struct dma_async_tx_descriptor *
- async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	  int src_cnt, size_t len, struct async_submit_ctl *submit);
+ 	/* existing parity data subtracted */
++	unsigned int des_offset = offs[count] = sh->dev[pd_idx].offset;
+ 	struct page *xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
  
-+struct dma_async_tx_descriptor *
-+async_xor_offsets(struct page *dest, unsigned int offset,
-+		struct page **src_list, unsigned int *src_offset,
-+		int src_cnt, size_t len, struct async_submit_ctl *submit);
-+
- struct dma_async_tx_descriptor *
- async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 	      int src_cnt, size_t len, enum sum_check_flags *result,
- 	      struct async_submit_ctl *submit);
+ 	BUG_ON(sh->batch_head);
+@@ -1758,15 +1767,23 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	for (i = disks; i--; ) {
+ 		struct r5dev *dev = &sh->dev[i];
+ 		/* Only process blocks that are known to be uptodate */
+-		if (test_bit(R5_InJournal, &dev->flags))
++		if (test_bit(R5_InJournal, &dev->flags)) {
++			/*
++			 * For this case, PAGE_SIZE must be 4KB and will not
++			 * use r5pages. So we can just set offset as zero.
++			 */
++			offs[count] = 0;
+ 			xor_srcs[count++] = dev->orig_page;
+-		else if (test_bit(R5_Wantdrain, &dev->flags))
++		} else if (test_bit(R5_Wantdrain, &dev->flags)) {
++			offs[count] = dev->offset;
+ 			xor_srcs[count++] = dev->page;
++		}
+ 	}
  
-+struct dma_async_tx_descriptor *
-+async_xor_val_offsets(struct page *dest, unsigned int offset,
-+		struct page **src_list, unsigned int *src_offset,
-+		int src_cnt, size_t len, enum sum_check_flags *result,
-+		struct async_submit_ctl *submit);
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
+ 			  ops_complete_prexor, sh, to_addr_conv(sh, percpu, 0));
+-	tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE, &submit);
++	tx = async_xor_offsets(xor_dest, des_offset, xor_srcs, offs,
++			count, STRIPE_SIZE, &submit);
+ 
+ 	return tx;
+ }
+@@ -1916,6 +1933,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs;
++	unsigned int *offs;
+ 	struct async_submit_ctl submit;
+ 	int count, pd_idx = sh->pd_idx, i;
+ 	struct page *xor_dest;
+@@ -1924,6 +1942,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	int j = 0;
+ 	struct stripe_head *head_sh = sh;
+ 	int last_stripe;
++	unsigned int des_offset;
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+@@ -1940,27 +1959,37 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 		ops_complete_reconstruct(sh);
+ 		return;
+ 	}
 +
- struct dma_async_tx_descriptor *
- async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
- 	     unsigned int src_offset, size_t len,
+ again:
+ 	count = 0;
+ 	xor_srcs = to_addr_page(percpu, j);
++	offs = to_addr_offs(sh, percpu);
+ 	/* check if prexor is active which means only process blocks
+ 	 * that are part of a read-modify-write (written)
+ 	 */
+ 	if (head_sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
+ 		prexor = 1;
++		des_offset = offs[count] = sh->dev[pd_idx].offset;
+ 		xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
++
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if (head_sh->dev[i].written ||
+-			    test_bit(R5_InJournal, &head_sh->dev[i].flags))
++			    test_bit(R5_InJournal, &head_sh->dev[i].flags)) {
++				offs[count] = dev->offset;
+ 				xor_srcs[count++] = dev->page;
++			}
+ 		}
+ 	} else {
+ 		xor_dest = sh->dev[pd_idx].page;
++		des_offset = sh->dev[pd_idx].offset;
++
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if (i != pd_idx)
++			if (i != pd_idx) {
++				offs[count] = dev->offset;
+ 				xor_srcs[count++] = dev->page;
++			}
+ 		}
+ 	}
+ 
+@@ -1986,9 +2015,12 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	}
+ 
+ 	if (unlikely(count == 1))
+-		tx = async_memcpy(xor_dest, xor_srcs[0], 0, 0, STRIPE_SIZE, &submit);
++		tx = async_memcpy(xor_dest, xor_srcs[0], des_offset,
++				offs[0], STRIPE_SIZE, &submit);
+ 	else
+-		tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE, &submit);
++		tx = async_xor_offsets(xor_dest, des_offset, xor_srcs,
++				offs, count, STRIPE_SIZE, &submit);
++
+ 	if (!last_stripe) {
+ 		j++;
+ 		sh = list_first_entry(&sh->batch_list, struct stripe_head,
+@@ -2076,10 +2108,12 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	int qd_idx = sh->qd_idx;
+ 	struct page *xor_dest;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	struct dma_async_tx_descriptor *tx;
+ 	struct async_submit_ctl submit;
+ 	int count;
+ 	int i;
++	unsigned int dest_offset;
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+@@ -2087,17 +2121,21 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	BUG_ON(sh->batch_head);
+ 	count = 0;
+ 	xor_dest = sh->dev[pd_idx].page;
++	dest_offset = sh->dev[pd_idx].offset;
++	offs[count] = dest_offset;
+ 	xor_srcs[count++] = xor_dest;
++
+ 	for (i = disks; i--; ) {
+ 		if (i == pd_idx || i == qd_idx)
+ 			continue;
++		offs[count] = sh->dev[i].offset;
+ 		xor_srcs[count++] = sh->dev[i].page;
+ 	}
+ 
+ 	init_async_submit(&submit, 0, NULL, NULL, NULL,
+ 			  to_addr_conv(sh, percpu, 0));
+-	tx = async_xor_val(xor_dest, xor_srcs, 0, count, STRIPE_SIZE,
+-			   &sh->ops.zero_sum_result, &submit);
++	tx = async_xor_val_offsets(xor_dest, dest_offset, xor_srcs, offs,
++			count, STRIPE_SIZE, &sh->ops.zero_sum_result, &submit);
+ 
+ 	atomic_inc(&sh->count);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, tx, ops_complete_check, sh, NULL);
 -- 
 2.21.1
