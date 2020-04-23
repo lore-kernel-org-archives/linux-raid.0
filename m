@@ -1,76 +1,79 @@
-From: Xiaosong Ma <xma@qf.org.qa>
-Subject: Fwd: Fw: some questions about uploading a Linux kernel driver
-Date: Wed, 22 Apr 2020 15:26:39 +0300
-Message-ID: <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
-References: <6a7c0aba219642de8b3f1cc680d53d85@AM0P193MB0754.EURP193.PROD.OUTLOOK.COM>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: Re: [PATCH RFC v2 0/8] md/raid5: set STRIPE_SIZE as a configurable
+ value
+Date: Thu, 23 Apr 2020 11:01:28 +0800
+Message-ID: <ab38eb52-32fa-8a87-4edf-765b1e9ff48c@huawei.com>
+References: <20200421123952.49025-1-yuyufen@huawei.com>
+ <67039bd4-1b24-a7f5-d82a-fabb3ebfce12@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6a7c0aba219642de8b3f1cc680d53d85@AM0P193MB0754.EURP193.PROD.OUTLOOK.COM>
+In-Reply-To: <67039bd4-1b24-a7f5-d82a-fabb3ebfce12@molgen.mpg.de>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: song@kernel.org, linux-raid@vger.kernel.org
-Cc: ty-jiang18@mails.tsinghua.edu.cn, Guangyan Zhang <gyzh@tsinghua.edu.cn>, wei-jy19@mails.tsinghua.edu.cn
+To: Paul Menzel <pmenzel@molgen.mpg.de>, song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com
 List-Id: linux-raid.ids
 
-Dear Song,
+Hi
 
-This is Xiaosong Ma from Qatar Computing Research Institute. I am
-writing to follow up with the questions posed by a co-author from
-Tsinghua U, regarding upstreaming our alternative md implementation
-that is designed to significantly reduce SSD RAID latency (both median
-and tail) for large SSD pools (such as 20-disk or more).
-
-We read the Linux kernel upstreaming instructions, and believe that
-our implementation has excellent separability from the current code
-base (as a plug-and-play module with identical interfaces as md).
-Meanwhile, we wonder whether there are standard test cases or
-preferred applications that we should test our system with, before
-doing code cleaning up. Your guidance is much appreciated.
-
-Best regards,
-Xiaosong
-
-Dr. Xiaosong Ma
-Principal Scientist
-Distributed Systems
-
-Qatar Computing Research Institute
-Hamad Bin Khalifa University
-HBKU – Research Complex
-P.O. Box 5825
-Doha, Qatar
-Tel: +974 4454 6190
-www.qcri.qa
-<http://www.qcri.qa>
-
-
-
----------- Forwarded message ---------
-From: 姜天洋 <ty-jiang18@mails.tsinghua.edu.cn>
-Date: Tue, Apr 14, 2020 at 2:10 PM
-Subject: Fw: some questions about uploading a Linux kernel driver
-To: Dr. Xiaosong Ma <xma@hbku.edu.qa>, gyzh@tsinghua.edu.cn
-<gyzh@tsinghua.edu.cn>, wei-jy19@mails.tsinghua.edu.cn
-<wei-jy19@mails.tsinghua.edu.cn>
-
-
+On 2020/4/21 20:56, Paul Menzel wrote:
+> Dear Yufen,
+> 
+> 
+> Thank you for your patch set.
+> 
+> Am 21.04.20 um 14:39 schrieb Yufen Yu:
+> 
+>>   For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5 will
+>>   issus echo bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64. However,
+> 
+> issue
+> 
+>>   filesystem usually issue bio in the unit of 4KB. Then, RAID5 will waste resource
+>>   of disk bandwidth.
+>>
+>>   To solve the problem, this patchset provide a new config CONFIG_MD_RAID456_STRIPE_SIZE
+>>   to let user config STRIPE_SIZE. The default value is 4096.
+>>
+>>   Normally, using default STRIPE_SIZE can get better performance. And NeilBrown have
+>>   suggested just to fix the STRIPE_SIZE as 4096. But, out test result show that
+>>   big value of STRIPE_SIZE may have better performance when size of issued IOs are
+>>   mostly bigger than 4096. Thus, in this patchset, we still want to set STRIPE_SIZE
+>>   as a configureable value.
+> 
+> configurable
+> 
+>>   In current implementation, grow_buffers() uses alloc_page() to allocate the buffers
+>>   for each stripe_head. With the change, it means we allocate 64K buffers but just
+>>   use 4K of them. To save memory, we try to 'compress' multiple buffers of stripe_head
+>>   to only one real page. Detail shows in patch #2.
+>>
+>>   To evaluate the new feature, we create raid5 device '/dev/md5' with 4 SSD disk
+>>   and test it on arm64 machine with 64KB PAGE_SIZE.
+> 
+> […]
+> 
+> So, what is affecting the performance? The size of the bio in the used file system? Shouldn’t it then be a run-time option (Linux CLI parameter and /proc) so the Linux kernel doesn’t need to be recompiled for different servers? Should the option be even per RAID, as each RAID5 device might be using another filesystem?
 
 
+We have used perf and blktrace to dig factors that affect the performance. Test
+'4KB randwrite' respectively on 'STRIPE_SIZE = 4K' and 'STRIPE_SIZE = 64K' on
+our arm64 with 64KB PAGE_SIZE machine. It shows that (STRIPE_SIZE = 64K) needs
+more time to compute xor and issue IO. Details:
 
------原始邮件-----
-发件人:"姜天洋" <ty-jiang18@mails.tsinghua.edu.cn>
-发送时间:2020-04-08 20:34:44 (星期三)
-收件人: song@kernel.org
-抄送: linux-raid@vger.kernel.org
-主题: some questions about uploading a Linux kernel driver
+1) perf and Flame Graph show that compute xor function(i.e. async_xor) percentage
+    is about 1.45% vs 14.87%. For each 4KB bio, raid5 compute 64KB xor when
+    'STRIPE_SIZE = 64K', while computing 4KB on 'STRIPE_SIZE = 4K'.
 
-Hello
-I am Tianyang JIANG, a PhD student from Tsinghua U. We finish a study
-which focuses on achieving consistent low latency for SSD arrays,
-especially timing tail latency in RAID level. We implement a Linux
-kernel driver called FusionRAID and we are interested in uploading
-codes to Linux upstream.
-I notice that I should seperate my changes and style-check my codes
-before submitting. Are there any other issues I need to be aware of?
-Thank you for your time.
+2) blktrace can trace each issued bio and it show that D2C latency (i.e. issue io
+    to driver until it complete) about 114.7us vs 1325.6us. That means big bio will
+    consume more time in driver.
+
+We know RAID5 can be reshaped by user. If STRIPE_SIZE is not equal to that before doing
+reshape, it can cause more complicated problems. But I think we can add a modules parameter
+for raid5 to set STRIPE_SIZE.
+
+Thanks,
+Yufen
