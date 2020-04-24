@@ -1,92 +1,65 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH] md/raid1: release pending accounting for an I/O only
- after write-behind is also finished
-Date: Fri, 24 Apr 2020 09:52:50 +0200
-Message-ID: <c6da909e-7394-bea4-9efe-48ae6dbb7f0b@cloud.ionos.com>
-References: <20200127152619.GA3596@redhat>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: some questions about uploading a Linux kernel driver FusionRAID
+Date: Fri, 24 Apr 2020 10:24:37 +0200
+Message-ID: <eb742f1b-fbc2-a47f-dd1b-eec20463fa21@molgen.mpg.de>
+References: <6a7c0aba219642de8b3f1cc680d53d85@AM0P193MB0754.EURP193.PROD.OUTLOOK.COM>
+ <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200127152619.GA3596@redhat>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
 Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: David Jeffery <djeffery@redhat.com>, linux-raid@vger.kernel.org
-Cc: Song Liu <song@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Xiaosong Ma <xma@qf.org.qa>, song@kernel.org, linux-raid@vger.kernel.org
+Cc: ty-jiang18@mails.tsinghua.edu.cn, Guangyan Zhang <gyzh@tsinghua.edu.cn>, wei-jy19@mails.tsinghua.edu.cn, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/27/20 4:26 PM, David Jeffery wrote:
-> When using RAID1 and write-behind, md can deadlock when errors occur. With
-> write-behind, r1bio structs can be accounted by raid1 as queued but not
-> counted as pending. The pending count is dropped when the original bio is
-> returned complete but write-behind for the r1bio may still be active.
->
-> This breaks the accounting used in some conditions to know when the raid1
-> md device has reached an idle state. It can result in calls to
-> freeze_array deadlocking. freeze_array will never complete from a negative
-> "unqueued" value being calculated due to a queued count larger than the
-> pending count.
->
-> To properly account for write-behind, move the call to allow_barrier from
-> call_bio_endio to raid_end_bio_io. When using write-behind, md can call
-> call_bio_endio before all write-behind I/O is complete. Using
-> raid_end_bio_io for the point to call allow_barrier will release the
-> pending count at a point where all I/O for an r1bio, even write-behind, is
-> done.
->
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> ---
->
->   raid1.c |   13 +++++++------
->   1 file changed, 7 insertions(+), 6 deletions(-)
->
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 201fd8aec59a..0196a9d9f7e9 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -279,22 +279,17 @@ static void reschedule_retry(struct r1bio *r1_bio)
->   static void call_bio_endio(struct r1bio *r1_bio)
->   {
->   	struct bio *bio = r1_bio->master_bio;
-> -	struct r1conf *conf = r1_bio->mddev->private;
->   
->   	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
->   		bio->bi_status = BLK_STS_IOERR;
->   
->   	bio_endio(bio);
-> -	/*
-> -	 * Wake up any possible resync thread that waits for the device
-> -	 * to go idle.
-> -	 */
-> -	allow_barrier(conf, r1_bio->sector);
->   }
->   
->   static void raid_end_bio_io(struct r1bio *r1_bio)
->   {
->   	struct bio *bio = r1_bio->master_bio;
-> +	struct r1conf *conf = r1_bio->mddev->private;
->   
->   	/* if nobody has done the final endio yet, do it now */
->   	if (!test_and_set_bit(R1BIO_Returned, &r1_bio->state)) {
-> @@ -305,6 +300,12 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
->   
->   		call_bio_endio(r1_bio);
->   	}
-> +	/*
-> +	 * Wake up any possible resync thread that waits for the device
-> +	 * to go idle.  All I/Os, even write-behind writes, are done.
-> +	 */
-> +	allow_barrier(conf, r1_bio->sector);
-> +
->   	free_r1bio(r1_bio);
->   }
->
+Dear Xiaosong, dear Tsinghua,
 
-Actually, it reverts part of change in 
-d2eb35acfdccbe2a3622ed6cc441a5482148423b,
-not sure if it is better to move the call of allow_barrier back to 
-free_r1bio, just FYI.
 
-Thanks,
-Guoqing
+Am 22.04.20 um 14:26 schrieb Xiaosong Ma:
+
+> This is Xiaosong Ma from Qatar Computing Research Institute. I am
+> writing to follow up with the questions posed by a co-author from
+> Tsinghua U, regarding upstreaming our alternative md implementation
+> that is designed to significantly reduce SSD RAID latency (both median
+> and tail) for large SSD pools (such as 20-disk or more).
+
+Sorry for the late reply, and thank you for wanting to upstream the driver.
+
+> We read the Linux kernel upstreaming instructions, and believe that
+> our implementation has excellent separability from the current code
+> base (as a plug-and-play module with identical interfaces as md).
+
+Is there a chance to integrate it into the current driver, and then 
+choose it, when creating the RAID?
+
+> Meanwhile, we wonder whether there are standard test cases or
+> preferred applications that we should test our system with, before
+> doing code cleaning up. Your guidance is much appreciated.
+
+[…]
+> I am Tianyang JIANG, a PhD student from Tsinghua U. We finish a study
+> which focuses on achieving consistent low latency for SSD arrays,
+> especially timing tail latency in RAID level. We implement a Linux
+> kernel driver called FusionRAID and we are interested in uploading
+> codes to Linux upstream.
+> I notice that I should separate my changes and style-check my codes
+> before submitting. Are there any other issues I need to be aware of?
+> Thank you for your time.
+
+Is your code in some public git branch to be looked at already?
+
+Otherwise, I believe just posting the patch train with `git send-email` 
+and a cover letter, might be the best first step, so the developers can 
+comment early before you put too much time into refactoring.
+
+Some easy to reproduce test scripts to verify the performance benefits 
+would indeed be nice, but I do not know, if that can be integrated into 
+some Linux kernel test infrastructure already.
+
+
+Kind regards,
+
+Paul
