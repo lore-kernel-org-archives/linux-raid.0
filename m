@@ -1,73 +1,34 @@
-From: =?UTF-8?B?0KHQtdGA0LPQtdC5INCg0YvQttC+0LI=?=
-        <ryzhovsergey@gmail.com>
-Subject: Linux RAID reshaping hang, can somebody help me with this?
-Date: Fri, 24 Apr 2020 11:47:24 +0300
-Message-ID: <CAMk5DB3QbSaPkPzvwLdZp5HQaca8JYJrTS9ahfvOovFuhusPiw@mail.gmail.com>
+From: Phillip Susi <phill@thesusis.net>
+Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
+Date: Fri, 24 Apr 2020 15:15:22 -0400
+Message-ID: <87d07wr8z9.fsf@vps.thesusis.net>
+References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de> <f9f2f479-2899-6774-eb20-bf81ed24bc7b@shaw.ca> <c6be03e8-7726-f184-7752-b41732a9e015@peter-speer.de> <87h7xhemk2.fsf@esperi.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <87h7xhemk2.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nix <nix@esperi.org.uk>
+Cc: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, G <garboge@shaw.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
 
-I've RAID-5 on 4 disks.
-I've added 1 new drive as spare and run a command to grow array to 5-disks.
-In the beginning, everything was fine, but now reshaping very slow -
-speed=77K/sec
+Nix writes:
 
-Kernel is 4.18.0-147.3.1.el8_1.x86_64
-mdadm - v4.1 - 2018-10-01
+> Agreed. I avoided GPT like the plague for ages (shoddy early-2010s
+> motherboard firmware), but once I switched to it it was so much easier
+> to manage than old-style BIOS, and so much easier to deal with when
+> disaster struck, that I'd never consider going back. Does the BIOS have
+> anything like an EFI shell? No, no it doesn't. Can you hack your own
 
-Commands what I used:
-mdadm --manage /dev/md3 --add  /dev/sdb
-mdadm --grow /dev/md3 --raid-devices=5
+My current and previous motherboard with UEFI boot support did not come
+with the shell.  I once tried downloading one and running it but never
+could find anything useful to do with it.  I also haven't ever been able
+to find any useful UEFI drivers or programs.
 
-There is crypted volume on raid: md3 -> cryptvol -> FS
-When I tryed unmount FS, umount command hung, however FS gone from
-'df' output.  Also I can't stop cryptvol,  'cryptsetup close' hung.
+> Can you play DOOM before the OS starts in your BIOS-based system -- oh
+> wait, sane people don't do that, do they. But you can't get higher
+> availability for truly important functions than that!
+> <https://doomwiki.org/wiki/Doom_UEFI>
 
-What I should do to don't lose my raid data?
-
-#  mdadm --detail /dev/md3
-/dev/md3:
-           Version : 1.2
-     Creation Time : Mon Jan 11 14:32:08 2016
-        Raid Level : raid5
-        Array Size : 5860150272 (5588.67 GiB 6000.79 GB)
-     Used Dev Size : 1953383424 (1862.89 GiB 2000.26 GB)
-      Raid Devices : 5
-     Total Devices : 5
-       Persistence : Superblock is persistent
-
-     Intent Bitmap : Internal
-
-       Update Time : Fri Apr 24 08:38:20 2020
-             State : active, reshaping
-    Active Devices : 5
-   Working Devices : 5
-    Failed Devices : 0
-     Spare Devices : 0
-
-            Layout : left-symmetric
-        Chunk Size : 512K
-
-Consistency Policy : bitmap
-
-    Reshape Status : 56% complete
-     Delta Devices : 1, (4->5)
-
-              Name : farm:3  (local to host farm)
-              UUID : e3537ea8:892da052:bfb9cb85:93156ade
-            Events : 59168
-
-    Number   Major   Minor   RaidDevice State
-       0       8        0        0      active sync   /dev/sda
-       4       8       48        1      active sync   /dev/sdd
-       3       8       96        2      active sync   /dev/sdg
-       5       8       32        3      active sync   /dev/sdc
-       6       8       16        4      active sync   /dev/sdb
-
-Regards,
-Sergey
+OMG!
