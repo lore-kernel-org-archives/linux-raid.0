@@ -1,43 +1,43 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: Setup Recommendation on UEFI/GRUB/RAID1/LVM
-Date: Fri, 24 Apr 2020 21:24:45 +0100
-Message-ID: <87ftcsk4xe.fsf@esperi.org.uk>
-References: <fc12df3c-aac9-4aa8-a596-f13225161e22@peter-speer.de>
-        <f9f2f479-2899-6774-eb20-bf81ed24bc7b@shaw.ca>
-        <c6be03e8-7726-f184-7752-b41732a9e015@peter-speer.de>
-        <87h7xhemk2.fsf@esperi.org.uk> <87d07wr8z9.fsf@vps.thesusis.net>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH v2] md/raid0: add config parameters to specify zone layout
+Date: Fri, 24 Apr 2020 23:22:23 +0000
+Message-ID: <81A991E8-B87E-4518-9643-45037A104981@fb.com>
+References: <1585584045-11263-1-git-send-email-jbaron@akamai.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87d07wr8z9.fsf@vps.thesusis.net> (Phillip Susi's message of
-        "Fri, 24 Apr 2020 15:15:22 -0400")
-Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <phill@thesusis.net>
-Cc: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, G <garboge@shaw.ca>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1585584045-11263-1-git-send-email-jbaron@akamai.com>
+Content-Language: en-US
+Content-ID: <14A498177D9406408AB7D323A41B5F7D@namprd15.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Baron <jbaron@akamai.com>
+Cc: "rdunlap@infradead.org" <rdunlap@infradead.org>, "neilb@suse.de" <neilb@suse.de>, "guoqing.jiang@cloud.ionos.com" <guoqing.jiang@cloud.ionos.com>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 24 Apr 2020, Phillip Susi stated:
 
->
-> Nix writes:
->
->> Agreed. I avoided GPT like the plague for ages (shoddy early-2010s
->> motherboard firmware), but once I switched to it it was so much easier
->> to manage than old-style BIOS, and so much easier to deal with when
->> disaster struck, that I'd never consider going back. Does the BIOS have
->> anything like an EFI shell? No, no it doesn't. Can you hack your own
->
-> My current and previous motherboard with UEFI boot support did not come
-> with the shell.  I once tried downloading one and running it but never
-> could find anything useful to do with it.
 
-It's mostly useful for emergency recovery, I'll admit :)
+> On Mar 30, 2020, at 9:00 AM, Jason Baron <jbaron@akamai.com> wrote:
+>=20
+> Let's add some CONFIG_* options to directly configure the raid0 layout
+> if you know in advance how your raid0 array was created. This can be
+> simpler than having to manage module or kernel command-line parameters.
+>=20
+> If the raid0 array was created by a pre-3.14 kernel, use
+> RAID0_ORIG_LAYOUT. If the raid0 array was created by a 3.14 or newer
+> kernel then select RAID0_ALT_MULTIZONE_LAYOUT. Otherwise, the default
+> setting is RAID0_LAYOUT_NONE, in which case the current behavior of
+> needing to specify a module parameter raid0.default_layout=3D1|2 is
+> preserved.
+>=20
+> Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+> Cc: NeilBrown <neilb@suse.de>
+> Cc: Song Liu <songliubraving@fb.com>
+> Signed-off-by: Jason Baron <jbaron@akamai.com>
 
->                                            I also haven't ever been able
-> to find any useful UEFI drivers or programs.
+This patch looks good. However, I am not sure whether the user will=20
+recompile the kernel for a different default value. Do you have real
+world use case for this?
 
-They are very thin on the ground :( a shame, really: it seems like
-something you *should* be able to use to build whole rescue
-environments, but nooo. I guess it *is* easier to stick those in an
-initramfs linked into a kernel built as an EFI stub, since at least it's
-a Linux rather than the rather weird PE-based environment which is EFI.
+Thanks,
+Song
