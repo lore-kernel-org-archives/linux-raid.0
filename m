@@ -1,65 +1,73 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: some questions about uploading a Linux kernel driver FusionRAID
-Date: Fri, 24 Apr 2020 10:24:37 +0200
-Message-ID: <eb742f1b-fbc2-a47f-dd1b-eec20463fa21@molgen.mpg.de>
-References: <6a7c0aba219642de8b3f1cc680d53d85@AM0P193MB0754.EURP193.PROD.OUTLOOK.COM>
- <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
+From: =?UTF-8?B?0KHQtdGA0LPQtdC5INCg0YvQttC+0LI=?=
+        <ryzhovsergey@gmail.com>
+Subject: Linux RAID reshaping hang, can somebody help me with this?
+Date: Fri, 24 Apr 2020 11:47:24 +0300
+Message-ID: <CAMk5DB3QbSaPkPzvwLdZp5HQaca8JYJrTS9ahfvOovFuhusPiw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Xiaosong Ma <xma@qf.org.qa>, song@kernel.org, linux-raid@vger.kernel.org
-Cc: ty-jiang18@mails.tsinghua.edu.cn, Guangyan Zhang <gyzh@tsinghua.edu.cn>, wei-jy19@mails.tsinghua.edu.cn, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Xiaosong, dear Tsinghua,
+Hello,
 
+I've RAID-5 on 4 disks.
+I've added 1 new drive as spare and run a command to grow array to 5-disks.
+In the beginning, everything was fine, but now reshaping very slow -
+speed=77K/sec
 
-Am 22.04.20 um 14:26 schrieb Xiaosong Ma:
+Kernel is 4.18.0-147.3.1.el8_1.x86_64
+mdadm - v4.1 - 2018-10-01
 
-> This is Xiaosong Ma from Qatar Computing Research Institute. I am
-> writing to follow up with the questions posed by a co-author from
-> Tsinghua U, regarding upstreaming our alternative md implementation
-> that is designed to significantly reduce SSD RAID latency (both median
-> and tail) for large SSD pools (such as 20-disk or more).
+Commands what I used:
+mdadm --manage /dev/md3 --add  /dev/sdb
+mdadm --grow /dev/md3 --raid-devices=5
 
-Sorry for the late reply, and thank you for wanting to upstream the driver.
+There is crypted volume on raid: md3 -> cryptvol -> FS
+When I tryed unmount FS, umount command hung, however FS gone from
+'df' output.  Also I can't stop cryptvol,  'cryptsetup close' hung.
 
-> We read the Linux kernel upstreaming instructions, and believe that
-> our implementation has excellent separability from the current code
-> base (as a plug-and-play module with identical interfaces as md).
+What I should do to don't lose my raid data?
 
-Is there a chance to integrate it into the current driver, and then 
-choose it, when creating the RAID?
+#  mdadm --detail /dev/md3
+/dev/md3:
+           Version : 1.2
+     Creation Time : Mon Jan 11 14:32:08 2016
+        Raid Level : raid5
+        Array Size : 5860150272 (5588.67 GiB 6000.79 GB)
+     Used Dev Size : 1953383424 (1862.89 GiB 2000.26 GB)
+      Raid Devices : 5
+     Total Devices : 5
+       Persistence : Superblock is persistent
 
-> Meanwhile, we wonder whether there are standard test cases or
-> preferred applications that we should test our system with, before
-> doing code cleaning up. Your guidance is much appreciated.
+     Intent Bitmap : Internal
 
-[…]
-> I am Tianyang JIANG, a PhD student from Tsinghua U. We finish a study
-> which focuses on achieving consistent low latency for SSD arrays,
-> especially timing tail latency in RAID level. We implement a Linux
-> kernel driver called FusionRAID and we are interested in uploading
-> codes to Linux upstream.
-> I notice that I should separate my changes and style-check my codes
-> before submitting. Are there any other issues I need to be aware of?
-> Thank you for your time.
+       Update Time : Fri Apr 24 08:38:20 2020
+             State : active, reshaping
+    Active Devices : 5
+   Working Devices : 5
+    Failed Devices : 0
+     Spare Devices : 0
 
-Is your code in some public git branch to be looked at already?
+            Layout : left-symmetric
+        Chunk Size : 512K
 
-Otherwise, I believe just posting the patch train with `git send-email` 
-and a cover letter, might be the best first step, so the developers can 
-comment early before you put too much time into refactoring.
+Consistency Policy : bitmap
 
-Some easy to reproduce test scripts to verify the performance benefits 
-would indeed be nice, but I do not know, if that can be integrated into 
-some Linux kernel test infrastructure already.
+    Reshape Status : 56% complete
+     Delta Devices : 1, (4->5)
 
+              Name : farm:3  (local to host farm)
+              UUID : e3537ea8:892da052:bfb9cb85:93156ade
+            Events : 59168
 
-Kind regards,
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       4       8       48        1      active sync   /dev/sdd
+       3       8       96        2      active sync   /dev/sdg
+       5       8       32        3      active sync   /dev/sdc
+       6       8       16        4      active sync   /dev/sdb
 
-Paul
+Regards,
+Sergey
