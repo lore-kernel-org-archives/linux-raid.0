@@ -1,32 +1,61 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Hard Drive Partition Table shows partition larger than drive
-Date: Sun, 26 Apr 2020 21:21:49 +0100
-Message-ID: <5EA5ED5D.8060006@youngman.org.uk>
-References: <6ee9392d-8867-f0b5-193e-17a516bb7e0e@steinmetznet.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6ee9392d-8867-f0b5-193e-17a516bb7e0e@steinmetznet.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Steinmetz <rob@steinmetznet.com>, linux-raid@vger.kernel.org
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: [RFC PATCH 2/9] md: remove __clear_page_buffers and use set/clear_fs_page_private
+Date: Sun, 26 Apr 2020 23:49:18 +0200
+Message-ID: <20200426214925.10970-3-guoqing.jiang@cloud.ionos.com>
+References: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200426214925.10970-1-guoqing.jiang@cloud.ionos.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: hch@infradead.org, david@fromorbit.com, willy@infradead.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/04/20 18:49, Robert Steinmetz wrote:
+After introduce set/clear_fs_page_private in pagemap.h, we can remove
+the duplicat code and call the new functions.
 
-> 
-> boot and raid flags are set.
-> Obviously something is wrong.
-> I originally use the drive to replace another smaller drive in a Raid 1
-> array and that array was created with mdadm and maybe lvm2.
-> Is there a reasonable way to see if the drive has anything usable in it?
-> 
-Run lsdrv over the drive and see what that reports.
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+---
+ drivers/md/md-bitmap.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-https://raid.wiki.kernel.org/index.php/Asking_for_help
-
-If you post that here, hopefully somebody can help you reconstruct
-whatever was there.
-
-Cheers,
-Wol
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index b952bd45bd6a..b935473c82b7 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -324,14 +324,6 @@ static void end_bitmap_write(struct buffer_head *bh, int uptodate)
+ 		wake_up(&bitmap->write_wait);
+ }
+ 
+-/* copied from buffer.c */
+-static void
+-__clear_page_buffers(struct page *page)
+-{
+-	ClearPagePrivate(page);
+-	set_page_private(page, 0);
+-	put_page(page);
+-}
+ static void free_buffers(struct page *page)
+ {
+ 	struct buffer_head *bh;
+@@ -345,7 +337,7 @@ static void free_buffers(struct page *page)
+ 		free_buffer_head(bh);
+ 		bh = next;
+ 	}
+-	__clear_page_buffers(page);
++	clear_fs_page_private(page);
+ 	put_page(page);
+ }
+ 
+@@ -374,7 +366,7 @@ static int read_page(struct file *file, unsigned long index,
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	attach_page_buffers(page, bh);
++	set_fs_page_private(page, bh);
+ 	blk_cur = index << (PAGE_SHIFT - inode->i_blkbits);
+ 	while (bh) {
+ 		block = blk_cur;
+-- 
+2.17.1
