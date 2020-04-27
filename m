@@ -1,70 +1,55 @@
 From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH] Monitor: improve check_one_sharer() for checking
- duplicated process
-Date: Mon, 27 Apr 2020 10:27:17 -0400
-Message-ID: <4a177b2d-f054-cffc-f970-1ec63e74701a@trained-monkey.org>
-References: <20200410162446.6292-1-colyli@suse.de>
+Subject: Re: [PATCH] Assemble: print error message if mdadm fails assembling
+ with --uuid option
+Date: Mon, 27 Apr 2020 10:44:38 -0400
+Message-ID: <291d7ab2-34f8-8f6e-cbd3-18113d9226be@trained-monkey.org>
+References: <20190416160817.10526-1-gi-oh.kim@cloud.ionos.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200410162446.6292-1-colyli@suse.de>
+In-Reply-To: <20190416160817.10526-1-gi-oh.kim@cloud.ionos.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
-Cc: Shinkichi Yamazaki <shinkichi.yamazaki@suse.com>
+To: Gioh Kim <gi-oh.kim@cloud.ionos.com>, linux-raid@vger.kernel.org
+Cc: neilb@suse.com, jsorensen@fb.com, jinpu.wang@cloud.ionos.com
 List-Id: linux-raid.ids
 
-On 4/10/20 12:24 PM, Coly Li wrote:
-> When running mdadm monitor with scan mode, only one autorebuild process
-> is allowed. check_one_sharer() checks duplicated process by following
-> steps,
-> 1) Read autorebuild.pid file,
->    - if file does not exist, no duplicated process, go to 3).
->    - if file exists, continue to next step.
-> 2) Read pid number from autorebuild.pid file, then check procfs pid
->    directory /proc/<PID>,
->    - if the directory does not exist, no duplicated process, go to 3)
->    - if the directory exists, print error message for duplicated process
->      and exit this mdadm.
-> 3) Write current pid into autorebuild.pid file, continue to monitor in
->    scan mode.
+On 4/16/19 12:08 PM, Gioh Kim wrote:
+> When mdadm tries to assemble one working device and one zeroed-out device,
+> it failed but print successful message because there is --uuid option.
 > 
-> The problem for the above step 2) is, if after system reboots and
-> another different process happens to have exact same pid number which
-> autorebuild.pid file records, check_one_sharer() will treat it as a
-> duplicated mdadm process and returns error with message "Only one
-> autorebuild process allowed in scan mode, aborting".
+> Following script always reproduce it.
 > 
-> This patch tries to fix the above same-pid-but-different-process issue
-> by one more step to check the process command name,
-> 1) Read autorebuild.pid file
->    - if file does not exist, no duplicated process, go to 4).
->    - if file exists, continue to next step.
-> 2) Read pid number from autorebuild.pid file, then check procfs file
->    comm with the specific pid directory /proc/<PID>/comm
->    - if the file does not exit, it means the directory /proc/<PID> does
->      not exist, go to 4)
->    - if the file exits, continue next step
-> 3) Read process command name from /proc/<PIC>/comm, compare the command
->    name with "mdadm" process name,
->    - if not equal, no duplicated process, goto 4)
->    - if strings are equal, print error message for duplicated process
->      and exit this mdadm.
-> 4) Write current pid into autorebuild.pid file, continue to monitor in
->    scan mode.
+> dd if=/dev/zero of=/dev/ram0 oflag=direct
+> dd if=/dev/zero of=/dev/ram1 oflag=direct
+> ./mdadm -C /dev/md111 -e 1.2 --uuid="12345678:12345678:12345678:12345678" \
+>     -l1 -n2 /dev/ram0 /dev/ram1
+> ./mdadm -S /dev/md111
+> dd if=/dev/zero of=/dev/ram1 oflag=direct
+> ./mdadm -A /dev/md111 --uuid="12345678:12345678:12345678:12345678" \
+>     /dev/ram0 /dev/ram1
 > 
-> Now check_one_sharer() returns error for duplicated process only when
-> the recorded pid from autorebuild.pid exists, and the process has exact
-> same command name as "mdadm".
+> Following is message from mdadm.
 > 
-> Reported-by: Shinkichi Yamazaki <shinkichi.yamazaki@suse.com>
-> Signed-off-by: Coly Li <colyli@suse.de>
-> ---
->  Monitor.c | 32 ++++++++++++++++++++------------
->  1 file changed, 20 insertions(+), 12 deletions(-)
+> mdadm: No super block found on /dev/ram1 (Expected magic a92b4efc, got 00000000)
+> mdadm: no RAID superblock on /dev/ram1
+> mdadm: /dev/md111 assembled from 1 drive - need all 2 to start it (use --run to insist).
+> 
+> The mdadm say that it assembled but mdadm does not create /dev/md111.
+> The message is wrong.
+> 
+> After applying this patch, mdadm reports error correctly as following.
+> 
+> mdadm: No super block found on /dev/ram1 (Expected magic a92b4efc, got 00000000)
+> mdadm: no RAID superblock on /dev/ram1
+> mdadm: /dev/ram1 has no superblock - assembly aborted
+> 
+> Signed-off-by: Gioh Kim <gi-oh.kim@cloud.ionos.com>
 
 Applied!
+
+This looks like an ideal case for something to be added to the test suite.
 
 Thanks,
 Jes
