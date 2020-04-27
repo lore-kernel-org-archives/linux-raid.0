@@ -1,92 +1,46 @@
-From: Zhong Lidong <lidong.zhong@suse.com>
-Subject: Re: [PATCH] Monitor: remove autorebuild pidfile when it exits
-Date: Tue, 28 Apr 2020 00:19:52 +0800
-Message-ID: <23c27b96-b6ef-396c-bd8b-3f7b14c25c46@suse.com>
-References: <20200327012854.5654-1-lidong.zhong@suse.com>
- <7fce6b8e-dbbc-b8b9-608b-cc5479484882@trained-monkey.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Hard Drive Partition Table shows partition larger than drive
+Date: Mon, 27 Apr 2020 13:54:27 -0400
+Message-ID: <991449ea-82e8-8f80-d73c-ad9701cf2d88@turmel.org>
+References: <6ee9392d-8867-f0b5-193e-17a516bb7e0e@steinmetznet.com>
+ <5EA5ED5D.8060006@youngman.org.uk>
+ <c3b5d1be-3ee6-303e-63f5-51faf2053f63@steinmetznet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7fce6b8e-dbbc-b8b9-608b-cc5479484882@trained-monkey.org>
+In-Reply-To: <c3b5d1be-3ee6-303e-63f5-51faf2053f63@steinmetznet.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes@trained-monkey.org>
-Cc: linux-raid@vger.kernel.org
+To: Robert Steinmetz <rob@steinmetznet.com>, Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/27/20 10:40 PM, Jes Sorensen wrote:
-> On 3/26/20 9:28 PM, Lidong Zhong wrote:
->> mdadm monitor is supposed to run in background and never exit. However
->> if it is killed by accident and the pid stored in autorebuild.pid is 
->> taken by some other process, it reports an error when restarting
->> "mdadm: Only one autorebuild process allowed in scan mode, aborting"
->> even though no autorebuild process exists. With the patch, this file
->> will be removed at the end to fix this scenario.
+On 4/27/20 10:40 AM, Robert Steinmetz wrote:
+> On 4/26/20 4:21 PM, Wols Lists wrote:
+>> Run lsdrv over the drive and see what that reports.
+>> https://raid.wiki.kernel.org/index.php/Asking_for_help
 >>
->> Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
->> ---
->> Hi Jes, 
+>> If you post that here, hopefully somebody can help you reconstruct
+>> whatever was there.
 >>
->> Sorry to ping you, but could you please share your opinion about this patch? TIA.
->> ---
->>  Monitor.c | 39 ++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 38 insertions(+), 1 deletion(-)
->>
->> diff --git a/Monitor.c b/Monitor.c
->> index b527165..4cb113d 100644
->> --- a/Monitor.c
->> +++ b/Monitor.c
->> @@ -62,6 +62,7 @@ struct alert_info {
->>  	int dosyslog;
->>  };
->>  static int make_daemon(char *pidfile);
->> +static int cleanup_sharer_pidfile();
->>  static int check_one_sharer(int scan);
->>  static void alert(char *event, char *dev, char *disc, struct alert_info *info);
->>  static int check_array(struct state *st, struct mdstat_ent *mdstat,
->> @@ -71,6 +72,12 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
->>  			  int test, struct alert_info *info);
->>  static void try_spare_migration(struct state *statelist, struct alert_info *info);
->>  static void link_containers_with_subarrays(struct state *list);
->> +static volatile sig_atomic_t finished = 0;
->> +
->> +static void _exit_handler(int sig)                                                                                               
->> +{
->> +	finished= 1;
+>> Cheers,
+>> Wol
 > 
-> Please respect formatting rules.
+> here is the output of lsdrv for the drive.
 > 
-> Also this patch fails to apply cleanly:
-> 
-> Applying: Monitor: remove autorebuild pidfile when it exits
-> Using index info to reconstruct a base tree...
-> M	Monitor.c
-> .git/rebase-apply/patch:27: trailing whitespace.
-> static void _exit_handler(int sig)
-> 
-> .git/rebase-apply/patch:46: trailing whitespace.
-> 	
-> .git/rebase-apply/patch:47: trailing whitespace.
-> 	signal(SIGTERM, &_exit_handler);
-> .git/rebase-apply/patch:48: trailing whitespace.
-> 	signal(SIGKILL, &_exit_handler);
-> warning: 4 lines add whitespace errors.
-> Falling back to patching base and 3-way merge...
-> Auto-merging Monitor.c
-> 
-> Please fix and resubmit a v2.
-> 
+> USB [usb-storage] Bus 001 Device 002: ID 152d:2338 JMicron Technology 
+> Corp. / JMicron USA Technology Corp. JM20337 Hi-Speed USB to SATA & PATA 
+> Combo Bridge {000000000005}
+> └scsi 4:0:0:0 TOSHIBA  HDWD110          {585T7P6NS}
+>   └sdb 931.51g [8:16] Partitioned (dos)
+                                     ^^^^^
+There's your answer.  This drive is using a dos partition table, not 
+GPT.  But there's some info where the GPT would be that is confusing parted.
 
-Hi Jes,
+>    └sdb1 931.51g [8:17] Empty/Unknown
 
-Thanks for your reply. Please ignore this one since Coly's patch
+As you can see, this partition entry is rational.
 
-Monitor: improve check_one_sharer() for checking duplicated process
+Try displaying the partition table with fdisk instead of parted.
 
-is already applied. They are aimed to fix the same issue.
-
-Regards,
-Lidong
-> Jes
-> 
+Phil
