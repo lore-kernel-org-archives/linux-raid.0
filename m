@@ -1,55 +1,90 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH] Assemble: print error message if mdadm fails assembling
- with --uuid option
-Date: Mon, 27 Apr 2020 10:44:38 -0400
-Message-ID: <291d7ab2-34f8-8f6e-cbd3-18113d9226be@trained-monkey.org>
-References: <20190416160817.10526-1-gi-oh.kim@cloud.ionos.com>
+From: Lidong Zhong <lidong.zhong@suse.com>
+Subject: [PATCH v2] Detail: adding sync status for cluster device
+Date: Tue, 28 Apr 2020 00:14:38 +0800
+Message-ID: <20200427161438.20296-1-lidong.zhong@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20190416160817.10526-1-gi-oh.kim@cloud.ionos.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Gioh Kim <gi-oh.kim@cloud.ionos.com>, linux-raid@vger.kernel.org
-Cc: neilb@suse.com, jsorensen@fb.com, jinpu.wang@cloud.ionos.com
+To: linux-raid@vger.kernel.org, jes@trained-monkey.org
+Cc: guoqing.jiang@cloud.ionos.com
 List-Id: linux-raid.ids
 
-On 4/16/19 12:08 PM, Gioh Kim wrote:
-> When mdadm tries to assemble one working device and one zeroed-out device,
-> it failed but print successful message because there is --uuid option.
-> 
-> Following script always reproduce it.
-> 
-> dd if=/dev/zero of=/dev/ram0 oflag=direct
-> dd if=/dev/zero of=/dev/ram1 oflag=direct
-> ./mdadm -C /dev/md111 -e 1.2 --uuid="12345678:12345678:12345678:12345678" \
->     -l1 -n2 /dev/ram0 /dev/ram1
-> ./mdadm -S /dev/md111
-> dd if=/dev/zero of=/dev/ram1 oflag=direct
-> ./mdadm -A /dev/md111 --uuid="12345678:12345678:12345678:12345678" \
->     /dev/ram0 /dev/ram1
-> 
-> Following is message from mdadm.
-> 
-> mdadm: No super block found on /dev/ram1 (Expected magic a92b4efc, got 00000000)
-> mdadm: no RAID superblock on /dev/ram1
-> mdadm: /dev/md111 assembled from 1 drive - need all 2 to start it (use --run to insist).
-> 
-> The mdadm say that it assembled but mdadm does not create /dev/md111.
-> The message is wrong.
-> 
-> After applying this patch, mdadm reports error correctly as following.
-> 
-> mdadm: No super block found on /dev/ram1 (Expected magic a92b4efc, got 00000000)
-> mdadm: no RAID superblock on /dev/ram1
-> mdadm: /dev/ram1 has no superblock - assembly aborted
-> 
-> Signed-off-by: Gioh Kim <gi-oh.kim@cloud.ionos.com>
+On the node with /proc/mdstat is
 
-Applied!
+Personalities : [raid1]
+md0 : active raid1 sdb[4] sdc[3] sdd[2]
+      1046528 blocks super 1.2 [3/2] [UU_]
+        recover=REMOTE
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
-This looks like an ideal case for something to be added to the test suite.
+Let's change the 'State' of 'mdadm -Q -D' accordingly
+State : clean, degraded
+With this patch, it will be
+State : clean, degraded, recovering (REMOTE)
 
-Thanks,
-Jes
+Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
+Acked-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+---
+ Detail.c | 9 ++++++---
+ mdadm.h  | 3 ++-
+ mdstat.c | 2 ++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/Detail.c b/Detail.c
+index 832485f..03d5e04 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -496,17 +496,20 @@ int Detail(char *dev, struct context *c)
+ 			} else
+ 				arrayst = "active";
+ 
+-			printf("             State : %s%s%s%s%s%s \n",
++			printf("             State : %s%s%s%s%s%s%s \n",
+ 			       arrayst, st,
+ 			       (!e || (e->percent < 0 &&
+ 				       e->percent != RESYNC_PENDING &&
+-				       e->percent != RESYNC_DELAYED)) ?
++				       e->percent != RESYNC_DELAYED &&
++				       e->percent != RESYNC_REMOTE)) ?
+ 			       "" : sync_action[e->resync],
+ 			       larray_size ? "": ", Not Started",
+ 			       (e && e->percent == RESYNC_DELAYED) ?
+ 			       " (DELAYED)": "",
+ 			       (e && e->percent == RESYNC_PENDING) ?
+-			       " (PENDING)": "");
++			       " (PENDING)": "",
++			       (e && e->percent == RESYNC_REMOTE) ?
++			       " (REMOTE)": "");
+ 		} else if (inactive && !is_container) {
+ 			printf("             State : inactive\n");
+ 		}
+diff --git a/mdadm.h b/mdadm.h
+index d94569f..399478b 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1815,7 +1815,8 @@ enum r0layout {
+ #define RESYNC_NONE -1
+ #define RESYNC_DELAYED -2
+ #define RESYNC_PENDING -3
+-#define RESYNC_UNKNOWN -4
++#define RESYNC_REMOTE  -4
++#define RESYNC_UNKNOWN -5
+ 
+ /* When using "GET_DISK_INFO" it isn't certain how high
+  * we need to check.  So we impose an absolute limit of
+diff --git a/mdstat.c b/mdstat.c
+index 7e600d0..20577a3 100644
+--- a/mdstat.c
++++ b/mdstat.c
+@@ -257,6 +257,8 @@ struct mdstat_ent *mdstat_read(int hold, int start)
+ 					ent->percent = RESYNC_DELAYED;
+ 				if (l > 8 && strcmp(w+l-8, "=PENDING") == 0)
+ 					ent->percent = RESYNC_PENDING;
++				if (l > 7 && strcmp(w+l-7, "=REMOTE") == 0)
++					ent->percent = RESYNC_REMOTE;
+ 			} else if (ent->percent == RESYNC_NONE &&
+ 				   w[0] >= '0' &&
+ 				   w[0] <= '9' &&
+-- 
+2.16.4
