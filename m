@@ -1,47 +1,46 @@
 From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH] Detail: adding sync status for cluster device
-Date: Mon, 27 Apr 2020 10:33:20 -0400
-Message-ID: <ca0df151-4d01-9122-fbcf-5baf281ec86a@trained-monkey.org>
-References: <20200413144128.26177-1-lidong.zhong@suse.com>
- <bcd5713f-d2e8-d358-17c9-323f9c125d1b@cloud.ionos.com>
- <5c7b0055-917c-87ee-237f-1deaeb6fc575@suse.com>
+Subject: Re: [PATCH v2] Manage, imsm: Write metadata before add
+Date: Mon, 27 Apr 2020 10:37:22 -0400
+Message-ID: <b674992e-fa21-0d51-9006-5bd620aca96b@trained-monkey.org>
+References: <20200417115555.24080-1-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5c7b0055-917c-87ee-237f-1deaeb6fc575@suse.com>
+In-Reply-To: <20200417115555.24080-1-mariusz.tkaczyk@intel.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Zhong Lidong <lidong.zhong@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, linux-raid@vger.kernel.org
+To: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/14/20 4:03 AM, Zhong Lidong wrote:
+On 4/17/20 7:55 AM, Tkaczyk Mariusz wrote:
+> New drive in container always appears as spare. Manager is able to
+> handle that, and queues appropriative update to monitor.
+> No update from mdadm side has to be processed, just insert the drive and
+> ping the mdmon. Metadata has to be written if no mdmon is running (case
+> for Raid0 or container without arrays).
 > 
+> If bare drive is added very early on startup (by custom bare rule),
+> there is possiblity that mdmon was not restarted after switch root. Old
+> one is not able to handle new drive. New one fails because there is
+> drive without metadata in container and metadata cannot be loaded.
 > 
-> On 4/14/20 3:25 PM, Guoqing Jiang wrote:
->> On 13.04.20 16:41, Lidong Zhong wrote:
->>> On the node with /proc/mdstat is
->>>
->>> Personalities : [raid1]
->>> md0 : active raid1 sdb[4] sdc[3] sdd[2]
->>>        1046528 blocks super 1.2 [3/2] [UU_]
->>>          recover=REMOTE
->>>        bitmap: 1/1 pages [4KB], 65536KB chunk
->>>
->>> the 'State' of 'mdadm -Q -D' is accordingly
->>
->> Maybe rephrase it a little bit, something like.
->>
->> "Let's change the 'State' of 'mdadm -Q -D' accordingly "
->>
->> Just FYI .
->>
+> To prevent this, write spare metadata before adding device
+> to container. Mdmon will overwrite it (same case as spare migration,
+> if drive appears it writes the most recent metadata).
+> Metadata has to be written only on new drive before sysfs_add_disk(),
+> don't race with mdmon if running.
 > 
-> Thank you for your suggestion, Guoqing. I'll send the
-> patch again.
+> Signed-off-by: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+> ---
+> v2: removed unused variable.
 > 
+>  Manage.c      |  6 +----
+>  super-intel.c | 66 +++++++++++++++++++++++++++++++++------------------
+>  2 files changed, 44 insertions(+), 28 deletions(-)
 
-Please mark the patch as v2 when you repost it with a change like this.
+Applied!
 
 Thanks,
 Jes
