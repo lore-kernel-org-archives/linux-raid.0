@@ -1,174 +1,60 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Does a "check" of a RAID6 actually read all disks in a stripe?
-Date: Tue, 28 Apr 2020 17:40:13 +0200
-Message-ID: <20200428154013.GA4633@lazy.lzy>
+Date: Wed, 29 Apr 2020 20:56:00 +0800
+Message-ID: <a1ebabac-6674-2907-55a6-41479c469232@fnarfbargle.com>
 References: <18271293-9866-1381-d73e-e351bf9278fd@fnarfbargle.com>
+ <1ccd57ba-9d9a-d10e-4efd-dc0e8a5cf162@fnarfbargle.com>
+ <e02412eb-d7f3-cea8-7398-4e5c0d749f43@turmel.org>
+ <1d7fe96e-d87a-185d-1599-84cc445383cf@fnarfbargle.com>
+ <f45df6fc-63eb-a1da-ca0c-5a3db08b454a@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18271293-9866-1381-d73e-e351bf9278fd@fnarfbargle.com>
+In-Reply-To: <f45df6fc-63eb-a1da-ca0c-5a3db08b454a@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 28, 2020 at 02:47:04PM +0800, Brad Campbell wrote:
-> G'day all,
-> 
-> I have a test server with some old disks I use for beating up on. Bear in mind the disks are old and dicey which is *why* they live in a test server. I'm not after reliability, I'm more interested in finding corner cases.
-> 
-> One disk has a persistent read error (pending sector). This can be identified easily with dd on a specific or whole disk basis.
-> 
-> The array has 9 2TB drives in a RAID6 :
-> 
-> md3 : active raid6 sdh[12] sdm[8] sdc[10] sde[6] sdj[9] sdk[4] sdl[11] sdg[13]
->       13673684416 blocks super 1.2 level 6, 64k chunk, algorithm 2 [9/8] [UU_UUUUUU]
->       bitmap: 0/15 pages [0KB], 65536KB chunk
-> 
-> Ignore the missing disk, it's out right now being secure erased, but it was in for the tests.
-> 
-> The read error is on sdj, about 23G into the disk :
-> 
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 Sense Key : 0x3 [current]
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 ASC=0x11 ASCQ=0x0
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 CDB: opcode=0x28 28 00 03 39 d8 08 00 20 00 00
-> [Sun Apr 26 15:05:30 2020] blk_update_request: critical medium error, dev sdj, sector 54126096 op 0x0:(READ) flags 0x80700 phys_seg 37 prio class 0
-> 
-> Trigger a "check" :
-> [Mon Apr 27 18:51:15 2020] md: data-check of RAID array md3
-> [Tue Apr 28 03:42:21 2020] md: md3: data-check done.
-> 
-> Just to be sure it's still there :
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 Sense Key : 0x3 [current]
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 ASC=0x11 ASCQ=0x0
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 CDB: opcode=0x28 28 00 03 39 e6 10 00 00 08 00
-> [Tue Apr 28 14:13:33 2020] blk_update_request: critical medium error, dev sdj, sector 54126096 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> 
-> So I can read from the disk with dd and trigger a read error each and every time, but a RAID6 "check" appears to skip over it without triggering the read error.
-> 
-> For completeness, the complete log :
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 Sense Key : 0x3 [current]
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 ASC=0x11 ASCQ=0x0
-> [Sun Apr 26 15:05:30 2020] sd 4:0:4:0: [sdj] tag#229 CDB: opcode=0x28 28 00 03 39 d8 08 00 20 00 00
-> [Sun Apr 26 15:05:30 2020] blk_update_request: critical medium error, dev sdj, sector 54126096 op 0x0:(READ) flags 0x80700 phys_seg 37 prio class 0
-> [Sun Apr 26 21:15:47 2020]  sdd: sdd1 sdd2
-> [Mon Apr 27 18:51:15 2020] md: data-check of RAID array md3
-> [Tue Apr 28 03:42:21 2020] md: md3: data-check done.
-> [Tue Apr 28 09:39:18 2020] md/raid:md3: Disk failure on sdi, disabling device.
->                            md/raid:md3: Operation continuing on 8 devices.
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 Sense Key : 0x3 [current]
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 ASC=0x11 ASCQ=0x0
-> [Tue Apr 28 14:13:33 2020] sd 4:0:4:0: [sdj] tag#100 CDB: opcode=0x28 28 00 03 39 e6 10 00 00 08 00
-> [Tue Apr 28 14:13:33 2020] blk_update_request: critical medium error, dev sdj, sector 54126096 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-> [Tue Apr 28 14:13:35 2020] sd 4:0:4:0: [sdj] tag#112 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-> [Tue Apr 28 14:13:35 2020] sd 4:0:4:0: [sdj] tag#112 Sense Key : 0x3 [current]
-> [Tue Apr 28 14:13:35 2020] sd 4:0:4:0: [sdj] tag#112 ASC=0x11 ASCQ=0x0
-> [Tue Apr 28 14:13:35 2020] sd 4:0:4:0: [sdj] tag#112 CDB: opcode=0x28 28 00 03 39 e6 10 00 00 08 00
-> [Tue Apr 28 14:13:35 2020] blk_update_request: critical medium error, dev sdj, sector 54126096 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> [Tue Apr 28 14:13:35 2020] Buffer I/O error on dev sdj, logical block 6765762, async page read
-> 
-> Examine on the suspect disk :
-> 
-> test:/home/brad# mdadm --examine /dev/sdj
-> /dev/sdj:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : dbbca7b5:327751b1:895f8f11:443f6ecb
->            Name : test:3  (local to host test)
->   Creation Time : Wed Nov 29 10:46:21 2017
->      Raid Level : raid6
->    Raid Devices : 9
-> 
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 13673684416 (13040.24 GiB 14001.85 GB)
->   Used Dev Size : 3906766976 (1862.89 GiB 2000.26 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=262056 sectors, after=48 sectors
->           State : clean
->     Device UUID : f1a39d9b:fe217c62:26b065e3:0f859afd
-> 
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Tue Apr 28 09:39:23 2020
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : cb44256b - correct
->          Events : 177156
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->    Device Role : Active device 5
->    Array State : AA.AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-> 
-> test:/home/brad# mdadm --detail /dev/md3
-> /dev/md3:
->         Version : 1.2
->   Creation Time : Wed Nov 29 10:46:21 2017
->      Raid Level : raid6
->      Array Size : 13673684416 (13040.24 GiB 14001.85 GB)
->   Used Dev Size : 1953383488 (1862.89 GiB 2000.26 GB)
->    Raid Devices : 9
->   Total Devices : 8
->     Persistence : Superblock is persistent
-> 
->   Intent Bitmap : Internal
-> 
->     Update Time : Tue Apr 28 09:39:23 2020
->           State : clean, degraded
->  Active Devices : 8
-> Working Devices : 8
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->            Name : test:3  (local to host test)
->            UUID : dbbca7b5:327751b1:895f8f11:443f6ecb
->          Events : 177156
-> 
->     Number   Major   Minor   RaidDevice State
->       12       8      112        0      active sync   /dev/sdh
->       13       8       96        1      active sync   /dev/sdg
->        4       0        0        4      removed
->       11       8      176        3      active sync   /dev/sdl
->        4       8      160        4      active sync   /dev/sdk
->        9       8      144        5      active sync   /dev/sdj
->        6       8       64        6      active sync   /dev/sde
->       10       8       32        7      active sync   /dev/sdc
->        8       8      192        8      active sync   /dev/sdm
-> 
-> test:/home/brad# uname -a
-> Linux test 5.4.11 #49 SMP Wed Jan 15 11:23:38 AWST 2020 x86_64 GNU/Linux
-> 
-> So the read error is well into the array member, yet a "check" doesn't hit it. Does that sound right?
-> These disks grow bad sectors not infrequently, and so a check quite often forces a repair on a block of 8 sectors, but it has persistently missed this one.
 
-I suspect, but Neil or some expert should confim
-or deny, that a check on a RAID-6 uses only the
-P parity to verify stripe consistency.
-If there are errors in the Q parity chunk, these
-will not be found.
+On 28/4/20 10:41 pm, Phil Turmel wrote:
+> On 4/28/20 10:00 AM, Brad Campbell wrote:
+>>
+>> On 28/4/20 9:47 pm, Phil Turmel wrote:
+>
+>>> The bad block log misfeature is turned on.  Any blocks recorded in it will never be read again by MD, last I looked.  This might explain what you are seeing.
+>>>
 
-On the other hand, "raid6check" :-) uses both
-parities and, maybe, can trigger the rebuild.
+test:/sys/block/md3/md# mdadm --examine-badblocks /dev/sd[ceghijklm]
+Bad-blocks list is empty in /dev/sdc
+Bad-blocks list is empty in /dev/sde
+Bad-blocks list is empty in /dev/sdg
+Bad-blocks list is empty in /dev/sdh
+Bad-blocks list is empty in /dev/sdi
+Bad-blocks list is empty in /dev/sdj
+Bad-blocks list is empty in /dev/sdk
+Bad-blocks list is empty in /dev/sdl
+Bad-blocks list is empty in /dev/sdm
 
-Hoep this helps,
+>> While I see where you are going, the fact it corrected the bad sector by re-writing it during the re-build would intimate that isn't/wasn't the case.
+>
+> Ah, yes.  Any chance you have set the sysfs sector limits on a check and haven't reset them?
+>
+> Phil
+>
+No. Each run was triggered by an :
 
-bye,
+echo check > /sys/block/md3/md/sync_action
 
-pg
+No other interaction with sysfs.
 
-> 
-> Regards,
-> Brad
+I have a few drives in another machine I can abuse, so I have some time put aside on the weekend to set up a couple of small test arrays. When I last tried (admittedly years ago now) it was easy enough to "create" bad blocks with hdparm.
 
--- 
+I think Piergiorgio was on the money with something not reading one of the parity blocks, but I've read the code several times and can't see obviously how that might be the case. I suppose examining a check with blktrace would highlight it if that were the case. I might try that first.
 
-piergiorgio
+On the topic of the bbl. Is there any way to remove it or mark it for removal while an array is active? For example, on an array used as the root filesystem, where stopping and restarting is a "take the machine down and boot from a live-cd" sort of affair. All of my arrays have the bbl enabled. It has never caused me an issue, but looking at it I can see how that might be possible.
+
+Regards,
+
+Brad
