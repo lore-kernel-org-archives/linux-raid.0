@@ -1,60 +1,61 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: Does a "check" of a RAID6 actually read all disks in a stripe?
-Date: Wed, 29 Apr 2020 20:56:00 +0800
-Message-ID: <a1ebabac-6674-2907-55a6-41479c469232@fnarfbargle.com>
-References: <18271293-9866-1381-d73e-e351bf9278fd@fnarfbargle.com>
- <1ccd57ba-9d9a-d10e-4efd-dc0e8a5cf162@fnarfbargle.com>
- <e02412eb-d7f3-cea8-7398-4e5c0d749f43@turmel.org>
- <1d7fe96e-d87a-185d-1599-84cc445383cf@fnarfbargle.com>
- <f45df6fc-63eb-a1da-ca0c-5a3db08b454a@turmel.org>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH] md/raid0: add config parameters to specify zone layout
+Date: Thu, 30 Apr 2020 06:19:26 +0000
+Message-ID: <E3616A45-C6D0-4B3B-8112-688B03126F00@fb.com>
+References: <1585236500-12015-1-git-send-email-jbaron@akamai.com>
+ <0b7aad8b-f0b7-24c6-ad19-99c6202a3036@suse.de>
+ <8feb2018-7f99-6e02-c704-9d7fed40bba2@akamai.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f45df6fc-63eb-a1da-ca0c-5a3db08b454a@turmel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <8feb2018-7f99-6e02-c704-9d7fed40bba2@akamai.com>
 Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Content-ID: <D838AE0962CBCF47995E7AC2D4866D5E@namprd15.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Baron <jbaron@akamai.com>
+Cc: Coly Li <colyli@suse.de>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Hi Jason,
 
-On 28/4/20 10:41 pm, Phil Turmel wrote:
-> On 4/28/20 10:00 AM, Brad Campbell wrote:
->>
->> On 28/4/20 9:47 pm, Phil Turmel wrote:
->
->>> The bad block log misfeature is turned on.  Any blocks recorded in it will never be read again by MD, last I looked.  This might explain what you are seeing.
->>>
+> On Apr 27, 2020, at 2:10 PM, Jason Baron <jbaron@akamai.com> wrote:
+>=20
+>=20
+>=20
+> On 4/25/20 12:31 AM, Coly Li wrote:
+>> On 2020/3/26 23:28, Jason Baron wrote:
+>>> Let's add some CONFIG_* options to directly configure the raid0 layout
+>>> if you know in advance how your raid0 array was created. This can be
+>>> simpler than having to manage module or kernel command-line parameters.
+>>>=20
+>>=20
+>> Hi Jason,
+>>=20
+>> If the people who compiling the kernel is not the end users, the
+>> communication gap has potential risk to make users to use a different
+>> layout for existing raid0 array after a kernel upgrade.
+>>=20
+>> If this patch goes into upstream, it is very probably such risky
+>> situation may happen.
+>>=20
+>> The purpose of adding default_layout is to let *end user* to be aware of
+>> they layout when they use difference sizes component disks to assemble
+>> the raid0 array, and make decision which layout algorithm should be
+>> used. Such situation cannot be decided in kernel compiling time.
+>=20
+> I agree that in general it may not be known at compile time. Thus,
+> I've left the default as RAID0_LAYOUT_NONE. However, there are
+> use-cases where it is known at compile-time which layout is needed.
+> In our use-case, we knew that we didn't have any pre-3.14 raid0
+> arrays. Thus, we can safely set RAID0_ALT_MULTIZONE_LAYOUT. So
+> this is a simpler configuration for us than setting module or command
+> line parameters.
 
-test:/sys/block/md3/md# mdadm --examine-badblocks /dev/sd[ceghijklm]
-Bad-blocks list is empty in /dev/sdc
-Bad-blocks list is empty in /dev/sde
-Bad-blocks list is empty in /dev/sdg
-Bad-blocks list is empty in /dev/sdh
-Bad-blocks list is empty in /dev/sdi
-Bad-blocks list is empty in /dev/sdj
-Bad-blocks list is empty in /dev/sdk
-Bad-blocks list is empty in /dev/sdl
-Bad-blocks list is empty in /dev/sdm
+I would echo Coly's concern that CONFIG_ option could make it risky.=20
+If the overhead of maintaining extra command line parameter, I would
+recommend you carry a private patch for this change. For upstream, it
+is better NOT to carry the default in CONFIG_.
 
->> While I see where you are going, the fact it corrected the bad sector by re-writing it during the re-build would intimate that isn't/wasn't the case.
->
-> Ah, yes.  Any chance you have set the sysfs sector limits on a check and haven't reset them?
->
-> Phil
->
-No. Each run was triggered by an :
-
-echo check > /sys/block/md3/md/sync_action
-
-No other interaction with sysfs.
-
-I have a few drives in another machine I can abuse, so I have some time put aside on the weekend to set up a couple of small test arrays. When I last tried (admittedly years ago now) it was easy enough to "create" bad blocks with hdparm.
-
-I think Piergiorgio was on the money with something not reading one of the parity blocks, but I've read the code several times and can't see obviously how that might be the case. I suppose examining a check with blktrace would highlight it if that were the case. I might try that first.
-
-On the topic of the bbl. Is there any way to remove it or mark it for removal while an array is active? For example, on an array used as the root filesystem, where stopping and restarting is a "take the machine down and boot from a live-cd" sort of affair. All of my arrays have the bbl enabled. It has never caused me an issue, but looking at it I can see how that might be possible.
-
-Regards,
-
-Brad
+Thanks,
+Song
