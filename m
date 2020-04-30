@@ -1,78 +1,36 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] raid5: use memalloc_noio_save()/restore in
- resize_chunks()
-Date: Thu, 30 Apr 2020 06:36:37 +0000
-Message-ID: <1B9A34D3-C98E-49A7-9222-7D25F5F7CCC9@fb.com>
-References: <20200402081312.32709-1-colyli@suse.de>
- <fa7e30b9-7480-6c03-0f43-d561fed912fb@cloud.ionos.com>
- <5f27365b-768f-eb69-36ec-f4ed0c292c60@suse.de>
- <204e9fd0-3712-4864-2bf5-38913511e658@cloud.ionos.com>
- <20200415114814.GJ4629@dhcp22.suse.cz>
- <a1e83cb5-366c-17a7-3a4b-9cd8a54c3b48@cloud.ionos.com>
- <20200415142303.GN4629@dhcp22.suse.cz>
- <b7584395-6230-36a6-9d78-dd1e1b630bbd@cloud.ionos.com>
+From: Song Liu <song@kernel.org>
+Subject: Re: [PATCH v2 0/4] improve memalloc scope APIs usage
+Date: Wed, 29 Apr 2020 23:49:39 -0700
+Message-ID: <CAPhsuW5EBYxNu2fqDO_jPbSuiGyUF5qgUCSLJYPAr2b6VPSytQ@mail.gmail.com>
+References: <20200409115258.19330-1-colyli@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b7584395-6230-36a6-9d78-dd1e1b630bbd@cloud.ionos.com>
-Content-Language: en-US
-Content-ID: <E886392282A0F64BAAAA3879F52851FB@namprd15.prod.outlook.com>
+In-Reply-To: <20200409115258.19330-1-colyli@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Coly Li <colyli@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
+To: Coly Li <colyli@suse.de>
+Cc: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>, mhocko@suse.com, kent.overstreet@gmail.com, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 List-Id: linux-raid.ids
 
+On Thu, Apr 9, 2020 at 4:53 AM <colyli@suse.de> wrote:
+>
+> From: Coly Li <colyli@suse.de>
+>
+> Hi folks,
+>
+> The motivation of this series is to fix the incorrect GFP_NOIO flag
+> usage in drivers/md/raid5.c:resize_chunks(). I take the suggestion
+> from Michal Hocko to use memalloc scope APIs in unified entry point
+> mddev_suspend()/mddev_resume(). Also I get rid of the incorect GFP_NOIO
+> usage for scribble_alloc(), and remove redundant memalloc scope APIs
+> usage in mddev_create_serial_pool(), also as Song Liu suggested, update
+> the code comments on the header of scribble_alloc().
+>
+> Thank you in advance for the review and comments.
+>
+> Coly Li
 
+Applied to md-next. Thanks for the fix. And Thanks Michal and Guoqing
+for great inputs.
 
-> On Apr 15, 2020, at 7:57 AM, Guoqing Jiang <guoqing.jiang@cloud.ionos.com=
-> wrote:
->=20
-> On 15.04.20 16:23, Michal Hocko wrote:
->> On Wed 15-04-20 16:10:08, Guoqing Jiang wrote:
->>> On 15.04.20 13:48, Michal Hocko wrote:
->>>> On Thu 09-04-20 23:38:13, Guoqing Jiang wrote:
->>>> [...]
->>>>> Not know memalloc_noio_{save,restore} well, but I guess it is better
->>>>> to use them to mark a small scope, just my two cents.
->>>> This would go against the intentio of the api. It is really meant to
->>>> define reclaim recursion problematic scope.
->>> Well, in current proposal, the scope is just when
->>> scribble_allo/kvmalloc_array is called.
->>>=20
->>> memalloc_noio_save
->>> scribble_allo/kvmalloc_array
->>> memalloc_noio_restore
->>>=20
->>> With the new proposal, the marked scope would be bigger than current on=
-e
->>> since there
->>> are lots of places call mddev_suspend/resume.
->>>=20
->>> mddev_suspend
->>> memalloc_noio_save
->>> ...
->>> memalloc_noio_restore
->>> mddev_resume
->>>=20
->>> IMHO, if the current proposal works then what is the advantage to incre=
-ase
->>> the scope.
->> The advantage is twofold. It serves the documentation purpose because it
->> is clear _what_ and _why_ is the actual allocation restricted context.
->> In this case mddev_{suspend,resume} because XYZ and you do not have to
->> care about __GFP_IO for _any_ allocation inside the scope.
->=20
-> Personally, I'd prefer fine grained protection scope, anyway just my own
-> flavor. And I think Song has his opinion about the proposal, I will respe=
-ct
-> his decision.
-
-Thanks Coly, Guoqing, and Michal for these great inputs.=20
-
-Coly's v3 set looks good to me. I will go ahead apply that version to md-ne=
-xt
-branch.=20
-
-Thanks again,
 Song
