@@ -1,47 +1,63 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: Fw: some questions about uploading a Linux kernel driver
-Date: Thu, 30 Apr 2020 00:10:27 -0700
-Message-ID: <CAPhsuW7e-xMNbk5ZJw2XQ3KSnnPiN5gwwR4hdMMhyjjVNRnfkQ@mail.gmail.com>
-References: <6a7c0aba219642de8b3f1cc680d53d85@AM0P193MB0754.EURP193.PROD.OUTLOOK.COM>
- <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: [PATCH] md/raid0: add config parameters to specify zone layout
+Date: Thu, 30 Apr 2020 12:09:49 -0400
+Message-ID: <24234.63565.561786.818825@quad.stoffel.home>
+References: <1585236500-12015-1-git-send-email-jbaron@akamai.com>
+        <0b7aad8b-f0b7-24c6-ad19-99c6202a3036@suse.de>
+        <8feb2018-7f99-6e02-c704-9d7fed40bba2@akamai.com>
+        <E3616A45-C6D0-4B3B-8112-688B03126F00@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKm37QWKVcPkF0fXKk2499CsYXfU3aMuMWgwa8Nk9HFzVxG7CA@mail.gmail.com>
+In-Reply-To: <E3616A45-C6D0-4B3B-8112-688B03126F00@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Xiaosong Ma <xma@qf.org.qa>
-Cc: linux-raid <linux-raid@vger.kernel.org>, =?UTF-8?B?5aec5aSp5rSL?= <ty-jiang18@mails.tsinghua.edu.cn>, Guangyan Zhang <gyzh@tsinghua.edu.cn>, wei-jy19@mails.tsinghua.edu.cn
+To: Song Liu <songliubraving@fb.com>
+Cc: Jason Baron <jbaron@akamai.com>, Coly Li <colyli@suse.de>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi Xiaosong,
+>>>>> "Song" == Song Liu <songliubraving@fb.com> writes:
 
-On Wed, Apr 22, 2020 at 5:26 AM Xiaosong Ma <xma@qf.org.qa> wrote:
->
-> Dear Song,
->
-> This is Xiaosong Ma from Qatar Computing Research Institute. I am
-> writing to follow up with the questions posed by a co-author from
-> Tsinghua U, regarding upstreaming our alternative md implementation
-> that is designed to significantly reduce SSD RAID latency (both median
-> and tail) for large SSD pools (such as 20-disk or more).
->
-> We read the Linux kernel upstreaming instructions, and believe that
-> our implementation has excellent separability from the current code
-> base (as a plug-and-play module with identical interfaces as md).
+Song> Hi Jason,
+>> On Apr 27, 2020, at 2:10 PM, Jason Baron <jbaron@akamai.com> wrote:
+>> 
+>> 
+>> 
+>> On 4/25/20 12:31 AM, Coly Li wrote:
+>>> On 2020/3/26 23:28, Jason Baron wrote:
+>>>> Let's add some CONFIG_* options to directly configure the raid0 layout
+>>>> if you know in advance how your raid0 array was created. This can be
+>>>> simpler than having to manage module or kernel command-line parameters.
+>>>> 
+>>> 
+>>> Hi Jason,
+>>> 
+>>> If the people who compiling the kernel is not the end users, the
+>>> communication gap has potential risk to make users to use a different
+>>> layout for existing raid0 array after a kernel upgrade.
+>>> 
+>>> If this patch goes into upstream, it is very probably such risky
+>>> situation may happen.
+>>> 
+>>> The purpose of adding default_layout is to let *end user* to be aware of
+>>> they layout when they use difference sizes component disks to assemble
+>>> the raid0 array, and make decision which layout algorithm should be
+>>> used. Such situation cannot be decided in kernel compiling time.
+>> 
+>> I agree that in general it may not be known at compile time. Thus,
+>> I've left the default as RAID0_LAYOUT_NONE. However, there are
+>> use-cases where it is known at compile-time which layout is needed.
+>> In our use-case, we knew that we didn't have any pre-3.14 raid0
+>> arrays. Thus, we can safely set RAID0_ALT_MULTIZONE_LAYOUT. So
+>> this is a simpler configuration for us than setting module or command
+>> line parameters.
 
-Plug-and-play is not the key for upstream new code/module. There are
-some other keys to consider:
+Song> I would echo Coly's concern that CONFIG_ option could make it risky. 
+Song> If the overhead of maintaining extra command line parameter, I would
+Song> recommend you carry a private patch for this change. For upstream, it
+Song> is better NOT to carry the default in CONFIG_.
 
-1. Why do we need it? (better performance is a good reason here).
-2. What's the impact on existing users?
-3. Can we improve existing code to achieve the same benefit?
+I agree as well.  Just because you have a known base, doesn't mean
+that others wouldn't be hit with this problem.
 
-> Meanwhile, we wonder whether there are standard test cases or
-> preferred applications that we should test our system with, before
-> doing code cleaning up. Your guidance is much appreciated.
-
-For testing, "mdadm test" is a good starting point (if it works here).
-We also need data integrity tests and stress tests.
-
-Thanks,
-Song
+John
