@@ -1,38 +1,64 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH v2] Detail: adding sync status for cluster device
-Date: Thu, 30 Apr 2020 13:09:46 -0400
-Message-ID: <22b8afdb-1b90-70c0-d017-76bd86eb99bf@trained-monkey.org>
-References: <20200427161438.20296-1-lidong.zhong@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200427161438.20296-1-lidong.zhong@suse.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Lidong Zhong <lidong.zhong@suse.com>, linux-raid@vger.kernel.org
-Cc: guoqing.jiang@cloud.ionos.com
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: [RFC PATCH V2 2/9] md: remove __clear_page_buffers and use attach/clear_page_private
+Date: Thu, 30 Apr 2020 23:44:43 +0200
+Message-ID: <20200430214450.10662-3-guoqing.jiang@cloud.ionos.com>
+References: <20200430214450.10662-1-guoqing.jiang@cloud.ionos.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200430214450.10662-1-guoqing.jiang@cloud.ionos.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: hch@infradead.org, david@fromorbit.com, willy@infradead.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/27/20 12:14 PM, Lidong Zhong wrote:
-> On the node with /proc/mdstat is
-> 
-> Personalities : [raid1]
-> md0 : active raid1 sdb[4] sdc[3] sdd[2]
->       1046528 blocks super 1.2 [3/2] [UU_]
->         recover=REMOTE
->       bitmap: 1/1 pages [4KB], 65536KB chunk
-> 
-> Let's change the 'State' of 'mdadm -Q -D' accordingly
-> State : clean, degraded
-> With this patch, it will be
-> State : clean, degraded, recovering (REMOTE)
-> 
-> Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
-> Acked-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+After introduce attach/clear_page_private in pagemap.h, we can remove
+the duplicat code and call the new functions.
 
-I already applied a version of this patch, what is new in the v2? Can
-you send an incremental patch on top of the current git tree?
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+---
+RFC -> RFC V2
+1. change the name of new functions to attach/clear_page_private.
 
-Thanks,
-Jes
+ drivers/md/md-bitmap.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index b952bd45bd6a..033d12063600 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -324,14 +324,6 @@ static void end_bitmap_write(struct buffer_head *bh, int uptodate)
+ 		wake_up(&bitmap->write_wait);
+ }
+ 
+-/* copied from buffer.c */
+-static void
+-__clear_page_buffers(struct page *page)
+-{
+-	ClearPagePrivate(page);
+-	set_page_private(page, 0);
+-	put_page(page);
+-}
+ static void free_buffers(struct page *page)
+ {
+ 	struct buffer_head *bh;
+@@ -345,7 +337,7 @@ static void free_buffers(struct page *page)
+ 		free_buffer_head(bh);
+ 		bh = next;
+ 	}
+-	__clear_page_buffers(page);
++	clear_page_private(page);
+ 	put_page(page);
+ }
+ 
+@@ -374,7 +366,7 @@ static int read_page(struct file *file, unsigned long index,
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	attach_page_buffers(page, bh);
++	attach_page_private(page, bh);
+ 	blk_cur = index << (PAGE_SHIFT - inode->i_blkbits);
+ 	while (bh) {
+ 		block = blk_cur;
+-- 
+2.17.1
