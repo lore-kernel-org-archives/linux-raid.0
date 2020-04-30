@@ -1,61 +1,78 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH] md/raid0: add config parameters to specify zone layout
-Date: Thu, 30 Apr 2020 06:19:26 +0000
-Message-ID: <E3616A45-C6D0-4B3B-8112-688B03126F00@fb.com>
-References: <1585236500-12015-1-git-send-email-jbaron@akamai.com>
- <0b7aad8b-f0b7-24c6-ad19-99c6202a3036@suse.de>
- <8feb2018-7f99-6e02-c704-9d7fed40bba2@akamai.com>
+Subject: Re: [PATCH] raid5: use memalloc_noio_save()/restore in
+ resize_chunks()
+Date: Thu, 30 Apr 2020 06:36:37 +0000
+Message-ID: <1B9A34D3-C98E-49A7-9222-7D25F5F7CCC9@fb.com>
+References: <20200402081312.32709-1-colyli@suse.de>
+ <fa7e30b9-7480-6c03-0f43-d561fed912fb@cloud.ionos.com>
+ <5f27365b-768f-eb69-36ec-f4ed0c292c60@suse.de>
+ <204e9fd0-3712-4864-2bf5-38913511e658@cloud.ionos.com>
+ <20200415114814.GJ4629@dhcp22.suse.cz>
+ <a1e83cb5-366c-17a7-3a4b-9cd8a54c3b48@cloud.ionos.com>
+ <20200415142303.GN4629@dhcp22.suse.cz>
+ <b7584395-6230-36a6-9d78-dd1e1b630bbd@cloud.ionos.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8feb2018-7f99-6e02-c704-9d7fed40bba2@akamai.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <b7584395-6230-36a6-9d78-dd1e1b630bbd@cloud.ionos.com>
 Content-Language: en-US
-Content-ID: <D838AE0962CBCF47995E7AC2D4866D5E@namprd15.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Baron <jbaron@akamai.com>
-Cc: Coly Li <colyli@suse.de>, "agk@redhat.com" <agk@redhat.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, NeilBrown <neilb@suse.de>
+Content-ID: <E886392282A0F64BAAAA3879F52851FB@namprd15.prod.outlook.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Coly Li <colyli@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
 List-Id: linux-raid.ids
 
-Hi Jason,
 
-> On Apr 27, 2020, at 2:10 PM, Jason Baron <jbaron@akamai.com> wrote:
+
+> On Apr 15, 2020, at 7:57 AM, Guoqing Jiang <guoqing.jiang@cloud.ionos.com=
+> wrote:
 >=20
->=20
->=20
-> On 4/25/20 12:31 AM, Coly Li wrote:
->> On 2020/3/26 23:28, Jason Baron wrote:
->>> Let's add some CONFIG_* options to directly configure the raid0 layout
->>> if you know in advance how your raid0 array was created. This can be
->>> simpler than having to manage module or kernel command-line parameters.
+> On 15.04.20 16:23, Michal Hocko wrote:
+>> On Wed 15-04-20 16:10:08, Guoqing Jiang wrote:
+>>> On 15.04.20 13:48, Michal Hocko wrote:
+>>>> On Thu 09-04-20 23:38:13, Guoqing Jiang wrote:
+>>>> [...]
+>>>>> Not know memalloc_noio_{save,restore} well, but I guess it is better
+>>>>> to use them to mark a small scope, just my two cents.
+>>>> This would go against the intentio of the api. It is really meant to
+>>>> define reclaim recursion problematic scope.
+>>> Well, in current proposal, the scope is just when
+>>> scribble_allo/kvmalloc_array is called.
 >>>=20
->>=20
->> Hi Jason,
->>=20
->> If the people who compiling the kernel is not the end users, the
->> communication gap has potential risk to make users to use a different
->> layout for existing raid0 array after a kernel upgrade.
->>=20
->> If this patch goes into upstream, it is very probably such risky
->> situation may happen.
->>=20
->> The purpose of adding default_layout is to let *end user* to be aware of
->> they layout when they use difference sizes component disks to assemble
->> the raid0 array, and make decision which layout algorithm should be
->> used. Such situation cannot be decided in kernel compiling time.
+>>> memalloc_noio_save
+>>> scribble_allo/kvmalloc_array
+>>> memalloc_noio_restore
+>>>=20
+>>> With the new proposal, the marked scope would be bigger than current on=
+e
+>>> since there
+>>> are lots of places call mddev_suspend/resume.
+>>>=20
+>>> mddev_suspend
+>>> memalloc_noio_save
+>>> ...
+>>> memalloc_noio_restore
+>>> mddev_resume
+>>>=20
+>>> IMHO, if the current proposal works then what is the advantage to incre=
+ase
+>>> the scope.
+>> The advantage is twofold. It serves the documentation purpose because it
+>> is clear _what_ and _why_ is the actual allocation restricted context.
+>> In this case mddev_{suspend,resume} because XYZ and you do not have to
+>> care about __GFP_IO for _any_ allocation inside the scope.
 >=20
-> I agree that in general it may not be known at compile time. Thus,
-> I've left the default as RAID0_LAYOUT_NONE. However, there are
-> use-cases where it is known at compile-time which layout is needed.
-> In our use-case, we knew that we didn't have any pre-3.14 raid0
-> arrays. Thus, we can safely set RAID0_ALT_MULTIZONE_LAYOUT. So
-> this is a simpler configuration for us than setting module or command
-> line parameters.
+> Personally, I'd prefer fine grained protection scope, anyway just my own
+> flavor. And I think Song has his opinion about the proposal, I will respe=
+ct
+> his decision.
 
-I would echo Coly's concern that CONFIG_ option could make it risky.=20
-If the overhead of maintaining extra command line parameter, I would
-recommend you carry a private patch for this change. For upstream, it
-is better NOT to carry the default in CONFIG_.
+Thanks Coly, Guoqing, and Michal for these great inputs.=20
 
-Thanks,
+Coly's v3 set looks good to me. I will go ahead apply that version to md-ne=
+xt
+branch.=20
+
+Thanks again,
 Song
