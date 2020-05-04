@@ -1,69 +1,43 @@
-From: Nigel Croxon <ncroxon@redhat.com>
-Subject: [PATCH] allow RAID5 to grow to RAID6 with a backup_file
-Date: Mon,  4 May 2020 12:31:38 -0400
-Message-ID: <20200504163138.22787-1-ncroxon@redhat.com>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: WD Red drives are now SMR drives?
+Date: Mon, 4 May 2020 14:11:51 -0600
+Message-ID: <CAJCQCtQaCq+D0YUa-smGqCDAeOQQcq1rM5RJ+xCGsWrCrrnM4A@mail.gmail.com>
+References: <b012e351-54cb-47c5-5fd7-fd2ee22322ed@youngman.org.uk> <20200504162138.GA4791@lazy.lzy>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200504162138.GA4791@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: antlists <antlists@youngman.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This problem came in, as the user did not specify a full path with
-the backup_file option when growing an RAID5 array to RAID6.
-When the full path is specified, the symbolic link is created
-properly (/run/mdadm/backup_file-mdX). But the code did not support
-the symbolic link when looking for the backup_file. Added two
-checks for symlink.
+On Mon, May 4, 2020 at 10:21 AM Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
+>
+> On Mon, May 04, 2020 at 12:38:04AM +0100, antlists wrote:
+> > Has anyone else picked up on this? Apparently 1TB and 8TB drives are still
+> > CMR, but new drives between 2 and 6 TB are now SMR drives.
+> >
+> > https://www.extremetech.com/computing/309730-western-digital-comes-clean-shares-which-hard-drives-use-smr
+> >
+> > What impact will this have on using them in raid arrays?
+>
+> https://www.smartmontools.org/ticket/1313
+>
 
-This addresses https://www.spinics.net/lists/raid/msg48910.html
-and numerous customer reported problems.
+I think it is defective abstraction that's the problem, not SMR per se.
 
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
----
- Grow.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+For a drive in normal use to fail with write errors like this? It's defective.
+[20809.396284] blk_update_request: I/O error, dev sdd, sector
+3484334688 op 0x1:(WRITE) flags 0x700 phys_seg 2 prio class 0
 
-diff --git a/Grow.c b/Grow.c
-index 764374f..6dce71c 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1135,6 +1135,16 @@ int reshape_open_backup_file(char *backup_file,
- 	unsigned int dev;
- 	int i;
-=20
-+	if (lstat(backup_file, &stb) !=3D -1) {
-+		switch (stb.st_mode & S_IFMT) {
-+		case S_IFLNK:
-+			return 1;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
- 	*fdlist =3D open(backup_file, O_RDWR|O_CREAT|(restart ? O_TRUNC : O_EXC=
-L),
- 		       S_IRUSR | S_IWUSR);
- 	*offsets =3D 8 * 512;
-@@ -5236,8 +5246,17 @@ char *locate_backup(char *name)
- 	char *fl =3D make_backup(name);
- 	struct stat stb;
-=20
--	if (stat(fl, &stb) =3D=3D 0 && S_ISREG(stb.st_mode))
-+	lstat(fl, &stb);
-+	switch (stb.st_mode & S_IFMT) {
-+	case S_IFLNK:
- 		return fl;
-+		break;
-+	case S_IFREG:
-+		return fl;
-+		break;
-+	default:
-+		break;
-+	}
-=20
- 	free(fl);
- 	return NULL;
---=20
-2.20.1
+As to what kind of performance guarantees they've made or implied, I
+think they have an obligation to perform no worse than the slowest
+speed of CMR "inside track" performance. However, they want to achieve
+that is their technical problem. They market DM-SMR as handling
+ordinary file systems without local mitigations.
+
+
+-- 
+Chris Murphy
