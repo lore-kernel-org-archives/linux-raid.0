@@ -1,53 +1,46 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: WD Red drives are now SMR drives?
-Date: Mon, 4 May 2020 17:28:24 -0600
-Message-ID: <CAJCQCtRinqCeCV1OS0BrObcm4Vc4ymZ6NcXwVhuGWFHBbgYhCA@mail.gmail.com>
-References: <b012e351-54cb-47c5-5fd7-fd2ee22322ed@youngman.org.uk>
- <20200504162138.GA4791@lazy.lzy> <CAJCQCtQaCq+D0YUa-smGqCDAeOQQcq1rM5RJ+xCGsWrCrrnM4A@mail.gmail.com>
+From: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>
+Subject: RAID 1 | Test Booting from /dev/sdb
+Date: Tue, 5 May 2020 10:11:44 +0200
+Message-ID: <221092f3-5b8a-5d95-01d9-261e6449f747@peter-speer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtQaCq+D0YUa-smGqCDAeOQQcq1rM5RJ+xCGsWrCrrnM4A@mail.gmail.com>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, antlists <antlists@youngman.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 4, 2020 at 2:11 PM Chris Murphy <lists@colorremedies.com> wrote:
->
-> On Mon, May 4, 2020 at 10:21 AM Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
-> >
-> > On Mon, May 04, 2020 at 12:38:04AM +0100, antlists wrote:
-> > > Has anyone else picked up on this? Apparently 1TB and 8TB drives are still
-> > > CMR, but new drives between 2 and 6 TB are now SMR drives.
-> > >
-> > > https://www.extremetech.com/computing/309730-western-digital-comes-clean-shares-which-hard-drives-use-smr
-> > >
-> > > What impact will this have on using them in raid arrays?
-> >
-> > https://www.smartmontools.org/ticket/1313
-> >
->
-> I think it is defective abstraction that's the problem, not SMR per se.
->
-> For a drive in normal use to fail with write errors like this? It's defective.
-> [20809.396284] blk_update_request: I/O error, dev sdd, sector
-> 3484334688 op 0x1:(WRITE) flags 0x700 phys_seg 2 prio class 0
->
-> As to what kind of performance guarantees they've made or implied, I
-> think they have an obligation to perform no worse than the slowest
-> speed of CMR "inside track" performance. However, they want to achieve
-> that is their technical problem. They market DM-SMR as handling
-> ordinary file systems without local mitigations.
->
+Hi.
+I want to test if grub is installed on both of the HDs which are part of 
+my raid1 array. I wonder which would be the best solution to do so.
 
-This same issue came up on the Btrfs list today. And one suggestion is
-stratospheric SCSI block layer timeout settings beyond 10 minutes, to
-avoid link resets. That's not what's reported in this thread so far,
-so I think we need more information about the exact failure modes.
-Link resets, however untenable for some workflows, can be changed. But
-discrete write errors, that strikes me as a bug/defect.
+I think I will archive that when I shutdown the computer, make /dev/sda 
+powerless and see if it is able to boot from /dev/sdb.
 
--- 
-Chris Murphy
+If it is not booting /dev/sdb will have no changes, I would shutdown, 
+connect /dev/sda with power again, turn it on and do a "grub-install 
+/dev/sdb". Depending on the state of the array (I guess it will need 
+recovery) I would do a "mdadm /dev/md0 --add /dev/sdb1". After recovery 
+I would try it again.
+
+If it is booting from /dev/sdb this HD will have "more" data because of 
+the one boot process than /dev/sda. I am not sure if it is a good idea 
+to shutdown and just connect /dev/sda with power again, boot (assuming 
+/dev/sda is the standard boot medium) because I do not know in which 
+state the array will be. What to do in case I do not want to loose data 
+from the last boot process with /dev/sdb? Change boot medium to /dev/sdb 
+and do a "mdadm /dev/md0 --add /dev/sda1" to get it recovered again 
+without loosing the "added" data (i.e. in /var/log) from booting? Also 
+device identifiers could change I guess. Even if I am fine with loosing 
+the "added" data from booting with /dev/sdb, will - when booting again 
+from /dev/sda - /dev/sda be the master in the array again?
+
+It is not clear to me if I understood correctly in which case which 
+array member will be the master which will be the base for recovery. Is 
+it always the HD one booted from?
+
+Could you please help me with that?
+
+Thanks,
+Steffi
