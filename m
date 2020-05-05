@@ -1,36 +1,102 @@
-From: Reindl Harald <h.reindl@thelounge.net>
-Subject: Re: RAID 1 | Test Booting from /dev/sdb
-Date: Tue, 5 May 2020 11:49:00 +0200
-Message-ID: <430ad5c7-0dda-8494-2abb-b79aad39a71a@thelounge.net>
-References: <221092f3-5b8a-5d95-01d9-261e6449f747@peter-speer.de>
- <5EB12900.3030505@youngman.org.uk>
- <608e4d08-a99d-97f3-0476-3a880096f858@peter-speer.de>
- <5EB1333E.1010801@youngman.org.uk>
- <be57a390-734b-c215-aa59-e07c531354a0@peter-speer.de>
+From: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+Subject: [PATCH] Assemble.c: respect force flag.
+Date: Tue,  5 May 2020 12:17:17 +0200
+Message-ID: <20200505101717.29553-1-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <be57a390-734b-c215-aa59-e07c531354a0@peter-speer.de>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 
+If the array is dirty handler will set resync_start to 0 to inform kernel
+that resync is needed. RWH affects only raid456 module, for other
+levels array will be started even array is degraded and resync cannot be
+performed.
 
-Am 05.05.20 um 11:42 schrieb Stefanie Leisestreichler:
-> On 05.05.20 11:34, Wols Lists wrote:
->> No. The journal or bitmap are stored as part of the array, not the
->> filesystem. sdb will have a load of "flags" set to say "these blocks
->> were written to while the array was degraded". So when sda is added back
->> in, these delayed writes will be copied from sdb to sda.
-> 
-> When sdb copies the changes it has in the blocks /var/log sits on, will
-> this result in the array showing the changes made to /var/log when it
-> was booted using sdb only or did I get this wrong?
+Force is really meaningful for raid456. If array is degraded and resync
+is requested, kernel will reject an attempt to start the array. To
+respect force, it has to be marked as clean (this will be done for each
+array without PPL) and remove the resync request (only for raid 456).
+Data corruption may occur so proper warning is added.
 
-the array is just fine and the filesystem on-top never takes any notice
-because it's a different layer not knowing anything about the RAID
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+---
+ Assemble.c | 51 ++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 38 insertions(+), 13 deletions(-)
 
-the array is just a block device like a single disk for upper layers
+diff --git a/Assemble.c b/Assemble.c
+index 6b5a7c8e..1206fb06 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -2030,6 +2030,15 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 			free(avail);
+ 			return err;
+ 		}
++	} else if (c->force) {
++		/* Set the array as 'clean' so that we can proceed with starting
++		 * it even if we don't have all devices. Mdmon doesn't care
++		 * if the dirty flag is set in metadata, it will start managing
++		 * it anyway.
++		 * This is really important for raid456 (RWH case), other levels
++		 * are started anyway.
++		 */
++		content->array.state |= 1;
+ 	}
+ 
+ 	if (enough(content->array.level, content->array.raid_disks,
+@@ -2049,20 +2058,36 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 	}
+ 	free(avail);
+ 
+-	if (c->runstop <= 0 &&
+-	    (working + preexist + expansion) <
+-	    content->array.working_disks) {
+-		if (c->export && result)
+-			*result |= INCR_UNSAFE;
+-		else if (c->verbose >= 0) {
+-			pr_err("%s assembled with %d device%s",
+-			       chosen_name, preexist + working,
+-			       preexist + working == 1 ? "":"s");
+-			if (preexist)
+-				fprintf(stderr, " (%d new)", working);
+-			fprintf(stderr, " but not safe to start\n");
++	if ((working + preexist + expansion) < content->array.working_disks) {
++		if (c->runstop <= 0) {
++			if (c->export && result)
++				*result |= INCR_UNSAFE;
++			else if (c->verbose >= 0) {
++				pr_err("%s assembled with %d device%s",
++					chosen_name, preexist + working,
++					preexist + working == 1 ? "":"s");
++				if (preexist)
++					fprintf(stderr, " (%d new)", working);
++				fprintf(stderr, " but not safe to start\n");
++				if (c->force)
++					pr_err("Consider --run to start array as degraded.\n");
++			}
++			return 1;
++		} else if (content->array.level >= 4 &&
++			   content->array.level <= 6 &&
++			   content->resync_start != MaxSector &&
++			   c->force) {
++			/* Don't inform the kernel that the array is not
++			 * clean and requires resync.
++			 */
++			content->resync_start = MaxSector;
++			err = sysfs_set_num(content, NULL, "resync_start",
++					    MaxSector);
++			if (err)
++				return 1;
++			pr_err("%s array state forced to clean. It may cause data corruption.\n",
++				chosen_name);
+ 		}
+-		return 1;
+ 	}
+ 
+ 
+-- 
+2.25.0
