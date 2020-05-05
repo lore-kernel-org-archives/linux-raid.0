@@ -1,102 +1,84 @@
-From: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
-Subject: [PATCH] Assemble.c: respect force flag.
-Date: Tue,  5 May 2020 12:17:17 +0200
-Message-ID: <20200505101717.29553-1-mariusz.tkaczyk@intel.com>
+From: Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH 2/4] mm/swap: use SECTORS_PER_PAGE_SHIFT to clean up code
+Date: Tue, 5 May 2020 19:55:41 +0800
+Message-ID: <20200505115543.1660-3-thunder.leizhen@huawei.com>
+References: <20200505115543.1660-1-thunder.leizhen@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20200505115543.1660-1-thunder.leizhen@huawei.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm <linux-mm@kvack.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel <dm-devel@redhat.com>, Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Zhen Lei <thunder.leizhen@huawei.com>
 List-Id: linux-raid.ids
 
-From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+1. Replace "PAGE_SHIFT - 9" with SECTORS_PER_PAGE_SHIFT
 
-If the array is dirty handler will set resync_start to 0 to inform kernel
-that resync is needed. RWH affects only raid456 module, for other
-levels array will be started even array is degraded and resync cannot be
-performed.
-
-Force is really meaningful for raid456. If array is degraded and resync
-is requested, kernel will reject an attempt to start the array. To
-respect force, it has to be marked as clean (this will be done for each
-array without PPL) and remove the resync request (only for raid 456).
-Data corruption may occur so proper warning is added.
-
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- Assemble.c | 51 ++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 38 insertions(+), 13 deletions(-)
+ mm/page_io.c  |  4 ++--
+ mm/swapfile.c | 12 ++++++------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 6b5a7c8e..1206fb06 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -2030,6 +2030,15 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 			free(avail);
- 			return err;
- 		}
-+	} else if (c->force) {
-+		/* Set the array as 'clean' so that we can proceed with starting
-+		 * it even if we don't have all devices. Mdmon doesn't care
-+		 * if the dirty flag is set in metadata, it will start managing
-+		 * it anyway.
-+		 * This is really important for raid456 (RWH case), other levels
-+		 * are started anyway.
-+		 */
-+		content->array.state |= 1;
+diff --git a/mm/page_io.c b/mm/page_io.c
+index b1d4f4558e6b..51f25238fd9a 100644
+--- a/mm/page_io.c
++++ b/mm/page_io.c
+@@ -38,7 +38,7 @@ static struct bio *get_swap_bio(gfp_t gfp_flags,
+ 
+ 		bio->bi_iter.bi_sector = map_swap_page(page, &bdev);
+ 		bio_set_dev(bio, bdev);
+-		bio->bi_iter.bi_sector <<= PAGE_SHIFT - 9;
++		bio->bi_iter.bi_sector <<= SECTORS_PER_PAGE_SHIFT;
+ 		bio->bi_end_io = end_io;
+ 
+ 		bio_add_page(bio, page, PAGE_SIZE * hpage_nr_pages(page), 0);
+@@ -266,7 +266,7 @@ int swap_writepage(struct page *page, struct writeback_control *wbc)
+ 
+ static sector_t swap_page_sector(struct page *page)
+ {
+-	return (sector_t)__page_file_index(page) << (PAGE_SHIFT - 9);
++	return (sector_t)__page_file_index(page) << SECTORS_PER_PAGE_SHIFT;
+ }
+ 
+ static inline void count_swpout_vm_event(struct page *page)
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 5871a2aa86a5..0871023c0166 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -177,8 +177,8 @@ static int discard_swap(struct swap_info_struct *si)
+ 
+ 	/* Do not discard the swap header page! */
+ 	se = first_se(si);
+-	start_block = (se->start_block + 1) << (PAGE_SHIFT - 9);
+-	nr_blocks = ((sector_t)se->nr_pages - 1) << (PAGE_SHIFT - 9);
++	start_block = (se->start_block + 1) << SECTORS_PER_PAGE_SHIFT;
++	nr_blocks = ((sector_t)se->nr_pages - 1) << SECTORS_PER_PAGE_SHIFT;
+ 	if (nr_blocks) {
+ 		err = blkdev_issue_discard(si->bdev, start_block,
+ 				nr_blocks, GFP_KERNEL, 0);
+@@ -188,8 +188,8 @@ static int discard_swap(struct swap_info_struct *si)
  	}
  
- 	if (enough(content->array.level, content->array.raid_disks,
-@@ -2049,20 +2058,36 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 	}
- 	free(avail);
+ 	for (se = next_se(se); se; se = next_se(se)) {
+-		start_block = se->start_block << (PAGE_SHIFT - 9);
+-		nr_blocks = (sector_t)se->nr_pages << (PAGE_SHIFT - 9);
++		start_block = se->start_block << SECTORS_PER_PAGE_SHIFT;
++		nr_blocks = (sector_t)se->nr_pages << SECTORS_PER_PAGE_SHIFT;
  
--	if (c->runstop <= 0 &&
--	    (working + preexist + expansion) <
--	    content->array.working_disks) {
--		if (c->export && result)
--			*result |= INCR_UNSAFE;
--		else if (c->verbose >= 0) {
--			pr_err("%s assembled with %d device%s",
--			       chosen_name, preexist + working,
--			       preexist + working == 1 ? "":"s");
--			if (preexist)
--				fprintf(stderr, " (%d new)", working);
--			fprintf(stderr, " but not safe to start\n");
-+	if ((working + preexist + expansion) < content->array.working_disks) {
-+		if (c->runstop <= 0) {
-+			if (c->export && result)
-+				*result |= INCR_UNSAFE;
-+			else if (c->verbose >= 0) {
-+				pr_err("%s assembled with %d device%s",
-+					chosen_name, preexist + working,
-+					preexist + working == 1 ? "":"s");
-+				if (preexist)
-+					fprintf(stderr, " (%d new)", working);
-+				fprintf(stderr, " but not safe to start\n");
-+				if (c->force)
-+					pr_err("Consider --run to start array as degraded.\n");
-+			}
-+			return 1;
-+		} else if (content->array.level >= 4 &&
-+			   content->array.level <= 6 &&
-+			   content->resync_start != MaxSector &&
-+			   c->force) {
-+			/* Don't inform the kernel that the array is not
-+			 * clean and requires resync.
-+			 */
-+			content->resync_start = MaxSector;
-+			err = sysfs_set_num(content, NULL, "resync_start",
-+					    MaxSector);
-+			if (err)
-+				return 1;
-+			pr_err("%s array state forced to clean. It may cause data corruption.\n",
-+				chosen_name);
- 		}
--		return 1;
- 	}
+ 		err = blkdev_issue_discard(si->bdev, start_block,
+ 				nr_blocks, GFP_KERNEL, 0);
+@@ -240,8 +240,8 @@ static void discard_swap_cluster(struct swap_info_struct *si,
+ 		start_page += nr_blocks;
+ 		nr_pages -= nr_blocks;
  
- 
+-		start_block <<= PAGE_SHIFT - 9;
+-		nr_blocks <<= PAGE_SHIFT - 9;
++		start_block <<= SECTORS_PER_PAGE_SHIFT;
++		nr_blocks <<= SECTORS_PER_PAGE_SHIFT;
+ 		if (blkdev_issue_discard(si->bdev, start_block,
+ 					nr_blocks, GFP_NOIO, 0))
+ 			break;
 -- 
-2.25.0
+2.26.0.106.g9fadedd
