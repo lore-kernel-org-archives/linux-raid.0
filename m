@@ -1,21 +1,19 @@
-From: Reindl Harald <h.reindl@thelounge.net>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: RAID 1 | Test Booting from /dev/sdb
-Date: Tue, 5 May 2020 10:39:03 +0200
-Message-ID: <3e8685c3-a0a6-4614-073a-afe7bb67d2eb@thelounge.net>
+Date: Tue, 5 May 2020 09:51:12 +0100
+Message-ID: <5EB12900.3030505@youngman.org.uk>
 References: <221092f3-5b8a-5d95-01d9-261e6449f747@peter-speer.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <221092f3-5b8a-5d95-01d9-261e6449f747@peter-speer.de>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Stefanie Leisestreichler <stefanie.leisestreichler@peter-speer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-Am 05.05.20 um 10:11 schrieb Stefanie Leisestreichler:
+On 05/05/20 09:11, Stefanie Leisestreichler wrote:
+> Hi.
 > I want to test if grub is installed on both of the HDs which are part of
 > my raid1 array. I wonder which would be the best solution to do so.
 > 
@@ -27,23 +25,23 @@ Am 05.05.20 um 10:11 schrieb Stefanie Leisestreichler:
 > /dev/sdb". Depending on the state of the array (I guess it will need
 > recovery) I would do a "mdadm /dev/md0 --add /dev/sdb1". After recovery
 > I would try it again.
-
-grub is *before* the RAID partitions and you need to run "grub2-install
-/dev/sda" as well as "grub2-install /dev/sdb"
-
-and you have to repeat that every time a disk fails and is replaced
-
-the boot loader is in front of the first partition and that was the
-reason a few years ago that you had to make sure there are 2 MB instead
-of the old 512 KB by switch to grub2 on machines dating back to 2008 or
-so where the default was smaller
-
+> 
 > If it is booting from /dev/sdb this HD will have "more" data because of
-> the one boot process than /dev/sda. I am not sure if it is a good idea
+> the one boot process than /dev/sda.
+
+Why? If it boots to the grub menu, just hit an arrow key to stop the
+timeout, and then hold the power button for 5 secs to shut it down again.
+
+> I am not sure if it is a good idea
 > to shutdown and just connect /dev/sda with power again, boot (assuming
 > /dev/sda is the standard boot medium) because I do not know in which
 > state the array will be. What to do in case I do not want to loose data
-> from the last boot process with /dev/sdb? Change boot medium to /dev/sdb
+> from the last boot process with /dev/sdb?
+
+Which would matter why? If you're worried about downloading mail etc,
+just kill the network temporarily.
+
+> Change boot medium to /dev/sdb
 > and do a "mdadm /dev/md0 --add /dev/sda1" to get it recovered again
 > without loosing the "added" data (i.e. in /var/log) from booting? Also
 > device identifiers could change I guess. Even if I am fine with loosing
@@ -54,10 +52,16 @@ so where the default was smaller
 > array member will be the master which will be the base for recovery. Is
 > it always the HD one booted from?
 > 
+The "master" if recovery is required will be the "older" one - in this
+case sda because it was disconnected. HOWEVER. Just check whether you
+have a bitmap or journal enabled. You can't have both at once, but the
+result should be that sda rejoins the array cleanly, raid has a record
+of which writes occurred while it was offline, and it will be updated.
+
 > Could you please help me with that?
+> 
+> Thanks,
+> Steffi
 
-you shouldn't remove disks and put them back without a good reason and
-verify booting is not a good one
-
-just change the boot order, switch the cables or explicit select both
-disks in BIOS
+Cheers,
+Wol
