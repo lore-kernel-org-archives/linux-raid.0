@@ -1,86 +1,35 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH] allow RAID5 to grow to RAID6 with a backup_file
-Date: Tue, 5 May 2020 13:59:31 -0400
-Message-ID: <01d95357-ce4b-3cd8-2e33-e619c11ea325@trained-monkey.org>
-References: <20200504163138.22787-1-ncroxon@redhat.com>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 0/4] eliminate SECTOR related magic numbers and
+ duplicated conversions
+Date: Tue, 5 May 2020 11:01:13 -0700
+Message-ID: <20200505180113.GJ16070@bombadil.infradead.org>
+References: <20200505115543.1660-1-thunder.leizhen@huawei.com>
+ <ea522f15-991d-6f67-ba8b-9cb4954a1064@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200504163138.22787-1-ncroxon@redhat.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ea522f15-991d-6f67-ba8b-9cb4954a1064@youngman.org.uk>
+Sender: linux-block-owner@vger.kernel.org
+To: antlists <antlists@youngman.org.uk>
+Cc: Zhen Lei <thunder.leizhen@huawei.com>, Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm <linux-mm@kvack.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel <dm-devel@redhat.com>, Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 5/4/20 12:31 PM, Nigel Croxon wrote:
-> This problem came in, as the user did not specify a full path with
-> the backup_file option when growing an RAID5 array to RAID6.
-> When the full path is specified, the symbolic link is created
-> properly (/run/mdadm/backup_file-mdX). But the code did not support
-> the symbolic link when looking for the backup_file. Added two
-> checks for symlink.
+On Tue, May 05, 2020 at 06:32:36PM +0100, antlists wrote:
+> On 05/05/2020 12:55, Zhen Lei wrote:
+> > When I studied the code of mm/swap, I found "1 << (PAGE_SHIFT - 9)" appears
+> > many times. So I try to clean up it.
+> > 
+> > 1. Replace "1 << (PAGE_SHIFT - 9)" or similar with SECTORS_PER_PAGE
+> > 2. Replace "PAGE_SHIFT - 9" with SECTORS_PER_PAGE_SHIFT
+> > 3. Replace "9" with SECTOR_SHIFT
+> > 4. Replace "512" with SECTOR_SIZE
 > 
-> This addresses https://www.spinics.net/lists/raid/msg48910.html
-> and numerous customer reported problems.
-> 
-> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
-> ---
->  Grow.c | 21 ++++++++++++++++++++-
->  1 file changed, 20 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 764374f..6dce71c 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1135,6 +1135,16 @@ int reshape_open_backup_file(char *backup_file,
->  	unsigned int dev;
->  	int i;
->  
-> +	if (lstat(backup_file, &stb) != -1) {
-> +		switch (stb.st_mode & S_IFMT) {
-> +		case S_IFLNK:
-> +			return 1;
-> +			break;
+> Naive question - what is happening about 4096-byte sectors? Do we need to
+> forward-plan?
 
-It doesn't make sense to have a break after a return here.
+They're fully supported already, but Linux defines a sector to be 512
+bytes.  So we multiply by 8 and divide by 8 a few times unnecessarily,
+but it's not worth making sector size be a per-device property.
 
-> +		default:
-> +			break;
-> +		}
-> +	}
-> +
->  	*fdlist = open(backup_file, O_RDWR|O_CREAT|(restart ? O_TRUNC : O_EXCL),
->  		       S_IRUSR | S_IWUSR);
->  	*offsets = 8 * 512;
-> @@ -5236,8 +5246,17 @@ char *locate_backup(char *name)
->  	char *fl = make_backup(name);
->  	struct stat stb;
->  
-> -	if (stat(fl, &stb) == 0 && S_ISREG(stb.st_mode))> +	lstat(fl, &stb);
-
-You ditched the error check for lstat here. You cannot count on the
-contents of stb being valid in this case.
-
-> +	switch (stb.st_mode & S_IFMT) {
-> +	case S_IFLNK:
->  		return fl;
-> +		break;
-> +	case S_IFREG:
-> +		return fl;
-> +		break;
-
-Same with the break statements here.
-
-Mind fixing this up and submitting a v2.
-
-Thanks,
-Jes
-
-> +	default:
-> +		break;
-> +	}
->  
->  	free(fl);
->  	return NULL;
-> 
+Good thought, though.
