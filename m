@@ -1,39 +1,72 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH] Assemble.c: respect force flag.
-Date: Tue, 5 May 2020 14:02:41 -0400
-Message-ID: <2f0b5405-eacd-afc9-69ab-3ffa781045ba@trained-monkey.org>
-References: <20200505101717.29553-1-mariusz.tkaczyk@intel.com>
+From: Nigel Croxon <ncroxon@redhat.com>
+Subject: [PATCH V2] allow RAID5 to grow to RAID6 with a backup_file
+Date: Tue,  5 May 2020 14:35:45 -0400
+Message-ID: <20200505183545.26291-1-ncroxon@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200505101717.29553-1-mariusz.tkaczyk@intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: jes@trained-monkey.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/5/20 6:17 AM, Tkaczyk Mariusz wrote:
-> From: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-> 
-> If the array is dirty handler will set resync_start to 0 to inform kernel
-> that resync is needed. RWH affects only raid456 module, for other
-> levels array will be started even array is degraded and resync cannot be
-> performed.
-> 
-> Force is really meaningful for raid456. If array is degraded and resync
-> is requested, kernel will reject an attempt to start the array. To
-> respect force, it has to be marked as clean (this will be done for each
-> array without PPL) and remove the resync request (only for raid 456).
-> Data corruption may occur so proper warning is added.
-> 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-> ---
->  Assemble.c | 51 ++++++++++++++++++++++++++++++++++++++-------------
->  1 file changed, 38 insertions(+), 13 deletions(-)
+This problem came in, as the user did not specify a full path with
+the backup_file option when growing an RAID5 array to RAID6.
+When the full path is specified, the symbolic link is created
+properly (/run/mdadm/backup_file-mdX). But the code did not support
+the symbolic link when looking for the backup_file. Added two
+checks for symlink.
 
-Applied!
+This addresses https://www.spinics.net/lists/raid/msg48910.html
+and numerous customer reported problems.
 
-Thanks,
-Jes
+V2:
+- Removed unneeded break; in both case-statements
+- Returned the error checking on call to lstat
+
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ Grow.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/Grow.c b/Grow.c
+index 764374f..53245d7 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1135,6 +1135,15 @@ int reshape_open_backup_file(char *backup_file,
+ 	unsigned int dev;
+ 	int i;
+=20
++	if (lstat(backup_file, &stb) !=3D -1) {
++		switch (stb.st_mode & S_IFMT) {
++		case S_IFLNK:
++			return 1;
++		default:
++			break;
++		}
++	}
++
+ 	*fdlist =3D open(backup_file, O_RDWR|O_CREAT|(restart ? O_TRUNC : O_EXC=
+L),
+ 		       S_IRUSR | S_IWUSR);
+ 	*offsets =3D 8 * 512;
+@@ -5236,8 +5245,16 @@ char *locate_backup(char *name)
+ 	char *fl =3D make_backup(name);
+ 	struct stat stb;
+=20
+-	if (stat(fl, &stb) =3D=3D 0 && S_ISREG(stb.st_mode))
+-		return fl;
++	if (lstat(fl, &stb) =3D=3D 0) {
++		switch (stb.st_mode & S_IFMT) {
++		case S_IFLNK:
++			return fl;
++		case S_IFREG:
++			return fl;
++		default:
++			break;
++		}
++	}
+=20
+ 	free(fl);
+ 	return NULL;
+--=20
+2.20.1
