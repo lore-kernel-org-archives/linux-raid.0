@@ -1,72 +1,43 @@
-From: Nigel Croxon <ncroxon@redhat.com>
-Subject: [PATCH V2] allow RAID5 to grow to RAID6 with a backup_file
-Date: Tue,  5 May 2020 14:35:45 -0400
-Message-ID: <20200505183545.26291-1-ncroxon@redhat.com>
+From: "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Subject: Re: [PATCH 2/4] mm/swap: use SECTORS_PER_PAGE_SHIFT to clean up code
+Date: Wed, 6 May 2020 09:33:50 +0800
+Message-ID: <32ba9907-60ad-27c0-c565-e7b5c80ab03c@huawei.com>
+References: <20200505115543.1660-1-thunder.leizhen@huawei.com>
+ <20200505115543.1660-3-thunder.leizhen@huawei.com>
+ <20200505172520.GI16070@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20200505172520.GI16070@bombadil.infradead.org>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm <linux-mm@kvack.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel <dm-devel@redhat.com>, Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This problem came in, as the user did not specify a full path with
-the backup_file option when growing an RAID5 array to RAID6.
-When the full path is specified, the symbolic link is created
-properly (/run/mdadm/backup_file-mdX). But the code did not support
-the symbolic link when looking for the backup_file. Added two
-checks for symlink.
 
-This addresses https://www.spinics.net/lists/raid/msg48910.html
-and numerous customer reported problems.
 
-V2:
-- Removed unneeded break; in both case-statements
-- Returned the error checking on call to lstat
+On 2020/5/6 1:25, Matthew Wilcox wrote:
+> On Tue, May 05, 2020 at 07:55:41PM +0800, Zhen Lei wrote:
+>> +++ b/mm/swapfile.c
+>> @@ -177,8 +177,8 @@ static int discard_swap(struct swap_info_struct *si)
+>>  
+>>  	/* Do not discard the swap header page! */
+>>  	se = first_se(si);
+>> -	start_block = (se->start_block + 1) << (PAGE_SHIFT - 9);
+>> -	nr_blocks = ((sector_t)se->nr_pages - 1) << (PAGE_SHIFT - 9);
+>> +	start_block = (se->start_block + 1) << SECTORS_PER_PAGE_SHIFT;
+>> +	nr_blocks = ((sector_t)se->nr_pages - 1) << SECTORS_PER_PAGE_SHIFT;
+> 
+> Thinking about this some more, wouldn't this look better?
+> 
+> 	start_block = page_sectors(se->start_block + 1);
+> 	nr_block = page_sectors(se->nr_pages - 1);
+> 
 
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
----
- Grow.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+OK，That's fine, it's clearer. And in this way, there won't be more than 80 columns.
 
-diff --git a/Grow.c b/Grow.c
-index 764374f..53245d7 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1135,6 +1135,15 @@ int reshape_open_backup_file(char *backup_file,
- 	unsigned int dev;
- 	int i;
-=20
-+	if (lstat(backup_file, &stb) !=3D -1) {
-+		switch (stb.st_mode & S_IFMT) {
-+		case S_IFLNK:
-+			return 1;
-+		default:
-+			break;
-+		}
-+	}
-+
- 	*fdlist =3D open(backup_file, O_RDWR|O_CREAT|(restart ? O_TRUNC : O_EXC=
-L),
- 		       S_IRUSR | S_IWUSR);
- 	*offsets =3D 8 * 512;
-@@ -5236,8 +5245,16 @@ char *locate_backup(char *name)
- 	char *fl =3D make_backup(name);
- 	struct stat stb;
-=20
--	if (stat(fl, &stb) =3D=3D 0 && S_ISREG(stb.st_mode))
--		return fl;
-+	if (lstat(fl, &stb) =3D=3D 0) {
-+		switch (stb.st_mode & S_IFMT) {
-+		case S_IFLNK:
-+			return fl;
-+		case S_IFREG:
-+			return fl;
-+		default:
-+			break;
-+		}
-+	}
-=20
- 	free(fl);
- 	return NULL;
---=20
-2.20.1
+> 
+> .
+> 
