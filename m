@@ -1,63 +1,69 @@
-From: "Renaud (Ron) OLGIATI" <renaud@olgiati-in-paraguay.org>
-Subject: Raid1 after new MB
-Date: Wed, 6 May 2020 14:09:40 -0400
-Message-ID: <20200506140940.39670aed@olgiati-in-paraguay.org>
+From: Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH v2 00/10] clean up SECTOR related macros and sectors/pages conversions
+Date: Thu, 7 May 2020 15:50:50 +0800
+Message-ID: <20200507075100.1779-1-thunder.leizhen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm <linux-mm@kvack.org>, dm-devel <dm-devel@redhat.com>, Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Zhen Lei <thunder.leizhen@huawei.com>
 List-Id: linux-raid.ids
 
+v1 --> v2:
+As Matthew Wilcox's suggestion, add sectors_to_npage()/npage_to_sectors()
+helpers to eliminate SECTORS_PER_PAGE_SHIFT, because it's quite hard to read.
+In further, I also eliminated PAGE_SECTORS_SHIFT.
 
-I have just booted my box after putting in a new MBn old one died peacefully during the night.
+I tried to eliminate all magic number "9" and "512", but it's too many, maybe
+no one want to review it, so I gave up. In the process of searching, I found
+the existing macro PAGE_SECTORS, it's equivalent to SECTORS_PER_PAGE. Because
+PAGE_SECTORS was defined in include/linux/device-mapper.h, and SECTORS_PER_PAGE
+was defined in drivers/block/zram/zram_drv.h, so I discarded SECTORS_PER_PAGE,
+althrough I prefer it so much.
 
-My HDs were configured at the BIOS level as hardware RAID1, and in the PCLinuxOS system with mdadm.
+v1:
+When I studied the code of mm/swap, I found "1 << (PAGE_SHIFT - 9)" appears
+many times. So I try to clean up it.
 
-I only learned later (on this list) that it was not necessary to configur HW RAID1 at the BIOS level.
+1. Replace "1 << (PAGE_SHIFT - 9)" or similar with SECTORS_PER_PAGE
+2. Replace "PAGE_SHIFT - 9" with SECTORS_PER_PAGE_SHIFT
+3. Replace "9" with SECTOR_SHIFT
+4. Replace "512" with SECTOR_SIZE
 
-Booting the box, and without configuring the RAID1 at the BIOS level, the box booted normally, but only the priùmary partitions of the two HD pairs work properly:
+Zhen Lei (10):
+  block: move PAGE_SECTORS definition into <linux/blkdev.h>
+  zram: abolish macro SECTORS_PER_PAGE
+  block: add sectors_to_npage()/npage_to_sectors() helpers
+  zram: abolish macro SECTORS_PER_PAGE_SHIFT
+  block: abolish macro PAGE_SECTORS_SHIFT
+  mm/swap: use npage_to_sectors() and PAGE_SECTORS to clean up code
+  block: use sectors_to_npage() and PAGE_SECTORS to clean up code
+  md: use sectors_to_npage() and npage_to_sectors() to clean up code
+  md: use existing definition RESYNC_SECTORS
+  md: use PAGE_SECTORS to clean up code
 
-~ $ cat /proc/mdstat 
-Personalities : [raid1] 
-md7 : active raid1 sdc1[0] sdd1[1]
-      1953382464 blocks super 1.2 [2/2] [UU]
-      bitmap: 1/15 pages [4KB], 65536KB chunk
+ block/blk-settings.c          |  6 +++---
+ block/partitions/core.c       |  5 ++---
+ drivers/block/brd.c           |  7 ++-----
+ drivers/block/null_blk_main.c | 10 ++++------
+ drivers/block/zram/zram_drv.c |  8 ++++----
+ drivers/block/zram/zram_drv.h |  2 --
+ drivers/md/bcache/util.h      |  2 --
+ drivers/md/dm-kcopyd.c        |  2 +-
+ drivers/md/dm-table.c         |  2 +-
+ drivers/md/md-bitmap.c        | 16 ++++++++--------
+ drivers/md/md.c               |  6 +++---
+ drivers/md/raid1.c            | 10 +++++-----
+ drivers/md/raid10.c           | 28 ++++++++++++++--------------
+ drivers/md/raid5-cache.c      | 11 +++++------
+ drivers/md/raid5.c            |  4 ++--
+ include/linux/blkdev.h        |  7 +++++--
+ include/linux/device-mapper.h |  1 -
+ mm/page_io.c                  |  4 ++--
+ mm/swapfile.c                 | 12 ++++++------
+ 19 files changed, 67 insertions(+), 76 deletions(-)
 
-md6 : active raid1 sda10[0]
-      248640 blocks super 1.2 [2/1] [U_]
-      
-md5 : active raid1 sda9[0]
-      446840832 blocks super 1.2 [2/1] [U_]
-      bitmap: 4/4 pages [16KB], 65536KB chunk
-
-md4 : active raid1 sda8[0]
-      15616000 blocks super 1.2 [2/1] [U_]
-      
-md3 : active raid1 sda7[0]
-      12686336 blocks super 1.2 [2/1] [U_]
-      
-md2 : active raid1 sda6[0]
-      242496 blocks super 1.2 [2/1] [U_]
-      
-md1 : active raid1 sda5[0]
-      8198144 blocks super 1.2 [2/1] [U_]
-      
-md0 : active raid1 sda1[0] sdb1[1]
-      4389888 blocks super 1.2 [2/2] [UU]
-      
-unused devices: <none>
-
-So I went to the BIOS, to activate the hardware RAID1, get a warning that all data will be lost; so did not do it., 
-
-What should I do to restore the RAID volumes md1 to md6 ?
- 
-Cheers,
- 
-Ron.
 -- 
-                 Une illusion perdue est une vérité trouvée .
-                                    
-                   -- http://www.olgiati-in-paraguay.org --
- 
+2.26.0.106.g9fadedd
