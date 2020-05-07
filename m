@@ -1,93 +1,102 @@
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH] md/raid1: Replace zero-length array with flexible-array
-Date: Thu, 7 May 2020 14:22:10 -0500
-Message-ID: <20200507192209.GA16290@embeddedor>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "David F" <raid@meta-dynamic.com>
+Subject: "mdadm -n": component device selection when delta_disks<0
+Date: Thu, 07 May 2020 15:36:36 -0400
+Message-ID: <20200507193636.5B4FE53E95@mail.meta-dynamic.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The current codebase makes use of the zero-length array language
-extension to the C90 standard, but the preferred mechanism to declare
-variable-length types such as these ones is a flexible array member[1][2],
-introduced in C99:
+Hi list,
 
-struct foo {
-        int stuff;
-        struct boo array[];
-};
+I've got a RAID-5 array that I'm looking to reshape from 3-on-4
+3TB-device [9TB-array] to 2-on-3 6TB-device [12TB-array], after
+having replaced all 3TB drives with larger 6TB ones.  I'll omit
+the details and simplify a little, since my question is more
+general in nature, but here is a crude ascii diagram ('#' is used
+disk sectors, either data or parity, and ' ' is unused).
 
-By making use of the mechanism above, we will get a compiler warning
-in case the flexible array does not occur last in the structure, which
-will help us prevent some kind of undefined behavior bugs from being
-inadvertently introduced[3] to the codebase from now on.
+Currently running
+RAID-5 3-on-4 3TB md-dev-size, 9TB array-size:
++-------+-------+-------+-------+
+| dev 1 | dev 2 | dev 3 | dev 4 |
++-------+-------+-------+-------+
+|#######|#######|#######|#######|  :
+|#######|#######|#######|#######|  :
+|#######|#######|#######|#######| 3TB
+|       |       |       |       |  :
+|       |       |       |       |  :
+|       |       |       |       | 6TB
++-------+-------+-------+-------+
 
-Also, notice that, dynamic memory allocations won't be affected by
-this change:
+Want to reshape to
+RAID-5 2-on-3 6TB md-dev-size, 12TB array-size:
++-------+-------+-------+-------+
+| dev 1 | dev 2 | dev 3 | dev 4 |
++-------+-------+-------+-------+
+|#######|#######|#######|       |  :
+|#######|#######|#######|       |  :
+|#######|#######|#######|       | 3TB
+|#######|#######|#######|       |  :
+|#######|#######|#######|       |  :
+|#######|#######|#######|       | 6TB
++-------+-------+-------+-------+
 
-"Flexible array members have incomplete type, and so the sizeof operator
-may not be applied. As a quirk of the original implementation of
-zero-length arrays, sizeof evaluates to zero."[1]
+... and remove dev 4 from the array.
 
-sizeof(flexible-array-member) triggers a warning because flexible array
-members have incomplete type[1]. There are some instances of code in
-which the sizeof operator is being incorrectly/erroneously applied to
-zero-length arrays and the result is zero. Such instances may be hiding
-some bugs. So, this work (flexible-array member conversions) will also
-help to get completely rid of those sorts of issues.
 
-This issue was found with the help of Coccinelle.
+I'm planning to use use three mdadm commands to accomplish the
+reshape, as follows:
 
-[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
-[2] https://github.com/KSPP/linux/issues/21
-[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
+mdadm --grow --size=6000G --assume-clean /dev/md0
+mdadm --grow --array-size=12000G /dev/md0
+mdadm --grow --raid-devices=3 --backup-file=/root/md-backup /dev/md0
 
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/md/md-linear.h |    2 +-
- drivers/md/raid1.h     |    2 +-
- drivers/md/raid10.h    |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md-linear.h b/drivers/md/md-linear.h
-index 8381d651d4ed..24e97db50ebb 100644
---- a/drivers/md/md-linear.h
-+++ b/drivers/md/md-linear.h
-@@ -12,6 +12,6 @@ struct linear_conf
- 	struct rcu_head		rcu;
- 	sector_t		array_sectors;
- 	int			raid_disks; /* a copy of mddev->raid_disks */
--	struct dev_info		disks[0];
-+	struct dev_info		disks[];
- };
- #endif
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index e7ccad898736..b7eb09e8c025 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -180,7 +180,7 @@ struct r1bio {
- 	 * if the IO is in WRITE direction, then multiple bios are used.
- 	 * We choose the number when they are allocated.
- 	 */
--	struct bio		*bios[0];
-+	struct bio		*bios[];
- 	/* DO NOT PUT ANY NEW FIELDS HERE - bios array is contiguously alloced*/
- };
- 
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index d3eaaf3eb1bc..79cd2b7d3128 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -153,7 +153,7 @@ struct r10bio {
- 		};
- 		sector_t	addr;
- 		int		devnum;
--	} devs[0];
-+	} devs[];
- };
- 
- /* bits for r10bio.state */
+Ideally, I'd prefer a single command,
+mdadm --grow --size=6000G --raid-devices=3 /dev/md0
+... but that seems not possible [1].
+
+
+In either case, my question still applies: when reshaping to
+reduce the number of devices in the array (--raid-devices), is
+there any way to specify exactly which device(s) are to be
+removed from active sync (I suppose they become spares) and which
+ones kept?  It seems odd that this would not be possible to
+control, but I've perused the mdadm manual-page, the wiki, the
+mailing-list archives, the web-search-engine, etc. and I can't
+seem to find any direct answer.  Also scanned the source code of
+both mdadm and the kernel driver, and didn't see a way to select
+beyond just listing component drives on the command-line,
+although with so many different kinds of functionality mixed in
+one (two) dense codebase, I didn't yet definitively determine
+where the drive(s) to eliminate are selected... hence asking here
+before spending more time with the code or setting up a test
+array to trial-and-error.
+
+It seems like a selection option akin to --replace and --with
+would be appropriate here, but perhaps I'm missing something.
+
+Any info or advice appreciated, thanks in advance.
+-- David
+
+
+[1]: A blog post by Neil Brown in 2009 [2] seemed to indicate
+     that it would be implemented, but while I haven't tried it,
+     my reading of the source code (current HEAD) of mdadm leads
+     me to believe that this is as yet unimplemented, please
+     correct me if I'm wrong.  In fact, there seem to me to be
+     specific validation checks that prevent any of the three
+     commands (-z, -Z, -n) from being combined with any other.
+     But I didn't go through it with a fine-toothed comb.
+
+[2]: From http://neil.brown.name/blog/20090817000931:
+     If you have replaced all the devices with larger devices,
+     you can avoid the need to reduce the size of the array by
+     increasing the component size at the same time as reducing
+     the number of devices. e.g. on a 4-disk RAID5,
+	`mdadm --grow --size max --raid-disk 3`
+     ... or at least you should be able to. The current mdadm
+     pre-release don't get that right but hopefully it will
+     before mdadm-3.1 is really released.
