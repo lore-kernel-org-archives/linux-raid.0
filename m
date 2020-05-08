@@ -1,96 +1,25 @@
 From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH] md/raid1: release pending accounting for an I/O only
- after write-behind is also finished
-Date: Thu, 7 May 2020 17:43:26 -0700
-Message-ID: <CAPhsuW5SMkstYK5OKm_C_9xE9o1SBT3AAKX9W4JAZG0pDv7OLQ@mail.gmail.com>
-References: <20200127152619.GA3596@redhat> <CAPhsuW628WHm_Rifm9uMPeH+mwmeH121p85KbgvLt+SQTngW4A@mail.gmail.com>
- <CA+-xHTGJr5M9Ge1MCPPZWueM56Ap5=qcsG0KkddBMJOCAOWWpw@mail.gmail.com>
- <CAPhsuW7XJzdWxkLDbRG9VS3BJB6qaAoEC_sDOtMRaw1ZvMj1dw@mail.gmail.com> <bcc52c3e-0865-709b-fc4d-7ca59d10bf9d@redhat.com>
+Subject: Re: [RFC PATCH V3 02/10] md: remove __clear_page_buffers and use attach/detach_page_private
+Date: Thu, 7 May 2020 17:47:35 -0700
+Message-ID: <CAPhsuW5Z9MfS_yFbPaC7Mc8+rMkL3e_m5N_P=6bq28TLXYQpuw@mail.gmail.com>
+References: <20200507214400.15785-1-guoqing.jiang@cloud.ionos.com> <20200507214400.15785-3-guoqing.jiang@cloud.ionos.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bcc52c3e-0865-709b-fc4d-7ca59d10bf9d@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Nigel Croxon <ncroxon@redhat.com>
-Cc: David Jeffery <djeffery@redhat.com>, linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200507214400.15785-3-guoqing.jiang@cloud.ionos.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Cc: Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, david@fromorbit.com, hch@infradead.org, Matthew Wilcox <willy@infradead.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Apr 23, 2020 at 5:38 AM Nigel Croxon <ncroxon@redhat.com> wrote:
+On Thu, May 7, 2020 at 2:44 PM Guoqing Jiang
+<guoqing.jiang@cloud.ionos.com> wrote:
 >
+> After introduce attach/detach_page_private in pagemap.h, we can remove
+> the duplicat code and call the new functions.
 >
-> On 1/28/20 2:08 PM, Song Liu wrote:
-> > On Mon, Jan 27, 2020 at 11:56 AM David Jeffery <djeffery@redhat.com> wrote:
-> >> On Mon, Jan 27, 2020 at 12:29 PM Song Liu <song@kernel.org> wrote:
-> >>> On Mon, Jan 27, 2020 at 7:26 AM David Jeffery <djeffery@redhat.com> wrote:
-> >>>> When using RAID1 and write-behind, md can deadlock when errors occur. With
-> >>>> write-behind, r1bio structs can be accounted by raid1 as queued but not
-> >>>> counted as pending. The pending count is dropped when the original bio is
-> >>>> returned complete but write-behind for the r1bio may still be active.
-> >>>>
-> >>>> This breaks the accounting used in some conditions to know when the raid1
-> >>>> md device has reached an idle state. It can result in calls to
-> >>>> freeze_array deadlocking. freeze_array will never complete from a negative
-> >>>> "unqueued" value being calculated due to a queued count larger than the
-> >>>> pending count.
-> >>>>
-> >>>> To properly account for write-behind, move the call to allow_barrier from
-> >>>> call_bio_endio to raid_end_bio_io. When using write-behind, md can call
-> >>>> call_bio_endio before all write-behind I/O is complete. Using
-> >>>> raid_end_bio_io for the point to call allow_barrier will release the
-> >>>> pending count at a point where all I/O for an r1bio, even write-behind, is
-> >>>> done.
-> >>>>
-> >>>> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> >>>> ---
-> >>>>
-> >>>>   raid1.c |   13 +++++++------
-> >>>>   1 file changed, 7 insertions(+), 6 deletions(-)
-> >>>>
-> >>>>
-> >>>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> >>>> index 201fd8aec59a..0196a9d9f7e9 100644
-> >>>> --- a/drivers/md/raid1.c
-> >>>> +++ b/drivers/md/raid1.c
-> >>>> @@ -279,22 +279,17 @@ static void reschedule_retry(struct r1bio *r1_bio)
-> >>>>   static void call_bio_endio(struct r1bio *r1_bio)
-> >>>>   {
-> >>>>          struct bio *bio = r1_bio->master_bio;
-> >>>> -       struct r1conf *conf = r1_bio->mddev->private;
-> >>>>
-> >>>>          if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
-> >>>>                  bio->bi_status = BLK_STS_IOERR;
-> >>>>
-> >>>>          bio_endio(bio);
-> >>>> -       /*
-> >>>> -        * Wake up any possible resync thread that waits for the device
-> >>>> -        * to go idle.
-> >>>> -        */
-> >>>> -       allow_barrier(conf, r1_bio->sector);
-> >>> raid1_end_write_request() also calls call_bio_endio(). Do we need to fix
-> >>> that?
-> >> This basically is the problem the patch is fixing.  We don't want
-> >> allow_barrier() being called when call_bio_endio() is called directly
-> >> from raid1_end_write_request().  Write-behind can still be active here
-> >> so it was dropping the pending accounting too early.  We only want it
-> >> called when all I/O for the r1bio is complete, which shifting the
-> >> allow_barrier() call to raid_end_bio_io() does.
-> > Thanks for the explanation. This looks good to me. I will process it
-> > after the merge window.
-> >
-> > I will also re-evaluate whether we need it for stable.
-> >
-> > Thanks again,
-> > Song
-> >
-> Hello Song,
->
-> Did you pull in this patch after the merge window?
->
-> I don't see it in your tree.
+> Cc: Song Liu <song@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 
-I am really sorry I missed this one.
-
-Just applied it to md-next.
-
-Thanks,
-Song
+Acked-by: Song Liu <song@kernel.org>
