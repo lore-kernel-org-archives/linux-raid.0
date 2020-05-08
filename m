@@ -1,158 +1,130 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH RFC v2 2/8] md/raid5: add a member of r5pages for struct stripe_head
-Date: Thu, 7 May 2020 18:25:49 -0700
-Message-ID: <CAPhsuW6ETatEq_x+4YEvY2XkFjBWDkodEjrXaAyRpmodvdNzzg@mail.gmail.com>
-References: <20200421123952.49025-1-yuyufen@huawei.com> <20200421123952.49025-3-yuyufen@huawei.com>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: [general question] rare silent data corruption when writing data
+Date: Thu, 7 May 2020 21:44:05 -0600
+Message-ID: <CAJCQCtRWvsKwwoZejERq=_OLXEa3JQd5RJ65tCz=X=Sp1xtRMQ@mail.gmail.com>
+References: <b0e91faf-3a14-3ac9-3c31-6989154791c1@yandex.pl>
+ <CAAMCDef6hKJsPw3738KJ0vEEwnVKB-QpTMJ6aSeybse-4h+y6Q@mail.gmail.com>
+ <24244.30530.155404.154787@quad.stoffel.home> <adccabc0-529f-e0a9-538f-1e5b784269e4@yandex.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200421123952.49025-3-yuyufen@huawei.com>
+In-Reply-To: <adccabc0-529f-e0a9-538f-1e5b784269e4@yandex.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yufen Yu <yuyufen@huawei.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Coly Li <colyli@suse.de>, Xiao Ni <xni@redhat.com>, Hou Tao <houtao1@huawei.com>
+To: Michal Soltys <msoltyspl@yandex.pl>
+Cc: John Stoffel <john@stoffel.org>, Roger Heflin <rogerheflin@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 21, 2020 at 5:40 AM Yufen Yu <yuyufen@huawei.com> wrote:
->
-> Since grow_buffers() uses alloc_page() allocate the buffers for each
-> stripe_head(), means, it will allocate 64K buffers and just use 4K
-> of them, after setting STRIPE_SIZE as 4096.
->
-> To avoid waste memory, we try to contain multiple 'page' of sh->dev
-> into one real page. That means, multiple sh->dev[i].page will point to
-> the only page with different offset. Example of 64K PAGE_SIZE and
-> 4K STRIPE_SIZE as following:
->
->                     64K PAGE_SIZE
->           +---+---+---+---+------------------------------+
->           |   |   |   |   |
->           |   |   |   |   |
->           +-+-+-+-+-+-+-+-+------------------------------+
->             ^   ^   ^   ^
->             |   |   |   +----------------------------+
->             |   |   |                                |
->             |   |   +-------------------+            |
->             |   |                       |            |
->             |   +----------+            |            |
->             |              |            |            |
->             +-+            |            |            |
->               |            |            |            |
->         +-----+-----+------+-----+------+-----+------+------+
-> sh      | offset(0) | offset(4K) | offset(8K) | offset(16K) |
->  +      +-----------+------------+------------+-------------+
->  +----> dev[0].page  dev[1].page  dev[2].page  dev[3].page
->
-> After compressing pages, the users of sh->dev[i].page need to be take care:
->
->   1) When issue bio of stripe_head, bi_io_vec.bv_page will point to
->      the page directly. So, we should make sure bv_offset been set with
->      correct offset.
->
->   2) When compute xor, the page will be passed to computer function.
->      So, we also need to pass offset of that page to computer. Let it
->      compute correct location of each sh->dev[i].page.
->
-> This patch will add a new member of r5pages in stripe_head to manage
-> all pages needed by each sh->dev[i]. We also add 'offset' for each r5dev
-> so that users can get related page offset easily. And add helper function
-> to get page and it's index in r5pages array by disk index. This is patch
-> in preparation for fallowing changes.
->
-> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
-> ---
->  drivers/md/raid5.h | 56 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
->
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index b0010991bdc8..6296578e9585 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -246,6 +246,13 @@ struct stripe_head {
->                 int                  target, target2;
->                 enum sum_check_flags zero_sum_result;
->         } ops;
-> +
-> +       /* These pages will be used by bios in dev[i] */
-> +       struct r5pages {
-> +               struct page     **page;
-> +               int     size; /* page array size */
+On Thu, May 7, 2020 at 4:34 PM Michal Soltys <msoltyspl@yandex.pl> wrote:
+> Since then we recreated the issue directly on the host, just by making
+> ext4 filesystem on some LV, then doing write with checksum, sync,
+> drop_caches, read and check checksum. The errors are, as I mentioned -
+> always a full 4KiB chunks (always same content, always same position).
 
-Do we really need variable size for each stripe?
+The 4KiB chunk. What are the contents? Is it definitely guest VM data?
+Or is it sometimes file system metadata? How many corruptions have
+happened? The file system metadata is quite small compared to data.
+But if there have been many errors, we'd expect if it's caused on the
+host, that eventually file system metadata is corrupted. If it's
+definitely only data, that's curious and maybe implicates something
+going on in the guest.
 
-Thanks,
-Song
-
-PS: I like the overall idea of 2/8 and 3/8. Will continue reviewing later.
+Btrfs, whether normal reads or scrubs, will report the path to the
+affected file, for data corruption. Metadata corruption errors
+sometimes have inode references, but not a path to a file.
 
 
-> +       } pages;
-> +
->         struct r5dev {
->                 /* rreq and rvec are used for the replacement device when
->                  * writing data to both devices.
-> @@ -253,6 +260,7 @@ struct stripe_head {
->                 struct bio      req, rreq;
->                 struct bio_vec  vec, rvec;
->                 struct page     *page, *orig_page;
-> +               unsigned int    offset;         /* offset of this page */
->                 struct bio      *toread, *read, *towrite, *written;
->                 sector_t        sector;                 /* sector of this page */
->                 unsigned long   flags;
-> @@ -754,6 +762,54 @@ static inline int algorithm_is_DDF(int layout)
->         return layout >= 8 && layout <= 10;
->  }
+> >
+> > Are the LVs split across RAID5 PVs by any chance?
 >
-> +/*
-> + * Return corresponding page index of r5pages array.
-> + */
-> +static inline int raid5_get_page_index(struct stripe_head *sh, int disk_idx)
-> +{
-> +       WARN_ON(!sh->pages.page);
-> +       if (disk_idx >= sh->raid_conf->pool_size)
-> +               return -ENOENT;
-> +
-> +       return (disk_idx * STRIPE_SIZE) / PAGE_SIZE;
-> +}
-> +
-> +/*
-> + * Return offset of the corresponding page for r5dev.
-> + */
-> +static inline int raid5_get_page_offset(struct stripe_head *sh, int disk_idx)
-> +{
-> +       WARN_ON(!sh->pages.page);
-> +       if (disk_idx >= sh->raid_conf->pool_size)
-> +               return -ENOENT;
-> +
-> +       return (disk_idx * STRIPE_SIZE) % PAGE_SIZE;
-> +}
-> +
-> +/*
-> + * Return corresponding page address for r5dev.
-> + */
-> +static inline struct page *
-> +raid5_get_dev_page(struct stripe_head *sh, int disk_idx)
-> +{
-> +       int idx;
-> +
-> +       WARN_ON(!sh->pages.page);
-> +       idx = raid5_get_page_index(sh, disk_idx);
-> +       return sh->pages.page[idx];
-> +}
-> +
-> +/*
-> + * We want to 'compress' multiple buffers to one real page for
-> + * stripe_head when PAGE_SIZE is biggger than STRIPE_SIZE. If their
-> + * values are equal, no need to use this strategy. For now, it just
-> + * support raid level less than 5.
-> + */
-> +static inline int raid5_compress_stripe_pages(struct r5conf *conf)
-> +{
-> +       return (PAGE_SIZE > STRIPE_SIZE) && (conf->level < 6);
-> +}
-> +
->  extern void md_raid5_kick_device(struct r5conf *conf);
->  extern int raid5_set_cache_size(struct mddev *mddev, int size);
->  extern sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous);
-> --
-> 2.21.1
+> raid5s are used as PVs, but a single logical volume always uses one only
+> one physical volume underneath (if that's what you meant by split across).
+
+It might be a bit suboptimal. A single 4KiB block write in the guest,
+turns into a 4KiB block write in the host's LV. That in turn trickles
+down to md, which has a 512KiB x 4 drive stripe. So a single 4KiB
+write translates into a 2M stripe write. There is an optimization for
+raid5 in the RMW case, where it should be true only 4KiB data plus
+4KiB parity is written (partial strip/chunk write); I'm not sure about
+reads.
+
+> > It's not clear if you can replicate the problem without using
+> > lvm-thin, but that's what I suspect you might be having problems with.
+> >
 >
+> I'll be trying to do that, though the heavier tests will have to wait
+> until I move all VMs to other hosts (as that is/was our production machnie).
+
+Btrfs default Btrfs uses 16KiB block size for leaves and nodes. It's
+still a tiny foot print compared to data writes, but if LVM thin is a
+suspect, it really should just be a matter of time before file system
+corruption happens. If it doesn't, that's useful information. It
+probably means it's not LVM thin. But then what?
+
+> As for how long, it's a hit and miss. Sometimes writing and reading back
+> ~16gb file fails (the cheksum read back differs from what was written)
+> after 2-3 tries. That's on the host.
+>
+> On the guest, it's been (so far) a guaranteed thing when we were
+> creating very large tar file (900gb+). As for past two weeks we were
+> unable to create that file without errors even once.
+
+It's very useful to have a consistent reproducer. You can do metadata
+only writes on Btrfs by doing multiple back to back metadata only
+balance. If the problem really is in the write path somewhere, this
+would eventually corrupt the metadata - it would be detected during
+any subsequent balance or scrub. 'btrfs balance start -musage=100
+/mountpoint' will do it.
+
+This reproducer. It only reproduces in the guest VM? If you do it in
+the host, otherwise exactly the same way with all the exact same
+versions of everything, and it does not reproduce?
+
+>
+> >
+> > Can you compile the newst kernel and newest thin tools and try them
+> > out?
+>
+> I can, but a bit later (once we move VMs out of the host).
+>
+> >
+> > How long does it take to replicate the corruption?
+> >
+>
+> When it happens, it's usually few tries tries of writing a 16gb file
+> with random patterns and reading it back (directly on host). The
+> irritating thing is that it can be somewhat hard to reproduce (e.g.
+> after machine's reboot).
+
+Reading it back on the host. So you've shut down the VM, and you're
+mounting what was the guests VM's backing disk, on the host to do the
+verification. There's never a case of concurrent usage between guest
+and host?
+
+
+>
+> > Sorry for all the questions, but until there's a test case which is
+> > repeatable, it's going to be hard to chase this down.
+> >
+> > I wonder if running 'fio' tests would be something to try?
+> >
+> > And also changing your RAID5 setup to use the default stride and
+> > stripe widths, instead of the large values you're using.
+>
+> The raid5 is using mdadm's defaults (which is 512 KiB these days for a
+> chunk). LVM on top is using much longer extents (as we don't really need
+> 4mb granularity) and the lvm-thin chunks were set to match (and align)
+> to raid's stripe.
+
+I would change very little until you track this down, if the goal is
+to track it down and get it fixed.
+
+I'm not sure if LVM thinp is supported with LVM raid still, which if
+it's not supported yet then I can understand using mdadm raid5 instead
+of LVM raid5.
+
+
+
+
+
+-- 
+Chris Murphy
