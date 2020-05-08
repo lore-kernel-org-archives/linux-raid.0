@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/15] md: stop using ->queuedata
-Date: Fri,  8 May 2020 18:15:14 +0200
-Message-ID: <20200508161517.252308-13-hch@lst.de>
+Subject: [PATCH 13/15] nvdimm/blk: stop using ->queuedata
+Date: Fri,  8 May 2020 18:15:15 +0200
+Message-ID: <20200508161517.252308-14-hch@lst.de>
 References: <20200508161517.252308-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,29 +14,45 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/nvdimm/blk.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 271e8a5873549..c079ecf77c564 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -466,7 +466,7 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
+diff --git a/drivers/nvdimm/blk.c b/drivers/nvdimm/blk.c
+index 43751fab9d36a..ffe4728bad8b1 100644
+--- a/drivers/nvdimm/blk.c
++++ b/drivers/nvdimm/blk.c
+@@ -165,7 +165,7 @@ static int nsblk_do_bvec(struct nd_namespace_blk *nsblk,
+ static blk_qc_t nd_blk_make_request(struct request_queue *q, struct bio *bio)
  {
- 	const int rw = bio_data_dir(bio);
- 	const int sgrp = op_stat_group(bio_op(bio));
--	struct mddev *mddev = q->queuedata;
-+	struct mddev *mddev = bio->bi_disk->private_data;
- 	unsigned int sectors;
+ 	struct bio_integrity_payload *bip;
+-	struct nd_namespace_blk *nsblk;
++	struct nd_namespace_blk *nsblk = bio->bi_disk->private_data;
+ 	struct bvec_iter iter;
+ 	unsigned long start;
+ 	struct bio_vec bvec;
+@@ -176,7 +176,6 @@ static blk_qc_t nd_blk_make_request(struct request_queue *q, struct bio *bio)
+ 		return BLK_QC_T_NONE;
  
- 	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
-@@ -5626,7 +5626,6 @@ static int md_alloc(dev_t dev, char *name)
- 	mddev->queue = blk_alloc_queue(md_make_request, NUMA_NO_NODE);
- 	if (!mddev->queue)
- 		goto abort;
--	mddev->queue->queuedata = mddev;
+ 	bip = bio_integrity(bio);
+-	nsblk = q->queuedata;
+ 	rw = bio_data_dir(bio);
+ 	do_acct = nd_iostat_start(bio, &start);
+ 	bio_for_each_segment(bvec, bio, iter) {
+@@ -258,7 +257,6 @@ static int nsblk_attach_disk(struct nd_namespace_blk *nsblk)
+ 	blk_queue_max_hw_sectors(q, UINT_MAX);
+ 	blk_queue_logical_block_size(q, nsblk_sector_size(nsblk));
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
+-	q->queuedata = nsblk;
  
- 	blk_set_stacking_limits(&mddev->queue->limits);
+ 	disk = alloc_disk(0);
+ 	if (!disk)
+@@ -268,6 +266,7 @@ static int nsblk_attach_disk(struct nd_namespace_blk *nsblk)
+ 	disk->fops		= &nd_blk_fops;
+ 	disk->queue		= q;
+ 	disk->flags		= GENHD_FL_EXT_DEVT;
++	disk->private_data	= nsblk;
+ 	nvdimm_namespace_disk_name(&nsblk->common, disk->disk_name);
  
+ 	if (devm_add_action_or_reset(dev, nd_blk_release_disk, disk))
 -- 
 2.26.2
