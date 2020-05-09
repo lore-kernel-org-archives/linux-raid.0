@@ -1,65 +1,58 @@
-From: "Renaud (Ron) OLGIATI" <renaud@olgiati-in-paraguay.org>
-Subject: Raid1 not assembling correctly after after new MB
-Date: Sat, 9 May 2020 12:21:09 -0400
-Message-ID: <20200509122109.5f68288b@olgiati-in-paraguay.org>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Re: Assemblin journaled array fails
+Date: Sun, 10 May 2020 01:57:47 +0200
+Message-ID: <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Another try, as I am not sure it went anywhere on the first attempt.
+Anyway, I did some tests with manually snapshotted component devices 
+(using dm snapshot target to not touch underlying devices).
+
+The raid manages to force assemble in read-only mode with missing 
+journal device, so we probably will be able to recover most data 
+underneath this way (as a last resort).
+
+The situation I'm in now is likely from uncelan shutdown after all (why 
+the machine failed to react to ups properly is another subject).
+
+I'd still want to find out why is - apparently - a journal device giving 
+issues (contrary to what I'd expect it to do ...), with notable mention of:
+
+1) mdadm hangs (unkillable, so I presume in kernel somewhere) and eats 1 
+cpu when trying to assemble the raid with journal device present; once 
+it happens I can't do anything with the array (stop, run, etc.) and can 
+only reboot the server to "fix" that
+
+2) mdadm -D shows nonsensical device size after assembly attempt (Used 
+Dev Size : 18446744073709551615)
+
+3) the journal device (which itself is md raid1 consisting of 2 ssds) 
+assembles, checks (0 mismatch_cnt) fine - and overall looks ok.
 
 
-I have just booted my box after putting in a new MBn old one died peacefully during the night.
+ From other interesting things, I also attempted to assemble the raid 
+with snapshotted journal. From what I can see it does attempt to do 
+something, judging from:
 
-My HDs were configured at the BIOS level as hardware RAID1, and in the PCLinuxOS system with mdadm.
+dmsetup status:
 
-I only learned later (on this list) that it was not necessary to configur HW RAID1 at the BIOS level.
+snap_jo2: 0 536870912 snapshot 40/33554432 16
+snap_sdi1: 0 7812500000 snapshot 25768/83886080 112
+snap_jo1: 0 536870912 snapshot 40/33554432 16
+snap_sdg1: 0 7812500000 snapshot 25456/83886080 112
+snap_sdj1: 0 7812500000 snapshot 25928/83886080 112
+snap_sdh1: 0 7812500000 snapshot 25352/83886080 112
 
-Booting the box, and without configuring the RAID1 at the BIOS level, the box booted normally, but only the priùmary partitions of the two HD pairs work properly:
+But it doesn't move from those values (with mdadm doing nothing eating 
+100% cpu as mentioned earlier).
 
-~ $ cat /proc/mdstat 
-Personalities : [raid1] 
-md7 : active raid1 sdc1[0] sdd1[1]
-      1953382464 blocks super 1.2 [2/2] [UU]
-      bitmap: 1/15 pages [4KB], 65536KB chunk
 
-md6 : active raid1 sda10[0]
-      248640 blocks super 1.2 [2/1] [U_]
-      
-md5 : active raid1 sda9[0]
-      446840832 blocks super 1.2 [2/1] [U_]
-      bitmap: 4/4 pages [16KB], 65536KB chunk
-
-md4 : active raid1 sda8[0]
-      15616000 blocks super 1.2 [2/1] [U_]
-      
-md3 : active raid1 sda7[0]
-      12686336 blocks super 1.2 [2/1] [U_]
-      
-md2 : active raid1 sda6[0]
-      242496 blocks super 1.2 [2/1] [U_]
-      
-md1 : active raid1 sda5[0]
-      8198144 blocks super 1.2 [2/1] [U_]
-      
-md0 : active raid1 sda1[0] sdb1[1]
-      4389888 blocks super 1.2 [2/2] [UU]
-      
-unused devices: <none>
-
-So I went to the BIOS, to activate the hardware RAID1, get a warning that all data will be lost; so did not do it., 
-
-What should I do to restore the RAID volumes md1 to md6 ? Where to look for guidance ?
- 
-Cheers,
- 
-Ron.
--- 
-                 Une illusion perdue est une vérité trouvée .
-                                    
-                   -- http://www.olgiati-in-paraguay.org --
- 
+Any suggestions how to proceed would very be appreciated.
