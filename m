@@ -1,34 +1,76 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: remove a few uses of ->queuedata
-Date: Sat, 9 May 2020 10:24:31 +0200
-Message-ID: <20200509082431.GC21834@lst.de>
-References: <20200508161517.252308-1-hch@lst.de> <20200508221321.GD1389136@T590>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: =?utf-8?b?W1BBVENIIDA5LzE1LCBm0ZZ4ZWRdIGxpZ2h0bnZtOiBz?=
+ =?utf-8?q?top_using_-=3Equeuedata?=
+Date: Sat, 9 May 2020 10:38:49 +0200
+Message-ID: <20200509083849.GA22173@lst.de>
+References: <20200508161517.252308-1-hch@lst.de>
+	<20200508161517.252308-10-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200508221321.GD1389136@T590>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Jim Paris <jim@jtan.com>, Geoff Levand <geoff@infradead.org>, Joshua Morris <josh.h.morris@us.ibm.com>, Philip Kelleher <pjk1939@linux.ibm.com>, Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, linux-xtensa@linux-xtensa.org, drbd-dev@lists.linbit.com, linux-block@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org
+In-Reply-To: <20200508161517.252308-10-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xtensa-PjhNF2WwrV/0Sa2dR60CXw@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sergey Senozhatsky <sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Geoff Levand <geoff-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jim Paris <jim-XrPbb/hENzg@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-m68k-cunTk1MwBs8S/qaLPR03pWD2FQJk+8+b@public.gmane.org, Philip Kelleher <pjk1939-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Joshua Morris <josh.h.morris-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Nitin Gupta <ngupta-KNmc09w0p+Ednm+yROfE0A@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-raid.ids
 
-On Sat, May 09, 2020 at 06:13:21AM +0800, Ming Lei wrote:
-> On Fri, May 08, 2020 at 06:15:02PM +0200, Christoph Hellwig wrote:
-> > Hi all,
-> > 
-> > various bio based drivers use queue->queuedata despite already having
-> > set up disk->private_data, which can be used just as easily.  This
-> > series cleans them up to only use a single private data pointer.
-> > 
-> > blk-mq based drivers that have code pathes that can't easily get at
-> > the gendisk are unaffected by this series.
-> 
-> Yeah, before adding disk, there still may be requests queued to LLD
-> for blk-mq based drivers.
-> 
-> So are there this similar situation for these bio based drivers?
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
 
-bio submittsion is based on the gendisk, so we can't submit before
-it is added.  The passthrough request based path obviously doesn't apply
-here.
+fixed the compilation in the print_ppa arguments
+
+ drivers/lightnvm/core.c      | 1 -
+ drivers/lightnvm/pblk-init.c | 2 +-
+ drivers/lightnvm/pblk.h      | 2 +-
+ 3 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/lightnvm/core.c b/drivers/lightnvm/core.c
+index db38a68abb6c0..85c5490cdfd2e 100644
+--- a/drivers/lightnvm/core.c
++++ b/drivers/lightnvm/core.c
+@@ -400,7 +400,6 @@ static int nvm_create_tgt(struct nvm_dev *dev, struct nvm_ioctl_create *create)
+ 	}
+ 
+ 	tdisk->private_data = targetdata;
+-	tqueue->queuedata = targetdata;
+ 
+ 	mdts = (dev->geo.csecs >> 9) * NVM_MAX_VLBA;
+ 	if (dev->geo.mdts) {
+diff --git a/drivers/lightnvm/pblk-init.c b/drivers/lightnvm/pblk-init.c
+index 9a967a2e83dd7..bec904ec0f7c0 100644
+--- a/drivers/lightnvm/pblk-init.c
++++ b/drivers/lightnvm/pblk-init.c
+@@ -49,7 +49,7 @@ struct bio_set pblk_bio_set;
+ 
+ static blk_qc_t pblk_make_rq(struct request_queue *q, struct bio *bio)
+ {
+-	struct pblk *pblk = q->queuedata;
++	struct pblk *pblk = bio->bi_disk->private_data;
+ 
+ 	if (bio_op(bio) == REQ_OP_DISCARD) {
+ 		pblk_discard(pblk, bio);
+diff --git a/drivers/lightnvm/pblk.h b/drivers/lightnvm/pblk.h
+index 86ffa875bfe16..49718105bc0dc 100644
+--- a/drivers/lightnvm/pblk.h
++++ b/drivers/lightnvm/pblk.h
+@@ -1255,7 +1255,7 @@ static inline int pblk_boundary_ppa_checks(struct nvm_tgt_dev *tgt_dev,
+ 				continue;
+ 		}
+ 
+-		print_ppa(tgt_dev->q->queuedata, ppa, "boundary", i);
++		print_ppa(tgt_dev->disk->q->private_data, ppa, "boundary", i);
+ 
+ 		return 1;
+ 	}
+-- 
+2.26.2
