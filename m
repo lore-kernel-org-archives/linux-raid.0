@@ -1,61 +1,92 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 01/15] nfblock: use gendisk private_data
-Date: Sat, 9 May 2020 12:38:00 +0200
-Message-ID: <CAMuHMdUBRsZQ1BOD9jW99NTm_8NZDootGrqzz3nPeeJ+mUAoTw@mail.gmail.com>
-References: <20200508161517.252308-1-hch@lst.de> <20200508161517.252308-2-hch@lst.de>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Assemblin journaled array fails
+Date: Sat, 9 May 2020 12:54:59 +0200
+Message-ID: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20200508161517.252308-2-hch@lst.de>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Jim Paris <jim@jtan.com>, Geoff Levand <geoff@infradead.org>, Joshua Morris <josh.h.morris@us.ibm.com>, Philip Kelleher <pjk1939@linux.ibm.com>, Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, linux-m68k <linux-m68k@lists.linux-m68k.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:TENSILICA XTENSA PORT (xtensa)" <linux-xtensa@linux-xtensa.org>, Lars Ellenberg <drbd-dev@lists.linbit.com>, linux-block@vger.kernel.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Christoph,
+Looks like I have now another issue with journaled array that now fails 
+to assemble - with related command used to assembly it (whether it would 
+be mdadm --incremental called by udev, or manually from commandline) 
+hanged and unkillable.
 
-On Fri, May 8, 2020 at 6:16 PM Christoph Hellwig <hch@lst.de> wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+The array was previously running with different journal that was later 
+replaced with different better disks. The journal device itself is 
+healthy and assembles fine. Assembling (the below dump is when mdadm vis 
+udev was doing it):
 
-Thanks for your patch!
 
-> --- a/arch/m68k/emu/nfblock.c
-> +++ b/arch/m68k/emu/nfblock.c
-> @@ -61,7 +61,7 @@ struct nfhd_device {
->
->  static blk_qc_t nfhd_make_request(struct request_queue *queue, struct bio *bio)
->  {
-> -       struct nfhd_device *dev = queue->queuedata;
-> +       struct nfhd_device *dev = bio->bi_disk->private_data;
->         struct bio_vec bvec;
->         struct bvec_iter iter;
->         int dir, len, shift;
-> @@ -122,7 +122,6 @@ static int __init nfhd_init_one(int id, u32 blocks, u32 bsize)
->         if (dev->queue == NULL)
->                 goto free_dev;
->
-> -       dev->queue->queuedata = dev;
->         blk_queue_logical_block_size(dev->queue, bsize);
->
->         dev->disk = alloc_disk(16);
-> @@ -136,6 +135,7 @@ static int __init nfhd_init_one(int id, u32 blocks, u32 bsize)
->         sprintf(dev->disk->disk_name, "nfhd%u", dev_id);
->         set_capacity(dev->disk, (sector_t)blocks * (bsize / 512));
->         dev->disk->queue = dev->queue;
-> +       dev->disk->private_data = dev;
+mdadm -D /dev/md126
+/dev/md126:
+            Version : 1.1
+      Creation Time : Tue Mar  5 19:28:58 2019
+         Raid Level : raid5
+      Used Dev Size : 18446744073709551615
+       Raid Devices : 4
+      Total Devices : 5
+        Persistence : Superblock is persistent
 
-This is already set above, just before the quoted sprintf() call.
+        Update Time : Sat May  9 09:34:58 2020
+              State : active, FAILED, Not Started
+     Active Devices : 4
+    Working Devices : 5
+     Failed Devices : 0
+      Spare Devices : 0
 
->
->         add_disk(dev->disk);
+             Layout : left-symmetric
+         Chunk Size : 512K
 
-Gr{oetje,eeting}s,
+Consistency Policy : journal
 
-                        Geert
+               Name : xs22:r5_big  (local to host xs22)
+               UUID : d5995d76:67d7fabd:05392f87:25a91a97
+             Events : 56283
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+     Number   Major   Minor   RaidDevice State
+        -       0        0        0      removed
+        -       0        0        1      removed
+        -       0        0        2      removed
+        -       0        0        3      removed
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+        -       8      145        3      sync   /dev/sdj1
+        -       8      129        2      sync   /dev/sdi1
+        -       9      127        -      spare   /dev/md/xs22:r1_journal_big
+        -       8      113        1      sync   /dev/sdh1
+        -       8       97        0      sync   /dev/sdg1
+
+
+
+mdadm -Esv:
+
+ARRAY /dev/md/r1_journal_big  level=raid1 metadata=1.1 num-devices=2 
+UUID=c18b3996:49b21f49:3ee18e92:a8240f7f name=xs22:r1_journal_big
+    devices=/dev/sdv1,/dev/sdu1
+ARRAY /dev/md/r5_big  level=raid5 metadata=1.1 num-devices=4 
+UUID=d5995d76:67d7fabd:05392f87:25a91a97 name=xs22:r5_big
+    spares=1 
+devices=/dev/md/xs22:r1_journal_big,/dev/sdg1,/dev/sdh1,/dev/sdj1,/dev/sdi1
+
+
+When I was changing journal some time ago (successfully, everything was 
+working fine afterwards) this is what I did:
+
+echo [write-through] >/sys/md126/md/journal_mode
+mdadm /dev/md126 --fail /dev/md/r1_journal_big --remove 
+/dev/md/r1_journal_big
+echo resync >/sys/md126/md/consistency_policy
+
+# here i created new journal from new disks, the name was the same
+
+mdadm --readonly /dev/md126
+mdadm /dev/md126 --add-journal /dev/md/r1_journal_big
+echo [write-back] >/sys/md126/md/journal_mode
+# At this point mdadm confirmed everything went fine
+
+After the reboot I'm in the situation as outlined above. Any suggestion 
+how to assemble this array now ?
