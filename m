@@ -1,58 +1,100 @@
-From: Michal Soltys <msoltyspl@yandex.pl>
-Subject: Re: Assemblin journaled array fails
-Date: Sun, 10 May 2020 01:57:47 +0200
-Message-ID: <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl>
-References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+From: Sam Hurst <sam@sam-hurst.co.uk>
+Subject: RAID wiped superblock recovery
+Date: Sun, 10 May 2020 11:50:57 +0100
+Message-ID: <922713c5-0cc1-24cb-14a6-9de7db631f98@sam-hurst.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Anyway, I did some tests with manually snapshotted component devices 
-(using dm snapshot target to not touch underlying devices).
+Hello,
 
-The raid manages to force assemble in read-only mode with missing 
-journal device, so we probably will be able to recover most data 
-underneath this way (as a last resort).
+** TL;DR: Preamble for first three paragraphs - issue meat at para 4 **
 
-The situation I'm in now is likely from uncelan shutdown after all (why 
-the machine failed to react to ups properly is another subject).
+I have a fairly long lived array that once started life as a 4 disk 
+RAID5, had a disk replaced, and recently I've made it larger by adding 
+three new disks and changing it to a RAID6 array. However, I've hit an 
+issue with these three new drives.
 
-I'd still want to find out why is - apparently - a journal device giving 
-issues (contrary to what I'd expect it to do ...), with notable mention of:
+The original RAID was set up using the raw block devices as opposed to a 
+partition on the disk, and I did the same with the three new drives. 
+However, these "new" drives had previously been in a machine where they 
+had GPT partition tables. I hadn't thought anything of it, as I figured 
+that adding the new drives to the array would wipe everything that 
+already existed.
 
-1) mdadm hangs (unkillable, so I presume in kernel somewhere) and eats 1 
-cpu when trying to assemble the raid with journal device present; once 
-it happens I can't do anything with the array (stop, run, etc.) and can 
-only reboot the server to "fix" that
+However, the backup GPT table was not wiped from the end of the disk. We 
+recently discovered a peculiarity [1] with ASRock motherboard firmware 
+that tries to be helpful and repair what it thinks might be a damaged 
+GPT if it can find a valid one at the end of a disk on boot. So when I 
+recently had to shut down the machine to replace a poorly UPS battery, 
+on boot my array didn't come up.
 
-2) mdadm -D shows nonsensical device size after assembly attempt (Used 
-Dev Size : 18446744073709551615)
+So, I now have three drives with a wiped superblock. I'm fairly certain 
+it hasn't wiped anything else, hex dumping the drives looks like the 
+data all begins at the same place. First we tried recreating the 
+superblocks by hand, but that didn't work. All the different 
+combinations of --assemble I've tried haven't been much help, as it 
+always ends the same way:
 
-3) the journal device (which itself is md raid1 consisting of 2 ssds) 
-assembles, checks (0 mismatch_cnt) fine - and overall looks ok.
+root@toothless:~# mdadm --assemble --force /dev/md127 $OVERLAYS
+mdadm: failed to add /dev/mapper/sdf to /dev/md127: Invalid argument
+mdadm: failed to add /dev/mapper/sdg to /dev/md127: Invalid argument
+mdadm: failed to add /dev/mapper/sdh to /dev/md127: Invalid argument
+mdadm: failed to RUN_ARRAY /dev/md127: Input/output error
+root@toothless:~# dmesg -T | grep sdf
+[Sun May 10 09:57:04 2020] md: invalid superblock checksum on sdf
+[Sun May 10 09:57:04 2020] md: sdf does not have a valid v1.2 
+superblock, not importing!
+
+So I've come to the conclusion that the only way forward is to use 
+`mdadm --create` and hope I get the array back that way, with new 
+superblocks. I've found a Stack Overflow discussion where someone 
+experimented with erasing superblocks and rebuilding, and have been 
+trying to follow that [2], combined with the instructions on the Linux 
+RAID wiki for using overlays to protect the underlying disk [3].
+
+However, it's my understanding that you need to add these disks in the 
+correct order - and given I have 7 disks, that's 5040 possible 
+permutations! The original four disks show their device roles, so I'm 
+/assuming/ that's the order in which they need adding:
+
+/dev/sda:
+    Device Role : Active device 0
+/dev/sdb:
+    Device Role : Active device 2
+/dev/sdc:
+    Device Role : Active device 1
+/dev/sdd:
+    Device Role : Active device 3
+/dev/sdf:
+    Device Role : spare
+/dev/sdg:
+    Device Role : spare
+/dev/sdh:
+    Device Role : spare
+
+So I've tried all six permutations of the devices showing as "spare" at 
+the end and I can never get a sensible filesystem out when I do a --create.
+
+Does anyone have any other ideas, or can offer some wisdom into what to 
+do next? Otherwise I'm writing a shell script to test all 5040 
+permutations...
 
 
- From other interesting things, I also attempted to assemble the raid 
-with snapshotted journal. From what I can see it does attempt to do 
-something, judging from:
-
-dmsetup status:
-
-snap_jo2: 0 536870912 snapshot 40/33554432 16
-snap_sdi1: 0 7812500000 snapshot 25768/83886080 112
-snap_jo1: 0 536870912 snapshot 40/33554432 16
-snap_sdg1: 0 7812500000 snapshot 25456/83886080 112
-snap_sdj1: 0 7812500000 snapshot 25928/83886080 112
-snap_sdh1: 0 7812500000 snapshot 25352/83886080 112
-
-But it doesn't move from those values (with mdadm doing nothing eating 
-100% cpu as mentioned earlier).
+Best Regards,
+Sam
 
 
-Any suggestions how to proceed would very be appreciated.
+
+[1]: 
+http://forum.asrock.com/forum_posts.asp?TID=10174&title=asrock-motherboard-destroys-linux-software-raid
+
+[2]: 
+https://serverfault.com/questions/347606/recover-raid-5-data-after-created-new-array-instead-of-re-using/347786#347786
+
+[3]: https://raid.wiki.kernel.org/index.php/Recovering_a_damaged_RAID
