@@ -1,72 +1,60 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+From: pg@lxraid.list.sabi.co.UK (Peter Grandi)
 Subject: Re: raid6check extremely slow ?
-Date: Mon, 11 May 2020 23:16:35 +0200
-Message-ID: <d350c913-0ec6-c1a2-fb41-1fa0dec6632f@cloud.ionos.com>
+Date: Mon, 11 May 2020 23:44:11 +0100
+Message-ID: <24249.54587.74070.71273@base.ty.sabi.co.uk>
 References: <20200510120725.20947240E1A@gemini.denx.de>
- <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com>
- <20200511064022.591C5240E1A@gemini.denx.de>
- <f003a8c7-e96d-ddc3-6d1d-42a13b70e0b6@cloud.ionos.com>
- <20200511161415.GA8049@lazy.lzy>
- <CAOxFTcyH8ET=DXsm7RQ3eVbxg+6g+nX-apwahBejniGz1QR2+g@mail.gmail.com>
- <59cd0b9f-b8ac-87c1-bc7e-fd290284a772@cloud.ionos.com>
+        <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com>
+        <20200511064022.591C5240E1A@gemini.denx.de>
+        <f003a8c7-e96d-ddc3-6d1d-42a13b70e0b6@cloud.ionos.com>
+        <20200511161415.GA8049@lazy.lzy>
+        <23d84744-9e3c-adc1-3af1-6498b9bcf750@cloud.ionos.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <59cd0b9f-b8ac-87c1-bc7e-fd290284a772@cloud.ionos.com>
-Content-Language: en-US
+In-Reply-To: <23d84744-9e3c-adc1-3af1-6498b9bcf750@cloud.ionos.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 5/11/20 11:12 PM, Guoqing Jiang wrote:
-> On 5/11/20 10:53 PM, Giuseppe Bilotta wrote:
->> Hello Piergiorgio,
->>
->> On Mon, May 11, 2020 at 6:15 PM Piergiorgio Sartor
->> <piergiorgio.sartor@nexgo.de> wrote:
->>> Hi again!
->>>
->>> I made a quick test.
->>> I disabled the lock / unlock in raid6check.
->>>
->>> With lock / unlock, I get around 1.2MB/sec
->>> per device component, with ~13% CPU load.
->>> Wihtout lock / unlock, I get around 15.5MB/sec
->>> per device component, with ~30% CPU load.
->>>
->>> So, it seems the lock / unlock mechanism is
->>> quite expensive.
->>>
->>> I'm not sure what's the best solution, since
->>> we still need to avoid race conditions.
->>>
->>> Any suggestion is welcome!
->> Would it be possible/effective to lock multiple stripes at once? Lock,
->> say, 8 or 16 stripes, process them, unlock. I'm not familiar with the
->> internals, but if locking is O(1) on the number of stripes (at least
->> if they are consecutive), this would help reduce (potentially by a
->> factor of 8 or 16) the costs of the locks/unlocks at the expense of
->> longer locks and their influence on external I/O.
->>
->
-> Hmm, maybe something like.
->
-> check_stripes
->
->     -> mddev_suspend
->
->     while (whole_stripe_num--) {
->         check each stripe
->     }
->
->     -> mddev_resume
->
->
-> Then just need to call suspend/resume once.
+>>> With lock / unlock, I get around 1.2MB/sec per device
+>>> component, with ~13% CPU load.  Wihtout lock / unlock, I get
+>>> around 15.5MB/sec per device component, with ~30% CPU load.
 
-But basically, the array can't process any new requests when checking is 
-in progress ...
+>> [...] we still need to avoid race conditions. [...]
 
-Guoqing
+Not all race conditions are equally bad in this situation.
+
+> 1. Per your previous reply, only call raid6check when array is
+> RO, then we don't need the lock.
+> 2. Investigate if it is possible that acquire stripe_lock in
+> suspend_lo/hi_store [...]
+
+Some other ways could be considered:
+
+* Read a stripe without locking and check it; if it checks good,
+  no problem, else either it was modified during the read, or it
+  was faulty, so acquire a W lock, reread and recheck it (it
+  could have become good in the meantime).
+
+  The assumption here is that there is a modest write load from
+  applications on the RAID set, so the check will almost always
+  succeed, and it is worth rereading the stripe in very rare
+  cases of "collisions" or faults.
+
+* Variants, like acquiring a W lock (if possible) on the stripe
+  solely while reading it ("atomic" read, which may be possible
+  in other ways without locking) and then if check fails we know
+  it was faulty, so optionally acquire a new W lock and reread
+  and recheck it (it could have become good in the meantime).
+
+  The assumption here is that the write load is less modest, but
+  there are a lot more reads than writes, so a W lock only
+  during read will eliminate the rereads and rechecks from
+  relatively rare "collisions".
+
+The case where there is at the same time a large application
+write load on the RAID set and checking at the same time is hard
+to improve and probably eliminating rereads and rechecks by just
+acquiring the stripe W lock for the whole duration of read and
+check.
