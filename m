@@ -1,7 +1,7 @@
 From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: raid6check extremely slow ?
-Date: Mon, 11 May 2020 17:39:37 +0200
-Message-ID: <20200511153937.GA3225@lazy.lzy>
+Date: Mon, 11 May 2020 18:14:15 +0200
+Message-ID: <20200511161415.GA8049@lazy.lzy>
 References: <20200510120725.20947240E1A@gemini.denx.de>
  <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com>
  <20200511064022.591C5240E1A@gemini.denx.de>
@@ -93,21 +93,23 @@ On Mon, May 11, 2020 at 10:58:07AM +0200, Guoqing Jiang wrote:
 > raid6check works, lock
 > stripe, check the stripe then unlock the stripe, just my guess ...
 
-Yes, that's the way it works.
-raid6check lock the stripe, check it, release it.
-This is required in order to avoid race conditions
-between raid6check and some write to the stripe.
+Hi again!
 
-The alternative is to set the array R/O and do
-the check, avoiding the lock / unlock.
+I made a quick test.
+I disabled the lock / unlock in raid6check.
 
-This could be a way to test if the problem is
-really here.
-That is, remove the lock / unlock (I guess
-there should be only one pair, but better
-check) and check with the array in R/O mode.
+With lock / unlock, I get around 1.2MB/sec
+per device component, with ~13% CPU load.
+Wihtout lock / unlock, I get around 15.5MB/sec
+per device component, with ~30% CPU load.
 
-Hope this helps,
+So, it seems the lock / unlock mechanism is
+quite expensive.
+
+I'm not sure what's the best solution, since
+we still need to avoid race conditions.
+
+Any suggestion is welcome!
 
 bye,
 
