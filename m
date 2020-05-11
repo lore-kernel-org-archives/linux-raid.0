@@ -1,67 +1,47 @@
-From: Sarah Newman <srn@prgmr.com>
-Subject: Re: [general question] rare silent data corruption when writing data
-Date: Mon, 11 May 2020 12:42:32 -0700
-Message-ID: <de121a93-7a32-31ac-de34-a91817e25cf3@prgmr.com>
-References: <b0e91faf-3a14-3ac9-3c31-6989154791c1@yandex.pl>
- <CAAMCDef6hKJsPw3738KJ0vEEwnVKB-QpTMJ6aSeybse-4h+y6Q@mail.gmail.com>
- <24244.30530.155404.154787@quad.stoffel.home>
- <adccabc0-529f-e0a9-538f-1e5b784269e4@yandex.pl>
- <CAJCQCtRWvsKwwoZejERq=_OLXEa3JQd5RJ65tCz=X=Sp1xtRMQ@mail.gmail.com>
- <cd93b47a-7d77-5491-9632-0cea1f34bbe4@prgmr.com>
- <532aaee8-7140-fc30-c376-dbea880186c7@prgmr.com>
- <397960a1-9757-7de7-cba7-a9778d13254d@yandex.pl>
+From: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
+Subject: Re: raid6check extremely slow ?
+Date: Mon, 11 May 2020 22:53:05 +0200
+Message-ID: <CAOxFTcyH8ET=DXsm7RQ3eVbxg+6g+nX-apwahBejniGz1QR2+g@mail.gmail.com>
+References: <20200510120725.20947240E1A@gemini.denx.de> <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com>
+ <20200511064022.591C5240E1A@gemini.denx.de> <f003a8c7-e96d-ddc3-6d1d-42a13b70e0b6@cloud.ionos.com>
+ <20200511161415.GA8049@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <397960a1-9757-7de7-cba7-a9778d13254d@yandex.pl>
-Content-Language: en-US
+In-Reply-To: <20200511161415.GA8049@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <msoltyspl@yandex.pl>, Chris Murphy <lists@colorremedies.com>
-Cc: John Stoffel <john@stoffel.org>, Roger Heflin <rogerheflin@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/11/20 2:41 AM, Michal Soltys wrote:
-> On 5/10/20 9:12 PM, Sarah Newman wrote:
->> On 5/10/20 12:05 PM, Sarah Newman wrote:
->>> On 5/7/20 8:44 PM, Chris Murphy wrote:
->>>>
->>>> I would change very little until you track this down, if the goal is
->>>> to track it down and get it fixed.
->>>>
->>>> I'm not sure if LVM thinp is supported with LVM raid still, which if
->>>> it's not supported yet then I can understand using mdadm raid5 instead
->>>> of LVM raid5.
->>>
->>>
->>> My apologies if this ideas was considered and discarded already, but the bug being hard to reproduce right after reboot and the error being exactly 
->>> the size of a page sounds like a memory use after free bug or similar.
->>>
->>> A debug kernel build with one or more of these options may find the problem:
->>>
->>> CONFIG_DEBUG_PAGEALLOC
->>> CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT
->>> CONFIG_PAGE_POISONING + page_poison=1
->>> CONFIG_KASAN
->>>
->>> --Sarah
->>
->> And on further reflection you may as well add these:
->>
->> CONFIG_DEBUG_OBJECTS
->> CONFIG_DEBUG_OBJECTS_ENABLE_DEFAULT
->> CONFIG_CRASH_DUMP (kdump)
->>
->> + anything else available. Basically turn debugging on all the way.
->>
->> If you can reproduce reliably with these, then you can try the latest kernel with the same options and have some confidence the problem was 
->> legitimately fixed.
->>
-> 
-> After compiling the kernel with above options enabled - and if this is the underlying issue as you suspect - will it just pop in dmesg if I hit this 
-> bug, or do I need some extra tools/preparation/etc. ?
-> 
+Hello Piergiorgio,
 
-I'm pretty sure that you can get everything you need from either dmesg or sysfs/debugfs. Be prepared for an oops or panic.
+On Mon, May 11, 2020 at 6:15 PM Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
+> Hi again!
+>
+> I made a quick test.
+> I disabled the lock / unlock in raid6check.
+>
+> With lock / unlock, I get around 1.2MB/sec
+> per device component, with ~13% CPU load.
+> Wihtout lock / unlock, I get around 15.5MB/sec
+> per device component, with ~30% CPU load.
+>
+> So, it seems the lock / unlock mechanism is
+> quite expensive.
+>
+> I'm not sure what's the best solution, since
+> we still need to avoid race conditions.
+>
+> Any suggestion is welcome!
 
---Sarah
+Would it be possible/effective to lock multiple stripes at once? Lock,
+say, 8 or 16 stripes, process them, unlock. I'm not familiar with the
+internals, but if locking is O(1) on the number of stripes (at least
+if they are consecutive), this would help reduce (potentially by a
+factor of 8 or 16) the costs of the locks/unlocks at the expense of
+longer locks and their influence on external I/O.
+
+--
+Giuseppe "Oblomov" Bilotta
