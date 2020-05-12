@@ -1,61 +1,33 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: raid6check extremely slow ?
-Date: Tue, 12 May 2020 09:37:47 +0200
-Message-ID: <20200512073747.645CE240E1A@gemini.denx.de>
-References: <20200510120725.20947240E1A@gemini.denx.de> <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com> <20200511064022.591C5240E1A@gemini.denx.de> <f003a8c7-e96d-ddc3-6d1d-42a13b70e0b6@cloud.ionos.com> <20200511153937.GA3225@lazy.lzy>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: remove a few uses of ->queuedata
+Date: Tue, 12 May 2020 10:08:20 +0200
+Message-ID: <20200512080820.GA2336@lst.de>
+References: <20200508161517.252308-1-hch@lst.de> <CAPcyv4j3gVqrZWCCc2Q-6JizGAQXW0b+R1BcvWCZOvzaukGLQg@mail.gmail.com> <20200509082352.GB21834@lst.de> <CAPcyv4ggb7_rwzGbhHNXSHd+jjSpZC=+DMEztY6Cu8Bc=ZNzag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20200511153937.GA3225@lazy.lzy>
-Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4ggb7_rwzGbhHNXSHd+jjSpZC=+DMEztY6Cu8Bc=ZNzag@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Jim Paris <jim@jtan.com>, Geoff Levand <geoff@infradead.org>, Joshua Morris <josh.h.morris@us.ibm.com>, Philip Kelleher <pjk1939@linux.ibm.com>, Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, linux-m68k@lists.linux-m68k.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xtensa@linux-xtensa.org, drbd-dev@lists.linbit.com, linux-block@vger.kernel.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-bcache@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
 List-Id: linux-raid.ids
 
-Dear Piergiorgio,
+On Sat, May 09, 2020 at 08:07:14AM -0700, Dan Williams wrote:
+> > which are all used in the I/O submission path (generic_make_request /
+> > generic_make_request_checks).  This is mostly a prep cleanup patch to
+> > also remove the pointless queue argument from ->make_request - then
+> > ->queue is an extra dereference and extra churn.
+> 
+> Ah ok. If the changelogs had been filled in with something like "In
+> preparation for removing @q from make_request_fn, stop using
+> ->queuedata", I probably wouldn't have looked twice.
+> 
+> For the nvdimm/ driver updates you can add:
+> 
+>     Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> 
+> ...or just let me know if you want me to pick those up through the nvdimm tree.
 
-In message <20200511153937.GA3225@lazy.lzy> you wrote:
-> >     while (length > 0) {
-> >             lock_stripe -> write suspend_lo/hi node
-> >             ...
-> >             unlock_all_stripes -> -> write suspend_lo/hi node
-> >     }
-> > 
-> > I think it explains the stack of raid6check, and maybe it is way that
-> > raid6check works, lock
-> > stripe, check the stripe then unlock the stripe, just my guess ...
->
-> Yes, that's the way it works.
-> raid6check lock the stripe, check it, release it.
-> This is required in order to avoid race conditions
-> between raid6check and some write to the stripe.
-
-This still does not really explain what is so slow here.  I mean,
-even if the locking was an expenive operation code-wise, I would
-expect to see at least one of the CPU cores near 100% then - but
-botch CPU _and_ I/O are basically idle, and disks are _all_ and
-_always_ really close at a trhoughput of 400 kB/s - this looks like
-some intentional bandwith limit - I just can't see where this can be
-configured?
-
-> This could be a way to test if the problem is
-> really here.
-> That is, remove the lock / unlock (I guess
-> there should be only one pair, but better
-> check) and check with the array in R/O mode.
-
-I may try this again after this test completed ;-)
-
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-It's certainly  convenient  the  way  the  crime  (or  condition)  of
-stupidity   carries   with   it  its  own  punishment,  automatically
-admisistered without remorse, pity, or prejudice. :-)
-         -- Tom Christiansen in <559seq$ag1$1@csnews.cs.colorado.edu>
+I'd love you to pick them up through the nvdimm tree.  Do you want
+to fix up the commit message yourself?
