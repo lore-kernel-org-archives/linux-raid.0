@@ -1,82 +1,32 @@
 From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH V2] allow RAID5 to grow to RAID6 with a backup_file
-Date: Tue, 12 May 2020 14:50:38 -0400
-Message-ID: <c0acda80-38a0-59d9-016e-8c59b12d317b@trained-monkey.org>
-References: <20200505183545.26291-1-ncroxon@redhat.com>
- <8a30b584-753c-abff-634a-7dda8a2e3e27@trained-monkey.org>
- <2b7c4bbd-8bfd-e33b-ca52-0cb3385d46f1@redhat.com>
- <7a37b29a-4d6c-b371-df26-aa67a32e57e8@redhat.com>
+Subject: Re: Time to think about mdadm-4.2?
+Date: Tue, 12 May 2020 16:13:07 -0400
+Message-ID: <d696b2f2-9182-eaaa-5e07-40fcab2207cf@trained-monkey.org>
+References: <4b3d6f4f-2f80-f290-beff-e303075ef5d9@trained-monkey.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7a37b29a-4d6c-b371-df26-aa67a32e57e8@redhat.com>
+In-Reply-To: <4b3d6f4f-2f80-f290-beff-e303075ef5d9@trained-monkey.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org
+To: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc: kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On 5/12/20 12:26 PM, Nigel Croxon wrote:
-> On 5/8/20 10:50 AM, Nigel Croxon wrote:
->>
->> On 5/8/20 10:01 AM, Jes Sorensen wrote:
->>> On 5/5/20 2:35 PM, Nigel Croxon wrote:
->>>> This problem came in, as the user did not specify a full path with
->>>> the backup_file option when growing an RAID5 array to RAID6.
->>>> When the full path is specified, the symbolic link is created
->>>> properly (/run/mdadm/backup_file-mdX). But the code did not support
->>>> the symbolic link when looking for the backup_file. Added two
->>>> checks for symlink.
->>>>
->>>> This addresses https://www.spinics.net/lists/raid/msg48910.html
->>>> and numerous customer reported problems.
->>>>
->>>> V2:
->>>> - Removed unneeded break; in both case-statements
->>>> - Returned the error checking on call to lstat
->>>>
->>>> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
->>>> ---
->>>>   Grow.c | 21 +++++++++++++++++++--
->>>>   1 file changed, 19 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/Grow.c b/Grow.c
->>>> index 764374f..53245d7 100644
->>>> --- a/Grow.c
->>>> +++ b/Grow.c
->>>> @@ -1135,6 +1135,15 @@ int reshape_open_backup_file(char *backup_file,
->>>>       unsigned int dev;
->>>>       int i;
->>>>   +    if (lstat(backup_file, &stb) != -1) {
->>>> +        switch (stb.st_mode & S_IFMT) {
->>>> +        case S_IFLNK:
->>>> +            return 1;
->>>> +        default:
->>>> +            break;
->>>> +        }
->>>> +    }
->>>> +
->>> Sorry for being a pita on this, but in this case you do the thing if the
->>> lstat completes correctly, but what if it fails? In that case we should
->>> error out rather than just continuing.
->>>
->>> Jes
->>>
->> There are two processes running in the reshape_array routine, the
->> original, where the user entered the mdadm grow parameter. And the
->> second, forked to call systemd mdadm-grow-continue@service.  It's in
->> the original call we want the code to continue rather than fail. It
->> needs to create the backup_file in the FS before the systemd thread runs.
->>
->> -Nigel
->>
-> Jes,
+On 3/17/20 5:15 PM, Jes Sorensen wrote:
+> Hi,
 > 
-> Do you have more questions?  an alternate solution?
+> We have had a lot of changes since 4.1 and I am thinking it's time to
+> start thinking about a 4.2 release.
+> 
+> No hard date set, but probably in about a month?
+> 
+> If you have anything pending you would like to get in, now would be a
+> good time to start posting those patches.
 
-I don't like ignoring error codes like this. As a bare minimum it should
-be documented, or we should call in with an argument to decide whether
-or not to stat the file in the first place.
+I received some patches for mdadm, anything else that needs to go in
+before the next release?
 
-Cheers,
+Thanks,
 Jes
