@@ -1,107 +1,106 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: raid6check extremely slow ?
-Date: Wed, 13 May 2020 18:22:55 +0200
-Message-ID: <20200513162255.GB5530@lazy.lzy>
+Date: Wed, 13 May 2020 18:37:18 +0100
+Message-ID: <5EBC304E.7010402@youngman.org.uk>
 References: <20200510120725.20947240E1A@gemini.denx.de>
  <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com>
  <20200511064022.591C5240E1A@gemini.denx.de>
  <f003a8c7-e96d-ddc3-6d1d-42a13b70e0b6@cloud.ionos.com>
- <20200511153937.GA3225@lazy.lzy>
- <20200512073747.645CE240E1A@gemini.denx.de>
- <20200512161731.GE7261@lazy.lzy>
- <20200513061358.20C84240E1A@gemini.denx.de>
+ <20200511161415.GA8049@lazy.lzy>
+ <23d84744-9e3c-adc1-3af1-6498b9bcf750@cloud.ionos.com>
+ <24249.54587.74070.71273@base.ty.sabi.co.uk> <20200512160943.GC7261@lazy.lzy>
+ <34f66548-1fcf-d38b-4c2d-88d43c1b19d0@youngman.org.uk>
+ <20200513161841.GA5530@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200513061358.20C84240E1A@gemini.denx.de>
+In-Reply-To: <20200513161841.GA5530@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Peter Grandi <pg@lxraid.list.sabi.co.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, May 13, 2020 at 08:13:58AM +0200, Wolfgang Denk wrote:
-> Dear Piergiorgio,
+On 13/05/20 17:18, Piergiorgio Sartor wrote:
+> On Tue, May 12, 2020 at 09:54:21PM +0100, antlists wrote:
+>> On 12/05/2020 17:09, Piergiorgio Sartor wrote:
+>>> About the check -> maybe lock -> re-check,
+>>> it is a possible workaround, but I find it
+>>> a bit extreme.
+>>
+>> This seems the best (most obvious?) solution to me.
+>>
+>> If the system is under light write pressure, and the disk is healthy, it
+>> will scan pretty quickly with almost no locking.
 > 
-> In message <20200512161731.GE7261@lazy.lzy> you wrote:
-> >
-> > > This still does not really explain what is so slow here.  I mean,
-> > > even if the locking was an expenive operation code-wise, I would
-> > > expect to see at least one of the CPU cores near 100% then - but
-> > > botch CPU _and_ I/O are basically idle, and disks are _all_ and
-> > > _always_ really close at a trhoughput of 400 kB/s - this looks like
-> > > some intentional bandwith limit - I just can't see where this can be
-> > > configured?
-> >
-> > The code has 2 functions: lock_stripe() and
-> > unlock_all_stripes().
-> >
-> > These are doing more than just lock / unlock.
-> > First, the memory pages of the process will
-> > be locked, then some signal will be set to
-> > "ignore", then the strip will be locked.
-> >
-> > The unlock does the opposite in the reverse
-> > order (unlock, set the signal back, unlock
-> > the memory pages).
-> > The difference is that, whatever the reason,
-> > the unlock unlocks *all* the stripes, not
-> > only the one locked.
-> >
-> > Not sure why.
+> I've some concerns about optimization
+> solutions which can result in less
+> performances than the original status.
 > 
-> It does not matter how omplex the operation is - I wonder why it is
-> taking so long: it cannot be CPU bound, as then I would expect to
-> see any significant CPU load, but none of the cores shows more than
-> 5...6% usage, ever.  Or it is I/O bound, then I would expect to see
-> I/O wait, but this is also never more than 0.2...0.3%.
+> You mention "write pressure", but there
+> is an other case, which will cause
+> read -> lock -> re-read...
+> Namely, when some chunk is really corrupted.
 > 
-> And why are all disks running at pretty exaclty 400 kB/s read rate,
-> all the time?  this looks like some intentinal bandwith limit, but I
-> cannot find any knob to change it.
+Yup. That's why I said "the disk is healthy" :-)
 
-In my test I see 1200KB/sec, or 1.2MB/sec,
-which is different than yours.
-
-I do not think there is any bandwidth
-limitation, otherwise we should see the
-same, I guess.
-
-The low CPU load and low data rate seems
-to me a symptom of CPU just systematically
-waiting (for something).
-
-It would be like putting in the code, here
-and there, some usleep().
-In the end we'll see low CPU load and low
-data rate, *but* very constant.
-
-Likely, is not either I/O wait, but some
-other wait.
-It could be not the lock stripe, but the
-locking of the process memory pages...
-
-This could be easily test, BTW.
-Maybe I'll try...
-
-bye,
-
-pg
-
+> Now, I do not know, maybe there are other
+> things we overlook, or maybe not.
 > 
+> I do not know either how likely is that some
+> situations will occur to reduce performances.
 > 
-> 
-> Best regards,
-> 
-> Wolfgang Denk
-> 
-> -- 
-> DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-> Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-> Be careful what you wish for. You never know who will be listening.
->                                       - Terry Pratchett, _Soul Music_
+> I would prefer a solution which will *only*
+> improve, without any possible drawback.
 
--- 
+Wouldn't we all. But if the *normal* case shows an appreciable
+improvement, then I'm inclined to write off a "shouldn't happen" case as
+"tough luck, shit happens".
+> 
+> Again, this does not mean this approach is
+> wrong, actually is to be considered.
+> 
+> In the end, I would like also to understand
+> why the lock / unlock is so expensive.
 
-piergiorgio
+Agreed.
+> 
+>> If the system is under heavy pressure, chances are there'll be a fair few
+>> stripes needing rechecking, but even at it's worst it'll only be as bad as
+>> the current setup.
+> 
+> It will be worse (or worst, I'm always
+> confused...).
+> The read and the check will double.
+
+Touche - my logic was off ...
+
+But a bit of grammar - bad = descriptive, worse = comparative, worst =
+absolute, so you were correct with worse.
+> 
+> I'm not sure about the read, but the
+> check is currently expensive.
+
+But you're still going to need a very unlucky state of affairs for the
+optimised check to be worse. Okay, if the disk IS damaged, then the
+optimised check could easily be the worst, but if it's just write
+pressure, you're going to need every second stripe to be messed up by a
+collision. Rather unlikely imho.
+> 
+> bye,
+> 
+> pg
+
+Cheers,
+Wol
+> 
+>> And if the system is somewhere inbetween, you still stand a good chance of a
+>> fast scan.
+>>
+>> At the end of the day, the rule should always be "lock only if you need to"
+>> so looking for problems with an optimistic no-lock scan, then locking only
+>> if needed to check and fix the problem, just feels right.
+>>
+>> Cheers,
+>> Wol
+> 
