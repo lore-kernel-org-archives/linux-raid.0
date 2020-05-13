@@ -1,156 +1,153 @@
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: [general question] rare silent data corruption when writing data
-Date: Wed, 13 May 2020 16:31:27 +1000
-Message-ID: <20200513063127.GA2769@onthe.net.au>
-References: <b0e91faf-3a14-3ac9-3c31-6989154791c1@yandex.pl>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Re: Assemblin journaled array fails
+Date: Wed, 13 May 2020 12:58:21 +0200
+Message-ID: <b9b6b007-2177-a844-4d80-480393f30476@yandex.pl>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+ <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl>
+ <56b68265-ca54-05d3-95bc-ea8ee0b227f6@yandex.pl>
+ <CAPhsuW4WcqkDXOhcuG33bZtSEZ-V-KYPLm87piBH24eYEB0qVw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <b0e91faf-3a14-3ac9-3c31-6989154791c1@yandex.pl>
+In-Reply-To: <CAPhsuW4WcqkDXOhcuG33bZtSEZ-V-KYPLm87piBH24eYEB0qVw@mail.gmail.com>
+Content-Language: en-US-large
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <msoltyspl@yandex.pl>
-Cc: linux-raid@vger.kernel.org
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 5/12/20 3:27 AM, Song Liu wrote:
+> On Mon, May 11, 2020 at 4:13 AM Michal Soltys <msoltyspl@yandex.pl> wrote:
+>>
+>> On 5/10/20 1:57 AM, Michal Soltys wrote:
+>>> Anyway, I did some tests with manually snapshotted component devices
+>>> (using dm snapshot target to not touch underlying devices).
+>>>
+>>> The raid manages to force assemble in read-only mode with missing
+>>> journal device, so we probably will be able to recover most data
+>>> underneath this way (as a last resort).
+>>>
+>>> The situation I'm in now is likely from uncelan shutdown after all (why
+>>> the machine failed to react to ups properly is another subject).
+>>>
+>>> I'd still want to find out why is - apparently - a journal device giving
+>>> issues (contrary to what I'd expect it to do ...), with notable mention of:
+>>>
+>>> 1) mdadm hangs (unkillable, so I presume in kernel somewhere) and eats 1
+>>> cpu when trying to assemble the raid with journal device present; once
+>>> it happens I can't do anything with the array (stop, run, etc.) and can
+>>> only reboot the server to "fix" that
+>>>
+>>> 2) mdadm -D shows nonsensical device size after assembly attempt (Used
+>>> Dev Size : 18446744073709551615)
+>>>
+>>> 3) the journal device (which itself is md raid1 consisting of 2 ssds)
+>>> assembles, checks (0 mismatch_cnt) fine - and overall looks ok.
+>>>
+>>>
+>>>   From other interesting things, I also attempted to assemble the raid
+>>> with snapshotted journal. From what I can see it does attempt to do
+>>> something, judging from:
+>>>
+>>> dmsetup status:
+>>>
+>>> snap_jo2: 0 536870912 snapshot 40/33554432 16
+>>> snap_sdi1: 0 7812500000 snapshot 25768/83886080 112
+>>> snap_jo1: 0 536870912 snapshot 40/33554432 16
+>>> snap_sdg1: 0 7812500000 snapshot 25456/83886080 112
+>>> snap_sdj1: 0 7812500000 snapshot 25928/83886080 112
+>>> snap_sdh1: 0 7812500000 snapshot 25352/83886080 112
+>>>
+>>> But it doesn't move from those values (with mdadm doing nothing eating
+>>> 100% cpu as mentioned earlier).
+>>>
+>>>
+>>> Any suggestions how to proceed would very be appreciated.
+>>
+>>
+>> I've added Song to the CC. If you have any suggestions how to
+>> proceed/debug this (mdadm stuck somewhere in kernel as far as I can see
+>> - while attempting to assembly it).
+>>
+>> For the record, I can assemble the raid successfully w/o journal (using
+>> snapshotted component devices as above), and we did recover some stuff
+>> this way from some filesystems - but for some other ones I'd like to
+>> keep that option as the very last resort.
+> 
+> Sorry for delayed response.
+> 
+> A few questions.
+> 
+> For these two outputs:
+> #1
+>                 Name : xs22:r5_big  (local to host xs22)
+>                 UUID : d5995d76:67d7fabd:05392f87:25a91a97
+>               Events : 56283
+> 
+>       Number   Major   Minor   RaidDevice State
+>          -       0        0        0      removed
+>          -       0        0        1      removed
+>          -       0        0        2      removed
+>          -       0        0        3      removed
+> 
+>          -       8      145        3      sync   /dev/sdj1
+>          -       8      129        2      sync   /dev/sdi1
+>          -       9      127        -      spare   /dev/md/xs22:r1_journal_big
+>          -       8      113        1      sync   /dev/sdh1
+>          -       8       97        0      sync   /dev/sdg1
+> 
+> #2
+> /dev/md/r1_journal_big:
+>             Magic : a92b4efc
+>           Version : 1.1
+>       Feature Map : 0x200
+>        Array UUID : d5995d76:67d7fabd:05392f87:25a91a97
+>              Name : xs22:r5_big  (local to host xs22)
+>     Creation Time : Tue Mar  5 19:28:58 2019
+>        Raid Level : raid5
+>      Raid Devices : 4
+> 
+>    Avail Dev Size : 536344576 (255.75 GiB 274.61 GB)
+>        Array Size : 11718355968 (11175.50 GiB 11999.60 GB)
+>     Used Dev Size : 7812237312 (3725.17 GiB 3999.87 GB)
+>       Data Offset : 262144 sectors
+>      Super Offset : 0 sectors
+>      Unused Space : before=261872 sectors, after=0 sectors
+>             State : clean
+>       Device UUID : c3a6f2f6:7dd26b0c:08a31ad7:cc8ed2a9
+> 
+>       Update Time : Sat May  9 15:05:22 2020
+>     Bad Block Log : 512 entries available at offset 264 sectors
+>          Checksum : c854904f - correct
+>            Events : 56289
+> 
+>            Layout : left-symmetric
+>        Chunk Size : 512K
+> 
+>      Device Role : Journal
+>      Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+> 
+> 
+> Are these captured back to back? I am asking because they showed different
+> "Events" number.
 
-On Thu, May 07, 2020 at 07:30:19PM +0200, Michal Soltys wrote:
-> Note: this is just general question - if anyone experienced something 
-> similar or could suggest how to pinpoint / verify the actual cause.
->
-> Thanks to btrfs's checksumming we discovered somewhat (even if quite 
-> rare) nasty silent corruption going on on one of our hosts. Or perhaps 
-> "corruption" is not the correct word - the files simply have precise 4kb 
-> (1 page) of incorrect data. The incorrect pieces of data look on their 
-> own fine - as something that was previously in the place, or written 
-> from wrong source.
+Nah, they were captured between reboots. Back to back all event fields show identical value (at 56291 now).
 
-"Me too!"
+> 
+> Also, when mdadm -A hangs, could you please capture /proc/$(pidof mdadm)/stack ?
+> 
 
-We are seeing 256-byte corruptions which are always the last 256b of a 4K 
-block. The 256b is very often a copy of a "last 256b of 4k block" from 
-earlier on the file. We sometimes see multiple corruptions in the same 
-file, with each of the corruptions being a copy of a different 256b from 
-earlier on the file. The original 256b and the copied 256b aren't 
-identifiably at a regular offset from each other. Where the 256b isn't a 
-copy from earlier in the file
+The output is empty:
 
-I'd be really interested to hear if your problem is just in the last 256b 
-of the 4k block also!
+xs22:/☠ ps -eF fww | grep mdadm
+root     10332  9362 97   740  1884  25 12:47 pts/1    R+     6:59  |   \_ mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/sdi1 /dev/sdg1 /dev/sdj1 /dev/sdh1
+xs22:/☠ cd /proc/10332
+xs22:/proc/10332☠ cat stack
+xs22:/proc/10332☠ 
 
-We haven't been able to track down any the origin of any of the copies 
-where it's not a 256b block earlier in the file. I tried some extensive 
-analysis of some of these occurrences, including looking at files being 
-written around the same time, but wasn't able to identify where the data 
-came from. It could be the "last 256b of 4k block" from some other file 
-being written at the same time, or a non-256b aligned chunk, or indeed not 
-a copy of other file data at all.
 
-See Also: https://lore.kernel.org/linux-xfs/20180322150226.GA31029@onthe.net.au/
-
-We've been able to detect these corruptions via an md5sum calculated as 
-the files are generated, where a later md5sum doesn't match the original.  
-We regularly see the md5sum match soon after the file is written (seconds 
-to minutes), and then go "bad" after doing a "vmtouch -e" to evict the 
-file from memory. I.e. it looks like the problem is occurring somewhere on 
-the write path to disk. We can move the corrupt file out of the way and 
-regenerate the file, then use 'cmp -l' to see where the corruption[s] are, 
-and calculate md5 sums for each 256b block in the file to identify where 
-the 256b was copied from.
-
-The corruptions are far more likely to occur during a scrub, although we 
-have seen a few of them when not scrubbing. We're currently working around 
-the issue by scrubbing infrequently, and trying to schedule scrubs during 
-periods of low write load.
-
-> The hardware is (can provide more detailed info of course):
->
-> - Supermicro X9DR7-LN4F
-> - onboard LSI SAS2308 controller (2 sff-8087 connectors, 1 connected to 
->   backplane)
-> - 96 gb ram (ecc)
-> - 24 disk backplane
->
-> - 1 array connected directly to lsi controller (4 disks, mdraid5, 
->   internal bitmap, 512kb chunk)
-> - 1 array on the backplane (4 disks, mdraid5, journaled)
-> - journal for the above array is: mdraid1, 2 ssd disks (micron 5300 pro 
->   disks)
-> - 1 btrfs raid1 boot array on motherboard's sata ports (older but still 
->   fine intel ssds from DC 3500 series)
-
-Ours is on similar hardware:
-
-- Supermicro X8DTH-IF
-- LSI SAS 9211-8i  (LSI SAS2008, PCI-e 2.0, multiple firmware versions)
-- 192GB ECC RAM
-- A mix of 12 and 24-bay expanders (some daisy chained: lsi-expander-expander)
-
-We swapped the LSI HBA for another of the same model, the problem 
-persisted. We have a SAS9300 card on the way for testing.
-
-> Raid 5 arrays are in lvm volume group, and the logical volumes are used 
-> by VMs. Some of the volumes are linear, some are using thin-pools (with 
-> metadata on the aforementioned intel ssds, in mirrored config). LVM uses 
-> large extent sizes (120m) and the chunk-size of thin-pools is set to 
-> 1.5m to match underlying raid stripe. Everything is cleanly aligned as 
-> well.
-
-We're not using VMs nor lvm thin on this storage.
-
-Our main filesystem is xfs + lvm + raid6 and this is where we've seen all 
-but one of these corruptions (70-100 since Mar 2018).
-
-The problem has occurred on all md arrays under the lvm, on disks from 
-multiple vendors and models, and on disks attached to all expanders.
-
-We've seen one of these corruptions with xfs directly on a hdd partition.  
-I.e. no mdraid or lvm involved. This fs an order of magnitude or more less 
-utilised than the main fs in terms of data being written.
-
-> We did not manage to rule out (though somewhat _highly_ unlikely):
->
-> - lvm thin (issue always - so far - occured on lvm thin pools)
-> - mdraid (issue always - so far - on mdraid managed arrays)
-> - kernel (tested with - in this case - debian's 5.2 and 5.4 kernels, 
->   happened with both - so it would imply rather already longstanding bug 
->   somewhere)
-
-- we're not using lvm thin
-- problem has occurred once on non-mdraid (xfs directly on a hdd partition)
-- problem NOT seen on kernel 3.18.25
-- problem seen on, so far, kernels 4.4.153 - 5.4.2
-
-> And finally - so far - the issue never occured:
->
-> - directly on a disk
-> - directly on mdraid
-> - on linear lvm volume on top of mdraid
-
-- seen once directly on disk (partition)
-- we don't use mdraid directly
-- our problem arises on linear lvm on top of mdraid (raid6)
-
-> As far as the issue goes it's:
->
-> - always a 4kb chunk that is incorrect - in a ~1 tb file it can be from 
->   a few to few dozens of such chunks
-> - we also found (or rather btrfs scrub did) a few small damaged files as 
->   well
-> - the chunks look like a correct piece of different or previous data
->
-> The 4kb is well, weird ? Doesn't really matter any chunk/stripes sizes 
-> anywhere across the stack (lvm - 120m extents, 1.5m chunks on thin 
-> pools; mdraid - default 512kb chunks). It does nicely fit a page though 
-> ...
->
-> Anyway, if anyone has any ideas or suggestions what could be happening 
-> (perhaps with this particular motherboard or vendor) or how to pinpoint 
-> the cause - I'll be grateful for any.
-
-Likewise!
-
-Cheers,
-
-Chris
+> 18446744073709551615 is 0xffffffffffffffffL, so it is not initialized
+> by data from the disk.
+> I suspect we hang somewhere before this value is initialized.
+> 
