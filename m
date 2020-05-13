@@ -1,46 +1,86 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: Assemblin journaled array fails
-Date: Wed, 13 May 2020 09:17:17 -0700
-Message-ID: <CAPhsuW70NNozBmt1-zsM_Pk-39cLzi8bC3ZZaNwQ0-VgYsmkiA@mail.gmail.com>
-References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
- <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl> <56b68265-ca54-05d3-95bc-ea8ee0b227f6@yandex.pl>
- <CAPhsuW4WcqkDXOhcuG33bZtSEZ-V-KYPLm87piBH24eYEB0qVw@mail.gmail.com> <b9b6b007-2177-a844-4d80-480393f30476@yandex.pl>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: raid6check extremely slow ?
+Date: Wed, 13 May 2020 18:18:41 +0200
+Message-ID: <20200513161841.GA5530@lazy.lzy>
+References: <20200510120725.20947240E1A@gemini.denx.de>
+ <2cf55e5f-bdfb-9fef-6255-151e049ac0a1@cloud.ionos.com>
+ <20200511064022.591C5240E1A@gemini.denx.de>
+ <f003a8c7-e96d-ddc3-6d1d-42a13b70e0b6@cloud.ionos.com>
+ <20200511161415.GA8049@lazy.lzy>
+ <23d84744-9e3c-adc1-3af1-6498b9bcf750@cloud.ionos.com>
+ <24249.54587.74070.71273@base.ty.sabi.co.uk>
+ <20200512160943.GC7261@lazy.lzy>
+ <34f66548-1fcf-d38b-4c2d-88d43c1b19d0@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b9b6b007-2177-a844-4d80-480393f30476@yandex.pl>
+Content-Disposition: inline
+In-Reply-To: <34f66548-1fcf-d38b-4c2d-88d43c1b19d0@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <msoltyspl@yandex.pl>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: antlists <antlists@youngman.org.uk>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Peter Grandi <pg@lxraid.list.sabi.co.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> >
-> > Are these captured back to back? I am asking because they showed differ=
-ent
-> > "Events" number.
->
-> Nah, they were captured between reboots. Back to back all event fields sh=
-ow identical value (at 56291 now).
->
-> >
-> > Also, when mdadm -A hangs, could you please capture /proc/$(pidof mdadm=
-)/stack ?
-> >
->
-> The output is empty:
->
-> xs22:/=E2=98=A0 ps -eF fww | grep mdadm
-> root     10332  9362 97   740  1884  25 12:47 pts/1    R+     6:59  |   \=
-_ mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/sdi1 /dev/sdg1 /dev/s=
-dj1 /dev/sdh1
-> xs22:/=E2=98=A0 cd /proc/10332
-> xs22:/proc/10332=E2=98=A0 cat stack
-> xs22:/proc/10332=E2=98=A0
+On Tue, May 12, 2020 at 09:54:21PM +0100, antlists wrote:
+> On 12/05/2020 17:09, Piergiorgio Sartor wrote:
+> > About the check -> maybe lock -> re-check,
+> > it is a possible workaround, but I find it
+> > a bit extreme.
+> 
+> This seems the best (most obvious?) solution to me.
+> 
+> If the system is under light write pressure, and the disk is healthy, it
+> will scan pretty quickly with almost no locking.
 
-Hmm... Could you please share the strace output of "mdadm -A" command? Like
+I've some concerns about optimization
+solutions which can result in less
+performances than the original status.
 
-strace mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/xxx ...
+You mention "write pressure", but there
+is an other case, which will cause
+read -> lock -> re-read...
+Namely, when some chunk is really corrupted.
 
-Thanks,
-Song
+Now, I do not know, maybe there are other
+things we overlook, or maybe not.
+
+I do not know either how likely is that some
+situations will occur to reduce performances.
+
+I would prefer a solution which will *only*
+improve, without any possible drawback.
+
+Again, this does not mean this approach is
+wrong, actually is to be considered.
+
+In the end, I would like also to understand
+why the lock / unlock is so expensive.
+
+> If the system is under heavy pressure, chances are there'll be a fair few
+> stripes needing rechecking, but even at it's worst it'll only be as bad as
+> the current setup.
+
+It will be worse (or worst, I'm always
+confused...).
+The read and the check will double.
+
+I'm not sure about the read, but the
+check is currently expensive.
+
+bye,
+
+pg
+
+> And if the system is somewhere inbetween, you still stand a good chance of a
+> fast scan.
+> 
+> At the end of the day, the rule should always be "lock only if you need to"
+> so looking for problems with an optimistic no-lock scan, then locking only
+> if needed to check and fix the problem, just feels right.
+> 
+> Cheers,
+> Wol
+
+-- 
+
+piergiorgio
