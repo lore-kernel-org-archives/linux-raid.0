@@ -1,36 +1,57 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: raid6check extremely slow ?
-Date: Fri, 15 May 2020 10:08:08 +0200
-Message-ID: <20200515080808.E637B240E1A@gemini.denx.de>
-References: <20200510120725.20947240E1A@gemini.denx.de> <1999694976.3317399.1589476824607.JavaMail.zimbra@karlsbakk.net> <20200514182041.CDF1F240E1A@gemini.denx.de> <1430936688.3381175.1589485881380.JavaMail.zimbra@karlsbakk.net>
+From: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+Subject: [PATCH, v2] Makefile: add EXTRAVERSION support
+Date: Fri, 15 May 2020 11:23:14 +0200
+Message-ID: <20200515092314.2711-1-mariusz.tkaczyk@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <1430936688.3381175.1589485881380.JavaMail.zimbra@karlsbakk.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Roy Sigurd Karlsbakk,
+Add optional EXTRAVERSION parameter to Makefile and allow to mark version
+by user friendly label. It might be useful when creating custom
+spins of mdadm, or labeling some instance in between major releases.
 
-In message <1430936688.3381175.1589485881380.JavaMail.zimbra@karlsbakk.net> you wrote:
-> what?
+Signed-off-by: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
+---
 
-You asked: "Try checking with iostat -x to see if one disk is
-performing worse than the other ones."
+V2: rename LABEL to EXTRAVERSION.
 
-The output of "iostat -x" which I posted shows clearly that all disk
-behave very much the same - there are just minimal statistic
-fluctuations, but agail equally distributed over all 8 disks.
+ Makefile | 3 ++-
+ ReadMe.c | 5 ++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-Best regards,
-
-Wolfgang Denk
-
+diff --git a/Makefile b/Makefile
+index a33319a8..0a20b758 100644
+--- a/Makefile
++++ b/Makefile
+@@ -105,7 +105,8 @@ VERSION = $(shell [ -d .git ] && git describe HEAD | sed 's/mdadm-//')
+ VERS_DATE = $(shell [ -d .git ] && date --iso-8601 --date="`git log -n1 --format=format:%cd --date=iso --date=short`")
+ DVERS = $(if $(VERSION),-DVERSION=\"$(VERSION)\",)
+ DDATE = $(if $(VERS_DATE),-DVERS_DATE="\"$(VERS_DATE)\"",)
+-CFLAGS += $(DVERS) $(DDATE)
++DEXTRAVERSION = $(if $(EXTRAVERSION),-DEXTRAVERSION="\" - $(EXTRAVERSION)\"",)
++CFLAGS += $(DVERS) $(DDATE) $(DEXTRAVERSION)
+ 
+ # The glibc TLS ABI requires applications that call clone(2) to set up
+ # TLS data structures, use pthreads until mdmon implements this support
+diff --git a/ReadMe.c b/ReadMe.c
+index eaf10423..06b8f7ee 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -33,7 +33,10 @@
+ #ifndef VERS_DATE
+ #define VERS_DATE "2018-10-01"
+ #endif
+-char Version[] = "mdadm - v" VERSION " - " VERS_DATE "\n";
++#ifndef EXTRAVERSION
++#define EXTRAVERSION ""
++#endif
++char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
+ 
+ /*
+  * File: ReadMe.c
 -- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-I used to be indecisive, now I'm not sure.
+2.25.0
