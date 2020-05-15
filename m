@@ -1,102 +1,118 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: Assemblin journaled array fails
-Date: Fri, 15 May 2020 17:15:53 -0700
-Message-ID: <CAPhsuW5ZfmCowTHNum5CSeadHqqPa5049weK6bq=m+JmnDE9Vg@mail.gmail.com>
-References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
- <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl> <56b68265-ca54-05d3-95bc-ea8ee0b227f6@yandex.pl>
- <CAPhsuW4WcqkDXOhcuG33bZtSEZ-V-KYPLm87piBH24eYEB0qVw@mail.gmail.com>
- <b9b6b007-2177-a844-4d80-480393f30476@yandex.pl> <CAPhsuW70NNozBmt1-zsM_Pk-39cLzi8bC3ZZaNwQ0-VgYsmkiA@mail.gmail.com>
- <f9b54d87-5b81-1fa3-04d5-ea86a6c062cb@yandex.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: David Favro <dfavro@meta-dynamic.com>
+Subject: [PATCH] mdadm: detect too-small device: error rather than underflow/crash
+Date: Fri, 15 May 2020 16:40:41 -0400
+Message-ID: <20200516035020.ABA6D19801B5@minderbinder.meta-dynamic.com>
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f9b54d87-5b81-1fa3-04d5-ea86a6c062cb@yandex.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <msoltyspl@yandex.pl>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: jes@trained-monkey.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 14, 2020 at 4:07 AM Michal Soltys <msoltyspl@yandex.pl> wrote:
->
-> On 5/13/20 6:17 PM, Song Liu wrote:
-> >>>
-> >>> Are these captured back to back? I am asking because they showed diff=
-erent
-> >>> "Events" number.
-> >>
-> >> Nah, they were captured between reboots. Back to back all event fields=
- show identical value (at 56291 now).
-> >>
-> >>>
-> >>> Also, when mdadm -A hangs, could you please capture /proc/$(pidof mda=
-dm)/stack ?
-> >>>
-> >>
-> >> The output is empty:
-> >>
-> >> xs22:/=E2=98=A0 ps -eF fww | grep mdadm
-> >> root     10332  9362 97   740  1884  25 12:47 pts/1    R+     6:59  | =
-  \_ mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/sdi1 /dev/sdg1 /de=
-v/sdj1 /dev/sdh1
-> >> xs22:/=E2=98=A0 cd /proc/10332
-> >> xs22:/proc/10332=E2=98=A0 cat stack
-> >> xs22:/proc/10332=E2=98=A0
-> >
-> > Hmm... Could you please share the strace output of "mdadm -A" command? =
-Like
-> >
-> > strace mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/xxx ...
-> >
-> > Thanks,
-> > Song
->
-> I did one more thing - ran cat on that stack in another terminal every
-> 0.1 seconds, this is what was found:
->
-> cat: /proc//stack: No such file or directory
-> cat: /proc//stack: No such file or directory
-> cat: /proc//stack: No such file or directory
-> [<0>] submit_bio_wait+0x5b/0x80
-> [<0>] r5l_recovery_read_page+0x1b6/0x200 [raid456]
-> [<0>] r5l_recovery_verify_data_checksum+0x19/0x70 [raid456]
-> [<0>] r5l_start+0x99e/0xe70 [raid456]
-> [<0>] md_start.part.48+0x2e/0x50 [md_mod]
-> [<0>] do_md_run+0x64/0x100 [md_mod]
-> [<0>] md_ioctl+0xe7d/0x17d0 [md_mod]
-> [<0>] blkdev_ioctl+0x4d0/0xa00
-> [<0>] block_ioctl+0x39/0x40
-> [<0>] do_vfs_ioctl+0xa4/0x630
-> [<0>] ksys_ioctl+0x60/0x90
-> [<0>] __x64_sys_ioctl+0x16/0x20
-> [<0>] do_syscall_64+0x52/0x160
-> [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> cat: /proc//stack: No such file or directory
-> [<0>] submit_bio_wait+0x5b/0x80
-> [<0>] r5l_recovery_read_page+0x1b6/0x200 [raid456]
-> [<0>] r5l_recovery_verify_data_checksum+0x19/0x70 [raid456]
-> [<0>] r5l_start+0x99e/0xe70 [raid456]
-> [<0>] md_start.part.48+0x2e/0x50 [md_mod]
-> [<0>] do_md_run+0x64/0x100 [md_mod]
-> [<0>] md_ioctl+0xe7d/0x17d0 [md_mod]
-> [<0>] blkdev_ioctl+0x4d0/0xa00
-> [<0>] block_ioctl+0x39/0x40
-> [<0>] do_vfs_ioctl+0xa4/0x630
-> [<0>] ksys_ioctl+0x60/0x90
-> [<0>] __x64_sys_ioctl+0x16/0x20
-> [<0>] do_syscall_64+0x52/0x160
-> [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> cat: /proc//stack: No such file or directory
-> cat: /proc//stack: No such file or directory
-> cat: /proc//stack: No such file or directory
-> cat: /proc//stack: No such file or directory
->
->
-> Strace output attached.
+Hi,
 
-So mdadm hangs at "ioctl(4, RUN_ARRAY", right?
+My apologies that this is so late, but would be nice if it could
+make it into the release.
 
-Does /proc/<pid of hanging mdadm>/stack always shows the same output above?
+In trying to test the behavior of mdadm under various circumstances,
+I was experimenting with creating a test array of very small
+loopback devices, when I observed some strange behavior from mdadm
+(died with floating-point-exception signal).  Turning on --verbose
+showed enormous volume sizes, and I eventually tracked down exactly
+what one might guess is happening, integer underflow.
 
-Thanks,
-Song
+I prepared a patch, which follows the scissors line -- while it's
+obviously not likely to come up frequently in "real life", corner
+cases have a way of occurring and should be properly handled, not
+left to crash at a later time in parts unknown.
+
+There are two places in the code for 1.x metadata where the same
+problem occurs, depending on 1.0 vs. 1.1+: I used the same
+error-message code for both, via a goto (which I prefer to
+replicating code, although a good optimizing compiler might combine
+replicated code to generate the same goto); I know that goto offends
+the sensibilities of some, but I noticed that it is already used
+elsewhere in existing mdadm codebase.
+
+A preexisting too-small-device check is removed both because it is
+inadequate to properly detect the condition, and because it is made
+redundant by the proper check (after the size of reserved space is
+computed).
+
+I wrote a small shell script which nicely demonstrates the bug and
+the patch's fix using loopback devices, will send in a separate
+email.
+
+As an aside, the follow-on hardware fault that I got was the result
+of a divide-by-0 on a little-endian 64-bit architecture after some
+word-size conversions on enormous integer values; it may manifest
+differently on machines with a different byte-ordering or word-size,
+perhaps attempting to create a garbage array rather than crashing,
+but it's not really relevant: the real fix is not to proceed with
+the invalid devices, as this patch prevents.
+
+-- David Favro
+
+
+8< --------------------------------------------------
+
+For 1.x metadata, when the user requested creation of an array on
+component devices that were too small even to hold the superblock,
+an undetected integer wraparound (underflow) resulted in an enormous
+computed size which resulted in various follow-on errors such as
+floating-point exception.
+
+This patch detects this condition, prints a reasonable diagnostic
+message, and refuses to continue.
+
+Signed-off-by: David Favro <dfavro@meta-dynamic.com>
+---
+ super1.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/super1.c b/super1.c
+index e0d80be1..1e12198d 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2785,10 +2785,6 @@ static int validate_geometry1(struct supertype *st, int level,
+ 	close(fd);
+ 
+ 	devsize = ldsize >> 9;
+-	if (devsize < 24) {
+-		*freesize = 0;
+-		return 0;
+-	}
+ 
+ 	/* creating:  allow suitable space for bitmap or PPL */
+ 	if (consistency_policy == CONSISTENCY_POLICY_PPL)
+@@ -2829,15 +2825,27 @@ static int validate_geometry1(struct supertype *st, int level,
+ 	case 0: /* metadata at end.  Round down and subtract space to reserve */
+ 		devsize = (devsize & ~(4ULL*2-1));
+ 		/* space for metadata, bblog, bitmap/ppl */
+-		devsize -= 8*2 + 8 + bmspace;
++		const unsigned long long required = 8*2 + 8 + bmspace;
++		if ( devsize < required ) /* detect underflow */
++			goto dev_too_small_err;
++		devsize -= required;
+ 		break;
+ 	case 1:
+ 	case 2:
++		if ( devsize < data_offset ) /* detect underflow */
++			goto dev_too_small_err;
+ 		devsize -= data_offset;
+ 		break;
+ 	}
+ 	*freesize = devsize;
+ 	return 1;
++
++	/* Error condition, device cannot even hold the overhead. */
++	dev_too_small_err:
++		fprintf( stderr, "device %s is too small (%lluK) for "
++				"required metadata!\n", subdev, devsize>>1 );
++		*freesize = 0;
++		return 0;
+ }
+ 
+ void *super1_make_v0(struct supertype *st, struct mdinfo *info, mdp_super_t *sb0)
+-- 
+2.26.2.593.gb9946226
