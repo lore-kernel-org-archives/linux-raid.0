@@ -1,53 +1,36 @@
-From: "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Subject: Re: [PATCH v2 07/10] block: use sectors_to_npage() and PAGE_SECTORS
- to clean up code
-Date: Fri, 15 May 2020 14:52:26 +0800
-Message-ID: <d3e9bebf-1fea-1497-6dd2-9354f9ca0d4b@huawei.com>
-References: <20200507075100.1779-1-thunder.leizhen@huawei.com>
- <20200507075100.1779-8-thunder.leizhen@huawei.com>
- <20200515041916.GE16070@bombadil.infradead.org>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: raid6check extremely slow ?
+Date: Fri, 15 May 2020 10:08:08 +0200
+Message-ID: <20200515080808.E637B240E1A@gemini.denx.de>
+References: <20200510120725.20947240E1A@gemini.denx.de> <1999694976.3317399.1589476824607.JavaMail.zimbra@karlsbakk.net> <20200514182041.CDF1F240E1A@gemini.denx.de> <1430936688.3381175.1589485881380.JavaMail.zimbra@karlsbakk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200515041916.GE16070@bombadil.infradead.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Minchan Kim <minchan@kernel.org>, Nitin Gupta <ngupta@vflare.org>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm <linux-mm@kvack.org>, dm-devel <dm-devel@redhat.com>, Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <1430936688.3381175.1589485881380.JavaMail.zimbra@karlsbakk.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Dear Roy Sigurd Karlsbakk,
 
+In message <1430936688.3381175.1589485881380.JavaMail.zimbra@karlsbakk.net> you wrote:
+> what?
 
-On 2020/5/15 12:19, Matthew Wilcox wrote:
-> On Thu, May 07, 2020 at 03:50:57PM +0800, Zhen Lei wrote:
->> +++ b/block/blk-settings.c
->> @@ -150,7 +150,7 @@ void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_hw_secto
->>  	unsigned int max_sectors;
->>  
->>  	if ((max_hw_sectors << 9) < PAGE_SIZE) {
->> -		max_hw_sectors = 1 << (PAGE_SHIFT - 9);
->> +		max_hw_sectors = PAGE_SECTORS;
-> 
-> Surely this should be:
-> 
-> 	if (max_hw_sectors < PAGE_SECTORS) {
-> 		max_hw_sectors = PAGE_SECTORS;
-> 
-> ... no?
+You asked: "Try checking with iostat -x to see if one disk is
+performing worse than the other ones."
 
-I've noticed this place before. "(max_hw_sectors << 9) < PAGE_SIZE" can also make sure
-that max_hw_sectors is not too large, that means (max_hw_sectors << 9) may overflow.
+The output of "iostat -x" which I posted shows clearly that all disk
+behave very much the same - there are just minimal statistic
+fluctuations, but agail equally distributed over all 8 disks.
 
-> 
->> -	page = read_mapping_page(mapping,
->> -			(pgoff_t)(n >> (PAGE_SHIFT - 9)), NULL);
->> +	page = read_mapping_page(mapping, (pgoff_t)sectors_to_npage(n), NULL);
-> 
-> ... again, get the type right, and you won't need the cast.
-OK, I'll consider it.
+Best regards,
 
-> 
-> 
-> .
-> 
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+I used to be indecisive, now I'm not sure.
