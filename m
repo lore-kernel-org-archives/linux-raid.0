@@ -1,30 +1,76 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH, v2] Makefile: add EXTRAVERSION support
-Date: Fri, 15 May 2020 09:52:14 -0400
-Message-ID: <90b6261f-f0dd-1a0c-f91b-21e47f1deef1@trained-monkey.org>
-References: <20200515092314.2711-1-mariusz.tkaczyk@intel.com>
+From: Yi Huiman <min.fan@helmholtz-muenchen.de>
+Subject: Re: Vorschlag
+Date: Fri, 15 May 2020 21:43:52 +0100
+Message-ID: <20200515204347.D6B011822C756@mtaextp1.scidom.de>
+Reply-To: info@huiman.cf
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200515092314.2711-1-mariusz.tkaczyk@intel.com>
-Content-Language: en-US
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Recipients <min.fan@helmholtz-muenchen.de>
 List-Id: linux-raid.ids
 
-On 5/15/20 5:23 AM, Tkaczyk Mariusz wrote:
-> Add optional EXTRAVERSION parameter to Makefile and allow to mark version
-> by user friendly label. It might be useful when creating custom
-> spins of mdadm, or labeling some instance in between major releases.
-> 
-> Signed-off-by: Tkaczyk Mariusz <mariusz.tkaczyk@intel.com>
-> ---
-> 
-> V2: rename LABEL to EXTRAVERSION.
+Ein Vorschlag für Sie
 
-Applied!
 
-Thanks,
-Jes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Helmholtz Zentrum Muenchen
+Deutsches Forschungszentrum fuer Gesundheit und Umwelt (GmbH)
+Ingolstaedter Landstr. 1
+85764 Neuherberg
+www.helmholtz-muenchen.de
+Aufsichtsratsvorsitzende: MinDir.in Prof. Dr. Veronika von Messling
+Geschaeftsfuehrung: Prof. Dr. med. Dr. h.c. Matthias Tschoep, Kerstin Guenther
+Registergericht: Amtsgericht Muenchen HRB 6466
+USt-IdNr: DE 129521671
