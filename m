@@ -1,149 +1,288 @@
-From: dfavro@meta-dynamic.com
-Subject: Script to demonstrate underflow in mdadm
-Date: Sat, 16 May 2020 00:56:52 -0400
-Message-ID: <20200516045652.618FB19801B4@minderbinder.meta-dynamic.com>
-References: <20200516035020.ABA6D19801B5@minderbinder.meta-dynamic.com>
-Content-Type: text/plain; charset=UTF-8
+From: Sam Hurst <sam@sam-hurst.co.uk>
+Subject: Re: RAID wiped superblock recovery
+Date: Sun, 17 May 2020 14:55:18 +0100
+Message-ID: <05011140-3625-5326-96c9-e995f93260f4@sam-hurst.co.uk>
+References: <922713c5-0cc1-24cb-14a6-9de7db631f98@sam-hurst.co.uk>
+ <0f954924-e7ae-c81e-55f1-afc41e293a18@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200516035020.ABA6D19801B5@minderbinder.meta-dynamic.com>
+In-Reply-To: <0f954924-e7ae-c81e-55f1-afc41e293a18@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Below is a script which makes a few very small (<128K) loopback
-devices, then tries to assemble them with mdadm.  It demonstrates
-the underflow bug for which I previously sent the patch.  It's a
-bash script, not a posix-shell script, as indicated in the shebang.
-It creates and destroys devices with hard-coded paths
-(/dev/loop[1-3], /dev/md99, etc.), so only run it with caution!
+Hi Phil,
+
+On 11/05/2020 15:18, Phil Turmel wrote:
+>> So I've come to the conclusion that the only way forward is to use 
+>> `mdadm --create` and hope I get the array back that way, with new 
+>> superblocks.
+> 
+> Yes.  Be sure to always include --assume-clean in these trials.
+> 
+>> However, it's my understanding that you need to add these disks in the 
+>> correct order - and given I have 7 disks, that's 5040 possible 
+>> permutations! The original four disks show their device roles, so I'm 
+>> /assuming/ that's the order in which they need adding:
+> 
+> Yes, existing superblocks can be trusted.  You should show the complete 
+> "mdadm -E" output for each of these member devices for our reference.
+
+My complete mdadm -E output:
+
+sosh@toothless:/$ sudo mdadm -E /dev/sda /dev/sdb /dev/sdc /dev/sdd 
+/dev/sdf /dev/sdg /dev/sdh
+/dev/sda:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=944 sectors
+           State : clean
+     Device UUID : 08c24be4:d352cbb0:edd50ba7:3a70e02e
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sat May  2 09:49:27 2020
+   Bad Block Log : 512 entries available at offset 24 sectors
+        Checksum : b1df527c - correct
+          Events : 2687251
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 0
+    Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=944 sectors
+           State : clean
+     Device UUID : 80d493f1:9649882b:bdcdeceb:cb61f937
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sat May  2 09:49:27 2020
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : 87de4546 - correct
+          Events : 2687251
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=944 sectors
+           State : clean
+     Device UUID : 078aa94c:de9ad5e8:dcb5b43c:bf12292f
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sat May  2 09:49:27 2020
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : e838e526 - correct
+          Events : 2687251
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=944 sectors
+           State : clean
+     Device UUID : 47eb651d:9d5eb96b:3b8e9d78:882f5f49
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sat May  2 09:49:27 2020
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : 91f7ff4f - correct
+          Events : 2687251
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 3
+    Array State : AAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdf:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=944 sectors
+           State : clean
+     Device UUID : 00000000:00000000:00000000:00000000
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Sat May  2 09:49:27 2020
+   Bad Block Log : 512 entries available at offset 24 sectors
+        Checksum : b1df527c - expected 46dbf779
+          Events : 2687251
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : ....... ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdg:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=944 sectors
+           State : active
+     Device UUID : 00000000:00000000:00000000:00000000
+
+     Update Time : Thu Jan  1 01:00:00 1970
+        Checksum : 0 - expected e7edc1ab
+          Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : ....... ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdh:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : f3667bf3:e2b718c2:22cbea68:428ea6ca
+            Name : toothless:WDRAID
+   Creation Time : Sat Oct 22 10:52:47 2016
+      Raid Level : raid6
+    Raid Devices : 7
+
+  Avail Dev Size : 5860271024 (2794.39 GiB 3000.46 GB)
+      Array Size : 14650675200 (13971.97 GiB 15002.29 GB)
+   Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262064 sectors, after=944 sectors
+           State : active
+     Device UUID : 00000000:00000000:00000000:00000000
+
+     Update Time : Thu Jan  1 01:00:00 1970
+        Checksum : 0 - expected e7edc1ab
+          Events : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : ....... ('A' == active, '.' == missing, 'R' == replacing)
+
+>> So I've tried all six permutations of the devices showing as "spare" 
+>> at the end and I can never get a sensible filesystem out when I do a 
+>> --create.
+>>
+>> Does anyone have any other ideas, or can offer some wisdom into what 
+>> to do next? Otherwise I'm writing a shell script to test all 5040 
+>> permutations...
+> 
+> It isn't just order that matters.   You must get the right data offset 
+> and chunk size.  Defaults have changed over the years, and offsets 
+> typically change (+/- 1 chunk) during reshapes.
+> 
+> You'll probably have to manually specify this stuff.  Be sure to use the 
+> latest released version of mdadm, even if you have to compile it yourself.
+> 
+> If your data offsets are at least a couple megabytes, consider 
+> partitioning these disks at the same time as you reconstruct--simply 
+> adjust the data offset for the start sector of the partition.  This will 
+> avoid future issues with stupid mobos.  (You aren't the first to suffer 
+> from this.)
+
+So I've now tried doing this and sadly haven't really gotten anywhere. 
+Given the output of mdadm -E, I've specified the chunk size as 512K, and 
+the data offset as 134MB (given the reported offset of 262144 sectors * 
+sector size of 512 bytes on the devices).
+
+Given your statement that I could trust the existing superblocks, I 
+haven't messed around with the order of those and instead I've just been 
+messing around with the order of the three disks which are unhappy. So 
+I've been putting sda first (active 0), then sdc (active 1), sdb (active 
+2), and sdd (active 3). As I said last time, I'm using overlay images to 
+avoid screwing up the disks. My create command line is as below:
+
+mdadm --create /dev/md1 --chunk=512 --level=6 --assume-clean 
+--data-offset=134M --raid-devices=7 /dev/mapper/sda /dev/mapper/sdc 
+/dev/mapper/sdb /dev/mapper/sdd ${UNHAPPY_DISK1} ${UNHAPPY_DISK2} 
+${UNHAPPY_DISK3}
+
+Apologies that it's taken a while to respond to your mail, I just 
+haven't had much time to look at this during the week.
 
 
-==== Here is the output when I run it:
-
-
-% sudo ./mdadm-patch-test.bash
-
-RAID-5, metadata 1.2, unpatched:
- /sbin/mdadm --create --verbose /dev/md99 --chunk=256 --level=5 --layout=left-symmetric --raid-devices=3 /dev/loop1 /dev/loop2 /dev/loop3 --metadata=1.2
-mdadm: size set to 9223372036854774784K
-mdadm: automatically enabling write-intent bitmap on large array
-./mdadm-patch-test.bash: line 24: 554310 Floating point exception${cmd}
-
-RAID-5, metadata 1.2, patched:
- ./mdadm --create --verbose /dev/md99 --chunk=256 --level=5 --layout=left-symmetric --raid-devices=3 /dev/loop1 /dev/loop2 /dev/loop3 --metadata=1.2
-device /dev/loop1 is too small (64K) for required metadata!
-mdadm: /dev/loop1 is not suitable for this array.
-device /dev/loop2 is too small (64K) for required metadata!
-mdadm: /dev/loop2 is not suitable for this array.
-device /dev/loop3 is too small (64K) for required metadata!
-mdadm: /dev/loop3 is not suitable for this array.
-mdadm: create aborted
-
-RAID-5, metadata 1.1, unpatched:
- /sbin/mdadm --create --verbose /dev/md99 --chunk=256 --level=5 --layout=left-symmetric --raid-devices=3 /dev/loop1 /dev/loop2 /dev/loop3 --metadata=1.1
-mdadm: size set to 9223372036854774784K
-mdadm: automatically enabling write-intent bitmap on large array
-./mdadm-patch-test.bash: line 24: 554321 Floating point exception${cmd}
-
-RAID-5, metadata 1.1, patched:
- ./mdadm --create --verbose /dev/md99 --chunk=256 --level=5 --layout=left-symmetric --raid-devices=3 /dev/loop1 /dev/loop2 /dev/loop3 --metadata=1.1
-device /dev/loop1 is too small (64K) for required metadata!
-mdadm: /dev/loop1 is not suitable for this array.
-device /dev/loop2 is too small (64K) for required metadata!
-mdadm: /dev/loop2 is not suitable for this array.
-device /dev/loop3 is too small (64K) for required metadata!
-mdadm: /dev/loop3 is not suitable for this array.
-mdadm: create aborted
-
-RAID-1, metadata 1.2, unpatched:
- /sbin/mdadm --create --verbose /dev/md99 --level=1 --raid-devices=2 /dev/loop1 /dev/loop2 --metadata=1.2
-mdadm: size set to 9223372036854774784K
-mdadm: automatically enabling write-intent bitmap on large array
-./mdadm-patch-test.bash: line 24: 554339 Floating point exception${cmd}
-
-RAID-1, metadata 1.2, patched:
- ./mdadm --create --verbose /dev/md99 --level=1 --raid-devices=2 /dev/loop1 /dev/loop2 --metadata=1.2
-device /dev/loop1 is too small (32K) for required metadata!
-mdadm: /dev/loop1 is not suitable for this array.
-device /dev/loop2 is too small (32K) for required metadata!
-mdadm: /dev/loop2 is not suitable for this array.
-mdadm: create aborted
-
-RAID-1, metadata 1.1, unpatched:
- /sbin/mdadm --create --verbose /dev/md99 --level=1 --raid-devices=2 /dev/loop1 /dev/loop2 --metadata=1.1
-mdadm: size set to 9223372036854774784K
-mdadm: automatically enabling write-intent bitmap on large array
-./mdadm-patch-test.bash: line 24: 554349 Floating point exception${cmd}
-
-RAID-1, metadata 1.1, patched:
- ./mdadm --create --verbose /dev/md99 --level=1 --raid-devices=2 /dev/loop1 /dev/loop2 --metadata=1.1
-device /dev/loop1 is too small (32K) for required metadata!
-mdadm: /dev/loop1 is not suitable for this array.
-device /dev/loop2 is too small (32K) for required metadata!
-mdadm: /dev/loop2 is not suitable for this array.
-mdadm: create aborted
-%
-
-
-==== Here's the script:
-
-#!/bin/bash
-
-
-#sudo="sudo" # empty-string if run as root
-sudo=""
-
-md_dev="/dev/md99"
-
-
-# Create test devices:
-mk_devs() {
-  n_dev="${1}"
-  devsize="${2}"
-  for (( n=1; n<="${n_dev}"; ++n )) do
-    dev="/dev/loop${n}"
-    file="/tmp/component-0${n}"
-    truncate -s "${devsize}" "${file}"
-    ${sudo} losetup "${dev}" "${file}"
-  done
-}
-
-
-# Do one test run:
-do_run() {
-  lbl="${1}"
-  mdvers="${2}"
-  echo -e "\n${lbl}, metadata ${mdvers}, unpatched:"
-  cmd="${sudo} /sbin/mdadm ${args} --metadata=${mdvers}"
-  echo "${cmd}"
-  ${cmd}
-  ${sudo} /sbin/mdadm --stop "${md_dev}" 2>/dev/null
-  echo -e "\n${lbl}, metadata ${mdvers}, patched:"
-  cmd="${sudo} ./mdadm ${args} --metadata=${mdvers}"
-  echo "${cmd}"
-  ${cmd}
-  ${sudo} /sbin/mdadm --stop "${md_dev}" 2>/dev/null # not necessary, create fails
-}
-
-
-# --- RAID level 5:
-mk_devs 3 65536
-
-args="--create --verbose ${md_dev} --chunk=256 --level=5 --layout=left-symmetric --raid-devices=3 /dev/loop1 /dev/loop2 /dev/loop3"
-do_run RAID-5 1.2
-do_run RAID-5 1.1
-
-${sudo} losetup -d /dev/loop1 /dev/loop2 /dev/loop3
-rm -f /tmp/component-01 /tmp/component-02 /tmp/component-03
-
-
-# --- RAID level 1:
-mk_devs 2 32768
-
-args="--create --verbose ${md_dev} --level=1 --raid-devices=2 /dev/loop1 /dev/loop2"
-do_run RAID-1 1.2
-do_run RAID-1 1.1
-
-${sudo} losetup -d /dev/loop1 /dev/loop2
-rm -f /tmp/component-01 /tmp/component-02
+Best Regards,
+Sam
