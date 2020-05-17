@@ -1,88 +1,125 @@
-From: Sam Hurst <sam@sam-hurst.co.uk>
-Subject: Re: RAID wiped superblock recovery
-Date: Sun, 17 May 2020 15:01:51 +0100
-Message-ID: <aa4b9947-39cd-6c30-79f0-138d307c9620@sam-hurst.co.uk>
-References: <922713c5-0cc1-24cb-14a6-9de7db631f98@sam-hurst.co.uk>
- <0f954924-e7ae-c81e-55f1-afc41e293a18@turmel.org>
- <05011140-3625-5326-96c9-e995f93260f4@sam-hurst.co.uk>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: [PATCH 01/10] include/linux/pagemap.h: introduce attach/detach_page_private
+Date: Sun, 17 May 2020 23:47:09 +0200
+Message-ID: <20200517214718.468-2-guoqing.jiang@cloud.ionos.com>
+References: <20200517214718.468-1-guoqing.jiang@cloud.ionos.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <05011140-3625-5326-96c9-e995f93260f4@sam-hurst.co.uk>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <20200517214718.468-1-guoqing.jiang@cloud.ionos.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: akpm@linux-foundation.org, viro@zeniv.linux.org.uk
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, david@fromorbit.com, hch@infradead.org, willy@infradead.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, William Kucharski <william.kucharski@oracle.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Andreas Gruenbacher <agruenba@redhat.com>, Yang Shi <yang.shi@linux.alibaba.com>, Yafang Shao <laoar.shao@gmail.com>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, Anton Altaparmakov <anton@tuxera.com>
 List-Id: linux-raid.ids
 
-On 17/05/2020 14:55, Sam Hurst wrote:
-> So I've now tried doing this and sadly haven't really gotten anywhere. 
-> Given the output of mdadm -E, I've specified the chunk size as 512K, and 
-> the data offset as 134MB (given the reported offset of 262144 sectors * 
-> sector size of 512 bytes on the devices).
-> 
-> Given your statement that I could trust the existing superblocks, I 
-> haven't messed around with the order of those and instead I've just been 
-> messing around with the order of the three disks which are unhappy. So 
-> I've been putting sda first (active 0), then sdc (active 1), sdb (active 
-> 2), and sdd (active 3). As I said last time, I'm using overlay images to 
-> avoid screwing up the disks. My create command line is as below:
-> 
-> mdadm --create /dev/md1 --chunk=512 --level=6 --assume-clean 
-> --data-offset=134M --raid-devices=7 /dev/mapper/sda /dev/mapper/sdc 
-> /dev/mapper/sdb /dev/mapper/sdd ${UNHAPPY_DISK1} ${UNHAPPY_DISK2} 
-> ${UNHAPPY_DISK3}
+The logic in attach_page_buffers and  __clear_page_buffers are quite
+paired, but
 
-One other thing which I meant to write on the previous email but forgot, 
-my test of "is the array sane" is to try and mount the XFS filesystem on 
-the array. However, each time it just fails to find the filesystem 
-superblock and is generally unhappy.
+1. they are located in different files.
 
-Reading the manpage, the only other thing I can see which I could put 
-into the --create command is the layout of the array, which I'm fairly 
-sure was left-symmetric because that's what the original RAID 5 array 
-was according to my backup of the RAID configuration before moving to 
-RAID 6, but I can't remember what the second parity disk layout was.
+2. attach_page_buffers is implemented in buffer_head.h, so it could be
+   used by other files. But __clear_page_buffers is static function in
+   buffer.c and other potential users can't call the function, md-bitmap
+   even copied the function.
 
-And in case it is helpful, the following is what mdadm thinks about the 
-new array that I try to build.
+So, introduce the new attach/detach_page_private to replace them. With
+the new pair of function, we will remove the usage of attach_page_buffers
+and  __clear_page_buffers in next patches. Thanks for suggestions about
+the function name from Alexander Viro, Andreas Grünbacher, Christoph
+Hellwig and Matthew Wilcox.
 
-root@toothless:~# mdadm -D /dev/md1
-/dev/md1:
-            Version : 1.2
-      Creation Time : Sun May 17 14:38:34 2020
-         Raid Level : raid6
-         Array Size : 14650644480 (13971.94 GiB 15002.26 GB)
-      Used Dev Size : 2930128896 (2794.39 GiB 3000.45 GB)
-       Raid Devices : 7
-      Total Devices : 7
-        Persistence : Superblock is persistent
+Suggested-by: Matthew Wilcox <willy@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: William Kucharski <william.kucharski@oracle.com>
+Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Yang Shi <yang.shi@linux.alibaba.com>
+Cc: Yafang Shao <laoar.shao@gmail.com>
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: Chris Mason <clm@fb.com>
+Cc: Josef Bacik <josef@toxicpanda.com>
+Cc: David Sterba <dsterba@suse.com>
+Cc: linux-btrfs@vger.kernel.org
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Chao Yu <chao@kernel.org>
+Cc: linux-f2fs-devel@lists.sourceforge.net
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Cc: Anton Altaparmakov <anton@tuxera.com>
+Cc: linux-ntfs-dev@lists.sourceforge.net
+Cc: Mike Marshall <hubcap@omnibond.com>
+Cc: Martin Brandenburg <martin@omnibond.com>
+Cc: devel@lists.orangefs.org
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Andreas Dilger <adilger@dilger.ca>
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+---
+No change since RFC V3.
 
-      Intent Bitmap : Internal
+RFC V2 -> RFC V3:
+1. rename clear_page_private to detach_page_private.
+2. updated the comments for the two functions.
 
-        Update Time : Sun May 17 14:38:34 2020
-              State : clean
-     Active Devices : 7
-    Working Devices : 7
-     Failed Devices : 0
-      Spare Devices : 0
+RFC -> RFC V2:  Address the comments from Christoph Hellwig
+1. change function names to attach/clear_page_private and add comments.
+2. change the return type of attach_page_private.
 
-             Layout : left-symmetric
-         Chunk Size : 512K
+ include/linux/pagemap.h | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-Consistency Policy : bitmap
-
-               Name : toothless.local:1  (local to host toothless.local)
-               UUID : ddf9f835:dc0fdad0:c864d5f5:f70ecbbf
-             Events : 1
-
-     Number   Major   Minor   RaidDevice State
-        0     253        2        0      active sync   /dev/dm-2
-        1     253        3        1      active sync   /dev/dm-3
-        2     253        0        2      active sync   /dev/dm-0
-        3     253        1        3      active sync   /dev/dm-1
-        4     253        4        4      active sync   /dev/dm-4
-        5     253        6        5      active sync   /dev/dm-6
-        6     253        5        6      active sync   /dev/dm-5
-
--Sam
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index c6348c50136f..8e085713150c 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -208,6 +208,43 @@ static inline int page_cache_add_speculative(struct page *page, int count)
+ 	return __page_cache_add_speculative(page, count);
+ }
+ 
++/**
++ * attach_page_private - Attach private data to a page.
++ * @page: Page to attach data to.
++ * @data: Data to attach to page.
++ *
++ * Attaching private data to a page increments the page's reference count.
++ * The data must be detached before the page will be freed.
++ */
++static inline void attach_page_private(struct page *page, void *data)
++{
++	get_page(page);
++	set_page_private(page, (unsigned long)data);
++	SetPagePrivate(page);
++}
++
++/**
++ * detach_page_private - Detach private data from a page.
++ * @page: Page to detach data from.
++ *
++ * Removes the data that was previously attached to the page and decrements
++ * the refcount on the page.
++ *
++ * Return: Data that was attached to the page.
++ */
++static inline void *detach_page_private(struct page *page)
++{
++	void *data = (void *)page_private(page);
++
++	if (!PagePrivate(page))
++		return NULL;
++	ClearPagePrivate(page);
++	set_page_private(page, 0);
++	put_page(page);
++
++	return data;
++}
++
+ #ifdef CONFIG_NUMA
+ extern struct page *__page_cache_alloc(gfp_t gfp);
+ #else
+-- 
+2.17.1
