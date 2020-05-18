@@ -1,95 +1,82 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: =?UTF-8?Q?Re=3a_=5bPATCH_2/2=5d_restripe=3a_fix_ignoring_return_val?=
- =?UTF-8?B?dWUgb2Yg4oCYcmVhZOKAmQ==?=
-Date: Mon, 18 May 2020 20:08:02 +0200
-Message-ID: <6bd3cb34-1339-9e1b-1f57-07ef62a70818@cloud.ionos.com>
-References: <20200515134026.8084-1-guoqing.jiang@cloud.ionos.com>
- <20200515134026.8084-3-guoqing.jiang@cloud.ionos.com>
- <4a888cbe-636b-b3a7-f669-8897753430d0@trained-monkey.org>
- <607932ff-0e76-9eca-1fdb-ca26428d8717@cloud.ionos.com>
- <01676778-bfc2-46d4-112b-ee16ef4cbcc1@trained-monkey.org>
+From: Sam Hurst <sam@sam-hurst.co.uk>
+Subject: Re: RAID wiped superblock recovery
+Date: Mon, 18 May 2020 19:52:47 +0100
+Message-ID: <f88bfa57-8a17-eaa1-a926-33e2eb6ddb34@sam-hurst.co.uk>
+References: <922713c5-0cc1-24cb-14a6-9de7db631f98@sam-hurst.co.uk>
+ <0f954924-e7ae-c81e-55f1-afc41e293a18@turmel.org>
+ <05011140-3625-5326-96c9-e995f93260f4@sam-hurst.co.uk>
+ <e7644f86-5342-b7bb-b6de-b37afd74f6cc@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed;
+ boundary="------------4FBEEC9466DC51A2C8C4793E"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <01676778-bfc2-46d4-112b-ee16ef4cbcc1@trained-monkey.org>
+In-Reply-To: <e7644f86-5342-b7bb-b6de-b37afd74f6cc@turmel.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes@trained-monkey.org>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/18/20 7:50 PM, Jes Sorensen wrote:
-> On 5/18/20 1:32 PM, Guoqing Jiang wrote:
->> On 5/18/20 7:22 PM, Jes Sorensen wrote:
->>> On 5/15/20 9:40 AM, Guoqing Jiang wrote:
->>>> Got below error when run "make everything".
->>>>
->>>> restripe.c: In function ‘test_stripes’:
->>>> restripe.c:870:4: error: ignoring return value of ‘read’, declared
->>>> with attribute warn_unused_result [-Werror=unused-result]
->>>>       read(source[i], stripes[i], chunk_size);
->>>>       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>>
->>>> Fix it by set the return value of ‘read’ to diskP, which should be
->>>> harmless since diskP will be set again before it is used.
->>>>
->>>> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
->>>> ---
->>>>    restripe.c | 6 +++++-
->>>>    1 file changed, 5 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/restripe.c b/restripe.c
->>>> index 31b07e8..21c90f5 100644
->>>> --- a/restripe.c
->>>> +++ b/restripe.c
->>>> @@ -867,7 +867,11 @@ int test_stripes(int *source, unsigned long long
->>>> *offsets,
->>>>              for (i = 0 ; i < raid_disks ; i++) {
->>>>                lseek64(source[i], offsets[i]+start, 0);
->>>> -            read(source[i], stripes[i], chunk_size);
->>>> +            /*
->>>> +             * To resolve "ignoring return value of ‘read’", it
->>>> +             * should be harmless since diskP will be again later.
->>>> +             */
->>>> +            diskP = read(source[i], stripes[i], chunk_size);
->>> It doesn't complain on Fedora 32, however checking the return value of
->>> lseek64 and read is a good thing.
->>>
->>> However what you have done is to just masking the return value and
->>> throwing it away, is not OK. Please do it properly.
->> Yes, it is used to suppress the warning. And set the return value to a
->> new variable
->> could cause unused-but-set-variable, not sure if there is better way now.
-> The correct way is to check the return values and take appropriate
-> action if an error is returned.
+This is a multi-part message in MIME format.
+--------------4FBEEC9466DC51A2C8C4793E
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Thanks, just find other places in restripe.c has check like this.
+Hi Phil,
 
-"read(source[dnum], buf+disk * chunk_size, chunk_size) != chunk_size)
+On 17/05/2020 22:56, Phil Turmel wrote:
+> Your math is wrong.  Or rather, you are using the bogus power-of-ten 
+> definition of "MB" that disk manufacturers use to deliver less space.
+> 
+> Use 128MB.  Or better, specify "262144s".
 
-Will send below changes if it is ok.
+Thanks very much, that was the final thing, and now I have a working 
+array again and don't have to worry about pulling 6TB of data down from S3.
 
-diff --git a/restripe.c b/restripe.c
-index 31b07e8..48c6506 100644
---- a/restripe.c
-+++ b/restripe.c
-@@ -867,7 +867,15 @@ int test_stripes(int *source, unsigned long long 
-*offsets,
+I had no idea that you could use sectors as a suffix to data-offset as 
+it's not in the manpage. So you should find attached a patch file which 
+adds that suffix to the manpage. If this isn't the correct place to 
+provide patches, or if there's an issue with the formatting of my patch, 
+please let me know and I'll happily update it and send it to the correct 
+place.
 
-                 for (i = 0 ; i < raid_disks ; i++) {
-                         lseek64(source[i], offsets[i]+start, 0);
--                       read(source[i], stripes[i], chunk_size);
-+                       if (read(source[i], stripes[i], chunk_size) !=
-+                           chunk_size) {
-+                               free(q);
-+                               free(p);
-+                               free(blocks);
-+                               free(stripes);
-+                               free(stripe_buf);
-+                               return -1;
-+                       }
-                 }
+Best Regards,
+Sam
 
-Thanks,
-Guoqing
+--------------4FBEEC9466DC51A2C8C4793E
+Content-Type: text/x-patch; charset=UTF-8;
+ name="0001-PATCH-Add-sector-suffix-to-mdadm-data-offset-manpage.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-PATCH-Add-sector-suffix-to-mdadm-data-offset-manpage.pa";
+ filename*1="tch"
+
+From 116bc0ddeb29e848077480853a41c509518eb8ff Mon Sep 17 00:00:00 2001
+From: Sam Hurst <sam@sam-hurst.co.uk>
+Date: Mon, 18 May 2020 19:48:13 +0100
+Subject: [PATCH] Add sector suffix to mdadm --data-offset manpage
+
+---
+ mdadm.8.in | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 9e7cb96..c997be4 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -857,8 +857,9 @@ an array which was originally created using a different version of
+ which computed a different offset.
+ 
+ Setting the offset explicitly over-rides the default.  The value given
+-is in Kilobytes unless a suffix of 'K', 'M', 'G' or 'T' is used to explicitly
+-indicate Kilobytes, Megabytes, Gigabytes or Terabytes respectively.
++is in Kilobytes unless a suffix of 'K', 'M', 'G', 'T' or 's' is used to
++explicitly indicate Kilobytes, Megabytes, Gigabytes, Terabytes or sectors
++respectively.
+ 
+ Since Linux 3.4,
+ .B \-\-data\-offset
+-- 
+2.17.1
+
+
+--------------4FBEEC9466DC51A2C8C4793E--
