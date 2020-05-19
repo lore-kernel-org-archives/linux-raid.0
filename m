@@ -1,77 +1,61 @@
-From: dfavro@meta-dynamic.com
-Subject: [PATCH] Detect too-small device: error rather than underflow/crash
-Date: Tue, 19 May 2020 14:58:12 -0400
-Message-ID: <20200519185812.979553-2-dfavro@meta-dynamic.com>
-References: <8c7c42f8-2040-859b-d558-0b523f7092d8@trained-monkey.org>
- <20200519185812.979553-1-dfavro@meta-dynamic.com>
+From: "Ahmed S. Darwish" <a.darwish@linutronix.de>
+Subject: [PATCH v1 20/25] raid5: Use sequence counter with associated spinlock
+Date: Tue, 19 May 2020 23:45:42 +0200
+Message-ID: <20200519214547.352050-21-a.darwish@linutronix.de>
+References: <20200519214547.352050-1-a.darwish@linutronix.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200519185812.979553-1-dfavro@meta-dynamic.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: jes@trained-monkey.org
-Cc: linux-raid@vger.kernel.org, David Favro <dfavro@meta-dynamic.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200519214547.352050-1-a.darwish@linutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, "Paul E. McKenney" <paulmck@kernel.org>, "Sebastian A. Siewior" <bigeasy@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, "Ahmed S. Darwish" <a.darwish@linutronix.de>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: David Favro <dfavro@meta-dynamic.com>
+A sequence counter write side critical section must be protected by some
+form of locking to serialize writers. A plain seqcount_t does not
+contain the information of which lock must be held when entering a write
+side critical section.
 
-For 1.x metadata, when the user requested creation of an array on
-component devices that were too small even to hold the superblock,
-an undetected integer wraparound (underflow) resulted in an enormous
-computed size which resulted in various follow-on errors such as
-floating-point exception.
+Use the new seqcount_spinlock_t data type, which allows to associate a
+spinlock with the sequence counter. This enables lockdep to verify that
+the spinlock used for writer serialization is held when the write side
+critical section is entered.
 
-This patch detects this condition, prints a reasonable diagnostic
-message, and refuses to continue.
+If lockdep is disabled this lock association is compiled out and has
+neither storage size nor runtime overhead.
 
-Signed-off-by: David Favro <dfavro@meta-dynamic.com>
+Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
 ---
- super1.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ drivers/md/raid5.c | 2 +-
+ drivers/md/raid5.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/super1.c b/super1.c
-index e0d80be1..1e12198d 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2785,10 +2785,6 @@ static int validate_geometry1(struct supertype *st, int level,
- 	close(fd);
- 
- 	devsize = ldsize >> 9;
--	if (devsize < 24) {
--		*freesize = 0;
--		return 0;
--	}
- 
- 	/* creating:  allow suitable space for bitmap or PPL */
- 	if (consistency_policy == CONSISTENCY_POLICY_PPL)
-@@ -2829,15 +2825,27 @@ static int validate_geometry1(struct supertype *st, int level,
- 	case 0: /* metadata at end.  Round down and subtract space to reserve */
- 		devsize = (devsize & ~(4ULL*2-1));
- 		/* space for metadata, bblog, bitmap/ppl */
--		devsize -= 8*2 + 8 + bmspace;
-+		const unsigned long long required = 8*2 + 8 + bmspace;
-+		if ( devsize < required ) /* detect underflow */
-+			goto dev_too_small_err;
-+		devsize -= required;
- 		break;
- 	case 1:
- 	case 2:
-+		if ( devsize < data_offset ) /* detect underflow */
-+			goto dev_too_small_err;
- 		devsize -= data_offset;
- 		break;
- 	}
- 	*freesize = devsize;
- 	return 1;
-+
-+	/* Error condition, device cannot even hold the overhead. */
-+	dev_too_small_err:
-+		fprintf( stderr, "device %s is too small (%lluK) for "
-+				"required metadata!\n", subdev, devsize>>1 );
-+		*freesize = 0;
-+		return 0;
- }
- 
- void *super1_make_v0(struct supertype *st, struct mdinfo *info, mdp_super_t *sb0)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ba00e9877f02..69f31c675b58 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6929,7 +6929,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	} else
+ 		goto abort;
+ 	spin_lock_init(&conf->device_lock);
+-	seqcount_init(&conf->gen_lock);
++	seqcount_spinlock_init(&conf->gen_lock, &conf->device_lock);
+ 	mutex_init(&conf->cache_size_mutex);
+ 	init_waitqueue_head(&conf->wait_for_quiescent);
+ 	init_waitqueue_head(&conf->wait_for_stripe);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index f90e0704bed9..a2c9e9e9f5ac 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -589,7 +589,7 @@ struct r5conf {
+ 	int			prev_chunk_sectors;
+ 	int			prev_algo;
+ 	short			generation; /* increments with every reshape */
+-	seqcount_t		gen_lock;	/* lock against generation changes */
++	seqcount_spinlock_t	gen_lock;	/* lock against generation changes */
+ 	unsigned long		reshape_checkpoint; /* Time we last updated
+ 						     * metadata */
+ 	long long		min_offset_diff; /* minimum difference between
 -- 
-2.26.2.593.gb9946226
+2.20.1
