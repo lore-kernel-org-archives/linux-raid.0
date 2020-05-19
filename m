@@ -1,14 +1,15 @@
 From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH V3 1/2] uuid.c: split uuid stuffs from util.c
-Date: Mon, 18 May 2020 20:11:50 -0400
-Message-ID: <de973f06-54ac-de63-61e3-34c07c932c69@trained-monkey.org>
+Subject: =?UTF-8?Q?Re=3a_=5bPATCH_V3_2/2=5d_restripe=3a_fix_ignoring_return_?=
+ =?UTF-8?B?dmFsdWUgb2Yg4oCYcmVhZOKAmSBhbmQgbHNlZWs=?=
+Date: Mon, 18 May 2020 20:26:12 -0400
+Message-ID: <7ba82317-5747-8297-bf8f-1883483adfea@trained-monkey.org>
 References: <20200518215336.29000-1-guoqing.jiang@cloud.ionos.com>
- <20200518215336.29000-2-guoqing.jiang@cloud.ionos.com>
+ <20200518215336.29000-3-guoqing.jiang@cloud.ionos.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200518215336.29000-2-guoqing.jiang@cloud.ionos.com>
+In-Reply-To: <20200518215336.29000-3-guoqing.jiang@cloud.ionos.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
@@ -16,30 +17,53 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On 5/18/20 5:53 PM, Guoqing Jiang wrote:
-> Currently, 'make raid6check' is build broken since commit b06815989
-> ("mdadm: load default sysfs attributes after assemblation").
+> Got below error when run "make everything".
 > 
-> /usr/bin/ld: sysfs.o: in function `sysfsline':
-> sysfs.c:(.text+0x2707): undefined reference to `parse_uuid'
-> /usr/bin/ld: sysfs.c:(.text+0x271a): undefined reference to `uuid_zero'
-> /usr/bin/ld: sysfs.c:(.text+0x2721): undefined reference to `uuid_zero'
+> restripe.c: In function ‘test_stripes’:
+> restripe.c:870:4: error: ignoring return value of ‘read’, declared with attribute warn_unused_result [-Werror=unused-result]
+>     read(source[i], stripes[i], chunk_size);
+>     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 > 
-> Apparently, the compile of mdadm or raid6check are coupled with uuid
-> functions inside util.c. However, we can't just add util.o to CHECK_OBJS
-> which raid6check is needed, because it caused other worse problems.
+> Fix it by check the return value of ‘read’, and free memory
+> in the failure case.
 > 
-> So, let's introduce a uuid.c file which is indenpended file to fix the
-> problem, all the contents are splitted from util.c.
+> And check the return value of lseek as well per Jes's comment.
 > 
 > Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 > ---
->  Makefile |   6 +--
->  util.c   |  87 ------------------------------------------
->  uuid.c   | 112 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 115 insertions(+), 90 deletions(-)
->  create mode 100644 uuid.c
+>  restripe.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/restripe.c b/restripe.c
+> index 31b07e8..86e1d00 100644
+> --- a/restripe.c
+> +++ b/restripe.c
+> @@ -866,8 +866,16 @@ int test_stripes(int *source, unsigned long long *offsets,
+>  		int disk;
+>  
+>  		for (i = 0 ; i < raid_disks ; i++) {
+> -			lseek64(source[i], offsets[i]+start, 0);
+> -			read(source[i], stripes[i], chunk_size);
+> +			if ((lseek64(source[i], offsets[i]+start, 0) < 0) ||
+> +			    (read(source[i], stripes[i], chunk_size) !=
+> +			     chunk_size)) {
+> +				free(q);
+> +				free(p);
+> +				free(blocks);
+> +				free(stripes);
+> +				free(stripe_buf);
+> +				return -1;
+> +			}
+>  		}
+>  		for (i = 0 ; i < data_disks ; i++) {
+>  			int disk = geo_map(i, start/chunk_size, raid_disks,
+> 
 
-Applied!
+This is not the prettiest solution, would have been nicer to introduce a
+cleanup handler at the end and just jumping to it.
+
+That said, I have applied it since restripe.c is pretty ugly across the
+board.
 
 Thanks,
 Jes
