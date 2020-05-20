@@ -1,166 +1,213 @@
-From: Michal Soltys <msoltyspl@yandex.pl>
-Subject: Re: [general question] rare silent data corruption when writing data
-Date: Wed, 20 May 2020 23:40:35 +0200
-Message-ID: <73d7db88-4fd9-214d-6320-4b5d4f6448b9@yandex.pl>
-References: <b0e91faf-3a14-3ac9-3c31-6989154791c1@yandex.pl>
- <CAAMCDef6hKJsPw3738KJ0vEEwnVKB-QpTMJ6aSeybse-4h+y6Q@mail.gmail.com>
- <24244.30530.155404.154787@quad.stoffel.home>
- <adccabc0-529f-e0a9-538f-1e5b784269e4@yandex.pl>
- <CAJCQCtRWvsKwwoZejERq=_OLXEa3JQd5RJ65tCz=X=Sp1xtRMQ@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: failed disks, mapper, and "Invalid argument"
+Date: Thu, 21 May 2020 00:23:27 +0100
+Message-ID: <5EC5BBEF.7070002@youngman.org.uk>
+References: <20200520200514.GE1415@justpickone.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtRWvsKwwoZejERq=_OLXEa3JQd5RJ65tCz=X=Sp1xtRMQ@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20200520200514.GE1415@justpickone.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: John Stoffel <john@stoffel.org>, Roger Heflin <rogerheflin@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: David T-G <davidtg-robot@justpickone.org>, Linux RAID list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Sorry for delayed reply, have had rather busy weeks.
-
-On 20/05/08 05:44, Chris Murphy wrote:
+On 20/05/20 21:05, David T-G wrote:
+> Hi, all --
 > 
-> The 4KiB chunk. What are the contents? Is it definitely guest VM data?
-> Or is it sometimes file system metadata? How many corruptions have
-> happened? The file system metadata is quite small compared to data.
-
-I haven't looked that precisely (and it would be hard to tell in quite a 
-few cases) - but I'll keep that in mind when I resume chasing this bug.
-
-> But if there have been many errors, we'd expect if it's caused on the
-> host, that eventually file system metadata is corrupted. If it's
-> definitely only data, that's curious and maybe implicates something
-> going on in the guest.
-
-As far as metadata goes, so far I haven't seen those - as far as e2fsck 
-on ext4 and btrfs-scrub on ext4 could tell. Though in ext4 case I 
-haven't ran it that many times - so good point, I'll include fsck after 
-each round.
-
+> I have a four-partition RAID5 array of which one disk failed while I was
+> out of town and a second failed just today.  Both failed smartctl tests
+> by not even starting, although I don't have that captured.  Those two
+> were on a SATA daughtercard, so I swapped them (formerly sde, sdf)
+> up to the motherboard SATA ports like the other two (still sda, sdb) and
+> now all are visible and happily pass smartctl checks and generally look
+> good ... except that my md0 doesn't :-(
 > 
-> Btrfs, whether normal reads or scrubs, will report the path to the
-> affected file, for data corruption. Metadata corruption errors
-> sometimes have inode references, but not a path to a file.
-> 
+> I've been through the wiki and other found documentation and have scraped
+> the archives, but the whole mapper thing is new to me, and I don't know
+> enough to pin down the error.  I've been attempting to fake-build my
+> array with overlay devices to see how it will do.  Please forgive the
+> long post if it's a bit ridiculous; I wanted to make sure that you have
+> all information :-)
 
-Btrfs pointed to file contents only, so far.
+https://raid.wiki.kernel.org/index.php/Asking_for_help
 
+Hate to say it, but if you've found the wiki, there's an awful lot of
+info missing from this post ...
 > 
->> >
->> > Are the LVs split across RAID5 PVs by any chance?
->>
->> raid5s are used as PVs, but a single logical volume always uses one only
->> one physical volume underneath (if that's what you meant by split across).
+> Here's the array after I swapped ports and booted up:
 > 
-> It might be a bit suboptimal. A single 4KiB block write in the guest,
-> turns into a 4KiB block write in the host's LV. That in turn trickles
-> down to md, which has a 512KiB x 4 drive stripe. So a single 4KiB
-> write translates into a 2M stripe write. There is an optimization for
-> raid5 in the RMW case, where it should be true only 4KiB data plus
-> 4KiB parity is written (partial strip/chunk write); I'm not sure about
-> reads.
-
-Well, I didn't play with current defaults too much - aside large 
-stripe_cache_size + the raid running under 2x ssd write-back journal 
-(which unfortunately became another issue - there is another thread 
-where I'm chasing that bug).
-
+>   diskfarm:root:10:~> mdadm --detail /dev/md0
+>   /dev/md0:
+>           Version : 1.2
+>     Creation Time : Mon Feb  6 00:56:35 2017
+>        Raid Level : raid5
+>     Used Dev Size : 4294967295
+>      Raid Devices : 4
+>     Total Devices : 2
+>       Persistence : Superblock is persistent
 > 
->> > It's not clear if you can replicate the problem without using
->> > lvm-thin, but that's what I suspect you might be having problems with.
->> >
->>
->> I'll be trying to do that, though the heavier tests will have to wait
->> until I move all VMs to other hosts (as that is/was our production machnie).
+>       Update Time : Mon May 18 01:10:07 2020
+>             State : active, FAILED, Not Started
+>    Active Devices : 2
+>   Working Devices : 2
+>    Failed Devices : 0
+>     Spare Devices : 0
 > 
-> Btrfs default Btrfs uses 16KiB block size for leaves and nodes. It's
-> still a tiny foot print compared to data writes, but if LVM thin is a
-> suspect, it really should just be a matter of time before file system
-> corruption happens. If it doesn't, that's useful information. It
-> probably means it's not LVM thin. But then what?
+>            Layout : left-symmetric
+>        Chunk Size : 512K
 > 
->> As for how long, it's a hit and miss. Sometimes writing and reading back
->> ~16gb file fails (the cheksum read back differs from what was written)
->> after 2-3 tries. That's on the host.
->>
->> On the guest, it's been (so far) a guaranteed thing when we were
->> creating very large tar file (900gb+). As for past two weeks we were
->> unable to create that file without errors even once.
+>              Name : diskfarm:0  (local to host diskfarm)
+>              UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+>            Events : 57840
 > 
-> It's very useful to have a consistent reproducer. You can do metadata
-> only writes on Btrfs by doing multiple back to back metadata only
-> balance. If the problem really is in the write path somewhere, this
-> would eventually corrupt the metadata - it would be detected during
-> any subsequent balance or scrub. 'btrfs balance start -musage=100
-> /mountpoint' will do it.
-
-Will do that too.
-
-> 
-> This reproducer. It only reproduces in the guest VM? If you do it in
-> the host, otherwise exactly the same way with all the exact same
-> versions of everything, and it does not reproduce?
-> 
-
-I did reproduce the issue on the host (both in ext4 and btrfs). The host 
-has slightly different versions of kernel and tools, but otherwise same 
-stuff as one of the guests in which I was testing it.
-
->>
->> >
->> > Can you compile the newst kernel and newest thin tools and try them
->> > out?
->>
->> I can, but a bit later (once we move VMs out of the host).
->>
->> >
->> > How long does it take to replicate the corruption?
->> >
->>
->> When it happens, it's usually few tries tries of writing a 16gb file
->> with random patterns and reading it back (directly on host). The
->> irritating thing is that it can be somewhat hard to reproduce (e.g.
->> after machine's reboot).
-> 
-> Reading it back on the host. So you've shut down the VM, and you're
-> mounting what was the guests VM's backing disk, on the host to do the
-> verification. There's never a case of concurrent usage between guest
-> and host?
-
-The hosts test where on a fresh filesystems on a fresh lvm volumes (and 
-I hit them on two different thin pools). The issue was also reproduced 
-on hosts when all guests were turned off.
-
+>       Number   Major   Minor   RaidDevice State
+>          0       8       17        0      active sync   /dev/sdb1
+>          -       0        0        1      removed
+>          -       0        0        2      removed
+>          4       8        1        3      active sync   /dev/sda1
 > 
 > 
->>
->> > Sorry for all the questions, but until there's a test case which is
->> > repeatable, it's going to be hard to chase this down.
->> >
->> > I wonder if running 'fio' tests would be something to try?
->> >
->> > And also changing your RAID5 setup to use the default stride and
->> > stripe widths, instead of the large values you're using.
->>
->> The raid5 is using mdadm's defaults (which is 512 KiB these days for a
->> chunk). LVM on top is using much longer extents (as we don't really need
->> 4mb granularity) and the lvm-thin chunks were set to match (and align)
->> to raid's stripe.
+>   diskfarm:root:10:~> mdadm --examine /dev/sd[abcd]1 | egrep '/dev|vents'
+>   /dev/sda1:
+>            Events : 57840
+>   /dev/sdb1:
+>            Events : 57840
+>   /dev/sdc1:
+>            Events : 57836
+>   /dev/sdd1:
+>            Events : 48959
 > 
-> I would change very little until you track this down, if the goal is
-> to track it down and get it fixed.
+> I'd say sdd is the former sde that went away first and sdc that was sdf
+> only just fell over.
+
+Okay, you DON'T want to include sdd in your attempts - sdc is only 4
+events behind so if you can assemble those three, you'll be almost
+perfect ...
 > 
-
-Yea, I'm keeping the stuff as is (and will try Sarah's suggestions with 
-debug options as well).
-
-> I'm not sure if LVM thinp is supported with LVM raid still, which if
-> it's not supported yet then I can understand using mdadm raid5 instead
-> of LVM raid5.
+> In my first round, I shut down md0
 > 
+>   diskfarm:root:12:~> mdadm --stop /dev/md0
+>   mdadm: stopped /dev/md0
+>   diskfarm:root:12:~> cat /proc/mdstat
+>   Personalities : [raid6] [raid5] [raid4]
+>   md127 : active raid5 sdf2[0] sdg2[1] sdh2[3]
+>         1464622080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+> 
+>   unused devices: <none>
+> 
+> and of course it isn't in mdstat any more.  Oops.  But it's down, so we
+> won't see any more writes that could be messy.
+> 
+> I whipped up four loop devices and created overlay files
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> parallel truncate -s8G overlay-{/} ::: $DEVICES
+>   ...
+>   To silence this citation notice: run 'parallel --citation'.
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> ls -goh
+>   total 33M
+>   -rw-r--r-- 1 8.0G May 20 14:00 overlay-sda1
+>   -rw-r--r-- 1 8.0G May 20 14:00 overlay-sdb1
+>   -rw-r--r-- 1 8.0G May 20 14:00 overlay-sdc1
+>   -rw-r--r-- 1 8.0G May 20 14:00 overlay-sdd1
+>   -rw-r--r-- 1  11K May 20 13:20 smartctl-a.sda.out
+>   -rw-r--r-- 1 5.3K May 20 13:20 smartctl-a.sdb.out
+>   -rw-r--r-- 1 5.3K May 20 13:20 smartctl-a.sdc.out
+>   -rw-r--r-- 1 5.3K May 20 13:20 smartctl-a.sdd.out
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> du -skhc overlay-sd*
+>   8.0M    overlay-sda1
+>   8.0M    overlay-sdb1
+>   8.0M    overlay-sdc1
+>   8.0M    overlay-sdd1
+>   32M     total
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> ls -goh /dev/mapper/*
+>   crw------- 1 10, 236 May 20 08:04 /dev/mapper/control
+>   lrwxrwxrwx 1       7 May 20 14:02 /dev/mapper/sda1 -> ../dm-1
+>   lrwxrwxrwx 1       7 May 20 14:02 /dev/mapper/sdb1 -> ../dm-0
+>   lrwxrwxrwx 1       7 May 20 14:02 /dev/mapper/sdc1 -> ../dm-2
+>   lrwxrwxrwx 1       7 May 20 14:02 /dev/mapper/sdd1 -> ../dm-3
+> 
+> and grabbed my overlays and checked the mapper
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> OVERLAYS=$(parallel echo /dev/mapper/{/} ::: $DEVICES)
+>   diskfarm:root:13:/mnt/scratch/disks> echo $OVERLAYS
+>   /dev/mapper/sda1 /dev/mapper/sdb1 /dev/mapper/sdc1 /dev/mapper/sdd1
+>   diskfarm:root:13:/mnt/scratch/disks> dmsetup status
+>   sdb1: 0 3518805647 snapshot 16/16777216 16
+>   sdc1: 0 3518805647 snapshot 16/16777216 16
+>   sda1: 0 3518805647 snapshot 16/16777216 16
+>   sdd1: 0 3518805647 snapshot 16/16777216 16
+> 
+> and so far it looks good ... as far as I know :-)
+> 
+> I didn't know if I should try md0, the real array name, or create a new
+> md1, so I took the safe approach first
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> mdadm --assemble --force /dev/md1 $OVERLAYS
+>   mdadm: forcing event count in /dev/mapper/sdc1(2) from 57836 upto 57840
+>   mdadm: clearing FAULTY flag for device 2 in /dev/md1 for /dev/mapper/sdc1
+>   mdadm: Marking array /dev/md1 as 'clean'
+>   mdadm: failed to add /dev/mapper/sdd1 to /dev/md1: Invalid argument
+>   mdadm: failed to add /dev/mapper/sdc1 to /dev/md1: Invalid argument
+>   mdadm: failed to add /dev/mapper/sda1 to /dev/md1: Invalid argument
+>   mdadm: failed to add /dev/mapper/sdb1 to /dev/md1: Invalid argument
+>   mdadm: failed to RUN_ARRAY /dev/md1: Invalid argument
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> cat /proc/mdstat
+>   Personalities : [raid6] [raid5] [raid4]
+>   md127 : active raid5 sdf2[0] sdg2[1] sdh2[3]
+>         1464622080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+> 
+>   unused devices: <none>
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> mdadm --examine /dev/md1
+>   mdadm: cannot open /dev/md1: No such file or directory
+> 
+> but didn't fet to move on to the next wiki step.  I crossed my fingers
+> and tried md0
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> mdadm --assemble --force /dev/md0 $OVERLAYS
+>   mdadm: failed to add /dev/mapper/sdd1 to /dev/md0: Invalid argument
+>   mdadm: failed to add /dev/mapper/sdc1 to /dev/md0: Invalid argument
+>   mdadm: failed to add /dev/mapper/sda1 to /dev/md0: Invalid argument
+>   mdadm: failed to add /dev/mapper/sdb1 to /dev/md0: Invalid argument
+>   mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> mdadm --assemble --force /dev/md0 --verbose $OVERLAYS
+>   mdadm: looking for devices for /dev/md0
+>   mdadm: /dev/mapper/sda1 is identified as a member of /dev/md0, slot 3.
+>   mdadm: /dev/mapper/sdb1 is identified as a member of /dev/md0, slot 0.
+>   mdadm: /dev/mapper/sdc1 is identified as a member of /dev/md0, slot 2.
+>   mdadm: /dev/mapper/sdd1 is identified as a member of /dev/md0, slot 1.
+>   mdadm: failed to add /dev/mapper/sdd1 to /dev/md0: Invalid argument
+>   mdadm: failed to add /dev/mapper/sdc1 to /dev/md0: Invalid argument
+>   mdadm: failed to add /dev/mapper/sda1 to /dev/md0: Invalid argument
+>   mdadm: failed to add /dev/mapper/sdb1 to /dev/md0: Invalid argument
+>   mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+> 
+>   diskfarm:root:13:/mnt/scratch/disks> mdadm --detail /dev/md0
+>   mdadm: cannot open /dev/md0: No such file or directory
+> 
+> and STILL got nowhere.  It was at this point that I figured I need to
+> back away and call for help!  I don't want to try rebuilding the actual
+> array in case it's out of sync and I lose data.
+> 
+> Soooooo...  There it is.  Any suggestions to correct whatever oops I've
+> made or complete a step I overlooked?  Any ideas why my assemble didn't?
+> 
+What I *always* jump on ...
 
-It probably is, but still while direct dmsetup exposes a few knobs (e.g. 
-allows to setup journal), the lvm doesn't allow much besides chunk size. 
-That was the primary reason that I sticked to native mdadm.
+https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
+
+You don't have any of these drives you shouldn't?
+
+I'll let someone else play about with all the device mapper stuff, I'm
+only just getting in to it, but as I say, drop sdd and you should get
+your array back with pretty much no corruption. Adding sdd runs the risk
+of corrupting much more ...
+
+Cheers,
+Wol
