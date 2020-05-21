@@ -1,111 +1,137 @@
-From: David T-G <davidtg-robot@justpickone.org>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: failed disks, mapper, and "Invalid argument"
-Date: Thu, 21 May 2020 07:24:21 -0400
-Message-ID: <20200521112421.GK1415@justpickone.org>
+Date: Thu, 21 May 2020 12:55:26 +0100
+Message-ID: <5EC66C2E.90901@youngman.org.uk>
 References: <20200520200514.GE1415@justpickone.org>
- <5EC5BBEF.7070002@youngman.org.uk>
- <20200520235347.GF1415@justpickone.org>
- <5EC63745.1080602@youngman.org.uk>
- <20200521110139.GW1711@justpickone.org>
+ <5EC5BBEF.7070002@youngman.org.uk> <20200520235347.GF1415@justpickone.org>
+ <5EC63745.1080602@youngman.org.uk> <20200521110103.GG1415@justpickone.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200521110139.GW1711@justpickone.org>
+In-Reply-To: <20200521110103.GG1415@justpickone.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID list <linux-raid@vger.kernel.org>
+To: David T-G <davidtg@justpickone.org>, Linux RAID list <linux-raid@vger.kernel.org>
+Cc: Phil Turmel <philip@turmel.org>
 List-Id: linux-raid.ids
 
-Wol, et al --
+On 21/05/20 12:01, David T-G wrote:
+> Wols, et al --
+> 
+> ...and then Wols Lists said...
+> % 
+> % On 21/05/20 00:53, David T-G wrote:
+> % >   ## parted
+> % >   Model: ATA ST4000DM000-1F21 (scsi)
+> ...
+> % >   SCT capabilities:              (0x1085) SCT Status supported.
+> % >   SMART Error Log Version: 1
+> % >   ## scterc
+> % >   SCT Error Recovery Control command not supported
+> % > 
+> % > Curiously, note that querying just scterc as the wiki instructs says "not
+> % > supported", but a general smartctl query says yes.  I'm not sure how to
+> % > interpret this...
+> % 
+> % Seagate Barracudas :-(
+> 
+> Yep.  They were good "back in the day" ...
+> 
+Still are. Just not for raid..
+> 
+> % 
+> % As for smartctl, you're asking two different things. Firstly is SCT
+> % supported (yes). Secondly, is the ERC feature supported (no).
+> % 
+> % And that second question is the killer. Your drives do not support error
+> % recovery. Plan to replace them with ones that do ASAP!
+> 
+> That would be nice.  I actually have wanted for quite some time
+> to grow these from 4T to 8T, but budget hasn't permitted.  Got any
+> particularly-affordable recommendations?
 
-...and then davidtg-robot@justpickone.org said...
-% 
-% ...and then Wols Lists said...
-% % 
-...
-% % What I don't want to advise, but I strongly suspect will work, is to
-% % force-assemble the two good drives and the nearly-good drive. Because it
-% % has no redundancy it won't scramble your data because it can't do a
-% 
-% Should I, then, get rid of the mapper overlay stuff?  I tried pointing to
-% even just three devs and got that they're busy.
-[snip]
+8TB WD Reds are still CMR and okay AT THE MOMENT. I wouldn't trust them
+though (or make sure you can RMA them if they've changed!)
 
-I was thinking of this last night but hesitant, so I went ahead and tried
-it this morning.  Perhaps my overlay and mapper config was all broken,
-because this apparently worked out.  Yay, part one.
+I haven't heard of Ironwolves using SMR (yet).
 
-  diskfarm:root:13:/mnt/scratch/disks> parallel 'dmsetup remove {/}; rm overlay-{/}' ::: $DEVICES 
+Looking quickly on Amazon
+WD Red 8TB                  £232
+Toshiba N300 8TB            £239
+Seagate Ironwolf 8TB        £260
+Seagate Ironwolf 8TB Silver £263 (optimised for raid it claims)
+WD Red 8TB Pro              £270
+Seagate Ironwolf 8TB Pro    £360
 
-  diskfarm:root:13:/mnt/scratch/disks> parallel losetup -d ::: /dev/loop1[01234]
-  losetup: /dev/loop11: detach failed: No such device or address
-  losetup: /dev/loop12: detach failed: No such device or address
-  losetup: /dev/loop13: detach failed: No such device or address
-  losetup: /dev/loop14: detach failed: No such device or address
+Given that the Red and the N300 are similar in price, I'd go for the
+N300. Bear in mind that I *never* see those drives mentioned here, I
+really don't know what they're like.
 
-This was odd...  Yes, I know I listed too many, but I couldn't remember
-whether or not I started counting at zero.
+Going up a bit, Ironwolf or Red Pro? My personal preference is Ironwolf.
+The Reds were always preferred on the list, but WD have really dropped
+the ball with making some of these drives SMR. These SMR drives *don't*
+*work* in raid full stop, which is bad seeing as they are marketed as
+raid drives! I don't know about Ironwolf Silver, but if it's optimised
+for raid the £3 is worth it :-)
 
-  diskfarm:root:14:~> ls -goh /dev/loop1?
-  brw-rw---- 1 7, 11 May 21 07:15 /dev/loop11                                                                                     
-  brw-rw---- 1 7, 12 May 21 07:15 /dev/loop12
-  brw-rw---- 1 7, 13 May 21 07:15 /dev/loop13                                                                                     
-  brw-rw---- 1 7, 14 May 21 07:15 /dev/loop14
+Ironwolf Pro? Probably overkill.
 
-  diskfarm:root:13:/mnt/scratch/disks> parallel losetup -d ::: /dev/loop1[1234]                                                   
-  losetup: /dev/loop11: detach failed: No such device or address
-  losetup: /dev/loop12: detach failed: No such device or address                                                                  
-  losetup: /dev/loop13: detach failed: No such device or address
-  losetup: /dev/loop14: detach failed: No such device or address                                                                  
-
-Even listing only the actual devices didn't seem to help much.  Huh?
-Never mind; let's move on.
-
-  diskfarm:root:13:/mnt/scratch/disks> dmsetup status
-  No devices found                                                                                                                
-
-  diskfarm:root:13:/mnt/scratch/disks> mdadm --assemble --force /dev/md0 --verbose /dev/sda1 /dev/sdb1 /dev/sdc1
-  mdadm: looking for devices for /dev/md0                                                                                         
-  mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 3.
-  mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 0.                                                                 
-  mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 2.
-  mdadm: forcing event count in /dev/sdc1(2) from 57836 upto 57840                                                                
-  mdadm: clearing FAULTY flag for device 2 in /dev/md0 for /dev/sdc1
-  mdadm: Marking array /dev/md0 as 'clean'                                                                                        
-  mdadm: no uptodate device for slot 1 of /dev/md0
-  mdadm: added /dev/sdc1 to /dev/md0 as 2                                                                                         
-  mdadm: added /dev/sda1 to /dev/md0 as 3
-  mdadm: added /dev/sdb1 to /dev/md0 as 0                                                                                         
-  mdadm: /dev/md0 has been started with 3 drives (out of 4).
-
-  diskfarm:root:13:/mnt/scratch/disks> cat /proc/mdstat                                                                           
-  Personalities : [raid6] [raid5] [raid4] 
-  md0 : active (auto-read-only) raid5 sdb1[0] sda1[4] sdc1[3]
-        11720265216 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U_UU]
-        
-  md127 : active raid5 sdf2[0] sdg2[1] sdh2[3]
-        1464622080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
-        
-  unused devices: <none>
-
-This looks good!  No protection, but it functions.
-
-  diskfarm:root:13:/mnt/scratch/disks> mount /mnt/4Traid5md
-  diskfarm:root:13:/mnt/scratch/disks> df -kh !$
-  df -kh /mnt/4Traid5md
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/md0p1       11T   11T  3.7G 100% /mnt/4Traid5md
-
-Sure enough, there it is.  Yay.
-
-Now ...  What do I do with the last drive?  Can I put it back in and let
-it catch up, or should it reinitialize and build from scratch?
-
-
-Thanks again & HANd
-
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
+On all of these, caveat emptor. I'm in the UK, so if the web page or
+marketing blurb says "suitable for raid", then I can RMA them as "unfit
+for purpose". I don't know what your legal regime is.
+> 
+> This whole problem sounds familiar to me.  I thought that it was possible
+> to adjust the timeouts on the software side to match the longer disk time
+> or similar.  Of course, I didn't know that I had a real problem in the
+> first place ...  But does that sound familiar to anyone?
+> 
+ :-) :-) :-)
+> 
+> % 
+> ...
+> % 
+> % In the meantime, make sure you're running Brad's script, and watch out
+> % for any hint of lengthening read/write times. That's unlikely to be why
+> % your overlay drives won't mount - I suspect a problem with loopback, but
+> % I don't know.
+> 
+> I most definitely also want to be able to spot trends to get ahead of
+> failures.  I just don't know for what to look or how to parse it to write
+> a script that will say "hey, this thingie here is growing, and you said
+> you cared ...".
+> 
+> 
+> % 
+> % What I don't want to advise, but I strongly suspect will work, is to
+> % force-assemble the two good drives and the nearly-good drive. Because it
+> % has no redundancy it won't scramble your data because it can't do a
+> 
+> Should I, then, get rid of the mapper overlay stuff?  I tried pointing to
+> even just three devs and got that they're busy.
+> 
+> 
+> % rebuild, but I would VERY STRONGLY suggest you download lsdrv and get
+> % the output. The whole point of this script is to get the information you
+> 
+> You mean the output that is some error and a few lines of traceback?
+> Yeah, I saw that, but I don't know how to fix it.  Another problem in the
+> queue.
+> 
+Last time I ran it, it was Python 2.7. I needed to edit the shebang
+line. I think Phil's fixed that.
+> 
+> % need so that if everything does go pear shaped, you can rebuild the
+> % metadata from first principles. It's easy - git clone, run.
+> 
+> ... and then debug ;-)
+> 
+> 
+> % 
+> % Cheers,
+> % Wol
+> 
+> 
+> Thanks again & HAND
+> 
+> :-D
+> 
