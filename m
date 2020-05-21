@@ -1,46 +1,56 @@
 From: David T-G <davidtg-robot@justpickone.org>
-Subject: Re: disks & prices plus python
-Date: Thu, 21 May 2020 09:46:24 -0400
-Message-ID: <20200521134624.GS1415@justpickone.org>
+Subject: Re: re-add syntax
+Date: Thu, 21 May 2020 14:07:00 -0400
+Message-ID: <20200521180700.GT1415@justpickone.org>
 References: <20200520200514.GE1415@justpickone.org>
  <5EC5BBEF.7070002@youngman.org.uk>
  <20200520235347.GF1415@justpickone.org>
  <5EC63745.1080602@youngman.org.uk>
- <20200521110103.GG1415@justpickone.org>
- <5EC66C2E.90901@youngman.org.uk>
- <20200521123059.GN1415@justpickone.org>
- <326faa2c-ba38-6cd4-c09c-ea321779e339@youngman.org.uk>
- <20200521131751.GQ1415@justpickone.org>
- <5EC68536.4040000@youngman.org.uk>
+ <20200521110139.GW1711@justpickone.org>
+ <20200521112421.GK1415@justpickone.org>
+ <5EC66D4E.8070708@youngman.org.uk>
+ <20200521123306.GO1415@justpickone.org>
+ <828a3b59-f79c-a205-3e1e-83e34ae93eac@youngman.org.uk>
+ <20200521131500.GP1415@justpickone.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5EC68536.4040000@youngman.org.uk>
+In-Reply-To: <20200521131500.GP1415@justpickone.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Wol, et al --
+Hi, all --
 
-...and then Wols Lists said...
+...and then davidtg-robot@justpickone.org said...
 % 
-% On 21/05/20 14:17, David T-G wrote:
-% > 
-% > Heh.  Except that this box has only three ports, so one was going to
-% > become USB storage or some such anyway.  But that means I can't have a
-% > RAID10 vol ...
+% ...and then antlists said...
+% % 
+% % So *you* should choose re-add. Let mdadm choose add if it can't do a re-add.
 % 
-% Three SATA ports? That sounds very stingy! (Or is it four, but one's the
-% DVD?)
-[snip]
+% Thanks.  Sooooo ...  Given this
+...
+% does this
+% 
+%   mdadm --manage /dev/md0 --re-add /dev/sdd1
+% 
+% look like the right next step?
 
-Nope; it's three.  It's an old Acer tower.  You wouldn't believe how old
-and pieced-together my gear is ...  If memory serves, we're pushing 20
-years now on diskfarm, and the "new" little system is probably 10.
+Perhaps it did, but it wasn't to be:
+
+  diskfarm:root:10:~> mdadm --manage /dev/md0 --re-add /dev/sdd1
+  mdadm: --re-add for /dev/sdd1 to /dev/md0 is not possible
+
+So we'll try "add"
+
+  diskfarm:root:10:~> mdadm --manage /dev/md0 --add /dev/sdd1
+  mdadm: added /dev/sdd1
+
+and now we wait :-)
 
 
-HAND
+Thanks again to all
 
 :-D
 -- 
