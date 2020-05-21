@@ -1,39 +1,45 @@
 From: antlists <antlists@youngman.org.uk>
-Subject: Re: re-add syntax (was "Re: failed disks, mapper, and "Invalid
- argument"")
-Date: Thu, 21 May 2020 14:01:08 +0100
-Message-ID: <828a3b59-f79c-a205-3e1e-83e34ae93eac@youngman.org.uk>
+Subject: Re: disks & prices plus python (was "Re: failed disks, mapper, and
+ "Invalid argument"")
+Date: Thu, 21 May 2020 14:07:27 +0100
+Message-ID: <326faa2c-ba38-6cd4-c09c-ea321779e339@youngman.org.uk>
 References: <20200520200514.GE1415@justpickone.org>
  <5EC5BBEF.7070002@youngman.org.uk> <20200520235347.GF1415@justpickone.org>
- <5EC63745.1080602@youngman.org.uk> <20200521110139.GW1711@justpickone.org>
- <20200521112421.GK1415@justpickone.org> <5EC66D4E.8070708@youngman.org.uk>
- <20200521123306.GO1415@justpickone.org>
+ <5EC63745.1080602@youngman.org.uk> <20200521110103.GG1415@justpickone.org>
+ <5EC66C2E.90901@youngman.org.uk> <20200521123059.GN1415@justpickone.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200521123306.GO1415@justpickone.org>
+In-Reply-To: <20200521123059.GN1415@justpickone.org>
 Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
 To: David T-G <davidtg-robot@justpickone.org>, Linux RAID list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21/05/2020 13:33, David T-G wrote:
-> % Can't remember the syntax, but there's a re-add option. If it can find
-> % and replay a log of failed updates, it will bring the drive straight
-> % back in. Otherwise it will rebuild from scratch.
+On 21/05/2020 13:30, David T-G wrote:
+> % > %
+> % > % Seagate Barracudas:-(
+> % >
+> % > Yep.  They were good "back in the day" ...
 > %
-> % That's probably the safest way - let mdadm choose the best option.
+> % Still are. Just not for raid..
 > 
-> OK; yay.  I'm still confused, though, between "add" and "readd".  I'll
-> take any pointers to docs I can get.
+> Oh!  Well, that's nice to know.  Of course, I had been hoping to move
+> these out to another system after upgrading to larger, but maybe that's
+> not an option:-(   They are going to be worlds better than the existing
+> crap drives in there now, though, so here's hoping I can put them to use.
 
-Add just adds the drive back and rebuilds it.
+General advice is don't use them for parity raid - ie 5 or 6! They're 
+okay (but not adviseable) for mirrors.
 
-Readd will play a journal if it can. If it can't, it will fall back and 
-do an add.
+So if you really want to use them in a raid array, I'd go for a 6TB 
+raid-10. Okay, you've lost 3TB of disk space, but you've bought a 66% 
+chance of surviving a 2-disk failure.
 
-So *you* should choose re-add. Let mdadm choose add if it can't do a re-add.
+I'm not sure what I'm going to do with mine. I've bought an add-in eSATA 
+card to go with my eSATA drive bay, so I may well use them as external 
+backups.
 
 Cheers,
 Wol
