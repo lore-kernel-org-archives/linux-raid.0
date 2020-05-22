@@ -1,48 +1,40 @@
-From: David T-G <davidtg-robot@justpickone.org>
-Subject: Re: re-add syntax
-Date: Thu, 21 May 2020 19:53:38 -0400
-Message-ID: <20200521235338.GV1415@justpickone.org>
-References: <20200521110139.GW1711@justpickone.org>
- <20200521112421.GK1415@justpickone.org>
- <5EC66D4E.8070708@youngman.org.uk>
- <20200521123306.GO1415@justpickone.org>
- <828a3b59-f79c-a205-3e1e-83e34ae93eac@youngman.org.uk>
- <20200521131500.GP1415@justpickone.org>
- <20200521180700.GT1415@justpickone.org>
- <CAAMCDecB+CU-EGtx+4bMPKBYcy65sgT-8MW=s=OeviyZeq6URA@mail.gmail.com>
- <20200521225230.GU1415@justpickone.org>
- <48fe44c5-f43e-3167-fd08-077dfc429cf2@youngman.org.uk>
+From: antlists <antlists@youngman.org.uk>
+Subject: Re: WD Red drives are now SMR drives?
+Date: Fri, 22 May 2020 17:26:49 +0100
+Message-ID: <b183a091-da81-0832-f1b6-a53738024eb1@youngman.org.uk>
+References: <b012e351-54cb-47c5-5fd7-fd2ee22322ed@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <48fe44c5-f43e-3167-fd08-077dfc429cf2@youngman.org.uk>
+In-Reply-To: <b012e351-54cb-47c5-5fd7-fd2ee22322ed@youngman.org.uk>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID list <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Wol, et al --
+On 04/05/2020 00:38, antlists wrote:
+> Has anyone else picked up on this? Apparently 1TB and 8TB drives are 
+> still CMR, but new drives between 2 and 6 TB are now SMR drives.
+> 
+> https://www.extremetech.com/computing/309730-western-digital-comes-clean-shares-which-hard-drives-use-smr 
+> 
+> 
+> What impact will this have on using them in raid arrays?
+> 
+Following up, two more articles ...
 
-...and then antlists said...
-% 
-% On 21/05/2020 23:52, David T-G wrote:
-% >
-...
-% >
-% >I've wondered about an internal bitmap vs not.  I also wonder how big the
-% >bitmap is and where else I might stick it ...
-% 
-% Bear in mind the bitmap is obsolete ... I need to get my head round
-% it, but you should upgrade from bitmap to journal ... amongst other
-[snip]
+https://blocksandfiles.com/2020/04/15/shingled-drives-have-non-shingled-zones-for-caching-writes/
 
-Ahhhhh...  Very good to know!  Thanks.
+https://blocksandfiles.com/2020/04/15/seagate-2-4-and-8tb-barracuda-and-desktop-hdd-smr/
 
+https://blocksandfiles.com/2020/04/16/toshiba-desktop-disk-drives-undocumented-shingle-magnetic-recording/
 
-HANW
+Note that for both Seagate and Toshiba it's only Desktop drives, and 
+their raid lines are unaffected.
 
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
+It's interesting to note that the interviewee in the first article is 
+assuming that the WD firmware is buggy ... :-)
+
+Cheers,
+Wol
