@@ -1,7 +1,7 @@
-From: Thomas Grawert <thomasgrawert0282@gmail.com>
+From: antlists <antlists@youngman.org.uk>
 Subject: Re: help requested for mdadm grow error
-Date: Tue, 26 May 2020 00:18:42 +0200
-Message-ID: <b5e5c7af-9d1b-3eca-f3a1-f03f8d308015@gmail.com>
+Date: Mon, 25 May 2020 23:32:38 +0100
+Message-ID: <37636c91-9baf-4565-9849-f8aca54e392e@youngman.org.uk>
 References: <7d95da49-33d8-cd4d-fa3f-0f3d3074cb30@gmail.com>
  <5ECC09D6.1010300@youngman.org.uk>
  <ff4ea9cd-ab35-0990-5946-4a72d4021658@gmail.com>
@@ -12,25 +12,43 @@ References: <7d95da49-33d8-cd4d-fa3f-0f3d3074cb30@gmail.com>
  <e1a4a609-2068-b084-59a6-214c88798966@youngman.org.uk>
  <e1ad56b2-df70-bc6a-9a81-333230d558c2@gmail.com>
  <358e9f6b-a989-0e4a-04c4-6efe2666159f@youngman.org.uk>
+ <b5e5c7af-9d1b-3eca-f3a1-f03f8d308015@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <358e9f6b-a989-0e4a-04c4-6efe2666159f@youngman.org.uk>
+In-Reply-To: <b5e5c7af-9d1b-3eca-f3a1-f03f8d308015@gmail.com>
+Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
+To: Thomas Grawert <thomasgrawert0282@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 25/05/2020 23:18, Thomas Grawert wrote:
+> 
+>> Okay, so we need to grep dmesg looking for a message like that above 
+>> about reshaping.
+>>
+>> So let's grep for "md/raid" and see what we get ...
+> 
+> root@nas:~# dmesg | grep md/raid
+> [  321.819562] md/raid:md0: not clean -- starting background reconstruction
+> [  321.819564] md/raid:md0: reshape_position too early for auto-recovery 
+> - aborting.
+> 
+> 
+> (again: thanks a lot for your help. I never expected that! :-) )
+> 
+> 
+Okay, so go back to the previous email for an example of how to revert 
+the reshape - it's done exactly what I expected and the reshape has 
+failed to start.
 
-> Okay, so we need to grep dmesg looking for a message like that above 
-> about reshaping.
->
-> So let's grep for "md/raid" and see what we get ...
+Once you've reverted the reshape, it should start fine. And with an 
+up-to-date mdadm and kernel, it should start and finish reshaping fine.
 
-root@nas:~# dmesg | grep md/raid
-[  321.819562] md/raid:md0: not clean -- starting background reconstruction
-[  321.819564] md/raid:md0: reshape_position too early for auto-recovery 
-- aborting.
+So step 1, revert the reshape. Step 2, get the array back running. Step 
+3, start the reshape again.
 
-
-(again: thanks a lot for your help. I never expected that! :-) )
+Cheers,
+Wol
