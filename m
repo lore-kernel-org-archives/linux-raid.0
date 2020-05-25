@@ -1,7 +1,7 @@
 From: Thomas Grawert <thomasgrawert0282@gmail.com>
 Subject: Re: help requested for mdadm grow error
-Date: Tue, 26 May 2020 01:15:41 +0200
-Message-ID: <333a650e-2345-0e09-b53e-57b6f2e6cc68@gmail.com>
+Date: Tue, 26 May 2020 01:31:14 +0200
+Message-ID: <50c3b5ce-519b-57a6-6f11-f99d69c3fd23@gmail.com>
 References: <7d95da49-33d8-cd4d-fa3f-0f3d3074cb30@gmail.com>
  <5ECC09D6.1010300@youngman.org.uk>
  <ff4ea9cd-ab35-0990-5946-4a72d4021658@gmail.com>
@@ -23,61 +23,55 @@ Sender: linux-raid-owner@vger.kernel.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+ok, maybe it´s getting out of scope now. If so, please let me know...
 
-> So step 1, revert the reshape. Step 2, get the array back running. 
-> Step 3, start the reshape again.
+md0 is clean and running. no active resync.  I just tried to mount the 
+filesystem to check if everything is fine and to proceed with growing... 
+thanks god, I did it this way because:
 
-root@nas:~# mdadm --readwrite /dev/md0
-root@nas:~# mdadm -D /dev/md0
-/dev/md0:
-            Version : 1.2
-      Creation Time : Sun May 17 00:23:42 2020
-         Raid Level : raid5
-         Array Size : 35156256768 (33527.62 GiB 36000.01 GB)
-      Used Dev Size : 11718752256 (11175.87 GiB 12000.00 GB)
-       Raid Devices : 4
-      Total Devices : 5
-        Persistence : Superblock is persistent
+root@nas:~# mount /dev/md0 /mnt
+mount: /mnt: wrong fs type, bad option, bad superblock on /dev/md0, 
+missing codepage or helper program, or other error.
 
-      Intent Bitmap : Internal
+root@nas:~# df -h
+Filesystem    Größe Benutzt Verf. Verw% Eingehängt auf
+udev             16G       0   16G    0% /dev
+tmpfs           3,1G     11M  3,1G    1% /run
+/dev/sdg2       203G    7,2G  186G    4% /
+tmpfs            16G       0   16G    0% /dev/shm
+tmpfs           5,0M    4,0K  5,0M    1% /run/lock
+tmpfs            16G       0   16G    0% /sys/fs/cgroup
+/dev/sdg1       511M    5,2M  506M    1% /boot/efi
+tmpfs           3,1G       0  3,1G    0% /run/user/0
+root@nas:~# fsck /dev/md0
+fsck from util-linux 2.33.1
+e2fsck 1.44.5 (15-Dec-2018)
+ext2fs_open2: Ungültige magische Zahl im Superblock
+fsck.ext2: Superblock ungültig, Datensicherungs-Blöcke werden versucht ...
+fsck.ext2: Ungültige magische Zahl im Superblock beim Versuch, /dev/md0 
+zu öffnen
 
-        Update Time : Tue May 26 01:13:08 2020
-              State : clean
-     Active Devices : 4
-    Working Devices : 5
-     Failed Devices : 0
-      Spare Devices : 1
+Der Superblock ist unlesbar bzw. beschreibt kein gültiges ext2/ext3/ext4-
+Dateisystem. Wenn das Gerät gültig ist und ein ext2/ext3/ext4-
+Dateisystem (kein swap oder ufs usw.) enthält, dann ist der Superblock
+beschädigt, und Sie könnten versuchen, e2fsck mit einem anderen Superblock
+zu starten:
+     e2fsck -b 8193 <Gerät>
+  oder
+     e2fsck -b 32768 <Gerät>
 
-             Layout : left-symmetric
-         Chunk Size : 512K
+In /dev/md0 wurde eine gpt-Partitionstabelle gefunden
 
-Consistency Policy : bitmap
+=========================================
 
-               Name : nas:0  (local to host nas)
-               UUID : d7d800b3:d203ff93:9cc2149a:804a1b97
-             Events : 38605
+For those who not understand German:
+ext2fs_open2: Invalid magical number in superblock
+fsck.ext2: Superblock invalid. Backup-blocks are tried...
+fsck.ext2:  Invalid magical number in superblock when trying to open 
+/dev/md0
 
-     Number   Major   Minor   RaidDevice State
-        0       8        1        0      active sync   /dev/sda1
-        1       8       33        1      active sync   /dev/sdc1
-        2       8       49        2      active sync   /dev/sdd1
-        4       8       65        3      active sync   /dev/sde1
+Found a gpt-partition-table at /dev/md0
 
-        5       8       81        -      spare   /dev/sdf1
-root@nas:~# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md0 : active raid5 sda1[0] sdf1[5](S) sde1[4] sdd1[2] sdc1[1]
-       35156256768 blocks super 1.2 level 5, 512k chunk, algorithm 2 
-[4/4] [UUUU]
-       bitmap: 0/88 pages [0KB], 65536KB chunk
+=========================================
 
-unused devices: <none>
-
-=================================
-
-ok, got a bit too scared :)
-
-it´s now working again. so I can plugin a UPS and restart grow.
-
-guys, thank you all very much for your help.
+there should be a valid ext4 filesystem...
