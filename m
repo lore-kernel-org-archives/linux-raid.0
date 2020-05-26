@@ -1,7 +1,7 @@
-From: antlists <antlists@youngman.org.uk>
+From: Thomas Grawert <thomasgrawert0282@gmail.com>
 Subject: Re: help requested for mdadm grow error
-Date: Tue, 26 May 2020 02:16:20 +0100
-Message-ID: <dab8f436-ab65-880e-dc4a-b19d6a2659dc@youngman.org.uk>
+Date: Tue, 26 May 2020 03:16:34 +0200
+Message-ID: <30b23c20-d16e-95d4-4460-96137ba4faa5@gmail.com>
 References: <7d95da49-33d8-cd4d-fa3f-0f3d3074cb30@gmail.com>
  <5ECC09D6.1010300@youngman.org.uk>
  <ff4ea9cd-ab35-0990-5946-4a72d4021658@gmail.com>
@@ -14,89 +14,98 @@ References: <7d95da49-33d8-cd4d-fa3f-0f3d3074cb30@gmail.com>
  <358e9f6b-a989-0e4a-04c4-6efe2666159f@youngman.org.uk>
  <b5e5c7af-9d1b-3eca-f3a1-f03f8d308015@gmail.com>
  <37636c91-9baf-4565-9849-f8aca54e392e@youngman.org.uk>
- <50c3b5ce-519b-57a6-6f11-f99d69c3fd23@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50c3b5ce-519b-57a6-6f11-f99d69c3fd23@gmail.com>
-Content-Language: en-GB
+In-Reply-To: <37636c91-9baf-4565-9849-f8aca54e392e@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Grawert <thomasgrawert0282@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/05/2020 00:31, Thomas Grawert wrote:
-> ok, maybe it´s getting out of scope now. If so, please let me know...
-> 
-> md0 is clean and running. no active resync.  I just tried to mount the 
-> filesystem to check if everything is fine and to proceed with growing... 
-> thanks god, I did it this way because:
-> 
-> root@nas:~# mount /dev/md0 /mnt
-> mount: /mnt: wrong fs type, bad option, bad superblock on /dev/md0, 
-> missing codepage or helper program, or other error.
-> 
-> root@nas:~# df -h
-> Filesystem    Größe Benutzt Verf. Verw% Eingehängt auf
-> udev             16G       0   16G    0% /dev
-> tmpfs           3,1G     11M  3,1G    1% /run
-> /dev/sdg2       203G    7,2G  186G    4% /
-> tmpfs            16G       0   16G    0% /dev/shm
-> tmpfs           5,0M    4,0K  5,0M    1% /run/lock
-> tmpfs            16G       0   16G    0% /sys/fs/cgroup
-> /dev/sdg1       511M    5,2M  506M    1% /boot/efi
-> tmpfs           3,1G       0  3,1G    0% /run/user/0
-> root@nas:~# fsck /dev/md0
-> fsck from util-linux 2.33.1
-> e2fsck 1.44.5 (15-Dec-2018)
-> ext2fs_open2: Ungültige magische Zahl im Superblock
-> fsck.ext2: Superblock ungültig, Datensicherungs-Blöcke werden versucht ...
-> fsck.ext2: Ungültige magische Zahl im Superblock beim Versuch, /dev/md0 
-> zu öffnen
-> 
-> Der Superblock ist unlesbar bzw. beschreibt kein gültiges ext2/ext3/ext4-
-> Dateisystem. Wenn das Gerät gültig ist und ein ext2/ext3/ext4-
-> Dateisystem (kein swap oder ufs usw.) enthält, dann ist der Superblock
-> beschädigt, und Sie könnten versuchen, e2fsck mit einem anderen Superblock
-> zu starten:
->      e2fsck -b 8193 <Gerät>
->   oder
->      e2fsck -b 32768 <Gerät>
-> 
-> In /dev/md0 wurde eine gpt-Partitionstabelle gefunden
-> 
-> =========================================
-> 
-> For those who not understand German:
-> ext2fs_open2: Invalid magical number in superblock
-> fsck.ext2: Superblock invalid. Backup-blocks are tried...
-> fsck.ext2:  Invalid magical number in superblock when trying to open 
-> /dev/md0
-> 
-> Found a gpt-partition-table at /dev/md0
-> 
-> =========================================
-> 
-> there should be a valid ext4 filesystem...
-> 
-Oh help ...
+Finally, the solution:
 
-Hopefully all that's happened is that something has written a GPT and 
-that's it. Unfortunately, that seems painfully common - rogue tools 
-format disks when they shouldn't ... I just hope it's not the Debian 
-upgrade that did it.
+as mentioned earlier, I reverted the reshape
 
-So we should hopefully just be able to recover the filesystem, except I 
-don't know how.
+mdadm --assemble /dev/md0 --force --verbose --update=revert-reshape 
+--invalid-backup /dev/sda1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
 
-Did you actually try the e2fsck with the alternate superblocks? That's 
-the limit of what I can suggest. I don't think e2fsck will try them for 
-you - you have to explicitly tell it.
+This restarted the md auto-read-only. So I had to manually start the md
 
-Just test it by using the "don't write anything" option, whatever that 
-is? If that then doesn't report many errors, it looks like we may have 
-our filesystem back - cross fingers ...
+mdadm --readwrite /dev/md0
 
-Cheers,
-Wol
+which resulted in bad superblock.
+
+mke2fs won´t work here, because it´s limited to 16TB of diskspace, where 
+my md is 36TiB big. Because I´m a bit lazy to google some more, I 
+started gparted at the machine, choosed the md0 und initiated filesystem 
+integrity check.
+
+This took 5 minutes, afterwards I was able to mount my md.
+
+So I unmounted the md again in order to grow it again:
+
+root@nas:~# mdadm --grow --raid-devices=5 /dev/md0 
+--backup-file=/tmp/bu_neu.bak
+mdadm: Need to backup 6144K of critical section..
+root@nas:~# mdadm -D /dev/md0
+/dev/md0:
+            Version : 1.2
+      Creation Time : Sun May 17 00:23:42 2020
+         Raid Level : raid5
+         Array Size : 35156256768 (33527.62 GiB 36000.01 GB)
+      Used Dev Size : 11718752256 (11175.87 GiB 12000.00 GB)
+       Raid Devices : 5
+      Total Devices : 5
+        Persistence : Superblock is persistent
+
+      Intent Bitmap : Internal
+
+        Update Time : Tue May 26 02:08:22 2020
+              State : clean, reshaping
+     Active Devices : 5
+    Working Devices : 5
+     Failed Devices : 0
+      Spare Devices : 0
+
+             Layout : left-symmetric
+         Chunk Size : 512K
+
+Consistency Policy : bitmap
+
+     Reshape Status : 0% complete
+      Delta Devices : 1, (4->5)
+
+               Name : nas:0  (local to host nas)
+               UUID : d7d800b3:d203ff93:9cc2149a:804a1b97
+             Events : 38631
+
+     Number   Major   Minor   RaidDevice State
+        0       8        1        0      active sync   /dev/sda1
+        1       8       33        1      active sync   /dev/sdc1
+        2       8       49        2      active sync   /dev/sdd1
+        4       8       65        3      active sync   /dev/sde1
+        5       8       81        4      active sync   /dev/sdf1
+root@nas:~#
+
+As we see in mdadm details, reshaping is running. Have a look at mdstat:
+
+root@nas:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] 
+[raid1] [raid10]
+md0 : active raid5 sda1[0] sdf1[5] sde1[4] sdd1[2] sdc1[1]
+       35156256768 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[5/5] [UUUUU]
+       [>....................]  reshape =  0.8% (93989376/11718752256) 
+finish=8260.4min speed=23454K/sec
+       bitmap: 0/88 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+
+Seems to be a bit slowly right now. I had expected a speed arount 
+60MByte due to 6G-Sata drives. However.. it´s running again.
+
+I will dig into speed later.
+
+Again: Thanks to everyone who helped me with ideas and / or advice. You 
+guys saved my ass :)
