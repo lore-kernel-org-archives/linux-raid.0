@@ -1,36 +1,29 @@
-From: Kinga Tanska <kinga.tanska@intel.com>
-Subject: [PATCH] Block overwriting existing links while manual assembly
-Date: Wed, 27 May 2020 09:14:43 +0200
-Message-ID: <20200527071443.20998-1-kinga.tanska@intel.com>
+From: "Mrs.Judith Rice" <hamurafujimi@tmail.plala.or.jp>
+Subject: Spende
+Date: Wed, 27 May 2020 22:08:28 +0900
+Message-ID: <20200527220828.CT7ZD.794.root__6212.90451833687$1590585377$gmane$org@mwebp13>
+Reply-To: jonesevansje@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-Manual assembly with existing link caused overwriting
-this link. Add checking link and block this situation.
+Attn:
 
-Change-Id: I29ef58636e8fd8583bcaef1b28b6cf2edec385ef
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
----
- Assemble.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Es tut uns leid, dass wir Sie aufgrund eines Mismanagent of Beneficaries-Fonds von unseren ernannten Zonal Managern versp&#228;tet kontaktiert haben. Bitte beachten Sie, dass Sie qualifiziert sind, die Zahlung von 900.000,00 USD an der ATM-Karte mit neunhunderttausend Dollar zu erhalten.
 
-diff --git a/Assemble.c b/Assemble.c
-index 6b5a7c8e..92616251 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1482,6 +1482,10 @@ try_again:
- 				name = content->name;
- 			break;
- 		}
-+		if (mddev && map_by_name(&map, mddev) != NULL) {
-+			pr_err("Cannot create device with %s because is in use\n", mddev);
-+			goto out;
-+		}
- 		if (!auto_assem)
- 			/* If the array is listed in mdadm.conf or on
- 			 * command line, then we trust the name
--- 
-2.16.4
+Als Entsch&#228;digung von WORLD BANK / IWF (Internationaler W&#228;hrungsfonds) f&#252;r die automatisch &#252;ber einen E-Mail-Wahlautomaten gezogenen, die in der Vergangenheit noch nicht abgeschlossene Transaktionen hatten.
+
+F&#252;r weitere Informationen kontaktieren Sie bitte Rev.EVANS JONES ( jonesevansje@gmail.com )
+
+Bitte senden Sie ihm Ihre pers&#246;nlichen Daten wie:
+
+Vollst&#228;ndiger Name:
+Wohnanschrift:
+Telefonnummer:
+Herkunftsland:
+
+Gr&#252;&#223;e,
+Mrs. Judith Rice
