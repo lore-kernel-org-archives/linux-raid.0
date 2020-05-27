@@ -1,168 +1,66 @@
-From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v3 00/11] md/raid5: set STRIPE_SIZE as a configurable value
-Date: Wed, 27 May 2020 21:19:22 +0800
-Message-ID: <20200527131933.34400-1-yuyufen@huawei.com>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Re: Assemblin journaled array fails
+Date: Wed, 27 May 2020 15:36:06 +0200
+Message-ID: <7b2b2bca-c1b7-06c5-10c5-2b1cdda21607@yandex.pl>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+ <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl>
+ <56b68265-ca54-05d3-95bc-ea8ee0b227f6@yandex.pl>
+ <CAPhsuW4WcqkDXOhcuG33bZtSEZ-V-KYPLm87piBH24eYEB0qVw@mail.gmail.com>
+ <b9b6b007-2177-a844-4d80-480393f30476@yandex.pl>
+ <CAPhsuW70NNozBmt1-zsM_Pk-39cLzi8bC3ZZaNwQ0-VgYsmkiA@mail.gmail.com>
+ <f9b54d87-5b81-1fa3-04d5-ea86a6c062cb@yandex.pl>
+ <CAPhsuW5ZfmCowTHNum5CSeadHqqPa5049weK6bq=m+JmnDE9Vg@mail.gmail.com>
+ <d0340d7b-6b3a-4fd3-e446-5f0967132ef6@yandex.pl>
+ <CAPhsuW4byXUvseqoj3Pw4r5nRGu=fHekdDec8FG6vj3of1wCyg@mail.gmail.com>
+ <1cb6c63f-a74c-a6f4-6875-455780f53fa1@yandex.pl>
+ <CAPhsuW6HdatOPJykqYCQs_7onWL1-AQRo05TygkXdRVSwAy_gQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW6HdatOPJykqYCQs_7onWL1-AQRo05TygkXdRVSwAy_gQ@mail.gmail.com>
+Content-Language: en-US-large
 Sender: linux-raid-owner@vger.kernel.org
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com, yuyufen@huawei.com
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi, all
+On 5/27/20 1:37 AM, Song Liu wrote:
+> On Mon, May 25, 2020 at 9:23 AM Michal Soltys <msoltyspl@yandex.pl> wrote:
+>>
+>> On 5/19/20 1:55 AM, Song Liu wrote:
+>>>
+>>> 2. try use bcc/bpftrace to trace r5l_recovery_read_page(),
+>>> specifically, the 4th argument.
+>>> With bcc, it is something like:
+>>>
+>>>       trace.py -M 100 'r5l_recovery_read_page() "%llx", arg4'
+>>>
+>>> -M above limits the number of outputs to 100 lines. We may need to
+>>> increase the limit or
+>>> remove the constraint. If the system doesn't have bcc/bpftrace. You
+>>> can also try with
+>>> kprobe.
+>>>
+>>
+>>
+> 
+> Looks like the kernel has processed about 1.2GB of journal (9b69bb8 -
+> 98f65b8 sectors).
+> And the limit is min(1/4 disk size, 10GB).
+> 
+> I just checked the code, it should stop once it hits checksum
+> mismatch. Does it keep going
+> after half hour or so?
 
- For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5 will
- issus echo bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64. However,
- filesystem usually issue bio in the unit of 4KB. Then, RAID5 will waste resource
- of disk bandwidth.
+It keeps going so far (mdadm started few hours ago):
 
- To solve the problem, this patchset provide a new config CONFIG_MD_RAID456_STRIPE_SHIFT
- to let user config STRIPE_SIZE. The default value is 1, means 4096(1<<9).
-
- Normally, using default STRIPE_SIZE can get better performance. And NeilBrown have
- suggested just to fix the STRIPE_SIZE as 4096. But, out test result show that
- big value of STRIPE_SIZE may have better performance when size of issued IOs are
- mostly bigger than 4096. Thus, in this patchset, we still want to set STRIPE_SIZE
- as a configureable value.
-
- In current implementation, grow_buffers() uses alloc_page() to allocate the buffers
- for each stripe_head. With the change, it means we allocate 64K buffers but just
- use 4K of them. To save memory, we try to 'compress' multiple buffers of stripe_head
- to only one real page. Detail shows in patch #2.
-
- To evaluate the new feature, we create raid5 device '/dev/md5' with 4 SSD disk
- and test it on arm64 machine with 64KB PAGE_SIZE.
- 
- 1) We format /dev/md5 with mkfs.ext4 and mount ext4 with default configure on
-    /mnt directory. Then, trying to test it by dbench with command:
-    dbench -D /mnt -t 1000 10. Result show as:
- 
-    'STRIPE_SHIFT = 64KB'
-   
-      Operation      Count    AvgLat    MaxLat
-      ----------------------------------------
-      NTCreateX    9805011     0.021    64.728
-      Close        7202525     0.001     0.120
-      Rename        415213     0.051    44.681
-      Unlink       1980066     0.079    93.147
-      Deltree          240     1.793     6.516
-      Mkdir            120     0.004     0.007
-      Qpathinfo    8887512     0.007    37.114
-      Qfileinfo    1557262     0.001     0.030
-      Qfsinfo      1629582     0.012     0.152
-      Sfileinfo     798756     0.040    57.641
-      Find         3436004     0.019    57.782
-      WriteX       4887239     0.021    57.638
-      ReadX        15370483     0.005    37.818
-      LockX          31934     0.003     0.022
-      UnlockX        31933     0.001     0.021
-      Flush         687205    13.302   530.088
-     
-     Throughput 307.799 MB/sec  10 clients  10 procs  max_latency=530.091 ms
-     -------------------------------------------------------
-     
-    'STRIPE_SIZE = 4KB'
-     
-      Operation      Count    AvgLat    MaxLat
-      ----------------------------------------
-      NTCreateX    11999166     0.021    36.380
-      Close        8814128     0.001     0.122
-      Rename        508113     0.051    29.169
-      Unlink       2423242     0.070    38.141
-      Deltree          300     1.885     7.155
-      Mkdir            150     0.004     0.006
-      Qpathinfo    10875921     0.007    35.485
-      Qfileinfo    1905837     0.001     0.032
-      Qfsinfo      1994304     0.012     0.125
-      Sfileinfo     977450     0.029    26.489
-      Find         4204952     0.019     9.361
-      WriteX       5981890     0.019    27.804
-      ReadX        18809742     0.004    33.491
-      LockX          39074     0.003     0.025
-      UnlockX        39074     0.001     0.014
-      Flush         841022    10.712   458.848
-     
-     Throughput 376.777 MB/sec  10 clients  10 procs  max_latency=458.852 ms
-     -------------------------------------------------------
- 
-    It shows that setting STREIP_SIZE as 4KB has higher thoughput, i.e.
-    (376.777 vs 307.799) and has smaller latency (530.091 vs 458.852)
-    than that setting as 64KB.
- 
- 2) We try to evaluate IO throughput for /dev/md5 by fio with config:
- 
-     [4KB randwrite]
-     direct=1
-     numjob=2
-     iodepth=64
-     ioengine=libaio
-     filename=/dev/md5
-     bs=4KB
-     rw=randwrite
-     
-     [64KB write]
-     direct=1
-     numjob=2
-     iodepth=64
-     ioengine=libaio
-     filename=/dev/md5
-     bs=1MB
-     rw=write
-     
-    The fio test result as follow:
-     
-                   +                   +
-                   | STRIPE_SIZE(64KB) | STRIPE_SIZE(4KB)
-     +----------------------------------------------------+
-     4KB randwrite |     15MB/s        |      100MB/s
-     +----------------------------------------------------+
-     1MB write     |   1000MB/s        |      700MB/s
- 
-    The result show that when size of io is bigger than 4KB (64KB),
-    64KB STRIPE_SIZE has much higher IOPS. But for 4KB randwrite, that
-    means, size of io issued to device are smaller, 4KB STRIPE_SIZE
-    have better performance.
-
-V3: 
- * RAID6 can support shared pages.
- * Rename function raid5_compress_stripe_pages() as 
-   raid5_stripe_pages_shared() and update commit message.
- * Rename CONFIG_MD_RAID456_STRIPE_SIZE as CONFIG_MD_RAID456_STRIPE_SHIFT,
-   and make the STRIPE_SIZE as multiple of 4KB.
-
-V2:
- https://www.spinics.net/lists/raid/msg64254.html
- Introduce share pages strategy to save memory, just support RAID4 and RAID5.
-
-V1:
- https://www.spinics.net/lists/raid/msg63111.html
- Just add CONFIG_MD_RAID456_STRIPE_SIZE to set STRIPE_SIZE
-
-
-Yufen Yu (11):
-  md/raid5: add CONFIG_MD_RAID456_STRIPE_SHIFT to set STRIPE_SIZE
-  md/raid5: add a member of r5pages for struct stripe_head
-  md/raid5: allocate and free pages of r5pages
-  md/raid5: set correct page offset for bi_io_vec in ops_run_io()
-  md/raid5: set correct page offset for async_copy_data()
-  md/raid5: add new xor function to support different page offset
-  md/raid5: add offset array in scribble buffer
-  md/raid5: compute xor with correct page offset
-  md/raid6: let syndrome computor support different page offset
-  md/raid6: compute syndrome with correct page offset
-  raid6test: adaptation with syndrome function
-
- crypto/async_tx/async_pq.c          |  71 ++++---
- crypto/async_tx/async_raid6_recov.c | 161 +++++++++++----
- crypto/async_tx/async_xor.c         | 120 +++++++++--
- crypto/async_tx/raid6test.c         |  24 ++-
- drivers/md/Kconfig                  |  21 ++
- drivers/md/raid5.c                  | 302 +++++++++++++++++++++++-----
- drivers/md/raid5.h                  |  59 +++++-
- include/linux/async_tx.h            |  23 ++-
- 8 files changed, 628 insertions(+), 153 deletions(-)
-
--- 
-2.21.3
+xs22:/home/msl☠ head -n 4 trace.out
+TIME     PID     TID     COMM            FUNC             -
+12:58:21 40739   40739   mdadm           r5l_recovery_read_page 98f65b8
+12:58:21 40739   40739   mdadm           r5l_recovery_read_page 98f65c0
+12:58:21 40739   40739   mdadm           r5l_recovery_read_page 98f65c8
+xs22:/home/msl☠ tail -n 4 trace.out
+15:34:50 40739   40739   mdadm           r5l_recovery_read_page bc04e88
+15:34:50 40739   40739   mdadm           r5l_recovery_read_page bc04e90
+15:34:50 40739   40739   mdadm           r5l_recovery_read_page bc04e98
