@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v3 11/11] raid6test: adaptation with syndrome function
-Date: Wed, 27 May 2020 21:19:33 +0800
-Message-ID: <20200527131933.34400-12-yuyufen@huawei.com>
+Subject: [PATCH v3 08/11] md/raid5: compute xor with correct page offset
+Date: Wed, 27 May 2020 21:19:30 +0800
+Message-ID: <20200527131933.34400-9-yuyufen@huawei.com>
 References: <20200527131933.34400-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,103 +13,214 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-After changing some syndrome functions to support different page offsets,
-we also need to adapt raid6test module. In this module, pages are allocated
-by the itself and their offset are '0'.
+When compute xor, the pages address will be passed to computer function.
+After trying to use pages in r5pages, we also need to pass page offset
+to let it know correct location of each page.
+
+For now raid5-cache and raid5-ppl are supported only when PAGE_SIZE is
+equal to 4096. In that case, shared pages will not be supported and
+dev->offset is '0'. So, we can use that value directly.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- crypto/async_tx/raid6test.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+ drivers/md/raid5.c | 64 ++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 51 insertions(+), 13 deletions(-)
 
-diff --git a/crypto/async_tx/raid6test.c b/crypto/async_tx/raid6test.c
-index 14e73dcd7475..66db82e5a3b1 100644
---- a/crypto/async_tx/raid6test.c
-+++ b/crypto/async_tx/raid6test.c
-@@ -18,6 +18,7 @@
- #define NDISKS 64 /* Including P and Q */
- 
- static struct page *dataptrs[NDISKS];
-+unsigned int dataoffs[NDISKS];
- static addr_conv_t addr_conv[NDISKS];
- static struct page *data[NDISKS+3];
- static struct page *spare;
-@@ -38,6 +39,7 @@ static void makedata(int disks)
- 	for (i = 0; i < disks; i++) {
- 		prandom_bytes(page_address(data[i]), PAGE_SIZE);
- 		dataptrs[i] = data[i];
-+		dataoffs[i] = 0;
- 	}
- }
- 
-@@ -52,7 +54,8 @@ static char disk_type(int d, int disks)
- }
- 
- /* Recover two failed blocks. */
--static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, struct page **ptrs)
-+static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb,
-+		struct page **ptrs, unsigned int *offs)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index b97ebc7b5747..1a59c1db96ff 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1481,6 +1481,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
  {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	int target = sh->ops.target;
+ 	struct r5dev *tgt = &sh->dev[target];
+ 	struct page *xor_dest = tgt->page;
+@@ -1488,6 +1489,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	struct dma_async_tx_descriptor *tx;
  	struct async_submit_ctl submit;
- 	struct completion cmp;
-@@ -66,7 +69,8 @@ static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, stru
- 		if (faila == disks-2) {
- 			/* P+Q failure.  Just rebuild the syndrome. */
- 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
--			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
-+			tx = async_gen_syndrome(ptrs, offs,
-+					disks, bytes, &submit);
- 		} else {
- 			struct page *blocks[NDISKS];
- 			struct page *dest;
-@@ -89,22 +93,26 @@ static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, stru
- 			tx = async_xor(dest, blocks, 0, count, bytes, &submit);
+ 	int i;
++	unsigned int des_offset = tgt->offset;
  
- 			init_async_submit(&submit, 0, tx, NULL, NULL, addr_conv);
--			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
-+			tx = async_gen_syndrome(ptrs, offs,
-+					disks, bytes, &submit);
+ 	BUG_ON(sh->batch_head);
+ 
+@@ -1495,18 +1497,23 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 		__func__, (unsigned long long)sh->sector, target);
+ 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+ 
+-	for (i = disks; i--; )
+-		if (i != target)
++	for (i = disks; i--; ) {
++		if (i != target) {
++			offs[count] = sh->dev[i].offset;
+ 			xor_srcs[count++] = sh->dev[i].page;
++		}
++	}
+ 
+ 	atomic_inc(&sh->count);
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL,
+ 			  ops_complete_compute, sh, to_addr_conv(sh, percpu, 0));
+ 	if (unlikely(count == 1))
+-		tx = async_memcpy(xor_dest, xor_srcs[0], 0, 0, STRIPE_SIZE, &submit);
++		tx = async_memcpy(xor_dest, xor_srcs[0], des_offset, offs[0],
++				STRIPE_SIZE, &submit);
+ 	else
+-		tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE, &submit);
++		tx = async_xor_offsets(xor_dest, des_offset, xor_srcs, offs,
++				count, STRIPE_SIZE, &submit);
+ 
+ 	return tx;
+ }
+@@ -1745,10 +1752,12 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	int count = 0, pd_idx = sh->pd_idx, i;
+ 	struct async_submit_ctl submit;
+ 
+ 	/* existing parity data subtracted */
++	unsigned int des_offset = offs[count] = sh->dev[pd_idx].offset;
+ 	struct page *xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
+ 
+ 	BUG_ON(sh->batch_head);
+@@ -1758,15 +1767,23 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	for (i = disks; i--; ) {
+ 		struct r5dev *dev = &sh->dev[i];
+ 		/* Only process blocks that are known to be uptodate */
+-		if (test_bit(R5_InJournal, &dev->flags))
++		if (test_bit(R5_InJournal, &dev->flags)) {
++			/*
++			 * For this case, PAGE_SIZE must be 4KB and will not
++			 * use r5pages. So dev->offset is zero.
++			 */
++			offs[count] = dev->offset;
+ 			xor_srcs[count++] = dev->orig_page;
+-		else if (test_bit(R5_Wantdrain, &dev->flags))
++		} else if (test_bit(R5_Wantdrain, &dev->flags)) {
++			offs[count] = dev->offset;
+ 			xor_srcs[count++] = dev->page;
++		}
+ 	}
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
+ 			  ops_complete_prexor, sh, to_addr_conv(sh, percpu, 0));
+-	tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE, &submit);
++	tx = async_xor_offsets(xor_dest, des_offset, xor_srcs, offs,
++			count, STRIPE_SIZE, &submit);
+ 
+ 	return tx;
+ }
+@@ -1916,6 +1933,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs;
++	unsigned int *offs;
+ 	struct async_submit_ctl submit;
+ 	int count, pd_idx = sh->pd_idx, i;
+ 	struct page *xor_dest;
+@@ -1924,6 +1942,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	int j = 0;
+ 	struct stripe_head *head_sh = sh;
+ 	int last_stripe;
++	unsigned int des_offset;
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+@@ -1940,27 +1959,37 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 		ops_complete_reconstruct(sh);
+ 		return;
+ 	}
++
+ again:
+ 	count = 0;
+ 	xor_srcs = to_addr_page(percpu, j);
++	offs = to_addr_offs(sh, percpu);
+ 	/* check if prexor is active which means only process blocks
+ 	 * that are part of a read-modify-write (written)
+ 	 */
+ 	if (head_sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
+ 		prexor = 1;
++		des_offset = offs[count] = sh->dev[pd_idx].offset;
+ 		xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
++
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if (head_sh->dev[i].written ||
+-			    test_bit(R5_InJournal, &head_sh->dev[i].flags))
++			    test_bit(R5_InJournal, &head_sh->dev[i].flags)) {
++				offs[count] = dev->offset;
+ 				xor_srcs[count++] = dev->page;
++			}
  		}
  	} else {
- 		if (failb == disks-2) {
- 			/* data+P failure. */
- 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
--			tx = async_raid6_datap_recov(disks, bytes, faila, ptrs, &submit);
-+			tx = async_raid6_datap_recov(disks, bytes,
-+					faila, ptrs, offs, &submit);
- 		} else {
- 			/* data+data failure. */
- 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
--			tx = async_raid6_2data_recov(disks, bytes, faila, failb, ptrs, &submit);
-+			tx = async_raid6_2data_recov(disks, bytes,
-+					faila, failb, ptrs, offs, &submit);
+ 		xor_dest = sh->dev[pd_idx].page;
++		des_offset = sh->dev[pd_idx].offset;
++
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if (i != pd_idx)
++			if (i != pd_idx) {
++				offs[count] = dev->offset;
+ 				xor_srcs[count++] = dev->page;
++			}
  		}
  	}
- 	init_completion(&cmp);
- 	init_async_submit(&submit, ASYNC_TX_ACK, tx, callback, &cmp, addr_conv);
--	tx = async_syndrome_val(ptrs, 0, disks, bytes, &result, spare, &submit);
-+	tx = async_syndrome_val(ptrs, offs,
-+			disks, bytes, &result, spare, 0, &submit);
- 	async_tx_issue_pending(tx);
  
- 	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0)
-@@ -126,7 +134,7 @@ static int test_disks(int i, int j, int disks)
- 	dataptrs[i] = recovi;
- 	dataptrs[j] = recovj;
+@@ -1986,9 +2015,12 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	}
  
--	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs);
-+	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs, dataoffs);
+ 	if (unlikely(count == 1))
+-		tx = async_memcpy(xor_dest, xor_srcs[0], 0, 0, STRIPE_SIZE, &submit);
++		tx = async_memcpy(xor_dest, xor_srcs[0], des_offset,
++				offs[0], STRIPE_SIZE, &submit);
+ 	else
+-		tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE, &submit);
++		tx = async_xor_offsets(xor_dest, des_offset, xor_srcs,
++				offs, count, STRIPE_SIZE, &submit);
++
+ 	if (!last_stripe) {
+ 		j++;
+ 		sh = list_first_entry(&sh->batch_list, struct stripe_head,
+@@ -2076,10 +2108,12 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	int qd_idx = sh->qd_idx;
+ 	struct page *xor_dest;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	struct dma_async_tx_descriptor *tx;
+ 	struct async_submit_ctl submit;
+ 	int count;
+ 	int i;
++	unsigned int dest_offset;
  
- 	erra = memcmp(page_address(data[i]), page_address(recovi), PAGE_SIZE);
- 	errb = memcmp(page_address(data[j]), page_address(recovj), PAGE_SIZE);
-@@ -162,7 +170,7 @@ static int test(int disks, int *tests)
- 	/* Generate assumed good syndrome */
- 	init_completion(&cmp);
- 	init_async_submit(&submit, ASYNC_TX_ACK, NULL, callback, &cmp, addr_conv);
--	tx = async_gen_syndrome(dataptrs, 0, disks, PAGE_SIZE, &submit);
-+	tx = async_gen_syndrome(dataptrs, dataoffs, disks, PAGE_SIZE, &submit);
- 	async_tx_issue_pending(tx);
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+@@ -2087,17 +2121,21 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	BUG_ON(sh->batch_head);
+ 	count = 0;
+ 	xor_dest = sh->dev[pd_idx].page;
++	dest_offset = sh->dev[pd_idx].offset;
++	offs[count] = dest_offset;
+ 	xor_srcs[count++] = xor_dest;
++
+ 	for (i = disks; i--; ) {
+ 		if (i == pd_idx || i == qd_idx)
+ 			continue;
++		offs[count] = sh->dev[i].offset;
+ 		xor_srcs[count++] = sh->dev[i].page;
+ 	}
  
- 	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0) {
+ 	init_async_submit(&submit, 0, NULL, NULL, NULL,
+ 			  to_addr_conv(sh, percpu, 0));
+-	tx = async_xor_val(xor_dest, xor_srcs, 0, count, STRIPE_SIZE,
+-			   &sh->ops.zero_sum_result, &submit);
++	tx = async_xor_val_offsets(xor_dest, dest_offset, xor_srcs, offs,
++			count, STRIPE_SIZE, &sh->ops.zero_sum_result, &submit);
+ 
+ 	atomic_inc(&sh->count);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, tx, ops_complete_check, sh, NULL);
 -- 
 2.21.3
