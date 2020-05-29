@@ -1,44 +1,47 @@
-From: Michal Soltys <msoltyspl@yandex.pl>
-Subject: Re: Assemblin journaled array fails
-Date: Fri, 29 May 2020 14:09:17 +0200
-Message-ID: <1767d7aa-6c60-7efb-bf37-6506f9aaa8a2@yandex.pl>
-References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
- <70dad446-7d38-fd10-130f-c23797165a21@yandex.pl>
- <56b68265-ca54-05d3-95bc-ea8ee0b227f6@yandex.pl>
- <CAPhsuW4WcqkDXOhcuG33bZtSEZ-V-KYPLm87piBH24eYEB0qVw@mail.gmail.com>
- <b9b6b007-2177-a844-4d80-480393f30476@yandex.pl>
- <CAPhsuW70NNozBmt1-zsM_Pk-39cLzi8bC3ZZaNwQ0-VgYsmkiA@mail.gmail.com>
- <f9b54d87-5b81-1fa3-04d5-ea86a6c062cb@yandex.pl>
- <CAPhsuW5ZfmCowTHNum5CSeadHqqPa5049weK6bq=m+JmnDE9Vg@mail.gmail.com>
- <d0340d7b-6b3a-4fd3-e446-5f0967132ef6@yandex.pl>
- <CAPhsuW4byXUvseqoj3Pw4r5nRGu=fHekdDec8FG6vj3of1wCyg@mail.gmail.com>
- <1cb6c63f-a74c-a6f4-6875-455780f53fa1@yandex.pl>
- <CAPhsuW6HdatOPJykqYCQs_7onWL1-AQRo05TygkXdRVSwAy_gQ@mail.gmail.com>
- <7b2b2bca-c1b7-06c5-10c5-2b1cdda21607@yandex.pl>
- <48e4fa28-4d20-ba80-cd69-b17da719531a@yandex.pl>
- <CAPhsuW69VYgLBZboxvQ6-Fmm-Oa0fGOVBg3SOVkzP_UopH+_wg@mail.gmail.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [PATCH v3 00/11] md/raid5: set STRIPE_SIZE as a configurable
+ value
+Date: Fri, 29 May 2020 14:22:30 +0200
+Message-ID: <71f662d7-9aee-a130-c41d-67a691514ef6@cloud.ionos.com>
+References: <20200527131933.34400-1-yuyufen@huawei.com>
+ <f0ab9a2d-696b-b21f-faec-370cd7c3ed3a@cloud.ionos.com>
+ <e373279d-9cc0-3a47-e6dd-887de0162d63@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW69VYgLBZboxvQ6-Fmm-Oa0fGOVBg3SOVkzP_UopH+_wg@mail.gmail.com>
-Content-Language: en-US-large
+In-Reply-To: <e373279d-9cc0-3a47-e6dd-887de0162d63@huawei.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Yufen Yu <yuyufen@huawei.com>, song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, colyli@suse.de, xni@redhat.com, houtao1@huawei.com
 List-Id: linux-raid.ids
 
-On 5/28/20 5:06 PM, Song Liu wrote:
-> 
-> For the next step, could you please try the following the beginning of
-> --assemble
-> run?
-> 
->     trace.py -M 10 'r::r5l_recovery_verify_data_checksum()(retval != 0)'
-> 
-> Thanks,
-> Song
-> 
+On 5/29/20 1:49 PM, Yufen Yu wrote:
+>> The 4k rand write performance drops from 100MB/S to 15MB/S?! How 
+>> about other
+>> io sizes? Say 16k, 64K and 256K etc, it would be more convincing if 
+>> 64KB stripe
+>> has better performance than 4KB stripe overall.
+>>
+>
+> Maybe I have not explain clearly. Here, the fio test result shows that 
+> 4KB
+> STRIPE_SIZE is not always have better performance. If applications 
+> request
+> IO size mostly are bigger than 4KB, likely 1MB in test, set 
+> STRIPE_SIZE with
+> a bigger value can get better performance.
+>
+> So, we try to provide a configurable STRIPE_SIZE, rather than fix 
+> STRIPE_SIZE as 4096. 
 
-How long should I keep this one running ? So far - after ~1hr - nothing 
-got reported.
+Which means if you set stripe size to 64KB then you should guarantee the 
+io size should
+always bigger then 1MB, right? Given that, I don't think it makes lots 
+of sense.
+
+Anyway, just my $0.02.
+
+Thanks,
+Guoqing
