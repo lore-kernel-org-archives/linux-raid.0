@@ -1,15 +1,35 @@
-From: "manuel franco" <manuel@info.com>
-Subject: Spende von 2.000.000,00 Euro
-Date: Thu, 28 May 2020 18:29:53 +0200
-Message-ID: <20200528163007.0621138E0A1B__41780.0417797238$1590704919$gmane$org@correo.bnv.gob.ve>
-Reply-To: manuelfrancospende11@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+From: Kinga Tanska <kinga.tanska@intel.com>
+Subject: [PATCH,v2] Block overwriting existing links while manual assembly
+Date: Fri, 29 May 2020 08:31:36 +0200
+Message-ID: <20200529063136.8177-1-kinga.tanska@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <manuel@info.com>
+To: linux-raid@vger.kernel.org
+Cc: jes.sorensen@gmail.com
 List-Id: linux-raid.ids
 
-Ich bin Manuel Franco, ich spende Ihnen 2.000.000,00 Euro. Nehmen Sie jetzt Kontakt mit mir auf, damit wir fortfahren können.
+Manual assembly with existing link caused overwriting
+this link. Add checking link and block this situation.
+
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+---
+ Assemble.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Assemble.c b/Assemble.c
+index 6b5a7c8e..92616251 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1482,6 +1482,10 @@ try_again:
+ 				name = content->name;
+ 			break;
+ 		}
++		if (mddev && map_by_name(&map, mddev) != NULL) {
++			pr_err("Cannot create device with %s because is in use\n", mddev);
++			goto out;
++		}
+ 		if (!auto_assem)
+ 			/* If the array is listed in mdadm.conf or on
+ 			 * command line, then we trust the name
+-- 
+2.16.4
