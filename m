@@ -1,47 +1,59 @@
-From: Rong Chen <rong.a.chen@intel.com>
-Subject: Re: [kbuild-all] Re: [PATCH] md: improve io stats accounting
-Date: Tue, 2 Jun 2020 14:31:28 +0800
-Message-ID: <46c406a2-0586-1291-a9c2-5a2e6bf328f6@intel.com>
+From: Song Liu <song@kernel.org>
+Subject: Re: [PATCH] md: improve io stats accounting
+Date: Mon, 1 Jun 2020 23:48:45 -0700
+Message-ID: <CAPhsuW4fjc4NgFGQUPuAKSvtWvtzyPor876anj64NF=nqaPo5g@mail.gmail.com>
 References: <20200601161256.27718-1-artur.paszkiewicz@intel.com>
- <202006020549.F4anhkPI%lkp@intel.com>
- <CAPhsuW5AKgHQaAOhqxd+4BEXL+Dc8SDiR+N27Y9AHnLXnjSQgw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW5AKgHQaAOhqxd+4BEXL+Dc8SDiR+N27Y9AHnLXnjSQgw@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20200601161256.27718-1-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>, kbuild test robot <lkp@intel.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, kbuild-all@lists.01.org, linux-raid <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Artur,
 
+Thanks for the patch.
 
-On 6/2/20 2:22 PM, Song Liu wrote:
-> Hi kbuild test robot,
+On Mon, Jun 1, 2020 at 9:13 AM Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 >
-> On Mon, Jun 1, 2020 at 3:03 PM kbuild test robot <lkp@intel.com> wrote:
->> Hi Artur,
->>
->> I love your patch! Yet something to improve:
->>
->> [auto build test ERROR on next-20200529]
->> [cannot apply to linus/master md/for-next v5.7 v5.7-rc7 v5.7-rc6 v5.7]
->> [if your patch is applied to the wrong git tree, please drop us a note to help
->> improve the system. BTW, we also suggest to use '--base' option to specify the
-> I am able to apply this to
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
->
-> Please use that branch for testing.
->
-> Thanks,
-> Song
+> Use generic io accounting functions to manage io stats. There was an
+[...]
 
-Hi Song,
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  drivers/md/md.c | 65 +++++++++++++++++++++++++++++++++++++++----------
+>  drivers/md/md.h |  1 +
+>  2 files changed, 53 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f567f536b529..5a9f167ef5b9 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -463,12 +463,32 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
+>  }
+>  EXPORT_SYMBOL(md_handle_request);
+>
+>
 
-Thanks for your advice, we'll try.
+[...]
 
-Best Regards,
-Rong Chen
+>
+> -       /*
+> -        * save the sectors now since our bio can
+> -        * go away inside make_request
+> -        */
+> -       sectors = bio_sectors(bio);
+> +       if (bio->bi_pool != &mddev->md_io_bs) {
+> +               struct bio *clone;
+> +               struct md_io *md_io;
+> +
+> +               clone = bio_clone_fast(bio, GFP_NOIO, &mddev->md_io_bs);
+
+Handle clone == NULL?
+
+Also, have you done benchmarks with this change?
+
+Song
