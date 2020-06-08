@@ -1,83 +1,171 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH] md: improve io stats accounting
-Date: Mon, 8 Jun 2020 16:37:27 +0200
-Message-ID: <d09aefa9-00ed-ef94-f5c4-50be91828170@cloud.ionos.com>
-References: <20200601161256.27718-1-artur.paszkiewicz@intel.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 199/274] md: don't flush workqueue unconditionally in md_open
+Date: Mon,  8 Jun 2020 19:04:52 -0400
+Message-ID: <20200608230607.3361041-199-sashal@kernel.org>
+References: <20200608230607.3361041-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200601161256.27718-1-artur.paszkiewicz@intel.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, song@kernel.org
-Cc: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200608230607.3361041-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/1/20 6:12 PM, Artur Paszkiewicz wrote:
-> Use generic io accounting functions to manage io stats. There was an
-> attempt to do this earlier in commit 18c0b223cf990172 ("md: use generic
-> io stats accounting functions to simplify io stat accounting"), but it
-> did not include a call to generic_end_io_acct() and caused issues with
-> tracking in-flight IOs, so it was later removed in commit
-> 74672d069b298b03 ("md: fix md io stats accounting broken").
->
-> This patch attempts to fix this by using both generic_start_io_acct()
-> and generic_end_io_acct(). To make it possible, in md_make_request() a
-> bio is cloned with additional data - struct md_io, which includes the io
-> start_time. A new bioset is introduced for this purpose. We call
-> generic_start_io_acct() and pass the clone instead of the original to
-> md_handle_request(). When it completes, we call generic_end_io_acct()
-> and complete the original bio.
->
-> This adds correct statistics about in-flight IOs and IO processing time,
-> interpreted e.g. in iostat as await, svctm, aqu-sz and %util.
->
-> It also fixes a situation where too many IOs where reported if a bio was
-> re-submitted to the mddev, because io accounting is now performed only
-> on newly arriving bios.
->
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->   drivers/md/md.c | 65 +++++++++++++++++++++++++++++++++++++++----------
->   drivers/md/md.h |  1 +
->   2 files changed, 53 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f567f536b529..5a9f167ef5b9 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -463,12 +463,32 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
->   }
->   EXPORT_SYMBOL(md_handle_request);
->   
-> +struct md_io {
-> +	struct mddev *mddev;
-> +	struct bio *orig_bio;
-> +	unsigned long start_time;
-> +	struct bio orig_bio_clone;
-> +};
-> +
-> +static void md_end_request(struct bio *bio)
-> +{
-> +	struct md_io *md_io = bio->bi_private;
-> +	struct mddev *mddev = md_io->mddev;
-> +	struct bio *orig_bio = md_io->orig_bio;
-> +
-> +	orig_bio->bi_status = bio->bi_status;
-> +
-> +	generic_end_io_acct(mddev->queue, bio_op(orig_bio),
-> +			    &mddev->gendisk->part0, md_io->start_time);
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 
-[...]
+[ Upstream commit f6766ff6afff70e2aaf39e1511e16d471de7c3ae ]
 
-> +		generic_start_io_acct(mddev->queue, bio_op(bio),
-> +				      bio_sectors(bio), &mddev->gendisk->part0);
-> +	}
-> +
+We need to check mddev->del_work before flush workqueu since the purpose
+of flush is to ensure the previous md is disappeared. Otherwise the similar
+deadlock appeared if LOCKDEP is enabled, it is due to md_open holds the
+bdev->bd_mutex before flush workqueue.
 
-Now, you need to switch to call bio_{start,end}_io_acct instead of
-generic_{start,end}_io_acct after the changes from Christoph.
+kernel: [  154.522645] ======================================================
+kernel: [  154.522647] WARNING: possible circular locking dependency detected
+kernel: [  154.522650] 5.6.0-rc7-lp151.27-default #25 Tainted: G           O
+kernel: [  154.522651] ------------------------------------------------------
+kernel: [  154.522653] mdadm/2482 is trying to acquire lock:
+kernel: [  154.522655] ffff888078529128 ((wq_completion)md_misc){+.+.}, at: flush_workqueue+0x84/0x4b0
+kernel: [  154.522673]
+kernel: [  154.522673] but task is already holding lock:
+kernel: [  154.522675] ffff88804efa9338 (&bdev->bd_mutex){+.+.}, at: __blkdev_get+0x79/0x590
+kernel: [  154.522691]
+kernel: [  154.522691] which lock already depends on the new lock.
+kernel: [  154.522691]
+kernel: [  154.522694]
+kernel: [  154.522694] the existing dependency chain (in reverse order) is:
+kernel: [  154.522696]
+kernel: [  154.522696] -> #4 (&bdev->bd_mutex){+.+.}:
+kernel: [  154.522704]        __mutex_lock+0x87/0x950
+kernel: [  154.522706]        __blkdev_get+0x79/0x590
+kernel: [  154.522708]        blkdev_get+0x65/0x140
+kernel: [  154.522709]        blkdev_get_by_dev+0x2f/0x40
+kernel: [  154.522716]        lock_rdev+0x3d/0x90 [md_mod]
+kernel: [  154.522719]        md_import_device+0xd6/0x1b0 [md_mod]
+kernel: [  154.522723]        new_dev_store+0x15e/0x210 [md_mod]
+kernel: [  154.522728]        md_attr_store+0x7a/0xc0 [md_mod]
+kernel: [  154.522732]        kernfs_fop_write+0x117/0x1b0
+kernel: [  154.522735]        vfs_write+0xad/0x1a0
+kernel: [  154.522737]        ksys_write+0xa4/0xe0
+kernel: [  154.522745]        do_syscall_64+0x64/0x2b0
+kernel: [  154.522748]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522749]
+kernel: [  154.522749] -> #3 (&mddev->reconfig_mutex){+.+.}:
+kernel: [  154.522752]        __mutex_lock+0x87/0x950
+kernel: [  154.522756]        new_dev_store+0xc9/0x210 [md_mod]
+kernel: [  154.522759]        md_attr_store+0x7a/0xc0 [md_mod]
+kernel: [  154.522761]        kernfs_fop_write+0x117/0x1b0
+kernel: [  154.522763]        vfs_write+0xad/0x1a0
+kernel: [  154.522765]        ksys_write+0xa4/0xe0
+kernel: [  154.522767]        do_syscall_64+0x64/0x2b0
+kernel: [  154.522769]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522770]
+kernel: [  154.522770] -> #2 (kn->count#253){++++}:
+kernel: [  154.522775]        __kernfs_remove+0x253/0x2c0
+kernel: [  154.522778]        kernfs_remove+0x1f/0x30
+kernel: [  154.522780]        kobject_del+0x28/0x60
+kernel: [  154.522783]        mddev_delayed_delete+0x24/0x30 [md_mod]
+kernel: [  154.522786]        process_one_work+0x2a7/0x5f0
+kernel: [  154.522788]        worker_thread+0x2d/0x3d0
+kernel: [  154.522793]        kthread+0x117/0x130
+kernel: [  154.522795]        ret_from_fork+0x3a/0x50
+kernel: [  154.522796]
+kernel: [  154.522796] -> #1 ((work_completion)(&mddev->del_work)){+.+.}:
+kernel: [  154.522800]        process_one_work+0x27e/0x5f0
+kernel: [  154.522802]        worker_thread+0x2d/0x3d0
+kernel: [  154.522804]        kthread+0x117/0x130
+kernel: [  154.522806]        ret_from_fork+0x3a/0x50
+kernel: [  154.522807]
+kernel: [  154.522807] -> #0 ((wq_completion)md_misc){+.+.}:
+kernel: [  154.522813]        __lock_acquire+0x1392/0x1690
+kernel: [  154.522816]        lock_acquire+0xb4/0x1a0
+kernel: [  154.522818]        flush_workqueue+0xab/0x4b0
+kernel: [  154.522821]        md_open+0xb6/0xc0 [md_mod]
+kernel: [  154.522823]        __blkdev_get+0xea/0x590
+kernel: [  154.522825]        blkdev_get+0x65/0x140
+kernel: [  154.522828]        do_dentry_open+0x1d1/0x380
+kernel: [  154.522831]        path_openat+0x567/0xcc0
+kernel: [  154.522834]        do_filp_open+0x9b/0x110
+kernel: [  154.522836]        do_sys_openat2+0x201/0x2a0
+kernel: [  154.522838]        do_sys_open+0x57/0x80
+kernel: [  154.522840]        do_syscall_64+0x64/0x2b0
+kernel: [  154.522842]        entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522844]
+kernel: [  154.522844] other info that might help us debug this:
+kernel: [  154.522844]
+kernel: [  154.522846] Chain exists of:
+kernel: [  154.522846]   (wq_completion)md_misc --> &mddev->reconfig_mutex --> &bdev->bd_mutex
+kernel: [  154.522846]
+kernel: [  154.522850]  Possible unsafe locking scenario:
+kernel: [  154.522850]
+kernel: [  154.522852]        CPU0                    CPU1
+kernel: [  154.522853]        ----                    ----
+kernel: [  154.522854]   lock(&bdev->bd_mutex);
+kernel: [  154.522856]                                lock(&mddev->reconfig_mutex);
+kernel: [  154.522858]                                lock(&bdev->bd_mutex);
+kernel: [  154.522860]   lock((wq_completion)md_misc);
+kernel: [  154.522861]
+kernel: [  154.522861]  *** DEADLOCK ***
+kernel: [  154.522861]
+kernel: [  154.522864] 1 lock held by mdadm/2482:
+kernel: [  154.522865]  #0: ffff88804efa9338 (&bdev->bd_mutex){+.+.}, at: __blkdev_get+0x79/0x590
+kernel: [  154.522868]
+kernel: [  154.522868] stack backtrace:
+kernel: [  154.522873] CPU: 1 PID: 2482 Comm: mdadm Tainted: G           O      5.6.0-rc7-lp151.27-default #25
+kernel: [  154.522875] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014
+kernel: [  154.522878] Call Trace:
+kernel: [  154.522881]  dump_stack+0x8f/0xcb
+kernel: [  154.522884]  check_noncircular+0x194/0x1b0
+kernel: [  154.522888]  ? __lock_acquire+0x1392/0x1690
+kernel: [  154.522890]  __lock_acquire+0x1392/0x1690
+kernel: [  154.522893]  lock_acquire+0xb4/0x1a0
+kernel: [  154.522895]  ? flush_workqueue+0x84/0x4b0
+kernel: [  154.522898]  flush_workqueue+0xab/0x4b0
+kernel: [  154.522900]  ? flush_workqueue+0x84/0x4b0
+kernel: [  154.522905]  ? md_open+0xb6/0xc0 [md_mod]
+kernel: [  154.522908]  md_open+0xb6/0xc0 [md_mod]
+kernel: [  154.522910]  __blkdev_get+0xea/0x590
+kernel: [  154.522912]  ? bd_acquire+0xc0/0xc0
+kernel: [  154.522914]  blkdev_get+0x65/0x140
+kernel: [  154.522916]  ? bd_acquire+0xc0/0xc0
+kernel: [  154.522918]  do_dentry_open+0x1d1/0x380
+kernel: [  154.522921]  path_openat+0x567/0xcc0
+kernel: [  154.522923]  ? __lock_acquire+0x380/0x1690
+kernel: [  154.522926]  do_filp_open+0x9b/0x110
+kernel: [  154.522929]  ? __alloc_fd+0xe5/0x1f0
+kernel: [  154.522935]  ? kmem_cache_alloc+0x28c/0x630
+kernel: [  154.522939]  ? do_sys_openat2+0x201/0x2a0
+kernel: [  154.522941]  do_sys_openat2+0x201/0x2a0
+kernel: [  154.522944]  do_sys_open+0x57/0x80
+kernel: [  154.522946]  do_syscall_64+0x64/0x2b0
+kernel: [  154.522948]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+kernel: [  154.522951] RIP: 0033:0x7f98d279d9ae
 
-Thanks,
-Guoqing
+And md_alloc also flushed the same workqueue, but the thing is different
+here. Because all the paths call md_alloc don't hold bdev->bd_mutex, and
+the flush is necessary to avoid race condition, so leave it as it is.
+
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 271e8a587354..41eead9cbee9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7752,7 +7752,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
+ 		 */
+ 		mddev_put(mddev);
+ 		/* Wait until bdev->bd_disk is definitely gone */
+-		flush_workqueue(md_misc_wq);
++		if (work_pending(&mddev->del_work))
++			flush_workqueue(md_misc_wq);
+ 		/* Then retry the open from the top */
+ 		return -ERESTARTSYS;
+ 	}
+-- 
+2.25.1
