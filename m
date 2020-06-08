@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 34/50] md: don't flush workqueue unconditionally in md_open
-Date: Mon,  8 Jun 2020 19:26:24 -0400
-Message-ID: <20200608232640.3370262-34-sashal@kernel.org>
-References: <20200608232640.3370262-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 072/106] md: don't flush workqueue unconditionally in md_open
+Date: Mon,  8 Jun 2020 19:22:04 -0400
+Message-ID: <20200608232238.3368589-72-sashal@kernel.org>
+References: <20200608232238.3368589-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200608232640.3370262-1-sashal@kernel.org>
+In-Reply-To: <20200608232238.3368589-1-sashal@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
@@ -154,10 +154,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index da8708b65356..3485d2a79600 100644
+index 9426976e0860..a6db4fd267aa 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7101,7 +7101,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
+@@ -7438,7 +7438,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
  		 */
  		mddev_put(mddev);
  		/* Wait until bdev->bd_disk is definitely gone */
