@@ -1,62 +1,31 @@
-From: "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v2 13/18] raid5: Use sequence counter with associated spinlock
-Date: Mon,  8 Jun 2020 02:57:24 +0200
-Message-ID: <20200608005729.1874024-14-a.darwish@linutronix.de>
-References: <20200519214547.352050-1-a.darwish@linutronix.de>
- <20200608005729.1874024-1-a.darwish@linutronix.de>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] mdraid: fix read/write bytes accounting
+Date: Mon, 8 Jun 2020 09:13:02 +0200
+Message-ID: <ed552b4b-b19a-cc85-05f4-0a0dc0d6fac2@intel.com>
+References: <20200605201953.11098-1-jeffm@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200608005729.1874024-1-a.darwish@linutronix.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, "Paul E. McKenney" <paulmck@kernel.org>, "Sebastian A. Siewior" <bigeasy@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, "Ahmed S. Darwish" <a.darwish@linutronix.de>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200605201953.11098-1-jeffm@suse.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: jeffm@suse.com, linux-raid@vger.kernel.org, song@kernel.org
+Cc: nfbrown@suse.com, colyli@suse.com
 List-Id: linux-raid.ids
 
-A sequence counter write side critical section must be protected by some
-form of locking to serialize writers. A plain seqcount_t does not
-contain the information of which lock must be held when entering a write
-side critical section.
+On 6/5/20 10:19 PM, jeffm@suse.com wrote:
+> The i/o accounting published in /proc/diskstats for mdraid is currently
+> broken.  md_make_request does the accounting for every bio passed but
+> when a bio needs to be split, all the split bios are also submitted
+> through md_make_request, resulting in multiple accounting.
 
-Use the new seqcount_spinlock_t data type, which allows to associate a
-spinlock with the sequence counter. This enables lockdep to verify that
-the spinlock used for writer serialization is held when the write side
-critical section is entered.
+Hi Jeff,
 
-If lockdep is disabled this lock association is compiled out and has
-neither storage size nor runtime overhead.
+I sent a patch a few days ago which should fix this issue. Can you check
+it out?
 
-Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
----
- drivers/md/raid5.c | 2 +-
- drivers/md/raid5.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+https://marc.info/?l=linux-raid&m=159102814820539
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ba00e9877f02..69f31c675b58 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6929,7 +6929,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	} else
- 		goto abort;
- 	spin_lock_init(&conf->device_lock);
--	seqcount_init(&conf->gen_lock);
-+	seqcount_spinlock_init(&conf->gen_lock, &conf->device_lock);
- 	mutex_init(&conf->cache_size_mutex);
- 	init_waitqueue_head(&conf->wait_for_quiescent);
- 	init_waitqueue_head(&conf->wait_for_stripe);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index f90e0704bed9..a2c9e9e9f5ac 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -589,7 +589,7 @@ struct r5conf {
- 	int			prev_chunk_sectors;
- 	int			prev_algo;
- 	short			generation; /* increments with every reshape */
--	seqcount_t		gen_lock;	/* lock against generation changes */
-+	seqcount_spinlock_t	gen_lock;	/* lock against generation changes */
- 	unsigned long		reshape_checkpoint; /* Time we last updated
- 						     * metadata */
- 	long long		min_offset_diff; /* minimum difference between
--- 
-2.20.1
+Thanks,
+Artur
