@@ -1,31 +1,60 @@
-From: antlists <antlists@youngman.org.uk>
-Subject: Re: rsync input/output errors during resyncing of RAID10 e-sata,
- share changed to read-only
-Date: Tue, 9 Jun 2020 19:26:11 +0100
-Message-ID: <a54042af-a97e-5de0-b75c-33cb2cb5df76@youngman.org.uk>
-References: <CAFHi+KSxLugjBpj0vFdC6xJMQrnGUrHDamqA6BcyYBt51r+wAA@mail.gmail.com>
- <CAFHi+KRL2VfyiQxEPbPQRE8Kkaj1jO+FdUcPikJxFUPN514eRg@mail.gmail.com>
+From: Song Liu <song@kernel.org>
+Subject: Re: Assemblin journaled array fails
+Date: Tue, 9 Jun 2020 11:36:55 -0700
+Message-ID: <CAPhsuW5kk0G9PSfEADc8+rn=QT2z4ogjuV98qWsH_s_WBic-5w@mail.gmail.com>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+ <f9b54d87-5b81-1fa3-04d5-ea86a6c062cb@yandex.pl> <CAPhsuW5ZfmCowTHNum5CSeadHqqPa5049weK6bq=m+JmnDE9Vg@mail.gmail.com>
+ <d0340d7b-6b3a-4fd3-e446-5f0967132ef6@yandex.pl> <CAPhsuW4byXUvseqoj3Pw4r5nRGu=fHekdDec8FG6vj3of1wCyg@mail.gmail.com>
+ <1cb6c63f-a74c-a6f4-6875-455780f53fa1@yandex.pl> <CAPhsuW6HdatOPJykqYCQs_7onWL1-AQRo05TygkXdRVSwAy_gQ@mail.gmail.com>
+ <7b2b2bca-c1b7-06c5-10c5-2b1cdda21607@yandex.pl> <48e4fa28-4d20-ba80-cd69-b17da719531a@yandex.pl>
+ <CAPhsuW69VYgLBZboxvQ6-Fmm-Oa0fGOVBg3SOVkzP_UopH+_wg@mail.gmail.com>
+ <1767d7aa-6c60-7efb-bf37-6506f9aaa8a2@yandex.pl> <CAPhsuW4oMKuCrHUU1ucsMKQbSfBQdsNEQWHA1SSbGR5nbvy21w@mail.gmail.com>
+ <CAPhsuW4WBDGGLYc=f4xoThxtxuF5K74m3odJ-uA98DuPLJR4nw@mail.gmail.com>
+ <0cf6454d-a8b5-4bee-5389-94b23c077050@yandex.pl> <CAPhsuW51u6KWLvUntMXPU7stu7oSA+d-yT6zf7G0zCETzLWwiA@mail.gmail.com>
+ <49efa0d2-b44c-ec85-5e44-fb93a15001e7@yandex.pl> <4df42e3d-ad2b-dfc2-3961-49ada4ea7eaf@yandex.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFHi+KRL2VfyiQxEPbPQRE8Kkaj1jO+FdUcPikJxFUPN514eRg@mail.gmail.com>
-Content-Language: en-GB
+In-Reply-To: <4df42e3d-ad2b-dfc2-3961-49ada4ea7eaf@yandex.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kudyba <rkudyba@fordham.edu>, linux-raid@vger.kernel.org
+To: Michal Soltys <msoltyspl@yandex.pl>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 09/06/2020 17:51, Robert Kudyba wrote:
-> Disk /dev/sdf: 1.37 TiB, 1500301910016 bytes, 2930277168 sectors
-> Disk model: ST31500341AS
+On Tue, Jun 9, 2020 at 2:36 AM Michal Soltys <msoltyspl@yandex.pl> wrote:
+>
+> On 6/5/20 2:26 PM, Michal Soltys wrote:
+> > On 6/4/20 12:07 AM, Song Liu wrote:
+> >>
+> >> The hang happens at expected place.
+> >>
+> >>> [Jun 3 09:02] INFO: task mdadm:2858 blocked for more than 120 seconds.
+> >>> [  +0.060545]       Tainted: G            E
+> >>> 5.4.19-msl-00001-gbf39596faf12 #2
+> >>> [  +0.062932] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> >>> disables this message.
+> >>
+> >> Could you please try disable the timeout message with
+> >>
+> >> echo 0 > /proc/sys/kernel/hung_task_timeout_secs
+> >>
+> >> And during this wait (after message
+> >> "r5c_recovery_flush_data_only_stripes before wait_event"),
+> >> checks whether the raid disks (not the journal disk) are taking IOs
+> >> (using tools like iostat).
+> >>
+> >
+> > No activity on component drives.
+>
+> To expand on that - while there is no i/o activity whatsoever at the component drives (as well as journal), the cpu is of course still fully loaded (5 days so far):
+>
+> UID        PID  PPID  C    SZ   RSS PSR STIME TTY          TIME CMD
+> root      8129  6755 15   740  1904  10 Jun04 pts/2    17:42:34 mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/sdj1 /dev/sdi1 /dev/sdg1 /dev/sdh1
+> root      8147     2 84     0     0  30 Jun04 ?        4-02:09:47 [md124_raid5]
 
-Is this a Barracuda? ummmm :-(
+I guess the md thread stuck at some stripe. Does the kernel have
+CONFIG_DYNAMIC_DEBUG enabled? If so, could you please try enable some pr_debug()
+in function handle_stripe()?
 
-https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-
-Are you running that script that fixes timeouts?
-
-When you get things sorted, you need to check all the SMARTs.
-
-Cheers,
-Wol
+Thanks,
+Song
