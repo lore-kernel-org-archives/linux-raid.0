@@ -1,80 +1,59 @@
-From: "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>
-Subject: RE: [PATCH v2] Use more secure HTTPS URLs
-Date: Tue, 9 Jun 2020 09:15:16 +0000
-Message-ID: <SA0PR11MB454273621EA4A4876B1D3503FF820@SA0PR11MB4542.namprd11.prod.outlook.com>
-References: <20200528145224.19062-1-pmenzel@molgen.mpg.de>
- <8b02033d-7570-e654-dc18-a96f0a71d00c@trained-monkey.org>
- <31fb5c7a-90c9-1810-1087-9dfa32c2f7f3@molgen.mpg.de>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Re: Assemblin journaled array fails
+Date: Tue, 9 Jun 2020 11:36:12 +0200
+Message-ID: <4df42e3d-ad2b-dfc2-3961-49ada4ea7eaf@yandex.pl>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+ <f9b54d87-5b81-1fa3-04d5-ea86a6c062cb@yandex.pl>
+ <CAPhsuW5ZfmCowTHNum5CSeadHqqPa5049weK6bq=m+JmnDE9Vg@mail.gmail.com>
+ <d0340d7b-6b3a-4fd3-e446-5f0967132ef6@yandex.pl>
+ <CAPhsuW4byXUvseqoj3Pw4r5nRGu=fHekdDec8FG6vj3of1wCyg@mail.gmail.com>
+ <1cb6c63f-a74c-a6f4-6875-455780f53fa1@yandex.pl>
+ <CAPhsuW6HdatOPJykqYCQs_7onWL1-AQRo05TygkXdRVSwAy_gQ@mail.gmail.com>
+ <7b2b2bca-c1b7-06c5-10c5-2b1cdda21607@yandex.pl>
+ <48e4fa28-4d20-ba80-cd69-b17da719531a@yandex.pl>
+ <CAPhsuW69VYgLBZboxvQ6-Fmm-Oa0fGOVBg3SOVkzP_UopH+_wg@mail.gmail.com>
+ <1767d7aa-6c60-7efb-bf37-6506f9aaa8a2@yandex.pl>
+ <CAPhsuW4oMKuCrHUU1ucsMKQbSfBQdsNEQWHA1SSbGR5nbvy21w@mail.gmail.com>
+ <CAPhsuW4WBDGGLYc=f4xoThxtxuF5K74m3odJ-uA98DuPLJR4nw@mail.gmail.com>
+ <0cf6454d-a8b5-4bee-5389-94b23c077050@yandex.pl>
+ <CAPhsuW51u6KWLvUntMXPU7stu7oSA+d-yT6zf7G0zCETzLWwiA@mail.gmail.com>
+ <49efa0d2-b44c-ec85-5e44-fb93a15001e7@yandex.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <31fb5c7a-90c9-1810-1087-9dfa32c2f7f3@molgen.mpg.de>
-Content-Language: en-US
+In-Reply-To: <49efa0d2-b44c-ec85-5e44-fb93a15001e7@yandex.pl>
+Content-Language: en-US-large
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Menzel <pmenzel@molgen.mpg.de>, Jes Sorensen <jes@trained-monkey.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "Tanska, Kinga" <kinga.tanska@intel.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SGksDQpJJ20gcmVjb21tZW5kaW5nIHRoaXMgbGluazoNCmh0dHBzOi8vd3d3LmludGVsLmNvbS9j
-b250ZW50L3d3dy91cy9lbi9zdXBwb3J0L3Byb2R1Y3RzLzEyMjQ4NC9tZW1vcnktYW5kLXN0b3Jh
-Z2Uvc3NkLXNvZnR3YXJlL2ludGVsLXZpcnR1YWwtcmFpZC1vbi1jcHUtaW50ZWwtdnJvYy5odG1s
-DQoNCkN1cnJlbnRseSB3ZSBkb24ndCBoYXZlIGFueSBvbmxpbmUgc3VwZXJibG9jayBkZXNjcmlw
-dGlvbiwgcmVkaXJlY3RpbmcgdG8gdGhlIFZST0Mgc3VwcG9ydCBwYWdlIGlzIHRoZSBiZXN0IHdl
-IGNhbiBkby4NClByZXZpb3VzIGxpbmsgaXMgcGVybWFuZW50bHkgZGVhZC4NCg0KVGhhbmtzLA0K
-TWFyaXVzeg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtcmFpZC1v
-d25lckB2Z2VyLmtlcm5lbC5vcmcgPGxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnPiBP
-biBCZWhhbGYgT2YgUGF1bCBNZW56ZWwNClNlbnQ6IEZyaWRheSwgSnVuZSA1LCAyMDIwIDg6MjMg
-UE0NClRvOiBKZXMgU29yZW5zZW4gPGplc0B0cmFpbmVkLW1vbmtleS5vcmc+OyBUa2FjenlrLCBN
-YXJpdXN6IDxtYXJpdXN6LnRrYWN6eWtAaW50ZWwuY29tPg0KQ2M6IGxpbnV4LXJhaWRAdmdlci5r
-ZXJuZWwub3JnOyBCYWxkeXNpYWssIFBhd2VsIDxwYXdlbC5iYWxkeXNpYWtAaW50ZWwuY29tPjsg
-VGFuc2thLCBLaW5nYSA8a2luZ2EudGFuc2thQGludGVsLmNvbT4NClN1YmplY3Q6IFJlOiBbUEFU
-Q0ggdjJdIFVzZSBtb3JlIHNlY3VyZSBIVFRQUyBVUkxzDQoNCkRlYXIgSmVzLA0KDQoNCkFtIDA1
-LjA2LjIwIHVtIDE3OjE3IHNjaHJpZWIgSmVzIFNvcmVuc2VuOg0KPiBPbiA1LzI4LzIwIDEwOjUy
-IEFNLCBQYXVsIE1lbnplbCB3cm90ZToNCj4+IEFsbCBVUkxzIGluIHRoZSBzb3VyY2UgYXJlIGF2
-YWlsYWJsZSBvdmVyIEhUVFBTLCBzbyBjb252ZXJ0IGFsbCBVUkxzIA0KPj4gdG8gSFRUUFMgd2l0
-aCB0aGUgY29tbWFuZCBiZWxvdy4NCj4+DQo+PiAgICAgIGdpdCBncmVwIC1sICdodHRwOi8vJyB8
-IHhhcmdzIHNlZCAtaSAncyxodHRwOi8vLGh0dHBzOi8vLGcnDQo+Pg0KPj4gUmV2ZXJ0IHRoZSBj
-aGFuZ2VzIHRvIGFubm91bmNlbWVudCBmaWxlcyBgQU5OT1VOQ0UtKmAgYXMgcmVxdWVzdGVkIGJ5
-IA0KPj4gdGhlIG1haW50YWluZXIuDQo+Pg0KPj4gQ2M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwu
-b3JnDQo+PiBTaWduZWQtb2ZmLWJ5OiBQYXVsIE1lbnplbCA8cG1lbnplbEBtb2xnZW4ubXBnLmRl
-Pg0KPj4gLS0tDQo+PiAgIGV4dGVybmFsLXJlc2hhcGUtZGVzaWduLnR4dCAgICAgIHwgMiArLQ0K
-Pj4gICBtZGFkbS44LmluICAgICAgICAgICAgICAgICAgICAgICB8IDYgKysrLS0tDQo+PiAgIG1k
-YWRtLnNwZWMgICAgICAgICAgICAgICAgICAgICAgIHwgNCArKy0tDQo+PiAgIHJhaWQ2Y2hlY2su
-OCAgICAgICAgICAgICAgICAgICAgIHwgMiArLQ0KPj4gICByZXN0cmlwZS5jICAgICAgICAgICAg
-ICAgICAgICAgICB8IDIgKy0NCj4+ICAgdWRldi1tZC1yYWlkLXNhZmUtdGltZW91dHMucnVsZXMg
-fCAyICstDQo+PiAgIDYgZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCA5IGRlbGV0aW9u
-cygtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9leHRlcm5hbC1yZXNoYXBlLWRlc2lnbi50eHQgDQo+
-PiBiL2V4dGVybmFsLXJlc2hhcGUtZGVzaWduLnR4dCBpbmRleCAxMGM1N2NjLi5lNGNmNGUxIDEw
-MDY0NA0KPj4gLS0tIGEvZXh0ZXJuYWwtcmVzaGFwZS1kZXNpZ24udHh0DQo+PiArKysgYi9leHRl
-cm5hbC1yZXNoYXBlLWRlc2lnbi50eHQNCj4+IEBAIC0yNzcsNCArMjc3LDQgQEAgc3luY19hY3Rp
-b24NCj4+ICAgDQo+PiAgIC4uLg0KPj4gICANCj4+IC1bMV06IExpbnV4IGtlcm5lbCBkZXNpZ24g
-cGF0dGVybnMgLSBwYXJ0IDMsIE5laWwgQnJvd24gDQo+PiBodHRwOi8vbHduLm5ldC9BcnRpY2xl
-cy8zMzYyNjIvDQo+PiArWzFdOiBMaW51eCBrZXJuZWwgZGVzaWduIHBhdHRlcm5zIC0gcGFydCAz
-LCBOZWlsIEJyb3duIA0KPj4gK2h0dHBzOi8vbHduLm5ldC9BcnRpY2xlcy8zMzYyNjIvDQo+PiBk
-aWZmIC0tZ2l0IGEvbWRhZG0uOC5pbiBiL21kYWRtLjguaW4NCj4+IGluZGV4IDllN2NiOTYuLjdm
-MzI3NjIgMTAwNjQ0DQo+PiAtLS0gYS9tZGFkbS44LmluDQo+PiArKysgYi9tZGFkbS44LmluDQo+
-PiBAQCAtMzY3LDcgKzM2Nyw3IEBAIFVzZSB0aGUgSW50ZWwoUikgTWF0cml4IFN0b3JhZ2UgTWFu
-YWdlciBtZXRhZGF0YSBmb3JtYXQuICBUaGlzIGNyZWF0ZXMgYQ0KPj4gICB3aGljaCBpcyBtYW5h
-Z2VkIGluIGEgc2ltaWxhciBtYW5uZXIgdG8gRERGLCBhbmQgaXMgc3VwcG9ydGVkIGJ5IGFuDQo+
-PiAgIG9wdGlvbi1yb20gb24gc29tZSBwbGF0Zm9ybXM6DQo+PiAgIC5JUA0KPj4gLS5CIGh0dHA6
-Ly93d3cuaW50ZWwuY29tL2Rlc2lnbi9jaGlwc2V0cy9tYXRyaXhzdG9yYWdlX3NiLmh0bQ0KPj4g
-Ky5CIGh0dHBzOi8vd3d3LmludGVsLmNvbS9kZXNpZ24vY2hpcHNldHMvbWF0cml4c3RvcmFnZV9z
-Yi5odG0NCj4gDQo+IFNvcnJ5IGZvciBiZWluZyBhIHBhaW4sIGJ1dCB0aGlzIGxpbmsgaXNuJ3Qg
-YWN0dWFsbHkgdmFsaWQuDQoNClNvcnJ5LCBmb3Igbm90IG1lbnRpb25pbmcgdGhhdCBpbiB0aGUg
-Y29tbWl0IG1lc3NhZ2UuIEluZGVlZCB0aGUgb3JpZ2luYWwgcGFnZSBpcyBnb25lLCBidXQgdGhl
-IHBsYWluIEhUVFAgVVJMIGdldHMgcmVkaXJlY3RlZCB0byBIVFRQUywgc28gaXQgZG9lc27igJl0
-IGNoYW5nZSB0aGUgYmVoYXZpb3IgZnJvbSBiZWZvcmUuDQoNCmBgYA0KJCBjdXJsIC1JIGh0dHA6
-Ly93d3cuaW50ZWwuY29tL2Rlc2lnbi9jaGlwc2V0cy9tYXRyaXhzdG9yYWdlX3NiLmh0bQ0KSFRU
-UC8xLjEgMzAxIE1vdmVkIFBlcm1hbmVudGx5DQpTZXJ2ZXI6IEFrYW1haUdIb3N0DQpDb250ZW50
-LUxlbmd0aDogMA0KTG9jYXRpb246IGh0dHBzOi8vd3d3LmludGVsLmNvbS9kZXNpZ24vY2hpcHNl
-dHMvbWF0cml4c3RvcmFnZV9zYi5odG0NCkRhdGU6IEZyaSwgMDUgSnVuIDIwMjAgMTg6MjA6NDMg
-R01UDQpDb25uZWN0aW9uOiBrZWVwLWFsaXZlDQpTZXQtQ29va2llOiBkZXRlY3RlZF9iYW5kd2lk
-dGg9TE9XOyBwYXRoPS87IGRvbWFpbj0uaW50ZWwuY29tOyBzZWN1cmU7IEh0dHBPbmx5DQpTZXQt
-Q29va2llOiBzcmNfY291bnRyeWNvZGU9REU7IHBhdGg9LzsgZG9tYWluPS5pbnRlbC5jb207IHNl
-Y3VyZTsgSHR0cE9ubHkNCkFjY2Vzcy1Db250cm9sLUFsbG93LU9yaWdpbjogKg0KWC1Db250ZW50
-LVR5cGUtT3B0aW9uczogbm9zbmlmZg0KDQpgYGANCg0KU28sIG1heWJlIHRha2UgdGhpcyBwYXRj
-aCwgYW5kIHRoZSBvdXRkYXRlZCBVUkwgY2FuIGJlIGZpeGVkIGluIGEgZm9sbG93LXVwIG9uY2Ug
-aXTigJlzIGtub3duLg0KDQo+IERvZXMgc29tZW9uZSBmcm9tIEludGVsIGtub3cgd2hhdCB0byBw
-b2ludCBhdD8NCg0KVGhhdOKAmWQgYmUgZ3JlYXQuDQoNCg0KS2luZCByZWdhcmRzLA0KDQpQYXVs
-DQo=
+On 6/5/20 2:26 PM, Michal Soltys wrote:
+> On 6/4/20 12:07 AM, Song Liu wrote:
+>>
+>> The hang happens at expected place.
+>>
+>>> [Jun 3 09:02] INFO: task mdadm:2858 blocked for more than 120 seconds.
+>>> [  +0.060545]       Tainted: G            E     
+>>> 5.4.19-msl-00001-gbf39596faf12 #2
+>>> [  +0.062932] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
+>>> disables this message.
+>>
+>> Could you please try disable the timeout message with
+>>
+>> echo 0 > /proc/sys/kernel/hung_task_timeout_secs
+>>
+>> And during this wait (after message
+>> "r5c_recovery_flush_data_only_stripes before wait_event"),
+>> checks whether the raid disks (not the journal disk) are taking IOs
+>> (using tools like iostat).
+>>
+> 
+> No activity on component drives.
+
+To expand on that - while there is no i/o activity whatsoever at the component drives (as well as journal), the cpu is of course still fully loaded (5 days so far):
+
+UID        PID  PPID  C    SZ   RSS PSR STIME TTY          TIME CMD
+root      8129  6755 15   740  1904  10 Jun04 pts/2    17:42:34 mdadm -A /dev/md/r5_big /dev/md/r1_journal_big /dev/sdj1 /dev/sdi1 /dev/sdg1 /dev/sdh1
+root      8147     2 84     0     0  30 Jun04 ?        4-02:09:47 [md124_raid5]
