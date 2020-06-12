@@ -1,66 +1,48 @@
-From: allenpeng <allenpeng@synology.com>
-Subject: [PATCH] mdadm/Grow: prevent md's fd from being occupied during delayed time
-Date: Fri, 12 Jun 2020 17:00:39 +0800
-Message-ID: <1591952439-8768-1-git-send-email-allenpeng@synology.com>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH v4 06/15] md/raid5: set correct page offset for bi_io_vec in ops_run_io()
+Date: Fri, 12 Jun 2020 19:42:11 +0800
+Message-ID: <20200612114220.13126-7-yuyufen@huawei.com>
+References: <20200612114220.13126-1-yuyufen@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200612114220.13126-1-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes.sorensen@gmail.com, allenpeng <allenpeng@synology.com>
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-If we start reshaping on md which shares sub-devices with another
-resyncing md, it may be forced to wait for others to complete. mdadm
-occupies the md's fd during this time, which causes the md can not be
-stopped and the filesystem can not be mounted on the md. We can close
-md's fd earlier to solve this problem.
+After using r5pages for each sh->dev[i], we need to set correct offset
+of that page for bi_io_vec when issue bio. The value of offset is zero
+without using r5pages.
 
-Reproducible Steps:
-
-1. create two partitions on sda, sdb, sdc, sdd
-2. create raid1 with sda1, sdb1
-mdadm -C /dev/md1 --assume-clean -l1 -n2 /dev/sda1 /dev/sdb1
-3. create raid5 with sda2, sdb2, sdc2
-mdadm -C /dev/md2 --assume-clean -l5 -n3 /dev/sda2 /dev/sdb2 /dev/sdc2
-4. start resync at md1
-echo repair > /sys/block/md1/md/sync_action
-5. reshape raid5 to raid6
-mdadm -a /dev/md2 /dev/sdd2
-mdadm --grow /dev/md2 -n4 -l6 --backup-file=/root/md2-backup
-
-Now mdadm is occupying the fd of md2, causing md2 unable to be stopped
-
-6.Try to stop md2, an error message shows
-mdadm -S /dev/md2
-mdadm: Cannot get exclusive access to /dev/md3:Perhaps a running process,
-mounted filesystem or active volume group?
-
-Reviewed-by: Alex Wu <alexwu@synology.com>
-Reviewed-by: BingJing Chang <bingjingc@synology.com>
-Reviewed-by: Danny Shih <dannyshih@synology.com>
-Signed-off-by: ChangSyun Peng <allenpeng@synology.com>
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- Grow.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid5.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index a4be7e7..5b8f774 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3514,6 +3514,7 @@ started:
- 			return 0;
- 		}
- 
-+	close(fd);
- 	/* Now we just need to kick off the reshape and watch, while
- 	 * handling backups of the data...
- 	 * This is all done by a forked background process.
-@@ -3566,7 +3567,6 @@ started:
- 			mdstat_wait(30 - (delayed-1) * 25);
- 	} while (delayed);
- 	mdstat_close();
--	close(fd);
- 	if (check_env("MDADM_GROW_VERIFY"))
- 		fd = open(devname, O_RDONLY | O_DIRECT);
- 	else
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3ae2cc8cd1ea..9ab7f99406d6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1200,7 +1200,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				sh->dev[i].vec.bv_page = sh->dev[i].page;
+ 			bi->bi_vcnt = 1;
+ 			bi->bi_io_vec[0].bv_len = conf->stripe_size;
+-			bi->bi_io_vec[0].bv_offset = 0;
++			bi->bi_io_vec[0].bv_offset = sh->dev[i].offset;
+ 			bi->bi_iter.bi_size = conf->stripe_size;
+ 			bi->bi_write_hint = sh->dev[i].write_hint;
+ 			if (!rrdev)
+@@ -1254,7 +1254,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			sh->dev[i].rvec.bv_page = sh->dev[i].page;
+ 			rbi->bi_vcnt = 1;
+ 			rbi->bi_io_vec[0].bv_len = conf->stripe_size;
+-			rbi->bi_io_vec[0].bv_offset = 0;
++			rbi->bi_io_vec[0].bv_offset = sh->dev[i].offset;
+ 			rbi->bi_iter.bi_size = conf->stripe_size;
+ 			rbi->bi_write_hint = sh->dev[i].write_hint;
+ 			sh->dev[i].write_hint = RWH_WRITE_LIFE_NOT_SET;
 -- 
-2.7.4
+2.21.3
