@@ -1,74 +1,56 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/16] init: remove the bstat helper
-Date: Mon, 15 Jun 2020 14:53:08 +0200
-Message-ID: <20200615125323.930983-2-hch@lst.de>
+Subject: [PATCH 05/16] md: remove the kernel version of md_u.h
+Date: Mon, 15 Jun 2020 14:53:12 +0200
+Message-ID: <20200615125323.930983-6-hch@lst.de>
 References: <20200615125323.930983-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200615125323.930983-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-The only caller of the bstat function becomes cleaner and simpler when
-open coding the function.
+mdp_major can just move to drivers/md/md.h.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- init/do_mounts.h    | 10 ----------
- init/do_mounts_md.c |  8 ++++----
- 2 files changed, 4 insertions(+), 14 deletions(-)
+ drivers/md/md.h           |  1 +
+ include/linux/raid/md_u.h | 13 -------------
+ 2 files changed, 1 insertion(+), 13 deletions(-)
+ delete mode 100644 include/linux/raid/md_u.h
 
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 0bb0806de4ce2c..7513d1c14d13fe 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -20,16 +20,6 @@ static inline int create_dev(char *name, dev_t dev)
- 	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 37315a3f28e97d..6f8fff77ce10a5 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -801,6 +801,7 @@ static inline void mddev_check_write_zeroes(struct mddev *mddev, struct bio *bio
+ 		mddev->queue->limits.max_write_zeroes_sectors = 0;
  }
  
--static inline u32 bstat(char *name)
--{
--	struct kstat stat;
--	if (vfs_stat(name, &stat) != 0)
--		return 0;
--	if (!S_ISBLK(stat.mode))
--		return 0;
--	return stat.rdev;
--}
++extern int mdp_major;
+ void md_autostart_arrays(int part);
+ 
+ #endif /* _MD_MD_H */
+diff --git a/include/linux/raid/md_u.h b/include/linux/raid/md_u.h
+deleted file mode 100644
+index 8dfec085a20ee1..00000000000000
+--- a/include/linux/raid/md_u.h
++++ /dev/null
+@@ -1,13 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0-or-later */
+-/*
+-   md_u.h : user <=> kernel API between Linux raidtools and RAID drivers
+-          Copyright (C) 1998 Ingo Molnar
+-	  
+-*/
+-#ifndef _MD_U_H
+-#define _MD_U_H
 -
- #ifdef CONFIG_BLK_DEV_RAM
- 
- int __init rd_load_disk(int n);
-diff --git a/init/do_mounts_md.c b/init/do_mounts_md.c
-index b84031528dd446..359363e85ccd0b 100644
---- a/init/do_mounts_md.c
-+++ b/init/do_mounts_md.c
-@@ -138,9 +138,9 @@ static void __init md_setup_drive(void)
- 			dev = MKDEV(MD_MAJOR, minor);
- 		create_dev(name, dev);
- 		for (i = 0; i < MD_SB_DISKS && devname != NULL; i++) {
-+			struct kstat stat;
- 			char *p;
- 			char comp_name[64];
--			u32 rdev;
- 
- 			p = strchr(devname, ',');
- 			if (p)
-@@ -150,9 +150,9 @@ static void __init md_setup_drive(void)
- 			if (strncmp(devname, "/dev/", 5) == 0)
- 				devname += 5;
- 			snprintf(comp_name, 63, "/dev/%s", devname);
--			rdev = bstat(comp_name);
--			if (rdev)
--				dev = new_decode_dev(rdev);
-+			if (vfs_stat(comp_name, &stat) == 0 &&
-+			    S_ISBLK(stat.mode))
-+				dev = new_decode_dev(stat.rdev);
- 			if (!dev) {
- 				printk(KERN_WARNING "md: Unknown device name: %s\n", devname);
- 				break;
+-#include <uapi/linux/raid/md_u.h>
+-
+-extern int mdp_major;
+-#endif 
 -- 
 2.26.2
