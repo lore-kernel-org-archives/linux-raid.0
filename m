@@ -1,268 +1,139 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/16] initrd: switch initrd loading to struct file based APIs
-Date: Mon, 15 Jun 2020 14:53:17 +0200
-Message-ID: <20200615125323.930983-11-hch@lst.de>
+Subject: [PATCH 13/16] initramfs: simplify clean_rootfs
+Date: Mon, 15 Jun 2020 14:53:20 +0200
+Message-ID: <20200615125323.930983-14-hch@lst.de>
 References: <20200615125323.930983-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20200615125323.930983-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is no good reason to mess with file descriptors from in-kernel
-code, switch the initrd loading to struct file based read and writes
-instead.
+Just use d_genocide instead of iterating through the root directory with
+cumbersome userspace-like APIs.  This also ensures we actually remove files
+that are not direct children of the root entry, which the old code failed
+to do.
 
+Fixes: df52092f3c97 ("fastboot: remove duplicate unpack_to_rootfs()")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/read_write.c          |  2 +-
- include/linux/syscalls.h |  1 -
- init/do_mounts_rd.c      | 82 ++++++++++++++++++++--------------------
- 3 files changed, 43 insertions(+), 42 deletions(-)
+ fs/readdir.c             | 11 ++--------
+ include/linux/syscalls.h |  2 --
+ init/initramfs.c         | 46 +++++-----------------------------------
+ 3 files changed, 7 insertions(+), 52 deletions(-)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index bbfa9b12b15eb7..fc1cbe2517894f 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -301,7 +301,7 @@ loff_t vfs_llseek(struct file *file, loff_t offset, int whence)
+diff --git a/fs/readdir.c b/fs/readdir.c
+index a49f07c11cfbd0..19434b3c982cd3 100644
+--- a/fs/readdir.c
++++ b/fs/readdir.c
+@@ -348,8 +348,8 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
+ 	return -EFAULT;
  }
- EXPORT_SYMBOL(vfs_llseek);
  
--off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
-+static off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
+-int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
+-		    unsigned int count)
++SYSCALL_DEFINE3(getdents64, unsigned int, fd,
++		struct linux_dirent64 __user *, dirent, unsigned int, count)
  {
- 	off_t retval;
- 	struct fd f = fdget_pos(fd);
+ 	struct fd f;
+ 	struct getdents_callback64 buf = {
+@@ -380,13 +380,6 @@ int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
+ 	return error;
+ }
+ 
+-
+-SYSCALL_DEFINE3(getdents64, unsigned int, fd,
+-		struct linux_dirent64 __user *, dirent, unsigned int, count)
+-{
+-	return ksys_getdents64(fd, dirent, count);
+-}
+-
+ #ifdef CONFIG_COMPAT
+ struct compat_old_linux_dirent {
+ 	compat_ulong_t	d_ino;
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 7c354c2955f51e..6a078b2c442a4e 100644
+index 6a078b2c442a4e..005463f5acc23d 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
-@@ -1246,7 +1246,6 @@ int ksys_fchown(unsigned int fd, uid_t user, gid_t group);
- int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
- 		    unsigned int count);
+@@ -1243,8 +1243,6 @@ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count);
+ int ksys_chdir(const char __user *filename);
+ int ksys_fchmod(unsigned int fd, umode_t mode);
+ int ksys_fchown(unsigned int fd, uid_t user, gid_t group);
+-int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
+-		    unsigned int count);
  int ksys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
--off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence);
  ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count);
  void ksys_sync(void);
- int ksys_unshare(unsigned long unshare_flags);
-diff --git a/init/do_mounts_rd.c b/init/do_mounts_rd.c
-index 27b1bccf6f12a8..7b64390c075043 100644
---- a/init/do_mounts_rd.c
-+++ b/init/do_mounts_rd.c
-@@ -31,7 +31,8 @@ static int __init ramdisk_start_setup(char *str)
- }
- __setup("ramdisk_start=", ramdisk_start_setup);
+diff --git a/init/initramfs.c b/init/initramfs.c
+index d10404625c31f0..d42ec8329cd840 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -11,6 +11,7 @@
+ #include <linux/utime.h>
+ #include <linux/file.h>
+ #include <linux/memblock.h>
++#include <linux/namei.h>
  
--static int __init crd_load(int in_fd, int out_fd, decompress_fn deco);
-+static int __init crd_load(struct file *in_file, struct file *out_file,
-+		decompress_fn deco);
- 
- /*
-  * This routine tries to find a RAM disk image to load, and returns the
-@@ -53,7 +54,8 @@ static int __init crd_load(int in_fd, int out_fd, decompress_fn deco);
-  *	lz4
-  */
- static int __init
--identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
-+identify_ramdisk_image(struct file *file, int start_block,
-+		decompress_fn *decompressor)
+ static ssize_t __init xwrite(int fd, const char *p, size_t count)
  {
- 	const int size = 512;
- 	struct minix_super_block *minixsb;
-@@ -64,6 +66,7 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
- 	unsigned char *buf;
- 	const char *compress_name;
- 	unsigned long n;
-+	loff_t pos;
+@@ -572,51 +573,14 @@ static inline bool kexec_free_initrd(void)
+ #endif /* CONFIG_KEXEC_CORE */
  
- 	buf = kmalloc(size, GFP_KERNEL);
- 	if (!buf)
-@@ -78,8 +81,8 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
- 	/*
- 	 * Read block 0 to test for compressed kernel
- 	 */
--	ksys_lseek(fd, start_block * BLOCK_SIZE, 0);
--	ksys_read(fd, buf, size);
-+	pos = start_block * BLOCK_SIZE;
-+	kernel_read(file, buf, size, &pos);
- 
- 	*decompressor = decompress_method(buf, size, &compress_name);
- 	if (compress_name) {
-@@ -124,8 +127,8 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
- 	/*
- 	 * Read 512 bytes further to check if cramfs is padded
- 	 */
--	ksys_lseek(fd, start_block * BLOCK_SIZE + 0x200, 0);
--	ksys_read(fd, buf, size);
-+	pos = start_block * BLOCK_SIZE + 0x200;
-+	kernel_read(file, buf, size, &pos);
- 
- 	if (cramfsb->magic == CRAMFS_MAGIC) {
- 		printk(KERN_NOTICE
-@@ -138,8 +141,8 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
- 	/*
- 	 * Read block 1 to test for minix and ext2 superblock
- 	 */
--	ksys_lseek(fd, (start_block+1) * BLOCK_SIZE, 0);
--	ksys_read(fd, buf, size);
-+	pos = (start_block + 1) * BLOCK_SIZE;
-+	kernel_read(file, buf, size, &pos);
- 
- 	/* Try minix */
- 	if (minixsb->s_magic == MINIX_SUPER_MAGIC ||
-@@ -166,15 +169,23 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
- 	       start_block);
- 
- done:
--	ksys_lseek(fd, start_block * BLOCK_SIZE, 0);
- 	kfree(buf);
- 	return nblocks;
- }
- 
-+static unsigned long nr_blocks(struct file *file)
-+{
-+	struct inode *inode = file->f_mapping->host;
-+
-+	if (!S_ISBLK(inode->i_mode))
-+		return 0;
-+	return i_size_read(inode) >> 10;
-+}
-+
- int __init rd_load_image(char *from)
+ #ifdef CONFIG_BLK_DEV_RAM
+-#define BUF_SIZE 1024
+ static void __init clean_rootfs(void)
  {
- 	int res = 0;
--	int in_fd, out_fd;
-+	struct file *in_file, *out_file;
- 	unsigned long rd_blocks, devblocks;
- 	int nblocks, i;
- 	char *buf = NULL;
-@@ -184,20 +195,20 @@ int __init rd_load_image(char *from)
- 	char rotator[4] = { '|' , '/' , '-' , '\\' };
- #endif
+-	int fd;
+-	void *buf;
+-	struct linux_dirent64 *dirp;
+-	int num;
++	struct path path;
  
--	out_fd = ksys_open("/dev/ram", O_RDWR, 0);
--	if (out_fd < 0)
-+	out_file = filp_open("/dev/ram", O_RDWR, 0);
-+	if (IS_ERR(out_file))
- 		goto out;
- 
--	in_fd = ksys_open(from, O_RDONLY, 0);
--	if (in_fd < 0)
-+	in_file = filp_open(from, O_RDONLY, 0);
-+	if (IS_ERR(in_file))
- 		goto noclose_input;
- 
--	nblocks = identify_ramdisk_image(in_fd, rd_image_start, &decompressor);
-+	nblocks = identify_ramdisk_image(in_file, rd_image_start, &decompressor);
- 	if (nblocks < 0)
- 		goto done;
- 
- 	if (nblocks == 0) {
--		if (crd_load(in_fd, out_fd, decompressor) == 0)
-+		if (crd_load(in_file, out_file, decompressor) == 0)
- 			goto successful_load;
- 		goto done;
- 	}
-@@ -206,11 +217,7 @@ int __init rd_load_image(char *from)
- 	 * NOTE NOTE: nblocks is not actually blocks but
- 	 * the number of kibibytes of data to load into a ramdisk.
- 	 */
--	if (ksys_ioctl(out_fd, BLKGETSIZE, (unsigned long)&rd_blocks) < 0)
--		rd_blocks = 0;
--	else
--		rd_blocks >>= 1;
+-	fd = ksys_open("/", O_RDONLY, 0);
+-	WARN_ON(fd < 0);
+-	if (fd < 0)
+-		return;
+-	buf = kzalloc(BUF_SIZE, GFP_KERNEL);
+-	WARN_ON(!buf);
+-	if (!buf) {
+-		ksys_close(fd);
++	if (kern_path("/", 0, &path))
+ 		return;
+-	}
 -
-+	rd_blocks = nr_blocks(out_file);
- 	if (nblocks > rd_blocks) {
- 		printk("RAMDISK: image too big! (%dKiB/%ldKiB)\n",
- 		       nblocks, rd_blocks);
-@@ -220,13 +227,10 @@ int __init rd_load_image(char *from)
- 	/*
- 	 * OK, time to copy in the data
- 	 */
--	if (ksys_ioctl(in_fd, BLKGETSIZE, (unsigned long)&devblocks) < 0)
--		devblocks = 0;
--	else
--		devblocks >>= 1;
+-	dirp = buf;
+-	num = ksys_getdents64(fd, dirp, BUF_SIZE);
+-	while (num > 0) {
+-		while (num > 0) {
+-			struct kstat st;
+-			int ret;
 -
- 	if (strcmp(from, "/initrd.image") == 0)
- 		devblocks = nblocks;
-+	else
-+		devblocks = nr_blocks(in_file);
- 
- 	if (devblocks == 0) {
- 		printk(KERN_ERR "RAMDISK: could not determine device size\n");
-@@ -245,14 +249,11 @@ int __init rd_load_image(char *from)
- 		if (i && (i % devblocks == 0)) {
- 			pr_cont("done disk #1.\n");
- 			rotate = 0;
--			if (ksys_close(in_fd)) {
--				printk("Error closing the disk.\n");
--				goto noclose_input;
+-			ret = vfs_lstat(dirp->d_name, &st);
+-			WARN_ON_ONCE(ret);
+-			if (!ret) {
+-				if (S_ISDIR(st.mode))
+-					ksys_rmdir(dirp->d_name);
+-				else
+-					ksys_unlink(dirp->d_name);
 -			}
-+			fput(in_file);
- 			break;
- 		}
--		ksys_read(in_fd, buf, BLOCK_SIZE);
--		ksys_write(out_fd, buf, BLOCK_SIZE);
-+		kernel_read(in_file, buf, BLOCK_SIZE, &in_file->f_pos);
-+		kernel_write(out_file, buf, BLOCK_SIZE, &out_file->f_pos);
- #if !defined(CONFIG_S390)
- 		if (!(i % 16)) {
- 			pr_cont("%c\b", rotator[rotate & 0x3]);
-@@ -265,9 +266,9 @@ int __init rd_load_image(char *from)
- successful_load:
- 	res = 1;
- done:
--	ksys_close(in_fd);
-+	fput(in_file);
- noclose_input:
--	ksys_close(out_fd);
-+	fput(out_file);
- out:
- 	kfree(buf);
- 	ksys_unlink("/dev/ram");
-@@ -283,11 +284,11 @@ int __init rd_load_disk(int n)
- 
- static int exit_code;
- static int decompress_error;
--static int crd_infd, crd_outfd;
-+static struct file *crd_infile, *crd_outfile;
- 
- static long __init compr_fill(void *buf, unsigned long len)
- {
--	long r = ksys_read(crd_infd, buf, len);
-+	long r = kernel_read(crd_infile, buf, len, &crd_infile->f_pos);
- 	if (r < 0)
- 		printk(KERN_ERR "RAMDISK: error while reading compressed data");
- 	else if (r == 0)
-@@ -297,7 +298,7 @@ static long __init compr_fill(void *buf, unsigned long len)
- 
- static long __init compr_flush(void *window, unsigned long outcnt)
- {
--	long written = ksys_write(crd_outfd, window, outcnt);
-+	long written = kernel_write(crd_outfile, window, outcnt, &crd_outfile->f_pos);
- 	if (written != outcnt) {
- 		if (decompress_error == 0)
- 			printk(KERN_ERR
-@@ -316,11 +317,12 @@ static void __init error(char *x)
- 	decompress_error = 1;
+-
+-			num -= dirp->d_reclen;
+-			dirp = (void *)dirp + dirp->d_reclen;
+-		}
+-		dirp = buf;
+-		memset(buf, 0, BUF_SIZE);
+-		num = ksys_getdents64(fd, dirp, BUF_SIZE);
+-	}
+-
+-	ksys_close(fd);
+-	kfree(buf);
++	d_genocide(path.dentry);
++	path_put(&path);
  }
  
--static int __init crd_load(int in_fd, int out_fd, decompress_fn deco)
-+static int __init crd_load(struct file *in_file, struct file *out_file,
-+		decompress_fn deco)
- {
- 	int result;
--	crd_infd = in_fd;
--	crd_outfd = out_fd;
-+	crd_infile = in_file;
-+	crd_outfile = out_file;
- 
- 	if (!deco) {
- 		pr_emerg("Invalid ramdisk decompression routine.  "
+ static void __init populate_initrd_image(char *err)
 -- 
 2.26.2
