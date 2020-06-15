@@ -1,67 +1,34 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/16] initramfs: remove the populate_initrd_image and clean_rootfs stubs
-Date: Mon, 15 Jun 2020 14:53:19 +0200
-Message-ID: <20200615125323.930983-13-hch@lst.de>
+Subject: [PATCH 11/16] initrd: mark init_linuxrc as __init
+Date: Mon, 15 Jun 2020 14:53:18 +0200
+Message-ID: <20200615125323.930983-12-hch@lst.de>
 References: <20200615125323.930983-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200615125323.930983-1-hch@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-If initrd support is not enable just print the warning directly instead
-of hiding the fact that we just failed behind two stub functions.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- init/initramfs.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ init/do_mounts_initrd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/init/initramfs.c b/init/initramfs.c
-index 7a38012e1af742..d10404625c31f0 100644
---- a/init/initramfs.c
-+++ b/init/initramfs.c
-@@ -618,13 +618,7 @@ static void __init clean_rootfs(void)
- 	ksys_close(fd);
- 	kfree(buf);
+diff --git a/init/do_mounts_initrd.c b/init/do_mounts_initrd.c
+index e4f88e9e1c0839..57ad5b2da8f5f5 100644
+--- a/init/do_mounts_initrd.c
++++ b/init/do_mounts_initrd.c
+@@ -56,7 +56,7 @@ static int __init early_initrd(char *p)
  }
--#else
--static inline void clean_rootfs(void)
--{
--}
--#endif /* CONFIG_BLK_DEV_RAM */
+ early_param("initrd", early_initrd);
  
--#ifdef CONFIG_BLK_DEV_RAM
- static void __init populate_initrd_image(char *err)
+-static int init_linuxrc(struct subprocess_info *info, struct cred *new)
++static int __init init_linuxrc(struct subprocess_info *info, struct cred *new)
  {
- 	ssize_t written;
-@@ -644,11 +638,6 @@ static void __init populate_initrd_image(char *err)
- 		       written, initrd_end - initrd_start);
- 	ksys_close(fd);
- }
--#else
--static void __init populate_initrd_image(char *err)
--{
--	printk(KERN_EMERG "Initramfs unpacking failed: %s\n", err);
--}
- #endif /* CONFIG_BLK_DEV_RAM */
- 
- static int __init populate_rootfs(void)
-@@ -668,8 +657,12 @@ static int __init populate_rootfs(void)
- 
- 	err = unpack_to_rootfs((char *)initrd_start, initrd_end - initrd_start);
- 	if (err) {
-+#ifdef CONFIG_BLK_DEV_RAM
- 		clean_rootfs();
- 		populate_initrd_image(err);
-+#else
-+		printk(KERN_EMERG "Initramfs unpacking failed: %s\n", err);
-+#endif
- 	}
- 
- done:
+ 	ksys_unshare(CLONE_FS | CLONE_FILES);
+ 	console_on_rootfs();
 -- 
 2.26.2
