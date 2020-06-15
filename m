@@ -1,139 +1,94 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/16] initramfs: simplify clean_rootfs
-Date: Mon, 15 Jun 2020 14:53:20 +0200
-Message-ID: <20200615125323.930983-14-hch@lst.de>
+Subject: [PATCH 15/16] init: open code setting up stdin/stdout/stderr
+Date: Mon, 15 Jun 2020 14:53:22 +0200
+Message-ID: <20200615125323.930983-16-hch@lst.de>
 References: <20200615125323.930983-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200615125323.930983-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just use d_genocide instead of iterating through the root directory with
-cumbersome userspace-like APIs.  This also ensures we actually remove files
-that are not direct children of the root entry, which the old code failed
-to do.
+Don't rely on the implicit set_fs(KERNEL_DS) for ksys_open to work, but
+instead open a struct file for /dev/console and then install it as FD
+0/1/2 manually.
 
-Fixes: df52092f3c97 ("fastboot: remove duplicate unpack_to_rootfs()")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/readdir.c             | 11 ++--------
- include/linux/syscalls.h |  2 --
- init/initramfs.c         | 46 +++++-----------------------------------
- 3 files changed, 7 insertions(+), 52 deletions(-)
+ fs/file.c                |  7 +------
+ include/linux/syscalls.h |  1 -
+ init/main.c              | 16 ++++++++++------
+ 3 files changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/fs/readdir.c b/fs/readdir.c
-index a49f07c11cfbd0..19434b3c982cd3 100644
---- a/fs/readdir.c
-+++ b/fs/readdir.c
-@@ -348,8 +348,8 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
- 	return -EFAULT;
+diff --git a/fs/file.c b/fs/file.c
+index abb8b7081d7a44..85b7993165dd2f 100644
+--- a/fs/file.c
++++ b/fs/file.c
+@@ -985,7 +985,7 @@ SYSCALL_DEFINE2(dup2, unsigned int, oldfd, unsigned int, newfd)
+ 	return ksys_dup3(oldfd, newfd, 0);
  }
  
--int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
--		    unsigned int count)
-+SYSCALL_DEFINE3(getdents64, unsigned int, fd,
-+		struct linux_dirent64 __user *, dirent, unsigned int, count)
+-int ksys_dup(unsigned int fildes)
++SYSCALL_DEFINE1(dup, unsigned int, fildes)
  {
- 	struct fd f;
- 	struct getdents_callback64 buf = {
-@@ -380,13 +380,6 @@ int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
- 	return error;
+ 	int ret = -EBADF;
+ 	struct file *file = fget_raw(fildes);
+@@ -1000,11 +1000,6 @@ int ksys_dup(unsigned int fildes)
+ 	return ret;
  }
  
--
--SYSCALL_DEFINE3(getdents64, unsigned int, fd,
--		struct linux_dirent64 __user *, dirent, unsigned int, count)
+-SYSCALL_DEFINE1(dup, unsigned int, fildes)
 -{
--	return ksys_getdents64(fd, dirent, count);
+-	return ksys_dup(fildes);
 -}
 -
- #ifdef CONFIG_COMPAT
- struct compat_old_linux_dirent {
- 	compat_ulong_t	d_ino;
+ int f_dupfd(unsigned int from, struct file *file, unsigned flags)
+ {
+ 	int err;
 diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 6a078b2c442a4e..005463f5acc23d 100644
+index 5215bd413b6eb1..bde56097a7c27e 100644
 --- a/include/linux/syscalls.h
 +++ b/include/linux/syscalls.h
-@@ -1243,8 +1243,6 @@ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count);
+@@ -1237,7 +1237,6 @@ asmlinkage long sys_ni_syscall(void);
+  */
+ 
+ int ksys_umount(char __user *name, int flags);
+-int ksys_dup(unsigned int fildes);
+ int ksys_chroot(const char __user *filename);
+ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count);
  int ksys_chdir(const char __user *filename);
- int ksys_fchmod(unsigned int fd, umode_t mode);
- int ksys_fchown(unsigned int fd, uid_t user, gid_t group);
--int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
--		    unsigned int count);
- int ksys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
- ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count);
- void ksys_sync(void);
-diff --git a/init/initramfs.c b/init/initramfs.c
-index d10404625c31f0..d42ec8329cd840 100644
---- a/init/initramfs.c
-+++ b/init/initramfs.c
-@@ -11,6 +11,7 @@
- #include <linux/utime.h>
- #include <linux/file.h>
- #include <linux/memblock.h>
-+#include <linux/namei.h>
- 
- static ssize_t __init xwrite(int fd, const char *p, size_t count)
- {
-@@ -572,51 +573,14 @@ static inline bool kexec_free_initrd(void)
- #endif /* CONFIG_KEXEC_CORE */
- 
- #ifdef CONFIG_BLK_DEV_RAM
--#define BUF_SIZE 1024
- static void __init clean_rootfs(void)
- {
--	int fd;
--	void *buf;
--	struct linux_dirent64 *dirp;
--	int num;
-+	struct path path;
- 
--	fd = ksys_open("/", O_RDONLY, 0);
--	WARN_ON(fd < 0);
--	if (fd < 0)
--		return;
--	buf = kzalloc(BUF_SIZE, GFP_KERNEL);
--	WARN_ON(!buf);
--	if (!buf) {
--		ksys_close(fd);
-+	if (kern_path("/", 0, &path))
- 		return;
--	}
--
--	dirp = buf;
--	num = ksys_getdents64(fd, dirp, BUF_SIZE);
--	while (num > 0) {
--		while (num > 0) {
--			struct kstat st;
--			int ret;
--
--			ret = vfs_lstat(dirp->d_name, &st);
--			WARN_ON_ONCE(ret);
--			if (!ret) {
--				if (S_ISDIR(st.mode))
--					ksys_rmdir(dirp->d_name);
--				else
--					ksys_unlink(dirp->d_name);
--			}
--
--			num -= dirp->d_reclen;
--			dirp = (void *)dirp + dirp->d_reclen;
--		}
--		dirp = buf;
--		memset(buf, 0, BUF_SIZE);
--		num = ksys_getdents64(fd, dirp, BUF_SIZE);
--	}
--
--	ksys_close(fd);
--	kfree(buf);
-+	d_genocide(path.dentry);
-+	path_put(&path);
+diff --git a/init/main.c b/init/main.c
+index 0ead83e86b5aa2..db0621dfbb0468 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1457,15 +1457,19 @@ static int __ref kernel_init(void *unused)
+ 	      "See Linux Documentation/admin-guide/init.rst for guidance.");
  }
  
- static void __init populate_initrd_image(char *err)
++/* Open /dev/console, for stdin/stdout/stderr, this should never fail */
+ void console_on_rootfs(void)
+ {
+-	/* Open the /dev/console as stdin, this should never fail */
+-	if (ksys_open((const char __user *) "/dev/console", O_RDWR, 0) < 0)
+-		pr_err("Warning: unable to open an initial console.\n");
++	struct file *file = filp_open("/dev/console", O_RDWR, 0);
+ 
+-	/* create stdout/stderr */
+-	(void) ksys_dup(0);
+-	(void) ksys_dup(0);
++	if (IS_ERR(file)) {
++		pr_err("Warning: unable to open an initial console.\n");
++		return;
++	}
++	get_file_rcu_many(file, 2);
++	fd_install(get_unused_fd_flags(0), file);
++	fd_install(get_unused_fd_flags(0), file);
++	fd_install(get_unused_fd_flags(0), file);
+ }
+ 
+ static noinline void __init kernel_init_freeable(void)
 -- 
 2.26.2
