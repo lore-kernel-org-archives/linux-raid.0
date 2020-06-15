@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/16] initrd: remove support for multiple floppies
-Date: Mon, 15 Jun 2020 14:53:15 +0200
-Message-ID: <20200615125323.930983-9-hch@lst.de>
+Subject: [PATCH 10/16] initrd: switch initrd loading to struct file based APIs
+Date: Mon, 15 Jun 2020 14:53:17 +0200
+Message-ID: <20200615125323.930983-11-hch@lst.de>
 References: <20200615125323.930983-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,292 +12,257 @@ To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Remove the special handling for multiple floppies in the initrd code.
-No one should be using floppies for booting these days. (famous last
-words..)
+There is no good reason to mess with file descriptors from in-kernel
+code, switch the initrd loading to struct file based read and writes
+instead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/arm/kernel/atags_parse.c |  2 -
- arch/sh/kernel/setup.c        |  2 -
- arch/sparc/kernel/setup_32.c  |  2 -
- arch/sparc/kernel/setup_64.c  |  2 -
- arch/x86/kernel/setup.c       |  2 -
- include/linux/initrd.h        |  6 ---
- init/do_mounts.c              | 69 ++++-------------------------------
- init/do_mounts.h              |  1 -
- init/do_mounts_rd.c           | 20 +++-------
- 9 files changed, 12 insertions(+), 94 deletions(-)
+ fs/read_write.c          |  2 +-
+ include/linux/syscalls.h |  1 -
+ init/do_mounts_rd.c      | 82 ++++++++++++++++++++--------------------
+ 3 files changed, 43 insertions(+), 42 deletions(-)
 
-diff --git a/arch/arm/kernel/atags_parse.c b/arch/arm/kernel/atags_parse.c
-index ce02f92f4ab262..6c12d9fe694e3e 100644
---- a/arch/arm/kernel/atags_parse.c
-+++ b/arch/arm/kernel/atags_parse.c
-@@ -91,8 +91,6 @@ __tagtable(ATAG_VIDEOTEXT, parse_tag_videotext);
- static int __init parse_tag_ramdisk(const struct tag *tag)
- {
- 	rd_image_start = tag->u.ramdisk.start;
--	rd_doload = (tag->u.ramdisk.flags & 1) == 0;
--	rd_prompt = (tag->u.ramdisk.flags & 2) == 0;
- 
- 	if (tag->u.ramdisk.size)
- 		rd_size = tag->u.ramdisk.size;
-diff --git a/arch/sh/kernel/setup.c b/arch/sh/kernel/setup.c
-index 67f5a3b44c2eff..4144be650d4106 100644
---- a/arch/sh/kernel/setup.c
-+++ b/arch/sh/kernel/setup.c
-@@ -290,8 +290,6 @@ void __init setup_arch(char **cmdline_p)
- 
- #ifdef CONFIG_BLK_DEV_RAM
- 	rd_image_start = RAMDISK_FLAGS & RAMDISK_IMAGE_START_MASK;
--	rd_prompt = ((RAMDISK_FLAGS & RAMDISK_PROMPT_FLAG) != 0);
--	rd_doload = ((RAMDISK_FLAGS & RAMDISK_LOAD_FLAG) != 0);
- #endif
- 
- 	if (!MOUNT_ROOT_RDONLY)
-diff --git a/arch/sparc/kernel/setup_32.c b/arch/sparc/kernel/setup_32.c
-index 6d07b85b9e2470..eea43a1aef1b9a 100644
---- a/arch/sparc/kernel/setup_32.c
-+++ b/arch/sparc/kernel/setup_32.c
-@@ -353,8 +353,6 @@ void __init setup_arch(char **cmdline_p)
- 	ROOT_DEV = old_decode_dev(root_dev);
- #ifdef CONFIG_BLK_DEV_RAM
- 	rd_image_start = ram_flags & RAMDISK_IMAGE_START_MASK;
--	rd_prompt = ((ram_flags & RAMDISK_PROMPT_FLAG) != 0);
--	rd_doload = ((ram_flags & RAMDISK_LOAD_FLAG) != 0);	
- #endif
- 
- 	prom_setsync(prom_sync_me);
-diff --git a/arch/sparc/kernel/setup_64.c b/arch/sparc/kernel/setup_64.c
-index f765fda871eb61..d87244197d5cbb 100644
---- a/arch/sparc/kernel/setup_64.c
-+++ b/arch/sparc/kernel/setup_64.c
-@@ -659,8 +659,6 @@ void __init setup_arch(char **cmdline_p)
- 	ROOT_DEV = old_decode_dev(root_dev);
- #ifdef CONFIG_BLK_DEV_RAM
- 	rd_image_start = ram_flags & RAMDISK_IMAGE_START_MASK;
--	rd_prompt = ((ram_flags & RAMDISK_PROMPT_FLAG) != 0);
--	rd_doload = ((ram_flags & RAMDISK_LOAD_FLAG) != 0);
- #endif
- 
- 	task_thread_info(&init_task)->kregs = &fake_swapper_regs;
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index a3767e74c758c0..b9a68d8e06d8d1 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -870,8 +870,6 @@ void __init setup_arch(char **cmdline_p)
- 
- #ifdef CONFIG_BLK_DEV_RAM
- 	rd_image_start = boot_params.hdr.ram_size & RAMDISK_IMAGE_START_MASK;
--	rd_prompt = ((boot_params.hdr.ram_size & RAMDISK_PROMPT_FLAG) != 0);
--	rd_doload = ((boot_params.hdr.ram_size & RAMDISK_LOAD_FLAG) != 0);
- #endif
- #ifdef CONFIG_EFI
- 	if (!strncmp((char *)&boot_params.efi_info.efi_loader_signature,
-diff --git a/include/linux/initrd.h b/include/linux/initrd.h
-index aa591435572868..8db6f8c8030b68 100644
---- a/include/linux/initrd.h
-+++ b/include/linux/initrd.h
-@@ -2,12 +2,6 @@
- 
- #define INITRD_MINOR 250 /* shouldn't collide with /dev/ram* too soon ... */
- 
--/* 1 = load ramdisk, 0 = don't load */
--extern int rd_doload;
--
--/* 1 = prompt for ramdisk, 0 = don't prompt */
--extern int rd_prompt;
--
- /* starting block # of image */
- extern int rd_image_start;
- 
-diff --git a/init/do_mounts.c b/init/do_mounts.c
-index 1a4dfa17fb2899..4f4ceb35805503 100644
---- a/init/do_mounts.c
-+++ b/init/do_mounts.c
-@@ -28,8 +28,6 @@
- 
- #include "do_mounts.h"
- 
--int __initdata rd_doload;	/* 1 = load RAM disk, 0 = don't load */
--
- int root_mountflags = MS_RDONLY | MS_SILENT;
- static char * __initdata root_device_name;
- static char __initdata saved_root_name[64];
-@@ -39,7 +37,7 @@ dev_t ROOT_DEV;
- 
- static int __init load_ramdisk(char *str)
- {
--	rd_doload = simple_strtol(str,NULL,0) & 3;
-+	pr_warn("ignoring the depreated load_ramdisk= option\n");
- 	return 1;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index bbfa9b12b15eb7..fc1cbe2517894f 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -301,7 +301,7 @@ loff_t vfs_llseek(struct file *file, loff_t offset, int whence)
  }
- __setup("load_ramdisk=", load_ramdisk);
-@@ -553,66 +551,20 @@ static int __init mount_cifs_root(void)
- }
- #endif
+ EXPORT_SYMBOL(vfs_llseek);
  
--#if defined(CONFIG_BLK_DEV_RAM) || defined(CONFIG_BLK_DEV_FD)
--void __init change_floppy(char *fmt, ...)
--{
--	struct termios termios;
--	char buf[80];
--	char c;
--	int fd;
--	va_list args;
--	va_start(args, fmt);
--	vsprintf(buf, fmt, args);
--	va_end(args);
--	fd = ksys_open("/dev/root", O_RDWR | O_NDELAY, 0);
--	if (fd >= 0) {
--		ksys_ioctl(fd, FDEJECT, 0);
--		ksys_close(fd);
--	}
--	printk(KERN_NOTICE "VFS: Insert %s and press ENTER\n", buf);
--	fd = ksys_open("/dev/console", O_RDWR, 0);
--	if (fd >= 0) {
--		ksys_ioctl(fd, TCGETS, (long)&termios);
--		termios.c_lflag &= ~ICANON;
--		ksys_ioctl(fd, TCSETSF, (long)&termios);
--		ksys_read(fd, &c, 1);
--		termios.c_lflag |= ICANON;
--		ksys_ioctl(fd, TCSETSF, (long)&termios);
--		ksys_close(fd);
--	}
--}
--#endif
--
- void __init mount_root(void)
+-off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
++static off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence)
  {
- #ifdef CONFIG_ROOT_NFS
- 	if (ROOT_DEV == Root_NFS) {
--		if (mount_nfs_root())
--			return;
--
--		printk(KERN_ERR "VFS: Unable to mount root fs via NFS, trying floppy.\n");
--		ROOT_DEV = Root_FD0;
-+		if (!mount_nfs_root())
-+			printk(KERN_ERR "VFS: Unable to mount root fs via NFS.\n");
-+		return;
- 	}
- #endif
- #ifdef CONFIG_CIFS_ROOT
- 	if (ROOT_DEV == Root_CIFS) {
--		if (mount_cifs_root())
--			return;
--
--		printk(KERN_ERR "VFS: Unable to mount root fs via SMB, trying floppy.\n");
--		ROOT_DEV = Root_FD0;
--	}
--#endif
--#ifdef CONFIG_BLK_DEV_FD
--	if (MAJOR(ROOT_DEV) == FLOPPY_MAJOR) {
--		/* rd_doload is 2 for a dual initrd/ramload setup */
--		if (rd_doload==2) {
--			if (rd_load_disk(1)) {
--				ROOT_DEV = Root_RAM1;
--				root_device_name = NULL;
--			}
--		} else
--			change_floppy("root floppy");
-+		if (!mount_cifs_root())
-+			printk(KERN_ERR "VFS: Unable to mount root fs via SMB.\n");
-+		return;
- 	}
- #endif
- #ifdef CONFIG_BLOCK
-@@ -631,8 +583,6 @@ void __init mount_root(void)
-  */
- void __init prepare_namespace(void)
- {
--	int is_floppy;
--
- 	if (root_delay) {
- 		printk(KERN_INFO "Waiting %d sec before mounting root device...\n",
- 		       root_delay);
-@@ -675,11 +625,6 @@ void __init prepare_namespace(void)
- 		async_synchronize_full();
- 	}
- 
--	is_floppy = MAJOR(ROOT_DEV) == FLOPPY_MAJOR;
--
--	if (is_floppy && rd_doload && rd_load_disk(0))
--		ROOT_DEV = Root_RAM0;
--
- 	mount_root();
- out:
- 	devtmpfs_mount();
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 50d6c8941e15a1..c855b3f0e06d19 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -9,7 +9,6 @@
- #include <linux/major.h>
- #include <linux/root_dev.h>
- 
--void  change_floppy(char *fmt, ...);
- void  mount_block_root(char *name, int flags);
- void  mount_root(void);
- extern int root_mountflags;
+ 	off_t retval;
+ 	struct fd f = fdget_pos(fd);
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 7c354c2955f51e..6a078b2c442a4e 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1246,7 +1246,6 @@ int ksys_fchown(unsigned int fd, uid_t user, gid_t group);
+ int ksys_getdents64(unsigned int fd, struct linux_dirent64 __user *dirent,
+ 		    unsigned int count);
+ int ksys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
+-off_t ksys_lseek(unsigned int fd, off_t offset, unsigned int whence);
+ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count);
+ void ksys_sync(void);
+ int ksys_unshare(unsigned long unshare_flags);
 diff --git a/init/do_mounts_rd.c b/init/do_mounts_rd.c
-index 32fb049d18f9b4..27b1bccf6f12a8 100644
+index 27b1bccf6f12a8..7b64390c075043 100644
 --- a/init/do_mounts_rd.c
 +++ b/init/do_mounts_rd.c
-@@ -15,11 +15,9 @@
- #include <linux/decompress/generic.h>
- 
- 
--int __initdata rd_prompt = 1;/* 1 = prompt for RAM disk, 0 = don't prompt */
--
- static int __init prompt_ramdisk(char *str)
- {
--	rd_prompt = simple_strtol(str,NULL,0) & 1;
-+	pr_warn("ignoring the depreated prompt_ramdisk= option\n");
- 	return 1;
+@@ -31,7 +31,8 @@ static int __init ramdisk_start_setup(char *str)
  }
- __setup("prompt_ramdisk=", prompt_ramdisk);
-@@ -178,7 +176,7 @@ int __init rd_load_image(char *from)
- 	int res = 0;
- 	int in_fd, out_fd;
- 	unsigned long rd_blocks, devblocks;
--	int nblocks, i, disk;
-+	int nblocks, i;
- 	char *buf = NULL;
- 	unsigned short rotate = 0;
- 	decompress_fn decompressor = NULL;
-@@ -243,21 +241,15 @@ int __init rd_load_image(char *from)
+ __setup("ramdisk_start=", ramdisk_start_setup);
  
- 	printk(KERN_NOTICE "RAMDISK: Loading %dKiB [%ld disk%s] into ram disk... ",
- 		nblocks, ((nblocks-1)/devblocks)+1, nblocks>devblocks ? "s" : "");
--	for (i = 0, disk = 1; i < nblocks; i++) {
-+	for (i = 0; i < nblocks; i++) {
+-static int __init crd_load(int in_fd, int out_fd, decompress_fn deco);
++static int __init crd_load(struct file *in_file, struct file *out_file,
++		decompress_fn deco);
+ 
+ /*
+  * This routine tries to find a RAM disk image to load, and returns the
+@@ -53,7 +54,8 @@ static int __init crd_load(int in_fd, int out_fd, decompress_fn deco);
+  *	lz4
+  */
+ static int __init
+-identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
++identify_ramdisk_image(struct file *file, int start_block,
++		decompress_fn *decompressor)
+ {
+ 	const int size = 512;
+ 	struct minix_super_block *minixsb;
+@@ -64,6 +66,7 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+ 	unsigned char *buf;
+ 	const char *compress_name;
+ 	unsigned long n;
++	loff_t pos;
+ 
+ 	buf = kmalloc(size, GFP_KERNEL);
+ 	if (!buf)
+@@ -78,8 +81,8 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+ 	/*
+ 	 * Read block 0 to test for compressed kernel
+ 	 */
+-	ksys_lseek(fd, start_block * BLOCK_SIZE, 0);
+-	ksys_read(fd, buf, size);
++	pos = start_block * BLOCK_SIZE;
++	kernel_read(file, buf, size, &pos);
+ 
+ 	*decompressor = decompress_method(buf, size, &compress_name);
+ 	if (compress_name) {
+@@ -124,8 +127,8 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+ 	/*
+ 	 * Read 512 bytes further to check if cramfs is padded
+ 	 */
+-	ksys_lseek(fd, start_block * BLOCK_SIZE + 0x200, 0);
+-	ksys_read(fd, buf, size);
++	pos = start_block * BLOCK_SIZE + 0x200;
++	kernel_read(file, buf, size, &pos);
+ 
+ 	if (cramfsb->magic == CRAMFS_MAGIC) {
+ 		printk(KERN_NOTICE
+@@ -138,8 +141,8 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+ 	/*
+ 	 * Read block 1 to test for minix and ext2 superblock
+ 	 */
+-	ksys_lseek(fd, (start_block+1) * BLOCK_SIZE, 0);
+-	ksys_read(fd, buf, size);
++	pos = (start_block + 1) * BLOCK_SIZE;
++	kernel_read(file, buf, size, &pos);
+ 
+ 	/* Try minix */
+ 	if (minixsb->s_magic == MINIX_SUPER_MAGIC ||
+@@ -166,15 +169,23 @@ identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+ 	       start_block);
+ 
+ done:
+-	ksys_lseek(fd, start_block * BLOCK_SIZE, 0);
+ 	kfree(buf);
+ 	return nblocks;
+ }
+ 
++static unsigned long nr_blocks(struct file *file)
++{
++	struct inode *inode = file->f_mapping->host;
++
++	if (!S_ISBLK(inode->i_mode))
++		return 0;
++	return i_size_read(inode) >> 10;
++}
++
+ int __init rd_load_image(char *from)
+ {
+ 	int res = 0;
+-	int in_fd, out_fd;
++	struct file *in_file, *out_file;
+ 	unsigned long rd_blocks, devblocks;
+ 	int nblocks, i;
+ 	char *buf = NULL;
+@@ -184,20 +195,20 @@ int __init rd_load_image(char *from)
+ 	char rotator[4] = { '|' , '/' , '-' , '\\' };
+ #endif
+ 
+-	out_fd = ksys_open("/dev/ram", O_RDWR, 0);
+-	if (out_fd < 0)
++	out_file = filp_open("/dev/ram", O_RDWR, 0);
++	if (IS_ERR(out_file))
+ 		goto out;
+ 
+-	in_fd = ksys_open(from, O_RDONLY, 0);
+-	if (in_fd < 0)
++	in_file = filp_open(from, O_RDONLY, 0);
++	if (IS_ERR(in_file))
+ 		goto noclose_input;
+ 
+-	nblocks = identify_ramdisk_image(in_fd, rd_image_start, &decompressor);
++	nblocks = identify_ramdisk_image(in_file, rd_image_start, &decompressor);
+ 	if (nblocks < 0)
+ 		goto done;
+ 
+ 	if (nblocks == 0) {
+-		if (crd_load(in_fd, out_fd, decompressor) == 0)
++		if (crd_load(in_file, out_file, decompressor) == 0)
+ 			goto successful_load;
+ 		goto done;
+ 	}
+@@ -206,11 +217,7 @@ int __init rd_load_image(char *from)
+ 	 * NOTE NOTE: nblocks is not actually blocks but
+ 	 * the number of kibibytes of data to load into a ramdisk.
+ 	 */
+-	if (ksys_ioctl(out_fd, BLKGETSIZE, (unsigned long)&rd_blocks) < 0)
+-		rd_blocks = 0;
+-	else
+-		rd_blocks >>= 1;
+-
++	rd_blocks = nr_blocks(out_file);
+ 	if (nblocks > rd_blocks) {
+ 		printk("RAMDISK: image too big! (%dKiB/%ldKiB)\n",
+ 		       nblocks, rd_blocks);
+@@ -220,13 +227,10 @@ int __init rd_load_image(char *from)
+ 	/*
+ 	 * OK, time to copy in the data
+ 	 */
+-	if (ksys_ioctl(in_fd, BLKGETSIZE, (unsigned long)&devblocks) < 0)
+-		devblocks = 0;
+-	else
+-		devblocks >>= 1;
+-
+ 	if (strcmp(from, "/initrd.image") == 0)
+ 		devblocks = nblocks;
++	else
++		devblocks = nr_blocks(in_file);
+ 
+ 	if (devblocks == 0) {
+ 		printk(KERN_ERR "RAMDISK: could not determine device size\n");
+@@ -245,14 +249,11 @@ int __init rd_load_image(char *from)
  		if (i && (i % devblocks == 0)) {
--			pr_cont("done disk #%d.\n", disk++);
-+			pr_cont("done disk #1.\n");
+ 			pr_cont("done disk #1.\n");
  			rotate = 0;
- 			if (ksys_close(in_fd)) {
- 				printk("Error closing the disk.\n");
- 				goto noclose_input;
- 			}
--			change_floppy("disk #%d", disk);
--			in_fd = ksys_open(from, O_RDONLY, 0);
--			if (in_fd < 0)  {
--				printk("Error opening disk.\n");
+-			if (ksys_close(in_fd)) {
+-				printk("Error closing the disk.\n");
 -				goto noclose_input;
 -			}
--			printk("Loading disk #%d... ", disk);
-+			break;
++			fput(in_file);
+ 			break;
  		}
- 		ksys_read(in_fd, buf, BLOCK_SIZE);
- 		ksys_write(out_fd, buf, BLOCK_SIZE);
-@@ -284,8 +276,6 @@ int __init rd_load_image(char *from)
+-		ksys_read(in_fd, buf, BLOCK_SIZE);
+-		ksys_write(out_fd, buf, BLOCK_SIZE);
++		kernel_read(in_file, buf, BLOCK_SIZE, &in_file->f_pos);
++		kernel_write(out_file, buf, BLOCK_SIZE, &out_file->f_pos);
+ #if !defined(CONFIG_S390)
+ 		if (!(i % 16)) {
+ 			pr_cont("%c\b", rotator[rotate & 0x3]);
+@@ -265,9 +266,9 @@ int __init rd_load_image(char *from)
+ successful_load:
+ 	res = 1;
+ done:
+-	ksys_close(in_fd);
++	fput(in_file);
+ noclose_input:
+-	ksys_close(out_fd);
++	fput(out_file);
+ out:
+ 	kfree(buf);
+ 	ksys_unlink("/dev/ram");
+@@ -283,11 +284,11 @@ int __init rd_load_disk(int n)
  
- int __init rd_load_disk(int n)
+ static int exit_code;
+ static int decompress_error;
+-static int crd_infd, crd_outfd;
++static struct file *crd_infile, *crd_outfile;
+ 
+ static long __init compr_fill(void *buf, unsigned long len)
  {
--	if (rd_prompt)
--		change_floppy("root floppy disk to be loaded into RAM disk");
- 	create_dev("/dev/root", ROOT_DEV);
- 	create_dev("/dev/ram", MKDEV(RAMDISK_MAJOR, n));
- 	return rd_load_image("/dev/root");
+-	long r = ksys_read(crd_infd, buf, len);
++	long r = kernel_read(crd_infile, buf, len, &crd_infile->f_pos);
+ 	if (r < 0)
+ 		printk(KERN_ERR "RAMDISK: error while reading compressed data");
+ 	else if (r == 0)
+@@ -297,7 +298,7 @@ static long __init compr_fill(void *buf, unsigned long len)
+ 
+ static long __init compr_flush(void *window, unsigned long outcnt)
+ {
+-	long written = ksys_write(crd_outfd, window, outcnt);
++	long written = kernel_write(crd_outfile, window, outcnt, &crd_outfile->f_pos);
+ 	if (written != outcnt) {
+ 		if (decompress_error == 0)
+ 			printk(KERN_ERR
+@@ -316,11 +317,12 @@ static void __init error(char *x)
+ 	decompress_error = 1;
+ }
+ 
+-static int __init crd_load(int in_fd, int out_fd, decompress_fn deco)
++static int __init crd_load(struct file *in_file, struct file *out_file,
++		decompress_fn deco)
+ {
+ 	int result;
+-	crd_infd = in_fd;
+-	crd_outfd = out_fd;
++	crd_infile = in_file;
++	crd_outfile = out_file;
+ 
+ 	if (!deco) {
+ 		pr_emerg("Invalid ramdisk decompression routine.  "
 -- 
 2.26.2
