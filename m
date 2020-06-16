@@ -1,40 +1,94 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: [PATCH 3/3] raid5: remove the meaningless check in raid5_make_request
-Date: Tue, 16 Jun 2020 11:25:52 +0200
-Message-ID: <20200616092552.1754-3-guoqing.jiang@cloud.ionos.com>
-References: <20200616092552.1754-1-guoqing.jiang@cloud.ionos.com>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Re: Assemblin journaled array fails
+Date: Tue, 16 Jun 2020 13:11:24 +0200
+Message-ID: <1b488097-249e-f479-71fe-6e8ce7319051@yandex.pl>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+ <d0340d7b-6b3a-4fd3-e446-5f0967132ef6@yandex.pl>
+ <CAPhsuW4byXUvseqoj3Pw4r5nRGu=fHekdDec8FG6vj3of1wCyg@mail.gmail.com>
+ <1cb6c63f-a74c-a6f4-6875-455780f53fa1@yandex.pl>
+ <CAPhsuW6HdatOPJykqYCQs_7onWL1-AQRo05TygkXdRVSwAy_gQ@mail.gmail.com>
+ <7b2b2bca-c1b7-06c5-10c5-2b1cdda21607@yandex.pl>
+ <48e4fa28-4d20-ba80-cd69-b17da719531a@yandex.pl>
+ <CAPhsuW69VYgLBZboxvQ6-Fmm-Oa0fGOVBg3SOVkzP_UopH+_wg@mail.gmail.com>
+ <1767d7aa-6c60-7efb-bf37-6506f9aaa8a2@yandex.pl>
+ <CAPhsuW4oMKuCrHUU1ucsMKQbSfBQdsNEQWHA1SSbGR5nbvy21w@mail.gmail.com>
+ <CAPhsuW4WBDGGLYc=f4xoThxtxuF5K74m3odJ-uA98DuPLJR4nw@mail.gmail.com>
+ <0cf6454d-a8b5-4bee-5389-94b23c077050@yandex.pl>
+ <CAPhsuW51u6KWLvUntMXPU7stu7oSA+d-yT6zf7G0zCETzLWwiA@mail.gmail.com>
+ <49efa0d2-b44c-ec85-5e44-fb93a15001e7@yandex.pl>
+ <4df42e3d-ad2b-dfc2-3961-49ada4ea7eaf@yandex.pl>
+ <CAPhsuW5kk0G9PSfEADc8+rn=QT2z4ogjuV98qWsH_s_WBic-5w@mail.gmail.com>
+ <71f58507-314e-4a1d-dd50-41a60d76521b@yandex.pl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200616092552.1754-1-guoqing.jiang@cloud.ionos.com>
+In-Reply-To: <71f58507-314e-4a1d-dd50-41a60d76521b@yandex.pl>
+Content-Language: en-US-large
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: song@kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-We can't guarntee the batched stripe to be set with STRIPE_HANDLE since
-there are lots of functions could set the flag, such as sync_request,
-ops_complete_* and end_{read,write}_request etc.
+On 6/9/20 11:51 PM, Michal Soltys wrote:
+> On 20/06/09 20:36, Song Liu wrote:
+>> On Tue, Jun 9, 2020 at 2:36 AM Michal Soltys <msoltyspl@yandex.pl> wrote:
+>>>
+>>> On 6/5/20 2:26 PM, Michal Soltys wrote:
+>>> > On 6/4/20 12:07 AM, Song Liu wrote:
+>>> >>
+>>> >> The hang happens at expected place.
+>>> >>
+>>> >>> [Jun 3 09:02] INFO: task mdadm:2858 blocked for more than 120 
+>>> seconds.
+>>> >>> [  +0.060545]       Tainted: G            E
+>>> >>> 5.4.19-msl-00001-gbf39596faf12 #2
+>>> >>> [  +0.062932] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+>>> >>> disables this message.
+>>> >>
+>>> >> Could you please try disable the timeout message with
+>>> >>
+>>> >> echo 0 > /proc/sys/kernel/hung_task_timeout_secs
+>>> >>
+>>> >> And during this wait (after message
+>>> >> "r5c_recovery_flush_data_only_stripes before wait_event"),
+>>> >> checks whether the raid disks (not the journal disk) are taking IOs
+>>> >> (using tools like iostat).
+>>> >>
+>>> >
+>>> > No activity on component drives.
+>>>
+>>> To expand on that - while there is no i/o activity whatsoever at the 
+>>> component drives (as well as journal), the cpu is of course still 
+>>> fully loaded (5 days so far):
+>>>
+>>> UID        PID  PPID  C    SZ   RSS PSR STIME TTY          TIME CMD
+>>> root      8129  6755 15   740  1904  10 Jun04 pts/2    17:42:34 mdadm 
+>>> -A /dev/md/r5_big /dev/md/r1_journal_big /dev/sdj1 /dev/sdi1 
+>>> /dev/sdg1 /dev/sdh1
+>>> root      8147     2 84     0     0  30 Jun04 ?        4-02:09:47 
+>>> [md124_raid5]
+>>
+>> I guess the md thread stuck at some stripe. Does the kernel have
+>> CONFIG_DYNAMIC_DEBUG enabled? If so, could you please try enable some 
+>> pr_debug()
+>> in function handle_stripe()?
+>>
+>> Thanks,
+>> Song
+>>
+> 
+> Massive spam in dmesg with messages like these:
+> 
+> [464836.603033] handling stripe 1551540328, state=0x41 cnt=1, pd_idx=3, 
+> qd_idx=-1
+>                  , check:0, reconstruct:0
+> [464836.603036] handling stripe 1551540336, state=0x41 cnt=1, pd_idx=3, 
+> qd_idx=-1
+>                  , check:0, reconstruct:0
+> [464836.603038] handling stripe 1551540344, state=0x41 cnt=1, pd_idx=3, 
+> qd_idx=-1
+>                  , check:0, reconstruct:0
+> <cut>
 
-Also clear_batch_ready called in handle_stripe ensures the batched list
-can't continue to be handled by handle_stripe.
-
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
----
- drivers/md/raid5.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 45398b9b0a46..bd010835332a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5738,8 +5738,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 				do_flush = false;
- 			}
- 
--			if (!sh->batch_head || sh == sh->batch_head)
--				set_bit(STRIPE_HANDLE, &sh->state);
-+			set_bit(STRIPE_HANDLE, &sh->state);
- 			clear_bit(STRIPE_DELAYED, &sh->state);
- 			if ((!sh->batch_head || sh == sh->batch_head) &&
- 			    (bi->bi_opf & REQ_SYNC) &&
--- 
-2.17.1
+So what should be the next step in debugging/fixing this ?
