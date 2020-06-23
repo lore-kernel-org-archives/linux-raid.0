@@ -1,87 +1,102 @@
-From: Alexander Murashkin <AlexanderMurashkin@msn.com>
-Subject: stripe_cache_size and journal (cache) in write-back mode
-Date: Tue, 23 Jun 2020 16:01:58 -0500
-Message-ID: <CH2PR22MB1768B9C137438BD5F512A73BD5940@CH2PR22MB1768.namprd22.prod.outlook.com>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Re: RAID types & chunks sizes for new NAS drives
+Date: Tue, 23 Jun 2020 15:27:35 -0500
+Message-ID: <1ba7c1be-4cb1-29a5-d49c-bb26380ceb90@gmail.com>
+References: <rco1i8$1l34$1@ciao.gmane.io>
+ <24305.24232.459249.386799@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <24305.24232.459249.386799@quad.stoffel.home>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear MD,
+On 6/22/20 8:45 PM, John Stoffel wrote:
+> This is a terrible idea.  Just think about how there is just one head
+> per disk, and it takes a signifigant amount of time to seek from track
+> to track, and then add in rotational latecy.  This all adds up.
+> 
+> So now create multiple seperate RAIDS across all these disks, with
+> competing seek patterns, and you're just going to thrash you disks.
 
-After reading md documentation describing stripe_cache_size and journal 
-(cache) in write-back mode, I found some inconsistencies
+Hmm.  Does that answer change if those partition-based RAID devices
+(of the same RAID level/settings) are combined into LVM volume groups?
 
-- sometimes the documentation states that the cache is for RAID 4/5/6, 
-sometimes just for RAID 5
-- it is nothing explicitly said about the cache block device size and 
-how one is related to the memory cache size
-- it is stated that the memory cache <includes> the same data stored on 
-cache disk - that is somewhat ambiguous
-- stripe_cache_size is the number of pages per device, but it is also 
-called the number of entries
+I think it does, as the physical layout of the data on the disks will
+end up pretty much identical, so the drive heads won't go unnecessarily
+skittering between partitions.
 
-Here are some statements about the journal. Could somebody confirm that 
-they are true (or not)?
+> Sorta kinda maybe... In either case, you only get 1 drive more space
+> with RAID 6 vs RAID10.  You can suffer any two disk failure, while
+> RAID10 is limited to one half of each pair.  It's a tradeoff.
 
-- the journal and all its features can be used with md RAID 4/5/6
-- references to RAID 5 only are wrong (in regards to the journal)
-- cache block device size in bytes shall be the same as memory cache 
-size in bytes
-- any extra block device or memory space (larger than the minimum of 
-cache block device and memory cache sizes) is not used
-- the cache block device and the memory cache contain the same data
-- the cache entry is exactly one page (so the number of pages and the 
-number of entries are the same)
+Yeah.  For some reason I had it in my head that RAID 10 could survive a
+double failure.  Not sure how I got that idea.  As you mention, the only
+way to get close to that would be to do a 4-drive/partition RAID 10 with
+a hot-spare.  Which would actually give me a reason for the partitioned
+setup, as I would want to try to avoid a 4TB or 8TB rebuild.  (My new
+drives are 8TB Seagate Ironwolfs.)
 
-Below are few extracts from the related documentation, for your convenience.
+> Look at the recent Arstechnica article on RAID levels and
+> performance.  It's an eye opener.
 
-md(4)
-====
+I assume that you're referring to this?
 
-     md/stripe_cache_size
-         This is only available on RAID5 and RAID6. It records the size 
-(in pages per device) of the stripe cache which
-         is used for synchronising all write operations to the array and 
-all read operations if the array is degraded.
-         memory_consumed = system_page_size * nr_disks * stripe_cache_size
+ 
+https://arstechnica.com/information-technology/2020/04/understanding-raid-how-performance-scales-from-one-disk-to-eight/
 
-https://www.kernel.org/doc/Documentation/md/raid5-cache.txt
-=======================================
+There's nothing really new in there.  Parity RAID sucks.  If you can't
+afford 3-legged mirrors, just go home, etc., etc.
 
-RAID5 cache
-------------------
+> I don't think larger chunk sizes really make all that much difference,
+> especially with your plan to use multiple partitions.
 
-Raid 4/5/6 could include an extra disk for data cache...
+ From what I understand about "parity RAID" (RAID-5, RAID-6, and exotic
+variants thereof), one wants a smaller stripe size if one is doing
+smaller writes (to minimize RMW cycles), but larger chunks increase the
+speed of multiple concurrent sequential readers.
 
-write-back mode:
-------------------------
+> You also don't say how *big* your disks will be, and if your 5 bay NAS
+> box can even split like that, and if it has the CPU to handle that.
+> Is it an NFS connection to the rest of your systems?
 
-Write-back cache will aggregate the data and flush the data to RAID 
-disks only after the data becomes a full stripe write...
-In write-back mode, MD also caches data in memory. The memory cache 
-includes the same data stored on cache disk, ...
-A user can configure the size by: echo "2048" > 
-/sys/block/md0/md/stripe_cache_size
+The disks are 8TB Seagate Ironwolf drives.  This is my home NAS, so it
+need to handle all sorts of different workloads - everything from media
+serving acting as an iSCSI target for test VMs.
 
-The implementation:
------------------------------
+It runs NFS, Samba, iSCSI, various media servers, Apache, etc.  The
+good news is that there isn't really any performance requirement (other
+than my own level of patience).  I basically just want to avoid
+handicapping the performance of the NAS with a pathological setting
+(such as putting VM root disks on a RAID-6 device with a large chunk
+size perhaps?).
 
-In write-back mode, MD writes IO data to the log and reports IO 
-completion. The data is also fully cached in memory at that
-time, which means read must query memory cache. If some conditions are 
-met, MD will flush the data to RAID disks
-... MD will write both data and parity into RAID disks, then MD can 
-release the memory cache. The flush conditions could be
-stripe becomes a full stripe write, free cache disk space is low or free 
-in-kernel memory cache space is low.
+> Honestly, I'd just setup two RAID1 mirrors with a single hot spare,
+> then use LVM on top to build the volumes you need.  With 8tb disks,
+> this only gives you 16Tb of space, but you get performance, quicker
+> rebuild speed if there's a problem with a disk, and simpler
+> management.
 
-https://www.kernel.org/doc/html/latest/admin-guide/md.html
-======================================
+I'm not willing to give up that much space *and* give up tolerance
+against double-failures.  Having come to my senses on what RAID-10
+can and can't do, I'll probably be doing RAID-6 everywhere, possibly
+with a couple of different chunk sizes.
 
-stripe_cache_size (currently raid5 only)
-     number of entries in the stripe cache...
+> With only five drives, you are limited in what you can do.  Now if you
+> could add a pair of mirror SSDs for caching, then I'd be more into
+> building a single large RAID6 backing device for media content, then
+> use the mirrored SSDs as a cache for a smaller block of day to day
+> storage.
+
+No space for any SSDs unfortunately.
+
+Thanks for the feedback!
+
+-- 
+========================================================================
+                  In Soviet Russia, Google searches you!
+========================================================================
