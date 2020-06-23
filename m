@@ -1,33 +1,58 @@
-From: o1bigtenor <o1bigtenor@gmail.com>
-Subject: Re: RAID types & chunks sizes for new NAS drives
-Date: Mon, 22 Jun 2020 21:31:40 -0500
-Message-ID: <CAPpdf5-RWyGX4Q9qaZBDfxUXedf+MnV3wnXh6R3XSF7-LomKzQ@mail.gmail.com>
-References: <rco1i8$1l34$1@ciao.gmane.io> <24305.24232.459249.386799@quad.stoffel.home>
+From: Sarah Koffi <paulwiliam782@gmail.com>
+Subject: Greetings From Mrs. Sarah Koffi
+Date: Tue, 23 Jun 2020 12:15:57 +0100
+Message-ID: <CAHqcnY1sQc2pQ+0Uyz5Y25va64Mmiq7PVAFb=gqiSCPOaqkzpA__46320.4542802245$1592910969$gmane$org@mail.gmail.com>
+Reply-To: sarahkoffi389@yahoo.co.jp
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <24305.24232.459249.386799@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Ian Pilcher <arequipeno@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: sarahkoffi389@yahoo.co.jp
 List-Id: linux-raid.ids
 
-On Mon, Jun 22, 2020 at 9:06 PM John Stoffel <john@stoffel.org> wrote:
->
-snip
+Greetings From Mrs. Sarah Koffi
 
-> In any case, make sure you get NAS rated disks, either the newest WD
-> RED+ (or is it Blue?)  In any case, make sure to NOT get the SMR
-> (Shingled Magnetic Recording) format drives.  See previous threads in
-> this group, as well as the arstechnica.com discussion about it all
-> that they disk last month.  Very informative.
->
-> Personally, with regular hard disks, I still kinda think 4gb is the
-> sweet spot, since you can just mirror pairs of the disks and then
-> stripe across on top as needed.  I like my storage simple, because
-> when (not if!) it all hits the fan, simple is easier to recover from.
->
-Did you mean 4 TB or 4 GB as you wrote?
-(Somewhat of a difference I do believe.)
+I'm contacting you based on your good profiles I read and for a good
+reasons, I am in search of a property to buy in your country as I
+intended to come over to your
+country for investment, Though I have not meet with you before but I
+believe that one has to risk confiding in someone to succeed sometimes
+in life.
 
-Regards
+My name is Mrs. Sarah Koffi. My late husband deals on Crude Oil with
+Federal Government of Sudan and he has a personal Oil firm in Bentiu
+Oil zone town and Upper
+Nile city. What I have experience physically, I don't wish to
+experience it again in my life due to the recent civil Ethnic war
+cause by our President Mr. Salva Kiir
+and the rebel leader Mr Riek Machar, I have been Under United Nation
+refuge camp in chad to save my life and that of my little daughter.
+
+Though, I do not know how you will feel to my proposal, but the truth
+is that I sneaked into Chad our neighboring country where I am living
+now as a refugee.
+I escaped with my little daughter when the rebels bust into our house
+and killed my husband as one of the big oil dealers in the country,
+ever since then, I have being on the run.
+
+I left my country and move to Chad our neighboring country with the
+little ceasefire we had, due to the face to face peace meeting accord
+coordinated by the US Secretary of State, Mr John Kerry and United
+Nations in Ethiopia (Addis Ababa) between our President Mr Salva Kiir
+and the rebel leader Mr Riek Machar to stop this war.
+
+I want to solicit for your partnership with trust to invest the $8
+million dollars deposited by my late husband in Bank because my life
+is no longer safe in our country, since the rebels are looking for the
+families of all the oil business men in the country to kill, saying
+that they are they one that is milking the country dry.
+
+I will offer you 20% of the total fund for your help while I will
+partner with you for the investment in your country.
+If I get your reply.
+
+I will wait to hear from you so as to give you details.With love from
+
+ i need you to contact me here sarahkoffi389@yahoo.co.jp
+
+Mrs. Sarah Koffi
