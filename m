@@ -1,32 +1,44 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: RAID types & chunks sizes for new NAS drives
-Date: Tue, 23 Jun 2020 13:26:33 +0100
-Message-ID: <875zbi3r46.fsf@esperi.org.uk>
-References: <rco1i8$1l34$1@ciao.gmane.io>
-        <24305.24232.459249.386799@quad.stoffel.home>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [PATCH] mdraid: fix read/write bytes accounting
+Date: Tue, 23 Jun 2020 16:21:49 +0200
+Message-ID: <fb3b18e6-9dda-6633-e25e-a141718f630b@cloud.ionos.com>
+References: <20200605201953.11098-1-jeffm@suse.com>
+ <ed552b4b-b19a-cc85-05f4-0a0dc0d6fac2@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <24305.24232.459249.386799@quad.stoffel.home> (John Stoffel's
-        message of "Mon, 22 Jun 2020 21:45:12 -0400")
+In-Reply-To: <ed552b4b-b19a-cc85-05f4-0a0dc0d6fac2@intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Ian Pilcher <arequipeno@gmail.com>, linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, jeffm@suse.com, linux-raid@vger.kernel.org, song@kernel.org
+Cc: nfbrown@suse.com, colyli@suse.com
 List-Id: linux-raid.ids
 
-On 23 Jun 2020, John Stoffel told this:
+Hi Artur,
 
-> You also don't say how *big* your disks will be, and if your 5 bay NAS
-> box can even split like that, and if it has the CPU to handle that.
-> Is it an NFS connection to the rest of your systems?
+On 6/8/20 9:13 AM, Artur Paszkiewicz wrote:
+> On 6/5/20 10:19 PM, jeffm@suse.com wrote:
+>> The i/o accounting published in /proc/diskstats for mdraid is currently
+>> broken.  md_make_request does the accounting for every bio passed but
+>> when a bio needs to be split, all the split bios are also submitted
+>> through md_make_request, resulting in multiple accounting.
+> Hi Jeff,
+>
+> I sent a patch a few days ago which should fix this issue. Can you check
+> it out?
+>
+> https://marc.info/?l=linux-raid&m=159102814820539
 
-Side note: NFSv4 really is much much better at this stuff than v3 ever
-was. With a fast enough network connection, I find NFSv4 as fast for
-more or less all workloads as NFSv3 was, mostly because of the lease
-support in v4 allowing client-side caching of the vast majority of files
-and directories that are either not written to or only written to by one
-client in a given short time window. (Obviously it also helps if your
-network is fast enough: 1GbE is going to be saturated many times over by
-a RAID array of any but the slowest modern HDDs. 10GbE and small
-10GbE-capable switches are not very costly these days and is definitely
-worth investing in on the NFS server and any clients you care about.)
+I need to account some extra statistics for bio such as latency and size,
+so it is kind of relies on your patch, then I read the code again.
+
+And besides my previous comment. I think you don't need clone bio for all
+personalities. For md-multipath, raid1 and raid10, you can track the start
+time by add it to those structures (multipath_bh, r1bio and r10bio), then
+one extra copy could be avoided.
+
+What do you think?
+
+Thanks,
+Guoqing
