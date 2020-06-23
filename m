@@ -1,39 +1,42 @@
 From: "John Stoffel" <john@stoffel.org>
 Subject: Re: RAID types & chunks sizes for new NAS drives
-Date: Tue, 23 Jun 2020 13:01:47 -0400
-Message-ID: <24306.13691.769328.392093@quad.stoffel.home>
+Date: Tue, 23 Jun 2020 14:50:26 -0400
+Message-ID: <24306.20210.265626.431196@quad.stoffel.home>
 References: <rco1i8$1l34$1@ciao.gmane.io>
         <24305.24232.459249.386799@quad.stoffel.home>
-        <CAPpdf5-RWyGX4Q9qaZBDfxUXedf+MnV3wnXh6R3XSF7-LomKzQ@mail.gmail.com>
+        <875zbi3r46.fsf@esperi.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf5-RWyGX4Q9qaZBDfxUXedf+MnV3wnXh6R3XSF7-LomKzQ@mail.gmail.com>
+In-Reply-To: <875zbi3r46.fsf@esperi.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>
-Cc: John Stoffel <john@stoffel.org>, Ian Pilcher <arequipeno@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Nix <nix@esperi.org.uk>
+Cc: John Stoffel <john@stoffel.org>, Ian Pilcher <arequipeno@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "o1bigtenor" == o1bigtenor  <o1bigtenor@gmail.com> writes:
+>>>>> "Nix" == Nix  <nix@esperi.org.uk> writes:
 
-o1bigtenor> On Mon, Jun 22, 2020 at 9:06 PM John Stoffel <john@stoffel.org> wrote:
->> 
-o1bigtenor> snip
+Nix> On 23 Jun 2020, John Stoffel told this:
+>> You also don't say how *big* your disks will be, and if your 5 bay NAS
+>> box can even split like that, and if it has the CPU to handle that.
+>> Is it an NFS connection to the rest of your systems?
 
->> In any case, make sure you get NAS rated disks, either the newest WD
->> RED+ (or is it Blue?)  In any case, make sure to NOT get the SMR
->> (Shingled Magnetic Recording) format drives.  See previous threads in
->> this group, as well as the arstechnica.com discussion about it all
->> that they disk last month.  Very informative.
->> 
->> Personally, with regular hard disks, I still kinda think 4gb is the
->> sweet spot, since you can just mirror pairs of the disks and then
->> stripe across on top as needed.  I like my storage simple, because
->> when (not if!) it all hits the fan, simple is easier to recover from.
->> 
-o1bigtenor> Did you mean 4 TB or 4 GB as you wrote?
-o1bigtenor> (Somewhat of a difference I do believe.)
+Nix> Side note: NFSv4 really is much much better at this stuff than v3
+Nix> ever was. With a fast enough network connection, I find NFSv4 as
+Nix> fast for more or less all workloads as NFSv3 was, mostly because
+Nix> of the lease support in v4 allowing client-side caching of the
+Nix> vast majority of files and directories that are either not
+Nix> written to or only written to by one client in a given short time
+Nix> window. (Obviously it also helps if your network is fast enough:
+Nix> 1GbE is going to be saturated many times over by a RAID array of
+Nix> any but the slowest modern HDDs. 10GbE and small 10GbE-capable
+Nix> switches are not very costly these days and is definitely worth
+Nix> investing in on the NFS server and any clients you care about.)
 
-LOL!  I meant 4Tb of course... but I do remember when 10mb HDs were
-amazing... :-)
+I've been thinking about moving to NFSv4 at home, since my main file
+server has my main desktop as an NFS and LDAP client for
+authentication.  Works quite well, and I don't care if my dekstop
+reboots on my, since the homedir is elsewhere.
+
+John
