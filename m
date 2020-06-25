@@ -1,55 +1,32 @@
-From: Ali Abdallah <ali.abdallah@suse.com>
-Subject: mdadm calendar specification format error
-Date: Thu, 25 Jun 2020 12:04:27 +0200
-Message-ID: <20200625100427.rsu56aa4zopqhilb@frix230>
+From: Coly Li <colyli@suse.de>
+Subject: Re: mdadm calendar specification format error
+Date: Thu, 25 Jun 2020 18:23:17 +0800
+Message-ID: <aedc28ae-6f6b-965e-049b-7d5055db0096@suse.de>
+References: <20200625100427.rsu56aa4zopqhilb@frix230>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="alvs6pyiehv63xkd"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20200625100427.rsu56aa4zopqhilb@frix230>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jes@trained-monkey.org
+Cc: Ali Abdallah <ali.abdallah@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 2020/6/25 18:04, Ali Abdallah wrote:
+> Hello,
+> 
+> Somebody can kindly take care of https://bugzilla.kernel.org/show_bug.cgi?id=208283 
+> 
+> Attached to the bug report, there is a very simple patch to correct the
+> OnCalendar syntax.
 
---alvs6pyiehv63xkd
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Jes,
 
-Hello,
+This patch is tested and verified by me, and already in SUSE Enterprise
+Linux products. Hope it can be picked into mdadm mainline.
 
-Somebody can kindly take care of https://bugzilla.kernel.org/show_bug.cgi?i=
-d=3D208283=20
+Thank you in advance.
 
-Attached to the bug report, there is a very simple patch to correct the
-OnCalendar syntax.
-
-Kind regards
-
---=20
-Ali Abdallah | SUSE Linux L3 Engineer
-GPG fingerprint: 51A0 F4A0 C8CF C98F 842E  A9A8 B945 56F8 1C85 D0D5
-
-
---alvs6pyiehv63xkd
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEUaD0oMjPyY+ELqmouUVW+ByF0NUFAl70dqcACgkQuUVW+ByF
-0NXY9A//T+UBQ+a7Jg7sgEHkyrSmfVLXkrfn+WxzGG4V6hxDU4PjpeA34CNa0H/J
-Zg7fbF5qXYDrshqHtArch8SZq/SrB1WiAuVqQy+6BObXzMBY3FBEkPXG9jEPUoaV
-C1I0kD1JZt3vs51NZyuBc2ejxL3/AzRkVt9zAdXT1QeDaGwb7gCRGMNQvyQD4+GJ
-D6BxlxX5EPlxd91VRQcKIvizaY2Cuj2kxAlmWGKzFCYprZBfB/Z/WYcw5Vb/ANFj
-H/Kg7/eqzW+5WvINCkIfd9BmmIKBo/pyteeIMSTa/VqN+64OnC7CmRVZCm8WnVYL
-wHD8UTXcHhib4GMg4a3Y9f+P6cJClhkrayklURMOsFSo2XBpTB1PYx7vgBFOJyFi
-zMeJ5hyoUv+H1jDHHxsaZMyGgR6syVArVXhxT0EkUqsu0C1xjhKTnW1RimBCde6t
-pybyJD/Kv5hTo3wxem6pYvpMeYjjxSOzz4/B4YB6v7x9V2HS1/RiuLwJY0ObLFzy
-wPFFk9h7ApeeNyPM3LhE87wsKquEAPDbtyRKfZgEdpUl5WTl6fKaoz/IfAIDnmWy
-r5TFQOkknJrXscIkr09Jf2TTVA+tc9jDUJmAQqNAxLa5JhLdDFX4NJ9MYd9KwYhd
-K0BKyloctpztQb0siorZpnAnZlQhi/h9Q3ZuRL0Dd05tt8SGF7I=
-=YrL6
------END PGP SIGNATURE-----
-
---alvs6pyiehv63xkd--
+Coly Li
