@@ -1,65 +1,71 @@
 From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH] mdraid: fix read/write bytes accounting
-Date: Thu, 25 Jun 2020 11:13:39 +0200
-Message-ID: <236cffb5-ab4a-0559-6f37-321347895189@cloud.ionos.com>
-References: <20200605201953.11098-1-jeffm@suse.com>
- <ed552b4b-b19a-cc85-05f4-0a0dc0d6fac2@intel.com>
- <fb3b18e6-9dda-6633-e25e-a141718f630b@cloud.ionos.com>
- <ac89af6c-1610-61b5-d275-304e6e54947f@intel.com>
+Subject: Re: [PATCH 1/3] raid5: call clear_batch_ready before set
+ STRIPE_ACTIVE
+Date: Thu, 25 Jun 2020 11:22:46 +0200
+Message-ID: <407fa617-c86e-d63d-65ad-3f3058c5e40f@cloud.ionos.com>
+References: <20200616092552.1754-1-guoqing.jiang@cloud.ionos.com>
+ <CAPhsuW70kML70Xi3MhubCGBWnLDg0L7sPKwKe9HZHsQHwtzEEQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ac89af6c-1610-61b5-d275-304e6e54947f@intel.com>
+In-Reply-To: <CAPhsuW70kML70Xi3MhubCGBWnLDg0L7sPKwKe9HZHsQHwtzEEQ@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, jeffm@suse.com, linux-raid@vger.kernel.org, song@kernel.org
-Cc: nfbrown@suse.com, colyli@suse.com
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
 
-On 6/23/20 6:48 PM, Artur Paszkiewicz wrote:
-> On 6/23/20 4:21 PM, Guoqing Jiang wrote:
->> Hi Artur,
+On 6/24/20 1:58 AM, Song Liu wrote:
+> On Tue, Jun 16, 2020 at 2:25 AM Guoqing Jiang
+> <guoqing.jiang@cloud.ionos.com> wrote:
+>> We tried to only put the head sh of batch list to handle_list, then the
+>> handle_stripe doesn't handle other members in the batch list. However,
+>> we still got the calltrace in break_stripe_batch_list.
 >>
->> On 6/8/20 9:13 AM, Artur Paszkiewicz wrote:
->>> On 6/5/20 10:19 PM, jeffm@suse.com wrote:
->>>> The i/o accounting published in /proc/diskstats for mdraid is currently
->>>> broken.  md_make_request does the accounting for every bio passed but
->>>> when a bio needs to be split, all the split bios are also submitted
->>>> through md_make_request, resulting in multiple accounting.
->>> Hi Jeff,
->>>
->>> I sent a patch a few days ago which should fix this issue. Can you check
->>> it out?
->>>
->>> https://marc.info/?l=linux-raid&m=159102814820539
->> I need to account some extra statistics for bio such as latency and size,
->> so it is kind of relies on your patch, then I read the code again.
+>> [593764.644269] stripe state: 2003
+>> kernel: [593764.644299] ------------[ cut here ]------------
+>> kernel: [593764.644308] WARNING: CPU: 12 PID: 856 at drivers/md/raid5.c:4625 break_stripe_batch_list+0x203/0x240 [raid456]
+>> [...]
+>> kernel: [593764.644363] Call Trace:
+>> kernel: [593764.644370]  handle_stripe+0x907/0x20c0 [raid456]
+>> kernel: [593764.644376]  ? __wake_up_common_lock+0x89/0xc0
+>> kernel: [593764.644379]  handle_active_stripes.isra.57+0x35f/0x570 [raid456]
+>> kernel: [593764.644382]  ? raid5_wakeup_stripe_thread+0x96/0x1f0 [raid456]
+>> kernel: [593764.644385]  raid5d+0x480/0x6a0 [raid456]
+>> kernel: [593764.644390]  ? md_thread+0x11f/0x160
+>> kernel: [593764.644392]  md_thread+0x11f/0x160
+>> kernel: [593764.644394]  ? wait_woken+0x80/0x80
+>> kernel: [593764.644396]  kthread+0xfc/0x130
+>> kernel: [593764.644398]  ? find_pers+0x70/0x70
+>> kernel: [593764.644399]  ? kthread_create_on_node+0x70/0x70
+>> kernel: [593764.644401]  ret_from_fork+0x1f/0x30
 >>
->> And besides my previous comment. I think you don't need clone bio for all
->> personalities. For md-multipath, raid1 and raid10, you can track the start
->> time by add it to those structures (multipath_bh, r1bio and r10bio), then
->> one extra copy could be avoided.
+>> As we can see, the stripe was set with STRIPE_ACTIVE and STRIPE_HANDLE,
+>> and only handle_stripe could set those flags then return. And since the
+>> stipe was already in the batch list, we need to return earlier before
+>> set the two flags.
+>>
+>> And after dig a little about git history especially commit 3664847d95e6
+>> ("md/raid5: fix a race condition in stripe batch"), it seems the batched
+>> stipe still could be handled by handle_stipe, then handle_stipe needs to
+>> return earlier if clear_batch_ready to return true.
+>>
+>> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+>> ---
+>> Another alternative would be just not warn if STRIPE_ACTIVE is valid for
+>> the batched list.
 >>
 >> What do you think?
-> You're right, cloning can be avoided for those personalities. I wanted
-> to keep it clean and centralized in the generic md code. I think we
-> should have a common completion callback and some common request
-> structure for all md personalities, like struct md_io which I'm using in
-> my patch.How about we add it to the existing stucts like r1bio etc. and
-> use that for io accounting, and clone the bio with the struct otherwise?
-> Or maybe remove the cloning from the personalities and instead make the
-> bio cloned in md_make_request available to them? Does this make sense?
+>>
+> This patch looks good to me (haven't tested yet). Let's try with this one.
 
-Centralization definitely has it's advantage, but given the difference
-among personalities, not sure it is possible or make sense to clone bio
-in common md layer.
+Ok, pls let me know if there is issue during test.
 
-For raid1/10, we at least need to care about barrier and read balance
-before clone bio, and I would prefer to not change current mechanism
-since it is really a big modification from my understanding.
+And do you want a new patch to reflect which I clarified for the line
+number and kernel version?
 
 Thanks,
 Guoqing
