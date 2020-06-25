@@ -1,71 +1,55 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH 1/3] raid5: call clear_batch_ready before set
- STRIPE_ACTIVE
-Date: Thu, 25 Jun 2020 11:22:46 +0200
-Message-ID: <407fa617-c86e-d63d-65ad-3f3058c5e40f@cloud.ionos.com>
-References: <20200616092552.1754-1-guoqing.jiang@cloud.ionos.com>
- <CAPhsuW70kML70Xi3MhubCGBWnLDg0L7sPKwKe9HZHsQHwtzEEQ@mail.gmail.com>
+From: Ali Abdallah <ali.abdallah@suse.com>
+Subject: mdadm calendar specification format error
+Date: Thu, 25 Jun 2020 12:04:27 +0200
+Message-ID: <20200625100427.rsu56aa4zopqhilb@frix230>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="alvs6pyiehv63xkd"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW70kML70Xi3MhubCGBWnLDg0L7sPKwKe9HZHsQHwtzEEQ@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--alvs6pyiehv63xkd
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 6/24/20 1:58 AM, Song Liu wrote:
-> On Tue, Jun 16, 2020 at 2:25 AM Guoqing Jiang
-> <guoqing.jiang@cloud.ionos.com> wrote:
->> We tried to only put the head sh of batch list to handle_list, then the
->> handle_stripe doesn't handle other members in the batch list. However,
->> we still got the calltrace in break_stripe_batch_list.
->>
->> [593764.644269] stripe state: 2003
->> kernel: [593764.644299] ------------[ cut here ]------------
->> kernel: [593764.644308] WARNING: CPU: 12 PID: 856 at drivers/md/raid5.c:4625 break_stripe_batch_list+0x203/0x240 [raid456]
->> [...]
->> kernel: [593764.644363] Call Trace:
->> kernel: [593764.644370]  handle_stripe+0x907/0x20c0 [raid456]
->> kernel: [593764.644376]  ? __wake_up_common_lock+0x89/0xc0
->> kernel: [593764.644379]  handle_active_stripes.isra.57+0x35f/0x570 [raid456]
->> kernel: [593764.644382]  ? raid5_wakeup_stripe_thread+0x96/0x1f0 [raid456]
->> kernel: [593764.644385]  raid5d+0x480/0x6a0 [raid456]
->> kernel: [593764.644390]  ? md_thread+0x11f/0x160
->> kernel: [593764.644392]  md_thread+0x11f/0x160
->> kernel: [593764.644394]  ? wait_woken+0x80/0x80
->> kernel: [593764.644396]  kthread+0xfc/0x130
->> kernel: [593764.644398]  ? find_pers+0x70/0x70
->> kernel: [593764.644399]  ? kthread_create_on_node+0x70/0x70
->> kernel: [593764.644401]  ret_from_fork+0x1f/0x30
->>
->> As we can see, the stripe was set with STRIPE_ACTIVE and STRIPE_HANDLE,
->> and only handle_stripe could set those flags then return. And since the
->> stipe was already in the batch list, we need to return earlier before
->> set the two flags.
->>
->> And after dig a little about git history especially commit 3664847d95e6
->> ("md/raid5: fix a race condition in stripe batch"), it seems the batched
->> stipe still could be handled by handle_stipe, then handle_stipe needs to
->> return earlier if clear_batch_ready to return true.
->>
->> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
->> ---
->> Another alternative would be just not warn if STRIPE_ACTIVE is valid for
->> the batched list.
->>
->> What do you think?
->>
-> This patch looks good to me (haven't tested yet). Let's try with this one.
+Hello,
 
-Ok, pls let me know if there is issue during test.
+Somebody can kindly take care of https://bugzilla.kernel.org/show_bug.cgi?i=
+d=3D208283=20
 
-And do you want a new patch to reflect which I clarified for the line
-number and kernel version?
+Attached to the bug report, there is a very simple patch to correct the
+OnCalendar syntax.
 
-Thanks,
-Guoqing
+Kind regards
+
+--=20
+Ali Abdallah | SUSE Linux L3 Engineer
+GPG fingerprint: 51A0 F4A0 C8CF C98F 842E  A9A8 B945 56F8 1C85 D0D5
+
+
+--alvs6pyiehv63xkd
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEUaD0oMjPyY+ELqmouUVW+ByF0NUFAl70dqcACgkQuUVW+ByF
+0NXY9A//T+UBQ+a7Jg7sgEHkyrSmfVLXkrfn+WxzGG4V6hxDU4PjpeA34CNa0H/J
+Zg7fbF5qXYDrshqHtArch8SZq/SrB1WiAuVqQy+6BObXzMBY3FBEkPXG9jEPUoaV
+C1I0kD1JZt3vs51NZyuBc2ejxL3/AzRkVt9zAdXT1QeDaGwb7gCRGMNQvyQD4+GJ
+D6BxlxX5EPlxd91VRQcKIvizaY2Cuj2kxAlmWGKzFCYprZBfB/Z/WYcw5Vb/ANFj
+H/Kg7/eqzW+5WvINCkIfd9BmmIKBo/pyteeIMSTa/VqN+64OnC7CmRVZCm8WnVYL
+wHD8UTXcHhib4GMg4a3Y9f+P6cJClhkrayklURMOsFSo2XBpTB1PYx7vgBFOJyFi
+zMeJ5hyoUv+H1jDHHxsaZMyGgR6syVArVXhxT0EkUqsu0C1xjhKTnW1RimBCde6t
+pybyJD/Kv5hTo3wxem6pYvpMeYjjxSOzz4/B4YB6v7x9V2HS1/RiuLwJY0ObLFzy
+wPFFk9h7ApeeNyPM3LhE87wsKquEAPDbtyRKfZgEdpUl5WTl6fKaoz/IfAIDnmWy
+r5TFQOkknJrXscIkr09Jf2TTVA+tc9jDUJmAQqNAxLa5JhLdDFX4NJ9MYd9KwYhd
+K0BKyloctpztQb0siorZpnAnZlQhi/h9Q3ZuRL0Dd05tt8SGF7I=
+=YrL6
+-----END PGP SIGNATURE-----
+
+--alvs6pyiehv63xkd--
