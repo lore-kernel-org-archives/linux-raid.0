@@ -1,25 +1,30 @@
-From: "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>
-Subject: mdadm-4.2 release
-Date: Wed, 1 Jul 2020 09:18:20 +0000
-Message-ID: <SA0PR11MB4542AD5A1AEF00B96404D5A4FF6C0@SA0PR11MB4542.namprd11.prod.outlook.com>
-References: <SA0PR11MB454290C854066D0AFD7EEC75FF6C0@SA0PR11MB4542.namprd11.prod.outlook.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: rename ->make_request_fn and move it to the
+ block_device_operations v2
+Date: Wed, 1 Jul 2020 07:43:29 -0600
+Message-ID: <bffb89d5-b51a-5f5a-15f4-b891f1f053ef@kernel.dk>
+References: <20200701085947.3354405-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <SA0PR11MB454290C854066D0AFD7EEC75FF6C0@SA0PR11MB4542.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200701085947.3354405-1-hch@lst.de>
 Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <jes@trained-monkey.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-xtensa@linux-xtensa.org, drbd-dev@lists.linbit.com, linuxppc-dev@lists.ozlabs.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Jes,
-It will be nice to release mdadm-4.2 soon. =A0If I remember correctly, rele=
-ase has been planned for May- now is July.
-Do you still working on it?
-We are ok with releasing it on current HEAD.
-Sorry for spam, resending as plain text.
+On 7/1/20 2:59 AM, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series moves the make_request_fn method into block_device_operations
+> with the much more descriptive ->submit_bio name.  It then also gives
+> generic_make_request a more descriptive name, and further optimize the
+> path to issue to blk-mq, removing the need for the direct_make_request
+> bypass.
 
-Thanks,
-Mariusz
+Thanks, I'll try this again.
+
+-- 
+Jens Axboe
