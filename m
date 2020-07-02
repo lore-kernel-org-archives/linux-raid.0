@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v5 15/16] md/raid6: compute syndrome with correct page offset
-Date: Thu, 2 Jul 2020 08:06:27 -0400
-Message-ID: <20200702120628.777303-16-yuyufen@huawei.com>
+Subject: [PATCH v5 09/16] md/raid5: add new xor function to support different page offset
+Date: Thu, 2 Jul 2020 08:06:21 -0400
+Message-ID: <20200702120628.777303-10-yuyufen@huawei.com>
 References: <20200702120628.777303-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,267 +13,270 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-When raid6 compute syndrome, the pages address will be passed to computer
-function. After trying to support shared page between multiple sh->dev,
-we also need to let computor know the correct location of each page.
+RAID5 will call async_xor() and async_xor_val() to compute xor.
+However, both of them require common src/dst page offset. After
+introducing shared pages of r5pages, we want these xor computer
+function to support different src/dst page offset.
+
+Here, we add two new functions async_xor_offsets() and
+async_xor_val_offsets() respectively for async_xor() and async_xor_val().
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/raid5.c | 69 +++++++++++++++++++++++++++++++---------------
- 1 file changed, 47 insertions(+), 22 deletions(-)
+ crypto/async_tx/async_xor.c | 120 +++++++++++++++++++++++++++++++-----
+ include/linux/async_tx.h    |  11 ++++
+ 2 files changed, 114 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a3376a4e4e5c..533097da2ea6 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1531,6 +1531,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
+index 4e5eebe52e6a..f5666ac84d34 100644
+--- a/crypto/async_tx/async_xor.c
++++ b/crypto/async_tx/async_xor.c
+@@ -97,7 +97,8 @@ do_async_xor(struct dma_chan *chan, struct dmaengine_unmap_data *unmap,
+ }
  
- /* set_syndrome_sources - populate source buffers for gen_syndrome
-  * @srcs - (struct page *) array of size sh->disks
-+ * @offs - (unsigned int) array of offset for each page
-  * @sh - stripe_head to parse
-  *
-  * Populates srcs in proper layout order for the stripe and returns the
-@@ -1539,6 +1540,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
-  * is recorded in srcs[count+1]].
-  */
- static int set_syndrome_sources(struct page **srcs,
-+				unsigned int *offs,
- 				struct stripe_head *sh,
- 				int srctype)
+ static void
+-do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
++do_sync_xor_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
+ 	    int src_cnt, size_t len, struct async_submit_ctl *submit)
  {
-@@ -1569,6 +1571,12 @@ static int set_syndrome_sources(struct page **srcs,
- 				srcs[slot] = sh->dev[i].orig_page;
- 			else
- 				srcs[slot] = sh->dev[i].page;
-+			/*
-+			 * For R5_InJournal, PAGE_SIZE must be 4KB and will
-+			 * not use r5pages. In that case, dev[i].offset
-+			 * is 0. So we can also use the value directly.
-+			 */
-+			offs[slot] = sh->dev[i].offset;
- 		}
- 		i = raid6_next_disk(i, disks);
- 	} while (i != d0_idx);
-@@ -1581,12 +1589,14 @@ ops_run_compute6_1(struct stripe_head *sh, struct raid5_percpu *percpu)
- {
- 	int disks = sh->disks;
- 	struct page **blocks = to_addr_page(percpu, 0);
-+	unsigned int *offs = to_addr_offs(sh, percpu);
- 	int target;
- 	int qd_idx = sh->qd_idx;
- 	struct dma_async_tx_descriptor *tx;
- 	struct async_submit_ctl submit;
- 	struct r5dev *tgt;
- 	struct page *dest;
-+	unsigned int dest_off;
  	int i;
- 	int count;
- 	struct r5conf *conf = sh->raid_conf;
-@@ -1606,32 +1616,35 @@ ops_run_compute6_1(struct stripe_head *sh, struct raid5_percpu *percpu)
- 	tgt = &sh->dev[target];
- 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
- 	dest = tgt->page;
-+	dest_off = tgt->offset;
+@@ -114,7 +115,8 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	/* convert to buffer pointers */
+ 	for (i = 0; i < src_cnt; i++)
+ 		if (src_list[i])
+-			srcs[xor_src_cnt++] = page_address(src_list[i]) + offset;
++			srcs[xor_src_cnt++] = page_address(src_list[i]) +
++				(src_offset ? src_offset[i] : offset);
+ 	src_cnt = xor_src_cnt;
+ 	/* set destination address */
+ 	dest_buf = page_address(dest) + offset;
+@@ -135,11 +137,31 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	async_tx_sync_epilog(submit);
+ }
  
- 	atomic_inc(&sh->count);
++static inline bool
++dma_xor_aligned_offsets(struct dma_device *device, unsigned int offset,
++		unsigned int *src_offset, int src_cnt, int len)
++{
++	int i;
++
++	if (!is_dma_xor_aligned(device, offset, 0, len))
++		return false;
++
++	if (!src_offset)
++		return true;
++
++	for (i = 0; i < src_cnt; i++) {
++		if (!is_dma_xor_aligned(device, src_offset[i], 0, len))
++			return false;
++	}
++	return true;
++}
++
+ /**
+- * async_xor - attempt to xor a set of blocks with a dma engine.
++ * async_xor_offsets - attempt to xor a set of blocks with a dma engine.
+  * @dest: destination page
++ * @offset: dst offset to start transaction
+  * @src_list: array of source pages
+- * @offset: common src/dst offset to start transaction
++ * @src_offset: array of source pages offset, NULL means common src/dst offset
+  * @src_cnt: number of source pages
+  * @len: length in bytes
+  * @submit: submission / completion modifiers
+@@ -157,8 +179,9 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+  * is not specified.
+  */
+ struct dma_async_tx_descriptor *
+-async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+-	  int src_cnt, size_t len, struct async_submit_ctl *submit)
++async_xor_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, struct async_submit_ctl *submit)
+ {
+ 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR,
+ 						      &dest, 1, src_list,
+@@ -171,7 +194,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	if (device)
+ 		unmap = dmaengine_get_unmap_data(device->dev, src_cnt+1, GFP_NOWAIT);
  
- 	if (target == qd_idx) {
--		count = set_syndrome_sources(blocks, sh, SYNDROME_SRC_ALL);
-+		count = set_syndrome_sources(blocks, offs,
-+					sh, SYNDROME_SRC_ALL);
- 		blocks[count] = NULL; /* regenerating p is not necessary */
- 		BUG_ON(blocks[count+1] != dest); /* q should already be set */
- 		init_async_submit(&submit, ASYNC_TX_FENCE, NULL,
- 				  ops_complete_compute, sh,
- 				  to_addr_conv(sh, percpu, 0));
--		tx = async_gen_syndrome(blocks, 0, count+2,
--				conf->stripe_size, &submit);
-+		tx = async_gen_syndrome(blocks, offs,
-+					count+2, conf->stripe_size, &submit);
- 	} else {
- 		/* Compute any data- or p-drive using XOR */
- 		count = 0;
- 		for (i = disks; i-- ; ) {
- 			if (i == target || i == qd_idx)
+-	if (unmap && is_dma_xor_aligned(device, offset, 0, len)) {
++	if (unmap && dma_xor_aligned_offsets(device, offset,
++				src_offset, src_cnt, len)) {
+ 		struct dma_async_tx_descriptor *tx;
+ 		int i, j;
+ 
+@@ -184,7 +208,8 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
  				continue;
-+			offs[count] = sh->dev[i].offset;
- 			blocks[count++] = sh->dev[i].page;
+ 			unmap->to_cnt++;
+ 			unmap->addr[j++] = dma_map_page(device->dev, src_list[i],
+-							offset, len, DMA_TO_DEVICE);
++					src_offset ? src_offset[i] : offset,
++					len, DMA_TO_DEVICE);
  		}
  
- 		init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST,
- 				  NULL, ops_complete_compute, sh,
- 				  to_addr_conv(sh, percpu, 0));
--		tx = async_xor(dest, blocks, 0, count,
--				conf->stripe_size, &submit);
-+		tx = async_xor_offsets(dest, dest_off, blocks, offs,
-+				count, conf->stripe_size, &submit);
+ 		/* map it bidirectional as it may be re-used as a source */
+@@ -213,11 +238,42 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 		/* wait for any prerequisite operations */
+ 		async_tx_quiesce(&submit->depend_tx);
+ 
+-		do_sync_xor(dest, src_list, offset, src_cnt, len, submit);
++		do_sync_xor_offsets(dest, offset, src_list, src_offset,
++				src_cnt, len, submit);
+ 
+ 		return NULL;
  	}
+ }
++EXPORT_SYMBOL_GPL(async_xor_offsets);
++
++/**
++ * async_xor - attempt to xor a set of blocks with a dma engine.
++ * @dest: destination page
++ * @src_list: array of source pages
++ * @offset: common src/dst offset to start transaction
++ * @src_cnt: number of source pages
++ * @len: length in bytes
++ * @submit: submission / completion modifiers
++ *
++ * honored flags: ASYNC_TX_ACK, ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DST
++ *
++ * xor_blocks always uses the dest as a source so the
++ * ASYNC_TX_XOR_ZERO_DST flag must be set to not include dest data in
++ * the calculation.  The assumption with dma eninges is that they only
++ * use the destination buffer as a source when it is explicity specified
++ * in the source list.
++ *
++ * src_list note: if the dest is also a source it must be at index zero.
++ * The contents of this array will be overwritten if a scribble region
++ * is not specified.
++ */
++struct dma_async_tx_descriptor *
++async_xor(struct page *dest, struct page **src_list, unsigned int offset,
++	  int src_cnt, size_t len, struct async_submit_ctl *submit)
++{
++	return async_xor_offsets(dest, offset, src_list, NULL,
++			src_cnt, len, submit);
++}
+ EXPORT_SYMBOL_GPL(async_xor);
+ 
+ static int page_is_zero(struct page *p, unsigned int offset, size_t len)
+@@ -237,10 +293,11 @@ xor_val_chan(struct async_submit_ctl *submit, struct page *dest,
+ }
+ 
+ /**
+- * async_xor_val - attempt a xor parity check with a dma engine.
++ * async_xor_val_offsets - attempt a xor parity check with a dma engine.
+  * @dest: destination page used if the xor is performed synchronously
++ * @offset: des offset in pages to start transaction
+  * @src_list: array of source pages
+- * @offset: offset in pages to start transaction
++ * @src_offset: array of source pages offset, NULL means common src/det offset
+  * @src_cnt: number of source pages
+  * @len: length in bytes
+  * @result: 0 if sum == 0 else non-zero
+@@ -253,9 +310,10 @@ xor_val_chan(struct async_submit_ctl *submit, struct page *dest,
+  * is not specified.
+  */
+ struct dma_async_tx_descriptor *
+-async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+-	      int src_cnt, size_t len, enum sum_check_flags *result,
+-	      struct async_submit_ctl *submit)
++async_xor_val_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, enum sum_check_flags *result,
++		struct async_submit_ctl *submit)
+ {
+ 	struct dma_chan *chan = xor_val_chan(submit, dest, src_list, src_cnt, len);
+ 	struct dma_device *device = chan ? chan->device : NULL;
+@@ -268,7 +326,7 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 		unmap = dmaengine_get_unmap_data(device->dev, src_cnt, GFP_NOWAIT);
+ 
+ 	if (unmap && src_cnt <= device->max_xor &&
+-	    is_dma_xor_aligned(device, offset, 0, len)) {
++	    dma_xor_aligned_offsets(device, offset, src_offset, src_cnt, len)) {
+ 		unsigned long dma_prep_flags = 0;
+ 		int i;
+ 
+@@ -281,7 +339,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 
+ 		for (i = 0; i < src_cnt; i++) {
+ 			unmap->addr[i] = dma_map_page(device->dev, src_list[i],
+-						      offset, len, DMA_TO_DEVICE);
++					src_offset ? src_offset[i] : offset,
++					len, DMA_TO_DEVICE);
+ 			unmap->to_cnt++;
+ 		}
+ 		unmap->len = len;
+@@ -312,7 +371,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 		submit->flags |= ASYNC_TX_XOR_DROP_DST;
+ 		submit->flags &= ~ASYNC_TX_ACK;
+ 
+-		tx = async_xor(dest, src_list, offset, src_cnt, len, submit);
++		tx = async_xor_offsets(dest, offset, src_list, src_offset,
++				src_cnt, len, submit);
+ 
+ 		async_tx_quiesce(&tx);
+ 
+@@ -325,6 +385,32 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
  
  	return tx;
-@@ -1650,6 +1663,7 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- 	struct r5dev *tgt2 = &sh->dev[target2];
- 	struct dma_async_tx_descriptor *tx;
- 	struct page **blocks = to_addr_page(percpu, 0);
-+	unsigned int *offs = to_addr_offs(sh, percpu);
- 	struct async_submit_ctl submit;
- 	struct r5conf *conf = sh->raid_conf;
- 
-@@ -1670,6 +1684,7 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- 	do {
- 		int slot = raid6_idx_to_slot(i, sh, &count, syndrome_disks);
- 
-+		offs[slot] = sh->dev[i].offset;
- 		blocks[slot] = sh->dev[i].page;
- 
- 		if (i == target)
-@@ -1694,10 +1709,12 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- 			init_async_submit(&submit, ASYNC_TX_FENCE, NULL,
- 					  ops_complete_compute, sh,
- 					  to_addr_conv(sh, percpu, 0));
--			return async_gen_syndrome(blocks, 0, syndrome_disks+2,
--						  conf->stripe_size, &submit);
-+			return async_gen_syndrome(blocks, offs,
-+					syndrome_disks+2,
-+					conf->stripe_size, &submit);
- 		} else {
- 			struct page *dest;
-+			unsigned int dest_off;
- 			int data_target;
- 			int qd_idx = sh->qd_idx;
- 
-@@ -1711,21 +1728,24 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- 			for (i = disks; i-- ; ) {
- 				if (i == data_target || i == qd_idx)
- 					continue;
-+				offs[count] = sh->dev[i].offset;
- 				blocks[count++] = sh->dev[i].page;
- 			}
- 			dest = sh->dev[data_target].page;
-+			dest_off = sh->dev[data_target].offset;
- 			init_async_submit(&submit,
- 					  ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST,
- 					  NULL, NULL, NULL,
- 					  to_addr_conv(sh, percpu, 0));
--			tx = async_xor(dest, blocks, 0, count,
--					conf->stripe_size, &submit);
-+			tx = async_xor_offsets(dest, dest_off, blocks, offs,
-+					count, conf->stripe_size, &submit);
- 
--			count = set_syndrome_sources(blocks, sh, SYNDROME_SRC_ALL);
-+			count = set_syndrome_sources(blocks, offs,
-+					sh, SYNDROME_SRC_ALL);
- 			init_async_submit(&submit, ASYNC_TX_FENCE, tx,
- 					  ops_complete_compute, sh,
- 					  to_addr_conv(sh, percpu, 0));
--			return async_gen_syndrome(blocks, 0, count+2,
-+			return async_gen_syndrome(blocks, offs, count+2,
- 						  conf->stripe_size, &submit);
- 		}
- 	} else {
-@@ -1736,13 +1756,13 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- 			/* We're missing D+P. */
- 			return async_raid6_datap_recov(syndrome_disks+2,
- 						       conf->stripe_size, faila,
--						       blocks, &submit);
-+						       blocks, offs, &submit);
- 		} else {
- 			/* We're missing D+D. */
- 			return async_raid6_2data_recov(syndrome_disks+2,
- 						       conf->stripe_size,
- 						       faila, failb,
--						       blocks, &submit);
-+						       blocks, offs, &submit);
- 		}
- 	}
  }
-@@ -1810,6 +1830,7 @@ ops_run_prexor6(struct stripe_head *sh, struct raid5_percpu *percpu,
- 		struct dma_async_tx_descriptor *tx)
- {
- 	struct page **blocks = to_addr_page(percpu, 0);
-+	unsigned int *offs = to_addr_offs(sh, percpu);
- 	int count;
- 	struct async_submit_ctl submit;
- 	struct r5conf *conf = sh->raid_conf;
-@@ -1817,12 +1838,12 @@ ops_run_prexor6(struct stripe_head *sh, struct raid5_percpu *percpu,
- 	pr_debug("%s: stripe %llu\n", __func__,
- 		(unsigned long long)sh->sector);
++EXPORT_SYMBOL_GPL(async_xor_val_offsets);
++
++/**
++ * async_xor_val - attempt a xor parity check with a dma engine.
++ * @dest: destination page used if the xor is performed synchronously
++ * @src_list: array of source pages
++ * @offset: offset in pages to start transaction
++ * @src_cnt: number of source pages
++ * @len: length in bytes
++ * @result: 0 if sum == 0 else non-zero
++ * @submit: submission / completion modifiers
++ *
++ * honored flags: ASYNC_TX_ACK
++ *
++ * src_list note: if the dest is also a source it must be at index zero.
++ * The contents of this array will be overwritten if a scribble region
++ * is not specified.
++ */
++struct dma_async_tx_descriptor *
++async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
++	      int src_cnt, size_t len, enum sum_check_flags *result,
++	      struct async_submit_ctl *submit)
++{
++	return async_xor_val_offsets(dest, offset, src_list, NULL, src_cnt,
++			len, result, submit);
++}
+ EXPORT_SYMBOL_GPL(async_xor_val);
  
--	count = set_syndrome_sources(blocks, sh, SYNDROME_SRC_WANT_DRAIN);
-+	count = set_syndrome_sources(blocks, offs, sh, SYNDROME_SRC_WANT_DRAIN);
+ MODULE_AUTHOR("Intel Corporation");
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index 75e582b8d2d9..8d79e2de06bd 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -162,11 +162,22 @@ struct dma_async_tx_descriptor *
+ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	  int src_cnt, size_t len, struct async_submit_ctl *submit);
  
- 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_PQ_XOR_DST, tx,
- 			  ops_complete_prexor, sh, to_addr_conv(sh, percpu, 0));
--	tx = async_gen_syndrome(blocks, 0, count+2,
--				conf->stripe_size, &submit);
-+	tx = async_gen_syndrome(blocks, offs, count+2,
-+				conf->stripe_size,  &submit);
++struct dma_async_tx_descriptor *
++async_xor_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, struct async_submit_ctl *submit);
++
+ struct dma_async_tx_descriptor *
+ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+ 	      int src_cnt, size_t len, enum sum_check_flags *result,
+ 	      struct async_submit_ctl *submit);
  
- 	return tx;
- }
-@@ -2054,6 +2075,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
- {
- 	struct async_submit_ctl submit;
- 	struct page **blocks;
-+	unsigned int *offs;
- 	int count, i, j = 0;
- 	struct stripe_head *head_sh = sh;
- 	int last_stripe;
-@@ -2079,6 +2101,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
- 
- again:
- 	blocks = to_addr_page(percpu, j);
-+	offs = to_addr_offs(sh, percpu);
- 
- 	if (sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
- 		synflags = SYNDROME_SRC_WRITTEN;
-@@ -2088,7 +2111,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
- 		txflags = ASYNC_TX_ACK;
- 	}
- 
--	count = set_syndrome_sources(blocks, sh, synflags);
-+	count = set_syndrome_sources(blocks, offs, sh, synflags);
- 	last_stripe = !head_sh->batch_head ||
- 		list_first_entry(&sh->batch_list,
- 				 struct stripe_head, batch_list) == head_sh;
-@@ -2100,8 +2123,8 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
- 	} else
- 		init_async_submit(&submit, 0, tx, NULL, NULL,
- 				  to_addr_conv(sh, percpu, j));
--	tx = async_gen_syndrome(blocks, 0, count+2,
--				conf->stripe_size, &submit);
-+	tx = async_gen_syndrome(blocks, offs, count+2,
-+				conf->stripe_size,  &submit);
- 	if (!last_stripe) {
- 		j++;
- 		sh = list_first_entry(&sh->batch_list, struct stripe_head,
-@@ -2168,6 +2191,7 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
- static void ops_run_check_pq(struct stripe_head *sh, struct raid5_percpu *percpu, int checkp)
- {
- 	struct page **srcs = to_addr_page(percpu, 0);
-+	unsigned int *offs = to_addr_offs(sh, percpu);
- 	struct async_submit_ctl submit;
- 	int count;
- 	struct r5conf *conf = sh->raid_conf;
-@@ -2176,15 +2200,16 @@ static void ops_run_check_pq(struct stripe_head *sh, struct raid5_percpu *percpu
- 		(unsigned long long)sh->sector, checkp);
- 
- 	BUG_ON(sh->batch_head);
--	count = set_syndrome_sources(srcs, sh, SYNDROME_SRC_ALL);
-+	count = set_syndrome_sources(srcs, offs, sh, SYNDROME_SRC_ALL);
- 	if (!checkp)
- 		srcs[count] = NULL;
- 
- 	atomic_inc(&sh->count);
- 	init_async_submit(&submit, ASYNC_TX_ACK, NULL, ops_complete_check,
- 			  sh, to_addr_conv(sh, percpu, 0));
--	async_syndrome_val(srcs, 0, count+2, conf->stripe_size,
--			   &sh->ops.zero_sum_result, percpu->spare_page, &submit);
-+	async_syndrome_val(srcs, offs, count+2, conf->stripe_size,
-+			   &sh->ops.zero_sum_result,
-+			   percpu->spare_page, 0, &submit);
- }
- 
- static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
++struct dma_async_tx_descriptor *
++async_xor_val_offsets(struct page *dest, unsigned int offset,
++		struct page **src_list, unsigned int *src_offset,
++		int src_cnt, size_t len, enum sum_check_flags *result,
++		struct async_submit_ctl *submit);
++
+ struct dma_async_tx_descriptor *
+ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
+ 	     unsigned int src_offset, size_t len,
 -- 
 2.25.4
