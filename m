@@ -1,50 +1,52 @@
 From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH v3] md: improve io stats accounting
-Date: Thu, 2 Jul 2020 14:25:26 -0700
-Message-ID: <CAPhsuW5eMPMH1HcMXi67Ci0rbWhVyiuLodVZB_oaGbrR7abTJQ@mail.gmail.com>
-References: <20200702142926.4419-1-artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH v5 02/16] md/raid5: add sysfs entry to set and show stripe_size
+Date: Thu, 2 Jul 2020 15:14:33 -0700
+Message-ID: <CAPhsuW7oDE_hD8=s1zZucn3khXWgrFh-CUewtSguM1KG6628mg@mail.gmail.com>
+References: <20200702120628.777303-1-yuyufen@huawei.com> <20200702120628.777303-3-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200702142926.4419-1-artur.paszkiewicz@intel.com>
+In-Reply-To: <20200702120628.777303-3-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To: Yufen Yu <yuyufen@huawei.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Hou Tao <houtao1@huawei.com>
 List-Id: linux-raid.ids
 
-On Thu, Jul 2, 2020 at 7:29 AM Artur Paszkiewicz
-<artur.paszkiewicz@intel.com> wrote:
+On Thu, Jul 2, 2020 at 5:05 AM Yufen Yu <yuyufen@huawei.com> wrote:
 >
-> Use generic io accounting functions to manage io stats. There was an
-> attempt to do this earlier in commit 18c0b223cf99 ("md: use generic io
-> stats accounting functions to simplify io stat accounting"), but it did
-> not include a call to generic_end_io_acct() and caused issues with
-> tracking in-flight IOs, so it was later removed in commit 74672d069b29
-> ("md: fix md io stats accounting broken").
+> Here, we don't support setting stripe_size by sysfs.
+> Following patches will do that.
 >
-> This patch attempts to fix this by using both bio_start_io_acct() and
-> bio_end_io_acct(). To make it possible, a struct md_io is allocated for
-> every new md bio, which includes the io start_time. A new mempool is
-> introduced for this purpose. We override bio->bi_end_io with our own
-> callback and call bio_start_io_acct() before passing the bio to
-> md_handle_request(). When it completes, we call bio_end_io_acct() and
-> the original bi_end_io callback.
+> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+> ---
+>  drivers/md/raid5.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
 >
-> This adds correct statistics about in-flight IOs and IO processing time,
-> interpreted e.g. in iostat as await, svctm, aqu-sz and %util.
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 2981b853c388..51bc39dab57b 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -6518,6 +6518,27 @@ raid5_rmw_level = __ATTR(rmw_level, S_IRUGO | S_IWUSR,
+>                          raid5_show_rmw_level,
+>                          raid5_store_rmw_level);
 >
-> It also fixes a situation where too many IOs where reported if a bio was
-> re-submitted to the mddev, because io accounting is now performed only
-> on newly arriving bios.
->
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> +static ssize_t
+> +raid5_show_stripe_size(struct mddev  *mddev, char *page)
+> +{
+> +       struct r5conf *conf = mddev->private;
+> +
+> +       if (conf)
+> +               return sprintf(page, "%d\n", conf->stripe_size);
+> +       else
+> +               return 0;
+> +}
+> +
+> +static ssize_t
+> +raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
+> +{
+> +       return -EINVAL;
+> +}
 
-Thanks Artur and Guoqing!
-
-I run quick test with this. Seems it only adds proper statistics to
-raid5 array, but
-not to raid0 array. Is this expected?
+How about we make the file read only for now?
 
 Song
-
-[...]
