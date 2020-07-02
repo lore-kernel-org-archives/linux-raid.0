@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v5 05/16] md/raid5: allocate and free shared pages of r5pages
-Date: Thu, 2 Jul 2020 08:06:17 -0400
-Message-ID: <20200702120628.777303-6-yuyufen@huawei.com>
+Subject: [PATCH v5 11/16] md/raid5: compute xor with correct page offset
+Date: Thu, 2 Jul 2020 08:06:23 -0400
+Message-ID: <20200702120628.777303-12-yuyufen@huawei.com>
 References: <20200702120628.777303-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,183 +13,217 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-When PAGE_SIZE is bigger than stripe_size, try to allocate pages of
-r5pages in grow_buffres() and free these pages in shrink_buffers().
-Then, set sh->dev[i].page and sh->dev[i].offset as the page in
-array. Without enable shared page, we just set offset as value of '0'.
+When compute xor, the pages address will be passed to computer function.
+After trying to use pages in r5pages, we also need to pass page offset
+to let it know correct location of each page.
+
+For now raid5-cache and raid5-ppl are supported only when PAGE_SIZE is
+equal to 4096. In that case, shared pages will not be supported and
+dev->offset is '0'. So, we can use that value directly.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/raid5.c | 113 ++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 106 insertions(+), 7 deletions(-)
+ drivers/md/raid5.c | 67 ++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 50 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 694f6713369d..920e1e147e8a 100644
+index b14d5909f6a9..f0fd01d9122e 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -448,15 +448,72 @@ static struct stripe_head *get_free_stripe(struct r5conf *conf, int hash)
- 	return sh;
- }
- 
-+/*
-+ * Try to free all pages in r5pages array.
-+ */
-+static void free_stripe_pages(struct stripe_head *sh)
-+{
-+	int i;
-+	struct page *p;
-+
-+	/* Have not allocate page pool */
-+	if (!sh->pages.page)
-+		return;
-+
-+	for (i = 0; i < sh->pages.size; i++) {
-+		p = sh->pages.page[i];
-+		if (p)
-+			put_page(p);
-+		sh->pages.page[i] = NULL;
-+	}
-+}
-+
-+/*
-+ * Allocate pages for r5pages.
-+ */
-+static int alloc_stripe_pages(struct stripe_head *sh, gfp_t gfp)
-+{
-+	int i;
-+	struct page *p;
-+
-+	for (i = 0; i < sh->pages.size; i++) {
-+		/* The page have allocated. */
-+		if (sh->pages.page[i])
-+			continue;
-+
-+		p = alloc_page(gfp);
-+		if (!p) {
-+			free_stripe_pages(sh);
-+			return -ENOMEM;
-+		}
-+		sh->pages.page[i] = p;
-+	}
-+	return 0;
-+}
-+
- static void shrink_buffers(struct stripe_head *sh)
+@@ -1491,6 +1491,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
  {
- 	struct page *p;
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	int target = sh->ops.target;
+ 	struct r5dev *tgt = &sh->dev[target];
+ 	struct page *xor_dest = tgt->page;
+@@ -1499,6 +1500,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	struct async_submit_ctl submit;
  	int i;
- 	int num = sh->raid_conf->pool_size;
+ 	struct r5conf *conf = sh->raid_conf;
++	unsigned int des_offset = tgt->offset;
  
--	for (i = 0; i < num ; i++) {
-+	if (raid5_stripe_pages_shared(sh->raid_conf))
-+		free_stripe_pages(sh); /* Free pages in r5pages */
-+
-+	for (i = 0; i < num; i++) {
- 		WARN_ON(sh->dev[i].page != sh->dev[i].orig_page);
- 		p = sh->dev[i].page;
-+
-+		/*
-+		 * If we use pages in r5pages, these pages have been
-+		 * freed in free_stripe_pages().
-+		 */
-+		if (raid5_stripe_pages_shared(sh->raid_conf)) {
-+			if (p)
-+				sh->dev[i].page = NULL;
-+			continue;
+ 	BUG_ON(sh->batch_head);
+ 
+@@ -1506,20 +1508,23 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 		__func__, (unsigned long long)sh->sector, target);
+ 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+ 
+-	for (i = disks; i--; )
+-		if (i != target)
++	for (i = disks; i--; ) {
++		if (i != target) {
++			offs[count] = sh->dev[i].offset;
+ 			xor_srcs[count++] = sh->dev[i].page;
 +		}
++	}
+ 
+ 	atomic_inc(&sh->count);
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL,
+ 			  ops_complete_compute, sh, to_addr_conv(sh, percpu, 0));
+ 	if (unlikely(count == 1))
+-		tx = async_memcpy(xor_dest, xor_srcs[0], 0, 0,
++		tx = async_memcpy(xor_dest, xor_srcs[0], des_offset, offs[0],
+ 				conf->stripe_size, &submit);
+ 	else
+-		tx = async_xor(xor_dest, xor_srcs, 0, count,
+-				conf->stripe_size, &submit);
++		tx = async_xor_offsets(xor_dest, des_offset, xor_srcs, offs,
++				count, conf->stripe_size, &submit);
+ 
+ 	return tx;
+ }
+@@ -1763,11 +1768,13 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	int count = 0, pd_idx = sh->pd_idx, i;
+ 	struct async_submit_ctl submit;
+ 	struct r5conf *conf = sh->raid_conf;
+ 
+ 	/* existing parity data subtracted */
++	unsigned int des_offset = offs[count] = sh->dev[pd_idx].offset;
+ 	struct page *xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
+ 
+ 	BUG_ON(sh->batch_head);
+@@ -1777,16 +1784,23 @@ ops_run_prexor5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	for (i = disks; i--; ) {
+ 		struct r5dev *dev = &sh->dev[i];
+ 		/* Only process blocks that are known to be uptodate */
+-		if (test_bit(R5_InJournal, &dev->flags))
++		if (test_bit(R5_InJournal, &dev->flags)) {
++			/*
++			 * For this case, PAGE_SIZE must be 4KB and will not
++			 * use r5pages. So dev->offset is zero.
++			 */
++			offs[count] = dev->offset;
+ 			xor_srcs[count++] = dev->orig_page;
+-		else if (test_bit(R5_Wantdrain, &dev->flags))
++		} else if (test_bit(R5_Wantdrain, &dev->flags)) {
++			offs[count] = dev->offset;
+ 			xor_srcs[count++] = dev->page;
++		}
+ 	}
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_DROP_DST, tx,
+ 			  ops_complete_prexor, sh, to_addr_conv(sh, percpu, 0));
+-	tx = async_xor(xor_dest, xor_srcs, 0, count,
+-				conf->stripe_size, &submit);
++	tx = async_xor_offsets(xor_dest, des_offset, xor_srcs, offs,
++			count, conf->stripe_size, &submit);
+ 
+ 	return tx;
+ }
+@@ -1938,6 +1952,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ {
+ 	int disks = sh->disks;
+ 	struct page **xor_srcs;
++	unsigned int *offs;
+ 	struct async_submit_ctl submit;
+ 	int count, pd_idx = sh->pd_idx, i;
+ 	struct page *xor_dest;
+@@ -1947,6 +1962,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	struct stripe_head *head_sh = sh;
+ 	int last_stripe;
+ 	struct r5conf *conf = sh->raid_conf;
++	unsigned int des_offset;
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+@@ -1966,24 +1982,33 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ again:
+ 	count = 0;
+ 	xor_srcs = to_addr_page(percpu, j);
++	offs = to_addr_offs(sh, percpu);
+ 	/* check if prexor is active which means only process blocks
+ 	 * that are part of a read-modify-write (written)
+ 	 */
+ 	if (head_sh->reconstruct_state == reconstruct_state_prexor_drain_run) {
+ 		prexor = 1;
++		des_offset = offs[count] = sh->dev[pd_idx].offset;
+ 		xor_dest = xor_srcs[count++] = sh->dev[pd_idx].page;
 +
- 		if (!p)
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if (head_sh->dev[i].written ||
+-			    test_bit(R5_InJournal, &head_sh->dev[i].flags))
++			    test_bit(R5_InJournal, &head_sh->dev[i].flags)) {
++				offs[count] = dev->offset;
+ 				xor_srcs[count++] = dev->page;
++			}
+ 		}
+ 	} else {
+ 		xor_dest = sh->dev[pd_idx].page;
++		des_offset = sh->dev[pd_idx].offset;
++
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+-			if (i != pd_idx)
++			if (i != pd_idx) {
++				offs[count] = dev->offset;
+ 				xor_srcs[count++] = dev->page;
++			}
+ 		}
+ 	}
+ 
+@@ -2009,11 +2034,12 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 	}
+ 
+ 	if (unlikely(count == 1))
+-		tx = async_memcpy(xor_dest, xor_srcs[0], 0, 0,
+-					conf->stripe_size, &submit);
++		tx = async_memcpy(xor_dest, xor_srcs[0], des_offset,
++				offs[0], conf->stripe_size, &submit);
+ 	else
+-		tx = async_xor(xor_dest, xor_srcs, 0, count,
+-					conf->stripe_size, &submit);
++		tx = async_xor_offsets(xor_dest, des_offset, xor_srcs,
++				offs, count, conf->stripe_size, &submit);
++
+ 	if (!last_stripe) {
+ 		j++;
+ 		sh = list_first_entry(&sh->batch_list, struct stripe_head,
+@@ -2103,11 +2129,13 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	int qd_idx = sh->qd_idx;
+ 	struct page *xor_dest;
+ 	struct page **xor_srcs = to_addr_page(percpu, 0);
++	unsigned int *offs = to_addr_offs(sh, percpu);
+ 	struct dma_async_tx_descriptor *tx;
+ 	struct async_submit_ctl submit;
+ 	int count;
+ 	int i;
+ 	struct r5conf *conf = sh->raid_conf;
++	unsigned int dest_offset;
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+@@ -2115,17 +2143,22 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	BUG_ON(sh->batch_head);
+ 	count = 0;
+ 	xor_dest = sh->dev[pd_idx].page;
++	dest_offset = sh->dev[pd_idx].offset;
++	offs[count] = dest_offset;
+ 	xor_srcs[count++] = xor_dest;
++
+ 	for (i = disks; i--; ) {
+ 		if (i == pd_idx || i == qd_idx)
  			continue;
- 		sh->dev[i].page = NULL;
-@@ -469,14 +526,26 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
- 	int i;
- 	int num = sh->raid_conf->pool_size;
- 
-+	if (raid5_stripe_pages_shared(sh->raid_conf) &&
-+			alloc_stripe_pages(sh, gfp))
-+		return -ENOMEM;
-+
- 	for (i = 0; i < num; i++) {
- 		struct page *page;
-+		unsigned int offset;
- 
--		if (!(page = alloc_page(gfp))) {
--			return 1;
-+		if (raid5_stripe_pages_shared(sh->raid_conf)) {
-+			page = raid5_get_dev_page(sh, i);
-+			offset = raid5_get_page_offset(sh, i);
-+		} else {
-+			page = alloc_page(gfp);
-+			if (!page)
-+				return -ENOMEM;
-+			offset = 0;
- 		}
- 		sh->dev[i].page = page;
- 		sh->dev[i].orig_page = page;
-+		sh->dev[i].offset = offset;
++		offs[count] = sh->dev[i].offset;
+ 		xor_srcs[count++] = sh->dev[i].page;
  	}
  
- 	return 0;
-@@ -2146,11 +2215,35 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
+ 	init_async_submit(&submit, 0, NULL, NULL, NULL,
+ 			  to_addr_conv(sh, percpu, 0));
+-	tx = async_xor_val(xor_dest, xor_srcs, 0, count, conf->stripe_size,
+-			   &sh->ops.zero_sum_result, &submit);
++	tx = async_xor_val_offsets(xor_dest, dest_offset, xor_srcs, offs,
++			count, conf->stripe_size,
++			&sh->ops.zero_sum_result, &submit);
  
- static void free_stripe(struct kmem_cache *sc, struct stripe_head *sh)
- {
-+	kfree(sh->pages.page);
-+
- 	if (sh->ppl_page)
- 		__free_page(sh->ppl_page);
- 	kmem_cache_free(sc, sh);
- }
- 
-+static int
-+init_stripe_shared_pages(struct stripe_head *sh, struct r5conf *conf)
-+{
-+	int nr_page;
-+	int cnt;
-+
-+	BUG_ON(conf->stripe_size > PAGE_SIZE);
-+	if (!raid5_stripe_pages_shared(conf) || sh->pages.page)
-+		return 0;
-+
-+	/* Each of the sh->dev[i] need one conf->stripe_size */
-+	cnt = PAGE_SIZE / conf->stripe_size;
-+	nr_page = (conf->raid_disks + cnt - 1) / cnt;
-+
-+	sh->pages.page = kcalloc(nr_page, sizeof(struct page *), GFP_KERNEL);
-+	if (!sh->pages.page)
-+		return -ENOMEM;
-+	sh->pages.size = nr_page;
-+
-+	return 0;
-+}
-+
- static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
- 	int disks, struct r5conf *conf)
- {
-@@ -2177,14 +2270,20 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
- 
- 		if (raid5_has_ppl(conf)) {
- 			sh->ppl_page = alloc_page(gfp);
--			if (!sh->ppl_page) {
--				free_stripe(sc, sh);
--				sh = NULL;
--			}
-+			if (!sh->ppl_page)
-+				goto fail;
- 		}
-+
-+		if (init_stripe_shared_pages(sh, conf))
-+			goto fail;
- 	}
- 	return sh;
-+
-+fail:
-+	free_stripe(sc, sh);
-+	return NULL;
- }
-+
- static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
- {
- 	struct stripe_head *sh;
+ 	atomic_inc(&sh->count);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, tx, ops_complete_check, sh, NULL);
 -- 
 2.25.4
