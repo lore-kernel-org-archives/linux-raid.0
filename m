@@ -1,12 +1,12 @@
 From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH v5 12/16] md/raid5: support config stripe_size by sysfs entry
-Date: Thu, 2 Jul 2020 15:38:41 -0700
-Message-ID: <CAPhsuW5rTOwd+hPsBobFWD4TWGO4pWMgwt5BVAt=Fnab71MC=w@mail.gmail.com>
-References: <20200702120628.777303-1-yuyufen@huawei.com> <20200702120628.777303-13-yuyufen@huawei.com>
+Subject: Re: [PATCH v5 04/16] md/raid5: add a member of r5pages for struct stripe_head
+Date: Thu, 2 Jul 2020 15:56:57 -0700
+Message-ID: <CAPhsuW4rcsOz49teDi_MzHTir7euoA21sYxZf=jo0_F=aRHcdg@mail.gmail.com>
+References: <20200702120628.777303-1-yuyufen@huawei.com> <20200702120628.777303-5-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200702120628.777303-13-yuyufen@huawei.com>
+In-Reply-To: <20200702120628.777303-5-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Yufen Yu <yuyufen@huawei.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Hou Tao <houtao1@huawei.com>
@@ -14,111 +14,153 @@ List-Id: linux-raid.ids
 
 On Thu, Jul 2, 2020 at 5:05 AM Yufen Yu <yuyufen@huawei.com> wrote:
 >
-> After this patch, we can adjust stripe_size by writing value into sysfs
-> entry, likely, set stripe_size as 16KB:
+> Since grow_buffers() uses alloc_page() to allocate the buffers for
+> each stripe_head(), means, it will allocate 64K buffers and just use
+> 4K of them, after setting stripe_size as 4096.
 >
->           echo 16384 > /sys/block/md1/md/stripe_size
+> To avoid wasting memory, we try to contain multiple 'page' of sh->dev
+> into one real page. That means, multiple sh->dev[i].page will point to
+> the only page with different offset. Example of 64K PAGE_SIZE and
+> 4K stripe_size as following:
 >
-> Show current stripe_size value:
+>                     64K PAGE_SIZE
+>           +---+---+---+---+------------------------------+
+>           |   |   |   |   |
+>           |   |   |   |   |
+>           +-+-+-+-+-+-+-+-+------------------------------+
+>             ^   ^   ^   ^
+>             |   |   |   +----------------------------+
+>             |   |   |                                |
+>             |   |   +-------------------+            |
+>             |   |                       |            |
+>             |   +----------+            |            |
+>             |              |            |            |
+>             +-+            |            |            |
+>               |            |            |            |
+>         +-----+-----+------+-----+------+-----+------+------+
+> sh      | offset(0) | offset(4K) | offset(8K) | offset(12K) |
+>  +      +-----------+------------+------------+-------------+
+>  +----> dev[0].page  dev[1].page  dev[2].page  dev[3].page
 >
->           cat /sys/block/md1/md/stripe_size
+> After trying to share one page, the users of sh->dev[i].page need to
+> take care:
 >
-> stripe_size should not be bigger than PAGE_SIZE, and it requires to be
-> multiple of 4096.
-
-I think we can just merge 02/16 into this one.
-
+>   1) When issue bio into stripe_head, bi_io_vec.bv_page will point to
+>      the page directly. So, we should make sure bv_offset to been set
+>      with correct offset.
+>
+>   2) When compute xor, the page will be passed to computer function.
+>      So, we also need to pass offset of that page to computer. Let it
+>      compute correct location of each sh->dev[i].page.
+>
+> This patch will add a new member of r5pages into stripe_head to manage
+> all pages needed by each sh->dev[i]. We also add 'offset' for each r5dev
+> so that users can get related page offset easily. And add helper function
+> to get page and it's index in r5pages array by disk index.
 >
 > Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 > ---
->  drivers/md/raid5.c | 69 +++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 68 insertions(+), 1 deletion(-)
+>  drivers/md/raid5.h | 61 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 61 insertions(+)
 >
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index f0fd01d9122e..a3376a4e4e5c 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -6715,7 +6715,74 @@ raid5_show_stripe_size(struct mddev  *mddev, char *page)
->  static ssize_t
->  raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
->  {
-> -       return -EINVAL;
-> +       struct r5conf *conf = mddev->private;
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 98698569370c..61fe26061c92 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -246,6 +246,13 @@ struct stripe_head {
+>                 int                  target, target2;
+>                 enum sum_check_flags zero_sum_result;
+>         } ops;
+> +
+> +       /* These pages will be used by bios in dev[i] */
+> +       struct r5pages {
+> +               struct page     **page;
+> +               int     size; /* page array size */
+> +       } pages;
+> +
 
-We need mddev_lock(mddev) before accessing mddev->private.
-
-> +       unsigned int new;
-> +       int err;
-> +       int nr;
-> +
-> +       if (len >= PAGE_SIZE)
-> +               return -EINVAL;
-> +       if (kstrtouint(page, 10, &new))
-> +               return -EINVAL;
-> +       if (!conf)
-> +               return -ENODEV;
-> +
-> +       /*
-> +        * When PAGE_SZIE is 4096, we don't need to modify stripe_size.
-> +        * And the value should not be bigger than PAGE_SIZE.
-> +        * It requires to be multiple of 4096.
-> +        */
-> +       if (PAGE_SIZE == 4096 || new % 4096 != 0 ||
-> +                       new > PAGE_SIZE || new == 0)
-> +               return -EINVAL;
-> +
-> +       if (new == conf->stripe_size)
-> +               return len;
-> +
-> +       pr_debug("md/raid: change stripe_size from %u to %u\n",
-> +                       conf->stripe_size, new);
-> +
-> +       err = mddev_lock(mddev);
-> +       if (err)
-> +               return err;
-> +
-> +       if (mddev->sync_thread ||
-> +           test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
-> +           mddev->reshape_position != MaxSector ||
-> +           mddev->sysfs_active) {
-> +               err = -EBUSY;
-> +               goto out_unlock;
-> +       }
-> +
-> +       nr = conf->max_nr_stripes;
-> +
-> +       /* 1. suspend raid array */
-> +       mddev_suspend(mddev);
-> +
-> +       /* 2. free all old stripe_head */
-> +       mutex_lock(&conf->cache_size_mutex);
-> +       shrink_stripes(conf);
-> +       BUG_ON(conf->max_nr_stripes != 0);
+struct r5pages seems unnecessary. How about we just use
+     struct page **pages;
+     int nr_pages;
 
 
-> +
-> +       /* 3. set new stripe_size */
-> +       conf->stripe_size = new;
-> +       conf->stripe_shift = ilog2(new) - 9;
-> +       conf->stripe_sectors = new >> 9;
-> +
-> +       /* 4. allocate new stripe_head */
-> +       if (grow_stripes(conf, nr)) {
-> +               pr_warn("md/raid:%s: couldn't allocate buffers\n",
-> +                               mdname(mddev));
-> +               err = -ENOMEM;
-> +       }
-> +       mutex_unlock(&conf->cache_size_mutex);
-> +
-> +       /* 5. resume raid array */
-> +       mddev_resume(mddev);
-> +
-> +out_unlock:
-> +       mddev_unlock(mddev);
-> +       return err ?: len;
+>         struct r5dev {
+>                 /* rreq and rvec are used for the replacement device when
+>                  * writing data to both devices.
+> @@ -253,6 +260,7 @@ struct stripe_head {
+>                 struct bio      req, rreq;
+>                 struct bio_vec  vec, rvec;
+>                 struct page     *page, *orig_page;
+> +               unsigned int    offset;         /* offset of this page */
+>                 struct bio      *toread, *read, *towrite, *written;
+>                 sector_t        sector;                 /* sector of this page */
+>                 unsigned long   flags;
+> @@ -754,6 +762,59 @@ r5_next_bio(struct r5conf *conf, struct bio *bio, sector_t sector)
+>                 return NULL;
 >  }
 >
->  static struct md_sysfs_entry
+> +/*
+> + * Return corresponding page index of r5pages array.
+> + */
+> +static inline int raid5_get_page_index(struct stripe_head *sh, int disk_idx)
+> +{
+> +       struct r5conf *conf = sh->raid_conf;
+> +       int cnt;
+> +
+> +       WARN_ON(!sh->pages.page);
+> +       BUG_ON(conf->stripe_size > PAGE_SIZE);
+
+We have too many of these WARN_ON() and BUG_ON().
+
+> +
+> +       cnt = PAGE_SIZE / conf->stripe_size;
+
+Maybe add cnt (with different name) to r5conf?
+
+> +       return disk_idx / cnt;
+> +}
+> +
+> +/*
+> + * Return offset of the corresponding page for r5dev.
+> + */
+> +static inline int raid5_get_page_offset(struct stripe_head *sh, int disk_idx)
+> +{
+> +       struct r5conf *conf = sh->raid_conf;
+> +       int cnt;
+> +
+> +       WARN_ON(!sh->pages.page);
+> +       BUG_ON(conf->stripe_size > PAGE_SIZE);
+> +
+> +       cnt = PAGE_SIZE / conf->stripe_size;
+> +       return (disk_idx % cnt) * conf->stripe_size;
+> +}
+> +
+> +/*
+> + * Return corresponding page address for r5dev.
+> + */
+> +static inline struct page *
+> +raid5_get_dev_page(struct stripe_head *sh, int disk_idx)
+> +{
+> +       int idx;
+> +
+> +       WARN_ON(!sh->pages.page);
+> +       idx = raid5_get_page_index(sh, disk_idx);
+> +       return sh->pages.page[idx];
+> +}
+> +
+> +/*
+> + * We want to let multiple buffers to share one real page for
+> + * stripe_head when PAGE_SIZE is biggger than stripe_size. If
+> + * they are equal, no need to use this strategy.
+> + */
+> +static inline int raid5_stripe_pages_shared(struct r5conf *conf)
+> +{
+> +       return conf->stripe_size < PAGE_SIZE;
+> +}
+> +
+>  extern void md_raid5_kick_device(struct r5conf *conf);
+>  extern int raid5_set_cache_size(struct mddev *mddev, int size);
+>  extern sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous);
 > --
 > 2.25.4
 >
