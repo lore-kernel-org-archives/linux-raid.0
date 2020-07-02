@@ -1,35 +1,50 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH 17/20] block: rename generic_make_request to submit_bio_noacct
-Date: Thu, 2 Jul 2020 11:22:12 -0700
-Message-ID: <CAPhsuW4=eiN2-_cy5vCn_RGwmYRf37jOX4DWTvUCDWAqRzU+pw@mail.gmail.com>
-References: <20200701085947.3354405-1-hch@lst.de> <20200701085947.3354405-18-hch@lst.de>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH v5 01/16] md/raid456: covert macro define of STRIPE_* as
+ members of struct r5conf
+Date: Thu, 2 Jul 2020 20:23:00 +0200
+Message-ID: <3bf71b7a-b457-c5e4-34df-bdea5cf2abc3@molgen.mpg.de>
+References: <20200702120628.777303-1-yuyufen@huawei.com>
+ <20200702120628.777303-2-yuyufen@huawei.com>
+ <CAPhsuW7cSue8BtWhmWMgOTjw42ChTm4cM+gApj_s02rq=YGRkQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20200701085947.3354405-18-hch@lst.de>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com, open list <linux-kernel@vger.kernel.org>, linux-m68k@lists.linux-m68k.org, linux-xtensa@linux-xtensa.org, drbd-dev@lists.linbit.com, linuxppc-dev@lists.ozlabs.org, linux-bcache@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW7cSue8BtWhmWMgOTjw42ChTm4cM+gApj_s02rq=YGRkQ@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <song@kernel.org>, Yufen Yu <yuyufen@huawei.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Hou Tao <houtao1@huawei.com>
 List-Id: linux-raid.ids
 
-On Wed, Jul 1, 2020 at 2:01 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> generic_make_request has always been very confusingly misnamed, so rename
-> it to submit_bio_noacct to make it clear that it is submit_bio minus
-> accounting and a few checks.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-[...]
+Dear Yufen,
 
->  drivers/md/md-faulty.c                        |  4 +--
->  drivers/md/md-linear.c                        |  4 +--
->  drivers/md/md-multipath.c                     |  4 +--
->  drivers/md/raid0.c                            |  8 ++---
->  drivers/md/raid1.c                            | 14 ++++----
->  drivers/md/raid10.c                           | 28 ++++++++--------
->  drivers/md/raid5.c                            | 10 +++---
 
-For md part:
+Am 02.07.20 um 20:15 schrieb Song Liu:
+> On Thu, Jul 2, 2020 at 5:05 AM Yufen Yu <yuyufen@huawei.com> wrote:
+>>
+>> We covert STRIPE_SIZE, STRIPE_SHIFT and STRIPE_SECTORS to stripe_size,
+>> stripe_shift and stripe_sectors as members of struct r5conf. Then each
+>> raid456 array can config different stripe_size. This patch is prepared
+>> for following configurable stripe_size.
+>>
+>> Simply replace word STRIPE_ with conf->stripe_ and add 'conf' argument
+>> for function stripe_hash_locks_hash() and r5_next_bio() to get stripe_size.
+>> After that, we initialize stripe_size into setup_conf().
+>>
+>> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+> 
+> This patch looks good. Please fix the warning found by the kernel test bot.
+> Also a nitpick below.
 
-Acked-by: Song Liu <song@kernel.org>
+Please also fix the typo *covert* to *Convert* in the commit message 
+summary, and maybe use *to* instead of *as*.
+
+ > Convert macro define of STRIPE_* to members of struct r5conf
+
+[…]
+
+
+Kind regards,
+
+Paul
