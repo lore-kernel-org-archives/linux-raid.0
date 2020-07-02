@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v5 10/16] md/raid5: add offset array in scribble buffer
-Date: Thu, 2 Jul 2020 08:06:22 -0400
-Message-ID: <20200702120628.777303-11-yuyufen@huawei.com>
+Subject: [PATCH v5 07/16] md/raid5: set correct page offset for async_copy_data()
+Date: Thu, 2 Jul 2020 08:06:19 -0400
+Message-ID: <20200702120628.777303-8-yuyufen@huawei.com>
 References: <20200702120628.777303-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,47 +13,66 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-When enable shared buffers for stripe_head, it need an offset
-array to record page offset to compute xor. To avoid repeatly allocate
-an new array each time, we add a memory region into scribble buffer
-to record offset.
+ops_run_biofill() and ops_run_biodrain() will call async_copy_data()
+to copy sh->dev[i].page from or to bio. It also need to set correct
+page offset for dev->page when use r5pages.
+
+Without modifying original code logic, we replace 'page_offset' with
+'page_offset + poff' simplify. In case of that wihtout using r5pages,
+poff is zero.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/raid5.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/md/raid5.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 689a36c8e723..b14d5909f6a9 100644
+index 0f6ec27cf620..e554d073113b 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1477,6 +1477,15 @@ static addr_conv_t *to_addr_conv(struct stripe_head *sh,
- 	return (void *) (to_addr_page(percpu, i) + sh->disks + 2);
- }
+@@ -1296,7 +1296,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
  
-+/*
-+ * Return a pointer to record offset address.
-+ */
-+static unsigned int *
-+to_addr_offs(struct stripe_head *sh, struct raid5_percpu *percpu)
-+{
-+	return (unsigned int *) (to_addr_conv(sh, percpu, 0) + sh->disks + 2);
-+}
-+
  static struct dma_async_tx_descriptor *
- ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ async_copy_data(int frombio, struct bio *bio, struct page **page,
+-	sector_t sector, struct dma_async_tx_descriptor *tx,
++	unsigned int poff, sector_t sector, struct dma_async_tx_descriptor *tx,
+ 	struct stripe_head *sh, int no_skipcopy)
  {
-@@ -2360,8 +2369,9 @@ static int scribble_alloc(struct raid5_percpu *percpu,
- 			  int num, int cnt)
- {
- 	size_t obj_size =
--		sizeof(struct page *) * (num+2) +
--		sizeof(addr_conv_t) * (num+2);
-+		sizeof(struct page *) * (num + 2) +
-+		sizeof(addr_conv_t) * (num + 2) +
-+		sizeof(unsigned int) * (num + 2);
- 	void *scribble;
- 
- 	/*
+ 	struct bio_vec bvl;
+@@ -1342,11 +1342,13 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
+ 				    !no_skipcopy)
+ 					*page = bio_page;
+ 				else
+-					tx = async_memcpy(*page, bio_page, page_offset,
+-						  b_offset, clen, &submit);
++					tx = async_memcpy(*page, bio_page,
++						  page_offset + poff, b_offset,
++						  clen, &submit);
+ 			} else
+ 				tx = async_memcpy(bio_page, *page, b_offset,
+-						  page_offset, clen, &submit);
++						page_offset + poff,
++						clen, &submit);
+ 		}
+ 		/* chain the operations */
+ 		submit.depend_tx = tx;
+@@ -1418,7 +1420,8 @@ static void ops_run_biofill(struct stripe_head *sh)
+ 			while (rbi && rbi->bi_iter.bi_sector <
+ 				dev->sector + sh->raid_conf->stripe_sectors) {
+ 				tx = async_copy_data(0, rbi, &dev->page,
+-						     dev->sector, tx, sh, 0);
++						dev->offset,
++						dev->sector, tx, sh, 0);
+ 				rbi = r5_next_bio(sh->raid_conf, rbi,
+ 						dev->sector);
+ 			}
+@@ -1846,6 +1849,7 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ 					set_bit(R5_Discard, &dev->flags);
+ 				else {
+ 					tx = async_copy_data(1, wbi, &dev->page,
++							     dev->offset,
+ 							     dev->sector, tx, sh,
+ 							     r5c_is_writeback(conf->log));
+ 					if (dev->page != dev->orig_page &&
 -- 
 2.25.4
