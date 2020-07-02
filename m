@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v5 16/16] raid6test: adaptation with syndrome function
-Date: Thu, 2 Jul 2020 08:06:28 -0400
-Message-ID: <20200702120628.777303-17-yuyufen@huawei.com>
+Subject: [PATCH v5 05/16] md/raid5: allocate and free shared pages of r5pages
+Date: Thu, 2 Jul 2020 08:06:17 -0400
+Message-ID: <20200702120628.777303-6-yuyufen@huawei.com>
 References: <20200702120628.777303-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,104 +13,183 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-After changing some syndrome and recovery functions to support
-different page offsets, we also need to adapt raid6test module.
-In this module, pages are allocated by the itself and their offset
-are '0'.
+When PAGE_SIZE is bigger than stripe_size, try to allocate pages of
+r5pages in grow_buffres() and free these pages in shrink_buffers().
+Then, set sh->dev[i].page and sh->dev[i].offset as the page in
+array. Without enable shared page, we just set offset as value of '0'.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- crypto/async_tx/raid6test.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+ drivers/md/raid5.c | 113 ++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 106 insertions(+), 7 deletions(-)
 
-diff --git a/crypto/async_tx/raid6test.c b/crypto/async_tx/raid6test.c
-index 14e73dcd7475..66db82e5a3b1 100644
---- a/crypto/async_tx/raid6test.c
-+++ b/crypto/async_tx/raid6test.c
-@@ -18,6 +18,7 @@
- #define NDISKS 64 /* Including P and Q */
- 
- static struct page *dataptrs[NDISKS];
-+unsigned int dataoffs[NDISKS];
- static addr_conv_t addr_conv[NDISKS];
- static struct page *data[NDISKS+3];
- static struct page *spare;
-@@ -38,6 +39,7 @@ static void makedata(int disks)
- 	for (i = 0; i < disks; i++) {
- 		prandom_bytes(page_address(data[i]), PAGE_SIZE);
- 		dataptrs[i] = data[i];
-+		dataoffs[i] = 0;
- 	}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 694f6713369d..920e1e147e8a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -448,15 +448,72 @@ static struct stripe_head *get_free_stripe(struct r5conf *conf, int hash)
+ 	return sh;
  }
  
-@@ -52,7 +54,8 @@ static char disk_type(int d, int disks)
- }
- 
- /* Recover two failed blocks. */
--static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, struct page **ptrs)
-+static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb,
-+		struct page **ptrs, unsigned int *offs)
++/*
++ * Try to free all pages in r5pages array.
++ */
++static void free_stripe_pages(struct stripe_head *sh)
++{
++	int i;
++	struct page *p;
++
++	/* Have not allocate page pool */
++	if (!sh->pages.page)
++		return;
++
++	for (i = 0; i < sh->pages.size; i++) {
++		p = sh->pages.page[i];
++		if (p)
++			put_page(p);
++		sh->pages.page[i] = NULL;
++	}
++}
++
++/*
++ * Allocate pages for r5pages.
++ */
++static int alloc_stripe_pages(struct stripe_head *sh, gfp_t gfp)
++{
++	int i;
++	struct page *p;
++
++	for (i = 0; i < sh->pages.size; i++) {
++		/* The page have allocated. */
++		if (sh->pages.page[i])
++			continue;
++
++		p = alloc_page(gfp);
++		if (!p) {
++			free_stripe_pages(sh);
++			return -ENOMEM;
++		}
++		sh->pages.page[i] = p;
++	}
++	return 0;
++}
++
+ static void shrink_buffers(struct stripe_head *sh)
  {
- 	struct async_submit_ctl submit;
- 	struct completion cmp;
-@@ -66,7 +69,8 @@ static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, stru
- 		if (faila == disks-2) {
- 			/* P+Q failure.  Just rebuild the syndrome. */
- 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
--			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
-+			tx = async_gen_syndrome(ptrs, offs,
-+					disks, bytes, &submit);
- 		} else {
- 			struct page *blocks[NDISKS];
- 			struct page *dest;
-@@ -89,22 +93,26 @@ static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, stru
- 			tx = async_xor(dest, blocks, 0, count, bytes, &submit);
+ 	struct page *p;
+ 	int i;
+ 	int num = sh->raid_conf->pool_size;
  
- 			init_async_submit(&submit, 0, tx, NULL, NULL, addr_conv);
--			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
-+			tx = async_gen_syndrome(ptrs, offs,
-+					disks, bytes, &submit);
+-	for (i = 0; i < num ; i++) {
++	if (raid5_stripe_pages_shared(sh->raid_conf))
++		free_stripe_pages(sh); /* Free pages in r5pages */
++
++	for (i = 0; i < num; i++) {
+ 		WARN_ON(sh->dev[i].page != sh->dev[i].orig_page);
+ 		p = sh->dev[i].page;
++
++		/*
++		 * If we use pages in r5pages, these pages have been
++		 * freed in free_stripe_pages().
++		 */
++		if (raid5_stripe_pages_shared(sh->raid_conf)) {
++			if (p)
++				sh->dev[i].page = NULL;
++			continue;
++		}
++
+ 		if (!p)
+ 			continue;
+ 		sh->dev[i].page = NULL;
+@@ -469,14 +526,26 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
+ 	int i;
+ 	int num = sh->raid_conf->pool_size;
+ 
++	if (raid5_stripe_pages_shared(sh->raid_conf) &&
++			alloc_stripe_pages(sh, gfp))
++		return -ENOMEM;
++
+ 	for (i = 0; i < num; i++) {
+ 		struct page *page;
++		unsigned int offset;
+ 
+-		if (!(page = alloc_page(gfp))) {
+-			return 1;
++		if (raid5_stripe_pages_shared(sh->raid_conf)) {
++			page = raid5_get_dev_page(sh, i);
++			offset = raid5_get_page_offset(sh, i);
++		} else {
++			page = alloc_page(gfp);
++			if (!page)
++				return -ENOMEM;
++			offset = 0;
  		}
- 	} else {
- 		if (failb == disks-2) {
- 			/* data+P failure. */
- 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
--			tx = async_raid6_datap_recov(disks, bytes, faila, ptrs, &submit);
-+			tx = async_raid6_datap_recov(disks, bytes,
-+					faila, ptrs, offs, &submit);
- 		} else {
- 			/* data+data failure. */
- 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
--			tx = async_raid6_2data_recov(disks, bytes, faila, failb, ptrs, &submit);
-+			tx = async_raid6_2data_recov(disks, bytes,
-+					faila, failb, ptrs, offs, &submit);
- 		}
+ 		sh->dev[i].page = page;
+ 		sh->dev[i].orig_page = page;
++		sh->dev[i].offset = offset;
  	}
- 	init_completion(&cmp);
- 	init_async_submit(&submit, ASYNC_TX_ACK, tx, callback, &cmp, addr_conv);
--	tx = async_syndrome_val(ptrs, 0, disks, bytes, &result, spare, &submit);
-+	tx = async_syndrome_val(ptrs, offs,
-+			disks, bytes, &result, spare, 0, &submit);
- 	async_tx_issue_pending(tx);
  
- 	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0)
-@@ -126,7 +134,7 @@ static int test_disks(int i, int j, int disks)
- 	dataptrs[i] = recovi;
- 	dataptrs[j] = recovj;
+ 	return 0;
+@@ -2146,11 +2215,35 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
  
--	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs);
-+	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs, dataoffs);
+ static void free_stripe(struct kmem_cache *sc, struct stripe_head *sh)
+ {
++	kfree(sh->pages.page);
++
+ 	if (sh->ppl_page)
+ 		__free_page(sh->ppl_page);
+ 	kmem_cache_free(sc, sh);
+ }
  
- 	erra = memcmp(page_address(data[i]), page_address(recovi), PAGE_SIZE);
- 	errb = memcmp(page_address(data[j]), page_address(recovj), PAGE_SIZE);
-@@ -162,7 +170,7 @@ static int test(int disks, int *tests)
- 	/* Generate assumed good syndrome */
- 	init_completion(&cmp);
- 	init_async_submit(&submit, ASYNC_TX_ACK, NULL, callback, &cmp, addr_conv);
--	tx = async_gen_syndrome(dataptrs, 0, disks, PAGE_SIZE, &submit);
-+	tx = async_gen_syndrome(dataptrs, dataoffs, disks, PAGE_SIZE, &submit);
- 	async_tx_issue_pending(tx);
++static int
++init_stripe_shared_pages(struct stripe_head *sh, struct r5conf *conf)
++{
++	int nr_page;
++	int cnt;
++
++	BUG_ON(conf->stripe_size > PAGE_SIZE);
++	if (!raid5_stripe_pages_shared(conf) || sh->pages.page)
++		return 0;
++
++	/* Each of the sh->dev[i] need one conf->stripe_size */
++	cnt = PAGE_SIZE / conf->stripe_size;
++	nr_page = (conf->raid_disks + cnt - 1) / cnt;
++
++	sh->pages.page = kcalloc(nr_page, sizeof(struct page *), GFP_KERNEL);
++	if (!sh->pages.page)
++		return -ENOMEM;
++	sh->pages.size = nr_page;
++
++	return 0;
++}
++
+ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
+ 	int disks, struct r5conf *conf)
+ {
+@@ -2177,14 +2270,20 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
  
- 	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0) {
+ 		if (raid5_has_ppl(conf)) {
+ 			sh->ppl_page = alloc_page(gfp);
+-			if (!sh->ppl_page) {
+-				free_stripe(sc, sh);
+-				sh = NULL;
+-			}
++			if (!sh->ppl_page)
++				goto fail;
+ 		}
++
++		if (init_stripe_shared_pages(sh, conf))
++			goto fail;
+ 	}
+ 	return sh;
++
++fail:
++	free_stripe(sc, sh);
++	return NULL;
+ }
++
+ static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
+ {
+ 	struct stripe_head *sh;
 -- 
 2.25.4
