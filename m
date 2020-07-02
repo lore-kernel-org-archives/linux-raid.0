@@ -1,56 +1,65 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] md: raid0/linear: fix dereference before null check on pointer mddev
-Date: Thu,  2 Jul 2020 12:35:02 +0100
-Message-ID: <20200702113502.37408-1-colin.king@canonical.com>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH v5 02/16] md/raid5: add sysfs entry to set and show stripe_size
+Date: Thu, 2 Jul 2020 08:06:14 -0400
+Message-ID: <20200702120628.777303-3-yuyufen@huawei.com>
+References: <20200702120628.777303-1-yuyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>, NeilBrown <neilb@suse.de>, "Guilherme G . Piccoli" <gpiccoli@canonical.com>, linux-raid@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200702120628.777303-1-yuyufen@huawei.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-From: Colin Ian King <colin.king@canonical.com>
+Here, we don't support setting stripe_size by sysfs.
+Following patches will do that.
 
-Pointer mddev is being dereferenced with a test_bit call before mddev
-is being null checked, this may cause a null pointer dereference. Fix
-this by moving the null pointer checks to sanity check mddev before
-it is dereferenced.
-
-Addresses-Coverity: ("Dereference before null check")
-Fixes: 62f7b1989c02 ("md raid0/linear: Mark array as 'broken' and fail BIOs if a member is gone")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/md.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/md/raid5.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8bb69c61afe0..49452149ac72 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -470,17 +470,18 @@ static blk_qc_t md_submit_bio(struct bio *bio)
- 	struct mddev *mddev = bio->bi_disk->private_data;
- 	unsigned int sectors;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 2981b853c388..51bc39dab57b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6518,6 +6518,27 @@ raid5_rmw_level = __ATTR(rmw_level, S_IRUGO | S_IWUSR,
+ 			 raid5_show_rmw_level,
+ 			 raid5_store_rmw_level);
  
--	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
-+	if (mddev == NULL || mddev->pers == NULL) {
- 		bio_io_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
++static ssize_t
++raid5_show_stripe_size(struct mddev  *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++
++	if (conf)
++		return sprintf(page, "%d\n", conf->stripe_size);
++	else
++		return 0;
++}
++
++static ssize_t
++raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
++{
++	return -EINVAL;
++}
++
++static struct md_sysfs_entry
++raid5_stripe_size = __ATTR(stripe_size, 0644,
++			 raid5_show_stripe_size,
++			 raid5_store_stripe_size);
  
--	blk_queue_split(&bio);
--
--	if (mddev == NULL || mddev->pers == NULL) {
-+	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
- 		bio_io_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
-+
-+	blk_queue_split(&bio);
-+
- 	if (mddev->ro == 1 && unlikely(rw == WRITE)) {
- 		if (bio_sectors(bio) != 0)
- 			bio->bi_status = BLK_STS_IOERR;
+ static ssize_t
+ raid5_show_preread_threshold(struct mddev *mddev, char *page)
+@@ -6706,6 +6727,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
++	&raid5_stripe_size.attr,
+ 	&r5c_journal_mode.attr,
+ 	&ppl_write_hint.attr,
+ 	NULL,
 -- 
-2.27.0
+2.25.4
