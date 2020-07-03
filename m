@@ -1,173 +1,85 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH v4] md: improve io stats accounting
-Date: Fri, 3 Jul 2020 11:26:59 +0200
-Message-ID: <82ac5fe5-e61d-e031-6a64-60b6e1dd408d@cloud.ionos.com>
-References: <20200703091309.19955-1-artur.paszkiewicz@intel.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: a crash in md-raid
+Date: Fri, 3 Jul 2020 08:18:28 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.2007030812320.13686@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200703091309.19955-1-artur.paszkiewicz@intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, song@kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, Song Liu <song@kernel.org>
+Cc: dm-devel@redhat.com, Mike Snitzer <msnitzer@redhat.com>
 List-Id: linux-raid.ids
 
-Looks good, Acked-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Hi
 
-Thanks,
-Guoqing
+I report a crash in md-raid. I have 5.8-rc3 kernel with debugging enabled. 
+The crash happened when running the "shell/integrity-blocksize.sh" lvm 
+test.
 
-On 7/3/20 11:13 AM, Artur Paszkiewicz wrote:
-> Use generic io accounting functions to manage io stats. There was an
-> attempt to do this earlier in commit 18c0b223cf99 ("md: use generic io
-> stats accounting functions to simplify io stat accounting"), but it did
-> not include a call to generic_end_io_acct() and caused issues with
-> tracking in-flight IOs, so it was later removed in commit 74672d069b29
-> ("md: fix md io stats accounting broken").
->
-> This patch attempts to fix this by using both disk_start_io_acct() and
-> disk_end_io_acct(). To make it possible, a struct md_io is allocated for
-> every new md bio, which includes the io start_time. A new mempool is
-> introduced for this purpose. We override bio->bi_end_io with our own
-> callback and call disk_start_io_acct() before passing the bio to
-> md_handle_request(). When it completes, we call disk_end_io_acct() and
-> the original bi_end_io callback.
->
-> This adds correct statistics about in-flight IOs and IO processing time,
-> interpreted e.g. in iostat as await, svctm, aqu-sz and %util.
->
-> It also fixes a situation where too many IOs where reported if a bio was
-> re-submitted to the mddev, because io accounting is now performed only
-> on newly arriving bios.
->
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
-> v4:
-> - Use disk_{start,end}_io_acct() instead of bio_{start,end}_io_acct() to
->    pass mddev->gendisk directly, not bio->bi_disk which gets modified by
->    some personalities.
->
-> v3:
-> - Use bio_start_io_acct() return value for md_io->start_time (thanks
->    Guoqing!)
->
-> v2:
-> - Just override the bi_end_io without having to clone the original bio.
-> - Rebased onto latest md-next.
->
->   drivers/md/md.c | 57 ++++++++++++++++++++++++++++++++++++++-----------
->   drivers/md/md.h |  1 +
->   2 files changed, 46 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 8bb69c61afe0..63aeebd9266b 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -463,12 +463,33 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
->   }
->   EXPORT_SYMBOL(md_handle_request);
->   
-> +struct md_io {
-> +	struct mddev *mddev;
-> +	bio_end_io_t *orig_bi_end_io;
-> +	void *orig_bi_private;
-> +	unsigned long start_time;
-> +};
-> +
-> +static void md_end_io(struct bio *bio)
-> +{
-> +	struct md_io *md_io = bio->bi_private;
-> +	struct mddev *mddev = md_io->mddev;
-> +
-> +	disk_end_io_acct(mddev->gendisk, bio_op(bio), md_io->start_time);
-> +
-> +	bio->bi_end_io = md_io->orig_bi_end_io;
-> +	bio->bi_private = md_io->orig_bi_private;
-> +
-> +	mempool_free(md_io, &mddev->md_io_pool);
-> +
-> +	if (bio->bi_end_io)
-> +		bio->bi_end_io(bio);
-> +}
-> +
->   static blk_qc_t md_submit_bio(struct bio *bio)
->   {
->   	const int rw = bio_data_dir(bio);
-> -	const int sgrp = op_stat_group(bio_op(bio));
->   	struct mddev *mddev = bio->bi_disk->private_data;
-> -	unsigned int sectors;
->   
->   	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
->   		bio_io_error(bio);
-> @@ -488,21 +509,27 @@ static blk_qc_t md_submit_bio(struct bio *bio)
->   		return BLK_QC_T_NONE;
->   	}
->   
-> -	/*
-> -	 * save the sectors now since our bio can
-> -	 * go away inside make_request
-> -	 */
-> -	sectors = bio_sectors(bio);
-> +	if (bio->bi_end_io != md_end_io) {
-> +		struct md_io *md_io;
-> +
-> +		md_io = mempool_alloc(&mddev->md_io_pool, GFP_NOIO);
-> +		md_io->mddev = mddev;
-> +		md_io->orig_bi_end_io = bio->bi_end_io;
-> +		md_io->orig_bi_private = bio->bi_private;
-> +
-> +		bio->bi_end_io = md_end_io;
-> +		bio->bi_private = md_io;
-> +
-> +		md_io->start_time = disk_start_io_acct(mddev->gendisk,
-> +						       bio_sectors(bio),
-> +						       bio_op(bio));
-> +	}
-> +
->   	/* bio could be mergeable after passing to underlayer */
->   	bio->bi_opf &= ~REQ_NOMERGE;
->   
->   	md_handle_request(mddev, bio);
->   
-> -	part_stat_lock();
-> -	part_stat_inc(&mddev->gendisk->part0, ios[sgrp]);
-> -	part_stat_add(&mddev->gendisk->part0, sectors[sgrp], sectors);
-> -	part_stat_unlock();
-> -
->   	return BLK_QC_T_NONE;
->   }
->   
-> @@ -5545,6 +5572,7 @@ static void md_free(struct kobject *ko)
->   
->   	bioset_exit(&mddev->bio_set);
->   	bioset_exit(&mddev->sync_set);
-> +	mempool_exit(&mddev->md_io_pool);
->   	kfree(mddev);
->   }
->   
-> @@ -5640,6 +5668,11 @@ static int md_alloc(dev_t dev, char *name)
->   		 */
->   		mddev->hold_active = UNTIL_STOP;
->   
-> +	error = mempool_init_kmalloc_pool(&mddev->md_io_pool, BIO_POOL_SIZE,
-> +					  sizeof(struct md_io));
-> +	if (error)
-> +		goto abort;
-> +
->   	error = -ENOMEM;
->   	mddev->queue = blk_alloc_queue(NUMA_NO_NODE);
->   	if (!mddev->queue)
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 612814d07d35..c26fa8bd41e7 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -481,6 +481,7 @@ struct mddev {
->   	struct bio_set			sync_set; /* for sync operations like
->   						   * metadata and bitmap writes
->   						   */
-> +	mempool_t			md_io_pool;
->   
->   	/* Generic flush handling.
->   	 * The last to finish preflush schedules a worker to submit
+The crash is not reproducible.
+
+Mikulas
+
+
+[ 1188.640677] device-mapper: raid: Superblocks created for new raid set
+[ 1188.679378] md/raid1:mdX: not clean -- starting background reconstruction
+[ 1188.681072] md/raid1:mdX: active with 2 out of 2 mirrors
+[ 1189.093707] mdX: bitmap file is out of date, doing full recovery
+[ 1189.108688] md: resync of RAID array mdX
+[ 1189.341925] Unable to handle kernel paging request at virtual address 006b6b6b6b6b6b73
+[ 1189.343183] Mem abort info:
+[ 1189.343632]   ESR = 0x96000004
+[ 1189.344219]   EC = 0x25: DABT (current EL), IL = 32 bits
+[ 1189.345012]   SET = 0, FnV = 0
+[ 1189.345483]   EA = 0, S1PTW = 0
+[ 1189.345998] Data abort info:
+[ 1189.346483]   ISV = 0, ISS = 0x00000004
+[ 1189.347109]   CM = 0, WnR = 0
+[ 1189.347589] [006b6b6b6b6b6b73] address between user and kernel address ranges
+[ 1189.348761] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+[ 1189.349802] Modules linked in: brd reiserfs hmac crc32_generic dm_zero dm_integrity dm_crypt dm_writecache dm_raid xfs dm_thin_pool dm_cache_smq dm_cache dm_persistent_data dm_bio_prison dm_mirror dm_region_hash dm_log dm_snapshot dm_bufio loop ipv6 autofs4 binfmt_misc nls_utf8 nls_cp852 vfat fat dm_mod af_packet aes_ce_blk crypto_simd cryptd aes_ce_cipher crct10dif_ce ghash_ce gf128mul sha2_ce sha256_arm64 sha1_ce sha1_generic efivars sg virtio_rng virtio_net rng_core net_failover failover virtio_console ext4 crc16 mbcache jbd2 raid10 raid456 libcrc32c crc32c_generic async_raid6_recov async_memcpy async_pq raid6_pq async_xor xor xor_neon async_tx raid1 raid0 linear md_mod sd_mod t10_pi virtio_scsi scsi_mod virtio_blk virtio_mmio virtio_pci virtio_ring virtio [last unloaded: scsi_debug]
+ 
+[ 1189.370709] CPU: 2 PID: 20 Comm: ksoftirqd/2 Not tainted 5.8.0-rc3-debug #1
+[ 1189.372088] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
+[ 1189.373400] pstate: 60000005 (nZCv daif -PAN -UAO BTYPE=--)
+[ 1189.374492] pc : end_sync_write+0x38/0xf8 [raid1]
+[ 1189.375408] lr : bio_endio+0x234/0x238
+[ 1189.376134] sp : ffffff80fee87af0
+[ 1189.376788] x29: ffffff80fee87af0 x28: 0000000000000004
+[ 1189.377817] x27: 0000000000000100 x26: ffffffc010532916
+[ 1189.378832] x25: 0000000100015b61 x24: 0000000100015b61
+[ 1189.379860] x23: 0000000000000001 x22: ffffffc01062f8e8
+[ 1189.380921] x21: 6b6b6b6b6b6b6b6b x20: ffffff80eaaa2058
+[ 1189.381967] x19: ffffff80d2e01c00 x18: 0000000000000000
+[ 1189.382970] x17: 0000000000000000 x16: 0000000000000000
+[ 1189.383994] x15: 0000000000000000 x14: 0000000000000000
+[ 1189.385003] x13: 0000000000000000 x12: 0000000000000001
+[ 1189.386010] x11: 0000000000000000 x10: 00000000000010f0
+[ 1189.387032] x9 : ffffff80f932cf98 x8 : 0000000000000000
+[ 1189.388044] x7 : 0000000000000000 x6 : 0000000000000000
+[ 1189.389050] x5 : 0000000000000001 x4 : ffffff80fee87aa0
+[ 1189.390062] x3 : ffffff8000000000 x2 : 0000000000000001
+[ 1189.391088] x1 : ffffff80fa22ca00 x0 : ffffff80d2e01c00
+[ 1189.392230] Call trace:
+[ 1189.392719]  end_sync_write+0x38/0xf8 [raid1]
+[ 1189.393553]  bio_endio+0x234/0x238
+[ 1189.394440]  dec_pending+0x1b8/0x1bc [dm_mod]
+[ 1189.395307]  clone_endio+0x14c/0x160 [dm_mod]
+[ 1189.396155]  bio_endio+0x234/0x238
+[ 1189.397602]  blk_update_request+0x2f8/0x418
+[ 1189.398473]  blk_mq_end_request+0x20/0x44
+[ 1189.400709]  lo_complete_rq+0x5c/0xbc [loop]
+[ 1189.401771]  blk_done_softirq+0xbc/0xc0
+[ 1189.402564]  efi_header_end+0x368/0x4b8
+[ 1189.403559]  run_ksoftirqd+0x34/0x64
+[ 1189.404303]  smpboot_thread_fn+0x228/0x22c
+[ 1189.405132]  kthread+0x114/0x124
+[ 1189.405807]  ret_from_fork+0x10/0x18
+[ 1189.406537] Code: f9400013 aa1303e0 f9401274 f9400295 (f94006a8)
+[ 1189.414734] ---[ end trace 4538a7676b244523 ]---
+[ 1189.415635] Kernel panic - not syncing: Fatal exception in interrupt
+[ 1189.416874] SMP: stopping secondary CPUs
+[ 1189.417691] Kernel Offset: disabled
+[ 1189.418380] CPU features: 0x000022,00002000
+[ 1189.419185] Memory Limit: none
+[ 1189.419743] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---
