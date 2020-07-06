@@ -1,292 +1,68 @@
-From: kernel test robot <lkp@intel.com>
-Subject: [song-md:md-next] BUILD SUCCESS
- c7a8bd2d606229937d17973d1b9639618bf40775
-Date: Mon, 06 Jul 2020 13:57:59 +0800
-Message-ID: <5f02bd67.90/7GMTwdJpxMoWq%lkp@intel.com>
+From: Michal Soltys <msoltyspl@yandex.pl>
+Subject: Re: Assemblin journaled array fails
+Date: Mon, 6 Jul 2020 10:07:17 +0200
+Message-ID: <4577498e-4124-ac6f-9d76-1f039fa1ba80@yandex.pl>
+References: <f8c61278-1758-66cd-cf25-8a118cb12f58@yandex.pl>
+ <0cf6454d-a8b5-4bee-5389-94b23c077050@yandex.pl>
+ <CAPhsuW51u6KWLvUntMXPU7stu7oSA+d-yT6zf7G0zCETzLWwiA@mail.gmail.com>
+ <49efa0d2-b44c-ec85-5e44-fb93a15001e7@yandex.pl>
+ <4df42e3d-ad2b-dfc2-3961-49ada4ea7eaf@yandex.pl>
+ <CAPhsuW5kk0G9PSfEADc8+rn=QT2z4ogjuV98qWsH_s_WBic-5w@mail.gmail.com>
+ <71f58507-314e-4a1d-dd50-41a60d76521b@yandex.pl>
+ <CAPhsuW59Q7mU9WH36RHs9kb-TMk7FmrQL+JCApupf_TZtpWynA@mail.gmail.com>
+ <4a03e900-61a8-f150-9be8-739e88ba8ce6@yandex.pl>
+ <CAPhsuW4BZE-DeESsq-coNx5_KZrfHjP=d9YOjOPqPji5kQBXjg@mail.gmail.com>
+ <a772ede5-1d6f-e7cd-e949-a5d81d0fdbd1@yandex.pl>
+ <CAPhsuW5hwAMTy8ozpsT+n5F3M7NzKqBdheFZvnouZEv8hEqAxQ@mail.gmail.com>
+ <4b426e56-f971-67cf-81c0-63e035bf492a@yandex.pl>
+ <CAPhsuW6fvgRCz7X7nnCEof4+yy2fTsxShNCuqTkMC0JQpj6gKw@mail.gmail.com>
+ <57247f5e-ec38-fb8c-9684-abbe699945fb@yandex.pl>
+ <CAPhsuW4hnpsbhQWWNKqgnw4nhp4Ho+gFbPU2fGjoMOcM8y7L+Q@mail.gmail.com>
+ <15a3dd66-39a9-894d-3e72-d231cf36758e@yandex.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <15a3dd66-39a9-894d-3e72-d231cf36758e@yandex.pl>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
-branch HEAD: c7a8bd2d606229937d17973d1b9639618bf40775  md: improve io stats accounting
+On 20/06/25 18:11, Michal Soltys wrote:
+> On 6/24/20 1:13 AM, Song Liu wrote:
+>> On Tue, Jun 23, 2020 at 6:17 AM Michal Soltys <msoltyspl@yandex.pl> 
+>> wrote:
+>>
+>> Hmm.. this is weird, as I think I marked every instance of set_bit
+>> MD_SB_CHANGE_PENDING.
+>> Would you mind confirm those are to the other array with something like:
+>>
+>> diff --git i/drivers/md/md.c w/drivers/md/md.c
+>> index dbbc8a50e2ed2..e91acfdcec032 100644
+>> --- i/drivers/md/md.c
+>> +++ w/drivers/md/md.c
+>> @@ -8480,7 +8480,7 @@ bool md_write_start(struct mddev *mddev, struct 
+>> bio *bi)
+>>                          mddev->in_sync = 0;
+>>                          set_bit(MD_SB_CHANGE_CLEAN, &mddev->sb_flags);
+>>                          set_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
+>> -                       pr_info("%s set MD_SB_CHANGE_PENDING\n", 
+>> __func__);
+>> +                       pr_info("%s: md: %s set
+>> MD_SB_CHANGE_PENDING\n", __func__, mdname(mddev));
+>>                          md_wakeup_thread(mddev->thread);
+>>                          did_change = 1;
+>>                  }
+>>
+>> Thanks,
+>> Song
+>>
+> 
+> dmesg attached
+> - md127 - journal
+> - md126 - the other raid
+> - md125 - the problematic one
 
-elapsed time: 3127m
-
-configs tested: 263
-configs skipped: 34
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arm                                 defconfig
-arm                              allmodconfig
-arm                               allnoconfig
-arm                              allyesconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm64                            allmodconfig
-arm64                             allnoconfig
-arm                       aspeed_g4_defconfig
-m68k                       m5249evb_defconfig
-arm                            mmp2_defconfig
-sh                            shmin_defconfig
-powerpc                      pmac32_defconfig
-sh                                  defconfig
-arm                          moxart_defconfig
-arm                            qcom_defconfig
-arm                          iop32x_defconfig
-mips                           ip28_defconfig
-powerpc                     pq2fads_defconfig
-arm                         at91_dt_defconfig
-sh                           cayman_defconfig
-m68k                         amcore_defconfig
-arc                             nps_defconfig
-arm                        trizeps4_defconfig
-microblaze                    nommu_defconfig
-m68k                        m5407c3_defconfig
-sh                               allmodconfig
-arm                         s5pv210_defconfig
-arm                             ezx_defconfig
-arm                  colibri_pxa270_defconfig
-h8300                       h8s-sim_defconfig
-arc                        nsim_700_defconfig
-c6x                        evmc6472_defconfig
-m68k                        m5272c3_defconfig
-arc                        nsimosci_defconfig
-mips                      malta_kvm_defconfig
-arm                          ep93xx_defconfig
-openrisc                 simple_smp_defconfig
-riscv                            alldefconfig
-h8300                    h8300h-sim_defconfig
-arm                         s3c2410_defconfig
-mips                        vocore2_defconfig
-mips                           ip27_defconfig
-sh                         apsh4a3a_defconfig
-arc                 nsimosci_hs_smp_defconfig
-sh                            titan_defconfig
-powerpc                     skiroot_defconfig
-arm                         cm_x300_defconfig
-sh                 kfr2r09-romimage_defconfig
-mips                         tb0219_defconfig
-sh                               j2_defconfig
-arm                          lpd270_defconfig
-h8300                     edosk2674_defconfig
-nios2                         10m50_defconfig
-arm                          pxa3xx_defconfig
-arm                       imx_v6_v7_defconfig
-powerpc                      ppc6xx_defconfig
-mips                          ath25_defconfig
-ia64                             allmodconfig
-arm                         assabet_defconfig
-xtensa                              defconfig
-arm                      jornada720_defconfig
-powerpc                       maple_defconfig
-mips                      pistachio_defconfig
-h8300                               defconfig
-arm                          simpad_defconfig
-xtensa                         virt_defconfig
-sh                          landisk_defconfig
-m68k                        stmark2_defconfig
-sh                           se7780_defconfig
-sh                          rsk7264_defconfig
-arm                           efm32_defconfig
-sh                               alldefconfig
-powerpc                    mvme5100_defconfig
-mips                          rb532_defconfig
-xtensa                          iss_defconfig
-m68k                       m5475evb_defconfig
-arm                        vexpress_defconfig
-arm                         lpc32xx_defconfig
-mips                   sb1250_swarm_defconfig
-sparc                            alldefconfig
-mips                  mips_paravirt_defconfig
-sh                        dreamcast_defconfig
-sh                     sh7710voipgw_defconfig
-nios2                            alldefconfig
-m68k                            q40_defconfig
-sh                        edosk7760_defconfig
-powerpc                  mpc885_ads_defconfig
-arm                   milbeaut_m10v_defconfig
-openrisc                    or1ksim_defconfig
-arc                        vdk_hs38_defconfig
-mips                         bigsur_defconfig
-arm                           tegra_defconfig
-m68k                             alldefconfig
-arc                      axs103_smp_defconfig
-ia64                          tiger_defconfig
-arm                         vf610m4_defconfig
-mips                        jmr3927_defconfig
-arm                         nhk8815_defconfig
-arm                             pxa_defconfig
-powerpc                      mgcoge_defconfig
-arm                         bcm2835_defconfig
-mips                        maltaup_defconfig
-m68k                            mac_defconfig
-sh                     magicpanelr2_defconfig
-mips                             allyesconfig
-arc                           tb10x_defconfig
-ia64                         bigsur_defconfig
-powerpc                     mpc5200_defconfig
-s390                          debug_defconfig
-ia64                                defconfig
-s390                             alldefconfig
-arm                        clps711x_defconfig
-xtensa                    xip_kc705_defconfig
-nios2                               defconfig
-mips                         rt305x_defconfig
-sh                          rsk7269_defconfig
-sparc64                          alldefconfig
-powerpc                         wii_defconfig
-arm                  colibri_pxa300_defconfig
-arm                            mps2_defconfig
-arm                        oxnas_v6_defconfig
-arm                           viper_defconfig
-arm                         orion5x_defconfig
-m68k                          multi_defconfig
-arm                       imx_v4_v5_defconfig
-arm                             rpc_defconfig
-arm                         mv78xx0_defconfig
-s390                                defconfig
-arm                         socfpga_defconfig
-mips                            e55_defconfig
-powerpc                     powernv_defconfig
-arm                         s3c6400_defconfig
-m68k                          atari_defconfig
-arm                           u8500_defconfig
-mips                    maltaup_xpa_defconfig
-arm                              zx_defconfig
-powerpc                          g5_defconfig
-arc                          axs103_defconfig
-arc                                 defconfig
-arm                          prima2_defconfig
-powerpc                      ppc64e_defconfig
-h8300                            alldefconfig
-sh                      rts7751r2d1_defconfig
-mips                     loongson1b_defconfig
-arm                         ebsa110_defconfig
-powerpc                       ppc64_defconfig
-m68k                       bvme6000_defconfig
-mips                           xway_defconfig
-ia64                              allnoconfig
-arm                          tango4_defconfig
-mips                     cu1000-neo_defconfig
-alpha                            allyesconfig
-powerpc                      ppc44x_defconfig
-powerpc                        cell_defconfig
-um                            kunit_defconfig
-powerpc                          alldefconfig
-arm                           stm32_defconfig
-arc                            hsdk_defconfig
-i386                             alldefconfig
-mips                      fuloong2e_defconfig
-mips                           jazz_defconfig
-parisc                generic-64bit_defconfig
-arm                           spitz_defconfig
-powerpc                          allyesconfig
-mips                         db1xxx_defconfig
-arm                         lubbock_defconfig
-sh                             espt_defconfig
-um                             i386_defconfig
-sh                           se7721_defconfig
-arm                           corgi_defconfig
-mips                malta_qemu_32r6_defconfig
-arm                            pleb_defconfig
-mips                      pic32mzda_defconfig
-sh                           se7619_defconfig
-mips                        nlm_xlp_defconfig
-powerpc                  storcenter_defconfig
-sh                          r7785rp_defconfig
-arm                      footbridge_defconfig
-arm                          badge4_defconfig
-arc                    vdk_hs38_smp_defconfig
-arc                     nsimosci_hs_defconfig
-powerpc                          allmodconfig
-sh                              ul2_defconfig
-arm                          pxa168_defconfig
-arm                        neponset_defconfig
-sh                            migor_defconfig
-alpha                               defconfig
-mips                           gcw0_defconfig
-nios2                         3c120_defconfig
-c6x                        evmc6678_defconfig
-sh                   sh7770_generic_defconfig
-sparc64                          allmodconfig
-microblaze                        allnoconfig
-sparc                               defconfig
-arm                             mxs_defconfig
-riscv                            allyesconfig
-m68k                          sun3x_defconfig
-sparc                       sparc32_defconfig
-ia64                        generic_defconfig
-arm                           sunxi_defconfig
-powerpc                      chrp32_defconfig
-mips                 pnx8335_stb225_defconfig
-riscv                             allnoconfig
-sh                         ecovec24_defconfig
-sh                          polaris_defconfig
-sh                   sh7724_generic_defconfig
-mips                          ath79_defconfig
-mips                 decstation_r4k_defconfig
-i386                              allnoconfig
-i386                             allyesconfig
-i386                                defconfig
-i386                              debian-10.3
-ia64                             allyesconfig
-m68k                              allnoconfig
-m68k                           sun3_defconfig
-m68k                                defconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-nios2                            allyesconfig
-openrisc                            defconfig
-c6x                              allyesconfig
-c6x                               allnoconfig
-openrisc                         allyesconfig
-nds32                               defconfig
-nds32                             allnoconfig
-csky                             allyesconfig
-csky                                defconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-h8300                            allmodconfig
-arc                              allyesconfig
-sh                                allnoconfig
-mips                              allnoconfig
-mips                             allmodconfig
-parisc                            allnoconfig
-parisc                              defconfig
-parisc                           allyesconfig
-parisc                           allmodconfig
-powerpc                          rhel-kconfig
-powerpc                           allnoconfig
-powerpc                             defconfig
-riscv                               defconfig
-riscv                            allmodconfig
-s390                             allyesconfig
-s390                              allnoconfig
-s390                             allmodconfig
-sparc64                             defconfig
-sparc64                           allnoconfig
-sparc                            allyesconfig
-sparc64                          allyesconfig
-um                                allnoconfig
-um                                  defconfig
-um                               allmodconfig
-um                               allyesconfig
-x86_64                               rhel-7.6
-x86_64                    rhel-7.6-kselftests
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                                   rhel
-x86_64                         rhel-7.2-clear
-x86_64                                    lkp
-x86_64                              fedora-25
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+So, what kind of next step after this ?
