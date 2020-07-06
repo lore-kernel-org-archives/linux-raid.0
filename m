@@ -1,130 +1,176 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH v5 01/16] md/raid456: covert macro define of STRIPE_* as
- members of struct r5conf
-Date: Mon, 6 Jul 2020 11:09:27 +0200
-Message-ID: <84277307-fc0a-44e2-8564-699651a7ff47@cloud.ionos.com>
-References: <20200702120628.777303-1-yuyufen@huawei.com>
- <20200702120628.777303-2-yuyufen@huawei.com>
+From: Laurie Denness <laurie@denness.net>
+Subject: upgrade from 0.9 to 1.0 metadata caused slight array shrink
+Date: Mon, 6 Jul 2020 11:33:48 +0100
+Message-ID: <CAGoQN1Bh0BX3BUZV-2MonU0gvGpAqLR_Cy2KvKCUMF7z9Uw4jQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200702120628.777303-2-yuyufen@huawei.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Yufen Yu <yuyufen@huawei.com>, song@kernel.org
-Cc: linux-raid@vger.kernel.org, neilb@suse.com, houtao1@huawei.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/2/20 2:06 PM, Yufen Yu wrote:
-> @@ -2509,10 +2532,11 @@ static void raid5_end_read_request(struct bio * bi)
->   			 */
->   			pr_info_ratelimited(
->   				"md/raid:%s: read error corrected (%lu sectors at %llu on %s)\n",
-> -				mdname(conf->mddev), STRIPE_SECTORS,
-> +				mdname(conf->mddev),
-> +				conf->stripe_sectors,
+Hello!
+I was happily swapping out my 2TB drives for 4TB in my 5 disk RAID 6
+array, when I got bitten by the "0.9 metadata does not support drives
+larger than 2TB" issue. The NAS had already run a --grow for me before
+I realised this could be a problem.
 
-The conf->stripe_sectors is printed with %lu format.
+After reading posts (and backing up my data), I attempted the
+instructions as per
+https://raid.wiki.kernel.org/index.php/RAID_superblock_formats#Converting_between_superblock_versions
+and ran:
 
-> ot allow a suitable chunk size */
->   		return ERR_PTR(-EINVAL);
->   
-> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index f90e0704bed9..e36cf71e8465 100644
-> --- a/drivers/md/raid5.h
-> +++ b/drivers/md/raid5.h
-> @@ -472,32 +472,12 @@ struct disk_info {
->    */
->   
->   #define NR_STRIPES		256
-> -#define STRIPE_SIZE		PAGE_SIZE
-> -#define STRIPE_SHIFT		(PAGE_SHIFT - 9)
-> -#define STRIPE_SECTORS		(STRIPE_SIZE>>9)
->   #define	IO_THRESHOLD		1
->   #define BYPASS_THRESHOLD	1
->   #define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
->   #define HASH_MASK		(NR_HASH - 1)
->   #define MAX_STRIPE_BATCH	8
->   
+mdadm --create /dev/md1 -l6 -n5 -c64 --layout=left-symmetric
+--metadata=1.0 --assume-clean /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2
+/dev/sde2
+(note I tried to be very careful specifying the defaults!)
 
-[...]
+Here's my mdadm --detail /dev/md1 from before:
 
-> 	return NULL;
-> -}
-> -
->   /* NOTE NR_STRIPE_HASH_LOCKS must remain below 64.
->    * This is because we sometimes take all the spinlocks
->    * and creating that much locking depth can cause
-> @@ -574,6 +554,9 @@ struct r5conf {
->   	int			raid_disks;
->   	int			max_nr_stripes;
->   	int			min_nr_stripes;
-> +	unsigned int	stripe_size;
-> +	unsigned int	stripe_shift;
-> +	unsigned int	stripe_sectors;
+root@127.0.0.1:/mnt# mdadm --detail /dev/md1
+/dev/md1:
+        Version : 0.90
+  Creation Time : Fri Nov 26 21:03:23 2010
+     Raid Level : raid6
+     Array Size : 11714908416 (11172.21 GiB 11996.07 GB)
+  Used Dev Size : -1
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 1
+    Persistence : Superblock is persistent
 
-So you need to define it with "unsigned long".
+    Update Time : Sun Jul  5 13:00:24 2020
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-Also, I am wondering if it is cleaner with something like below.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8dea4398b191..984eea97e77c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6918,6 +6918,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
-         conf = kzalloc(sizeof(struct r5conf), GFP_KERNEL);
-         if (conf == NULL)
-                 goto abort;
-+       r5conf_set_size(conf, PAGE_SIZE);
-         INIT_LIST_HEAD(&conf->free_list);
-         INIT_LIST_HEAD(&conf->pending_list);
-         conf->pending_data = kcalloc(PENDING_IO_MAX,
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index f90e0704bed9..04fc4c514d54 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -471,10 +471,13 @@ struct disk_info {
-   * Stripe cache
-   */
+           UUID : 98493182:5d26fa6e:1c0a08b1:19765080
+         Events : 0.729722
 
-+static unsigned long stripe_size = PAGE_SIZE;
-+static unsigned long stripe_shift = PAGE_SHIFT - 9;
-+static unsigned long stripe_sectors = PAGE_SIZE>>9;
-  #define NR_STRIPES             256
--#define STRIPE_SIZE            PAGE_SIZE
--#define STRIPE_SHIFT           (PAGE_SHIFT - 9)
--#define STRIPE_SECTORS         (STRIPE_SIZE>>9)
-+#define STRIPE_SIZE            stripe_size
-+#define STRIPE_SHIFT           stripe_shift
-+#define STRIPE_SECTORS         stripe_sectors
-  #define        IO_THRESHOLD            1
-  #define BYPASS_THRESHOLD       1
-  #define NR_HASH                        (PAGE_SIZE / sizeof(struct 
-hlist_head))
-@@ -574,6 +577,9 @@ struct r5conf {
-         int                     raid_disks;
-         int                     max_nr_stripes;
-         int                     min_nr_stripes;
-+       unsigned long           stripe_size;
-+       unsigned long           stripe_shift;
-+       unsigned long           stripe_sectors;
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+       3       8       50        3      active sync   /dev/sdd2
+       4       8       66        4      active sync   /dev/sde2
 
-         /* reshape_progress is the leading edge of a 'reshape'
-          * It has value MaxSector when no reshape is happening
-@@ -690,6 +696,12 @@ struct r5conf {
-         struct r5pending_data   *next_pending_data;
-  };
 
-+static inline void r5conf_set_size(struct r5conf *conf, unsigned long size)
-+{
-+       stripe_size = conf->stripe_size = size;
-+       stripe_shift = conf->stripe_shift = ilog2(size) - 9;
-+       stripe_sectors = conf->stripe_sectors = size >> 9;
-+}
+And here's the output after the command was run:
 
-  /*
-   * Our supported algorithms
+root@127.0.0.1:/app/bin# mdadm --detail /dev/md1
+/dev/md1:
+        Version : 1.0
+  Creation Time : Sun Jul  5 15:46:21 2020
+     Raid Level : raid6
+     Array Size : 11714908032 (11172.21 GiB 11996.07 GB)
+  Used Dev Size : 3904969344 (3724.07 GiB 3998.69 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
 
-Thanks,
-Guoqing
+    Update Time : Mon Jul  6 10:57:31 2020
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : N5500:1  (local to host N5500)
+           UUID : 5c5ee93c:b52b9bc1:d8cba3fd:802b54ac
+         Events : 4
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+       3       8       50        3      active sync   /dev/sdd2
+       4       8       66        4      active sync   /dev/sde2
+
+
+
+I have LVM and then an XFS filesystem on top of md1, and I got hit by
+the dreaded "too small for target":
+device-mapper: table: 253:1: md1 too small for target: start=2097536,
+len=23427719168, dev_size=23429816064
+
+Which suddenly made sense when I paid attention to the size of the
+array before and after:
+     Array Size : 11714908416 (11172.21 GiB 11996.07 GB)
+     Array Size : 11714908032 (11172.21 GiB 11996.07 GB)
+
+I appear to have lost a tiny amount of space with the re-creation. If
+I was not using XFS, I would shrug this off and resize the filesystem,
+but since XFS cannot be shrunk, I am open to any advice about the best
+course of action to go from here.
+
+
+Things that crossed my mind:
+1) Post here to figure out why I lost a few bytes - here I am! Maybe I
+made an error in the re-creation? I did not zero superblocks before
+the re-create.
+2) The NAS this is hosted on places a 2GB partition that is used for a
+5 disk RAID1 (md0) that is only used for swap, so resizing that down
+on each drive, failing one by one and letting them resync, so I can
+gain back a few megabytes of space and mount my XFS filesystem.
+
+
+Here's an example of --examine on one of the drives too:
+
+root@127.0.0.1:/app/bin# mdadm -Evvvv /dev/sda2
+/dev/sda2:
+             Magic : a92b4efc
+           Version : 1.0
+       Feature Map : 0x0
+        Array UUID : 5c5ee93c:b52b9bc1:d8cba3fd:802b54ac
+              Name : N5500:1  (local to host N5500)
+     Creation Time : Sun Jul  5 15:46:21 2020
+        Raid Level : raid6
+      Raid Devices : 5
+
+    Avail Dev Size : 7809938808 (3724.07 GiB 3998.69 GB)
+        Array Size : 23429816064 (11172.21 GiB 11996.07 GB)
+     Used Dev Size : 7809938688 (3724.07 GiB 3998.69 GB)
+      Super Offset : 7809939064 sectors
+             State : clean
+       Device UUID : 3db4c62d:2e43ef6c:bf54eb23:ee928fa9
+
+       Update Time : Mon Jul  6 11:16:51 2020
+Update Time(Epoch) : 1594030611
+          Checksum : 1ccda3df - correct
+   Events(64bits) : 4
+
+            Layout : left-symmetric
+        Chunk Size : 64K
+
+      Device Role : Active device 0
+      Array State : AAAAA ('A' == active, '.' == missing)
+
+
+Here's the layout of the drive:
+
+root@127.0.0.1:/tmp# /sbin/sgdisk /dev/sda -p
+Disk /dev/sda: 7814037168 sectors, 3.6 TiB
+Logical sector size: 512 bytes
+Disk identifier (GUID): CCAAA40B-2375-48DA-A8DF-9C629F2E121D
+Partition table holds up to 128 entries
+First usable sector is 34, last usable sector is 7814037134
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 2014 sectors (1007.0 KiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048         4098047   2.0 GiB     FD00
+   2         4098048      7814037134   3.6 TiB     FD00
+
+
+I'm afraid the NAS does not have python available, so I cannot run lsdrv.
+
+
+Many thanks in advance! Any thoughts welcome.
