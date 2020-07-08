@@ -1,157 +1,38 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/6] cdrom: remove the unused cdrom_media_changed function
-Date: Wed,  8 Jul 2020 14:25:42 +0200
-Message-ID: <20200708122546.214579-3-hch@lst.de>
+Subject: [PATCH 4/6] isofs: remove a stale comment
+Date: Wed,  8 Jul 2020 14:25:44 +0200
+Message-ID: <20200708122546.214579-5-hch@lst.de>
 References: <20200708122546.214579-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20200708122546.214579-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Song Liu <song@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, linux-kernel@vger.kernel.org, linux-xtensa@linux-xtensa.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-As well as the ->media_changed method.  All these are left over from
-before the drivers were switched over to the check_events scheme.
+check_disk_change isn't for consumers of the block layer, so remove
+the comment mentioning it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/cdrom/cdrom-standard.rst | 18 +----------------
- drivers/cdrom/cdrom.c                  | 28 +++++---------------------
- include/linux/cdrom.h                  |  2 --
- 3 files changed, 6 insertions(+), 42 deletions(-)
+ fs/isofs/inode.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/Documentation/cdrom/cdrom-standard.rst b/Documentation/cdrom/cdrom-standard.rst
-index dde4f7f7fdbf1c..2de90581059033 100644
---- a/Documentation/cdrom/cdrom-standard.rst
-+++ b/Documentation/cdrom/cdrom-standard.rst
-@@ -157,7 +157,6 @@ with the kernel as a block device by registering the following general
- 		cdrom_release,		/∗ release ∗/
- 		NULL,			/∗ fsync ∗/
- 		NULL,			/∗ fasync ∗/
--		cdrom_media_changed,	/∗ media change ∗/
- 		NULL			/∗ revalidate ∗/
- 	};
+diff --git a/fs/isofs/inode.c b/fs/isofs/inode.c
+index d634561f871a56..78f5c96c76f31e 100644
+--- a/fs/isofs/inode.c
++++ b/fs/isofs/inode.c
+@@ -612,9 +612,6 @@ static bool rootdir_empty(struct super_block *sb, unsigned long block)
  
-@@ -366,19 +365,6 @@ which may or may not be in the drive). If the drive is not a changer,
- 	CDS_DRIVE_NOT_READY	/* something is wrong, tray is moving? */
- 	CDS_DISC_OK		/* a disc is loaded and everything is fine */
- 
--::
--
--	int media_changed(struct cdrom_device_info *cdi, int disc_nr)
--
--This function is very similar to the original function in $struct
--file_operations*. It returns 1 if the medium of the device *cdi->dev*
--has changed since the last call, and 0 otherwise. The parameter
--*disc_nr* identifies a specific slot in a juke-box, it should be
--ignored for single-disc drives. Note that by `re-routing` this
--function through *cdrom_media_changed()*, we can implement separate
--queues for the VFS and a new *ioctl()* function that can report device
--changes to software (e. g., an auto-mounting daemon).
--
- ::
- 
- 	int tray_move(struct cdrom_device_info *cdi, int position)
-@@ -917,9 +903,7 @@ commands can be identified by the underscores in their names.
- 	maximum number of discs in the juke-box found in the *cdrom_dops*.
- `CDROM_MEDIA_CHANGED`
- 	Returns 1 if a disc has been changed since the last call.
--	Note that calls to *cdrom_media_changed* by the VFS are treated
--	by an independent queue, so both mechanisms will detect a
--	media change once. For juke-boxes, an extra argument *arg*
-+	For juke-boxes, an extra argument *arg*
- 	specifies the slot for which the information is given. The special
- 	value *CDSL_CURRENT* requests that information about the currently
- 	selected slot be returned.
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index d82b3b7658bddc..0c271b9e3c5b79 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -605,7 +605,7 @@ int register_cdrom(struct gendisk *disk, struct cdrom_device_info *cdi)
- 	disk->cdi = cdi;
- 
- 	ENSURE(cdo, drive_status, CDC_DRIVE_STATUS);
--	if (cdo->check_events == NULL && cdo->media_changed == NULL)
-+	if (cdo->check_events == NULL)
- 		WARN_ON_ONCE(cdo->capability & (CDC_MEDIA_CHANGED | CDC_SELECT_DISC));
- 	ENSURE(cdo, tray_move, CDC_CLOSE_TRAY | CDC_OPEN_TRAY);
- 	ENSURE(cdo, lock_door, CDC_LOCK);
-@@ -1419,8 +1419,6 @@ static int cdrom_select_disc(struct cdrom_device_info *cdi, int slot)
- 
- 	if (cdi->ops->check_events)
- 		cdi->ops->check_events(cdi, 0, slot);
--	else
--		cdi->ops->media_changed(cdi, slot);
- 
- 	if (slot == CDSL_NONE) {
- 		/* set media changed bits, on both queues */
-@@ -1517,13 +1515,10 @@ int media_changed(struct cdrom_device_info *cdi, int queue)
- 		return ret;
- 
- 	/* changed since last call? */
--	if (cdi->ops->check_events) {
--		BUG_ON(!queue);	/* shouldn't be called from VFS path */
--		cdrom_update_events(cdi, DISK_EVENT_MEDIA_CHANGE);
--		changed = cdi->ioctl_events & DISK_EVENT_MEDIA_CHANGE;
--		cdi->ioctl_events = 0;
--	} else
--		changed = cdi->ops->media_changed(cdi, CDSL_CURRENT);
-+	BUG_ON(!queue);	/* shouldn't be called from VFS path */
-+	cdrom_update_events(cdi, DISK_EVENT_MEDIA_CHANGE);
-+	changed = cdi->ioctl_events & DISK_EVENT_MEDIA_CHANGE;
-+	cdi->ioctl_events = 0;
- 
- 	if (changed) {
- 		cdi->mc_flags = 0x3;    /* set bit on both queues */
-@@ -1535,18 +1530,6 @@ int media_changed(struct cdrom_device_info *cdi, int queue)
- 	return ret;
- }
- 
--int cdrom_media_changed(struct cdrom_device_info *cdi)
--{
--	/* This talks to the VFS, which doesn't like errors - just 1 or 0.  
--	 * Returning "0" is always safe (media hasn't been changed). Do that 
--	 * if the low-level cdrom driver dosn't support media changed. */ 
--	if (cdi == NULL || cdi->ops->media_changed == NULL)
--		return 0;
--	if (!CDROM_CAN(CDC_MEDIA_CHANGED))
--		return 0;
--	return media_changed(cdi, 0);
--}
--
- /* Requests to the low-level drivers will /always/ be done in the
-    following format convention:
- 
-@@ -3464,7 +3447,6 @@ EXPORT_SYMBOL(unregister_cdrom);
- EXPORT_SYMBOL(cdrom_open);
- EXPORT_SYMBOL(cdrom_release);
- EXPORT_SYMBOL(cdrom_ioctl);
--EXPORT_SYMBOL(cdrom_media_changed);
- EXPORT_SYMBOL(cdrom_number_of_slots);
- EXPORT_SYMBOL(cdrom_mode_select);
- EXPORT_SYMBOL(cdrom_mode_sense);
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index 8543fa59da7207..f48d0a31deaece 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -73,7 +73,6 @@ struct cdrom_device_ops {
- 	int (*drive_status) (struct cdrom_device_info *, int);
- 	unsigned int (*check_events) (struct cdrom_device_info *cdi,
- 				      unsigned int clearing, int slot);
--	int (*media_changed) (struct cdrom_device_info *, int);
- 	int (*tray_move) (struct cdrom_device_info *, int);
- 	int (*lock_door) (struct cdrom_device_info *, int);
- 	int (*select_speed) (struct cdrom_device_info *, int);
-@@ -107,7 +106,6 @@ extern int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
- 		       fmode_t mode, unsigned int cmd, unsigned long arg);
- extern unsigned int cdrom_check_events(struct cdrom_device_info *cdi,
- 				       unsigned int clearing);
--extern int cdrom_media_changed(struct cdrom_device_info *);
- 
- extern int register_cdrom(struct gendisk *disk, struct cdrom_device_info *cdi);
- extern void unregister_cdrom(struct cdrom_device_info *cdi);
+ /*
+  * Initialize the superblock and read the root inode.
+- *
+- * Note: a check_disk_change() has been done immediately prior
+- * to this call, so we don't need to check again.
+  */
+ static int isofs_fill_super(struct super_block *s, void *data, int silent)
+ {
 -- 
 2.26.2
