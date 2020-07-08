@@ -1,43 +1,50 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 1/6] md: switch to ->check_events for media change
- notifications
-Date: Wed, 8 Jul 2020 14:23:38 +0100
-Message-ID: <20200708132338.GO25523@casper.infradead.org>
-References: <20200708122546.214579-1-hch@lst.de>
- <20200708122546.214579-2-hch@lst.de>
- <09cd4827-52ae-0e7c-c3d3-e9a6cd27ff2b@cloud.ionos.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH 6/6] mmc: remove the call to check_disk_change
+Date: Wed, 8 Jul 2020 16:17:26 +0200
+Message-ID: <CAPDyKFr5+LRRGMYhWM2At=O9LQSPmFAp0YuQiwmRiV1a6Tx6=g@mail.gmail.com>
+References: <20200708122546.214579-1-hch@lst.de> <20200708122546.214579-7-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <09cd4827-52ae-0e7c-c3d3-e9a6cd27ff2b@cloud.ionos.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, linux-kernel@vger.kernel.org, linux-xtensa@linux-xtensa.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200708122546.214579-7-hch@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xtensa@linux-xtensa.org, linux-block <linux-block@vger.kernel.org>, linux-raid@vger.kernel.org, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 08, 2020 at 03:17:31PM +0200, Guoqing Jiang wrote:
-> On 7/8/20 2:25 PM, Christoph Hellwig wrote:
-> > -static int md_media_changed(struct gendisk *disk)
-> > -{
-> > -	struct mddev *mddev = disk->private_data;
-> > -
-> > -	return mddev->changed;
-> > -}
-> 
-> Maybe we can remove "changed" from struct mddev since no one reads it
-> after the change.
+On Wed, 8 Jul 2020 at 14:41, Christoph Hellwig <hch@lst.de> wrote:
+>
+> The mmc driver doesn't support event notifications, which means
+> that check_disk_change is a no-op.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-You missed this hunk:
+I can queue this via my mmc tree, but perhaps you have plans for some
+additional cleanups on top? In such a case, it may be better that this
+goes through Jens' tree?
 
-+static unsigned int md_check_events(struct gendisk *disk, unsigned int clearing)
- {
-        struct mddev *mddev = disk->private_data;
-+	unsigned int ret = 0;
+Kind regards
+Uffe
 
-+	if (mddev->changed)
-+               ret = DISK_EVENT_MEDIA_CHANGE;
-        mddev->changed = 0;
--	return 0;
-+	return ret;
- }
+> ---
+>  drivers/mmc/core/block.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
+> index 4791c82f8f7c78..fa313b63413547 100644
+> --- a/drivers/mmc/core/block.c
+> +++ b/drivers/mmc/core/block.c
+> @@ -312,10 +312,7 @@ static int mmc_blk_open(struct block_device *bdev, fmode_t mode)
+>
+>         mutex_lock(&block_mutex);
+>         if (md) {
+> -               if (md->usage == 2)
+> -                       check_disk_change(bdev);
+>                 ret = 0;
+> -
+>                 if ((mode & FMODE_WRITE) && md->read_only) {
+>                         mmc_blk_put(md);
+>                         ret = -EROFS;
+> --
+> 2.26.2
+>
