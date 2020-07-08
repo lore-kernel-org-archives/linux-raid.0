@@ -1,38 +1,37 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/6] isofs: remove a stale comment
-Date: Wed,  8 Jul 2020 14:25:44 +0200
-Message-ID: <20200708122546.214579-5-hch@lst.de>
+Subject: [PATCH 5/6] xtensa/simdisk: remove the call to check_disk_change
+Date: Wed,  8 Jul 2020 14:25:45 +0200
+Message-ID: <20200708122546.214579-6-hch@lst.de>
 References: <20200708122546.214579-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20200708122546.214579-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Song Liu <song@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, linux-kernel@vger.kernel.org, linux-xtensa@linux-xtensa.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-check_disk_change isn't for consumers of the block layer, so remove
-the comment mentioning it.
+The simdisk driver doesn't support event notifications, which means
+that check_disk_change is a no-op.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/isofs/inode.c | 3 ---
- 1 file changed, 3 deletions(-)
+ arch/xtensa/platforms/iss/simdisk.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/fs/isofs/inode.c b/fs/isofs/inode.c
-index d634561f871a56..78f5c96c76f31e 100644
---- a/fs/isofs/inode.c
-+++ b/fs/isofs/inode.c
-@@ -612,9 +612,6 @@ static bool rootdir_empty(struct super_block *sb, unsigned long block)
+diff --git a/arch/xtensa/platforms/iss/simdisk.c b/arch/xtensa/platforms/iss/simdisk.c
+index 5107140dbb7edc..3447556d276d32 100644
+--- a/arch/xtensa/platforms/iss/simdisk.c
++++ b/arch/xtensa/platforms/iss/simdisk.c
+@@ -127,8 +127,6 @@ static int simdisk_open(struct block_device *bdev, fmode_t mode)
+ 	struct simdisk *dev = bdev->bd_disk->private_data;
  
- /*
-  * Initialize the superblock and read the root inode.
-- *
-- * Note: a check_disk_change() has been done immediately prior
-- * to this call, so we don't need to check again.
-  */
- static int isofs_fill_super(struct super_block *s, void *data, int silent)
- {
+ 	spin_lock(&dev->lock);
+-	if (!dev->users)
+-		check_disk_change(bdev);
+ 	++dev->users;
+ 	spin_unlock(&dev->lock);
+ 	return 0;
 -- 
 2.26.2
