@@ -1,48 +1,125 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: remove dead bdi congestion leftovers
-Date: Thu, 9 Jul 2020 07:32:33 +0200
-Message-ID: <20200709053233.GA3243@lst.de>
-References: <20200701090622.3354860-1-hch@lst.de>
-	<b5d6df17-68af-d535-79e4-f95e16dd5632@kernel.dk>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: Re: [PATCH v5 00/16] md/raid5: set STRIPE_SIZE as a configurable
+ value
+Date: Thu, 9 Jul 2020 21:27:42 +0800
+Message-ID: <21aaf87f-157b-c37a-f16b-4e981268eeda@huawei.com>
+References: <20200702120628.777303-1-yuyufen@huawei.com>
+ <CAPhsuW7PgJV-bjaa8v=Zrhd0MqPmjew1dF-Qi0FP6i-809YAQg@mail.gmail.com>
+ <0dd1ebed-2802-2bef-48f0-87bbdd2ee8e5@huawei.com>
+ <CAPhsuW7m7qYGe3g2XyZNWZch4Wy0y2URNeUprKAm4si+nyBB8g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <b5d6df17-68af-d535-79e4-f95e16dd5632-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW7m7qYGe3g2XyZNWZch4Wy0y2URNeUprKAm4si+nyBB8g@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Hou Tao <houtao1@huawei.com>
 List-Id: linux-raid.ids
 
-T24gV2VkLCBKdWwgMDgsIDIwMjAgYXQgMDU6MTQ6MjlQTSAtMDYwMCwgSmVucyBBeGJvZSB3cm90
-ZToKPiBPbiA3LzEvMjAgMzowNiBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gPiBIaSBK
-ZW5zLAo+ID4gCj4gPiB3ZSBoYXZlIGEgbG90IG9mIGJkaSBjb25nZXN0aW9uIHJlbGF0ZWQgY29k
-ZSB0aGF0IGlzIGxlZnQgYXJvdW5kIHdpdGhvdXQKPiA+IGFueSB1c2UuICBUaGlzIHNlcmllcyBy
-ZW1vdmVzIGl0IGluIHByZXBhcmF0aW9uIG9mIHNvcnRpbmcgb3V0IHRoZSBiZGkKPiA+IGxpZmV0
-aW1lIHJ1bGVzIHByb3Blcmx5Lgo+IAo+IFBsZWFzZSBydW4gc2VyaWVzIGxpa2UgdGhpcyB0aHJv
-dWdoIGEgZnVsbCBjb21waWxhdGlvbiwgZm9yIGJvdGggdGhpcyBvbmUKPiBhbmQgdGhlIHByZXZp
-b3VzIHNlcmllcyBJIGhhZCB0byBmaXggdXAgaXNzdWVzIGxpa2UgdGhpczoKPiAKPiBkcml2ZXJz
-L21kL2JjYWNoZS9yZXF1ZXN0LmM6IEluIGZ1bmN0aW9uIOKAmGJjaF9jYWNoZWRfZGV2X3JlcXVl
-c3RfaW5pdOKAmToKPiBkcml2ZXJzL21kL2JjYWNoZS9yZXF1ZXN0LmM6MTIzMzoxODogd2Fybmlu
-ZzogdW51c2VkIHZhcmlhYmxlIOKAmGfigJkgWy1XdW51c2VkLXZhcmlhYmxlXQo+ICAxMjMzIHwg
-IHN0cnVjdCBnZW5kaXNrICpnID0gZGMtPmRpc2suZGlzazsKPiAgICAgICB8ICAgICAgICAgICAg
-ICAgICAgXgo+IGRyaXZlcnMvbWQvYmNhY2hlL3JlcXVlc3QuYzogSW4gZnVuY3Rpb24g4oCYYmNo
-X2ZsYXNoX2Rldl9yZXF1ZXN0X2luaXTigJk6Cj4gZHJpdmVycy9tZC9iY2FjaGUvcmVxdWVzdC5j
-OjEzMjA6MTg6IHdhcm5pbmc6IHVudXNlZCB2YXJpYWJsZSDigJhn4oCZIFstV3VudXNlZC12YXJp
-YWJsZV0KPiAgMTMyMCB8ICBzdHJ1Y3QgZ2VuZGlzayAqZyA9IGQtPmRpc2s7Cj4gICAgICAgfCAg
-ICAgICAgICAgICAgICAgIF4KPiAKPiBEaWQgdGhlIHNhbWUgaGVyZSwgYXBwbGllZCBpdC4KCkFu
-ZCBqdXN0IGxpa2UgdGhlIHByZXZpb3VzIG9uZSBJIGRpZCwgYW5kIHRoZSBjb21waWxlciBkaWQg
-bm90IGNvbXBsYWluLgpUaGVyZSBtdXN0IGJlIHNvbWV0aGluZyBhYm91dCBjZXJ0YWluIGdjYyB2
-ZXJzaW9ucyBub3Qgd2FybmluZyBhYm91dAp2YXJpYWJsZXMgdGhhdCBhcmUgaW5pdGlhbGl6ZWQg
-YnV0IG5vdCBvdGhlcndpc2UgdXNlZC4KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KZHJiZC1kZXYgbWFpbGluZyBsaXN0CmRyYmQtZGV2QGxpc3RzLmxpbmJp
-dC5jb20KaHR0cHM6Ly9saXN0cy5saW5iaXQuY29tL21haWxtYW4vbGlzdGluZm8vZHJiZC1kZXYK
+
+
+On 2020/7/9 7:55, Song Liu wrote:
+> On Wed, Jul 8, 2020 at 6:15 AM Yufen Yu <yuyufen@huawei.com> wrote:
+>>
+>>
+>>
+>> On 2020/7/3 7:00, Song Liu wrote:
+>>> On Thu, Jul 2, 2020 at 5:05 AM Yufen Yu <yuyufen@huawei.com> wrote:
+>>>>
+>>>> Hi, all
+>>>>
+>>>>    For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5
+>>>>    will issue each bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64.
+>>>>    However, filesystem usually issue bio in the unit of 4KB. Then, RAID5 may
+>>>>    waste resource of disk bandwidth.
+>>>>
+>>>>    To solve the problem, this patchset try to set stripe_size as a configuare
+>>>>    value. The default value is 4096. We will add a new sysfs entry and set it
+>>>>    by writing a new value, likely:
+>>>>
+>>>>           echo 16384 > /sys/block/md1/md/stripe_size
+>>>
+>>> Higher level question: do we need to support page size that is NOT 4kB
+>>> times power
+>>> of 2? Meaning, do we need to support 12kB, 20kB, 24kB, etc. If we only
+>>> supports, 4kB,
+>>> 8kB, 16kB, 32kB, etc. some of the logic can be simpler.
+>>
+>> Yeah, I think we just support 4kb, 8kb, 16kb, 32kb... is enough.
+>> But Sorry that I don't know what logic can be simpler in current implementation.
+>> I mean it also need to allocate page, and record page offset.
+> 
+> I was thinking about replacing multiplication/division with bit
+> operations (shift left/right).
+> But I am not very sure how much that matters in modern ARM CPUs. Would you mind
+> running some benchmarks with this?
+
+To test multiplication/division and bit operation, I write a simple test case:
+
+$ cat normal.c
+
+int page_size = 65536;
+int stripe_size = 32768; //32KB
+
+int main(int argc, char *argv[])
+{
+         int i, j, count;
+         int page, offset;
+
+         if (argc != 2)
+                 return -1;
+
+         count = atol(argv[1]);
+
+         for (i = 0; i < count; i++) {
+                 for (j = 0; j < 4; j++) {
+                         page = page_size / stripe_size;
+                         offset = j * stripe_size;
+                 }
+         }
+}
+
+$ cat shift.c
+
+int page_shift = 16; //64KB
+int stripe_shift = 15; //32KB
+
+int main(int argc, char *argv[])
+{
+         int i, j, count;
+         int page, offset;
+
+         if (argc != 2)
+                 return -1;
+
+         count = atol(argv[1]);
+
+         for (i = 0; i < count; i++) {
+                 for (j = 0; j < 4; j++) {
+                         page = 1 << (page_shift - stripe_shift);
+                         offset = j << stripe_shift;
+                 }
+         }
+}
+
+Test them on a arm64 server, the result show there is a minor
+performance gap between multiplication/division and shift operation.
+
+[root@localhost shift]# time ./normal 104857600
+
+real    0m1.199s
+user    0m1.198s
+sys     0m0.000s
+
+[root@localhost shift]# time ./shift 104857600
+
+real    0m1.166s
+user    0m1.166s
+sys     0m0.000s
+
+For our implementation, page address and page offset are just computed
+when allocate stripe_size. After that, we just use the recorded value
+in sh->dev[i].page and sh->dev[i].offset. So, I think current implementation
+may not cause much overhead.
