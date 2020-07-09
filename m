@@ -1,52 +1,72 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH v5 00/16] md/raid5: set STRIPE_SIZE as a configurable value
-Date: Wed, 8 Jul 2020 16:55:17 -0700
-Message-ID: <CAPhsuW7m7qYGe3g2XyZNWZch4Wy0y2URNeUprKAm4si+nyBB8g@mail.gmail.com>
-References: <20200702120628.777303-1-yuyufen@huawei.com> <CAPhsuW7PgJV-bjaa8v=Zrhd0MqPmjew1dF-Qi0FP6i-809YAQg@mail.gmail.com>
- <0dd1ebed-2802-2bef-48f0-87bbdd2ee8e5@huawei.com>
+From: Zhao Heming <heming.zhao@suse.com>
+Subject: [PATCH] md-cluster: fix wild pointer of unlock_all_bitmaps()
+Date: Thu,  9 Jul 2020 11:29:29 +0800
+Message-ID: <1594265369-9468-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0dd1ebed-2802-2bef-48f0-87bbdd2ee8e5@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yufen Yu <yuyufen@huawei.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Hou Tao <houtao1@huawei.com>
+To: linux-raid@vger.kernel.org
+Cc: Zhao Heming <heming.zhao@suse.com>
 List-Id: linux-raid.ids
 
-On Wed, Jul 8, 2020 at 6:15 AM Yufen Yu <yuyufen@huawei.com> wrote:
->
->
->
-> On 2020/7/3 7:00, Song Liu wrote:
-> > On Thu, Jul 2, 2020 at 5:05 AM Yufen Yu <yuyufen@huawei.com> wrote:
-> >>
-> >> Hi, all
-> >>
-> >>   For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5
-> >>   will issue each bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64.
-> >>   However, filesystem usually issue bio in the unit of 4KB. Then, RAID5 may
-> >>   waste resource of disk bandwidth.
-> >>
-> >>   To solve the problem, this patchset try to set stripe_size as a configuare
-> >>   value. The default value is 4096. We will add a new sysfs entry and set it
-> >>   by writing a new value, likely:
-> >>
-> >>          echo 16384 > /sys/block/md1/md/stripe_size
-> >
-> > Higher level question: do we need to support page size that is NOT 4kB
-> > times power
-> > of 2? Meaning, do we need to support 12kB, 20kB, 24kB, etc. If we only
-> > supports, 4kB,
-> > 8kB, 16kB, 32kB, etc. some of the logic can be simpler.
->
-> Yeah, I think we just support 4kb, 8kb, 16kb, 32kb... is enough.
-> But Sorry that I don't know what logic can be simpler in current implementation.
-> I mean it also need to allocate page, and record page offset.
+reproduction steps:
+```
+node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
+/dev/sdb
+node2 # mdadm -A /dev/md0 /dev/sda /dev/sdb
+node1 # mdadm -G /dev/md0 -b none
+mdadm: failed to remove clustered bitmap.
+node1 # mdadm -S --scan
+^C  <==== mdadm hung & kernel crash
+```
 
-I was thinking about replacing multiplication/division with bit
-operations (shift left/right).
-But I am not very sure how much that matters in modern ARM CPUs. Would you mind
-running some benchmarks with this?
+kernel stack:
+```
+[  335.230657] general protection fault: 0000 [#1] SMP NOPTI
+[...]
+[  335.230848] Call Trace:
+[  335.230873]  ? unlock_all_bitmaps+0x5/0x70 [md_cluster]
+[  335.230886]  unlock_all_bitmaps+0x3d/0x70 [md_cluster]
+[  335.230899]  leave+0x10f/0x190 [md_cluster]
+[  335.230932]  ? md_super_wait+0x93/0xa0 [md_mod]
+[  335.230947]  ? leave+0x5/0x190 [md_cluster]
+[  335.230973]  md_cluster_stop+0x1a/0x30 [md_mod]
+[  335.230999]  md_bitmap_free+0x142/0x150 [md_mod]
+[  335.231013]  ? _cond_resched+0x15/0x40
+[  335.231025]  ? mutex_lock+0xe/0x30
+[  335.231056]  __md_stop+0x1c/0xa0 [md_mod]
+[  335.231083]  do_md_stop+0x160/0x580 [md_mod]
+[  335.231119]  ? 0xffffffffc05fb078
+[  335.231148]  md_ioctl+0xa04/0x1930 [md_mod]
+[  335.231165]  ? filename_lookup+0xf2/0x190
+[  335.231179]  blkdev_ioctl+0x93c/0xa10
+[  335.231205]  ? _cond_resched+0x15/0x40
+[  335.231214]  ? __check_object_size+0xd4/0x1a0
+[  335.231224]  block_ioctl+0x39/0x40
+[  335.231243]  do_vfs_ioctl+0xa0/0x680
+[  335.231253]  ksys_ioctl+0x70/0x80
+[  335.231261]  __x64_sys_ioctl+0x16/0x20
+[  335.231271]  do_syscall_64+0x65/0x1f0
+[  335.231278]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+```
 
-Thanks,
-Song
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+---
+ drivers/md/md-cluster.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 813a99ffa86f..73fd50e77975 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1518,6 +1518,7 @@ static void unlock_all_bitmaps(struct mddev *mddev)
+ 			}
+ 		}
+ 		kfree(cinfo->other_bitmap_lockres);
++		cinfo->other_bitmap_lockres = NULL;
+ 	}
+ }
+ 
+-- 
+2.16.4
