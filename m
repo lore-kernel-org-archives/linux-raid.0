@@ -1,50 +1,74 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: remove dead bdi congestion leftovers
-Date: Thu, 9 Jul 2020 16:01:45 +0200
-Message-ID: <20200709140145.GA3068@lst.de>
-References: <20200701090622.3354860-1-hch@lst.de> <b5d6df17-68af-d535-79e4-f95e16dd5632@kernel.dk> <20200709053233.GA3243@lst.de> <82e2785d-2091-1986-0014-3b7cea7cd0d8@kernel.dk>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/17] init: remove the bstat helper
+Date: Thu,  9 Jul 2020 17:17:58 +0200
+Message-ID: <20200709151814.110422-2-hch@lst.de>
+References: <20200709151814.110422-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <82e2785d-2091-1986-0014-3b7cea7cd0d8-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200709151814.110422-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jul 09, 2020 at 07:58:58AM -0600, Jens Axboe wrote:
-> On 7/8/20 11:32 PM, Christoph Hellwig wrote:
-> > On Wed, Jul 08, 2020 at 05:14:29PM -0600, Jens Axboe wrote:
-> >> On 7/1/20 3:06 AM, Christoph Hellwig wrote:
-> >>> Hi Jens,
-> >>>
-> >>> we have a lot of bdi congestion related code that is left around without
-> >>> any use.  This series removes it in preparation of sorting out the bdi
-> >>> lifetime rules properly.
-> >>
-> >> Please run series like this through a full compilation, for both this one
-> >> and the previous series I had to fix up issues like this:
-> >>
-> >> drivers/md/bcache/request.c: In function ‘bch_cached_dev_request_init’:
-> >> drivers/md/bcache/request.c:1233:18: warning: unused variable ‘g’ [-Wunused-variable]
-> >>  1233 |  struct gendisk *g = dc->disk.disk;
-> >>       |                  ^
-> >> drivers/md/bcache/request.c: In function ‘bch_flash_dev_request_init’:
-> >> drivers/md/bcache/request.c:1320:18: warning: unused variable ‘g’ [-Wunused-variable]
-> >>  1320 |  struct gendisk *g = d->disk;
-> >>       |                  ^
-> >>
-> >> Did the same here, applied it.
-> > 
-> > And just like the previous one I did, and the compiler did not complain.
-> > There must be something about certain gcc versions not warning about
-> > variables that are initialized but not otherwise used.
-> 
-> Are you using gcc-10? It sucks for that. gcc-9 seems to reliably hit
-> these cases for me, not sure why gcc-10 doesn't. And the ones quoted
-> above are about as trivial as they can get.
+The only caller of the bstat function becomes cleaner and simpler when
+open coding the function.
 
-gcc-9.3 from Debian -testing.  And yes, I'm really surprised it didn't
-find those.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ init/do_mounts.h    | 10 ----------
+ init/do_mounts_md.c |  8 ++++----
+ 2 files changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/init/do_mounts.h b/init/do_mounts.h
+index 0bb0806de4ce2c..7513d1c14d13fe 100644
+--- a/init/do_mounts.h
++++ b/init/do_mounts.h
+@@ -20,16 +20,6 @@ static inline int create_dev(char *name, dev_t dev)
+ 	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
+ }
+ 
+-static inline u32 bstat(char *name)
+-{
+-	struct kstat stat;
+-	if (vfs_stat(name, &stat) != 0)
+-		return 0;
+-	if (!S_ISBLK(stat.mode))
+-		return 0;
+-	return stat.rdev;
+-}
+-
+ #ifdef CONFIG_BLK_DEV_RAM
+ 
+ int __init rd_load_disk(int n);
+diff --git a/init/do_mounts_md.c b/init/do_mounts_md.c
+index b84031528dd446..359363e85ccd0b 100644
+--- a/init/do_mounts_md.c
++++ b/init/do_mounts_md.c
+@@ -138,9 +138,9 @@ static void __init md_setup_drive(void)
+ 			dev = MKDEV(MD_MAJOR, minor);
+ 		create_dev(name, dev);
+ 		for (i = 0; i < MD_SB_DISKS && devname != NULL; i++) {
++			struct kstat stat;
+ 			char *p;
+ 			char comp_name[64];
+-			u32 rdev;
+ 
+ 			p = strchr(devname, ',');
+ 			if (p)
+@@ -150,9 +150,9 @@ static void __init md_setup_drive(void)
+ 			if (strncmp(devname, "/dev/", 5) == 0)
+ 				devname += 5;
+ 			snprintf(comp_name, 63, "/dev/%s", devname);
+-			rdev = bstat(comp_name);
+-			if (rdev)
+-				dev = new_decode_dev(rdev);
++			if (vfs_stat(comp_name, &stat) == 0 &&
++			    S_ISBLK(stat.mode))
++				dev = new_decode_dev(stat.rdev);
+ 			if (!dev) {
+ 				printk(KERN_WARNING "md: Unknown device name: %s\n", devname);
+ 				break;
+-- 
+2.26.2
