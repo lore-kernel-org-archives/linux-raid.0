@@ -1,76 +1,55 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 15/17] initramfs: switch initramfs unpacking to struct
- file based APIs
-Date: Thu, 9 Jul 2020 11:23:03 -0700
-Message-ID: <CAHk-=wgXtjWb_sVfaSGTaCToHZmxRs4EHpQ1ck=6B=zGTLuQdQ@mail.gmail.com>
-References: <20200709151814.110422-1-hch@lst.de> <20200709151814.110422-16-hch@lst.de>
- <CAHk-=whXq_149rcDv9ENkKeKpcEQ93MAvcmAOAbU8=bWG55X2A@mail.gmail.com> <20200709181227.GA20954@lst.de>
+From: Brian Gerst <brgerst@gmail.com>
+Subject: Re: [PATCH 16/17] init: open code setting up stdin/stdout/stderr
+Date: Thu, 9 Jul 2020 14:32:54 -0400
+Message-ID: <CAMzpN2gn_5bXt3RNOwvCSAo+79FevWgMYROxbdFAd1mzo9EOhQ@mail.gmail.com>
+References: <20200709151814.110422-1-hch@lst.de> <20200709151814.110422-17-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200709181227.GA20954@lst.de>
+In-Reply-To: <20200709151814.110422-17-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jul 9, 2020 at 11:12 AM Christoph Hellwig <hch@lst.de> wrote:
+On Thu, Jul 9, 2020 at 11:19 AM Christoph Hellwig <hch@lst.de> wrote:
 >
-> On Thu, Jul 09, 2020 at 11:07:08AM -0700, Linus Torvalds wrote:
-> > On Thu, Jul 9, 2020 at 8:18 AM Christoph Hellwig <hch@lst.de> wrote:
-> > >
-> > > There is no good reason to mess with file descriptors from in-kernel
-> > > code, switch the initramfs unpacking to struct file based write
-> > > instead.  As we don't have nice helper for chmod or chown on a struct
-> > > file or struct path use the pathname based ones instead there.  This
-> > > causes additional (cached) lookups, but keeps the code much simpler.
-> >
-> > This is the only one I'm not a huge fan of.
-> >
-> > I agree about moving to 'struct file'. But then you could just do the
-> > chown/chmod using chown/chmod_common() on file->f_path.
-> >
-> > That would keep the same semantics, and it feels like a more
-> > straightforward patch.
-> >
-> > It would still remove the nasty ksys_fchmod/fchmod, it would just
-> > require our - already existing - *_common() functions to be non-static
-> > (and maybe renamed to "vfs_chown/chmod()" instead, that "*_common()"
-> > naming looks a bit odd compared to all our other "vfs_operation()"
-> > helpers).
+> Don't rely on the implicit set_fs(KERNEL_DS) for ksys_open to work, but
+> instead open a struct file for /dev/console and then install it as FD
+> 0/1/2 manually.
 >
-> Sure, we can do that.  It requires a little more boilerplate that I
-> thought we could just skip.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/file.c                |  7 +------
+>  include/linux/syscalls.h |  1 -
+>  init/main.c              | 16 ++++++++++------
+>  3 files changed, 11 insertions(+), 13 deletions(-)
+>
+> diff --git a/fs/file.c b/fs/file.c
+> index abb8b7081d7a44..85b7993165dd2f 100644
+> --- a/fs/file.c
+> +++ b/fs/file.c
+> @@ -985,7 +985,7 @@ SYSCALL_DEFINE2(dup2, unsigned int, oldfd, unsigned int, newfd)
+>         return ksys_dup3(oldfd, newfd, 0);
+>  }
+>
+> -int ksys_dup(unsigned int fildes)
+> +SYSCALL_DEFINE1(dup, unsigned int, fildes)
+>  {
+>         int ret = -EBADF;
+>         struct file *file = fget_raw(fildes);
+> @@ -1000,11 +1000,6 @@ int ksys_dup(unsigned int fildes)
+>         return ret;
+>  }
+>
+> -SYSCALL_DEFINE1(dup, unsigned int, fildes)
+> -{
+> -       return ksys_dup(fildes);
+> -}
+> -
 
-Yeah, it makes the patch perhaps a bit larger (or rather, it adds one
-new patch to do that "introduce new names for *_common() and add them
-to the headers"), but just looking at your current patch:
+Please split the removal of the now unused ksys_*() functions into a
+separate patch.
 
-+                       ksys_chown(collected, uid, gid);
-+                       ksys_chmod(collected, mode);
-+                       if (body_len)
-+                               vfs_truncate(&wfile->f_path, body_len);
-
-and I go "wouldn't that look a _lot_ more regular something like this":
-
-+                       vfs_chown(&wfile->f_path, uid, gid);
-+                       vfs_chmod(&wfile->f_path, mode);
-+                       if (body_len)
-+                               vfs_truncate(&wfile->f_path, body_len);
-
-so I think that I'd prefer it simply because it makes all our
-interfaces much more natural.
-
-I note that we still need that ksys_chown() because of disgusting
-issues with the legacy 16-bit uid support. Which is likely not used
-any more now that a.out support is gone (well, alpha and m68k still
-define HAVE_AOUT, so it's not "gone" gone, but it's gone).
-
-I can't imagine that anybody would have ELF and 16-bit uid's.
-
-Except users are crazy. So who knows. But it might definitely be time
-to deprecate UID16.
-
-That's a separate issue, though, it just came up because of that ksys_chown().
-
-                Linus
+--
+Brian Gerst
