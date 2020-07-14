@@ -1,63 +1,45 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/23] fs: add a vfs_fchmod helper
-Date: Tue, 14 Jul 2020 21:04:06 +0200
-Message-ID: <20200714190427.4332-3-hch@lst.de>
+Subject: [PATCH 06/23] md: remove the autoscan partition re-read
+Date: Tue, 14 Jul 2020 21:04:10 +0200
+Message-ID: <20200714190427.4332-7-hch@lst.de>
 References: <20200714190427.4332-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20200714190427.4332-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add a helper for struct file based chmode operations.  To be used by
-the initramfs code soon.
+devfs is long gone, and autoscan works just fine without this these days.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Song Liu <song@kernel.org>
 ---
- fs/open.c          | 9 +++++++--
- include/linux/fs.h | 1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/md/md-autodetect.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/fs/open.c b/fs/open.c
-index 103c66309bee67..75166f071d280a 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -602,14 +602,19 @@ static int chmod_common(const struct path *path, umode_t mode)
- 	return error;
- }
- 
-+int vfs_fchmod(struct file *file, umode_t mode)
-+{
-+	audit_file(file);
-+	return chmod_common(&file->f_path, mode);
-+}
-+
- int ksys_fchmod(unsigned int fd, umode_t mode)
- {
- 	struct fd f = fdget(fd);
- 	int err = -EBADF;
- 
- 	if (f.file) {
--		audit_file(f.file);
--		err = chmod_common(&f.file->f_path, mode);
-+		err = vfs_fchmod(f.file, mode);
- 		fdput(f);
+diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
+index 0eb746211ed53c..6bc9b734eee6ff 100644
+--- a/drivers/md/md-autodetect.c
++++ b/drivers/md/md-autodetect.c
+@@ -240,16 +240,6 @@ static void __init md_setup_drive(void)
+ 			err = ksys_ioctl(fd, RUN_ARRAY, 0);
+ 		if (err)
+ 			printk(KERN_WARNING "md: starting md%d failed\n", minor);
+-		else {
+-			/* reread the partition table.
+-			 * I (neilb) and not sure why this is needed, but I cannot
+-			 * boot a kernel with devfs compiled in from partitioned md
+-			 * array without it
+-			 */
+-			ksys_close(fd);
+-			fd = ksys_open(name, 0, 0);
+-			ksys_ioctl(fd, BLKRRPART, 0);
+-		}
+ 		ksys_close(fd);
  	}
- 	return err;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0ddd64ca0b45c0..635086726f2053 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1745,6 +1745,7 @@ int vfs_mkobj(struct dentry *, umode_t,
- 		void *);
- 
- int vfs_fchown(struct file *file, uid_t user, gid_t group);
-+int vfs_fchmod(struct file *file, umode_t mode);
- 
- extern long vfs_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
- 
+ }
 -- 
 2.27.0
