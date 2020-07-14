@@ -1,67 +1,75 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: decruft the early init / initrd / initramfs code v2
-Date: Tue, 14 Jul 2020 21:04:04 +0200
-Message-ID: <20200714190427.4332-1-hch@lst.de>
+Subject: [PATCH 03/23] init: remove the bstat helper
+Date: Tue, 14 Jul 2020 21:04:07 +0200
+Message-ID: <20200714190427.4332-4-hch@lst.de>
+References: <20200714190427.4332-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20200714190427.4332-1-hch@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+The only caller of the bstat function becomes cleaner and simpler when
+open coding the function.
 
-this series starts to move the early init code away from requiring
-KERNEL_DS to be implicitly set during early startup.  It does so by
-first removing legacy unused cruft, and the switches away the code
-from struct file based APIs to our more usual in-kernel APIs.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Song Liu <song@kernel.org>
+---
+ init/do_mounts.h    | 10 ----------
+ init/do_mounts_md.c |  8 ++++----
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-There is no really good tree for this, so if there are no objections
-I'd like to set up a new one for linux-next.
-
-
-Git tree:
-
-    git://git.infradead.org/users/hch/misc.git init-user-pointers
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init-user-pointers
-
-Changes since v2:
- - add vfs_fchown and vfs_fchmod helpers and use them for initramfs
-   unpacking
- - split patches up a little more
- - fix a commit log typo
-Changes since v1:
- - add a patch to deprecated "classic" initrd support
-
-Diffstat:
- b/arch/arm/kernel/atags_parse.c |    2 
- b/arch/sh/kernel/setup.c        |    2 
- b/arch/sparc/kernel/setup_32.c  |    2 
- b/arch/sparc/kernel/setup_64.c  |    2 
- b/arch/x86/kernel/setup.c       |    2 
- b/drivers/md/Makefile           |    3 
- b/drivers/md/md-autodetect.c    |  239 ++++++++++++++++++----------------------
- b/drivers/md/md.c               |   34 +----
- b/drivers/md/md.h               |   10 +
- b/fs/file.c                     |    7 -
- b/fs/ioctl.c                    |    7 -
- b/fs/open.c                     |   56 +++++----
- b/fs/read_write.c               |    2 
- b/fs/readdir.c                  |   11 -
- b/include/linux/fs.h            |    3 
- b/include/linux/initrd.h        |    6 -
- b/include/linux/raid/detect.h   |    8 +
- b/include/linux/syscalls.h      |   17 --
- b/init/Makefile                 |    1 
- b/init/do_mounts.c              |   70 +----------
- b/init/do_mounts.h              |   21 ---
- b/init/do_mounts_initrd.c       |   13 --
- b/init/do_mounts_rd.c           |  102 +++++++----------
- b/init/initramfs.c              |  103 +++++------------
- b/init/main.c                   |   16 +-
- include/linux/raid/md_u.h       |   13 --
- 26 files changed, 279 insertions(+), 473 deletions(-)
+diff --git a/init/do_mounts.h b/init/do_mounts.h
+index 0bb0806de4ce2c..7513d1c14d13fe 100644
+--- a/init/do_mounts.h
++++ b/init/do_mounts.h
+@@ -20,16 +20,6 @@ static inline int create_dev(char *name, dev_t dev)
+ 	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
+ }
+ 
+-static inline u32 bstat(char *name)
+-{
+-	struct kstat stat;
+-	if (vfs_stat(name, &stat) != 0)
+-		return 0;
+-	if (!S_ISBLK(stat.mode))
+-		return 0;
+-	return stat.rdev;
+-}
+-
+ #ifdef CONFIG_BLK_DEV_RAM
+ 
+ int __init rd_load_disk(int n);
+diff --git a/init/do_mounts_md.c b/init/do_mounts_md.c
+index b84031528dd446..359363e85ccd0b 100644
+--- a/init/do_mounts_md.c
++++ b/init/do_mounts_md.c
+@@ -138,9 +138,9 @@ static void __init md_setup_drive(void)
+ 			dev = MKDEV(MD_MAJOR, minor);
+ 		create_dev(name, dev);
+ 		for (i = 0; i < MD_SB_DISKS && devname != NULL; i++) {
++			struct kstat stat;
+ 			char *p;
+ 			char comp_name[64];
+-			u32 rdev;
+ 
+ 			p = strchr(devname, ',');
+ 			if (p)
+@@ -150,9 +150,9 @@ static void __init md_setup_drive(void)
+ 			if (strncmp(devname, "/dev/", 5) == 0)
+ 				devname += 5;
+ 			snprintf(comp_name, 63, "/dev/%s", devname);
+-			rdev = bstat(comp_name);
+-			if (rdev)
+-				dev = new_decode_dev(rdev);
++			if (vfs_stat(comp_name, &stat) == 0 &&
++			    S_ISBLK(stat.mode))
++				dev = new_decode_dev(stat.rdev);
+ 			if (!dev) {
+ 				printk(KERN_WARNING "md: Unknown device name: %s\n", devname);
+ 				break;
+-- 
+2.27.0
