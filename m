@@ -1,71 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: decruft the early init / initrd / initramfs code v2
-Date: Tue, 14 Jul 2020 08:41:11 +0200
-Message-ID: <20200714064111.GB32655@lst.de>
-References: <20200709151814.110422-1-hch@lst.de> <31944685-7627-43BA-B9A2-A4743AFF0AB7@zytor.com>
+From: Junxiao Bi <junxiao.bi@oracle.com>
+Subject: Re: [PATCH] md: fix deadlock causing by sysfs_notify
+Date: Mon, 13 Jul 2020 23:41:12 -0700
+Message-ID: <de97a2c1-fba0-5276-7748-f0155088ad0d@oracle.com>
+References: <20200709233545.67954-1-junxiao.bi@oracle.com>
+ <CAPhsuW7seCUnt3zt6A_fjTS2diB7qiTE+SZkM6Vh=G26hdwGtg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <31944685-7627-43BA-B9A2-A4743AFF0AB7@zytor.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hpa@zytor.com
-Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW7seCUnt3zt6A_fjTS2diB7qiTE+SZkM6Vh=G26hdwGtg@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <song@kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jul 09, 2020 at 04:32:07PM -0700, hpa@zytor.com wrote:
-> On July 9, 2020 8:17:57 AM PDT, Christoph Hellwig <hch@lst.de> wrote:
-> >Hi all,
-> >
-> >this series starts to move the early init code away from requiring
-> >KERNEL_DS to be implicitly set during early startup.  It does so by
-> >first removing legacy unused cruft, and the switches away the code
-> >from struct file based APIs to our more usual in-kernel APIs.
-> >
-> >There is no really good tree for this, so if there are no objections
-> >I'd like to set up a new one for linux-next.
-> >
-> >
-> >Git tree:
-> >
-> >    git://git.infradead.org/users/hch/misc.git init-user-pointers
-> >
-> >Gitweb:
-> >
-> >http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init-user-pointers
-> >
-> >
-> >Changes since v1:
-> > - add a patch to deprecated "classic" initrd support
-> >
-> >Diffstat:
-> > b/arch/arm/kernel/atags_parse.c |    2 
-> > b/arch/sh/kernel/setup.c        |    2 
-> > b/arch/sparc/kernel/setup_32.c  |    2 
-> > b/arch/sparc/kernel/setup_64.c  |    2 
-> > b/arch/x86/kernel/setup.c       |    2 
-> > b/drivers/md/Makefile           |    3 
-> >b/drivers/md/md-autodetect.c    |  239
-> >++++++++++++++++++----------------------
-> > b/drivers/md/md.c               |   34 +----
-> > b/drivers/md/md.h               |   10 +
-> > b/fs/file.c                     |    7 -
-> > b/fs/open.c                     |   18 +--
-> > b/fs/read_write.c               |    2 
-> > b/fs/readdir.c                  |   11 -
-> > b/include/linux/initrd.h        |    6 -
-> > b/include/linux/raid/detect.h   |    8 +
-> > b/include/linux/syscalls.h      |   16 --
-> > b/init/Makefile                 |    1 
-> > b/init/do_mounts.c              |   70 +----------
-> > b/init/do_mounts.h              |   21 ---
-> > b/init/do_mounts_initrd.c       |   13 --
-> > b/init/do_mounts_rd.c           |  102 +++++++----------
-> > b/init/initramfs.c              |  103 +++++------------
-> > b/init/main.c                   |   16 +-
-> > include/linux/raid/md_u.h       |   13 --
-> > 24 files changed, 251 insertions(+), 452 deletions(-)
-> 
-> I guess I could say something here... ;)
+On 7/13/20 11:17 PM, Song Liu wrote:
 
-Like adding an ACK? :)
+> On Thu, Jul 9, 2020 at 4:36 PM Junxiao Bi <junxiao.bi@oracle.com> wrote:
+>> The following deadlock was captured. The first process is holding 'kernfs_mutex'
+>> and hung by io. The io was staging in 'r1conf.pending_bio_list' of raid1 device,
+>> this pending bio list would be flushed by second process 'md127_raid1', but
+>> it was hung by 'kernfs_mutex'. Using sysfs_notify_dirent_safe() to replace
+>> sysfs_notify() can fix it. There were other sysfs_notify() invoked from io
+>> path, removed all of them.
+>>
+> [...]
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+> Thanks for the patch. It looks good in general. One question though, do we
+> need the same change the following line in md.c:level_store()?
+>
+>      sysfs_notify(&mddev->kobj, NULL, "level");
+
+Thanks for the review. This one is not in io path, looks it's safe. I 
+can change it if you want to align it with others.
+
+Thanks,
+
+Junxiao.
+
+>
+> Thanks,
+> Song
+>
+> [...]
