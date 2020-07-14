@@ -1,59 +1,32 @@
 From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 17/23] initramfs: switch initramfs unpacking to struct
- file based APIs
-Date: Tue, 14 Jul 2020 12:31:01 -0700
-Message-ID: <CAHk-=whDbHL7x5Jx-CSz97=nVg4V_q45DsokX+X-Y-yZV4rPvw@mail.gmail.com>
-References: <20200714190427.4332-1-hch@lst.de> <20200714190427.4332-18-hch@lst.de>
+Subject: Re: decruft the early init / initrd / initramfs code v2
+Date: Tue, 14 Jul 2020 12:34:45 -0700
+Message-ID: <CAHk-=wgxV9We+nVcJtQu2DHco+HSeja-WqVdA-KUcB=nyUYuoQ@mail.gmail.com>
+References: <20200714190427.4332-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200714190427.4332-18-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200714190427.4332-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jul 14, 2020 at 12:09 PM Christoph Hellwig <hch@lst.de> wrote:
+On Tue, Jul 14, 2020 at 12:06 PM Christoph Hellwig <hch@lst.de> wrote:
 >
-> There is no good reason to mess with file descriptors from in-kernel
-> code, switch the initramfs unpacking to struct file based write
-> instead.
+> this series starts to move the early init code away from requiring
+> KERNEL_DS to be implicitly set during early startup.  It does so by
+> first removing legacy unused cruft, and the switches away the code
+> from struct file based APIs to our more usual in-kernel APIs.
 
-Looking at this diff, I realized this really should be cleaned up more.
+Looks good to me, with the added note on the utimes cruft too as a
+further cleanup (separate patch).
 
- +                       wfile = filp_open(collected, openflags, mode);
-> +                       if (IS_ERR(wfile))
-> +                               return 0;
-> +
-> +                       vfs_fchown(wfile, uid, gid);
-> +                       vfs_fchmod(wfile, mode);
-> +                       if (body_len)
-> +                               vfs_truncate(&wfile->f_path, body_len);
-> +                       vcollected = kstrdup(collected, GFP_KERNEL);
+So you can add my acked-by.
 
-That "vcollected" is ugly and broken, and seems oh-so-wrong.
+I _would_ like the md parts to get a few more acks. I see the one from
+Song Liu, anybody else in md land willing to go through those patches?
+They were the bulk of it, and the least obvious to me because I don't
+know that code at all?
 
-Because it's only use is:
-
-
-> -               ksys_close(wfd);
-> +               fput(wfile);
->                 do_utime(vcollected, mtime);
->                 kfree(vcollected);
-
-which should just have done the exact same thing that you did with
-vfs_chown() and friends: we already have a "utimes_common()" that
-takes a path, and it could have been made into "vfs_utimes()", and
-then this whole vcollected confusion would go away and be replaced by
-
-        vfs_truncate(&wfile->f_path, mtime);
-
-(ok, with all the "timespec64 t[2]" things going on that do_utime()
-does now, but you get the idea).
-
-Talk about de-crufting that initramfs unpacking..
-
-But I don't hate this patch, I'm just pointing out that there's room
-for improvement.
-
-             Linus
+              Linus
