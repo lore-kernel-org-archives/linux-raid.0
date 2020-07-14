@@ -1,52 +1,67 @@
-From: Junxiao Bi <junxiao.bi@oracle.com>
-Subject: Re: [PATCH] md: fix deadlock causing by sysfs_notify
-Date: Tue, 14 Jul 2020 09:29:41 -0700
-Message-ID: <23a115e4-0d48-9186-c606-89d526649372@oracle.com>
-References: <20200709233545.67954-1-junxiao.bi@oracle.com>
- <CAPhsuW7seCUnt3zt6A_fjTS2diB7qiTE+SZkM6Vh=G26hdwGtg@mail.gmail.com>
- <de97a2c1-fba0-5276-7748-f0155088ad0d@oracle.com>
- <CAPhsuW4GQK7hS4AOpJJ1mEE8gbFgo+n+XCQ2fvW94QnZhA6ivQ@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: decruft the early init / initrd / initramfs code v2
+Date: Tue, 14 Jul 2020 21:04:04 +0200
+Message-ID: <20200714190427.4332-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPhsuW4GQK7hS4AOpJJ1mEE8gbFgo+n+XCQ2fvW94QnZhA6ivQ@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/14/20 9:18 AM, Song Liu wrote:
+Hi all,
 
-> On Mon, Jul 13, 2020 at 11:41 PM Junxiao Bi <junxiao.bi@oracle.com> wrote:
->> On 7/13/20 11:17 PM, Song Liu wrote:
->>
->>> On Thu, Jul 9, 2020 at 4:36 PM Junxiao Bi <junxiao.bi@oracle.com> wrote:
->>>> The following deadlock was captured. The first process is holding 'kernfs_mutex'
->>>> and hung by io. The io was staging in 'r1conf.pending_bio_list' of raid1 device,
->>>> this pending bio list would be flushed by second process 'md127_raid1', but
->>>> it was hung by 'kernfs_mutex'. Using sysfs_notify_dirent_safe() to replace
->>>> sysfs_notify() can fix it. There were other sysfs_notify() invoked from io
->>>> path, removed all of them.
->>>>
->>> [...]
->>>> Cc: stable@vger.kernel.org
->>>> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
->>> Thanks for the patch. It looks good in general. One question though, do we
->>> need the same change the following line in md.c:level_store()?
->>>
->>>       sysfs_notify(&mddev->kobj, NULL, "level");
->> Thanks for the review. This one is not in io path, looks it's safe. I
->> can change it if you want to align it with others.
-> This one is the only leftover. Let's also change it.
+this series starts to move the early init code away from requiring
+KERNEL_DS to be implicitly set during early startup.  It does so by
+first removing legacy unused cruft, and the switches away the code
+from struct file based APIs to our more usual in-kernel APIs.
 
-Sure, i will send a v2.
+There is no really good tree for this, so if there are no objections
+I'd like to set up a new one for linux-next.
 
-Thanks,
 
-Junxiao.
+Git tree:
 
->
-> Thanks,
-> Song
+    git://git.infradead.org/users/hch/misc.git init-user-pointers
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init-user-pointers
+
+Changes since v2:
+ - add vfs_fchown and vfs_fchmod helpers and use them for initramfs
+   unpacking
+ - split patches up a little more
+ - fix a commit log typo
+Changes since v1:
+ - add a patch to deprecated "classic" initrd support
+
+Diffstat:
+ b/arch/arm/kernel/atags_parse.c |    2 
+ b/arch/sh/kernel/setup.c        |    2 
+ b/arch/sparc/kernel/setup_32.c  |    2 
+ b/arch/sparc/kernel/setup_64.c  |    2 
+ b/arch/x86/kernel/setup.c       |    2 
+ b/drivers/md/Makefile           |    3 
+ b/drivers/md/md-autodetect.c    |  239 ++++++++++++++++++----------------------
+ b/drivers/md/md.c               |   34 +----
+ b/drivers/md/md.h               |   10 +
+ b/fs/file.c                     |    7 -
+ b/fs/ioctl.c                    |    7 -
+ b/fs/open.c                     |   56 +++++----
+ b/fs/read_write.c               |    2 
+ b/fs/readdir.c                  |   11 -
+ b/include/linux/fs.h            |    3 
+ b/include/linux/initrd.h        |    6 -
+ b/include/linux/raid/detect.h   |    8 +
+ b/include/linux/syscalls.h      |   17 --
+ b/init/Makefile                 |    1 
+ b/init/do_mounts.c              |   70 +----------
+ b/init/do_mounts.h              |   21 ---
+ b/init/do_mounts_initrd.c       |   13 --
+ b/init/do_mounts_rd.c           |  102 +++++++----------
+ b/init/initramfs.c              |  103 +++++------------
+ b/init/main.c                   |   16 +-
+ include/linux/raid/md_u.h       |   13 --
+ 26 files changed, 279 insertions(+), 473 deletions(-)
