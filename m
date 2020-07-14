@@ -1,141 +1,59 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/23] md: move the early init autodetect code to drivers/md/
-Date: Tue, 14 Jul 2020 21:04:08 +0200
-Message-ID: <20200714190427.4332-5-hch@lst.de>
-References: <20200714190427.4332-1-hch@lst.de>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH 17/23] initramfs: switch initramfs unpacking to struct
+ file based APIs
+Date: Tue, 14 Jul 2020 12:31:01 -0700
+Message-ID: <CAHk-=whDbHL7x5Jx-CSz97=nVg4V_q45DsokX+X-Y-yZV4rPvw@mail.gmail.com>
+References: <20200714190427.4332-1-hch@lst.de> <20200714190427.4332-18-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200714190427.4332-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200714190427.4332-18-hch@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Just like the NFS and CIFS root code this better lives with the
-driver it is tightly integrated with.
+On Tue, Jul 14, 2020 at 12:09 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> There is no good reason to mess with file descriptors from in-kernel
+> code, switch the initramfs unpacking to struct file based write
+> instead.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Song Liu <song@kernel.org>
----
- drivers/md/Makefile                               |  3 +++
- init/do_mounts_md.c => drivers/md/md-autodetect.c | 15 +++++++++++++--
- include/linux/raid/detect.h                       |  8 ++++++++
- init/Makefile                                     |  1 -
- init/do_mounts.c                                  |  1 +
- init/do_mounts.h                                  | 10 ----------
- 6 files changed, 25 insertions(+), 13 deletions(-)
- rename init/do_mounts_md.c => drivers/md/md-autodetect.c (96%)
+Looking at this diff, I realized this really should be cleaned up more.
 
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index 31840f95cd408b..6d3e234dc46a5d 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -43,6 +43,9 @@ obj-$(CONFIG_MD_FAULTY)		+= faulty.o
- obj-$(CONFIG_MD_CLUSTER)	+= md-cluster.o
- obj-$(CONFIG_BCACHE)		+= bcache/
- obj-$(CONFIG_BLK_DEV_MD)	+= md-mod.o
-+ifeq ($(CONFIG_BLK_DEV_MD),y)
-+obj-y				+= md-autodetect.o
-+endif
- obj-$(CONFIG_BLK_DEV_DM)	+= dm-mod.o
- obj-$(CONFIG_BLK_DEV_DM_BUILTIN) += dm-builtin.o
- obj-$(CONFIG_DM_UNSTRIPED)	+= dm-unstripe.o
-diff --git a/init/do_mounts_md.c b/drivers/md/md-autodetect.c
-similarity index 96%
-rename from init/do_mounts_md.c
-rename to drivers/md/md-autodetect.c
-index 359363e85ccd0b..fe806f7b9759a1 100644
---- a/init/do_mounts_md.c
-+++ b/drivers/md/md-autodetect.c
-@@ -1,10 +1,15 @@
- // SPDX-License-Identifier: GPL-2.0
-+#include <linux/kernel.h>
-+#include <linux/blkdev.h>
-+#include <linux/init.h>
-+#include <linux/syscalls.h>
-+#include <linux/mount.h>
-+#include <linux/major.h>
- #include <linux/delay.h>
-+#include <linux/raid/detect.h>
- #include <linux/raid/md_u.h>
- #include <linux/raid/md_p.h>
- 
--#include "do_mounts.h"
--
- /*
-  * When md (and any require personalities) are compiled into the kernel
-  * (not a module), arrays can be assembles are boot time using with AUTODETECT
-@@ -114,6 +119,12 @@ static int __init md_setup(char *str)
- 	return 1;
- }
- 
-+static inline int create_dev(char *name, dev_t dev)
-+{
-+	ksys_unlink(name);
-+	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
-+}
-+
- static void __init md_setup_drive(void)
- {
- 	int minor, i, ent, partitioned;
-diff --git a/include/linux/raid/detect.h b/include/linux/raid/detect.h
-index 37dd3f40cd316e..1f029a71c3ef05 100644
---- a/include/linux/raid/detect.h
-+++ b/include/linux/raid/detect.h
-@@ -1,3 +1,11 @@
- /* SPDX-License-Identifier: GPL-2.0 */
- 
- void md_autodetect_dev(dev_t dev);
-+
-+#ifdef CONFIG_BLK_DEV_MD
-+void md_run_setup(void);
-+#else
-+static inline void md_run_setup(void)
-+{
-+}
-+#endif
-diff --git a/init/Makefile b/init/Makefile
-index 57499b1ff4714d..6bc37f64b3617c 100644
---- a/init/Makefile
-+++ b/init/Makefile
-@@ -18,7 +18,6 @@ obj-y                          += init_task.o
- mounts-y			:= do_mounts.o
- mounts-$(CONFIG_BLK_DEV_RAM)	+= do_mounts_rd.o
- mounts-$(CONFIG_BLK_DEV_INITRD)	+= do_mounts_initrd.o
--mounts-$(CONFIG_BLK_DEV_MD)	+= do_mounts_md.o
- 
- # dependencies on generated files need to be listed explicitly
- $(obj)/version.o: include/generated/compile.h
-diff --git a/init/do_mounts.c b/init/do_mounts.c
-index 29d326b6c29d2d..1a4dfa17fb2899 100644
---- a/init/do_mounts.c
-+++ b/init/do_mounts.c
-@@ -23,6 +23,7 @@
- #include <linux/nfs_fs.h>
- #include <linux/nfs_fs_sb.h>
- #include <linux/nfs_mount.h>
-+#include <linux/raid/detect.h>
- #include <uapi/linux/mount.h>
- 
- #include "do_mounts.h"
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 7513d1c14d13fe..50d6c8941e15a1 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -41,13 +41,3 @@ bool __init initrd_load(void);
- static inline bool initrd_load(void) { return false; }
- 
- #endif
--
--#ifdef CONFIG_BLK_DEV_MD
--
--void md_run_setup(void);
--
--#else
--
--static inline void md_run_setup(void) {}
--
--#endif
--- 
-2.27.0
+ +                       wfile = filp_open(collected, openflags, mode);
+> +                       if (IS_ERR(wfile))
+> +                               return 0;
+> +
+> +                       vfs_fchown(wfile, uid, gid);
+> +                       vfs_fchmod(wfile, mode);
+> +                       if (body_len)
+> +                               vfs_truncate(&wfile->f_path, body_len);
+> +                       vcollected = kstrdup(collected, GFP_KERNEL);
+
+That "vcollected" is ugly and broken, and seems oh-so-wrong.
+
+Because it's only use is:
+
+
+> -               ksys_close(wfd);
+> +               fput(wfile);
+>                 do_utime(vcollected, mtime);
+>                 kfree(vcollected);
+
+which should just have done the exact same thing that you did with
+vfs_chown() and friends: we already have a "utimes_common()" that
+takes a path, and it could have been made into "vfs_utimes()", and
+then this whole vcollected confusion would go away and be replaced by
+
+        vfs_truncate(&wfile->f_path, mtime);
+
+(ok, with all the "timespec64 t[2]" things going on that do_utime()
+does now, but you get the idea).
+
+Talk about de-crufting that initramfs unpacking..
+
+But I don't hate this patch, I'm just pointing out that there's room
+for improvement.
+
+             Linus
