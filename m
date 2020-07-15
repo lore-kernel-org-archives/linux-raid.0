@@ -1,104 +1,44 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Reshape using drives not partitions, RAID gone after reboot
-Date: Wed, 15 Jul 2020 11:10:35 -0500
-Message-ID: <CAAMCDecPanRSN70UL7fuMNSdPUwqui8+nDj4Fm=3XohbicBsQA@mail.gmail.com>
-References: <b551920e-ddad-c627-d75a-e99d32247b6d@gmail.com>
- <0b857b5f-20aa-871d-a22d-43d26ad64764@youngman.org.uk> <CAAMCDec22wshoG8eb9aM4su-EBdJRbh_LyVtaskR9FbYc4f=gw@mail.gmail.com>
- <8373f6a8-f0d9-02de-268d-64bddc4b9aa2@gmail.com>
+From: Zhao Heming <heming.zhao@suse.com>
+Subject: [PATCH] md-cluster: fix safemode_delay non-zero when bitmap switch to clustered
+Date: Thu, 16 Jul 2020 01:04:04 +0800
+Message-ID: <1594832644-8837-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8373f6a8-f0d9-02de-268d-64bddc4b9aa2@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Barnett <adamtravisbarnett@gmail.com>
-Cc: antlists <antlists@youngman.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Zhao Heming <heming.zhao@suse.com>
 List-Id: linux-raid.ids
 
-there is a chance that removing the partition tables that should not
-be there will just fix it and are what is blocking the devices.
+reproduction steps:
+```
+node1 # mdadm --zero-superblock /dev/sd{b,c,d}
+node1 # mdadm -C /dev/md0 -b internal -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
+node1 # cat /sys/block/md0/md/safe_mode_delay
+0.204
+node1 # mdadm -G /dev/md0 -b none
+node1 # mdadm --grow /dev/md0 --bitmap=clustered
+node1 # cat /sys/block/md0/md/safe_mode_delay
+0.204  <== doesn't change, should ZERO for cluster-md
+```
 
-So once you have a copy of the disks, remove the partition table
-completely from the 3 and reboot, and it may just start since it will
-be able to find the devices.   Or it may now be startable with the
-command you attempted to start it with before.
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+---
+ drivers/md/md-bitmap.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I have had partitioned devices (say /dev/sda1 have a partition table
-put on it, and that "block" lvm from looking at /dev/sda1, removing it
-and removing the mappings immediately makes the missing pv's show up,
-and I am pretty sure mdadm has the same rules.
-
-
-You must have the exactly right order for assume-clean to work, and
-mistake and there will be data issues.
-
-On Tue, Jul 14, 2020 at 9:28 PM Adam Barnett
-<adamtravisbarnett@gmail.com> wrote:
->
-> Thanks for all the the replies. The drives had single gpt partitions
-> that were created before adding the drives to the arrays. So I'll give
-> removing the partition tables a try and forcing reassembly.
->
-> I also tried stopping the array before forcing reassembly but this issue
-> is that the newly added drives appear to have no superblocks, so mdadm
-> aborts the assembly.
->
-> My current plan is to try to --create --assume-clean the array, but I
-> have been reading about using overlay files to preserve the drives. If
-> anyone could help me understand exactly how that is done I would be very
-> appreciative.
->
-> I don't think the list allows links(?) but I'm following the steps on
-> the kernel wiki under "Recovering_a_failed_software_RAID" but the bash
-> commands are a bit confusing due to the use of the parallel command.
->
-> Thanks again all!
->
-> -Adam
->
-> On 7/14/20 5:27 PM, Roger Heflin wrote:
-> > Did you create the partition before you added the disk to mdadm or
-> > after?  If after was it a dos or a gpt?  Dos should have only cleared
-> > the first 512byte block.  If gpt it will have written to the first
-> > block and to at least 1 more location on the disk, possibly causing
-> > data loss.
-> >
-> > If before then you at least need to get rid of the partition table
-> > completely.   Having a partition on a device will often cause a number
-> > of things to ignore the whole disk.  I have debugged "lost" pv's where
-> > the partition effectively "blocked" lvm from even looking at the
-> > entire device that the pv was one.
-> >
-> > If it is a dos partition table then:
-> > save a backup of each disk first (always a good idea, you can dd it
-> > back if you screwed up so long as you carefully create the backups and
-> > name them properly).
-> > dd if=/dev/sdx of=/root/sdxbackup.img bs=512 count=1
-> > then clear the partition table space, rebooting is probably the
-> > easiest way to clear out the mappings, it can be done without
-> > rebooting but I have to do it trial and error to figure out the exact
-> > order and commands.
-> > dd if=/dev/zero of=/dev/sdX bs=512 count=1
-> >
-> > On Tue, Jul 14, 2020 at 6:11 PM antlists <antlists@youngman.org.uk> wrote:
-> >> On 14/07/2020 20:50, Adam Barnett wrote:
-> >>> Forcing the assembly does not work:
-> >>>
-> >>> $ sudo mdadm /dev/md1 --assemble --force /dev/sd[ijmop]1 /dev/sd[kln]
-> >>> mdadm: /dev/sdi1 is busy - skipping
-> >>> mdadm: /dev/sdj1 is busy - skipping
-> >>> mdadm: /dev/sdm1 is busy - skipping
-> >>> mdadm: /dev/sdo1 is busy - skipping
-> >>> mdadm: /dev/sdp1 is busy - skipping
-> >>> mdadm: Cannot assemble mbr metadata on /dev/sdk
-> >>> mdadm: /dev/sdk has no superblock - assembly aborted
-> >> Did you do an "mdadm --stop /dev/md1" before trying that? That's a
-> >> classic error from an array that's previously been partially assembled
-> >> and failed ...
-> >>
-> >> The other thing I'd do is make sure there aren't any other unepected
-> >> partially assembled arrays. I doubt it applies here, but I have come
-> >> across mirrors that get broken in half and you get two failed arrays
-> >> instead of one working one ...
-> >>
-> >> Cheers,
-> >> Wol
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 95a5f3757fa3..547adea1d1e6 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2344,6 +2344,8 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ 					mddev_resume(mddev);
+ 					goto out;
+ 				}
++				if (mddev_is_clustered(mddev))
++					mddev->safemode_delay = 0;
+ 				mddev_resume(mddev);
+ 			}
+ 		}
+-- 
+2.16.4
