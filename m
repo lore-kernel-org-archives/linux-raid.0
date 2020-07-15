@@ -1,65 +1,48 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [GIT PULL] md-next 20200714
-Date: Wed, 15 Jul 2020 06:53:15 +0000
-Message-ID: <FBE6B82B-E360-4EAF-999D-AFBC6BC5F058@fb.com>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH v6 05/15] md/raid5: set correct page offset for bi_io_vec in ops_run_io()
+Date: Wed, 15 Jul 2020 08:42:47 -0400
+Message-ID: <20200715124257.3175816-6-yuyufen@huawei.com>
+References: <20200715124257.3175816-1-yuyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Content-ID: <F3C4813CA6067943BC1E18B5F8D96A5F@namprd15.prod.outlook.com>
+In-Reply-To: <20200715124257.3175816-1-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Junxiao Bi <junxiao.bi@oracle.com>, Zhao Heming <heming.zhao@suse.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Colin Ian King <colin.king@canonical.com>
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-Hi Jens,=20
+After using r5pages for each sh->dev[i], we need to set correct offset
+of that page for bi_io_vec when issue bio. The value of offset is zero
+without using r5pages.
 
-Please consider pulling the following changes for md-next on top of your fo=
-r-5.9/drivers=20
-branch.=20
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+---
+ drivers/md/raid5.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-Song
-
-
-The following changes since commit 2eaac320db515b2ec681f6a4bad4f67a7be84ce8=
-:
-
-  rsxx: switch from 'pci_free_consistent()' to 'dma_free_coherent()' (2020-=
-07-11 09:27:09 -0600)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-
-for you to fetch changes up to 60f80d6f2d07a6d8aee485a1d1252327eeee0c81:
-
-  md-cluster: fix wild pointer of unlock_all_bitmaps() (2020-07-14 23:38:32=
- -0700)
-
-----------------------------------------------------------------
-Artur Paszkiewicz (1):
-      md: improve io stats accounting
-
-Colin Ian King (1):
-      md: raid0/linear: fix dereference before null check on pointer mddev
-
-Junxiao Bi (1):
-      md: fix deadlock causing by sysfs_notify
-
-Song Liu (1):
-      md/raid5-cache: clear MD_SB_CHANGE_PENDING before flushing stripes
-
-Zhao Heming (1):
-      md-cluster: fix wild pointer of unlock_all_bitmaps()
-
- drivers/md/md-bitmap.c   |   2 +-
- drivers/md/md-cluster.c  |   1 +
- drivers/md/md.c          | 110 +++++++++++++++++++++++++++++++++++++++++++=
-+++++++++++++++++++++++++++++++++++++------------------------------
- drivers/md/md.h          |   9 ++++++++-
- drivers/md/raid10.c      |   2 +-
- drivers/md/raid5-cache.c |   7 +++++++
- drivers/md/raid5.c       |   6 +++---
- 7 files changed, 101 insertions(+), 36 deletions(-)=
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 17f42203b0ae..96efb4ad8835 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1200,7 +1200,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				sh->dev[i].vec.bv_page = sh->dev[i].page;
+ 			bi->bi_vcnt = 1;
+ 			bi->bi_io_vec[0].bv_len = conf->stripe_size;
+-			bi->bi_io_vec[0].bv_offset = 0;
++			bi->bi_io_vec[0].bv_offset = sh->dev[i].offset;
+ 			bi->bi_iter.bi_size = conf->stripe_size;
+ 			bi->bi_write_hint = sh->dev[i].write_hint;
+ 			if (!rrdev)
+@@ -1254,7 +1254,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			sh->dev[i].rvec.bv_page = sh->dev[i].page;
+ 			rbi->bi_vcnt = 1;
+ 			rbi->bi_io_vec[0].bv_len = conf->stripe_size;
+-			rbi->bi_io_vec[0].bv_offset = 0;
++			rbi->bi_io_vec[0].bv_offset = sh->dev[i].offset;
+ 			rbi->bi_iter.bi_size = conf->stripe_size;
+ 			rbi->bi_write_hint = sh->dev[i].write_hint;
+ 			sh->dev[i].write_hint = RWH_WRITE_LIFE_NOT_SET;
+-- 
+2.25.4
