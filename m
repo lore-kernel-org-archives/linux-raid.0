@@ -1,86 +1,111 @@
-From: Adam Barnett <adamtravisbarnett@gmail.com>
-Subject: Re: Reshape using drives not partitions, RAID gone after reboot
-Date: Tue, 14 Jul 2020 20:28:40 -0600
-Message-ID: <8373f6a8-f0d9-02de-268d-64bddc4b9aa2@gmail.com>
-References: <b551920e-ddad-c627-d75a-e99d32247b6d@gmail.com>
- <0b857b5f-20aa-871d-a22d-43d26ad64764@youngman.org.uk>
- <CAAMCDec22wshoG8eb9aM4su-EBdJRbh_LyVtaskR9FbYc4f=gw@mail.gmail.com>
+From: "heming.zhao@suse.com" <heming.zhao@suse.com>
+Subject: cluster-md mddev->in_sync & mddev->safemode_delay may have bug
+Date: Wed, 15 Jul 2020 11:48:26 +0800
+Message-ID: <a29f8374-cc64-cc87-71cb-507c43aff503@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDec22wshoG8eb9aM4su-EBdJRbh_LyVtaskR9FbYc4f=gw@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>, antlists <antlists@youngman.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.com, guoqing.jiang@cloud.ionos.com
 List-Id: linux-raid.ids
 
-Thanks for all the the replies. The drives had single gpt partitions 
-that were created before adding the drives to the arrays. So I'll give 
-removing the partition tables a try and forcing reassembly.
+Hello List,
 
-I also tried stopping the array before forcing reassembly but this issue 
-is that the newly added drives appear to have no superblocks, so mdadm 
-aborts the assembly.
 
-My current plan is to try to --create --assume-clean the array, but I 
-have been reading about using overlay files to preserve the drives. If 
-anyone could help me understand exactly how that is done I would be very 
-appreciative.
+@Neil  @Guoqing,
+Would you have time to take a look at this bug?
 
-I don't think the list allows links(?) but I'm following the steps on 
-the kernel wiki under "Recovering_a_failed_software_RAID" but the bash 
-commands are a bit confusing due to the use of the parallel command.
+This mail replaces previous mail: commit 480523feae581 may introduce a bug.
+Previous mail has some unclear description, I sort out & resend in this mail.
 
-Thanks again all!
+This bug was reported from a SUSE customer.
 
--Adam
+In cluster-md env, after below steps, "mdadm -D /dev/md0" shows "State: active" all the time.
+```
+# mdadm -S --scan
+# mdadm --zero-superblock /dev/sd{a,b}
+# mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda /dev/sdb
 
-On 7/14/20 5:27 PM, Roger Heflin wrote:
-> Did you create the partition before you added the disk to mdadm or
-> after?  If after was it a dos or a gpt?  Dos should have only cleared
-> the first 512byte block.  If gpt it will have written to the first
-> block and to at least 1 more location on the disk, possibly causing
-> data loss.
->
-> If before then you at least need to get rid of the partition table
-> completely.   Having a partition on a device will often cause a number
-> of things to ignore the whole disk.  I have debugged "lost" pv's where
-> the partition effectively "blocked" lvm from even looking at the
-> entire device that the pv was one.
->
-> If it is a dos partition table then:
-> save a backup of each disk first (always a good idea, you can dd it
-> back if you screwed up so long as you carefully create the backups and
-> name them properly).
-> dd if=/dev/sdx of=/root/sdxbackup.img bs=512 count=1
-> then clear the partition table space, rebooting is probably the
-> easiest way to clear out the mappings, it can be done without
-> rebooting but I have to do it trial and error to figure out the exact
-> order and commands.
-> dd if=/dev/zero of=/dev/sdX bs=512 count=1
->
-> On Tue, Jul 14, 2020 at 6:11 PM antlists <antlists@youngman.org.uk> wrote:
->> On 14/07/2020 20:50, Adam Barnett wrote:
->>> Forcing the assembly does not work:
->>>
->>> $ sudo mdadm /dev/md1 --assemble --force /dev/sd[ijmop]1 /dev/sd[kln]
->>> mdadm: /dev/sdi1 is busy - skipping
->>> mdadm: /dev/sdj1 is busy - skipping
->>> mdadm: /dev/sdm1 is busy - skipping
->>> mdadm: /dev/sdo1 is busy - skipping
->>> mdadm: /dev/sdp1 is busy - skipping
->>> mdadm: Cannot assemble mbr metadata on /dev/sdk
->>> mdadm: /dev/sdk has no superblock - assembly aborted
->> Did you do an "mdadm --stop /dev/md1" before trying that? That's a
->> classic error from an array that's previously been partially assembled
->> and failed ...
->>
->> The other thing I'd do is make sure there aren't any other unepected
->> partially assembled arrays. I doubt it applies here, but I have come
->> across mirrors that get broken in half and you get two failed arrays
->> instead of one working one ...
->>
->> Cheers,
->> Wol
+# mdadm -D /dev/md0
+/dev/md0:
+            Version : 1.2
+      Creation Time : Mon Jul  6 12:02:23 2020
+         Raid Level : raid1
+         Array Size : 64512 (63.00 MiB 66.06 MB)
+      Used Dev Size : 64512 (63.00 MiB 66.06 MB)
+       Raid Devices : 2
+      Total Devices : 2
+        Persistence : Superblock is persistent
+
+      Intent Bitmap : Internal
+
+        Update Time : Mon Jul  6 12:02:24 2020
+              State : active <==== this line
+     Active Devices : 2
+    Working Devices : 2
+     Failed Devices : 0
+      Spare Devices : 0
+
+Consistency Policy : bitmap
+
+               Name : lp-clustermd1:0  (local to host lp-clustermd1)
+       Cluster Name : hacluster
+               UUID : 38ae5052:560c7d36:bb221e15:7437f460
+             Events : 18
+
+     Number   Major   Minor   RaidDevice State
+        0       8        0        0      active sync   /dev/sda
+        1       8       16        1      active sync   /dev/sdb
+```
+
+with commit 480523feae581 (author: Neil Brown), the try_set_sync never true, so mddev->in_sync always 0.
+
+the simplest fix is bypass try_set_sync when array is clustered.
+```
+  void md_check_recovery(struct mddev *mddev)
+  {
+     ... ...
+         if (mddev_is_clustered(mddev)) {
+             struct md_rdev *rdev;
+             /* kick the device if another node issued a
+              * remove disk.
+              */
+             rdev_for_each(rdev, mddev) {
+                 if (test_and_clear_bit(ClusterRemove, &rdev->flags) &&
+                         rdev->raid_disk < 0)
+                     md_kick_rdev_from_array(rdev);
+             }
++           try_set_sync = 1;
+         }
+     ... ...
+  }
+```
+this fix makes commit 480523feae581 doesn't work when clustered env.
+I want to know what impact with above fix.
+Or does there have other solution for this issue?
+
+
+--------
+And for mddev->safemode_delay issue
+
+There is also another bug when array change bitmap from internal to clustered.
+the /sys/block/mdX/md/safe_mode_delay keep original value after changing bitmap type.
+in safe_delay_store(), the code forbids setting mddev->safemode_delay when array is clustered.
+So in cluster-md env, the expected safemode_delay value should be 0.
+
+reproduction steps:
+```
+# mdadm --zero-superblock /dev/sd{b,c,d}
+# mdadm -C /dev/md0 -b internal -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
+# cat /sys/block/md0/md/safe_mode_delay
+0.204
+# mdadm -G /dev/md0 -b none
+# mdadm --grow /dev/md0 --bitmap=clustered
+# cat /sys/block/md0/md/safe_mode_delay
+0.204  <== doesn't change, should ZERO for cluster-md
+```
+
+thanks
