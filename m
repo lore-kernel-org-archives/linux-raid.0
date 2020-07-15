@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH v6 04/15] md/raid5: allocate and free shared pages of r5pages
-Date: Wed, 15 Jul 2020 08:42:46 -0400
-Message-ID: <20200715124257.3175816-5-yuyufen@huawei.com>
+Subject: [PATCH v6 03/15] md/raid5: add a member of r5pages for struct stripe_head
+Date: Wed, 15 Jul 2020 08:42:45 -0400
+Message-ID: <20200715124257.3175816-4-yuyufen@huawei.com>
 References: <20200715124257.3175816-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,182 +13,117 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-When PAGE_SIZE is bigger than stripe_size, try to allocate pages of
-r5pages in grow_buffres() and free these pages in shrink_buffers().
-Then, set sh->dev[i].page and sh->dev[i].offset as the page in
-array. Without enable shared page, we just set offset as value of '0'.
+Since grow_buffers() uses alloc_page() to allocate the buffers for
+each stripe_head(), means, it will allocate 64K buffers and just use
+4K of them, after setting stripe_size as 4096.
+
+To avoid wasting memory, we try to contain multiple 'page' of sh->dev
+into one real page. That means, multiple sh->dev[i].page will point to
+the only page with different offset. Example of 64K PAGE_SIZE and
+4K stripe_size as following:
+
+                    64K PAGE_SIZE
+          +---+---+---+---+------------------------------+
+          |   |   |   |   |
+          |   |   |   |   |
+          +-+-+-+-+-+-+-+-+------------------------------+
+            ^   ^   ^   ^
+            |   |   |   +----------------------------+
+            |   |   |                                |
+            |   |   +-------------------+            |
+            |   |                       |            |
+            |   +----------+            |            |
+            |              |            |            |
+            +-+            |            |            |
+              |            |            |            |
+        +-----+-----+------+-----+------+-----+------+------+
+sh      | offset(0) | offset(4K) | offset(8K) | offset(12K) |
+ +      +-----------+------------+------------+-------------+
+ +----> dev[0].page  dev[1].page  dev[2].page  dev[3].page
+
+After trying to share one page, the users of sh->dev[i].page need to
+take care:
+
+  1) When issue bio into stripe_head, bi_io_vec.bv_page will point to
+     the page directly. So, we should make sure bv_offset to been set
+     with correct offset.
+
+  2) When compute xor, the page will be passed to computer function.
+     So, we also need to pass offset of that page to computer. Let it
+     compute correct location of each sh->dev[i].page.
+
+This patch will add a new member of r5pages into stripe_head to manage
+all pages needed by each sh->dev[i]. We also add 'offset' for each r5dev
+so that users can get related page offset easily. And add helper function
+to get page and it's index in r5pages array by disk index.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/raid5.c | 112 ++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 105 insertions(+), 7 deletions(-)
+ drivers/md/raid5.h | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0824fe7c3bec..17f42203b0ae 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -448,15 +448,72 @@ static struct stripe_head *get_free_stripe(struct r5conf *conf, int hash)
- 	return sh;
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 5a79a657f162..ff03c0ac2995 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -246,6 +246,14 @@ struct stripe_head {
+ 		int 		     target, target2;
+ 		enum sum_check_flags zero_sum_result;
+ 	} ops;
++
++	/* These pages will be used by bios in dev[i] */
++	struct r5pages {
++		struct page	**page;
++		int	size;	/* page array size */
++		int	stripes_per_page;
++	} pages;
++
+ 	struct r5dev {
+ 		/* rreq and rvec are used for the replacement device when
+ 		 * writing data to both devices.
+@@ -253,6 +261,7 @@ struct stripe_head {
+ 		struct bio	req, rreq;
+ 		struct bio_vec	vec, rvec;
+ 		struct page	*page, *orig_page;
++		unsigned int	offset;		/* offset of this page */
+ 		struct bio	*toread, *read, *towrite, *written;
+ 		sector_t	sector;			/* sector of this page */
+ 		unsigned long	flags;
+@@ -754,6 +763,35 @@ r5_next_bio(struct r5conf *conf, struct bio *bio, sector_t sector)
+ 		return NULL;
  }
  
 +/*
-+ * Try to free all pages in r5pages array.
++ * Return offset of the corresponding page for r5dev.
 + */
-+static void free_stripe_pages(struct stripe_head *sh)
++static inline int raid5_get_page_offset(struct stripe_head *sh, int disk_idx)
 +{
-+	int i;
-+	struct page *p;
++	struct r5conf *conf = sh->raid_conf;
 +
-+	/* Have not allocate page pool */
-+	if (!sh->pages.page)
-+		return;
-+
-+	for (i = 0; i < sh->pages.size; i++) {
-+		p = sh->pages.page[i];
-+		if (p)
-+			put_page(p);
-+		sh->pages.page[i] = NULL;
-+	}
++	return (disk_idx % sh->pages.stripes_per_page) * conf->stripe_size;
 +}
 +
 +/*
-+ * Allocate pages for r5pages.
++ * Return corresponding page address for r5dev.
 + */
-+static int alloc_stripe_pages(struct stripe_head *sh, gfp_t gfp)
++static inline struct page *
++raid5_get_dev_page(struct stripe_head *sh, int disk_idx)
 +{
-+	int i;
-+	struct page *p;
-+
-+	for (i = 0; i < sh->pages.size; i++) {
-+		/* The page have allocated. */
-+		if (sh->pages.page[i])
-+			continue;
-+
-+		p = alloc_page(gfp);
-+		if (!p) {
-+			free_stripe_pages(sh);
-+			return -ENOMEM;
-+		}
-+		sh->pages.page[i] = p;
-+	}
-+	return 0;
++	return sh->pages.page[disk_idx / sh->pages.stripes_per_page];
 +}
 +
- static void shrink_buffers(struct stripe_head *sh)
- {
- 	struct page *p;
- 	int i;
- 	int num = sh->raid_conf->pool_size;
- 
--	for (i = 0; i < num ; i++) {
-+	if (raid5_stripe_pages_shared(sh->raid_conf))
-+		free_stripe_pages(sh); /* Free pages in r5pages */
-+
-+	for (i = 0; i < num; i++) {
- 		WARN_ON(sh->dev[i].page != sh->dev[i].orig_page);
- 		p = sh->dev[i].page;
-+
-+		/*
-+		 * If we use pages in r5pages, these pages have been
-+		 * freed in free_stripe_pages().
-+		 */
-+		if (raid5_stripe_pages_shared(sh->raid_conf)) {
-+			if (p)
-+				sh->dev[i].page = NULL;
-+			continue;
-+		}
-+
- 		if (!p)
- 			continue;
- 		sh->dev[i].page = NULL;
-@@ -469,14 +526,26 @@ static int grow_buffers(struct stripe_head *sh, gfp_t gfp)
- 	int i;
- 	int num = sh->raid_conf->pool_size;
- 
-+	if (raid5_stripe_pages_shared(sh->raid_conf) &&
-+			alloc_stripe_pages(sh, gfp))
-+		return -ENOMEM;
-+
- 	for (i = 0; i < num; i++) {
- 		struct page *page;
-+		unsigned int offset;
- 
--		if (!(page = alloc_page(gfp))) {
--			return 1;
-+		if (raid5_stripe_pages_shared(sh->raid_conf)) {
-+			page = raid5_get_dev_page(sh, i);
-+			offset = raid5_get_page_offset(sh, i);
-+		} else {
-+			page = alloc_page(gfp);
-+			if (!page)
-+				return -ENOMEM;
-+			offset = 0;
- 		}
- 		sh->dev[i].page = page;
- 		sh->dev[i].orig_page = page;
-+		sh->dev[i].offset = offset;
- 	}
- 
- 	return 0;
-@@ -2146,11 +2215,34 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
- 
- static void free_stripe(struct kmem_cache *sc, struct stripe_head *sh)
- {
-+	kfree(sh->pages.page);
-+
- 	if (sh->ppl_page)
- 		__free_page(sh->ppl_page);
- 	kmem_cache_free(sc, sh);
- }
- 
-+static int
-+init_stripe_shared_pages(struct stripe_head *sh, struct r5conf *conf)
++/*
++ * We want to let multiple buffers to share one real page for
++ * stripe_head when PAGE_SIZE is biggger than stripe_size. If
++ * they are equal, no need to use this strategy.
++ */
++static inline int raid5_stripe_pages_shared(struct r5conf *conf)
 +{
-+	int nr_pages, cnt;
-+
-+	if (!raid5_stripe_pages_shared(conf) || sh->pages.page)
-+		return 0;
-+
-+	/* Each of the sh->dev[i] need one conf->stripe_size */
-+	cnt = PAGE_SIZE / conf->stripe_size;
-+	nr_pages = (conf->raid_disks + cnt - 1) / cnt;
-+
-+	sh->pages.page = kcalloc(nr_pages, sizeof(struct page *), GFP_KERNEL);
-+	if (!sh->pages.page)
-+		return -ENOMEM;
-+	sh->pages.size = nr_pages;
-+	sh->pages.stripes_per_page = cnt;
-+
-+	return 0;
++	return conf->stripe_size < PAGE_SIZE;
 +}
 +
- static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
- 	int disks, struct r5conf *conf)
- {
-@@ -2177,14 +2269,20 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
- 
- 		if (raid5_has_ppl(conf)) {
- 			sh->ppl_page = alloc_page(gfp);
--			if (!sh->ppl_page) {
--				free_stripe(sc, sh);
--				sh = NULL;
--			}
-+			if (!sh->ppl_page)
-+				goto fail;
- 		}
-+
-+		if (init_stripe_shared_pages(sh, conf))
-+			goto fail;
- 	}
- 	return sh;
-+
-+fail:
-+	free_stripe(sc, sh);
-+	return NULL;
- }
-+
- static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
- {
- 	struct stripe_head *sh;
+ extern void md_raid5_kick_device(struct r5conf *conf);
+ extern int raid5_set_cache_size(struct mddev *mddev, int size);
+ extern sector_t raid5_compute_blocknr(struct stripe_head *sh, int i, int previous);
 -- 
 2.25.4
