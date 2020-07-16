@@ -1,12 +1,12 @@
 From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH v6 11/15] md/raid5: support config stripe_size by sysfs entry
-Date: Thu, 16 Jul 2020 00:06:57 -0700
-Message-ID: <CAPhsuW66oecM0RfGQjvsAnBKrwA7Hxv_Ytf1U-S4Jzirs49N7g@mail.gmail.com>
-References: <20200715124257.3175816-1-yuyufen@huawei.com> <20200715124257.3175816-12-yuyufen@huawei.com>
+Subject: Re: [PATCH v6 00/15] md/raid5: set STRIPE_SIZE as a configurable value
+Date: Thu, 16 Jul 2020 00:20:09 -0700
+Message-ID: <CAPhsuW4ON3U9GXygpMsTxWGfQr8XH1H8GHn-VPUmOBfOqAEWdw@mail.gmail.com>
+References: <20200715124257.3175816-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200715124257.3175816-12-yuyufen@huawei.com>
+In-Reply-To: <20200715124257.3175816-1-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Yufen Yu <yuyufen@huawei.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.com>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Hou Tao <houtao1@huawei.com>
@@ -14,71 +14,59 @@ List-Id: linux-raid.ids
 
 On Wed, Jul 15, 2020 at 5:42 AM Yufen Yu <yuyufen@huawei.com> wrote:
 >
-> Adding a new 'stripe_size' sysfs entry to set and show stripe_size.
-> After that, we can adjust stripe_size by writing value into sysfs
-> entry, likely, set stripe_size as 16KB:
+> Hi, all
 >
->           echo 16384 > /sys/block/md1/md/stripe_size
+>  For now, STRIPE_SIZE is equal to the value of PAGE_SIZE. That means, RAID5
+>  will issue each bio to disk at least 64KB when PAGE_SIZE is 64KB in arm64.
+>  However, filesystem usually issue bio in the unit of 4KB. Then, RAID5 may
+>  waste resource of disk bandwidth.
 >
-> Show current stripe_size value:
+>  To solve the problem, this patchset try to set stripe_size as a configuare
+>  value. The default value is 4096. We will add a new sysfs entry and set it
+>  by writing a new value, likely:
 >
->           cat /sys/block/md1/md/stripe_size
->
-> stripe_size should not be bigger than PAGE_SIZE, and it requires to be
-> multiple of 4096.
->
-> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+>         echo 16384 > /sys/block/md1/md/stripe_size
 
-For this patch, please consider the following changes:
-1) use DEFAULT_STRIPE_SIZE instead of 4096;
-2) make the sysfs entry read only for PAGE_SIZE == 4096
+[...]
 
+> V6:
+>  * Convert stripe_size and stripe_sectors from 'unsigned int' to
+>    'unsigned long' avoiding compiler warning.
+>  * Add a new member of stripes_per_page into r5conf, avoiding to
+>    compute each time.
+>  * Cover mddev->private with mddev_lock(mddev) for raid5_store/show_stripe_size().
+>  * Get rid of too many WARN_ON() and BUG_ON().
+>  * Unfold raid5_get_page_index() into raid5_get_dev_page() directly.
 
-diff --git i/drivers/md/raid5.c w/drivers/md/raid5.c
-index 735238425c7f3..320fc14bc628c 100644
---- i/drivers/md/raid5.c
-+++ w/drivers/md/raid5.c
-@@ -6532,6 +6532,8 @@ raid5_show_stripe_size(struct mddev  *mddev, char *page)
-        return ret;
- }
+We are running out of time before the upcoming merge window, so we may not
+be able to ship the whole set. How about we ship 01, and 11 in this
+merge window,
+and the rest in the next merge window? Would the array get most of the
+performance benefit with these 2 patches? Do you see other issues with
+this path?
 
-+#if PAGE_SIZE != DEFAULT_STRIPE_SIZE
-+
- static ssize_t
- raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
- {
-@@ -6544,13 +6546,12 @@ raid5_store_stripe_size(struct mddev  *mddev,
-const char *page, size_t len)
-                return -EINVAL;
-        if (kstrtoul(page, 10, &new))
-                return -EINVAL;
-+
-        /*
--        * When PAGE_SZIE is 4096, we don't need to modify stripe_size.
--        * And the value should not be bigger than PAGE_SIZE.
--        * It requires to be multiple of 4096.
-+        * The value should not be bigger than PAGE_SIZE. It requires to
-+        * be multiple of DEFAULT_STRIPE_SIZE.
-         */
--       if (PAGE_SIZE == 4096 || new % 4096 != 0 ||
--                       new > PAGE_SIZE || new == 0)
-+       if (new % DEFAULT_STRIPE_SIZE != 0 || new > PAGE_SIZE || new == 0)
-                return -EINVAL;
+Also I would like to minimize changes for PAGE_SIZE==4096 systems. Ideally,
+we can hide these changes from these system in ifdef's, like:
 
-        err = mddev_lock(mddev);
-@@ -6612,6 +6613,15 @@ raid5_stripe_size = __ATTR(stripe_size, 0644,
-                         raid5_show_stripe_size,
-                         raid5_store_stripe_size);
+#if PAGE_SIZE == DEFAULT_STRIPE_SIZE
+#define STRIPE_SIZE            PAGE_SIZE
+#define STRIPE_SHIFT           (PAGE_SHIFT - 9)
+#define STRIPE_SECTORS         (STRIPE_SIZE>>9)
+#endif
 
-+#else
-+
-+static struct md_sysfs_entry
-+raid5_stripe_size = __ATTR(stripe_size, 0444,
-+                        raid5_show_stripe_size,
-+                        NULL);
-+
-+#endif /* PAGE_SIZE != DEFAULT_STRIPE_SIZE */
-+
- static ssize_t
- raid5_show_preread_threshold(struct mddev *mddev, char *page)
- {
+#if PAGE_SIZE != DEFAULT_STRIPE_SIZE
+unsigned long           stripe_size;
+unsigned int            stripe_shift;
+unsigned long           stripe_sectors;
+#endif
+
+#if PAGE_SIZE != DEFAULT_STRIPE_SIZE
+#define RAID5_STRIPE_SIZE(conf) DEFAULT_STRIPE_SIZE
+#else
+#define RAID5_STRIPE_SIZE(conf) ((conf)->stripe_size)
+#endif
+
+And then use RAID5_STRIPE_SIZE(conf) in the rest of the code.
+
+Thanks,
+Song
