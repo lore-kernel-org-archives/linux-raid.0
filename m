@@ -1,102 +1,72 @@
-From: Zhao Heming <heming.zhao@suse.com>
-Subject: [PATCH v2] md-cluster: fix safemode_delay value when converting to clustered bitmap
-Date: Thu, 16 Jul 2020 22:50:43 +0800
-Message-ID: <1594911043-16956-1-git-send-email-heming.zhao@suse.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: decruft the early init / initrd / initramfs code v2
+Date: Thu, 16 Jul 2020 17:57:12 +0200
+Message-ID: <4b38a63b-af09-608c-c4fa-b9e484ebe6bc@cloud.ionos.com>
+References: <20200714190427.4332-1-hch@lst.de>
+ <CAHk-=wgxV9We+nVcJtQu2DHco+HSeja-WqVdA-KUcB=nyUYuoQ@mail.gmail.com>
+ <20200715065140.GA22060@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, song@kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20200715065140.GA22060@lst.de>
+Content-Language: en-US
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-When array convert to clustered bitmap, the safe_mode_delay doesn't clean and vice versa.
-the /sys/block/mdX/md/safe_mode_delay keep original value after changing bitmap type.
-in safe_delay_store(), the code forbids setting mddev->safemode_delay when array is clustered.
-So in cluster-md env, the expected safemode_delay value should be 0.
+On 7/15/20 8:51 AM, Christoph Hellwig wrote:
+> On Tue, Jul 14, 2020 at 12:34:45PM -0700, Linus Torvalds wrote:
+>> On Tue, Jul 14, 2020 at 12:06 PM Christoph Hellwig <hch@lst.de> wrote:
+>>> this series starts to move the early init code away from requiring
+>>> KERNEL_DS to be implicitly set during early startup.  It does so by
+>>> first removing legacy unused cruft, and the switches away the code
+>>> from struct file based APIs to our more usual in-kernel APIs.
+>> Looks good to me, with the added note on the utimes cruft too as a
+>> further cleanup (separate patch).
+>>
+>> So you can add my acked-by.
+>>
+>> I _would_ like the md parts to get a few more acks. I see the one from
+>> Song Liu, anybody else in md land willing to go through those patches?
+>> They were the bulk of it, and the least obvious to me because I don't
+>> know that code at all?
+> Song is the maintainer.   Neil is the only person I could think of
+> that also knows the old md code pretty well.  Guoqing has contributed
+> a lot lately, but the code touched here is rather historic (and not
+> used very much at all these days as people use modular md and initramfѕ
+> based detection).
 
-reproduction steps:
-```
-node1 # mdadm --zero-superblock /dev/sd{b,c,d}
-node1 # mdadm -C /dev/md0 -b internal -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.204
-node1 # mdadm -G /dev/md0 -b none
-node1 # mdadm --grow /dev/md0 --bitmap=clustered
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.204  <== doesn't change, should ZERO for cluster-md
+Hi Christoph,
 
-node1 # mdadm --zero-superblock /dev/sd{b,c,d}
-node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.000
-node1 # mdadm -G /dev/md0 -b none
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.000  <== doesn't change, should default value
-```
+I just cloned the tree, seems there is compile issue that you need to 
+resolve.
 
-Neil said md_setup_cluster/md_cluster_stop are good places to fix.
-After investigation, md_setup_cluster() is a good place for setting,
-but md_cluster_stop are not pair for restoring.
-see below flow:
-(user space)
-mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda /dev/sdb
-mdadm --grow /dev/md0 -b none
-(kernel space)
-SET_ARRAY_INFO
- update_array_info
-  + mddev->bitmap_info.nodes = 0;
-  + md_cluster_ops->leave(mddev)
-  + md_bitmap_destroy
-     md_bitmap_free //won't trigger md_cluster_stop() because above set 0.
+hch-misc$ make -j8
+   DESCEND  objtool
+   CALL    scripts/atomic/check-atomics.sh
+   CALL    scripts/checksyscalls.sh
+   CHK     include/generated/compile.h
+   CC      drivers/md/md.o
+   CC      drivers/md/md-bitmap.o
+   CC      drivers/md/md-autodetect.o
+   AR      drivers/perf/built-in.a
+   CC      drivers/md/dm.o
+   AR      drivers/hwtracing/intel_th/built-in.a
+   CC      drivers/nvmem/core.o
+drivers/md/md.c:7809:45: error: static declaration of ‘md_fops’ follows 
+non-static declaration
+  static const struct block_device_operations md_fops =
+                                              ^~~~~~~
+drivers/md/md.c:329:38: note: previous declaration of ‘md_fops’ was here
+  const struct block_device_operations md_fops;
+                                       ^~~~~~~
+scripts/Makefile.build:280: recipe for target 'drivers/md/md.o' failed
+make[2]: *** [drivers/md/md.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
 
-Signed-off-by: Zhao Heming <heming.zhao@suse.com>
----
-v2:
-- change setting path from location_store to md_setup_cluster
-- add restoring path
+And for the changes of md, feel free to add my Acked-by if it could help.
 
----
- drivers/md/md.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f567f53..f082f5c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -101,6 +101,8 @@ static int remove_and_add_spares(struct mddev *mddev,
-  * count by 2 for every hour elapsed between read errors.
-  */
- #define MD_DEFAULT_MAX_CORRECTED_READ_ERRORS 20
-+/* Default safemode delay: 200 msec */
-+#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1) 
- /*
-  * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
-  * is 1000 KB/sec, so the extra system load does not show up that much.
-@@ -5982,7 +5984,7 @@ int md_run(struct mddev *mddev)
- 	if (mddev_is_clustered(mddev))
- 		mddev->safemode_delay = 0;
- 	else
--		mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
-+		mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 	mddev->in_sync = 1;
- 	smp_wmb();
- 	spin_lock(&mddev->lock);
-@@ -7361,6 +7363,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 
- 				mddev->bitmap_info.nodes = 0;
- 				md_cluster_ops->leave(mddev);
-+				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 			}
- 			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
-@@ -8366,6 +8369,7 @@ int md_setup_cluster(struct mddev *mddev, int nodes)
- 	}
- 	spin_unlock(&pers_lock);
- 
-+	mddev->safemode_delay = 0;
- 	return md_cluster_ops->join(mddev, nodes);
- }
- 
--- 
-1.8.3.1
+Thanks,
+Guoqing
