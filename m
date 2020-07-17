@@ -1,114 +1,61 @@
-From: Zhao Heming <heming.zhao@suse.com>
-Subject: [PATCH v3] md-cluster: fix safemode_delay value when converting to clustered bitmap
-Date: Fri, 17 Jul 2020 16:34:20 +0800
-Message-ID: <1594974860-12917-1-git-send-email-heming.zhao@suse.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH v4] md: improve io stats accounting
+Date: Fri, 17 Jul 2020 12:44:24 +0200
+Message-ID: <db93b8ae-25a1-5b50-7360-1f9c8e0661c3@intel.com>
+References: <20200703091309.19955-1-artur.paszkiewicz@intel.com>
+ <82ac5fe5-e61d-e031-6a64-60b6e1dd408d@cloud.ionos.com>
+ <CAPhsuW4Xc19jJyxzOUcfoE+HrKH=bogC55=-dt04z6phn0Wu5Q@mail.gmail.com>
+ <CAPhsuW6HjN0hZ8E998XBpg+WxP5uhZO0on-M-tQ45kpFO5XHqg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPhsuW6HjN0hZ8E998XBpg+WxP5uhZO0on-M-tQ45kpFO5XHqg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, song@kernel.org
+To: Song Liu <song@kernel.org>, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When array convert to clustered bitmap, the safe_mode_delay doesn't clean and vice versa.
-the /sys/block/mdX/md/safe_mode_delay keep original value after changing bitmap type.
-in safe_delay_store(), the code forbids setting mddev->safemode_delay when array is clustered.
-So in cluster-md env, the expected safemode_delay value should be 0.
+On 7/16/20 7:29 PM, Song Liu wrote:
+> I just noticed another issue with this work on raid456, as iostat
+> shows something
+> like:
+> 
+> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
+> avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+> nvme0n1        6306.50 18248.00  636.00 1280.00    45.11    76.19
+> 129.65     3.03    1.23    0.67    1.51   0.76 145.50
+> nvme1n1       11441.50 13234.00 1069.50  961.00    71.87    55.39
+> 128.35     3.32    1.30    0.90    1.75   0.72 146.50
+> nvme2n1        8280.50 16352.50  971.50 1231.00    65.53    68.65
+> 124.77     3.20    1.17    0.69    1.54   0.64 142.00
+> nvme3n1        6158.50 18199.50  567.00 1453.50    39.81    76.74
+> 118.13     3.50    1.40    0.88    1.60   0.73 146.50
+> md0               0.00     0.00 1436.00 1411.00    89.75    88.19
+> 128.00    22.98    8.07    0.16   16.12   0.52 147.00
+> 
+> md0 here is a RAID-6 array with 4 devices. %util of > 100% is clearly
+> wrong here.
+> This only doesn't happen to RAID-0 or RAID-1 in my tests.
+> 
+> Artur, could you please take a look at this?
 
-reproduction steps:
-```
-node1 # mdadm --zero-superblock /dev/sd{b,c,d}
-node1 # mdadm -C /dev/md0 -b internal -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.204
-node1 # mdadm -G /dev/md0 -b none
-node1 # mdadm --grow /dev/md0 --bitmap=clustered
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.204  <== doesn't change, should ZERO for cluster-md
+Hi Song,
 
-node1 # mdadm --zero-superblock /dev/sd{b,c,d}
-node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.000
-node1 # mdadm -G /dev/md0 -b none
-node1 # cat /sys/block/md0/md/safe_mode_delay
-0.000  <== doesn't change, should default value
-```
+I think it's not caused by this patch, because %util of the member
+drives is affected as well. I reverted the patch and it's still
+happening:
 
-Neil said md_setup_cluster/md_cluster_stop are good places to fix.
-After investigation, md_setup_cluster() is a good place for setting,
-but md_cluster_stop is good for cleaning job when md_setup_cluster return err.
+Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wMB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dMB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
+md0             20.00      2.50     0.00   0.00    0.00   128.00   21.00      2.62     0.00   0.00    0.00   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+nvme0n1         13.00      1.62   279.00  95.55    0.77   128.00    4.00      0.50   372.00  98.94 1289.00   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    5.17 146.70
+nvme1n1         15.00      1.88   310.00  95.38    0.53   128.00   21.00      2.62   341.00  94.20 1180.29   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   24.80 146.90
+nvme2n1         16.00      2.00   310.00  95.09    0.69   128.00   19.00      2.38   341.00  94.72  832.89   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   15.84 146.80
+nvme3n1         18.00      2.25   403.00  95.72    0.72   128.00   16.00      2.00   248.00  93.94  765.69   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   12.26 114.30
 
-see below flow:
-(user space)
-mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda /dev/sdb
-mdadm --grow /dev/md0 -b none
-(kernel space)
-SET_ARRAY_INFO
- update_array_info
-  + mddev->bitmap_info.nodes = 0;
-  + md_cluster_ops->leave(mddev)
-  + md_bitmap_destroy
-     md_bitmap_free //won't trigger md_cluster_stop() because above set 0.
+I was only able to reproduce it on a VM, it doesn't occur on real
+hardware (for me). What was your test configuration?
 
-Signed-off-by: Zhao Heming <heming.zhao@suse.com>
----
-v2:
-- change setting path from location_store to md_setup_cluster
-- add restoring path
-v3:
-- add restoring path for error case
-- modify comments
-
----
- drivers/md/md.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f567f536b529..e20f1d5a5261 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -101,6 +101,8 @@ static void mddev_detach(struct mddev *mddev);
-  * count by 2 for every hour elapsed between read errors.
-  */
- #define MD_DEFAULT_MAX_CORRECTED_READ_ERRORS 20
-+/* Default safemode delay: 200 msec */
-+#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
- /*
-  * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
-  * is 1000 KB/sec, so the extra system load does not show up that much.
-@@ -5982,7 +5984,7 @@ int md_run(struct mddev *mddev)
- 	if (mddev_is_clustered(mddev))
- 		mddev->safemode_delay = 0;
- 	else
--		mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
-+		mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 	mddev->in_sync = 1;
- 	smp_wmb();
- 	spin_lock(&mddev->lock);
-@@ -7361,6 +7363,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 
- 				mddev->bitmap_info.nodes = 0;
- 				md_cluster_ops->leave(mddev);
-+				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 			}
- 			mddev_suspend(mddev);
- 			md_bitmap_destroy(mddev);
-@@ -8366,6 +8369,7 @@ int md_setup_cluster(struct mddev *mddev, int nodes)
- 	}
- 	spin_unlock(&pers_lock);
- 
-+	mddev->safemode_delay = 0;
- 	return md_cluster_ops->join(mddev, nodes);
- }
- 
-@@ -8375,6 +8379,7 @@ void md_cluster_stop(struct mddev *mddev)
- 		return;
- 	md_cluster_ops->leave(mddev);
- 	module_put(md_cluster_mod);
-+	mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- }
- 
- static int is_mddev_idle(struct mddev *mddev, int init)
--- 
-2.25.0
+Thanks,
+Artur
