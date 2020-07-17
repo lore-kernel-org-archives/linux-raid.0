@@ -1,65 +1,107 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: Re: [PATCH v4] md: improve io stats accounting
-Date: Fri, 17 Jul 2020 14:45:49 +0200
-Message-ID: <677e39d3-ec87-7e93-09c6-c40aabd303f1@cloud.ionos.com>
-References: <20200703091309.19955-1-artur.paszkiewicz@intel.com>
- <82ac5fe5-e61d-e031-6a64-60b6e1dd408d@cloud.ionos.com>
- <CAPhsuW4Xc19jJyxzOUcfoE+HrKH=bogC55=-dt04z6phn0Wu5Q@mail.gmail.com>
- <CAPhsuW6HjN0hZ8E998XBpg+WxP5uhZO0on-M-tQ45kpFO5XHqg@mail.gmail.com>
- <db93b8ae-25a1-5b50-7360-1f9c8e0661c3@intel.com>
+From: Zhao Heming <heming.zhao@suse.com>
+Subject: [PATCH] mdadm/Detail: show correct state for cluster-md array
+Date: Sat, 18 Jul 2020 01:51:11 +0800
+Message-ID: <1595008271-3234-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <db93b8ae-25a1-5b50-7360-1f9c8e0661c3@intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Song Liu <song@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, jes@trained-monkey.org
 List-Id: linux-raid.ids
 
-On 7/17/20 12:44 PM, Artur Paszkiewicz wrote:
-> On 7/16/20 7:29 PM, Song Liu wrote:
->> I just noticed another issue with this work on raid456, as iostat
->> shows something
->> like:
->>
->> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
->> avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
->> nvme0n1        6306.50 18248.00  636.00 1280.00    45.11    76.19
->> 129.65     3.03    1.23    0.67    1.51   0.76 145.50
->> nvme1n1       11441.50 13234.00 1069.50  961.00    71.87    55.39
->> 128.35     3.32    1.30    0.90    1.75   0.72 146.50
->> nvme2n1        8280.50 16352.50  971.50 1231.00    65.53    68.65
->> 124.77     3.20    1.17    0.69    1.54   0.64 142.00
->> nvme3n1        6158.50 18199.50  567.00 1453.50    39.81    76.74
->> 118.13     3.50    1.40    0.88    1.60   0.73 146.50
->> md0               0.00     0.00 1436.00 1411.00    89.75    88.19
->> 128.00    22.98    8.07    0.16   16.12   0.52 147.00
->>
->> md0 here is a RAID-6 array with 4 devices. %util of > 100% is clearly
->> wrong here.
->> This only doesn't happen to RAID-0 or RAID-1 in my tests.
->>
->> Artur, could you please take a look at this?
-> Hi Song,
->
-> I think it's not caused by this patch, because %util of the member
-> drives is affected as well. I reverted the patch and it's still
-> happening:
->
-> Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wMB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dMB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
-> md0             20.00      2.50     0.00   0.00    0.00   128.00   21.00      2.62     0.00   0.00    0.00   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-> nvme0n1         13.00      1.62   279.00  95.55    0.77   128.00    4.00      0.50   372.00  98.94 1289.00   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    5.17 146.70
-> nvme1n1         15.00      1.88   310.00  95.38    0.53   128.00   21.00      2.62   341.00  94.20 1180.29   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   24.80 146.90
-> nvme2n1         16.00      2.00   310.00  95.09    0.69   128.00   19.00      2.38   341.00  94.72  832.89   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   15.84 146.80
-> nvme3n1         18.00      2.25   403.00  95.72    0.72   128.00   16.00      2.00   248.00  93.94  765.69   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   12.26 114.30
->
-> I was only able to reproduce it on a VM, it doesn't occur on real
-> hardware (for me). What was your test configuration?
+After kernel md module commit 480523feae581, in md-cluster env,
+mddev->in_sync always zero, it will make array.state never set
+up MD_SB_CLEAN. it causes "mdadm -D /dev/mdX" show state 'active'
+all the time.
 
-Just FYI,  I suspect it could be related to the commit 2b8bd423614c595
-("block/diskstats: more accurate approximation of io_ticks for slow disks").
+bitmap.c: add a new API IsBitmapDirty() to support inquiry bitmap
+dirty or clean.
 
-Thanks,
-Guoqing
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+---
+ Detail.c | 21 ++++++++++++++++++++-
+ bitmap.c | 22 ++++++++++++++++++++++
+ mdadm.h  |  1 +
+ 3 files changed, 43 insertions(+), 1 deletion(-)
+
+diff --git a/Detail.c b/Detail.c
+index 24eeba0..fd580a3 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -495,8 +495,27 @@ int Detail(char *dev, struct context *c)
+ 							  sra->array_state);
+ 				else
+ 					arrayst = "clean";
+-			} else
++			} else {
+ 				arrayst = "active";
++				if (array.state & (1<<MD_SB_CLUSTERED)) {
++					int dirty = 0;
++					for (d = 0; d < max_disks * 2; d++) {
++						char *dv;
++						mdu_disk_info_t disk = disks[d];
++
++						if (d >= array.raid_disks * 2 &&
++								disk.major == 0 && disk.minor == 0)
++							continue;
++						if ((d & 1) && disk.major == 0 && disk.minor == 0)
++							continue;
++						dv = map_dev_preferred(disk.major, disk.minor, 0, c->prefer);
++						if (dv != NULL)
++							if ((dirty = IsBitmapDirty(dv))) break;
++					}
++					if (dirty == 0)
++						arrayst = "clean";
++				}
++			}
+ 
+ 			printf("             State : %s%s%s%s%s%s%s \n",
+ 			       arrayst, st,
+diff --git a/bitmap.c b/bitmap.c
+index e38cb96..10c2045 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -368,6 +368,28 @@ free_info:
+ 	return rv;
+ }
+ 
++int IsBitmapDirty(char *filename)
++{
++	/*
++	 * Read the bitmap file
++	 * return: 1(dirty), 0 (clean), -1(error)
++	 */
++
++	struct supertype *st = NULL;
++	bitmap_info_t *info;
++	int fd = -1, rv = -1;
++
++	fd = bitmap_file_open(filename, &st, 0);
++	if (fd < 0)
++		return rv;
++
++	info = bitmap_fd_read(fd, 0);
++	if (!info)
++		return rv;
++	close(fd);
++	return info->dirty_bits ? 1 : 0;
++}
++
+ int CreateBitmap(char *filename, int force, char uuid[16],
+ 		 unsigned long chunksize, unsigned long daemon_sleep,
+ 		 unsigned long write_behind,
+diff --git a/mdadm.h b/mdadm.h
+index 399478b..ba8ba91 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1447,6 +1447,7 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			unsigned long long array_size,
+ 			int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
++extern int IsBitmapDirty(char *filename);
+ extern int Write_rules(char *rule_name);
+ extern int bitmap_update_uuid(int fd, int *uuid, int swap);
+ 
+-- 
+2.25.0
