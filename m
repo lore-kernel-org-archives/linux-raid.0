@@ -1,69 +1,125 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH v4] md: improve io stats accounting
-Date: Fri, 17 Jul 2020 16:49:38 -0700
-Message-ID: <CAPhsuW7a2cAmBcgyineR3DoAht5=BoSDWHYh2gLJ6ur1+rshyQ@mail.gmail.com>
-References: <20200703091309.19955-1-artur.paszkiewicz@intel.com>
- <82ac5fe5-e61d-e031-6a64-60b6e1dd408d@cloud.ionos.com> <CAPhsuW4Xc19jJyxzOUcfoE+HrKH=bogC55=-dt04z6phn0Wu5Q@mail.gmail.com>
- <CAPhsuW6HjN0hZ8E998XBpg+WxP5uhZO0on-M-tQ45kpFO5XHqg@mail.gmail.com> <db93b8ae-25a1-5b50-7360-1f9c8e0661c3@intel.com>
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH v7 3/3] md/raid5: support config stripe_size by sysfs entry
+Date: Sat, 18 Jul 2020 05:29:09 -0400
+Message-ID: <20200718092909.4020424-4-yuyufen@huawei.com>
+References: <20200718092909.4020424-1-yuyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <db93b8ae-25a1-5b50-7360-1f9c8e0661c3@intel.com>
+In-Reply-To: <20200718092909.4020424-1-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, linux-raid <linux-raid@vger.kernel.org>
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-On Fri, Jul 17, 2020 at 3:44 AM Artur Paszkiewicz
-<artur.paszkiewicz@intel.com> wrote:
->
-> On 7/16/20 7:29 PM, Song Liu wrote:
-> > I just noticed another issue with this work on raid456, as iostat
-> > shows something
-> > like:
-> >
-> > Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> > avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
-> > nvme0n1        6306.50 18248.00  636.00 1280.00    45.11    76.19
-> > 129.65     3.03    1.23    0.67    1.51   0.76 145.50
-> > nvme1n1       11441.50 13234.00 1069.50  961.00    71.87    55.39
-> > 128.35     3.32    1.30    0.90    1.75   0.72 146.50
-> > nvme2n1        8280.50 16352.50  971.50 1231.00    65.53    68.65
-> > 124.77     3.20    1.17    0.69    1.54   0.64 142.00
-> > nvme3n1        6158.50 18199.50  567.00 1453.50    39.81    76.74
-> > 118.13     3.50    1.40    0.88    1.60   0.73 146.50
-> > md0               0.00     0.00 1436.00 1411.00    89.75    88.19
-> > 128.00    22.98    8.07    0.16   16.12   0.52 147.00
-> >
-> > md0 here is a RAID-6 array with 4 devices. %util of > 100% is clearly
-> > wrong here.
-> > This only doesn't happen to RAID-0 or RAID-1 in my tests.
-> >
-> > Artur, could you please take a look at this?
->
-> Hi Song,
->
-> I think it's not caused by this patch, because %util of the member
-> drives is affected as well. I reverted the patch and it's still
-> happening:
->
-> Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wMB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dMB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
-> md0             20.00      2.50     0.00   0.00    0.00   128.00   21.00      2.62     0.00   0.00    0.00   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
-> nvme0n1         13.00      1.62   279.00  95.55    0.77   128.00    4.00      0.50   372.00  98.94 1289.00   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    5.17 146.70
-> nvme1n1         15.00      1.88   310.00  95.38    0.53   128.00   21.00      2.62   341.00  94.20 1180.29   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   24.80 146.90
-> nvme2n1         16.00      2.00   310.00  95.09    0.69   128.00   19.00      2.38   341.00  94.72  832.89   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   15.84 146.80
-> nvme3n1         18.00      2.25   403.00  95.72    0.72   128.00   16.00      2.00   248.00  93.94  765.69   128.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00   12.26 114.30
->
-> I was only able to reproduce it on a VM, it doesn't occur on real
-> hardware (for me). What was your test configuration?
+Adding a new 'stripe_size' sysfs entry to set and show stripe_size.
+stripe_size should not be bigger than PAGE_SIZE, and it requires to
+be multiple of 4096. We can adjust stripe_size by writing value into
+sysfs entry, likely, set stripe_size as 16KB:
 
-I was testing on VM. But I didn't see this issue after reverting the
-patch. Let me
-test more.
+          echo 16384 > /sys/block/md1/md/stripe_size
 
-Thanks,
-Song
+Show current stripe_size value:
 
+          cat /sys/block/md1/md/stripe_size
 
-> Thanks,
-> Artur
+For PAGE_SIZE is equal to 4096, 'stripe_size' can just be read.
+
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+---
+ drivers/md/raid5.c | 72 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 60cfa397f2d6..40961dd1777b 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6503,6 +6503,77 @@ raid5_rmw_level = __ATTR(rmw_level, S_IRUGO | S_IWUSR,
+ 			 raid5_show_rmw_level,
+ 			 raid5_store_rmw_level);
+ 
++static ssize_t
++raid5_show_stripe_size(struct mddev  *mddev, char *page)
++{
++	struct r5conf *conf;
++	int ret = 0;
++
++	spin_lock(&mddev->lock);
++	conf = mddev->private;
++	if (conf)
++		ret = sprintf(page, "%lu\n", RAID5_STRIPE_SIZE(conf));
++	spin_unlock(&mddev->lock);
++	return ret;
++}
++
++#if PAGE_SIZE != DEFAULT_STRIPE_SIZE
++static ssize_t
++raid5_store_stripe_size(struct mddev  *mddev, const char *page, size_t len)
++{
++	struct r5conf *conf;
++	unsigned long new;
++	int err;
++
++	if (len >= PAGE_SIZE)
++		return -EINVAL;
++	if (kstrtoul(page, 10, &new))
++		return -EINVAL;
++
++	/*
++	 * The value should not be bigger than PAGE_SIZE. It requires to
++	 * be multiple of DEFAULT_STRIPE_SIZE.
++	 */
++	if (new % DEFAULT_STRIPE_SIZE != 0 || new > PAGE_SIZE || new == 0)
++		return -EINVAL;
++
++	err = mddev_lock(mddev);
++	if (err)
++		return err;
++
++	conf = mddev->private;
++	if (!conf) {
++		err = -ENODEV;
++		goto out_unlock;
++	}
++
++	if (new == conf->stripe_size)
++		goto out_unlock;
++
++	pr_debug("md/raid: change stripe_size from %lu to %lu\n",
++			conf->stripe_size, new);
++
++	mddev_suspend(mddev);
++	conf->stripe_size = new;
++	conf->stripe_shift = ilog2(new) - 9;
++	conf->stripe_sectors = new >> 9;
++	mddev_resume(mddev);
++
++out_unlock:
++	mddev_unlock(mddev);
++	return err ?: len;
++}
++
++static struct md_sysfs_entry
++raid5_stripe_size = __ATTR(stripe_size, 0644,
++			 raid5_show_stripe_size,
++			 raid5_store_stripe_size);
++#else
++static struct md_sysfs_entry
++raid5_stripe_size = __ATTR(stripe_size, 0444,
++			 raid5_show_stripe_size,
++			 NULL);
++#endif
+ 
+ static ssize_t
+ raid5_show_preread_threshold(struct mddev *mddev, char *page)
+@@ -6691,6 +6762,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
+ 	&raid5_rmw_level.attr,
++	&raid5_stripe_size.attr,
+ 	&r5c_journal_mode.attr,
+ 	&ppl_write_hint.attr,
+ 	NULL,
+-- 
+2.25.4
