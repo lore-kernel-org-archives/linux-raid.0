@@ -1,34 +1,38 @@
-From: Winston Weinert <winston@ml1.net>
-Subject: [PATCH] mdadm/md.4: update path to in-kernel-tree documentation
-Date: Sat, 18 Jul 2020 05:33:15 -0500
-Message-ID: <20200718103314.14549-1-winston@ml1.net>
+From: Zhao Heming <heming.zhao@suse.com>
+Subject: [PATCH v4 0/2] md_cluster: bugs fix
+Date: Sun, 19 Jul 2020 19:08:38 +0800
+Message-ID: <1595156920-31427-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Winston Weinert <winston@ml1.net>
+Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, jes@trained-monkey.org
 List-Id: linux-raid.ids
 
-Documentation/md.txt was renamed to Documentation/admin/guide/md.rst
-in linux commit 9d85025b0418163fae079c9ba8f8445212de8568 (Oct 26,
-2016).
----
- md.4 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v4:
+- add new patch 'fix rmmod issue when md_cluster convert bitmap to none'
+- add cover leter
+- modify both patches comments.
 
-diff --git a/md.4 b/md.4
-index 0712af2..aecff38 100644
---- a/md.4
-+++ b/md.4
-@@ -1061,7 +1061,7 @@ which contains various files for providing access to information about
- the array.
- 
- This interface is documented more fully in the file
--.B Documentation/md.txt
-+.B Documentation/admin-guide/md.rst
- which is distributed with the kernel sources.  That file should be
- consulted for full documentation.  The following are just a selection
- of attribute files that are available.
+v3:
+- add restoring path for error case
+- modify comments
+
+v2:
+- change setting path from location_store to md_setup_cluster
+- add restoring path
+
+v1:
+- create: fix safemode_delay value when converting to clustered bitmap
+
+Zhao Heming (2):
+  md-cluster: fix safemode_delay value when converting to clustered
+    bitmap
+  md-cluster: fix rmmod issue when md_cluster convert bitmap to none
+
+ drivers/md/md.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
 -- 
-2.26.2
+2.25.0
