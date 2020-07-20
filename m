@@ -1,66 +1,60 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/24] fs: move the putname from filename_create to the callers
-Date: Mon, 20 Jul 2020 17:58:42 +0200
-Message-ID: <20200720155902.181712-5-hch@lst.de>
-References: <20200720155902.181712-1-hch@lst.de>
+Subject: add file system helpers that take kernel pointers for the init code
+Date: Mon, 20 Jul 2020 17:58:38 +0200
+Message-ID: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200720155902.181712-1-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-This allows reusing the struct filename for retries, and will also allow
-pushing the getname up the stack for a few places to allower for better
-handling of kernel space filenames.
+Hi Al,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/namei.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+currently a lot of the file system calls in the early in code (and the
+devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
+This is one of the few last remaining places we need to deal with to kill
+off set_fs entirely, so this series adds new helpers that take kernel
+pointers.  That is mostly done by pushing the getname() call further up
+the stack so that we can add variants using getname_kernel() without
+duplicating code.
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 72d4219c93acb7..6ebe400c9736d2 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -3478,7 +3478,6 @@ static struct dentry *filename_create(int dfd, struct filename *name,
- 		error = err2;
- 		goto fail;
- 	}
--	putname(name);
- 	return dentry;
- fail:
- 	dput(dentry);
-@@ -3496,8 +3495,12 @@ static struct dentry *filename_create(int dfd, struct filename *name,
- struct dentry *kern_path_create(int dfd, const char *pathname,
- 				struct path *path, unsigned int lookup_flags)
- {
--	return filename_create(dfd, getname_kernel(pathname),
--				path, lookup_flags);
-+	struct filename *name = getname_kernel(pathname);
-+	struct dentry *dentry = filename_create(dfd, name, path, lookup_flags);
-+
-+	if (!IS_ERR(dentry))
-+		putname(name);
-+	return dentry;
- }
- EXPORT_SYMBOL(kern_path_create);
- 
-@@ -3513,7 +3516,12 @@ EXPORT_SYMBOL(done_path_create);
- inline struct dentry *user_path_create(int dfd, const char __user *pathname,
- 				struct path *path, unsigned int lookup_flags)
- {
--	return filename_create(dfd, getname(pathname), path, lookup_flags);
-+	struct filename *name = getname(pathname);
-+	struct dentry *dentry = filename_create(dfd, name, path, lookup_flags);
-+
-+	if (!IS_ERR(dentry))
-+		putname(name);
-+	return dentry;
- }
- EXPORT_SYMBOL(user_path_create);
- 
--- 
-2.27.0
+The series sits on top of my previous
+
+  "decruft the early init / initrd / initramfs code v2"
+
+series.
+
+
+Git tree:
+
+    git://git.infradead.org/users/hch/misc.git kern_path
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/kern_path
+
+
+Diffstat:
+ drivers/base/devtmpfs.c    |    8 +-
+ drivers/md/md-autodetect.c |    2 
+ fs/coredump.c              |    2 
+ fs/fs_parser.c             |    1 
+ fs/internal.h              |   12 ---
+ fs/namei.c                 |  166 +++++++++++++++++++++++++++++++--------------
+ fs/namespace.c             |  134 +++++++++++++++++++++---------------
+ fs/open.c                  |  149 ++++++++++++++++++++++++++++------------
+ fs/stat.c                  |   92 ++++++++++++------------
+ fs/utimes.c                |   19 +++--
+ include/linux/fs.h         |   39 +++++-----
+ include/linux/syscalls.h   |   82 ----------------------
+ init/do_mounts.c           |   12 +--
+ init/do_mounts.h           |    4 -
+ init/do_mounts_initrd.c    |   26 +++----
+ init/do_mounts_rd.c        |    2 
+ init/initramfs.c           |   27 +++----
+ init/main.c                |    9 --
+ init/noinitramfs.c         |    9 +-
+ kernel/uid16.c             |   15 ----
+ 20 files changed, 434 insertions(+), 376 deletions(-)
