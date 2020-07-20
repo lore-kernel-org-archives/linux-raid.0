@@ -1,65 +1,75 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/24] fs: remove KSTAT_QUERY_FLAGS
-Date: Mon, 20 Jul 2020 17:59:01 +0200
-Message-ID: <20200720155902.181712-24-hch@lst.de>
+Subject: [PATCH 21/24] fs: move vfs_fstatat out of line
+Date: Mon, 20 Jul 2020 17:58:59 +0200
+Message-ID: <20200720155902.181712-22-hch@lst.de>
 References: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <20200720155902.181712-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-KSTAT_QUERY_FLAGS expands to AT_STATX_SYNC_TYPE, which itself already
-is a mask.  Remove the double name, especially given that the prefix
-is a little confusing vs the normal AT_* flags.
+This allows to keep vfs_statx static in fs/stat.c to prepare for the following
+changes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/stat.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/stat.c          | 9 +++++++--
+ include/linux/fs.h | 9 ++-------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/fs/stat.c b/fs/stat.c
-index 8acc4b14ac24c9..dacecdda2e7967 100644
+index 2683a051ce07fa..ddf0176d4dbcd7 100644
 --- a/fs/stat.c
 +++ b/fs/stat.c
-@@ -56,7 +56,7 @@ EXPORT_SYMBOL(generic_fillattr);
-  * @path: file to get attributes from
-  * @stat: structure to return attributes in
-  * @request_mask: STATX_xxx flags indicating what the caller wants
-- * @query_flags: Query mode (KSTAT_QUERY_FLAGS)
-+ * @query_flags: Query mode (AT_STATX_SYNC_TYPE)
+@@ -181,7 +181,7 @@ static inline unsigned vfs_stat_set_lookup_flags(unsigned *lookup_flags,
   *
-  * Get attributes without calling security_inode_getattr.
-  *
-@@ -71,7 +71,7 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
+  * 0 will be returned on success, and a -ve error code if unsuccessful.
+  */
+-int vfs_statx(int dfd, const char __user *filename, int flags,
++static int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	      struct kstat *stat, u32 request_mask)
+ {
+ 	struct path path;
+@@ -209,8 +209,13 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
+ out:
+ 	return error;
+ }
+-EXPORT_SYMBOL(vfs_statx);
  
- 	memset(stat, 0, sizeof(*stat));
- 	stat->result_mask |= STATX_BASIC_STATS;
--	query_flags &= KSTAT_QUERY_FLAGS;
-+	query_flags &= AT_STATX_SYNC_TYPE;
++int vfs_fstatat(int dfd, const char __user *filename,
++			      struct kstat *stat, int flags)
++{
++	return vfs_statx(dfd, filename, flags | AT_NO_AUTOMOUNT,
++			 stat, STATX_BASIC_STATS);
++}
  
- 	/* allow the fs to override these if it really wants to */
- 	/* SB_NOATIME means filesystem supplies dummy atime value */
-@@ -97,7 +97,7 @@ EXPORT_SYMBOL(vfs_getattr_nosec);
-  * @path: The file of interest
-  * @stat: Where to return the statistics
-  * @request_mask: STATX_xxx flags indicating what the caller wants
-- * @query_flags: Query mode (KSTAT_QUERY_FLAGS)
-+ * @query_flags: Query mode (AT_STATX_SYNC_TYPE)
-  *
-  * Ask the filesystem for a file's attributes.  The caller must indicate in
-  * request_mask and query_flags to indicate what they want.
-@@ -171,7 +171,7 @@ static int vfs_statx(int dfd, const char __user *filename, int flags,
- 	int error;
+ #ifdef __ARCH_WANT_OLD_STAT
  
- 	if (flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT | AT_EMPTY_PATH |
--		      KSTAT_QUERY_FLAGS))
-+		      AT_STATX_SYNC_TYPE))
- 		return -EINVAL;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4d9d33c62fa2e5..0e0cd6a988bb38 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3296,15 +3296,10 @@ extern const struct inode_operations simple_symlink_inode_operations;
  
- 	if (!(flags & AT_SYMLINK_NOFOLLOW))
+ extern int iterate_dir(struct file *, struct dir_context *);
+ 
+-extern int vfs_statx(int, const char __user *, int, struct kstat *, u32);
++int vfs_fstatat(int dfd, const char __user *filename, struct kstat *stat,
++		int flags);
+ int vfs_fstat(int fd, struct kstat *stat);
+ 
+-static inline int vfs_fstatat(int dfd, const char __user *filename,
+-			      struct kstat *stat, int flags)
+-{
+-	return vfs_statx(dfd, filename, flags | AT_NO_AUTOMOUNT,
+-			 stat, STATX_BASIC_STATS);
+-}
+ static inline int vfs_stat(const char __user *filename, struct kstat *stat)
+ {
+ 	return vfs_fstatat(AT_FDCWD, filename, stat, 0);
 -- 
 2.27.0
