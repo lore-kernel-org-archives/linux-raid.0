@@ -1,94 +1,62 @@
-From: "heming.zhao@suse.com" <heming.zhao@suse.com>
-Subject: Re: [PATCH v4 2/2] md-cluster: fix rmmod issue when md_cluster
- convert bitmap to none
-Date: Mon, 20 Jul 2020 23:27:41 +0800
-Message-ID: <5152d463-01ca-4a9f-21bf-25ec0af8589e@suse.com>
-References: <1595156920-31427-1-git-send-email-heming.zhao@suse.com>
- <1595156920-31427-3-git-send-email-heming.zhao@suse.com>
- <87h7u3w0gj.fsf@notabene.neil.brown.name>
+From: "Ahmed S. Darwish" <a.darwish@linutronix.de>
+Subject: [PATCH v4 19/24] raid5: Use sequence counter with associated spinlock
+Date: Mon, 20 Jul 2020 17:55:25 +0200
+Message-ID: <20200720155530.1173732-20-a.darwish@linutronix.de>
+References: <20200519214547.352050-1-a.darwish@linutronix.de>
+ <20200720155530.1173732-1-a.darwish@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87h7u3w0gj.fsf@notabene.neil.brown.name>
-Content-Language: en-US
+In-Reply-To: <20200720155530.1173732-1-a.darwish@linutronix.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neil@brown.name>, linux-raid@vger.kernel.org
-Cc: neilb@suse.com, jes@trained-monkey.org
+To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, "Paul E. McKenney" <paulmck@kernel.org>, "Sebastian A. Siewior" <bigeasy@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, "Ahmed S. Darwish" <a.darwish@linutronix.de>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+A sequence counter write side critical section must be protected by some
+form of locking to serialize writers. A plain seqcount_t does not
+contain the information of which lock must be held when entering a write
+side critical section.
 
+Use the new seqcount_spinlock_t data type, which allows to associate a
+spinlock with the sequence counter. This enables lockdep to verify that
+the spinlock used for writer serialization is held when the write side
+critical section is entered.
 
-On 7/20/20 7:26 AM, NeilBrown wrote:
-> On Sun, Jul 19 2020, Zhao Heming wrote:
-> 
->> update_array_info misses calling module_put when removing cluster bitmap.
->>
->> steps to reproduce:
->> ```
->> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
->> /dev/sdb
->> mdadm: array /dev/md0 started.
->> node1 # lsmod | egrep "dlm|md_|raid1"
->> md_cluster             28672  1
->> dlm                   212992  14 md_cluster
->> configfs               57344  2 dlm
->> raid1                  53248  1
->> md_mod                176128  2 raid1,md_cluster
->> node1 # mdadm -G /dev/md0 -b none
->> node1 # lsmod | egrep "dlm|md_|raid1"
->> md_cluster             28672  1 <== should be zero
->> dlm                   212992  9 md_cluster
->> configfs               57344  2 dlm
->> raid1                  53248  1
->> md_mod                176128  2 raid1,md_cluster
->> node1 # mdadm -G /dev/md0 -b clustered
->> node1 # lsmod | egrep "dlm|md_|raid1"
->> md_cluster             28672  2 <== increase
->> dlm                   212992  14 md_cluster
->> configfs               57344  2 dlm
->> raid1                  53248  1
->> md_mod                176128  2 raid1,md_cluster
->> node1 # mdadm -G /dev/md0 -b none
->> node1 # mdadm -G /dev/md0 -b clustered
->> node1 # lsmod | egrep "dlm|md_|raid1"
->> md_cluster             28672  3 <== increase
->> dlm                   212992  14 md_cluster
->> configfs               57344  2 dlm
->> raid1                  53248  1
->> md_mod                176128  2 raid1,md_cluster
->> ```
->>
->> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
->> ---
->>   drivers/md/md.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index e20f1d5a5261..ca791387e54d 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -7363,6 +7363,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
->>   
->>   				mddev->bitmap_info.nodes = 0;
->>   				md_cluster_ops->leave(mddev);
->> +				module_put(md_cluster_mod);
->>   				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
-> 
-> I would make this a call to "md_cluster_stop()", and move the reset of
-> ->safemode_delay" in there, but either way this is correct and needed.
-> 
->    Reviewed-by: NeilBrown <neilb@suse.de>
-> 
-> Thanks,
-> NeilBrown
-> 
-Thank you for your review.
-If put module_put() in md_cluster_stop(), "mddev->bitmap_info.nodes = 0" also needs to put in md_cluster_stop().
-the "bitmap_info.nodes = 0" makes mddev_is_clustered() false and will close the door to call md_cluster_stop().
+If lockdep is disabled this lock association is compiled out and has
+neither storage size nor runtime overhead.
 
-> 
->>   			}
->>   			mddev_suspend(mddev);
->> -- 
->> 2.25.0
+Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
+---
+ drivers/md/raid5.c | 2 +-
+ drivers/md/raid5.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ab8067f9ce8c..892aefe88fa7 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6935,7 +6935,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	} else
+ 		goto abort;
+ 	spin_lock_init(&conf->device_lock);
+-	seqcount_init(&conf->gen_lock);
++	seqcount_spinlock_init(&conf->gen_lock, &conf->device_lock);
+ 	mutex_init(&conf->cache_size_mutex);
+ 	init_waitqueue_head(&conf->wait_for_quiescent);
+ 	init_waitqueue_head(&conf->wait_for_stripe);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index f90e0704bed9..a2c9e9e9f5ac 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -589,7 +589,7 @@ struct r5conf {
+ 	int			prev_chunk_sectors;
+ 	int			prev_algo;
+ 	short			generation; /* increments with every reshape */
+-	seqcount_t		gen_lock;	/* lock against generation changes */
++	seqcount_spinlock_t	gen_lock;	/* lock against generation changes */
+ 	unsigned long		reshape_checkpoint; /* Time we last updated
+ 						     * metadata */
+ 	long long		min_offset_diff; /* minimum difference between
+-- 
+2.20.1
