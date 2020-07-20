@@ -1,71 +1,45 @@
 From: Zhao Heming <heming.zhao@suse.com>
-Subject: [PATCH v5 2/2] md-cluster: fix rmmod issue when md_cluster convert bitmap to none
-Date: Tue, 21 Jul 2020 02:08:53 +0800
-Message-ID: <1595268533-7040-3-git-send-email-heming.zhao@suse.com>
-References: <1595268533-7040-1-git-send-email-heming.zhao@suse.com>
+Subject: [PATCH v5 0/2] md_cluster: bugs fix
+Date: Tue, 21 Jul 2020 02:08:51 +0800
+Message-ID: <1595268533-7040-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1595268533-7040-1-git-send-email-heming.zhao@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, song@kernel.org
 List-Id: linux-raid.ids
 
-update_array_info misses calling module_put when removing cluster bitmap.
+v5:
+- change safemode_delay patch code by neil's comments.
+- modify safemode_delay patch comments:
+  - remove useless analysis
+  - limit line in 75 chars
+- add neil's reviewd info in rmmod patch.
 
-steps to reproduce:
-```
-node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
-/dev/sdb
-mdadm: array /dev/md0 started.
-node1 # lsmod | egrep "dlm|md_|raid1"
-md_cluster             28672  1
-dlm                   212992  14 md_cluster
-configfs               57344  2 dlm
-raid1                  53248  1
-md_mod                176128  2 raid1,md_cluster
-node1 # mdadm -G /dev/md0 -b none
-node1 # lsmod | egrep "dlm|md_|raid1"
-md_cluster             28672  1 <== should be zero
-dlm                   212992  9 md_cluster
-configfs               57344  2 dlm
-raid1                  53248  1
-md_mod                176128  2 raid1,md_cluster
-node1 # mdadm -G /dev/md0 -b clustered
-node1 # lsmod | egrep "dlm|md_|raid1"
-md_cluster             28672  2 <== increase
-dlm                   212992  14 md_cluster
-configfs               57344  2 dlm
-raid1                  53248  1
-md_mod                176128  2 raid1,md_cluster
-node1 # mdadm -G /dev/md0 -b none
-node1 # mdadm -G /dev/md0 -b clustered
-node1 # lsmod | egrep "dlm|md_|raid1"
-md_cluster             28672  3 <== increase
-dlm                   212992  14 md_cluster
-configfs               57344  2 dlm
-raid1                  53248  1
-md_mod                176128  2 raid1,md_cluster
-```
+v4:
+- add new patch 'fix rmmod issue when md_cluster convert bitmap to none'
+- add cover leter
+- modify both patches comments.
 
-Reviewed-by: NeilBrown <neilb@suse.de>
-Signed-off-by: Zhao Heming <heming.zhao@suse.com>
----
- drivers/md/md.c | 1 +
- 1 file changed, 1 insertion(+)
+v3:
+- add restoring path for error case
+- modify comments
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1bde3df3fa18..502f0d100a96 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7363,6 +7363,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 
- 				mddev->bitmap_info.nodes = 0;
- 				md_cluster_ops->leave(mddev);
-+				module_put(md_cluster_mod);
- 				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
- 			}
- 			mddev_suspend(mddev);
+v2:
+- change setting path from location_store to md_setup_cluster
+- add restoring path
+
+v1:
+- create: fix safemode_delay value when converting to clustered bitmap
+
+Zhao Heming (2):
+  md-cluster: fix safemode_delay value when converting to clustered
+    bitmap
+  md-cluster: fix rmmod issue when md_cluster convert bitmap to none
+
+ drivers/md/md.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
 -- 
 2.25.0
