@@ -1,62 +1,49 @@
-From: "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH v4 19/24] raid5: Use sequence counter with associated spinlock
-Date: Mon, 20 Jul 2020 17:55:25 +0200
-Message-ID: <20200720155530.1173732-20-a.darwish@linutronix.de>
-References: <20200519214547.352050-1-a.darwish@linutronix.de>
- <20200720155530.1173732-1-a.darwish@linutronix.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/24] init: initialize ramdisk_execute_command at compile time
+Date: Mon, 20 Jul 2020 17:58:39 +0200
+Message-ID: <20200720155902.181712-2-hch@lst.de>
+References: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200720155530.1173732-1-a.darwish@linutronix.de>
+In-Reply-To: <20200720155902.181712-1-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, "Paul E. McKenney" <paulmck@kernel.org>, "Sebastian A. Siewior" <bigeasy@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, LKML <linux-kernel@vger.kernel.org>, "Ahmed S. Darwish" <a.darwish@linutronix.de>, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-A sequence counter write side critical section must be protected by some
-form of locking to serialize writers. A plain seqcount_t does not
-contain the information of which lock must be held when entering a write
-side critical section.
+Set ramdisk_execute_command to "/init" at compile time.  The command
+line can still override it, but this saves a few instructions and
+removes a NULL check.
 
-Use the new seqcount_spinlock_t data type, which allows to associate a
-spinlock with the sequence counter. This enables lockdep to verify that
-the spinlock used for writer serialization is held when the write side
-critical section is entered.
-
-If lockdep is disabled this lock association is compiled out and has
-neither storage size nor runtime overhead.
-
-Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5.c | 2 +-
- drivers/md/raid5.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ init/main.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ab8067f9ce8c..892aefe88fa7 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -6935,7 +6935,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	} else
- 		goto abort;
- 	spin_lock_init(&conf->device_lock);
--	seqcount_init(&conf->gen_lock);
-+	seqcount_spinlock_init(&conf->gen_lock, &conf->device_lock);
- 	mutex_init(&conf->cache_size_mutex);
- 	init_waitqueue_head(&conf->wait_for_quiescent);
- 	init_waitqueue_head(&conf->wait_for_stripe);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index f90e0704bed9..a2c9e9e9f5ac 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -589,7 +589,7 @@ struct r5conf {
- 	int			prev_chunk_sectors;
- 	int			prev_algo;
- 	short			generation; /* increments with every reshape */
--	seqcount_t		gen_lock;	/* lock against generation changes */
-+	seqcount_spinlock_t	gen_lock;	/* lock against generation changes */
- 	unsigned long		reshape_checkpoint; /* Time we last updated
- 						     * metadata */
- 	long long		min_offset_diff; /* minimum difference between
+diff --git a/init/main.c b/init/main.c
+index db0621dfbb0468..c2c9143db96795 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -154,7 +154,7 @@ static bool initargs_found;
+ #endif
+ 
+ static char *execute_command;
+-static char *ramdisk_execute_command;
++static char *ramdisk_execute_command = "/init";
+ 
+ /*
+  * Used to generate warnings if static_key manipulation functions are used
+@@ -1514,10 +1514,6 @@ static noinline void __init kernel_init_freeable(void)
+ 	 * check if there is an early userspace init.  If yes, let it do all
+ 	 * the work
+ 	 */
+-
+-	if (!ramdisk_execute_command)
+-		ramdisk_execute_command = "/init";
+-
+ 	if (ksys_access((const char __user *)
+ 			ramdisk_execute_command, 0) != 0) {
+ 		ramdisk_execute_command = NULL;
 -- 
-2.20.1
+2.27.0
