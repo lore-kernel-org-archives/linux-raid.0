@@ -1,97 +1,179 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 19/24] fs: remove vfs_statx_fd
-Date: Mon, 20 Jul 2020 17:58:57 +0200
-Message-ID: <20200720155902.181712-20-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 15/24] fs: add a kern_link helper
+Date: Mon, 20 Jul 2020 17:58:53 +0200
+Message-ID: <20200720155902.181712-16-hch@lst.de>
 References: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200720155902.181712-1-hch-jcswGhMUV9g@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20200720155902.181712-1-hch@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-vfs_statx_fd is only used to implement vfs_fstat.  Remove vfs_statx_fd
-and just implement vfs_fstat directly.
+Add a simple helper perform a link with a kernel space file name and use
+it in the early init code instead of relying on the implicit
+set_fs(KERNEL_DS) there.  To do so push the getname from do_linkat into the
+callers.  Remove the now unused ksys_link.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/stat.c          | 22 +++++++---------------
- include/linux/fs.h |  7 +------
- 2 files changed, 8 insertions(+), 21 deletions(-)
+ fs/internal.h            |  2 --
+ fs/namei.c               | 39 +++++++++++++++++++++++++++++----------
+ include/linux/fs.h       |  1 +
+ include/linux/syscalls.h |  9 ---------
+ init/initramfs.c         |  2 +-
+ 5 files changed, 31 insertions(+), 22 deletions(-)
 
-diff --git a/fs/stat.c b/fs/stat.c
-index 44f8ad346db4ca..2683a051ce07fa 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -126,35 +126,27 @@ int vfs_getattr(const struct path *path, struct kstat *stat,
- EXPORT_SYMBOL(vfs_getattr);
+diff --git a/fs/internal.h b/fs/internal.h
+index 1e7a72bd183e63..f0869d5dc4dbfa 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -66,8 +66,6 @@ long do_rmdir(int dfd, const char __user *pathname);
+ long do_unlinkat(int dfd, struct filename *name);
+ long do_symlinkat(const char __user *oldname, int newdfd,
+ 		  const char __user *newname);
+-int do_linkat(int olddfd, const char __user *oldname, int newdfd,
+-	      const char __user *newname, int flags);
  
- /**
-- * vfs_statx_fd - Get the enhanced basic attributes by file descriptor
-+ * vfs_fstat - Get the basic attributes by file descriptor
-  * @fd: The file descriptor referring to the file of interest
-  * @stat: The result structure to fill in.
-- * @request_mask: STATX_xxx flags indicating what the caller wants
-- * @query_flags: Query mode (KSTAT_QUERY_FLAGS)
-  *
-  * This function is a wrapper around vfs_getattr().  The main difference is
-  * that it uses a file descriptor to determine the file location.
-  *
-  * 0 will be returned on success, and a -ve error code if unsuccessful.
+ /*
+  * namespace.c
+diff --git a/fs/namei.c b/fs/namei.c
+index de97edac21849d..9d80a5bce1051a 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -4122,8 +4122,8 @@ EXPORT_SYMBOL(vfs_link);
+  * with linux 2.0, and to avoid hard-linking to directories
+  * and other special files.  --ADM
   */
--int vfs_statx_fd(unsigned int fd, struct kstat *stat,
--		 u32 request_mask, unsigned int query_flags)
-+int vfs_fstat(int fd, struct kstat *stat)
+-int do_linkat(int olddfd, const char __user *oldname, int newdfd,
+-	      const char __user *newname, int flags)
++static int do_linkat(int olddfd, struct filename *oldname, int newdfd,
++	      struct filename *newname, int flags)
  {
- 	struct fd f;
--	int error = -EBADF;
--
--	if (query_flags & ~KSTAT_QUERY_FLAGS)
--		return -EINVAL;
-+	int error;
+ 	struct dentry *new_dentry;
+ 	struct path old_path, new_path;
+@@ -4131,27 +4131,29 @@ int do_linkat(int olddfd, const char __user *oldname, int newdfd,
+ 	int how = 0;
+ 	int error;
  
- 	f = fdget_raw(fd);
--	if (f.file) {
--		error = vfs_getattr(&f.file->f_path, stat,
--				    request_mask, query_flags);
--		fdput(f);
--	}
-+	if (!f.file)
-+		return -EBADF;
-+	error = vfs_getattr(&f.file->f_path, stat, STATX_BASIC_STATS, 0);
-+	fdput(f);
++	error = -EINVAL;
+ 	if ((flags & ~(AT_SYMLINK_FOLLOW | AT_EMPTY_PATH)) != 0)
+-		return -EINVAL;
++		goto out_put_both_names;
+ 	/*
+ 	 * To use null names we require CAP_DAC_READ_SEARCH
+ 	 * This ensures that not everyone will be able to create
+ 	 * handlink using the passed filedescriptor.
+ 	 */
+ 	if (flags & AT_EMPTY_PATH) {
++		error = -ENOENT;
+ 		if (!capable(CAP_DAC_READ_SEARCH))
+-			return -ENOENT;
++			goto out_put_both_names;
+ 		how = LOOKUP_EMPTY;
+ 	}
+ 
+ 	if (flags & AT_SYMLINK_FOLLOW)
+ 		how |= LOOKUP_FOLLOW;
+ retry:
+-	error = user_path_at(olddfd, oldname, how, &old_path);
++	error = filename_lookup(olddfd, oldname, how, &old_path, NULL);
+ 	if (error)
+-		return error;
++		goto out_put_newname;
+ 
+-	new_dentry = user_path_create(newdfd, newname, &new_path,
++	new_dentry = filename_create(newdfd, newname, &new_path,
+ 					(how & LOOKUP_REVAL));
+ 	error = PTR_ERR(new_dentry);
+ 	if (IS_ERR(new_dentry))
+@@ -4181,21 +4183,38 @@ int do_linkat(int olddfd, const char __user *oldname, int newdfd,
+ 		how |= LOOKUP_REVAL;
+ 		goto retry;
+ 	}
++	putname(newname);
+ out:
+ 	path_put(&old_path);
+-
++	putname(oldname);
++	return error;
++out_put_both_names:
++	if (!IS_ERR(oldname))
++		putname(oldname);
++out_put_newname:
++	if (!IS_ERR(newname))
++		putname(newname);
  	return error;
  }
--EXPORT_SYMBOL(vfs_statx_fd);
  
- static inline unsigned vfs_stat_set_lookup_flags(unsigned *lookup_flags,
- 						 int flags)
++int __init kern_link(const char *oldname, const char *newname)
++{
++	return do_linkat(AT_FDCWD, getname_kernel(oldname), AT_FDCWD,
++			 getname_kernel(newname), 0);
++}
++
+ SYSCALL_DEFINE5(linkat, int, olddfd, const char __user *, oldname,
+ 		int, newdfd, const char __user *, newname, int, flags)
+ {
+-	return do_linkat(olddfd, oldname, newdfd, newname, flags);
++	int how = (flags & AT_EMPTY_PATH) ? LOOKUP_EMPTY : 0;
++
++	return do_linkat(olddfd, getname_flags(oldname, how, NULL), newdfd,
++			 getname(newname), flags);
+ }
+ 
+ SYSCALL_DEFINE2(link, const char __user *, oldname, const char __user *, newname)
+ {
+-	return do_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
++	return do_linkat(AT_FDCWD, getname(oldname), AT_FDCWD, getname(newname), 0);
+ }
+ 
+ /**
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 6100b9f92cee8b..0169d3efa844d0 100644
+index 846a21a9b3e14c..fc3b09d473945f 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -3297,7 +3297,7 @@ extern const struct inode_operations simple_symlink_inode_operations;
- extern int iterate_dir(struct file *, struct dir_context *);
+@@ -3679,5 +3679,6 @@ int __init kern_chmod(const char *filename, umode_t mode);
+ int __init kern_utimes(const char *filename, struct timespec64 *tv, int flags);
+ int kern_mkdir(const char *pathname, umode_t mode);
+ int kern_mknod(const char *filename, umode_t mode, unsigned int dev);
++int __init kern_link(const char *oldname, const char *newname);
  
- extern int vfs_statx(int, const char __user *, int, struct kstat *, u32);
--extern int vfs_statx_fd(unsigned int, struct kstat *, u32, unsigned int);
-+int vfs_fstat(int fd, struct kstat *stat);
- 
- static inline int vfs_stat(const char __user *filename, struct kstat *stat)
- {
-@@ -3315,11 +3315,6 @@ static inline int vfs_fstatat(int dfd, const char __user *filename,
- 	return vfs_statx(dfd, filename, flags | AT_NO_AUTOMOUNT,
- 			 stat, STATX_BASIC_STATS);
+ #endif /* _LINUX_FS_H */
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 3dfcae351a077d..467cc4413874ed 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1293,15 +1293,6 @@ static inline long ksys_symlink(const char __user *oldname,
+ 	return do_symlinkat(oldname, AT_FDCWD, newname);
  }
--static inline int vfs_fstat(int fd, struct kstat *stat)
+ 
+-extern int do_linkat(int olddfd, const char __user *oldname, int newdfd,
+-		     const char __user *newname, int flags);
+-
+-static inline long ksys_link(const char __user *oldname,
+-			     const char __user *newname)
 -{
--	return vfs_statx_fd(fd, stat, STATX_BASIC_STATS, 0);
+-	return do_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
 -}
 -
+ extern long do_sys_ftruncate(unsigned int fd, loff_t length, int small);
  
- extern const char *vfs_get_link(struct dentry *, struct delayed_call *);
- extern int vfs_readlink(struct dentry *, char __user *, int);
+ static inline long ksys_ftruncate(unsigned int fd, loff_t length)
+diff --git a/init/initramfs.c b/init/initramfs.c
+index f32226d0388100..e484381c6c131b 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -310,7 +310,7 @@ static int __init maybe_link(void)
+ 		char *old = find_link(major, minor, ino, mode, collected);
+ 		if (old) {
+ 			clean_path(collected, 0);
+-			return (ksys_link(old, collected) < 0) ? -1 : 1;
++			return (kern_link(old, collected) < 0) ? -1 : 1;
+ 		}
+ 	}
+ 	return 0;
 -- 
 2.27.0
