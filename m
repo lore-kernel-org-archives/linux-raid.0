@@ -1,164 +1,159 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 08/24] fs: add a kern_access helper
-Date: Mon, 20 Jul 2020 17:58:46 +0200
-Message-ID: <20200720155902.181712-9-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/24] fs: add a kern_chdir helper
+Date: Mon, 20 Jul 2020 17:58:44 +0200
+Message-ID: <20200720155902.181712-7-hch@lst.de>
 References: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200720155902.181712-1-hch-jcswGhMUV9g@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20200720155902.181712-1-hch@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add a simple helper for a access with a kernelspace name and use it in
-the early init code instead of relying on the implicit set_fs(KERNEL_DS)
-there.  Remove the now unused ksys_access.
+Add a simple helper for a chdir with a kernelspace name and use it in the
+early init code instead of relying on the implicit set_fs(KERNEL_DS)
+there.  Remove the now unused ksys_chdir.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/open.c                | 37 +++++++++++++++++++++++++------------
- include/linux/fs.h       |  1 +
- include/linux/syscalls.h |  7 -------
- init/main.c              |  3 +--
- 4 files changed, 27 insertions(+), 21 deletions(-)
+ drivers/base/devtmpfs.c  |  2 +-
+ fs/open.c                | 15 ++++++++++-----
+ include/linux/fs.h       |  2 ++
+ include/linux/syscalls.h |  1 -
+ init/do_mounts.c         |  2 +-
+ init/do_mounts_initrd.c  |  8 ++++----
+ 6 files changed, 18 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/base/devtmpfs.c b/drivers/base/devtmpfs.c
+index 03221ca708c91c..2cedeb62706f18 100644
+--- a/drivers/base/devtmpfs.c
++++ b/drivers/base/devtmpfs.c
+@@ -388,7 +388,7 @@ static int devtmpfs_setup(void *p)
+ 	err = do_kern_mount("devtmpfs", "/", "devtmpfs", MS_SILENT, NULL);
+ 	if (err)
+ 		goto out;
+-	ksys_chdir("/.."); /* will traverse into overmounted root */
++	kern_chdir("/.."); /* will traverse into overmounted root */
+ 	ksys_chroot(".");
+ out:
+ 	*(int *)p = err;
 diff --git a/fs/open.c b/fs/open.c
-index 424db905da5f18..2a9457a16b2be2 100644
+index b316dd6a86a8b9..3d62f4d2604739 100644
 --- a/fs/open.c
 +++ b/fs/open.c
-@@ -394,19 +394,19 @@ static const struct cred *access_override_creds(void)
- 	return old_cred;
+@@ -482,15 +482,15 @@ SYSCALL_DEFINE2(access, const char __user *, filename, int, mode)
+ 	return do_faccessat(AT_FDCWD, filename, mode, 0);
  }
  
--long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
-+static int do_faccessat(int dfd, struct filename *name, int mode, int flags)
+-int ksys_chdir(const char __user *filename)
++static int do_chdir(struct filename *name)
  {
  	struct path path;
- 	struct inode *inode;
--	int res;
-+	int res = -EINVAL;
- 	unsigned int lookup_flags = LOOKUP_FOLLOW;
- 	const struct cred *old_cred = NULL;
- 
- 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
--		return -EINVAL;
-+		goto out_putname;
- 
- 	if (flags & ~(AT_EACCESS | AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH))
--		return -EINVAL;
-+		goto out_putname;
- 
- 	if (flags & AT_SYMLINK_NOFOLLOW)
- 		lookup_flags &= ~LOOKUP_FOLLOW;
-@@ -414,15 +414,16 @@ long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
- 		lookup_flags |= LOOKUP_EMPTY;
- 
- 	if (!(flags & AT_EACCESS)) {
-+		res = -ENOMEM;
- 		old_cred = access_override_creds();
- 		if (!old_cred)
--			return -ENOMEM;
-+			goto out_putname;
- 	}
- 
+ 	int error;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_DIRECTORY;
  retry:
--	res = user_path_at(dfd, filename, lookup_flags, &path);
-+	res = filename_lookup(dfd, name, lookup_flags, &path, NULL);
- 	if (res)
+-	error = user_path_at(AT_FDCWD, filename, lookup_flags, &path);
++	error = filename_lookup(AT_FDCWD, name, lookup_flags, &path, NULL);
+ 	if (error)
 -		goto out;
-+		goto out_revert_creds;
++		return error;
  
- 	inode = d_backing_inode(path.dentry);
- 
-@@ -459,27 +460,39 @@ long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
+ 	error = inode_permission(path.dentry->d_inode, MAY_EXEC | MAY_CHDIR);
+ 	if (error)
+@@ -504,13 +504,18 @@ int ksys_chdir(const char __user *filename)
  		lookup_flags |= LOOKUP_REVAL;
  		goto retry;
  	}
 -out:
 +	putname(name);
-+out_revert_creds:
- 	if (old_cred)
- 		revert_creds(old_cred);
--
- 	return res;
-+out_putname:
-+	if (!IS_ERR(name))
-+		putname(name);
-+	return res;
+ 	return error;
+ }
+ 
++int kern_chdir(const char *filename)
++{
++	return do_chdir(getname_kernel(filename));
 +}
 +
-+int __init kern_access(const char __user *filename, int mode)
-+{
-+	return do_faccessat(AT_FDCWD, getname_kernel(filename), mode, 0);
- }
- 
- SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
+ SYSCALL_DEFINE1(chdir, const char __user *, filename)
  {
--	return do_faccessat(dfd, filename, mode, 0);
-+	return do_faccessat(dfd, getname(filename), mode, 0);
+-	return ksys_chdir(filename);
++	return do_chdir(getname(filename));
  }
  
- SYSCALL_DEFINE4(faccessat2, int, dfd, const char __user *, filename, int, mode,
- 		int, flags)
- {
--	return do_faccessat(dfd, filename, mode, flags);
-+	unsigned int lookup_flags = (flags & AT_EMPTY_PATH) ? LOOKUP_EMPTY : 0;
-+	struct filename *name = getname_flags(filename, lookup_flags, NULL);
-+
-+	return do_faccessat(dfd, name, mode, flags);
- }
- 
- SYSCALL_DEFINE2(access, const char __user *, filename, int, mode)
- {
--	return do_faccessat(AT_FDCWD, filename, mode, 0);
-+	return do_faccessat(AT_FDCWD, getname(filename), mode, 0);
- }
- 
- static int do_chdir(struct filename *name)
+ SYSCALL_DEFINE1(fchdir, unsigned int, fd)
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0205355bffb1bc..0c7672d3f1172f 100644
+index fbeadaa1a185fb..dccb37407e9bad 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -3673,5 +3673,6 @@ static inline int inode_drain_writes(struct inode *inode)
- 
- int kern_chdir(const char *filename);
- int kern_chroot(const char *filename);
-+int __init kern_access(const char *filename, int mode);
- 
- #endif /* _LINUX_FS_H */
-diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index a3176d1a521467..b387e3700c68c5 100644
---- a/include/linux/syscalls.h
-+++ b/include/linux/syscalls.h
-@@ -1326,13 +1326,6 @@ static inline int ksys_chmod(const char __user *filename, umode_t mode)
- 	return do_fchmodat(AT_FDCWD, filename, mode);
+@@ -3671,4 +3671,6 @@ static inline int inode_drain_writes(struct inode *inode)
+ 	return filemap_write_and_wait(inode->i_mapping);
  }
  
--long do_faccessat(int dfd, const char __user *filename, int mode, int flags);
--
--static inline long ksys_access(const char __user *filename, int mode)
--{
--	return do_faccessat(AT_FDCWD, filename, mode, 0);
--}
--
- extern int do_fchownat(int dfd, const char __user *filename, uid_t user,
- 		       gid_t group, int flag);
++int kern_chdir(const char *filename);
++
+ #endif /* _LINUX_FS_H */
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 3b1b8ebcda1d8c..f2a181776b0409 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1238,7 +1238,6 @@ asmlinkage long sys_ni_syscall(void);
  
-diff --git a/init/main.c b/init/main.c
-index c2c9143db96795..880f195b61abe1 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1514,8 +1514,7 @@ static noinline void __init kernel_init_freeable(void)
- 	 * check if there is an early userspace init.  If yes, let it do all
- 	 * the work
- 	 */
--	if (ksys_access((const char __user *)
--			ramdisk_execute_command, 0) != 0) {
-+	if (kern_access(ramdisk_execute_command, 0) != 0) {
- 		ramdisk_execute_command = NULL;
- 		prepare_namespace();
+ int ksys_chroot(const char __user *filename);
+ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count);
+-int ksys_chdir(const char __user *filename);
+ int ksys_fchown(unsigned int fd, uid_t user, gid_t group);
+ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count);
+ void ksys_sync(void);
+diff --git a/init/do_mounts.c b/init/do_mounts.c
+index 2fef92a8ed3c15..8c3fca8e2d3c6e 100644
+--- a/init/do_mounts.c
++++ b/init/do_mounts.c
+@@ -408,7 +408,7 @@ static int __init do_mount_root(const char *name, const char *fs,
+ 	if (ret)
+ 		goto out;
+ 
+-	ksys_chdir("/root");
++	kern_chdir("/root");
+ 	s = current->fs->pwd.dentry->d_sb;
+ 	ROOT_DEV = s->s_dev;
+ 	printk(KERN_INFO
+diff --git a/init/do_mounts_initrd.c b/init/do_mounts_initrd.c
+index d3858620707893..522554d703b785 100644
+--- a/init/do_mounts_initrd.c
++++ b/init/do_mounts_initrd.c
+@@ -61,7 +61,7 @@ static int __init init_linuxrc(struct subprocess_info *info, struct cred *new)
+ 	ksys_unshare(CLONE_FS | CLONE_FILES);
+ 	console_on_rootfs();
+ 	/* move initrd over / and chdir/chroot in initrd root */
+-	ksys_chdir("/root");
++	kern_chdir("/root");
+ 	do_kern_mount(".", "/", NULL, MS_MOVE, NULL);
+ 	ksys_chroot(".");
+ 	ksys_setsid();
+@@ -82,7 +82,7 @@ static void __init handle_initrd(void)
+ 	/* mount initrd on rootfs' /root */
+ 	mount_block_root("/dev/root.old", root_mountflags & ~MS_RDONLY);
+ 	ksys_mkdir("/old", 0700);
+-	ksys_chdir("/old");
++	kern_chdir("/old");
+ 
+ 	/*
+ 	 * In case that a resume from disk is carried out by linuxrc or one of
+@@ -104,11 +104,11 @@ static void __init handle_initrd(void)
+ 	ksys_chroot("..");
+ 
+ 	if (new_decode_dev(real_root_dev) == Root_RAM0) {
+-		ksys_chdir("/old");
++		kern_chdir("/old");
+ 		return;
  	}
+ 
+-	ksys_chdir("/");
++	kern_chdir("/");
+ 	ROOT_DEV = new_decode_dev(real_root_dev);
+ 	mount_root();
+ 
 -- 
 2.27.0
