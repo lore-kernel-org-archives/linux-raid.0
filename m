@@ -1,60 +1,99 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: add file system helpers that take kernel pointers for the init code
-Date: Mon, 20 Jul 2020 17:58:38 +0200
-Message-ID: <20200720155902.181712-1-hch@lst.de>
+Subject: [PATCH 05/24] fs: move the putname from filename_lookup to the callers
+Date: Mon, 20 Jul 2020 17:58:43 +0200
+Message-ID: <20200720155902.181712-6-hch@lst.de>
+References: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20200720155902.181712-1-hch@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Al,
+This allows reusing the struct filename for retries, and will also allow
+pushing the getname up the stack for a few places to allower for better
+handling of kernel space filenames.
 
-currently a lot of the file system calls in the early in code (and the
-devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
-This is one of the few last remaining places we need to deal with to kill
-off set_fs entirely, so this series adds new helpers that take kernel
-pointers.  That is mostly done by pushing the getname() call further up
-the stack so that we can add variants using getname_kernel() without
-duplicating code.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/fs_parser.c |  1 +
+ fs/namei.c     | 28 ++++++++++++++++++++--------
+ 2 files changed, 21 insertions(+), 8 deletions(-)
 
-The series sits on top of my previous
-
-  "decruft the early init / initrd / initramfs code v2"
-
-series.
-
-
-Git tree:
-
-    git://git.infradead.org/users/hch/misc.git kern_path
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/kern_path
-
-
-Diffstat:
- drivers/base/devtmpfs.c    |    8 +-
- drivers/md/md-autodetect.c |    2 
- fs/coredump.c              |    2 
- fs/fs_parser.c             |    1 
- fs/internal.h              |   12 ---
- fs/namei.c                 |  166 +++++++++++++++++++++++++++++++--------------
- fs/namespace.c             |  134 +++++++++++++++++++++---------------
- fs/open.c                  |  149 ++++++++++++++++++++++++++++------------
- fs/stat.c                  |   92 ++++++++++++------------
- fs/utimes.c                |   19 +++--
- include/linux/fs.h         |   39 +++++-----
- include/linux/syscalls.h   |   82 ----------------------
- init/do_mounts.c           |   12 +--
- init/do_mounts.h           |    4 -
- init/do_mounts_initrd.c    |   26 +++----
- init/do_mounts_rd.c        |    2 
- init/initramfs.c           |   27 +++----
- init/main.c                |    9 --
- init/noinitramfs.c         |    9 +-
- kernel/uid16.c             |   15 ----
- 20 files changed, 434 insertions(+), 376 deletions(-)
+diff --git a/fs/fs_parser.c b/fs/fs_parser.c
+index ab53e42a874aaa..58d5e53d74eeb7 100644
+--- a/fs/fs_parser.c
++++ b/fs/fs_parser.c
+@@ -171,6 +171,7 @@ int fs_lookup_param(struct fs_context *fc,
+ 		errorf(fc, "%s: Lookup failure for '%s'", param->key, f->name);
+ 		goto out;
+ 	}
++	putname(f);
+ 
+ 	if (want_bdev &&
+ 	    !S_ISBLK(d_backing_inode(_path->dentry)->i_mode)) {
+diff --git a/fs/namei.c b/fs/namei.c
+index 6ebe400c9736d2..6daffd59e97270 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2372,8 +2372,9 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
+ 	if (likely(!retval))
+ 		audit_inode(name, path->dentry,
+ 			    flags & LOOKUP_MOUNTPOINT ? AUDIT_INODE_NOEVAL : 0);
++	else
++		putname(name);
+ 	restore_nameidata();
+-	putname(name);
+ 	return retval;
+ }
+ 
+@@ -2450,8 +2451,12 @@ struct dentry *kern_path_locked(const char *name, struct path *path)
+ 
+ int kern_path(const char *name, unsigned int flags, struct path *path)
+ {
+-	return filename_lookup(AT_FDCWD, getname_kernel(name),
+-			       flags, path, NULL);
++	struct filename *f = getname_kernel(name);
++	int ret = filename_lookup(AT_FDCWD, f, flags, path, NULL);
++
++	if (!ret)
++		putname(f);
++	return ret;
+ }
+ EXPORT_SYMBOL(kern_path);
+ 
+@@ -2468,9 +2473,12 @@ int vfs_path_lookup(struct dentry *dentry, struct vfsmount *mnt,
+ 		    struct path *path)
+ {
+ 	struct path root = {.mnt = mnt, .dentry = dentry};
+-	/* the first argument of filename_lookup() is ignored with root */
+-	return filename_lookup(AT_FDCWD, getname_kernel(name),
+-			       flags , path, &root);
++	struct filename *f = getname_kernel(name);
++	int ret = filename_lookup(AT_FDCWD, f, flags, path, &root);
++
++	if (!ret)
++		putname(f);
++	return ret;
+ }
+ EXPORT_SYMBOL(vfs_path_lookup);
+ 
+@@ -2643,8 +2651,12 @@ int path_pts(struct path *path)
+ int user_path_at_empty(int dfd, const char __user *name, unsigned flags,
+ 		 struct path *path, int *empty)
+ {
+-	return filename_lookup(dfd, getname_flags(name, flags, empty),
+-			       flags, path, NULL);
++	struct filename *f = getname_flags(name, flags, empty);
++	int ret = filename_lookup(dfd, f, flags, path, NULL);
++
++	if (!ret)
++		putname(f);
++	return ret;
+ }
+ EXPORT_SYMBOL(user_path_at_empty);
+ 
+-- 
+2.27.0
