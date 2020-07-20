@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/24] init: initialize ramdisk_execute_command at compile time
-Date: Mon, 20 Jul 2020 17:58:39 +0200
-Message-ID: <20200720155902.181712-2-hch@lst.de>
+Subject: [PATCH 04/24] fs: move the putname from filename_create to the callers
+Date: Mon, 20 Jul 2020 17:58:42 +0200
+Message-ID: <20200720155902.181712-5-hch@lst.de>
 References: <20200720155902.181712-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,38 +12,55 @@ To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-Set ramdisk_execute_command to "/init" at compile time.  The command
-line can still override it, but this saves a few instructions and
-removes a NULL check.
+This allows reusing the struct filename for retries, and will also allow
+pushing the getname up the stack for a few places to allower for better
+handling of kernel space filenames.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- init/main.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ fs/namei.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/init/main.c b/init/main.c
-index db0621dfbb0468..c2c9143db96795 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -154,7 +154,7 @@ static bool initargs_found;
- #endif
+diff --git a/fs/namei.c b/fs/namei.c
+index 72d4219c93acb7..6ebe400c9736d2 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3478,7 +3478,6 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ 		error = err2;
+ 		goto fail;
+ 	}
+-	putname(name);
+ 	return dentry;
+ fail:
+ 	dput(dentry);
+@@ -3496,8 +3495,12 @@ static struct dentry *filename_create(int dfd, struct filename *name,
+ struct dentry *kern_path_create(int dfd, const char *pathname,
+ 				struct path *path, unsigned int lookup_flags)
+ {
+-	return filename_create(dfd, getname_kernel(pathname),
+-				path, lookup_flags);
++	struct filename *name = getname_kernel(pathname);
++	struct dentry *dentry = filename_create(dfd, name, path, lookup_flags);
++
++	if (!IS_ERR(dentry))
++		putname(name);
++	return dentry;
+ }
+ EXPORT_SYMBOL(kern_path_create);
  
- static char *execute_command;
--static char *ramdisk_execute_command;
-+static char *ramdisk_execute_command = "/init";
+@@ -3513,7 +3516,12 @@ EXPORT_SYMBOL(done_path_create);
+ inline struct dentry *user_path_create(int dfd, const char __user *pathname,
+ 				struct path *path, unsigned int lookup_flags)
+ {
+-	return filename_create(dfd, getname(pathname), path, lookup_flags);
++	struct filename *name = getname(pathname);
++	struct dentry *dentry = filename_create(dfd, name, path, lookup_flags);
++
++	if (!IS_ERR(dentry))
++		putname(name);
++	return dentry;
+ }
+ EXPORT_SYMBOL(user_path_create);
  
- /*
-  * Used to generate warnings if static_key manipulation functions are used
-@@ -1514,10 +1514,6 @@ static noinline void __init kernel_init_freeable(void)
- 	 * check if there is an early userspace init.  If yes, let it do all
- 	 * the work
- 	 */
--
--	if (!ramdisk_execute_command)
--		ramdisk_execute_command = "/init";
--
- 	if (ksys_access((const char __user *)
- 			ramdisk_execute_command, 0) != 0) {
- 		ramdisk_execute_command = NULL;
 -- 
 2.27.0
