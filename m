@@ -1,160 +1,139 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/24] init: add an init_mknod helper
-Date: Tue, 21 Jul 2020 18:28:17 +0200
-Message-ID: <20200721162818.197315-24-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 18/24] init: add an init_chmod helper
+Date: Tue, 21 Jul 2020 18:28:12 +0200
+Message-ID: <20200721162818.197315-19-hch@lst.de>
 References: <20200721162818.197315-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200721162818.197315-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200721162818.197315-1-hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Add a simple helper to mknod with a kernel space file name and switch
-the early init code over to it.  Remove the now unused ksys_mknod.
+Add a simple helper to chmod with a kernel space file name and switch
+the early init code over to it.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- fs/internal.h            |  2 --
- fs/namei.c               |  2 +-
- include/linux/syscalls.h |  9 ---------
- init/do_mounts.h         |  3 ++-
- init/fs.c                | 25 +++++++++++++++++++++++++
- init/initramfs.c         |  2 +-
- init/noinitramfs.c       |  3 +--
- 7 files changed, 30 insertions(+), 16 deletions(-)
+ fs/internal.h            |  2 +-
+ fs/open.c                |  4 ++--
+ include/linux/syscalls.h |  7 -------
+ init/do_mounts.h         |  1 +
+ init/fs.c                | 13 +++++++++++++
+ init/initramfs.c         |  4 ++--
+ 6 files changed, 19 insertions(+), 12 deletions(-)
 
 diff --git a/fs/internal.h b/fs/internal.h
-index 54cf897bd0c18f..490cf426ec9f67 100644
+index 4a66730fabefa7..585968c0286cf7 100644
 --- a/fs/internal.h
 +++ b/fs/internal.h
-@@ -62,8 +62,6 @@ extern int filename_lookup(int dfd, struct filename *name, unsigned flags,
- 			   struct path *path, struct path *root);
- extern int vfs_path_lookup(struct dentry *, struct vfsmount *,
- 			   const char *, unsigned int, struct path *);
--long do_mknodat(int dfd, const char __user *filename, umode_t mode,
--		unsigned int dev);
- long do_rmdir(int dfd, struct filename *name);
- long do_unlinkat(int dfd, struct filename *name);
- int may_linkat(struct path *link);
-diff --git a/fs/namei.c b/fs/namei.c
-index d6b25dd32f4d50..fde8fe086c090d 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -3564,7 +3564,7 @@ static int may_mknod(umode_t mode)
- 	}
- }
+@@ -126,7 +126,7 @@ extern struct open_how build_open_how(int flags, umode_t mode);
+ extern int build_open_flags(const struct open_how *how, struct open_flags *op);
  
--long do_mknodat(int dfd, const char __user *filename, umode_t mode,
-+static long do_mknodat(int dfd, const char __user *filename, umode_t mode,
- 		unsigned int dev)
- {
- 	struct dentry *dentry;
-diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 5ef77a91382aa5..63046c5e9fc5d4 100644
---- a/include/linux/syscalls.h
-+++ b/include/linux/syscalls.h
-@@ -1270,15 +1270,6 @@ int compat_ksys_ipc(u32 call, int first, int second,
-  * The following kernel syscall equivalents are just wrappers to fs-internal
-  * functions. Therefore, provide stubs to be inlined at the callsites.
-  */
--extern long do_mknodat(int dfd, const char __user *filename, umode_t mode,
--		       unsigned int dev);
--
--static inline long ksys_mknod(const char __user *filename, umode_t mode,
--			      unsigned int dev)
--{
--	return do_mknodat(AT_FDCWD, filename, mode, dev);
--}
--
- extern int do_fchownat(int dfd, const char __user *filename, uid_t user,
- 		       gid_t group, int flag);
- 
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 62ae09b96be025..a793bafc6c6f2b 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -16,6 +16,7 @@ int __init init_chroot(const char *filename);
- int __init init_chown(const char *filename, uid_t user, gid_t group, int flags);
- int __init init_chmod(const char *filename, umode_t mode);
- int __init init_eaccess(const char *filename);
-+int __init init_mknod(const char *filename, umode_t mode, unsigned int dev);
- int __init init_link(const char *oldname, const char *newname);
- int __init init_symlink(const char *oldname, const char *newname);
- int __init init_unlink(const char *pathname);
-@@ -30,7 +31,7 @@ extern int root_mountflags;
- static inline __init int create_dev(char *name, dev_t dev)
- {
- 	init_unlink(name);
--	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
-+	return init_mknod(name, S_IFBLK | 0600, new_encode_dev(dev));
- }
- 
- #ifdef CONFIG_BLK_DEV_RAM
-diff --git a/init/fs.c b/init/fs.c
-index 0793a6872d0e33..7f0e50a877fc98 100644
---- a/init/fs.c
-+++ b/init/fs.c
-@@ -103,6 +103,31 @@ int __init init_eaccess(const char *filename)
+ long do_sys_ftruncate(unsigned int fd, loff_t length, int small);
+-int do_fchmodat(int dfd, const char __user *filename, umode_t mode);
++int chmod_common(const struct path *path, umode_t mode);
+ int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
+ 		int flag);
+ int chown_common(const struct path *path, uid_t user, gid_t group);
+diff --git a/fs/open.c b/fs/open.c
+index 49960a1248f14b..7ba89eae46c560 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -563,7 +563,7 @@ SYSCALL_DEFINE1(chroot, const char __user *, filename)
  	return error;
  }
  
-+int __init init_mknod(const char *filename, umode_t mode, unsigned int dev)
+-static int chmod_common(const struct path *path, umode_t mode)
++int chmod_common(const struct path *path, umode_t mode)
+ {
+ 	struct inode *inode = path->dentry->d_inode;
+ 	struct inode *delegated_inode = NULL;
+@@ -610,7 +610,7 @@ SYSCALL_DEFINE2(fchmod, unsigned int, fd, umode_t, mode)
+ 	return err;
+ }
+ 
+-int do_fchmodat(int dfd, const char __user *filename, umode_t mode)
++static int do_fchmodat(int dfd, const char __user *filename, umode_t mode)
+ {
+ 	struct path path;
+ 	int error;
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index e89d62e944dc0e..8b71fa321ca20c 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1304,13 +1304,6 @@ static inline long ksys_link(const char __user *oldname,
+ 	return do_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
+ }
+ 
+-extern int do_fchmodat(int dfd, const char __user *filename, umode_t mode);
+-
+-static inline int ksys_chmod(const char __user *filename, umode_t mode)
+-{
+-	return do_fchmodat(AT_FDCWD, filename, mode);
+-}
+-
+ long do_faccessat(int dfd, const char __user *filename, int mode, int flags);
+ 
+ static inline long ksys_access(const char __user *filename, int mode)
+diff --git a/init/do_mounts.h b/init/do_mounts.h
+index db42564080a2f9..b323d9755d7e5e 100644
+--- a/init/do_mounts.h
++++ b/init/do_mounts.h
+@@ -14,6 +14,7 @@ int __init init_mount(const char *dev_name, const char *dir_name,
+ int __init init_chdir(const char *filename);
+ int __init init_chroot(const char *filename);
+ int __init init_chown(const char *filename, uid_t user, gid_t group, int flags);
++int __init init_chmod(const char *filename, umode_t mode);
+ int __init init_unlink(const char *pathname);
+ int __init init_rmdir(const char *pathname);
+ 
+diff --git a/init/fs.c b/init/fs.c
+index 30000b7097b9f0..c636f25c9a6d69 100644
+--- a/init/fs.c
++++ b/init/fs.c
+@@ -77,6 +77,19 @@ int __init init_chown(const char *filename, uid_t user, gid_t group, int flags)
+ 	return error;
+ }
+ 
++int __init init_chmod(const char *filename, umode_t mode)
 +{
-+	struct dentry *dentry;
 +	struct path path;
 +	int error;
 +
-+	if (S_ISFIFO(mode) || S_ISSOCK(mode))
-+		dev = 0;
-+	else if (!(S_ISBLK(mode) || S_ISCHR(mode)))
-+		return -EINVAL;
-+
-+	dentry = user_path_create(AT_FDCWD, filename, &path, 0);
-+	if (IS_ERR(dentry))
-+		return PTR_ERR(dentry);
-+
-+	if (!IS_POSIXACL(path.dentry->d_inode))
-+		mode &= ~current_umask();
-+	error = security_path_mknod(&path, dentry, mode, dev);
-+	if (!error)
-+		error = vfs_mknod(path.dentry->d_inode, dentry, mode,
-+				  new_decode_dev(dev));
-+	done_path_create(&path, dentry);
++	error = kern_path(filename, LOOKUP_FOLLOW, &path);
++	if (error)
++		return error;
++	error = chmod_common(&path, mode);
++	path_put(&path);
 +	return error;
 +}
 +
- int __init init_link(const char *oldname, const char *newname)
+ int __init init_unlink(const char *pathname)
  {
- 	struct dentry *new_dentry;
+ 	return do_unlinkat(AT_FDCWD, getname_kernel(pathname));
 diff --git a/init/initramfs.c b/init/initramfs.c
-index b1a0a1d5c3c135..bd685fdb5840f3 100644
+index 076413dbe8bcf3..771da27e87afa1 100644
 --- a/init/initramfs.c
 +++ b/init/initramfs.c
-@@ -359,7 +359,7 @@ static int __init do_name(void)
+@@ -354,14 +354,14 @@ static int __init do_name(void)
+ 	} else if (S_ISDIR(mode)) {
+ 		ksys_mkdir(collected, mode);
+ 		init_chown(collected, uid, gid, 0);
+-		ksys_chmod(collected, mode);
++		init_chmod(collected, mode);
+ 		dir_add(collected, mtime);
  	} else if (S_ISBLK(mode) || S_ISCHR(mode) ||
  		   S_ISFIFO(mode) || S_ISSOCK(mode)) {
  		if (maybe_link() == 0) {
--			ksys_mknod(collected, mode, rdev);
-+			init_mknod(collected, mode, rdev);
+ 			ksys_mknod(collected, mode, rdev);
  			init_chown(collected, uid, gid, AT_SYMLINK_NOFOLLOW);
- 			init_chmod(collected, mode);
+-			ksys_chmod(collected, mode);
++			init_chmod(collected, mode);
  			do_utime(collected, mtime);
-diff --git a/init/noinitramfs.c b/init/noinitramfs.c
-index b8bdba1c949cf9..490f2bd2b49979 100644
---- a/init/noinitramfs.c
-+++ b/init/noinitramfs.c
-@@ -22,8 +22,7 @@ static int __init default_rootfs(void)
- 	if (err < 0)
- 		goto out;
- 
--	err = ksys_mknod((const char __user __force *) "/dev/console",
--			S_IFCHR | S_IRUSR | S_IWUSR,
-+	err = init_mknod("/dev/console", S_IFCHR | S_IRUSR | S_IWUSR,
- 			new_encode_dev(MKDEV(5, 1)));
- 	if (err < 0)
- 		goto out;
+ 		}
+ 	}
 -- 
 2.27.0
