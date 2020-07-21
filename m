@@ -1,76 +1,45 @@
-From: Nigel Croxon <ncroxon@redhat.com>
-Subject: Re: [PATCH 1/1] md/raid10: avoid deadlock on recovery.
-Date: Tue, 21 Jul 2020 10:26:35 -0400
-Message-ID: <D5A36675-8344-4D67-9836-64F9BA78D78E@redhat.com>
-References: <1583259280-124995-1-git-send-email-vmayatskikh@digitalocean.com>
- <1583259280-124995-2-git-send-email-vmayatskikh@digitalocean.com>
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Content-Type: text/plain;
-        charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1583259280-124995-2-git-send-email-vmayatskikh@digitalocean.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vitaly Mayatskikh <vmayatskikh@digitalocean.com>
-Cc: linux-raid@vger.kernel.org, Song Liu <liu.song.a23@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: add file system helpers that take kernel pointers for the init code v2
+Date: Tue, 21 Jul 2020 18:27:54 +0200
+Message-ID: <20200721162818.197315-1-hch@lst.de>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Al and Linus,
 
-> On Mar 3, 2020, at 1:14 PM, Vitaly Mayatskikh =
-<vmayatskikh@digitalocean.com> wrote:
->=20
-> When disk failure happens and the array has a spare drive, resync =
-thread
-> kicks in and starts to refill the spare. However it may get blocked by
-> a retry thread that resubmits failed IO to a mirror and itself can get
-> blocked on a barrier raised by the resync thread.
->=20
-> Signed-off-by: Vitaly Mayatskikh <vmayatskikh@digitalocean.com>
-> ---
-> drivers/md/raid10.c | 14 +++++++++++---
-> 1 file changed, 11 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index ec136e4..f1a8e26 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -980,6 +980,7 @@ static void wait_barrier(struct r10conf *conf)
-> {
-> 	spin_lock_irq(&conf->resync_lock);
-> 	if (conf->barrier) {
-> +		struct bio_list *bio_list =3D current->bio_list;
-> 		conf->nr_waiting++;
-> 		/* Wait for the barrier to drop.
-> 		 * However if there are already pending
-> @@ -994,9 +995,16 @@ static void wait_barrier(struct r10conf *conf)
-> 		wait_event_lock_irq(conf->wait_barrier,
-> 				    !conf->barrier ||
-> 				    (atomic_read(&conf->nr_pending) &&
-> -				     current->bio_list &&
-> -				     =
-(!bio_list_empty(&current->bio_list[0]) ||
-> -				      =
-!bio_list_empty(&current->bio_list[1]))),
-> +				     bio_list &&
-> +				     (!bio_list_empty(&bio_list[0]) ||
-> +				      !bio_list_empty(&bio_list[1]))) ||
-> +				     /* move on if recovery thread is
-> +				      * blocked by us
-> +				      */
-> +				     (conf->mddev->thread->tsk =3D=3D =
-current &&
-> +				      test_bit(MD_RECOVERY_RUNNING,
-> +					       &conf->mddev->recovery) =
-&&
-> +				      conf->nr_queued > 0),
-> 				    conf->resync_lock);
-> 		conf->nr_waiting--;
-> 		if (!conf->nr_waiting)
-> =E2=80=94=20
-> 1.8.3.1
->=20
+currently a lot of the file system calls in the early in code (and the
+devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
+This is one of the few last remaining places we need to deal with to kill
+off set_fs entirely, so this series adds new helpers that take kernel
+pointers.  These helpers are in init/ and marked __init and thus will
+be discarded after bootup.  A few also need to be duplicated in devtmpfs,
+though unfortunately.
 
-Song, Have you had a chance to look at this patch?
-We would like to have it pulled in to the kernel.
+The series sits on top of my previous
 
--Nigel
+  "decruft the early init / initrd / initramfs code v2"
+
+series.
+
+
+Git tree:
+
+    git://git.infradead.org/users/hch/misc.git init_path
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init_path
+
+
+Changes since v1:
+ - avoid most core VFS changes
+ - renamed the functions and move them to init/ and devtmpfs
+ - drop a bunch of cleanups that can be submitted independently now
+
+
+Diffstat:
