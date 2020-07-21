@@ -1,84 +1,97 @@
-From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 11/14] mm: use SWP_SYNCHRONOUS_IO more intelligently
-Date: Mon, 20 Jul 2020 22:46:17 -0700
-Message-ID: <20200721054617.GA1879427@google.com>
-References: <20200720075148.172156-1-hch@lst.de>
- <20200720075148.172156-12-hch@lst.de>
- <CALvZod7ACBnNX5W-gtTzheh8R-rxv1nB-5q7UcDUZ7BvtpakpA@mail.gmail.com>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: [PATCH v5 1/2] md-cluster: fix safemode_delay value when
+ converting to clustered bitmap
+Date: Tue, 21 Jul 2020 10:35:11 +0200
+Message-ID: <8f122dea-2a4a-4523-653f-fe6fc2842653@cloud.ionos.com>
+References: <1595268533-7040-1-git-send-email-heming.zhao@suse.com>
+ <1595268533-7040-2-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CALvZod7ACBnNX5W-gtTzheh8R-rxv1nB-5q7UcDUZ7BvtpakpA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1595268533-7040-2-git-send-email-heming.zhao@suse.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Zhao Heming <heming.zhao@suse.com>, linux-raid@vger.kernel.org
+Cc: neilb@suse.com, song@kernel.org
 List-Id: linux-raid.ids
 
-Thanks for Ccing me, Shakeel.
 
-On Mon, Jul 20, 2020 at 10:52:55AM -0700, Shakeel Butt wrote:
-> +Minchan Kim
-> 
-> On Mon, Jul 20, 2020 at 12:52 AM Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
-> >
-> > There is no point in trying to call bdev_read_page if SWP_SYNCHRONOUS_IO
-> > is not set, as the device won't support it.  Also there is no point in
-> > trying a bio submission if bdev_read_page failed.
-> 
-> This will at least break the failure path of zram_rw_page().
 
-Yes, it needs post processing for error propagaion like *page* handling
-part in end_swap_bio_read(mostly, PG_error and PG_uptodate with pr_alert).
-bdev_read_page's sematic doesn't need to be synchronous so it could just
-submit the IO request and complete the IO afterward. In that case, we
-need right error handling, too if the IO encoutered error. BIO fallback
-makes it simple.
+On 7/20/20 8:08 PM, Zhao Heming wrote:
+> When array convert to clustered bitmap, the safe_mode_delay doesn't
+> clean and vice versa. the /sys/block/mdX/md/safe_mode_delay keep original
+> value after changing bitmap type. In safe_delay_store(), the code forbids
+> setting mddev->safemode_delay when array is clustered. So in cluster-md
+> env, the expected safemode_delay value should be 0.
+>
+> Reproducible steps:
+> ```
+> node1 # mdadm --zero-superblock /dev/sd{b,c,d}
+> node1 # mdadm -C /dev/md0 -b internal -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
+> node1 # cat /sys/block/md0/md/safe_mode_delay
+> 0.204
+> node1 # mdadm -G /dev/md0 -b none
+> node1 # mdadm --grow /dev/md0 --bitmap=clustered
+> node1 # cat /sys/block/md0/md/safe_mode_delay
+> 0.204  <== doesn't change, should ZERO for cluster-md
+>
+> node1 # mdadm --zero-superblock /dev/sd{b,c,d}
+> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdb /dev/sdc
+> node1 # cat /sys/block/md0/md/safe_mode_delay
+> 0.000
+> node1 # mdadm -G /dev/md0 -b none
+> node1 # cat /sys/block/md0/md/safe_mode_delay
+> 0.000  <== doesn't change, should default value
+> ```
+>
+> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+> ---
+>   drivers/md/md.c | 11 +++++++++--
+>   1 file changed, 9 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f567f536b529..1bde3df3fa18 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -101,6 +101,8 @@ static void mddev_detach(struct mddev *mddev);
+>    * count by 2 for every hour elapsed between read errors.
+>    */
+>   #define MD_DEFAULT_MAX_CORRECTED_READ_ERRORS 20
+> +/* Default safemode delay: 200 msec */
+> +#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
+>   /*
+>    * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
+>    * is 1000 KB/sec, so the extra system load does not show up that much.
+> @@ -5982,7 +5984,7 @@ int md_run(struct mddev *mddev)
+>   	if (mddev_is_clustered(mddev))
+>   		mddev->safemode_delay = 0;
+>   	else
+> -		mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
+> +		mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
+>   	mddev->in_sync = 1;
+>   	smp_wmb();
+>   	spin_lock(&mddev->lock);
+> @@ -7361,6 +7363,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+>   
+>   				mddev->bitmap_info.nodes = 0;
+>   				md_cluster_ops->leave(mddev);
+> +				mddev->safemode_delay = DEFAULT_SAFEMODE_DELAY;
+>   			}
 
- * bdev_read_page() - Start reading a page from a block device
- * @bdev: The device to read the page from
- * @sector: The offset on the device to read the page to (need not be aligned)
- * @page: The page to read
- *
- * On entry, the page should be locked.  It will be unlocked when the page
- * has been read.  If the block driver implements rw_page synchronously,
- * that will be true on exit from this function, but it need not be.
- *
- * Errors returned by this function are usually "soft", eg out of memory, or
- * queue full; callers should try a different route to read this page rather
- * than propagate an error back up the stack.
+Not about the patch itself, just confuse about the meaning of 
+safemode_delay.
+As safemode_delay represents 200 ms delay, but md_write_end has this.
 
-The other concern about this patch is zram have used rw_page for a long
-time even though sometime it doesn't declare BDI_CAP_SYNCHRONOUS_IO by itself
-because rw_page shows 4~5% bandwidth improvement compared to bio-based.
-The performance gain becomes more important these day because compressor
-becomes more fast day by day.
+                 /* The roundup() ensures this only performs locking once
+                  * every ->safemode_delay *jiffies*
+                  */
+                 mod_timer(&mddev->safemode_timer,
+                           roundup(jiffies, mddev->safemode_delay) +
+                           mddev->safemode_delay);
 
-> 
-> >
-> > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> > ---
-> >  mm/page_io.c | 7 +++++--
-> >  1 file changed, 5 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/mm/page_io.c b/mm/page_io.c
-> > index ccda7679008851..63b44b8221af0f 100644
-> > --- a/mm/page_io.c
-> > +++ b/mm/page_io.c
-> > @@ -403,8 +403,11 @@ int swap_readpage(struct page *page, bool synchronous)
-> >                 goto out;
-> >         }
-> >
-> > -       ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
-> > -       if (!ret) {
-> > +       if (sis->flags & SWP_SYNCHRONOUS_IO) {
-> > +               ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
-> > +               if (ret)
-> > +                       goto out;
-> > +
-> >                 if (trylock_page(page)) {
-> >                         swap_slot_free_notify(page);
-> >                         unlock_page(page);
-> > --
-> > 2.27.0
-> >
+And the second argument in mod_timer() means "new timeout in jiffies",
+does the above need to convert from ms to jiffies? Am I miss something?
+
+Thanks,
+Guoqing
