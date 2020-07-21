@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 17/24] init: add an init_chown helper
-Date: Tue, 21 Jul 2020 18:28:11 +0200
-Message-ID: <20200721162818.197315-18-hch@lst.de>
+Subject: [PATCH 12/24] init: add an init_mount helper
+Date: Tue, 21 Jul 2020 18:28:06 +0200
+Message-ID: <20200721162818.197315-13-hch@lst.de>
 References: <20200721162818.197315-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,114 +12,137 @@ To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torv
 Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Add a simple helper to chown with a kernel space file name and switch
-the early init code over to it.
+Like do_mount, but takes a kernel pointer for the destination path.
+Switch over the mounts in the init code and devtmpfs to it, which
+just happen to work due to the implicit set_fs(KERNEL_DS) during early
+init right now.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- fs/internal.h    |  2 +-
- fs/open.c        |  2 +-
- init/do_mounts.h |  1 +
- init/fs.c        | 18 ++++++++++++++++++
- init/initramfs.c |  6 +++---
- 5 files changed, 24 insertions(+), 5 deletions(-)
+ init/Makefile           |  2 +-
+ init/do_mounts.c        |  8 ++++----
+ init/do_mounts.h        |  3 +++
+ init/do_mounts_initrd.c |  6 +++---
+ init/fs.c               | 20 ++++++++++++++++++++
+ 5 files changed, 31 insertions(+), 8 deletions(-)
+ create mode 100644 init/fs.c
 
-diff --git a/fs/internal.h b/fs/internal.h
-index e903d5aae139a2..4a66730fabefa7 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -129,7 +129,7 @@ long do_sys_ftruncate(unsigned int fd, loff_t length, int small);
- int do_fchmodat(int dfd, const char __user *filename, umode_t mode);
- int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
- 		int flag);
--
-+int chown_common(const struct path *path, uid_t user, gid_t group);
- extern int vfs_open(const struct path *, struct file *);
+diff --git a/init/Makefile b/init/Makefile
+index 6bc37f64b3617c..7d4b57d3cf7eac 100644
+--- a/init/Makefile
++++ b/init/Makefile
+@@ -5,7 +5,7 @@
  
- /*
-diff --git a/fs/open.c b/fs/open.c
-index f62f4752bb436d..49960a1248f14b 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -639,7 +639,7 @@ SYSCALL_DEFINE2(chmod, const char __user *, filename, umode_t, mode)
- 	return do_fchmodat(AT_FDCWD, filename, mode);
+ ccflags-y := -fno-function-sections -fno-data-sections
+ 
+-obj-y                          := main.o version.o mounts.o
++obj-y                          := main.o version.o fs.o mounts.o
+ ifneq ($(CONFIG_BLK_DEV_INITRD),y)
+ obj-y                          += noinitramfs.o
+ else
+diff --git a/init/do_mounts.c b/init/do_mounts.c
+index 4f4ceb35805503..4812e21d149cab 100644
+--- a/init/do_mounts.c
++++ b/init/do_mounts.c
+@@ -395,16 +395,16 @@ static int __init do_mount_root(const char *name, const char *fs,
+ 	int ret;
+ 
+ 	if (data) {
+-		/* do_mount() requires a full page as fifth argument */
++		/* init_mount() requires a full page as fifth argument */
+ 		p = alloc_page(GFP_KERNEL);
+ 		if (!p)
+ 			return -ENOMEM;
+ 		data_page = page_address(p);
+-		/* zero-pad. do_mount() will make sure it's terminated */
++		/* zero-pad. init_mount() will make sure it's terminated */
+ 		strncpy(data_page, data, PAGE_SIZE);
+ 	}
+ 
+-	ret = do_mount(name, "/root", fs, flags, data_page);
++	ret = init_mount(name, "/root", fs, flags, data_page);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -628,7 +628,7 @@ void __init prepare_namespace(void)
+ 	mount_root();
+ out:
+ 	devtmpfs_mount();
+-	do_mount(".", "/", NULL, MS_MOVE, NULL);
++	init_mount(".", "/", NULL, MS_MOVE, NULL);
+ 	ksys_chroot(".");
  }
  
--static int chown_common(const struct path *path, uid_t user, gid_t group)
-+int chown_common(const struct path *path, uid_t user, gid_t group)
- {
- 	struct inode *inode = path->dentry->d_inode;
- 	struct inode *delegated_inode = NULL;
 diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 810b37ce1db882..db42564080a2f9 100644
+index 15d256658a3093..ce4f95fff6bc16 100644
 --- a/init/do_mounts.h
 +++ b/init/do_mounts.h
-@@ -13,6 +13,7 @@ int __init init_mount(const char *dev_name, const char *dir_name,
- 		const char *type_page, unsigned long flags, void *data_page);
- int __init init_chdir(const char *filename);
- int __init init_chroot(const char *filename);
-+int __init init_chown(const char *filename, uid_t user, gid_t group, int flags);
- int __init init_unlink(const char *pathname);
- int __init init_rmdir(const char *pathname);
+@@ -9,6 +9,9 @@
+ #include <linux/major.h>
+ #include <linux/root_dev.h>
  
++int __init init_mount(const char *dev_name, const char *dir_name,
++		const char *type_page, unsigned long flags, void *data_page);
++
+ void  mount_block_root(char *name, int flags);
+ void  mount_root(void);
+ void prepare_namespace(void);
+diff --git a/init/do_mounts_initrd.c b/init/do_mounts_initrd.c
+index 3fabbc82513506..63a3eebd36e76b 100644
+--- a/init/do_mounts_initrd.c
++++ b/init/do_mounts_initrd.c
+@@ -63,7 +63,7 @@ static int __init init_linuxrc(struct subprocess_info *info, struct cred *new)
+ 	console_on_rootfs();
+ 	/* move initrd over / and chdir/chroot in initrd root */
+ 	ksys_chdir("/root");
+-	do_mount(".", "/", NULL, MS_MOVE, NULL);
++	init_mount(".", "/", NULL, MS_MOVE, NULL);
+ 	ksys_chroot(".");
+ 	ksys_setsid();
+ 	return 0;
+@@ -100,7 +100,7 @@ static void __init handle_initrd(void)
+ 	current->flags &= ~PF_FREEZER_SKIP;
+ 
+ 	/* move initrd to rootfs' /old */
+-	do_mount("..", ".", NULL, MS_MOVE, NULL);
++	init_mount("..", ".", NULL, MS_MOVE, NULL);
+ 	/* switch root and cwd back to / of rootfs */
+ 	ksys_chroot("..");
+ 
+@@ -114,7 +114,7 @@ static void __init handle_initrd(void)
+ 	mount_root();
+ 
+ 	printk(KERN_NOTICE "Trying to move old root to /initrd ... ");
+-	error = do_mount("/old", "/root/initrd", NULL, MS_MOVE, NULL);
++	error = init_mount("/old", "/root/initrd", NULL, MS_MOVE, NULL);
+ 	if (!error)
+ 		printk("okay\n");
+ 	else {
 diff --git a/init/fs.c b/init/fs.c
-index af55e6d40357dc..30000b7097b9f0 100644
---- a/init/fs.c
+new file mode 100644
+index 00000000000000..73423f5461f934
+--- /dev/null
 +++ b/init/fs.c
-@@ -59,6 +59,24 @@ int __init init_chroot(const char *filename)
- 	return error;
- }
- 
-+int __init init_chown(const char *filename, uid_t user, gid_t group, int flags)
+@@ -0,0 +1,20 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <linux/init.h>
++#include <linux/mount.h>
++#include <linux/namei.h>
++#include <linux/fs.h>
++#include "do_mounts.h"
++
++int __init init_mount(const char *dev_name, const char *dir_name,
++		const char *type_page, unsigned long flags, void *data_page)
 +{
-+	int lookup_flags = (flags & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;
 +	struct path path;
-+	int error;
++	int ret;
 +
-+	error = kern_path(filename, lookup_flags, &path);
-+	if (error)
-+		return error;
-+	error = mnt_want_write(path.mnt);
-+	if (!error) {
-+		error = chown_common(&path, user, group);
-+		mnt_drop_write(path.mnt);
-+	}
++	ret = kern_path(dir_name, LOOKUP_FOLLOW, &path);
++	if (ret)
++		return ret;
++	ret = path_mount(dev_name, &path, type_page, flags, data_page);
 +	path_put(&path);
-+	return error;
++	return ret;
 +}
-+
- int __init init_unlink(const char *pathname)
- {
- 	return do_unlinkat(AT_FDCWD, getname_kernel(pathname));
-diff --git a/init/initramfs.c b/init/initramfs.c
-index 41491149fb1f29..076413dbe8bcf3 100644
---- a/init/initramfs.c
-+++ b/init/initramfs.c
-@@ -353,14 +353,14 @@ static int __init do_name(void)
- 		}
- 	} else if (S_ISDIR(mode)) {
- 		ksys_mkdir(collected, mode);
--		ksys_chown(collected, uid, gid);
-+		init_chown(collected, uid, gid, 0);
- 		ksys_chmod(collected, mode);
- 		dir_add(collected, mtime);
- 	} else if (S_ISBLK(mode) || S_ISCHR(mode) ||
- 		   S_ISFIFO(mode) || S_ISSOCK(mode)) {
- 		if (maybe_link() == 0) {
- 			ksys_mknod(collected, mode, rdev);
--			ksys_chown(collected, uid, gid);
-+			init_chown(collected, uid, gid, AT_SYMLINK_NOFOLLOW);
- 			ksys_chmod(collected, mode);
- 			do_utime(collected, mtime);
- 		}
-@@ -398,7 +398,7 @@ static int __init do_symlink(void)
- 	collected[N_ALIGN(name_len) + body_len] = '\0';
- 	clean_path(collected, 0);
- 	ksys_symlink(collected + N_ALIGN(name_len), collected);
--	ksys_lchown(collected, uid, gid);
-+	init_chown(collected, uid, gid, AT_SYMLINK_NOFOLLOW);
- 	do_utime(collected, mtime);
- 	state = SkipIt;
- 	next_state = Reset;
 -- 
 2.27.0
