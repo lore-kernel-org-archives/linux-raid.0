@@ -1,49 +1,79 @@
-From: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Subject: Re: [PATCH 06/24] md: open code vfs_stat in md_setup_drive
-Date: Tue, 21 Jul 2020 17:55:39 +0100
-Message-ID: <20200721165539.GT2786714@ZenIV.linux.org.uk>
+From: Al Viro <viro@zeniv.linux.org.uk>
+Subject: Re: [PATCH 23/24] init: add an init_mknod helper
+Date: Tue, 21 Jul 2020 18:02:46 +0100
+Message-ID: <20200721170246.GW2786714@ZenIV.linux.org.uk>
 References: <20200721162818.197315-1-hch@lst.de>
- <20200721162818.197315-7-hch@lst.de>
+ <20200721162818.197315-24-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200721162818.197315-7-hch-jcswGhMUV9g@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200721162818.197315-24-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 21, 2020 at 06:28:00PM +0200, Christoph Hellwig wrote:
-> Instead of passing a kernel pointer to vfs_stat by relying on the
-> implicit set_fs(KERNEL_DS) in md_setup_drive, just open code the
-> trivial getattr, and use the opportunity to move a little bit more
-> code from the caller into the new helper.
+On Tue, Jul 21, 2020 at 06:28:17PM +0200, Christoph Hellwig wrote:
 
-Ugh...
-
-> +static void __init md_lookup_dev(const char *devname, dev_t *dev)
+> +int __init init_mknod(const char *filename, umode_t mode, unsigned int dev)
 > +{
-> +	struct kstat stat;
+> +	struct dentry *dentry;
 > +	struct path path;
-> +	char filename[64];
+> +	int error;
 > +
-> +	if (strncmp(devname, "/dev/", 5) == 0)
-> +		devname += 5;
-> +	snprintf(filename, 63, "/dev/%s", devname);
+> +	if (S_ISFIFO(mode) || S_ISSOCK(mode))
+> +		dev = 0;
+> +	else if (!(S_ISBLK(mode) || S_ISCHR(mode)))
+> +		return -EINVAL;
 > +
-> +	if (!kern_path(filename, LOOKUP_FOLLOW, &path) &&
-> +	    !vfs_getattr(&path, &stat, STATX_BASIC_STATS, AT_NO_AUTOMOUNT) &&
-> +	    S_ISBLK(stat.mode))
-> +		*dev = new_decode_dev(stat.rdev);
-> +	path_put(&path);
+> +	dentry = user_path_create(AT_FDCWD, filename, &path, 0);
+> +	if (IS_ERR(dentry))
+> +		return PTR_ERR(dentry);
+
+user_path_create() is wrong here.
+
+> +
+> +	if (!IS_POSIXACL(path.dentry->d_inode))
+> +		mode &= ~current_umask();
+> +	error = security_path_mknod(&path, dentry, mode, dev);
+> +	if (!error)
+> +		error = vfs_mknod(path.dentry->d_inode, dentry, mode,
+> +				  new_decode_dev(dev));
+> +	done_path_create(&path, dentry);
+> +	return error;
 > +}
-
-How about fs/for_init.c and putting the damn helpers there?  With
-calling conventions as close to syscalls as possible, and a fat
-comment regarding their intended use being _ONLY_ the setup
-in should-have-been-done-in-userland parts of init?
-
-I really want to keep the surface as small as possible - we had
-fun shite several releases ago when somebody tried that kind of
-crap (with open(), IIRC).  Let's not go there again...
+> +
+>  int __init init_link(const char *oldname, const char *newname)
+>  {
+>  	struct dentry *new_dentry;
+> diff --git a/init/initramfs.c b/init/initramfs.c
+> index b1a0a1d5c3c135..bd685fdb5840f3 100644
+> --- a/init/initramfs.c
+> +++ b/init/initramfs.c
+> @@ -359,7 +359,7 @@ static int __init do_name(void)
+>  	} else if (S_ISBLK(mode) || S_ISCHR(mode) ||
+>  		   S_ISFIFO(mode) || S_ISSOCK(mode)) {
+>  		if (maybe_link() == 0) {
+> -			ksys_mknod(collected, mode, rdev);
+> +			init_mknod(collected, mode, rdev);
+>  			init_chown(collected, uid, gid, AT_SYMLINK_NOFOLLOW);
+>  			init_chmod(collected, mode);
+>  			do_utime(collected, mtime);
+> diff --git a/init/noinitramfs.c b/init/noinitramfs.c
+> index b8bdba1c949cf9..490f2bd2b49979 100644
+> --- a/init/noinitramfs.c
+> +++ b/init/noinitramfs.c
+> @@ -22,8 +22,7 @@ static int __init default_rootfs(void)
+>  	if (err < 0)
+>  		goto out;
+>  
+> -	err = ksys_mknod((const char __user __force *) "/dev/console",
+> -			S_IFCHR | S_IRUSR | S_IWUSR,
+> +	err = init_mknod("/dev/console", S_IFCHR | S_IRUSR | S_IWUSR,
+>  			new_encode_dev(MKDEV(5, 1)));
+>  	if (err < 0)
+>  		goto out;
+> -- 
+> 2.27.0
+> 
