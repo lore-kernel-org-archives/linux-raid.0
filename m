@@ -1,98 +1,67 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/24] fs: refactor ksys_umount
-Date: Tue, 21 Jul 2020 18:27:56 +0200
-Message-ID: <20200721162818.197315-3-hch@lst.de>
+Subject: [PATCH 05/24] devtmpfs: open code ksys_chdir and ksys_chroot
+Date: Tue, 21 Jul 2020 18:27:59 +0200
+Message-ID: <20200721162818.197315-6-hch@lst.de>
 References: <20200721162818.197315-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <20200721162818.197315-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-Factor out a path_umount helper that takes a struct path * instead of the
-actual file name.  This will allow to convert the init and devtmpfs code
-to properly mount based on a kernel pointer instead of relying on the
-implicit set_fs(KERNEL_DS) during early init.
+devtmpfs is the only non-early init caller of ksys_chdir and ksys_chroot
+with kernel pointers.  Just open code the two operations which only
+really need a single path lookup anyway in devtmpfs_setup instead.
+The open coded verson doesn't need any of the stale dentry revalidation
+logic from the full blown version as those can't happen on tmpfs and
+ramfs.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/namespace.c | 40 ++++++++++++++++++----------------------
- 1 file changed, 18 insertions(+), 22 deletions(-)
+ drivers/base/devtmpfs.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/fs/namespace.c b/fs/namespace.c
-index 6f8234f74bed90..43834b59eff6c3 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -1706,36 +1706,19 @@ static inline bool may_mandlock(void)
- }
- #endif
+diff --git a/drivers/base/devtmpfs.c b/drivers/base/devtmpfs.c
+index 5e8d677ee783bc..f798d3976b4052 100644
+--- a/drivers/base/devtmpfs.c
++++ b/drivers/base/devtmpfs.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched.h>
+ #include <linux/slab.h>
+ #include <linux/kthread.h>
++#include <linux/fs_struct.h>
+ #include <uapi/linux/mount.h>
+ #include "base.h"
  
--/*
-- * Now umount can handle mount points as well as block devices.
-- * This is important for filesystems which use unnamed block devices.
-- *
-- * We now support a flag for forced unmount like the other 'big iron'
-- * unixes. Our API is identical to OSF/1 to avoid making a mess of AMD
-- */
--
--int ksys_umount(char __user *name, int flags)
-+static int path_umount(struct path *path, int flags)
+@@ -393,6 +394,7 @@ static int handle(const char *name, umode_t mode, kuid_t uid, kgid_t gid,
+ 
+ static int devtmpfs_setup(void *p)
  {
--	struct path path;
- 	struct mount *mnt;
- 	int retval;
--	int lookup_flags = LOOKUP_MOUNTPOINT;
- 
- 	if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))
- 		return -EINVAL;
--
- 	if (!may_mount())
- 		return -EPERM;
- 
--	if (!(flags & UMOUNT_NOFOLLOW))
--		lookup_flags |= LOOKUP_FOLLOW;
--
--	retval = user_path_at(AT_FDCWD, name, lookup_flags, &path);
--	if (retval)
--		goto out;
--	mnt = real_mount(path.mnt);
-+	mnt = real_mount(path->mnt);
- 	retval = -EINVAL;
--	if (path.dentry != path.mnt->mnt_root)
-+	if (path->dentry != path->mnt->mnt_root)
- 		goto dput_and_out;
- 	if (!check_mnt(mnt))
- 		goto dput_and_out;
-@@ -1748,12 +1731,25 @@ int ksys_umount(char __user *name, int flags)
- 	retval = do_umount(mnt, flags);
- dput_and_out:
- 	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
--	dput(path.dentry);
-+	dput(path->dentry);
- 	mntput_no_expire(mnt);
--out:
- 	return retval;
- }
- 
-+int ksys_umount(char __user *name, int flags)
-+{
-+	int lookup_flags = LOOKUP_MOUNTPOINT;
 +	struct path path;
-+	int ret;
+ 	int err;
+ 
+ 	err = ksys_unshare(CLONE_NEWNS);
+@@ -401,8 +403,16 @@ static int devtmpfs_setup(void *p)
+ 	err = devtmpfs_do_mount("/");
+ 	if (err)
+ 		goto out;
+-	ksys_chdir("/.."); /* will traverse into overmounted root */
+-	ksys_chroot(".");
 +
-+	if (!(flags & UMOUNT_NOFOLLOW))
-+		lookup_flags |= LOOKUP_FOLLOW;
-+	ret = user_path_at(AT_FDCWD, name, lookup_flags, &path);
-+	if (ret)
-+		return ret;
-+	return path_umount(&path, flags);
-+}
-+
- SYSCALL_DEFINE2(umount, char __user *, name, int, flags)
- {
- 	return ksys_umount(name, flags);
++	/* traverse into overmounted root and then chroot to it */
++	if (!kern_path("/..", LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path) &&
++	    !inode_permission(path.dentry->d_inode, MAY_EXEC | MAY_CHDIR) &&
++	    ns_capable(current_user_ns(), CAP_SYS_CHROOT) &&
++	    !security_path_chroot(&path)) {
++		set_fs_pwd(current->fs, &path);
++		set_fs_root(current->fs, &path);
++	}
++	path_put(&path);
+ out:
+ 	*(int *)p = err;
+ 	complete(&setup_done);
 -- 
 2.27.0
