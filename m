@@ -1,131 +1,133 @@
-From: "heming.zhao@suse.com" <heming.zhao@suse.com>
-Subject: Re: [PATCH v5 1/2] md-cluster: fix safemode_delay value when
- converting to clustered bitmap
-Date: Tue, 21 Jul 2020 16:58:35 +0800
-Message-ID: <f1b63409-5837-cfcd-2a6e-05d9cb753d3f@suse.com>
-References: <1595268533-7040-1-git-send-email-heming.zhao@suse.com>
- <1595268533-7040-2-git-send-email-heming.zhao@suse.com>
- <8f122dea-2a4a-4523-653f-fe6fc2842653@cloud.ionos.com>
+From: kernel test robot <lkp@intel.com>
+Subject: [song-md:md-next] BUILD SUCCESS
+ 1684e97538b9484c72bcaff2961569c3b0021473
+Date: Tue, 21 Jul 2020 20:35:46 +0800
+Message-ID: <5f16e122.9DKLcRHs8GuVPwi0%lkp@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8f122dea-2a4a-4523-653f-fe6fc2842653@cloud.ionos.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, linux-raid@vger.kernel.org
-Cc: neilb@suse.com, song@kernel.org
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
+branch HEAD: 1684e97538b9484c72bcaff2961569c3b0021473  raid5: remove the meaningless check in raid5_make_request
 
+elapsed time: 6862m
 
-On 7/21/20 4:35 PM, Guoqing Jiang wrote:
->=20
->=20
-> On 7/20/20 8:08 PM, Zhao Heming wrote:
->> When array convert to clustered bitmap, the safe_mode_delay doesn't
->> clean and vice versa. the /sys/block/mdX/md/safe_mode_delay keep origina=
-l
->> value after changing bitmap type. In safe_delay_store(), the code forbid=
-s
->> setting mddev->safemode_delay when array is clustered. So in cluster-md
->> env, the expected safemode_delay value should be 0.
->>
->> Reproducible steps:
->> ```
->> node1 # mdadm --zero-superblock /dev/sd{b,c,d}
->> node1 # mdadm -C /dev/md0 -b internal -e 1.2 -n 2 -l mirror /dev/sdb /de=
-v/sdc
->> node1 # cat /sys/block/md0/md/safe_mode_delay
->> 0.204
->> node1 # mdadm -G /dev/md0 -b none
->> node1 # mdadm --grow /dev/md0 --bitmap=3Dclustered
->> node1 # cat /sys/block/md0/md/safe_mode_delay
->> 0.204=C2=A0 <=3D=3D doesn't change, should ZERO for cluster-md
->>
->> node1 # mdadm --zero-superblock /dev/sd{b,c,d}
->> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdb /d=
-ev/sdc
->> node1 # cat /sys/block/md0/md/safe_mode_delay
->> 0.000
->> node1 # mdadm -G /dev/md0 -b none
->> node1 # cat /sys/block/md0/md/safe_mode_delay
->> 0.000=C2=A0 <=3D=3D doesn't change, should default value
->> ```
->>
->> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
->> ---
->> =C2=A0 drivers/md/md.c | 11 +++++++++--
->> =C2=A0 1 file changed, 9 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index f567f536b529..1bde3df3fa18 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -101,6 +101,8 @@ static void mddev_detach(struct mddev *mddev);
->> =C2=A0=C2=A0 * count by 2 for every hour elapsed between read errors.
->> =C2=A0=C2=A0 */
->> =C2=A0 #define MD_DEFAULT_MAX_CORRECTED_READ_ERRORS 20
->> +/* Default safemode delay: 200 msec */
->> +#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
->> =C2=A0 /*
->> =C2=A0=C2=A0 * Current RAID-1,4,5 parallel reconstruction 'guaranteed sp=
-eed limit'
->> =C2=A0=C2=A0 * is 1000 KB/sec, so the extra system load does not show up=
- that much.
->> @@ -5982,7 +5984,7 @@ int md_run(struct mddev *mddev)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (mddev_is_clustered(mddev))
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->safemode_d=
-elay =3D 0;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 else
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->safemode_delay =3D (2=
-00 * HZ)/1000 +1; /* 200 msec delay */
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->safemode_delay =3D DE=
-FAULT_SAFEMODE_DELAY;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->in_sync =3D 1;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 smp_wmb();
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock(&mddev->lock);
->> @@ -7361,6 +7363,7 @@ static int update_array_info(struct mddev *mddev, =
-mdu_array_info_t *info)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mddev->bitmap_info.nodes =3D 0;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 md_cluster_ops->leave(mddev);
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 mddev->safemode_delay =3D DEFAULT_SAFEMODE_DELAY;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 }
->=20
-> Not about the patch itself, just confuse about the meaning of safemode_de=
-lay.
-> As safemode_delay represents 200 ms delay, but md_write_end has this.
->=20
->  =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=
-=A0 /* The roundup() ensures this only performs locking once
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 * every ->safemode_delay *jiffies*
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 */
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 mod_timer(&mddev->safemode_timer,
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 roundup(jiffies, mddev->safemode_delay) +
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 mddev->safemode_delay);
->=20
-> And the second argument in mod_timer() means "new timeout in jiffies",
-> does the above need to convert from ms to jiffies? Am I miss something?
->=20
-> Thanks,
-> Guoqing
->=20
+configs tested: 104
+configs skipped: 1
 
-The safemode_delay stores jiffies not msec. it converts to ms only in safe_=
-delay_{store|show}.
-please see default value:
-#define DEFAULT_SAFEMODE_DELAY ((200 * HZ)/1000 +1)
-in safe_delay_store, user space input will multiple 10^3, which will conver=
-t from second to msec.
-then  (*HZ/1000) to jiffies.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+arm                                 defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                               allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+i386                             allyesconfig
+i386                                defconfig
+i386                              debian-10.3
+i386                              allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                              allnoconfig
+m68k                           sun3_defconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+nios2                            allyesconfig
+openrisc                            defconfig
+c6x                              allyesconfig
+c6x                               allnoconfig
+openrisc                         allyesconfig
+nds32                               defconfig
+nds32                             allnoconfig
+csky                             allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+h8300                            allmodconfig
+xtensa                              defconfig
+arc                                 defconfig
+arc                              allyesconfig
+sh                               allmodconfig
+sh                                allnoconfig
+microblaze                        allnoconfig
+mips                             allyesconfig
+mips                              allnoconfig
+mips                             allmodconfig
+parisc                            allnoconfig
+parisc                              defconfig
+parisc                           allyesconfig
+parisc                           allmodconfig
+powerpc                          allyesconfig
+powerpc                          rhel-kconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+x86_64               randconfig-a005-20200717
+x86_64               randconfig-a006-20200717
+x86_64               randconfig-a002-20200717
+x86_64               randconfig-a001-20200717
+x86_64               randconfig-a003-20200717
+x86_64               randconfig-a004-20200717
+i386                 randconfig-a001-20200716
+i386                 randconfig-a005-20200716
+i386                 randconfig-a002-20200716
+i386                 randconfig-a006-20200716
+i386                 randconfig-a003-20200716
+i386                 randconfig-a004-20200716
+x86_64               randconfig-a012-20200716
+x86_64               randconfig-a011-20200716
+x86_64               randconfig-a016-20200716
+x86_64               randconfig-a014-20200716
+x86_64               randconfig-a013-20200716
+x86_64               randconfig-a015-20200716
+i386                 randconfig-a016-20200716
+i386                 randconfig-a011-20200716
+i386                 randconfig-a015-20200716
+i386                 randconfig-a012-20200716
+i386                 randconfig-a013-20200716
+i386                 randconfig-a014-20200716
+i386                 randconfig-a015-20200719
+i386                 randconfig-a011-20200719
+i386                 randconfig-a016-20200719
+i386                 randconfig-a012-20200719
+i386                 randconfig-a013-20200719
+i386                 randconfig-a014-20200719
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+s390                             allyesconfig
+s390                              allnoconfig
+s390                             allmodconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+sparc64                             defconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                          allmodconfig
+x86_64                                   rhel
+x86_64                                    lkp
+x86_64                              fedora-25
+x86_64                    rhel-7.6-kselftests
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
