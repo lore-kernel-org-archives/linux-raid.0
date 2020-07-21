@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/24] init: move the prepare_namespace prototype to init/do_mounts.h
-Date: Tue, 21 Jul 2020 18:28:02 +0200
-Message-ID: <20200721162818.197315-9-hch@lst.de>
+Subject: [PATCH 07/24] init: initialize ramdisk_execute_command at compile time
+Date: Tue, 21 Jul 2020 18:28:01 +0200
+Message-ID: <20200721162818.197315-8-hch@lst.de>
 References: <20200721162818.197315-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,52 +12,38 @@ To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-No need to have this prototype in a global header included by
-every driver.
+Set ramdisk_execute_command to "/init" at compile time.  The command
+line can still override it, but this saves a few instructions and
+removes a NULL check.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/init.h | 1 -
- init/do_mounts.h     | 1 +
- init/main.c          | 2 ++
- 3 files changed, 3 insertions(+), 1 deletion(-)
+ init/main.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/include/linux/init.h b/include/linux/init.h
-index 212fc9e2f691a1..7de54fcad39431 100644
---- a/include/linux/init.h
-+++ b/include/linux/init.h
-@@ -147,7 +147,6 @@ extern unsigned int reset_devices;
- 
- /* used by init/main.c */
- void setup_arch(char **);
--void prepare_namespace(void);
- void __init init_rootfs(void);
- extern struct file_system_type rootfs_fs_type;
- 
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index c855b3f0e06d19..853da3cc4a3586 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -11,6 +11,7 @@
- 
- void  mount_block_root(char *name, int flags);
- void  mount_root(void);
-+void prepare_namespace(void);
- extern int root_mountflags;
- 
- static inline int create_dev(char *name, dev_t dev)
 diff --git a/init/main.c b/init/main.c
-index c2c9143db96795..b952e4cd685af4 100644
+index db0621dfbb0468..c2c9143db96795 100644
 --- a/init/main.c
 +++ b/init/main.c
-@@ -103,6 +103,8 @@
- #include <asm/sections.h>
- #include <asm/cacheflush.h>
+@@ -154,7 +154,7 @@ static bool initargs_found;
+ #endif
  
-+#include "do_mounts.h"
-+
- #define CREATE_TRACE_POINTS
- #include <trace/events/initcall.h>
+ static char *execute_command;
+-static char *ramdisk_execute_command;
++static char *ramdisk_execute_command = "/init";
  
+ /*
+  * Used to generate warnings if static_key manipulation functions are used
+@@ -1514,10 +1514,6 @@ static noinline void __init kernel_init_freeable(void)
+ 	 * check if there is an early userspace init.  If yes, let it do all
+ 	 * the work
+ 	 */
+-
+-	if (!ramdisk_execute_command)
+-		ramdisk_execute_command = "/init";
+-
+ 	if (ksys_access((const char __user *)
+ 			ramdisk_execute_command, 0) != 0) {
+ 		ramdisk_execute_command = NULL;
 -- 
 2.27.0
