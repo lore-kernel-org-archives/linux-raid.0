@@ -1,67 +1,100 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/24] devtmpfs: open code ksys_chdir and ksys_chroot
-Date: Tue, 21 Jul 2020 18:27:59 +0200
-Message-ID: <20200721162818.197315-6-hch@lst.de>
+Subject: [PATCH 03/24] fs: push the getname from do_rmdir into the callers
+Date: Tue, 21 Jul 2020 18:27:57 +0200
+Message-ID: <20200721162818.197315-4-hch@lst.de>
 References: <20200721162818.197315-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20200721162818.197315-1-hch@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-devtmpfs is the only non-early init caller of ksys_chdir and ksys_chroot
-with kernel pointers.  Just open code the two operations which only
-really need a single path lookup anyway in devtmpfs_setup instead.
-The open coded verson doesn't need any of the stale dentry revalidation
-logic from the full blown version as those can't happen on tmpfs and
-ramfs.
+This mirrors do_unlinkat and will make life a little easier for
+the init code to reuse the whole function with a kernel filename.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/base/devtmpfs.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ fs/internal.h            |  2 +-
+ fs/namei.c               | 10 ++++------
+ include/linux/syscalls.h |  4 ++--
+ 3 files changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/base/devtmpfs.c b/drivers/base/devtmpfs.c
-index 5e8d677ee783bc..f798d3976b4052 100644
---- a/drivers/base/devtmpfs.c
-+++ b/drivers/base/devtmpfs.c
-@@ -25,6 +25,7 @@
- #include <linux/sched.h>
- #include <linux/slab.h>
- #include <linux/kthread.h>
-+#include <linux/fs_struct.h>
- #include <uapi/linux/mount.h>
- #include "base.h"
+diff --git a/fs/internal.h b/fs/internal.h
+index 9b863a7bd70892..e903d5aae139a2 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -65,7 +65,7 @@ extern int vfs_path_lookup(struct dentry *, struct vfsmount *,
+ long do_mknodat(int dfd, const char __user *filename, umode_t mode,
+ 		unsigned int dev);
+ long do_mkdirat(int dfd, const char __user *pathname, umode_t mode);
+-long do_rmdir(int dfd, const char __user *pathname);
++long do_rmdir(int dfd, struct filename *name);
+ long do_unlinkat(int dfd, struct filename *name);
+ long do_symlinkat(const char __user *oldname, int newdfd,
+ 		  const char __user *newname);
+diff --git a/fs/namei.c b/fs/namei.c
+index 72d4219c93acb7..d75a6039ae3966 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3720,17 +3720,16 @@ int vfs_rmdir(struct inode *dir, struct dentry *dentry)
+ }
+ EXPORT_SYMBOL(vfs_rmdir);
  
-@@ -393,6 +394,7 @@ static int handle(const char *name, umode_t mode, kuid_t uid, kgid_t gid,
- 
- static int devtmpfs_setup(void *p)
+-long do_rmdir(int dfd, const char __user *pathname)
++long do_rmdir(int dfd, struct filename *name)
  {
-+	struct path path;
- 	int err;
+ 	int error = 0;
+-	struct filename *name;
+ 	struct dentry *dentry;
+ 	struct path path;
+ 	struct qstr last;
+ 	int type;
+ 	unsigned int lookup_flags = 0;
+ retry:
+-	name = filename_parentat(dfd, getname(pathname), lookup_flags,
++	name = filename_parentat(dfd, name, lookup_flags,
+ 				&path, &last, &type);
+ 	if (IS_ERR(name))
+ 		return PTR_ERR(name);
+@@ -3781,7 +3780,7 @@ long do_rmdir(int dfd, const char __user *pathname)
  
- 	err = ksys_unshare(CLONE_NEWNS);
-@@ -401,8 +403,16 @@ static int devtmpfs_setup(void *p)
- 	err = devtmpfs_do_mount("/");
- 	if (err)
- 		goto out;
--	ksys_chdir("/.."); /* will traverse into overmounted root */
--	ksys_chroot(".");
-+
-+	/* traverse into overmounted root and then chroot to it */
-+	if (!kern_path("/..", LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path) &&
-+	    !inode_permission(path.dentry->d_inode, MAY_EXEC | MAY_CHDIR) &&
-+	    ns_capable(current_user_ns(), CAP_SYS_CHROOT) &&
-+	    !security_path_chroot(&path)) {
-+		set_fs_pwd(current->fs, &path);
-+		set_fs_root(current->fs, &path);
-+	}
-+	path_put(&path);
- out:
- 	*(int *)p = err;
- 	complete(&setup_done);
+ SYSCALL_DEFINE1(rmdir, const char __user *, pathname)
+ {
+-	return do_rmdir(AT_FDCWD, pathname);
++	return do_rmdir(AT_FDCWD, getname(pathname));
+ }
+ 
+ /**
+@@ -3926,8 +3925,7 @@ SYSCALL_DEFINE3(unlinkat, int, dfd, const char __user *, pathname, int, flag)
+ 		return -EINVAL;
+ 
+ 	if (flag & AT_REMOVEDIR)
+-		return do_rmdir(dfd, pathname);
+-
++		return do_rmdir(dfd, getname(pathname));
+ 	return do_unlinkat(dfd, getname(pathname));
+ }
+ 
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 5b0f1fca4cfb9d..e43816198e6001 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1281,11 +1281,11 @@ static inline long ksys_unlink(const char __user *pathname)
+ 	return do_unlinkat(AT_FDCWD, getname(pathname));
+ }
+ 
+-extern long do_rmdir(int dfd, const char __user *pathname);
++long do_rmdir(int dfd, struct filename *name);
+ 
+ static inline long ksys_rmdir(const char __user *pathname)
+ {
+-	return do_rmdir(AT_FDCWD, pathname);
++	return do_rmdir(AT_FDCWD, getname(pathname));
+ }
+ 
+ extern long do_mkdirat(int dfd, const char __user *pathname, umode_t mode);
 -- 
 2.27.0
