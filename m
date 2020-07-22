@@ -1,39 +1,144 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 02/14] drbd: remove dead code in
-	device_to_statistics
-Date: Wed, 22 Jul 2020 09:07:03 +0200
-Message-ID: <20200722070703.GA25590@lst.de>
-References: <20200722062552.212200-1-hch@lst.de>
-	<20200722062552.212200-3-hch@lst.de>
-	<SN4PR0401MB3598495DA5AF46CAF019BDC69B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
+From: Zhao Heming <heming.zhao@suse.com>
+Subject: [PATCH v2] mdadm/Detail: show correct state for cluster-md array
+Date: Wed, 22 Jul 2020 15:11:45 +0800
+Message-ID: <1595401905-3459-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <SN4PR0401MB3598495DA5AF46CAF019BDC69B790-OZENnpeWoeG1GMmP3NTBp/nBZW37Ciw+nBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Johannes Thumshirn <Johannes.Thumshirn-Sjgp3cTcYWE@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, jes@trained-monkey.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 22, 2020 at 07:03:21AM +0000, Johannes Thumshirn wrote:
-> On 22/07/2020 08:28, Christoph Hellwig wrote:
-> > Ever since the switch to blk-mq, a lower device not use by VM
->                                            in-use/used? ~^
+After kernel md module commit 480523feae581, in md-cluster env,
+mddev->in_sync always zero, it will make array.state never set
+up MD_SB_CLEAN. it causes "mdadm -D /dev/mdX" show state 'active'
+all the time.
 
-Yeah, this should be used.
+bitmap.c: add a new API IsBitmapDirty() to support inquiry bitmap
+dirty or clean.
 
-> Also this looks like the last user of 'dev_lower_blocked' so it could
-> be removed from device_statistics if it's not an ABI (not sure with this
-> netlink stuff).
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+---
+v2:
+- Detail.c: change to read only one device.
+- bitmap.c: modify IsBitmapDirty() to check all bitmap on the selected device.
 
-As far as I can tell this is a netlink user ABI.
+---
+ Detail.c | 20 +++++++++++++++++++-
+ bitmap.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ mdadm.h  |  1 +
+ 3 files changed, 75 insertions(+), 1 deletion(-)
+
+diff --git a/Detail.c b/Detail.c
+index 24eeba0..cb5ce7d 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -495,8 +495,26 @@ int Detail(char *dev, struct context *c)
+ 							  sra->array_state);
+ 				else
+ 					arrayst = "clean";
+-			} else
++			} else {
+ 				arrayst = "active";
++				if (array.state & (1<<MD_SB_CLUSTERED)) {
++					for (d = 0; d < max_disks * 2; d++) {
++						char *dv;
++						mdu_disk_info_t disk = disks[d];
++
++						if (d >= array.raid_disks * 2 &&
++								disk.major == 0 && disk.minor == 0)
++							continue;
++						if ((d & 1) && disk.major == 0 && disk.minor == 0)
++							continue;
++						dv = map_dev_preferred(disk.major, disk.minor, 0,
++												c->prefer);
++						if (dv && !IsBitmapDirty(dv))
++							arrayst = "clean";
++						break;
++					}
++				}
++			}
+ 
+ 			printf("             State : %s%s%s%s%s%s%s \n",
+ 			       arrayst, st,
+diff --git a/bitmap.c b/bitmap.c
+index e38cb96..1095dc8 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -368,6 +368,61 @@ free_info:
+ 	return rv;
+ }
+ 
++int IsBitmapDirty(char *filename)
++{
++	/*
++	 * Read the bitmap file
++	 * This function is currently for cluster-md only.
++	 * Return: 1(dirty), 0 (clean), -1(error)
++	 */
++
++	int fd = -1, rv = 0, i;
++	struct supertype *st = NULL;
++	bitmap_info_t *info = NULL;
++	bitmap_super_t *sb = NULL;
++
++	fd = bitmap_file_open(filename, &st, 0);
++	free(st);
++	if (fd < 0)
++		goto out;
++
++	info = bitmap_fd_read(fd, 0);
++	close(fd);
++	if (!info)
++		goto out;
++
++	sb = &info->sb;
++	for (i = 0; i < (int)sb->nodes; i++) {
++		st = NULL;
++		free(info);
++		info = NULL;
++
++		fd = bitmap_file_open(filename, &st, i);
++		free(st);
++		if (fd < 0)
++			goto out;
++
++		info = bitmap_fd_read(fd, 0);
++		close(fd);
++		if (!info)
++			goto out;
++
++		sb = &info->sb;
++		if (sb->magic != BITMAP_MAGIC) { /* invalid bitmap magic */
++			free(info);
++			goto out;
++		}
++
++		if (info->dirty_bits)
++			rv = 1;
++	}
++
++	free(info);
++	return rv;
++out:
++	return -1;
++}
++
+ int CreateBitmap(char *filename, int force, char uuid[16],
+ 		 unsigned long chunksize, unsigned long daemon_sleep,
+ 		 unsigned long write_behind,
+diff --git a/mdadm.h b/mdadm.h
+index 399478b..ba8ba91 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1447,6 +1447,7 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			unsigned long long array_size,
+ 			int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
++extern int IsBitmapDirty(char *filename);
+ extern int Write_rules(char *rule_name);
+ extern int bitmap_update_uuid(int fd, int *uuid, int swap);
+ 
+-- 
+2.25.0
