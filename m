@@ -1,42 +1,47 @@
-From: Winston Weinert <winston@ml1.net>
-Subject: [PATCH v2] mdadm/md.4: update path to in-kernel-tree documentation
-Date: Wed, 22 Jul 2020 08:33:22 -0500
-Message-ID: <20200722133321.8512-1-winston@ml1.net>
-References: <20200718103314.14549-1-winstonml1.net>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 06/24] md: open code vfs_stat in md_setup_drive
+Date: Wed, 22 Jul 2020 16:05:25 +0200
+Message-ID: <20200722140525.GA16395@lst.de>
+References: <20200721162818.197315-1-hch@lst.de> <20200721162818.197315-7-hch@lst.de> <20200721165539.GT2786714@ZenIV.linux.org.uk> <20200721182701.GB14450@lst.de> <20200722074432.GD2786714@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200718103314.14549-1-winstonml1.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jes Sorensen <jes@trained-monkey.org>, Winston Weinert <winston@ml1.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200722074432.GD2786714-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Documentation/md.txt was renamed to Documentation/admin-guide/md.rst
-in linux commit 9d85025b0418163fae079c9ba8f8445212de8568 (Oct 26,
-2016).
+On Wed, Jul 22, 2020 at 08:44:32AM +0100, Al Viro wrote:
+> On Tue, Jul 21, 2020 at 08:27:01PM +0200, Christoph Hellwig wrote:
+> > On Tue, Jul 21, 2020 at 05:55:39PM +0100, Al Viro wrote:
+> > > How about fs/for_init.c and putting the damn helpers there?  With
+> > > calling conventions as close to syscalls as possible, and a fat
+> > > comment regarding their intended use being _ONLY_ the setup
+> > > in should-have-been-done-in-userland parts of init?
+> > 
+> > Where do you want the prototypes to go?  Also do you want devtmpfs
+> > use the same helpers, which then't can't be marked __init (mount,
+> > chdir, chroot), or separate copies?
+> 
+> Hmm...  mount still can be __init (devtmpfs_mount() is), and I suspect
+> devtmpfs_setup() could also be made such - just turn devtmpfsd()
+> into
+> static int __init devtmpfsd(void *p)
+> {
+>         int err = devtmpfs_setup(p);
+> 
+> 	if (!err)
+> 		devtmpfsd_real();	/* never returns */
+> 	return err;
+> }
+> and you are done.
 
-Signed-off-by: Winston Weinert <winston@ml1.net>
----
-I am sending this updated patch which includes a sign-off, fixes a
-commit message typo, and CC's Jes Sorensen. I hope it is up to
-standards.
+Yes, that seems to work.  We can obviously call non-__init functions
+from __init ones, and kthread_run doesn't seem to care if it gets passed
+a __init function.
 
- md.4 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Here is what I have now:
 
-diff --git a/md.4 b/md.4
-index 0712af2..aecff38 100644
---- a/md.4
-+++ b/md.4
-@@ -1061,7 +1061,7 @@ which contains various files for providing access to information about
- the array.
- 
- This interface is documented more fully in the file
--.B Documentation/md.txt
-+.B Documentation/admin-guide/md.rst
- which is distributed with the kernel sources.  That file should be
- consulted for full documentation.  The following are just a selection
- of attribute files that are available.
--- 
-2.26.2
+http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init_path
