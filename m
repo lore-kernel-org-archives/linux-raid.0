@@ -1,29 +1,23 @@
 From: antlists <antlists@youngman.org.uk>
-Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
-Date: Wed, 22 Jul 2020 23:00:25 +0100
-Message-ID: <0f935586-7d2f-02b9-9955-ab160dd4017f@youngman.org.uk>
-References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
+Subject: An update on the WD Red saga ...
+Date: Wed, 22 Jul 2020 23:47:34 +0100
+Message-ID: <4cbcbb30-a432-3cb3-e6d0-c1b7767276bc@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
 Content-Language: en-GB
 Sender: linux-raid-owner@vger.kernel.org
-To: Vojtech Myslivec <vojtech@xmyslivec.cz>, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Michal Moravec <michal.moravec@logicworks.cz>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 22/07/2020 21:47, Vojtech Myslivec wrote:
-> - RAID6 over 6 HDD and 1 LV as write journal (md1)
->      - This is the affected device
+https://www.anandtech.com/show/15878/western-digital-cleans-up-the-red-smr-nas-hdd-mess
 
-What hard drives do you have?
+tl;dr - DON'T BUY WD REDS.
 
-https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
-
-Dunno whether that is your problem, but it's one of the first things to 
-check.
+The basic Red drive is now SMR end of. If you want what was the old CMR 
+Red that's been re-branded as Red-Plus. And the Red Pro is still the 
+expensive CMR Pro drive.
 
 Cheers,
 Wol
