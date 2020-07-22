@@ -1,24 +1,134 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 06/24] md: open code vfs_stat in md_setup_drive
-Date: Tue, 21 Jul 2020 20:27:01 +0200
-Message-ID: <20200721182701.GB14450@lst.de>
-References: <20200721162818.197315-1-hch@lst.de> <20200721162818.197315-7-hch@lst.de> <20200721165539.GT2786714@ZenIV.linux.org.uk>
+From: Song Liu <song@kernel.org>
+Subject: Re: [PATCH V1 3/3] improve raid10 discard request
+Date: Tue, 21 Jul 2020 17:17:26 -0700
+Message-ID: <CAPhsuW7=zvCANj6YcQciPHpAohOpv-XQ=eMBHrcBUmdoEBZ9yw@mail.gmail.com>
+References: <1595221108-10137-1-git-send-email-xni@redhat.com>
+ <1595221108-10137-4-git-send-email-xni@redhat.com> <ead4cd95-3a17-7ab6-3494-d1ac6bcc4d1f@suse.de>
+ <f1aae07b-bdec-82ec-51a3-85de4b7e695c@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200721165539.GT2786714-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <f1aae07b-bdec-82ec-51a3-85de4b7e695c@suse.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>
 List-Id: linux-raid.ids
 
-On Tue, Jul 21, 2020 at 05:55:39PM +0100, Al Viro wrote:
-> How about fs/for_init.c and putting the damn helpers there?  With
-> calling conventions as close to syscalls as possible, and a fat
-> comment regarding their intended use being _ONLY_ the setup
-> in should-have-been-done-in-userland parts of init?
+On Sun, Jul 19, 2020 at 10:38 PM Coly Li <colyli@suse.de> wrote:
+>
+> On 2020/7/20 13:26, Coly Li wrote:
+> > On 2020/7/20 12:58, Xiao Ni wrote:
+> >> Now the discard request is split by chunk size. So it takes a long tim=
+e to finish mkfs on
+> >> disks which support discard function. This patch improve handling raid=
+10 discard request.
+> >> It uses  the similar way with raid0(29efc390b).
+> >>
+> >> But it's a little complex than raid0. Because raid10 has different lay=
+out. If raid10 is
+> >> offset layout and the discard request is smaller than stripe size. The=
+re are some holes
+> >> when we submit discard bio to underlayer disks.
+> >>
+> >> For example: five disks (disk1 - disk5)
+> >> D01 D02 D03 D04 D05
+> >> D05 D01 D02 D03 D04
+> >> D06 D07 D08 D09 D10
+> >> D10 D06 D07 D08 D09
+> >> The discard bio just wants to discard from D03 to D10. For disk3, ther=
+e is a hole between
+> >> D03 and D08. For disk4, there is a hole between D04 and D09. D03 is a =
+chunk, raid10_write_request
+> >> can handle one chunk perfectly. So the part that is not aligned with s=
+tripe size is still
+> >> handled by raid10_write_request.
+> >>
+> >> If reshape is running when discard bio comes and the discard bio spans=
+ the reshape position,
+> >> raid10_write_request is responsible to handle this discard bio.
+> >>
+> >> I did a test with this patch set.
+> >> Without patch:
+> >> time mkfs.xfs /dev/md0
+> >> real4m39.775s
+> >> user0m0.000s
+> >> sys0m0.298s
+> >>
+> >> With patch:
+> >> time mkfs.xfs /dev/md0
+> >> real0m0.105s
+> >> user0m0.000s
+> >> sys0m0.007s
+> >>
+> >> nvme3n1           259:1    0   477G  0 disk
+> >> =E2=94=94=E2=94=80nvme3n1p1       259:10   0    50G  0 part
+> >> nvme4n1           259:2    0   477G  0 disk
+> >> =E2=94=94=E2=94=80nvme4n1p1       259:11   0    50G  0 part
+> >> nvme5n1           259:6    0   477G  0 disk
+> >> =E2=94=94=E2=94=80nvme5n1p1       259:12   0    50G  0 part
+> >> nvme2n1           259:9    0   477G  0 disk
+> >> =E2=94=94=E2=94=80nvme2n1p1       259:15   0    50G  0 part
+> >> nvme0n1           259:13   0   477G  0 disk
+> >> =E2=94=94=E2=94=80nvme0n1p1       259:14   0    50G  0 part
+> >>
+> >> v1:
+> >> Coly helps to review these patches and give some suggestions:
+> >> One bug is found. If discard bio is across one stripe but bio size is =
+bigger
+> >> than one stripe size. After spliting, the bio will be NULL. In this ve=
+rsion,
+> >> it checks whether discard bio size is bigger than 2*stripe_size.
+> >> In raid10_end_discard_request, it's better to check R10BIO_Uptodate is=
+ set
+> >> or not. It can avoid write memory to improve performance.
+> >> Add more comments for calculating addresses.
+> >>
+> >> Signed-off-by: Xiao Ni <xni@redhat.com>
+> >
+> > The code looks good to me, you may add my Reviewed-by: Coly Li
+> > <colyli@suse.de>
+> >
+> > But I still suggest you to add a more detailed commit log, to explain
+> > how the discard range of each component disk is decided. Anyway this is
+> > just a suggestion, it is up to you.
+> >
+> > Thank you for this work.
+>
+> In raid10_end_discard_request(), the first 5 lines for local variables
+> declaration, there are 3 lines starts with improper blanks (should be
+> tab '\t'). You may find this minor issue by checkpatch.pl I guess.
+>
+> After fixing this format issue, you stil have my Reviewed-by :-)
+>
+> Coly Li
 
-Where do you want the prototypes to go?  Also do you want devtmpfs
-use the same helpers, which then't can't be marked __init (mount,
-chdir, chroot), or separate copies?
+Thanks to Xiao for the patch And thanks to Coly for the review.
+
+I did an experiment with a patch to increase max_discard_sectors,
+like:
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 14b1ba732cd7d..0b15397ebfaf9 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3762,7 +3762,7 @@ static int raid10_run(struct mddev *mddev)
+        chunk_size =3D mddev->chunk_sectors << 9;
+        if (mddev->queue) {
+                blk_queue_max_discard_sectors(mddev->queue,
+-                                             mddev->chunk_sectors);
++                                             UINT_MAX);
+                blk_queue_max_write_same_sectors(mddev->queue, 0);
+                blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+                blk_queue_io_min(mddev->queue, chunk_size);
+
+This simple change reduces the run time of mkfs.xfs on my SSD
+from 5+ minutes to about 14 seconds. Of course this is not as good
+as ~2s seconds with the set. But I wonder whether the time saving
+justifies extra complexity. Thoughts on this?
+
+Also, as Coly mentioned, please run checkpatch.pl on the patches.
+I have seen warnings on all 3 patches in the set.
+
+Thanks,
+Song
