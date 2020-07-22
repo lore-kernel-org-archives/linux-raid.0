@@ -1,47 +1,60 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 06/24] md: open code vfs_stat in md_setup_drive
-Date: Wed, 22 Jul 2020 16:05:25 +0200
-Message-ID: <20200722140525.GA16395@lst.de>
-References: <20200721162818.197315-1-hch@lst.de> <20200721162818.197315-7-hch@lst.de> <20200721165539.GT2786714@ZenIV.linux.org.uk> <20200721182701.GB14450@lst.de> <20200722074432.GD2786714@ZenIV.linux.org.uk>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 11/14] mm: use SWP_SYNCHRONOUS_IO more intelligently
+Date: Wed, 22 Jul 2020 09:26:45 -0700
+Message-ID: <CALvZod6zF7Ak8KWf4dq0pEF2ty7JN_SyNE7PxLjrfF+EuDbZ2w@mail.gmail.com>
+References: <20200722062552.212200-1-hch@lst.de> <20200722062552.212200-12-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200722074432.GD2786714-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200722062552.212200-12-hch@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jul 22, 2020 at 08:44:32AM +0100, Al Viro wrote:
-> On Tue, Jul 21, 2020 at 08:27:01PM +0200, Christoph Hellwig wrote:
-> > On Tue, Jul 21, 2020 at 05:55:39PM +0100, Al Viro wrote:
-> > > How about fs/for_init.c and putting the damn helpers there?  With
-> > > calling conventions as close to syscalls as possible, and a fat
-> > > comment regarding their intended use being _ONLY_ the setup
-> > > in should-have-been-done-in-userland parts of init?
-> > 
-> > Where do you want the prototypes to go?  Also do you want devtmpfs
-> > use the same helpers, which then't can't be marked __init (mount,
-> > chdir, chroot), or separate copies?
-> 
-> Hmm...  mount still can be __init (devtmpfs_mount() is), and I suspect
-> devtmpfs_setup() could also be made such - just turn devtmpfsd()
-> into
-> static int __init devtmpfsd(void *p)
-> {
->         int err = devtmpfs_setup(p);
-> 
-> 	if (!err)
-> 		devtmpfsd_real();	/* never returns */
-> 	return err;
-> }
-> and you are done.
+On Tue, Jul 21, 2020 at 11:27 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> There is no point in trying to call bdev_read_page if SWP_SYNCHRONOUS_IO
+> is not set, as the device won't support it.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  mm/page_io.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
+>
+> diff --git a/mm/page_io.c b/mm/page_io.c
+> index ccda7679008851..442061348dfb26 100644
+> --- a/mm/page_io.c
+> +++ b/mm/page_io.c
+> @@ -403,15 +403,17 @@ int swap_readpage(struct page *page, bool synchronous)
+>                 goto out;
+>         }
+>
+> -       ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
+> -       if (!ret) {
+> -               if (trylock_page(page)) {
+> -                       swap_slot_free_notify(page);
+> -                       unlock_page(page);
+> -               }
+> +       if (sis->flags & SWP_SYNCHRONOUS_IO) {
+> +               ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
+> +               if (ret) {
 
-Yes, that seems to work.  We can obviously call non-__init functions
-from __init ones, and kthread_run doesn't seem to care if it gets passed
-a __init function.
+!ret
 
-Here is what I have now:
-
-http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init_path
+> +                       if (trylock_page(page)) {
+> +                               swap_slot_free_notify(page);
+> +                               unlock_page(page);
+> +                       }
+>
+> -               count_vm_event(PSWPIN);
+> -               goto out;
+> +                       count_vm_event(PSWPIN);
+> +                       goto out;
+> +               }
+>         }
+>
+>         ret = 0;
+> --
+> 2.27.0
+>
