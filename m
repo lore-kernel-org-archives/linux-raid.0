@@ -1,82 +1,169 @@
-From: Song Liu <liu.song.a23@gmail.com>
-Subject: Re: [PATCH 1/1] md/raid10: avoid deadlock on recovery.
-Date: Tue, 21 Jul 2020 23:18:19 -0700
-Message-ID: <CAPhsuW5mSbNNspW2tPy-RZW0MmqZkEfsGzLPh1EvXkzW=eS1vg@mail.gmail.com>
-References: <1583259280-124995-1-git-send-email-vmayatskikh@digitalocean.com>
- <1583259280-124995-2-git-send-email-vmayatskikh@digitalocean.com> <D5A36675-8344-4D67-9836-64F9BA78D78E@redhat.com>
+From: Song Liu <song@kernel.org>
+Subject: Re: [PATCH V1 3/3] improve raid10 discard request
+Date: Tue, 21 Jul 2020 23:20:38 -0700
+Message-ID: <CAPhsuW5dcBMZeACJ5=YMYHnVAAyD6rczgqeFMO76Fvr_wCj3aw@mail.gmail.com>
+References: <1595221108-10137-1-git-send-email-xni@redhat.com>
+ <1595221108-10137-4-git-send-email-xni@redhat.com> <ead4cd95-3a17-7ab6-3494-d1ac6bcc4d1f@suse.de>
+ <f1aae07b-bdec-82ec-51a3-85de4b7e695c@suse.de> <CAPhsuW7=zvCANj6YcQciPHpAohOpv-XQ=eMBHrcBUmdoEBZ9yw@mail.gmail.com>
+ <ba53df52-4e87-c18d-845b-1fd95cb95176@redhat.com> <43cc1ca5-2636-f610-6824-554ebea81335@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D5A36675-8344-4D67-9836-64F9BA78D78E@redhat.com>
+In-Reply-To: <43cc1ca5-2636-f610-6824-554ebea81335@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nigel Croxon <ncroxon@redhat.com>
-Cc: Vitaly Mayatskikh <vmayatskikh@digitalocean.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Xiao Ni <xni@redhat.com>
+Cc: Coly Li <colyli@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>
 List-Id: linux-raid.ids
 
-On Tue, Jul 21, 2020 at 7:26 AM Nigel Croxon <ncroxon@redhat.com> wrote:
+On Tue, Jul 21, 2020 at 10:10 PM Xiao Ni <xni@redhat.com> wrote:
 >
 >
-> > On Mar 3, 2020, at 1:14 PM, Vitaly Mayatskikh <vmayatskikh@digitalocean=
-.com> wrote:
-> >
-> > When disk failure happens and the array has a spare drive, resync threa=
-d
-> > kicks in and starts to refill the spare. However it may get blocked by
-> > a retry thread that resubmits failed IO to a mirror and itself can get
-> > blocked on a barrier raised by the resync thread.
-> >
-> > Signed-off-by: Vitaly Mayatskikh <vmayatskikh@digitalocean.com>
-> > ---
-> > drivers/md/raid10.c | 14 +++++++++++---
-> > 1 file changed, 11 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> > index ec136e4..f1a8e26 100644
-> > --- a/drivers/md/raid10.c
-> > +++ b/drivers/md/raid10.c
-> > @@ -980,6 +980,7 @@ static void wait_barrier(struct r10conf *conf)
-> > {
-> >       spin_lock_irq(&conf->resync_lock);
-> >       if (conf->barrier) {
-> > +             struct bio_list *bio_list =3D current->bio_list;
-> >               conf->nr_waiting++;
-> >               /* Wait for the barrier to drop.
-> >                * However if there are already pending
-> > @@ -994,9 +995,16 @@ static void wait_barrier(struct r10conf *conf)
-> >               wait_event_lock_irq(conf->wait_barrier,
-> >                                   !conf->barrier ||
-> >                                   (atomic_read(&conf->nr_pending) &&
-> > -                                  current->bio_list &&
-> > -                                  (!bio_list_empty(&current->bio_list[=
-0]) ||
-> > -                                   !bio_list_empty(&current->bio_list[=
-1]))),
-> > +                                  bio_list &&
-> > +                                  (!bio_list_empty(&bio_list[0]) ||
-> > +                                   !bio_list_empty(&bio_list[1]))) ||
-> > +                                  /* move on if recovery thread is
-> > +                                   * blocked by us
-> > +                                   */
-> > +                                  (conf->mddev->thread->tsk =3D=3D cur=
-rent &&
-> > +                                   test_bit(MD_RECOVERY_RUNNING,
-> > +                                            &conf->mddev->recovery) &&
-> > +                                   conf->nr_queued > 0),
-> >                                   conf->resync_lock);
-> >               conf->nr_waiting--;
-> >               if (!conf->nr_waiting)
-> > =E2=80=94
-> > 1.8.3.1
-> >
 >
-> Song, Have you had a chance to look at this patch?
-> We would like to have it pulled in to the kernel.
+> On 07/22/2020 10:43 AM, Xiao Ni wrote:
+> >
+> >
+> > On 07/22/2020 08:17 AM, Song Liu wrote:
+> >> On Sun, Jul 19, 2020 at 10:38 PM Coly Li <colyli@suse.de> wrote:
+> >>> On 2020/7/20 13:26, Coly Li wrote:
+> >>>> On 2020/7/20 12:58, Xiao Ni wrote:
+> >>>>> Now the discard request is split by chunk size. So it takes a long
+> >>>>> time to finish mkfs on
+> >>>>> disks which support discard function. This patch improve handling
+> >>>>> raid10 discard request.
+> >>>>> It uses  the similar way with raid0(29efc390b).
+> >>>>>
+> >>>>> But it's a little complex than raid0. Because raid10 has different
+> >>>>> layout. If raid10 is
+> >>>>> offset layout and the discard request is smaller than stripe size.
+> >>>>> There are some holes
+> >>>>> when we submit discard bio to underlayer disks.
+> >>>>>
+> >>>>> For example: five disks (disk1 - disk5)
+> >>>>> D01 D02 D03 D04 D05
+> >>>>> D05 D01 D02 D03 D04
+> >>>>> D06 D07 D08 D09 D10
+> >>>>> D10 D06 D07 D08 D09
+> >>>>> The discard bio just wants to discard from D03 to D10. For disk3,
+> >>>>> there is a hole between
+> >>>>> D03 and D08. For disk4, there is a hole between D04 and D09. D03
+> >>>>> is a chunk, raid10_write_request
+> >>>>> can handle one chunk perfectly. So the part that is not aligned
+> >>>>> with stripe size is still
+> >>>>> handled by raid10_write_request.
+> >>>>>
+> >>>>> If reshape is running when discard bio comes and the discard bio
+> >>>>> spans the reshape position,
+> >>>>> raid10_write_request is responsible to handle this discard bio.
+> >>>>>
+> >>>>> I did a test with this patch set.
+> >>>>> Without patch:
+> >>>>> time mkfs.xfs /dev/md0
+> >>>>> real4m39.775s
+> >>>>> user0m0.000s
+> >>>>> sys0m0.298s
+> >>>>>
+> >>>>> With patch:
+> >>>>> time mkfs.xfs /dev/md0
+> >>>>> real0m0.105s
+> >>>>> user0m0.000s
+> >>>>> sys0m0.007s
+> >>>>>
+> >>>>> nvme3n1           259:1    0   477G  0 disk
+> >>>>> =E2=94=94=E2=94=80nvme3n1p1       259:10   0    50G  0 part
+> >>>>> nvme4n1           259:2    0   477G  0 disk
+> >>>>> =E2=94=94=E2=94=80nvme4n1p1       259:11   0    50G  0 part
+> >>>>> nvme5n1           259:6    0   477G  0 disk
+> >>>>> =E2=94=94=E2=94=80nvme5n1p1       259:12   0    50G  0 part
+> >>>>> nvme2n1           259:9    0   477G  0 disk
+> >>>>> =E2=94=94=E2=94=80nvme2n1p1       259:15   0    50G  0 part
+> >>>>> nvme0n1           259:13   0   477G  0 disk
+> >>>>> =E2=94=94=E2=94=80nvme0n1p1       259:14   0    50G  0 part
+> >>>>>
+> >>>>> v1:
+> >>>>> Coly helps to review these patches and give some suggestions:
+> >>>>> One bug is found. If discard bio is across one stripe but bio size
+> >>>>> is bigger
+> >>>>> than one stripe size. After spliting, the bio will be NULL. In
+> >>>>> this version,
+> >>>>> it checks whether discard bio size is bigger than 2*stripe_size.
+> >>>>> In raid10_end_discard_request, it's better to check
+> >>>>> R10BIO_Uptodate is set
+> >>>>> or not. It can avoid write memory to improve performance.
+> >>>>> Add more comments for calculating addresses.
+> >>>>>
+> >>>>> Signed-off-by: Xiao Ni <xni@redhat.com>
+> >>>> The code looks good to me, you may add my Reviewed-by: Coly Li
+> >>>> <colyli@suse.de>
+> >>>>
+> >>>> But I still suggest you to add a more detailed commit log, to explai=
+n
+> >>>> how the discard range of each component disk is decided. Anyway
+> >>>> this is
+> >>>> just a suggestion, it is up to you.
+> >>>>
+> >>>> Thank you for this work.
+> >>> In raid10_end_discard_request(), the first 5 lines for local variable=
+s
+> >>> declaration, there are 3 lines starts with improper blanks (should be
+> >>> tab '\t'). You may find this minor issue by checkpatch.pl I guess.
+> >>>
+> >>> After fixing this format issue, you stil have my Reviewed-by :-)
+> >>>
+> >>> Coly Li
+> >> Thanks to Xiao for the patch And thanks to Coly for the review.
+> >>
+> >> I did an experiment with a patch to increase max_discard_sectors,
+> >> like:
+> >>
+> >> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> >> index 14b1ba732cd7d..0b15397ebfaf9 100644
+> >> --- a/drivers/md/raid10.c
+> >> +++ b/drivers/md/raid10.c
+> >> @@ -3762,7 +3762,7 @@ static int raid10_run(struct mddev *mddev)
+> >>          chunk_size =3D mddev->chunk_sectors << 9;
+> >>          if (mddev->queue) {
+> >>                  blk_queue_max_discard_sectors(mddev->queue,
+> >> - mddev->chunk_sectors);
+> >> +                                             UINT_MAX);
+> >> blk_queue_max_write_same_sectors(mddev->queue, 0);
+> >> blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+> >>                  blk_queue_io_min(mddev->queue, chunk_size);
+> >>
+> >> This simple change reduces the run time of mkfs.xfs on my SSD
+> >> from 5+ minutes to about 14 seconds. Of course this is not as good
+> >> as ~2s seconds with the set. But I wonder whether the time saving
+> >> justifies extra complexity. Thoughts on this?
+> >>
+> >> Also, as Coly mentioned, please run checkpatch.pl on the patches.
+> >> I have seen warnings on all 3 patches in the set.
+> >>
+> >> Thanks,
+> >> Song
+> >>
+> > Hi Song
+> >
+> > The mkfs.xfs still takes a very long time if just modifying the max
+> > discard sectors in my environment.
+> > But it doesn't make sense in your test. It still needs to split the
+> > bio based on the chunk size. So it don't
+> > make a difference only modifying the mas discard sectors?
+> >
+> > And thanks Coly for the review. I'll fix the problem in the next versio=
+n.
+> >
+> It takes effect only changing mas discard sectors to UINT_MAX in my
+> environment.
+> time mkfs.xfs /dev/md0 -f
+> real    50m1.674s  (no change)
+> real    13m19.367s (with change)
+>
+> Maybe it depends on the disks. In my environment, it still takes a long
+> time.
 
-I am sorry I missed this one. This looks good to me.
-
-Nigel, would you like to add your Reviewed-by, or Acked-by, or Tested-by ta=
-g?
+I see. Let's fix it with this patch then. Please fix checkpatch.pl warnings=
+ and
+resubmit with Coly's Review tag.
 
 Thanks,
 Song
