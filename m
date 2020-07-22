@@ -1,42 +1,23 @@
-From: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Subject: Re: [PATCH 06/24] md: open code vfs_stat in md_setup_drive
-Date: Wed, 22 Jul 2020 08:44:32 +0100
-Message-ID: <20200722074432.GD2786714@ZenIV.linux.org.uk>
-References: <20200721162818.197315-1-hch@lst.de>
- <20200721162818.197315-7-hch@lst.de>
- <20200721165539.GT2786714@ZenIV.linux.org.uk>
- <20200721182701.GB14450@lst.de>
+From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Subject: Re: [PATCH 09/14] bdi: remove BDI_CAP_CGROUP_WRITEBACK
+Date: Wed, 22 Jul 2020 07:45:24 +0000
+Message-ID: <SN4PR0401MB35988BC2003CCDFC7CE8258F9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200722062552.212200-1-hch@lst.de>
+ <20200722062552.212200-10-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200721182701.GB14450-jcswGhMUV9g@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jul 21, 2020 at 08:27:01PM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 21, 2020 at 05:55:39PM +0100, Al Viro wrote:
-> > How about fs/for_init.c and putting the damn helpers there?  With
-> > calling conventions as close to syscalls as possible, and a fat
-> > comment regarding their intended use being _ONLY_ the setup
-> > in should-have-been-done-in-userland parts of init?
-> 
-> Where do you want the prototypes to go?  Also do you want devtmpfs
-> use the same helpers, which then't can't be marked __init (mount,
-> chdir, chroot), or separate copies?
-
-Hmm...  mount still can be __init (devtmpfs_mount() is), and I suspect
-devtmpfs_setup() could also be made such - just turn devtmpfsd()
-into
-static int __init devtmpfsd(void *p)
-{
-        int err = devtmpfs_setup(p);
-
-	if (!err)
-		devtmpfsd_real();	/* never returns */
-	return err;
-}
-and you are done.  As for the prototypes... include/linux/init_syscalls.h,
-perhaps?
+On 22/07/2020 08:27, Christoph Hellwig wrote:=0A=
+> it is know to support cgroup writeback, or the bdi comes from the block=
+=0A=
+knwon  ~^=0A=
+=0A=
+Apart from that,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
