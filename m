@@ -1,49 +1,115 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/14] drbd: remove dead code in device_to_statistics
-Date: Fri, 24 Jul 2020 09:33:01 +0200
-Message-ID: <20200724073313.138789-3-hch@lst.de>
-References: <20200724073313.138789-1-hch@lst.de>
+From: kernel test robot <lkp@intel.com>
+Subject: [song-md:md-next] BUILD SUCCESS
+ 83c3e5e17b5e3057ac304383a46e3c485d00ffed
+Date: Fri, 24 Jul 2020 18:01:10 +0800
+Message-ID: <5f1ab166.vsR0k+Jv3XADShB0%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200724073313.138789-1-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ever since the switch to blk-mq, a lower device not used for VM
-writeback will not be marked congested, so the check will never
-trigger.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
+branch HEAD: 83c3e5e17b5e3057ac304383a46e3c485d00ffed  md/raid5: use do_div() for 64 bit divisions in raid5_sync_request
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+elapsed time: 1672m
+
+configs tested: 86
+configs skipped: 1
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+arm                                 defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                               allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+i386                             allyesconfig
+i386                                defconfig
+i386                              debian-10.3
+i386                              allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                              allnoconfig
+m68k                           sun3_defconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+nios2                            allyesconfig
+openrisc                            defconfig
+c6x                              allyesconfig
+c6x                               allnoconfig
+openrisc                         allyesconfig
+nds32                               defconfig
+nds32                             allnoconfig
+csky                             allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+h8300                            allmodconfig
+xtensa                              defconfig
+arc                                 defconfig
+arc                              allyesconfig
+sh                               allmodconfig
+sh                                allnoconfig
+microblaze                        allnoconfig
+mips                             allyesconfig
+mips                              allnoconfig
+mips                             allmodconfig
+parisc                            allnoconfig
+parisc                              defconfig
+parisc                           allyesconfig
+parisc                           allmodconfig
+powerpc                             defconfig
+powerpc                          allyesconfig
+powerpc                          rhel-kconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a003-20200723
+i386                 randconfig-a005-20200723
+i386                 randconfig-a004-20200723
+i386                 randconfig-a006-20200723
+i386                 randconfig-a002-20200723
+i386                 randconfig-a001-20200723
+x86_64               randconfig-a005-20200723
+x86_64               randconfig-a004-20200723
+x86_64               randconfig-a003-20200723
+x86_64               randconfig-a002-20200723
+x86_64               randconfig-a006-20200723
+x86_64               randconfig-a001-20200723
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+s390                             allyesconfig
+s390                              allnoconfig
+s390                             allmodconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+sparc64                             defconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                          allmodconfig
+x86_64                                   rhel
+x86_64                                    lkp
+x86_64                              fedora-25
+x86_64                    rhel-7.6-kselftests
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
 ---
- drivers/block/drbd/drbd_nl.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-index d0d9a549b58388..650372ee2c7822 100644
---- a/drivers/block/drbd/drbd_nl.c
-+++ b/drivers/block/drbd/drbd_nl.c
-@@ -3370,7 +3370,6 @@ static void device_to_statistics(struct device_statistics *s,
- 	if (get_ldev(device)) {
- 		struct drbd_md *md = &device->ldev->md;
- 		u64 *history_uuids = (u64 *)s->history_uuids;
--		struct request_queue *q;
- 		int n;
- 
- 		spin_lock_irq(&md->uuid_lock);
-@@ -3384,11 +3383,6 @@ static void device_to_statistics(struct device_statistics *s,
- 		spin_unlock_irq(&md->uuid_lock);
- 
- 		s->dev_disk_flags = md->flags;
--		q = bdev_get_queue(device->ldev->backing_bdev);
--		s->dev_lower_blocked =
--			bdi_congested(q->backing_dev_info,
--				      (1 << WB_async_congested) |
--				      (1 << WB_sync_congested));
- 		put_ldev(device);
- 	}
- 	s->dev_size = drbd_get_capacity(device->this_bdev);
--- 
-2.27.0
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
