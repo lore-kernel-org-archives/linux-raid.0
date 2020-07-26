@@ -1,29 +1,29 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 04/21] devtmpfs: refactor devtmpfsd()
-Date: Sun, 26 Jul 2020 10:21:18 +0200
-Message-ID: <20200726082118.GA17726@lst.de>
-References: <20200726071356.287160-1-hch@lst.de> <20200726071356.287160-5-hch@lst.de> <20200726074306.GA444745@kroah.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH 09/14] bdi: remove BDI_CAP_CGROUP_WRITEBACK
+Date: Sun, 26 Jul 2020 10:01:37 +0100
+Message-ID: <5F1D4671.5060708@youngman.org.uk>
+References: <20200722062552.212200-1-hch@lst.de>
+ <20200722062552.212200-10-hch@lst.de>
+ <SN4PR0401MB35988BC2003CCDFC7CE8258F9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200726074306.GA444745@kroah.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <SN4PR0401MB35988BC2003CCDFC7CE8258F9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Jul 26, 2020 at 09:43:06AM +0200, Greg Kroah-Hartman wrote:
-> On Sun, Jul 26, 2020 at 09:13:39AM +0200, Christoph Hellwig wrote:
-> > Split the main worker loop into a separate function.  This allows
-> > devtmpfsd itself and devtmpfsd_setup to be marked __init, which will
-> > allows us to call __init routines for the setup work.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  drivers/base/devtmpfs.c | 47 +++++++++++++++++++++++------------------
-> >  1 file changed, 26 insertions(+), 21 deletions(-)
+On 22/07/20 08:45, Johannes Thumshirn wrote:
+> On 22/07/2020 08:27, Christoph Hellwig wrote:
+>> it is know to support cgroup writeback, or the bdi comes from the block
+> knwon  ~^
 > 
-> Nice cleanup, thanks for doing this:
+Whoops - "known"
 
-This was actualy Als idea, I should have probably mentioned that.
+> Apart from that,
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> 
+Cheers,
+Wol
