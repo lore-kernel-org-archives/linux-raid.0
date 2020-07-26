@@ -1,29 +1,31 @@
-From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [PATCH 04/21] devtmpfs: refactor devtmpfsd()
-Date: Sun, 26 Jul 2020 09:43:06 +0200
-Message-ID: <20200726074306.GA444745@kroah.com>
-References: <20200726071356.287160-1-hch@lst.de>
- <20200726071356.287160-5-hch@lst.de>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: [PATCH v2] mdadm/Detail: show correct state for cluster-md array
+Date: Sun, 26 Jul 2020 09:14:08 +0100
+Message-ID: <5F1D3B50.8080006@youngman.org.uk>
+References: <1595401905-3459-1-git-send-email-heming.zhao@suse.com>
+ <7697b7eb-76f9-8102-a490-1684e5f18acf@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200726071356.287160-5-hch-jcswGhMUV9g@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7697b7eb-76f9-8102-a490-1684e5f18acf@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "heming.zhao@suse.com" <heming.zhao@suse.com>, linux-raid@vger.kernel.org
+Cc: neilb@suse.com, jes@trained-monkey.org
 List-Id: linux-raid.ids
 
-On Sun, Jul 26, 2020 at 09:13:39AM +0200, Christoph Hellwig wrote:
-> Split the main worker loop into a separate function.  This allows
-> devtmpfsd itself and devtmpfsd_setup to be marked __init, which will
-> allows us to call __init routines for the setup work.
+On 22/07/20 08:20, heming.zhao@suse.com wrote:
+> During I was creating patch, I found the ExamineBitmap() has memory leak issue.
+> I am not sure whether the leak issue should be fixed.
+> (Because when mdadm cmd finish, all leaked memory will be released).
+> The IsBitmapDirty() used some of ExamineBitmap() code, and I only fixed leaked issue in IsBitmapDirty().
 > 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> ---
->  drivers/base/devtmpfs.c | 47 +++++++++++++++++++++++------------------
->  1 file changed, 26 insertions(+), 21 deletions(-)
+My gut feel?
 
-Nice cleanup, thanks for doing this:
+Firstly, "do things right" - it should be fixed.
+Second - are you sure this code is not run while mdadm is running as a
+daemon? It's all very well saying it will be released, but but mdadm
+could be running for a looonnngg time.
 
-Reviewed-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cheers,
+Wol
