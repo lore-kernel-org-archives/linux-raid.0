@@ -1,36 +1,135 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/21] init: mark create_dev as __init
-Date: Sun, 26 Jul 2020 09:13:41 +0200
-Message-ID: <20200726071356.287160-7-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 09/21] init: add an init_unlink helper
+Date: Sun, 26 Jul 2020 09:13:44 +0200
+Message-ID: <20200726071356.287160-10-hch@lst.de>
 References: <20200726071356.287160-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200726071356.287160-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200726071356.287160-1-hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-The helper is only used for the early init code.
+Add a simple helper to unlink with a kernel space file name and switch
+the early init code over to it.  Remove the now unused ksys_unlink.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- init/do_mounts.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/for_init.c                 | 5 +++++
+ include/linux/init_syscalls.h | 1 +
+ include/linux/syscalls.h      | 7 -------
+ init/do_mounts.h              | 2 +-
+ init/do_mounts_initrd.c       | 4 ++--
+ init/do_mounts_rd.c           | 2 +-
+ init/initramfs.c              | 3 ++-
+ 7 files changed, 12 insertions(+), 12 deletions(-)
 
+diff --git a/fs/for_init.c b/fs/for_init.c
+index 7a039b6d107c92..32472206d64136 100644
+--- a/fs/for_init.c
++++ b/fs/for_init.c
+@@ -33,3 +33,8 @@ int __init init_umount(const char *name, int flags)
+ 		return ret;
+ 	return path_umount(&path, flags);
+ }
++
++int __init init_unlink(const char *pathname)
++{
++	return do_unlinkat(AT_FDCWD, getname_kernel(pathname));
++}
+diff --git a/include/linux/init_syscalls.h b/include/linux/init_syscalls.h
+index a5a2e7f1991691..00d597249549ee 100644
+--- a/include/linux/init_syscalls.h
++++ b/include/linux/init_syscalls.h
+@@ -3,3 +3,4 @@
+ int __init init_mount(const char *dev_name, const char *dir_name,
+ 		const char *type_page, unsigned long flags, void *data_page);
+ int __init init_umount(const char *name, int flags);
++int __init init_unlink(const char *pathname);
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 1a4f5d8ee7044b..26f9738e5ab861 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1273,13 +1273,6 @@ int compat_ksys_ipc(u32 call, int first, int second,
+  * The following kernel syscall equivalents are just wrappers to fs-internal
+  * functions. Therefore, provide stubs to be inlined at the callsites.
+  */
+-extern long do_unlinkat(int dfd, struct filename *name);
+-
+-static inline long ksys_unlink(const char __user *pathname)
+-{
+-	return do_unlinkat(AT_FDCWD, getname(pathname));
+-}
+-
+ long do_rmdir(int dfd, struct filename *name);
+ 
+ static inline long ksys_rmdir(const char __user *pathname)
 diff --git a/init/do_mounts.h b/init/do_mounts.h
-index c855b3f0e06d19..021e2f60223e25 100644
+index 20e7fec8cb499e..104d8431725aeb 100644
 --- a/init/do_mounts.h
 +++ b/init/do_mounts.h
-@@ -13,7 +13,7 @@ void  mount_block_root(char *name, int flags);
- void  mount_root(void);
- extern int root_mountflags;
+@@ -16,7 +16,7 @@ extern int root_mountflags;
  
--static inline int create_dev(char *name, dev_t dev)
-+static inline __init int create_dev(char *name, dev_t dev)
+ static inline __init int create_dev(char *name, dev_t dev)
  {
- 	ksys_unlink(name);
+-	ksys_unlink(name);
++	init_unlink(name);
  	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
+ }
+ 
+diff --git a/init/do_mounts_initrd.c b/init/do_mounts_initrd.c
+index 6b020a06990251..8b44dd017842a8 100644
+--- a/init/do_mounts_initrd.c
++++ b/init/do_mounts_initrd.c
+@@ -137,11 +137,11 @@ bool __init initrd_load(void)
+ 		 * mounted in the normal path.
+ 		 */
+ 		if (rd_load_image("/initrd.image") && ROOT_DEV != Root_RAM0) {
+-			ksys_unlink("/initrd.image");
++			init_unlink("/initrd.image");
+ 			handle_initrd();
+ 			return true;
+ 		}
+ 	}
+-	ksys_unlink("/initrd.image");
++	init_unlink("/initrd.image");
+ 	return false;
+ }
+diff --git a/init/do_mounts_rd.c b/init/do_mounts_rd.c
+index 7b64390c075043..b062f8b028ce7c 100644
+--- a/init/do_mounts_rd.c
++++ b/init/do_mounts_rd.c
+@@ -271,7 +271,7 @@ int __init rd_load_image(char *from)
+ 	fput(out_file);
+ out:
+ 	kfree(buf);
+-	ksys_unlink("/dev/ram");
++	init_unlink("/dev/ram");
+ 	return res;
+ }
+ 
+diff --git a/init/initramfs.c b/init/initramfs.c
+index 3823d15e5d2619..574ab3755203da 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -12,6 +12,7 @@
+ #include <linux/file.h>
+ #include <linux/memblock.h>
+ #include <linux/namei.h>
++#include <linux/init_syscalls.h>
+ 
+ static ssize_t __init xwrite(struct file *file, const char *p, size_t count)
+ {
+@@ -300,7 +301,7 @@ static void __init clean_path(char *path, umode_t fmode)
+ 		if (S_ISDIR(st.mode))
+ 			ksys_rmdir(path);
+ 		else
+-			ksys_unlink(path);
++			init_unlink(path);
+ 	}
+ }
+ 
 -- 
 2.27.0
