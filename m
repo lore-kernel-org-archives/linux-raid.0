@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 02/21] fs: refactor ksys_umount
-Date: Sun, 26 Jul 2020 09:13:37 +0200
-Message-ID: <20200726071356.287160-3-hch@lst.de>
+Subject: [PATCH 04/21] devtmpfs: refactor devtmpfsd()
+Date: Sun, 26 Jul 2020 09:13:39 +0200
+Message-ID: <20200726071356.287160-5-hch@lst.de>
 References: <20200726071356.287160-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,87 +12,84 @@ To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torv
 Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Factor out a path_umount helper that takes a struct path * instead of the
-actual file name.  This will allow to convert the init and devtmpfs code
-to properly mount based on a kernel pointer instead of relying on the
-implicit set_fs(KERNEL_DS) during early init.
+Split the main worker loop into a separate function.  This allows
+devtmpfsd itself and devtmpfsd_setup to be marked __init, which will
+allows us to call __init routines for the setup work.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- fs/namespace.c | 40 ++++++++++++++++++----------------------
- 1 file changed, 18 insertions(+), 22 deletions(-)
+ drivers/base/devtmpfs.c | 47 +++++++++++++++++++++++------------------
+ 1 file changed, 26 insertions(+), 21 deletions(-)
 
-diff --git a/fs/namespace.c b/fs/namespace.c
-index 6f8234f74bed90..43834b59eff6c3 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -1706,36 +1706,19 @@ static inline bool may_mandlock(void)
- }
- #endif
- 
--/*
-- * Now umount can handle mount points as well as block devices.
-- * This is important for filesystems which use unnamed block devices.
-- *
-- * We now support a flag for forced unmount like the other 'big iron'
-- * unixes. Our API is identical to OSF/1 to avoid making a mess of AMD
-- */
--
--int ksys_umount(char __user *name, int flags)
-+static int path_umount(struct path *path, int flags)
- {
--	struct path path;
- 	struct mount *mnt;
- 	int retval;
--	int lookup_flags = LOOKUP_MOUNTPOINT;
- 
- 	if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))
- 		return -EINVAL;
--
- 	if (!may_mount())
- 		return -EPERM;
- 
--	if (!(flags & UMOUNT_NOFOLLOW))
--		lookup_flags |= LOOKUP_FOLLOW;
--
--	retval = user_path_at(AT_FDCWD, name, lookup_flags, &path);
--	if (retval)
--		goto out;
--	mnt = real_mount(path.mnt);
-+	mnt = real_mount(path->mnt);
- 	retval = -EINVAL;
--	if (path.dentry != path.mnt->mnt_root)
-+	if (path->dentry != path->mnt->mnt_root)
- 		goto dput_and_out;
- 	if (!check_mnt(mnt))
- 		goto dput_and_out;
-@@ -1748,12 +1731,25 @@ int ksys_umount(char __user *name, int flags)
- 	retval = do_umount(mnt, flags);
- dput_and_out:
- 	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
--	dput(path.dentry);
-+	dput(path->dentry);
- 	mntput_no_expire(mnt);
--out:
- 	return retval;
+diff --git a/drivers/base/devtmpfs.c b/drivers/base/devtmpfs.c
+index c9017e0584c003..a103ee7e229930 100644
+--- a/drivers/base/devtmpfs.c
++++ b/drivers/base/devtmpfs.c
+@@ -378,7 +378,30 @@ static int handle(const char *name, umode_t mode, kuid_t uid, kgid_t gid,
+ 		return handle_remove(name, dev);
  }
  
-+int ksys_umount(char __user *name, int flags)
+-static int devtmpfs_setup(void *p)
++static void __noreturn devtmpfs_work_loop(void)
 +{
-+	int lookup_flags = LOOKUP_MOUNTPOINT;
-+	struct path path;
-+	int ret;
-+
-+	if (!(flags & UMOUNT_NOFOLLOW))
-+		lookup_flags |= LOOKUP_FOLLOW;
-+	ret = user_path_at(AT_FDCWD, name, lookup_flags, &path);
-+	if (ret)
-+		return ret;
-+	return path_umount(&path, flags);
++	while (1) {
++		spin_lock(&req_lock);
++		while (requests) {
++			struct req *req = requests;
++			requests = NULL;
++			spin_unlock(&req_lock);
++			while (req) {
++				struct req *next = req->next;
++				req->err = handle(req->name, req->mode,
++						  req->uid, req->gid, req->dev);
++				complete(&req->done);
++				req = next;
++			}
++			spin_lock(&req_lock);
++		}
++		__set_current_state(TASK_INTERRUPTIBLE);
++		spin_unlock(&req_lock);
++		schedule();
++	}
 +}
 +
- SYSCALL_DEFINE2(umount, char __user *, name, int, flags)
++static int __init devtmpfs_setup(void *p)
  {
- 	return ksys_umount(name, flags);
+ 	int err;
+ 
+@@ -396,31 +419,13 @@ static int devtmpfs_setup(void *p)
+ 	return err;
+ }
+ 
+-static int devtmpfsd(void *p)
++static int __init devtmpfsd(void *p)
+ {
+ 	int err = devtmpfs_setup(p);
+ 
+ 	if (err)
+ 		return err;
+-	while (1) {
+-		spin_lock(&req_lock);
+-		while (requests) {
+-			struct req *req = requests;
+-			requests = NULL;
+-			spin_unlock(&req_lock);
+-			while (req) {
+-				struct req *next = req->next;
+-				req->err = handle(req->name, req->mode,
+-						  req->uid, req->gid, req->dev);
+-				complete(&req->done);
+-				req = next;
+-			}
+-			spin_lock(&req_lock);
+-		}
+-		__set_current_state(TASK_INTERRUPTIBLE);
+-		spin_unlock(&req_lock);
+-		schedule();
+-	}
++	devtmpfs_work_loop();
+ 	return 0;
+ }
+ 
 -- 
 2.27.0
