@@ -1,29 +1,28 @@
 From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH 09/14] bdi: remove BDI_CAP_CGROUP_WRITEBACK
-Date: Sun, 26 Jul 2020 10:01:37 +0100
-Message-ID: <5F1D4671.5060708@youngman.org.uk>
-References: <20200722062552.212200-1-hch@lst.de>
- <20200722062552.212200-10-hch@lst.de>
- <SN4PR0401MB35988BC2003CCDFC7CE8258F9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Subject: Re: [PATCH v2 mdadm 1/1] Specify nodes number when updating cluster
+ nodes
+Date: Sun, 26 Jul 2020 10:05:48 +0100
+Message-ID: <5F1D476C.4090605@youngman.org.uk>
+References: <1595503205-11129-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <SN4PR0401MB35988BC2003CCDFC7CE8258F9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1595503205-11129-1-git-send-email-xni@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org, jes@trained-monkey.org
+Cc: ncroxon@redhat.com, heinzm@redhat.com
 List-Id: linux-raid.ids
 
-On 22/07/20 08:45, Johannes Thumshirn wrote:
-> On 22/07/2020 08:27, Christoph Hellwig wrote:
->> it is know to support cgroup writeback, or the bdi comes from the block
-> knwon  ~^
+On 23/07/20 12:20, Xiao Ni wrote:
+> Now it allow updating cluster nodes without specify --nodes. It can write superblock
+> with zero nodes. It can break the current cluster. Add this check to avoid this problem.
 > 
-Whoops - "known"
-
-> Apart from that,
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> v2: It needs check c.update first to void NULL pointer reference
+                                       ^^^^
+Do you mean "avoid"?
 > 
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
 Cheers,
 Wol
