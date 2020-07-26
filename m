@@ -1,43 +1,49 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: [PATCH v2] mdadm/Detail: show correct state for cluster-md array
-Date: Sun, 26 Jul 2020 15:21:13 +0100
-Message-ID: <5F1D9159.1020200@youngman.org.uk>
-References: <1595401905-3459-1-git-send-email-heming.zhao@suse.com>
- <7697b7eb-76f9-8102-a490-1684e5f18acf@suse.com>
- <5F1D3B50.8080006@youngman.org.uk>
- <7aeb1f5a-df3c-183e-93cd-61631a40e9b5@suse.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 02/14] drbd: remove dead code in device_to_statistics
+Date: Sun, 26 Jul 2020 17:03:21 +0200
+Message-ID: <20200726150333.305527-3-hch@lst.de>
+References: <20200726150333.305527-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7aeb1f5a-df3c-183e-93cd-61631a40e9b5@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "heming.zhao@suse.com" <heming.zhao@suse.com>, linux-raid@vger.kernel.org
-Cc: neilb@suse.com, jes@trained-monkey.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200726150333.305527-1-hch-jcswGhMUV9g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-On 26/07/20 10:22, heming.zhao@suse.com wrote:
-> Hello Wols,
-> 
-> I just started to learn mdadm code. Maybe there are some historical reasons to keep leaked issue. 
-> I guess your said daemon mode is: "mdadm --monitor --daemonise ...".
+Ever since the switch to blk-mq, a lower device not used for VM
+writeback will not be marked congested, so the check will never
+trigger.
 
-> After very quickly browsing the code in Monitor.c, these mode check /proc/mdstat, send ioctl GET_ARRAY_INFO, and
-> read some /sys/block/mdX/md/xx files. There is no way to call ExamineBitmap().
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ drivers/block/drbd/drbd_nl.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-> In currently mdadm code, the only way to call ExamineBitmap() is by cmd "mdadm -X /dev/sdX". So as my last mail said, when the mdadm program finish, all leaked memory will be released.
-> And last week, before I send v2 patch, I try to use valgrind to check memory related issue, there are many places to leak. e.g. 
-
-You're learning the mdadm code? Personally, I find it hard to learn
-stuff if there's no purpose behind what I'm studying. Treat it as a
-learning exercise and fix all the leaks ;-)
-
-As they say, if a job's worth doing it's worth doing well, and you can
-learn what stuff is doing while you're working your way through it.
-
-I need to learn my way around mdadm, and I've got a task in mind that'll
-teach me a load of it, so all being well I'll soon be following in your
-footsteps ...
-
-Cheers,
-Wol
+diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+index d0d9a549b58388..650372ee2c7822 100644
+--- a/drivers/block/drbd/drbd_nl.c
++++ b/drivers/block/drbd/drbd_nl.c
+@@ -3370,7 +3370,6 @@ static void device_to_statistics(struct device_statistics *s,
+ 	if (get_ldev(device)) {
+ 		struct drbd_md *md = &device->ldev->md;
+ 		u64 *history_uuids = (u64 *)s->history_uuids;
+-		struct request_queue *q;
+ 		int n;
+ 
+ 		spin_lock_irq(&md->uuid_lock);
+@@ -3384,11 +3383,6 @@ static void device_to_statistics(struct device_statistics *s,
+ 		spin_unlock_irq(&md->uuid_lock);
+ 
+ 		s->dev_disk_flags = md->flags;
+-		q = bdev_get_queue(device->ldev->backing_bdev);
+-		s->dev_lower_blocked =
+-			bdi_congested(q->backing_dev_info,
+-				      (1 << WB_async_congested) |
+-				      (1 << WB_sync_congested));
+ 		put_ldev(device);
+ 	}
+ 	s->dev_size = drbd_get_capacity(device->this_bdev);
+-- 
+2.27.0
