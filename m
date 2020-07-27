@@ -1,39 +1,55 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH v3 mdadm 1/1] Specify nodes number when updating cluster nodes
-Date: Mon, 27 Jul 2020 09:14:20 +0800
-Message-ID: <1595812460-3929-1-git-send-email-xni@redhat.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, jes@trained-monkey.org
-Cc: antlists@youngman.org.uk, ncroxon@redhat.com, heinzm@redhat.com
+From: Al Viro <viro@zeniv.linux.org.uk>
+Subject: Re: [PATCH 12/23] initrd: switch initrd loading to struct file based
+ APIs
+Date: Mon, 27 Jul 2020 02:50:38 +0100
+Message-ID: <20200727015038.GA795125@ZenIV.linux.org.uk>
+References: <20200714190427.4332-1-hch@lst.de>
+ <20200714190427.4332-13-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20200714190427.4332-13-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now it allows updating cluster nodes without specify --nodes. It can write superblock
-with zero nodes. It can break the current cluster. Add this check to avoid this problem.
+On Tue, Jul 14, 2020 at 09:04:16PM +0200, Christoph Hellwig wrote:
 
-v2: It needs check c.update first to avoid NULL pointer reference
-v3: Wol points the typo error
+>  static int __init
+> -identify_ramdisk_image(int fd, int start_block, decompress_fn *decompressor)
+> +identify_ramdisk_image(struct file *file, int start_block,
+> +		decompress_fn *decompressor)
+>  {
+....
+> -	ksys_lseek(fd, start_block * BLOCK_SIZE, 0);
+>  	kfree(buf);
+>  	return nblocks;
+>  }
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- mdadm.c | 5 +++++
- 1 file changed, 5 insertions(+)
+You do realize that you've changed behaviour of that thing if start_block != 0?
+Old one used to leave the things for subsequent reads to start at start_block * 512;
+new one will ignore that.  So after
 
-diff --git a/mdadm.c b/mdadm.c
-index 13dc24e..1b3467f 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1433,6 +1433,11 @@ int main(int argc, char *argv[])
- 		}
- 	}
- 
-+	if (c.update && strcmp(c.update, "nodes") == 0 && c.nodes == 0) {
-+		pr_err("Please specify nodes number with --nodes\n");
-+		exit(1);
-+	}
-+
- 	if (c.backup_file && data_offset != INVALID_SECTORS) {
- 		pr_err("--backup-file and --data-offset are incompatible\n");
- 		exit(2);
--- 
-2.7.5
+> -	nblocks = identify_ramdisk_image(in_fd, rd_image_start, &decompressor);
+> +	nblocks = identify_ramdisk_image(in_file, rd_image_start, &decompressor);
+
+you'll have in_file->f_pos left at 0 instead of rd_image_start * 512.
+
+... affecting this
+
+> -		if (crd_load(in_fd, out_fd, decompressor) == 0)
+> +		if (crd_load(in_file, out_file, decompressor) == 0)
+
+
+... and this
+
+> -		ksys_read(in_fd, buf, BLOCK_SIZE);
+> -		ksys_write(out_fd, buf, BLOCK_SIZE);
+> +		kernel_read(in_file, buf, BLOCK_SIZE, &in_file->f_pos);
+> +		kernel_write(out_file, buf, BLOCK_SIZE, &out_file->f_pos);
+
+FWIW, I would suggest *not* bothering with ->f_pos and using two global
+(well, file-static, obviously) variables instead.  And kill 'pos' in
+identify_ramdisk_image() as well - use the in_pos instead.
