@@ -1,52 +1,65 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 18/23] init: open code setting up stdin/stdout/stderr
-Date: Mon, 27 Jul 2020 17:58:29 +0200
-Message-ID: <20200727155829.GA7225@lst.de>
-References: <20200714190427.4332-1-hch@lst.de> <20200714190427.4332-19-hch@lst.de> <20200727030534.GD795125@ZenIV.linux.org.uk> <20200727054625.GA1241@lst.de> <20200727060322.GC794331@ZenIV.linux.org.uk> <20200727064828.GA2317@lst.de> <20200727155453.GE794331@ZenIV.linux.org.uk>
+From: Song Liu <song@kernel.org>
+Subject: Re: [PATCH 1/2] super1.0 calculates max sectors in a wrong way
+Date: Mon, 27 Jul 2020 10:33:56 -0700
+Message-ID: <CAPhsuW7WY7kQ77BKBqev2CVFPS63C7u0HtBqkB49XtbRCysWmg@mail.gmail.com>
+References: <1593503737-5067-1-git-send-email-xni@redhat.com> <1593503737-5067-2-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200727155453.GE794331@ZenIV.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1593503737-5067-2-git-send-email-xni@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, Jul 27, 2020 at 04:54:53PM +0100, Al Viro wrote:
-> On Mon, Jul 27, 2020 at 08:48:28AM +0200, Christoph Hellwig wrote:
-> > On Mon, Jul 27, 2020 at 07:03:22AM +0100, Al Viro wrote:
-> > > On Mon, Jul 27, 2020 at 07:46:25AM +0200, Christoph Hellwig wrote:
-> > > > On Mon, Jul 27, 2020 at 04:05:34AM +0100, Al Viro wrote:
-> > > > > On Tue, Jul 14, 2020 at 09:04:22PM +0200, Christoph Hellwig wrote:
-> > > > > > Don't rely on the implicit set_fs(KERNEL_DS) for ksys_open to work, but
-> > > > > > instead open a struct file for /dev/console and then install it as FD
-> > > > > > 0/1/2 manually.
-> > > > > 
-> > > > > I really hate that one.  Every time we exposed the internal details to
-> > > > > the fucking early init code, we paid for that afterwards.  And this
-> > > > > goes over the top wrt the level of details being exposed.
-> > > > > 
-> > > > > _IF_ you want to keep that thing, move it to fs/file.c, with dire comment
-> > > > > re that being very special shite for init and likely cause of subsequent
-> > > > > trouble whenever anything gets changed, a gnat farts somewhere, etc.
-> > > > 
-> > > > Err, while I'm all for keeping internals internal, fd_install and
-> > > > get_unused_fd_flags are exported routines with tons of users of this
-> > > > pattern all over.
-> > > 
-> > > get_file_rcu_many()?  All over the place?  Besides, that's _not_ the normal
-> > > pattern for get_unused_fd() - there's a very special reason we don't expect
-> > > an error from it here.
-> > 
-> > Oh well.  I can add an init_dup2, but that should probably go after
-> > the series adding fs/for-init.c or fs/init.c.  I'll skip it for the
-> > current set of fixups and will send it once we have a stable branch for
-> > that.
-> 
-> OK.  The really serious ones are around f_pos uses and d_genocide() one.
-> FWIW, cleanup_rootfs() should probably be removed - it looks rather
-> pointless.
+On Tue, Jun 30, 2020 at 12:55 AM Xiao Ni <xni@redhat.com> wrote:
+>
+> One super1.0 raid array wants to grow size, it needs to check the device max usable
+> size. If the requested size is bigger than max usable size, it will return an error.
+>
+> Now it uses rdev->sectors for max usable size. If one disk is 500G and the raid device
+> only uses the 100GB of this disk. rdev->sectors can't tell the real max usable size.
+> The max usable size should be dev_size-(superblock_size+bitmap_size+badblock_size).
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 
-I've got all that in a series I've tested this morning, and which
-I really should post now..
+Thanks for the fix!
+
+> ---
+>  drivers/md/md.c | 26 +++++++++++++++++++++++---
+>  1 file changed, 23 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f567f53..d2c5984 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2183,10 +2183,30 @@ super_1_rdev_size_change(struct md_rdev *rdev, sector_t num_sectors)
+>                 return 0;
+>         } else {
+>                 /* minor version 0; superblock after data */
+> -               sector_t sb_start;
+> -               sb_start = (i_size_read(rdev->bdev->bd_inode) >> 9) - 8*2;
+> +               sector_t sb_start, bm_space;
+> +               sector_t dev_size = i_size_read(rdev->bdev->bd_inode) >> 9;
+> +
+> +               /* 8K is for superblock */
+> +               sb_start = dev_size - 8*2;
+>                 sb_start &= ~(sector_t)(4*2 - 1);
+> -               max_sectors = rdev->sectors + sb_start - rdev->sb_start;
+> +
+> +               /* if the device is bigger than 8Gig, save 64k for bitmap usage,
+> +                * if bigger than 200Gig, save 128k
+> +                */
+> +               if (dev_size < 64*2)
+> +                       bm_space = 0;
+> +               else if (dev_size - 64*2 >= 200*1024*1024*2)
+> +                       bm_space = 128*2;
+> +               else if (dev_size - 4*2 > 8*1024*1024*2)
+> +                       bm_space = 64*2;
+> +               else
+> +                       bm_space = 4*2;
+
+Could you explain the handling of bitmap space?
+
+Thanks,
+Song
