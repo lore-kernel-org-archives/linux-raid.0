@@ -1,7 +1,7 @@
-From: Al Viro <viro@zeniv.linux.org.uk>
+From: Matthew Wilcox <willy@infradead.org>
 Subject: Re: [PATCH 16/23] initramfs: simplify clean_rootfs
-Date: Mon, 27 Jul 2020 03:41:49 +0100
-Message-ID: <20200727024149.GB795125@ZenIV.linux.org.uk>
+Date: Mon, 27 Jul 2020 03:44:26 +0100
+Message-ID: <20200727024426.GI23808@casper.infradead.org>
 References: <20200714190427.4332-1-hch@lst.de>
  <20200714190427.4332-17-hch@lst.de>
  <CGME20200717205549eucas1p13fca9a8496836faa71df515524743648@eucas1p1.samsung.com>
@@ -10,40 +10,44 @@ References: <20200714190427.4332-1-hch@lst.de>
  <20200723092200.GA19922@lst.de>
  <dleftjblk6b95t.fsf%l.stelmach@samsung.com>
  <20200723142734.GA11080@lst.de>
+ <20200727024149.GB795125@ZenIV.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200723142734.GA11080@lst.de>
+In-Reply-To: <20200727024149.GB795125@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Lukasz Stelmach <l.stelmach@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, linux-kernel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Shaohua Li <shaohua.li@intel.com>
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Christoph Hellwig <hch@lst.de>, Lukasz Stelmach <l.stelmach@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, linux-kernel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Song Liu <song@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-On Thu, Jul 23, 2020 at 04:27:34PM +0200, Christoph Hellwig wrote:
-> On Thu, Jul 23, 2020 at 04:25:34PM +0200, Lukasz Stelmach wrote:
-> > >> Can you comment out the call to d_genocide?  It seems like for your
-> > >> the fact that clean_rootfs didn't actually clean up was a feature and
-> > >> not a bug.
-> > >> 
-> > >> I guess the old, pre-2008 code also wouldn't have worked for you in
-> > >> that case.
-> > >
-> > > Did you get a chance to try this?
+On Mon, Jul 27, 2020 at 03:41:49AM +0100, Al Viro wrote:
+> On Thu, Jul 23, 2020 at 04:27:34PM +0200, Christoph Hellwig wrote:
+> > On Thu, Jul 23, 2020 at 04:25:34PM +0200, Lukasz Stelmach wrote:
+> > > >> Can you comment out the call to d_genocide?  It seems like for your
+> > > >> the fact that clean_rootfs didn't actually clean up was a feature and
+> > > >> not a bug.
+> > > >> 
+> > > >> I guess the old, pre-2008 code also wouldn't have worked for you in
+> > > >> that case.
+> > > >
+> > > > Did you get a chance to try this?
+> > > 
+> > > Indeed, commenting out d_genocide() helps.
 > > 
-> > Indeed, commenting out d_genocide() helps.
+> > So given that people have relied on at least the basic device nodes
+> > like /dev/console to not go away since 2008, I wonder if we should just
+> > remove clean_rootfs entirely
+> > 
+> > Linus, Al?
 > 
-> So given that people have relied on at least the basic device nodes
-> like /dev/console to not go away since 2008, I wonder if we should just
-> remove clean_rootfs entirely
+> First of all, d_genocide() is simply wrong here from VFS point of view.  _IF_
+> you want recursive removal, you need simple_recursive_remove(path.dentry, NULL).
+> And it's a userland-visible change of behaviour.
 > 
-> Linus, Al?
+> As for removal of clean_rootfs()...  FWIW, the odds of an image that would
+> eventually fail accidentally getting past the signature mismatch check are
+> fairly low.  I've no idea what scenario the author of that thing used to have;
+> that would be Shaohua Li <shaohua.li@intel.com>.  Cc'd...
 
-First of all, d_genocide() is simply wrong here from VFS point of view.  _IF_
-you want recursive removal, you need simple_recursive_remove(path.dentry, NULL).
-And it's a userland-visible change of behaviour.
-
-As for removal of clean_rootfs()...  FWIW, the odds of an image that would
-eventually fail accidentally getting past the signature mismatch check are
-fairly low.  I've no idea what scenario the author of that thing used to have;
-that would be Shaohua Li <shaohua.li@intel.com>.  Cc'd...
+Shaohua is now at Facebook.
