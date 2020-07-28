@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/23] init: add an init_unlink helper
-Date: Tue, 28 Jul 2020 18:34:03 +0200
-Message-ID: <20200728163416.556521-11-hch@lst.de>
+Subject: [PATCH 13/23] init: add an init_chroot helper
+Date: Tue, 28 Jul 2020 18:34:06 +0200
+Message-ID: <20200728163416.556521-14-hch@lst.de>
 References: <20200728163416.556521-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,124 +12,158 @@ To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add a simple helper to unlink with a kernel space file name and switch
-the early init code over to it.  Remove the now unused ksys_unlink.
+Add a simple helper to chroot with a kernel space file name and switch
+the early init code over to it.  Remove the now unused ksys_chroot.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/init.c                     | 5 +++++
- include/linux/init_syscalls.h | 1 +
- include/linux/syscalls.h      | 7 -------
- init/do_mounts.h              | 2 +-
- init/do_mounts_initrd.c       | 4 ++--
- init/do_mounts_rd.c           | 2 +-
- init/initramfs.c              | 3 ++-
- 7 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/base/devtmpfs.c       |  2 +-
+ fs/init.c                     | 24 ++++++++++++++++++++++++
+ fs/open.c                     |  7 +------
+ include/linux/init_syscalls.h |  1 +
+ include/linux/syscalls.h      |  2 --
+ init/do_mounts.c              |  2 +-
+ init/do_mounts_initrd.c       |  4 ++--
+ 7 files changed, 30 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/base/devtmpfs.c b/drivers/base/devtmpfs.c
+index e48aaba3166b5d..eac184e6d65774 100644
+--- a/drivers/base/devtmpfs.c
++++ b/drivers/base/devtmpfs.c
+@@ -413,7 +413,7 @@ static int __init devtmpfs_setup(void *p)
+ 	if (err)
+ 		goto out;
+ 	init_chdir("/.."); /* will traverse into overmounted root */
+-	ksys_chroot(".");
++	init_chroot(".");
+ out:
+ 	*(int *)p = err;
+ 	complete(&setup_done);
 diff --git a/fs/init.c b/fs/init.c
-index 9c8e31fdb048c8..507ffbb5d146d6 100644
+index 64d4e12eba9339..2c78f24814dde4 100644
 --- a/fs/init.c
 +++ b/fs/init.c
-@@ -37,3 +37,8 @@ int __init init_umount(const char *name, int flags)
- 		return ret;
- 	return path_umount(&path, flags);
- }
-+
-+int __init init_unlink(const char *pathname)
-+{
-+	return do_unlinkat(AT_FDCWD, getname_kernel(pathname));
-+}
-diff --git a/include/linux/init_syscalls.h b/include/linux/init_syscalls.h
-index a5a2e7f1991691..00d597249549ee 100644
---- a/include/linux/init_syscalls.h
-+++ b/include/linux/init_syscalls.h
-@@ -3,3 +3,4 @@
+@@ -9,6 +9,7 @@
+ #include <linux/fs.h>
+ #include <linux/fs_struct.h>
+ #include <linux/init_syscalls.h>
++#include <linux/security.h>
+ #include "internal.h"
+ 
  int __init init_mount(const char *dev_name, const char *dir_name,
- 		const char *type_page, unsigned long flags, void *data_page);
- int __init init_umount(const char *name, int flags);
-+int __init init_unlink(const char *pathname);
-diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
-index 1a4f5d8ee7044b..26f9738e5ab861 100644
---- a/include/linux/syscalls.h
-+++ b/include/linux/syscalls.h
-@@ -1273,13 +1273,6 @@ int compat_ksys_ipc(u32 call, int first, int second,
-  * The following kernel syscall equivalents are just wrappers to fs-internal
-  * functions. Therefore, provide stubs to be inlined at the callsites.
-  */
--extern long do_unlinkat(int dfd, struct filename *name);
--
--static inline long ksys_unlink(const char __user *pathname)
+@@ -54,6 +55,29 @@ int __init init_chdir(const char *filename)
+ 	return error;
+ }
+ 
++int __init init_chroot(const char *filename)
++{
++	struct path path;
++	int error;
++
++	error = kern_path(filename, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path);
++	if (error)
++		return error;
++	error = inode_permission(path.dentry->d_inode, MAY_EXEC | MAY_CHDIR);
++	if (error)
++		goto dput_and_out;
++	error = -EPERM;
++	if (!ns_capable(current_user_ns(), CAP_SYS_CHROOT))
++		goto dput_and_out;
++	error = security_path_chroot(&path);
++	if (error)
++		goto dput_and_out;
++	set_fs_root(current->fs, &path);
++dput_and_out:
++	path_put(&path);
++	return error;
++}
++
+ int __init init_unlink(const char *pathname)
+ {
+ 	return do_unlinkat(AT_FDCWD, getname_kernel(pathname));
+diff --git a/fs/open.c b/fs/open.c
+index 723e0ac898935e..f62f4752bb436d 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -530,7 +530,7 @@ SYSCALL_DEFINE1(fchdir, unsigned int, fd)
+ 	return error;
+ }
+ 
+-int ksys_chroot(const char __user *filename)
++SYSCALL_DEFINE1(chroot, const char __user *, filename)
+ {
+ 	struct path path;
+ 	int error;
+@@ -563,11 +563,6 @@ int ksys_chroot(const char __user *filename)
+ 	return error;
+ }
+ 
+-SYSCALL_DEFINE1(chroot, const char __user *, filename)
 -{
--	return do_unlinkat(AT_FDCWD, getname(pathname));
+-	return ksys_chroot(filename);
 -}
 -
- long do_rmdir(int dfd, struct filename *name);
- 
- static inline long ksys_rmdir(const char __user *pathname)
-diff --git a/init/do_mounts.h b/init/do_mounts.h
-index 20e7fec8cb499e..104d8431725aeb 100644
---- a/init/do_mounts.h
-+++ b/init/do_mounts.h
-@@ -16,7 +16,7 @@ extern int root_mountflags;
- 
- static inline __init int create_dev(char *name, dev_t dev)
+ static int chmod_common(const struct path *path, umode_t mode)
  {
--	ksys_unlink(name);
-+	init_unlink(name);
- 	return ksys_mknod(name, S_IFBLK|0600, new_encode_dev(dev));
+ 	struct inode *inode = path->dentry->d_inode;
+diff --git a/include/linux/init_syscalls.h b/include/linux/init_syscalls.h
+index 1e845910ae56e9..e07099a14b91db 100644
+--- a/include/linux/init_syscalls.h
++++ b/include/linux/init_syscalls.h
+@@ -4,5 +4,6 @@ int __init init_mount(const char *dev_name, const char *dir_name,
+ 		const char *type_page, unsigned long flags, void *data_page);
+ int __init init_umount(const char *name, int flags);
+ int __init init_chdir(const char *filename);
++int __init init_chroot(const char *filename);
+ int __init init_unlink(const char *pathname);
+ int __init init_rmdir(const char *pathname);
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 31fa67fb9894b3..e89d62e944dc0e 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1235,8 +1235,6 @@ asmlinkage long sys_ni_syscall(void);
+  * Instead, use one of the functions which work equivalently, such as
+  * the ksys_xyzyyz() functions prototyped below.
+  */
+-
+-int ksys_chroot(const char __user *filename);
+ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count);
+ int ksys_fchown(unsigned int fd, uid_t user, gid_t group);
+ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count);
+diff --git a/init/do_mounts.c b/init/do_mounts.c
+index a7581c6e85f268..b5f9604d0c98a2 100644
+--- a/init/do_mounts.c
++++ b/init/do_mounts.c
+@@ -629,7 +629,7 @@ void __init prepare_namespace(void)
+ out:
+ 	devtmpfs_mount();
+ 	init_mount(".", "/", NULL, MS_MOVE, NULL);
+-	ksys_chroot(".");
++	init_chroot(".");
  }
  
+ static bool is_tmpfs;
 diff --git a/init/do_mounts_initrd.c b/init/do_mounts_initrd.c
-index 6b020a06990251..8b44dd017842a8 100644
+index 04627fd22a921f..a6b447b191dbc8 100644
 --- a/init/do_mounts_initrd.c
 +++ b/init/do_mounts_initrd.c
-@@ -137,11 +137,11 @@ bool __init initrd_load(void)
- 		 * mounted in the normal path.
- 		 */
- 		if (rd_load_image("/initrd.image") && ROOT_DEV != Root_RAM0) {
--			ksys_unlink("/initrd.image");
-+			init_unlink("/initrd.image");
- 			handle_initrd();
- 			return true;
- 		}
- 	}
--	ksys_unlink("/initrd.image");
-+	init_unlink("/initrd.image");
- 	return false;
+@@ -63,7 +63,7 @@ static int __init init_linuxrc(struct subprocess_info *info, struct cred *new)
+ 	/* move initrd over / and chdir/chroot in initrd root */
+ 	init_chdir("/root");
+ 	init_mount(".", "/", NULL, MS_MOVE, NULL);
+-	ksys_chroot(".");
++	init_chroot(".");
+ 	ksys_setsid();
+ 	return 0;
  }
-diff --git a/init/do_mounts_rd.c b/init/do_mounts_rd.c
-index d4255c10432a8b..ac021ae6e6fa78 100644
---- a/init/do_mounts_rd.c
-+++ b/init/do_mounts_rd.c
-@@ -272,7 +272,7 @@ int __init rd_load_image(char *from)
- 	fput(out_file);
- out:
- 	kfree(buf);
--	ksys_unlink("/dev/ram");
-+	init_unlink("/dev/ram");
- 	return res;
- }
+@@ -101,7 +101,7 @@ static void __init handle_initrd(void)
+ 	/* move initrd to rootfs' /old */
+ 	init_mount("..", ".", NULL, MS_MOVE, NULL);
+ 	/* switch root and cwd back to / of rootfs */
+-	ksys_chroot("..");
++	init_chroot("..");
  
-diff --git a/init/initramfs.c b/init/initramfs.c
-index 584bc8fe88e77c..7e9db1cfa3c060 100644
---- a/init/initramfs.c
-+++ b/init/initramfs.c
-@@ -12,6 +12,7 @@
- #include <linux/file.h>
- #include <linux/memblock.h>
- #include <linux/namei.h>
-+#include <linux/init_syscalls.h>
- 
- static ssize_t __init xwrite(struct file *file, const char *p, size_t count,
- 		loff_t *pos)
-@@ -301,7 +302,7 @@ static void __init clean_path(char *path, umode_t fmode)
- 		if (S_ISDIR(st.mode))
- 			ksys_rmdir(path);
- 		else
--			ksys_unlink(path);
-+			init_unlink(path);
- 	}
- }
- 
+ 	if (new_decode_dev(real_root_dev) == Root_RAM0) {
+ 		init_chdir("/old");
 -- 
 2.27.0
