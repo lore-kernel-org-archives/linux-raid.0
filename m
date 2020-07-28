@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/23] init: add an init_stat helper
-Date: Tue, 28 Jul 2020 18:34:14 +0200
-Message-ID: <20200728163416.556521-22-hch@lst.de>
+Subject: [PATCH 23/23] init: add an init_dup helper
+Date: Tue, 28 Jul 2020 18:34:16 +0200
+Message-ID: <20200728163416.556521-24-hch@lst.de>
 References: <20200728163416.556521-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,89 +12,69 @@ To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add a simple helper to stat with a kernel space file name and switch
-the early init code over to it.
+Add a simple helper to grab a reference to a file and install it at
+the next available fd, and switch the early init code over to it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md-autodetect.c    |  3 ++-
- fs/init.c                     | 15 +++++++++++++++
+ fs/init.c                     | 12 ++++++++++++
  include/linux/init_syscalls.h |  1 +
- init/initramfs.c              |  3 ++-
- 4 files changed, 20 insertions(+), 2 deletions(-)
+ init/main.c                   |  7 +++----
+ 3 files changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md-autodetect.c b/drivers/md/md-autodetect.c
-index 14b6e86814c061..6bbec89976a748 100644
---- a/drivers/md/md-autodetect.c
-+++ b/drivers/md/md-autodetect.c
-@@ -5,6 +5,7 @@
- #include <linux/mount.h>
- #include <linux/major.h>
- #include <linux/delay.h>
-+#include <linux/init_syscalls.h>
- #include <linux/raid/detect.h>
- #include <linux/raid/md_u.h>
- #include <linux/raid/md_p.h>
-@@ -151,7 +152,7 @@ static void __init md_setup_drive(struct md_setup_args *args)
- 		if (strncmp(devname, "/dev/", 5) == 0)
- 			devname += 5;
- 		snprintf(comp_name, 63, "/dev/%s", devname);
--		if (vfs_stat(comp_name, &stat) == 0 && S_ISBLK(stat.mode))
-+		if (init_stat(comp_name, &stat, 0) == 0 && S_ISBLK(stat.mode))
- 			dev = new_decode_dev(stat.rdev);
- 		if (!dev) {
- 			pr_warn("md: Unknown device name: %s\n", devname);
 diff --git a/fs/init.c b/fs/init.c
-index 145fb31b7a5f2d..51646ba38099e6 100644
+index db5c48a85644fa..730e05acda2392 100644
 --- a/fs/init.c
 +++ b/fs/init.c
-@@ -122,6 +122,21 @@ int __init init_eaccess(const char *filename)
+@@ -8,6 +8,7 @@
+ #include <linux/namei.h>
+ #include <linux/fs.h>
+ #include <linux/fs_struct.h>
++#include <linux/file.h>
+ #include <linux/init_syscalls.h>
+ #include <linux/security.h>
+ #include "internal.h"
+@@ -251,3 +252,14 @@ int __init init_utimes(char *filename, struct timespec64 *ts)
+ 	path_put(&path);
  	return error;
  }
- 
-+int __init init_stat(const char *filename, struct kstat *stat, int flags)
++
++int __init init_dup(struct file *file)
 +{
-+	int lookup_flags = (flags & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;
-+	struct path path;
-+	int error;
++	int fd;
 +
-+	error = kern_path(filename, lookup_flags, &path);
-+	if (error)
-+		return error;
-+	error = vfs_getattr(&path, stat, STATX_BASIC_STATS,
-+			    flags | AT_NO_AUTOMOUNT);
-+	path_put(&path);
-+	return error;
++	fd = get_unused_fd_flags(0);
++	if (fd < 0)
++		return fd;
++	fd_install(get_unused_fd_flags(0), get_file(file));
++	return 0;
 +}
-+
- int __init init_mknod(const char *filename, umode_t mode, unsigned int dev)
- {
- 	struct dentry *dentry;
 diff --git a/include/linux/init_syscalls.h b/include/linux/init_syscalls.h
-index fa1fe7a877795f..b2fda50daca6c5 100644
+index 3654b525ac0b17..92045d18cbfc99 100644
 --- a/include/linux/init_syscalls.h
 +++ b/include/linux/init_syscalls.h
-@@ -8,6 +8,7 @@ int __init init_chroot(const char *filename);
- int __init init_chown(const char *filename, uid_t user, gid_t group, int flags);
- int __init init_chmod(const char *filename, umode_t mode);
- int __init init_eaccess(const char *filename);
-+int __init init_stat(const char *filename, struct kstat *stat, int flags);
- int __init init_mknod(const char *filename, umode_t mode, unsigned int dev);
- int __init init_link(const char *oldname, const char *newname);
- int __init init_symlink(const char *oldname, const char *newname);
-diff --git a/init/initramfs.c b/init/initramfs.c
-index ad5800c2d8e206..8f7e39f06547ff 100644
---- a/init/initramfs.c
-+++ b/init/initramfs.c
-@@ -298,7 +298,8 @@ static void __init clean_path(char *path, umode_t fmode)
- {
- 	struct kstat st;
+@@ -16,3 +16,4 @@ int __init init_unlink(const char *pathname);
+ int __init init_mkdir(const char *pathname, umode_t mode);
+ int __init init_rmdir(const char *pathname);
+ int __init init_utimes(char *filename, struct timespec64 *ts);
++int __init init_dup(struct file *file);
+diff --git a/init/main.c b/init/main.c
+index 1c710d3e1d461a..089e21504b1fc1 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1467,10 +1467,9 @@ void __init console_on_rootfs(void)
+ 		pr_err("Warning: unable to open an initial console.\n");
+ 		return;
+ 	}
+-	get_file_rcu_many(file, 2);
+-	fd_install(get_unused_fd_flags(0), file);
+-	fd_install(get_unused_fd_flags(0), file);
+-	fd_install(get_unused_fd_flags(0), file);
++	init_dup(file);
++	init_dup(file);
++	init_dup(file);
+ }
  
--	if (!vfs_lstat(path, &st) && (st.mode ^ fmode) & S_IFMT) {
-+	if (init_stat(path, &st, AT_SYMLINK_NOFOLLOW) &&
-+	    (st.mode ^ fmode) & S_IFMT) {
- 		if (S_ISDIR(st.mode))
- 			init_rmdir(path);
- 		else
+ static noinline void __init kernel_init_freeable(void)
 -- 
 2.27.0
