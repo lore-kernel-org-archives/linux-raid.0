@@ -1,44 +1,38 @@
-From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: [PATCH 5/5] raid5: don't duplicate code for different paths in handle_stripe
-Date: Tue, 28 Jul 2020 12:01:43 +0200
-Message-ID: <20200728100143.17813-6-guoqing.jiang@cloud.ionos.com>
-References: <20200728100143.17813-1-guoqing.jiang@cloud.ionos.com>
+From: Rashid Al-Wahaibi <pdlarsen550@gmail.com>
+Subject: Your Partnership
+Date: Tue, 28 Jul 2020 12:38:13 +0100
+Message-ID: <CAE00X2F5SUiQf0qCZYq3Yx353S0Esu1hA3RH4THqOM0WZMKHFQ__8875.24692095525$1595936308$gmane$org@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200728100143.17813-1-guoqing.jiang@cloud.ionos.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: song@kernel.org
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 List-Id: linux-raid.ids
 
-As we can see, R5_LOCKED is set and s.locked is increased whether
-R5_ReWrite is set or not, so move it to common path.
-
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
----
- drivers/md/raid5.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 790d91aa5f40..b06edfaa73b0 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4966,14 +4966,11 @@ static void handle_stripe(struct stripe_head *sh)
- 				if (!test_bit(R5_ReWrite, &dev->flags)) {
- 					set_bit(R5_Wantwrite, &dev->flags);
- 					set_bit(R5_ReWrite, &dev->flags);
--					set_bit(R5_LOCKED, &dev->flags);
--					s.locked++;
--				} else {
-+				} else
- 					/* let's read it back */
- 					set_bit(R5_Wantread, &dev->flags);
--					set_bit(R5_LOCKED, &dev->flags);
--					s.locked++;
--				}
-+				set_bit(R5_LOCKED, &dev->flags);
-+				s.locked++;
- 			}
- 		}
- 
 -- 
-2.17.1
+Good day,
+My name is Rashid Al-Wahaibi, I am from Oman but base here in the UK
+and a Managing Partner of BP Partnership Ltd, a Financial Consultancy
+Firm with office in the United Kingdom. I am contacting you based on
+the request of Ms Rosmah Mansor Najib Razak, wife of Najib Razak, the
+immediate past Malaysian Prime Minister.
+
+I found your profile satisfying and decided to contact you based on Ms
+Rosmah Mansor Najib Razak desire to invest in any viable project in
+your region.
+
+I need you to guide me on the type of investment that will be of best
+interest and provide good return on investment in your country and
+also act as her investment manager. She is ready to invest $25m to
+$50m USD
+
+I will explain further detail of this business proposal when you reply
+to this email indicating your interest.
+
+
+Regards,
+
+Rashid Al-Wahaibi,
+Bp Partnership Ltd
+60 Raglan Road
+Reigate, ENG RH2 0HN,
+United Kingdom
