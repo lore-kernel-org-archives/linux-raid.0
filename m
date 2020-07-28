@@ -1,80 +1,70 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/23] init: add an init_dup helper
-Date: Tue, 28 Jul 2020 18:34:16 +0200
-Message-ID: <20200728163416.556521-24-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 22/23] init: add an init_utimes helper
+Date: Tue, 28 Jul 2020 18:34:15 +0200
+Message-ID: <20200728163416.556521-23-hch@lst.de>
 References: <20200728163416.556521-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200728163416.556521-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200728163416.556521-1-hch-jcswGhMUV9g@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Add a simple helper to grab a reference to a file and install it at
-the next available fd, and switch the early init code over to it.
+Add a simple helper to set timestamps with a kernel space file name and
+switch the early init code over to it.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- fs/init.c                     | 12 ++++++++++++
+ fs/init.c                     | 13 +++++++++++++
  include/linux/init_syscalls.h |  1 +
- init/main.c                   |  7 +++----
- 3 files changed, 16 insertions(+), 4 deletions(-)
+ init/initramfs.c              |  3 +--
+ 3 files changed, 15 insertions(+), 2 deletions(-)
 
 diff --git a/fs/init.c b/fs/init.c
-index db5c48a85644fa..730e05acda2392 100644
+index 51646ba38099e6..db5c48a85644fa 100644
 --- a/fs/init.c
 +++ b/fs/init.c
-@@ -8,6 +8,7 @@
- #include <linux/namei.h>
- #include <linux/fs.h>
- #include <linux/fs_struct.h>
-+#include <linux/file.h>
- #include <linux/init_syscalls.h>
- #include <linux/security.h>
- #include "internal.h"
-@@ -251,3 +252,14 @@ int __init init_utimes(char *filename, struct timespec64 *ts)
- 	path_put(&path);
- 	return error;
+@@ -238,3 +238,16 @@ int __init init_rmdir(const char *pathname)
+ {
+ 	return do_rmdir(AT_FDCWD, getname_kernel(pathname));
  }
 +
-+int __init init_dup(struct file *file)
++int __init init_utimes(char *filename, struct timespec64 *ts)
 +{
-+	int fd;
++	struct path path;
++	int error;
 +
-+	fd = get_unused_fd_flags(0);
-+	if (fd < 0)
-+		return fd;
-+	fd_install(get_unused_fd_flags(0), get_file(file));
-+	return 0;
++	error = kern_path(filename, 0, &path);
++	if (error)
++		return error;
++	error = vfs_utimes(&path, ts);
++	path_put(&path);
++	return error;
 +}
 diff --git a/include/linux/init_syscalls.h b/include/linux/init_syscalls.h
-index 3654b525ac0b17..92045d18cbfc99 100644
+index b2fda50daca6c5..3654b525ac0b17 100644
 --- a/include/linux/init_syscalls.h
 +++ b/include/linux/init_syscalls.h
-@@ -16,3 +16,4 @@ int __init init_unlink(const char *pathname);
+@@ -15,3 +15,4 @@ int __init init_symlink(const char *oldname, const char *newname);
+ int __init init_unlink(const char *pathname);
  int __init init_mkdir(const char *pathname, umode_t mode);
  int __init init_rmdir(const char *pathname);
- int __init init_utimes(char *filename, struct timespec64 *ts);
-+int __init init_dup(struct file *file);
-diff --git a/init/main.c b/init/main.c
-index 1c710d3e1d461a..089e21504b1fc1 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1467,10 +1467,9 @@ void __init console_on_rootfs(void)
- 		pr_err("Warning: unable to open an initial console.\n");
- 		return;
- 	}
--	get_file_rcu_many(file, 2);
--	fd_install(get_unused_fd_flags(0), file);
--	fd_install(get_unused_fd_flags(0), file);
--	fd_install(get_unused_fd_flags(0), file);
-+	init_dup(file);
-+	init_dup(file);
-+	init_dup(file);
++int __init init_utimes(char *filename, struct timespec64 *ts);
+diff --git a/init/initramfs.c b/init/initramfs.c
+index 8f7e39f06547ff..d5351737624edd 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -111,8 +111,7 @@ static long __init do_utime(char *filename, time64_t mtime)
+ 	t[0].tv_nsec = 0;
+ 	t[1].tv_sec = mtime;
+ 	t[1].tv_nsec = 0;
+-
+-	return do_utimes(AT_FDCWD, filename, t, AT_SYMLINK_NOFOLLOW);
++	return init_utimes(filename, t);
  }
  
- static noinline void __init kernel_init_freeable(void)
+ static __initdata LIST_HEAD(dir_list);
 -- 
 2.27.0
