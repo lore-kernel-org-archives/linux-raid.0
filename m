@@ -1,35 +1,32 @@
 From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: [PATCH 3/5] md: print errno in super_written
-Date: Tue, 28 Jul 2020 12:01:41 +0200
-Message-ID: <20200728100143.17813-4-guoqing.jiang@cloud.ionos.com>
-References: <20200728100143.17813-1-guoqing.jiang@cloud.ionos.com>
+Subject: [PATCH 0/5] misc patches for md
+Date: Tue, 28 Jul 2020 12:01:38 +0200
+Message-ID: <20200728100143.17813-1-guoqing.jiang@cloud.ionos.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200728100143.17813-1-guoqing.jiang@cloud.ionos.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 List-Id: linux-raid.ids
 
-It is better to print errno instead of bi_status.
+Hi,
 
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
----
- drivers/md/md.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Please review the patchset which has quite small change, :).
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0c2a0e65b4f1..8f9a89b4c7ba 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -978,7 +978,8 @@ static void super_written(struct bio *bio)
- 	struct mddev *mddev = rdev->mddev;
- 
- 	if (bio->bi_status) {
--		pr_err("md: super_written gets error=%d\n", bio->bi_status);
-+		pr_err("md: %s gets error=%d\n", __func__,
-+		       blk_status_to_errno(bio->bi_status));
- 		md_error(mddev, rdev);
- 		if (!test_bit(Faulty, &rdev->flags)
- 		    && (bio->bi_opf & MD_FAILFAST)) {
+Thanks,
+Guoqing
+
+Guoqing Jiang (5):
+  md: register new md sysfs file 'uuid' read-only
+  md/raid5: remove the redundant setting of STRIPE_HANDLE
+  md: print errno in super_written
+  raid5-cache: hold spinlock instead of mutex in r5c_journal_mode_show
+  raid5: don't duplicate code for different paths in handle_stripe
+
+ Documentation/admin-guide/md.rst |  4 ++++
+ drivers/md/md.c                  | 12 +++++++++++-
+ drivers/md/raid5-cache.c         |  9 +++------
+ drivers/md/raid5.c               | 17 +++++------------
+ 4 files changed, 23 insertions(+), 19 deletions(-)
+
 -- 
 2.17.1
