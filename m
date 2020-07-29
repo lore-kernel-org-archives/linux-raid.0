@@ -1,43 +1,146 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH 1/2] super1.0 calculates max sectors in a wrong way
-Date: Tue, 28 Jul 2020 19:51:19 -0700
-Message-ID: <CAPhsuW4Vty+k1gS_Eiw7=2a+pGoPnGAS72wmt1U7PimeMnMWUQ@mail.gmail.com>
-References: <1593503737-5067-1-git-send-email-xni@redhat.com>
- <1593503737-5067-2-git-send-email-xni@redhat.com> <CAPhsuW7WY7kQ77BKBqev2CVFPS63C7u0HtBqkB49XtbRCysWmg@mail.gmail.com>
- <9626595c-cdd8-f46d-629e-67f9b11d2b6a@redhat.com> <CAPhsuW5RAEb7i-VQ+MS0XfGKNyd=2_=VoGVjk2SU6A30cW9PKg@mail.gmail.com>
- <22684ab9-7c20-f0a3-4045-3357bbf53125@redhat.com>
+From: Zhao Heming <heming.zhao@suse.com>
+Subject: [PATCH v3] mdadm/Detail: show correct state for cluster-md array
+Date: Wed, 29 Jul 2020 11:48:30 +0800
+Message-ID: <1595994510-16161-1-git-send-email-heming.zhao@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22684ab9-7c20-f0a3-4045-3357bbf53125@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Nigel Croxon <ncroxon@redhat.com>
+To: linux-raid@vger.kernel.org
+Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com, jes@trained-monkey.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 28, 2020 at 6:15 PM Xiao Ni <xni@redhat.com> wrote:
->
->
->
-> On 07/29/2020 08:43 AM, Song Liu wrote:
-> >> Hi Song
-> >>
-> >> This calculation of bitmap is decided by mdadm. In mdadm super1.c
-> >> choose_bm_space function,
-> >> it uses this way to calculate bitmap space. Do I need to add comments
-> >> here to describe this?
-> >> Something like "mdadm function choose_bm_space decides the bitmap space"?
-> > Thanks for the explanation.
-> >
-> > I merged the two patches, made some changes, and applied it to md-next. Please
-> > let me know whether it looks good.
-> >
-> The function super_10_choose_bm_space can make people confused. All
-> types of super1 calculate
-> bitmap space in the same way (super1.0, 1.1 and 1.2). Could you change
-> the function name to
-> super_1_choose_bm_space?
+After kernel md module commit 480523feae581, in md-cluster env,
+mddev->in_sync always zero, it will make array.state never set
+up MD_SB_CLEAN. it causes "mdadm -D /dev/mdX" show state 'active'
+all the time.
 
-Updated. Thanks!
+bitmap.c: add a new API IsBitmapDirty() to support inquiry bitmap
+dirty or clean.
 
-Song
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+---
+v3:
+- Detail.c: fix error logic: v2 code didn't check bitmap when dv is null.
+v2:
+- Detail.c: change to read only one device.
+- bitmap.c: modify IsBitmapDirty() to check all bitmap on the selected device.
+
+---
+ Detail.c | 20 +++++++++++++++++++-
+ bitmap.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ mdadm.h  |  1 +
+ 3 files changed, 75 insertions(+), 1 deletion(-)
+
+diff --git a/Detail.c b/Detail.c
+index 24eeba0..a69e5ac 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -495,8 +495,26 @@ int Detail(char *dev, struct context *c)
+ 							  sra->array_state);
+ 				else
+ 					arrayst = "clean";
+-			} else
++			} else {
+ 				arrayst = "active";
++				if (array.state & (1<<MD_SB_CLUSTERED)) {
++					for (d = 0; d < max_disks * 2; d++) {
++						char *dv;
++						mdu_disk_info_t disk = disks[d];
++
++						if (d >= array.raid_disks * 2 &&
++							disk.major == 0 && disk.minor == 0)
++							continue;
++						if ((d & 1) && disk.major == 0 && disk.minor == 0)
++							continue;
++						dv = map_dev_preferred(disk.major, disk.minor, 0,
++												c->prefer);
++						if (!dv) continue;
++						arrayst = IsBitmapDirty(dv) ? "active" : "clean";
++						break;
++					}
++				}
++			}
+ 
+ 			printf("             State : %s%s%s%s%s%s%s \n",
+ 			       arrayst, st,
+diff --git a/bitmap.c b/bitmap.c
+index e38cb96..1095dc8 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -368,6 +368,61 @@ free_info:
+ 	return rv;
+ }
+ 
++int IsBitmapDirty(char *filename)
++{
++	/*
++	 * Read the bitmap file
++	 * This function is currently for cluster-md only.
++	 * Return: 1(dirty), 0 (clean), -1(error)
++	 */
++
++	int fd = -1, rv = 0, i;
++	struct supertype *st = NULL;
++	bitmap_info_t *info = NULL;
++	bitmap_super_t *sb = NULL;
++
++	fd = bitmap_file_open(filename, &st, 0);
++	free(st);
++	if (fd < 0)
++		goto out;
++
++	info = bitmap_fd_read(fd, 0);
++	close(fd);
++	if (!info)
++		goto out;
++
++	sb = &info->sb;
++	for (i = 0; i < (int)sb->nodes; i++) {
++		st = NULL;
++		free(info);
++		info = NULL;
++
++		fd = bitmap_file_open(filename, &st, i);
++		free(st);
++		if (fd < 0)
++			goto out;
++
++		info = bitmap_fd_read(fd, 0);
++		close(fd);
++		if (!info)
++			goto out;
++
++		sb = &info->sb;
++		if (sb->magic != BITMAP_MAGIC) { /* invalid bitmap magic */
++			free(info);
++			goto out;
++		}
++
++		if (info->dirty_bits)
++			rv = 1;
++	}
++
++	free(info);
++	return rv;
++out:
++	return -1;
++}
++
+ int CreateBitmap(char *filename, int force, char uuid[16],
+ 		 unsigned long chunksize, unsigned long daemon_sleep,
+ 		 unsigned long write_behind,
+diff --git a/mdadm.h b/mdadm.h
+index 399478b..ba8ba91 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1447,6 +1447,7 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			unsigned long long array_size,
+ 			int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
++extern int IsBitmapDirty(char *filename);
+ extern int Write_rules(char *rule_name);
+ extern int bitmap_update_uuid(int fd, int *uuid, int swap);
+ 
+-- 
+2.25.0
