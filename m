@@ -1,77 +1,34 @@
-From: kernel test robot <lkp@intel.com>
-Subject: [song-md:md-next] BUILD SUCCESS
- 4fdedbcc914e49851eb9f0ac7b8f2fe41407c935
-Date: Thu, 30 Jul 2020 02:22:10 +0800
-Message-ID: <5f21be52.kpGhsO47D9ZHw6BV%lkp@intel.com>
+From: Al Viro <viro@zeniv.linux.org.uk>
+Subject: Re: add file system helpers that take kernel pointers for the init
+ code v4
+Date: Wed, 29 Jul 2020 20:51:17 +0100
+Message-ID: <20200729195117.GE951209@ZenIV.linux.org.uk>
+References: <20200728163416.556521-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20200728163416.556521-1-hch@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
 List-Id: linux-raid.ids
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
-branch HEAD: 4fdedbcc914e49851eb9f0ac7b8f2fe41407c935  raid5: don't duplicate code for different paths in handle_stripe
+On Tue, Jul 28, 2020 at 06:33:53PM +0200, Christoph Hellwig wrote:
+> Hi Al and Linus,
+> 
+> currently a lot of the file system calls in the early in code (and the
+> devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
+> This is one of the few last remaining places we need to deal with to kill
+> off set_fs entirely, so this series adds new helpers that take kernel
+> pointers.  These helpers are in init/ and marked __init and thus will
+> be discarded after bootup.  A few also need to be duplicated in devtmpfs,
+> though unfortunately.
+>
+> The series sits on top of my previous
+> 
+>   "decruft the early init / initrd / initramfs code v2"
 
-elapsed time: 741m
-
-configs tested: 48
-configs skipped: 1
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                             defconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Could you fold the fixes in the parent branch to avoid the bisect hazards?
+As it is, you have e.g. "initd: pass a non-f_pos offset to kernel_read/kernel_write"
+that ought to go into "initrd: switch initrd loading to struct file based APIs"...
