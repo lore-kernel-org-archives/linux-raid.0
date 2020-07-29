@@ -1,34 +1,49 @@
-From: Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: add file system helpers that take kernel pointers for the init
- code v4
-Date: Wed, 29 Jul 2020 20:51:17 +0100
-Message-ID: <20200729195117.GE951209@ZenIV.linux.org.uk>
-References: <20200728163416.556521-1-hch@lst.de>
+From: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
+Date: Wed, 29 Jul 2020 23:06:37 +0200
+Message-ID: <a070c45a-0509-e900-e3f3-98d20267c8c9@cloud.ionos.com>
+References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200728163416.556521-1-hch@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
+Content-Language: en-US
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Vojtech Myslivec <vojtech@xmyslivec.cz>, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: Michal Moravec <michal.moravec@logicworks.cz>, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On Tue, Jul 28, 2020 at 06:33:53PM +0200, Christoph Hellwig wrote:
-> Hi Al and Linus,
-> 
-> currently a lot of the file system calls in the early in code (and the
-> devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
-> This is one of the few last remaining places we need to deal with to kill
-> off set_fs entirely, so this series adds new helpers that take kernel
-> pointers.  These helpers are in init/ and marked __init and thus will
-> be discarded after bootup.  A few also need to be duplicated in devtmpfs,
-> though unfortunately.
->
-> The series sits on top of my previous
-> 
->   "decruft the early init / initrd / initramfs code v2"
+Hi,
 
-Could you fold the fixes in the parent branch to avoid the bisect hazards?
-As it is, you have e.g. "initd: pass a non-f_pos offset to kernel_read/kernel_write"
-that ought to go into "initrd: switch initrd loading to struct file based APIs"...
+On 7/22/20 10:47 PM, Vojtech Myslivec wrote:
+> 1. What should be the cause of this problem?
+
+Just a quick glance based on the stacks which you attached, I guess it 
+could be
+a deadlock issue of raid5 cache super write.
+
+Maybe the commit 8e018c21da3f ("raid5-cache: fix a deadlock in superblock
+write") didn't fix the problem completely.  Cc Song.
+
+And I am curious why md thread is not waked if mddev_trylock fails, you can
+give it a try but I can't promise it helps ...
+
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1337,8 +1337,10 @@ static void 
+r5l_write_super_and_discard_space(struct r5l_log *log,
+          */
+         set_mask_bits(&mddev->sb_flags, 0,
+                 BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
+-       if (!mddev_trylock(mddev))
++       if (!mddev_trylock(mddev)) {
++               md_wakeup_thread(mddev->thread);
+                 return;
++       }
+         md_update_sb(mddev, 1);
+         mddev_unlock(mddev);
+
+
+Thanks,
+Guoqing
