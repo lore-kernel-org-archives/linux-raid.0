@@ -1,7 +1,7 @@
 From: allenpeng <allenpeng@synology.com>
-Subject: [PATCH 2/2] md/raid5: Allow degraded raid6 to do rmw
-Date: Fri, 31 Jul 2020 17:50:31 +0800
-Message-ID: <1596189031-3082-1-git-send-email-allenpeng@synology.com>
+Subject: [PATCH 1/2] md/raid5: Fix Force reconstruct-write io stuck in degraded raid5
+Date: Fri, 31 Jul 2020 17:50:17 +0800
+Message-ID: <1596189017-3038-1-git-send-email-allenpeng@synology.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -10,68 +10,49 @@ List-Id: linux-raid.ids
 
 From: ChangSyun Peng <allenpeng@synology.com>
 
-Degraded raid6 always do reconstruct-write now. With raid6 xor supported,
-we can do rmw in degraded raid6. This patch can reduce many read IOs to
-improve performance.
+In degraded raid5, we need to read parity to do reconstruct-write when
+data disks fail. However, we can not read parity from
+handle_stripe_dirtying() in force reconstruct-write mode.
 
-If the failed disk is P, Q or the disk we want to write to, we may need to
-do reconstruct-write in max degraded raid6. In this situation we can not
-read enough data from handle_stripe_dirtying() so we have to set force_rcw
-in handle_stripe_fill() to read all data.
+Reproducible Steps:
+
+1. Create degraded raid5
+mdadm -C /dev/md2 --assume-clean -l5 -n3 /dev/sda2 /dev/sdb2 missing
+2. Set rmw_level to 0
+echo 0 > /sys/block/md2/md/rmw_level
+3. IO to raid5
+
+Now some io may be stuck in raid5. We can use handle_stripe_fill() to read
+the parity in this situation.
 
 Reviewed-by: Alex Wu <alexwu@synology.com>
 Reviewed-by: BingJing Chang <bingjingc@synology.com>
 Reviewed-by: Danny Shih <dannyshih@synology.com>
 Signed-off-by: ChangSyun Peng <allenpeng@synology.com>
 ---
- drivers/md/raid5.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ drivers/md/raid5.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 43eedf7..02760f3 100644
+index ab8067f..43eedf7 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3538,6 +3538,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
- 	struct r5dev *fdev[2] = { &sh->dev[s->failed_num[0]],
- 				  &sh->dev[s->failed_num[1]] };
- 	int i;
-+	bool force_rcw = (sh->raid_conf->rmw_level == PARITY_DISABLE_RMW);
- 
- 
- 	if (test_bit(R5_LOCKED, &dev->flags) ||
-@@ -3596,18 +3597,27 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
- 			 * devices must be read.
- 			 */
- 			return 1;
-+
-+		if (s->failed >= 2 &&
-+		    (fdev[i]->towrite ||
-+		     s->failed_num[i] == sh->pd_idx ||
-+		     s->failed_num[i] == sh->qd_idx) &&
-+		    !test_bit(R5_UPTODATE, &fdev[i]->flags))
-+			/* In max degraded raid6, If the failed disk is P, Q,
-+			 * or we want to read the failed disk, we need to do
-+			 * reconstruct-write.
-+			 */
-+			force_rcw = true;
- 	}
- 
--	/* If we are forced to do a reconstruct-write, either because
--	 * the current RAID6 implementation only supports that, or
--	 * because parity cannot be trusted and we are currently
--	 * recovering it, there is extra need to be careful.
-+	/* If we are forced to do a reconstruct-write, because parity
-+	 * cannot be trusted and we are currently recovering it, there
-+	 * is extra need to be careful.
- 	 * If one of the devices that we would need to read, because
- 	 * it is not being overwritten (and maybe not written at all)
+@@ -3607,6 +3607,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
  	 * is missing/faulty, then we need to read everything we can.
  	 */
--	if (sh->raid_conf->level != 6 &&
--	    sh->raid_conf->rmw_level != PARITY_DISABLE_RMW &&
-+	if (!force_rcw &&
+ 	if (sh->raid_conf->level != 6 &&
++	    sh->raid_conf->rmw_level != PARITY_DISABLE_RMW &&
  	    sh->sector < sh->raid_conf->mddev->recovery_cp)
  		/* reconstruct-write isn't being forced */
  		return 0;
+@@ -4842,7 +4843,7 @@ static void handle_stripe(struct stripe_head *sh)
+ 	 * or to load a block that is being partially written.
+ 	 */
+ 	if (s.to_read || s.non_overwrite
+-	    || (conf->level == 6 && s.to_write && s.failed)
++	    || (s.to_write && s.failed)
+ 	    || (s.syncing && (s.uptodate + s.compute < disks))
+ 	    || s.replacing
+ 	    || s.expanding)
 -- 
 2.7.4
