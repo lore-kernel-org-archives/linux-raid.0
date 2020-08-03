@@ -1,123 +1,82 @@
-From: tyranastrasz@gmx.de
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Restoring a raid0 for data rescue
-Date: Mon, 3 Aug 2020 02:46:27 +0200
-Message-ID: <84492bfd-8a1b-6109-fb3f-a32ce25e740d@gmx.de>
+Date: Sun, 2 Aug 2020 22:55:37 -0400
+Message-ID: <811f84cf-62e1-f8e0-b120-60f7369e3774@turmel.org>
 References: <S1726630AbgHBR6v/20200802175851Z+2001@vger.kernel.org>
  <68c39e83-1155-0c8d-96a9-0418bdaf850d@gmx.de>
  <7437ab4d-9cd1-fe53-a17a-fc9e966ccd92@youngman.org.uk>
  <d8f9d16d-b6a2-77ba-bff2-a56c62dac5df@gmx.de>
  <057b0c58-3876-0f03-af33-86f3b266a18a@gmx.de>
  <4d48303b-b8f4-0749-cc6c-8d73ea77edb6@youngman.org.uk>
+ <84492bfd-8a1b-6109-fb3f-a32ce25e740d@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4d48303b-b8f4-0749-cc6c-8d73ea77edb6@youngman.org.uk>
+In-Reply-To: <84492bfd-8a1b-6109-fb3f-a32ce25e740d@gmx.de>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org, Phil Turmel <philip@turmel.org>, NeilBrown <neilb@suse.com>
+To: tyranastrasz@gmx.de, antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 02.08.20 22:50, antlists wrote:
-> On 02/08/2020 21:38, tyranastrasz@gmx.de wrote:
->> On 02.08.20 21:24, tyranastrasz@gmx.de wrote:
->>> On 02.08.20 21:01, antlists wrote:
->>>> On 02/08/2020 19:09, tyranastrasz@gmx.de wrote:
->>>>> Hello
->>>>>
->>>>> I've a problem with my raid0.
->>>>> The probelmatic disks (2x 1TB wdred) were in usage in my server, now
->>>>> they got replaced with 3x 4TB seagate in a raid5.
->>>>>
->>>>> Before I turned them off, I made a backup on an external drive (norm=
-al
->>>>> hdd via USB) via rsync -avx /source /mnt/external/
->>>>>
->>>>> Whatever happens in the night, the backup isn't complete and I miss
->>>>> files.
->>>>> So I put the old raid again into the server and wanted to start,
->>>>> but the
->>>>> Intel Raid Controller said that one of the disks are no member of a
->>>>> raid.
->>>>>
->>>>> My server mainboard is from Gigabyte a MX11-PC0.
->>>>>
->>>>> Well I made some mdadm examines, smartctl, mdstat, lsdrv logfiles an=
-d
->>>>> attached them to the mail.
->>>>>
->>>> Ow...
+On 8/2/20 8:46 PM, tyranastrasz@gmx.de wrote:
+> On 02.08.20 22:50, antlists wrote:
+
+>>>> No, I have the disks in my pc.
+>>>> The server can't boot the disks because Intel Storage says the raid has
+>>>> a failure, because one of the disks has no raid information. But as I
+>>>> read them both yesterday they had, now (see the last attachment) one of
+>>>> them has none.
+>>>> It makes no sense... I need the files
 >>>>
->>>> This is still the same linux on the server? Because mdstat says no ra=
-id
->>>> personalities are installed. Either linux has changed or you've got
->>>> hardware raid. in which case you'll need to read up on the motherboar=
-d
->>>> manual.
+>>>> Intel means "yeah make a new raid, with data loss" that's no option.
 >>>>
->>>> I'm not sure what they're called, but try "insmod raid1x" I think it
->>>> is.
->>>> Could be raid0x. If that loads the raid0 driver, cat /proc/mdstat
->>>> should
->>>> list raid0 as a personality. Once that's there, mdadm may be able to
->>>> start the array.
->>>>
->>>> Until you've got a working raid driver in the kernel, I certainly can=
-'t
->>>> help any further. But hopefully reading the mobo manual might help. T=
-he
->>>> other thing to try is an up-to-date rescue disk and see if that can
->>>> read
->>>> the array.
->>>>
->>>> Cheers,
->>>> Wol
+>>>> Nara
 >>>
->>> No, I have the disks in my pc.
->>> The server can't boot the disks because Intel Storage says the raid ha=
-s
->>> a failure, because one of the disks has no raid information. But as I
->>> read them both yesterday they had, now (see the last attachment) one o=
-f
->>> them has none.
->>> It makes no sense... I need the files
 >>>
->>> Intel means "yeah make a new raid, with data loss" that's no option.
+>>> I tried something what was told here
+>>> https://askubuntu.com/questions/69086/mdadm-superblock-recovery
 >>>
->>> Nara
+>>> root@Nibler:~# mdadm --create /dev/md0 -v -f -l 0 -c 128 -n 2 /dev/sdd
+>>> /dev/sdb
 >>
+>> OH SHIT !!!
 >>
->> I tried something what was told here
->> https://askubuntu.com/questions/69086/mdadm-superblock-recovery
+>> You didn't try booting with a rescue disk? That mistake could well cost
+>> you the array :-( I'm out of my depth ...
 >>
->> root@Nibler:~# mdadm --create /dev/md0 -v -f -l 0 -c 128 -n 2 /dev/sdd
->> /dev/sdb
->
-> OH SHIT !!!
->
-> You didn't try booting with a rescue disk? That mistake could well cost
-> you the array :-( I'm out of my depth ...
->
-> https://raid.wiki.kernel.org/index.php/Linux_Raid
-> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
->
-> I've called in the heavy cavalry, and fortunately with 1.2 the damage
-> might not be too bad.
->
-> Here's hoping,
-> Wol
+>> https://raid.wiki.kernel.org/index.php/Linux_Raid
+>> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
+>>
+>> I've called in the heavy cavalry, and fortunately with 1.2 the damage
+>> might not be too bad.
+>>
+>> Here's hoping,
+>> Wol
+> 
+> What do you mean with 1.2?
+> 
+> Should I do?
+> https://raid.wiki.kernel.org/index.php/Recovering_a_damaged_RAID
+> 
+> I wait for an answer so I do it not more complicated :/
+> But is it not possible to merge both disks together into a virtual one,
+> block by block?
+> Our put the old superblock back?
+> 
+> I dunno what's the best solution.
+> 
+> Thanks
+> Nara
 
-What do you mean with 1.2?
+Oy.  I don't mind being called a "big gun", but I've zero experience 
+with IMSM / software raid combinations.  Not even a sparkler for you, sorry.
 
-Should I do?
-https://raid.wiki.kernel.org/index.php/Recovering_a_damaged_RAID
+I avoid any form of "fakeraid" as too dangerous to play with.  I 
+understand it is necessary if you wish to dual boot windows and linux on 
+the same raid, but I don't do the former at all any more (no bare metal 
+windows in my life for over a decade, now).
 
-I wait for an answer so I do it not more complicated :/
-But is it not possible to merge both disks together into a virtual one,
-block by block?
-Our put the old superblock back?
+):
 
-I dunno what's the best solution.
-
-Thanks
-Nara
+Phil
