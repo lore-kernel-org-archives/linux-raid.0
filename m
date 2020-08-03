@@ -1,23 +1,41 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [GIT PULL] md-next 20200802
-Date: Mon, 3 Aug 2020 06:39:32 -0600
-Message-ID: <8c363cf1-a61d-aede-492a-cef2f0b28e6e@kernel.dk>
-References: <1B094166-6B2F-4181-B389-8C5B564CD485@fb.com>
+From: "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>
+Subject: RE: mdadm-4.2 release
+Date: Mon, 3 Aug 2020 12:48:12 +0000
+Message-ID: <SA0PR11MB4542B9DC53D2B8013450A767FF4D0@SA0PR11MB4542.namprd11.prod.outlook.com>
+References: <SA0PR11MB454290C854066D0AFD7EEC75FF6C0@SA0PR11MB4542.namprd11.prod.outlook.com>
+ <SA0PR11MB4542AD5A1AEF00B96404D5A4FF6C0@SA0PR11MB4542.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1B094166-6B2F-4181-B389-8C5B564CD485@fb.com>
+In-Reply-To: <SA0PR11MB4542AD5A1AEF00B96404D5A4FF6C0@SA0PR11MB4542.namprd11.prod.outlook.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Xiao Ni <xni@redhat.com>, ChangSyun Peng <allenpeng@synology.com>, Sebastian Parschauer <s.parschauer@gmx.de>
+To: "Tkaczyk, Mariusz" <mariusz.tkaczyk@intel.com>, Jes Sorensen <jes@trained-monkey.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-On 8/3/20 12:59 AM, Song Liu wrote:
-> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+Hi Jes,
+Is there any chance to release mdadm soon?
 
-Pulled, thanks.
+Thanks,
+Mariusz
 
--- 
-Jens Axboe
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org <linux-raid-owner@vger.kernel.org> O=
+n Behalf Of Tkaczyk, Mariusz
+Sent: Wednesday, July 1, 2020 11:18 AM
+To: Jes Sorensen <jes@trained-monkey.org>
+Cc: linux-raid@vger.kernel.org; Baldysiak, Pawel <pawel.baldysiak@intel.com=
+>
+Subject: mdadm-4.2 release
+
+Hi Jes,
+It will be nice to release mdadm-4.2 soon. =A0If I remember correctly, rele=
+ase has been planned for May- now is July.
+Do you still working on it?
+We are ok with releasing it on current HEAD.
+Sorry for spam, resending as plain text.
+
+Thanks,
+Mariusz
