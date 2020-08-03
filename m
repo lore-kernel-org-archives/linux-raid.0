@@ -1,87 +1,75 @@
-From: Qian Cai <cai@lca.pw>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Subject: Re: add file system helpers that take kernel pointers for the init
  code v4
-Date: Mon, 3 Aug 2020 10:56:23 -0400
-Message-ID: <20200803145622.GB4631@lca.pw>
-References: <20200728163416.556521-1-hch@lst.de>
+Date: Mon, 3 Aug 2020 17:08:02 +0200
+Message-ID: <20200803150802.GA19112@lst.de>
+References: <20200728163416.556521-1-hch@lst.de> <20200803145622.GB4631@lca.pw>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200728163416.556521-1-hch@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, sfr@canb.auug.org.au, linux-next@vger.kernel.org
+In-Reply-To: <20200803145622.GB4631-J5quhbR+WMc@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 28, 2020 at 06:33:53PM +0200, Christoph Hellwig wrote:
-> Hi Al and Linus,
+On Mon, Aug 03, 2020 at 10:56:23AM -0400, Qian Cai wrote:
+> On Tue, Jul 28, 2020 at 06:33:53PM +0200, Christoph Hellwig wrote:
+> > Hi Al and Linus,
+> > 
+> > currently a lot of the file system calls in the early in code (and the
+> > devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
+> > This is one of the few last remaining places we need to deal with to kill
+> > off set_fs entirely, so this series adds new helpers that take kernel
+> > pointers.  These helpers are in init/ and marked __init and thus will
+> > be discarded after bootup.  A few also need to be duplicated in devtmpfs,
+> > though unfortunately.
 > 
-> currently a lot of the file system calls in the early in code (and the
-> devtmpfs kthread) rely on the implicit set_fs(KERNEL_DS) during boot.
-> This is one of the few last remaining places we need to deal with to kill
-> off set_fs entirely, so this series adds new helpers that take kernel
-> pointers.  These helpers are in init/ and marked __init and thus will
-> be discarded after bootup.  A few also need to be duplicated in devtmpfs,
-> though unfortunately.
+> Reverting this series from next-20200803 fixed the crash below on shutdown.
 
-Reverting this series from next-20200803 fixed the crash below on shutdown.
+Please try this patch:
 
-[ 7303.287890][    T1] systemd-shutdown[1]: All loop devices detached.
-[ 7303.287930][    T1] systemd-shutdown[1]: Detaching DM devices.
-[ 7303.441674][    T1] printk: shutdown: 9 output lines suppressed due to ratelimiting
-[ 7303.443999][    T1] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000100
-[ 7303.444027][    T1] CPU: 120 PID: 1 Comm: shutdown Not tainted 5.8.0-next-20200803 #2
-[ 7303.444053][    T1] Call Trace:
-[ 7303.444069][    T1] [c000000015d27b70] [c0000000006f3778] dump_stack+0xfc/0x174 (unreliable)
-[ 7303.444103][    T1] [c000000015d27bc0] [c0000000000c9328] panic+0x214/0x4ac
-[ 7303.444140][    T1] [c000000015d27c60] [c0000000000d4d28] do_exit+0xda8/0xee0
-[ 7303.444178][    T1] [c000000015d27d60] [c0000000000d4f1c] do_group_exit+0x5c/0xd0
-list_empty at include/linux/list.h:282
-(inlined by) thread_group_empty at include/linux/sched/signal.h:671
-(inlined by) do_group_exit at kernel/exit.c:888
-[ 7303.444205][    T1] [c000000015d27da0] [c0000000000d4fac] sys_exit_group+0x1c/0x20
-sys_exit_group at kernel/exit.c:914
-[ 7303.444234][    T1] [c000000015d27dc0] [c00000000002c628] system_call_exception+0xf8/0x1d0
-[ 7303.444262][    T1] [c000000015d27e20] [c00000000000d0a8] system_call_common+0xe8/0x218
-[ 7304.936912][    T1] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000100 ]---
+---
+From 6448eebe2fe7189cedc5136ab3464517956922b7 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Date: Mon, 3 Aug 2020 15:56:18 +0200
+Subject: init: fix init_dup
 
-> 
-> The series sits on top of my previous
-> 
->   "decruft the early init / initrd / initramfs code v2"
-> 
-> series.
-> 
-> 
-> Git tree:
-> 
->     git://git.infradead.org/users/hch/misc.git init_path
-> 
-> Gitweb:
-> 
->     http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/init_path
-> 
-> 
-> Changes since v3:
->  - rename fs/for_init.c to fs/init.c
->  - document the purpose of the routines in fs/init.c with a comment
->  - don't mark devtmpfs __init as that will cause it to get overwritten
->    by initmem poisoning
->  - add an init_dup helper to make Al more happy than with the version
->    commit to the "decruft the early init / initrd / initramfs code v2"
->    series
-> 
-> Changes since v2:
->  - move to fs/for_init.c
->  - reuse the init routines in devtmpfs after refactoring devtmpfsd
->    (and thus the broken error handling in the previous version)
->  - actually use kern_path in a place where user_path_at sneaked back in
-> 
-> Changes since v1:
->  - avoid most core VFS changes
->  - renamed the functions and move them to init/ and devtmpfs
->  - drop a bunch of cleanups that can be submitted independently now
-> 
-> 
-> Diffstat:
+Don't allocate an unused fd for each call.  Also drop the extra
+reference from filp_open after the init_dup calls while we're at it.
+
+Fixes: 36e96b411649 ("init: add an init_dup helper")
+Reported-by Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ fs/init.c   | 2 +-
+ init/main.c | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/init.c b/fs/init.c
+index 730e05acda2392..e9c320a48cf157 100644
+--- a/fs/init.c
++++ b/fs/init.c
+@@ -260,6 +260,6 @@ int __init init_dup(struct file *file)
+ 	fd = get_unused_fd_flags(0);
+ 	if (fd < 0)
+ 		return fd;
+-	fd_install(get_unused_fd_flags(0), get_file(file));
++	fd_install(fd, get_file(file));
+ 	return 0;
+ }
+diff --git a/init/main.c b/init/main.c
+index 089e21504b1fc1..9dae9c4f806bb9 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1470,6 +1470,7 @@ void __init console_on_rootfs(void)
+ 	init_dup(file);
+ 	init_dup(file);
+ 	init_dup(file);
++	fput(file);
+ }
+ 
+ static noinline void __init kernel_init_freeable(void)
+-- 
+2.27.0
