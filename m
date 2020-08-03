@@ -1,34 +1,58 @@
-From: Song Liu <song@kernel.org>
-Subject: Re: [PATCH 0/2] Fix RCW bug and allow degraded raid6 do rmw
-Date: Sun, 2 Aug 2020 23:55:08 -0700
-Message-ID: <CAPhsuW72=Mh8v2oYwcftyjescPi06tOt4XZJXebPvnKF+Ok1-Q@mail.gmail.com>
-References: <1596188998-2994-1-git-send-email-allenpeng@synology.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [GIT PULL] md-next 20200802
+Date: Mon, 3 Aug 2020 06:59:02 +0000
+Message-ID: <1B094166-6B2F-4181-B389-8C5B564CD485@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1596188998-2994-1-git-send-email-allenpeng@synology.com>
+Content-Language: en-US
+Content-ID: <7EB313009BBF0E4E93475456E604D083@namprd15.prod.outlook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: allenpeng <allenpeng@synology.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, Xiao Ni <xni@redhat.com>, ChangSyun Peng <allenpeng@synology.com>, Sebastian Parschauer <s.parschauer@gmx.de>
 List-Id: linux-raid.ids
 
-On Fri, Jul 31, 2020 at 2:56 AM allenpeng <allenpeng@synology.com> wrote:
->
-> From: ChangSyun Peng <allenpeng@synology.com>
->
-> This patch fix io stuck in force reconstruct-write degraded raid5
-> problem and allow degraded raid6 do rmw.
->
-> ChangSyun Peng (2):
->   md/raid5: Fix Force reconstruct-write io stuck in degraded raid5
->   md/raid5: Allow degraded raid6 to do rmw
+Hi Jens,=20
 
-Thanks for the patches. Applied to md-next.
+Please consider pulling the following changes for md-next on top of your
+for-5.9/drivers branch.
 
->
->  drivers/md/raid5.c | 23 +++++++++++++++++------
->  1 file changed, 17 insertions(+), 6 deletions(-)
->
-> --
-> 2.7.4
->
+The following changes since commit a9e8e18aaf914bf273ed63480c4c3d8dd626c95f=
+:
+
+  Merge branch 'nvme-5.9' of git://git.infradead.org/nvme into for-5.9/driv=
+ers (2020-07-29 11:22:40 -0600)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+
+for you to fetch changes up to 45a4d8fd6c7926e7991a1b29233d725fe12935da:
+
+  md/raid5: Allow degraded raid6 to do rmw (2020-08-02 23:54:31 -0700)
+
+----------------------------------------------------------------
+ChangSyun Peng (2):
+      md/raid5: Fix Force reconstruct-write io stuck in degraded raid5
+      md/raid5: Allow degraded raid6 to do rmw
+
+Guoqing Jiang (4):
+      md/raid5: remove the redundant setting of STRIPE_HANDLE
+      md: print errno in super_written
+      raid5-cache: hold spinlock instead of mutex in r5c_journal_mode_show
+      raid5: don't duplicate code for different paths in handle_stripe
+
+Sebastian Parschauer (1):
+      md: register new md sysfs file 'uuid' read-only
+
+Xiao Ni (1):
+      md: fix max sectors calculation for super 1.0
+
+ Documentation/admin-guide/md.rst |  4 ++++
+ drivers/md/md.c                  | 47 ++++++++++++++++++++++++++++++++++++=
+++++++-----
+ drivers/md/raid5-cache.c         |  9 +++------
+ drivers/md/raid5.c               | 40 ++++++++++++++++++++++--------------=
+----
+ 4 files changed, 71 insertions(+), 29 deletions(-)=
