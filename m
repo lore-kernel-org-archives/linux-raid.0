@@ -1,32 +1,37 @@
-From: Jes Sorensen <jes@trained-monkey.org>
-Subject: Re: [PATCH v2] mdadm/md.4: update path to in-kernel-tree
- documentation
-Date: Fri, 7 Aug 2020 09:44:05 -0400
-Message-ID: <567445a4-49b1-003c-61c9-9a9e113ee184@trained-monkey.org>
-References: <20200718103314.14549-1-winstonml1.net>
- <20200722133321.8512-1-winston@ml1.net>
+From: info@furshetcrimea.ru
+Subject: Bei Interesse antworten.
+Date: Fri, 07 Aug 2020 14:22:08 +0100
+Message-ID: <auto-000011097452@furshetcrimea.ru>
+Reply-To: mattiassjoborg751@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200722133321.8512-1-winston@ml1.net>
-Content-Language: en-US
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Winston Weinert <winston@ml1.net>, linux-raid@vger.kernel.org
+To: Recipients <info@furshetcrimea.ru>
 List-Id: linux-raid.ids
 
-On 7/22/20 9:33 AM, Winston Weinert wrote:
-> Documentation/md.txt was renamed to Documentation/admin-guide/md.rst
-> in linux commit 9d85025b0418163fae079c9ba8f8445212de8568 (Oct 26,
-> 2016).
-> 
-> Signed-off-by: Winston Weinert <winston@ml1.net>
-> ---
-> I am sending this updated patch which includes a sign-off, fixes a
-> commit message typo, and CC's Jes Sorensen. I hope it is up to
-> standards.
+Schöne Grüße,
 
-Applied!
+Mein Name ist MATTIAS SJOBORG, ich bin Schweizer Staatsbürger und (Vorsitzender des Vergütungs- und Nominierungsausschusses) von Tethys Petroleum, einem multinationalen Ölkonzern mit Sitz in London-England, Großbritannien. Ich bitte Sie um Ihre Hilfe, um die Summe von vierzig Millionen Dollar abzurufen, die aus zwei Sendungsboxen besteht.
 
-Thanks,
-Jes
+Dieses Geld wurde von der Firma erworben und von einem Diplomaten begleitet und korrekt in einer Sicherheitsfirma in Amerika hinterlegt. Mein Grund dafür ist, dass ich von der Firma zu lange um meine Ansprüche betrogen wurde, nur weil ich kein bin Britisch. Die Kontaktdaten des Diplomaten erhalten Sie, wenn Sie Ihr Interesse bekunden, mir zu helfen.
+
+Jede der Schachteln enthält 20 Mio. USD. Für Ihre Hilfe bin ich bereit, 40% an Sie freizugeben. Aus Sicherheitsgründen wurde die Sendung als VERTRAULICHE DIPLOMATISCHE DOKUMENTE registriert, und ich kann erklären, warum dies so erklärt wurde. Denken Sie daran, dass der Diplomat den Inhalt der Sendung nicht kennt. Er ist seit einem Monat dort, während ich nach einem zuverlässigen Partner suchen möchte. Ich werde das Land verlassen, sobald die Sendung für Sie an Sie geliefert wird Private Investitionen und ich haben geschworen, niemals nach London zurückzukehren. Bitte, ich brauche Ihre dringende Antwort, bevor meine Pläne, das Unternehmen zu verlassen, entdeckt werden.
+
+www.tethyspetroleum.com/tethys/static/EN_US/au_seniormanagement.html
+
+Im Moment ist die sicherste Form der Korrespondenz meine eigene E-Mail-Adresse. Bitte antworten Sie im Interesse der Vertraulichkeit nur über meine direkte E-Mail-Adresse. Antworten Sie zusammen mit Ihrer direkten Telefon- und Faxnummer, unter der ich Sie alternativ erreichen kann.
+
+Bitte, wenn Sie nicht bereit und interessiert sind, mir zu helfen, löschen Sie bitte diese E-Mail aus Ihrer E-Mail und tun Sie so, als hätten Sie sie nie erhalten.
+
+Freundliche Grüße,
+Mr.Mattias Sjoborg
+(Vorsitzender des Vergütungs- und Nominierungsausschusses)
+Tethys Petroleum.
+London, England
+
+-- 
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
