@@ -1,7 +1,7 @@
 From: info@furshetcrimea.ru
 Subject: Bei Interesse antworten.
-Date: Fri, 07 Aug 2020 15:45:40 +0100
-Message-ID: <auto-000011133007@furshetcrimea.ru>
+Date: Fri, 07 Aug 2020 17:09:17 +0100
+Message-ID: <auto-000011168890__22520.2846386068$1596816670$gmane$org@furshetcrimea.ru>
 Reply-To: mattiassjoborg751@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
