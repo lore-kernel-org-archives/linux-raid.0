@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 36/40] md: raid0/linear: fix dereference before null check on pointer mddev
-Date: Sat,  8 Aug 2020 19:38:40 -0400
-Message-ID: <20200808233844.3618823-36-sashal@kernel.org>
-References: <20200808233844.3618823-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 50/58] md: raid0/linear: fix dereference before null check on pointer mddev
+Date: Sat,  8 Aug 2020 19:37:16 -0400
+Message-ID: <20200808233724.3618168-50-sashal@kernel.org>
+References: <20200808233724.3618168-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20200808233844.3618823-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200808233724.3618168-1-sashal@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Colin Ian King <colin.king@canonical.com>, "Guilherme G . Piccoli" <gpiccoli@canonical.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -32,10 +32,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5a378a453a2d4..acef01e519d06 100644
+index 41eead9cbee98..d5a5c18813985 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -376,17 +376,18 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
+@@ -469,17 +469,18 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
  	struct mddev *mddev = q->queuedata;
  	unsigned int sectors;
  
