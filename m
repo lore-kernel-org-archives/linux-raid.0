@@ -1,149 +1,62 @@
-From: Zhao Heming <heming.zhao@suse.com>
-Subject: [PATCH v4] mdadm/Detail: show correct state for cluster-md array
-Date: Sat,  8 Aug 2020 17:01:19 +0800
-Message-ID: <1596877279-21355-1-git-send-email-heming.zhao@suse.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 36/40] md: raid0/linear: fix dereference before null check on pointer mddev
+Date: Sat,  8 Aug 2020 19:38:40 -0400
+Message-ID: <20200808233844.3618823-36-sashal@kernel.org>
+References: <20200808233844.3618823-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, jes@trained-monkey.org
-Cc: Zhao Heming <heming.zhao@suse.com>, neilb@suse.com
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20200808233844.3618823-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Colin Ian King <colin.king@canonical.com>, "Guilherme G . Piccoli" <gpiccoli@canonical.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After kernel md module commit 480523feae581, in md-cluster env,
-mddev->in_sync always zero, it will make array.state never set
-up MD_SB_CLEAN. it causes "mdadm -D /dev/mdX" show state 'active'
-all the time.
+From: Colin Ian King <colin.king@canonical.com>
 
-bitmap.c: add a new API IsBitmapDirty() to support inquiry bitmap
-dirty or clean.
+[ Upstream commit 9a5a85972c073f720d81a7ebd08bfe278e6e16db ]
 
-Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+Pointer mddev is being dereferenced with a test_bit call before mddev
+is being null checked, this may cause a null pointer dereference. Fix
+this by moving the null pointer checks to sanity check mddev before
+it is dereferenced.
+
+Addresses-Coverity: ("Dereference before null check")
+Fixes: 62f7b1989c02 ("md raid0/linear: Mark array as 'broken' and fail BIOs if a member is gone")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-v4:
-- Detail.c: follow Jes comment, split if into 2 lines
-v3:
-- Detail.c: fix error logic: v2 code didn't check bitmap when dv is null.
-v2:
-- Detail.c: change to read only one device.
-- bitmap.c: modify IsBitmapDirty() to check all bitmap on the selected device.
+ drivers/md/md.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
----
- Detail.c | 21 ++++++++++++++++++++-
- bitmap.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mdadm.h  |  1 +
- 3 files changed, 76 insertions(+), 1 deletion(-)
-
-diff --git a/Detail.c b/Detail.c
-index 24eeba0..2682e87 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -495,8 +495,27 @@ int Detail(char *dev, struct context *c)
- 							  sra->array_state);
- 				else
- 					arrayst = "clean";
--			} else
-+			} else {
- 				arrayst = "active";
-+				if (array.state & (1<<MD_SB_CLUSTERED)) {
-+					for (d = 0; d < max_disks * 2; d++) {
-+						char *dv;
-+						mdu_disk_info_t disk = disks[d];
-+
-+						if (d >= array.raid_disks * 2 &&
-+							disk.major == 0 && disk.minor == 0)
-+							continue;
-+						if ((d & 1) && disk.major == 0 && disk.minor == 0)
-+							continue;
-+						dv = map_dev_preferred(disk.major, disk.minor, 0,
-+												c->prefer);
-+						if (!dv)
-+							continue;
-+						arrayst = IsBitmapDirty(dv) ? "active" : "clean";
-+						break;
-+					}
-+				}
-+			}
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5a378a453a2d4..acef01e519d06 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -376,17 +376,18 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
+ 	struct mddev *mddev = q->queuedata;
+ 	unsigned int sectors;
  
- 			printf("             State : %s%s%s%s%s%s%s \n",
- 			       arrayst, st,
-diff --git a/bitmap.c b/bitmap.c
-index e38cb96..1095dc8 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -368,6 +368,61 @@ free_info:
- 	return rv;
- }
+-	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
++	if (mddev == NULL || mddev->pers == NULL) {
+ 		bio_io_error(bio);
+ 		return BLK_QC_T_NONE;
+ 	}
  
-+int IsBitmapDirty(char *filename)
-+{
-+	/*
-+	 * Read the bitmap file
-+	 * This function is currently for cluster-md only.
-+	 * Return: 1(dirty), 0 (clean), -1(error)
-+	 */
+-	blk_queue_split(q, &bio);
+-
+-	if (mddev == NULL || mddev->pers == NULL) {
++	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
+ 		bio_io_error(bio);
+ 		return BLK_QC_T_NONE;
+ 	}
 +
-+	int fd = -1, rv = 0, i;
-+	struct supertype *st = NULL;
-+	bitmap_info_t *info = NULL;
-+	bitmap_super_t *sb = NULL;
++	blk_queue_split(q, &bio);
 +
-+	fd = bitmap_file_open(filename, &st, 0);
-+	free(st);
-+	if (fd < 0)
-+		goto out;
-+
-+	info = bitmap_fd_read(fd, 0);
-+	close(fd);
-+	if (!info)
-+		goto out;
-+
-+	sb = &info->sb;
-+	for (i = 0; i < (int)sb->nodes; i++) {
-+		st = NULL;
-+		free(info);
-+		info = NULL;
-+
-+		fd = bitmap_file_open(filename, &st, i);
-+		free(st);
-+		if (fd < 0)
-+			goto out;
-+
-+		info = bitmap_fd_read(fd, 0);
-+		close(fd);
-+		if (!info)
-+			goto out;
-+
-+		sb = &info->sb;
-+		if (sb->magic != BITMAP_MAGIC) { /* invalid bitmap magic */
-+			free(info);
-+			goto out;
-+		}
-+
-+		if (info->dirty_bits)
-+			rv = 1;
-+	}
-+
-+	free(info);
-+	return rv;
-+out:
-+	return -1;
-+}
-+
- int CreateBitmap(char *filename, int force, char uuid[16],
- 		 unsigned long chunksize, unsigned long daemon_sleep,
- 		 unsigned long write_behind,
-diff --git a/mdadm.h b/mdadm.h
-index 399478b..ba8ba91 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1447,6 +1447,7 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
- 			unsigned long long array_size,
- 			int major);
- extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
-+extern int IsBitmapDirty(char *filename);
- extern int Write_rules(char *rule_name);
- extern int bitmap_update_uuid(int fd, int *uuid, int swap);
- 
+ 	if (mddev->ro == 1 && unlikely(rw == WRITE)) {
+ 		if (bio_sectors(bio) != 0)
+ 			bio->bi_status = BLK_STS_IOERR;
 -- 
-2.25.0
+2.25.1
