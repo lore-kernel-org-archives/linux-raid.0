@@ -1,80 +1,20 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.8 15/64] md-cluster: fix wild pointer of unlock_all_bitmaps()
-Date: Mon, 10 Aug 2020 15:08:10 -0400
-Message-ID: <20200810190859.3793319-15-sashal@kernel.org>
-References: <20200810190859.3793319-1-sashal@kernel.org>
+From: Marco <info@mahatmehospital.com>
+Subject: =?UTF-8?Q?Sto_sperando_che_tu_stia_avendo_una_?= =?UTF-8?Q?buona_giornata?=
+Date: Mon, 10 Aug 2020 12:35:18 -1000
+Message-ID: <2060977d3792$39a62b5c$724946ea$@mahatmehospital.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200810190859.3793319-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Zhao Heming <heming.zhao@suse.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: polis <polis@clevermobile.net>, opensuse <opensuse@opensuse.org>, smmarino <smmarino@sogei.it>, Development discussions related to Fedora <devel@lists.fedoraproject.org>, Community support for Fedora users <users@lists.fedoraproject.org>, lm sensors <lm-sensors@lm-sensors.org>, Hans de Goede <hdegoede@redhat.com>, linux raid <linux-raid@vger.kernel.org>, Neil Brown <nfbrown@novell.com>, marco manini <marco.manini@senato.it>
 List-Id: linux-raid.ids
 
-From: Zhao Heming <heming.zhao@suse.com>
+https://hotslasleca1919.blogspot.mk/
 
-[ Upstream commit 60f80d6f2d07a6d8aee485a1d1252327eeee0c81 ]
 
-reproduction steps:
-```
-node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
-/dev/sdb
-node2 # mdadm -A /dev/md0 /dev/sda /dev/sdb
-node1 # mdadm -G /dev/md0 -b none
-mdadm: failed to remove clustered bitmap.
-node1 # mdadm -S --scan
-^C  <==== mdadm hung & kernel crash
-```
 
-kernel stack:
-```
-[  335.230657] general protection fault: 0000 [#1] SMP NOPTI
-[...]
-[  335.230848] Call Trace:
-[  335.230873]  ? unlock_all_bitmaps+0x5/0x70 [md_cluster]
-[  335.230886]  unlock_all_bitmaps+0x3d/0x70 [md_cluster]
-[  335.230899]  leave+0x10f/0x190 [md_cluster]
-[  335.230932]  ? md_super_wait+0x93/0xa0 [md_mod]
-[  335.230947]  ? leave+0x5/0x190 [md_cluster]
-[  335.230973]  md_cluster_stop+0x1a/0x30 [md_mod]
-[  335.230999]  md_bitmap_free+0x142/0x150 [md_mod]
-[  335.231013]  ? _cond_resched+0x15/0x40
-[  335.231025]  ? mutex_lock+0xe/0x30
-[  335.231056]  __md_stop+0x1c/0xa0 [md_mod]
-[  335.231083]  do_md_stop+0x160/0x580 [md_mod]
-[  335.231119]  ? 0xffffffffc05fb078
-[  335.231148]  md_ioctl+0xa04/0x1930 [md_mod]
-[  335.231165]  ? filename_lookup+0xf2/0x190
-[  335.231179]  blkdev_ioctl+0x93c/0xa10
-[  335.231205]  ? _cond_resched+0x15/0x40
-[  335.231214]  ? __check_object_size+0xd4/0x1a0
-[  335.231224]  block_ioctl+0x39/0x40
-[  335.231243]  do_vfs_ioctl+0xa0/0x680
-[  335.231253]  ksys_ioctl+0x70/0x80
-[  335.231261]  __x64_sys_ioctl+0x16/0x20
-[  335.231271]  do_syscall_64+0x65/0x1f0
-[  335.231278]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-```
 
-Signed-off-by: Zhao Heming <heming.zhao@suse.com>
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/md/md-cluster.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 813a99ffa86f8..73fd50e779754 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1518,6 +1518,7 @@ static void unlock_all_bitmaps(struct mddev *mddev)
- 			}
- 		}
- 		kfree(cinfo->other_bitmap_lockres);
-+		cinfo->other_bitmap_lockres = NULL;
- 	}
- }
- 
--- 
-2.25.1
+
+Calorosamente,Marco
