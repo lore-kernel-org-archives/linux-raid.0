@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 06/17] md-cluster: fix wild pointer of unlock_all_bitmaps()
-Date: Mon, 10 Aug 2020 15:14:07 -0400
-Message-ID: <20200810191418.3795394-6-sashal@kernel.org>
-References: <20200810191418.3795394-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 06/22] md-cluster: fix wild pointer of unlock_all_bitmaps()
+Date: Mon, 10 Aug 2020 15:13:28 -0400
+Message-ID: <20200810191345.3795166-6-sashal@kernel.org>
+References: <20200810191345.3795166-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20200810191418.3795394-1-sashal@kernel.org>
+In-Reply-To: <20200810191345.3795166-1-sashal@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Zhao Heming <heming.zhao@suse.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
@@ -65,10 +65,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index e870b09b2c84d..d08c63aaf10bb 100644
+index 10057ac85476e..035d5ec8e677f 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -1234,6 +1234,7 @@ static void unlock_all_bitmaps(struct mddev *mddev)
+@@ -1423,6 +1423,7 @@ static void unlock_all_bitmaps(struct mddev *mddev)
  			}
  		}
  		kfree(cinfo->other_bitmap_lockres);
