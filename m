@@ -1,62 +1,80 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.8 58/72] md: raid0/linear: fix dereference before null check on pointer mddev
-Date: Sat,  8 Aug 2020 19:35:27 -0400
-Message-ID: <20200808233542.3617339-58-sashal@kernel.org>
-References: <20200808233542.3617339-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 10/31] md-cluster: fix wild pointer of unlock_all_bitmaps()
+Date: Mon, 10 Aug 2020 15:12:38 -0400
+Message-ID: <20200810191259.3794858-10-sashal@kernel.org>
+References: <20200810191259.3794858-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200808233542.3617339-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200810191259.3794858-1-sashal@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Colin Ian King <colin.king@canonical.com>, "Guilherme G . Piccoli" <gpiccoli@canonical.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Cc: Zhao Heming <heming.zhao@suse.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Zhao Heming <heming.zhao@suse.com>
 
-[ Upstream commit 9a5a85972c073f720d81a7ebd08bfe278e6e16db ]
+[ Upstream commit 60f80d6f2d07a6d8aee485a1d1252327eeee0c81 ]
 
-Pointer mddev is being dereferenced with a test_bit call before mddev
-is being null checked, this may cause a null pointer dereference. Fix
-this by moving the null pointer checks to sanity check mddev before
-it is dereferenced.
+reproduction steps:
+```
+node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
+/dev/sdb
+node2 # mdadm -A /dev/md0 /dev/sda /dev/sdb
+node1 # mdadm -G /dev/md0 -b none
+mdadm: failed to remove clustered bitmap.
+node1 # mdadm -S --scan
+^C  <==== mdadm hung & kernel crash
+```
 
-Addresses-Coverity: ("Dereference before null check")
-Fixes: 62f7b1989c02 ("md raid0/linear: Mark array as 'broken' and fail BIOs if a member is gone")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Reviewed-by: Guilherme G. Piccoli <gpiccoli@canonical.com>
+kernel stack:
+```
+[  335.230657] general protection fault: 0000 [#1] SMP NOPTI
+[...]
+[  335.230848] Call Trace:
+[  335.230873]  ? unlock_all_bitmaps+0x5/0x70 [md_cluster]
+[  335.230886]  unlock_all_bitmaps+0x3d/0x70 [md_cluster]
+[  335.230899]  leave+0x10f/0x190 [md_cluster]
+[  335.230932]  ? md_super_wait+0x93/0xa0 [md_mod]
+[  335.230947]  ? leave+0x5/0x190 [md_cluster]
+[  335.230973]  md_cluster_stop+0x1a/0x30 [md_mod]
+[  335.230999]  md_bitmap_free+0x142/0x150 [md_mod]
+[  335.231013]  ? _cond_resched+0x15/0x40
+[  335.231025]  ? mutex_lock+0xe/0x30
+[  335.231056]  __md_stop+0x1c/0xa0 [md_mod]
+[  335.231083]  do_md_stop+0x160/0x580 [md_mod]
+[  335.231119]  ? 0xffffffffc05fb078
+[  335.231148]  md_ioctl+0xa04/0x1930 [md_mod]
+[  335.231165]  ? filename_lookup+0xf2/0x190
+[  335.231179]  blkdev_ioctl+0x93c/0xa10
+[  335.231205]  ? _cond_resched+0x15/0x40
+[  335.231214]  ? __check_object_size+0xd4/0x1a0
+[  335.231224]  block_ioctl+0x39/0x40
+[  335.231243]  do_vfs_ioctl+0xa0/0x680
+[  335.231253]  ksys_ioctl+0x70/0x80
+[  335.231261]  __x64_sys_ioctl+0x16/0x20
+[  335.231271]  do_syscall_64+0x65/0x1f0
+[  335.231278]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+```
+
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
 Signed-off-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/md.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/md/md-cluster.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f567f536b529b..90756450b9588 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -470,17 +470,18 @@ static blk_qc_t md_make_request(struct request_queue *q, struct bio *bio)
- 	struct mddev *mddev = bio->bi_disk->private_data;
- 	unsigned int sectors;
- 
--	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
-+	if (mddev == NULL || mddev->pers == NULL) {
- 		bio_io_error(bio);
- 		return BLK_QC_T_NONE;
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 0b2af6e74fc37..4522e87d9d68d 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1443,6 +1443,7 @@ static void unlock_all_bitmaps(struct mddev *mddev)
+ 			}
+ 		}
+ 		kfree(cinfo->other_bitmap_lockres);
++		cinfo->other_bitmap_lockres = NULL;
  	}
+ }
  
--	blk_queue_split(q, &bio);
--
--	if (mddev == NULL || mddev->pers == NULL) {
-+	if (unlikely(test_bit(MD_BROKEN, &mddev->flags)) && (rw == WRITE)) {
- 		bio_io_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
-+
-+	blk_queue_split(q, &bio);
-+
- 	if (mddev->ro == 1 && unlikely(rw == WRITE)) {
- 		if (bio_sectors(bio) != 0)
- 			bio->bi_status = BLK_STS_IOERR;
 -- 
 2.25.1
