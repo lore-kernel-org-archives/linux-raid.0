@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.7 15/60] md-cluster: fix wild pointer of unlock_all_bitmaps()
-Date: Mon, 10 Aug 2020 15:09:43 -0400
-Message-ID: <20200810191028.3793884-15-sashal@kernel.org>
-References: <20200810191028.3793884-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 15/64] md-cluster: fix wild pointer of unlock_all_bitmaps()
+Date: Mon, 10 Aug 2020 15:08:10 -0400
+Message-ID: <20200810190859.3793319-15-sashal@kernel.org>
+References: <20200810190859.3793319-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200810191028.3793884-1-sashal@kernel.org>
+In-Reply-To: <20200810190859.3793319-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Zhao Heming <heming.zhao@suse.com>, Song Liu <songliubraving@fb.com>, Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
