@@ -1,34 +1,65 @@
-From: Michael Fritscher <michael@fritscher.net>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: Recommended filesystem for RAID 6
-Date: Tue, 11 Aug 2020 21:19:07 +0200
-Message-ID: <4a7bfca8-af6e-cbd1-0dc4-feaf1a0288be@fritscher.net>
+Date: Wed, 12 Aug 2020 00:33:05 +0500
+Message-ID: <20200812003305.6628dd6e@natsu>
 References: <CAF-KpgYcEF5juR9nFPifZunPPGW73kWVG9fjR3=WpufxXJcewg@mail.gmail.com>
- <1381759926.21710099.1597158389614.JavaMail.zimbra@karlsbakk.net>
+ <20200811212305.02fec65a@natsu>
+ <ea7232af-a411-6b16-d03e-6b21c14cc5be@thelounge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1381759926.21710099.1597158389614.JavaMail.zimbra@karlsbakk.net>
-Content-Language: en-GB
+In-Reply-To: <ea7232af-a411-6b16-d03e-6b21c14cc5be@thelounge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Reindl Harald <h.reindl@thelounge.net>
+Cc: George Rapp <george.rapp@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Tue, 11 Aug 2020 20:57:15 +0200
+Reindl Harald <h.reindl@thelounge.net> wrote:
 
-if you really want to use these tiny 2 TB HDDs - yes, RAID 6 (2x - the
-second for the backup system on a physically different location) is a
-good choice.
+> > Whichever filesystem you choose, you will end up with a huge single point of
+> > failure, and any trouble with that FS or the underlying array put all your
+> > data instantly at risk. 
+> 
+> calling an array where you can lose *two* disks as
+> single-point-of-failure is absurd
 
-But: If you can, buy some 8-12 TB HDDs and forget the old rusty tiny
-HDDs. You'll save a lot at the system - and power.
+As noted before, not just *disks* can fail, plenty of other things to fail in
+a storage server, and they can easily take down, say, a half of all disks, or
+random portions of them in increments of four. Even if temporarily -- that
+surely will be "unexpected" to that single precious 20TB filesystem. How will
+it behave, who knows. Do you know? For added fun, reconnect the drives back 30
+seconds later. Oh, let's write to linux-raid for how to bring back a half of
+RAID6 from the Spare (S) status. Or find some HOWTO suggesting a random
+--create without --assume-clean. And if the FS goes corrupt, now you suddenly
+need *all* your backups, not just 1 drive worth of them.
 
-ext4 is fine. In my experience, it is rock-solid, and also fsck.ext4 is
-fairly qick (don't know what Roy is doing that it is so slow - do you
-really made a full-fledged ext4 with journal or a old ext2 file system?^^)
+> no raid can replace backups anyways
 
-Another way would be deploying zfs with raid-z2 (Yes, I can hear the
-screams :-D )
+All too often I've seen RAID being used as an implicit excuse to be lenient
+about backups. Heck, I know from personal experience how enticing that can be.
 
-Best regards,
-Michael Fritscher
+> > Most likely you do not. And the RAID's main purpose in that case is to just
+> > have a unified storage pool, for the convenience of not having to manage free
+> > space across so many drives. But given the above, I would suggest leaving the
+> > drives with their individual FSes, and just running MergerFS on top: 
+> > https://www.teknophiles.com/2018/02/19/disk-pooling-in-linux-with-mergerfs/
+> 
+> you just move the complexity to something not used by many people for
+> what exactly to gain? the rives are still in the same machine
+
+To gain total independence of drives from each other, you can pull any drive
+out of the machine, plug it in somewhere else, and it will have a proper
+filesystem and readable files on it. Writable, even.
+
+Compared to a 16-drive RAID6, where you either have a whopping 14 disks
+present, connected, powered, spinning, healthy, online, OR you have useless
+binary junk instead of any data.
+
+Of course I do not insist my way is the best for everyone, but I hope now you
+can better understand the concerns and reasons for choosing it. :)
+
+-- 
+With respect,
+Roman
