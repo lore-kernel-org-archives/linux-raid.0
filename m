@@ -1,41 +1,77 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
 Subject: Re: Recommended filesystem for RAID 6
-Date: Tue, 11 Aug 2020 20:45:48 +0100
-Message-ID: <5F32F56C.7040603@youngman.org.uk>
+Date: Tue, 11 Aug 2020 21:49:07 +0200
+Message-ID: <e662446e-33e4-81fa-18ab-516fd140d51a@grumpydevil.homelinux.org>
 References: <CAF-KpgYcEF5juR9nFPifZunPPGW73kWVG9fjR3=WpufxXJcewg@mail.gmail.com>
- <1381759926.21710099.1597158389614.JavaMail.zimbra@karlsbakk.net>
- <4a7bfca8-af6e-cbd1-0dc4-feaf1a0288be@fritscher.net>
+ <20200811212305.02fec65a@natsu>
+ <ea7232af-a411-6b16-d03e-6b21c14cc5be@thelounge.net>
+ <20200812003305.6628dd6e@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4a7bfca8-af6e-cbd1-0dc4-feaf1a0288be@fritscher.net>
+In-Reply-To: <20200812003305.6628dd6e@natsu>
+Content-Language: nl
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Fritscher <michael@fritscher.net>, linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>, Reindl Harald <h.reindl@thelounge.net>
+Cc: George Rapp <george.rapp@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/08/20 20:19, Michael Fritscher wrote:
-> Hi,
-> 
-> if you really want to use these tiny 2 TB HDDs - yes, RAID 6 (2x - the
-> second for the backup system on a physically different location) is a
-> good choice.
-> 
-> But: If you can, buy some 8-12 TB HDDs and forget the old rusty tiny
-> HDDs. You'll save a lot at the system - and power.
-> 
-I'm looking at one of these ...
-https://www.amazon.co.uk/Seagate-ST8000DM004-Barracuda-internal-Silver/dp/B075WYBQXJ/ref=pd_ybh_a_8?_encoding=UTF8&psc=1&refRID=WF1CTS2K9RWY96D1RENJ
 
-Note that it IS a shingled drive, so fine for backup, much less so for
-anything else. I'm not sure whether btrfs would be a good choice or not ...
 
-> ext4 is fine. In my experience, it is rock-solid, and also fsck.ext4 is
-> fairly qick (don't know what Roy is doing that it is so slow - do you
-> really made a full-fledged ext4 with journal or a old ext2 file system?^^)
-> 
-> Another way would be deploying zfs with raid-z2 (Yes, I can hear the
-> screams :-D )
-> 
-Cheers,
-Wol
+Op 11-08-2020 om 21:33 schreef Roman Mamedov:
+> On Tue, 11 Aug 2020 20:57:15 +0200
+> Reindl Harald <h.reindl@thelounge.net> wrote:
+>
+>>> Whichever filesystem you choose, you will end up with a huge single point of
+>>> failure, and any trouble with that FS or the underlying array put all your
+>>> data instantly at risk.
+>> calling an array where you can lose *two* disks as
+>> single-point-of-failure is absurd
+> As noted before, not just *disks* can fail, plenty of other things to fail in
+> a storage server, and they can easily take down, say, a half of all disks, or
+> random portions of them in increments of four. Even if temporarily -- that
+> surely will be "unexpected" to that single precious 20TB filesystem. How will
+> it behave, who knows. Do you know? For added fun, reconnect the drives back 30
+> seconds later. Oh, let's write to linux-raid for how to bring back a half of
+> RAID6 from the Spare (S) status. Or find some HOWTO suggesting a random
+> --create without --assume-clean. And if the FS goes corrupt, now you suddenly
+> need *all* your backups, not just 1 drive worth of them.
+actually, recovering from such an occasion is not the difficult part. 
+The difficult part is controlling the human doing the recovery. Too 
+often time pressure results in panic and the wrong choices. Which is 
+where having a good backup is so very valuable.
+Yes, i have had problems like that, and recovered. mdadm -A -f is your 
+friend :)
+>
+>> no raid can replace backups anyways
+> All too often I've seen RAID being used as an implicit excuse to be lenient
+> about backups. Heck, I know from personal experience how enticing that can be.
+Is the backup not automatic? in that case it is no backup.
+>
+>>> Most likely you do not. And the RAID's main purpose in that case is to just
+>>> have a unified storage pool, for the convenience of not having to manage free
+>>> space across so many drives. But given the above, I would suggest leaving the
+>>> drives with their individual FSes, and just running MergerFS on top:
+>>> https://www.teknophiles.com/2018/02/19/disk-pooling-in-linux-with-mergerfs/
+>> you just move the complexity to something not used by many people for
+>> what exactly to gain? the rives are still in the same machine
+> To gain total independence of drives from each other, you can pull any drive
+> out of the machine, plug it in somewhere else, and it will have a proper
+> filesystem and readable files on it. Writable, even.
+>
+> Compared to a 16-drive RAID6, where you either have a whopping 14 disks
+> present, connected, powered, spinning, healthy, online, OR you have useless
+> binary junk instead of any data.
+>
+> Of course I do not insist my way is the best for everyone, but I hope now you
+> can better understand the concerns and reasons for choosing it. :)
+You have simply chosen a different set of mistakes to make. Considering 
+you need to update the "what is where" list regularly (is that 
+automated?) you may actually have more options for mistakes.
+
+My biggest raid currently is a 6 disk raid10
+
+Cheers
+
+Rudy
