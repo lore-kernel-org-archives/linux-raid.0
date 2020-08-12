@@ -1,7 +1,7 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH 03/12] md/raid5: make async_copy_data() to support different page offset
-Date: Wed, 12 Aug 2020 08:49:22 -0400
-Message-ID: <20200812124931.2584743-4-yuyufen@huawei.com>
+Subject: [PATCH 09/12] raid6test: adaptation with new syndrome function
+Date: Wed, 12 Aug 2020 08:49:28 -0400
+Message-ID: <20200812124931.2584743-10-yuyufen@huawei.com>
 References: <20200812124931.2584743-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -13,63 +13,104 @@ To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-ops_run_biofill() and ops_run_biodrain() will call async_copy_data()
-to copy sh->dev[i].page from or to bio page. For now, it implies the
-offset of dev[i].page is 0. But we want to support different page offset
-in the following.
-
-Thus, pass page offset to these functions and replace 'page_offset'
-with 'page_offset + poff'.
-
-No functional change.
+After changing some syndrome and recovery functions to support
+different page offsets, we also need to adapt raid6test module.
+In this module, pages are allocated by the itself and their offset
+are '0'.
 
 Signed-off-by: Yufen Yu <yuyufen@huawei.com>
 ---
- drivers/md/raid5.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ crypto/async_tx/raid6test.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 508dceafa533..4757d1b8f90d 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1227,7 +1227,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+diff --git a/crypto/async_tx/raid6test.c b/crypto/async_tx/raid6test.c
+index 14e73dcd7475..66db82e5a3b1 100644
+--- a/crypto/async_tx/raid6test.c
++++ b/crypto/async_tx/raid6test.c
+@@ -18,6 +18,7 @@
+ #define NDISKS 64 /* Including P and Q */
  
- static struct dma_async_tx_descriptor *
- async_copy_data(int frombio, struct bio *bio, struct page **page,
--	sector_t sector, struct dma_async_tx_descriptor *tx,
-+	unsigned int poff, sector_t sector, struct dma_async_tx_descriptor *tx,
- 	struct stripe_head *sh, int no_skipcopy)
+ static struct page *dataptrs[NDISKS];
++unsigned int dataoffs[NDISKS];
+ static addr_conv_t addr_conv[NDISKS];
+ static struct page *data[NDISKS+3];
+ static struct page *spare;
+@@ -38,6 +39,7 @@ static void makedata(int disks)
+ 	for (i = 0; i < disks; i++) {
+ 		prandom_bytes(page_address(data[i]), PAGE_SIZE);
+ 		dataptrs[i] = data[i];
++		dataoffs[i] = 0;
+ 	}
+ }
+ 
+@@ -52,7 +54,8 @@ static char disk_type(int d, int disks)
+ }
+ 
+ /* Recover two failed blocks. */
+-static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, struct page **ptrs)
++static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb,
++		struct page **ptrs, unsigned int *offs)
  {
- 	struct bio_vec bvl;
-@@ -1273,11 +1273,11 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
- 				    !no_skipcopy)
- 					*page = bio_page;
- 				else
--					tx = async_memcpy(*page, bio_page, page_offset,
-+					tx = async_memcpy(*page, bio_page, page_offset + poff,
- 						  b_offset, clen, &submit);
- 			} else
- 				tx = async_memcpy(bio_page, *page, b_offset,
--						  page_offset, clen, &submit);
-+						  page_offset + poff, clen, &submit);
+ 	struct async_submit_ctl submit;
+ 	struct completion cmp;
+@@ -66,7 +69,8 @@ static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, stru
+ 		if (faila == disks-2) {
+ 			/* P+Q failure.  Just rebuild the syndrome. */
+ 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
+-			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
++			tx = async_gen_syndrome(ptrs, offs,
++					disks, bytes, &submit);
+ 		} else {
+ 			struct page *blocks[NDISKS];
+ 			struct page *dest;
+@@ -89,22 +93,26 @@ static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, stru
+ 			tx = async_xor(dest, blocks, 0, count, bytes, &submit);
+ 
+ 			init_async_submit(&submit, 0, tx, NULL, NULL, addr_conv);
+-			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
++			tx = async_gen_syndrome(ptrs, offs,
++					disks, bytes, &submit);
  		}
- 		/* chain the operations */
- 		submit.depend_tx = tx;
-@@ -1350,6 +1350,7 @@ static void ops_run_biofill(struct stripe_head *sh)
- 			while (rbi && rbi->bi_iter.bi_sector <
- 				dev->sector + RAID5_STRIPE_SECTORS(conf)) {
- 				tx = async_copy_data(0, rbi, &dev->page,
-+						     dev->offset,
- 						     dev->sector, tx, sh, 0);
- 				rbi = r5_next_bio(conf, rbi, dev->sector);
- 			}
-@@ -1790,6 +1791,7 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- 					set_bit(R5_Discard, &dev->flags);
- 				else {
- 					tx = async_copy_data(1, wbi, &dev->page,
-+							     dev->offset,
- 							     dev->sector, tx, sh,
- 							     r5c_is_writeback(conf->log));
- 					if (dev->page != dev->orig_page &&
+ 	} else {
+ 		if (failb == disks-2) {
+ 			/* data+P failure. */
+ 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
+-			tx = async_raid6_datap_recov(disks, bytes, faila, ptrs, &submit);
++			tx = async_raid6_datap_recov(disks, bytes,
++					faila, ptrs, offs, &submit);
+ 		} else {
+ 			/* data+data failure. */
+ 			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
+-			tx = async_raid6_2data_recov(disks, bytes, faila, failb, ptrs, &submit);
++			tx = async_raid6_2data_recov(disks, bytes,
++					faila, failb, ptrs, offs, &submit);
+ 		}
+ 	}
+ 	init_completion(&cmp);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, tx, callback, &cmp, addr_conv);
+-	tx = async_syndrome_val(ptrs, 0, disks, bytes, &result, spare, &submit);
++	tx = async_syndrome_val(ptrs, offs,
++			disks, bytes, &result, spare, 0, &submit);
+ 	async_tx_issue_pending(tx);
+ 
+ 	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0)
+@@ -126,7 +134,7 @@ static int test_disks(int i, int j, int disks)
+ 	dataptrs[i] = recovi;
+ 	dataptrs[j] = recovj;
+ 
+-	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs);
++	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs, dataoffs);
+ 
+ 	erra = memcmp(page_address(data[i]), page_address(recovi), PAGE_SIZE);
+ 	errb = memcmp(page_address(data[j]), page_address(recovj), PAGE_SIZE);
+@@ -162,7 +170,7 @@ static int test(int disks, int *tests)
+ 	/* Generate assumed good syndrome */
+ 	init_completion(&cmp);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, NULL, callback, &cmp, addr_conv);
+-	tx = async_gen_syndrome(dataptrs, 0, disks, PAGE_SIZE, &submit);
++	tx = async_gen_syndrome(dataptrs, dataoffs, disks, PAGE_SIZE, &submit);
+ 	async_tx_issue_pending(tx);
+ 
+ 	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0) {
 -- 
 2.25.4
