@@ -1,35 +1,40 @@
-From: Vojtech Myslivec <vojtech@xmyslivec.cz>
-Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
-Date: Wed, 12 Aug 2020 15:58:41 +0200
-Message-ID: <43082abe-b0c8-ecaf-fc21-606df34fb5f8@xmyslivec.cz>
-References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
- <a070c45a-0509-e900-e3f3-98d20267c8c9@cloud.ionos.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: Recommended filesystem for RAID 6
+Date: Wed, 12 Aug 2020 15:16:37 +0100
+Message-ID: <87sgcsar0a.fsf@esperi.org.uk>
+References: <CAF-KpgYcEF5juR9nFPifZunPPGW73kWVG9fjR3=WpufxXJcewg@mail.gmail.com>
+        <20200811212305.02fec65a@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a070c45a-0509-e900-e3f3-98d20267c8c9@cloud.ionos.com>
-Content-Language: en-US
+In-Reply-To: <20200811212305.02fec65a@natsu> (Roman Mamedov's message of "Tue,
+        11 Aug 2020 21:23:05 +0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Michal Moravec <michal.moravec@logicworks.cz>, Song Liu <songliubraving@fb.com>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: George Rapp <george.rapp@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On 11 Aug 2020, Roman Mamedov stated:
+> For the FS considerations, the dealbreaker of XFS for me is its inability to
+> be shrunk. The ivory tower people do not think that is important enough, but
+> for me that limits the FS applicability severely. Also it loved truncating
+> currently-open files to zero bytes on power loss (dunno if that's been
+> improved).
 
-On 29. 07. 20 23:06, Guoqing Jiang wrote:
-> On 7/22/20 10:47 PM, Vojtech Myslivec wrote:
->> 1. What should be the cause of this problem?
-> 
-> Just a quick glance based on the stacks which you attached, I guess it
-> could be
-> a deadlock issue of raid5 cache super write.
-> 
-> Maybe the commit 8e018c21da3f ("raid5-cache: fix a deadlock in superblock
-> write") didn't fix the problem completely.  Cc Song.
-> 
-> And I am curious why md thread is not waked if mddev_trylock fails, you can
-> give it a try but I can't promise it helps ...
+I've been using XFS for more than ten years now and have never seen this
+allegedly frequent behaviour at all. It certainly seems to be less
+common than, say, fs damage due to the (unjournalled) RAID write hole.
 
-Just to make sure we use RAID 6 across 6 HDD (I am not sure how RAID 5
-implementation relates to RAID 6).
+I suspect you're talking about this:
+<https://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_see_binary_NULLS_in_some_files_after_recovery_when_I_unplugged_the_power.3F>,
+whicih was fixed in *2007*. So... ignore it, it's *long* dead. (Equally,
+ignore complaints about xfs being really slow under heavy metadata
+updates: this was true before delayed logging was implemented, but
+delaylog has been non-experimental since 2.6.39 (2011) and the
+non-delaylog option was removed in 2015. xfs is often now faster than
+ext4 at metadata operations, and is generally on par with it.
+
+Shrinking xfs is relatively irrelevant these days: if you want to be
+able to shrink, use thin provisioning and run fstrim periodically. The
+space used by the fs will then shrink whenever fstrim is run, with no
+need to mess about with filesystem resizing.
