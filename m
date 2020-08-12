@@ -1,28 +1,58 @@
-From: Alex Anadi <diplomatagency2011@gmail.com>
-Subject: Re:
-Date: Wed, 12 Aug 2020 11:54:17 +0100
-Message-ID: <CAG2PG9VSNH2ukcO6fsJhaDp9DqTRw4ujLo-DJjtej2T=gVdW3A__20333.8907029078$1597229769$gmane$org@mail.gmail.com>
-Reply-To: alexanadi0005@gmail.com
+From: Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH 01/12] md/raid5: add offset array in scribble buffer
+Date: Wed, 12 Aug 2020 08:49:20 -0400
+Message-ID: <20200812124931.2584743-2-yuyufen@huawei.com>
+References: <20200812124931.2584743-1-yuyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200812124931.2584743-1-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: song@kernel.org
+Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-Attention: Sir/Madam,
+We try to support different page offset for xor compution functions
+in the following. To avoid repeatly allocate a new array each time,
+we add a memory region into scribble buffer to record offset.
 
-Compliments of the season.
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+---
+ drivers/md/raid5.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-I am Mr Alex Anadi a senior staff of Computer Telex Dept of central
-bank of Nigeria.
-
-I decided to contact you because of the prevailing security report
-reaching my office and the intense nature of polity in Nigeria.
-
-This is to inform you about the recent plan of federal government of
-Nigeria to send your fund to you via diplomatic immunity CASH DELIVERY
-SYSTEM valued at $10.6 Million United states dollars only, contact me
-for further details.
-
-Regards,
-Mr Alex Anadi.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index fb8d1fb14088..a4df2c2085a6 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1404,6 +1404,15 @@ static addr_conv_t *to_addr_conv(struct stripe_head *sh,
+ 	return (void *) (to_addr_page(percpu, i) + sh->disks + 2);
+ }
+ 
++/*
++ * Return a pointer to record offset address.
++ */
++static unsigned int *
++to_addr_offs(struct stripe_head *sh, struct raid5_percpu *percpu)
++{
++	return (unsigned int *) (to_addr_conv(sh, percpu, 0) + sh->disks + 2);
++}
++
+ static struct dma_async_tx_descriptor *
+ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ {
+@@ -2253,8 +2262,9 @@ static int scribble_alloc(struct raid5_percpu *percpu,
+ 			  int num, int cnt)
+ {
+ 	size_t obj_size =
+-		sizeof(struct page *) * (num+2) +
+-		sizeof(addr_conv_t) * (num+2);
++		sizeof(struct page *) * (num + 2) +
++		sizeof(addr_conv_t) * (num + 2) +
++		sizeof(unsigned int) * (num + 2);
+ 	void *scribble;
+ 
+ 	/*
+-- 
+2.25.4
