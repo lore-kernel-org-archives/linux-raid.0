@@ -1,69 +1,75 @@
 From: Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH 00/12] Save memory for stripe_head buffer
-Date: Wed, 12 Aug 2020 08:49:19 -0400
-Message-ID: <20200812124931.2584743-1-yuyufen@huawei.com>
+Subject: [PATCH 03/12] md/raid5: make async_copy_data() to support different page offset
+Date: Wed, 12 Aug 2020 08:49:22 -0400
+Message-ID: <20200812124931.2584743-4-yuyufen@huawei.com>
+References: <20200812124931.2584743-1-yuyufen@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20200812124931.2584743-1-yuyufen@huawei.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: song@kernel.org
 Cc: linux-raid@vger.kernel.org, neilb@suse.com, guoqing.jiang@cloud.ionos.com, houtao1@huawei.com, yuyufen@huawei.com
 List-Id: linux-raid.ids
 
-Hi, all
+ops_run_biofill() and ops_run_biodrain() will call async_copy_data()
+to copy sh->dev[i].page from or to bio page. For now, it implies the
+offset of dev[i].page is 0. But we want to support different page offset
+in the following.
 
- In current implementation, grow_buffers() uses alloc_page() to allocate
- the buffers for each stripe_head, i.e. allocate a page for each dev[i]
- in stripe_head.
+Thus, pass page offset to these functions and replace 'page_offset'
+with 'page_offset + poff'.
+
+No functional change.
+
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+---
+ drivers/md/raid5.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 508dceafa533..4757d1b8f90d 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1227,7 +1227,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
  
- After setting stripe_size as a configurable value by writing sysfs entry,
- it means that we always allocate 64K buffers, but just use 4K of them when
- stripe_size is 4K in 64KB arm64.
- 
- To save memory, we try to let multiple buffers of stripe_head to share only
- one real page when page size is bigger than stripe_size. Detail can be
- seen in patch #10.
- 
- This patch set is subsequent optimization for configurable stripe_size,
- which based on the origin patches[1] but reorganized them.
-
- Patch 1 ~ 2 try to replace current page offset '0' with dev[i].offset.
- Patch 3 ~ 5 let xor compute functions support different page offset for raid5.
- Patch 6 ~ 9 let syndrome and recovery function support different page offset for raid6.
- All of these patch are preparing for shared page. There is no functional change.
-
- Patch 10 ~ 11 actually implement shared page between multiple devices of
- stripe_head. But they only make sense for PAGE_SIZE != 4096, likely, 64KB arm64
- system. It doesn't make any difference for PAGE_SIZE == 4096 system, likely x86.
-
- We have run tests of mdadm for raid456 and test raid6test module. 
- Not found obvious errors.
-
-[1] https://www.spinics.net/lists/raid/msg65018.html
-
-Yufen Yu (12):
-  md/raid5: add offset array in scribble buffer
-  md/raid5: add a new member of offset into r5dev
-  md/raid5: make async_copy_data() to support different page offset
-  md/raid5: add new xor function to support different page offset
-  md/raid5: convert to new xor compution interface
-  md/raid6: let syndrome computor support different page offset
-  md/raid6: let async recovery function support different page offset
-  md/raid6: convert to new syndrome and recovery interface
-  raid6test: adaptation with new syndrome function
-  md/raid5: let multiple devices of stripe_head share page
-  md/raid5: resize stripe_head when reshape array
-  md/raid5: reallocate page array after setting new stripe_size
-
- crypto/async_tx/async_pq.c          |  72 +++++---
- crypto/async_tx/async_raid6_recov.c | 163 ++++++++++++-----
- crypto/async_tx/async_xor.c         | 120 +++++++++++--
- crypto/async_tx/raid6test.c         |  24 ++-
- drivers/md/raid5.c                  | 270 ++++++++++++++++++++++++----
- drivers/md/raid5.h                  |  29 ++-
- include/linux/async_tx.h            |  23 ++-
- 7 files changed, 565 insertions(+), 136 deletions(-)
-
+ static struct dma_async_tx_descriptor *
+ async_copy_data(int frombio, struct bio *bio, struct page **page,
+-	sector_t sector, struct dma_async_tx_descriptor *tx,
++	unsigned int poff, sector_t sector, struct dma_async_tx_descriptor *tx,
+ 	struct stripe_head *sh, int no_skipcopy)
+ {
+ 	struct bio_vec bvl;
+@@ -1273,11 +1273,11 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
+ 				    !no_skipcopy)
+ 					*page = bio_page;
+ 				else
+-					tx = async_memcpy(*page, bio_page, page_offset,
++					tx = async_memcpy(*page, bio_page, page_offset + poff,
+ 						  b_offset, clen, &submit);
+ 			} else
+ 				tx = async_memcpy(bio_page, *page, b_offset,
+-						  page_offset, clen, &submit);
++						  page_offset + poff, clen, &submit);
+ 		}
+ 		/* chain the operations */
+ 		submit.depend_tx = tx;
+@@ -1350,6 +1350,7 @@ static void ops_run_biofill(struct stripe_head *sh)
+ 			while (rbi && rbi->bi_iter.bi_sector <
+ 				dev->sector + RAID5_STRIPE_SECTORS(conf)) {
+ 				tx = async_copy_data(0, rbi, &dev->page,
++						     dev->offset,
+ 						     dev->sector, tx, sh, 0);
+ 				rbi = r5_next_bio(conf, rbi, dev->sector);
+ 			}
+@@ -1790,6 +1791,7 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ 					set_bit(R5_Discard, &dev->flags);
+ 				else {
+ 					tx = async_copy_data(1, wbi, &dev->page,
++							     dev->offset,
+ 							     dev->sector, tx, sh,
+ 							     r5c_is_writeback(conf->log));
+ 					if (dev->page != dev->orig_page &&
 -- 
 2.25.4
