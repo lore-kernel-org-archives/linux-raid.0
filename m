@@ -1,71 +1,123 @@
-Return-Path: <SRS0=Kmql=BZ=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=XZ7W=B3=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32457C433E1
-	for <linux-raid@archiver.kernel.org>; Sat, 15 Aug 2020 22:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AC78C433E1
+	for <linux-raid@archiver.kernel.org>; Mon, 17 Aug 2020 13:44:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18DF5205CB
-	for <linux-raid@archiver.kernel.org>; Sat, 15 Aug 2020 22:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 581B520789
+	for <linux-raid@archiver.kernel.org>; Mon, 17 Aug 2020 13:44:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ckeoC9vO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728552AbgHOWHk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 15 Aug 2020 18:07:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45594 "EHLO
+        id S1728619AbgHQNoX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 17 Aug 2020 09:44:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728120AbgHOVun (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 15 Aug 2020 17:50:43 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1413C09B040
-        for <linux-raid@vger.kernel.org>; Sat, 15 Aug 2020 08:03:50 -0700 (PDT)
-Received: from [172.58.171.202] (helo=[192.168.42.102])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1k6xif-0008Ij-9s; Sat, 15 Aug 2020 15:03:41 +0000
-Subject: Re: Confusing output of --examine-badblocks1 message
-To:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
-        Linux Raid <linux-raid@vger.kernel.org>
-References: <511683715.22423223.1597320866233.JavaMail.zimbra@karlsbakk.net>
- <2053545579.22464117.1597329096623.JavaMail.zimbra@karlsbakk.net>
- <303847410.22535373.1597344622629.JavaMail.zimbra@karlsbakk.net>
- <573421659.22903312.1597428439621.JavaMail.zimbra@karlsbakk.net>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <de6e9dd1-7447-54ab-1818-ceabf422c8a0@turmel.org>
-Date:   Sat, 15 Aug 2020 11:03:35 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S1728521AbgHQNoU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Aug 2020 09:44:20 -0400
+Received: from mail-ua1-x942.google.com (mail-ua1-x942.google.com [IPv6:2607:f8b0:4864:20::942])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D126FC061342
+        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2020 06:44:19 -0700 (PDT)
+Received: by mail-ua1-x942.google.com with SMTP id u15so4753150uau.10
+        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2020 06:44:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=YK1g7CpAj1uxdUMop0TAQ/KlG7NubSk4gl7YMK07x3k=;
+        b=ckeoC9vO/EDF3YhPTlzEiluCGyrsP53BCP34FHVrdI8dpxxDV3K+SwS1hVvx0mZcmM
+         e2O91NKmU+NTYcN/tz61BiWW9QlDpE/ctnp1RkSV1f3S0tJquoPdWFtFvwbM/qj+ig42
+         Zx0Etpm3KzjpWimA7LfYgeTbvIYJ+MqLP2/1WK0GsLq/AJ4Gq3/IYaIVHao2TI3hcZfP
+         68I7yu3R0UWmbe6eTH+cBL+DEwLUN/83wu07NWUwmKKz3AZctOS6JJatO5ps/e1MpIEc
+         FG4FYDE5qqMgZ9NiMEdTtKRZS7MBhdsf9UCzEXzeLnjCseF8vqop52zofptLynay9JjQ
+         6qpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=YK1g7CpAj1uxdUMop0TAQ/KlG7NubSk4gl7YMK07x3k=;
+        b=W0eiNGL/GOP+Fgh+yQG3nXfv+3oxgMOc9yLsLHR0pXKGwxQrep6zJ0BHJxK0zIq8n0
+         msKyGdOj7LY1bzUYbwllnTOEtowrnmr/F3qlpF5Dqc11VNzEamq1d2U2xh9rpLs3yhNK
+         YQEYwZwpw1ouWVKm6Dx2STlvCP/CY5eLqnaGkynPF0YRElC8wEAFqyTNwkIeUEuNUfzl
+         SAWlTuVsWDqIQowYisZjEE5ge7RFtJY3K95+gDQBRAyHqyFaVmGKq1lIj07zWtD0s8hQ
+         uHfc0Uz9QaO7glKahtNihJF9Wm+JiEDJXZq4Kj3JIlrWUOaH+fxEVZLHSHHprxf7bcP+
+         wzdQ==
+X-Gm-Message-State: AOAM5306WUrSDA/ffPLKN9v4YQChkgJQetBeWD16Aty0oVBpymfCzZIv
+        I7hWEZy0swPBb/aC/6mdvynCeJVKMYHoPMUOHhXFug==
+X-Google-Smtp-Source: ABdhPJx2boyWtvrgXSxzxAFNpocIavvkFNhc8FhgjvFzGZM8f5Qera674/ApAjhCKTryvJlmcUOHc2HfleHlukxtHlM=
+X-Received: by 2002:a9f:35d0:: with SMTP id u16mr7432899uad.113.1597671858524;
+ Mon, 17 Aug 2020 06:44:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <573421659.22903312.1597428439621.JavaMail.zimbra@karlsbakk.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20200728163416.556521-1-hch@lst.de> <20200728163416.556521-3-hch@lst.de>
+ <CA+G9fYuYxGBKR5aQqCQwA=SjLRDbyQKwQYJvbJRaKT7qwy7voQ@mail.gmail.com>
+In-Reply-To: <CA+G9fYuYxGBKR5aQqCQwA=SjLRDbyQKwQYJvbJRaKT7qwy7voQ@mail.gmail.com>
+From:   Naresh Kamboju <naresh.kamboju@linaro.org>
+Date:   Mon, 17 Aug 2020 19:14:04 +0530
+Message-ID: <CA+G9fYs4w46bZtgaKTzTLgaqNDcw3vdRaKWuGJ4wN4SSKJqUKA@mail.gmail.com>
+Subject: Re: [PATCH 02/23] fs: refactor ksys_umount
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org, Jan Stancek <jstancek@redhat.com>,
+        chrubis <chrubis@suse.cz>, lkft-triage@lists.linaro.org,
+        LTP List <ltp@lists.linux.it>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/14/20 2:07 PM, Roy Sigurd Karlsbakk wrote:
->> I just tried another approach, mdadm --remove on the spares, mdadm --examine on
->> the removed spares, no superblock. Then madm --fail for one of the drives and
->> mdadm --add for another, now spare for a few milliseconds until recovery
->> started. This runs as it should, slower than --replace, but I don't care. After
->> 12% or so, I checked with --examine-badblocks, and the same sectors are popping
->> up again. This was just a small test to see i --replace was the "bad guy" here
->> or if a full recovery would do the same. It does.
-> 
-> For the record, I just tested mdadm --replace again on a disk in the raid. The source disk had no badblocks. The destination disk is new-ish (that is, a few years old, but hardly written to and without an md superblock). It seems the badblocks present on other drives in the raid6 are also replicated to the "new" disk. This is not really how it should be IMO.
-> 
-> There must be a major bug in here somewhere. If there's a bad sector somewhere, well, ok, I can handle some corruption. The filesystem will probably be able to handle it as well. But if this is all blocked because of flakey "bad" sectors not really being bad, then something is bad indeed.
+On Thu, 6 Aug 2020 at 20:14, Naresh Kamboju <naresh.kamboju@linaro.org> wrote:
+>
+> On Tue, 28 Jul 2020 at 22:04, Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > Factor out a path_umount helper that takes a struct path * instead of the
+> > actual file name.  This will allow to convert the init and devtmpfs code
+> > to properly mount based on a kernel pointer instead of relying on the
+> > implicit set_fs(KERNEL_DS) during early init.
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/namespace.c | 40 ++++++++++++++++++----------------------
+> >  1 file changed, 18 insertions(+), 22 deletions(-)
+> >
+> > diff --git a/fs/namespace.c b/fs/namespace.c
+> > index 6f8234f74bed90..43834b59eff6c3 100644
+> > --- a/fs/namespace.c
+> > +++ b/fs/namespace.c
 
-In my not-so-humble opinion, the bug is the existence of the BadBlocks 
-feature.  Once a badblock is recorded for a sector, redundancy is 
-permanently lost at that location.  There is no tool to undo this.
+<trim>
 
-I strongly recommend that you remove badblock logs on all arrays before 
-the "feature" screws you.
+>
+> Regressions on linux next 20200803 tag kernel.
+> LTP syscalls test umount03 mount a path for testing and
+> umount failed and retired for 50 times and test exit with warning
+> and following test cases using that mount path failed.
+>
+> LTP syscalls tests failed list,
+>     * umount03
+>     * umount2_01
+>     * umount2_02
+>     * umount2_03
+>     * utime06
+>     * copy_file_range01
 
-Phil
+The reported issue has been fixed in linux next 20200817 tag by
+below patch.
+
+fs: fix a struct path leak in path_umount
+Make sure we also put the dentry and vfsmnt in the illegal flags and
+!may_umount cases.
+Fixes: 41525f56e256 ("fs: refactor ksys_umount")
+
+- Naresh
