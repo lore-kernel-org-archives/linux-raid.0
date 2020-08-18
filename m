@@ -2,85 +2,62 @@ Return-Path: <SRS0=fBal=B4=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FC8FC433DF
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 19:41:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B68C433DF
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 19:45:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE9AA206B5
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 19:41:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DDA52076E
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 19:45:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N61G1Cp7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726633AbgHRTlv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Aug 2020 15:41:51 -0400
-Received: from vsmx012.vodafonemail.xion.oxcs.net ([153.92.174.90]:61655 "EHLO
-        vsmx012.vodafonemail.xion.oxcs.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726635AbgHRTlv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 18 Aug 2020 15:41:51 -0400
-X-Greylist: delayed 402 seconds by postgrey-1.27 at vger.kernel.org; Tue, 18 Aug 2020 15:41:50 EDT
-Received: from vsmx004.vodafonemail.xion.oxcs.net (unknown [192.168.75.198])
-        by mta-8-out.mta.xion.oxcs.net (Postfix) with ESMTP id 12503F34FA8;
-        Tue, 18 Aug 2020 19:35:06 +0000 (UTC)
-Received: from lazy.lzy (unknown [93.212.119.244])
-        by mta-8-out.mta.xion.oxcs.net (Postfix) with ESMTPA id B223919AE19;
-        Tue, 18 Aug 2020 19:34:57 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-        by lazy.lzy (8.15.2/8.14.5) with ESMTPS id 07IJYuKW004140
-        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-        Tue, 18 Aug 2020 21:34:56 +0200
-Received: (from red@localhost)
-        by lazy.lzy (8.15.2/8.15.2/Submit) id 07IJYu15004139;
-        Tue, 18 Aug 2020 21:34:56 +0200
-Date:   Tue, 18 Aug 2020 21:34:56 +0200
-From:   Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
-        Linux RAID Mailing List <linux-raid@vger.kernel.org>,
-        =?iso-8859-1?Q?H=E5kon?= <hawken@thehawken.org>
-Subject: Re: Feature request: Remove the badblocks list
-Message-ID: <20200818193456.GA4066@lazy.lzy>
-References: <75076966.1748398.1597773608869.JavaMail.zimbra@karlsbakk.net>
- <5F3C2B4F.1050708@youngman.org.uk>
+        id S1726837AbgHRTpM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 Aug 2020 15:45:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45458 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726825AbgHRTpE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Aug 2020 15:45:04 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 659EDC061342;
+        Tue, 18 Aug 2020 12:45:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=U4MIf2lCi6IjYxRdtV0kTVnULW1LZNZAc4yIpa1q9jk=; b=N61G1Cp70WD+t0nHtEm0vZgsCC
+        prZOoPO5OGHOGZGBgsN1fGLvsUlXnjF9XIjjIxT5xdhI8AZWTKbPGAwQXGRtRsjR7Q43DFMQ419kz
+        9e9w5XkAtwoqa/PqkMXo5k0A7RKzPfLBkxKA0AhWR0esmR/pQ4qfrWVPVbuK2lmUj1m6HXXxkA/VN
+        vIZAaQIbsrACBQ6LMDUZk+QTaQgL7XDggekmgdO6yD3MNDgXXI8TwgcWYe0ZI/BiAHc6FeM9QaVmN
+        +mvs+7YxMFYgxWll3YTZNJ+J2xP1OaSCtjW8xffbyWFEhQfQ1kN5ChdwpYxvRuy04dfBYAEQMZlHc
+        mzSMeekQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k87XZ-00012N-9r; Tue, 18 Aug 2020 19:45:01 +0000
+Date:   Tue, 18 Aug 2020 20:45:01 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Song Liu <songliubraving@fb.com>
+Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org, colyli@suse.de, axboe@kernel.dk,
+        kernel-team@fb.com, song@kernel.org
+Subject: Re: [PATCH 1/4] block: expose disk_map_sector_rcu() and
+ hd_struct_put in genhd.h
+Message-ID: <20200818194501.GB3271@infradead.org>
+References: <20200818070238.1323126-1-songliubraving@fb.com>
+ <20200818070238.1323126-2-songliubraving@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5F3C2B4F.1050708@youngman.org.uk>
-X-VADE-STATUS: LEGIT
+In-Reply-To: <20200818070238.1323126-2-songliubraving@fb.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 08:26:07PM +0100, Wols Lists wrote:
-> On 18/08/20 19:00, Roy Sigurd Karlsbakk wrote:
-> > As far as I can understand, this list doesn't have any reason to exist, except to annoy sysadmins.
-> 
-> Actually, there's at least one good reason for it to exist that I can
-> think of - it *could* make recovering a broken array much easier. Think
-> about it, I think it's documented in the wiki.
-> 
-> That said, I'm hoping to do some work soon that will make it redundant.
-> 
-> One little tip though - you've done a load of research to tell us what
-> we already know - as documented on the wiki - and now you're asking us
-> to do a load of work. If you want it done, well nobody else has bothered
-> so far so what makes you think they'll bother now?
+On Tue, Aug 18, 2020 at 12:02:35AM -0700, Song Liu wrote:
+> So they can be used in drivers.
 
-Is it really "a load of work" to switch for
-default "on" to default "off"?
-Because that's what he is asking.
-
-If this is the case, there is something more
-broken in the code...
-
-BTW, I find it quite problematic too to have
-a feature, activated by default, which is
-_officially_ declared as *buggy*/
-
-bye,
-
--- 
-
-piergiorgio
+Looking at your later patches I'd much rather hide the call to
+disk_map_sector_rcu in the actual accounting helper.
