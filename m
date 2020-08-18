@@ -1,123 +1,98 @@
-Return-Path: <SRS0=XZ7W=B3=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=fBal=B4=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AC78C433E1
-	for <linux-raid@archiver.kernel.org>; Mon, 17 Aug 2020 13:44:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC25C433DF
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 04:30:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 581B520789
-	for <linux-raid@archiver.kernel.org>; Mon, 17 Aug 2020 13:44:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ckeoC9vO"
+	by mail.kernel.org (Postfix) with ESMTP id C5B09207BB
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 04:30:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728619AbgHQNoX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 17 Aug 2020 09:44:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45706 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728521AbgHQNoU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 Aug 2020 09:44:20 -0400
-Received: from mail-ua1-x942.google.com (mail-ua1-x942.google.com [IPv6:2607:f8b0:4864:20::942])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D126FC061342
-        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2020 06:44:19 -0700 (PDT)
-Received: by mail-ua1-x942.google.com with SMTP id u15so4753150uau.10
-        for <linux-raid@vger.kernel.org>; Mon, 17 Aug 2020 06:44:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YK1g7CpAj1uxdUMop0TAQ/KlG7NubSk4gl7YMK07x3k=;
-        b=ckeoC9vO/EDF3YhPTlzEiluCGyrsP53BCP34FHVrdI8dpxxDV3K+SwS1hVvx0mZcmM
-         e2O91NKmU+NTYcN/tz61BiWW9QlDpE/ctnp1RkSV1f3S0tJquoPdWFtFvwbM/qj+ig42
-         Zx0Etpm3KzjpWimA7LfYgeTbvIYJ+MqLP2/1WK0GsLq/AJ4Gq3/IYaIVHao2TI3hcZfP
-         68I7yu3R0UWmbe6eTH+cBL+DEwLUN/83wu07NWUwmKKz3AZctOS6JJatO5ps/e1MpIEc
-         FG4FYDE5qqMgZ9NiMEdTtKRZS7MBhdsf9UCzEXzeLnjCseF8vqop52zofptLynay9JjQ
-         6qpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YK1g7CpAj1uxdUMop0TAQ/KlG7NubSk4gl7YMK07x3k=;
-        b=W0eiNGL/GOP+Fgh+yQG3nXfv+3oxgMOc9yLsLHR0pXKGwxQrep6zJ0BHJxK0zIq8n0
-         msKyGdOj7LY1bzUYbwllnTOEtowrnmr/F3qlpF5Dqc11VNzEamq1d2U2xh9rpLs3yhNK
-         YQEYwZwpw1ouWVKm6Dx2STlvCP/CY5eLqnaGkynPF0YRElC8wEAFqyTNwkIeUEuNUfzl
-         SAWlTuVsWDqIQowYisZjEE5ge7RFtJY3K95+gDQBRAyHqyFaVmGKq1lIj07zWtD0s8hQ
-         uHfc0Uz9QaO7glKahtNihJF9Wm+JiEDJXZq4Kj3JIlrWUOaH+fxEVZLHSHHprxf7bcP+
-         wzdQ==
-X-Gm-Message-State: AOAM5306WUrSDA/ffPLKN9v4YQChkgJQetBeWD16Aty0oVBpymfCzZIv
-        I7hWEZy0swPBb/aC/6mdvynCeJVKMYHoPMUOHhXFug==
-X-Google-Smtp-Source: ABdhPJx2boyWtvrgXSxzxAFNpocIavvkFNhc8FhgjvFzGZM8f5Qera674/ApAjhCKTryvJlmcUOHc2HfleHlukxtHlM=
-X-Received: by 2002:a9f:35d0:: with SMTP id u16mr7432899uad.113.1597671858524;
- Mon, 17 Aug 2020 06:44:18 -0700 (PDT)
+        id S1726302AbgHREaP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 Aug 2020 00:30:15 -0400
+Received: from smtp.h3c.com ([60.191.123.56]:61813 "EHLO h3cspam01-ex.h3c.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726099AbgHREaO (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 18 Aug 2020 00:30:14 -0400
+X-Greylist: delayed 4841 seconds by postgrey-1.27 at vger.kernel.org; Tue, 18 Aug 2020 00:30:11 EDT
+Received: from h3cspam01-ex.h3c.com (localhost [127.0.0.2] (may be forged))
+        by h3cspam01-ex.h3c.com with ESMTP id 07I39TEO006132;
+        Tue, 18 Aug 2020 11:09:29 +0800 (GMT-8)
+        (envelope-from tian.xianting@h3c.com)
+Received: from DAG2EX03-BASE.srv.huawei-3com.com ([10.8.0.66])
+        by h3cspam01-ex.h3c.com with ESMTPS id 07I395UC005479
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 18 Aug 2020 11:09:05 +0800 (GMT-8)
+        (envelope-from tian.xianting@h3c.com)
+Received: from localhost.localdomain (10.99.212.201) by
+ DAG2EX03-BASE.srv.huawei-3com.com (10.8.0.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Tue, 18 Aug 2020 11:09:06 +0800
+From:   Xianting Tian <tian.xianting@h3c.com>
+To:     <song@kernel.org>
+CC:     <linux-raid@vger.kernel.org>, <inux-kernel@vger.kernel.org>,
+        Xianting Tian <tian.xianting@h3c.com>
+Subject: [PATCH] md: only calculate blocksize once and use i_blocksize()
+Date:   Tue, 18 Aug 2020 11:02:19 +0800
+Message-ID: <20200818030219.40340-1-tian.xianting@h3c.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-References: <20200728163416.556521-1-hch@lst.de> <20200728163416.556521-3-hch@lst.de>
- <CA+G9fYuYxGBKR5aQqCQwA=SjLRDbyQKwQYJvbJRaKT7qwy7voQ@mail.gmail.com>
-In-Reply-To: <CA+G9fYuYxGBKR5aQqCQwA=SjLRDbyQKwQYJvbJRaKT7qwy7voQ@mail.gmail.com>
-From:   Naresh Kamboju <naresh.kamboju@linaro.org>
-Date:   Mon, 17 Aug 2020 19:14:04 +0530
-Message-ID: <CA+G9fYs4w46bZtgaKTzTLgaqNDcw3vdRaKWuGJ4wN4SSKJqUKA@mail.gmail.com>
-Subject: Re: [PATCH 02/23] fs: refactor ksys_umount
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org, Jan Stancek <jstancek@redhat.com>,
-        chrubis <chrubis@suse.cz>, lkft-triage@lists.linaro.org,
-        LTP List <ltp@lists.linux.it>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.99.212.201]
+X-ClientProxiedBy: BJSMTP01-EX.srv.huawei-3com.com (10.63.20.132) To
+ DAG2EX03-BASE.srv.huawei-3com.com (10.8.0.66)
+X-DNSRBL: 
+X-MAIL: h3cspam01-ex.h3c.com 07I395UC005479
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 6 Aug 2020 at 20:14, Naresh Kamboju <naresh.kamboju@linaro.org> wrote:
->
-> On Tue, 28 Jul 2020 at 22:04, Christoph Hellwig <hch@lst.de> wrote:
-> >
-> > Factor out a path_umount helper that takes a struct path * instead of the
-> > actual file name.  This will allow to convert the init and devtmpfs code
-> > to properly mount based on a kernel pointer instead of relying on the
-> > implicit set_fs(KERNEL_DS) during early init.
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/namespace.c | 40 ++++++++++++++++++----------------------
-> >  1 file changed, 18 insertions(+), 22 deletions(-)
-> >
-> > diff --git a/fs/namespace.c b/fs/namespace.c
-> > index 6f8234f74bed90..43834b59eff6c3 100644
-> > --- a/fs/namespace.c
-> > +++ b/fs/namespace.c
+We alreday has the interface i_blocksize(), which can be used
+to get blocksize, so use it.
+Only calculate blocksize once and use it within read_page().
 
-<trim>
+Signed-off-by: Xianting Tian <tian.xianting@h3c.com>
+---
+ drivers/md/md-bitmap.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
->
-> Regressions on linux next 20200803 tag kernel.
-> LTP syscalls test umount03 mount a path for testing and
-> umount failed and retired for 50 times and test exit with warning
-> and following test cases using that mount path failed.
->
-> LTP syscalls tests failed list,
->     * umount03
->     * umount2_01
->     * umount2_02
->     * umount2_03
->     * utime06
->     * copy_file_range01
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 95a5f3757..0d5544868 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -357,11 +357,12 @@ static int read_page(struct file *file, unsigned long index,
+ 	struct inode *inode = file_inode(file);
+ 	struct buffer_head *bh;
+ 	sector_t block, blk_cur;
++	unsigned long blocksize = i_blocksize(inode);
+ 
+ 	pr_debug("read bitmap file (%dB @ %llu)\n", (int)PAGE_SIZE,
+ 		 (unsigned long long)index << PAGE_SHIFT);
+ 
+-	bh = alloc_page_buffers(page, 1<<inode->i_blkbits, false);
++	bh = alloc_page_buffers(page, blocksize, false);
+ 	if (!bh) {
+ 		ret = -ENOMEM;
+ 		goto out;
+@@ -383,10 +384,10 @@ static int read_page(struct file *file, unsigned long index,
+ 
+ 			bh->b_blocknr = block;
+ 			bh->b_bdev = inode->i_sb->s_bdev;
+-			if (count < (1<<inode->i_blkbits))
++			if (count < blocksize)
+ 				count = 0;
+ 			else
+-				count -= (1<<inode->i_blkbits);
++				count -= blocksize;
+ 
+ 			bh->b_end_io = end_bitmap_write;
+ 			bh->b_private = bitmap;
+-- 
+2.17.1
 
-The reported issue has been fixed in linux next 20200817 tag by
-below patch.
-
-fs: fix a struct path leak in path_umount
-Make sure we also put the dentry and vfsmnt in the illegal flags and
-!may_umount cases.
-Fixes: 41525f56e256 ("fs: refactor ksys_umount")
-
-- Naresh
