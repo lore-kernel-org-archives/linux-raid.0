@@ -2,67 +2,56 @@ Return-Path: <SRS0=fBal=B4=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B8AC433DF
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 19:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DB7CC433E1
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 20:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 156632076E
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 19:48:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b55Q+9dZ"
+	by mail.kernel.org (Postfix) with ESMTP id 1560520786
+	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 20:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbgHRTsj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Aug 2020 15:48:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46034 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726585AbgHRTsj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Aug 2020 15:48:39 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8026C061389;
-        Tue, 18 Aug 2020 12:48:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=3K0FQWCpxkDdpzYdicrbQTL+aSH1Bv0zE5559DIxof4=; b=b55Q+9dZkd7BFTZCFnWleH9P1s
-        VKWsvrAdrNY0xnzjxQ7uVmzDz6CgaP3FyqJgQTUJRMsIBqw7TRwYah1Fy48HLxqZTgZsfKMLmRNGE
-        +qCG4F/bC4k6o3fkuNPHHHjZW9AdWLj78rMyI8MKqMK+XcKnYcOqOZyB5N4NTLZvsKhnsQ1CSV47O
-        tqwlbR5zoeJPBd5Bf+21/vGKUfKAvYZfoejs/GG3DZuh9WFK6ybNrnm+ZXx0Xw9MpPoscJVxBQYID
-        vXB4ZA3zH9WhZAhtzcRAmbC7hBlbfqXPP2dNQ1GeGHTtyvtg8A0iktTaGT75oj192//BNgM61mvbv
-        z/+5c+kw==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k87b2-0001Ys-AD; Tue, 18 Aug 2020 19:48:36 +0000
-Date:   Tue, 18 Aug 2020 20:48:36 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Song Liu <songliubraving@fb.com>
-Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org, colyli@suse.de, axboe@kernel.dk,
-        kernel-team@fb.com, song@kernel.org
-Subject: Re: [PATCH 2/4] block: introduce part_[begin|end]_io_acct
-Message-ID: <20200818194836.GC3271@infradead.org>
-References: <20200818070238.1323126-1-songliubraving@fb.com>
- <20200818070238.1323126-3-songliubraving@fb.com>
+        id S1726703AbgHRUIn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 Aug 2020 16:08:43 -0400
+Received: from hermes.turmel.org ([107.191.102.135]:51404 "EHLO
+        hermes.turmel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726694AbgHRUIl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Aug 2020 16:08:41 -0400
+X-Greylist: delayed 1347 seconds by postgrey-1.27 at vger.kernel.org; Tue, 18 Aug 2020 16:08:41 EDT
+Received: from c-98-192-104-236.hsd1.ga.comcast.net ([98.192.104.236] helo=[192.168.19.160])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1k87WM-0000rY-63; Tue, 18 Aug 2020 19:43:46 +0000
+Subject: Re: Feature request: Remove the badblocks list
+To:     Wols Lists <antlists@youngman.org.uk>,
+        Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
+        Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc:     =?UTF-8?B?SMOla29u?= <hawken@thehawken.org>
+References: <75076966.1748398.1597773608869.JavaMail.zimbra@karlsbakk.net>
+ <5F3C2B4F.1050708@youngman.org.uk>
+From:   Phil Turmel <philip@turmel.org>
+Message-ID: <9affe1a7-c068-0835-153e-dd5f10ef7c3a@turmel.org>
+Date:   Tue, 18 Aug 2020 15:43:45 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200818070238.1323126-3-songliubraving@fb.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <5F3C2B4F.1050708@youngman.org.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 12:02:36AM -0700, Song Liu wrote:
-> These functions can be used to enable iostat for partitions on devices
-> like md, bcache.
+On 8/18/20 3:26 PM, Wols Lists wrote:
+> On 18/08/20 19:00, Roy Sigurd Karlsbakk wrote:
+>> As far as I can understand, this list doesn't have any reason to exist, except to annoy sysadmins.
+> 
+> Actually, there's at least one good reason for it to exist that I can
+> think of - it *could* make recovering a broken array much easier. Think
+> about it, I think it's documented in the wiki.
 
-Please follow a model like bio_start_io_acct - that is pass a bio
-for all the input parameters except for the gendisk.  Given that we
-don't have anywhere for the part to store that will need another
-output paramater.
-
-The end_io function should drop the hd_struct reference as well for
-a well rounded API.
+Link please.
