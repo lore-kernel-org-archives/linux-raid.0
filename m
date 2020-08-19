@@ -1,100 +1,87 @@
-Return-Path: <SRS0=fBal=B4=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=jE/M=B5=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 425CEC433E1
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 22:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D95A9C433DF
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Aug 2020 09:03:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1571E20738
-	for <linux-raid@archiver.kernel.org>; Tue, 18 Aug 2020 22:27:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="jegP3tYd"
+	by mail.kernel.org (Postfix) with ESMTP id C093B2072D
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Aug 2020 09:03:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726991AbgHRW1S (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Aug 2020 18:27:18 -0400
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:60498 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726905AbgHRW1Q (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 18 Aug 2020 18:27:16 -0400
-Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07IMDV0v030272
-        for <linux-raid@vger.kernel.org>; Tue, 18 Aug 2020 15:27:15 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=facebook; bh=mDwExpppelWwEhObLUpHdWuu5whhjC8BnC8yJ4+f9go=;
- b=jegP3tYd3vGf0Z1oCN62w6/2gRHKMdql0B3WuUnUM+cJNUmHow/KF6gSvdDe/0M9jBtD
- H3phxyWzgPm3ZFx/zFyxhcXyVWgXiAT2xY+DTGL0inrxXFeDFK3WMDHzkT75yO0q36TQ
- /MFgQgrkeY9ViuIluBSB9+JMVu0YZv/WWb8= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com with ESMTP id 3304kpncrb-4
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-raid@vger.kernel.org>; Tue, 18 Aug 2020 15:27:14 -0700
-Received: from intmgw002.08.frc2.facebook.com (2620:10d:c085:208::f) by
- mail.thefacebook.com (2620:10d:c085:11d::4) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 18 Aug 2020 15:27:01 -0700
-Received: by devbig006.ftw2.facebook.com (Postfix, from userid 4523)
-        id CE4BE62E4B8C; Tue, 18 Aug 2020 15:26:57 -0700 (PDT)
-Smtp-Origin-Hostprefix: devbig
-From:   Song Liu <songliubraving@fb.com>
-Smtp-Origin-Hostname: devbig006.ftw2.facebook.com
-To:     <linux-block@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <linux-bcache@vger.kernel.org>
-CC:     <colyli@suse.de>, <axboe@kernel.dk>, <kernel-team@fb.com>,
-        <song@kernel.org>, <hch@infradead.org>,
-        Song Liu <songliubraving@fb.com>
-Smtp-Origin-Cluster: ftw2c04
-Subject: [PATCH v2 0/3] block: improve iostat for md/bcache partitions
-Date:   Tue, 18 Aug 2020 15:26:42 -0700
-Message-ID: <20200818222645.952219-1-songliubraving@fb.com>
-X-Mailer: git-send-email 2.24.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-18_16:2020-08-18,2020-08-18 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 clxscore=1015 spamscore=0
- impostorscore=0 mlxscore=0 adultscore=0 malwarescore=0 mlxlogscore=543
- lowpriorityscore=0 suspectscore=0 phishscore=0 bulkscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008180160
-X-FB-Internal: deliver
+        id S1726825AbgHSJDS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Aug 2020 05:03:18 -0400
+Received: from mga02.intel.com ([134.134.136.20]:49839 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726731AbgHSJDR (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 19 Aug 2020 05:03:17 -0400
+IronPort-SDR: eDo3ToXFX6Egz2+A4fvjwRi2XaCyzitImplDsnpC9489Dr+4FhDtAypy84stTR1pk07dJHxkDM
+ xP7tBUktAOTA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9717"; a="142887083"
+X-IronPort-AV: E=Sophos;i="5.76,330,1592895600"; 
+   d="scan'208";a="142887083"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2020 02:03:16 -0700
+IronPort-SDR: tCS2Jr6XD8sZeNPj2zI4lHlFylSLZSo8eBWxwI/0eYqUH5a+mLbzlfXr5OrkCun/LObOe/gLIs
+ 6Wqz7UWkNZEg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,330,1592895600"; 
+   d="scan'208";a="400768622"
+Received: from linux-3rn9.igk.intel.com ([10.102.102.97])
+  by fmsmga001.fm.intel.com with ESMTP; 19 Aug 2020 02:03:15 -0700
+From:   Kinga Tanska <kinga.tanska@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes.sorensen@gmail.com
+Subject: [PATCH] Make target to install binaries only
+Date:   Wed, 19 Aug 2020 11:03:12 +0200
+Message-Id: <20200819090312.16994-1-kinga.tanska@intel.com>
+X-Mailer: git-send-email 2.16.4
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Currently, devices like md, bcache uses disk_[start|end]_io_acct to repor=
-t
-iostat. These functions couldn't get proper iostat for partitions on thes=
-e
-devices.
+Make install causes installation of binaries, udev and man.
+This commit contains new target make install-bin, which
+results in installation of binaries only.
 
-This set resolves this issue by introducing part_[begin|end]_io_acct, and
-using them in md and bcache code.
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
+---
+ Makefile | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Changes v1 =3D> v2:
-1. Refactor the code, as suggested by Christoph.
-2. Include Coly's Reviewed-by tag.
+diff --git a/Makefile b/Makefile
+index 15d05d14..92150dbf 100644
+--- a/Makefile
++++ b/Makefile
+@@ -245,9 +245,7 @@ $(MON_OBJS) : $(INCL) mdmon.h
+ sha1.o : sha1.c sha1.h md5.h
+ 	$(CC) $(CFLAGS) -DHAVE_STDINT_H -o sha1.o -c sha1.c
+ 
+-install : mdadm mdmon install-man install-udev
+-	$(INSTALL) -D $(STRIP) -m 755 mdadm $(DESTDIR)$(BINDIR)/mdadm
+-	$(INSTALL) -D $(STRIP) -m 755 mdmon $(DESTDIR)$(BINDIR)/mdmon
++install : install-binaries install-man install-udev
+ 
+ install-static : mdadm.static install-man
+ 	$(INSTALL) -D $(STRIP) -m 755 mdadm.static $(DESTDIR)$(BINDIR)/mdadm
+@@ -297,6 +295,10 @@ install-systemd: systemd/mdmon@.service
+ 	done
+ 	if [ -f /etc/SuSE-release -o -n "$(SUSE)" ] ;then $(INSTALL) -D -m 755 systemd/SUSE-mdadm_env.sh $(DESTDIR)$(LIB_DIR)/mdadm_env.sh ;fi
+ 
++install-binaries: mdadm mdmon
++	$(INSTALL) -D $(STRIP) -m 755 mdadm $(DESTDIR)$(BINDIR)/mdadm
++	$(INSTALL) -D $(STRIP) -m 755 mdmon $(DESTDIR)$(BINDIR)/mdmon
++
+ uninstall:
+ 	rm -f $(DESTDIR)$(MAN8DIR)/mdadm.8 $(DESTDIR)$(MAN8DIR)/mdmon.8 $(DESTDIR)$(MAN4DIR)/md.4 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5 $(DESTDIR)$(BINDIR)/mdadm
+ 
+-- 
+2.16.4
 
-Song Liu (3):
-  block: introduce part_[begin|end]_io_acct
-  md: use part_[begin|end]_io_acct instead of disk_[begin|end]_io_acct
-  bcache: use part_[begin|end]_io_acct instead of
-    disk_[begin|end]_io_acct
-
- block/blk-core.c            | 39 +++++++++++++++++++++++++++++++------
- drivers/md/bcache/request.c | 10 ++++++----
- drivers/md/md.c             |  8 ++++----
- include/linux/blkdev.h      |  5 +++++
- 4 files changed, 48 insertions(+), 14 deletions(-)
-
---
-2.24.1
