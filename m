@@ -2,84 +2,102 @@ Return-Path: <SRS0=jE/M=B5=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01356C433DF
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Aug 2020 18:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FEDCC433E3
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Aug 2020 22:58:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B251C207FF
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Aug 2020 18:39:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597862348;
-	bh=VmtnYIlrJv63X2hpoTNAYQ6tX+DHuv/SPtaRQNt5Jr8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=PwtoHJoE9+BQ4UFOcpKdYsoOEIMbLGsAPd/IQV7HucDK+cxMPHM52FH6AZTD9Z1Zt
-	 ERnWIrTC0YGQmM054MRVtrCLKln0CRuMqXYsznPQRCrJxPVgS2DJ3NL1AQHxIpl3HC
-	 3N0GPOMROj6kdaue1uecb7S9D+ilXEcXTIAapsxM=
+	by mail.kernel.org (Postfix) with ESMTP id 1ECD32076E
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Aug 2020 22:58:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=colorremedies-com.20150623.gappssmtp.com header.i=@colorremedies-com.20150623.gappssmtp.com header.b="dBee0qDk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726612AbgHSSjI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Aug 2020 14:39:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37554 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725997AbgHSSjH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 19 Aug 2020 14:39:07 -0400
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 491F1207FF
-        for <linux-raid@vger.kernel.org>; Wed, 19 Aug 2020 18:39:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597862347;
-        bh=VmtnYIlrJv63X2hpoTNAYQ6tX+DHuv/SPtaRQNt5Jr8=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=xdXb0rDib0XLEeiyYAgMr/vmdHj3xLUitf1NedOGJEuHq3tCK2xh7vF1qdT7htbJm
-         GYpDvbcMfOt1pcwTWfl3+xNDs+eApztq91NuiLkA8fAAjHRImON6J4RhuiUsI5y9eJ
-         ZmkSZe5JBTKqi6EL2pUC1lrQL48hfXGMPWOuB8h4=
-Received: by mail-lf1-f49.google.com with SMTP id c8so1020660lfh.9
-        for <linux-raid@vger.kernel.org>; Wed, 19 Aug 2020 11:39:07 -0700 (PDT)
-X-Gm-Message-State: AOAM5302lxzW5dG2UgR4ZUorPjoUG8x9F3ci901DsauQqNJ5pepvPhSk
-        pF1XxG3ywfMBFCOqoBsjz2lTcZu8yqPz9CE9hlw=
-X-Google-Smtp-Source: ABdhPJw1hYOkGqzy2XCK+wYPMJh4c25VcqjVksO12VxOHAmS39DFC2sa/4GZya0vb0dRNnoxLcEPphVmRqWtFgBqTYM=
-X-Received: by 2002:ac2:4881:: with SMTP id x1mr1915841lfc.162.1597862345201;
- Wed, 19 Aug 2020 11:39:05 -0700 (PDT)
+        id S1726578AbgHSW6u (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Aug 2020 18:58:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44704 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726209AbgHSW6p (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Aug 2020 18:58:45 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31819C061757
+        for <linux-raid@vger.kernel.org>; Wed, 19 Aug 2020 15:58:45 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id u18so942708wmc.3
+        for <linux-raid@vger.kernel.org>; Wed, 19 Aug 2020 15:58:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=OgK1MCgpPhEyKdpI6E11FXxu07NX2wkWvImgYHGvMzo=;
+        b=dBee0qDkVpFH3ka/yH/WX+vNUaKq3fpDM4oLXAzn8oOZ++e1UbWyXN83UyU/b1MjlI
+         jIECwviGYCbtb3n1bvxaiVbCLh0Jbmn29WUk+UCLl4ohCL/hyShJdaYVGFAWGgWEM1bd
+         GklCcX0lWDfpZxe0pD+LrXxivai2hSowbpWQBHuq0RvW5MM9Sc6zq5HXH01G7L67oeYu
+         SmJhCEKWzq7Dmh1ZDE5tsRj4oYKvw4N8vs1pllfJ3y/391lxKGEeSA2Mo/ZYs5TeeCEX
+         RSVE8i7nq/AXwCxsr01mv3qnsqYEqmuQd8LDyLmk/dSWW57JqkKiVqjcL2uReDtjvBYi
+         P8LQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=OgK1MCgpPhEyKdpI6E11FXxu07NX2wkWvImgYHGvMzo=;
+        b=mYyBpLZkUVMQIvUOPrBbDGjtXd/phfv3m1bY1X5P7hsBS340aY6X5O3E0YZCe4NR1a
+         6xor3/aNa1KyU6c+FKcuOl0vxaOL3RDwt51X532KGJwY+PuwgTO+ZumPallvaiVI1t1+
+         mn5MXbI3/PWDd73dy9uXOZ3H+QSCUkinVKGbegBBYSluIJ0gvbVBW8TCj5nPm8izScLv
+         PWmy6kRKLYlgRD3cCKqW1+S5Ypq7/YxS8nacSQeFlo1nze0VsQ2C+p5VJBlpQNlTIwG2
+         zNvACG1bfdKfWla1YGfjvrbrcPIyHJTvw/lTENdJlZLXatbu3nTZR/LvHWXTZEXxNf6f
+         A/5g==
+X-Gm-Message-State: AOAM532E2L2z6TnrFQlr4R6BQ7n6Dzricb+3NAcpxbENmORAc0mYBJC3
+        KJtvSpkr9Oz1peLDOS0xQVQV77Kci0bMDd88WafYzg==
+X-Google-Smtp-Source: ABdhPJw9YwL2k9GzSFOCYosgh7Xv8zWbyw62vLe3UoXdWEvjv2XJIeClPdoe5nNbX+PauYRN3G1x1qgPYq9FACKpXSU=
+X-Received: by 2002:a1c:5581:: with SMTP id j123mr497261wmb.11.1597877923880;
+ Wed, 19 Aug 2020 15:58:43 -0700 (PDT)
 MIME-Version: 1.0
-References: <1597306476-8396-1-git-send-email-xni@redhat.com> <1597306476-8396-5-git-send-email-xni@redhat.com>
-In-Reply-To: <1597306476-8396-5-git-send-email-xni@redhat.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 19 Aug 2020 11:38:54 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6OSp71fEXiW4D0uf4n=T65xLMiQDbSRd6FDhua3adg-A@mail.gmail.com>
-Message-ID: <CAPhsuW6OSp71fEXiW4D0uf4n=T65xLMiQDbSRd6FDhua3adg-A@mail.gmail.com>
-Subject: Re: [PATCH V3 4/4] md/raid10: Improve discard request for far layout
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, Coly Li <colyli@suse.de>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
+References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
+ <CAJCQCtSfz+b38fW3zdcHwMMtO1LfXSq+0xgg_DaKShmAumuCWQ@mail.gmail.com>
+ <29509e08-e373-b352-d696-fcb9f507a545@xmyslivec.cz> <CAJCQCtRx7NJP=-rX5g_n5ZL7ypX-5z_L6d6sk120+4Avs6rJUw@mail.gmail.com>
+ <695936b4-67a2-c862-9cb6-5545b4ab3c42@xmyslivec.cz> <CAJCQCtQWNSd123OJ_Rp8NO0=upY2Mn+SE7pdMqmyizJP028Yow@mail.gmail.com>
+ <2f2f1c21-c81b-55aa-6f77-e2d3f32d32cb@xmyslivec.cz>
+In-Reply-To: <2f2f1c21-c81b-55aa-6f77-e2d3f32d32cb@xmyslivec.cz>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Wed, 19 Aug 2020 16:58:05 -0600
+Message-ID: <CAJCQCtTQN60V=DEkNvDedq+usfmFB+SQP2SBezUaSeUjjY46nA@mail.gmail.com>
+Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
+To:     Vojtech Myslivec <vojtech@xmyslivec.cz>
+Cc:     Chris Murphy <lists@colorremedies.com>,
+        Michal Moravec <michal.moravec@logicworks.cz>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>,
+        Song Liu <songliubraving@fb.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 13, 2020 at 1:15 AM Xiao Ni <xni@redhat.com> wrote:
+On Wed, Aug 19, 2020 at 11:29 AM Vojtech Myslivec <vojtech@xmyslivec.cz> wrote:
 >
-> For far layout, the discard region is not continuous on disks. So it needs
-> far copies r10bio to cover all regions. It needs a way to know all r10bios
-> have finish or not. Similar with raid10_sync_request, only the first r10bio
-> master_bio records the discard bio. Other r10bios master_bio record the first
-> r10bio. The first r10bio can finish after other r10bios finish and then return
-> the discard bio.
+> Linux backup1 5.7.0-0.bpo.2-amd64 #1 SMP Debian 5.7.10-1~bpo10+1
+
+Should be new enough; I don't see raid related md changes between
+5.7.10 and 5.7.16. I haven't looked at 5.8, but 5.7 is probably recent
+enough to know if there have been relevant changes in 5.8 that are
+worth testing.
+
 >
-> Signed-off-by: Xiao Ni <xni@redhat.com>
+> - `5.7_profs.txt`
+>   - dump of the whole /proc when the issue happened
 
-1/4 and 2/4 of the set looks good to me. But we will need more work on 3
-and 4. Please refer to comments in 3/4.
+The problem here I think is that /proc/pid/stack is empty. You might
+have to hammer on it a bunch of times to get a stack. I can't tell if
+the sysrq+w is enough information to conclusively tell if this is
+strictly an md problem or if there's something else going on.
 
-Please also rebase on top of the latest md-next branch, and try fix warnings
-from checkpatch.pl.
+But I do see in the sysrq+w evidence of a Btrfs snapshot happening,
+which will result in a flush of the file system. Since the mdadm raid
+journal is on two SSDs which should be fast enough to accept the
+metadata changes before actually doing the flush.
 
-Thanks,
-Song
+
+-- 
+Chris Murphy
