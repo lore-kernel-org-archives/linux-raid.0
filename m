@@ -2,105 +2,235 @@ Return-Path: <SRS0=xKAG=B6=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 398AEC433DF
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 06:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D48C433DF
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 07:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C4862076E
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 06:31:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C655E2080C
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 07:26:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V0/SPj7B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725819AbgHTGbH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Aug 2020 02:31:07 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:9792 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725797AbgHTGbH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 20 Aug 2020 02:31:07 -0400
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id C8CDE921887A1CB7C952;
-        Thu, 20 Aug 2020 14:31:01 +0800 (CST)
-Received: from [10.174.179.185] (10.174.179.185) by
- DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
- 14.3.487.0; Thu, 20 Aug 2020 14:30:53 +0800
-Subject: Re: [PATCH 00/12] Save memory for stripe_head buffer
+        id S1725819AbgHTH0z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Aug 2020 03:26:55 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45031 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726364AbgHTH0y (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 20 Aug 2020 03:26:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597908412;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=E+lrSvXLMlkFIk79vgyBx5WjbrO9jJufRoaoXVAYPxw=;
+        b=V0/SPj7B7PA8R0vmgZkn20O9SjZNTBQOtH60DYnt4S/h28kunKOIEssLi2029VlX/O8s/g
+        mUPHeBm1BIfCLHyC10PN7EC9CijbEE/OlwVMGo0d28KDYGHzJkIKHDmugJVabE7s/5hoLY
+        KgFUnzsxiAsa0dQaO1Lp1hHBupAkTr0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-325-JBPgo2oGM-qDY-k7MSIkTQ-1; Thu, 20 Aug 2020 03:26:50 -0400
+X-MC-Unique: JBPgo2oGM-qDY-k7MSIkTQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1E62F1074643;
+        Thu, 20 Aug 2020 07:26:49 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-8-35.pek2.redhat.com [10.72.8.35])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AC92B5C88B;
+        Thu, 20 Aug 2020 07:26:45 +0000 (UTC)
+Subject: Re: [PATCH V3 3/4] md/raid10: improve raid10 discard request
 To:     Song Liu <song@kernel.org>
-CC:     linux-raid <linux-raid@vger.kernel.org>,
-        NeilBrown <neilb@suse.com>,
+Cc:     linux-raid <linux-raid@vger.kernel.org>, Coly Li <colyli@suse.de>,
         Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Hou Tao <houtao1@huawei.com>
-References: <20200812124931.2584743-1-yuyufen@huawei.com>
- <CAPhsuW6rB-+APsw77CqOz8ipdneRyCDBdgx_rxi0ep22xC5gVw@mail.gmail.com>
-From:   Yufen Yu <yuyufen@huawei.com>
-Message-ID: <bfe3b715-e6d4-4754-dc4f-c4441123e7c7@huawei.com>
-Date:   Thu, 20 Aug 2020 14:30:52 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>
+References: <1597306476-8396-1-git-send-email-xni@redhat.com>
+ <1597306476-8396-4-git-send-email-xni@redhat.com>
+ <CAPhsuW4sa8PBC8sn4u+9SBMEHkinoAr2jRss1bSsvV+WQ+yPuA@mail.gmail.com>
+From:   Xiao Ni <xni@redhat.com>
+Message-ID: <f1a59821-cd64-d694-5d4e-f0dba81e635f@redhat.com>
+Date:   Thu, 20 Aug 2020 15:26:43 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW6rB-+APsw77CqOz8ipdneRyCDBdgx_rxi0ep22xC5gVw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
+In-Reply-To: <CAPhsuW4sa8PBC8sn4u+9SBMEHkinoAr2jRss1bSsvV+WQ+yPuA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.185]
-X-CFilter-Loop: Reflected
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi Song
 
 
-On 2020/8/20 8:25, Song Liu wrote:
-> On Wed, Aug 12, 2020 at 5:48 AM Yufen Yu <yuyufen@huawei.com> wrote:
+On 08/20/2020 02:36 AM, Song Liu wrote:
+> On Thu, Aug 13, 2020 at 1:15 AM Xiao Ni <xni@redhat.com> wrote:
+> [...]
+>> Reviewed-by: Coly Li <colyli@suse.de>
+>> Reviewed-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+>> Signed-off-by: Xiao Ni <xni@redhat.com>
 >>
->> Hi, all
+> Please add "---" before "v1:..." so that this part is ignored during git am.
+Ok
+>
+>> v1:
+>> Coly helps to review these patches and give some suggestions:
+>> One bug is found. If discard bio is across one stripe but bio size is bigger
+>> than one stripe size. After spliting, the bio will be NULL. In this version,
+>> it checks whether discard bio size is bigger than 2*stripe_size.
+>> In raid10_end_discard_request, it's better to check R10BIO_Uptodate is set
+>> or not. It can avoid write memory to improve performance.
+>> Add more comments for calculating addresses.
 >>
->>   In current implementation, grow_buffers() uses alloc_page() to allocate
->>   the buffers for each stripe_head, i.e. allocate a page for each dev[i]
->>   in stripe_head.
+>> v2:
+>> Fix error by checkpatch.pl
+>> Fix one bug for offset layout. v1 calculates wrongly split size
+>> Add more comments to explain how the discard range of each component disk
+>> is decided.
+>> ---
+>>   drivers/md/raid10.c | 287 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+>>   1 file changed, 286 insertions(+), 1 deletion(-)
 >>
->>   After setting stripe_size as a configurable value by writing sysfs entry,
->>   it means that we always allocate 64K buffers, but just use 4K of them when
->>   stripe_size is 4K in 64KB arm64.
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index cef3cb8..5431e1b 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -1526,6 +1526,287 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+>>                  raid10_write_request(mddev, bio, r10_bio);
+>>   }
 >>
->>   To save memory, we try to let multiple buffers of stripe_head to share only
->>   one real page when page size is bigger than stripe_size. Detail can be
->>   seen in patch #10.
->>
->>   This patch set is subsequent optimization for configurable stripe_size,
->>   which based on the origin patches[1] but reorganized them.
->>
->>   Patch 1 ~ 2 try to replace current page offset '0' with dev[i].offset.
->>   Patch 3 ~ 5 let xor compute functions support different page offset for raid5.
->>   Patch 6 ~ 9 let syndrome and recovery function support different page offset for raid6.
->>   All of these patch are preparing for shared page. There is no functional change.
->>
->>   Patch 10 ~ 11 actually implement shared page between multiple devices of
->>   stripe_head. But they only make sense for PAGE_SIZE != 4096, likely, 64KB arm64
->>   system. It doesn't make any difference for PAGE_SIZE == 4096 system, likely x86.
-> 
-> Thanks for the patches.
-> 
-> I went through the first half of the set, most of the code looks fine.
-> However, there is
-> one issue: the way you split the changes into 12 patches is not ideal. The most
-> significant issue is that build failed after 5/12 or 6/12 (and was
-> fixed after 9/12). We
-> would like every commit build successfully. I think the proper fix is
-> to break 9/12 and
-> merge changes in raid5.c to proper patches. Also, I think we can merge
-> 1/12 and 2/12.
-> 
-> Please resubmit after these changes.
-> 
-> Thanks,
-> Song
-> .
-> 
+>> +static void wait_blocked_dev(struct mddev *mddev, int cnt)
+>> +{
+>> +       int i;
+>> +       struct r10conf *conf = mddev->private;
+>> +       struct md_rdev *blocked_rdev = NULL;
+>> +
+>> +retry_wait:
+>> +       rcu_read_lock();
+>> +       for (i = 0; i < cnt; i++) {
+>> +               struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+>> +               struct md_rdev *rrdev = rcu_dereference(
+>> +                       conf->mirrors[i].replacement);
+>> +               if (rdev == rrdev)
+>> +                       rrdev = NULL;
+>> +               if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+>> +                       atomic_inc(&rdev->nr_pending);
+>> +                       blocked_rdev = rdev;
+>> +                       break;
+>> +               }
+>> +               if (rrdev && unlikely(test_bit(Blocked, &rrdev->flags))) {
+>> +                       atomic_inc(&rrdev->nr_pending);
+>> +                       blocked_rdev = rrdev;
+>> +                       break;
+>> +               }
+>> +       }
+>> +       rcu_read_unlock();
+>> +
+>> +       if (unlikely(blocked_rdev)) {
+>> +               /* Have to wait for this device to get unblocked, then retry */
+>> +               allow_barrier(conf);
+>> +               raid10_log(conf->mddev, "%s wait rdev %d blocked",
+>> +                               __func__, blocked_rdev->raid_disk);
+>> +               md_wait_for_blocked_rdev(blocked_rdev, mddev);
+>> +               wait_barrier(conf);
+>> +               goto retry_wait;
+> We need to clear blocked_rdev before this goto, or put retry_wait label
+> before "blocked_rdev = NULL;". I guess this path is not tested...
+I did test for this patch with mkfs with/without resync and wrote some 
+files to device.
+And ran fstrim after writing some files. The patch worked well during 
+the test.
+For blocked device situation, I didn't test. I'll add this test.
+>
+> We are duplicating a lot of logic from raid10_write_request() here. Can we
+> try to pull the common logic into a helper function?
+I'll do this.
+>
+> [...]
+>
+>> +static void raid10_end_discard_request(struct bio *bio)
+>> +{
+>> +       struct r10bio *r10_bio = bio->bi_private;
+>> +       struct r10conf *conf = r10_bio->mddev->private;
+>> +       struct md_rdev *rdev = NULL;
+>> +       int dev;
+>> +       int slot, repl;
+>> +
+>> +       /*
+>> +        * We don't care the return value of discard bio
+>> +        */
+>> +       if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
+>> +               set_bit(R10BIO_Uptodate, &r10_bio->state);
+>> +
+>> +       dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
+>> +       if (repl)
+>> +               rdev = conf->mirrors[dev].replacement;
+>> +       if (!rdev) {
+>> +               smp_rmb();
+>> +               repl = 0;
+>> +               rdev = conf->mirrors[dev].rdev;
+>> +       }
+>> +
+>> +       if (atomic_dec_and_test(&r10_bio->remaining)) {
+>> +               md_write_end(r10_bio->mddev);
+>> +               raid_end_bio_io(r10_bio);
+>> +       }
+>> +
+>> +       rdev_dec_pending(rdev, conf->mddev);
+>> +}
+>> +
+>> +/* There are some limitations to handle discard bio
+>> + * 1st, the discard size is bigger than stripe_size*2.
+>> + * 2st, if the discard bio spans reshape progress, we use the old way to
+>> + * handle discard bio
+>> + */
+>> +static bool raid10_handle_discard(struct mddev *mddev, struct bio *bio)
+>> +{
+>> +       struct r10conf *conf = mddev->private;
+>> +       struct geom geo = conf->geo;
+> Do we really need a full copy of conf->geo?
+It doesn't need a full copy. Thanks for pointing about this.
+>
+>> +       struct r10bio *r10_bio;
+>> +
+>> +       int disk;
+>> +       sector_t chunk;
+>> +       int stripe_size, stripe_mask;
+>> +
+>> +       sector_t bio_start, bio_end;
+>> +       sector_t first_stripe_index, last_stripe_index;
+>> +       sector_t start_disk_offset;
+>> +       unsigned int start_disk_index;
+>> +       sector_t end_disk_offset;
+>> +       unsigned int end_disk_index;
+>> +
+>> +       wait_barrier(conf);
+>> +
+>> +       if (conf->reshape_progress != MaxSector &&
+>> +           ((bio->bi_iter.bi_sector >= conf->reshape_progress) !=
+>> +            conf->mddev->reshape_backwards))
+>> +               geo = conf->prev;
+>> +
+>> +       stripe_size = (1<<geo.chunk_shift) * geo.raid_disks;
+> This could be raid_disks << chunk_shift
+ok
+>
+>> +       stripe_mask = stripe_size - 1;
+> Does this work when raid_disks is not power of 2?
+In test I used 5 disks to create the raid10 too, it worked well. Could 
+you explain what
+you worried in detail?
 
-Thanks a lot for your review. These changes can make patch set more reasonable.
+Regards
+Xiao
 
-Thanks,
-Yufen
