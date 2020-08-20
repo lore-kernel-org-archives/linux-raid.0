@@ -2,285 +2,106 @@ Return-Path: <SRS0=xKAG=B6=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F5C1C433E1
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 09:06:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07DC1C433E1
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 13:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D829C2078B
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 09:06:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J2DmRkpx"
+	by mail.kernel.org (Postfix) with ESMTP id D21AA208DB
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Aug 2020 13:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725916AbgHTJGR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Aug 2020 05:06:17 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:22598 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726364AbgHTJGO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 20 Aug 2020 05:06:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597914371;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=UlCOBdiTcImWZxr4wrL0xW/R52EgCAtE2eBSyFCII6I=;
-        b=J2DmRkpx6Q69Y6pD+ccm4YefzYbyjj9gBnzBbnX+rYF6B77Qygxv4MpH9OR6N0s6v1fXyG
-        cUDcyiWbk1TQpAWzDtgCMrrriPdzisdc/E3WvdqLgZuzl6+YgCcJN7r7Rs3mSPRfoI2qZJ
-        jllvssPgAodG7rykynO/Iw69CdGMs9Y=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-310-qp7Mes3LPyG92ZWA_Hf3uA-1; Thu, 20 Aug 2020 05:06:07 -0400
-X-MC-Unique: qp7Mes3LPyG92ZWA_Hf3uA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 972CE186A56F;
-        Thu, 20 Aug 2020 09:06:06 +0000 (UTC)
-Received: from [10.72.8.30] (ovpn-8-30.pek2.redhat.com [10.72.8.30])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B61A917567;
-        Thu, 20 Aug 2020 09:06:02 +0000 (UTC)
-Subject: Re: [PATCH V3 3/4] md/raid10: improve raid10 discard request
-From:   Xiao Ni <xni@redhat.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, Coly Li <colyli@suse.de>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-References: <1597306476-8396-1-git-send-email-xni@redhat.com>
- <1597306476-8396-4-git-send-email-xni@redhat.com>
- <CAPhsuW4sa8PBC8sn4u+9SBMEHkinoAr2jRss1bSsvV+WQ+yPuA@mail.gmail.com>
- <f1a59821-cd64-d694-5d4e-f0dba81e635f@redhat.com>
-Message-ID: <b01d98d4-51b2-14e6-9eac-bf2139189e2e@redhat.com>
-Date:   Thu, 20 Aug 2020 17:06:00 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.2.1
+        id S1729443AbgHTNWS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Aug 2020 09:22:18 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:10239 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728700AbgHTNWG (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 20 Aug 2020 09:22:06 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 87EC39B69A099393F2F0;
+        Thu, 20 Aug 2020 21:21:51 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Thu, 20 Aug 2020
+ 21:21:43 +0800
+From:   Yufen Yu <yuyufen@huawei.com>
+To:     <song@kernel.org>
+CC:     <linux-raid@vger.kernel.org>, <houtao1@huawei.com>
+Subject: [PATCH v2 03/10] md/raid5: make async_copy_data() to support different page offset
+Date:   Thu, 20 Aug 2020 09:22:07 -0400
+Message-ID: <20200820132214.3749139-4-yuyufen@huawei.com>
+X-Mailer: git-send-email 2.25.4
+In-Reply-To: <20200820132214.3749139-1-yuyufen@huawei.com>
+References: <20200820132214.3749139-1-yuyufen@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <f1a59821-cd64-d694-5d4e-f0dba81e635f@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-CFilter-Loop: Reflected
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+ops_run_biofill() and ops_run_biodrain() will call async_copy_data()
+to copy sh->dev[i].page from or to bio page. For now, it implies the
+offset of dev[i].page is 0. But we want to support different page offset
+in the following.
 
+Thus, pass page offset to these functions and replace 'page_offset'
+with 'page_offset + poff'.
 
-On 08/20/2020 03:26 PM, Xiao Ni wrote:
-> Hi Song
->
->
-> On 08/20/2020 02:36 AM, Song Liu wrote:
->> On Thu, Aug 13, 2020 at 1:15 AM Xiao Ni <xni@redhat.com> wrote:
->> [...]
->>> Reviewed-by: Coly Li <colyli@suse.de>
->>> Reviewed-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
->>> Signed-off-by: Xiao Ni <xni@redhat.com>
->>>
->> Please add "---" before "v1:..." so that this part is ignored during 
->> git am.
-> Ok
->>
->>> v1:
->>> Coly helps to review these patches and give some suggestions:
->>> One bug is found. If discard bio is across one stripe but bio size 
->>> is bigger
->>> than one stripe size. After spliting, the bio will be NULL. In this 
->>> version,
->>> it checks whether discard bio size is bigger than 2*stripe_size.
->>> In raid10_end_discard_request, it's better to check R10BIO_Uptodate 
->>> is set
->>> or not. It can avoid write memory to improve performance.
->>> Add more comments for calculating addresses.
->>>
->>> v2:
->>> Fix error by checkpatch.pl
->>> Fix one bug for offset layout. v1 calculates wrongly split size
->>> Add more comments to explain how the discard range of each component 
->>> disk
->>> is decided.
->>> ---
->>>   drivers/md/raid10.c | 287 
->>> +++++++++++++++++++++++++++++++++++++++++++++++++++-
->>>   1 file changed, 286 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->>> index cef3cb8..5431e1b 100644
->>> --- a/drivers/md/raid10.c
->>> +++ b/drivers/md/raid10.c
->>> @@ -1526,6 +1526,287 @@ static void __make_request(struct mddev 
->>> *mddev, struct bio *bio, int sectors)
->>>                  raid10_write_request(mddev, bio, r10_bio);
->>>   }
->>>
->>> +static void wait_blocked_dev(struct mddev *mddev, int cnt)
->>> +{
->>> +       int i;
->>> +       struct r10conf *conf = mddev->private;
->>> +       struct md_rdev *blocked_rdev = NULL;
->>> +
->>> +retry_wait:
->>> +       rcu_read_lock();
->>> +       for (i = 0; i < cnt; i++) {
->>> +               struct md_rdev *rdev = 
->>> rcu_dereference(conf->mirrors[i].rdev);
->>> +               struct md_rdev *rrdev = rcu_dereference(
->>> +                       conf->mirrors[i].replacement);
->>> +               if (rdev == rrdev)
->>> +                       rrdev = NULL;
->>> +               if (rdev && unlikely(test_bit(Blocked, 
->>> &rdev->flags))) {
->>> +                       atomic_inc(&rdev->nr_pending);
->>> +                       blocked_rdev = rdev;
->>> +                       break;
->>> +               }
->>> +               if (rrdev && unlikely(test_bit(Blocked, 
->>> &rrdev->flags))) {
->>> +                       atomic_inc(&rrdev->nr_pending);
->>> +                       blocked_rdev = rrdev;
->>> +                       break;
->>> +               }
->>> +       }
->>> +       rcu_read_unlock();
->>> +
->>> +       if (unlikely(blocked_rdev)) {
->>> +               /* Have to wait for this device to get unblocked, 
->>> then retry */
->>> +               allow_barrier(conf);
->>> +               raid10_log(conf->mddev, "%s wait rdev %d blocked",
->>> +                               __func__, blocked_rdev->raid_disk);
->>> +               md_wait_for_blocked_rdev(blocked_rdev, mddev);
->>> +               wait_barrier(conf);
->>> +               goto retry_wait;
->> We need to clear blocked_rdev before this goto, or put retry_wait label
->> before "blocked_rdev = NULL;". I guess this path is not tested...
-> I did test for this patch with mkfs with/without resync and wrote some 
-> files to device.
-> And ran fstrim after writing some files. The patch worked well during 
-> the test.
-> For blocked device situation, I didn't test. I'll add this test.
->>
->> We are duplicating a lot of logic from raid10_write_request() here. 
->> Can we
->> try to pull the common logic into a helper function?
-> I'll do this.
+No functional change.
 
-Hi Song
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+---
+ drivers/md/raid5.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-At first I had thought about this. In raid10_write_request, it checks 
-blocked rdev, badblock and sets
-r10_bio->devs[].bio in one loop. Can we move the codes that check 
-blocked rdev into a separate loop,
-similar like this:
-
-wait_block:
-for (i = 0;  i < conf->copies; i++) {
-     /* check rdev/rrdev is block or not
-      * If it's block, goto wait_block
-      */
-}
-
-for (i = 0;  i < conf->copies; i++) {
-     /* check bad block
-      * sets r10_bio->devs[i].bio
-      */
-}
-
-This way it waits until all rdev devices are not blocked. There is a 
-possibility that some rdev devices change
-to blocked again after checking. But the way raid10_write_request uses 
-now has this risk too. If you think
-the method mentioned above is OK, I'll try to use this way.
-
-Best Regards
-Xiao
-
->>
->> [...]
->>
->>> +static void raid10_end_discard_request(struct bio *bio)
->>> +{
->>> +       struct r10bio *r10_bio = bio->bi_private;
->>> +       struct r10conf *conf = r10_bio->mddev->private;
->>> +       struct md_rdev *rdev = NULL;
->>> +       int dev;
->>> +       int slot, repl;
->>> +
->>> +       /*
->>> +        * We don't care the return value of discard bio
->>> +        */
->>> +       if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
->>> +               set_bit(R10BIO_Uptodate, &r10_bio->state);
->>> +
->>> +       dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
->>> +       if (repl)
->>> +               rdev = conf->mirrors[dev].replacement;
->>> +       if (!rdev) {
->>> +               smp_rmb();
->>> +               repl = 0;
->>> +               rdev = conf->mirrors[dev].rdev;
->>> +       }
->>> +
->>> +       if (atomic_dec_and_test(&r10_bio->remaining)) {
->>> +               md_write_end(r10_bio->mddev);
->>> +               raid_end_bio_io(r10_bio);
->>> +       }
->>> +
->>> +       rdev_dec_pending(rdev, conf->mddev);
->>> +}
->>> +
->>> +/* There are some limitations to handle discard bio
->>> + * 1st, the discard size is bigger than stripe_size*2.
->>> + * 2st, if the discard bio spans reshape progress, we use the old 
->>> way to
->>> + * handle discard bio
->>> + */
->>> +static bool raid10_handle_discard(struct mddev *mddev, struct bio 
->>> *bio)
->>> +{
->>> +       struct r10conf *conf = mddev->private;
->>> +       struct geom geo = conf->geo;
->> Do we really need a full copy of conf->geo?
-> It doesn't need a full copy. Thanks for pointing about this.
->>
->>> +       struct r10bio *r10_bio;
->>> +
->>> +       int disk;
->>> +       sector_t chunk;
->>> +       int stripe_size, stripe_mask;
->>> +
->>> +       sector_t bio_start, bio_end;
->>> +       sector_t first_stripe_index, last_stripe_index;
->>> +       sector_t start_disk_offset;
->>> +       unsigned int start_disk_index;
->>> +       sector_t end_disk_offset;
->>> +       unsigned int end_disk_index;
->>> +
->>> +       wait_barrier(conf);
->>> +
->>> +       if (conf->reshape_progress != MaxSector &&
->>> +           ((bio->bi_iter.bi_sector >= conf->reshape_progress) !=
->>> +            conf->mddev->reshape_backwards))
->>> +               geo = conf->prev;
->>> +
->>> +       stripe_size = (1<<geo.chunk_shift) * geo.raid_disks;
->> This could be raid_disks << chunk_shift
-> ok
->>
->>> +       stripe_mask = stripe_size - 1;
->> Does this work when raid_disks is not power of 2?
-> In test I used 5 disks to create the raid10 too, it worked well. Could 
-> you explain what
-> you worried in detail?
->
-> Regards
-> Xiao
->
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 445a73e1dd2a..e6bbba1e05f4 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1227,7 +1227,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 
+ static struct dma_async_tx_descriptor *
+ async_copy_data(int frombio, struct bio *bio, struct page **page,
+-	sector_t sector, struct dma_async_tx_descriptor *tx,
++	unsigned int poff, sector_t sector, struct dma_async_tx_descriptor *tx,
+ 	struct stripe_head *sh, int no_skipcopy)
+ {
+ 	struct bio_vec bvl;
+@@ -1273,11 +1273,11 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
+ 				    !no_skipcopy)
+ 					*page = bio_page;
+ 				else
+-					tx = async_memcpy(*page, bio_page, page_offset,
++					tx = async_memcpy(*page, bio_page, page_offset + poff,
+ 						  b_offset, clen, &submit);
+ 			} else
+ 				tx = async_memcpy(bio_page, *page, b_offset,
+-						  page_offset, clen, &submit);
++						  page_offset + poff, clen, &submit);
+ 		}
+ 		/* chain the operations */
+ 		submit.depend_tx = tx;
+@@ -1350,6 +1350,7 @@ static void ops_run_biofill(struct stripe_head *sh)
+ 			while (rbi && rbi->bi_iter.bi_sector <
+ 				dev->sector + RAID5_STRIPE_SECTORS(conf)) {
+ 				tx = async_copy_data(0, rbi, &dev->page,
++						     dev->offset,
+ 						     dev->sector, tx, sh, 0);
+ 				rbi = r5_next_bio(conf, rbi, dev->sector);
+ 			}
+@@ -1790,6 +1791,7 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ 					set_bit(R5_Discard, &dev->flags);
+ 				else {
+ 					tx = async_copy_data(1, wbi, &dev->page,
++							     dev->offset,
+ 							     dev->sector, tx, sh,
+ 							     r5c_is_writeback(conf->log));
+ 					if (dev->page != dev->orig_page &&
+-- 
+2.25.4
 
