@@ -2,83 +2,148 @@ Return-Path: <SRS0=1IH2=B7=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD77C433DF
-	for <linux-raid@archiver.kernel.org>; Fri, 21 Aug 2020 12:20:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883DBC433DF
+	for <linux-raid@archiver.kernel.org>; Fri, 21 Aug 2020 14:23:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81DA420724
-	for <linux-raid@archiver.kernel.org>; Fri, 21 Aug 2020 12:20:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CE64204FD
+	for <linux-raid@archiver.kernel.org>; Fri, 21 Aug 2020 14:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728489AbgHUMUy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 21 Aug 2020 08:20:54 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:10302 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728413AbgHUMUk (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 21 Aug 2020 08:20:40 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id D20E7DD63F5293E4F9AF;
-        Fri, 21 Aug 2020 20:20:34 +0800 (CST)
-Received: from [10.174.179.185] (10.174.179.185) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.487.0; Fri, 21 Aug 2020 20:20:24 +0800
-Subject: Re: [PATCH v2 00/10] Save memory for stripe_head buffer
+        id S1726974AbgHUOXZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 21 Aug 2020 10:23:25 -0400
+Received: from mga12.intel.com ([192.55.52.136]:51580 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726440AbgHUOXX (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 21 Aug 2020 10:23:23 -0400
+IronPort-SDR: 0U0nZmAFtwykdwtPTyUaQGVKqP4XLVPOEvjB7eM0CCah+B2NFN9eKOq6zCWag95fudxuJzw5S1
+ smBY49CdqTSw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9719"; a="135075029"
+X-IronPort-AV: E=Sophos;i="5.76,337,1592895600"; 
+   d="scan'208";a="135075029"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2020 07:23:22 -0700
+IronPort-SDR: IVlQg9WRSiOLBmoMgmegf19R40bRsiQFxm/CBoDIRnyfndCuGO+fW3WP2T1LPD/R4K5twNrbC8
+ e7yN5bUp3dAA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,337,1592895600"; 
+   d="scan'208";a="297957373"
+Received: from lkp-server01.sh.intel.com (HELO 91ed66e1ca04) ([10.239.97.150])
+  by orsmga006.jf.intel.com with ESMTP; 21 Aug 2020 07:23:21 -0700
+Received: from kbuild by 91ed66e1ca04 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1k97wu-00017l-GT; Fri, 21 Aug 2020 14:23:20 +0000
+Date:   Fri, 21 Aug 2020 22:22:29 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Song Liu <song@kernel.org>
-CC:     linux-raid <linux-raid@vger.kernel.org>,
-        Hou Tao <houtao1@huawei.com>
-References: <20200820132214.3749139-1-yuyufen@huawei.com>
- <CAPhsuW473fmPDanrHYwG6NxU3Ai7kd8oo6siKo4A4j1w-pi7rg@mail.gmail.com>
-From:   Yufen Yu <yuyufen@huawei.com>
-Message-ID: <1f99d02f-0104-8c22-78e8-46a90c4f25b4@huawei.com>
-Date:   Fri, 21 Aug 2020 20:20:24 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ faecb8be6060294adffc3013104c3852c0506e24
+Message-ID: <5f3fd8a5.9sg2CZAlbTsEjuj/%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW473fmPDanrHYwG6NxU3Ai7kd8oo6siKo4A4j1w-pi7rg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.185]
-X-CFilter-Loop: Reflected
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-fixes
+branch HEAD: faecb8be6060294adffc3013104c3852c0506e24  md/raid5: make sure stripe_size as power of two
 
+elapsed time: 720m
 
-On 2020/8/21 13:04, Song Liu wrote:
-> On Thu, Aug 20, 2020 at 6:21 AM Yufen Yu <yuyufen@huawei.com> wrote:
->>
-> [...]
->>
->>   Patch 8 ~ 10 actually implement shared page between multiple devices of
->>   stripe_head. But they only make sense for PAGE_SIZE != 4096, likely, 64KB arm64
->>   system. It doesn't make any difference for PAGE_SIZE == 4096 system, likely x86.
->>
->>   We have run tests of mdadm for raid456 and test raid6test module.
->>   Not found obvious errors.
-> 
-> Applied series to md-next.
-> 
-> I noticed there is another case where we allocate page for
-> sh->dev[i].orig_page in
-> handle_stripe_dirtying(). This only happens with journal devices.
-> Please run tests
-> with journal device.
+configs tested: 79
+configs skipped: 3
 
-For now, raid5 journal and PPL feature are both required PAGE_SIZE == 4096.
-(Seen r5l_init_log() and ppl_init_log() return -EINVAL when PAGE_SIZE is not
-4096). So, in theory, this patch set should not make any different for them.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-But, run tests is also necessary. Tests under mdadm git repository have two
-journal cases: 21raid5cache and 20raid5journal. To test PPL, I write a simple
-test case: create raid5 array with option '-k ppl'. mkfs and mount the array.
-Then, some read and write data test on mount directory. Concurrently remove disk
-from array and re-add it. Not found obvious errors.
+arm                                 defconfig
+arm64                               defconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+arm                              allmodconfig
+mips                           ip28_defconfig
+arm                            mmp2_defconfig
+h8300                    h8300h-sim_defconfig
+riscv                               defconfig
+mips                        bcm47xx_defconfig
+m68k                       m5275evb_defconfig
+arm                        keystone_defconfig
+s390                             alldefconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+m68k                                defconfig
+nios2                               defconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+sh                               allmodconfig
+arc                                 defconfig
+arc                              allyesconfig
+parisc                              defconfig
+s390                                defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                             defconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a002-20200820
+i386                 randconfig-a004-20200820
+i386                 randconfig-a005-20200820
+i386                 randconfig-a003-20200820
+i386                 randconfig-a006-20200820
+i386                 randconfig-a001-20200820
+x86_64               randconfig-a015-20200820
+x86_64               randconfig-a012-20200820
+x86_64               randconfig-a016-20200820
+x86_64               randconfig-a014-20200820
+x86_64               randconfig-a011-20200820
+x86_64               randconfig-a013-20200820
+i386                 randconfig-a013-20200820
+i386                 randconfig-a012-20200820
+i386                 randconfig-a011-20200820
+i386                 randconfig-a016-20200820
+i386                 randconfig-a014-20200820
+i386                 randconfig-a015-20200820
+i386                 randconfig-a013-20200821
+i386                 randconfig-a012-20200821
+i386                 randconfig-a011-20200821
+i386                 randconfig-a016-20200821
+i386                 randconfig-a014-20200821
+i386                 randconfig-a015-20200821
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+x86_64                           allyesconfig
 
-Thanks,
-Yufen
-
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
