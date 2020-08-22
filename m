@@ -6,30 +6,27 @@ X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E6AC433E1
-	for <linux-raid@archiver.kernel.org>; Sat, 22 Aug 2020 01:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DC65C433DF
+	for <linux-raid@archiver.kernel.org>; Sat, 22 Aug 2020 01:42:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0729420720
-	for <linux-raid@archiver.kernel.org>; Sat, 22 Aug 2020 01:40:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F97720720
+	for <linux-raid@archiver.kernel.org>; Sat, 22 Aug 2020 01:42:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725976AbgHVBk5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 21 Aug 2020 21:40:57 -0400
-Received: from omta04.suddenlink.net ([208.180.40.74]:32739 "EHLO
-        omta04.suddenlink.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725935AbgHVBk5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Aug 2020 21:40:57 -0400
-X-Greylist: delayed 536 seconds by postgrey-1.27 at vger.kernel.org; Fri, 21 Aug 2020 21:40:56 EDT
+        id S1725976AbgHVBmo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 21 Aug 2020 21:42:44 -0400
+Received: from omta02.suddenlink.net ([208.180.40.72]:61078 "EHLO
+        omta02.suddenlink.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725935AbgHVBmn (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 21 Aug 2020 21:42:43 -0400
 Received: from [192.168.6.104] (really [66.76.46.195])
-          by dalofep01.suddenlink.net
+          by dalofep02.suddenlink.net
           (InterMail vM.8.04.03.22.02 201-2389-100-169-20190213) with ESMTP
-          id <20200822013158.DWVR7821.dalofep01.suddenlink.net@[192.168.6.104]>
-          for <linux-raid@vger.kernel.org>; Fri, 21 Aug 2020 20:31:58 -0500
-Subject: Re: Recommended filesystem for RAID 6
+          id <20200822014241.FBWG10794.dalofep02.suddenlink.net@[192.168.6.104]>
+          for <linux-raid@vger.kernel.org>; Fri, 21 Aug 2020 20:42:41 -0500
+Subject: Re: Feature request: Remove the badblocks list
 To:     mdraid <linux-raid@vger.kernel.org>
-References: <CAF-KpgYcEF5juR9nFPifZunPPGW73kWVG9fjR3=WpufxXJcewg@mail.gmail.com>
- <1381759926.21710099.1597158389614.JavaMail.zimbra@karlsbakk.net>
- <4a7bfca8-af6e-cbd1-0dc4-feaf1a0288be@fritscher.net>
- <5F32F56C.7040603@youngman.org.uk>
+References: <75076966.1748398.1597773608869.JavaMail.zimbra@karlsbakk.net>
+ <001c5a42-93fd-eddb-ba86-aa3e2695f2a8@thehawken.org>
 From:   "David C. Rankin" <drankinatty@suddenlinkmail.com>
 Autocrypt: addr=drankinatty@suddenlinkmail.com; prefer-encrypt=mutual;
  keydata=
@@ -59,32 +56,45 @@ Autocrypt: addr=drankinatty@suddenlinkmail.com; prefer-encrypt=mutual;
  u9Lrpjpyry1YorbCeiLMQLH4WaeCjwW25E44sXEz3yQEBs0IXKGUttoxkz4NTexuMbajE/zN
  +E26HU22iDtB5AOJ9R8=
 Organization: Rankin Law Firm, PLLC
-Message-ID: <05661c44-8193-6bba-67c9-4e0d220eb348@suddenlinkmail.com>
-Date:   Fri, 21 Aug 2020 20:31:58 -0500
+Message-ID: <37b43194-f372-dd04-a319-34406f63c5a2@suddenlinkmail.com>
+Date:   Fri, 21 Aug 2020 20:42:40 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.2.1
 MIME-Version: 1.0
-In-Reply-To: <5F32F56C.7040603@youngman.org.uk>
+In-Reply-To: <001c5a42-93fd-eddb-ba86-aa3e2695f2a8@thehawken.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Authentication-Info: Submitted using SMTP AUTH PLAIN at dalofep01.suddenlink.net from [66.76.46.195] using ID drankinatty@suddenlinkmail.com at Fri, 21 Aug 2020 20:31:58 -0500
-X-CM-Analysis: v=2.3 cv=X9Ys11be c=1 sm=1 tr=0 cx=a_idp_d a=/cos1G3ae6AqFCvJLv+j9g==:117 a=/cos1G3ae6AqFCvJLv+j9g==:17 a=IkcTkHD0fZMA:10 a=y4yBn9ojGxQA:10 a=A1jyNYAxBm8A:10 a=tXNp_sQbAAAA:8 a=iP1lC_2evjmJotsKC3cA:9 a=QEXdDO2ut3YA:10 a=Ml6N1FFu0uQA:10 a=EsphXFvyNvgA:10 a=Z5ABNNGmrOfJ6cZ5bIyy:22 a=UDnyf2zBuKT2w-IlGP_r:22
-X-CM-Envelope: MS4wfBXfwNSuwirFswAgvXGLShNVSDNFsICFUbvP3U1135alvKgZyrOlyC9uMlkUTGD9Kbe8mL+nrASehIIPA5t5GMTtjnGAZW2eiTw2JybOCn9B/HP3PGCF 6lB2p9/N0HOs1Y6xeFWrtZwdJuUhQqVvdmspfcwu4BAlJ5lS/BNv/wA5LG8LwRJ9fSzJIciKHikwFw==
+Content-Transfer-Encoding: 8bit
+X-Authentication-Info: Submitted using SMTP AUTH PLAIN at dalofep02.suddenlink.net from [66.76.46.195] using ID drankinatty@suddenlinkmail.com at Fri, 21 Aug 2020 20:42:40 -0500
+X-CM-Analysis: v=2.3 cv=FPxlONgs c=1 sm=1 tr=0 cx=a_idp_d a=/cos1G3ae6AqFCvJLv+j9g==:117 a=/cos1G3ae6AqFCvJLv+j9g==:17 a=IkcTkHD0fZMA:10 a=y4yBn9ojGxQA:10 a=A1jyNYAxBm8A:10 a=5q-iPHjFlLO9OT3GkaoA:9 a=QEXdDO2ut3YA:10
+X-CM-Envelope: MS4wfL5xBt7zzz29ermvyUfXp1IEKD1/1/Fq5FJh/Mekk+VKDLEbrM+aoafzsLRoH8/QgGurWTsM/ZByEdMYWwUG5MVoFCneBpWDRD3+wwWdilhV0s/M7vBd YdZodtXbvrUCdEk2qxsh9cM5j5cS3i99EqK7AzMkrYgLyY93BjmIEkgApvvGvGKSqczQ77hckczQqQ==
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/11/20 2:45 PM, Wols Lists wrote:
-> Note that it IS a shingled drive, so fine for backup, much less so for
-> anything else. I'm not sure whether btrfs would be a good choice or not ...
+On 8/18/20 4:03 PM, Håkon Struijk Holmen wrote:
+> Hi,
 > 
+> Thanks for the CC, I just managed to get myself subscribed to the list :)
+> 
+> I have gathered some thoughts on the subject as well after reading up on it,
+> figuring out the actual header format is, and writing a tool [3] to fix my
+> array...
+> 
+<snip>
+> But I have some complaints about the thing..
 
-I'll defer to you, but last I check btrfs did NOT play well with raid 5/6. It
-may be old info, but:
+Well,
 
-https://superuser.com/questions/1131701/btrfs-over-mdadm-raid6
+  There is code in all things that can be fixed, but I for one will chime in
+and say I don't care if a lose a strip or two so long as on a failed disk I
+pop the new one in and it rebuilds without issue (which it does, even when the
+disk was replaced due to bad blocks)
+
+  So whatever is done, don't fix what isn't broken and introduce more bugs
+along the way. If this is such an immediate problem, then why are patches
+being attached to the complaints?
 
 -- 
 David C. Rankin, J.D.,P.E.
