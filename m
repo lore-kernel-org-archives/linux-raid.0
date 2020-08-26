@@ -2,44 +2,46 @@ Return-Path: <SRS0=E/bP=CE=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF6AC433DF
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 07:02:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02FFEC433E1
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 08:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C802D2067C
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 07:02:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fOVmaNl0"
+	by mail.kernel.org (Postfix) with ESMTP id D1828206FA
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 08:18:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598429937;
+	bh=+vJV+mRF0Lzjjr3fr3A1d25Ht5edbPCfJqUZ9mJTuZc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=RKsTdo1kXFWmtzBoP+ESZygEhNKBBLBMiJ2v3wBrne7wXVZEiJx9z9lr2/Mfm+yhb
+	 brPLba9fw0aA212BwORQpWIelOGgGQWEhRfa+xPYIdvNQ4ZWnDi//CO1sYNGIpP6LN
+	 +OiuoIqM9xz32Barp1rcGUP9NDuhkPcZYlmPapdk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726870AbgHZHAg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Aug 2020 03:00:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45452 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726854AbgHZHAJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Aug 2020 03:00:09 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B279AC0613ED;
-        Wed, 26 Aug 2020 00:00:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=0wLQREwCLa44wEl2hfeoilZWN+qNU12maLsfDeeDnXw=; b=fOVmaNl0hhBbHTyIodHZaxhtT3
-        Dy2Fqd3O6tvNgLIg7ZGiDrpqjAGMkLn9SU2Eyq/KJCzY60tnLhRYktY9ji0pG4seu7X4ixHdZ6F0s
-        QccUlVpuuHKvPs4yx7CzAvuaMTuRBL+top1QQ0UzaTSZyYNrf45PlPcXtOMh7K2wcvwGUzRq2CTtP
-        cGPc8XU25+AQm/OVpXKFqNKOssn7EhMg4db1Qv1BDwpb2LuYSQAx1XT5f+PflmTnzfyHEPCmHqf1f
-        nOVNLt/tJK0/ObjLMSFaMiMpKXcVgkqvS+6z1wS4XMjJkU5NJ6SSEqkvSOQ4mfETLq1Um+Wjg5m7u
-        EzEMfVGw==;
-Received: from [2001:4bb8:18c:45ba:9892:9e86:5202:32f0] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kApPc-0003lJ-UY; Wed, 26 Aug 2020 07:00:03 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        id S1726936AbgHZISw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Aug 2020 04:18:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40140 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726016AbgHZISu (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 26 Aug 2020 04:18:50 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 23DE520678;
+        Wed, 26 Aug 2020 08:18:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598429929;
+        bh=+vJV+mRF0Lzjjr3fr3A1d25Ht5edbPCfJqUZ9mJTuZc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GEU0Xm/bx8cP15xViHXthdwpTyen+TUGLxiTYu1aQr59txHczphF0iSJ6zUYeHWWX
+         KeG6A4r//Wu1oZzMeekzFUdHP4041f9NyizugHYCE97ojW+tbEj5IjPyO+fOYOD9T4
+         Wjw7xvPDwkn7MCG9zkXnTpGNV75HhW6BJRy8Z9QE=
+Date:   Wed, 26 Aug 2020 10:19:05 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Denis Efremov <efremov@linux.com>,
         "David S. Miller" <davem@davemloft.net>,
@@ -47,180 +49,159 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 18/19] z2ram: use separate gendisk for the different modes
-Date:   Wed, 26 Aug 2020 08:24:45 +0200
-Message-Id: <20200826062446.31860-19-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200826062446.31860-1-hch@lst.de>
+Subject: Re: [PATCH 01/19] char_dev: replace cdev_map with an xarray
+Message-ID: <20200826081905.GB1796103@kroah.com>
 References: <20200826062446.31860-1-hch@lst.de>
+ <20200826062446.31860-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200826062446.31860-2-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use separate gendisks (which share a tag_set) for the different operating
-modes instead of redirecting the gendisk lookup using a probe callback.
-This avoids potential problems with aliased block_device instances and
-will eventually allow for removing the blk_register_region framework.
+On Wed, Aug 26, 2020 at 08:24:28AM +0200, Christoph Hellwig wrote:
+> None of the complicated overlapping regions bits of the kobj_map are
+> required for the character device lookup, so just a trivial xarray
+> instead.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/block/z2ram.c | 100 ++++++++++++++++++++++++------------------
- 1 file changed, 58 insertions(+), 42 deletions(-)
+Really?  This is ok to use and just as fast?  If so, wonderful, it would
+be great to clean up kobj_map users.
 
-diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
-index 566c653399d8d3..2bf059ba95603c 100644
---- a/drivers/block/z2ram.c
-+++ b/drivers/block/z2ram.c
-@@ -63,7 +63,7 @@ static int current_device = -1;
- 
- static DEFINE_SPINLOCK(z2ram_lock);
- 
--static struct gendisk *z2ram_gendisk;
-+static struct gendisk *z2ram_gendisk[Z2MINOR_COUNT];
- 
- static blk_status_t z2_queue_rq(struct blk_mq_hw_ctx *hctx,
- 				const struct blk_mq_queue_data *bd)
-@@ -281,7 +281,7 @@ static int z2_open(struct block_device *bdev, fmode_t mode)
- 
- 		current_device = device;
- 		z2ram_size <<= Z2RAM_CHUNKSHIFT;
--		set_capacity(z2ram_gendisk, z2ram_size >> 9);
-+		set_capacity(z2ram_gendisk[device], z2ram_size >> 9);
- 	}
- 
- 	mutex_unlock(&z2ram_mutex);
-@@ -313,71 +313,87 @@ static const struct block_device_operations z2_fops = {
- 	.release = z2_release,
- };
- 
--static struct kobject *z2_find(dev_t dev, int *part, void *data)
--{
--	*part = 0;
--	return get_disk_and_module(z2ram_gendisk);
--}
--
--static struct request_queue *z2_queue;
- static struct blk_mq_tag_set tag_set;
- 
- static const struct blk_mq_ops z2_mq_ops = {
- 	.queue_rq = z2_queue_rq,
- };
- 
-+static int z2ram_register_disk(int minor)
-+{
-+	struct request_queue *q;
-+	struct gendisk *disk;
-+
-+	disk = alloc_disk(1);
-+	if (!disk)
-+		return -ENOMEM;
-+
-+	q = blk_mq_init_queue(&tag_set);
-+	if (IS_ERR(q)) {
-+		put_disk(disk);
-+		return PTR_ERR(q);
-+	}
-+
-+	disk->major = Z2RAM_MAJOR;
-+	disk->first_minor = minor;
-+	disk->fops = &z2_fops;
-+	if (minor)
-+		sprintf(disk->disk_name, "z2ram%d", minor);
-+	else
-+		sprintf(disk->disk_name, "z2ram");
-+	disk->queue = q;
-+
-+	z2ram_gendisk[minor] = disk;
-+	add_disk(disk);
-+	return 0;
-+}
-+
- static int __init z2_init(void)
- {
--	int ret;
-+	int ret, i;
- 
- 	if (!MACH_IS_AMIGA)
- 		return -ENODEV;
- 
--	ret = -EBUSY;
- 	if (register_blkdev(Z2RAM_MAJOR, DEVICE_NAME))
--		goto err;
--
--	ret = -ENOMEM;
--	z2ram_gendisk = alloc_disk(1);
--	if (!z2ram_gendisk)
--		goto out_disk;
--
--	z2_queue = blk_mq_init_sq_queue(&tag_set, &z2_mq_ops, 16,
--					BLK_MQ_F_SHOULD_MERGE);
--	if (IS_ERR(z2_queue)) {
--		ret = PTR_ERR(z2_queue);
--		z2_queue = NULL;
--		goto out_queue;
-+		return -EBUSY;
-+
-+	tag_set.ops = &z2_mq_ops;
-+	tag_set.nr_hw_queues = 1;
-+	tag_set.nr_maps = 1;
-+	tag_set.queue_depth = 16;
-+	tag_set.numa_node = NUMA_NO_NODE;
-+	tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
-+	ret = blk_mq_alloc_tag_set(&tag_set);
-+	if (ret)
-+		goto out_unregister_blkdev;
-+
-+	for (i = 0; i < Z2MINOR_COUNT; i++) {
-+		ret = z2ram_register_disk(i);
-+		if (ret && i == 0)
-+			goto out_free_tagset;
- 	}
- 
--	z2ram_gendisk->major = Z2RAM_MAJOR;
--	z2ram_gendisk->first_minor = 0;
--	z2ram_gendisk->fops = &z2_fops;
--	sprintf(z2ram_gendisk->disk_name, "z2ram");
--
--	z2ram_gendisk->queue = z2_queue;
--	add_disk(z2ram_gendisk);
--	blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT, THIS_MODULE,
--			    z2_find, NULL, NULL);
--
- 	return 0;
- 
--out_queue:
--	put_disk(z2ram_gendisk);
--out_disk:
-+out_free_tagset:
-+	blk_mq_free_tag_set(&tag_set);
-+out_unregister_blkdev:
- 	unregister_blkdev(Z2RAM_MAJOR, DEVICE_NAME);
--err:
- 	return ret;
- }
- 
- static void __exit z2_exit(void)
- {
- 	int i, j;
--	blk_unregister_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT);
-+
- 	unregister_blkdev(Z2RAM_MAJOR, DEVICE_NAME);
--	del_gendisk(z2ram_gendisk);
--	put_disk(z2ram_gendisk);
--	blk_cleanup_queue(z2_queue);
-+
-+	for (i = 0; i < Z2MINOR_COUNT; i++) {
-+		del_gendisk(z2ram_gendisk[i]);
-+		blk_cleanup_queue(z2ram_gendisk[i]->queue);
-+		put_disk(z2ram_gendisk[i]);
-+	}
- 	blk_mq_free_tag_set(&tag_set);
- 
- 	if (current_device != -1) {
--- 
-2.28.0
+But I don't think you got all of the needed bits here:
 
+> ---
+>  fs/char_dev.c | 94 +++++++++++++++++++++++++--------------------------
+>  fs/dcache.c   |  1 -
+>  fs/internal.h |  5 ---
+>  3 files changed, 46 insertions(+), 54 deletions(-)
+> 
+> diff --git a/fs/char_dev.c b/fs/char_dev.c
+> index ba0ded7842a779..6c4d6c4938f14b 100644
+> --- a/fs/char_dev.c
+> +++ b/fs/char_dev.c
+> @@ -17,7 +17,6 @@
+>  #include <linux/seq_file.h>
+>  
+>  #include <linux/kobject.h>
+> -#include <linux/kobj_map.h>
+>  #include <linux/cdev.h>
+>  #include <linux/mutex.h>
+>  #include <linux/backing-dev.h>
+> @@ -25,8 +24,7 @@
+>  
+>  #include "internal.h"
+>  
+> -static struct kobj_map *cdev_map;
+> -
+> +static DEFINE_XARRAY(cdev_map);
+>  static DEFINE_MUTEX(chrdevs_lock);
+>  
+>  #define CHRDEV_MAJOR_HASH_SIZE 255
+> @@ -367,6 +365,29 @@ void cdev_put(struct cdev *p)
+>  	}
+>  }
+>  
+> +static struct cdev *cdev_lookup(dev_t dev)
+> +{
+> +	struct cdev *cdev;
+> +
+> +retry:
+> +	mutex_lock(&chrdevs_lock);
+> +	cdev = xa_load(&cdev_map, dev);
+> +	if (!cdev) {
+> +		mutex_unlock(&chrdevs_lock);
+> +
+> +		if (request_module("char-major-%d-%d",
+> +				   MAJOR(dev), MINOR(dev)) > 0)
+> +			/* Make old-style 2.4 aliases work */
+> +			request_module("char-major-%d", MAJOR(dev));
+> +		goto retry;
+> +	}
+> +
+> +	if (!cdev_get(cdev))
+> +		cdev = NULL;
+> +	mutex_unlock(&chrdevs_lock);
+> +	return cdev;
+> +}
+> +
+>  /*
+>   * Called every time a character special file is opened
+>   */
+> @@ -380,13 +401,10 @@ static int chrdev_open(struct inode *inode, struct file *filp)
+>  	spin_lock(&cdev_lock);
+>  	p = inode->i_cdev;
+>  	if (!p) {
+> -		struct kobject *kobj;
+> -		int idx;
+>  		spin_unlock(&cdev_lock);
+> -		kobj = kobj_lookup(cdev_map, inode->i_rdev, &idx);
+> -		if (!kobj)
+> +		new = cdev_lookup(inode->i_rdev);
+> +		if (!new)
+>  			return -ENXIO;
+> -		new = container_of(kobj, struct cdev, kobj);
+>  		spin_lock(&cdev_lock);
+>  		/* Check i_cdev again in case somebody beat us to it while
+>  		   we dropped the lock. */
+> @@ -454,18 +472,6 @@ const struct file_operations def_chr_fops = {
+>  	.llseek = noop_llseek,
+>  };
+>  
+> -static struct kobject *exact_match(dev_t dev, int *part, void *data)
+> -{
+> -	struct cdev *p = data;
+> -	return &p->kobj;
+> -}
+> -
+> -static int exact_lock(dev_t dev, void *data)
+> -{
+> -	struct cdev *p = data;
+> -	return cdev_get(p) ? 0 : -1;
+> -}
+> -
+>  /**
+>   * cdev_add() - add a char device to the system
+>   * @p: the cdev structure for the device
+> @@ -478,7 +484,7 @@ static int exact_lock(dev_t dev, void *data)
+>   */
+>  int cdev_add(struct cdev *p, dev_t dev, unsigned count)
+>  {
+> -	int error;
+> +	int error, i;
+>  
+>  	p->dev = dev;
+>  	p->count = count;
+> @@ -486,14 +492,22 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
+>  	if (WARN_ON(dev == WHITEOUT_DEV))
+>  		return -EBUSY;
+>  
+> -	error = kobj_map(cdev_map, dev, count, NULL,
+> -			 exact_match, exact_lock, p);
+> -	if (error)
+> -		return error;
+> +	mutex_lock(&chrdevs_lock);
+> +	for (i = 0; i < count; i++) {
+> +		error = xa_insert(&cdev_map, dev + i, p, GFP_KERNEL);
+> +		if (error)
+> +			goto out_unwind;
+> +	}
+> +	mutex_unlock(&chrdevs_lock);
+>  
+>  	kobject_get(p->kobj.parent);
+
+Can't you drop this kobject_get() too?
+
+And also the "struct kobj" in struct cdev can be gone as well, as the
+kobj_map was the only "real" user of this structure.  I know some
+drivers liked to touch that field as well, but it never actually did
+anything for them, so it was pointless, but it will take some 'make
+allmodconfig' builds to flush them out.
+
+thanks,
+
+greg k-h
