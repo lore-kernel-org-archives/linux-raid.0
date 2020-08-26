@@ -6,38 +6,42 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73866C433E1
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 09:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F7C8C433E1
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 09:49:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A8D5206FA
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 09:18:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D86A207DF
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 09:49:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727884AbgHZJSB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:18:01 -0400
-Received: from smtprelay0083.hostedemail.com ([216.40.44.83]:56644 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727793AbgHZJSB (ORCPT
+        id S1728256AbgHZJti convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Aug 2020 05:49:38 -0400
+Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:38435 "EHLO
+        outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727997AbgHZJth (ORCPT
         <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:18:01 -0400
-X-Greylist: delayed 312 seconds by postgrey-1.27 at vger.kernel.org; Wed, 26 Aug 2020 05:18:01 EDT
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave01.hostedemail.com (Postfix) with ESMTP id 8D75F1802E8C6
-        for <linux-raid@vger.kernel.org>; Wed, 26 Aug 2020 09:12:49 +0000 (UTC)
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 5F9B0180A68C8;
-        Wed, 26 Aug 2020 09:12:47 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: field82_4a0e14027063
-X-Filterd-Recvd-Size: 1581
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf13.hostedemail.com (Postfix) with ESMTPA;
-        Wed, 26 Aug 2020 09:12:45 +0000 (UTC)
-Message-ID: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>
+        Wed, 26 Aug 2020 05:49:37 -0400
+Received: from inpost2.zedat.fu-berlin.de ([130.133.4.69])
+          by outpost.zedat.fu-berlin.de (Exim 4.93)
+          with esmtps (TLS1.2)
+          tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+          (envelope-from <glaubitz@zedat.fu-berlin.de>)
+          id 1kAs3g-001QRa-BS; Wed, 26 Aug 2020 11:49:32 +0200
+Received: from tmo-117-196.customers.d1-online.com ([80.187.117.196] helo=localhost.localdomain)
+          by inpost2.zedat.fu-berlin.de (Exim 4.93)
+          with esmtpsa (TLS1.2)
+          tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+          (envelope-from <glaubitz@physik.fu-berlin.de>)
+          id 1kAs3g-0020Ib-1g; Wed, 26 Aug 2020 11:49:32 +0200
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+From:   John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Mime-Version: 1.0 (1.0)
 Subject: Re: [PATCH 17/19] z2ram: reindent
-From:   Joe Perches <joe@perches.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Date:   Wed, 26 Aug 2020 11:49:29 +0200
+Message-Id: <EF673A30-F88D-4E4E-8A2B-E942153830AC@physik.fu-berlin.de>
+References: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Denis Efremov <efremov@linux.com>,
         "David S. Miller" <davem@davemloft.net>,
@@ -45,28 +49,27 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Date:   Wed, 26 Aug 2020 02:12:43 -0700
-In-Reply-To: <20200826062446.31860-18-hch@lst.de>
-References: <20200826062446.31860-1-hch@lst.de>
-         <20200826062446.31860-18-hch@lst.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.4-0ubuntu1 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>
+To:     Joe Perches <joe@perches.com>
+X-Mailer: iPhone Mail (18A5351d)
+X-Original-Sender: glaubitz@physik.fu-berlin.de
+X-Originating-IP: 80.187.117.196
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 2020-08-26 at 08:24 +0200, Christoph Hellwig wrote:
-> reindent the driver using Lident as the code style was far away from
-> normal Linux code.
 
-Why?  Does anyone use this anymore?
+> On Aug 26, 2020, at 11:21 AM, Joe Perches <joe@perches.com> wrote:
+> 
+> ﻿On Wed, 2020-08-26 at 08:24 +0200, Christoph Hellwig wrote:
+>> reindent the driver using Lident as the code style was far away from
+>> normal Linux code.
+> 
+> Why?  Does anyone use this anymore?
 
- ** z2ram - Amiga pseudo-driver to access 16bit-RAM in ZorroII space
- **         as a block device, to be used as a RAM disk or swap space
- ** Copyright (C) 1994 by Ingo Wilken (Ingo.Wilken@informatik.uni-oldenburg.de)
+Yes, the Amiga and Linux/m68k is very well and alive. There is new hardware being developed and new drivers being developed and so on.
 
+Please let’s don’t have another discussion about that. The code is maintained which is what counts and not whether any corporation is still making money with it.
 
-
+Adrian
