@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A6EC433E3
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 07:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C6DC433E1
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 07:01:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 401092067C
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 07:01:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A7302067C
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Aug 2020 07:01:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NMSwFWI0"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HUzISJGW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726734AbgHZHBH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Aug 2020 03:01:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45458 "EHLO
+        id S1726947AbgHZHBM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Aug 2020 03:01:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726856AbgHZHAM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Aug 2020 03:00:12 -0400
+        with ESMTP id S1726709AbgHZHAG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 Aug 2020 03:00:06 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A2F6C061786;
-        Wed, 26 Aug 2020 00:00:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA665C061756;
+        Wed, 26 Aug 2020 00:00:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=BZmzuzcN7BR56jKzhMqx/iElPzxOZdyo7h8lorg9pJU=; b=NMSwFWI0aNVPdmlBwry20ZNi6/
-        75ZWifY6T3b+V/5F0sil22u77lVXgraoNSPHkGMc/pqPPaDxM2KFL/iearEYoWx4QBNLyhJexOe3x
-        xVqVByMQE4bwC7fOh02QoKY/EbWU/u+VIB0p9fFDyTTQk7QAkvIyun623cucCZHq4cANTmm4Tqpn3
-        EkRxj1nl95YjEFO+vB1Qum+8AJyPky620MqlUcS2zpVIHr7kV9+MnDICbKC10Ctrr4JX09lpmtTQi
-        VsXYyxljmbYJgClPxYZbiOFuuBRg7BsJqsxDyuueHo0ZyRAXSRrFQY7qPOFiwvgVPEwYuX40bLbV/
-        09bYaf1A==;
+        bh=Fts/xdyAgLXiHkT6oH53N4wrgx9qxnqqG5ORQ9IwOoI=; b=HUzISJGWLAjwA82k9t12N5J1E9
+        fdxb4+UqdrlHFftWtL4XmszinTr9KfdbSSYdbGtgE/oWp71RQZJKfgOScUGOP0Jg2DH+zGmsK46y/
+        Yx8yQEFHQq/Z037t5ZTC7D0fO3I9vneCDN5vSQjQSZwzOktwz6/ajoqL64xfZ+yiKB7OJ9PvkcFmH
+        VfOqFCSzbirpECt6/BsEDgduuKqbmLVrHV81YbImmBZdM9dwAV9cauV1mMM8dtUnMKMiZaQ4dEgTB
+        KW6w8Ywr98IotI/L/pwK0+XO9XNO9i7GCe/AllfDafzjAJmTCHs0XGHifS3vg1TAsdlpVPtLdteF5
+        UlMGjaVw==;
 Received: from [2001:4bb8:18c:45ba:9892:9e86:5202:32f0] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kApPg-0003lr-Jz; Wed, 26 Aug 2020 07:00:05 +0000
+        id 1kApPX-0003ke-5Q; Wed, 26 Aug 2020 06:59:56 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -47,9 +47,9 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 19/19] block: switch gendisk lookup to a simple xarray
-Date:   Wed, 26 Aug 2020 08:24:46 +0200
-Message-Id: <20200826062446.31860-20-hch@lst.de>
+Subject: [PATCH 16/19] ataflop: use a separate gendisk for each media format
+Date:   Wed, 26 Aug 2020 08:24:43 +0200
+Message-Id: <20200826062446.31860-17-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200826062446.31860-1-hch@lst.de>
 References: <20200826062446.31860-1-hch@lst.de>
@@ -61,333 +61,287 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Now that bdev_map is only used for finding gendisks, we can use
-a simple xarray instead of the regions tracking structure for it.
+The Atari floppy driver usually autodetects the media when used with the
+ormal /dev/fd? devices, which also are the only nodes created by udev.
+But it also supports various aliases that force a given media format.
+That is currently supported using the blk_register_region framework
+which finds the floppy gendisk even for a 'mismatched' dev_t.  The
+problem with this (besides the code complexity) is that it creates
+multiple struct block_device instances for the whole device of a
+single gendisk, which can lead to interesting issues in code not
+aware of that fact.
+
+To fix this just create a separate gendisk for each of the aliases
+if they are accessed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c         | 210 ++++++++----------------------------------
- include/linux/genhd.h |   7 --
- 2 files changed, 38 insertions(+), 179 deletions(-)
+ drivers/block/ataflop.c | 135 +++++++++++++++++++++++++---------------
+ 1 file changed, 86 insertions(+), 49 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 4cbeff3ec1ef5a..80afacaf15f740 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -27,15 +27,7 @@
+diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
+index a50e13af030526..b5acc85328c329 100644
+--- a/drivers/block/ataflop.c
++++ b/drivers/block/ataflop.c
+@@ -297,7 +297,7 @@ static struct atari_floppy_struct {
+ 	unsigned int wpstat;	/* current state of WP signal (for
+ 				   disk change detection) */
+ 	int flags;		/* flags */
+-	struct gendisk *disk;
++	struct gendisk *disk[NUM_DISK_MINORS];
+ 	int ref;
+ 	int type;
+ 	struct blk_mq_tag_set tag_set;
+@@ -723,12 +723,16 @@ static void fd_error( void )
  
- static struct kobject *block_depr;
- 
--struct bdev_map {
--	struct bdev_map *next;
--	dev_t dev;
--	unsigned long range;
--	struct module *owner;
--	struct kobject *(*probe)(dev_t, int *, void *);
--	int (*lock)(dev_t, void *);
--	void *data;
--} *bdev_map[255];
-+static DEFINE_XARRAY(bdev_map);
- static DEFINE_MUTEX(bdev_map_lock);
- 
- /* for extended dynamic devt allocation, currently only one major is used */
-@@ -649,85 +641,26 @@ static char *bdevt_str(dev_t devt, char *buf)
- 	return buf;
- }
- 
--/*
-- * Register device numbers dev..(dev+range-1)
-- * range must be nonzero
-- * The hash chain is sorted on range, so that subranges can override.
-- */
--void blk_register_region(dev_t devt, unsigned long range, struct module *module,
--			 struct kobject *(*probe)(dev_t, int *, void *),
--			 int (*lock)(dev_t, void *), void *data)
--{
--	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
--	unsigned index = MAJOR(devt);
--	unsigned i;
--	struct bdev_map *p;
--
--	n = min(n, 255u);
--	p = kmalloc_array(n, sizeof(struct bdev_map), GFP_KERNEL);
--	if (p == NULL)
--		return;
--
--	for (i = 0; i < n; i++, p++) {
--		p->owner = module;
--		p->probe = probe;
--		p->lock = lock;
--		p->dev = devt;
--		p->range = range;
--		p->data = data;
--	}
--
--	mutex_lock(&bdev_map_lock);
--	for (i = 0, p -= n; i < n; i++, p++, index++) {
--		struct bdev_map **s = &bdev_map[index % 255];
--		while (*s && (*s)->range < range)
--			s = &(*s)->next;
--		p->next = *s;
--		*s = p;
--	}
--	mutex_unlock(&bdev_map_lock);
--}
--EXPORT_SYMBOL(blk_register_region);
--
--void blk_unregister_region(dev_t devt, unsigned long range)
-+static void blk_register_region(struct gendisk *disk)
+ static int do_format(int drive, int type, struct atari_format_descr *desc)
  {
--	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
--	unsigned index = MAJOR(devt);
--	unsigned i;
--	struct bdev_map *found = NULL;
-+	int i;
+-	struct request_queue *q = unit[drive].disk->queue;
++	struct request_queue *q;
+ 	unsigned char	*p;
+ 	int sect, nsect;
+ 	unsigned long	flags;
+ 	int ret;
  
- 	mutex_lock(&bdev_map_lock);
--	for (i = 0; i < min(n, 255u); i++, index++) {
--		struct bdev_map **s;
--		for (s = &bdev_map[index % 255]; *s; s = &(*s)->next) {
--			struct bdev_map *p = *s;
--			if (p->dev == devt && p->range == range) {
--				*s = p->next;
--				if (!found)
--					found = p;
--				break;
--			}
--		}
-+	for (i = 0; i < disk->minors; i++) {
-+		if (xa_insert(&bdev_map, disk_devt(disk) + i, disk, GFP_KERNEL))
-+			WARN_ON_ONCE(1);
++	if (type)
++		type--;
++
++	q = unit[drive].disk[type]->queue;
+ 	blk_mq_freeze_queue(q);
+ 	blk_mq_quiesce_queue(q);
+ 
+@@ -738,7 +742,7 @@ static int do_format(int drive, int type, struct atari_format_descr *desc)
+ 	local_irq_restore(flags);
+ 
+ 	if (type) {
+-		if (--type >= NUM_DISK_MINORS ||
++		if (type >= NUM_DISK_MINORS ||
+ 		    minor2disktype[type].drive_types > DriveType) {
+ 			ret = -EINVAL;
+ 			goto out;
+@@ -1154,7 +1158,7 @@ static void fd_rwsec_done1(int status)
+ 			    if (SUDT[-1].blocks > ReqBlock) {
+ 				/* try another disk type */
+ 				SUDT--;
+-				set_capacity(unit[SelectedDrive].disk,
++				set_capacity(unit[SelectedDrive].disk[0],
+ 							SUDT->blocks);
+ 			    } else
+ 				Probing = 0;
+@@ -1169,7 +1173,7 @@ static void fd_rwsec_done1(int status)
+ /* record not found, but not probing. Maybe stretch wrong ? Restart probing */
+ 			if (SUD.autoprobe) {
+ 				SUDT = atari_disk_type + StartDiskType[DriveType];
+-				set_capacity(unit[SelectedDrive].disk,
++				set_capacity(unit[SelectedDrive].disk[0],
+ 							SUDT->blocks);
+ 				Probing = 1;
+ 			}
+@@ -1515,7 +1519,7 @@ static blk_status_t ataflop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		if (!UDT) {
+ 			Probing = 1;
+ 			UDT = atari_disk_type + StartDiskType[DriveType];
+-			set_capacity(floppy->disk, UDT->blocks);
++			set_capacity(bd->rq->rq_disk, UDT->blocks);
+ 			UD.autoprobe = 1;
+ 		}
+ 	} 
+@@ -1533,7 +1537,7 @@ static blk_status_t ataflop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		}
+ 		type = minor2disktype[type].index;
+ 		UDT = &atari_disk_type[type];
+-		set_capacity(floppy->disk, UDT->blocks);
++		set_capacity(bd->rq->rq_disk, UDT->blocks);
+ 		UD.autoprobe = 0;
  	}
- 	mutex_unlock(&bdev_map_lock);
--	kfree(found);
- }
--EXPORT_SYMBOL(blk_unregister_region);
  
--static struct kobject *exact_match(dev_t devt, int *partno, void *data)
-+static void blk_unregister_region(struct gendisk *disk)
- {
--	struct gendisk *p = data;
--
--	return &disk_to_dev(p)->kobj;
--}
--
--static int exact_lock(dev_t devt, void *data)
--{
--	struct gendisk *p = data;
-+	int i;
+@@ -1658,7 +1662,7 @@ static int fd_locked_ioctl(struct block_device *bdev, fmode_t mode,
+ 				    printk (KERN_INFO "floppy%d: setting %s %p!\n",
+ 				        drive, dtp->name, dtp);
+ 				UDT = dtp;
+-				set_capacity(floppy->disk, UDT->blocks);
++				set_capacity(disk, UDT->blocks);
  
--	if (!get_disk_and_module(p))
--		return -1;
--	return 0;
-+	mutex_lock(&bdev_map_lock);
-+	for (i = 0; i < disk->minors; i++)
-+		xa_erase(&bdev_map, disk_devt(disk) + i);
-+	mutex_lock(&bdev_map_lock);
- }
+ 				if (cmd == FDDEFPRM) {
+ 				  /* save settings as permanent default type */
+@@ -1702,7 +1706,7 @@ static int fd_locked_ioctl(struct block_device *bdev, fmode_t mode,
+ 			return -EINVAL;
  
- static void register_disk(struct device *parent, struct gendisk *disk,
-@@ -878,8 +811,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
- 		ret = bdi_register(bdi, "%u:%u", MAJOR(devt), MINOR(devt));
- 		WARN_ON(ret);
- 		bdi_set_owner(bdi, dev);
--		blk_register_region(disk_devt(disk), disk->minors, NULL,
--				    exact_match, exact_lock, disk);
-+		blk_register_region(disk);
- 	}
- 	register_disk(parent, disk, groups);
- 	if (register_queue)
-@@ -987,7 +919,7 @@ void del_gendisk(struct gendisk *disk)
- 		 */
- 		bdi_unregister(disk->queue->backing_dev_info);
- 		blk_unregister_queue(disk);
--		blk_unregister_region(disk_devt(disk), disk->minors);
-+		blk_unregister_region(disk);
- 	} else {
- 		blk_unregister_queue(disk);
- 	}
-@@ -1057,54 +989,22 @@ static void request_gendisk_module(dev_t devt)
- 		request_module("block-major-%d", MAJOR(devt));
- }
+ 		UDT = dtp;
+-		set_capacity(floppy->disk, UDT->blocks);
++		set_capacity(disk, UDT->blocks);
  
--static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
-+static bool get_disk_and_module(struct gendisk *disk)
- {
--	struct kobject *kobj;
--	struct bdev_map *p;
--	unsigned long best = ~0UL;
--
--retry:
--	mutex_lock(&bdev_map_lock);
--	for (p = bdev_map[MAJOR(dev) % 255]; p; p = p->next) {
--		struct kobject *(*probe)(dev_t, int *, void *);
--		struct module *owner;
--		void *data;
--
--		if (p->dev > dev || p->dev + p->range - 1 < dev)
--			continue;
--		if (p->range - 1 >= best)
--			break;
--		if (!try_module_get(p->owner))
--			continue;
--		owner = p->owner;
--		data = p->data;
--		probe = p->probe;
--		best = p->range - 1;
--		*partno = dev - p->dev;
--
--		if (!probe) {
--			mutex_unlock(&bdev_map_lock);
--			module_put(owner);
--			request_gendisk_module(dev);
--			goto retry;
--		}
-+	struct module *owner;
- 
--		if (p->lock && p->lock(dev, data) < 0) {
--			module_put(owner);
--			continue;
--		}
--		mutex_unlock(&bdev_map_lock);
--		kobj = probe(dev, partno, data);
--		/* Currently ->owner protects _only_ ->probe() itself. */
-+	if (!disk->fops)
-+		return false;
-+	owner = disk->fops->owner;
-+	if (owner && !try_module_get(owner))
-+		return false;
-+	if (!kobject_get_unless_zero(&disk_to_dev(disk)->kobj)) {
- 		module_put(owner);
--		if (kobj)
--			return dev_to_disk(kobj_to_dev(kobj));
--		goto retry;
-+		return false;
- 	}
--	mutex_unlock(&bdev_map_lock);
--	return NULL;
--}
-+	return true;
- 
-+}
- 
- /**
-  * get_gendisk - get partitioning information for a given device
-@@ -1123,7 +1023,19 @@ struct gendisk *get_gendisk(dev_t devt, int *partno)
- 	might_sleep();
- 
- 	if (MAJOR(devt) != BLOCK_EXT_MAJOR) {
--		disk = lookup_gendisk(devt, partno);
-+		mutex_lock(&bdev_map_lock);
-+		disk = xa_load(&bdev_map, devt);
-+		if (!disk) {
-+			mutex_unlock(&bdev_map_lock);
-+			request_gendisk_module(devt);
-+			mutex_lock(&bdev_map_lock);
-+			disk = xa_load(&bdev_map, devt);
-+		}
-+		if (disk && !get_disk_and_module(disk))
-+			disk = NULL;
-+		if (disk)
-+			*partno = devt - disk_devt(disk);
-+		mutex_unlock(&bdev_map_lock);
- 	} else {
- 		struct hd_struct *part;
- 
-@@ -1327,21 +1239,6 @@ static const struct seq_operations partitions_op = {
+ 		return 0;
+ 	case FDMSGON:
+@@ -1725,7 +1729,7 @@ static int fd_locked_ioctl(struct block_device *bdev, fmode_t mode,
+ 		UDT = NULL;
+ 		/* MSch: invalidate default_params */
+ 		default_params[drive].blocks  = 0;
+-		set_capacity(floppy->disk, MAX_DISK_SIZE * 2);
++		set_capacity(disk, MAX_DISK_SIZE * 2);
+ 		fallthrough;
+ 	case FDFMTEND:
+ 	case FDFLUSH:
+@@ -1961,14 +1965,50 @@ static const struct blk_mq_ops ataflop_mq_ops = {
+ 	.commit_rqs = ataflop_commit_rqs,
  };
- #endif
  
--static void bdev_map_init(void)
--{
--	struct bdev_map *base;
--	int i;
--
--	base = kzalloc(sizeof(*base), GFP_KERNEL);
--	if (!base)
--		panic("cannot allocate bdev_map");
--
--	base->dev = 1;
--	base->range = ~0 ;
--	for (i = 0; i < 255; i++)
--		bdev_map[i] = base;
--}
--
- static int __init genhd_device_init(void)
+-static struct kobject *floppy_find(dev_t dev, int *part, void *data)
++static int ataflop_alloc_disk(unsigned int drive, unsigned int type)
  {
- 	int error;
-@@ -1350,7 +1247,6 @@ static int __init genhd_device_init(void)
- 	error = class_register(&block_class);
- 	if (unlikely(error))
- 		return error;
--	bdev_map_init();
- 	blk_dev_init();
- 
- 	register_blkdev(BLOCK_EXT_MAJOR, "blkext");
-@@ -1896,35 +1792,6 @@ struct gendisk *__alloc_disk_node(int minors, int node_id)
+-	int drive = *part & 3;
+-	int type  = *part >> 2;
++	struct gendisk *disk;
++	int ret;
++
++	disk = alloc_disk(1);
++	if (!disk)
++		return -ENOMEM;
++
++	disk->queue = blk_mq_init_queue(&unit[drive].tag_set);
++	if (IS_ERR(disk->queue)) {
++		ret = PTR_ERR(disk->queue);
++		disk->queue = NULL;
++		put_disk(disk);
++		return ret;
++	}
++
++	disk->major = FLOPPY_MAJOR;
++	disk->first_minor = drive + (type << 2);
++	sprintf(disk->disk_name, "fd%d", drive);
++	disk->fops = &floppy_fops;
++	disk->events = DISK_EVENT_MEDIA_CHANGE;
++	disk->private_data = &unit[drive];
++	set_capacity(disk, MAX_DISK_SIZE * 2);
++
++	unit[drive].disk[type] = disk;
++	return 0;
++}
++
++static DEFINE_MUTEX(ataflop_probe_lock);
++
++static void ataflop_probe(dev_t dev)
++{
++	int drive = MINOR(dev) & 3;
++	int type  = MINOR(dev) >> 2;
++
+ 	if (drive >= FD_MAX_UNITS || type > NUM_DISK_MINORS)
+-		return NULL;
+-	*part = 0;
+-	return get_disk_and_module(unit[drive].disk);
++		return;
++	mutex_lock(&ataflop_probe_lock);
++	if (!unit[drive].disk[type]) {
++		if (ataflop_alloc_disk(drive, type) == 0)
++			add_disk(unit[drive].disk[type]);
++	}
++	mutex_unlock(&ataflop_probe_lock);
  }
- EXPORT_SYMBOL(__alloc_disk_node);
  
--/**
-- * get_disk_and_module - increments the gendisk and gendisk fops module refcount
-- * @disk: the struct gendisk to increment the refcount for
-- *
-- * This increments the refcount for the struct gendisk, and the gendisk's
-- * fops module owner.
-- *
-- * Context: Any context.
-- */
--struct kobject *get_disk_and_module(struct gendisk *disk)
--{
--	struct module *owner;
--	struct kobject *kobj;
--
--	if (!disk->fops)
--		return NULL;
--	owner = disk->fops->owner;
--	if (owner && !try_module_get(owner))
--		return NULL;
--	kobj = kobject_get_unless_zero(&disk_to_dev(disk)->kobj);
--	if (kobj == NULL) {
--		module_put(owner);
--		return NULL;
--	}
--	return kobj;
--
--}
--EXPORT_SYMBOL(get_disk_and_module);
--
- /**
-  * put_disk - decrements the gendisk refcount
-  * @disk: the struct gendisk to decrement the refcount for
-@@ -1961,7 +1828,6 @@ void put_disk_and_module(struct gendisk *disk)
- 		module_put(owner);
+ static int __init atari_floppy_init (void)
+@@ -1980,23 +2020,26 @@ static int __init atari_floppy_init (void)
+ 		/* Amiga, Mac, ... don't have Atari-compatible floppy :-) */
+ 		return -ENODEV;
+ 
+-	if (register_blkdev(FLOPPY_MAJOR,"fd"))
+-		return -EBUSY;
++	mutex_lock(&ataflop_probe_lock);
++	ret = __register_blkdev(FLOPPY_MAJOR, "fd", ataflop_probe);
++	if (ret)
++		goto out_unlock;
+ 
+ 	for (i = 0; i < FD_MAX_UNITS; i++) {
+-		unit[i].disk = alloc_disk(1);
+-		if (!unit[i].disk) {
+-			ret = -ENOMEM;
++		memset(&unit[i].tag_set, 0, sizeof(unit[i].tag_set));
++		unit[i].tag_set.ops = &ataflop_mq_ops;
++		unit[i].tag_set.nr_hw_queues = 1;
++		unit[i].tag_set.nr_maps = 1;
++		unit[i].tag_set.queue_depth = 2;
++		unit[i].tag_set.numa_node = NUMA_NO_NODE;
++		unit[i].tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
++		ret = blk_mq_alloc_tag_set(&unit[i].tag_set);
++		if (ret)
+ 			goto err;
+-		}
+ 
+-		unit[i].disk->queue = blk_mq_init_sq_queue(&unit[i].tag_set,
+-							   &ataflop_mq_ops, 2,
+-							   BLK_MQ_F_SHOULD_MERGE);
+-		if (IS_ERR(unit[i].disk->queue)) {
+-			put_disk(unit[i].disk);
+-			ret = PTR_ERR(unit[i].disk->queue);
+-			unit[i].disk->queue = NULL;
++		ret = ataflop_alloc_disk(i, 0);
++		if (ret) {
++			blk_mq_free_tag_set(&unit[i].tag_set);
+ 			goto err;
+ 		}
  	}
+@@ -2026,19 +2069,9 @@ static int __init atari_floppy_init (void)
+ 	for (i = 0; i < FD_MAX_UNITS; i++) {
+ 		unit[i].track = -1;
+ 		unit[i].flags = 0;
+-		unit[i].disk->major = FLOPPY_MAJOR;
+-		unit[i].disk->first_minor = i;
+-		sprintf(unit[i].disk->disk_name, "fd%d", i);
+-		unit[i].disk->fops = &floppy_fops;
+-		unit[i].disk->events = DISK_EVENT_MEDIA_CHANGE;
+-		unit[i].disk->private_data = &unit[i];
+-		set_capacity(unit[i].disk, MAX_DISK_SIZE * 2);
+-		add_disk(unit[i].disk);
++		add_disk(unit[i].disk[0]);
+ 	}
+ 
+-	blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
+-				floppy_find, NULL, NULL);
+-
+ 	printk(KERN_INFO "Atari floppy driver: max. %cD, %strack buffering\n",
+ 	       DriveType == 0 ? 'D' : DriveType == 1 ? 'H' : 'E',
+ 	       UseTrackbuffer ? "" : "no ");
+@@ -2048,14 +2081,14 @@ static int __init atari_floppy_init (void)
+ 
+ err:
+ 	while (--i >= 0) {
+-		struct gendisk *disk = unit[i].disk;
+-
+-		blk_cleanup_queue(disk->queue);
++		blk_cleanup_queue(unit[i].disk[0]->queue);
++		put_disk(unit[i].disk[0]);
+ 		blk_mq_free_tag_set(&unit[i].tag_set);
+-		put_disk(unit[i].disk);
+ 	}
+ 
+ 	unregister_blkdev(FLOPPY_MAJOR, "fd");
++out_unlock:
++	mutex_unlock(&ataflop_probe_lock);
+ 	return ret;
  }
--EXPORT_SYMBOL(put_disk_and_module);
  
- static void set_disk_ro_uevent(struct gendisk *gd, int ro)
+@@ -2100,13 +2133,17 @@ __setup("floppy=", atari_floppy_setup);
+ 
+ static void __exit atari_floppy_exit(void)
  {
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index c0bde190a3dd0c..c6bdc8ce69bd87 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -341,15 +341,8 @@ int blk_add_partitions(struct gendisk *disk, struct block_device *bdev);
- int blk_drop_partitions(struct block_device *bdev);
+-	int i;
+-	blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
++	int i, type;
++
+ 	for (i = 0; i < FD_MAX_UNITS; i++) {
+-		del_gendisk(unit[i].disk);
+-		blk_cleanup_queue(unit[i].disk->queue);
++		for (type = 0; type < NUM_DISK_MINORS; type++) {
++			if (!unit[i].disk[type])
++				continue;
++			del_gendisk(unit[i].disk[type]);
++			blk_cleanup_queue(unit[i].disk[type]->queue);
++			put_disk(unit[i].disk[type]);
++		}
+ 		blk_mq_free_tag_set(&unit[i].tag_set);
+-		put_disk(unit[i].disk);
+ 	}
+ 	unregister_blkdev(FLOPPY_MAJOR, "fd");
  
- extern struct gendisk *__alloc_disk_node(int minors, int node_id);
--extern struct kobject *get_disk_and_module(struct gendisk *disk);
- extern void put_disk(struct gendisk *disk);
- extern void put_disk_and_module(struct gendisk *disk);
--extern void blk_register_region(dev_t devt, unsigned long range,
--			struct module *module,
--			struct kobject *(*probe)(dev_t, int *, void *),
--			int (*lock)(dev_t, void *),
--			void *data);
--extern void blk_unregister_region(dev_t devt, unsigned long range);
- 
- #define alloc_disk_node(minors, node_id)				\
- ({									\
 -- 
 2.28.0
 
