@@ -2,153 +2,105 @@ Return-Path: <SRS0=wQ6l=CG=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5959AC433E2
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 05:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55418C433E2
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 07:03:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17BC3208CA
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 05:49:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="FIIhklvC";
-	dkim=pass (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="NnKQwItE"
+	by mail.kernel.org (Postfix) with ESMTP id 2382120CC7
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 07:03:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598598215;
+	bh=ZFE72OFAgOrfVe5aXsNii1HXODaJ9DGQn8J2EMa5Ilc=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=GkYbPxfsmIrDrY5gDnZVIvvbyuWHtg0eU3L5YBAl48VZALi4H/U7Ari65eLcCFVlR
+	 p+Pcxb7iq2CtfTUmD/fMFJarUghbXnIKWULfx9KSqcRkF+Sr8opJX2F2m8sOuzg3Ui
+	 kDwZCy4DOye51j2sOxOy1DT2doKGQPCAZCfnhzVU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgH1FtR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Aug 2020 01:49:17 -0400
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:37612 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725858AbgH1FtQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 28 Aug 2020 01:49:16 -0400
-Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07S5ikiw012979;
-        Thu, 27 Aug 2020 22:48:30 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : content-type : content-id :
- content-transfer-encoding : mime-version; s=facebook;
- bh=N6VllCC9Uh1aXcqwvAq6dgxabedZaHHJUzsmU/zkLe4=;
- b=FIIhklvCw+z4vxAg2/K7H4DLNLDQBUcZHnwmerh4makSDCNMBdc2cq2qoHWOYmQtB1xd
- UG8qWX/yu2CknPKypRq7ON3uwbMSeqUm1VQdqUvOUzU+QUY/R0xKcIMDqMrmmhiuGlub
- FJ7FQvaAEWx6Xfw6uASpJmMt/HHm2p5BHW8= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com with ESMTP id 335up89cm2-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 27 Aug 2020 22:48:30 -0700
-Received: from NAM04-SN1-obe.outbound.protection.outlook.com (100.104.98.9) by
- o365-in.thefacebook.com (100.104.94.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Thu, 27 Aug 2020 22:48:29 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VwkYBsQo/CjLWqpeu31K4Z289xcZsSUCOQVfeZLv51itzUshy6HpkiHvXztKToPKs9yo3tZvHv9sCThNN+dWhBCsvedWVNDhjDKoAWnS6jEqVPXu0VQrsybmjHv6wVRZhBCvEXQbSkwkI4hE64+1kZ+Y6h14j7Gj74QfJcwj/zYu1p6gf8hGig4dlKu64ahOwJZ3TYdoR3U4nRO+1e50QbDTHS1FJve8qZJw2LNLBRs49VUZJFJjMymZO4Gv2pXX6AqETsCvvC0dbOLm1n/6owTUwLwXEhsi+VHB2o2m97dYSkQu+i1HYsf5R1RKSD1uc6yvs7nOrw/IgJOJyL5pgg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=N6VllCC9Uh1aXcqwvAq6dgxabedZaHHJUzsmU/zkLe4=;
- b=DyQ4W5yI0dbtkU4u86cf54c5AgrepbtWyuOBmZ8462F6pl8pcUtJO59IWO+bieUfUUiZDxH0j6oJDZf+NXSC88BVGJ22WgwS5PL2u9nCfpOv0OU1a6JeFYv4luqejbmfGbn0J0/TtXvhqcEB664VTnx6HAbRvhBsbXoyzvw06wNc6FdWqUSdfn6KgSKigOu4R416U4HDytFAK0/4lGVArKdhyHqpLyoAgt5kmT6nKqRAKT45bzw7NpogtsMtRGLo77eeHCuWmOr2kpcv9SX7U6z0VWEHvQgWbzbIznWBhVspi7efSTxrGOD2TO6D1v8XUHHFgivBfhLo3qiV7CjKVA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=N6VllCC9Uh1aXcqwvAq6dgxabedZaHHJUzsmU/zkLe4=;
- b=NnKQwItEapmstVbUjYm7aJY6Bq0jhmDy0VEjH5TDtQu308l7Yl6TF8Mqtz3yHrEyiYgOJyVxMvr2y1Y54zUSPYSP3qMOGWwwFpZSRpuU2V1bu6iWlAqylnJMn64hpYGgphX1a4ZCEjHQzCEeyyKb//Yp6btxxyyrtF4bBKmFPV4=
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
- by BY5PR15MB3571.namprd15.prod.outlook.com (2603:10b6:a03:1f6::32) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.21; Fri, 28 Aug
- 2020 05:48:14 +0000
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::1400:be2f:8b3d:8f4d]) by BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::1400:be2f:8b3d:8f4d%7]) with mapi id 15.20.3326.023; Fri, 28 Aug 2020
- 05:48:14 +0000
-From:   Song Liu <songliubraving@fb.com>
-To:     Jens Axboe <axboe@kernel.dk>,
-        linux-raid <linux-raid@vger.kernel.org>
-CC:     Yufen Yu <yuyufen@huawei.com>
-Subject: [GIT PULL] md-fixes 20200828
-Thread-Topic: [GIT PULL] md-fixes 20200828
-Thread-Index: AQHWfP7RrnvxlRJQ/0qbP8SvopSutA==
-Date:   Fri, 28 Aug 2020 05:48:13 +0000
-Message-ID: <D8061404-18E3-401D-8FBB-749F4C6DDAA4@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3608.120.23.2.1)
-authentication-results: kernel.dk; dkim=none (message not signed)
- header.d=none;kernel.dk; dmarc=none action=none header.from=fb.com;
-x-originating-ip: [2620:10d:c090:400::5:858a]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2cff6471-310d-4886-64d8-08d84b15f472
-x-ms-traffictypediagnostic: BY5PR15MB3571:
-x-microsoft-antispam-prvs: <BY5PR15MB35716DEA47DD82F2BE2A8F67B3520@BY5PR15MB3571.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: P1fIuikgIzyABw5BMzatL1cnF0d+bmuWJ6HNOxTqM5YMEVettufV/XyPR2JMvIp5fvjAnQl8lINmPAtl7KBnq1uh5F0WWiP4sFfCuvHvXI+7WgqNIvN1aJchIrR6UKuzXZ4foaWah4aHAX4n+BRwnOd/em299Bx1NyYQhnBZuRm6zHwcSMAl6Rg8Oc47J0OmCcYseLjOPsAnrEwmrEfXZb+YkzBA6g0Pk3t4hBFOtd6MJTDS6tppzeRUXUpY9xlVHRu/oG/4LMTczoMLZtEL+4N5T6H2OAEwrHMAa/E/g+ThV34BE4zhMFwVZRQom9wF0wjmPrUDmLwzDg9gdJRNPKnACVCqAdGYUxUz1v61TFUGQwzR8MBoEillaxt1s8XQii0/wNprAsHKbP7ubQWWKw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(346002)(396003)(376002)(39860400002)(366004)(4326008)(8936002)(33656002)(6512007)(316002)(6486002)(8676002)(478600001)(36756003)(5660300002)(966005)(71200400001)(110136005)(64756008)(86362001)(83380400001)(4744005)(6506007)(186003)(2616005)(66946007)(66446008)(76116006)(66476007)(2906002)(66556008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: tUmhOxPWZdVMPJtmKYiJmJsZ19E0BTwCLli5s0+eY9i3aK1sd58dXT6dC+FnecxAGvFbISBFv+xKZJPuZWvPrvq4LYbwpyo7Otchs/qUc6hIGzhW9Pdt8AfDfl222dwyDPhVsnedFm7KjTim0Ijl16PQWyxlvokNLCvN1tx99Mr023K7KfAcIhCdcwQF4HldVeYblcAM/lzu/6xbLOY1qDCCiIvTzm4CGteD3BYSVUyrNXmPBvEn61Q7bU3fnfL5TwrsA1/9cyZx5ylI4BuO21bgpMRPeXIll2b/Y61UDT/ekGJWYUxiYEv0Aejyy5Xl74ZQnRwbPLpC6tTKYJtGmTIN5CPO9NJSsS2/VVklKMjnEK2hEgoDF2bBPymrfy9UtjKpmwI8PFHtpKi+nKmBVr5hY3ZBNebyG5kbsHogsdirr7gm9RtQWJWgfQX6mq8HyuDXfGecbGyYmbrYQF411rbldLjK3An0xI8tIZwjYGN2+JP8BQxEKlLnVmi1cY0QoPfnalVTJC/3dIXa/pcwDeL5EbfJbwwA3hUa6i+LU0qvRezr261mxVnE461yNp0G2V9+s6yoDX3ymZrRyXyVnGr29HuZjeuk7cvpGn/XE7pdJ0aRPQLP60ztA76EpEubPdvAUnz2de9//R7opbCnnME7YDpNtxTEb8d1zw7VvO0VYVkdyiZXLiXcV/TjDcIG
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <294E7CC21C28134C8A9619CCC0AC3CF4@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1728072AbgH1HDe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Aug 2020 03:03:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57970 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725858AbgH1HDe (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 28 Aug 2020 03:03:34 -0400
+Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7B22C20CC7
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2020 07:03:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598598213;
+        bh=ZFE72OFAgOrfVe5aXsNii1HXODaJ9DGQn8J2EMa5Ilc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=iDIE4kfiVnjVXdocZSkun62TbNUKG4b9oXIVz1Z6sbxNUPj96rMJWH0e+0w6x54+l
+         jo4gynFd4j5VRfyxSt8qXB9gQgkKeeWYfFmfVTlRZBeKj5uPVM52dUUATnT1J6inlQ
+         MN03Il8mVxSnunzgG1J8ennJVSjSp63skIC0Oyh4=
+Received: by mail-lf1-f47.google.com with SMTP id s9so163015lfs.4
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2020 00:03:33 -0700 (PDT)
+X-Gm-Message-State: AOAM5324Jj527cLxihTXTIYjsEA3XqUSxagwXwxAvOlYICLI3L2vdYsM
+        NK8jQSSR99UN0eM8OcV857pFj/kCmSAeZmnUR1o=
+X-Google-Smtp-Source: ABdhPJzEgGYSjk55kAP8Wfro7UbWVg8mtUnegc+zUfterrejaZDNZVe6UYPpWfKnZ37/Oq58/b0V1wfYi98eJVaRbqo=
+X-Received: by 2002:a19:6b1a:: with SMTP id d26mr115500lfa.138.1598598211823;
+ Fri, 28 Aug 2020 00:03:31 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2cff6471-310d-4886-64d8-08d84b15f472
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Aug 2020 05:48:13.9349
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: bl/k+ci6xpr+00P4mi5YUiiEk7kJTVGSj23OR+Lo2OUVMsJavJccGsI4lwx6IuBrKd2WAyNN93yRCgy78mr70Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR15MB3571
-X-OriginatorOrg: fb.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-28_03:2020-08-27,2020-08-28 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 bulkscore=0
- suspectscore=0 adultscore=0 mlxlogscore=999 spamscore=0 impostorscore=0
- clxscore=1011 phishscore=0 priorityscore=1501 mlxscore=0 malwarescore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008280047
-X-FB-Internal: deliver
+References: <1598334183-25301-1-git-send-email-xni@redhat.com> <1598334183-25301-6-git-send-email-xni@redhat.com>
+In-Reply-To: <1598334183-25301-6-git-send-email-xni@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 28 Aug 2020 00:03:20 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5X7XnNX9UHiEv5wUzCNUtXG36gWz+pgZ2HPNf7NFN5Sg@mail.gmail.com>
+Message-ID: <CAPhsuW5X7XnNX9UHiEv5wUzCNUtXG36gWz+pgZ2HPNf7NFN5Sg@mail.gmail.com>
+Subject: Re: [PATCH V5 5/5] md/raid10: improve discard request for far layout
+To:     Xiao Ni <xni@redhat.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Coly Li <colyli@suse.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jens,=20
+On Mon, Aug 24, 2020 at 10:43 PM Xiao Ni <xni@redhat.com> wrote:
+>
+> For far layout, the discard region is not continuous on disks. So it needs
+> far copies r10bio to cover all regions. It needs a way to know all r10bios
+> have finish or not. Similar with raid10_sync_request, only the first r10bio
+> master_bio records the discard bio. Other r10bios master_bio record the
+> first r10bio. The first r10bio can finish after other r10bios finish and
+> then return the discard bio.
+>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  drivers/md/raid10.c | 87 +++++++++++++++++++++++++++++++++++++++--------------
+>  drivers/md/raid10.h |  1 +
+>  2 files changed, 65 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 257791e..f6518ea 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1534,6 +1534,29 @@ static struct bio *raid10_split_bio(struct r10conf *conf,
+>         return bio;
+>  }
+>
+> +static void raid_end_discard_bio(struct r10bio *r10bio)
 
-Please consider pulling the following fix on top of your block-5.9 branch.=
-=20
+Let's name this raid10_*
+
+> +{
+> +       struct r10conf *conf = r10bio->mddev->private;
+> +       struct r10bio *first_r10bio;
+> +
+> +       while (atomic_dec_and_test(&r10bio->remaining)) {
+
+Should this be "if (atomic_*"?
 
 Thanks,
 Song
 
-
-The following changes since commit 79e5dc59e2974a48764269fa9ff544ae8ffe3338=
-:
-
-  loop: Set correct device size when using LOOP_CONFIGURE (2020-08-26 09:30=
-:31 -0600)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
-
-for you to fetch changes up to 6af10a33c501b0b5878476501143c2cfbbfd63a2:
-
-  md/raid5: make sure stripe_size as power of two (2020-08-27 22:41:03 -070=
-0)
-
-----------------------------------------------------------------
-Yufen Yu (1):
-      md/raid5: make sure stripe_size as power of two
-
- drivers/md/raid5.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)=
+[...]
