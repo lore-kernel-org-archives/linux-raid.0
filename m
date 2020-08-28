@@ -2,178 +2,126 @@ Return-Path: <SRS0=wQ6l=CG=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57ABEC433E2
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 20:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CFC2C433E6
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 21:44:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D28B207DA
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 20:47:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DDBB2080C
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 21:44:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598651057;
+	bh=NoIuA9LSio3w+knYw6DB9mvx+B/OpDIvVjN1Hs8cJtk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=X5ZtTeAbJhntRthySZqYrwoV+l24TPUeOPcZnKsz87VeDKGjuO8gITWjE+m8liklk
+	 mui3Yjsi+EJbu5iZqv0jOiidVHldw7DxG9nq/lyEdVts+BoNJbFELR50q5wx7tucZ4
+	 cTyOm3/W3RUQ2Gt8wv6kisRaqJJRFVoGjIpHH3oo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726845AbgH1UrM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Aug 2020 16:47:12 -0400
-Received: from mga09.intel.com ([134.134.136.24]:28789 "EHLO mga09.intel.com"
+        id S1726876AbgH1VoQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Aug 2020 17:44:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59264 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726720AbgH1UrL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 28 Aug 2020 16:47:11 -0400
-IronPort-SDR: aq0QUb2GmNLxz4fBuSMXxdw47CDfflKR2cXDazkMipUl1WfjUxymq2EbRlZErGjrmsCNTdVEIA
- 58kgWnzzqRUA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9727"; a="157762789"
-X-IronPort-AV: E=Sophos;i="5.76,365,1592895600"; 
-   d="scan'208";a="157762789"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2020 13:47:10 -0700
-IronPort-SDR: LFAYVbanFkZzR+CeAVzOg2ewPHV2pC2dMsekOxJTdCx0gOSxfwxZ+XBJAkLa1riNHfGK+gCn/d
- rjTCjRiIKsxg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,365,1592895600"; 
-   d="scan'208";a="337606628"
-Received: from lkp-server02.sh.intel.com (HELO 301dc1beeb51) ([10.239.97.151])
-  by FMSMGA003.fm.intel.com with ESMTP; 28 Aug 2020 13:47:09 -0700
-Received: from kbuild by 301dc1beeb51 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kBlHA-0000BX-6C; Fri, 28 Aug 2020 20:47:08 +0000
-Date:   Sat, 29 Aug 2020 04:47:01 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-fixes] BUILD SUCCESS
- 6af10a33c501b0b5878476501143c2cfbbfd63a2
-Message-ID: <5f496d45.zXOjZCRw6t4wriRz%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1726820AbgH1VoP (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 28 Aug 2020 17:44:15 -0400
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 870FE2086A
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2020 21:44:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598651054;
+        bh=NoIuA9LSio3w+knYw6DB9mvx+B/OpDIvVjN1Hs8cJtk=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=yPMrPGH6y3nTNgV7ACq1C3VIR71wf6ZgqeMsRlIzlZdX+brlrux0QIljQFscdFFHf
+         Cg2sBXZabzpAsjWQUX2sFe0swRhDnQ8pmbDv/gP6UDSPRKaXFCH7YDcU+T3tZYCdJ1
+         UNwTdqykYAQoexQEX2BAwd4yJ4PTxD9TAD2ZSZE0=
+Received: by mail-lf1-f51.google.com with SMTP id z17so397299lfi.12
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2020 14:44:14 -0700 (PDT)
+X-Gm-Message-State: AOAM530iz0w4hopU4gos3QNp+Q68CsT7MX7E59bqAsooVLpe36dmxBCt
+        3CITok1lngQ06X2qCxcDPzQKNLh1wimSTsHhpmk=
+X-Google-Smtp-Source: ABdhPJy/EIdHlfBc6t9ULPpaBAYwVPkjwNagzAiv8lrvHIidEBpYm5CodQoRPxSwcbTG1+uEGHMI6x57WDcnvdPcTLw=
+X-Received: by 2002:a19:6b1a:: with SMTP id d26mr249666lfa.138.1598651052853;
+ Fri, 28 Aug 2020 14:44:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <1598334183-25301-1-git-send-email-xni@redhat.com>
+ <1598334183-25301-6-git-send-email-xni@redhat.com> <CAPhsuW5X7XnNX9UHiEv5wUzCNUtXG36gWz+pgZ2HPNf7NFN5Sg@mail.gmail.com>
+ <37a21aa1-c23d-754f-e786-72d979bd54bd@redhat.com>
+In-Reply-To: <37a21aa1-c23d-754f-e786-72d979bd54bd@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 28 Aug 2020 14:44:01 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW49dOUDBhKdnWkwG0RsKxw5WQp-gq1ei8TWzmiY5Qs63A@mail.gmail.com>
+Message-ID: <CAPhsuW49dOUDBhKdnWkwG0RsKxw5WQp-gq1ei8TWzmiY5Qs63A@mail.gmail.com>
+Subject: Re: [PATCH V5 5/5] md/raid10: improve discard request for far layout
+To:     Xiao Ni <xni@redhat.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Coly Li <colyli@suse.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-fixes
-branch HEAD: 6af10a33c501b0b5878476501143c2cfbbfd63a2  md/raid5: make sure stripe_size as power of two
+On Fri, Aug 28, 2020 at 2:50 AM Xiao Ni <xni@redhat.com> wrote:
+>
+>
+>
+> On 08/28/2020 03:03 PM, Song Liu wrote:
+> > On Mon, Aug 24, 2020 at 10:43 PM Xiao Ni <xni@redhat.com> wrote:
+> >> For far layout, the discard region is not continuous on disks. So it needs
+> >> far copies r10bio to cover all regions. It needs a way to know all r10bios
+> >> have finish or not. Similar with raid10_sync_request, only the first r10bio
+> >> master_bio records the discard bio. Other r10bios master_bio record the
+> >> first r10bio. The first r10bio can finish after other r10bios finish and
+> >> then return the discard bio.
+> >>
+> >> Signed-off-by: Xiao Ni <xni@redhat.com>
+> >> ---
+> >>   drivers/md/raid10.c | 87 +++++++++++++++++++++++++++++++++++++++--------------
+> >>   drivers/md/raid10.h |  1 +
+> >>   2 files changed, 65 insertions(+), 23 deletions(-)
+> >>
+> >> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> >> index 257791e..f6518ea 100644
+> >> --- a/drivers/md/raid10.c
+> >> +++ b/drivers/md/raid10.c
+> >> @@ -1534,6 +1534,29 @@ static struct bio *raid10_split_bio(struct r10conf *conf,
+> >>          return bio;
+> >>   }
+> >>
+> >> +static void raid_end_discard_bio(struct r10bio *r10bio)
+> > Let's name this raid10_*
+> Ok
+> >
+> >> +{
+> >> +       struct r10conf *conf = r10bio->mddev->private;
+> >> +       struct r10bio *first_r10bio;
+> >> +
+> >> +       while (atomic_dec_and_test(&r10bio->remaining)) {
+> > Should this be "if (atomic_*"?
+> >
+> The usage of while is right here. For far layout, it needs far copies
+> r10bio. It needs to find a method
+> to know all r10bios finish. The first r10bio->remaining is used to
+> achieve the target. It adds the first
+> r10bio->remaining when preparing other r10bios. I was inspired by
+> end_sync_request. So it should
+> use while here. It needs to decrease the first r10bio remaining for
+> other r10bios in the second loop.
 
-elapsed time: 724m
+Thanks for the explanation.
 
-configs tested: 109
-configs skipped: 9
+>
+> Are there more things you want me to modify or add? If not, I'll send
+> the v6 to rename the function
+> name.  Thanks for reviewing these patches :)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+1/5 to 3/5 look good so far. I applied them to md-next. I have some
+comments on 4/5.
 
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-m68k                       m5208evb_defconfig
-m68k                        mvme147_defconfig
-openrisc                    or1ksim_defconfig
-x86_64                           allyesconfig
-arm                         cm_x300_defconfig
-arc                        nsim_700_defconfig
-mips                         rt305x_defconfig
-i386                             allyesconfig
-powerpc                     ep8248e_defconfig
-powerpc                     pseries_defconfig
-arm                        keystone_defconfig
-sh                           se7722_defconfig
-parisc                generic-64bit_defconfig
-mips                           rs90_defconfig
-m68k                       bvme6000_defconfig
-arm                            qcom_defconfig
-mips                  maltasmvp_eva_defconfig
-nios2                            allyesconfig
-powerpc                          alldefconfig
-arc                           tb10x_defconfig
-m68k                           sun3_defconfig
-sh                           se7721_defconfig
-sh                           se7780_defconfig
-arm                           efm32_defconfig
-powerpc                    adder875_defconfig
-arm                        mvebu_v7_defconfig
-sh                           se7724_defconfig
-mips                         db1xxx_defconfig
-mips                        maltaup_defconfig
-arm                        realview_defconfig
-h8300                               defconfig
-mips                malta_kvm_guest_defconfig
-mips                  cavium_octeon_defconfig
-arc                             nps_defconfig
-arm                       spear13xx_defconfig
-arm                         ebsa110_defconfig
-ia64                      gensparse_defconfig
-arc                     nsimosci_hs_defconfig
-sh                     magicpanelr2_defconfig
-mips                          rb532_defconfig
-sh                          lboxre2_defconfig
-s390                       zfcpdump_defconfig
-sh                             sh03_defconfig
-powerpc                    gamecube_defconfig
-sh                        sh7785lcr_defconfig
-arm                        oxnas_v6_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                             defconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a002-20200828
-i386                 randconfig-a005-20200828
-i386                 randconfig-a003-20200828
-i386                 randconfig-a004-20200828
-i386                 randconfig-a001-20200828
-i386                 randconfig-a006-20200828
-x86_64               randconfig-a015-20200828
-x86_64               randconfig-a012-20200828
-x86_64               randconfig-a014-20200828
-x86_64               randconfig-a011-20200828
-x86_64               randconfig-a013-20200828
-x86_64               randconfig-a016-20200828
-i386                 randconfig-a013-20200828
-i386                 randconfig-a012-20200828
-i386                 randconfig-a011-20200828
-i386                 randconfig-a016-20200828
-i386                 randconfig-a014-20200828
-i386                 randconfig-a015-20200828
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Thanks,
+Song
