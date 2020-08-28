@@ -2,163 +2,113 @@ Return-Path: <SRS0=wQ6l=CG=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4A91C433E6
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 18:01:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F9CC433E2
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 20:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C3392098B
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 18:01:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CCDA2074A
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 20:39:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="n2SN5LrK";
-	dkim=pass (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="MLYGJa5s"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M/stZdmq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727053AbgH1SBT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 Aug 2020 14:01:19 -0400
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:2526 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726010AbgH1SBP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 28 Aug 2020 14:01:15 -0400
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07SI0xcM022220;
-        Fri, 28 Aug 2020 11:01:01 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=npal+0BhmmMN5hR+X8cdbdh7b4qEH9vnJZjPALKATOg=;
- b=n2SN5LrKF+LeSzsRznTyvIY03Zt6u1Bf0T7lLHhsG/UgtDSGAXP0cuFs+YfXe7EdJ887
- WwXNQsUZXXeQb4i48EeT2K9y8Dt8+MEksI1xpZWb0/lGc4gRDDVG+5/8bObSefvVe7PI
- nVEuyIq0qeQQzmvh6Qa6iWRfHLNDjpae7GM= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com with ESMTP id 335up8c8cp-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 28 Aug 2020 11:01:01 -0700
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (100.104.98.9) by
- o365-in.thefacebook.com (100.104.94.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 28 Aug 2020 11:00:58 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bSnYR8suX25SJwXi2pYIXv/0vqPMO9tR+sTXCSi94FAAq89Jkgp8DXxSQjrlzm+0mLhB+8iMyoI6xyu1+JiyxtJ0/xRPNZdx6VUIVh1VwN+CcAgYOwfkpzywLL7vtRxijFqxtuqjhjO+erwMqqpmNmj9D3Eqm1W01GHpXBBs8VChJ4O6BXK2wcQuL2JXuCIP4JbqIhjfAbx6MXLL2Ui7bt7U6285mBUGpLEmJtuD3ZiqeLjNzUqrPpoIa+lUv04HubIKnZPkguGb2CgxTwlwHZFrJf6QSsEHOK+b6JPoZN9yX1lMY11aDnQR6yof0eB5LCvJGXzw5D1RzJmBDvIQfg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=npal+0BhmmMN5hR+X8cdbdh7b4qEH9vnJZjPALKATOg=;
- b=T28vQFKyHHjy7hjvjH3ukS16LMDr8kFn8ejP+J0LDBxGqgJbov5uvfoWHIk6kNQ5bAIDXPhChy9iZOxTCo0YNsoJrtp7ClOSFJJ5n7EUL7jR0bKBUF2hmcNqeIWC+6UnMxJ0XHDMheZvoUrdOwqXMUXcfD3Ml4LCeA0uVFXsXy2MGE/lFPIp2J8xHvV54S1/HrZCbEIChJD5ursHwIcr9s51hRoteNxV/QWFPGIVdlO+of9EmAYap1oXuEl9W12cJkIYQ2UBTEcB8on001gWHlS6UTfGBoY2ciQiNXsdei3hesrjebmDfuJyKLfq3z4+HJY5cdzRgAG+eQgxB/r7pQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=npal+0BhmmMN5hR+X8cdbdh7b4qEH9vnJZjPALKATOg=;
- b=MLYGJa5s8d4vPokOrn8yZEWWAm+SNdE+koFDXvsnwaaySJPc6aHXI6SejU5TaqWAqptjYs5Im+tCo7t89eQ9dGqdO9jDBhLa6X7WPc3ccg+BNbD/onirRpbF67eGEJCwww1wgEbv5Qzeg29bdxfNNpWZvSlw+cT4E4MhYSuQnFY=
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
- by BYAPR15MB2728.namprd15.prod.outlook.com (2603:10b6:a03:14c::27) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.21; Fri, 28 Aug
- 2020 18:00:54 +0000
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::1400:be2f:8b3d:8f4d]) by BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::1400:be2f:8b3d:8f4d%7]) with mapi id 15.20.3326.023; Fri, 28 Aug 2020
- 18:00:54 +0000
-From:   Song Liu <songliubraving@fb.com>
-To:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     Coly Li <colyli@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        Kernel Team <Kernel-team@fb.com>, Song Liu <song@kernel.org>
-Subject: Re: [PATCH v2 0/3] block: improve iostat for md/bcache partitions
-Thread-Topic: [PATCH v2 0/3] block: improve iostat for md/bcache partitions
-Thread-Index: AQHWda67Sg7bLs6JS0apFNQ8Go++eKlN3veA
-Date:   Fri, 28 Aug 2020 18:00:53 +0000
-Message-ID: <2A15441E-7812-47FA-A3B4-41E8E38AFBC6@fb.com>
-References: <20200818222645.952219-1-songliubraving@fb.com>
-In-Reply-To: <20200818222645.952219-1-songliubraving@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3608.120.23.2.1)
-authentication-results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=fb.com;
-x-originating-ip: [2620:10d:c090:400::5:858a]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: bf89bb87-d089-4312-4e66-08d84b7c4eba
-x-ms-traffictypediagnostic: BYAPR15MB2728:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR15MB27289E870C48096DFD3D5A62B3520@BYAPR15MB2728.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:6108;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 4PwKUzQViTD6sv49EuOH8SAhaVM1SZQXnpZ89jEDW9UPuxF2A1Gx+hU/f+HI7F1a8sOnBdxCMHLwT9E78AmffzP4Nj+yeyp+QcxYDepjSDfPNdm9vcYgFWuY0iVegYo6JN1DPQArzDlfVvHBOVzEw26Zjp5mB6f79UxFcrljENCjnxie0t2bS1lXqpuu5n+9s87xyPM1wPmRk/4simXnqBa/xZebDTsxG6/54ER2ZNoENcWc1EpCGtn8eHPa6YUKi/IeuMkwOaZyb7bENdA/0EIau9wQC74npcB6OqsAwbEcxrVF1R06cs9Zp4aM2517
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(136003)(396003)(39860400002)(346002)(376002)(83380400001)(4326008)(2906002)(71200400001)(36756003)(5660300002)(8676002)(316002)(8936002)(66556008)(6486002)(66446008)(64756008)(86362001)(33656002)(66476007)(478600001)(76116006)(186003)(4744005)(6506007)(2616005)(54906003)(6512007)(66946007)(110136005)(53546011);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: L/mGEG2Clu6184z507LIgi6mwOdjj2PzHwSQNPeM3o9FzAlxw1bOhj5APQd9uNg3XkSMSHf9KGu7PDxv/I9h2bkRhzVE5gMdZA7jf/Hqg55SN6mNNdmI69t4pNXd6wNZKWZThrRBQIlLgea+NAkJFECsxBnGwaF9zkwva0JfNAZSCNNDex2wnk0Y9qRfwMcYqC+0Q2DPCp3iBWQ+EN1/vYLhN5RkUS5r9UynJPFACxB5q2F6MjThvEf9ReI1mJq5I9THRmxNgx/p2LzA67AYziDVnTJ8olvI+YELBvqrvnpMv7CpnZZY48gAMxNcLtaIl5/uFwwXBgWHq1HJOuubR16EV/GP+1ZzUE0iNt7wKtx6DgKYRyCITK6IweNfHvJDuywJILtSv1m0WP5TAUQbYcddfQ6nKVQj7XEizuy0B1LumBvlkKEV0Oub/XipQCZ+KE39QuLysgfbL0MT74bAM/QdkjmBNjYMBdDXrDovhb9b1PROOj4LIA5aVOivVUM8xMd/y1TJRxesy9j2Lvf46SEbGNCYSj/xVARgA3owmmPTilkIeNMfHbPbYunAnk3B/wNVpBQLpXD4K3qJuBRwuqZn9DF56Nrjpsis63kBhe0HXsNo0vcJwzX6rhNp74CC1739GEXXg4u9nZ3pq6+eib9gDh8ejETAIP+sDlr0VV7RhJQwP9xRaSJFNC7Dsjxq
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A2765C72E873CF47A27E545E9021D7DD@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1726321AbgH1Ujr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 28 Aug 2020 16:39:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57102 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726033AbgH1Ujr (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 Aug 2020 16:39:47 -0400
+Received: from mail-ot1-x330.google.com (mail-ot1-x330.google.com [IPv6:2607:f8b0:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E75C061264
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2020 13:39:47 -0700 (PDT)
+Received: by mail-ot1-x330.google.com with SMTP id h17so337039otl.9
+        for <linux-raid@vger.kernel.org>; Fri, 28 Aug 2020 13:39:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=o4EKVUxu4E8V2Uo+4VaNnZYt0CpgHvnR22lh1CuI97k=;
+        b=M/stZdmqYejmxbvn/UcY7YilCWxh+rQx2RqB3oLwCSjFqn+TDa92E9aiX3c7J8gV84
+         W2V6Y4Lr5PMG5e+2MEaYpgoqG/EadrszcXl8omDf0zz2I22h40kyz0US2X+xHajFcdf4
+         kQnGuQMyHBA2YMOMYcH/mUKo+xX+nT28eNAtLPTzOHcKUv8VbqlRaXSJg0MjpVh9SlH5
+         HHVXx9YXKv6mSQ3FdaD2uHvZMrm/U4whydV3i0UJPZ4nle9ZttELq6cayFypLaKfVuti
+         TW5Qxk//XvdFRqHb1mp31RKRVvpnvm4XmeJ8asb0zzdTEQl0+GDQ8p/q3qUZ+HPSVZtJ
+         puKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=o4EKVUxu4E8V2Uo+4VaNnZYt0CpgHvnR22lh1CuI97k=;
+        b=V/JZgmv4rGCqNN44mlaH2Z+VuCFCqI/4P02Gh9/NpsE3Ze7mwIfrBuPiR0erGZQRRk
+         PcgSsR/0Nwbs2u5C2Zds6+0loppNx6sztSs6Bm2y4UvGT4vS9YP9XOAC/lkef9Zn81L1
+         Bl5yySjb2tzR/m6avRyFs8Q4xFLNjFwlpkjphC/BhENRmXDZOgy7bSnzq/c3nHcc47c7
+         P55GY0bXAEvq7Tkge1pfJxfbh6DopAbojxawv5vC5YwVFuORDD1fZDAXL6e1Bx5vL3kA
+         3Cv31I+2L/44tLA+hVuI+FH40271W49w+1zZ7TI9CUs9+Jkp4MGqA8wjcriJzX7UVT2V
+         mxlQ==
+X-Gm-Message-State: AOAM5316dWwSvEM4O8d8n3n8F+zy+uVHLaPEs6wGAuIYqQzZgWuXt1Fj
+        ZCqj0RKMqpbasLewM4zaEge836epP7o=
+X-Google-Smtp-Source: ABdhPJzMjKPCrP2MHkr71EVQXWDtWKLaoAMdjK18cNe0tQkX6AgqClr0a3fD43MkWh8s7VMWHjQeMQ==
+X-Received: by 2002:a9d:5f0c:: with SMTP id f12mr297966oti.141.1598647186156;
+        Fri, 28 Aug 2020 13:39:46 -0700 (PDT)
+Received: from [192.168.3.65] ([47.187.193.82])
+        by smtp.googlemail.com with ESMTPSA id w11sm127299oog.33.2020.08.28.13.39.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Aug 2020 13:39:45 -0700 (PDT)
+Subject: Re: Best way to add caching to a new raid setup.
+To:     Roman Mamedov <rm@romanrm.net>, "R. Ramesh" <rramesh@verizon.net>
+Cc:     Linux Raid <linux-raid@vger.kernel.org>
+References: <16cee7f2-38d9-13c8-4342-4562be68930b.ref@verizon.net>
+ <16cee7f2-38d9-13c8-4342-4562be68930b@verizon.net>
+ <20200828224616.58a1ad6c@natsu>
+From:   Ram Ramesh <rramesh2400@gmail.com>
+Message-ID: <448afb39-d277-445f-cc42-2dfc5210da7b@gmail.com>
+Date:   Fri, 28 Aug 2020 15:39:45 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bf89bb87-d089-4312-4e66-08d84b7c4eba
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Aug 2020 18:00:54.0066
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 1ZUXsZmOSOUoLc8L27G3FPwBmNhCSX1uhzEAOnqz+yC+JQCzW1+u35jX/g4FVhYE+H6+CuNM2ZyMi9BwnJL6NA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB2728
-X-OriginatorOrg: fb.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-28_12:2020-08-28,2020-08-28 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 clxscore=1015 spamscore=0
- phishscore=0 adultscore=0 impostorscore=0 priorityscore=1501
- mlxlogscore=882 lowpriorityscore=0 bulkscore=0 mlxscore=0 malwarescore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008280131
-X-FB-Internal: deliver
+In-Reply-To: <20200828224616.58a1ad6c@natsu>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 8/28/20 12:46 PM, Roman Mamedov wrote:
+> On Thu, 27 Aug 2020 21:31:07 -0500
+> "R. Ramesh" <rramesh@verizon.net> wrote:
+>
+>> I have two raid6s running on mythbuntu 14.04. The are built on 6
+>> enterprise drives. So, no hd issues as of now. Still, I plan to upgrade
+>> as it has been a while and the size of the hard drives have become
+>> significantly larger (a indication that my disks may be older) I want to
+>> build new raid using the 16/14tb drives. Since I am building new raid, I
+>> thought I could explore caching options. I see a mention of LVM cache
+>> and few other bcache/xyzcache etc.
+> Once you set up bcache, it cannot be removed. The volume will always stay a
+> bcache volume, even if you decide to stop using caching. Which feels weird and
+> potentially troublesome, going through an extra layer (kernel driver) with its
+> complexity and computational overhead (no matter how small).
+>
+> On the other hand LVM with caching turned off is just normal LVM, that you'd
+> likely would have used anyway, for other benefits that it provides.
+>
+> Also my impression is that LVM has more solid and reliable codebase, but
+> bcache might provide a somewhat better the performance boost due to caching.
+>
+Thanks for the info on bcache. I do not think it will be my favorite. I 
+am going to try LVM cache as my first choice. Note that the new disks 
+will be spare disks for some time and I will be able to try out a few 
+things before deciding to put it into use.
 
+One thing about LVM that I am not clear. Given the choice between 
+creating /mirror LV /on a VG over simple PVs and /simple LV/ over raid1 
+PVs, which is preferred method? Why?
 
-> On Aug 18, 2020, at 3:26 PM, Song Liu <songliubraving@fb.com> wrote:
->=20
-> Currently, devices like md, bcache uses disk_[start|end]_io_acct to repor=
-t
-> iostat. These functions couldn't get proper iostat for partitions on thes=
-e
-> devices.
->=20
-> This set resolves this issue by introducing part_[begin|end]_io_acct, and
-> using them in md and bcache code.
->=20
-> Changes v1 =3D> v2:
-> 1. Refactor the code, as suggested by Christoph.
-> 2. Include Coly's Reviewed-by tag.
->=20
-> Song Liu (3):
->  block: introduce part_[begin|end]_io_acct
->  md: use part_[begin|end]_io_acct instead of disk_[begin|end]_io_acct
->  bcache: use part_[begin|end]_io_acct instead of
->    disk_[begin|end]_io_acct
->=20
-> block/blk-core.c            | 39 +++++++++++++++++++++++++++++++------
-> drivers/md/bcache/request.c | 10 ++++++----
-> drivers/md/md.c             |  8 ++++----
-> include/linux/blkdev.h      |  5 +++++
-> 4 files changed, 48 insertions(+), 14 deletions(-)
-
-Hi Christoph,=20
-
-Does this version look good to you?
-
-Thanks,
-Song
+Ramesh
 
