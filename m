@@ -2,71 +2,99 @@ Return-Path: <SRS0=wQ6l=CG=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C75AFC433E2
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 01:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C430EC433E6
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 02:03:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A659E2080C
-	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 01:11:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98659207DF
+	for <linux-raid@archiver.kernel.org>; Fri, 28 Aug 2020 02:03:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=drivescale-com.20150623.gappssmtp.com header.i=@drivescale-com.20150623.gappssmtp.com header.b="kaSyvGuY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727807AbgH1BLK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Aug 2020 21:11:10 -0400
-Received: from smtprelay0247.hostedemail.com ([216.40.44.247]:36728 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726147AbgH1BLJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 27 Aug 2020 21:11:09 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay07.hostedemail.com (Postfix) with ESMTP id B49D2181D3025;
-        Fri, 28 Aug 2020 01:11:05 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: can98_270b1e627071
-X-Filterd-Recvd-Size: 1791
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf01.hostedemail.com (Postfix) with ESMTPA;
-        Fri, 28 Aug 2020 01:11:03 +0000 (UTC)
-Message-ID: <32f16bf6137f8575f2b1d66258d77269ce0f9d28.camel@perches.com>
-Subject: Re: [PATCH 17/19] z2ram: reindent
-From:   Joe Perches <joe@perches.com>
-To:     Finn Thain <fthain@telegraphics.com.au>
-Cc:     John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Date:   Thu, 27 Aug 2020 18:11:02 -0700
-In-Reply-To: <alpine.LNX.2.23.453.2008281052580.8@nippy.intranet>
-References: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>
-                 <EF673A30-F88D-4E4E-8A2B-E942153830AC@physik.fu-berlin.de>
-                 <b88538f92386f41b938c502ae2daec5800a85dcf.camel@perches.com>
-                 <alpine.LNX.2.23.453.2008280859300.10@nippy.intranet>
-         <5682daf68b94be288c05f859942ce06deec2b022.camel@perches.com>
-         <alpine.LNX.2.23.453.2008281052580.8@nippy.intranet>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+        id S1727972AbgH1CDd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 27 Aug 2020 22:03:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53154 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726147AbgH1CDc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Aug 2020 22:03:32 -0400
+Received: from mail-ot1-x361.google.com (mail-ot1-x361.google.com [IPv6:2607:f8b0:4864:20::361])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4598C061264
+        for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2020 19:03:32 -0700 (PDT)
+Received: by mail-ot1-x361.google.com with SMTP id i11so6173163otr.5
+        for <linux-raid@vger.kernel.org>; Thu, 27 Aug 2020 19:03:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=drivescale-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=g9nFnjYAZDlXNDkTfFbOPrXxXNOHzyFlElzh3U9lug0=;
+        b=kaSyvGuYm/YBTAAm3MNDAhO0xt3BXMy7RXgyeB0IZhM+P9JIS0pfnkFvrHnV+pc7kF
+         5HKr2MYvWvfqeLjzUO+T+bbysnmHK0TEToPv+iFTOz41IRON4Hm0xlxrJeY2/gENiPGd
+         ClgFnHf0+/YF0PowdakFyQt4h+nQFaYSVb69C4VDz1TO60KM3JGC85zXVPeHaMwgDp1r
+         n94Ip5rZsm+sTVRmpzux6RaKATNmA9KfawKEAgsNYhKGviAo6Y0fNRpGsm8m63jZ8Omm
+         Nc23SINnJlVUYqgXh+ug7G+7kZfaEE1OBtOHy91UQEtNRu4b0xqwnGP1bw9IlJnGERLW
+         ikgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=g9nFnjYAZDlXNDkTfFbOPrXxXNOHzyFlElzh3U9lug0=;
+        b=IEcs2VCA5noyr6jJ+rYLN8sPLESB37zKDKQuwmpS9/KIUowPXaFvty16yjHxbpgZHz
+         tKCEeSTJw/kKSGbo5JO3NQUJMSPWr5LrBB2G11Wxtx5BbqAhACVUiVCtiFiGEzzfFTU/
+         gXr1oRIlyXMiAZYWfzUWY4PXDFkJY0oQ1TN7wS2/y0613+97Cz+G4HSh274dVHO6Sj7t
+         bRs7DwxV53UgTLVC3BNZFD7tMmLxdpVi5PXDa9AXam0z07pAN+mZYhubaJdpO8JF3VNr
+         9ngYvgsXIiYdTyVGsdfhen6x0jLPMMvc+f5orvXghwdgyo42Pb65CY2hxQ7VX+HAr9C7
+         N0cA==
+X-Gm-Message-State: AOAM533sh/jqrRoJt/LL+Cghao+kSG+BfAmoSbyc+rGMIMsddnmc3wMs
+        cjIEohtBA5L36PdV3re7CkyI1tTmX0krHLCYlU54kl/xQmj3YA==
+X-Google-Smtp-Source: ABdhPJzB6HF/9sDh+7RytLSEAtUV7EPozw4K8yTcFAllV7+hbl6Xwb9OY8B32O60MAkO+tqUxKM7JVppFhTJ
+X-Received: by 2002:a05:6830:1c7c:: with SMTP id s28mr11049552otg.335.1598580210574;
+        Thu, 27 Aug 2020 19:03:30 -0700 (PDT)
+Received: from dcs.hq.drivescale.com ([68.74.115.3])
+        by smtp-relay.gmail.com with ESMTP id g7sm766412ooe.11.2020.08.27.19.03.30;
+        Thu, 27 Aug 2020 19:03:30 -0700 (PDT)
+X-Relaying-Domain: drivescale.com
+Received: from cunkel.drivescale.com (cunkel.drivescale.com [192.168.33.80])
+        by dcs.hq.drivescale.com (Postfix) with ESMTP id 15838420AC;
+        Fri, 28 Aug 2020 02:03:30 +0000 (UTC)
+From:   Christopher Unkel <cunkel@drivescale.com>
+To:     Jiri Kosina <trivial@kernel.org>
+Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Christopher Unkel <cunkel@drivescale.com>
+Subject: [PATCH] md: trivial comment typo fix
+Date:   Thu, 27 Aug 2020 19:03:05 -0700
+Message-Id: <20200828020305.3698463-1-cunkel@drivescale.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 2020-08-28 at 10:57 +1000, Finn Thain wrote:
-> On Thu, 27 Aug 2020, Joe Perches wrote:
-> 
-> > checkpatch already does this.
-> > 
-> 
-> Did you use checkpatch to generate this patch?
+"predicted", not "predicated".
 
-Nope.
+Signed-off-by: Christopher Unkel <cunkel@drivescale.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 607278207023..9e5755549eb1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -29,7 +29,7 @@
+      pr_crit() for error conditions that risk data loss
+      pr_err() for error conditions that are unexpected, like an IO error
+          or internal inconsistency
+-     pr_warn() for error conditions that could have been predicated, like
++     pr_warn() for error conditions that could have been predicted, like
+          adding a device to an array when it has incompatible metadata
+      pr_info() for every interesting, very rare events, like an array starting
+          or stopping, or resync starting or stopping
+-- 
+2.24.1
 
