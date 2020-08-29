@@ -2,85 +2,160 @@ Return-Path: <SRS0=8aTj=CH=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F89C433E2
-	for <linux-raid@archiver.kernel.org>; Sat, 29 Aug 2020 05:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D03AC433E2
+	for <linux-raid@archiver.kernel.org>; Sat, 29 Aug 2020 09:54:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C68D2208A9
-	for <linux-raid@archiver.kernel.org>; Sat, 29 Aug 2020 05:03:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5361B2075B
+	for <linux-raid@archiver.kernel.org>; Sat, 29 Aug 2020 09:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725898AbgH2FC7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 29 Aug 2020 01:02:59 -0400
-Received: from rin.romanrm.net ([51.158.148.128]:57568 "EHLO rin.romanrm.net"
+        id S1727105AbgH2Jy5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 29 Aug 2020 05:54:57 -0400
+Received: from mga18.intel.com ([134.134.136.126]:24263 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725860AbgH2FC6 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 29 Aug 2020 01:02:58 -0400
-Received: from natsu (unknown [IPv6:fd39::e99e:8f1b:cfc9:ccb8])
-        by rin.romanrm.net (Postfix) with SMTP id 5F2023F0;
-        Sat, 29 Aug 2020 05:02:56 +0000 (UTC)
-Date:   Sat, 29 Aug 2020 10:02:56 +0500
-From:   Roman Mamedov <rm@romanrm.net>
-To:     "R. Ramesh" <rramesh@verizon.net>
-Cc:     antlists <antlists@youngman.org.uk>,
-        Ram Ramesh <rramesh2400@gmail.com>,
-        Linux Raid <linux-raid@vger.kernel.org>
-Subject: Re: Best way to add caching to a new raid setup.
-Message-ID: <20200829100256.57e8d57b@natsu>
-In-Reply-To: <d0aeb41b-09d4-b756-05ee-f0b3da486532@verizon.net>
-References: <16cee7f2-38d9-13c8-4342-4562be68930b.ref@verizon.net>
- <16cee7f2-38d9-13c8-4342-4562be68930b@verizon.net>
- <dc91cc7d-02c4-66ee-21b4-bda69be3bbd9@youngman.org.uk>
- <1310d10c-1b83-7031-58e3-0f767b1df71b@gmail.com>
- <101d4a60-916c-fe30-ae7c-994098fe2ebe@youngman.org.uk>
- <694be035-4317-26fd-5eaf-8fdc20019d9b@gmail.com>
- <6872a42c-5c27-e38a-33ab-10ec01723961@youngman.org.uk>
- <d0aeb41b-09d4-b756-05ee-f0b3da486532@verizon.net>
+        id S1726869AbgH2Jy5 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 29 Aug 2020 05:54:57 -0400
+IronPort-SDR: +9YyvdTkEiw5cL2mgGrJJ+oGzpR3elDJwLPo1OGjAhPX62Ca7w8PYe6SXzGfJmwSgjk9bL89+/
+ 3o4TQQAmnQbA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9727"; a="144466459"
+X-IronPort-AV: E=Sophos;i="5.76,367,1592895600"; 
+   d="scan'208";a="144466459"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Aug 2020 02:54:56 -0700
+IronPort-SDR: NY3MC3GgU1fY3JXDi8Fqv8+8Fq4FaN7fWIngBmnLB6nALbmwfVDZFPN32dzGpnGIqug86AcqAx
+ 7kfpHkekkdjw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,367,1592895600"; 
+   d="scan'208";a="324328371"
+Received: from lkp-server02.sh.intel.com (HELO 301dc1beeb51) ([10.239.97.151])
+  by fmsmga004.fm.intel.com with ESMTP; 29 Aug 2020 02:54:55 -0700
+Received: from kbuild by 301dc1beeb51 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kBxZW-0000R1-NO; Sat, 29 Aug 2020 09:54:54 +0000
+Date:   Sat, 29 Aug 2020 17:54:45 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 13f6b6b1f883e02068ff107075dac6dd35fb137d
+Message-ID: <5f4a25e5.4iO75fqXl04XhP6o%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 28 Aug 2020 22:08:22 -0500
-"R. Ramesh" <rramesh@verizon.net> wrote:
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
+branch HEAD: 13f6b6b1f883e02068ff107075dac6dd35fb137d  md/raid10: pull codes that wait for blocked dev into one function
 
-> I do not know how SSD caching is implemented. I assumed it will be 
-> somewhat similar to memory cache (L2 vs L3 vs L4 etc). I am hoping that 
-> with SSD caching, reads/writes to disk will be larger in size and 
-> sequential within a file (similar to cache line fill in memory cache 
-> which results in memory bursts that are efficient). I thought that is 
-> what SSD caching will do to disk reads/writes. I assumed, once reads 
-> (ahead) and writes (assuming writeback cache) buffers data sufficiently 
-> in the SSD, all reads/writes will be to SSD with periodic well organized 
-> large transfers to disk. If I am wrong here then I do not see any point 
-> in SSD as a cache. My aim is not to optimize by cache hits, but optimize 
-> by preventing disks from thrashing back and forth seeking after every 
-> block read. I suppose Linux (memory) buffer cache alleviates some of 
-> that. I was hoping SSD will provide next level. If not, I am off in my 
-> understanding of SSD as a disk cache.
+elapsed time: 726m
 
-Just try it, as I said before with LVM it is easy to remove if it doesn't work
-out. You can always go to the manual copying method or whatnot, but first why
-not check if the automatic caching solution might be "good enough" for your
-needs.
+configs tested: 91
+configs skipped: 4
 
-Yes it usually tries to avoid caching long sequential reads or writes, but
-there's also quite a bit of other load on the FS, i.e. metadata. I found that
-browsing directories and especially mounting the filesystem had a great
-benefit from caching.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-You are correct that it will try to increase performance via writeback
-caching, however with LVM that needs to be enabled explicitly:
-https://www.systutorials.com/docs/linux/man/7-lvmcache/#lbAK
-And of course a failure of that cache SSD will mean losing some data, even if
-the main array is RAID. Perhaps should consider a RAID of SSDs for cache in
-that case then.
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                         s3c6400_defconfig
+arm                        vexpress_defconfig
+mips                   sb1250_swarm_defconfig
+sh                        edosk7760_defconfig
+arm                        realview_defconfig
+mips                          rb532_defconfig
+ia64                         bigsur_defconfig
+arm                           viper_defconfig
+arm64                            alldefconfig
+powerpc                          g5_defconfig
+arm                          tango4_defconfig
+arm                      jornada720_defconfig
+sh                           se7780_defconfig
+arm                             pxa_defconfig
+mips                 pnx8335_stb225_defconfig
+sh                          sdk7780_defconfig
+arm                          ixp4xx_defconfig
+sh                   rts7751r2dplus_defconfig
+arm                           sunxi_defconfig
+arm                       mainstone_defconfig
+mips                     decstation_defconfig
+m68k                        stmark2_defconfig
+mips                      malta_kvm_defconfig
+sh                ecovec24-romimage_defconfig
+m68k                          sun3x_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                             defconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a002-20200828
+i386                 randconfig-a005-20200828
+i386                 randconfig-a003-20200828
+i386                 randconfig-a004-20200828
+i386                 randconfig-a001-20200828
+i386                 randconfig-a006-20200828
+x86_64               randconfig-a015-20200828
+x86_64               randconfig-a012-20200828
+x86_64               randconfig-a016-20200828
+x86_64               randconfig-a014-20200828
+x86_64               randconfig-a011-20200828
+x86_64               randconfig-a013-20200828
+i386                 randconfig-a013-20200828
+i386                 randconfig-a012-20200828
+i386                 randconfig-a011-20200828
+i386                 randconfig-a016-20200828
+i386                 randconfig-a014-20200828
+i386                 randconfig-a015-20200828
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
 
--- 
-With respect,
-Roman
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
