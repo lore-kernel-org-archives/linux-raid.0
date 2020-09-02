@@ -2,121 +2,97 @@ Return-Path: <SRS0=XO6g=CL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38038C433E7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:09:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69402C433E7
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:16:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B01E20773
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:09:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BEBA20767
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:16:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728078AbgIBPJ3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 11:09:29 -0400
-Received: from hammer.websitemanagers.com.au ([59.100.172.130]:37942 "EHLO
-        hammer.websitemanagers.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727894AbgIBPJJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 11:09:09 -0400
-Received: (qmail 25223 invoked by uid 1011); 2 Sep 2020 15:09:07 -0000
-Received: from 192.168.5.112 by hammer (envelope-from <mailinglists@websitemanagers.com.au>, uid 1008) with qmail-scanner-1.24 
- (clamdscan: 0.102.4/25878. spamassassin: 3.4.2.  
- Clear:RC:1(192.168.5.112):. 
- Processed in 0.055628 secs); 02 Sep 2020 15:09:07 -0000
-Received: from unknown (HELO ADAM-MBP.local) (adamg+websitemanagers.com.au@192.168.5.112)
-  by 0 with ESMTPA; 2 Sep 2020 15:09:06 -0000
-Subject: Re: Feature request: Remove the badblocks list
-To:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc:     "David C. Rankin" <drankinatty@suddenlinkmail.com>,
-        Linux Raid <linux-raid@vger.kernel.org>
-References: <75076966.1748398.1597773608869.JavaMail.zimbra@karlsbakk.net>
- <001c5a42-93fd-eddb-ba86-aa3e2695f2a8@thehawken.org>
- <37b43194-f372-dd04-a319-34406f63c5a2@suddenlinkmail.com>
- <51057261.933837.1599053769942.JavaMail.zimbra@karlsbakk.net>
- <8dce17fb-13df-b273-cc3d-b3f71d180354@websitemanagers.com.au>
- <1375662956.965590.1599058237477.JavaMail.zimbra@karlsbakk.net>
-From:   Adam Goryachev <mailinglists@websitemanagers.com.au>
-Organization: Website Managers
-Message-ID: <afb20610-530e-4185-69c3-4ceef939fc6f@websitemanagers.com.au>
-Date:   Thu, 3 Sep 2020 01:09:06 +1000
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.0
+        id S1727903AbgIBPPy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 11:15:54 -0400
+Received: from verein.lst.de ([213.95.11.211]:60870 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726567AbgIBPLt (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 2 Sep 2020 11:11:49 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 4285B68B05; Wed,  2 Sep 2020 17:11:44 +0200 (CEST)
+Date:   Wed, 2 Sep 2020 17:11:44 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mike Snitzer <snitzer@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-raid@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Richard Weinberger <richard@nod.at>,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        Song Liu <song@kernel.org>, dm-devel@redhat.com,
+        linux-mtd@lists.infradead.org, cgroups@vger.kernel.org,
+        drbd-dev@tron.linbit.com, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, martin.petersen@oracle.com
+Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
+ block layer
+Message-ID: <20200902151144.GA1738@lst.de>
+References: <20200726150333.305527-1-hch@lst.de> <20200726150333.305527-7-hch@lst.de> <20200826220737.GA25613@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1375662956.965590.1599058237477.JavaMail.zimbra@karlsbakk.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200826220737.GA25613@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Wed, Aug 26, 2020 at 06:07:38PM -0400, Mike Snitzer wrote:
+> On Sun, Jul 26 2020 at 11:03am -0400,
+> Christoph Hellwig <hch@lst.de> wrote:
+> 
+> > Drivers shouldn't really mess with the readahead size, as that is a VM
+> > concept.  Instead set it based on the optimal I/O size by lifting the
+> > algorithm from the md driver when registering the disk.  Also set
+> > bdi->io_pages there as well by applying the same scheme based on
+> > max_sectors.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  block/blk-settings.c         |  5 ++---
+> >  block/blk-sysfs.c            |  1 -
+> >  block/genhd.c                | 13 +++++++++++--
+> >  drivers/block/aoe/aoeblk.c   |  2 --
+> >  drivers/block/drbd/drbd_nl.c | 12 +-----------
+> >  drivers/md/bcache/super.c    |  4 ----
+> >  drivers/md/dm-table.c        |  3 ---
+> >  drivers/md/raid0.c           | 16 ----------------
+> >  drivers/md/raid10.c          | 24 +-----------------------
+> >  drivers/md/raid5.c           | 13 +------------
+> >  10 files changed, 16 insertions(+), 77 deletions(-)
+> 
+> 
+> In general these changes need a solid audit relative to stacking
+> drivers.  That is, the limits stacking methods (blk_stack_limits)
+> vs lower level allocation methods (__device_add_disk).
+> 
+> You optimized for lowlevel __device_add_disk establishing the bdi's
+> ra_pages and io_pages.  That is at the beginning of disk allocation,
+> well before any build up of stacking driver's queue_io_opt() -- which
+> was previously done in disk_stack_limits or driver specific methods
+> (e.g. dm_table_set_restrictions) that are called _after_ all the limits
+> stacking occurs.
+> 
+> By inverting the setting of the bdi's ra_pages and io_pages to be done
+> so early in __device_add_disk it'll break properly setting these values
+> for at least DM afaict.
 
-On 3/9/20 00:50, Roy Sigurd Karlsbakk wrote:
->> I'm no MD expert, but I there are a couple of things to consider...
->>
->> 1) MD doesn't mark the sector as bad unless we try to write to it, AND
->> the drive replies to say it could not be written. So, in your case, the
->> drive is saying that it doesn't have any "spare" sectors left to
->> re-allocate, we are already passed that point.
->>
->> 2) When MD tries to read, it gets an error, so read from the other
->> mirror, or re-construct from parity/etc, and automatically attempt to
->> write to the sector, see point 1 above for the failure case.
->>
->> So by the time MD gets a write error for a sector, the drive really is
->> bad, and MD can no longer ensure that *this* sector will be able to
->> properly store data again (whatever level of RAID we asked for, that
->> level can't be achieved with one drive faulty). So MD marks it bad, and
->> won't store any user data in that sector in future. As other drives are
->> replaced, we mark the corresponding sector on those drives as also bad,
->> so they also know that no user data should be stored there.
->>
->> Eventually, we replace the faulty disk, and it would probably be safe to
->> store user data in the marked sector (assuming the new drive is not
->> faulty on the same sector, and all other member drives are not faulty on
->> the same sector).
->>
->> So, to "fix" this, we just need a way to tell MD to try and write to all
->> member drives, on all faulty sectors, and if any drive returns fails to
->> write, then keep the sector as marked bad, if *ALL* drives succeed, then
->> remove from the bad blocks list on all members.
->>
->> So why not add this feature to fix the problem, instead of throwing away
->> something that is potentially useful? Perhaps this could be done as part
->> of the "repair" mode, or done during a replace/add (when we reach the
->> "bad" sector, test the new drive, test all existing drives, and then
->> continue with the repair/add.
->>
->> Would that solve the "bug"?
-> I'd better want md to stop fixing "somebody else's problem", that is, the disk, and rather just do its job. As for the case, I have tried to manually read those sectors named in the badblocks list and they all work. All of them. But then, there's no fixing, since they are proclaimed dead. So are their siblings' sectors with the same number, regardless of status.
-Just because you can read them, doesn't mean you can write them. 
-Clearly, at some point in time, one of your drives failed. You now need 
-to recover from that failed drive in the most sensible way.
-> If a drive has multiple issues with bad sector, kick it out. It doesn't have anything to do in the RAID anymore
+ra_pages never got inherited by stacking drivers, check it by modifying
+it on an underlying device and then creating a trivial dm or md one.
+And I think that is a good thing - in general we shouldn't really mess
+with this thing from drivers if we can avoid it.  I've kept the legacy
+aoe and md parity raid cases, out of which the first looks pretty weird
+and the md one at least remotely sensible.
 
-And if a group of 100 sectors are bad on drive 1, and 100 different 
-sectors on drive 2, you want to kick both drives out, and destroy all 
-your data until you can create a new array and restore from backup?
-
-OR, just mark those parts of all disks faulty, and at some point in the 
-future, you replace the disks, and then find a way to tell MD that the 
-sectors are working now (and preferably, re-test them before marking 
-them as OK)?
-
-BTW, I just found this:
-
-https://raid.wiki.kernel.org/index.php/The_Badblocks_controversy
-
-Which suggests that there is indeed a bug which should be hunted and 
-fixed, and that actually the BBL isn't populated via failed writes, it 
-is populated by failed reads while doing a replace/add, AND the failed 
-read is from the source drive AND the parity/mirror drives.
-
-Either way, perhaps what is needed (if you are interested) is a 
-repeatable test scenario causing the problem, which could then be used 
-to identify and fix the bug.
-
-Regards,
-Adam
-
+->io_pages is still inherited in disk_stack_limits, just like before
+so no change either.
