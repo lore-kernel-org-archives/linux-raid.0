@@ -2,74 +2,36 @@ Return-Path: <SRS0=XO6g=CL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A475C433E2
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73012C433E2
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:46:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2081204FD
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:45:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="dqFgKByi";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="IQ9YvJAL"
+	by mail.kernel.org (Postfix) with ESMTP id 51D24204FD
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:46:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727935AbgIBPpi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 11:45:38 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:26414 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728470AbgIBPpD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 11:45:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1599061502; x=1630597502;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=dqFgKByicwuZK2yvvgaV4HLUnZEArMrEQTPKHAG7U16334qp6J3tgf7y
-   M9/6dqx1NWeB+CQzaLIKQ2kjhnmhxpPMAOjLPgr7772xOwaL3MGOw6rtf
-   6xwc4ZdJGmYkO8qWHLlZrlgiHOacGaDootJ0mvSe72QN5KhVipLZ6PsbO
-   aYytZARIxk3zhA2nFdZuLZHbe5NCNh5htXjV8EwKSGZT8xRucocq949bu
-   L0zr87DxOYgbrWqCh0XKo5I7HoHi+zVYMs0UaVvzOh4S/vryfJhK0jvNw
-   9EMA8Z0K//zJ4zfVapDCCh/MKnlU85MK9ktWO0UVjlfz908c0+grYC73C
-   g==;
-IronPort-SDR: aKQDqp6LwlYd9VVgToyuntSjaDpu/xjt9jl3zGGBwsQfFc8vGqwYrZl055JuX7/PDrkgjV/ppB
- HgApYEQAAj2Qn+p8ZWWTDg4GyEaOIKmmvi231ROE5nqDL88qS1FbfDgbX4ZYZsCL6gAN6FZgDm
- w3Znj6dPfnhgpQAuDY7ESwOfSqNfjUtKgyndYq+twdQEnqgX4M/Xi5PSHraIG7+qJyTGSNBR57
- sUPIcktoB//OoFRm8Jd0uQXT615qxZR9xX5a773f5UUsR2byjnqXeggP0z5paJ6V540R/ox9Sy
- qm8=
-X-IronPort-AV: E=Sophos;i="5.76,383,1592841600"; 
-   d="scan'208";a="255953363"
-Received: from mail-dm6nam10lp2103.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.103])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Sep 2020 23:44:47 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TsxswkAxtW2jicR5iNvz7tuvLVeGQ6NGCIEZEPqHq5QmZcQW4yZfkYSFs2mVVfuSZIet+yWG7ZHbbZ+pXoOT7Erf1H9cLOY4ahuSjiffSOLWWeJ1cxIVL1Qt/RAoVQ2akVLaz70S0Vqw6+ccaFiyD6VUe3U2Aal9v5haTOSnWI9LklpEXbyDKA3pCyQJdM16PdQM2wdBI/WnTBcdYcxTLIrwbnKDOK36q2y8zNf59tcoZzcwFp7rBw19Ydd9v6grMRfJdtdipGWJLEbluLcrK0nIZa4W6eEJNZ4D/OXgN1iSvQIPAfJ0ww+8gTs57J7iW7ZUjyIhAp/R+ebdh+Kang==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=CO/h+hrvyZBQ4Neh1Tp35STSPGmAohsO+ALoizmcMGKFiZUpVCv9x5bXTBk2QEJwvD2Tjgj88hqc8SAj5rimS/sE7qOgmgHXPfLRD9eOd6jT8edmD6nVJ1ibRZEdTBOrLzR/C0QBZaV2VgYywlo5QJ5rBflEjOLRFvT9n3d8XfPPomY1r7YOpW5cXmB/npJbxRGjgSAHAUyxBUu7dajKLsinc1MBUuEuBtisCh+gktl11sRviK/mdFF0fY1nMhzr5DJ5LdvCiAzFxcp6YVGG8onDRhi7aI3v3t9FTww0Zxp0NLWTRgnUFDsPgjAnC1JHg3QaRZF5UdCi7yn4DS0xZg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=IQ9YvJAL1QKJWloGorSfgPJCLOCoOBv/At8AAHqxO1gfvrDo21ZZJeMMVnF98XqMVeTsHrTojVZasjHCPSTbzDa5mxlwOqPuTFa7QvRF9xOwqbkEQv7rzydEXqb4gFbFr3/tdJEcH1m8+YFVvzJXR/t47SuCRnsFHNd2AVLkNUk=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3680.namprd04.prod.outlook.com
- (2603:10b6:803:4e::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.25; Wed, 2 Sep
- 2020 15:44:46 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738%7]) with mapi id 15.20.3326.023; Wed, 2 Sep 2020
- 15:44:46 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+        id S1728386AbgIBPqP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 11:46:15 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:51387 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727860AbgIBPqI (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 2 Sep 2020 11:46:08 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 93E6A20418E;
+        Wed,  2 Sep 2020 17:38:52 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id PCCwPRfO6cmJ; Wed,  2 Sep 2020 17:38:50 +0200 (CEST)
+Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
+        by smtp.infotech.no (Postfix) with ESMTPA id 04A34204158;
+        Wed,  2 Sep 2020 17:38:47 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: rework check_disk_change()
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         Michal Simek <michal.simek@xilinx.com>,
         Borislav Petkov <bp@alien8.de>,
         "David S. Miller" <davem@davemloft.net>,
@@ -77,58 +39,54 @@ CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Finn Thain <fthain@telegraphics.com.au>,
         Michael Schmitz <schmitzmic@gmail.com>,
-        "linux-m68k@lists.linux-m68k.org" <linux-m68k@lists.linux-m68k.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 11/19] gdrom: use bdev_check_media_change
-Thread-Topic: [PATCH 11/19] gdrom: use bdev_check_media_change
-Thread-Index: AQHWgTNOeedM/+DMc0eDlPBuSQgWrg==
-Date:   Wed, 2 Sep 2020 15:44:46 +0000
-Message-ID: <SN4PR0401MB3598FE94BA85C20DFB48A8229B2F0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
 References: <20200902141218.212614-1-hch@lst.de>
- <20200902141218.212614-12-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2001:a62:1590:f101:1584:4722:fd5f:b30e]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: b7567157-626e-4959-701d-08d84f571ebd
-x-ms-traffictypediagnostic: SN4PR0401MB3680:
-x-microsoft-antispam-prvs: <SN4PR0401MB36802A2DA32AA2990255DE369B2F0@SN4PR0401MB3680.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: bheRkqXyhGzyrmje6s96OnUUWDeU5bvuYBAZeXohergZwIguk0K+QtZ/hGnu1wmRLmvgcls6QXr7H0bXW1ayvKApc0dbio8HnBkrnK5n3gaFGvyg2JG7RJlYuq+XNnaBgFh7Ozx16GWr0tMvSF7KmrLIkfz0PN1oNFIBzLtI4IEq0J4ecHzi97hzSTOupn+N88LHmAkgd8anYiRrq9U9baxmeI+h+O+rUtqrVWLHt7q6ajXykVzlD9rsoBMTPN/hkqn+0+A8GeFNpJ6495w52A+yOiRAMD2iTOef0vHnWpJQ42KY11wUiBYDHLnYyDroPuBH6eiaqHMrWpeYozzfBg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(346002)(366004)(396003)(39850400004)(86362001)(558084003)(55016002)(8676002)(19618925003)(9686003)(4270600006)(5660300002)(478600001)(2906002)(8936002)(33656002)(7416002)(186003)(54906003)(316002)(66556008)(66446008)(71200400001)(7696005)(52536014)(4326008)(64756008)(76116006)(66946007)(91956017)(66476007)(6506007)(110136005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: KqYjTWP78wmmXeGu/XX+4rBnUgMb9XeJRpXz+eqRK7xYZESIG6ZHICCn7niBfOjf9BdIucRVJFL4CvXw2TPebvcwHgRlBd3ESTEqhfnO/uFwhUE6oR/SKOEc7RTOp3bv+8fzPfYFKxb0CvLMnB9EEW1RMT5O2MJYlGY5uMiz6QSAmhjLJcpiGbplPOzMVIbbo49/CL3U733ql2MeV+ZrNaMf8msEZXuXi295TNpMBxf6N8n6TW7IdFYxEJaMW7yExc170TdSzlogFuDeUf/lg/yoOQArkzpsc6LhPHzha7m9ItpMObtDjYkSCnPdsmSMOK1AuEKfjPQFcRfeY6YcjBdp8kxliFolCi2ogVardAoiszFtYDZDeLiVhd8fGYF1DdBoFkYFHudlBdOaEg5wWDtsJ7FsCIPz7dlPDzn/Gm3VfnEWMzRD3ebQsfES3/jDVJABq0BL39rWPRhvydWC/2NMBsZ/19v8TfheguszzTPR9JuQ1FFBvc1Yx8pwoxfCfwmzbHc7n3Hgid48P47jpGEsdrUOyJjg9okPh5QIyTOReE/07BQ4OmUcp2W61fp6Bw5S01GvbF+TFrY2SO9ZFqYt95ii1idyoB4HE9S+8pktSZvegXwMVwJdNO9jse854Q5rARamS9QSxXVuz28DTzkTUchPfCdHofaltWoVyB/sfR1samyDJ9e2E36fy6AHhAlDEUoaid/5kXHkTefRvw==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <730eced4-c804-a78f-3d52-2a448dbd1b84@interlog.com>
+Date:   Wed, 2 Sep 2020 11:38:45 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b7567157-626e-4959-701d-08d84f571ebd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 15:44:46.8226
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: l3UqEjxv7u7ytOYL9RpJXasnuOhmWCBGIJYSbrJvytcMHH8pKPXa0Nt3HgHnsbk79KVMeHAnaQr0RM3PMeQck32SKjSxCh2jv1kWZNmdVm0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3680
+In-Reply-To: <20200902141218.212614-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+On 2020-09-02 10:11 a.m., Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series replaced the not very nice check_disk_change() function with
+> a new bdev_media_changed that avoids having the ->revalidate_disk call
+> at its end.  As a result ->revalidate_disk can be removed from a lot of
+> drivers.
+> 
+
+For over 20 years the sg driver has been carrying this snippet that hangs
+off the completion callback:
+
+        if (driver_stat & DRIVER_SENSE) {
+                 struct scsi_sense_hdr ssh;
+
+                 if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
+                         if (!scsi_sense_is_deferred(&ssh)) {
+                                 if (ssh.sense_key == UNIT_ATTENTION) {
+                                         if (sdp->device->removable)
+                                                 sdp->device->changed = 1;
+                                 }
+                         }
+                 }
+         }
+
+Is it needed? The unit attention (UA) may not be associated with the
+device changing. Shouldn't the SCSI mid-level monitor UAs if they
+impact the state of a scsi_device object?
+
+Doug Gilbert
+
