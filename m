@@ -2,127 +2,104 @@ Return-Path: <SRS0=XO6g=CL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2601BC433E7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:48:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C6DC433E2
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5E822078E
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:48:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADDB32078E
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZuN/Dmn2"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="DEE5OKKG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728251AbgIBOru (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:47:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38092 "EHLO
+        id S1727103AbgIBOtY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:49:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727957AbgIBOMy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 10:12:54 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76268C061249;
-        Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=IOBdZmqfub+9TrAGeUEaXu5Vz5gp+vrz6f+ooFKXHwY=; b=ZuN/Dmn2J8IDS9piakhRmsdkpI
-        7vWOwaizTLkjNJZxYBailM2+9Gl+YeAVFkiiwel78wa+j0YAag1iY7m8xJoMJzrMEi9g5hRbd/mX4
-        96CJBtGZJ690xEt7ffFH5Bq3HC9aTfTPlVKUzp5n4Pyuu51JrEvzAxLAhvbwg1D6SASNJKuwilp4f
-        5cPWKtsThdhLGWnV4ifqgx6HPdP8bp1+SIo/LtGnRAVWFIZgBr44DEPpeweTkKFy+8o8V3slYgBtu
-        J9XmHaFEinAi5UwsSHm7hKaBR1cAkO67N5oCJLbNexpnDyC9UkVHw9cXaHLhCzF5YWsQHRqLyAAov
-        9uuRmeHQ==;
-Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTUy-0005dM-96; Wed, 02 Sep 2020 14:12:28 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>,
+        with ESMTP id S1727075AbgIBODD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 10:03:03 -0400
+Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0663FC061249
+        for <linux-raid@vger.kernel.org>; Wed,  2 Sep 2020 07:02:51 -0700 (PDT)
+Received: by mail-io1-xd2f.google.com with SMTP id j2so5851955ioj.7
+        for <linux-raid@vger.kernel.org>; Wed, 02 Sep 2020 07:02:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Ku7e+DesYlsL/c7k5HJw65rc3jrpfmGqzPu51jyJxJY=;
+        b=DEE5OKKGh1r8VHsSbRDOHXyr0EY/JZmo9R9NjqSjJKawRaCP4hU7gd7TYcJP/9YZM7
+         f9ePonEEbp/l91A6T4zFQxTQLDeZxmy0LMYDoRrMahsz8WSo30cFpFYAnwscMWxFdIlp
+         oD8CXLDbgxFmE3UimYbtHYWaCjvm1HLjDP1Jf/oc196Q0dgg3xrDzjQ3BN32QyrfzGEu
+         BAA+ZfhsIf58ZQsISLcJD7bVqjEF28U7NRblbSxZYn9AOlHAjsBMyhDBaU/uxguqX2OT
+         X2fZVbjEQa6505uyiqaXXm9chdV79wx7RHjRntV/V2w1d3oytjJ926JWuLbQ8ZonRWBw
+         7Msg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Ku7e+DesYlsL/c7k5HJw65rc3jrpfmGqzPu51jyJxJY=;
+        b=bKAinF7BJQ3f6xje5OzVLBJHMQfSSZHC0UmrkyCjflLueMpaS3r12RcPwC6HjES+Xu
+         twgCInvTesY5Qr/BL+TyyDG3PocK0b+UiNzvv6Pv8uG2cdVefGULX3e4VuFfXg4tmbDk
+         89EmIZavUhgXiP29YG9MADXc/J2nZFEwe4zN5hmYDY+VvScBXbYwqmLHJrCBbKlXUTL/
+         hxJtAtXvblHpwKkSn3bdJRGwsQXT1dp5Ga17D+iMxSuRbBzV0RzBEWxkBXXhZ1aFKH0R
+         8J6nWBOBqlhmoffvpy21PUOXM5IpBbKKDveqCFmVuwc/G4Z7ouZ/tpKJa74xpl0237wl
+         MtMA==
+X-Gm-Message-State: AOAM533DXHXh7BqFZhN4s5A9ZYZ+e0uScIoLAsvHkTmO/dchtIKxle7x
+        OOLyWOcCf/6pEi4DDqJ7388w6Q==
+X-Google-Smtp-Source: ABdhPJxFrZXWesZv0xLmVsuUB1MDZ450c11yMQmgXL3dPEcVh+WgJjGeEIGPOaG+O49/dxLkaoYMdQ==
+X-Received: by 2002:a05:6602:2043:: with SMTP id z3mr3472576iod.93.1599055371125;
+        Wed, 02 Sep 2020 07:02:51 -0700 (PDT)
+Received: from [192.168.1.57] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id s10sm616030ilo.53.2020.09.02.07.02.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Sep 2020 07:02:50 -0700 (PDT)
+Subject: Re: remove revalidate_disk()
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Josef Bacik <josef@toxicpanda.com>,
+        Dan Williams <dan.j.williams@intel.com>, dm-devel@redhat.com,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 06/19] swim: simplify media change handling
-Date:   Wed,  2 Sep 2020 16:12:05 +0200
-Message-Id: <20200902141218.212614-7-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200902141218.212614-1-hch@lst.de>
-References: <20200902141218.212614-1-hch@lst.de>
+References: <20200901155748.2884-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <78d5ab8a-4387-7bfb-6e25-07fd6c1ddc10@kernel.dk>
+Date:   Wed, 2 Sep 2020 08:02:49 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200901155748.2884-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-floppy_revalidate mostly duplicates work already done in floppy_open
-despite only beeing called from floppy_open.  Remove the function and
-just clear the ->ejected flag directly under the right condition.
+On 9/1/20 9:57 AM, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series removes the revalidate_disk() function, which has been a
+> really odd duck in the last years.  The prime reason why most people
+> use it is because it propagates a size change from the gendisk to
+> the block_device structure.  But it also calls into the rather ill
+> defined ->revalidate_disk method which is rather useless for the
+> callers.  So this adds a new helper to just propagate the size, and
+> cleans up all kinds of mess around this area.  Follow on patches
+> will eventuall kill of ->revalidate_disk entirely, but ther are a lot
+> more patches needed for that.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/block/swim.c | 24 ++----------------------
- 1 file changed, 2 insertions(+), 22 deletions(-)
+Applied, thanks.
 
-diff --git a/drivers/block/swim.c b/drivers/block/swim.c
-index d4565c555b289f..52dd1efa00f9c5 100644
---- a/drivers/block/swim.c
-+++ b/drivers/block/swim.c
-@@ -217,8 +217,6 @@ extern int swim_read_sector_header(struct swim __iomem *base,
- extern int swim_read_sector_data(struct swim __iomem *base,
- 				 unsigned char *data);
- 
--static int floppy_revalidate(struct gendisk *disk);
--
- static DEFINE_MUTEX(swim_mutex);
- static inline void set_swim_mode(struct swim __iomem *base, int enable)
- {
-@@ -640,8 +638,8 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
- 		return 0;
- 
- 	if (mode & (FMODE_READ|FMODE_WRITE)) {
--		if (bdev_check_media_change(bdev))
--			floppy_revalidate(bdev->bd_disk);
-+		if (bdev_check_media_change(bdev) && fs->disk_in)
-+			fs->ejected = 0;
- 		if ((mode & FMODE_WRITE) && fs->write_protected) {
- 			err = -EROFS;
- 			goto out;
-@@ -738,24 +736,6 @@ static unsigned int floppy_check_events(struct gendisk *disk,
- 	return fs->ejected ? DISK_EVENT_MEDIA_CHANGE : 0;
- }
- 
--static int floppy_revalidate(struct gendisk *disk)
--{
--	struct floppy_state *fs = disk->private_data;
--	struct swim __iomem *base = fs->swd->base;
--
--	swim_drive(base, fs->location);
--
--	if (fs->ejected)
--		setup_medium(fs);
--
--	if (!fs->disk_in)
--		swim_motor(base, OFF);
--	else
--		fs->ejected = 0;
--
--	return !fs->disk_in;
--}
--
- static const struct block_device_operations floppy_fops = {
- 	.owner		 = THIS_MODULE,
- 	.open		 = floppy_unlocked_open,
 -- 
-2.28.0
+Jens Axboe
 
