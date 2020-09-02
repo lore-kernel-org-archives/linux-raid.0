@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D850AC433E7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A091FC2BC0E
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:47:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9F572078E
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:46:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 765F42078E
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:47:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YbggAEx9"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YGK8fJVS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728056AbgIBOqP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:46:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38134 "EHLO
+        id S1726567AbgIBOrD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:47:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727977AbgIBONL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 10:13:11 -0400
+        with ESMTP id S1727963AbgIBOMy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 10:12:54 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F134C06124F;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E9F1C061247;
         Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=G29JkSXO5mbjv1FoDpuAl//FXROAUm+3biOsauwhg0s=; b=YbggAEx9ze8hczGoKQ8PaAFw67
-        PsEkFNv31FZcKERky+O++zQ9kvVdW7HBx4lvmngVLfdXX8SbwEPkzZvdCK5vFc4az+Sk27+TGhgN9
-        7QFg/4pEu0RYytEvQPP+uO21Tca9pR4QqutZ+Z7gOGBhGqNbhk/Hvowhiix75ZDYUMZnQ7niEHxEY
-        VYjoCyUJ0L/cTR4nH2S2b+skjfHtbx4qpYKK8G4srMxCKSunIMBAaDDQyaYI1RSy4GdQ5SGPgn6TM
-        N7/ixE54Q5ehR/xHZ6a4HfuN6Iu92GWKCuyjF3PguqjYRY61I3HAnYSU4VLCRnkRoEuqhabztoVxg
-        5i4HKTaw==;
+        bh=bJa71sDGZRTcC2iIw3V/lx4zrrvbhIXSbhIKo+Q3k5g=; b=YGK8fJVS2GhiC/1NvOWxDvyR76
+        lncnW8u9y5IvWyMGnSvbzmCBmG7CeKllGy/JYfR3xfhKqx/+Xb/Lc+pSCTGW8TlF8oRUvRzxRsOhc
+        awsTrnlvbnjczzPUBzFa3QXwj35mhof/K6MHnFNHofvGWJP2684IwP0x0QbFTndL87AdMRy8384mS
+        qJDm0Oxy2lyCIjZvbaT0OYEDgITukkRgmOYBQ7+bLoKBDbipGRKtjIeCFL9/e4nsRMA4hA+zKzqaS
+        ZgDNJbC+Ii0/vQJkZ8bpIftCw5rI23+PmfgYQoJ115/ANznPrxEXbVZDp61Kq7NaQYsf+QZspJD1+
+        LXMNpjSg==;
 Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTV1-0005ds-SV; Wed, 02 Sep 2020 14:12:32 +0000
+        id 1kDTV5-0005ew-Qp; Wed, 02 Sep 2020 14:12:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -51,9 +51,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 09/19] xsysace: simplify media change handling
-Date:   Wed,  2 Sep 2020 16:12:08 +0200
-Message-Id: <20200902141218.212614-10-hch@lst.de>
+Subject: [PATCH 12/19] ide-cd: use bdev_check_media_changed
+Date:   Wed,  2 Sep 2020 16:12:11 +0200
+Message-Id: <20200902141218.212614-13-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200902141218.212614-1-hch@lst.de>
 References: <20200902141218.212614-1-hch@lst.de>
@@ -65,73 +65,47 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Pass a struct ace_device to ace_revalidate_disk, move the media changed
-check into the one caller that needs it, and give the routine a better
-name.
+Switch to use bdev_check_media_changed instead of check_disk_change and
+call idecd_revalidate_disk manually.  Given that idecd_revalidate_disk
+only re-reads the TOC, and we already do the same at probe time, the
+extra call into ->revalidate_disk from bdev_disk_changed is not required
+either, so stop wiring up the method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/xsysace.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
+ drivers/ide/ide-cd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/xsysace.c b/drivers/block/xsysace.c
-index eefe542f2d9fff..8d581c7536fb51 100644
---- a/drivers/block/xsysace.c
-+++ b/drivers/block/xsysace.c
-@@ -888,26 +888,20 @@ static unsigned int ace_check_events(struct gendisk *gd, unsigned int clearing)
- 	return ace->media_change ? DISK_EVENT_MEDIA_CHANGE : 0;
- }
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 212bb2d8bf346a..6a38cbc80aea0d 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -56,6 +56,7 @@ static DEFINE_MUTEX(ide_cd_mutex);
+ static DEFINE_MUTEX(idecd_ref_mutex);
  
--static int ace_revalidate_disk(struct gendisk *gd)
-+static void ace_media_changed(struct ace_device *ace)
+ static void ide_cd_release(struct device *);
++static int idecd_revalidate_disk(struct gendisk *disk);
+ 
+ static struct cdrom_info *ide_cd_get(struct gendisk *disk)
  {
--	struct ace_device *ace = gd->private_data;
- 	unsigned long flags;
+@@ -1611,7 +1612,8 @@ static int idecd_open(struct block_device *bdev, fmode_t mode)
+ 	struct cdrom_info *info;
+ 	int rc = -ENXIO;
  
--	dev_dbg(ace->dev, "ace_revalidate_disk()\n");
--
--	if (ace->media_change) {
--		dev_dbg(ace->dev, "requesting cf id and scheduling tasklet\n");
-+	dev_dbg(ace->dev, "requesting cf id and scheduling tasklet\n");
+-	check_disk_change(bdev);
++	if (bdev_check_media_change(bdev))
++		idecd_revalidate_disk(bdev->bd_disk);
  
--		spin_lock_irqsave(&ace->lock, flags);
--		ace->id_req_count++;
--		spin_unlock_irqrestore(&ace->lock, flags);
-+	spin_lock_irqsave(&ace->lock, flags);
-+	ace->id_req_count++;
-+	spin_unlock_irqrestore(&ace->lock, flags);
+ 	mutex_lock(&ide_cd_mutex);
+ 	info = ide_cd_get(bdev->bd_disk);
+@@ -1770,7 +1772,6 @@ static const struct block_device_operations idecd_ops = {
+ 	.compat_ioctl		= IS_ENABLED(CONFIG_COMPAT) ?
+ 				  idecd_compat_ioctl : NULL,
+ 	.check_events		= idecd_check_events,
+-	.revalidate_disk	= idecd_revalidate_disk
+ };
  
--		tasklet_schedule(&ace->fsm_tasklet);
--		wait_for_completion(&ace->id_completion);
--	}
-+	tasklet_schedule(&ace->fsm_tasklet);
-+	wait_for_completion(&ace->id_completion);
- 
- 	dev_dbg(ace->dev, "revalidate complete\n");
--	return ace->id_result;
- }
- 
- static int ace_open(struct block_device *bdev, fmode_t mode)
-@@ -922,8 +916,8 @@ static int ace_open(struct block_device *bdev, fmode_t mode)
- 	ace->users++;
- 	spin_unlock_irqrestore(&ace->lock, flags);
- 
--	if (bdev_check_media_change(bdev))
--		ace_revalidate_disk(bdev->bd_disk);
-+	if (bdev_check_media_change(bdev) && ace->media_change)
-+		ace_media_changed(ace);
- 	mutex_unlock(&xsysace_mutex);
- 
- 	return 0;
-@@ -1080,7 +1074,7 @@ static int ace_setup(struct ace_device *ace)
- 		(unsigned long long) ace->physaddr, ace->baseaddr, ace->irq);
- 
- 	ace->media_change = 1;
--	ace_revalidate_disk(ace->gd);
-+	ace_media_changed(ace);
- 
- 	/* Make the sysace device 'live' */
- 	add_disk(ace->gd);
+ /* module options */
 -- 
 2.28.0
 
