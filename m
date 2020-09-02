@@ -2,133 +2,134 @@ Return-Path: <SRS0=XO6g=CL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BD8C433E7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:32:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41928C433E7
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:32:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A28F20767
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:32:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AA2720767
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 15:32:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TYUCwox4";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="RmLMexsr"
+	dkim=pass (2048-bit key) header.d=karlsbakk.net header.i=@karlsbakk.net header.b="DLag6/4k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728211AbgIBP3I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 11:29:08 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:6218 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728161AbgIBPZE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 11:25:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1599060304; x=1630596304;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=TYUCwox4mTo4ySGXeofvaUhiGrgqqX9UOsOiOiyocwa67TQFmpjCkWb9
-   1IaXjzj6TpKEsoB10FgUjaRhkqcY4l7k8HDsHbl/6c0fS6ZzlpfycUVnx
-   fNcpu7SMtL3wvz1bbk5tCRSKrLOHkZ1gq3jbpsWthjfWJfb3P0sqNevaZ
-   a8r586SPsDtMPgqzR3LjQD5D9tlMmSwRnfJbI18kY5HgKpuRivsGCqPPz
-   LRRTVOB2WSidiRdmS7kX5xBtzm2gEPlQQFhfU4tFXUNIaV9jRhbRNbbfi
-   8tSLv7FSouylX5AzRQJM29Cw0g/6V1qb8PIv5gU4DormFAJJAzCNww9t/
-   Q==;
-IronPort-SDR: ZBbAUPenMn+ytTD1+bDbQC2AhmRnNJ1KJq+8Kl4eNXiSXe7ZStfJXze9p4R/Z8eP9M8BGFPB/G
- RQd3ZSNGL3Yi6dZbK00sur0oGWL8e6d+sszospbM/u9BnHvHp0YntNHyKqxO4Ug1AZ2rgf2hQi
- 16iIwRRvOx2iiPI+KrIkmRjB86ni5FpIJThKgS5Kztz468pYZ5DlxH9LUCfoaBcQHvMpoENECS
- ZI+vHDi3jQwQpL1KOhdlyp556PZh+9OovMSdTyNqFurWThwkhUyKSdW4guJRBuSV/yn4ctLBmQ
- fTY=
-X-IronPort-AV: E=Sophos;i="5.76,383,1592841600"; 
-   d="scan'208";a="150760263"
-Received: from mail-dm6nam10lp2103.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.103])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Sep 2020 23:24:47 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NDFSJWo5U5uW0071hnlRGRZCWsYYoEvUHJ1Lj9/g6ehhgpqmdcHxlhllOIcFIPSQj2Z3RH80chxRNxHhIs73DXEQoctfeknI2ijBzYPVLk8Je7ahbLHF8HuarWBIIjJVQBdELrVHwrjAjDNMebi7ctAWIsPTkOrrAWFvJRga1EmsaT+bNo4yjfvbIyo+y4wmBdcHjtofGRHoU5Jr68pMZ8Q586L0Yf7lG/B2WYFFVWH51SJF37QrJakTPSVSNbRKwng+YJ0Dry9/ZsxgUosmUJVIVjsE8Me2uXDAV7wO+kRZcsoI8rAsHshDUgaf3yZAJb+uNlm8zeH2QvD8++5ziA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=IySUSGLrsKvOjcDDqtrLGfWM9OEVT0ckuK6yI9bMEu/hc9iT1PfeEIugjRVnO6Cotzs1N4tRK57vu71+QBr7vFjq2FfNAwyBkbaJKWB1quQHTsEVXZlWNniH0GTCdPFE/yF572AIrpWqr2F7zGqORAa62PvwRJV4Amjm9T+Bs5IkVs9EB7U/s9JJE0rI2ACORLSt+7lCy3S4o/BiMqd8OG5ojO9u2s11XmYPa7OpUPUjexAqCFddte+RY0tbfQ24sJURG24BOY3vgUonLJcpC9bbnO0uOUQlskzIogFgqnTfoCz+PQbhASeg0oM8cKGky3KawLChr8VR9fu3W+4Kfg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=RmLMexsr63hNqnwhKnJPpkUz0Sj5LjI59ddiOjxaoJRnwVBmHBGdOcJOcECG7sg2mJ27uT2/PUKeZDEKb7kjntgIiDW9/82h+Q7F3pxvm1p8MTKsStfCbEJcBzLBHLB5PZiNVvVyi4mbKoG9vIMql8NzAxCtLTYpmP7izpQxH+E=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3679.namprd04.prod.outlook.com
- (2603:10b6:803:46::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.25; Wed, 2 Sep
- 2020 15:24:39 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738%7]) with mapi id 15.20.3326.023; Wed, 2 Sep 2020
- 15:24:39 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "linux-m68k@lists.linux-m68k.org" <linux-m68k@lists.linux-m68k.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 04/19] floppy: use bdev_check_media_change
-Thread-Topic: [PATCH 04/19] floppy: use bdev_check_media_change
-Thread-Index: AQHWgTQMdY22DogrRE+XphQq0renYQ==
-Date:   Wed, 2 Sep 2020 15:24:39 +0000
-Message-ID: <SN4PR0401MB35982192F35579A6B487EECE9B2F0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200902141218.212614-1-hch@lst.de>
- <20200902141218.212614-5-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2001:a62:1590:f101:1584:4722:fd5f:b30e]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 1a846bd3-c68b-4270-9755-08d84f544f44
-x-ms-traffictypediagnostic: SN4PR0401MB3679:
-x-microsoft-antispam-prvs: <SN4PR0401MB36793EE2B17B449273A42E149B2F0@SN4PR0401MB3679.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rZLriCRvFtx2yWIglYlTZyPzesPWZqYxxoxSYy1RObVBiof/0pbRw2e1iD1dmxHxy3TicKw83CsCl/GPlF1p9U38vbKsmCeKThkfeg1Sy6/8FSivhhtmertHHejzI1S4LwPSfnBwI6rrUtE1Qw5dDb5g31WtCwkL4C80M6VHxDJgDaOL4u4WvyVWOFveoWRjkS66zLcbV52HwywrrJbr6T45fYuD8u5NEFs7Lre9kT1ZEKxeZRGWTP6Ac+xKLFcs+JlT3KP7lRHrTS+A+cy5V4l2MV8Ho64Z85v/CyUkjAXBAIJ9V4jVLMwG9zyRvQjqsJ0W+7Q1JWPuk0mBt9C/xw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(136003)(39850400004)(396003)(366004)(8936002)(86362001)(76116006)(52536014)(91956017)(66476007)(66556008)(33656002)(66946007)(71200400001)(5660300002)(4326008)(66446008)(64756008)(7696005)(316002)(558084003)(54906003)(110136005)(7416002)(8676002)(186003)(19618925003)(478600001)(4270600006)(6506007)(55016002)(9686003)(2906002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: 2sx8UtjjLAr/68EpndtxVX+X4lAGVRid0f0OjetQsFzSuiZ7yfSTYbhvcghKpT/K47q80wPsEeVruYnsbSFh1xidv+OnliW7my+/nxbIjTy1GfJik1BVkF38WcnQBGvbaw1jzjjQGbSZdijKTNIH8cmMgfbVw6AQFrt3/A4Gj/xKJdqTWgRSK+EkhY567NvX3X3ojuJO0FeTpEV4AnYVxiPfuWvzOeHssEp9pGOrY38UHRBcjUE7rQHPIwgcUri506enIsqENY990aLVmxFftWOviEsYbAr60qNHeagXG+JTS4HY8yAAPYvRnChC/oXduYZKaJotJpdjsD/AAuH5m58OQdK1v58nd4jjkygJaqC6x75ZmAD3NhlpoNcob6h7wvJf7XinTO+PmyoN4u0B93EmjcHFBHXnL7j1YBLNASbC4nfi5NWn0oJ4HDdaeHeZSdnG3wWfQOikE62YR3uFNIV2tN7q1vdzUNFeQMNd7GqN3wFeKXepEnnAlDEPhB65pBhNsYyLnCapuGXG43HqwX+XdzyJh0+zK5I+xRrBtJa4Ku2Iz3ld3s2seuo3HtGeMiMmAUn74GeeHRELnyRk1NOaHe3cFx0RqfbDW9iFdsYrne7tqDUD0FP3VERpjTj5jBJgDgNO4WKdrqY6AscJoyVOGJMaL+GRTlPyfFhvhLpNLQIBAafVeTuwt6oDjk7uBqHl/mJ67lKKAgHXAvdfiA==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727968AbgIBP3F (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 11:29:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49264 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726938AbgIBPZQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 11:25:16 -0400
+Received: from zimbra.karlsbakk.net (zimbra.karlsbakk.net [IPv6:2a0a:51c0:0:1f:4ca5::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B84C061246
+        for <linux-raid@vger.kernel.org>; Wed,  2 Sep 2020 08:25:15 -0700 (PDT)
+Received: from localhost (localhost.localdomain [IPv6:::1])
+        by zimbra.karlsbakk.net (Postfix) with ESMTP id 2BCB43C273F;
+        Wed,  2 Sep 2020 17:25:14 +0200 (CEST)
+Received: from zimbra.karlsbakk.net ([IPv6:::1])
+        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10032)
+        with ESMTP id 6dhbL2ONNbyR; Wed,  2 Sep 2020 17:25:12 +0200 (CEST)
+Received: from localhost (localhost.localdomain [IPv6:::1])
+        by zimbra.karlsbakk.net (Postfix) with ESMTP id EDD0E3C27C6;
+        Wed,  2 Sep 2020 17:25:11 +0200 (CEST)
+DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra.karlsbakk.net EDD0E3C27C6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=karlsbakk.net;
+        s=1DC131FE-D37A-11E7-BD32-3AD4DFE620DF; t=1599060312;
+        bh=cDI8ivktQG22LirbXAZPU2J9xWu9Ihjgyqr57Bq8y0k=;
+        h=Date:From:To:Message-ID:MIME-Version;
+        b=DLag6/4kJfUd4TkTtPf0W9Sl2PxpN1xmnXjD3oxeYkUdBiFehXoH+20wwN8o85zig
+         ZJKtLxlkGkKxtKNKvh6TqKsFDtMoqivOT+w7o7tjwlXXzcfI29xkqkTgiB8z7oHglY
+         PD4ndX/c17xOtn2LHpOppeggFniYWLjCPQYZLNblb/j1BHyS33ubrXPHYKynbkh1Xj
+         RdpsvG3+HGGzxtVHB3keumCkyaQN6aWS74qOBxc+ncCgCMr3Yu1g93boLstqGsOkXZ
+         uRh1yK2gVCELwCnV8yJWaChncD+ClZi+5cca2K2QkVayIvP/JZC7/J4LL0q6KGTONm
+         l0WogqOSTnYig==
+X-Virus-Scanned: amavisd-new at zimbra.karlsbakk.net
+Received: from zimbra.karlsbakk.net ([IPv6:::1])
+        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10026)
+        with ESMTP id 0V2G_KqtoaAA; Wed,  2 Sep 2020 17:25:11 +0200 (CEST)
+Received: from zimbra.karlsbakk.net (localhost.localdomain [127.0.0.1])
+        by zimbra.karlsbakk.net (Postfix) with ESMTP id CBA0F3C273F;
+        Wed,  2 Sep 2020 17:25:11 +0200 (CEST)
+Date:   Wed, 2 Sep 2020 17:25:11 +0200 (CEST)
+From:   Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+To:     Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc:     "David C. Rankin" <drankinatty@suddenlinkmail.com>,
+        Linux Raid <linux-raid@vger.kernel.org>
+Message-ID: <675330127.983718.1599060311646.JavaMail.zimbra@karlsbakk.net>
+In-Reply-To: <afb20610-530e-4185-69c3-4ceef939fc6f@websitemanagers.com.au>
+References: <75076966.1748398.1597773608869.JavaMail.zimbra@karlsbakk.net> <001c5a42-93fd-eddb-ba86-aa3e2695f2a8@thehawken.org> <37b43194-f372-dd04-a319-34406f63c5a2@suddenlinkmail.com> <51057261.933837.1599053769942.JavaMail.zimbra@karlsbakk.net> <8dce17fb-13df-b273-cc3d-b3f71d180354@websitemanagers.com.au> <1375662956.965590.1599058237477.JavaMail.zimbra@karlsbakk.net> <afb20610-530e-4185-69c3-4ceef939fc6f@websitemanagers.com.au>
+Subject: Re: Feature request: Remove the badblocks list
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1a846bd3-c68b-4270-9755-08d84f544f44
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 15:24:39.6658
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ZlarJBzYgLLzI8LbjKqT+WhKFDXf6aM5JGoDbq+MVlUbhqK3Yv3GKVKlEE9XLCCzGpLKeeqM1dBPGgua4Qwl+OWv+InSVHhijJmut5ed1kE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3679
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Originating-IP: [2a01:79c:cebf:61e4:95bb:fcf8:43db:53b]
+X-Mailer: Zimbra 8.8.10_GA_3801 (ZimbraWebClient - FF80 (Mac)/8.8.10_GA_3786)
+Thread-Topic: Feature request: Remove the badblocks list
+Thread-Index: NYMdcxlI6QbyNTGCWs09onBoM94fCA==
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+>> I'd better want md to stop fixing "somebody else's problem", that is, th=
+e disk,
+>> and rather just do its job. As for the case, I have tried to manually re=
+ad
+>> those sectors named in the badblocks list and they all work. All of them=
+. But
+>> then, there's no fixing, since they are proclaimed dead. So are their si=
+blings'
+>> sectors with the same number, regardless of status.
+> Just because you can read them, doesn't mean you can write them.
+> Clearly, at some point in time, one of your drives failed. You now need
+> to recover from that failed drive in the most sensible way.
+>> If a drive has multiple issues with bad sector, kick it out. It doesn't =
+have
+>> anything to do in the RAID anymore
+>=20
+> And if a group of 100 sectors are bad on drive 1, and 100 different
+> sectors on drive 2, you want to kick both drives out, and destroy all
+> your data until you can create a new array and restore from backup?
+>=20
+> OR, just mark those parts of all disks faulty, and at some point in the
+> future, you replace the disks, and then find a way to tell MD that the
+> sectors are working now (and preferably, re-test them before marking
+> them as OK)?
+>=20
+> BTW, I just found this:
+>=20
+> https://raid.wiki.kernel.org/index.php/The_Badblocks_controversy
+
+I linked to that earlier in the thread
+
+> Which suggests that there is indeed a bug which should be hunted and
+> fixed, and that actually the BBL isn't populated via failed writes, it
+> is populated by failed reads while doing a replace/add, AND the failed
+> read is from the source drive AND the parity/mirror drives.
+
+It is neither hunted down nor fixed. It's the same thing and it has stayed =
+the same for these years.
+
+> Either way, perhaps what is needed (if you are interested) is a
+> repeatable test scenario causing the problem, which could then be used
+> to identify and fix the bug.
+
+I have tried several things and all show the same. I just don't know how to=
+ tell md "this drive's sector X is bad, so flag it so".
+
+Again, this is not the way to walk around a problem. What this does is just=
+ hiding real problems and let them grow in generations instead of just flag=
+ging a bad drive as bad, since that's the originating problem here.
+
+Vennlig hilsen
+
+roy
+--=20
+Roy Sigurd Karlsbakk
+(+47) 98013356
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+Hi=C3=B0 g=C3=B3=C3=B0a skaltu =C3=AD stein h=C3=B6ggva, hi=C3=B0 illa =C3=
+=AD snj=C3=B3 rita.
+
