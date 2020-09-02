@@ -2,124 +2,114 @@ Return-Path: <SRS0=XO6g=CL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B0DC433E7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 12:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9304C433E2
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 12:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AE392078B
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 12:01:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1FCD2078B
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 12:01:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O0WbBU6g"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ug+z0wla"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726515AbgIBMBY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 08:01:24 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:38436 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726307AbgIBMBE (ORCPT
+        id S1726654AbgIBMB0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 08:01:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25795 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726124AbgIBMBE (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 08:01:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599048056;
+        s=mimecast20190719; t=1599048055;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=auDVl+pnNel3qm/JsrCAnfsKZrQmGAfBCWkgsKi4Lgc=;
-        b=O0WbBU6gTVRlKK3PAY423DDrRNKLXSBsvlUPVMZX/KPoq9Mqq4IIA/5Y/Aj4FT4xjzgWM1
-        p2T/lDSlLRvEIurPvNXLVuGbKAp3Niqh5YruKcsXhgZUF7TDGNcCXgNgyRbDBrhSC/2dp+
-        WtobKfHhGfn1n5b36vjn6qi06VfA9wo=
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=gVenz3WFXJ/gXjGecmhDSZsz7lYbhjpQgjaEGPo4bH8=;
+        b=Ug+z0wlalh8ihtPPDy+NRj38UGGLhbOneakb7uEFHkyXHWdNTGnznGOBOt7JUWG2ENkPSs
+        Tf3hxNxcKufiPQ46Xhm31H+30AKUATVs9w3QKOTlRsm99CS2EjqnImdIio/zNUxRtOrVNQ
+        RB0KYacSa7zQipC9FjQh7rienz1WnRs=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-359-WvBTdNcENuuVaWqnN3zliw-1; Wed, 02 Sep 2020 08:00:52 -0400
-X-MC-Unique: WvBTdNcENuuVaWqnN3zliw-1
+ us-mta-223-sJzGYayYOIGb9i0166Jhjw-1; Wed, 02 Sep 2020 08:00:48 -0400
+X-MC-Unique: sJzGYayYOIGb9i0166Jhjw-1
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 73D2610ABDBB;
-        Wed,  2 Sep 2020 12:00:51 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-22.pek2.redhat.com [10.72.8.22])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4B1D17E581;
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A295818C5224;
         Wed,  2 Sep 2020 12:00:46 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-8-22.pek2.redhat.com [10.72.8.22])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BE69C811B3;
+        Wed,  2 Sep 2020 12:00:25 +0000 (UTC)
 From:   Xiao Ni <xni@redhat.com>
 To:     linux-raid@vger.kernel.org, song@kernel.org
 Cc:     heinzm@redhat.com, ncroxon@redhat.com,
         guoqing.jiang@cloud.ionos.com, colyli@suse.de
-Subject: [PATCH V6 1/3] md: calculate discard start address and size in specific raid type
-Date:   Wed,  2 Sep 2020 20:00:21 +0800
-Message-Id: <1599048023-9957-2-git-send-email-xni@redhat.com>
-In-Reply-To: <1599048023-9957-1-git-send-email-xni@redhat.com>
-References: <1599048023-9957-1-git-send-email-xni@redhat.com>
+Subject: [PATCH V6 0/3] md/raid10: Improve handling raid10 discard request
+Date:   Wed,  2 Sep 2020 20:00:20 +0800
+Message-Id: <1599048023-9957-1-git-send-email-xni@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-For raid10 it needs to choose new data offset and old offset
-in reshape. So it's better to calculate discard start address
-and size in specific raid type.
+Hi all
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/md.c    | 9 +++------
- drivers/md/md.h    | 3 +--
- drivers/md/raid0.c | 5 +++--
- 3 files changed, 7 insertions(+), 10 deletions(-)
+Now mkfs on raid10 which is combined with ssd/nvme disks takes a long time.
+This patch set tries to resolve this problem.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 10743be..e360d46 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8585,15 +8585,12 @@ EXPORT_SYMBOL(md_write_end);
- 
- /* This is used by raid0 and raid10 */
- void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
--				struct bio *bio,
--				sector_t dev_start, sector_t dev_end)
-+			struct bio *bio, sector_t start, sector_t size)
- {
- 	struct bio *discard_bio = NULL;
- 
--	if (__blkdev_issue_discard(rdev->bdev,
--	    dev_start + rdev->data_offset,
--	    dev_end - dev_start, GFP_NOIO, 0, &discard_bio) ||
--	    !discard_bio)
-+	if (__blkdev_issue_discard(rdev->bdev, start, size,
-+		GFP_NOIO, 0, &discard_bio) || !discard_bio)
- 		return;
- 
- 	bio_chain(discard_bio, bio);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index bae3bd5..da9997a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -714,8 +714,7 @@ extern void md_done_sync(struct mddev *mddev, int blocks, int ok);
- extern void md_error(struct mddev *mddev, struct md_rdev *rdev);
- extern void md_finish_reshape(struct mddev *mddev);
- extern void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
--				struct bio *bio,
--				sector_t dev_start, sector_t dev_end);
-+			struct bio *bio, sector_t start, sector_t size);
- 
- extern bool __must_check md_flush_request(struct mddev *mddev, struct bio *bio);
- extern void md_super_write(struct mddev *mddev, struct md_rdev *rdev,
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 2868294..d3da17b 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -532,8 +532,9 @@ static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
- 
- 		rdev = conf->devlist[(zone - conf->strip_zone) *
- 			conf->strip_zone[0].nb_dev + disk];
--		dev_start += zone->dev_start;
--		md_submit_discard_bio(mddev, rdev, bio, dev_start, dev_end);
-+		md_submit_discard_bio(mddev, rdev, bio,
-+			dev_start + zone->dev_start + rdev->data_offset,
-+			dev_end - dev_start);
- 	}
- 	bio_endio(bio);
- }
+v1:
+Coly helps to review these patches and give some suggestions:
+One bug is found. If discard bio is across one stripe but bio size is
+bigger than one stripe size. After spliting, the bio will be NULL.
+In this version, it checks whether discard bio size is bigger than
+(2*stripe_size). 
+In raid10_end_discard_request, it's better to check R10BIO_Uptodate
+is set or not. It can avoid write memory to improve performance. 
+Add more comments for calculating addresses.
+
+v2:
+Fix error by checkpatch.pl
+Fix one bug for offset layout. v1 calculates wrongly split size
+Add more comments to explain how the discard range of each component disk
+is decided.
+
+v3:
+add support for far layout
+Change the patch name
+
+v4:
+Pull codes that wait for blocked device into a seprate function
+It can't use (stripe_size-1) as a mask to calculate. (stripe_size-1) may
+not be power of 2.
+It doesn't need to use a full copy of geo.
+Fix warning by checkpatch.pl
+
+v5:
+In 32bit platform, it doesn't support 64bit devide by 32bit value.
+Reported-by: kernel test robot <lkp@intel.com>
+
+v6:
+Move the codes that calculate discard start/size into specific raid type.
+Remove discard support for reshape
+
+Xiao Ni (3):
+  md: calculate discard start address and size in specific raid type
+  md/raid10: improve raid10 discard request
+  md/raid10: improve discard request for far layout
+
+ drivers/md/md.c     |   9 +-
+ drivers/md/md.h     |   3 +-
+ drivers/md/raid0.c  |   5 +-
+ drivers/md/raid10.c | 296 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/md/raid10.h |   1 +
+ 5 files changed, 303 insertions(+), 11 deletions(-)
+
 -- 
 2.7.5
 
