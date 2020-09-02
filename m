@@ -2,133 +2,118 @@ Return-Path: <SRS0=XO6g=CL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA13BC433E7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 13:47:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 215BFC2BC0E
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:13:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F8F32083B
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 13:47:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5DDB207D3
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Sep 2020 14:13:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=karlsbakk.net header.i=@karlsbakk.net header.b="zM/qIeg6"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WwKvie5U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726933AbgIBNrj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Sep 2020 09:47:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34078 "EHLO
+        id S1728020AbgIBONw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:13:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727803AbgIBNrQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 09:47:16 -0400
-Received: from zimbra.karlsbakk.net (zimbra.karlsbakk.net [IPv6:2a0a:51c0:0:1f:4ca5::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01CADC061251
-        for <linux-raid@vger.kernel.org>; Wed,  2 Sep 2020 06:37:19 -0700 (PDT)
-Received: from localhost (localhost.localdomain [IPv6:::1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id 20C4E3C273F;
-        Wed,  2 Sep 2020 15:36:12 +0200 (CEST)
-Received: from zimbra.karlsbakk.net ([IPv6:::1])
-        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id uiLPRCmyfT59; Wed,  2 Sep 2020 15:36:10 +0200 (CEST)
-Received: from localhost (localhost.localdomain [IPv6:::1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id B07333C27C6;
-        Wed,  2 Sep 2020 15:36:10 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra.karlsbakk.net B07333C27C6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=karlsbakk.net;
-        s=1DC131FE-D37A-11E7-BD32-3AD4DFE620DF; t=1599053770;
-        bh=Jm098Z94iMl7J1Lui1HzOS+is138pFHIUfugQs6rOuQ=;
-        h=Date:From:To:Message-ID:MIME-Version;
-        b=zM/qIeg6YwVPs/Hs07L7WzhpmZ0wFqOAEFPOlNiWpFU1BkjyRCyuMp7Wur6BbPNjb
-         JhdcnwfosRm0eSc5u1OeZVckRf7CNbEK4YUShYbn5X9gM5aF1k+bbKO30l5szDV7An
-         vl5VBzNrUWAQKaONfKoZ52UNJls12mUlKs7kW7wEV12e6JZllTIj75iOtdBo8Zm9Hd
-         oZSJ+eWGTuNFjXD7n6eqcawG5OqM/peXi/CNE1Cxbkw6c3rd9TrTyU0aJ9gYZ+Tr+E
-         r9FO33hvC4UgEPCGWjuotYbkxLmIOab7oa7ywfuknXueck0rAb99OukYJB0tj5GuGT
-         lvXDxbzjaN+Xg==
-X-Virus-Scanned: amavisd-new at zimbra.karlsbakk.net
-Received: from zimbra.karlsbakk.net ([IPv6:::1])
-        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id sYFSLyar8nSZ; Wed,  2 Sep 2020 15:36:10 +0200 (CEST)
-Received: from zimbra.karlsbakk.net (localhost.localdomain [127.0.0.1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id 8E1693C273F;
-        Wed,  2 Sep 2020 15:36:10 +0200 (CEST)
-Date:   Wed, 2 Sep 2020 15:36:09 +0200 (CEST)
-From:   Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-To:     "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Cc:     Linux Raid <linux-raid@vger.kernel.org>
-Message-ID: <51057261.933837.1599053769942.JavaMail.zimbra@karlsbakk.net>
-In-Reply-To: <37b43194-f372-dd04-a319-34406f63c5a2@suddenlinkmail.com>
-References: <75076966.1748398.1597773608869.JavaMail.zimbra@karlsbakk.net> <001c5a42-93fd-eddb-ba86-aa3e2695f2a8@thehawken.org> <37b43194-f372-dd04-a319-34406f63c5a2@suddenlinkmail.com>
-Subject: Re: Feature request: Remove the badblocks list
+        with ESMTP id S1727991AbgIBONL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Sep 2020 10:13:11 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1396EC06125C;
+        Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=EqP9HPoUpfEHaFZHJN9/qOYklR5YKLZjZD+GBezP77s=; b=WwKvie5UOByQM0J/L7OERFefDG
+        ekdcHLA92IY05Goz+JUSOuazP3GEGKKjiLVA1rLvqyDC5QPu1wQlZuYlb67SbGXgpQUWb0Z085ajZ
+        bzKBmGu7jmWA7jca34IRO+FzQGfZXCvxyTQLUgkJrzFOWFHRqdpbXFTey/eVRMg47kL6JCidKpDX7
+        0XIROz3WU/OiGmOoFvLLNfbDFBvsO5PcclVc8CarMFrymMsiwtWuH1CD3efqsXF1SBRJ8k2Nnub7I
+        FdkSZB5lwhZ9HKyDbJ2fEA1f4fwIkuFNnTxjhPcxx3OlbDrtrVbW53tyC6dCWUAoFHlrhRuiPpqve
+        2sW3A4EA==;
+Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kDTV7-0005f9-Hr; Wed, 02 Sep 2020 14:12:38 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH 13/19] ide-cd: remove idecd_revalidate_disk
+Date:   Wed,  2 Sep 2020 16:12:12 +0200
+Message-Id: <20200902141218.212614-14-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200902141218.212614-1-hch@lst.de>
+References: <20200902141218.212614-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Originating-IP: [2a01:79c:cebf:61e4:95bb:fcf8:43db:53b]
-X-Mailer: Zimbra 8.8.10_GA_3801 (ZimbraWebClient - FF80 (Mac)/8.8.10_GA_3786)
-Thread-Topic: Feature request: Remove the badblocks list
-Thread-Index: DLg5POTzmtwo9eVn75aBYJuqGQ4wvg==
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
------ Original Message -----
-> From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-> To: "Linux Raid" <linux-raid@vger.kernel.org>
-> Sent: Saturday, 22 August, 2020 03:42:40
-> Subject: Re: Feature request: Remove the badblocks list
+Just merge the trivial function into its only caller.
 
-> On 8/18/20 4:03 PM, H=C3=A5kon Struijk Holmen wrote:
->> Hi,
->>=20
->> Thanks for the CC, I just managed to get myself subscribed to the list :=
-)
->>=20
->> I have gathered some thoughts on the subject as well after reading up on=
- it,
->> figuring out the actual header format is, and writing a tool [3] to fix =
-my
->> array...
->>=20
-> <snip>
->> But I have some complaints about the thing..
->=20
-> Well,
->=20
->  There is code in all things that can be fixed, but I for one will chime =
-in
-> and say I don't care if a lose a strip or two so long as on a failed disk=
- I
-> pop the new one in and it rebuilds without issue (which it does, even whe=
-n the
-> disk was replaced due to bad blocks)
->=20
->  So whatever is done, don't fix what isn't broken and introduce more bugs
-> along the way. If this is such an immediate problem, then why are patches
-> being attached to the complaints?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/ide/ide-cd.c | 17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
-The problem is that it's already broken. Take a single mirror. One drive ex=
-periences a bad sector, fine, you have redundancy, so you read the data fro=
-m the other drive and md flags the sector as bad. The drive two is replaced=
-, you lose the data. The new drive will get flagged with the same sector nu=
-mber as faulty, since the first drive has it flagged. So you replace the fi=
-rst drive and during resync, it also gets flagged as having a bad sector. A=
-nd so on.
-
-Modern (that is, disks since 20 years ago or so) reallocate sectors as they=
- wear out. We have redundancy to handle errors, not to pinpoint them on dis=
-ks and fill up not-so-smart lists with broken sectors that work. If md sees=
- a drive with excessive errors, that drive should be kicked out, marked as =
-dead, but not interfere with the rest of the raid.
-
-Vennlig hilsen
-
-roy
---=20
-Roy Sigurd Karlsbakk
-(+47) 98013356
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-Hi=C3=B0 g=C3=B3=C3=B0a skaltu =C3=AD stein h=C3=B6ggva, hi=C3=B0 illa =C3=
-=AD snj=C3=B3 rita.
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 6a38cbc80aea0d..25d2d88e82ada0 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -56,7 +56,6 @@ static DEFINE_MUTEX(ide_cd_mutex);
+ static DEFINE_MUTEX(idecd_ref_mutex);
+ 
+ static void ide_cd_release(struct device *);
+-static int idecd_revalidate_disk(struct gendisk *disk);
+ 
+ static struct cdrom_info *ide_cd_get(struct gendisk *disk)
+ {
+@@ -1612,8 +1611,11 @@ static int idecd_open(struct block_device *bdev, fmode_t mode)
+ 	struct cdrom_info *info;
+ 	int rc = -ENXIO;
+ 
+-	if (bdev_check_media_change(bdev))
+-		idecd_revalidate_disk(bdev->bd_disk);
++	if (bdev_check_media_change(bdev)) {
++		info = ide_drv_g(bdev->bd_disk, cdrom_info);
++
++		ide_cd_read_toc(info->drive);
++	}
+ 
+ 	mutex_lock(&ide_cd_mutex);
+ 	info = ide_cd_get(bdev->bd_disk);
+@@ -1755,15 +1757,6 @@ static unsigned int idecd_check_events(struct gendisk *disk,
+ 	return cdrom_check_events(&info->devinfo, clearing);
+ }
+ 
+-static int idecd_revalidate_disk(struct gendisk *disk)
+-{
+-	struct cdrom_info *info = ide_drv_g(disk, cdrom_info);
+-
+-	ide_cd_read_toc(info->drive);
+-
+-	return  0;
+-}
+-
+ static const struct block_device_operations idecd_ops = {
+ 	.owner			= THIS_MODULE,
+ 	.open			= idecd_open,
+-- 
+2.28.0
 
