@@ -2,74 +2,103 @@ Return-Path: <SRS0=BPCQ=CN=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	DKIM_ADSP_CUSTOM_MED,DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B1CC43461
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 10:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43397C43461
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 13:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D7AF206D4
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 10:35:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EB14208DB
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 13:57:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=google.com header.i=@google.com header.b="nBQKq2tZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730224AbgIDKe6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Sep 2020 06:34:58 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48288 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730106AbgIDKbV (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 4 Sep 2020 06:31:21 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 01B79AF6D;
-        Fri,  4 Sep 2020 10:30:35 +0000 (UTC)
-Subject: Re: [PATCH 19/19] block: switch gendisk lookup to a simple xarray
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-References: <20200903080119.441674-1-hch@lst.de>
- <20200903080119.441674-20-hch@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <3dae7f00-58bc-c857-7c90-08ec336783c9@suse.de>
-Date:   Fri, 4 Sep 2020 12:30:33 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <20200903080119.441674-20-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1730586AbgIDN5y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Sep 2020 09:57:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54660 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730638AbgIDNxp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Sep 2020 09:53:45 -0400
+Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4E00C061246
+        for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2020 06:53:44 -0700 (PDT)
+Received: by mail-qt1-x849.google.com with SMTP id f5so4401644qtk.11
+        for <linux-raid@vger.kernel.org>; Fri, 04 Sep 2020 06:53:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=sender:date:in-reply-to:message-id:mime-version:references:subject
+         :from:to:cc;
+        bh=6QhKTbTEeY1hMpwGRn3I4+LPI2vg1nOM4QWM63CXncA=;
+        b=nBQKq2tZPHnHW6+VjusqM7szXA10nJIkygMDcuxIOkW1Cr311hBbBCr2AU9gMR5Clc
+         3C8/3M/R0g35KUMJ+X+SMr3E+wfpTlr1WHpcdCWuL0nssZaWcqyeERm25cn3LIyfPoQz
+         fpMpl4DgjhIPtuz46UcOQwO7E9frYXls10Y1w4UsL2Pn76eFN4PtI3rfAHrAdgZrGhql
+         M8DkLpjUPpoSva9fXKh9llb5tB1j8EpfNZBrOnWaKRpkuJctbiG4XiyypLCAf9Q81n95
+         1drRRPeUEzVtEp1RwvYCBDIQPhxNTwsS9s/7JjfrzNbLFyrSEa0dpY+OHbnhKxNjM0Ry
+         o5Dg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=6QhKTbTEeY1hMpwGRn3I4+LPI2vg1nOM4QWM63CXncA=;
+        b=IkSjDSo3c456Y1nI1eaAq/c8+sAvf/2Nd/grM+BG9OArfWUvjlPRs0KPJZ+B/22iXA
+         rPvKsFpI2WaBvvReybR/BGzWp+hmX++vMBkcOgc84KARTJtL5DwkSC3ehCoT7i1WvHbn
+         6zn6QKdoVyQR7bpAiiEb3vwODl+1asw7VutUQmhtpXNN0CiDnVnaU2YIiMF6iylxlCrX
+         heEzogBsh1mHCYPq1B5dAu3tHZAIPeRZLnJJsBjVSOEUbHo5MKucfjBEDA2oJzZ7tx4S
+         rKgSvckQWQEBPxm/51F5EBEJu/i0gnynM95VLDVdjEpDEbQvFYGFdrRgB6QSY6zBCLgE
+         oTqg==
+X-Gm-Message-State: AOAM533it34Ecuhh5P0BDW3mqx2s9mITllMzRK+FZr5eNIcV2oKph/Mp
+        Qz2dskJeiRQ244gorNviEF5U0LLo
+X-Google-Smtp-Source: ABdhPJxQcGmIFWhXaDJlfBg9IY86LASa1SjfOzRlyC9IPT6aHtPDVbg/sEqfYFy1y9Rg9qWeo6OqFTmg
+X-Received: from gnomeregan.cam.corp.google.com ([2620:15c:6:14:1ea0:b8ff:fe76:1e48])
+ (user=brho job=sendgmr) by 2002:a05:6214:292:: with SMTP id
+ l18mr6631318qvv.5.1599227623676; Fri, 04 Sep 2020 06:53:43 -0700 (PDT)
+Date:   Fri,  4 Sep 2020 09:53:32 -0400
+In-Reply-To: <20200728163416.556521-22-hch@lst.de>
+Message-Id: <20200904135332.1130070-1-brho@google.com>
+Mime-Version: 1.0
+References: <20200728163416.556521-22-hch@lst.de>
+X-Mailer: git-send-email 2.28.0.526.ge36021eeef-goog
+Subject: [PATCH] init: fix error check in clean_path()
+From:   Barret Rhoden <brho@google.com>
+To:     hch@lst.de
+Cc:     gregkh@linuxfoundation.org, linux-api@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, rafael@kernel.org,
+        torvalds@linux-foundation.org, viro@zeniv.linux.org.uk,
+        luto@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/3/20 10:01 AM, Christoph Hellwig wrote:
-> Now that bdev_map is only used for finding gendisks, we can use
-> a simple xarray instead of the regions tracking structure for it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->   block/genhd.c         | 208 ++++++++----------------------------------
->   include/linux/genhd.h |   7 --
->   2 files changed, 37 insertions(+), 178 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+init_stat() returns 0 on success, same as vfs_lstat().  When it replaced
+vfs_lstat(), the '!' was dropped.
 
-Cheers,
+Fixes: 716308a5331b ("init: add an init_stat helper")
+Signed-off-by: Barret Rhoden <brho@google.com>
+---
 
-Hannes
+Andy: this was broken in virtme.  "/init: source: not found"
+
+ init/initramfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/init/initramfs.c b/init/initramfs.c
+index e6dbfb767057..1f97c0328a7a 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -297,7 +297,7 @@ static void __init clean_path(char *path, umode_t fmode)
+ {
+ 	struct kstat st;
+ 
+-	if (init_stat(path, &st, AT_SYMLINK_NOFOLLOW) &&
++	if (!init_stat(path, &st, AT_SYMLINK_NOFOLLOW) &&
+ 	    (st.mode ^ fmode) & S_IFMT) {
+ 		if (S_ISDIR(st.mode))
+ 			init_rmdir(path);
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.28.0.526.ge36021eeef-goog
+
