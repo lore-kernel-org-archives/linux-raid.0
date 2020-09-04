@@ -2,80 +2,97 @@ Return-Path: <SRS0=BPCQ=CN=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA898C43461
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 08:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FDA0C2BC84
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 09:23:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0F27206B8
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 08:02:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bitfolk.com header.i=@bitfolk.com header.b="s04LCwjn"
+	by mail.kernel.org (Postfix) with ESMTP id DC4E420770
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Sep 2020 09:23:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728163AbgIDICK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Sep 2020 04:02:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56750 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726151AbgIDICJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Sep 2020 04:02:09 -0400
-X-Greylist: delayed 965 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 04 Sep 2020 01:02:09 PDT
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C1F0C061244
-        for <linux-raid@vger.kernel.org>; Fri,  4 Sep 2020 01:02:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com; s=alpha;
-        h=Content-Type:MIME-Version:Message-ID:Subject:To:From:Date; bh=ARxNMSvXvUunAINJmdELEdoAUvLN2Ng8Y8YPwSkD1FI=;
-        b=s04LCwjnMrrjalwsJLTeZf59DFkX/RDxvhl0c6IvssKk1uPyNzjSpZ5Rdjr+nYXj2XVnnYLHG3vyOaME/j970YBZov6uenZUSBIhejCmrrsrzdkSBoPTiu0B0Z44eou92MDstx7RTEgTabg0dlssMSjm40dlmKB868PmQN2PGKmjZzujbToir5RPlOCngf5acn8gpbwsgTThHjk6q9lbMGvWkOYVycDYIWC9T3mavTp7+0waWcLf0/4cxsbuoT9T3SVReDQdU+u7rDUloXnIa9olMYX7cfiulGtd0yUiWmaSq56Ab9chvfnceI+P/bXT1VKAuMthAty/4vdRKe7FOw==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.84_2)
-        (envelope-from <andy@strugglers.net>)
-        id 1kE6Q1-0002t6-3P
-        for linux-raid@vger.kernel.org; Fri, 04 Sep 2020 07:45:57 +0000
-Date:   Fri, 4 Sep 2020 07:45:57 +0000
-From:   Andy Smith <andy@strugglers.net>
-To:     linux-raid@vger.kernel.org
-Subject: Config option for removing bbl on assembly?
-Message-ID: <20200904074557.GT13298@bitfolk.com>
-Mail-Followup-To: linux-raid@vger.kernel.org
+        id S1730017AbgIDJXK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Sep 2020 05:23:10 -0400
+Received: from mx2.suse.de ([195.135.220.15]:39698 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728588AbgIDJXK (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 4 Sep 2020 05:23:10 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 899CAB165;
+        Fri,  4 Sep 2020 09:23:08 +0000 (UTC)
+Subject: Re: rework check_disk_change()
+To:     dgilbert@interlog.com, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20200902141218.212614-1-hch@lst.de>
+ <730eced4-c804-a78f-3d52-2a448dbd1b84@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <29ec4708-3a8d-a4f2-5eea-a08908a8d093@suse.de>
+Date:   Fri, 4 Sep 2020 11:23:04 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL:  http://strugglers.net/wiki/User:Andy
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
+In-Reply-To: <730eced4-c804-a78f-3d52-2a448dbd1b84@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-Could we have a config setting for removing the bad blocks list on
-assembly?
-
-I'm aware that one could put:
-
-CREATE bbl=no
-
-in mdadm.conf and then newly created arrays won't have a bad blocks
-list. But in many cases, system arrays are created before an
-mdadm.conf exists, so they get a bbl.
-
-So, to remove a bbl I know that you have to stop the array and
-assemble it like:
-
-# mdadm /dev/mdX --assemble --update=no-bbl
-
-Again, for arrays with the actual system on it this is rather
-inconvenient. Even having to have some downtime of the service to do
-this is not great.
-
-So how about a config option telling mdadm to remove empty bbl the
-next time arrays are assembled? If there is a bbl with entries in it
-then it could warn and not remove it (so no force).
+On 9/2/20 5:38 PM, Douglas Gilbert wrote:
+> On 2020-09-02 10:11 a.m., Christoph Hellwig wrote:
+>> Hi Jens,
+>>
+>> this series replaced the not very nice check_disk_change() function with
+>> a new bdev_media_changed that avoids having the ->revalidate_disk call
+>> at its end.  As a result ->revalidate_disk can be removed from a lot of
+>> drivers.
+>>
+> 
+> For over 20 years the sg driver has been carrying this snippet that hangs
+> off the completion callback:
+> 
+>         if (driver_stat & DRIVER_SENSE) {
+>                  struct scsi_sense_hdr ssh;
+> 
+>                  if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
+>                          if (!scsi_sense_is_deferred(&ssh)) {
+>                                  if (ssh.sense_key == UNIT_ATTENTION) {
+>                                          if (sdp->device->removable)
+>                                                  sdp->device->changed = 1;
+>                                  }
+>                          }
+>                  }
+>          }
+> 
+> Is it needed? The unit attention (UA) may not be associated with the
+> device changing. Shouldn't the SCSI mid-level monitor UAs if they
+> impact the state of a scsi_device object?
+> 
+We do; check scsi_io_completion_action() in drivers/scsi/scsi_lib.c
+So I don't think you'd need to keep it in sg.c.
 
 Cheers,
-Andy
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
