@@ -2,131 +2,129 @@ Return-Path: <SRS0=DmcQ=CR=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AF66C43461
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 01:24:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F2AFC2D0E0
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 15:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E28F2193E
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 01:24:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 276AF251C4
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 15:55:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SkP9/0jh"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="noebgbDT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728305AbgIHBYO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Sep 2020 21:24:14 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:48618 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728241AbgIHBYN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Sep 2020 21:24:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599528252;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9nWSUZiWb3snOVulMSALV4he0iSrVT0Kl82xmy7nsew=;
-        b=SkP9/0jhouPmrn9oqFaANaZe3wosUGTb+PvdfybzuZ6+g56cKxKOuMN/3rTJbdHOVqsESZ
-        4eDE/H8xKw1bZXiQQx/P1ywYc2HTSomJFgyk7gqBqYy1/pevUxRa2PkKzX07D8WUhG/m3R
-        2mAElno5NVwardoaCO4PO3Jp8e+suMU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-451-xTneOeobNXysyZTQvrqhrQ-1; Mon, 07 Sep 2020 21:24:10 -0400
-X-MC-Unique: xTneOeobNXysyZTQvrqhrQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5197B807335;
-        Tue,  8 Sep 2020 01:24:08 +0000 (UTC)
-Received: from localhost (ovpn-12-217.pek2.redhat.com [10.72.12.217])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 886D860C0F;
-        Tue,  8 Sep 2020 01:24:04 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
+        id S1730826AbgIHPuj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Sep 2020 11:50:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52590 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730607AbgIHPt5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Sep 2020 11:49:57 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3DB2C0A3BE7;
+        Tue,  8 Sep 2020 07:54:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=T3DAd20WTb1Hb/Ra/a3WLrHCAUox9jbNIuydKc6Zwq0=; b=noebgbDTM393jBZuz8b4XPDreU
+        6wJ3DmWW4agGQj7UfprYVx8eF3+AFoEFftZqarIzWu1hxbmosigPQIHqlIZ+66W/uJmVFP9aXLjZU
+        ozaQ3eGcPyvoxsu6KMF/k7jX4EtE8YMhn+xwUfisrE85z2VvUQrm96lE97H1eWdMW5nW46FosdncC
+        WceOuD/7NyEZ1vcGW/fA8pqZJLAJPpx5RteD/YTpmudBbWS8uFR+8XbK3yMUgtijSWHPXig9zmArD
+        1UrJLeuY2m/E2QToGMBRKZ0HOsckIhOVNmyDTakcOz5VMW2zg9DQkub5G140UKeFW3ehh0juqUcC9
+        mf9Q+lNQ==;
+Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kFf0n-0002xK-0m; Tue, 08 Sep 2020 14:54:22 +0000
+From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
-        Veronika Kabatova <vkabatov@redhat.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Sagi Grimberg <sagi@grimberg.me>, Tejun Heo <tj@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH V3 1/3] percpu_ref: add percpu_ref_inited() for MD
-Date:   Tue,  8 Sep 2020 09:23:49 +0800
-Message-Id: <20200908012351.1092986-2-ming.lei@redhat.com>
-In-Reply-To: <20200908012351.1092986-1-ming.lei@redhat.com>
-References: <20200908012351.1092986-1-ming.lei@redhat.com>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 06/19] swim: simplify media change handling
+Date:   Tue,  8 Sep 2020 16:53:34 +0200
+Message-Id: <20200908145347.2992670-7-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
+References: <20200908145347.2992670-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-MD code uses perpcu-refcount internal to check if this percpu-refcount
-variable is initialized, this way is a hack.
+floppy_revalidate mostly duplicates work already done in floppy_open
+despite only beeing called from floppy_open.  Remove the function and
+just clear the ->ejected flag directly under the right condition.
 
-Add percpu_ref_inited() for MD so that the hack can be avoided.
-
-Suggested-by: Jens Axboe <axboe@kernel.dk>
-Tested-by: Veronika Kabatova <vkabatov@redhat.com>
-Cc: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/md/md.c                 | 2 +-
- include/linux/percpu-refcount.h | 1 +
- lib/percpu-refcount.c           | 6 ++++++
- 3 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/block/swim.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9562ef598ae1..a7c2429949fb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5632,7 +5632,7 @@ static void no_op(struct percpu_ref *r) {}
+diff --git a/drivers/block/swim.c b/drivers/block/swim.c
+index d4565c555b289f..52dd1efa00f9c5 100644
+--- a/drivers/block/swim.c
++++ b/drivers/block/swim.c
+@@ -217,8 +217,6 @@ extern int swim_read_sector_header(struct swim __iomem *base,
+ extern int swim_read_sector_data(struct swim __iomem *base,
+ 				 unsigned char *data);
  
- int mddev_init_writes_pending(struct mddev *mddev)
+-static int floppy_revalidate(struct gendisk *disk);
+-
+ static DEFINE_MUTEX(swim_mutex);
+ static inline void set_swim_mode(struct swim __iomem *base, int enable)
  {
--	if (mddev->writes_pending.percpu_count_ptr)
-+	if (percpu_ref_inited(&mddev->writes_pending))
+@@ -640,8 +638,8 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
  		return 0;
- 	if (percpu_ref_init(&mddev->writes_pending, no_op,
- 			    PERCPU_REF_ALLOW_REINIT, GFP_KERNEL) < 0)
-diff --git a/include/linux/percpu-refcount.h b/include/linux/percpu-refcount.h
-index 87d8a38bdea1..aed01562387b 100644
---- a/include/linux/percpu-refcount.h
-+++ b/include/linux/percpu-refcount.h
-@@ -109,6 +109,7 @@ struct percpu_ref {
- int __must_check percpu_ref_init(struct percpu_ref *ref,
- 				 percpu_ref_func_t *release, unsigned int flags,
- 				 gfp_t gfp);
-+bool percpu_ref_inited(struct percpu_ref *ref);
- void percpu_ref_exit(struct percpu_ref *ref);
- void percpu_ref_switch_to_atomic(struct percpu_ref *ref,
- 				 percpu_ref_func_t *confirm_switch);
-diff --git a/lib/percpu-refcount.c b/lib/percpu-refcount.c
-index 0ba686b8fe57..9e7c4ab5b7bb 100644
---- a/lib/percpu-refcount.c
-+++ b/lib/percpu-refcount.c
-@@ -93,6 +93,12 @@ int percpu_ref_init(struct percpu_ref *ref, percpu_ref_func_t *release,
- }
- EXPORT_SYMBOL_GPL(percpu_ref_init);
  
-+bool percpu_ref_inited(struct percpu_ref *ref)
-+{
-+	return percpu_count_ptr(ref) != NULL;
-+}
-+EXPORT_SYMBOL_GPL(percpu_ref_inited);
-+
- /**
-  * percpu_ref_exit - undo percpu_ref_init()
-  * @ref: percpu_ref to exit
+ 	if (mode & (FMODE_READ|FMODE_WRITE)) {
+-		if (bdev_check_media_change(bdev))
+-			floppy_revalidate(bdev->bd_disk);
++		if (bdev_check_media_change(bdev) && fs->disk_in)
++			fs->ejected = 0;
+ 		if ((mode & FMODE_WRITE) && fs->write_protected) {
+ 			err = -EROFS;
+ 			goto out;
+@@ -738,24 +736,6 @@ static unsigned int floppy_check_events(struct gendisk *disk,
+ 	return fs->ejected ? DISK_EVENT_MEDIA_CHANGE : 0;
+ }
+ 
+-static int floppy_revalidate(struct gendisk *disk)
+-{
+-	struct floppy_state *fs = disk->private_data;
+-	struct swim __iomem *base = fs->swd->base;
+-
+-	swim_drive(base, fs->location);
+-
+-	if (fs->ejected)
+-		setup_medium(fs);
+-
+-	if (!fs->disk_in)
+-		swim_motor(base, OFF);
+-	else
+-		fs->ejected = 0;
+-
+-	return !fs->disk_in;
+-}
+-
+ static const struct block_device_operations floppy_fops = {
+ 	.owner		 = THIS_MODULE,
+ 	.open		 = floppy_unlocked_open,
 -- 
-2.25.2
+2.28.0
 
