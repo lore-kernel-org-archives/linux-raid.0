@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D25C433E2
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 20:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B9CC2D0A7
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 20:08:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FF9B204FD
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 20:08:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0E1D207DE
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Sep 2020 20:08:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="H0x969PG"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GIpniUBI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730449AbgIHUHo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Sep 2020 16:07:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47048 "EHLO
+        id S1729663AbgIHUIj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Sep 2020 16:08:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730271AbgIHPTw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Sep 2020 11:19:52 -0400
+        with ESMTP id S1730275AbgIHPTQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Sep 2020 11:19:16 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 796D5C0A3BED;
-        Tue,  8 Sep 2020 07:55:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 304B6C0A3BEA;
+        Tue,  8 Sep 2020 07:55:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=RiAzaIm/dr+SqUNzkRGWaPTEPPycR0xtNLj0/t/BvYg=; b=H0x969PGygh0xFT8As+1SdAab4
-        7dTzLcqZS9aNhj2PskNHvp8w6D+cEieztIWQcwTxq14Pn7j51kwggzWDsdxnOdSMRhJD/01AVQEd4
-        yXb8OdLnjZD0FVPEfWYyXic07WSgJlaIATnHplGzCEwjX7aPhLvORMQiQwfPqAbH/PTWiWpoLeDZ6
-        HTym/4cidrk8j+woXhIAJQD6+ve4+ef6LBSpDl58i15OHtujoNXQODMOGPehhK/jesJSUrreEqRTP
-        l3IDDrhWM6+RY+z4qUIOaMcjBZNeHVeVNsmcIgfdvIMKd+1LCyT6BAz9ETQFUz6fw7s6ThzQpERHB
-        u1KxIYEg==;
+        bh=AIbdaWqDOZXyI97EfNIUO6cOxzS/iRi/fiJ/sz/ZAL8=; b=GIpniUBInLXgvz98qrm3XEFBUU
+        jI7kZn/WrtbX4474Skgn5Iwip5HLeqPsKx5DEn4psj2SQF9WbRQFr6hKKl3VF9Ii5a+mcgkre1Sza
+        LvVllN82PZVtFinvq56fIrZ+RrfX3jfJo2TnUV32FrYcLzR4jFJCrT6NEMboJtHMh3kzEw0gcMwMo
+        kjJpuGwfTeKms3eK/8v1oiodNb55XfT3nmCYDptXrSPYQqqabbpKVI0KcHMhN7OEQmG5UydppiZWH
+        7B0QIIZZTgk9Gy3y1V11t3QVuwPYZecByMco+KFniEh8KoEeAjHYCnn8GTwF55IekYLSdRaFbpzFI
+        XKaiiNDg==;
 Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFf10-0002yF-Ru; Tue, 08 Sep 2020 14:54:35 +0000
+        id 1kFf0u-0002xt-QY; Tue, 08 Sep 2020 14:54:30 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -52,9 +52,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 10/19] paride/pcd: use bdev_check_media_change
-Date:   Tue,  8 Sep 2020 16:53:38 +0200
-Message-Id: <20200908145347.2992670-11-hch@lst.de>
+Subject: [PATCH 08/19] xsysace: use bdev_check_media_change
+Date:   Tue,  8 Sep 2020 16:53:36 +0200
+Message-Id: <20200908145347.2992670-9-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
 References: <20200908145347.2992670-1-hch@lst.de>
@@ -66,28 +66,40 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The pcd driver does not have a ->revalidate_disk method, so it can just
-use bdev_check_media_change without any additional changes.
+Switch to use bdev_check_media_change instead of check_disk_change and
+call ace_revalidate_disk manually.  Given that ace_revalidate_disk only
+deals with media change events, the extra call into ->revalidate_disk
+from bdev_disk_changed is not required either, so stop wiring up the
+method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/block/paride/pcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/block/xsysace.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
-index 5124eca90e8337..70da8b86ce587d 100644
---- a/drivers/block/paride/pcd.c
-+++ b/drivers/block/paride/pcd.c
-@@ -233,7 +233,7 @@ static int pcd_block_open(struct block_device *bdev, fmode_t mode)
- 	struct pcd_unit *cd = bdev->bd_disk->private_data;
- 	int ret;
+diff --git a/drivers/block/xsysace.c b/drivers/block/xsysace.c
+index 5d8e0ab3f054f5..eefe542f2d9fff 100644
+--- a/drivers/block/xsysace.c
++++ b/drivers/block/xsysace.c
+@@ -922,7 +922,8 @@ static int ace_open(struct block_device *bdev, fmode_t mode)
+ 	ace->users++;
+ 	spin_unlock_irqrestore(&ace->lock, flags);
  
 -	check_disk_change(bdev);
-+	bdev_check_media_change(bdev);
++	if (bdev_check_media_change(bdev))
++		ace_revalidate_disk(bdev->bd_disk);
+ 	mutex_unlock(&xsysace_mutex);
  
- 	mutex_lock(&pcd_mutex);
- 	ret = cdrom_open(&cd->info, bdev, mode);
+ 	return 0;
+@@ -966,7 +967,6 @@ static const struct block_device_operations ace_fops = {
+ 	.open = ace_open,
+ 	.release = ace_release,
+ 	.check_events = ace_check_events,
+-	.revalidate_disk = ace_revalidate_disk,
+ 	.getgeo = ace_getgeo,
+ };
+ 
 -- 
 2.28.0
 
