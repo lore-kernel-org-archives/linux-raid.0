@@ -2,107 +2,105 @@ Return-Path: <SRS0=i/dv=CT=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74211C2D0A7
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 09:29:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C32BDC43461
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 14:50:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C36821582
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 09:29:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7238820770
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 14:50:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZswcqTFO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730461AbgIJJ2Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Sep 2020 05:28:24 -0400
-Received: from verein.lst.de ([213.95.11.211]:60174 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728936AbgIJJ2R (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 10 Sep 2020 05:28:17 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id C27726736F; Thu, 10 Sep 2020 11:28:13 +0200 (CEST)
-Date:   Thu, 10 Sep 2020 11:28:13 +0200
+        id S1730233AbgIJOue (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Sep 2020 10:50:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58916 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731177AbgIJOsp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Sep 2020 10:48:45 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11357C06179B;
+        Thu, 10 Sep 2020 07:48:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=Y4tkWtiLArM5ZtpwjGyv2ND3RgxFSGIzR5QDPUf60TY=; b=ZswcqTFOr1k+k8bIZc2FH2eUg0
+        wsLUdWC34/7nfCE+rLqwkfxZ0kbFaEA2XbrSR8UiGJjmuF6VjbDNNZNF6vyV4nRWR280lBh+jYHe7
+        J1uMIOIPhJ+YImvVr6HOCCH/lsQNrC7eWq18bDK9w2t1c1iEAyIM/QHVjf6kP7CuD48LHncPaXu/8
+        LivZ8Nv8ZJCqdiwTCnOLLg33yHJKtLFbfB+30oXoOG7tp+xgT6e2A8XcWpMXqC+nQsqvpDNHp1eB4
+        DisYt7MHXMGmX/n1dYG8k6SjAGljP3k8PmOqUUOFMU+35SybDId1sACVrMjI5odLDALvjBfo1Bzd1
+        bFfcjDXg==;
+Received: from [2001:4bb8:184:af1:3ecc:ac5b:136f:434a] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kGNsN-0006w7-Mx; Thu, 10 Sep 2020 14:48:40 +0000
 From:   Christoph Hellwig <hch@lst.de>
-To:     Mike Snitzer <snitzer@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, martin.petersen@oracle.com,
-        Hans de Goede <hdegoede@redhat.com>,
-        Song Liu <song@kernel.org>,
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
         Richard Weinberger <richard@nod.at>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, Minchan Kim <minchan@kernel.org>,
-        dm-devel@redhat.com, linux-mtd@lists.infradead.org,
-        linux-mm@kvack.org, drbd-dev@tron.linbit.com,
-        cgroups@vger.kernel.org
-Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
- block layer
-Message-ID: <20200910092813.GA27229@lst.de>
-References: <20200726150333.305527-1-hch@lst.de> <20200726150333.305527-7-hch@lst.de> <20200826220737.GA25613@redhat.com> <20200902151144.GA1738@lst.de> <20200902162007.GB5513@redhat.com>
+        Minchan Kim <minchan@kernel.org>,
+        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        cgroups@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 03/12] drbd: remove RB_CONGESTED_REMOTE
+Date:   Thu, 10 Sep 2020 16:48:23 +0200
+Message-Id: <20200910144833.742260-4-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200910144833.742260-1-hch@lst.de>
+References: <20200910144833.742260-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200902162007.GB5513@redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Sep 02, 2020 at 12:20:07PM -0400, Mike Snitzer wrote:
-> On Wed, Sep 02 2020 at 11:11am -0400,
-> Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > On Wed, Aug 26, 2020 at 06:07:38PM -0400, Mike Snitzer wrote:
-> > > On Sun, Jul 26 2020 at 11:03am -0400,
-> > > Christoph Hellwig <hch@lst.de> wrote:
-> > > 
-> > > > Drivers shouldn't really mess with the readahead size, as that is a VM
-> > > > concept.  Instead set it based on the optimal I/O size by lifting the
-> > > > algorithm from the md driver when registering the disk.  Also set
-> > > > bdi->io_pages there as well by applying the same scheme based on
-> > > > max_sectors.
-> > > > 
-> > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > ---
-> > > >  block/blk-settings.c         |  5 ++---
-> > > >  block/blk-sysfs.c            |  1 -
-> > > >  block/genhd.c                | 13 +++++++++++--
-> > > >  drivers/block/aoe/aoeblk.c   |  2 --
-> > > >  drivers/block/drbd/drbd_nl.c | 12 +-----------
-> > > >  drivers/md/bcache/super.c    |  4 ----
-> > > >  drivers/md/dm-table.c        |  3 ---
-> > > >  drivers/md/raid0.c           | 16 ----------------
-> > > >  drivers/md/raid10.c          | 24 +-----------------------
-> > > >  drivers/md/raid5.c           | 13 +------------
-> > > >  10 files changed, 16 insertions(+), 77 deletions(-)
-> > > 
-> > > 
-> > > In general these changes need a solid audit relative to stacking
-> > > drivers.  That is, the limits stacking methods (blk_stack_limits)
-> > > vs lower level allocation methods (__device_add_disk).
-> > > 
-> > > You optimized for lowlevel __device_add_disk establishing the bdi's
-> > > ra_pages and io_pages.  That is at the beginning of disk allocation,
-> > > well before any build up of stacking driver's queue_io_opt() -- which
-> > > was previously done in disk_stack_limits or driver specific methods
-> > > (e.g. dm_table_set_restrictions) that are called _after_ all the limits
-> > > stacking occurs.
-> > > 
-> > > By inverting the setting of the bdi's ra_pages and io_pages to be done
-> > > so early in __device_add_disk it'll break properly setting these values
-> > > for at least DM afaict.
-> > 
-> > ra_pages never got inherited by stacking drivers, check it by modifying
-> > it on an underlying device and then creating a trivial dm or md one.
-> 
-> Sure, not saying that it did.  But if the goal is to set ra_pages based
-> on io_opt then to do that correctly on stacking drivers it must be done
-> in terms of limits stacking right?  Or at least done at a location that
-> is after the limits stacking has occurred?  So should DM just open-code
-> setting ra_pages like it did for io_pages?
-> 
-> Because setting ra_pages in __device_add_disk() is way too early for DM
-> -- given it uses device_add_disk_no_queue_reg via add_disk_no_queue_reg
-> at DM device creation (before stacking all underlying devices' limits).
+This case isn't ever used.
 
-I'll move it to blk_register_queue, which should work just fine.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ drivers/block/drbd/drbd_req.c | 4 ----
+ include/linux/drbd.h          | 1 -
+ 2 files changed, 5 deletions(-)
+
+diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
+index 5c975af9c15fb8..481bc34fcf386a 100644
+--- a/drivers/block/drbd/drbd_req.c
++++ b/drivers/block/drbd/drbd_req.c
+@@ -901,13 +901,9 @@ static bool drbd_may_do_local_read(struct drbd_device *device, sector_t sector,
+ static bool remote_due_to_read_balancing(struct drbd_device *device, sector_t sector,
+ 		enum drbd_read_balancing rbm)
+ {
+-	struct backing_dev_info *bdi;
+ 	int stripe_shift;
+ 
+ 	switch (rbm) {
+-	case RB_CONGESTED_REMOTE:
+-		bdi = device->ldev->backing_bdev->bd_disk->queue->backing_dev_info;
+-		return bdi_read_congested(bdi);
+ 	case RB_LEAST_PENDING:
+ 		return atomic_read(&device->local_cnt) >
+ 			atomic_read(&device->ap_pending_cnt) + atomic_read(&device->rs_pending_cnt);
+diff --git a/include/linux/drbd.h b/include/linux/drbd.h
+index 5755537b51b114..6a8286132751df 100644
+--- a/include/linux/drbd.h
++++ b/include/linux/drbd.h
+@@ -94,7 +94,6 @@ enum drbd_read_balancing {
+ 	RB_PREFER_REMOTE,
+ 	RB_ROUND_ROBIN,
+ 	RB_LEAST_PENDING,
+-	RB_CONGESTED_REMOTE,
+ 	RB_32K_STRIPING,
+ 	RB_64K_STRIPING,
+ 	RB_128K_STRIPING,
+-- 
+2.28.0
+
