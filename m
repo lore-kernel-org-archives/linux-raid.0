@@ -1,153 +1,108 @@
-Return-Path: <SRS0=aYZJ=CS=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=i/dv=CT=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDBB3C43461
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Sep 2020 08:32:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74211C2D0A7
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 09:29:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C1CD21532
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Sep 2020 08:32:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C36821582
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 09:29:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726811AbgIIIb5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Sep 2020 04:31:57 -0400
-Received: from mga04.intel.com ([192.55.52.120]:56811 "EHLO mga04.intel.com"
+        id S1730461AbgIJJ2Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Sep 2020 05:28:24 -0400
+Received: from verein.lst.de ([213.95.11.211]:60174 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726535AbgIIIbx (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 9 Sep 2020 04:31:53 -0400
-IronPort-SDR: IXjaqj+OM11VBz9RNu5Y/8Fh0wbjYq0/MiyfXs3qXxrdWsRTuOQ+Jvob0jxo31Ct6N6lQiwI8O
- fPFpO78a4wEw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9738"; a="155692161"
-X-IronPort-AV: E=Sophos;i="5.76,409,1592895600"; 
-   d="scan'208";a="155692161"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2020 01:31:51 -0700
-IronPort-SDR: Yd5uyrPGWgYHyr43rkIHdsFy38KyU3ka94mW62VQCY9CkmLwOSv5zzgwqHN2rjiqbbwcvBxYPX
- m6ca2TFMJoAQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,409,1592895600"; 
-   d="scan'208";a="449119056"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga004.jf.intel.com with ESMTP; 09 Sep 2020 01:31:50 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 4/4] Check if other Monitor instance running before fork.
-Date:   Wed,  9 Sep 2020 10:31:20 +0200
-Message-Id: <20200909083120.10396-5-mariusz.tkaczyk@intel.com>
-X-Mailer: git-send-email 2.25.0
-In-Reply-To: <20200909083120.10396-1-mariusz.tkaczyk@intel.com>
-References: <20200909083120.10396-1-mariusz.tkaczyk@intel.com>
+        id S1728936AbgIJJ2R (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 10 Sep 2020 05:28:17 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C27726736F; Thu, 10 Sep 2020 11:28:13 +0200 (CEST)
+Date:   Thu, 10 Sep 2020 11:28:13 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mike Snitzer <snitzer@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, martin.petersen@oracle.com,
+        Hans de Goede <hdegoede@redhat.com>,
+        Song Liu <song@kernel.org>,
+        Richard Weinberger <richard@nod.at>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, Minchan Kim <minchan@kernel.org>,
+        dm-devel@redhat.com, linux-mtd@lists.infradead.org,
+        linux-mm@kvack.org, drbd-dev@tron.linbit.com,
+        cgroups@vger.kernel.org
+Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
+ block layer
+Message-ID: <20200910092813.GA27229@lst.de>
+References: <20200726150333.305527-1-hch@lst.de> <20200726150333.305527-7-hch@lst.de> <20200826220737.GA25613@redhat.com> <20200902151144.GA1738@lst.de> <20200902162007.GB5513@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200902162007.GB5513@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Blazej Kucman <blazej.kucman@intel.com>
+On Wed, Sep 02, 2020 at 12:20:07PM -0400, Mike Snitzer wrote:
+> On Wed, Sep 02 2020 at 11:11am -0400,
+> Christoph Hellwig <hch@lst.de> wrote:
+> 
+> > On Wed, Aug 26, 2020 at 06:07:38PM -0400, Mike Snitzer wrote:
+> > > On Sun, Jul 26 2020 at 11:03am -0400,
+> > > Christoph Hellwig <hch@lst.de> wrote:
+> > > 
+> > > > Drivers shouldn't really mess with the readahead size, as that is a VM
+> > > > concept.  Instead set it based on the optimal I/O size by lifting the
+> > > > algorithm from the md driver when registering the disk.  Also set
+> > > > bdi->io_pages there as well by applying the same scheme based on
+> > > > max_sectors.
+> > > > 
+> > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > > ---
+> > > >  block/blk-settings.c         |  5 ++---
+> > > >  block/blk-sysfs.c            |  1 -
+> > > >  block/genhd.c                | 13 +++++++++++--
+> > > >  drivers/block/aoe/aoeblk.c   |  2 --
+> > > >  drivers/block/drbd/drbd_nl.c | 12 +-----------
+> > > >  drivers/md/bcache/super.c    |  4 ----
+> > > >  drivers/md/dm-table.c        |  3 ---
+> > > >  drivers/md/raid0.c           | 16 ----------------
+> > > >  drivers/md/raid10.c          | 24 +-----------------------
+> > > >  drivers/md/raid5.c           | 13 +------------
+> > > >  10 files changed, 16 insertions(+), 77 deletions(-)
+> > > 
+> > > 
+> > > In general these changes need a solid audit relative to stacking
+> > > drivers.  That is, the limits stacking methods (blk_stack_limits)
+> > > vs lower level allocation methods (__device_add_disk).
+> > > 
+> > > You optimized for lowlevel __device_add_disk establishing the bdi's
+> > > ra_pages and io_pages.  That is at the beginning of disk allocation,
+> > > well before any build up of stacking driver's queue_io_opt() -- which
+> > > was previously done in disk_stack_limits or driver specific methods
+> > > (e.g. dm_table_set_restrictions) that are called _after_ all the limits
+> > > stacking occurs.
+> > > 
+> > > By inverting the setting of the bdi's ra_pages and io_pages to be done
+> > > so early in __device_add_disk it'll break properly setting these values
+> > > for at least DM afaict.
+> > 
+> > ra_pages never got inherited by stacking drivers, check it by modifying
+> > it on an underlying device and then creating a trivial dm or md one.
+> 
+> Sure, not saying that it did.  But if the goal is to set ra_pages based
+> on io_opt then to do that correctly on stacking drivers it must be done
+> in terms of limits stacking right?  Or at least done at a location that
+> is after the limits stacking has occurred?  So should DM just open-code
+> setting ra_pages like it did for io_pages?
+> 
+> Because setting ra_pages in __device_add_disk() is way too early for DM
+> -- given it uses device_add_disk_no_queue_reg via add_disk_no_queue_reg
+> at DM device creation (before stacking all underlying devices' limits).
 
-Make error message visible to the user.
-
-Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
----
- Monitor.c | 44 ++++++++++++++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 16 deletions(-)
-
-diff --git a/Monitor.c b/Monitor.c
-index 0fb4f77d..7fd48084 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -63,6 +63,7 @@ struct alert_info {
- };
- static int make_daemon(char *pidfile);
- static int check_one_sharer(int scan);
-+static void write_autorebuild_pid(void);
- static void alert(char *event, char *dev, char *disc, struct alert_info *info);
- static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 		       int test, struct alert_info *info,
-@@ -153,6 +154,11 @@ int Monitor(struct mddev_dev *devlist,
- 	info.mailfrom = mailfrom;
- 	info.dosyslog = dosyslog;
- 
-+	if (share){
-+		if (check_one_sharer(c->scan))
-+			return 1;
-+	}
-+
- 	if (daemonise) {
- 		int rv = make_daemon(pidfile);
- 		if (rv >= 0)
-@@ -160,8 +166,7 @@ int Monitor(struct mddev_dev *devlist,
- 	}
- 
- 	if (share)
--		if (check_one_sharer(c->scan))
--			return 1;
-+		write_autorebuild_pid();
- 
- 	if (devlist == NULL) {
- 		mdlist = conf_get_ident(NULL);
-@@ -328,8 +333,8 @@ static int check_one_sharer(int scan)
- 	int pid;
- 	FILE *comm_fp;
- 	FILE *fp;
--	char comm_path[100];
--	char path[100];
-+	char comm_path[PATH_MAX];
-+	char path[PATH_MAX];
- 	char comm[20];
- 
- 	sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
-@@ -356,21 +361,28 @@ static int check_one_sharer(int scan)
- 		}
- 		fclose(fp);
- 	}
--	if (scan) {
--		if (mkdir(MDMON_DIR, S_IRWXU) < 0 && errno != EEXIST) {
-+	return 0;
-+}
-+
-+static void write_autorebuild_pid()
-+{
-+	char path[PATH_MAX];
-+	int pid;
-+	FILE *fp;
-+	sprintf(path, "%s/autorebuild.pid", MDMON_DIR);
-+
-+	if (mkdir(MDMON_DIR, S_IRWXU) < 0 && errno != EEXIST) {
-+		pr_err("Can't create autorebuild.pid file\n");
-+	} else {
-+		fp = fopen(path, "w");
-+		if (!fp)
- 			pr_err("Can't create autorebuild.pid file\n");
--		} else {
--			fp = fopen(path, "w");
--			if (!fp)
--				pr_err("Cannot create autorebuild.pidfile\n");
--			else {
--				pid = getpid();
--				fprintf(fp, "%d\n", pid);
--				fclose(fp);
--			}
-+		else {
-+			pid = getpid();
-+			fprintf(fp, "%d\n", pid);
-+			fclose(fp);
- 		}
- 	}
--	return 0;
- }
- 
- static void alert(char *event, char *dev, char *disc, struct alert_info *info)
--- 
-2.25.0
-
+I'll move it to blk_register_queue, which should work just fine.
