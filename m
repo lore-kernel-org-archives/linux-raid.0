@@ -2,164 +2,155 @@ Return-Path: <SRS0=i/dv=CT=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF18C43461
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 14:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ABCFC43461
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 17:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CCA420720
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 14:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A93120C09
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 17:19:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aZBbWgDM"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gH5ANVlh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731194AbgIJOxU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Sep 2020 10:53:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59248 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731153AbgIJOus (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Sep 2020 10:50:48 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 098E1C0617B9;
-        Thu, 10 Sep 2020 07:49:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=30TjXOdnpDp07+Y2EmVpqqUY8VLMnUGZI+E0/QlSfTE=; b=aZBbWgDMcicAcxmQ3IzlsLiveP
-        0HqUahF787FHkeoLnaRUtYKLhuS6LMrG9OzJvsKfjJZ37Vl1lmAvKlCTxGX4+U2C8inJyWLlmpPQL
-        8xCspOOThTnnH3YWggYMYmPThY6aCQloB04kN3OD4LF8lwG6fqlWw09+aGrKZ02pK6i3/bQscUXaO
-        TNrrSIIL1uaEp/X3FEmhollxlCwyaVd/IM0ejkJeZ2o2zDFWemKwjaLRRZv/FmgTtPYGh9q1Mt4Xz
-        lfVhoHKI8KzlURBwvCh37TjBd+mraLInbe3dmNhzmHI0r8alXmLU1twQUzaEAMQY3CY225HhCflOs
-        6u1SGnKQ==;
-Received: from [2001:4bb8:184:af1:3ecc:ac5b:136f:434a] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kGNsa-0006yh-98; Thu, 10 Sep 2020 14:48:52 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
+        id S1726781AbgIJRSv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Sep 2020 13:18:51 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:38610 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726841AbgIJRP7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 10 Sep 2020 13:15:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599758150;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=V5RVkZoHNNgO8iRkts2uQucFzF0PqLciDsVyoi9bgfc=;
+        b=gH5ANVlh9jHChevAgLxQU6nEieXdAB93TigKP1WvfIKmZ6pVADdvi7rZTEsLqOpZnj2sDu
+        OhPCxAZQ9sgZBkTyw4ty6ImPZKHwi5E0d1bhyiuwaNgfiGjgh3P2QAv9N0VS4tX/gl3XVb
+        3zIVLYKa8LDenzQjpCd10+ZcVWFekqA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-250-HnAUMfNAM0OMvyN4RsRhjA-1; Thu, 10 Sep 2020 13:15:48 -0400
+X-MC-Unique: HnAUMfNAM0OMvyN4RsRhjA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D7CFB802B72;
+        Thu, 10 Sep 2020 17:15:45 +0000 (UTC)
+Received: from localhost (unknown [10.18.25.174])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 061BB60BFA;
+        Thu, 10 Sep 2020 17:15:42 +0000 (UTC)
+Date:   Thu, 10 Sep 2020 13:15:41 -0400
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        martin.petersen@oracle.com, Hans de Goede <hdegoede@redhat.com>,
+        Song Liu <song@kernel.org>,
         Richard Weinberger <richard@nod.at>,
-        Minchan Kim <minchan@kernel.org>,
-        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, Minchan Kim <minchan@kernel.org>,
+        dm-devel@redhat.com, linux-mtd@lists.infradead.org,
+        linux-mm@kvack.org, drbd-dev@tron.linbit.com,
         cgroups@vger.kernel.org
-Subject: [PATCH 11/12] bdi: invert BDI_CAP_NO_ACCT_WB
-Date:   Thu, 10 Sep 2020 16:48:31 +0200
-Message-Id: <20200910144833.742260-12-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200910144833.742260-1-hch@lst.de>
-References: <20200910144833.742260-1-hch@lst.de>
+Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
+ block layer
+Message-ID: <20200910171541.GB21919@redhat.com>
+References: <20200726150333.305527-1-hch@lst.de>
+ <20200726150333.305527-7-hch@lst.de>
+ <20200826220737.GA25613@redhat.com>
+ <20200902151144.GA1738@lst.de>
+ <20200902162007.GB5513@redhat.com>
+ <20200910092813.GA27229@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200910092813.GA27229@lst.de>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Replace BDI_CAP_NO_ACCT_WB with a positive BDI_CAP_WRITEBACK_ACCT to
-make the checks more obvious.  Also remove the pointless
-bdi_cap_account_writeback wrapper that just obsfucates the check.
+On Thu, Sep 10 2020 at  5:28am -0400,
+Christoph Hellwig <hch@lst.de> wrote:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/fuse/inode.c             |  3 ++-
- include/linux/backing-dev.h | 13 +++----------
- mm/backing-dev.c            |  1 +
- mm/page-writeback.c         |  4 ++--
- 4 files changed, 8 insertions(+), 13 deletions(-)
+> On Wed, Sep 02, 2020 at 12:20:07PM -0400, Mike Snitzer wrote:
+> > On Wed, Sep 02 2020 at 11:11am -0400,
+> > Christoph Hellwig <hch@lst.de> wrote:
+> > 
+> > > On Wed, Aug 26, 2020 at 06:07:38PM -0400, Mike Snitzer wrote:
+> > > > On Sun, Jul 26 2020 at 11:03am -0400,
+> > > > Christoph Hellwig <hch@lst.de> wrote:
+> > > > 
+> > > > > Drivers shouldn't really mess with the readahead size, as that is a VM
+> > > > > concept.  Instead set it based on the optimal I/O size by lifting the
+> > > > > algorithm from the md driver when registering the disk.  Also set
+> > > > > bdi->io_pages there as well by applying the same scheme based on
+> > > > > max_sectors.
+> > > > > 
+> > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > > > ---
+> > > > >  block/blk-settings.c         |  5 ++---
+> > > > >  block/blk-sysfs.c            |  1 -
+> > > > >  block/genhd.c                | 13 +++++++++++--
+> > > > >  drivers/block/aoe/aoeblk.c   |  2 --
+> > > > >  drivers/block/drbd/drbd_nl.c | 12 +-----------
+> > > > >  drivers/md/bcache/super.c    |  4 ----
+> > > > >  drivers/md/dm-table.c        |  3 ---
+> > > > >  drivers/md/raid0.c           | 16 ----------------
+> > > > >  drivers/md/raid10.c          | 24 +-----------------------
+> > > > >  drivers/md/raid5.c           | 13 +------------
+> > > > >  10 files changed, 16 insertions(+), 77 deletions(-)
+> > > > 
+> > > > 
+> > > > In general these changes need a solid audit relative to stacking
+> > > > drivers.  That is, the limits stacking methods (blk_stack_limits)
+> > > > vs lower level allocation methods (__device_add_disk).
+> > > > 
+> > > > You optimized for lowlevel __device_add_disk establishing the bdi's
+> > > > ra_pages and io_pages.  That is at the beginning of disk allocation,
+> > > > well before any build up of stacking driver's queue_io_opt() -- which
+> > > > was previously done in disk_stack_limits or driver specific methods
+> > > > (e.g. dm_table_set_restrictions) that are called _after_ all the limits
+> > > > stacking occurs.
+> > > > 
+> > > > By inverting the setting of the bdi's ra_pages and io_pages to be done
+> > > > so early in __device_add_disk it'll break properly setting these values
+> > > > for at least DM afaict.
+> > > 
+> > > ra_pages never got inherited by stacking drivers, check it by modifying
+> > > it on an underlying device and then creating a trivial dm or md one.
+> > 
+> > Sure, not saying that it did.  But if the goal is to set ra_pages based
+> > on io_opt then to do that correctly on stacking drivers it must be done
+> > in terms of limits stacking right?  Or at least done at a location that
+> > is after the limits stacking has occurred?  So should DM just open-code
+> > setting ra_pages like it did for io_pages?
+> > 
+> > Because setting ra_pages in __device_add_disk() is way too early for DM
+> > -- given it uses device_add_disk_no_queue_reg via add_disk_no_queue_reg
+> > at DM device creation (before stacking all underlying devices' limits).
+> 
+> I'll move it to blk_register_queue, which should work just fine.
 
-diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index 17b00670fb539e..581329203d6860 100644
---- a/fs/fuse/inode.c
-+++ b/fs/fuse/inode.c
-@@ -1050,7 +1050,8 @@ static int fuse_bdi_init(struct fuse_conn *fc, struct super_block *sb)
- 		return err;
- 
- 	/* fuse does it's own writeback accounting */
--	sb->s_bdi->capabilities = BDI_CAP_NO_ACCT_WB | BDI_CAP_STRICTLIMIT;
-+	sb->s_bdi->capabilities &= ~BDI_CAP_WRITEBACK_ACCT;
-+	sb->s_bdi->capabilities |= BDI_CAP_STRICTLIMIT;
- 
- 	/*
- 	 * For a single fuse filesystem use max 1% of dirty +
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 5da4ea3dd0cc5c..b217344a2c63be 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -120,17 +120,17 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
-  *
-  * BDI_CAP_NO_ACCT_DIRTY:  Dirty pages shouldn't contribute to accounting
-  * BDI_CAP_NO_WRITEBACK:   Don't write pages back
-- * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
-+ * BDI_CAP_WRITEBACK_ACCT: Automatically account writeback pages
-  * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
-  */
- #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
- #define BDI_CAP_NO_WRITEBACK	0x00000002
--#define BDI_CAP_NO_ACCT_WB	0x00000004
-+#define BDI_CAP_WRITEBACK_ACCT	0x00000004
- #define BDI_CAP_STRICTLIMIT	0x00000010
- #define BDI_CAP_CGROUP_WRITEBACK 0x00000020
- 
- #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
--	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
-+	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY)
- 
- extern struct backing_dev_info noop_backing_dev_info;
- 
-@@ -179,13 +179,6 @@ static inline bool bdi_cap_account_dirty(struct backing_dev_info *bdi)
- 	return !(bdi->capabilities & BDI_CAP_NO_ACCT_DIRTY);
- }
- 
--static inline bool bdi_cap_account_writeback(struct backing_dev_info *bdi)
--{
--	/* Paranoia: BDI_CAP_NO_WRITEBACK implies BDI_CAP_NO_ACCT_WB */
--	return !(bdi->capabilities & (BDI_CAP_NO_ACCT_WB |
--				      BDI_CAP_NO_WRITEBACK));
--}
--
- static inline bool mapping_cap_writeback_dirty(struct address_space *mapping)
- {
- 	return bdi_cap_writeback_dirty(inode_to_bdi(mapping->host));
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index f9a2842bd81c3d..ab0415dde5c66c 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -744,6 +744,7 @@ struct backing_dev_info *bdi_alloc(int node_id)
- 		kfree(bdi);
- 		return NULL;
- 	}
-+	bdi->capabilities = BDI_CAP_WRITEBACK_ACCT;
- 	bdi->ra_pages = VM_READAHEAD_PAGES;
- 	bdi->io_pages = VM_READAHEAD_PAGES;
- 	return bdi;
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index e9c36521461aaa..0139f9622a92da 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2738,7 +2738,7 @@ int test_clear_page_writeback(struct page *page)
- 		if (ret) {
- 			__xa_clear_mark(&mapping->i_pages, page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
--			if (bdi_cap_account_writeback(bdi)) {
-+			if (bdi->capabilities & BDI_CAP_WRITEBACK_ACCT) {
- 				struct bdi_writeback *wb = inode_to_wb(inode);
- 
- 				dec_wb_stat(wb, WB_WRITEBACK);
-@@ -2791,7 +2791,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 						   PAGECACHE_TAG_WRITEBACK);
- 
- 			xas_set_mark(&xas, PAGECACHE_TAG_WRITEBACK);
--			if (bdi_cap_account_writeback(bdi))
-+			if (bdi->capabilities & BDI_CAP_WRITEBACK_ACCT)
- 				inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
- 
- 			/*
--- 
-2.28.0
+That'll work for initial DM table load as part of DM device creation
+(dm_setup_md_queue).  But it won't account for DM table reloads that
+might change underlying devices on a live DM device (done using
+__bind).
+
+Both dm_setup_md_queue() and __bind() call dm_table_set_restrictions()
+to set/update queue_limits.  It feels like __bind() will need to call a
+new block helper to set/update parts of queue_limits (e.g. ra_pages and
+io_pages).
+
+Any chance you're open to factoring out that block function as an
+exported symbol for use by blk_register_queue() and code like DM's
+__bind()?
+
+Thanks,
+Mike
 
