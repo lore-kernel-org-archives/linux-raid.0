@@ -2,155 +2,102 @@ Return-Path: <SRS0=i/dv=CT=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ABCFC43461
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 17:19:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6122EC433E2
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 19:18:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A93120C09
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 17:19:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D424214F1
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Sep 2020 19:18:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gH5ANVlh"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="dJRG8Qmp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726781AbgIJRSv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Sep 2020 13:18:51 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:38610 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726841AbgIJRP7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 10 Sep 2020 13:15:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599758150;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=V5RVkZoHNNgO8iRkts2uQucFzF0PqLciDsVyoi9bgfc=;
-        b=gH5ANVlh9jHChevAgLxQU6nEieXdAB93TigKP1WvfIKmZ6pVADdvi7rZTEsLqOpZnj2sDu
-        OhPCxAZQ9sgZBkTyw4ty6ImPZKHwi5E0d1bhyiuwaNgfiGjgh3P2QAv9N0VS4tX/gl3XVb
-        3zIVLYKa8LDenzQjpCd10+ZcVWFekqA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-250-HnAUMfNAM0OMvyN4RsRhjA-1; Thu, 10 Sep 2020 13:15:48 -0400
-X-MC-Unique: HnAUMfNAM0OMvyN4RsRhjA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D7CFB802B72;
-        Thu, 10 Sep 2020 17:15:45 +0000 (UTC)
-Received: from localhost (unknown [10.18.25.174])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 061BB60BFA;
-        Thu, 10 Sep 2020 17:15:42 +0000 (UTC)
-Date:   Thu, 10 Sep 2020 13:15:41 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
+        id S1726899AbgIJTSh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Sep 2020 15:18:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41062 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731466AbgIJPyf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Sep 2020 11:54:35 -0400
+Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4555C061796
+        for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2020 08:54:35 -0700 (PDT)
+Received: by mail-il1-x136.google.com with SMTP id u20so6135730ilk.6
+        for <linux-raid@vger.kernel.org>; Thu, 10 Sep 2020 08:54:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=OZHxSy9GxPtwL4FPXTEL4wHPxBFDa6n0iEKloHdc+dY=;
+        b=dJRG8Qmps859QERXNYLJxi55QI15qf+NmhuQCnsZM3tzSEE4XDm6akhiZPmfFP2D5L
+         noKfGQmOG//ogqGq6MHNPrBzfyTsSRYDDvmU4HpGKt2M3+VX34Rn11vzjMP7dWCeXtL7
+         peTBqP2XxuoNfSrqxocG1z0zzHqFPkd4E6mCLjflVUpkyfeWBoxTosdtHT8O3weuXwoU
+         tQ9lPzZrLFElRA5AiEu/B7dHsjPFnIljwQ7uqXHEHqGd8+4jBMrrg/VTkfD3IGCBJS5B
+         tsG5z+xzaGHBSxD5B1GWK+wIELg2uX73o8AHY/LKWaXB7jjiscV+sTvRU/rMsZateAut
+         mn4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=OZHxSy9GxPtwL4FPXTEL4wHPxBFDa6n0iEKloHdc+dY=;
+        b=iPYqt2ZlNvgMNVtzoM20uIz46l3Oej2x3D10eSQOKLl9E2wDceqydU/MkfkeM0I9mg
+         ZV2GMaS4CHkkUBvoOOOlstPmrd5a+DZPqpgzkEcCk3N+1HChOjBxogdOrSSiTrsO3qKu
+         F5hM7B4pa+OLnBgABeG+mOyScVc5eZQ2uwpVLcIkdLLCJ6yOTOLxF2ffOist8GSfK8W2
+         4/N9XrnhoHxomD7ZiHG3SlJW8FvdKYft+XYBECqjKLOyq2BUAConfkML+FU7zFOi277t
+         8fvqcoyFxrnDQba6q/QWnu7T63Lig6D34Lc0o/RECUdMkXseB5/XqNgSNm8IXsiBZ8i7
+         HA7w==
+X-Gm-Message-State: AOAM532U4OPz3AJWBxmvoAkwjXymxFuwDy17GMhxHXl/l/2IWNzPkXJx
+        oeDQZfu+fvYGNAzrT/IUhiFH7Q==
+X-Google-Smtp-Source: ABdhPJxHvxNIiZ7YNxR9PEQ5wMasrzeeVlpwNZVmQsRSVIQZmYnp6kGKrBV3BTGdMbs3dPcZtBZnXQ==
+X-Received: by 2002:a92:b309:: with SMTP id p9mr6758105ilh.125.1599753274952;
+        Thu, 10 Sep 2020 08:54:34 -0700 (PDT)
+Received: from [192.168.1.10] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id z15sm3315413ilb.73.2020.09.10.08.54.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Sep 2020 08:54:34 -0700 (PDT)
+Subject: Re: rework check_disk_change() v2
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        martin.petersen@oracle.com, Hans de Goede <hdegoede@redhat.com>,
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
         Song Liu <song@kernel.org>,
-        Richard Weinberger <richard@nod.at>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, Minchan Kim <minchan@kernel.org>,
-        dm-devel@redhat.com, linux-mtd@lists.infradead.org,
-        linux-mm@kvack.org, drbd-dev@tron.linbit.com,
-        cgroups@vger.kernel.org
-Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
- block layer
-Message-ID: <20200910171541.GB21919@redhat.com>
-References: <20200726150333.305527-1-hch@lst.de>
- <20200726150333.305527-7-hch@lst.de>
- <20200826220737.GA25613@redhat.com>
- <20200902151144.GA1738@lst.de>
- <20200902162007.GB5513@redhat.com>
- <20200910092813.GA27229@lst.de>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20200908145347.2992670-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <b5e51c24-b9a6-979f-8fe0-f762f113bba3@kernel.dk>
+Date:   Thu, 10 Sep 2020 09:54:33 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200910092813.GA27229@lst.de>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Sep 10 2020 at  5:28am -0400,
-Christoph Hellwig <hch@lst.de> wrote:
-
-> On Wed, Sep 02, 2020 at 12:20:07PM -0400, Mike Snitzer wrote:
-> > On Wed, Sep 02 2020 at 11:11am -0400,
-> > Christoph Hellwig <hch@lst.de> wrote:
-> > 
-> > > On Wed, Aug 26, 2020 at 06:07:38PM -0400, Mike Snitzer wrote:
-> > > > On Sun, Jul 26 2020 at 11:03am -0400,
-> > > > Christoph Hellwig <hch@lst.de> wrote:
-> > > > 
-> > > > > Drivers shouldn't really mess with the readahead size, as that is a VM
-> > > > > concept.  Instead set it based on the optimal I/O size by lifting the
-> > > > > algorithm from the md driver when registering the disk.  Also set
-> > > > > bdi->io_pages there as well by applying the same scheme based on
-> > > > > max_sectors.
-> > > > > 
-> > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > > ---
-> > > > >  block/blk-settings.c         |  5 ++---
-> > > > >  block/blk-sysfs.c            |  1 -
-> > > > >  block/genhd.c                | 13 +++++++++++--
-> > > > >  drivers/block/aoe/aoeblk.c   |  2 --
-> > > > >  drivers/block/drbd/drbd_nl.c | 12 +-----------
-> > > > >  drivers/md/bcache/super.c    |  4 ----
-> > > > >  drivers/md/dm-table.c        |  3 ---
-> > > > >  drivers/md/raid0.c           | 16 ----------------
-> > > > >  drivers/md/raid10.c          | 24 +-----------------------
-> > > > >  drivers/md/raid5.c           | 13 +------------
-> > > > >  10 files changed, 16 insertions(+), 77 deletions(-)
-> > > > 
-> > > > 
-> > > > In general these changes need a solid audit relative to stacking
-> > > > drivers.  That is, the limits stacking methods (blk_stack_limits)
-> > > > vs lower level allocation methods (__device_add_disk).
-> > > > 
-> > > > You optimized for lowlevel __device_add_disk establishing the bdi's
-> > > > ra_pages and io_pages.  That is at the beginning of disk allocation,
-> > > > well before any build up of stacking driver's queue_io_opt() -- which
-> > > > was previously done in disk_stack_limits or driver specific methods
-> > > > (e.g. dm_table_set_restrictions) that are called _after_ all the limits
-> > > > stacking occurs.
-> > > > 
-> > > > By inverting the setting of the bdi's ra_pages and io_pages to be done
-> > > > so early in __device_add_disk it'll break properly setting these values
-> > > > for at least DM afaict.
-> > > 
-> > > ra_pages never got inherited by stacking drivers, check it by modifying
-> > > it on an underlying device and then creating a trivial dm or md one.
-> > 
-> > Sure, not saying that it did.  But if the goal is to set ra_pages based
-> > on io_opt then to do that correctly on stacking drivers it must be done
-> > in terms of limits stacking right?  Or at least done at a location that
-> > is after the limits stacking has occurred?  So should DM just open-code
-> > setting ra_pages like it did for io_pages?
-> > 
-> > Because setting ra_pages in __device_add_disk() is way too early for DM
-> > -- given it uses device_add_disk_no_queue_reg via add_disk_no_queue_reg
-> > at DM device creation (before stacking all underlying devices' limits).
+On 9/8/20 8:53 AM, Christoph Hellwig wrote:
+> Hi Jens,
 > 
-> I'll move it to blk_register_queue, which should work just fine.
+> this series replaced the not very nice check_disk_change() function with
+> a new bdev_media_changed that avoids having the ->revalidate_disk call
+> at its end.  As a result ->revalidate_disk can be removed from a lot of
+> drivers.
 
-That'll work for initial DM table load as part of DM device creation
-(dm_setup_md_queue).  But it won't account for DM table reloads that
-might change underlying devices on a live DM device (done using
-__bind).
+Applied, thanks.
 
-Both dm_setup_md_queue() and __bind() call dm_table_set_restrictions()
-to set/update queue_limits.  It feels like __bind() will need to call a
-new block helper to set/update parts of queue_limits (e.g. ra_pages and
-io_pages).
-
-Any chance you're open to factoring out that block function as an
-exported symbol for use by blk_register_queue() and code like DM's
-__bind()?
-
-Thanks,
-Mike
+-- 
+Jens Axboe
 
