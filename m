@@ -2,169 +2,107 @@ Return-Path: <SRS0=Qcx5=CV=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22533C433E2
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 15:03:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4086C433E2
+	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 16:19:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBB8420855
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 15:03:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="n77rMRg5"
+	by mail.kernel.org (Postfix) with ESMTP id 6C4BE20838
+	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 16:19:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725860AbgILPDz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 12 Sep 2020 11:03:55 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:58583 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725848AbgILPDl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 12 Sep 2020 11:03:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1599923016;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=nhklhS6Gk1DYmYXuqJBAKO6oR+zdH1oPrFmdQqtYhhg=;
-        b=n77rMRg5lNcZX7masdzI84TJxGYiEz2p7AkhlCytIVVUTlpk+dZD3n0SFe5EyUE9pTJb5B
-        KsC79OEHyAnM2knAbYrA7FM1jon85NN6PtU3auCIfLUTLkoDO0VW21x2KyN8aB62qcggQk
-        KoET0kC1qQJD3v4Qy0hlJJ4c/1gUIwA=
-Received: from EUR04-HE1-obe.outbound.protection.outlook.com
- (mail-he1eur04lp2051.outbound.protection.outlook.com [104.47.13.51]) (Using
- TLS) by relay.mimecast.com with ESMTP id de-mta-8-LIZUz-pzOvKWY2PPJdYk8Q-1;
- Sat, 12 Sep 2020 17:03:35 +0200
-X-MC-Unique: LIZUz-pzOvKWY2PPJdYk8Q-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=m09WzWqvvRRrAm1L/wawP/GLuFbmAmz7+h5QbghULrsUXzex+zo1VDMINclvlOXYWS+pB1Ax7ehKmcOPeqJPNZtssgNpIdfX0Z+2h6FWB7HhOVA9NJeGY47MykgN8bwilbXiWsxMY3ANmoZNq1Ol86T0jPJpZjviQ2g9T/wHbN2+LqZ7O01KuhNjwprp7KbFfgjSTTh19gT7csN5c6UMBlgL7+ps2U1kVXVi43iahZotT6f2GPs1Ttq0TxRFD86UzBaCbFkv4CrNvJUclHNHX3lcPV6skBRCB3ZqsOo2S8FOTc/6ErCsCNXQLDsnH2Q/jJmmS22fILElFHP/HSbAqg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nhklhS6Gk1DYmYXuqJBAKO6oR+zdH1oPrFmdQqtYhhg=;
- b=fALio8nmwHmjcjpNSYHx/pNoNg7djyfPDmOw98trWQSuUASjtyl8wr8vYYOVRxMlGKWAV2/FYUK30YWOr8F0KdBlxeQ6MxRj0xJu0qdtW3m+hkxWDva9B4rHrz1M5HaSNIoNJ5awJkWiHRp0WOYnTMaYV3pRXxV7kQExI4DupKkX5Jd2yVOrEi1i4fnDxPPFPx1cZ31OCIRYnr02cXEhPzHdH2khAf3w3mpsT70JoDw+rkbtVXpoQCL71JfA7vwFgcT7Z+zNMvUsxJ2SOJxtIA7yIXAa5V6hKVMzk+Y9AlryckZKX6We+/rWFBPGodS2Y3GwdHFGDfyvxfWEFuZzZw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from AM0PR04MB6529.eurprd04.prod.outlook.com (2603:10a6:208:16f::21)
- by AM0PR04MB5123.eurprd04.prod.outlook.com (2603:10a6:208:bf::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.16; Sat, 12 Sep
- 2020 15:03:32 +0000
-Received: from AM0PR04MB6529.eurprd04.prod.outlook.com
- ([fe80::c8ac:ffb6:8e0d:36e7]) by AM0PR04MB6529.eurprd04.prod.outlook.com
- ([fe80::c8ac:ffb6:8e0d:36e7%3]) with mapi id 15.20.3348.015; Sat, 12 Sep 2020
- 15:03:31 +0000
-Subject: Re: [RFC PATCH] Detail: don't display the raid level when it's
- inactive
-To:     Nix <nix@esperi.org.uk>
-Cc:     linux-raid@vger.kernel.org
-References: <20200826151658.3493-1-lidong.zhong@suse.com>
- <ribbtt$t51$1@ciao.gmane.io> <0468dc70-7309-44b1-f094-67b617bf4c98@suse.com>
- <87wo1emyi4.fsf@esperi.org.uk>
-From:   Zhong Lidong <lidong.zhong@suse.com>
-Autocrypt: addr=lidong.zhong@suse.com; keydata=
- xsBNBFne5DgBCADQj9QdXtw20bP35mDylFrd0LWj4cjpQ9kHD693GVpwNqTmwJcxGJutRvhe
- 8HJjiJhstnP60v6+Q+qoP7cNY4KS35LDZJHgXbdRcPYBSzabEdWfge6UH86HxK8MHY0w+GDu
- TseKNwt6fr6NH2FVQSTTQhpVv+fYGPTgAqaKD5J8JhTHS9c/sBsV1zNSQmTULpykXXcO/COL
- +Yw2A7P4+KR12wNAIhpITRykUtfKiHjdAFBLmQs0ES/c/MwQ2gOwEt7RAjJB9il71oR+9Kyr
- CDkHaBoNK/mkdDyXDL/FBCqEExeiYL3XnBWckoyPZT8ivA5DQuOuiG8Yv2TyTMSaSMQFABEB
- AAHNU0xpZG9uZyBaaG9uZyAoU1VTRSBMMyB0ZWFtLiBCZWlqaW5nIE9mZmljZS4gbGlkb25n
- L2x6aG9uZyBvbiBJUkMpIDxsemhvbmdAc3VzZS5jb20+wsB/BBMBAgApBQJZ3uQ4AhsDBQkJ
- ZgGABwsJCAcDAgEGFQgCCQoLBBYCAwECHgECF4AACgkQsnlJphZSmJJZWgf/VSvl+O1sRDI6
- VIAXiGzFCqVnPBARZFXMahzYrTbfb/LdxTCE9R5g2ex5jM7ME8Y+j/PtCS7z0TW5jF0R9LFP
- gjTHfaUqDq7sqzrONB85NMud+qtkn07HlgTCwhIZe972LHuv96iWv7n1nRyMHe8eAMK2xVL9
- sPS3L4LW5b2AN1BEwk3x/BVoXKNMzlKP8CyoDG03UaptcBRgbm+Ds9Sgx9ZuxkAL/nUdDqvB
- 6Of+FleCNRmTm5c9gawOS3w24KzVCbhOKSp+y8FSt0gS05mL1P1wVos2sErKgOk6uSNo5oa2
- TIk6T5BpWytWKRcdn2NSmM68MqezUXMpD/eCjkohF87ATQRZ3uQ4AQgAvvWi8gOGzVm4uiUj
- pxeteRthpsdvm3YU7rAWwxPPSXjZDDoSL8ogSoj5/mV7wKxJemv/UHnxWO66KNkP5YlwBVpf
- yhLWvFuas8vKgrL6xwstjIoqQkAHwzFeMGKYdXZKZbJgxl56MeE6cpGoKpMHNkRVDhbmhfOt
- yrISWhBccrOsgeYjaPos8B53sAQry5PoVA3hNhpSZ23N37VZcs4KJOtNpxbsXC3KcbrisXUr
- MqkyYnccSNVGT1Bfr4nItAp3bdgyoMPh2kWkNtX7xms5fQs3kIZoCevbjQcJeerBG/E4rNtq
- wBYtagTg9m0/bn/w+iA6RfcLZWC7Z31ggkSZ0wARAQABwsBlBBgBAgAPBQJZ3uQ4AhsMBQkJ
- ZgGAAAoJELJ5SaYWUpiScgEIAMcAuAxnvRg5L9aB1/Xrmm+ILf7qB7FYxmavGMkZ+sHrLhw1
- Ycb5jYMhQQcTGCefKpsxx44PAw5DhJe7xnbHjRAWl8ScCGXmJUof3eaQ+7p3pWtl7R/J5W4j
- C5undogrFFcRimd5ah1tWc0t4BejelxpV+OiG4u/ghuCMrEQn6DgGL++gDs3vAspW/43RNZe
- BaxvvUMbNU0B3iKlwzXUxCDlBu8EcXEltM9MF02yoG5FxLaRXa/8kqeYAgH2vQjJqfMBMBLS
- tYfhW3GUnwUCN1GlKsguZWKprwgDzAp0JIeAatemSNtCzcTpgT0gTB+iTWYac12EQTu3Ckdx
- Rdu9+hQ=
-Message-ID: <0fb181ac-e6c4-45e4-d29d-19a98343fb82@suse.com>
-Date:   Sat, 12 Sep 2020 23:03:25 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-In-Reply-To: <87wo1emyi4.fsf@esperi.org.uk>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM3PR07CA0099.eurprd07.prod.outlook.com
- (2603:10a6:207:6::33) To AM0PR04MB6529.eurprd04.prod.outlook.com
- (2603:10a6:208:16f::21)
+        id S1725846AbgILQTV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 12 Sep 2020 12:19:21 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:29172 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725385AbgILQTT (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 12 Sep 2020 12:19:19 -0400
+Received: from host86-136-163-47.range86-136.btcentralplus.com ([86.136.163.47] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1kH8FA-0007dM-AV; Sat, 12 Sep 2020 17:19:16 +0100
+Subject: Re: Linux raid-like idea
+To:     Brian Allen Vanderburg II <brianvanderburg2@aim.com>,
+        linux-raid@vger.kernel.org
+References: <1cf0d18c-2f63-6bca-9884-9544b0e7c54e.ref@aim.com>
+ <1cf0d18c-2f63-6bca-9884-9544b0e7c54e@aim.com>
+ <e3cb1bbe-65eb-5b75-8e99-afba72156b6e@youngman.org.uk>
+ <ef3719a9-ae53-516e-29ee-36d1cdf91ef1@aim.com>
+ <5F54146F.40808@youngman.org.uk>
+ <274cb804-9cf1-f56c-9ee4-56463f052c09@aim.com>
+ <ddd9b5b9-88e6-e730-29f4-30dfafd3a736@youngman.org.uk>
+ <38f9595b-963e-b1f5-3c29-ad8981e677a7@aim.com>
+From:   antlists <antlists@youngman.org.uk>
+Message-ID: <9220ea81-3a81-bb98-22e3-be1a123113a1@youngman.org.uk>
+Date:   Sat, 12 Sep 2020 17:19:18 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from l3-laptop.suse (39.71.186.250) by AM3PR07CA0099.eurprd07.prod.outlook.com (2603:10a6:207:6::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3391.5 via Frontend Transport; Sat, 12 Sep 2020 15:03:30 +0000
-X-Originating-IP: [39.71.186.250]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f9177bec-83ba-4bf4-e4d0-08d8572d0366
-X-MS-TrafficTypeDiagnostic: AM0PR04MB5123:
-X-Microsoft-Antispam-PRVS: <AM0PR04MB51237E789A1B17E3B7303138F8250@AM0PR04MB5123.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 3qA3ZLbvhdoG5XUrSbqDFRok4hKc0Qzy4llcS36Kp840+5zZifUT6LwhQJ/Q7vij9678TIwNyLc0amQco3etiCm7EuxfD6tJQgTslkJZS3CR/EAT+ueNnAfUcqJLaBL0pkf0skRNltVgkv6o7AipPdR4JlRtScf6VaX8SVmjSd0HBOf1WlY5VijZX85fvku46IvYgdRb0ORdechfB31hWHRD9Flh87RnNJZ9uxMajzqbFLx9K/2EdyvHaYFDL3H1ZK+mdX5y9CrX2MPmZpn1AeKzBd3xL0w+mlhPzoULmXD7cyglyEP6KZeJd1vajCdc+Cy7tf7OzESy7RnvKZ/WJGP5s9gUaJsuUuPENuI0wEj5tLXL0O2hOKBcXDZPzfvQ
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM0PR04MB6529.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(136003)(376002)(39860400002)(396003)(366004)(66556008)(26005)(66476007)(6512007)(6486002)(8936002)(2616005)(52116002)(86362001)(31686004)(4326008)(316002)(956004)(2906002)(5660300002)(6916009)(8886007)(186003)(16526019)(36756003)(66946007)(8676002)(31696002)(6506007)(53546011)(478600001)(83380400001)(6666004)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: rE+b5SLRpe4DU013E6csF3AVEuzAm/SgfZHWonT+Z+p15lTew41U+lUBevFn01cmlFOStDZ/4TtMF4BQJ7jaXGF1MZG1TNnHYrue+7Xg3uEksI0zpv8VZt8FYRyjy0G2KuIEyXT4YEuNVZ3t3p6kbnYwz7SBtmkOviGf+ra0MA2N8am9avXfjblLZjrZ4uveFJON+IuwT9dGhowQRmxTc1uE0v1Y3WsLlyXk8ERnP9x1p6luxzjfGGWvBYDzCCIOmMQs4iUy2iPz4M0/oANbONeytFeli7A9/nec7S8wVWoVluzW9lP2Ihz4SHtKOb4XYcA6eJ13v2Gus0RVGTnayIHZ7BDLK8roL4WWZI7k2dfxUdON92tqLZFXpU76nd+y5+lgcItV64lILHWU7unCxIDW5dAF6SnzPhTpLT8uQ85M+EwBRlf7R875GZZvmEb95OMpKm+9DseHM+djglN667Ug13oYAIDNgli1An+PbEFHs69v93FajnlOBzyelUbw7RwQIGPbalEYoy8QMaitJ2VfTxp68nBCDNcaoKE/REa5ULW2Nl/jyna21MCF/mABXuA7PXEBzkDpCt70iW9T9++pSjJV/Jzmh+6HSgg27SmAwI8ZKjyqWfRFlFIeFSICMLkO+r7g27l0/oii91wGng==
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f9177bec-83ba-4bf4-e4d0-08d8572d0366
-X-MS-Exchange-CrossTenant-AuthSource: AM0PR04MB6529.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2020 15:03:31.7563
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gn8B+t18rdsyfRgW9kkO+I4KXmrp+2sxVyyO4GTN6YX2dNf6LjWrOVwFiruaramZwhazQvtsbasf5CjkjlDrLg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB5123
+In-Reply-To: <38f9595b-963e-b1f5-3c29-ad8981e677a7@aim.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 8bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 11/09/2020 21:14, Brian Allen Vanderburg II wrote:
+> That's right, I get the various combinations confused.  So does raid61
+> allow for losing 4 disks in any order and still recovering? or would
+> some order of disks make it where just 3 disks lost and be bad?
+> Iinteresting non-the-less and I'll have to look into it.  Obviously it's
+> not intended to as a replacement for backing up important data, but, for
+> me any way, just away to minimize loss of any trivial bulk data/files.
 
+Yup. Raid 6 has two parity disks, and that's mirrored to give four 
+parity disks. So as an *absolute* *minimum*, raid-61 could lose four 
+disks with no data loss.
 
-On 9/1/20 3:00 AM, Nix wrote:
-> On 31 Aug 2020, Zhong Lidong told this:
+Throw in the guarantee that, with a mirror, you can lose an entire 
+mirror with no data-loss, that means - with luck and a following wind - 
+you could lose half your disks, PLUS the two parities in the remaining 
+disks, and still recover your data. So with a raid-6+1, if I had twelve 
+disks, I could lose EIGHT disks and still have a *chance* of recovering 
+my array. I'm not quite sure what difference raid-61 would make.
+
+(That says to me, if I have a raid-61, I need as a minimum a complete 
+set of data disks. That also says to me, if I've splatted an 8+2 raid-61 
+across 11 disks, I only need 7 for a full recovery despite needing a 
+minimum of 8, so something isn't quite right here... I suspect the 7 
+would be enough but I did say my mind goes Whooaaa!!!!)
 > 
->> On 8/29/20 12:38 AM, Ian Pilcher wrote:
->>> On 8/26/20 10:16 AM, Lidong Zhong wrote:
->>>> ...
->>>> So the misleading "raid0" is shown in this testcase. I think maybe
->>>> the "Raid Level" item shouldn't be displayed any more for the inactive
->>>> array.
->>>
->>> As a system administrator, I'd much rather see "unknown" (or something
->>> similar), rather than simply omitting the information.
->>>
->> Thanks for the suggestion.
->> Yeah, just removing the Raid Level info is not the best option. I also
->> considered to show it as "inactive Raid1" in such case.
-> 
-> If it would be a raid1 when activated, it is still a raid1 when
-> inactive: the data on disk doesn't suddenly become not a raid array
-> simply because the kernel isn't able to access it right now. This is
-> valuable information to expose to the sysadmin and should not be
-> concealed (and *certainly* not described as a raid level it actually
-> isn't).
-> 
-> I think it should say as much (if the system knows at this stage, which
-> if there is a device node, it presumably does).
-> 
+> It would be nice if the raid modules had support for methods that could
+> support a total of more disks in any order lost without loosing data.
+> Snapraid source states that it uses some Cauchy Matrix algorithm which
+> in theory could loose up to 6 disks if using 6 parity disks, in any
+> order, and still be able to restore the data.  I'm not familiar with the
+> math behind it so can't speak to the accuracy of that claim.
 
-Makes sense to me. I'll try to rewrite the patch.
-Thanks for your share.
+That's easy, it's just whether it's worth it. Look at the maths behind 
+raid-6. The "one parity disk" methods, 4 or 5, just use XOR. But that 
+only works once, a second XOR parity disk adds no new redundancy and is 
+worthless. I'm guessing raid-6 uses that Cauchy method you talk about - 
+certainly it can generate as many parity disks as you like ... so that 
+claim is good, even if raid-6 doesn't use that particular technique.
 
-Regards,
-Lidong
+If someone wants to, mod'ing raid-6 to use 3 parity disks shouldn't be 
+that hard ...
 
+
+But going back to your original idea, I've been thinking about it. And 
+it struck me - you NEED to regenerate parity EVERY TIME you write data 
+to disk! Otherwise, writing one file on one disk instantly trashes your 
+ability to recover all the other files in the same position on the other 
+disks. WHOOPS! But if you think it's a good idea, by all means try and 
+do it.
+
+The other thing I'd suggest here, is try and make it more like raid-5 
+than raid-4. You have X disks, let's say 5. So one disk each is numbered 
+0, 1, 2, 3, 4. As part of formatting the disk ready for raid, you create 
+a file containing every block where LBA mod 5 equals disk number. So as 
+you recalculate your parities, that's where they go.
+
+Cheers,
+Wol
