@@ -2,88 +2,169 @@ Return-Path: <SRS0=Qcx5=CV=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33240C433E2
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 11:08:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E967C433E2
+	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 14:07:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3BB520855
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 11:08:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bitfolk.com header.i=@bitfolk.com header.b="zXeoYNv2"
+	by mail.kernel.org (Postfix) with ESMTP id 1248720855
+	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 14:07:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725863AbgILLIH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 12 Sep 2020 07:08:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46740 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725825AbgILLH7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 12 Sep 2020 07:07:59 -0400
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F044AC061573
-        for <linux-raid@vger.kernel.org>; Sat, 12 Sep 2020 04:07:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com; s=alpha;
-        h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:Subject:To:From:Date; bh=oDDXZTcY07kLmUXoxCMOL3ZHu1HV2LHU/L14OGFcN+M=;
-        b=zXeoYNv2Zb8vxilTkBhw+JQ1ICtQ6CpATqfUvErgCC/Z8ulU2+NiUI5qLBNg+AyizTKtWTfOKW35gC9l+sYvX52M+LIY+LLkacsRBILKNZc38dwN0Eqhm+1DJsdrpXzcWoEL40NUpCy9ZuMNgaxqyEslO+B876ad61T4oLbTgiBJTWGOoR4JAO5by/Zu34ZbgmeFCcFUiv1s53LDCBH3GOSoT0CqJUrGjmPg5Ca9BculIG94DtEEMEOut8F+AyjjGYXHn/PaigpLvkEq1NpyWaeQkd3DvLBuAwIG+7z8liLrZ/AxlXzsxHoYvviDrc9rx9X23h9Z6UM7wzB5FzkQIA==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.84_2)
-        (envelope-from <andy@strugglers.net>)
-        id 1kH3Nq-0001jf-HB
-        for linux-raid@vger.kernel.org; Sat, 12 Sep 2020 11:07:54 +0000
-Date:   Sat, 12 Sep 2020 11:07:54 +0000
-From:   Andy Smith <andy@strugglers.net>
-To:     Linux Raid <linux-raid@vger.kernel.org>
-Subject: Re: Config option for removing bbl on assembly?
-Message-ID: <20200912110754.GE31926@bitfolk.com>
-Mail-Followup-To: Linux Raid <linux-raid@vger.kernel.org>
-References: <20200904074557.GT13298@bitfolk.com>
- <583511729.466.1599908325671.JavaMail.zimbra@karlsbakk.net>
+        id S1725860AbgILOHK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 12 Sep 2020 10:07:10 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33016 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725846AbgILOGs (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 12 Sep 2020 10:06:48 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id D88B2AAC7;
+        Sat, 12 Sep 2020 14:06:58 +0000 (UTC)
+To:     linux-raid@vger.kernel.org
+From:   Coly Li <colyli@suse.de>
+Autocrypt: addr=colyli@suse.de; keydata=
+ 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
+Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <songliubraving@fb.com>, xiao ni <xni@redhat.com>
+Subject: unexpected 'mdadm -S' hang with I/O pressure testing
+Message-ID: <a5f14765-4da8-e965-beed-3d01ac496c61@suse.de>
+Date:   Sat, 12 Sep 2020 22:06:37 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.12.0
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <583511729.466.1599908325671.JavaMail.zimbra@karlsbakk.net>
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL:  http://strugglers.net/wiki/User:Andy
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Roy,
+Unexpected Behavior:
+- With Linux v5.9-rc4 mainline kernel and latest mdadm upstream code
+- After running fio with 10 jobs, 16 iodpes and 64K block size for a
+while, try to stop the fio process by 'Ctrl + c', the main fio process
+hangs.
+- Then try to stop the md raid 5 array by 'mdadm -S /dev/md0', the mdad
+process hangs.
+- Reboot the system by 'echo b > /proc/sysrq-trigger', this md raid5
+array is assembled but inactive. /proc/mdstat shows,
+	Personalities : [raid6] [raid5] [raid4]
+	md127 : inactive sdc[0] sde[3] sdd[1]
+	      35156259840 blocks super 1.2
 
-On Sat, Sep 12, 2020 at 12:58:45PM +0200, Roy Sigurd Karlsbakk wrote:
-> …or just remove the whole bbl, since it has virtually no function
-> and didn't even have it when it was introduced 10 years ago.
+Expectation:
+- The fio process can stop with 'Ctrl + c'
+- The raid5 array can be stopped by 'mdadm -S /dev/md0'
+- This md raid5 array may continue to work (resync and being active)
+after reboot
 
-Yes, I saw your recent thread on the subject, and the others going
-back years, and it did motivate me to think more about this.
 
-I haven't seen an opinion from the current maintainers but I read that
-Neil Brown thought it should not be removed but instead the bugs
-should be found and fixed. So there doesn't seem to be any prospect
-of this feature being removed.
+How to reproduce:
+1) Create md raid5 with 3 hard drives (12TB for each SATA spinning disk)
+  # mdadm -C /dev/md0 -l 5 -n 3 /dev/sd{c,d,e}
+  # cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sde[3] sdd[1] sdc[0]
+      23437506560 blocks super 1.2 level 5, 512k chunk, algorithm 2
+[3/2] [UU_]
+      [>....................]  recovery =  0.0% (2556792/11718753280)
+finish=5765844.7min speed=33K/sec
+      bitmap: 2/88 pages [8KB], 65536KB chunk
 
-Given that, and that there is a config option to disable it, I was
-hoping it would be deemed less controversial to also have a way to
-remove on next (incremental) assembly.
+2) Run fio for random write on the raid5 array
+  fio job file content:
+[global]
+thread=1
+ioengine=libaio
+random_generator=tausworthe64
 
-If you can't have your first choice of having the feature removed,
-would you support that?
+[job]
+filename=/dev/md0
+readwrite=randwrite
+blocksize=64K
+numjobs=10
+iodepth=16
+runtime=1m
+  # fio ./raid5.fio
 
-As an aside, I'm having a devil of a game trying to get the Debian
-installer to let me use "CREATE bbl=no". Not only does
-debian-installer use a config file at /tmp/mdadm.conf, but it
-appears to constantly rewrite it every time you enter the MD
-configuration section, so realistically it seems that the only way
-to create arrays without a bbl is to do it manually from the d-i
-shell.
+3) Wait for 10 seconds after the above fio runs, then type 'Ctrl + c' to
+stop the fio process:
+x:/home/colyli/fio_test/raid5 # fio ./raid5.fio
+job: (g=0): rw=randwrite, bs=(R) 64.0KiB-64.0KiB, (W) 64.0KiB-64.0KiB,
+(T) 64.0KiB-64.0KiB, ioengine=libaio, iodepth=16
+...
+fio-3.23-10-ge007
+Starting 12 threads
+^Cbs: 12 (f=12): [w(12)][3.3%][w=6080KiB/s][w=95 IOPS][eta 14m:30s]
+fio: terminating on signal 2
+^C
+fio: terminating on signal 2
+^C
+fio: terminating on signal 2
+Jobs: 11 (f=11): [w(5),_(1),w(4),f(1),w(1)][7.5%][eta 14m:20s]
+^C
+fio: terminating on signal 2
+Jobs: 11 (f=11): [w(5),_(1),w(4),f(1),w(1)][70.5%][eta 15m:00s]
 
-    https://lists.debian.org/debian-boot/2020/09/msg00074.html
+Now the fio process is hang forever.
 
-Cheers,
-Andy
+4) try to stop this md raid5 array by mdadm
+  # mdadm -S /dev/md0
+  Now the mdadm process hangs for ever
+
+
+Kernel versions to reproduce
+- Use latest upstream mdadm source code
+- I tried Linux v5.9-rc4, and Linux v4.12, both of them may stable
+reproduce the above unexpected behavior.
+  Therefore I assume maybe at least from v4.12 to v5.9 may have such issue.
+
+Just for your information, hope you may have a look into it. Thanks in
+advance.
+
+Coly Li
+
