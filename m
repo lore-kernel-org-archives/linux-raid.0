@@ -2,308 +2,173 @@ Return-Path: <SRS0=Qcx5=CV=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58B1CC43461
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 14:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59353C433E2
+	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 15:01:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 119A42076C
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 14:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA64720829
+	for <linux-raid@archiver.kernel.org>; Sat, 12 Sep 2020 15:01:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Nwp8WIb3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725863AbgILOkp convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 12 Sep 2020 10:40:45 -0400
-Received: from hammer.websitemanagers.com.au ([59.100.172.130]:40734 "EHLO
-        hammer.websitemanagers.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725854AbgILOkk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 12 Sep 2020 10:40:40 -0400
-Received: (qmail 6278 invoked by uid 1011); 12 Sep 2020 14:40:25 -0000
-Received: from 124.149.186.15 by hammer (envelope-from <mailinglists@websitemanagers.com.au>, uid 1008) with qmail-scanner-1.24 
- (clamdscan: 0.102.4/25878. spamassassin: 3.4.2.  
- Clear:RC:1(124.149.186.15):. 
- Processed in 0.163523 secs); 12 Sep 2020 14:40:25 -0000
-Received: from unknown (HELO Galaxy-S20-Ultra-5G) (adamg+websitemanagers.com.au@124.149.186.15)
-  by 0 with ESMTPA; 12 Sep 2020 14:40:25 -0000
-Date:   Sun, 13 Sep 2020 00:40:23 +1000
-User-Agent: K-9 Mail for Android
-In-Reply-To: <38f9595b-963e-b1f5-3c29-ad8981e677a7@aim.com>
-References: <1cf0d18c-2f63-6bca-9884-9544b0e7c54e.ref@aim.com> <1cf0d18c-2f63-6bca-9884-9544b0e7c54e@aim.com> <e3cb1bbe-65eb-5b75-8e99-afba72156b6e@youngman.org.uk> <ef3719a9-ae53-516e-29ee-36d1cdf91ef1@aim.com> <5F54146F.40808@youngman.org.uk> <274cb804-9cf1-f56c-9ee4-56463f052c09@aim.com> <ddd9b5b9-88e6-e730-29f4-30dfafd3a736@youngman.org.uk> <38f9595b-963e-b1f5-3c29-ad8981e677a7@aim.com>
+        id S1725871AbgILPBA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 12 Sep 2020 11:01:00 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:23525 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725935AbgILPAB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 12 Sep 2020 11:00:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599922799;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=oyegQIQQIAZUVoK5inqBvLUfFHbpYMmyXukgMGHdoPk=;
+        b=Nwp8WIb3G8uL+1S0hYnTmi3Y/Y/wCfNdtD+tWwsIW4IaxNSyJahLuCIyqsbYJ7WIUybgOs
+        2pNLd5uJukm8R6LfwmpgF6Bo5yh9kYw4BBbthQvE8C1rWjffZ2RC8vOX2WOIZfLEPZEWjz
+        E4HwyW00vBahrqSn8M+ckI8FqrmbWmg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-363-WoJvsNNlMNC_7KYe7Qh54g-1; Sat, 12 Sep 2020 10:59:55 -0400
+X-MC-Unique: WoJvsNNlMNC_7KYe7Qh54g-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 216BA1074649;
+        Sat, 12 Sep 2020 14:59:54 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-8-18.pek2.redhat.com [10.72.8.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B1EAF19D7C;
+        Sat, 12 Sep 2020 14:59:51 +0000 (UTC)
+Subject: Re: unexpected 'mdadm -S' hang with I/O pressure testing
+To:     Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
+Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <songliubraving@fb.com>
+References: <a5f14765-4da8-e965-beed-3d01ac496c61@suse.de>
+ <0be1a9cf-3a8a-4ed9-91b8-d15787528acf@suse.de>
+From:   Xiao Ni <xni@redhat.com>
+Message-ID: <dce9b69e-1d22-226a-9a0d-87d8a43c4827@redhat.com>
+Date:   Sat, 12 Sep 2020 22:59:49 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Subject: Re: Linux raid-like idea
-To:     Brian Allen Vanderburg II <brianvanderburg2@aim.com>,
-        antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
-From:   Adam Goryachev <mailinglists@websitemanagers.com.au>
-Message-ID: <B0FC586C-8C01-4FFC-AE3A-7FE1BFDBFE08@websitemanagers.com.au>
+In-Reply-To: <0be1a9cf-3a8a-4ed9-91b8-d15787528acf@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi all
 
-
-On 12 September 2020 6:14:51 am AEST, Brian Allen Vanderburg II <brianvanderburg2@aim.com> wrote:
->
->On 9/11/20 3:16 PM, antlists wrote:
->> Yes it is a bit like raid-4 since the data and parity disks are
->>> separated.  In fact the idea could be better called a parity backed
->>> collection of independently accessed disks. While you would not get
->the
->>> advantage/performance increase of reads/writes going across multiple
->>> disks, the idea is primarily targeted to read-heavy applications, so
->in
->>> a typical use, read performance should be no worse than reading
->directly
->>> from a single un-raided disk, except in case of a disk failure where
->the
->>> parity is being used to calculated a block read on a missing disk.
->>> Writes would have more overhead since they would also have to
->>> calculate/update parity.
->>
->> Ummm...
->>
->> So let me word this differently. You're looking at pairing disks up,
->> with a filesystem on each pair (data/parity), and then using mergefs
->> on top. Compared with simple raid, that looks like a lose-lose
->> scenario to me.
->>
->> A raid-1 will read faster than a single disk, because it optimises
->> which disk to read from, and it will write faster too because your
->> typical parity calculation for a two-disk scenario is a no-op, which
->> might not optimise out.
->
->
->Not exactly.  You can do a data + parity, but you could also do a data
->+
->data + parity or a data + data + data + parity.  Or with more than one
->parity disk data + data + data + data +parity + parity, etc.
->
->Best viewed in a fixed-width font, and probably make more sense read
->from the bottom up:
->
->
->       /data
->         |
->    / mergerfs  \
->   /             \
->/pool1         /pool2         /pool3 (or /home or /usr/local, etc)
->   |             |             |
->The filesystem built upon the /dev/frX devices can be used however the
->user wants.
->   |             |             |
->----------------------------------------
->   |             |             |
->ext4 (etc)     ext4(etc)    (ext4/etc, could in theory even have
->multiple partitions then filesystems)
->   |             |             |
->Each exposed block device /dev/frX can have a filesystem/partition
->table
->placed on it, which is placed onto the single mapped disk.
->Any damage/issues on one data disk would not affect the other data
->disks
->at all.  However, since the collection of data disks also has parity
->for
->them,
->damage to a data disk can be restored from the parity and other data
->disks.  If, during restore, something prevents the restore, then only
->the bad
->data disks have an issue, the other data disks would still be fully
->accessible, and any filesystem on them still intact since the entire
->filesystem
->from anything on /dev/fr0 would be only on /dev/sda1, and so on.
->   |             |             |
->----------------------------------------
->   |             |             |
->/dev/fr0      /dev/fr1      /dev/fr2
->   |             |             |
->Individual data disks are passed through as fully exposed block
->devices,
->minus any overhead for information/data structures for the 'raid'.
->A block X on /dev/fr0 maps to block X + offset on /dev/sda1 and so on
->   |             |             |
->Raid/parity backed disk layer (data: /dev/sda1=/dev/fr0,
->/dev/sdb1=/dev/fr1, /dev/sdc1=/dev/fr2, parity: /dev/sdd1)
->   |             |             |
->-----------------------------------------------------
->   |             |             |                 |
->/dev/sda1    /dev/sdb1     /dev/sdc1      /dev/sdd1 (parity)
->
->
->
->So basically at the raid (or parity backed layer), multiple disks and
->not just a single disk, can be backed by the parity disk (ideally
->support for more than on parity disk as well)  Only difference is,
->instead of joining the disks as one block device /dev/md0, each data
->disk gets its own block device and so has it's own filesystem(s) on it
->independently of the other disks.  A single data disk can be removed
->entirely, taken to a different system, and still be read (would need to
->do losetup with an offset to get to the start of the
->filesystem/partition table though), and the other data disks would
->still
->be readable on the original system.  So any total loss of a data disk
->would not affect the other data disks files.  In this example, /data
->could be missing some files if /pool1 (/dev/sda1) died, but the files
->on
->/pool2 would still be entirely accessible as would any filesystem from
->/dev/sdc1.  There is no performance advantage to such a setup. The
->advantage is that should something real bad happen and it become
->impossible to restore some data disk(s), the other disk(s) are still
->accessible.
->
->Read from /dev/fr0 = read from /dev/sda1 (adjusted for any
->overhead/headers)
->Read from /dev/fr1 = read from /dev/sdb1 (adjusted for any
->overhead/headers)
->Read from /dev/fr2 = read from /dev/sdc1 (adjusted for any
->overhead/headers)
->Write to /dev/fr0 = write to /dev/sda1 ((adjusted for any
->overhead/headers) and parity /dev/sdd1
->Write to /dev/fr1 = write to /dev/sdb1 ((adjusted for any
->overhead/headers) and parity /dev/sdd1
->Write to /dev/fr2 = write to /dev/sdc1 ((adjusted for any
->overhead/headers) and parity /dev/sdd1
->
->Read from /dev/fr0 (/dev/sda1 missing) = read from parity and other
->disks, recalculate original block)
->During rebuild, /dev/sdd dies as well (unable to rebuild from parity
->now
->since /dev/sda and /dev/sdd are missing)
->    Lost: /dev/sda1
->    Still present: /dev/sdb1 -- some files from the pool will be
->missing
->since /pool1 is missing but the files on /pool2 are still present in
->their entirety
->    Still present: /pool3 (or /home or /usr/local, etc, whatever
->/dev/fr2 was used for)
->
->>>
->>>> Personally, I'm looking at something like raid-61 as a project.
->That
->>>> would let you survive four disk failures ...
->>>
->>> Interesting.  I'll check that out more later, but from what it seems
->so
->>> far there is a lot of overhead (10 1TB disks would only be 3TB of
->data
->>> (2x 5 disk arrays mirrors, then raid6 on each leaving 3 disks-worth
->of
->>> data).  My currently solution since I'ts basically just storing bulk
->>> data, is mergerfs and snapraid, and from the documents of snapraid,
->10
->>> 1TB disks would provide 6TB if using 4 for parity.  However it's
->parity
->>> calculations seem to be more complex as well.
->>
->> Actually no. Don't forget that, as far as linux is concerned, raid-10
->> and raid-1+0 are two *completely* *different* things. You can raid-10
->> three disks, but you need four for raid-1+0.
->>
->> You've mis-calculated raid-6+1 - that gives you 6TB for 10 disks (two
->> 3TB arrays). I think I would probably get more with raid-61, but
->every
->> time I think about it my brain goes "whoa!!!", and I'll need to start
->> concentrating on it to work out exactly what's going on.
->
->That's right, I get the various combinations confused.  So does raid61
->allow for losing 4 disks in any order and still recovering? or would
->some order of disks make it where just 3 disks lost and be bad?
->Iinteresting non-the-less and I'll have to look into it.  Obviously
->it's
->not intended to as a replacement for backing up important data, but,
->for
->me any way, just away to minimize loss of any trivial bulk data/files.
->
->It would be nice if the raid modules had support for methods that could
->support a total of more disks in any order lost without loosing data. 
->Snapraid source states that it uses some Cauchy Matrix algorithm which
->in theory could loose up to 6 disks if using 6 parity disks, in any
->order, and still be able to restore the data.  I'm not familiar with
->the
->math behind it so can't speak to the accuracy of that claim.
->
->>> This is actually the main purpose of the idea.  Due to the data on
->the
->>> disks in a traditional raid5/6 being mapped from multiple disks to a
->>> single logical block device, and so the structures of any file
->systems
->>> and their files scattered across all the disks, losing one more than
->the
->>> number of available lost disks would make the entire filesystem(s)
->and
->>> all files virtually unrecoverable.
->>
->> But raid 5/6 give you much more usable space than a mirror. What I'm
->> having trouble getting to grips with in your idea is how is it an
->> improvement on a mirror? It looks to me like you're proposing a
->2-disk
->> raid-4 as the underlying storage medium, with mergefs on top. Which
->is
->> effectively giving you a poorly-performing mirror. A crappy raid-1+0,
->> basically.
->
->I do apologize it seems I'm having a little difficulty clearly
->explaining the idea.  Hopefully the chart above helps explain it better
->than I have been.  Imagine raid 5 or 6, but with no striping (so the
->parity goes on their own disks), and the data disks passed through as
->their down block devices each.  You lose any performance benefits of
->the
->striping of data/parity, but the data stored on any data disk is only
->on
->that data disk, and same for the others, so losing all parity and a
->data
->disk, would not lose the data on the other data disks.
->
->>>
->>> By keeping each data disk separate and exposed as it's own block
->device
->>> with some parity backup, each disk contains an entire filesystem(s)
->on
->>> it's own to be used however a user decides.  The loss of one of the
->>> disks during a rebuild would not cause full data loss anymore but
->only
->>> of the filesystem(s) on that disk.  The data on the other disks
->would
->>> still be intact and readable, although depending on the user's
->usage,
->>> may be missing files if they used a union/merge filesystem on top of
->>> them.  A rebuild would still have the same issues, would have to
->read
->>> all the remaining disks to rebuild the lost disk.  I'm not really
->sure
->>> of any way around that since parity would essentially be calculated
->as
->>> the xor of the same block on all the data disks.
->>>
->> And as I understand your setup, you also suffer from the same problem
->> as raid-10 - lose one disk and you're fine, lose two and it's russian
->> roulette whether you can recover your data. raid-6 is *any* two and
->> you're fine, raid-61 would be *any* four and you're fine.
->
->Not exactly.  Since the data disks are passed through as individual
->block devices instead of 'joined' into a single block device, if you
->lose one disk (assuming only one disk of parity) then you are fine. If
->you lose two, then you've only lost the data on the lost data disk. The
->other data disks would still have their in-tact filesystems on them. 
->Depending on how they are used, some files may be missing. IE a
->mergerfs
->between two mount points would be missing any files on the lost mount
->point, but the other files would still be accessible.
->
->
->It may or may not (leaning more to probably not) have any use. I'm
->hoping from the above at least the idea is better understood.  I do
->apologize if it's still not clear/
->
-
-Possibly silly question, if you lost 3 data disks, but still had your parity disk, how do you recover all your data? Doesn't sound possible to store enough data on one disk to recover three....
-
-BTW, my preferred method is raid6 on machine a, raid6 6 on machine b, and then drbd to join them together. You can lose a maximum of all disks on one machine and two on the other, or any 2 disks on both machines (total of 4). Basically raid 61 but split between machines.
+I did a test on single disk (just replace /dev/md0 with /dev/sde), it 
+had the same problem too.
+Ctrl+c can't stop the fio process. There still are write I/O on /dev/sde 
+after ctrl+c. It needs to wait
+for all I/O finish.
 
 Regards
-Adam
+Xiao
+
+On 09/12/2020 10:21 PM, Coly Li wrote:
+> One thing to correct: the hang is not forever - after I posted the
+> previous email, all commands returns and the array stopped. It takes
+> around 40 minutes -- still quite unexpected and suspicious.
+>
+> Thanks.
+>
+> Coly Li
+>
+> On 2020/9/12 22:06, Coly Li wrote:
+>> Unexpected Behavior:
+>> - With Linux v5.9-rc4 mainline kernel and latest mdadm upstream code
+>> - After running fio with 10 jobs, 16 iodpes and 64K block size for a
+>> while, try to stop the fio process by 'Ctrl + c', the main fio process
+>> hangs.
+>> - Then try to stop the md raid 5 array by 'mdadm -S /dev/md0', the mdad
+>> process hangs.
+>> - Reboot the system by 'echo b > /proc/sysrq-trigger', this md raid5
+>> array is assembled but inactive. /proc/mdstat shows,
+>> 	Personalities : [raid6] [raid5] [raid4]
+>> 	md127 : inactive sdc[0] sde[3] sdd[1]
+>> 	      35156259840 blocks super 1.2
+>>
+>> Expectation:
+>> - The fio process can stop with 'Ctrl + c'
+>> - The raid5 array can be stopped by 'mdadm -S /dev/md0'
+>> - This md raid5 array may continue to work (resync and being active)
+>> after reboot
+>>
+>>
+>> How to reproduce:
+>> 1) Create md raid5 with 3 hard drives (12TB for each SATA spinning disk)
+>>    # mdadm -C /dev/md0 -l 5 -n 3 /dev/sd{c,d,e}
+>>    # cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md0 : active raid5 sde[3] sdd[1] sdc[0]
+>>        23437506560 blocks super 1.2 level 5, 512k chunk, algorithm 2
+>> [3/2] [UU_]
+>>        [>....................]  recovery =  0.0% (2556792/11718753280)
+>> finish=5765844.7min speed=33K/sec
+>>        bitmap: 2/88 pages [8KB], 65536KB chunk
+>>
+>> 2) Run fio for random write on the raid5 array
+>>    fio job file content:
+>> [global]
+>> thread=1
+>> ioengine=libaio
+>> random_generator=tausworthe64
+>>
+>> [job]
+>> filename=/dev/md0
+>> readwrite=randwrite
+>> blocksize=64K
+>> numjobs=10
+>> iodepth=16
+>> runtime=1m
+>>    # fio ./raid5.fio
+>>
+>> 3) Wait for 10 seconds after the above fio runs, then type 'Ctrl + c' to
+>> stop the fio process:
+>> x:/home/colyli/fio_test/raid5 # fio ./raid5.fio
+>> job: (g=0): rw=randwrite, bs=(R) 64.0KiB-64.0KiB, (W) 64.0KiB-64.0KiB,
+>> (T) 64.0KiB-64.0KiB, ioengine=libaio, iodepth=16
+>> ...
+>> fio-3.23-10-ge007
+>> Starting 12 threads
+>> ^Cbs: 12 (f=12): [w(12)][3.3%][w=6080KiB/s][w=95 IOPS][eta 14m:30s]
+>> fio: terminating on signal 2
+>> ^C
+>> fio: terminating on signal 2
+>> ^C
+>> fio: terminating on signal 2
+>> Jobs: 11 (f=11): [w(5),_(1),w(4),f(1),w(1)][7.5%][eta 14m:20s]
+>> ^C
+>> fio: terminating on signal 2
+>> Jobs: 11 (f=11): [w(5),_(1),w(4),f(1),w(1)][70.5%][eta 15m:00s]
+>>
+>> Now the fio process is hang forever.
+>>
+>> 4) try to stop this md raid5 array by mdadm
+>>    # mdadm -S /dev/md0
+>>    Now the mdadm process hangs for ever
+>>
+>>
+>> Kernel versions to reproduce
+>> - Use latest upstream mdadm source code
+>> - I tried Linux v5.9-rc4, and Linux v4.12, both of them may stable
+>> reproduce the above unexpected behavior.
+>>    Therefore I assume maybe at least from v4.12 to v5.9 may have such issue.
+>>
+>> Just for your information, hope you may have a look into it. Thanks in
+>> advance.
+>>
+>> Coly Li
+>>
 
