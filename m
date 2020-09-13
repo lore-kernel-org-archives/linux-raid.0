@@ -2,74 +2,68 @@ Return-Path: <SRS0=mN13=CW=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=BAYES_20,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D30C433E2
-	for <linux-raid@archiver.kernel.org>; Sun, 13 Sep 2020 16:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D186CC433E2
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Sep 2020 20:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CE7020829
-	for <linux-raid@archiver.kernel.org>; Sun, 13 Sep 2020 16:01:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BAC621655
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Sep 2020 20:48:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=lease-up.com header.i=@lease-up.com header.b="iQnsL+cs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725939AbgIMQBi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 13 Sep 2020 12:01:38 -0400
-Received: from smtp.hosts.co.uk ([85.233.160.19]:9492 "EHLO smtp.hosts.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725876AbgIMQBf (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sun, 13 Sep 2020 12:01:35 -0400
-Received: from host86-136-163-47.range86-136.btcentralplus.com ([86.136.163.47] helo=[192.168.1.64])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1kHURY-000520-6L; Sun, 13 Sep 2020 17:01:33 +0100
-Subject: Re: Linux raid-like idea
-To:     John Stoffel <john@stoffel.org>
-References: <1cf0d18c-2f63-6bca-9884-9544b0e7c54e.ref@aim.com>
- <1cf0d18c-2f63-6bca-9884-9544b0e7c54e@aim.com>
- <e3cb1bbe-65eb-5b75-8e99-afba72156b6e@youngman.org.uk>
- <ef3719a9-ae53-516e-29ee-36d1cdf91ef1@aim.com>
- <5F54146F.40808@youngman.org.uk>
- <274cb804-9cf1-f56c-9ee4-56463f052c09@aim.com>
- <ddd9b5b9-88e6-e730-29f4-30dfafd3a736@youngman.org.uk>
- <38f9595b-963e-b1f5-3c29-ad8981e677a7@aim.com>
- <9220ea81-3a81-bb98-22e3-be1a123113a1@youngman.org.uk>
- <24413.1342.676749.275674@quad.stoffel.home>
- <9ba44595-8986-0b22-7495-d8a15fb96dbd@youngman.org.uk>
- <24414.5523.261076.733659@quad.stoffel.home>
-Cc:     linux-raid@vger.kernel.org
-From:   Wols Lists <antlists@youngman.org.uk>
-X-Enigmail-Draft-Status: N1110
-Message-ID: <5F5E425B.3040501@youngman.org.uk>
-Date:   Sun, 13 Sep 2020 17:01:31 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
- Thunderbird/38.7.0
+        id S1725942AbgIMUsC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 13 Sep 2020 16:48:02 -0400
+Received: from letbox-vps.us-core.com ([144.172.68.95]:60718 "EHLO
+        letbox-vps.us-core.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725938AbgIMUsA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 13 Sep 2020 16:48:00 -0400
+X-Greylist: delayed 1398 seconds by postgrey-1.27 at vger.kernel.org; Sun, 13 Sep 2020 16:48:00 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=lease-up.com; s=2017; h=Content-Type:To:Subject:Message-ID:Date:From:
+        MIME-Version:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=CwIbL6Z1TcBR/t3Y8gmT/syVo0Z5FTG+Nts4bfFWW1Q=; b=iQnsL+csOQ8S80KjfSC1SzzVtO
+        yS17zd5agmtF2fcNnljT3ZuKjJMnMeHd0GoPQaq3TyPv+kYcD2Kmq1UHv+CsyJxOkoXDQo1dtx4Mf
+        ROBvmblJTPbeplMYyFwVtnIXZNsEqSSOE1K3iGq7SSOMi1tC4qh+eQL58e6D5F8CaT2M=;
+Received: from mail-io1-f43.google.com ([209.85.166.43])
+        by letbox-vps.us-core.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <felix.lechner@lease-up.com>)
+        id 1kHYYC-003FAr-Qo
+        for linux-raid@vger.kernel.org; Sun, 13 Sep 2020 13:24:40 -0700
+Received: by mail-io1-f43.google.com with SMTP id r25so17140114ioj.0
+        for <linux-raid@vger.kernel.org>; Sun, 13 Sep 2020 13:24:40 -0700 (PDT)
+X-Gm-Message-State: AOAM530QTk4++IULaE6scocRBSbARpqVq4HRjjVwR/UV0LiyxVkQoer7
+        51r2/RtN5rIetTfQOMUDKnNem88jE0wFZz3qE1A=
+X-Google-Smtp-Source: ABdhPJwdxOgXQISP5EWDneHpRSe4cW4YD14Kxu1mhKgIhIDlRg2nfWxjJDbnyheGe77ZSqAWmcaEQz7S0CCuYohFEGc=
+X-Received: by 2002:a02:234c:: with SMTP id u73mr10533021jau.141.1600028680326;
+ Sun, 13 Sep 2020 13:24:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <24414.5523.261076.733659@quad.stoffel.home>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From:   Felix Lechner <felix.lechner@lease-up.com>
+Date:   Sun, 13 Sep 2020 13:24:03 -0700
+X-Gmail-Original-Message-ID: <CAFHYt55wZfb66zMjGG96OVeXjfVga-kJew=HQqnNBKD2ZXQiFQ@mail.gmail.com>
+Message-ID: <CAFHYt55wZfb66zMjGG96OVeXjfVga-kJew=HQqnNBKD2ZXQiFQ@mail.gmail.com>
+Subject: Recommendation for a stable commit in mdadm
+To:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 13/09/20 13:50, John Stoffel wrote:
-> I know, I really need to buy another drive, but my main system is
-> full, so I *also* need to either get a new case, or one of those 5 x
-> 3.5" into 3 x 5.25" bay cages to make some room.  Decisions... decisions...
+Hi,
 
-I know I keep on saying it, but I really think I'm close to getting my
-new main system (and hence my development system) sorted, and I think I
-need to buy one of those cages too.
+I recently assumed maintenance of mdadm in Debian and would like to
+reduce the number of cherry-picked feature patches in our package.
+Would you please recommend a stable commit I could use in lieu of a
+4.2 release?
 
-If you did get those two 8TB drives, you could still have your 8TB 3-way
-mirror without needing any more bays/sata-ports.
+I am subscribed to the mailing list. Thanks!
 
-My problem, of course, is if I'm playing with raid layouts I need as
-many disks as I can cram in :-) I'm counting 6 tucked away in my drawer,
-which means I'll almost certainly need to add an add-in 4-way sata card,
-and as those drives are a mixture of 500GB and 1TB, I'll probably split
-the 1TBs into 2x500GB and ignore md complaining that I have multiple
-components on the same physical disk ...
-
-Cheers,
-Wol
+Kind regards
+Felix Lechner
