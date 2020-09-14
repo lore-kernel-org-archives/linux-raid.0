@@ -2,80 +2,61 @@ Return-Path: <SRS0=PPQD=CX=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67DE6C433E2
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Sep 2020 05:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B5EEC433E2
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Sep 2020 08:28:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BDAA214F1
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Sep 2020 05:38:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HnHh+hn4"
+	by mail.kernel.org (Postfix) with ESMTP id E28B722204
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Sep 2020 08:28:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726062AbgINFiW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Sep 2020 01:38:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59179 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726048AbgINFiT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 14 Sep 2020 01:38:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600061914;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=9wjHp1jMiYI8TOhmbjxXJIuS85T3wAliI4DXXuRLxEU=;
-        b=HnHh+hn4Wlpky3H9A+oiyndXZblkNva3tS/INvuOcv+gSz2O0peOkE48br35pg8x/tL5SM
-        HprrI/uuMhwPJfNc5bkGexYxzJcjwMqb/TrnfsNevt1APZxQZ1KgeSZNDHN/F+mRf/oP+M
-        BUp6Z/8u+Uk2HqP/MDCd5Afp6mZf/0E=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-586-Ut3Siom5Nl29OmOTaIu1fQ-1; Mon, 14 Sep 2020 01:38:31 -0400
-X-MC-Unique: Ut3Siom5Nl29OmOTaIu1fQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7A3DA1074644;
-        Mon, 14 Sep 2020 05:38:30 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-18.pek2.redhat.com [10.72.8.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2647F5C893;
-        Mon, 14 Sep 2020 05:38:26 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     jes@trained-monkey.org, linux-raid@vger.kernel.org
+        id S1726190AbgINI2E (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Sep 2020 04:28:04 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:36623 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726139AbgINI2E (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 14 Sep 2020 04:28:04 -0400
+Received: from host86-136-163-47.range86-136.btcentralplus.com ([86.136.163.47] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antmbox@youngman.org.uk>)
+        id 1kHjqD-0007uc-F6; Mon, 14 Sep 2020 09:28:01 +0100
+Subject: Re: [mdadm PATCH 1/2] Check hostname file empty or not when creating
+ raid device
+To:     Xiao Ni <xni@redhat.com>, jes@trained-monkey.org,
+        linux-raid@vger.kernel.org
 Cc:     colyli@suse.de, ncroxon@redhat.com
-Subject: [mdadm PATCH 2/2] Don't create bitmap for raid5 with journal disk
-Date:   Mon, 14 Sep 2020 13:38:15 +0800
-Message-Id: <1600061895-16330-3-git-send-email-xni@redhat.com>
-In-Reply-To: <1600061895-16330-1-git-send-email-xni@redhat.com>
 References: <1600061895-16330-1-git-send-email-xni@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+ <1600061895-16330-2-git-send-email-xni@redhat.com>
+From:   anthony <antmbox@youngman.org.uk>
+Message-ID: <5ed15812-1d8d-1c40-6746-36cd801b0166@youngman.org.uk>
+Date:   Mon, 14 Sep 2020 09:28:01 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
+MIME-Version: 1.0
+In-Reply-To: <1600061895-16330-2-git-send-email-xni@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Journal disk and bitmap can't exist at the same time. It needs to check if the raid
-has a journal disk when creating bitmap.
+On 14/09/2020 06:38, Xiao Ni wrote:
+> If /etc/hostname is empty and the hostname is decided by DHCP. There is a risk that the raid
+> device can't be active after boot. Maybe the network starts after storage. The system can
+          ^^^^^
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- Create.c | 1 +
- 1 file changed, 1 insertion(+)
+I think you mean "won't" - "the raid device will not be active after boot".
 
-diff --git a/Create.c b/Create.c
-index 6f84e5b..0efa19c 100644
---- a/Create.c
-+++ b/Create.c
-@@ -542,6 +542,7 @@ int Create(struct supertype *st, char *mddev,
- 	if (!s->bitmap_file &&
- 	    s->level >= 1 &&
- 	    st->ss->add_internal_bitmap &&
-+	    s->journaldisks == 0 &&
- 	    (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
- 	     s->consistency_policy != CONSISTENCY_POLICY_PPL) &&
- 	    (s->write_behind || s->size > 100*1024*1024ULL)) {
--- 
-2.7.5
+This is a nasty corner case in English Grammar - one verb is "I can, you 
+will, he will", the other is "I will, you can, he can" !?!?!?
 
+If you mean it is possible that the array will not be there after boot, 
+but that the user can just start it manually (ie there's no real problem 
+with it), then it's "the raid device won't be active ..."
+
+Cheers,
+Wol
