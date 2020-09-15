@@ -2,101 +2,114 @@ Return-Path: <SRS0=ezIp=CY=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=BAYES_00,DKIM_ADSP_CUSTOM_MED,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B67F9C43461
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 15:32:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F18C433E2
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 15:43:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C5A520770
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 15:32:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QuquWALy"
+	by mail.kernel.org (Postfix) with ESMTP id 8E35720872
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 15:43:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726994AbgIOP3Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Sep 2020 11:29:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43138 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727398AbgIOP1W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Sep 2020 11:27:22 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1CC1C061797;
-        Tue, 15 Sep 2020 08:25:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=RXt5uY93CeNpmXcpasT+yQQlaTOE/frmzO1PH2TPYYU=; b=QuquWALypxtZa4d/TzijS9gtw8
-        OMQtEqN382McMdWUwtk9BdaXKEOweAqTxpAoMfsCKgdO2D3IF8kZWKRezBCdCxWR1NJGLVd6So1B5
-        c+2GsrCdpvhDiILYQFsQzdsZd1DGs1SfyEWINPa702Bo52XWkZpTSHOaD7iks/95Nz+Q0OwUuLgPL
-        1d/IJSqFMXo2KPpp6+DUFdpzIG8J2dBWSVhYHtRGMKpnYmRj92L1S53lxQ8GZdxniuEBBJRTiaa5E
-        tlC6TO+uOWuDmbD72jwipnSiG7Snxm/YBq1HMC35CiuS8Kf0Cb3zQ+jF7viuQNxRf8WGiGZr/zvZF
-        +ulYOBJg==;
-Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kICpL-0001JA-QH; Tue, 15 Sep 2020 15:25:04 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
-        Richard Weinberger <richard@nod.at>,
-        Minchan Kim <minchan@kernel.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        cgroups@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 02/12] drbd: remove dead code in device_to_statistics
-Date:   Tue, 15 Sep 2020 17:18:19 +0200
-Message-Id: <20200915151829.1767176-3-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200915151829.1767176-1-hch@lst.de>
-References: <20200915151829.1767176-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+        id S1727442AbgIOPmi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Sep 2020 11:42:38 -0400
+Received: from static.214.254.202.116.clients.your-server.de ([116.202.254.214]:45346
+        "EHLO ciao.gmane.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727429AbgIOPmT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Sep 2020 11:42:19 -0400
+Received: from list by ciao.gmane.io with local (Exim 4.92)
+        (envelope-from <linux-raid@m.gmane-mx.org>)
+        id 1kID0C-0000tB-GH
+        for linux-raid@vger.kernel.org; Tue, 15 Sep 2020 17:36:16 +0200
+X-Injected-Via-Gmane: http://gmane.org/
+To:     linux-raid@vger.kernel.org
+From:   "Andrey Jr. Melnikov" <temnota.am@gmail.com>
+Subject: Re: [PATCH V2 1/2] Check hostname file empty or not when creating raid device
+Date:   Tue, 15 Sep 2020 18:27:29 +0300
+Message-ID: <v3373h-8sh.ln1@banana.localnet>
+References: <1600155882-4488-1-git-send-email-xni@redhat.com> <1600155882-4488-2-git-send-email-xni@redhat.com>
+User-Agent: tin/2.2.1-20140504 ("Tober an Righ") (UNIX) (Linux/4.4.66-bananian (armv7l))
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Ever since the switch to blk-mq, a lower device not used for VM
-writeback will not be marked congested, so the check will never
-trigger.
+Xiao Ni <xni@redhat.com> wrote:
+> If /etc/hostname is empty and the hostname is decided by network(dhcp, e.g.), there is a
+> risk that raid device will not be in active state after boot. It will be auto-read-only
+> state. It depends on the boot sequence. If the storage starts before network. The system
+> detects disks first, udev rules are triggered and raid device is assemble automatically.
+> But the network hasn't started successfully. So mdadm can't get the right hostname. The
+> raid device will be treated as a foreign raid.
+> Add a note message if /etc/hostname is empty when creating a raid device.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/block/drbd/drbd_nl.c | 6 ------
- 1 file changed, 6 deletions(-)
+> Signed-off-by: Xiao Ni <xni@redhat.com>
+> ---
+>  mdadm.c |  3 +++
+>  mdadm.h |  1 +
+>  util.c  | 19 +++++++++++++++++++
+>  3 files changed, 23 insertions(+)
 
-diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-index 43c8ae4d9fca81..aaff5bde391506 100644
---- a/drivers/block/drbd/drbd_nl.c
-+++ b/drivers/block/drbd/drbd_nl.c
-@@ -3370,7 +3370,6 @@ static void device_to_statistics(struct device_statistics *s,
- 	if (get_ldev(device)) {
- 		struct drbd_md *md = &device->ldev->md;
- 		u64 *history_uuids = (u64 *)s->history_uuids;
--		struct request_queue *q;
- 		int n;
- 
- 		spin_lock_irq(&md->uuid_lock);
-@@ -3384,11 +3383,6 @@ static void device_to_statistics(struct device_statistics *s,
- 		spin_unlock_irq(&md->uuid_lock);
- 
- 		s->dev_disk_flags = md->flags;
--		q = bdev_get_queue(device->ldev->backing_bdev);
--		s->dev_lower_blocked =
--			bdi_congested(q->backing_dev_info,
--				      (1 << WB_async_congested) |
--				      (1 << WB_sync_congested));
- 		put_ldev(device);
- 	}
- 	s->dev_size = drbd_get_capacity(device->this_bdev);
--- 
-2.28.0
+> diff --git a/mdadm.c b/mdadm.c
+> index 1b3467f..e551958 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1408,6 +1408,9 @@ int main(int argc, char *argv[])
+>         if (c.homehost == NULL && c.require_homehost)
+>                 c.homehost = conf_get_homehost(&c.require_homehost);
+>         if (c.homehost == NULL || strcasecmp(c.homehost, "<system>") == 0) {
+> +               if (check_hostname())
+> +                       pr_err("Note: The file /etc/hostname is empty. There is a risk the raid\n"
+> +                               "      can't be active after boot\n");
+>                 if (gethostname(sys_hostname, sizeof(sys_hostname)) == 0) {
+>                         sys_hostname[sizeof(sys_hostname)-1] = 0;
+>                         c.homehost = sys_hostname;
+> diff --git a/mdadm.h b/mdadm.h
+> index 399478b..3ef1209 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1480,6 +1480,7 @@ extern int parse_cluster_confirm_arg(char *inp, char **devname, int *slot);
+>  extern int check_ext2(int fd, char *name);
+>  extern int check_reiser(int fd, char *name);
+>  extern int check_raid(int fd, char *name);
+> +extern int check_hostname(void);
+>  extern int check_partitions(int fd, char *dname,
+>                             unsigned long long freesize,
+>                             unsigned long long size);
+> diff --git a/util.c b/util.c
+> index 579dd42..de5bad0 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -694,6 +694,25 @@ int check_raid(int fd, char *name)
+>         return 1;
+>  }
+>  
+> +/* It checks /etc/hostname has value or not */
+> +int check_hostname()
+> +{
+> +       int fd, ret = 0;
+> +       char buf[256];
+> +
+> +       fd = open("/etc/hostname", O_RDONLY);
+> +       if (fd < 0) {
+> +               ret = 1;
+> +               goto out;
+> +       }
+> +
+> +       if (read(fd, buf, sizeof(buf)) == 0)
+> +               ret = 1;
+
+Why not use stat() here, since you don't use file content?
+Also, any error from read() - mean file "not empty". This is right?
+
+> +out:
+> +       close(fd);
+> +       return ret;
+> +}
+> +
+>  int fstat_is_blkdev(int fd, char *devname, dev_t *rdev)
+>  {
+>         struct stat stb;
 
