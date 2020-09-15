@@ -1,107 +1,73 @@
-Return-Path: <SRS0=ezIp=CY=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=gUE6=CZ=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_ADSP_CUSTOM_MED,
+	FORGED_MUA_MOZILLA,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A30BC433E2
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 22:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CED6CC2D0E3
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Sep 2020 00:16:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 273A420770
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 22:54:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vkcvNvrA"
+	by mail.kernel.org (Postfix) with ESMTP id 9D8BC20739
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Sep 2020 00:16:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727556AbgIOWyf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:54:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43302 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727407AbgIOP10 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Sep 2020 11:27:26 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25649C061788;
-        Tue, 15 Sep 2020 08:27:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=Y4tkWtiLArM5ZtpwjGyv2ND3RgxFSGIzR5QDPUf60TY=; b=vkcvNvrAlfkpjgC6PLHdCcE+Rt
-        rVJhEc5LvegHmwyCNl+Jp1ZvzkxadlEJeRvmlI+paiq2Xw90Vk1EKkFLuOLon9UBw7bf5O+d1APq9
-        lUfd4Ij5H9rc6mwCtjWSocnPHXmDvPMY1jXFvzyo/ohoQjxH3pNyLhn93bHHi4S8FJYokwjh7afBg
-        VdnV6ovjwCi6bz7tc9Dsp5emWgQsT/+RvvI2EIEN7ME6GaruCkOpQBu3l2bgNoLkB273IebNiu4L1
-        Eiq/0XQ/xTWB36/gDGzmAL3gAHWN+XRKtB5xAzCQGf2SajsuwNGzkL5FmdrT+wuay5vKexMNetnWk
-        l0MLo90Q==;
-Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kICrS-0001S0-U3; Tue, 15 Sep 2020 15:27:17 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
-        Richard Weinberger <richard@nod.at>,
-        Minchan Kim <minchan@kernel.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        cgroups@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 03/12] drbd: remove RB_CONGESTED_REMOTE
-Date:   Tue, 15 Sep 2020 17:18:20 +0200
-Message-Id: <20200915151829.1767176-4-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200915151829.1767176-1-hch@lst.de>
-References: <20200915151829.1767176-1-hch@lst.de>
-MIME-Version: 1.0
+        id S1727272AbgIPAQe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Sep 2020 20:16:34 -0400
+Received: from static.214.254.202.116.clients.your-server.de ([116.202.254.214]:34042
+        "EHLO ciao.gmane.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726359AbgIOOW7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Sep 2020 10:22:59 -0400
+Received: from list by ciao.gmane.io with local (Exim 4.92)
+        (envelope-from <linux-raid@m.gmane-mx.org>)
+        id 1kIBqz-0003GA-GU
+        for linux-raid@vger.kernel.org; Tue, 15 Sep 2020 16:22:41 +0200
+X-Injected-Via-Gmane: http://gmane.org/
+To:     linux-raid@vger.kernel.org
+From:   Ian Pilcher <arequipeno@gmail.com>
+Subject: IMSM RAID not recognized after kernel update
+Date:   Tue, 15 Sep 2020 09:22:37 -0500
+Message-ID: <rjqind$2k0$1@ciao.gmane.io>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
+X-Mozilla-News-Host: news://news.gmane.org:119
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This case isn't ever used.
+https://bugzilla.redhat.com/show_bug.cgi?id=1878970
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/block/drbd/drbd_req.c | 4 ----
- include/linux/drbd.h          | 1 -
- 2 files changed, 5 deletions(-)
+After updating my Fedora kernel package this morning, my IMSM RAID is
+no longer recognized:
 
-diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
-index 5c975af9c15fb8..481bc34fcf386a 100644
---- a/drivers/block/drbd/drbd_req.c
-+++ b/drivers/block/drbd/drbd_req.c
-@@ -901,13 +901,9 @@ static bool drbd_may_do_local_read(struct drbd_device *device, sector_t sector,
- static bool remote_due_to_read_balancing(struct drbd_device *device, sector_t sector,
- 		enum drbd_read_balancing rbm)
- {
--	struct backing_dev_info *bdi;
- 	int stripe_shift;
- 
- 	switch (rbm) {
--	case RB_CONGESTED_REMOTE:
--		bdi = device->ldev->backing_bdev->bd_disk->queue->backing_dev_info;
--		return bdi_read_congested(bdi);
- 	case RB_LEAST_PENDING:
- 		return atomic_read(&device->local_cnt) >
- 			atomic_read(&device->ap_pending_cnt) + atomic_read(&device->rs_pending_cnt);
-diff --git a/include/linux/drbd.h b/include/linux/drbd.h
-index 5755537b51b114..6a8286132751df 100644
---- a/include/linux/drbd.h
-+++ b/include/linux/drbd.h
-@@ -94,7 +94,6 @@ enum drbd_read_balancing {
- 	RB_PREFER_REMOTE,
- 	RB_ROUND_ROBIN,
- 	RB_LEAST_PENDING,
--	RB_CONGESTED_REMOTE,
- 	RB_32K_STRIPING,
- 	RB_64K_STRIPING,
- 	RB_128K_STRIPING,
+[pilcher@ian system]$ sudo mdadm --examine --verbose /dev/sdc
+/dev/sdc:
+    MBR Magic : aa55
+Partition[0] :       204800 sectors at         2048 (type 07)
+Partition[1] :      2048000 sectors at       206848 (type 83)
+Partition[2] :     61440000 sectors at      2254848 (type 07)
+Partition[3] :   1889824768 sectors at     63694848 (type 05)
+
+If I boot the older kernel, it says:
+
+[pilcher@ian ~]$ sudo mdadm --examine --verbose /dev/sdc
+/dev/sdc:
+           Magic : Intel Raid ISM Cfg Sig.
+             ⋮
+
+Any tips on what might cause this or how to debug further would be
+appreciated.
+
+Thanks!
+
 -- 
-2.28.0
+========================================================================
+                  In Soviet Russia, Google searches you!
+========================================================================
 
