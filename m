@@ -2,81 +2,138 @@ Return-Path: <SRS0=ezIp=CY=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 852D8C433E2
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 11:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A68CC43461
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 15:21:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51AAF20872
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 11:34:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE608206A2
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Sep 2020 15:21:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="e+3jk+59"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726172AbgIOLdE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Sep 2020 07:33:04 -0400
-Received: from icebox.esperi.org.uk ([81.187.191.129]:44412 "EHLO
-        mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726344AbgIOLcr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Sep 2020 07:32:47 -0400
-Received: from loom (nix@sidle.srvr.nix [192.168.14.8])
-        by mail.esperi.org.uk (8.15.2/8.15.2) with ESMTP id 08FBW678005720;
-        Tue, 15 Sep 2020 12:32:06 +0100
-From:   Nix <nix@esperi.org.uk>
-To:     Brian Allen Vanderburg II <brianvanderburg2@aim.com>
-Cc:     antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
-Subject: Re: Linux raid-like idea
-References: <1cf0d18c-2f63-6bca-9884-9544b0e7c54e.ref@aim.com>
-        <1cf0d18c-2f63-6bca-9884-9544b0e7c54e@aim.com>
-        <e3cb1bbe-65eb-5b75-8e99-afba72156b6e@youngman.org.uk>
-        <ef3719a9-ae53-516e-29ee-36d1cdf91ef1@aim.com>
-Emacs:  indefensible, reprehensible, and fully extensible.
-Date:   Tue, 15 Sep 2020 12:32:06 +0100
-In-Reply-To: <ef3719a9-ae53-516e-29ee-36d1cdf91ef1@aim.com> (Brian Allen
-        Vanderburg, II's message of "Sat, 5 Sep 2020 17:47:50 -0400")
-Message-ID: <87pn6nz361.fsf@esperi.org.uk>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.3.50 (gnu/linux)
+        id S1727389AbgIOPVu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Sep 2020 11:21:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42286 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727047AbgIOPU5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Sep 2020 11:20:57 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FDE9C06178A;
+        Tue, 15 Sep 2020 08:20:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=WgQU+DROBiFXSU4XRLi15Ig7DnwkeQul1eu0RWtmaDw=; b=e+3jk+59mxpACTbbZjvM84YGj4
+        ceZbnJEyNbo2sMobiL9SoJ/Wml/TfR7ZxGNJ2SmU+0KOtNugocfDQjsanQudzdZwG8tMW2iGt2Dbh
+        5mQmfr9qjUufz+t8XYePond1pxsq56FWF3eh/QXzn34d7rxr8btIOElj7CGNBYepyUHlm89BAuMWW
+        FTRFUOsqtFqEL6dBsoD8pHkZEwTfg+xJKDiQK18DDhC6neKQnJnR54JJ1XBA0dPWp6V1bYeExdck6
+        hrhjpYhRMs5GVJSKvJV5yRYrE8qRMuWvyKp0uETm2uGjmbQ8U96hYfS5T23/uXLzXtXL5lfc40b7j
+        JVXhJ3JQ==;
+Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kICl8-0000xV-0W; Tue, 15 Sep 2020 15:20:42 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
+        Richard Weinberger <richard@nod.at>,
+        Minchan Kim <minchan@kernel.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        cgroups@vger.kernel.org
+Subject: bdi cleanups v5
+Date:   Tue, 15 Sep 2020 17:18:17 +0200
+Message-Id: <20200915151829.1767176-1-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-X-DCC-wuwien-Metrics: loom 1290; Body=3 Fuz1=3 Fuz2=3
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-raid-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5 Sep 2020, Brian Allen Vanderburg, II verbalised:
+Hi Jens,
 
-> The idea is actually to be able to use more than two disks, like raid 5
-> or raid 6, except with parity on their own disks instead of distributed
-> across disks, and data kept own their own disks as well.  I've used
-> SnapRaid a bit and was just making some changes to my own setup when I
-> got the idea as to why something similar can't be done in block device
-> level, but keeping one of the advantages of SnapRaid-like systems which
-> is if any data disk is lost beyond recovery, then only the data on that
-> data disk is lost due to the fact that the data on the other data disks
-> are still their own complete filesystem, and providing real-time updates
-> to the parity data.
->
->
-> So for instance
->
-> /dev/sda - may be data disk 1, say 1TB
->
-> /dev/sdb - may be data disk 2, 2TB
->
-> /dev/sdc - may be data disk 3, 2TB
->
-> /dev/sdd - may be parity disk 1 (maybe a raid-5-like setup), 2TB
->
-> /dev/sde - may be parity disk 2 (maybe a raid-6-like setup), 2TB
+this series contains a bunch of different BDI cleanups.  The biggest item
+is to isolate block drivers from the BDI in preparation of changing the
+lifetime of the block device BDI in a follow up series.
 
-Why use something as crude as parity? There's *lots* of space there. You
-could store full-blown Reed-Solomon stuff in there in much less space
-than parity would require with far more likelihood of repairing even
-very large errors. A separate device-mapper target would seem to be
-perfect for this: like dm-integrity, only with a separate set of
-"error-correcting disks" rather than expanding every sector like
-dm-integrity does.
+Changes since v4:
+ - add a back a prematurely removed assignment in dm-table.c
+ - pick up a few reviews from Johannes that got lost
 
--- 
-NULL && (void)
+Changes since v3:
+ - rebased on the lasted block tree, which has some of the prep
+   changes merged
+ - extend the ->ra_pages changes to ->io_pages
+ - move initializing ->ra_pages and ->io_pages for block devices to
+   blk_register_queue
+
+Changes since v2:
+ - fix a rw_page return value check
+ - fix up various changelogs
+
+Changes since v1:
+ - rebased to the for-5.9/block-merge branch
+ - explicitly set the readahead to 0 for ubifs, vboxsf and mtd
+ - split the zram block_device operations
+ - let rw_page users fall back to bios in swap_readpage
+
+
+Diffstat:
+ block/blk-core.c              |    3 -
+ block/blk-integrity.c         |    4 +-
+ block/blk-mq-debugfs.c        |    1 
+ block/blk-settings.c          |    5 +-
+ block/blk-sysfs.c             |    4 +-
+ block/genhd.c                 |   13 +++++--
+ drivers/block/aoe/aoeblk.c    |    2 -
+ drivers/block/brd.c           |    1 
+ drivers/block/drbd/drbd_nl.c  |   18 ---------
+ drivers/block/drbd/drbd_req.c |    4 --
+ drivers/block/rbd.c           |    2 -
+ drivers/block/zram/zram_drv.c |   19 +++++++---
+ drivers/md/bcache/super.c     |    4 --
+ drivers/md/dm-table.c         |    9 +---
+ drivers/md/raid0.c            |   16 --------
+ drivers/md/raid10.c           |   46 ++++++++----------------
+ drivers/md/raid5.c            |   31 +++++++---------
+ drivers/mmc/core/queue.c      |    3 -
+ drivers/mtd/mtdcore.c         |    2 +
+ drivers/nvdimm/btt.c          |    2 -
+ drivers/nvdimm/pmem.c         |    1 
+ drivers/nvme/host/core.c      |    3 -
+ drivers/nvme/host/multipath.c |   10 +----
+ drivers/scsi/iscsi_tcp.c      |    4 +-
+ fs/9p/vfs_file.c              |    2 -
+ fs/9p/vfs_super.c             |    6 ++-
+ fs/afs/super.c                |    1 
+ fs/btrfs/disk-io.c            |    2 -
+ fs/fs-writeback.c             |    7 ++-
+ fs/fuse/inode.c               |    4 +-
+ fs/namei.c                    |    4 +-
+ fs/nfs/super.c                |    9 ----
+ fs/super.c                    |    2 +
+ fs/ubifs/super.c              |    2 +
+ fs/vboxsf/super.c             |    2 +
+ include/linux/backing-dev.h   |   78 +++++++-----------------------------------
+ include/linux/blkdev.h        |    3 +
+ include/linux/drbd.h          |    1 
+ include/linux/fs.h            |    2 -
+ mm/backing-dev.c              |   13 +++----
+ mm/filemap.c                  |    4 +-
+ mm/memcontrol.c               |    2 -
+ mm/memory-failure.c           |    2 -
+ mm/migrate.c                  |    2 -
+ mm/mmap.c                     |    2 -
+ mm/page-writeback.c           |   18 ++++-----
+ mm/page_io.c                  |   18 +++++----
+ mm/swapfile.c                 |    4 +-
+ 48 files changed, 144 insertions(+), 253 deletions(-)
