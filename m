@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C0A7C2BBD1
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 09:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33605C433E2
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 10:05:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D07220770
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 09:55:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E680C2083B
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 10:05:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726566AbgIQJzL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Sep 2020 05:55:11 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58124 "EHLO mx2.suse.de"
+        id S1726423AbgIQKFE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Sep 2020 06:05:04 -0400
+Received: from mx2.suse.de ([195.135.220.15]:36996 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726200AbgIQJzK (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 17 Sep 2020 05:55:10 -0400
+        id S1726217AbgIQKFC (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 17 Sep 2020 06:05:02 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 40398AEC8;
-        Thu, 17 Sep 2020 09:55:41 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id DEFB0AD03;
+        Thu, 17 Sep 2020 10:05:33 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 0A4781E12E1; Thu, 17 Sep 2020 11:55:07 +0200 (CEST)
-Date:   Thu, 17 Sep 2020 11:55:07 +0200
+        id ADFA01E12E1; Thu, 17 Sep 2020 12:04:59 +0200 (CEST)
+Date:   Thu, 17 Sep 2020 12:04:59 +0200
 From:   Jan Kara <jack@suse.cz>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
@@ -36,72 +36,46 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        cgroups@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH 03/12] drbd: remove RB_CONGESTED_REMOTE
-Message-ID: <20200917095507.GJ7347@quack2.suse.cz>
+        cgroups@vger.kernel.org, David Sterba <dsterba@suse.com>
+Subject: Re: [PATCH 04/12] bdi: initialize ->ra_pages and ->io_pages in
+ bdi_init
+Message-ID: <20200917100459.GK7347@quack2.suse.cz>
 References: <20200910144833.742260-1-hch@lst.de>
- <20200910144833.742260-4-hch@lst.de>
+ <20200910144833.742260-5-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200910144833.742260-4-hch@lst.de>
+In-Reply-To: <20200910144833.742260-5-hch@lst.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu 10-09-20 16:48:23, Christoph Hellwig wrote:
-> This case isn't ever used.
+On Thu 10-09-20 16:48:24, Christoph Hellwig wrote:
+> Set up a readahead size by default, as very few users have a good
+> reason to change it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
+> Acked-by: Richard Weinberger <richard@nod.at> [ubifs, mtd]
 
-Are you sure it's never used? As far as I'm reading drdb code the contents
-of the disk_conf structure seems to be received through netlink (that code
-is really a macro hell) and so read_balancing attribute passed to
-remote_due_to_read_balancing() can have any value userspace passed to it.
+Looks good but what about coda, ecryptfs, and orangefs? Currenly they have
+readahead disabled and this patch would seem to enable it?
+
+> diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+> index 8e8b00627bb2d8..2dac3be6127127 100644
+> --- a/mm/backing-dev.c
+> +++ b/mm/backing-dev.c
+> @@ -746,6 +746,8 @@ struct backing_dev_info *bdi_alloc(int node_id)
+>  		kfree(bdi);
+>  		return NULL;
+>  	}
+> +	bdi->ra_pages = VM_READAHEAD_PAGES;
+> +	bdi->io_pages = VM_READAHEAD_PAGES;
+
+Won't this be more logical in bdi_init() than in bdi_alloc()?
 
 								Honza
-
-> ---
->  drivers/block/drbd/drbd_req.c | 4 ----
->  include/linux/drbd.h          | 1 -
->  2 files changed, 5 deletions(-)
-> 
-> diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
-> index 5c975af9c15fb8..481bc34fcf386a 100644
-> --- a/drivers/block/drbd/drbd_req.c
-> +++ b/drivers/block/drbd/drbd_req.c
-> @@ -901,13 +901,9 @@ static bool drbd_may_do_local_read(struct drbd_device *device, sector_t sector,
->  static bool remote_due_to_read_balancing(struct drbd_device *device, sector_t sector,
->  		enum drbd_read_balancing rbm)
->  {
-> -	struct backing_dev_info *bdi;
->  	int stripe_shift;
->  
->  	switch (rbm) {
-> -	case RB_CONGESTED_REMOTE:
-> -		bdi = device->ldev->backing_bdev->bd_disk->queue->backing_dev_info;
-> -		return bdi_read_congested(bdi);
->  	case RB_LEAST_PENDING:
->  		return atomic_read(&device->local_cnt) >
->  			atomic_read(&device->ap_pending_cnt) + atomic_read(&device->rs_pending_cnt);
-> diff --git a/include/linux/drbd.h b/include/linux/drbd.h
-> index 5755537b51b114..6a8286132751df 100644
-> --- a/include/linux/drbd.h
-> +++ b/include/linux/drbd.h
-> @@ -94,7 +94,6 @@ enum drbd_read_balancing {
->  	RB_PREFER_REMOTE,
->  	RB_ROUND_ROBIN,
->  	RB_LEAST_PENDING,
-> -	RB_CONGESTED_REMOTE,
->  	RB_32K_STRIPING,
->  	RB_64K_STRIPING,
->  	RB_128K_STRIPING,
-> -- 
-> 2.28.0
-> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
