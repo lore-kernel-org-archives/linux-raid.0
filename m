@@ -2,205 +2,165 @@ Return-Path: <SRS0=RAIN=C2=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F82BC433E2
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 10:36:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A5E9C433E2
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 17:08:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06FAC2072E
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 10:36:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35245206CA
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 17:08:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=colorremedies-com.20150623.gappssmtp.com header.i=@colorremedies-com.20150623.gappssmtp.com header.b="NfIK0YbJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726605AbgIQKgM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Sep 2020 06:36:12 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34176 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726185AbgIQKfw (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 17 Sep 2020 06:35:52 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 0F193AF74;
-        Thu, 17 Sep 2020 10:36:15 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id E12DF1E12E1; Thu, 17 Sep 2020 12:35:40 +0200 (CEST)
-Date:   Thu, 17 Sep 2020 12:35:40 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Richard Weinberger <richard@nod.at>,
-        Minchan Kim <minchan@kernel.org>,
-        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        cgroups@vger.kernel.org
-Subject: Re: [PATCH 06/12] block: lift setting the readahead size into the
- block layer
-Message-ID: <20200917103540.GL7347@quack2.suse.cz>
-References: <20200910144833.742260-1-hch@lst.de>
- <20200910144833.742260-7-hch@lst.de>
+        id S1727164AbgIQRIp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Sep 2020 13:08:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55662 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727135AbgIQRIc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Sep 2020 13:08:32 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B87DC061756
+        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2020 10:08:31 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id c18so2863410wrm.9
+        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2020 10:08:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=iYEWTUFHFof4A3+LUAxrs3RqDwrA+xrJMEv7p3PRbdc=;
+        b=NfIK0YbJZCJJnCfEnJwGkGG8azR0qVzuauNi4Gmy9fo8ijH9L/j7cKdTmZq9gVzb7y
+         Mvgk/FdN0Zq5zFN//DgtlYCRX3ZyJkJoUNppyUVG798OGIjkkRODG4T8H9f8+iVe5RMm
+         xhVkO+u0R1IPInQkbYoTTO4bLXiehhaOU07EM0IgEchV5MOJp6fi0vO3tPqy8QOalN3+
+         IDQiljBphYhPmjdqzYjy+Sx+d0e5AkrQSIjRlzSHOoTrjUpAMpG6POXWUsj9a8nNUpPa
+         PYnpkkzANpHkNzlzTpeQrYfKBgb6e11TWLDFwLusOa3vAUu0IYWuJtCBedUlyS1yP5qR
+         FbMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=iYEWTUFHFof4A3+LUAxrs3RqDwrA+xrJMEv7p3PRbdc=;
+        b=EV+go2zXMs569LhHagXMnGbEmvyYQU6YO8X5gXyvO3ia2pJPL/4rPUAI0lyvO7HzmQ
+         iTs0LX/TdRjVmFIgUyHDTb8E8NYtkvDESm9UsRqH5K5YaX90hPQIz9GY08A2EBkd5AFk
+         VsJ6yjSSyBg45tQpl224Y8H6jImbzNHSHauiKg7/Xx1jzN90EDrbXtvUTH+Ff4fQSdrU
+         0uW1/3gNn4xQbnOR7cvUO2OxlMwnMnHjpAaybh+Yh5DlHZtKbK3T9SXTml5CqYudaKNW
+         9Szhx5QXSOiwv0Svs39dxjndQkaxmnNvQrm0nHpljnowaMxU6kTvd460bfp5BDQo/2dY
+         jCGQ==
+X-Gm-Message-State: AOAM5333FL4dTtRUytNzUSDEeHWwhzUbOonfmO+M7eRGuS1SzIw5aya3
+        EVNb1ZrTUSQi5DPQ6w1XVqnFJbUGUo4+vIAKLOhhUg==
+X-Google-Smtp-Source: ABdhPJzhScIpyI3tS/M2fGQYCPGtED4ia91t6ycwn1X0AoOnpiUC7CLenzrvOIqwfTEeEggtzjHkekQvDHO8kZTyM/g=
+X-Received: by 2002:adf:b74b:: with SMTP id n11mr7642087wre.274.1600362509778;
+ Thu, 17 Sep 2020 10:08:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200910144833.742260-7-hch@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
+ <CAJCQCtSfz+b38fW3zdcHwMMtO1LfXSq+0xgg_DaKShmAumuCWQ@mail.gmail.com>
+ <29509e08-e373-b352-d696-fcb9f507a545@xmyslivec.cz> <CAJCQCtRx7NJP=-rX5g_n5ZL7ypX-5z_L6d6sk120+4Avs6rJUw@mail.gmail.com>
+ <695936b4-67a2-c862-9cb6-5545b4ab3c42@xmyslivec.cz> <CAJCQCtQWNSd123OJ_Rp8NO0=upY2Mn+SE7pdMqmyizJP028Yow@mail.gmail.com>
+ <2f2f1c21-c81b-55aa-6f77-e2d3f32d32cb@xmyslivec.cz> <CAJCQCtTQN60V=DEkNvDedq+usfmFB+SQP2SBezUaSeUjjY46nA@mail.gmail.com>
+ <4b0dd0aa-f77b-16c8-107b-0182378f34e6@xmyslivec.cz> <CAJCQCtQWh2JBAL_SDRG-gMd9Z1TXad7aKjZVUGdY1Akj7fn5Qg@mail.gmail.com>
+ <5e79d1f8-7632-48ef-de56-9e79cba87434@xmyslivec.cz>
+In-Reply-To: <5e79d1f8-7632-48ef-de56-9e79cba87434@xmyslivec.cz>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Thu, 17 Sep 2020 11:08:13 -0600
+Message-ID: <CAJCQCtTYAg-uNpk2WYv0QDWH+prfnDN5oKyKmvTVHjARu_w0Kw@mail.gmail.com>
+Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
+To:     Vojtech Myslivec <vojtech@xmyslivec.cz>
+Cc:     Chris Murphy <lists@colorremedies.com>,
+        Song Liu <songliubraving@fb.com>,
+        Michal Moravec <michal.moravec@logicworks.cz>,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu 10-09-20 16:48:26, Christoph Hellwig wrote:
-> Drivers shouldn't really mess with the readahead size, as that is a VM
-> concept.  Instead set it based on the optimal I/O size by lifting the
-> algorithm from the md driver when registering the disk.  Also set
-> bdi->io_pages there as well by applying the same scheme based on
-> max_sectors.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-settings.c         |  5 ++---
->  block/blk-sysfs.c            | 10 +++++++++-
->  block/genhd.c                |  5 +++--
->  drivers/block/aoe/aoeblk.c   |  2 --
->  drivers/block/drbd/drbd_nl.c | 12 +-----------
->  drivers/md/bcache/super.c    |  4 ----
->  drivers/md/dm-table.c        |  3 ---
->  drivers/md/raid0.c           | 16 ----------------
->  drivers/md/raid10.c          | 24 +-----------------------
->  drivers/md/raid5.c           | 13 +------------
->  10 files changed, 17 insertions(+), 77 deletions(-)
-> 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index 76a7e03bcd6cac..01049e9b998f1d 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -452,6 +452,8 @@ EXPORT_SYMBOL(blk_limits_io_opt);
->  void blk_queue_io_opt(struct request_queue *q, unsigned int opt)
->  {
->  	blk_limits_io_opt(&q->limits, opt);
-> +	q->backing_dev_info->ra_pages =
-> +		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
->  }
->  EXPORT_SYMBOL(blk_queue_io_opt);
->  
-> @@ -628,9 +630,6 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
->  		printk(KERN_NOTICE "%s: Warning: Device %s is misaligned\n",
->  		       top, bottom);
->  	}
-> -
-> -	t->backing_dev_info->io_pages =
-> -		t->limits.max_sectors >> (PAGE_SHIFT - 9);
->  }
->  EXPORT_SYMBOL(disk_stack_limits);
->  
-> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-> index 81722cdcf0cb21..95eb35324e1a61 100644
-> --- a/block/blk-sysfs.c
-> +++ b/block/blk-sysfs.c
-> @@ -245,7 +245,6 @@ queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
->  
->  	spin_lock_irq(&q->queue_lock);
->  	q->limits.max_sectors = max_sectors_kb << 1;
-> -	q->backing_dev_info->io_pages = max_sectors_kb >> (PAGE_SHIFT - 10);
->  	spin_unlock_irq(&q->queue_lock);
+On Wed, Sep 16, 2020 at 3:42 AM Vojtech Myslivec <vojtech@xmyslivec.cz> wrote:
+>
+> Hello,
+>
+> it seems my last e-mail was filtered as I can't find it in the archives.
+> So I will resend it and include all attachments in one tarball.
+>
+>
+> On 26. 08. 20 20:07, Chris Murphy wrote:> OK so from the attachments..
+> >
+> > cat /proc/<pid>/stack for md1_raid6
+> >
+> > [<0>] rq_qos_wait+0xfa/0x170
+> > [<0>] wbt_wait+0x98/0xe0
+> > [<0>] __rq_qos_throttle+0x23/0x30
+> > [<0>] blk_mq_make_request+0x12a/0x5d0
+> > [<0>] generic_make_request+0xcf/0x310
+> > [<0>] submit_bio+0x42/0x1c0
+> > [<0>] md_update_sb.part.71+0x3c0/0x8f0 [md_mod]
+> > [<0>] r5l_do_reclaim+0x32a/0x3b0 [raid456]
+> > [<0>] md_thread+0x94/0x150 [md_mod]
+> > [<0>] kthread+0x112/0x130
+> > [<0>] ret_from_fork+0x22/0x40
+> >
+> >
+> > Btrfs snapshot flushing might instigate the problem but it seems to me
+> > there's some kind of contention or blocking happening within md, and
+> > that's why everything stalls. But I can't tell why.
+> >
+> > Do you have any iostat output at the time of this problem? I'm
+> > wondering if md is waiting on disks. If not, try `iostat -dxm 5` and
+> > share a few minutes before and after the freeze/hang.
+> We have detected the issue at Monday 31.09.2020 15:24. It must happen
+> sometimes between 15:22-15:24 as we monitor the state every 2 minutes.
+>
+> We have recorded stacks of blocked processes, sysrq+w command and
+> requested `iostat`. Then in 15:45, we perform manual "unstuck" process
+> by accessing md1 device via dd command (reading a few random blocks).
+>
+> I hope attached file names are self-explaining.
+>
+> Please let me know if we can do anything more to track the issue or if I
+> forget something.
+>
+> Thanks a lot,
+> Vojtech and Michal
+>
+>
+>
+> Description of the devices in iostat, just for recap:
+> - sda-sdf: 6 HDD disks
+> - sdg, sdh: 2 SSD disks
+>
+> - md0: raid1 over sdg1 and sdh1 ("SSD RAID", Physical Volume for LVM)
+> - md1: our "problematic" raid6 over sda-sdf ("HDD RAID", btrfs
+>        formatted)
+>
+> - Logical volumes over md0 Physical Volume (on SSD RAID)
+>     - dm-0: 4G  LV for SWAP
+>     - dm-1: 16G LV for root file system (ext4 formatted)
+>     - dm-2: 1G  LV for md1 journal
+>
 
-So do I get it right that readahead won't now be limited if you store lower
-value to max_sectors? Why? I'd consider io_pages a "cached value" of
-max_sectors and thus expect it to change together with max_sectors...
+It's kindof a complicated setup. When this problem happens, can you
+check swap pressure?
 
-> @@ -854,6 +853,15 @@ int blk_register_queue(struct gendisk *disk)
->  		percpu_ref_switch_to_percpu(&q->q_usage_counter);
->  	}
->  
-> +	/*
-> +	 * For read-ahead of large files to be effective, we need to read ahead
-> +	 * at least twice the optimal I/O size.
-> +	 */
-> +	q->backing_dev_info->ra_pages =
-> +		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
-> +	q->backing_dev_info->io_pages =
-> +		queue_max_sectors(q) >> (PAGE_SHIFT - 9);
-> +
->  	ret = blk_trace_init_sysfs(dev);
->  	if (ret)
->  		return ret;
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 081f1039d9367f..db311a14ddc71a 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -772,6 +772,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
->  			      const struct attribute_group **groups,
->  			      bool register_queue)
->  {
-> +	struct request_queue *q = disk->queue;
->  	dev_t devt;
->  	int retval;
->  
-> @@ -782,7 +783,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
->  	 * registration.
->  	 */
->  	if (register_queue)
-> -		elevator_init_mq(disk->queue);
-> +		elevator_init_mq(q);
->  
->  	/* minors == 0 indicates to use ext devt from part0 and should
->  	 * be accompanied with EXT_DEVT flag.  Make sure all
-> @@ -812,7 +813,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
->  		disk->flags |= GENHD_FL_SUPPRESS_PARTITION_INFO;
->  		disk->flags |= GENHD_FL_NO_PART_SCAN;
->  	} else {
-> -		struct backing_dev_info *bdi = disk->queue->backing_dev_info;
-> +		struct backing_dev_info *bdi = q->backing_dev_info;
->  		struct device *dev = disk_to_dev(disk);
->  		int ret;
+/sys/fs/cgroup/memory.stat
 
-Not sure how/why these changes got here... Not that I care too much :)
+pgfault and maybe also pgmajfault - see if they're going up; or also
+you can look at vmstat and see how heavy swap is being used at the
+time. The thing is.
 
->  
-> diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
-> index 5ca7216e9e01f3..89b33b402b4e52 100644
-> --- a/drivers/block/aoe/aoeblk.c
-> +++ b/drivers/block/aoe/aoeblk.c
-> @@ -347,7 +347,6 @@ aoeblk_gdalloc(void *vp)
->  	mempool_t *mp;
->  	struct request_queue *q;
->  	struct blk_mq_tag_set *set;
-> -	enum { KB = 1024, MB = KB * KB, READ_AHEAD = 2 * MB, };
->  	ulong flags;
->  	int late = 0;
->  	int err;
-> @@ -407,7 +406,6 @@ aoeblk_gdalloc(void *vp)
->  	WARN_ON(d->gd);
->  	WARN_ON(d->flags & DEVFL_UP);
->  	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
-> -	q->backing_dev_info->ra_pages = READ_AHEAD / PAGE_SIZE;
->  	d->bufpool = mp;
->  	d->blkq = gd->queue = q;
->  	q->queuedata = d;
+Because any heavy eviction means writes to dm-0->md0 raid1->sdg+sdh
+SSDs, which are the same SSDs that you have the md1 raid6 mdadm
+journal going to. So if you have any kind of swap pressure, it very
+likely will stop the journal or at least substantially slow it down,
+and now you get blocked tasks as the pressure builds more and more
+because now you have a ton of dirty writes in Btrfs that can't make it
+to disk.
 
-Shouldn't AOE set 2MB optimal IO size so that readahead is equivalent to
-previous behavior?
+If there is minimal swap usage, then this hypothesis is false and
+something else is going on. I also don't have an explanation why your
+work around works.
 
-> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-> index 1bbdc410ee3c51..ff2101d56cd7f1 100644
-> --- a/drivers/md/bcache/super.c
-> +++ b/drivers/md/bcache/super.c
-> @@ -1427,10 +1427,6 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
->  	if (ret)
->  		return ret;
->  
-> -	dc->disk.disk->queue->backing_dev_info->ra_pages =
-> -		max(dc->disk.disk->queue->backing_dev_info->ra_pages,
-> -		    q->backing_dev_info->ra_pages);
-> -
 
-So bcache is basically stacking readahead here on top of underlying cache
-device. I don't see this being replicated by your patch so it is lost now?
-Probably this should be replaced by properly inheriting optimal IO size?
 
-								Honza
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Chris Murphy
