@@ -1,121 +1,151 @@
-Return-Path: <SRS0=RAIN=C2=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=zFFE=C3=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F00EDC433E2
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 17:44:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E9FC43463
+	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 02:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CA7E208E4
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Sep 2020 17:44:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=colorremedies-com.20150623.gappssmtp.com header.i=@colorremedies-com.20150623.gappssmtp.com header.b="0U5E2y74"
+	by mail.kernel.org (Postfix) with ESMTP id BD9C323119
+	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 02:23:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600395808;
+	bh=5urpLU8oeS6gDR7Jjp/j4LpHwZGRGcr0hFAeFKjIv6g=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=OJfBaON/hphdqq6LmF1Rkj5s/9i/yGPk1JR1DxPxaAdCFI0C6eFvFh2XgY7TTXPei
+	 im7pjTWfniyxkub+vrN37vIbwV+8u2RwLG+3WPuDJKt8UWn/aLsc0EQ5BVENNeus+s
+	 T578eqBEG2tO8pVOvBv3B2DW1O9I7BAgMR9S3E4E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726433AbgIQRn7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Sep 2020 13:43:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32878 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726511AbgIQRni (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Sep 2020 13:43:38 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64D6AC061788
-        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2020 10:43:37 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id w5so2966814wrp.8
-        for <linux-raid@vger.kernel.org>; Thu, 17 Sep 2020 10:43:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wON0dKFle54/Y2jT4odl53a7vPSakIOfhvPMR/qdfZM=;
-        b=0U5E2y74/NgCBUF32OQkOzDHBQpyrwFh1SIRnf2O44YCfzRhHRvUDT+Al//2GmPOk2
-         cOKadKAvcVK+/JcHRU112AWWLrw88Uqk0wjRLN0W3mx3WKQsIiNVfGaBkko8IVdfEjKT
-         LcQgKi+hsR2vCqHut2dj2ROFmojwKLXb9Hleuv5KXofEj/amTTS0csKABfuqX5oU0P8C
-         uHfd9UfQeLU33F1oCi+CCVW3+rARqpZBUc780xDrCukgN1lOFwJHCA2FU6T8y2UM6Mvc
-         2BTd1aUXcQ8w66xPxqxK+pJSl+RGH3ip1VBvqMIOSmpM14V0JwEPLU9z+VkCt9OL6X4z
-         R3TQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=wON0dKFle54/Y2jT4odl53a7vPSakIOfhvPMR/qdfZM=;
-        b=GTUaHIkz6WvGMNTYG3CtytFA/mLZ7SmHSRe+EzSMw1JhKN3FRoRmaKxgsh97qWA0i0
-         PCnEyDopHjwOQwyyeC9Kli5iK43x56nEmr2oQSlqWDC2Y4FGq/fLGi8XV0vj6dwwGTDB
-         1zZNBPnTkiy6jhDUJ3+/nroou+zlKXhkUVdhQHZE6u1dqOFDquckXQ+K0LqJerimfGGe
-         EOGNTpgwfNftnebKF25Uu8y5BjvmqOZdZdk5At2F8wyr7CX0FWYvyaVPa6XEF+1Y2UQh
-         Au+4pTWDPP8FSRE4s4kBzzHCUZ7f40K9NWUOGSu6iNZ9Ij3taCHCLc/DNokvja94bFLr
-         pCag==
-X-Gm-Message-State: AOAM533WYf8v+acpYvSB5wCBaZp1oQ8E9tlQB5CsmTBJrawgvz5XcAGh
-        ABI8nLtLqVTyC5BcXluBThcteLtvRgKnwKbMCTCyaw==
-X-Google-Smtp-Source: ABdhPJxlzZ/5cKjv3zYTIETJG3QeH9/okYQv6QOZh8IVXdbdp2iDyXieTem9Ya0HI9hx9oylH+cblYAnVCMv2mM8aAg=
-X-Received: by 2002:a5d:4811:: with SMTP id l17mr34678059wrq.252.1600364615961;
- Thu, 17 Sep 2020 10:43:35 -0700 (PDT)
+        id S1729062AbgIRCXR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:23:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47076 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729463AbgIRCQ4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:16:56 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B826E23772;
+        Fri, 18 Sep 2020 02:16:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600395415;
+        bh=5urpLU8oeS6gDR7Jjp/j4LpHwZGRGcr0hFAeFKjIv6g=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=qzvn6Zerh+ih7BZ7R3itpLFtfqywIVEKsn8fKTE4zjwb0Wl8gChvkxwTtmptf54yO
+         ZKUUkIZs4SVfw0WzDs+Ce+YhYK2h2zkQyh5LFCuipJ9f47aXhdAkxL9ngYEpqCFRAM
+         qFZAmGsCpqfbTbPGyP08gEXhVPjS1Irv4cQ1Xlc8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Guoju Fang <fangguoju@gmail.com>, Coly Li <colyli@suse.de>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 10/64] bcache: fix a lost wake-up problem caused by mca_cannibalize_lock
+Date:   Thu, 17 Sep 2020 22:15:49 -0400
+Message-Id: <20200918021643.2067895-10-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200918021643.2067895-1-sashal@kernel.org>
+References: <20200918021643.2067895-1-sashal@kernel.org>
 MIME-Version: 1.0
-References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
- <CAJCQCtSfz+b38fW3zdcHwMMtO1LfXSq+0xgg_DaKShmAumuCWQ@mail.gmail.com>
- <29509e08-e373-b352-d696-fcb9f507a545@xmyslivec.cz> <CAJCQCtRx7NJP=-rX5g_n5ZL7ypX-5z_L6d6sk120+4Avs6rJUw@mail.gmail.com>
- <695936b4-67a2-c862-9cb6-5545b4ab3c42@xmyslivec.cz> <CAJCQCtQWNSd123OJ_Rp8NO0=upY2Mn+SE7pdMqmyizJP028Yow@mail.gmail.com>
- <2f2f1c21-c81b-55aa-6f77-e2d3f32d32cb@xmyslivec.cz> <CAJCQCtTQN60V=DEkNvDedq+usfmFB+SQP2SBezUaSeUjjY46nA@mail.gmail.com>
- <4b0dd0aa-f77b-16c8-107b-0182378f34e6@xmyslivec.cz> <CAJCQCtQWh2JBAL_SDRG-gMd9Z1TXad7aKjZVUGdY1Akj7fn5Qg@mail.gmail.com>
- <5e79d1f8-7632-48ef-de56-9e79cba87434@xmyslivec.cz>
-In-Reply-To: <5e79d1f8-7632-48ef-de56-9e79cba87434@xmyslivec.cz>
-From:   Chris Murphy <lists@colorremedies.com>
-Date:   Thu, 17 Sep 2020 11:43:20 -0600
-Message-ID: <CAJCQCtTR1JZTLr+xTEZxrwh8xSfb+zpKjc+_S2tJGFofVMUdSQ@mail.gmail.com>
-Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
-To:     Vojtech Myslivec <vojtech@xmyslivec.cz>
-Cc:     Chris Murphy <lists@colorremedies.com>,
-        Song Liu <songliubraving@fb.com>,
-        Michal Moravec <michal.moravec@logicworks.cz>,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-[Mon Aug 31 15:31:55 2020] sysrq: Show Blocked State
-[Mon Aug 31 15:31:55 2020]   task                        PC stack   pid father
+From: Guoju Fang <fangguoju@gmail.com>
 
-[Mon Aug 31 15:31:55 2020] md1_reclaim     D    0   806      2 0x80004000
-[Mon Aug 31 15:31:55 2020] Call Trace:
-[Mon Aug 31 15:31:55 2020]  __schedule+0x2dd/0x710
-[Mon Aug 31 15:31:55 2020]  ? finish_wait+0x80/0x80
-[Mon Aug 31 15:31:55 2020]  ? wbt_exit+0x30/0x30
-[Mon Aug 31 15:31:55 2020]  ? __wbt_done+0x30/0x30
-[Mon Aug 31 15:31:55 2020]  schedule+0x40/0xb0
-[Mon Aug 31 15:31:55 2020]  io_schedule+0x12/0x40
-[Mon Aug 31 15:31:55 2020]  rq_qos_wait+0xfa/0x170
-[Mon Aug 31 15:31:55 2020]  ? karma_partition+0x1e0/0x1e0
-[Mon Aug 31 15:31:55 2020]  ? wbt_exit+0x30/0x30
-[Mon Aug 31 15:31:55 2020]  wbt_wait+0x98/0xe0
-[Mon Aug 31 15:31:55 2020]  __rq_qos_throttle+0x23/0x30
-[Mon Aug 31 15:31:55 2020]  blk_mq_make_request+0x12a/0x5d0
-[Mon Aug 31 15:31:55 2020]  generic_make_request+0xcf/0x310
-[Mon Aug 31 15:31:55 2020]  submit_bio+0x42/0x1c0
-[Mon Aug 31 15:31:55 2020]  ? md_super_write.part.70+0x98/0x120 [md_mod]
-[Mon Aug 31 15:31:55 2020]  md_update_sb.part.71+0x3c0/0x8f0 [md_mod]
-[Mon Aug 31 15:31:55 2020]  r5l_do_reclaim+0x32a/0x3b0 [raid456]
-[Mon Aug 31 15:31:55 2020]  ? schedule_timeout+0x162/0x340
-[Mon Aug 31 15:31:55 2020]  ? prepare_to_wait_event+0xb6/0x140
-[Mon Aug 31 15:31:55 2020]  ? md_register_thread+0xd0/0xd0 [md_mod]
-[Mon Aug 31 15:31:55 2020]  md_thread+0x94/0x150 [md_mod]
-[Mon Aug 31 15:31:55 2020]  ? finish_wait+0x80/0x80
-[Mon Aug 31 15:31:55 2020]  kthread+0x112/0x130
-[Mon Aug 31 15:31:55 2020]  ? kthread_park+0x80/0x80
-[Mon Aug 31 15:31:55 2020]  ret_from_fork+0x22/0x40
+[ Upstream commit 34cf78bf34d48dddddfeeadb44f9841d7864997a ]
 
+This patch fix a lost wake-up problem caused by the race between
+mca_cannibalize_lock and bch_cannibalize_unlock.
 
-*shrug*
+Consider two processes, A and B. Process A is executing
+mca_cannibalize_lock, while process B takes c->btree_cache_alloc_lock
+and is executing bch_cannibalize_unlock. The problem happens that after
+process A executes cmpxchg and will execute prepare_to_wait. In this
+timeslice process B executes wake_up, but after that process A executes
+prepare_to_wait and set the state to TASK_INTERRUPTIBLE. Then process A
+goes to sleep but no one will wake up it. This problem may cause bcache
+device to dead.
 
-These SSDs should be able to handle > 500MB/s. And > 130K IOPS. Swap
-would have to be pretty heavy to slow down journal writes.
-
-I'm not sure I have any good advise. My remaining ideas involve
-changing configuration just to see if the problem goes away, rather
-than actually understanding the cause of the problem.
-
+Signed-off-by: Guoju Fang <fangguoju@gmail.com>
+Signed-off-by: Coly Li <colyli@suse.de>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-Chris Murphy
+ drivers/md/bcache/bcache.h |  1 +
+ drivers/md/bcache/btree.c  | 12 ++++++++----
+ drivers/md/bcache/super.c  |  1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
+index 7fe7df56fa334..f0939fc1cfe55 100644
+--- a/drivers/md/bcache/bcache.h
++++ b/drivers/md/bcache/bcache.h
+@@ -547,6 +547,7 @@ struct cache_set {
+ 	 */
+ 	wait_queue_head_t	btree_cache_wait;
+ 	struct task_struct	*btree_cache_alloc_lock;
++	spinlock_t		btree_cannibalize_lock;
+ 
+ 	/*
+ 	 * When we free a btree node, we increment the gen of the bucket the
+diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+index 122d975220945..bdf6071c1b184 100644
+--- a/drivers/md/bcache/btree.c
++++ b/drivers/md/bcache/btree.c
+@@ -841,15 +841,17 @@ out:
+ 
+ static int mca_cannibalize_lock(struct cache_set *c, struct btree_op *op)
+ {
+-	struct task_struct *old;
+-
+-	old = cmpxchg(&c->btree_cache_alloc_lock, NULL, current);
+-	if (old && old != current) {
++	spin_lock(&c->btree_cannibalize_lock);
++	if (likely(c->btree_cache_alloc_lock == NULL)) {
++		c->btree_cache_alloc_lock = current;
++	} else if (c->btree_cache_alloc_lock != current) {
+ 		if (op)
+ 			prepare_to_wait(&c->btree_cache_wait, &op->wait,
+ 					TASK_UNINTERRUPTIBLE);
++		spin_unlock(&c->btree_cannibalize_lock);
+ 		return -EINTR;
+ 	}
++	spin_unlock(&c->btree_cannibalize_lock);
+ 
+ 	return 0;
+ }
+@@ -884,10 +886,12 @@ static struct btree *mca_cannibalize(struct cache_set *c, struct btree_op *op,
+  */
+ static void bch_cannibalize_unlock(struct cache_set *c)
+ {
++	spin_lock(&c->btree_cannibalize_lock);
+ 	if (c->btree_cache_alloc_lock == current) {
+ 		c->btree_cache_alloc_lock = NULL;
+ 		wake_up(&c->btree_cache_wait);
+ 	}
++	spin_unlock(&c->btree_cannibalize_lock);
+ }
+ 
+ static struct btree *mca_alloc(struct cache_set *c, struct btree_op *op,
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index f7f8fb079d2a9..d73f9ea776861 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1511,6 +1511,7 @@ struct cache_set *bch_cache_set_alloc(struct cache_sb *sb)
+ 	sema_init(&c->sb_write_mutex, 1);
+ 	mutex_init(&c->bucket_lock);
+ 	init_waitqueue_head(&c->btree_cache_wait);
++	spin_lock_init(&c->btree_cannibalize_lock);
+ 	init_waitqueue_head(&c->bucket_wait);
+ 	init_waitqueue_head(&c->gc_wait);
+ 	sema_init(&c->uuid_write_mutex, 1);
+-- 
+2.25.1
+
