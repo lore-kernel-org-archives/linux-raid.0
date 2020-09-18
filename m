@@ -4,48 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98569C43467
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 03:13:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D63C43467
+	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E2DE20678
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 03:13:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD9A2208C3
+	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398801;
-	bh=ANl3JrAbLgRoeObtJtIWUNJ2+H7AmOOwkQArMASHwBc=;
+	s=default; t=1600398876;
+	bh=GCpIlk45KEdWE+TgcSSh2KmZtDCtTFvs1FUmXMqcwe4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mp/+/dKDWcweS5x1FMGT1n+s9BZjHd4M1zj9WZORQFB0XfcVfUm24oXMOnIqR1ObQ
-	 PaSKPAls7+I8QJQ7CbQSp8MyEc8heatRnKYzAuJNwBzsKqdQShno6FLQ1wWzm62jnf
-	 m4+sl/dxSiP+90zwC6awiqPHb6T+WI9Exq3N5U4w=
+	b=dO7NQszU7CHlMnqyuyUCfh+4RP3s2Z5aHi4GJRtcYUkTVb5BTjVM5hJsc03RNFmIE
+	 CThp6TzDlrIIIoNqp/LbteUTV3EUhLDFv8UYmysX+rSwtPirkjdTsLxGbUsGf93n4u
+	 tx10y2W/TLW8ds4wXUAsKqpEfN44koTu8UKDGE7c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726629AbgIRCCG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:02:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47000 "EHLO mail.kernel.org"
+        id S1729301AbgIRDOT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Sep 2020 23:14:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45880 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726611AbgIRCCF (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:02:05 -0400
+        id S1726474AbgIRCBo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:01:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2BBAA208DB;
-        Fri, 18 Sep 2020 02:02:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A390B2311C;
+        Fri, 18 Sep 2020 02:01:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394524;
-        bh=ANl3JrAbLgRoeObtJtIWUNJ2+H7AmOOwkQArMASHwBc=;
+        s=default; t=1600394502;
+        bh=GCpIlk45KEdWE+TgcSSh2KmZtDCtTFvs1FUmXMqcwe4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JqGxW7uIoAiPlEZSaQa8sy2VZGjgnNNX/p2PmRFEjFS5sUOiidiyh/ZhcG1xiomDl
-         LVHb/6IqxO5g93rZNpXC2ZV6esekGJHuhjAhf82qglbDUhIokDyOoKXLttkmWemUQQ
-         an25T6LMfn3tkT+UXzLJ++1Vc0liyRYSxVyR/nfo=
+        b=hfiUt2BGvX2cJC1I9GjTCELDbpdMkv2RQVsjkCwQGHkNI56eHhP5nsqpNO8mCHCRj
+         erHZ5Gn4PNdkQl+fU0NVXDxAzLgN3WMc3tW9um8N7J163uJbp6x1z/F5utJ2oRjISI
+         Ue3kpCZb1IbpTrXO05nbViiFFrVLLeJ4v9NtKbck=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Guoju Fang <fangguoju@gmail.com>, Coly Li <colyli@suse.de>,
-        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 045/330] bcache: fix a lost wake-up problem caused by mca_cannibalize_lock
-Date:   Thu, 17 Sep 2020 21:56:25 -0400
-Message-Id: <20200918020110.2063155-45-sashal@kernel.org>
+Cc:     Mike Snitzer <snitzer@redhat.com>, Sasha Levin <sashal@kernel.org>,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 026/330] dm table: do not allow request-based DM to stack on partitions
+Date:   Thu, 17 Sep 2020 21:56:06 -0400
+Message-Id: <20200918020110.2063155-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
 References: <20200918020110.2063155-1-sashal@kernel.org>
@@ -57,95 +56,84 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Guoju Fang <fangguoju@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
 
-[ Upstream commit 34cf78bf34d48dddddfeeadb44f9841d7864997a ]
+[ Upstream commit 6ba01df72b4b63a26b4977790f58d8f775d2992c ]
 
-This patch fix a lost wake-up problem caused by the race between
-mca_cannibalize_lock and bch_cannibalize_unlock.
+Partitioned request-based devices cannot be used as underlying devices
+for request-based DM because no partition offsets are added to each
+incoming request.  As such, until now, stacking on partitioned devices
+would _always_ result in data corruption (e.g. wiping the partition
+table, writing to other partitions, etc).  Fix this by disallowing
+request-based stacking on partitions.
 
-Consider two processes, A and B. Process A is executing
-mca_cannibalize_lock, while process B takes c->btree_cache_alloc_lock
-and is executing bch_cannibalize_unlock. The problem happens that after
-process A executes cmpxchg and will execute prepare_to_wait. In this
-timeslice process B executes wake_up, but after that process A executes
-prepare_to_wait and set the state to TASK_INTERRUPTIBLE. Then process A
-goes to sleep but no one will wake up it. This problem may cause bcache
-device to dead.
+While at it, since all .request_fn support has been removed from block
+core, remove legacy dm-table code that differentiated between blk-mq and
+.request_fn request-based.
 
-Signed-off-by: Guoju Fang <fangguoju@gmail.com>
-Signed-off-by: Coly Li <colyli@suse.de>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/md/bcache/bcache.h |  1 +
- drivers/md/bcache/btree.c  | 12 ++++++++----
- drivers/md/bcache/super.c  |  1 +
- 3 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/md/dm-table.c | 27 ++++++++-------------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
-index 217c838a1b405..859567ad3db4e 100644
---- a/drivers/md/bcache/bcache.h
-+++ b/drivers/md/bcache/bcache.h
-@@ -585,6 +585,7 @@ struct cache_set {
- 	 */
- 	wait_queue_head_t	btree_cache_wait;
- 	struct task_struct	*btree_cache_alloc_lock;
-+	spinlock_t		btree_cannibalize_lock;
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 52e049554f5cd..2ae0c19137667 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -918,21 +918,15 @@ bool dm_table_supports_dax(struct dm_table *t,
  
- 	/*
- 	 * When we free a btree node, we increment the gen of the bucket the
-diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-index 46556bde032e2..8d06105fc9ff5 100644
---- a/drivers/md/bcache/btree.c
-+++ b/drivers/md/bcache/btree.c
-@@ -886,15 +886,17 @@ out:
+ static bool dm_table_does_not_support_partial_completion(struct dm_table *t);
  
- static int mca_cannibalize_lock(struct cache_set *c, struct btree_op *op)
- {
--	struct task_struct *old;
+-struct verify_rq_based_data {
+-	unsigned sq_count;
+-	unsigned mq_count;
+-};
 -
--	old = cmpxchg(&c->btree_cache_alloc_lock, NULL, current);
--	if (old && old != current) {
-+	spin_lock(&c->btree_cannibalize_lock);
-+	if (likely(c->btree_cache_alloc_lock == NULL)) {
-+		c->btree_cache_alloc_lock = current;
-+	} else if (c->btree_cache_alloc_lock != current) {
- 		if (op)
- 			prepare_to_wait(&c->btree_cache_wait, &op->wait,
- 					TASK_UNINTERRUPTIBLE);
-+		spin_unlock(&c->btree_cannibalize_lock);
- 		return -EINTR;
+-static int device_is_rq_based(struct dm_target *ti, struct dm_dev *dev,
+-			      sector_t start, sector_t len, void *data)
++static int device_is_rq_stackable(struct dm_target *ti, struct dm_dev *dev,
++				  sector_t start, sector_t len, void *data)
+ {
+-	struct request_queue *q = bdev_get_queue(dev->bdev);
+-	struct verify_rq_based_data *v = data;
++	struct block_device *bdev = dev->bdev;
++	struct request_queue *q = bdev_get_queue(bdev);
+ 
+-	if (queue_is_mq(q))
+-		v->mq_count++;
+-	else
+-		v->sq_count++;
++	/* request-based cannot stack on partitions! */
++	if (bdev != bdev->bd_contains)
++		return false;
+ 
+ 	return queue_is_mq(q);
+ }
+@@ -941,7 +935,6 @@ static int dm_table_determine_type(struct dm_table *t)
+ {
+ 	unsigned i;
+ 	unsigned bio_based = 0, request_based = 0, hybrid = 0;
+-	struct verify_rq_based_data v = {.sq_count = 0, .mq_count = 0};
+ 	struct dm_target *tgt;
+ 	struct list_head *devices = dm_table_get_devices(t);
+ 	enum dm_queue_mode live_md_type = dm_get_md_type(t->md);
+@@ -1045,14 +1038,10 @@ verify_rq_based:
+ 
+ 	/* Non-request-stackable devices can't be used for request-based dm */
+ 	if (!tgt->type->iterate_devices ||
+-	    !tgt->type->iterate_devices(tgt, device_is_rq_based, &v)) {
++	    !tgt->type->iterate_devices(tgt, device_is_rq_stackable, NULL)) {
+ 		DMERR("table load rejected: including non-request-stackable devices");
+ 		return -EINVAL;
  	}
-+	spin_unlock(&c->btree_cannibalize_lock);
+-	if (v.sq_count > 0) {
+-		DMERR("table load rejected: not all devices are blk-mq request-stackable");
+-		return -EINVAL;
+-	}
  
  	return 0;
  }
-@@ -929,10 +931,12 @@ static struct btree *mca_cannibalize(struct cache_set *c, struct btree_op *op,
-  */
- static void bch_cannibalize_unlock(struct cache_set *c)
- {
-+	spin_lock(&c->btree_cannibalize_lock);
- 	if (c->btree_cache_alloc_lock == current) {
- 		c->btree_cache_alloc_lock = NULL;
- 		wake_up(&c->btree_cache_wait);
- 	}
-+	spin_unlock(&c->btree_cannibalize_lock);
- }
- 
- static struct btree *mca_alloc(struct cache_set *c, struct btree_op *op,
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 2cbfcd99b7ee7..63f5ce18311bb 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1798,6 +1798,7 @@ struct cache_set *bch_cache_set_alloc(struct cache_sb *sb)
- 	sema_init(&c->sb_write_mutex, 1);
- 	mutex_init(&c->bucket_lock);
- 	init_waitqueue_head(&c->btree_cache_wait);
-+	spin_lock_init(&c->btree_cannibalize_lock);
- 	init_waitqueue_head(&c->bucket_wait);
- 	init_waitqueue_head(&c->gc_wait);
- 	sema_init(&c->uuid_write_mutex, 1);
 -- 
 2.25.1
 
