@@ -5,50 +5,50 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E9FC43463
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 02:23:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75CD3C43465
+	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 02:29:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD9C323119
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 02:23:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4623F235F7
+	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 02:29:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600395808;
-	bh=5urpLU8oeS6gDR7Jjp/j4LpHwZGRGcr0hFAeFKjIv6g=;
+	s=default; t=1600396160;
+	bh=RMrWm9O1QbQpo3EGcjd78aEJURre9a9Z5xRIIN7QmkQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OJfBaON/hphdqq6LmF1Rkj5s/9i/yGPk1JR1DxPxaAdCFI0C6eFvFh2XgY7TTXPei
-	 im7pjTWfniyxkub+vrN37vIbwV+8u2RwLG+3WPuDJKt8UWn/aLsc0EQ5BVENNeus+s
-	 T578eqBEG2tO8pVOvBv3B2DW1O9I7BAgMR9S3E4E=
+	b=L9aJJT6Vx12C9p/ThIt7hSEuuFvZZKGu7imx5YGb7gCEvEIJdNBlT/a7f36UA2bPG
+	 NyhOxv4gGFFEGhY0CvF5l2ARPc1uN+QJ+9YqUDuQjvJS7EPrE+0mK8gjUgLoneam82
+	 KM4KrDfaJyj88m1lbUb3y0KqzfN+RncUQfHtLxR0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729062AbgIRCXR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:23:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47076 "EHLO mail.kernel.org"
+        id S1729364AbgIRC3T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:29:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729463AbgIRCQ4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:16:56 -0400
+        id S1728580AbgIRCPJ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:15:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B826E23772;
-        Fri, 18 Sep 2020 02:16:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 197E8235F7;
+        Fri, 18 Sep 2020 02:15:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395415;
-        bh=5urpLU8oeS6gDR7Jjp/j4LpHwZGRGcr0hFAeFKjIv6g=;
+        s=default; t=1600395308;
+        bh=RMrWm9O1QbQpo3EGcjd78aEJURre9a9Z5xRIIN7QmkQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qzvn6Zerh+ih7BZ7R3itpLFtfqywIVEKsn8fKTE4zjwb0Wl8gChvkxwTtmptf54yO
-         ZKUUkIZs4SVfw0WzDs+Ce+YhYK2h2zkQyh5LFCuipJ9f47aXhdAkxL9ngYEpqCFRAM
-         qFZAmGsCpqfbTbPGyP08gEXhVPjS1Irv4cQ1Xlc8=
+        b=RhlPYgwXa1m20rK4lW+VCr5gvwznX9vk0hgty2K0i940nSZQ7vL2RYdZzuIXYFa0W
+         +J8Kyof70mnIzEie/OJ4hjgsrBg9eTGOkfdUd9HUZk1nwBxtfGa14IQIBLmXHm0YXL
+         LC8cPZpq1f7rr3/HT43cwvNStD4ETOxdrPtXdASM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Guoju Fang <fangguoju@gmail.com>, Coly Li <colyli@suse.de>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 10/64] bcache: fix a lost wake-up problem caused by mca_cannibalize_lock
-Date:   Thu, 17 Sep 2020 22:15:49 -0400
-Message-Id: <20200918021643.2067895-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 11/90] bcache: fix a lost wake-up problem caused by mca_cannibalize_lock
+Date:   Thu, 17 Sep 2020 22:13:36 -0400
+Message-Id: <20200918021455.2067301-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918021643.2067895-1-sashal@kernel.org>
-References: <20200918021643.2067895-1-sashal@kernel.org>
+In-Reply-To: <20200918021455.2067301-1-sashal@kernel.org>
+References: <20200918021455.2067301-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -96,10 +96,10 @@ index 7fe7df56fa334..f0939fc1cfe55 100644
  	/*
  	 * When we free a btree node, we increment the gen of the bucket the
 diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-index 122d975220945..bdf6071c1b184 100644
+index 764d519a7f1c6..26e56a9952d09 100644
 --- a/drivers/md/bcache/btree.c
 +++ b/drivers/md/bcache/btree.c
-@@ -841,15 +841,17 @@ out:
+@@ -836,15 +836,17 @@ out:
  
  static int mca_cannibalize_lock(struct cache_set *c, struct btree_op *op)
  {
@@ -121,7 +121,7 @@ index 122d975220945..bdf6071c1b184 100644
  
  	return 0;
  }
-@@ -884,10 +886,12 @@ static struct btree *mca_cannibalize(struct cache_set *c, struct btree_op *op,
+@@ -879,10 +881,12 @@ static struct btree *mca_cannibalize(struct cache_set *c, struct btree_op *op,
   */
  static void bch_cannibalize_unlock(struct cache_set *c)
  {
@@ -135,10 +135,10 @@ index 122d975220945..bdf6071c1b184 100644
  
  static struct btree *mca_alloc(struct cache_set *c, struct btree_op *op,
 diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index f7f8fb079d2a9..d73f9ea776861 100644
+index 95e9a33de06a2..263c0d987929e 100644
 --- a/drivers/md/bcache/super.c
 +++ b/drivers/md/bcache/super.c
-@@ -1511,6 +1511,7 @@ struct cache_set *bch_cache_set_alloc(struct cache_sb *sb)
+@@ -1510,6 +1510,7 @@ struct cache_set *bch_cache_set_alloc(struct cache_sb *sb)
  	sema_init(&c->sb_write_mutex, 1);
  	mutex_init(&c->bucket_lock);
  	init_waitqueue_head(&c->btree_cache_wait);
