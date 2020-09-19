@@ -1,139 +1,78 @@
-Return-Path: <SRS0=zFFE=C3=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=OZLJ=C4=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D63C43467
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41EF5C43466
+	for <linux-raid@archiver.kernel.org>; Sat, 19 Sep 2020 06:51:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD9A2208C3
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398876;
-	bh=GCpIlk45KEdWE+TgcSSh2KmZtDCtTFvs1FUmXMqcwe4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=dO7NQszU7CHlMnqyuyUCfh+4RP3s2Z5aHi4GJRtcYUkTVb5BTjVM5hJsc03RNFmIE
-	 CThp6TzDlrIIIoNqp/LbteUTV3EUhLDFv8UYmysX+rSwtPirkjdTsLxGbUsGf93n4u
-	 tx10y2W/TLW8ds4wXUAsKqpEfN44koTu8UKDGE7c=
+	by mail.kernel.org (Postfix) with ESMTP id 0EFBE20796
+	for <linux-raid@archiver.kernel.org>; Sat, 19 Sep 2020 06:51:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729301AbgIRDOT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:14:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45880 "EHLO mail.kernel.org"
+        id S1726201AbgISGvc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 19 Sep 2020 02:51:32 -0400
+Received: from verein.lst.de ([213.95.11.211]:35048 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726474AbgIRCBo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:01:44 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A390B2311C;
-        Fri, 18 Sep 2020 02:01:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394502;
-        bh=GCpIlk45KEdWE+TgcSSh2KmZtDCtTFvs1FUmXMqcwe4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hfiUt2BGvX2cJC1I9GjTCELDbpdMkv2RQVsjkCwQGHkNI56eHhP5nsqpNO8mCHCRj
-         erHZ5Gn4PNdkQl+fU0NVXDxAzLgN3WMc3tW9um8N7J163uJbp6x1z/F5utJ2oRjISI
-         Ue3kpCZb1IbpTrXO05nbViiFFrVLLeJ4v9NtKbck=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Snitzer <snitzer@redhat.com>, Sasha Levin <sashal@kernel.org>,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 026/330] dm table: do not allow request-based DM to stack on partitions
-Date:   Thu, 17 Sep 2020 21:56:06 -0400
-Message-Id: <20200918020110.2063155-26-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
-References: <20200918020110.2063155-1-sashal@kernel.org>
+        id S1726112AbgISGvc (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 19 Sep 2020 02:51:32 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 2740768BFE; Sat, 19 Sep 2020 08:51:27 +0200 (CEST)
+Date:   Sat, 19 Sep 2020 08:51:26 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Song Liu <song@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Richard Weinberger <richard@nod.at>,
+        Minchan Kim <minchan@kernel.org>,
+        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        cgroups@vger.kernel.org
+Subject: Re: [PATCH 10/12] bdi: replace BDI_CAP_STABLE_WRITES with a queue
+ and a sb flag
+Message-ID: <20200919065126.GA8048@lst.de>
+References: <20200910144833.742260-1-hch@lst.de> <20200910144833.742260-11-hch@lst.de> <20200917092524.GC7347@quack2.suse.cz>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200917092524.GC7347@quack2.suse.cz>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Mike Snitzer <snitzer@redhat.com>
+On Thu, Sep 17, 2020 at 11:25:24AM +0200, Jan Kara wrote:
+> On Thu 10-09-20 16:48:30, Christoph Hellwig wrote:
+> > The BDI_CAP_STABLE_WRITES is one of the few bits of information in the
+> > backing_dev_info shared between the block drivers and the writeback code.
+> > To help untangling the dependency replace it with a queue flag and a
+> > superblock flag derived from it.  This also helps with the case of e.g.
+> > a file system requiring stable writes due to its own checksumming, but
+> > not forcing it on other users of the block device like the swap code.
+> > 
+> > One downside is that we can't support the stable_pages_required bdi
+> > attribute in sysfs anymore.  It is replaced with a queue attribute, that
+> > can also be made writable for easier testing.
+>   ^^^^^^^^^^^^^^^^
+>   is also made
+> 
+> For a while I was confused thinking that the new attribute is not writeable
+> but when I checked the code I saw that it is.
+> 
+> Not supporting stable_pages_required attribute is not nice but probably it
+> isn't widely used. Maybe the deprecation message can even mention to use
+> the queue attribute? Otherwise the patch looks good to me so feel free to
+> add:
+> 
+> Reviewed-by: Jan Kara <jack@suse.cz>
 
-[ Upstream commit 6ba01df72b4b63a26b4977790f58d8f775d2992c ]
+Thanks.  I've fixed the commit log and changed the warning to:
 
-Partitioned request-based devices cannot be used as underlying devices
-for request-based DM because no partition offsets are added to each
-incoming request.  As such, until now, stacking on partitioned devices
-would _always_ result in data corruption (e.g. wiping the partition
-table, writing to other partitions, etc).  Fix this by disallowing
-request-based stacking on partitions.
-
-While at it, since all .request_fn support has been removed from block
-core, remove legacy dm-table code that differentiated between blk-mq and
-.request_fn request-based.
-
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/md/dm-table.c | 27 ++++++++-------------------
- 1 file changed, 8 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 52e049554f5cd..2ae0c19137667 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -918,21 +918,15 @@ bool dm_table_supports_dax(struct dm_table *t,
- 
- static bool dm_table_does_not_support_partial_completion(struct dm_table *t);
- 
--struct verify_rq_based_data {
--	unsigned sq_count;
--	unsigned mq_count;
--};
--
--static int device_is_rq_based(struct dm_target *ti, struct dm_dev *dev,
--			      sector_t start, sector_t len, void *data)
-+static int device_is_rq_stackable(struct dm_target *ti, struct dm_dev *dev,
-+				  sector_t start, sector_t len, void *data)
- {
--	struct request_queue *q = bdev_get_queue(dev->bdev);
--	struct verify_rq_based_data *v = data;
-+	struct block_device *bdev = dev->bdev;
-+	struct request_queue *q = bdev_get_queue(bdev);
- 
--	if (queue_is_mq(q))
--		v->mq_count++;
--	else
--		v->sq_count++;
-+	/* request-based cannot stack on partitions! */
-+	if (bdev != bdev->bd_contains)
-+		return false;
- 
- 	return queue_is_mq(q);
- }
-@@ -941,7 +935,6 @@ static int dm_table_determine_type(struct dm_table *t)
- {
- 	unsigned i;
- 	unsigned bio_based = 0, request_based = 0, hybrid = 0;
--	struct verify_rq_based_data v = {.sq_count = 0, .mq_count = 0};
- 	struct dm_target *tgt;
- 	struct list_head *devices = dm_table_get_devices(t);
- 	enum dm_queue_mode live_md_type = dm_get_md_type(t->md);
-@@ -1045,14 +1038,10 @@ verify_rq_based:
- 
- 	/* Non-request-stackable devices can't be used for request-based dm */
- 	if (!tgt->type->iterate_devices ||
--	    !tgt->type->iterate_devices(tgt, device_is_rq_based, &v)) {
-+	    !tgt->type->iterate_devices(tgt, device_is_rq_stackable, NULL)) {
- 		DMERR("table load rejected: including non-request-stackable devices");
- 		return -EINVAL;
- 	}
--	if (v.sq_count > 0) {
--		DMERR("table load rejected: not all devices are blk-mq request-stackable");
--		return -EINVAL;
--	}
- 
- 	return 0;
- }
--- 
-2.25.1
-
+	dev_warn_once(dev, 
+                 "the stable_pages_required attribute has been removed. Use the
+		 stable_writes queue attribute instead.\n");
