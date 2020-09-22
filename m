@@ -2,324 +2,148 @@ Return-Path: <SRS0=RxpK=C7=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3EB8C4727F
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Sep 2020 09:51:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30446C2D0E2
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Sep 2020 10:27:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92683239A1
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Sep 2020 09:51:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F795208A9
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Sep 2020 10:27:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=karlsbakk.net header.i=@karlsbakk.net header.b="wSJuA3tn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726694AbgIVJvv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Sep 2020 05:51:51 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58380 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726461AbgIVJvu (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 22 Sep 2020 05:51:50 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 3226EADCD;
-        Tue, 22 Sep 2020 09:52:25 +0000 (UTC)
-Subject: Re: [PATCH 07/13] block: lift setting the readahead size into the
- block layer
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
-        Richard Weinberger <richard@nod.at>,
-        Minchan Kim <minchan@kernel.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Justin Sanders <justin@coraid.com>,
-        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, cgroups@vger.kernel.org
-References: <20200921080734.452759-1-hch@lst.de>
- <20200921080734.452759-8-hch@lst.de>
-From:   Coly Li <colyli@suse.de>
-Autocrypt: addr=colyli@suse.de; keydata=
- mQINBFYX6S8BEAC9VSamb2aiMTQREFXK4K/W7nGnAinca7MRuFUD4JqWMJ9FakNRd/E0v30F
- qvZ2YWpidPjaIxHwu3u9tmLKqS+2vnP0k7PRHXBYbtZEMpy3kCzseNfdrNqwJ54A430BHf2S
- GMVRVENiScsnh4SnaYjFVvB8SrlhTsgVEXEBBma5Ktgq9YSoy5miatWmZvHLFTQgFMabCz/P
- j5/xzykrF6yHo0rHZtwzQzF8rriOplAFCECp/t05+OeHHxjSqSI0P/G79Ll+AJYLRRm9til/
- K6yz/1hX5xMToIkYrshDJDrUc8DjEpISQQPhG19PzaUf3vFpmnSVYprcWfJWsa2wZyyjRFkf
- J51S82WfclafNC6N7eRXedpRpG6udUAYOA1YdtlyQRZa84EJvMzW96iSL1Gf+ZGtRuM3k49H
- 1wiWOjlANiJYSIWyzJjxAd/7Xtiy/s3PRKL9u9y25ftMLFa1IljiDG+mdY7LyAGfvdtIkanr
- iBpX4gWXd7lNQFLDJMfShfu+CTMCdRzCAQ9hIHPmBeZDJxKq721CyBiGAhRxDN+TYiaG/UWT
- 7IB7LL4zJrIe/xQ8HhRO+2NvT89o0LxEFKBGg39yjTMIrjbl2ZxY488+56UV4FclubrG+t16
- r2KrandM7P5RjR+cuHhkKseim50Qsw0B+Eu33Hjry7YCihmGswARAQABtBhDb2x5IExpIDxj
- b2x5bGlAc3VzZS5kZT6JAlYEEwEIAEACGyMHCwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgBYh
- BOo+RS/0+Uhgjej60Mc5B5Nrffj8BQJcR84dBQkY++fuAAoJEMc5B5Nrffj8ixcP/3KAKg1X
- EcoW4u/0z+Ton5rCyb/NpAww8MuRjNW82UBUac7yCi1y3OW7NtLjuBLw5SaVG5AArb7IF3U0
- qTOobqfl5XHsT0o5wFHZaKUrnHb6y7V3SplsJWfkP3JmOooJsQB3z3K96ZTkFelsNb0ZaBRu
- gV+LA4MomhQ+D3BCDR1it1OX/tpvm2uaDF6s/8uFtcDEM9eQeqATN/QAJ49nvU/I8zDSY9rc
- 0x9mP0x+gH4RccbnoPu/rUG6Fm1ZpLrbb6NpaYBBJ/V1BC4lIOjnd24bsoQrQmnJn9dSr60X
- 1MY60XDszIyzRw7vbJcUn6ZzPNFDxFFT9diIb+wBp+DD8ZlD/hnVpl4f921ZbvfOSsXAJrKB
- 1hGY17FPwelp1sPcK2mDT+pfHEMV+OQdZzD2OCKtza/5IYismJJm3oVUYMogb5vDNAw9X2aP
- XgwUuG+FDEFPamFMUwIfzYHcePfqf0mMsaeSgtA/xTxzx/0MLjUJHl46Bc0uKDhv7QUyGz0j
- Ywgr2mHTvG+NWQ/mDeHNGkcnsnp3IY7koDHnN2xMFXzY4bn9m8ctqKo2roqjCzoxD/njoAhf
- KBzdybLHATqJG/yiZSbCxDA1n/J4FzPyZ0rNHUAJ/QndmmVspE9syFpFCKigvvyrzm016+k+
- FJ59Q6RG4MSy/+J565Xj+DNY3/dCuQINBFYX6S8BEADZP+2cl4DRFaSaBms08W8/smc5T2CO
- YhAoygZn71rB7Djml2ZdvrLRjR8Qbn0Q/2L2gGUVc63pJnbrjlXSx2LfAFE0SlfYIJ11aFdF
- 9w7RvqWByQjDJor3Z0fWvPExplNgMvxpD0U0QrVT5dIGTx9hadejCl/ug09Lr6MPQn+a4+qs
- aRWwgCSHaIuDkH3zI1MJXiqXXFKUzJ/Fyx6R72rqiMPHH2nfwmMu6wOXAXb7+sXjZz5Po9GJ
- g2OcEc+rpUtKUJGyeQsnCDxUcqJXZDBi/GnhPCcraQuqiQ7EGWuJfjk51vaI/rW4bZkA9yEP
- B9rBYngbz7cQymUsfxuTT8OSlhxjP3l4ZIZFKIhDaQeZMj8pumBfEVUyiF6KVSfgfNQ/5PpM
- R4/pmGbRqrAAElhrRPbKQnCkGWDr8zG+AjN1KF6rHaFgAIO7TtZ+F28jq4reLkur0N5tQFww
- wFwxzROdeLHuZjL7eEtcnNnzSkXHczLkV4kQ3+vr/7Gm65mQfnVpg6JpwpVrbDYQeOFlxZ8+
- GERY5Dag4KgKa/4cSZX2x/5+KkQx9wHwackw5gDCvAdZ+Q81nm6tRxEYBBiVDQZYqO73stgT
- ZyrkxykUbQIy8PI+g7XMDCMnPiDncQqgf96KR3cvw4wN8QrgA6xRo8xOc2C3X7jTMQUytCz9
- 0MyV1QARAQABiQI8BBgBCAAmAhsMFiEE6j5FL/T5SGCN6PrQxzkHk2t9+PwFAlxHziAFCRj7
- 5/EACgkQxzkHk2t9+PxgfA//cH5R1DvpJPwraTAl24SUcG9EWe+NXyqveApe05nk15zEuxxd
- e4zFEjo+xYZilSveLqYHrm/amvQhsQ6JLU+8N60DZHVcXbw1Eb8CEjM5oXdbcJpXh1/1BEwl
- 4phsQMkxOTns51bGDhTQkv4lsZKvNByB9NiiMkT43EOx14rjkhHw3rnqoI7ogu8OO7XWfKcL
- CbchjJ8t3c2XK1MUe056yPpNAT2XPNF2EEBPG2Y2F4vLgEbPv1EtpGUS1+JvmK3APxjXUl5z
- 6xrxCQDWM5AAtGfM/IswVjbZYSJYyH4BQKrShzMb0rWUjkpXvvjsjt8rEXpZEYJgX9jvCoxt
- oqjCKiVLpwje9WkEe9O9VxljmPvxAhVqJjX62S+TGp93iD+mvpCoHo3+CcvyRcilz+Ko8lfO
- hS9tYT0HDUiDLvpUyH1AR2xW9RGDevGfwGTpF0K6cLouqyZNdhlmNciX48tFUGjakRFsxRmX
- K0Jx4CEZubakJe+894sX6pvNFiI7qUUdB882i5GR3v9ijVPhaMr8oGuJ3kvwBIA8lvRBGVGn
- 9xvzkQ8Prpbqh30I4NMp8MjFdkwCN6znBKPHdjNTwE5PRZH0S9J0o67IEIvHfH0eAWAsgpTz
- +jwc7VKH7vkvgscUhq/v1/PEWCAqh9UHy7R/jiUxwzw/288OpgO+i+2l11Y=
-Message-ID: <c6bb4a65-33f5-8e96-fe61-c8b91372d76a@suse.de>
-Date:   Tue, 22 Sep 2020 17:51:40 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.0
+        id S1726509AbgIVK1q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Sep 2020 06:27:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56958 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726423AbgIVK1q (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Sep 2020 06:27:46 -0400
+Received: from zimbra.karlsbakk.net (zimbra.karlsbakk.net [IPv6:2a0a:51c0:0:1f:4ca5::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 920EDC061755
+        for <linux-raid@vger.kernel.org>; Tue, 22 Sep 2020 03:27:45 -0700 (PDT)
+Received: from localhost (localhost.localdomain [IPv6:::1])
+        by zimbra.karlsbakk.net (Postfix) with ESMTP id 6CC8C3C2751;
+        Tue, 22 Sep 2020 12:27:42 +0200 (CEST)
+Received: from zimbra.karlsbakk.net ([IPv6:::1])
+        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10032)
+        with ESMTP id XRAvFq7yUMjj; Tue, 22 Sep 2020 12:27:41 +0200 (CEST)
+Received: from localhost (localhost.localdomain [IPv6:::1])
+        by zimbra.karlsbakk.net (Postfix) with ESMTP id F34B73C27A0;
+        Tue, 22 Sep 2020 12:27:40 +0200 (CEST)
+DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra.karlsbakk.net F34B73C27A0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=karlsbakk.net;
+        s=1DC131FE-D37A-11E7-BD32-3AD4DFE620DF; t=1600770461;
+        bh=AqPsaxYANAF7+LVy/U49bRUMwY66Dz9mDfyjwHrEuNE=;
+        h=Date:From:To:Message-ID:MIME-Version;
+        b=wSJuA3tnae1CYphE0amGRBDeoKB5inV1pUDtKAk16fS1lLRQu4SgiV0/zEEcmzKep
+         4gkVsDlfmYLWdp5l5J9PJTuWXblkhn/DmTg4xTO4b/SDVWBZRwg9RXR6NZb9ZpvQqz
+         I9dwhfIBEWq54qN+H4f1++yIYx86z45RBQIAHrIvJR2mGwxHPNZx2Qq4fkosk1JIqE
+         BHp/6NPYCau+tXgx8zoRArMFh2MuJT8KEr0w0h/puKEkhsrh3/zK9EdRQNFaGWClgE
+         CVKvlEaLFf1gqzgszYdbrZM6LiDPkbgnJIw+nER70GqlRL5vUR+TjOWUNo9orDeyBQ
+         3Z6NRlKF3MiFw==
+X-Virus-Scanned: amavisd-new at zimbra.karlsbakk.net
+Received: from zimbra.karlsbakk.net ([IPv6:::1])
+        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10026)
+        with ESMTP id n-c45oWWjP02; Tue, 22 Sep 2020 12:27:40 +0200 (CEST)
+Received: from zimbra.karlsbakk.net (localhost.localdomain [127.0.0.1])
+        by zimbra.karlsbakk.net (Postfix) with ESMTP id CEF463C2751;
+        Tue, 22 Sep 2020 12:27:40 +0200 (CEST)
+Date:   Tue, 22 Sep 2020 12:27:40 +0200 (CEST)
+From:   Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+To:     Andy Smith <andy@strugglers.net>
+Cc:     Linux Raid <linux-raid@vger.kernel.org>
+Message-ID: <913919976.4679345.1600770460519.JavaMail.zimbra@karlsbakk.net>
+In-Reply-To: <20200915102736.GE13298@bitfolk.com>
+References: <20200915102736.GE13298@bitfolk.com>
+Subject: Re: "--re-add for /dev/sdb1 to /dev/md0 is not possible"
 MIME-Version: 1.0
-In-Reply-To: <20200921080734.452759-8-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Originating-IP: [2a01:79c:cebf:61e4:19e9:53c:a2ad:5fc7]
+X-Mailer: Zimbra 8.8.10_GA_3801 (ZimbraWebClient - FF80 (Mac)/8.8.10_GA_3786)
+Thread-Topic: "--re-add for /dev/sdb1 to /dev/md0 is not possible"
+Thread-Index: kJ5MmErB0WGkEIvqk45LutzbUZdO2A==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2020/9/21 16:07, Christoph Hellwig wrote:
-> Drivers shouldn't really mess with the readahead size, as that is a VM
-> concept.  Instead set it based on the optimal I/O size by lifting the
-> algorithm from the md driver when registering the disk.  Also set
-> bdi->io_pages there as well by applying the same scheme based on
-> max_sectors.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> In my continuing goal to remove the bad blocks log from any of my
+> arrays and not have one on any new arrays I create, I wrote this
+> article:
+>=20
+>    https://strugglers.net/~andy/blog/2020/09/13/debian-installer-mdadm-co=
+nfiguration-and-the-bad-blocks-controversy
+>=20
+> Shortly afterwards someone on Hacker News=C2=B9 said that it is possible
+> to remove the BBL by failing and re-adding devices, like so:
+>=20
+> # mdadm /dev/md127 --fail /dev/sda --remove /dev/sda --re-add /dev/sda
+> --update=3Dno-bbl
+>=20
+> I tried that on Ubuntu 18.04:
+>=20
+> $ mdadm --version
+> mdadm - v4.1-rc1 - 2018-03-22
+> $ sudo mdadm --fail /dev/md0 /dev/sdb1 --remove /dev/sdb1 --re-add /dev/s=
+db1
+> --update=3Dno-bbl
+> mdadm: set /dev/sdb1 faulty in /dev/md0
+> mdadm: hot removed /dev/sdb1 from /dev/md0
+> mdadm: --re-add for /dev/sdb1 to /dev/md0 is not possible
+> $ sudo mdadm --add /dev/md0 /dev/sdb1 --update=3Dno-bbl
+> mdadm: --update in Manage mode only allowed with --re-add.
+> $ sudo mdadm --add /dev/md0 /dev/sdb1
+> mdadm: added /dev/sdb1
+> $ sudo mdadm --examine-badblocks /dev/sdb1
+> Bad-blocks list is empty in /dev/sdb1
+>=20
+> I tried it on Debian buster:
+>=20
+> $ mdadm --version
+> mdadm - v4.1 - 2018-10-01
+> $ sudo mdadm --fail /dev/md6 /dev/sdb1 --remove /dev/sdb1 --re-add /dev/s=
+db1
+> --update=3Dno-bbl
+> mdadm: set /dev/sdb1 faulty in /dev/md6
+> mdadm: hot removed /dev/sdb1 from /dev/md6
+> mdadm: --re-add for /dev/sdb1 to /dev/md6 is not possible
+>=20
+> So, is that supposed to work and if so, why doesn't it work for me?
+>=20
+> In both cases these are simple two device RAID-1 metadata version
+> 1.2 arrays. Neither has bitmaps.
 
-For the bcache part,
+I've tried this as well, and ran
 
-Acked-by: Coly Li <colyli@suse.de>
+mddev=3D/dev/md0
+diskdev=3D/dev/sdm
 
+mdadm --fail $mddev $diskdev
+mdadm --remove $mddev $diskdev
+mdadm --re-add $mddev $diskdev
 
-Thanks.
+All returned ok, but sdm was listed as a slave, thus not active anymore. Af=
+ter this, a new --remove and --re-add didn't work, so it'll take some hours=
+ to --add it again (yet another time).
 
-Coly Li
+It would be very nice if someone at linux-raid could prioritise this rather=
+ obvious bug in the bbl code, where the bbl keeps replicating itself over a=
+nd over, regardless of any actual failures on the disks. IMHO the whole BBL=
+ should be scrapped, as mentioned earlier, since it really has no function.=
+ Mapping out bad sectors is for the drive to decide and if it can't handle =
+it, it should be kicked out of the array.
 
+Vennlig hilsen
 
-> ---
->  block/blk-settings.c         |  5 ++---
->  block/blk-sysfs.c            |  9 +++++++++
->  drivers/block/aoe/aoeblk.c   |  1 -
->  drivers/block/drbd/drbd_nl.c | 12 +-----------
->  drivers/md/bcache/super.c    |  3 ---
->  drivers/md/raid0.c           | 16 ----------------
->  drivers/md/raid10.c          | 24 +-----------------------
->  drivers/md/raid5.c           | 13 +------------
->  8 files changed, 14 insertions(+), 69 deletions(-)
-> 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index 76a7e03bcd6cac..01049e9b998f1d 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -452,6 +452,8 @@ EXPORT_SYMBOL(blk_limits_io_opt);
->  void blk_queue_io_opt(struct request_queue *q, unsigned int opt)
->  {
->  	blk_limits_io_opt(&q->limits, opt);
-> +	q->backing_dev_info->ra_pages =
-> +		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
->  }
->  EXPORT_SYMBOL(blk_queue_io_opt);
->  
-> @@ -628,9 +630,6 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
->  		printk(KERN_NOTICE "%s: Warning: Device %s is misaligned\n",
->  		       top, bottom);
->  	}
-> -
-> -	t->backing_dev_info->io_pages =
-> -		t->limits.max_sectors >> (PAGE_SHIFT - 9);
->  }
->  EXPORT_SYMBOL(disk_stack_limits);
->  
-> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-> index 81722cdcf0cb21..83915b4a1fc3ad 100644
-> --- a/block/blk-sysfs.c
-> +++ b/block/blk-sysfs.c
-> @@ -854,6 +854,15 @@ int blk_register_queue(struct gendisk *disk)
->  		percpu_ref_switch_to_percpu(&q->q_usage_counter);
->  	}
->  
-> +	/*
-> +	 * For read-ahead of large files to be effective, we need to read ahead
-> +	 * at least twice the optimal I/O size.
-> +	 */
-> +	q->backing_dev_info->ra_pages =
-> +		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
-> +	q->backing_dev_info->io_pages =
-> +		queue_max_sectors(q) >> (PAGE_SHIFT - 9);
-> +
->  	ret = blk_trace_init_sysfs(dev);
->  	if (ret)
->  		return ret;
-> diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
-> index d8cfc233e64b93..c34e71b0c4a98c 100644
-> --- a/drivers/block/aoe/aoeblk.c
-> +++ b/drivers/block/aoe/aoeblk.c
-> @@ -406,7 +406,6 @@ aoeblk_gdalloc(void *vp)
->  	WARN_ON(d->gd);
->  	WARN_ON(d->flags & DEVFL_UP);
->  	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
-> -	q->backing_dev_info->ra_pages = SZ_2M / PAGE_SIZE;
->  	blk_queue_io_opt(q, SZ_2M);
->  	d->bufpool = mp;
->  	d->blkq = gd->queue = q;
-> diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-> index aaff5bde391506..f8fb1c9b1bb6c1 100644
-> --- a/drivers/block/drbd/drbd_nl.c
-> +++ b/drivers/block/drbd/drbd_nl.c
-> @@ -1360,18 +1360,8 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
->  	decide_on_discard_support(device, q, b, discard_zeroes_if_aligned);
->  	decide_on_write_same_support(device, q, b, o, disable_write_same);
->  
-> -	if (b) {
-> +	if (b)
->  		blk_stack_limits(&q->limits, &b->limits, 0);
-> -
-> -		if (q->backing_dev_info->ra_pages !=
-> -		    b->backing_dev_info->ra_pages) {
-> -			drbd_info(device, "Adjusting my ra_pages to backing device's (%lu -> %lu)\n",
-> -				 q->backing_dev_info->ra_pages,
-> -				 b->backing_dev_info->ra_pages);
-> -			q->backing_dev_info->ra_pages =
-> -						b->backing_dev_info->ra_pages;
-> -		}
-> -	}
->  	fixup_discard_if_not_supported(q);
->  	fixup_write_zeroes(device, q);
->  }
-> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-> index 48113005ed86ad..6bfa771673623e 100644
-> --- a/drivers/md/bcache/super.c
-> +++ b/drivers/md/bcache/super.c
-> @@ -1427,9 +1427,6 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
->  	if (ret)
->  		return ret;
->  
-> -	dc->disk.disk->queue->backing_dev_info->ra_pages =
-> -		max(dc->disk.disk->queue->backing_dev_info->ra_pages,
-> -		    q->backing_dev_info->ra_pages);
->  	blk_queue_io_opt(dc->disk.disk->queue,
->  		max(queue_io_opt(dc->disk.disk->queue), queue_io_opt(q)));
->  
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index f54a449f97aa79..aa2d7279176880 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -410,22 +410,6 @@ static int raid0_run(struct mddev *mddev)
->  		 mdname(mddev),
->  		 (unsigned long long)mddev->array_sectors);
->  
-> -	if (mddev->queue) {
-> -		/* calculate the max read-ahead size.
-> -		 * For read-ahead of large files to be effective, we need to
-> -		 * readahead at least twice a whole stripe. i.e. number of devices
-> -		 * multiplied by chunk size times 2.
-> -		 * If an individual device has an ra_pages greater than the
-> -		 * chunk size, then we will not drive that device as hard as it
-> -		 * wants.  We consider this a configuration error: a larger
-> -		 * chunksize should be used in that case.
-> -		 */
-> -		int stripe = mddev->raid_disks *
-> -			(mddev->chunk_sectors << 9) / PAGE_SIZE;
-> -		if (mddev->queue->backing_dev_info->ra_pages < 2* stripe)
-> -			mddev->queue->backing_dev_info->ra_pages = 2* stripe;
-> -	}
-> -
->  	dump_zones(mddev);
->  
->  	ret = md_integrity_register(mddev);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 9956a04ac13bd6..5d1bdee313ec33 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3873,19 +3873,6 @@ static int raid10_run(struct mddev *mddev)
->  	mddev->resync_max_sectors = size;
->  	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
->  
-> -	if (mddev->queue) {
-> -		int stripe = conf->geo.raid_disks *
-> -			((mddev->chunk_sectors << 9) / PAGE_SIZE);
-> -
-> -		/* Calculate max read-ahead size.
-> -		 * We need to readahead at least twice a whole stripe....
-> -		 * maybe...
-> -		 */
-> -		stripe /= conf->geo.near_copies;
-> -		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
-> -			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
-> -	}
-> -
->  	if (md_integrity_register(mddev))
->  		goto out_free_conf;
->  
-> @@ -4723,17 +4710,8 @@ static void end_reshape(struct r10conf *conf)
->  	conf->reshape_safe = MaxSector;
->  	spin_unlock_irq(&conf->device_lock);
->  
-> -	/* read-ahead size must cover two whole stripes, which is
-> -	 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
-> -	 */
-> -	if (conf->mddev->queue) {
-> -		int stripe = conf->geo.raid_disks *
-> -			((conf->mddev->chunk_sectors << 9) / PAGE_SIZE);
-> -		stripe /= conf->geo.near_copies;
-> -		if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
-> -			conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
-> +	if (conf->mddev->queue)
->  		raid10_set_io_opt(conf);
-> -	}
->  	conf->fullsync = 0;
->  }
->  
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 9a7d1250894ef1..7ace1f76b14736 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7522,8 +7522,6 @@ static int raid5_run(struct mddev *mddev)
->  		int data_disks = conf->previous_raid_disks - conf->max_degraded;
->  		int stripe = data_disks *
->  			((mddev->chunk_sectors << 9) / PAGE_SIZE);
-> -		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
-> -			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
->  
->  		chunk_size = mddev->chunk_sectors << 9;
->  		blk_queue_io_min(mddev->queue, chunk_size);
-> @@ -8111,17 +8109,8 @@ static void end_reshape(struct r5conf *conf)
->  		spin_unlock_irq(&conf->device_lock);
->  		wake_up(&conf->wait_for_overlap);
->  
-> -		/* read-ahead size must cover two whole stripes, which is
-> -		 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
-> -		 */
-> -		if (conf->mddev->queue) {
-> -			int data_disks = conf->raid_disks - conf->max_degraded;
-> -			int stripe = data_disks * ((conf->chunk_sectors << 9)
-> -						   / PAGE_SIZE);
-> -			if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
-> -				conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
-> +		if (conf->mddev->queue)
->  			raid5_set_io_opt(conf);
-> -		}
->  	}
->  }
->  
-> 
-
+roy
+--=20
+Roy Sigurd Karlsbakk
+(+47) 98013356
+http://blogg.karlsbakk.net/
+GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
+--
+Hi=C3=B0 g=C3=B3=C3=B0a skaltu =C3=AD stein h=C3=B6ggva, hi=C3=B0 illa =C3=
+=AD snj=C3=B3 rita.
