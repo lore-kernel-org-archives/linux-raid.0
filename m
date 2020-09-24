@@ -2,75 +2,106 @@ Return-Path: <SRS0=HtB1=DB=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A188C4346E
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 03:26:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9876CC4727D
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 06:52:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8CB02388A
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 03:26:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600918000;
-	bh=17cSOhZAOjq0y9Mym8O2mP/ldgw8rBNS9LJzP0S/8+Q=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=aNXOkdR+qDfebtphw44tMLtvHYnaq+QaBEOD/PfmIey2D9o7jDz0nXAWYIncb9UHO
-	 FYAIAgcZYmYFU8Hlt3fwMOEwDOWEKphloPDUZdU74NTyp6oDU2KfYOFuiuLUS3HJsc
-	 rm0Ms7gdvpALggKygMAPd5wt75MDo7QZxH8+lKpc=
+	by mail.kernel.org (Postfix) with ESMTP id 5C3992388A
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 06:52:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XUFcuzWy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727134AbgIXD0j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Sep 2020 23:26:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36722 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726485AbgIXD0j (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 23 Sep 2020 23:26:39 -0400
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4152C2388A
-        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2020 03:26:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600917998;
-        bh=17cSOhZAOjq0y9Mym8O2mP/ldgw8rBNS9LJzP0S/8+Q=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=DHvec2lO+4FiMLhauIqLGs9+XDm1sl+GeTWp4enjJJPJC4qrPt+oj51HZhrxkedps
-         v+b4O8r18nFPvvl0I6di9evj6bthqDISUZ+U89BngM7+huAtWQPizexgtx3pqCYBHA
-         WJpoH3bfHi1UTxsTbDlgPQYG27nPeBXNexbWyIFc=
-Received: by mail-lj1-f180.google.com with SMTP id s205so1432877lja.7
-        for <linux-raid@vger.kernel.org>; Wed, 23 Sep 2020 20:26:38 -0700 (PDT)
-X-Gm-Message-State: AOAM532A/L+Ay5B2tIQj8REMl6XX1CHrQ3cSrl5PVQFe4J585QkOxaCq
-        iIfFZYVB+5e72XAPeAu11tYi/1mYCuTktGAXVwM=
-X-Google-Smtp-Source: ABdhPJwonLj8KOTPKJuYnZloZ9msutvAKTdfJ2RFVG8+BHHgVRzD1THHi45mT+piW6xULyC4PjCsiOQodnZt0RmldU4=
-X-Received: by 2002:a2e:b0d6:: with SMTP id g22mr815075ljl.350.1600917996604;
- Wed, 23 Sep 2020 20:26:36 -0700 (PDT)
+        id S1727221AbgIXGwA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Sep 2020 02:52:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43464 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727212AbgIXGv7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 02:51:59 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BD34C0613D3;
+        Wed, 23 Sep 2020 23:51:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=ZzPx71qgJF0jC0ikEBgBKShPtgyqvHrdfndjbCu7C3c=; b=XUFcuzWy60D3s8pxvmU8mmt6xP
+        a5KtiaRQVXJifB651UMtAjWRxMib0YObi/FPgk2O8+1Br4UYxRrvOMiR/Y/1SB5fPjZ2pxQBNfgzb
+        4OXHKYc+ovmJJwNys7gjgm9A9vk0V+0ta6/+ECBHyxrlilHmxjzSkmnm+EQ4n/X7f1ir//eTIwmZD
+        AVApt4a76FZYddf361u9kKYhGkmUfg26eH1hS0Z8/FZt6MNh8B4s4kiZo3TsVgN0rYbCpo/4cbVMn
+        dY+2XXF2/Gfct2itXYVT6aKOVcRef77ztCUnX9W9i8Bwm1fLgEAeOgO74vo7lOEK99PoqR/6gA1z9
+        gU9HJDCQ==;
+Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kLL6U-00019N-Al; Thu, 24 Sep 2020 06:51:42 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
+        Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>,
+        Minchan Kim <minchan@kernel.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Justin Sanders <justin@coraid.com>,
+        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, cgroups@vger.kernel.org,
+        Jan Kara <jack@suse.cz>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 01/13] fs: remove the unused SB_I_MULTIROOT flag
+Date:   Thu, 24 Sep 2020 08:51:28 +0200
+Message-Id: <20200924065140.726436-2-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200924065140.726436-1-hch@lst.de>
+References: <20200924065140.726436-1-hch@lst.de>
 MIME-Version: 1.0
-References: <1600754282-3982-1-git-send-email-xni@redhat.com>
-In-Reply-To: <1600754282-3982-1-git-send-email-xni@redhat.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 23 Sep 2020 20:26:25 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6x6C4P7jsUz8hAS-foTz_u1Zv7M4JLp+PS7cO0-FiDLw@mail.gmail.com>
-Message-ID: <CAPhsuW6x6C4P7jsUz8hAS-foTz_u1Zv7M4JLp+PS7cO0-FiDLw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] md/raid10: Change the return type of
- raid10_handle_discard to int
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Song Liu <songliubraving@fb.com>,
-        kbuild test robot <lkp@intel.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Sep 21, 2020 at 10:58 PM Xiao Ni <xni@redhat.com> wrote:
->
-> Now the return type of raid10_handle_discard is bool. This is wrong.
-> Change the return type to int.
->
-> Reported-by: kernel test robot <lkp@intel.com>
-> fixes: 8f694215ae4c (md/raid10: improve raid10 discard request)
-> Signed-off-by: Xiao Ni <xni@redhat.com>
+The last user of SB_I_MULTIROOT is disappeared with commit f2aedb713c28
+("NFS: Add fs_context support.")
 
-Applied to md-next. Thanks for the fix!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ fs/namei.c         | 4 ++--
+ include/linux/fs.h | 1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index e99e2a9da0f7de..f1eb8ccd2be958 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -568,8 +568,8 @@ static bool path_connected(struct vfsmount *mnt, struct dentry *dentry)
+ {
+ 	struct super_block *sb = mnt->mnt_sb;
+ 
+-	/* Bind mounts and multi-root filesystems can have disconnected paths */
+-	if (!(sb->s_iflags & SB_I_MULTIROOT) && (mnt->mnt_root == sb->s_root))
++	/* Bind mounts can have disconnected paths */
++	if (mnt->mnt_root == sb->s_root)
+ 		return true;
+ 
+ 	return is_subdir(dentry, mnt->mnt_root);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7519ae003a082c..fbd74df5ce5f34 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1385,7 +1385,6 @@ extern int send_sigurg(struct fown_struct *fown);
+ #define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
+ #define SB_I_NOEXEC	0x00000002	/* Ignore executables on this fs */
+ #define SB_I_NODEV	0x00000004	/* Ignore devices on this fs */
+-#define SB_I_MULTIROOT	0x00000008	/* Multiple roots to the dentry tree */
+ 
+ /* sb->s_iflags to limit user namespace mounts */
+ #define SB_I_USERNS_VISIBLE		0x00000010 /* fstype already mounted */
+-- 
+2.28.0
+
