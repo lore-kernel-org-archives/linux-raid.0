@@ -7,77 +7,71 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98E38C4363D
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 19:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7FCC4363D
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 19:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45CE22399A
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 19:45:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E970A2220C
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 19:48:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="L2Wx7FlL"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="FexggIT1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726578AbgIXTo6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Sep 2020 15:44:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50218 "EHLO
+        id S1726210AbgIXTsC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Sep 2020 15:48:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726376AbgIXTo5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 15:44:57 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6949C0613D4
-        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2020 12:44:57 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id k133so319839pgc.7
-        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2020 12:44:57 -0700 (PDT)
+        with ESMTP id S1726037AbgIXTsB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 15:48:01 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE8BFC0613CE
+        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2020 12:48:01 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id b17so342161pji.1
+        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2020 12:48:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ADwlTn9rnJzlHv/xfLefERCgTh/zOY3+dj+IP5LMhIo=;
-        b=L2Wx7FlLw8QHVp62Ne3mt4GV7+MUCO/WLUazgDqXAmYbUX1Et5GwKUZRbOhKWcg1pJ
-         h3F8YG2QH8T53HlhbxkOnKDq7rYr7VYQSpBZ/SrGKbAAN0q9gjlZztvIvkLYWYD2H5p5
-         D5jWhUDJxNaNV9x10hDsgdYsv3+GqUJuih92RXGRYnyEyog4jlWpFA8o+B+sqtqEeysu
-         zXsVFR5QGsEI7lJZ39JHqx1JjZyubGP7QEwNsybW+JHQWulohPcvjDgNlPxNi7sQOhp+
-         YLXR3ph4QhgGStegDp9ue2849D7tWES5wOYPeY73GujeWcYMaP3DsMTgcgakPfQ8C4Iw
-         pmzA==
+        bh=2OYG9mygTeIwd3eXCqdDkc2EJID9VW1FmMPEh3/Wf1k=;
+        b=FexggIT1JeZknPy3pFy/61i8kvMFqbwVxaZ6RfvNqDhI881+H9OuafRAZNw9G2uVXM
+         DVKwTt26oyHU5ic/QmDs96kNDXa66TixT/3IfrOurCscqWA/xMbfxp6NJBp8ATs+VCLL
+         ucbs399nhzGOnzxOytvo97SZQ6Om4j4Gs+hkCj1b7Oi9SsFnTKw4Z8ka/rW1ATJmqGzE
+         sTlteynM87H05Z9ZiDHyo0iTT1NJ9HgB/fZYZLTVrnS+A+R4jeMhpG2LzTX2ILB2moqo
+         Z/Lh3fdiFZGw8TMfEtVek6GQePCVwhLfEZ+0JsmsRlTepJ3oFsLmpQG5cE7vgYEqVg/W
+         qctw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=ADwlTn9rnJzlHv/xfLefERCgTh/zOY3+dj+IP5LMhIo=;
-        b=SPPrQYzvYuwlvv2oBOeqYVUA6EjmQF57IqXs5doDIj0ZzVxcgasyQgNFaX9OqLziSX
-         MTV5v06uX9J0E0mwS+tg6spXJ4A328vomSMquv5nlcER/Fsf35tJ02mz+SjSy1hqwgN3
-         Y+kOHDxnFzpbjw5nJtZGGib55QeyJSellaJphxXQ3jGvXBKOeZ6ielYHsK9+euhWWU1w
-         06Dand7+KuaTYkk7Kux/dqw7l2v0vOeNCR9myNsNGkY7SFTjHO2GeBGhf/p8rMTWf5cl
-         Oav4E3gQjcbXWZ8H3ug7W/vlDx8+3zFfXs47u27PQ+UIcMxtxnCnsgk4dSX99Ekf8kiG
-         2ccQ==
-X-Gm-Message-State: AOAM530HUFjyv2hYT8nR145WPMHmkYVdzdCcvTwYlHs8L72Kg0S+lOj8
-        yDW17o2m2cNO/+i/Emq/kx3sQg==
-X-Google-Smtp-Source: ABdhPJyn7jUbiC3AGiO/dBfKmKGpcA3VV/JE4LzjEmCUjGJIbrcL8/kmgANM72e+JonEfnG9EJ77rg==
-X-Received: by 2002:a17:902:854b:b029:d1:cbf4:bb43 with SMTP id d11-20020a170902854bb02900d1cbf4bb43mr778274plo.13.1600976697336;
-        Thu, 24 Sep 2020 12:44:57 -0700 (PDT)
+        bh=2OYG9mygTeIwd3eXCqdDkc2EJID9VW1FmMPEh3/Wf1k=;
+        b=dgb6RpE0LgnTpSO2oe9WxN1GMP8Snwf5tG3+KWjbPyfWVVMGArl/3B17W+p8T+Euzx
+         RbvLZeW4CxQ2VuRXKHtlN/Ex0RvGeS9ePiBYTU6r3SQeIlIfMbY9YhSAV1u61acYLP38
+         BcwNss0BZy0yEJTLHIaz2lFSnCwnROC7RbNsw9I8mazL/xANKJRoT8O5XHk9vGz5Ty6m
+         TIJOnvUL19fwLyKfDukmnRjEyGq5jRAv55UlvAm9s8TWVsUv2VGH8cm7C89BjxfQXgrX
+         YRS7EHid5dHTM2wlIxCco175Jg4nPwSZFVDqZtpkgUUYd+4HSM/CPakIXSUmvT5T1KZ/
+         vhww==
+X-Gm-Message-State: AOAM532lCLqtDQAL0N9LZ48akGBv/2w48t/1wDjWeUJ8azCkplLlaKIL
+        MDCizlFNY/iduRWglfW+D22fzw==
+X-Google-Smtp-Source: ABdhPJxhFmFszaCsxMfmB5ZEkvdnPuJUFSosIpkxGW0L8EN0AXYSjGLvXRjEShv7eK+rFvz3VEgucg==
+X-Received: by 2002:a17:90a:8c8a:: with SMTP id b10mr517941pjo.216.1600976881416;
+        Thu, 24 Sep 2020 12:48:01 -0700 (PDT)
 Received: from ?IPv6:2620:10d:c085:21d6::1911? ([2620:10d:c090:400::5:d63d])
-        by smtp.gmail.com with ESMTPSA id u10sm267612pfn.122.2020.09.24.12.44.55
+        by smtp.gmail.com with ESMTPSA id n9sm184766pgi.2.2020.09.24.12.47.59
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Sep 2020 12:44:56 -0700 (PDT)
-Subject: Re: bdi cleanups v7
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
-        Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>,
-        Minchan Kim <minchan@kernel.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Justin Sanders <justin@coraid.com>,
-        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, cgroups@vger.kernel.org
-References: <20200924065140.726436-1-hch@lst.de>
+        Thu, 24 Sep 2020 12:48:00 -0700 (PDT)
+Subject: Re: [GIT PULL] md-next 20200923
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Xiao Ni <xni@redhat.com>, Zhen Lei <thunder.leizhen@huawei.com>,
+        Yufen Yu <yuyufen@huawei.com>,
+        Xianting Tian <tian.xianting@h3c.com>
+References: <8960F87F-602B-40B0-863F-E3DE75ACCD45@fb.com>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <a9235ba9-95a0-4251-ee7d-e4012775346e@kernel.dk>
-Date:   Thu, 24 Sep 2020 13:44:54 -0600
+Message-ID: <40dbf27a-1c5e-6d32-1bb8-6f8f8d1ac46a@kernel.dk>
+Date:   Thu, 24 Sep 2020 13:47:59 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200924065140.726436-1-hch@lst.de>
+In-Reply-To: <8960F87F-602B-40B0-863F-E3DE75ACCD45@fb.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,14 +79,14 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/24/20 12:51 AM, Christoph Hellwig wrote:
-> Hi Jens,
+On 9/23/20 4:56 PM, Song Liu wrote:
 > 
-> this series contains a bunch of different BDI cleanups.  The biggest item
-> is to isolate block drivers from the BDI in preparation of changing the
-> lifetime of the block device BDI in a follow up series.
+> Hi Jens, 
+> 
+> Please consider pulling the following changes for md-next on top of your 
+> for-5.10/block branch. 
 
-Applied, thanks.
+Pulled, thanks.
 
 -- 
 Jens Axboe
