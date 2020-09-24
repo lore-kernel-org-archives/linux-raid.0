@@ -2,152 +2,336 @@ Return-Path: <SRS0=HtB1=DB=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2EF3C4346E
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 09:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE9CDC4741F
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 14:53:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72AC822208
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 09:27:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F90E2220D
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 14:53:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726567AbgIXJ1v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Sep 2020 05:27:51 -0400
-Received: from mail-il1-f208.google.com ([209.85.166.208]:38730 "EHLO
-        mail-il1-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727487AbgIXJ01 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 05:26:27 -0400
-Received: by mail-il1-f208.google.com with SMTP id n71so2099774ild.5
-        for <linux-raid@vger.kernel.org>; Thu, 24 Sep 2020 02:26:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=1vZBoUfllgQW1HoxmcWnFRiHdvFknjpt5KNWNGuStuA=;
-        b=gQA6nh0kkB8uHdTY4sBTJlE0k1k2eshZ3uOVmGLSX364UnB7IIfM51va6CfaIguuW+
-         Kd3ucaqDxBBg43D8AvBsOQSUMnjh9+LSuwPQ/8KxsE3L1wMOfL5fdj7dPXhIRUajhBcy
-         ogFypGR+RFutgTDB1vb+kiIhk+nMA2gBAvi+TEX5FJRDLSp39tF6KPMbSM7l0AA5R6tr
-         u/frj7iar+sQfv4q5718dsM4sbhMy7SNd/uBJRD+0EdA/mMhbBGH+V3ZW3ahhqjHCBvr
-         DVvtciJXXbGWA9KoZHRzXnGzhCZ83ulCGrlrwwXl/qPqNw0rnQ8lW4HbHFV1AjdtUuPU
-         Uz7g==
-X-Gm-Message-State: AOAM532nFnwOJSL65lmhkHSdVeC9NWO04InYViPMiBAh7ovvtAVrJNtV
-        HoMQa/I1YckUYacvKZdbx6lJCzFgf81NPHZDAbupvIxQ1859
-X-Google-Smtp-Source: ABdhPJwOx8rANuVrAsei7C1g+CVbAzLOuF18+sdMCU8TSORbUwU6ZvDr5+K0pkfk5oYluj6k2Rofx9x79zsvdMNZFPGsktwVak2E
+        id S1728292AbgIXOxw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Sep 2020 10:53:52 -0400
+Received: from mx2.suse.de ([195.135.220.15]:45024 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727859AbgIXOxw (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 24 Sep 2020 10:53:52 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 1FAE0ACCF;
+        Thu, 24 Sep 2020 14:53:48 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 992521E12DD; Thu, 24 Sep 2020 16:53:46 +0200 (CEST)
+Date:   Thu, 24 Sep 2020 16:53:46 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>,
+        Minchan Kim <minchan@kernel.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Justin Sanders <justin@coraid.com>,
+        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, cgroups@vger.kernel.org
+Subject: Re: [PATCH 07/13] block: lift setting the readahead size into the
+ block layer
+Message-ID: <20200924145346.GA3361@quack2.suse.cz>
+References: <20200924065140.726436-1-hch@lst.de>
+ <20200924065140.726436-8-hch@lst.de>
 MIME-Version: 1.0
-X-Received: by 2002:a02:c789:: with SMTP id n9mr2750231jao.36.1600939586191;
- Thu, 24 Sep 2020 02:26:26 -0700 (PDT)
-Date:   Thu, 24 Sep 2020 02:26:26 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000578a4f05b00bcb4b@google.com>
-Subject: KASAN: vmalloc-out-of-bounds Read in bpf_trace_run5
-From:   syzbot <syzbot+856297c51366950e115e@syzkaller.appspotmail.com>
-To:     a@unstable.cc, andriin@fb.com, ast@kernel.org,
-        b.a.t.m.a.n@lists.open-mesh.org, bpf@vger.kernel.org,
-        daniel@iogearbox.net, davem@davemloft.net, hawk@kernel.org,
-        john.fastabend@gmail.com, kafai@fb.com, kpsingh@chromium.org,
-        kuba@kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, mareklindner@neomailbox.ch,
-        mingo@redhat.com, netdev@vger.kernel.org, rostedt@goodmis.org,
-        shli@fb.com, shli@kernel.org, songliubraving@fb.com,
-        sw@simonwunderlich.de, syzkaller-bugs@googlegroups.com, yhs@fb.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200924065140.726436-8-hch@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello,
+On Thu 24-09-20 08:51:34, Christoph Hellwig wrote:
+> Drivers shouldn't really mess with the readahead size, as that is a VM
+> concept.  Instead set it based on the optimal I/O size by lifting the
+> algorithm from the md driver when registering the disk.  Also set
+> bdi->io_pages there as well by applying the same scheme based on
+> max_sectors.  To ensure the limits work well for stacking drivers a
+> new helper is added to update the readahead limits from the block
+> limits, which is also called from disk_stack_limits.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Coly Li <colyli@suse.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-syzbot found the following issue on:
+The patch looks good to me now. You can add:
 
-HEAD commit:    b10b8ad8 Add linux-next specific files for 20200921
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=1371eb1d900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3cf0782933432b43
-dashboard link: https://syzkaller.appspot.com/bug?extid=856297c51366950e115e
-compiler:       gcc (GCC) 10.1.0-syz 20200507
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1510d3d9900000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1328ecbb900000
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-The issue was bisected to:
+								Honza
 
-commit 1e6d690b9334b7e1b31d25fd8d93e980e449a5f9
-Author: Song Liu <songliubraving@fb.com>
-Date:   Thu Nov 17 23:24:39 2016 +0000
-
-    md/r5cache: caching phase of r5cache
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=109283d9900000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=129283d9900000
-console output: https://syzkaller.appspot.com/x/log.txt?x=149283d9900000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+856297c51366950e115e@syzkaller.appspotmail.com
-Fixes: 1e6d690b9334 ("md/r5cache: caching phase of r5cache")
-
-==================================================================
-BUG: KASAN: vmalloc-out-of-bounds in __bpf_trace_run kernel/trace/bpf_trace.c:1937 [inline]
-BUG: KASAN: vmalloc-out-of-bounds in bpf_trace_run5+0x401/0x410 kernel/trace/bpf_trace.c:1977
-Read of size 8 at addr ffffc90000e80030 by task rs:main Q:Reg/6567
-
-CPU: 1 PID: 6567 Comm: rs:main Q:Reg Not tainted 5.9.0-rc5-next-20200921-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x198/0x1fb lib/dump_stack.c:118
- print_address_description.constprop.0.cold+0x5/0x497 mm/kasan/report.c:385
- __kasan_report mm/kasan/report.c:545 [inline]
- kasan_report.cold+0x1f/0x37 mm/kasan/report.c:562
- __bpf_trace_run kernel/trace/bpf_trace.c:1937 [inline]
- bpf_trace_run5+0x401/0x410 kernel/trace/bpf_trace.c:1977
- __bpf_trace_ext4_journal_start+0x142/0x180 include/trace/events/ext4.h:1788
- __traceiter_ext4_journal_start+0x83/0xd0 include/trace/events/ext4.h:1788
- trace_ext4_journal_start include/trace/events/ext4.h:1788 [inline]
- __ext4_journal_start_sb+0x228/0x440 fs/ext4/ext4_jbd2.c:96
- __ext4_journal_start fs/ext4/ext4_jbd2.h:328 [inline]
- ext4_dirty_inode+0xbc/0x130 fs/ext4/inode.c:5850
- __mark_inode_dirty+0x888/0x1190 fs/fs-writeback.c:2260
- generic_update_time+0x21c/0x370 fs/inode.c:1764
- update_time fs/inode.c:1777 [inline]
- file_update_time+0x434/0x520 fs/inode.c:1992
- file_modified fs/inode.c:2015 [inline]
- file_modified+0x7d/0xa0 fs/inode.c:2000
- ext4_write_checks fs/ext4/file.c:248 [inline]
- ext4_buffered_write_iter+0xf9/0x4a0 fs/ext4/file.c:264
- ext4_file_write_iter+0x1f3/0x13e0 fs/ext4/file.c:660
- call_write_iter include/linux/fs.h:1895 [inline]
- new_sync_write+0x426/0x650 fs/read_write.c:517
- vfs_write+0x57d/0x700 fs/read_write.c:595
- ksys_write+0x12d/0x250 fs/read_write.c:648
- do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x7fed08e3a1cd
-Code: c2 20 00 00 75 10 b8 01 00 00 00 0f 05 48 3d 01 f0 ff ff 73 31 c3 48 83 ec 08 e8 ae fc ff ff 48 89 04 24 b8 01 00 00 00 0f 05 <48> 8b 3c 24 48 89 c2 e8 f7 fc ff ff 48 89 d0 48 83 c4 08 48 3d 01
-RSP: 002b:00007fed063f5590 EFLAGS: 00000293 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 00007fecfc0238a0 RCX: 00007fed08e3a1cd
-RDX: 0000000000000dd6 RSI: 00007fecfc0238a0 RDI: 0000000000000006
-RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000293 R12: 00007fecfc023620
-R13: 00007fed063f55b0 R14: 0000560a2b025360 R15: 0000000000000dd6
-
-
-Memory state around the buggy address:
- ffffc90000e7ff00: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
- ffffc90000e7ff80: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
->ffffc90000e80000: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
-                                     ^
- ffffc90000e80080: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
- ffffc90000e80100: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8
-==================================================================
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+> ---
+>  block/blk-settings.c         | 18 ++++++++++++++++--
+>  block/blk-sysfs.c            |  2 ++
+>  drivers/block/aoe/aoeblk.c   |  1 -
+>  drivers/block/drbd/drbd_nl.c | 10 +---------
+>  drivers/md/bcache/super.c    |  3 ---
+>  drivers/md/dm-table.c        |  3 +--
+>  drivers/md/raid0.c           | 16 ----------------
+>  drivers/md/raid10.c          | 24 +-----------------------
+>  drivers/md/raid5.c           | 13 +------------
+>  drivers/nvme/host/core.c     |  1 +
+>  include/linux/blkdev.h       |  1 +
+>  11 files changed, 24 insertions(+), 68 deletions(-)
+> 
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 5ea3de48afba22..4f6eb4bb17236a 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -372,6 +372,19 @@ void blk_queue_alignment_offset(struct request_queue *q, unsigned int offset)
+>  }
+>  EXPORT_SYMBOL(blk_queue_alignment_offset);
+>  
+> +void blk_queue_update_readahead(struct request_queue *q)
+> +{
+> +	/*
+> +	 * For read-ahead of large files to be effective, we need to read ahead
+> +	 * at least twice the optimal I/O size.
+> +	 */
+> +	q->backing_dev_info->ra_pages =
+> +		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
+> +	q->backing_dev_info->io_pages =
+> +		queue_max_sectors(q) >> (PAGE_SHIFT - 9);
+> +}
+> +EXPORT_SYMBOL_GPL(blk_queue_update_readahead);
+> +
+>  /**
+>   * blk_limits_io_min - set minimum request size for a device
+>   * @limits: the queue limits
+> @@ -450,6 +463,8 @@ EXPORT_SYMBOL(blk_limits_io_opt);
+>  void blk_queue_io_opt(struct request_queue *q, unsigned int opt)
+>  {
+>  	blk_limits_io_opt(&q->limits, opt);
+> +	q->backing_dev_info->ra_pages =
+> +		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
+>  }
+>  EXPORT_SYMBOL(blk_queue_io_opt);
+>  
+> @@ -631,8 +646,7 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+>  		       top, bottom);
+>  	}
+>  
+> -	t->backing_dev_info->io_pages =
+> -		t->limits.max_sectors >> (PAGE_SHIFT - 9);
+> +	blk_queue_update_readahead(disk->queue);
+>  }
+>  EXPORT_SYMBOL(disk_stack_limits);
+>  
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 81722cdcf0cb21..869ed21a9edcab 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -854,6 +854,8 @@ int blk_register_queue(struct gendisk *disk)
+>  		percpu_ref_switch_to_percpu(&q->q_usage_counter);
+>  	}
+>  
+> +	blk_queue_update_readahead(q);
+> +
+>  	ret = blk_trace_init_sysfs(dev);
+>  	if (ret)
+>  		return ret;
+> diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
+> index d8cfc233e64b93..c34e71b0c4a98c 100644
+> --- a/drivers/block/aoe/aoeblk.c
+> +++ b/drivers/block/aoe/aoeblk.c
+> @@ -406,7 +406,6 @@ aoeblk_gdalloc(void *vp)
+>  	WARN_ON(d->gd);
+>  	WARN_ON(d->flags & DEVFL_UP);
+>  	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
+> -	q->backing_dev_info->ra_pages = SZ_2M / PAGE_SIZE;
+>  	blk_queue_io_opt(q, SZ_2M);
+>  	d->bufpool = mp;
+>  	d->blkq = gd->queue = q;
+> diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+> index aaff5bde391506..54a4930c04fe07 100644
+> --- a/drivers/block/drbd/drbd_nl.c
+> +++ b/drivers/block/drbd/drbd_nl.c
+> @@ -1362,15 +1362,7 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
+>  
+>  	if (b) {
+>  		blk_stack_limits(&q->limits, &b->limits, 0);
+> -
+> -		if (q->backing_dev_info->ra_pages !=
+> -		    b->backing_dev_info->ra_pages) {
+> -			drbd_info(device, "Adjusting my ra_pages to backing device's (%lu -> %lu)\n",
+> -				 q->backing_dev_info->ra_pages,
+> -				 b->backing_dev_info->ra_pages);
+> -			q->backing_dev_info->ra_pages =
+> -						b->backing_dev_info->ra_pages;
+> -		}
+> +		blk_queue_update_readahead(q);
+>  	}
+>  	fixup_discard_if_not_supported(q);
+>  	fixup_write_zeroes(device, q);
+> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+> index 48113005ed86ad..6bfa771673623e 100644
+> --- a/drivers/md/bcache/super.c
+> +++ b/drivers/md/bcache/super.c
+> @@ -1427,9 +1427,6 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
+>  	if (ret)
+>  		return ret;
+>  
+> -	dc->disk.disk->queue->backing_dev_info->ra_pages =
+> -		max(dc->disk.disk->queue->backing_dev_info->ra_pages,
+> -		    q->backing_dev_info->ra_pages);
+>  	blk_queue_io_opt(dc->disk.disk->queue,
+>  		max(queue_io_opt(dc->disk.disk->queue), queue_io_opt(q)));
+>  
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index 5edc3079e7c199..ef2757012f59d5 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -1925,8 +1925,7 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+>  	}
+>  #endif
+>  
+> -	/* Allow reads to exceed readahead limits */
+> -	q->backing_dev_info->io_pages = limits->max_sectors >> (PAGE_SHIFT - 9);
+> +	blk_queue_update_readahead(q);
+>  }
+>  
+>  unsigned int dm_table_get_num_targets(struct dm_table *t)
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index f54a449f97aa79..aa2d7279176880 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -410,22 +410,6 @@ static int raid0_run(struct mddev *mddev)
+>  		 mdname(mddev),
+>  		 (unsigned long long)mddev->array_sectors);
+>  
+> -	if (mddev->queue) {
+> -		/* calculate the max read-ahead size.
+> -		 * For read-ahead of large files to be effective, we need to
+> -		 * readahead at least twice a whole stripe. i.e. number of devices
+> -		 * multiplied by chunk size times 2.
+> -		 * If an individual device has an ra_pages greater than the
+> -		 * chunk size, then we will not drive that device as hard as it
+> -		 * wants.  We consider this a configuration error: a larger
+> -		 * chunksize should be used in that case.
+> -		 */
+> -		int stripe = mddev->raid_disks *
+> -			(mddev->chunk_sectors << 9) / PAGE_SIZE;
+> -		if (mddev->queue->backing_dev_info->ra_pages < 2* stripe)
+> -			mddev->queue->backing_dev_info->ra_pages = 2* stripe;
+> -	}
+> -
+>  	dump_zones(mddev);
+>  
+>  	ret = md_integrity_register(mddev);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 9956a04ac13bd6..5d1bdee313ec33 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -3873,19 +3873,6 @@ static int raid10_run(struct mddev *mddev)
+>  	mddev->resync_max_sectors = size;
+>  	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+>  
+> -	if (mddev->queue) {
+> -		int stripe = conf->geo.raid_disks *
+> -			((mddev->chunk_sectors << 9) / PAGE_SIZE);
+> -
+> -		/* Calculate max read-ahead size.
+> -		 * We need to readahead at least twice a whole stripe....
+> -		 * maybe...
+> -		 */
+> -		stripe /= conf->geo.near_copies;
+> -		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+> -			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
+> -	}
+> -
+>  	if (md_integrity_register(mddev))
+>  		goto out_free_conf;
+>  
+> @@ -4723,17 +4710,8 @@ static void end_reshape(struct r10conf *conf)
+>  	conf->reshape_safe = MaxSector;
+>  	spin_unlock_irq(&conf->device_lock);
+>  
+> -	/* read-ahead size must cover two whole stripes, which is
+> -	 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
+> -	 */
+> -	if (conf->mddev->queue) {
+> -		int stripe = conf->geo.raid_disks *
+> -			((conf->mddev->chunk_sectors << 9) / PAGE_SIZE);
+> -		stripe /= conf->geo.near_copies;
+> -		if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+> -			conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
+> +	if (conf->mddev->queue)
+>  		raid10_set_io_opt(conf);
+> -	}
+>  	conf->fullsync = 0;
+>  }
+>  
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 9a7d1250894ef1..7ace1f76b14736 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7522,8 +7522,6 @@ static int raid5_run(struct mddev *mddev)
+>  		int data_disks = conf->previous_raid_disks - conf->max_degraded;
+>  		int stripe = data_disks *
+>  			((mddev->chunk_sectors << 9) / PAGE_SIZE);
+> -		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+> -			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
+>  
+>  		chunk_size = mddev->chunk_sectors << 9;
+>  		blk_queue_io_min(mddev->queue, chunk_size);
+> @@ -8111,17 +8109,8 @@ static void end_reshape(struct r5conf *conf)
+>  		spin_unlock_irq(&conf->device_lock);
+>  		wake_up(&conf->wait_for_overlap);
+>  
+> -		/* read-ahead size must cover two whole stripes, which is
+> -		 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
+> -		 */
+> -		if (conf->mddev->queue) {
+> -			int data_disks = conf->raid_disks - conf->max_degraded;
+> -			int stripe = data_disks * ((conf->chunk_sectors << 9)
+> -						   / PAGE_SIZE);
+> -			if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+> -				conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
+> +		if (conf->mddev->queue)
+>  			raid5_set_io_opt(conf);
+> -		}
+>  	}
+>  }
+>  
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index ea1fa41fbba8df..741c9bfa8e14c7 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -2147,6 +2147,7 @@ static int __nvme_revalidate_disk(struct gendisk *disk, struct nvme_id_ns *id)
+>  		nvme_update_disk_info(ns->head->disk, ns, id);
+>  		blk_stack_limits(&ns->head->disk->queue->limits,
+>  				 &ns->queue->limits, 0);
+> +		blk_queue_update_readahead(ns->head->disk->queue);
+>  		nvme_update_bdev_size(ns->head->disk);
+>  	}
+>  #endif
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index be5ef6f4ba1905..282f5ca424f14a 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1140,6 +1140,7 @@ extern void blk_queue_max_zone_append_sectors(struct request_queue *q,
+>  extern void blk_queue_physical_block_size(struct request_queue *, unsigned int);
+>  extern void blk_queue_alignment_offset(struct request_queue *q,
+>  				       unsigned int alignment);
+> +void blk_queue_update_readahead(struct request_queue *q);
+>  extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
+>  extern void blk_queue_io_min(struct request_queue *q, unsigned int min);
+>  extern void blk_limits_io_opt(struct queue_limits *limits, unsigned int opt);
+> -- 
+> 2.28.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
