@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D52ECC47426
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 06:52:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C789C4346E
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 06:52:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FC162388A
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 06:52:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0364723772
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 06:52:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UB5YCNux"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FUjCrvU6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727287AbgIXGwQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Sep 2020 02:52:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43476 "EHLO
+        id S1727365AbgIXGwp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Sep 2020 02:52:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727212AbgIXGwB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 02:52:01 -0400
+        with ESMTP id S1727208AbgIXGwK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 02:52:10 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CAA2C0613D4;
-        Wed, 23 Sep 2020 23:52:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D847EC0613DB;
+        Wed, 23 Sep 2020 23:52:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=II635vFBb1VUrIhyKQTtXi4VWoh2O6zcRcSXRwzfbpE=; b=UB5YCNux+TI+Jd2fEhNidjhyLu
-        +l8iEWNXmg4pFLWzuPahIMrMUofCGV65UTxU6uo1NhymBoOVb6qFu2/kxIRrQBd2g1A+Xf0Uo1sjW
-        SHgbk+Xz3KCUR+2pPM1zX8sh6e/H/z1geRWceWC29DEfpPYwoyOFKxI7T+I0s4R70dg7WArCrepOt
-        7ORCNPllmUEVtrmaPLotpLq84FrXddqSbrYASJjiF/VqQfPIPxq8HqElgMQudxqx54XO/Ij+IKLZg
-        xrN/S7FZ9KtN/uJceMAK47PKvJ/Agvg5hkjvWPtoted9OLRZihbK+1QG/DSIF0XdCgYu+8gPwoXMS
-        UkRcBaEQ==;
+        bh=XopQpzpw3KoIwQKF1nuIAvoWKkMjHrthqtRC/LQIsIM=; b=FUjCrvU6H2vva9OlbvPRBjueT5
+        3WXeoJz7jDgz3iw1Mg+Iopz/QJv6nWDYq/GeZgV0pNiTlmEizWOs5noXGIap262ObPZLLRr7tvE8r
+        JNstR6W2pQXp1QSypUIAUd6VajwetTYHmxREzhwHzIiglVM/1kYN8t+yrxAp2LIA9cOfWRrvBdCLS
+        G605Ys2cGihmniidppqvKePiGkYbfjsW9VA/Aj55jf2UW1wyYJDiPsfLR3g1zI2EYw4T57DMfQJ+i
+        gxrErAJDe9sH140Q+m+FmHzsKzsELzKsSi7UI7xmwOqgFxtavnbxKa6xUMzx4tWiinIxQeTWJ+g6u
+        tHziqaFg==;
 Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kLL6e-0001Ar-PP; Thu, 24 Sep 2020 06:51:52 +0000
+        id 1kLL6j-0001Bg-1R; Thu, 24 Sep 2020 06:51:57 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
@@ -51,9 +51,9 @@ Cc:     Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
         linux-mm@kvack.org, cgroups@vger.kernel.org,
         Jan Kara <jack@suse.cz>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 08/13] bdi: remove BDI_CAP_CGROUP_WRITEBACK
-Date:   Thu, 24 Sep 2020 08:51:35 +0200
-Message-Id: <20200924065140.726436-9-hch@lst.de>
+Subject: [PATCH 12/13] bdi: invert BDI_CAP_NO_ACCT_WB
+Date:   Thu, 24 Sep 2020 08:51:39 +0200
+Message-Id: <20200924065140.726436-13-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200924065140.726436-1-hch@lst.de>
 References: <20200924065140.726436-1-hch@lst.de>
@@ -64,77 +64,107 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just checking SB_I_CGROUPWB for cgroup writeback support is enough.
-Either the file system allocates its own bdi (e.g. btrfs), in which case
-it is known to support cgroup writeback, or the bdi comes from the block
-layer, which always supports cgroup writeback.
+Replace BDI_CAP_NO_ACCT_WB with a positive BDI_CAP_WRITEBACK_ACCT to
+make the checks more obvious.  Also remove the pointless
+bdi_cap_account_writeback wrapper that just obsfucates the check.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/blk-core.c            | 1 -
- fs/btrfs/disk-io.c          | 1 -
- include/linux/backing-dev.h | 8 +++-----
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ fs/fuse/inode.c             |  3 ++-
+ include/linux/backing-dev.h | 13 +++----------
+ mm/backing-dev.c            |  1 +
+ mm/page-writeback.c         |  4 ++--
+ 4 files changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 865d39e5be2b28..1cc4fa6bc7fe1f 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -538,7 +538,6 @@ struct request_queue *blk_alloc_queue(int node_id)
- 	if (!q->stats)
- 		goto fail_stats;
+diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+index 17b00670fb539e..581329203d6860 100644
+--- a/fs/fuse/inode.c
++++ b/fs/fuse/inode.c
+@@ -1050,7 +1050,8 @@ static int fuse_bdi_init(struct fuse_conn *fc, struct super_block *sb)
+ 		return err;
  
--	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
- 	q->node = node_id;
+ 	/* fuse does it's own writeback accounting */
+-	sb->s_bdi->capabilities = BDI_CAP_NO_ACCT_WB | BDI_CAP_STRICTLIMIT;
++	sb->s_bdi->capabilities &= ~BDI_CAP_WRITEBACK_ACCT;
++	sb->s_bdi->capabilities |= BDI_CAP_STRICTLIMIT;
  
- 	atomic_set(&q->nr_active_requests_shared_sbitmap, 0);
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index 047934cea25efa..e24927bddd5829 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -3091,7 +3091,6 @@ int __cold open_ctree(struct super_block *sb, struct btrfs_fs_devices *fs_device
- 		goto fail_sb_buffer;
- 	}
- 
--	sb->s_bdi->capabilities |= BDI_CAP_CGROUP_WRITEBACK;
- 	sb->s_bdi->ra_pages *= btrfs_super_num_devices(disk_super);
- 	sb->s_bdi->ra_pages = max(sb->s_bdi->ra_pages, SZ_4M / PAGE_SIZE);
- 
+ 	/*
+ 	 * For a single fuse filesystem use max 1% of dirty +
 diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 0b06b2d26c9aa3..52583b6f2ea05d 100644
+index 5da4ea3dd0cc5c..b217344a2c63be 100644
 --- a/include/linux/backing-dev.h
 +++ b/include/linux/backing-dev.h
-@@ -123,7 +123,6 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
-  * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
+@@ -120,17 +120,17 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
+  *
+  * BDI_CAP_NO_ACCT_DIRTY:  Dirty pages shouldn't contribute to accounting
+  * BDI_CAP_NO_WRITEBACK:   Don't write pages back
+- * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
++ * BDI_CAP_WRITEBACK_ACCT: Automatically account writeback pages
   * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
-  *
-- * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
-  * BDI_CAP_SYNCHRONOUS_IO: Device is so fast that asynchronous IO would be
-  *			   inefficient.
   */
-@@ -233,9 +232,9 @@ int inode_congested(struct inode *inode, int cong_bits);
-  * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
-  * @inode: inode of interest
-  *
-- * cgroup writeback requires support from both the bdi and filesystem.
-- * Also, both memcg and iocg have to be on the default hierarchy.  Test
-- * whether all conditions are met.
-+ * Cgroup writeback requires support from the filesystem.  Also, both memcg and
-+ * iocg have to be on the default hierarchy.  Test whether all conditions are
-+ * met.
-  *
-  * Note that the test result may change dynamically on the same inode
-  * depending on how memcg and iocg are configured.
-@@ -247,7 +246,6 @@ static inline bool inode_cgwb_enabled(struct inode *inode)
- 	return cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
- 		cgroup_subsys_on_dfl(io_cgrp_subsys) &&
- 		bdi_cap_account_dirty(bdi) &&
--		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
- 		(inode->i_sb->s_iflags & SB_I_CGROUPWB);
+ #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
+ #define BDI_CAP_NO_WRITEBACK	0x00000002
+-#define BDI_CAP_NO_ACCT_WB	0x00000004
++#define BDI_CAP_WRITEBACK_ACCT	0x00000004
+ #define BDI_CAP_STRICTLIMIT	0x00000010
+ #define BDI_CAP_CGROUP_WRITEBACK 0x00000020
+ 
+ #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
+-	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
++	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY)
+ 
+ extern struct backing_dev_info noop_backing_dev_info;
+ 
+@@ -179,13 +179,6 @@ static inline bool bdi_cap_account_dirty(struct backing_dev_info *bdi)
+ 	return !(bdi->capabilities & BDI_CAP_NO_ACCT_DIRTY);
  }
  
+-static inline bool bdi_cap_account_writeback(struct backing_dev_info *bdi)
+-{
+-	/* Paranoia: BDI_CAP_NO_WRITEBACK implies BDI_CAP_NO_ACCT_WB */
+-	return !(bdi->capabilities & (BDI_CAP_NO_ACCT_WB |
+-				      BDI_CAP_NO_WRITEBACK));
+-}
+-
+ static inline bool mapping_cap_writeback_dirty(struct address_space *mapping)
+ {
+ 	return bdi_cap_writeback_dirty(inode_to_bdi(mapping->host));
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 8e3802bf03a968..df18f0088dd3f5 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -745,6 +745,7 @@ struct backing_dev_info *bdi_alloc(int node_id)
+ 		kfree(bdi);
+ 		return NULL;
+ 	}
++	bdi->capabilities = BDI_CAP_WRITEBACK_ACCT;
+ 	bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	bdi->io_pages = VM_READAHEAD_PAGES;
+ 	return bdi;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index e9c36521461aaa..0139f9622a92da 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2738,7 +2738,7 @@ int test_clear_page_writeback(struct page *page)
+ 		if (ret) {
+ 			__xa_clear_mark(&mapping->i_pages, page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+-			if (bdi_cap_account_writeback(bdi)) {
++			if (bdi->capabilities & BDI_CAP_WRITEBACK_ACCT) {
+ 				struct bdi_writeback *wb = inode_to_wb(inode);
+ 
+ 				dec_wb_stat(wb, WB_WRITEBACK);
+@@ -2791,7 +2791,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 						   PAGECACHE_TAG_WRITEBACK);
+ 
+ 			xas_set_mark(&xas, PAGECACHE_TAG_WRITEBACK);
+-			if (bdi_cap_account_writeback(bdi))
++			if (bdi->capabilities & BDI_CAP_WRITEBACK_ACCT)
+ 				inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
+ 
+ 			/*
 -- 
 2.28.0
 
