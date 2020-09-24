@@ -2,92 +2,101 @@ Return-Path: <SRS0=HtB1=DB=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC295C4727D
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 15:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8166FC4346E
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 15:50:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 660EF2311A
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 15:03:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39307206DB
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Sep 2020 15:50:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eP3Z9KmG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jGpN8isN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728352AbgIXPDe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:03:34 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:48203 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728331AbgIXPDd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 24 Sep 2020 11:03:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600959811;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CuPbzvXQosIYzpsTmyDB+PWCFgx3pRZznwdDq166LWs=;
-        b=eP3Z9KmGOgHKsdc2egcKFmMEqUWOPS/355h58xDpBE45HyaDSMZNhofIlD/t/Uqhd633Tw
-        Pjk8AQdt4Oup7qKiLogc4TKnNXLGKMfNDE7+5XQUc0Y0VMu3WPO2TldBeaOgBtsvqaBpDA
-        c0C4sIuAmGj8+IGxQpULtmDqlUTAmQQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-283-iUJ3YX6mN1eUqjWHfNMFxw-1; Thu, 24 Sep 2020 11:03:27 -0400
-X-MC-Unique: iUJ3YX6mN1eUqjWHfNMFxw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5C924802B75;
-        Thu, 24 Sep 2020 15:03:24 +0000 (UTC)
-Received: from localhost (unknown [10.18.25.174])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 92FD35C1D7;
-        Thu, 24 Sep 2020 15:03:19 +0000 (UTC)
-Date:   Thu, 24 Sep 2020 11:03:19 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
+        id S1728563AbgIXPub (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Sep 2020 11:50:31 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51862 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728139AbgIXPub (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Sep 2020 11:50:31 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OFZLxn125776;
+        Thu, 24 Sep 2020 15:50:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=vn1696U5CRhKmLmc6mdwCozBnLCLObO7LgftVl1wh2o=;
+ b=jGpN8isNZtCM5z7nsb1wBtRcRov8B0bLS4Y8Jgq8H3hJMgkHBgpw+B0j+n0iQtU6oW4a
+ QX84oMRfxrda29DxxN+D1WO6Juo95LBcan1pWECxN045bzOeYSFit8QXthhoJDaQRbnU
+ seFTga76zsuEvub1vBYax7ppb/U+L6mAumw2Mhgx2mEcIYPYMg5hWrJvCiudE1KCKong
+ 6dgAASGoNxvU+gi3A53HQylRFymVIzYtV5b4NqtIoeyAAlCFpl+JO5CMpcTFKUHNrPPx
+ wq25IEd46NnTfcYJ10+Cju65COp21F54g/3/Y9TEogN0+CpBlb7kUPWjmg4Oti/cRVCh Lw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 33q5rgqf43-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 24 Sep 2020 15:50:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OFUZHt054350;
+        Thu, 24 Sep 2020 15:49:59 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 33nurwbrpy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Sep 2020 15:49:59 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08OFnq1D012263;
+        Thu, 24 Sep 2020 15:49:53 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 24 Sep 2020 08:49:51 -0700
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org,
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
         Hans de Goede <hdegoede@redhat.com>,
-        Justin Sanders <justin@coraid.com>,
+        Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>,
         Minchan Kim <minchan@kernel.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        cgroups@vger.kernel.org, linux-bcache@vger.kernel.org,
-        Coly Li <colyli@suse.de>, linux-block@vger.kernel.org,
-        Song Liu <song@kernel.org>, dm-devel@redhat.com,
-        linux-mtd@lists.infradead.org, Richard Weinberger <richard@nod.at>,
-        drbd-dev@tron.linbit.com, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 07/13] block: lift setting the readahead size into the
- block layer
-Message-ID: <20200924150318.GE13849@redhat.com>
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Justin Sanders <justin@coraid.com>,
+        linux-mtd@lists.infradead.org, dm-devel@redhat.com,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-kernel@vger.kernel.org, drbd-dev@tron.linbit.com,
+        linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, cgroups@vger.kernel.org,
+        Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 03/13] bcache: inherit the optimal I/O size
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1ft77maz5.fsf@ca-mkp.ca.oracle.com>
 References: <20200924065140.726436-1-hch@lst.de>
- <20200924065140.726436-8-hch@lst.de>
+        <20200924065140.726436-4-hch@lst.de>
+Date:   Thu, 24 Sep 2020 11:49:48 -0400
+In-Reply-To: <20200924065140.726436-4-hch@lst.de> (Christoph Hellwig's message
+        of "Thu, 24 Sep 2020 08:51:30 +0200")
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200924065140.726436-8-hch@lst.de>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ phishscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 suspectscore=1
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009240118
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1 phishscore=0
+ malwarescore=0 mlxlogscore=999 adultscore=0 bulkscore=0 lowpriorityscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009240118
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Sep 24 2020 at  2:51am -0400,
-Christoph Hellwig <hch@lst.de> wrote:
 
-> Drivers shouldn't really mess with the readahead size, as that is a VM
-> concept.  Instead set it based on the optimal I/O size by lifting the
-> algorithm from the md driver when registering the disk.  Also set
-> bdi->io_pages there as well by applying the same scheme based on
-> max_sectors.  To ensure the limits work well for stacking drivers a
-> new helper is added to update the readahead limits from the block
-> limits, which is also called from disk_stack_limits.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Coly Li <colyli@suse.de>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Christoph,
 
-Thanks for adding blk_queue_update_readahead()
+> Inherit the optimal I/O size setting just like the readahead window,
+> as any reason to do larger I/O does not apply to just readahead.
 
-Reviewed-by: Mike Snitzer <snitzer@redhat.com>
+Looks fine.
 
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
