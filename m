@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DATE_IN_PAST_96_XX,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F167C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D4CC43381
 	for <linux-raid@archiver.kernel.org>; Fri,  5 Mar 2021 12:02:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 172E16501C
+	by mail.kernel.org (Postfix) with ESMTP id 845746501B
 	for <linux-raid@archiver.kernel.org>; Fri,  5 Mar 2021 12:02:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229723AbhCEMC1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        id S229793AbhCEMC1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
         Fri, 5 Mar 2021 07:02:27 -0500
 Received: from mga04.intel.com ([192.55.52.120]:35709 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229563AbhCEMB4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 5 Mar 2021 07:01:56 -0500
-IronPort-SDR: 0MOtoUmX44kSyx9JM2f//ZmnpR7b3tOuq/lcS6RDMYHT6z4tBDpIyWc6RcIJcs/XZLyPG5ubdr
- Nn4xm84nxprg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9913"; a="185230237"
+        id S229674AbhCEMB6 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 5 Mar 2021 07:01:58 -0500
+IronPort-SDR: 54Zo5fqMOsKxepYdZQOFzOXEDhFhCqEo7qdHoOmm2n3B3NSbbtdhDPrSehsxa/9hxy9wrMgxhv
+ GyhuCwt3BFSQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9913"; a="185230244"
 X-IronPort-AV: E=Sophos;i="5.81,224,1610438400"; 
-   d="scan'208";a="185230237"
+   d="scan'208";a="185230244"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2021 04:01:56 -0800
-IronPort-SDR: wsTDLbRPjChMgCrbUuquGHH4IEZzghRfERowYjTO1Mas9yCFI6900pOHF63hV5YOOgH1HMES4o
- I7o6RSAZ8wRQ==
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2021 04:01:58 -0800
+IronPort-SDR: Dunwyub22PSoSy06A1m0/ZQHzf55ymc9W0xmcWEVwkUR5v88CorNTomN00+yRAkfKNfGxD/w4r
+ PuoPX/3ZL1Sg==
 X-IronPort-AV: E=Sophos;i="5.81,224,1610438400"; 
-   d="scan'208";a="401656603"
+   d="scan'208";a="401656612"
 Received: from unknown (HELO localhost.igk.intel.com) ([10.237.126.111])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2021 04:01:53 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Mar 2021 04:01:57 -0800
 From:   Jakub Radtke <jakub.radtke@linux.intel.com>
 To:     jes@trained-monkey.org
 Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 3/8] imsm: Write-intent bitmap support
-Date:   Thu, 24 Sep 2020 20:02:59 -0400
-Message-Id: <20200925000304.169728-4-jakub.radtke@linux.intel.com>
+Subject: [PATCH 4/8] imsm: Adding a spare to an existing array with bitmap
+Date:   Thu, 24 Sep 2020 20:03:00 -0400
+Message-Id: <20200925000304.169728-5-jakub.radtke@linux.intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200925000304.169728-1-jakub.radtke@linux.intel.com>
 References: <20200925000304.169728-1-jakub.radtke@linux.intel.com>
@@ -49,714 +49,71 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Jakub Radtke <jakub.radtke@intel.com>
 
-This patch enables the bitmap functionality with the IMSM metadata format.
-The functionality covers "internal" bitmap.
+When adding a spare to an existing array with bitmap, an additional
+initialization (adding bitmap header and preparing the bitmap area)
+is required.
 
-There are the following limitation to "internal" metadata:
-- creating the bitmap using --grow is not supported
-- parameter --bitmap-chunk is ignored (default value 64MiB is used)
-
-Change-Id: I22826f736bc013aa5516239e1e0c38d4eec32f62
 Signed-off-by: Jakub Radtke <jakub.radtke@intel.com>
+Change-Id: Icaced458f4a1dd7777fce60660b749301c8496e8
 ---
- super-intel.c | 619 +++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 617 insertions(+), 2 deletions(-)
+ super-intel.c | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 715febf7..edb1c60e 100644
+index edb1c60e..eb5d39b9 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -96,6 +96,23 @@
- 						   * mutliple PPL area
- 						   */
- 
-+/*
-+ * Internal Write-intent bitmap is stored in the same area where PPL.
-+ * Both features are mutually exclusive, so it is not an issue.
-+ * The first 8KiB of the area are reserved and shall not be used.
-+ */
-+#define IMSM_BITMAP_AREA_RESERVED_SIZE 8192
-+
-+#define IMSM_BITMAP_HEADER_OFFSET (IMSM_BITMAP_AREA_RESERVED_SIZE)
-+#define IMSM_BITMAP_HEADER_SIZE MAX_SECTOR_SIZE
-+
-+#define IMSM_BITMAP_START_OFFSET (IMSM_BITMAP_HEADER_OFFSET + IMSM_BITMAP_HEADER_SIZE)
-+#define IMSM_BITMAP_AREA_SIZE (MULTIPLE_PPL_AREA_SIZE_IMSM - IMSM_BITMAP_START_OFFSET)
-+#define IMSM_BITMAP_AND_HEADER_SIZE (IMSM_BITMAP_AREA_SIZE + IMSM_BITMAP_HEADER_SIZE)
-+
-+#define IMSM_DEFAULT_BITMAP_CHUNKSIZE (64 * 1024 * 1024)
-+#define IMSM_DEFAULT_BITMAP_DAEMON_SLEEP 5
-+
- /*
-  * This macro let's us ensure that no-one accidentally
-  * changes the size of a struct
-@@ -229,6 +246,7 @@ struct imsm_dev {
- #define RWH_MULTIPLE_DISTRIBUTED 3
- #define RWH_MULTIPLE_PPLS_JOURNALING_DRIVE 4
- #define RWH_MULTIPLE_OFF 5
-+#define RWH_BITMAP 6
- 	__u8  rwh_policy; /* Raid Write Hole Policy */
- 	__u8  jd_serial[MAX_RAID_SERIAL_LEN]; /* Journal Drive serial number */
- 	__u8  filler1;
-@@ -1682,6 +1700,8 @@ static void print_imsm_dev(struct intel_super *super,
- 		printf("Multiple distributed PPLs\n");
- 	else if (dev->rwh_policy == RWH_MULTIPLE_PPLS_JOURNALING_DRIVE)
- 		printf("Multiple PPLs on journaling drive\n");
-+	else if (dev->rwh_policy == RWH_BITMAP)
-+		printf("Write-intent bitmap\n");
- 	else
- 		printf("<unknown:%d>\n", dev->rwh_policy);
- 
-@@ -3310,6 +3330,53 @@ static unsigned long long imsm_component_size_alignment_check(int level,
- 	return component_size;
- }
- 
-+/*******************************************************************************
-+ * Function:	get_bitmap_header_sector
-+ * Description:	Returns the sector where the bitmap header is placed.
-+ * Parameters:
-+ *	st		: supertype information
-+ *	dev_idx		: index of the device with bitmap
-+ *
-+ * Returns:
-+ *	 The sector where the bitmap header is placed
-+ ******************************************************************************/
-+static unsigned long long get_bitmap_header_sector(struct intel_super *super,
-+						   int dev_idx)
-+{
-+	struct imsm_dev *dev = get_imsm_dev(super, dev_idx);
-+	struct imsm_map *map = get_imsm_map(dev, MAP_0);
-+
-+	if (!super->sector_size) {
-+		dprintf("sector size is not set\n");
-+		return 0;
-+	}
-+
-+	return pba_of_lba0(map) + calc_component_size(map, dev) +
-+	       (IMSM_BITMAP_HEADER_OFFSET / super->sector_size);
-+}
-+
-+/*******************************************************************************
-+ * Function:	get_bitmap_sector
-+ * Description:	Returns the sector where the bitmap is placed.
-+ * Parameters:
-+ *	st		: supertype information
-+ *	dev_idx		: index of the device with bitmap
-+ *
-+ * Returns:
-+ *	 The sector where the bitmap is placed
-+ ******************************************************************************/
-+static unsigned long long get_bitmap_sector(struct intel_super *super,
-+					    int dev_idx)
-+{
-+	if (!super->sector_size) {
-+		dprintf("sector size is not set\n");
-+		return 0;
-+	}
-+
-+	return get_bitmap_header_sector(super, dev_idx) +
-+	       (IMSM_BITMAP_HEADER_SIZE / super->sector_size);
-+}
-+
- static unsigned long long get_ppl_sector(struct intel_super *super, int dev_idx)
- {
- 	struct imsm_dev *dev = get_imsm_dev(super, dev_idx);
-@@ -3430,7 +3497,12 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	} else if (info->array.level <= 0) {
- 		info->consistency_policy = CONSISTENCY_POLICY_NONE;
- 	} else {
--		info->consistency_policy = CONSISTENCY_POLICY_RESYNC;
-+		if (dev->rwh_policy == RWH_BITMAP) {
-+			info->bitmap_offset = get_bitmap_sector(super, super->current_vol);
-+			info->consistency_policy = CONSISTENCY_POLICY_BITMAP;
-+		} else {
-+			info->consistency_policy = CONSISTENCY_POLICY_RESYNC;
-+		}
- 	}
- 
- 	info->reshape_progress = 0;
-@@ -6465,6 +6537,60 @@ static int write_init_ppl_imsm_all(struct supertype *st, struct mdinfo *info)
- 	return ret;
- }
- 
-+/*******************************************************************************
-+ * Function:	write_init_bitmap_imsm_vol
-+ * Description:	Write a bitmap header and prepares the area for the bitmap.
-+ * Parameters:
-+ *	st	: supertype information
-+ *	vol_idx	: the volume index to use
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int write_init_bitmap_imsm_vol(struct supertype *st, int vol_idx)
-+{
-+	struct intel_super *super = st->sb;
-+	int prev_current_vol = super->current_vol;
-+	struct dl *d;
-+	int ret = 0;
-+
-+	super->current_vol = vol_idx;
-+	for (d = super->disks; d; d = d->next) {
-+		if (d->index < 0 || is_failed(&d->disk))
-+			continue;
-+		ret = st->ss->write_bitmap(st, d->fd, NoUpdate);
-+		if (ret)
-+			break;
-+	}
-+	super->current_vol = prev_current_vol;
-+	return ret;
-+}
-+
-+/*******************************************************************************
-+ * Function:	write_init_bitmap_imsm_all
-+ * Description:	Write a bitmap header and prepares the area for the bitmap.
-+ *		Operation is executed for volumes with CONSISTENCY_POLICY_BITMAP.
-+ * Parameters:
-+ *	st	: supertype information
-+ *	info	: info about the volume where the bitmap should be written
-+ *	vol_idx	: the volume index to use
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int write_init_bitmap_imsm_all(struct supertype *st, struct mdinfo *info,
-+				      int vol_idx)
-+{
-+	int ret = 0;
-+
-+	if (info && (info->consistency_policy == CONSISTENCY_POLICY_BITMAP))
-+		ret = write_init_bitmap_imsm_vol(st, vol_idx);
-+
-+	return ret;
-+}
-+
- static int write_init_super_imsm(struct supertype *st)
- {
- 	struct intel_super *super = st->sb;
-@@ -6488,7 +6614,10 @@ static int write_init_super_imsm(struct supertype *st)
- 			 */
- 			rv = mgmt_disk(st);
- 		} else {
-+			/* adding the second volume to the array */
- 			rv = write_init_ppl_imsm_all(st, &info);
-+			if (!rv)
-+				rv = write_init_bitmap_imsm_all(st, &info, current_vol);
- 			if (!rv)
- 				rv = create_array(st, current_vol);
- 		}
-@@ -6496,8 +6625,12 @@ static int write_init_super_imsm(struct supertype *st)
- 		struct dl *d;
- 		for (d = super->disks; d; d = d->next)
- 			Kill(d->devname, NULL, 0, -1, 1);
--		if (current_vol >= 0)
-+		if (current_vol >= 0) {
- 			rv = write_init_ppl_imsm_all(st, &info);
-+			if (!rv)
-+				rv = write_init_bitmap_imsm_all(st, &info, current_vol);
-+		}
-+
- 		if (!rv)
- 			rv = write_super_imsm(st, 1);
- 	}
-@@ -12306,6 +12439,483 @@ abort:
+@@ -9537,6 +9537,39 @@ static int apply_size_change_update(struct imsm_update_size_change *u,
  	return ret_val;
  }
  
-+/*******************************************************************************
-+ * Function:	calculate_bitmap_min_chunksize
-+ * Description:	Calculates the minimal valid bitmap chunk size
-+ * Parameters:
-+ *	max_bits	: indicate how many bits can be used for the bitmap
-+ *	data_area_size	: the size of the data area covered by the bitmap
-+ *
-+ * Returns:
-+ *	 The bitmap chunk size
-+ ******************************************************************************/
-+static unsigned long long
-+calculate_bitmap_min_chunksize(unsigned long long max_bits,
-+			       unsigned long long data_area_size)
-+{
-+	unsigned long long min_chunk =
-+		4096; /* sub-page chunks don't work yet.. */
-+	unsigned long long bits = data_area_size / min_chunk + 1;
-+
-+	while (bits > max_bits) {
-+		min_chunk *= 2;
-+		bits = (bits + 1) / 2;
-+	}
-+	return min_chunk;
-+}
-+
-+/*******************************************************************************
-+ * Function:	calculate_bitmap_chunksize
-+ * Description:	Calculates the bitmap chunk size for the given device
-+ * Parameters:
-+ *	st	: supertype information
-+ *	dev	: device for the bitmap
-+ *
-+ * Returns:
-+ *	 The bitmap chunk size
-+ ******************************************************************************/
-+static unsigned long long calculate_bitmap_chunksize(struct supertype *st,
-+						     struct imsm_dev *dev)
-+{
-+	struct intel_super *super = st->sb;
-+	unsigned long long min_chunksize;
-+	unsigned long long result = IMSM_DEFAULT_BITMAP_CHUNKSIZE;
-+	size_t dev_size = imsm_dev_size(dev);
-+
-+	min_chunksize = calculate_bitmap_min_chunksize(
-+		IMSM_BITMAP_AREA_SIZE * super->sector_size, dev_size);
-+
-+	if (result < min_chunksize)
-+		result = min_chunksize;
-+
-+	return result;
-+}
-+
-+/*******************************************************************************
-+ * Function:	init_bitmap_header
-+ * Description:	Initialize the bitmap header structure
-+ * Parameters:
-+ *	st	: supertype information
-+ *	bms	: bitmap header struct to initialize
-+ *	dev	: device for the bitmap
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int init_bitmap_header(struct supertype *st, struct bitmap_super_s *bms,
-+			      struct imsm_dev *dev)
-+{
-+	int vol_uuid[4];
-+
-+	if (!bms || !dev)
-+		return -1;
-+
-+	bms->magic = __cpu_to_le32(BITMAP_MAGIC);
-+	bms->version = __cpu_to_le32(BITMAP_MAJOR_HI);
-+	bms->daemon_sleep = __cpu_to_le32(IMSM_DEFAULT_BITMAP_DAEMON_SLEEP);
-+	bms->sync_size = __cpu_to_le64(IMSM_BITMAP_AREA_SIZE);
-+	bms->write_behind = __cpu_to_le32(0);
-+
-+	uuid_from_super_imsm(st, vol_uuid);
-+	memcpy(bms->uuid, vol_uuid, 16);
-+
-+	bms->chunksize = calculate_bitmap_chunksize(st, dev);
-+
-+	return 0;
-+}
-+
-+/*******************************************************************************
-+ * Function:	validate_internal_bitmap_for_drive
-+ * Description:	Verify if the bitmap header for a given drive.
-+ * Parameters:
-+ *	st	: supertype information
-+ *	offset	: The offset from the beginning of the drive where to look for
-+ *		  the bitmap header.
-+ *	d	: the drive info
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int validate_internal_bitmap_for_drive(struct supertype *st,
-+					      unsigned long long offset,
-+					      struct dl *d)
-+{
-+	struct intel_super *super = st->sb;
-+	int ret = -1;
-+	int vol_uuid[4];
-+	bitmap_super_t *bms;
-+	int fd;
-+
-+	if (!d)
-+		return -1;
-+
-+	void *read_buf;
-+
-+	if (posix_memalign(&read_buf, MAX_SECTOR_SIZE, IMSM_BITMAP_HEADER_SIZE))
-+		return -1;
-+
-+	fd = d->fd;
-+	if (fd < 0) {
-+		fd = open(d->devname, O_RDONLY, 0);
-+		if (fd < 0) {
-+			dprintf("cannot open the device %s\n", d->devname);
-+			goto abort;
-+		}
-+	}
-+
-+	if (lseek64(fd, offset * super->sector_size, SEEK_SET) < 0)
-+		goto abort;
-+	if (read(fd, read_buf, IMSM_BITMAP_HEADER_SIZE) !=
-+	    IMSM_BITMAP_HEADER_SIZE)
-+		goto abort;
-+
-+	uuid_from_super_imsm(st, vol_uuid);
-+
-+	bms = read_buf;
-+	if ((bms->magic != __cpu_to_le32(BITMAP_MAGIC)) ||
-+	    (bms->version != __cpu_to_le32(BITMAP_MAJOR_HI)) ||
-+	    (!same_uuid((int *)bms->uuid, vol_uuid, st->ss->swapuuid))) {
-+		dprintf("wrong bitmap header detected\n");
-+		goto abort;
-+	}
-+
-+	ret = 0;
-+abort:
-+	if ((d->fd < 0) && (fd >= 0))
-+		close(fd);
-+	if (read_buf)
-+		free(read_buf);
-+
-+	return ret;
-+}
-+
-+/*******************************************************************************
-+ * Function:	validate_internal_bitmap_imsm
-+ * Description:	Verify if the bitmap header is in place and with proper data.
-+ * Parameters:
-+ *	st	: supertype information
-+ *
-+ * Returns:
-+ *	 0 : success or device w/o RWH_BITMAP
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int validate_internal_bitmap_imsm(struct supertype *st)
-+{
-+	struct intel_super *super = st->sb;
-+	struct imsm_dev *dev = get_imsm_dev(super, super->current_vol);
-+	unsigned long long offset;
-+	struct dl *d;
-+
-+	if (!dev)
-+		return -1;
-+
-+	if (dev->rwh_policy != RWH_BITMAP)
-+		return 0;
-+
-+	offset = get_bitmap_header_sector(super, super->current_vol);
-+	for (d = super->disks; d; d = d->next) {
-+		if (d->index < 0 || is_failed(&d->disk))
-+			continue;
-+
-+		if (validate_internal_bitmap_for_drive(st, offset, d)) {
-+			pr_err("imsm: bitmap validation failed\n");
-+			return -1;
-+		}
-+	}
-+	return 0;
-+}
-+
-+/*******************************************************************************
-+ * Function:	add_internal_bitmap_imsm
-+ * Description:	Mark the volume to use the bitmap and updates the chunk size value.
-+ * Parameters:
-+ *	st		: supertype information
-+ *	chunkp		: bitmap chunk size
-+ *	delay		: not used for imsm
-+ *	write_behind	: not used for imsm
-+ *	size		: not used for imsm
-+ *	may_change	: not used for imsm
-+ *	amajor		: not used for imsm
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int add_internal_bitmap_imsm(struct supertype *st, int *chunkp,
-+				    int delay, int write_behind,
-+				    unsigned long long size, int may_change,
-+				    int amajor)
-+{
-+	struct intel_super *super = st->sb;
-+	int vol_idx = super->current_vol;
-+	struct imsm_dev *dev;
-+
-+	if (!super->devlist || vol_idx == -1 || !chunkp)
-+		return -1;
-+
-+	dev = get_imsm_dev(super, vol_idx);
-+
-+	if (!dev) {
-+		dprintf("cannot find the device for volume index %d\n",
-+			vol_idx);
-+		return -1;
-+	}
-+	dev->rwh_policy = RWH_BITMAP;
-+
-+	*chunkp = calculate_bitmap_chunksize(st, dev);
-+
-+	return 0;
-+}
-+
-+/*******************************************************************************
-+ * Function:	locate_bitmap_imsm
-+ * Description:	Seek 'fd' to start of write-intent-bitmap.
-+ * Parameters:
-+ *	st		: supertype information
-+ *	fd		: file descriptor for the device
-+ *	node_num	: not used for imsm
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int locate_bitmap_imsm(struct supertype *st, int fd, int node_num)
-+{
-+	struct intel_super *super = st->sb;
-+	unsigned long long offset;
-+	int vol_idx = super->current_vol;
-+
-+	if (!super->devlist || vol_idx == -1)
-+		return -1;
-+
-+	offset = get_bitmap_header_sector(super, super->current_vol);
-+	dprintf("bitmap header offset is %llu\n", offset);
-+
-+	lseek64(fd, offset << 9, 0);
-+
-+	return 0;
-+}
-+
-+/*******************************************************************************
-+ * Function:	write_init_bitmap_imsm
-+ * Description:	Write a bitmap header and prepares the area for the bitmap.
-+ * Parameters:
-+ *	st	: supertype information
-+ *	fd	: file descriptor for the device
-+ *	update	: not used for imsm
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int write_init_bitmap_imsm(struct supertype *st, int fd,
-+				  enum bitmap_update update)
-+{
-+	struct intel_super *super = st->sb;
-+	int vol_idx = super->current_vol;
-+	int ret = 0;
-+	unsigned long long offset;
-+	bitmap_super_t bms = { 0 };
-+	size_t written = 0;
-+	size_t to_write;
-+	ssize_t rv_num;
-+	void *buf;
-+
-+	if (!super->devlist || !super->sector_size || vol_idx == -1)
-+		return -1;
-+
-+	struct imsm_dev *dev = get_imsm_dev(super, vol_idx);
-+
-+	/* first clear the space for bitmap header */
-+	unsigned long long bitmap_area_start =
-+		get_bitmap_header_sector(super, vol_idx);
-+
-+	dprintf("zeroing area start (%llu) and size (%u)\n", bitmap_area_start,
-+		IMSM_BITMAP_AND_HEADER_SIZE / super->sector_size);
-+	if (zero_disk_range(fd, bitmap_area_start,
-+			    IMSM_BITMAP_HEADER_SIZE / super->sector_size)) {
-+		pr_err("imsm: cannot zeroing the space for the bitmap\n");
-+		return -1;
-+	}
-+
-+	/* The bitmap area should be filled with "1"s to perform initial
-+	 * synchronization.
-+	 */
-+	if (posix_memalign(&buf, MAX_SECTOR_SIZE, MAX_SECTOR_SIZE))
-+		return -1;
-+	memset(buf, 0xFF, MAX_SECTOR_SIZE);
-+	offset = get_bitmap_sector(super, vol_idx);
-+	lseek64(fd, offset << 9, 0);
-+	while (written < IMSM_BITMAP_AREA_SIZE) {
-+		to_write = IMSM_BITMAP_AREA_SIZE - written;
-+		if (to_write > MAX_SECTOR_SIZE)
-+			to_write = MAX_SECTOR_SIZE;
-+		rv_num = write(fd, buf, MAX_SECTOR_SIZE);
-+		if (rv_num != MAX_SECTOR_SIZE) {
-+			ret = -1;
-+			dprintf("cannot initialize bitmap area\n");
-+			goto abort;
-+		}
-+		written += rv_num;
-+	}
-+
-+	/* write a bitmap header */
-+	init_bitmap_header(st, &bms, dev);
-+	memset(buf, 0, MAX_SECTOR_SIZE);
-+	memcpy(buf, &bms, sizeof(bitmap_super_t));
-+	if (locate_bitmap_imsm(st, fd, 0)) {
-+		ret = -1;
-+		dprintf("cannot locate the bitmap\n");
-+		goto abort;
-+	}
-+	if (write(fd, buf, MAX_SECTOR_SIZE) != MAX_SECTOR_SIZE) {
-+		ret = -1;
-+		dprintf("cannot write the bitmap header\n");
-+		goto abort;
-+	}
-+	fsync(fd);
-+
-+abort:
-+	free(buf);
-+
-+	return ret;
-+}
-+
-+/*******************************************************************************
-+ * Function:	is_vol_to_setup_bitmap
-+ * Description:	Checks if a bitmap should be activated on the dev.
-+ * Parameters:
-+ *	info	: info about the volume to setup the bitmap
-+ *	dev	: the device to check against bitmap creation
-+ *
-+ * Returns:
-+ *	 0 : bitmap should be set up on the device
-+ *	-1 : otherwise
-+ ******************************************************************************/
-+static int is_vol_to_setup_bitmap(struct mdinfo *info, struct imsm_dev *dev)
-+{
-+	if (!dev || !info)
-+		return -1;
-+
-+	if ((strcmp((char *)dev->volume, info->name) == 0) &&
-+	    (dev->rwh_policy == RWH_BITMAP))
-+		return -1;
-+
-+	return 0;
-+}
-+
-+/*******************************************************************************
-+ * Function:	set_bitmap_sysfs
-+ * Description:	Set the sysfs atributes of a given volume to activate the bitmap.
-+ * Parameters:
-+ *	info		: info about the volume where the bitmap should be setup
-+ *	chunksize	: bitmap chunk size
-+ *	location	: location of the bitmap
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int set_bitmap_sysfs(struct mdinfo *info, unsigned long long chunksize,
-+			    char *location)
-+{
-+	/* The bitmap/metadata is set to external to allow changing of value for
-+	 * bitmap/location. When external is used, the kernel will treat an offset
-+	 * related to the device's first lba (in opposition to the "internal" case
-+	 * when this value is related to the beginning of the superblock).
-+	 */
-+	if (sysfs_set_str(info, NULL, "bitmap/metadata", "external")) {
-+		dprintf("failed to set bitmap/metadata\n");
-+		return -1;
-+	}
-+
-+	/* It can only be changed when no bitmap is active.
-+	 * Should be bigger than 512 and must be power of 2.
-+	 * It is expecting the value in bytes.
-+	 */
-+	if (sysfs_set_num(info, NULL, "bitmap/chunksize",
-+					  __cpu_to_le32(chunksize))) {
-+		dprintf("failed to set bitmap/chunksize\n");
-+		return -1;
-+	}
-+
-+	/* It is expecting the value in sectors. */
-+	if (sysfs_set_num(info, NULL, "bitmap/space",
-+					  __cpu_to_le64(IMSM_BITMAP_AREA_SIZE))) {
-+		dprintf("failed to set bitmap/space\n");
-+		return -1;
-+	}
-+
-+	/* Determines the delay between the bitmap updates.
-+	 * It is expecting the value in seconds.
-+	 */
-+	if (sysfs_set_num(info, NULL, "bitmap/time_base",
-+					  __cpu_to_le64(IMSM_DEFAULT_BITMAP_DAEMON_SLEEP))) {
-+		dprintf("failed to set bitmap/time_base\n");
-+		return -1;
-+	}
-+
-+	/* It is expecting the value in sectors with a sign at the beginning. */
-+	if (sysfs_set_str(info, NULL, "bitmap/location", location)) {
-+		dprintf("failed to set bitmap/location\n");
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+/*******************************************************************************
-+ * Function:	set_bitmap_imsm
-+ * Description:	Setup the bitmap for the given volume
-+ * Parameters:
-+ *	st	: supertype information
-+ *	info	: info about the volume where the bitmap should be setup
-+ *
-+ * Returns:
-+ *	 0 : success
-+ *	-1 : fail
-+ ******************************************************************************/
-+static int set_bitmap_imsm(struct supertype *st, struct mdinfo *info)
++static int prepare_spare_to_activate(struct supertype *st,
++				     struct imsm_update_activate_spare *u)
 +{
 +	struct intel_super *super = st->sb;
 +	int prev_current_vol = super->current_vol;
-+	struct imsm_dev *dev;
-+	int ret = -1;
-+	char location[16] = "";
-+	unsigned long long chunksize;
-+	struct intel_dev *dev_it;
++	struct active_array *a;
++	int ret = 1;
 +
-+	for (dev_it = super->devlist; dev_it; dev_it = dev_it->next) {
-+		super->current_vol = dev_it->index;
-+		dev = get_imsm_dev(super, super->current_vol);
++	for (a = st->arrays; a; a = a->next)
++		/*
++		 * Additional initialization (adding bitmap header, filling
++		 * the bitmap area with '1's to force initial rebuild for a whole
++		 * data-area) is required when adding the spare to the volume
++		 * with write-intent bitmap.
++		 */
++		if (a->info.container_member == u->array &&
++		    a->info.consistency_policy == CONSISTENCY_POLICY_BITMAP) {
++			struct dl *dl;
 +
-+		if (is_vol_to_setup_bitmap(info, dev)) {
-+			if (validate_internal_bitmap_imsm(st)) {
-+				dprintf("bitmap header validation failed\n");
-+				goto abort;
-+			}
++			for (dl = super->disks; dl; dl = dl->next)
++				if (dl == u->dl)
++					break;
++			if (!dl)
++				break;
 +
-+			chunksize = calculate_bitmap_chunksize(st, dev);
-+			dprintf("chunk size is %llu\n", chunksize);
-+
-+			snprintf(location, sizeof(location), "+%llu",
-+				 get_bitmap_sector(super, super->current_vol));
-+			dprintf("bitmap offset is %s\n", location);
-+
-+			if (set_bitmap_sysfs(info, chunksize, location)) {
-+				dprintf("cannot setup the bitmap\n");
-+				goto abort;
-+			}
++			super->current_vol = u->array;
++			if (st->ss->write_bitmap(st, dl->fd, NoUpdate))
++				ret = 0;
++			super->current_vol = prev_current_vol;
 +		}
-+	}
-+	ret = 0;
-+abort:
-+	super->current_vol = prev_current_vol;
 +	return ret;
 +}
 +
- struct superswitch super_imsm = {
- 	.examine_super	= examine_super_imsm,
- 	.brief_examine_super = brief_examine_super_imsm,
-@@ -12347,6 +12957,11 @@ struct superswitch super_imsm = {
- 	.container_content = container_content_imsm,
- 	.validate_container = validate_container_imsm,
- 
-+	.add_internal_bitmap = add_internal_bitmap_imsm,
-+	.locate_bitmap = locate_bitmap_imsm,
-+	.write_bitmap = write_init_bitmap_imsm,
-+	.set_bitmap = set_bitmap_imsm,
+ static int apply_update_activate_spare(struct imsm_update_activate_spare *u,
+ 				       struct intel_super *super,
+ 				       struct active_array *active_array)
+@@ -9961,7 +9994,9 @@ static void imsm_process_update(struct supertype *st,
+ 	}
+ 	case update_activate_spare: {
+ 		struct imsm_update_activate_spare *u = (void *) update->buf;
+-		if (apply_update_activate_spare(u, super, st->arrays))
 +
- 	.write_init_ppl = write_init_ppl_imsm,
- 	.validate_ppl	= validate_ppl_imsm,
- 
++		if (prepare_spare_to_activate(st, u) &&
++		    apply_update_activate_spare(u, super, st->arrays))
+ 			super->updates_pending++;
+ 		break;
+ 	}
 -- 
 2.26.2
 
