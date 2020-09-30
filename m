@@ -2,101 +2,93 @@ Return-Path: <SRS0=vpcD=DH=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE2EC4363D
-	for <linux-raid@archiver.kernel.org>; Wed, 30 Sep 2020 22:26:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0333C4363D
+	for <linux-raid@archiver.kernel.org>; Wed, 30 Sep 2020 22:44:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 622D320719
-	for <linux-raid@archiver.kernel.org>; Wed, 30 Sep 2020 22:26:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=madore.org header.i=@madore.org header.b="alSoso2C"
+	by mail.kernel.org (Postfix) with ESMTP id 5775F2071E
+	for <linux-raid@archiver.kernel.org>; Wed, 30 Sep 2020 22:44:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1601505879;
+	bh=fEWtRDcIOEsyywJAVhIx3J7i7mk+XvMl2xGXw2800ew=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=F7gQmJNSFr2Tz5xen29KGdBqu3SY4FkxsiUIEw4PcVGLEEqVp0jRx7L7Hq8lhElHf
+	 523ZyHiasMtfJ/cUOcaNPCwIdq5YluwVAjpMpxkRlJ6L96bk0V+mt71b89roo0yLS3
+	 Y3couln9cEBVjKfbQpwO4dnP+zR54yKowibRsRs4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731154AbgI3W0j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 30 Sep 2020 18:26:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50540 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730958AbgI3W0i (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 30 Sep 2020 18:26:38 -0400
-Received: from achernar.gro-tsen.net (achernar6.gro-tsen.net [IPv6:2001:bc8:30e8::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B695C061755
-        for <linux-raid@vger.kernel.org>; Wed, 30 Sep 2020 15:26:38 -0700 (PDT)
-Received: by achernar.gro-tsen.net (Postfix, from userid 500)
-        id EB8AB214050C; Thu,  1 Oct 2020 00:26:37 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=madore.org;
-        s=achernar; t=1601504797;
-        bh=iZ+vG+3tpaW8fuMdYhixkEoHwckCc7KVW4ha4xCTtGU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=alSoso2C3vF5EXUcWdgYeKmeCcvEJIOlUH6ryWpDuDcXkPBCI0/qkCciJ8+hcC6JD
-         FtdZlU7YoakqnZKUtJVeGqp13LCZhje7d7WZEgoCfe2Ibh13/c65EFk/ajfP/Z0/hN
-         dMB5aYshiJr32Ekj+Q/TbaLFcs2lUO0M4yBQIMvQ=
-Date:   Thu, 1 Oct 2020 00:26:37 +0200
-From:   David Madore <david+ml@madore.org>
-To:     antlists <antlists@youngman.org.uk>
-Cc:     Linux RAID mailing-list <linux-raid@vger.kernel.org>
-Subject: Re: RAID5->RAID6 reshape remains stuck at 0% (does nothing, not even
- start)
-Message-ID: <20200930222637.mmlphc4patipalng@achernar.gro-tsen.net>
-References: <20200930014032.pd4csjwu3m7uihin@achernar.gro-tsen.net>
- <5F740390.7050005@youngman.org.uk>
- <20200930090031.6lzrs336fr4inpz4@achernar.gro-tsen.net>
- <90338e5b-9ed4-c86e-fa35-8acdd6768ca7@youngman.org.uk>
- <20200930185824.q6dphu2axpfcjjly@achernar.gro-tsen.net>
- <5F74D684.8020005@youngman.org.uk>
- <20200930194510.vki7zixjca6sxvin@achernar.gro-tsen.net>
- <bfe9949c-1b46-baa3-1a89-0d994175dc95@youngman.org.uk>
+        id S1730981AbgI3Woj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 30 Sep 2020 18:44:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48986 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729980AbgI3Woi (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 30 Sep 2020 18:44:38 -0400
+Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2EE282071E
+        for <linux-raid@vger.kernel.org>; Wed, 30 Sep 2020 22:44:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1601505878;
+        bh=fEWtRDcIOEsyywJAVhIx3J7i7mk+XvMl2xGXw2800ew=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=V9vjw3PTSsrVy4733Fq+48A5H+cQlfu2exAPk19xl477z019eMNx2zj4dNDYYW8Rt
+         pltkNrZaGXe/QE5kBSW8vVLxKbei3nQlrhqsptNjBcg5e2SsjYVSiRvYTktZQhLqMS
+         Whi+uf9Pux5c1lkPsfyRvDnw9GuBtYG35aOFkcJA=
+Received: by mail-lj1-f181.google.com with SMTP id u21so2981346ljl.6
+        for <linux-raid@vger.kernel.org>; Wed, 30 Sep 2020 15:44:38 -0700 (PDT)
+X-Gm-Message-State: AOAM533oiehk9f+EXgfaK6sQRJkHG03V6bonQ5UuGvQueedpKS2sYOae
+        sYfOXRKvFoIU5ZqvbF30HPdf/9Npz0fE8pQQ/tc=
+X-Google-Smtp-Source: ABdhPJwrXLdxVpKNFofvLoDWNty9mEP/LX491IQFeB1ClALB1ftKksS7U8trKf9pxpTeX9jmsWKHKHuchl/a65Bmruw=
+X-Received: by 2002:a2e:b0d6:: with SMTP id g22mr1372259ljl.350.1601505876507;
+ Wed, 30 Sep 2020 15:44:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bfe9949c-1b46-baa3-1a89-0d994175dc95@youngman.org.uk>
-User-Agent: NeoMutt/20170113 (1.7.2)
+References: <20200921063825.3501577-1-yanaijie@huawei.com> <96d8e516-511d-c2d4-4c93-ce2b9c38b226@huawei.com>
+In-Reply-To: <96d8e516-511d-c2d4-4c93-ce2b9c38b226@huawei.com>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 30 Sep 2020 15:44:25 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5jbE4Mt8+vaztae+cHLLdCaHu7z+eFaYw=BJNfCbWN=Q@mail.gmail.com>
+Message-ID: <CAPhsuW5jbE4Mt8+vaztae+cHLLdCaHu7z+eFaYw=BJNfCbWN=Q@mail.gmail.com>
+Subject: Re: [PATCH] raid5: refactor raid5 personality definition
+To:     Jason Yan <yanaijie@huawei.com>
+Cc:     Yufen Yu <yuyufen@huawei.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Sep 30, 2020 at 09:16:10PM +0100, antlists wrote:
-> The problem is that if you use mdadm 3.4 with kernel 4.9.237, the 237 means
-> that your kernel has been heavily updated and is far too new. But if you use
-> mdadm 4.1 with kernel 4.9.237, the 4.9 means that the kernel is basically a
-> very old one - too old for mdadm 4.1
+On Mon, Sep 28, 2020 at 6:03 PM Jason Yan <yanaijie@huawei.com> wrote:
+>
+> Hi all, any comments?
 
-But the point of the longterm kernel lines like 4.9.237 is to keep
-strict compatibility with the original branch point (that's the point
-of a "stable" line) and perform only bugfixes, isn't it?  Do you mean
-to say that there is NO stable kernel line with full mdadm support?
-Or just the ones provided by distributions?  (But don't distributions
-like Debian do exactly the same thing as GKH and others with these
-longterm lines?  I.e., fix bugs while keeping strict compatibility.
-If there are no longterm stable kernels with full RAID support, I find
-this rather worrying.)
+Sorry for the late reply. I somehow missed the first email.
 
-But in my specific case, the issue didn't come from a mdadm/kernel
-mismatch after all: I performed further investigation after I wrote my
-previous message, and my problem did indeed come from the
-/lib/systemd/system/mdadm-grow-continue@.service which, as far as I
-can tell, is broken insofar as --backup-file=... goes (the option is
-needed for --continue to work and it isn't passed).  Furthermore, this
-file appears to be distributed by mdadm itself (it's not
-Debian-specific), and the systemd service is called by mdadm (from
-continue_via_systemd() in Grow.c).
+>
+> =E5=9C=A8 2020/9/21 14:38, Jason Yan =E5=86=99=E9=81=93:
+> > The definition of md personality for raid4/raid5/raid6 is almost the sa=
+me.
+> > So introduce a macro 'RAID5_PERSONALITY_ATTR' to help define the
+> > personality. This can help us reduce some duplicated code.
+> >
+> > Signed-off-by: Jason Yan <yanaijie@huawei.com>
+[...]
+> > +}
+> > +
+> > +#define raid4_check_reshape raid5_check_reshape
+> > +
+> > +RAID5_PERSONALITY_ATTR(raid4, 4);
+> > +RAID5_PERSONALITY_ATTR(raid5, 5);
+> > +RAID5_PERSONALITY_ATTR(raid6, 6);
 
-So it seems to me that RAID reshaping with backup files is currently
-broken on all systems which use systemd.  But then I'm confused as to
-why this didn't get more attention.  Anyway, if you have any
-suggestion as to where I should bugreport this, it's the least I can
-do.
+I don't think we benefit much from this change. It doesn't make the code
+easier to read. Instead, this change adds another level of marco to the cod=
+e.
+I would rather keep this code as-is.
 
-In my particular setup, after giving this more thought, I thought the
-wisest thing would be to get tons of external storage, copy everything
-away, recreate a fresh RAID6 array, and copy everything back into it.
-
-Whatever the case, thanks for your help.
-
-Cheers,
-
--- 
-     David A. Madore
-   ( http://www.madore.org/~david/ )
+Thanks,
+Song
