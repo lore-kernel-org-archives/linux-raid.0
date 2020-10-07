@@ -1,117 +1,143 @@
-Return-Path: <SRS0=H5I/=DN=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=wpSx=DO=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1285C4363D
-	for <linux-raid@archiver.kernel.org>; Tue,  6 Oct 2020 22:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7050DC41604
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Oct 2020 07:02:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41E76206BE
-	for <linux-raid@archiver.kernel.org>; Tue,  6 Oct 2020 22:56:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D13520797
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Oct 2020 07:02:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UG1Xmu3r"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="p1VoNskq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727250AbgJFW4W (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 6 Oct 2020 18:56:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57378 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725996AbgJFW4W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 6 Oct 2020 18:56:22 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBB2BC061755
-        for <linux-raid@vger.kernel.org>; Tue,  6 Oct 2020 15:56:21 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id b22so69582lfs.13
-        for <linux-raid@vger.kernel.org>; Tue, 06 Oct 2020 15:56:21 -0700 (PDT)
+        id S1727608AbgJGHCU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Oct 2020 03:02:20 -0400
+Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:57129 "EHLO
+        smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727518AbgJGHCU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Oct 2020 03:02:20 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=WvuPJfo8THvT06jiwO8gWEhl7RnaRaTIWtPcPxS6S1Q=;
-        b=UG1Xmu3rM6GDtp01bXoc8/S57/sEiQ4uAiHmRLaPh2Um65iNgYTnCyn98aSjvi6LLY
-         wmNknkq32hpYy/Xs/X69Q0eogYM9MjIcFHllMj5MtKGHhRK+99mIkY2Ma7p860h0MrHd
-         ipka/pTRbZIdtzv6aAe99isiFxGOw2osimCi2TDcjM0UOmfX5rmbSKiPOxCMB+lZPrdI
-         nH7rRXQbssBBHK4P5ldlqeu17eIe0x2lgtZiaFG0SGb1QAmg4SRjI9l3HO1SyPDODRhD
-         Z+LT8IBRyNPLiibc8zmLTPQ0RC1CPnYaoaCCDjMJvp8lX35P4YdyAR+zH0FmF2OfVMgW
-         xA4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=WvuPJfo8THvT06jiwO8gWEhl7RnaRaTIWtPcPxS6S1Q=;
-        b=cwIyTQES7fbmLnU3M0PesO3oOfjIOuWMoRUySa4mV3/u7eGaPpIA5QFODleCrtqWDv
-         t6QsYzRC4FCZBTUS86CUeTxP/+GYESAFb+wTjLlLBpVpj77MmGuR8J1y09fyfK1GS4HL
-         rfxmuy6XCzdFXafZVMkVj0TUq/NlDB77h0Zg9joubjYk/tFkukaqccyGnjKkNQ56IG4W
-         42CnXl/MOa3MEzFt4k2EIIzz3VJhzSZ1XlivY0AuGUd+zqeU0HJwJlWYmjTF7B3MPWct
-         nMyB44tSljYHdVLj1Lq8XW5J4xmi/09Lgdoj5meg6fL67SGVyDXSGUA/Bm6SBQgYChvZ
-         f7ag==
-X-Gm-Message-State: AOAM533TETUhzzAEuUo8dZGyTZtkJt0yCAajO7/4ww5m1zabl13WG+Or
-        ROD8e23uycWcYpat9S5qYZSaMbZJWOFFlT+XFLY=
-X-Google-Smtp-Source: ABdhPJy5NRZKlc/QdsAUkjMOSaT0/woUkxsZ7nZa64nU/oMljAALMnrIRq82KewFUIoJQhRLLIWElX2f8Xq6VS9s9sM=
-X-Received: by 2002:ac2:5e87:: with SMTP id b7mr22929lfq.151.1602024980293;
- Tue, 06 Oct 2020 15:56:20 -0700 (PDT)
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
+  t=1602054139; x=1633590139;
+  h=from:to:cc:date:message-id:references:in-reply-to:
+   content-transfer-encoding:mime-version:subject;
+  bh=n0cDxX6F+nqk+0xadEUtQxOcnCks9fW0XuUZuO3eak8=;
+  b=p1VoNskq/dF5aPHpzNepUNIInnovzKtMLuUjODzQWI5Q6oa4D630LkY0
+   BvaLscyhxzYuFp+tqC6UCv11OkV81/Jxwp/Nwgr3TiLE1zLeEKz8jY0un
+   iVROCR+NNrARwHBjsSZlhcWaACpJ8x33PuGPSDm4tWoyapq53IXHv5mm4
+   4=;
+X-IronPort-AV: E=Sophos;i="5.77,345,1596499200"; 
+   d="scan'208";a="58521963"
+Subject: Re: RAID5 issue with UBUNTU 20.04.1 on my desktop
+Thread-Topic: RAID5 issue with UBUNTU 20.04.1 on my desktop
+Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-2b-8cc5d68b.us-west-2.amazon.com) ([10.43.8.6])
+  by smtp-border-fw-out-6002.iad6.amazon.com with ESMTP; 07 Oct 2020 07:02:16 +0000
+Received: from EX13D07EUA003.ant.amazon.com (pdx4-ws-svc-p6-lb7-vlan3.pdx.amazon.com [10.170.41.166])
+        by email-inbound-relay-2b-8cc5d68b.us-west-2.amazon.com (Postfix) with ESMTPS id 4C3AFA1C95;
+        Wed,  7 Oct 2020 07:02:16 +0000 (UTC)
+Received: from EX13D09EUA002.ant.amazon.com (10.43.165.251) by
+ EX13D07EUA003.ant.amazon.com (10.43.165.176) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.2; Wed, 7 Oct 2020 07:02:14 +0000
+Received: from EX13D09EUA002.ant.amazon.com ([10.43.165.251]) by
+ EX13D09EUA002.ant.amazon.com ([10.43.165.251]) with mapi id 15.00.1497.006;
+ Wed, 7 Oct 2020 07:02:14 +0000
+From:   "Sung, KoWei" <winders@amazon.com>
+To:     Song Liu <song@kernel.org>
+CC:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "Bshara, Saeed" <saeedb@amazon.com>,
+        "Duan, HanShen" <hansduan@amazon.com>,
+        "Tokoyo, Hiroshi" <htokoyo@amazon.co.jp>,
+        "Fortin, Mike" <mfortin@amazon.com>
+Thread-Index: AQHWmusL9wfwpfZB/Ueqw53chpUH0amLt7cm
+Date:   Wed, 7 Oct 2020 07:02:14 +0000
+Message-ID: <1602054133661.46939@amazon.com>
+References: <6F1A48DB-CA95-433B-91F3-D0051453A8E1@amazon.com>
+ <CAPhsuW6q5bLgOUyuTH8MFTo6GSnGqRxne6sV+dsFHRy_qHtxRA@mail.gmail.com>
+ <1600734878242.50073@amazon.com>
+ <CAPhsuW4Q-aYzUQ=Utw6XigjJ0tVbCZOjmn+Wq6hvvjXhvAiwZA@mail.gmail.com>,<CAPhsuW7+jnPkvzVsqn_Eh7TqB_HAuZRXTofar9ucj7rsqyfE9w@mail.gmail.com>
+In-Reply-To: <CAPhsuW7+jnPkvzVsqn_Eh7TqB_HAuZRXTofar9ucj7rsqyfE9w@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.43.157.194]
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <202010061607.096G7CgT4052287@epjdn.zq3q.org> <1f21b8cb-a9eb-74e8-24b5-550d016b6473@thelounge.net>
-In-Reply-To: <1f21b8cb-a9eb-74e8-24b5-550d016b6473@thelounge.net>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Tue, 6 Oct 2020 17:56:09 -0500
-Message-ID: <CAAMCDefgEd7dbEKNix41cLDfaXvmWZ3m02P5Y4aeTHm+JQTqyQ@mail.gmail.com>
-Subject: Re: pls help/review: fed 32 | LVM over raid1, on SSDs & spinning disks
-To:     Reindl Harald <h.reindl@thelounge.net>
-Cc:     linux-raid@zq3q.org, Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Nothing seems to care about the partition type(LVM or md).  My working
-md partitions have the following types:
-Microsoft basic data
-Linux Raid
-Linux Filesystem
-All successfully reform into a working raid6 after reboot.
-
-
-On Tue, Oct 6, 2020 at 12:05 PM Reindl Harald <h.reindl@thelounge.net> wrote:
->
->
->
-> Am 06.10.20 um 18:07 schrieb linux-raid@zq3q.org:
-> > Is it possible to get the 2MiB "bios boot" partition into raid1?
-> > This seems to be the most vulnerable part of my setup.
-> should be no problem when you have the same partitioning on all disks,
-> "BIOS boot" normally have no writes at boot time
->
-> RAID1 is handeled like a single disk at early boot
->
-> the only thing you need to do manually is install the bootloaer on all
-> disks and don#t forget repeat it after replace one
->
-> the only thing i am not sure is the partition type, until now my setups
-> are MBR and sda1 is a RAID1 over all 4 disks
->
-> [root@srv-rhsoft:~]$ fdisk -l /dev/sda
-> Disk /dev/sda: 1.84 TiB, 2000398934016 bytes, 3907029168 sectors
-> Disk model: Samsung SSD 860
-> Units: sectors of 1 * 512 = 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disklabel type: dos
-> Disk identifier: 0x000d9ef2
->
-> Device     Boot    Start        End    Sectors  Size Id Type
-> /dev/sda1  *        2048    1026047    1024000  500M fd Linux raid
-> autodetect
-> /dev/sda2        1026048   31746047   30720000 14.7G fd Linux raid
-> autodetect
-> /dev/sda3       31746048 3906971647 3875225600  1.8T fd Linux raid
-> autodetect
->
-> [root@srv-rhsoft:~]$ df
-> Filesystem     Type  Size  Used Avail Use% Mounted on
-> /dev/md1       ext4   29G  7.4G   22G  26% /
-> /dev/md2       ext4  3.6T  1.2T  2.5T  33% /mnt/data
-> /dev/md0       ext4  485M   49M  432M  11% /boot
+Hi, Song:=0A=
+=0A=
+Thanks a lot for your fix.=0A=
+I've tested the patch by "v4.19.149" tag from Linux kernel stable tree (ker=
+nel/git/stable/linux.git).=0A=
+The test runs over 1000 rounds in 24 hours without kernel crash, so the pat=
+ch should fix this issue.=0A=
+=0A=
+Best Regards,=0A=
+Winder=0A=
+________________________________________=0A=
+From: Song Liu <song@kernel.org>=0A=
+Sent: Monday, October 5, 2020 3:40 PM=0A=
+To: Sung, KoWei=0A=
+Cc: linux-raid@vger.kernel.org; Bshara, Saeed; Duan, HanShen; Tokoyo, Hiros=
+hi; Fortin, Mike=0A=
+Subject: RE: [EXTERNAL] RAID5 issue with UBUNTU 20.04.1 on my desktop=0A=
+=0A=
+CAUTION: This email originated from outside of the organization. Do not cli=
+ck links or open attachments unless you can confirm the sender and know the=
+ content is safe.=0A=
+=0A=
+=0A=
+=0A=
+Hi KoWei,=0A=
+=0A=
+On Mon, Sep 28, 2020 at 10:15 AM Song Liu <song@kernel.org> wrote:=0A=
+>=0A=
+> On Mon, Sep 21, 2020 at 5:34 PM Sung, KoWei <winders@amazon.com> wrote:=
+=0A=
+> >=0A=
+> > Hi, Song Liu:=0A=
+> >=0A=
+> > May I know if you're able to reproduce this issue? Thanks a lot for you=
+r help.=0A=
+>=0A=
+=0A=
+Could you please verify whether the following patch fixes it? If it=0A=
+works well, please=0A=
+reply with your Test-by tag.=0A=
+=0A=
+Thanks,=0A=
+Song=0A=
+=0A=
+diff --git i/drivers/md/raid5.c w/drivers/md/raid5.c=0A=
+index 66690b40818e7..39343479ac2a9 100644=0A=
+--- i/drivers/md/raid5.c=0A=
++++ w/drivers/md/raid5.c=0A=
+@@ -2585,8 +2585,6 @@ static int resize_stripes(struct r5conf *conf,=0A=
+int newsize)=0A=
+        } else=0A=
+                err =3D -ENOMEM;=0A=
+=0A=
+-       mutex_unlock(&conf->cache_size_mutex);=0A=
+-=0A=
+        conf->slab_cache =3D sc;=0A=
+        conf->active_name =3D 1-conf->active_name;=0A=
+=0A=
+@@ -2628,6 +2626,8 @@ static int resize_stripes(struct r5conf *conf,=0A=
+int newsize)=0A=
+=0A=
+        if (!err)=0A=
+                conf->pool_size =3D newsize;=0A=
++       mutex_unlock(&conf->cache_size_mutex);=0A=
++=0A=
+        return err;=0A=
+ }=0A=
