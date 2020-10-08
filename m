@@ -2,166 +2,150 @@ Return-Path: <SRS0=hplT=DP=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18BFFC43467
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Oct 2020 10:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71562C433E7
+	for <linux-raid@archiver.kernel.org>; Thu,  8 Oct 2020 18:13:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 911592076B
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Oct 2020 10:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DB79221FE
+	for <linux-raid@archiver.kernel.org>; Thu,  8 Oct 2020 18:13:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="DfyNFU6d"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pT5vKGMP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729311AbgJHKgB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 8 Oct 2020 06:36:01 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:32722 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725912AbgJHKgA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Oct 2020 06:36:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1602153358;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1QlKsNfskmXC46DmOmCAEyxhokcRcEU+JAC0cUe4Kyo=;
-        b=DfyNFU6dgR2fsrTjd0JfVJUUrLXHL/1ruwsKO2aRHOhDSZXYlieBsIclo4aa7ud7F4ijBW
-        TRMqKAB292c+ro+zXjeINYUTtTWaCVJ8o50InmajakAm1RQwmN9mWPvanwysz8dtZm4Jiv
-        aiA18eKNMkntWZKewxyqDPscKJTswCg=
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com
- (mail-vi1eur05lp2176.outbound.protection.outlook.com [104.47.17.176])
- (Using TLS) by relay.mimecast.com with ESMTP id
- de-mta-8-cRiBXfeYPD-jQ9s0GWXSKQ-1; Thu, 08 Oct 2020 12:35:56 +0200
-X-MC-Unique: cRiBXfeYPD-jQ9s0GWXSKQ-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lEjoB5RtVkwqQRJR91eE59+1jGikWqZf/Wh31bkGuuKttXEzCe68nkH9beZa1ny4Tbh/u/PCXpgKz6Y3fXC0LtdlYQ450uf6nzAq7aRyOLwi4LWB2N7m3r+/y0ioD2Gyy/LMNclXZDCDN+qEMV8UzhP9R6FDsgdquQclUI9H/dpDybTA9NIs4rjI4GJ11S96uGyVD19kVHYg4r2fKQtUSvrRzkMVaZMO1sUF+BDnPBxox9S+2jfdr0zuiMdV+vo17qy9U2t4l1aoAhvYYU5X48i0yAn+p54Rdd04OID8YSsAjZs+cMM/mUMXcS3PGNcarAF99hCxJvnWsqpG/3MG9A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1QlKsNfskmXC46DmOmCAEyxhokcRcEU+JAC0cUe4Kyo=;
- b=nbqkwiSh/BZ/bExhfjg+S0k406ScmILwj0Q7juv0VLGsX1ldtDs4yh1yQD6Y2rK6wJMydn3nlHa+SVs3LkcTuGg1u4RCLPSKKwQFv6Y2wFbdtLIXjxIWQg8K6L4RMzOaK2ctgVwE7YUOSB5QwORox7E6e0NbF4pbH4LacTWgnTmNCbXcCvhZoN2IdRDqL1LdUEAjMhIgBKx8xDZQVNCVNYcRfqG3cZZieJrNx2YU/e4m+7RwVHN0DfNiTq0YCIwklIbZcxzJKt4wD98n+ueSiplcDI68QrBQJYtlMGDjaRpSn7m/rDr1pMzj3tts5WZ37m3Vq3Z6gXfRMpG3BMKgjQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from DB7PR04MB4666.eurprd04.prod.outlook.com (2603:10a6:5:2b::14) by
- DB7PR04MB4892.eurprd04.prod.outlook.com (2603:10a6:10:14::24) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3433.34; Thu, 8 Oct 2020 10:35:56 +0000
-Received: from DB7PR04MB4666.eurprd04.prod.outlook.com
- ([fe80::b59c:e9a2:d279:3904]) by DB7PR04MB4666.eurprd04.prod.outlook.com
- ([fe80::b59c:e9a2:d279:3904%4]) with mapi id 15.20.3455.024; Thu, 8 Oct 2020
- 10:35:56 +0000
-Subject: Re: [PATCH] [md-cluster] fix memory leak for bitmap
-To:     Song Liu <song@kernel.org>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-References: <1601185213-7464-1-git-send-email-heming.zhao@suse.com>
- <fd2dddb4-13d1-31a3-a2ee-031a8e781634@cloud.ionos.com>
- <CAPhsuW4r=zwvKKs+WgqBfXiWF1Qn71OKH40ovVReJjPvkUcpug@mail.gmail.com>
-From:   "heming.zhao@suse.com" <heming.zhao@suse.com>
-Message-ID: <b9ffc967-42cd-9d47-fdb9-b920cf5534f5@suse.com>
-Date:   Thu, 8 Oct 2020 18:35:45 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
-In-Reply-To: <CAPhsuW4r=zwvKKs+WgqBfXiWF1Qn71OKH40ovVReJjPvkUcpug@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [123.123.129.194]
-X-ClientProxiedBy: HKAPR03CA0019.apcprd03.prod.outlook.com
- (2603:1096:203:c9::6) To DB7PR04MB4666.eurprd04.prod.outlook.com
- (2603:10a6:5:2b::14)
+        id S1731297AbgJHSLp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 8 Oct 2020 14:11:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34876 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731273AbgJHSLp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Oct 2020 14:11:45 -0400
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40618C0613D3
+        for <linux-raid@vger.kernel.org>; Thu,  8 Oct 2020 11:11:45 -0700 (PDT)
+Received: by mail-io1-xd34.google.com with SMTP id b1so2490291iot.4
+        for <linux-raid@vger.kernel.org>; Thu, 08 Oct 2020 11:11:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=CSoXq+8L+uC2Fsay1hVylBa3yjr5bnHuLLVYJzuZ4aI=;
+        b=pT5vKGMPtJ8Uu1GPdNg182aAorfrqDbkZNvk9nq43R+BMkMwkl8RCmSJClcMtqi1D8
+         1sLlRVSNdcKtaJBFjjabLfw/1JIGfpFfe3Y/dQ8ptZ3ONr59BWTSz++BzaoAWcNwUdzK
+         Y7THOwqhyOFuEyaTnDXUrN3zWGDUKvYtcbj9vdWSMJLlrcLad9evL4yGR/qiKWcLHPJW
+         5aaXo/0Y9jtxJjRKtwHwxGsJTXAGQ2GpD574EMRJtmFwWJedx9N1PDJE3P86Q7LFF5/L
+         2oJO7nZ1VUdnaer8JJDMixfNSrfiy6AUFTkag3CCXKS3DxHw5r/4xz2VXu0E0Ri2NLtl
+         dIQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=CSoXq+8L+uC2Fsay1hVylBa3yjr5bnHuLLVYJzuZ4aI=;
+        b=pWEfhyYcFyeAV84NX0JINwqRh7omJO/B54Kh4aVoEZmvCquR/KPMos/WpUm8+oeArM
+         IhJABD5I3Kiz6a1HkDj00mOnZUixCcWbw6mYv7Uic5km5AqPqDds3HHpMigKkHmcJB2+
+         0yVYduPG01cM8UybInZCugpQ7czvQoVPNr6Ifk75jsF7RCis/QP3el05d6rG5aR7UnVd
+         MKPhWilwEILyeMnJcPcQBXUqGWBQrTdy6vDhwgz8SJIGV1z2mDUnegPdnarWE3PjQ20Y
+         7EZ7Utd7llJHU5Mq4c8PR6fo2EKyaPwxhvdw1cj1jvaRIu/FdYT/TMPIUCOHkQtrsa3c
+         rNlg==
+X-Gm-Message-State: AOAM533RmDR/aEoa5NWDhjYfomcz/Aaznn3p0pJlDLZ4NK8Nk93d9JJi
+        q/ldcZxfoSmmjUFEHghV2x880Ozz4Fk9Tez+pigu5Q==
+X-Google-Smtp-Source: ABdhPJzVlut/DlArUd8JRiXjai5dHk1kcamlui+SCoUrieIyqKit4kOehyULHhdcXTviwgnXEt638LyGUxQgcYISjOA=
+X-Received: by 2002:a6b:b208:: with SMTP id b8mr6973090iof.36.1602180703879;
+ Thu, 08 Oct 2020 11:11:43 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from c73.home (123.123.129.194) by HKAPR03CA0019.apcprd03.prod.outlook.com (2603:1096:203:c9::6) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.30 via Frontend Transport; Thu, 8 Oct 2020 10:35:54 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 3acdc0b1-913a-42ab-f5ef-08d86b75f02d
-X-MS-TrafficTypeDiagnostic: DB7PR04MB4892:
-X-Microsoft-Antispam-PRVS: <DB7PR04MB48924667DE971650634D4E8D970B0@DB7PR04MB4892.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: iTFqkOtjMBE6LTowoQpXf3UrOQR0W1Q7X4xhgBoa6QLxSbZyy6MCBGhYe8YUO0Ynd9pUR9pNJI1kNyRasCinK4PcFPLxycSUC5EiuOuP0Tk39rUSFA27lIcw3a4xONb1n1VuZl1REBOA1Zrb20NVm3BzwhfOetRdhDNHm7iHZwaRZdRqRTDejaqFFjlgz3hDUUNUxKEO6FrUE+4AmkELM1CkFUewt0J1JPtde/QneLbQ6tHcaThbl1/gEGMw/DLLTyd67/DZJAR/T5b6oscdz5HnehoAYIXCpRjPR+dyN32yWeROa+mjfC30QgOtAZFScfpDz8qKFh4oySyf1xni0V4qtSz7v/tBnC5tzzAcNt7VgcF+45v1yM3+B5MZtTaxjV45rjDIU8NNLQl42DLP2Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB7PR04MB4666.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(376002)(366004)(39860400002)(346002)(6486002)(4326008)(86362001)(6666004)(8886007)(478600001)(66556008)(66476007)(2616005)(956004)(36756003)(5660300002)(52116002)(66946007)(316002)(110136005)(6506007)(53546011)(186003)(26005)(8676002)(2906002)(16526019)(31696002)(8936002)(6512007)(31686004)(9126004)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: 6ab1aaL4wdG3fH9cIfFmMPeIFy4vVtxjxT4UknSonPRsn8+0Hm5xbO1bDE7YnZSYNygIbGqfSmHpD4WIKfxzPmqY+S7zzgIFAwAXtqSJ9pW2J6rm6dBdnJK2W9lFcROkLZSbmeQJb32xy69LlysltC5CgZIixDQZGx3jdF7hKEAYRtJLcvnznMPFXIV6zKbCMOXoC3JAXonYRgQcKeaxCAIYqjfxyWMt0HDWLRqvS0Jwv8SVr6qekDSBI9SjLO5ttvA0KHdyy4DWFZj159g+exbPLlKe0RxwIXbdcrlYvJby4zsElzBJhektvZzjX0PkwRmco7tig/fIe5+pfVFHljXs4xHivp9c7jR8xOlzXswNxPx9wvHNYBrn998CalnKPdVZzF2KhGqtabFbE25N2kfLD3iGpY1Vxdi3PooDZzj6XlhUXotoBN8cC2100iczM83e1X/ZdAj2KWFTL011jOI6PMQ2CDrLiKApMQzeGZ1F6orDlruN7sB8HsVbAlpmlprJEO4SHQK/vqnAvbNwZW7/RvgcADjJyDlpizr4+8BAqLEiJM/s4dY9n8fcW18MubeCZL1RGznf9502sclc6wurqaB4V5V24Nd60mubVB8Ws2i/8v8qLA6kwHjj4mb6UOKYultmmJjLccUoEzAriA==
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3acdc0b1-913a-42ab-f5ef-08d86b75f02d
-X-MS-Exchange-CrossTenant-AuthSource: DB7PR04MB4666.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Oct 2020 10:35:55.9983
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4iqsXCvViTmBoI13EHjNA1ll4JnCNWKhKBfwGnKjRPV25ebS0CPFwigvxA17Uo+f2s0J29jiHLaci6kKNXiNfA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR04MB4892
+From:   Naresh Kamboju <naresh.kamboju@linaro.org>
+Date:   Thu, 8 Oct 2020 23:41:32 +0530
+Message-ID: <CA+G9fYtwisRJtN4ht=ApeWc1jWssDok-7y2wee6Z0kzMP-atKg@mail.gmail.com>
+Subject: [ Regressions ] linux next 20201008: blk_update_request: I/O error,
+ dev sda, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 0 prio class 0
+To:     dm-devel@redhat.com, open list <linux-kernel@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        drbd-dev@lists.linbit.com,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, linux-raid@vger.kernel.org,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        lkft-triage@lists.linaro.org
+Cc:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello Song & Guoqing,
+There are two major regressions noticed on linux next tag 20201008.
+I will bisect this problem and get back to you.
 
-Thank you for your review.
-I will take your advises & take more attention on later.
+1) qemu_i386 and qemu_x86 boot failed due to mount rootfs failing [1].
 
-On 10/8/20 2:56 PM, Song Liu wrote:
-> On Wed, Oct 7, 2020 at 8:36 PM Guoqing Jiang
-> <guoqing.jiang@cloud.ionos.com> wrote:
->>
->>
->>
->> On 9/27/20 07:40, Zhao Heming wrote:
->>> current code doesn't free temporary bitmap memory.
->>>
->>> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
->>> ---
->>>    drivers/md/md-bitmap.c  | 1 +
->>>    drivers/md/md-cluster.c | 1 +
->>>    2 files changed, 2 insertions(+)
->>>
->>> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->>> index b10c519..593fe15 100644
->>> --- a/drivers/md/md-bitmap.c
->>> +++ b/drivers/md/md-bitmap.c
->>> @@ -2012,6 +2012,7 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
->>>        md_bitmap_unplug(mddev->bitmap);
->>>        *low = lo;
->>>        *high = hi;
->>> +     md_bitmap_free(bitmap);
->>>
->>>        return rv;
->>>    }
->>> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->>> index d50737e..afbbc55 100644
->>> --- a/drivers/md/md-cluster.c
->>> +++ b/drivers/md/md-cluster.c
->>> @@ -1166,6 +1166,7 @@ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsiz
->>>                         * can't resize bitmap
->>>                         */
->>>                        goto out;
->>> +             md_bitmap_free(bitmap);
->>>        }
->>>
->>>        return 0;
->>
->> I'd prefer add a comment for get_bitmap_from_slot to mention it's caller
->> need to
->> free bitmap.
-> 
-> I added comment to the patch with Guoqing's "Suggested-by" tag, and applied
-> it to md-next. I also made some changes to the commit log of all 3 patches from
-> Heming.
-> 
-> Herming, for future patches, please prefix the subject with "md:" or
-> "md/bitmap".
-> 
-> Thanks,
-> Song
-> 
+        Starting Remount Root and Kernel File Systems...
+[    1.750740] ata1.00: WARNING: zero len r/w req
+[    1.751423] ata1.00: WARNING: zero len r/w req
+[    1.752361] ata1.00: WARNING: zero len r/w req
+[    1.753400] ata1.00: WARNING: zero len r/w req
+[    1.754447] ata1.00: WARNING: zero len r/w req
+[    1.755529] ata1.00: WARNING: zero len r/w req
+[    1.756630] sd 0:0:0:0: [sda] tag#0 FAILED Result:
+hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
+[    1.758622] sd 0:0:0:0: [sda] tag#0 CDB: Synchronize Cache(10) 35
+00 00 00 00 00 00 00 00 00
+[    1.760576] blk_update_request: I/O error, dev sda, sector 0 op
+0x1:(WRITE) flags 0x800 phys_seg 1 prio class 0
+[    1.761534] Buffer I/O error on dev sda, logical block 0, lost sync
+page write
+[    1.764158] EXT4-fs (sda): I/O error while writing superblock
 
+
+2) the devices boot pass but mkfs failed on x86_64, i386, arm64
+Juno-r2 devices [2].
+
+mkfs -t ext4 /dev/disk/by-id/ata-TOSHIBA_MG03ACA100_37O9KGL0F
+[   72.159789] ata3.00: WARNING: zero len r/w req
+[   72.164287] ata3.00: WARNING: zero len r/w req
+[   72.168774] ata3.00: WARNING: zero len r/w req
+[   72.168777] ata3.00: WARNING: zero len r/w req
+[   72.168779] ata3.00: WARNING: zero len r/w req
+[   72.168781] ata3.00: WARNING: zero len r/w req
+[   72.168786] sd 2:0:0:0: [sda] tag#5 FAILED Result:
+hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
+[   72.168788] sd 2:0:0:0: [sda] tag#5 CDB: Synchronize Cache(10) 35
+00 00 00 00 00 00 00 00 00
+[   72.168791] blk_update_request: I/O error, dev sda, sector 0 op
+0x1:(WRITE) flags 0x800 phys_seg 0 prio class 0
+
+Reported-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+
+metadata:
+  git branch: master
+  git repo: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next
+  git commit: e4fb79c771fbe2e6fcb3cffa87d5823a9bbf3f10
+  git describe: next-20201008
+  make_kernelversion: 5.9.0-rc8
+  kernel-config:
+https://builds.tuxbuild.com/pOW-FELX2VUycejkuyiKZg/kernel.config
+
+
+steps to reproduce:
+--------------------------
+1) qemu boot command:
+
+/usr/bin/qemu-system-x86_64 -cpu host -enable-kvm -nographic -net
+nic,model=virtio,macaddr=DE:AD:BE:EF:66:06 -net tap -m 1024 -monitor
+none -kernel bzImage --append "root=/dev/sda  rootwait
+console=ttyS0,115200" -hda
+rpb-console-image-lkft-intel-corei7-64-20200723162342-41.rootfs.ext4
+-m 4096 -smp 4 -nographic
+
+2) boot x86_64 with linux next 20201008 tag kernel and attach SDD drive.
+
+mkfs -t ext4 /dev/<drive-partition>
+
+Full log links,
+[1 ]https://lkft.validation.linaro.org/scheduler/job/1823906#L688
+[2] https://lkft.validation.linaro.org/scheduler/job/1823938#L2065
+
+
+-- 
+Linaro LKFT
+https://lkft.linaro.org
