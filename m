@@ -1,230 +1,87 @@
-Return-Path: <SRS0=hplT=DP=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=zRnh=DQ=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61BCCC433E7
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Oct 2020 22:40:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68FD6C433DF
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Oct 2020 01:07:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F39EC22243
-	for <linux-raid@archiver.kernel.org>; Thu,  8 Oct 2020 22:40:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BF5222242
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Oct 2020 01:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730535AbgJHWki (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 8 Oct 2020 18:40:38 -0400
-Received: from mga07.intel.com ([134.134.136.100]:21904 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730491AbgJHWki (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 8 Oct 2020 18:40:38 -0400
-IronPort-SDR: 26z3iKf8nNlI/ZRUeWXc+vwbk4IuqhVNJ4gGlZSitIk1Zuj4HaaCkWo25Nz8aqwiZjoayNLsBP
- Ymt59X54iWCw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9768"; a="229601372"
-X-IronPort-AV: E=Sophos;i="5.77,352,1596524400"; 
-   d="scan'208";a="229601372"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2020 15:40:36 -0700
-IronPort-SDR: Oh/HIOymcB1bNtwbaUWh2CSw7U205l+8jp0J5yiFljqQv3e0pjMoE4iDHfb88fQbXuflgzvxbe
- 1dMhAZwk7JAA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,352,1596524400"; 
-   d="scan'208";a="461968182"
-Received: from lkp-server02.sh.intel.com (HELO b5ae2f167493) ([10.239.97.151])
-  by orsmga004.jf.intel.com with ESMTP; 08 Oct 2020 15:40:34 -0700
-Received: from kbuild by b5ae2f167493 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1kQeaP-0002N6-W3; Thu, 08 Oct 2020 22:40:33 +0000
-Date:   Fri, 09 Oct 2020 06:40:04 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 03ee70c404b671674dc365870588e3bc3733735a
-Message-ID: <5f7f9544.c8lQkdTrepLbK1kw%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1728806AbgJIBH5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 8 Oct 2020 21:07:57 -0400
+Received: from li1843-175.members.linode.com ([172.104.24.175]:36908 "EHLO
+        mail.stoffel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726348AbgJIBH5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 8 Oct 2020 21:07:57 -0400
+X-Greylist: delayed 462 seconds by postgrey-1.27 at vger.kernel.org; Thu, 08 Oct 2020 21:07:56 EDT
+Received: from quad.stoffel.org (066-189-075-104.res.spectrum.com [66.189.75.104])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.stoffel.org (Postfix) with ESMTPSA id 3995220F2A;
+        Thu,  8 Oct 2020 21:00:13 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id 92394A6771; Thu,  8 Oct 2020 21:00:11 -0400 (EDT)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+Message-ID: <24447.46619.550227.607747@quad.stoffel.home>
+Date:   Thu, 8 Oct 2020 21:00:11 -0400
+From:   "John Stoffel" <john@stoffel.org>
+To:     Roger Heflin <rogerheflin@gmail.com>
+Cc:     antlists <antlists@youngman.org.uk>,
+        Daniel Sanabria <sanabria.d@gmail.com>,
+        Roman Mamedov <rm@romanrm.net>,
+        Linux-RAID <linux-raid@vger.kernel.org>
+Subject: Re: do i need to give up on this setup
+In-Reply-To: <CAAMCDefj4koi_+g-vdzWpfSB21KLgRq2kJ9sCZK04iX85b_qfw@mail.gmail.com>
+References: <CAHscji30ACa2d0qz-nr5vqPYOP642dwjS5BY07g2DQS7GBG-2A@mail.gmail.com>
+        <20201005184449.54225175@natsu>
+        <CAHscji0pNezf6xCpjWto5-21ayoCeLWm34GTYh5TSgxkOw90mw@mail.gmail.com>
+        <20201005190421.4ecd8f1b@natsu>
+        <CAHscji1VrccTOaQc4GdWof4E+Bzs5KL0-tJJj0ZUM9Db=QBriw@mail.gmail.com>
+        <CAAMCDedZfx+w3NT_QgB0KGkeEQikCtYVy9YuiNEhNaEjXF1C8w@mail.gmail.com>
+        <CAHscji01ikKz4fQ_9i4Tb3AraTD+ZcXBbK-Mm+zY4p3p2qbF4Q@mail.gmail.com>
+        <CAAMCDeeRNnoC6mdj7L1PdD5Ztek1tzm++UPi3k=hWvBUA=oLxQ@mail.gmail.com>
+        <5be31543-22ec-dd9f-fd08-d759c4b0df3a@youngman.org.uk>
+        <CAAMCDefj4koi_+g-vdzWpfSB21KLgRq2kJ9sCZK04iX85b_qfw@mail.gmail.com>
+X-Mailer: VM 8.2.0b under 26.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
-branch HEAD: 03ee70c404b671674dc365870588e3bc3733735a  md/raid5: fix oops during stripe resizing
+>>>>> "Roger" == Roger Heflin <rogerheflin@gmail.com> writes:
 
-elapsed time: 726m
+Roger> The controller is crap, and is expected to have serious issues no
+Roger> matter what drives are on the controller.
 
-configs tested: 157
-configs skipped: 2
+I can't say enough good things about the LSI SATA RAID controllers.
+You can usually get them pretty cheap on eBay, and just flash them
+with the JBOD firmware and they do great.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+  LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT S)
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-mips                      fuloong2e_defconfig
-riscv                               defconfig
-powerpc                     tqm8540_defconfig
-powerpc                 mpc836x_mds_defconfig
-powerpc                  iss476-smp_defconfig
-mips                         bigsur_defconfig
-powerpc                       eiger_defconfig
-mips                       rbtx49xx_defconfig
-arm                           tegra_defconfig
-powerpc                        icon_defconfig
-powerpc                  mpc885_ads_defconfig
-mips                      bmips_stb_defconfig
-arm                      footbridge_defconfig
-mips                malta_qemu_32r6_defconfig
-arm                        magician_defconfig
-sh                         ap325rxa_defconfig
-powerpc                 xes_mpc85xx_defconfig
-m68k                        m5307c3_defconfig
-arm                             mxs_defconfig
-h8300                               defconfig
-nios2                               defconfig
-xtensa                generic_kc705_defconfig
-sh                   secureedge5410_defconfig
-sh                        apsh4ad0a_defconfig
-arm                       multi_v4t_defconfig
-m68k                           sun3_defconfig
-sh                          polaris_defconfig
-arm                           sama5_defconfig
-powerpc                      bamboo_defconfig
-sh                         ecovec24_defconfig
-m68k                             allmodconfig
-arm                             ezx_defconfig
-arm                  colibri_pxa300_defconfig
-powerpc                       maple_defconfig
-sh                          rsk7203_defconfig
-sh                          urquell_defconfig
-powerpc               mpc834x_itxgp_defconfig
-powerpc                         ps3_defconfig
-sh                 kfr2r09-romimage_defconfig
-arm                           h3600_defconfig
-arm                          exynos_defconfig
-powerpc                     mpc512x_defconfig
-parisc                           allyesconfig
-arm                       omap2plus_defconfig
-m68k                         apollo_defconfig
-powerpc                          g5_defconfig
-mips                          ath25_defconfig
-i386                             alldefconfig
-powerpc                 mpc834x_itx_defconfig
-powerpc                     powernv_defconfig
-powerpc                      mgcoge_defconfig
-sh                         apsh4a3a_defconfig
-mips                           mtx1_defconfig
-arm                            mmp2_defconfig
-sh                           sh2007_defconfig
-arm                          ixp4xx_defconfig
-mips                        nlm_xlp_defconfig
-mips                      malta_kvm_defconfig
-sh                           se7721_defconfig
-s390                          debug_defconfig
-s390                             alldefconfig
-arm                      integrator_defconfig
-c6x                        evmc6474_defconfig
-arm                            qcom_defconfig
-arm                             rpc_defconfig
-c6x                              alldefconfig
-sh                        sh7757lcr_defconfig
-arm                         cm_x300_defconfig
-mips                         db1xxx_defconfig
-arm                       netwinder_defconfig
-c6x                              allyesconfig
-powerpc                    ge_imp3a_defconfig
-arm                         axm55xx_defconfig
-powerpc                      ep88xc_defconfig
-powerpc                        warp_defconfig
-powerpc                    gamecube_defconfig
-alpha                            allyesconfig
-i386                             allyesconfig
-arm                         bcm2835_defconfig
-sh                             espt_defconfig
-mips                      loongson3_defconfig
-mips                           ip28_defconfig
-arm                        shmobile_defconfig
-powerpc                      arches_defconfig
-powerpc                     ksi8560_defconfig
-powerpc                     ppa8548_defconfig
-sh                          r7780mp_defconfig
-sh                              ul2_defconfig
-microblaze                          defconfig
-mips                           ip22_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allyesconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a004-20201008
-x86_64               randconfig-a003-20201008
-x86_64               randconfig-a005-20201008
-x86_64               randconfig-a001-20201008
-x86_64               randconfig-a002-20201008
-x86_64               randconfig-a006-20201008
-i386                 randconfig-a006-20201008
-i386                 randconfig-a005-20201008
-i386                 randconfig-a001-20201008
-i386                 randconfig-a004-20201008
-i386                 randconfig-a002-20201008
-i386                 randconfig-a003-20201008
-i386                 randconfig-a015-20201008
-i386                 randconfig-a013-20201008
-i386                 randconfig-a014-20201008
-i386                 randconfig-a016-20201008
-i386                 randconfig-a011-20201008
-i386                 randconfig-a012-20201008
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
+It's been a while, but I think it was an IBM branded card at the
+time.  8 ports, easy setup, works well.  And looking on ebay, they're
+cheap now, around $50 though you might have to pay for the 1-to-4
+cables to goto SATA drives.  9211, 9341, stuff like that.  Here's an
+eBay listing with cables:
 
-clang tested configs:
-x86_64               randconfig-a012-20201008
-x86_64               randconfig-a015-20201008
-x86_64               randconfig-a013-20201008
-x86_64               randconfig-a014-20201008
-x86_64               randconfig-a011-20201008
-x86_64               randconfig-a016-20201008
+https://www.ebay.com/p/1404809612?iid=133501363959&_trkparms=aid%3D555018%26algo%3DPL.SIM%26ao%3D1%26asc%3D20170810093926%26meid%3De20ed20fb9634e328a31bca5c9e2063c%26pid%3D100854%26rk%3D1%26rkt%3D1%26itm%3D133501363959%26pmt%3D1%26noa%3D0%26pg%3D2322090%26algv%3DSimplAMLSeedlessV2&_trksid=p2322090.c100854.m4779
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+In my mind, the other advantage of these cards is that you can get two
+of them, and split your data across two controllers.  But it also gets
+your data disks off the internal controllers, which means you don't
+run into nearly as many problems where the system tries to boot off
+your data drives, or you have to put boot blocks on them, etc.  
+
+This controller would be more tolerant of your existing drives, since
+you have the 850w power supply, it's almost certainly not power
+problems either.
+
+John
