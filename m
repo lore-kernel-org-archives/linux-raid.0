@@ -1,67 +1,113 @@
-Return-Path: <SRS0=MdlR=DY=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=Wz+v=DZ=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12CB1C433E7
-	for <linux-raid@archiver.kernel.org>; Sat, 17 Oct 2020 11:13:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 782ADC43457
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Oct 2020 19:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D79EC206CB
-	for <linux-raid@archiver.kernel.org>; Sat, 17 Oct 2020 11:13:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 431A5222E9
+	for <linux-raid@archiver.kernel.org>; Sun, 18 Oct 2020 19:22:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603048958;
+	bh=+kDMFYPNlsQUHUHKdFrxk0ckCdUURXek0l2hYWeThDI=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=nqNxyJjSUh/vaODwIEb1jOG9D6N2RUBf7GtCDBkR9eOKT/DRi+deCmEL7UNuskYnh
+	 SfnjB2MTR216rg7PE0nL6hlPTEorGA4E88FpYTMjJ9T/mlRd5bTIO57Qzf/Tu5o0/f
+	 dy+msrB3yqcm+Rf8gpHXoYFqrWFPCL8AEutTOsFM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437359AbgJQLNj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 17 Oct 2020 07:13:39 -0400
-Received: from smtp2.kaist.ac.kr ([143.248.5.229]:59387 "EHLO
-        smtp2.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437248AbgJQLNe (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 17 Oct 2020 07:13:34 -0400
-X-Greylist: delayed 395 seconds by postgrey-1.27 at vger.kernel.org; Sat, 17 Oct 2020 07:13:34 EDT
-Received: from unknown (HELO mail1.kaist.ac.kr) (143.248.5.247)
-        by 143.248.5.229 with ESMTP; 17 Oct 2020 20:06:51 +0900
-X-Original-SENDERIP: 143.248.5.247
-X-Original-MAILFROM: dae.r.jeong@kaist.ac.kr
-X-Original-RCPTTO: linux-raid@vger.kernel.org
-Received: from kaist.ac.kr (143.248.133.220)
-        by kaist.ac.kr with ESMTP imoxion SensMail SmtpServer 7.0
-        id <595760cb0b67440a9c04038fe1fdce40> from <dae.r.jeong@kaist.ac.kr>;
-        Sat, 17 Oct 2020 20:06:51 +0900
-Date:   Sat, 17 Oct 2020 20:06:51 +0900
-From:   "Dae R. Jeong" <dae.r.jeong@kaist.ac.kr>
-To:     song@kernel.org
-Cc:     yjkwon@kaist.ac.kr, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: WARNING in md_ioctl
-Message-ID: <20201017110651.GA1602260@dragonet>
+        id S1727072AbgJRTWh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:22:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35378 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729885AbgJRTWe (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:22:34 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1AB6E207DE;
+        Sun, 18 Oct 2020 19:22:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603048953;
+        bh=+kDMFYPNlsQUHUHKdFrxk0ckCdUURXek0l2hYWeThDI=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ocjM+73pjhffQwbUau+t9z99ur58//xEpXT/gIqwD/pgc84aE4SxfDZGR8ukjTwlj
+         zkxBQlSqUPmulAtu/dkf39RU75ZL2snX1F3ad/zIgBGlfx4O9yfVJwKk1bagCy2ucX
+         lRA2vBokWQIT12DsdwNEVB/HdabHFjKXMBzYT6ZM=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Zhao Heming <heming.zhao@suse.com>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <songliubraving@fb.com>,
+        Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 01/80] md/bitmap: fix memory leak of temporary bitmap
+Date:   Sun, 18 Oct 2020 15:21:12 -0400
+Message-Id: <20201018192231.4054535-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Zhao Heming <heming.zhao@suse.com>
 
-I looked into the warning "WARNING in md_ioctl" found by Syzkaller.
-(https://syzkaller.appspot.com/bug?id=fbf9eaea2e65bfcabb4e2750c3ab0892867edea1)
-I suspect that it is caused by a race between two concurrenct ioctl()s as belows.
+[ Upstream commit 1383b347a8ae4a69c04ae3746e6cb5c8d38e2585 ]
 
-CPU1 (md_ioctl())                          CPU2 (md_ioctl())
-------                                     ------
-set_bit(MD_CLOSING, &mddev->flags);
-did_set_md_closing = true;
-                                           WARN_ON_ONCE(test_bit(MD_CLOSING, &mddev->flags));
+Callers of get_bitmap_from_slot() are responsible to free the bitmap.
 
-if(did_set_md_closing)
-    clear_bit(MD_CLOSING, &mddev->flags);
+Suggested-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/md/md-bitmap.c  | 3 ++-
+ drivers/md/md-cluster.c | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-If the above is correct, this warning is introduced
-in the commit 065e519e("md: MD_CLOSING needs to be cleared after called md_set_readonly or do_md_stop").
-Could you please take a look into this?
-
-Best regards,
-Dae R. Jeong
-
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 3ad18246fcb3c..7227d03dbbea7 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -1954,6 +1954,7 @@ int md_bitmap_load(struct mddev *mddev)
+ }
+ EXPORT_SYMBOL_GPL(md_bitmap_load);
+ 
++/* caller need to free returned bitmap with md_bitmap_free() */
+ struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot)
+ {
+ 	int rv = 0;
+@@ -2017,6 +2018,7 @@ int md_bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 	md_bitmap_unplug(mddev->bitmap);
+ 	*low = lo;
+ 	*high = hi;
++	md_bitmap_free(bitmap);
+ 
+ 	return rv;
+ }
+@@ -2620,4 +2622,3 @@ struct attribute_group md_bitmap_group = {
+ 	.name = "bitmap",
+ 	.attrs = md_bitmap_attrs,
+ };
+-
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index d50737ec40394..afbbc552c3275 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1166,6 +1166,7 @@ static int resize_bitmaps(struct mddev *mddev, sector_t newsize, sector_t oldsiz
+ 			 * can't resize bitmap
+ 			 */
+ 			goto out;
++		md_bitmap_free(bitmap);
+ 	}
+ 
+ 	return 0;
+-- 
+2.25.1
 
