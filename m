@@ -2,93 +2,141 @@ Return-Path: <SRS0=jU3t=D4=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 560AAC561F8
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Oct 2020 05:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D71EC4363A
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Oct 2020 20:38:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAA4121D7B
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Oct 2020 05:28:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603258134;
-	bh=eC/8ejH9N5F4wrrvByVIBEvBYC/IQ0CVvBIej1Nl2Sg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=GetzUjGmJoAHDCzo+q9cW9SaFCRNXdQIyMyqrdmB4h15eqirDyDH9nS5oS/IWY/iU
-	 OlUF0tplvv5m9IcNKfpTQRiq6bbGrX7JzlEkY8ToMF8iAUOEtAc9sL/BSval7R4ffl
-	 eiHrWWbZZZX/B4gJGfn3UDlLkb1YWGaNLW0Cv/NA=
+	by mail.kernel.org (Postfix) with ESMTP id 81F3B2237B
+	for <linux-raid@archiver.kernel.org>; Wed, 21 Oct 2020 20:38:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=mail.mil header.i=@mail.mil header.b="RPOTihxC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407867AbgJUF2u (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Oct 2020 01:28:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34328 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2407832AbgJUF2u (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 21 Oct 2020 01:28:50 -0400
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B078921D7B;
-        Wed, 21 Oct 2020 05:28:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603258129;
-        bh=eC/8ejH9N5F4wrrvByVIBEvBYC/IQ0CVvBIej1Nl2Sg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=QzAZjtGK+0+nmQ/pP8JAMiF4/LyT9YluxptTfuHzN8StCRyHXXwonMBx6KB3pBthF
-         wRVLChfN7X0j7w3l2yox1niTP8eakddJr2wNfyG6p6mAL914o0cQ+3NA8MUF1LJKNY
-         CeE3fgMTxcLFjPpnSaRqSa50AZ1n3IY84daY+BzI=
-Received: by mail-lj1-f171.google.com with SMTP id h20so1116418lji.9;
-        Tue, 20 Oct 2020 22:28:48 -0700 (PDT)
-X-Gm-Message-State: AOAM531b9Sohaz0siw3kAT6f3AUeL1MXMa9gYJIWsSaHaHFWAXH4b7Bv
-        tcTDpU4ytJ1fPAshuBIehkHNDs1MqBWJ9WWAgV0=
-X-Google-Smtp-Source: ABdhPJyW6FP/zSxKAx7F8RAcOdBp7sUVGWXw3lamx+YyF24259+mJHFNhvQPb8tgJUChbgse2QDVDao5w++IvxD8kak=
-X-Received: by 2002:a05:651c:1a5:: with SMTP id c5mr631039ljn.273.1603258126970;
- Tue, 20 Oct 2020 22:28:46 -0700 (PDT)
+        id S2505415AbgJUUi3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 21 Oct 2020 16:38:29 -0400
+Received: from UCOL19PA35.eemsg.mail.mil ([214.24.24.195]:41291 "EHLO
+        UCOL19PA35.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2505413AbgJUUi3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 21 Oct 2020 16:38:29 -0400
+X-Greylist: delayed 430 seconds by postgrey-1.27 at vger.kernel.org; Wed, 21 Oct 2020 16:38:27 EDT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2018v1a;
+  t=1603312707; x=1634848707;
+  h=from:to:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=L3F0++KL2PMy1BfmqJdjCoMvXLDKnYTAZHeGxkOzMEI=;
+  b=RPOTihxCfmSRstMBsHLjMbwVJpOX+Uy6ehh/r9JypnE0qJKWZKO3hETz
+   pYhs/ExmneEZHlWWGki+EpbvY8JtMmWPaVnSon3Bir+eIvJPAWDUFd9nm
+   SlD5+7tL82r52pyNbLpPV+ZzG85FodtYaVgyZNwVEmqHE9HWV/WPorfur
+   gvOH4LB8sjDIMl+2sfm301JOcrNs/aeJB5nFvw32L4+w263wdaSSaQqVV
+   yKwTZUn3KQWbJ2pVtz9OShdOY/TpuskPN1/qmxJ0XMXbhL1ddFOyoxYAE
+   7EoOtd2BVwYMdNs4EMk9jPjLBBlBGpadk1vueC847FlIVymcKpWj4/zu2
+   A==;
+X-EEMSG-check-017: 164380007|UCOL19PA35_ESA_OUT02.csd.disa.mil
+X-IronPort-AV: E=Sophos;i="5.77,402,1596499200"; 
+   d="scan'208";a="164380007"
+Received: from edge-mech02.mail.mil ([214.21.130.228])
+  by UCOL19PA35.eemsg.mail.mil with ESMTP/TLS/DHE-RSA-AES256-SHA; 21 Oct 2020 20:30:17 +0000
+Received: from UMECHPAOU.easf.csd.disa.mil (214.21.130.164) by
+ edge-mech02.mail.mil (214.21.130.228) with Microsoft SMTP Server (TLS) id
+ 14.3.487.0; Wed, 21 Oct 2020 20:29:19 +0000
+Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.5.75]) by
+ umechpaou.easf.csd.disa.mil ([214.21.130.164]) with mapi id 14.03.0487.000;
+ Wed, 21 Oct 2020 20:29:18 +0000
+From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+To:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Nr_requests mdraid
+Thread-Topic: Nr_requests mdraid
+Thread-Index: Adan6NmsRmtK8hFlSiegy3yaiyRpBw==
+Date:   Wed, 21 Oct 2020 20:29:18 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A23856DD0D3@UMECHPA7B.easf.csd.disa.mil>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [214.21.97.89]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20201017110651.GA1602260@dragonet> <CAPhsuW583=org7AOR-W2vcQV3pTBxin2LG1tb3On=x6VtjXvxQ@mail.gmail.com>
- <20201019070319.GA1811280@dragonet>
-In-Reply-To: <20201019070319.GA1811280@dragonet>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 20 Oct 2020 22:28:36 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4dR7_pgxg-696M34peSRTPhTmJgpokKr5qAMXd81damg@mail.gmail.com>
-Message-ID: <CAPhsuW4dR7_pgxg-696M34peSRTPhTmJgpokKr5qAMXd81damg@mail.gmail.com>
-Subject: Re: WARNING in md_ioctl
-To:     "Dae R. Jeong" <dae.r.jeong@kaist.ac.kr>
-Cc:     yjkwon@kaist.ac.kr, linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Oct 19, 2020 at 12:03 AM Dae R. Jeong <dae.r.jeong@kaist.ac.kr> wrote:
->
-> > diff --git i/drivers/md/md.c w/drivers/md/md.c
-> > index 6072782070230..49442a3f4605b 100644
-> > --- i/drivers/md/md.c
-> > +++ w/drivers/md/md.c
-> > @@ -7591,8 +7591,10 @@ static int md_ioctl(struct block_device *bdev,
-> > fmode_t mode,
-> >                         err = -EBUSY;
-> >                         goto out;
-> >                 }
-> > -               WARN_ON_ONCE(test_bit(MD_CLOSING, &mddev->flags));
-> > -               set_bit(MD_CLOSING, &mddev->flags);
-> > +               if (test_and_set_bit(MD_CLOSING, &mddev->flags)) {
-> > +                       err = -EBUSY;
-> > +                       goto out;
-> > +               }
-> >                 did_set_md_closing = true;
-> >                 mutex_unlock(&mddev->open_mutex);
-> >                 sync_blockdev(bdev);
-> >
-> > Could you please test whether this fixes the issue?
->
-> Since &mddev->open_mutex is held when testing a bit of mddev->flags, I
-> modified the code just a little bit by putting mutex_unlock() as
-> belows.
+All,
+I'm working on creating raid5 or raid6 arrays of 800K IOP nvme drives.   Ea=
+ch of the drives performs well with a queue depth of 128 and I set to 1023 =
+if allowed.   In order for me to try to max out the queue depth on each RAI=
+D member, so I'd like to set the sysfs nr_requests on the md device to some=
+thing greater than 128, like #raid members * 128.   Even though /sys/block/=
+md127/queue/nr_requests is mode 644, when I try to change nr_requests in an=
+y way as root, I get write error: invalid argument.  When I'm hitting the m=
+d device with random reads, my nvme drives are 100% utilized, but only doin=
+g 160K IOPS because they have no queue depth.  =20
 
-Good catch! The fix looks good. Would you like to submit a patch for it?
+Am I doing something silly?  =20
+Regards,
+Jim Finlayson
 
-Thanks,
-Song
+[root@hp-dl325 ~]# cd /sys/block/md127/queue
+[root@hp-dl325 queue]# ls
+add_random            discard_zeroes_data  io_timeout              max_segm=
+ents      optimal_io_size      unpriv_sgio
+chunk_sectors         fua                  logical_block_size      max_segm=
+ent_size  physical_block_size  wbt_lat_usec
+dax                   hw_sector_size       max_discard_segments    minimum_=
+io_size   read_ahead_kb        write_cache
+discard_granularity   io_poll              max_hw_sectors_kb       nomerges=
+          rotational           write_same_max_bytes
+discard_max_bytes     io_poll_delay        max_integrity_segments  nr_reque=
+sts       rq_affinity          write_zeroes_max_bytes
+discard_max_hw_bytes  iostats              max_sectors_kb          nr_zones=
+          scheduler            zoned
+[root@hp-dl325 queue]# cat nr_requests
+128
+[root@hp-dl325 queue]# ls -l nr_requests
+-rw-r--r-- 1 root root 4096 Oct 21 18:55 nr_requests
+[root@hp-dl325 queue]# echo 1023 > nr_requests
+-bash: echo: write error: Invalid argument
+[root@hp-dl325 queue]# echo 128 > nr_requests
+-bash: echo: write error: Invalid argument
+[root@hp-dl325 queue]# pwd
+/sys/block/md127/queue
+[root@hp-dl325 queue]#
+
+[root@hp-dl325 queue]# mdadm --version
+mdadm - v4.1 - 2018-10-01
+[root@hp-dl325 queue]# uname -r
+4.18.0-193.el8.x86_64
+[root@hp-dl325 queue]# cat /etc/redhat-release
+Red Hat Enterprise Linux release 8.2 (Ootpa)
+[root@hp-dl325 queue]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid0]
+md126 : active raid5 nvme9n1[10] nvme8n1[8] nvme7n1[7] nvme6n1[6] nvme5n1[5=
+] nvme4n1[4] nvme3n1[3] nvme2n1[2] nvme1n1[1] nvme0n1[0]
+      16877177856 blocks super 1.2 level 5, 512k chunk, algorithm 2 [10/10]=
+ [UUUUUUUUUU]
+      bitmap: 0/14 pages [0KB], 65536KB chunk
+
+md127 : active raid5 nvme18n1[9] nvme17n1[7] nvme16n1[6] nvme15n1[5] nvme14=
+n1[4] nvme13n1[3] nvme12n1[2] nvme11n1[1] nvme10n1[0]
+      15001935872 blocks super 1.2 level 5, 512k chunk, algorithm 2 [9/9] [=
+UUUUUUUUU]
+      bitmap: 0/14 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+
+[root@hp-dl325 queue]# cat /etc/udev/rules.d/99-local.rules
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add|change", KERNEL=3D=3D"md*", ATTR{m=
+d/sync_speed_max}=3D"2000000",ATTR{md/group_thread_cnt}=3D"16", ATTR{md/str=
+ipe_cache_size}=3D"1024" ATTR{queue/nomerges}=3D"2", ATTR{queue/nr_requests=
+}=3D"1023", ATTR{queue/rotational}=3D"0", ATTR{queue/rq_affinity}=3D"2", AT=
+TR{queue/scheduler}=3D"none", ATTR{queue/add_random}=3D"0", ATTR{queue/max_=
+sectors_kb}=3D"4096"
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add|change", KERNEL=3D=3D"nvme*[0-9]n*=
+[0-9]", ATTRS{model}=3D=3D"*PM1725a*", ATTR{queue/nomerges}=3D"2", ATTR{que=
+ue/nr_requests}=3D"1023", ATTR{queue/rotational}=3D"0", ATTR{queue/rq_affin=
+ity}=3D"2", ATTR{queue/scheduler}=3D"none", ATTR{queue/add_random}=3D"0", A=
+TTR{queue/max_sectors_kb}=3D"4096"=
