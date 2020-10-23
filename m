@@ -1,198 +1,156 @@
-Return-Path: <SRS0=HOAI=D5=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=YfF9=D6=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC13C388F2
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Oct 2020 12:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D178BC4363A
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Oct 2020 03:31:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21B64223BF
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Oct 2020 12:39:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 633FA2177B
+	for <linux-raid@archiver.kernel.org>; Fri, 23 Oct 2020 03:31:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=creamfinance.com header.i=@creamfinance.com header.b="iehxVNA9"
+	dkim=pass (2048-bit key) header.d=drivescale-com.20150623.gappssmtp.com header.i=@drivescale-com.20150623.gappssmtp.com header.b="iX0Eh39a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2898276AbgJVMjL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Oct 2020 08:39:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44372 "EHLO
+        id S460380AbgJWDbp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Oct 2020 23:31:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2898421AbgJVMiw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Oct 2020 08:38:52 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E1DEC0613CF
-        for <linux-raid@vger.kernel.org>; Thu, 22 Oct 2020 05:38:52 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id 13so1913554wmf.0
-        for <linux-raid@vger.kernel.org>; Thu, 22 Oct 2020 05:38:52 -0700 (PDT)
+        with ESMTP id S374850AbgJWDbo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Oct 2020 23:31:44 -0400
+Received: from mail-ua1-x964.google.com (mail-ua1-x964.google.com [IPv6:2607:f8b0:4864:20::964])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2C09C0613CE
+        for <linux-raid@vger.kernel.org>; Thu, 22 Oct 2020 20:31:43 -0700 (PDT)
+Received: by mail-ua1-x964.google.com with SMTP id f20so631912uap.2
+        for <linux-raid@vger.kernel.org>; Thu, 22 Oct 2020 20:31:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=creamfinance.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=YyjpZBF+3OEsHilfw+vUwETlg8dwHruXX8KJoDSqWSA=;
-        b=iehxVNA9YrR9pqhVsUIvhmgqsA9Bx1dT6KQv9ChCIBQj8h7qlxNaGaAOTHvfPpfJxd
-         4dEC+KjT0+z6ItTDzou+7lkejHe+poFSxRflGQ991BMCJFEsRM+HdJFdMgziMPkByH9r
-         454iV+S/KtLtgUwjmZn6etSCXRMjoObYCZb9A=
+        d=drivescale-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id;
+        bh=ReTTaNs/1URCBe015zmmsnkZL8avfnlCHdKrYfMsUo4=;
+        b=iX0Eh39aqpOwnxJBatJaScEMnOAfgzq3qvGvZLeXjM61EmZgTGO89tuYRjCMi4Vks6
+         qrjr0Cua8S6hdGMKyDsTBRvygocQyPw+RKQa4U++kuTdKniSwXCoYQ3zAtg1Cik9M8my
+         xIUsq5GOicpeaB6RciM+uis9JHr5+7lizqD5ram1wHEhcWoqZjrwrbYW6pg0lAwlw7kY
+         Gy+KctTCtbD4G3F/SdXA8YY0t9egtxPxywawRsvnw84v95zN9mgHqT63yn0Ch7OuRvZh
+         MtFgXjlqxV0KsqWdGGjmAvT3afzaxfhN0//s7pRfWmHzy9C2FG3iKHUdA8ehJi5kfmv7
+         /dAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=YyjpZBF+3OEsHilfw+vUwETlg8dwHruXX8KJoDSqWSA=;
-        b=afZl1ZMXXzC5gCxo4SV19JQvKr1Js3IlShVC4zLC/KzMRVYcIA1Xcm2NKL3S/zIGzN
-         KkI2/TVbaxijlPhwpg48zigqze24lH6LDrNS2qZy3LseGhvXkw8U4pFIlVx1bwejEEvn
-         o35U9VchK9ciR0oW6wOYbNkiU3ooOj4ke9UKUn0FjoPQ8cHPh5/C0+Uky3CFmnNm08tb
-         SwqdQaEX0NCaIbQasv2Ixrux0EmNwX8boOJf3dneLOfIHM6gJPAbJgq7OlJcavsistFj
-         xnsegsN75da+3YlS1kjBqRU2xY1lxN2h35W4YsdQDH+YmJf1mjojJ4/xqwW7/t1859My
-         9pdw==
-X-Gm-Message-State: AOAM5316zu/qG+AsQ7yBsAxoO6FOI0361qFNKxrc/hdvxvmmDzyqqnzN
-        u6Z3VerpkykzGvB4bIlGfHb2HFlCMZm4ONs=
-X-Google-Smtp-Source: ABdhPJzR2lwD7TH2lMWWlfyjfAFwFz+6B3WkRMaCoAQjgHHjOk6gB2fJCaV2+z+CqzhuGQtoPsC3+w==
-X-Received: by 2002:a7b:c1d6:: with SMTP id a22mr1871689wmj.161.1603370330626;
-        Thu, 22 Oct 2020 05:38:50 -0700 (PDT)
-Received: from [10.8.100.4] (ip-185.208.132.9.cf-it.at. [185.208.132.9])
-        by smtp.gmail.com with ESMTPSA id 4sm3754612wrp.58.2020.10.22.05.38.49
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 22 Oct 2020 05:38:50 -0700 (PDT)
-From:   "Thomas Rosenstein" <thomas.rosenstein@creamfinance.com>
-To:     "Jack Wang" <jack.wang.usish@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Subject: Re: mdraid: raid1 and iscsi-multipath devices - never faults but
- should!
-Date:   Thu, 22 Oct 2020 14:38:46 +0200
-X-Mailer: MailMate (1.13.2r5673)
-Message-ID: <263E5644-41C7-4029-A47E-0328483F0941@creamfinance.com>
-In-Reply-To: <CA+res+SvZWmCuWdcQA95WPG4wi3kChLmzAH2jKXW3TK5pL=WQg@mail.gmail.com>
-References: <ED0868EE-9B90-4CE6-A722-57E0486A71FF@creamfinance.com>
- <CA+res+SvZWmCuWdcQA95WPG4wi3kChLmzAH2jKXW3TK5pL=WQg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ReTTaNs/1URCBe015zmmsnkZL8avfnlCHdKrYfMsUo4=;
+        b=XpUrNZdx4Gzlk6P8NIo9Y+1COCFCy0JWP7fHKHk3bjnhQ07nX14vI+bsJWm+HH/0df
+         fNC8/58tgzrPoj6aaIg/+hD1u+x6FbDLkkpwadmvkuhXDG72PDsql26AyjISYYdLd9QJ
+         CmzAH1RM+Qe0SmpVSu1IHujHzOLslN0l5lbb3F2/5I/J4r2EjCl/fQyEEKplIeCjAKuo
+         U7odkz/BHZ0In2Y+bR0AoFlApJInWjP24fx6nTrurckwdFGyQJ2zYk2vLYrFSDyeW6+H
+         Mm2AeGJhavRX/JepH0/nDEDiwQHVn8HGzxJI0TYq0CZh64spox5CvJ94Qhzvg32LuSsB
+         rNRg==
+X-Gm-Message-State: AOAM532TQBIIE/VSw1ZXD7WwevfEjGM/ouJgq9uhMZm12090PEwwBbi5
+        F6gO/FirZuzONwnNlLzgsUtOfsIxmuUGEbST0TdXLbi+OPjcZA==
+X-Google-Smtp-Source: ABdhPJwIWpFcsIiW8yfvDvEBcQIxb250sa2gQL1dNp7BJ2OoScUbPyV7hwErd66vzdMT6prDPTQFu4kP6WJF
+X-Received: by 2002:ab0:77d8:: with SMTP id y24mr130681uar.72.1603423903067;
+        Thu, 22 Oct 2020 20:31:43 -0700 (PDT)
+Received: from dcs.hq.drivescale.com ([68.74.115.3])
+        by smtp-relay.gmail.com with ESMTP id p17sm40671vkf.7.2020.10.22.20.31.42;
+        Thu, 22 Oct 2020 20:31:43 -0700 (PDT)
+X-Relaying-Domain: drivescale.com
+Received: from localhost.localdomain (gw1-dc.hq.drivescale.com [192.168.33.175])
+        by dcs.hq.drivescale.com (Postfix) with ESMTP id 2E05A420D3;
+        Fri, 23 Oct 2020 03:31:42 +0000 (UTC)
+From:   Christopher Unkel <cunkel@drivescale.com>
+To:     linux-raid@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>,
+        cunkel@drivescale.com
+Subject: [PATCH 0/3] mdraid sb and bitmap write alignment on 512e drives
+Date:   Thu, 22 Oct 2020 20:31:27 -0700
+Message-Id: <20201023033130.11354-1-cunkel@drivescale.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hello all,
+
+While investigating some performance issues on mdraid 10 volumes
+formed with "512e" disks (4k native/physical sector size but with 512
+byte sector emulation), I've found two cases where mdraid will
+needlessly issue writes that start on 4k byte boundary, but are are
+shorter than 4k:
+
+1. writes of the raid superblock; and
+2. writes of the last page of the write-intent bitmap.
+
+The following is an excerpt of a blocktrace of one of the component
+members of a mdraid 10 volume during a 4k write near the end of the
+array:
+
+  8,32  11        2     0.000001687   711  D  WS 2064 + 8 [kworker/11:1H]
+* 8,32  11        5     0.001454119   711  D  WS 2056 + 1 [kworker/11:1H]
+* 8,32  11        8     0.002847204   711  D  WS 2080 + 7 [kworker/11:1H]
+  8,32  11       11     0.003700545  3094  D  WS 11721043920 + 8 [md127_raid1]
+  8,32  11       14     0.308785692   711  D  WS 2064 + 8 [kworker/11:1H]
+* 8,32  11       17     0.310201697   711  D  WS 2056 + 1 [kworker/11:1H]
+  8,32  11       20     5.500799245   711  D  WS 2064 + 8 [kworker/11:1H]
+* 8,32  11       23    15.740923558   711  D  WS 2080 + 7 [kworker/11:1H]
+
+Note the starred transactions, which each start on a 4k boundary, but
+are less than 4k in length, and so will use the 512-byte emulation.
+Sector 2056 holds the superblock, and is written as a single 512-byte
+write.  Sector 2086 holds the bitmap bit relevant to the written
+sector.  When it is written the active bits of the last page of the
+bitmap are written, starting at sector 2080, padded out to the end of
+the 512-byte logical sector as required.  This results in a 3.5kb
+write, again using the 512-byte emulation.
+
+Note that in some arrays the last page of the bitmap may be
+sufficiently full that they are not affected by the issue with the
+bitmap write.
+
+As there can be a substantial penalty to using the 512-byte sector
+emulation (turning writes into read-modify writes if the relevant
+sector is not in the drive's cache) I believe it makes sense to pad
+these writes out to a 4k boundary.  The writes are already padded out
+for "4k native" drives, where the short access is illegal.
+
+The following patch set changes the superblock and bitmap writes to
+respect the physical block size (e.g. 4k for today's 512e drives) when
+possible.  In each case there is already logic for padding out to the
+underlying logical sector size.  I reuse or repeat the logic for
+padding out to the physical sector size, but treat the padding out as
+optional rather than mandatory.
+
+The corresponding block trace with these patches is:
+
+   8,32   1        2     0.000003410   694  D  WS 2064 + 8 [kworker/1:1H]
+   8,32   1        5     0.001368788   694  D  WS 2056 + 8 [kworker/1:1H]
+   8,32   1        8     0.002727981   694  D  WS 2080 + 8 [kworker/1:1H]
+   8,32   1       11     0.003533831  3063  D  WS 11721043920 + 8 [md127_raid1]
+   8,32   1       14     0.253952321   694  D  WS 2064 + 8 [kworker/1:1H]
+   8,32   1       17     0.255354215   694  D  WS 2056 + 8 [kworker/1:1H]
+   8,32   1       20     5.337938486   694  D  WS 2064 + 8 [kworker/1:1H]
+   8,32   1       23    15.577963062   694  D  WS 2080 + 8 [kworker/1:1H]
+
+I do notice that the code for bitmap writes has a more sophisticated
+and thorough check for overlap than the code for superblock writes.
+(Compare write_sb_page in md-bitmap.c vs. super_1_load in md.c.) From
+what I know since the various structures starts have always been 4k
+aligned anyway, it is always safe to pad the superblock write out to
+4k (as occurs on 4k native drives) but not necessarily futher.
+
+Feedback appreciated.
+
+  --Chris
 
 
-On 22 Oct 2020, at 13:44, Jack Wang wrote:
+Christopher Unkel (3):
+  md: align superblock writes to physical blocks
+  md: factor sb write alignment check into function
+  md: pad writes to end of bitmap to physical blocks
 
-> Thomas Rosenstein <thomas.rosenstein@creamfinance.com> 
-> 于2020年10月22日周四 下午12:28写道：
->>
->> Hello,
->>
->> I'm trying todo something interesting, the structure looks like this:
->>
->> xfs
->> - mdraid
->>    - multipath (with no_path_queue = fail)
->>      - iscsi path 1
->>      - iscsi path 2
->>    - multipath (with no_path_queue = fail)
->>      - iscsi path 1
->>      - iscsi path 2
->>
->> During normal operation everything looks good, once a path fails 
->> (i.e.
->> iscsi target is removed), the array goes to degraded, if the path 
->> comes
->> back nothing happens.
->>
->> Q1) Can I enable auto recovery for failed devices?
->>
->> If the device is readded manually (or by software) everything resyncs
->> and it works again. As all should be.
->>
->> If BOTH devices fail at the same time (worst case scenario) it gets
->> wonky. I would expect a total hang (as with iscsi, and multipath
->> queue_no_path)
->>
->> 1) XFS reports Input/Output error
->> 2) dmesg has logs like:
->>
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41472, async page read
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41473, async page read
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41474, async page read
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41475, async page read
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41476, async page read
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41477, async page read
->> [Thu Oct 22 09:25:28 2020] Buffer I/O error on dev md127, logical 
->> block
->> 41478, async page read
->>
->> 3) mdadm --detail /dev/md127 shows:
->>
->> /dev/md127:
->>             Version : 1.2
->>       Creation Time : Wed Oct 21 17:25:22 2020
->>          Raid Level : raid1
->>          Array Size : 96640 (94.38 MiB 98.96 MB)
->>       Used Dev Size : 96640 (94.38 MiB 98.96 MB)
->>        Raid Devices : 2
->>       Total Devices : 2
->>         Persistence : Superblock is persistent
->>
->>         Update Time : Thu Oct 22 09:23:35 2020
->>               State : clean, degraded
->>      Active Devices : 1
->>     Working Devices : 1
->>      Failed Devices : 1
->>       Spare Devices : 0
->>
->> Consistency Policy : resync
->>
->>                Name : v-b08c6663-7296-4c66-9faf-ac687
->>                UUID : cc282a5c:59a499b3:682f5e6f:36f9c490
->>              Events : 122
->>
->>      Number   Major   Minor   RaidDevice State
->>         0     253        2        0      active sync   /dev/dm-2
->>         -       0        0        1      removed
->>
->>         1     253        3        -      faulty   /dev/dm-
->>
->> 4) I can read from /dev/md127, but only however much is in the buffer
->> (see above dmesg logs)
->>
->>
->> In my opinion this should happen, or at least should be configurable.
->> I expect:
->> 1) XFS hangs indefinitly (like multipath queue_no_path)
->> 2) mdadm shows FAULTED as State
->
->>
->> Q2) Can this be configured in any way?
-> you can enable the last device to fail
-> 9a567843f7ce ("md: allow last device to be forcibly removed from 
-> RAID1/RAID10.")
+ drivers/md/md-bitmap.c | 80 +++++++++++++++++++++++++-----------------
+ drivers/md/md.c        | 15 ++++++++
+ 2 files changed, 63 insertions(+), 32 deletions(-)
 
-That did work, last device moved into faulted. Is there a way to recover 
-from that? or is the array completely broken at that point?
-I tried to re-add the first device after it's back up, but that leads to 
-a Recovery / Synchronize Loop
+-- 
+2.17.1
 
-btw. kernel 5.4.60
-
->>
->> After BOTH paths are recovered, nothing works anymore, and the raid
->> doesn't recover automatically.
->> Only a complete unmount and stop followed by an assemble and mount 
->> makes
->> the raid function again.
->>
->> Q3) Is that expected behavior?
->>
->> Thanks
->> Thomas Rosenstein
