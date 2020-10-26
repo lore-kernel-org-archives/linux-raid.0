@@ -5,50 +5,50 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86149C55178
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 00:23:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5FD0C83008
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 00:34:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C21E20759
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 00:23:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C03E222C8
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 00:34:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603758225;
-	bh=vl6O4oqa8oou/C33lhU3F45BLVant7tmaE2Yu+Cjurw=;
+	s=default; t=1603758871;
+	bh=Iv6oWJLm2ZeV/TBAkasOqZMrTumMK7Ca24ww5LvigYI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jeNfggbWaCx6G4WRoZz3N7bbV88dIni0JtKlcjZ9GpU8LvAhQ9+wW31RwDHDuNo1F
-	 WGVnVCkMpKrGy019xsyb5/thhOaS2vwlA9hlOQgRSqN6rf9536xcEAsZZ/XSqcYsb1
-	 +pDsgWuYtehf6kBd51Q4Ak3lbsBtIdvxSPYzLrrU=
+	b=xBFAd0Z0u6RPnolD4w9Wo3HMewBSbmukzS99Yof3mJJJsJq1w8+S+cBbzn4ZgYLFD
+	 dO3trgr5IkDkUAQpgFxkVDzjsPLNM5qUBRLou4ug48Q2EFtL+0MixxXRsRoa0SoYLT
+	 ErCWp7HuqXR+Obow2Ewzoo6+PDHaIZYODiNkf248=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441449AbgJ0AXo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 26 Oct 2020 20:23:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59432 "EHLO mail.kernel.org"
+        id S2409356AbgJZXvP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 26 Oct 2020 19:51:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51686 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2410298AbgJZXyF (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 26 Oct 2020 19:54:05 -0400
+        id S2409344AbgJZXvO (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 26 Oct 2020 19:51:14 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0AF2021655;
-        Mon, 26 Oct 2020 23:54:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DF35121BE5;
+        Mon, 26 Oct 2020 23:51:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603756444;
-        bh=vl6O4oqa8oou/C33lhU3F45BLVant7tmaE2Yu+Cjurw=;
+        s=default; t=1603756273;
+        bh=Iv6oWJLm2ZeV/TBAkasOqZMrTumMK7Ca24ww5LvigYI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FQ/YDg89Yp8bezeQCGq6KsKlVJUZpi4gPXR7BipP/3CgYrCOAv6liLYiAKFuB5xfc
-         GfTpbS0DdS4tsN+Z6+BZEqzN9ASLXkd/q+Y9pSTKIP58s99oYkjO1t7B4e6kJvqTQ1
-         47GnZuYI+UsZpRyf0JuxLTU7Clq/cyMEGstR1Z6I=
+        b=IL7p3mWhez48DCins3LAInHKlV8JK36/+HkHSFVB5k+zSHp6Gmbg4xuX7ZXfnKJOn
+         MVFGYvI2wBELq1fSKoIa+Cc8aE6zOB2AFMUwoNdnydtN9ZI+HO3d8jjbnD+u4LoYel
+         uYEV4BUBA9AReWjwuHaxMdoaJDjjufrpqKThYhNE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zhao Heming <heming.zhao@suse.com>,
         Song Liu <songliubraving@fb.com>,
         Sasha Levin <sashal@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 097/132] md/bitmap: md_bitmap_get_counter returns wrong blocks
-Date:   Mon, 26 Oct 2020 19:51:29 -0400
-Message-Id: <20201026235205.1023962-97-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 105/147] md/bitmap: md_bitmap_get_counter returns wrong blocks
+Date:   Mon, 26 Oct 2020 19:48:23 -0400
+Message-Id: <20201026234905.1022767-105-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201026235205.1023962-1-sashal@kernel.org>
-References: <20201026235205.1023962-1-sashal@kernel.org>
+In-Reply-To: <20201026234905.1022767-1-sashal@kernel.org>
+References: <20201026234905.1022767-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -90,7 +90,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-index 95a5f3757fa30..32a96559cb366 100644
+index b10c51988c8ee..4894c107f72ce 100644
 --- a/drivers/md/md-bitmap.c
 +++ b/drivers/md/md-bitmap.c
 @@ -1367,7 +1367,7 @@ __acquires(bitmap->lock)
