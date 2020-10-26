@@ -1,81 +1,91 @@
-Return-Path: <SRS0=UWzS=EA=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=FvUE=EB=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08AD5C388F7
-	for <linux-raid@archiver.kernel.org>; Sun, 25 Oct 2020 13:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DDECC4363A
+	for <linux-raid@archiver.kernel.org>; Mon, 26 Oct 2020 13:05:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 301D820853
-	for <linux-raid@archiver.kernel.org>; Sun, 25 Oct 2020 13:54:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=fisica.ufpr.br header.i=@fisica.ufpr.br header.b="wwBP4ro1"
+	by mail.kernel.org (Postfix) with ESMTP id 2182820790
+	for <linux-raid@archiver.kernel.org>; Mon, 26 Oct 2020 13:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1416448AbgJYNyg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 25 Oct 2020 09:54:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42796 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1416446AbgJYNyg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 25 Oct 2020 09:54:36 -0400
-X-Greylist: delayed 583 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 25 Oct 2020 06:54:35 PDT
-Received: from hoggar.fisica.ufpr.br (hoggar.fisica.ufpr.br [IPv6:2801:82:80ff:7fff::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ED66C0613CE
-        for <linux-raid@vger.kernel.org>; Sun, 25 Oct 2020 06:54:35 -0700 (PDT)
-Received: by hoggar.fisica.ufpr.br (Postfix, from userid 577)
-        id D7DC83620303; Sun, 25 Oct 2020 10:44:46 -0300 (-03)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=fisica.ufpr.br;
-        s=201705; t=1603633486;
-        bh=ZQYTB0R+ZUo6fyG3SgggEguKCWQOVBqO6BntqF3M/y8=;
-        h=Date:From:To:Subject:From;
-        b=wwBP4ro1CKw+DGZLWMTf5uHsIZY6mb9V52mCiRv696lqcvdMtU3goyfa5Uv4sf/cr
-         74/6dnG5H/Mh15zZQ1tM0h9XSRPXqhYvtl1qBgz27WgMiDjiojPQcpbWiwJGjxA1I+
-         2KwL0+X+I+GAeW0rVwNM15nhqYZnMiVnYzjlBUfOqtQTauqkj7kTBhAQj5h3bEUgzC
-         Cc/ZbwnRjptgGoV65itJjyEbgdMgr3c74l4XVcxoZbsvlcBZ7NKZyTtkfvCmtFO0W6
-         aSd5zYc51kizK5dDlUeL4s29CCRv1RWv9+EPlUZMoHm8uwNqJ9kSOv7SdMLgZAAbic
-         NQDRqF7FeF3MA==
-Date:   Sun, 25 Oct 2020 10:44:46 -0300
-From:   Carlos Carvalho <carlos@fisica.ufpr.br>
-To:     linux-raid@vger.kernel.org
-Subject: crash with 5.8.11 and 5.8.13
-Message-ID: <20201025134446.GA16905@fisica.ufpr.br>
+        id S1737208AbgJZNFE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 26 Oct 2020 09:05:04 -0400
+Received: from foss.arm.com ([217.140.110.172]:38288 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1737199AbgJZNFE (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 26 Oct 2020 09:05:04 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 57E461477;
+        Mon, 26 Oct 2020 06:05:03 -0700 (PDT)
+Received: from e110176-lin.arm.com (unknown [172.31.20.19])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DD6DE3F68F;
+        Mon, 26 Oct 2020 06:05:00 -0700 (PDT)
+From:   Gilad Ben-Yossef <gilad@benyossef.com>
+To:     Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>, Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc:     Ofir Drang <ofir.drang@arm.com>, linux-crypto@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: [PATCH 0/4] crypto: switch to crypto API for EBOIV generation
+Date:   Mon, 26 Oct 2020 15:04:43 +0200
+Message-Id: <20201026130450.6947-1-gilad@benyossef.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-We had kernel panic with 5.8.11 and 5.8.13. Here's the trace, copied manually
-from the console:
+This series creates an EBOIV template that produces a skcipher
+transform which passes through all operations to the skcipher, while
+using the same skcipher and key to encrypt the input IV, which is
+assumed to be a sector offset, although this is not enforced.
 
-r5l_log_stripe
-r5l_write_stripe
-ops_run_io
-? async_gen_syndrome
-? ops_run_reconstruct6
-handle_stripe
-raid5_do_work
-? __switch_to_asm
-process_one_work
-worker_thread
-? process_scheduled_works
-kthread
-? __kthread_queue_delayed_work
-ret_from_fork
+This matches dm-crypt use of EBOIV to provide BitLocker support,
+and so it is proposed as a replacement in patch #3.
 
-The machine has an array with 14 disks and one with 20, both with it's own
-journal ssd. It has high I/O flux and is usually very stable. The first crash
-happened with 5.8.13; I downgraded to 5.8.11 and it happened again. In both
-cases I had done a check on the arrays (simultaneously) by doing echo check >
-/sys/block/md<number>/md/sync_action. Note that the crash happened more than
-24h after the checks had successfully finished.
+Replacing the dm-crypt specific EBOIV implementation to a Crypto
+API based one allows us to save a memory allocation per
+each request, as well as opening the way for use of compatible
+alternative transform providers, one of which, based on the
+Arm TrustZone CryptoCell hardware, is proposed as patch #4.
 
-The only thing I've changed from the usual procedure is to change
-/sys/block/md<number>/md/group_thread_cnt. I normally use 5 to not limit checks
-by cpu. In the crash cases I raised group_thread_cnt to 10 soon after the
-checks started.
+Future potential work to allow encapsulating the handling of
+multiple subsequent blocks by the Crypto API may also
+benefit from this work.
 
-Any ideas?
+The code has been tested on both x86_64 virtual machine
+with the dm-crypt test suite and on an arm 32 bit board
+with the CryptoCell hardware.
+
+Since no offical source for eboiv test vectors is known,
+the test vectors supplied as patch #2 are derived from
+sectors which are part of the dm-crypt test suite.
+
+Gilad Ben-Yossef (4):
+  crypto: add eboiv as a crypto API template
+  crypto: add eboiv(cbc(aes)) test vectors
+  dm crypt: switch to EBOIV crypto API template
+  crypto: ccree: re-introduce ccree eboiv support
+
+ crypto/Kconfig                       |  21 ++
+ crypto/Makefile                      |   1 +
+ crypto/eboiv.c                       | 295 +++++++++++++++++++++++++++
+ crypto/tcrypt.c                      |   9 +
+ crypto/testmgr.c                     |   6 +
+ crypto/testmgr.h                     | 279 +++++++++++++++++++++++++
+ drivers/crypto/ccree/cc_cipher.c     | 130 ++++++++----
+ drivers/crypto/ccree/cc_crypto_ctx.h |   1 +
+ drivers/md/Kconfig                   |   1 +
+ drivers/md/dm-crypt.c                |  61 ++----
+ 10 files changed, 725 insertions(+), 79 deletions(-)
+ create mode 100644 crypto/eboiv.c
+
+-- 
+2.28.0
+
