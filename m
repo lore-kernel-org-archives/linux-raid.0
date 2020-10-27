@@ -2,64 +2,61 @@ Return-Path: <SRS0=osZw=EC=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1973BC56201
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 06:59:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F71C55178
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 13:05:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8FCC20B1F
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 06:59:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0162622284
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Oct 2020 13:05:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=benyossef-com.20150623.gappssmtp.com header.i=@benyossef-com.20150623.gappssmtp.com header.b="Ojl6JlAN"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L0tzrZHm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389150AbgJ0G7j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 27 Oct 2020 02:59:39 -0400
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:36784 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728363AbgJ0G7g (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Oct 2020 02:59:36 -0400
-Received: by mail-yb1-f194.google.com with SMTP id f140so367412ybg.3
-        for <linux-raid@vger.kernel.org>; Mon, 26 Oct 2020 23:59:34 -0700 (PDT)
+        id S1751794AbgJ0NFQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 27 Oct 2020 09:05:16 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:50995 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751781AbgJ0NFQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Oct 2020 09:05:16 -0400
+Received: by mail-wm1-f68.google.com with SMTP id 13so1315158wmf.0;
+        Tue, 27 Oct 2020 06:05:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=benyossef-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=/MJ+UTfnuNYWSl6F6YSIZ4D2DyAhRF8y858D6tasEvw=;
-        b=Ojl6JlAN3zbm1LbCOHvpxKHmr3L5vs2pku5A2tc4RvlhiU4fWtenEdLlujKmeaGUC7
-         aqlL3W3bCv/Dt56pp+AZ5AHOyb7JkxXmw6wbM1XwxiZgb/6/C2gsf5XhDEdQuyGMHu1u
-         vhfblhEok3wrb0k+5LrnzzO5GPKgypY8HiDrJaGyWfMz3TY5NFWjIWSp3eUOIS2NoSCI
-         TyVuaIjNkYUNTkRvu0tIoctrY2MqgImQWSBodF8ZPCITXRf2L+EUXZQ05EdgP43jUAUM
-         1KmSuO3DQjCsHBlYwfkzB2mWMxmkgeFELaBURyuXFadqBG0mtb3jPz+KAzp/EriNXiEE
-         Pnmg==
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=myy/l02Rm8F+X0fdWIlyuf1JwB3VU/GU2tmaR4vsSCk=;
+        b=L0tzrZHmCG5QHwZNJaYIFcqmN0Bh3prvAa8X7BcRmDT8OjcUU7g/d2Rmu8z2Lff+JW
+         VmCufz/BrOr9plfiItsFEzzCySrBaYylFjqjHfODbtIBIndtvnFvyl65j6AHwppGGscm
+         NHYFXfURWElG2ZdBVn5WKT99TrtWvrdbfFiDMvoTepQRGiQocDMDNAv7tuvH7Qcs0QfG
+         bzsnP3XqnkmX3oGsHF/xG7pco8j/mfwCIBoNrfbWLh5QBA9XAeDB7aI3MydveTV5rxD3
+         7AvxG+r5eX2fHtaxKdzTH/4dU7MhOGNb5trmpdX1gEIxojpRqs87LHa2o+CkT/m56nSd
+         uuYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=/MJ+UTfnuNYWSl6F6YSIZ4D2DyAhRF8y858D6tasEvw=;
-        b=CPcpDkgME1UjEAq7yx4FkTzbLJZ0QOSfvZd+8E3fDK3ZbI0OFx0WwbdnfkCwB4jNpP
-         kHzGDfUI3eAutvbTCvxoGShqPoIyNJKlbxNT5Wkplnr88gDRefvzyHfvcsBiyJ7LqyUo
-         elWqbRoeDBW9DnBtr3w8lGxytK/J0Sk7k2GLduC1q0znq2W+WgCkKDCK9axnLl5v6Mfm
-         xDa2PGgSCk+ot2u4aVL3eZwUlRFnBbrXeMnZXflcZSUtKYeYJrlT1cqta13LrZJIh02i
-         h68vJYvokXCW57Dj/LjeETE5bmsFGFZkm+BCLLBzhtMvkf29M45qLGtciennyNsUlds2
-         ZaUw==
-X-Gm-Message-State: AOAM530rwADNlKqQ77caiCd2UAl7RK7opetTAJGc0IOztBcCUwmgdUKh
-        G+DhU3w5/iwCk3+rB9wFs1BlEfHjWn5jksEw3ZD4Qw==
-X-Google-Smtp-Source: ABdhPJz+9qYgc6z6pEq4anawMnwD8UgeJFA5p9U95SlGuQbt5EuEgoDjkIODeWkTxrO6zuIhQ9mwwY+zQLKSY3uumOg=
-X-Received: by 2002:a25:6609:: with SMTP id a9mr1102464ybc.375.1603781973236;
- Mon, 26 Oct 2020 23:59:33 -0700 (PDT)
-MIME-Version: 1.0
-References: <20201026130450.6947-1-gilad@benyossef.com> <20201026130450.6947-4-gilad@benyossef.com>
- <20201026175231.GG858@sol.localdomain> <d07b062c-1405-4d72-b907-1c4dfa97aecb@gmail.com>
- <20201026183936.GJ858@sol.localdomain> <fd5e46ce-a4bf-8025-05ea-e20d35485446@gmail.com>
-In-Reply-To: <fd5e46ce-a4bf-8025-05ea-e20d35485446@gmail.com>
-From:   Gilad Ben-Yossef <gilad@benyossef.com>
-Date:   Tue, 27 Oct 2020 08:59:27 +0200
-Message-ID: <CAOtvUMdatUOnffg90aEGanD0y1LtKc7EeKQ=E+N+W-wpo8Zo3A@mail.gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=myy/l02Rm8F+X0fdWIlyuf1JwB3VU/GU2tmaR4vsSCk=;
+        b=fCIgtL4n5aEbekgqaZ19H1tkJ3poOCDnQgZY4IXbHOQDO2oZeDTrN4+P/3G2uU+OqY
+         qJ/BGPZGjUQE9HCuxfHBqZOqaJ9u0m8ECJJAVjnNpdizovYKiL+a1kgZ36/1LsD/Kvxh
+         ksTNekgskzh38mBPiLXD2iygiPrwU54FhZqGQo0fEHsv3tDf1qHCJEVpUyS6N0EkeQCH
+         TVcA8S/fxgNd+osw/jyX2WToK0DC6ArkQ3fweHDPlMlFU/bX2tq5GmJo5eYoTZxjbMTT
+         K7ry3kmgSSzHYu3R/emZKSMZWAIoq/Yb8jsFcbrW5b26Uo7O1KueVIXi0Z6X1KAbXys9
+         e3Qg==
+X-Gm-Message-State: AOAM532uMky4DOtQ++RDpn341z2ncFcvvNR+MzVrNK4t1YzbNBpC1PZZ
+        6rteqKS7vxrTJzY4fqKLDEZnYYnqwdQcTA==
+X-Google-Smtp-Source: ABdhPJw2WkckDLSI9JGvq3GUMLI8ZV6nTEuB/GOGNsDV91M7d1D0A1mFL4txXw9pl279LalTttu+tQ==
+X-Received: by 2002:a1c:6643:: with SMTP id a64mr2744990wmc.142.1603803911919;
+        Tue, 27 Oct 2020 06:05:11 -0700 (PDT)
+Received: from [192.168.2.27] (39.35.broadband4.iol.cz. [85.71.35.39])
+        by smtp.gmail.com with ESMTPSA id o3sm1971923wru.15.2020.10.27.06.05.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Oct 2020 06:05:11 -0700 (PDT)
 Subject: Re: [PATCH 3/4] dm crypt: switch to EBOIV crypto API template
-To:     Milan Broz <gmazyland@gmail.com>
+To:     Gilad Ben-Yossef <gilad@benyossef.com>
 Cc:     Eric Biggers <ebiggers@kernel.org>,
         Herbert Xu <herbert@gondor.apana.org.au>,
         "David S. Miller" <davem@davemloft.net>,
@@ -70,127 +67,68 @@ Cc:     Eric Biggers <ebiggers@kernel.org>,
         Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
         Linux kernel mailing list <linux-kernel@vger.kernel.org>,
         linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <20201026130450.6947-1-gilad@benyossef.com>
+ <20201026130450.6947-4-gilad@benyossef.com>
+ <20201026175231.GG858@sol.localdomain>
+ <d07b062c-1405-4d72-b907-1c4dfa97aecb@gmail.com>
+ <20201026183936.GJ858@sol.localdomain>
+ <fd5e46ce-a4bf-8025-05ea-e20d35485446@gmail.com>
+ <CAOtvUMdatUOnffg90aEGanD0y1LtKc7EeKQ=E+N+W-wpo8Zo3A@mail.gmail.com>
+From:   Milan Broz <gmazyland@gmail.com>
+Message-ID: <7c8c1453-94b2-23ec-1c93-7674fc8a413b@gmail.com>
+Date:   Tue, 27 Oct 2020 14:05:10 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
+MIME-Version: 1.0
+In-Reply-To: <CAOtvUMdatUOnffg90aEGanD0y1LtKc7EeKQ=E+N+W-wpo8Zo3A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 9:04 PM Milan Broz <gmazyland@gmail.com> wrote:
->
->
->
-> On 26/10/2020 19:39, Eric Biggers wrote:
-> > On Mon, Oct 26, 2020 at 07:29:57PM +0100, Milan Broz wrote:
-> >> On 26/10/2020 18:52, Eric Biggers wrote:
-> >>> On Mon, Oct 26, 2020 at 03:04:46PM +0200, Gilad Ben-Yossef wrote:
-> >>>> Replace the explicit EBOIV handling in the dm-crypt driver with call=
-s
-> >>>> into the crypto API, which now possesses the capability to perform
-> >>>> this processing within the crypto subsystem.
-> >>>>
-> >>>> Signed-off-by: Gilad Ben-Yossef <gilad@benyossef.com>
-> >>>>
-> >>>> ---
-> >>>>  drivers/md/Kconfig    |  1 +
-> >>>>  drivers/md/dm-crypt.c | 61 ++++++++++++++--------------------------=
----
-> >>>>  2 files changed, 20 insertions(+), 42 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-> >>>> index 30ba3573626c..ca6e56a72281 100644
-> >>>> --- a/drivers/md/Kconfig
-> >>>> +++ b/drivers/md/Kconfig
-> >>>> @@ -273,6 +273,7 @@ config DM_CRYPT
-> >>>>    select CRYPTO
-> >>>>    select CRYPTO_CBC
-> >>>>    select CRYPTO_ESSIV
-> >>>> +  select CRYPTO_EBOIV
-> >>>>    help
-> >>>>      This device-mapper target allows you to create a device that
-> >>>>      transparently encrypts the data on it. You'll need to activate
-> >>>
-> >>> Can CRYPTO_EBOIV please not be selected by default?  If someone reall=
-y wants
-> >>> Bitlocker compatibility support, they can select this option themselv=
-es.
-> >>
-> >> Please no! Until this move of IV to crypto API, we can rely on
-> >> support in dm-crypt (if it is not supported, it is just a very old ker=
-nel).
-> >> (Actually, this was the first thing I checked in this patchset - if it=
- is
-> >> unconditionally enabled for compatibility once dmcrypt is selected.)
-> >>
-> >> People already use removable devices with BitLocker.
-> >> It was the whole point that it works out-of-the-box without enabling a=
-nything.
-> >>
-> >> If you insist on this to be optional, please better keep this IV insid=
-e dmcrypt.
-> >> (EBOIV has no other use than for disk encryption anyway.)
-> >>
-> >> Or maybe another option would be to introduce option under dm-crypt Kc=
-onfig that
-> >> defaults to enabled (like support for foreign/legacy disk encryption s=
-chemes) and that
-> >> selects these IVs/modes.
-> >> But requiring some random switch in crypto API will only confuse users=
-.
-> >
-> > CONFIG_DM_CRYPT can either select every weird combination of algorithms=
- anyone
-> > can ever be using, or it can select some defaults and require any other=
- needed
-> > algorithms to be explicitly selected.
-> >
-> > In reality, dm-crypt has never even selected any particular block ciphe=
-rs, even
-> > AES.  Nor has it ever selected XTS.  So it's actually always made users=
- (or
-> > kernel distributors) explicitly select algorithms.  Why the Bitlocker s=
-upport
-> > suddenly different?
-> >
-> > I'd think a lot of dm-crypt users don't want to bloat their kernels wit=
-h random
-> > legacy algorithms.
->
-> Yes, but IV is in reality not a cryptographic algorithm, it is kind-of a =
-configuration
-> "option" of sector encryption mode here.
->
-> We had all of disk-IV inside dmcrypt before - but once it is partially mo=
-ved into crypto API
-> (ESSIV, EBOIV for now), it becomes much more complicated for user to sele=
-ct what he needs.
->
-> I think we have no way to check that IV is available from userspace - it
-> will report the same error as if block cipher is not available, not helpi=
-ng user much
-> with the error.
->
-> But then I also think we should add abstract dm-crypt options here (Legac=
-y TrueCrypt modes,
-> Bitlocker modes) that will select these crypto API configuration switches=
-.
-> Otherwise it will be only a complicated matrix of crypto API options...
+On 27/10/2020 07:59, Gilad Ben-Yossef wrote:
+> On Mon, Oct 26, 2020 at 9:04 PM Milan Broz <gmazyland@gmail.com> wrote:
+...
+>> We had all of disk-IV inside dmcrypt before - but once it is partially moved into crypto API
+>> (ESSIV, EBOIV for now), it becomes much more complicated for user to select what he needs.
+>>
+>> I think we have no way to check that IV is available from userspace - it
+>> will report the same error as if block cipher is not available, not helping user much
+>> with the error.
+>>
+>> But then I also think we should add abstract dm-crypt options here (Legacy TrueCrypt modes,
+>> Bitlocker modes) that will select these crypto API configuration switches.
+>> Otherwise it will be only a complicated matrix of crypto API options...
+> 
+> hm... just thinking out loud, but maybe the right say to go is to not
+> have a build dependency,
+> but add some user assistance code in cryptosetup that parses
+> /proc/crypto after failures to
+> try and suggest the user with a way forward?
+> 
+> e.g. if eboiv mapping initiation fails, scan /proc/crypto and either
+> warn of a lack of AES
+> or, assuming some instance of AES is found, warn of lack of EBOIV.
+> It's a little messy
+> and heuristic code for sure, but it lives in a user space utility.
+> 
+> Does that sound sane?
 
-hm... just thinking out loud, but maybe the right say to go is to not
-have a build dependency,
-but add some user assistance code in cryptosetup that parses
-/proc/crypto after failures to
-try and suggest the user with a way forward?
+Such an idea (try to parse /proc/crypto) is on my TODO list since 2009 :)
+I expected userspace kernel crypto API could help here, but it seems it is not the case.
 
-e.g. if eboiv mapping initiation fails, scan /proc/crypto and either
-warn of a lack of AES
-or, assuming some instance of AES is found, warn of lack of EBOIV.
-It's a little messy
-and heuristic code for sure, but it lives in a user space utility.
+So yes, I think we need to add something like this in userspace. In combination with
+the kernel and dmcrypt target version, we could have a pretty good hint matrix for the user,
+instead of (literally) cryptic errors.
 
-Does that sound sane?
---=20
-Gilad Ben-Yossef
-Chief Coffee Drinker
+(There is also a problem that device-mapper targets are losing detailed error state.
+We often end just with -EINVAL during table create ... and no descriptive log entry.
+And leaking info about encrypted devices activation failures to syslog is not a good idea either.)
 
-values of =CE=B2 will give rise to dom!
+Anyway, this will not fix existing userspace that is not prepared for this kind
+of EBOIV missing fail, so Herbert's solution seems like the solution for this particular
+problem for now. (But I agree we should perhaps remove these build dependences in future completely...)
+
+Milan
