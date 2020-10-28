@@ -2,98 +2,106 @@ Return-Path: <SRS0=Dxgx=ED=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0DDC388F7
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Oct 2020 22:44:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D86BBC4363A
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Oct 2020 23:31:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14F2C20714
-	for <linux-raid@archiver.kernel.org>; Wed, 28 Oct 2020 22:44:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F5DC207BC
+	for <linux-raid@archiver.kernel.org>; Wed, 28 Oct 2020 23:31:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i++16Nos"
+	dkim=pass (2048-bit key) header.d=benyossef-com.20150623.gappssmtp.com header.i=@benyossef-com.20150623.gappssmtp.com header.b="L2xbAiWT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389476AbgJ1Wnq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:43:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57912 "EHLO
+        id S2390501AbgJ1XbG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 28 Oct 2020 19:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731710AbgJ1WnD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Oct 2020 18:43:03 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F27A1C0613CF
-        for <linux-raid@vger.kernel.org>; Wed, 28 Oct 2020 15:43:02 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id m20so999008ljj.5
-        for <linux-raid@vger.kernel.org>; Wed, 28 Oct 2020 15:43:02 -0700 (PDT)
+        with ESMTP id S1726286AbgJ1XbE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 28 Oct 2020 19:31:04 -0400
+Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 582C4C0613D1
+        for <linux-raid@vger.kernel.org>; Wed, 28 Oct 2020 16:31:03 -0700 (PDT)
+Received: by mail-ot1-x343.google.com with SMTP id k3so774235otp.1
+        for <linux-raid@vger.kernel.org>; Wed, 28 Oct 2020 16:31:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=benyossef-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc:content-transfer-encoding;
-        bh=JAxqBiv9FAqTcbh8Jcrvr5UifYuflldy0L4UvGJ6V1M=;
-        b=i++16NosqanHc+xDEFxOcaQVCVAbk7vAjCbDSXO0Rhdbgbida3P+enir4KzQimPYc3
-         2il4YZ2zfXVZiYz+SPvHXCg5xdeDNRWmWM0YTNaIUSMDGe60qMJj3Iace1/48yf9A8yG
-         tGlYLEr6mEEBgXKJHzby9LPRJ86Ks2Ztc0hGvOcmk7e9f7wpqW1KT1mUN1ebnkUmowUm
-         qb7Ga1GDEGh39dRj1YzP3Q0W2t6zcDUnry68oIoeSGxQmYcuGESf5yzzh16wCHZC9yCy
-         ZoX1Qgus4CGkEkryZSONkG4/TRhemhtkS81WIAPFwLhqybf9+puo1R2C5zVj2lCKZBYc
-         z+rQ==
+        bh=9ZlXToatDcyQe4UfooUu3JrhisJTqzWvPk9UeTaykHI=;
+        b=L2xbAiWTTbIrt5K7yoWLPYgbHcR6JA3ygW52PmeYhcPUro9EBJ7jeSZ+LuUceUwi6h
+         7oJ0nyVewkcb5K+ygEJWYYMKXhaWMSobBdS26zzBkdJSzJLQfkJ9ORBytL4idG2x8OiJ
+         9aarfLTEzGCk1uCjCog7oi7V7msQ35V7eKNBN6lB3Pt0XeZUaZZGqxIfwBcha2zEJ3WN
+         kZ9kfFU6h35Lf2aGkBLA0WhEm9MhweORqvnr/qOj6MkqYCWc4yB4rpgdiBoO/86iCgZ7
+         IEUBBDYCvLrMJVulHBHcZCHWqbinwfnCxIm8NM7pVPl6asD8IeCh1a7crlyWFtjVbf2K
+         AdbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc:content-transfer-encoding;
-        bh=JAxqBiv9FAqTcbh8Jcrvr5UifYuflldy0L4UvGJ6V1M=;
-        b=Ns2RypCMhkayhuE39iGI0EGzon3vsftVchjllML8WvYHF4Fy7Gsdrz3YcX9wQWTbe2
-         Fb9DaPiWAF8mNTUTtiaVgCloxya87PgrIH/EJl63nRVoLZZcimiI2nfDiVTQy45kZAdA
-         ki4PnxFinVvOhfqIvSHPKV75HMY8LRf6GdL+cBjvIe2kiRAnLx1SEtyvtOEcEI21BmPE
-         0fVKI0kiJD05oVewcy2T0ScR/rnWUTXo/eVA9Pl8E9WB2ZLHgunV95mCYFW/jIDNJIdW
-         Brx2n2TeWcB6/e/wLVbGvkjxyD9WdiQUEccxKr7ElnolMRSVZ02R24n+1tGm6PRfvLtY
-         TE1g==
-X-Gm-Message-State: AOAM533vDiQm8xomHJ2IwFWjmDGh6E9xNSP3037DKZq68+Qhjkx0UFg+
-        qk51TPPvI9F8e3KWLXS668o0wES65HGR7DqSI22VUHE/
-X-Google-Smtp-Source: ABdhPJw50WR+C7kcU0ZfDX3zjWBgDtHGyMosf3mw7PXKGyCALdWUqWUbxDxim/yAQvd6LORNKFrQeY2FlkZMeoX5nlg=
-X-Received: by 2002:aa7:de89:: with SMTP id j9mr205106edv.363.1603910353259;
- Wed, 28 Oct 2020 11:39:13 -0700 (PDT)
+        bh=9ZlXToatDcyQe4UfooUu3JrhisJTqzWvPk9UeTaykHI=;
+        b=C75n99BZDDkjBXbHayCj7ZeymWs/X7BAveZPW9Vfvvi1PX7r1bNlchhPNxYQWqPb++
+         nVy8PuP/6va797MQffPnI/N7rBk4TulTQ4D9ljOJjQKJLJSEGCr9BBot/DHF/qzVl7sY
+         J+w9DTlSFyrhEB4EQel9DgefbyUC/Dre6Bi/m70ZzGIGFZ1+KFaAWl9w0nVAPEPlYrZO
+         N/kZiho0y/MIoEznDn3dZ6y5vq9XYYUClI5NbaE6xh0NaVt+q+tZi4wS/CZ9ihQW5o7v
+         +PUzHII3FC1LlBM78btPmrBDZLCBDRKQCW+gK7ydX6Z/VliSGnuzor7QDKkT5hSfMeO5
+         6gjg==
+X-Gm-Message-State: AOAM531tupTD5nlyP2IhZh700WKvJm5JIwBWTFwXXksdKIDAXUHiKaii
+        ZYqe98wLYru+TLrWkUEaOtFHY5/thh19dTEB1rWSbtRJXWvOQQ==
+X-Google-Smtp-Source: ABdhPJwPEPpN0dIcKBfaGDgutMYF3sOkE6KoP9i1uddB1epbqqtMw2qCiW/gFeatIzJ1+Wk2li1pZyaWC1wQlcX+ghA=
+X-Received: by 2002:a25:41d0:: with SMTP id o199mr9520447yba.276.1603885293714;
+ Wed, 28 Oct 2020 04:41:33 -0700 (PDT)
 MIME-Version: 1.0
-References: <5EAED86C53DED2479E3E145969315A23856DD0D3@UMECHPA7B.easf.csd.disa.mil>
-In-Reply-To: <5EAED86C53DED2479E3E145969315A23856DD0D3@UMECHPA7B.easf.csd.disa.mil>
-From:   Vitaly Mayatskih <v.mayatskih@gmail.com>
-Date:   Wed, 28 Oct 2020 14:39:02 -0400
-Message-ID: <CAGF4SLhGz4mg-ia_KWWt3mrQCry8sHunbBhRNhVod3H19ztaCg@mail.gmail.com>
-Subject: Re: Nr_requests mdraid
-To:     "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <20201026130450.6947-1-gilad@benyossef.com> <20201026130450.6947-4-gilad@benyossef.com>
+ <20201026175231.GG858@sol.localdomain> <d07b062c-1405-4d72-b907-1c4dfa97aecb@gmail.com>
+ <20201026183936.GJ858@sol.localdomain> <20201026184155.GA6863@gondor.apana.org.au>
+ <20201026184402.GA6908@gondor.apana.org.au>
+In-Reply-To: <20201026184402.GA6908@gondor.apana.org.au>
+From:   Gilad Ben-Yossef <gilad@benyossef.com>
+Date:   Wed, 28 Oct 2020 13:41:28 +0200
+Message-ID: <CAOtvUMf-xv5cHTjExW2Ffx6soLavFztow6DwE6Qo5pffF0N5uw@mail.gmail.com>
+Subject: Re: [PATCH 3/4] dm crypt: switch to EBOIV crypto API template
+To:     Herbert Xu <herbert@gondor.apana.org.au>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        Milan Broz <gmazyland@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        Song Liu <song@kernel.org>, Ofir Drang <ofir.drang@arm.com>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Linux kernel mailing list <linux-kernel@vger.kernel.org>,
+        linux-raid@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Oct 22, 2020 at 2:56 AM Finlayson, James M CIV (USA)
-<james.m.finlayson4.civ@mail.mil> wrote:
+On Mon, Oct 26, 2020 at 8:44 PM Herbert Xu <herbert@gondor.apana.org.au> wr=
+ote:
 >
-> All,
-> I'm working on creating raid5 or raid6 arrays of 800K IOP nvme drives.   =
-Each of the drives performs well with a queue depth of 128 and I set to 102=
-3 if allowed.   In order for me to try to max out the queue depth on each R=
-AID member, so I'd like to set the sysfs nr_requests on the md device to so=
-mething greater than 128, like #raid members * 128.   Even though /sys/bloc=
-k/md127/queue/nr_requests is mode 644, when I try to change nr_requests in =
-any way as root, I get write error: invalid argument.  When I'm hitting the=
- md device with random reads, my nvme drives are 100% utilized, but only do=
-ing 160K IOPS because they have no queue depth.
+> On Tue, Oct 27, 2020 at 05:41:55AM +1100, Herbert Xu wrote:
+> >
+> > The point is that people rebuilding their kernel can end up with a
+> > broken system.  Just set a default on EBOIV if dm-crypt is on.
 >
-> Am I doing something silly?
+> That's not enough as it's an existing option.  So we need to
+> add a new Kconfig option with a default equal to dm-crypt.
 
-It only works for blk-mq block devices. MD is not blk-mq.
+Sorry if I'm being daft, but what did you refer to be "an existing
+option"? there was no CONFIG_EBOIV before my patchset, it was simply
+built as part of dm-crypt so it seems that setting CONFIG_EBOIV
+default to dm-crypto Kconfig option value does solves the problem, or
+have I missed something?
 
-You can exchange simplicity for performance: instead of creating one
-RAID-5/6 array you can partition drives in N equal sized partitions,
-create N RAID-5/6 arrays using one partition from every disk, then
-stripe them into top-level RAID-0. So that would be RAID-5+0 (or 6+0).
-
-It is awful, but simulates multiqueue and performs better in parallel
-loads. Especially for writes (on RAID-5/6).
-
+Thanks,
+Gilad
 
 --=20
-wbr, Vitaly
+Gilad Ben-Yossef
+Chief Coffee Drinker
+
+values of =CE=B2 will give rise to dom!
