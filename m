@@ -2,395 +2,205 @@ Return-Path: <SRS0=2a2u=EE=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83512C4363A
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 15:51:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4D75C4363A
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 17:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2B1C207DE
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 15:51:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D00320790
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 17:03:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="a8ovsw3q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YkDewNg2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728525AbgJ2PvB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 29 Oct 2020 11:51:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49632 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728509AbgJ2Pu7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Oct 2020 11:50:59 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3B3C0613CF;
-        Thu, 29 Oct 2020 08:41:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=iBrwQ7u9qumc4njkhWiPx+LnMHepKgVCZBO024rsKVU=; b=a8ovsw3qEH9a1JE2dbyz8caYti
-        XhDBkiE63ZuKYUZXZB77wo6BJuHEkndi44+JMWdHQsYop8n/jNE/wsrsTlb3x7e1p2A7qHSj6WUOv
-        cmQSsRgTkw36FvlABOPWp+LZlsDHWmIcbxbmFFVEeGTeg7fhq+Z9WTPIYnaw7HW9GB6lHx45/sHXr
-        HaiSW4mrH0pCqgEAfNRUvQXM8SvqJSvMRLJK4RaoZKpEbpcjHTAQnP0t9j9qDs3f6ecH12mk2TI7C
-        84wp+P+WARddkTA3COwlZ9AszfSNliRI2an3cxPSNvlgA6YQifX4GtjLiyBqniUfq5YnE8t5Kom7V
-        zBOeCiYA==;
-Received: from 089144193201.atnat0002.highway.a1.net ([89.144.193.201] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kYA3J-0008Dj-A7; Thu, 29 Oct 2020 15:41:26 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/18] block: switch gendisk lookup to a simple xarray
-Date:   Thu, 29 Oct 2020 15:58:41 +0100
-Message-Id: <20201029145841.144173-19-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201029145841.144173-1-hch@lst.de>
-References: <20201029145841.144173-1-hch@lst.de>
+        id S1726105AbgJ2RDm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 29 Oct 2020 13:03:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:29367 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725792AbgJ2RDl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 29 Oct 2020 13:03:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603991020;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CG1fKRPVSdrGSp+7rK/M6F5hjq72k8gDNl1r/YhUOgg=;
+        b=YkDewNg2GdGl5GIOOzdvOfNB5z5+NKeZSgRnqV5jz8u9fiRlaz2mjQK9HZ/O/I8M+I0Ys0
+        kzvJzhUbmpfqj8kPVXN51Z17QMEjA74sKHSUr8jhoRnFK+q8XqfTjmiLciAWzG/D2HH2Cu
+        B4gAOHc9/gugw29uNQ2ev0MKzGUVNf0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-194-Ip7AN7eBPIiH7fZgCqHpnA-1; Thu, 29 Oct 2020 13:03:34 -0400
+X-MC-Unique: Ip7AN7eBPIiH7fZgCqHpnA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C9C5A18C89C1;
+        Thu, 29 Oct 2020 17:03:32 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-8-36.pek2.redhat.com [10.72.8.36])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 42FB85DA2A;
+        Thu, 29 Oct 2020 17:03:29 +0000 (UTC)
+Subject: Re: [PATCH] mdadm/bitmap: fix wrong bitmap nodes num when adding new
+ disk
+To:     "heming.zhao@suse.com" <heming.zhao@suse.com>,
+        linux-raid@vger.kernel.org, jes@trained-monkey.org,
+        guoqing.jiang@cloud.ionos.com
+References: <1603552027-10655-1-git-send-email-heming.zhao@suse.com>
+ <75940d7d-3933-a026-d878-d75aa0050905@redhat.com>
+ <8f39db60-635e-f187-f134-da6fdf3b83a5@suse.com>
+From:   Xiao Ni <xni@redhat.com>
+Message-ID: <325ed7c0-c133-a502-5212-dba32b32f2f8@redhat.com>
+Date:   Fri, 30 Oct 2020 01:03:28 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <8f39db60-635e-f187-f134-da6fdf3b83a5@suse.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Now that bdev_map is only used for finding gendisks, we can use
-a simple xarray instead of the regions tracking structure for it.
+Hi Heming
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- block/genhd.c         | 208 ++++++++----------------------------------
- include/linux/genhd.h |   7 --
- 2 files changed, 37 insertions(+), 178 deletions(-)
+I can reproduce this bug myself. It indeed writes the wrong cluster 
+nodes to the new disk.
+So the original subject is good for me. Thanks for the explanation.
 
-diff --git a/block/genhd.c b/block/genhd.c
-index e78c95cf3c00a9..439b444cac2038 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -27,15 +27,7 @@
- 
- static struct kobject *block_depr;
- 
--struct bdev_map {
--	struct bdev_map *next;
--	dev_t dev;
--	unsigned long range;
--	struct module *owner;
--	struct kobject *(*probe)(dev_t, int *, void *);
--	int (*lock)(dev_t, void *);
--	void *data;
--} *bdev_map[255];
-+static DEFINE_XARRAY(bdev_map);
- static DEFINE_MUTEX(bdev_map_lock);
- 
- /* for extended dynamic devt allocation, currently only one major is used */
-@@ -646,85 +638,26 @@ static char *bdevt_str(dev_t devt, char *buf)
- 	return buf;
- }
- 
--/*
-- * Register device numbers dev..(dev+range-1)
-- * range must be nonzero
-- * The hash chain is sorted on range, so that subranges can override.
-- */
--void blk_register_region(dev_t devt, unsigned long range, struct module *module,
--			 struct kobject *(*probe)(dev_t, int *, void *),
--			 int (*lock)(dev_t, void *), void *data)
--{
--	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
--	unsigned index = MAJOR(devt);
--	unsigned i;
--	struct bdev_map *p;
--
--	n = min(n, 255u);
--	p = kmalloc_array(n, sizeof(struct bdev_map), GFP_KERNEL);
--	if (p == NULL)
--		return;
--
--	for (i = 0; i < n; i++, p++) {
--		p->owner = module;
--		p->probe = probe;
--		p->lock = lock;
--		p->dev = devt;
--		p->range = range;
--		p->data = data;
--	}
-+static void blk_register_region(struct gendisk *disk)
-+{
-+	int i;
- 
- 	mutex_lock(&bdev_map_lock);
--	for (i = 0, p -= n; i < n; i++, p++, index++) {
--		struct bdev_map **s = &bdev_map[index % 255];
--		while (*s && (*s)->range < range)
--			s = &(*s)->next;
--		p->next = *s;
--		*s = p;
-+	for (i = 0; i < disk->minors; i++) {
-+		if (xa_insert(&bdev_map, disk_devt(disk) + i, disk, GFP_KERNEL))
-+			WARN_ON_ONCE(1);
- 	}
- 	mutex_unlock(&bdev_map_lock);
- }
--EXPORT_SYMBOL(blk_register_region);
- 
--void blk_unregister_region(dev_t devt, unsigned long range)
-+static void blk_unregister_region(struct gendisk *disk)
- {
--	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
--	unsigned index = MAJOR(devt);
--	unsigned i;
--	struct bdev_map *found = NULL;
-+	int i;
- 
- 	mutex_lock(&bdev_map_lock);
--	for (i = 0; i < min(n, 255u); i++, index++) {
--		struct bdev_map **s;
--		for (s = &bdev_map[index % 255]; *s; s = &(*s)->next) {
--			struct bdev_map *p = *s;
--			if (p->dev == devt && p->range == range) {
--				*s = p->next;
--				if (!found)
--					found = p;
--				break;
--			}
--		}
--	}
-+	for (i = 0; i < disk->minors; i++)
-+		xa_erase(&bdev_map, disk_devt(disk) + i);
- 	mutex_unlock(&bdev_map_lock);
--	kfree(found);
--}
--EXPORT_SYMBOL(blk_unregister_region);
--
--static struct kobject *exact_match(dev_t devt, int *partno, void *data)
--{
--	struct gendisk *p = data;
--
--	return &disk_to_dev(p)->kobj;
--}
--
--static int exact_lock(dev_t devt, void *data)
--{
--	struct gendisk *p = data;
--
--	if (!get_disk_and_module(p))
--		return -1;
--	return 0;
- }
- 
- static void disk_scan_partitions(struct gendisk *disk)
-@@ -870,8 +803,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
- 		ret = bdi_register(bdi, "%u:%u", MAJOR(devt), MINOR(devt));
- 		WARN_ON(ret);
- 		bdi_set_owner(bdi, dev);
--		blk_register_region(disk_devt(disk), disk->minors, NULL,
--				    exact_match, exact_lock, disk);
-+		blk_register_region(disk);
- 	}
- 	register_disk(parent, disk, groups);
- 	if (register_queue)
-@@ -984,7 +916,7 @@ void del_gendisk(struct gendisk *disk)
- 	blk_unregister_queue(disk);
- 	
- 	if (!(disk->flags & GENHD_FL_HIDDEN))
--		blk_unregister_region(disk_devt(disk), disk->minors);
-+		blk_unregister_region(disk);
- 	/*
- 	 * Remove gendisk pointer from idr so that it cannot be looked up
- 	 * while RCU period before freeing gendisk is running to prevent
-@@ -1050,54 +982,22 @@ static void request_gendisk_module(dev_t devt)
- 		request_module("block-major-%d", MAJOR(devt));
- }
- 
--static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
-+static bool get_disk_and_module(struct gendisk *disk)
- {
--	struct kobject *kobj;
--	struct bdev_map *p;
--	unsigned long best = ~0UL;
--
--retry:
--	mutex_lock(&bdev_map_lock);
--	for (p = bdev_map[MAJOR(dev) % 255]; p; p = p->next) {
--		struct kobject *(*probe)(dev_t, int *, void *);
--		struct module *owner;
--		void *data;
--
--		if (p->dev > dev || p->dev + p->range - 1 < dev)
--			continue;
--		if (p->range - 1 >= best)
--			break;
--		if (!try_module_get(p->owner))
--			continue;
--		owner = p->owner;
--		data = p->data;
--		probe = p->probe;
--		best = p->range - 1;
--		*partno = dev - p->dev;
--
--		if (!probe) {
--			mutex_unlock(&bdev_map_lock);
--			module_put(owner);
--			request_gendisk_module(dev);
--			goto retry;
--		}
-+	struct module *owner;
- 
--		if (p->lock && p->lock(dev, data) < 0) {
--			module_put(owner);
--			continue;
--		}
--		mutex_unlock(&bdev_map_lock);
--		kobj = probe(dev, partno, data);
--		/* Currently ->owner protects _only_ ->probe() itself. */
-+	if (!disk->fops)
-+		return false;
-+	owner = disk->fops->owner;
-+	if (owner && !try_module_get(owner))
-+		return false;
-+	if (!kobject_get_unless_zero(&disk_to_dev(disk)->kobj)) {
- 		module_put(owner);
--		if (kobj)
--			return dev_to_disk(kobj_to_dev(kobj));
--		goto retry;
-+		return false;
- 	}
--	mutex_unlock(&bdev_map_lock);
--	return NULL;
--}
-+	return true;
- 
-+}
- 
- /**
-  * get_gendisk - get partitioning information for a given device
-@@ -1116,7 +1016,19 @@ struct gendisk *get_gendisk(dev_t devt, int *partno)
- 	might_sleep();
- 
- 	if (MAJOR(devt) != BLOCK_EXT_MAJOR) {
--		disk = lookup_gendisk(devt, partno);
-+		mutex_lock(&bdev_map_lock);
-+		disk = xa_load(&bdev_map, devt);
-+		if (!disk) {
-+			mutex_unlock(&bdev_map_lock);
-+			request_gendisk_module(devt);
-+			mutex_lock(&bdev_map_lock);
-+			disk = xa_load(&bdev_map, devt);
-+		}
-+		if (disk && !get_disk_and_module(disk))
-+			disk = NULL;
-+		if (disk)
-+			*partno = devt - disk_devt(disk);
-+		mutex_unlock(&bdev_map_lock);
- 	} else {
- 		struct hd_struct *part;
- 
-@@ -1320,21 +1232,6 @@ static const struct seq_operations partitions_op = {
- };
- #endif
- 
--static void bdev_map_init(void)
--{
--	struct bdev_map *base;
--	int i;
--
--	base = kzalloc(sizeof(*base), GFP_KERNEL);
--	if (!base)
--		panic("cannot allocate bdev_map");
--
--	base->dev = 1;
--	base->range = ~0 ;
--	for (i = 0; i < 255; i++)
--		bdev_map[i] = base;
--}
--
- static int __init genhd_device_init(void)
- {
- 	int error;
-@@ -1343,7 +1240,6 @@ static int __init genhd_device_init(void)
- 	error = class_register(&block_class);
- 	if (unlikely(error))
- 		return error;
--	bdev_map_init();
- 	blk_dev_init();
- 
- 	register_blkdev(BLOCK_EXT_MAJOR, "blkext");
-@@ -1892,35 +1788,6 @@ struct gendisk *__alloc_disk_node(int minors, int node_id)
- }
- EXPORT_SYMBOL(__alloc_disk_node);
- 
--/**
-- * get_disk_and_module - increments the gendisk and gendisk fops module refcount
-- * @disk: the struct gendisk to increment the refcount for
-- *
-- * This increments the refcount for the struct gendisk, and the gendisk's
-- * fops module owner.
-- *
-- * Context: Any context.
-- */
--struct kobject *get_disk_and_module(struct gendisk *disk)
--{
--	struct module *owner;
--	struct kobject *kobj;
--
--	if (!disk->fops)
--		return NULL;
--	owner = disk->fops->owner;
--	if (owner && !try_module_get(owner))
--		return NULL;
--	kobj = kobject_get_unless_zero(&disk_to_dev(disk)->kobj);
--	if (kobj == NULL) {
--		module_put(owner);
--		return NULL;
--	}
--	return kobj;
--
--}
--EXPORT_SYMBOL(get_disk_and_module);
--
- /**
-  * put_disk - decrements the gendisk refcount
-  * @disk: the struct gendisk to decrement the refcount for
-@@ -1957,7 +1824,6 @@ void put_disk_and_module(struct gendisk *disk)
- 		module_put(owner);
- 	}
- }
--EXPORT_SYMBOL(put_disk_and_module);
- 
- static void set_disk_ro_uevent(struct gendisk *gd, int ro)
- {
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 14b1bc7dea21d8..77c3489991f42e 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -340,15 +340,8 @@ int blk_add_partitions(struct gendisk *disk, struct block_device *bdev);
- int blk_drop_partitions(struct block_device *bdev);
- 
- extern struct gendisk *__alloc_disk_node(int minors, int node_id);
--extern struct kobject *get_disk_and_module(struct gendisk *disk);
- extern void put_disk(struct gendisk *disk);
- extern void put_disk_and_module(struct gendisk *disk);
--extern void blk_register_region(dev_t devt, unsigned long range,
--			struct module *module,
--			struct kobject *(*probe)(dev_t, int *, void *),
--			int (*lock)(dev_t, void *),
--			void *data);
--extern void blk_unregister_region(dev_t devt, unsigned long range);
- 
- #define alloc_disk_node(minors, node_id)				\
- ({									\
--- 
-2.28.0
+Regards
+Xiao
+
+On 10/28/2020 08:37 PM, heming.zhao@suse.com wrote:
+> Hello Xiao,
+>
+> Thank you for your comment.
+> The patch code is right, but the patch subject need modification.
+>
+> The bug only generate one bitmap area in clustered env.
+> So the more suitable subject: fixing wrong bitmap area number when adding new disk in clustered env
+>
+> Do you feel better for it?
+>
+> On 10/28/20 1:51 PM, Xiao Ni wrote:
+>> Hi Heming
+>>
+>> In fact it's not a wrong cluster nodes. This patch only avoids to do the job that doesn't
+>> need to do, right? The cluster nodes don't change when adding a new disk. Even NodeNumUpdate
+>> is specified, it'll not change the cluster nodes. If so, the subject is a little confusing.
+>>
+>> Regards
+>> Xiao
+>>
+>> On 10/24/2020 11:07 PM, Zhao Heming wrote:
+>>> The bug introduced from commit 81306e021ebdcc4baef866da82d25c3f0a415d2d
+>>> In this patch, it modified two place to support NodeNumUpdate:
+>>>    Grow_addbitmap, write_init_super1
+>>>
+>>> The path write_init_super1 is wrong.
+>>>
+>>> reproducible steps:
+>>> ```
+>>> node1 # mdadm -S --scan
+>>> node1 # for i in {a,b,c};do dd if=/dev/zero of=/dev/sd$i bs=1M count=10;
+>>> done
+>>> ... ...
+>>> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
+>>> /dev/sdb
+>>> mdadm: array /dev/md0 started.
+>>> node1 # mdadm --manage --add /dev/md0 /dev/sdc
+>>> mdadm: added /dev/sdc
+>>> node1 # mdadm --grow --raid-devices=3 /dev/md0
+>>> raid_disks for /dev/md0 set to 3
+>>> node1 # mdadm -X /dev/sdc
+>>>           Filename : /dev/sdc
+>>>              Magic : 6d746962
+>>>            Version : 5
+>>>               UUID : 9b0ff8c8:2a274a64:088ade6e:a88286a3
+>>>          Chunksize : 64 MB
+>>>             Daemon : 5s flush period
+>>>         Write Mode : Normal
+>>>          Sync Size : 306176 (299.00 MiB 313.52 MB)
+>>>      Cluster nodes : 4
+>>>       Cluster name : tb-ha-tst
+>>>          Node Slot : 0
+>>>             Events : 44
+>>>     Events Cleared : 0
+>>>              State : OK
+>>>             Bitmap : 5 bits (chunks), 0 dirty (0.0%)
+>>> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
+>>>          Node Slot : 1
+>>>             Events : 0
+>>>     Events Cleared : 0
+>>>              State : OK
+>>>             Bitmap : 0 bits (chunks), 0 dirty (0.0%)
+>>> ```
+>>>
+>>> There are three paths to call write_bitmap:
+>>>    Assemble, Grow, write_init_super.
+>>>
+>>> 1. Assemble & Grow should concern NodeNumUpdate
+>>>
+>>> Grow: Grow_addbitmap => write_bitmap
+>>> trigger steps:
+>>> ```
+>>> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
+>>> /dev/sdb
+>>> node1 # mdadm -G /dev/md0 -b none
+>>> node1 # mdadm -G /dev/md0 -b clustered
+>>> ```
+>>>
+>>> Assemble: Assemble => load_devices => write_bitmap1
+>>> trigger steps:
+>>> ```
+>>> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
+>>> /dev/sdb
+>>> node2 # mdadm -A /dev/md0 /dev/sda /dev/sdb --update=nodes --nodes=5
+>>> ```
+>>>
+>>> 2. write_init_super should use NoUpdate.
+>>>
+>>> write_init_super is called by Create & Manage path.
+>>>
+>>> Create: Create => write_init_super => write_bitmap
+>>> This is initialization, it doesn't need to care node changing.
+>>> trigger step:
+>>> ```
+>>> node1 # mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda
+>>> /dev/sdb
+>>> ```
+>>>
+>>> Manage: Manage_subdevs => Manage_add => write_init_super => write_bitmap
+>>> This is disk add, not node add. So it doesn't need to care node
+>>> changing.
+>>> trigger steps:
+>>> ```
+>>> mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda /dev/sdb
+>>> mdadm --manage --add /dev/md0 /dev/sdc
+>>> ```
+>>>
+>>> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+>>> ---
+>>>    super1.c | 2 +-
+>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/super1.c b/super1.c
+>>> index 8b0d6ff..06fa3ad 100644
+>>> --- a/super1.c
+>>> +++ b/super1.c
+>>> @@ -2093,7 +2093,7 @@ static int write_init_super1(struct supertype *st)
+>>>            if (rv == 0 &&
+>>>                (__le32_to_cpu(sb->feature_map) &
+>>>                 MD_FEATURE_BITMAP_OFFSET)) {
+>>> -            rv = st->ss->write_bitmap(st, di->fd, NodeNumUpdate);
+>>> +            rv = st->ss->write_bitmap(st, di->fd, NoUpdate);
+>>>            } else if (rv == 0 &&
+>>>                md_feature_any_ppl_on(sb->feature_map)) {
+>>>                struct mdinfo info;
 
