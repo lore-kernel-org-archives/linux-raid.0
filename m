@@ -2,96 +2,72 @@ Return-Path: <SRS0=2a2u=EE=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6279DC55179
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 01:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A290FC2D0A3
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 08:44:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01A2820790
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 01:04:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QKppPdoI"
+	by mail.kernel.org (Postfix) with ESMTP id 3E2262075E
+	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 08:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730436AbgJ1WIq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:08:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51601 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728730AbgJ1WHK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:07:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603922828;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=53vG2f+Yp/xCo65Ted4x3V7LSvlV/Bm/ByBHBLx0eH8=;
-        b=QKppPdoIEQ5/2azhd12GPENAcwQ8E0VEk0zUVYMpTXpjkYgJ4hFJ9A7gQ3//ZlfAPhCpHZ
-        jDcd6BV0KPwB5F41td9ckyVDfHZFcK/NevqfADAckXDqO3yO06TcuMPYdF4JpO+9NILTmK
-        qSfxa4vxOcpIVKzs0KJWwwGIKcpUUwo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-429-E_bmg_ISOLmsPReGxJ74NA-1; Wed, 28 Oct 2020 02:04:32 -0400
-X-MC-Unique: E_bmg_ISOLmsPReGxJ74NA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2954D5F9CB;
-        Wed, 28 Oct 2020 06:04:31 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 885565D9EF;
-        Wed, 28 Oct 2020 06:04:26 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     jes@trained-monkey.org
-Cc:     heming.zhao@suse.com, ncroxon@redhat.com, heinzm@redhat.com,
+        id S1725984AbgJ2Iow (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 29 Oct 2020 04:44:52 -0400
+Received: from helcar.hmeau.com ([216.24.177.18]:58728 "EHLO fornost.hmeau.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725804AbgJ2Iow (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 29 Oct 2020 04:44:52 -0400
+Received: from gwarestrin.arnor.me.apana.org.au ([192.168.0.7])
+        by fornost.hmeau.com with smtp (Exim 4.92 #5 (Debian))
+        id 1kXz12-0007pU-3R; Thu, 29 Oct 2020 14:54:21 +1100
+Received: by gwarestrin.arnor.me.apana.org.au (sSMTP sendmail emulation); Thu, 29 Oct 2020 14:54:20 +1100
+Date:   Thu, 29 Oct 2020 14:54:20 +1100
+From:   Herbert Xu <herbert@gondor.apana.org.au>
+To:     Gilad Ben-Yossef <gilad@benyossef.com>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        Milan Broz <gmazyland@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        device-mapper development <dm-devel@redhat.com>,
+        Song Liu <song@kernel.org>, Ofir Drang <ofir.drang@arm.com>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Linux kernel mailing list <linux-kernel@vger.kernel.org>,
         linux-raid@vger.kernel.org
-Subject: [PATCH 1/1] mdadm/bitmap: locate bitmap calcuate bitmap position wrongly
-Date:   Wed, 28 Oct 2020 14:04:24 +0800
-Message-Id: <1603865064-27404-1-git-send-email-xni@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Subject: Re: [PATCH 3/4] dm crypt: switch to EBOIV crypto API template
+Message-ID: <20201029035419.GA19506@gondor.apana.org.au>
+References: <20201026130450.6947-1-gilad@benyossef.com>
+ <20201026130450.6947-4-gilad@benyossef.com>
+ <20201026175231.GG858@sol.localdomain>
+ <d07b062c-1405-4d72-b907-1c4dfa97aecb@gmail.com>
+ <20201026183936.GJ858@sol.localdomain>
+ <20201026184155.GA6863@gondor.apana.org.au>
+ <20201026184402.GA6908@gondor.apana.org.au>
+ <CAOtvUMf-xv5cHTjExW2Ffx6soLavFztow6DwE6Qo5pffF0N5uw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOtvUMf-xv5cHTjExW2Ffx6soLavFztow6DwE6Qo5pffF0N5uw@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Now it only adds bitmap offset based on cluster nodes. It's not right. It needs to
-add per node bitmap space to find next node bitmap position.
+On Wed, Oct 28, 2020 at 01:41:28PM +0200, Gilad Ben-Yossef wrote:
+>
+> Sorry if I'm being daft, but what did you refer to be "an existing
+> option"? there was no CONFIG_EBOIV before my patchset, it was simply
+> built as part of dm-crypt so it seems that setting CONFIG_EBOIV
+> default to dm-crypto Kconfig option value does solves the problem, or
+> have I missed something?
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- super1.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+Oh I'm mistaken then.  I thought it was an existing option.  If
+it's a new option then a default depending on dm-crypt should be
+sufficient.
 
-diff --git a/super1.c b/super1.c
-index 8b0d6ff..b5b379b 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2582,8 +2582,9 @@ add_internal_bitmap1(struct supertype *st,
- 
- static int locate_bitmap1(struct supertype *st, int fd, int node_num)
- {
--	unsigned long long offset;
-+	unsigned long long offset, bm_sectors_per_node;
- 	struct mdp_superblock_1 *sb;
-+	bitmap_super_t *bms;
- 	int mustfree = 0;
- 	int ret;
- 
-@@ -2598,8 +2599,13 @@ static int locate_bitmap1(struct supertype *st, int fd, int node_num)
- 		ret = 0;
- 	else
- 		ret = -1;
--	offset = __le64_to_cpu(sb->super_offset);
--	offset += (int32_t) __le32_to_cpu(sb->bitmap_offset) * (node_num + 1);
-+
-+	offset = __le64_to_cpu(sb->super_offset) + __le32_to_cpu(sb->bitmap_offset);
-+	if (node_num) {
-+		bms = (bitmap_super_t*)(((char*)sb)+MAX_SB_SIZE);
-+		bm_sectors_per_node = calc_bitmap_size(bms, 4096) >> 9;
-+		offset += bm_sectors_per_node * node_num;
-+	}
- 	if (mustfree)
- 		free(sb);
- 	lseek64(fd, offset<<9, 0);
+Thanks,
 -- 
-2.7.5
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
