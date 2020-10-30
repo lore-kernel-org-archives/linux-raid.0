@@ -1,181 +1,500 @@
-Return-Path: <SRS0=2a2u=EE=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=hsaE=EF=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6251AC4742C
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 20:19:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB428C2D0A3
+	for <linux-raid@archiver.kernel.org>; Fri, 30 Oct 2020 00:20:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00F3D20639
-	for <linux-raid@archiver.kernel.org>; Thu, 29 Oct 2020 20:19:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=drivescale-com.20150623.gappssmtp.com header.i=@drivescale-com.20150623.gappssmtp.com header.b="papIqcpj"
+	by mail.kernel.org (Postfix) with ESMTP id 4736820756
+	for <linux-raid@archiver.kernel.org>; Fri, 30 Oct 2020 00:20:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726813AbgJ2UTm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 29 Oct 2020 16:19:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35366 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726535AbgJ2UT2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Oct 2020 16:19:28 -0400
-Received: from mail-vs1-xe64.google.com (mail-vs1-xe64.google.com [IPv6:2607:f8b0:4864:20::e64])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 193F7C0613D5
-        for <linux-raid@vger.kernel.org>; Thu, 29 Oct 2020 13:19:28 -0700 (PDT)
-Received: by mail-vs1-xe64.google.com with SMTP id h5so2259785vsp.3
-        for <linux-raid@vger.kernel.org>; Thu, 29 Oct 2020 13:19:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=drivescale-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ecgbskNC7kILn/M09bb6Zbg3H3gdB6NlCB1yWqgqIY0=;
-        b=papIqcpjLky53BkcAr0vNEue9c3X0epiXTPDnEezKpkjcUvZ6pU9D7Hnuuv37igCUe
-         9PoYKhYCasL9FJlFbYxoPrpg0N7Serlb50COi0aGgtkuZdGqgw3k95FuJ3n3TNrx5vPD
-         tJtlWxv5YOmy2vTGtdrEPI2AnAwwOCqjuX+Z8K7LgXdC7diQQX3jV/AoT/IJK/ZQDZlV
-         Vw/zQDYIgAxebh28eK2pPAC9Y1Z8d+D6/JiqqaTMDZi4V5aXUlRZtdQSM3L+PCB++nRl
-         Hek1eCzVxW9jak60aeM+q8xpS53WsaT1QOoo6ba35KniC4cgPbB2HwnQZ2RpCS8xIVqn
-         Kxlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=ecgbskNC7kILn/M09bb6Zbg3H3gdB6NlCB1yWqgqIY0=;
-        b=SIi51e2pV6LTJNAJ6dKrka1qFs6crRaZv0bweV/cjJx6iFDzlqzShKtsmpndJy+MVk
-         MCgQV+T8DasbYLc7/J8LMgJkqfcOkuitGqiMeC/z2/bjVxwrQbPSKjQrAWQtAYLIqUXW
-         uwdoitxSg5zBaaIoBXld5yAHhMvn++e87VFIBenFgLneZG1z5OiU8zupcHZFrc0DE381
-         7xJ+iUfC7SZB0SB/05Ky1lvKSRIQ4ugFaCFBNg6EzEmOy/ewbYwCRFEg17ssfkOjyZhk
-         PU7hD+gGMi2LJ0XczJATGiPEHAouAQUAxS8SO2NWGTWVnvh6CX6me9+12W25vyHlipS9
-         st1A==
-X-Gm-Message-State: AOAM5330xYCLbEgR5tqD+KhFrYs4oeRcOlf94hL00Z608Sn/dKzXAxRV
-        oQ0nYH5ZLlu5OL5hfyf+RjFCusv+AUTJWx8xVcvjBe6RkCu4tg==
-X-Google-Smtp-Source: ABdhPJzNbYShm4bs3P7IxFz7bbIzREFpJ8XA8MNUwjuxt332v4XXjf9qW1L98vuwfW6ML5FghnMLi6Ip8uZo
-X-Received: by 2002:a67:f657:: with SMTP id u23mr4986044vso.50.1604002767125;
-        Thu, 29 Oct 2020 13:19:27 -0700 (PDT)
-Received: from dcs.hq.drivescale.com ([68.74.115.3])
-        by smtp-relay.gmail.com with ESMTP id a6sm602460vkl.11.2020.10.29.13.19.26;
-        Thu, 29 Oct 2020 13:19:27 -0700 (PDT)
-X-Relaying-Domain: drivescale.com
-Received: from localhost.localdomain (gw1-dc.hq.drivescale.com [192.168.33.175])
-        by dcs.hq.drivescale.com (Postfix) with ESMTP id 2E7D44210A;
-        Thu, 29 Oct 2020 20:19:26 +0000 (UTC)
-From:   Christopher Unkel <cunkel@drivescale.com>
-To:     linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Christopher Unkel <cunkel@drivescale.com>
-Subject: [PATCH 2/3] md: align superblock writes to physical blocks
-Date:   Thu, 29 Oct 2020 13:13:57 -0700
-Message-Id: <20201029201358.29181-3-cunkel@drivescale.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201029201358.29181-1-cunkel@drivescale.com>
-References: <20201029201358.29181-1-cunkel@drivescale.com>
+        id S1726073AbgJ3AUw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 29 Oct 2020 20:20:52 -0400
+Received: from smtprelay0131.hostedemail.com ([216.40.44.131]:35778 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726065AbgJ3AUw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 29 Oct 2020 20:20:52 -0400
+X-Greylist: delayed 540 seconds by postgrey-1.27 at vger.kernel.org; Thu, 29 Oct 2020 20:20:51 EDT
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave04.hostedemail.com (Postfix) with ESMTP id 7836218017192
+        for <linux-raid@vger.kernel.org>; Fri, 30 Oct 2020 00:11:52 +0000 (UTC)
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay06.hostedemail.com (Postfix) with ESMTP id 4AEA618224D75;
+        Fri, 30 Oct 2020 00:11:50 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: watch11_400bb4e27291
+X-Filterd-Recvd-Size: 14105
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf18.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 30 Oct 2020 00:11:47 +0000 (UTC)
+Message-ID: <4945b720d67e9f67b8c8ba02a29c6af1ffa15b08.camel@perches.com>
+Subject: [PATCH] z2ram: MODULE_LICENSE update and neatening
+From:   Joe Perches <joe@perches.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Denis Efremov <efremov@linux.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        Hannes Reinecke <hare@suse.de>
+Date:   Thu, 29 Oct 2020 17:11:46 -0700
+In-Reply-To: <20201029145841.144173-18-hch@lst.de>
+References: <20201029145841.144173-1-hch@lst.de>
+         <20201029145841.144173-18-hch@lst.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.38.1-1 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Writes of the md superblock are aligned to the logical blocks of the
-containing device, but no attempt is made to align them to physical
-block boundaries.  This means that on a "512e" device (4k physical, 512
-logical) every superblock update hits the 512-byte emulation and the
-possible associated performance penalty.
+Additional style neatenings.
 
-Respect the physical block alignment when possible, that is, when the
-write padded out to the physical block doesn't run into the data or
-bitmap.
+Miscellanea:
 
-Signed-off-by: Christopher Unkel <cunkel@drivescale.com>
+o Make MODULE_LICENSE match the actual license text
+o Comment neatening
+o alloc failure message removals as there is already a dump_stack()
+o Add pr_fmt() and convert printks to pr_<level>
+o Unindent code blocks by using continue
+o Return early z2open when current_device != 1 and unindent code block
+o Add and remove braces where appropriate
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-This series replaces the first patch of the previous series
-(https://lkml.org/lkml/2020/10/22/1058), with the following changes:
 
-1. Creates a helper function super_1_sb_length_ok().
-2. Fixes operator placement style violation.
-3. Covers case in super_1_sync().
-4. Refactors duplicate logic.
-5. Covers a case in existing code where aligned superblock could
-   run into bitmap.
+Uncompiled/untested.
 
- drivers/md/md.c | 45 +++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 41 insertions(+), 4 deletions(-)
+On top of Christoph's changes.
+This file still does not have an SPDX line.  What should it be?
+Is this still used by anyone?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d6a55ca1d52e..802a9a256fe5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1646,15 +1646,52 @@ static __le32 calc_sb_1_csum(struct mdp_superblock_1 *sb)
- 	return cpu_to_le32(csum);
- }
- 
-+static int
-+super_1_sb_length_ok(struct md_rdev *rdev, int minor_version, int sb_len)
-+{
-+	int sectors = sb_len / 512;
-+	struct mdp_superblock_1 *sb;
-+
-+	/* superblock is stored in memory as a single page */
-+	if (sb_len > PAGE_SIZE)
-+		return 0;
-+
-+	/* check if sb runs into data */
-+	if (minor_version) {
-+		if (rdev->sb_start + sectors > rdev->data_offset
-+		    || rdev->sb_start + sectors > rdev->new_data_offset)
-+			return 0;
-+	} else if (sb_len > 4096)
-+		return 0;
-+
-+	/* check if sb runs into bitmap */
-+	sb = page_address(rdev->sb_page);
-+	if (le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) {
-+		__s32 bitmap_offset = (__s32)le32_to_cpu(sb->bitmap_offset);
-+		if (bitmap_offset > 0 && sectors > bitmap_offset)
-+			return 0;
-+	}
-+
-+	return 1;
-+}
-+
+ drivers/block/z2ram.c | 304 ++++++++++++++++++++++----------------------------
+ 1 file changed, 132 insertions(+), 172 deletions(-)
+
+diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
+index c1d20818e649..4e6c5564f1e8 100644
+--- a/drivers/block/z2ram.c
++++ b/drivers/block/z2ram.c
+@@ -1,30 +1,31 @@
  /*
-  * set rdev->sb_size to that required for number of devices in array
-  * with appropriate padding to underlying sectors
-  */
- static void
--super_1_set_rdev_sb_size(struct md_rdev *rdev, int max_dev)
-+super_1_set_rdev_sb_size(struct md_rdev *rdev, int max_dev, int minor_version)
- {
- 	int sb_size = max_dev * 2 + 256;
--	rdev->sb_size = round_up(sb_size, bdev_logical_block_size(rdev->bdev));
-+	int pb_aligned_size = round_up(sb_size,
-+				       bdev_physical_block_size(rdev->bdev));
+-** z2ram - Amiga pseudo-driver to access 16bit-RAM in ZorroII space
+-**         as a block device, to be used as a RAM disk or swap space
+-** 
+-** Copyright (C) 1994 by Ingo Wilken (Ingo.Wilken@informatik.uni-oldenburg.de)
+-**
+-** ++Geert: support for zorro_unused_z2ram, better range checking
+-** ++roman: translate accesses via an array
+-** ++Milan: support for ChipRAM usage
+-** ++yambo: converted to 2.0 kernel
+-** ++yambo: modularized and support added for 3 minor devices including:
+-**          MAJOR  MINOR  DESCRIPTION
+-**          -----  -----  ----------------------------------------------
+-**          37     0       Use Zorro II and Chip ram
+-**          37     1       Use only Zorro II ram
+-**          37     2       Use only Chip ram
+-**          37     4-7     Use memory list entry 1-4 (first is 0)
+-** ++jskov: support for 1-4th memory list entry.
+-**
+-** Permission to use, copy, modify, and distribute this software and its
+-** documentation for any purpose and without fee is hereby granted, provided
+-** that the above copyright notice appear in all copies and that both that
+-** copyright notice and this permission notice appear in supporting
+-** documentation.  This software is provided "as is" without express or
+-** implied warranty.
+-*/
+-
++ * z2ram - Amiga pseudo-driver to access 16bit-RAM in ZorroII space
++ *         as a block device, to be used as a RAM disk or swap space
++ *
++ * Copyright (C) 1994 by Ingo Wilken (Ingo.Wilken@informatik.uni-oldenburg.de)
++ *
++ * ++Geert: support for zorro_unused_z2ram, better range checking
++ * ++roman: translate accesses via an array
++ * ++Milan: support for ChipRAM usage
++ * ++yambo: converted to 2.0 kernel
++ * ++yambo: modularized and support added for 3 minor devices including:
++ *          MAJOR  MINOR  DESCRIPTION
++ *          -----  -----  ----------------------------------------------
++ *          37     0       Use Zorro II and Chip ram
++ *          37     1       Use only Zorro II ram
++ *          37     2       Use only Chip ram
++ *          37     4-7     Use memory list entry 1-4 (first is 0)
++ * ++jskov: support for 1-4th memory list entry.
++ *
++ * Permission to use, copy, modify, and distribute this software and its
++ * documentation for any purpose and without fee is hereby granted, provided
++ * that the above copyright notice appear in all copies and that both that
++ * copyright notice and this permission notice appear in supporting
++ * documentation.  This software is provided "as is" without express or
++ * implied warranty.
++ */
 +
-+	/* generate physical-block aligned writes if legal */
-+	if (super_1_sb_length_ok(rdev, minor_version, pb_aligned_size))
-+		rdev->sb_size = pb_aligned_size;
-+	else
-+		rdev->sb_size = round_up(sb_size,
-+					 bdev_logical_block_size(rdev->bdev));
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ #define DEVICE_NAME "Z2RAM"
+ 
+ #include <linux/major.h>
+@@ -51,7 +52,7 @@
+ #define Z2MINOR_MEMLIST4      (7)
+ #define Z2MINOR_COUNT         (8)	/* Move this down when adding a new minor */
+ 
+-#define Z2RAM_CHUNK1024       ( Z2RAM_CHUNKSIZE >> 10 )
++#define Z2RAM_CHUNK1024       (Z2RAM_CHUNKSIZE >> 10)
+ 
+ static DEFINE_MUTEX(z2ram_mutex);
+ static u_long *z2ram_map = NULL;
+@@ -75,8 +76,7 @@ static blk_status_t z2_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	blk_mq_start_request(req);
+ 
+ 	if (start + len > z2ram_size) {
+-		pr_err(DEVICE_NAME ": bad access: block=%llu, "
+-		       "count=%u\n",
++		pr_err("bad access: block=%llu, count=%u\n",
+ 		       (unsigned long long)blk_rq_pos(req),
+ 		       blk_rq_cur_sectors(req));
+ 		return BLK_STS_IOERR;
+@@ -93,9 +93,9 @@ static blk_status_t z2_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 			size = len;
+ 		addr += z2ram_map[start >> Z2RAM_CHUNKSHIFT];
+ 		if (rq_data_dir(req) == READ)
+-			memcpy(buffer, (char *)addr, size);
++			memcpy(buffer, (void *)addr, size);
+ 		else
+-			memcpy((char *)addr, buffer, size);
++			memcpy((void *)addr, buffer, size);
+ 		start += size;
+ 		len -= size;
+ 	}
+@@ -107,37 +107,29 @@ static blk_status_t z2_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 
+ static void get_z2ram(void)
+ {
++	unsigned long vaddr = (unsigned long)ZTWO_VADDR(Z2RAM_START);
+ 	int i;
+ 
+ 	for (i = 0; i < Z2RAM_SIZE / Z2RAM_CHUNKSIZE; i++) {
+-		if (test_bit(i, zorro_unused_z2ram)) {
+-			z2_count++;
+-			z2ram_map[z2ram_size++] =
+-			    (unsigned long)ZTWO_VADDR(Z2RAM_START) +
+-			    (i << Z2RAM_CHUNKSHIFT);
+-			clear_bit(i, zorro_unused_z2ram);
+-		}
++		if (!test_and_clear_bit(i, zorro_unused_z2ram))
++			continue;
++		z2_count++;
++		z2ram_map[z2ram_size++] = vaddr + (i << Z2RAM_CHUNKSHIFT);
+ 	}
+-
+-	return;
  }
  
- static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_version)
-@@ -1730,7 +1767,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 		rdev->new_data_offset += (s32)le32_to_cpu(sb->new_offset);
- 	atomic_set(&rdev->corrected_errors, le32_to_cpu(sb->cnt_corrected_read));
+ static void get_chipram(void)
+ {
+-
+ 	while (amiga_chip_avail() > (Z2RAM_CHUNKSIZE * 4)) {
+ 		chip_count++;
+ 		z2ram_map[z2ram_size] =
+-		    (u_long) amiga_chip_alloc(Z2RAM_CHUNKSIZE, "z2ram");
++		    (u_long)amiga_chip_alloc(Z2RAM_CHUNKSIZE, "z2ram");
  
--	super_1_set_rdev_sb_size(rdev, le32_to_cpu(sb->max_dev));
-+	super_1_set_rdev_sb_size(rdev, le32_to_cpu(sb->max_dev), minor_version);
+-		if (z2ram_map[z2ram_size] == 0) {
++		if (z2ram_map[z2ram_size] == 0)
+ 			break;
+-		}
  
- 	if (minor_version
- 	    && rdev->data_offset < sb_start + (rdev->sb_size/512))
-@@ -2140,7 +2177,7 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 		z2ram_size++;
+ 	}
+-
+-	return;
+ }
  
- 	if (max_dev > le32_to_cpu(sb->max_dev)) {
- 		sb->max_dev = cpu_to_le32(max_dev);
--		super_1_set_rdev_sb_size(rdev, max_dev);
-+		super_1_set_rdev_sb_size(rdev, max_dev, mddev->minor_version);
- 	} else
- 		max_dev = le32_to_cpu(sb->max_dev);
+ static int z2_open(struct block_device *bdev, fmode_t mode)
+@@ -146,146 +138,120 @@ static int z2_open(struct block_device *bdev, fmode_t mode)
+ 	int max_z2_map = (Z2RAM_SIZE / Z2RAM_CHUNKSIZE) * sizeof(z2ram_map[0]);
+ 	int max_chip_map = (amiga_chip_size / Z2RAM_CHUNKSIZE) *
+ 	    sizeof(z2ram_map[0]);
+-	int rc = -ENOMEM;
++	int ret = -ENOMEM;
  
--- 
-2.17.1
+ 	device = MINOR(bdev->bd_dev);
+ 
+ 	mutex_lock(&z2ram_mutex);
+-	if (current_device != -1 && current_device != device) {
+-		rc = -EBUSY;
+-		goto err_out;
++	if (current_device != -1) {
++		ret = (current_device != device) ? -EBUSY : 0;
++		mutex_unlock(&z2ram_mutex);
++		return ret;
+ 	}
+ 
+-	if (current_device == -1) {
+-		z2_count = 0;
+-		chip_count = 0;
+-		list_count = 0;
+-		z2ram_size = 0;
+-
+-		/* Use a specific list entry. */
+-		if (device >= Z2MINOR_MEMLIST1 && device <= Z2MINOR_MEMLIST4) {
+-			int index = device - Z2MINOR_MEMLIST1 + 1;
+-			unsigned long size, paddr, vaddr;
+-
+-			if (index >= m68k_realnum_memory) {
+-				printk(KERN_ERR DEVICE_NAME
+-				       ": no such entry in z2ram_map\n");
+-				goto err_out;
+-			}
++	z2_count = 0;
++	chip_count = 0;
++	list_count = 0;
++	z2ram_size = 0;
+ 
+-			paddr = m68k_memory[index].addr;
+-			size = m68k_memory[index].size & ~(Z2RAM_CHUNKSIZE - 1);
++	/* Use a specific list entry. */
++	if (device >= Z2MINOR_MEMLIST1 && device <= Z2MINOR_MEMLIST4) {
++		int index = device - Z2MINOR_MEMLIST1 + 1;
++		unsigned long size, paddr, vaddr;
++
++		if (index >= m68k_realnum_memory) {
++			pr_err("no such entry in z2ram_map\n");
++			goto err_out;
++		}
++
++		paddr = m68k_memory[index].addr;
++		size = m68k_memory[index].size & ~(Z2RAM_CHUNKSIZE - 1);
+ 
+ #ifdef __powerpc__
+-			/* FIXME: ioremap doesn't build correct memory tables. */
+-			{
+-				vfree(vmalloc(size));
+-			}
++		/* FIXME: ioremap doesn't build correct memory tables. */
++		{
++			vfree(vmalloc(size));
++		}
+ 
+-			vaddr = (unsigned long)ioremap_wt(paddr, size);
++		vaddr = (unsigned long)ioremap_wt(paddr, size);
+ 
+ #else
+-			vaddr =
+-			    (unsigned long)z_remap_nocache_nonser(paddr, size);
++		vaddr = (unsigned long)z_remap_nocache_nonser(paddr, size);
+ #endif
+-			z2ram_map =
+-			    kmalloc_array(size / Z2RAM_CHUNKSIZE,
++		z2ram_map = kmalloc_array(size / Z2RAM_CHUNKSIZE,
+ 					  sizeof(z2ram_map[0]), GFP_KERNEL);
+-			if (z2ram_map == NULL) {
+-				printk(KERN_ERR DEVICE_NAME
+-				       ": cannot get mem for z2ram_map\n");
++		if (!z2ram_map)
++			goto err_out;
++
++		while (size) {
++			z2ram_map[z2ram_size++] = vaddr;
++			size -= Z2RAM_CHUNKSIZE;
++			vaddr += Z2RAM_CHUNKSIZE;
++			list_count++;
++		}
++
++		if (z2ram_size != 0)
++			pr_info("using %iK List Entry %d Memory\n",
++				list_count * Z2RAM_CHUNK1024, index);
++	} else {
++		switch (device) {
++		case Z2MINOR_COMBINED:
++
++			z2ram_map = kmalloc(max_z2_map + max_chip_map,
++					    GFP_KERNEL);
++			if (!z2ram_map)
+ 				goto err_out;
+-			}
+ 
+-			while (size) {
+-				z2ram_map[z2ram_size++] = vaddr;
+-				size -= Z2RAM_CHUNKSIZE;
+-				vaddr += Z2RAM_CHUNKSIZE;
+-				list_count++;
+-			}
++			get_z2ram();
++			get_chipram();
+ 
+ 			if (z2ram_size != 0)
+-				printk(KERN_INFO DEVICE_NAME
+-				       ": using %iK List Entry %d Memory\n",
+-				       list_count * Z2RAM_CHUNK1024, index);
+-		} else
+-			switch (device) {
+-			case Z2MINOR_COMBINED:
+-
+-				z2ram_map =
+-				    kmalloc(max_z2_map + max_chip_map,
+-					    GFP_KERNEL);
+-				if (z2ram_map == NULL) {
+-					printk(KERN_ERR DEVICE_NAME
+-					       ": cannot get mem for z2ram_map\n");
+-					goto err_out;
+-				}
+-
+-				get_z2ram();
+-				get_chipram();
+-
+-				if (z2ram_size != 0)
+-					printk(KERN_INFO DEVICE_NAME
+-					       ": using %iK Zorro II RAM and %iK Chip RAM (Total %dK)\n",
+-					       z2_count * Z2RAM_CHUNK1024,
+-					       chip_count * Z2RAM_CHUNK1024,
+-					       (z2_count +
+-						chip_count) * Z2RAM_CHUNK1024);
+-
+-				break;
+-
+-			case Z2MINOR_Z2ONLY:
+-				z2ram_map = kmalloc(max_z2_map, GFP_KERNEL);
+-				if (z2ram_map == NULL) {
+-					printk(KERN_ERR DEVICE_NAME
+-					       ": cannot get mem for z2ram_map\n");
+-					goto err_out;
+-				}
+-
+-				get_z2ram();
+-
+-				if (z2ram_size != 0)
+-					printk(KERN_INFO DEVICE_NAME
+-					       ": using %iK of Zorro II RAM\n",
+-					       z2_count * Z2RAM_CHUNK1024);
+-
+-				break;
+-
+-			case Z2MINOR_CHIPONLY:
+-				z2ram_map = kmalloc(max_chip_map, GFP_KERNEL);
+-				if (z2ram_map == NULL) {
+-					printk(KERN_ERR DEVICE_NAME
+-					       ": cannot get mem for z2ram_map\n");
+-					goto err_out;
+-				}
+-
+-				get_chipram();
+-
+-				if (z2ram_size != 0)
+-					printk(KERN_INFO DEVICE_NAME
+-					       ": using %iK Chip RAM\n",
+-					       chip_count * Z2RAM_CHUNK1024);
+-
+-				break;
+-
+-			default:
+-				rc = -ENODEV;
++				pr_info("using %iK Zorro II RAM and %iK Chip RAM (Total %dK)\n",
++					z2_count * Z2RAM_CHUNK1024,
++					chip_count * Z2RAM_CHUNK1024,
++					(z2_count + chip_count) * Z2RAM_CHUNK1024);
++
++			break;
++
++		case Z2MINOR_Z2ONLY:
++			z2ram_map = kmalloc(max_z2_map, GFP_KERNEL);
++			if (!z2ram_map)
++				goto err_out;
++
++			get_z2ram();
++
++			if (z2ram_size != 0)
++				pr_info("using %iK of Zorro II RAM\n",
++					z2_count * Z2RAM_CHUNK1024);
++			break;
++
++		case Z2MINOR_CHIPONLY:
++			z2ram_map = kmalloc(max_chip_map, GFP_KERNEL);
++			if (!z2ram_map)
+ 				goto err_out;
+ 
+-				break;
+-			}
++			get_chipram();
+ 
+-		if (z2ram_size == 0) {
+-			printk(KERN_NOTICE DEVICE_NAME
+-			       ": no unused ZII/Chip RAM found\n");
+-			goto err_out_kfree;
++			if (z2ram_size != 0)
++				pr_info("using %iK Chip RAM\n",
++					chip_count * Z2RAM_CHUNK1024);
++			break;
++
++		default:
++			ret = -ENODEV;
++			goto err_out;
+ 		}
++	}
+ 
+-		current_device = device;
+-		z2ram_size <<= Z2RAM_CHUNKSHIFT;
+-		set_capacity(z2ram_gendisk[device], z2ram_size >> 9);
++	if (z2ram_size == 0) {
++		pr_notice("no unused ZII/Chip RAM found\n");
++		goto err_out_kfree;
+ 	}
+ 
++	current_device = device;
++	z2ram_size <<= Z2RAM_CHUNKSHIFT;
++	set_capacity(z2ram_gendisk[device], z2ram_size >> 9);
++
+ 	mutex_unlock(&z2ram_mutex);
+ 	return 0;
+ 
+@@ -293,7 +259,7 @@ static int z2_open(struct block_device *bdev, fmode_t mode)
+ 	kfree(z2ram_map);
+ err_out:
+ 	mutex_unlock(&z2ram_mutex);
+-	return rc;
++	return ret;
+ }
+ 
+ static void z2_release(struct gendisk *disk, fmode_t mode)
+@@ -401,24 +367,18 @@ static void __exit z2_exit(void)
+ 	if (current_device != -1) {
+ 		i = 0;
+ 
+-		for (j = 0; j < z2_count; j++) {
++		for (j = 0; j < z2_count; j++)
+ 			set_bit(i++, zorro_unused_z2ram);
+-		}
+ 
+ 		for (j = 0; j < chip_count; j++) {
+-			if (z2ram_map[i]) {
++			if (z2ram_map[i])
+ 				amiga_chip_free((void *)z2ram_map[i++]);
+-			}
+ 		}
+ 
+-		if (z2ram_map != NULL) {
+-			kfree(z2ram_map);
+-		}
++		kfree(z2ram_map);
+ 	}
+-
+-	return;
+ }
+ 
+ module_init(z2_init);
+ module_exit(z2_exit);
+-MODULE_LICENSE("GPL");
++MODULE_LICENSE("GPL and additional rights");
 
