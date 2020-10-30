@@ -2,105 +2,130 @@ Return-Path: <SRS0=hsaE=EF=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64997C2D0A3
-	for <linux-raid@archiver.kernel.org>; Fri, 30 Oct 2020 02:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 675DCC56201
+	for <linux-raid@archiver.kernel.org>; Fri, 30 Oct 2020 05:53:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDC6320756
-	for <linux-raid@archiver.kernel.org>; Fri, 30 Oct 2020 02:15:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E932620723
+	for <linux-raid@archiver.kernel.org>; Fri, 30 Oct 2020 05:53:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LtfLt7Yl"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Gfur+lhF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725963AbgJ3CPu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 29 Oct 2020 22:15:50 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:49386 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725790AbgJ3CPu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 29 Oct 2020 22:15:50 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2FXt0057285;
-        Fri, 30 Oct 2020 02:15:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=Cm/6VbzyJH4sOrtddGQ54uD1O5Uz5x5zqNdZFEq/iWk=;
- b=LtfLt7YldThlxCxbhkPHLsw4m63RD1s4XMFzSMnu1P6DeyAPuMMiUUee6j+FZC3kgf8o
- PMpIPBTMW6lzrlgMM1P9u8+Fb9lE1w551e00LpwA2yN0vdq0oEjh4VUVfFVdbvA6iKMg
- F7c4vtPq56gu9gOXN/xq2wV7lBPd3Q4/iMOZJtZwpb6G4juOTaOcLCBQGVRt04zTsYie
- unVDn+BKsR0P9r0stRIbArMf89Ssg3ZLnRa5ndWnpTFfmlHwHZasUBuc5EP1QCaiwbhs
- t2y1Nv5Z3BFAS1eaHbVMDp+cNMTly+s/fQU0pECytoS7LLr5cqtn6MxCuUrqFPtPzqxw Gg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 34cc7m7qq0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 30 Oct 2020 02:15:33 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2APRv115382;
-        Fri, 30 Oct 2020 02:13:32 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 34cx1txdjm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Oct 2020 02:13:31 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09U2DOSB002716;
-        Fri, 30 Oct 2020 02:13:24 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 19:13:24 -0700
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/18] sd: use __register_blkdev to avoid a modprobe for
- an unregistered dev_t
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1tuuczcjx.fsf@ca-mkp.ca.oracle.com>
-References: <20201029145841.144173-1-hch@lst.de>
-        <20201029145841.144173-9-hch@lst.de>
-Date:   Thu, 29 Oct 2020 22:13:21 -0400
-In-Reply-To: <20201029145841.144173-9-hch@lst.de> (Christoph Hellwig's message
-        of "Thu, 29 Oct 2020 15:58:31 +0100")
+        id S1725784AbgJ3Fxt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 30 Oct 2020 01:53:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:48997 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725770AbgJ3Fxt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 30 Oct 2020 01:53:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1604037227;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Hn2IzAOwiraZM76dwJfMK7GGyzOOVI/se7VYHK9Ap98=;
+        b=Gfur+lhFt3tMqOiBzae1rT3U+RzpGblxFPd3b7viH0csewaEdlffSbdAApINMSogXOT3or
+        fBXorg0yOr0gfsOt1YH6spTKMPkxdOQHMtaE9CmIdwXiEUIfJhyz2jgPKHni3gNRueYE0C
+        TGDXVYKO9b2CL+eaJ9JfpdgEQj/TLW0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-285-2EKgt1MZO0q2OKi5sQ4sBA-1; Fri, 30 Oct 2020 01:53:43 -0400
+X-MC-Unique: 2EKgt1MZO0q2OKi5sQ4sBA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5A54F1868403;
+        Fri, 30 Oct 2020 05:53:42 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-8-36.pek2.redhat.com [10.72.8.36])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C87515578C;
+        Fri, 30 Oct 2020 05:53:39 +0000 (UTC)
+Subject: Re: [PATCH 1/1] mdadm/bitmap: locate bitmap calcuate bitmap position
+ wrongly
+To:     "heming.zhao@suse.com" <heming.zhao@suse.com>,
+        jes@trained-monkey.org
+Cc:     ncroxon@redhat.com, heinzm@redhat.com, linux-raid@vger.kernel.org
+References: <1603865064-27404-1-git-send-email-xni@redhat.com>
+ <95046dfe-c770-8950-c720-6b1d30bb1789@suse.com>
+From:   Xiao Ni <xni@redhat.com>
+Message-ID: <f0616f2c-7156-8717-349d-7dcf349fd421@redhat.com>
+Date:   Fri, 30 Oct 2020 13:53:37 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=1 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010300014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- malwarescore=0 spamscore=0 clxscore=1011 mlxscore=0 suspectscore=1
- priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010300015
+In-Reply-To: <95046dfe-c770-8950-c720-6b1d30bb1789@suse.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi Heming
 
-Christoph,
+The cluster raid is only supported by super 1.2, so we don't need to 
+consider the old system when
+it's a cluster raid.
 
-> Switch from using blk_register_region to the probe callback passed to
-> __register_blkdev to disable the request_module call for an unclaimed
-> dev_t in the SD majors.
+Regards
+Xiao
+
+On 10/28/2020 08:29 PM, heming.zhao@suse.com wrote:
+> Hello Xiao,
 >
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> My review comment:
+> You code only work in modern system. the boundary is 4k not 512, because using hardcode 4k to call calc_bitmap_size
+>
+> In current cluster env, if bitmap area beyond 4K size (or 512 in very old system), locate_bitmap1
+> will return wrong address.
+>
+> Please refer write_bitmap1() to saparate 512 & 4096 case.
+>
+> On 10/28/20 2:04 PM, Xiao Ni wrote:
+>> Now it only adds bitmap offset based on cluster nodes. It's not right. It needs to
+>> add per node bitmap space to find next node bitmap position.
+>>
+>> Signed-off-by: Xiao Ni <xni@redhat.com>
+>> ---
+>>    super1.c | 12 +++++++++---
+>>    1 file changed, 9 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/super1.c b/super1.c
+>> index 8b0d6ff..b5b379b 100644
+>> --- a/super1.c
+>> +++ b/super1.c
+>> @@ -2582,8 +2582,9 @@ add_internal_bitmap1(struct supertype *st,
+>>    
+>>    static int locate_bitmap1(struct supertype *st, int fd, int node_num)
+>>    {
+>> -	unsigned long long offset;
+>> +	unsigned long long offset, bm_sectors_per_node;
+>>    	struct mdp_superblock_1 *sb;
+>> +	bitmap_super_t *bms;
+>>    	int mustfree = 0;
+>>    	int ret;
+>>    
+>> @@ -2598,8 +2599,13 @@ static int locate_bitmap1(struct supertype *st, int fd, int node_num)
+>>    		ret = 0;
+>>    	else
+>>    		ret = -1;
+>> -	offset = __le64_to_cpu(sb->super_offset);
+>> -	offset += (int32_t) __le32_to_cpu(sb->bitmap_offset) * (node_num + 1);
+>> +
+>> +	offset = __le64_to_cpu(sb->super_offset) + __le32_to_cpu(sb->bitmap_offset);
+>> +	if (node_num) {
+>> +		bms = (bitmap_super_t*)(((char*)sb)+MAX_SB_SIZE);
+>> +		bm_sectors_per_node = calc_bitmap_size(bms, 4096) >> 9;
+>> +		offset += bm_sectors_per_node * node_num;
+>> +	}
+>>    	if (mustfree)
+>>    		free(sb);
+>>    	lseek64(fd, offset<<9, 0);
+>>
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
