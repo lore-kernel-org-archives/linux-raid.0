@@ -1,65 +1,68 @@
-Return-Path: <SRS0=c9Ba=EI=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=1EIv=EJ=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC290C388F9
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Nov 2020 20:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8566EC388F2
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 00:19:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8344521D40
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Nov 2020 20:19:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44C2922268
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 00:19:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726998AbgKBUTY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 2 Nov 2020 15:19:24 -0500
-Received: from vps.thesusis.net ([34.202.238.73]:56422 "EHLO vps.thesusis.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725805AbgKBUTX (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 2 Nov 2020 15:19:23 -0500
-X-Greylist: delayed 446 seconds by postgrey-1.27 at vger.kernel.org; Mon, 02 Nov 2020 15:19:23 EST
-Received: from localhost (localhost [127.0.0.1])
-        by vps.thesusis.net (Postfix) with ESMTP id AD71123B69;
-        Mon,  2 Nov 2020 15:11:55 -0500 (EST)
-Received: from vps.thesusis.net ([IPv6:::1])
-        by localhost (vps.thesusis.net [IPv6:::1]) (amavisd-new, port 10024)
-        with ESMTP id US_wt1stFoAn; Mon,  2 Nov 2020 15:11:54 -0500 (EST)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id A70E923B6D; Mon,  2 Nov 2020 15:11:53 -0500 (EST)
-References: <9b6db7d5-4a34-a1f9-2314-5e3522555052@redhat.com>
-User-agent: mu4e 1.5.6; emacs 26.3
-From:   Phillip Susi <phill@thesusis.net>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Heinz Mauelshagen <heinzm@redhat.com>,
-        Nigel Croxon <ncroxon@redhat.com>
-Subject: Re: The raid device can't be unmount when it can't work
-In-reply-to: <9b6db7d5-4a34-a1f9-2314-5e3522555052@redhat.com>
-Date:   Mon, 02 Nov 2020 15:11:53 -0500
-Message-ID: <87tuu7y0vq.fsf@vps.thesusis.net>
+        id S1727281AbgKCATs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 2 Nov 2020 19:19:48 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:38785 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726104AbgKCATq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Nov 2020 19:19:46 -0500
+Received: from 1.is.james.uk.vpn ([10.172.254.24] helo=malefic)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <james.troup@canonical.com>)
+        id 1kZk2y-0003dl-1M; Tue, 03 Nov 2020 00:19:36 +0000
+Received: from james by malefic with local (Exim 4.94 #2 (Debian))
+        id 1kZk2w-000Zd6-Vj; Tue, 03 Nov 2020 00:19:34 +0000
+From:   James Troup <james.troup@canonical.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Ilya Dryomov <idryomov@gmail.com>,
+        Song Liu <song@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org
+Subject: Re: [PATCH 06/11] md: implement ->set_read_only to hook into BLKROSET processing
+References: <20201031085810.450489-1-hch@lst.de>
+        <20201031085810.450489-7-hch@lst.de>
+Mail-Copies-To: never
+Date:   Tue, 03 Nov 2020 00:19:34 +0000
+In-Reply-To: <20201031085810.450489-7-hch@lst.de> (Christoph Hellwig's message
+        of "Sat, 31 Oct 2020 09:58:05 +0100")
+Message-ID: <87y2jjpa09.fsf@canonical.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.3 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Christoph Hellwig <hch@lst.de> writes:
 
-Xiao Ni writes:
+> @@ -7809,6 +7778,36 @@ static int md_compat_ioctl(struct block_device *bdev, fmode_t mode,
 
-> When one raid loses disks that are bigger than the max degraded number, 
-> the udev rule[1] tries to stop
-> the raid device. If the raid device is mount, it tries to unmount it
+[...]
 
-Why?  If there are open files on it, you won't be able to unmount it
-anyway, and what would you gain by stopping the broken device?
+> +	 * Transitioning to readauto need only happen for arrays that call
+> +	 * md_write_start and which are not ready for writes yet.
 
-> first[2]. It uses udisks command to do this.
-> It's a little old. Now the package version is udisks2 which uses 
-> udisksctl to do this. I write a patch[3] and do
-> test. It's failed because of "udisksctl error Permission denied".
+I realise you're just moving the comment around but perhaps you could
+s/readauto/readonly/ while you're doing so?
 
-Udisks is a GNOME desktop component, and so may not even exist on many
-systems.  When it does, you still can't call it from udev scripts since
-they are not run within the desktop in the context of a logged in user.
-If you want to unmount the device, just use umount.
+-- 
+James
