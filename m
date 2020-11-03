@@ -2,183 +2,183 @@ Return-Path: <SRS0=1EIv=EJ=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CA51C4742C
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 10:24:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5613C388F7
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 20:12:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17741206F1
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 10:24:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 624CB206F1
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 20:12:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Mb6LGpfk"
+	dkim=pass (2048-bit key) header.d=drivescale-com.20150623.gappssmtp.com header.i=@drivescale-com.20150623.gappssmtp.com header.b="O7zOsHoJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727999AbgKCKY3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 3 Nov 2020 05:24:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37004 "EHLO
+        id S1728527AbgKCUMP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 3 Nov 2020 15:12:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727470AbgKCKY3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Nov 2020 05:24:29 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E99E6C0613D1;
-        Tue,  3 Nov 2020 02:24:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=8AaWlBE9Yvo2R2/ZXbUOXEpeEH/l5Fj4MrbBNz6ii3Y=; b=Mb6LGpfkh14+un19YFolpxCFxt
-        a1BUlvjssEidXgzpwzOf9JN7Y4zwQmZsO8mW3BIDixwLRULnH4DT+QA75GdjFrN00dynNTrZCrraV
-        ZOnhV5B+aoZH/ogPs7L0zNwKvMZ1QNFNfa2a5Fhq4hOv/MJpOkeii4UiVXsohnfMy9+XOhk3gnPZz
-        z0v91IAOr+Ot3NlB30L7B1kCySLp+uYx9eE0nA91Z6IvL46f0IxvC4rbsId1SJQKeGQ0LvXVME6un
-        Kn67C6Xe8kJvGgm/+VStGKSE5yx4GY6k2/gc4+M9DYlSVRL1y3Oo3pUP7f2MI3UyyftE72k/ZyOe4
-        bXG9zLiA==;
-Received: from 089144208145.atnat0017.highway.a1.net ([89.144.208.145] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kZtUD-0001Zu-Kw; Tue, 03 Nov 2020 10:24:22 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Ilya Dryomov <idryomov@gmail.com>, Song Liu <song@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org
-Subject: [PATCH 10/10] block: remove __blkdev_driver_ioctl
-Date:   Tue,  3 Nov 2020 11:00:18 +0100
-Message-Id: <20201103100018.683694-11-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201103100018.683694-1-hch@lst.de>
-References: <20201103100018.683694-1-hch@lst.de>
+        with ESMTP id S1727688AbgKCUMO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Nov 2020 15:12:14 -0500
+Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A9C5C0617A6
+        for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2020 12:12:13 -0800 (PST)
+Received: by mail-ot1-x341.google.com with SMTP id y22so6687696oti.10
+        for <linux-raid@vger.kernel.org>; Tue, 03 Nov 2020 12:12:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=drivescale-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=csm6WJIqkvgmHgjyFbVOCKjF/qQY6zaL8P5DbbzYf5w=;
+        b=O7zOsHoJsyNmSctB0hK/p1kq9D4Cf8l1PE33c5vl9PD3ENNqc46es0CXlSAKn3elQC
+         vBj7lEgL1EUxhewi8dyETj92Cp60JPR/ydwC9dZZY9SeebuEtot5UC2VXxo0s8f5s19r
+         BHnOxC/7Qy5YMXKJZN6T7VR7RnDZKx3TBGvgYpyUuxNTyr9KBiylO77bEpg2S6v7ZeYW
+         bqFHs81C5qtwfz82Twd7VX7U0z7vpmboXKwB57B7dSlCGVguiYWN7kJapx8OVNo5av+j
+         yRf/JR9az66TlaVbxQLRlHn6OvCymaxY6I1Id7aHMXDai/L9xZwNrBuDf22FxSwqLFSg
+         tNhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=csm6WJIqkvgmHgjyFbVOCKjF/qQY6zaL8P5DbbzYf5w=;
+        b=AQ8yoWcTrDXq/fvhVtLlqWAl2kmf8+zR0TYOO5RHQ8vax+U4tajVikyaWNXsizU/GF
+         ZG1sBn1t11gzfWprjl7FSB+x/O++H1jkp/NzsHt2Udeuf4MUFl1XhimWLFwc4Mk8K6SE
+         AfShuNF4fUgk0J2sy9j7Ipam62C32kWt/DO4WfupTpjAT1sGK+yARS1bnYd5x2xLnQhu
+         W8BUAm1WgJnROvTx+/FwKjIK7EapMotsY5QfezG9SRuH8PmCly8YJm5qqeXRyvZY33KW
+         GV6I1w4f4WFW5ARWym7Xr5Fgi2nQEkByqJGzd3QpISNxVhJNmkFwrLj2K6yFdZga9wHe
+         FgQQ==
+X-Gm-Message-State: AOAM532vaqUnaOvdwSoeGQqtpHdYlL1jstGoSJ8YDI6uectjtnkYagVL
+        mIGAUlXnHdDxEG4ryN0gRUJ4imWUjuhSpHikQiGb9w==
+X-Google-Smtp-Source: ABdhPJz5PAXuw4nvCoOi2WMbeaAaYxFbUwsUxwUrIuKo9hsfaVXO5qZ3KTaQqFX7qJ+DkibTNBKBkh6JeDQfHPHfPac=
+X-Received: by 2002:a9d:7cd7:: with SMTP id r23mr15671271otn.228.1604434332404;
+ Tue, 03 Nov 2020 12:12:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+References: <20201029201358.29181-1-cunkel@drivescale.com> <265efd48-b0c6-cba5-c77e-5efb0e6b9e00@redhat.com>
+In-Reply-To: <265efd48-b0c6-cba5-c77e-5efb0e6b9e00@redhat.com>
+From:   Chris Unkel <cunkel@drivescale.com>
+Date:   Tue, 3 Nov 2020 12:12:00 -0800
+Message-ID: <CAHFUYDo23BBq0R5mZBZgcCEzE=rN_ZYHCZp5WEs-nBZwYeyEnA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] md superblock write alignment on 512e devices
+To:     Xiao Ni <xni@redhat.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just open code it in the few callers.
+Hi Xiao,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/ioctl.c               | 25 +++++--------------------
- drivers/block/pktcdvd.c     |  6 ++++--
- drivers/md/bcache/request.c |  5 +++--
- drivers/md/dm.c             |  5 ++++-
- include/linux/blkdev.h      |  2 --
- 5 files changed, 16 insertions(+), 27 deletions(-)
+Thanks for the excellent feedback.  Since bitmap_offset appears to be
+a free-form field, it wasn't apparent to me that the bitmap never
+starts within 4K of the bitmap.
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 04255dc5f3bff3..6b785181344fe1 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -219,23 +219,6 @@ static int compat_put_ulong(compat_ulong_t __user *argp, compat_ulong_t val)
- }
- #endif
- 
--int __blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
--			unsigned cmd, unsigned long arg)
--{
--	struct gendisk *disk = bdev->bd_disk;
--
--	if (disk->fops->ioctl)
--		return disk->fops->ioctl(bdev, mode, cmd, arg);
--
--	return -ENOTTY;
--}
--/*
-- * For the record: _GPL here is only because somebody decided to slap it
-- * on the previous export.  Sheer idiocy, since it wasn't copyrightable
-- * at all and could be open-coded without any exports by anybody who cares.
-- */
--EXPORT_SYMBOL_GPL(__blkdev_driver_ioctl);
--
- #ifdef CONFIG_COMPAT
- /*
-  * This is the equivalent of compat_ptr_ioctl(), to be used by block
-@@ -594,10 +577,12 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	}
- 
- 	ret = blkdev_common_ioctl(bdev, mode, cmd, arg, argp);
--	if (ret == -ENOIOCTLCMD)
--		return __blkdev_driver_ioctl(bdev, mode, cmd, arg);
-+	if (ret != -ENOIOCTLCMD)
-+		return ret;
- 
--	return ret;
-+	if (!bdev->bd_disk->fops->ioctl)
-+		return -ENOTTY;
-+	return bdev->bd_disk->fops->ioctl(bdev, mode, cmd, arg);
- }
- EXPORT_SYMBOL_GPL(blkdev_ioctl); /* for /dev/raw */
- 
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index 467dbd06b7cdb1..ef1c1f094ea4fc 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -2584,9 +2584,11 @@ static int pkt_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd,
- 	case CDROM_LAST_WRITTEN:
- 	case CDROM_SEND_PACKET:
- 	case SCSI_IOCTL_SEND_COMMAND:
--		ret = __blkdev_driver_ioctl(pd->bdev, mode, cmd, arg);
-+		if (!bdev->bd_disk->fops->ioctl)
-+			ret = -ENOTTY;
-+		else
-+			ret = bdev->bd_disk->fops->ioctl(bdev, mode, cmd, arg);
- 		break;
--
- 	default:
- 		pkt_dbg(2, pd, "Unknown ioctl (%x)\n", cmd);
- 		ret = -ENOTTY;
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 21432638314562..afac8d07c1bd00 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -1230,8 +1230,9 @@ static int cached_dev_ioctl(struct bcache_device *d, fmode_t mode,
- 
- 	if (dc->io_disable)
- 		return -EIO;
--
--	return __blkdev_driver_ioctl(dc->bdev, mode, cmd, arg);
-+	if (!dc->bdev->bd_disk->fops->ioctl)
-+		return -ENOTTY;
-+	return dc->bdev->bd_disk->fops->ioctl(dc->bdev, mode, cmd, arg);
- }
- 
- void bch_cached_dev_request_init(struct cached_dev *dc)
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index c18fc25485186d..6db395c3d28be8 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -570,7 +570,10 @@ static int dm_blk_ioctl(struct block_device *bdev, fmode_t mode,
- 		}
- 	}
- 
--	r =  __blkdev_driver_ioctl(bdev, mode, cmd, arg);
-+	if (!bdev->bd_disk->fops->ioctl)
-+		r = -ENOTTY;
-+	else
-+		r = bdev->bd_disk->fops->ioctl(bdev, mode, cmd, arg);
- out:
- 	dm_unprepare_ioctl(md, srcu_idx);
- 	return r;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 5c1ba8a8d2bc7e..05b346a68c2eee 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1867,8 +1867,6 @@ extern int blkdev_compat_ptr_ioctl(struct block_device *, fmode_t,
- #define blkdev_compat_ptr_ioctl NULL
- #endif
- 
--extern int __blkdev_driver_ioctl(struct block_device *, fmode_t, unsigned int,
--				 unsigned long);
- extern int bdev_read_page(struct block_device *, sector_t, struct page *);
- extern int bdev_write_page(struct block_device *, sector_t, struct page *,
- 						struct writeback_control *);
--- 
-2.28.0
+I don't think it's worth worrying about a logical block size that's
+more than 4K here--from what I can see logical block size larger than
+the usual 4K page isn't going to happen.
 
+I do think that it makes sense to handle the case where the physical
+block size is more than 4K.  I think what you propose works, but I
+think in the physical block > MAX_SB_SIZE case it makes more sense to
+align the superblock writes to the physical block size (as now) rather
+than rejecting the create/assemble.  Mounting with the possible
+performance hit seems like a better outcome for the user in that case
+than refusing to assemble.
+It's the same check that would have to be written to reject the
+assembly in that case and so the code shouldn't really be any more
+complex.
+
+So basically what I propose is:  if the physical block size is no
+larger than MAX_SB_SIZE, pad to that; otherwise pad to to
+logical_block_size, that is, replace queue_logical_block_size()
+with something equivalent to:
+
+    queue_physical_block_size(...) > MAX_SB_SIZE ?
+queue_logical_block_size(...) : queue_physical_block_size(...)
+
+which is simple, safe in all cases, doesn't reject any feasible
+assembly, and generates aligned sb writes on all common current
+devices (512n,4kn,512e.)
+
+What do you think?
+
+Regards,
+
+  --Chris
+
+On Sun, Nov 1, 2020 at 11:43 PM Xiao Ni <xni@redhat.com> wrote:
+>
+>
+>
+> On 10/30/2020 04:13 AM, Christopher Unkel wrote:
+> > Hello,
+> >
+> > Thanks for the feedback on the previous patch series.
+> >
+> > A updated patch series with the same function as the first patch
+> > (https://lkml.org/lkml/2020/10/22/1058 "md: align superblock writes to
+> > physical blocks") follows.
+> >
+> > As suggested, it introduces a helper function, which can be used to
+> > reduce some code duplication.  It handles the case in super_1_sync()
+> > where the superblock is extended by the addition of new component
+> > devices.
+> >
+> > I think it also fixes a bug where the existing code in super_1_load()
+> > ought to be rejecting the array with EINVAL: if the superblock padded
+> > out to the *logical* block length runs into the bitmap.  For example, if
+> > the bitmap offset is 2 (bitmap 1K after superblock) and the logical
+> > block size is 4K, the superblock padded out to 4K runs into the bitmap.
+> > This case may be unusual (perhaps only happens if the array is created
+> > on a 512n device and then raw contents are copied onto a 4kn device) but
+> > I think it is possible.
+> Hi Chris
+> For super1.1 and super1.2 bitmap offset is 8. It's a fixed value. So it
+> should
+> not have the risk?
+>
+> But for future maybe it has this problem. If the disk logical or
+> physical block size
+> is larger than 4K in future, it has data corruption risk.
+> >
+> > With respect to the option of simply replacing
+> > queue_logical_block_size() with queue_physical_block_size(), I think
+> > this can result in the code rejecting devices that can be loaded, but
+> In mdadm it defines the max super size of super1 is 4096
+> #define MAX_SB_SIZE 4096
+> /* bitmap super size is 256, but we round up to a sector for alignment */
+> #define BM_SUPER_SIZE 512
+> #define MAX_DEVS ((int)(MAX_SB_SIZE - sizeof(struct mdp_superblock_1)) / 2)
+> #define SUPER1_SIZE     (MAX_SB_SIZE + BM_SUPER_SIZE \
+>                           + sizeof(struct misc_dev_info))
+>
+> It should be ok to replace queue_logical_block_size with
+> queue_physical_block_size?
+> Now it doesn't check physical block size and super block size. For
+> super1, we can add
+> a check that if physical block size is larger than MAX_SB_SIZE, then we
+> reject to create/assmble
+> the raid device.
+> > for which the physical block alignment can't be respected--the longer
+> > padded size would trigger the EINVAL cases testing against
+> > data_offset/new_data_offset.  I think it's better to proceed in such
+> > cases, just with unaligned superblock writes as would presently happen.
+> > Also if I'm right about the above bug, then I think this subsitution
+> > would be more likely to trigger it.
+> >
+> > Thanks,
+> >
+> >    --Chris
+> >
+> >
+> > Christopher Unkel (3):
+> >    md: factor out repeated sb alignment logic
+> >    md: align superblock writes to physical blocks
+> >    md: reuse sb length-checking logic
+> >
+> >   drivers/md/md.c | 69 +++++++++++++++++++++++++++++++++++++------------
+> >   1 file changed, 52 insertions(+), 17 deletions(-)
+> >
+>
