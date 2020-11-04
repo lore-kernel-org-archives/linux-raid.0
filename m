@@ -1,184 +1,123 @@
-Return-Path: <SRS0=1EIv=EJ=vger.kernel.org=linux-raid-owner@kernel.org>
+Return-Path: <SRS0=4QbR=EK=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5613C388F7
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 20:12:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B958C2D0A3
+	for <linux-raid@archiver.kernel.org>; Wed,  4 Nov 2020 02:42:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 624CB206F1
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Nov 2020 20:12:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D29FA2236F
+	for <linux-raid@archiver.kernel.org>; Wed,  4 Nov 2020 02:42:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=drivescale-com.20150623.gappssmtp.com header.i=@drivescale-com.20150623.gappssmtp.com header.b="O7zOsHoJ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Yu8uILbq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728527AbgKCUMP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 3 Nov 2020 15:12:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44708 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727688AbgKCUMO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Nov 2020 15:12:14 -0500
-Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A9C5C0617A6
-        for <linux-raid@vger.kernel.org>; Tue,  3 Nov 2020 12:12:13 -0800 (PST)
-Received: by mail-ot1-x341.google.com with SMTP id y22so6687696oti.10
-        for <linux-raid@vger.kernel.org>; Tue, 03 Nov 2020 12:12:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=drivescale-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=csm6WJIqkvgmHgjyFbVOCKjF/qQY6zaL8P5DbbzYf5w=;
-        b=O7zOsHoJsyNmSctB0hK/p1kq9D4Cf8l1PE33c5vl9PD3ENNqc46es0CXlSAKn3elQC
-         vBj7lEgL1EUxhewi8dyETj92Cp60JPR/ydwC9dZZY9SeebuEtot5UC2VXxo0s8f5s19r
-         BHnOxC/7Qy5YMXKJZN6T7VR7RnDZKx3TBGvgYpyUuxNTyr9KBiylO77bEpg2S6v7ZeYW
-         bqFHs81C5qtwfz82Twd7VX7U0z7vpmboXKwB57B7dSlCGVguiYWN7kJapx8OVNo5av+j
-         yRf/JR9az66TlaVbxQLRlHn6OvCymaxY6I1Id7aHMXDai/L9xZwNrBuDf22FxSwqLFSg
-         tNhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=csm6WJIqkvgmHgjyFbVOCKjF/qQY6zaL8P5DbbzYf5w=;
-        b=AQ8yoWcTrDXq/fvhVtLlqWAl2kmf8+zR0TYOO5RHQ8vax+U4tajVikyaWNXsizU/GF
-         ZG1sBn1t11gzfWprjl7FSB+x/O++H1jkp/NzsHt2Udeuf4MUFl1XhimWLFwc4Mk8K6SE
-         AfShuNF4fUgk0J2sy9j7Ipam62C32kWt/DO4WfupTpjAT1sGK+yARS1bnYd5x2xLnQhu
-         W8BUAm1WgJnROvTx+/FwKjIK7EapMotsY5QfezG9SRuH8PmCly8YJm5qqeXRyvZY33KW
-         GV6I1w4f4WFW5ARWym7Xr5Fgi2nQEkByqJGzd3QpISNxVhJNmkFwrLj2K6yFdZga9wHe
-         FgQQ==
-X-Gm-Message-State: AOAM532vaqUnaOvdwSoeGQqtpHdYlL1jstGoSJ8YDI6uectjtnkYagVL
-        mIGAUlXnHdDxEG4ryN0gRUJ4imWUjuhSpHikQiGb9w==
-X-Google-Smtp-Source: ABdhPJz5PAXuw4nvCoOi2WMbeaAaYxFbUwsUxwUrIuKo9hsfaVXO5qZ3KTaQqFX7qJ+DkibTNBKBkh6JeDQfHPHfPac=
-X-Received: by 2002:a9d:7cd7:: with SMTP id r23mr15671271otn.228.1604434332404;
- Tue, 03 Nov 2020 12:12:12 -0800 (PST)
-MIME-Version: 1.0
-References: <20201029201358.29181-1-cunkel@drivescale.com> <265efd48-b0c6-cba5-c77e-5efb0e6b9e00@redhat.com>
-In-Reply-To: <265efd48-b0c6-cba5-c77e-5efb0e6b9e00@redhat.com>
-From:   Chris Unkel <cunkel@drivescale.com>
-Date:   Tue, 3 Nov 2020 12:12:00 -0800
-Message-ID: <CAHFUYDo23BBq0R5mZBZgcCEzE=rN_ZYHCZp5WEs-nBZwYeyEnA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] md superblock write alignment on 512e devices
-To:     Xiao Ni <xni@redhat.com>
+        id S1730679AbgKDCmf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 3 Nov 2020 21:42:35 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:40525 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730153AbgKDCme (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Nov 2020 21:42:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1604457753;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zpo4q12oXG/yCzxI7RWwU0WV11iZu1bOFDfnVLke5Dk=;
+        b=Yu8uILbqkHaEv4ka5sEikK8S7hQ9Z2TifA/6qkI6gCnMIjGXi6TlnAvw7BvFud+JxYvNrB
+        JvTmNzGW+SFtroN3sfXtYULqP/qW6FHp4CDgZKJrGh+xp2I9CntYpkqMJldSIOgjl/Ku2q
+        Zes7kt4ybBeNlxeco9fOKXDNDSiOOk8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-302-r67hww1UPA2Q9cfbXgsIpg-1; Tue, 03 Nov 2020 21:42:31 -0500
+X-MC-Unique: r67hww1UPA2Q9cfbXgsIpg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8710080365D;
+        Wed,  4 Nov 2020 02:42:30 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-8-30.pek2.redhat.com [10.72.8.30])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 95F91610F3;
+        Wed,  4 Nov 2020 02:42:27 +0000 (UTC)
+Subject: Re: The raid device can't be unmount when it can't work
+To:     Phillip Susi <phill@thesusis.net>
 Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        Nigel Croxon <ncroxon@redhat.com>
+References: <9b6db7d5-4a34-a1f9-2314-5e3522555052@redhat.com>
+ <87tuu7y0vq.fsf@vps.thesusis.net>
+From:   Xiao Ni <xni@redhat.com>
+Message-ID: <f51a8b6a-4da7-ca0a-ac35-8bc478c64ada@redhat.com>
+Date:   Wed, 4 Nov 2020 10:42:25 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
+MIME-Version: 1.0
+In-Reply-To: <87tuu7y0vq.fsf@vps.thesusis.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Xiao,
 
-Thanks for the excellent feedback.  Since bitmap_offset appears to be
-a free-form field, it wasn't apparent to me that the bitmap never
-starts within 4K of the bitmap.
 
-I don't think it's worth worrying about a logical block size that's
-more than 4K here--from what I can see logical block size larger than
-the usual 4K page isn't going to happen.
-
-I do think that it makes sense to handle the case where the physical
-block size is more than 4K.  I think what you propose works, but I
-think in the physical block > MAX_SB_SIZE case it makes more sense to
-align the superblock writes to the physical block size (as now) rather
-than rejecting the create/assemble.  Mounting with the possible
-performance hit seems like a better outcome for the user in that case
-than refusing to assemble.
-It's the same check that would have to be written to reject the
-assembly in that case and so the code shouldn't really be any more
-complex.
-
-So basically what I propose is:  if the physical block size is no
-larger than MAX_SB_SIZE, pad to that; otherwise pad to to
-logical_block_size, that is, replace queue_logical_block_size()
-with something equivalent to:
-
-    queue_physical_block_size(...) > MAX_SB_SIZE ?
-queue_logical_block_size(...) : queue_physical_block_size(...)
-
-which is simple, safe in all cases, doesn't reject any feasible
-assembly, and generates aligned sb writes on all common current
-devices (512n,4kn,512e.)
-
-What do you think?
-
-Regards,
-
-  --Chris
-
-On Sun, Nov 1, 2020 at 11:43 PM Xiao Ni <xni@redhat.com> wrote:
+On 11/03/2020 04:11 AM, Phillip Susi wrote:
+> Xiao Ni writes:
 >
+>> When one raid loses disks that are bigger than the max degraded number,
+>> the udev rule[1] tries to stop
+>> the raid device. If the raid device is mount, it tries to unmount it
+> Why?  If there are open files on it, you won't be able to unmount it
+> anyway, and what would you gain by stopping the broken device?
+Hi Phillip
+
+This policy was introduced by this patch:
+
+commit 8af530b07fce27f56c56b2ffd254a40b4ab67c6b
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue Mar 5 09:46:34 2013 +1100
+
+     Enhance incremental removal.
+
+     When asked to incrementally-remove a device, try marking the array
+     read-auto first.  That will delay recording the failure in the
+     metadata until it is really relevant.
+     This way, if the device are just unplugged when the array is not
+     really in use, the metadata will remain clean.
+
+     If marking the default as faulty fails because it is EBUSY, that
+     implies that the array would be failed without the device.  As the
+     device has (presumably gone) - that means the array is dead.  So try
+     to stop it.  If that fails because it is in use, send a uevent to
+     report that it is gone.  Hopefully whoever mounted it will now let go.
+
+     This means that if  you plug in some devices and they are
+     auto-assembled, then unplugging them will auto-deassemble relatively
+     cleanly.
+
+     To be complete, we really need the kernel to disassemble the array
+     after the last close somehow.  Maybe if a REMOVE has failed and a STOP
+     has failed and nothing else much has happened, it could safely stop
+     the array on last close.
+
 >
+>> first[2]. It uses udisks command to do this.
+>> It's a little old. Now the package version is udisks2 which uses
+>> udisksctl to do this. I write a patch[3] and do
+>> test. It's failed because of "udisksctl error Permission denied".
+> Udisks is a GNOME desktop component, and so may not even exist on many
+> systems.  When it does, you still can't call it from udev scripts since
+> they are not run within the desktop in the context of a logged in user.
+> If you want to unmount the device, just use umount.
 >
-> On 10/30/2020 04:13 AM, Christopher Unkel wrote:
-> > Hello,
-> >
-> > Thanks for the feedback on the previous patch series.
-> >
-> > A updated patch series with the same function as the first patch
-> > (https://lkml.org/lkml/2020/10/22/1058 "md: align superblock writes to
-> > physical blocks") follows.
-> >
-> > As suggested, it introduces a helper function, which can be used to
-> > reduce some code duplication.  It handles the case in super_1_sync()
-> > where the superblock is extended by the addition of new component
-> > devices.
-> >
-> > I think it also fixes a bug where the existing code in super_1_load()
-> > ought to be rejecting the array with EINVAL: if the superblock padded
-> > out to the *logical* block length runs into the bitmap.  For example, if
-> > the bitmap offset is 2 (bitmap 1K after superblock) and the logical
-> > block size is 4K, the superblock padded out to 4K runs into the bitmap.
-> > This case may be unusual (perhaps only happens if the array is created
-> > on a 512n device and then raw contents are copied onto a 4kn device) but
-> > I think it is possible.
-> Hi Chris
-> For super1.1 and super1.2 bitmap offset is 8. It's a fixed value. So it
-> should
-> not have the risk?
->
-> But for future maybe it has this problem. If the disk logical or
-> physical block size
-> is larger than 4K in future, it has data corruption risk.
-> >
-> > With respect to the option of simply replacing
-> > queue_logical_block_size() with queue_physical_block_size(), I think
-> > this can result in the code rejecting devices that can be loaded, but
-> In mdadm it defines the max super size of super1 is 4096
-> #define MAX_SB_SIZE 4096
-> /* bitmap super size is 256, but we round up to a sector for alignment */
-> #define BM_SUPER_SIZE 512
-> #define MAX_DEVS ((int)(MAX_SB_SIZE - sizeof(struct mdp_superblock_1)) / 2)
-> #define SUPER1_SIZE     (MAX_SB_SIZE + BM_SUPER_SIZE \
->                           + sizeof(struct misc_dev_info))
->
-> It should be ok to replace queue_logical_block_size with
-> queue_physical_block_size?
-> Now it doesn't check physical block size and super block size. For
-> super1, we can add
-> a check that if physical block size is larger than MAX_SB_SIZE, then we
-> reject to create/assmble
-> the raid device.
-> > for which the physical block alignment can't be respected--the longer
-> > padded size would trigger the EINVAL cases testing against
-> > data_offset/new_data_offset.  I think it's better to proceed in such
-> > cases, just with unaligned superblock writes as would presently happen.
-> > Also if I'm right about the above bug, then I think this subsitution
-> > would be more likely to trigger it.
-> >
-> > Thanks,
-> >
-> >    --Chris
-> >
-> >
-> > Christopher Unkel (3):
-> >    md: factor out repeated sb alignment logic
-> >    md: align superblock writes to physical blocks
-> >    md: reuse sb length-checking logic
-> >
-> >   drivers/md/md.c | 69 +++++++++++++++++++++++++++++++++++++------------
-> >   1 file changed, 52 insertions(+), 17 deletions(-)
-> >
->
+Thanks for sharing the knowledge.
+
+Regards
+Xiao
+
