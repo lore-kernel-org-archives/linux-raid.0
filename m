@@ -2,109 +2,199 @@ Return-Path: <SRS0=7RKO=EL=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 327E9C4741F
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Nov 2020 18:08:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CE4EC5517A
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Nov 2020 20:58:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7ED420709
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Nov 2020 18:08:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2E4E20735
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Nov 2020 20:58:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MCVx0bZp"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="aDt+mWvk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727851AbgKESIJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Nov 2020 13:08:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50798 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725862AbgKESII (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Nov 2020 13:08:08 -0500
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43EE1C0613CF
-        for <linux-raid@vger.kernel.org>; Thu,  5 Nov 2020 10:08:07 -0800 (PST)
-Received: by mail-pj1-x1044.google.com with SMTP id w7so472371pjy.1
-        for <linux-raid@vger.kernel.org>; Thu, 05 Nov 2020 10:08:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=u1qY+4ADGmO3FXtfgKtBLuD/hMettBhnyT5e01W+V2w=;
-        b=MCVx0bZp6NPEgbSZ5pJHDjf+8eOQHNgHazdy1CMDW1bQHxJSiAI+BKn0+6Wnfiya4V
-         zybRIYod/CIXhT9jua2KEEUUXzZVXJi7TY2Forjnhk+EwipT88LHAPSfTBWlv1Rx3RzS
-         wrliMe6p46Xa03uGOeMIhCWJxFgGzq2pvVWI5XcykCopxrMuenmgAp5GVZlksXpvZ590
-         H5BIEpsnWr9CcIDUlPHqoM8KQ+Q+R1bkpHrJcspe6rsbb10pB2G585MGQ+CTZ96ry4HC
-         g9/XgyZzKCgJ81nGTPMONLpbitG4wUfO5ufMrBHr53x7Lwq5IBkG8NGzHihARszCUETP
-         LH3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=u1qY+4ADGmO3FXtfgKtBLuD/hMettBhnyT5e01W+V2w=;
-        b=Bok6CQJJivB3Lxheljh+e+vRRhdGwmAO3j8uHZSR282eZZWv22J3BeQ7ScCYJ+jObZ
-         4ApwURtUoh2XJdUNQLryhCJUNQHoCK5Ma1X8K0w4PbxYTwR+1qRr5nvNXxG2c1P63aaQ
-         OZ4yisLGJ/oe+rOo0bjGPXvzEDADpwb3d9txxwN9IHGUGAYvTBDbkDFL2f3h2S+yY1J3
-         601R9MHt8shwFme+ftqnWmGSPyRWYvTZjot5AGWliO18PrvlQSM6h42PtLYp9DcDsya2
-         iBZdfP8Mm5/Kt2zrB4J76UJBEp6DdZ5inD2hLM6odakHTSmJheqSpjx/tZq1X9KbK4fX
-         Ft7w==
-X-Gm-Message-State: AOAM532cEq+3lFdazjPZi6qZDXQNX5shA7UpKf8A12WEhLPneO5EPvuF
-        MKrvcQXvSHLkWui3GL8XKoQ=
-X-Google-Smtp-Source: ABdhPJynOLEx1B+IRkn/znqzkWej8avTkuEpXfRuW0x6zDMYUZukGwxDJWTBbL86E85OWnppxxh9tg==
-X-Received: by 2002:a17:902:ed01:b029:d6:bb79:d46a with SMTP id b1-20020a170902ed01b02900d6bb79d46amr3537670pld.76.1604599686779;
-        Thu, 05 Nov 2020 10:08:06 -0800 (PST)
-Received: from kvigor-fedora-R90RRLH2.thefacebook.com ([2620:10d:c090:400::5:b0c2])
-        by smtp.gmail.com with ESMTPSA id a8sm2885789pgt.1.2020.11.05.10.08.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2020 10:08:05 -0800 (PST)
-From:   Kevin Vigor <kvigor@gmail.com>
-To:     song@kernel.org, linux-raid@vger.kernel.org
-Cc:     Kevin Vigor <kvigor@gmail.com>
-Subject: [PATCH] md/raid10: initialize r10_bio->read_slot before use.
-Date:   Thu,  5 Nov 2020 10:07:46 -0800
-Message-Id: <20201105180746.1149364-1-kvigor@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S1732120AbgKEU6A (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Nov 2020 15:58:00 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:16442 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726801AbgKEU6A (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Nov 2020 15:58:00 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0A5KuOAk106406;
+        Thu, 5 Nov 2020 15:57:03 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=uIaPG9KOvlm0C7hDrH8NX5ORxxb/hO/D/dXfsLrewTk=;
+ b=aDt+mWvklXfmHhHG+r46Ld+1w9kYvuX5tZDw4VQ2XINT6U6AL8jkzD7BtLcRmZ41fY5F
+ EvdzpDppKiOthGc2PGcVJ5zo99X5EvjzHpFprz85OGg8QqD1EU7JHi0v/SXHHMP9slZF
+ EaFZlvLbKbJngPv2gUcEmNmWJuB0kmVqOluBupuLD/OkzEi5jSXgO0+mbvsrc7qQfxER
+ T7vWWmCWzuUOlXTzRDcqR0stKq0TgmVar83wN6hlzMSZKwldiE/ZDU3si+IBPZxFLTlL
+ ckzhFCNGXbwoWR01rcNxSYKJkR6nta128L3X9577wTenqsU/HOenT3S9recPyDQEGxl5 Hw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 34mfdgne75-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 05 Nov 2020 15:57:03 -0500
+Received: from m0098393.ppops.net (m0098393.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0A5Kv3IJ108031;
+        Thu, 5 Nov 2020 15:57:03 -0500
+Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 34mfdgne68-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 05 Nov 2020 15:57:02 -0500
+Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
+        by ppma06fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0A5Kv0qE019035;
+        Thu, 5 Nov 2020 20:57:00 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma06fra.de.ibm.com with ESMTP id 34h01kk0bc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 05 Nov 2020 20:57:00 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0A5Kuwve41484616
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 5 Nov 2020 20:56:58 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4E060A4051;
+        Thu,  5 Nov 2020 20:56:58 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E0026A4040;
+        Thu,  5 Nov 2020 20:56:57 +0000 (GMT)
+Received: from imap.linux.ibm.com (unknown [9.152.85.9])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Thu,  5 Nov 2020 20:56:57 +0000 (GMT)
+Date:   Thu, 5 Nov 2020 21:56:47 +0100
+From:   Stefan Haberland <sth@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Ilya Dryomov <idryomov@gmail.com>,
+        Song Liu <song@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org
+Subject: Re: [PATCH 06/10] dasd: implement ->set_read_only to hook into
+ BLKROSET processing
+Message-ID: <20201105205634.GA78869@imap.linux.ibm.com>
+References: <20201103100018.683694-1-hch@lst.de>
+ <20201103100018.683694-7-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201103100018.683694-7-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-05_14:2020-11-05,2020-11-05 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 mlxscore=0 lowpriorityscore=0
+ priorityscore=1501 impostorscore=0 clxscore=1011 phishscore=0 adultscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011050129
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In __make_request() a new r10bio is allocated and passed to
-raid10_read_request(). The read_slot member of the bio is not
-initialized, and the raid10_read_request() uses it to index an
-array. This leads to occasional panics.
+Christoph Hellwig <hch@lst.de> schrieb am Tue, 03. Nov 11:00:
+> Implement the ->set_read_only method instead of parsing the actual
+> ioctl command.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/s390/block/dasd.c       |  1 +
+>  drivers/s390/block/dasd_int.h   |  3 ++-
+>  drivers/s390/block/dasd_ioctl.c | 27 +++++++++------------------
+>  3 files changed, 12 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/s390/block/dasd.c b/drivers/s390/block/dasd.c
+> index eb17fea8075c6f..db24e04ee9781e 100644
+> --- a/drivers/s390/block/dasd.c
+> +++ b/drivers/s390/block/dasd.c
+> @@ -3394,6 +3394,7 @@ dasd_device_operations = {
+>  	.ioctl		= dasd_ioctl,
+>  	.compat_ioctl	= dasd_ioctl,
+>  	.getgeo		= dasd_getgeo,
+> +	.set_read_only	= dasd_set_read_only,
+>  };
+>  
+>  /*******************************************************************************
+> diff --git a/drivers/s390/block/dasd_int.h b/drivers/s390/block/dasd_int.h
+> index fa552f9f166671..c59a0d63b506e6 100644
+> --- a/drivers/s390/block/dasd_int.h
+> +++ b/drivers/s390/block/dasd_int.h
+> @@ -844,7 +844,8 @@ int dasd_scan_partitions(struct dasd_block *);
+>  void dasd_destroy_partitions(struct dasd_block *);
+>  
+>  /* externals in dasd_ioctl.c */
+> -int  dasd_ioctl(struct block_device *, fmode_t, unsigned int, unsigned long);
+> +int dasd_ioctl(struct block_device *, fmode_t, unsigned int, unsigned long);
+> +int dasd_set_read_only(struct block_device *bdev, bool ro);
+>  
+>  /* externals in dasd_proc.c */
+>  int dasd_proc_init(void);
+> diff --git a/drivers/s390/block/dasd_ioctl.c b/drivers/s390/block/dasd_ioctl.c
+> index cb6427fb9f3d16..3359559517bfcf 100644
+> --- a/drivers/s390/block/dasd_ioctl.c
+> +++ b/drivers/s390/block/dasd_ioctl.c
+> @@ -532,28 +532,22 @@ static int dasd_ioctl_information(struct dasd_block *block, void __user *argp,
+>  /*
+>   * Set read only
+>   */
+> -static int
+> -dasd_ioctl_set_ro(struct block_device *bdev, void __user *argp)
+> +int dasd_set_read_only(struct block_device *bdev, bool ro)
+>  {
+>  	struct dasd_device *base;
+> -	int intval, rc;
+> +	int rc;
+>  
+> -	if (!capable(CAP_SYS_ADMIN))
+> -		return -EACCES;
+> +	/* do not manipulate hardware state for partitions */
+>  	if (bdev_is_partition(bdev))
+> -		// ro setting is not allowed for partitions
+> -		return -EINVAL;
+> -	if (get_user(intval, (int __user *)argp))
+> -		return -EFAULT;
+> +		return 0;
+> +
+>  	base = dasd_device_from_gendisk(bdev->bd_disk);
+>  	if (!base)
+>  		return -ENODEV;
+> -	if (!intval && test_bit(DASD_FLAG_DEVICE_RO, &base->flags)) {
+> -		dasd_put_device(base);
+> -		return -EROFS;
+> -	}
+> -	set_disk_ro(bdev->bd_disk, intval);
 
-Fix by initializing the field to invalid value and checking for
-valid value in raid10_read_request().
 
-Signed-off-by: Kevin Vigor <kvigor@gmail.com>
----
- drivers/md/raid10.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+While testing this patch I just noticed that when I set a device readonly this is
+not going to be passed on to the partitions on this device any longer.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 8a1354a08a1a..64b1306b0c4a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1143,7 +1143,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
- 	struct md_rdev *err_rdev = NULL;
- 	gfp_t gfp = GFP_NOIO;
- 
--	if (r10_bio->devs[slot].rdev) {
-+	if (slot >= 0 && r10_bio->devs[slot].rdev) {
- 		/*
- 		 * This is an error retry, but we cannot
- 		 * safely dereference the rdev in the r10_bio,
-@@ -1508,6 +1508,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 	r10_bio->mddev = mddev;
- 	r10_bio->sector = bio->bi_iter.bi_sector;
- 	r10_bio->state = 0;
-+	r10_bio->read_slot = -1;
- 	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * conf->copies);
- 
- 	if (bio_data_dir(bio) == READ)
--- 
-2.26.2
+This is caused by the removed call to set_disk_ro().
 
+Is this intentional or was this removed by accident?
+
+> -	rc = dasd_set_feature(base->cdev, DASD_FEATURE_READONLY, intval);
+> +	if (!ro && test_bit(DASD_FLAG_DEVICE_RO, &base->flags))
+> +		rc = -EROFS;
+> +	else
+> +		rc = dasd_set_feature(base->cdev, DASD_FEATURE_READONLY, ro);
+>  	dasd_put_device(base);
+>  	return rc;
+>  }
+> @@ -633,9 +627,6 @@ int dasd_ioctl(struct block_device *bdev, fmode_t mode,
+>  	case BIODASDPRRST:
+>  		rc = dasd_ioctl_reset_profile(block);
+>  		break;
+> -	case BLKROSET:
+> -		rc = dasd_ioctl_set_ro(bdev, argp);
+> -		break;
+>  	case DASDAPIVER:
+>  		rc = dasd_ioctl_api_version(argp);
+>  		break;
+> -- 
+> 2.28.0
+> 
