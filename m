@@ -2,127 +2,107 @@ Return-Path: <SRS0=g69Z=EM=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBD5BC388F2
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD0DBC55ABD
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:17:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A394208C7
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:06:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B69B21D7F
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:17:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U1It/9Vb"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XQ250mRn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728293AbgKFTGM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Nov 2020 14:06:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59274 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728049AbgKFTES (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Nov 2020 14:04:18 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9404DC0613D3;
-        Fri,  6 Nov 2020 11:04:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=S6R/LHkwABMFjsoJfGZBhUHQ6k4Dx5wFWz0jliJ5rD4=; b=U1It/9VbhOthOZFs+YaVYw6zCF
-        hNCoh8Q0VrrRw+fcw+giRCsYx4IzyJqpYjQUkT9hnCEW7vlBjyfGp4xQIQZdpzcZqGIczsa9Rbzeq
-        csXqFZUcF409NVlMSBJ6emZObaktQ+PW12dNKE6Wt3cwNbOS6p1R+LMqGZ6N5QYbqrmyAk58AFU7i
-        vOL8ZxppeFPE2SWuIK6cM1/GCx9SodNxTSAOH8MIGdsdIVTf6kNR7ak6SkuuXu0m07Pf4gSvqNRxz
-        GZKRdWmd7ZGqToecIIzl+SJ6plPlZPGQgVa0wCWrE9dOJ0tigJgjfSwvF9I0uonfZF33Uc7mHc/4w
-        bMzYnQig==;
-Received: from [2001:4bb8:184:9a8d:9e34:f7f4:e59e:ad6f] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kb71l-0000vc-9Z; Fri, 06 Nov 2020 19:04:02 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 07/24] nbd: remove the call to set_blocksize
-Date:   Fri,  6 Nov 2020 20:03:19 +0100
-Message-Id: <20201106190337.1973127-8-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201106190337.1973127-1-hch@lst.de>
-References: <20201106190337.1973127-1-hch@lst.de>
+        id S1728029AbgKFTRD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Nov 2020 14:17:03 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38768 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727591AbgKFTRB (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Nov 2020 14:17:01 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0A6J2MRW157358;
+        Fri, 6 Nov 2020 14:16:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=brcEGuXx1SCR06xQpnTSpPb59yS8Em/gYIdOCt2y0Xk=;
+ b=XQ250mRndjvMwj+0Cjd4ClEN+e/27VN3KXNp0L0jiYMeevfYbjm+UZG0KuEbTauFQscV
+ IBZBTO6L49URkOqCiupfmUVxIbXcnF8ZDvNpmX5zVQuXJZ4/BPlm2Ch3sPr8yZ4/QBK9
+ /lRIaiD5sW/xBKp9PsDw176j7WOLFgcpBoZ4nzt4oFk8HWKlhKCeUvUlL9B6hEgWfzzY
+ as6md9UazK8xqOdVGPlogxSwtjG/VEb2iK7+OdnudHEejJgXRGNxS3m/rO7v33aVf3KU
+ Ku+hOghI/EmHF2thv6zrSSw9E//gA0NAg5Rq8fwuPEAAyjYOKI5eqc7KAabIzEI4IgLp 9w== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 34mnyjh0ww-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 06 Nov 2020 14:16:44 -0500
+Received: from m0098413.ppops.net (m0098413.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0A6J2tIP159426;
+        Fri, 6 Nov 2020 14:16:43 -0500
+Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 34mnyjh0wa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 06 Nov 2020 14:16:43 -0500
+Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
+        by ppma05fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0A6JCt2L031354;
+        Fri, 6 Nov 2020 19:16:41 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma05fra.de.ibm.com with ESMTP id 34h01qugky-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 06 Nov 2020 19:16:41 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0A6JGd0254919652
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 6 Nov 2020 19:16:39 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5B5754203F;
+        Fri,  6 Nov 2020 19:16:39 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D32D342042;
+        Fri,  6 Nov 2020 19:16:38 +0000 (GMT)
+Received: from imap.linux.ibm.com (unknown [9.152.85.9])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Fri,  6 Nov 2020 19:16:38 +0000 (GMT)
+Date:   Fri, 6 Nov 2020 20:16:32 +0100
+From:   Stefan Haberland <sth@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Ilya Dryomov <idryomov@gmail.com>,
+        Song Liu <song@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
+        martin.petersen@oracle.com
+Subject: Re: [PATCH, RFC 11/10] block: propagate BLKROSET to all partitions
+Message-ID: <20201106191632.GB76682@imap.linux.ibm.com>
+References: <20201106140817.GA23557@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201106140817.GA23557@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-06_06:2020-11-05,2020-11-06 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 spamscore=0 phishscore=0 impostorscore=0
+ lowpriorityscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011060132
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Block driver have no business setting the file system concept of a
-block size.
+Christoph Hellwig <hch@lst.de> schrieb am Fri, 06. Nov 15:08:
+> 
+> When setting the whole device read-only (or clearing the read-only
+> state), also update the policy for all partitions.  The s390 dasd
+> driver has awlways been doing this and it makes a lot of sense.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/block/nbd.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index c4f9ccf5cc2ac5..f618688a196654 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -296,7 +296,7 @@ static void nbd_size_clear(struct nbd_device *nbd)
- 	}
- }
- 
--static void nbd_size_update(struct nbd_device *nbd, bool start)
-+static void nbd_size_update(struct nbd_device *nbd)
- {
- 	struct nbd_config *config = nbd->config;
- 	struct block_device *bdev = bdget_disk(nbd->disk, 0);
-@@ -311,11 +311,9 @@ static void nbd_size_update(struct nbd_device *nbd, bool start)
- 	blk_queue_physical_block_size(nbd->disk->queue, config->blksize);
- 	set_capacity(nbd->disk, nr_sectors);
- 	if (bdev) {
--		if (bdev->bd_disk) {
-+		if (bdev->bd_disk)
- 			bd_set_nr_sectors(bdev, nr_sectors);
--			if (start)
--				set_blocksize(bdev, config->blksize);
--		} else
-+		else
- 			set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
- 		bdput(bdev);
- 	}
-@@ -329,7 +327,7 @@ static void nbd_size_set(struct nbd_device *nbd, loff_t blocksize,
- 	config->blksize = blocksize;
- 	config->bytesize = blocksize * nr_blocks;
- 	if (nbd->task_recv != NULL)
--		nbd_size_update(nbd, false);
-+		nbd_size_update(nbd);
- }
- 
- static void nbd_complete_rq(struct request *req)
-@@ -1309,7 +1307,7 @@ static int nbd_start_device(struct nbd_device *nbd)
- 		args->index = i;
- 		queue_work(nbd->recv_workq, &args->work);
- 	}
--	nbd_size_update(nbd, true);
-+	nbd_size_update(nbd);
- 	return error;
- }
- 
--- 
-2.28.0
+Tested on s390, works fine for me. Thanks.
 
