@@ -2,107 +2,110 @@ Return-Path: <SRS0=g69Z=EM=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD0DBC55ABD
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26664C2D0A3
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 21:57:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B69B21D7F
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:17:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XQ250mRn"
+	by mail.kernel.org (Postfix) with ESMTP id B24452087E
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 21:56:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1604699819;
+	bh=CLOm0ZLK99G+kgJq8r1qakTsSje+lm/jMkk7ECSGqEM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=EqI6PeMqmtY6XtKg/9nIbSixE+iUBGXTi3LpRX6pq6jI1vgOExOrn314liJLI/q2d
+	 MC3yKBrVYy/VjwJ5qYgSMl9pdDt9PFKmCZ/eNURmqAUc7AJjaTJyvNpp+KkHtFycJm
+	 c4x4vTIOosTJHOGuXHpouwndsSc/6YnRybwpDhZw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728029AbgKFTRD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Nov 2020 14:17:03 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38768 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727591AbgKFTRB (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Nov 2020 14:17:01 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0A6J2MRW157358;
-        Fri, 6 Nov 2020 14:16:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pp1; bh=brcEGuXx1SCR06xQpnTSpPb59yS8Em/gYIdOCt2y0Xk=;
- b=XQ250mRndjvMwj+0Cjd4ClEN+e/27VN3KXNp0L0jiYMeevfYbjm+UZG0KuEbTauFQscV
- IBZBTO6L49URkOqCiupfmUVxIbXcnF8ZDvNpmX5zVQuXJZ4/BPlm2Ch3sPr8yZ4/QBK9
- /lRIaiD5sW/xBKp9PsDw176j7WOLFgcpBoZ4nzt4oFk8HWKlhKCeUvUlL9B6hEgWfzzY
- as6md9UazK8xqOdVGPlogxSwtjG/VEb2iK7+OdnudHEejJgXRGNxS3m/rO7v33aVf3KU
- Ku+hOghI/EmHF2thv6zrSSw9E//gA0NAg5Rq8fwuPEAAyjYOKI5eqc7KAabIzEI4IgLp 9w== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 34mnyjh0ww-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 Nov 2020 14:16:44 -0500
-Received: from m0098413.ppops.net (m0098413.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0A6J2tIP159426;
-        Fri, 6 Nov 2020 14:16:43 -0500
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 34mnyjh0wa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 Nov 2020 14:16:43 -0500
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0A6JCt2L031354;
-        Fri, 6 Nov 2020 19:16:41 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma05fra.de.ibm.com with ESMTP id 34h01qugky-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 06 Nov 2020 19:16:41 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0A6JGd0254919652
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 6 Nov 2020 19:16:39 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5B5754203F;
-        Fri,  6 Nov 2020 19:16:39 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D32D342042;
-        Fri,  6 Nov 2020 19:16:38 +0000 (GMT)
-Received: from imap.linux.ibm.com (unknown [9.152.85.9])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Fri,  6 Nov 2020 19:16:38 +0000 (GMT)
-Date:   Fri, 6 Nov 2020 20:16:32 +0100
-From:   Stefan Haberland <sth@linux.ibm.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Ilya Dryomov <idryomov@gmail.com>,
-        Song Liu <song@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
-        martin.petersen@oracle.com
-Subject: Re: [PATCH, RFC 11/10] block: propagate BLKROSET to all partitions
-Message-ID: <20201106191632.GB76682@imap.linux.ibm.com>
-References: <20201106140817.GA23557@lst.de>
+        id S1728730AbgKFV47 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Nov 2020 16:56:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728672AbgKFV47 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 6 Nov 2020 16:56:59 -0500
+Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 086D52087E
+        for <linux-raid@vger.kernel.org>; Fri,  6 Nov 2020 21:56:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604699818;
+        bh=CLOm0ZLK99G+kgJq8r1qakTsSje+lm/jMkk7ECSGqEM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=1i6hgQNs7XoJqC155M/5FfXpEU6UQSdLfnIo7ECjFgnwRZGAtvnVon6BDsC0B8cjm
+         2EGAzyT0x9f3U6FEs/Tw7Japf+9DUn/YsSaBZMLjHjVJp+qeErq8E95Hhh/JrEvGCi
+         XWEa9A0M+aUHdJzKJhpdYP4rVnXmyL9Ul1GNm4ZY=
+Received: by mail-lf1-f43.google.com with SMTP id r19so1617542lfe.6
+        for <linux-raid@vger.kernel.org>; Fri, 06 Nov 2020 13:56:57 -0800 (PST)
+X-Gm-Message-State: AOAM533Y3flS+kC+L9v4Efyj83+i0PA65/XYl5kw3AkGENbis0bVH7/G
+        ctKmQUCqRFXvW3G71jNqGFlbCVpBgKwqa2Fl2E4=
+X-Google-Smtp-Source: ABdhPJzgBwPf01XPJD/v5we9K8qmGZeTyvE5FGnYKX+RQBvJOsSehjXsSksTUbEuVSuLxRRyl8hzmzEW9rnRGJW+2gc=
+X-Received: by 2002:a19:c703:: with SMTP id x3mr1513367lff.105.1604699816222;
+ Fri, 06 Nov 2020 13:56:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201106140817.GA23557@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-11-06_06:2020-11-05,2020-11-06 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
- priorityscore=1501 bulkscore=0 spamscore=0 phishscore=0 impostorscore=0
- lowpriorityscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011060132
+References: <20201105180746.1149364-1-kvigor@gmail.com>
+In-Reply-To: <20201105180746.1149364-1-kvigor@gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 6 Nov 2020 13:56:45 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6GqEU7BczF2tpgtEJoU5Fdh4M17N9cobhSMdVY4NPD3w@mail.gmail.com>
+Message-ID: <CAPhsuW6GqEU7BczF2tpgtEJoU5Fdh4M17N9cobhSMdVY4NPD3w@mail.gmail.com>
+Subject: Re: [PATCH] md/raid10: initialize r10_bio->read_slot before use.
+To:     Kevin Vigor <kvigor@gmail.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> schrieb am Fri, 06. Nov 15:08:
-> 
-> When setting the whole device read-only (or clearing the read-only
-> state), also update the policy for all partitions.  The s390 dasd
-> driver has awlways been doing this and it makes a lot of sense.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, Nov 5, 2020 at 10:08 AM Kevin Vigor <kvigor@gmail.com> wrote:
+>
+> In __make_request() a new r10bio is allocated and passed to
+> raid10_read_request(). The read_slot member of the bio is not
+> initialized, and the raid10_read_request() uses it to index an
+> array. This leads to occasional panics.
+>
+> Fix by initializing the field to invalid value and checking for
+> valid value in raid10_read_request().
+>
+> Signed-off-by: Kevin Vigor <kvigor@gmail.com>
 
-Tested on s390, works fine for me. Thanks.
+Thanks for the fix!
 
+I am having problem apply this patch, could you please rebase against
+
+   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-next
+
+> ---
+>  drivers/md/raid10.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 8a1354a08a1a..64b1306b0c4a 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1143,7 +1143,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+>         struct md_rdev *err_rdev = NULL;
+>         gfp_t gfp = GFP_NOIO;
+>
+> -       if (r10_bio->devs[slot].rdev) {
+> +       if (slot >= 0 && r10_bio->devs[slot].rdev) {
+
+If we set default read_slot = 0, we should not need this change, right?
+
+>                 /*
+>                  * This is an error retry, but we cannot
+>                  * safely dereference the rdev in the r10_bio,
+> @@ -1508,6 +1508,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+>         r10_bio->mddev = mddev;
+>         r10_bio->sector = bio->bi_iter.bi_sector;
+>         r10_bio->state = 0;
+> +       r10_bio->read_slot = -1;
+>         memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * conf->copies);
+>
+>         if (bio_data_dir(bio) == READ)
+> --
+> 2.26.2
+>
