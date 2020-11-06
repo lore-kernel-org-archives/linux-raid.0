@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A55C63699
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:04:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DDDDC388F2
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:04:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE4AE20882
-	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:04:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 496EB20882
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Nov 2020 19:04:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N/BTEsal"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tH8UdTWn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728080AbgKFTEU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Nov 2020 14:04:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59262 "EHLO
+        id S1728063AbgKFTET (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Nov 2020 14:04:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726447AbgKFTEQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Nov 2020 14:04:16 -0500
+        with ESMTP id S1728036AbgKFTER (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 6 Nov 2020 14:04:17 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 460B2C0613CF;
-        Fri,  6 Nov 2020 11:04:15 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 228BCC0613D2;
+        Fri,  6 Nov 2020 11:04:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=z4FJvyEBdJUNH2ICfgDhXYhI93Iugb+FUQTixBMdEJs=; b=N/BTEsalf53sWMF1NynFhjnBWQ
-        uMEzJhDiUhbdgTn6HR32ujb4p0zRiPS+sOoVdEnyZv+Dij8IJUweK1eMVi2RBr1hXUSEwwavtHExg
-        sNr9j1HAVcinwU0zvVZ9QarhyRI4g+YDE9woukNnt8R+toHJE6Yyj0N6xE2RsmnTfWYuqVKiRBcdc
-        C+RJ0pjKXC9y7PJrEmbrlFyzinEMuLJP5ArJM2hoiLEKHH5IAxDcyRZUkdM+9P4+gn1Pn36IKFZYO
-        AdL3p37VKRLnvBgnAkwYvUIBdzrmEngx2OqoC8PTe/8DN9HA5diR/JaO+uxOByGNXLNxU91/DaxUA
-        FUf64JDg==;
+        bh=msAxRVgou3+s48HjnTxbv/pHmvKh+OTllxGOwTa9PDs=; b=tH8UdTWnkIuPETR5ERZJsxXqO9
+        RuvncvGLMp3eecYVL5xbljvoepHQIy9LJuMEB0q+0oEeVpE399lmWu6TR7di2UcX2jvpnbzMAgO+T
+        lVDmVMLdl2vdcru/zg5P/TlhhczznEvHfAs7dYsm2yxmv3ZUvGZmRnMrTXcu7NYlNoXgOCzkHUicc
+        AGwDOPnsGK9wvtFNI87/4PdBzDhhP3bDY7qTssXyAvbxU4+VHn4Hlisg3BkNqrDEoze0VUh2Ufbsg
+        sLEPDubY8OG8SNMA5E0TVDhcZDYddMUr3C9Qfc/tX9zYtsMYh7soL6M1ihPRkp1F9FRPk6C6a4b5z
+        IcLgD9AQ==;
 Received: from [2001:4bb8:184:9a8d:9e34:f7f4:e59e:ad6f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kb71f-0000uK-9c; Fri, 06 Nov 2020 19:03:56 +0000
+        id 1kb71j-0000vL-Sx; Fri, 06 Nov 2020 19:04:00 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 04/24] sd: update the bdev size in sd_revalidate_disk
-Date:   Fri,  6 Nov 2020 20:03:16 +0100
-Message-Id: <20201106190337.1973127-5-hch@lst.de>
+Subject: [PATCH 06/24] block: add a return value to set_capacity_and_notify
+Date:   Fri,  6 Nov 2020 20:03:18 +0100
+Message-Id: <20201106190337.1973127-7-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201106190337.1973127-1-hch@lst.de>
 References: <20201106190337.1973127-1-hch@lst.de>
@@ -70,49 +70,54 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This avoids the extra call to revalidate_disk_size in sd_rescan and
-is otherwise a no-op because the size did not change, or we are in
-the probe path.
+Return if the function ended up sending an uevent or not.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ block/genhd.c         | 7 +++++--
+ include/linux/genhd.h | 2 +-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 656bcf4940d6d1..4a34dd5b153196 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1750,10 +1750,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- static void sd_rescan(struct device *dev)
+diff --git a/block/genhd.c b/block/genhd.c
+index d8d9d6c1c916e1..8c350fecfe8bfe 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -47,9 +47,9 @@ static void disk_release_events(struct gendisk *disk);
+ 
+ /*
+  * Set disk capacity and notify if the size is not currently zero and will not
+- * be set to zero.
++ * be set to zero.  Returns true if a uevent was sent, otherwise false.
+  */
+-void set_capacity_and_notify(struct gendisk *disk, sector_t size)
++bool set_capacity_and_notify(struct gendisk *disk, sector_t size)
  {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	int ret;
+ 	sector_t capacity = get_capacity(disk);
  
--	ret = sd_revalidate_disk(sdkp->disk);
--	revalidate_disk_size(sdkp->disk, ret == 0);
-+	sd_revalidate_disk(sdkp->disk);
+@@ -60,7 +60,10 @@ void set_capacity_and_notify(struct gendisk *disk, sector_t size)
+ 		char *envp[] = { "RESIZE=1", NULL };
+ 
+ 		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
++		return true;
+ 	}
++
++	return false;
  }
+ EXPORT_SYMBOL_GPL(set_capacity_and_notify);
  
- static int sd_ioctl(struct block_device *bdev, fmode_t mode,
-@@ -3266,7 +3264,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	sdkp->first_scan = 0;
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 596f31b5a3e133..4b22bfd9336e1a 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -315,7 +315,7 @@ static inline int get_disk_ro(struct gendisk *disk)
+ extern void disk_block_events(struct gendisk *disk);
+ extern void disk_unblock_events(struct gendisk *disk);
+ extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
+-void set_capacity_and_notify(struct gendisk *disk, sector_t size);
++bool set_capacity_and_notify(struct gendisk *disk, sector_t size);
  
- 	set_capacity_revalidate_and_notify(disk,
--		logical_to_sectors(sdp, sdkp->capacity), false);
-+		logical_to_sectors(sdp, sdkp->capacity), true);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
- 
-@@ -3276,7 +3274,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 * capacity to 0.
- 	 */
- 	if (sd_zbc_revalidate_zones(sdkp))
--		set_capacity_revalidate_and_notify(disk, 0, false);
-+		set_capacity_revalidate_and_notify(disk, 0, true);
- 
-  out:
- 	return 0;
+ /* drivers/char/random.c */
+ extern void add_disk_randomness(struct gendisk *disk) __latent_entropy;
 -- 
 2.28.0
 
