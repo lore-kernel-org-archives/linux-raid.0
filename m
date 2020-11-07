@@ -2,103 +2,95 @@ Return-Path: <SRS0=Jo7I=EN=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C53D6C55178
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:17:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0531BC2D0A3
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:26:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64A162087E
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:17:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D2E920728
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:26:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604708269;
-	bh=w9AHeUgsbS21qz/kGcH7wQrUOhCa3nGk39KYZmKBWBU=;
+	s=default; t=1604708812;
+	bh=7nh6rlaj84d75XebUKRQkdD4FWYVD2xJfJqKAjkS5DE=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=WEZlAsp3oQurYWW7jU16987YaeAshpo4pYQXUtX1oLUrQBqESWp65KpeTxkokX6ek
-	 HR8l4glhaXvhHckkvD49uyui9FMgTMPuOjcpeYK1fzlTcpi1ed/kQ1vfrWVvyQB9wX
-	 /HfarAAagESyi56WV5h3vyUQe/dtcpKd/nFOeMGU=
+	b=ftfNSetDeBjUlI/dpLvnyBUMuHx8Wu1OgiXzbNRPrR2j9Yb8nBaPQtYMATHkMIPQa
+	 f+H3K9CZqQbRQm2hGW3ssGZwYOdEbJd4A/kZURhVEG5KK6JtKDFK/1nDYzEh+g/dRa
+	 y6sUZMLDTzGZaEkboSAPY+u5mSwK79x53/04BPVE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728130AbgKGARs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Nov 2020 19:17:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39238 "EHLO mail.kernel.org"
+        id S1728075AbgKGA0v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Nov 2020 19:26:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726987AbgKGARs (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 6 Nov 2020 19:17:48 -0500
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+        id S1727985AbgKGA0v (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 6 Nov 2020 19:26:51 -0500
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7680D2087E
-        for <linux-raid@vger.kernel.org>; Sat,  7 Nov 2020 00:17:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E54620728
+        for <linux-raid@vger.kernel.org>; Sat,  7 Nov 2020 00:26:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604708267;
-        bh=w9AHeUgsbS21qz/kGcH7wQrUOhCa3nGk39KYZmKBWBU=;
+        s=default; t=1604708810;
+        bh=7nh6rlaj84d75XebUKRQkdD4FWYVD2xJfJqKAjkS5DE=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=wpLfaLJCPHhfvLyvVJOY5FkVhxwxJTrUV+TtfvIYyph6I4ScJ98CUgGImlbf/cZB5
-         sRzCzXpVS0j9rofnkqEl8O0nmiNg2Vlo4Uj8UV9s94Nas+06PB8rqHjg6qNgA4mkNa
-         qV+Eti+KT/1ytLLE15kVhuye9/L9+/YQfeLsr/jY=
-Received: by mail-lj1-f175.google.com with SMTP id y25so2408204lja.9
-        for <linux-raid@vger.kernel.org>; Fri, 06 Nov 2020 16:17:47 -0800 (PST)
-X-Gm-Message-State: AOAM533hVJxJ2zwFy01k9ya18FVM0PEkttijEnczmhAYloe0tLJkUCb2
-        hgPNxcDkHmeWuDd7+XrNBgMHWHCLrxOz0iWdxdE=
-X-Google-Smtp-Source: ABdhPJziaqEfNV66C+cLVUgINMAMRoZt2wdxkqIlyo0FDbmHOKHjVQw3rdeafRh/fdcCok345SlIY/mPZ+nxJFVSdjw=
-X-Received: by 2002:a2e:6d09:: with SMTP id i9mr1707330ljc.10.1604708263677;
- Fri, 06 Nov 2020 16:17:43 -0800 (PST)
+        b=kATr3wtu6jlMha2D9NOrvX1NK96c5iK/frQQrZBw2mK9MPl9uIL1U1LhZh+mavT+4
+         5Ey6a+xxi+MrPGKbnHpQ0VlIaGPIggImMvPHmKUPoye2HpAe0txO72IYyhCzqSXIxB
+         s3WGanSCh9UAup0S34Po0WezKjnE9zVdmvPM6jho=
+Received: by mail-lf1-f51.google.com with SMTP id e27so4348608lfn.7
+        for <linux-raid@vger.kernel.org>; Fri, 06 Nov 2020 16:26:50 -0800 (PST)
+X-Gm-Message-State: AOAM533IORFj8Jjdi1wjsm0vzZyG1D/nm4Rgu/gdrUl2YnC6ENW34uzH
+        LfxQ90fR/fWrmqbb9F7ihseBwSMGEKC1djGmhFk=
+X-Google-Smtp-Source: ABdhPJw1GIRWEi/JbD+dq1sf6hXA0t9UTjQG/0N5eOC4dqaG0y1J5HHYE0Hhw/ZPAm3obdqO/xDoazvjS5aOPNRz7CM=
+X-Received: by 2002:a19:4b45:: with SMTP id y66mr1697790lfa.482.1604708808823;
+ Fri, 06 Nov 2020 16:26:48 -0800 (PST)
 MIME-Version: 1.0
-References: <1604581888-27659-1-git-send-email-heming.zhao@suse.com>
-In-Reply-To: <1604581888-27659-1-git-send-email-heming.zhao@suse.com>
+References: <CAPhsuW6GqEU7BczF2tpgtEJoU5Fdh4M17N9cobhSMdVY4NPD3w@mail.gmail.com>
+ <20201106222034.1304830-1-kvigor@gmail.com>
+In-Reply-To: <20201106222034.1304830-1-kvigor@gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 6 Nov 2020 16:17:32 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4GqAXQ=6Hx5FjYhECxmVHDKC0j2oiqx6Q5OLvqe9F9nA@mail.gmail.com>
-Message-ID: <CAPhsuW4GqAXQ=6Hx5FjYhECxmVHDKC0j2oiqx6Q5OLvqe9F9nA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] md/cluster: reshape should returns error when remote
- doing resyncing job
-To:     Zhao Heming <heming.zhao@suse.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        lidong.zhong@suse.com, Xiao Ni <xni@redhat.com>,
-        NeilBrown <neilb@suse.de>, Coly Li <colyli@suse.de>
+Date:   Fri, 6 Nov 2020 16:26:37 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5RAB8buLN9FxNX3cnJ8=5eqRpZH+FXL54FpZvjoK7x2w@mail.gmail.com>
+Message-ID: <CAPhsuW5RAB8buLN9FxNX3cnJ8=5eqRpZH+FXL54FpZvjoK7x2w@mail.gmail.com>
+Subject: Re: [PATCH v2] md/raid10: initialize r10_bio->read_slot before use.
+To:     Kevin Vigor <kvigor@gmail.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Nov 5, 2020 at 5:11 AM Zhao Heming <heming.zhao@suse.com> wrote:
+On Fri, Nov 6, 2020 at 2:21 PM Kevin Vigor <kvigor@gmail.com> wrote:
 >
-> Test script (reproducible steps):
-> ```
-> ssh root@node2 "mdadm -S --scan"
-> mdadm -S --scan
-> mdadm --zero-superblock /dev/sd{g,h,i}
-> for i in {g,h,i};do dd if=/dev/zero of=/dev/sd$i oflag=direct bs=1M \
-> count=20; done
+> In __make_request() a new r10bio is allocated and passed to
+> raid10_read_request(). The read_slot member of the bio is not
+> initialized, and the raid10_read_request() uses it to index an
+> array. This leads to occasional panics.
 >
-> echo "mdadm create array"
-> mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdg /dev/sdh
-> echo "set up array on node2"
-> ssh root@node2 "mdadm -A /dev/md0 /dev/sdg /dev/sdh"
+> Fix by initializing the field to invalid value and checking for
+> valid value in raid10_read_request().
 >
-> sleep 5
+> Signed-off-by: Kevin Vigor <kvigor@gmail.com>
+> ---
+> v2:
+> - rebase onto md-next
+> ---
+>  drivers/md/raid10.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 >
-> mdadm --manage --add /dev/md0 /dev/sdi
-> mdadm --wait /dev/md0
-> mdadm --grow --raid-devices=3 /dev/md0
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index b7bca6703df8..3153183b7772 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1127,7 +1127,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+>         struct md_rdev *err_rdev = NULL;
+>         gfp_t gfp = GFP_NOIO;
 >
-> mdadm /dev/md0 --fail /dev/sdg
-> mdadm /dev/md0 --remove /dev/sdg
->  #mdadm --wait /dev/md0
-> mdadm --grow --raid-devices=2 /dev/md0
-> ```
+> -       if (r10_bio->devs[slot].rdev) {
+> +       if (slot >= 0 && r10_bio->devs[slot].rdev) {
 
-I found it was hard for me to follow this set. IIUC, the two patches try to
-address one issue. Please add a cover letter and reorganize the descriptions
-like:
-
-  cover-letter: error behavior, repro steps, analysis, and maybe describe the
-             relationship of the two patches.
-  1/2 and 2/2: what is being fixed.
+How about we initialize read_slot to 0, and get rid of this check?
 
 Thanks,
 Song
-
-[...]
