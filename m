@@ -2,95 +2,87 @@ Return-Path: <SRS0=Jo7I=EN=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0531BC2D0A3
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26408C55179
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:32:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D2E920728
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:26:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB9D020728
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:32:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604708812;
-	bh=7nh6rlaj84d75XebUKRQkdD4FWYVD2xJfJqKAjkS5DE=;
+	s=default; t=1604709143;
+	bh=KcpIPe+A58yFNxxgdAdaS3ugXYdHOBtuseeQrVYguHI=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=ftfNSetDeBjUlI/dpLvnyBUMuHx8Wu1OgiXzbNRPrR2j9Yb8nBaPQtYMATHkMIPQa
-	 f+H3K9CZqQbRQm2hGW3ssGZwYOdEbJd4A/kZURhVEG5KK6JtKDFK/1nDYzEh+g/dRa
-	 y6sUZMLDTzGZaEkboSAPY+u5mSwK79x53/04BPVE=
+	b=Uj/BcJ1HjwlC9/GNULEdfsAkWcC5wR9OuaE6td9CMaG3TIUyPakY70IEfUA9JiyG8
+	 IJEGGgKQNLJ9Im4wlvJiRWmCVdNssMwWYGMNkorBJkGpmN2aE8pSp4EbAPET3o3WTU
+	 XgvHTOnh2ntitSXE+OVlLS6874iV2jfAGQKBe7MY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728075AbgKGA0v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Nov 2020 19:26:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40672 "EHLO mail.kernel.org"
+        id S1728055AbgKGAcV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Nov 2020 19:32:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41550 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727985AbgKGA0v (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 6 Nov 2020 19:26:51 -0500
-Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
+        id S1726447AbgKGAcV (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 6 Nov 2020 19:32:21 -0500
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8E54620728
-        for <linux-raid@vger.kernel.org>; Sat,  7 Nov 2020 00:26:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6ADE1217A0;
+        Sat,  7 Nov 2020 00:32:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604708810;
-        bh=7nh6rlaj84d75XebUKRQkdD4FWYVD2xJfJqKAjkS5DE=;
+        s=default; t=1604709140;
+        bh=KcpIPe+A58yFNxxgdAdaS3ugXYdHOBtuseeQrVYguHI=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=kATr3wtu6jlMha2D9NOrvX1NK96c5iK/frQQrZBw2mK9MPl9uIL1U1LhZh+mavT+4
-         5Ey6a+xxi+MrPGKbnHpQ0VlIaGPIggImMvPHmKUPoye2HpAe0txO72IYyhCzqSXIxB
-         s3WGanSCh9UAup0S34Po0WezKjnE9zVdmvPM6jho=
-Received: by mail-lf1-f51.google.com with SMTP id e27so4348608lfn.7
-        for <linux-raid@vger.kernel.org>; Fri, 06 Nov 2020 16:26:50 -0800 (PST)
-X-Gm-Message-State: AOAM533IORFj8Jjdi1wjsm0vzZyG1D/nm4Rgu/gdrUl2YnC6ENW34uzH
-        LfxQ90fR/fWrmqbb9F7ihseBwSMGEKC1djGmhFk=
-X-Google-Smtp-Source: ABdhPJw1GIRWEi/JbD+dq1sf6hXA0t9UTjQG/0N5eOC4dqaG0y1J5HHYE0Hhw/ZPAm3obdqO/xDoazvjS5aOPNRz7CM=
-X-Received: by 2002:a19:4b45:: with SMTP id y66mr1697790lfa.482.1604708808823;
- Fri, 06 Nov 2020 16:26:48 -0800 (PST)
+        b=O7dyOXal7YL7+3TQPR507WAWXuCRa9VXvh3tl/XZ3Wmey5p91Ew7PyDj8k/tZUsUX
+         XY5D3+3MbK8y+gvrbaa+8QamA+h71zwFvUqQhxnEoaqEjETZ+k6/bM4uDXaudNmc1c
+         Llst5cl3Ll69uQ67EfsvLxy48UchXaU9XWGm+pGE=
+Received: by mail-lf1-f52.google.com with SMTP id 126so4362492lfi.8;
+        Fri, 06 Nov 2020 16:32:20 -0800 (PST)
+X-Gm-Message-State: AOAM531NcbaFJQ5J7CYMwQ0moSUEaytCf5CbAPlhFKZo58sH60tEtS8t
+        4F/a88gLZaWErS7sjIpcq6I2NxawPVn9naRCaao=
+X-Google-Smtp-Source: ABdhPJzPKJgvb0YpcBOATticPbEhSqNhkf0gjO34lXWldMg14DmOELWQsnbdEhjrrSsS6KPE2QcSxjJkDLUT8kUmj4w=
+X-Received: by 2002:a19:ae13:: with SMTP id f19mr1682538lfc.193.1604709138508;
+ Fri, 06 Nov 2020 16:32:18 -0800 (PST)
 MIME-Version: 1.0
-References: <CAPhsuW6GqEU7BczF2tpgtEJoU5Fdh4M17N9cobhSMdVY4NPD3w@mail.gmail.com>
- <20201106222034.1304830-1-kvigor@gmail.com>
-In-Reply-To: <20201106222034.1304830-1-kvigor@gmail.com>
+References: <20201106190337.1973127-1-hch@lst.de> <20201106190337.1973127-22-hch@lst.de>
+In-Reply-To: <20201106190337.1973127-22-hch@lst.de>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 6 Nov 2020 16:26:37 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5RAB8buLN9FxNX3cnJ8=5eqRpZH+FXL54FpZvjoK7x2w@mail.gmail.com>
-Message-ID: <CAPhsuW5RAB8buLN9FxNX3cnJ8=5eqRpZH+FXL54FpZvjoK7x2w@mail.gmail.com>
-Subject: Re: [PATCH v2] md/raid10: initialize r10_bio->read_slot before use.
-To:     Kevin Vigor <kvigor@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
+Date:   Fri, 6 Nov 2020 16:32:07 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6GuXe_2YKnP5wRHg7ytOxjUzTQZ=fG2RKxs6woNVPFaQ@mail.gmail.com>
+Message-ID: <CAPhsuW6GuXe_2YKnP5wRHg7ytOxjUzTQZ=fG2RKxs6woNVPFaQ@mail.gmail.com>
+Subject: Re: [PATCH 21/24] md: use set_capacity_and_notify
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Nov 6, 2020 at 2:21 PM Kevin Vigor <kvigor@gmail.com> wrote:
+On Fri, Nov 6, 2020 at 11:04 AM Christoph Hellwig <hch@lst.de> wrote:
 >
-> In __make_request() a new r10bio is allocated and passed to
-> raid10_read_request(). The read_slot member of the bio is not
-> initialized, and the raid10_read_request() uses it to index an
-> array. This leads to occasional panics.
+> Use set_capacity_and_notify to set the size of both the disk and block
+> device.  This also gets the uevent notifications for the resize for free.
 >
-> Fix by initializing the field to invalid value and checking for
-> valid value in raid10_read_request().
->
-> Signed-off-by: Kevin Vigor <kvigor@gmail.com>
-> ---
-> v2:
-> - rebase onto md-next
-> ---
->  drivers/md/raid10.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index b7bca6703df8..3153183b7772 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1127,7 +1127,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->         struct md_rdev *err_rdev = NULL;
->         gfp_t gfp = GFP_NOIO;
->
-> -       if (r10_bio->devs[slot].rdev) {
-> +       if (slot >= 0 && r10_bio->devs[slot].rdev) {
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-How about we initialize read_slot to 0, and get rid of this check?
-
-Thanks,
-Song
+Acked-by: Song Liu <song@kernel.org>
