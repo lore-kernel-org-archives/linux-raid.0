@@ -2,109 +2,192 @@ Return-Path: <SRS0=Jo7I=EN=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA14C55178
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4769CC2D0A3
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 01:06:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86744206A1
-	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 00:40:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604709601;
-	bh=yHGYGCtLswTDWsVV8G7btJ2YrfbhRJpoj/2QQHMNku0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=ZHLJU6dpEmME4Nb4oaW+UtlL7GzhPtsLWITRxac1lb9007fPi3WiwKm1+XSVAyaj7
-	 1ndhFr1j+1CXoxzKyU4xpYYcH/EaK6hrfJs6si+kTPisQ7AnRxn+vL+rDRunJKPdSc
-	 O4RcODuuyX5HBTl320GMElhTyeIbWKEr5fpl84TA=
+	by mail.kernel.org (Postfix) with ESMTP id B873320704
+	for <linux-raid@archiver.kernel.org>; Sat,  7 Nov 2020 01:06:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=purdue0.onmicrosoft.com header.i=@purdue0.onmicrosoft.com header.b="vu5SfgEG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727996AbgKGAj7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 6 Nov 2020 19:39:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42262 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726447AbgKGAj6 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 6 Nov 2020 19:39:58 -0500
-Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AD7D822210;
-        Sat,  7 Nov 2020 00:39:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604709598;
-        bh=yHGYGCtLswTDWsVV8G7btJ2YrfbhRJpoj/2QQHMNku0=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=JaraML33QnlELqv9b1nVGycC8TqrN2CO3mYGqYHHPbzpftbxLrgkNlDLzNuVKBnOA
-         +2GGCnIf2S6SmvnOXWVOrneIGjkyT+jTAQmqF3CZZVfU2qqbBMNpn6QobIOWbu07iq
-         qAPvrSntweEuYizqycf91KNQI82ZEYM27rTtgZAw=
-Received: by mail-lf1-f51.google.com with SMTP id v144so4348780lfa.13;
-        Fri, 06 Nov 2020 16:39:57 -0800 (PST)
-X-Gm-Message-State: AOAM5330H0J2yYpb6Q3WzWIVjyxQedwd2/O0+fVb7U37A4dxhPukQzcS
-        wlkpzAwLAuM1JiH1F+Joo7s9bypCSlWR6A5iTJY=
-X-Google-Smtp-Source: ABdhPJxa7Wve2F+59EP4hPqinvAbRhF4pNbwqT8FgL1QaPoOKbDOM27LB1KUwtpCP4KuABwtVBcs7qNXSe7PRXbnm/0=
-X-Received: by 2002:a19:4b45:: with SMTP id y66mr1708840lfa.482.1604709595815;
- Fri, 06 Nov 2020 16:39:55 -0800 (PST)
+        id S1727178AbgKGBGN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 6 Nov 2020 20:06:13 -0500
+Received: from mail-co1nam11on2097.outbound.protection.outlook.com ([40.107.220.97]:26408
+        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727129AbgKGBGM (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 6 Nov 2020 20:06:12 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dqSS2DKElvS51r2wjwgQAI/G6qud/2Di/JF5JR4T5ryfR4pjXwov9nZ7rvFPPWAZA/DAuY6/LVm/6fHkeZ5mDz3BmzrA4RmgLGdYktRUrT2mXBCjuCzvuYu+RiWAAjVWWNru4C+n+RCdOVWU7bvM8hghW8dpQEL7rxkatKtRXm+RgeSdVnAsDw6m8CJARtE463soyGdSLwpMghgASzVdl564Q+m1IBV9i46A5LtlAsdtq4ynXs85Xs3/swqdHPe48Ll872BtstDjdyq/8uel4Gs40K7AMEL2BsKIT4K71qXXGTqLGRmzpyih74gHbEmL/5ya/Tq9HL87zhnKMdU6Kg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=k1wBQ0pyvD0uwvOgFH5pI/Z9OVPX6E9r1XJHiUlEDFM=;
+ b=Jevbiczw3qxrQAyuqGYYrAitINxxMaMVXl5wfA+eQ6T7XNjQz6cGZOPEp2fxP4TsnZhUoDviUszlZTu1kqLfVg9nUfWBay6iD87weK9i2a5UuutMJhVm1vSSXPgcp7vDBUKkVfEkIFsWLzqHW8eky9AznVAjHJHP1YripkgPiWmcpSj4VJvSZesqejc4y5t8uz26kmNxABlhMua+8q7Hk2C8bnF55ClJF+K3QiDXzBvU34Jqy90XuV0SR7rU/i41fOViye0/o+/xTn9/EU2E6qkI3QnH6fHdGwD87Mnq8lf0+HwPwhYmObOGqILnGgQLqAfdYuQ5dfRo+i8OHcykyQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=purdue.edu; dmarc=pass action=none header.from=purdue.edu;
+ dkim=pass header.d=purdue.edu; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=purdue0.onmicrosoft.com; s=selector2-purdue0-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=k1wBQ0pyvD0uwvOgFH5pI/Z9OVPX6E9r1XJHiUlEDFM=;
+ b=vu5SfgEGL+mo0GffvL7eVeJF/HpMw7jSYDU5TgpmJEvYaONcY3WQy/NYahxY5bT3n9r3+pRB5gitmtc7klXZ8g1d0PP6eZFRrnZRIYky8zhFzlqHV/+GWIxl6qj6z5YhtGgPZYbPthJHWiUtpnny4rrIKZfiednF/KcODp2XzR0=
+Received: from CH2PR22MB2056.namprd22.prod.outlook.com (2603:10b6:610:5d::11)
+ by CH2PR22MB2055.namprd22.prod.outlook.com (2603:10b6:610:8f::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.29; Sat, 7 Nov
+ 2020 01:06:09 +0000
+Received: from CH2PR22MB2056.namprd22.prod.outlook.com
+ ([fe80::1922:c660:f2f4:50fa]) by CH2PR22MB2056.namprd22.prod.outlook.com
+ ([fe80::1922:c660:f2f4:50fa%7]) with mapi id 15.20.3499.032; Sat, 7 Nov 2020
+ 01:06:09 +0000
+From:   "Gong, Sishuai" <sishuai@purdue.edu>
+To:     Song Liu <song@kernel.org>
+CC:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: Re: PROBLEM: a concurrency bug in drivers/md/md.c
+Thread-Topic: PROBLEM: a concurrency bug in drivers/md/md.c
+Thread-Index: AQHWtG7hcgKPM1m0rUi0+CrsxjWKqam7vJQAgAAe5wA=
+Date:   Sat, 7 Nov 2020 01:06:09 +0000
+Message-ID: <CC257BF4-6B53-4BA3-BDFE-22B35FCDAB90@purdue.edu>
+References: <CF84A11A-D1E2-4B7D-825A-C54E2C82B28F@purdue.edu>
+ <CAPhsuW4swc4VXkpjVMqj6mzY1Uj7DiAPuf5e0PoY1B675ij4yw@mail.gmail.com>
+In-Reply-To: <CAPhsuW4swc4VXkpjVMqj6mzY1Uj7DiAPuf5e0PoY1B675ij4yw@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=purdue.edu;
+x-originating-ip: [66.253.158.157]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 34934d63-7b53-4324-c25e-08d882b94fba
+x-ms-traffictypediagnostic: CH2PR22MB2055:
+x-microsoft-antispam-prvs: <CH2PR22MB20554F8FE876A070716FF2B3DFEC0@CH2PR22MB2055.namprd22.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:205;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: zp34bYCteH2IUkLFoo+sVRrqXw1D/YDUPkCp1gfyebhhVleJKd70Z0VlGhVfPMbumblieaQP+tDQ8n/LRS9p/pbVoFj4GvMwXmcnw5BoYtH83+IPREAkdrv/Lp7nL61l/Eu4GwvdKQ7T/ETGQON8PqQQxFXt1TPrUUTVqDM/8YxPuFV+5XioSKVIlr/kFct1r9QYhCHKgtQDKudWEnrD1cFnY9uGSFxPQSSF4vESjWMtPz4PO7kv5NMaLgHNaiCEGLcniOfWAIV8YLiqp2/flngV5ifTjQEVoWdPdyXoG+rSojTYAfg7wShgaSTFzk9vUokjvcSdiwzIc2Wdi6OhsGb/P+R2wpK2r9nHGdoYEVYcB0AMzbpVZHg2pC3GUOSrwaR03yOZztQ1ENjm8IRXEQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR22MB2056.namprd22.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(136003)(366004)(396003)(39860400002)(346002)(86362001)(4326008)(6512007)(8936002)(2616005)(478600001)(83380400001)(26005)(8676002)(316002)(64756008)(6486002)(786003)(66946007)(2906002)(75432002)(76116006)(66556008)(53546011)(71200400001)(5660300002)(6506007)(45080400002)(6916009)(966005)(66476007)(66446008)(36756003)(186003)(33656002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: K7dknMLpOmzW44ygB+Hr50YvTi4vI68AO/Z0dcgS0ssFuvjCgzxBU/BPBa8VxLxtWFPVaPxRxTYxDLlmani2lOTvy3MDD8v6McRFk14uwpcQZKZkXWfGTlpZjZmE4J7OD4h3w10sHmz2R9yuDCdmZ7yyruv098Z5KVsJzXzUWnWQBiGeQXR8lGW01kBNVQXs2Yr4gUUtVOeqjdppJTyXsZBKqlwpXUMIUgB/oZ8daQfWUPA5IOFkGcazsMV21jPspufR65aKDxbzVExKd1WdwreImhnkWu3HrXs3cq+J86ZtkrvtugaM9hTRgYakmjcRhpBizkFy3bydftKJb4GkB3vx2OP0v4d1ZyPXMXYMfiVhGwO+GdwZoBwxjB6Z/rnLoSpHP3ZW6JgLXwhCsieWb5IdCT3p6S7reahPw2TeA4zg4O++A9Lm/mTsKMY2dh2epF3U6OBj6hrcb3+px573EHYpcirct5RiGEeRj3h8txi0Ep17BdUvu2xgS4nhIQJmIwz9V3GuueYrSEG8jiLjW6+f5Py5YlH/cJHt6XtXZ8FJABtVZpcPBf7pt7RhXhsMSKWm2kKpmGV/Slezp3vmxC73VnFgzlgl6dJPHRKQtwj2ngFUCG99rSrhmXfW6sxULcP0C1CoAkwCSKsjh6kLmw==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <2709F5F2B019F7458601629B2C24B1F5@namprd22.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <20201106190337.1973127-1-hch@lst.de> <20201106190337.1973127-23-hch@lst.de>
-In-Reply-To: <20201106190337.1973127-23-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 6 Nov 2020 16:39:44 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4TjGZYpf-Ad4sk5WMq8BLGTpxaCd-FnMfmqo49pX1Z9w@mail.gmail.com>
-Message-ID: <CAPhsuW4TjGZYpf-Ad4sk5WMq8BLGTpxaCd-FnMfmqo49pX1Z9w@mail.gmail.com>
-Subject: Re: [PATCH 22/24] md: remove a spurious call to revalidate_disk_size
- in update_size
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: purdue.edu
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR22MB2056.namprd22.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 34934d63-7b53-4324-c25e-08d882b94fba
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Nov 2020 01:06:09.0209
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4130bd39-7c53-419c-b1e5-8758d6d63f21
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3BpihQBBJzpmuqHD+mvsICJtnpBp+Vq7pA2KbK9ETFzPQpZ8SEH2yem9ze93ba5Q9yVa+HepiyTdlXQtqcCHBQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR22MB2055
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Nov 6, 2020 at 11:04 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> None of the ->resize methods updates the disk size, so calling
-> revalidate_disk_size here won't do anything.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Acked-by: Song Liu <song@kernel.org>
-
-> ---
->  drivers/md/md-cluster.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 87442dc59f6ca3..35e2690c1803dd 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -1299,8 +1299,6 @@ static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
->         } else {
->                 /* revert to previous sectors */
->                 ret = mddev->pers->resize(mddev, old_dev_sectors);
-> -               if (!ret)
-> -                       revalidate_disk_size(mddev->gendisk, true);
->                 ret = __sendmsg(cinfo, &cmsg);
->                 if (ret)
->                         pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
-> --
-> 2.28.0
->
+U29ycnksIHdlIGRpZG7igJl0IG5vdGljZSB0aGlzIHBhdGNoLiBJdCBkb2VzIGZpeCB0aGUgaXNz
+dWUhDQoNClRoYW5rcywNClNpc2h1YWkNCg0KPiBPbiBOb3YgNiwgMjAyMCwgYXQgNjoxNSBQTSwg
+U29uZyBMaXUgPHNvbmdAa2VybmVsLm9yZz4gd3JvdGU6DQo+IA0KPiBPbiBGcmksIE5vdiA2LCAy
+MDIwIGF0IDEwOjU4IEFNIEdvbmcsIFNpc2h1YWkgPHNpc2h1YWlAcHVyZHVlLmVkdT4gd3JvdGU6
+DQo+PiANCj4+IA0KPj4gSGksDQo+PiANCj4+IFdlIGZvdW5kIGEgY29uY3VycmVuY3kgYnVnIGlu
+IGxpbnV4IDUuMy4xMSB0aGF0IHdlIHdlcmUgYWJsZSB0byByZXByb2R1Y2UgaW4geDg2IHVuZGVy
+IHNwZWNpZmljIGludGVybGVhdmluZ3MuIFRoaXMgYnVnIGNhdXNlcyBhIHdhcm5pbmcgbWVzc2Fn
+ZSDigJxXQVJOSU5HOiBsaW51eC01LjMuMTEvZHJpdmVycy9tZC9tZC5jOjcyNzkgbWRfaW9jdGwr
+MHg5Y2QvMHgxYjAy4oCdLg0KPj4gDQo+PiBUaGlzIGJ1ZyBpcyB0cmlnZ2VyZWQgd2hlbiB0d28g
+a2VybmVsIHRocmVhZHMgcnVuIHRoZSBtZF9pb2N0bCgpIGZ1bmN0aW9uIG9uIHRoZSBzYW1lIHJl
+c291cmNlIGludGVybGVhdmUgd2l0aCBlYWNoIG90aGVyLiBUaGUgY29kZSBzZXRzIHRoZSBtZGRl
+di0+ZmxhZ3MgdG8gaW5kaWNhdGUgdGhhdCB0aGUgcmVzb3VyY2UgaXMgYmVpbmcgbW9kaWZpZWQg
+YW5kIHJlc2V0cyBpdCBhZnRlciB0aGUgbW9kaWZpY2F0aW9uLiBIb3dldmVyLCB0aGUgY3VycmVu
+dCBjb2RlIGFsbG93cyBhbm90aGVyIHRocmVhZCB0byBleGVjdXRlIGFmdGVyIHRoZSBtZGRldi0+
+ZmxhZ3MgaXMgc2V0IGJ1dCBiZWZvcmUgaXQgaXMgcmVzZXQsIHJlc3VsdGluZyBpbiB0aGUgd2Fy
+bmluZyBtZXNzYWdlLg0KPj4gDQo+PiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0NCj4+IEtlcm5lbCBjb25zb2xlIG91dHB1dA0KPj4gWyAgMTQwLjUyNDMzMV0gV0FS
+TklORzogQ1BVOiAxIFBJRDogMTgxNSBhdCAvdG1wL3RtcC5CN3piN29kMnpFLTUuMy4xMS9leHRy
+YWN0L2xpbnV4LTUuMy4xMS9kcml2ZXJzL21kL21kLmM6NzI3OSBtZF9pb2N0bCsweDljZC8weDFi
+MDINCj4+IFsgIDE0NS40Mzg3NDldIE1vZHVsZXMgbGlua2VkIGluOg0KPj4gWyAgMTQ3LjY5MTEz
+MF0gQ1BVOiAxIFBJRDogMTgxNSBDb21tOiBza2ktZXhlY3V0b3IgTm90IHRhaW50ZWQgNS4zLjEx
+ICMxDQo+PiBbICAxNTAuMzMzODM5XSBIYXJkd2FyZSBuYW1lOiBCb2NocyBCb2NocywgQklPUyBC
+b2NocyAwMS8wMS8yMDA3DQo+PiBbICAxNTMuNzEyODg3XSBFSVA6IG1kX2lvY3RsKzB4OWNkLzB4
+MWIwMg0KPj4gWyAgMTU3LjQ2NDM2OF0gQ29kZTogZmYgZmYgZmYgZTggMGYgZWQgOTEgZmYgYzYg
+NDUgODQgMDEgZTkgMTAgZmYgZmYgZmYgOGQgODMgNzQgMDEgMDAgMDAgZTggNzUgMzMgMjQgMDAg
+YzYgNDUgODQgMDAgYmUgZjAgZmYgZmYgZmYgZTkgM2UgZjcgZmYgZmYgPDBmPiAwYiBlYiBiZiBi
+MCAwMCBlYiAwMiBiMCAwMSA4NCBjMCAwZiA4NCAyYyBmNyBmZiBmZiA4OSA3YyAyNCAwYw0KPj4g
+WyAgMTY4LjgxMzc4MV0gRUFYOiAwMDAwMDAwMiBFQlg6IGYzZGY0ODAwIEVDWDogZjNkZjQ5N2Mg
+RURYOiAwMDAwMDAwMg0KPj4gWyAgMTcxLjg5MDYxNV0gRVNJOiAwMDAwMDAwMCBFREk6IDAwMDAw
+OTMyIEVCUDogZTUyN2JlMmMgRVNQOiBlNTI3YmQ5OA0KPj4gWyAgMTc1LjQ2NTcyOF0gRFM6IDAw
+N2IgRVM6IDAwN2IgRlM6IDAwZDggR1M6IDAwZTAgU1M6IDAwNjggRUZMQUdTOiAwMDAwMDIwMg0K
+Pj4gWyAgMTc5LjM5NDQzOV0gQ1IwOiA4MDA1MDAzMyBDUjI6IDA4NTcyNTY4IENSMzogMjUyNDIw
+MDAgQ1I0OiAwMDAwMDY5MA0KPj4gWyAgMTgzLjE0MDU4OF0gRFIwOiAwMDAwMDAwMCBEUjE6IDAw
+MDAwMDAwIERSMjogMDAwMDAwMDAgRFIzOiAwMDAwMDAwMA0KPj4gWyAgMTg2LjU3ODk3Nl0gRFI2
+OiAwMDAwMDAwMCBEUjc6IDAwMDAwMDAwDQo+PiANCj4+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQ0KPj4gVGVzdCBpbnB1dA0KPj4gDQo+PiBUaGUgYnVnIGlzIHRy
+aWdnZXJlZCB3aGVuIHRoZSBzYW1lIGtlcm5lbCB0ZXN0IHByb2dyYW0gaXMgZXhlY3V0ZWQgY29u
+Y3VycmVudGx5IGJ5IHR3byBkaWZmZXJlbnQgdGhyZWFkcy4gSW4gcGFydGljdWxhciwgaXQgaXMg
+dHJpZ2dlcmVkIHdoZW4gdGhlIHN5c3RlbSBjYWxsIG1kX2lvY3RsKCkgaW50ZXJsZWF2ZXMgd2l0
+aCBpdHNlbGYuDQo+PiANCj4+IFRoZSB0ZXN0IHByb2dyYW0gaXMgaW4gU3l6a2FsbGVy4oCZcyBm
+b3JtYXQgYXMgZm9sbG93czoNCj4+IHIwID0gb3BlbmF0JG1kKDB4ZmZmZmZmZmZmZmZmZmY5Yywg
+JigweDdmMDAwMDAwMDAwMCk9Jy9kZXYvbWQwXHgwMCcsIDB4MCwgMHgwKQ0KPj4gaW9jdGwkQkxL
+VFJBQ0VURUFSRE9XTihyMCwgMHg5MzIsIDB4MCkNCj4+IA0KPj4gDQo+PiANCj4+IC0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPj4gSW50ZXJsZWF2aW5nDQo+PiAN
+Cj4+IE91ciBhbmFseXNpcyByZXZlYWxlZCB0aGF0IHRoZSBmb2xsb3dpbmcgaW50ZXJsZWF2aW5n
+IGNhbiB0cmlnZ2VyIHRoaXMgYnVnOg0KPj4gDQo+PiBUaHJlYWQgMSAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBUaHJlYWQgMg0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICBtZF9vcGVuKCkNCj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgLWlmICh0ZXN0X2JpdChNRF9DTE9TSU5HLCAmbWRkZXYtPmZsYWdzKSkgew0KPj4gICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG11dGV4X3VubG9jaygmbWRk
+ZXYtPm9wZW5fbXV0ZXgpOw0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIGVyciA9IC1FTk9ERVY7DQo+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgZ290byBvdXQ7DQo+PiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgfQ0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAoY29uZGl0aW9uIGlzIGZhbHNlKQ0KPj4gICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAt4oCmDQo+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIC1tdXRleF91bmxvY2soJm1kZGV2LT5vcGVuX211dGV4KTsNCj4+ICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgLeKApg0KPj4gICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAtcmV0dXJuIGVycjsNCj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgKG1kX29wZW4gZmluaXNoZXMgY29ycmVjdGx5KQ0KPj4gbWRfb3BlbigpDQo+
+PiAtaWYgKHRlc3RfYml0KE1EX0NMT1NJTkcsICZtZGRldi0+ZmxhZ3MpKSB7DQo+PiAgICAgICAg
+bXV0ZXhfdW5sb2NrKCZtZGRldi0+b3Blbl9tdXRleCk7DQo+PiAgICAgICAgZXJyID0gLUVOT0RF
+VjsNCj4+ICAgICAgICBnb3RvIG91dDsNCj4+IH0NCj4+IChjb25kaXRpb24gaXMgZmFsc2UpDQo+
+PiAtLi4uDQo+PiAtcmV0dXJuIGVycjsNCj4+IChtZF9vcGVuIGZpbmlzaGVzIGNvcnJlY3RseSkN
+Cj4+IA0KPj4gbWRfaW9jdGwoKQ0KPj4gKGRyaXZlcnMvbWQvbWQuYzo3Mjc5KQ0KPj4gLVdBUk5f
+T05fT05DRSh0ZXN0X2JpdChNRF9DTE9TSU5HLCAmbWRkZXYtPmZsYWdzKSk7DQo+PiAtc2V0X2Jp
+dChNRF9DTE9TSU5HLCAmbWRkZXYtPmZsYWdzKTsNCj4+IC0uLi4NCj4+IC1tdXRleF91bmxvY2so
+Jm1kZGV2LT5vcGVuX211dGV4KTsNCj4+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgbWRfaW9jdGwoKQ0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAoZHJpdmVycy9tZC9tZC5jOjcyNzkpDQo+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIC1XQVJOX09OX09OQ0UodGVzdF9iaXQoTURfQ0xPU0lORywgJm1kZGV2LT5mbGFn
+cykpOw0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAod2FybmluZyBt
+ZXNzYWdlIHNob3dzKQ0KPj4gKGRyaXZlcnMvbWQvbWQuYzo3MzQ3KQ0KPj4gLWNhc2UgU1RPUF9B
+UlJBWToNCj4+ICAgICAgIGVyciA9IGRvX21kX3N0b3AobWRkZXYsIDAsIGJkZXYpOw0KPj4gICAg
+ICAgZ290byB1bmxvY2s7DQo+PiAobWRkZXYtPmZsYWdzIHdpbGwgYmUgY2xlYXJlZCBpbnNpZGUg
+ZG9fbWRfc3RvcCgpKQ0KPj4gDQo+IA0KPiBUaGFua3MgZm9yIHRoZSByZXBvcnQuIENvdWxkIHlv
+dSBwbGVhc2UgdmVyaWZ5IHdoZXRoZXIgdGhpcyBjb21taXQNCj4gYWRkcmVzcyB0aGlzIGlzc3Vl
+Og0KPiANCj4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQv
+c29uZy9tZC5naXQvY29tbWl0Lz9oPW1kLW5leHQmaWQ9ZTdmMTQ1NmI1ZWU0ZTk3OTM0YWU3MjRl
+NzAxNWQ5NWY4ODk4NGRmMA0KPiANCj4gVGhhbmtzLA0KPiBTb25nDQoNCg==
