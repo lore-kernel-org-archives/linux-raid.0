@@ -2,56 +2,73 @@ Return-Path: <SRS0=Hvl7=EP=vger.kernel.org=linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE428C4741F
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 10:22:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AEE2C2D0A3
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 11:30:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DDD9206B2
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 10:22:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F21A206ED
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 11:30:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aumEm1BQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V995cmrS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729255AbgKIKWf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 Nov 2020 05:22:35 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:55356 "EHLO
+        id S1729243AbgKILaX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 Nov 2020 06:30:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:29062 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727077AbgKIKWe (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Nov 2020 05:22:34 -0500
+        by vger.kernel.org with ESMTP id S1727311AbgKILaX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Nov 2020 06:30:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604917353;
+        s=mimecast20190719; t=1604921421;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=fvP8UJpz4riRKthWscMZ00xlDbEYu80keBJwGqqSMOE=;
-        b=aumEm1BQiWsEY/9fPJkWEcC+J3tNGAuuStz1sz061yEn2cbmbE/xFVOJ0/mGqOBUTvLMbj
-        XEvSqdnEm9L0mVzFmax2+VHoPXRso+cA4kGUdLuLVB5WgcvvkchfZl6Pv+ab1WvXk2Tb1/
-        kSgQDJadu/MUnB7XVvQEB0sbQGrp/mw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-41-I_sUUytpNla_sXK2O1mUPw-1; Mon, 09 Nov 2020 05:22:29 -0500
-X-MC-Unique: I_sUUytpNla_sXK2O1mUPw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C02131084C8F;
-        Mon,  9 Nov 2020 10:22:26 +0000 (UTC)
-Received: from localhost (ovpn-114-110.ams2.redhat.com [10.36.114.110])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4D8985D9DD;
-        Mon,  9 Nov 2020 10:22:10 +0000 (UTC)
-Date:   Mon, 9 Nov 2020 10:22:09 +0000
-From:   Stefan Hajnoczi <stefanha@redhat.com>
+        bh=qJPHU79Z9aFII+RXhVTkpUcHO9yLNqjEBCGqyvXY310=;
+        b=V995cmrSEl54zDxw55HTc5LkSVBjkP2bV0TQekN9COsw8YV5x1PRZoXTiOQWYGIU7qeB/F
+        S4Jatc89SsaTrYA2XyRpHprinR8Gwv4zs3Vt/5nvJ4nLkVnzBzM/M3xEYu8X8hmCleZFtk
+        XB3dlRLouPrOoTfOtSq1W/8EfJ7ljA0=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-501-XhJpEooSMPeUcPSFpz9dTA-1; Mon, 09 Nov 2020 06:30:20 -0500
+X-MC-Unique: XhJpEooSMPeUcPSFpz9dTA-1
+Received: by mail-wm1-f72.google.com with SMTP id s3so8524wmj.6
+        for <linux-raid@vger.kernel.org>; Mon, 09 Nov 2020 03:30:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=qJPHU79Z9aFII+RXhVTkpUcHO9yLNqjEBCGqyvXY310=;
+        b=C3gzqgJoKv24Qtni7MwumylHT+8G1C4Btal9+fCdT4v33i36uCBRp+xlC5VUxUjAZo
+         msdKNE4tPbpimi9ed7iblWFmuJ3zvIUvEdF/0Vl0I1fV6NV9lKQexcn92/bbpC07G9Mq
+         iFwsPh6iSp8ayC0nP9qLU42zhrJsKSNPWEAVRMV6untV+/c67pxceReMu/GkQnAOUQw2
+         Eb+5NrnSuGG7fzGGeo0VVVb9poAuq4rNxL3hkgGmCovfOu7KBzr97Ds1oZPXYfkC+bmf
+         GuWJnRYmgq120T9AWSHUZtwsZvYaWy71JJvWA3F8EIt3KuXYilTlZ9B1fAry3r/Hmlyc
+         N+mw==
+X-Gm-Message-State: AOAM531OD3hbYJBxYMh4yaQTTHp+AiNGHo2mzafb+oKX7QNin6pJvJm7
+        Xl0xeMIHPo6wMY8IliHnj9NvUi+V2sPGmEHjiXlEccEDW1SyRZtk5eYVSz1Ihgi0SeTO8/ECfYw
+        UKHmPCHg6pU2beMlCXtHf2w==
+X-Received: by 2002:a05:6000:1005:: with SMTP id a5mr10320366wrx.425.1604921419108;
+        Mon, 09 Nov 2020 03:30:19 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxfMfmWa9Cv9HNLSs0dLMrckBnIhQ+LX5gsNBfqeNBoHRKN7zV/cjWgtINNh6h724r5DlDOEA==
+X-Received: by 2002:a05:6000:1005:: with SMTP id a5mr10320328wrx.425.1604921418961;
+        Mon, 09 Nov 2020 03:30:18 -0800 (PST)
+Received: from redhat.com (bzq-79-181-34-244.red.bezeqint.net. [79.181.34.244])
+        by smtp.gmail.com with ESMTPSA id 35sm10972366wro.71.2020.11.09.03.30.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Nov 2020 03:30:17 -0800 (PST)
+Date:   Mon, 9 Nov 2020 06:30:10 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
         Ilya Dryomov <idryomov@gmail.com>,
         Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
         Jason Wang <jasowang@redhat.com>,
         Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
         Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
         Minchan Kim <minchan@kernel.org>,
@@ -64,56 +81,42 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH 23/24] virtio-blk: remove a spurious call to
  revalidate_disk_size
-Message-ID: <20201109102209.GF783516@stefanha-x1.localdomain>
+Message-ID: <20201109063004-mutt-send-email-mst@kernel.org>
 References: <20201106190337.1973127-1-hch@lst.de>
  <20201106190337.1973127-24-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20201106190337.1973127-24-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: redhat.com
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="7cm2iqirTL37Ot+N"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20201106190337.1973127-24-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
-
---7cm2iqirTL37Ot+N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
 On Fri, Nov 06, 2020 at 08:03:35PM +0100, Christoph Hellwig wrote:
 > revalidate_disk_size just updates the block device size from the disk
 > size.  Thus calling it from revalidate_disk_size doesn't actually do
 > anything.
->=20
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+
 > ---
 >  drivers/block/virtio_blk.c | 1 -
 >  1 file changed, 1 deletion(-)
-
-Modulo Paolo's comment:
-
-Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
-
---7cm2iqirTL37Ot+N
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl+pGFEACgkQnKSrs4Gr
-c8hPvggAiEUoB55Y2NWYKmWp20Pqz66o8MfxgXahkbbIj6hWGOJZ5M8cZD5dmb6h
-xlDynJx6PzDey/2EstgMWAWpt5QFnKiPDSY+t/UjxpkAXqacgWSnNXhedkDGlczW
-4LP5GspHB7zun1KHAcMpcXo6Uet85t5RPsKZqqkp1hRsIMjzKScj4Kan0b65BS0V
-J6vUVDQnwVqn8DI38Ebm0r6TWG3PorXZ/SanjhCB9wbuGw3dX6X9aAk2XY8Ybwa6
-34P5kZN1RxaqPNFYU0r3gcIWvi8CdCB6XE1Q4OM0ahxmoN4Y4pJcGA0XDZI1N7ei
-35TRtk3FCvvJK8X13zk4enPGeLZiYQ==
-=JdMU
------END PGP SIGNATURE-----
-
---7cm2iqirTL37Ot+N--
+> 
+> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+> index 3e812b4c32e669..145606dc52db1e 100644
+> --- a/drivers/block/virtio_blk.c
+> +++ b/drivers/block/virtio_blk.c
+> @@ -598,7 +598,6 @@ static void virtblk_update_cache_mode(struct virtio_device *vdev)
+>  	struct virtio_blk *vblk = vdev->priv;
+>  
+>  	blk_queue_write_cache(vblk->disk->queue, writeback, false);
+> -	revalidate_disk_size(vblk->disk, true);
+>  }
+>  
+>  static const char *const virtblk_cache_types[] = {
+> -- 
+> 2.28.0
 
