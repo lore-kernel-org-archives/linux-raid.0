@@ -2,73 +2,115 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5248C2D0A3
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 18:28:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FB8C4741F
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 23:28:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F948206D8
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 18:28:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZTmwq/xF"
+	by mail.kernel.org (Postfix) with ESMTP id 296EB206ED
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Nov 2020 23:28:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729491AbgKIS26 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 Nov 2020 13:28:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55458 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726952AbgKIS26 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 9 Nov 2020 13:28:58 -0500
-Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E9CC7206D8
-        for <linux-raid@vger.kernel.org>; Mon,  9 Nov 2020 18:28:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604946538;
-        bh=ZsX+e428boFEqOxL9OorejMQ9wIvouat9S88XfFO/7A=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ZTmwq/xF2xaDrwFNA5DnFsp/ft+MKZElY15EXUdOBNR7spIlGOggmtEdfPvwWZUVN
-         vxGDQcGA4XV4RxISKd7a6r0fWwLeimbxB8QL4oTuTBEvtumyyRj/rGE/QMXaGI33z8
-         pBpscM2bQY6N/QXqk3oVhi7IPPRBUiwJ4OY+9suo=
-Received: by mail-lj1-f173.google.com with SMTP id r17so5939308ljg.5
-        for <linux-raid@vger.kernel.org>; Mon, 09 Nov 2020 10:28:57 -0800 (PST)
-X-Gm-Message-State: AOAM533E48Xaza64ulVB049GYag+Q2M4460GZeXF3yiQ5Nv8CsYl0Nwn
-        /vhSetWsPDN595ParlT+5CuYFgX55OYvYWM5OjE=
-X-Google-Smtp-Source: ABdhPJzYPlaT4OzOWYE642eAszreOg91YUeKzUgEk0u8iMKoQjE9HrTzgRg5KKf5OUmBBIu0xwf211VFKGVrIfmCbxo=
-X-Received: by 2002:a2e:3316:: with SMTP id d22mr1610676ljc.392.1604946536204;
- Mon, 09 Nov 2020 10:28:56 -0800 (PST)
+        id S1730151AbgKIX2z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 Nov 2020 18:28:55 -0500
+Received: from mail-wm1-f53.google.com ([209.85.128.53]:39700 "EHLO
+        mail-wm1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727070AbgKIX2z (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Nov 2020 18:28:55 -0500
+Received: by mail-wm1-f53.google.com with SMTP id s13so1198991wmh.4;
+        Mon, 09 Nov 2020 15:28:53 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uVd85Bl4q22td+3jSMit0FtxZJ1sJtChRiPRn7GLPMw=;
+        b=HmwiSpFl37ey7W+KPYX0yuTvszCkzbZPqiU2uXb6qT02LkHBR46YeEhm9srTHyhJF2
+         FRS9/deJcROvz4rWp1AWoJmDeFSQbccznPh0nKBwG/zkGqXCW3fOeKxDRzDhpycI6QOo
+         Xkp7YymryHYQdqkrPPqha15m0Td85ytosagMBI/DbYq0KErPYPeNriK0QKEK722VPLbZ
+         0pBJObub8M+MSF+2NQuhzdhpuvBZTgdW9H22O9sbjmuPDAPRyAy5BgNFOHGYmz2bDT6Z
+         2VOv+XV2Yi2cWR3JWgUzwccsUSeHdMpJthdjmXkX0NeItxwAZOEUtxCm/0Yk/mlAHsO0
+         4HPA==
+X-Gm-Message-State: AOAM531WI4EAudH0HhWYHlwY+eeDGMxcDgTkQF1n8zxx3HEmdg0fiyuE
+        LZ/VB59ZM7ilfY22SNRc62uTFY8US70=
+X-Google-Smtp-Source: ABdhPJyLfZWJAVtXVvWavay6Dkz/YKClz0bIC5QMERvUePaULd58OWlCLidmjNr2cN/ZVx4HfgINbw==
+X-Received: by 2002:a7b:c2f7:: with SMTP id e23mr1575766wmk.100.1604964532362;
+        Mon, 09 Nov 2020 15:28:52 -0800 (PST)
+Received: from ?IPv6:2601:647:4802:9070:f26a:270b:f54c:37eb? ([2601:647:4802:9070:f26a:270b:f54c:37eb])
+        by smtp.gmail.com with ESMTPSA id c17sm6900728wro.19.2020.11.09.15.28.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Nov 2020 15:28:51 -0800 (PST)
+Subject: Re: [PATCH 03/24] nvme: let set_capacity_revalidate_and_notify update
+ the bdev size
+To:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20201106190337.1973127-1-hch@lst.de>
+ <20201106190337.1973127-4-hch@lst.de>
+ <1d06cdfa-a904-30be-f3ec-08ae2fa85cbd@suse.de>
+ <20201109085340.GB27483@lst.de>
+ <e79f9a96-ef53-d6ea-f6e7-e141bdd2e2d2@suse.de>
+From:   Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <d28042e3-3123-5dfc-d0a2-aab0012150c8@grimberg.me>
+Date:   Mon, 9 Nov 2020 15:28:44 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <CAPhsuW6GqEU7BczF2tpgtEJoU5Fdh4M17N9cobhSMdVY4NPD3w@mail.gmail.com>
- <20201106222034.1304830-1-kvigor@gmail.com> <CAPhsuW5RAB8buLN9FxNX3cnJ8=5eqRpZH+FXL54FpZvjoK7x2w@mail.gmail.com>
- <CAFVaERqog8s80npb-w2g9He50=8D4-qYdCr9GicN_PU=Q5mt=Q@mail.gmail.com>
-In-Reply-To: <CAFVaERqog8s80npb-w2g9He50=8D4-qYdCr9GicN_PU=Q5mt=Q@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 9 Nov 2020 10:28:45 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6UY6h=5b-dQ+fkzobVnWgpq7mQaVhTHx48UTU9zzJwZQ@mail.gmail.com>
-Message-ID: <CAPhsuW6UY6h=5b-dQ+fkzobVnWgpq7mQaVhTHx48UTU9zzJwZQ@mail.gmail.com>
-Subject: Re: [PATCH v2] md/raid10: initialize r10_bio->read_slot before use.
-To:     Kevin Vigor <kvigor@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <e79f9a96-ef53-d6ea-f6e7-e141bdd2e2d2@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Nov 6, 2020 at 5:25 PM Kevin Vigor <kvigor@gmail.com> wrote:
->
-> > How about we initialize read_slot to 0, and get rid of this check?
->
-> That will definitely work properly since we memset the rdev to null in __=
-make_request. But the read_slot is truly invalid until we call read_balance=
-() successfully and it feels wrong to set it to a valid value even if it os=
- harmless by accident. So I prefer to give it an explicitly invalid value.
->
-> But your solution saves one test in the issue path and a line of diff, so=
- I will happily change if you prefer the zero solution.
 
-I think initialized to -1 is safer in long run.
+> [ .. ]
+>>> Originally nvme multipath would update/change the size of the multipath
+>>> device according to the underlying path devices.
+>>> With this patch the size of the multipath device will _not_ change if 
+>>> there
+>>> is a change on the underlying devices.
+>>
+>> Yes, it will.  Take a close look at nvme_update_disk_info and how it is
+>> called.
+>>
+> Okay, then: What would be the correct way of handling a size update for 
+> NVMe multipath?
+> Assuming we're getting an AEN for each path signalling the size change
+> (or a controller reset leading to a size change).
+> So if we're updating the size of the multipath device together with the 
+> path device at the first AEN/reset we'll end up with the other paths 
+> having a different size than the multipath device (and the path we've 
+> just been updating).
+> - Do we care, or cross fingers and hope for the best?
+> - Shouldn't we detect the case where we won't get a size update for the 
+> other paths, or, indeed, we have a genuine device size mismatch due to a 
+> misconfiguration on the target?
+> 
+> IE shouldn't we have a flag 'size update pending' for the other paths,, 
+> to take them out ouf use temporarily until the other AENs/resets have 
+> been processed?
 
-Thanks for the fix! Applied to md-next.
+the mpath device will take the minimum size from all the paths, that is
+what blk_stack_limits does. When the AEN for all the paths will arrive
+the mpath size will update.
+
+Not sure how this is different than what we have today...
