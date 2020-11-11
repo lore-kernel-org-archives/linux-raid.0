@@ -2,118 +2,124 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C14C388F9
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 08:36:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F20C388F9
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 09:55:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7935E206E3
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADE3420729
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 09:55:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ls58rLr6"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Flu0kG/G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726379AbgKKI10 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:27:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33496 "EHLO
+        id S1727308AbgKKJzr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 11 Nov 2020 04:55:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbgKKI1W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 Nov 2020 03:27:22 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB3FC0613D1;
-        Wed, 11 Nov 2020 00:27:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=5qPdl0lgCEFGJP5lmM9cIt5xVilmdrR4jnFYjPe6Rv8=; b=Ls58rLr6Jmuq6v/NWUCE8TiQve
-        QBjPwhQnxk5CSZDABDmV5Iyu5nLZjZdDmarW2RJ3+wQ5CV5i02GTCtgGza5/Yikfz5DAuG4zguCCG
-        EgI2R68wska0Fvawliu6ZPQh4vTvOEmDa4t/Qtue0sps/HKOLz+4l8CHVpEuyJgxKspc63ZIHdpKU
-        Uq3vr9AJQ5geGGAUVhvBJa5nv2zB+UeNiCzfSwqeiFVJbNutC+jduzyz0hsShH64P+ui1tcelTUh9
-        yk7kRWHvmVGXLbg/oeCZFpx13CQpxXc9aqGPjNAocrsQQUXFrFu2FbaPQL06RNU64LcD6XqJk4iCo
-        SOHcJEpw==;
-Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclT6-0007Zx-Ef; Wed, 11 Nov 2020 08:27:04 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Justin Sanders <justin@coraid.com>,
+        with ESMTP id S1725870AbgKKJzq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 Nov 2020 04:55:46 -0500
+Received: from mail-il1-x141.google.com (mail-il1-x141.google.com [IPv6:2607:f8b0:4864:20::141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D378BC0613D1;
+        Wed, 11 Nov 2020 01:55:45 -0800 (PST)
+Received: by mail-il1-x141.google.com with SMTP id e17so1439067ili.5;
+        Wed, 11 Nov 2020 01:55:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qfEf7xRtwJh6vel7ndE10SMbjF6zTEFOWV8RA9xu3eI=;
+        b=Flu0kG/G8H5tmdzF22ns+x1T3WixC4FBs0RbA9YeGx20Pw3IL573gomPOrRSgLhidi
+         jxm4xXdraWCqe23Uz/lTRF5Gzul+neu0ZW5SRlL8rLtuRaQOMWWnKLr+e1J5E2f/IB4R
+         iaO9iEipyz2F49FzVbspMmUTamyYBNigOi7Hq45S5vTkNhsbMM69J9bWbbawzfmKvyaE
+         prBgh+sprAAWuhDKQzcpJRm9c4LoRmjW0z3OGufy4OEk4vgw7impUerADJ8+P1l4Evs/
+         gUeZGg6Qzu0m4oCwYhIr6na+Ay9Hq4ATHKFwzo1XQC1pmqP6NOhCJ7ijtefRPRR/Tb4r
+         FFHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qfEf7xRtwJh6vel7ndE10SMbjF6zTEFOWV8RA9xu3eI=;
+        b=KvtS3IeStM5spfDS6t6NO2+Z1VVJWwY9Dkb++mMQr4Cbe0WS12JoCGvRiKDFTDqW23
+         Fcl0HjtUQWBREdxrjcfttIJ1Dl3UDFkmWILgzi2EV40lzqdbH6U3RU2Sxd3ZtHbAxq5M
+         e7uKNRkXS77qam+khns2CflLQkAbtEdbDN5EDc6Qtv0/JI6ZZyj58jtePF9bAzs1B8qu
+         2UEBX/rhc9OohOWQBumtJHm192PB+q6NVqH/1Nu599qdHrSlSgAhl05U9Y1c3J2ChkXg
+         eZZHtlCXQifk2Ur/USrSzX8jorUsiOURvtiLIHqxAFdoQYGWu5edS8Gd2Z9dlu+Blm+G
+         c0Xw==
+X-Gm-Message-State: AOAM530rzE2Uf1a3DNfiF3E8gear4jJ9Te9pOjiINn0CCaTDD+fG/Jf+
+        I3OImvDk2aXapBxLGV/SDmHx5+N36GBSYNMgtEOmEDHQZ3pvnb2q
+X-Google-Smtp-Source: ABdhPJy9ZPoku1YjH4P5V9sTrbXGNc0TDLR8E4ST1Mn4KA5kvu+HvwpbOUC5MO/5tCHlTeWvzQ658Y1GM8zrKYsupSY=
+X-Received: by 2002:a92:1f43:: with SMTP id i64mr17516886ile.281.1605088545285;
+ Wed, 11 Nov 2020 01:55:45 -0800 (PST)
+MIME-Version: 1.0
+References: <20201111082658.3401686-1-hch@lst.de> <20201111082658.3401686-18-hch@lst.de>
+In-Reply-To: <20201111082658.3401686-18-hch@lst.de>
+From:   Ilya Dryomov <idryomov@gmail.com>
+Date:   Wed, 11 Nov 2020 10:55:45 +0100
+Message-ID: <CAOi1vP-JjnNdAUqd9Gy6YdFgi8Ev4_Jt3zcB9DhAmdAvQhG7Eg@mail.gmail.com>
+Subject: Re: [PATCH 17/24] rbd: use set_capacity_and_notify
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
         Jack Wang <jinpu.wang@cloud.ionos.com>,
         "Michael S. Tsirkin" <mst@redhat.com>,
         Jason Wang <jasowang@redhat.com>,
         Paolo Bonzini <pbonzini@redhat.com>,
         Stefan Hajnoczi <stefanha@redhat.com>,
         Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
         Minchan Kim <minchan@kernel.org>,
         Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 04/24] sd: update the bdev size in sd_revalidate_disk
-Date:   Wed, 11 Nov 2020 09:26:38 +0100
-Message-Id: <20201111082658.3401686-5-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
-References: <20201111082658.3401686-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+        dm-devel@redhat.com, linux-block <linux-block@vger.kernel.org>,
+        Lars Ellenberg <drbd-dev@lists.linbit.com>,
+        nbd@other.debian.org,
+        Ceph Development <ceph-devel@vger.kernel.org>,
+        xen-devel@lists.xenproject.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This avoids the extra call to revalidate_disk_size in sd_rescan and
-is otherwise a no-op because the size did not change, or we are in
-the probe path.
+On Wed, Nov 11, 2020 at 9:27 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Use set_capacity_and_notify to set the size of both the disk and block
+> device.  This also gets the uevent notifications for the resize for free.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+> ---
+>  drivers/block/rbd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+> index f84128abade319..b7a194ffda55b4 100644
+> --- a/drivers/block/rbd.c
+> +++ b/drivers/block/rbd.c
+> @@ -4920,8 +4920,7 @@ static void rbd_dev_update_size(struct rbd_device *rbd_dev)
+>             !test_bit(RBD_DEV_FLAG_REMOVING, &rbd_dev->flags)) {
+>                 size = (sector_t)rbd_dev->mapping.size / SECTOR_SIZE;
+>                 dout("setting size to %llu sectors", (unsigned long long)size);
+> -               set_capacity(rbd_dev->disk, size);
+> -               revalidate_disk_size(rbd_dev->disk, true);
+> +               set_capacity_and_notify(rbd_dev->disk, size);
+>         }
+>  }
+>
+> --
+> 2.28.0
+>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/scsi/sd.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+Hi Christoph,
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 656bcf4940d6d1..4a34dd5b153196 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1750,10 +1750,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- static void sd_rescan(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	int ret;
- 
--	ret = sd_revalidate_disk(sdkp->disk);
--	revalidate_disk_size(sdkp->disk, ret == 0);
-+	sd_revalidate_disk(sdkp->disk);
- }
- 
- static int sd_ioctl(struct block_device *bdev, fmode_t mode,
-@@ -3266,7 +3264,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	sdkp->first_scan = 0;
- 
- 	set_capacity_revalidate_and_notify(disk,
--		logical_to_sectors(sdp, sdkp->capacity), false);
-+		logical_to_sectors(sdp, sdkp->capacity), true);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
- 
-@@ -3276,7 +3274,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 * capacity to 0.
- 	 */
- 	if (sd_zbc_revalidate_zones(sdkp))
--		set_capacity_revalidate_and_notify(disk, 0, false);
-+		set_capacity_revalidate_and_notify(disk, 0, true);
- 
-  out:
- 	return 0;
--- 
-2.28.0
+The Acked-by is wrong here.  I acked this patch (17/24, rbd), and Jack
+acked the next one (18/24, rnbd).
 
+Thanks,
+
+                Ilya
