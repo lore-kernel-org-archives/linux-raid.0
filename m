@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A93C4742C
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 627A2C61DD8
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 505D9206E3
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2A6B206F1
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HtE3Jf5V"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fBt6QhZH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726533AbgKKI12 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:27:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33522 "EHLO
+        id S1726775AbgKKI1g (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:27:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbgKKI10 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 Nov 2020 03:27:26 -0500
+        with ESMTP id S1726405AbgKKI12 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 11 Nov 2020 03:27:28 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24450C0613D4;
-        Wed, 11 Nov 2020 00:27:26 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E067C0617A6;
+        Wed, 11 Nov 2020 00:27:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=msAxRVgou3+s48HjnTxbv/pHmvKh+OTllxGOwTa9PDs=; b=HtE3Jf5Vbg9BUyHuOP4LioCkGM
-        D5RSbkrHUpDFKIQjTw/EK4TzE+8HC7HKkeSRDQ5TzvYLeD176nt7vURqsS/VEBAOA0ZGVp2Hfk4BA
-        FS2uNGpdT5zytQL6JfJub2kZpw2LjaJ9Qgw8NxRTfmPK2IU9L78Jw1VK21pEcdjuzr8xdUwVC1AG8
-        FZzij4ATCs/rSb1EzfUVneXPwEq9nYX5eNo+i9hTfvU1x/iEwjUiJQP7bXoR4lZCu9eKsU3Nd9Bq0
-        Kq770Jj2OBzqFQPHPMIVFh4h4EqCewYZ87onZqxTquG/UH1fcZ9aZrou8dZ3Mf5neqm7MQBxdmEx8
-        6E4xnYtg==;
+        bh=bgbs5emPj5p7gTWcmnEuks79StD6TA5roIn47mScHH4=; b=fBt6QhZHrv17/Y1zEBZjou8nag
+        /S9UF+dPlT5bEmXhZ0AkX3Des+z44TDZwhlLf8UZwm1bya/Tw1ihVWQ1eo0/wpa9jcmRthywUSjkC
+        a5WCNVJjuCks8OG28CqM1W4KLfPlPhhxQn2JdcTB6we015wUZWKRrDnDkhahK+xL2QOV8g1e7VDFb
+        R8OvQOpZICV1BZy/htkG1su/uosUSegQuLRvZZFjPgBFD8n7wOMK+yVOakCbK2S5b4ZCm7OCaoLMu
+        rE0BnJF3Xca/1n6MGkXXTyg53AWbOj3IBct9gJs8ljT/56L365ZklV7NkghnJYSHb0UpMIe95v8XT
+        ZTecf9FA==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclT8-0007aM-Pa; Wed, 11 Nov 2020 08:27:06 +0000
+        id 1kclTG-0007bi-W8; Wed, 11 Nov 2020 08:27:15 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 06/24] block: add a return value to set_capacity_and_notify
-Date:   Wed, 11 Nov 2020 09:26:40 +0100
-Message-Id: <20201111082658.3401686-7-hch@lst.de>
+Subject: [PATCH 12/24] aoe: don't call set_capacity from irq context
+Date:   Wed, 11 Nov 2020 09:26:46 +0100
+Message-Id: <20201111082658.3401686-13-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
 References: <20201111082658.3401686-1-hch@lst.de>
@@ -70,54 +70,58 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Return if the function ended up sending an uevent or not.
+Updating the block device size from irq context can lead to torn
+writes of the 64-bit value, and prevents us from using normal
+process context locking primitives to serialize access to the 64-bit
+nr_sectors value.  Defer the set_capacity to the already existing
+workqueue handler, where it can be merged with the update of the
+block device size by using set_capacity_and_notify.  As an extra
+bonus this also adds proper uevent notifications for the resize.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c         | 7 +++++--
- include/linux/genhd.h | 2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/block/aoe/aoecmd.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index d8d9d6c1c916e1..8c350fecfe8bfe 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -47,9 +47,9 @@ static void disk_release_events(struct gendisk *disk);
- 
- /*
-  * Set disk capacity and notify if the size is not currently zero and will not
-- * be set to zero.
-+ * be set to zero.  Returns true if a uevent was sent, otherwise false.
-  */
--void set_capacity_and_notify(struct gendisk *disk, sector_t size)
-+bool set_capacity_and_notify(struct gendisk *disk, sector_t size)
+diff --git a/drivers/block/aoe/aoecmd.c b/drivers/block/aoe/aoecmd.c
+index 313f0b946fe2b3..ac720bdcd983e7 100644
+--- a/drivers/block/aoe/aoecmd.c
++++ b/drivers/block/aoe/aoecmd.c
+@@ -890,19 +890,13 @@ void
+ aoecmd_sleepwork(struct work_struct *work)
  {
- 	sector_t capacity = get_capacity(disk);
+ 	struct aoedev *d = container_of(work, struct aoedev, work);
+-	struct block_device *bd;
+-	u64 ssize;
  
-@@ -60,7 +60,10 @@ void set_capacity_and_notify(struct gendisk *disk, sector_t size)
- 		char *envp[] = { "RESIZE=1", NULL };
+ 	if (d->flags & DEVFL_GDALLOC)
+ 		aoeblk_gdalloc(d);
  
- 		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
-+		return true;
- 	}
+ 	if (d->flags & DEVFL_NEWSIZE) {
+-		ssize = get_capacity(d->gd);
+-		bd = bdget_disk(d->gd, 0);
+-		if (bd) {
+-			bd_set_nr_sectors(bd, ssize);
+-			bdput(bd);
+-		}
++		set_capacity_and_notify(d->gd, d->ssize);
 +
-+	return false;
+ 		spin_lock_irq(&d->lock);
+ 		d->flags |= DEVFL_UP;
+ 		d->flags &= ~DEVFL_NEWSIZE;
+@@ -971,10 +965,9 @@ ataid_complete(struct aoedev *d, struct aoetgt *t, unsigned char *id)
+ 	d->geo.start = 0;
+ 	if (d->flags & (DEVFL_GDALLOC|DEVFL_NEWSIZE))
+ 		return;
+-	if (d->gd != NULL) {
+-		set_capacity(d->gd, ssize);
++	if (d->gd != NULL)
+ 		d->flags |= DEVFL_NEWSIZE;
+-	} else
++	else
+ 		d->flags |= DEVFL_GDALLOC;
+ 	schedule_work(&d->work);
  }
- EXPORT_SYMBOL_GPL(set_capacity_and_notify);
- 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 596f31b5a3e133..4b22bfd9336e1a 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -315,7 +315,7 @@ static inline int get_disk_ro(struct gendisk *disk)
- extern void disk_block_events(struct gendisk *disk);
- extern void disk_unblock_events(struct gendisk *disk);
- extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
--void set_capacity_and_notify(struct gendisk *disk, sector_t size);
-+bool set_capacity_and_notify(struct gendisk *disk, sector_t size);
- 
- /* drivers/char/random.c */
- extern void add_disk_randomness(struct gendisk *disk) __latent_entropy;
 -- 
 2.28.0
 
