@@ -2,417 +2,191 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B56DDC63777
-	for <linux-raid@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36E1BC2D0A3
+	for <linux-raid@archiver.kernel.org>; Thu, 12 Nov 2020 11:28:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41DF220825
-	for <linux-raid@archiver.kernel.org>; Thu, 12 Nov 2020 05:39:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB238221FE
+	for <linux-raid@archiver.kernel.org>; Thu, 12 Nov 2020 11:28:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J9sw7lGM"
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Ng5TboSv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728918AbgKLFj1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:39:27 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:29118 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729221AbgKLFI4 (ORCPT
+        id S1725902AbgKLL2L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 12 Nov 2020 06:28:11 -0500
+Received: from de-smtp-delivery-52.mimecast.com ([51.163.158.52]:43300 "EHLO
+        de-smtp-delivery-52.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727147AbgKLL2D (ORCPT
         <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 12 Nov 2020 00:08:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605157733;
+        Thu, 12 Nov 2020 06:28:03 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
+        t=1605180479;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=d9AAFh3DR5nR6Lq+NZoziKf6IWM76CqhJxrD0I8GBMM=;
-        b=J9sw7lGMi8+vL/R8djp+6ToWQ1y1F/k6gQiNdfJ4L+Iv4LBgdoP5FKvGiUT1bS9e3xS4N4
-        LKdSIpozHkaum9LSMvMD4UF9r+R0fACdP1W88xisvFEtbeSiaSOTpScz65pPy9758nDXGY
-        qmrnpb1PyB1EqfKAM5WVRh2GxF2QYh8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-163-ODBGAFy1NRaJbRNQgPyq6Q-1; Thu, 12 Nov 2020 00:08:48 -0500
-X-MC-Unique: ODBGAFy1NRaJbRNQgPyq6Q-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 084C81074647;
-        Thu, 12 Nov 2020 05:08:47 +0000 (UTC)
-Received: from localhost.localdomain (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 32E4755766;
-        Thu, 12 Nov 2020 05:08:42 +0000 (UTC)
+        bh=xFyUiezV1cdW4/QTofUxjO180K8KiGOd6d3KDMph82k=;
+        b=Ng5TboSvWALbvTNrCJcFVxgIbrvOHCergJOpiA2BKPf9I0OQgDgasktUmLygF8fQ9AGHsq
+        YvcSFR+09q16mgWU2lkAtCfDFGG+qmalG6lfhg7PoJwuBwtT+sQwoYUrepoTvmjdzH0UDF
+        m6g9P+i2uSWXioSsp3AY9LxBknga2oo=
+Received: from EUR04-DB3-obe.outbound.protection.outlook.com
+ (mail-db3eur04lp2058.outbound.protection.outlook.com [104.47.12.58]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ de-mta-15-N2Dl2i7rPO23ytFPRaPJDw-1; Thu, 12 Nov 2020 12:27:57 +0100
+X-MC-Unique: N2Dl2i7rPO23ytFPRaPJDw-1
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Pcx3aNuQZo13HMHm+YRsoAFj4OPvW+fe0ptTHB0M/fCvKFeTJI87gB05+W9w1EBxgKqahigtjwt1vXt6VIqsaPL38529J7BUD7e7jLo+hcWnOqh3Tx6TX4QGMTkA2Jq3fVd/bxChSoMKieD6KaEB30Y18k5DUhdq3d00hI2Yy1F05t33zcBrojMhRVzZ9JZBTQA8VTqZv4tIRcRxlD4EY8+PZB2XbvMrxmduHJNGXgIvxJ68iWBeDAV2KtEg1jv5ltiDI9NYT+0v9ubUr8UyyzywjcHVrwNcYxg3al8wzhLrkr7h6EYMKRLrJFjXD3Egs5GpFtZGv8jA7X5DgXIrSA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+dfgu8xSBnPTufu2XeyBZqtrIzNHfESMJ4vVIGErGmM=;
+ b=Q1TjaoHOnqcU6vH3rbCFRYlNNCjkG3Ym3u9O2FKVyBrDt9r9fDE4vr6OzFHMgDy5jHq3KwkH6AEtV88RJg9L8Onyt9jH0mbDfcUKmH0jGxLkG2rBuarMqgPeLYwMyc6hWlEf5MIclALumVPtMorO9EqtXlFNlEgOz+lk9qz55t3KdgIWV1xI7a8nwplDNJS2bS1l1asRzUeRD4Gh5y1oDc47fIz0Qoq+iF8TVLeOXERT02HAwSisRMaYpNQMAXvMlBnwrhTxYOGRtjJsv5aQ0RXj4my8H08Vje4STqgvecTjgT1ybwEZrNckJciW6n7baTbgUsxjlvm5cP7Vwf5otA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: suse.de; dkim=none (message not signed)
+ header.d=none;suse.de; dmarc=none action=none header.from=suse.com;
+Received: from DB7PR04MB4666.eurprd04.prod.outlook.com (2603:10a6:5:2b::14) by
+ DB8PR04MB6908.eurprd04.prod.outlook.com (2603:10a6:10:116::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3541.21; Thu, 12 Nov 2020 11:27:56 +0000
+Received: from DB7PR04MB4666.eurprd04.prod.outlook.com
+ ([fe80::197:4f2c:bd9d:ff7a]) by DB7PR04MB4666.eurprd04.prod.outlook.com
+ ([fe80::197:4f2c:bd9d:ff7a%7]) with mapi id 15.20.3541.025; Thu, 12 Nov 2020
+ 11:27:56 +0000
 Subject: Re: [PATCH v2] md/cluster: fix deadlock when doing reshape job
-To:     Zhao Heming <heming.zhao@suse.com>, linux-raid@vger.kernel.org,
+To:     Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org,
         song@kernel.org, guoqing.jiang@cloud.ionos.com
-Cc:     lidong.zhong@suse.com, neilb@suse.de, colyli@suse.de
+CC:     lidong.zhong@suse.com, neilb@suse.de, colyli@suse.de
 References: <1605109898-14258-1-git-send-email-heming.zhao@suse.com>
-From:   Xiao Ni <xni@redhat.com>
-Message-ID: <a5b45adc-2db2-3429-49f9-ac3fa82f4c87@redhat.com>
-Date:   Thu, 12 Nov 2020 13:08:40 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.2.1
-MIME-Version: 1.0
-In-Reply-To: <1605109898-14258-1-git-send-email-heming.zhao@suse.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ <a5b45adc-2db2-3429-49f9-ac3fa82f4c87@redhat.com>
+From:   "heming.zhao@suse.com" <heming.zhao@suse.com>
+Message-ID: <d606f944-f66f-98f7-498d-f3939a395934@suse.com>
+Date:   Thu, 12 Nov 2020 19:27:46 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
+In-Reply-To: <a5b45adc-2db2-3429-49f9-ac3fa82f4c87@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Transfer-Encoding: quoted-printable
+X-Originating-IP: [123.123.134.204]
+X-ClientProxiedBy: HK2PR04CA0089.apcprd04.prod.outlook.com
+ (2603:1096:202:15::33) To DB7PR04MB4666.eurprd04.prod.outlook.com
+ (2603:10a6:5:2b::14)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from c73.home (123.123.134.204) by HK2PR04CA0089.apcprd04.prod.outlook.com (2603:1096:202:15::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3541.21 via Frontend Transport; Thu, 12 Nov 2020 11:27:54 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: dbae1b0e-cd52-4311-f6bd-08d886fe00c1
+X-MS-TrafficTypeDiagnostic: DB8PR04MB6908:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DB8PR04MB69089544CE1EBB980FC872CC97E70@DB8PR04MB6908.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: v4WMkYUiudxv+GJ7y3ANmws84j8KkqcoOiLvQ4XZVRNmakfvOSeVHu2zYfKuzpIDJF4h0zuedOtGhELE11Z/RIgc1NJnSZHgWfoJFKIVH3SqbEEKcR4VedbmRMebazrX7I10+vvqtIZqq/8sDBC/wbg+P3EL7pNWM0Wa3YDHVGwFohr6YK9Cmb7hQshzU7vxgIzeI1/Tjd1tOm2aEUsCXB3mCr1uJ0yLvU7LHwdg7HPM+3Tg32NFmX9CFA1vqV6ngTZHAqy9CjI9MvgisI65nn2uhb9ZsAUsWQrjZUpV4ypYltQf1DTY6bZNX0jvWHgcv4bB2Jby7dCOaXOx7yCzr7+kZFE1i2Cvq5vhnKRHSdaQ2/sDMrc1j3L+6mrznv3qb7bNcP3szU8EvqO13kkp6A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB7PR04MB4666.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(376002)(396003)(366004)(346002)(39860400002)(6486002)(5660300002)(316002)(66946007)(66476007)(66556008)(31696002)(6666004)(86362001)(83380400001)(8886007)(26005)(4326008)(186003)(16526019)(36756003)(8936002)(31686004)(478600001)(6512007)(52116002)(956004)(8676002)(6506007)(53546011)(2616005)(2906002)(9126006)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: TlFDfZm6IdjSIiAhBHsUTU+DNR37cOn1e5mn9T9Kf1jOiGB12987LKIok83lD/Cm7k6iLHk4cCgbUclXK4FEDmlmtA2wtzU7mp/RsCbUodfttPlY3+cS9pMQ5MZIOEPM9Oadda6OjsguwOaOSWkesKUCceZMwGsKQ9UYw96fiwO6vUqERZf4YZBb3JU6WmZ2+BKjz81DgekBRlE2/dgRI+u91+DM1s9maAg/TO1loa240GdxyoZYMY+kRZcOdpbp5JGUlY251LDtfAuy7GoAh56T8YdmisCODagbJcPc0q6JXRsS4QxjKP2H7JZo1ilHvOOt9YWIu/hbotMzZDQ9jNuvhhKvLq75chtugwRIjYiDsUedoX1nkdp+t9iUfxhFvgPt1AlVeBe2w2jH/u/ymC8uyDg2eWeD4qhJp5Y80X1nGpOiMgJDw3JYd7yoiucCqs0wXP17wgXFo0oFiJcizptNwP7bkS12L2uTFHBpJlSsdkKX2buaNi76Vci9dr85DnvmZax38le0HSgv+kYESEA/IH6qHMpqQvDtdZwRu8jrPZKZb+UjsYFUdy0NI38d3LBKVWe+ANY/57XWU6jRJO+4iM/KzR3qtN8RcA9CEEV8iqPpFSEWrVyicQeOnBNS5YlPQ4RMnDEg2HoGBaCrqQ==
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dbae1b0e-cd52-4311-f6bd-08d886fe00c1
+X-MS-Exchange-CrossTenant-AuthSource: DB7PR04MB4666.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2020 11:27:56.7320
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8WZfjH2DnSGJ3DhswQEwlVKh1SUdqwYOGwFqQog81Z0W2in9wbAGrdydeW2+It52ETHSn9CrsLR97XRyrWLfYw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR04MB6908
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hello,
 
+On 11/12/20 1:08 PM, Xiao Ni wrote:
+>=20
+>=20
+> On 11/11/2020 11:51 PM, Zhao Heming wrote:
+>> There is a similar deadlock in commit 0ba959774e93
+>> ("md-cluster: use sync way to handle METADATA_UPDATED msg")
+>> My patch fixed issue is very like commit 0ba959774e93, except <c>.
+>> 0ba959774e93 step <c> is "update sb", my fix is "mdadm --remove"
+>>
+>> ... ...
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state),
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 msecs_to_jiffies(5000));
+>> +=C2=A0=C2=A0=C2=A0 if (rv)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return lock_token(cinfo, mdd=
+ev_locked);
+>> +=C2=A0=C2=A0=C2=A0 else
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -1;
+>> =C2=A0 }
+> Hi Heming
+>=20
+> Can we handle this problem like metadata_update_start? lock_comm and meta=
+data_update_start are two users that
+> want to get token lock. lock_comm can do the same thing as metadata_updat=
+e_start does. If so, process_recvd_msg
+> can call md_reload_sb without waiting. All threads can work well when the=
+ initiated node release token lock. Resync
+> can send message and clear MD_CLUSTER_SEND_LOCK, then lock_comm can go on=
+ working. In this way, all threads
+> work successfully without failure.
+>=20
 
-On 11/11/2020 11:51 PM, Zhao Heming wrote:
-> There is a similar deadlock in commit 0ba959774e93
-> ("md-cluster: use sync way to handle METADATA_UPDATED msg")
-> My patch fixed issue is very like commit 0ba959774e93, except <c>.
-> 0ba959774e93 step <c> is "update sb", my fix is "mdadm --remove"
->
-> ```
-> nodeA                       nodeB
-> --------------------     --------------------
-> a.
-> send METADATA_UPDATED
-> held token_lockres:EX
->                           b.
->                           md_do_sync
->                            resync_info_update
->                              send RESYNCING
->                               + set MD_CLUSTER_SEND_LOCK
->                               + wait for holding token_lockres:EX
->
->                           c.
->                           mdadm /dev/md0 --remove /dev/sdg
->                            + held reconfig_mutex
->                            + send REMOVE
->                               + wait_event(MD_CLUSTER_SEND_LOCK)
->
->                           d.
->                           recv_daemon //METADATA_UPDATED from A
->                            process_metadata_update
->                             + (mddev_trylock(mddev) ||
->                                MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD)
->                               //this time, both return false forever.
-> ```
->
-> Explaination:
->
-> a>
-> A send METADATA_UPDATED
-> this will block all other nodes to send msg in cluster.
->
-> b>
-> B does sync jobs, so it will send RESYNCING at intervals.
-> this will be block for holding token_lockres:EX lock.
-> ```
-> md_do_sync
->   raid1_sync_request
->    resync_info_update
->     sendmsg //with mddev_locked: false
->      lock_comm
->       + wait_event(cinfo->wait,
->       |    !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state));
->       + lock_token //for step<a>, block holding EX lock
->          + dlm_lock_sync(cinfo->token_lockres, DLM_LOCK_EX); // blocking
-> ```
-> c>
-> B do "--remove" action and will send REMOVE.
-> this will be blocked by step <b>: MD_CLUSTER_SEND_LOCK is 1.
-> ```
-> md_ioctl
->   + mddev_lock(mddev) //holding reconfig_mutex, it influnces <d>
->   + hot_remove_disk
->      remove_disk
->       sendmsg //with mddev_locked: true
->        lock_comm
->         wait_event(cinfo->wait,
->           !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state));//blocking
-> ```
-> d>
-> B recv METADATA_UPDATED msg which send from A in step <a>.
-> this will be blocked by step <c>: holding mddev lock, it makes
-> wait_event can't hold mddev lock. (btw,
-> MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD keep ZERO in this scenario.)
-> ```
-> process_metadata_update
->    wait_event(mddev->thread->wqueue,
->          (got_lock = mddev_trylock(mddev)) ||
->          test_bit(MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD, &cinfo->state));
-> ```
->
-> Repro steps:
->
-> Test env
->
-> node A & B share 3 iSCSI luns: sdg/sdh/sdi. Each lun size is 1GB. The disk
-> size is more large the issues are more likely to trigger.
-> (more resync time, more easily trigger issues)
->
-> Test script
->
-> ```
-> ssh root@node2 "mdadm -S --scan"
-> mdadm -S --scan
-> for i in {g,h,i};do dd if=/dev/zero of=/dev/sd$i oflag=direct bs=1M \
-> count=20; done
->
-> echo "mdadm create array"
-> mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdg /dev/sdh \
->   --bitmap-chunk=1M
-> echo "set up array on node2"
-> ssh root@node2 "mdadm -A /dev/md0 /dev/sdg /dev/sdh"
->
-> sleep 5
->
-> mkfs.xfs /dev/md0
-> mdadm --manage --add /dev/md0 /dev/sdi
-> mdadm --wait /dev/md0
-> mdadm --grow --raid-devices=3 /dev/md0
->
-> mdadm /dev/md0 --fail /dev/sdg
-> mdadm /dev/md0 --remove /dev/sdg
-> mdadm --grow --raid-devices=2 /dev/md0
-> ```
->
->
-> Test result
->
-> test script will hung when executing "mdadm --remove".
->
-> ```
-> node1 # ps axj | grep mdadm
-> 1  5423  5227  2231 ?    -1 D   0   0:00 mdadm /dev/md0 --remove /dev/sdg
->
-> node1 # cat /proc/mdstat
-> Personalities : [raid1]
-> md0 : active raid1 sdi[2] sdh[1] sdg[0](F)
->        1046528 blocks super 1.2 [2/1] [_U]
->        [>....................]  recovery =  0.0% (1/1046528)
-> finish=354.0min speed=47K/sec
->        bitmap: 1/1 pages [4KB], 1024KB chunk
->
-> unused devices: <none>
->
-> node2 # cat /proc/mdstat
-> Personalities : [raid1]
-> md0 : active raid1 sdi[2] sdg[0](F) sdh[1]
->        1046528 blocks super 1.2 [2/1] [_U]
->        bitmap: 1/1 pages [4KB], 1024KB chunk
->
-> unused devices: <none>
->
-> node1 # echo t > /proc/sysrq-trigger
-> md0_cluster_rec D    0  5329      2 0x80004000
-> Call Trace:
->   __schedule+0x1f6/0x560
->   ? _cond_resched+0x2d/0x40
->   ? schedule+0x4a/0xb0
->   ? process_metadata_update.isra.0+0xdb/0x140 [md_cluster]
->   ? wait_woken+0x80/0x80
->   ? process_recvd_msg+0x113/0x1d0 [md_cluster]
->   ? recv_daemon+0x9e/0x120 [md_cluster]
->   ? md_thread+0x94/0x160 [md_mod]
->   ? wait_woken+0x80/0x80
->   ? md_congested+0x30/0x30 [md_mod]
->   ? kthread+0x115/0x140
->   ? __kthread_bind_mask+0x60/0x60
->   ? ret_from_fork+0x1f/0x40
->
-> mdadm           D    0  5423      1 0x00004004
-> Call Trace:
->   __schedule+0x1f6/0x560
->   ? __schedule+0x1fe/0x560
->   ? schedule+0x4a/0xb0
->   ? lock_comm.isra.0+0x7b/0xb0 [md_cluster]
->   ? wait_woken+0x80/0x80
->   ? remove_disk+0x4f/0x90 [md_cluster]
->   ? hot_remove_disk+0xb1/0x1b0 [md_mod]
->   ? md_ioctl+0x50c/0xba0 [md_mod]
->   ? wait_woken+0x80/0x80
->   ? blkdev_ioctl+0xa2/0x2a0
->   ? block_ioctl+0x39/0x40
->   ? ksys_ioctl+0x82/0xc0
->   ? __x64_sys_ioctl+0x16/0x20
->   ? do_syscall_64+0x5f/0x150
->   ? entry_SYSCALL_64_after_hwframe+0x44/0xa9
->
-> md0_resync      D    0  5425      2 0x80004000
-> Call Trace:
->   __schedule+0x1f6/0x560
->   ? schedule+0x4a/0xb0
->   ? dlm_lock_sync+0xa1/0xd0 [md_cluster]
->   ? wait_woken+0x80/0x80
->   ? lock_token+0x2d/0x90 [md_cluster]
->   ? resync_info_update+0x95/0x100 [md_cluster]
->   ? raid1_sync_request+0x7d3/0xa40 [raid1]
->   ? md_do_sync.cold+0x737/0xc8f [md_mod]
->   ? md_thread+0x94/0x160 [md_mod]
->   ? md_congested+0x30/0x30 [md_mod]
->   ? kthread+0x115/0x140
->   ? __kthread_bind_mask+0x60/0x60
->   ? ret_from_fork+0x1f/0x40
-> ```
->
-> How to fix:
->
-> Break sending side bock by wait_event_timeout:5s.
->
-> Why only break send side, why not break on receive side or both side?
->
-> *** send side***
->
-> Currently code, sendmsg only fail when __sendmsg return error. (it's
-> caused by dlm layer fails.)
->
-> After applying patch, there will have new fail cases:
->   5s timeout & return -1.
->
-> All related functions:
-> resync_bitmap, update_bitmap_size, resync_info_update, remove_disk,
-> gather_bitmaps
->
-> There is only one function which doesn't care return value: resync_bitmap
-> This function is used in leave path. If the msg doesn't send out (5s
-> timeout), the result is other nodes won't know the failure event by
-> BITMAP_NEEDS_SYNC. But even if missing BITMAP_NEEDS_SYNC, there is another
-> api recover_slot(), which is triggered by dlm and do the same job.
->
-> So all the sending side related functions are safe to break deadloop.
->
-> *** receive side ***
->
-> Related function: process_metadata_update
->
-> Receive side should do as more as possible to handle incoming msg.
-> If there is a 5s timeout code in process_metadata_update, there will
-> tigger inconsistent issue.
-> e.g.
-> A does --faulty, send METADATA_UPDATE to B,
-> B receives the msg, but meets 5s timeout. It won't trigger to update
-> kernel md info, and will have a gap between kernel memory and disk
-> metadata.
->
-> So receive side should keep current code.
->
-> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
-> ---
-> v2:
-> - for clearly, split patch-v1 into two single patch to review.
-> - add error handling of remove_disk in hot_remove_disk
-> - add error handling of lock_comm in all caller
-> - drop 5s timeout patch code in process_metadata_update
-> - revise commit log
->
-> v1:
-> - add cover-letter
-> - add more descriptions in commit log
->
-> v0:
-> - create 2 patches, patch 2/2 is this patch.
->
-> ---
->   drivers/md/md-cluster.c | 27 +++++++++++++++++++--------
->   drivers/md/md.c         |  6 ++++--
->   2 files changed, 23 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 4aaf4820b6f6..06b4c787dd1f 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -701,10 +701,15 @@ static int lock_token(struct md_cluster_info *cinfo, bool mddev_locked)
->    */
->   static int lock_comm(struct md_cluster_info *cinfo, bool mddev_locked)
->   {
-> -	wait_event(cinfo->wait,
-> -		   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state));
-> +	int rv;
->   
-> -	return lock_token(cinfo, mddev_locked);
-> +	rv = wait_event_timeout(cinfo->wait,
-> +			   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state),
-> +			   msecs_to_jiffies(5000));
-> +	if (rv)
-> +		return lock_token(cinfo, mddev_locked);
-> +	else
-> +		return -1;
->   }
-Hi Heming
+Currently MD_CLUSTER_SEND_LOCKED_ALREADY only for adding a new disk.
+(please refer Documentation/driver-api/md/md-cluster.rst section: 5. Adding=
+ a new Device")
+During ADD_NEW_DISK process, md-cluster will block all other msg sending un=
+til metadata_update_finish calls
+unlock_comm.
 
-Can we handle this problem like metadata_update_start? lock_comm and 
-metadata_update_start are two users that
-want to get token lock. lock_comm can do the same thing as 
-metadata_update_start does. If so, process_recvd_msg
-can call md_reload_sb without waiting. All threads can work well when 
-the initiated node release token lock. Resync
-can send message and clear MD_CLUSTER_SEND_LOCK, then lock_comm can go 
-on working. In this way, all threads
-work successfully without failure.
+With your idea, md-cluster will allow to concurrently send msg. I'm not ver=
+y familiar with all raid1 scenarios.
+But at least, you break the rule of handling ADD_NEW_DISK. it will allow se=
+nd other msg during ADD_NEW_DISK.
 
->   
->   static void unlock_comm(struct md_cluster_info *cinfo)
-> @@ -784,9 +789,11 @@ static int sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg,
->   {
->   	int ret;
->   
-> -	lock_comm(cinfo, mddev_locked);
-> -	ret = __sendmsg(cinfo, cmsg);
-> -	unlock_comm(cinfo);
-> +	ret = lock_comm(cinfo, mddev_locked);
-> +	if (!ret) {
-> +		ret = __sendmsg(cinfo, cmsg);
-> +		unlock_comm(cinfo);
-> +	}
->   	return ret;
->   }
->   
-> @@ -1255,7 +1262,10 @@ static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
->   	int raid_slot = -1;
->   
->   	md_update_sb(mddev, 1);
-> -	lock_comm(cinfo, 1);
-> +	if (lock_comm(cinfo, 1)) {
-> +		pr_err("%s: lock_comm failed\n", __func__);
-> +		return;
-> +	}
->   
->   	memset(&cmsg, 0, sizeof(cmsg));
->   	cmsg.type = cpu_to_le32(METADATA_UPDATED);
-> @@ -1407,7 +1417,8 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
->   	cmsg.type = cpu_to_le32(NEWDISK);
->   	memcpy(cmsg.uuid, uuid, 16);
->   	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
-> -	lock_comm(cinfo, 1);
-> +	if (lock_comm(cinfo, 1))
-> +		return -EAGAIN;
->   	ret = __sendmsg(cinfo, &cmsg);
->   	if (ret) {
->   		unlock_comm(cinfo);
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 74280e353b8f..46da165afde2 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6948,8 +6948,10 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
->   		goto busy;
->   
->   kick_rdev:
-> -	if (mddev_is_clustered(mddev))
-> -		md_cluster_ops->remove_disk(mddev, rdev);
-> +	if (mddev_is_clustered(mddev)) {
-> +		if (md_cluster_ops->remove_disk(mddev, rdev))
-> +			goto busy;
-> +	}
->   
->   	md_kick_rdev_from_array(rdev);
->   	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-These codes are not related with this deadlock problem. It's better to 
-file a new patch
-to fix checking the return value problem.
+>> =C2=A0 static void unlock_comm(struct md_cluster_info *cinfo)
+>> @@ -784,9 +789,11 @@ static int sendmsg(struct md_cluster_info *cinfo, s=
+truct cluster_msg *cmsg,
+>> =C2=A0 {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int ret;
+>> -=C2=A0=C2=A0=C2=A0 lock_comm(cinfo, mddev_locked);
+>> ... ...
+>> +=C2=A0=C2=A0=C2=A0 if (mddev_is_clustered(mddev)) {
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (md_cluster_ops->remove_d=
+isk(mddev, rdev))
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto=
+ busy;
+>> +=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 md_kick_rdev_from_array(rdev);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_fla=
+gs);
+> These codes are not related with this deadlock problem. It's better to fi=
+le a new patch
+> to fix checking the return value problem.
+>=20
 
-Best Regards
-Xiao
+In my opinion: we should include these code in this patch.=20
+For totally fix the deadlock, md layer should return error to userspace.
+
+But with your comments, I found other potential issues of md-cluster.=20
+There still have some cluster_ops APIs, which caller doesn't care error ret=
+urn:
+.resync_finish - may cause other nodes never clean MD_RESYNCING_REMOTE.
+.resync_info_update - this error could be safely ignore
+.metadata_update_finish - may cause other nodes kernel md info is inconsist=
+ent with disk metadata.
+
+maybe I or other guys fix them in the future.
+
+> Best Regards
+> Xiao
+>=20
 
