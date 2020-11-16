@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDF9CC82544
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5825EC83018
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B69C524248
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 111B424248
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OnR7Hl4G"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="in7tsAV0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731191AbgKPPAf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:00:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49300 "EHLO
+        id S1731198AbgKPPAg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:00:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731140AbgKPPAL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 10:00:11 -0500
+        with ESMTP id S1731129AbgKPPAF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 10:00:05 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3C13C0613CF;
-        Mon, 16 Nov 2020 07:00:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA55CC0613D1;
+        Mon, 16 Nov 2020 07:00:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=hht0IJxm0Atonm6wFAUEQs4XOgcCelxMQ4knV7FOtuU=; b=OnR7Hl4Gn8Cqes4fUGZG09Ou5b
-        wkdlpWME3XUZyniKD0u6+LvQEZ4jfV5KI0bvgOdKoKy/avRVN1ICpG3ayLr7y9f7mbweYvyb5dtf9
-        LB6vxsD9CHKtKypIkEHeVB91GzwQLjRfxlTFqOarpX4O1io/JrahYaGlAejJ9Wdq1/ICyENnWPCND
-        K6zRNnIdtyLJMuh8Hr4Sfe2rN4rdYR4DXOl0KacL5GfpL0QuIaqSWtKXdNYNYLVFnm5vnjYokZj+O
-        0vQqQ4fnqy8Lr9QzB4VCWPgAQgxp0yphr6N7aK0gOpCB0lKFL+g2IP94YJiiFkRNGuFpsWI78KvwO
-        vmSnReZw==;
+        bh=hARJkWQlpNoJdj/vxwczaVdCfVVvfIUC8NDH/Nikt6k=; b=in7tsAV0pYzdDaH23WhnwAKR3R
+        7xf04zdmNOdEtYs8arbN89y3kw4LApo5bLo3N/m4GrsdUYv2To+bUfGPGTQpzQd4TQGyrpK4e5lHC
+        eCShsJJjHfdRG2ZVv14MPwihM8z3yu6kfNX1CiibXDctlXHH5jeZRUvheSFxZ/0kcEtUXIuEjWms/
+        mhndsgiWlZLvqm1AI73/nDAEmdFQJYfIewjJl63lmaezSXoLWkADqyILaKsE+S6dzaUQc9rbYpEsZ
+        grwi29hhSKISbnn7jD3DaEY2GFWHItE9E68g0ieNppWIL+4Ck8rzVBmAR0Eftf+VYl62odfp1ooaP
+        Zg8s5EIQ==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefz6-0004Ja-4t; Mon, 16 Nov 2020 15:00:00 +0000
+        id 1kefz0-0004Hn-7B; Mon, 16 Nov 2020 14:59:54 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 76/78] filemap: use ->f_mapping over ->i_mapping consistently
-Date:   Mon, 16 Nov 2020 15:58:07 +0100
-Message-Id: <20201116145809.410558-77-hch@lst.de>
+Subject: [PATCH 72/78] block: use disk_part_iter_exit in disk_part_iter_next
+Date:   Mon, 16 Nov 2020 15:58:03 +0100
+Message-Id: <20201116145809.410558-73-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,56 +70,28 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use file->f_mapping in all functions that have a struct file available
-to properly handle the case where file_inode(file)->i_mapping !=
-inode->i_mapping.
+Call disk_part_iter_exit in disk_part_iter_next instead of duplicating
+the functionality.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mm/filemap.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ block/genhd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d5e7c2029d16b4..3e3531a757f8db 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2887,13 +2887,13 @@ EXPORT_SYMBOL(filemap_map_pages);
- vm_fault_t filemap_page_mkwrite(struct vm_fault *vmf)
- {
- 	struct page *page = vmf->page;
--	struct inode *inode = file_inode(vmf->vma->vm_file);
-+	struct inode *inode = vmf->vma->vm_file->f_mapping->host;
- 	vm_fault_t ret = VM_FAULT_LOCKED;
+diff --git a/block/genhd.c b/block/genhd.c
+index 999f7142b04e7d..56bc37e98ed852 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -230,8 +230,7 @@ struct hd_struct *disk_part_iter_next(struct disk_part_iter *piter)
+ 	int inc, end;
  
- 	sb_start_pagefault(inode->i_sb);
- 	file_update_time(vmf->vma->vm_file);
- 	lock_page(page);
--	if (page->mapping != inode->i_mapping) {
-+	if (page->mapping != vmf->vma->vm_file->f_mapping) {
- 		unlock_page(page);
- 		ret = VM_FAULT_NOPAGE;
- 		goto out;
-@@ -3149,10 +3149,9 @@ void dio_warn_stale_pagecache(struct file *filp)
- {
- 	static DEFINE_RATELIMIT_STATE(_rs, 86400 * HZ, DEFAULT_RATELIMIT_BURST);
- 	char pathname[128];
--	struct inode *inode = file_inode(filp);
- 	char *path;
+ 	/* put the last partition */
+-	disk_put_part(piter->part);
+-	piter->part = NULL;
++	disk_part_iter_exit(piter);
  
--	errseq_set(&inode->i_mapping->wb_err, -EIO);
-+	errseq_set(&filp->f_mapping->wb_err, -EIO);
- 	if (__ratelimit(&_rs)) {
- 		path = file_path(filp, pathname, sizeof(pathname));
- 		if (IS_ERR(path))
-@@ -3179,7 +3178,7 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 
- 	if (iocb->ki_flags & IOCB_NOWAIT) {
- 		/* If there are pages to writeback, return */
--		if (filemap_range_has_page(inode->i_mapping, pos,
-+		if (filemap_range_has_page(file->f_mapping, pos,
- 					   pos + write_len - 1))
- 			return -EAGAIN;
- 	} else {
+ 	/* get part_tbl */
+ 	rcu_read_lock();
 -- 
 2.29.2
 
