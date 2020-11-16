@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40488C4742C
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18C77C6369E
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:52 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 019082344C
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B146C22450
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vsGAL9U8"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 019082344C
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QYwalgIH"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B146C22450
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-raid-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729871AbgKPO6c (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:58:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48892 "EHLO
+        id S1730577AbgKPO6j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:58:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726236AbgKPO6b (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:58:31 -0500
+        with ESMTP id S1730446AbgKPO6h (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:58:37 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BE23C0613CF;
-        Mon, 16 Nov 2020 06:58:31 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA2BCC0613D2;
+        Mon, 16 Nov 2020 06:58:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=x5/MaiTSLd30pQ/Fqm/l4PitleNTflLc7dCfcSezhUw=; b=vsGAL9U8HRExJBfuNBlOJoYTrw
-        TjKt1s0QBKjG6I5tKKhtgoYV/e1gMtZau9MsGbzjL6ihP06PQ8IAVbe+JV6qvxfhubM6k3FD5n/Ta
-        sfOT7ioQF9fWp3yjxs1txJ+JxTgkSd1h8SuTZhNqV2KfEh3d9sp0wul/KMAtYzv/nWLwcquJtpxyw
-        loV+Tkg2tMzw1ciSe//LPbFNEK2gCOGFgsX7ytqRM4Y6skH1rdy0ayx4DfRzhbFzNc8UbnxLsWAfz
-        4Oi9dpKoJqVcUe23/rbzHXdvlIR2k09MyeOVJX4AGpVZ5L4Zh8Od777u2dexRDhOPgmWiAMpOnltJ
-        cQp3oOwQ==;
+        bh=iXRxgxZjdW0OSiynW0b97Ye/Ew891ZT5a6+RemicV+c=; b=QYwalgIHuTfbRFaTkWHkM/7tzW
+        ACNgYybAP7vqcx/im3VyKOgAqTgW5Atn+0ww2N8yuikc1w292fLMl1UaSuvRPNP3foPRzIFlfYrUO
+        TF5EYc+etKoCl/jtkiK/l8LsHF/56Z+hcqD9nruEsa0QAFV8VyAb2w5WHLyaXloSD46SPL4BHTJgf
+        Bvq6vpDR5mgNyI2RyrRZoODX71i6Aaac3KpH4ld2puCpmn3rAVa2TkBfOKYPio3kLY7m4sAF2wK3s
+        dHoLtSXORuum4wYRF1CwCfPc8DdNWE91x1++nDT4y6RTBsjGds+V9F6YFSSS6E9XoHMur0U1Y3c7J
+        sLlJ6zUA==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxP-0003j3-EO; Mon, 16 Nov 2020 14:58:15 +0000
+        id 1kefxU-0003l1-V7; Mon, 16 Nov 2020 14:58:21 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -59,11 +59,10 @@ Cc:     Justin Sanders <justin@coraid.com>,
         drbd-dev@lists.linbit.com, nbd@other.debian.org,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 04/78] sd: update the bdev size in sd_revalidate_disk
-Date:   Mon, 16 Nov 2020 15:56:55 +0100
-Message-Id: <20201116145809.410558-5-hch@lst.de>
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH 08/78] nbd: refactor size updates
+Date:   Mon, 16 Nov 2020 15:56:59 +0100
+Message-Id: <20201116145809.410558-9-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -74,51 +73,116 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This avoids the extra call to revalidate_disk_size in sd_rescan and
-is otherwise a no-op because the size did not change, or we are in
-the probe path.
+Merge nbd_size_set and nbd_size_update into a single function that also
+updates the nbd_config fields.  This new function takes the device size
+in bytes as the first argument, and the blocksize as the second argument,
+simplifying the calculations required in most callers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 ---
- drivers/scsi/sd.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/block/nbd.c | 44 ++++++++++++++++++--------------------------
+ 1 file changed, 18 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 656bcf4940d6d1..4a34dd5b153196 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1750,10 +1750,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- static void sd_rescan(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	int ret;
- 
--	ret = sd_revalidate_disk(sdkp->disk);
--	revalidate_disk_size(sdkp->disk, ret == 0);
-+	sd_revalidate_disk(sdkp->disk);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 48054051e281e6..6e8f2ff715c661 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -296,28 +296,30 @@ static void nbd_size_clear(struct nbd_device *nbd)
+ 	}
  }
  
- static int sd_ioctl(struct block_device *bdev, fmode_t mode,
-@@ -3266,7 +3264,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	sdkp->first_scan = 0;
+-static void nbd_size_update(struct nbd_device *nbd)
++static void nbd_set_size(struct nbd_device *nbd, loff_t bytesize,
++		loff_t blksize)
+ {
+-	struct nbd_config *config = nbd->config;
+-	sector_t nr_sectors = config->bytesize >> 9;
+ 	struct block_device *bdev;
  
- 	set_capacity_revalidate_and_notify(disk,
--		logical_to_sectors(sdp, sdkp->capacity), false);
-+		logical_to_sectors(sdp, sdkp->capacity), true);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
++	nbd->config->bytesize = bytesize;
++	nbd->config->blksize = blksize;
++
+ 	if (!nbd->task_recv)
+ 		return;
  
-@@ -3276,7 +3274,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 * capacity to 0.
- 	 */
- 	if (sd_zbc_revalidate_zones(sdkp))
--		set_capacity_revalidate_and_notify(disk, 0, false);
-+		set_capacity_revalidate_and_notify(disk, 0, true);
+-	if (config->flags & NBD_FLAG_SEND_TRIM) {
+-		nbd->disk->queue->limits.discard_granularity = config->blksize;
+-		nbd->disk->queue->limits.discard_alignment = config->blksize;
++	if (nbd->config->flags & NBD_FLAG_SEND_TRIM) {
++		nbd->disk->queue->limits.discard_granularity = blksize;
++		nbd->disk->queue->limits.discard_alignment = blksize;
+ 		blk_queue_max_discard_sectors(nbd->disk->queue, UINT_MAX);
+ 	}
+-	blk_queue_logical_block_size(nbd->disk->queue, config->blksize);
+-	blk_queue_physical_block_size(nbd->disk->queue, config->blksize);
++	blk_queue_logical_block_size(nbd->disk->queue, blksize);
++	blk_queue_physical_block_size(nbd->disk->queue, blksize);
  
-  out:
+-	set_capacity(nbd->disk, nr_sectors);
++	set_capacity(nbd->disk, bytesize >> 9);
+ 	bdev = bdget_disk(nbd->disk, 0);
+ 	if (bdev) {
+ 		if (bdev->bd_disk)
+-			bd_set_nr_sectors(bdev, nr_sectors);
++			bd_set_nr_sectors(bdev, bytesize >> 9);
+ 		else
+ 			set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
+ 		bdput(bdev);
+@@ -325,15 +327,6 @@ static void nbd_size_update(struct nbd_device *nbd)
+ 	kobject_uevent(&nbd_to_dev(nbd)->kobj, KOBJ_CHANGE);
+ }
+ 
+-static void nbd_size_set(struct nbd_device *nbd, loff_t blocksize,
+-			 loff_t nr_blocks)
+-{
+-	struct nbd_config *config = nbd->config;
+-	config->blksize = blocksize;
+-	config->bytesize = blocksize * nr_blocks;
+-	nbd_size_update(nbd);
+-}
+-
+ static void nbd_complete_rq(struct request *req)
+ {
+ 	struct nbd_cmd *cmd = blk_mq_rq_to_pdu(req);
+@@ -1311,7 +1304,7 @@ static int nbd_start_device(struct nbd_device *nbd)
+ 		args->index = i;
+ 		queue_work(nbd->recv_workq, &args->work);
+ 	}
+-	nbd_size_update(nbd);
++	nbd_set_size(nbd, config->bytesize, config->blksize);
+ 	return error;
+ }
+ 
+@@ -1390,15 +1383,14 @@ static int __nbd_ioctl(struct block_device *bdev, struct nbd_device *nbd,
+ 			arg = NBD_DEF_BLKSIZE;
+ 		if (!nbd_is_valid_blksize(arg))
+ 			return -EINVAL;
+-		nbd_size_set(nbd, arg,
+-			     div_s64(config->bytesize, arg));
++		nbd_set_size(nbd, config->bytesize, arg);
+ 		return 0;
+ 	case NBD_SET_SIZE:
+-		nbd_size_set(nbd, config->blksize,
+-			     div_s64(arg, config->blksize));
++		nbd_set_size(nbd, arg, config->blksize);
+ 		return 0;
+ 	case NBD_SET_SIZE_BLOCKS:
+-		nbd_size_set(nbd, config->blksize, arg);
++		nbd_set_size(nbd, arg * config->blksize,
++			     config->blksize);
+ 		return 0;
+ 	case NBD_SET_TIMEOUT:
+ 		nbd_set_cmd_timeout(nbd, arg);
+@@ -1828,7 +1820,7 @@ static int nbd_genl_size_set(struct genl_info *info, struct nbd_device *nbd)
+ 	}
+ 
+ 	if (bytes != config->bytesize || bsize != config->blksize)
+-		nbd_size_set(nbd, bsize, div64_u64(bytes, bsize));
++		nbd_set_size(nbd, bytes, bsize);
  	return 0;
+ }
+ 
 -- 
 2.29.2
 
