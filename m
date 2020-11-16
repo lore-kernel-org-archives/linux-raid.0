@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D987DC83018
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8184AC8301C
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4D6D223C7
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AABD24199
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qaAfbB35"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eK8/rlIl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730705AbgKPO6v (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:58:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48980 "EHLO
+        id S1730728AbgKPO6z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:58:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730678AbgKPO6v (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:58:51 -0500
+        with ESMTP id S1730709AbgKPO6w (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:58:52 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCB38C0613CF;
-        Mon, 16 Nov 2020 06:58:50 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4B4DC0613CF;
+        Mon, 16 Nov 2020 06:58:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=pTUA48t42+HHCJV8On6c5azUAuBD9lzCSJPspjiep2g=; b=qaAfbB35avsytGqpNEWytrYnG3
-        Gzj30W9piDTxClPGcKhQyC+7xWVJuzk1wqdaEoOD9LirlO1oU4d+8MQk8YOX9kwzJ7YvxhfCYVwqV
-        R1dvaVAuFO/bc6xYy1Ev4vzKAgcI+bbNKPs2o+tMhgBNzFFqOC/Cs3j9//Uol04948xLm+DnqHaQV
-        JmjjR/YVKAVJHjcogeCp9WMAO/bNvPQrjfn23UtbJYTihH9NKGBOQhYu6ZZR0Bj/S8oBjTDj9QxIb
-        xdoFbJTJepAHEgsdxqO7JMl+zv8FirGSWZmdep8SDJQcE2TlUZhGVyxST/B+EptdxxxLsqlXBn1sz
-        2IVCtD9Q==;
+        bh=Y79HfAEyQ1Osc+bcMzZJ5692pPHEaLCtoTd5IVsJTUY=; b=eK8/rlIlxKne8mY/TyQF28rFKp
+        R+NjWRmyqlHhZW7mc0uKiw7grYmQBF60/GTH8mV7+V1y+jWkJgjEMZIH8WPLPgIBhMJUMD1G0pLpF
+        7JyjO8JIaJaLLPZiY0OUk25E7QxOEU7w104PbHzamDXeIRSHtvAz9/NM31Z7B0V5xRgvs+KXRqxPq
+        x8i9w7gcG6i3Ci/5TUST199evDiwc4f6VACjbFzWy4Z0jBwdV4x0GMLLvZCFi/p1y7Db0VzicSOUt
+        lrzr+ZlA6NpSYydrhrbUYW+XCA6DIrRp0muBraMGxMazXjPHsTjGudfq7pK8O26r+BkzECXNBsH/F
+        JZxCaIPg==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxi-0003ph-Re; Mon, 16 Nov 2020 14:58:35 +0000
+        id 1kefxn-0003r7-B8; Mon, 16 Nov 2020 14:58:39 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 18/78] zram: use set_capacity_and_notify
-Date:   Mon, 16 Nov 2020 15:57:09 +0100
-Message-Id: <20201116145809.410558-19-hch@lst.de>
+Subject: [PATCH 21/78] md: remove a spurious call to revalidate_disk_size in update_size
+Date:   Mon, 16 Nov 2020 15:57:12 +0100
+Message-Id: <20201116145809.410558-22-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,46 +70,28 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use set_capacity_and_notify to set the size of both the disk and block
-device.  This also gets the uevent notifications for the resize for free.
+None of the ->resize methods updates the disk size, so calling
+revalidate_disk_size here won't do anything.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Song Liu <song@kernel.org>
 ---
- drivers/block/zram/zram_drv.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/md/md-cluster.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index 1b697208d66157..6d15d51cee2b7e 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -1695,7 +1695,7 @@ static void zram_reset_device(struct zram *zram)
- 	disksize = zram->disksize;
- 	zram->disksize = 0;
- 
--	set_capacity(zram->disk, 0);
-+	set_capacity_and_notify(zram->disk, 0);
- 	part_stat_set_all(&zram->disk->part0, 0);
- 
- 	up_write(&zram->init_lock);
-@@ -1741,9 +1741,7 @@ static ssize_t disksize_store(struct device *dev,
- 
- 	zram->comp = comp;
- 	zram->disksize = disksize;
--	set_capacity(zram->disk, zram->disksize >> SECTOR_SHIFT);
--
--	revalidate_disk_size(zram->disk, true);
-+	set_capacity_and_notify(zram->disk, zram->disksize >> SECTOR_SHIFT);
- 	up_write(&zram->init_lock);
- 
- 	return len;
-@@ -1790,7 +1788,6 @@ static ssize_t reset_store(struct device *dev,
- 	/* Make sure all the pending I/O are finished */
- 	fsync_bdev(bdev);
- 	zram_reset_device(zram);
--	revalidate_disk_size(zram->disk, true);
- 	bdput(bdev);
- 
- 	mutex_lock(&bdev->bd_mutex);
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 87442dc59f6ca3..35e2690c1803dd 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1299,8 +1299,6 @@ static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
+ 	} else {
+ 		/* revert to previous sectors */
+ 		ret = mddev->pers->resize(mddev, old_dev_sectors);
+-		if (!ret)
+-			revalidate_disk_size(mddev->gendisk, true);
+ 		ret = __sendmsg(cinfo, &cmsg);
+ 		if (ret)
+ 			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
 -- 
 2.29.2
 
