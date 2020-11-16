@@ -2,71 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBC5FC6369E
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 17:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EBACC4742C
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 17:39:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85C8121D7E
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 17:31:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F1AB22265
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 17:39:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="MX6ugVEQ"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="wH0K96ai"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733018AbgKPRav (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 12:30:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46966 "EHLO mail.kernel.org"
+        id S2387473AbgKPRht (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 12:37:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49674 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732924AbgKPRav (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 16 Nov 2020 12:30:51 -0500
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+        id S1733098AbgKPRhs (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 16 Nov 2020 12:37:48 -0500
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7F5982225B;
-        Mon, 16 Nov 2020 17:30:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0B33E222EC;
+        Mon, 16 Nov 2020 17:37:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605547850;
-        bh=UpQYpVjxWvfwphzD1YtzZKX4gJ1zajvx3CurLsFZ+60=;
+        s=default; t=1605548267;
+        bh=ftduAERcAIXDqH3TIoaKNDFMaog9lpKkHZKNbYpzPJA=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=MX6ugVEQerRMjIihGXuRuaBSd9U41KzRG79hPwln/sRIyBy6qOhQ8qDKwJMO9MTyl
-         Cw4/oLQkcKwXNzi6Iuka91E5JX6xrEl2UMntabkWUhyRlZMUJb8CYBi6NbtG820zOz
-         3Pba/5bjyuuGYg8CY6zxdqwEPP6ewom09xZAK0W4=
-Received: by mail-lj1-f180.google.com with SMTP id y16so21080985ljk.1;
-        Mon, 16 Nov 2020 09:30:50 -0800 (PST)
-X-Gm-Message-State: AOAM532xqOVd0FxjvDPnVtCXytxqGNn5l1bMeQVuVxJAVfHEW5IKnisf
-        bqBXUPxhXmnuGksnGTl/zUcIkzaF2NrapxOOmFk=
-X-Google-Smtp-Source: ABdhPJyRWi+mnbDZNzQgnSLP2+UnefmQHMh4IVb1bM04Or4ZESnQGi5EDw/rg7q7PWuXK2IKYc6fMXCbzsa/whMb9lo=
-X-Received: by 2002:a2e:3316:: with SMTP id d22mr160386ljc.392.1605547848865;
- Mon, 16 Nov 2020 09:30:48 -0800 (PST)
+        b=wH0K96aiOcV3zWDXEfO4eGXrSbfel4fzpavvJrcvlGnm+IOvE6CCXcyPRZ9CDEpWQ
+         ERyPgn3goZaj4Rjri8kCDsRD2QqVIDrl9bwMtmzAsZXelVyGcoi/J8IVVb6h9ki8ms
+         Nt6zKSXy/JZjbcTnM2HNzH4y+CQMSryqUl+eemUA=
+Received: by mail-wm1-f52.google.com with SMTP id p22so25432wmg.3;
+        Mon, 16 Nov 2020 09:37:46 -0800 (PST)
+X-Gm-Message-State: AOAM532+D7CgVwSiMMWS3UnCwBorA2v4LkI7ZN8sQJ8ZqWXcaPOmRLIQ
+        WKg7/hX4Hr+f4oBq6+kb0J6ZN8cgd7LU/vzhKLk=
+X-Google-Smtp-Source: ABdhPJwSJNXG5A+c75VC7fB+eg5ocrYD0cMopnWErnzA3/FY5Qe4JfgRdEHZElz1KxxX9qTRF1opV72EejXl51sD+G0=
+X-Received: by 2002:a1c:bbc4:: with SMTP id l187mr17490114wmf.133.1605548265533;
+ Mon, 16 Nov 2020 09:37:45 -0800 (PST)
 MIME-Version: 1.0
-References: <20201111051658.18904-1-pankaj.gupta.linux@gmail.com>
-In-Reply-To: <20201111051658.18904-1-pankaj.gupta.linux@gmail.com>
+References: <20201116145809.410558-1-hch@lst.de> <20201116145809.410558-29-hch@lst.de>
+In-Reply-To: <20201116145809.410558-29-hch@lst.de>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 16 Nov 2020 09:30:37 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6J9e+6Q69eTR+PzbCpgrmisBOQO-xE_qvBo=a1BtRVDQ@mail.gmail.com>
-Message-ID: <CAPhsuW6J9e+6Q69eTR+PzbCpgrmisBOQO-xE_qvBo=a1BtRVDQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] md: code cleanups
-To:     Pankaj Gupta <pankaj.gupta.linux@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Pankaj Gupta <pankaj.gupta@cloud.ionos.com>
+Date:   Mon, 16 Nov 2020 09:37:34 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5YeO0-Cb=avHu2osRKjz19Lvk4jWqaCdaqFnjbdPJtrw@mail.gmail.com>
+Message-ID: <CAPhsuW5YeO0-Cb=avHu2osRKjz19Lvk4jWqaCdaqFnjbdPJtrw@mail.gmail.com>
+Subject: Re: [PATCH 28/78] md: implement ->set_read_only to hook into BLKROSET processing
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Nov 10, 2020 at 9:17 PM Pankaj Gupta
-<pankaj.gupta.linux@gmail.com> wrote:
+On Mon, Nov 16, 2020 at 6:58 AM Christoph Hellwig <hch@lst.de> wrote:
 >
-> From: Pankaj Gupta <pankaj.gupta@cloud.ionos.com>
+> Implement the ->set_read_only method instead of parsing the actual
+> ioctl command.
 >
-> This patch series does some cleanups during my attempt to understand
-> the code.
->
-> Pankaj Gupta (3):
->   md: improve variable names in md_flush_request()
->   md: add comments in md_flush_request()
->   md: use current request time as base for ktime comparisons
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks for the clean up. Applied to md-next.
+Acked-by: Song Liu <song@kernel.org>
+
+[...]
