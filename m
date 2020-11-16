@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E2F6C64E7A
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52AD7C64E7D
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2E74223C7
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13B6122263
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IrFVDJmA"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="byXWvuFW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730635AbgKPO6m (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:58:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48912 "EHLO
+        id S1730644AbgKPO6n (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:58:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730230AbgKPO6e (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:58:34 -0500
+        with ESMTP id S1730591AbgKPO6m (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:58:42 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70FAFC0617A7;
-        Mon, 16 Nov 2020 06:58:34 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE1CC0613CF;
+        Mon, 16 Nov 2020 06:58:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=oD/feK/kknJy8NgrN6GUwKk4j5cIe6yLgGU87KzsgtI=; b=IrFVDJmAyDCdyIjxW0mx/wM+i0
-        EfULIltaIxUj6jxf0IidNz1l2jSw8Ksulh7xmd0CBDNRy5YCjxY1r+V6kXvdMfu4B/jrKJGjZItyY
-        pmVnQEQV+OHhGl4k/Fbj2BhN/m0dlPmLgbtOB54UGEgkstKPEUU8vGqNKmkcDv/niskfsfpX18U5w
-        8InEkFKVUp9ZNaV7h0/GILJT1k3XrBuLsYqtDA+gf+w4j99DHcs4CUnHwP7kXuwaUANPik+3qgqiI
-        RHxMSvMovWPDR+Oayh36XrbKH+oZyCtI9oB6aJjNi0FJ0TmkB7C1+oOtTu6BFVjYIqdqBrv/I5gjp
-        v+ue0wAw==;
+        bh=j/0/qXcDYvQ/KRFTCfbeLrD6BKftlYW1jMJrLTQknrA=; b=byXWvuFWUAS6lZPm5Zeq7p8bBe
+        us/bzllqhkru2czyVVokQTTeYL+/3nVsuU4/rDhYvEj/ImRfWDgds8ciFSHt3DJegL3w+3AQaGHag
+        PKasBfLdKS5E4pWdTFh6/4uyvJRFiUdVWjcV1a5aQvY/kBYNo4iLxhmPSh2kdJdTp7A4ixInIx3wo
+        JpWIePokKzvwp8PcbSTxxumquRpS137WC1RZjgyVjiJeOwfVg8ecKo6rYbXAhcQrObDK5SeQ3EIfa
+        OTrz4SZ5xlHtXA94sJkOV0q/92afNyn3WLIhIoPBbXq1zA8kztmL78I31XmGh7QR7o5AcHIy7rcAn
+        HnC1nGVw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxT-0003kh-MQ; Mon, 16 Nov 2020 14:58:20 +0000
+        id 1kefxb-0003mp-ER; Mon, 16 Nov 2020 14:58:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 07/78] nbd: move the task_recv check into nbd_size_update
-Date:   Mon, 16 Nov 2020 15:56:58 +0100
-Message-Id: <20201116145809.410558-8-hch@lst.de>
+Subject: [PATCH 13/78] pktcdvd: use set_capacity_and_notify
+Date:   Mon, 16 Nov 2020 15:57:04 +0100
+Message-Id: <20201116145809.410558-14-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,52 +70,28 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-nbd_size_update is about to acquire a few more callers, so lift the check
-into the function.
+Use set_capacity_and_notify to set the size of both the disk and block
+device.  This also gets the uevent notifications for the resize for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 ---
- drivers/block/nbd.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/block/pktcdvd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index a9a0b49ff16101..48054051e281e6 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -299,8 +299,11 @@ static void nbd_size_clear(struct nbd_device *nbd)
- static void nbd_size_update(struct nbd_device *nbd)
- {
- 	struct nbd_config *config = nbd->config;
--	struct block_device *bdev = bdget_disk(nbd->disk, 0);
- 	sector_t nr_sectors = config->bytesize >> 9;
-+	struct block_device *bdev;
-+
-+	if (!nbd->task_recv)
-+		return;
- 
- 	if (config->flags & NBD_FLAG_SEND_TRIM) {
- 		nbd->disk->queue->limits.discard_granularity = config->blksize;
-@@ -309,7 +312,9 @@ static void nbd_size_update(struct nbd_device *nbd)
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index 467dbd06b7cdb1..4326401cede445 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -2130,8 +2130,7 @@ static int pkt_open_dev(struct pktcdvd_device *pd, fmode_t write)
  	}
- 	blk_queue_logical_block_size(nbd->disk->queue, config->blksize);
- 	blk_queue_physical_block_size(nbd->disk->queue, config->blksize);
-+
- 	set_capacity(nbd->disk, nr_sectors);
-+	bdev = bdget_disk(nbd->disk, 0);
- 	if (bdev) {
- 		if (bdev->bd_disk)
- 			bd_set_nr_sectors(bdev, nr_sectors);
-@@ -326,8 +331,7 @@ static void nbd_size_set(struct nbd_device *nbd, loff_t blocksize,
- 	struct nbd_config *config = nbd->config;
- 	config->blksize = blocksize;
- 	config->bytesize = blocksize * nr_blocks;
--	if (nbd->task_recv != NULL)
--		nbd_size_update(nbd);
-+	nbd_size_update(nbd);
- }
  
- static void nbd_complete_rq(struct request *req)
+ 	set_capacity(pd->disk, lba << 2);
+-	set_capacity(pd->bdev->bd_disk, lba << 2);
+-	bd_set_nr_sectors(pd->bdev, lba << 2);
++	set_capacity_and_notify(pd->bdev->bd_disk, lba << 2);
+ 
+ 	q = bdev_get_queue(pd->bdev);
+ 	if (write) {
 -- 
 2.29.2
 
