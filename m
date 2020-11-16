@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AC3C71155
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B2EC82561
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEB262075A
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FEE42075A
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FbV09+iw"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YOFzGbUV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731249AbgKPPB1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:01:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49226 "EHLO
+        id S1730996AbgKPO7j (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731036AbgKPO7x (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:59:53 -0500
+        with ESMTP id S1730987AbgKPO7h (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:59:37 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31353C0613D1;
-        Mon, 16 Nov 2020 06:59:53 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D56C0613CF;
+        Mon, 16 Nov 2020 06:59:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=IuZ426HAkGqkpmUmDFrK/jtW75cQ9xEgfhlt4WVjI90=; b=FbV09+iwI8V/pddqU1sEXr5MRG
-        2LGeCEdJzbpooxAikaWsNr5YfxH34ymPyuCnSJiwiRrphkz09RICgAbMVyHqGKWH6sHHkHvoruwW2
-        nCorG1tvxjOd6vHnEE7swqUtKyD+8syeAG7c9+VEIxM/4sCmK8n7wJLvPzvcwP62k5ghl2GH7p6CA
-        bmJY/GpCYWKc3Q69Wkb4Pf5N62nndPgbrmqv4yTNQic3S4e4YxaEGByMc1ZRJgWTOUB49DbdAAXXh
-        7s2MiZc7fa4gFYEJLSLS59VU/0nxQ+mwt1zxXN8laEEd1sAgMYK6+cPM77anChY7SAPVWwdnlrtv1
-        YRLIq+dw==;
+        bh=JcB9e14ZTBoVWi3xdlC8mpSR3JW9dN3IR752p30j0qE=; b=YOFzGbUV9VEtyNxwp7qzlkBkkA
+        Xn0oawKxqvp0rAIqeYWfpnGW5iMkDHaT9Q19LnRvvfRleFF+dEeV1rIXFrxzZ6V3OKsv1gqggDose
+        CZ8HXwPH00Ft2bAKbkVkNVOZSwCoCf+BbjKAUSbeaDWhW2TFIaXsT/mf0vQ14ewbGqO18nmazvj5g
+        b1Wy0xuDKhqpZX+ptswIwNRpIl/sRXy2DRT6yF/1ufD4XI4Nw45co8Yphscy9XmWqZZmCKt0hG1sl
+        9Nlddjx5eT+Hbi58Z8JKvsvZh3X28RVFCimEe1Pj+dy6gOSZ5ekmYcmi5bYlS8agcooKnl5AoCpPZ
+        e88oTXSg==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyn-0004Cl-AQ; Mon, 16 Nov 2020 14:59:41 +0000
+        id 1kefyX-00044O-9l; Mon, 16 Nov 2020 14:59:25 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 63/78] bcache: remove a superflous lookup_bdev all
-Date:   Mon, 16 Nov 2020 15:57:54 +0100
-Message-Id: <20201116145809.410558-64-hch@lst.de>
+Subject: [PATCH 53/78] blk-cgroup: fix a hd_struct leak in blkcg_fill_root_iostats
+Date:   Mon, 16 Nov 2020 15:57:44 +0100
+Message-Id: <20201116145809.410558-54-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,35 +70,26 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Don't bother to call lookup_bdev for just a slightly different error
-message without any functional change.
+disk_get_part needs to be paired with a disk_put_part.
 
+Fixes: ef45fe470e1 ("blk-cgroup: show global disk stats in root cgroup io.stat")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/bcache/super.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ block/blk-cgroup.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 46a00134a36ae1..d36ccdda16ed2e 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -2538,15 +2538,7 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
- 				  sb);
- 	if (IS_ERR(bdev)) {
- 		if (bdev == ERR_PTR(-EBUSY)) {
--			bdev = lookup_bdev(strim(path));
--			mutex_lock(&bch_register_lock);
--			if (!IS_ERR(bdev) && bch_is_open(bdev))
--				err = "device already registered";
--			else
--				err = "device busy";
--			mutex_unlock(&bch_register_lock);
--			if (!IS_ERR(bdev))
--				bdput(bdev);
-+			err = "device busy";
- 			if (attr == &ksysfs_register_quiet)
- 				goto done;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c68bdf58c9a6e1..54fbe1e80cc41a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -849,6 +849,7 @@ static void blkcg_fill_root_iostats(void)
+ 			blkg_iostat_set(&blkg->iostat.cur, &tmp);
+ 			u64_stats_update_end(&blkg->iostat.sync);
  		}
++		disk_put_part(part);
+ 	}
+ }
+ 
 -- 
 2.29.2
 
