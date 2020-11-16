@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F0CC6379D
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F00C64E75
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:49 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E213920867
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E036620867
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k5dNhGax"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E213920867
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NxdcCH21"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org E036620867
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-raid-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730906AbgKPO7Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        id S1730897AbgKPO7Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
         Mon, 16 Nov 2020 09:59:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49110 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730891AbgKPO7X (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:59:23 -0500
+        with ESMTP id S1730879AbgKPO7U (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 09:59:20 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 602CCC0617A6;
-        Mon, 16 Nov 2020 06:59:23 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CB68C0613CF;
+        Mon, 16 Nov 2020 06:59:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=K+kkAiIfWzB4syRFt+33j5OXLPH83fZlF9ACMDZkYhg=; b=k5dNhGax8VxlBfuaj9EQBdAXgt
-        4072QYhm07kKi1w+W9nEyoMSW3ELii8kjNeM1F9XviJBMC0uEQv6MPhU9nRzHBDI1yZZmWAy9Q0N2
-        fTvPwi+VC8nhfIjC7jFXt9leIcNNiMb0XmPx9eg/JoTwye7h/y7KHjVMVYweaBNLQMktbr4A8iWEt
-        dOTjTgdEq+CLoKYrid8bVvBdmQLTGWBIgPYXUmyZ/n6rnRuKWj+UuQ5XIshtknCUOMSkMwKUNjD5w
-        dJBoojTYMzEvaH9mPATlftM3BLIRcn7GZkGadLtxoUQdZeeK4Y0pHIv111cNROAtxxvV+mZxdO2Kj
-        KOai2cDA==;
+        bh=432B/HqYIabrrukDRcMGdzlFQ4i1D0sjcTyhKWP2cJc=; b=NxdcCH21KU0PaY1Ri6HGwnc/L0
+        Pm1N/StwGgisA5L0p+2kPsr3LyRSKmgmK71GuTbdbvT9TCfwbfRA1dvjC1q7rJtFSAtSyf3mHxeWW
+        EZ5rlOqNukX80JHmh+gFjJH5eHC5ab37sgk28CMqNBjsJHct6TH7Aec/aHSrjGlIQeH8J/fYjoVWT
+        m9S/ORPThsGxcTn9lN7RKKBuWsC/aTMeA81vfKRaWx1OhdXImDLKffH2sllTwanrVTcnLmBpn+vIK
+        rxhCqctUbf1QtVmOhyQKeyb0Bskq73OmiuHEGSYFZZUivRg1xuCXEdg0WX9hj3ohTWz5bCrIzwOJR
+        oOsbfaxQ==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyL-0003zc-NO; Mon, 16 Nov 2020 14:59:14 +0000
+        id 1kefyE-0003y0-K9; Mon, 16 Nov 2020 14:59:06 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -61,9 +61,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 45/78] md: use __register_blkdev to allocate devices on demand
-Date:   Mon, 16 Nov 2020 15:57:36 +0100
-Message-Id: <20201116145809.410558-46-hch@lst.de>
+Subject: [PATCH 40/78] ide: remove ide_{,un}register_region
+Date:   Mon, 16 Nov 2020 15:57:31 +0100
+Message-Id: <20201116145809.410558-41-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -74,77 +74,93 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use the simpler mechanism attached to major_name to allocate a md device
-when a currently unregistered minor is accessed.
+There is no need to ever register the fake gendisk used for ide-tape.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Song Liu <song@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/md/md.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+ drivers/ide/ide-probe.c | 32 --------------------------------
+ drivers/ide/ide-tape.c  |  2 --
+ include/linux/ide.h     |  3 ---
+ 3 files changed, 37 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index fa31b71a72a35d..b2edf5e0f965b5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5764,11 +5764,12 @@ static int md_alloc(dev_t dev, char *name)
- 	return error;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 1ddc45a04418cd..076d34b381720f 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -929,38 +929,6 @@ static struct kobject *ata_probe(dev_t dev, int *part, void *data)
+ 	return NULL;
  }
  
--static struct kobject *md_probe(dev_t dev, int *part, void *data)
-+static void md_probe(dev_t dev)
+-static struct kobject *exact_match(dev_t dev, int *part, void *data)
+-{
+-	struct gendisk *p = data;
+-	*part &= (1 << PARTN_BITS) - 1;
+-	return &disk_to_dev(p)->kobj;
+-}
+-
+-static int exact_lock(dev_t dev, void *data)
+-{
+-	struct gendisk *p = data;
+-
+-	if (!get_disk_and_module(p))
+-		return -1;
+-	return 0;
+-}
+-
+-void ide_register_region(struct gendisk *disk)
+-{
+-	blk_register_region(MKDEV(disk->major, disk->first_minor),
+-			    disk->minors, NULL, exact_match, exact_lock, disk);
+-}
+-
+-EXPORT_SYMBOL_GPL(ide_register_region);
+-
+-void ide_unregister_region(struct gendisk *disk)
+-{
+-	blk_unregister_region(MKDEV(disk->major, disk->first_minor),
+-			      disk->minors);
+-}
+-
+-EXPORT_SYMBOL_GPL(ide_unregister_region);
+-
+ void ide_init_disk(struct gendisk *disk, ide_drive_t *drive)
  {
-+	if (MAJOR(dev) == MD_MAJOR && MINOR(dev) >= 512)
-+		return;
- 	if (create_on_open)
- 		md_alloc(dev, NULL);
--	return NULL;
- }
+ 	ide_hwif_t *hwif = drive->hwif;
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 6f26634b22bbec..88b96437b22e62 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -1822,7 +1822,6 @@ static void ide_tape_remove(ide_drive_t *drive)
  
- static int add_named_array(const char *val, const struct kernel_param *kp)
-@@ -6532,7 +6533,7 @@ static void autorun_devices(int part)
- 			break;
- 		}
+ 	ide_proc_unregister_driver(drive, tape->driver);
+ 	device_del(&tape->dev);
+-	ide_unregister_region(tape->disk);
  
--		md_probe(dev, NULL, NULL);
-+		md_probe(dev);
- 		mddev = mddev_find(dev);
- 		if (!mddev || !mddev->gendisk) {
- 			if (mddev)
-@@ -9563,18 +9564,15 @@ static int __init md_init(void)
- 	if (!md_rdev_misc_wq)
- 		goto err_rdev_misc_wq;
+ 	mutex_lock(&idetape_ref_mutex);
+ 	put_device(&tape->dev);
+@@ -2026,7 +2025,6 @@ static int ide_tape_probe(ide_drive_t *drive)
+ 		      "n%s", tape->name);
  
--	if ((ret = register_blkdev(MD_MAJOR, "md")) < 0)
-+	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
-+	if (ret < 0)
- 		goto err_md;
+ 	g->fops = &idetape_block_ops;
+-	ide_register_region(g);
  
--	if ((ret = register_blkdev(0, "mdp")) < 0)
-+	ret = __register_blkdev(0, "mdp", md_probe);
-+	if (ret < 0)
- 		goto err_mdp;
- 	mdp_major = ret;
+ 	return 0;
  
--	blk_register_region(MKDEV(MD_MAJOR, 0), 512, THIS_MODULE,
--			    md_probe, NULL, NULL);
--	blk_register_region(MKDEV(mdp_major, 0), 1UL<<MINORBITS, THIS_MODULE,
--			    md_probe, NULL, NULL);
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 62653769509f89..2c300689a51a5c 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1493,9 +1493,6 @@ static inline void ide_acpi_port_init_devices(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_set_state(ide_hwif_t *hwif, int on) {}
+ #endif
+ 
+-void ide_register_region(struct gendisk *);
+-void ide_unregister_region(struct gendisk *);
 -
- 	register_reboot_notifier(&md_notifier);
- 	raid_table_header = register_sysctl_table(raid_root_table);
+ void ide_check_nien_quirk_list(ide_drive_t *);
+ void ide_undecoded_slave(ide_drive_t *);
  
-@@ -9841,9 +9839,6 @@ static __exit void md_exit(void)
- 	struct list_head *tmp;
- 	int delay = 1;
- 
--	blk_unregister_region(MKDEV(MD_MAJOR,0), 512);
--	blk_unregister_region(MKDEV(mdp_major,0), 1U << MINORBITS);
--
- 	unregister_blkdev(MD_MAJOR,"md");
- 	unregister_blkdev(mdp_major, "mdp");
- 	unregister_reboot_notifier(&md_notifier);
 -- 
 2.29.2
 
