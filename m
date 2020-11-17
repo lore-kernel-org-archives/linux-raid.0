@@ -2,84 +2,78 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=BAYES_05,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EBACC4742C
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 17:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30514C63777
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Nov 2020 02:43:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F1AB22265
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Nov 2020 17:39:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7D14246A4
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Nov 2020 02:43:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="wH0K96ai"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pKSmvuQ5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387473AbgKPRht (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Nov 2020 12:37:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49674 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733098AbgKPRhs (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 16 Nov 2020 12:37:48 -0500
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0B33E222EC;
-        Mon, 16 Nov 2020 17:37:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605548267;
-        bh=ftduAERcAIXDqH3TIoaKNDFMaog9lpKkHZKNbYpzPJA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=wH0K96aiOcV3zWDXEfO4eGXrSbfel4fzpavvJrcvlGnm+IOvE6CCXcyPRZ9CDEpWQ
-         ERyPgn3goZaj4Rjri8kCDsRD2QqVIDrl9bwMtmzAsZXelVyGcoi/J8IVVb6h9ki8ms
-         Nt6zKSXy/JZjbcTnM2HNzH4y+CQMSryqUl+eemUA=
-Received: by mail-wm1-f52.google.com with SMTP id p22so25432wmg.3;
-        Mon, 16 Nov 2020 09:37:46 -0800 (PST)
-X-Gm-Message-State: AOAM532+D7CgVwSiMMWS3UnCwBorA2v4LkI7ZN8sQJ8ZqWXcaPOmRLIQ
-        WKg7/hX4Hr+f4oBq6+kb0J6ZN8cgd7LU/vzhKLk=
-X-Google-Smtp-Source: ABdhPJwSJNXG5A+c75VC7fB+eg5ocrYD0cMopnWErnzA3/FY5Qe4JfgRdEHZElz1KxxX9qTRF1opV72EejXl51sD+G0=
-X-Received: by 2002:a1c:bbc4:: with SMTP id l187mr17490114wmf.133.1605548265533;
- Mon, 16 Nov 2020 09:37:45 -0800 (PST)
+        id S1725994AbgKQCnu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Nov 2020 21:43:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725554AbgKQCnu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Nov 2020 21:43:50 -0500
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06BA4C0613CF
+        for <linux-raid@vger.kernel.org>; Mon, 16 Nov 2020 18:43:49 -0800 (PST)
+Received: by mail-lf1-x12d.google.com with SMTP id e139so8603058lfd.1
+        for <linux-raid@vger.kernel.org>; Mon, 16 Nov 2020 18:43:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=WeV+JVOkEmNTDp4jy1ZY4oZElCBz4q7DQiSfSHKoqUY=;
+        b=pKSmvuQ5NyGfGT6QRdy+5nCDTnt+jx9zwrhlgYISMOIPn4CZ+5BsFpNv3WZsGktD69
+         vhK12zqmaWOY3T+xEORutprRu+PdhQa9jHfO2yDXwe78L0/LVaBRMMAAB1OMIfJt/wzU
+         jXaZ48Xjcy1IeLGRaqeAaVGWOgcLl+Qq2/7BP1ABcjuLSv6SgGsLuQu6AC1KUmvvBMiC
+         PX/WgkfibTsOmN2FM6Q7iJ5qfsoyqRiRiX0WP9XN1uQFZeAtB2Xjz9snmKituTLx90pz
+         4jMJxoimfvXJ1FsFhQnVdKbHGYhgznlUcXe3eUhATHQ5mdnqf96D0eQ6FJ/Txl/IH8Wm
+         uWIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=WeV+JVOkEmNTDp4jy1ZY4oZElCBz4q7DQiSfSHKoqUY=;
+        b=kDekMG9FFXj931P0y5pYb8tKq0wn5t8RK+UpT/YdBlhkSbt11ce7cq2QrvLB+QnBZk
+         wb9nVHvMxVv2fRQNrYCMVqtWDi9S7WblBcMJyWfHdtDJj5ZRRoMEQBRuWExsRhJkzu8N
+         Q2u3RvO+Js4OnJBQjGI+Og4nCJiDLLxkeMYc0vr2vQShMOUiWUq/UdXSGgwsToFBNK/z
+         N7tIvp2KZxGSlsD8PNSpnsnebp1kpmqu2PTU71EJTdjRTQA2EXJznkiqjPW1C2/AocIb
+         yGgH8IkVgP75V4pUNUl0gZKglAmD877TrXagJARrD4wxqMyOzLBWcV531Xsd9P+quCy2
+         qkLA==
+X-Gm-Message-State: AOAM533r1f9BYCzU0w10fh8pRrNKlqNOKvs9DBfmWNyWSeXMRh+2Q0lT
+        C4HTB5D6hW4yyxFabAfxaCntjqtypQyzkRGi5c1pTsDXJ2bTLg==
+X-Google-Smtp-Source: ABdhPJxw7OzQbL7YZmh7kNRN2Q479TD6uaYs1dOsRFZbvYTyINWMCDWzzkChI/khpESgqXK+SIfLjefXcdHpbjFbKwo=
+X-Received: by 2002:a19:e04c:: with SMTP id g12mr872502lfj.261.1605581028158;
+ Mon, 16 Nov 2020 18:43:48 -0800 (PST)
 MIME-Version: 1.0
-References: <20201116145809.410558-1-hch@lst.de> <20201116145809.410558-29-hch@lst.de>
-In-Reply-To: <20201116145809.410558-29-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 16 Nov 2020 09:37:34 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5YeO0-Cb=avHu2osRKjz19Lvk4jWqaCdaqFnjbdPJtrw@mail.gmail.com>
-Message-ID: <CAPhsuW5YeO0-Cb=avHu2osRKjz19Lvk4jWqaCdaqFnjbdPJtrw@mail.gmail.com>
-Subject: Re: [PATCH 28/78] md: implement ->set_read_only to hook into BLKROSET processing
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
+From:   o1bigtenor <o1bigtenor@gmail.com>
+Date:   Mon, 16 Nov 2020 20:43:12 -0600
+Message-ID: <CAPpdf5-ji4YSMyCkwr8BRZLE4Jm8835TMOUfWGd2Xg6c=7TYBg@mail.gmail.com>
+Subject: Information request
+To:     Linux-RAID <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Nov 16, 2020 at 6:58 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> Implement the ->set_read_only method instead of parsing the actual
-> ioctl command.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Greetings
 
-Acked-by: Song Liu <song@kernel.org>
 
-[...]
+I managed to delete a file that would require a lot of hours to replace.
+(I would be entering all the information again.)
+
+The file is located on a Raid 10 array set up using mdadm - v4.1 - 2018-10-01.
+Am running Debian Bullseye (testing).
+
+Looking for suggestions on how to recover the file.
+
+Not sure what other data might be required for anyone assisting so if
+more information is required - - please indicate.
+
+TIA
