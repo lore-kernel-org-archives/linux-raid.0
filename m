@@ -2,98 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F55BC2D0E4
-	for <linux-raid@archiver.kernel.org>; Tue, 17 Nov 2020 11:34:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 256FBC2D0E4
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Nov 2020 15:51:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF8C7221FF
-	for <linux-raid@archiver.kernel.org>; Tue, 17 Nov 2020 11:34:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC02220867
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Nov 2020 15:51:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PkTvE5TB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R8eCqNz3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728135AbgKQLeU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 17 Nov 2020 06:34:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42944 "EHLO
+        id S1726642AbgKQPvB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 17 Nov 2020 10:51:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727759AbgKQLeU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 Nov 2020 06:34:20 -0500
-Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACCAFC0613CF
-        for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2020 03:34:19 -0800 (PST)
-Received: by mail-lj1-x231.google.com with SMTP id r17so23856229ljg.5
-        for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2020 03:34:19 -0800 (PST)
+        with ESMTP id S1726302AbgKQPvA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 17 Nov 2020 10:51:00 -0500
+Received: from mail-qk1-x735.google.com (mail-qk1-x735.google.com [IPv6:2607:f8b0:4864:20::735])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E2AC0613CF
+        for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2020 07:51:00 -0800 (PST)
+Received: by mail-qk1-x735.google.com with SMTP id v143so20816627qkb.2
+        for <linux-raid@vger.kernel.org>; Tue, 17 Nov 2020 07:51:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=mDo72cCNWbYqoT4ueQ2GiN7yIASH47GNiu81Ss8KXwY=;
-        b=PkTvE5TBpIgSLY6ZhoaRGzuiv7SJIGCC96Ge04tYHoDrxGS3LtzB+Bb67PwdfTfJCa
-         EbLuTIvBM06vxST7Tkod8BQYCDlPkjvKgsYLQBM5tULW3X69iyrPB1ugKIAhSWCIl5E1
-         1D1aCumD3Xqa2OdSXdcDGh8xKzQKkme3pE5GfdaMyWU/v+T7dB6wFk4SyVuwYGi+x5JQ
-         M06dXmMzfzyJVyUzl6Wq//rQAtQHutn5AM0WalCndMgTn17gmvw0U99H+yozA7kcaRC+
-         iwBSDjTbvJqtcbAi7oI+wMiJqKEvu/40TWLdIhE54bVFSCnh5cxSBx4QIMVH2ZF0NaBB
-         urmA==
+        h=subject:references:to:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=GKpWKO/8UsSBTsjnb+7x1CGzDYkMw06XSrcG+nh3gZk=;
+        b=R8eCqNz3guNsldym3FVkPJuJtZ5deZ3PtgC0u7fXCMkAwMuA0hxspWGQ6aNrQCT8Gv
+         YtQSBfdnLJfHWtsQ8iNWjvcTmuwrzhC4JIosb4kp+seqeiYdgXUt9C9NDPvAD+YadvBL
+         WBn02WXsMKJZjs3v7wjDxz+GeDFjNLse92ShTEXoC2KTMy9IlfBSjeEKaFvbDQrpwZMB
+         2Jwvh7Ewx2yR/PRu+rOM1JNGyy1ILTv/bzjNsVAuUnnwni/gxCL7XZNkFsU2XRqn6GVo
+         fvceK2Vj08jOJ8OaeQwdnMTX/4sE5v0f+T+/Hea0IMpgNiZ9arUlABeRBPeiixtv8pxF
+         4e9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:content-transfer-encoding;
-        bh=mDo72cCNWbYqoT4ueQ2GiN7yIASH47GNiu81Ss8KXwY=;
-        b=C1S0/fRf03BACyTPD+ERBUVcjhLlh0AN5K0oUMfNRMmoOLhb+XQl1pLCkJM1JHUuCd
-         CSwInDyl7r3PB798gTXUkTiBn23FPBY+d5EsojWkAXTwo5d4xxq7u4eIBqR+l+mWeMW0
-         qNfbeXDbsMqi6DIvTes4AbCk3FKguGRfTs+itMB/mfNO972gB81IilUf5OiphZCAnylg
-         eJ/aPIvZ1cn9t/UHtP8TzX/lPjgmtdF0lU6T7e3EoC/+BiFXWKtm6DPeW2o78YIDPnVT
-         EL0Oh6ZbFmmHbjT2VZ7INAa+TOoOJ70GuCEmusGah450HrSmrjE8R9tHNaa2oYjZzF2H
-         c/hQ==
-X-Gm-Message-State: AOAM531uIjbFFZZKJRsonkIYoz2aNuF2RVP+mSySmUZw25r0Oz8JmfOr
-        bJXYg7Qbkm8pTltJOWTDtCct3snEScgvfxZu7A14xNQWWnk=
-X-Google-Smtp-Source: ABdhPJy9B5ulOUUukqtmu3p4ZJUmnLNrl1W0J8xVM/l0lEDIvWq0Z3ayTJ9QJogf9be35Pqt9e0EsxsceTaZ86/uVoo=
-X-Received: by 2002:a05:651c:319:: with SMTP id a25mr1754427ljp.333.1605612858029;
- Tue, 17 Nov 2020 03:34:18 -0800 (PST)
+        h=x-gm-message-state:subject:references:to:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=GKpWKO/8UsSBTsjnb+7x1CGzDYkMw06XSrcG+nh3gZk=;
+        b=oVEZ92AF1f+BAkHS4Cn92jZg/vs38nk0KA0PppGfgDCTsUFDrXikRA4Gsggvz30MU/
+         JMu2a0/ZPbfEw4BO5bJHcIJAB4E7kgLmP1Nd+Z2yNRzGXWQVBxDegZWH45O6utJdauP2
+         GFn2xL6/MZvdrzpufTzBtuX5PBZ3teFyrsSm1nhOszYhkVf+8KzwvQ9ciaDcaOvywOSN
+         d9AWHwYflyJs2LlNvt03RjA+CI9Mk/rP8Kvz8r45cB9gHdG2HnIdAglnWzd39uxET3fQ
+         baK2jcCkCIJObUTCbs8I8PZ+g6Pqs/ZcG5vQRLIStaRRH1yK+nuBLBR8mxyfkHaoXfVR
+         A35A==
+X-Gm-Message-State: AOAM530+P3ChnM+W6KPMj2PNfN6u4Gw4FxLYTns8ZyPi3gHFrvo5bDls
+        /7qjMfdsnX0KXsWCBvprc9WDK8X/01P+0w==
+X-Google-Smtp-Source: ABdhPJw+Varu8ROW48SEftCcd76Kok61jqcC02f7npnATAhBeXVbFfiGz3YTVktWwaQLC4yFyaJ7yg==
+X-Received: by 2002:a37:ba82:: with SMTP id k124mr156621qkf.25.1605628259455;
+        Tue, 17 Nov 2020 07:50:59 -0800 (PST)
+Received: from biodora.local ([104.238.233.190])
+        by smtp.gmail.com with ESMTPSA id a85sm14611440qkg.3.2020.11.17.07.50.58
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Nov 2020 07:50:59 -0800 (PST)
+Subject: Re: Events Counter - How it increments
+References: <819ff80e-10d0-8cc6-b34c-418fdea7b57a@gmail.com>
+To:     linux-raid@vger.kernel.org
+From:   =?UTF-8?Q?Jorge_F=c3=a1bregas?= <jorge.fabregas@gmail.com>
+Message-ID: <7b06b78f-c0de-94cc-54de-bf66cfe80b8e@gmail.com>
+Date:   Tue, 17 Nov 2020 11:50:58 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
 MIME-Version: 1.0
-References: <CAPpdf5-ji4YSMyCkwr8BRZLE4Jm8835TMOUfWGd2Xg6c=7TYBg@mail.gmail.com>
- <20201117042652.GU3103@bitfolk.com>
-In-Reply-To: <20201117042652.GU3103@bitfolk.com>
-From:   o1bigtenor <o1bigtenor@gmail.com>
-Date:   Tue, 17 Nov 2020 05:33:41 -0600
-Message-ID: <CAPpdf58DZnHOQ-K86ypF6dW8tOOXbMsNJxZ3zrXhfBkPjsSe1g@mail.gmail.com>
-Subject: Re: Information request
-To:     Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <819ff80e-10d0-8cc6-b34c-418fdea7b57a@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Nov 16, 2020 at 10:43 PM Andy Smith <andy@strugglers.net> wrote:
->
-> Hello,
->
-> On Mon, Nov 16, 2020 at 08:43:12PM -0600, o1bigtenor wrote:
-> > I managed to delete a file that would require a lot of hours to replace=
-.
->
-> [=E2=80=A6]
->
-> > Looking for suggestions on how to recover the file.
->
-> This is really a filesystem question - files are not something that
-> RAID concerns itself with. So, what filesystem and what type of
-> file? You might get lucky running photorec (it's not just for
-> images) on the block device while it's unmounted.
->
->     https://www.cgsecurity.org/wiki/PhotoRec_Step_By_Step
->
+On 11/10/20 10:24 AM, Jorge Fábregas wrote:
+> How does the "Events" counter (as shown with mdadm --examine) gets
+> incremented? On what sort of events?
 
-Sorry for the noise folks!
+Anyone?  :)
 
-Thanks for the tip Mr Andy - - - - had started that even before I
-read your note. Help validate my findings!
+Thank you.
 
-Thanking you for your assistance (even if it weren't 100% raid
-related - - - grin!).
-
-Regards
+-- 
+Jorge
