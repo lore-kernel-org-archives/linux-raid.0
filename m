@@ -2,209 +2,96 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D1BBC6369E
-	for <linux-raid@archiver.kernel.org>; Wed, 18 Nov 2020 17:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99263C5519F
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Nov 2020 02:21:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DABCD24825
-	for <linux-raid@archiver.kernel.org>; Wed, 18 Nov 2020 17:14:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A0C3241A6
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Nov 2020 02:21:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="OrrQu24U"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M++0K9N+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727117AbgKRRNr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 18 Nov 2020 12:13:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46224 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725943AbgKRRNr (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 18 Nov 2020 12:13:47 -0500
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AFB6D248A1;
-        Wed, 18 Nov 2020 17:13:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1605719626;
-        bh=IlZAznblZt4xT3tGNdphNfI2m8V2aWGbgxAGUPHRwrc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OrrQu24UmIDGrpvyk3RYg+b8Nrabmyj46/jEM67PIMqLMuvfkiPjDY1cXaV6avMrr
-         e3sB6fXXT+OzU5ZYHJU1TIQqzDXei/AQ8Kwr9rftp4oXAVEtVlgroRC3uZFhchAGIT
-         ZcPnufTgLUJWBdbylciYMct2jd+9PntTt3LJ1uf8=
-Date:   Wed, 18 Nov 2020 18:14:32 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Zhao Heming <heming.zhao@suse.com>
-Cc:     linux-raid@vger.kernel.org, song@kernel.org,
-        guoqing.jiang@cloud.ionos.com, xni@redhat.com,
-        lidong.zhong@suse.com, neilb@suse.de, colyli@suse.de,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] md/cluster: fix deadlock when node is doing
- resync job
-Message-ID: <X7VWeJfr3Jh7N2KP@kroah.com>
-References: <1605717954-20173-1-git-send-email-heming.zhao@suse.com>
- <1605717954-20173-3-git-send-email-heming.zhao@suse.com>
+        id S1727316AbgKSCVe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 Nov 2020 21:21:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36476 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726340AbgKSCVe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 Nov 2020 21:21:34 -0500
+Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A54CC0613D4
+        for <linux-raid@vger.kernel.org>; Wed, 18 Nov 2020 18:21:34 -0800 (PST)
+Received: by mail-qk1-x733.google.com with SMTP id d9so4021590qke.8
+        for <linux-raid@vger.kernel.org>; Wed, 18 Nov 2020 18:21:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:references:to:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=LxQ+X5Rd4UnM8jTryEQTNi2vQxSVH2Ujj1G220ZoICY=;
+        b=M++0K9N+PimKBeZtOil6PXglVoQ5MOCTdwrdAGR2G8y1xClHbP722kWmsiQLVDdI4m
+         1V+N8m4P7NBvddsRhn9Lb537Uihkmse4UseIDuPacRYDLkOH8NaDTbNmnWmVjgFZxSaA
+         61dvhnRbz/4qzpPvxTAACCC6QauvKLzKk9Kemk517aAc+dE7l3JQcTlDKRhinAn4s6Me
+         MrcdN+hRV9riZCjTqpR6849+lQeIMb2yzUgHL5DWWm/J6xePo5vYw2KWVNgN/m1puuY9
+         rw6vDxsna+oYCrr/ST9BNIQoT97/GwgBZ3NC7maU97QLRwck0GrfEWyxBmjcWEcVCd4F
+         z67A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:references:to:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=LxQ+X5Rd4UnM8jTryEQTNi2vQxSVH2Ujj1G220ZoICY=;
+        b=iJGwom7S47ULheh/l0gITaj9a8ztBzTtVfoPam5ynU0antQpIzwrQSzze5mzyLLP5H
+         hJwkFY0JOXvoy9nVVNIGx08oWKCqPuts0AKAnuUeOJ11x7jTqXOXiJuOdaQoqsjD7EoI
+         RisDA/xAPiFA09kdma3G0YYoE8VrkuYVHMpDy3T7lZlQpxg+9C38+2beQ33OSxfJsEa3
+         Kq/Cy1VDa9wMfPPQ6Xi1nBQNOe7SuY0ZJbg3PGcoNpL3wGAkX5fWciIQOW8rVDXHnWaB
+         cGHaSc1QCaGaVs/DZHWnHDwpl7vASNiY/iO3pvdxDkk2pUUxqDcL0lsYGYZW5mIINfIg
+         4ZIA==
+X-Gm-Message-State: AOAM530tt+Hyecv/v25JbHKepGWToygAzJwpPot2PmkguUgP4zi9vtMu
+        DxGkhlldruQMftXq4navi5K3O8u4QYIN1g==
+X-Google-Smtp-Source: ABdhPJzOGsuGVS3PiExoVhxtHFJmSejN6DiImRCFcJRL3Is/FFviGtu4u72CTcCDw4fMLAQ2e4O+lQ==
+X-Received: by 2002:a05:620a:228f:: with SMTP id o15mr8931160qkh.206.1605752493232;
+        Wed, 18 Nov 2020 18:21:33 -0800 (PST)
+Received: from biodora.local ([104.238.233.190])
+        by smtp.gmail.com with ESMTPSA id s16sm18282581qkg.5.2020.11.18.18.21.32
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Nov 2020 18:21:32 -0800 (PST)
+Subject: Re: Events Counter - How it increments
+References: <819ff80e-10d0-8cc6-b34c-418fdea7b57a@gmail.com>
+ <567bc78b-cf37-c40b-2e99-b86a80bdfb3e@suse.com>
+To:     linux-raid@vger.kernel.org
+From:   =?UTF-8?Q?Jorge_F=c3=a1bregas?= <jorge.fabregas@gmail.com>
+Message-ID: <f2d69b9a-9e2d-a104-0600-612f5d39084c@gmail.com>
+Date:   Wed, 18 Nov 2020 22:21:31 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1605717954-20173-3-git-send-email-heming.zhao@suse.com>
+In-Reply-To: <567bc78b-cf37-c40b-2e99-b86a80bdfb3e@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Nov 19, 2020 at 12:45:54AM +0800, Zhao Heming wrote:
-> md-cluster uses MD_CLUSTER_SEND_LOCK to make node can exclusively send msg.
-> During sending msg, node can concurrently receive msg from another node.
-> When node does resync job, grab token_lockres:EX may trigger a deadlock:
-> ```
-> nodeA                       nodeB
-> --------------------     --------------------
-> a.
-> send METADATA_UPDATED
-> held token_lockres:EX
->                          b.
->                          md_do_sync
->                           resync_info_update
->                             send RESYNCING
->                              + set MD_CLUSTER_SEND_LOCK
->                              + wait for holding token_lockres:EX
-> 
->                          c.
->                          mdadm /dev/md0 --remove /dev/sdg
->                           + held reconfig_mutex
->                           + send REMOVE
->                              + wait_event(MD_CLUSTER_SEND_LOCK)
-> 
->                          d.
->                          recv_daemon //METADATA_UPDATED from A
->                           process_metadata_update
->                            + (mddev_trylock(mddev) ||
->                               MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD)
->                              //this time, both return false forever
-> ```
-> Explaination:
-> a. A send METADATA_UPDATED
->    This will block another node to send msg
-> 
-> b. B does sync jobs, which will send RESYNCING at intervals.
->    This will be block for holding token_lockres:EX lock.
-> 
-> c. B do "mdadm --remove", which will send REMOVE.
->    This will be blocked by step <b>: MD_CLUSTER_SEND_LOCK is 1.
-> 
-> d. B recv METADATA_UPDATED msg, which send from A in step <a>.
->    This will be blocked by step <c>: holding mddev lock, it makes
->    wait_event can't hold mddev lock. (btw,
->    MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD keep ZERO in this scenario.)
-> 
-> There is a similar deadlock in commit 0ba959774e93
-> ("md-cluster: use sync way to handle METADATA_UPDATED msg")
-> In that commit, step c is "update sb". This patch step c is
-> "mdadm --remove".
-> 
-> For fixing this issue, we can refer the solution of function:
-> metadata_update_start. Which does the same grab lock_token action.
-> lock_comm can use the same steps to avoid deadlock. By moving
-> MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD from lock_token to lock_comm.
-> It enlarge a little bit window of MD_CLUSTER_HOLDING_MUTEX_FOR_RECVD,
-> but it is safe & can break deadlock.
-> 
-> Repro steps (I only triggered 3 times with hundreds tests):
-> 
-> two nodes share 3 iSCSI luns: sdg/sdh/sdi. Each lun size is 1GB.
-> ```
-> ssh root@node2 "mdadm -S --scan"
-> mdadm -S --scan
-> for i in {g,h,i};do dd if=/dev/zero of=/dev/sd$i oflag=direct bs=1M \
-> count=20; done
-> 
-> mdadm -C /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sdg /dev/sdh \
->  --bitmap-chunk=1M
-> ssh root@node2 "mdadm -A /dev/md0 /dev/sdg /dev/sdh"
-> 
-> sleep 5
-> 
-> mkfs.xfs /dev/md0
-> mdadm --manage --add /dev/md0 /dev/sdi
-> mdadm --wait /dev/md0
-> mdadm --grow --raid-devices=3 /dev/md0
-> 
-> mdadm /dev/md0 --fail /dev/sdg
-> mdadm /dev/md0 --remove /dev/sdg
-> mdadm --grow --raid-devices=2 /dev/md0
-> ```
-> 
-> test script will hung when executing "mdadm --remove".
-> 
-> ```
->  # dump stacks by "echo t > /proc/sysrq-trigger"
-> md0_cluster_rec D    0  5329      2 0x80004000
-> Call Trace:
->  __schedule+0x1f6/0x560
->  ? _cond_resched+0x2d/0x40
->  ? schedule+0x4a/0xb0
->  ? process_metadata_update.isra.0+0xdb/0x140 [md_cluster]
->  ? wait_woken+0x80/0x80
->  ? process_recvd_msg+0x113/0x1d0 [md_cluster]
->  ? recv_daemon+0x9e/0x120 [md_cluster]
->  ? md_thread+0x94/0x160 [md_mod]
->  ? wait_woken+0x80/0x80
->  ? md_congested+0x30/0x30 [md_mod]
->  ? kthread+0x115/0x140
->  ? __kthread_bind_mask+0x60/0x60
->  ? ret_from_fork+0x1f/0x40
-> 
-> mdadm           D    0  5423      1 0x00004004
-> Call Trace:
->  __schedule+0x1f6/0x560
->  ? __schedule+0x1fe/0x560
->  ? schedule+0x4a/0xb0
->  ? lock_comm.isra.0+0x7b/0xb0 [md_cluster]
->  ? wait_woken+0x80/0x80
->  ? remove_disk+0x4f/0x90 [md_cluster]
->  ? hot_remove_disk+0xb1/0x1b0 [md_mod]
->  ? md_ioctl+0x50c/0xba0 [md_mod]
->  ? wait_woken+0x80/0x80
->  ? blkdev_ioctl+0xa2/0x2a0
->  ? block_ioctl+0x39/0x40
->  ? ksys_ioctl+0x82/0xc0
->  ? __x64_sys_ioctl+0x16/0x20
->  ? do_syscall_64+0x5f/0x150
->  ? entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> md0_resync      D    0  5425      2 0x80004000
-> Call Trace:
->  __schedule+0x1f6/0x560
->  ? schedule+0x4a/0xb0
->  ? dlm_lock_sync+0xa1/0xd0 [md_cluster]
->  ? wait_woken+0x80/0x80
->  ? lock_token+0x2d/0x90 [md_cluster]
->  ? resync_info_update+0x95/0x100 [md_cluster]
->  ? raid1_sync_request+0x7d3/0xa40 [raid1]
->  ? md_do_sync.cold+0x737/0xc8f [md_mod]
->  ? md_thread+0x94/0x160 [md_mod]
->  ? md_congested+0x30/0x30 [md_mod]
->  ? kthread+0x115/0x140
->  ? __kthread_bind_mask+0x60/0x60
->  ? ret_from_fork+0x1f/0x40
-> ```
-> 
-> At last, thanks for Xiao's solution.
-> 
-> Signed-off-by: Zhao Heming <heming.zhao@suse.com>
-> Suggested-by: Xiao Ni <xni@redhat.com>
-> Reviewed-by: Xiao Ni <xni@redhat.com>
-> ---
->  drivers/md/md-cluster.c | 69 +++++++++++++++++++++++------------------
->  drivers/md/md.c         |  6 ++--
->  2 files changed, 43 insertions(+), 32 deletions(-)
+On 11/18/20 12:45 PM, heming.zhao@suse.com wrote:
+> The events is related with (struct mddev) mddev->events. 
+> you can search it in kernel source code.
 
-<formletter>
+Thank you Heming.  I was expecting more of a general view since I'm a
+new user.  Sorry I wasn't clear.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
+What sort of events cause the Event counter to increase?  If it's mainly
+whenever the superblock is updated then my question is: What sort of
+events cause the superblock to be updated? I can imagine detection of
+failed disk, read errors, array checks, commands by user/admin,
+assembly-reassembly etc? If an array operates fine for months - without
+user intervention,  will the Event counter increase at all?
 
-</formletter>
+Thanks.
+
+-- 
+Jorge
