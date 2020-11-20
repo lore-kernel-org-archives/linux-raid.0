@@ -5,25 +5,25 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12F5AC63798
-	for <linux-raid@archiver.kernel.org>; Fri, 20 Nov 2020 07:32:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2F1C64E75
+	for <linux-raid@archiver.kernel.org>; Fri, 20 Nov 2020 07:33:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C018222400
-	for <linux-raid@archiver.kernel.org>; Fri, 20 Nov 2020 07:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EAC5223B0
+	for <linux-raid@archiver.kernel.org>; Fri, 20 Nov 2020 07:33:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726654AbgKTHby (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 20 Nov 2020 02:31:54 -0500
-Received: from mx2.suse.de ([195.135.220.15]:55066 "EHLO mx2.suse.de"
+        id S1726824AbgKTHdq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 20 Nov 2020 02:33:46 -0500
+Received: from mx2.suse.de ([195.135.220.15]:56410 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726483AbgKTHby (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 20 Nov 2020 02:31:54 -0500
+        id S1725797AbgKTHdq (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 20 Nov 2020 02:33:46 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 48C4FAC23;
-        Fri, 20 Nov 2020 07:31:52 +0000 (UTC)
-Subject: Re: [PATCH 56/78] init: refactor name_to_dev_t
+        by mx2.suse.de (Postfix) with ESMTP id 95E0EAB3D;
+        Fri, 20 Nov 2020 07:33:44 +0000 (UTC)
+Subject: Re: [PATCH 57/78] init: refactor devt_from_partuuid
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -44,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201116145809.410558-1-hch@lst.de>
- <20201116145809.410558-57-hch@lst.de>
+ <20201116145809.410558-58-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <a98ac74a-d1c4-776f-145f-583a1d56eed3@suse.de>
-Date:   Fri, 20 Nov 2020 08:31:51 +0100
+Message-ID: <23b99285-e2b4-45cf-017e-f93e5368bc79@suse.de>
+Date:   Fri, 20 Nov 2020 08:33:42 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201116145809.410558-57-hch@lst.de>
+In-Reply-To: <20201116145809.410558-58-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -60,13 +60,13 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 On 11/16/20 3:57 PM, Christoph Hellwig wrote:
-> Split each case into a self-contained helper.
+> The code in devt_from_partuuid is very convoluted.  Refactor a bit by
+> sanitizing the goto and variable name usage.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   include/linux/genhd.h |   7 +-
->   init/do_mounts.c      | 183 +++++++++++++++++++++---------------------
->   2 files changed, 91 insertions(+), 99 deletions(-)
+>   init/do_mounts.c | 68 ++++++++++++++++++++++--------------------------
+>   1 file changed, 31 insertions(+), 37 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
