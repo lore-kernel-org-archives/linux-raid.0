@@ -2,80 +2,78 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64510C2D0E4
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Nov 2020 21:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE6D4C63798
+	for <linux-raid@archiver.kernel.org>; Wed, 25 Nov 2020 02:20:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C768B206E5
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Nov 2020 21:51:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B5D42145D
+	for <linux-raid@archiver.kernel.org>; Wed, 25 Nov 2020 02:20:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E32tcx9v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387653AbgKXVvQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 24 Nov 2020 16:51:16 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:45315 "EHLO smtp.hosts.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731557AbgKXVvQ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 24 Nov 2020 16:51:16 -0500
-Received: from host86-149-69-253.range86-149.btcentralplus.com ([86.149.69.253] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1khftn-0002yE-5t; Tue, 24 Nov 2020 21:30:56 +0000
-Subject: Re: RAID-6 and write hole with write-intent bitmap
-To:     Mukund Sivaraman <muks@mukund.org>
-Cc:     linux-raid@vger.kernel.org
-References: <20201124072039.GA381531@jurassic.vpn.mukund.org>
- <5FBCDC18.9050809@youngman.org.uk>
- <20201124185004.GA27132@jurassic.vpn.mukund.org>
-From:   antlists <antlists@youngman.org.uk>
-Message-ID: <ae4c0922-eb63-6f1b-3542-503c369a6110@youngman.org.uk>
-Date:   Tue, 24 Nov 2020 21:30:54 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+        id S1726614AbgKYCUc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 24 Nov 2020 21:20:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40446 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725616AbgKYCUb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 Nov 2020 21:20:31 -0500
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9245C0613D4
+        for <linux-raid@vger.kernel.org>; Tue, 24 Nov 2020 18:20:31 -0800 (PST)
+Received: by mail-pf1-x42d.google.com with SMTP id w202so875181pff.10
+        for <linux-raid@vger.kernel.org>; Tue, 24 Nov 2020 18:20:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=GH/+e5FGH7qJanGKp3XKEvIf1tabknh/PyYUwBAk8Ag=;
+        b=E32tcx9vFqW1sOX5wljJN9JlEm1iyKi6rA2Cj4X5gW4rkZkHkYnTXHwxKG3BdDBMeA
+         oVWkfP/gW3zI6W2GOdKT5aw6xCrI48NqpzSgYD/sbjr44lV5+lqYn/RLEKTVK3tXDOCP
+         G8TUJdhND5qcpqMuhdsuttaoJxxWYmoAt6H2gGoBNGjuqqZthIDW1XkAeX2GqGg+Id7q
+         EX1RPSbDx6IH9MLm85u2H06mrKopQ6kC3lUbWsTgLfgfa8mMzSdW9dScRnfxPHogHnis
+         1lpzwpT7zuHPbVV74sxlufmgzBu9PeoU1ashpwdCnoSsFkmySbuU6KOzkaqOsxweadU0
+         Y2ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=GH/+e5FGH7qJanGKp3XKEvIf1tabknh/PyYUwBAk8Ag=;
+        b=aHfWPuQTQQkdQSvComU4lVsNfwCLQMyF1470oXkCZ7Nn+6Bmm0ip1K87G2dH2j1GM2
+         pQlr3NRv3oiR3HlbQ+h7n3zm690FCJUZrtsumvQfRVfwL/NbsgcPtqMfmbawsei8F5ME
+         +zmgeiP1cxylzyaeFpTMX8OCcPMenpNpcSmU8ut3KOCd3eVDqR5fwKc0OWZoiOp/OGCF
+         4Ey5B2IYRYw7Uz1XbDjPAXYKg882Im9jt4/KvygAgLCEyhnLj7+3HTath2A2NENYrY/h
+         stKcHR+U2o6TKfyrIXJ2ugDECB9roMYNSzEl2KAZ6qLdSZ5P/+QqEQFoG947/Vn/3fLz
+         ynwA==
+X-Gm-Message-State: AOAM533FylxbVc3MVA2P/H3ChsJKZwcxxdafa2CL1jO81pHp1zxcVxkm
+        TXVaeeVD9tYAu+IkXGVXWl0hHNGx6s/oIyUfAkW37Uk=
+X-Google-Smtp-Source: ABdhPJxKklVU9T3Vbyk1k6cRFiohYnLB+5APMEnriKX0QcFsRsf73gVaVXLmza7COOUo6T11cD5zmUUaUn3KbXGmkI0=
+X-Received: by 2002:a17:90a:fd0d:: with SMTP id cv13mr1427590pjb.124.1606270831342;
+ Tue, 24 Nov 2020 18:20:31 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20201124185004.GA27132@jurassic.vpn.mukund.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+From:   Alex <mysqlstudent@gmail.com>
+Date:   Tue, 24 Nov 2020 21:20:20 -0500
+Message-ID: <CAB1R3sgQm2_-Bhbzned4y056XP5hM9oz1OnTZSfHH9+L5sdpFQ@mail.gmail.com>
+Subject: Considering new SATA PCIe card
+To:     Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi, I have a fedora33 server with an E31240 @ 3.30GHz processor with
+32GB that I'm using as a backup server with 4x4TB 7200 SATA disks in
+RAID5 and 2x480GB SSDs in RAID1 for root. The motherboard has two
+SATA-6 ports on it and the others are SATA3.
 
+Would there really be any benefit to purchasing a new controller such
+as this for it instead of the onboard for the 4x4TB disks?
+https://www.amazon.com/gp/product/B07ST9CPND/
 
-On 24/11/2020 18:50, Mukund Sivaraman wrote:
-> (a) With RAID-5, assuming there are 4 member disks A, B, C, D, a write
-> operation with its data on disk A and stripe's parity on disk B may
-> involve:
+The server is relatively responsive, but I was just wondering if I
+could keep it running for a few more years with a faster SATA
+controller.
 
-Close
-> 
-> 1. a read of the stripe
-> 2. update of data in the stripe
-2.5 write A^C^D
-> 3. computation and update of parity A^C^D on B
-> 
-> These are not atomic updates. If power is lost between steps 2 and 3,
-> upon recovery the mismatch between data and parity for the stripe would
-> be found and the parity can be updated on B. The data chunk written to A
-> may be incomplete if power is lost during step 2, but the ext4's journal
-> would return the FS to a consistent state. Moreover, there should not be
-> any modification/corruption of data in the stripe on disks C and D
-> (assuming the disks are OK).
-
-I *don't* think that's necessarily true. Yes it probably is true, but 
-it's not guaranteed ...
-> 
-> (b) With RAID-6, assuming there are 5 member disks A, B, C, D, E, a
-> write operation with its data on disk A and stripe's parity on disks
-> B(p) and C(q) would involve:
-> 
-> 1. a read of the stripe
-> 2. update of data in stripe
-2.5 write A^D^E
-> 3. computation and update of parity on B(p)
-> 4. update of parity on C(q)
-
-Cheers,
-Wol
+I'm also curious if the SATA cables have improved over time, or are
+the same cables I purchased five years ago just as good today?
