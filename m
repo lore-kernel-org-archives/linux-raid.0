@@ -2,68 +2,256 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFEEC56202
-	for <linux-raid@archiver.kernel.org>; Wed, 25 Nov 2020 23:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B879C64E7A
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Nov 2020 01:11:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD112207BC
-	for <linux-raid@archiver.kernel.org>; Wed, 25 Nov 2020 23:25:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B1E82075A
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Nov 2020 01:11:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CJdcPtV0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731002AbgKYXZJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 25 Nov 2020 18:25:09 -0500
-Received: from sender11-op-o12.zoho.eu ([31.186.226.226]:17308 "EHLO
-        sender11-op-o12.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730254AbgKYXZJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 25 Nov 2020 18:25:09 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1606345803; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=kQAjdA/O+L7l5nIX6nGvdIuq0PDIx0ieDkUSAEQRmLd4tVfqxu1Cmvu9CWJAmz7j5Crb5ChkhzxKkCGrrlWxby3CYdaQgtHbaAF+N0qv+EyfqiA4agPpoDyLOzvGQ2URuO84LQjxexbK3f1ubtfetdpIcuoAhqALxZ5Xwaft0tQ=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1606345803; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=MJJDa5qcD+cjiZ7Dv+3dBCxJAL5cmBtZ5zsFci0CD+k=; 
-        b=HWF2fdwchkRTt2YzWM8sJjTMZ1QC2BaqpqT3R2tbuHZWmh79oNAnh9T/n5REd6gDOF/1J02qilk5bIEDXWhc0/vypu44GYDwGcl9wa7mWjnvvTpl+LugSszKHB82GOG22ARn+TSN0THheITtgWGgAKA79St5rYLVejTRfVuv+5M=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
-Received: from [IPv6:2620:10d:c0a8:1102::1844] (163.114.130.3 [163.114.130.3]) by mx.zoho.eu
-        with SMTPS id 1606345803098766.2756473933701; Thu, 26 Nov 2020 00:10:03 +0100 (CET)
-Subject: Re: [PATCH] imsm: limit support to first NVMe namespace
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Cc:     linux-raid@vger.kernel.org
-References: <20201104090128.17096-1-mariusz.tkaczyk@intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <7c2d0164-8ca1-539e-d1fc-e1d3752cd981@trained-monkey.org>
-Date:   Wed, 25 Nov 2020 18:10:01 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+        id S1729679AbgKZBLM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 25 Nov 2020 20:11:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55446 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726009AbgKZBLM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 25 Nov 2020 20:11:12 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2381EC0613D4;
+        Wed, 25 Nov 2020 17:11:12 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id q10so137675pfn.0;
+        Wed, 25 Nov 2020 17:11:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=f8bMvE80grJsQDxQbN+SXa4Ok4avPUhhCBLg+N5g7uE=;
+        b=CJdcPtV0FUzyxFptDYgR6iAeEpy/fm/U+qwm7MjSAUITShNs3IGjSdma/ci1d+UdB1
+         /4QBGWKw7GesxoQFO7vGWULXUqZeTgSL72KBwgOOTOpdW6FEjFkGl8KvyOmWfu5zn3C8
+         2D8lQB9/sXcZGuetWYq/y9fJ/4tVoCfZkFM+w/twGxXZf6jIBGOeoFgX3V3eoJ4SxFtL
+         DMlA1WjSzrfwym46BYlZOU4NNlAHgEZUyXcv6V6vuCHVbSrKNoE7MZTnCkoIzELetkkK
+         3iGfzFOaAaJYntoqnGECTiJfY05IPhrPMzUEVWqaaAGWlk8VKPKZsqmpzgCIg3k/819j
+         bQTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=f8bMvE80grJsQDxQbN+SXa4Ok4avPUhhCBLg+N5g7uE=;
+        b=i9YOxFL6AsFIZk3I5DQpmDz/gDFKvYadt1l12LPL174jiWhKGxn2G+nHRAoZdbPiNK
+         tIp9KNCxCM5DNqiPGPy+ppSnvap7tM+DmgSb6mut4BrniebfGuoMaPoAtt5C/RLC+4eR
+         aA9WfpNzPuah7gAPJRAo3ZSkVaxJqvAh0lMgg2rbrr4cIdfPzUxfB+bUAXCAOdYVgE2R
+         LyzIvpKbpvfFm0hmCRM9GJ9UGichuN8yv2mnSt9ZDRn5ma38hMJVWmzfQ+PToVcBmhBu
+         aYtR888KoVd8wG0WGsaU0s/lmkkBOcp+96saw9ipyKnAtwktiuD02nWN4C5xs9+3cBLj
+         z+HQ==
+X-Gm-Message-State: AOAM532jYN0lMS5UX4AL6+ZeHaa7ZZzrj5+If2Cfmk5sGTkliRRKnd5f
+        Blp5e/fVW/nccXM61g0RDzQ=
+X-Google-Smtp-Source: ABdhPJy2rvS54nam6WzB3Gos6rktAfztTZ/apost62cNhHmAqWfXtcE8/JRGjAG0GRNN0NDnAydY0Q==
+X-Received: by 2002:a17:90a:8909:: with SMTP id u9mr643556pjn.100.1606353071628;
+        Wed, 25 Nov 2020 17:11:11 -0800 (PST)
+Received: from google.com (c-67-188-94-199.hsd1.ca.comcast.net. [67.188.94.199])
+        by smtp.gmail.com with ESMTPSA id s10sm3915048pjn.35.2020.11.25.17.11.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2020 17:11:10 -0800 (PST)
+Sender: Minchan Kim <minchan.kim@gmail.com>
+Date:   Wed, 25 Nov 2020 17:11:07 -0800
+From:   Minchan Kim <minchan@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH 60/78] zram: remove the claim mechanism
+Message-ID: <20201126011107.GA57352@google.com>
+References: <20201116145809.410558-1-hch@lst.de>
+ <20201116145809.410558-61-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20201104090128.17096-1-mariusz.tkaczyk@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201116145809.410558-61-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/4/20 4:01 AM, Mariusz Tkaczyk wrote:
-> Due to metadata limitations NVMe multinamespace support has to be removed.
+On Mon, Nov 16, 2020 at 03:57:51PM +0100, Christoph Hellwig wrote:
+> The zram claim mechanism was added to ensure no new opens come in
+> during teardown.  But the proper way to archive that is to call
+> del_gendisk first, which takes care of all that.  Once del_gendisk
+> is called in the right place, the reset side can also be simplified
+> as no I/O can be outstanding on a block device that is not open.
+
+It would be great if it makes the mess simple. Let me have a question
+Please see below.
+
 > 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  platform-intel.c | 31 +++++++++++++++++++++++++++++++
->  platform-intel.h |  1 +
->  super-intel.c    | 11 ++++++++++-
->  3 files changed, 42 insertions(+), 1 deletion(-)
+>  drivers/block/zram/zram_drv.c | 76 ++++++++++-------------------------
+>  1 file changed, 21 insertions(+), 55 deletions(-)
+> 
+> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+> index 6d15d51cee2b7e..3641434a9b154d 100644
+> --- a/drivers/block/zram/zram_drv.c
+> +++ b/drivers/block/zram/zram_drv.c
+> @@ -1756,64 +1756,33 @@ static ssize_t disksize_store(struct device *dev,
+>  static ssize_t reset_store(struct device *dev,
+>  		struct device_attribute *attr, const char *buf, size_t len)
+>  {
+> -	int ret;
+> -	unsigned short do_reset;
+> -	struct zram *zram;
+> +	struct zram *zram = dev_to_zram(dev);
+>  	struct block_device *bdev;
+> +	unsigned short do_reset;
+> +	int ret = 0;
+>  
+>  	ret = kstrtou16(buf, 10, &do_reset);
+>  	if (ret)
+>  		return ret;
+> -
+>  	if (!do_reset)
+>  		return -EINVAL;
+>  
+> -	zram = dev_to_zram(dev);
+>  	bdev = bdget_disk(zram->disk, 0);
+>  	if (!bdev)
+>  		return -ENOMEM;
+>  
+>  	mutex_lock(&bdev->bd_mutex);
+> -	/* Do not reset an active device or claimed device */
+> -	if (bdev->bd_openers || zram->claim) {
+> -		mutex_unlock(&bdev->bd_mutex);
+> -		bdput(bdev);
+> -		return -EBUSY;
+> -	}
+> -
+> -	/* From now on, anyone can't open /dev/zram[0-9] */
+> -	zram->claim = true;
+> +	if (bdev->bd_openers)
+> +		ret = -EBUSY;
+> +	else
+> +		zram_reset_device(zram);
+>  	mutex_unlock(&bdev->bd_mutex);
+> -
+> -	/* Make sure all the pending I/O are finished */
+> -	fsync_bdev(bdev);
+> -	zram_reset_device(zram);
+>  	bdput(bdev);
+>  
+> -	mutex_lock(&bdev->bd_mutex);
+> -	zram->claim = false;
+> -	mutex_unlock(&bdev->bd_mutex);
+> -
+> -	return len;
+> -}
+> -
+> -static int zram_open(struct block_device *bdev, fmode_t mode)
+> -{
+> -	int ret = 0;
+> -	struct zram *zram;
+> -
+> -	WARN_ON(!mutex_is_locked(&bdev->bd_mutex));
+> -
+> -	zram = bdev->bd_disk->private_data;
+> -	/* zram was claimed to reset so open request fails */
+> -	if (zram->claim)
+> -		ret = -EBUSY;
+> -
+> -	return ret;
+> +	return ret ? ret : len;
+>  }
+>  
+>  static const struct block_device_operations zram_devops = {
+> -	.open = zram_open,
+>  	.submit_bio = zram_submit_bio,
+>  	.swap_slot_free_notify = zram_slot_free_notify,
+>  	.rw_page = zram_rw_page,
+> @@ -1821,7 +1790,6 @@ static const struct block_device_operations zram_devops = {
+>  };
+>  
+>  static const struct block_device_operations zram_wb_devops = {
+> -	.open = zram_open,
+>  	.submit_bio = zram_submit_bio,
+>  	.swap_slot_free_notify = zram_slot_free_notify,
+>  	.owner = THIS_MODULE
+> @@ -1972,34 +1940,32 @@ static int zram_add(void)
+>  	return ret;
+>  }
+>  
+> -static int zram_remove(struct zram *zram)
+> +static bool zram_busy(struct zram *zram)
+>  {
+>  	struct block_device *bdev;
+> +	bool busy = false;
+>  
+>  	bdev = bdget_disk(zram->disk, 0);
+> -	if (!bdev)
+> -		return -ENOMEM;
+> -
+> -	mutex_lock(&bdev->bd_mutex);
+> -	if (bdev->bd_openers || zram->claim) {
+> -		mutex_unlock(&bdev->bd_mutex);
+> +	if (bdev) {
+> +		if (bdev->bd_openers)
+> +			busy = true;
+>  		bdput(bdev);
+> -		return -EBUSY;
+>  	}
+>  
+> -	zram->claim = true;
+> -	mutex_unlock(&bdev->bd_mutex);
+> +	return busy;
+> +}
+>  
+> -	zram_debugfs_unregister(zram);
+> +static int zram_remove(struct zram *zram)
+> +{
+> +	if (zram_busy(zram))
+> +		return -EBUSY;
+>  
+> -	/* Make sure all the pending I/O are finished */
+> -	fsync_bdev(bdev);
+> +	del_gendisk(zram->disk);
+> +	zram_debugfs_unregister(zram);
+>  	zram_reset_device(zram);
+> -	bdput(bdev);
+>  
+>  	pr_info("Removed device: %s\n", zram->disk->disk_name);
+>  
+> -	del_gendisk(zram->disk);
+>  	blk_cleanup_queue(zram->disk->queue);
+>  	put_disk(zram->disk);
+>  	kfree(zram);
+> -- 
+> 2.29.2
 > 
 
-Applied!
+With this patch, how deal with the race?
 
-Thanks,
-Jes
+CPU 1                                     CPU 2
 
+hot_remove_store
+  zram_remove
+    zram_busy
+      return -EBUSY
+                                         open /dev/zram0
+    del_gendisk
+    zram_reset and destroy
 
