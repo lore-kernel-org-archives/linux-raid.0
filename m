@@ -6,34 +6,32 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB05FC63798
-	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 01:59:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B01B6C3E8C5
+	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 02:27:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AB5D20679
-	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 01:59:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 764D721D46
+	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 02:27:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731398AbgK1B6w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 27 Nov 2020 20:58:52 -0500
-Received: from icebox.esperi.org.uk ([81.187.191.129]:48744 "EHLO
+        id S1729459AbgK1C0a (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 27 Nov 2020 21:26:30 -0500
+Received: from icebox.esperi.org.uk ([81.187.191.129]:48806 "EHLO
         mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731210AbgK1B6A (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 27 Nov 2020 20:58:00 -0500
-X-Greylist: delayed 369 seconds by postgrey-1.27 at vger.kernel.org; Fri, 27 Nov 2020 20:57:57 EST
+        with ESMTP id S1729695AbgK1CZQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 27 Nov 2020 21:25:16 -0500
 Received: from loom (nix@sidle.srvr.nix [192.168.14.8])
-        by mail.esperi.org.uk (8.16.1/8.16.1) with ESMTP id 0AS1vXLv016469;
-        Sat, 28 Nov 2020 01:57:33 GMT
+        by mail.esperi.org.uk (8.16.1/8.16.1) with ESMTP id 0AS1pHn2016401;
+        Sat, 28 Nov 2020 01:51:17 GMT
 From:   Nix <nix@esperi.org.uk>
-To:     Mukund Sivaraman <muks@mukund.org>
-Cc:     Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To:     Wols Lists <antlists@youngman.org.uk>
+Cc:     Mukund Sivaraman <muks@mukund.org>, linux-raid@vger.kernel.org
 Subject: Re: RAID-6 and write hole with write-intent bitmap
 References: <20201124072039.GA381531@jurassic.vpn.mukund.org>
         <5FBCDC18.9050809@youngman.org.uk>
-        <20201124185004.GA27132@jurassic.vpn.mukund.org>
-Emacs:  the definitive fritterware.
-Date:   Sat, 28 Nov 2020 01:57:33 +0000
-In-Reply-To: <20201124185004.GA27132@jurassic.vpn.mukund.org> (Mukund
-        Sivaraman's message of "Wed, 25 Nov 2020 00:20:04 +0530")
-Message-ID: <878samckfm.fsf@esperi.org.uk>
+Emacs:  don't try this at home, kids!
+Date:   Sat, 28 Nov 2020 01:51:17 +0000
+In-Reply-To: <5FBCDC18.9050809@youngman.org.uk> (Wols Lists's message of "Tue,
+        24 Nov 2020 10:10:32 +0000")
+Message-ID: <87ft4uckq2.fsf@esperi.org.uk>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.3.50 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -42,33 +40,30 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 24 Nov 2020, Mukund Sivaraman told this:
-[...]
-> (a) With RAID-5, assuming there are 4 member disks A, B, C, D, a write
-> operation with its data on disk A and stripe's parity on disk B may
-> involve:
->
-> 1. a read of the stripe
-> 2. update of data on A
-> 3. computation and update of parity A^C^D on B
->
-> These are not atomic updates. If power is lost between steps 2 and 3,
+On 24 Nov 2020, Wols Lists told this:
 
-The writes usually proceed in parallel (because anything else would be
-abominably slow). But... the problem is that the writes to the component
-disks are also not atomic, and will likely not proceed at the same
-rates: only with spindle-synched drives is there anything like a
-guarantee of that, and those have been unobtainable for decades. So a
-power loss could well lead to 500 sectors of the stripe written on disk
-A, 430 sectors written on disk B... and the sectors between sector 430
-and 500 are not consistent. (Disk C might well be up around sector 600,
-disk D around sector 450 and there's no *way* mere parity or RAID 6
-syndromes can recover from the wildly-varying mess between sectors 430
-and 600... it's not like it gets recorded anywhere where a disk write
-got up to before the power went out, either. But the journal avoids this
-in the usual fashion for a journal, by writing out the whole thing first
-and committing it to stable storage, so that on restart the incomplete
-writes can just be replayed.)
+> On 24/11/20 07:20, Mukund Sivaraman wrote:
+>> * With RAID-6 with write-intent bitmap in use, ext4 in ordered mode, no
+>>   disk failures, and abrupt power loss, is there any chance of data loss
+>>   in files other than those being written to just before the power loss?
+>
+> Probably. Sod's law, you will have other files on the same stripe and
+> things could go wrong ... Plus I believe some file systems (including
+> ext4?) store small files in the directory, not as their own i-node, so
 
--- 
-NULL && (void)
+ext4 can store small files in the *inode*, not in the containing
+directory: that's impossible, since an inode can appear in many
+directories at the same time.
+
+... but, of course, inodes on many filesystems are packed into big
+tables of inodes, and if you have a write hole hitting an inode write,
+you've probably buggered up a bunch of other inodes too. And inodes are
+more or less unordered, so that's just smashed a random spray of things
+on the disk... it is quite posible that a lot of them are in directories
+close in space or in time-of-write to the one you were updating, but not
+necessarily. Reach for backups time.
+
+> RULE 0: RAID IS NO SUBSTITUTE FOR BACKUPS.
+
+But backups are a substitute for lack of sleep (for me anyway, because
+if I don't have good backups, I can't sodding sleep).
