@@ -2,69 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5232CC83018
-	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 22:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2223C64E7B
+	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12A7F21D7A
-	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 22:06:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bitfolk.com header.i=@bitfolk.com header.b="UDXeWgY8"
+	by mail.kernel.org (Postfix) with ESMTP id BF00321527
+	for <linux-raid@archiver.kernel.org>; Sat, 28 Nov 2020 22:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389936AbgK1VuS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 28 Nov 2020 16:50:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33662 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387757AbgK1VAY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 28 Nov 2020 16:00:24 -0500
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C2BFC0613D1
-        for <linux-raid@vger.kernel.org>; Sat, 28 Nov 2020 12:59:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com; s=alpha;
-        h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=dGsEDecFNZWjrMYn5uHYdjUr9zcCvzf51LUyvBujP/g=;
-        b=UDXeWgY84dqJDHi6hP7t8Mtr8xNdtWyX8AenS5u5dJVQXTguZ/OFYbriM/EYm7dMzKLIXk8CPRAM7gVTnSoSzpQF0zF4nAyhuby+6m7+xLEABg3KFQq2Go1ICZ73+/EriOk5xgFWjrmu66Dc3mdAjkNHTx3hLjPAXAa3G5rr9QIO8tnuqtA2rbPxEAyqUQVAAuHlXMrfiFGgCtPqofubJQ2FCjRIKPLFl3/o2qb8Nh/T1W25ZOaaw9gzmE/5xLcvtyGiFgdHXWSZWX9M05i893mnwnIfBfOVTGCv/KYDyjExsg9RO+f5SWHo7MYSHBiKQKX9LVs8BJev3LkBlNqspg==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.84_2)
-        (envelope-from <andy@strugglers.net>)
-        id 1kj7Jx-0001q0-2g; Sat, 28 Nov 2020 20:59:53 +0000
-Date:   Sat, 28 Nov 2020 20:59:53 +0000
-From:   Andy Smith <andy@strugglers.net>
-To:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc:     Linux Raid <linux-raid@vger.kernel.org>
-Subject: Re: Config option for removing bbl on assembly?
-Message-ID: <20201128205953.GJ16071@bitfolk.com>
-Mail-Followup-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
-        Linux Raid <linux-raid@vger.kernel.org>
-References: <20200904074557.GT13298@bitfolk.com>
- <1375483028.8430464.1606594500693.JavaMail.zimbra@karlsbakk.net>
+        id S1730894AbgK1VuQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 28 Nov 2020 16:50:16 -0500
+Received: from smtp.hosts.co.uk ([85.233.160.19]:28275 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732385AbgK1SHo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 28 Nov 2020 13:07:44 -0500
+Received: from host86-149-69-253.range86-149.btcentralplus.com ([86.149.69.253] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1kj4KC-0002UW-FB
+        for linux-raid@vger.kernel.org; Sat, 28 Nov 2020 17:47:56 +0000
+Subject: Re: Assemble RAID on new machine but with missing devices
+To:     linux-raid@vger.kernel.org
+References: <4CjVhl4nSbz6tm9@submission01.posteo.de>
+From:   antlists <antlists@youngman.org.uk>
+Message-ID: <b5d9ee39-3be6-381b-78ac-93b500255945@youngman.org.uk>
+Date:   Sat, 28 Nov 2020 17:47:58 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1375483028.8430464.1606594500693.JavaMail.zimbra@karlsbakk.net>
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL:  http://strugglers.net/wiki/User:Andy
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
+In-Reply-To: <4CjVhl4nSbz6tm9@submission01.posteo.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Roy,
+On 27/11/2020 23:10, c.buhtz@posteo.jp wrote:
+> Hello,
+> 
+> I red some stuff about assembling mode for mdadm. But two points are
+> unclear for me.
+> 
+> 1. Missing devices
+> I have two HDDs in a RAID1 - only data, no OS, on them. I want to
+> physical remove one HDD and plug it into a new server machine. Then I
+> want to bring the RAID1 online again on the new machine but with one
+> existing and one missing drive.
+> Background: When finished I will plug in a new fresh HDD as the second
+> one to the new server.
 
-On Sat, Nov 28, 2020 at 09:15:00PM +0100, Roy Sigurd Karlsbakk wrote:
-> Will anyone look into this issue, please? It really is a problem.
+It's fairly certain that the array will - initially - refuse to run. 
+That's a safety feature - if an array is damaged while shut down, it 
+won't come back without intervention.
 
-Since it seems you can remove the BBL by removing and re-adding a
-device I no longer see a need for a new option that removes it on
-assembly.
+Put the single disk in your new system. As I say, it's unlikely it'll 
+start straight away. "cat /proc/mdstat" and if the array is there in a 
+failed state, stop it. Then you can re-assemble it and it should come up 
+degraded. All you have to do after that is replace the non-existent 
+drive with your new replacement, and you'll have a functioning array.
+> 
+> 2. mdadm.conf
+> On the web I read sometimes about modifying mdadm.conf on the new
+> machine. But I do not understand why. If so. Why and what do I have to
+> modify in the mdadm.conf?
+> 
+If you've even got one ...
 
-Ideally I remember to do the remove and re-add before the machine is
-put into service, but failing that just doing a remove and re-add
-one time seems reasonable enough.
+I don't know the history of it, but the early arrays did not have 
+superblocks, so mdadm.conf - an ACCURATE - mdadm.conf was essential. Now 
+they've got superblocks, it's optional and - to the best of my knowledge 
+- none of my systems have mdadm.conf's.
+
+Do you have a superblock? Preferably v1 (1.0, 1.1 or 1.2). If you do, 
+don't worry about it, it's old advice, and while it's good to have an 
+up-to-date mdadm.conf to tell *you* what's what, the system doesn't need it.
 
 Cheers,
-Andy
+Wol
