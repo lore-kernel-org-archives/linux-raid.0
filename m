@@ -6,80 +6,66 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94915C64E7B
-	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 22:05:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37025C64E7B
+	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 22:06:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45B4C2076C
-	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 22:05:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D028020709
+	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 22:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730394AbgK3WFH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 Nov 2020 17:05:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33966 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730391AbgK3WFG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 Nov 2020 17:05:06 -0500
-Received: from u17383850.onlinehome-server.com (u17383850.onlinehome-server.com [IPv6:2607:f1c0:83f:ac00::a6:f62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F2C70C0613CF
-        for <linux-raid@vger.kernel.org>; Mon, 30 Nov 2020 14:04:25 -0800 (PST)
+        id S1730377AbgK3WGq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 Nov 2020 17:06:46 -0500
+Received: from u17383850.onlinehome-server.com ([74.208.250.170]:54116 "EHLO
+        u17383850.onlinehome-server.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730359AbgK3WGq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 30 Nov 2020 17:06:46 -0500
 Received: by u17383850.onlinehome-server.com (Postfix, from userid 5001)
-        id 7613379C; Mon, 30 Nov 2020 17:04:25 -0500 (EST)
-Date:   Mon, 30 Nov 2020 17:04:25 -0500
+        id 758BF79C; Mon, 30 Nov 2020 17:06:05 -0500 (EST)
+Date:   Mon, 30 Nov 2020 17:06:05 -0500
 From:   David T-G <davidtg-robot@justpickone.org>
 To:     linux-raid@vger.kernel.org
-Subject: Re: partitions & filesystems
-Message-ID: <20201130220425.GY1415@justpickone.org>
+Subject: Re: RAID repair script (was "Re: ???root account locked??? after
+ removing one RAID1 hard disc"
+Message-ID: <20201130220605.GZ1415@justpickone.org>
 Reply-To: linux-raid@vger.kernel.org
 References: <e6b7a61d16a25c433438c670fa4c0b4f@posteo.de>
- <20201130200503.GV1415@justpickone.org>
- <01a571de-8ae8-3d9e-6f3d-16555ad93ea3@youngman.org.uk>
+ <bc15926a-8bf4-14ae-bd67-ae14d915d4c0@youngman.org.uk>
+ <0fd4f7e5-b71d-0c53-baca-d483d7872981@thelounge.net>
+ <ef7d7b4c-d7d2-1bff-8b13-2187889162af@grumpydevil.homelinux.org>
+ <ed411d06-c343-43dc-04e1-0a17658cb989@thelounge.net>
+ <20201130200620.GW1415@justpickone.org>
+ <e580e980-1842-b505-8159-e921ccd412a8@thelounge.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <01a571de-8ae8-3d9e-6f3d-16555ad93ea3@youngman.org.uk>
+In-Reply-To: <e580e980-1842-b505-8159-e921ccd412a8@thelounge.net>
 User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Wol, et al --
+Reindl, et al --
 
-...and then antlists said...
+...and then Reindl Harald said...
 % 
-% On 30/11/2020 20:05, David T-G wrote:
+% Am 30.11.20 um 21:06 schrieb David T-G:
 % >
-% >output because you have apparently created your filesystem on the entire
-% >device (hey, I didn't know one could do that!).
+% >Oooh!  How handy :-)  Share, please!
 % 
-% That, actually, is the norm. It is NOT normal to partition a raid array.
-
-Oh!  That's two things I've learned today :-)
-
-
+% just make sure GOOD_DISK is one of the remaining and BAD_DISK is the
+% repalcement drive before uncomment the "exit"
 % 
-...
-% >So the display isn't interesting, although the logic behind that approach
-% >certainly is to me.
+% and yeah, adjust how many raid-partitions are there
 % 
-% Your approach seems to be at odds with *normal* practice, although
+% the first is my homeserver with 3 filesystems (boot, system, data),
+% the second one is a RAID10 on a HP microserver with the OS on a
+% sd-card
+[snip]
 
-Well, that isn't surprising; I haven't been a real^Wprofessional Sys Admin
-for a decade or more now.  I don't by any means pretend to even think that
-I know what's what :-)  I was happy to just be able to explain why the OP's
-"filesystem" was missing.
-
-
-% there is nothing wrong with it. At the end of the day, as far as
-% linux is concerned, one block device is much the same as any other.
-
-True.  TMTOWTDI :-)
+Thanks!
 
 
-% 
-% Cheers,
-% Wol
-
-
-Thanks & HAND
+HANN
 
 :-D
 -- 
