@@ -2,96 +2,86 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23EA8C64E8A
-	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 10:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A906C64E8A
+	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 10:52:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C77420708
-	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 10:30:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.jp header.i=@posteo.jp header.b="b8mHVeVt"
+	by mail.kernel.org (Postfix) with ESMTP id 00CDD206D8
+	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 10:52:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728168AbgK3Kaa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 Nov 2020 05:30:30 -0500
-Received: from mout01.posteo.de ([185.67.36.65]:38461 "EHLO mout01.posteo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727288AbgK3Kaa (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 30 Nov 2020 05:30:30 -0500
-Received: from submission (posteo.de [89.146.220.130]) 
-        by mout01.posteo.de (Postfix) with ESMTPS id 092D8160064
-        for <linux-raid@vger.kernel.org>; Mon, 30 Nov 2020 11:29:33 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.jp; s=2017;
-        t=1606732173; bh=c6OVI5Zku0zWQq7z4X9jUSV7CjdDFZVg2IrIyiQ4AHY=;
-        h=Date:From:To:Subject:From;
-        b=b8mHVeVtwKSeA+hAA13kNzxKEobQu0Flskq6Jur3wZBfEgz4XAJ3e7rVRsBXET9kt
-         6SM8gGBOiVDVmO3WOu1GnKPAsNsupRamuPXdZOKOXhXGBIiAD8fQE32KIEOXjbDhSF
-         w78IuCpe5ZISzU6BHeksB/vLrVkF3HjadJ7ReaNGV4yzyzwGD2/yq2IRhrJ5Wg9S8R
-         xvUd06cI/vYDU8gHhB9BrYUH9NJkx+RxYiJFcqnfh5PtuFa1FohkQUcODBREvXUnz1
-         1e0EfzCCcNHdRkBQTPJvjcqEXuW7YwdGFkzLa77ahxfASAX4hm+yNczLa5B3XeDp1K
-         kfGxH7+AziXKQ==
-Received: from customer (localhost [127.0.0.1])
-        by submission (posteo.de) with ESMTPSA id 4Cl1gc1tcbz9rxG
-        for <linux-raid@vger.kernel.org>; Mon, 30 Nov 2020 11:29:31 +0100 (CET)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 30 Nov 2020 11:29:31 +0100
-From:   c.buhtz@posteo.jp
-To:     linux-raid@vger.kernel.org
-Subject: Re: =?UTF-8?Q?=E2=80=9Croot=20account=20locked=E2=80=9D=20after?=
- =?UTF-8?Q?=20removing=20one=20RAID=31=20hard=20disc?=
-In-Reply-To: <bc15926a-8bf4-14ae-bd67-ae14d915d4c0@youngman.org.uk>
+        id S1728916AbgK3Kvp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 Nov 2020 05:51:45 -0500
+Received: from mail.thelounge.net ([91.118.73.15]:36203 "EHLO
+        mail.thelounge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728830AbgK3Kvp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 Nov 2020 05:51:45 -0500
+X-Greylist: delayed 1161 seconds by postgrey-1.27 at vger.kernel.org; Mon, 30 Nov 2020 05:51:44 EST
+Received: from srv-rhsoft.rhsoft.net (rh.vpn.thelounge.net [10.10.10.2])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-256))
+        (No client certificate requested)
+        (Authenticated sender: h.reindl@thelounge.net)
+        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4Cl1k52mQWzXVl;
+        Mon, 30 Nov 2020 11:31:41 +0100 (CET)
+To:     antlists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 References: <e6b7a61d16a25c433438c670fa4c0b4f@posteo.de>
  <bc15926a-8bf4-14ae-bd67-ae14d915d4c0@youngman.org.uk>
-Message-ID: <4fde482053771294fc5369beaccea03a@posteo.de>
-X-Sender: c.buhtz@posteo.jp
-User-Agent: Posteo Webmail
+From:   Reindl Harald <h.reindl@thelounge.net>
+Organization: the lounge interactive design
+Subject: =?UTF-8?Q?Re=3a_=e2=80=9croot_account_locked=e2=80=9d_after_removin?=
+ =?UTF-8?Q?g_one_RAID1_hard_disc?=
+Message-ID: <0fd4f7e5-b71d-0c53-baca-d483d7872981@thelounge.net>
+Date:   Mon, 30 Nov 2020 11:31:41 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
+MIME-Version: 1.0
+In-Reply-To: <bc15926a-8bf4-14ae-bd67-ae14d915d4c0@youngman.org.uk>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Thanks for your answer. It tells me that the observed behaviour is usual 
-- no matter that I think it should not be usual. ;)
 
-Am 30.11.2020 10:27 schrieb antlists:
->> Why is the system so sensible about one RAID device that does not 
->> contain essential data for the boot process. I would I understand if 
->> there is a error messages somewhere. But blocking the whole boot 
->> process is to much in my understanding.
+
+Am 30.11.20 um 10:27 schrieb antlists:
+>> I read that a single RAID1 device (the second is missing) can be 
+>> accessed without any problems. How can I do that?
 > 
-> It's not. It's sensitive to the fact that ANY disk is missing.
+> When a component of a raid disappears without warning, the raid will 
+> refuse to assemble properly on next boot. You need to get at a command 
+> line and force-assemble it
 
-But the system does not need this disc to boot or to run. This IMO 
-should not happen.
+since when is it broken that way?
 
-> When a component of a raid disappears without warning, the raid will
-> refuse to assemble properly on next boot. You need to get at a command
-> line and force-assemble it.
+from where should that commandlien come from when the operating system 
+itself is on the for no vali dreason not assembling RAID?
 
-This is logical to me.
+luckily the past few years no disks died but on the office server 300 
+kilometers from here with /boot, os and /data on RAID1 this was not true 
+at least 10 years
 
->>> sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,relatime)
->>> /dev/sda1 on / type ext4 (rw,relatime,errors=remount-ro)
->>> /dev/md127 on /Daten type ext4 (rw,relatime)
-> 
-> And here is at least part of your problem. If the mount fails, systemd
-> will halt and chuck you into a recovery console.
+* disk died
+* boss replaced it and made sure
+   the remaining is on the first SATA
+   port
+* power on
+* machine booted
+* me partitioned and added the new drive
 
-btw: I am not able to open the recovery console. I am not able to enter 
-the shell.
-In the Unix/Linux world all things have reasons - no matter that I do 
-not know or understand all of them.
-But this is systemd. ;)
+hell it's and ordinary situation for a RAID that a disk disappears 
+without warning because they tend to die from one moment to the next
 
-I see no no reason to stop the boot process just because a unneeded 
-data-only partition/drive is not available.
+hell it's expected behavior to boot from the remaining disks, no matter 
+RAID1, RAID10, RAID5 as long as there are enough present for the whole 
+dataset
 
-> Is root's home on /Daten? It shouldn't be.
+the only thing i expect in that case is that it takes a little longer to 
+boot when soemthing tries to wait until a timeout for the missing device 
+/ componenzt
 
-No it is not. As you can see in the second line of the fstab / (and all 
-its sub-content like home-dirs, boot, etc) is on /dev/sda1. The RAID is 
-build of sdb and sdc.
+
