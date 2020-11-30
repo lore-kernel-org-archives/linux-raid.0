@@ -2,428 +2,194 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-22.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A370C63777
-	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 18:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA2AC63777
+	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 18:17:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C43242074A
-	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 18:11:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65F4E2074A
+	for <linux-raid@archiver.kernel.org>; Mon, 30 Nov 2020 18:17:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PPuo2qmV"
+	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="ZH+Svv4i";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="lVk2PVCz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729391AbgK3SLm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 30 Nov 2020 13:11:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54150 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727154AbgK3SLm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 30 Nov 2020 13:11:42 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 823D0C0613D2;
-        Mon, 30 Nov 2020 10:11:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=R+zzLdYfKZFmJ36yLKNtpCZ9PINkATWvA4dyjIcnWFM=; b=PPuo2qmVcjPQdsoH9RsaGnoTpr
-        RLpBILWYSmwb32KJcipwmMDPkU+lg7H/pYit/9nT84/HkhNMhc+KrEZ8svXyRFykwQvcAArOM7jD3
-        PfGOKi5ZAfpl352M7K28KCbcS0W7mdDU1JqCuRgTcmWCqixAVJ/0pt276xS0UmD5UJzm0S1aKkjXM
-        AhvC5zEwQgMLmPTq0L+4W3LMQMioVuMVhjUZSvVUqU+wKz3qf1ABNPZdHezeSiVUkqD0qDjtBWWpw
-        Dnmt/CPzIx0Xtnwpn295u5g/V8S8ROtK1EPhSyBO7JZdpEe8BhbkAGHw10fQeEcEN2uuLMEjzNnCH
-        F9Tkq+nw==;
-Received: from 089144198196.atnat0007.highway.a1.net ([89.144.198.196] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kjnda-00079A-78; Mon, 30 Nov 2020 18:10:59 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     dm-devel@redhat.com, linux-block@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-s390@vger.kernel.org
-Subject: [PATCH 5/5] block: remove the request_queue to argument request based tracepoints
-Date:   Mon, 30 Nov 2020 18:58:54 +0100
-Message-Id: <20201130175854.982460-6-hch@lst.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201130175854.982460-1-hch@lst.de>
-References: <20201130175854.982460-1-hch@lst.de>
+        id S2388033AbgK3SQs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 30 Nov 2020 13:16:48 -0500
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:16724 "EHLO
+        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388030AbgK3SQs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 30 Nov 2020 13:16:48 -0500
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AUI9Vn6030975;
+        Mon, 30 Nov 2020 10:15:58 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : content-type : content-id :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=aDhiYHkKUXNW8N1gqdKA6xp6ht//+SGB7DEVpIsWR7I=;
+ b=ZH+Svv4inDnwImgWSFSGT8B58THKInM1MPpA2flKZmmv+lYYWnIputGRpbhQB6bW6+NB
+ 4wUnLLZdnDhUWVBgn7/+xNF4jTFwOaswIrZzDmwlaQ/67d3v2FF6bLRHFYb57icjGblO
+ iZm9NDc7tUTHoZxt6l1bFSIzOUir6yLHbm4= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com with ESMTP id 354c7qdkr1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 30 Nov 2020 10:15:57 -0800
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (100.104.31.183)
+ by o365-in.thefacebook.com (100.104.35.175) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Mon, 30 Nov 2020 10:15:57 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=elk4lCO1ieVNibI7xWAJ4EZ7xhm+SdKz2x3RfbcKeMiCdfoBpvxjDbIp+DE3DZa7lsdMURiMPuXuxeergLKgrMAjjsvmDUuhsQBhm49bMhoUofaWabktZitNecLnM7WVny3NAQ174Od/+x5JOoAyKoUJCW8Z9ljsKH8jTRN4l68v9oXbkuYAWuxlrAZOYDE/nP2G70Zm/q+lS04ZHT/EWNeYOcYyDXOL1ztraYWxuOTqInTNecRDByT9mBSTj6unHqzMvOI3Qbxg/DmgEIBVLweiYwkq08hu6ZZmzslfUkYSwyGb4PxUX+DghlLWC5MeE2P3QAsVag+T1wTnu/aQUA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EZ6U+f4ANTb2+ABNnGZ9xNl5SuDkvVaPiicc69fU2PE=;
+ b=jf33hD6WjzniSEt0TTlofkz0kdj7lKkPC1HNeFv7nLUak5Rny4pmbKb1usoi0VtabErc15v6qokAeCStWgk8/HbDBFPYMIg7z7lUw8qub/YgLAV+i1EkzXXvWLXPLWvmh/dz4WKH+QZOON6EUO/s203VuLGSFjfZE+OVBGwlJChJcrPJKbmEnO+1/AtJ3IVpbvEaAv3c/BgmG9NrACM8bfVD/egg2v/Dks3OzoYc3hRpAkQAvG7rHb7nWN5Zdiba1zkKgv1XPuSYjk4cEek4kr16C7d374tnLfxm6J0WDEt5YSc099+m/o22FcuAbiaf5hVThkBBKUopE3oDWcwxZA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EZ6U+f4ANTb2+ABNnGZ9xNl5SuDkvVaPiicc69fU2PE=;
+ b=lVk2PVCz7v53cwSzKg8Zi874beupD1dSfgekHsKhaztVrllRk++rKajqULeg38TVW2O2eqWj3fMTFtxrX7HBpPAJYKBq2csEDspye510Fp/UoRDELEMxwAkCIZf1vPFlb584hXwkE22QPOHUS0Jn8tdDqZmu0dT7nyKPeVJFOgs=
+Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
+ by BYAPR15MB2583.namprd15.prod.outlook.com (2603:10b6:a03:156::25) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3611.25; Mon, 30 Nov
+ 2020 18:15:56 +0000
+Received: from BYAPR15MB2999.namprd15.prod.outlook.com
+ ([fe80::f49e:bdbb:8cd7:bf6b]) by BYAPR15MB2999.namprd15.prod.outlook.com
+ ([fe80::f49e:bdbb:8cd7:bf6b%7]) with mapi id 15.20.3611.022; Mon, 30 Nov 2020
+ 18:15:56 +0000
+From:   Song Liu <songliubraving@fb.com>
+To:     Jens Axboe <axboe@kernel.dk>,
+        linux-raid <linux-raid@vger.kernel.org>
+CC:     Zhao Heming <heming.zhao@suse.com>,
+        Pankaj Gupta <pankaj.gupta@cloud.ionos.com>,
+        Kevin Vigor <kvigor@gmail.com>,
+        "Dae R. Jeong" <dae.r.jeong@kaist.ac.kr>
+Subject: [GIT PULL] md-next 20201130
+Thread-Topic: [GIT PULL] md-next 20201130
+Thread-Index: AQHWx0TYyu9IuxpRPkicdWuoUaFNHQ==
+Date:   Mon, 30 Nov 2020 18:15:56 +0000
+Message-ID: <84FD2F29-B2F8-4026-A93D-5E28F28A3B4B@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3608.120.23.2.4)
+authentication-results: kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=none action=none header.from=fb.com;
+x-originating-ip: [2620:10d:c090:400::5:438f]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 23a73cd2-bdd1-447c-aab2-08d8955bfb29
+x-ms-traffictypediagnostic: BYAPR15MB2583:
+x-microsoft-antispam-prvs: <BYAPR15MB2583BF1D5DF27B3BAE06CC49B3F50@BYAPR15MB2583.namprd15.prod.outlook.com>
+x-fb-source: Internal
+x-ms-oob-tlc-oobclassifiers: OLM:2089;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 6bLRr28VdnN1DbzOvdFrz4NJl0LUV1DWjZNaTY3R1YfYtu1VkKnB7fjzNJdaPaEHyfIEJtaBNW+upd2suQURH1CYNISMv9l9acoK+Onnm6OZoApKvwMBmUxFJQu+hh+s8y2aB8C9iwpV4h8pDePZc/rx/sXGA9zLOGlNud4zO35am0sXyFefzVsBnyEThV32bhtY2EkN01CSeWAJBDJTRA29xfrfgRkBKI1aldNx2UBY5wJXnEBkP7UWs+CJ4bYP3a5CejKBqkyI/z54799UIshOJ/mIPARAGHusgzCrGP+nXPU/OE/RXtwc3gTl5KZNfF4B4Xk8GOi8YvTPTP3U183CWDSKGMUKNLX1iGd3MTBKEruy9q427RSnmOLt/3F7krft16f8FEkBikQ0w70DXA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(376002)(346002)(39860400002)(396003)(136003)(6506007)(66946007)(6512007)(966005)(110136005)(2906002)(66476007)(186003)(83380400001)(316002)(36756003)(2616005)(54906003)(86362001)(71200400001)(4326008)(478600001)(6486002)(8676002)(5660300002)(66446008)(91956017)(66556008)(76116006)(8936002)(33656002)(64756008)(4001150100001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?Ex0d69VuudOEkvXtQn/RlKceFxzdi1G+kGe2geuzHYyLq0KJIsDoElFkJDbc?=
+ =?us-ascii?Q?dVavH+B3rP/q8vv9TZ3e0LsgMpBxgGuT0f97wGVyxZR6X+TJDnkHerSLj2OZ?=
+ =?us-ascii?Q?pjvWHoWuaHHSLhTFdlHngoUMNctwtj52962OWv7Rzb0pMMONFGhJJ5oSsyrq?=
+ =?us-ascii?Q?JAOh7ZJcwmPN3E6aifXe+mMdOVxCRcPZnsbKCeCVcj5KlX+JIYGUYaLZSFXL?=
+ =?us-ascii?Q?gr6jZb8ElASaUR/7ioI0wqplSdXR3en4l6wDrG+KmrSCG8mcJ0Hnu2iISY2x?=
+ =?us-ascii?Q?e74EqXNnx/DA4GTGhxhVjojdiiVoOmbnOrV6If3RFBAPY/QTzF0hanBidXIn?=
+ =?us-ascii?Q?pheM49xqKNje9IKQK/3ciSCcxQLYowpI+9kkNKnGphJRGpPQfdKD6pKuRwXU?=
+ =?us-ascii?Q?EwimXtYgwiLQF7c+doePPKlyhZLKEw8Bi9qzwVJvLUjeofSyPxJh1I0bY1MU?=
+ =?us-ascii?Q?JtPDPHaVkXCp2cTvjbfKvaNCkYzmPw2q6xz+2PVxdeJ+A3zO8IdsQIQx/J9c?=
+ =?us-ascii?Q?N0jb/4zNT3O/eytDU8/wHdbf5DewiLIAHaTSXWdwP8AVYe7P0nTc6zKJbr7S?=
+ =?us-ascii?Q?2gAA7YjqbHsQ/clEeqpvEkxlmRAK0I+QH8Ky2mO0iNxeBRKA+xrCaIkJ0FBC?=
+ =?us-ascii?Q?lZxir3bK9kIdr1rDgBk0RYLxRjENo/5cH7rGJ7xQFsU46cSRz35mMPE56jmv?=
+ =?us-ascii?Q?PL34nowXAdVpLfkouo0BfXPuVqc80Ddt61AwxS+tJwR6IpolpjjD457LGTII?=
+ =?us-ascii?Q?t6HyCOTd+L37daw86E+JFSxfuUmh90U2TgpFKRE7EMtHO0kALGKgmqj1HTQ7?=
+ =?us-ascii?Q?h19kHsU4C1EmcDP05eqLOz2g+yiUOzBJwUUvXMnvtuURnaOz43z3AosHVQam?=
+ =?us-ascii?Q?85zNVMxc3bzXrpJ1/wovEF3iK7+xhZjIvniVhKNfj7M0B97R/qZOPJ6cdYrd?=
+ =?us-ascii?Q?bRIk8tUVgblorj/SIxian6hPJbQHNGt/Kr32hFhHZYLVxiM9qDGrLGLl22zE?=
+ =?us-ascii?Q?7x1guCxr38aKJ/oGdYgQKvIF+g=3D=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <D1C19806D5284040B40D13DE69B7F850@namprd15.prod.outlook.com>
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 23a73cd2-bdd1-447c-aab2-08d8955bfb29
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Nov 2020 18:15:56.0769
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 5jCnA+yYlsLCqgJgiXuw7aR0vu2acBh0UkLn8MLqVhsLfs7Ey4fQVeEmGCP/DHKaq6YcARJ+3H6E8vZrnZBhcQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB2583
+X-OriginatorOrg: fb.com
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-30_06:2020-11-30,2020-11-30 signatures=0
+X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 mlxlogscore=999
+ bulkscore=0 priorityscore=1501 clxscore=1011 lowpriorityscore=0
+ spamscore=0 mlxscore=0 malwarescore=0 phishscore=0 adultscore=0
+ suspectscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2011300119
+X-FB-Internal: deliver
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The request_queue can trivially be derived from the request.
+Hi Jens,=20
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-merge.c            |  2 +-
- block/blk-mq-sched.c         |  2 +-
- block/blk-mq.c               |  8 +++----
- drivers/md/dm-rq.c           |  2 +-
- drivers/s390/scsi/zfcp_fsf.c |  3 +--
- include/linux/blktrace_api.h |  5 ++--
- include/trace/events/block.h | 30 ++++++++++--------------
- kernel/trace/blktrace.c      | 44 ++++++++++++++----------------------
- 8 files changed, 39 insertions(+), 57 deletions(-)
+Please consider pulling the following changes for md-next on top of your=20
+for-5.11/drivers branch.=20
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 4071daa88a5eaf..7497d86fff3834 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -799,7 +799,7 @@ static struct request *attempt_merge(struct request_queue *q,
- 	 */
- 	blk_account_io_merge_request(next);
- 
--	trace_block_rq_merge(q, next);
-+	trace_block_rq_merge(next);
- 
- 	/*
- 	 * ownership of bio passed from next to req, return 'next' for
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index d1eafe2c045caa..deff4e826e234d 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -386,7 +386,7 @@ EXPORT_SYMBOL_GPL(blk_mq_sched_try_insert_merge);
- 
- void blk_mq_sched_request_inserted(struct request *rq)
- {
--	trace_block_rq_insert(rq->q, rq);
-+	trace_block_rq_insert(rq);
- }
- EXPORT_SYMBOL_GPL(blk_mq_sched_request_inserted);
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 13636458f32f1c..bb669b415a387e 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -732,7 +732,7 @@ void blk_mq_start_request(struct request *rq)
- {
- 	struct request_queue *q = rq->q;
- 
--	trace_block_rq_issue(q, rq);
-+	trace_block_rq_issue(rq);
- 
- 	if (test_bit(QUEUE_FLAG_STATS, &q->queue_flags)) {
- 		rq->io_start_time_ns = ktime_get_ns();
-@@ -759,7 +759,7 @@ static void __blk_mq_requeue_request(struct request *rq)
- 
- 	blk_mq_put_driver_tag(rq);
- 
--	trace_block_rq_requeue(q, rq);
-+	trace_block_rq_requeue(rq);
- 	rq_qos_requeue(q, rq);
- 
- 	if (blk_mq_request_started(rq)) {
-@@ -1820,7 +1820,7 @@ static inline void __blk_mq_insert_req_list(struct blk_mq_hw_ctx *hctx,
- 
- 	lockdep_assert_held(&ctx->lock);
- 
--	trace_block_rq_insert(hctx->queue, rq);
-+	trace_block_rq_insert(rq);
- 
- 	if (at_head)
- 		list_add(&rq->queuelist, &ctx->rq_lists[type]);
-@@ -1877,7 +1877,7 @@ void blk_mq_insert_requests(struct blk_mq_hw_ctx *hctx, struct blk_mq_ctx *ctx,
- 	 */
- 	list_for_each_entry(rq, list, queuelist) {
- 		BUG_ON(rq->mq_ctx != ctx);
--		trace_block_rq_insert(hctx->queue, rq);
-+		trace_block_rq_insert(rq);
- 	}
- 
- 	spin_lock(&ctx->lock);
-diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-index 729a72ec30ccae..13b4385f4d5a92 100644
---- a/drivers/md/dm-rq.c
-+++ b/drivers/md/dm-rq.c
-@@ -397,7 +397,7 @@ static int map_request(struct dm_rq_target_io *tio)
- 		}
- 
- 		/* The target has remapped the I/O so dispatch it */
--		trace_block_rq_remap(clone->q, clone, disk_devt(dm_disk(md)),
-+		trace_block_rq_remap(clone, disk_devt(dm_disk(md)),
- 				     blk_rq_pos(rq));
- 		ret = dm_dispatch_clone_request(clone, rq);
- 		if (ret == BLK_STS_RESOURCE || ret == BLK_STS_DEV_RESOURCE) {
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index 6cb963a0677714..37d450f4695281 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -2359,8 +2359,7 @@ static void zfcp_fsf_req_trace(struct zfcp_fsf_req *req, struct scsi_cmnd *scsi)
- 		}
- 	}
- 
--	blk_add_driver_data(scsi->request->q, scsi->request, &blktrc,
--			    sizeof(blktrc));
-+	blk_add_driver_data(scsi->request, &blktrc, sizeof(blktrc));
- }
- 
- /**
-diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
-index 3b6ff5902edce6..05556573b896a2 100644
---- a/include/linux/blktrace_api.h
-+++ b/include/linux/blktrace_api.h
-@@ -75,8 +75,7 @@ static inline bool blk_trace_note_message_enabled(struct request_queue *q)
- 	return ret;
- }
- 
--extern void blk_add_driver_data(struct request_queue *q, struct request *rq,
--				void *data, size_t len);
-+extern void blk_add_driver_data(struct request *rq, void *data, size_t len);
- extern int blk_trace_setup(struct request_queue *q, char *name, dev_t dev,
- 			   struct block_device *bdev,
- 			   char __user *arg);
-@@ -90,7 +89,7 @@ extern struct attribute_group blk_trace_attr_group;
- #else /* !CONFIG_BLK_DEV_IO_TRACE */
- # define blk_trace_ioctl(bdev, cmd, arg)		(-ENOTTY)
- # define blk_trace_shutdown(q)				do { } while (0)
--# define blk_add_driver_data(q, rq, data, len)		do {} while (0)
-+# define blk_add_driver_data(rq, data, len)		do {} while (0)
- # define blk_trace_setup(q, name, dev, bdev, arg)	(-ENOTTY)
- # define blk_trace_startstop(q, start)			(-ENOTTY)
- # define blk_trace_remove(q)				(-ENOTTY)
-diff --git a/include/trace/events/block.h b/include/trace/events/block.h
-index 8fb89574d8677f..0d782663a005dc 100644
---- a/include/trace/events/block.h
-+++ b/include/trace/events/block.h
-@@ -64,7 +64,6 @@ DEFINE_EVENT(block_buffer, block_dirty_buffer,
- 
- /**
-  * block_rq_requeue - place block IO request back on a queue
-- * @q: queue holding operation
-  * @rq: block IO operation request
-  *
-  * The block operation request @rq is being placed back into queue
-@@ -73,9 +72,9 @@ DEFINE_EVENT(block_buffer, block_dirty_buffer,
-  */
- TRACE_EVENT(block_rq_requeue,
- 
--	TP_PROTO(struct request_queue *q, struct request *rq),
-+	TP_PROTO(struct request *rq),
- 
--	TP_ARGS(q, rq),
-+	TP_ARGS(rq),
- 
- 	TP_STRUCT__entry(
- 		__field(  dev_t,	dev			)
-@@ -147,9 +146,9 @@ TRACE_EVENT(block_rq_complete,
- 
- DECLARE_EVENT_CLASS(block_rq,
- 
--	TP_PROTO(struct request_queue *q, struct request *rq),
-+	TP_PROTO(struct request *rq),
- 
--	TP_ARGS(q, rq),
-+	TP_ARGS(rq),
- 
- 	TP_STRUCT__entry(
- 		__field(  dev_t,	dev			)
-@@ -181,7 +180,6 @@ DECLARE_EVENT_CLASS(block_rq,
- 
- /**
-  * block_rq_insert - insert block operation request into queue
-- * @q: target queue
-  * @rq: block IO operation request
-  *
-  * Called immediately before block operation request @rq is inserted
-@@ -191,14 +189,13 @@ DECLARE_EVENT_CLASS(block_rq,
-  */
- DEFINE_EVENT(block_rq, block_rq_insert,
- 
--	TP_PROTO(struct request_queue *q, struct request *rq),
-+	TP_PROTO(struct request *rq),
- 
--	TP_ARGS(q, rq)
-+	TP_ARGS(rq)
- );
- 
- /**
-  * block_rq_issue - issue pending block IO request operation to device driver
-- * @q: queue holding operation
-  * @rq: block IO operation operation request
-  *
-  * Called when block operation request @rq from queue @q is sent to a
-@@ -206,14 +203,13 @@ DEFINE_EVENT(block_rq, block_rq_insert,
-  */
- DEFINE_EVENT(block_rq, block_rq_issue,
- 
--	TP_PROTO(struct request_queue *q, struct request *rq),
-+	TP_PROTO(struct request *rq),
- 
--	TP_ARGS(q, rq)
-+	TP_ARGS(rq)
- );
- 
- /**
-  * block_rq_merge - merge request with another one in the elevator
-- * @q: queue holding operation
-  * @rq: block IO operation operation request
-  *
-  * Called when block operation request @rq from queue @q is merged to another
-@@ -221,9 +217,9 @@ DEFINE_EVENT(block_rq, block_rq_issue,
-  */
- DEFINE_EVENT(block_rq, block_rq_merge,
- 
--	TP_PROTO(struct request_queue *q, struct request *rq),
-+	TP_PROTO(struct request *rq),
- 
--	TP_ARGS(q, rq)
-+	TP_ARGS(rq)
- );
- 
- /**
-@@ -491,7 +487,6 @@ TRACE_EVENT(block_bio_remap,
- 
- /**
-  * block_rq_remap - map request for a block operation request
-- * @q: queue holding the operation
-  * @rq: block IO operation request
-  * @dev: device for the operation
-  * @from: original sector for the operation
-@@ -502,10 +497,9 @@ TRACE_EVENT(block_bio_remap,
-  */
- TRACE_EVENT(block_rq_remap,
- 
--	TP_PROTO(struct request_queue *q, struct request *rq, dev_t dev,
--		 sector_t from),
-+	TP_PROTO(struct request *rq, dev_t dev, sector_t from),
- 
--	TP_ARGS(q, rq, dev, from),
-+	TP_ARGS(rq, dev, from),
- 
- 	TP_STRUCT__entry(
- 		__field( dev_t,		dev		)
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 405637144a0389..7839a78205c243 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -795,12 +795,12 @@ static u64 blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
- #endif
- 
- static u64
--blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
-+blk_trace_request_get_cgid(struct request *rq)
- {
- 	if (!rq->bio)
- 		return 0;
- 	/* Use the first bio */
--	return blk_trace_bio_get_cgid(q, rq->bio);
-+	return blk_trace_bio_get_cgid(rq->q, rq->bio);
- }
- 
- /*
-@@ -841,40 +841,35 @@ static void blk_add_trace_rq(struct request *rq, int error,
- 	rcu_read_unlock();
- }
- 
--static void blk_add_trace_rq_insert(void *ignore,
--				    struct request_queue *q, struct request *rq)
-+static void blk_add_trace_rq_insert(void *ignore, struct request *rq)
- {
- 	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_INSERT,
--			 blk_trace_request_get_cgid(q, rq));
-+			 blk_trace_request_get_cgid(rq));
- }
- 
--static void blk_add_trace_rq_issue(void *ignore,
--				   struct request_queue *q, struct request *rq)
-+static void blk_add_trace_rq_issue(void *ignore, struct request *rq)
- {
- 	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_ISSUE,
--			 blk_trace_request_get_cgid(q, rq));
-+			 blk_trace_request_get_cgid(rq));
- }
- 
--static void blk_add_trace_rq_merge(void *ignore,
--				   struct request_queue *q, struct request *rq)
-+static void blk_add_trace_rq_merge(void *ignore, struct request *rq)
- {
- 	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_BACKMERGE,
--			 blk_trace_request_get_cgid(q, rq));
-+			 blk_trace_request_get_cgid(rq));
- }
- 
--static void blk_add_trace_rq_requeue(void *ignore,
--				     struct request_queue *q,
--				     struct request *rq)
-+static void blk_add_trace_rq_requeue(void *ignore, struct request *rq)
- {
- 	blk_add_trace_rq(rq, 0, blk_rq_bytes(rq), BLK_TA_REQUEUE,
--			 blk_trace_request_get_cgid(q, rq));
-+			 blk_trace_request_get_cgid(rq));
- }
- 
- static void blk_add_trace_rq_complete(void *ignore, struct request *rq,
- 			int error, unsigned int nr_bytes)
- {
- 	blk_add_trace_rq(rq, error, nr_bytes, BLK_TA_COMPLETE,
--			 blk_trace_request_get_cgid(rq->q, rq));
-+			 blk_trace_request_get_cgid(rq));
- }
- 
- /**
-@@ -1037,16 +1032,14 @@ static void blk_add_trace_bio_remap(void *ignore, struct bio *bio, dev_t dev,
-  *     Add a trace for that action.
-  *
-  **/
--static void blk_add_trace_rq_remap(void *ignore,
--				   struct request_queue *q,
--				   struct request *rq, dev_t dev,
-+static void blk_add_trace_rq_remap(void *ignore, struct request *rq, dev_t dev,
- 				   sector_t from)
- {
- 	struct blk_trace *bt;
- 	struct blk_io_trace_remap r;
- 
- 	rcu_read_lock();
--	bt = rcu_dereference(q->blk_trace);
-+	bt = rcu_dereference(rq->q->blk_trace);
- 	if (likely(!bt)) {
- 		rcu_read_unlock();
- 		return;
-@@ -1058,13 +1051,12 @@ static void blk_add_trace_rq_remap(void *ignore,
- 
- 	__blk_add_trace(bt, blk_rq_pos(rq), blk_rq_bytes(rq),
- 			rq_data_dir(rq), 0, BLK_TA_REMAP, 0,
--			sizeof(r), &r, blk_trace_request_get_cgid(q, rq));
-+			sizeof(r), &r, blk_trace_request_get_cgid(rq));
- 	rcu_read_unlock();
- }
- 
- /**
-  * blk_add_driver_data - Add binary message with driver-specific data
-- * @q:		queue the io is for
-  * @rq:		io request
-  * @data:	driver-specific data
-  * @len:	length of driver-specific data
-@@ -1073,14 +1065,12 @@ static void blk_add_trace_rq_remap(void *ignore,
-  *     Some drivers might want to write driver-specific data per request.
-  *
-  **/
--void blk_add_driver_data(struct request_queue *q,
--			 struct request *rq,
--			 void *data, size_t len)
-+void blk_add_driver_data(struct request *rq, void *data, size_t len)
- {
- 	struct blk_trace *bt;
- 
- 	rcu_read_lock();
--	bt = rcu_dereference(q->blk_trace);
-+	bt = rcu_dereference(rq->q->blk_trace);
- 	if (likely(!bt)) {
- 		rcu_read_unlock();
- 		return;
-@@ -1088,7 +1078,7 @@ void blk_add_driver_data(struct request_queue *q,
- 
- 	__blk_add_trace(bt, blk_rq_trace_sector(rq), blk_rq_bytes(rq), 0, 0,
- 				BLK_TA_DRV_DATA, 0, len, data,
--				blk_trace_request_get_cgid(q, rq));
-+				blk_trace_request_get_cgid(rq));
- 	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(blk_add_driver_data);
--- 
-2.29.2
+Summary:=20
+  1. Fix race condition in md_ioctl(), by Dae R. Jeong;
+  2. Initialize read_slot properly for raid10, by Kevin Vigor;
+  3. Code cleanup, by Pankaj Gupta;
+  4. md-cluster resync/reshape fix, by Zhao Heming.=20
 
+Thanks,
+Song
+
+
+The following changes since commit 4d063e646b4bfe8e74c0b4b78bf11c3a7b5d962a:
+
+  s390/dasd: Process FCES path event notification (2020-11-16 08:14:38 -070=
+0)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+
+for you to fetch changes up to bca5b0658020be90b6b504ca514fd80110204f71:
+
+  md/cluster: fix deadlock when node is doing resync job (2020-11-30 10:12:=
+35 -0800)
+
+----------------------------------------------------------------
+Dae R. Jeong (1):
+      md: fix a warning caused by a race between concurrent md_ioctl()s
+
+Kevin Vigor (1):
+      md/raid10: initialize r10_bio->read_slot before use.
+
+Pankaj Gupta (3):
+      md: improve variable names in md_flush_request()
+      md: add comments in md_flush_request()
+      md: use current request time as base for ktime comparisons
+
+Zhao Heming (2):
+      md/cluster: block reshape with remote resync job
+      md/cluster: fix deadlock when node is doing resync job
+
+ drivers/md/md-cluster.c | 67 ++++++++++++++++++++++++++++++++++++++-------=
+----------------------
+ drivers/md/md.c         | 33 +++++++++++++++++++++++----------
+ drivers/md/md.h         |  6 +++---
+ drivers/md/raid10.c     |  3 ++-
+ 4 files changed, 66 insertions(+), 43 deletions(-)=
