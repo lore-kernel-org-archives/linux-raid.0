@@ -3,50 +3,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E76C83012
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50EC5C83017
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:55:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E435920758
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:55:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E98F320758
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:55:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vLBHi88Q"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MEEeMs+I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387511AbgLAQzN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Dec 2020 11:55:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40670 "EHLO
+        id S2392035AbgLAQzR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Dec 2020 11:55:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728674AbgLAQzM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Dec 2020 11:55:12 -0500
+        with ESMTP id S2390685AbgLAQzP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Dec 2020 11:55:15 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBD1EC0613D4;
-        Tue,  1 Dec 2020 08:54:31 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90151C0617A6;
+        Tue,  1 Dec 2020 08:54:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=I+ifGuG/HQilGLAEqzH+daR+z1lv7T7G70yP4O/K0Aw=; b=vLBHi88QMCRODAgHO+f6T+9uLv
-        SKqsUWzzgNcLj7Qi7TcTtnO2igYK/hpBjExIUhv/buk3/9wrMiF8SXJoD9Qx14CHc7ZG7mGmHpEpT
-        BrCm6KnAq9olHMb1AX17OtXEl4UApnehOtAax6e0j2dlBZAs5li2wGx/ddaQJ1ONCO+I9guV//Ml+
-        2D1Iv3Pu1e5ZlBbme+6zYtljYDRPA4i5mzr7N+eGEZMHBs3D0o68HlJH3QLXqHK+BE5EplEKVNBR6
-        jH8CuPlGr1qk1R5rcNsWzGgX7VclZp57xXsHCHHN/Lq3bBzJDoae2lOaugHvfY7vXYXNLQfKfM+to
-        +Ux0ziNQ==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=IVAiR/5EBbH9VxN9lxbQLCTkk81ZOuRFYA9YZtOf8x4=; b=MEEeMs+IN9pux7xZMfswtKb/lc
+        ynLY06460gePuqWvpWslMSJ/yrHuBTYTFx3TrLjpHq4ddp/sWzp+T1TUcVQlpEy/QPrIHMv7WOrIO
+        nZRGl5RXd24KXaBhAHfkr0F7LzvXlFuuv91HSG3c0bIEvEtzMWmbsRGO1ZdMWFD4TOX1gcyFihtck
+        nrV0cSiYwwXvxHmwwGo+mbYqkXz3/TXz3BkWLZBuV5er/4h2TYiBbREubCBy8AamDQHpSwHWwWefy
+        KaKIdA/THuw0ASwg2bwu05OfOwktwFFKgx3QR+RJo7vkWmkzAqhFeVEmNuaGsmcxAVKixgnSFiecO
+        f8Rqfh4A==;
 Received: from [2001:4bb8:184:6389:bbd8:a1c2:99e0:f58a] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kk8v3-0005Yk-J4; Tue, 01 Dec 2020 16:54:25 +0000
+        id 1kk8v6-0005Z2-1u; Tue, 01 Dec 2020 16:54:28 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tejun Heo <tj@kernel.org>, Coly Li <colyli@suse.de>,
         Song Liu <song@kernel.org>, dm-devel@redhat.com,
         linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-s390@vger.kernel.org, linux-block@vger.kernel.org
-Subject: store a pointer to the block_device in struct bio (again)
-Date:   Tue,  1 Dec 2020 17:54:15 +0100
-Message-Id: <20201201165424.2030647-1-hch@lst.de>
+Subject: [PATCH 2/9] dcssblk: remove the end of device check in brd_do_bvec
+Date:   Tue,  1 Dec 2020 17:54:17 +0100
+Message-Id: <20201201165424.2030647-3-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201201165424.2030647-1-hch@lst.de>
+References: <20201201165424.2030647-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -54,84 +56,29 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jens,
+The block layer already checks for this conditions in bio_check_eod
+before calling the driver.
 
-this series switches back from storing the gendisk + partno to storing
-a block_device pointer in struct bio.  The reason is two fold:  for one
-the new struct block_device actually is always available, removing the
-need to avoid originally.  Second the merge struct block_device is much
-more useful than the old one, as storing it avoids the need for looking
-up what used to be hd_struct during partition remapping and I/O
-accounting.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/s390/block/dcssblk.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Note that this series depends on the posted but not merged
-"block tracepoint cleanups" series.
+diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
+index 299e77ec2c4163..5c5cff3f237452 100644
+--- a/drivers/s390/block/dcssblk.c
++++ b/drivers/s390/block/dcssblk.c
+@@ -886,10 +886,6 @@ dcssblk_submit_bio(struct bio *bio)
+ 	    (bio->bi_iter.bi_size & 4095) != 0)
+ 		/* Request is not page-aligned. */
+ 		goto fail;
+-	if (bio_end_sector(bio) > get_capacity(bio->bi_disk)) {
+-		/* Request beyond end of DCSS segment. */
+-		goto fail;
+-	}
+ 	/* verify data transfer direction */
+ 	if (dev_info->is_shared) {
+ 		switch (dev_info->segment_type) {
+-- 
+2.29.2
 
-A git tree is also available:
-
-    git://git.infradead.org/users/hch/block.git bi_bdev
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/bi_bdev
-
-Diffstat:
- arch/m68k/emu/nfblock.c             |    2 
- arch/xtensa/platforms/iss/simdisk.c |    2 
- block/bio-integrity.c               |   18 +-
- block/bio.c                         |   31 +---
- block/blk-cgroup.c                  |    7 
- block/blk-core.c                    |   99 ++++++-------
- block/blk-crypto-fallback.c         |    2 
- block/blk-crypto.c                  |    2 
- block/blk-merge.c                   |   17 +-
- block/blk-mq.c                      |    2 
- block/blk-settings.c                |    2 
- block/blk-throttle.c                |    2 
- block/blk.h                         |    9 -
- block/bounce.c                      |    2 
- block/genhd.c                       |  261 +++---------------------------------
- block/partitions/core.c             |   31 ----
- drivers/block/brd.c                 |    8 -
- drivers/block/drbd/drbd_int.h       |    4 
- drivers/block/drbd/drbd_req.c       |    2 
- drivers/block/null_blk_main.c       |    2 
- drivers/block/pktcdvd.c             |    4 
- drivers/block/ps3vram.c             |    2 
- drivers/block/rsxx/dev.c            |    2 
- drivers/block/umem.c                |    2 
- drivers/block/zram/zram_drv.c       |    2 
- drivers/lightnvm/pblk-init.c        |    2 
- drivers/md/bcache/debug.c           |    2 
- drivers/md/bcache/request.c         |   39 +++--
- drivers/md/dm-bio-record.h          |    9 -
- drivers/md/dm-raid1.c               |   10 -
- drivers/md/dm.c                     |   14 -
- drivers/md/md-linear.c              |    2 
- drivers/md/md.c                     |   10 -
- drivers/md/md.h                     |    6 
- drivers/md/raid1.c                  |    6 
- drivers/md/raid10.c                 |   12 -
- drivers/md/raid5.c                  |    2 
- drivers/nvdimm/blk.c                |    4 
- drivers/nvdimm/btt.c                |    4 
- drivers/nvdimm/pmem.c               |    4 
- drivers/nvme/host/core.c            |    6 
- drivers/nvme/host/lightnvm.c        |    3 
- drivers/nvme/host/multipath.c       |    6 
- drivers/nvme/host/rdma.c            |    2 
- drivers/s390/block/dasd.c           |   26 ---
- drivers/s390/block/dcssblk.c        |    6 
- drivers/s390/block/xpram.c          |    2 
- fs/btrfs/check-integrity.c          |   10 -
- fs/btrfs/raid56.c                   |    7 
- fs/btrfs/scrub.c                    |    2 
- fs/direct-io.c                      |    2 
- fs/f2fs/data.c                      |   12 -
- include/linux/bio.h                 |   18 +-
- include/linux/blk_types.h           |    3 
- include/linux/blkdev.h              |   20 --
- include/linux/genhd.h               |   21 --
- kernel/trace/blktrace.c             |   16 +-
- mm/page_io.c                        |    2 
- 58 files changed, 251 insertions(+), 556 deletions(-)
