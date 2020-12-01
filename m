@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26058C8301A
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6C8C83013
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:56:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C49182168B
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:56:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4178F2168B
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Dec 2020 16:56:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n78/jw54"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HefPhl90"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391170AbgLAQzx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Dec 2020 11:55:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40784 "EHLO
+        id S2404079AbgLAQzz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Dec 2020 11:55:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387673AbgLAQzw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Dec 2020 11:55:52 -0500
+        with ESMTP id S2389102AbgLAQzx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Dec 2020 11:55:53 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FC7AC061A48;
-        Tue,  1 Dec 2020 08:54:38 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 677B1C061A4A;
+        Tue,  1 Dec 2020 08:54:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=/vZJ79X9hALM9iM8QdSc8GyIin8S/scUMPe4YHdcmHk=; b=n78/jw546YyEIqcGNclmo3NCIt
-        dAUp9WucYBjIlzvStIEIBrn+jjr5sGQa0L6Qp5vWSFjrwAG/0qRbp/nHDImJ3IiDHbLYMKURtGLBC
-        uwVVm7RN+wwmWkA7wmGOy9XPNv0glqZYwwJDjaFE1aB3dCLXrl4axVtssfe+oN+7LcRlE1+5izPr8
-        fIWSOFoQ2EkYSWsqjG0Bdx8hQiNqwzCd0OJkuoYt6vjf9MpSz2p9bnphyUBIedJwCvUhHPF06jIA/
-        m266T0rh5Fmjd6xn3e6fiPo/64AfmG2CDnZ0EC/hn3Waj1xnvp/p7CUdi2d7VEikY99rzfRUKB/9r
-        s4GVLCZQ==;
+        bh=qDJw9+WBWtvvbs2CFXkHCwVKHcE61fPt5/mC66tZW6M=; b=HefPhl90E9WicKOenQcxb/Jthq
+        avfTbLC37i0nY9MjwYfrGC7v5rXxL85x3z2ChtbUnTI/5BrsktnpRyUjidl3QKAzutcZLXadpKQ2E
+        wUncJWVl1DSWu+CH2Ow8kkeM+eiDCFL6tCYCq3fgUeoTR3kdA7V83zjYnBLaAU5ruWs0Se40f+L48
+        zvt9Ia1K83sQ2JZlL/qrPuLvtBDJgOhMrhcTSse5qnbpAa/tYKSq7Wj7Rpxz0Adj4g4XmYvDQKgtp
+        Wqb1GowGM8JzzB9y16bHGIRZyNLw2NOR4KO3zCmt6d7xhHTT4cumyzhe1yy52gZv0333e8cMDlGei
+        0aS9Y/TA==;
 Received: from [2001:4bb8:184:6389:bbd8:a1c2:99e0:f58a] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kk8vB-0005Zh-O2; Tue, 01 Dec 2020 16:54:34 +0000
+        id 1kk8vE-0005Zx-5c; Tue, 01 Dec 2020 16:54:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tejun Heo <tj@kernel.org>, Coly Li <colyli@suse.de>,
         Song Liu <song@kernel.org>, dm-devel@redhat.com,
         linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-s390@vger.kernel.org, linux-block@vger.kernel.org
-Subject: [PATCH 6/9] blk-mq: use ->bi_bdev for I/O accounting
-Date:   Tue,  1 Dec 2020 17:54:21 +0100
-Message-Id: <20201201165424.2030647-7-hch@lst.de>
+Subject: [PATCH 8/9] block: remove DISK_PITER_REVERSE
+Date:   Tue,  1 Dec 2020 17:54:23 +0100
+Message-Id: <20201201165424.2030647-9-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201201165424.2030647-1-hch@lst.de>
 References: <20201201165424.2030647-1-hch@lst.de>
@@ -56,105 +56,107 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Remove the reverse map from a sector to a partition for I/O accounting by
-simply using ->bi_bdev.
+There is good reason to iterate backwards when deleting all partitions in
+del_gendisk, just like we don't in blk_drop_partitions.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c |  6 +++++-
- block/blk.h      |  2 --
- block/genhd.c    | 48 ------------------------------------------------
- 3 files changed, 5 insertions(+), 51 deletions(-)
+ block/genhd.c         | 34 ++++------------------------------
+ include/linux/genhd.h |  1 -
+ 2 files changed, 4 insertions(+), 31 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index d53cc887e1b8ea..ad041e903b0a8f 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1296,7 +1296,11 @@ void blk_account_io_start(struct request *rq)
- 	if (!blk_do_io_stat(rq))
- 		return;
- 
--	rq->part = disk_map_sector_rcu(rq->rq_disk, blk_rq_pos(rq));
-+	/* passthrough requests can hold bios that do not have ->bi_bdev set */
-+	if (rq->bio && rq->bio->bi_bdev)
-+		rq->part = rq->bio->bi_bdev;
-+	else
-+		rq->part = rq->rq_disk->part0;
- 
- 	part_stat_lock();
- 	update_io_ticks(rq->part, jiffies, false);
-diff --git a/block/blk.h b/block/blk.h
-index 64dc8e5a3f44cb..f93a6af04adbd1 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -346,8 +346,6 @@ void blk_queue_free_zone_bitmaps(struct request_queue *q);
- static inline void blk_queue_free_zone_bitmaps(struct request_queue *q) {}
- #endif
- 
--struct block_device *disk_map_sector_rcu(struct gendisk *disk, sector_t sector);
--
- int blk_alloc_devt(struct block_device *part, dev_t *devt);
- void blk_free_devt(dev_t devt);
- char *disk_name(struct gendisk *hd, int partno, char *buf);
 diff --git a/block/genhd.c b/block/genhd.c
-index 57c709a9f90267..3b9cd766d95228 100644
+index 65dba32df5474f..7730ddabebba92 100644
 --- a/block/genhd.c
 +++ b/block/genhd.c
-@@ -280,54 +280,6 @@ void disk_part_iter_exit(struct disk_part_iter *piter)
- }
- EXPORT_SYMBOL_GPL(disk_part_iter_exit);
- 
--static inline int sector_in_part(struct block_device *part, sector_t sector)
--{
--	return part->bd_start_sect <= sector &&
--		sector < part->bd_start_sect + bdev_nr_sectors(part);
--}
--
--/**
-- * disk_map_sector_rcu - map sector to partition
-- * @disk: gendisk of interest
-- * @sector: sector to map
-- *
-- * Find out which partition @sector maps to on @disk.  This is
-- * primarily used for stats accounting.
-- *
-- * CONTEXT:
-- * RCU read locked.
-- *
-- * RETURNS:
-- * Found partition on success, part0 is returned if no partition matches
-- * or the matched partition is being deleted.
-- */
--struct block_device *disk_map_sector_rcu(struct gendisk *disk, sector_t sector)
--{
+@@ -182,24 +182,13 @@ static struct block_device *__disk_get_part(struct gendisk *disk, int partno)
+ void disk_part_iter_init(struct disk_part_iter *piter, struct gendisk *disk,
+ 			  unsigned int flags)
+ {
 -	struct disk_part_tbl *ptbl;
--	struct block_device *part;
--	int i;
 -
 -	rcu_read_lock();
 -	ptbl = rcu_dereference(disk->part_tbl);
 -
--	part = rcu_dereference(ptbl->last_lookup);
--	if (part && sector_in_part(part, sector))
--		goto out_unlock;
+ 	piter->disk = disk;
+ 	piter->part = NULL;
 -
--	for (i = 1; i < ptbl->len; i++) {
--		part = rcu_dereference(ptbl->part[i]);
--		if (part && sector_in_part(part, sector)) {
--			rcu_assign_pointer(ptbl->last_lookup, part);
--			goto out_unlock;
--		}
+-	if (flags & DISK_PITER_REVERSE)
+-		piter->idx = ptbl->len - 1;
+-	else if (flags & (DISK_PITER_INCL_PART0 | DISK_PITER_INCL_EMPTY_PART0))
++	if (flags & (DISK_PITER_INCL_PART0 | DISK_PITER_INCL_EMPTY_PART0))
+ 		piter->idx = 0;
+ 	else
+ 		piter->idx = 1;
+-
+ 	piter->flags = flags;
+-
+-	rcu_read_unlock();
+ }
+ 
+ /**
+@@ -214,7 +203,6 @@ void disk_part_iter_init(struct disk_part_iter *piter, struct gendisk *disk,
+ struct block_device *disk_part_iter_next(struct disk_part_iter *piter)
+ {
+ 	struct disk_part_tbl *ptbl;
+-	int inc, end;
+ 
+ 	/* put the last partition */
+ 	disk_part_iter_exit(piter);
+@@ -223,21 +211,8 @@ struct block_device *disk_part_iter_next(struct disk_part_iter *piter)
+ 	rcu_read_lock();
+ 	ptbl = rcu_dereference(piter->disk->part_tbl);
+ 
+-	/* determine iteration parameters */
+-	if (piter->flags & DISK_PITER_REVERSE) {
+-		inc = -1;
+-		if (piter->flags & (DISK_PITER_INCL_PART0 |
+-				    DISK_PITER_INCL_EMPTY_PART0))
+-			end = -1;
+-		else
+-			end = 0;
+-	} else {
+-		inc = 1;
+-		end = ptbl->len;
 -	}
 -
--	part = disk->part0;
--out_unlock:
--	rcu_read_unlock();
--	return part;
--}
--
- /**
-  * disk_has_partitions
-  * @disk: gendisk of interest
+ 	/* iterate to the next partition */
+-	for (; piter->idx != end; piter->idx += inc) {
++	for (; piter->idx != ptbl->len; piter->idx += 1) {
+ 		struct block_device *part;
+ 
+ 		part = rcu_dereference(ptbl->part[piter->idx]);
+@@ -252,7 +227,7 @@ struct block_device *disk_part_iter_next(struct disk_part_iter *piter)
+ 		piter->part = bdgrab(part);
+ 		if (!piter->part)
+ 			continue;
+-		piter->idx += inc;
++		piter->idx += 1;
+ 		break;
+ 	}
+ 
+@@ -776,8 +751,7 @@ void del_gendisk(struct gendisk *disk)
+ 	down_write(&bdev_lookup_sem);
+ 
+ 	/* invalidate stuff */
+-	disk_part_iter_init(&piter, disk,
+-			     DISK_PITER_INCL_EMPTY | DISK_PITER_REVERSE);
++	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
+ 	while ((part = disk_part_iter_next(&piter))) {
+ 		invalidate_partition(part);
+ 		delete_partition(part);
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 191f5e4ae4e93b..425956ac9315fa 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -217,7 +217,6 @@ void disk_uevent(struct gendisk *disk, enum kobject_action action);
+ /*
+  * Smarter partition iterator without context limits.
+  */
+-#define DISK_PITER_REVERSE	(1 << 0) /* iterate in the reverse direction */
+ #define DISK_PITER_INCL_EMPTY	(1 << 1) /* include 0-sized parts */
+ #define DISK_PITER_INCL_PART0	(1 << 2) /* include partition 0 */
+ #define DISK_PITER_INCL_EMPTY_PART0 (1 << 3) /* include empty partition 0 */
 -- 
 2.29.2
 
