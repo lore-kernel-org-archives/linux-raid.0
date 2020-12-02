@@ -2,102 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5070AC64E7B
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 22:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64C30C83019
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 22:55:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDCE7221F7
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 22:47:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 317E0221FD
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 22:55:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726253AbgLBWrA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Dec 2020 17:47:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35446 "EHLO
+        id S2387825AbgLBWzb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Dec 2020 17:55:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725985AbgLBWq7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Dec 2020 17:46:59 -0500
-Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25B4FC0613D6;
-        Wed,  2 Dec 2020 14:46:19 -0800 (PST)
-Received: by mail-io1-xd31.google.com with SMTP id q137so30255iod.9;
-        Wed, 02 Dec 2020 14:46:19 -0800 (PST)
+        with ESMTP id S2387806AbgLBWza (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Dec 2020 17:55:30 -0500
+Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 824CCC061A04;
+        Wed,  2 Dec 2020 14:55:15 -0800 (PST)
+Received: by mail-qk1-x744.google.com with SMTP id q5so374531qkc.12;
+        Wed, 02 Dec 2020 14:55:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=HShAgJCUcps4N1A+2IklR049T/RPogDj41ruzx2BBDo=;
-        b=RdBEJfJEaDCigr/rMLVq+8cy888LMCaKBIVSTunG9ji57bTX0HIoEo8hRE9LLPfscf
-         EM7cBweMOm/pgGviIwEMlXBC/3Op2f/NT5F3D0Rg/ZidxhHORRrLsEWr48hbAgx9pxjp
-         BlKNF5cdSns0aooDvIiWtNfXEN96NcBbbojtsgOjFNHfWk0Uw9CYHyOB/2mFUBGPL/fH
-         XTJX5dIkQoyt+51+jwbZfp+R+901vo5Ewb7aU9MOQy000tvqshA5ToKnCb52LbYZmv1A
-         +X8Orp5Gz//3XW1IQDgEaPTh4UyYuFI+mqTnHWrE6e7jHC3Wjv7Lw3JONa1ZUwWudMmN
-         rJkg==
+        bh=VtlFvmaklvcZDGrLlSAgQhu+0H7bK0zCUEpwXYO6ZPg=;
+        b=D14l/wshUGZCLD3wWiZIT1JCNTY3aTqIyxCfKL/K3/xKFQ9erOkl9v3qtrxneBa5Aj
+         RD5YmRyHnCGWKeVe7R66GWndaA83nwR69amIWlSzzwPMtpY/CG0RHaMQPQibbjf3+aRl
+         P9ZexYmwx3SuVFl1qgnYiib52TykSz0S/OggqcAzcYEXv0EW5kwUZcOsoyhoevDv+EKA
+         qFNTlmOu4GOHodHSx/GJhj7eX8CEc6H4AK0F04VVwF8pUVk8HVvXbydSSCVBPu6qGyEb
+         JMDPne/YXTYckXWutVnMWbeU4ypJDfG38/syck4HZkHvvn005LL5LwGlf9hkP3qmNpNo
+         2i7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
          :references:mime-version:content-disposition:in-reply-to;
-        bh=HShAgJCUcps4N1A+2IklR049T/RPogDj41ruzx2BBDo=;
-        b=NAT2aNroTm+dvzX4h/WH0tUzcdPaYjv2OEv3vglItqpkkdbufDZMPqMLfGqCovBl+i
-         w3nQxmXBjYtxf/HFdUpgIgfmS6/UtqE6P0pU9LxG7eVtki2aCslvyQ12QgMsl2EVpIjm
-         jTkiH/oWcrYddcCqIFxBqBdyYx/V3CSw/Nzx2Zrz6fYI3l9458Np0CYo7QfdESkF/KqM
-         2NdoXv/rahjW0QbqdxyQO314tqzyjkRSHgIGzGMKpqDqO2Pc8E46jhds9Rl9mh/Hx70E
-         QwgvLwa6bSRUZcHF88rAqcINQMAlZNatA0yI9eTa3H4CWjT54pbb9bArJd2yr0Vs5PE/
-         N/eQ==
-X-Gm-Message-State: AOAM533VCltEqSXSPqEi4bJf9jDMxR+iOS2mLFm3UUZtH0pPeKooG6ch
-        mlJycTTPg4qJcN7f3PcZyda7Gp2kPqwgrw==
-X-Google-Smtp-Source: ABdhPJzLQDjBM2feXi0iRxAJyEtngQDMNkvdJGyaFvpaYJZxsZ3XDEBbF+Aj812h7lkT9BmeOE3RFw==
-X-Received: by 2002:ac8:6bc6:: with SMTP id b6mr390050qtt.127.1606948651820;
-        Wed, 02 Dec 2020 14:37:31 -0800 (PST)
+        bh=VtlFvmaklvcZDGrLlSAgQhu+0H7bK0zCUEpwXYO6ZPg=;
+        b=DMh/GVxaSBa6XieWsW1nXsJGTPuIA6HpRITQZ4YUb7uYZnOTB2lugKTOfFB42BqFt0
+         DODoqkZts1h9nlFl7dzH4oPuCoLj/3rRL00OgHNtOcliaWwkKydD7gQ6QyPQcfqVuf0k
+         rLbTtV2EJ/eGBGstwgc05ce0ct2honwY9KgO07wXLt1xsCyoKGxPI1MhgchjT1aV662M
+         SCwETbdcCqL/NuWT0gc7P22Y3lae/FeWkH9zCWaR4aWzeY0pqIoy/6cZjOdXY3Arzu/h
+         u1Dkg7oVqBl7lBUoougVX09NsbZEXhciCwbKRqyIO7w0/ICv/Smbba/xSmTWl9wXpHLC
+         VfNA==
+X-Gm-Message-State: AOAM5336Gzakzv1yVQ+EAcY51Zb5fUYRB3WxwuAwkdkIjCGPzn5jnsMw
+        a7aa2surTnp/flQQCR9iAsU=
+X-Google-Smtp-Source: ABdhPJzxbVxALs+v4IXK2QlV8LBTGqeZrxGS7JYABGudWsaxBMX2uEOJyie3dRa7pXdUAfhwcyfqDw==
+X-Received: by 2002:a37:8c06:: with SMTP id o6mr63663qkd.382.1606949714715;
+        Wed, 02 Dec 2020 14:55:14 -0800 (PST)
 Received: from localhost ([2620:10d:c091:480::1:ec0f])
-        by smtp.gmail.com with ESMTPSA id z20sm352334qtb.31.2020.12.02.14.37.30
+        by smtp.gmail.com with ESMTPSA id r14sm452404qte.27.2020.12.02.14.55.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Dec 2020 14:37:31 -0800 (PST)
+        Wed, 02 Dec 2020 14:55:13 -0800 (PST)
 Sender: Tejun Heo <htejun@gmail.com>
-Date:   Wed, 2 Dec 2020 17:37:03 -0500
+Date:   Wed, 2 Dec 2020 17:54:45 -0500
 From:   Tejun Heo <tj@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
         Song Liu <song@kernel.org>, dm-devel@redhat.com,
         linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-s390@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: store a pointer to the block_device in struct bio (again)
-Message-ID: <X8gXDx0DU+sqJoPc@mtj.duckdns.org>
+Subject: Re: [PATCH 3/9] block: store a block_device pointer in struct bio
+Message-ID: <X8gbNeczmbhF8ZEW@mtj.duckdns.org>
 References: <20201201165424.2030647-1-hch@lst.de>
- <X8gWqZ6li+CvgF4i@mtj.duckdns.org>
+ <20201201165424.2030647-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <X8gWqZ6li+CvgF4i@mtj.duckdns.org>
+In-Reply-To: <20201201165424.2030647-4-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Dec 02, 2020 at 05:35:21PM -0500, Tejun Heo wrote:
-> On Tue, Dec 01, 2020 at 05:54:15PM +0100, Christoph Hellwig wrote:
-> > Hi Jens,
-> > 
-> > this series switches back from storing the gendisk + partno to storing
-> > a block_device pointer in struct bio.  The reason is two fold:  for one
-> > the new struct block_device actually is always available, removing the
-> > need to avoid originally.  Second the merge struct block_device is much
-> > more useful than the old one, as storing it avoids the need for looking
-> > up what used to be hd_struct during partition remapping and I/O
-> > accounting.
-> > 
-> > Note that this series depends on the posted but not merged
-> > "block tracepoint cleanups" series.
+On Tue, Dec 01, 2020 at 05:54:18PM +0100, Christoph Hellwig wrote:
+> Replace the gendisk pointer in struct bio with a pointer to the newly
+> improved struct block device.  From that the gendisk can be trivially
+> accessed with an extra indirection, but it also allows to directly
+> look up all information related to partition remapping.
 > 
-> I'm late but everything looks good to me. So much better than the mess we
-> had before. Thank you.
-> 
-> The only thing I noticed is that blkdev_get_no_open() can now use
-> kobject_get() instead of kobject_get_unless_zero() as bdev lookup is
-> synchronously disabled before device_del().
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Oops, sorry, this was supposed to be a reply to the earlier hd_struct
-removal patchset. Reviewing this patchset now.
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
