@@ -2,224 +2,97 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0CA2C64E7C
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 17:29:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0372FC64E7B
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 22:36:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F837221FA
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 17:29:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DCEA221FB
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 22:36:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389287AbgLBR26 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Dec 2020 12:28:58 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:46479 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2389133AbgLBR26 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 2 Dec 2020 12:28:58 -0500
-Received: from [192.168.0.2] (ip5f5ae87a.dynamic.kabel-deutschland.de [95.90.232.122])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 27ADB20647B6E;
-        Wed,  2 Dec 2020 18:28:14 +0100 (CET)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-From:   Donald Buczek <buczek@molgen.mpg.de>
-To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+raid@molgen.mpg.de
-References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
- <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
- <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
-Message-ID: <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
-Date:   Wed, 2 Dec 2020 18:28:13 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S2387493AbgLBWgc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Dec 2020 17:36:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33810 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbgLBWgb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Dec 2020 17:36:31 -0500
+Received: from mail-qk1-x735.google.com (mail-qk1-x735.google.com [IPv6:2607:f8b0:4864:20::735])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76373C0613D6;
+        Wed,  2 Dec 2020 14:35:51 -0800 (PST)
+Received: by mail-qk1-x735.google.com with SMTP id x25so388953qkj.3;
+        Wed, 02 Dec 2020 14:35:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=fDRCmKzmG6EnsCDvgSnP9O6h60abQiEIqQj5Un1xVQs=;
+        b=QTGfcA/KAa1F9u20M9X6dp1tGwTJ9l9iQ/B4uJNQYW4ffy94d2eTrAs+WZtVW5mBwy
+         NG/vQbWHcBLBk1Y9Fnfsn5UXGRjaBzMCME72Y3CWeA2k/TMOPd0ke2fhL+tOfi0lIdqv
+         jpJAQJ+yOhL8DvusELZ8ozOUQ4OZUDjaR7sFDAUIBLr2EIGBvnLYJTGIhrxhEHuSonll
+         3jtLZuq++ZEr3zcGDUFAArIh4qSX5RajDjHpZu/4y6Vr0qwBwKeYw9vmbKWv0+c0ogQ5
+         QptM0aJqqEphnjzgRQgy8JYQA21xDcGZw58d6cTygsB3v8XdCOSBjClFfyrDiGsz0Xqo
+         qnNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=fDRCmKzmG6EnsCDvgSnP9O6h60abQiEIqQj5Un1xVQs=;
+        b=ptt54fump8bqBOw9/4npS5wQM/izSrrnJFfNLgy70Pf6Wz68oVed/POKOsZnldwDmv
+         GwIdk/0RpsDYXC5KpQQavwdHavVoOqY+E0orYg8bvB9sy6NCVhgdGhOxPZoyqc6WdQdL
+         yYZuDgfyN9QQlDd7YpReqjiIT0LHfmt/Dd5oRUb/8MvrrUxwM5Zoy2vUKJRXNaj8yCR9
+         5yiXwr0ljpAk/q2NbA08zUTuTYorD8+xjlb/CsHSr20t0Xx5mhQzZ2GJJkl/IzUHNHHE
+         hqdW0CFeuVibD/+SjaVXF4XOWzYV7mjFU/rrliv5v1od40Wh5rl97vp1/5Ya2CnrtJ9k
+         jj+g==
+X-Gm-Message-State: AOAM531bMuBos0WjzcLJfDZh1uWRDrI0MK31dKe1ew2KUSmwFapFaniQ
+        p75YlihkmvDb8pm14tK2ZFNs7lXv3d65aA==
+X-Google-Smtp-Source: ABdhPJyMGutGFjHzf5aJ0KpE53xmkUwgzzDYFiQltazRaUqs1lE+hnd/Glbacs9CB2txXmoV49DhhA==
+X-Received: by 2002:a37:6712:: with SMTP id b18mr5498qkc.340.1606948550514;
+        Wed, 02 Dec 2020 14:35:50 -0800 (PST)
+Received: from localhost ([2620:10d:c091:480::1:ec0f])
+        by smtp.gmail.com with ESMTPSA id l79sm59809qke.1.2020.12.02.14.35.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Dec 2020 14:35:49 -0800 (PST)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Wed, 2 Dec 2020 17:35:21 -0500
+From:   Tejun Heo <tj@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
+        Song Liu <song@kernel.org>, dm-devel@redhat.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: store a pointer to the block_device in struct bio (again)
+Message-ID: <X8gWqZ6li+CvgF4i@mtj.duckdns.org>
+References: <20201201165424.2030647-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201201165424.2030647-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Guoqing,
-
-unfortunately the patch didn't fix the problem (unless I messed it up with my logging). This is what I used:
-
-     --- a/drivers/md/md.c
-     +++ b/drivers/md/md.c
-     @@ -9305,6 +9305,14 @@ void md_check_recovery(struct mddev *mddev)
-                             clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-                             goto unlock;
-                     }
-     +               if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-     +                   (!test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
-     +                    test_bit(MD_RECOVERY_CHECK, &mddev->recovery))) {
-     +                       /* resync/recovery still happening */
-     +                       pr_info("md: XXX BUGFIX applied\n");
-     +                       clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-     +                       goto unlock;
-     +               }
-                     if (mddev->sync_thread) {
-                             md_reap_sync_thread(mddev);
-                             goto unlock;
-
-With pausing and continuing the check four times an hour, I could trigger the problem after about 48 hours. This time, the other device (md0) has locked up on `echo idle > /sys/devices/virtual/block/md0/md/sync_action` , while the check of md1 is still ongoing:
-
-     Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
-     md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
-           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-           [=>...................]  check =  8.5% (666852112/7813894144) finish=1271.2min speed=93701K/sec
-           bitmap: 0/59 pages [0KB], 65536KB chunk
-     
-     md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
-           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-           [>....................]  check =  0.2% (19510348/7813894144) finish=253779.6min speed=511K/sec
-           bitmap: 0/59 pages [0KB], 65536KB chunk
-
-after 1 minute:
-
-     Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
-     md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
-           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-           [=>...................]  check =  8.6% (674914560/7813894144) finish=941.1min speed=126418K/sec
-           bitmap: 0/59 pages [0KB], 65536KB chunk
-     
-     md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
-           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
-           [>....................]  check =  0.2% (19510348/7813894144) finish=256805.0min speed=505K/sec
-           bitmap: 0/59 pages [0KB], 65536KB chunk
-
-A data point, I didn't mention in my previous mail, is that the mdX_resync thread is not gone when the problem occurs:
-
-     buczek@done:/scratch/local/linux (v5.10-rc6-mpi)$ ps -Af|fgrep [md
-     root       134     2  0 Nov30 ?        00:00:00 [md]
-     root      1321     2 27 Nov30 ?        12:57:14 [md0_raid6]
-     root      1454     2 26 Nov30 ?        12:37:23 [md1_raid6]
-     root      5845     2  0 16:20 ?        00:00:30 [md0_resync]
-     root      5855     2 13 16:20 ?        00:14:11 [md1_resync]
-     buczek    9880  9072  0 18:05 pts/0    00:00:00 grep -F [md
-     
-     buczek@done:/scratch/local/linux (v5.10-rc6-mpi)$ sudo cat /proc/5845/stack
-     [<0>] md_bitmap_cond_end_sync+0x12d/0x170
-     [<0>] raid5_sync_request+0x24b/0x390
-     [<0>] md_do_sync+0xb41/0x1030
-     [<0>] md_thread+0x122/0x160
-     [<0>] kthread+0x118/0x130
-     [<0>] ret_from_fork+0x1f/0x30
-
-I guess, md_bitmap_cond_end_sync+0x12d is the `wait_event(bitmap->mddev->recovery_wait,atomic_read(&bitmap->mddev->recovery_active) == 0);` in md-bitmap.c.
-
-Donald
-
-
-On 01.12.20 10:29, Donald Buczek wrote:
-> Am 30.11.20 um 03:06 schrieb Guoqing Jiang:
->>
->>
->> On 11/28/20 13:25, Donald Buczek wrote:
->>> Dear Linux mdraid people,
->>>
->>> we are using raid6 on several servers. Occasionally we had failures, where a mdX_raid6 process seems to go into a busy loop and all I/O to the md device blocks. We've seen this on various kernel versions.
->>>
->>> The last time this happened (in this case with Linux 5.10.0-rc4), I took some data.
->>>
->>> The triggering event seems to be the md_check cron job trying to pause the ongoing check operation in the morning with
->>>
->>>      echo idle > /sys/devices/virtual/block/md1/md/sync_action
->>>
->>> This doesn't complete. Here's /proc/stack of this process:
->>>
->>>      root@done:~/linux_problems/mdX_raid6_looping/2020-11-27# ps -fp 23333
->>>      UID        PID  PPID  C STIME TTY          TIME CMD
->>>      root     23333 23331  0 02:00 ?        00:00:00 /bin/bash /usr/bin/mdcheck --continue --duration 06:00
->>>      root@done:~/linux_problems/mdX_raid6_looping/2020-11-27# cat /proc/23333/stack
->>>      [<0>] kthread_stop+0x6e/0x150
->>>      [<0>] md_unregister_thread+0x3e/0x70
->>>      [<0>] md_reap_sync_thread+0x1f/0x1e0
->>>      [<0>] action_store+0x141/0x2b0
->>>      [<0>] md_attr_store+0x71/0xb0
->>>      [<0>] kernfs_fop_write+0x113/0x1a0
->>>      [<0>] vfs_write+0xbc/0x250
->>>      [<0>] ksys_write+0xa1/0xe0
->>>      [<0>] do_syscall_64+0x33/0x40
->>>      [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
->>>
->>> Note, that md0 has been paused successfully just before.
->>
->> What is the personality of md0? Is it also raid6?
+On Tue, Dec 01, 2020 at 05:54:15PM +0100, Christoph Hellwig wrote:
+> Hi Jens,
 > 
-> Yes.
+> this series switches back from storing the gendisk + partno to storing
+> a block_device pointer in struct bio.  The reason is two fold:  for one
+> the new struct block_device actually is always available, removing the
+> need to avoid originally.  Second the merge struct block_device is much
+> more useful than the old one, as storing it avoids the need for looking
+> up what used to be hd_struct during partition remapping and I/O
+> accounting.
 > 
->>
->>>
->>>      2020-11-27T02:00:01+01:00 done CROND[23333]: (root) CMD (/usr/bin/mdcheck --continue --duration "06:00")
->>>      2020-11-27T02:00:01+01:00 done root: mdcheck continue checking /dev/md0 from 10623180920
->>>      2020-11-27T02:00:01.382994+01:00 done kernel: [378596.606381] md: data-check of RAID array md0
->>>      2020-11-27T02:00:01+01:00 done root: mdcheck continue checking /dev/md1 from 11582849320
->>>      2020-11-27T02:00:01.437999+01:00 done kernel: [378596.661559] md: data-check of RAID array md1
->>>      2020-11-27T06:00:01.842003+01:00 done kernel: [392996.625147] md: md0: data-check interrupted.
->>>      2020-11-27T06:00:02+01:00 done root: pause checking /dev/md0 at 13351127680
->>>      2020-11-27T06:00:02.338989+01:00 done kernel: [392997.122520] md: md1: data-check interrupted.
->>>      [ nothing related following.... ]
->>>
->>> After that, we see md1_raid6 in a busy loop:
->>>
->>>      PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
->>>      2376 root     20   0       0      0      0 R 100.0  0.0   1387:38 md1_raid6
->>
->> Seems the reap sync thread was trying to stop md1_raid6 while md1_raid6 was triggered again and again.
->>
->>>
->>> Also, all processes doing I/O do the md device block.
->>>
->>> This is /proc/mdstat:
->>>
->>>      Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
->>>      md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
->>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
->>>            [==================>..]  check = 94.0% (7350290348/7813894144) finish=57189.3min speed=135K/sec
->>>            bitmap: 0/59 pages [0KB], 65536KB chunk
->>>      md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
->>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
->>>            bitmap: 0/59 pages [0KB], 65536KB chunk
->>>
->>
->> So the RECOVERY_CHECK flag should be set, not sure if the simple changes
->> helps, but you may give it a try.
-> 
-> Thanks. I've copied the original condition block to execute before the modified one and added some logging to it to see, if the change actually triggers. I will pause and unpause the check frequently on a busy machine to get this code executed more often.
-> 
-> Best
->    Donald
-> 
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 98bac4f..e2697d0 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -9300,7 +9300,8 @@ void md_check_recovery(struct mddev *mddev)
->>                          md_update_sb(mddev, 0);
->>
->>                  if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
->> -                   !test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
->> +                   (!test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
->> +                    test_bit(MD_RECOVERY_CHECK, &mddev->recovery))) {
->>                          /* resync/recovery still happening */
->>                          clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>                          goto unlock;
->>
->> Thanks,
->> Guoqing
-> 
+> Note that this series depends on the posted but not merged
+> "block tracepoint cleanups" series.
+
+I'm late but everything looks good to me. So much better than the mess we
+had before. Thank you.
+
+The only thing I noticed is that blkdev_get_no_open() can now use
+kobject_get() instead of kobject_get_unless_zero() as bdev lookup is
+synchronously disabled before device_del().
 
 -- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
+tejun
