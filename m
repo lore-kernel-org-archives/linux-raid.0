@@ -2,208 +2,224 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5F58C64E7C
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 07:15:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0CA2C64E7C
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 17:29:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7670922203
-	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 07:15:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F837221FA
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Dec 2020 17:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728782AbgLBHO5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 2 Dec 2020 02:14:57 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:13741 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728105AbgLBHO5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Dec 2020 02:14:57 -0500
-X-IronPort-AV: E=Sophos;i="5.78,385,1599494400"; 
-   d="scan'208";a="101976775"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 02 Dec 2020 15:14:10 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 11B374CE5CF5;
-        Wed,  2 Dec 2020 15:14:06 +0800 (CST)
-Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
- (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Dec
- 2020 15:14:05 +0800
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-To:     Dave Chinner <david@fromorbit.com>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <hch@lst.de>, <song@kernel.org>, <rgoldwyn@suse.de>,
-        <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
- <20201129224723.GG2842436@dread.disaster.area>
-From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <e0aa187f-e124-1ddc-0f5a-6a8c41a3dc66@cn.fujitsu.com>
-Date:   Wed, 2 Dec 2020 15:12:20 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+        id S2389287AbgLBR26 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Dec 2020 12:28:58 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:46479 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2389133AbgLBR26 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 2 Dec 2020 12:28:58 -0500
+Received: from [192.168.0.2] (ip5f5ae87a.dynamic.kabel-deutschland.de [95.90.232.122])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 27ADB20647B6E;
+        Wed,  2 Dec 2020 18:28:14 +0100 (CET)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+From:   Donald Buczek <buczek@molgen.mpg.de>
+To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+raid@molgen.mpg.de
+References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
+ <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
+ <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
+Message-ID: <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
+Date:   Wed, 2 Dec 2020 18:28:13 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20201129224723.GG2842436@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
-X-yoursite-MailScanner-ID: 11B374CE5CF5.A2628
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Dave,
+Dear Guoqing,
 
-On 2020/11/30 上午6:47, Dave Chinner wrote:
-> On Mon, Nov 23, 2020 at 08:41:10AM +0800, Shiyang Ruan wrote:
->> 
->> The call trace is like this:
->>   memory_failure()
->>     pgmap->ops->memory_failure()   => pmem_pgmap_memory_failure()
->>      gendisk->fops->block_lost()   => pmem_block_lost() or
->>                                           md_blk_block_lost()
->>       sb->s_ops->storage_lost()    => xfs_fs_storage_lost()
->>        xfs_rmap_query_range()
->>         xfs_storage_lost_helper()
->>          mf_recover_controller->recover_fn => \
->>                              memory_failure_dev_pagemap_kill_procs()
+unfortunately the patch didn't fix the problem (unless I messed it up with my logging). This is what I used:
+
+     --- a/drivers/md/md.c
+     +++ b/drivers/md/md.c
+     @@ -9305,6 +9305,14 @@ void md_check_recovery(struct mddev *mddev)
+                             clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+                             goto unlock;
+                     }
+     +               if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+     +                   (!test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+     +                    test_bit(MD_RECOVERY_CHECK, &mddev->recovery))) {
+     +                       /* resync/recovery still happening */
+     +                       pr_info("md: XXX BUGFIX applied\n");
+     +                       clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+     +                       goto unlock;
+     +               }
+                     if (mddev->sync_thread) {
+                             md_reap_sync_thread(mddev);
+                             goto unlock;
+
+With pausing and continuing the check four times an hour, I could trigger the problem after about 48 hours. This time, the other device (md0) has locked up on `echo idle > /sys/devices/virtual/block/md0/md/sync_action` , while the check of md1 is still ongoing:
+
+     Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
+     md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
+           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+           [=>...................]  check =  8.5% (666852112/7813894144) finish=1271.2min speed=93701K/sec
+           bitmap: 0/59 pages [0KB], 65536KB chunk
+     
+     md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
+           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+           [>....................]  check =  0.2% (19510348/7813894144) finish=253779.6min speed=511K/sec
+           bitmap: 0/59 pages [0KB], 65536KB chunk
+
+after 1 minute:
+
+     Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
+     md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
+           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+           [=>...................]  check =  8.6% (674914560/7813894144) finish=941.1min speed=126418K/sec
+           bitmap: 0/59 pages [0KB], 65536KB chunk
+     
+     md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
+           109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+           [>....................]  check =  0.2% (19510348/7813894144) finish=256805.0min speed=505K/sec
+           bitmap: 0/59 pages [0KB], 65536KB chunk
+
+A data point, I didn't mention in my previous mail, is that the mdX_resync thread is not gone when the problem occurs:
+
+     buczek@done:/scratch/local/linux (v5.10-rc6-mpi)$ ps -Af|fgrep [md
+     root       134     2  0 Nov30 ?        00:00:00 [md]
+     root      1321     2 27 Nov30 ?        12:57:14 [md0_raid6]
+     root      1454     2 26 Nov30 ?        12:37:23 [md1_raid6]
+     root      5845     2  0 16:20 ?        00:00:30 [md0_resync]
+     root      5855     2 13 16:20 ?        00:14:11 [md1_resync]
+     buczek    9880  9072  0 18:05 pts/0    00:00:00 grep -F [md
+     
+     buczek@done:/scratch/local/linux (v5.10-rc6-mpi)$ sudo cat /proc/5845/stack
+     [<0>] md_bitmap_cond_end_sync+0x12d/0x170
+     [<0>] raid5_sync_request+0x24b/0x390
+     [<0>] md_do_sync+0xb41/0x1030
+     [<0>] md_thread+0x122/0x160
+     [<0>] kthread+0x118/0x130
+     [<0>] ret_from_fork+0x1f/0x30
+
+I guess, md_bitmap_cond_end_sync+0x12d is the `wait_event(bitmap->mddev->recovery_wait,atomic_read(&bitmap->mddev->recovery_active) == 0);` in md-bitmap.c.
+
+Donald
+
+
+On 01.12.20 10:29, Donald Buczek wrote:
+> Am 30.11.20 um 03:06 schrieb Guoqing Jiang:
 >>
->> The collect_procs() and kill_procs() are moved into a callback which
->> is passed from memory_failure() to xfs_storage_lost_helper().  So we
->> can call it when a file assocaited is found, instead of creating a
->> file list and iterate it.
 >>
->> The fsdax & reflink support for XFS is not contained in this patchset.
+>> On 11/28/20 13:25, Donald Buczek wrote:
+>>> Dear Linux mdraid people,
+>>>
+>>> we are using raid6 on several servers. Occasionally we had failures, where a mdX_raid6 process seems to go into a busy loop and all I/O to the md device blocks. We've seen this on various kernel versions.
+>>>
+>>> The last time this happened (in this case with Linux 5.10.0-rc4), I took some data.
+>>>
+>>> The triggering event seems to be the md_check cron job trying to pause the ongoing check operation in the morning with
+>>>
+>>>      echo idle > /sys/devices/virtual/block/md1/md/sync_action
+>>>
+>>> This doesn't complete. Here's /proc/stack of this process:
+>>>
+>>>      root@done:~/linux_problems/mdX_raid6_looping/2020-11-27# ps -fp 23333
+>>>      UID        PID  PPID  C STIME TTY          TIME CMD
+>>>      root     23333 23331  0 02:00 ?        00:00:00 /bin/bash /usr/bin/mdcheck --continue --duration 06:00
+>>>      root@done:~/linux_problems/mdX_raid6_looping/2020-11-27# cat /proc/23333/stack
+>>>      [<0>] kthread_stop+0x6e/0x150
+>>>      [<0>] md_unregister_thread+0x3e/0x70
+>>>      [<0>] md_reap_sync_thread+0x1f/0x1e0
+>>>      [<0>] action_store+0x141/0x2b0
+>>>      [<0>] md_attr_store+0x71/0xb0
+>>>      [<0>] kernfs_fop_write+0x113/0x1a0
+>>>      [<0>] vfs_write+0xbc/0x250
+>>>      [<0>] ksys_write+0xa1/0xe0
+>>>      [<0>] do_syscall_64+0x33/0x40
+>>>      [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+>>>
+>>> Note, that md0 has been paused successfully just before.
+>>
+>> What is the personality of md0? Is it also raid6?
 > 
-> This looks promising - the overall architecture is a lot more
-> generic and less dependent on knowing about memory, dax or memory
-> failures. A few comments that I think would further improve
-> understanding the patchset and the implementation:
-
-Thanks for your kindly comment.  It gives me confidence.
-
+> Yes.
 > 
-> - the order of the patches is inverted. It should start with a
->    single patch introducing the mf_recover_controller structure for
->    callbacks, then introduce pgmap->ops->memory_failure, then
->    ->block_lost, then the pmem and md implementations of ->block
->    list, then ->storage_lost and the XFS implementations of
->    ->storage_lost.
-
-Yes, it will be easier to understand the patchset in this order.
-
-But I have something unsure: for example, I introduce ->memory_failure() 
-firstly, but the implementation of ->memory_failure() needs to call 
-->block_lost() which is supposed to be introduced in the next patch. So, 
-I am not sure the code is supposed to be what in the implementation of 
-->memory_failure() in pmem?  To avoid this situation, I committed the 
-patches in the inverted order: lowest level first, then its caller, and 
-then caller's caller.
-
-I am trying to sort out the order.  How about this:
-  Patch i.
-    Introduce ->memory_failure()
-       - just introduce interface, without implementation
-  Patch i++.
-    Introduce ->block_lost()
-       - introduce interface and implement ->memory_failure()
-          in pmem, so that it can call ->block_lost()
-  Patch i++.
-    (similar with above, skip...)
-
+>>
+>>>
+>>>      2020-11-27T02:00:01+01:00 done CROND[23333]: (root) CMD (/usr/bin/mdcheck --continue --duration "06:00")
+>>>      2020-11-27T02:00:01+01:00 done root: mdcheck continue checking /dev/md0 from 10623180920
+>>>      2020-11-27T02:00:01.382994+01:00 done kernel: [378596.606381] md: data-check of RAID array md0
+>>>      2020-11-27T02:00:01+01:00 done root: mdcheck continue checking /dev/md1 from 11582849320
+>>>      2020-11-27T02:00:01.437999+01:00 done kernel: [378596.661559] md: data-check of RAID array md1
+>>>      2020-11-27T06:00:01.842003+01:00 done kernel: [392996.625147] md: md0: data-check interrupted.
+>>>      2020-11-27T06:00:02+01:00 done root: pause checking /dev/md0 at 13351127680
+>>>      2020-11-27T06:00:02.338989+01:00 done kernel: [392997.122520] md: md1: data-check interrupted.
+>>>      [ nothing related following.... ]
+>>>
+>>> After that, we see md1_raid6 in a busy loop:
+>>>
+>>>      PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+>>>      2376 root     20   0       0      0      0 R 100.0  0.0   1387:38 md1_raid6
+>>
+>> Seems the reap sync thread was trying to stop md1_raid6 while md1_raid6 was triggered again and again.
+>>
+>>>
+>>> Also, all processes doing I/O do the md device block.
+>>>
+>>> This is /proc/mdstat:
+>>>
+>>>      Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
+>>>      md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
+>>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+>>>            [==================>..]  check = 94.0% (7350290348/7813894144) finish=57189.3min speed=135K/sec
+>>>            bitmap: 0/59 pages [0KB], 65536KB chunk
+>>>      md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
+>>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+>>>            bitmap: 0/59 pages [0KB], 65536KB chunk
+>>>
+>>
+>> So the RECOVERY_CHECK flag should be set, not sure if the simple changes
+>> helps, but you may give it a try.
 > 
-> - I think the names "block_lost" and "storage_lost" are misleading.
->    It's more like a "media failure" or a general "data corruption"
->    event at a specific physical location. The data may not be "lost"
->    but only damaged, so we might be able to recover from it without
->    "losing" anything. Hence I think they could be better named,
->    perhaps just "->corrupt_range"
-
-'corrupt' sounds better.  (I'm not good at naming functions...)
-
+> Thanks. I've copied the original condition block to execute before the modified one and added some logging to it to see, if the change actually triggers. I will pause and unpause the check frequently on a busy machine to get this code executed more often.
 > 
-> - need to pass a {offset,len} pair through the chain, not just a
->    single offset. This will allow other types of devices to report
->    different ranges of failures, from a single sector to an entire
->    device.
-
-Yes, it's better to add the length.  I restrictively thought that 
-memory-failure on pmem should affect one single page at one time.
-
+> Best
+>    Donald
 > 
-> - I'm not sure that passing the mf_recover_controller structure
->    through the corruption event chain is the right thing to do here.
->    A block device could generate this storage failure callback if it
->    detects an unrecoverable error (e.g. during a MD media scrub or
->    rebuild/resilver failure) and in that case we don't have PFNs or
->    memory device failure functions to perform.
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 98bac4f..e2697d0 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -9300,7 +9300,8 @@ void md_check_recovery(struct mddev *mddev)
+>>                          md_update_sb(mddev, 0);
+>>
+>>                  if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+>> -                   !test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
+>> +                   (!test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+>> +                    test_bit(MD_RECOVERY_CHECK, &mddev->recovery))) {
+>>                          /* resync/recovery still happening */
+>>                          clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>>                          goto unlock;
+>>
+>> Thanks,
+>> Guoqing
 > 
->    IOWs, I think the action that is taken needs to be independent of
->    the source that generated the error. Even for a pmem device, we
->    can be using the page cache, so it may be possible to recover the
->    pmem error by writing the cached page (if it exists) back over the
->    pmem.
-> 
->    Hence I think that the recover function probably needs to be moved
->    to the address space ops, because what we do to recover from the
->    error is going to be dependent on type of mapping the filesystem
->    is using. If it's a DAX mapping, we call back into a generic DAX
->    function that does the vma walk and process kill functions. If it
->    is a page cache mapping, then if the page is cached then we can
->    try to re-write it to disk to fix the bad data, otherwise we treat
->    it like a writeback error and report it on the next
->    write/fsync/close operation done on that file.
-> 
->    This gets rid of the mf_recover_controller altogether and allows
->    the interface to be used by any sort of block device for any sort
->    of bottom-up reporting of media/device failures.
-
-Moving the recover function to the address_space ops looks a better 
-idea. But I think that the error handler for page cache mapping is 
-finished well in memory-failure.  The memory-failure is also reused to 
-handles anonymous page.  If we move the recover function to 
-address_space ops, I think we also need to refactor the existing handler 
-for page cache mapping, which may affect anonymous page handling.  This 
-makes me confused...
-
-
-I rewrote the call trace:
-memory_failure()
-  * dax mapping case
-  pgmap->ops->memory_failure()          =>
-                                    pmem_pgmap_memory_failure()
-   gendisk->fops->block_corrupt_range() =>
-                                    - pmem_block_corrupt_range()
-                                    - md_blk_block_corrupt_range()
-    sb->s_ops->storage_currupt_range()  =>
-                                    xfs_fs_storage_corrupt_range()
-     xfs_rmap_query_range()
-      xfs_storage_lost_helper()
-       mapping->a_ops->corrupt_range()  =>
-                                    xfs_dax_aops.xfs_dax_corrupt_range
-        memory_failure_dev_pagemap_kill_procs()
-
-  * page cache mapping case
-  mapping->a_ops->corrupt_range()       =>
-                                    xfs_address_space_operations.xfs_xxx
-   memory_failure_generic_kill_procs()
-
-It's rough and not completed yet.  Hope for your comment.
 
 -- 
-Thanks,
-Ruan Shiyang.
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
-
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
