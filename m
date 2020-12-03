@@ -2,110 +2,164 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D9FC63777
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 09:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A1CC64E8A
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 11:43:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A84B217A0
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 09:33:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED3DE20758
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 11:43:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728883AbgLCJdy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Dec 2020 04:33:54 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20333 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728664AbgLCJdy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Dec 2020 04:33:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606987947;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Jmel3tjqsc7Vgh83Ue1t0WC/6y10c9bSGUCqUms/GTA=;
-        b=fytLYeqFhBUljgJsUu+Llyir/MVEfsMjpaz01XOrLVxMYFds90+n7Ao+qF3eGqqXP3/0G9
-        jF/8aF5LbYR1xZ+afLEfFHXtWcnfxspNm0RpXvjP1QAVYxmgeC6xi1xdtW1WlDKkH0vEu5
-        hEEGHPzq5lrd8RCIa9O2AR6gj/0TJ0A=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-337-oQcaGzWtP5-v7yXp30SHvg-1; Thu, 03 Dec 2020 04:32:25 -0500
-X-MC-Unique: oQcaGzWtP5-v7yXp30SHvg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728903AbgLCLnR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Dec 2020 06:43:17 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:39761 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726710AbgLCLnR (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 3 Dec 2020 06:43:17 -0500
+Received: from theinternet.molgen.mpg.de (theinternet.molgen.mpg.de [141.14.31.7])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2D5D9185E497;
-        Thu,  3 Dec 2020 09:32:24 +0000 (UTC)
-Received: from T590 (ovpn-13-173.pek2.redhat.com [10.72.13.173])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 627CB1899A;
-        Thu,  3 Dec 2020 09:32:10 +0000 (UTC)
-Date:   Thu, 3 Dec 2020 17:32:01 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        Coly Li <colyli@suse.de>, Song Liu <song@kernel.org>,
-        dm-devel@redhat.com, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: Re: [PATCH 3/9] block: store a block_device pointer in struct bio
-Message-ID: <20201203093201.GC633702@T590>
-References: <20201201165424.2030647-1-hch@lst.de>
- <20201201165424.2030647-4-hch@lst.de>
- <20201203063941.GA629758@T590>
- <20201203071055.GA633702@T590>
- <20201203082951.GA15581@lst.de>
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6636120647D81;
+        Thu,  3 Dec 2020 12:42:32 +0100 (CET)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+raid@molgen.mpg.de
+References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
+ <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
+ <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
+ <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
+ <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <37c158cb-f527-34f5-2482-cae138bc8b07@molgen.mpg.de>
+Date:   Thu, 3 Dec 2020 12:42:32 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201203082951.GA15581@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 09:29:51AM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 03, 2020 at 03:10:55PM +0800, Ming Lei wrote:
-> > On Thu, Dec 03, 2020 at 02:40:04PM +0800, Ming Lei wrote:
-> > > On Tue, Dec 01, 2020 at 05:54:18PM +0100, Christoph Hellwig wrote:
-> > > > Replace the gendisk pointer in struct bio with a pointer to the newly
-> > > > improved struct block device.  From that the gendisk can be trivially
-> > > > accessed with an extra indirection, but it also allows to directly
-> > > > look up all information related to partition remapping.
-> > > 
-> > > The extra indirection is often done in fast path, so just wondering why
-> > > you don't consider to embed gendisk into block_device? Then the extra
-> > > indirection can be avoided.
-> > 
-> > oops, that is only possible for disk, and indirection is still needed
-> > for partitions.
+Dear Guoqing,
+
+On 12/3/20 2:55 AM, Guoqing Jiang wrote:
+> Hi Donald,
 > 
-> I looked into that, but given that the block device is allocated as part
-> of the inode we'd need to tell ->alloc_inode if we want to allocate the
-> small inode without the gendisk, or the large one with it which doesn't
-> work with the current interface.
+> On 12/2/20 18:28, Donald Buczek wrote:
+>> Dear Guoqing,
+>>
+>> unfortunately the patch didn't fix the problem (unless I messed it up with my logging). This is what I used:
+>>
+>>      --- a/drivers/md/md.c
+>>      +++ b/drivers/md/md.c
+>>      @@ -9305,6 +9305,14 @@ void md_check_recovery(struct mddev *mddev)
+>>                              clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>>                              goto unlock;
+>>                      }
+> 
+> I think you can add the check of RECOVERY_CHECK in above part instead of add a new part.
 
-I guess it could be done without fs code change, because now block device is
-always allocated by bdev_alloc() since 22ae8ce8b892("block: simplify bdev/disk
-lookup in blkdev_get"). And one manual inode allocation with a bit duplication
-from new_inode_pseudo() should be fine:
+I understand that. I did it this way to get a log only when the changed expression makes a difference (original block not triggering and using goto and and modified block triggering) and even if both of us make some stupid error with boolean expressions.
 
-	allocate big inode for disk, and small for partition
-	inode_init_always(sb, inode);
-    if (inode) {
-            spin_lock(&inode->i_lock);
-            inode->i_state = 0;
-            spin_unlock(&inode->i_lock);
-            INIT_LIST_HEAD(&inode->i_sb_list);
-			inode_sb_list_add(inode);
-    }
+> 
+>>      +               if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+>>      +                   (!test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
+>>      +                    test_bit(MD_RECOVERY_CHECK, &mddev->recovery))) {
+>>      +                       /* resync/recovery still happening */
+>>      +                       pr_info("md: XXX BUGFIX applied\n");
+>>      +                       clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>>      +                       goto unlock;
+>>      +               }
+>>                      if (mddev->sync_thread) {
+>>                              md_reap_sync_thread(mddev);
+>>                              goto unlock;
+> 
+> 
+>>
+>> With pausing and continuing the check four times an hour, I could trigger the problem after about 48 hours. This time, the other device (md0) has locked up on `echo idle > /sys/devices/virtual/block/md0/md/sync_action` , while the check of md1 is still ongoing:
+> 
+> Without the patch, md0 was good while md1 was locked. So the patch switches the status of the two arrays, a little weird ...
 
-> Beause the hd_struct is gone we're
-> still not using more structures in the I/O path than we did before.
+I think its just random. There is a slight chance for a deadlock depending on I/O to the device or other system load when stopping the resync. In the last experiment, both md0 and md1 where changed from "check" to "idle" for about 400 times before one of it blocked.
 
-Indeed, and block_device instance is often cached in IO path.
+OTOH - and I don't understand this at all - it looks like md0 hung again after reboot to a 5.4 kernel at the very first "check" to "idle" transition which seems to contradict the "slight" chance and "once after 400 attempts".
+
+> What is the stack of the process? I guess it is same as the stack of 23333 in your previous mail, but just to confirm.
+
+Of md0_raid6 thread ?  Sorry, didn't take the data before reboot this time, and concentrated on the non-terminating md0_resync thread.
+
+>>      Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
+>>      md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
+>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+>>            [=>...................]  check =  8.5% (666852112/7813894144) finish=1271.2min speed=93701K/sec
+>>            bitmap: 0/59 pages [0KB], 65536KB chunk
+>>      md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
+>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+>>            [>....................]  check =  0.2% (19510348/7813894144) finish=253779.6min speed=511K/sec
+>>            bitmap: 0/59 pages [0KB], 65536KB chunk
+>>
+>> after 1 minute:
+>>
+>>      Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath]
+>>      md1 : active raid6 sdk[0] sdj[15] sdi[14] sdh[13] sdg[12] sdf[11] sde[10] sdd[9] sdc[8] sdr[7] sdq[6] sdp[5] sdo[4] sdn[3] sdm[2] sdl[1]
+>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+>>            [=>...................]  check =  8.6% (674914560/7813894144) finish=941.1min speed=126418K/sec
+>>            bitmap: 0/59 pages [0KB], 65536KB chunk
+>>      md0 : active raid6 sds[0] sdah[15] sdag[16] sdaf[13] sdae[12] sdad[11] sdac[10] sdab[9] sdaa[8] sdz[7] sdy[6] sdx[17] sdw[4] sdv[3] sdu[2] sdt[1]
+>>            109394518016 blocks super 1.2 level 6, 512k chunk, algorithm 2 [16/16] [UUUUUUUUUUUUUUUU]
+>>            [>....................]  check =  0.2% (19510348/7813894144) finish=256805.0min speed=505K/sec
+>>            bitmap: 0/59 pages [0KB], 65536KB chunk
+>>
+>> A data point, I didn't mention in my previous mail, is that the mdX_resync thread is not gone when the problem occurs:
+>>
+>>      buczek@done:/scratch/local/linux (v5.10-rc6-mpi)$ ps -Af|fgrep [md
+>>      root       134     2  0 Nov30 ?        00:00:00 [md]
+>>      root      1321     2 27 Nov30 ?        12:57:14 [md0_raid6]
+>>      root      1454     2 26 Nov30 ?        12:37:23 [md1_raid6]
+>>      root      5845     2  0 16:20 ?        00:00:30 [md0_resync]
+>>      root      5855     2 13 16:20 ?        00:14:11 [md1_resync]
+>>      buczek    9880  9072  0 18:05 pts/0    00:00:00 grep -F [md
+>>      buczek@done:/scratch/local/linux (v5.10-rc6-mpi)$ sudo cat /proc/5845/stack
+>>      [<0>] md_bitmap_cond_end_sync+0x12d/0x170
+>>      [<0>] raid5_sync_request+0x24b/0x390
+>>      [<0>] md_do_sync+0xb41/0x1030
+>>      [<0>] md_thread+0x122/0x160
+>>      [<0>] kthread+0x118/0x130
+>>      [<0>] ret_from_fork+0x1f/0x30
+>>
+>> I guess, md_bitmap_cond_end_sync+0x12d is the `wait_event(bitmap->mddev->recovery_wait,atomic_read(&bitmap->mddev->recovery_active) == 0);` in md-bitmap.c.
+>>
+> 
+> Could be, if so, then I think md_done_sync was not triggered by the path md0_raid6 -> ... -> handle_stripe.
+
+Ok. Maybe I find a way to add some logging there.
+
+> I'd suggest to compare the stacks between md0 and md1 to find the difference.
+
+Compare stack of md0_raid6 and md1_raid6?
+
+Okay, but when one md is deadlocked, the other is operating just normally. I/O can be done and you can even start and stop a resync on it. So I'd expect the stack of the operating raid to be varying.
+
+Thanks.
+
+   Donald
+
+> 
+> Thanks,
+> Guoqing
 
 
-thanks,
-Ming
-
+-- 
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
