@@ -2,64 +2,67 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E42A5C193FE
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 22:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1053CC4167B
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 22:34:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A912A223E8
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 22:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8AD5223E4
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 22:34:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731866AbgLCWdy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Dec 2020 17:33:54 -0500
+        id S1731888AbgLCWeJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Dec 2020 17:34:09 -0500
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729745AbgLCWdy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Dec 2020 17:33:54 -0500
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 188D3C061A56
-        for <linux-raid@vger.kernel.org>; Thu,  3 Dec 2020 14:32:26 -0800 (PST)
-Received: by mail-pl1-x641.google.com with SMTP id p6so1981641plo.6
-        for <linux-raid@vger.kernel.org>; Thu, 03 Dec 2020 14:32:26 -0800 (PST)
+        with ESMTP id S1729869AbgLCWeJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Dec 2020 17:34:09 -0500
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FA20C09424E
+        for <linux-raid@vger.kernel.org>; Thu,  3 Dec 2020 14:32:33 -0800 (PST)
+Received: by mail-pl1-x644.google.com with SMTP id y10so518215plr.10
+        for <linux-raid@vger.kernel.org>; Thu, 03 Dec 2020 14:32:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=dabbelt-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:date:message-id:mime-version:content-transfer-encoding:cc
-         :from:to;
-        bh=SPmFoB1my9jXoLv2dn26VSZIQKA7cIMRdqpuLUFB/zE=;
-        b=uibFYOvnC4zY0yQjSghNFXGoITN/klJGjUJawm7CLMgnwHLEgoSF8aYrp3JujngJOL
-         Q1/1efT1Sk1ZvEgzkg0itaC6uT+mpiCbV+wr2qFTg/EhXoM8USYjKCA49GdnVTWWZ0tP
-         rahJLwwp8GwB0lIDDNsa/yfR1+ZYu8Jzevvs/J5ONrYw8jKGlEw9eov6jWgP39zOBXFG
-         iIH8Qv+lpLNP2Zhd2G7dAvg8kGv/PxOxkG6KmZP9h1L9cCQQNa1jrvom/D1PErxBspZJ
-         iVqODTL1y2FkymUDIFPNBB6S6aotiP8SU7ZbbYz16SRlFub6isCp3ufmz/yH1ijPlqxp
-         oF/g==
+        h=subject:date:message-id:in-reply-to:references:mime-version
+         :content-transfer-encoding:cc:from:to;
+        bh=kWu6dOTpWM5OEhpvvxAmGbYOm4nAgVI2rftl3/PRnJw=;
+        b=bb3TCC2gTuwqOzen2Ppu96SWrslPoHVYn9ghrkgyDWdZa8ILSfqc1wrojX1K3U73Vm
+         /r50dYf+je7pw5TDPJsRRIofKlxMtnczpH8DEEMxc6f6su/Fyvrp7310ABwpwthtbxgE
+         dh4dAzwHX13qe8zGtbSnnHi6cpCoUgASyqy3geEYFliW8AwCp60EvA42stwrZe0OTchB
+         rezZqwJ7yndm/Mp1sQBTLVS9ar/3tS182u7HiIA9p8vP+QbSBWyQU6kQHLD0gAFo6uvX
+         9eeQitIK+S2t+aMW9Zj+hkdgmLuAEnshhl1Xud18G3YOS6yU07NUYpNnGGRtmo3zQ5cZ
+         GsGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:date:message-id:mime-version
-         :content-transfer-encoding:cc:from:to;
-        bh=SPmFoB1my9jXoLv2dn26VSZIQKA7cIMRdqpuLUFB/zE=;
-        b=JsA+UloXESuv7USG+pjyzhC0szhuog4+q35CZ6bXJqJYTPMYv7jknSof6A8Nin7Gz8
-         88g0/KyFFgYx2KTdpK7eAIMDBRRYdwJfEegdLumg8xtNU/vf1AFbcn4dB7qzB32SvbWS
-         n29HZx4MF4r1yiAlttnIEpS4lLeviJLuubQSexTErbAjJzahoD3wm9ntLigKQgZfcof8
-         nwIQli7QjQBAsw4V+Cp22KOYrLBynGt0CzGk3JErZfguCsvRGf3Ri/9Yor2oDAy313Gy
-         JamC7B0wpcW5b06raQi4rpYebN9So4kcA3tSM7Otqmq5FMb50P+Q8aV9P9zUztdQ4sw+
-         YUHQ==
-X-Gm-Message-State: AOAM5331aFFRYbJTB4o7kNXum350FRfWlptqLIB+/Mx5F9Z5qEhXr5GN
-        2qCJuR2qxx5NTIi2q8xcq8DbnA==
-X-Google-Smtp-Source: ABdhPJxhPr+P5fujnqKI96o2pvSvJ5MAQGdtq4scxTMGJtMVGb63v//A39PGQQlbMjp5MmCtDbhQGg==
-X-Received: by 2002:a17:902:469:b029:da:17d0:e755 with SMTP id 96-20020a1709020469b02900da17d0e755mr954487ple.53.1607034745298;
-        Thu, 03 Dec 2020 14:32:25 -0800 (PST)
+        h=x-gm-message-state:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding:cc:from:to;
+        bh=kWu6dOTpWM5OEhpvvxAmGbYOm4nAgVI2rftl3/PRnJw=;
+        b=HTk1x5EbPRCHz1lTcQiCYC6jeCme+6fqjCUt5mO+5aLEV9Cgn2cfvEjQYAwA1o4B2n
+         phxhq6oXNo53pgWsTaJBkeO8B1d/yQ/BYnVhA8fQqT1IH4c1YKbed1wckDcB8UfsDLEd
+         J4Ip0KQ1zDvnP8FkepV57oDk6LPhPKdMvUU+zOHDTOUllL+DDvoDo02v3uU+LOhb5Cna
+         t02iL4lCy8U6IDq6R8A4ne4oH6OREPoWkbIvVyTrdRnWrDcGsqUduSt+evqcw4Cl8Cgb
+         VbItd7FwAAQakf4YHobF7wrH6+wXnYaRz7Sf4ewLNDmqktgEtialiAVdQScWNPxaNNpc
+         L6hA==
+X-Gm-Message-State: AOAM530hnmh9LTfU1hnR3JAtPFKtnKo6R7nQOx7oeehKNw5ivCy4aV1R
+        DLuwnltvafrB21HMnANm6xF3CA==
+X-Google-Smtp-Source: ABdhPJyss4HB0tRKuTdlmynwH8EalWY5UH5526iClcnKVeSXxYoDVLrUWDJ1cBtKdu4wdMbvN0OThQ==
+X-Received: by 2002:a17:902:758c:b029:da:a6e1:e06 with SMTP id j12-20020a170902758cb02900daa6e10e06mr1222353pll.67.1607034752937;
+        Thu, 03 Dec 2020 14:32:32 -0800 (PST)
 Received: from localhost (76-210-143-223.lightspeed.sntcca.sbcglobal.net. [76.210.143.223])
-        by smtp.gmail.com with ESMTPSA id x23sm2646437pfo.209.2020.12.03.14.32.24
+        by smtp.gmail.com with ESMTPSA id g6sm305006pjd.3.2020.12.03.14.32.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Dec 2020 14:32:24 -0800 (PST)
-Subject: [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to userspace
-Date:   Thu,  3 Dec 2020 13:58:54 -0800
-Message-Id: <20201203215859.2719888-1-palmer@dabbelt.com>
+        Thu, 03 Dec 2020 14:32:32 -0800 (PST)
+Subject: [PATCH v1 5/5] MAINTAINERS: Add myself as a dm-user maintainer
+Date:   Thu,  3 Dec 2020 13:58:59 -0800
+Message-Id: <20201203215859.2719888-6-palmer@dabbelt.com>
 X-Mailer: git-send-email 2.29.2.454.gaff20da3a2-goog
+In-Reply-To: <20201203215859.2719888-1-palmer@dabbelt.com>
+References: <20201203215859.2719888-1-palmer@dabbelt.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Cc:     corbet@lwn.net, song@kernel.org,
         Palmer Dabbelt <palmerdabbelt@google.com>, shuah@kernel.org,
@@ -72,48 +75,35 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This patch set contains dm-user, a device mapper target that proxies incoming
-BIOs to userspace via a misc device.  Essentially it's FUSE, but for block
-devices.  There's more information in the documentation patch and as a handful
-of commends, so I'm just going to avoid duplicating that here.  I don't really
-think there's any fundamental functionality that dm-user enables, as one could
-use something along the lines of nbd/iscsi, but dm-user does result in
-extremely simple userspace daemons -- so simple that when I tried to write a
-helper userspace library for dm-user I just ended up with nothing.
+From: Palmer Dabbelt <palmerdabbelt@google.com>
 
-I talked about this a bit at Plumbers and was hoping to send patches a bit
-earlier on in the process, but got tied up with a few things.  As a result this
-is actually quite far along: it's at the point where we're starting to run this
-on real devices as part of an updated Android OTA update flow, where we're
-using this to provide an Android-specific compressed backing store for
-dm-snap-persistent.  The bulk of that project is scattered throughout the
-various Android trees, so there are kselftests and a (somewhat bare for now)
-Documentation entry with the intent of making this a self-contained
-contribution.  There's a lot to the Android userspace daemon, but it doesn't
-interact with dm-user in a very complex manner.
+I'm not sure this is big enough to warrant an entry in the MAINTAINERS file,
+but I know it can be quite a bit of work to maintain something like this so I'm
+happy to sign up if that helps.
 
-This is still in a somewhat early stage, but it's at the point where things
-largely function.  I'm certainly not ready to commit to the user ABI
-implemented here and there are a bunch of FIXMEs scattered throughout the code,
-but I do think that it's far along enough to begin a more concrete discussion
-of where folks would like to go with something like this.  While I'd intending
-on sorting that stuff out, I'd like to at least get a feel for whether this is
-a path worth pursuing before spending a bunch more time on it.
+Signed-off-by: Palmer Dabbelt <palmerdabbelt@google.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I haven't done much in the way of performance analysis for dm-user.  Earlier on
-I did some simple throughput tests and found that dm-user/ext4 was faster than
-half the speed of tmpfs, which is way out of the realm of being an issue for
-our use case (decompressing blocks out of a phone's storage).  The design of
-dm-user does preclude an extremely high performance implementation, where I
-assume one would want an explicit ring buffer and zero copy, but I feel like
-users who want that degree of performance are probably better served writing a
-proper kernel driver.  I wouldn't be opposed to pushing on performance (ideally
-without a major design change), but for now I feel like time is better spent
-fortifying the user ABI and fixing the various issues with the implementation.
-
-The patches follow as usual, but in case it's easier I've published a tree as
-well:
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/palmer/dm-user.git -b dm-user-v1
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2daa6ee673f7..ab9d7746cfb4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5198,6 +5198,13 @@ W:	http://sources.redhat.com/cluster/
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/teigland/linux-dlm.git
+ F:	fs/dlm/
+ 
++DM USER (Block Device in Userspace)
++M:	Palmer Dabbelt <palmerdabbelt@google.com>
++S:	Maintained
++F:	include/linux/dm-user.h
++F:	drivers/md/dm-user.c
++F:	tools/testing/selftests/dm-user/
++
+ DMA BUFFER SHARING FRAMEWORK
+ M:	Sumit Semwal <sumit.semwal@linaro.org>
+ M:	Christian König <christian.koenig@amd.com>
+-- 
+2.29.2.454.gaff20da3a2-goog
 
