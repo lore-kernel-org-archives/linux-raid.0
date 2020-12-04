@@ -2,1241 +2,149 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6202C19425
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 22:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63652C4167B
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Dec 2020 03:26:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7254223DB
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Dec 2020 22:34:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2980C22519
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Dec 2020 03:26:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731911AbgLCWe3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Dec 2020 17:34:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59042 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731896AbgLCWe3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Dec 2020 17:34:29 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D59C09424A
-        for <linux-raid@vger.kernel.org>; Thu,  3 Dec 2020 14:32:32 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id t8so2294174pfg.8
-        for <linux-raid@vger.kernel.org>; Thu, 03 Dec 2020 14:32:32 -0800 (PST)
+        id S1727557AbgLDD0W (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Dec 2020 22:26:22 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:5679 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726080AbgLDD0W (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Dec 2020 22:26:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1607052381; x=1638588381;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=rQsvjltla/RzjugCImDnv2IKAWbQBv/Y1blShSNFhz8=;
+  b=Ue66IsITa7rADjxiXAqAb6LpdDR62B37fVuYHM2UcaZStgjf23gGhVKn
+   E0hhXatnE4J1kiFXxrHO9bYQO63lc5wFYiXMdW/p2VT3PRfqf2UEG+CE8
+   cgfRRblJlD+stXRpNAkpK0xhyAuD/x/R9y2JRSXLlcC9Z3LJl0aq8VBGK
+   yCXzev7QioBO/4nr0U8ZZ3/1+wKTBpC98Dnzg4jdRm0BK94AXVvHrRIJo
+   QJhUjjVD6T5pJ7PiXFPVWBAwughlSZ1fFNPS06A+8L323TVlvsYJbUkpA
+   KFRi8ynL4qVoRbyXc8IC/mKHDime0SypzSN4xzxpzgVZFEkn02MaZv50e
+   Q==;
+IronPort-SDR: 6TGqd9cAtoI0X0rqu4rpcy2W49ELch59T+vmvjtopV+C/V0Slpm+T3P4KQrfcqaDoPWnVBV1UX
+ 8+9xOmuAevHhXQBtAMs19alemOboOvwW/4MVfYNZgNRSL/dc+7avcOOUc3/GAdwkQWg1a4kQBW
+ ulcz9ZIB1YEPtudBaSNWWP0510bnfS2DnbmAm7AfiLwlFtJNEJ+yIJ+Iht7g6790BgagE2KOdo
+ dEMbPI7UbxdiguL8+OB+zCcl93s/DrqRLSGJWTW/eYuj3MxxuM5LmGmSMtB/Otxf/cSMNr4wYQ
+ DV0=
+X-IronPort-AV: E=Sophos;i="5.78,391,1599494400"; 
+   d="scan'208";a="158871639"
+Received: from mail-cys01nam02lp2052.outbound.protection.outlook.com (HELO NAM02-CY1-obe.outbound.protection.outlook.com) ([104.47.37.52])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Dec 2020 11:25:16 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=PKYeCt+/jZ1OVT2+7acLVdR+8nDprdwL19dnmSm1/JtQIuHH87hqS+LCigSqntOik1vscNOYgo8c2kclkTOkJxW2jGyWyyNdv4YAiEkRgwhC2BMkHS4iSwXGfCnUejgKA0gLPva3qA7LorSjlwQXCNwJpE2O074o3R+8+2PO9iMkN7NmmKa27ao68ByYoQ6zLvmAwtvVBTB6Dbx1v1EIr+4ymlTA919Tv4IVlDajiS3QDQVi5z66wycs6rUJuxArNXgydis1UrgcRLg+5G7RY7GCXT9N4hwPbtV/Mi3OCn2pQLU9sDlKBcGts+o/2qwL6LM5eG7x38qD2g/2ZJ3hgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=rQsvjltla/RzjugCImDnv2IKAWbQBv/Y1blShSNFhz8=;
+ b=KSxwY0plDrofAcFAidCkjbaioxIPHHlyXEpRfEldzr4XdutchwZdhinDy7173D2Umz9FOiJ7HiSCSAieO9n7zX8GfgQ7GlK2Jv41bDdcjBT8hX+mCPFD734ItyqoXROJ7frmzHSzO0jg7fLUUkn8D3NlblDJDKRoMUPWEDjzigx+9xJGlKtD43B9b2K91AbH+5lloPg4HH/3yu9fXJtQBgbClS3YXmi7psH6ZfNeLZBJ7OqFgVSpZRO9jWU7pZ3iv7gO3zthsPPFbZ+zOoY+JlRVpHOs+C2bCFx+c634ml9Vijfi9oURFLpU/Iyg6R9bD+8n7RtoYI12gdybRykSTw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dabbelt-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:date:message-id:in-reply-to:references:mime-version
-         :content-transfer-encoding:cc:from:to;
-        bh=oIMlBnB15JVo5GvJtYOEjnoSMHizrpybMOv5lys41nw=;
-        b=wMe5VvfF5acd4U/J42MRxAWyGBynt3IN4/CeVj8vsMQNIeUiNzCDweFMZUDVazkVME
-         UKIxOdRqH859A96aWpy13kHBZVX4RGAF1GS4w5yzy9vOP1wiQfIuY2gds7nB5RhARdQv
-         oCdO3ysOlUY/TGOjQyutqicGezgEQrqUsx+veg3wfkqa4hf0Wbfd21F6pdqqeHnIfiay
-         e4vXtHXAGgWvCwT36C7167/tqANmibsaOJtc1tCoQZmCs11OQdQsObhAJ988rvdBioV6
-         lr7f7oqyrwqyMy98byHyepUV4uANk29LzjMHzWp7GhOjHbvqWbHz/IaSnPuIXeEf3zh7
-         hKlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding:cc:from:to;
-        bh=oIMlBnB15JVo5GvJtYOEjnoSMHizrpybMOv5lys41nw=;
-        b=AK514+zZXGU6fa2sCHZ6rLW4dQ+Pw3MGMVP4LdtGj1/HvBxigcx+9uhazUmn+1301k
-         itMFIIF8G9aT8mIhcO2ScaS9JufCROTAle2KAuv1jeKzx+zMxoGCT4N0NAF9IrgZEo9u
-         zNG8NMDNavBracVMWbuksIKcTzSsIdo7tbZ6ovhCeOM3LO1+ZH9gyIJac8SIgILKF3fY
-         OD3Y9/H6ISFZdPPgYqAUBRh3BZAvjqgK8gwRbzQtObYtfsZ86gC7uz7opBItfVukcSVa
-         G0OYJJuYGeMnwSBttWxx7Q34zuYvR7BgoeDHQbm0VksguQcSe32nrxHghDYZcgsSefFV
-         39hA==
-X-Gm-Message-State: AOAM531rFKhKWI62wmtg9x4V4ToOU9gyi7ohQ7OK6K6B6Ds/BGZ1zXRj
-        sJgbeLQYRv7tnJpIezg6sbVnsA==
-X-Google-Smtp-Source: ABdhPJza/ryMS859XzWd8bYQIWub0aqq0ai/rq1L5WfJpINiXZi0oBdW/6g/jNlcAIeujSn6Hsmvow==
-X-Received: by 2002:a05:6a00:1506:b029:18b:5a31:ed87 with SMTP id q6-20020a056a001506b029018b5a31ed87mr951347pfu.55.1607034751382;
-        Thu, 03 Dec 2020 14:32:31 -0800 (PST)
-Received: from localhost (76-210-143-223.lightspeed.sntcca.sbcglobal.net. [76.210.143.223])
-        by smtp.gmail.com with ESMTPSA id x4sm1879678pgg.94.2020.12.03.14.32.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Dec 2020 14:32:30 -0800 (PST)
-Subject: [PATCH v1 4/5] selftests/dm-user: A handful of tests for dm-user
-Date:   Thu,  3 Dec 2020 13:58:58 -0800
-Message-Id: <20201203215859.2719888-5-palmer@dabbelt.com>
-X-Mailer: git-send-email 2.29.2.454.gaff20da3a2-goog
-In-Reply-To: <20201203215859.2719888-1-palmer@dabbelt.com>
-References: <20201203215859.2719888-1-palmer@dabbelt.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=rQsvjltla/RzjugCImDnv2IKAWbQBv/Y1blShSNFhz8=;
+ b=UZ5T5Ddlx5GKlRzvZiEoXl7JDZf/eNijUwpZeN7Ww7x0SEDQAlKJn7X52ku1ekxxvxKw+v+GNYVyZ0cJgLveN4vyJXSSlC8D8MxQQzIHPfL+0G78P5zooDE/V086SeOp4GplL5ZL9Y0f+uzy2EEelK6lXkZUcMeCNA7CUh1MFyg=
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
+ by BY5PR04MB7123.namprd04.prod.outlook.com (2603:10b6:a03:227::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3632.17; Fri, 4 Dec
+ 2020 03:25:15 +0000
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::99ae:ab95:7c27:99e4]) by BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::99ae:ab95:7c27:99e4%7]) with mapi id 15.20.3611.031; Fri, 4 Dec 2020
+ 03:25:15 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+CC:     Tejun Heo <tj@kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/5] block: remove the unused block_sleeprq tracepoint
+Thread-Topic: [PATCH 1/5] block: remove the unused block_sleeprq tracepoint
+Thread-Index: AQHWyZDC35x3z2bn6UGINOM1pHH38A==
+Date:   Fri, 4 Dec 2020 03:25:15 +0000
+Message-ID: <BYAPR04MB4965C0AF4B7461309062FD6186F10@BYAPR04MB4965.namprd04.prod.outlook.com>
+References: <20201203162139.2110977-1-hch@lst.de>
+ <20201203162139.2110977-2-hch@lst.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [199.255.45.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: cb39fcb0-b1eb-492b-9beb-08d8980437a4
+x-ms-traffictypediagnostic: BY5PR04MB7123:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BY5PR04MB7123671F1214CC854F1B554586F10@BY5PR04MB7123.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:901;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: Yb4iqdoIqWnojrHlcMuIADml8F6IiLKFSLGoIihyLkEFFg08Jpo5JzUgqgukjXh7HNuMmyNaxYCJZF/agR424dUdG9FSQdh8KiLak0gwhPoG3Qh/pABLsCoZjp1Fi/+9ZHTYjLN/TnY/Lvp78+rxZnVXBMb/F3d21/wbbDyhaexHWuyTSnuLVdZvPJSvJKhGyDqTy9T5KxRRyPasx+VoFXSr5RXhDqdrOcGrC+4k2RU8X9F16cGnM0qBF1HJ7t0BVVRgBsS9H/Mq4Upi/kc/3C1PEFhwQdOicaTnQ4mAUJ0Nq8+tBAyeWihV7OfDK/d9hFWYCcaHoFZ+JOnnt0+2MA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(136003)(366004)(39860400002)(346002)(478600001)(66476007)(66446008)(66946007)(64756008)(186003)(66556008)(4744005)(4326008)(54906003)(316002)(110136005)(26005)(2906002)(7696005)(33656002)(6506007)(86362001)(71200400001)(53546011)(5660300002)(76116006)(52536014)(8676002)(8936002)(55016002)(9686003)(83380400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?PG+wyrnBE/vHz/CUfpCUYs+lj1LPsqrBMOMkT2EK7wkl5UwykT7+aiG/Addm?=
+ =?us-ascii?Q?U5bVBanNe5hK65DCWrVVCDfEYlwbHwrmCTsyD5d00TZGmy305kZhEJLnuiwa?=
+ =?us-ascii?Q?DnaTuq3PhGRY27wGgPt55POvu0PUa2kc+rxTFa/FMqI/7Ty5lt416ZP3x51i?=
+ =?us-ascii?Q?EbQIshE6HnKhnAbYeJwucAav7nnJLwA2cwovgLDuGMXMGUq1T4AdgsO6s2MM?=
+ =?us-ascii?Q?E6ejjosqMb4V0rdKRjeu7ffoeyKE00m84rJ7xKkD0qgwVL0gnFezSgmJIafJ?=
+ =?us-ascii?Q?a3g0mxj/KcDGvLjOEOvzkviiAHBiun5msx7HvxiPKqrv3E/q8GhS/5CtmcwI?=
+ =?us-ascii?Q?RRI7E4nTlUw4qPnrBju/YdNv/L2+devfBWV3mCi8l0DuWW0V/eZWbH2vt3Zy?=
+ =?us-ascii?Q?z5WeLAHxU4daSkEloI81eVn/zHDONrkZA44PQCWJ/BB7A/+Y0oo6HKEBawG+?=
+ =?us-ascii?Q?Vyomulbbo4FzQl64UmS0+JWoBlfILF87GrEqOUH5uy+2aFKYMN1zRtsxQNZp?=
+ =?us-ascii?Q?2FlSuUeiM8KN3cVXDj3/ff58HrW1x2GkI/zre4YhBwuuc0yaNYnxlEn+3q3E?=
+ =?us-ascii?Q?W0joT88bzAmBkp6LpO3XDUPCmRnCB7f9ySzYEI9/yJI+DZ5xh6wsLhNnIFZ5?=
+ =?us-ascii?Q?CkppSSSQTVL/Oi1lB/wBOgvUeUytaVDKREZnJQgWeaziHQx23k71Gsf76uH7?=
+ =?us-ascii?Q?VkzsBmtwVxb9G4abaiS8IXtxxsWJy/+ieCcHrQiszz5gXOoRriVx3GHystXU?=
+ =?us-ascii?Q?arKkRDexY5eNnCdIAKoiwjA6GSjKZMle7BER0uwUMO+OZeeGMbcYxEBaxqCa?=
+ =?us-ascii?Q?jHNhH4SITe8pFLTi5kWNbfMQ/3WvoGc/kq9KxnyhCqvPh6ceyRxOrdXCVtIx?=
+ =?us-ascii?Q?OxwVGonbEKPhJKXdI5bGU2tRMEbB2vwcvqiNSCwKFuemM/mdneHb1262Nqrc?=
+ =?us-ascii?Q?TLh1q0ypEEMuM/1I+SN+2Z2aj0tCA9FEMeVlHv9y9ANxxWTK0nrCfYGmJptl?=
+ =?us-ascii?Q?sIwn?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Cc:     corbet@lwn.net, song@kernel.org,
-        Palmer Dabbelt <palmerdabbelt@google.com>, shuah@kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        kernel-team@android.com
-From:   Palmer Dabbelt <palmer@dabbelt.com>
-To:     dm-devel@redhat.com, agk@redhat.com, snitzer@redhat.com
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cb39fcb0-b1eb-492b-9beb-08d8980437a4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Dec 2020 03:25:15.3031
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: fjwqt6qsefY0V+LSrT+gbch7JJEWoXDsqdVq041pnYaj2vsWGuGRR3cbJ7/HrbCGyl+cmedvCIkg4P7NDLT0Q40VhFUfnofxNBrEAY05pvY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB7123
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Palmer Dabbelt <palmerdabbelt@google.com>
-
-These tests ruly on fsstress and fio to generate accesses to a block
-device backed by a dm-user daemon.
-
-Signed-off-by: Palmer Dabbelt <palmerdabbelt@google.com>
-
----
-
-I've lumped these all together rather than splitting them up.  The tests
-themselves are independent, but the associated build/run infastructure
-is pretty simple and I got tired of handling all the merge conflicts
-that came from juggling each test as its own patch.
-
-The tests themselves sholud be portable, but the harness will only run
-in my environment (ie, QEMU).  That's kind of ugly, but I'm not really
-sure how to do this in a more reasonable way.  I run the tests as
-follows:
-
-    $ rm -f scratch
-    $ truncate scratch --size=10G
-    $ qemu-system-x86_64 \
-            -m 8G -smp 32 -cpu host -accel kvm \
-            -kernel "${TREE}"/arch/x86_64/boot/bzImage \
-            -initrd buildroot/output/images/rootfs.cpio \
-            -append "console=ttyS0" \
-            -drive
-            file="${TREE}"/tools/testing/selftests/kselftest_install/kselftest-packages/kselftest.squashfs,if=virtio
-            \
-            -drive
-            file=scratch,if=virtio \
-            -nographic |&
-            tee log
----
- tools/testing/selftests/.gitignore            |   3 +
- tools/testing/selftests/Makefile              |   1 +
- tools/testing/selftests/dm-user/.gitignore    |   3 +
- tools/testing/selftests/dm-user/Makefile      |  23 ++
- tools/testing/selftests/dm-user/README        |  20 ++
- .../selftests/dm-user/daemon-example.c        | 186 ++++++++++++++
- .../selftests/dm-user/daemon-parallel.c       | 240 ++++++++++++++++++
- .../testing/selftests/dm-user/daemon-short.c  | 196 ++++++++++++++
- .../selftests/dm-user/fio-rand-read-1G.fio    |  16 ++
- .../selftests/dm-user/fio-verify-1G.fio       |  10 +
- .../testing/selftests/dm-user/harness-fio.sh  |  45 ++++
- .../selftests/dm-user/harness-fsstress.sh     |  44 ++++
- .../selftests/dm-user/include/logging.h       | 148 +++++++++++
- tools/testing/selftests/dm-user/run.sh        |  74 ++++++
- 14 files changed, 1009 insertions(+)
- create mode 100644 tools/testing/selftests/dm-user/.gitignore
- create mode 100644 tools/testing/selftests/dm-user/Makefile
- create mode 100644 tools/testing/selftests/dm-user/README
- create mode 100644 tools/testing/selftests/dm-user/daemon-example.c
- create mode 100644 tools/testing/selftests/dm-user/daemon-parallel.c
- create mode 100644 tools/testing/selftests/dm-user/daemon-short.c
- create mode 100644 tools/testing/selftests/dm-user/fio-rand-read-1G.fio
- create mode 100644 tools/testing/selftests/dm-user/fio-verify-1G.fio
- create mode 100755 tools/testing/selftests/dm-user/harness-fio.sh
- create mode 100755 tools/testing/selftests/dm-user/harness-fsstress.sh
- create mode 100644 tools/testing/selftests/dm-user/include/logging.h
- create mode 100755 tools/testing/selftests/dm-user/run.sh
-
-diff --git a/tools/testing/selftests/.gitignore b/tools/testing/selftests/.gitignore
-index 055a5019b13c..88b1938ea5e6 100644
---- a/tools/testing/selftests/.gitignore
-+++ b/tools/testing/selftests/.gitignore
-@@ -8,3 +8,6 @@ tpm2/SpaceTest.log
- # Python bytecode and cache
- __pycache__/
- *.py[cod]
-+
-+# selftest install dir
-+/kselftest_install/
-diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
-index d9c283503159..f5e0f61c4384 100644
---- a/tools/testing/selftests/Makefile
-+++ b/tools/testing/selftests/Makefile
-@@ -9,6 +9,7 @@ TARGETS += clone3
- TARGETS += core
- TARGETS += cpufreq
- TARGETS += cpu-hotplug
-+TARGETS += dm-user
- TARGETS += drivers/dma-buf
- TARGETS += efivarfs
- TARGETS += exec
-diff --git a/tools/testing/selftests/dm-user/.gitignore b/tools/testing/selftests/dm-user/.gitignore
-new file mode 100644
-index 000000000000..7b0aa3e4a738
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/.gitignore
-@@ -0,0 +1,3 @@
-+/daemon-example
-+/daemon-parallel
-+/daemon-short
-diff --git a/tools/testing/selftests/dm-user/Makefile b/tools/testing/selftests/dm-user/Makefile
-new file mode 100644
-index 000000000000..98ff4f5d0fad
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/Makefile
-@@ -0,0 +1,23 @@
-+# SPDX-License-Identifier: GPL-2.0
-+.PHONY: all clean
-+
-+top_srcdir = ../../../..
-+INCLUDES := -I../ -Iinclude/ -I$(top_srcdir)/usr/include
-+CFLAGS := $(CFLAGS) -g -O2 -Wall -static -D_GNU_SOURCE -pthread $(INCLUDES)
-+KSFT_KHDR_INSTALL := 1
-+
-+TEST_GEN_FILES := \
-+	daemon-example \
-+	daemon-parallel \
-+	daemon-short
-+
-+TEST_PROGS := \
-+	fio-rand-read-1G.fio \
-+	fio-verify-1G.fio \
-+	harness-fio.sh \
-+	harness-fsstress.sh \
-+	run.sh
-+
-+$(TEST_GEN_FILES): khdr
-+
-+include ../lib.mk
-diff --git a/tools/testing/selftests/dm-user/README b/tools/testing/selftests/dm-user/README
-new file mode 100644
-index 000000000000..213de27db35d
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/README
-@@ -0,0 +1,20 @@
-+dm-user Tests
-+=============
-+Tests for dm-user.
-+
-+Quick Start
-+-----------
-+It's probably a bad idea to just run this blindly, but all you need to do is:
-+
-+# make
-+# ./run.sh
-+
-+Slow Start
-+----------
-+These tests use `dmsetup` to manage device mapper nodes, which is part of lvm2.
-+Some use `fio`, and some use the `fsstress` from xfstests.  Some of the tests
-+also expect "/dev/vdb" to exist and to be at least 10G.
-+
-+I use a simple buildroot-based initramfs to run the tests.  I've added an
-+xfstests package to get fsstress, but I haven't sent out the patches yet.  I
-+run everything in QEMU.
-diff --git a/tools/testing/selftests/dm-user/daemon-example.c b/tools/testing/selftests/dm-user/daemon-example.c
-new file mode 100644
-index 000000000000..b245fad192bf
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/daemon-example.c
-@@ -0,0 +1,186 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright 2020 Google, Inc
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <getopt.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <poll.h>
-+#include <pthread.h>
-+#include <linux/dm-user.h>
-+#include <sys/prctl.h>
-+#include "logging.h"
-+
-+#define SECTOR_SIZE 512
-+
-+#define MAX(a, b) ((a) > (b) ? (a) : (b))
-+
-+int write_all(int fd, void *buf, size_t len)
-+{
-+	char *buf_c = buf;
-+	ssize_t total = 0;
-+	ssize_t once;
-+
-+	while (total < len) {
-+		once = write(fd, buf_c + total, len - total);
-+		if (once <= 0)
-+			return once;
-+		total += once;
-+	}
-+
-+	return total;
-+}
-+
-+int read_all(int fd, void *buf, size_t len)
-+{
-+	char *buf_c = buf;
-+	ssize_t total = 0;
-+	ssize_t once;
-+
-+	while (total < len) {
-+		once = read(fd, buf_c + total, len - total);
-+		if (once <= 0)
-+			return once;
-+		total += once;
-+	}
-+
-+	return total;
-+}
-+
-+int simple_daemon(char *control_dev,
-+		  size_t block_bytes,
-+		  char *store)
-+
-+{
-+	int control_fd = open(control_dev, O_RDWR);
-+
-+	if (control_fd < 0) {
-+		ksft_print_msg("Unable to open control device %s\n", control_dev);
-+		return RET_FAIL;
-+	}
-+
-+	while (1) {
-+		struct dm_user_message msg;
-+		__u64 type;
-+		char *base;
-+
-+		if (read_all(control_fd, &msg, sizeof(msg)) < 0) {
-+			if (errno == ENOTBLK)
-+				return RET_PASS;
-+
-+			perror("unable to read msg");
-+			return RET_FAIL;
-+		}
-+
-+		base = store + msg.sector * SECTOR_SIZE;
-+		if (base + msg.len > store + block_bytes) {
-+			fprintf(stderr, "access out of bounds\n");
-+			return RET_FAIL;
-+		}
-+
-+		type = msg.type;
-+		switch (type) {
-+		case DM_USER_REQ_MAP_WRITE:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			if (read_all(control_fd, base, msg.len) < 0) {
-+				if (errno == ENOTBLK)
-+					return RET_PASS;
-+
-+				perror("unable to read buf");
-+				return RET_FAIL;
-+			}
-+			break;
-+		case DM_USER_REQ_MAP_FLUSH:
-+			/* Nothing extra to do on flush, we're in memory. */
-+		case DM_USER_REQ_MAP_READ:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			break;
-+		default:
-+			msg.type = DM_USER_RESP_UNSUPPORTED;
-+			break;
-+		}
-+
-+		if (write_all(control_fd, &msg, sizeof(msg)) < 0) {
-+			if (errno == ENOTBLK)
-+				return RET_PASS;
-+
-+			perror("unable to write msg");
-+			return RET_FAIL;
-+		}
-+
-+		if (type == DM_USER_REQ_MAP_READ) {
-+			if (write_all(control_fd, base, msg.len) < 0) {
-+				if (errno == ENOTBLK)
-+					return RET_PASS;
-+
-+				perror("unable to write buf");
-+				return RET_FAIL;
-+			}
-+		}
-+	}
-+
-+	/* The daemon doesn't actully terminate for this test. */
-+	perror("Unable to read from control device");
-+	return RET_FAIL;
-+}
-+
-+void usage(char *prog)
-+{
-+	printf("Usage: %s\n", prog);
-+	printf("  -h			Display this help message\n");
-+	printf("  -v L			Verbosity level: %d=QUIET %d=CRITICAL %d=INFO\n",
-+	       VQUIET, VCRITICAL, VINFO);
-+	printf("  -c <control dev>	Control device to use for the test\n");
-+	printf("  -s <sectors>		The number of sectors in the device\n");
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int ret = RET_PASS;
-+	int c;
-+	char *control_dev = NULL;
-+	long block_bytes = 1024;
-+	char *store;
-+
-+	prctl(PR_SET_IO_FLUSHER, 0, 0, 0, 0);
-+
-+	while ((c = getopt(argc, argv, "h:v:c:s:")) != -1) {
-+		switch (c) {
-+		case 'h':
-+			usage(basename(argv[0]));
-+			exit(0);
-+		case 'v':
-+			log_verbosity(atoi(optarg));
-+			break;
-+		case 'c':
-+			control_dev = strdup(optarg);
-+			break;
-+		case 's':
-+			block_bytes = atoi(optarg) * SECTOR_SIZE;
-+			break;
-+		default:
-+			usage(basename(argv[0]));
-+			exit(1);
-+		}
-+	}
-+
-+	ksft_print_header();
-+	ksft_set_plan(1);
-+	ksft_print_msg("%s: block_bytes=%zu\n",
-+		       basename(argv[0]),
-+		       block_bytes);
-+
-+	store = malloc(block_bytes);
-+	for (size_t i = 0; i < block_bytes/sizeof(size_t); ++i)
-+		((size_t *)(store))[i] = i;
-+
-+	ret = simple_daemon(control_dev, block_bytes, store);
-+
-+	print_result(basename(argv[0]), ret);
-+	exit(ret);
-+	return ret;
-+}
-diff --git a/tools/testing/selftests/dm-user/daemon-parallel.c b/tools/testing/selftests/dm-user/daemon-parallel.c
-new file mode 100644
-index 000000000000..9e5303f02241
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/daemon-parallel.c
-@@ -0,0 +1,240 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright 2020 Google, Inc
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <getopt.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <poll.h>
-+#include <pthread.h>
-+#include <linux/dm-user.h>
-+#include <sys/prctl.h>
-+#include <sys/mman.h>
-+#include "logging.h"
-+
-+#define SECTOR_SIZE 512
-+#define MAX_WORKER_COUNT 256
-+
-+#define MAX(a, b) ((a) > (b) ? (a) : (b))
-+
-+struct test_context {
-+	char *control_dev;
-+	size_t block_bytes;
-+	char *store;
-+	long worker_count;
-+	char *backing_path;
-+};
-+
-+int write_all(int fd, void *buf, size_t len)
-+{
-+	char *buf_c = buf;
-+	ssize_t total = 0;
-+	ssize_t once;
-+
-+	while (total < len) {
-+		once = write(fd, buf_c + total, len - total);
-+		if (once <= 0)
-+			return once;
-+		total += once;
-+	}
-+
-+	return total;
-+}
-+
-+int read_all(int fd, void *buf, size_t len)
-+{
-+	char *buf_c = buf;
-+	ssize_t total = 0;
-+	ssize_t once;
-+
-+	while (total < len) {
-+		once = read(fd, buf_c + total, len - total);
-+		if (once <= 0)
-+			return once;
-+		total += once;
-+	}
-+
-+	return total;
-+}
-+
-+void *simple_daemon(void *context_uc)
-+{
-+	struct test_context *context = context_uc;
-+	char *store = context->store;
-+	int control_fd = open(context->control_dev, O_RDWR);
-+
-+	if (control_fd < 0) {
-+		ksft_print_msg("Unable to open control device %s\n", context->control_dev);
-+		return (void *)(RET_FAIL);
-+	}
-+
-+	while (1) {
-+		struct dm_user_message msg;
-+		__u64 type;
-+		char *base;
-+
-+		if (read_all(control_fd, &msg, sizeof(msg)) < 0) {
-+			if (errno == ENOTBLK)
-+				return (void *)(RET_PASS);
-+
-+			perror("unable to read msg");
-+			return (void *)(RET_FAIL);
-+		}
-+
-+		base = store + msg.sector * SECTOR_SIZE;
-+		if (base + msg.len > store + context->block_bytes) {
-+			fprintf(stderr, "access out of bounds\n");
-+			return (void *)(RET_FAIL);
-+		}
-+
-+		type = msg.type;
-+		switch (type) {
-+		case DM_USER_REQ_MAP_READ:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			break;
-+		case DM_USER_REQ_MAP_WRITE:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			if (read_all(control_fd, base, msg.len) < 0) {
-+				if (errno == ENOTBLK)
-+					return (void *)(RET_PASS);
-+
-+				perror("unable to read buf");
-+				return (void *)(RET_FAIL);
-+			}
-+			break;
-+		case DM_USER_REQ_MAP_FLUSH:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			sync();
-+			break;
-+		default:
-+			msg.type = DM_USER_RESP_UNSUPPORTED;
-+			break;
-+		}
-+
-+		if (write_all(control_fd, &msg, sizeof(msg)) < 0) {
-+			if (errno == ENOTBLK)
-+				return (void *)(RET_PASS);
-+
-+			perror("unable to write msg");
-+			return (void *)(RET_FAIL);
-+		}
-+
-+		if (type == DM_USER_REQ_MAP_READ) {
-+			if (write_all(control_fd, base, msg.len) < 0) {
-+				if (errno == ENOTBLK)
-+					return (void *)(RET_PASS);
-+
-+				perror("unable to write buf");
-+				return (void *)(RET_FAIL);
-+			}
-+		}
-+	}
-+
-+	/* The daemon doesn't actully terminate for this test. */
-+	perror("Unable to read from control device");
-+	return (void *)(RET_FAIL);
-+}
-+
-+void usage(char *prog)
-+{
-+	printf("Usage: %s\n", prog);
-+	printf("  -h			Display this help message\n");
-+	printf("  -v L			Verbosity level: %d=QUIET %d=CRITICAL %d=INFO\n",
-+	       VQUIET, VCRITICAL, VINFO);
-+	printf("  -c <control dev>	Control device to use for the test\n");
-+	printf("  -s <sectors>		The number of sectors in the device\n");
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int ret = RET_PASS;
-+	int done = 0;
-+	int c;
-+	struct test_context context = {
-+		.control_dev	= NULL,
-+		.block_bytes	= 0,
-+		.worker_count   = 1,
-+		.backing_path   = NULL,
-+	};
-+	pthread_t daemon[MAX_WORKER_COUNT];
-+	void *pthread_ret;
-+
-+	prctl(PR_SET_IO_FLUSHER, 0, 0, 0, 0);
-+
-+	while ((c = getopt(argc, argv, "h:v:c:s:w:b:")) != -1) {
-+		switch (c) {
-+		case 'h':
-+			usage(basename(argv[0]));
-+			exit(0);
-+		case 'v':
-+			log_verbosity(atoi(optarg));
-+			break;
-+		case 'c':
-+			context.control_dev = strdup(optarg);
-+			break;
-+		case 's':
-+			context.block_bytes = atoi(optarg) * SECTOR_SIZE;
-+			break;
-+		case 'w':
-+			context.worker_count = atoi(optarg);
-+			break;
-+		case 'b':
-+			context.backing_path = strdup(optarg);
-+			break;
-+		default:
-+			usage(basename(argv[0]));
-+			exit(1);
-+		}
-+	}
-+
-+	ksft_print_header();
-+	ksft_set_plan(1);
-+	ksft_print_msg("%s: block_bytes=%zu\n",
-+		       basename(argv[0]),
-+		       context.block_bytes);
-+
-+	ret = RET_PASS;
-+
-+	if (context.backing_path == NULL) {
-+		ksft_print_msg("Using an in-memory backing store\n");
-+		context.store = malloc(context.block_bytes);
-+		for (size_t i = 0; i < context.block_bytes/sizeof(size_t); ++i)
-+			((size_t *)(context.store))[i] = i;
-+	} else {
-+		int backing_fd = open(context.backing_path, O_RDWR);
-+
-+		ksft_print_msg("Using %s as a backing store\n", context.backing_path);
-+		if (backing_fd < 0) {
-+			perror("Unable to open backing store");
-+			ksft_print_msg("Unable to open backing store %s\n", context.backing_path);
-+			return RET_FAIL;
-+		}
-+
-+		context.store = mmap(NULL, context.block_bytes,
-+				     PROT_READ | PROT_WRITE, MAP_SHARED,
-+				     backing_fd, 0);
-+	}
-+
-+	for (size_t i = 0; i < context.worker_count; ++i)
-+		if (pthread_create(&daemon[i], NULL, &simple_daemon, &context) < 0)
-+			ret = RET_ERROR;
-+
-+	while (!done)  {
-+		for (size_t i = 0; i < context.worker_count; ++i) {
-+			if (pthread_tryjoin_np(daemon[i], &pthread_ret) == 0) {
-+				if (pthread_ret != RET_PASS)
-+					ret = RET_ERROR;
-+				done = 1;
-+			}
-+		}
-+
-+		sleep(1);
-+	}
-+
-+	print_result(basename(argv[0]), ret);
-+	exit(ret);
-+}
-diff --git a/tools/testing/selftests/dm-user/daemon-short.c b/tools/testing/selftests/dm-user/daemon-short.c
-new file mode 100644
-index 000000000000..40fd114cb390
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/daemon-short.c
-@@ -0,0 +1,196 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright 2020 Google, Inc
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <getopt.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <poll.h>
-+#include <pthread.h>
-+#include <linux/dm-user.h>
-+#include <sys/prctl.h>
-+#include "logging.h"
-+
-+#define SECTOR_SIZE 512
-+
-+#define MAX(a, b) ((a) > (b) ? (a) : (b))
-+
-+int write_all(int fd, void *buf, size_t len)
-+{
-+	char *buf_c = buf;
-+	ssize_t total = 0;
-+	ssize_t once;
-+
-+	while (total < len) {
-+		size_t max = len - total;
-+
-+		if (max > 3)
-+			max = max / 3;
-+
-+		once = write(fd, buf_c + total, max);
-+		if (once <= 0)
-+			return once;
-+		total += once;
-+	}
-+
-+	return total;
-+}
-+
-+int read_all(int fd, void *buf, size_t len)
-+{
-+	char *buf_c = buf;
-+	ssize_t total = 0;
-+	ssize_t once;
-+
-+	while (total < len) {
-+		size_t max = len - total;
-+
-+		if (max > 3)
-+			max = max / 3;
-+
-+		once = read(fd, buf_c + total, max);
-+		if (once <= 0)
-+			return once;
-+		total += once;
-+	}
-+
-+	return total;
-+}
-+
-+int simple_daemon(char *control_dev,
-+		  size_t block_bytes,
-+		  char *store)
-+
-+{
-+	int control_fd = open(control_dev, O_RDWR);
-+
-+	if (control_fd < 0) {
-+		ksft_print_msg("Unable to open control device %s\n", control_dev);
-+		return RET_FAIL;
-+	}
-+
-+	while (1) {
-+		struct dm_user_message msg;
-+		__u64 type;
-+		char *base;
-+
-+		if (read_all(control_fd, &msg, sizeof(msg)) < 0) {
-+			if (errno == ENOTBLK)
-+				return RET_PASS;
-+
-+			perror("unable to read msg");
-+			return RET_FAIL;
-+		}
-+
-+		base = store + msg.sector * SECTOR_SIZE;
-+		if (base + msg.len > store + block_bytes) {
-+			fprintf(stderr, "access out of bounds\n");
-+			return RET_FAIL;
-+		}
-+
-+		type = msg.type;
-+		switch (type) {
-+		case DM_USER_REQ_MAP_WRITE:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			if (read_all(control_fd, base, msg.len) < 0) {
-+				if (errno == ENOTBLK)
-+					return RET_PASS;
-+
-+				perror("unable to read buf");
-+				return RET_FAIL;
-+			}
-+			break;
-+		case DM_USER_REQ_MAP_FLUSH:
-+			/* Nothing extra to do on flush, we're in memory. */
-+		case DM_USER_REQ_MAP_READ:
-+			msg.type = DM_USER_RESP_SUCCESS;
-+			break;
-+		default:
-+			msg.type = DM_USER_RESP_UNSUPPORTED;
-+			break;
-+		}
-+
-+		if (write_all(control_fd, &msg, sizeof(msg)) < 0) {
-+			if (errno == ENOTBLK)
-+				return RET_PASS;
-+
-+			perror("unable to write msg");
-+			return RET_FAIL;
-+		}
-+
-+		if (type == DM_USER_REQ_MAP_READ) {
-+			if (write_all(control_fd, base, msg.len) < 0) {
-+				if (errno == ENOTBLK)
-+					return RET_PASS;
-+
-+				perror("unable to write buf");
-+				return RET_FAIL;
-+			}
-+		}
-+	}
-+
-+	/* The daemon doesn't actully terminate for this test. */
-+	perror("Unable to read from control device");
-+	return RET_FAIL;
-+}
-+
-+void usage(char *prog)
-+{
-+	printf("Usage: %s\n", prog);
-+	printf("  -h			Display this help message\n");
-+	printf("  -v L			Verbosity level: %d=QUIET %d=CRITICAL %d=INFO\n",
-+	       VQUIET, VCRITICAL, VINFO);
-+	printf("  -c <control dev>	Control device to use for the test\n");
-+	printf("  -s <sectors>		The number of sectors in the device\n");
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int ret = RET_PASS;
-+	int c;
-+	char *control_dev = NULL;
-+	long block_bytes = 1024;
-+	char *store;
-+
-+	prctl(PR_SET_IO_FLUSHER, 0, 0, 0, 0);
-+
-+	while ((c = getopt(argc, argv, "h:v:c:s:")) != -1) {
-+		switch (c) {
-+		case 'h':
-+			usage(basename(argv[0]));
-+			exit(0);
-+		case 'v':
-+			log_verbosity(atoi(optarg));
-+			break;
-+		case 'c':
-+			control_dev = strdup(optarg);
-+			break;
-+		case 's':
-+			block_bytes = atoi(optarg) * SECTOR_SIZE;
-+			break;
-+		default:
-+			usage(basename(argv[0]));
-+			exit(1);
-+		}
-+	}
-+
-+	ksft_print_header();
-+	ksft_set_plan(1);
-+	ksft_print_msg("%s: block_bytes=%zu\n",
-+		       basename(argv[0]),
-+		       block_bytes);
-+
-+	store = malloc(block_bytes);
-+	for (size_t i = 0; i < block_bytes/sizeof(size_t); ++i)
-+		((size_t *)(store))[i] = i;
-+
-+	ret = simple_daemon(control_dev, block_bytes, store);
-+
-+	print_result(basename(argv[0]), ret);
-+	exit(ret);
-+	return ret;
-+}
-diff --git a/tools/testing/selftests/dm-user/fio-rand-read-1G.fio b/tools/testing/selftests/dm-user/fio-rand-read-1G.fio
-new file mode 100644
-index 000000000000..f971483e0e27
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/fio-rand-read-1G.fio
-@@ -0,0 +1,16 @@
-+; fio-rand-read.job for fiotest
-+
-+[global]
-+name=fio-rand-read-1G
-+filename=fio-rand-read-1G
-+rw=randread
-+bs=4K
-+direct=0
-+numjobs=1
-+time_based=1
-+runtime=30
-+
-+[file1]
-+size=1G
-+ioengine=io_uring
-+iodepth=16
-diff --git a/tools/testing/selftests/dm-user/fio-verify-1G.fio b/tools/testing/selftests/dm-user/fio-verify-1G.fio
-new file mode 100644
-index 000000000000..4b626271ce7c
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/fio-verify-1G.fio
-@@ -0,0 +1,10 @@
-+# The most basic form of data verification. Write the device randomly
-+# in 4K chunks, then read it back and verify the contents.
-+[write-and-verify]
-+rw=randwrite
-+bs=4k
-+ioengine=libaio
-+iodepth=16
-+direct=1
-+verify=crc32c
-+size=1G
-diff --git a/tools/testing/selftests/dm-user/harness-fio.sh b/tools/testing/selftests/dm-user/harness-fio.sh
-new file mode 100755
-index 000000000000..4b95c9f5efd8
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/harness-fio.sh
-@@ -0,0 +1,45 @@
-+#!/bin/sh
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright 2020 Google, Inc
-+
-+# Just a fixed size for now, but it's passed to the tests and they're supposed
-+# to respect it.
-+SIZE=1024
-+BLOCK=kselftest-dm-user-block
-+CONTROL=kselftest-dm-user-control
-+unset FIO
-+
-+while [ x"$1" != x"--" ]
-+do
-+    case "$1" in
-+    "-s")    SIZE="$2";                             shift 2;;
-+    "-f")    FIO="$2";                              shift 2;;
-+    *)       echo "$0: unknown argument $1" >&2;    exit  1;;
-+    esac
-+done
-+shift
-+
-+# Run the benchmark again via dm-user, to see what the overhead is.
-+dmsetup create $BLOCK << EOF
-+0 $SIZE user 0 $SIZE $CONTROL
-+EOF
-+
-+dmsetup resume $BLOCK
-+
-+"$@" -s $SIZE -c /dev/dm-user/$CONTROL &
-+
-+yes | mkfs.ext2 /dev/mapper/$BLOCK
-+mount /dev/mapper/$BLOCK /mnt
-+cp "$FIO" /mnt/benchmark.fio
-+(cd /mnt; fio benchmark.fio)
-+umount /mnt
-+
-+# Mount again and read the whole thing, just to see if there's any corruption.
-+mount /dev/mapper/$BLOCK /mnt
-+find /mnt -type f | xargs cat > /dev/null
-+umount /mnt
-+
-+dmsetup remove $BLOCK
-+
-+# Make sure the daemon actually responds to DM closing it.
-+wait
-diff --git a/tools/testing/selftests/dm-user/harness-fsstress.sh b/tools/testing/selftests/dm-user/harness-fsstress.sh
-new file mode 100755
-index 000000000000..265c0ff636ca
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/harness-fsstress.sh
-@@ -0,0 +1,44 @@
-+#!/bin/sh
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright 2020 Google, Inc
-+
-+BLOCK=kselftest-dm-user-block
-+CONTROL=kselftest-dm-user-control
-+unset SIZE
-+unset NPROC
-+unset NOP
-+
-+while [ x"$1" != x"--" ]
-+do
-+    case "$1" in
-+    "-s")    SIZE="$2";                             shift 2;;
-+    "-n")    NOP="$2";                              shift 2;;
-+    "-p")    NPROC="$2";                            shift 2;;
-+    *)       echo "$0: unknown argument $1" >&2;    exit  1;;
-+    esac
-+done
-+shift
-+
-+# Runs the fs stress tests
-+dmsetup create $BLOCK << EOF
-+0 $SIZE user 0 $SIZE $CONTROL
-+EOF
-+
-+dmsetup resume $BLOCK
-+
-+"$@" -s $SIZE -c /dev/dm-user/$CONTROL &
-+
-+yes | mkfs.ext2 /dev/mapper/$BLOCK
-+mount /dev/mapper/$BLOCK /mnt
-+/usr/xfstests/ltp/fsstress -d /mnt/ -n "$NOP" -p "$NPROC"
-+umount /mnt
-+
-+# Mount again and read the whole thing, just to see if there's any corruption.
-+mount /dev/mapper/$BLOCK /mnt
-+find /mnt -type f | xargs cat > /dev/null
-+umount /mnt
-+
-+dmsetup remove $BLOCK
-+
-+# Make sure the daemon actually responds to DM closing it.
-+wait
-diff --git a/tools/testing/selftests/dm-user/include/logging.h b/tools/testing/selftests/dm-user/include/logging.h
-new file mode 100644
-index 000000000000..874c69ce5cce
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/include/logging.h
-@@ -0,0 +1,148 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/******************************************************************************
-+ *
-+ *   Copyright © International Business Machines  Corp., 2009
-+ *
-+ * DESCRIPTION
-+ *      Glibc independent futex library for testing kernel functionality.
-+ *
-+ * AUTHOR
-+ *      Darren Hart <dvhart@linux.intel.com>
-+ *
-+ * HISTORY
-+ *      2009-Nov-6: Initial version by Darren Hart <dvhart@linux.intel.com>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef _LOGGING_H
-+#define _LOGGING_H
-+
-+#include <stdio.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <linux/futex.h>
-+#include "kselftest.h"
-+
-+/*
-+ * Define PASS, ERROR, and FAIL strings with and without color escape
-+ * sequences, default to no color.
-+ */
-+#define ESC 0x1B, '['
-+#define BRIGHT '1'
-+#define GREEN '3', '2'
-+#define YELLOW '3', '3'
-+#define RED '3', '1'
-+#define ESCEND 'm'
-+#define BRIGHT_GREEN ESC, BRIGHT, ';', GREEN, ESCEND
-+#define BRIGHT_YELLOW ESC, BRIGHT, ';', YELLOW, ESCEND
-+#define BRIGHT_RED ESC, BRIGHT, ';', RED, ESCEND
-+#define RESET_COLOR ESC, '0', 'm'
-+static const char PASS_COLOR[] = {BRIGHT_GREEN, ' ', 'P', 'A', 'S', 'S',
-+				  RESET_COLOR, 0};
-+static const char ERROR_COLOR[] = {BRIGHT_YELLOW, 'E', 'R', 'R', 'O', 'R',
-+				   RESET_COLOR, 0};
-+static const char FAIL_COLOR[] = {BRIGHT_RED, ' ', 'F', 'A', 'I', 'L',
-+				  RESET_COLOR, 0};
-+static const char INFO_NORMAL[] = " INFO";
-+static const char PASS_NORMAL[] = " PASS";
-+static const char ERROR_NORMAL[] = "ERROR";
-+static const char FAIL_NORMAL[] = " FAIL";
-+const char *INFO = INFO_NORMAL;
-+const char *PASS = PASS_NORMAL;
-+const char *ERROR = ERROR_NORMAL;
-+const char *FAIL = FAIL_NORMAL;
-+
-+/* Verbosity setting for INFO messages */
-+#define VQUIET    0
-+#define VCRITICAL 1
-+#define VINFO     2
-+#define VMAX      VINFO
-+int _verbose = VCRITICAL;
-+
-+/* Functional test return codes */
-+#define RET_PASS   0
-+#define RET_ERROR -1
-+#define RET_FAIL  -2
-+
-+/**
-+ * log_color() - Use colored output for PASS, ERROR, and FAIL strings
-+ * @use_color:	use color (1) or not (0)
-+ */
-+void log_color(int use_color)
-+{
-+	if (use_color) {
-+		PASS = PASS_COLOR;
-+		ERROR = ERROR_COLOR;
-+		FAIL = FAIL_COLOR;
-+	} else {
-+		PASS = PASS_NORMAL;
-+		ERROR = ERROR_NORMAL;
-+		FAIL = FAIL_NORMAL;
-+	}
-+}
-+
-+/**
-+ * log_verbosity() - Set verbosity of test output
-+ * @verbose:	Enable (1) verbose output or not (0)
-+ *
-+ * Currently setting verbose=1 will enable INFO messages and 0 will disable
-+ * them. FAIL and ERROR messages are always displayed.
-+ */
-+void log_verbosity(int level)
-+{
-+	if (level > VMAX)
-+		level = VMAX;
-+	else if (level < 0)
-+		level = 0;
-+	_verbose = level;
-+}
-+
-+/**
-+ * print_result() - Print standard PASS | ERROR | FAIL results
-+ * @ret:	the return value to be considered: 0 | RET_ERROR | RET_FAIL
-+ *
-+ * print_result() is primarily intended for functional tests.
-+ */
-+void print_result(const char *test_name, int ret)
-+{
-+	switch (ret) {
-+	case RET_PASS:
-+		ksft_test_result_pass("%s\n", test_name);
-+		ksft_print_cnts();
-+		return;
-+	case RET_ERROR:
-+		ksft_test_result_error("%s\n", test_name);
-+		ksft_print_cnts();
-+		return;
-+	case RET_FAIL:
-+		ksft_test_result_fail("%s\n", test_name);
-+		ksft_print_cnts();
-+		return;
-+	}
-+}
-+
-+/* log level macros */
-+#define info(message, vargs...) \
-+do { \
-+	if (_verbose >= VINFO) \
-+		fprintf(stderr, "\t%s: "message, INFO, ##vargs); \
-+} while (0)
-+
-+#define error(message, err, args...) \
-+do { \
-+	if (_verbose >= VCRITICAL) {\
-+		if (err) \
-+			fprintf(stderr, "\t%s: %s: "message, \
-+				ERROR, strerror(err), ##args); \
-+		else \
-+			fprintf(stderr, "\t%s: "message, ERROR, ##args); \
-+	} \
-+} while (0)
-+
-+#define fail(message, args...) \
-+do { \
-+	if (_verbose >= VCRITICAL) \
-+		fprintf(stderr, "\t%s: "message, FAIL, ##args); \
-+} while (0)
-+
-+#endif
-diff --git a/tools/testing/selftests/dm-user/run.sh b/tools/testing/selftests/dm-user/run.sh
-new file mode 100755
-index 000000000000..2ed2581e4a57
---- /dev/null
-+++ b/tools/testing/selftests/dm-user/run.sh
-@@ -0,0 +1,74 @@
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright 2020 Palmer Dabbelt <palmerdabbelt@google.com>
-+
-+# Top-level run script for dm-user kernel self tests.  This just runs a bunch
-+# of different tests back to back, relying on the kernel selftest infrastructure
-+# to tease out the success/failure of each.  The tests all use the same global
-+# directories and such, so it's not like there's a whole lot
-+#
-+# The actual test code should be fairly portable, but the scripts that run it
-+# aren't.  See the README for more information.
-+
-+# Runs various FIO scripts against an ext2-based filesystem backed by dm-user.
-+if test -e /usr/bin/fio
-+then
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-example
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-short
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w   1
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w   4
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w  16
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w  64
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w 256
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w   1 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w   4 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w  16 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w  64 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-rand-read-1G.fio -- ./daemon-parallel -w 256 -b /dev/vdb
-+
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-example
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-short
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w   1
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w   4
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w  16
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w  64
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w 256
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w   1 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w   4 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w  16 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w  64 -b /dev/vdb
-+    ./harness-fio.sh      -s 3000000 -f fio-verify-1G.fio    -- ./daemon-parallel -w 256 -b /dev/vdb
-+else
-+    echo "Unable to find /usr/bin/fio"
-+fi
-+
-+# Runs fsstress from xfstests against an ext2-based filesystem backed by
-+# dm-user.
-+if test -e /usr/xfstests/ltp/fsstress
-+then
-+    ./harness-fsstress.sh -s 3000000 -p   1 -n 10000 -- ./daemon-example
-+    ./harness-fsstress.sh -s 3000000 -p   4 -n 10000 -- ./daemon-example
-+    ./harness-fsstress.sh -s 3000000 -p  16 -n 10000 -- ./daemon-example
-+    ./harness-fsstress.sh -s 3000000 -p  64 -n 10000 -- ./daemon-example
-+    ./harness-fsstress.sh -s 3000000 -p 256 -n 10000 -- ./daemon-example
-+
-+    ./harness-fsstress.sh -s 3000000 -p   1 -n 10000 -- ./daemon-short
-+    ./harness-fsstress.sh -s 3000000 -p   4 -n 10000 -- ./daemon-short
-+    ./harness-fsstress.sh -s 3000000 -p  16 -n 10000 -- ./daemon-short
-+    ./harness-fsstress.sh -s 3000000 -p  64 -n 10000 -- ./daemon-short
-+    ./harness-fsstress.sh -s 3000000 -p 256 -n 10000 -- ./daemon-short
-+
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w    1
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w    4
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w   16
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w   64
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w  256
-+
-+    ./harness-fsstress.sh -s 3000000 -p  1 -n 10000 -- ./daemon-parallel -w    1 -b /dev/vdb
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w    1 -b /dev/vdb
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w    4 -b /dev/vdb
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w   16 -b /dev/vdb
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w   64 -b /dev/vdb
-+    ./harness-fsstress.sh -s 3000000 -p 64 -n 10000 -- ./daemon-parallel -w  256 -b /dev/vdb
-+else
-+    echo "Unable to find /usr/xfstests/ltp/fsstress"
-+fi
--- 
-2.29.2.454.gaff20da3a2-goog
-
+On 12/3/20 08:24, Christoph Hellwig wrote:=0A=
+> The block_sleeprq tracepoint was only used by the legacy request code.=0A=
+> Remove it now that the legacy request code is gone.=0A=
+>=0A=
+> Signed-off-by: Christoph Hellwig <hch@lst.de>=0A=
+> Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
+> Reviewed-by: Hannes Reinecke <hare@suse.de>=0A=
+=0A=
+Looks good.=0A=
+=0A=
+Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
+=0A=
