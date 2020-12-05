@@ -2,109 +2,171 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E176C433FE
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 21:02:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3868FC4361A
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 21:36:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD55B230F9
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 21:02:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F093B229C5
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 21:36:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726893AbgLEVCa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 5 Dec 2020 16:02:30 -0500
-Received: from mout.perfora.net ([74.208.4.197]:47773 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725270AbgLEVCa (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 5 Dec 2020 16:02:30 -0500
-Received: from [192.168.1.23] ([72.94.51.172]) by mrelay.perfora.net
- (mreueus004 [74.208.5.2]) with ESMTPSA (Nemesis) id 1N7RQ1-1k6Qew08K5-017oAM
- for <linux-raid@vger.kernel.org>; Sat, 05 Dec 2020 22:01:19 +0100
-Subject: Re: Disk identifiers
-To:     list Linux RAID <linux-raid@vger.kernel.org>
-References: <5B155FE8-2761-47FF-BDBA-F5AE3A9BC396@meddatainc.com>
- <24523.11681.86857.449384@cyme.ty.sabi.co.uk>
- <3302e569-5ac4-1738-1d9f-9f1db66bfcee@meddatainc.com>
- <24523.55982.520696.570767@cyme.ty.sabi.co.uk>
-From:   H <agents@meddatainc.com>
-Message-ID: <362dc592-d2e4-d8a1-b167-a1e28a22c735@meddatainc.com>
-Date:   Sat, 5 Dec 2020 16:01:18 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1726120AbgLEVf6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 5 Dec 2020 16:35:58 -0500
+Received: from [41.80.191.118] ([41.80.191.118]:64096 "EHLO
+        premium81-4.web-hosting.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726011AbgLEVf6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Dec 2020 16:35:58 -0500
+X-Greylist: delayed 458 seconds by postgrey-1.27 at vger.kernel.org; Sat, 05 Dec 2020 16:35:54 EST
+Message-ID: <a56234986da5fef2d5f04615e1276d61404169aa@documents.co.ke>
+Reply-To: "Kenya Business Plans" <info@documents.co.ke>
+From:   "Kenya Business Plans" <info@documents.co.ke>
+To:     <linux-raid@vger.kernel.org>
+Subject: Customized Kenya Business Plans for only Kshs 999/=
+Date:   Sun, 6 Dec 2020 00:27:40 +0300
+Organization: Kenya Business Plans
 MIME-Version: 1.0
-In-Reply-To: <24523.55982.520696.570767@cyme.ty.sabi.co.uk>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Provags-ID: V03:K1:9ENWqVWg8vMwDJsOHC4+j2x5w+BhUm22jkpULBV8uP7Hh2vgohU
- 5iclqxIAsAWYMdGjKWnAQkiEFXmRJCC0qUysHnZwGE9XRGoiKmdkqrZbDBpf7kMSISWI4JX
- NiERL5U/kFHlYd734prgwNwCe80FzTkCPF3pTiAtt6ekkKubvpu38Fyc1fUXpAkuYidIVdV
- 74TVkyVJ/q91yeF/uTekA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:0z8mwKe7AQA=:DVurfmwZj40CbBsmcU0aI3
- bx4njNc64+zodz6ymaMMQpAHI2MdFmZNDRBBe0PEg7GByS/NB0ctbY2bSuaIMLFeM/zrSrP0q
- mEIicmzN/QSEMYW744I1AVgli/XSrd4ioFWxGP9nNXC+gh8vqJZnu4VU3/LfyAEXNh6Fnp7YF
- 3YWSKd5GXwj8FeK1xokOf4r9x/tEaF4+H28P39Vf50AUHEXPgToYwiiPThe5dwIKiJJl7XM7O
- E9jHnUu9AgXMbnbkWpgQwINo1dSLTUvu7qwxrla0CBvvmj8pPMKomES/qzCNlo9rEjJgYFpss
- YND55MEg5k47vovnJmPuNMTL/wVM9iSkuNloBBoy4Db13x1yR55m9kZeh5WaiVYi24hd1jZFt
- ZbYAMyBigGzzBOkPvcOiRKgcRUCkn67R3PBZZuIw6EkM1ekPql9h5UZobRfxOLqjwpQpuOVxL
- TwsSIpW8wQ==
+Content-Type: text/plain; charset="utf-8";
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; d=documents.co.ke; s=default;
+        c=relaxed/relaxed; t=1607203660;
+        h=message-id:from:to:subject:date:mime-version;
+        bh=aeQpEq1qrudO78jK9jHltlBWB3mcLkf+SMn8FyCxkcE=;
+        b=NpNSvFqOfc7N6w+By+5p2Alz1Fv5+f7XTotyteJzOlDUu3Z9ARVuCsbCR6WSCz
+        maILuCm9xotlxbu503Xs1pfKizSQ1+zTX9LYzC9lLp9YD6IDis+NoBaFgXOSGZM1
+        v0yAwxMMbcFLNgF6ICrhnv5K0lOh0Cj+UGWAx7rAUSmVGZIfdAWywaMD7n/4mdLx
+        SuwaZ1fY1ydDbQSYbQD+ss9lRFxcqGT7zmBc/pYTVQQSRc7lojRmCoYoHW0uoqJf
+        Hv354XXc5+w6cq2SFCbtaoLdZLutOx8A2Xy0K13mcMtjGef9ba6fN8BvDZjqd+gn
+        2YkOlIgmCvJ0nujXDMEzdQ3w==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/05/2020 02:08 PM, Peter Grandi wrote:
-> [...]
->
->> I was referring to what fdisk -l calls "disk
->> identifier". [...]
-> That's not a very fruitful approach :-). The real disk
-> identifiers are the serial number or WWN.
->
-> What 'fdisk' reports is the identifier of the "label" (called by
-> 'fdisk' "Disklabel", which is a metadata block which usually
-> contains the partition table, and of which there are several
-> types).
->
-> For MBR/DOS type labels that is a pretty obscure field at offset
-> 0x1B8 on the disk, and it is a 32b field. I personally use it
-> to store 4 characters, but it can be any 32-bit value.
->
-> That value matters a lot more to MS-Windows than to GNU/Linux,
-> which basically ignores it. I find that value used under
-> '/dev/disk/by-partuuid/' where it is used to prefix the number
-> of the partition for DOS/MBR labeled disks. BTW the entries
-> under '/dev/disk/' seem to me a "legacy" mess.
->
-> GPT/EFI labels instead have 128b fields which are usually filled
-> with UUID-structured random values, and those are not ignored
-> and usually appear under '/dev/disk/by-uuid'.
->
-> For MD raid sets I like to use GPT labels and refer to RAID set
-> members by partition name, where I give those partitions
-> meaningful proper-name prefixes. But that's another story.
+ =20
+Customized Kenya Business Plans
+Invest wisely by getting street smart market surveys, guides and info pac=
+ks with the sweet or harsh reality of the market.
+Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Com=
+petition, Survival rate, Differentiation, Capital, Process, Equipment, Su=
+ppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tric=
+ks & so so much more.
 
-This is the output from fdisk -l where it is called "Disk identifier":
+We have comprehensive business proposals in these categories:
 
-Disk /dev/sda: 256.1 GB, 256060514304 bytes, 500118192 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 4096 bytes
-I/O size (minimum/optimal): 4096 bytes / 4096 bytes
-Disk label type: gpt
-Disk identifier: 00000000-0000-0000-0000-000000000000
+Agrovet
+Auto Glass Retail -17 Pages
+Bank Agency Fact-sheet
+Beef Butchery - 31 pages
+Boda Boda
+Bottled Water - 53 Pages
+Building Materials Yard - Dynamics & Case Study
+Car Wash Quick Guide
+Chapati Wholesale (Case Study)
+Chemist -Retail - 31 Pages
+Chicken Butchery
+Chips & Chicken Cafe - 31 Pages
+Concreting ( Koroga) Equipment Leasing - 29 Pages
+Corn Chips Snacks Making - 37 Pages
+Cosmetics Retail - 30 Pages
+Cosmetics Retail -30 Pages
+Courier - 35 Pages
+Cyber Cafe
+Day-care
+Electrical Parts Retail - 27 Pages
+Executive Barber Shop - 42 Pages
+Fish Supply - Nairobi Hotels Quick Overview
+Fish Supply - Nairobi Hotels Quick Survey
+Flowers - Nairobi (Retail/ Wholesale )
+Free Advertiser Magazine ( Quick Guide & Case Study )
+Fruit / Juice Parlour
+Gas (LPG) Retail
+Gift Service
+Gym - 38 pages
+Hair Salon
+Ice Lollies Making
+Ice Lollies Making ( Quick Guide )
+Imaging Clinic (Ultrasound and X-ray) - 46 Pages
+Inner-wear Retail - 27 Pages
+Laundry - 31 pages
+Leather: Skins Trade -26 Pages
+'Local' Bar - 48 Pages
+Maize Milling (Unga wa Ugali)
+Milk Distributorship
+Mitumba Clothes
+Money Lending - Informal Overview
+Motorcycle Spare Parts Retail -33 Pages
+Movie Shop
+M-pesa Sub Agent
+Nails (Misumari) Making - 60 Pages
+Non-Woven Bags Making -39 Pages
+Petrol Station (Independent) - 47 Pages
+Plumbing Hardware Retail - 35 Pages *New
+Primary School Business - 38 Pages
+Printing Business - 55 Pages
+Real Estate Agency - 42 Pages
+Second Hand Novels (R)
+Selling Cake Boxes
+Selling Cookies
+Senator Keg Bar
+Slot Machines Quick Guide
+Small Scale FMCG Distribution - New
+Smokies & Egg Vending
+Supermarket - 75 Pages
+Supermarket Shelf Space Guide
+Tents & Chairs Leasing
+Tiles Retail Business Fact-sheet
+Timber Yard - 32 Pages
+Tomato ( Greenhouse ) - Quick Market & Production Guide
+Tyres Retail Business - 29 Pages
 
-and the output from another disk:
+Invest wisely in 2020 by getting street smart market surveys with:
+- Market Analysis
+- Step by step establishing Process
+- Licenses - Issuing authority, cost, requirements
+- Equipment - Suppliers, Considerations, Cost
+- Other requirements
+- Suppliers & Prices
+- Raw Materials
+- Buying Selling Prices
+- Production Costs
+- Operational Costs
+- Day to day Operations
+- Revenue & Margins
+- Sample wholesale retail prices
+- Case Studies
+- Manpower
+- Capital breakdown
+- Opportunities
+- Competition
+- Surviving & Thriving
+- Analysis, figures, observations, dos & don'ts
+- Trends ,Tips, Tricks and so much more.
 
-Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes, 3907029168 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk label type: gpt
-Disk identifier: EF1A3010-0A15-5A4B-A6FC-1B0EA869D0A7
+To Download a Sample Business Plan Copy and paste the link below to your =
+browser
 
-Thus the disk identifier in the first case is not, as I had mentioned seeing in my first e-mail, something like 0x12345678, but rather a UUID-like number.
+https://drive.google.com/open?id=3D1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
 
-Should I change the disk identifier for the first disk to something else than all-zeroes? And, if so, should I use a UUID-like number since fdisk presents it as such or should I use a 8-character string?
+The whole package of 65 guides above is available Offer Price @ Kshs. 999=
+. We are only selling the guides as a package.
 
-I
+To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931=
+.
 
+On payment kindly forward the Mpesa payment confirmation text and your em=
+ail address to +254 721 351 269.
+
+We deliver via email within 15 minutes of payment.
+
+TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Les=
+s Risk!
+
+Kind Regards;
+
+
+George K. Mariene
+Manager - Sales & Marketing
+Kenya Business Plans Limited
++254721351269 | +254707559080
+78 Brookside Drive | Nairobi | Kenya
