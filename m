@@ -2,97 +2,55 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B12C4167B
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Dec 2020 16:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD414C433FE
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 06:07:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70A8C2054F
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Dec 2020 16:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EC4822D3E
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 06:07:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730896AbgLDQnn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Dec 2020 11:43:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58250 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728382AbgLDQnm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Dec 2020 11:43:42 -0500
-Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761AEC061A54
-        for <linux-raid@vger.kernel.org>; Fri,  4 Dec 2020 08:43:02 -0800 (PST)
-Received: by mail-il1-x142.google.com with SMTP id k8so5764581ilr.4
-        for <linux-raid@vger.kernel.org>; Fri, 04 Dec 2020 08:43:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=eMCK196yGD9HEmztT5X4HDwb0AlO+qvFoU6onkVpAVY=;
-        b=m3sqnXWJeTAd3qQUF1d9wJyXwHu7JxXcC6uKIzKnlo7TpnJ0vYQXk+eWhirNC1qNc6
-         aWtFXzQOh0tidKwXqU80pwMzIT8ZRZt5PRaxJSJc8E29JFtApk6BEQdYW7hsB24li7Wz
-         GaHvnlkDkAXaS5vCx5OsdA8Gdjg2fKCwfxWclRwxoS6t079ff5UktFuwRsCmmeiSXiuT
-         xW/GuQxNIV2YBOU7ho2AFYAEGF1BA6L5NjXH97l1WWxaDgleOwbf8TG5h9LgnhjdG/OI
-         JRD43kLpWzFWbCzhBfc/Q4Pv6ykA/JlxFPWiKSwSGdMJVYAl1gBtHvq4FoMJiyhXaw3Z
-         plEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=eMCK196yGD9HEmztT5X4HDwb0AlO+qvFoU6onkVpAVY=;
-        b=LqphFTIR4vBYF2hoiv4VfOON8MiXfLlP0MGMuktx4D93h9zEuS6RCqV7orJ2ywOcpd
-         EOasZjtLVxvIQQc16vgGtIW/CixojV985pE3baCWU5SMFc0DMwI1Sxwlov2b6S6g45Qr
-         7X/7RwfR7VbqJIdm9bTjKwrzTtGOF0UvvDPfOPr1WOxtUk4dcbu2dc4HqNEBWulf0qVf
-         oXm1MThLB2m6LuMtv327lIX6by7PhaycDTn3W2m+YVsJFvqy+q4HCzGgaFYeNHpk34P1
-         w8Zy/466FaIltZHnTpLu7hNExIh5JDIdoWP+leC8K+kXAEedI8oH3+lQk0OzD4buQsmL
-         xviw==
-X-Gm-Message-State: AOAM532lY3lb0IMxvJyzGdZu4t1AaytR5DU0tuOKq3bOko4R5KnsPw4S
-        MhYx1w21Wd500R9hIGKjOfG2pA==
-X-Google-Smtp-Source: ABdhPJzAzVGKZD0+jfQBEzVp6xMbQWg671BzhxHKVihCK0qVzrk8H6Zb94kitBpSOVrN+CsFf10McA==
-X-Received: by 2002:a92:58cb:: with SMTP id z72mr7331084ilf.104.1607100181830;
-        Fri, 04 Dec 2020 08:43:01 -0800 (PST)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id h1sm1874781ilj.8.2020.12.04.08.43.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 04 Dec 2020 08:43:01 -0800 (PST)
-Subject: Re: store a pointer to the block_device in struct bio (again)
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Tejun Heo <tj@kernel.org>, Coly Li <colyli@suse.de>,
-        Song Liu <song@kernel.org>, dm-devel@redhat.com,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-block@vger.kernel.org
-References: <20201201165424.2030647-1-hch@lst.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <285e5e82-2e9c-a1db-b9b6-b82ec95aea6d@kernel.dk>
-Date:   Fri, 4 Dec 2020 09:43:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726762AbgLEGHb convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 5 Dec 2020 01:07:31 -0500
+Received: from mout.perfora.net ([74.208.4.194]:45157 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726513AbgLEGHb (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 5 Dec 2020 01:07:31 -0500
+Received: from android-de2ab3c23f073453.home ([72.94.51.172]) by
+ mrelay.perfora.net (mreueus003 [74.208.5.2]) with ESMTPSA (Nemesis) id
+ 0MhBR9-1kY2SK3ru5-00MND5 for <linux-raid@vger.kernel.org>; Sat, 05 Dec 2020
+ 06:59:34 +0100
+Date:   Sat, 05 Dec 2020 00:59:30 -0500
+User-Agent: K-9 Mail for Android
 MIME-Version: 1.0
-In-Reply-To: <20201201165424.2030647-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Subject: Disk identifiers
+To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
+From:   H <agents@meddatainc.com>
+Message-ID: <5B155FE8-2761-47FF-BDBA-F5AE3A9BC396@meddatainc.com>
+X-Provags-ID: V03:K1:mbKm3qj1NmPsMIvcPuMnS9gSEvf1vXPe0fVdg+3jmdGETc0eqrE
+ vPcbLvlsUY3iJ39+Y0Ckv54r9WPR4WX/56j3sDoxPYwlUn5CYfh1oYFb7yQurM9ajPwWxQ1
+ p4HLUfSn0luUoGZDeiC0So4dl3/5uqd+4o4BL64iVbROZqGP+RVDPAjYQoUSs6cFjny57Mx
+ fEojn16SoF6rSgfuPNWKA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:gmFCPGCkmrU=:J4RznsPwcksZS3LSTYCBpX
+ 5BkRkQdWqsMo1lt8dtcWiCWp5hvKh3lyUOPCK6ba2RaxruEX+vkr0UZL27ZgHQoxw8iIZy7JR
+ 9wWy7IlXxbdpo3NfsQXqwyc8ZX6CVP9tGXY08uECyCN00kdfNVxkGhEC8ObNATXgIIcS/3+Uc
+ NwIHPxx7PdHmUYZYxHNHt48foj+SuXmT59QKvI/7DTK7svasXj2H+Ky2GLXHtRRDhZzup9WkI
+ OMrjSRjYLG8AXZcC7B7VWa00gKvqK54CeYs7ML2mVOkEiZCABP6bKzzkSXY/DYxjwC0+jsVk0
+ T9flUksrJEzPA36Kd8+lDSEj7N0S1E+comcCA+UUM6xwmb+oAQe7YHU6e5JuMLZltTpcro8yv
+ etcCfUsI2WST8qF3DNXYJbeGjGb1UNhvD+K6fTqLtIAzkI3R0npOcPOPiFBbrYBS0mAJBKNsu
+ FDRcWmhTjA==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/1/20 9:54 AM, Christoph Hellwig wrote:
-> Hi Jens,
-> 
-> this series switches back from storing the gendisk + partno to storing
-> a block_device pointer in struct bio.  The reason is two fold:  for one
-> the new struct block_device actually is always available, removing the
-> need to avoid originally.  Second the merge struct block_device is much
-> more useful than the old one, as storing it avoids the need for looking
-> up what used to be hd_struct during partition remapping and I/O
-> accounting.
-> 
-> Note that this series depends on the posted but not merged
-> "block tracepoint cleanups" series.
+Are disk identifiers important in Linux (CentOS)? I have two disks that used to be in a Intel fake RAID1 configuration and I now see have identical disk identifiers of 00000000-0000-0000-0000000000. I now want to use only one of them and later use mdraid for a software RAID1 configuration.
 
-Applied, thanks.
+Googling suggests that: (1) disk identifiers are /not/ important and (2) they are using the format 0x12345678. However fdisk -l displays the disk identifiers of my disks in the long UUID format. Further, another disk in the system does use a long UUID.
 
--- 
-Jens Axboe
-
+Last, googling suggests there is confusion between disk identifiers and partition UUIDs. I am specifically asking about the former.
