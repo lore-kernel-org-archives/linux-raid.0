@@ -3,54 +3,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD414C433FE
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 06:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7EAFC4361A
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 07:27:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EC4822D3E
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 06:07:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7ED2122D2B
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Dec 2020 07:27:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726762AbgLEGHb convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 5 Dec 2020 01:07:31 -0500
-Received: from mout.perfora.net ([74.208.4.194]:45157 "EHLO mout.perfora.net"
+        id S1726841AbgLEH1o (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 5 Dec 2020 02:27:44 -0500
+Received: from SMTP.sabi.co.UK ([72.249.182.114]:50194 "EHLO sabi.co.UK"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726513AbgLEGHb (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 5 Dec 2020 01:07:31 -0500
-Received: from android-de2ab3c23f073453.home ([72.94.51.172]) by
- mrelay.perfora.net (mreueus003 [74.208.5.2]) with ESMTPSA (Nemesis) id
- 0MhBR9-1kY2SK3ru5-00MND5 for <linux-raid@vger.kernel.org>; Sat, 05 Dec 2020
- 06:59:34 +0100
-Date:   Sat, 05 Dec 2020 00:59:30 -0500
-User-Agent: K-9 Mail for Android
+        id S1726234AbgLEH1n (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 5 Dec 2020 02:27:43 -0500
+X-Greylist: delayed 2205 seconds by postgrey-1.27 at vger.kernel.org; Sat, 05 Dec 2020 02:27:43 EST
+Received: from [5.147.245.68] (helo=ty.sabi.co.UK)
+        by sabi.co.UK with esmtps(Cipher TLS1.2:RSA_AES_256_CBC_SHA1:256)(PeerDN C=GB,ST=Oxfordshire,L=Didcot,O=sabi.co.UK,OU=systems,CN=ty.sabi.co.UK)(Exim 4.82 id 1klROZ-00055v-I1
+        for <linux-raid@vger.kernel.org>; Sat, 05 Dec 2020 06:50:15 +0000
+Received: from from [127.0.0.1] (helo=cyme.ty.sabi.co.uk)
+        by ty.sabi.co.UK with esmtps(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)(Exim 4.93 5)
+        id 1klROT-0033xe-J2
+        for <linux-raid@vger.kernel.org>; Sat, 05 Dec 2020 07:50:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Subject: Disk identifiers
-To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
-From:   H <agents@meddatainc.com>
-Message-ID: <5B155FE8-2761-47FF-BDBA-F5AE3A9BC396@meddatainc.com>
-X-Provags-ID: V03:K1:mbKm3qj1NmPsMIvcPuMnS9gSEvf1vXPe0fVdg+3jmdGETc0eqrE
- vPcbLvlsUY3iJ39+Y0Ckv54r9WPR4WX/56j3sDoxPYwlUn5CYfh1oYFb7yQurM9ajPwWxQ1
- p4HLUfSn0luUoGZDeiC0So4dl3/5uqd+4o4BL64iVbROZqGP+RVDPAjYQoUSs6cFjny57Mx
- fEojn16SoF6rSgfuPNWKA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:gmFCPGCkmrU=:J4RznsPwcksZS3LSTYCBpX
- 5BkRkQdWqsMo1lt8dtcWiCWp5hvKh3lyUOPCK6ba2RaxruEX+vkr0UZL27ZgHQoxw8iIZy7JR
- 9wWy7IlXxbdpo3NfsQXqwyc8ZX6CVP9tGXY08uECyCN00kdfNVxkGhEC8ObNATXgIIcS/3+Uc
- NwIHPxx7PdHmUYZYxHNHt48foj+SuXmT59QKvI/7DTK7svasXj2H+Ky2GLXHtRRDhZzup9WkI
- OMrjSRjYLG8AXZcC7B7VWa00gKvqK54CeYs7ML2mVOkEiZCABP6bKzzkSXY/DYxjwC0+jsVk0
- T9flUksrJEzPA36Kd8+lDSEj7N0S1E+comcCA+UUM6xwmb+oAQe7YHU6e5JuMLZltTpcro8yv
- etcCfUsI2WST8qF3DNXYJbeGjGb1UNhvD+K6fTqLtIAzkI3R0npOcPOPiFBbrYBS0mAJBKNsu
- FDRcWmhTjA==
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <24523.11681.86857.449384@cyme.ty.sabi.co.uk>
+Date:   Sat, 5 Dec 2020 07:50:09 +0100
+X-Face: SMJE]JPYVBO-9UR%/8d'mG.F!@.,l@c[f'[%S8'BZIcbQc3/">GrXDwb#;fTRGNmHr^JFb
+ SAptvwWc,0+z+~p~"Gdr4H$(|N(yF(wwCM2bW0~U?HPEE^fkPGx^u[*[yV.gyB!hDOli}EF[\cW*S
+ H<GG"+i\3#fp@@EeWZWBv;]LA5n1pS2VO%Vv[yH?kY'lEWr30WfIU?%>&spRGFL}{`bj1TaD^l/"[
+ msn( /TH#THs{Hpj>)]f><W}Ck9%2?H"AEM)+9<@D;3Kv=^?4$1/+#Qs:-aSsBTUS]iJ$6
+To:     list Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: Disk identifiers
+In-Reply-To: <5B155FE8-2761-47FF-BDBA-F5AE3A9BC396@meddatainc.com>
+References: <5B155FE8-2761-47FF-BDBA-F5AE3A9BC396@meddatainc.com>
+X-Mailer: VM 8.2.0b under 26.3 (x86_64-pc-linux-gnu)
+From:   pg@raid.list.sabi.co.UK (Peter Grandi)
+X-Disclaimer: This message contains only personal opinions
+X-Blacklisted-At: 
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Are disk identifiers important in Linux (CentOS)? I have two disks that used to be in a Intel fake RAID1 configuration and I now see have identical disk identifiers of 00000000-0000-0000-0000000000. I now want to use only one of them and later use mdraid for a software RAID1 configuration.
+> Are disk identifiers important in Linux (CentOS)? [...]  Last,
+> googling suggests there is confusion between disk identifiers
+> and partition UUIDs. I am specifically asking about the
+> former.
 
-Googling suggests that: (1) disk identifiers are /not/ important and (2) they are using the format 0x12345678. However fdisk -l displays the disk identifiers of my disks in the long UUID format. Further, another disk in the system does use a long UUID.
+That "disk identifiers" is not specific. Which one do you mean
+among disk serial numbers, disk WWNs, disk label identifiers?
+Also apart from partition identifiers there are also partition
+lavbels, MD set identifiers, MD member identifiers, and filetree
+labels and identifiers.  Not all of these are present in every
+case.
 
-Last, googling suggests there is confusion between disk identifiers and partition UUIDs. I am specifically asking about the former.
+It may be interesting to have a look at the contents of the
+'/dev/disk/by-*/' directories.
+
+As to the importance of any of these it depends on which
+specific configuration goals you have. Each of them has some
+advantages and disadvantages.
