@@ -2,103 +2,75 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.5 required=3.0 tests=BAYES_40,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_20,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_ABUSE_SURBL autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B98AC4361B
-	for <linux-raid@archiver.kernel.org>; Sun,  6 Dec 2020 01:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 350DDC433FE
+	for <linux-raid@archiver.kernel.org>; Sun,  6 Dec 2020 01:16:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46FD423128
-	for <linux-raid@archiver.kernel.org>; Sun,  6 Dec 2020 01:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA93122D08
+	for <linux-raid@archiver.kernel.org>; Sun,  6 Dec 2020 01:16:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726188AbgLFBKI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 5 Dec 2020 20:10:08 -0500
-Received: from [41.80.191.118] ([41.80.191.118]:36463 "EHLO
+        id S1726237AbgLFBQM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 5 Dec 2020 20:16:12 -0500
+Received: from [41.80.191.118] ([41.80.191.118]:65030 "EHLO
         host31.registrar-servers.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725920AbgLFBKI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Dec 2020 20:10:08 -0500
-Message-ID: <a499006b9f4a7c0122ddebb8b3675f3310e6e5837c@detahost.com>
-Reply-To: "ICT Kenya" <info@detahost.com>
-From:   "ICT Kenya" <newsletter@detahost.com>
+        by vger.kernel.org with ESMTP id S1725920AbgLFBQM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Dec 2020 20:16:12 -0500
+Message-ID: <2269208d65c0eae22e2b9d31d76349489971d5@datahost.co.ke>
+Reply-To: "Kenya Bulk Email" <info@datahost.co.ke>
+From:   "Kenya Bulk Email" <newsletter@datahost.co.ke>
 To:     <linux-raid@vger.kernel.org>
-Subject: Kenya - 50% OFF - Professional Website Development from Kshs.25,000
-Date:   Sun, 6 Dec 2020 04:09:33 +0300
-Organization: ICT Kenya
+Subject: Kenya bulk email marketing - Target over 1.8 Million Kenyans via email
+Date:   Sun, 6 Dec 2020 04:15:37 +0300
+Organization: Kenya Bulk Email
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8";
 Content-Transfer-Encoding: quoted-printable
-DKIM-Signature: v=1; a=rsa-sha256; d=detahost.com; s=default;
-        c=relaxed/relaxed; t=1607216973;
+DKIM-Signature: v=1; a=rsa-sha256; d=datahost.co.ke; s=default;
+        c=relaxed/relaxed; t=1607217337;
         h=message-id:from:to:subject:date:mime-version;
-        bh=A9HLI0jmaJg85fpWhECB2JCmtB3yYC4+I0uwyh/vTg8=;
-        b=ZdK3IOvr1jb/cE+S7RhijGN/DzrW7dd+VaKfDH7yKV1ZO8HTpkHp7EO37GG8zV
-        QYpGYCP/q5wRRJKbkS6a3YT1dnq1oei2iDy78fDGnynj4K0jdZsSToc8bOUkk89i
-        k1qWSrTf6jXeT+BrF0lpGADJRxx407YcoPZji31VTrKaNUh0RpB4F1pE4Fo5pjVb
-        M3yVBZ9HQMGENRSSRzS1UhFWby4QPIXBNsiUgoUTqqfZ9tdo5WuBlNTurweazEeI
-        BUAJ3+UCbEpK14EFWZm05KfHHFcMiCq78kJpmWb+PF4vxe1EGWis2D88hmIEKoBe
-        oUs0r8ToyR0390bW0Jxhl8eQ==
+        bh=/5/6iHz2QxuWK0zadxEuGPqW6r+EaAkj+Wi8s0IiHBE=;
+        b=vh+pJdecTYP9jt/lX69Pt9wGT1MZgUuWab7dGfrglrOFSx3GKiknBTPFbfWLOm
+        kTrvcHTRpDCe/oityUAWRs0DyzYYWYcgKz+AfhXDkJ+Az4L4WR7tMn88UZInYm6Y
+        NMPTkoYRe6UsRZcDw3nWSXgiMwtIl052A8LpjBLBRHrf2eszJ8AetwFsLtiKEeDw
+        6/Na6j+yoWoH98EGxdQARIjnHDeXqFz8G4n+82cC2iwR9LOK4dU+kpEFHIaimmnF
+        Et3Bc2tTTpKYLG4tX9Gpytm0GwOFJRK4NeqGtUuLgN/RVM5wJ0ijEi+Xw1ovGr28
+        Ul1mNV892dj+aDDG7QKUvHvg==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-If you are looking for a modern and effective website design that represe=
-nts your business in the way that you want, at an affordable price, then =
-this is for you!
+Gain more clients on top of your existing clients on a daily basis 24/7/3=
+65 via Bulk email marketing - GUARANTEED
+Get A Personal Mail Server For Your Company / Organization Fully Setup & =
+Configured & 1.8Million Kenyan Emails Loaded
+  - Why A Personal Mail Server For Bulk Mail Marketing
+  - Send mass email on a daily basis 24/7/365 days
+  - The mass mail server comes with its own logins to view the mass email=
+ing progress
+  - The mass mail server comes with 1.8Million clean Kenyan emails alread=
+y loaded.
+  - You only add the subject and the content of the email
+  - The mass mail server can send up to 100,000 emails per day all delive=
+red straight to inbox
+  - We Monitor your mail mail server 24/7  to ensure full deliverability
+  - Be able to add you own email list in the mail server
+  - Gain New Clients Today on Top Of Your Existing Clients.
+As they say, Mass Marketing is the True fuel for business growth.
+Reach 100,000+ People in a Day & Notice the Difference.
+Bulk Email Marketing - Most cost effective alternative to TV & Radio Ads
+Reach approximately 100,000 people on a daily basis. 24/7/365 With your o=
+wn personal mail server at a cost of Kshs 10,000 per month. (Offer Valid =
+for 7days ONLY)
+We also have a mobile phone numbers database segmented per county, and we=
+ provide Bulk SMS  at  60cents/sms, sender ID Kshs.8300
 
-Our Approach:
-Most of our designs are tended towards a clean and a modern look in order=
- to make the user experience as great as possible. Only an eye catching d=
-esign will ensure that people will stay on your website for more then a f=
-ew seconds. After that, it=E2=80=99s down to an easy to understand layout=
- and organized content to keep clients longer on your website, which we h=
-ave a very good eye for.=20
-Professional Website from - Kshs.25,000 - Limited Time Offer (7Days ONLY)
-
-Our work can only speak for itself. Contact us Today
-
-Below are a few Websites that we have worked on recently:
-http://laxiptv.com/
-http://laxtv.co.ke
-http://icta.go.ke
-http://nairobi.go.ke
-http://eastafricayouth.org/
-http://amalcapital.net
-http://foodiebox.co.ke
-http://keekorokcapital.co.ke
-http://mycarcare.co.ke
-http://kazitele.co.ke
-http://alecconsultancy.co.tz/
-http://stratechsms.co.ke
-
-We also offer Bulk SMS @60cents/sms and Bulk email marketing service via =
-www.textsms.co.ke
-
-We also have segmented Kenyan Mobile Database of (10Million) and 2Million=
- Validated Kenyan email addresses=20
-The Ultimate Home TV Entertainment
-Get Over 500 Live Channels Including your favorite Sports Channels. Acces=
-s over 2,000 On Demand Movies & Series in 4K. Super-Fast Loading, Optimiz=
-ed to consume low Internet. Compatible with All Android Boxes. It cant ge=
-t Any better!
-For more information about LAXIPTV TV Channels go to: https://laxtv.live/=
-channel-list/
-
-
-
-
-Kind Regards;
-
-
+Contact Us Today
+Regards
 George K. Mariene
-
-
-
-Manager - Business & Development
 Wyzer Technologies Limited
-www.datahost.co.ke | www.textsms.co.ke | www.laxtv.co.ke
-+254707559080 | +254721351269
-18, Msanduku Rd, Off Mbaazi Avenue, Lavington, Dagoreti North            =
-                                                                 Unsubscr=
-ibe from marketing emails
+Tel: +254 707 559 080 | +254 721 351 269
+www.textsms.co.ke | www.datahost.co.ke =20
+18, Msanduku Road | Off Mbaazi Avenue | Lavington | Nairobi
