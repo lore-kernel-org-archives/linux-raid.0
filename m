@@ -2,223 +2,147 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB495C4167B
-	for <linux-raid@archiver.kernel.org>; Sun,  6 Dec 2020 22:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FA3C1B0D9
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Dec 2020 18:56:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A885230FA
-	for <linux-raid@archiver.kernel.org>; Sun,  6 Dec 2020 22:56:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B07F2396F
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Dec 2020 18:56:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727350AbgLFW4E (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 6 Dec 2020 17:56:04 -0500
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:53337 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726046AbgLFW4E (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 6 Dec 2020 17:56:04 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 6D9241AC2B8;
-        Mon,  7 Dec 2020 09:55:19 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1km2w2-001FXH-Ks; Mon, 07 Dec 2020 09:55:18 +1100
-Date:   Mon, 7 Dec 2020 09:55:18 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-Message-ID: <20201206225518.GJ3913616@dread.disaster.area>
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
- <20201129224723.GG2842436@dread.disaster.area>
- <e0aa187f-e124-1ddc-0f5a-6a8c41a3dc66@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+        id S1726485AbgLGS4q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Dec 2020 13:56:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53458 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726483AbgLGS4p (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Dec 2020 13:56:45 -0500
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BCAFC061793
+        for <linux-raid@vger.kernel.org>; Mon,  7 Dec 2020 10:55:59 -0800 (PST)
+Received: by mail-pg1-x542.google.com with SMTP id o5so9683446pgm.10
+        for <linux-raid@vger.kernel.org>; Mon, 07 Dec 2020 10:55:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dabbelt-com.20150623.gappssmtp.com; s=20150623;
+        h=date:subject:in-reply-to:cc:from:to:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KtGdp/lwKq2VYARUSn9Vex8GHiah3So/M600I4rdU+k=;
+        b=y8VTp9ob9fYKSzfHkWUymZptoMnZAg/NWhWoUrlxY8pjbTg36T7Fdn2pVvvh9zWVaa
+         B87zFRzbc5t2R3rkosrvupXzz338IyKlSY3h6nO3hw2GSlHpQdfeFCFxtUhS5Em8PxAK
+         GskuFtlBmCwDw1vgOearEpEMLctI3/GBGMMkxS4uTHgTlQmXpFEiGHn6AAwbt+EO5Xpo
+         3asZytuj39HVI8357jpgKbjNw0RDymoX3VrjPjBcw6mvh9J8s4Dahu+rG1Q6cmQ+8YsP
+         4+x7YjvAxBKlP5PrmfwWH835KSJEkeNn4fEjBTBtYWVE8cRi+N6+9AUXb+oBqFMdGTEM
+         BcDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:subject:in-reply-to:cc:from:to:message-id
+         :mime-version:content-transfer-encoding;
+        bh=KtGdp/lwKq2VYARUSn9Vex8GHiah3So/M600I4rdU+k=;
+        b=IdsVYCltvOil2nS6nTKQhROHvefKUVn6yiq96mGKstdZWLtd1BWXqe+UKbdS+yn3R4
+         rHC96+l70DAkIHdXDTBbX6z9FXBbQLeZDXL9nZOdY5lkzWhVB0KmjmDzLgKVxgnstCAQ
+         IKKDaplE7O8IEHJIkb5O1ldJjESeTeZC8I1JCvp9LQDvJjzyzM1Uu1s+mZGa6V5ShCCp
+         uXLXH2hsndZT4e0usO0ubXB9hkfrddcUbSCYkER2Nv+ZxtFrsy8yCIA00o10fEUZWWzA
+         mwLgT3FQxa1SX1fpuKKwAjRnYaT6j/PhIuWuTrq9siW0oDxyp01FPHVnnBFFplBro4MY
+         SX+g==
+X-Gm-Message-State: AOAM530oRaw0rEYX4O5jvO5WpQ3CcvDWAtLNDpE2N9VIlXy7OapGttsi
+        Uyhyo+HiKjaJI/th0Gp24+9J0g==
+X-Google-Smtp-Source: ABdhPJzLmOMynfb1JI8F+/oNdCFJom0GbATVogv9ZDfkhxeT99YUXudSQ0OdVQFteOgVntZyE3iBvQ==
+X-Received: by 2002:a62:4dc2:0:b029:19d:b6f2:e7bb with SMTP id a185-20020a624dc20000b029019db6f2e7bbmr17129167pfb.74.1607367358874;
+        Mon, 07 Dec 2020 10:55:58 -0800 (PST)
+Received: from localhost (76-210-143-223.lightspeed.sntcca.sbcglobal.net. [76.210.143.223])
+        by smtp.gmail.com with ESMTPSA id t36sm14214255pfg.55.2020.12.07.10.55.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Dec 2020 10:55:57 -0800 (PST)
+Date:   Mon, 07 Dec 2020 10:55:57 -0800 (PST)
+X-Google-Original-Date: Mon, 07 Dec 2020 10:55:56 PST (-0800)
+Subject:     Re: [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to userspace
+In-Reply-To: <20201204103336.GA7374@infradead.org>
+CC:     dm-devel@redhat.com, agk@redhat.com, snitzer@redhat.com,
+        corbet@lwn.net, song@kernel.org, shuah@kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-kselftest@vger.kernel.org,
+        kernel-team@android.com
+From:   Palmer Dabbelt <palmer@dabbelt.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Message-ID: <mhng-97fc5874-29d0-4d9e-8c92-d3704a482f28@palmerdabbelt-glaptop1>
+Mime-Version: 1.0 (MHng)
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <e0aa187f-e124-1ddc-0f5a-6a8c41a3dc66@cn.fujitsu.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=IkcTkHD0fZMA:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=HHWehwv_o5C9Q5xAZY4A:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Dec 02, 2020 at 03:12:20PM +0800, Ruan Shiyang wrote:
-> Hi Dave,
-> 
-> On 2020/11/30 上午6:47, Dave Chinner wrote:
-> > On Mon, Nov 23, 2020 at 08:41:10AM +0800, Shiyang Ruan wrote:
-> > > 
-> > > The call trace is like this:
-> > >   memory_failure()
-> > >     pgmap->ops->memory_failure()   => pmem_pgmap_memory_failure()
-> > >      gendisk->fops->block_lost()   => pmem_block_lost() or
-> > >                                           md_blk_block_lost()
-> > >       sb->s_ops->storage_lost()    => xfs_fs_storage_lost()
-> > >        xfs_rmap_query_range()
-> > >         xfs_storage_lost_helper()
-> > >          mf_recover_controller->recover_fn => \
-> > >                              memory_failure_dev_pagemap_kill_procs()
-> > > 
-> > > The collect_procs() and kill_procs() are moved into a callback which
-> > > is passed from memory_failure() to xfs_storage_lost_helper().  So we
-> > > can call it when a file assocaited is found, instead of creating a
-> > > file list and iterate it.
-> > > 
-> > > The fsdax & reflink support for XFS is not contained in this patchset.
-> > 
-> > This looks promising - the overall architecture is a lot more
-> > generic and less dependent on knowing about memory, dax or memory
-> > failures. A few comments that I think would further improve
-> > understanding the patchset and the implementation:
-> 
-> Thanks for your kindly comment.  It gives me confidence.
-> 
-> > 
-> > - the order of the patches is inverted. It should start with a
-> >    single patch introducing the mf_recover_controller structure for
-> >    callbacks, then introduce pgmap->ops->memory_failure, then
-> >    ->block_lost, then the pmem and md implementations of ->block
-> >    list, then ->storage_lost and the XFS implementations of
-> >    ->storage_lost.
-> 
-> Yes, it will be easier to understand the patchset in this order.
-> 
-> But I have something unsure: for example, I introduce ->memory_failure()
-> firstly, but the implementation of ->memory_failure() needs to call
-> ->block_lost() which is supposed to be introduced in the next patch. So, I
-> am not sure the code is supposed to be what in the implementation of
-> ->memory_failure() in pmem?  To avoid this situation, I committed the
-> patches in the inverted order: lowest level first, then its caller, and then
-> caller's caller.
+On Fri, 04 Dec 2020 02:33:36 PST (-0800), Christoph Hellwig wrote:
+> What is the advantage over simply using nbd?
 
-Well, there's two things here. The first is the infrastructure, the
-second is the drivers that use the infrastructure. You can introduce
-a method in one patch, and then the driver that uses it in another.
-Or you can introduce a driver skeleton that doesn't nothing until
-more infrastructure is added. so...
+There's a short bit about that in the cover letter (and in some talks), but
+I'll expand on it here -- I suppose my most important question is "is this
+interesting enough to take upstream?", so there should be at least a bit of a
+description of what it actually enables:
 
-> 
-> I am trying to sort out the order.  How about this:
->  Patch i.
->    Introduce ->memory_failure()
->       - just introduce interface, without implementation
->  Patch i++.
->    Introduce ->block_lost()
->       - introduce interface and implement ->memory_failure()
->          in pmem, so that it can call ->block_lost()
->  Patch i++.
->    (similar with above, skip...)
+I don't think there's any deep fundamental advantages to doing this as opposed
+to nbd/iscsi over localhost/unix (or by just writing a kernel implementation,
+for that matter), at least in terms of anything that was previously impossible
+now becoming possible.  There are a handful of things that are easier and/or
+faster, though.
 
-So this is better, but you don't need to add the pmem driver use of
-"->block_lost" in the patch that adds the method. IOWs, something
-like:
+dm-user looks a lot like NBD without the networking.  The major difference is
+which side initiates messages: in NBD the kernel initiates messages, while in
+dm-user userspace initiates messages (via a read that will block if there is no
+message, but presumably we'd want to add support for a non-blocking userspace
+implementations eventually).  The NBD approach certainly makes sense for a
+networked system, as one generally wants to have a single storage server
+handling multiple clients, but inverting that makes some things simpler in
+dm-user.  
 
-P1: introduce ->memory_failure API, all the required documentation
-and add the call sites in the infrastructure that trigger it
+One specific advantage of this change is that a dm-user target can be
+transitioned from one daemon to another without any IO errors: just spin up the
+second daemon, signal the first to stop requesting new messages, and let it
+exit.  We're using that mechanism to replace the daemon launched by early init
+(which runs before the security subsystem is up, as in our use case dm-user
+provides the root filesystem) with one that's properly sandboxed (which can
+only be launched after the root filesystem has come up).  There are ways around
+this (replacing the DM table, for example), but they don't fit it as cleanly.
 
-P2: introduce ->corrupted_range to the block device API, all the
-required documentation and any generic block infrastructure that
-needs to call it.
+Unless I'm missing something, NBD servers aren't capable of that style of
+transition: soft disconnects can only be initiated by the client (the kernel,
+in this case), which leaves no way for the server to transition while
+guaranteeing that no IOs error out.  It's usually possible to shoehorn this
+sort of direction reversing concept into network protocols, but it's also
+usually ugly (I'm thinking of IDLE, for example).  I didn't try to actually do
+it, but my guess would be that adding a way for the server to ask the client to
+stop sending messages until a new server shows up would be at least as much
+work as doing this.
 
-P3: introduce ->corrupted_range to the superblock ops API, all the
-required documentation
+There are also a handful of possible performance advantages, but I haven't gone
+through the work to prove any of them out yet as performance isn't all that
+important for our first use case.  For example:
 
-P4: add ->corrupted_range() API to the address space ops, all the
-required documentation
+* Cutting out the network stack is unlikely to hurt performance.  I'm not sure
+  if it will help performance, though.  I think if we really had workload where
+  the extra copy was likely to be an issue we'd want an explicit ring buffer,
+  but I have a theory that it would be possible to get very good performance out
+  of a stream-style API by using multiple channels and relying on io_uring to
+  plumb through multiple ops per channel.
+* There's a comment in the implementation about allowing userspace to insert
+  itself into user_map(), likely by uploading a BPF fragment.  There's a whole
+  class of interesting block devices that could be written in this fashion:
+  essentially you keep a cache on a regular block device that handles the common
+  cases by remapping BIOs and passing them along, relegating the more complicated
+  logic to fetch cache misses and watching some subset of the access stream where
+  necessary.
 
-P5: factor the existing kill procs stuff to be able to be called on
-via generic_mapping_kill_range()
+  We have a use case like this in Android, where we opportunistically store
+  backups in a portion of the TRIM'd space on devices.  It's currently
+  implemented entirely in kernel by the dm-bow target, but IIUC that was deemed
+  too Android-specific to merge.  Assuming we could get good enough performance
+  we could move that logic to userspace, which lets us shrink our diff with
+  upstream.  It feels like some other interesting block devices could be
+  written in a similar fashion.
 
-P5: add dax_mapping_kill_range()
-
-P6: add the pmem driver support for ->memory_failure
-
-P7: add the block device driver support for ->corrupted_range
-
-P8: add filesystem support for sb_ops->corrupted_range.
-
-P9: add filesystem support for aops->corrupted_range.
-
-> >    This gets rid of the mf_recover_controller altogether and allows
-> >    the interface to be used by any sort of block device for any sort
-> >    of bottom-up reporting of media/device failures.
-> 
-> Moving the recover function to the address_space ops looks a better idea.
-> But I think that the error handler for page cache mapping is finished well
-> in memory-failure.  The memory-failure is also reused to handles anonymous
-> page.
-
-Yes, anonymous page handling can remain there, we're only concerned
-about handling file mapped pages here right now. If we end up
-sharing page cache pages across reflink mappings, we'll have exactly
-the same issue we have now with DAX....
-
-> If we move the recover function to address_space ops, I think we also
-> need to refactor the existing handler for page cache mapping, which may
-> affect anonymous page handling.  This makes me confused...
-
-Make the handling of the page the error occurred in conditional on
-!PageAnon().
-
-> I rewrote the call trace:
-> memory_failure()
->  * dax mapping case
->  pgmap->ops->memory_failure()          =>
->                                    pmem_pgmap_memory_failure()
->   gendisk->fops->block_corrupt_range() =>
->                                    - pmem_block_corrupt_range()
->                                    - md_blk_block_corrupt_range()
->    sb->s_ops->storage_currupt_range()  =>
->                                    xfs_fs_storage_corrupt_range()
-
-No need for block/storage prefixes in these...
-
->     xfs_rmap_query_range()
->      xfs_storage_lost_helper()
->       mapping->a_ops->corrupt_range()  =>
->                                    xfs_dax_aops.xfs_dax_corrupt_range
->        memory_failure_dev_pagemap_kill_procs()
-
-This assumes we find a user data mapping. We might find the
-corrupted storage contained metadata, in which case we'll be
-shutting down the filesystem, not trying to kill user procs...
-
-Also, we don't need aops->corrupt_range() here as we are already in
-the filesystem code and if we find a mapping in memory we can just
-do "if (IS_DAX(mapping->host))" to call the right kill procs
-implementation for the mapping we've found. aops->corrupt_range is
-for generic code working on a mapping to inform the filesystem that
-there is a bad range in the mapping (my apologies for getting that
-all mixed up in my last email).
-
->  * page cache mapping case
->  mapping->a_ops->corrupt_range()       =>
->                                    xfs_address_space_operations.xfs_xxx
->   memory_failure_generic_kill_procs()
-
-We need the aops->corrupted_range() to call into the filesystem so
-it can do a similar reverse mapping lookup to
-sb->s_ops->corrupted_range.  Yes, the page cache should already have
-a mapping attached to the page, but we do not know whether it is the
-only mapping that exists for that page. e.g. if/when we implement
-multiple-mapped shared read-only reflink pages in the page cache
-which results in the same problem we have with DAX pages right now.
-
-Overall, though, it seems like you're on the right path. :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+All in all, I've found it a bit hard to figure out what sort of interest people
+have in dm-user: when I bring this up I seem to run into people who've done
+similar things before and are vaguely interested, but certainly nobody is
+chomping at the bit.  I'm sending it out in this early state to try and figure
+out if it's interesting enough to keep going.
