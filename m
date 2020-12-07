@@ -2,147 +2,240 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FA3C1B0D9
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Dec 2020 18:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA21C4167B
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Dec 2020 18:58:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B07F2396F
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Dec 2020 18:56:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 292DF238D6
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Dec 2020 18:58:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726485AbgLGS4q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Dec 2020 13:56:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53458 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726483AbgLGS4p (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Dec 2020 13:56:45 -0500
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BCAFC061793
-        for <linux-raid@vger.kernel.org>; Mon,  7 Dec 2020 10:55:59 -0800 (PST)
-Received: by mail-pg1-x542.google.com with SMTP id o5so9683446pgm.10
-        for <linux-raid@vger.kernel.org>; Mon, 07 Dec 2020 10:55:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=dabbelt-com.20150623.gappssmtp.com; s=20150623;
-        h=date:subject:in-reply-to:cc:from:to:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KtGdp/lwKq2VYARUSn9Vex8GHiah3So/M600I4rdU+k=;
-        b=y8VTp9ob9fYKSzfHkWUymZptoMnZAg/NWhWoUrlxY8pjbTg36T7Fdn2pVvvh9zWVaa
-         B87zFRzbc5t2R3rkosrvupXzz338IyKlSY3h6nO3hw2GSlHpQdfeFCFxtUhS5Em8PxAK
-         GskuFtlBmCwDw1vgOearEpEMLctI3/GBGMMkxS4uTHgTlQmXpFEiGHn6AAwbt+EO5Xpo
-         3asZytuj39HVI8357jpgKbjNw0RDymoX3VrjPjBcw6mvh9J8s4Dahu+rG1Q6cmQ+8YsP
-         4+x7YjvAxBKlP5PrmfwWH835KSJEkeNn4fEjBTBtYWVE8cRi+N6+9AUXb+oBqFMdGTEM
-         BcDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:subject:in-reply-to:cc:from:to:message-id
-         :mime-version:content-transfer-encoding;
-        bh=KtGdp/lwKq2VYARUSn9Vex8GHiah3So/M600I4rdU+k=;
-        b=IdsVYCltvOil2nS6nTKQhROHvefKUVn6yiq96mGKstdZWLtd1BWXqe+UKbdS+yn3R4
-         rHC96+l70DAkIHdXDTBbX6z9FXBbQLeZDXL9nZOdY5lkzWhVB0KmjmDzLgKVxgnstCAQ
-         IKKDaplE7O8IEHJIkb5O1ldJjESeTeZC8I1JCvp9LQDvJjzyzM1Uu1s+mZGa6V5ShCCp
-         uXLXH2hsndZT4e0usO0ubXB9hkfrddcUbSCYkER2Nv+ZxtFrsy8yCIA00o10fEUZWWzA
-         mwLgT3FQxa1SX1fpuKKwAjRnYaT6j/PhIuWuTrq9siW0oDxyp01FPHVnnBFFplBro4MY
-         SX+g==
-X-Gm-Message-State: AOAM530oRaw0rEYX4O5jvO5WpQ3CcvDWAtLNDpE2N9VIlXy7OapGttsi
-        Uyhyo+HiKjaJI/th0Gp24+9J0g==
-X-Google-Smtp-Source: ABdhPJzLmOMynfb1JI8F+/oNdCFJom0GbATVogv9ZDfkhxeT99YUXudSQ0OdVQFteOgVntZyE3iBvQ==
-X-Received: by 2002:a62:4dc2:0:b029:19d:b6f2:e7bb with SMTP id a185-20020a624dc20000b029019db6f2e7bbmr17129167pfb.74.1607367358874;
-        Mon, 07 Dec 2020 10:55:58 -0800 (PST)
-Received: from localhost (76-210-143-223.lightspeed.sntcca.sbcglobal.net. [76.210.143.223])
-        by smtp.gmail.com with ESMTPSA id t36sm14214255pfg.55.2020.12.07.10.55.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 10:55:57 -0800 (PST)
-Date:   Mon, 07 Dec 2020 10:55:57 -0800 (PST)
-X-Google-Original-Date: Mon, 07 Dec 2020 10:55:56 PST (-0800)
-Subject:     Re: [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to userspace
-In-Reply-To: <20201204103336.GA7374@infradead.org>
-CC:     dm-devel@redhat.com, agk@redhat.com, snitzer@redhat.com,
-        corbet@lwn.net, song@kernel.org, shuah@kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        kernel-team@android.com
-From:   Palmer Dabbelt <palmer@dabbelt.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Message-ID: <mhng-97fc5874-29d0-4d9e-8c92-d3704a482f28@palmerdabbelt-glaptop1>
-Mime-Version: 1.0 (MHng)
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        id S1726355AbgLGS6I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Dec 2020 13:58:08 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59227 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725960AbgLGS6G (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Dec 2020 13:58:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607367398;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b8sZ7kDwGGIN+Kypu8hW1xHLpa/L+swfS8k/pXhtOf4=;
+        b=TXq+iGaaNaAmLRyaeTIhb2kC8oUmssI3YdLSpEQ/V6szSa6kxZMj6t52BbUpgwWGRrpp2j
+        lX7NGfcin2T1nExHw+7aqjejhEiOwTou4opqz9ptDKSAkZNOXL5fMcF4MhGF6QurO1TTMi
+        DlNXEfi8GnAh495QB4VZo5gzVsBDKgo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-123-POBl93a7OTqc9Z1aOoBjYw-1; Mon, 07 Dec 2020 13:56:34 -0500
+X-MC-Unique: POBl93a7OTqc9Z1aOoBjYw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D66A7107ACE4;
+        Mon,  7 Dec 2020 18:56:31 +0000 (UTC)
+Received: from ovpn-66-220.rdu2.redhat.com (ovpn-66-220.rdu2.redhat.com [10.10.66.220])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2FBD65D6AB;
+        Mon,  7 Dec 2020 18:56:27 +0000 (UTC)
+Message-ID: <920899710c9e8dcce16e561c6d832e4e9c03cd73.camel@redhat.com>
+Subject: Re: store a pointer to the block_device in struct bio (again)
+From:   Qian Cai <qcai@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Tejun Heo <tj@kernel.org>, Coly Li <colyli@suse.de>,
+        Song Liu <song@kernel.org>, dm-devel@redhat.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-block@vger.kernel.org,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Date:   Mon, 07 Dec 2020 13:56:26 -0500
+In-Reply-To: <20201201165424.2030647-1-hch@lst.de>
+References: <20201201165424.2030647-1-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 04 Dec 2020 02:33:36 PST (-0800), Christoph Hellwig wrote:
-> What is the advantage over simply using nbd?
+On Tue, 2020-12-01 at 17:54 +0100, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series switches back from storing the gendisk + partno to storing
+> a block_device pointer in struct bio.  The reason is two fold:  for one
+> the new struct block_device actually is always available, removing the
+> need to avoid originally.  Second the merge struct block_device is much
+> more useful than the old one, as storing it avoids the need for looking
+> up what used to be hd_struct during partition remapping and I/O
+> accounting.
+> 
+> Note that this series depends on the posted but not merged
+> "block tracepoint cleanups" series.
 
-There's a short bit about that in the cover letter (and in some talks), but
-I'll expand on it here -- I suppose my most important question is "is this
-interesting enough to take upstream?", so there should be at least a bit of a
-description of what it actually enables:
+Reverting this patchset on the top of today's linux-next fixed data corruptions
+everywhere, i.e.,
 
-I don't think there's any deep fundamental advantages to doing this as opposed
-to nbd/iscsi over localhost/unix (or by just writing a kernel implementation,
-for that matter), at least in terms of anything that was previously impossible
-now becoming possible.  There are a handful of things that are easier and/or
-faster, though.
+$ git revert --no-edit a54895fa057c..4498a8536c81
+(with a trivial conflict resolution with the commit "block: move
+blk_rq_bio_prep() to linux/blk-mq.h")
 
-dm-user looks a lot like NBD without the networking.  The major difference is
-which side initiates messages: in NBD the kernel initiates messages, while in
-dm-user userspace initiates messages (via a read that will block if there is no
-message, but presumably we'd want to add support for a non-blocking userspace
-implementations eventually).  The NBD approach certainly makes sense for a
-networked system, as one generally wants to have a single storage server
-handling multiple clients, but inverting that makes some things simpler in
-dm-user.  
+.config (if ever matters and also happened on POWER9 NV):
+https://cailca.coding.net/public/linux/mm/git/files/master/x86.config
 
-One specific advantage of this change is that a dm-user target can be
-transitioned from one daemon to another without any IO errors: just spin up the
-second daemon, signal the first to stop requesting new messages, and let it
-exit.  We're using that mechanism to replace the daemon launched by early init
-(which runs before the security subsystem is up, as in our use case dm-user
-provides the root filesystem) with one that's properly sandboxed (which can
-only be launched after the root filesystem has come up).  There are ways around
-this (replacing the DM table, for example), but they don't fit it as cleanly.
+== XFS failed to mount ==
+[   55.116279][ T1507] XFS (dm-0): Mounting V5 Filesystem
+[   55.144671][ T1507] XFS (dm-0): Corruption warning: Metadata has LSN (3:70242) ahead of current LSN (3:66504). Please unmount and run xfs_repair (>= v4.3) to resolve.
+[   55.159965][ T1507] XFS (dm-0): log mount/recovery failed: error -22
+[   55.288632][ T1507] XFS (dm-0): log mount failed
 
-Unless I'm missing something, NBD servers aren't capable of that style of
-transition: soft disconnects can only be initiated by the client (the kernel,
-in this case), which leaves no way for the server to transition while
-guaranteeing that no IOs error out.  It's usually possible to shoehorn this
-sort of direction reversing concept into network protocols, but it's also
-usually ugly (I'm thinking of IDLE, for example).  I didn't try to actually do
-it, but my guess would be that adding a way for the server to ask the client to
-stop sending messages until a new server shows up would be at least as much
-work as doing this.
+In this case, it is not possible to mount the XFS rootfs anymore, and it can be
+repaired with "-L". However, we could lost vital files. Then, I have to re-
+install the system.
 
-There are also a handful of possible performance advantages, but I haven't gone
-through the work to prove any of them out yet as performance isn't all that
-important for our first use case.  For example:
+systemd[1]: System cannot boot: Missing /etc/machine-id and /etc is mounted read-only.
+systemd[1]: Booting up is supported only when:
+systemd[1]: 1) /etc/machine-id exists and is populated.
+systemd[1]: 2) /etc/machine-id exists and is empty.
+systemd[1]: 3) /etc/machine-id is missing and /etc is writable.
+lvm2-activation-generator: lvmconfig failed
+systemd[1]: Failed to populate /etc with preset unit settings, ignoring: No such file or directory
 
-* Cutting out the network stack is unlikely to hurt performance.  I'm not sure
-  if it will help performance, though.  I think if we really had workload where
-  the extra copy was likely to be an issue we'd want an explicit ring buffer,
-  but I have a theory that it would be possible to get very good performance out
-  of a stream-style API by using multiple channels and relying on io_uring to
-  plumb through multiple ops per channel.
-* There's a comment in the implementation about allowing userspace to insert
-  itself into user_map(), likely by uploading a BPF fragment.  There's a whole
-  class of interesting block devices that could be written in this fashion:
-  essentially you keep a cache on a regular block device that handles the common
-  cases by remapping BIOs and passing them along, relegating the more complicated
-  logic to fetch cache misses and watching some subset of the access stream where
-  necessary.
+== systemd core dump ==
+[   46.124485][ T1028] Process 1028(systemd-coredum) has RLIMIT_CORE set to 1
+[   46.131434][ T1028] Aborting core
+[   46.143366][ T1027] systemd-cgroups (1027) used greatest stack depth: 23512 bytes left
+[   46.384430][    T1] printk: systemd: 20 output lines suppressed due to ratelimiting
+[   46.447620][    T1] traps: systemd[1] trap invalid opcode ip:7f44c485fee6 sp:7ffee96e6960 error:0 in libm-2.28.so[7f44c481a000+181000]
+[   46.492643][ T1029] traps: systemd-coredum[1029] trap invalid opcode ip:7f2f60471ee6 sp:7ffd58f76e00 error:0 in libm-2.28.so[7f2f6042c000+181000]
+[   46.505968][ T1029] Process 1029(systemd-coredum) has RLIMIT_CORE set to 1
+[   46.512900][ T1029] Aborting core
+[   46.520024][    T1] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000084
+[   46.528437][    T1] CPU: 32 PID: 1 Comm: systemd Not tainted 5.10.0-rc6-next-20201207 #1
+[   46.536581][    T1] Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 07/10/2019
+[   46.545860][    T1] Call Trace:
+[   46.549038][    T1]  dump_stack+0x99/0xcb
+[   46.553082][    T1]  panic+0x20c/0x48b
+[   46.556860][    T1]  ? print_oops_end_marker.cold.10+0x10/0x10
+[   46.562739][    T1]  ? do_signal_stop+0x690/0x690
+[   46.567478][    T1]  ? do_exit+0x226/0x2410
+[   46.571690][    T1]  do_exit.cold.38+0x1de/0x1e5
+[   46.576346][    T1]  ? rcu_read_lock_sched_held+0xa1/0xd0
+[   46.581782][    T1]  ? rcu_read_lock_bh_held+0xb0/0xb0
+[   46.586955][    T1]  ? mm_update_next_owner+0x750/0x750
+[   46.592215][    T1]  ? get_signal+0x80f/0x1f90
+[   46.596688][    T1]  do_group_exit+0xf0/0x2e0
+[   46.601076][    T1]  get_signal+0x35a/0x1f90
+[   46.605380][    T1]  ? finish_task_switch+0x1bb/0xa80
+[   46.610468][    T1]  arch_do_signal_or_restart+0x1d8/0x690
+[   46.615993][    T1]  ? __setup_rt_frame.isra.15+0x1830/0x1830
+[   46.621781][    T1]  ? __sched_text_start+0x8/0x8
+[   46.626521][    T1]  ? asm_exc_invalid_op+0xa/0x20
+[   46.631347][    T1]  exit_to_user_mode_prepare+0xde/0x170
+[   46.636782][    T1]  irqentry_exit_to_user_mode+0x5/0x30
+[   46.642129][    T1]  asm_exc_invalid_op+0x12/0x20
+[   46.646868][    T1] RIP: 0033:0x7f44c485fee6
+[   46.651171][    T1] Code: 6d 6e 6f 70 71 72 73 74 75 76 77 78 79 7a 0a 00 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f 50 51 52 53 54 55 56 57 58 59 5a <61> 62 63 64 65 66 67 68 6a 69 6b 6c 6d 6e 6f 70 71 72 73 74 75 76
+[   46.670757][    T1] RSP: 002b:00007ffee96e6960 EFLAGS: 00010202
+[   46.676719][    T1] RAX: 00007f44c481c780 RBX: 00007f44c4825e78 RCX: 0000000000000000
+[   46.684600][    T1] RDX: 00007ffee96e6a90 RSI: 0000000000000000 RDI: 00007f44c481c780
+[   46.692480][    T1] RBP: 00007ffee96e6a90 R08: 00007f44c85d88a8 R09: 00007f44c85d88a8
+[   46.700360][    T1] R10: 00007f44ca38e4f0 R11: 00007f44c481a000 R12: 00007f44c481c780
+[   46.708241][    T1] R13: 00007f44c4826088 R14: 00007f44c4b9b128 R15: 00007f44ca38e4f0
+[   46.716523][    T1] Kernel Offset: 0x11000000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+[   46.728244][    T1] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000084 ]---
 
-  We have a use case like this in Android, where we opportunistically store
-  backups in a portion of the TRIM'd space on devices.  It's currently
-  implemented entirely in kernel by the dm-bow target, but IIUC that was deemed
-  too Android-specific to merge.  Assuming we could get good enough performance
-  we could move that logic to userspace, which lets us shrink our diff with
-  upstream.  It feels like some other interesting block devices could be
-  written in a similar fashion.
+== git coredump == 
+# coredumpctl dump
+           PID: 1906 (git)
+           UID: 0 (root)
+           GID: 0 (root)
+        Signal: 11 (SEGV)
+     Timestamp: Mon 2020-12-07 10:10:36 EST (34s ago)
+       Boot ID: 5dd9e21b02e4487f96d2ffeed3140f22
+    Machine ID: 00f60cae470d4f54a377e935638619c5
+       Storage: /var/lib/systemd/coredump/core.git.0.5dd9e21b02e4487f96d2ffeed3140f22.1906.1607353836000000.lz4
+       Message: Process 1906 (git) of user 0 dumped core.
+                
+                Stack trace of thread 1906:
+                #0  0x00007fff845af9dc _dl_relocate_object (/usr/lib64/ld-2.28.so)
+                #1  0x00007fff845a6664 dl_main (/usr/lib64/ld-2.28.so)
+                #2  0x00007fff845c0448 _dl_sysdep_start (/usr/lib64/ld-2.28.so)
+                #3  0x00007fff845a1cbc _dl_start_final (/usr/lib64/ld-2.28.so)
+                #4  0x00007fff845a2dbc _dl_start (/usr/lib64/ld-2.28.so)
+                #5  0x00007fff845a1458 _start (/usr/lib64/ld-2.28.so)
 
-All in all, I've found it a bit hard to figure out what sort of interest people
-have in dm-user: when I bring this up I seem to run into people who've done
-similar things before and are vaguely interested, but certainly nobody is
-chomping at the bit.  I'm sending it out in this early state to try and figure
-out if it's interesting enough to keep going.
+> 
+> A git tree is also available:
+> 
+>     git://git.infradead.org/users/hch/block.git bi_bdev
+> 
+> Gitweb:
+> 
+>     http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/bi_bdev
+> 
+> Diffstat:
+>  arch/m68k/emu/nfblock.c             |    2 
+>  arch/xtensa/platforms/iss/simdisk.c |    2 
+>  block/bio-integrity.c               |   18 +-
+>  block/bio.c                         |   31 +---
+>  block/blk-cgroup.c                  |    7 
+>  block/blk-core.c                    |   99 ++++++-------
+>  block/blk-crypto-fallback.c         |    2 
+>  block/blk-crypto.c                  |    2 
+>  block/blk-merge.c                   |   17 +-
+>  block/blk-mq.c                      |    2 
+>  block/blk-settings.c                |    2 
+>  block/blk-throttle.c                |    2 
+>  block/blk.h                         |    9 -
+>  block/bounce.c                      |    2 
+>  block/genhd.c                       |  261 +++-------------------------------
+> --
+>  block/partitions/core.c             |   31 ----
+>  drivers/block/brd.c                 |    8 -
+>  drivers/block/drbd/drbd_int.h       |    4 
+>  drivers/block/drbd/drbd_req.c       |    2 
+>  drivers/block/null_blk_main.c       |    2 
+>  drivers/block/pktcdvd.c             |    4 
+>  drivers/block/ps3vram.c             |    2 
+>  drivers/block/rsxx/dev.c            |    2 
+>  drivers/block/umem.c                |    2 
+>  drivers/block/zram/zram_drv.c       |    2 
+>  drivers/lightnvm/pblk-init.c        |    2 
+>  drivers/md/bcache/debug.c           |    2 
+>  drivers/md/bcache/request.c         |   39 +++--
+>  drivers/md/dm-bio-record.h          |    9 -
+>  drivers/md/dm-raid1.c               |   10 -
+>  drivers/md/dm.c                     |   14 -
+>  drivers/md/md-linear.c              |    2 
+>  drivers/md/md.c                     |   10 -
+>  drivers/md/md.h                     |    6 
+>  drivers/md/raid1.c                  |    6 
+>  drivers/md/raid10.c                 |   12 -
+>  drivers/md/raid5.c                  |    2 
+>  drivers/nvdimm/blk.c                |    4 
+>  drivers/nvdimm/btt.c                |    4 
+>  drivers/nvdimm/pmem.c               |    4 
+>  drivers/nvme/host/core.c            |    6 
+>  drivers/nvme/host/lightnvm.c        |    3 
+>  drivers/nvme/host/multipath.c       |    6 
+>  drivers/nvme/host/rdma.c            |    2 
+>  drivers/s390/block/dasd.c           |   26 ---
+>  drivers/s390/block/dcssblk.c        |    6 
+>  drivers/s390/block/xpram.c          |    2 
+>  fs/btrfs/check-integrity.c          |   10 -
+>  fs/btrfs/raid56.c                   |    7 
+>  fs/btrfs/scrub.c                    |    2 
+>  fs/direct-io.c                      |    2 
+>  fs/f2fs/data.c                      |   12 -
+>  include/linux/bio.h                 |   18 +-
+>  include/linux/blk_types.h           |    3 
+>  include/linux/blkdev.h              |   20 --
+>  include/linux/genhd.h               |   21 --
+>  kernel/trace/blktrace.c             |   16 +-
+>  mm/page_io.c                        |    2 
+>  58 files changed, 251 insertions(+), 556 deletions(-)
+
