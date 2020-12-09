@@ -2,296 +2,304 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 622ACC433FE
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Dec 2020 03:47:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F8CC433FE
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Dec 2020 04:19:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 300BD23975
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Dec 2020 03:47:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4D4623A79
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Dec 2020 04:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726288AbgLIDrD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Dec 2020 22:47:03 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:37865 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725283AbgLIDrD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Dec 2020 22:47:03 -0500
-Received: from mail-pg1-f198.google.com ([209.85.215.198])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <matthew.ruffell@canonical.com>)
-        id 1kmqQm-00060N-Bz
-        for linux-raid@vger.kernel.org; Wed, 09 Dec 2020 03:46:20 +0000
-Received: by mail-pg1-f198.google.com with SMTP id o128so267781pga.2
-        for <linux-raid@vger.kernel.org>; Tue, 08 Dec 2020 19:46:20 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=LqsfjdpvRBrJPnLpBLMyDBgFdfBa9hHPug34fwUzfwc=;
-        b=qkpGVF32WwG+n6E6Fdonvns1oFE5sZQ48nDOpPL9LvTrYC3YKTfMJDp9cNAH3XN3VA
-         FCek2Bsz+45kd8768TdkNsK1rVvCDs7r9nnKz32a7J5lu2Q7TGDER+W071O/7pNZvKq5
-         9fwGBpInUpkjjf7XwIUDpChqdYqToB/UrhWDx96OTQeSfJlH+ZPMAh3dBE1JQBy7VG5Q
-         aEbN/v62DjQFgWxaJNy8IXcwuMGtwkqXT2McEqi8Jot3HIEM0aMjrhufAiOifR3X3EwR
-         fr8F3SbprpVjAXLpxobVC9h/Bnkp+08rFFUIXh64aQlMoQNM132aQFFwQ5knyBqmhHUn
-         wsOA==
-X-Gm-Message-State: AOAM5327vOw5DwzmnHNd6cqwXgH4o5vyceJz4fAAjt+OXI0prRVxi/qV
-        kTUgZ85J6QPeGgFx2oEEzfKLRQJFvkjlokJWa8U//OqlGCgLj1wBq17iGn86kGc1CkrJCzAiNRI
-        vm+3Vq4ri+1c1KATdm2OcyeTD+DbPB86N4Gc5R0o=
-X-Received: by 2002:a65:414d:: with SMTP id x13mr215037pgp.226.1607485578568;
-        Tue, 08 Dec 2020 19:46:18 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJw3iA2Op3W2abvcsx1yFM+J9B0Hqz9B8+s1CTmq5LiCD6qd4eM8vmhS3TmHfkHMS5rMWdqmWg==
-X-Received: by 2002:a65:414d:: with SMTP id x13mr215015pgp.226.1607485578220;
-        Tue, 08 Dec 2020 19:46:18 -0800 (PST)
-Received: from [192.168.1.107] (222-152-178-139-fibre.sparkbb.co.nz. [222.152.178.139])
-        by smtp.gmail.com with ESMTPSA id jz20sm291676pjb.4.2020.12.08.19.46.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Dec 2020 19:46:17 -0800 (PST)
-To:     xni@redhat.com, linux-raid@vger.kernel.org
-Cc:     song@kernel.org, linux-kernel@vger.kernel.org, colyli@suse.de,
-        guoqing.jiang@cloud.ionos.com, songliubraving@fb.com,
-        khalid.elmously@canonical.com, jay.vosburgh@canonical.com
-From:   Matthew Ruffell <matthew.ruffell@canonical.com>
-Subject: PROBLEM: Recent raid10 block discard patchset causes filesystem
+        id S1726822AbgLIESh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Dec 2020 23:18:37 -0500
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:64822 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726303AbgLIESh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Dec 2020 23:18:37 -0500
+Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
+        by m0001303.ppops.net (8.16.0.43/8.16.0.43) with SMTP id 0B94HdTD023098;
+        Tue, 8 Dec 2020 20:17:45 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=G96tJvVakaHqeCgEMJzkE3GpcoUeIzotDdBpSxSuNwM=;
+ b=Yg6wWH6z5124M0Q7EFpsmQfO3EJe7C8mTu9R3W0Pv7rwKu2l8JphH/ciffkIS/3hKE/U
+ NHJVxgI2JsPOwfh1RaP6GsWvN2GzIwXDeUURx5PLUhX7oxekwITWbNz2WE7KZnWS3a8Q
+ zpWpcqsGy+fvSjYjNtWaf7eogpg9RxG62hQ= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by m0001303.ppops.net with ESMTP id 35882fypma-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 08 Dec 2020 20:17:45 -0800
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (100.104.31.183)
+ by o365-in.thefacebook.com (100.104.35.175) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Tue, 8 Dec 2020 20:17:44 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OpEmrX/I5itcCX6l/bLijbt1Azi97ChdF6u1qTgkXh9Eg6iobVMJl+/q2+EGHN1lttBx7LaEdWsF/uPkHH+Hh0Bv77aN6i5tiL7jwktfWARKWOk5RFM5eVSTjZVh6KScPb28xE8Vk3D67OXs6vIYHjgkgJFaxzolaxkoldVg/qM8b8bhA3cNkCg3q17vR1aQtJ5DwaL7PLrZ1lLvR+83mUcv4ECDWN2NNjKhnPGEp/Fw7Si4Qxm7u/FL9gJWKvBPd4T/0olPPPZ4gIRlxNPASgDtp94tb7j+7sIgNvn0DXYP6H9Rnh2ls4tPgK+qYTqSK0lDeoQSZVN9Qruo205qDw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DlW8WQli+UAFUg4La7Qv9WQKtFQskkztTcWZjFBd0Z4=;
+ b=UH35rpvqhMrr2ZOrMir5u7GcEt0ePVbhB26Rg3ysnYv7J38bN3jiVkRGVF436ylHJUlWBjsOMJz9vXthQ4OJHtDG+0Lo4tCsv43CfXIymI/x6FA6o4UrC27VWNa9KbD3uKLfRLtxT9bOaV3GnH1NSsJdpy/icy7942J6uXNaFImD3LV9QPWK9pApMUwU03A9HahSJOF79Zix+BgZfjGSegywgVhlElX/hOAPWHw3V8GWAtpiqH92oETWzV9A7uyIsI+yF5bRenml6vJwcheR6dX4QUCcSgztLRFaaEa0fBR6P4tKXjzIVocLTDa5ROdehTuco9FGqdg0lv2IIIp0Hg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DlW8WQli+UAFUg4La7Qv9WQKtFQskkztTcWZjFBd0Z4=;
+ b=GF/bsK6dvTxBOeXtUylbOpDFHJHw3tlm8BVWFxB+RyFhhWeiLEUGsB7sO0BHnKDVDYt3JKs9BClPdcXeSMvVh1YMaJurbibeAAGL8jUXGjZSFpQnfJpk6AsmgHebXkDrVT5qSORWfOodmtc7MXwZDnPssJYKIEEmf3GoG6ghQ54=
+Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
+ by BY5PR15MB3713.namprd15.prod.outlook.com (2603:10b6:a03:1f8::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3632.17; Wed, 9 Dec
+ 2020 04:17:43 +0000
+Received: from BYAPR15MB2999.namprd15.prod.outlook.com
+ ([fe80::f49e:bdbb:8cd7:bf6b]) by BYAPR15MB2999.namprd15.prod.outlook.com
+ ([fe80::f49e:bdbb:8cd7:bf6b%7]) with mapi id 15.20.3654.012; Wed, 9 Dec 2020
+ 04:17:42 +0000
+From:   Song Liu <songliubraving@fb.com>
+To:     Matthew Ruffell <matthew.ruffell@canonical.com>,
+        Xiao Ni <xni@redhat.com>
+CC:     linux-raid <linux-raid@vger.kernel.org>,
+        Song Liu <song@kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>, Coly Li <colyli@suse.de>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        "khalid.elmously@canonical.com" <khalid.elmously@canonical.com>,
+        Jay Vosburgh <jay.vosburgh@canonical.com>
+Subject: Re: PROBLEM: Recent raid10 block discard patchset causes filesystem
  corruption on fstrim
-Message-ID: <dbd2761e-cd7d-d60a-f769-ecc8c6335814@canonical.com>
-Date:   Wed, 9 Dec 2020 16:46:11 +1300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Thread-Topic: PROBLEM: Recent raid10 block discard patchset causes filesystem
+ corruption on fstrim
+Thread-Index: AQHWzd3nQ9ev8wV9uUaN5qap82J25anuKLyA
+Date:   Wed, 9 Dec 2020 04:17:42 +0000
+Message-ID: <EA47EF7A-06D8-4B37-BED7-F04753D70DF5@fb.com>
+References: <dbd2761e-cd7d-d60a-f769-ecc8c6335814@canonical.com>
+In-Reply-To: <dbd2761e-cd7d-d60a-f769-ecc8c6335814@canonical.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3608.120.23.2.4)
+authentication-results: canonical.com; dkim=none (message not signed)
+ header.d=none;canonical.com; dmarc=none action=none header.from=fb.com;
+x-originating-ip: [2620:10d:c090:400::5:d023]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: ebddb333-78ed-42d9-f2d5-08d89bf95fd4
+x-ms-traffictypediagnostic: BY5PR15MB3713:
+x-microsoft-antispam-prvs: <BY5PR15MB3713A327E49ECD3F527C95EDB3CC0@BY5PR15MB3713.namprd15.prod.outlook.com>
+x-fb-source: Internal
+x-ms-oob-tlc-oobclassifiers: OLM:1751;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: JSOVGD3Oe9yBMcwgr2n9CzLpU17S0SrocBq5D6jqOFjb7gXjlkldFjDzqcUgGMVil4OKB4uR5CuwgtrQcnKT5ENF2apSZTN1WKS6MwbkSDQxS+rifLPBCZAohtoTPiRANnQg2H8hnyXYibzTqZZ5oI6ht3f6XEV+3LeDaBoCxLEkfeFK6I6SkH3IigEU7orXsNo8QKheyDmDP7c909NA8sl5od75eJfHNTq9ftK9SX7qk/beDLdzR/DTp36QLftxWugTA+VgG+29JCM0DcBOX5z6mcNbYX2pAtDSfAWmsUDdvjhF0ZYyNh1gCCN6C+OreQ/T9O4nUQlE0+GSiCx2b3wibemmzAA1X1Mn/cLGbJa3QnZsoa5CXssS6UCtyYoZ4jfd8V9bvlxTD3gth6yT/GrLFZcOMDEguWgkikYNewJU6uFRPwe3oQahgA8g6dIz2z1KJr/P8HCndym2Q34WIQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(136003)(346002)(376002)(86362001)(64756008)(76116006)(8676002)(5660300002)(83380400001)(2906002)(508600001)(33656002)(110136005)(91956017)(36756003)(6486002)(966005)(66556008)(2616005)(8936002)(6506007)(66946007)(186003)(66446008)(6512007)(53546011)(4326008)(66476007)(71200400001)(54906003)(45980500001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?utf-8?B?UHpqUzZIMStBeUJxd2ZmVjQ2eDdkdU16VzFReThCaTFXb1FrdzVYNk92OXNY?=
+ =?utf-8?B?bDlpcTR4UE1tdTZ3ZVUzZHVtNlJzNTM4cmp3R0tzWWVoSjFoSUs2ZllSdjlp?=
+ =?utf-8?B?dVhLOHlEcXZQTXpZN20wRVUvaG5pd2NxRis3MlNSSjcrZ2JNcFN4WXIrQU5Y?=
+ =?utf-8?B?QnhCc0o3SFZzbnQrWksyNGZ1KzRPWkRlT0xVLyt3R2xGVVUveWlYUzBtbXh1?=
+ =?utf-8?B?LzZ3dmIyQXI3SnRaTWM0a05RZEVRemk5MjlsclhHczJUNTBiUEdRTjZqK3Zq?=
+ =?utf-8?B?bU9yeUVUSE1RdklxZjVWbEx5d3RWUFQ3OE9Ob1BKUXRUUWVZeU5id3d6eDhN?=
+ =?utf-8?B?V1NGSnhnZU1hWXdKR1BGWE9oUnlXK0xDQzRudUlUYnh5d0wrQ0VIVHdST2R1?=
+ =?utf-8?B?WWRlR2lmbE1zNHp1ajhLU0U1VS9DT3l4Q1BZU3lKb1VpZS8rbU5IZUhLSU5P?=
+ =?utf-8?B?TXVEdnBteHRmeEhPbTZQdVZSek1idlE5clduZTd3R1FIQW5VU3JXU05RWThn?=
+ =?utf-8?B?bnR6R1pxQVRBbjl0RGRsT3gxTlJOVDFEWmIvSkVhc1RSWG50dVhnWDl4dkVW?=
+ =?utf-8?B?bTZwbm1rQ053OWF2eE45OHIrY2NKdzBIWWZISVZzMFczd1dOdTdqWUhtZnJo?=
+ =?utf-8?B?Ly94WU93ZW5razNXR3l0YXFQMXc2SWlNdUxjekQvN0pPSU5rSkpUSnFZWi9n?=
+ =?utf-8?B?d2tCTDBHREE3VCtTWGhMRnYzREc2clpyYXEyZXhqWE41SnFaQkxOZ3lETmN4?=
+ =?utf-8?B?ekxycTRLSURESFJYWVBWUmwrTlFXMDJQbVpEanFkbDNnT3U4U0lYbGx1TmMr?=
+ =?utf-8?B?d3JKeGg4UVo0ZVdnZldZY25wTEJaZE9rNEp5VHZXckdoR0VjdTFQVjNMbDNm?=
+ =?utf-8?B?YXlBMXZ6T25LTjJqMzRqeUE3b09hYmNyVUR2ZWF1VU1zR1NHUzh2a244UWY5?=
+ =?utf-8?B?NjkzYlZCeG01dTJwRk5lWDhvTTE5VytWT21aNmd0bzF1RDZXQTRlbURzN2RG?=
+ =?utf-8?B?YklDUGtGQlRRWGx4ckpZQ3lteFNTWCsxcCtLUW5TeWtESkFsVGxOa0pRb3kw?=
+ =?utf-8?B?Y1k3Q3B0VHcxbCtaSHM3bW5kTGRqRUZDL0M0UFFuMFc5OVZnL3pVQVZVQlhL?=
+ =?utf-8?B?TlFPc2tEUjJaVHQyNGdENVpyWGFJZmFJZFRCS3lXSHZxSUxBcVZDRkZ6a1k0?=
+ =?utf-8?B?NndScGxDa2wwakNwZnBocVQ4RDI2Y21uNXJFUDY2QVlzMWM0TDlRczZGUjUr?=
+ =?utf-8?B?RTFmOXR3YkE5UTAvcWt4aHpxVEIwb2JpcnZRbTNaTEZJcUY3OVJ2anVPN0p6?=
+ =?utf-8?B?NXdLQkVSb29HaTIzV0R4MUdQanhtZ1VrZFJXTS9FWlFFamIzZXBUc2E2UEV4?=
+ =?utf-8?Q?i8d6mGAFP6RbJUC8Ti11dH71SoHpOtuU=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <FCCB91FEBF57AB448BA54FA4523BC991@namprd15.prod.outlook.com>
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ebddb333-78ed-42d9-f2d5-08d89bf95fd4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Dec 2020 04:17:42.8319
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Y6K9WbbUlL3mF/uVjOsATC5n6hJY7HUnHbt8wI/2cz0RQse1thYAuffZMDMNscqm0av5Jx9AEA9uEVDOtBaI9g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR15MB3713
+X-OriginatorOrg: fb.com
+Content-Transfer-Encoding: base64
+X-Proofpoint-UnRewURL: 1 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2020-12-09_03:2020-12-08,2020-12-09 signatures=0
+X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 malwarescore=0
+ spamscore=0 phishscore=0 mlxlogscore=999 clxscore=1011 adultscore=0
+ priorityscore=1501 bulkscore=0 lowpriorityscore=0 impostorscore=0
+ suspectscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012090029
+X-FB-Internal: deliver
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello,
-
-I recently backported the following patches into the Ubuntu stable kernels:
-
-md: add md_submit_discard_bio() for submitting discard bio
-md/raid10: extend r10bio devs to raid disks
-md/raid10: pull codes that wait for blocked dev into one function
-md/raid10: improve raid10 discard request
-md/raid10: improve discard request for far layout
-dm raid: fix discard limits for raid1 and raid10
-dm raid: remove unnecessary discard limits for raid10
-
-and this morning, a user reported the following downstream bug:
-
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1907262/
-
-Their weekly cronjob that runs fstrim had run, and their raid10 array has
-extensive data corruption. 
-
-The issue is reproducible on the latest 5.10-rc7 mainline kernel, steps are
-below.
-
-I used a m5d.4xlarge instance on AWS to ultilise 2x 300GB SSDs that support
-block discard. You will want to select small disks to lower the time needed
-to reproduce.
-
-$ uname -rv
-5.10.0-rc7+ #1 SMP Wed Dec 9 01:15:27 UTC 2020
-
-Create a raid10 array, with LVM:
-
-$ lsblk
-NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
-nvme0n1     259:0    0     8G  0 disk 
-└─nvme0n1p1 259:1    0     8G  0 part /
-nvme1n1     259:2    0 279.4G  0 disk 
-nvme2n1     259:3    0 279.4G  0 disk
-
-$ sudo -s
-# mdadm -C -v -l10 -n2 -N "lv-raid" -R /dev/md0 /dev/nvme1n1 /dev/nvme2n1
-mdadm: layout defaults to n2
-mdadm: layout defaults to n2
-mdadm: chunk size defaults to 512K
-mdadm: size set to 292836352K
-mdadm: automatically enabling write-intent bitmap on large array
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
-# pvcreate -ff -y /dev/md0
-  Physical volume "/dev/md0" successfully created.
-# vgcreate -f -y VolGroup /dev/md0
-  Volume group "VolGroup" successfully created
-# lvcreate -n root -L 100G -ay -y VolGroup
-  Logical volume "root" created.
-# mkfs.ext4 /dev/VolGroup/root
-mke2fs 1.44.1 (24-Mar-2018)
-Discarding device blocks: done                            
-Creating filesystem with 26214400 4k blocks and 6553600 inodes
-Filesystem UUID: d7be2e14-fa4d-4489-884b-3bef63b1e1db
-Superblock backups stored on blocks: 
-	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
-	4096000, 7962624, 11239424, 20480000, 23887872
-
-Allocating group tables: done                            
-Writing inode tables: done                            
-Creating journal (131072 blocks): done
-Writing superblocks and filesystem accounting information: done
-# mount /dev/VolGroup/root /mnt
-
-Next, wait for the disk check to complete, 25 minutes on m5d.4xlarge instance.
-
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 nvme2n1[1] nvme1n1[0]
-      292836352 blocks super 1.2 2 near-copies [2/2] [UU]
-      [==>..................]  resync = 12.0% (35211392/292836352) finish=21.4min speed=200340K/sec
-      bitmap: 3/3 pages [12KB], 65536KB chunk
-
-unused devices: <none>
-# cat /sys/block/md0/md/mismatch_cnt
-76918016
-
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 nvme2n1[1] nvme1n1[0]
-      292836352 blocks super 1.2 2 near-copies [2/2] [UU]
-      bitmap: 0/3 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-# cat /sys/block/md0/md/mismatch_cnt
-582330240
-
-Now that the check is complete, create a file, sync and delete it:
-
-# dd if=/dev/zero of=/mnt/data.raw bs=4K count=1M
-1048576+0 records in
-1048576+0 records out
-4294967296 bytes (4.3 GB, 4.0 GiB) copied, 3.95974 s, 1.1 GB/s
-# sync
-# rm /mnt/data.raw
-
-Perform a check:
-
-# echo check > /sys/block/md0/md/sync_action
-
-Again, wait 25 minutes for it to complete:
-
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 nvme1n1[1] nvme2n1[0]
-      292836352 blocks super 1.2 2 near-copies [2/2] [UU]
-      [==>..................]  check = 13.7% (40356224/292836352) finish=20.8min speed=201707K/sec
-      bitmap: 0/3 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-# cat /sys/block/md0/md/mismatch_cnt
-1469696
-
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 nvme1n1[1] nvme2n1[0]
-      292836352 blocks super 1.2 2 near-copies [2/2] [UU]
-      bitmap: 0/3 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-# cat /sys/block/md0/md/mismatch_cnt
-1469696
-
-Now, perform the fstrim:
-
-# fstrim /mnt --verbose
-/mnt: 97.9 GiB (105089236992 bytes) trimmed
-
-Go for another check:
-
-# echo check >/sys/block/md0/md/sync_action
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 nvme1n1[1] nvme2n1[0]
-      292836352 blocks super 1.2 2 near-copies [2/2] [UU]
-      [========>............]  check = 40.3% (118270848/292836352) finish=14.4min speed=200963K/sec
-      bitmap: 0/3 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-# cat /sys/block/md0/md/mismatch_cnt
-205324928
-
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 nvme1n1[1] nvme2n1[0]
-      292836352 blocks super 1.2 2 near-copies [2/2] [UU]
-      bitmap: 0/3 pages [0KB], 65536KB chunk
-
-unused devices: <none>
-# cat /sys/block/md0/md/mismatch_cnt
-205324928
-
-Now, we need to take the raid10 array down, and perform a fsck on one disk at
-a time:
-
-# umount /mnt
-# vgchange -a n /dev/VolGroup
-  0 logical volume(s) in volume group "VolGroup" now active
-# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-
-Let's do first disk;
-
-# mdadm --assemble /dev/md127 /dev/nvme1n1 
-mdadm: /dev/md1 assembled from 1 drive - need all 2 to start it (use --run to insist).
-# mdadm --run /dev/md127
-mdadm: started array /dev/md/lv-raid
-# vgchange -a y /dev/VolGroup
-  1 logical volume(s) in volume group "VolGroup" now active
-# fsck.ext4 -n -f /dev/VolGroup/root
-e2fsck 1.44.1 (24-Mar-2018)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-/dev/VolGroup/root: 11/6553600 files (0.0% non-contiguous), 557848/26214400 blocks
-# vgchange -a n /dev/VolGroup
-  0 logical volume(s) in volume group "VolGroup" now active
-# mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
-
-The second disk:
-
-# mdadm --assemble /dev/md127 /dev/nvme2n1
-mdadm: /dev/md1 assembled from 1 drive - need all 2 to start it (use --run to insist).
-# mdadm --run /dev/md127
-mdadm: started array /dev/md/lv-raid
-# vgchange -a y /dev/VolGroup
-  1 logical volume(s) in volume group "VolGroup" now active
-# fsck.ext4 -n -f /dev/VolGroup/root
-e2fsck 1.44.1 (24-Mar-2018)
-Resize inode not valid.  Recreate? no
-
-Pass 1: Checking inodes, blocks, and sizes
-Inode 7 has illegal block(s).  Clear? no
-
-Illegal indirect block (1714656753) in inode 7.  IGNORED.
-Error while iterating over blocks in inode 7: Illegal indirect block found
-
-/dev/VolGroup/root: ********** WARNING: Filesystem still has errors **********
-
-e2fsck: aborted
-
-/dev/VolGroup/root: ********** WARNING: Filesystem still has errors **********
-
-# vgchange -a n /dev/VolGroup
-  0 logical volume(s) in volume group "VolGroup" now active
-# mdadm --stop /dev/md127
-mdadm: stopped /dev/md127
-
-There are no panics or anything in dmesg. The directory structure of the first
-disk is intact, but the second disk only has Lost+Found present.
-
-I can confirm it is the patches listed at the top of the email, but I have not
-had an opportunity to bisect to find the exact root cause. I will do that once
-we confirm what Ubuntu stable kernels are affected and begin reverting the
-patches.
-
-Let me know if you need any more details.
-
-Thanks,
-Matthew Ruffell
+SGkgTWF0dGhldywgDQoNCj4gT24gRGVjIDgsIDIwMjAsIGF0IDc6NDYgUE0sIE1hdHRoZXcgUnVm
+ZmVsbCA8bWF0dGhldy5ydWZmZWxsQGNhbm9uaWNhbC5jb20+IHdyb3RlOg0KPiANCj4gSGVsbG8s
+DQo+IA0KPiBJIHJlY2VudGx5IGJhY2twb3J0ZWQgdGhlIGZvbGxvd2luZyBwYXRjaGVzIGludG8g
+dGhlIFVidW50dSBzdGFibGUga2VybmVsczoNCj4gDQo+IG1kOiBhZGQgbWRfc3VibWl0X2Rpc2Nh
+cmRfYmlvKCkgZm9yIHN1Ym1pdHRpbmcgZGlzY2FyZCBiaW8NCj4gbWQvcmFpZDEwOiBleHRlbmQg
+cjEwYmlvIGRldnMgdG8gcmFpZCBkaXNrcw0KPiBtZC9yYWlkMTA6IHB1bGwgY29kZXMgdGhhdCB3
+YWl0IGZvciBibG9ja2VkIGRldiBpbnRvIG9uZSBmdW5jdGlvbg0KPiBtZC9yYWlkMTA6IGltcHJv
+dmUgcmFpZDEwIGRpc2NhcmQgcmVxdWVzdA0KPiBtZC9yYWlkMTA6IGltcHJvdmUgZGlzY2FyZCBy
+ZXF1ZXN0IGZvciBmYXIgbGF5b3V0DQo+IGRtIHJhaWQ6IGZpeCBkaXNjYXJkIGxpbWl0cyBmb3Ig
+cmFpZDEgYW5kIHJhaWQxMA0KPiBkbSByYWlkOiByZW1vdmUgdW5uZWNlc3NhcnkgZGlzY2FyZCBs
+aW1pdHMgZm9yIHJhaWQxMA0KDQpUaGFua3MgZm9yIHRoZSByZXBvcnQhDQoNCkhpIFhpYW8sIA0K
+DQpDb3VsZCB5b3UgcGxlYXNlIHRha2UgYSBsb29rIGF0IHRoaXMgYW5kIGxldCBtZSBrbm93IHNv
+b24/IFdlIG5lZWQgdG8gZml4IA0KdGhpcyBiZWZvcmUgNS4xMCBvZmZpY2lhbCByZWxlYXNlLiAN
+Cg0KVGhhbmtzLA0KU29uZw0KDQo+IA0KPiBhbmQgdGhpcyBtb3JuaW5nLCBhIHVzZXIgcmVwb3J0
+ZWQgdGhlIGZvbGxvd2luZyBkb3duc3RyZWFtIGJ1ZzoNCj4gDQo+IGh0dHBzOi8vYnVncy5sYXVu
+Y2hwYWQubmV0L3VidW50dS8rc291cmNlL2xpbnV4LytidWcvMTkwNzI2Mi8gDQo+IA0KPiBUaGVp
+ciB3ZWVrbHkgY3JvbmpvYiB0aGF0IHJ1bnMgZnN0cmltIGhhZCBydW4sIGFuZCB0aGVpciByYWlk
+MTAgYXJyYXkgaGFzDQo+IGV4dGVuc2l2ZSBkYXRhIGNvcnJ1cHRpb24uIA0KPiANCj4gVGhlIGlz
+c3VlIGlzIHJlcHJvZHVjaWJsZSBvbiB0aGUgbGF0ZXN0IDUuMTAtcmM3IG1haW5saW5lIGtlcm5l
+bCwgc3RlcHMgYXJlDQo+IGJlbG93Lg0KPiANCj4gSSB1c2VkIGEgbTVkLjR4bGFyZ2UgaW5zdGFu
+Y2Ugb24gQVdTIHRvIHVsdGlsaXNlIDJ4IDMwMEdCIFNTRHMgdGhhdCBzdXBwb3J0DQo+IGJsb2Nr
+IGRpc2NhcmQuIFlvdSB3aWxsIHdhbnQgdG8gc2VsZWN0IHNtYWxsIGRpc2tzIHRvIGxvd2VyIHRo
+ZSB0aW1lIG5lZWRlZA0KPiB0byByZXByb2R1Y2UuDQo+IA0KPiAkIHVuYW1lIC1ydg0KPiA1LjEw
+LjAtcmM3KyAjMSBTTVAgV2VkIERlYyA5IDAxOjE1OjI3IFVUQyAyMDIwDQo+IA0KPiBDcmVhdGUg
+YSByYWlkMTAgYXJyYXksIHdpdGggTFZNOg0KPiANCj4gJCBsc2Jsaw0KPiBOQU1FICAgICAgICBN
+QUo6TUlOIFJNICAgU0laRSBSTyBUWVBFIE1PVU5UUE9JTlQNCj4gbnZtZTBuMSAgICAgMjU5OjAg
+ICAgMCAgICAgOEcgIDAgZGlzayANCj4g4pSU4pSAbnZtZTBuMXAxIDI1OToxICAgIDAgICAgIDhH
+ICAwIHBhcnQgLw0KPiBudm1lMW4xICAgICAyNTk6MiAgICAwIDI3OS40RyAgMCBkaXNrIA0KPiBu
+dm1lMm4xICAgICAyNTk6MyAgICAwIDI3OS40RyAgMCBkaXNrDQo+IA0KPiAkIHN1ZG8gLXMNCj4g
+IyBtZGFkbSAtQyAtdiAtbDEwIC1uMiAtTiAibHYtcmFpZCIgLVIgL2Rldi9tZDAgL2Rldi9udm1l
+MW4xIC9kZXYvbnZtZTJuMQ0KPiBtZGFkbTogbGF5b3V0IGRlZmF1bHRzIHRvIG4yDQo+IG1kYWRt
+OiBsYXlvdXQgZGVmYXVsdHMgdG8gbjINCj4gbWRhZG06IGNodW5rIHNpemUgZGVmYXVsdHMgdG8g
+NTEySw0KPiBtZGFkbTogc2l6ZSBzZXQgdG8gMjkyODM2MzUySw0KPiBtZGFkbTogYXV0b21hdGlj
+YWxseSBlbmFibGluZyB3cml0ZS1pbnRlbnQgYml0bWFwIG9uIGxhcmdlIGFycmF5DQo+IG1kYWRt
+OiBEZWZhdWx0aW5nIHRvIHZlcnNpb24gMS4yIG1ldGFkYXRhDQo+IG1kYWRtOiBhcnJheSAvZGV2
+L21kMCBzdGFydGVkLg0KPiAjIHB2Y3JlYXRlIC1mZiAteSAvZGV2L21kMA0KPiAgUGh5c2ljYWwg
+dm9sdW1lICIvZGV2L21kMCIgc3VjY2Vzc2Z1bGx5IGNyZWF0ZWQuDQo+ICMgdmdjcmVhdGUgLWYg
+LXkgVm9sR3JvdXAgL2Rldi9tZDANCj4gIFZvbHVtZSBncm91cCAiVm9sR3JvdXAiIHN1Y2Nlc3Nm
+dWxseSBjcmVhdGVkDQo+ICMgbHZjcmVhdGUgLW4gcm9vdCAtTCAxMDBHIC1heSAteSBWb2xHcm91
+cA0KPiAgTG9naWNhbCB2b2x1bWUgInJvb3QiIGNyZWF0ZWQuDQo+ICMgbWtmcy5leHQ0IC9kZXYv
+Vm9sR3JvdXAvcm9vdA0KPiBta2UyZnMgMS40NC4xICgyNC1NYXItMjAxOCkNCj4gRGlzY2FyZGlu
+ZyBkZXZpY2UgYmxvY2tzOiBkb25lICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KPiBDcmVh
+dGluZyBmaWxlc3lzdGVtIHdpdGggMjYyMTQ0MDAgNGsgYmxvY2tzIGFuZCA2NTUzNjAwIGlub2Rl
+cw0KPiBGaWxlc3lzdGVtIFVVSUQ6IGQ3YmUyZTE0LWZhNGQtNDQ4OS04ODRiLTNiZWY2M2IxZTFk
+Yg0KPiBTdXBlcmJsb2NrIGJhY2t1cHMgc3RvcmVkIG9uIGJsb2NrczogDQo+IAkzMjc2OCwgOTgz
+MDQsIDE2Mzg0MCwgMjI5Mzc2LCAyOTQ5MTIsIDgxOTIwMCwgODg0NzM2LCAxNjA1NjMyLCAyNjU0
+MjA4LCANCj4gCTQwOTYwMDAsIDc5NjI2MjQsIDExMjM5NDI0LCAyMDQ4MDAwMCwgMjM4ODc4NzIN
+Cj4gDQo+IEFsbG9jYXRpbmcgZ3JvdXAgdGFibGVzOiBkb25lICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIA0KPiBXcml0aW5nIGlub2RlIHRhYmxlczogZG9uZSAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICANCj4gQ3JlYXRpbmcgam91cm5hbCAoMTMxMDcyIGJsb2Nrcyk6IGRvbmUNCj4gV3Jp
+dGluZyBzdXBlcmJsb2NrcyBhbmQgZmlsZXN5c3RlbSBhY2NvdW50aW5nIGluZm9ybWF0aW9uOiBk
+b25lDQo+ICMgbW91bnQgL2Rldi9Wb2xHcm91cC9yb290IC9tbnQNCj4gDQo+IE5leHQsIHdhaXQg
+Zm9yIHRoZSBkaXNrIGNoZWNrIHRvIGNvbXBsZXRlLCAyNSBtaW51dGVzIG9uIG01ZC40eGxhcmdl
+IGluc3RhbmNlLg0KPiANCj4gIyBjYXQgL3Byb2MvbWRzdGF0DQo+IFBlcnNvbmFsaXRpZXMgOiBb
+bGluZWFyXSBbbXVsdGlwYXRoXSBbcmFpZDBdIFtyYWlkMV0gW3JhaWQ2XSBbcmFpZDVdIFtyYWlk
+NF0gW3JhaWQxMF0gDQo+IG1kMCA6IGFjdGl2ZSByYWlkMTAgbnZtZTJuMVsxXSBudm1lMW4xWzBd
+DQo+ICAgICAgMjkyODM2MzUyIGJsb2NrcyBzdXBlciAxLjIgMiBuZWFyLWNvcGllcyBbMi8yXSBb
+VVVdDQo+ICAgICAgWz09Pi4uLi4uLi4uLi4uLi4uLi4uLl0gIHJlc3luYyA9IDEyLjAlICgzNTIx
+MTM5Mi8yOTI4MzYzNTIpIGZpbmlzaD0yMS40bWluIHNwZWVkPTIwMDM0MEsvc2VjDQo+ICAgICAg
+Yml0bWFwOiAzLzMgcGFnZXMgWzEyS0JdLCA2NTUzNktCIGNodW5rDQo+IA0KPiB1bnVzZWQgZGV2
+aWNlczogPG5vbmU+DQo+ICMgY2F0IC9zeXMvYmxvY2svbWQwL21kL21pc21hdGNoX2NudA0KPiA3
+NjkxODAxNg0KPiANCj4gIyBjYXQgL3Byb2MvbWRzdGF0DQo+IFBlcnNvbmFsaXRpZXMgOiBbbGlu
+ZWFyXSBbbXVsdGlwYXRoXSBbcmFpZDBdIFtyYWlkMV0gW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0g
+W3JhaWQxMF0gDQo+IG1kMCA6IGFjdGl2ZSByYWlkMTAgbnZtZTJuMVsxXSBudm1lMW4xWzBdDQo+
+ICAgICAgMjkyODM2MzUyIGJsb2NrcyBzdXBlciAxLjIgMiBuZWFyLWNvcGllcyBbMi8yXSBbVVVd
+DQo+ICAgICAgYml0bWFwOiAwLzMgcGFnZXMgWzBLQl0sIDY1NTM2S0IgY2h1bmsNCj4gDQo+IHVu
+dXNlZCBkZXZpY2VzOiA8bm9uZT4NCj4gIyBjYXQgL3N5cy9ibG9jay9tZDAvbWQvbWlzbWF0Y2hf
+Y250DQo+IDU4MjMzMDI0MA0KPiANCj4gTm93IHRoYXQgdGhlIGNoZWNrIGlzIGNvbXBsZXRlLCBj
+cmVhdGUgYSBmaWxlLCBzeW5jIGFuZCBkZWxldGUgaXQ6DQo+IA0KPiAjIGRkIGlmPS9kZXYvemVy
+byBvZj0vbW50L2RhdGEucmF3IGJzPTRLIGNvdW50PTFNDQo+IDEwNDg1NzYrMCByZWNvcmRzIGlu
+DQo+IDEwNDg1NzYrMCByZWNvcmRzIG91dA0KPiA0Mjk0OTY3Mjk2IGJ5dGVzICg0LjMgR0IsIDQu
+MCBHaUIpIGNvcGllZCwgMy45NTk3NCBzLCAxLjEgR0Ivcw0KPiAjIHN5bmMNCj4gIyBybSAvbW50
+L2RhdGEucmF3DQo+IA0KPiBQZXJmb3JtIGEgY2hlY2s6DQo+IA0KPiAjIGVjaG8gY2hlY2sgPiAv
+c3lzL2Jsb2NrL21kMC9tZC9zeW5jX2FjdGlvbg0KPiANCj4gQWdhaW4sIHdhaXQgMjUgbWludXRl
+cyBmb3IgaXQgdG8gY29tcGxldGU6DQo+IA0KPiAjIGNhdCAvcHJvYy9tZHN0YXQNCj4gUGVyc29u
+YWxpdGllcyA6IFtsaW5lYXJdIFttdWx0aXBhdGhdIFtyYWlkMF0gW3JhaWQxXSBbcmFpZDZdIFty
+YWlkNV0gW3JhaWQ0XSBbcmFpZDEwXSANCj4gbWQwIDogYWN0aXZlIHJhaWQxMCBudm1lMW4xWzFd
+IG52bWUybjFbMF0NCj4gICAgICAyOTI4MzYzNTIgYmxvY2tzIHN1cGVyIDEuMiAyIG5lYXItY29w
+aWVzIFsyLzJdIFtVVV0NCj4gICAgICBbPT0+Li4uLi4uLi4uLi4uLi4uLi4uXSAgY2hlY2sgPSAx
+My43JSAoNDAzNTYyMjQvMjkyODM2MzUyKSBmaW5pc2g9MjAuOG1pbiBzcGVlZD0yMDE3MDdLL3Nl
+Yw0KPiAgICAgIGJpdG1hcDogMC8zIHBhZ2VzIFswS0JdLCA2NTUzNktCIGNodW5rDQo+IA0KPiB1
+bnVzZWQgZGV2aWNlczogPG5vbmU+DQo+ICMgY2F0IC9zeXMvYmxvY2svbWQwL21kL21pc21hdGNo
+X2NudA0KPiAxNDY5Njk2DQo+IA0KPiAjIGNhdCAvcHJvYy9tZHN0YXQNCj4gUGVyc29uYWxpdGll
+cyA6IFtsaW5lYXJdIFttdWx0aXBhdGhdIFtyYWlkMF0gW3JhaWQxXSBbcmFpZDZdIFtyYWlkNV0g
+W3JhaWQ0XSBbcmFpZDEwXSANCj4gbWQwIDogYWN0aXZlIHJhaWQxMCBudm1lMW4xWzFdIG52bWUy
+bjFbMF0NCj4gICAgICAyOTI4MzYzNTIgYmxvY2tzIHN1cGVyIDEuMiAyIG5lYXItY29waWVzIFsy
+LzJdIFtVVV0NCj4gICAgICBiaXRtYXA6IDAvMyBwYWdlcyBbMEtCXSwgNjU1MzZLQiBjaHVuaw0K
+PiANCj4gdW51c2VkIGRldmljZXM6IDxub25lPg0KPiAjIGNhdCAvc3lzL2Jsb2NrL21kMC9tZC9t
+aXNtYXRjaF9jbnQNCj4gMTQ2OTY5Ng0KPiANCj4gTm93LCBwZXJmb3JtIHRoZSBmc3RyaW06DQo+
+IA0KPiAjIGZzdHJpbSAvbW50IC0tdmVyYm9zZQ0KPiAvbW50OiA5Ny45IEdpQiAoMTA1MDg5MjM2
+OTkyIGJ5dGVzKSB0cmltbWVkDQo+IA0KPiBHbyBmb3IgYW5vdGhlciBjaGVjazoNCj4gDQo+ICMg
+ZWNobyBjaGVjayA+L3N5cy9ibG9jay9tZDAvbWQvc3luY19hY3Rpb24NCj4gIyBjYXQgL3Byb2Mv
+bWRzdGF0DQo+IFBlcnNvbmFsaXRpZXMgOiBbbGluZWFyXSBbbXVsdGlwYXRoXSBbcmFpZDBdIFty
+YWlkMV0gW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0gW3JhaWQxMF0gDQo+IG1kMCA6IGFjdGl2ZSBy
+YWlkMTAgbnZtZTFuMVsxXSBudm1lMm4xWzBdDQo+ICAgICAgMjkyODM2MzUyIGJsb2NrcyBzdXBl
+ciAxLjIgMiBuZWFyLWNvcGllcyBbMi8yXSBbVVVdDQo+ICAgICAgWz09PT09PT09Pi4uLi4uLi4u
+Li4uLl0gIGNoZWNrID0gNDAuMyUgKDExODI3MDg0OC8yOTI4MzYzNTIpIGZpbmlzaD0xNC40bWlu
+IHNwZWVkPTIwMDk2M0svc2VjDQo+ICAgICAgYml0bWFwOiAwLzMgcGFnZXMgWzBLQl0sIDY1NTM2
+S0IgY2h1bmsNCj4gDQo+IHVudXNlZCBkZXZpY2VzOiA8bm9uZT4NCj4gIyBjYXQgL3N5cy9ibG9j
+ay9tZDAvbWQvbWlzbWF0Y2hfY250DQo+IDIwNTMyNDkyOA0KPiANCj4gIyBjYXQgL3Byb2MvbWRz
+dGF0DQo+IFBlcnNvbmFsaXRpZXMgOiBbbGluZWFyXSBbbXVsdGlwYXRoXSBbcmFpZDBdIFtyYWlk
+MV0gW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0gW3JhaWQxMF0gDQo+IG1kMCA6IGFjdGl2ZSByYWlk
+MTAgbnZtZTFuMVsxXSBudm1lMm4xWzBdDQo+ICAgICAgMjkyODM2MzUyIGJsb2NrcyBzdXBlciAx
+LjIgMiBuZWFyLWNvcGllcyBbMi8yXSBbVVVdDQo+ICAgICAgYml0bWFwOiAwLzMgcGFnZXMgWzBL
+Ql0sIDY1NTM2S0IgY2h1bmsNCj4gDQo+IHVudXNlZCBkZXZpY2VzOiA8bm9uZT4NCj4gIyBjYXQg
+L3N5cy9ibG9jay9tZDAvbWQvbWlzbWF0Y2hfY250DQo+IDIwNTMyNDkyOA0KPiANCj4gTm93LCB3
+ZSBuZWVkIHRvIHRha2UgdGhlIHJhaWQxMCBhcnJheSBkb3duLCBhbmQgcGVyZm9ybSBhIGZzY2sg
+b24gb25lIGRpc2sgYXQNCj4gYSB0aW1lOg0KPiANCj4gIyB1bW91bnQgL21udA0KPiAjIHZnY2hh
+bmdlIC1hIG4gL2Rldi9Wb2xHcm91cA0KPiAgMCBsb2dpY2FsIHZvbHVtZShzKSBpbiB2b2x1bWUg
+Z3JvdXAgIlZvbEdyb3VwIiBub3cgYWN0aXZlDQo+ICMgbWRhZG0gLS1zdG9wIC9kZXYvbWQwDQo+
+IG1kYWRtOiBzdG9wcGVkIC9kZXYvbWQwDQo+IA0KPiBMZXQncyBkbyBmaXJzdCBkaXNrOw0KPiAN
+Cj4gIyBtZGFkbSAtLWFzc2VtYmxlIC9kZXYvbWQxMjcgL2Rldi9udm1lMW4xIA0KPiBtZGFkbTog
+L2Rldi9tZDEgYXNzZW1ibGVkIGZyb20gMSBkcml2ZSAtIG5lZWQgYWxsIDIgdG8gc3RhcnQgaXQg
+KHVzZSAtLXJ1biB0byBpbnNpc3QpLg0KPiAjIG1kYWRtIC0tcnVuIC9kZXYvbWQxMjcNCj4gbWRh
+ZG06IHN0YXJ0ZWQgYXJyYXkgL2Rldi9tZC9sdi1yYWlkDQo+ICMgdmdjaGFuZ2UgLWEgeSAvZGV2
+L1ZvbEdyb3VwDQo+ICAxIGxvZ2ljYWwgdm9sdW1lKHMpIGluIHZvbHVtZSBncm91cCAiVm9sR3Jv
+dXAiIG5vdyBhY3RpdmUNCj4gIyBmc2NrLmV4dDQgLW4gLWYgL2Rldi9Wb2xHcm91cC9yb290DQo+
+IGUyZnNjayAxLjQ0LjEgKDI0LU1hci0yMDE4KQ0KPiBQYXNzIDE6IENoZWNraW5nIGlub2Rlcywg
+YmxvY2tzLCBhbmQgc2l6ZXMNCj4gUGFzcyAyOiBDaGVja2luZyBkaXJlY3Rvcnkgc3RydWN0dXJl
+DQo+IFBhc3MgMzogQ2hlY2tpbmcgZGlyZWN0b3J5IGNvbm5lY3Rpdml0eQ0KPiBQYXNzIDQ6IENo
+ZWNraW5nIHJlZmVyZW5jZSBjb3VudHMNCj4gUGFzcyA1OiBDaGVja2luZyBncm91cCBzdW1tYXJ5
+IGluZm9ybWF0aW9uDQo+IC9kZXYvVm9sR3JvdXAvcm9vdDogMTEvNjU1MzYwMCBmaWxlcyAoMC4w
+JSBub24tY29udGlndW91cyksIDU1Nzg0OC8yNjIxNDQwMCBibG9ja3MNCj4gIyB2Z2NoYW5nZSAt
+YSBuIC9kZXYvVm9sR3JvdXANCj4gIDAgbG9naWNhbCB2b2x1bWUocykgaW4gdm9sdW1lIGdyb3Vw
+ICJWb2xHcm91cCIgbm93IGFjdGl2ZQ0KPiAjIG1kYWRtIC0tc3RvcCAvZGV2L21kMTI3DQo+IG1k
+YWRtOiBzdG9wcGVkIC9kZXYvbWQxMjcNCj4gDQo+IFRoZSBzZWNvbmQgZGlzazoNCj4gDQo+ICMg
+bWRhZG0gLS1hc3NlbWJsZSAvZGV2L21kMTI3IC9kZXYvbnZtZTJuMQ0KPiBtZGFkbTogL2Rldi9t
+ZDEgYXNzZW1ibGVkIGZyb20gMSBkcml2ZSAtIG5lZWQgYWxsIDIgdG8gc3RhcnQgaXQgKHVzZSAt
+LXJ1biB0byBpbnNpc3QpLg0KPiAjIG1kYWRtIC0tcnVuIC9kZXYvbWQxMjcNCj4gbWRhZG06IHN0
+YXJ0ZWQgYXJyYXkgL2Rldi9tZC9sdi1yYWlkDQo+ICMgdmdjaGFuZ2UgLWEgeSAvZGV2L1ZvbEdy
+b3VwDQo+ICAxIGxvZ2ljYWwgdm9sdW1lKHMpIGluIHZvbHVtZSBncm91cCAiVm9sR3JvdXAiIG5v
+dyBhY3RpdmUNCj4gIyBmc2NrLmV4dDQgLW4gLWYgL2Rldi9Wb2xHcm91cC9yb290DQo+IGUyZnNj
+ayAxLjQ0LjEgKDI0LU1hci0yMDE4KQ0KPiBSZXNpemUgaW5vZGUgbm90IHZhbGlkLiAgUmVjcmVh
+dGU/IG5vDQo+IA0KPiBQYXNzIDE6IENoZWNraW5nIGlub2RlcywgYmxvY2tzLCBhbmQgc2l6ZXMN
+Cj4gSW5vZGUgNyBoYXMgaWxsZWdhbCBibG9jayhzKS4gIENsZWFyPyBubw0KPiANCj4gSWxsZWdh
+bCBpbmRpcmVjdCBibG9jayAoMTcxNDY1Njc1MykgaW4gaW5vZGUgNy4gIElHTk9SRUQuDQo+IEVy
+cm9yIHdoaWxlIGl0ZXJhdGluZyBvdmVyIGJsb2NrcyBpbiBpbm9kZSA3OiBJbGxlZ2FsIGluZGly
+ZWN0IGJsb2NrIGZvdW5kDQo+IA0KPiAvZGV2L1ZvbEdyb3VwL3Jvb3Q6ICoqKioqKioqKiogV0FS
+TklORzogRmlsZXN5c3RlbSBzdGlsbCBoYXMgZXJyb3JzICoqKioqKioqKioNCj4gDQo+IGUyZnNj
+azogYWJvcnRlZA0KPiANCj4gL2Rldi9Wb2xHcm91cC9yb290OiAqKioqKioqKioqIFdBUk5JTkc6
+IEZpbGVzeXN0ZW0gc3RpbGwgaGFzIGVycm9ycyAqKioqKioqKioqDQo+IA0KPiAjIHZnY2hhbmdl
+IC1hIG4gL2Rldi9Wb2xHcm91cA0KPiAgMCBsb2dpY2FsIHZvbHVtZShzKSBpbiB2b2x1bWUgZ3Jv
+dXAgIlZvbEdyb3VwIiBub3cgYWN0aXZlDQo+ICMgbWRhZG0gLS1zdG9wIC9kZXYvbWQxMjcNCj4g
+bWRhZG06IHN0b3BwZWQgL2Rldi9tZDEyNw0KPiANCj4gVGhlcmUgYXJlIG5vIHBhbmljcyBvciBh
+bnl0aGluZyBpbiBkbWVzZy4gVGhlIGRpcmVjdG9yeSBzdHJ1Y3R1cmUgb2YgdGhlIGZpcnN0DQo+
+IGRpc2sgaXMgaW50YWN0LCBidXQgdGhlIHNlY29uZCBkaXNrIG9ubHkgaGFzIExvc3QrRm91bmQg
+cHJlc2VudC4NCj4gDQo+IEkgY2FuIGNvbmZpcm0gaXQgaXMgdGhlIHBhdGNoZXMgbGlzdGVkIGF0
+IHRoZSB0b3Agb2YgdGhlIGVtYWlsLCBidXQgSSBoYXZlIG5vdA0KPiBoYWQgYW4gb3Bwb3J0dW5p
+dHkgdG8gYmlzZWN0IHRvIGZpbmQgdGhlIGV4YWN0IHJvb3QgY2F1c2UuIEkgd2lsbCBkbyB0aGF0
+IG9uY2UNCj4gd2UgY29uZmlybSB3aGF0IFVidW50dSBzdGFibGUga2VybmVscyBhcmUgYWZmZWN0
+ZWQgYW5kIGJlZ2luIHJldmVydGluZyB0aGUNCj4gcGF0Y2hlcy4NCj4gDQo+IExldCBtZSBrbm93
+IGlmIHlvdSBuZWVkIGFueSBtb3JlIGRldGFpbHMuDQo+IA0KPiBUaGFua3MsDQo+IE1hdHRoZXcg
+UnVmZmVsbA0KDQo=
