@@ -2,119 +2,122 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF908C0018C
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 15:31:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CDFC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 17:04:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CEBF23D22
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 15:31:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC60222D6E
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 17:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390572AbgLJPaz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Dec 2020 10:30:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41828 "EHLO
+        id S2390891AbgLJREQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Dec 2020 12:04:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729979AbgLJPam (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Dec 2020 10:30:42 -0500
-Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 513D2C0613CF
-        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 07:30:02 -0800 (PST)
-Received: by mail-io1-xd31.google.com with SMTP id o8so5931525ioh.0
-        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 07:30:02 -0800 (PST)
+        with ESMTP id S2387776AbgLJREG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Dec 2020 12:04:06 -0500
+Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9827BC06179C
+        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 09:03:25 -0800 (PST)
+Received: by mail-qk1-x741.google.com with SMTP id q22so5438140qkq.6
+        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 09:03:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=CLUcdVoTS0KpV496cqdhKIjPuoIPuM2lnsf6pLV7NtU=;
-        b=Unr42VwG5m7A052lIcw00Jv+JlWCDeJx9a7zEmvwCGKr3oTB31eu1MZjV0Ep/Wsz/A
-         4h5xvCsKahHKtDv28uQIXVxifEN1nesFDGH7tklzS91s4BoqXldNL3CUhIs8vOCh7mJn
-         ykFdDwPfH08WM8Tv1b6Pw+esr8KhhqxYm1QTbsko/VGigU34IzPOXGRRQcwpFp/c7E7h
-         w3xoBqjd9nXXGmMABZLQnID3GuwUEI7/ecsFIlpecp70jhlcowpyc9HchPZ6ddR9g5Tq
-         fl4YZAJB+ir1uVeaweqjqNv1S3Ywz8PvHZqAb1PweQozDXfbQYC0sP9SqGvXv0JCmK5S
-         A7Hw==
+        bh=sUTklf9jBEwzs6UhWeShzolt35srKpXJ+Aec/2jQSUU=;
+        b=h/WaKNT1y3XBZzgswgsh3Ixjw2N5x/28mj80swAvklzGIkVrj6MJ8wuNisjEyktydT
+         zCseyjCchbMSPmxaGGplDZeJZGmP5oyuuVuXTxCHsGpXk0qls2m66qjTPGaKUsL8ZRao
+         pG1Gub5CnI64JSe7Y7ezFsY7qfQdgeOGSHy9txvrSC33WOO2k81hdMm/P+2raMibY7v9
+         fJHm6P4C0LRQcU3U5FIZ0KPx7ZPzEHxNce551WR814F2jYgp0wq9R/aJ9NcE8kgU8u2e
+         QyaXhCI11vcVH6ukyAI3qKqvg5kI9bv6rPVXMAlpIk9CUlSY5f7ETZmBRFKsxQ/oRgfO
+         7ZoA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=CLUcdVoTS0KpV496cqdhKIjPuoIPuM2lnsf6pLV7NtU=;
-        b=OC2i4JI0Lz09kNbQTe0VVtouDSMAhGZhudK6FcaUKaCKkzjFmpEAd7eIocS1iGO1DO
-         bYEC2OoQ2cIpYzQ5Q+NUlyEVHErZaFv8ANMBnFfTGq/99hNfttGS24dXqwk2pUgXsaCq
-         ZQL5MxTrEbtZoHX4UjXoAVVL+Czb68Z3w4n5DQoOtKdLrnTfRU17geCHblh3zn6VRGB3
-         8mmw4a1fnHPWF2TlHCFJkyJ8/eVMDV/VZQR9eR24uJ82BjTp7kZ28579wzUl4U0AeGOC
-         wrvq0FvlYOlfzwDBH3QNjyB9YH6NKGCIh1BNWVMMDxpgJbhrlEnAKCk9MXC87C+tiFWl
-         3Npg==
-X-Gm-Message-State: AOAM533hTUzD5M5P5AXcCWE7IKEMaqWQJPdwJvDTSF2/wywUVvJOH9sa
-        5+omk76k7Gy/6CLLWgDBDjksNg==
-X-Google-Smtp-Source: ABdhPJzZip4bmW6pvZRMHsPsYzr6rFNPOEKXNdkqs+pOp3RXtExNSmWQG7OgFJoezOjQnkzbRSUbQw==
-X-Received: by 2002:a6b:b5d2:: with SMTP id e201mr5359683iof.111.1607614201641;
-        Thu, 10 Dec 2020 07:30:01 -0800 (PST)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id r10sm3468716ilo.34.2020.12.10.07.30.00
+        bh=sUTklf9jBEwzs6UhWeShzolt35srKpXJ+Aec/2jQSUU=;
+        b=lnCSAug4Tn8E2NFv40o4M3qgRLwJTCkDVRTZxx9sOweubCnrtPLF6fYx3Zpdr8Qap5
+         lPp3T45AgHURhtCfnDioitS6FovwO5uiDt8jMzi0aXtlwp6MJruflF/P6gKMQZb9gqRf
+         i0MPHhBOQv2V/bx2McOBuSKzqPma7WJfbOQweRncsUA0v1ajG7mt72Em6OP3nRc8PvDJ
+         FPXg8wb9HU0jDI0+DeUAhofNnoDOHj8oSO/QvL2XmsGMrpCukgdFFspElVXZOZNdl8Mt
+         o4/inRzFybGDNhAJJg+zEm3liGty43PrPBvH/lx9icPNivxM4zPw6EZwTvj6UKG4FWKz
+         zHDw==
+X-Gm-Message-State: AOAM533rbxc9FId8phwsnRjc5SP2ToPiiSFy8J0Y1nXbd18FMZ9RiGB4
+        5Gsi2VLzHOByAWHuo+kd7ZYWuw==
+X-Google-Smtp-Source: ABdhPJymXAQH/aw0VSr4+J5MsG5kd52DH5BGq1ZaXwLD+lvifpGCtkGDCg1EXTpttoD9CP3doaPF0g==
+X-Received: by 2002:a37:bac7:: with SMTP id k190mr10524292qkf.464.1607619804657;
+        Thu, 10 Dec 2020 09:03:24 -0800 (PST)
+Received: from [192.168.1.45] (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
+        by smtp.gmail.com with ESMTPSA id y22sm3789944qkj.129.2020.12.10.09.03.23
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Dec 2020 07:30:01 -0800 (PST)
-Subject: Re: [GIT PULL v2] md-fixes 20201209
-To:     Mike Snitzer <snitzer@redhat.com>
-Cc:     Song Liu <songliubraving@fb.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Xiao Ni <xni@redhat.com>,
-        Matthew Ruffell <matthew.ruffell@canonical.com>
-References: <0C161FAC-8A21-4EAF-B3B4-A7BF04089213@fb.com>
- <aa01f088-c4a5-2eed-3e74-2288554ea98a@kernel.dk>
- <20201210145119.GA9856@redhat.com>
- <00e0d114-e45e-9fbc-0f44-2eb1d81f992d@kernel.dk>
- <20201210152136.GB9856@redhat.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <6fec3df2-c94a-7291-ce3e-89cd7c21728c@kernel.dk>
-Date:   Thu, 10 Dec 2020 08:29:59 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Thu, 10 Dec 2020 09:03:23 -0800 (PST)
+Subject: Re: [dm-devel] [PATCH v1 0/5] dm: dm-user: New target that proxies
+ BIOs to userspace
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     snitzer@redhat.com, corbet@lwn.net, kernel-team@android.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, song@kernel.org, dm-devel@redhat.com,
+        linux-kselftest@vger.kernel.org, shuah@kernel.org, agk@redhat.com,
+        Mike Christie <michael.christie@oracle.com>
+References: <mhng-97fc5874-29d0-4d9e-8c92-d3704a482f28@palmerdabbelt-glaptop1>
+ <6fb5be2d-c6ca-c21b-dddf-9b314973dcfe@acm.org>
+From:   Josef Bacik <josef@toxicpanda.com>
+Message-ID: <30d39293-80a4-9ef5-92bb-6b6dec464be3@toxicpanda.com>
+Date:   Thu, 10 Dec 2020 12:03:21 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.5.1
 MIME-Version: 1.0
-In-Reply-To: <20201210152136.GB9856@redhat.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <6fb5be2d-c6ca-c21b-dddf-9b314973dcfe@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/10/20 8:21 AM, Mike Snitzer wrote:
-> On Thu, Dec 10 2020 at  9:53am -0500,
-> Jens Axboe <axboe@kernel.dk> wrote:
+On 12/9/20 10:38 PM, Bart Van Assche wrote:
+> On 12/7/20 10:55 AM, Palmer Dabbelt wrote:
+>> All in all, I've found it a bit hard to figure out what sort of interest
+>> people
+>> have in dm-user: when I bring this up I seem to run into people who've done
+>> similar things before and are vaguely interested, but certainly nobody is
+>> chomping at the bit.  I'm sending it out in this early state to try and
+>> figure
+>> out if it's interesting enough to keep going.
 > 
->> On 12/10/20 7:51 AM, Mike Snitzer wrote:
->>> On Thu, Dec 10 2020 at  9:08am -0500,
->>> Jens Axboe <axboe@kernel.dk> wrote:
->>>
->>>> On 12/9/20 9:59 PM, Song Liu wrote:
->>>>> Hi Jens, 
->>>>>
->>>>> Please consider pulling the following changes on top of your block-5.10 
->>>>> branch. This is to fix raid10 data corruption [1] in 5.10-rc7. 
->>>>
->>>> Pulled, thanks.
->>>
->>> Hi Jens,
->>>
->>> Can you please pick this related revert up too?:
->>> https://patchwork.kernel.org/project/dm-devel/patch/20201209215814.2623617-1-songliubraving@fb.com/
->>>
->>> I asked Song to do so in v2.. seems it got overlooked.
->>>
->>> Patchwork didn't grab my Acked-by, but I did provide it (should be in
->>> your INBOX).
->>
->> I would, but looks like the offending patch isn't even in my block-5.10.
->> So probably best if you just ship that one.
+> Cc-ing Josef and Mike since their nbd contributions make me wonder
+> whether this new driver could be useful to their use cases?
 > 
-> Ha, you already pulled the dm-raid revert in via Song's v2... I just
-> missed that Song _did_ include it in v2 like I asked.
 
-Ah yes indeed, all's well then.
+Sorry gmail+imap sucks and I can't get my email client to get at the original 
+thread.  However here is my take.
 
--- 
-Jens Axboe
+1) The advantages of using dm-user of NBD that you listed aren't actually 
+problems for NBD.  We have NBD working in production where you can hand off the 
+sockets for the server without ending in timeouts, it was actually the main 
+reason we wrote our own server so we could use the FD transfer stuff to restart 
+the server without impacting any clients that had the device in use.
 
+2) The extra copy is a big deal, in fact we already have too many copies in our 
+existing NBD setup and are actively looking for ways to avoid those.
+
+Don't take this as I don't think dm-user is a good idea, but I think at the very 
+least it should start with the very best we have to offer, starting with as few 
+copies as possible.
+
+If you are using it currently in production then cool, there's clearly a usecase 
+for it.  Personally as I get older and grouchier I want less things in the 
+kernel, so if this enables us to eventually do everything NBD related in 
+userspace with no performance drop then I'd be down.  I don't think you need to 
+make that your primary goal, but at least polishing this up so it could 
+potentially be abused in the future would make it more compelling for merging. 
+Thanks,
+
+Josef
