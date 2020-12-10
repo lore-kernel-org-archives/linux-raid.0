@@ -2,106 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3FBC4361B
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 06:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A1AC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 14:10:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0AF223C43
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 06:35:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C86723B85
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 14:10:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727911AbgLJGfI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Dec 2020 01:35:08 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:33381 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726253AbgLJGfI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 10 Dec 2020 01:35:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607582022;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=DlEDS0VhDQNLf3zDI9fC63hW4Bb0PPnF6YMdfO0jM1g=;
-        b=dwsXTQawrXAwoudQeaJhXlmlPXV3aUqjSlJoychqW+QW+r3A3JXRMjiLRSKZHFkv1Tyn6g
-        d/L47gBBqnwCAE1qG8f8nbIpPV9qUPClpA0vFCKpY6gK/z1CpeRP+op+vuZEbdqlnKK5sp
-        eWIkKCoZIOWqOZt/O3b3ML1GPiqUlpQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-320-mzwLk9z-PBS0Gp1miyi_Iw-1; Thu, 10 Dec 2020 01:33:40 -0500
-X-MC-Unique: mzwLk9z-PBS0Gp1miyi_Iw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 768B2801AC2;
-        Thu, 10 Dec 2020 06:33:39 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-22.pek2.redhat.com [10.72.8.22])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F13A910023AC;
-        Thu, 10 Dec 2020 06:33:35 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     songliubraving@fb.com, linux-raid@vger.kernel.org
-Cc:     ncroxon@redhat.com, heinzm@redhat.com, djeffery@redhat.com
-Subject: [PATCH 1/1] Set prev_flush_start and flush_bio in an atomic way
-Date:   Thu, 10 Dec 2020 14:33:32 +0800
-Message-Id: <1607582012-9501-1-git-send-email-xni@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+        id S2387871AbgLJOJw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Dec 2020 09:09:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57506 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726212AbgLJOJk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Dec 2020 09:09:40 -0500
+Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFA6AC0613CF
+        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 06:08:59 -0800 (PST)
+Received: by mail-io1-xd35.google.com with SMTP id r9so5634541ioo.7
+        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 06:08:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=l666f9hxREhiyP65Bq+dygMssg+tElf27r2XG5nBtRY=;
+        b=wkpejLagQAbihQq8Ex9HlR2P3RqG0Rv3zz6Efe3aIibMsmROypSXb7YkAhkP3bPxtu
+         xKK5PS46B+Irnop0GYcc2XwPI3TnUgU666TsgwmtSDR71j03tXlyMocjFaufqFJflkUx
+         cFyPyHtKDOjPymH1VHSkJDTBE2ohQlFOAqezTJiYPJAuzDfAxPKgUHD0G059TH3HyORf
+         w1iRNYolQYx452xm/Q+Sfc25XZFzi9wghOkFZ3F0M9QvvYyHRn3Ru73+IzpJsmx+eAN5
+         qRxSrGCjnDit8dH2waIAdFWTyUMSFoayFjMJ/ogkAupfLryPN3lYMrKAvWQrscJfmuJ0
+         kjCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=l666f9hxREhiyP65Bq+dygMssg+tElf27r2XG5nBtRY=;
+        b=LgAjMcyGqJNAyQBpjK2hMyQRy+xTB98/JeVVZmWf0y8tyV93j+QGaKfQTwUGgHhKMG
+         +JSlUsyxFcRWs+CIqaEbM7WR0HNBnS/fPXKw41JoQxupE2vm+W3gCFQ+q11f/KNjnGsK
+         fUaM8AbeSBzTRAozsFCD3Nsd9QQQiZnWsIGsAl8bLE3oYboyKev+tb9pBX0PBR6nT7jC
+         yhZRWNWHoaTq9dCuS/QlKLZT2rDWJ8v8eEx3ajIm+Q6O1DKnPsvU7R392HZ9oGvtHW1a
+         0BRdFbSeKEEPc1JzL20G0Uigq7G+yr+G9m3rt0FnEpOPp14UpBRul8MtM1ohs3WgXDIu
+         ajYQ==
+X-Gm-Message-State: AOAM532dgVuxZKmyVJQN+CzJsL+2BSMLjI8aWE99vGDipsXM4Bq+Lhjj
+        BRbRuYizCYHuC0p0OmQiKwzZzg==
+X-Google-Smtp-Source: ABdhPJzKQf1C7zwysJtBAHiayrg+i1SOYpA/WuU4j8EbTglbWR7FHo38+x1I2bgZiRwnLnofdlXQgA==
+X-Received: by 2002:a5e:d510:: with SMTP id e16mr8456738iom.21.1607609339026;
+        Thu, 10 Dec 2020 06:08:59 -0800 (PST)
+Received: from [192.168.1.30] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id s4sm2800314ioc.33.2020.12.10.06.08.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Dec 2020 06:08:58 -0800 (PST)
+Subject: Re: [GIT PULL v2] md-fixes 20201209
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Xiao Ni <xni@redhat.com>,
+        Matthew Ruffell <matthew.ruffell@canonical.com>,
+        Mike Snitzer <snitzer@redhat.com>
+References: <0C161FAC-8A21-4EAF-B3B4-A7BF04089213@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <aa01f088-c4a5-2eed-3e74-2288554ea98a@kernel.dk>
+Date:   Thu, 10 Dec 2020 07:08:59 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <0C161FAC-8A21-4EAF-B3B4-A7BF04089213@fb.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-One customer reports a crash problem which causes by flush request. It triggers a warning
-before crash.
+On 12/9/20 9:59 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following changes on top of your block-5.10 
+> branch. This is to fix raid10 data corruption [1] in 5.10-rc7. 
 
-        /* new request after previous flush is completed */
-        if (ktime_after(req_start, mddev->prev_flush_start)) {
-                WARN_ON(mddev->flush_bio);
-                mddev->flush_bio = bio;
-                bio = NULL;
-        }
+Pulled, thanks.
 
-The WARN_ON is triggered. We use spin lock to protect prev_flush_start and flush_bio
-in md_flush_request. But there is no lock protection in md_submit_flush_data. It can
-set flush_bio to NULL first because of compiler reordering write instructions.
-
-For example, flush bio1 sets flush bio to NULL first in md_submit_flush_data. An
-interrupt or vmware causing an extended stall happen between updating flush_bio and
-prev_flush_start. Because flush_bio is NULL, flush bio2 can get the lock and submit
-to underlayer disks. Then flush bio1 updates prev_flush_start after the interrupt or
-exteneded stall.
-
-Then flush bio3 enters in md_flush_request. The start time req_start is behind
-prev_flush_start. The flush_bio is not NULL(flush bio2 hasn't finished). So it can
-trigger the WARN_ON now. Then it calls INIT_WORK again. INIT_WORK() will re-initialize
-the list pointers in the work_struct, which then can result in a corrupted work list
-and the work_struct queued a second time. With the work list corrupted, it can lead
-in invalid work items being used and cause a crash in process_one_work.
-
-We need to make sure only one flush bio can be handled at one same time. So add
-spin lock in md_submit_flush_data to protect prev_flush_start and flush_bio in
-an atomic way.
-
-Reviewed-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/md.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c42af46..2746d5c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -639,8 +639,10 @@ static void md_submit_flush_data(struct work_struct *ws)
- 	 * could wait for this and below md_handle_request could wait for those
- 	 * bios because of suspend check
- 	 */
-+	spin_lock_irq(&mddev->lock);
- 	mddev->prev_flush_start = mddev->start_flush;
- 	mddev->flush_bio = NULL;
-+	spin_unlock_irq(&mddev->lock);
- 	wake_up(&mddev->sb_wait);
- 
- 	if (bio->bi_iter.bi_size == 0) {
 -- 
-2.7.5
+Jens Axboe
 
