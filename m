@@ -2,90 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A83F4C4361B
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 02:58:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A33DC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 03:39:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67A1A2332A
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 02:58:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1081B2184D
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 03:39:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726843AbgLJC60 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Dec 2020 21:58:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbgLJC6R (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Dec 2020 21:58:17 -0500
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94207C0613D6
-        for <linux-raid@vger.kernel.org>; Wed,  9 Dec 2020 18:57:37 -0800 (PST)
-Received: by mail-pl1-x62a.google.com with SMTP id p6so2033546plo.6
-        for <linux-raid@vger.kernel.org>; Wed, 09 Dec 2020 18:57:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=KXj9D3NDi7BfyunRnGJM9LSlGJn6qDKIszeWtOiZAII=;
-        b=ZS6vN2n2h7WXbbQjxioXsH17tB5XEYb9Kt5pg5quRfIuKz6X9MMidfb42wJhHcsFDG
-         MDmT+sNGrgrT/ukycQwB8R5EUPS89q0g2Wtv2qMplTFU25Go7qIu7pzmDlv7MmRL/5GJ
-         sRjs3c/1zt/jUlRQcPY+hIpg1QQds/ituv7Jiiskl3f5Eq2JjkTp6Zcdc85laBVEoSYO
-         vRaPStQt157F4HH9xbJM1dhQO8GEetRP8qujZ8RoWq1lm6VakO/bOA0BvnrlSyQXzAOu
-         18ouRJlfgYcOHI5e/My7fUlqtZy3Ebd0ebQPEyrsaP8TqOqh5xGinNXU0vtGrIJU0Kyp
-         Z0aA==
+        id S1730103AbgLJDjp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Dec 2020 22:39:45 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:45015 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729136AbgLJDjh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Dec 2020 22:39:37 -0500
+Received: by mail-pf1-f194.google.com with SMTP id f9so2736386pfc.11;
+        Wed, 09 Dec 2020 19:39:22 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=KXj9D3NDi7BfyunRnGJM9LSlGJn6qDKIszeWtOiZAII=;
-        b=f754WOwAWDBWmNuXsNy98Zb6XXXTYbQv+CuNl4UUPxGKObHjueahhooyXv/D+7FXc/
-         o0dPsmFKgkQ+iUhjom+ecLFXO85iTy2Irvmu7fUntNlHiNsw3i++CK3/YIZqSojsxbRk
-         eBwymAS/gC1qeb8hR/uFJMHoU1nkEfMl2KPVWEXzDfr6yNhQsOsdMjtnYpeSvfeFOr3I
-         1eQuDnA6lBcCCuwCJDCH16R94WGyO41MW7jZs9H57IXMQKqSkDD4AYIuddH30shVtPDz
-         qPYZYQAgAtkjrRKhvHFdQQPFRAdj6RG0cDIlu7gQkRsOjNVxBO/ED6qUUVb5dpj9ci8D
-         r2eg==
-X-Gm-Message-State: AOAM533S1z9Ry1F+rtQTsqSVYX1cFRxXXTp+Q/5463niQTMMLFaQ3B7H
-        Awru0jbg7eKJ2+hsbc7hoiOV63tbcxSq9w==
-X-Google-Smtp-Source: ABdhPJwuuypJF20/VUUptITvU+/yJk7KLm9B8i8bcWBymSY8dls3K9S08fJto9MgXRJ4JLHZdDcXkQ==
-X-Received: by 2002:a17:902:9894:b029:da:5698:7f7b with SMTP id s20-20020a1709029894b02900da56987f7bmr4594265plp.78.1607569057092;
-        Wed, 09 Dec 2020 18:57:37 -0800 (PST)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id 77sm3486848pfx.156.2020.12.09.18.57.35
+        bh=vl3B7XtbEhQjt2nq8MXPBFdyJIVZUFP3ezbjFEmRzg8=;
+        b=ecgffhcT4fpoyypTmpgIoOigMAIhaRhOriXOhdIrvGb8Mw5BVHA5CyMSA1evXFHITX
+         OqvmdPUKlfx+RoYkE4GPvc8N/LOWhspeAfhsJCsvlykZht/qrivh/L6DSul6txih2nf1
+         LBnOcv/fGgWpBUb7OEEX83z27uoUaxymB5ZtfrRaGIph1CYFU3b4M5VifhYoXb83yDJO
+         q2u68quyjHa/0NcFFeFaSP75Ppu+BJjJsc2/HPACmOGf8U0QgvRCb5Xu/+1CD2EFNwC8
+         3Qcvx5MnDc5sGP0hT2KVhxcFY94o9M0Oh271O3ny84gtlU/StPZ38WdQAFQQ6yDayyMs
+         Da0g==
+X-Gm-Message-State: AOAM5330b1FF6d+5nY9AcaXe39uzye+JAnJ88zIgoBb1zOLm/atWedVh
+        Fy8+hCcwCmVfNSpylPYp/FQ=
+X-Google-Smtp-Source: ABdhPJyk5LMpvJBOnoJv/cjrpAyasLKu4LBxr7jKQq4OCERkzn7Dwo1S3bQcoGiBB3763Qi0ahgwYw==
+X-Received: by 2002:a63:fe41:: with SMTP id x1mr4835088pgj.254.1607571536653;
+        Wed, 09 Dec 2020 19:38:56 -0800 (PST)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id b4sm3743505pju.33.2020.12.09.19.38.54
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Dec 2020 18:57:36 -0800 (PST)
-Subject: Re: [GIT PULL] md-fixes 20201208
-To:     Song Liu <songliubraving@fb.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Xiao Ni <xni@redhat.com>,
-        Matthew Ruffell <matthew.ruffell@canonical.com>,
-        Mike Snitzer <snitzer@redhat.com>
-References: <1D36E148-BF3D-41D0-8361-746FCD524C5A@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <e2942bd0-a70f-9934-4650-d4a396c3fb68@kernel.dk>
-Date:   Wed, 9 Dec 2020 19:57:35 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Wed, 09 Dec 2020 19:38:55 -0800 (PST)
+Subject: Re: [dm-devel] [PATCH v1 0/5] dm: dm-user: New target that proxies
+ BIOs to userspace
+To:     Palmer Dabbelt <palmer@dabbelt.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     snitzer@redhat.com, corbet@lwn.net, kernel-team@android.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, song@kernel.org, dm-devel@redhat.com,
+        linux-kselftest@vger.kernel.org, shuah@kernel.org, agk@redhat.com,
+        Josef Bacik <josef@toxicpanda.com>,
+        Mike Christie <michael.christie@oracle.com>
+References: <mhng-97fc5874-29d0-4d9e-8c92-d3704a482f28@palmerdabbelt-glaptop1>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <6fb5be2d-c6ca-c21b-dddf-9b314973dcfe@acm.org>
+Date:   Wed, 9 Dec 2020 19:38:53 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-In-Reply-To: <1D36E148-BF3D-41D0-8361-746FCD524C5A@fb.com>
+In-Reply-To: <mhng-97fc5874-29d0-4d9e-8c92-d3704a482f28@palmerdabbelt-glaptop1>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/9/20 3:09 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes on top of your master branch. 
-> This is to fix raid10 data corruption [1] in 5.10-rc7. 
+On 12/7/20 10:55 AM, Palmer Dabbelt wrote:
+> All in all, I've found it a bit hard to figure out what sort of interest
+> people
+> have in dm-user: when I bring this up I seem to run into people who've done
+> similar things before and are vaguely interested, but certainly nobody is
+> chomping at the bit.  I'm sending it out in this early state to try and
+> figure
+> out if it's interesting enough to keep going.
 
-Please send them against block-5.10. I considered moving it forward, but
-you didn't even base this on 5.10-rc7 (it's one ahead).
+Cc-ing Josef and Mike since their nbd contributions make me wonder
+whether this new driver could be useful to their use cases?
 
--- 
-Jens Axboe
+Thanks,
 
+Bart.
