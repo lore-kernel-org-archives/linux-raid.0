@@ -2,122 +2,210 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CDFC433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 17:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 316DFC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 19:38:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC60222D6E
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 17:04:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D423623340
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 19:38:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390891AbgLJREQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Dec 2020 12:04:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56474 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387776AbgLJREG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Dec 2020 12:04:06 -0500
-Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9827BC06179C
-        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 09:03:25 -0800 (PST)
-Received: by mail-qk1-x741.google.com with SMTP id q22so5438140qkq.6
-        for <linux-raid@vger.kernel.org>; Thu, 10 Dec 2020 09:03:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=sUTklf9jBEwzs6UhWeShzolt35srKpXJ+Aec/2jQSUU=;
-        b=h/WaKNT1y3XBZzgswgsh3Ixjw2N5x/28mj80swAvklzGIkVrj6MJ8wuNisjEyktydT
-         zCseyjCchbMSPmxaGGplDZeJZGmP5oyuuVuXTxCHsGpXk0qls2m66qjTPGaKUsL8ZRao
-         pG1Gub5CnI64JSe7Y7ezFsY7qfQdgeOGSHy9txvrSC33WOO2k81hdMm/P+2raMibY7v9
-         fJHm6P4C0LRQcU3U5FIZ0KPx7ZPzEHxNce551WR814F2jYgp0wq9R/aJ9NcE8kgU8u2e
-         QyaXhCI11vcVH6ukyAI3qKqvg5kI9bv6rPVXMAlpIk9CUlSY5f7ETZmBRFKsxQ/oRgfO
-         7ZoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=sUTklf9jBEwzs6UhWeShzolt35srKpXJ+Aec/2jQSUU=;
-        b=lnCSAug4Tn8E2NFv40o4M3qgRLwJTCkDVRTZxx9sOweubCnrtPLF6fYx3Zpdr8Qap5
-         lPp3T45AgHURhtCfnDioitS6FovwO5uiDt8jMzi0aXtlwp6MJruflF/P6gKMQZb9gqRf
-         i0MPHhBOQv2V/bx2McOBuSKzqPma7WJfbOQweRncsUA0v1ajG7mt72Em6OP3nRc8PvDJ
-         FPXg8wb9HU0jDI0+DeUAhofNnoDOHj8oSO/QvL2XmsGMrpCukgdFFspElVXZOZNdl8Mt
-         o4/inRzFybGDNhAJJg+zEm3liGty43PrPBvH/lx9icPNivxM4zPw6EZwTvj6UKG4FWKz
-         zHDw==
-X-Gm-Message-State: AOAM533rbxc9FId8phwsnRjc5SP2ToPiiSFy8J0Y1nXbd18FMZ9RiGB4
-        5Gsi2VLzHOByAWHuo+kd7ZYWuw==
-X-Google-Smtp-Source: ABdhPJymXAQH/aw0VSr4+J5MsG5kd52DH5BGq1ZaXwLD+lvifpGCtkGDCg1EXTpttoD9CP3doaPF0g==
-X-Received: by 2002:a37:bac7:: with SMTP id k190mr10524292qkf.464.1607619804657;
-        Thu, 10 Dec 2020 09:03:24 -0800 (PST)
-Received: from [192.168.1.45] (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
-        by smtp.gmail.com with ESMTPSA id y22sm3789944qkj.129.2020.12.10.09.03.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Dec 2020 09:03:23 -0800 (PST)
-Subject: Re: [dm-devel] [PATCH v1 0/5] dm: dm-user: New target that proxies
- BIOs to userspace
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     snitzer@redhat.com, corbet@lwn.net, kernel-team@android.com,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, song@kernel.org, dm-devel@redhat.com,
-        linux-kselftest@vger.kernel.org, shuah@kernel.org, agk@redhat.com,
-        Mike Christie <michael.christie@oracle.com>
-References: <mhng-97fc5874-29d0-4d9e-8c92-d3704a482f28@palmerdabbelt-glaptop1>
- <6fb5be2d-c6ca-c21b-dddf-9b314973dcfe@acm.org>
-From:   Josef Bacik <josef@toxicpanda.com>
-Message-ID: <30d39293-80a4-9ef5-92bb-6b6dec464be3@toxicpanda.com>
-Date:   Thu, 10 Dec 2020 12:03:21 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.1
+        id S2393506AbgLJTie (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Dec 2020 14:38:34 -0500
+Received: from mga09.intel.com ([134.134.136.24]:10571 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2393492AbgLJTic (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 10 Dec 2020 14:38:32 -0500
+IronPort-SDR: H+0O77BZJlUFiWyXg/pIUoS8/QK7uq4JE6d98doH5gGLP9oAGfkAdpktBuwvcrysCzhSsOBUOi
+ e0XaEfcVDAmQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9831"; a="174465671"
+X-IronPort-AV: E=Sophos;i="5.78,409,1599548400"; 
+   d="scan'208";a="174465671"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2020 11:37:51 -0800
+IronPort-SDR: 1r/AxopUwYQ/F31Bdx1GE7ZcJKDQHOtH/jlRMmz6OFoMebSTsxMUvOAv7w4Hjcux+OZBwy8PSn
+ nvRvYQEyI+mg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.78,409,1599548400"; 
+   d="scan'208";a="338626190"
+Received: from lkp-server01.sh.intel.com (HELO ecc0cebe68d1) ([10.239.97.150])
+  by orsmga006.jf.intel.com with ESMTP; 10 Dec 2020 11:37:50 -0800
+Received: from kbuild by ecc0cebe68d1 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1knRl7-0000R3-VH; Thu, 10 Dec 2020 19:37:49 +0000
+Date:   Fri, 11 Dec 2020 03:36:58 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ 57a0f3a81ef21fe51d6223aa78a1a890098d4ada
+Message-ID: <5fd278da.6a4uMPPxWTiYG/TF%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <6fb5be2d-c6ca-c21b-dddf-9b314973dcfe@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/9/20 10:38 PM, Bart Van Assche wrote:
-> On 12/7/20 10:55 AM, Palmer Dabbelt wrote:
->> All in all, I've found it a bit hard to figure out what sort of interest
->> people
->> have in dm-user: when I bring this up I seem to run into people who've done
->> similar things before and are vaguely interested, but certainly nobody is
->> chomping at the bit.  I'm sending it out in this early state to try and
->> figure
->> out if it's interesting enough to keep going.
-> 
-> Cc-ing Josef and Mike since their nbd contributions make me wonder
-> whether this new driver could be useful to their use cases?
-> 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-fixes
+branch HEAD: 57a0f3a81ef21fe51d6223aa78a1a890098d4ada  Revert "md: add md_submit_discard_bio() for submitting discard bio"
 
-Sorry gmail+imap sucks and I can't get my email client to get at the original 
-thread.  However here is my take.
+elapsed time: 725m
 
-1) The advantages of using dm-user of NBD that you listed aren't actually 
-problems for NBD.  We have NBD working in production where you can hand off the 
-sockets for the server without ending in timeouts, it was actually the main 
-reason we wrote our own server so we could use the FD transfer stuff to restart 
-the server without impacting any clients that had the device in use.
+configs tested: 140
+configs skipped: 2
 
-2) The extra copy is a big deal, in fact we already have too many copies in our 
-existing NBD setup and are actively looking for ways to avoid those.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Don't take this as I don't think dm-user is a good idea, but I think at the very 
-least it should start with the very best we have to offer, starting with as few 
-copies as possible.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+mips                        workpad_defconfig
+arm                        shmobile_defconfig
+powerpc                     ep8248e_defconfig
+arm                          pcm027_defconfig
+powerpc                 mpc836x_mds_defconfig
+powerpc                      tqm8xx_defconfig
+arc                        vdk_hs38_defconfig
+powerpc                      walnut_defconfig
+ia64                         bigsur_defconfig
+arm                     eseries_pxa_defconfig
+arm                      tct_hammer_defconfig
+powerpc                    mvme5100_defconfig
+powerpc                      acadia_defconfig
+sh                             shx3_defconfig
+arm                          imote2_defconfig
+powerpc                         ps3_defconfig
+sh                           se7705_defconfig
+sh                        sh7763rdp_defconfig
+sparc64                          alldefconfig
+h8300                               defconfig
+sh                          rsk7201_defconfig
+alpha                            alldefconfig
+sh                         microdev_defconfig
+arm                           u8500_defconfig
+powerpc                        icon_defconfig
+arm                        spear6xx_defconfig
+arm                         s3c6400_defconfig
+mips                         db1xxx_defconfig
+mips                            ar7_defconfig
+arm                       versatile_defconfig
+m68k                             alldefconfig
+sh                          r7785rp_defconfig
+sh                   secureedge5410_defconfig
+ia64                          tiger_defconfig
+arm                        mini2440_defconfig
+sh                              ul2_defconfig
+c6x                                 defconfig
+mips                             allyesconfig
+mips                          rb532_defconfig
+mips                        bcm47xx_defconfig
+sh                           se7343_defconfig
+powerpc                     tqm8541_defconfig
+arm                          ep93xx_defconfig
+arm                        cerfcube_defconfig
+arm                       multi_v4t_defconfig
+sh                          urquell_defconfig
+sh                          sdk7786_defconfig
+powerpc                      ppc64e_defconfig
+arm                         palmz72_defconfig
+sh                  sh7785lcr_32bit_defconfig
+openrisc                            defconfig
+m68k                           sun3_defconfig
+arm                        multi_v7_defconfig
+powerpc                 mpc85xx_cds_defconfig
+mips                          rm200_defconfig
+arm                             mxs_defconfig
+riscv                            alldefconfig
+powerpc                      arches_defconfig
+m68k                        m5272c3_defconfig
+powerpc                 mpc837x_rdb_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                               tinyconfig
+i386                                defconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a004-20201209
+i386                 randconfig-a005-20201209
+i386                 randconfig-a001-20201209
+i386                 randconfig-a002-20201209
+i386                 randconfig-a006-20201209
+i386                 randconfig-a003-20201209
+x86_64               randconfig-a016-20201209
+x86_64               randconfig-a012-20201209
+x86_64               randconfig-a013-20201209
+x86_64               randconfig-a014-20201209
+x86_64               randconfig-a015-20201209
+x86_64               randconfig-a011-20201209
+i386                 randconfig-a013-20201209
+i386                 randconfig-a014-20201209
+i386                 randconfig-a011-20201209
+i386                 randconfig-a015-20201209
+i386                 randconfig-a012-20201209
+i386                 randconfig-a016-20201209
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
 
-If you are using it currently in production then cool, there's clearly a usecase 
-for it.  Personally as I get older and grouchier I want less things in the 
-kernel, so if this enables us to eventually do everything NBD related in 
-userspace with no performance drop then I'd be down.  I don't think you need to 
-make that your primary goal, but at least polishing this up so it could 
-potentially be abused in the future would make it more compelling for merging. 
-Thanks,
+clang tested configs:
+x86_64               randconfig-a004-20201209
+x86_64               randconfig-a006-20201209
+x86_64               randconfig-a005-20201209
+x86_64               randconfig-a001-20201209
+x86_64               randconfig-a002-20201209
+x86_64               randconfig-a003-20201209
+x86_64               randconfig-a003-20201210
+x86_64               randconfig-a006-20201210
+x86_64               randconfig-a002-20201210
+x86_64               randconfig-a005-20201210
+x86_64               randconfig-a004-20201210
+x86_64               randconfig-a001-20201210
 
-Josef
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
