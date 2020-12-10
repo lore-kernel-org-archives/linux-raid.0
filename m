@@ -2,174 +2,319 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02081C4361B
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Dec 2020 23:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17FDFC4361B
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 01:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A45FD23A22
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Dec 2020 23:14:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC03D23BE5
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Dec 2020 01:38:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731930AbgLIXOy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Dec 2020 18:14:54 -0500
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:46338 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727641AbgLIXOy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Dec 2020 18:14:54 -0500
-Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B9N4iqD026593;
-        Wed, 9 Dec 2020 15:14:09 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=q3W/b2TkAI9Iz+H2FQOlfV5pqlk0iQ9vLVxuBVxD9Hg=;
- b=abbL8cMAQ8mFSPS314KvEx1b0XDDoIXuMnxRzwyERQJ+SuJUX56RckJ7kKQ1TvkeVasM
- ZDBz3aSWnYETmQugR5IFnn7DTeofY8IF6Bc4J6RV85Zs4acWXi3RxWw4lpx6vaZVBuz7
- VrUzC8lano9BJo1X+Q+8hakZe4TAUDdmcuc= 
-Received: from maileast.thefacebook.com ([163.114.130.16])
-        by mx0a-00082601.pphosted.com with ESMTP id 35ak7a89mm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 09 Dec 2020 15:14:09 -0800
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (100.104.31.183)
- by o365-in.thefacebook.com (100.104.35.172) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Wed, 9 Dec 2020 15:14:08 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=B99yAzhIfLwozvU7sD0drqcYlKSWs1K5wX9ElU1towFsuqQ91ovkBRbPknmKDMd43d/OjH6Fu8NHmqWZ8Rxx462hpyhApAxcWoOyCQkrb74b49To52skV2WazYX5b3t3MUD5Ji51oJKbwjwL8B5d77W7M+P071YdRFmy4YS+/zPqsvVr1Y59z/iVj/jmIqFYQhsvTNCfTnvr6WhPyCsdACgrtbrnr+v/zITwI7xlVldCvz0gK61zWp2zXDocKABZtCg+urJ5/qfcU4LxLpUEMuRIRjk9M8bjhU0nAIBlms1I3Nzrcd8jCMJCqxLVuFisNyndJmEpjPWGJihs2cPS7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Nw/JIkKfV58xeVygyZvqEX08Vu9uyS/KOut8ylDvIzo=;
- b=CAan2Hb9F4PKmrYDcCLzgOuoXNPQHMnojeyaaPW3p7psR/cG7tY5t+rB1L+KAEVu+q3BVZd5q53WitoxwG9H05piQ2CHhZfWuYXyJ2qMQZ/g93djinJV7H3wdnLEy9duPV9kCILpV1ZxhqrV8K1Rp5qryk6s8YTd52CVqDVjsZjZLwe2iRhydt47po0qQpSTGoZKFR/0egDAr7LR/TWftyny37SfgGSbwzPUnXLjRm46pGyd6gm+3lu5p5wADMjQ9Sj+iot0AAIEmbBRGQlfx4Zb9KRV+epE7MhIUnUdIMx7gYsRsdQy6EX1gLQlOAAHo+FecUcwOkcFJiMWQOVPDw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Nw/JIkKfV58xeVygyZvqEX08Vu9uyS/KOut8ylDvIzo=;
- b=bIV041I8+E49fj9fX3xJpkN8Vb3XVK+ZTr2whlL4E1eryj28+ZelTpH6W0F6fYkpB8RyOvFD1HDai91VLZCEHR6Se+Pju+bbC24bEk2ghq5MBWRcEvnf/dnjfC8Mvi0m3P5aDCMnxfWBHGHLTevT3cNA4DNHNYuBSilixxq+dp0=
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
- by BYAPR15MB3303.namprd15.prod.outlook.com (2603:10b6:a03:10e::32) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3632.18; Wed, 9 Dec
- 2020 23:14:08 +0000
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::f49e:bdbb:8cd7:bf6b]) by BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::f49e:bdbb:8cd7:bf6b%7]) with mapi id 15.20.3654.012; Wed, 9 Dec 2020
- 23:14:07 +0000
-From:   Song Liu <songliubraving@fb.com>
-To:     Mike Snitzer <snitzer@redhat.com>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        Matthew Ruffell <matthew.ruffell@canonical.com>,
-        "Xiao Ni" <xni@redhat.com>
-Subject: Re: Revert "dm raid: remove unnecessary discard limits for raid10"
-Thread-Topic: Revert "dm raid: remove unnecessary discard limits for raid10"
-Thread-Index: AQHWznvGWYeJlNK5kEy9X37Df/JOxKnvZQSA
-Date:   Wed, 9 Dec 2020 23:14:07 +0000
-Message-ID: <03EC7F7D-DF6E-4962-BBA7-FA554509C2E5@fb.com>
-References: <20201209215814.2623617-1-songliubraving@fb.com>
- <20201209223615.GA2752@redhat.com>
-In-Reply-To: <20201209223615.GA2752@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3608.120.23.2.4)
-authentication-results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=fb.com;
-x-originating-ip: [2620:10d:c090:400::5:d023]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: aebea487-bebb-4e59-3709-08d89c982142
-x-ms-traffictypediagnostic: BYAPR15MB3303:
-x-microsoft-antispam-prvs: <BYAPR15MB3303A59E93EAA3A05A5005F3B3CC0@BYAPR15MB3303.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: OPlUyXQKAU8h5+9XHSSZbNjldsv980yP1m6bVd/sm8SqEBoO3JaVMl80IzUZ4/q4aVJ9DuCYCJcugerMJxnI9q1Sal2WTy3T/1TKiuC8Jgg+lwMNzRIL2qOfcYPmqDvM8lSkeJ7NCtJffbKBT8Z9KD9T8bqAS4cs9DHAEHgqbH0QvSEw3gSX3CubwrpVLmUBgvnYH6N41LNRiT/JiDzoqLzSltmGUXY9LDhWe2UmhBXZ7fHSTwH8n0CjzU07n9JQkUY829z/7x3AoAZiqfoGnuJoeHsaIRTeLcVdk90hrE8jouP45+9+KmMEENA55O0QmNlbJ0HQgQHoBO1p6aSzgLS8Tfg0kFfWhKX7nfOYdbeSwGwi5ArYJ6H0WGn0OwiLeqcT7p97YCOgBbL13ZukXUK2RNg33miJmlEY3V1ordXv+eIYC6VHgvqtqEuKrgG2/g0nmvflmTo17IZORkWlFA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(366004)(376002)(346002)(6916009)(2616005)(2906002)(6512007)(5660300002)(508600001)(66446008)(8676002)(86362001)(64756008)(66556008)(53546011)(54906003)(71200400001)(6486002)(8936002)(76116006)(66946007)(966005)(4744005)(36756003)(4326008)(6506007)(186003)(66476007)(33656002)(45980500001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?lf6F/SsHBi9ex73b0zNBRiNQODY5yFyURMZFGofbohTi5UB/K39twqvlIv4C?=
- =?us-ascii?Q?uAtORMI1Bvmd9NERGZ6YWhzzhbIwU/1Qw8i5LgGEJ7zeKAPlS53TgxM2dMSG?=
- =?us-ascii?Q?YU8Sknb5U2eEvve6PqEptGgDzHgdnttjoYjd4XXAzbM7WE9K9o0PDBjnkWeR?=
- =?us-ascii?Q?3HiqScj/oV/hmTsIU55HjTJKvcUBm9zq3Yu35VwaEjFNJucg8/wafGKyM/v0?=
- =?us-ascii?Q?yKB4jfugqveL4Ap3t6iQ1fnVk8HWuJ/YdDCyrLK4jcUzI/wtYLgmMTJbQloV?=
- =?us-ascii?Q?uQN0FssO1M4rfaGCFqfJarCPGzQtDMopAYFA/vyAhEjeVX0TITbuToMMMfTi?=
- =?us-ascii?Q?kJcHwMJa5QUPBLZzw6TzUAsBjM+zm8J/4cnPYFCHG8autGYPajuKbZAjG9w9?=
- =?us-ascii?Q?l88v0BkFbCL/JZIN5R2sl6EaZ2j5gMJ2YKn+H6M/E5O2otSOP5YGm9LeySfg?=
- =?us-ascii?Q?HTwbbcRl7edupTRsO1cVc7CNj9ttNHYPt1RkC1fspwuH4Y4CskIwD6qIANnq?=
- =?us-ascii?Q?7PP/kBeT3fpiuB1q5sOQ7ln2XrFHa5gCB6A5W6WCgHn1nkswaMHPswMtHOpH?=
- =?us-ascii?Q?WoNZmH3ZuiM3B91PkQ7kObV9Q/Gh48xqLI5K/Ksbwd3YnamPuXWkT4UEztPD?=
- =?us-ascii?Q?OZHfXIzz4gfa7K4ARCIhE6Vv8YgA7VZ4L7eb9/UWGi7v8fvH4dqfiRLCU4w2?=
- =?us-ascii?Q?YMylKh35+Fkkzyg+Y9AIIIsqqyHLx1y9NbxIys31+11GsSOb6kztB4BQc27n?=
- =?us-ascii?Q?MhUJwCS2KTNb6/RhjD2VMUSKazqJp4cT+yru+aXPcNtvyRYY8Hi53rN6y6Oa?=
- =?us-ascii?Q?d6ZTa02AiUsrsd2iZZYgntGUsps6Ib9wGhSyWkX9gQIrBG+nGRSu6jgIW8+/?=
- =?us-ascii?Q?254CpKLqR80xLYc1wvrW4yv5S+9JUIK5OhGzrYeojDwx0B4NbRvxGms73CPp?=
- =?us-ascii?Q?cosnVsXcQpfQHb8eJxpDuvYx07rY7m3WSFcdphg3NY9e7cL45taEKx31HUM8?=
- =?us-ascii?Q?coHigf3IVeDfLLiR4NPF0D4rusj7RasE89ngBtC+7ZMCFRM=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <69A71CAB8890E444B48DA3D937DD6248@namprd15.prod.outlook.com>
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aebea487-bebb-4e59-3709-08d89c982142
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Dec 2020 23:14:07.7995
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YCRtnlq/vmdBfoeZnxSiAVpOoPj9CiU3meOYL6wTaPIcZ64oZyzF7rwros4Wt2uFQH1JNV98aIejQ+hhfyWQsw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB3303
-X-OriginatorOrg: fb.com
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-UnRewURL: 1 URL was un-rewritten
+        id S1726162AbgLJBhX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Dec 2020 20:37:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:39835 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725829AbgLJBhX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Dec 2020 20:37:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607564156;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fJ91IrOn62+1TtRC9bPcseBt+zy20zXjbZevUvoS6S0=;
+        b=aX0IoP1Lh7VbvvAsb3kE2iMW6nVmV1AjHYaruO3qWj2pKaqoIvv8J0zOeUaOgFCHthoR6+
+        D2zKzw+dFzoL0vdRPqCCPicppM99/yaiZQTf1zmiWaJDSwHJz2pnapEIDQZ3uI3saZPwqZ
+        TpVlIpHybs3JiHrEQ/sO1iuSaLJXWEM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-470-SnyL43vmOxCma51YwBAk_A-1; Wed, 09 Dec 2020 20:35:51 -0500
+X-MC-Unique: SnyL43vmOxCma51YwBAk_A-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0F76059;
+        Thu, 10 Dec 2020 01:35:50 +0000 (UTC)
+Received: from localhost.localdomain (ovpn-8-22.pek2.redhat.com [10.72.8.22])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9994F5C1D1;
+        Thu, 10 Dec 2020 01:35:44 +0000 (UTC)
+Subject: Re: PROBLEM: Recent raid10 block discard patchset causes filesystem
+ corruption on fstrim
+To:     Song Liu <songliubraving@fb.com>,
+        Matthew Ruffell <matthew.ruffell@canonical.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Song Liu <song@kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>, Coly Li <colyli@suse.de>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        "khalid.elmously@canonical.com" <khalid.elmously@canonical.com>,
+        Jay Vosburgh <jay.vosburgh@canonical.com>
+References: <dbd2761e-cd7d-d60a-f769-ecc8c6335814@canonical.com>
+ <EA47EF7A-06D8-4B37-BED7-F04753D70DF5@fb.com>
+From:   Xiao Ni <xni@redhat.com>
+Message-ID: <a8e1db0b-5785-f80f-33ae-f68de22e1525@redhat.com>
+Date:   Thu, 10 Dec 2020 09:35:42 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2020-12-09_18:2020-12-09,2020-12-09 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 impostorscore=0
- malwarescore=0 mlxscore=0 suspectscore=0 spamscore=0 adultscore=0
- lowpriorityscore=0 bulkscore=0 phishscore=0 mlxlogscore=951
- priorityscore=1501 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2009150000 definitions=main-2012090159
-X-FB-Internal: deliver
+In-Reply-To: <EA47EF7A-06D8-4B37-BED7-F04753D70DF5@fb.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-> On Dec 9, 2020, at 2:36 PM, Mike Snitzer <snitzer@redhat.com> wrote:
->=20
-> On Wed, Dec 09 2020 at  4:58pm -0500,
-> Song Liu <songliubraving@fb.com> wrote:
->=20
->> This reverts commit f0e90b6c663a7e3b4736cb318c6c7c589f152c28.
->>=20
->> Matthew Ruffell reported data corruption in raid10 due to the changes
->> in discard handling [1]. Revert these changes before we find a proper fi=
-x.
->>=20
->> [1] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1907262/=20
->> Cc: Matthew Ruffell <matthew.ruffell@canonical.com>
->> Cc: Xiao Ni <xni@redhat.com>
->> Cc: Mike Snitzer <snitzer@redhat.com>
->> Signed-off-by: Song Liu <songliubraving@fb.com>
->=20
-> If you're reverting all the MD code that enabled this DM change, then
-> obviously the DM change must be reverted too.  But please do _not_
-> separate the DM revert from the MD reverts.
+On 12/09/2020 12:17 PM, Song Liu wrote:
+> Hi Matthew,
+>
+>> On Dec 8, 2020, at 7:46 PM, Matthew Ruffell <matthew.ruffell@canonical.com> wrote:
+>>
+>> Hello,
+>>
+>> I recently backported the following patches into the Ubuntu stable kernels:
+>>
+>> md: add md_submit_discard_bio() for submitting discard bio
+>> md/raid10: extend r10bio devs to raid disks
+>> md/raid10: pull codes that wait for blocked dev into one function
+>> md/raid10: improve raid10 discard request
+>> md/raid10: improve discard request for far layout
+>> dm raid: fix discard limits for raid1 and raid10
+>> dm raid: remove unnecessary discard limits for raid10
+> Thanks for the report!
+>
+> Hi Xiao,
+>
+> Could you please take a look at this and let me know soon? We need to fix
+> this before 5.10 official release.
+>
+> Thanks,
+> Song
 
-Good point! I should have thought about it through.=20
+Hi all
 
-Thanks,
-Song
-
-[...]
-
+Sorry for the trouble. But I'm in pto with no test machines. I'll have a 
+look at this problem
+next week.
+>
+>> and this morning, a user reported the following downstream bug:
+>>
+>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1907262/
+>>
+>> Their weekly cronjob that runs fstrim had run, and their raid10 array has
+>> extensive data corruption.
+>>
+>> The issue is reproducible on the latest 5.10-rc7 mainline kernel, steps are
+>> below.
+>>
+>> I used a m5d.4xlarge instance on AWS to ultilise 2x 300GB SSDs that support
+>> block discard. You will want to select small disks to lower the time needed
+>> to reproduce.
+>>
+>> $ uname -rv
+>> 5.10.0-rc7+ #1 SMP Wed Dec 9 01:15:27 UTC 2020
+>>
+>> Create a raid10 array, with LVM:
+>>
+>> $ lsblk
+>> NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+>> nvme0n1     259:0    0     8G  0 disk
+>> └─nvme0n1p1 259:1    0     8G  0 part /
+>> nvme1n1     259:2    0 279.4G  0 disk
+>> nvme2n1     259:3    0 279.4G  0 disk
+>>
+>> $ sudo -s
+>> # mdadm -C -v -l10 -n2 -N "lv-raid" -R /dev/md0 /dev/nvme1n1 /dev/nvme2n1
+>> mdadm: layout defaults to n2
+>> mdadm: layout defaults to n2
+>> mdadm: chunk size defaults to 512K
+>> mdadm: size set to 292836352K
+>> mdadm: automatically enabling write-intent bitmap on large array
+>> mdadm: Defaulting to version 1.2 metadata
+>> mdadm: array /dev/md0 started.
+>> # pvcreate -ff -y /dev/md0
+>>   Physical volume "/dev/md0" successfully created.
+>> # vgcreate -f -y VolGroup /dev/md0
+>>   Volume group "VolGroup" successfully created
+>> # lvcreate -n root -L 100G -ay -y VolGroup
+>>   Logical volume "root" created.
+>> # mkfs.ext4 /dev/VolGroup/root
+>> mke2fs 1.44.1 (24-Mar-2018)
+>> Discarding device blocks: done
+>> Creating filesystem with 26214400 4k blocks and 6553600 inodes
+>> Filesystem UUID: d7be2e14-fa4d-4489-884b-3bef63b1e1db
+>> Superblock backups stored on blocks:
+>> 	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+>> 	4096000, 7962624, 11239424, 20480000, 23887872
+>>
+>> Allocating group tables: done
+>> Writing inode tables: done
+>> Creating journal (131072 blocks): done
+>> Writing superblocks and filesystem accounting information: done
+>> # mount /dev/VolGroup/root /mnt
+>>
+>> Next, wait for the disk check to complete, 25 minutes on m5d.4xlarge instance.
+>>
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid10 nvme2n1[1] nvme1n1[0]
+>>       292836352 blocks super 1.2 2 near-copies [2/2] [UU]
+>>       [==>..................]  resync = 12.0% (35211392/292836352) finish=21.4min speed=200340K/sec
+>>       bitmap: 3/3 pages [12KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> # cat /sys/block/md0/md/mismatch_cnt
+>> 76918016
+>>
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid10 nvme2n1[1] nvme1n1[0]
+>>       292836352 blocks super 1.2 2 near-copies [2/2] [UU]
+>>       bitmap: 0/3 pages [0KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> # cat /sys/block/md0/md/mismatch_cnt
+>> 582330240
+>>
+>> Now that the check is complete, create a file, sync and delete it:
+>>
+>> # dd if=/dev/zero of=/mnt/data.raw bs=4K count=1M
+>> 1048576+0 records in
+>> 1048576+0 records out
+>> 4294967296 bytes (4.3 GB, 4.0 GiB) copied, 3.95974 s, 1.1 GB/s
+>> # sync
+>> # rm /mnt/data.raw
+>>
+>> Perform a check:
+>>
+>> # echo check > /sys/block/md0/md/sync_action
+>>
+>> Again, wait 25 minutes for it to complete:
+>>
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid10 nvme1n1[1] nvme2n1[0]
+>>       292836352 blocks super 1.2 2 near-copies [2/2] [UU]
+>>       [==>..................]  check = 13.7% (40356224/292836352) finish=20.8min speed=201707K/sec
+>>       bitmap: 0/3 pages [0KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> # cat /sys/block/md0/md/mismatch_cnt
+>> 1469696
+>>
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid10 nvme1n1[1] nvme2n1[0]
+>>       292836352 blocks super 1.2 2 near-copies [2/2] [UU]
+>>       bitmap: 0/3 pages [0KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> # cat /sys/block/md0/md/mismatch_cnt
+>> 1469696
+>>
+>> Now, perform the fstrim:
+>>
+>> # fstrim /mnt --verbose
+>> /mnt: 97.9 GiB (105089236992 bytes) trimmed
+>>
+>> Go for another check:
+>>
+>> # echo check >/sys/block/md0/md/sync_action
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid10 nvme1n1[1] nvme2n1[0]
+>>       292836352 blocks super 1.2 2 near-copies [2/2] [UU]
+>>       [========>............]  check = 40.3% (118270848/292836352) finish=14.4min speed=200963K/sec
+>>       bitmap: 0/3 pages [0KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> # cat /sys/block/md0/md/mismatch_cnt
+>> 205324928
+>>
+>> # cat /proc/mdstat
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid10 nvme1n1[1] nvme2n1[0]
+>>       292836352 blocks super 1.2 2 near-copies [2/2] [UU]
+>>       bitmap: 0/3 pages [0KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> # cat /sys/block/md0/md/mismatch_cnt
+>> 205324928
+>>
+>> Now, we need to take the raid10 array down, and perform a fsck on one disk at
+>> a time:
+>>
+>> # umount /mnt
+>> # vgchange -a n /dev/VolGroup
+>>   0 logical volume(s) in volume group "VolGroup" now active
+>> # mdadm --stop /dev/md0
+>> mdadm: stopped /dev/md0
+>>
+>> Let's do first disk;
+>>
+>> # mdadm --assemble /dev/md127 /dev/nvme1n1
+>> mdadm: /dev/md1 assembled from 1 drive - need all 2 to start it (use --run to insist).
+>> # mdadm --run /dev/md127
+>> mdadm: started array /dev/md/lv-raid
+>> # vgchange -a y /dev/VolGroup
+>>   1 logical volume(s) in volume group "VolGroup" now active
+>> # fsck.ext4 -n -f /dev/VolGroup/root
+>> e2fsck 1.44.1 (24-Mar-2018)
+>> Pass 1: Checking inodes, blocks, and sizes
+>> Pass 2: Checking directory structure
+>> Pass 3: Checking directory connectivity
+>> Pass 4: Checking reference counts
+>> Pass 5: Checking group summary information
+>> /dev/VolGroup/root: 11/6553600 files (0.0% non-contiguous), 557848/26214400 blocks
+>> # vgchange -a n /dev/VolGroup
+>>   0 logical volume(s) in volume group "VolGroup" now active
+>> # mdadm --stop /dev/md127
+>> mdadm: stopped /dev/md127
+>>
+>> The second disk:
+>>
+>> # mdadm --assemble /dev/md127 /dev/nvme2n1
+>> mdadm: /dev/md1 assembled from 1 drive - need all 2 to start it (use --run to insist).
+>> # mdadm --run /dev/md127
+>> mdadm: started array /dev/md/lv-raid
+>> # vgchange -a y /dev/VolGroup
+>>   1 logical volume(s) in volume group "VolGroup" now active
+>> # fsck.ext4 -n -f /dev/VolGroup/root
+>> e2fsck 1.44.1 (24-Mar-2018)
+>> Resize inode not valid.  Recreate? no
+>>
+>> Pass 1: Checking inodes, blocks, and sizes
+>> Inode 7 has illegal block(s).  Clear? no
+>>
+>> Illegal indirect block (1714656753) in inode 7.  IGNORED.
+>> Error while iterating over blocks in inode 7: Illegal indirect block found
+>>
+>> /dev/VolGroup/root: ********** WARNING: Filesystem still has errors **********
+>>
+>> e2fsck: aborted
+>>
+>> /dev/VolGroup/root: ********** WARNING: Filesystem still has errors **********
+>>
+>> # vgchange -a n /dev/VolGroup
+>>   0 logical volume(s) in volume group "VolGroup" now active
+>> # mdadm --stop /dev/md127
+>> mdadm: stopped /dev/md127
+>>
+>> There are no panics or anything in dmesg. The directory structure of the first
+>> disk is intact, but the second disk only has Lost+Found present.
+>>
+>> I can confirm it is the patches listed at the top of the email, but I have not
+>> had an opportunity to bisect to find the exact root cause. I will do that once
+>> we confirm what Ubuntu stable kernels are affected and begin reverting the
+>> patches.
+>>
+>> Let me know if you need any more details.
+>>
+>> Thanks,
+>> Matthew Ruffell
 
