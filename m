@@ -2,102 +2,224 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FEEBC4361B
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 16:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2910C4361B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 18:39:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30192223D6
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 16:37:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 714332222F
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 18:39:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727891AbgLOQg7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 11:36:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33820 "EHLO
+        id S1730739AbgLOSiy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 13:38:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725963AbgLOQgt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 11:36:49 -0500
-X-Greylist: delayed 985 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 15 Dec 2020 08:36:08 PST
-Received: from titan.nuclearwinter.com (titan.nuclearwinter.com [IPv6:2605:6400:20:950:ed61:983f:b93a:fc2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E45A8C06179C
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 08:36:08 -0800 (PST)
-Received: from [IPv6:2601:6c5:8001:2780:f5b9:6856:8fb8:83f3] ([IPv6:2601:6c5:8001:2780:f5b9:6856:8fb8:83f3])
-        (authenticated bits=0)
-        by titan.nuclearwinter.com (8.14.7/8.14.7) with ESMTP id 0BFGJWVb021928
-        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO)
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 11:19:39 -0500
-DKIM-Filter: OpenDKIM Filter v2.11.0 titan.nuclearwinter.com 0BFGJWVb021928
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nuclearwinter.com;
-        s=201211; t=1608049180;
-        bh=MQmEPQQ2MVGeBq89gU4g58Ve4hiNjjW/sS3Xb/wdxp0=;
-        h=To:From:Subject:Date:From;
-        b=FIm2kMd4LFoMR4JAbdY7cwH5jVKAa6RNPyQQ9rH2i4JgLAPEYoAJOryHQKA+5MC29
-         Gy/zJgFIJs80NhAn5LMKgcHpA2sKWTydfNOl1QSHsOYCK/DUDNgutMfUEppLvbI1AF
-         7oPtiTT1uCDAQOlPMz20NammRI9zzzk30rAoZ+Wk=
-To:     linux-raid <linux-raid@vger.kernel.org>
-From:   Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: raid6 performance > 16 drives
-Message-ID: <3f5d2de5-fd58-95ea-231b-8be760b75896@nuclearwinter.com>
-Date:   Tue, 15 Dec 2020 11:19:32 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+        with ESMTP id S1728004AbgLOSiy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 13:38:54 -0500
+X-Greylist: delayed 506 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 15 Dec 2020 10:38:14 PST
+Received: from mail1.84.tech (mail1.84.tech [IPv6:2001:bc8:321a:200:fa7:a55:d1e7:f00d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19BE0C06179C
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 10:38:14 -0800 (PST)
+Received: from localhost (localhost [IPv6:::1])
+        by mail1.84.tech (Postfix) with ESMTP id 1314D50530D
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:02 +0100 (CET)
+Received: from mail1.84.tech ([IPv6:::1])
+        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10032)
+        with ESMTP id 6_x1RFxDAMP9 for <linux-raid@vger.kernel.org>;
+        Tue, 15 Dec 2020 19:29:01 +0100 (CET)
+Received: from localhost (localhost [IPv6:::1])
+        by mail1.84.tech (Postfix) with ESMTP id B599950533B
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:01 +0100 (CET)
+X-Virus-Scanned: amavisd-new at 84.tech
+Received: from mail1.84.tech ([IPv6:::1])
+        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10026)
+        with ESMTP id h2a9IDeSAkC6 for <linux-raid@vger.kernel.org>;
+        Tue, 15 Dec 2020 19:29:01 +0100 (CET)
+Received: from mail.seblu.net (mail.seblu.net [212.129.28.29])
+        by mail1.84.tech (Postfix) with ESMTPS id A2FEE50530D
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:01 +0100 (CET)
+Received: from localhost (localhost [IPv6:::1])
+        by mail.seblu.net (Postfix) with ESMTP id 7E9385383060
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:01 +0100 (CET)
+Received: from mail.seblu.net ([IPv6:::1])
+        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10032)
+        with ESMTP id rbQchj2OPbkD for <linux-raid@vger.kernel.org>;
+        Tue, 15 Dec 2020 19:29:00 +0100 (CET)
+Received: from localhost (localhost [IPv6:::1])
+        by mail.seblu.net (Postfix) with ESMTP id C900E5383781
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:00 +0100 (CET)
+DKIM-Filter: OpenDKIM Filter v2.10.3 mail.seblu.net C900E5383781
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seblu.net; s=pipa;
+        t=1608056940; bh=SYJh7IVqju9uLlhH3RBOkUqaYN+YdYHKu2WVlIzXwSo=;
+        h=Message-ID:From:To:Date:MIME-Version;
+        b=IL/xgekuIBALSGOp8bc8noUDFOSO2fsgvwmAPzD3HRC/VPYgou87EnXTsbdial1jB
+         826+4tsg20zYAxp+GFBYt6U9CbN4WtPMRbCb37GCQoQy9OgnUc1kSpl18YchS8GAtx
+         rPJEuN4n8Rt+78j2AdVoHeQWFdi8sNqz0TsZrpWYH+1iB/LdyP85TfI6jax9FNeDFI
+         7sl+cSld78rbmgn1vefjQwVo2Cc465YiFq56DxZwc4o877M8waUPa6HpJDrgUXH/Ya
+         asXt8tA5W1oNyyfHjTy2Dn9+LlOFUOzNil3s1lwb0XygpNRWoDbJOQoCxrZ4cak7/u
+         JU8XGNkQtwk6g==
+X-Virus-Scanned: amavisd-new at seblu.net
+Received: from mail.seblu.net ([IPv6:::1])
+        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10026)
+        with ESMTP id Gcq7Vg4XW7Sb for <linux-raid@vger.kernel.org>;
+        Tue, 15 Dec 2020 19:29:00 +0100 (CET)
+Received: from [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19] (unknown [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19])
+        by mail.seblu.net (Postfix) with ESMTPSA id B4F645383060
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:00 +0100 (CET)
+Message-ID: <89d2eb88e6a300631862718024e687fc3102a4e1.camel@seblu.net>
+Subject: Array size dropped from 40TB to 7TB when upgrading to 5.10
+From:   =?ISO-8859-1?Q?S=E9bastien?= Luttringer <seblu@seblu.net>
+To:     linux-raid@vger.kernel.org
+Date:   Tue, 15 Dec 2020 19:29:00 +0100
+Content-Type: multipart/signed; micalg="pgp-sha384";
+        protocol="application/pgp-signature"; boundary="=-3C9gkxVrNVR263DgiuQz"
+User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.2 (titan.nuclearwinter.com [IPv6:2605:6400:20:950:ed61:983f:b93a:fc2b]); Tue, 15 Dec 2020 11:19:43 -0500 (EST)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+
+--=-3C9gkxVrNVR263DgiuQz
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
 Hello,
 
-I'm looking for advise on how to best configure mdraid with 16 or more 
-drives. My goal is to maximize sequential read speed while maintaining a 
-high level of fault tolerance (2 or more failures).
+After a clean reboot to the new kernel 5.10.0 my 40TB md raid5 array size
+droped to 7TB.
+The previous kernel was 5.9.5. Rebooting back to the 5.9.5 didn't fix the
+issue.
 
-I had a 16 drive raid 6 array that performed reasonably well. Peak drive 
-performance (check) was ~180MB/s which is not far from the native drive 
-performance of ~200MB/s. I recently added 4 more drives and now the 
-check performance is only 50MB/s per drive.
+# cat /proc/mdstat=20
+Personalities : [raid6] [raid5] [raid4]=20
+md0 : active raid5 sdf[9] sdd[10] sda[7] sdb[6] sdc[11] sde[8]
+      6857871360 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6]
+[UUUUUU]
+     =20
+unused devices: <none>
 
-I had similar issues on another, older, system with 12 drives that I did 
-solve by setting group_thread_cnt to 2 but in that case the md1_resync 
-process was very close to 100% CPU. In this case it's only about 50%. On 
-this (20 drive) system, setting group_thread_cnt to 2 caused performance 
-to drop to 35MB/s.
 
-md1 : active raid6 sdf1[10] sdh1[16] sdi1[17] sdb1[13] sdc1[12] sdg1[8] 
-sda1[15] sde1[9] sdd1[11] sds1[18] sdn1[5] sdq1[6] sdj1[1] sdp1[14] 
-sdk1[2] sdl1[3] sdt1[19] sdm1[0] sdr1[4] sdo1[7]
-       140650080768 blocks super 1.2 level 6, 128k chunk, algorithm 2 
-[20/20] [UUUUUUUUUUUUUUUUUUUU]
-       [=============>.......]  check = 69.3% (5419742336/7813893376) 
-finish=795.6min speed=50150K/sec
-       bitmap: 0/4 pages [0KB], 1048576KB chunk
+journalctl -oshort-iso --no-hostname -b -6|grep md0
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdf operational as rai=
+d
+disk 0
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sda operational as rai=
+d
+disk 5
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdd operational as rai=
+d
+disk 4
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sde operational as rai=
+d
+disk 2
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdc operational as rai=
+d
+disk 1
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdb operational as rai=
+d
+disk 3
+2020-12-04T02:30:47+0100 kernel: md/raid:md0: raid level 5 active with 6 ou=
+t of
+6 devices, algorithm 2
+2020-12-04T02:30:47+0100 kernel: md0: detected capacity change from 0 to
+40007809105920
+2020-12-04T02:31:47+0100 kernel: EXT4-fs (md0): mounted filesystem with ord=
+ered
+data mode. Opts: (null)
 
-# cat /sys/block/md1/md/stripe_cache_size
-32768
+# journalctl -oshort-iso --no-hostname -b -5|grep md0
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdf operational as rai=
+d
+disk 0
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sda operational as rai=
+d
+disk 5
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sde operational as rai=
+d
+disk 2
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdd operational as rai=
+d
+disk 4
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdc operational as rai=
+d
+disk 1
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdb operational as rai=
+d
+disk 3
+2020-12-15T03:53:00+0100 kernel: md/raid:md0: raid level 5 active with 6 ou=
+t of
+6 devices, algorithm 2
+2020-12-15T03:53:00+0100 kernel: md0: detected capacity change from 0 to
+7022460272640
+2020-12-15T03:54:20+0100 systemd-fsck[1009]: fsck.ext4: Invalid argument wh=
+ile
+trying to open /dev/md0
 
-I have confirmed that this system can read from all 20 drives at top 
-speed (200MB/s) simultaneously by running 20 dd's in parallel. So, this 
-isn't a bus, CPU or memory bandwidth constraint of the system.
+There is no log of hardware errors or unclean unmounting.
 
-The array is mainly used for media files and accesses are large and 
-sequential. This particular host is storing backups so maintaining high 
-sequential performance is important in order to keep backup/restore time 
-to a minimum.
+# mdadm -D /dev/md0
+/dev/md0:
+           Version : 1.2
+     Creation Time : Mon Jan 24 02:53:21 2011
+        Raid Level : raid5
+        Array Size : 6857871360 (6540.18 GiB 7022.46 GB)
+     Used Dev Size : 1371574272 (1308.04 GiB 1404.49 GB)
+      Raid Devices : 6
+     Total Devices : 6
+       Persistence : Superblock is persistent
 
-I recall reading that the mdraid raid6 implementation was fundamentally 
-single threaded and suffered from memory bandwidth constraints due to 
-many necessary copy operations. How does one best avoid these 
-constraints? Does chunk size matter?
+       Update Time : Tue Dec 15 17:53:13 2020
+             State : clean=20
+    Active Devices : 6
+   Working Devices : 6
+    Failed Devices : 0
+     Spare Devices : 0
 
-Would raid 60 help? If I split this into two 10 drive raid6 arrays, 
-would each array run on separate cores?
+            Layout : left-symmetric
+        Chunk Size : 512K
 
-Any advise would be appreciated. Thank you.
+Consistency Policy : resync
 
---Larkin
+              Name : white:0  (local to host white)
+              UUID : affd87df:da503e3b:52a8b97f:77b80c0c
+            Events : 1791763
+
+    Number   Major   Minor   RaidDevice State
+       9       8       80        0      active sync   /dev/sdf
+      11       8       32        1      active sync   /dev/sdc
+       8       8       64        2      active sync   /dev/sde
+       6       8       16        3      active sync   /dev/sdb
+      10       8       48        4      active sync   /dev/sdd
+       7       8        0        5      active sync   /dev/sda
+
+The mdadm userspace as not been updated.
+# mdadm -V
+mdadm - v4.1 - 2018-10-01
+
+An `mdadm --action check /dev/md0` was run without errors.
+
+1) What's the best option to restore the size without loosing the data?
+2) Is this issue can be related to the kernel upgrade or it's fortuitous?
+
+Regards,
+
+S=C3=A9bastien "Seblu" Luttringer
+
+--=-3C9gkxVrNVR263DgiuQz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYJAB0WIQSTtRpKFHmOS6hn0ULluymEcK1OQQUCX9kAbAAKCRDluymEcK1O
+QYszAQCPvBrZpkQycHURigLuytjgxgTePePuTdgWbKK7ZsPKDQEA/DvVFNIap3iG
+zXWp/htBTQmlXBSdvZrAurcschvKGAE=
+=YzHH
+-----END PGP SIGNATURE-----
+
+--=-3C9gkxVrNVR263DgiuQz--
+
