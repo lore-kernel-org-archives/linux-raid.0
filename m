@@ -2,282 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC5EC2BB9A
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 20:52:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33114C4361B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 22:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 964F222D06
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 20:52:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1C8822BE9
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 22:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729565AbgLOUwN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 15:52:13 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56104 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727804AbgLOUwG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 15:52:06 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BFKoaa6193672;
-        Tue, 15 Dec 2020 20:51:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=U0/8Fm7pFqF1iyihP7LVzM2ebGbwYrgJDkT5uPW9pmw=;
- b=zdpNoBKbaLTc7cSst7dYZzIoCPEd1K6ZEtCm9AjC4scJCHgKpSMIQGvCqKTR9hmIcK+/
- /LfKA9PWqPsfF5NXxFDESf4IsWC66RQY88+lyUiQ9+cnVCt1EOFdl7kOwmsvp7w6ou0G
- kdUO8tWt7P06dRorSw0ndFfSqa2l87Cws+fe3L5hcW8JW5fK7tCxIjCeSPbUmlwKQvKA
- +PzSShFT0KxnY8TaF+DorxJKyFB3+/gOSP/nhYIJ7uZLgxIcWu5JL+oldbWAbEmSp9qh
- l9AMmnNmy2LkclfMskdvzA5/IZ9LQ/AMKxFPr2Le/krVOvHz5su+5lQyqEJHPan5I3QP SA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 35cn9rcrsy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Dec 2020 20:51:08 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BFKp1jK046319;
-        Tue, 15 Dec 2020 20:51:07 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 35e6eqys6x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Dec 2020 20:51:07 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BFKp4g2021214;
-        Tue, 15 Dec 2020 20:51:04 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Dec 2020 12:51:04 -0800
-Date:   Tue, 15 Dec 2020 12:51:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com, "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [RFC PATCH v3 8/9] md: Implement ->corrupted_range()
-Message-ID: <20201215205102.GB6918@magnolia>
-References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
- <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
+        id S1730733AbgLOW3w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 17:29:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60334 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730571AbgLOWXh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 17:23:37 -0500
+Received: from mail1.84.tech (mail1.84.tech [IPv6:2001:bc8:321a:200:fa7:a55:d1e7:f00d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6353C0617A6
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 14:22:40 -0800 (PST)
+Received: from localhost (localhost [IPv6:::1])
+        by mail1.84.tech (Postfix) with ESMTP id 800A450535C;
+        Tue, 15 Dec 2020 23:22:39 +0100 (CET)
+Received: from mail1.84.tech ([IPv6:::1])
+        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10032)
+        with ESMTP id pwi1bdxHEE_7; Tue, 15 Dec 2020 23:22:39 +0100 (CET)
+Received: from localhost (localhost [IPv6:::1])
+        by mail1.84.tech (Postfix) with ESMTP id 33DC9505670;
+        Tue, 15 Dec 2020 23:22:39 +0100 (CET)
+X-Virus-Scanned: amavisd-new at 84.tech
+Received: from mail1.84.tech ([IPv6:::1])
+        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10026)
+        with ESMTP id FhVqAHYFJrEG; Tue, 15 Dec 2020 23:22:39 +0100 (CET)
+Received: from mail.seblu.net (mail.seblu.net [IPv6:2001:bc8:3173:101:bad:cafe:bad:c0de])
+        by mail1.84.tech (Postfix) with ESMTPS id 2278250535C;
+        Tue, 15 Dec 2020 23:22:39 +0100 (CET)
+Received: from localhost (localhost [IPv6:::1])
+        by mail.seblu.net (Postfix) with ESMTP id E7BBF52FCB91;
+        Tue, 15 Dec 2020 23:22:38 +0100 (CET)
+Received: from mail.seblu.net ([IPv6:::1])
+        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10032)
+        with ESMTP id RRXzrqOgHWlw; Tue, 15 Dec 2020 23:22:38 +0100 (CET)
+Received: from localhost (localhost [IPv6:::1])
+        by mail.seblu.net (Postfix) with ESMTP id 61D5B53839DF;
+        Tue, 15 Dec 2020 23:22:38 +0100 (CET)
+DKIM-Filter: OpenDKIM Filter v2.10.3 mail.seblu.net 61D5B53839DF
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seblu.net; s=pipa;
+        t=1608070958; bh=/zd7Sner6T3xDx5su9MidJdvD7b/9uel6qay+OmGkOM=;
+        h=Message-ID:From:To:Date:MIME-Version;
+        b=dNFPdx/Th+HMemKUDZ8zPo8PTGAe8IOBXlx1whP6EMLjvTTMkKJu0Wo3KZ56e+gWH
+         a2uuUbT02pUs41EVhdpWNZtVQQzQo39AecCwTJcFXrmR5Xft/8GfX6gZ5LEL1IKsX+
+         Vl6smBgjTHgMTXMzCXMSaZoV7hf6G3WhuFFCkQPKnAqiIf1HJQCB13cEaPHB/7JlZv
+         9GC0D3gnBLRHkpObdFftOlOkgIXLyfak1uO6xeOo0+PHosnp0hoXWOzPr2QAcX8Rg5
+         OaFP5a7YIq9E/xrG0ohNfHtIDw9SPkAwmAnN1yMYVx2cFAyQ7A1L9QWWsvvgfUGjZo
+         OFrn81Ctao2QQ==
+X-Virus-Scanned: amavisd-new at seblu.net
+Received: from mail.seblu.net ([IPv6:::1])
+        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10026)
+        with ESMTP id kt6oPYk8wDln; Tue, 15 Dec 2020 23:22:38 +0100 (CET)
+Received: from [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19] (unknown [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19])
+        by mail.seblu.net (Postfix) with ESMTPSA id 3D59352FCB91;
+        Tue, 15 Dec 2020 23:22:38 +0100 (CET)
+Message-ID: <1368d8f7aee0e49519f8d9ac9c7c156ab25a0e50.camel@seblu.net>
+Subject: Re: RE Array size dropped from 40TB to 7TB when upgrading to 5.10
+From:   =?ISO-8859-1?Q?S=E9bastien?= Luttringer <seblu@seblu.net>
+To:     Ian Kumlien <ian.kumlien@gmail.com>, linux-raid@vger.kernel.org
+Date:   Tue, 15 Dec 2020 23:22:37 +0100
+In-Reply-To: <CAA85sZt+MV=LY7xCvKqccD_gK35hwSnczPSKenW81rQ3yK7JTA@mail.gmail.com>
+References: <CAA85sZt+MV=LY7xCvKqccD_gK35hwSnczPSKenW81rQ3yK7JTA@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha384";
+        protocol="application/pgp-signature"; boundary="=-QQcioVIw8En3JS8W1yiA"
+User-Agent: Evolution 3.38.2 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012150140
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
- malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012150140
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 08:14:13PM +0800, Shiyang Ruan wrote:
-> With the support of ->rmap(), it is possible to obtain the superblock on
-> a mapped device.
-> 
-> If a pmem device is used as one target of mapped device, we cannot
-> obtain its superblock directly.  With the help of SYSFS, the mapped
-> device can be found on the target devices.  So, we iterate the
-> bdev->bd_holder_disks to obtain its mapped device.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
->  drivers/md/dm.c       | 66 +++++++++++++++++++++++++++++++++++++++++++
->  drivers/nvdimm/pmem.c |  9 ++++--
->  fs/block_dev.c        | 21 ++++++++++++++
->  include/linux/genhd.h |  7 +++++
->  4 files changed, 100 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 4e0cbfe3f14d..9da1f9322735 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -507,6 +507,71 @@ static int dm_blk_report_zones(struct gendisk *disk, sector_t sector,
->  #define dm_blk_report_zones		NULL
->  #endif /* CONFIG_BLK_DEV_ZONED */
->  
-> +struct dm_blk_corrupt {
-> +	struct block_device *bdev;
-> +	sector_t offset;
-> +};
-> +
-> +static int dm_blk_corrupt_fn(struct dm_target *ti, struct dm_dev *dev,
-> +				sector_t start, sector_t len, void *data)
-> +{
-> +	struct dm_blk_corrupt *bc = data;
-> +
-> +	return bc->bdev == (void *)dev->bdev &&
-> +			(start <= bc->offset && bc->offset < start + len);
-> +}
-> +
-> +static int dm_blk_corrupted_range(struct gendisk *disk,
-> +				  struct block_device *target_bdev,
-> +				  loff_t target_offset, size_t len, void *data)
-> +{
-> +	struct mapped_device *md = disk->private_data;
-> +	struct block_device *md_bdev = md->bdev;
-> +	struct dm_table *map;
-> +	struct dm_target *ti;
-> +	struct super_block *sb;
-> +	int srcu_idx, i, rc = 0;
-> +	bool found = false;
-> +	sector_t disk_sec, target_sec = to_sector(target_offset);
-> +
-> +	map = dm_get_live_table(md, &srcu_idx);
-> +	if (!map)
-> +		return -ENODEV;
-> +
-> +	for (i = 0; i < dm_table_get_num_targets(map); i++) {
-> +		ti = dm_table_get_target(map, i);
-> +		if (ti->type->iterate_devices && ti->type->rmap) {
-> +			struct dm_blk_corrupt bc = {target_bdev, target_sec};
-> +
-> +			found = ti->type->iterate_devices(ti, dm_blk_corrupt_fn, &bc);
-> +			if (!found)
-> +				continue;
-> +			disk_sec = ti->type->rmap(ti, target_sec);
 
-What happens if the dm device has multiple reverse mappings because the
-physical storage is being shared at multiple LBAs?  (e.g. a
-deduplication target)
+--=-QQcioVIw8En3JS8W1yiA
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> +			break;
-> +		}
-> +	}
-> +
-> +	if (!found) {
-> +		rc = -ENODEV;
-> +		goto out;
-> +	}
-> +
-> +	sb = get_super(md_bdev);
-> +	if (!sb) {
-> +		rc = bd_disk_holder_corrupted_range(md_bdev, to_bytes(disk_sec), len, data);
-> +		goto out;
-> +	} else if (sb->s_op->corrupted_range) {
-> +		loff_t off = to_bytes(disk_sec - get_start_sect(md_bdev));
-> +
-> +		rc = sb->s_op->corrupted_range(sb, md_bdev, off, len, data);
+On Tue, 2020-12-15 at 21:08 +0100, Ian Kumlien wrote:
+> the same thing happened to me, but it was a raid6...
+With the same kernel (5.10) or an older one?
 
-This "call bd_disk_holder_corrupted_range or sb->s_op->corrupted_range"
-logic appears twice; should it be refactored into a common helper?
+> Eventually I just gave up and did a:
+> mdadm --grow /dev/md3 --size=3Dmax (since it reflects the size it used to=
+ be)
+This doesn't removed your data?
+I wondering if the flag --assume-clean is mandatory to keep the data untouc=
+hed.
 
-Or, should the superblock dispatch part move to
-bd_disk_holder_corrupted_range?
+> After a few hours of syncing, everything was ok again
+> (according to btrfs check which also took a few hours =3D))
+>=20
+> But remember to do this with a 5.0.1 kernel ;)
+You mean 5.10?
 
-> +	}
-> +	drop_super(sb);
-> +
-> +out:
-> +	dm_put_live_table(md, srcu_idx);
-> +	return rc;
-> +}
-> +
->  static int dm_prepare_ioctl(struct mapped_device *md, int *srcu_idx,
->  			    struct block_device **bdev)
->  {
-> @@ -3084,6 +3149,7 @@ static const struct block_device_operations dm_blk_dops = {
->  	.getgeo = dm_blk_getgeo,
->  	.report_zones = dm_blk_report_zones,
->  	.pr_ops = &dm_pr_ops,
-> +	.corrupted_range = dm_blk_corrupted_range,
->  	.owner = THIS_MODULE
->  };
->  
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 4688bff19c20..e8cfaf860149 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -267,11 +267,14 @@ static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
->  
->  	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
->  	sb = get_super(bdev);
-> -	if (sb && sb->s_op->corrupted_range) {
-> +	if (!sb) {
-> +		rc = bd_disk_holder_corrupted_range(bdev, bdev_offset, len, data);
-> +		goto out;
-> +	} else if (sb->s_op->corrupted_range)
->  		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
-> -		drop_super(sb);
+Regards,
 
-This is out of scope for this patch(set) but do you think that the scsi
-disk driver should intercept media errors from sense data and call
-->corrupted_range too?  ISTR Ted muttering that one of his employers had
-a patchset to do more with sense data than the upstream kernel currently
-does...
+S=C3=A9bastien "Seblu" Luttringer
 
-> -	}
-> +	drop_super(sb);
->  
-> +out:
->  	bdput(bdev);
->  	return rc;
->  }
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 9e84b1928b94..d3e6bddb8041 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -1171,6 +1171,27 @@ struct bd_holder_disk {
->  	int			refcnt;
->  };
->  
-> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off, size_t len, void *data)
-> +{
-> +	struct bd_holder_disk *holder;
-> +	struct gendisk *disk;
-> +	int rc = 0;
-> +
-> +	if (list_empty(&(bdev->bd_holder_disks)))
-> +		return -ENODEV;
-> +
-> +	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
-> +		disk = holder->disk;
-> +		if (disk->fops->corrupted_range) {
-> +			rc = disk->fops->corrupted_range(disk, bdev, off, len, data);
-> +			if (rc != -ENODEV)
-> +				break;
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(bd_disk_holder_corrupted_range);
-> +
->  static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
->  						  struct gendisk *disk)
->  {
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index ed06209008b8..fba247b852fa 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -382,9 +382,16 @@ int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
->  long compat_blkdev_ioctl(struct file *, unsigned, unsigned long);
->  
->  #ifdef CONFIG_SYSFS
-> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-> +				   size_t len, void *data);
->  int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk);
->  void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk);
->  #else
-> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-> +				   size_t len, void *data)
-> +{
-> +	return 0;
-> +}
->  static inline int bd_link_disk_holder(struct block_device *bdev,
->  				      struct gendisk *disk)
->  {
-> -- 
-> 2.29.2
-> 
-> 
-> 
+
+--=-QQcioVIw8En3JS8W1yiA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYJAB0WIQSTtRpKFHmOS6hn0ULluymEcK1OQQUCX9k3LQAKCRDluymEcK1O
+Qe3rAPwNiXIJDRdRaMih0t89XfvAE3P7JvNgruRQF/zX9Z5MgAEAjBcQh+siQSr1
+xh5uMpQCZ8KVX+sdiUzg+qLRgVaimQs=
+=v9gf
+-----END PGP SIGNATURE-----
+
+--=-QQcioVIw8En3JS8W1yiA--
+
