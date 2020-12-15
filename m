@@ -2,224 +2,128 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2910C4361B
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 18:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77907C2BB9A
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 19:07:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 714332222F
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 18:39:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44E4622B2D
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 19:07:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730739AbgLOSiy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 13:38:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52688 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728004AbgLOSiy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 13:38:54 -0500
-X-Greylist: delayed 506 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 15 Dec 2020 10:38:14 PST
-Received: from mail1.84.tech (mail1.84.tech [IPv6:2001:bc8:321a:200:fa7:a55:d1e7:f00d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19BE0C06179C
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 10:38:14 -0800 (PST)
-Received: from localhost (localhost [IPv6:::1])
-        by mail1.84.tech (Postfix) with ESMTP id 1314D50530D
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:02 +0100 (CET)
-Received: from mail1.84.tech ([IPv6:::1])
-        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id 6_x1RFxDAMP9 for <linux-raid@vger.kernel.org>;
-        Tue, 15 Dec 2020 19:29:01 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-        by mail1.84.tech (Postfix) with ESMTP id B599950533B
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:01 +0100 (CET)
-X-Virus-Scanned: amavisd-new at 84.tech
-Received: from mail1.84.tech ([IPv6:::1])
-        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id h2a9IDeSAkC6 for <linux-raid@vger.kernel.org>;
-        Tue, 15 Dec 2020 19:29:01 +0100 (CET)
-Received: from mail.seblu.net (mail.seblu.net [212.129.28.29])
-        by mail1.84.tech (Postfix) with ESMTPS id A2FEE50530D
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:01 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-        by mail.seblu.net (Postfix) with ESMTP id 7E9385383060
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:01 +0100 (CET)
-Received: from mail.seblu.net ([IPv6:::1])
-        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id rbQchj2OPbkD for <linux-raid@vger.kernel.org>;
-        Tue, 15 Dec 2020 19:29:00 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-        by mail.seblu.net (Postfix) with ESMTP id C900E5383781
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:00 +0100 (CET)
-DKIM-Filter: OpenDKIM Filter v2.10.3 mail.seblu.net C900E5383781
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seblu.net; s=pipa;
-        t=1608056940; bh=SYJh7IVqju9uLlhH3RBOkUqaYN+YdYHKu2WVlIzXwSo=;
-        h=Message-ID:From:To:Date:MIME-Version;
-        b=IL/xgekuIBALSGOp8bc8noUDFOSO2fsgvwmAPzD3HRC/VPYgou87EnXTsbdial1jB
-         826+4tsg20zYAxp+GFBYt6U9CbN4WtPMRbCb37GCQoQy9OgnUc1kSpl18YchS8GAtx
-         rPJEuN4n8Rt+78j2AdVoHeQWFdi8sNqz0TsZrpWYH+1iB/LdyP85TfI6jax9FNeDFI
-         7sl+cSld78rbmgn1vefjQwVo2Cc465YiFq56DxZwc4o877M8waUPa6HpJDrgUXH/Ya
-         asXt8tA5W1oNyyfHjTy2Dn9+LlOFUOzNil3s1lwb0XygpNRWoDbJOQoCxrZ4cak7/u
-         JU8XGNkQtwk6g==
-X-Virus-Scanned: amavisd-new at seblu.net
-Received: from mail.seblu.net ([IPv6:::1])
-        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id Gcq7Vg4XW7Sb for <linux-raid@vger.kernel.org>;
-        Tue, 15 Dec 2020 19:29:00 +0100 (CET)
-Received: from [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19] (unknown [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19])
-        by mail.seblu.net (Postfix) with ESMTPSA id B4F645383060
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 19:29:00 +0100 (CET)
-Message-ID: <89d2eb88e6a300631862718024e687fc3102a4e1.camel@seblu.net>
-Subject: Array size dropped from 40TB to 7TB when upgrading to 5.10
-From:   =?ISO-8859-1?Q?S=E9bastien?= Luttringer <seblu@seblu.net>
-To:     linux-raid@vger.kernel.org
-Date:   Tue, 15 Dec 2020 19:29:00 +0100
-Content-Type: multipart/signed; micalg="pgp-sha384";
-        protocol="application/pgp-signature"; boundary="=-3C9gkxVrNVR263DgiuQz"
-User-Agent: Evolution 3.38.2 
+        id S1731885AbgLOTGc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 14:06:32 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:56668 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731778AbgLOTGU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 14:06:20 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BFJ05Nn166879;
+        Tue, 15 Dec 2020 19:05:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=rPaA1lXHtSIrJnQXSfEHzf/QB0dDoI9KLHNNF9d2vyk=;
+ b=XxG8yezhuwhvdL/NoipNesCnm3sm5cjA8YlgvbvW1HHxEITZTP0ZyhE82MIDP+GN9/5j
+ /UZJZ7hWT3uni1b4nkheEECeEBHEr1L2SnshTtQVU/iqLCgyI7D+ORP5ghWepy3TfEgC
+ 0m6V/K1enEiivJ1Jiiiq2UvfS1meyUKLdtShxrbkD0aSPeyF2GLlG0llWmfavR8YciAQ
+ ar+LEZmRhmWrMOrGwGdcmluYiQ74ngB7eLg1+QbsEWoR4Hl88lMeQ9Zgq5zyTg3P69Ti
+ /1zZpwj5XBbTcCQjYQY80V+mav+tk0T+ALeAhgWPt2AA+kYasicfoyT8hMUB07BJOemq 7g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 35ckcbcgye-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 15 Dec 2020 19:05:14 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BFJ1C3e048331;
+        Tue, 15 Dec 2020 19:05:14 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 35d7enf2hf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 15 Dec 2020 19:05:14 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BFJ5AuJ024299;
+        Tue, 15 Dec 2020 19:05:10 GMT
+Received: from [10.159.136.92] (/10.159.136.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 15 Dec 2020 11:05:09 -0800
+Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
+To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
+ <89ab4ec4-e4f0-7c17-6982-4f55bb40f574@oracle.com>
+ <bb699996-ddc8-8f3a-dc8f-2422bf990b06@cn.fujitsu.com>
+From:   Jane Chu <jane.chu@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <3b35604c-57e2-8cb5-da69-53508c998540@oracle.com>
+Date:   Tue, 15 Dec 2020 11:05:07 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
+In-Reply-To: <bb699996-ddc8-8f3a-dc8f-2422bf990b06@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 adultscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012150126
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ priorityscore=1501 mlxscore=0 suspectscore=0 adultscore=0 phishscore=0
+ malwarescore=0 impostorscore=0 lowpriorityscore=0 clxscore=1015
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012150126
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 12/15/2020 3:58 AM, Ruan Shiyang wrote:
+> Hi Jane
+> 
+> On 2020/12/15 上午4:58, Jane Chu wrote:
+>> Hi, Shiyang,
+>>
+>> On 11/22/2020 4:41 PM, Shiyang Ruan wrote:
+>>> This patchset is a try to resolve the problem of tracking shared page
+>>> for fsdax.
+>>>
+>>> Change from v1:
+>>>    - Intorduce ->block_lost() for block device
+>>>    - Support mapped device
+>>>    - Add 'not available' warning for realtime device in XFS
+>>>    - Rebased to v5.10-rc1
+>>>
+>>> This patchset moves owner tracking from dax_assocaite_entry() to pmem
+>>> device, by introducing an interface ->memory_failure() of struct
+>>> pagemap.  The interface is called by memory_failure() in mm, and
+>>> implemented by pmem device.  Then pmem device calls its ->block_lost()
+>>> to find the filesystem which the damaged page located in, and call
+>>> ->storage_lost() to track files or metadata assocaited with this page.
+>>> Finally we are able to try to fix the damaged data in filesystem and do
+>>
+>> Does that mean clearing poison? if so, would you mind to elaborate 
+>> specifically which change does that?
+> 
+> Recovering data for filesystem (or pmem device) has not been done in 
+> this patchset...  I just triggered the handler for the files sharing the 
+> corrupted page here.
 
---=-3C9gkxVrNVR263DgiuQz
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks! That confirms my understanding.
 
-Hello,
+With the framework provided by the patchset, how do you envision it to
+ease/simplify poison recovery from the user's perspective?
 
-After a clean reboot to the new kernel 5.10.0 my 40TB md raid5 array size
-droped to 7TB.
-The previous kernel was 5.9.5. Rebooting back to the 5.9.5 didn't fix the
-issue.
+And how does it help in dealing with page faults upon poisoned
+dax page?
 
-# cat /proc/mdstat=20
-Personalities : [raid6] [raid5] [raid4]=20
-md0 : active raid5 sdf[9] sdd[10] sda[7] sdb[6] sdc[11] sde[8]
-      6857871360 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6]
-[UUUUUU]
-     =20
-unused devices: <none>
-
-
-journalctl -oshort-iso --no-hostname -b -6|grep md0
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdf operational as rai=
-d
-disk 0
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sda operational as rai=
-d
-disk 5
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdd operational as rai=
-d
-disk 4
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sde operational as rai=
-d
-disk 2
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdc operational as rai=
-d
-disk 1
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: device sdb operational as rai=
-d
-disk 3
-2020-12-04T02:30:47+0100 kernel: md/raid:md0: raid level 5 active with 6 ou=
-t of
-6 devices, algorithm 2
-2020-12-04T02:30:47+0100 kernel: md0: detected capacity change from 0 to
-40007809105920
-2020-12-04T02:31:47+0100 kernel: EXT4-fs (md0): mounted filesystem with ord=
-ered
-data mode. Opts: (null)
-
-# journalctl -oshort-iso --no-hostname -b -5|grep md0
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdf operational as rai=
-d
-disk 0
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sda operational as rai=
-d
-disk 5
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sde operational as rai=
-d
-disk 2
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdd operational as rai=
-d
-disk 4
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdc operational as rai=
-d
-disk 1
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: device sdb operational as rai=
-d
-disk 3
-2020-12-15T03:53:00+0100 kernel: md/raid:md0: raid level 5 active with 6 ou=
-t of
-6 devices, algorithm 2
-2020-12-15T03:53:00+0100 kernel: md0: detected capacity change from 0 to
-7022460272640
-2020-12-15T03:54:20+0100 systemd-fsck[1009]: fsck.ext4: Invalid argument wh=
-ile
-trying to open /dev/md0
-
-There is no log of hardware errors or unclean unmounting.
-
-# mdadm -D /dev/md0
-/dev/md0:
-           Version : 1.2
-     Creation Time : Mon Jan 24 02:53:21 2011
-        Raid Level : raid5
-        Array Size : 6857871360 (6540.18 GiB 7022.46 GB)
-     Used Dev Size : 1371574272 (1308.04 GiB 1404.49 GB)
-      Raid Devices : 6
-     Total Devices : 6
-       Persistence : Superblock is persistent
-
-       Update Time : Tue Dec 15 17:53:13 2020
-             State : clean=20
-    Active Devices : 6
-   Working Devices : 6
-    Failed Devices : 0
-     Spare Devices : 0
-
-            Layout : left-symmetric
-        Chunk Size : 512K
-
-Consistency Policy : resync
-
-              Name : white:0  (local to host white)
-              UUID : affd87df:da503e3b:52a8b97f:77b80c0c
-            Events : 1791763
-
-    Number   Major   Minor   RaidDevice State
-       9       8       80        0      active sync   /dev/sdf
-      11       8       32        1      active sync   /dev/sdc
-       8       8       64        2      active sync   /dev/sde
-       6       8       16        3      active sync   /dev/sdb
-      10       8       48        4      active sync   /dev/sdd
-       7       8        0        5      active sync   /dev/sda
-
-The mdadm userspace as not been updated.
-# mdadm -V
-mdadm - v4.1 - 2018-10-01
-
-An `mdadm --action check /dev/md0` was run without errors.
-
-1) What's the best option to restore the size without loosing the data?
-2) Is this issue can be related to the kernel upgrade or it's fortuitous?
-
-Regards,
-
-S=C3=A9bastien "Seblu" Luttringer
-
---=-3C9gkxVrNVR263DgiuQz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYJAB0WIQSTtRpKFHmOS6hn0ULluymEcK1OQQUCX9kAbAAKCRDluymEcK1O
-QYszAQCPvBrZpkQycHURigLuytjgxgTePePuTdgWbKK7ZsPKDQEA/DvVFNIap3iG
-zXWp/htBTQmlXBSdvZrAurcschvKGAE=
-=YzHH
------END PGP SIGNATURE-----
-
---=-3C9gkxVrNVR263DgiuQz--
+thanks!
+-jane
 
