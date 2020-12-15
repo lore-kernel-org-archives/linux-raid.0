@@ -2,130 +2,102 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B030C2BBCA
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 12:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FEEBC4361B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 16:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4D9822510
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 12:30:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30192223D6
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 16:37:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728540AbgLOMPg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 07:15:36 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:22820 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726156AbgLOMPU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 07:15:20 -0500
-X-IronPort-AV: E=Sophos;i="5.78,420,1599494400"; 
-   d="scan'208";a="102420175"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 15 Dec 2020 20:14:30 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 649AF4CE5CCA;
-        Tue, 15 Dec 2020 20:14:29 +0800 (CST)
-Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 15 Dec 2020 20:14:28 +0800
-Received: from localhost.localdomain (10.167.225.141) by
- G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Tue, 15 Dec 2020 20:14:28 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
-        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [RFC PATCH v3 0/9] fsdax: introduce fs query to support reflink
-Date:   Tue, 15 Dec 2020 20:14:05 +0800
-Message-ID: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.29.2
+        id S1727891AbgLOQg7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 11:36:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33820 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725963AbgLOQgt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 11:36:49 -0500
+X-Greylist: delayed 985 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 15 Dec 2020 08:36:08 PST
+Received: from titan.nuclearwinter.com (titan.nuclearwinter.com [IPv6:2605:6400:20:950:ed61:983f:b93a:fc2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E45A8C06179C
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 08:36:08 -0800 (PST)
+Received: from [IPv6:2601:6c5:8001:2780:f5b9:6856:8fb8:83f3] ([IPv6:2601:6c5:8001:2780:f5b9:6856:8fb8:83f3])
+        (authenticated bits=0)
+        by titan.nuclearwinter.com (8.14.7/8.14.7) with ESMTP id 0BFGJWVb021928
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO)
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 11:19:39 -0500
+DKIM-Filter: OpenDKIM Filter v2.11.0 titan.nuclearwinter.com 0BFGJWVb021928
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nuclearwinter.com;
+        s=201211; t=1608049180;
+        bh=MQmEPQQ2MVGeBq89gU4g58Ve4hiNjjW/sS3Xb/wdxp0=;
+        h=To:From:Subject:Date:From;
+        b=FIm2kMd4LFoMR4JAbdY7cwH5jVKAa6RNPyQQ9rH2i4JgLAPEYoAJOryHQKA+5MC29
+         Gy/zJgFIJs80NhAn5LMKgcHpA2sKWTydfNOl1QSHsOYCK/DUDNgutMfUEppLvbI1AF
+         7oPtiTT1uCDAQOlPMz20NammRI9zzzk30rAoZ+Wk=
+To:     linux-raid <linux-raid@vger.kernel.org>
+From:   Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: raid6 performance > 16 drives
+Message-ID: <3f5d2de5-fd58-95ea-231b-8be760b75896@nuclearwinter.com>
+Date:   Tue, 15 Dec 2020 11:19:32 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 649AF4CE5CCA.AE812
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.2 (titan.nuclearwinter.com [IPv6:2605:6400:20:950:ed61:983f:b93a:fc2b]); Tue, 15 Dec 2020 11:19:43 -0500 (EST)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This patchset is a try to resolve the problem of tracking shared page
-for fsdax.
+Hello,
 
-Change from v2:
-  - Adjust the order of patches
-  - Divide the infrastructure and the drivers that use it
-  - Rebased to v5.10
+I'm looking for advise on how to best configure mdraid with 16 or more 
+drives. My goal is to maximize sequential read speed while maintaining a 
+high level of fault tolerance (2 or more failures).
 
-Change from v1:
-  - Introduce ->block_lost() for block device
-  - Support mapped device
-  - Add 'not available' warning for realtime device in XFS
-  - Rebased to v5.10-rc1
+I had a 16 drive raid 6 array that performed reasonably well. Peak drive 
+performance (check) was ~180MB/s which is not far from the native drive 
+performance of ~200MB/s. I recently added 4 more drives and now the 
+check performance is only 50MB/s per drive.
 
-This patchset moves owner tracking from dax_assocaite_entry() to pmem
-device driver, by introducing an interface ->memory_failure() of struct
-pagemap.  This interface is called by memory_failure() in mm, and
-implemented by pmem device.  Then pmem device calls its ->corrupted_range()
-to find the filesystem which the corrupted data located in, and call
-filesystem handler to track files or metadata assocaited with this page.
-Finally we are able to try to fix the corrupted data in filesystem and do
-other necessary processing, such as killing processes who are using the
-files affected.
+I had similar issues on another, older, system with 12 drives that I did 
+solve by setting group_thread_cnt to 2 but in that case the md1_resync 
+process was very close to 100% CPU. In this case it's only about 50%. On 
+this (20 drive) system, setting group_thread_cnt to 2 caused performance 
+to drop to 35MB/s.
 
-The call trace is like this:
-memory_failure()
- pgmap->ops->memory_failure()      => pmem_pgmap_memory_failure()
-  gendisk->fops->corrupted_range() => - pmem_corrupted_range()
-                                      - md_blk_corrupted_range()
-   sb->s_ops->currupted_range()    => xfs_fs_corrupted_range()
-    xfs_rmap_query_range()
-     xfs_currupt_helper()
-      * corrupted on metadata
-          try to recover data, call xfs_force_shutdown()
-      * corrupted on file data 
-          try to recover data, call mf_dax_mapping_kill_procs()
+md1 : active raid6 sdf1[10] sdh1[16] sdi1[17] sdb1[13] sdc1[12] sdg1[8] 
+sda1[15] sde1[9] sdd1[11] sds1[18] sdn1[5] sdq1[6] sdj1[1] sdp1[14] 
+sdk1[2] sdl1[3] sdt1[19] sdm1[0] sdr1[4] sdo1[7]
+       140650080768 blocks super 1.2 level 6, 128k chunk, algorithm 2 
+[20/20] [UUUUUUUUUUUUUUUUUUUU]
+       [=============>.......]  check = 69.3% (5419742336/7813893376) 
+finish=795.6min speed=50150K/sec
+       bitmap: 0/4 pages [0KB], 1048576KB chunk
 
-The fsdax & reflink support for XFS is not contained in this patchset.
+# cat /sys/block/md1/md/stripe_cache_size
+32768
 
-(Rebased on v5.10)
---
+I have confirmed that this system can read from all 20 drives at top 
+speed (200MB/s) simultaneously by running 20 dd's in parallel. So, this 
+isn't a bus, CPU or memory bandwidth constraint of the system.
 
-Shiyang Ruan (9):
-  pagemap: Introduce ->memory_failure()
-  blk: Introduce ->corrupted_range() for block device
-  fs: Introduce ->corrupted_range() for superblock
-  mm, fsdax: Refactor memory-failure handler for dax mapping
-  mm, pmem: Implement ->memory_failure() in pmem driver
-  pmem: Implement ->corrupted_range() for pmem driver
-  dm: Introduce ->rmap() to find bdev offset
-  md: Implement ->corrupted_range()
-  xfs: Implement ->corrupted_range() for XFS
+The array is mainly used for media files and accesses are large and 
+sequential. This particular host is storing backups so maintaining high 
+sequential performance is important in order to keep backup/restore time 
+to a minimum.
 
- block/genhd.c                 |  12 +++
- drivers/md/dm-linear.c        |   8 ++
- drivers/md/dm.c               |  66 +++++++++++++++
- drivers/nvdimm/pmem.c         |  51 ++++++++++++
- fs/block_dev.c                |  21 +++++
- fs/dax.c                      |  24 +++---
- fs/xfs/xfs_fsops.c            |  10 +++
- fs/xfs/xfs_mount.h            |   2 +
- fs/xfs/xfs_super.c            |  93 +++++++++++++++++++++
- include/linux/blkdev.h        |   2 +
- include/linux/dax.h           |   5 +-
- include/linux/device-mapper.h |   2 +
- include/linux/fs.h            |   2 +
- include/linux/genhd.h         |   8 ++
- include/linux/memremap.h      |   8 ++
- include/linux/mm.h            |   9 ++
- mm/memory-failure.c           | 150 +++++++++++++++++++---------------
- 17 files changed, 391 insertions(+), 82 deletions(-)
+I recall reading that the mdraid raid6 implementation was fundamentally 
+single threaded and suffered from memory bandwidth constraints due to 
+many necessary copy operations. How does one best avoid these 
+constraints? Does chunk size matter?
 
--- 
-2.29.2
+Would raid 60 help? If I split this into two 10 drive raid6 arrays, 
+would each array run on separate cores?
 
+Any advise would be appreciated. Thank you.
 
-
+--Larkin
