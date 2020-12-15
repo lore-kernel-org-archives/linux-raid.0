@@ -2,112 +2,154 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A92C2BB40
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Dec 2020 21:02:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA29C4361B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 03:02:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31C0722512
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Dec 2020 21:02:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C483B223C8
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 03:02:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503738AbgLNVBx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Dec 2020 16:01:53 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:57024 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2503706AbgLNVBs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Dec 2020 16:01:48 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BEKsHeE144093;
-        Mon, 14 Dec 2020 21:00:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=aa0Ax+bPQnK4YL5LoY0LgelOl5GRjz9JrB0IR+sjwy4=;
- b=ZI3+5u9fy8oScjTCPSIf0nTtRFLUqT+rmE9ZY5kRukhi7zEbtkOhM1ANvHwO7nOCgi2N
- 09NS9xbcnV9uICnIhloRb5nT4+Mh5wNP7E2k95vLT5yq+NicQHkzj3sQUClD2B63PCkV
- iu7c4BOhuH8BbVldQeT3+PcYmeGxEao0sfoVdwy+2ncWx6tfP07IUKuugxzSQ1vAxNZ5
- pJTECX1MndtEGJigCmXGolSHW7PE/aS5eQm8VB7s2G8lKqMpLyfPuJFhuE6+an4rhX3k
- hcUTsD8xzCT2fLlHKZAHeCpXJ53fwnhQjCpfUUdvlvCcRh04cKwzor65YmwqTBoBXiRI lg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 35cn9r7ftb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Dec 2020 21:00:47 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BEKt5rf135821;
-        Mon, 14 Dec 2020 20:58:47 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 35e6jq0b48-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Dec 2020 20:58:47 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BEKwcf0020933;
-        Mon, 14 Dec 2020 20:58:39 GMT
-Received: from [10.159.141.221] (/10.159.141.221)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 14 Dec 2020 12:58:38 -0800
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
-From:   Jane Chu <jane.chu@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <89ab4ec4-e4f0-7c17-6982-4f55bb40f574@oracle.com>
-Date:   Mon, 14 Dec 2020 12:58:32 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
-MIME-Version: 1.0
-In-Reply-To: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
+        id S1725858AbgLODBt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Dec 2020 22:01:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49396 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726123AbgLODBj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Dec 2020 22:01:39 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE363C06179C
+        for <linux-raid@vger.kernel.org>; Mon, 14 Dec 2020 19:00:58 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id t8so13586424pfg.8
+        for <linux-raid@vger.kernel.org>; Mon, 14 Dec 2020 19:00:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dabbelt-com.20150623.gappssmtp.com; s=20150623;
+        h=date:subject:in-reply-to:cc:from:to:message-id:mime-version
+         :content-transfer-encoding;
+        bh=b9Yyd2SJUpD5M0JEcQPm/jMQVqbJpky9fEX60fZ5oLU=;
+        b=kLw7ncveXiHBEXRnq/Rpd6ap9lA+qdSTsgLkFTS/JvrCkCMRcl5Hdug//D/YdTxLmI
+         /VemLoljIXXAX1Q0ZZ2QRoNoZ2FZNrdJM0/ny6LBW2KFcrCipDHF6i5Kk1XJ/6gQdo9P
+         qg8xZ1oSEuq1yblAWKoTuwLg6DdnUs9cfx3P12lSZg+ANqreHdnJcLvUPQQjFHWvJeD4
+         ZOci35AXKZDqTeIlq3Vzz2AQ2lrFMdgF2qG69BY8WEYoB8f2IuDIwihht0LTM05NFhsr
+         V0Qn4UHbznj8X/kqmP9KXBqWnn7AJGPO2o4hAMOWhrjgAqstMoRBceFSPHr8eIRBulmu
+         ZoHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:subject:in-reply-to:cc:from:to:message-id
+         :mime-version:content-transfer-encoding;
+        bh=b9Yyd2SJUpD5M0JEcQPm/jMQVqbJpky9fEX60fZ5oLU=;
+        b=g+THs3KwNy62nnSWzDms/xau42TuWeCQ1c4KRPJyKGqQS3Z+QPfhjc1NdnrK0qqYCH
+         WvF816X8Eq6NHzBvTtK7oE6d/oQMCsCQb50x9vzlyX+JyZgz7KjQmP2iDuefXbSGeEoi
+         U+4d+Ms5K8jv0ECU61KML3sRYoQW+DD/9IoSRRToFgLaazpfXXt70+NpUaPoTSu1UVPF
+         A+JNuObVnPEgx/hVH3W05GOlhk2UpOAQDxFMZhs8qHtPRqgngHV/aA2GLSJ76Mwi/7NR
+         lL++xWtbZkEOZRtvxUr//2ms0rZRrY6llCTg0bl7yItLcNesfJwiFZDvzz5PtR5XlgsX
+         3LEw==
+X-Gm-Message-State: AOAM531WIiTUOBdTUQwnel7K6efv4tUk25acrIjVh4L3c+3JVtbANXd0
+        A2a2kjR/uu2L7YspinY4ZCtPKA==
+X-Google-Smtp-Source: ABdhPJyKCn7Z6PEeIJzplurcW2m8m7LJC9wdzi2X3lcSQ1bxIAbeSMiqO89ZdyZdyMq5hexNtN0JQw==
+X-Received: by 2002:a05:6a00:80b:b029:198:124a:d58a with SMTP id m11-20020a056a00080bb0290198124ad58amr25719514pfk.56.1608001258225;
+        Mon, 14 Dec 2020 19:00:58 -0800 (PST)
+Received: from localhost (76-210-143-223.lightspeed.sntcca.sbcglobal.net. [76.210.143.223])
+        by smtp.gmail.com with ESMTPSA id c199sm23127946pfb.108.2020.12.14.19.00.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Dec 2020 19:00:57 -0800 (PST)
+Date:   Mon, 14 Dec 2020 19:00:57 -0800 (PST)
+X-Google-Original-Date: Mon, 14 Dec 2020 19:00:53 PST (-0800)
+Subject:     Re: [dm-devel] [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to userspace
+In-Reply-To: <30d39293-80a4-9ef5-92bb-6b6dec464be3@toxicpanda.com>
+CC:     bvanassche@acm.org, Christoph Hellwig <hch@infradead.org>,
+        snitzer@redhat.com, corbet@lwn.net, kernel-team@android.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, song@kernel.org, dm-devel@redhat.com,
+        linux-kselftest@vger.kernel.org, shuah@kernel.org, agk@redhat.com,
+        michael.christie@oracle.com
+From:   Palmer Dabbelt <palmer@dabbelt.com>
+To:     josef@toxicpanda.com
+Message-ID: <mhng-2da5b1a2-20f9-4b0e-9ffd-7f60a161ebf0@palmerdabbelt-glaptop>
+Mime-Version: 1.0 (MHng)
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9834 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 bulkscore=0
- malwarescore=0 adultscore=0 mlxlogscore=999 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012140140
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9834 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- impostorscore=0 lowpriorityscore=0 clxscore=1011 spamscore=0
- malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012140140
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi, Shiyang,
+On Thu, 10 Dec 2020 09:03:21 PST (-0800), josef@toxicpanda.com wrote:
+> On 12/9/20 10:38 PM, Bart Van Assche wrote:
+>> On 12/7/20 10:55 AM, Palmer Dabbelt wrote:
+>>> All in all, I've found it a bit hard to figure out what sort of interest
+>>> people
+>>> have in dm-user: when I bring this up I seem to run into people who've done
+>>> similar things before and are vaguely interested, but certainly nobody is
+>>> chomping at the bit.  I'm sending it out in this early state to try and
+>>> figure
+>>> out if it's interesting enough to keep going.
+>>
+>> Cc-ing Josef and Mike since their nbd contributions make me wonder
+>> whether this new driver could be useful to their use cases?
+>>
+>
+> Sorry gmail+imap sucks and I can't get my email client to get at the original
+> thread.  However here is my take.
 
-On 11/22/2020 4:41 PM, Shiyang Ruan wrote:
-> This patchset is a try to resolve the problem of tracking shared page
-> for fsdax.
-> 
-> Change from v1:
->    - Intorduce ->block_lost() for block device
->    - Support mapped device
->    - Add 'not available' warning for realtime device in XFS
->    - Rebased to v5.10-rc1
-> 
-> This patchset moves owner tracking from dax_assocaite_entry() to pmem
-> device, by introducing an interface ->memory_failure() of struct
-> pagemap.  The interface is called by memory_failure() in mm, and
-> implemented by pmem device.  Then pmem device calls its ->block_lost()
-> to find the filesystem which the damaged page located in, and call
-> ->storage_lost() to track files or metadata assocaited with this page.
-> Finally we are able to try to fix the damaged data in filesystem and do
+and I guess I then have to apoligize for missing your email ;).  Hopefully that
+was the problem, but who knows.
 
-Does that mean clearing poison? if so, would you mind to elaborate 
-specifically which change does that?
+> 1) The advantages of using dm-user of NBD that you listed aren't actually
+> problems for NBD.  We have NBD working in production where you can hand off the
+> sockets for the server without ending in timeouts, it was actually the main
+> reason we wrote our own server so we could use the FD transfer stuff to restart
+> the server without impacting any clients that had the device in use.
 
-Thanks!
--jane
+OK.  So you just send the FD around using one of the standard mechanisms to
+orchestrate the handoff?  I guess that might work for our use case, assuming
+whatever the security side of things was doing was OK with the old FD.  TBH I'm
+not sure how all that works and while we thought about doing that sort of
+transfer scheme we decided to just open it again -- not sure how far we were
+down the dm-user rabbit hole at that point, though, as this sort of arose out
+of some other ideas.
 
-> other necessary processing, such as killing processes who are using the
-> files affected.
+> 2) The extra copy is a big deal, in fact we already have too many copies in our
+> existing NBD setup and are actively looking for ways to avoid those.
+>
+> Don't take this as I don't think dm-user is a good idea, but I think at the very
+> least it should start with the very best we have to offer, starting with as few
+> copies as possible.
+
+I was really experting someone to say that.  It does seem kind of silly to build
+out the new interface, but not go all the way to a ring buffer.  We just didn't
+really have any way to justify the extra complexity as our use cases aren't
+that high performance.   I kind of like to have benchmarks for this sort of
+thing, though, and I didn't have anyone who had bothered avoiding the last copy
+to compare against.
+
+> If you are using it currently in production then cool, there's clearly a usecase
+> for it.  Personally as I get older and grouchier I want less things in the
+> kernel, so if this enables us to eventually do everything NBD related in
+> userspace with no performance drop then I'd be down.  I don't think you need to
+> make that your primary goal, but at least polishing this up so it could
+> potentially be abused in the future would make it more compelling for merging.
+> Thanks,
+
+Ya, it's in Android already and we'll be shipping it as part of the new OTA
+flow for the next release.  The rules on deprecation are a bit different over
+there, though, so it's not like we're wed to it.  The whole point of bringing
+this up here was to try and get something usable by everyone, and while I'd
+eventually like to get whatever's in Android into the kernel proper we'd really
+planned on supporting an extra Android-only ABI for a cycle at least.  
+
+I'm kind of inclined to take a crack at the extra copy, to at least see if
+building something that eliminates it is viable.  I'm not really sure if it is
+(or at least, if it'll net us a meaningful amount of performance), but it'd at
+least be interesting to try.
+
+It'd be nice to have some benchmark target, though, as otherwise this stuff
+hangs on forever.  My workloads are in selftests later on in the patch set, but
+I'm essentially using tmpfs as a baseline to compare against ext4+dm-user with
+some FIO examples as workloads.  Our early benchmark numbers indicated this was
+way faster than we needed, so I didn't even bother putting together a proper
+system to run on so I don't really have any meaningful numbers there.  Is there
+an NBD server that's fast that I should be comparing against?
+
+I haven't gotten a whole lot of feedback, so I'm inclined to at least have some
+reasonable performance numbers before bothering with a v2.
