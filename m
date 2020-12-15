@@ -2,104 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4B1C2BBCA
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 12:01:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E2BC2BB48
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 12:15:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02297224B1
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 12:01:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DA8222475
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 12:15:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728959AbgLOMA6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 07:00:58 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:23578 "EHLO
+        id S1728609AbgLOMPm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 07:15:42 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:22826 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728743AbgLOMAt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 07:00:49 -0500
+        with ESMTP id S1728117AbgLOMPZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 07:15:25 -0500
 X-IronPort-AV: E=Sophos;i="5.78,420,1599494400"; 
-   d="scan'208";a="102419797"
+   d="scan'208";a="102420179"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 15 Dec 2020 20:00:29 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 928374CE600B;
-        Tue, 15 Dec 2020 20:00:26 +0800 (CST)
-Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
- (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 15 Dec
- 2020 20:00:25 +0800
-Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
-To:     Jane Chu <jane.chu@oracle.com>, <linux-kernel@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
-        <linux-mm@kvack.org>
+  by heian.cn.fujitsu.com with ESMTP; 15 Dec 2020 20:14:36 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id DAC2B4CE546D;
+        Tue, 15 Dec 2020 20:14:32 +0800 (CST)
+Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 15 Dec 2020 20:14:31 +0800
+Received: from localhost.localdomain (10.167.225.141) by
+ G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Tue, 15 Dec 2020 20:14:31 +0800
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
 CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
         <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
         <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
- <89ab4ec4-e4f0-7c17-6982-4f55bb40f574@oracle.com>
-From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <bb699996-ddc8-8f3a-dc8f-2422bf990b06@cn.fujitsu.com>
-Date:   Tue, 15 Dec 2020 19:58:36 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
+Subject: [RFC PATCH v3 3/9] fs: Introduce ->corrupted_range() for superblock
+Date:   Tue, 15 Dec 2020 20:14:08 +0800
+Message-ID: <20201215121414.253660-4-ruansy.fnst@cn.fujitsu.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
+References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <89ab4ec4-e4f0-7c17-6982-4f55bb40f574@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
-X-yoursite-MailScanner-ID: 928374CE600B.AB884
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: DAC2B4CE546D.ACED8
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jane
+Memory failure occurs in fsdax mode will finally be handled in
+filesystem.  We introduce this interface to find out files or metadata
+affected by the corrupted range, and try to recover the corrupted data
+if possiable.
 
-On 2020/12/15 上午4:58, Jane Chu wrote:
-> Hi, Shiyang,
-> 
-> On 11/22/2020 4:41 PM, Shiyang Ruan wrote:
->> This patchset is a try to resolve the problem of tracking shared page
->> for fsdax.
->>
->> Change from v1:
->>    - Intorduce ->block_lost() for block device
->>    - Support mapped device
->>    - Add 'not available' warning for realtime device in XFS
->>    - Rebased to v5.10-rc1
->>
->> This patchset moves owner tracking from dax_assocaite_entry() to pmem
->> device, by introducing an interface ->memory_failure() of struct
->> pagemap.  The interface is called by memory_failure() in mm, and
->> implemented by pmem device.  Then pmem device calls its ->block_lost()
->> to find the filesystem which the damaged page located in, and call
->> ->storage_lost() to track files or metadata assocaited with this page.
->> Finally we are able to try to fix the damaged data in filesystem and do
-> 
-> Does that mean clearing poison? if so, would you mind to elaborate 
-> specifically which change does that?
+Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+---
+ include/linux/fs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Recovering data for filesystem (or pmem device) has not been done in 
-this patchset...  I just triggered the handler for the files sharing the 
-corrupted page here.
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 8667d0cdc71e..282e2139b23e 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1965,6 +1965,8 @@ struct super_operations {
+ 				  struct shrink_control *);
+ 	long (*free_cached_objects)(struct super_block *,
+ 				    struct shrink_control *);
++	int (*corrupted_range)(struct super_block *sb, struct block_device *bdev,
++			       loff_t offset, size_t len, void *data);
+ };
+ 
+ /*
+-- 
+2.29.2
 
-
---
-Thanks,
-Ruan Shiyang.
-
-> 
-> Thanks!
-> -jane
-> 
->> other necessary processing, such as killing processes who are using the
->> files affected.
-> 
-> 
 
 
