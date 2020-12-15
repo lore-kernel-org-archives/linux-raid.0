@@ -2,121 +2,125 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33114C4361B
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 22:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66472C4361B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 23:13:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1C8822BE9
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 22:29:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3018522C7B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Dec 2020 23:13:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730733AbgLOW3w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 17:29:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60334 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730571AbgLOWXh (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 17:23:37 -0500
-Received: from mail1.84.tech (mail1.84.tech [IPv6:2001:bc8:321a:200:fa7:a55:d1e7:f00d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6353C0617A6
-        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 14:22:40 -0800 (PST)
-Received: from localhost (localhost [IPv6:::1])
-        by mail1.84.tech (Postfix) with ESMTP id 800A450535C;
-        Tue, 15 Dec 2020 23:22:39 +0100 (CET)
-Received: from mail1.84.tech ([IPv6:::1])
-        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id pwi1bdxHEE_7; Tue, 15 Dec 2020 23:22:39 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-        by mail1.84.tech (Postfix) with ESMTP id 33DC9505670;
-        Tue, 15 Dec 2020 23:22:39 +0100 (CET)
-X-Virus-Scanned: amavisd-new at 84.tech
-Received: from mail1.84.tech ([IPv6:::1])
-        by localhost (mail1.84.tech [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id FhVqAHYFJrEG; Tue, 15 Dec 2020 23:22:39 +0100 (CET)
-Received: from mail.seblu.net (mail.seblu.net [IPv6:2001:bc8:3173:101:bad:cafe:bad:c0de])
-        by mail1.84.tech (Postfix) with ESMTPS id 2278250535C;
-        Tue, 15 Dec 2020 23:22:39 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-        by mail.seblu.net (Postfix) with ESMTP id E7BBF52FCB91;
-        Tue, 15 Dec 2020 23:22:38 +0100 (CET)
-Received: from mail.seblu.net ([IPv6:::1])
-        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id RRXzrqOgHWlw; Tue, 15 Dec 2020 23:22:38 +0100 (CET)
-Received: from localhost (localhost [IPv6:::1])
-        by mail.seblu.net (Postfix) with ESMTP id 61D5B53839DF;
-        Tue, 15 Dec 2020 23:22:38 +0100 (CET)
-DKIM-Filter: OpenDKIM Filter v2.10.3 mail.seblu.net 61D5B53839DF
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seblu.net; s=pipa;
-        t=1608070958; bh=/zd7Sner6T3xDx5su9MidJdvD7b/9uel6qay+OmGkOM=;
-        h=Message-ID:From:To:Date:MIME-Version;
-        b=dNFPdx/Th+HMemKUDZ8zPo8PTGAe8IOBXlx1whP6EMLjvTTMkKJu0Wo3KZ56e+gWH
-         a2uuUbT02pUs41EVhdpWNZtVQQzQo39AecCwTJcFXrmR5Xft/8GfX6gZ5LEL1IKsX+
-         Vl6smBgjTHgMTXMzCXMSaZoV7hf6G3WhuFFCkQPKnAqiIf1HJQCB13cEaPHB/7JlZv
-         9GC0D3gnBLRHkpObdFftOlOkgIXLyfak1uO6xeOo0+PHosnp0hoXWOzPr2QAcX8Rg5
-         OaFP5a7YIq9E/xrG0ohNfHtIDw9SPkAwmAnN1yMYVx2cFAyQ7A1L9QWWsvvgfUGjZo
-         OFrn81Ctao2QQ==
-X-Virus-Scanned: amavisd-new at seblu.net
-Received: from mail.seblu.net ([IPv6:::1])
-        by localhost (mail.seblu.net [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id kt6oPYk8wDln; Tue, 15 Dec 2020 23:22:38 +0100 (CET)
-Received: from [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19] (unknown [IPv6:2a01:e0a:1f8:6b42:be57:b00b:a2e:b19])
-        by mail.seblu.net (Postfix) with ESMTPSA id 3D59352FCB91;
-        Tue, 15 Dec 2020 23:22:38 +0100 (CET)
-Message-ID: <1368d8f7aee0e49519f8d9ac9c7c156ab25a0e50.camel@seblu.net>
-Subject: Re: RE Array size dropped from 40TB to 7TB when upgrading to 5.10
-From:   =?ISO-8859-1?Q?S=E9bastien?= Luttringer <seblu@seblu.net>
-To:     Ian Kumlien <ian.kumlien@gmail.com>, linux-raid@vger.kernel.org
-Date:   Tue, 15 Dec 2020 23:22:37 +0100
-In-Reply-To: <CAA85sZt+MV=LY7xCvKqccD_gK35hwSnczPSKenW81rQ3yK7JTA@mail.gmail.com>
-References: <CAA85sZt+MV=LY7xCvKqccD_gK35hwSnczPSKenW81rQ3yK7JTA@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha384";
-        protocol="application/pgp-signature"; boundary="=-QQcioVIw8En3JS8W1yiA"
-User-Agent: Evolution 3.38.2 
+        id S1730015AbgLOXMn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 18:12:43 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43648 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726414AbgLOXLS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 15 Dec 2020 18:11:18 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1941F3C3F8B;
+        Wed, 16 Dec 2020 10:10:29 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kpJSY-004N5L-QJ; Wed, 16 Dec 2020 10:10:22 +1100
+Date:   Wed, 16 Dec 2020 10:10:22 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jane Chu <jane.chu@oracle.com>
+Cc:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com, hch@lst.de,
+        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
+        y-goto@fujitsu.com
+Subject: Re: [RFC PATCH v2 0/6] fsdax: introduce fs query to support reflink
+Message-ID: <20201215231022.GL632069@dread.disaster.area>
+References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
+ <89ab4ec4-e4f0-7c17-6982-4f55bb40f574@oracle.com>
+ <bb699996-ddc8-8f3a-dc8f-2422bf990b06@cn.fujitsu.com>
+ <3b35604c-57e2-8cb5-da69-53508c998540@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3b35604c-57e2-8cb5-da69-53508c998540@oracle.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=IkcTkHD0fZMA:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
+        a=1WtExyGbPUdzLH7rxhUA:9 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Tue, Dec 15, 2020 at 11:05:07AM -0800, Jane Chu wrote:
+> On 12/15/2020 3:58 AM, Ruan Shiyang wrote:
+> > Hi Jane
+> > 
+> > On 2020/12/15 上午4:58, Jane Chu wrote:
+> > > Hi, Shiyang,
+> > > 
+> > > On 11/22/2020 4:41 PM, Shiyang Ruan wrote:
+> > > > This patchset is a try to resolve the problem of tracking shared page
+> > > > for fsdax.
+> > > > 
+> > > > Change from v1:
+> > > >    - Intorduce ->block_lost() for block device
+> > > >    - Support mapped device
+> > > >    - Add 'not available' warning for realtime device in XFS
+> > > >    - Rebased to v5.10-rc1
+> > > > 
+> > > > This patchset moves owner tracking from dax_assocaite_entry() to pmem
+> > > > device, by introducing an interface ->memory_failure() of struct
+> > > > pagemap.  The interface is called by memory_failure() in mm, and
+> > > > implemented by pmem device.  Then pmem device calls its ->block_lost()
+> > > > to find the filesystem which the damaged page located in, and call
+> > > > ->storage_lost() to track files or metadata assocaited with this page.
+> > > > Finally we are able to try to fix the damaged data in filesystem and do
+> > > 
+> > > Does that mean clearing poison? if so, would you mind to elaborate
+> > > specifically which change does that?
+> > 
+> > Recovering data for filesystem (or pmem device) has not been done in
+> > this patchset...  I just triggered the handler for the files sharing the
+> > corrupted page here.
+> 
+> Thanks! That confirms my understanding.
+> 
+> With the framework provided by the patchset, how do you envision it to
+> ease/simplify poison recovery from the user's perspective?
 
---=-QQcioVIw8En3JS8W1yiA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+At the moment, I'd say no change what-so-ever. THe behaviour is
+necessary so that we can kill whatever user application maps
+multiply-shared physical blocks if there's a memory error. THe
+recovery method from that is unchanged. The only advantage may be
+that the filesystem (if rmap enabled) can tell you the exact file
+and offset into the file where data was corrupted.
 
-On Tue, 2020-12-15 at 21:08 +0100, Ian Kumlien wrote:
-> the same thing happened to me, but it was a raid6...
-With the same kernel (5.10) or an older one?
+However, it can be worse, too: it may also now completely shut down
+the filesystem if the filesystem discovers the error is in metadata
+rather than user data. That's much more complex to recover from, and
+right now will require downtime to take the filesystem offline and
+run fsck to correct the error. That may trash whatever the metadata
+that can't be recovered points to, so you still have a uesr data
+recovery process to perform after this...
 
-> Eventually I just gave up and did a:
-> mdadm --grow /dev/md3 --size=3Dmax (since it reflects the size it used to=
- be)
-This doesn't removed your data?
-I wondering if the flag --assume-clean is mandatory to keep the data untouc=
-hed.
+> And how does it help in dealing with page faults upon poisoned
+> dax page?
 
-> After a few hours of syncing, everything was ok again
-> (according to btrfs check which also took a few hours =3D))
->=20
-> But remember to do this with a 5.0.1 kernel ;)
-You mean 5.10?
+It doesn't. If the page is poisoned, the same behaviour will occur
+as does now. This is simply error reporting infrastructure, not
+error handling.
 
-Regards,
+Future work might change how we correct the faults found in the
+storage, but I think the user visible behaviour is going to be "kill
+apps mapping corrupted data" for a long time yet....
 
-S=C3=A9bastien "Seblu" Luttringer
+Cheers,
 
-
---=-QQcioVIw8En3JS8W1yiA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYJAB0WIQSTtRpKFHmOS6hn0ULluymEcK1OQQUCX9k3LQAKCRDluymEcK1O
-Qe3rAPwNiXIJDRdRaMih0t89XfvAE3P7JvNgruRQF/zX9Z5MgAEAjBcQh+siQSr1
-xh5uMpQCZ8KVX+sdiUzg+qLRgVaimQs=
-=v9gf
------END PGP SIGNATURE-----
-
---=-QQcioVIw8En3JS8W1yiA--
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
