@@ -2,99 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EF67C4361B
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 00:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED033C4361B
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 01:27:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6332822D02
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 00:04:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A27CF22DCC
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 01:27:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbgLPAB3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 19:01:29 -0500
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:42299 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725769AbgLOX3W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 15 Dec 2020 18:29:22 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 2618411A239;
-        Wed, 16 Dec 2020 10:28:37 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kpJk9-004NPu-GG; Wed, 16 Dec 2020 10:28:33 +1100
-Date:   Wed, 16 Dec 2020 10:28:33 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        dan.j.williams@intel.com, hch@lst.de, song@kernel.org,
-        rgoldwyn@suse.de, qi.fuli@fujitsu.com, y-goto@fujitsu.com,
-        Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [RFC PATCH v3 8/9] md: Implement ->corrupted_range()
-Message-ID: <20201215232833.GM632069@dread.disaster.area>
-References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
- <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
- <20201215205102.GB6918@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201215205102.GB6918@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=7-415B0cAAAA:8
-        a=c9VSvi9VynfUMAegli0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1725765AbgLPB1h (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Dec 2020 20:27:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60904 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725320AbgLPB1c (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Dec 2020 20:27:32 -0500
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45FE9C0613D6
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 17:26:52 -0800 (PST)
+Received: by mail-ej1-x642.google.com with SMTP id x16so30421982ejj.7
+        for <linux-raid@vger.kernel.org>; Tue, 15 Dec 2020 17:26:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=0YeQol4UUnc2r7M4Orydwby2O2PPAZtNd+0yMn15aPo=;
+        b=fuFyS+HwIc8oAZ4P+X1VH1d/KZ+OzSRgIiRdGi4PpptIRxPQ/yzpP4Av2x8ISh6f/S
+         LiXg7oaYiFXqcGDH+2TYyZ6BNJnqKCLH/jMp/0C32HCgIYETMjg5SQNCsHRA1ouYrCoY
+         jMLxA4+M2A2vQE4NgTnBCjF5ds+F1HXM1pGz+QqCg24Vw8ZotTJSP07+PK2VdVWM7xkq
+         HZNmWlWdNyOkY7utGAjPD06z/Pi5gJB48f/D9PDh6ZESN+H4LL6zv92D4uN90HyhCm/k
+         i+ZNjrwK46xFd9HsgmeZYqedE/MkHmjUgbWKuN4FlFzMAQkCBfpMgZKc6KYBxA4LNw0y
+         H0RQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=0YeQol4UUnc2r7M4Orydwby2O2PPAZtNd+0yMn15aPo=;
+        b=V1ujBkFZYM6AFl8exUpJ9bdj5tn8v4oubr759uvX886quehUTihg20h6zUCr2GwWv3
+         Kx8pxcfjg42dZCvwdhJOZwU1f8QatKbMUq09KJI8DT7dcbWR1MeLNWJ3rb1P2ogkB6RJ
+         03ZlvKVbgnDz98c0w0xIS37lkVHf0OWDGQ1IIZEbJoPv/L9VY7dApMKuvlJCWJvdhiIj
+         1qiJf1GKC3ZRFf/qMrkNSgWYfdq8iNmjnqRFK3coD3EeE0vzrqaUMLbCOEibA+0xT5WN
+         Xcel7FWP7dEvSj7p1l8maN9tsXBU78RMsEb6JsSdK+bS34mEfuIX9EA2eh9VJMgKnBKr
+         3Y7A==
+X-Gm-Message-State: AOAM531IfQrhkxBAKB9Xz4tYSS00+dLfhRmBhA5wom7jOkRbGxxaS8vj
+        avW7xYV9GKxXeB1HMCeYlegCp65sedG94Dfmwdc=
+X-Google-Smtp-Source: ABdhPJzgGDUdWAbxjoRCeYpd/Quvy77q/RJ92BB3ppRb+RnxmOeE6BjgT+RnT+oWDgqVCPCzURwRGA==
+X-Received: by 2002:a17:906:6d0b:: with SMTP id m11mr28364300ejr.230.1608082010790;
+        Tue, 15 Dec 2020 17:26:50 -0800 (PST)
+Received: from gqjiang-home.profitbricks.net ([240e:304:2c80:539:f508:1adf:4d34:f89c])
+        by smtp.gmail.com with ESMTPSA id m24sm195379ejo.52.2020.12.15.17.26.45
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 15 Dec 2020 17:26:50 -0800 (PST)
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To:     linux-raid@vger.kernel.org
+Cc:     song@kernel.org, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: [PATCH] md/raid5: cast chunk_sectors to sector_t value
+Date:   Wed, 16 Dec 2020 02:26:22 +0100
+Message-Id: <1608081982-10839-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 12:51:02PM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 15, 2020 at 08:14:13PM +0800, Shiyang Ruan wrote:
-> > diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> > index 4688bff19c20..e8cfaf860149 100644
-> > --- a/drivers/nvdimm/pmem.c
-> > +++ b/drivers/nvdimm/pmem.c
-> > @@ -267,11 +267,14 @@ static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
-> >  
-> >  	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
-> >  	sb = get_super(bdev);
-> > -	if (sb && sb->s_op->corrupted_range) {
-> > +	if (!sb) {
-> > +		rc = bd_disk_holder_corrupted_range(bdev, bdev_offset, len, data);
-> > +		goto out;
-> > +	} else if (sb->s_op->corrupted_range)
-> >  		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
-> > -		drop_super(sb);
-> 
-> This is out of scope for this patch(set) but do you think that the scsi
-> disk driver should intercept media errors from sense data and call
-> ->corrupted_range too?  ISTR Ted muttering that one of his employers had
-> a patchset to do more with sense data than the upstream kernel currently
-> does...
+Currently, raid5 calculates dev_sectors from chunk_sectors without
+proper cast, which is problematic.
 
-Most definitely!
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+---
+I think the recently report about raid5 issue could be related with
+the setting of dev_sectors.
 
-That's the whole point of layering corrupt range reporting through
-the device layers like this - the corrupted range reporting is not
-limited specifically to pmem devices and so generic storage failures
-(e.g.  RAID failures, hardware media failures, etc) can be reported
-back up to the filesystem and we can take immediate, appropriate
-action, including reporting to userspace that they just lost data in
-file X at offset Y...
+Could someone test it with a large raid5 array? Thanks.
 
-Combine that with the proposed "watch_sb()" syscall for reporting
-such errors in a generic manner to interested listeners, and we've
-got a fairly solid generic path for reporting data loss events to
-userspace for an appropriate user-defined action to be taken...
+ drivers/md/raid5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Cheers,
-
-Dave.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3934347..ca0b29a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7662,7 +7662,7 @@ static int raid5_run(struct mddev *mddev)
+ 	}
+ 
+ 	/* device size must be a multiple of chunk size */
+-	mddev->dev_sectors &= ~(mddev->chunk_sectors - 1);
++	mddev->dev_sectors &= ~((sector_t)mddev->chunk_sectors - 1);
+ 	mddev->resync_max_sectors = mddev->dev_sectors;
+ 
+ 	if (mddev->degraded > dirty_parity_disks &&
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
