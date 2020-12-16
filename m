@@ -2,92 +2,107 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFE8C4361B
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 04:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8023C0018C
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 05:44:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7813B22210
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 04:29:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B62D23331
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 05:44:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725710AbgLPE3L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Dec 2020 23:29:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45010 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725275AbgLPE3K (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 15 Dec 2020 23:29:10 -0500
-X-Gm-Message-State: AOAM530LaRGCaorLdP3Ew5PPjL+nwZ/nGlBXEXYU9guZXp0qJmBcsLZG
-        Tmusd2yyOUCDXkf+fkPu3IdP2RdwY82L3ypGMUc=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608092910;
-        bh=pXmc0xY4veHzuC+UYnNUrEmo1gi4+K0e1eY6LHGUpDU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Cr7QYVDXLJ4980+JOOil78s6WBacaWcHk5+bZR5DhCXl9Tj8/OX12qOKSjNLG0hFZ
-         sqTkjJjQVE22TTzKR0CisMltw+LSS1EvzcTSL3/p9UkHPq7+1gPYLLDQb6aIH9W+A2
-         ZP4ejG1zXdb0eQW5ofwBDdAnDCaAPUiDW3Mt1fO78WcvXRzYYz8xpOGKhYM+F02EPt
-         ImTq00nyR35zB1JEl7PsZRhjWTff/Exvq3jcS+SFjE9rhCGtzMh069U01C/TJdWeYl
-         WGXgEOOJpzwxmYfb+LimW/8Ou/VDKrVUdzXOmmeo7G445DCPj8j04a9HLk5+/CDz62
-         w5qb/i/qQfwdg==
-X-Google-Smtp-Source: ABdhPJyjRVYSdJOLNappa5fdyY+tLn1CtELznfCd9I4xyMLfCixc0IH0pV7LMzEYMhXpPvqaGh4PaUX5YmJNvvt6xE4=
-X-Received: by 2002:ac2:5199:: with SMTP id u25mr11848031lfi.438.1608092908561;
- Tue, 15 Dec 2020 20:28:28 -0800 (PST)
+        id S1725829AbgLPFoL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Dec 2020 00:44:11 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:42278 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725274AbgLPFoL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Dec 2020 00:44:11 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BG5ecQf172932;
+        Wed, 16 Dec 2020 05:43:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=T8VJpldCNi+sj6YW08esJ7EhQP7RkcOTlE+MlH6mYLs=;
+ b=K5A3QJWodrZBH11uy941tRO6n38iCfy9Czcb7m/MrxhOmWZ3LtNOzj5vrynmZILAFi3C
+ o/hBnV8lvTjP95xcdUi2MQqBPRED1ZX8HrGP3mgTO0VaKk49d0oxJdEXrzCmn2WpsevR
+ +TKf3vheZaSiHrSF24Jt2/I39qoaraAeIkdbVXRS0prYxUdje7qgYmuOn2TTXv4HXzjE
+ zeKrcD4mKuaI2/OXeWyhr/soaSXYHVvz+tqfcvXgUaPqICHwWGgcuyiRquHStTwcTb0m
+ 7ct+CSzEd6nyCOeJfd9JtpUa/liMsJ9oJqj6TuBsp9LcHVyhraWlR1OYP0ij4CGAf2ZV 7g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 35cn9re4ux-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 16 Dec 2020 05:43:13 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BG5f9TG060072;
+        Wed, 16 Dec 2020 05:43:13 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 35e6js8pa1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Dec 2020 05:43:13 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BG5hAp8001000;
+        Wed, 16 Dec 2020 05:43:10 GMT
+Received: from [10.159.136.92] (/10.159.136.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 15 Dec 2020 21:43:10 -0800
+Subject: Re: [RFC PATCH v3 8/9] md: Implement ->corrupted_range()
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, david@fromorbit.com, hch@lst.de,
+        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
+        y-goto@fujitsu.com
+References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
+ <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
+From:   Jane Chu <jane.chu@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <100fcdf4-b2fe-d77d-e95f-52a7323d7ee1@oracle.com>
+Date:   Tue, 15 Dec 2020 21:43:08 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-References: <89d2eb88e6a300631862718024e687fc3102a4e1.camel@seblu.net>
- <CAPhsuW4upOOUq13argQ_0VK0Xwrof7K9vzKO8NjKxL7qPMKtDg@mail.gmail.com> <5d57edd9de751d009023407666f97e72a31f1459.camel@seblu.net>
-In-Reply-To: <5d57edd9de751d009023407666f97e72a31f1459.camel@seblu.net>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 15 Dec 2020 20:28:17 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4zE+a0rh6f+tFeM8QcW6GP2evd03X89agxrm0=WpDTxw@mail.gmail.com>
-Message-ID: <CAPhsuW4zE+a0rh6f+tFeM8QcW6GP2evd03X89agxrm0=WpDTxw@mail.gmail.com>
-Subject: Re: Array size dropped from 40TB to 7TB when upgrading to 5.10
-To:     =?UTF-8?Q?S=C3=A9bastien_Luttringer?= <seblu@seblu.net>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20201215121414.253660-9-ruansy.fnst@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 bulkscore=0
+ malwarescore=0 adultscore=0 mlxlogscore=999 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012160035
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9836 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
+ malwarescore=0 priorityscore=1501 phishscore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012160035
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 6:28 PM S=C3=A9bastien Luttringer <seblu@seblu.net>=
- wrote:
->
->
-> On Tue, 2020-12-15 at 15:53 -0800, Song Liu wrote:
-> > On Tue, Dec 15, 2020 at 10:40 AM S=C3=A9bastien Luttringer <seblu@seblu=
-.net>
-> > wrote:
-> >
-> >
-> > Hi,
-> >
-> > I am very sorry for this problem. This is a bug in 5.10 which is fixed
-> > in 5.10.1.
-> > To fix it, please upgrade your kernel to 5.10.1 (or downgrade to previo=
-us
-> > version). In many cases, the array should be back normal. If not, pleas=
-e try
-> >
-> >        mdadm --grow --size <size> /dev/mdXXX.
-> >
-> > If the original array uses the full disk/partition, you can use "max" f=
-or
-> > <size>
-> > to safe some calculation.
-> >
-> > Please let me know if you have future problem with it.
->
-> Hello,
->
-> The array didn't returned to normal after a reboot on 5.10.1. The `mdadm =
---grow
-> --size max /dev/md0` command did the trick. The e2fsck detect no error, s=
-o we
-> are back online.
->
-> Thanks you for your help and especially your quick answer.
+On 12/15/2020 4:14 AM, Shiyang Ruan wrote:
+>   #ifdef CONFIG_SYSFS
+> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
+> +				   size_t len, void *data);
+>   int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk);
+>   void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk);
+>   #else
+> +int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
 
-I am glad that helped.
+Did you mean
+   static inline int bd_disk_holder_corrupted_range(..
+?
 
-Song
+thanks,
+-jane
+
+> +				   size_t len, void *data)
+> +{
+> +	return 0;
+> +}
+>   static inline int bd_link_disk_holder(struct block_device *bdev,
+>   				      struct gendisk *disk)
