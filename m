@@ -2,106 +2,144 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97500C4361B
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 21:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 985DDC2BB48
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Dec 2020 06:56:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5802C233F6
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Dec 2020 21:27:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7223523372
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Dec 2020 06:56:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726259AbgLPV1f (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Dec 2020 16:27:35 -0500
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:43700 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725601AbgLPV1f (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 16 Dec 2020 16:27:35 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 66BF9D7FD6B;
-        Thu, 17 Dec 2020 08:26:49 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kpeJs-004h5o-Hy; Thu, 17 Dec 2020 08:26:48 +1100
-Date:   Thu, 17 Dec 2020 08:26:48 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com, hch@lst.de,
-        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
-        y-goto@fujitsu.com
-Subject: Re: [RFC PATCH v3 4/9] mm, fsdax: Refactor memory-failure handler
- for dax mapping
-Message-ID: <20201216212648.GN632069@dread.disaster.area>
-References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
- <20201215121414.253660-5-ruansy.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201215121414.253660-5-ruansy.fnst@cn.fujitsu.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=zTNgK-yGK50A:10 a=omOdbC7AAAAA:8 a=7-415B0cAAAA:8
-        a=eyTjK9YyoW615e0u8fsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1726613AbgLQG4A (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Dec 2020 01:56:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51190 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725828AbgLQG4A (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Dec 2020 01:56:00 -0500
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59891C06138C
+        for <linux-raid@vger.kernel.org>; Wed, 16 Dec 2020 22:55:20 -0800 (PST)
+Received: by mail-pg1-x533.google.com with SMTP id k65so9366091pgk.0
+        for <linux-raid@vger.kernel.org>; Wed, 16 Dec 2020 22:55:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dabbelt-com.20150623.gappssmtp.com; s=20150623;
+        h=date:subject:in-reply-to:cc:from:to:message-id:mime-version
+         :content-transfer-encoding;
+        bh=BjnZ5s+jnI9mFnTZF3RJgIJMeukCqH/N1kppehfap7Y=;
+        b=MBNR7NLIdCYQa+qPbJyC+kEool/SY9YLMyPfGemmPyFOFNBylFATMYY0dvR/oo61E8
+         9f4eyvP+inKs/hugnGWwfwE2QtXdDrna2juwkKf1zZwI4ibcD9gU2BYyhkoPZFBL8Sxb
+         ShVzr0UPDrFT4vMttijcd+lYmuLDZVOmxMMrz8huf+mNHWh71wfNP0ZWJ1ZrdHZu3SqF
+         YjOWXNdI4hufbL5e6JVHlsvsg9qeOVlfA1zBc2blHIa/8dM6FI2YC0ZWkN0GEjWCwv7P
+         12OZZS+iGTuSm1EzDR4rrh/l2KsC1J9enE/z5SzJWscdldap/xklGjipk/IIbGLbFTk0
+         xG8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:subject:in-reply-to:cc:from:to:message-id
+         :mime-version:content-transfer-encoding;
+        bh=BjnZ5s+jnI9mFnTZF3RJgIJMeukCqH/N1kppehfap7Y=;
+        b=BqP0JoKeRl+BRGC9OncavLMklle9H42B3gOWNvuBgJODbGQVB40fy3gVGDq1jYs0wR
+         wmsmjekyyxCcmOO0QvZXiUCyXJAJ+qxteRFJ+1JNiVKIskvMVjdpTIxsBlaMVd6nQDKS
+         AOvnTg71ID4VvB747Bw1b79Uf4xGcYMMpXn96Db4byuSMuo8mZAQbAmxx70gGPFURdtR
+         dKncGZzh9oy6zd3E/zFuqm9//8CuuX5q1pnlUpymi7JeBis8EjkA97nE+nbS2YGCiXEQ
+         n9UAujKEZr2u3u5nEHUuyn+5sqSfRegbTxfrnfZTQXqLGKr15SbRkT9dP19HAqrxNCO5
+         fP2w==
+X-Gm-Message-State: AOAM533erujYFHiF2Cl+Lfmhvx3tAVrn91QF+tiZkP5qW1MofLprBU+w
+        7r8enFhsnfq1kW8dfg8iTfDgcw==
+X-Google-Smtp-Source: ABdhPJwOkX04PZM/hDkMwFByq3zRzuq27yaN/Sp6sDe9qMIhnlWHKH2jlrq5wuwjc8F2fNQ6gRsdzQ==
+X-Received: by 2002:aa7:8506:0:b029:19e:95:f75f with SMTP id v6-20020aa785060000b029019e0095f75fmr35416013pfn.7.1608188119792;
+        Wed, 16 Dec 2020 22:55:19 -0800 (PST)
+Received: from localhost (76-210-143-223.lightspeed.sntcca.sbcglobal.net. [76.210.143.223])
+        by smtp.gmail.com with ESMTPSA id l7sm3921765pjy.29.2020.12.16.22.55.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Dec 2020 22:55:19 -0800 (PST)
+Date:   Wed, 16 Dec 2020 22:55:19 -0800 (PST)
+X-Google-Original-Date: Wed, 16 Dec 2020 22:55:17 PST (-0800)
+Subject:     Re: [dm-devel] [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to userspace
+In-Reply-To: <CAGF4SLgDvS7VOih4XZ+sqx6jVK3wBQZan+uZMVsdYdVEPZdrpw@mail.gmail.com>
+CC:     josef@toxicpanda.com, bvanassche@acm.org,
+        Christoph Hellwig <hch@infradead.org>, snitzer@redhat.com,
+        corbet@lwn.net, kernel-team@android.com, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        song@kernel.org, dm-devel@redhat.com,
+        linux-kselftest@vger.kernel.org, shuah@kernel.org, agk@redhat.com,
+        michael.christie@oracle.com
+From:   Palmer Dabbelt <palmer@dabbelt.com>
+To:     v.mayatskih@gmail.com
+Message-ID: <mhng-7da80016-a7d7-4232-999d-6fea3196118d@palmerdabbelt-glaptop>
+Mime-Version: 1.0 (MHng)
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Dec 15, 2020 at 08:14:09PM +0800, Shiyang Ruan wrote:
-> The current memory_failure_dev_pagemap() can only handle single-mapped
-> dax page for fsdax mode.  The dax page could be mapped by multiple files
-> and offsets if we let reflink feature & fsdax mode work together.  So,
-> we refactor current implementation to support handle memory failure on
-> each file and offset.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
-.....
->  static const char *action_name[] = {
-> @@ -1147,6 +1148,60 @@ static int try_to_split_thp_page(struct page *page, const char *msg)
->  	return 0;
->  }
->  
-> +int mf_dax_mapping_kill_procs(struct address_space *mapping, pgoff_t index, int flags)
-> +{
-> +	const bool unmap_success = true;
-> +	unsigned long pfn, size = 0;
-> +	struct to_kill *tk;
-> +	LIST_HEAD(to_kill);
-> +	int rc = -EBUSY;
-> +	loff_t start;
-> +	dax_entry_t cookie;
-> +
-> +	/*
-> +	 * Prevent the inode from being freed while we are interrogating
-> +	 * the address_space, typically this would be handled by
-> +	 * lock_page(), but dax pages do not use the page lock. This
-> +	 * also prevents changes to the mapping of this pfn until
-> +	 * poison signaling is complete.
-> +	 */
-> +	cookie = dax_lock(mapping, index, &pfn);
-> +	if (!cookie)
-> +		goto unlock;
+On Wed, 16 Dec 2020 10:24:59 PST (-0800), v.mayatskih@gmail.com wrote:
+> On Mon, Dec 14, 2020 at 10:03 PM Palmer Dabbelt <palmer@dabbelt.com> wrote:
+>
+>> I was really experting someone to say that.  It does seem kind of silly to build
+>> out the new interface, but not go all the way to a ring buffer.  We just didn't
+>> really have any way to justify the extra complexity as our use cases aren't
+>> that high performance.   I kind of like to have benchmarks for this sort of
+>> thing, though, and I didn't have anyone who had bothered avoiding the last copy
+>> to compare against.
+>
+> I worked on something very similar, though performance was one of the
+> goals. The implementation was floating around lockless ring buffers,
+> shared memory for zerocopy, multiqueue and error handling. It could be
+> that every disk storage vendor has to implement something like that in
+> order to bridge Linux kernel to their own proprietary datapath running
+> in userspace.
 
-Why do we need to prevent the inode from going away here? This
-function gets called by XFS after doing an xfs_iget() call to grab
-the inode that owns the block. Hence the the inode (and the mapping)
-are guaranteed to be referenced and can't go away. Hence for the
-filesystem based callers, this whole "dax_lock()" thing can go away.
+OK, good to know.  That's kind of the feeling I'd gotten from having chatted to
+a handful of people about this, but I don't remember people having actually
+gotten all the way to zero-copy.  That's how we managed to end up at this
+middle-ground ABI style: when I thought people were, in practice, punting on
+zero copy because the complexity just wasn't worth the performance benefit.
+Maybe I'd just been colored by how my projects ended up going, but I've ended
+up designing complicated interfaces in the past that allow for zero-copy only
+to never get around to actually making that work.  I don't know if that's just
+because I've had the good fortune to avoid working on anything that ended up
+with users, though :).
 
-So, AFAICT, the dax_lock() stuff is only necessary when the
-filesystem can't be used to resolve the owner of physical page that
-went bad....
+For our use case I think we actually get better performance out of the
+copy-based (and probably more importantly kalloc-based, but that's an
+implementation thing not an ABI thing) approach: essentially we're very
+sensitive to memory pressure and expect this first dm-user daemon to mostly be
+idle, so we're really worried about avoiding excess memory usage while idle and
+less worried about throughput when active.  This stream-based interface means
+that userspace doesn't need much memory allocated to service a request, which
+helps with sleep/wake latencies and/or idle memory usage.  That's also why we
+have the simple locking scheme: no sense splitting locks if there's no
+contention, and we only need a single thread to saturate the storage bandwidth
+on these phones.
 
-Cheers,
+That said, it does sound like people really do care about the sort of
+performance levels where zero copy is relevant in this space.  I'll take a shot
+at something along those lines, and while it will add a degree of userspace
+complexity I'm not sure it'll add much in the way of kernel complexity -- at
+least compared to a fast version of this, where we'd need most of that stuff
+anyway (obviously the malloc+single lock design is simple, but probably
+wouldn't stick around for long).  At a bare minimum it'll be interesting to
+play around with, but if people are doing it in practice then I'm more
+confident that I can put something together that at least serves as a starting
+point for further discussion.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I haven't gotten around to writing any code yet, but I had spent a bit of time
+thinking about how to put this zero-copy version together and am leaning
+towards it being a standalone block device (as opposed to a DM target).  I'd
+avoided that before as I didn't want to mess around with my own device control
+scheme so I'll still try to do the DM thing, but I'm not sure it'll be viable.
+That's all speculation now, but it does bring up one interesting question:
+
+IIUC, this version of dm-user handles BIOs before they reach the block
+scheduler while a standalone driver would likely handle them after blk-mq.  I
+don't have direct experience with this, but the last time I ran into people who
+had these sorts of performance requirements for userspace drivers they weren't
+actually trying to write userspace drivers but were instead trying to write a
+userspace scheduler, with the userspace drivers just being the mechanism to
+implement that scheduler.  This was a decade ago and I'm not sure that's what
+people are trying to do in the new blk-mq world, but if it is then it's going
+to be a major design consideration.  I'm also not entirely sure that we're
+really solving the same problem at that point.
