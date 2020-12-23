@@ -2,64 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A03BEC433E6
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Dec 2020 07:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42325C433E0
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Dec 2020 17:00:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64513224BE
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Dec 2020 07:50:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 076A82229C
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Dec 2020 17:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727800AbgLWHtv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Dec 2020 02:49:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58324 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727179AbgLWHtv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Dec 2020 02:49:51 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 126BDC0613D3;
-        Tue, 22 Dec 2020 23:49:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=VJA2Gqy8jGT0RgzTT5UVlJfq4XprQm8NpWSKksAaoTw=; b=Y2KK7HRkXqg1VLN9ubpTwYDI0w
-        Ep+SKigC5jwe2uB1UnUMz3uOsrVasAiYXZUzP9QprSSBjPJVqSZvomAb9NqBq8/VzqcNEclwAUs/a
-        9DpG7xDpanTsGh1QSz6ldIcRgzZwLujXZ+nZ/jcAJSf48gFxTkatMqAmJmc2aOcQMSVzk2xyxf/9+
-        tGNvyc4LINYaZpwmksQKJ4Mnlp6k069qYALw9MkYmOSKZVWgpS4Mesca9CJVr2T0TaIpy6LcqkJTl
-        9gjBt/ayYYok4M0W0gqXj+mKdlMVIPkSK6Ni3DTGAUivYygjDnO58CGjHXQgH7OiKrcppizSGoHq+
-        xahlPh9g==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kryt8-00046B-Vc; Wed, 23 Dec 2020 07:48:52 +0000
-Date:   Wed, 23 Dec 2020 07:48:50 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Palmer Dabbelt <palmer@dabbelt.com>
-Cc:     snitzer@redhat.com, Christoph Hellwig <hch@infradead.org>,
-        josef@toxicpanda.com, bvanassche@acm.org, corbet@lwn.net,
+        id S1725988AbgLWRAX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 23 Dec 2020 12:00:23 -0500
+Received: from mail-pl1-f170.google.com ([209.85.214.170]:34504 "EHLO
+        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725807AbgLWRAX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Dec 2020 12:00:23 -0500
+Received: by mail-pl1-f170.google.com with SMTP id t6so9426640plq.1;
+        Wed, 23 Dec 2020 09:00:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=C5J0im/g/lziWkOXhLJMkLHB39Y3IwOJRzVpXSFIMwo=;
+        b=b7FVHvlxZxgfeH70dfJLxtdeSo+wXThcBKdgGERIWTOI5L5I1oCrHxVRjOc/QM1QE/
+         XAZAYx/wf7IF2iqzGrel57kS4MBRpvgE3bjjhJYqsjnoAruEN53BxmkKkrPF0g2qdGkO
+         ixsyUqwkR6jEICWv3js50/+qXyuUzI6gC0A8/uDEKn8GtxscNMx5Qzgo+A0TMH6dqZCS
+         xNK5h/7r2b+Gp3XbHeUFV61UPPOj75yu+JJyGhXQutlba/I4oA5B884Ml5mEJ2d/0+GV
+         lIyddkVteXIkfbDepHQANFZw4pEZO0sMA5ChirvtOp+zWZO6TIzVzmtM6A7PsmFGUFR8
+         vt8g==
+X-Gm-Message-State: AOAM531qEV/o/DkBQufxCKDOg4WbBhtGy0QWM3+2HtCqwO8AVgje3Xpe
+        U3z/lcw+7lrt1sI2v2O50g69mS/yoxM=
+X-Google-Smtp-Source: ABdhPJzqv31c8q2ac9TtdhmNSe0N38boCxuCdDiKIhDRPStVefyp5/WAIeJm9xrsMsbN4NqKKvm8qw==
+X-Received: by 2002:a17:902:523:b029:dc:1aa4:28e7 with SMTP id 32-20020a1709020523b02900dc1aa428e7mr26256507plf.4.1608742781850;
+        Wed, 23 Dec 2020 08:59:41 -0800 (PST)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id b10sm24081106pgh.15.2020.12.23.08.59.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Dec 2020 08:59:40 -0800 (PST)
+Subject: Re: [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to
+ userspace
+To:     Christoph Hellwig <hch@infradead.org>,
+        Palmer Dabbelt <palmer@dabbelt.com>
+Cc:     snitzer@redhat.com, josef@toxicpanda.com, corbet@lwn.net,
         kernel-team@android.com, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         song@kernel.org, dm-devel@redhat.com,
         linux-kselftest@vger.kernel.org, shuah@kernel.org, agk@redhat.com,
         michael.christie@oracle.com
-Subject: Re: [PATCH v1 0/5] dm: dm-user: New target that proxies BIOs to
- userspace
-Message-ID: <20201223074850.GA15369@infradead.org>
 References: <20201222143616.GB12885@redhat.com>
  <mhng-26d96d8e-77aa-415b-a8ee-518a0e91b6ef@palmerdabbelt-glaptop>
+ <20201223074850.GA15369@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <8f09b196-0977-3b81-2bfe-4a97b1e0e3aa@acm.org>
+Date:   Wed, 23 Dec 2020 08:59:38 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <mhng-26d96d8e-77aa-415b-a8ee-518a0e91b6ef@palmerdabbelt-glaptop>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20201223074850.GA15369@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 12/22/20 11:48 PM, Christoph Hellwig wrote:
+> FYI, a few years ago I spent some time helping a customer to prepare
+> their block device in userspace using fuse code for upstreaming, but
+> at some point they abandoned the project.  But if for some reason we
+> don't want to use nbd I think a driver using the fuse infrastructure
+> would be the next logical choice.
 
-FYI, a few years ago I spent some time helping a customer to prepare
-their block device in userspace using fuse code for upstreaming, but
-at some point they abandoned the project.  But if for some reason we
-don't want to use nbd I think a driver using the fuse infrastructure
-would be the next logical choice.
+Hi Christoph,
+
+Thanks for having shared this information. Since I'm not familiar with the
+FUSE code: does this mean translating block device accesses into FUSE_READ
+and FUSE_WRITE messages? Does the FUSE kernel code only support exchanging
+such messages between kernel and user space via the read() and write()
+system calls? I'm asking this since there is already an interface in the
+Linux kernel for implementing block devices in user space that uses another
+approach, namely a ring buffer for messages and data that is shared between
+kernel and user space (documented in Documentation/target/tcmu-design.rst).
+Is one system call per read and per write operation fast enough for all
+block-device-in-user-space implementations?
+
+Thanks,
+
+Bart.
