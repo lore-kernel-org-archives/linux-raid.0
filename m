@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 638F1C433DB
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Dec 2020 12:29:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE515C433E0
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Dec 2020 12:47:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 307BE224B8
-	for <linux-raid@archiver.kernel.org>; Thu, 24 Dec 2020 12:29:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CD0C224B8
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Dec 2020 12:47:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727971AbgLXM3a (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 24 Dec 2020 07:29:30 -0500
-Received: from mga18.intel.com ([134.134.136.126]:22857 "EHLO mga18.intel.com"
+        id S1727081AbgLXMrk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Dec 2020 07:47:40 -0500
+Received: from mga01.intel.com ([192.55.52.88]:60492 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727081AbgLXM3a (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 24 Dec 2020 07:29:30 -0500
-IronPort-SDR: JcCq5+e39lgJrZgtIm5Mq9Vz5WQU+8Hj2rttdugXE2m3FzOqunR/jWfGXQg3OBkW4DdSzCipb8
- z69Y2aE0rLdQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9844"; a="163863338"
+        id S1726544AbgLXMrk (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 24 Dec 2020 07:47:40 -0500
+IronPort-SDR: pnpXHzXa/XbQoGcj3IMf9U+YyRXuC89Fz0ArOd1idc+G49x6kpXeO+m8uMFSypQnrsR6a1D4Ou
+ rnYMnwgNggPg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9844"; a="194609383"
 X-IronPort-AV: E=Sophos;i="5.78,444,1599548400"; 
-   d="gz'50?scan'50,208,50";a="163863338"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Dec 2020 04:28:45 -0800
-IronPort-SDR: KnBkTb7Js4a0JBZ1HaB3NYynSlPFlsbn7iY2QHadJW6Qccq9J8CTX6PaXvBBLuvI03hkLr04Gy
- CQwA7Y0c4CZQ==
+   d="gz'50?scan'50,208,50";a="194609383"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Dec 2020 04:46:46 -0800
+IronPort-SDR: IBwfK9lrwAjO7wktOQ//joWbbc+rfsHFLPhp8+oDe8y7XPn9ZgrJmOHPYEsbC6HhBOhw6hOKiQ
+ a+uevhCd40QA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,444,1599548400"; 
-   d="gz'50?scan'50,208,50";a="458455729"
+   d="gz'50?scan'50,208,50";a="391137433"
 Received: from lkp-server02.sh.intel.com (HELO 4242b19f17ef) ([10.239.97.151])
-  by fmsmga001.fm.intel.com with ESMTP; 24 Dec 2020 04:28:42 -0800
+  by fmsmga004.fm.intel.com with ESMTP; 24 Dec 2020 04:46:43 -0800
 Received: from kbuild by 4242b19f17ef with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1ksPjW-0000yH-3E; Thu, 24 Dec 2020 12:28:42 +0000
-Date:   Thu, 24 Dec 2020 20:28:27 +0800
+        id 1ksQ0x-0000yo-7b; Thu, 24 Dec 2020 12:46:43 +0000
+Date:   Thu, 24 Dec 2020 20:46:18 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     YANG LI <abaci-bugfix@linux.alibaba.com>, song@kernel.org
 Cc:     kbuild-all@lists.01.org, linux-raid@vger.kernel.org,
@@ -44,10 +44,10 @@ Cc:     kbuild-all@lists.01.org, linux-raid@vger.kernel.org,
         YANG LI <abaci-bugfix@linux.alibaba.com>
 Subject: Re: [PATCH] md/raid10: fix: incompatible types in comparison
  expression (different address spaces).
-Message-ID: <202012242050.DTmQCV7J-lkp@intel.com>
+Message-ID: <202012242039.IcxZ1GlW-lkp@intel.com>
 References: <1608624010-69405-1-git-send-email-abaci-bugfix@linux.alibaba.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="1yeeQ81UyVL57Vl7"
+Content-Type: multipart/mixed; boundary="3V7upXqbjpZ4EhLz"
 Content-Disposition: inline
 In-Reply-To: <1608624010-69405-1-git-send-email-abaci-bugfix@linux.alibaba.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
@@ -56,7 +56,7 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
---1yeeQ81UyVL57Vl7
+--3V7upXqbjpZ4EhLz
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -239,12 +239,12 @@ f0250618361db14 Ming Lei          2017-03-17  5118  	struct r10bio *r10_bio = ge
 0-DAY CI Kernel Test Service, Intel Corporation
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
---1yeeQ81UyVL57Vl7
+--3V7upXqbjpZ4EhLz
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICHNo5F8AAy5jb25maWcAlDzLcty2svt8xZSzSRb2kWRZ16lbWoAkOESGJGgAHI20YSny
+H4sICE145F8AAy5jb25maWcAlDzLcty2svt8xZSzSRb2kWRZ16lbWoAkOESGJGgAHI20YSny
 2FHFlnxG0on997e7wQcAgnNys3A06Maz340Gf/7p5xV7eX78evt8f3f75cuP1ef9w/5w+7z/
 uPp0/2X/v6tMrmppVjwT5g0gl/cPL9//9f39RXdxvnr35vTkzcnrw935arM/POy/rNLHh0/3
 n19ggPvHh59+/imVdS7WXZp2W660kHVn+M5cvvp8d/f6t9Uv2f6P+9uH1W9v3sIwp+9+tX+9
@@ -870,4 +870,4 @@ szhitbG9Sal9B4DOWxeNwMRJhDGAGpeXidTc926lAgk9kG9CGI5pY9NQWlrCaNCbZ2H7cmYr
 cFYKOg2Fq41IqGU/XaFguogVHJ3VsaAFIHAXOnYSMMTyAiLNQe7UOmfTESugm+Dt/irnX+Qe
 4Mv+/wFlKbN/FhgCAA==
 
---1yeeQ81UyVL57Vl7--
+--3V7upXqbjpZ4EhLz--
