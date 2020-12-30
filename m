@@ -2,241 +2,243 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-17.1 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F12BC432C3
-	for <linux-raid@archiver.kernel.org>; Wed, 30 Dec 2020 17:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E41C433E6
+	for <linux-raid@archiver.kernel.org>; Wed, 30 Dec 2020 17:07:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D6F322242
-	for <linux-raid@archiver.kernel.org>; Wed, 30 Dec 2020 17:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3286922242
+	for <linux-raid@archiver.kernel.org>; Wed, 30 Dec 2020 17:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbgL3RBO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 30 Dec 2020 12:01:14 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:58640 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726428AbgL3RBN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 30 Dec 2020 12:01:13 -0500
-X-IronPort-AV: E=Sophos;i="5.78,461,1599494400"; 
-   d="scan'208";a="103085839"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 31 Dec 2020 00:58:45 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 57F5C4CE6023;
-        Thu, 31 Dec 2020 00:58:43 +0800 (CST)
-Received: from G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 31 Dec 2020 00:58:43 +0800
-Received: from irides.mr (10.167.225.141) by G08CNEXCHPEKD04.g08.fujitsu.local
- (10.167.33.209) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 31 Dec 2020 00:58:42 +0800
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
-CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
-        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
-        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [PATCH 09/10] xfs: Implement ->corrupted_range() for XFS
-Date:   Thu, 31 Dec 2020 00:56:00 +0800
-Message-ID: <20201230165601.845024-10-ruansy.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+        id S1726276AbgL3RHN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 30 Dec 2020 12:07:13 -0500
+Received: from li1843-175.members.linode.com ([172.104.24.175]:34210 "EHLO
+        mail.stoffel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726197AbgL3RHH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 30 Dec 2020 12:07:07 -0500
+Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by mail.stoffel.org (Postfix) with ESMTPSA id DAE0325CE0;
+        Wed, 30 Dec 2020 12:06:25 -0500 (EST)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id 57317A6ACF; Wed, 30 Dec 2020 12:06:25 -0500 (EST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 57F5C4CE6023.ABDE7
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <24556.45969.276771.345181@quad.stoffel.home>
+Date:   Wed, 30 Dec 2020 12:06:25 -0500
+From:   "John Stoffel" <john@stoffel.org>
+To:     Danny Shih <dannyshih@synology.com>
+Cc:     John Stoffel <john@stoffel.org>, axboe@kernel.dk, agk@redhat.com,
+        snitzer@redhat.com, dm-devel@redhat.com, song@kernel.org,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 1/4] block: introduce submit_bio_noacct_add_head
+In-Reply-To: <abac671f-91f2-ca4e-7f77-8bb5da85a4cc@synology.com>
+References: <1609233522-25837-1-git-send-email-dannyshih@synology.com>
+        <1609233522-25837-2-git-send-email-dannyshih@synology.com>
+        <24555.49943.411197.147225@quad.stoffel.home>
+        <abac671f-91f2-ca4e-7f77-8bb5da85a4cc@synology.com>
+X-Mailer: VM 8.2.0b under 26.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This function is used to handle errors which may cause data lost in
-filesystem.  Such as memory failure in fsdax mode.
+>>>>> "Danny" == Danny Shih <dannyshih@synology.com> writes:
 
-In XFS, it requires "rmapbt" feature in order to query for files or
-metadata which associated to the corrupted data.  Then we could call fs
-recover functions to try to repair the corrupted data.(did not
-implemented in this patchset)
+Danny> Hi, John,
+Danny> Thank you for taking the time to write a review.
 
-After that, the memory failure also needs to notify the processes who
-are using those files.
 
-Only support data device.  Realtime device is not supported for now.
+Danny> John Stoffel <john@stoffel.org> writes:
+>>>>>>> "dannyshih" == dannyshih  <dannyshih@synology.com> writes:
+dannyshih> From: Danny Shih <dannyshih@synology.com>
+dannyshih> Porvide a way for stacking block device to re-submit the bio
+dannyshih> which sholud be handled firstly.
+>> 
+>> You're spelling needs to be fixed in these messages.
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
----
- fs/xfs/xfs_fsops.c |   5 +++
- fs/xfs/xfs_mount.h |   1 +
- fs/xfs/xfs_super.c | 107 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 113 insertions(+)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ef1d5bb88b93..0a2038875d32 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -501,6 +501,11 @@ xfs_do_force_shutdown(
- "Corruption of in-memory data detected.  Shutting down filesystem");
- 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
- 			xfs_stack_trace();
-+	} else if (flags & SHUTDOWN_CORRUPT_META) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-+"Corruption of on-disk metadata detected.  Shutting down filesystem");
-+		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
-+			xfs_stack_trace();
- 	} else if (logerror) {
- 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
- 			"Log I/O Error Detected. Shutting down filesystem");
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..8f0df67ffcc1 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -274,6 +274,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
- #define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
- #define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
-+#define SHUTDOWN_CORRUPT_META	0x0010  /* corrupt metadata on device */
- 
- /*
-  * Flags for xfs_mountfs
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e3e229e52512..cbcad419bb9e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -35,6 +35,11 @@
- #include "xfs_refcount_item.h"
- #include "xfs_bmap_item.h"
- #include "xfs_reflink.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -1103,6 +1108,107 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
- 
-+static int
-+xfs_corrupt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*data)
-+{
-+	struct xfs_inode		*ip;
-+	struct address_space		*mapping;
-+	int				rc = 0;
-+	int				*flags = data;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-+	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-+		// TODO check and try to fix metadata
-+		rc = -EFSCORRUPTED;
-+	} else {
-+		/*
-+		 * Get files that incore, filter out others that are not in use.
-+		 */
-+		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
-+			      XFS_IGET_INCORE, 0, &ip);
-+		if (rc || !ip)
-+			return rc;
-+		if (!VFS_I(ip)->i_mapping)
-+			goto out;
-+
-+		mapping = VFS_I(ip)->i_mapping;
-+		if (IS_DAX(VFS_I(ip)))
-+			rc = mf_dax_mapping_kill_procs(mapping, rec->rm_offset,
-+						       *flags);
-+		else
-+			mapping_set_error(mapping, -EFSCORRUPTED);
-+
-+		// TODO try to fix data
-+out:
-+		xfs_irele(ip);
-+	}
-+
-+	return rc;
-+}
-+
-+static int
-+xfs_fs_corrupted_range(
-+	struct super_block	*sb,
-+	struct block_device	*bdev,
-+	loff_t			offset,
-+	size_t			len,
-+	void			*data)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_rmap_irec	rmap_low, rmap_high;
-+	struct xfs_buf		*agf_bp = NULL;
-+	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
-+	xfs_filblks_t		bcnt = XFS_B_TO_FSB(mp, len);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	int			error = 0;
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
-+		xfs_warn(mp, "corrupted_range support not available for realtime device!");
-+		return 0;
-+	}
-+	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_bdev == bdev &&
-+	    mp->m_logdev_targp != mp->m_ddev_targp) {
-+		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+		return 0;
-+	}
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		xfs_warn(mp, "corrupted_range needs rmapbt enabled!");
-+		return 0;
-+	}
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
-+
-+	/* Construct a range for rmap query */
-+	memset(&rmap_low, 0, sizeof(rmap_low));
-+	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-+	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-+	rmap_low.rm_blockcount = rmap_high.rm_blockcount = bcnt;
-+
-+	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high, xfs_corrupt_helper, data);
-+	if (error == -EFSCORRUPTED)
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_META);
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_trans_brelse(tp, agf_bp);
-+	return error;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1116,6 +1222,7 @@ static const struct super_operations xfs_super_operations = {
- 	.show_options		= xfs_fs_show_options,
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
-+	.corrupted_range	= xfs_fs_corrupted_range,
- };
- 
- static int
--- 
-2.29.2
+Danny> Sorry for so many spelling errors.
 
+Danny> The message should be
+
+Danny> "Provide a way for stacking block device to re-submit
+
+Danny> the bio which should be handled first."
+
+Danny> I will fix it.
+
+Great, though my second question is *why* it needs to be handled
+first?  What is the difference between stacked and un-stacked devices
+and how could it be done in a way that doesn't require a seperate
+function like this?
+
+
+
+
+dannyshih> Signed-off-by: Danny Shih <dannyshih@synology.com>
+dannyshih> Reviewed-by: Allen Peng <allenpeng@synology.com>
+dannyshih> Reviewed-by: Alex Wu <alexwu@synology.com>
+dannyshih> ---
+dannyshih> block/blk-core.c       | 44 +++++++++++++++++++++++++++++++++-----------
+dannyshih> include/linux/blkdev.h |  1 +
+dannyshih> 2 files changed, 34 insertions(+), 11 deletions(-)
+>> 
+dannyshih> diff --git a/block/blk-core.c b/block/blk-core.c
+dannyshih> index 96e5fcd..693dc83 100644
+dannyshih> --- a/block/blk-core.c
+dannyshih> +++ b/block/blk-core.c
+dannyshih> @@ -1031,16 +1031,7 @@ static blk_qc_t __submit_bio_noacct_mq(struct bio *bio)
+dannyshih> return ret;
+dannyshih> }
+>> 
+dannyshih> -/**
+dannyshih> - * submit_bio_noacct - re-submit a bio to the block device layer for I/O
+dannyshih> - * @bio:  The bio describing the location in memory and on the device.
+dannyshih> - *
+dannyshih> - * This is a version of submit_bio() that shall only be used for I/O that is
+dannyshih> - * resubmitted to lower level drivers by stacking block drivers.  All file
+dannyshih> - * systems and other upper level users of the block layer should use
+dannyshih> - * submit_bio() instead.
+dannyshih> - */
+dannyshih> -blk_qc_t submit_bio_noacct(struct bio *bio)
+dannyshih> +static blk_qc_t do_submit_bio_noacct(struct bio *bio, bool add_head)
+dannyshih> {
+dannyshih> if (!submit_bio_checks(bio))
+dannyshih> return BLK_QC_T_NONE;
+dannyshih> @@ -1052,7 +1043,10 @@ blk_qc_t submit_bio_noacct(struct bio *bio)
+dannyshih> * it is active, and then process them after it returned.
+dannyshih> */
+dannyshih> if (current->bio_list) {
+dannyshih> -		bio_list_add(&current->bio_list[0], bio);
+dannyshih> +		if (add_head)
+dannyshih> +			bio_list_add_head(&current->bio_list[0], bio);
+dannyshih> +		else
+dannyshih> +			bio_list_add(&current->bio_list[0], bio);
+dannyshih> return BLK_QC_T_NONE;
+dannyshih> }
+>> 
+dannyshih> @@ -1060,9 +1054,37 @@ blk_qc_t submit_bio_noacct(struct bio *bio)
+dannyshih> return __submit_bio_noacct_mq(bio);
+dannyshih> return __submit_bio_noacct(bio);
+dannyshih> }
+dannyshih> +
+dannyshih> +/**
+dannyshih> + * submit_bio_noacct - re-submit a bio to the block device layer for I/O
+dannyshih> + * @bio:  The bio describing the location in memory and on the device.
+dannyshih> + *
+dannyshih> + * This is a version of submit_bio() that shall only be used for I/O that is
+dannyshih> + * resubmitted to lower level drivers by stacking block drivers.  All file
+dannyshih> + * systems and other upper level users of the block layer should use
+dannyshih> + * submit_bio() instead.
+dannyshih> + */
+dannyshih> +blk_qc_t submit_bio_noacct(struct bio *bio)
+dannyshih> +{
+dannyshih> +	return do_submit_bio_noacct(bio, false);
+dannyshih> +}
+dannyshih> EXPORT_SYMBOL(submit_bio_noacct);
+>> 
+>> So why is it named "submit_bio_noacct" when it's supposed to be only
+>> used by layers submitting to lower level drivers.  How can this be
+>> figured out by drivers automatically, so the writed doesn't have to
+>> know about this?
+
+
+Danny> There is no logical change while using submit_bio_noacct() after my 
+Danny> patch. So I didn't change
+
+Danny> the name and the documentation of submit_bio_noacct().
+
+
+>> 
+dannyshih> /**
+dannyshih> + * submit_bio_noacct - re-submit a bio, which needs to be handle firstly,
+dannyshih> + *                     to the block device layer for I/O
+dannyshih> + * @bio:  The bio describing the location in memory and on the device.
+dannyshih> + *
+dannyshih> + * alternative submit_bio_noacct() which add bio to the head of
+dannyshih> + * current->bio_list.
+dannyshih> + */
+>> 
+>> Firstly isn't proper english.  Maybe something like:
+>> 
+>> submit_bio_noacct - re-submit a bio which needs to be handled first
+>> because <reasons> to the block device layer for I/O
+>> 
+>> But the name still sucks, and the *reason* the bio needs to be handled
+>> differently isn't well explained.
+
+
+Danny> Sorry for the grammar mistake. And I wrote the wrong function name here.
+
+Danny> It should be replaced by submit_bio_noacct_add_head.
+
+
+Danny> About the function name, the name of submit_bio_noacct_add_head()
+
+Danny> is trying to let drivers know that this is just an alternative version of
+
+Danny> submit_bio_noacct(). The only difference is that this function adds bio to
+
+Danny> the head of current->bio_list, and submit_bio_noacct() adds it to the tail.
+
+
+Danny> About the documentation, what if I change it like:
+
+
+Danny> "submit_bio_noacct_add_head - re-submit a bio which needs to
+
+Danny> be handled first to the block device layer for I/O, because it has
+
+Danny> sequential relevance with the bio handling in current ->submit_bio.
+
+
+Danny> Alternative submit_bio_noacct() adds bio to the head of
+
+current-> bio_list. To keep bio sequence, this function is used
+
+Danny> when a block device splits bio and re-submits the remainder back
+
+Danny> to itself. This makes sure that the re-submitted bio will be handle
+
+Danny> just after the split part of the original bio."
+
+
+Danny> Thanks for your suggestion.
+
+
+dannyshih> +blk_qc_t submit_bio_noacct_add_head(struct bio *bio)
+dannyshih> +{
+dannyshih> +	return do_submit_bio_noacct(bio, true);
+dannyshih> +}
+dannyshih> +EXPORT_SYMBOL(submit_bio_noacct_add_head);
+dannyshih> +
+dannyshih> +/**
+dannyshih> * submit_bio - submit a bio to the block device layer for I/O
+dannyshih> * @bio: The &struct bio which describes the I/O
+dannyshih> *
+dannyshih> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+dannyshih> index 070de09..b0080d0 100644
+dannyshih> --- a/include/linux/blkdev.h
+dannyshih> +++ b/include/linux/blkdev.h
+dannyshih> @@ -905,6 +905,7 @@ static inline void rq_flush_dcache_pages(struct request *rq)
+dannyshih> extern int blk_register_queue(struct gendisk *disk);
+dannyshih> extern void blk_unregister_queue(struct gendisk *disk);
+dannyshih> blk_qc_t submit_bio_noacct(struct bio *bio);
+dannyshih> +blk_qc_t submit_bio_noacct_add_head(struct bio *bio);
+dannyshih> extern void blk_rq_init(struct request_queue *q, struct request *rq);
+dannyshih> extern void blk_put_request(struct request *);
+dannyshih> extern struct request *blk_get_request(struct request_queue *, unsigned int op,
+dannyshih> --
+dannyshih> 2.7.4
+
+Danny> Best Regards,
+
+Danny> Danny Shih
 
 
