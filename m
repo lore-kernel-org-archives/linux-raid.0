@@ -2,50 +2,62 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AABDCC433E0
-	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 16:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 262FEC433E0
+	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 19:51:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77F3E221F2
-	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 16:16:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEBC8221F2
+	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 19:51:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727285AbhAAQP5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 1 Jan 2021 11:15:57 -0500
-Received: from mail.thelounge.net ([91.118.73.15]:18487 "EHLO
-        mail.thelounge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727156AbhAAQP5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 1 Jan 2021 11:15:57 -0500
-Received: from srv-rhsoft.rhsoft.net (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4D6qqk6yBgzXMq;
-        Fri,  1 Jan 2021 17:15:14 +0100 (CET)
+        id S1727207AbhAATuv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 1 Jan 2021 14:50:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34264 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727142AbhAATuu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 1 Jan 2021 14:50:50 -0500
+X-Greylist: delayed 2441 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 01 Jan 2021 11:50:10 PST
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BFE8C061573
+        for <linux-raid@vger.kernel.org>; Fri,  1 Jan 2021 11:50:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
+        Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=O3Yv6/jWIrr9s32cdbC1rZsCa2CXDxQ8b2/MhzoEBLw=; b=EEWFBAhi4XwZrlv3NqokH+IGB8
+        O9af0l36LOLEaplS2FTdvCpbgZDJrnoEWltlMDIfWg8EsZ7W1k0h75NRGdVsYSfPfLPIRyLsw+V59
+        1DyJK06YX137DNDQzNO4zv1LKYAPEJG/KdDZtC1AppmjwlQMgHoMHlb/FBoiNOEYAkOESpKYFAiIM
+        kBX2NVwcAwFL8DO+GQKgUgfLrt8fRu0fkYO+3Qyy8mTBmASbQ3r4QvOU+lrZ8XKxXZuH6G6luXglw
+        c412xFZ9aXrFwrT6/VmQt/pqpJ43fMrxI2qz6s6kpnX7VM/xQ6YDYP/QaIrxQb0zlNV9Ksuf7Ydio
+        /p5Tbv3A==;
+Received: from c-73-43-58-214.hsd1.ga.comcast.net ([73.43.58.214] helo=[192.168.20.123])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1kvPni-0005r6-5G; Fri, 01 Jan 2021 19:09:26 +0000
+Subject: Re: naming system of raid devices
 To:     c.buhtz@posteo.jp, linux-raid@vger.kernel.org
 References: <4D6pnR0fqcz9rxN@submission02.posteo.de>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
-Subject: Re: naming system of raid devices
-Message-ID: <6ae91038-0f94-36b1-6da5-9235b9addb6f@thelounge.net>
-Date:   Fri, 1 Jan 2021 17:15:14 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+From:   Phil Turmel <philip@turmel.org>
+Message-ID: <5d53fe14-3e61-d3bf-d467-9227c93b11a2@turmel.org>
+Date:   Fri, 1 Jan 2021 14:09:25 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
 In-Reply-To: <4D6pnR0fqcz9rxN@submission02.posteo.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-Am 01.01.21 um 16:28 schrieb c.buhtz@posteo.jp:
+On 1/1/21 10:28 AM, c.buhtz@posteo.jp wrote:
 > In the last weeks I played around with mdadm - on VMs, Odroid-Devices,
 > PCs - all with Debian 10.
 > 
@@ -64,58 +76,28 @@ Am 01.01.21 um 16:28 schrieb c.buhtz@posteo.jp:
 > 
 > My current solution is to ignore the /dev/*-name and mount the
 > device/partition by its UUID.
-
-you should do that for about 20 years anyways, no matter RAID or not
-
+> 
 > Another often reported "solution" is to edit the mdadm.conf. But this
 > is not a good solution for me. mdadm looks in the superblock and knows
 > (nearly) everything. Each conf-file I need to edit keeps the
 > possibility for errors/mistakes/faults (because I am not a sysop/admin
 > but a simple home-server-wannabe-admin).
 
-but how often is anything changed there?
+Most distros incrementally assemble raid arrays during early boot, 
+before the real root filesystem is mounted.  By itself, with no 
+mdadm.conf guidance, mdadm will assign names to arrays starting with 
+md127 and counting backwards.  And will process all arrays found.
 
-my mdadm.conf is from 2011 and it's not even the same machine with my 
-disks which are in the meantime replaced by SSD
+I recommend creating an mdadm.conf file containing ARRAY entries for 
+your desired setup.  Trim those lines to only have the desired name and 
+UUID.
 
-you need to make sure that the current config is part if the initrd 
-(dracut -f as example) which happens anyways when the kernel is updated 
-and a new initrd is generated for the new kernel
+Have your distro then rebuild your initramfs (distro-specific) so the 
+updated mdadm.conf is available during early boot.  Reboot to see that 
+it worked.
 
----------------------
+Once you are sure it works, I also recommend adding AUTO=-all to 
+mdadm.conf, so any extra arrays you might plug in temporarily won't 
+auto-assemble if still plugged in during boot.
 
-[root@srv-rhsoft:~]$ lsinitrd | grep mdadm
--rw-r--r--   1 root     root          315 Aug 16  2014 etc/mdadm.conf
-
----------------------
-
-[root@srv-rhsoft:~]$ cat /etc/mdadm.conf
-MAILADDR root
-HOMEHOST localhost.localdomain
-AUTO +imsm +1.x -all
-
-ARRAY /dev/md0 level=raid1 num-devices=4 
-UUID=1d691642:baed26df:1d197496:4fb00ff8
-ARRAY /dev/md1 level=raid10 num-devices=4 
-UUID=b7475879:c95d9a47:c5043c02:0c5ae720
-ARRAY /dev/md2 level=raid10 num-devices=4 
-UUID=ea253255:cb915401:f32794ad:ce0fe396
----------------------
-
-"localhost.localdomain" is intentional, there is a second machine with 
-identical UUIDs all over the place cloned by move two disks, resync on 
-both and adjust runtime config like networking and so on
-
-> My Question is how this names come up? How does mdadm, the kernel or
-> what ever component is responsible here, decide about the "name" of a
-> raid device?
-> And which factors influence the re-nameing of such devices (e.g.
-> between boot or kernel-updates)?
-
-devices are always a problem because it's unknown when they appear, it's 
-even unknown *if* they appear so nothing can wait for them
-
-that's why you should always work with UUID
-
-
-
+Phil
