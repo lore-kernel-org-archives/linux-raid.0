@@ -2,62 +2,44 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 262FEC433E0
-	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 19:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5C9C433E0
+	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 20:02:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEBC8221F2
-	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 19:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02EF6221F2
+	for <linux-raid@archiver.kernel.org>; Fri,  1 Jan 2021 20:02:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727207AbhAATuv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 1 Jan 2021 14:50:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34264 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727142AbhAATuu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 1 Jan 2021 14:50:50 -0500
-X-Greylist: delayed 2441 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 01 Jan 2021 11:50:10 PST
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BFE8C061573
-        for <linux-raid@vger.kernel.org>; Fri,  1 Jan 2021 11:50:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=O3Yv6/jWIrr9s32cdbC1rZsCa2CXDxQ8b2/MhzoEBLw=; b=EEWFBAhi4XwZrlv3NqokH+IGB8
-        O9af0l36LOLEaplS2FTdvCpbgZDJrnoEWltlMDIfWg8EsZ7W1k0h75NRGdVsYSfPfLPIRyLsw+V59
-        1DyJK06YX137DNDQzNO4zv1LKYAPEJG/KdDZtC1AppmjwlQMgHoMHlb/FBoiNOEYAkOESpKYFAiIM
-        kBX2NVwcAwFL8DO+GQKgUgfLrt8fRu0fkYO+3Qyy8mTBmASbQ3r4QvOU+lrZ8XKxXZuH6G6luXglw
-        c412xFZ9aXrFwrT6/VmQt/pqpJ43fMrxI2qz6s6kpnX7VM/xQ6YDYP/QaIrxQb0zlNV9Ksuf7Ydio
-        /p5Tbv3A==;
-Received: from c-73-43-58-214.hsd1.ga.comcast.net ([73.43.58.214] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1kvPni-0005r6-5G; Fri, 01 Jan 2021 19:09:26 +0000
+        id S1727226AbhAAUB5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 1 Jan 2021 15:01:57 -0500
+Received: from smtp.hosts.co.uk ([85.233.160.19]:55777 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727213AbhAAUB5 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 1 Jan 2021 15:01:57 -0500
+Received: from host86-158-105-41.range86-158.btcentralplus.com ([86.158.105.41] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1kvQ0R-0005fn-A4; Fri, 01 Jan 2021 19:22:35 +0000
 Subject: Re: naming system of raid devices
 To:     c.buhtz@posteo.jp, linux-raid@vger.kernel.org
 References: <4D6pnR0fqcz9rxN@submission02.posteo.de>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <5d53fe14-3e61-d3bf-d467-9227c93b11a2@turmel.org>
-Date:   Fri, 1 Jan 2021 14:09:25 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+From:   antlists <antlists@youngman.org.uk>
+Message-ID: <f1abeaa1-e412-99f8-3853-57f1ae6915ad@youngman.org.uk>
+Date:   Fri, 1 Jan 2021 19:22:35 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
 In-Reply-To: <4D6pnR0fqcz9rxN@submission02.posteo.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/1/21 10:28 AM, c.buhtz@posteo.jp wrote:
+On 01/01/2021 15:28, c.buhtz@posteo.jp wrote:
 > In the last weeks I played around with mdadm - on VMs, Odroid-Devices,
 > PCs - all with Debian 10.
 > 
@@ -82,22 +64,24 @@ On 1/1/21 10:28 AM, c.buhtz@posteo.jp wrote:
 > (nearly) everything. Each conf-file I need to edit keeps the
 > possibility for errors/mistakes/faults (because I am not a sysop/admin
 > but a simple home-server-wannabe-admin).
+> 
+> My Question is how this names come up? How does mdadm, the kernel or
+> what ever component is responsible here, decide about the "name" of a
+> raid device?
+> And which factors influence the re-nameing of such devices (e.g.
+> between boot or kernel-updates)?
+> 
+The kernel and/or mdadm decides the same way it decides what drive is 
+sda, sdb, etc, in that it is COMPLETELY RANDOM. Yes, the dice normally 
+fall the same way and names are consistent, but numbers now normally 
+always count down from 127. (I think that's so we can count down from 
+32,000 if we need to... :-) For example, because I have just two, 
+mirrored, drives, it doesn't matter which one appears first the arrays 
+count down consistently so eg root is always md127. But that's a quirk 
+of my system.
 
-Most distros incrementally assemble raid arrays during early boot, 
-before the real root filesystem is mounted.  By itself, with no 
-mdadm.conf guidance, mdadm will assign names to arrays starting with 
-md127 and counting backwards.  And will process all arrays found.
+The recommended way with mdadm is to create named arrays, eg 
+/dev/md/root or /dev/md/home.
 
-I recommend creating an mdadm.conf file containing ARRAY entries for 
-your desired setup.  Trim those lines to only have the desired name and 
-UUID.
-
-Have your distro then rebuild your initramfs (distro-specific) so the 
-updated mdadm.conf is available during early boot.  Reboot to see that 
-it worked.
-
-Once you are sure it works, I also recommend adding AUTO=-all to 
-mdadm.conf, so any extra arrays you might plug in temporarily won't 
-auto-assemble if still plugged in during boot.
-
-Phil
+Cheers,
+Wol
