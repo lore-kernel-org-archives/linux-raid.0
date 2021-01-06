@@ -2,180 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C18EDC433E9
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Jan 2021 17:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1980C433E0
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Jan 2021 23:44:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1A0923120
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Jan 2021 17:15:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A76EA2313E
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Jan 2021 23:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727605AbhAFRPM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Jan 2021 12:15:12 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54610 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727525AbhAFRPL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 6 Jan 2021 12:15:11 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 05EF5ACAF;
-        Wed,  6 Jan 2021 17:14:30 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id A0C771E0816; Wed,  6 Jan 2021 18:14:29 +0100 (CET)
-Date:   Wed, 6 Jan 2021 18:14:29 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-Subject: Re: [PATCH 08/10] md: Implement ->corrupted_range()
-Message-ID: <20210106171429.GE29271@quack2.suse.cz>
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
- <20201230165601.845024-9-ruansy.fnst@cn.fujitsu.com>
+        id S1727206AbhAFXoK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Jan 2021 18:44:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59050 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726293AbhAFXoK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Jan 2021 18:44:10 -0500
+X-Greylist: delayed 956 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 06 Jan 2021 15:43:14 PST
+Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B555C061786
+        for <linux-raid@vger.kernel.org>; Wed,  6 Jan 2021 15:43:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com; s=alpha;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Subject:To:From:Date; bh=bPeouSZ1JpBj7J1oFqfS0x/iwXX7Au5rfCTevuxSkjo=;
+        b=jyqgHEGCYG9vUKik+phkLb08J7LmV/MJUHYv3TBAl42HMtewOEUMl/5QE9SorDAIdt2TWjN0Nj7L8tKx4UE2etwwwPs03YS6nC5dWgjWnqQY5Ht+78ulmukQix/Bd86a5Gin4O8QSZbiWN7x+hQ/G7wavLBIK9C19CVmwMa1W2qSVxra+bnN+TuHHXjSRoO2dUdTpcUTSXmvEukVGtS/694/ANMUbu5uSvLTw/RfNAHffyKz43tJiYXZjj8igcNPz3LrVvH3qEyMX1W3pHQW/jVkSbwGajyxZxNPvu1AS4vlUepf5uI2RdrDQgR4qpPyTeIHpHaJh5l6bZ9RRtDLpw==;
+Received: from andy by mail.bitfolk.com with local (Exim 4.84_2)
+        (envelope-from <andy@strugglers.net>)
+        id 1kxICy-0005TO-6j
+        for linux-raid@vger.kernel.org; Wed, 06 Jan 2021 23:27:16 +0000
+Date:   Wed, 6 Jan 2021 23:27:16 +0000
+From:   Andy Smith <andy@strugglers.net>
+To:     linux-raid@vger.kernel.org
+Subject: "md/raid10:md5: sdf: redirecting sector 2979126480 to another mirror"
+Message-ID: <20210106232716.GY3712@bitfolk.com>
+Mail-Followup-To: linux-raid@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20201230165601.845024-9-ruansy.fnst@cn.fujitsu.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
+X-URL:  http://strugglers.net/wiki/User:Andy
+User-Agent: Mutt/1.5.23 (2014-03-12)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: andy@strugglers.net
+X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu 31-12-20 00:55:59, Shiyang Ruan wrote:
-> With the support of ->rmap(), it is possible to obtain the superblock on
-> a mapped device.
-> 
-> If a pmem device is used as one target of mapped device, we cannot
-> obtain its superblock directly.  With the help of SYSFS, the mapped
-> device can be found on the target devices.  So, we iterate the
-> bdev->bd_holder_disks to obtain its mapped device.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Hi,
 
-Thanks for the patch. Two comments below.
+"md/raid10:md5: sdf: redirecting sector 2979126480 to another
+mirror"
 
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 4688bff19c20..9f9a2f3bf73b 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -256,21 +256,16 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
->  static int pmem_corrupted_range(struct gendisk *disk, struct block_device *bdev,
->  				loff_t disk_offset, size_t len, void *data)
->  {
-> -	struct super_block *sb;
->  	loff_t bdev_offset;
->  	sector_t disk_sector = disk_offset >> SECTOR_SHIFT;
-> -	int rc = 0;
-> +	int rc = -ENODEV;
->  
->  	bdev = bdget_disk_sector(disk, disk_sector);
->  	if (!bdev)
-> -		return -ENODEV;
-> +		return rc;
->  
->  	bdev_offset = (disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT;
-> -	sb = get_super(bdev);
-> -	if (sb && sb->s_op->corrupted_range) {
-> -		rc = sb->s_op->corrupted_range(sb, bdev, bdev_offset, len, data);
-> -		drop_super(sb);
-> -	}
-> +	rc = bd_corrupted_range(bdev, bdev_offset, bdev_offset, len, data);
->  
->  	bdput(bdev);
->  	return rc;
+I've actually been seeing these messages very occasionally across
+many machines for years but have never found anything wrong so kept
+putting investigation of it to the bottom of my TODO list. I have
+even in the past upon seeing this done a full scrub and check and
+found no issue.
 
-This (and the fs/block_dev.c change below) is just refining the function
-you've implemented in the patch 6. I think it's confusing to split changes
-like this - why not implement things correctly from the start in patch 6?
+Having just seen one of them again now, and having some spare time I
+tried to look into it.
 
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 9e84b1928b94..0e50f0e8e8af 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -1171,6 +1171,27 @@ struct bd_holder_disk {
->  	int			refcnt;
->  };
->  
-> +static int bd_disk_holder_corrupted_range(struct block_device *bdev, loff_t off,
-> +					  size_t len, void *data)
-> +{
-> +	struct bd_holder_disk *holder;
-> +	struct gendisk *disk;
-> +	int rc = 0;
-> +
-> +	if (list_empty(&(bdev->bd_holder_disks)))
-> +		return -ENODEV;
+So, this messages comes from here:
 
-This will not compile for !CONFIG_SYSFS kernels. Not that it would be
-common but still. Also I'm not sure whether using bd_holder_disks like this
-is really the right thing to do (when it seems to be only a sysfs thing),
-although admittedly I'm not aware of a better way of getting this
-information.
+    https://github.com/torvalds/linux/blob/v5.8/drivers/md/raid10.c#L1188
 
-								Honza
+but under what circumstances does it actually happen?
 
-> +
-> +	list_for_each_entry(holder, &bdev->bd_holder_disks, list) {
-> +		disk = holder->disk;
-> +		if (disk->fops->corrupted_range) {
-> +			rc = disk->fops->corrupted_range(disk, bdev, off, len, data);
-> +			if (rc != -ENODEV)
-> +				break;
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +
->  static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
->  						  struct gendisk *disk)
->  {
-> @@ -1378,6 +1399,22 @@ void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors)
->  }
->  EXPORT_SYMBOL(bd_set_nr_sectors);
->  
-> +int bd_corrupted_range(struct block_device *bdev, loff_t disk_off, loff_t bdev_off, size_t len, void *data)
-> +{
-> +	struct super_block *sb = get_super(bdev);
-> +	int rc = 0;
-> +
-> +	if (!sb) {
-> +		rc = bd_disk_holder_corrupted_range(bdev, disk_off, len, data);
-> +		return rc;
-> +	} else if (sb->s_op->corrupted_range)
-> +		rc = sb->s_op->corrupted_range(sb, bdev, bdev_off, len, data);
-> +	drop_super(sb);
-> +
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL(bd_corrupted_range);
-> +
->  static void __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part);
->  
->  int bdev_disk_changed(struct block_device *bdev, bool invalidate)
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index ed06209008b8..42290470810d 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -376,6 +376,8 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose);
->  bool bdev_check_media_change(struct block_device *bdev);
->  int __invalidate_device(struct block_device *bdev, bool kill_dirty);
->  void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
-> +int bd_corrupted_range(struct block_device *bdev, loff_t disk_off,
-> +		       loff_t bdev_off, size_t len, void *data);
->  
->  /* for drivers/char/raw.c: */
->  int blkdev_ioctl(struct block_device *, fmode_t, unsigned, unsigned long);
-> -- 
-> 2.29.2
-> 
-> 
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+This time, as with the other times, I cannot see any indication of
+read error (i.e. no logs of that) and no problems apparent in SMART
+data.
+
+err_rdev there can only be set inside the block above that starts
+with:
+
+
+    if (r10_bio->devs[slot].rdev) {
+        /*
+         * This is an error retry, but we cannot
+         * safely dereference the rdev in the r10_bio,
+         * we must use the one in conf.
+
+…but why is this an error retry? Nothing was logged so how do I find
+out what the error was?
+
+Cheers,
+Andy
