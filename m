@@ -2,68 +2,127 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95899C433E9
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jan 2021 09:57:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D395C433DB
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Jan 2021 18:16:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E5F32368A
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jan 2021 09:57:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E65B23A77
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Jan 2021 18:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728123AbhAHJ46 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Jan 2021 04:56:58 -0500
-Received: from verein.lst.de ([213.95.11.211]:43323 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727795AbhAHJ45 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 8 Jan 2021 04:56:57 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 0C03967373; Fri,  8 Jan 2021 10:56:15 +0100 (CET)
-Date:   Fri, 8 Jan 2021 10:56:14 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+        id S1728278AbhAHSQI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Jan 2021 13:16:08 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:43920 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727429AbhAHSQH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jan 2021 13:16:07 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 108HwwOY004690;
+        Fri, 8 Jan 2021 18:15:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=KiTw25sQnwXSQX+0iRD1HBB4uXxJXhd7Tk5XQ9JUJTE=;
+ b=gTJvSGLjyueTzS8vgNsV+rpKJmQFk8fY+zb3p5ZDQqfAWD0TXtxr0+zcwpk/Z5f9BG5e
+ VwNDwsqFMNUcseD6IEwkpfpSHYOITZNUp5dTFJF3GZJlV0Qbvj5cXNFfUWQ4mhZbb6Kh
+ 7t601GM0mXU18dnI2cVo1qytEC2sUIBJA6/fu4DmcG+wxp0PxPmrBAwkqYTHm9KeCfXv
+ FqcIB4Ec7M+DYaIHNVo1oCCjPzOaZ1lgAMjgQF/f8urKsNVcjV12MvAhvgmFwrWXDi2x
+ SFEINWClUGqtHlOWAU9dapkOdg1gHd2jiFKW+9gf1IC+ZJpceqxWihAQYrpFIpewNTLj zg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 35wcuy2pbg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 08 Jan 2021 18:15:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 108I0wFn081682;
+        Fri, 8 Jan 2021 18:15:08 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 35v1fcvpaa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 08 Jan 2021 18:15:08 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 108IF6J1019818;
+        Fri, 8 Jan 2021 18:15:06 GMT
+Received: from [10.159.230.21] (/10.159.230.21)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 08 Jan 2021 18:15:05 +0000
+Subject: Re: [RFC PATCH v3 0/9] fsdax: introduce fs query to support reflink
+To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-nvdimm@lists.01.org, linux-mm@kvack.org,
         linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-Subject: Re: [PATCH 03/10] fs: Introduce ->corrupted_range() for superblock
-Message-ID: <20210108095614.GB5647@lst.de>
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com> <20201230165601.845024-4-ruansy.fnst@cn.fujitsu.com>
+        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
+        song@kernel.org, rgoldwyn@suse.de, qi.fuli@fujitsu.com,
+        y-goto@fujitsu.com
+References: <20201215121414.253660-1-ruansy.fnst@cn.fujitsu.com>
+ <7fc7ba7c-f138-4944-dcc7-ce4b3f097528@oracle.com>
+ <a57c44dd-127a-3bd2-fcb3-f1373572de27@cn.fujitsu.com>
+ <20201218034907.GG6918@magnolia>
+ <16ac8000-2892-7491-26a0-84de4301f168@cn.fujitsu.com>
+From:   Jane Chu <jane.chu@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <f3f93809-ba68-521f-70d8-27f1ba5d0036@oracle.com>
+Date:   Fri, 8 Jan 2021 10:14:58 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201230165601.845024-4-ruansy.fnst@cn.fujitsu.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <16ac8000-2892-7491-26a0-84de4301f168@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ suspectscore=0 spamscore=0 bulkscore=0 adultscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101080099
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ clxscore=1011 spamscore=0 impostorscore=0 priorityscore=1501 mlxscore=0
+ adultscore=0 mlxlogscore=999 lowpriorityscore=0 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2101080099
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Dec 31, 2020 at 12:55:54AM +0800, Shiyang Ruan wrote:
-> Memory failure occurs in fsdax mode will finally be handled in
-> filesystem.  We introduce this interface to find out files or metadata
-> affected by the corrupted range, and try to recover the corrupted data
-> if possiable.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
->  include/linux/fs.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 8667d0cdc71e..282e2139b23e 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1965,6 +1965,8 @@ struct super_operations {
->  				  struct shrink_control *);
->  	long (*free_cached_objects)(struct super_block *,
->  				    struct shrink_control *);
-> +	int (*corrupted_range)(struct super_block *sb, struct block_device *bdev,
+Hi, Shiyang,
 
-This adds an overly long line.  But more importantly it must work on
-the dax device and not the block device.  I'd also structure the callback
-so that it is called on the dax device only, with the file system storing
-the super block in a private data member.
+On 12/18/2020 1:13 AM, Ruan Shiyang wrote:
+>>>>
+>>>> So I tried the patchset with pmem error injection, the SIGBUS payload
+>>>> does not look right -
+>>>>
+>>>> ** SIGBUS(7): **
+>>>> ** si_addr(0x(nil)), si_lsb(0xC), si_code(0x4, BUS_MCEERR_AR) **
+>>>>
+>>>> I expect the payload looks like
+>>>>
+>>>> ** si_addr(0x7f3672e00000), si_lsb(0x15), si_code(0x4, 
+>>>> BUS_MCEERR_AR) **
+>>>
+>>> Thanks for testing.  I test the SIGBUS by writing a program which calls
+>>> madvise(... ,MADV_HWPOISON) to inject memory-failure.  It just shows 
+>>> that
+>>> the program is killed by SIGBUS.  I cannot get any detail from it.  So,
+>>> could you please show me the right way(test tools) to test it?
+>>
+>> I'm assuming that Jane is using a program that calls sigaction to
+>> install a SIGBUS handler, and dumps the entire siginfo_t structure
+>> whenever it receives one...
+
+Yes, thanks Darrick.
+
+> 
+> OK.  Let me try it and figure out what's wrong in it.
+
+I injected poison via "ndctl inject-error",  not expecting it made any 
+difference though.
+
+Any luck?
+
+thanks,
+-jane
+
