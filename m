@@ -2,91 +2,138 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEEADC433E6
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jan 2021 19:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2324AC433E6
+	for <linux-raid@archiver.kernel.org>; Mon, 11 Jan 2021 17:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E895239A1
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Jan 2021 19:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE42822B30
+	for <linux-raid@archiver.kernel.org>; Mon, 11 Jan 2021 17:28:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728844AbhAHTKM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Jan 2021 14:10:12 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:33240 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727376AbhAHTKL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Jan 2021 14:10:11 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 108J52fv008954;
-        Fri, 8 Jan 2021 19:09:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=mM6AT4VIgyY77kqNzTjiuApzWT+pAy7YDdIiGpktXDY=;
- b=NUGl9vvCjI+srkXa647I47YdrcKV2Ohfi8KN8TwzR3PkJyYM8+ogxpVnJ2Vb3puq6ggm
- IZuQSXVkttwfPd+9bwh0Ip5NzH4c3cVtIEGb39a3Djzt9bSTJOt3iIJnUKq8+oFPC6NA
- 0rIlcKB4tUTvuZhsNhdRiEQqW3LksF1gGN8M7ZW8Iu5gvQn9bHJZCNPvYSzcfJKGntqH
- 9Vxu01RchOtrRygQDQFoyBP30dNwcqJKCHjPr8JfbiAaYDT9jlkKf8PYAEYPn9ZIlNZL
- 6IEHavuS77KAZU4aMx20TZu/QV9eP4l7wl+DAMCD44jJr5H/85TCcjCu+nm7cT1fGmZ1 Aw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 35wcuy2ve2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 08 Jan 2021 19:09:14 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 108J4Xsu055993;
-        Fri, 8 Jan 2021 19:09:14 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 35w3qvtm49-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Jan 2021 19:09:13 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 108J9C96013451;
-        Fri, 8 Jan 2021 19:09:12 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 08 Jan 2021 19:09:12 +0000
-Date:   Fri, 8 Jan 2021 11:09:10 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        dan.j.williams@intel.com, david@fromorbit.com, song@kernel.org,
-        rgoldwyn@suse.de, qi.fuli@fujitsu.com, y-goto@fujitsu.com
-Subject: Re: [PATCH 02/10] blk: Introduce ->corrupted_range() for block device
-Message-ID: <20210108190910.GR6918@magnolia>
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
- <20201230165601.845024-3-ruansy.fnst@cn.fujitsu.com>
- <20210108095500.GA5647@lst.de>
+        id S2389546AbhAKR22 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 11 Jan 2021 12:28:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47878 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389425AbhAKR21 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Jan 2021 12:28:27 -0500
+Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C94BC061786
+        for <linux-raid@vger.kernel.org>; Mon, 11 Jan 2021 09:27:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com; s=alpha;
+        h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:Subject:To:From:Date; bh=j2o2jAZ9bHbIPtnP3x1/ZuBJWA1rP+sVGnruGaTThMw=;
+        b=PSnOIq5Uxel2+JguwIAGFhtak2ht8otu7ILKslGkCdD6Fb6CcrabWmf94jJlTkWgbu3emeg0LdPPBeZGvgH5SHS1o74wBicQAJAFovExQAVfuO6QIzh6wV17zC6Ex7rj1sFi/qRWJ630bc0y9SPXrd5Q7N6bV38x+NIHsa2SQ+LzxBVTUEIudD232CLHNrwF7+z+4Mo9vgQSBLr4b6v4YkjARktxVz5vfyUCEe+20Smq+tIk3wm2djmYpKdamGVVQ+4jGaiMVhIjvzL/A071+7UPcH5GEshY2V9wytfmoQY4DR59z6dWI4dbCwb/jLAL3Oj3AQ+Ug4tL4TNUn6Zmrg==;
+Received: from andy by mail.bitfolk.com with local (Exim 4.84_2)
+        (envelope-from <andy@strugglers.net>)
+        id 1kz0ym-0007KR-RU
+        for linux-raid@vger.kernel.org; Mon, 11 Jan 2021 17:27:44 +0000
+Date:   Mon, 11 Jan 2021 17:27:44 +0000
+From:   Andy Smith <andy@strugglers.net>
+To:     linux-raid@vger.kernel.org
+Subject: Re: "md/raid10:md5: sdf: redirecting sector 2979126480 to another
+ mirror"
+Message-ID: <20210111172744.GH3712@bitfolk.com>
+Mail-Followup-To: linux-raid@vger.kernel.org
+References: <20210106232716.GY3712@bitfolk.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210108095500.GA5647@lst.de>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
- spamscore=0 mlxlogscore=999 phishscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101080102
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9858 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- clxscore=1015 spamscore=0 impostorscore=0 priorityscore=1501 mlxscore=0
- adultscore=0 mlxlogscore=999 lowpriorityscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101080102
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210106232716.GY3712@bitfolk.com>
+OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
+X-URL:  http://strugglers.net/wiki/User:Andy
+User-Agent: Mutt/1.5.23 (2014-03-12)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: andy@strugglers.net
+X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Jan 08, 2021 at 10:55:00AM +0100, Christoph Hellwig wrote:
-> It happens on a dax_device.  We should not interwind dax and block_device
-> even more after a lot of good work has happened to detangle them.
+On Wed, Jan 06, 2021 at 11:27:16PM +0000, Andy Smith wrote:
+> "md/raid10:md5: sdf: redirecting sector 2979126480 to another
+> mirror"
 
-I agree that the dax device should not be implied from the block device,
-but what happens if regular block device drivers grow the ability to
-(say) perform a background integrity scan and want to ->corrupted_range?
+[…]
 
---D
+> So, this messages comes from here:
+> 
+>     https://github.com/torvalds/linux/blob/v5.8/drivers/md/raid10.c#L1188
+> 
+> but under what circumstances does it actually happen?
+
+I managed to obtain a stack trace with "perf":
+
+# Line 77 of this function in the raid10 module is where the
+# "redirecting sector" message comes from on my kernel, the stock
+# Debian buster kernel.
+$ sudo perf probe -s ./linux-source-4.19/ -m raid10 --add 'raid10_read_request:77'
+Added new events:
+  probe:raid10_read_request (on raid10_read_request:77 in raid10)
+  probe:raid10_read_request_1 (on raid10_read_request:77 in raid10)
+  probe:raid10_read_request_2 (on raid10_read_request:77 in raid10)
+  probe:raid10_read_request_3 (on raid10_read_request:77 in raid10)
+  probe:raid10_read_request_4 (on raid10_read_request:77 in raid10)
+
+You can now use it in all perf tools, such as:
+
+        perf record -e probe:raid10_read_request_4 -aR sleep 1
+
+# In another window start up a heavy continuous read load on
+# /dev/md3.
+$ sudo perf record -e probe:raid10_read_request -gaR sleep 120
+
+# In syslog:
+Jan 11 17:10:38 hostname kernel: [1318771.689507] md/raid10:md3: nvme1n1p5: redirecting sector 656970992 to another mirror
+
+# "perf record" finishes:
+[ perf record: Woken up 2 times to write data ]
+[ perf record: Captured and wrote 0.757 MB perf.data (2 samples) ]
+$ sudo perf report --stdio
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2  of event 'probe:raid10_read_request'
+# Event count (approx.): 2
+#
+# Children      Self  Trace output
+# ........  ........  ..................
+#
+   100.00%   100.00%  (ffffffffc0127e42)
+            |
+            ---__libc_read
+               entry_SYSCALL_64_after_hwframe
+               do_syscall_64
+               ksys_read
+               vfs_read
+               new_sync_read
+               generic_file_read_iter
+               ondemand_readahead
+               __do_page_cache_readahead
+               read_pages
+               mpage_readpages
+               submit_bio
+               generic_make_request
+               md_make_request
+               md_handle_request
+               raid10_make_request
+               raid10_read_request
+
+So I still don't know why this is considered an error and worth
+logging about, but at least I don't see any obvious error paths
+there.
+
+I will continue to dig in to it ("perf" is all new to me), but if
+anyone happens to know why it does this please do put me out of my
+misery!
+
+BTW this is a different host to the one I previously saw it on. As I
+say I have seen this message occasionally for years now, on multiple
+machines and multiple versions of Debian.
+
+Cheers,
+Andy
