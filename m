@@ -2,115 +2,181 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA8DCC433DB
-	for <linux-raid@archiver.kernel.org>; Tue, 12 Jan 2021 02:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83F1EC43381
+	for <linux-raid@archiver.kernel.org>; Tue, 12 Jan 2021 02:56:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CF1F23159
-	for <linux-raid@archiver.kernel.org>; Tue, 12 Jan 2021 02:04:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53AEA22D6E
+	for <linux-raid@archiver.kernel.org>; Tue, 12 Jan 2021 02:56:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727058AbhALCES (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 11 Jan 2021 21:04:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46156 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725601AbhALCER (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Jan 2021 21:04:17 -0500
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EAF5C061575
-        for <linux-raid@vger.kernel.org>; Mon, 11 Jan 2021 18:03:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com; s=alpha;
-        h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:Subject:To:From:Date; bh=x6WnEUA7+yGWJlBP9H2A45ipBgwXk7eREBBzV2ILWP4=;
-        b=srw0Ddncn2zpxv2UgptGCbluFjqUKSe83Ux4uTuKY/JiNWxSTeHIkdkvqLfUI/ELg+4cVEMZb4HRb6yl+kQGLV6uR8q+ixRtRUk03D1AQgS6+AP9USovo0l7qMqALhPi/otXI6FJx/7Q5w2xicgDQ6tSOd0I7IFtae3Gsq+4KUSIrtGDLF6o6AXF9MWf+CB3ikm4HvBtvLytdwj/Xx8FyrQY7ecJjxQPiekbOdPkDMX3mbA41Wiy2fZfECdUJSZsFHEBczDSg8zydazw04MfHgvZsZa3jL4n1xflFmqXoCHsGHAmEI6LxQXz5hDWeQ8FiLy+Xmg3hj8ydmyJTxMSMA==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.84_2)
-        (envelope-from <andy@strugglers.net>)
-        id 1kz920-000156-1v
-        for linux-raid@vger.kernel.org; Tue, 12 Jan 2021 02:03:36 +0000
-Date:   Tue, 12 Jan 2021 02:03:36 +0000
-From:   Andy Smith <andy@strugglers.net>
-To:     linux-raid@vger.kernel.org
-Subject: Re: "md/raid10:md5: sdf: redirecting sector 2979126480 to another
- mirror"
-Message-ID: <20210112020336.GJ3712@bitfolk.com>
-Mail-Followup-To: linux-raid@vger.kernel.org
-References: <20210106232716.GY3712@bitfolk.com>
- <a5c10248-9835-dec9-2ac2-a72b9a49deff@cloud.ionos.com>
+        id S1731515AbhALC4e (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 11 Jan 2021 21:56:34 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:57297 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728044AbhALC4d (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 11 Jan 2021 21:56:33 -0500
+X-IronPort-AV: E=Sophos;i="5.79,340,1602518400"; 
+   d="scan'208";a="103383793"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 12 Jan 2021 10:55:38 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id C0A054CE602D;
+        Tue, 12 Jan 2021 10:55:35 +0800 (CST)
+Received: from irides.mr (10.167.225.141) by G08CNEXMBPEKD05.g08.fujitsu.local
+ (10.167.33.204) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 12 Jan
+ 2021 10:55:36 +0800
+Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
+ mapping
+To:     Jan Kara <jack@suse.cz>
+CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
+        <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
+        <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
+References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
+ <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
+ <20210106154132.GC29271@quack2.suse.cz>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
+Date:   Tue, 12 Jan 2021 10:55:34 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <20210106154132.GC29271@quack2.suse.cz>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <a5c10248-9835-dec9-2ac2-a72b9a49deff@cloud.ionos.com>
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL:  http://strugglers.net/wiki/User:Andy
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD04.g08.fujitsu.local (10.167.33.200) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: C0A054CE602D.AADE7
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Guoqing,
 
-Thanks for following up on this. I have a couple of questions.
 
-On Tue, Jan 12, 2021 at 01:36:55AM +0100, Guoqing Jiang wrote:
-> On 1/7/21 00:27, Andy Smith wrote:
-> >err_rdev there can only be set inside the block above that starts
-> >with:
-> >
-> >     if (r10_bio->devs[slot].rdev) {
-> >         /*
-> >          * This is an error retry, but we cannot
-> >          * safely dereference the rdev in the r10_bio,
-> >          * we must use the one in conf.
-> >
-> >…but why is this an error retry? Nothing was logged so how do I find
-> >out what the error was?
+On 2021/1/6 下午11:41, Jan Kara wrote:
+> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
+>> The current memory_failure_dev_pagemap() can only handle single-mapped
+>> dax page for fsdax mode.  The dax page could be mapped by multiple files
+>> and offsets if we let reflink feature & fsdax mode work together.  So,
+>> we refactor current implementation to support handle memory failure on
+>> each file and offset.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 > 
-> This is because handle_read_error also calls raid10_read_request, pls see
-> commit 545250f2480 ("md/raid10: simplify handle_read_error()").
+> Overall this looks OK to me, a few comments below.
+> 
+>> ---
+>>   fs/dax.c            | 21 +++++++++++
+>>   include/linux/dax.h |  1 +
+>>   include/linux/mm.h  |  9 +++++
+>>   mm/memory-failure.c | 91 ++++++++++++++++++++++++++++++++++-----------
+>>   4 files changed, 100 insertions(+), 22 deletions(-)
 
-So if I understand you correctly, this is a consequence of
-raid10_read_request being reworked so that it can be called by
-handle_read_error, but in my case it is not being called by
-handle_read_error but instead raid10_make_request and is incorrectly
-going down an error path and reporting a redirected read?
+...
 
-From my stack trace it seemed that it was just
-raid10.c:__make_request that was calling raid10_read_request but I
-could not see where in __make_request the r10_bio->devs[slot].rdev
-was being set, enabling the above test to succeed. All I could see
-was a memset to 0.
+>>   
+>> @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct *tsk, struct page *p,
+>>   	}
+>>   
+>>   	tk->addr = page_address_in_vma(p, vma);
+>> -	if (is_zone_device_page(p))
+>> -		tk->size_shift = dev_pagemap_mapping_shift(p, vma);
+>> -	else
+>> +	if (is_zone_device_page(p)) {
+>> +		if (is_device_fsdax_page(p))
+>> +			tk->addr = vma->vm_start +
+>> +					((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
+> 
+> It seems strange to use 'pgoff' for dax pages and not for any other page.
+> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
+> avoid this special casing...
 
-I understand that your patch makes it so this test can no longer
-succeed when being called by __make_request, meaning that aside from
-not logging about a redirected read it will also not do the
-rcu_read_lock() / rcu_dereference() / rcu_read_unlock() that's in
-that if block. Is that a significant amount of work that is being
-needlessly done right now or is it trivial?
+Because one fsdax page can be shared by multiple pgoffs.  I have to pass 
+each pgoff in each iteration to calculate the address in vma (for 
+tk->addr).  Other kinds of pages don't need this.  They can get their 
+unique address by calling "page_address_in_vma()".
 
-I'm trying to understand how big of a problem this is, beyond some
-spurious logging.
+So, I added this fsdax case here.  This patchset only implemented the 
+fsdax case, other cases also need to be added here if to be implemented.
 
-Right now when it is logging about redirecting a read, does that
-mean that it isn't actually redirecting a read? That is, when it
-says:
 
-Jan 11 17:10:40 hostname kernel: [1318773.480077] md/raid10:md3: nvme1n1p5: redirecting sector 699122984 to another mirror
+--
+Thanks,
+Ruan Shiyang.
 
-in the absence of any other error logging it is in fact its first
-try at reading and it will really be using device nvme1n1p5 (rdev)
-to satisfy that?
+> 
+>> +		tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
+>> +	} else
+>>   		tk->size_shift = page_shift(compound_head(p));
+>>   
+>>   	/*
+>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
+>>   			if (!page_mapped_in_vma(page, vma))
+>>   				continue;
+>>   			if (vma->vm_mm == t->mm)
+>> -				add_to_kill(t, page, vma, to_kill);
+>> +				add_to_kill(t, page, NULL, 0, vma, to_kill);
+>>   		}
+>>   	}
+>>   	read_unlock(&tasklist_lock);
+>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page *page, struct list_head *to_kill,
+>>   /*
+>>    * Collect processes when the error hit a file mapped page.
+>>    */
+>> -static void collect_procs_file(struct page *page, struct list_head *to_kill,
+>> -				int force_early)
+>> +static void collect_procs_file(struct page *page, struct address_space *mapping,
+>> +		pgoff_t pgoff, struct list_head *to_kill, int force_early)
+>>   {
+>>   	struct vm_area_struct *vma;
+>>   	struct task_struct *tsk;
+>> -	struct address_space *mapping = page->mapping;
+>> -	pgoff_t pgoff;
+>>   
+>>   	i_mmap_lock_read(mapping);
+>>   	read_lock(&tasklist_lock);
+>> -	pgoff = page_to_pgoff(page);
+>>   	for_each_process(tsk) {
+>>   		struct task_struct *t = task_early_kill(tsk, force_early);
+>> -
+>>   		if (!t)
+>>   			continue;
+>> -		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
+>> -				      pgoff) {
+>> +		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
+>>   			/*
+>>   			 * Send early kill signal to tasks where a vma covers
+>>   			 * the page but the corrupted page is not necessarily
+>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
+>>   			 * to be informed of all such data corruptions.
+>>   			 */
+>>   			if (vma->vm_mm == t->mm)
+>> -				add_to_kill(t, page, vma, to_kill);
+>> +				add_to_kill(t, page, mapping, pgoff, vma, to_kill);
+>>   		}
+>>   	}
+>>   	read_unlock(&tasklist_lock);
+>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, struct list_head *tokill,
+>>   	if (PageAnon(page))
+>>   		collect_procs_anon(page, tokill, force_early);
+>>   	else
+>> -		collect_procs_file(page, tokill, force_early);
+>> +		collect_procs_file(page, page->mapping, page_to_pgoff(page),
+> 
+> Why not use page_mapping() helper here? It would be safer for THPs if they
+> ever get here...
+> 
+> 								Honza
+> 
 
-I suppose I am also confused why this happens so rarely. I can only
-encourage it to happen a couple of times by putting the array under
-very heavy read load, and it only seems to happen with pretty high
-performing arrays (all SSD). But perhaps that is the result of the
-rate-limited logging with pr_err_ratelimited() causing me to only
-see very few of the actual events.
 
-Thanks again,
-Andy
