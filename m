@@ -2,235 +2,465 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EADBC072B1
-	for <linux-raid@archiver.kernel.org>; Tue, 12 Jan 2021 21:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1187C433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jan 2021 09:00:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DE9623125
-	for <linux-raid@archiver.kernel.org>; Tue, 12 Jan 2021 21:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 481A923371
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jan 2021 09:00:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732704AbhALVqq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 12 Jan 2021 16:46:46 -0500
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:65480 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2437968AbhALVhC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 12 Jan 2021 16:37:02 -0500
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 10CLWtmx020828;
-        Tue, 12 Jan 2021 13:36:19 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=hF0hriGfy1XMZnfNzRgCATJ0L3FKoFzOJIaWzlMjvJU=;
- b=QVkXx1a18F8kdKxAojbdU8rAJw1OAnYB8Z18NbVS+AE1pPmZetNTCXV9qnwnb7s1L/X4
- NFjMQILiHjucusFAE1TLZNBR5Ildlvr/COckifK4clG38Ml5Sm3q1CeyHYxWem1qpx3C
- 0L14V2wxJE9hvdOoM5VzAjpx4XSgiYip9cM= 
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com with ESMTP id 361fp2sp82-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 12 Jan 2021 13:36:18 -0800
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (100.104.98.9) by
- o365-in.thefacebook.com (100.104.94.198) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 12 Jan 2021 13:36:18 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=METMWbKrPNeJY6SJsQs4euD4RyUjQS9sk8eaBIDHMu2Q6nK2YqKJgAuK5cfDRBBTfrRKboiWdq0BKtg10NNH0wU4zSMJN3HefK+8G4Xmok15XdBApaM3RwDHPPj2mbT1HYEMEH1ruhOG/8mS/cmRl7GkFz0pPPczN8it3lT5vvNBbZVxK5PbohCLypIpu+e6MeDY4HBQaDcgqTArdrRmCVAnu6h4JtFySQ5cUWKAIvEvlWdXKRFyn7NRKQYNSkLrVMAz1ALpyGM7lQWxdoAXeHfMWFlMWMnM2gui3DgQye7xsPVktkq79KqfleQeLG/9nBGgFarqf7Ie2IfEsu75Zg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hF0hriGfy1XMZnfNzRgCATJ0L3FKoFzOJIaWzlMjvJU=;
- b=BWf8Xp9MSzrhPXR6+2GbKA+zxEf+ad/QdKxIBwf6FByCWnHhdq4UxnPtQ1EJ+SJHZMUy3KANeFvWrfYfLzD4uy+7i/EWt70EPahKKuIugmp9jYHU6ChzOyln7/H/9qwyqtqSqeAyHCGLk+f1api2bEr9apodDUQJzUx1L5wve0jI8malSNbkWnA2xxU+zKo7Kp5XdfP+J+oOS6eZev8rrFwtGmjhjc4IeK+hofRUsKcX6IKEBrvqnoqQmMCpJWfkoRBVAO+nugzF83I+8KV4pOHNKyCgt26JYUzHXwl41qa9PLFoPylZpJfDMjKGRW+s82AsHnOU03bV1M8QJOxkSA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hF0hriGfy1XMZnfNzRgCATJ0L3FKoFzOJIaWzlMjvJU=;
- b=J08bYPCZiFiFhT5x91z90El6TEZJICwRHCNRMLyXsCVFVYvI+M0AfhslvAmwBPPD9bT6fV4KTCWdu/IOlX2tuRqN5gl+bI4Sj2doT3FM0nT2Tzn8orgvagqfwBtH/FnIr7jMLkuS6rMSC2qyKc9+6AEQZ2yxItcazBNVxjw8t5Q=
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
- by BYAPR15MB3000.namprd15.prod.outlook.com (2603:10b6:a03:b1::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6; Tue, 12 Jan
- 2021 21:36:17 +0000
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::c97:58e4:ee9:1dc0]) by BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::c97:58e4:ee9:1dc0%7]) with mapi id 15.20.3763.010; Tue, 12 Jan 2021
- 21:36:16 +0000
-From:   Song Liu <songliubraving@fb.com>
-To:     Xiao Ni <xni@redhat.com>
-CC:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "ncroxon@redhat.com" <ncroxon@redhat.com>,
-        "heinzm@redhat.com" <heinzm@redhat.com>,
-        "djeffery@redhat.com" <djeffery@redhat.com>
-Subject: Re: [PATCH 1/1] Set prev_flush_start and flush_bio in an atomic way
-Thread-Topic: [PATCH 1/1] Set prev_flush_start and flush_bio in an atomic way
-Thread-Index: AQHWzr5vTEBlzEimgkSykEp35O2G56oj6+6AgADMfYA=
-Date:   Tue, 12 Jan 2021 21:36:16 +0000
-Message-ID: <45D2E6EF-116D-405D-A708-C4397B19393C@fb.com>
-References: <1607582012-9501-1-git-send-email-xni@redhat.com>
- <f1f2ef45-6fc0-4593-d312-b961a0fb1174@redhat.com>
-In-Reply-To: <f1f2ef45-6fc0-4593-d312-b961a0fb1174@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3654.40.0.2.32)
-authentication-results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=fb.com;
-x-originating-ip: [2620:10d:c090:400::5:f14a]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 35c1632f-ea88-4ebc-980e-08d8b74217bf
-x-ms-traffictypediagnostic: BYAPR15MB3000:
-x-microsoft-antispam-prvs: <BYAPR15MB3000103D668B7F79B769BA61B3AA0@BYAPR15MB3000.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: vGj6juhlnbGcvlglCwM4+joJJKigCNhqvGDJHoLklRMgvpeXxMaxqFUJJLxs3FjJ2xQ7ZtevdorlGxeYTpnRfXXyDVxQanaZbOJeQhCetZzeFU1hmiZP0Q1EctD5mmmGw71S6LokQLAVb2Z+DWp0cA1mJIjdEqNcP2Z1bhoM6E6ZX4Gw0hkBJU8krPM3UwbWdrPWxwLADXNC2op064EunGDMw4CaIYrVoQSU7XFEbxzWsAkSCIlIZfNDWrh4tng6SsKMzOXE4weGfSGjG4ZSJAUyMJHmfOYiplYcONPz7AzrmtAcjZOwrH9Jgs+vBVdmvc/xOtpqsVxkZMCBODRDpsrfACmFQ0Cj4fmNsQB18UQE1MyAUrY8HSzbDBknNg/t4Ny3gMkf4HfplRbGpsf7tcLm4HZoBzCu1WmOf9PcTDY9KmUnr55DWur1mNugCy86
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(376002)(39860400002)(346002)(136003)(396003)(53546011)(8676002)(6506007)(71200400001)(6486002)(66476007)(316002)(478600001)(2906002)(2616005)(186003)(4326008)(91956017)(66556008)(64756008)(86362001)(54906003)(8936002)(66946007)(6512007)(33656002)(83380400001)(76116006)(36756003)(5660300002)(6916009)(66446008)(45980500001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?Sls7sMOdKat2KBJ4Gbr5j77o/fbZyQN8icdBmztQM1S/I6g4TyLZAWNA8YLC?=
- =?us-ascii?Q?YKHnBDirJQqhbrNJP9BgQrpMAVUrc2hs7/6BwZMWHHYLf6Gd7zA1yy6kkHeW?=
- =?us-ascii?Q?XpQl2rAEDkLC+kedUpuQwm26Q/bwnd/JVN661X80ukABeclJFtEPOD6G6vda?=
- =?us-ascii?Q?lnQwqAYpsYfmRq0XbHHL8680rf1ILUANYBV0j/NHbDrK1hosGGPY71rLdC1k?=
- =?us-ascii?Q?7gdOyGfwziZ5pEXErnoxT0yCBW8psTwl+DWXild5ycYg255rwnO5569Kgtrh?=
- =?us-ascii?Q?dYsENdGvV15CfLMZFTX0+GMxZSCyV+LXpzkOHkalNpxvGneLl7Fdx7wgv6Wa?=
- =?us-ascii?Q?7MkKJYRdWPE9ksl/USRSCZv4C+ALxAhYHAGQIZiv7iNeDTQxmIOYAckOj05O?=
- =?us-ascii?Q?1uvGoSGkzGEgpP3hIO2eYncWwGFvHiCCUbAQCmJ30bvVGMubQg99n3ljWVcb?=
- =?us-ascii?Q?OxCkdrt51t8XAxg8fwpfdmyUfkP2O5rQaXJdBNB8oAMonCJ3Rq+zynA/JmS1?=
- =?us-ascii?Q?cRWb0+ph0HHFw1CjaM03I3TpthuIyrGEkJoKG+83C2Aosp7fDzXea+jeWKPj?=
- =?us-ascii?Q?wW3zZR8pWBuK7kJNu/QYXZt8PoBPEgOHfc2ZJCOr5YtAztjRtOJJ+47YWlqk?=
- =?us-ascii?Q?FmcuBvutmbU2FoTQuRpBcYLvOpZ9RHotn3OnWR5WIMTE2xeYfjl8HvvElns2?=
- =?us-ascii?Q?FMs5tysnCnM290AEja3NMS6LWeNBc7Z4ZgJm1KWX4FjmO6F2MQJPVAHcyMMK?=
- =?us-ascii?Q?8SyQUeAu+vp+0RWd4AOiXo1YP6+jJrDGvkGcZvIr8LX1Aw7t0VJ50APaoxi+?=
- =?us-ascii?Q?6S9VkgOiFstMmoPUbtKCELB1W86QINFAqTnBuPzqY3X/Z7TDZ+Baki2v30Bn?=
- =?us-ascii?Q?f6tBb6N9+nCNQCgRZyH+UNB++R2zuNDm0UWumQf3vMowWcSu0MiDGmH4Fi1U?=
- =?us-ascii?Q?Uo5gJujbvEFY/lxE4fWS3vPMVxrDsidnvdMgJGy24vivBuLAYSr9SvHx4ZBQ?=
- =?us-ascii?Q?zlbW5sZUhwsrvHaW1fzzeEENPQPrMb3qOS4B6vlRU3CDXcc=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <4531F0BDA9F87A4B81574A5475F9DBE7@namprd15.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1727369AbhAMJAU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jan 2021 04:00:20 -0500
+Received: from mga07.intel.com ([134.134.136.100]:18184 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727056AbhAMJAU (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 13 Jan 2021 04:00:20 -0500
+IronPort-SDR: k4xudO9S9s5TFLJe/+JKwGJtilJswCoio5ZAZWmr5N/5OeGciIBZi5ZMbvg6MJPXGVhyBjOKDn
+ ambX078bubpQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9862"; a="242248333"
+X-IronPort-AV: E=Sophos;i="5.79,343,1602572400"; 
+   d="scan'208";a="242248333"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 00:58:57 -0800
+IronPort-SDR: jhNYJTDsXZiGqm3UB+mG410j7v4gAl6CPps8NscVxZsXkIxkq0Tccdx2NkqrbpKyh4wACMMLRH
+ puWN2V2n+cCw==
+X-IronPort-AV: E=Sophos;i="5.79,343,1602572400"; 
+   d="scan'208";a="381767223"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 00:58:55 -0800
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH] imsm: use saved fds during migration
+Date:   Wed, 13 Jan 2021 09:58:45 +0100
+Message-Id: <20210113085845.26881-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 35c1632f-ea88-4ebc-980e-08d8b74217bf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jan 2021 21:36:16.6342
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: K9AJbZvesQqxwKFMqez5NBh4L2vUs0f9Q7WrwEzyA0zMb77kFwvLdIhnjrPiHTJ4sdOI+KCq9G2m4AZ8mw3rLQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB3000
-X-OriginatorOrg: fb.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-12_16:2021-01-12,2021-01-12 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 spamscore=0
- impostorscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 suspectscore=0 mlxscore=0 bulkscore=0 phishscore=0
- adultscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101120128
-X-FB-Internal: deliver
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+IMSM super keeps open descriptors in super->disks structure, they are
+reliable and should be chosen if possible. The repeatedly called open
+and close during reshape generates redundant udev change events on
+each member drive.
 
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ super-intel.c | 208 +++++++++++++-------------------------------------
+ 1 file changed, 54 insertions(+), 154 deletions(-)
 
-> On Jan 12, 2021, at 1:24 AM, Xiao Ni <xni@redhat.com> wrote:
->=20
-> Hi Song
->=20
-> Could you review this patch
->=20
-
-I am sorry for the delay. Just applied it to md-fixes.=20
-
-I made some changes to it
- 1. add md: prefix to the commit log subject;
- 2. Adjust the width of the commit log to 75 characters.=20
-
-For future tests please run ./scripts/checkpatch.pl on it.=20
-
-Thanks,
-Song
-
-> Regards
-> Xiao
->=20
-> On 12/10/2020 02:33 PM, Xiao Ni wrote:
->> One customer reports a crash problem which causes by flush request. It t=
-riggers a warning
->> before crash.
->>=20
->>         /* new request after previous flush is completed */
->>         if (ktime_after(req_start, mddev->prev_flush_start)) {
->>                 WARN_ON(mddev->flush_bio);
->>                 mddev->flush_bio =3D bio;
->>                 bio =3D NULL;
->>         }
->>=20
->> The WARN_ON is triggered. We use spin lock to protect prev_flush_start a=
-nd flush_bio
->> in md_flush_request. But there is no lock protection in md_submit_flush_=
-data. It can
->> set flush_bio to NULL first because of compiler reordering write instruc=
-tions.
->>=20
->> For example, flush bio1 sets flush bio to NULL first in md_submit_flush_=
-data. An
->> interrupt or vmware causing an extended stall happen between updating fl=
-ush_bio and
->> prev_flush_start. Because flush_bio is NULL, flush bio2 can get the lock=
- and submit
->> to underlayer disks. Then flush bio1 updates prev_flush_start after the =
-interrupt or
->> exteneded stall.
->>=20
->> Then flush bio3 enters in md_flush_request. The start time req_start is =
-behind
->> prev_flush_start. The flush_bio is not NULL(flush bio2 hasn't finished).=
- So it can
->> trigger the WARN_ON now. Then it calls INIT_WORK again. INIT_WORK() will=
- re-initialize
->> the list pointers in the work_struct, which then can result in a corrupt=
-ed work list
->> and the work_struct queued a second time. With the work list corrupted, =
-it can lead
->> in invalid work items being used and cause a crash in process_one_work.
->>=20
->> We need to make sure only one flush bio can be handled at one same time.=
- So add
->> spin lock in md_submit_flush_data to protect prev_flush_start and flush_=
-bio in
->> an atomic way.
->>=20
->> Reviewed-by: David Jeffery <djeffery@redhat.com>
->> Signed-off-by: Xiao Ni <xni@redhat.com>
->> ---
->>  drivers/md/md.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>=20
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index c42af46..2746d5c 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -639,8 +639,10 @@ static void md_submit_flush_data(struct work_struct=
- *ws)
->>  	 * could wait for this and below md_handle_request could wait for thos=
-e
->>  	 * bios because of suspend check
->>  	 */
->> +	spin_lock_irq(&mddev->lock);
->>  	mddev->prev_flush_start =3D mddev->start_flush;
->>  	mddev->flush_bio =3D NULL;
->> +	spin_unlock_irq(&mddev->lock);
->>  	wake_up(&mddev->sb_wait);
->>    	if (bio->bi_iter.bi_size =3D=3D 0) {
->=20
+diff --git a/super-intel.c b/super-intel.c
+index 715febf..c3466d0 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -3055,15 +3055,13 @@ static struct imsm_dev *imsm_get_device_during_migration(
+  *		sector of disk)
+  * Parameters:
+  *	super	: imsm internal array info
+- *	info	: general array info
+  * Returns:
+  *	 0 : success
+  *	-1 : fail
+  *	-2 : no migration in progress
+  ******************************************************************************/
+-static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
++static int load_imsm_migr_rec(struct intel_super *super)
+ {
+-	struct mdinfo *sd;
+ 	struct dl *dl;
+ 	char nm[30];
+ 	int retval = -1;
+@@ -3071,6 +3069,7 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	struct imsm_dev *dev;
+ 	struct imsm_map *map;
+ 	int slot = -1;
++	int keep_fd = 1;
+ 
+ 	/* find map under migration */
+ 	dev = imsm_get_device_during_migration(super);
+@@ -3079,44 +3078,40 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	if (dev == NULL)
+ 		return -2;
+ 
+-	if (info) {
+-		for (sd = info->devs ; sd ; sd = sd->next) {
+-			/* read only from one of the first two slots */
+-			if ((sd->disk.raid_disk < 0) ||
+-			    (sd->disk.raid_disk > 1))
+-				continue;
++	map = get_imsm_map(dev, MAP_0);
++	if (!map)
++		return -1;
+ 
+-			sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+-			fd = dev_open(nm, O_RDONLY);
+-			if (fd >= 0)
+-				break;
+-		}
+-	}
+-	if (fd < 0) {
+-		map = get_imsm_map(dev, MAP_0);
+-		for (dl = super->disks; dl; dl = dl->next) {
+-			/* skip spare and failed disks
+-			*/
+-			if (dl->index < 0)
+-				continue;
+-			/* read only from one of the first two slots */
+-			if (map)
+-				slot = get_imsm_disk_slot(map, dl->index);
+-			if (map == NULL || slot > 1 || slot < 0)
+-				continue;
++	for (dl = super->disks; dl; dl = dl->next) {
++		/* skip spare and failed disks
++		 */
++		if (dl->index < 0)
++			continue;
++		/* read only from one of the first two slots
++		 */
++		slot = get_imsm_disk_slot(map, dl->index);
++		if (slot > 1 || slot < 0)
++			continue;
++
++		if (dl->fd < 0) {
+ 			sprintf(nm, "%d:%d", dl->major, dl->minor);
+ 			fd = dev_open(nm, O_RDONLY);
+-			if (fd >= 0)
++			if (fd >= 0) {
++				keep_fd = 0;
+ 				break;
++			}
++		} else {
++			fd = dl->fd;
++			break;
+ 		}
+ 	}
++
+ 	if (fd < 0)
+-		goto out;
++		return retval;
+ 	retval = read_imsm_migr_rec(fd, super);
+-
+-out:
+-	if (fd >= 0)
++	if (!keep_fd)
+ 		close(fd);
++
+ 	return retval;
+ }
+ 
+@@ -3177,8 +3172,6 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 	struct intel_super *super = st->sb;
+ 	unsigned int sector_size = super->sector_size;
+ 	unsigned long long dsize;
+-	char nm[30];
+-	int fd = -1;
+ 	int retval = -1;
+ 	struct dl *sd;
+ 	int len;
+@@ -3211,26 +3204,21 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 		if (map == NULL || slot > 1 || slot < 0)
+ 			continue;
+ 
+-		sprintf(nm, "%d:%d", sd->major, sd->minor);
+-		fd = dev_open(nm, O_RDWR);
+-		if (fd < 0)
+-			continue;
+-		get_dev_size(fd, NULL, &dsize);
+-		if (lseek64(fd, dsize - (MIGR_REC_SECTOR_POSITION*sector_size),
++		get_dev_size(sd->fd, NULL, &dsize);
++		if (lseek64(sd->fd, dsize - (MIGR_REC_SECTOR_POSITION *
++		    sector_size),
+ 		    SEEK_SET) < 0) {
+ 			pr_err("Cannot seek to anchor block: %s\n",
+ 			       strerror(errno));
+ 			goto out;
+ 		}
+-		if ((unsigned int)write(fd, super->migr_rec_buf,
++		if ((unsigned int)write(sd->fd, super->migr_rec_buf,
+ 		    MIGR_REC_BUF_SECTORS*sector_size) !=
+ 		    MIGR_REC_BUF_SECTORS*sector_size) {
+ 			pr_err("Cannot write migr record block: %s\n",
+ 			       strerror(errno));
+ 			goto out;
+ 		}
+-		close(fd);
+-		fd = -1;
+ 	}
+ 	if (sector_size == 4096)
+ 		convert_from_4k_imsm_migr_rec(super);
+@@ -3256,8 +3244,6 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 
+ 	retval = 0;
+  out:
+-	if (fd >= 0)
+-		close(fd);
+ 	return retval;
+ }
+ 
+@@ -5011,7 +4997,7 @@ static int load_super_imsm_all(struct supertype *st, int fd, void **sbp,
+ 	}
+ 
+ 	/* load migration record */
+-	err = load_imsm_migr_rec(super, NULL);
++	err = load_imsm_migr_rec(super);
+ 	if (err == -1) {
+ 		/* migration is in progress,
+ 		 * but migr_rec cannot be loaded,
+@@ -5260,7 +5246,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ 	}
+ 
+ 	/* load migration record */
+-	if (load_imsm_migr_rec(super, NULL) == 0) {
++	if (load_imsm_migr_rec(super) == 0) {
+ 		/* Check for unsupported migration features */
+ 		if (check_mpb_migr_compatibility(super) != 0) {
+ 			pr_err("Unsupported migration detected");
+@@ -10381,21 +10367,6 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
+ 	}
+ }
+ 
+-static void close_targets(int *targets, int new_disks)
+-{
+-	int i;
+-
+-	if (!targets)
+-		return;
+-
+-	for (i = 0; i < new_disks; i++) {
+-		if (targets[i] >= 0) {
+-			close(targets[i]);
+-			targets[i] = -1;
+-		}
+-	}
+-}
+-
+ static int imsm_get_allowed_degradation(int level, int raid_disks,
+ 					struct intel_super *super,
+ 					struct imsm_dev *dev)
+@@ -10449,62 +10420,6 @@ static int imsm_get_allowed_degradation(int level, int raid_disks,
+ 	}
+ }
+ 
+-/*******************************************************************************
+- * Function:	open_backup_targets
+- * Description:	Function opens file descriptors for all devices given in
+- *		info->devs
+- * Parameters:
+- *	info		: general array info
+- *	raid_disks	: number of disks
+- *	raid_fds	: table of device's file descriptors
+- *	super		: intel super for raid10 degradation check
+- *	dev		: intel device for raid10 degradation check
+- * Returns:
+- *	 0 : success
+- *	-1 : fail
+- ******************************************************************************/
+-int open_backup_targets(struct mdinfo *info, int raid_disks, int *raid_fds,
+-			struct intel_super *super, struct imsm_dev *dev)
+-{
+-	struct mdinfo *sd;
+-	int i;
+-	int opened = 0;
+-
+-	for (i = 0; i < raid_disks; i++)
+-		raid_fds[i] = -1;
+-
+-	for (sd = info->devs ; sd ; sd = sd->next) {
+-		char *dn;
+-
+-		if (sd->disk.state & (1<<MD_DISK_FAULTY)) {
+-			dprintf("disk is faulty!!\n");
+-			continue;
+-		}
+-
+-		if (sd->disk.raid_disk >= raid_disks || sd->disk.raid_disk < 0)
+-			continue;
+-
+-		dn = map_dev(sd->disk.major,
+-			     sd->disk.minor, 1);
+-		raid_fds[sd->disk.raid_disk] = dev_open(dn, O_RDWR);
+-		if (raid_fds[sd->disk.raid_disk] < 0) {
+-			pr_err("cannot open component\n");
+-			continue;
+-		}
+-		opened++;
+-	}
+-	/* check if maximum array degradation level is not exceeded
+-	*/
+-	if ((raid_disks - opened) >
+-	    imsm_get_allowed_degradation(info->new_level, raid_disks,
+-					 super, dev)) {
+-		pr_err("Not enough disks can be opened.\n");
+-		close_targets(raid_fds, raid_disks);
+-		return -2;
+-	}
+-	return 0;
+-}
+-
+ /*******************************************************************************
+  * Function:	validate_container_imsm
+  * Description: This routine validates container after assemble,
+@@ -10745,13 +10660,11 @@ void init_migr_record_imsm(struct supertype *st, struct imsm_dev *dev,
+ 	int new_data_disks;
+ 	unsigned long long dsize, dev_sectors;
+ 	long long unsigned min_dev_sectors = -1LLU;
+-	struct mdinfo *sd;
+-	char nm[30];
+-	int fd;
+ 	struct imsm_map *map_dest = get_imsm_map(dev, MAP_0);
+ 	struct imsm_map *map_src = get_imsm_map(dev, MAP_1);
+ 	unsigned long long num_migr_units;
+ 	unsigned long long array_blocks;
++	struct dl *dl_disk = NULL;
+ 
+ 	memset(migr_rec, 0, sizeof(struct migr_record));
+ 	migr_rec->family_num = __cpu_to_le32(super->anchor->family_num);
+@@ -10780,16 +10693,14 @@ void init_migr_record_imsm(struct supertype *st, struct imsm_dev *dev,
+ 	migr_rec->post_migr_vol_cap_hi = dev->size_high;
+ 
+ 	/* Find the smallest dev */
+-	for (sd = info->devs ; sd ; sd = sd->next) {
+-		sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+-		fd = dev_open(nm, O_RDONLY);
+-		if (fd < 0)
++	for (dl_disk =  super->disks; dl_disk ; dl_disk = dl_disk->next) {
++		/* ignore spares in container */
++		if (dl_disk->index < 0)
+ 			continue;
+-		get_dev_size(fd, NULL, &dsize);
++		get_dev_size(dl_disk->fd, NULL, &dsize);
+ 		dev_sectors = dsize / 512;
+ 		if (dev_sectors < min_dev_sectors)
+ 			min_dev_sectors = dev_sectors;
+-		close(fd);
+ 	}
+ 	set_migr_chkp_area_pba(migr_rec, min_dev_sectors -
+ 					RAID_DISK_RESERVED_BLOCKS_IMSM_HI);
+@@ -10835,8 +10746,11 @@ int save_backup_imsm(struct supertype *st,
+ 
+ 	targets = xmalloc(new_disks * sizeof(int));
+ 
+-	for (i = 0; i < new_disks; i++)
+-		targets[i] = -1;
++	for (i = 0; i < new_disks; i++) {
++		struct dl *dl_disk = get_imsm_dl_disk(super, i);
++
++		targets[i] = dl_disk->fd;
++	}
+ 
+ 	target_offsets = xcalloc(new_disks, sizeof(unsigned long long));
+ 
+@@ -10849,10 +10763,6 @@ int save_backup_imsm(struct supertype *st,
+ 		target_offsets[i] -= start/data_disks;
+ 	}
+ 
+-	if (open_backup_targets(info, new_disks, targets,
+-				super, dev))
+-		goto abort;
+-
+ 	dest_layout = imsm_level_to_layout(map_dest->raid_level);
+ 	dest_chunk = __le16_to_cpu(map_dest->blocks_per_strip) * 512;
+ 
+@@ -10876,7 +10786,6 @@ int save_backup_imsm(struct supertype *st,
+ 
+ abort:
+ 	if (targets) {
+-		close_targets(targets, new_disks);
+ 		free(targets);
+ 	}
+ 	free(target_offsets);
+@@ -10903,7 +10812,7 @@ int save_checkpoint_imsm(struct supertype *st, struct mdinfo *info, int state)
+ 	unsigned long long blocks_per_unit;
+ 	unsigned long long curr_migr_unit;
+ 
+-	if (load_imsm_migr_rec(super, info) != 0) {
++	if (load_imsm_migr_rec(super) != 0) {
+ 		dprintf("imsm: ERROR: Cannot read migration record for checkpoint save.\n");
+ 		return 1;
+ 	}
+@@ -10954,8 +10863,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	unsigned long long read_offset;
+ 	unsigned long long write_offset;
+ 	unsigned unit_len;
+-	int *targets = NULL;
+-	int new_disks, i, err;
++	int new_disks, err;
+ 	char *buf = NULL;
+ 	int retval = 1;
+ 	unsigned int sector_size = super->sector_size;
+@@ -10963,6 +10871,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	unsigned long num_migr_units = get_num_migr_units(migr_rec);
+ 	char buffer[20];
+ 	int skipped_disks = 0;
++	struct dl *dl_disk;
+ 
+ 	err = sysfs_get_str(info, NULL, "array_state", (char *)buffer, 20);
+ 	if (err < 1)
+@@ -10995,37 +10904,34 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	unit_len = __le32_to_cpu(migr_rec->dest_depth_per_unit) * 512;
+ 	if (posix_memalign((void **)&buf, sector_size, unit_len) != 0)
+ 		goto abort;
+-	targets = xcalloc(new_disks, sizeof(int));
+ 
+-	if (open_backup_targets(info, new_disks, targets, super, id->dev)) {
+-		pr_err("Cannot open some devices belonging to array.\n");
+-		goto abort;
+-	}
++	for (dl_disk = super->disks; dl_disk; dl_disk = dl_disk->next) {
++		if (dl_disk->index < 0)
++			continue;
+ 
+-	for (i = 0; i < new_disks; i++) {
+-		if (targets[i] < 0) {
++		if (dl_disk->fd < 0) {
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if (lseek64(targets[i], read_offset, SEEK_SET) < 0) {
++		if (lseek64(dl_disk->fd, read_offset, SEEK_SET) < 0) {
+ 			pr_err("Cannot seek to block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if ((unsigned)read(targets[i], buf, unit_len) != unit_len) {
++		if (read(dl_disk->fd, buf, unit_len) != unit_len) {
+ 			pr_err("Cannot read copy area block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if (lseek64(targets[i], write_offset, SEEK_SET) < 0) {
++		if (lseek64(dl_disk->fd, write_offset, SEEK_SET) < 0) {
+ 			pr_err("Cannot seek to block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if ((unsigned)write(targets[i], buf, unit_len) != unit_len) {
++		if (write(dl_disk->fd, buf, unit_len) != unit_len) {
+ 			pr_err("Cannot restore block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+@@ -11049,12 +10955,6 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 		retval = 0;
+ 
+ abort:
+-	if (targets) {
+-		for (i = 0; i < new_disks; i++)
+-			if (targets[i])
+-				close(targets[i]);
+-		free(targets);
+-	}
+ 	free(buf);
+ 	return retval;
+ }
+-- 
+2.25.0
 
