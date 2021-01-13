@@ -2,188 +2,191 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACEE0C433E0
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jan 2021 10:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15DD6C433E6
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jan 2021 10:06:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FD4623359
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Jan 2021 10:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFCA82339D
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Jan 2021 10:06:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727160AbhAMKFg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Jan 2021 05:05:36 -0500
-Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:42756 "EHLO
-        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725873AbhAMKFg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 13 Jan 2021 05:05:36 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R811e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04420;MF=zhongjiang-ali@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0ULc.JMJ_1610532286;
-Received: from L-X1DSLVDL-1420.local(mailfrom:zhongjiang-ali@linux.alibaba.com fp:SMTPD_---0ULc.JMJ_1610532286)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Wed, 13 Jan 2021 18:04:47 +0800
-Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
- mapping
-To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>, Jan Kara <jack@suse.cz>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
- <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
- <20210106154132.GC29271@quack2.suse.cz>
- <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
-From:   zhong jiang <zhongjiang-ali@linux.alibaba.com>
-Message-ID: <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
-Date:   Wed, 13 Jan 2021 18:04:46 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:85.0)
- Gecko/20100101 Thunderbird/85.0
+        id S1727288AbhAMKGB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Jan 2021 05:06:01 -0500
+Received: from mga14.intel.com ([192.55.52.115]:35788 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727265AbhAMKF7 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 13 Jan 2021 05:05:59 -0500
+IronPort-SDR: iSOJBL9hwM3PC6w3DJD7Hiif7k89qozI1y4/PxWQH7DC6aLwsIHsl0a+slvaMBKPsic+tWsFC/
+ 1CYYiottOMUw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9862"; a="177404625"
+X-IronPort-AV: E=Sophos;i="5.79,344,1602572400"; 
+   d="scan'208";a="177404625"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 02:05:18 -0800
+IronPort-SDR: S2OxH43Q7w9FFHl/LWQfGeCDJ4p8zieTtDjtdd9GdoE9iVw8q0gPIqtvKdB6QV+c75JjwsIIEK
+ Y1LDvFTaBHtQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,344,1602572400"; 
+   d="scan'208";a="381789542"
+Received: from lkp-server01.sh.intel.com (HELO d5d1a9a2c6bb) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 13 Jan 2021 02:05:17 -0800
+Received: from kbuild by d5d1a9a2c6bb with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1kzd1g-0000Ac-Ox; Wed, 13 Jan 2021 10:05:16 +0000
+Date:   Wed, 13 Jan 2021 18:05:00 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ c5d9dcfb1d340591e04e976469ac38cf2dc1707a
+Message-ID: <5ffec5cc.5sTZImutK4/U4dUh%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git  md-fixes
+branch HEAD: c5d9dcfb1d340591e04e976469ac38cf2dc1707a  md: Set prev_flush_start and flush_bio in an atomic way
 
-On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
->
->
-> On 2021/1/6 下午11:41, Jan Kara wrote:
->> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
->>> The current memory_failure_dev_pagemap() can only handle single-mapped
->>> dax page for fsdax mode.  The dax page could be mapped by multiple 
->>> files
->>> and offsets if we let reflink feature & fsdax mode work together.  So,
->>> we refactor current implementation to support handle memory failure on
->>> each file and offset.
->>>
->>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
->>
->> Overall this looks OK to me, a few comments below.
->>
->>> ---
->>>   fs/dax.c            | 21 +++++++++++
->>>   include/linux/dax.h |  1 +
->>>   include/linux/mm.h  |  9 +++++
->>>   mm/memory-failure.c | 91 
->>> ++++++++++++++++++++++++++++++++++-----------
->>>   4 files changed, 100 insertions(+), 22 deletions(-)
->
-> ...
->
->>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct task_struct 
->>> *tsk, struct page *p,
->>>       }
->>>         tk->addr = page_address_in_vma(p, vma);
->>> -    if (is_zone_device_page(p))
->>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
->>> -    else
->>> +    if (is_zone_device_page(p)) {
->>> +        if (is_device_fsdax_page(p))
->>> +            tk->addr = vma->vm_start +
->>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
->>
->> It seems strange to use 'pgoff' for dax pages and not for any other 
->> page.
->> Why? I'd rather pass correct pgoff from all callers of add_to_kill() and
->> avoid this special casing...
->
-> Because one fsdax page can be shared by multiple pgoffs.  I have to 
-> pass each pgoff in each iteration to calculate the address in vma (for 
-> tk->addr).  Other kinds of pages don't need this. They can get their 
-> unique address by calling "page_address_in_vma()".
->
-IMO,   an fsdax page can be shared by multiple files rather than 
-multiple pgoffs if fs query support reflink.   Because an page only 
-located in an mapping(page->mapping is exclusive),  hence it  only has 
-an pgoff or index pointing at the node.
+elapsed time: 720m
 
-  or  I miss something for the feature ?  thanks,
+configs tested: 121
+configs skipped: 2
 
-> So, I added this fsdax case here.  This patchset only implemented the 
-> fsdax case, other cases also need to be added here if to be implemented.
->
->
-> -- 
-> Thanks,
-> Ruan Shiyang.
->
->>
->>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, tk->addr);
->>> +    } else
->>>           tk->size_shift = page_shift(compound_head(p));
->>>         /*
->>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
->>> *page, struct list_head *to_kill,
->>>               if (!page_mapped_in_vma(page, vma))
->>>                   continue;
->>>               if (vma->vm_mm == t->mm)
->>> -                add_to_kill(t, page, vma, to_kill);
->>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
->>>           }
->>>       }
->>>       read_unlock(&tasklist_lock);
->>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
->>> *page, struct list_head *to_kill,
->>>   /*
->>>    * Collect processes when the error hit a file mapped page.
->>>    */
->>> -static void collect_procs_file(struct page *page, struct list_head 
->>> *to_kill,
->>> -                int force_early)
->>> +static void collect_procs_file(struct page *page, struct 
->>> address_space *mapping,
->>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
->>>   {
->>>       struct vm_area_struct *vma;
->>>       struct task_struct *tsk;
->>> -    struct address_space *mapping = page->mapping;
->>> -    pgoff_t pgoff;
->>>         i_mmap_lock_read(mapping);
->>>       read_lock(&tasklist_lock);
->>> -    pgoff = page_to_pgoff(page);
->>>       for_each_process(tsk) {
->>>           struct task_struct *t = task_early_kill(tsk, force_early);
->>> -
->>>           if (!t)
->>>               continue;
->>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
->>> -                      pgoff) {
->>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
->>> pgoff) {
->>>               /*
->>>                * Send early kill signal to tasks where a vma covers
->>>                * the page but the corrupted page is not necessarily
->>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
->>> *page, struct list_head *to_kill,
->>>                * to be informed of all such data corruptions.
->>>                */
->>>               if (vma->vm_mm == t->mm)
->>> -                add_to_kill(t, page, vma, to_kill);
->>> +                add_to_kill(t, page, mapping, pgoff, vma, to_kill);
->>>           }
->>>       }
->>>       read_unlock(&tasklist_lock);
->>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
->>> struct list_head *tokill,
->>>       if (PageAnon(page))
->>>           collect_procs_anon(page, tokill, force_early);
->>>       else
->>> -        collect_procs_file(page, tokill, force_early);
->>> +        collect_procs_file(page, page->mapping, page_to_pgoff(page),
->>
->> Why not use page_mapping() helper here? It would be safer for THPs if 
->> they
->> ever get here...
->>
->>                                 Honza
->>
->
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                         shannon_defconfig
+powerpc                       maple_defconfig
+arm                              zx_defconfig
+mips                            e55_defconfig
+arm                       spear13xx_defconfig
+sh                           se7750_defconfig
+powerpc                     ep8248e_defconfig
+arm                         lubbock_defconfig
+sh                        apsh4ad0a_defconfig
+sh                           se7343_defconfig
+powerpc64                        alldefconfig
+arm                          moxart_defconfig
+powerpc                      arches_defconfig
+arm                             rpc_defconfig
+arc                        nsimosci_defconfig
+m68k                          multi_defconfig
+xtensa                generic_kc705_defconfig
+mips                      bmips_stb_defconfig
+sh                             espt_defconfig
+arm                            xcep_defconfig
+sh                            migor_defconfig
+arm                        oxnas_v6_defconfig
+mips                         tb0219_defconfig
+sh                        edosk7760_defconfig
+mips                        jmr3927_defconfig
+mips                  decstation_64_defconfig
+powerpc                      ep88xc_defconfig
+sh                          rsk7264_defconfig
+mips                       rbtx49xx_defconfig
+arm                        spear6xx_defconfig
+arm                         s3c6400_defconfig
+powerpc                     pseries_defconfig
+arc                              alldefconfig
+arc                     nsimosci_hs_defconfig
+arm                         lpc18xx_defconfig
+sh                ecovec24-romimage_defconfig
+mips                        qi_lb60_defconfig
+um                            kunit_defconfig
+arm                           sunxi_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                               tinyconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a002-20210113
+i386                 randconfig-a005-20210113
+i386                 randconfig-a006-20210113
+i386                 randconfig-a003-20210113
+i386                 randconfig-a001-20210113
+i386                 randconfig-a004-20210113
+i386                 randconfig-a012-20210112
+i386                 randconfig-a011-20210112
+i386                 randconfig-a016-20210112
+i386                 randconfig-a013-20210112
+i386                 randconfig-a015-20210112
+i386                 randconfig-a014-20210112
+i386                 randconfig-a012-20210113
+i386                 randconfig-a011-20210113
+i386                 randconfig-a016-20210113
+i386                 randconfig-a013-20210113
+i386                 randconfig-a015-20210113
+i386                 randconfig-a014-20210113
+x86_64               randconfig-a006-20210113
+x86_64               randconfig-a004-20210113
+x86_64               randconfig-a001-20210113
+x86_64               randconfig-a005-20210113
+x86_64               randconfig-a003-20210113
+x86_64               randconfig-a002-20210113
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a015-20210113
+x86_64               randconfig-a012-20210113
+x86_64               randconfig-a013-20210113
+x86_64               randconfig-a016-20210113
+x86_64               randconfig-a014-20210113
+x86_64               randconfig-a011-20210113
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
