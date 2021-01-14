@@ -2,266 +2,133 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2DF3C433E9
-	for <linux-raid@archiver.kernel.org>; Thu, 14 Jan 2021 09:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED9DDC433E6
+	for <linux-raid@archiver.kernel.org>; Thu, 14 Jan 2021 13:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAC0223A33
-	for <linux-raid@archiver.kernel.org>; Thu, 14 Jan 2021 09:40:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A980C23A59
+	for <linux-raid@archiver.kernel.org>; Thu, 14 Jan 2021 13:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728538AbhANJk3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 14 Jan 2021 04:40:29 -0500
-Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:58723 "EHLO
-        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726551AbhANJkZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 14 Jan 2021 04:40:25 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04394;MF=zhongjiang-ali@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0ULi6zbO_1610617113;
-Received: from L-X1DSLVDL-1420.local(mailfrom:zhongjiang-ali@linux.alibaba.com fp:SMTPD_---0ULi6zbO_1610617113)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Thu, 14 Jan 2021 17:38:34 +0800
-Subject: Re: [PATCH 04/10] mm, fsdax: Refactor memory-failure handler for dax
- mapping
-To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>, Jan Kara <jack@suse.cz>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-References: <20201230165601.845024-1-ruansy.fnst@cn.fujitsu.com>
- <20201230165601.845024-5-ruansy.fnst@cn.fujitsu.com>
- <20210106154132.GC29271@quack2.suse.cz>
- <75164044-bfdf-b2d6-dff0-d6a8d56d1f62@cn.fujitsu.com>
- <781f276b-afdd-091c-3dba-048e415431ab@linux.alibaba.com>
- <ef29ba5c-96d7-d0bb-e405-c7472a518b32@cn.fujitsu.com>
- <e2f7ad16-8162-4933-9091-72e690e9877e@linux.alibaba.com>
- <4f184987-3cc2-c72d-0774-5d20ea2e1d49@cn.fujitsu.com>
-From:   zhong jiang <zhongjiang-ali@linux.alibaba.com>
-Message-ID: <53ecb7e2-8f59-d1a5-df75-4780620ce91f@linux.alibaba.com>
-Date:   Thu, 14 Jan 2021 17:38:33 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:85.0)
- Gecko/20100101 Thunderbird/85.0
+        id S1728491AbhANNC5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 14 Jan 2021 08:02:57 -0500
+Received: from mga14.intel.com ([192.55.52.115]:60766 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726066AbhANNC4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 14 Jan 2021 08:02:56 -0500
+IronPort-SDR: pqU6oLM9Dr+bczC9o1M1At9lAOdlldo98gWBHj0Zkmhd5h6bJupumjX4yh50b1DYfOP5ITjQOS
+ 4zTtg8mk7rGg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9863"; a="177581206"
+X-IronPort-AV: E=Sophos;i="5.79,347,1602572400"; 
+   d="scan'208";a="177581206"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jan 2021 05:02:15 -0800
+IronPort-SDR: 2HiRFOi6V++YlducTM6R7z8sn4KfHXePxlbD5aoPsONHWSjoiYy+Hq4F+GCme1JUjQ4RxQ5+ls
+ WBqkGynxCnTg==
+X-IronPort-AV: E=Sophos;i="5.79,347,1602572400"; 
+   d="scan'208";a="382260157"
+Received: from unknown (HELO gklab-109-123.igk.intel.com) ([10.102.109.123])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jan 2021 05:02:13 -0800
+From:   Oleksandr Shchirskyi <oleksandr.shchirskyi@intel.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH v2] Document PPL in man md
+Date:   Thu, 14 Jan 2021 13:59:20 +0100
+Message-Id: <20210114125920.42675-1-oleksandr.shchirskyi@intel.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <4f184987-3cc2-c72d-0774-5d20ea2e1d49@cn.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Partial Parity Log (PPL) was not documented in the man md.
+Added brief info about PPL.
 
-On 2021/1/14 11:52 上午, Ruan Shiyang wrote:
->
->
-> On 2021/1/14 上午11:26, zhong jiang wrote:
->>
->> On 2021/1/14 9:44 上午, Ruan Shiyang wrote:
->>>
->>>
->>> On 2021/1/13 下午6:04, zhong jiang wrote:
->>>>
->>>> On 2021/1/12 10:55 上午, Ruan Shiyang wrote:
->>>>>
->>>>>
->>>>> On 2021/1/6 下午11:41, Jan Kara wrote:
->>>>>> On Thu 31-12-20 00:55:55, Shiyang Ruan wrote:
->>>>>>> The current memory_failure_dev_pagemap() can only handle 
->>>>>>> single-mapped
->>>>>>> dax page for fsdax mode.  The dax page could be mapped by 
->>>>>>> multiple files
->>>>>>> and offsets if we let reflink feature & fsdax mode work 
->>>>>>> together. So,
->>>>>>> we refactor current implementation to support handle memory 
->>>>>>> failure on
->>>>>>> each file and offset.
->>>>>>>
->>>>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
->>>>>>
->>>>>> Overall this looks OK to me, a few comments below.
->>>>>>
->>>>>>> ---
->>>>>>>   fs/dax.c            | 21 +++++++++++
->>>>>>>   include/linux/dax.h |  1 +
->>>>>>>   include/linux/mm.h  |  9 +++++
->>>>>>>   mm/memory-failure.c | 91 
->>>>>>> ++++++++++++++++++++++++++++++++++-----------
->>>>>>>   4 files changed, 100 insertions(+), 22 deletions(-)
->>>>>
->>>>> ...
->>>>>
->>>>>>>   @@ -345,9 +348,12 @@ static void add_to_kill(struct 
->>>>>>> task_struct *tsk, struct page *p,
->>>>>>>       }
->>>>>>>         tk->addr = page_address_in_vma(p, vma);
->>>>>>> -    if (is_zone_device_page(p))
->>>>>>> -        tk->size_shift = dev_pagemap_mapping_shift(p, vma);
->>>>>>> -    else
->>>>>>> +    if (is_zone_device_page(p)) {
->>>>>>> +        if (is_device_fsdax_page(p))
->>>>>>> +            tk->addr = vma->vm_start +
->>>>>>> +                    ((pgoff - vma->vm_pgoff) << PAGE_SHIFT);
->>>>>>
->>>>>> It seems strange to use 'pgoff' for dax pages and not for any 
->>>>>> other page.
->>>>>> Why? I'd rather pass correct pgoff from all callers of 
->>>>>> add_to_kill() and
->>>>>> avoid this special casing...
->>>>>
->>>>> Because one fsdax page can be shared by multiple pgoffs. I have to 
->>>>> pass each pgoff in each iteration to calculate the address in vma 
->>>>> (for tk->addr).  Other kinds of pages don't need this. They can 
->>>>> get their unique address by calling "page_address_in_vma()".
->>>>>
->>>> IMO,   an fsdax page can be shared by multiple files rather than 
->>>> multiple pgoffs if fs query support reflink.   Because an page only 
->>>> located in an mapping(page->mapping is exclusive), hence it  only 
->>>> has an pgoff or index pointing at the node.
->>>>
->>>>   or  I miss something for the feature ?  thanks,
->>>
->>> Yes, a fsdax page is shared by multiple files because of reflink. I 
->>> think my description of 'pgoff' here is not correct.  This 'pgoff' 
->>> means the offset within the a file. (We use rmap to find out all the 
->>> sharing files and their offsets.)  So, I said that "can be shared by 
->>> multiple pgoffs".  It's my bad.
->>>
->>> I think I should name it another word to avoid misunderstandings.
->>>
->> IMO,  All the sharing files should be the same offset to share the 
->> fsdax page.  why not that ? 
->
-> The dedupe operation can let different files share their same data 
-> extent, though offsets are not same.  So, files can share one fsdax 
-> page at different offset.
-Ok,  Get it.
->
->> As you has said,  a shared fadax page should be inserted to different 
->> mapping files.  but page->index and page->mapping is exclusive.  
->> hence an page only should be placed in an mapping tree.
->
-> We can't use page->mapping and page->index here for reflink & fsdax. 
-> And that's this patchset aims to solve.  I introduced a series of 
-> ->corrupted_range(), from mm to pmem driver to block device and 
-> finally to filesystem, to use rmap feature of filesystem to find out 
-> all files sharing same data extent (fsdax page).
+Signed-off-by: Oleksandr Shchirskyi <oleksandr.shchirskyi@intel.com>
+---
+ md.4 | 44 +++++++++++++++++++++++++++++---------------
+ 1 file changed, 29 insertions(+), 15 deletions(-)
 
- From this patch,  each file has mapping tree,  the shared page will be 
-inserted into multiple file mapping tree.  then filesystem use file and 
-offset to get the killed process.   Is it correct?
+diff --git a/md.4 b/md.4
+index 60fdd274..7a0bc7e6 100644
+--- a/md.4
++++ b/md.4
+@@ -219,7 +219,7 @@ Once you have updated the layout you will not be able to mount the array
+ on an older kernel.  If you need to revert to an older kernel, the
+ layout information can be erased with the
+ .B "--update=layout-unspecificed"
+-option.  If you use this option to 
++option.  If you use this option to
+ .B --assemble
+ while running a newer kernel, the array will NOT assemble, but the
+ metadata will be update so that it can be assembled on an older kernel.
+@@ -909,26 +909,40 @@ The list is particularly useful when recovering to a spare.  If a few blocks
+ cannot be read from the other devices, the bulk of the recovery can
+ complete and those few bad blocks will be recorded in the bad block list.
+ 
+-.SS RAID456 WRITE JOURNAL
++.SS RAID WRITE HOLE
+ 
+-Due to non-atomicity nature of RAID write operations, interruption of
+-write operations (system crash, etc.) to RAID456 array can lead to
+-inconsistent parity and data loss (so called RAID-5 write hole).
++Due to non-atomicity nature of RAID write operations,
++interruption of write operations (system crash, etc.) to RAID456
++array can lead to inconsistent parity and data loss (so called
++RAID-5 write hole).
++To plug the write hole md supports two mechanisms described below.
+ 
+-To plug the write hole, from Linux 4.4 (to be confirmed),
+-.I md
+-supports write ahead journal for RAID456. When the array is created,
+-an additional journal device can be added to the array through
+-.IR write-journal
+-option. The RAID write journal works similar to file system journals.
+-Before writing to the data disks, md persists data AND parity of the
+-stripe to the journal device. After crashes, md searches the journal
+-device for incomplete write operations, and replay them to the data
+-disks.
++.TP
++DIRTY STRIPE JOURNAL
++From Linux 4.4, md supports write ahead journal for RAID456.
++When the array is created, an additional journal device can be added to
++the array through write-journal option. The RAID write journal works
++similar to file system journals. Before writing to the data
++disks, md persists data AND parity of the stripe to the journal
++device. After crashes, md searches the journal device for
++incomplete write operations, and replay them to the data disks.
+ 
+ When the journal device fails, the RAID array is forced to run in
+ read-only mode.
+ 
++.TP
++PARTIAL PARITY LOG
++From Linux 4.12 md supports Partial Parity Log (PPL) for RAID5 arrays only.
++Partial parity for a write operation is the XOR of stripe data chunks not
++modified by the write. PPL is stored in the metadata region of RAID member drives,
++no additional journal drive is needed.
++After crashes, if one of the not modified data disks of
++the stripe is missing, this updated parity can be used to recover its
++data.
++
++This mechanism is documented more fully in the file
++Documentation/md/raid5-ppl.rst
++
+ .SS WRITE-BEHIND
+ 
+ From Linux 2.6.14,
+-- 
+2.27.0
 
-Thanks,
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+ul. Sowackiego 173 | 80-298 Gdask | Sd Rejonowy Gdask Pnoc | VII Wydzia Gospodarczy Krajowego Rejestru Sdowego - KRS 101882 | NIP 957-07-52-316 | Kapita zakadowy 200.000 PLN.
+Ta wiadomo wraz z zacznikami jest przeznaczona dla okrelonego adresata i moe zawiera informacje poufne. W razie przypadkowego otrzymania tej wiadomoci, prosimy o powiadomienie nadawcy oraz trwae jej usunicie; jakiekolwiek przegldanie lub rozpowszechnianie jest zabronione.
+This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). If you are not the intended recipient, please contact the sender and delete all copies; any review or distribution by others is strictly prohibited.
+ 
 
->
->
-> -- 
-> Thanks,
-> Ruan Shiyang.
->
->>
->> And In the current patch,  we failed to found out that all process 
->> use the fsdax page shared by multiple files and kill them.
->>
->>
->> Thanks,
->>
->>> -- 
->>> Thanks,
->>> Ruan Shiyang.
->>>
->>>>
->>>>> So, I added this fsdax case here. This patchset only implemented 
->>>>> the fsdax case, other cases also need to be added here if to be 
->>>>> implemented.
->>>>>
->>>>>
->>>>> -- 
->>>>> Thanks,
->>>>> Ruan Shiyang.
->>>>>
->>>>>>
->>>>>>> +        tk->size_shift = dev_pagemap_mapping_shift(p, vma, 
->>>>>>> tk->addr);
->>>>>>> +    } else
->>>>>>>           tk->size_shift = page_shift(compound_head(p));
->>>>>>>         /*
->>>>>>> @@ -495,7 +501,7 @@ static void collect_procs_anon(struct page 
->>>>>>> *page, struct list_head *to_kill,
->>>>>>>               if (!page_mapped_in_vma(page, vma))
->>>>>>>                   continue;
->>>>>>>               if (vma->vm_mm == t->mm)
->>>>>>> -                add_to_kill(t, page, vma, to_kill);
->>>>>>> +                add_to_kill(t, page, NULL, 0, vma, to_kill);
->>>>>>>           }
->>>>>>>       }
->>>>>>>       read_unlock(&tasklist_lock);
->>>>>>> @@ -505,24 +511,19 @@ static void collect_procs_anon(struct page 
->>>>>>> *page, struct list_head *to_kill,
->>>>>>>   /*
->>>>>>>    * Collect processes when the error hit a file mapped page.
->>>>>>>    */
->>>>>>> -static void collect_procs_file(struct page *page, struct 
->>>>>>> list_head *to_kill,
->>>>>>> -                int force_early)
->>>>>>> +static void collect_procs_file(struct page *page, struct 
->>>>>>> address_space *mapping,
->>>>>>> +        pgoff_t pgoff, struct list_head *to_kill, int force_early)
->>>>>>>   {
->>>>>>>       struct vm_area_struct *vma;
->>>>>>>       struct task_struct *tsk;
->>>>>>> -    struct address_space *mapping = page->mapping;
->>>>>>> -    pgoff_t pgoff;
->>>>>>>         i_mmap_lock_read(mapping);
->>>>>>>       read_lock(&tasklist_lock);
->>>>>>> -    pgoff = page_to_pgoff(page);
->>>>>>>       for_each_process(tsk) {
->>>>>>>           struct task_struct *t = task_early_kill(tsk, 
->>>>>>> force_early);
->>>>>>> -
->>>>>>>           if (!t)
->>>>>>>               continue;
->>>>>>> -        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff,
->>>>>>> -                      pgoff) {
->>>>>>> +        vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, 
->>>>>>> pgoff) {
->>>>>>>               /*
->>>>>>>                * Send early kill signal to tasks where a vma covers
->>>>>>>                * the page but the corrupted page is not necessarily
->>>>>>> @@ -531,7 +532,7 @@ static void collect_procs_file(struct page 
->>>>>>> *page, struct list_head *to_kill,
->>>>>>>                * to be informed of all such data corruptions.
->>>>>>>                */
->>>>>>>               if (vma->vm_mm == t->mm)
->>>>>>> -                add_to_kill(t, page, vma, to_kill);
->>>>>>> +                add_to_kill(t, page, mapping, pgoff, vma, 
->>>>>>> to_kill);
->>>>>>>           }
->>>>>>>       }
->>>>>>>       read_unlock(&tasklist_lock);
->>>>>>> @@ -550,7 +551,8 @@ static void collect_procs(struct page *page, 
->>>>>>> struct list_head *tokill,
->>>>>>>       if (PageAnon(page))
->>>>>>>           collect_procs_anon(page, tokill, force_early);
->>>>>>>       else
->>>>>>> -        collect_procs_file(page, tokill, force_early);
->>>>>>> +        collect_procs_file(page, page->mapping, 
->>>>>>> page_to_pgoff(page),
->>>>>>
->>>>>> Why not use page_mapping() helper here? It would be safer for 
->>>>>> THPs if they
->>>>>> ever get here...
->>>>>>
->>>>>>                                 Honza
->>>>>>
->>>>>
->>>>
->>>>
->>>
->>
->>
->
