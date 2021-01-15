@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB9C3C433E6
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Jan 2021 13:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB03C433E0
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Jan 2021 13:29:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABCAF22583
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Jan 2021 13:29:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 687BF22583
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Jan 2021 13:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731958AbhAON3Q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Jan 2021 08:29:16 -0500
-Received: from mga18.intel.com ([134.134.136.126]:10827 "EHLO mga18.intel.com"
+        id S1731831AbhAON3R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 15 Jan 2021 08:29:17 -0500
+Received: from mga18.intel.com ([134.134.136.126]:10830 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731831AbhAON3P (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        id S1731652AbhAON3P (ORCPT <rfc822;linux-raid@vger.kernel.org>);
         Fri, 15 Jan 2021 08:29:15 -0500
-IronPort-SDR: KnbCXRccV2Iw/ZepzKi+MEJKqRa2KsLy6l8SRHGkSfwrEJ0cnSXfHX/VqKcGSyGMFMdeCIAUFp
- LbacloPJiZuw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9864"; a="166216217"
+IronPort-SDR: PugGTeGa+sV52wgyW0KICfIINYYejS8jEPFMVItAr5Y0ElB+pEMJUT3Tw9mHC6nwS8av/jFPk1
+ tYFb7vodGyMg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9864"; a="166216207"
 X-IronPort-AV: E=Sophos;i="5.79,349,1602572400"; 
-   d="scan'208";a="166216217"
+   d="scan'208";a="166216207"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2021 05:25:38 -0800
-IronPort-SDR: J9Qq5dz8H74MvqFePsAbSWItisdg9OcMB8qY4xbPe2udCfHberwfQK74i2T3OOg96W+S1naUMz
- WFfj9NYy6Yjw==
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2021 05:25:36 -0800
+IronPort-SDR: eMH/RyciNq6VyChmF2vCbekZaM06k0//AMaQ3tUqsKwG3sX5pfCYdR1vYLLLYdD29XrYNDMmhs
+ cu+OAL7GsMNQ==
 X-IronPort-AV: E=Sophos;i="5.79,349,1602572400"; 
-   d="scan'208";a="425312450"
+   d="scan'208";a="425312447"
 Received: from unknown (HELO localhost.igk.intel.com) ([10.237.126.111])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2021 05:25:37 -0800
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2021 05:25:35 -0800
 From:   Jakub Radtke <jakub.radtke@linux.intel.com>
 To:     jes@trained-monkey.org
 Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 8/8] Grow: Block reshape when external metadata and write-intent bitmap
-Date:   Fri, 15 Jan 2021 00:47:01 -0500
-Message-Id: <20210115054701.92064-9-jakub.radtke@linux.intel.com>
+Subject: [PATCH 7/8] Create: Block automatic enabling bitmap for external metadata
+Date:   Fri, 15 Jan 2021 00:47:00 -0500
+Message-Id: <20210115054701.92064-8-jakub.radtke@linux.intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210115054701.92064-1-jakub.radtke@linux.intel.com>
 References: <20210115054701.92064-1-jakub.radtke@linux.intel.com>
@@ -49,58 +49,30 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 From: Jakub Radtke <jakub.radtke@intel.com>
 
-Current kernel sysfs interface for the bitmap is limited. It allows
-the applying of the bitmap on non-active volumes only.
-The reshape operation for a volume with a bitmap should be blocked.
+For external metadata, bitmap should be added only when
+explicitly set by the administrator.
+They could be additional requirements to consider before
+enabling the external metadata's functionality
+(e.g., kernel support).
 
+Change-Id: I3973464b4c73f77b9c2ebc9cbb5f501a14d5eb02
 Signed-off-by: Jakub Radtke <jakub.radtke@intel.com>
-Change-Id: I2b4f57d6934815cd63a9cf506328b89fa4aa3930
 ---
- Grow.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ Create.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Grow.c b/Grow.c
-index 6b8321c5..a48789ce 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1838,15 +1838,14 @@ int Grow_reshape(char *devname, int fd,
- 		pr_err("Cannot increase raid-disks on this array beyond %d\n", st->max_devs);
- 		return 1;
+diff --git a/Create.c b/Create.c
+index 751f18c1..7df3b7e2 100644
+--- a/Create.c
++++ b/Create.c
+@@ -540,6 +540,7 @@ int Create(struct supertype *st, char *mddev,
  	}
--	if (s->level == 0 &&
--	    (array.state & (1<<MD_SB_BITMAP_PRESENT)) &&
--	    !(array.state & (1<<MD_SB_CLUSTERED))) {
--                array.state &= ~(1<<MD_SB_BITMAP_PRESENT);
--                if (md_set_array_info(fd, &array)!= 0) {
--                        pr_err("failed to remove internal bitmap.\n");
--                        return 1;
--                }
--        }
-+	if (s->level == 0 && (array.state & (1 << MD_SB_BITMAP_PRESENT)) &&
-+		!(array.state & (1 << MD_SB_CLUSTERED)) && !st->ss->external) {
-+		array.state &= ~(1 << MD_SB_BITMAP_PRESENT);
-+		if (md_set_array_info(fd, &array) != 0) {
-+			pr_err("failed to remove internal bitmap.\n");
-+			return 1;
-+		}
-+	}
  
- 	/* in the external case we need to check that the requested reshape is
- 	 * supported, and perform an initial check that the container holds the
-@@ -1910,6 +1909,13 @@ int Grow_reshape(char *devname, int fd,
- 					free(subarray);
- 					return 1;
- 				}
-+				if (content->consistency_policy ==
-+				    CONSISTENCY_POLICY_BITMAP) {
-+					pr_err("Operation not supported when write-intent bitmap is enabled\n");
-+					sysfs_free(cc);
-+					free(subarray);
-+					return 1;
-+				}
- 			}
- 			sysfs_free(cc);
- 		}
+ 	if (!s->bitmap_file &&
++	    !st->ss->external &&
+ 	    s->level >= 1 &&
+ 	    st->ss->add_internal_bitmap &&
+ 	    s->journaldisks == 0 &&
 -- 
 2.26.2
 
