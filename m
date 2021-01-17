@@ -2,88 +2,132 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 644F3C433DB
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Jan 2021 09:15:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BE5C433E0
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Jan 2021 20:42:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A24D21707
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Jan 2021 09:15:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60F7421D7A
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Jan 2021 20:42:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726298AbhAQJPX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 17 Jan 2021 04:15:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46266 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726221AbhAQJPH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Jan 2021 04:15:07 -0500
-Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C7BEC061573
-        for <linux-raid@vger.kernel.org>; Sun, 17 Jan 2021 01:14:08 -0800 (PST)
-Received: by mail-wr1-x42e.google.com with SMTP id l12so8308533wry.2
-        for <linux-raid@vger.kernel.org>; Sun, 17 Jan 2021 01:14:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=uEnhPu/Q/IuQW35RG7DlW7oj6UxvuBAdb4yr/buxqKI=;
-        b=o6Nz/wuVhN0cGqE+ishv7UGx3DR8u2vyqjd8qqGHTxPi228/6x6GKCt4yfCeXfech5
-         cJzsmMAgG4ESkqGOZjsqJ8VNCK83slUHGvjJ0z9i0FyjlbZygW8Vmghl6TRHtrhKq5Qm
-         9VJcj6/375ww1gRmjnjLgPxM4kRvzQu2OeGam1qXRMDyp2PzZtG0s1Z7Ydu8F+OtfaBH
-         OI4vAIQ5vVf8B7c9rh+jfyDI/IAERKqNXEmMiEj2NJeaak/Gyb/tpRMPhu4eBwJp+N+0
-         MPRjMPQyx1WvNriXFm+7JkDcx95UVYuwlZYY6Mc4apcjUG6/FQTfaJ099psq1kdSDCMy
-         Oe1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uEnhPu/Q/IuQW35RG7DlW7oj6UxvuBAdb4yr/buxqKI=;
-        b=eVlPNkHzT6ujyHppMXdWuk9IJ4rkLcTY7Ijb127fS8+RnwRX870OXx7Io/8DykWnM6
-         xr5FIV1GcPNnwRPXLw3V9V8RM96+1xT+dWsktM3tEzVrZ2obGEvLVNchFvIQuHgQfDJ5
-         jZ1vN9g4EFLzKdyfGPqRip1HaU5hkjOWjl1TpBAKk4GEhH/QSksMt5Dac4Ta/FlkeTiZ
-         8/75sroYvC4BgqLnUeLt2jril0Iky1WOrde/aJWpsChiUysle1qcl6Twv4w3Np9U1e+B
-         MweHHtEVdcgk8vY+Xg2imwb99+5H1e1b2HWUoPnyewQeOeLeHgCZKjQC+iSZsSaCCUjw
-         6VGw==
-X-Gm-Message-State: AOAM530bRquwO7RubedQK8PZw8Y6B46GFl2Q9At0e5Rfi8wmgq2tqg8d
-        BGTwxmcrq44mmGFfkyay16G3t4ngSQjzcSO/rD3l5u+H
-X-Google-Smtp-Source: ABdhPJzfqgcvZJb3lTQvpDyBn9WKEz1Pt7jItpmbylC2DvB4zXoEqeItxZvqjI9Gbz0UznGP41KY+K+/IM6V0BvsaGI=
-X-Received: by 2002:a05:6000:1811:: with SMTP id m17mr20562963wrh.67.1610874846934;
- Sun, 17 Jan 2021 01:14:06 -0800 (PST)
+        id S1729894AbhAQUmP convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 17 Jan 2021 15:42:15 -0500
+Received: from mail.eclipso.de ([217.69.254.104]:42840 "EHLO mail.eclipso.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729279AbhAQUmO (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sun, 17 Jan 2021 15:42:14 -0500
+X-Greylist: delayed 350 seconds by postgrey-1.27 at vger.kernel.org; Sun, 17 Jan 2021 15:42:13 EST
+Received: from mail.eclipso.de (www1.eclipso.de [217.69.254.102])
+        by mail.eclipso.de with ESMTP id 75469544
+        for <linux-raid@vger.kernel.org>; Sun, 17 Jan 2021 21:35:37 +0100 (CET)
+Date:   Sun, 17 Jan 2021 21:35:37 +0100
 MIME-Version: 1.0
-References: <CAM7EtNjpS3yr=3XtGkgfc3=L=fSfqJW7P8mSZ__+L7fwjLu8eA@mail.gmail.com>
- <24576.47848.628487.833800@quad.stoffel.home> <CAPhsuW53Y84PVBgM1q_S8phVKHq00gbxZH0O40BNgNo+qka6mQ@mail.gmail.com>
-In-Reply-To: <CAPhsuW53Y84PVBgM1q_S8phVKHq00gbxZH0O40BNgNo+qka6mQ@mail.gmail.com>
-From:   Marcus Lell <marcus.lell@gmail.com>
-Date:   Sun, 17 Jan 2021 10:13:59 +0100
-Message-ID: <CAM7EtNhBv8ahiK0GnL0cL7XTDWJFFuMZkmMjYQ7AJSD_FeYyXA@mail.gmail.com>
-Subject: Re: raid5 size reduced after system reinstall, how to fix?
-To:     Song Liu <song@kernel.org>
-Cc:     John Stoffel <john@stoffel.org>,
-        linux-raid <linux-raid@vger.kernel.org>
+Message-ID: <950d061954e1f779739c9c5777b94ade@mail.eclipso.de>
+X-Mailer: eclipso / 7.4.0
+From:   " " <Cedric.dewijs@eclipso.eu>
+Subject: What is the best way to combine 4 HDD's and 2 SSD's into a single
+        filesystem?
+Reply-To: " " <Cedric.dewijs@eclipso.eu>
+To:     <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Song,
+­I have 4 slow, loud, big, power hungry and old hard drives, and 2 SSD's. I'm trying to come up with a way to combine them into a system that has the following characteristics:
 
-On Fri, Jan 15, 2021 at 8:58 AM Song Liu <song@kernel.org> wrote:
->
-> Are you running kernel 5.10? If so, please upgrade to 5.10.1 or later.
-> There was an
-> bug in 5.10 kernel. After upgrading the kernel, the mdadm --grow command above
-> should fix this. The --grow will trigger a resync for the newly grown
-> area. If the array
-> was not in degraded mode, the resync should not change any data.
-I was indeed running 5.10.0 a few times.
-Upgraded and running "mdadm --grow --size=max /dev/md0" fixed it completely.
+A) The hard drives stop spinning 5 minutes after they have been used.
+B) The SSD's are used for read and write caching. Writes to the system are absorbed by the SSD's. Only when the ssd's are full of dirty data, then the hard drives are woken up. (This means the SSD's contain dirty data for potentially a long time.)
+C) When data is requested that's not present on the SSD's (a read cache miss), then the hard drive which has that data is woken up.
+D) When a hard drive is woken up as a result of a read cache miss, then the SSD's write out the dirty data to that drive.
+E) If one drive fails, or starts to produce random data, the system must return the correct data to the user.
 
->
-> Please let me know if this works.
-Yes.
+First idea is to use this stack of bcache and btrfs:
++--------------------------------------------+--------------+
+|               btrfs raid 1 (2 copies) /mnt                |
++--------------+--------------+--------------+--------------+
+| /dev/bcache0 | /dev/bcache1 | /dev/bcache2 |/dev/bcache3  |
++--------------+--------------+--------------+--------------+
+|                       Cache (SSD)                         |
+|                       /dev/sda4                           |
++--------------+--------------+--------------+--------------+
+| Data HDD     | Data HDD     | Data HDD     |Data HDD      |
+| /dev/sda8    | /dev/sda9    | /dev/sda10   |/dev/sda11    |
++--------------+--------------+--------------+--------------+
+The good:
+Btrfs in raid 1 is able to handle a failing hard drive, both when it failed completely, and when it corrupts data.
+Bcache is capable of using an ssd to cache the read and the write requests from btrfs. 
+The not-so-good:
+Bcache can only use one SSD, so using bcache is only possible as read cache in order to achieve characteristic E, but this prevents characteristic B to be achieved.
+I can't get bcache to read-ahead the data that is adjacent to the data that has just been accessed.
 
-Thank you.
+Second idea is to use a SSD in front of each hard drive:
++-----------------------------------------------------------+
+|                btrfs raid 1 (2 copies) /mnt               |
++--------------+--------------+--------------+--------------+
+| /dev/bcache0 | /dev/bcache1 | /dev/bcache2 | /dev/bcache3 |
++--------------+--------------+--------------+--------------+
+| Cache SSD    |  Cache SSD   |  Cache SSD   |   Cache SSD  | 
+| /dev/sda5    | /dev/sda6    | /dev/sda7    | /dev/sda8    |
++--------------+--------------+--------------+--------------+
+| Data         | Data         | Data         | Data         |
+| /dev/sda9    | /dev/sda10   | /dev/sda11   |/dev/sda12    |
++--------------+--------------+--------------+--------------+
+The good:
+This setup achieves all characteristics I'm after 
+The not-so-good:
+This requires more SSD's and more (SATA) ports than I have.
+I can't get bcache to read-ahead the data that is adjacent to the data that has just been accessed.
 
-marcus
+Third idea is to use mdadm to create a raid 0 array out of the 2 SSD's to create a fault tolerant write cache:
++-----------------------------------------------------------+
+|                 btrfs raid 1 (2 copies) /mnt              |
++--------------+--------------+--------------+--------------+
+| /dev/bcache0 | /dev/bcache1 | /dev/bcache2 |/dev/bcache3  |
++--------------+--------------+--------------+--------------+
+|                      bcache Cache                         |
+|                         /dev/md0                          |
++-----------------------------------------------------------+
+|               mdadm raid 0 array /dev/md0                 |
+|             SSD /dev/sda4 and SSD /dev/sda5               |    
++--------------+--------------+--------------+--------------+
+| Data         | Data         | Data         | Data         |
+| /dev/sda9    | /dev/sda10   | /dev/sda11   |/dev/sda12    |
++--------------+--------------+--------------+--------------+
+The good:
+This setup is capable of achieving all characteristics I'm after. It can handle abrupt failure of a single drive.
+The not-so-good:
+When one of the SSD's start to produce random data, mdadm is not able to know what SSD produces correct data, and data is lost. (both copies of the data btrfs is trying to write to underlying storage are on the 2 SSD's.
+
+Fourth idea is to use dm-cache. Dm-cache can only cache one backing device, and it has no way to use 2 cache devices. 
++-----------------------------------------------------------+
+|                btrfs raid 1 (2 copies) /mnt               |
++--------------+--------------+--------------+--------------+
+| /dev/bcache0 | /dev/bcache1 | /dev/bcache2 | /dev/bcache3 |
++--------------+--------------+--------------+--------------+
+| Cache SSD    |  Cache SSD   |  Cache SSD   |   Cache SSD  |  
+| /dev/sda5    | /dev/sda6    | /dev/sda7    | /dev/sda8    |
++--------------+--------------+--------------+--------------+
+| Data         | Data         | Data         | Data         |
+| /dev/sda9    | /dev/sda10   | /dev/sda11   |/dev/sda12    |
++--------------+--------------+--------------+--------------+
+The good:
+This setup is capable of achieving all characteristics I'm after.
+The not-so-good:
+This requires more SSD's and more (SATA) ports than I have.
+
+What options do I have to create the desired setup?
+Is it feasible to add a checksum to mdadm, much like btrfs has, so it can tell what drive (if any) has returned the correct data?
+
+Is this the correct mailing list to ask these questions?
+
+---
+
+Take your mailboxes with you. Free, fast and secure Mail &amp; Cloud: https://www.eclipso.eu - Time to change!
+
+
