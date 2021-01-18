@@ -2,49 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F41AC433DB
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Jan 2021 23:38:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EACD1C433E0
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Jan 2021 00:50:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 186AD2075B
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Jan 2021 23:38:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB5B220758
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Jan 2021 00:50:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730672AbhAQXin (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 17 Jan 2021 18:38:43 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:17259 "EHLO smtp.hosts.co.uk"
+        id S1729202AbhARAu3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 17 Jan 2021 19:50:29 -0500
+Received: from mx2.suse.de ([195.135.220.15]:45294 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729141AbhAQXim (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sun, 17 Jan 2021 18:38:42 -0500
-Received: from host86-157-192-59.range86-157.btcentralplus.com ([86.157.192.59] helo=[192.168.1.64])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1l1GvC-0003V0-5t; Sun, 17 Jan 2021 22:53:23 +0000
-Subject: Re: What is the best way to combine 4 HDD's and 2 SSD's into a single
- filesystem?
-To:     Cedric.dewijs@eclipso.eu, linux-raid@vger.kernel.org
-References: <950d061954e1f779739c9c5777b94ade@mail.eclipso.de>
-From:   Wols Lists <antlists@youngman.org.uk>
-Message-ID: <6004C927.2070809@youngman.org.uk>
-Date:   Sun, 17 Jan 2021 23:32:55 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
- Thunderbird/38.7.0
+        id S1729056AbhARAu3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sun, 17 Jan 2021 19:50:29 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id BEC10ACAD;
+        Mon, 18 Jan 2021 00:49:47 +0000 (UTC)
+From:   NeilBrown <neil@brown.name>
+To:     Nathan Brown <nbrown.us@gmail.com>, linux-raid@vger.kernel.org
+Date:   Mon, 18 Jan 2021 11:49:43 +1100
+Subject: Re: Self inflicted reshape catastrophe
+In-Reply-To: <CAHikZs7DaOj4QAw0VcbidmdrP11pWE-NTcxXDJS=KW9rf0TY7Q@mail.gmail.com>
+References: <CAHikZs7DaOj4QAw0VcbidmdrP11pWE-NTcxXDJS=KW9rf0TY7Q@mail.gmail.com>
+Message-ID: <87eeijjcgo.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
-In-Reply-To: <950d061954e1f779739c9c5777b94ade@mail.eclipso.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 17/01/21 20:35, Cedric.dewijs@eclipso.eu wrote:
-> Is it feasible to add a checksum to mdadm, much like btrfs has, so it can tell what drive (if any) has returned the correct data?
+--=-=-=
+Content-Type: text/plain
 
-put mdadm on top of dm-integrity
+On Thu, Jan 14 2021, Nathan Brown wrote:
 
-https://raid.wiki.kernel.org/index.php/Dm-integrity
+> Scenario:
+>
+> I had a 4 by 10TB raid 5 array and was adding 5 more disks and
+> reshaping it to a raid6. This was working just fine until I got a
+> little too aggressive with perf tuning and caused `mdadm` to
+> completely hang. I froze the rebuild and rebooted the server to wipe
+> away my tuning mess. The raid didn't automatically assemble so I did
+> `mdadm --assemble` but really screwed up and put the 5 new disks in a
+> different array. Not sure why the superblock on those disks didn't
+> stop `mdadm` from putting them into service but the end result was the
+> superblock on those 5 new drives got wiped. That array was missing a
 
-Cheers,
-Wol
+What does this mean "the superblock on those 5 new drives got wiped"?
+How do you think that happened.
+Can you please report the current super blocks (mdadm --examine) anyway
+please.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJEBAEBCAAuFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAmAE2ycQHG5laWxAYnJv
+d24ubmFtZQAKCRA57J7dVmKBucKjEACehWS5TdN9m1zr6Qnknh3sjl2bJSdm1NIK
+BRhWbaPKl/cfQkUdWtPC2QlBaJh/7cpaKfH57bn9nnQdEtSRtQIKk6N0WyAo3b+1
+szTKgzoz8LTVqsCjLkvaPAB09JlIJ2p1UcIBHvrM66dXDS4uPQ4pXVVNcEG9KkNG
+6y5vy96VXqzM1yvpCxQS469WmzCmmRFyF/3ngdC/fHIC8nU/29WB4BXrHGtSywTL
+iJTQnh7i1lbwCprl6FwocxLn+kvDbP/ezYMSCFk2Dd11x+Imn75mPbSbhPopUL4z
+l+Rbdea9wrCc41Hg9zcjVPts7WfZy05TPBAGaSuzQCmS0xUtBlCPt5H6+vwNvUDt
+Lz4ubPNysUXmVSiDHSwDgEAq/iFiGWA1JekO468CQOaCsd3gY2p59yFZGo1EBOLF
+nRvEiQvnMIwCrjg6+Oz7fntx6CVeIDIi9J6wyIe1e5632VQyedqSPlKCJatpurxI
+WWRuAERRnvyA40dRSXAZw4cwDtFKSz1f+6y4HEIRdjQQUU9Ylwb343iRPJhi59aw
+kqUljxoItSiFSgISZEuyOrRwgMLeKYoUy9XJsqNKKghLQ1ugxiq5iSUDo8Imfdog
+QDUnM51Q4U2pybrrJTB722a+f7fOqg+13La+7W88J3WK9hikIsgUT/Q4vCP2PDdW
+tn3pYQI/7g==
+=JDwP
+-----END PGP SIGNATURE-----
+--=-=-=--
