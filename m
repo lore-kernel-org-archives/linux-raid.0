@@ -2,64 +2,119 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9800EC43381
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 20:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6B76C4332B
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 21:42:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50C132310B
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 20:03:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8F0023104
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 21:42:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391966AbhASUBT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 15:01:19 -0500
-Received: from vps.thesusis.net ([34.202.238.73]:40918 "EHLO vps.thesusis.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729731AbhASTuF (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 19 Jan 2021 14:50:05 -0500
-X-Greylist: delayed 551 seconds by postgrey-1.27 at vger.kernel.org; Tue, 19 Jan 2021 14:50:05 EST
-Received: from localhost (localhost [127.0.0.1])
-        by vps.thesusis.net (Postfix) with ESMTP id 22E9F297D4;
-        Tue, 19 Jan 2021 14:40:11 -0500 (EST)
-Received: from vps.thesusis.net ([IPv6:::1])
-        by localhost (vps.thesusis.net [IPv6:::1]) (amavisd-new, port 10024)
-        with ESMTP id ervq_EOHcT1l; Tue, 19 Jan 2021 14:40:10 -0500 (EST)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id D5D012970C; Tue, 19 Jan 2021 14:40:10 -0500 (EST)
-References: <950d061954e1f779739c9c5777b94ade@mail.eclipso.de> <CAJCQCtTT+_2F2EFUz=juOn2YG+ZOu2gmNx1Qwu2wp6273T9DNA@mail.gmail.com>
-User-agent: mu4e 1.5.7; emacs 26.3
-From:   Phillip Susi <phill@thesusis.net>
-To:     Chris Murphy <lists@colorremedies.com>
-Cc:     Cedric.dewijs@eclipso.eu, Linux-RAID <linux-raid@vger.kernel.org>
-Subject: Re: What is the best way to combine 4 HDD's and 2 SSD's into a single filesystem?
-Date:   Tue, 19 Jan 2021 14:27:55 -0500
-In-reply-to: <CAJCQCtTT+_2F2EFUz=juOn2YG+ZOu2gmNx1Qwu2wp6273T9DNA@mail.gmail.com>
-Message-ID: <87ft2w67hh.fsf@vps.thesusis.net>
+        id S2387870AbhASRu2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 12:50:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60192 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732856AbhASPFA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 10:05:00 -0500
+Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A268EC0613D6
+        for <linux-raid@vger.kernel.org>; Tue, 19 Jan 2021 07:01:05 -0800 (PST)
+Received: by mail-qt1-x830.google.com with SMTP id v5so13830943qtv.7
+        for <linux-raid@vger.kernel.org>; Tue, 19 Jan 2021 07:01:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=vn5Y0TrG3Ui6LBbbxvYnxl2nn5t3OepGIypDVq8V4YM=;
+        b=pVUDC5WiZM6Lp8yH89xT1k/YpP/3TyrwAZ15/iuWX8RBRpjlf+jFHDFgLTMtLU49SW
+         kEgj71/8gTx8uUrcUqv22pjWXvmAkk4+JJZsk/LNpOAvMGyURf5ntpntikem4UAdkJmG
+         qDOyNrfgyoTi6CRDwvwFDajSm8kWtjdnUlLRIqDQEpqlUC7OINwQ6kVz/aldXxJjQoP5
+         MYUKt/PXULwtUE7UtG7pCk3dYIcLp50Gn7OBfoEA7a8X+HS5qin3yAo+UQVY1bXrt2Uf
+         4/dAwPqazua4LeUKIitWS+j1v7XvAyJz/3HiR12eJJa0QTCjoU3WExHuF4czyxSiqnRH
+         2paQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=vn5Y0TrG3Ui6LBbbxvYnxl2nn5t3OepGIypDVq8V4YM=;
+        b=f1Zf4z0d/meTx2QQFrsOe55C06Sctl0w4R8oxwZSkLh+X5ZadV2y0Lik87/PAQ2wUv
+         KmszzHfw/V/y0bWixGLqtdqFNRMqT08237cVgANgwBzCUTqH/7kakv8pKzPmfCaFgZ5A
+         c4vFX3Q3wJ2YZFiU1lr49eT52LMVnVLkF649kmmxiWWScBkPv+g1cdCHYJLupWU1s6dx
+         83QfGiwbXuzZNCJTnPnZ8+LLSonK9hz/Z87Ly1d50xWjUT7onZ5T1pBNOG9oBE4MDScG
+         wA1I/ajBuhFSRO1MuOmCntHJPVlEUHxQ4LLsnZU6lg8H9Q8kDAHFKeA0Lh/DX5PUXHk9
+         FVYA==
+X-Gm-Message-State: AOAM533AvjUhHAhrRqiMtVvGl4AxsyaM7DN8Bms0ClxLc7FS9STqTK63
+        jVcssjNck0d/kY/14soW5LvTwQ==
+X-Google-Smtp-Source: ABdhPJw9hzTjA0HJ6VQUPwDH9drSNqii0WFZZyVd4uYqJRq1euvOSRi+J16/swjVIXriRDU/RjWmOQ==
+X-Received: by 2002:ac8:6f07:: with SMTP id g7mr4493450qtv.308.1611068464463;
+        Tue, 19 Jan 2021 07:01:04 -0800 (PST)
+Received: from ?IPv6:2620:10d:c0a8:11d1::117a? ([2620:10d:c091:480::1:150f])
+        by smtp.gmail.com with ESMTPSA id w91sm6339412qte.83.2021.01.19.07.01.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jan 2021 07:01:03 -0800 (PST)
+Subject: Re: [RFC PATCH 00/37] block: introduce bio_init_fields()
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com
+Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
+        axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, efremov@linux.com, colyli@suse.de,
+        kent.overstreet@gmail.com, agk@redhat.com, snitzer@redhat.com,
+        song@kernel.org, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, clm@fb.com,
+        dsterba@suse.com, tytso@mit.edu, adilger.kernel@dilger.ca,
+        rpeterso@redhat.com, agruenba@redhat.com, darrick.wong@oracle.com,
+        shaggy@kernel.org, damien.lemoal@wdc.com, naohiro.aota@wdc.com,
+        jth@kernel.org, tj@kernel.org, osandov@fb.com, bvanassche@acm.org,
+        gustavo@embeddedor.com, asml.silence@gmail.com,
+        jefflexu@linux.alibaba.com
+References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
+From:   Josef Bacik <josef@toxicpanda.com>
+Message-ID: <6eab7373-3c7f-fccf-8a6f-b02519258d23@toxicpanda.com>
+Date:   Tue, 19 Jan 2021 10:00:59 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.6.1
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 1/19/21 12:05 AM, Chaitanya Kulkarni wrote:
+> Hi,
+> 
+> This is a *compile only RFC* which adds a generic helper to initialize
+> the various fields of the bio that is repeated all the places in
+> file-systems, block layer, and drivers.
+> 
+> The new helper allows callers to initialize various members such as
+> bdev, sector, private, end io callback, io priority, and write hints.
+> 
+> The objective of this RFC is to only start a discussion, this it not
+> completely tested at all.
 
-Chris Murphy writes:
+It would help to know what you're trying to accomplish here.  I'd echo Mike's 
+comments about how it makes it annoying to update things in the future.  In 
+addition, there's so many fields that I'm not going to remember what each one is 
+without having to look it up, which makes it annoying to use and to review.  If 
+it's simply to make sure fields are initialized then you could add debug sanity 
+checks to submit_bio().  If it's to clean up duplication, well I'd argue that 
+the duplication is much clearer than positional arguments in a giant function 
+call.  If you are wanting to change a particular part of the bio to be 
+initialized properly, like Dennis's work to make sure the bi_blkg was 
+initialized at bi_bdev set time, then a more targeted patch series with a 
+specific intent will be more useful and more successful.  Thanks,
 
-> A
->
-> HDD1+SSD1=>
->                             Btrfs raid1 profile for metadata, raid0 or
-> raid1 profile for data depending on your risk tolerance
-> HDD2+SSD2=>
-
-But then sometimes reads will go to one leg and miss the cache and have
-to hit the HDD even though the data is in the ssd cache of the other leg
-already.  Therefore, wouldn't it be preferable to keep the mirroring
-underneath the cache?  Also having a separate B with the other two HDDs
-and using it purely as a backup further halves your storage capacity (
-so now only 1/4th ).  Also if one disk gets spun up to satisfy a read,
-the next read might go start up the other disk rather than go to the one
-that is already running.
-
-I'd say make a raid5 of the 4 HDDs, a raid1 of the the two SSDs, and use
-the combined SSDs to cache the combined HDDs.
+Josef
