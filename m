@@ -2,97 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6B76C4332B
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 21:42:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B90A7C4332B
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 23:01:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8F0023104
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 21:42:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A097823104
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 23:01:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387870AbhASRu2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 12:50:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60192 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732856AbhASPFA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 10:05:00 -0500
-Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A268EC0613D6
-        for <linux-raid@vger.kernel.org>; Tue, 19 Jan 2021 07:01:05 -0800 (PST)
-Received: by mail-qt1-x830.google.com with SMTP id v5so13830943qtv.7
-        for <linux-raid@vger.kernel.org>; Tue, 19 Jan 2021 07:01:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=vn5Y0TrG3Ui6LBbbxvYnxl2nn5t3OepGIypDVq8V4YM=;
-        b=pVUDC5WiZM6Lp8yH89xT1k/YpP/3TyrwAZ15/iuWX8RBRpjlf+jFHDFgLTMtLU49SW
-         kEgj71/8gTx8uUrcUqv22pjWXvmAkk4+JJZsk/LNpOAvMGyURf5ntpntikem4UAdkJmG
-         qDOyNrfgyoTi6CRDwvwFDajSm8kWtjdnUlLRIqDQEpqlUC7OINwQ6kVz/aldXxJjQoP5
-         MYUKt/PXULwtUE7UtG7pCk3dYIcLp50Gn7OBfoEA7a8X+HS5qin3yAo+UQVY1bXrt2Uf
-         4/dAwPqazua4LeUKIitWS+j1v7XvAyJz/3HiR12eJJa0QTCjoU3WExHuF4czyxSiqnRH
-         2paQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=vn5Y0TrG3Ui6LBbbxvYnxl2nn5t3OepGIypDVq8V4YM=;
-        b=f1Zf4z0d/meTx2QQFrsOe55C06Sctl0w4R8oxwZSkLh+X5ZadV2y0Lik87/PAQ2wUv
-         KmszzHfw/V/y0bWixGLqtdqFNRMqT08237cVgANgwBzCUTqH/7kakv8pKzPmfCaFgZ5A
-         c4vFX3Q3wJ2YZFiU1lr49eT52LMVnVLkF649kmmxiWWScBkPv+g1cdCHYJLupWU1s6dx
-         83QfGiwbXuzZNCJTnPnZ8+LLSonK9hz/Z87Ly1d50xWjUT7onZ5T1pBNOG9oBE4MDScG
-         wA1I/ajBuhFSRO1MuOmCntHJPVlEUHxQ4LLsnZU6lg8H9Q8kDAHFKeA0Lh/DX5PUXHk9
-         FVYA==
-X-Gm-Message-State: AOAM533AvjUhHAhrRqiMtVvGl4AxsyaM7DN8Bms0ClxLc7FS9STqTK63
-        jVcssjNck0d/kY/14soW5LvTwQ==
-X-Google-Smtp-Source: ABdhPJw9hzTjA0HJ6VQUPwDH9drSNqii0WFZZyVd4uYqJRq1euvOSRi+J16/swjVIXriRDU/RjWmOQ==
-X-Received: by 2002:ac8:6f07:: with SMTP id g7mr4493450qtv.308.1611068464463;
-        Tue, 19 Jan 2021 07:01:04 -0800 (PST)
-Received: from ?IPv6:2620:10d:c0a8:11d1::117a? ([2620:10d:c091:480::1:150f])
-        by smtp.gmail.com with ESMTPSA id w91sm6339412qte.83.2021.01.19.07.01.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Jan 2021 07:01:03 -0800 (PST)
-Subject: Re: [RFC PATCH 00/37] block: introduce bio_init_fields()
-To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        id S1727822AbhASXAq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 18:00:46 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45437 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2404056AbhASOTe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 19 Jan 2021 09:19:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611065887;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2ycJhE8mXTZkoJTspQiF4eAdjjIOqaHJTzxw51QUBpw=;
+        b=iH91giBXcrvLWkxZafRwzhtnAaqC4UgOyL2/svKS5JpqN4aXD9uZoHjHC1ghixJvzFQFwB
+        wLFBArEfZwc4Z7vEzAYFoEYWqEGfkJemKwWQ+7hEoy/NTkYb2K/87UEluBwNSQI9TmihSg
+        YrK+WSWmMbUsVGj8AVkkO22Ba2gkMuA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-504-Na2rrFESP2-59Jhvxs6BgA-1; Tue, 19 Jan 2021 09:14:34 -0500
+X-MC-Unique: Na2rrFESP2-59Jhvxs6BgA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B9A58806661;
+        Tue, 19 Jan 2021 14:14:29 +0000 (UTC)
+Received: from localhost (unknown [10.18.25.174])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2AA0D19C47;
+        Tue, 19 Jan 2021 14:14:23 +0000 (UTC)
+Date:   Tue, 19 Jan 2021 09:14:22 -0500
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Cc:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        cluster-devel@redhat.com
-Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
-        axboe@kernel.dk, philipp.reisner@linbit.com,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        dm-devel@redhat.com, axboe@kernel.dk, philipp.reisner@linbit.com,
         lars.ellenberg@linbit.com, efremov@linux.com, colyli@suse.de,
-        kent.overstreet@gmail.com, agk@redhat.com, snitzer@redhat.com,
-        song@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, clm@fb.com,
+        kent.overstreet@gmail.com, agk@redhat.com, song@kernel.org,
+        hch@lst.de, sagi@grimberg.me, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, clm@fb.com, josef@toxicpanda.com,
         dsterba@suse.com, tytso@mit.edu, adilger.kernel@dilger.ca,
         rpeterso@redhat.com, agruenba@redhat.com, darrick.wong@oracle.com,
         shaggy@kernel.org, damien.lemoal@wdc.com, naohiro.aota@wdc.com,
         jth@kernel.org, tj@kernel.org, osandov@fb.com, bvanassche@acm.org,
         gustavo@embeddedor.com, asml.silence@gmail.com,
         jefflexu@linux.alibaba.com
+Subject: Re: [RFC PATCH 00/37] block: introduce bio_init_fields()
+Message-ID: <20210119141422.GA23758@redhat.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
-From:   Josef Bacik <josef@toxicpanda.com>
-Message-ID: <6eab7373-3c7f-fccf-8a6f-b02519258d23@toxicpanda.com>
-Date:   Tue, 19 Jan 2021 10:00:59 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.6.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/19/21 12:05 AM, Chaitanya Kulkarni wrote:
+On Tue, Jan 19 2021 at 12:05am -0500,
+Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com> wrote:
+
 > Hi,
 > 
 > This is a *compile only RFC* which adds a generic helper to initialize
@@ -102,19 +89,17 @@ On 1/19/21 12:05 AM, Chaitanya Kulkarni wrote:
 > The new helper allows callers to initialize various members such as
 > bdev, sector, private, end io callback, io priority, and write hints.
 > 
-> The objective of this RFC is to only start a discussion, this it not
-> completely tested at all.
+> The objective of this RFC is to only start a discussion, this it not 
+> completely tested at all.                                                                                                            
+> Following diff shows code level benefits of this helper :-
+>  38 files changed, 124 insertions(+), 236 deletions(-)
 
-It would help to know what you're trying to accomplish here.  I'd echo Mike's 
-comments about how it makes it annoying to update things in the future.  In 
-addition, there's so many fields that I'm not going to remember what each one is 
-without having to look it up, which makes it annoying to use and to review.  If 
-it's simply to make sure fields are initialized then you could add debug sanity 
-checks to submit_bio().  If it's to clean up duplication, well I'd argue that 
-the duplication is much clearer than positional arguments in a giant function 
-call.  If you are wanting to change a particular part of the bio to be 
-initialized properly, like Dennis's work to make sure the bi_blkg was 
-initialized at bi_bdev set time, then a more targeted patch series with a 
-specific intent will be more useful and more successful.  Thanks,
 
-Josef
+Please no... this is just obfuscation.
+
+Adding yet another field to set would create a cascade of churn
+throughout kernel (and invariably many callers won't need the new field
+initialized, so you keep passing 0 for more and more fields).
+
+Nacked-by: Mike Snitzer <snitzer@redhat.com>
+
