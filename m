@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACAC3C43331
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C888C433E6
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95215206F8
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 427F6206DC
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:33:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390551AbhASFbI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 00:31:08 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:57027 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389479AbhASFLu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:11:50 -0500
+        id S2390614AbhASFbj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:31:39 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51811 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389700AbhASFM7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:12:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611033109; x=1642569109;
+  t=1611033178; x=1642569178;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=cW+SY0F4uLtssGzI42l+SJRJJ7OOq+Ii5A3v3sT7Yes=;
-  b=Y2d2D4oPfN8X6+6qjUizRevGL0KpGYKqXxsoOfTrW7V5ZXCLjrQbs6+1
-   3EFYjncxwSm3Jm1SFX+VjA2z43vWJYb2q2xdbfdYT0uQBrq6jQGsTW/4P
-   jG9YhwopOibRpY0UnFxVdpqsikwdM/D+lSvMxp+r28VR6oFEtAqEvGVhM
-   +NDNQLboEz3ZJ6Tk8uN8eoO01vqfrvI3p+n4jZMCITbAxIBb8ib9T8jKX
-   EEgpIdkypy5qQKtPdFJQSru3q5zaVpql7n7qwjrPM3p42ZTO19RJoshiP
-   vRosT8qQNJ7NcvCHQZPFhk+ZUE8EwPw9t1Zos6uAIHwyz0lcF7yo1kuRT
-   g==;
-IronPort-SDR: qKGHfO9zN7A1SHGD0sJgeLXKtsxCWCZQCBMta+7tC9HjPa0iIdgq06stafZjSUOuGrWgzH6/Zs
- qrnOgaWyHIH5wPnOEfNlBrg61+ELtLuy8MVfUmBIrKkY/vrVUQG7KR5YeotmEBAgOpMmT0oPtH
- 4bhhS/DClbRNw5+WwuKwkC/liLbtp7IJ1QJi8MA4XFdTyf4m9NaN1djmN/HBN1U63o0nBSdZCr
- hc8ttQjeYcu14uBj4dURdwnwRJd8G/vefW2dPVCvY3WQkIKSvUpsP5tyvHfytQhm5DW0FTqE89
- Mxc=
+  bh=aM7JQIyW0SiKsSN5jKrINUGLCUPGl+Twv+vS/lM3j18=;
+  b=I+0R9kFTByjN8HhYmfs2snGrda8O+EleMIdOgAMcJGfW6b40ZAbVamia
+   eieH5+tsDZz/8gNjGejAcOCkTf4sShA42hLoZuItXUjwv/0ZndClBqWc1
+   6rEcHL3oO4e2SZd8pvH8zU4hvSCkfTB5HlximWtzaLm0T0sV2E3qvYH+1
+   qMiWTxtZ3zc3a1oz+oSDzoV4QKILHJ9TESREbDvpP+K0usrEX3rHYYx9p
+   1h9GrbyMv83RDMuiCnhPKE6qHZIDnBI9YUfTNxaJvGPc4vCd5lQgYpDZF
+   jauDIQlNZ0ncGeglEKLL0zZknUgms72YtQ16T4hZbxzjNJbU+rvisjPs5
+   w==;
+IronPort-SDR: WmLlzAFOCCK7ebyOIFjPaJxTBseeb/A6EOI93syS1UhhgBGkFyfek12qu1gNMzWE0H3qWgoA23
+ WiNqLEJ6ZF7SewyaC1E25ZE3cSa9ZzXoXPFnc2wvy+NezfIbr7/kE+pIvUWdenkLHlus+8bHsD
+ V9a6vEapvtgANSMYpDuZK7w5DlH0z81gDhaftOJ+IyQhig/S65JHC30aL0joTvKCUmkPhrcn35
+ byTpFYd5siD1vNDhpCo48Q6qA4HIkAYFKoXxSA597TAq1GxzUYzlJZyN07U9XTM/8xKqTklrbh
+ B98=
 X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
-   d="scan'208";a="162201332"
+   d="scan'208";a="157764092"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:11:05 +0800
-IronPort-SDR: Jxwf3i9x1B0RHCIROtDE/iuDAINqBt2F/RuDwWDEmyByP2X7eHHcF6VYOb5pX3bjB98MQOBY/k
- EE7/XY0VHY25Xrc3u2aWXZDj/vhyZzri+REe7jdepimEkX/LSD5BHLSu2lgFdY0PUwWpTUV+wS
- g0AMlGBKhMvJzUbhNknog1IYhJUgz90bASkg7Nfrls4FH661MmIBfGkT+K0k46pqDk1Gc4u8uP
- uOawWWUbGxnsrJmwxL+1TtwCKD4GoWRA+UE75WfzG0WxSOHGUYc9zXiaXHV3Kqjokf1MtXYWF1
- z2f/O4DCt2Qar7cdiXh2oQLW
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:10:41 +0800
+IronPort-SDR: G/wwn44rqxqM6nGo5TO3sRS8YTPeKYm8qIfwmtXQQE1FzKPlE1QM+hp3zez0DOTDGlyqBCbmko
+ Uwa8ggIAxucx0Hgf1riU7XZcHseJyE2+8tjEXuTJaPZNNXazrWvxKuqqSd4l/deYRIIrYqEjDW
+ upX5HtT1YQ+I4K8SnnbD5HNMtSjjPF1IDAtvW3VKW0dzeRVDYDvq1PTwVM5mFc3WlZ4+63Vtau
+ 7aI0ir3NtpmZpr1d/0oeMfZtUenOlggVtQtGuRxXDyRmPOUVfRgCZ974aWkyXKeynWazuZvjaL
+ 2RJ3z89UoZrWz5ZyKsWAdJeb
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:53:41 -0800
-IronPort-SDR: JhXhgWS0+e3HTDStYfAXJ39RQBEk0euVnqe58ziJOnn1c9Zev+zyQZ1feT8Pf3jy1k/0jfejeB
- 9eRQsJQYlpsXL/MQdwG+RKeojvlhwZb7/kK3K8LYVIUeWuWwf4teK/xrJ6FiTzChv1xe4/bY5+
- eWHUFZ+nWTw4YtzlPxnn6S3DZ4LcVreyfhizYCPM9a4WY7tqwq6bMPlFdYm38BooiwkcJvUlM2
- jto6KJJwnZYWpzG78qeBvec0imqsf+1kIqtJBGsfGtjSerNFR4ZUCja3e3hANc2sx71Lno1zNp
- h1M=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:53:16 -0800
+IronPort-SDR: oklSZwC4T98igITkHvUN5/cFLVu1yS+dVuRFw1rj6Sypghilpv1dq004ftoRiIcXr+1cvb1C+g
+ e1+GCw894PQkPu1QcGSBSC17BzbJVdUoKLEKnb23R5ToJPinuljlR2aaNZBBxuQfj4BqaudRJa
+ XDGeUKlYGqrX0PkiJf+ZiBwJ6Ik8t4zeEDjdqLOFU05xrby1lNOvGG7JThAaPObtceSdxUj1c7
+ /m5QwBatTkcZcWmVuIDWjsPnj5ACeHofJxm9d2p07oDQHlNegcWml37RbpxW8gEnNxSajg/OqB
+ c4E=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:11:05 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:10:40 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -77,9 +77,9 @@ Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
         osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
         asml.silence@gmail.com, jefflexu@linux.alibaba.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 37/37] xfs: use bio_init_fields in xfs_log
-Date:   Mon, 18 Jan 2021 21:06:31 -0800
-Message-Id: <20210119050631.57073-38-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 34/37] nfs: use bio_init_fields in blocklayout
+Date:   Mon, 18 Jan 2021 21:06:28 -0800
+Message-Id: <20210119050631.57073-35-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
@@ -91,26 +91,28 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- fs/xfs/xfs_log.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ fs/nfs/blocklayout/blocklayout.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fa2d05e65ff1..062ee664a910 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1702,10 +1702,8 @@ xlog_write_iclog(
+diff --git a/fs/nfs/blocklayout/blocklayout.c b/fs/nfs/blocklayout/blocklayout.c
+index 3be6836074ae..7ac96519c8b7 100644
+--- a/fs/nfs/blocklayout/blocklayout.c
++++ b/fs/nfs/blocklayout/blocklayout.c
+@@ -128,12 +128,8 @@ bl_alloc_init_bio(int npg, struct block_device *bdev, sector_t disk_sector,
+ 			bio = bio_alloc(GFP_NOIO, npg);
  	}
  
- 	bio_init(&iclog->ic_bio, iclog->ic_bvec, howmany(count, PAGE_SIZE));
--	bio_set_dev(&iclog->ic_bio, log->l_targ->bt_bdev);
--	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
--	iclog->ic_bio.bi_end_io = xlog_bio_end_io;
--	iclog->ic_bio.bi_private = iclog;
-+	bio_init_fields(&iclog->ic_bio, log->l_targ->bt_bdev,
-+			log->l_logBBstart + bno, iclog, xlog_bio_end_io, 0, 0);
+-	if (bio) {
+-		bio->bi_iter.bi_sector = disk_sector;
+-		bio_set_dev(bio, bdev);
+-		bio->bi_end_io = end_io;
+-		bio->bi_private = par;
+-	}
++	if (bio)
++		bio_init_fields(bio, bdev, disk_sector, par, end_io, 0, 0);
+ 	return bio;
+ }
  
- 	/*
- 	 * We use REQ_SYNC | REQ_IDLE here to tell the block layer the are more
 -- 
 2.22.1
 
