@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25917C4332E
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD4C3C433DB
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:32:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E821B206DC
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:30:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 752C4206DC
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390391AbhASF37 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 00:29:59 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:34800 "EHLO
+        id S2390439AbhASFaO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:30:14 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:34587 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731382AbhASFKf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:10:35 -0500
+        with ESMTP id S2388519AbhASFKu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:10:50 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611033035; x=1642569035;
+  t=1611033049; x=1642569049;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=L+Yd1/4O9mwEd1BMH1dhU7y2A0Eiek2poS1YnEOWuVY=;
-  b=fWNXSCAhcbItckwvIt5qRRy/ag9+6VYA5VsCk2g7hpN94LG8mgXBZXtP
-   Of30sUjN7DylpCZqlzSYcaZU8CHwwpVXkBmB6ZKagcEWbbwNFqSpqo1WX
-   I9mYBz+E8jv7Hoill6On+gt1uWNJWCWU1bA3LXMWwxH3f1FY2gUkGMKN2
-   0O8EiSQOfsCdWrlfQqJ9sAaahjG/wqGPdAhELQzXwm0K0ZcNk1GoRr+9B
-   9dEjOQ4hVw+wBbWkcu74fOip/LZ9L7ijdzn2Q22nJTQo09Zdp7VT9QIR0
-   1oAVkvJzea154Gx/6ZUxBM6ObIGbFxoVrvZV3l/7GUGYWfn64+ET0DVah
-   A==;
-IronPort-SDR: jC+O6nP/MAMdwui1af7Ikv1CzMbDn2XFYy9w37pA05PchpgXfW0iTXpZSI+zPQ0pj6l9svGRmL
- EeeG8gqBkJeLameM4gGQj1HtaIUf+BucXOvvOvvYDnmpSTJSZapjTkTP/oxKLlMvl+bjJP8FC5
- A04cqqq36Itlfmt8ovHQqqNVJM8MAci+zkzpXEuRaH7N3DOVDQIt51ktEeNZRptGsNPS9G4o5n
- QaYpfhZ6QzjqllRaJnL5GvkaPqrH6cBVDFZwsSJ6e3wXYxthLRhmzk/njFoGnIS/kC777+I1QN
- MwQ=
+  bh=nnZ15L+rQ/6NXzNuwsPySOITMggjv2dpPGtghDgn/3I=;
+  b=c6ge3YWau1INJmsjVAk3miP9WZn9TgseoFv6EOqoQC6pEZ1nSdc2v4H+
+   XY7xema/PlZUxMm7UmjFeo7N94HtuCKqcVmUHVSG17A8tROWpS6b1vg6x
+   OmpR5Xs/adYB4YsjvoN9Z0qY2bjx/cv9YKELvArFRHD/OdsoQmYfUxAw4
+   1ke950X9ux0Ug+67BzioxQ82+yXZrBTEFdBsWBfWCeANgT5qsjxk0SLjq
+   eBqYmFgwZPkUOG7tsdeJlEfFiAj5Bk0/g7eUZ2Zq7rZmBlu7K1Ec3dckX
+   cWC9kPtWyY4GLFws9H6mMDWx+i3m9ecfp7hUwUtov6N2EY0IwWGcn1YTE
+   w==;
+IronPort-SDR: gbGAu7FMM9M8ra3+i2OKLO6Jioiv358lVgEzPKNEu2wQS2qvvMBn6sOibH+3TH04xLAK7LIkk0
+ PxKEz+YInFHNc3iYphlT1w60bC1eS/YF66wsTlun+GeGNw+ngTePoNAvj67HmSnOP4C7ntmrTe
+ 41fMi5wApz9NqDKehY7r/diqAfT1k15t8QCgpkKP9Kzh+zENpuX+s/DJwP0BX86Nmz6SiEHyTQ
+ PYspGTVIesP99QfunG+h138RXlV0gUS6hKCM3+WKxFlL9b+Pq62pCAU2ABPVI/vq57691S3NHu
+ 5nw=
 X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
-   d="scan'208";a="268081142"
+   d="scan'208";a="268081200"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:09:29 +0800
-IronPort-SDR: WCdxvo6o/R9U8QtkcOsbeYEcSpfvlbUY82JvNgxd8EyLC3KfSNrguHpu817u4mB/itkKIwjKbj
- nJdP/tT9aDu0cE8Ez/n5ndSV3K166wwObOEYwK6srJ98RK72x+M/1hsPHgsEKdc8i0iMTeCPjb
- yGt83Q6B0OT1CN3CBEJpnJYT4c3oay1ImWN0Gquerkr65/i4Cv43QG2laqb6MFnMtWdV30iuk+
- 7Jtz4h2lb5262gPNnmJxqQEA1aBgnJATmNGrqoMhC2Rz9s9Xr5KOejiAIN20QpBgaCH2sngZw/
- OVdm2EtNwFv796HkL1cvnOAj
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:10:04 +0800
+IronPort-SDR: xpJbTCxWpzCZeo36vMY6XjlmHCGC4zjkb4E++k4PpAOJx4m0PY9+lr8a7JAIsOXY9q6Lq8PKZN
+ eF/dP5iQOP3fnZEQKtZdFSb/stFf1HUhyR3XfKv4jQh6M4J5FBp3lvEQ729h1QEurdQqZLnRIP
+ yCEms2/NAZpbOCE0Ambs8Za1BZJHvf/X5MByCHb8470orI8KDjjFGzqmTSqCkb8BVJgqODQSJv
+ RhBCTpJbLbO7M5o/x6p8TsI8oQTYHne7dOmBwld9Uq6ubcEYAg7YVteWfcYW5SV+8rJq41lijO
+ flzi/OFrhDmWNYU5lKeuvhIh
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:54:07 -0800
-IronPort-SDR: X2W/WReUXrAfluwkD7se2dZ1819ju1OynW28uTSvDSLN2ps3wO1qXeL0GJaXlJKwpIqaALDMhb
- kimb7jLOr+gpWYj06rWyhvZYDu9+2JsUCLwbEquhMfnoBM1g23E7vbj6QE5tFPT0RXTnWA/1bR
- 1HmN0UVHZv2jYDXSsFNmf+lCI3bFpzj7XxZ5y9GFacGpyfKADcPO/cyDwrim/4xYtJ4n8KmXYm
- LOaLwIRAOFVmRCvuPUSpoWyGGLooeoj1II+Syix9yI2u6Xeh/1MmoJBsJ6CUrYMQLVvvA0Jyzk
- ZqE=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:54:41 -0800
+IronPort-SDR: fQMFfgdtSu8nKcxUqzclyRB9P+rBI21YWfB4xejgzd1WEdOnHm3L4SakDlfU6oc/GiImWBi40s
+ xrwXfD+NR0eoiSPOERNl2yA3hT/FAiC6WXYJT29OBzUhR33jyW2a44OEEyaO8RW7lmq0Kfdbp8
+ zCQCZgyL3cFPfEB3ClOgIrUgLmRSb/JHMwYFzZiPt3rsP6BzAQG3FZAe7E697plU5PyJKHWhGY
+ W00r37LQP39Cea2s9M16j4CR51XnjLw+rlD/Eucyelmc2VgMjnWu4RGUyCYihZR6I9F/PiTOxm
+ QL8=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:09:29 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:10:04 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -77,9 +77,9 @@ Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
         osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
         asml.silence@gmail.com, jefflexu@linux.alibaba.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 24/37] dm-zoned: use bio_init_fields target
-Date:   Mon, 18 Jan 2021 21:06:18 -0800
-Message-Id: <20210119050631.57073-25-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 29/37]  btrfs: use bio_init_fields in scrub
+Date:   Mon, 18 Jan 2021 21:06:23 -0800
+Message-Id: <20210119050631.57073-30-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
@@ -91,31 +91,26 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- drivers/md/dm-zoned-target.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ fs/btrfs/scrub.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/dm-zoned-target.c b/drivers/md/dm-zoned-target.c
-index 697f9de37355..8b232b9e3386 100644
---- a/drivers/md/dm-zoned-target.c
-+++ b/drivers/md/dm-zoned-target.c
-@@ -129,14 +129,11 @@ static int dmz_submit_bio(struct dmz_target *dmz, struct dm_zone *zone,
- 	if (!clone)
- 		return -ENOMEM;
+diff --git a/fs/btrfs/scrub.c b/fs/btrfs/scrub.c
+index 5f4f88a4d2c8..1e533966ccf1 100644
+--- a/fs/btrfs/scrub.c
++++ b/fs/btrfs/scrub.c
+@@ -1650,10 +1650,8 @@ static int scrub_add_page_to_wr_bio(struct scrub_ctx *sctx,
+ 			sbio->bio = bio;
+ 		}
  
--	bio_set_dev(clone, dev->bdev);
- 	bioctx->dev = dev;
--	clone->bi_iter.bi_sector =
--		dmz_start_sect(dmz->metadata, zone) + dmz_blk2sect(chunk_block);
- 	clone->bi_iter.bi_size = dmz_blk2sect(nr_blocks) << SECTOR_SHIFT;
--	clone->bi_end_io = dmz_clone_endio;
--	clone->bi_private = bioctx;
--
-+	bio_init_fields(clone, dev->bdev,
-+			dmz_start_sect(dmz->metadata, zone) + dmz, bioctx,
-+			dmz_clone_endio, 0, 0);
- 	bio_advance(bio, clone->bi_iter.bi_size);
- 
- 	refcount_inc(&bioctx->ref);
+-		bio->bi_private = sbio;
+-		bio->bi_end_io = scrub_wr_bio_end_io;
+-		bio_set_dev(bio, sbio->dev->bdev);
+-		bio->bi_iter.bi_sector = sbio->physical >> 9;
++		bio_init_fields(bio, sbio->dev->bdev, sbio->physical >> 9,
++				sbio, scrub_wr_bio_end_io, 0, 0);
+ 		bio->bi_opf = REQ_OP_WRITE;
+ 		sbio->status = 0;
+ 	} else if (sbio->physical + sbio->page_count * PAGE_SIZE !=
 -- 
 2.22.1
 
