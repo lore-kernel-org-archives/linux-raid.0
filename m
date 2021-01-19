@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0874AC433DB
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:29:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25917C4332E
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:30:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B77E12311C
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:29:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E821B206DC
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:30:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389060AbhASF2R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 00:28:17 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51835 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726041AbhASFJH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:09:07 -0500
+        id S2390391AbhASF37 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:29:59 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:34800 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731382AbhASFKf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:10:35 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611032947; x=1642568947;
+  t=1611033035; x=1642569035;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=D5cmtnOCFRgYuXCr3qAROSsFWDMPsd6wC55oJ+RtqCY=;
-  b=gXS6aGeW69xGTbejTXr3A+VDyGmVf954sHJsGF181bpFFi9v0CieF00e
-   5f/i8wMYuwWM6RibSot34dkAM5U44W8FnzPeaCkbhRNVXzPyVbbIznW0h
-   rGhZuLopb+njfB+DHqqIzOF3pZHCOyMxPchTFF9yzMRLfkg3YQX63U2yE
-   o7xHEOdgeHTyJw3IP/c1hx13jQTWkT4Cw7cpTNVsObnZXOUG2nML5RzW4
-   Q28nagAFpc29CgfQy5opBPiGK2pVlgFdN/u2/tRsFXMxVhWhkfTUQI3Nf
-   A+dbwgIEaXtTyHDiTEu7zL2AnnoKRPFn2NLUgYeI/+JVZhDmRkDK/PmRg
-   Q==;
-IronPort-SDR: Jtn7QNW3HC3OVWnWuFnEorU+MICXHjTwrEczhQ/zlPGXOIyJB9gB4eV/6n4UsrLh+JlbAPOjUS
- 9XWMhH+AwZ6t/LsS+0Ojyh0pGlCp1A4yVWHAZ3DjybRf3HPiYG9eDb+kbc3f+WZmSKOj9i0Exp
- v+OhMZCyxB042RY/Km2wdv0hcfzuCtRmIOEnxuxVQ1gghss/8yCe4OaOucfo9f0DVGbaXhzTlG
- 3dt2ZSMHqH7JDKTWLc3EI6KkhMGhmU0/oJWhBpbEm8FuMU0Qh6STqjriCpDjwjhNIsWpTgYHAx
- WFo=
+  bh=L+Yd1/4O9mwEd1BMH1dhU7y2A0Eiek2poS1YnEOWuVY=;
+  b=fWNXSCAhcbItckwvIt5qRRy/ag9+6VYA5VsCk2g7hpN94LG8mgXBZXtP
+   Of30sUjN7DylpCZqlzSYcaZU8CHwwpVXkBmB6ZKagcEWbbwNFqSpqo1WX
+   I9mYBz+E8jv7Hoill6On+gt1uWNJWCWU1bA3LXMWwxH3f1FY2gUkGMKN2
+   0O8EiSQOfsCdWrlfQqJ9sAaahjG/wqGPdAhELQzXwm0K0ZcNk1GoRr+9B
+   9dEjOQ4hVw+wBbWkcu74fOip/LZ9L7ijdzn2Q22nJTQo09Zdp7VT9QIR0
+   1oAVkvJzea154Gx/6ZUxBM6ObIGbFxoVrvZV3l/7GUGYWfn64+ET0DVah
+   A==;
+IronPort-SDR: jC+O6nP/MAMdwui1af7Ikv1CzMbDn2XFYy9w37pA05PchpgXfW0iTXpZSI+zPQ0pj6l9svGRmL
+ EeeG8gqBkJeLameM4gGQj1HtaIUf+BucXOvvOvvYDnmpSTJSZapjTkTP/oxKLlMvl+bjJP8FC5
+ A04cqqq36Itlfmt8ovHQqqNVJM8MAci+zkzpXEuRaH7N3DOVDQIt51ktEeNZRptGsNPS9G4o5n
+ QaYpfhZ6QzjqllRaJnL5GvkaPqrH6cBVDFZwsSJ6e3wXYxthLRhmzk/njFoGnIS/kC777+I1QN
+ MwQ=
 X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
-   d="scan'208";a="157763776"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:07:04 +0800
-IronPort-SDR: 3KOifggCECjDw7+BF1aqp+vcmn045Y0f5Vs++y+7O6FUUUXsH3IJRpcT7tuvunjoc1uoLl7vWm
- suUyM5CRB0LjMRqVTFwTlLcnkOUPnLavqVQ9SvmsNPcjsdLrmUNGlOdh071Fi6THVn2+NdFSiA
- YRxoQeP9WUi7VDxiPFBoEQebhd2n3YAWH0TG9H6C6u0XGGZZQg6kamaaO42lqVEcCKd1mWk8oA
- hZlcrrf8AJxyWyD2FzKfQjUqY21ZodhHwQupxUC4bg1nNGyna+/8bpka79dj3OZ9R6vZlbXfs9
- uzHrxrYFi+fTQYdkvBMniNhv
+   d="scan'208";a="268081142"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:09:29 +0800
+IronPort-SDR: WCdxvo6o/R9U8QtkcOsbeYEcSpfvlbUY82JvNgxd8EyLC3KfSNrguHpu817u4mB/itkKIwjKbj
+ nJdP/tT9aDu0cE8Ez/n5ndSV3K166wwObOEYwK6srJ98RK72x+M/1hsPHgsEKdc8i0iMTeCPjb
+ yGt83Q6B0OT1CN3CBEJpnJYT4c3oay1ImWN0Gquerkr65/i4Cv43QG2laqb6MFnMtWdV30iuk+
+ 7Jtz4h2lb5262gPNnmJxqQEA1aBgnJATmNGrqoMhC2Rz9s9Xr5KOejiAIN20QpBgaCH2sngZw/
+ OVdm2EtNwFv796HkL1cvnOAj
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:51:42 -0800
-IronPort-SDR: pxAqff3CzY6SNypEdU8pcyRF7Ycp2XDG/dFXp67ii/ClPi77Zq14dTS0/Abfh56tMQEJCZUgEv
- hp/pu5jYnyf4G6Ftz6560hm1xTauIc3+qd7iUoR92HKspQ4jIbCxp/rRkQaHksEACl6G/0Nxwk
- QZZl1HrIzXwoiE65870EG7Al72AiwGtlVjZjJc6GYoY+JOC16HDs1pPQioV4bpbAPsiE8/On0q
- zAsBgNZtal+/XzWJ5D9TE5/A5r3kkpStmQ4w13z8jL1gTn8oG9nSDXfj42gpMTqu+V2gtyTMTx
- oyE=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:54:07 -0800
+IronPort-SDR: X2W/WReUXrAfluwkD7se2dZ1819ju1OynW28uTSvDSLN2ps3wO1qXeL0GJaXlJKwpIqaALDMhb
+ kimb7jLOr+gpWYj06rWyhvZYDu9+2JsUCLwbEquhMfnoBM1g23E7vbj6QE5tFPT0RXTnWA/1bR
+ 1HmN0UVHZv2jYDXSsFNmf+lCI3bFpzj7XxZ5y9GFacGpyfKADcPO/cyDwrim/4xYtJ4n8KmXYm
+ LOaLwIRAOFVmRCvuPUSpoWyGGLooeoj1II+Syix9yI2u6Xeh/1MmoJBsJ6CUrYMQLVvvA0Jyzk
+ ZqE=
 WDCIronportException: Internal
 Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
-  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:07:04 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:09:29 -0800
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -77,9 +77,9 @@ Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
         osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
         asml.silence@gmail.com, jefflexu@linux.alibaba.com,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 04/37] btrfs: use bio_init_fields in volumes
-Date:   Mon, 18 Jan 2021 21:05:58 -0800
-Message-Id: <20210119050631.57073-5-chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 24/37] dm-zoned: use bio_init_fields target
+Date:   Mon, 18 Jan 2021 21:06:18 -0800
+Message-Id: <20210119050631.57073-25-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.22.1
 In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
@@ -91,29 +91,31 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- fs/btrfs/volumes.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/md/dm-zoned-target.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index ee086fc56c30..836167212252 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -6371,14 +6371,12 @@ static void submit_stripe_bio(struct btrfs_bio *bbio, struct bio *bio,
+diff --git a/drivers/md/dm-zoned-target.c b/drivers/md/dm-zoned-target.c
+index 697f9de37355..8b232b9e3386 100644
+--- a/drivers/md/dm-zoned-target.c
++++ b/drivers/md/dm-zoned-target.c
+@@ -129,14 +129,11 @@ static int dmz_submit_bio(struct dmz_target *dmz, struct dm_zone *zone,
+ 	if (!clone)
+ 		return -ENOMEM;
  
- 	bio->bi_private = bbio;
- 	btrfs_io_bio(bio)->device = dev;
--	bio->bi_end_io = btrfs_end_bio;
--	bio->bi_iter.bi_sector = physical >> 9;
-+	bio_init_fields(bio, dev->bdev, physical >> 9, bbio, btrfs_end_bio, 0, 0);
- 	btrfs_debug_in_rcu(fs_info,
- 	"btrfs_map_bio: rw %d 0x%x, sector=%llu, dev=%lu (%s id %llu), size=%u",
- 		bio_op(bio), bio->bi_opf, bio->bi_iter.bi_sector,
- 		(unsigned long)dev->bdev->bd_dev, rcu_str_deref(dev->name),
- 		dev->devid, bio->bi_iter.bi_size);
--	bio_set_dev(bio, dev->bdev);
+-	bio_set_dev(clone, dev->bdev);
+ 	bioctx->dev = dev;
+-	clone->bi_iter.bi_sector =
+-		dmz_start_sect(dmz->metadata, zone) + dmz_blk2sect(chunk_block);
+ 	clone->bi_iter.bi_size = dmz_blk2sect(nr_blocks) << SECTOR_SHIFT;
+-	clone->bi_end_io = dmz_clone_endio;
+-	clone->bi_private = bioctx;
+-
++	bio_init_fields(clone, dev->bdev,
++			dmz_start_sect(dmz->metadata, zone) + dmz, bioctx,
++			dmz_clone_endio, 0, 0);
+ 	bio_advance(bio, clone->bi_iter.bi_size);
  
- 	btrfs_bio_counter_inc_noblocked(fs_info);
- 
+ 	refcount_inc(&bioctx->ref);
 -- 
 2.22.1
 
