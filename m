@@ -2,114 +2,133 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B45D7C433E0
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 00:10:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6A6C433E0
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:29:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B88A22EBF
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 00:10:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7564A206DC
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Jan 2021 05:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732350AbhASAKN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Jan 2021 19:10:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37842 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731557AbhASAKM (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Jan 2021 19:10:12 -0500
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74E2FC061573
-        for <linux-raid@vger.kernel.org>; Mon, 18 Jan 2021 16:09:32 -0800 (PST)
-Received: by mail-ej1-x636.google.com with SMTP id w1so26010437ejf.11
-        for <linux-raid@vger.kernel.org>; Mon, 18 Jan 2021 16:09:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Zj6lj1EKV9y6gbJRNSl9V+sGUbC+pZyrp8aqvNYhh+U=;
-        b=kzNFUkCK/5h99B56JKZQg+3bh+cHHObu4J0g+Dvq6MBaCmtxBw8zPVgdhEP8995ZyU
-         iZ75ie+eMEJ0knrHmzHqk0rmHREL3gSE8TuBVK7zPKczto3IVO+E4UXI2tYwmLNuthqb
-         J4eWuQ8mSGA9LGNC4jpgwhyT+fbg/XBPaEvbXC6v0qQQnPxGaS/VkiZ81p/0KFWO1IxG
-         vTg7t7+Jk4Pmx0cN4H4VRTcK/XhYvkg+BHMhBbJvB5334+ZjjhGRYkLbz1PgWc183609
-         2BMYAsBEx6GdNjG7A4GHs9+pNC9zY9TLmZgcOTzieqJDGmYFKq8d62Z+LH1daU/NIj+i
-         6D6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Zj6lj1EKV9y6gbJRNSl9V+sGUbC+pZyrp8aqvNYhh+U=;
-        b=YxCLkV2s+D1XN0PqR2gL30g+8y8j334yqIPrhsHvdKXGxEozo0pkAw3pxDxhlwePLz
-         nolAK4mYc3kzrRb/EoQADDKURPRS5Evv5ziYsR3Ga035vEGaKgsYpebT1/0PWYiOK7KB
-         iidVh0uB5FyajaPT2pTb7PXddXIgmptrZ8JJOZtyyZAN8Rxv8wvhIiwu4uSz71+iNLt4
-         bILde0xRB4xDjEXz6oO2QHAb8aD+lh2/XpWQAa69QUVrXU9QjliThY3wwxXy+OsL/o1v
-         MeUoFIj/T/pzYy3L6qXgZ2hvhgT/qj1X0BxiW+kSyRpz5z3wb/8CzyUh9O9cP4OQFnZb
-         IEkw==
-X-Gm-Message-State: AOAM530qQJNgpKTNJsvDJSOHXAVb/NDenpfMpeIRogB6qudRnS+Tpnsl
-        72YNYj9YnQRNq+HiPo5gggMp5hSPWhSRbtliTzwpMRRzUcA=
-X-Google-Smtp-Source: ABdhPJw/bgcuGa7kqOxFyTDU1pld6YHSDGx1kNnU5YlOxQoR/ZhhDett2thu2XDJMyoWIErYtmJYP3E84hPwrKNDE/c=
-X-Received: by 2002:a17:906:9345:: with SMTP id p5mr1314061ejw.40.1611014971002;
- Mon, 18 Jan 2021 16:09:31 -0800 (PST)
+        id S1732944AbhASF1p (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 00:27:45 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:51811 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389834AbhASFH5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Jan 2021 00:07:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611032876; x=1642568876;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ZpEdbwVtPI0wVPLoSXxNauBL5CtIsv1pRUC3n0RI/T8=;
+  b=RQ08hgtgbjsaEc/NjIqdiz+HXgZyCES5X29TOkQCoOtMdpU3OGNR+ZXq
+   owpIEhX9i5TG/PujPBmIl4HioeOCUY9ZJxiIM9G4iUedYHqoRU4i8xD7r
+   R47ESZvAyr/qGqW41V55myWI2oOj551s3Rvdwt8Z76+yS4mIw4d8t/bGu
+   t75OGek8s90L7x9HrJmD8TPnvvZsQXTUr2+Mt/Nb85i3zrXLrQhUHrp2v
+   7qjBWLKT7LrwRR6xvfxz140fQflG5Mj2ZCxa+nlI/E4WQ9bnqAscJGAnW
+   l0e2nMfDvY1kIdyYV07+J1b1qNJi9ZSRf90LERkYC/mSb+dFYaafI7o86
+   A==;
+IronPort-SDR: 7b250JfhUMmv07RyLN/n/+VSCSNzF7O9pHe6QqDNllClPx/HsmrdWDQX826O9RlqR1t+o0FeU2
+ 3nNFZSceZBxc+aDMcwdP+dqFkMCj5kQPJYv1fzOumgTYkODSh19iDZlTgzXzIkIl4EXn+H85xz
+ gDFMkA/Ic5uGB4YjCCWD8MdAfX+JR90Ngoxx17kM8pieDOeCh2XmQhzKTAODhzycVqg5moMAQL
+ 78vzF77Oy3BNccc/JvDu8CE40KVv1iE2giVQmFYdO/4t9SjS5FPbO3dI5Yaz8AkTk94l3Htsmd
+ wck=
+X-IronPort-AV: E=Sophos;i="5.79,357,1602518400"; 
+   d="scan'208";a="157763755"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2021 13:06:49 +0800
+IronPort-SDR: PnLGHmRPjPv6mVfmbEJTDrsqOIAqCK5GE42P8oM4jZlpKaoSdYM+TtBl67mehGcYNisyA19sgS
+ yLwLCTScdhlnnkHND2lvQFzDCcnbqO5oHieP/2DhU0SfGiHR2VSi5UBNo8L5qtweDt6D+VePPZ
+ pPNMxR6viaOuZURe4jB076VeJLcyQpX+8pSZ9P1TaSQIc3p8YBehcDrmaTPMXbRArxJfcRdjPN
+ w+ZRAQSYb5s6fq6Sn6wRcGzFeWcgq5QGP2XOGDsnAAmFRlkU6L8HW/TO5YqJ86+Jq4wC5wG0XV
+ 85gjqPbui5TRiNpxdNbbC8OF
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2021 20:51:27 -0800
+IronPort-SDR: XoCPpBnEyAS0C26NACpPNr6hc2mgCkBhR/slXc8vz6d3NBxAPkngsmR+924mOBWvaQi6WZHAP1
+ e4hIrlRuqs07ngks51wLmgnhqz6gvPVZzt6c/xtYGHpktVNv4G+tlyQwdXjSld+DKB31WM3e0X
+ o4xJZXi1ZVzEGxYUOHxoYuaGW27b5AhyEnbnJEWPqSGnvSmb4YAK4r55aDWz+qouFqxTNJ1Ve4
+ MmaSi236cQpo5ubtxkwfTjN+hUw7qXvWgQEEinw8kPT9rlOQYeg6qJM9v7qJDF5MBv1NXcWrD2
+ OOA=
+WDCIronportException: Internal
+Received: from vm.labspan.wdc.com (HELO vm.sc.wdc.com) ([10.6.137.102])
+  by uls-op-cesaip02.wdc.com with ESMTP; 18 Jan 2021 21:06:49 -0800
+From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+To:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com
+Cc:     jfs-discussion@lists.sourceforge.net, dm-devel@redhat.com,
+        axboe@kernel.dk, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, efremov@linux.com, colyli@suse.de,
+        kent.overstreet@gmail.com, agk@redhat.com, snitzer@redhat.com,
+        song@kernel.org, hch@lst.de, sagi@grimberg.me,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, clm@fb.com,
+        josef@toxicpanda.com, dsterba@suse.com, tytso@mit.edu,
+        adilger.kernel@dilger.ca, rpeterso@redhat.com, agruenba@redhat.com,
+        darrick.wong@oracle.com, shaggy@kernel.org, damien.lemoal@wdc.com,
+        naohiro.aota@wdc.com, jth@kernel.org, tj@kernel.org,
+        osandov@fb.com, bvanassche@acm.org, gustavo@embeddedor.com,
+        asml.silence@gmail.com, jefflexu@linux.alibaba.com,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Subject: [RFC PATCH 02/37] fs: use bio_init_fields in block_dev
+Date:   Mon, 18 Jan 2021 21:05:56 -0800
+Message-Id: <20210119050631.57073-3-chaitanya.kulkarni@wdc.com>
+X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
+References: <20210119050631.57073-1-chaitanya.kulkarni@wdc.com>
 MIME-Version: 1.0
-References: <CAHikZs7DaOj4QAw0VcbidmdrP11pWE-NTcxXDJS=KW9rf0TY7Q@mail.gmail.com>
- <87eeijjcgo.fsf@notabene.neil.brown.name> <CAHikZs7EKe2H5OYdxd5dwZ8WCs8fdVp-5BWku0vQ5Bb-yCstCw@mail.gmail.com>
- <8735yxkh30.fsf@notabene.neil.brown.name>
-In-Reply-To: <8735yxkh30.fsf@notabene.neil.brown.name>
-From:   Nathan Brown <nbrown.us@gmail.com>
-Date:   Mon, 18 Jan 2021 18:09:19 -0600
-Message-ID: <CAHikZs4uOs7RZs038vkw7ryEEK31e-rq7M8Xu7B0cGDa7fiK4A@mail.gmail.com>
-Subject: Re: Self inflicted reshape catastrophe
-To:     NeilBrown <neil@brown.name>
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-> That command wouldn't have the effect you describe (and is visible in
-> the --examine output - thanks).
->
-> Maybe you mean "--add" ???
+Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+---
+ fs/block_dev.c | 17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
-I feel like I did `--assemble` but it is entirely possible I am not
-remembering correctly and did an `--add`. It may be worth testing both
-scenarios to see if `mdadm` could stop people like me from shooting
-themselves in the foot. To be clear I am not placing any blame on
-`mdadm` for my stupid mistakes.
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 3e5b02f6606c..44b992976ee5 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -239,12 +239,9 @@ __blkdev_direct_IO_simple(struct kiocb *iocb, struct iov_iter *iter,
+ 	}
+ 
+ 	bio_init(&bio, vecs, nr_pages);
+-	bio_set_dev(&bio, bdev);
+-	bio.bi_iter.bi_sector = pos >> 9;
+-	bio.bi_write_hint = iocb->ki_hint;
+-	bio.bi_private = current;
+-	bio.bi_end_io = blkdev_bio_end_io_simple;
+-	bio.bi_ioprio = iocb->ki_ioprio;
++	bio_init_fields(&bio, bdev, pos >> 9, current, blkdev_bio_end_io_simple,
++			iocb->ki_ioprio, iocb->ki_hint);
++
+ 
+ 	ret = bio_iov_iter_get_pages(&bio, iter);
+ 	if (unlikely(ret))
+@@ -390,12 +387,8 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 		blk_start_plug(&plug);
+ 
+ 	for (;;) {
+-		bio_set_dev(bio, bdev);
+-		bio->bi_iter.bi_sector = pos >> 9;
+-		bio->bi_write_hint = iocb->ki_hint;
+-		bio->bi_private = dio;
+-		bio->bi_end_io = blkdev_bio_end_io;
+-		bio->bi_ioprio = iocb->ki_ioprio;
++		bio_init_fields(bio, bdev, pos >> 9, dio, blkdev_bio_end_io,
++				iocb->ki_ioprio, iocb->ki_hint);
+ 
+ 		ret = bio_iov_iter_get_pages(bio, iter);
+ 		if (unlikely(ret)) {
+-- 
+2.22.1
 
-> To reconstruct the correct metadata, the easiest approach is probably to
-> copy the superblock from the best drive in md0 and use a binary-editor
-> to change the 'Device Role' field to an appropriate number for each
-> different device.  Maybe your kernel logs will have enough info to
-> confirm which device was in each role.
-
-I checked all my logs and all I can see is the start of the reshape
-with no indication of what is changing.
-
-Jan 14 00:20:46 nas2 kernel: md: reshape of RAID array md0
-
-> One approach to copying the metadata is to use "mdadm --dump=/tmp/md0 /dev/md0"
-> which should create sparse files in /tmp/md0 with the metadata from each
-> device.
-> Then binary-edit those files, and rename them. Then use
->    mdadm --restore=/tmp/md0 /dev/md0
-> to copy the metadata back.  Maybe.
->
-> Then use "mdadm --examine --super=1.2" to check that the superblock
-> looks OK and to find out what the "expected" checksum is.  Then edit the
-> superblock again to set the checksum.
->
-> Then try assembling the array with
->    mdadm --assemble --freeze-reshape --readonly ....
->
-> which should minimize the damage that can be done if something isn't
-> right.
-> Then try "fsck -n" the filesystem to see if it looks OK.
-
-Since I do not know the disk order I'll work up a script to use
-overlays and craft these super blocks in each permutation with `fsck`
-checks to see which one gets me the most data back.
-
-I truly appreciate the help, thank you very much. I'll let you all
-know how it goes :)
