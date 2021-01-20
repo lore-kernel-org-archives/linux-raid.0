@@ -5,44 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1229CC433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3160CC433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF6DC22509
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:21:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBB1622509
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731018AbhATCUT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 21:20:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47266 "EHLO mail.kernel.org"
+        id S1730323AbhATB24 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 20:28:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46620 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730857AbhATB3o (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 19 Jan 2021 20:29:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EDC8623715;
-        Wed, 20 Jan 2021 01:28:04 +0000 (UTC)
+        id S1726322AbhATB2t (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 19 Jan 2021 20:28:49 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A11CF23332;
+        Wed, 20 Jan 2021 01:27:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611106085;
-        bh=jcd+HH/G7EYQLV0kHgGg4IVObzS7LgAWPr49vD7pUh4=;
+        s=k20201202; t=1611106028;
+        bh=MHHSEdHWWHQDTN+p6yi39+yU36kMMRKVLoHSUbGF48c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aDB1viuI5Sqi4sYsm6U8lwGjqIcA0Qw2OtvVgd1d2wFT7IXghQMOHtctWAlKkePWP
-         L7Kgo8jQ4gNSUnheYp2B2ns34Po9qz2fGXTM5sIFGAyi1So2JUbnnRbqRAjTJQPm75
-         WTbAk0ghfAX5SCRsu2j09ZvDd1YeAeFq7kh3ANP2Zs39BxtqldsxELA1+PAx6BYPAx
-         pfMg2rAtyru3jAAhqWWhQv9Et3J+N4EvlTnWzm9UEVU5YqTHPuV9Krx5EojVgOO27+
-         xL9b4ZXOjot3F50c7hb6DVVNIEwcXoi41jDr0B3PMn345tDSP2elKw12wfVz3vBv/D
-         ff69MpfzZII8w==
+        b=MkKQozzOJxXpDeR/toxOeurs53QSsJXXZXDUZEynOTzYjQRFDCv67ZRdfH/zcQEfM
+         rg9kEVWiTmp0hVqXvzJ830dU3eXy/iUwMs/tcxeNxubWjI1uTOzzHOrBvOFt56iDQ7
+         UE1A4mvcwKEB35cJ/BjY2T1WGOvwoSiAquYvhL1oyarSYIIqf741no+FgC1inRotYg
+         EDFfd4fesHpQubJidWk9pRhMoOxzXMc9WFSuhsY775b20PBkpaf6K6IsbYTz9cCZ6+
+         eEzVEUe1SyGeltZ3Ht8oT5HiBKV2sWf4kzRdmGW51Bii1TYtsxVQtfO3aFpM1lpcCt
+         3Rib1qv6yuBNw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Anthony Iliopoulos <ailiop@suse.com>,
         Mike Snitzer <snitzer@redhat.com>,
         Sasha Levin <sashal@kernel.org>, dm-devel@redhat.com,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 2/9] dm integrity: select CRYPTO_SKCIPHER
-Date:   Tue, 19 Jan 2021 20:27:55 -0500
-Message-Id: <20210120012802.770525-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 03/26] dm integrity: select CRYPTO_SKCIPHER
+Date:   Tue, 19 Jan 2021 20:26:40 -0500
+Message-Id: <20210120012704.770095-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210120012802.770525-1-sashal@kernel.org>
-References: <20210120012802.770525-1-sashal@kernel.org>
+In-Reply-To: <20210120012704.770095-1-sashal@kernel.org>
+References: <20210120012704.770095-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -69,10 +69,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 4a249ee86364c..231b6a18ca272 100644
+index aa98953f4462e..7dd6e98257c72 100644
 --- a/drivers/md/Kconfig
 +++ b/drivers/md/Kconfig
-@@ -508,6 +508,7 @@ config DM_INTEGRITY
+@@ -565,6 +565,7 @@ config DM_INTEGRITY
  	select BLK_DEV_INTEGRITY
  	select DM_BUFIO
  	select CRYPTO
