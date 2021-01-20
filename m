@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3160CC433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30FB8C4332E
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBB1622509
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C594523131
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 02:27:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730323AbhATB24 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Jan 2021 20:28:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46620 "EHLO mail.kernel.org"
+        id S1729648AbhATB1k (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Jan 2021 20:27:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726322AbhATB2t (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 19 Jan 2021 20:28:49 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A11CF23332;
-        Wed, 20 Jan 2021 01:27:07 +0000 (UTC)
+        id S1729339AbhATB12 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 19 Jan 2021 20:27:28 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B0FC323121;
+        Wed, 20 Jan 2021 01:26:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611106028;
-        bh=MHHSEdHWWHQDTN+p6yi39+yU36kMMRKVLoHSUbGF48c=;
+        s=k20201202; t=1611105971;
+        bh=74ee0G2fGOSu4kMozZgJOcryEsvgpnye5mybvhlRqt0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MkKQozzOJxXpDeR/toxOeurs53QSsJXXZXDUZEynOTzYjQRFDCv67ZRdfH/zcQEfM
-         rg9kEVWiTmp0hVqXvzJ830dU3eXy/iUwMs/tcxeNxubWjI1uTOzzHOrBvOFt56iDQ7
-         UE1A4mvcwKEB35cJ/BjY2T1WGOvwoSiAquYvhL1oyarSYIIqf741no+FgC1inRotYg
-         EDFfd4fesHpQubJidWk9pRhMoOxzXMc9WFSuhsY775b20PBkpaf6K6IsbYTz9cCZ6+
-         eEzVEUe1SyGeltZ3Ht8oT5HiBKV2sWf4kzRdmGW51Bii1TYtsxVQtfO3aFpM1lpcCt
-         3Rib1qv6yuBNw==
+        b=R9zf/MckfHV5sBWpG1m5EigHjlV9ycJO7faeSOnTwkvENfufQ0rq7euPaEVm+5/2z
+         g4padWtyMH9UY00iKfxEsGoNbuv3uFbdruukXP+iPbYe0qSFT3+1qyCJwwn8I1Tqx5
+         5KEKaZn0hnZTQmz1T8ACJZ0pFZNi52Uuped3oxJn7MxMdtaT4QjuJP+vs6iRPTUHGG
+         BZ7lSze8j1qDxiepf2HHzTFw8QVC+JsdjN21wiHp08ksVfxbdWG4qZrIIcfBCluYWM
+         dcHLBgXDNpH8Hj4RTfDN016YwRFJkMINe5ZAGoOqHXOav2gzV2djtbTkz3Vwv/0BuC
+         X8gfcccAsVhOw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Anthony Iliopoulos <ailiop@suse.com>,
         Mike Snitzer <snitzer@redhat.com>,
         Sasha Levin <sashal@kernel.org>, dm-devel@redhat.com,
         linux-raid@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 03/26] dm integrity: select CRYPTO_SKCIPHER
-Date:   Tue, 19 Jan 2021 20:26:40 -0500
-Message-Id: <20210120012704.770095-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 07/45] dm integrity: select CRYPTO_SKCIPHER
+Date:   Tue, 19 Jan 2021 20:25:24 -0500
+Message-Id: <20210120012602.769683-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210120012704.770095-1-sashal@kernel.org>
-References: <20210120012704.770095-1-sashal@kernel.org>
+In-Reply-To: <20210120012602.769683-1-sashal@kernel.org>
+References: <20210120012602.769683-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -69,16 +69,16 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index aa98953f4462e..7dd6e98257c72 100644
+index 30ba3573626c2..5c0e7063f5f5c 100644
 --- a/drivers/md/Kconfig
 +++ b/drivers/md/Kconfig
-@@ -565,6 +565,7 @@ config DM_INTEGRITY
+@@ -585,6 +585,7 @@ config DM_INTEGRITY
  	select BLK_DEV_INTEGRITY
  	select DM_BUFIO
  	select CRYPTO
 +	select CRYPTO_SKCIPHER
  	select ASYNC_XOR
- 	---help---
+ 	help
  	  This device-mapper target emulates a block device that has
 -- 
 2.27.0
