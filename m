@@ -2,190 +2,242 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01496C433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 16:32:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A32FC433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 16:35:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C09C623122
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 16:32:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FDE6233E2
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 16:35:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403929AbhATQb5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Jan 2021 11:31:57 -0500
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:55548 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2404053AbhATQa2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 20 Jan 2021 11:30:28 -0500
-Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 10KGTE5u015386;
-        Wed, 20 Jan 2021 08:29:44 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=3cIEeInYfU0KUR9lTq9ZHTfT1oUK9yAqpc89uKoF70I=;
- b=mIs/euApdrHlFy0W3ThVlKUyoeVdp9MXZJo/18H4ca3iiYL20cYXVBG6bhW23tFglsUI
- zLuhef8c6gzM7AdG/i4BtfFoJCJhWkFRGjv5HZAESbzBdszvgY6lHQd5ALmox/eiFGGj
- ABoA9cC9pFne4IUnv4ssACdHPIhWm/BmljY= 
-Received: from maileast.thefacebook.com ([163.114.130.16])
-        by mx0a-00082601.pphosted.com with ESMTP id 3668qhmcbw-18
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 20 Jan 2021 08:29:44 -0800
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (100.104.31.183)
- by o365-in.thefacebook.com (100.104.35.174) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Wed, 20 Jan 2021 08:29:38 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hizS+unYPCTaFv/x3nQbJGO8gR8RttORHHomjBsYtXGiY027RIcFaENHB2YLpvPLl/YbsGuf3HIPIihbmGp70+fUalO6vulUnhSmGCKBoM+YHdd/OtWnp5Y4ilvTNQwxHPwnAuXGu9Yjnk+Ho0t1XkNPAxEoFbCiSh80wbfoCPy8JRiqMolvWXMDO8WKCD+bNA9BWnXc+jGuMjYCYZKDxTsMV3RUA4cDkSAHuSi19HxpeHEybObfEKrfZDObK2YZLdMlD6OjeHcccpai9JbKPL89f83ZZ6QT4DHXtRRwon6aOpzYYdUHqZ8CgPDF1JpT0eB5eQeNCf7Cl0RJvqaYaA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aT7IpD2ZIx/29DKf1/eYY/e6n0H7G/vFpvitWydlHJY=;
- b=hspBmuRy4aXQAGZhvqP3zNZsIGrsgc22IJE7qjG3yrOUXbEnE8DVXN8OtpFJ93eDBdDPztMqktw6NS86GDGZWgBw3dxFxh+RxxBefhxXJQK6BrYnLoapknxf/H3cOtZ1/awkRk6AXE0r/tEjEqrB8lSDQk57xexUa+BgjmFpYQZlusU1D/2m7JLIK999m/LhXvOQl45w8yo6DQrFDRexbn7KtTo3mwwlQZ0wtFy8Lt1hLN6B/haOhOxgW0vC/ylmIYtiW21q3yxQzv3z0gwBYCPUx78C0SFKnZ+mjgcFQuuoN5xryzUOhAcPlCfUfSfKfuZ/uwoBreRUuNlNARSfpw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aT7IpD2ZIx/29DKf1/eYY/e6n0H7G/vFpvitWydlHJY=;
- b=hgbI8Ai0jx+5EkYqhRBAnm/hMx9rUDuX9hrYH79p2//4r1B+zJhhLmej7HqYVhydfl6f4Cr7Ku5oSfd0N6Sh1iClQRfYABWwkVclsXUQkrh6j6QiBdQMtljg7RUHjro8p0zP5VhUJ9hd1DxYNIcPDj5i47xC5OKxhokW5xi3hps=
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
- by BYAPR15MB3415.namprd15.prod.outlook.com (2603:10b6:a03:112::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.14; Wed, 20 Jan
- 2021 16:29:37 +0000
-Received: from BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::c97:58e4:ee9:1dc0]) by BYAPR15MB2999.namprd15.prod.outlook.com
- ([fe80::c97:58e4:ee9:1dc0%7]) with mapi id 15.20.3763.014; Wed, 20 Jan 2021
- 16:29:37 +0000
-From:   Song Liu <songliubraving@fb.com>
-To:     Jens Axboe <axboe@kernel.dk>
-CC:     linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
-Subject: Re: [GIT PULL] md-fixes 20210119
-Thread-Topic: [GIT PULL] md-fixes 20210119
-Thread-Index: AQHW7v3SOp01z7POsEy2/TW0GuItFKowrFsAgAACR4CAAAZEAA==
-Date:   Wed, 20 Jan 2021 16:29:37 +0000
-Message-ID: <D76D387E-E353-4049-994A-2A3B4E99A1EC@fb.com>
-References: <745AFA65-3D87-4D24-9B16-D1DE59CB3AC6@fb.com>
- <1b5ab25e-7ab0-ef51-ca3d-b2e25d916533@kernel.dk>
- <B68A8E6B-D79F-4AAA-AB7A-E52F6213B343@fb.com>
-In-Reply-To: <B68A8E6B-D79F-4AAA-AB7A-E52F6213B343@fb.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3654.40.0.2.32)
-authentication-results: kernel.dk; dkim=none (message not signed)
- header.d=none;kernel.dk; dmarc=none action=none header.from=fb.com;
-x-originating-ip: [2620:10d:c090:400::5:ad14]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 41ec8b59-1eed-4eea-f515-08d8bd60948b
-x-ms-traffictypediagnostic: BYAPR15MB3415:
-x-microsoft-antispam-prvs: <BYAPR15MB3415AAA7BD7D5E46F97BC005B3A20@BYAPR15MB3415.namprd15.prod.outlook.com>
-x-fb-source: Internal
-x-ms-oob-tlc-oobclassifiers: OLM:883;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: d/yIuFogvqHww3jnB2d0Vaq3TMtR0DI8MMpvQafJ3iWgLryOa0eDeBy8RXLPpIDVAT++tf3tnSHD2dLQjobVs5eqrPGY51Vrs6tBo7orhS2IX+moU55LHXVj7QCeHDC4/dDKhQaFTegdevIW7vrrwZ6B1H5VmOkuUDcEg5aPpi8fDT0KVulZ/ppIxABlA/kDL5dK8z+2vPiYATs2hzoVDtS3M7e9uG+rRON3+SbUAuaz8ncTjwR0m2TrOoAPiwr6j79LFjBZlBmmMiquvTTVqE1YyaJ+u+jd2JlBgCPh8q65fbCDRxF6rn4xQipimzwOYI6uhNuapMslZYpnindKn/WcmuEmmvJIDHraxcZWm60KGsTx49WhBV9qSzOBv2YcvZWIzS988ZF+GsFFLE72NS19PULw4MUHhG66yQdOov8SjtAO14Bx1cT+xflp+awdXdY+/dXrYM3ZPDGOvaVDIXmaxRBYchsfCe2VKLUcfs5WZYIWOqaaDg55esK9J0ZCgTS6iWPMr4T1z/Ff7fJYDxfQ+NrWEqGO6/w9QGlnQxweENB3VYtY3ai/5AGn2UZXg+bfEaZYCQ2oXdCk9peuvDTHTCgOQtN0Kprzbc4UnUWsidzXMR1WDmvcJSfxZg4s5xNindc8HCEYyW+Uw3sEyg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(136003)(366004)(376002)(396003)(39860400002)(33656002)(36756003)(6486002)(71200400001)(6916009)(8676002)(8936002)(2616005)(66446008)(66946007)(478600001)(91956017)(76116006)(54906003)(86362001)(186003)(966005)(83380400001)(6512007)(53546011)(6506007)(316002)(4326008)(2906002)(66476007)(66556008)(64756008)(5660300002)(45980500001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?uPyM71HcicwnnbyMsQUmlSJrLoKlvzQyFyeJQUVaTYmPIICd0mhdnSOj/V+k?=
- =?us-ascii?Q?D5jI46M0LLOZvkxC5kHS//yaCQdZG5e6s9rBbgD5h7bICUaIqjAjrqo1haDK?=
- =?us-ascii?Q?ol83FNdM4ByfniReHY9xJmankx85i1fRbMoBHJZ3FRcqSVTfbdcLbn4F7C1m?=
- =?us-ascii?Q?YR6pnHarzuvepJJk0zvfp2b6vHJSF+2ONYTn3Nhb+UXGijNIiR6BCANI9thB?=
- =?us-ascii?Q?z7MOGRsw15maxDPatz1eXTcht1/yWtiuhguRc2zwg/jDzAJ3lFzWhaH2R0nJ?=
- =?us-ascii?Q?ItOpWT+8lWaajPYkMaRqYCEVrOAYFEaF7XpVglEaapWn+oWQ1s9hUSx5IDNu?=
- =?us-ascii?Q?tre87MAymektFm/68F0E+WczhwjVo6qcaRloOj8R0C/UB/gHPQO+w3tUDRdE?=
- =?us-ascii?Q?RSo/473iCoxu9nw6z3hvJ5MJd1C+RQrasxgY96vxqoWXsQk4etcq/sktLgfE?=
- =?us-ascii?Q?veSChQG1eqaIy53Fs/xdNRLDaBpup8h1zcNsHnuMAVAmE5Kg2hUm9pbb4uMg?=
- =?us-ascii?Q?bUcp13lddetEo7cB49fQYSdf8nHN7pJAWWRBEhC/K7QBAJ67QmtIUkAJjO72?=
- =?us-ascii?Q?GLlZ39PJRVQNrm5DYe39aes58pLLqRLdACvR/LeY4GJfKfwWyIs2xPdx4xte?=
- =?us-ascii?Q?LrMQzAhGjsWfU06oBPJyE54y3gqnBg4Sl6Wyl6wayTQ0Wl7iN+Ehs43BO/Q/?=
- =?us-ascii?Q?GQVT9Owlu0aVrTgRc1mjy32Dyb8j+1B4NssZ0vVRN7e2FOCpupjcr7pX7SNi?=
- =?us-ascii?Q?Iu/k73cKFF8d1Oe+VTMGdboHbqula55uRzNKY4tnXcluyXk45FJpKMzlWk2A?=
- =?us-ascii?Q?72IE6BA613wdXA+BX3KpdO2V2Kr+Guo0Lm+e3DXUBs/vL8uGx+jYzicgpm5q?=
- =?us-ascii?Q?Dga2HTemYoxnm1tvMmC2ltFjh34G1EAhGHhZPJ4Tf4k09B7L4MFZ3RUuO5q9?=
- =?us-ascii?Q?nR3X6DhjHGEsj4IIsTflmai+BZ6BHieNvZzmP392nm2cD2y3YENkloEP3pMQ?=
- =?us-ascii?Q?YiZ86+XWu7d1KM/JjWfnNuJp3Hfgusqgpb5dSNymhwM5CS3e3Luy2MJqfHCx?=
- =?us-ascii?Q?3hFh3q5NJyaBHmvmXuL3D8k/Y5r+gZZ4+KCl66dqrbA0q/k2lUw=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <3E45DCC7D939BE4388165090D9C18BA5@namprd15.prod.outlook.com>
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 41ec8b59-1eed-4eea-f515-08d8bd60948b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jan 2021 16:29:37.7936
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: j6+2dRUkXH1tmjkA/WhSOeKhu3c4Mb+4cyVEc+xnRZjB+NFJEhFlJLzTNrCKCAqFzhmQw9+9++PpdvbTivMKtA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB3415
-X-OriginatorOrg: fb.com
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S1731520AbhATQf1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Jan 2021 11:35:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51758 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391071AbhATQe6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Jan 2021 11:34:58 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7329EC061757
+        for <linux-raid@vger.kernel.org>; Wed, 20 Jan 2021 08:33:58 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id l23so2526424pjg.1
+        for <linux-raid@vger.kernel.org>; Wed, 20 Jan 2021 08:33:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=JLGWYHpThCdPVVDkiECV6GKoYJQKgK7kvIvNi0RW4IU=;
+        b=EajgIUSDQxdCeg1OOPniYRAp+omb97kwO2g5i7bqkXMWDjS7VjoaElZINfyJOOZmoG
+         pOvX5fWOSSjkCG8Eeomlfkmqm7v39xXJ37bWf1wavV1hK+/uHSOVeUyffjcKeAYaB68O
+         L3+FQ7T7sxByCYhXnnS+yDgeR6rnjk7aDwJTnO5logdsMbwWEl8CyAaaN/oBETX+l86S
+         qH95YaB6iVT4E/2DZBRSXHtXJTOgTVMoMyd45xl7KvrOgBfdaJP5ck/FJdH7PJl9hbV+
+         47XR+Nkw7+/EHz51FwAFAj8Vw0ueySSNW2sobdHcRnLSF1wENC7Z8rSG2OGxoaUtHLnM
+         S52Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=JLGWYHpThCdPVVDkiECV6GKoYJQKgK7kvIvNi0RW4IU=;
+        b=tY9P/lDMmUfK7RfDU+4itPrMjwi0/HgVXHpn7/OXU4JBO/w/g9EED4vnDMoJ6HQgxJ
+         vkDzzDtTinkCBfGDY8Qernsy3W3/IqJJtJrqjCAPInXtf27Jfaf00zir7wk67jZzr2rB
+         uxpag9ExXguzH47z6jW6zyZIvzJXf8Rs9+RG2P/qaHkJq+oxJdIlTIaY+bkG/Z2YQHnO
+         gXV8cBqJA8PXKc43xTYyz1bYkDDp9acNTeADvnYeI92pRNdXa/uMAe1ay4Ba6RJxq4BF
+         pyalZheJSEd/HVfEO9lBaoVA4pS536u8Z8Xl9ZiDZWPoO1kjZX7zuEEi4xq/JbnVIRnu
+         Uf+g==
+X-Gm-Message-State: AOAM531I7cJOvZCHiIYACw4MjjtL013hHqPOGbClBF5wUgdAd60EiEY5
+        2CD41h2dkgcGgp0oqOv/xehcnQ==
+X-Google-Smtp-Source: ABdhPJwn5ZkwkYWcRHQRxbmIFZ2sDHzHlj3u2Gzc5GSHGe+J+1okMzB8JjH/ZgqHWCtuOQjQBiZkbA==
+X-Received: by 2002:a17:90a:db96:: with SMTP id h22mr6610657pjv.204.1611160436902;
+        Wed, 20 Jan 2021 08:33:56 -0800 (PST)
+Received: from [10.8.0.149] ([196.245.9.36])
+        by smtp.gmail.com with ESMTPSA id y26sm3031976pgk.42.2021.01.20.08.33.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Jan 2021 08:33:56 -0800 (PST)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+To:     Donald Buczek <buczek@molgen.mpg.de>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+raid@molgen.mpg.de
+References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
+ <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
+ <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
+ <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
+ <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
+ <37c158cb-f527-34f5-2482-cae138bc8b07@molgen.mpg.de>
+ <efb8d47b-ab9b-bdb9-ee2f-fb1be66343b1@molgen.mpg.de>
+ <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Message-ID: <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
+Date:   Wed, 20 Jan 2021 17:33:38 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-20_10:2021-01-20,2021-01-20 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 spamscore=0
- suspectscore=0 bulkscore=0 priorityscore=1501 phishscore=0 clxscore=1015
- lowpriorityscore=0 malwarescore=0 adultscore=0 impostorscore=0 mlxscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2101200096
-X-FB-Internal: deliver
+In-Reply-To: <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jens,
+Hi Donald,
 
-> On Jan 20, 2021, at 8:07 AM, Song Liu <songliubraving@fb.com> wrote:
->=20
->=20
->=20
->> On Jan 20, 2021, at 7:59 AM, Jens Axboe <axboe@kernel.dk> wrote:
->>=20
->> On 1/20/21 12:28 AM, Song Liu wrote:
->>> Hi Jens,=20
->>>=20
->>> Please pull the following changes for md-fixes on top of your for-5.11/=
-drivers=20
->>> branch.=20
->>=20
->> Don't submit current release patches against the old branch for the merge
->> window, you need to be using block-5.11 at this point...
->=20
-> Sorry for the confusion... Will rebase and resubmit.=20
+On 1/19/21 12:30, Donald Buczek wrote:
+> Dear md-raid people,
+> 
+> I've reported a problem in this thread in December:
+> 
+> "We are using raid6 on several servers. Occasionally we had failures, 
+> where a mdX_raid6 process seems to go into a busy loop and all I/O to 
+> the md device blocks. We've seen this on various kernel versions." It 
+> was clear, that this is related to "mdcheck" running, because we found, 
+> that the command, which should stop the scrubbing in the morning (`echo 
+> idle > /sys/devices/virtual/block/md1/md/sync_action`) is also blocked.
+> 
+> On 12/21/20, I've reported, that the problem might be caused by a 
+> failure of the underlying block device driver, because I've found 
+> "inflight" counters of the block devices not being zero. However, this 
+> is not the case. We were able to run into the mdX_raid6 looping 
+> condition a few times again, but the non-zero inflight counters have not 
+> been observed again.
+> 
+> I was able to collect a lot of additional information from a blocked 
+> system.
+> 
+> - The `cat idle > /sys/devices/virtual/block/md1/md/sync_action` command 
+> is waiting at kthread_stop to stop the sync thread. [ 
+> https://elixir.bootlin.com/linux/latest/source/drivers/md/md.c#L7989 ]
+> 
+> - The sync thread ("md1_resync") does not finish, because its blocked at
+> 
+> [<0>] raid5_get_active_stripe+0x4c4/0x660     # [1]
+> [<0>] raid5_sync_request+0x364/0x390
+> [<0>] md_do_sync+0xb41/0x1030
+> [<0>] md_thread+0x122/0x160
+> [<0>] kthread+0x118/0x130
+> [<0>] ret_from_fork+0x22/0x30
+> 
+> [1] https://elixir.bootlin.com/linux/latest/source/drivers/md/raid5.c#L735
+> 
+> - yes, gdb confirms that `conf->cache_state` is 0x03 ( 
+> R5_INACTIVE_BLOCKED + R5_ALLOC_MORE )
 
-Please consider pulling the following changes for md-fixes on top of your b=
-lock-5.11
-branch.=20
+The resync thread is blocked since it can't get sh from inactive list, 
+so R5_ALLOC_MORE and R5_INACTIVE_BLOCKED are set, that is why `echo idle 
+ > /sys/devices/virtual/block/md1/md/sync_action` can't stop sync thread.
+
+> 
+> - We have lots of active stripes:
+> 
+> root@deadbird:~/linux_problems/mdX_raid6_looping# cat 
+> /sys/block/md1/md/stripe_cache_active
+> 27534
+
+There are too many active stripes, so this is false:
+
+atomic_read(&conf->active_stripes) < (conf->max_nr_stripes * 3 / 4)
+
+so raid5_get_active_stripe has to wait till it becomes true, either 
+increase max_nr_stripes or decrease active_stripes.
+
+1. Increase max_nr_stripes
+since "mdX_raid6 process seems to go into a busy loop" and R5_ALLOC_MORE 
+is set, if there is enough memory, I suppose mdX_raid6 (raid5d) could 
+alloc new stripe in grow_one_stripe and increase max_nr_stripes. So 
+please check the memory usage of your system.
+
+Another thing is you can try to increase the number of sh manually by 
+write new number to stripe_cache_size if there is enough memory.
+
+2. Or decrease active_stripes
+This is suppose to be done by do_release_stripe, but STRIPE_HANDLE is set
+
+> - handle_stripe() doesn't make progress:
+> 
+> echo "func handle_stripe =pflt" > /sys/kernel/debug/dynamic_debug/control
+> 
+> In dmesg, we see the debug output from 
+> https://elixir.bootlin.com/linux/latest/source/drivers/md/raid5.c#L4925 
+> but never from 
+> https://elixir.bootlin.com/linux/latest/source/drivers/md/raid5.c#L4958:
+> 
+> [171908.896651] [1388] handle_stripe:4929: handling stripe 4947089856, 
+> state=0x2029 cnt=1, pd_idx=9, qd_idx=10
+>                  , check:4, reconstruct:0
+> [171908.896657] [1388] handle_stripe:4929: handling stripe 4947089872, 
+> state=0x2029 cnt=1, pd_idx=9, qd_idx=10
+>                  , check:4, reconstruct:0
+> [171908.896669] [1388] handle_stripe:4929: handling stripe 4947089912, 
+> state=0x2029 cnt=1, pd_idx=9, qd_idx=10
+>                  , check:4, reconstruct:0
+> 
+> The sector numbers repeat after some time. We have only the following 
+> variants of stripe state and "check":
+> 
+> state=0x2031 cnt=1, check:0 # ACTIVE        +INSYNC+REPLACED+IO_STARTED, 
+> check_state_idle
+> state=0x2029 cnt=1, check:4 # ACTIVE+SYNCING       +REPLACED+IO_STARTED, 
+> check_state_check_result
+> state=0x2009 cnt=1, check:0 # ACTIVE+SYNCING                +IO_STARTED, 
+> check_state_idle
+> 
+> - We have MD_SB_CHANGE_PENDING set:
+
+because MD_SB_CHANGE_PENDING flag. So do_release_stripe can't call 
+atomic_dec(&conf->active_stripes).
+
+Normally, SB_CHANGE_PENDING is cleared from md_update_sb which could be 
+called by md_reap_sync_thread. But md_reap_sync_thread stuck with 
+unregister sync_thread (it was blocked in raid5_get_active_stripe).
+
+
+Still I don't understand well why mdX_raid6 in a busy loop, maybe raid5d 
+can't break from the while(1) loop because "if (!batch_size && 
+!released)" is false. I would assume released is '0' since
+ >      released_stripes = {
+ >          first = 0x0
+ >      }
+And __get_priority_stripe fetches sh from conf->handle_list and delete
+it from handle_list, handle_stripe marks the state of the sh with 
+STRIPE_HANDLE, then do_release_stripe put the sh back to handle_list.
+So batch_size can't be '0', and handle_active_stripes in the loop
+repeats the process in the busy loop. This is my best guess to explain 
+the busy loop situation.
+
+> 
+> root@deadbird:~/linux_problems/mdX_raid6_looping# cat 
+> /sys/block/md1/md/array_state
+> write-pending
+> 
+> gdb confirms that sb_flags = 6 (MD_SB_CHANGE_CLEAN + MD_SB_CHANGE_PENDING)
+
+since rdev_set_badblocks could set them, could you check if there is 
+badblock of underlying device (sd*)?
+
+> 
+> So it can be assumed that handle_stripe breaks out at 
+> https://elixir.bootlin.com/linux/latest/source/drivers/md/raid5.c#L4939
+> 
+> - The system can manually be freed from the deadlock:
+> 
+> When `echo active > /sys/block/md1/md/array_state` is used, the 
+> scrubbing and other I/O continue. Probably because of 
+> https://elixir.bootlin.com/linux/latest/source/drivers/md/md.c#L4520
+
+Hmm, seems clear SB_CHANGE_PENDING made the trick, so the blocked 
+process can make progress.
+
+> 
+> I, of coruse, don't fully understand it yet. Any ideas?
+> 
+> I append some data from a hanging raid... (mddev, r5conf and a sample 
+> stripe_head from handle_list with it first disks)
+
+These data did help for investigation!
 
 Thanks,
-Song
-
-
-The following changes since commit b4f664252f51e119e9403ef84b6e9ff36d119510:
-
-  Merge tag 'nvme-5.11-2021-01-14' of git://git.infradead.org/nvme into blo=
-ck-5.11 (2021-01-14 15:17:33 -0700)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
-
-for you to fetch changes up to dc5d17a3c39b06aef866afca19245a9cfb533a79:
-
-  md: Set prev_flush_start and flush_bio in an atomic way (2021-01-20 08:18=
-:10 -0800)
-
-----------------------------------------------------------------
-Xiao Ni (1):
-      md: Set prev_flush_start and flush_bio in an atomic way
-
- drivers/md/md.c | 2 ++
- 1 file changed, 2 insertions(+)=
+Guoqing
