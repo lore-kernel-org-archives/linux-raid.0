@@ -2,86 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB4EEC433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 16:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00BCBC433E6
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 20:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76F5823358
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 16:38:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0611233FC
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Jan 2021 20:08:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391260AbhATQh5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Jan 2021 11:37:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51490 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728439AbhATQd2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Jan 2021 11:33:28 -0500
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9298C061757
-        for <linux-raid@vger.kernel.org>; Wed, 20 Jan 2021 08:32:43 -0800 (PST)
-Received: by mail-pj1-x102e.google.com with SMTP id x20so2517499pjh.3
-        for <linux-raid@vger.kernel.org>; Wed, 20 Jan 2021 08:32:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=tA0yGYdEDNQO0h7po7+iQDqn1rvtKrhvUf77EOSGq24=;
-        b=xTNgj3xqGLEiSznyFZuqBuDP1lTlw7a4EWTOjlv+Jwp4NxfacdHLVdMkbwe2wW0gcV
-         86sQUoXjGhMgCAdIvyclHLWp9YWFE0VqplVbso5SPMvmyZx14n9Omz16AFuTx6sJ3PQp
-         1Ei94KCGT9BMTjSz8clKVf7tzr4xFTUu1kwFbFy9umTnQcPLZC0V71b2V3utIkwDu5Hi
-         azSK/tYHm4izgyTGI6Ph7dOX9sbOdOXlLGWesDN3AQC79uHM7qiovkBQCXcDdYqaGanF
-         Fqg4P7yukH0apGA7Me7Fe87CPy4g7KIHlrkdHSNoChZ3JPGeC8JjC0bV9RK7dFbhEuTY
-         SlkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tA0yGYdEDNQO0h7po7+iQDqn1rvtKrhvUf77EOSGq24=;
-        b=jEsOeQLqw9FMsJyiqd1kVADDPfgnz69VK/L4rjTAHVrEXxLTytRr3bU2VNivP2T1oY
-         x6kgRL/QktNu2i55rZkw9bsTlhsSYs3/ApD9C0FY6DeOp6kEJMXRsrlTQahYiRetHJNn
-         H/8N6UPqsCVvrDH6537W1mdNksZj4V2BPCw0sESwGEf3EQ7l7CZtwKbM8ATqqbj+5fUl
-         m9lpsfzbj23M2T3udmkRf9MhVSCAsNKw96jDZdU+khmTAIJlJj4Uh+BNSUV0jnK5ismP
-         bsrY2+cUd+tSnEl0XUAQtcWxhpD3mB+Ati/OKHZKmfhYVf5EUSuLex9PVaY36lNbwKVI
-         2LTg==
-X-Gm-Message-State: AOAM5325pObVHjf4YFa0XwGzmKtyXZwp5AWItT3kHyXmI6OZ6HCnZvWi
-        6bSbDz9DLzr9bYPFgwLrg+6X+A==
-X-Google-Smtp-Source: ABdhPJw6urYvcsNQB8f9Yt+6Yh2tDUcO4YDI4XUbub+RSWj5IDQhZg8u/bmWeFPmaWwMUPJBz3xDew==
-X-Received: by 2002:a17:90a:d913:: with SMTP id c19mr2244445pjv.19.1611160363252;
-        Wed, 20 Jan 2021 08:32:43 -0800 (PST)
-Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
-        by smtp.gmail.com with ESMTPSA id c5sm3178887pgt.73.2021.01.20.08.32.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Jan 2021 08:32:42 -0800 (PST)
-Subject: Re: [GIT PULL] md-fixes 20210119
-To:     Song Liu <songliubraving@fb.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
-References: <745AFA65-3D87-4D24-9B16-D1DE59CB3AC6@fb.com>
- <1b5ab25e-7ab0-ef51-ca3d-b2e25d916533@kernel.dk>
- <B68A8E6B-D79F-4AAA-AB7A-E52F6213B343@fb.com>
- <D76D387E-E353-4049-994A-2A3B4E99A1EC@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <55ded707-2911-2097-ccd9-57eaff7b2b22@kernel.dk>
-Date:   Wed, 20 Jan 2021 09:32:41 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S2392668AbhATUIe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Jan 2021 15:08:34 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:35955 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2392789AbhATUHN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 20 Jan 2021 15:07:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611173147;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=6eD7VYWAobROrsiOgUJOrS1jcOUOOIqOtjKgz9OsHdk=;
+        b=LyS+7MUgueyDvTzBdbX8WNSnDeYbrji0T1kL2aoBUVTwBrNq/rUkK2qZXJD2K/B7nK54nc
+        firGctVo76FgfcPiTRmsXOHswWmBamjqfJB1VY7I6YGXm/K+mJATu0vA6ldN/KdLa9X2X9
+        s/y4MdxWnJGXcFeNZAEyKEEkm/C6JVQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-550-HALJkJQVM4OMUixMEWSzyg-1; Wed, 20 Jan 2021 15:05:45 -0500
+X-MC-Unique: HALJkJQVM4OMUixMEWSzyg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 18E0380A5C2;
+        Wed, 20 Jan 2021 20:05:44 +0000 (UTC)
+Received: from localhost (dhcp-17-171.bos.redhat.com [10.18.17.171])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C1CFB5D74D;
+        Wed, 20 Jan 2021 20:05:43 +0000 (UTC)
+From:   Nigel Croxon <ncroxon@redhat.com>
+To:     linux-raid@vger.kernel.org, jes@trained-monkey.org, xni@redhat.com
+Subject: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
+Date:   Wed, 20 Jan 2021 15:05:42 -0500
+Message-Id: <20210120200542.19139-1-ncroxon@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <D76D387E-E353-4049-994A-2A3B4E99A1EC@fb.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/20/21 9:29 AM, Song Liu wrote:
-> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+Reshaping a 3-disk RAID5 to 4-disk RAID6 will cause a hang of
+the resync after the grow.
 
-Pulled, thanks.
+Adding a spare disk to avoid degrading the array when growing
+is successful, but not successful when supplying a backup file
+on the command line. If the reshape job is not already running,
+set the sync_max value to max.
 
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ Grow.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Grow.c b/Grow.c
+index 6b8321c..5c2512f 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -931,12 +931,15 @@ int start_reshape(struct mdinfo *sra, int already_running,
+ 	err = err ?: sysfs_set_num(sra, NULL, "sync_max", sync_max_to_set);
+ 	if (!already_running && err == 0) {
+ 		int cnt = 5;
++		int err2;
+ 		do {
+ 			err = sysfs_set_str(sra, NULL, "sync_action",
+ 					    "reshape");
+-			if (err)
++			err2 = sysfs_set_str(sra, NULL, "sync_max",
++					    "max");
++			if (err || err2)
+ 				sleep(1);
+-		} while (err && errno == EBUSY && cnt-- > 0);
++		} while (err && err2 && errno == EBUSY && cnt-- > 0);
+ 	}
+ 	return err;
+ }
 -- 
-Jens Axboe
+2.20.1
 
