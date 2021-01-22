@@ -2,76 +2,136 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51046C433E0
-	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 19:17:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A90FC433DB
+	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 19:20:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27D8323AC1
-	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 19:17:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A34123B00
+	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 19:20:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729812AbhAVSm6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 22 Jan 2021 13:42:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60366 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728630AbhAVSTH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 22 Jan 2021 13:19:07 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 94D1C23A6A;
-        Fri, 22 Jan 2021 18:18:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611339507;
-        bh=KNhTFj4b/WjHeWypkT82xEpFT9PVrz9GAch5QmpPHO4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jhAgBJQXrcMcoqHefvG5loiFOINdoHPtPPQp73Ukao4L9S/90LjNnNVFp/EgeRnxx
-         jtc5UPB1ClAdSjAev2DKAz6MLfD29rmtFClcNRg4lNXwcVsuNEL24pQ9Jrpjpsze9/
-         rABszlpk2JSQhCJXyjU+TwWsDo5r9dRTi7SEb7+/tIKu1jXn0kt9/Eco17fHrH9b8P
-         Z1wu3z0LWuWTRlJjKedYcvmQffmb4TzHvgVokt1ZYtu4P6Bm9R8NoAqqMVduUgQxUP
-         Npsr5+jOKBmV+yBuKW6NQwNKLI8YZWgaCPZd9RDZ56EXPp/dsrj8l7Qv/qTO4VTsn0
-         ldxvffAhVIprg==
-Date:   Fri, 22 Jan 2021 20:18:24 +0200
-From:   Jarkko Sakkinen <jarkko@kernel.org>
-To:     Ahmad Fatoum <a.fatoum@pengutronix.de>
+        id S1729150AbhAVTT3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 22 Jan 2021 14:19:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55212 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728471AbhAVTFl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 22 Jan 2021 14:05:41 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE826C061797
+        for <linux-raid@vger.kernel.org>; Fri, 22 Jan 2021 11:04:49 -0800 (PST)
+Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=[IPv6:::1])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <a.fatoum@pengutronix.de>)
+        id 1l31jk-0003zG-BI; Fri, 22 Jan 2021 20:04:48 +0100
+Subject: Re: [PATCH 2/2] dm crypt: support using trusted keys
+To:     Jarkko Sakkinen <jarkko@kernel.org>
 Cc:     Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
         Song Liu <song@kernel.org>, kernel@pengutronix.de,
-        Jan =?iso-8859-1?Q?L=FCbbe?= <jlu@pengutronix.de>,
+        =?UTF-8?Q?Jan_L=c3=bcbbe?= <jlu@pengutronix.de>,
         linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
         Dmitry Baryshkov <dbaryshkov@gmail.com>,
         Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Sumit Garg <sumit.garg@linaro.org>
-Subject: Re: [PATCH 2/2] dm crypt: support using trusted keys
-Message-ID: <YAsW8DAt3vc68rLA@kernel.org>
 References: <20210122084321.24012-1-a.fatoum@pengutronix.de>
  <20210122084321.24012-2-a.fatoum@pengutronix.de>
- <YAsT/N8CHHNTZcj3@kernel.org>
+ <YAsT/N8CHHNTZcj3@kernel.org> <YAsW8DAt3vc68rLA@kernel.org>
+From:   Ahmad Fatoum <a.fatoum@pengutronix.de>
+Message-ID: <5d44e50e-4309-830b-79f6-f5d888b1ef69@pengutronix.de>
+Date:   Fri, 22 Jan 2021 20:04:46 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YAsT/N8CHHNTZcj3@kernel.org>
+In-Reply-To: <YAsW8DAt3vc68rLA@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
+X-SA-Exim-Mail-From: a.fatoum@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-raid@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 08:05:51PM +0200, Jarkko Sakkinen wrote:
-> On Fri, Jan 22, 2021 at 09:43:21AM +0100, Ahmad Fatoum wrote:
-> > Commit 27f5411a718c ("dm crypt: support using encrypted keys") extended
-> > dm-crypt to allow use of "encrypted" keys along with "user" and "logon".
-> > 
-> > Along the same lines, teach dm-crypt to support "trusted" keys as well.
-> > 
-> > Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
-> > ---
-> 
-> Is it possible to test run this with tmpfs? Would be a good test
-> target for Sumit's ARM-TEE trusted keys patches.
-> 
-> https://lore.kernel.org/linux-integrity/1604419306-26105-1-git-send-email-sumit.garg@linaro.org/
+Hello Jarkko,
 
-Also, I would hold merging *this* patch up until we are able to
-test TEE trusted keys with TEE trusted keys.
+On 22.01.21 19:18, Jarkko Sakkinen wrote:
+> On Fri, Jan 22, 2021 at 08:05:51PM +0200, Jarkko Sakkinen wrote:
+>> On Fri, Jan 22, 2021 at 09:43:21AM +0100, Ahmad Fatoum wrote:
+>>> Commit 27f5411a718c ("dm crypt: support using encrypted keys") extended
+>>> dm-crypt to allow use of "encrypted" keys along with "user" and "logon".
+>>>
+>>> Along the same lines, teach dm-crypt to support "trusted" keys as well.
+>>>
+>>> Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
+>>> ---
+>>
+>> Is it possible to test run this with tmpfs? Would be a good test
+>> target for Sumit's ARM-TEE trusted keys patches.
 
-/Jarkko
+I tested these on top of Sumit's patches with TPM and a CAAM blobifier
+backend, I am preparing. The system I am developing these patches against
+doesn't have a TEE.  Steps to test these changes:
+
+#!/bin/sh
+
+DEV=/dev/loop0
+ALGO=aes-cbc-essiv:sha256
+KEYNAME=kmk
+BLOCKS=20
+
+fallocate -l $((BLOCKS*512)) /tmp/loop0.img
+losetup -P $DEV /tmp/loop0.img
+mount -o remount,rw /
+KEY="$(keyctl add trusted $KEYNAME 'new 32' @s)"
+keyctl pipe $KEY >$HOME/kmk.blob
+
+TABLE="0 $BLOCKS crypt $ALGO :32:trusted:$KEYNAME 0 $DEV 0 1 allow_discards"
+echo $TABLE | dmsetup create mydev
+echo $TABLE | dmsetup load mydev
+dd if=/dev/zero of=/dev/mapper/mydev
+echo "It works!" 1<> /dev/mapper/mydev
+cryptsetup close mydev
+
+reboot
+
+DEV=/dev/loop0
+ALGO=aes-cbc-essiv:sha256
+KEYNAME=kmk
+BLOCKS=20
+
+losetup -P $DEV $HOME/loop0.img
+keyctl add trusted $KEYNAME "load $(cat $HOME/kmk.blob)" @s
+TABLE="0 $BLOCKS crypt $ALGO :32:trusted:$KEYNAME 0 $DEV 0 1 allow_discards"
+echo $TABLE | dmsetup create mydev
+echo $TABLE | dmsetup load mydev
+
+# should print that It works!
+hexdump -C /dev/mapper/mydev
+
+>> https://lore.kernel.org/linux-integrity/1604419306-26105-1-git-send-email-sumit.garg@linaro.org/
+> 
+> Also, I would hold merging *this* patch up until we are able to
+> test TEE trusted keys with TEE trusted keys.
+
+Which blocks which? I tested this with TPM-Trusted keys, so it's usable
+as is. For convenient usage, it would be nice to have cryptsetup
+support for trusted and encrypted keys. I intended to look at this next week.
+
+Cheers,
+Ahmad
+
+> 
+> /Jarkko
+> 
+
+-- 
+Pengutronix e.K.                           |                             |
+Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
