@@ -2,161 +2,170 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC197C433DB
-	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 08:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEAA6C433E0
+	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 18:07:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B748235F9
-	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 08:47:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B570B23AA1
+	for <linux-raid@archiver.kernel.org>; Fri, 22 Jan 2021 18:07:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726894AbhAVIq4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 22 Jan 2021 03:46:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34186 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727267AbhAVIow (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 22 Jan 2021 03:44:52 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01F72C061793
-        for <linux-raid@vger.kernel.org>; Fri, 22 Jan 2021 00:44:12 -0800 (PST)
-Received: from dude.hi.pengutronix.de ([2001:67c:670:100:1d::7])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <afa@pengutronix.de>)
-        id 1l2s2s-00061d-GP; Fri, 22 Jan 2021 09:43:54 +0100
-Received: from afa by dude.hi.pengutronix.de with local (Exim 4.92)
-        (envelope-from <afa@pengutronix.de>)
-        id 1l2s2r-0006HR-PH; Fri, 22 Jan 2021 09:43:53 +0100
-From:   Ahmad Fatoum <a.fatoum@pengutronix.de>
-To:     Alasdair Kergon <agk@redhat.com>,
+        id S1729390AbhAVSGt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 22 Jan 2021 13:06:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55972 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728745AbhAVSGc (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 22 Jan 2021 13:06:32 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9F92223A6A;
+        Fri, 22 Jan 2021 18:05:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611338751;
+        bh=RWAadgTE3OBkC/7CFKgrnVcdGooeNarn5qiZczZ3+Ko=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=TL6jaYn0mzvupgHkDmXIqa9iuhcFq3T13YmqLldcmDGL5osB8mbti6TlMo6wa6g9D
+         3PwJeNrHZRo+CBeWBC2PapF/ydLffUl/MD68ct0FA+iuKHUjdT1jDBuvfiKtldc3o0
+         vWdBYyCfAhGX7c8wmTKL3svn0q/lSp3y8CrdM2gGWQVKDwwATfhZ+dFt8xF9YTrKsR
+         0ChufAze2E5dUsJUdp4L8LHGvDzddpkCeT6k/B/gpqpBVI/eNAEx5AsDztIUJW4egA
+         OEjlE27f5bOY925CQ3oAI2NpMaWhplSzaTGJvy/suIKQlKmPD+E4GcHOfy0TBvAs30
+         3opMQxT7vie+Q==
+Date:   Fri, 22 Jan 2021 20:05:48 +0200
+From:   Jarkko Sakkinen <jarkko@kernel.org>
+To:     Ahmad Fatoum <a.fatoum@pengutronix.de>
+Cc:     Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        Song Liu <song@kernel.org>
-Cc:     kernel@pengutronix.de, Ahmad Fatoum <a.fatoum@pengutronix.de>,
-        =?UTF-8?q?Jan=20L=C3=BCbbe?= <jlu@pengutronix.de>,
+        Song Liu <song@kernel.org>, kernel@pengutronix.de,
+        Jan =?iso-8859-1?Q?L=FCbbe?= <jlu@pengutronix.de>,
         linux-integrity@vger.kernel.org, keyrings@vger.kernel.org,
         Dmitry Baryshkov <dbaryshkov@gmail.com>,
         Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Subject: [PATCH 2/2] dm crypt: support using trusted keys
-Date:   Fri, 22 Jan 2021 09:43:21 +0100
-Message-Id: <20210122084321.24012-2-a.fatoum@pengutronix.de>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210122084321.24012-1-a.fatoum@pengutronix.de>
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Sumit Garg <sumit.garg@linaro.org>
+Subject: Re: [PATCH 2/2] dm crypt: support using trusted keys
+Message-ID: <YAsT/N8CHHNTZcj3@kernel.org>
 References: <20210122084321.24012-1-a.fatoum@pengutronix.de>
+ <20210122084321.24012-2-a.fatoum@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::7
-X-SA-Exim-Mail-From: afa@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-raid@vger.kernel.org
+In-Reply-To: <20210122084321.24012-2-a.fatoum@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Commit 27f5411a718c ("dm crypt: support using encrypted keys") extended
-dm-crypt to allow use of "encrypted" keys along with "user" and "logon".
+On Fri, Jan 22, 2021 at 09:43:21AM +0100, Ahmad Fatoum wrote:
+> Commit 27f5411a718c ("dm crypt: support using encrypted keys") extended
+> dm-crypt to allow use of "encrypted" keys along with "user" and "logon".
+> 
+> Along the same lines, teach dm-crypt to support "trusted" keys as well.
+> 
+> Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
+> ---
 
-Along the same lines, teach dm-crypt to support "trusted" keys as well.
+Is it possible to test run this with tmpfs? Would be a good test
+target for Sumit's ARM-TEE trusted keys patches.
 
-Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
----
-Unsure on whether target_type::version is something authors increment or
-maintainers fix up. I can respin if needed.
+https://lore.kernel.org/linux-integrity/1604419306-26105-1-git-send-email-sumit.garg@linaro.org/
 
-Cc: Jan LÃ¼bbe <jlu@pengutronix.de>
-Cc: linux-integrity@vger.kernel.org
-Cc: keyrings@vger.kernel.org
-Cc: Dmitry Baryshkov <dbaryshkov@gmail.com>
----
- .../admin-guide/device-mapper/dm-crypt.rst    |  2 +-
- drivers/md/Kconfig                            |  1 +
- drivers/md/dm-crypt.c                         | 23 ++++++++++++++++++-
- 3 files changed, 24 insertions(+), 2 deletions(-)
+/Jarkko
 
-diff --git a/Documentation/admin-guide/device-mapper/dm-crypt.rst b/Documentation/admin-guide/device-mapper/dm-crypt.rst
-index 1a6753b76dbb..aa2d04d95df6 100644
---- a/Documentation/admin-guide/device-mapper/dm-crypt.rst
-+++ b/Documentation/admin-guide/device-mapper/dm-crypt.rst
-@@ -67,7 +67,7 @@ Parameters::
-     the value passed in <key_size>.
- 
- <key_type>
--    Either 'logon', 'user' or 'encrypted' kernel key type.
-+    Either 'logon', 'user', 'encrypted' or 'trusted' kernel key type.
- 
- <key_description>
-     The kernel keyring key description crypt target should look for
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 9e44c09f6410..f2014385d48b 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -270,6 +270,7 @@ config DM_CRYPT
- 	tristate "Crypt target support"
- 	depends on BLK_DEV_DM
- 	depends on (ENCRYPTED_KEYS || ENCRYPTED_KEYS=n)
-+	depends on (TRUSTED_KEYS || TRUSTED_KEYS=n)
- 	select CRYPTO
- 	select CRYPTO_CBC
- 	select CRYPTO_ESSIV
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 7eeb9248eda5..6c7c687e546c 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -37,6 +37,7 @@
- #include <linux/key-type.h>
- #include <keys/user-type.h>
- #include <keys/encrypted-type.h>
-+#include <keys/trusted-type.h>
- 
- #include <linux/device-mapper.h>
- 
-@@ -2452,6 +2453,22 @@ static int set_key_encrypted(struct crypt_config *cc, struct key *key)
- 	return 0;
- }
- 
-+static int set_key_trusted(struct crypt_config *cc, struct key *key)
-+{
-+	const struct trusted_key_payload *tkp;
-+
-+	tkp = key->payload.data[0];
-+	if (!tkp)
-+		return -EKEYREVOKED;
-+
-+	if (cc->key_size != tkp->key_len)
-+		return -EINVAL;
-+
-+	memcpy(cc->key, tkp->key, cc->key_size);
-+
-+	return 0;
-+}
-+
- static int crypt_set_keyring_key(struct crypt_config *cc, const char *key_string)
- {
- 	char *new_key_string, *key_desc;
-@@ -2484,6 +2501,10 @@ static int crypt_set_keyring_key(struct crypt_config *cc, const char *key_string
- 		   !strncmp(key_string, "encrypted:", key_desc - key_string + 1)) {
- 		type = &key_type_encrypted;
- 		set_key = set_key_encrypted;
-+	} else if (IS_ENABLED(CONFIG_TRUSTED_KEYS) &&
-+	           !strncmp(key_string, "trusted:", key_desc - key_string + 1)) {
-+		type = &key_type_trusted;
-+		set_key = set_key_trusted;
- 	} else {
- 		return -EINVAL;
- 	}
-@@ -3555,7 +3576,7 @@ static void crypt_io_hints(struct dm_target *ti, struct queue_limits *limits)
- 
- static struct target_type crypt_target = {
- 	.name   = "crypt",
--	.version = {1, 22, 0},
-+	.version = {1, 23, 0},
- 	.module = THIS_MODULE,
- 	.ctr    = crypt_ctr,
- 	.dtr    = crypt_dtr,
--- 
-2.30.0
-
+> Unsure on whether target_type::version is something authors increment or
+> maintainers fix up. I can respin if needed.
+> 
+> Cc: Jan Lübbe <jlu@pengutronix.de>
+> Cc: linux-integrity@vger.kernel.org
+> Cc: keyrings@vger.kernel.org
+> Cc: Dmitry Baryshkov <dbaryshkov@gmail.com>
+> ---
+>  .../admin-guide/device-mapper/dm-crypt.rst    |  2 +-
+>  drivers/md/Kconfig                            |  1 +
+>  drivers/md/dm-crypt.c                         | 23 ++++++++++++++++++-
+>  3 files changed, 24 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/device-mapper/dm-crypt.rst b/Documentation/admin-guide/device-mapper/dm-crypt.rst
+> index 1a6753b76dbb..aa2d04d95df6 100644
+> --- a/Documentation/admin-guide/device-mapper/dm-crypt.rst
+> +++ b/Documentation/admin-guide/device-mapper/dm-crypt.rst
+> @@ -67,7 +67,7 @@ Parameters::
+>      the value passed in <key_size>.
+>  
+>  <key_type>
+> -    Either 'logon', 'user' or 'encrypted' kernel key type.
+> +    Either 'logon', 'user', 'encrypted' or 'trusted' kernel key type.
+>  
+>  <key_description>
+>      The kernel keyring key description crypt target should look for
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index 9e44c09f6410..f2014385d48b 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -270,6 +270,7 @@ config DM_CRYPT
+>  	tristate "Crypt target support"
+>  	depends on BLK_DEV_DM
+>  	depends on (ENCRYPTED_KEYS || ENCRYPTED_KEYS=n)
+> +	depends on (TRUSTED_KEYS || TRUSTED_KEYS=n)
+>  	select CRYPTO
+>  	select CRYPTO_CBC
+>  	select CRYPTO_ESSIV
+> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+> index 7eeb9248eda5..6c7c687e546c 100644
+> --- a/drivers/md/dm-crypt.c
+> +++ b/drivers/md/dm-crypt.c
+> @@ -37,6 +37,7 @@
+>  #include <linux/key-type.h>
+>  #include <keys/user-type.h>
+>  #include <keys/encrypted-type.h>
+> +#include <keys/trusted-type.h>
+>  
+>  #include <linux/device-mapper.h>
+>  
+> @@ -2452,6 +2453,22 @@ static int set_key_encrypted(struct crypt_config *cc, struct key *key)
+>  	return 0;
+>  }
+>  
+> +static int set_key_trusted(struct crypt_config *cc, struct key *key)
+> +{
+> +	const struct trusted_key_payload *tkp;
+> +
+> +	tkp = key->payload.data[0];
+> +	if (!tkp)
+> +		return -EKEYREVOKED;
+> +
+> +	if (cc->key_size != tkp->key_len)
+> +		return -EINVAL;
+> +
+> +	memcpy(cc->key, tkp->key, cc->key_size);
+> +
+> +	return 0;
+> +}
+> +
+>  static int crypt_set_keyring_key(struct crypt_config *cc, const char *key_string)
+>  {
+>  	char *new_key_string, *key_desc;
+> @@ -2484,6 +2501,10 @@ static int crypt_set_keyring_key(struct crypt_config *cc, const char *key_string
+>  		   !strncmp(key_string, "encrypted:", key_desc - key_string + 1)) {
+>  		type = &key_type_encrypted;
+>  		set_key = set_key_encrypted;
+> +	} else if (IS_ENABLED(CONFIG_TRUSTED_KEYS) &&
+> +	           !strncmp(key_string, "trusted:", key_desc - key_string + 1)) {
+> +		type = &key_type_trusted;
+> +		set_key = set_key_trusted;
+>  	} else {
+>  		return -EINVAL;
+>  	}
+> @@ -3555,7 +3576,7 @@ static void crypt_io_hints(struct dm_target *ti, struct queue_limits *limits)
+>  
+>  static struct target_type crypt_target = {
+>  	.name   = "crypt",
+> -	.version = {1, 22, 0},
+> +	.version = {1, 23, 0},
+>  	.module = THIS_MODULE,
+>  	.ctr    = crypt_ctr,
+>  	.dtr    = crypt_dtr,
+> -- 
+> 2.30.0
+> 
+> 
