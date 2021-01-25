@@ -2,105 +2,140 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A2DDC433E6
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 01:32:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29906C433DB
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 02:52:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 522A323109
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 01:32:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E939F22E03
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 02:52:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727933AbhAZBcP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Jan 2021 20:32:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46766 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730214AbhAZBaI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Jan 2021 20:30:08 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0BEFC061224
-        for <linux-raid@vger.kernel.org>; Mon, 25 Jan 2021 16:51:07 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id md11so680260pjb.0
-        for <linux-raid@vger.kernel.org>; Mon, 25 Jan 2021 16:51:07 -0800 (PST)
+        id S1729336AbhAYOR5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 25 Jan 2021 09:17:57 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:28212 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729186AbhAYORd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Jan 2021 09:17:33 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611584253; x=1643120253;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+  b=plqN6ULfZWOnYxzWZjh5wDrZvU6JIiXe5tNC7vjgfGWJgo7N6JXokkPV
+   V8VeVPMXqK9zrmg2l/+NlGsdOL5ANKj143JNCeXLJyls0hgZKzkKqboiJ
+   1PVmNVtpTV0VM5dZon5UgFmKGzWh2gp4cPF7k/Lb+MhuwBc5qPOY3wELN
+   3olQx0pLTOU7pnGMweXNWQ/dcZml2s8C02uIgFToGYeaXuYEyI02zreh0
+   NcqplF4qpZAorRDuK8HpAj97U7z8Ze40bO0OP3VYaP5QCeOxCYi0/uwN7
+   lOOMajRnuJ/0dMhRosPJMkqBdCLCHku13EhFo+/sE7/jcKFqLhxlJn/nz
+   A==;
+IronPort-SDR: qTagf3ki+EPA/XAMm7uptzJnwMYd+FUpsoAUPAXs2F5/7oAFJMPCspjzJygQU86vKC2ccoGWuF
+ Kh4S0i8WG3GQ5l6hOkJT1og4TGqGI04ektdvdIDO16ww5lpXrtAwgZPD47DpNMS2eWswyhk//x
+ gjVYby7OeRUokKDO61m8cIzVxlll39W3LMFcvCRl5/wmDf+hY3vYE9bJqp3uk2o7efDjOm0sVp
+ 5Sj+v6UljCw5GESobRnMrhJa5u1ff5MnUiWTpRr5Vwpu/1UxH/0cebkSB14088mRAY7JC4tORm
+ d/c=
+X-IronPort-AV: E=Sophos;i="5.79,373,1602518400"; 
+   d="scan'208";a="162701801"
+Received: from mail-bn7nam10lp2106.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.106])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2021 22:14:08 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=JIKzWtm70kuelpOWyzrrIYam3rDPkakiCbEjR3G1tKr0FNvXEw68YWbkWCKoF53qgy8HTuCLHnbb632MWD2CJEwKIsEhXAdiCI6k48rPNbw8MEzWQi6cHGNsgnmoSIHX5sKax9HKbrVZorArps+3vbm35rdVeeTHy09apPNyWvWtKHF6T4OfZ6DDsdCfuYDUgo603OKUq7SUGoVkly9QV/DFgmWAjCo6exXhvAKPuC2yWraDk61iiGn1X+MCgWEtHDs15XznTgR6Ft5Pc5uUb5ErkBteJ11A3+YMchavdScjf8PjAwt9mZsi+Z6xfHY3KANNlLFhqmDW53AJFfdcxg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=dK6Y9YB1ploSPo5LS1a1ghI/9Q/hA3+0bMiCWReYk60nRgzwSj/4OZ1jAhW7QUbgG21ODZSu3UXuziqSmURXjMvg1TymDa0XYb+v1Gsg3cm659Znnr9eNj/CMXMzJ82h3Pqpi0VQ1IMmtF5AXUA+wa4CPSuQY7wLnQEWpf2NWpON4ReXuOjD6/amG/37xgPxsH9rmDip45NoJcxvbshgkF0w3JO6CAW/IcMQ5UHgrJ36MXrb7y7U+z8q8CVetM4ZZxC8uSI2D8t1C8VMF7pp/o6fhNeHh9Drq7G8fWKOXBJ9iCRsSvQkyej9UN+OArUGbgeB7zP1q70ecZ9tMZZU0w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=uPJlUchjV+OaTIftOWbXEjVwG0d/bApny8LKz3OH9do=;
-        b=Fn4EVg48BXJQ0XVCGo4P1/CcZQYyaUjR593N0Mrt0Pa+QokgKItCP+8Jqv/2LG0i6e
-         ZOE+o7Kp6TSk5kE5z/p+B9iYW/TEKeeUZ38hHU2REBudTZapniqQIgruui5UYR2CX3jM
-         XMAbvuY6JHqMBPOAxvGF/pd+dD2JXyjuQuYgOdpBoKEe5OkwN21A1Oz9evbFfBDmAQvY
-         7WFdRbpEZ2liR9Ig+qsbIiWSj+GDDvognZEVlwuSJJV6ndniZaVtaxhiGOys5MNoWytQ
-         gQ7Z3yycyJCcMckSCcJGV82qUswKaz/f7sRYaD0P22YuS9ZNrnmyYgBqU8O8EcKu5dJk
-         dg7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=uPJlUchjV+OaTIftOWbXEjVwG0d/bApny8LKz3OH9do=;
-        b=C+eQuACaq/Vlxhm2GxQOYWeWLKlezguNLtlLkMHdTa/ky3LXaklnagJBIrV///Pfxl
-         gBCpQrLVRVgGVWo14XLHTVB44HZzO8zyAyur3AHj9qBwD9JA6Andrc0RciMZQle3CsN3
-         3XtcOTSHvIyNMYNSCrNv81hnkiLnyPDNTTz6lsgDugXnkJqOMrUA+ZUItQ7TsbFoHWLJ
-         Lr9Is1kMxxMm94N87DnaSIWxm/HJ4f9Mfs+/Aml1OwL9ue3Wp6E6T9gEjdSZWY1eXE8G
-         hJs3sBw73+urzY6t5NYdGNo9MM3y0K21SynQ301zZg9trk9KGPFqkgJfpg4xlTIjOHc0
-         6C6g==
-X-Gm-Message-State: AOAM532elC9OSQF4gs3Iij5OTO1xs6x2D3u0T54oaZ0wNcb/IhTXbhzC
-        Fmkk9eJTnsEA2gZLnjdDiExLaw==
-X-Google-Smtp-Source: ABdhPJzzs4C/lNGU5gJfjXLgueQ6h//2HOCs2JEgJn8fHs+SjPK/bp53wfdpI/yc0gqOKDwXYe/jwg==
-X-Received: by 2002:a17:902:c284:b029:df:c0d8:6b7 with SMTP id i4-20020a170902c284b02900dfc0d806b7mr3120918pld.34.1611622266246;
-        Mon, 25 Jan 2021 16:51:06 -0800 (PST)
-Received: from [10.8.1.5] ([185.125.207.232])
-        by smtp.gmail.com with ESMTPSA id r7sm3940119pfc.26.2021.01.25.16.50.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Jan 2021 16:51:05 -0800 (PST)
-Subject: Re: [PATCH v2 08/10] md: Implement ->corrupted_range()
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
-        darrick.wong@oracle.com, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-References: <20210125225526.1048877-1-ruansy.fnst@cn.fujitsu.com>
- <20210125225526.1048877-9-ruansy.fnst@cn.fujitsu.com>
-From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Message-ID: <6100b7ca-7968-e1ea-84b8-074dc216a453@cloud.ionos.com>
-Date:   Tue, 26 Jan 2021 01:50:32 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <20210125225526.1048877-9-ruansy.fnst@cn.fujitsu.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=QM0m5iUjH1JwYfWdKn9+yOS2OyYhA7XPUkY/dbBEEmRF3e24CnN+5cNUlwUefNyZohDwVjbPWgBx2wxmseDWl06M2ExmYKDdoICViNGvzV6mLCAfVf5272hLbhy7FcfuVcEhIYxviELAfk9v7BT2IuHKARlxvSy+ek1ioC3iAwI=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN6PR04MB4319.namprd04.prod.outlook.com
+ (2603:10b6:805:31::27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.16; Mon, 25 Jan
+ 2021 14:14:06 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::c19b:805:20e0:6274]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::c19b:805:20e0:6274%6]) with mapi id 15.20.3784.017; Mon, 25 Jan 2021
+ 14:14:06 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+CC:     Tejun Heo <tj@kernel.org>, Coly Li <colyli@suse.de>,
+        Song Liu <song@kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Subject: Re: [PATCH 08/10] block: add a disk_uevent helper
+Thread-Topic: [PATCH 08/10] block: add a disk_uevent helper
+Thread-Index: AQHW8jkXIqNElehhEEiDCcJeiMg69A==
+Date:   Mon, 25 Jan 2021 14:14:06 +0000
+Message-ID: <SN4PR0401MB35987817DFEC3A6344C34E0D9BBD9@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20210124100241.1167849-1-hch@lst.de>
+ <20210124100241.1167849-9-hch@lst.de>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 485e63bb-7c3f-4581-5bc0-08d8c13b7a01
+x-ms-traffictypediagnostic: SN6PR04MB4319:
+x-microsoft-antispam-prvs: <SN6PR04MB4319C6923F6CBB53E34518EF9BBD9@SN6PR04MB4319.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1728;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: bCk6Jb8+QfXyraTfaRPSO0Z4tOap/NHbwVyo7Ed7Jsgx8xTRxqHvWq7y6zJP8fEExTQYQKRUQK1ld+pb0WwwG+gjCh4sQDsJz5WjOlXIu+p+nVDv3oMS+KadBoXNvZqdA5Ee6A0cfNHjItEy0zpotJIZr57k9/2tt8qnt/jfXlLHdwZ1ctQ1EAklQi8u2K+zEyOTDWBmOzjq1JzJFbMrXW5gO+F2oYQ5PUI7ePcGsF4SIKo4aecLTz1ixW+J3i9zfpB0bjlH/0sbJB3/JeGb/AlyxErjif/dXCn6S2hZacoDE0EF5hwO+a9ZzejOMdbHNKxTzeEWaXO8QmMxHeQObU2LW9MXjS55Upr63mcztFFZYvy3B6RgflkbTTA1vv6OeMj3EIKKtEceP7Dw831l4g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(346002)(136003)(366004)(39860400002)(4270600006)(71200400001)(54906003)(8676002)(110136005)(8936002)(316002)(33656002)(7696005)(5660300002)(2906002)(66946007)(91956017)(76116006)(86362001)(64756008)(66446008)(558084003)(66556008)(4326008)(66476007)(7416002)(52536014)(186003)(9686003)(19618925003)(26005)(55016002)(478600001)(6506007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?DY4V+TmXM55i/Akra5XOIzLfrUZf+oUb1MrkLQUi8EmFMZfVUQJ95xWLANBG?=
+ =?us-ascii?Q?+KsioA+tJf1dA6Ee+9jFMVVIsUVA38uB9jCDhGmS7Upr8IEobkLNawH0hhGO?=
+ =?us-ascii?Q?tmzxMBs1DGutZfFxxW9/2lgG6v7X4EUhN/2NO2Ah1zECZftXg8j86vS+3Kp3?=
+ =?us-ascii?Q?nLQhOYeRuszHqCL3TaYTT8NKCSxL6JbFt+/KGzkBJC0zkRM/9Hpvt9FdC47z?=
+ =?us-ascii?Q?eukQfCgzRrxUyfSzKvtbpE+vO5gpZsnVxxe0RCtMBIYjzCppJ6l73Y9MEFKL?=
+ =?us-ascii?Q?RHxPth6r8J7jGV+f9GF4dt/3vIvrtsZ/1b7o4lrQVKNtx7p1/wex9R+4G/AP?=
+ =?us-ascii?Q?/2J/Mtn5ayzuoWfcma3iVYhvv0J0twtUZwRgRS1VqtzR5TM06Jk5JouP9PMm?=
+ =?us-ascii?Q?ny1xJGODZJeWmPwAP+W9ByPoOdKOWZK/CjdtqU3CBb1dYsJXiTl29S9No27M?=
+ =?us-ascii?Q?SvdF5d6Nr1Uy52DMPhUWplgE0dapsfhnUAa9LZpj+zhKno2QIo3WoU/aaK3K?=
+ =?us-ascii?Q?3a81Dp8MnJ039V78Xwt2zrF6Oo0r2DvOPz3JueRia+3jOqObr+R0/qT+ooOs?=
+ =?us-ascii?Q?9PXVOjkoHZVClX3n/O9bKYsLgv49mx6mKMAL0R0wWSkSGQiPgW1VXhKdQxVL?=
+ =?us-ascii?Q?vT74q2KgF76BgyQNCrrF5U9BnCuZxoGEAew/KWGoA8ZD02U0RtIsC8W3bBwY?=
+ =?us-ascii?Q?Tmy6J6HHIW1mlnMOo1u++1IqmSmio8zp+2hf1orJKEwltWkuIu34yBEA54Di?=
+ =?us-ascii?Q?nVgIhHiTn39toJwchB73wvTFYXOG6MXuGc3vhkdmxEmMzD5ATJdoYFNvCczV?=
+ =?us-ascii?Q?LeTfCGoKqxJbMDJySrR1W3Y//7qH18Leusieco2hQ4ZHK0405YDPS6i3LKu6?=
+ =?us-ascii?Q?2ZkQSBORQ565A3EtRUTYVRTW6SZXQwv199sUWbz9mv3PlZ/1wXN4Tu9Jwc5v?=
+ =?us-ascii?Q?0xd3QYONjsDGRWq7U61V2b89guhlJvzgaP+R9C/8K7O4YAidWRtSz7Ikz1RN?=
+ =?us-ascii?Q?JRbERlmLkbXdVjB8IuJFFve5gpoD4nYEnCBarx6/Xadh5B7//fZ5OZ5R0jY6?=
+ =?us-ascii?Q?/xUsOE2ObhYYtSNSiRBNiM3HQmXFag=3D=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 485e63bb-7c3f-4581-5bc0-08d8c13b7a01
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 14:14:06.6516
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: EC4IJ1mPr5agF1kGHk101F2P1wfJRJTDjk2KyI7YmzH+lFZX8NEXxI2XkX7EFkR8eHiF+gjMi+E2/FJZke38g/gRXuu5GTvCKgL88N6T7UM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4319
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 1/25/21 23:55, Shiyang Ruan wrote:
-> With the support of ->rmap(), it is possible to obtain the superblock on
-> a mapped device.
-> 
-> If a pmem device is used as one target of mapped device, we cannot
-> obtain its superblock directly.  With the help of SYSFS, the mapped
-> device can be found on the target devices.  So, we iterate the
-> bdev->bd_holder_disks to obtain its mapped device.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
->   drivers/md/dm.c       | 61 +++++++++++++++++++++++++++++++++++++++++++
->   drivers/nvdimm/pmem.c | 11 +++-----
->   fs/block_dev.c        | 42 ++++++++++++++++++++++++++++-
->   include/linux/genhd.h |  2 ++
->   4 files changed, 107 insertions(+), 9 deletions(-)
-
-I can't see md raid is involved here, perhaps dm-devel need to be cced 
-instead of raid list. And the subject need to be changed as well.
-
-Thanks,
-Guoqing
+Looks good,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
