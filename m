@@ -2,142 +2,112 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32358C433E0
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 02:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18CB5C433E0
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 05:10:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C749E22E03
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 02:55:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E76B122273
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 05:10:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729120AbhAYNyn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Jan 2021 08:54:43 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:64421 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729136AbhAYNxl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Jan 2021 08:53:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611583271; x=1643119271;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=BtNfaQi6qJYlqfzSJgMusazLO6FbREkoXUGyqj7Wi68xaGQYgy8Qc4t0
-   mT9Jn/JLo8wtJBPpwOybgdUNM+Zu9luoEHuI+lY/eOh0d8XB/eStYletG
-   5LV5tf0oRMdOkoE4teGtbWOsN/wntdKpCMA6Ecf13012FaOhmGrcXisB0
-   fva8mPs+cQx1tJG2o9XWMF4sfGtGW8l4CspsOxANC9slUK16KgT/KbHsb
-   NwYTIdIeVj9uYer66Gi523A2/2Nw1evIdpsUbbbuXlQGPzdBxYoB760zT
-   qD0VotBkpmRNpz+MYpas0OL82uoSPJLaanCfw/2+Unh/2ihRyAT8pxF4n
-   A==;
-IronPort-SDR: w9f7yEUHTBwXH9ZtLOs5/TOVOPlLhmMnitvBAcZH78kFCm5hRy37eqUkH32WYLvd0wuuvundny
- JUjSb4iKAorYOruy22KO4j5kXm5DSPE10b3LRvWffh137kdw7tMsdcRVqU+2eJVfc+PWz+o8C+
- wnO/AMVGbs6J8RlyeuqsEczMUgZ2fJ3tcj4NUp3GDoh5vnOwQH6zAnOILIieaKdX4p3Ge1tKs2
- wz5UVKeuuhGsBGVhktQEarEoqwwe9xWZlSdKQalGvBv5gmJ/LZpSesfpC11dGVT9cJ6Hdhj34V
- lVc=
-X-IronPort-AV: E=Sophos;i="5.79,373,1602518400"; 
-   d="scan'208";a="262261185"
-Received: from mail-dm6nam11lp2168.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.168])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2021 21:59:11 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Huy2TIXWW5A0L+UQHt5Nsr/4BJt5o7p6LZAePnZstSnIdVx/oYhCsEOyVRa5iYA/zavTWRy0xZ6bFe7tWiW40MMAc3JKCDqjNy/RkjMi1R7XqYbJCPiVTdK6AIk00wH41wLymqkyqqBtvLnKS9C7l/VQom6N2/TIOZVtFKmHvROLgHPDjtETeInaGDvl+0vcmOkrl5PYT5XOD4cFS4pJWYxLS/9IUPwY9BTEZd61gQBYGtmRL3Gxeq5BxsJO/3oYMCXMq4WUbKZIqTBBSjSWAsN5GvywZIdzcwxIloQNhykERfT9lPGbKpwd7FIondZruNdcDax6jeMB/r+CwY9vpA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=SDbqW5uf7fl5/hzhiF9sMqRbpxBjdA0EZ/vqSoDVy5NGp4oaXBuceX4UYMdyV32tNxMXmNAIaIApd/5IkEkAGMkmJWfkaVQ2Kfh6QnqZrZwIvDWfXOuBD3LcD1C/YMjW+F3kRIU7Wlz4JGWtMwK0ceIxPnXbfq6fRLe5OtC/WiifIN0PAoBPMIKAGpsJ8kawaQ8XpHVYOQQioAURGZnxtXwgkBZUitUKJFfIFb3M76wvdM79XGCuQgKTQao+QnlDXyt/aPcaJy7EencTghJq0UpTYexD2AcblsxR+xOG6eom2/4pWg5xkZ9n59xFqS2hDuro+afSNLCE26kpvIUmXA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1727977AbhAZFKm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Jan 2021 00:10:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38584 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729127AbhAYOAl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Jan 2021 09:00:41 -0500
+Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA54C0617A7
+        for <linux-raid@vger.kernel.org>; Mon, 25 Jan 2021 05:57:32 -0800 (PST)
+Received: by mail-oi1-x232.google.com with SMTP id n7so2915471oic.11
+        for <linux-raid@vger.kernel.org>; Mon, 25 Jan 2021 05:57:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=vdKs+UxI18D3S5nrGqVHOUvT8jpjKM7MtjZzfR0AJQMexzRrchg9M63PvH6d6yxeqXW+BzdEw3yvapc0X6Hq1MheDIjkGg8pTgLN3kuroXTXTRCQMkz0c54kXZpRlpofSb8AGSq7nG7HOKElaGsu6iDnErhTP1BxNKkAnZNsmOA=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SA2PR04MB7612.namprd04.prod.outlook.com
- (2603:10b6:806:147::16) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.11; Mon, 25 Jan
- 2021 13:52:20 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::c19b:805:20e0:6274]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::c19b:805:20e0:6274%6]) with mapi id 15.20.3784.017; Mon, 25 Jan 2021
- 13:52:20 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC:     Tejun Heo <tj@kernel.org>, Coly Li <colyli@suse.de>,
-        Song Liu <song@kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: Re: [PATCH 02/10] dcssblk: remove the end of device check in
- dcssblk_submit_bio
-Thread-Topic: [PATCH 02/10] dcssblk: remove the end of device check in
- dcssblk_submit_bio
-Thread-Index: AQHW8jiwHN0LZhsDiEuvFiOYbsXH2A==
-Date:   Mon, 25 Jan 2021 13:52:20 +0000
-Message-ID: <SN4PR0401MB3598F6894E3789B7D3FCB7679BBD9@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20210124100241.1167849-1-hch@lst.de>
- <20210124100241.1167849-3-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: a1e656bc-f908-4935-389d-08d8c1386f73
-x-ms-traffictypediagnostic: SA2PR04MB7612:
-x-microsoft-antispam-prvs: <SA2PR04MB761269F9E0177D9E9267E7D59BBD9@SA2PR04MB7612.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: bU5R9tm9gvsBNXwaTw7lhZWx8a3ybA0DpqZLEQ5vuCd0GbwvvliXQ1Zcz7aRVsBwnudvUh9IyMRb94R/r1DC7Mc2nkztLx4jnPB8k9cLnlhsxo2X/tGwY9MSJ/43HZGMOyOaknzujG2bwmP7xRt6MTS1t1Ub/vJccUp6FE//bYpyUUtcfa/RgsiQfN4tI0mAbRySo0EgntHNhTK9aMolg3vULSVbYUx7D2Mq8PHBTb4H2ObQFGVb/1WQIdwMS8aC9hNR9uDIH39CoIBQmKWuI0+VERppoh7OXSuSMj1ssd23sD3FtMFx47xi9lfOC1EWd2EOM+y9CGJW5gjFQO7FdwZj9n69zFDcGgOAYd0DT67tVpZn5TRkqUkw9kqcgaCbo5VrrRf9NPF6dTpvn4cAoA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(39860400002)(346002)(136003)(376002)(64756008)(186003)(5660300002)(4326008)(86362001)(7416002)(316002)(8936002)(52536014)(2906002)(33656002)(66446008)(66556008)(6506007)(4270600006)(66476007)(55016002)(110136005)(66946007)(8676002)(558084003)(76116006)(9686003)(478600001)(26005)(71200400001)(19618925003)(54906003)(7696005)(91956017);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?lDHqkrQZVyGZ31ML1d+IhfEcdPEiXrPozKBjdBevBrp1zpl2XoidpNz2mXTE?=
- =?us-ascii?Q?6/3WStXkE+FSLY8+H0V6yFVgE55XlWaToz4fvdYixnUNZHlu3JnJf8n9xKLf?=
- =?us-ascii?Q?WoJOR/lTCKliSW6wi+8ZnrJhw77ct+Nf9fvUt2qUFjFYvwOzEKNkcjO/0UfY?=
- =?us-ascii?Q?DTjfkYFJgl+d/2olcMOUtYqKaCa9piBrIATbU5zJichvf67oRdL3d4kjVtud?=
- =?us-ascii?Q?W5BkAo9PYzU1TpfcGyuDox8ipXSBAEwV4V5s5BEpFMCGQb6ffamau+h45y+d?=
- =?us-ascii?Q?k/g9e4/YuyJDsnNFKgHmg161493sJutWrBkIegyqz7NI/Ybj1SUBdYcdEd5Q?=
- =?us-ascii?Q?qjSJLlV/+JJjE9dRaAVyS/dhLUjC4f218fn6rCzGBNVQibzUQLdZgAMxtPSQ?=
- =?us-ascii?Q?jSGGD/QcWf4xkCnAUW4Z9Q8HhOYSxiveujCSJskhfdcMlJz7KNnQt9gHBsYo?=
- =?us-ascii?Q?aJIUyUKAjWbmJDWxkCA//ZQbn7/bdnxVSilYIU3YXg6GrpCij4hLMFsLe54i?=
- =?us-ascii?Q?DHjeS6s8QhFHyRP9hv22rwFS6sN3tnQfkzSWp8VMCs4p+fXVDmSYf0+7vH2m?=
- =?us-ascii?Q?CzeEM5ZFgldTFeuBpw8jKB7kDuPHfileuYYuK4XUDLxlS6QZy5xsj22vpk7L?=
- =?us-ascii?Q?WAy7d5rBm+96PHxnpnVSCyJqKZDfIiqM8cQiwk6I0a7/0SnzsEtGs4IYt0FB?=
- =?us-ascii?Q?NlZvHPzsowE2Br3d7ZuHMr713Hn1PArjvlD8x8k8wZMvoEFVxYj1MYJvIuFj?=
- =?us-ascii?Q?+yo41/bbTC3N9+wMoiEczrV9E5SywMRR0MIHBcmwSbnMhDURnABRxuVWfrga?=
- =?us-ascii?Q?SqZ2wo7S2L3vyFXE7Sx7g2g9/Jf1lUTN5dtMeOzcITLOnMBfBX1vjBZeotoy?=
- =?us-ascii?Q?S15nHBW15drWRG78GsnEDMxEFI6w+OJr/hty1rSC/25m0/fvU+UHXZJmwNPC?=
- =?us-ascii?Q?Bw1QawKtheMInGW4gxGvqE24WKa1fOtgQhu6FXUNLln19F1ddlMNC+MDTg+z?=
- =?us-ascii?Q?oywG1pcmKG73YoufraIiF4Zv0NC+jAkI1sICjrZEItLHz4s0u57a0R//2RCn?=
- =?us-ascii?Q?XiDd4M+sH2ypNbN1pGOzVPvhXmf7qA=3D=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=0Scv2CQzHRXmF/ApG3CAUp2rduzdSqCt18fo2IzgVws=;
+        b=F92Rm6AsDKrnd7Njw0L0j3r9RgGaR2fdGzU+moVPTtcYIDG9E1lNtu5XLX+4tedUQh
+         nA0XJl+RzNepkgi2menUD2n0Ql6XM8YsnJp5yA+3Ijw4POEKZvZjbdULBbrH42QUK1As
+         TnBEPzOaVvWR2HKHwCqUS8hl7U44STMxMEjQ/ZRPi/Wy3r/reeOA3xrGca93ql+QdQLn
+         /JtLDpM3w/gdQeVI+h1Wvwj6swK47I6Ny7QCgm9e4rOaF5REMwMLNgsJqaNfpRnZaK0K
+         WxtsDESr/SdAQcTWQ5MGP3egqdKoRKPOeR8yNR+nyG4RDH0ZztwGC4lw/IC4CyuNmqNC
+         ZYLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=0Scv2CQzHRXmF/ApG3CAUp2rduzdSqCt18fo2IzgVws=;
+        b=HIfNiEXj1UD3avX2HXsQX36t2jEGo9ZRy6vz9z1vJjE/o1s5BDrN4TLqMh7Gn0fz7I
+         Sj1VhOzoXpVs0sIqQLGT1ONmZYJqs/UYh/bG4GpN+dbLdw1a4UnPrGsJJF0foEUbgKQP
+         JjGOOT4T5qq09d71vFtshZZKc/SI936bx2VuzSzgio0LByJ5tmqBhKVqmdx8f0g9s3/S
+         hFzQrL+FND4v5l+MsM94dR3JMtEuIIv5bxQm4LEQyoNZ+3MyB7vb/K2wdun/emlxKJTP
+         wI1rNdUZR7sgVBgtyyYASubhONkZKSYoIXQOrTPi1OinST0RDjuyfQdqokTqDE7cgLeJ
+         RhUg==
+X-Gm-Message-State: AOAM5304jamQ9eibr6UrTtep6HIZIcSVTpWWgHX+zZ3eYDX5IaB66n6d
+        h3EtivcxmaYbIn7V/1vPG4zyMqbwMiHjw+/EECw=
+X-Google-Smtp-Source: ABdhPJwTz6me2k2pSZsuKRuAzKjUqHHrlYn6Uw22so/fg0a5kndPFUQfse0PZz8x1DHisLHTdQTZClL9SWg3piVPlRM=
+X-Received: by 2002:aca:b441:: with SMTP id d62mr163671oif.91.1611583051572;
+ Mon, 25 Jan 2021 05:57:31 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a1e656bc-f908-4935-389d-08d8c1386f73
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jan 2021 13:52:20.4127
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Cg1G7xyT10MPoHu/nOwo5LbZhouchgS3A+abYpZxs+RvkR1G/A5gL8sBR27JsumSYIw638q9hWajJ3kcMMiE5JBNWe7gKtPKidupxFHsrFs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR04MB7612
+References: <1608081982-10839-1-git-send-email-guoqing.jiang@cloud.ionos.com> <CAPhsuW4E+cxg3b7H2Mczp9AyD2T_uwLeKDjGUtWcw7rdPpNaPw@mail.gmail.com>
+In-Reply-To: <CAPhsuW4E+cxg3b7H2Mczp9AyD2T_uwLeKDjGUtWcw7rdPpNaPw@mail.gmail.com>
+From:   Jack Wang <jack.wang.usish@gmail.com>
+Date:   Mon, 25 Jan 2021 14:57:20 +0100
+Message-ID: <CA+res+Qae7BufW5rHsp31Op9zqz4E6TsrFFbYprVna+dY0cRvg@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: cast chunk_sectors to sector_t value
+To:     Song Liu <song@kernel.org>
+Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+Song Liu <song@kernel.org> =E4=BA=8E2020=E5=B9=B412=E6=9C=8816=E6=97=A5=E5=
+=91=A8=E4=B8=89 =E4=B8=8A=E5=8D=885:29=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Tue, Dec 15, 2020 at 5:26 PM Guoqing Jiang
+> <guoqing.jiang@cloud.ionos.com> wrote:
+> >
+> > Currently, raid5 calculates dev_sectors from chunk_sectors without
+> > proper cast, which is problematic.
+> >
+> > Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+> > ---
+> > I think the recently report about raid5 issue could be related with
+> > the setting of dev_sectors.
+> >
+> > Could someone test it with a large raid5 array? Thanks.
+>
+> Yes, this was the exact problem. I will apply this to md-next. (probably
+> after the merge window).
+>
+> Thanks,
+> Song
+>
+> >
+> >  drivers/md/raid5.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 3934347..ca0b29a 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -7662,7 +7662,7 @@ static int raid5_run(struct mddev *mddev)
+> >         }
+> >
+> >         /* device size must be a multiple of chunk size */
+> > -       mddev->dev_sectors &=3D ~(mddev->chunk_sectors - 1);
+> > +       mddev->dev_sectors &=3D ~((sector_t)mddev->chunk_sectors - 1);
+> >         mddev->resync_max_sectors =3D mddev->dev_sectors;
+> >
+> >         if (mddev->degraded > dirty_parity_disks &&
+> > --
+> > 2.7.4
+> >
+ping, I cant find it in latest mainline, is it forgotten?
