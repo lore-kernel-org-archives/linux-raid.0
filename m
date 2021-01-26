@@ -2,163 +2,164 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB75C43331
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 20:36:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B4ABC433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 04:45:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E1B222B51
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 20:36:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47F252070C
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 04:45:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727775AbhAZFKa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:10:30 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:42443 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726529AbhAYJbW (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 25 Jan 2021 04:31:22 -0500
-Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 00B7620645D5C;
-        Mon, 25 Jan 2021 09:54:24 +0100 (CET)
-From:   Donald Buczek <buczek@molgen.mpg.de>
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+raid@molgen.mpg.de
-References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
- <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
- <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
- <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
- <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
- <37c158cb-f527-34f5-2482-cae138bc8b07@molgen.mpg.de>
- <efb8d47b-ab9b-bdb9-ee2f-fb1be66343b1@molgen.mpg.de>
- <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
- <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
- <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de>
-Message-ID: <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
-Date:   Mon, 25 Jan 2021 09:54:24 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S239516AbhA0EpH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Jan 2021 23:45:07 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:7496 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2395173AbhAZTKl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Jan 2021 14:10:41 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1611688240; x=1643224240;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=YGNmnRINIpG1Ldktirw1F7YWnEoLOxBb3VspVRYqkeo=;
+  b=XtJKEuGFBigxznv2rxdaqxqqfKsUuFsRZ8PXJbg5nbEX1wDqVLl5OJ44
+   RCI/X/otG2FxCzhBehhQiVztpU8Mzrd4qXGY0eBgNzKr0OKtylc7vHJJ8
+   k+ZhU40NQigfNJQN0rI87FkDc2ZMRT40NjAgbsvh7q4Q56uhaLZdPYzWt
+   tTzkge6nkCgrg8DqKdvDQNCaGf8RJRL04VOKTrgeD0EdWLzVQvNmPhDVe
+   uUdZJ/topR5wf7JVMh979aW0eZRRZB2eA7y/H2nb4PII7mhJiA70LMaTx
+   49W70fAiH6yvMNwBp62XV2TCiWHWshUigqzHzSRXFesWMu8vLd+lwh01S
+   g==;
+IronPort-SDR: ZLZpwRVXYXuqucQk4LzjqbsACPMCWjLltDd65uTVUK91NaD6NYa9szG3Yu/xxsLQnUGxZ/Hfxl
+ al+ABfpuzPa/RegGoK13Q+Y08Wn3GIgdfRYZlE1re+ChX6f5XY/mfRNzI+9iGzuiI6L9J4WtLP
+ xKYvv8UYajhDLdFbZvItVPrDNl0lvRE+mdFFGACL5WVrr/43A/cjIYtqbkwS8WIklV4P+m52ai
+ hwtMFEtlVfYls4W7T6KZmqFO6DSbHZkgR1PatE9b9zIYFi7QUmbCYObpLc6futzOIYEXTorU5a
+ qK4=
+X-IronPort-AV: E=Sophos;i="5.79,377,1602518400"; 
+   d="scan'208";a="158378853"
+Received: from mail-dm6nam11lp2170.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.170])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2021 03:09:31 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZG2qmGpjuZXFXFiu0bfvUKd1O4ISpb3YZSvH7lopj7G2AZr5mIvaZCxg93xCcIGyzZN7V0lLkkNFpX8wTwmVNyZReZGEWgSooasTN1lhvK5YP6fq3HINdmw3wPKBTqTe/wDlkUbCbm9TLYZAwj6xukcKscEZarb5JPd1G7amfqet2BiiLf3h0+I7D7fAljjhh8kWVsTc9gS5gNRoYgPmooBXvGCQ2c9X0X9NW4EwfBCcW2am9R6nVE+FU0+sjkc4Giz/9FvgoedL+o5ZzIWE5O5kD7+hKnrmjSU//rp/tEpPIYxHS/qang/gPLlKP0hW+/+NI/ZNCpSaqgLC3diTKQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YGNmnRINIpG1Ldktirw1F7YWnEoLOxBb3VspVRYqkeo=;
+ b=H7yzhoHlHIy56Kc5rSIQSZF26D4x/4VQEFVSokSseSQTZPqp1RH6uVbPQc7pUMb8MP+Z2xLHjCajI122fT1FrwqXL8EMrskD277iKvZjyCnbNZ+idfW/Im3/GrXSSWBRAh0U/WWHvvzTXs1XSDmhhPWJmCA2if4m/gpHbBKrQvX9qa9H/CcH6MyZ171r3x5YxqIKMYyY1NUI/9CoP+GLA/PzyqCXKlsWKKmN2Dhi/WWck/OqUatbyp9xiBVhFjsftL+zuLiMpbPoxSFilrxV0CWpgY+45A5eF1+AEdZF8yWsebF/wGj3kbFUr2rOZq5c25RBPxHPOaTQAGIjhD8W+Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YGNmnRINIpG1Ldktirw1F7YWnEoLOxBb3VspVRYqkeo=;
+ b=Ksy6ELnealbnBgmT8mPoeUlKa40k/AUv0nJviygP8ikh51UA2gOxdGE2iw++0XMwttPnw26xXO90biaop2t+Da84ywfdyKIAlR3a1nlcxE4qQBdLHbIy9we3LP6Bj5dUnAjgEde5i3yoOQytXca+YN18Qarp9VZX9BeBO0hl2EE=
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
+ by BYAPR04MB5895.namprd04.prod.outlook.com (2603:10b6:a03:112::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.16; Tue, 26 Jan
+ 2021 19:09:30 +0000
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::1d83:38d9:143:4c9c]) by BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::1d83:38d9:143:4c9c%5]) with mapi id 15.20.3784.016; Tue, 26 Jan 2021
+ 19:09:29 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Song Liu <song@kernel.org>
+CC:     Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Naohiro Aota <Naohiro.Aota@wdc.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "linux-f2fs-devel@lists.sourceforge.net" 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+Subject: Re: [PATCH 01/17] zonefs: use bio_alloc in zonefs_file_dio_append
+Thread-Topic: [PATCH 01/17] zonefs: use bio_alloc in zonefs_file_dio_append
+Thread-Index: AQHW8/QrNhI8HyLlwU+4pUC6zgQqrw==
+Date:   Tue, 26 Jan 2021 19:09:29 +0000
+Message-ID: <BYAPR04MB496552BD237A2B9388B82CFC86BC9@BYAPR04MB4965.namprd04.prod.outlook.com>
+References: <20210126145247.1964410-1-hch@lst.de>
+ <20210126145247.1964410-2-hch@lst.de>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2600:8802:270c:4b00:b091:5edc:1473:bf45]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 8f35eef7-24b1-40b5-ac26-08d8c22de84a
+x-ms-traffictypediagnostic: BYAPR04MB5895:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB5895EA71901A3B2B4198EBAC86BC9@BYAPR04MB5895.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:949;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: N5D1t7fEmZ/vRNsWL3SIMc3Ot4sbmgvQI230Ws9puQQrSkHLU7QdmNi6cGMo6z/AbJK+eQGOSmvl0g0DpEvFCSiacEm3U0OSOfor1kMaTHm2KMXIR+6kbjZGjKo2FO8NFdevDiQwjJ82AVtVBA7fzkpchaEiRp38f0cIzWBXIeR1w9G0ik/lTypoLW50rpeWn/1KfAZ92+UAED1IAoshDwgj/uhsSznutl+YUp0j6FIRTnIyaPGvKnQ2oahnSOKI6UfxNzZyynVTAnW+PqbZxdwTfus6WeultlmVhuXW1N+RSFMXlojqaKUFCueH8/zSlx3xzceb6pHlv9c8DCpaa1fQYpwiNcgCzbE209PFFG4Lcyl9z9BqvzcK0F6CHQJPARNJQGaSy8eQ4/yujPsx1g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(346002)(396003)(136003)(376002)(39860400002)(478600001)(53546011)(6506007)(7696005)(316002)(2906002)(66556008)(33656002)(4326008)(55016002)(7416002)(558084003)(110136005)(54906003)(8676002)(8936002)(9686003)(186003)(71200400001)(5660300002)(52536014)(66946007)(66446008)(64756008)(66476007)(76116006)(86362001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?eI6rIzFiJ6pedp6gEywHXdT+FYQOv4L4uRq8vwaUazN5LGmbO1EWcC9OHSHy?=
+ =?us-ascii?Q?c/c/DjnwUKe0q1TWZbiU2nr3r3nd8CWCRLtgoY4iQOn5w2RmnmNpg5vaUaV1?=
+ =?us-ascii?Q?X6B+RQfAqBmd5rgF77e4pU0E6PIbjW7wN9oTi+dFXoJBe+YOZ2Np5s6Hityh?=
+ =?us-ascii?Q?djzKvVenO3GOcaz+yVKyxDAgCkZpv19KRm/et3BXfHHgN+bOCpcG9sq9NYB3?=
+ =?us-ascii?Q?p1EvfoUeNOxYW0YiffyqGcehEvZoPa7DHpCVKnIaGuERUiocudPD6XBuo7a1?=
+ =?us-ascii?Q?ijGncT78qfxBeNhPnzil3nbp98vJBzJd86wn4Stgq4FlKLjpiPwoRD8L7bG2?=
+ =?us-ascii?Q?c14D0Y5fqjnMVtm4+6scIMKIZH2zgNDMqJXUnIqwg1Yl/GMIxLgbw7XtV5jJ?=
+ =?us-ascii?Q?IVxooGC/QM9jTrBeSryVEkCkgibYzlgUvKrJG8nkvHKseF9phqCkxKzXryTV?=
+ =?us-ascii?Q?4wfQXVaswzstXOyuVkO11HBZkr3l812sjAzSPvZz1KX6zCPEFEIgMJotdClg?=
+ =?us-ascii?Q?cFb/t/s2edeFlHBLSdrLIPs/cGbDUq80bYZE+7NaBf1Br9P5mf3fJcUShVgS?=
+ =?us-ascii?Q?uLnkM6iFXI02D4GySlgQqKE2lIx7V7Vb1h1LGJTPy1z+z676yEkCrsnjSpNJ?=
+ =?us-ascii?Q?u1IZRMTY9kvecwUao/V+2CeiFImbwUAfr73PF9ROR8b5xu4oo4PnYT9VFG4/?=
+ =?us-ascii?Q?KmNaQmLx8y2wbFmlF+ypcfe4zid6rsiXPJQGWJcwJM5Qkah7wwianLbKQfW6?=
+ =?us-ascii?Q?+WI3lyzGlIvqXDoCPufhaodo1w7gTeOrWSD2xHaHcxT6S4z4rlWvO+B8J5Yt?=
+ =?us-ascii?Q?liIdUjW4OmbxoioAIpMSY28TMvEPlWgyPI1nkCr+0pFSYxLXc8tOgv0fXm52?=
+ =?us-ascii?Q?u7yKcGNzEMvrTbyqdPDHZOqG8VOilSuqBkYtL/zqqP8jScAm8MdE5EwIaUUi?=
+ =?us-ascii?Q?JWfRR5NNtWEfdWsGMOIdSqFyXhlM4dYGoeR7Jv+bKqWCOf4zawJ70rz0+EYT?=
+ =?us-ascii?Q?PwYk7BYtWdg4utZNrLHUYKieb+8kGloWg+ShRguSxz8FplEMgIJOO0XhtAZ5?=
+ =?us-ascii?Q?KlfdbrpKp62cb1whKV/ytqcQMgxfKTIrr7qUBl+1nVdlVPkfWzNBvMeAeNUR?=
+ =?us-ascii?Q?MOvDAGfu1lbcFsBdOgeWxMeKDWhw3/SsRA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8f35eef7-24b1-40b5-ac26-08d8c22de84a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Jan 2021 19:09:29.8430
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gkoUaWb/WhPq0RyTEnv292YDUor0Pva/RL40BBpOQCTXxnD9rOdFToZ4ixKO5MZqy95nepFUpZvo2MUVDYgPBLJOfNNDqjPVo1cp6us5IQs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5895
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Guoqing,
-
-a colleague of mine was able to produce the issue inside a vm and were able to find a procedure to run the vm into the issue within minutes (not unreliably after hours on a physical system as before). This of course helped to pinpoint the problem.
-
-My current theory of what is happening is:
-
-- MD_SB_CHANGE_CLEAN + MD_SB_CHANGE_PENDING are set by md_write_start() when file-system I/O wants to do a write and the array transitions from "clean" to "active". (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L8308)
-
-- Before raid5d gets to write the superblock (its busy processing active stripes because of the sync activity) , userspace wants to pause the check by `echo idle > /sys/block/mdX/md/sync_action`
-
-- action_store() takes the reconfig_mutex before trying to stop the sync thread. (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L4689) Dump of struct mddev of email 1/19/21 confirms reconf_mutex non-zero.
-
-- raid5d is running in its main loop. raid5d()->handle_active_stripes() returns a positive batch size ( https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/raid5.c#L6329 ) although raid5d()->handle_active_stripes()->handle_stripe() doesn't process any stripe because of MD_SB_CHANGE_PENDING. (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/raid5.c#L4729 ). This is the reason, raid5d is busy looping.
-
-- raid5d()->md_check_recovery() is called by the raid5d main loop. One of its duties is to write the superblock, if a change is pending. However to do so, it needs either MD_ALLOW_SB_UPDATE or must be able to take the reconfig_mutex. (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L8967 , https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L9006) Both is not true, so the superblock is not written and MD_SB_CHANGE_PENDING is not cleared.
-
-- (as discussed previously) the sync thread is waiting for the number of active stripes to go down and doesn't terminate. The userspace thread is waiting for the sync thread to terminate.
-
-Does this make sense?
-
-Just for reference, I add the procedure which triggers the issue on the vm (with /dev/md3 mounted on /mnt/raid_md3) and some debug output:
-
-```
-#! /bin/bash
-
-(
-         while true; do
-                 echo "start check"
-                 echo check > /sys/block/md3/md/sync_action
-                 sleep 10
-                 echo "stop check"
-                 echo idle > /sys/block/md3/md/sync_action
-                 sleep 2
-         done
-) &
-
-(
-         while true; do
-                 dd bs=1k count=$((5*1024*1024)) if=/dev/zero of=/mnt/raid_md3/bigfile status=none
-                 sync /mnt/raid_md3/bigfile
-                 rm /mnt/raid_md3/bigfile
-                 sleep .1
-         done
-) &
-
-start="$(date +%s)"
-cd /sys/block/md3/md
-wp_count=0
-while true; do
-         array_state=$(cat array_state)
-         if [ "$array_state" = write-pending ]; then
-                 wp_count=$(($wp_count+1))
-         else
-                 wp_count=0
-         fi
-         echo $(($(date +%s)-$start)) $(cat sync_action) $(cat sync_completed) $array_state $(cat stripe_cache_active)
-         if [ $wp_count -ge 3 ]; then
-                 kill -- -$$
-                 exit
-         fi
-         sleep 1
-done
-```
-
-The time, this needs to trigger the issue, varies from under a minute to one hour with 5 minute being typical. The output ends like this:
-
-     309 check 6283872 / 8378368 active-idle 4144
-     310 check 6283872 / 8378368 active 1702
-     311 check 6807528 / 8378368 active 4152
-     312 check 7331184 / 8378368 clean 3021
-     stop check
-     313 check 7331184 / 8378368 write-pending 3905
-     314 check 7331184 / 8378368 write-pending 3905
-     315 check 7331184 / 8378368 write-pending 3905
-     Terminated
-
-If I add
-
-     pr_debug("XXX batch_size %d release %d mdddev->sb_flags %lx\n", batch_size, released, mddev->sb_flags);
-
-in raid5d after the call to handle_active_stripes and enable the debug location after the deadlock occurred, I get
-
-     [ 3123.939143] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
-     [ 3123.939156] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
-     [ 3123.939170] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
-     [ 3123.939184] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
-
-If I add
-
-     pr_debug("XXX 1 %s:%d mddev->flags %08lx mddev->sb_flags %08lx\n", __FILE__, __LINE__, mddev->flags, mddev->sb_flags);
-
-at the head of md_check_recovery, I get:
-
-     [  789.555462] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
-     [  789.555477] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
-     [  789.555491] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
-     [  789.555505] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
-     [  789.555520] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
-
-More debug lines in md_check_recovery confirm the control flow ( `if (mddev_trylock(mddev))` block not taken )
-
-What approach would you suggest to fix this?
-
-Best
-   Donald
-
-
+On 1/26/21 7:01 AM, Christoph Hellwig wrote:=0A=
+> Use bio_alloc instead of open coding it.=0A=
+>=0A=
+> Signed-off-by: Christoph Hellwig <hch@lst.de>=0A=
+=0A=
+Ha Ha I was going send out a patch for this :P.=0A=
+=0A=
+Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
+=0A=
