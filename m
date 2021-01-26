@@ -2,187 +2,105 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A560BC433DB
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Jan 2021 23:08:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A2DDC433E6
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 01:32:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 634AA227BF
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Jan 2021 23:08:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 522A323109
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 01:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732557AbhAYXH2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Jan 2021 18:07:28 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:46823 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732772AbhAYVdU (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 25 Jan 2021 16:33:20 -0500
-Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id F165920647907;
-        Mon, 25 Jan 2021 22:32:30 +0100 (CET)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-From:   Donald Buczek <buczek@molgen.mpg.de>
-To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+raid@molgen.mpg.de
-References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
- <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
- <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
- <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
- <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
- <37c158cb-f527-34f5-2482-cae138bc8b07@molgen.mpg.de>
- <efb8d47b-ab9b-bdb9-ee2f-fb1be66343b1@molgen.mpg.de>
- <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
- <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
- <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de>
- <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
-Message-ID: <bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de>
-Date:   Mon, 25 Jan 2021 22:32:30 +0100
+        id S1727933AbhAZBcP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 25 Jan 2021 20:32:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46766 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730214AbhAZBaI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Jan 2021 20:30:08 -0500
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0BEFC061224
+        for <linux-raid@vger.kernel.org>; Mon, 25 Jan 2021 16:51:07 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id md11so680260pjb.0
+        for <linux-raid@vger.kernel.org>; Mon, 25 Jan 2021 16:51:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=uPJlUchjV+OaTIftOWbXEjVwG0d/bApny8LKz3OH9do=;
+        b=Fn4EVg48BXJQ0XVCGo4P1/CcZQYyaUjR593N0Mrt0Pa+QokgKItCP+8Jqv/2LG0i6e
+         ZOE+o7Kp6TSk5kE5z/p+B9iYW/TEKeeUZ38hHU2REBudTZapniqQIgruui5UYR2CX3jM
+         XMAbvuY6JHqMBPOAxvGF/pd+dD2JXyjuQuYgOdpBoKEe5OkwN21A1Oz9evbFfBDmAQvY
+         7WFdRbpEZ2liR9Ig+qsbIiWSj+GDDvognZEVlwuSJJV6ndniZaVtaxhiGOys5MNoWytQ
+         gQ7Z3yycyJCcMckSCcJGV82qUswKaz/f7sRYaD0P22YuS9ZNrnmyYgBqU8O8EcKu5dJk
+         dg7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uPJlUchjV+OaTIftOWbXEjVwG0d/bApny8LKz3OH9do=;
+        b=C+eQuACaq/Vlxhm2GxQOYWeWLKlezguNLtlLkMHdTa/ky3LXaklnagJBIrV///Pfxl
+         gBCpQrLVRVgGVWo14XLHTVB44HZzO8zyAyur3AHj9qBwD9JA6Andrc0RciMZQle3CsN3
+         3XtcOTSHvIyNMYNSCrNv81hnkiLnyPDNTTz6lsgDugXnkJqOMrUA+ZUItQ7TsbFoHWLJ
+         Lr9Is1kMxxMm94N87DnaSIWxm/HJ4f9Mfs+/Aml1OwL9ue3Wp6E6T9gEjdSZWY1eXE8G
+         hJs3sBw73+urzY6t5NYdGNo9MM3y0K21SynQ301zZg9trk9KGPFqkgJfpg4xlTIjOHc0
+         6C6g==
+X-Gm-Message-State: AOAM532elC9OSQF4gs3Iij5OTO1xs6x2D3u0T54oaZ0wNcb/IhTXbhzC
+        Fmkk9eJTnsEA2gZLnjdDiExLaw==
+X-Google-Smtp-Source: ABdhPJzzs4C/lNGU5gJfjXLgueQ6h//2HOCs2JEgJn8fHs+SjPK/bp53wfdpI/yc0gqOKDwXYe/jwg==
+X-Received: by 2002:a17:902:c284:b029:df:c0d8:6b7 with SMTP id i4-20020a170902c284b02900dfc0d806b7mr3120918pld.34.1611622266246;
+        Mon, 25 Jan 2021 16:51:06 -0800 (PST)
+Received: from [10.8.1.5] ([185.125.207.232])
+        by smtp.gmail.com with ESMTPSA id r7sm3940119pfc.26.2021.01.25.16.50.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Jan 2021 16:51:05 -0800 (PST)
+Subject: Re: [PATCH v2 08/10] md: Implement ->corrupted_range()
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org,
+        darrick.wong@oracle.com, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, song@kernel.org, rgoldwyn@suse.de,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+References: <20210125225526.1048877-1-ruansy.fnst@cn.fujitsu.com>
+ <20210125225526.1048877-9-ruansy.fnst@cn.fujitsu.com>
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Message-ID: <6100b7ca-7968-e1ea-84b8-074dc216a453@cloud.ionos.com>
+Date:   Tue, 26 Jan 2021 01:50:32 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
+In-Reply-To: <20210125225526.1048877-9-ruansy.fnst@cn.fujitsu.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 25.01.21 09:54, Donald Buczek wrote:
-> Dear Guoqing,
+On 1/25/21 23:55, Shiyang Ruan wrote:
+> With the support of ->rmap(), it is possible to obtain the superblock on
+> a mapped device.
 > 
-> a colleague of mine was able to produce the issue inside a vm and were able to find a procedure to run the vm into the issue within minutes (not unreliably after hours on a physical system as before). This of course helped to pinpoint the problem.
+> If a pmem device is used as one target of mapped device, we cannot
+> obtain its superblock directly.  With the help of SYSFS, the mapped
+> device can be found on the target devices.  So, we iterate the
+> bdev->bd_holder_disks to obtain its mapped device.
 > 
-> My current theory of what is happening is:
-> 
-> - MD_SB_CHANGE_CLEAN + MD_SB_CHANGE_PENDING are set by md_write_start() when file-system I/O wants to do a write and the array transitions from "clean" to "active". (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L8308)
-> 
-> - Before raid5d gets to write the superblock (its busy processing active stripes because of the sync activity) , userspace wants to pause the check by `echo idle > /sys/block/mdX/md/sync_action`
-> 
-> - action_store() takes the reconfig_mutex before trying to stop the sync thread. (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L4689) Dump of struct mddev of email 1/19/21 confirms reconf_mutex non-zero.
-> 
-> - raid5d is running in its main loop. raid5d()->handle_active_stripes() returns a positive batch size ( https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/raid5.c#L6329 ) although raid5d()->handle_active_stripes()->handle_stripe() doesn't process any stripe because of MD_SB_CHANGE_PENDING. (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/raid5.c#L4729 ). This is the reason, raid5d is busy looping.
-> 
-> - raid5d()->md_check_recovery() is called by the raid5d main loop. One of its duties is to write the superblock, if a change is pending. However to do so, it needs either MD_ALLOW_SB_UPDATE or must be able to take the reconfig_mutex. (https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L8967 , https://elixir.bootlin.com/linux/v5.4.57/source/drivers/md/md.c#L9006) Both is not true, so the superblock is not written and MD_SB_CHANGE_PENDING is not cleared.
-> 
-> - (as discussed previously) the sync thread is waiting for the number of active stripes to go down and doesn't terminate. The userspace thread is waiting for the sync thread to terminate.
-> 
-> Does this make sense?
-> 
-> Just for reference, I add the procedure which triggers the issue on the vm (with /dev/md3 mounted on /mnt/raid_md3) and some debug output:
-> 
-> ```
-> #! /bin/bash
-> 
-> (
->          while true; do
->                  echo "start check"
->                  echo check > /sys/block/md3/md/sync_action
->                  sleep 10
->                  echo "stop check"
->                  echo idle > /sys/block/md3/md/sync_action
->                  sleep 2
->          done
-> ) &
-> 
-> (
->          while true; do
->                  dd bs=1k count=$((5*1024*1024)) if=/dev/zero of=/mnt/raid_md3/bigfile status=none
->                  sync /mnt/raid_md3/bigfile
->                  rm /mnt/raid_md3/bigfile
->                  sleep .1
->          done
-> ) &
-> 
-> start="$(date +%s)"
-> cd /sys/block/md3/md
-> wp_count=0
-> while true; do
->          array_state=$(cat array_state)
->          if [ "$array_state" = write-pending ]; then
->                  wp_count=$(($wp_count+1))
->          else
->                  wp_count=0
->          fi
->          echo $(($(date +%s)-$start)) $(cat sync_action) $(cat sync_completed) $array_state $(cat stripe_cache_active)
->          if [ $wp_count -ge 3 ]; then
->                  kill -- -$$
->                  exit
->          fi
->          sleep 1
-> done
-> ```
-> 
-> The time, this needs to trigger the issue, varies from under a minute to one hour with 5 minute being typical. The output ends like this:
-> 
->      309 check 6283872 / 8378368 active-idle 4144
->      310 check 6283872 / 8378368 active 1702
->      311 check 6807528 / 8378368 active 4152
->      312 check 7331184 / 8378368 clean 3021
->      stop check
->      313 check 7331184 / 8378368 write-pending 3905
->      314 check 7331184 / 8378368 write-pending 3905
->      315 check 7331184 / 8378368 write-pending 3905
->      Terminated
-> 
-> If I add
-> 
->      pr_debug("XXX batch_size %d release %d mdddev->sb_flags %lx\n", batch_size, released, mddev->sb_flags);
-> 
-> in raid5d after the call to handle_active_stripes and enable the debug location after the deadlock occurred, I get
-> 
->      [ 3123.939143] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
->      [ 3123.939156] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
->      [ 3123.939170] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
->      [ 3123.939184] [1223] raid5d:6332: XXX batch_size 8 release 0 mdddev->sb_flags 6
-> 
-> If I add
-> 
->      pr_debug("XXX 1 %s:%d mddev->flags %08lx mddev->sb_flags %08lx\n", __FILE__, __LINE__, mddev->flags, mddev->sb_flags);
-> 
-> at the head of md_check_recovery, I get:
-> 
->      [  789.555462] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
->      [  789.555477] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
->      [  789.555491] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
->      [  789.555505] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
->      [  789.555520] [1191] md_check_recovery:8970: XXX 1 drivers/md/md.c:8970 mddev->flags 00000000 mddev->sb_flags 00000006
-> 
-> More debug lines in md_check_recovery confirm the control flow ( `if (mddev_trylock(mddev))` block not taken )
-> 
-> What approach would you suggest to fix this?
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> ---
+>   drivers/md/dm.c       | 61 +++++++++++++++++++++++++++++++++++++++++++
+>   drivers/nvdimm/pmem.c | 11 +++-----
+>   fs/block_dev.c        | 42 ++++++++++++++++++++++++++++-
+>   include/linux/genhd.h |  2 ++
+>   4 files changed, 107 insertions(+), 9 deletions(-)
 
-I naively tried the following patch and it seems to fix the problem. The test procedure didn't trigger the deadlock in 10 hours.
+I can't see md raid is involved here, perhaps dm-devel need to be cced 
+instead of raid list. And the subject need to be changed as well.
 
-D.
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2d21c298ffa7..f40429843906 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4687,11 +4687,13 @@ action_store(struct mddev *mddev, const char *page, size_t len)
-  			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-  		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-  		    mddev_lock(mddev) == 0) {
-+			set_bit(MD_ALLOW_SB_UPDATE, &mddev->flags);
-  			flush_workqueue(md_misc_wq);
-  			if (mddev->sync_thread) {
-  				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-  				md_reap_sync_thread(mddev);
-  			}
-+			clear_bit(MD_ALLOW_SB_UPDATE, &mddev->flags);
-  			mddev_unlock(mddev);
-  		}
-  	} else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
--- 
-2.30.0
+Thanks,
+Guoqing
