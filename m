@@ -2,191 +2,133 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CBFCC43381
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 15:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49EB2C433E9
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 16:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BC8A22D58
-	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 15:28:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A4B821E92
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Jan 2021 16:08:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405892AbhAZP2l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Jan 2021 10:28:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57902 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405889AbhAZP03 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Jan 2021 10:26:29 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 201BEC061D73;
-        Tue, 26 Jan 2021 07:25:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=imDKE4404TVupECTT3CTRw+cqCPUxNPppd2/iiQCXMs=; b=aQgfKd6q628v0njktwMXtO+tpa
-        VQ6AN2ML+AjC9smASiy0wrdfS4sFFCnIEmcIXu/uC9Ta7v/gFWb+6z6PpQmY8jMFGWtYqV8VJSHA0
-        dXAF/4pi0+HC8kVchlMaU5GmAZa714wa2/luSOmABw0GZfAT6AU7MbJuMKkGL5tnR0JtqQacKoy8n
-        WCCfmaNoO8QrPSmsSJPHsjQGoOnH268uw3Hhya2Ewhml5arq/gCxUDMs/smtqApFBFC+qBFUve6kd
-        hWTlztN9lb5yJebq1pTZJuSmAUl3qDJDAbW4e+pnBNWS1tiUosnRkCm/5hJV/Kb0mS6xYMUviraAV
-        ixL6cw1Q==;
-Received: from [2001:4bb8:191:e347:5918:ac86:61cb:8801] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1l4QAZ-005opo-7d; Tue, 26 Jan 2021 15:22:55 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        linux-nilfs@vger.kernel.org, dm-devel@redhat.com,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 17/17] mm: remove get_swap_bio
-Date:   Tue, 26 Jan 2021 15:52:47 +0100
-Message-Id: <20210126145247.1964410-18-hch@lst.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210126145247.1964410-1-hch@lst.de>
-References: <20210126145247.1964410-1-hch@lst.de>
+        id S2404934AbhAZQGd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Jan 2021 11:06:33 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:54897 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2404713AbhAZQGa (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 26 Jan 2021 11:06:30 -0500
+Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 39BCA20645D6E;
+        Tue, 26 Jan 2021 17:05:41 +0100 (CET)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+raid@molgen.mpg.de
+References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
+ <95fbd558-5e46-7a6a-43ac-bcc5ae8581db@cloud.ionos.com>
+ <77244d60-1c2d-330e-71e6-4907d4dd65fc@molgen.mpg.de>
+ <7c5438c7-2324-cc50-db4d-512587cb0ec9@molgen.mpg.de>
+ <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
+ <37c158cb-f527-34f5-2482-cae138bc8b07@molgen.mpg.de>
+ <efb8d47b-ab9b-bdb9-ee2f-fb1be66343b1@molgen.mpg.de>
+ <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
+ <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
+ <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de>
+ <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
+ <bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de>
+ <c3390ab0-d038-f1c3-5544-67ae9c8408b1@cloud.ionos.com>
+ <a27c5a64-62bf-592c-e547-1e8e904e3c97@molgen.mpg.de>
+ <6c7008df-942e-13b1-2e70-a058e96ab0e9@cloud.ionos.com>
+ <12f09162-c92f-8fbb-8382-cba6188bfb29@molgen.mpg.de>
+ <6757d55d-ada8-9b7e-b7fd-2071fe905466@cloud.ionos.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <93d8d623-8aec-ad91-490c-a414c4926fb2@molgen.mpg.de>
+Date:   Tue, 26 Jan 2021 17:05:40 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <6757d55d-ada8-9b7e-b7fd-2071fe905466@cloud.ionos.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just reuse the block_device and sector from the swap_info structure,
-just as used by the SWP_SYNCHRONOUS path.  Also remove the checks for
-NULL returns from bio_alloc as that can't happen for sleeping
-allocations.
+Dear Guoqing,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/swap.h |  1 -
- mm/page_io.c         | 45 +++++++++++++-------------------------------
- mm/swapfile.c        | 10 ----------
- 3 files changed, 13 insertions(+), 43 deletions(-)
+On 26.01.21 15:06, Guoqing Jiang wrote:
+> 
+> 
+> On 1/26/21 13:58, Donald Buczek wrote:
+>>
+>>
+>>> Hmm, how about wake the waiter up in the while loop of raid5d?
+>>>
+>>> @@ -6520,6 +6532,11 @@ static void raid5d(struct md_thread *thread)
+>>>                          md_check_recovery(mddev);
+>>>                          spin_lock_irq(&conf->device_lock);
+>>>                  }
+>>> +
+>>> +               if ((atomic_read(&conf->active_stripes)
+>>> +                    < (conf->max_nr_stripes * 3 / 4) ||
+>>> +                    (test_bit(MD_RECOVERY_INTR, &mddev->recovery))))
+>>> +                       wake_up(&conf->wait_for_stripe);
+>>>          }
+>>>          pr_debug("%d stripes handled\n", handled);
+>>
+>> Hmm... With this patch on top of your other one, we still have the basic symptoms (md3_raid6 busy looping), but the sync thread is now hanging at
+>>
+>>      root@sloth:~# cat /proc/$(pgrep md3_resync)/stack
+>>      [<0>] md_do_sync.cold+0x8ec/0x97c
+>>      [<0>] md_thread+0xab/0x160
+>>      [<0>] kthread+0x11b/0x140
+>>      [<0>] ret_from_fork+0x22/0x30
+>>
+>> instead, which is https://elixir.bootlin.com/linux/latest/source/drivers/md/md.c#L8963
+> 
+> Not sure why recovery_active is not zero, because it is set 0 before blk_start_plug, and raid5_sync_request returns 0 and skipped is also set to 1. Perhaps handle_stripe calls md_done_sync.
+> 
+> Could you double check the value of recovery_active? Or just don't wait if resync thread is interrupted.
+> 
+> wait_event(mddev->recovery_wait,
+>         test_bit(MD_RECOVERY_INTR,&mddev->recovery) ||
+>         !atomic_read(&mddev->recovery_active));
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 596bc2f4d9b03e..3f1f7ae0fbe9e1 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -468,7 +468,6 @@ extern int free_swap_and_cache(swp_entry_t);
- int swap_type_of(dev_t device, sector_t offset);
- int find_first_swap(dev_t *device);
- extern unsigned int count_swap_pages(int, int);
--extern sector_t map_swap_page(struct page *, struct block_device **);
- extern sector_t swapdev_block(int, pgoff_t);
- extern int page_swapcount(struct page *);
- extern int __swap_count(swp_entry_t entry);
-diff --git a/mm/page_io.c b/mm/page_io.c
-index a75f35464a4e73..92f7941c6d018b 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -26,25 +26,6 @@
- #include <linux/uio.h>
- #include <linux/sched/task.h>
- 
--static struct bio *get_swap_bio(gfp_t gfp_flags,
--				struct page *page, bio_end_io_t end_io)
--{
--	struct bio *bio;
--
--	bio = bio_alloc(gfp_flags, 1);
--	if (bio) {
--		struct block_device *bdev;
--
--		bio->bi_iter.bi_sector = map_swap_page(page, &bdev);
--		bio_set_dev(bio, bdev);
--		bio->bi_iter.bi_sector <<= PAGE_SHIFT - 9;
--		bio->bi_end_io = end_io;
--
--		bio_add_page(bio, page, thp_size(page), 0);
--	}
--	return bio;
--}
--
- void end_swap_bio_write(struct bio *bio)
- {
- 	struct page *page = bio_first_page_all(bio);
-@@ -361,13 +342,13 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
- 		return 0;
- 	}
- 
--	bio = get_swap_bio(GFP_NOIO, page, end_write_func);
--	if (bio == NULL) {
--		set_page_dirty(page);
--		unlock_page(page);
--		return -ENOMEM;
--	}
-+	bio = bio_alloc(GFP_NOIO, 1);
-+	bio_set_dev(bio, sis->bdev);
-+	bio->bi_iter.bi_sector = swap_page_sector(page);
- 	bio->bi_opf = REQ_OP_WRITE | REQ_SWAP | wbc_to_write_flags(wbc);
-+	bio->bi_end_io = end_write_func;
-+	bio_add_page(bio, page, thp_size(page), 0);
-+
- 	bio_associate_blkg_from_page(bio, page);
- 	count_swpout_vm_event(page);
- 	set_page_writeback(page);
-@@ -427,18 +408,18 @@ int swap_readpage(struct page *page, bool synchronous)
- 	}
- 
- 	ret = 0;
--	bio = get_swap_bio(GFP_KERNEL, page, end_swap_bio_read);
--	if (bio == NULL) {
--		unlock_page(page);
--		ret = -ENOMEM;
--		goto out;
--	}
-+	bio = bio_alloc(GFP_KERNEL, 1);
-+	bio_set_dev(bio, sis->bdev);
-+	bio->bi_opf = REQ_OP_READ;
-+	bio->bi_iter.bi_sector = swap_page_sector(page);
-+	bio->bi_end_io = end_swap_bio_read;
-+	bio_add_page(bio, page, thp_size(page), 0);
-+
- 	disk = bio->bi_bdev->bd_disk;
- 	/*
- 	 * Keep this task valid during swap readpage because the oom killer may
- 	 * attempt to access it in the page fault retry time check.
- 	 */
--	bio_set_op_attrs(bio, REQ_OP_READ, 0);
- 	if (synchronous) {
- 		bio->bi_opf |= REQ_HIPRI;
- 		get_task_struct(current);
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 9fffc5af29d1b9..bfa9e8b0c2ef61 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -2301,16 +2301,6 @@ static sector_t map_swap_entry(swp_entry_t entry, struct block_device **bdev)
- 	return se->start_block + (offset - se->start_page);
- }
- 
--/*
-- * Returns the page offset into bdev for the specified page's swap entry.
-- */
--sector_t map_swap_page(struct page *page, struct block_device **bdev)
--{
--	swp_entry_t entry;
--	entry.val = page_private(page);
--	return map_swap_entry(entry, bdev);
--}
--
- /*
-  * Free all of a swapdev's extent information
-  */
+With that added, md3_resync goes into a loop, too. Not 100% busy, though.
+
+root@sloth:~# cat /proc/$(pgrep md3_resync)/stack
+
+[<0>] raid5_get_active_stripe+0x1e7/0x6b0  # https://elixir.bootlin.com/linux/v5.11-rc5/source/drivers/md/raid5.c#L735
+[<0>] raid5_sync_request+0x2a7/0x3d0       # https://elixir.bootlin.com/linux/v5.11-rc5/source/drivers/md/raid5.c#L6274
+[<0>] md_do_sync.cold+0x3ee/0x97c          # https://elixir.bootlin.com/linux/v5.11-rc5/source/drivers/md/md.c#L8883
+[<0>] md_thread+0xab/0x160
+[<0>] kthread+0x11b/0x140
+[<0>] ret_from_fork+0x22/0x30
+
+Sometimes top of stack is raid5_get_active_stripe+0x1ef/0x6b0 instead of raid5_get_active_stripe+0x1e7/0x6b0, so I guess it sleeps, its woken, but the conditions don't match so its sleeps again.
+
+Best
+   Donald
+
+> 
+>> And, unlike before, "md: md3: data-check interrupted." from the pr_info two lines above appears in dmesg.
+> 
+> Yes, that is intentional since MD_RECOVERY_INTR is set by write idle.
+> 
+> Anyway, will try the script and investigate more about the issue.
+> 
+> Thanks,
+> Guoqing
+
 -- 
-2.29.2
-
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
