@@ -2,163 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB83C43219
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 04:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42CA2C433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 04:49:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1474E20715
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 04:49:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06EAD2070C
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 04:49:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233105AbhA0EpM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 26 Jan 2021 23:45:12 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:50956 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732414AbhAZTMd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 26 Jan 2021 14:12:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1611688353; x=1643224353;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=qycwswdKEkfSrfBGHipxmgVrIyfCcU42WNDTcdPx4d0=;
-  b=NTnzrB3ZxZn6U0sgYA6ixwWzgGO9J0I6t4jCC/N7eN49tuoIIT4zaOl+
-   dZ7KlpnZQ2Kb/wEM2xeWPZULB45z7CctY3jYRNMkkfhzc7bbKT8fEvokS
-   quD7t+NzYjWW+WVA8/k6VFQk7DH49xtm05lpAsoKzTlqTKXtt34+jaqnH
-   RqGZ98ih3l83+EfRARSs2t3PKLzybelZXDhLvdtBNbfKZqloGwSTQQ3MI
-   Oe44vB2L0XALOQuOIOJOAEJsAKaxd10O+s+eXz2tEyG1UJI5+AlTezhpD
-   uubTbmMdV7yCEXD3xKoX9kiWe7soKmIh/XbfSkQUsvIAHt50JN1CCbGsV
-   A==;
-IronPort-SDR: 9HrUbYLhXi0toG9lWlwQ111gEyZxDJnP776ZlBI/cre4cQGC66/tHZrdY7ZvWcqdOjH+D5ze95
- TutGps+CGm7uVKGD0TBGMIxCHZaRwQ2282KRgGnO8QjYDXcobHE2JLuN3rLmPY26qVPY71dw2T
- xqwzF7u4UA970Aq9SJcl+hjCqMuKKB/HnPRXjP5saZOGBNz3yhO/SfEQcgeExO4Kb7r+E+ykAQ
- XGdNVbr1RVUUvi6jx8UTeQYFRxjs7dpADtExt4fiyOZFM46D3Ck3Dq5JvR6FXIld2yEROAKZYH
- dzQ=
-X-IronPort-AV: E=Sophos;i="5.79,377,1602518400"; 
-   d="scan'208";a="159553899"
-Received: from mail-co1nam11lp2176.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.176])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2021 03:11:20 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=a1UdTxzrjUs4pfZi48MQJ6Pv/CbpbAa+Wh3SZ8JXHI2+1zKEKiuTx5IPbv3T9//EIWegRwhHfZAsNwMlAQTtd0BObrY3Mt2kTbTDnoLPL1Wmqxzlm26Ueiep1q/ifZIQnF1ZeqzfTnZMlFBJa93hAz6h4sVhByHprsF4OlJqB5UQU7FZ2P1Ahh4IT4JJRv+5Dh1+92jPwigb69Bd+qZJQ6JYnUehfFJGftte3T6EwlmBRxpd+qvFib61c63GPJpyTtnvazAD4QgoofKSwlkSDUx427HlzrfrxalJcDEN39FeVwlwzkJ8s0sERWS0FSQx1cBpdkVGjt6xSbTsZw8q7Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qycwswdKEkfSrfBGHipxmgVrIyfCcU42WNDTcdPx4d0=;
- b=PkBkS+/ZzTepagg6yZMWS21S2ogWWy0E94Lx2s6Ie2VfFSM36aNDIl29Rh401i0vSCR0EDF1sAZpMrgqOkm/GTEF94yE28M6mKFLXWlXtdzBx159eiygch6xD76XxOkvxTkaIL+/IXsEjlbJD8wZ49eFGpLhuB4HbpNj4L9BekYX8ppcdbQ1BllchLKJch7K7+uZbaxKFv1W/TJDVTOrAUxKLRKQK/RiD+RetBOYqrRY+UWWrz2fOuvLRPY+WXWGGunQtsk02Vvqu7q7PFEkMLrQGBEv/ZXfm/JFcX5AI7G8JIH43KVn/fkT4YSOVh43a410o6a0KqTvfK7Mv6WI7Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qycwswdKEkfSrfBGHipxmgVrIyfCcU42WNDTcdPx4d0=;
- b=PrVh+41fYjjTea3vPDoMebpSZh/LOBX+Wy5D7i2YyXFwnEktcnu04SFNCPZgwromMFrPzERw99RGdu2i3N+UOCF33YF6Gnm289xkUWn7uihL6uhwqUolBOdp661zHcnM7MY+4INjSee6xVFJa4rizpquDOZIx8NDnbSCYPpAdfs=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by SJ0PR04MB7262.namprd04.prod.outlook.com (2603:10b6:a03:292::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3784.13; Tue, 26 Jan
- 2021 19:11:18 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::1d83:38d9:143:4c9c]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::1d83:38d9:143:4c9c%5]) with mapi id 15.20.3784.016; Tue, 26 Jan 2021
- 19:11:18 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Song Liu <song@kernel.org>
-CC:     Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-f2fs-devel@lists.sourceforge.net" 
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-Subject: Re: [PATCH 02/17] btrfs: use bio_kmalloc in __alloc_device
-Thread-Topic: [PATCH 02/17] btrfs: use bio_kmalloc in __alloc_device
-Thread-Index: AQHW8/R60f6RE8OXIUCkbvhVzCX0Mg==
-Date:   Tue, 26 Jan 2021 19:11:18 +0000
-Message-ID: <BYAPR04MB4965808085867317CEDE615186BC9@BYAPR04MB4965.namprd04.prod.outlook.com>
-References: <20210126145247.1964410-1-hch@lst.de>
- <20210126145247.1964410-3-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2600:8802:270c:4b00:b091:5edc:1473:bf45]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: fa00d4b4-9e05-4e1e-33e9-08d8c22e28dc
-x-ms-traffictypediagnostic: SJ0PR04MB7262:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SJ0PR04MB7262B19D21BE2A31F5E3BD6386BC9@SJ0PR04MB7262.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:227;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 2KZA1/rEr/W1lpsd1PINRSs1f7HpMDml5NjuyzUcogKy1mCT3fgeDTpF1FIazWAF8MR+Yd77vp/F11XUtpv4hlThBYYPia3DmQ3A0TjfFC3J2cJF+KKjRN2E9Tm8nWK52cTa6a7EPO7VSVnqQErVZjbOGFbPuWeUnlVkO0SJ8CYaG1DNLb21CabGvBVe3IsaV5GSQZBROQTlzVK8iza7zdXyXqkCCeOOhHuJzC1eVj2COw1C25soX+k/CX4rzrvgMO0TE64hT07HISuBgQPH/h7MD8gwNSXWJ7OlYni5WZxKiT7usYVgJNc3IxG5cjHtnTy89noCKjl1EqsF6pmTZ5Ai2ujRbw1TrlyHA+3XFnf1FpT/Qr+35LLAPDF1bM0Slawui5uIfyO9Zso13TkCpa2row9Nceqzhaqd9NlOxz9evZLDBqSN+GmxWoIUcnmqJSKRI+ifYMag5l+7vv51aEg8h7xD36SCxPYGVJJx5LKFwkUvdDykR3BcdLZ0yU2uTuTITD8PlslERMvihzVByw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(396003)(376002)(136003)(366004)(346002)(558084003)(52536014)(186003)(33656002)(7696005)(8936002)(53546011)(6506007)(8676002)(110136005)(9686003)(316002)(64756008)(66556008)(5660300002)(55016002)(54906003)(66946007)(66476007)(66446008)(4326008)(76116006)(71200400001)(2906002)(7416002)(86362001)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?d4ptxX6mZEPBGIZsteWKaLZjzSo1m+Lq7aENEzkgzE+r+P9kNQHhSVi1ehRM?=
- =?us-ascii?Q?RMLcPq2hxicyKbHz+eg+N+ogzO9lhKeNRPhcPnLHWgdf7QfWGmIt2THZ8Fw3?=
- =?us-ascii?Q?6S78Vl8duyVcvcecfD5nQy4TwkCdlwFeoBVONhhsfO7sK1cG880KqU9UTi/G?=
- =?us-ascii?Q?oiatjNa4LLxdzYXulB5dVOrifgDo7omNXmOdISIK/wwGMWMzTUqBHftGHQqb?=
- =?us-ascii?Q?zk3qx5Mh8mXAqrXa3W6ZFVuGW9TBRzJvPG1iOXRKAnArShWTbqDFhSXG1hoy?=
- =?us-ascii?Q?WIZHCGn8KSyKiEZXkNVlSFKxV17kfwTXzKk7NNtP4gTf6U6n1zQS1dXSWkhn?=
- =?us-ascii?Q?Yl0iClvJsO+6dqGmA6WYOKm/u9Zp5OedUru6UgVMKWYARWer7jvh4kpjLfVT?=
- =?us-ascii?Q?jNNLn06mRoEVmZcG6rjqqf5+tpX7XpNEzc2yQ1+4R2gGH3p43HylRaDbOhl2?=
- =?us-ascii?Q?Lb19ODYgIlpXUbk0tgTZ8jN0J50YN1EVSazlk6hjdC673/LMlx/MSYgI21zQ?=
- =?us-ascii?Q?W/dvD6CTswOGwZ8vdTTq+/6F+plGhCuqfJobVaqyCjTVzpeWDWWvgb61/xTF?=
- =?us-ascii?Q?O7ZU72VgeL0o+xyrwiSDlGEayXnCsivG3sH21/Gy589h8UI08L646cL6A/T4?=
- =?us-ascii?Q?dHSPBbHgBX6fowOnMoN0YrgG87OzCbN4XxNm/ABh1QekfQ7l+9Zgjhe2mu5B?=
- =?us-ascii?Q?/e2goxVgjfFAILuB79AinYBOwGSf9KVTlLwwPlJTh+IdW6+8o7QzJREpaIgH?=
- =?us-ascii?Q?2IxE7UeVmoDOhw4GCxJR2Room/m20b+K15If9Brbnv5ETahJvVeT+4Fvga7k?=
- =?us-ascii?Q?kFle1+xQ9qSBL3qCsR844RUQv+fmwkDLQxBcWJjW/uqnci5ls5Y9sA/Pq3u6?=
- =?us-ascii?Q?Xe1bz6CLthQv1PiaZGp4jwHKU+riFE8/z6aGlKffeOiruP0v2pJapm00K23Z?=
- =?us-ascii?Q?DMBCjL327szzR5Nku5yRBJZ1p8HSqozCpp32w8zzQwbpSRNJMKboeugOafYn?=
- =?us-ascii?Q?iyDKdxmH4Eb1cuNL6Cf0b94NpxR2YdspdcERHuyLjyZzgoxcE/ENl5YsNLbp?=
- =?us-ascii?Q?7G9h33NyV4Lir4m0h2OvTVl+59AmQe/tvhNz5aOqgQurle+SKteGNpSyVNLz?=
- =?us-ascii?Q?hpWu2csTD3cO/KMFJSiB4RSVnIQ67Hb/Rg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S239512AbhA0EpB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Jan 2021 23:45:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52342 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2394945AbhAZSvt (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 26 Jan 2021 13:51:49 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 29B5722A84
+        for <linux-raid@vger.kernel.org>; Tue, 26 Jan 2021 18:51:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611687068;
+        bh=2rTkgVU+LTvrXuY/4CyD4QmBScd+nz4JQiolwughZPU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=XeeI41C0VcojjpjloYtH2W69E7F7dGTzRFxE2WNc7wIXGP0IRE0AJXM6kesrEG90e
+         pEXZ8LS2qLcnU81TZdWPgrZpQUKS/mpBC/N/U6SIaEhnPjhiv00eTwEUzoUMPq++5W
+         FDgpOXBy2rURKR82AZN5/h1mHmTrU8/filwno8wpSP5g0fqsYtvlgRgYXMQMIliQye
+         8XnpoL0UxHPqx4JsFk9rZch+nPhUtFVCEKD/n+Ll9Dz3t2mkAMNpJQwiB85TjeU3m3
+         k9AG4g3cEIFHU/OxPqB36+b7QcFoDBO3HwIgX2HBtwu+xhdN7398kxJmv715/IzaB8
+         +pyFGAyDQXZFA==
+Received: by mail-lf1-f51.google.com with SMTP id f1so14319372lfu.3
+        for <linux-raid@vger.kernel.org>; Tue, 26 Jan 2021 10:51:08 -0800 (PST)
+X-Gm-Message-State: AOAM532/q2WbxVUXuBGgNpsPjp2N9DdPGY2QfqV9A7auUEHajKZUYyAg
+        pLy8PyJLZICKS5y8ArM9iGzoVf/Gi7T+mmJPgSc=
+X-Google-Smtp-Source: ABdhPJzXPCqfU2w6CneJnYJvhhAUaQpNMtol7VTmohIhtb9L/s6VkXwTsYSLTotJKSkQAybbdYWsbp3CFMPkhk1mld0=
+X-Received: by 2002:ac2:5199:: with SMTP id u25mr3102991lfi.438.1611687066427;
+ Tue, 26 Jan 2021 10:51:06 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fa00d4b4-9e05-4e1e-33e9-08d8c22e28dc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Jan 2021 19:11:18.1689
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: NW/d4FbXu1icGoh8C9XQmW4dRM0JEd+cBUzwUw/wAHLhcJ6XSs3gYponomIRJGMZ8CrpHOU6ygsZgtqzLCnAa5EXK3aXQckWIRUfscUiJ7o=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR04MB7262
+References: <1608081982-10839-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+ <CAPhsuW4E+cxg3b7H2Mczp9AyD2T_uwLeKDjGUtWcw7rdPpNaPw@mail.gmail.com> <CA+res+Qae7BufW5rHsp31Op9zqz4E6TsrFFbYprVna+dY0cRvg@mail.gmail.com>
+In-Reply-To: <CA+res+Qae7BufW5rHsp31Op9zqz4E6TsrFFbYprVna+dY0cRvg@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 26 Jan 2021 10:50:55 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7fwJ_eHuT_ug8SmNQOPx3BG-_xLRhf1N+8Mh2-+djN4w@mail.gmail.com>
+Message-ID: <CAPhsuW7fwJ_eHuT_ug8SmNQOPx3BG-_xLRhf1N+8Mh2-+djN4w@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: cast chunk_sectors to sector_t value
+To:     Jack Wang <jack.wang.usish@gmail.com>
+Cc:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/26/21 7:04 AM, Christoph Hellwig wrote:=0A=
-> Use bio_kmalloc instead of open coding it.=0A=
->=0A=
-> Signed-off-by: Christoph Hellwig <hch@lst.de>=0A=
-Looks good.=0A=
-=0A=
-Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
-=0A=
+On Mon, Jan 25, 2021 at 5:57 AM Jack Wang <jack.wang.usish@gmail.com> wrote=
+:
+>
+> Song Liu <song@kernel.org> =E4=BA=8E2020=E5=B9=B412=E6=9C=8816=E6=97=A5=
+=E5=91=A8=E4=B8=89 =E4=B8=8A=E5=8D=885:29=E5=86=99=E9=81=93=EF=BC=9A
+> >
+> > On Tue, Dec 15, 2020 at 5:26 PM Guoqing Jiang
+> > <guoqing.jiang@cloud.ionos.com> wrote:
+> > >
+> > > Currently, raid5 calculates dev_sectors from chunk_sectors without
+> > > proper cast, which is problematic.
+> > >
+> > > Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+> > > ---
+> > > I think the recently report about raid5 issue could be related with
+> > > the setting of dev_sectors.
+> > >
+> > > Could someone test it with a large raid5 array? Thanks.
+> >
+> > Yes, this was the exact problem. I will apply this to md-next. (probabl=
+y
+> > after the merge window).
+> >
+> > Thanks,
+> > Song
+> >
+> > >
+> > >  drivers/md/raid5.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > > index 3934347..ca0b29a 100644
+> > > --- a/drivers/md/raid5.c
+> > > +++ b/drivers/md/raid5.c
+> > > @@ -7662,7 +7662,7 @@ static int raid5_run(struct mddev *mddev)
+> > >         }
+> > >
+> > >         /* device size must be a multiple of chunk size */
+> > > -       mddev->dev_sectors &=3D ~(mddev->chunk_sectors - 1);
+> > > +       mddev->dev_sectors &=3D ~((sector_t)mddev->chunk_sectors - 1)=
+;
+> > >         mddev->resync_max_sectors =3D mddev->dev_sectors;
+> > >
+> > >         if (mddev->degraded > dirty_parity_disks &&
+> > > --
+> > > 2.7.4
+> > >
+> ping, I cant find it in latest mainline, is it forgotten?
+
+Applied to md-next. Thanks.
+
+Song
