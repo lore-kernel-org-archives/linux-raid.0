@@ -2,88 +2,101 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB3B4C433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 11:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D11A7C433E0
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 16:53:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82DF32076B
-	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 11:44:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97C1F60187
+	for <linux-raid@archiver.kernel.org>; Wed, 27 Jan 2021 16:53:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234535AbhA0Ln6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 27 Jan 2021 06:43:58 -0500
-Received: from mga07.intel.com ([134.134.136.100]:15339 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236730AbhA0Llf (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 27 Jan 2021 06:41:35 -0500
-IronPort-SDR: NHf8+icDIRyri0d8HYnC79ewdBDhLdz8rHYt7FzrN8UbUYLlB1zkFZWVCgdB5Y9xrtqjVI9ItD
- Ml3M+a6fU6xw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9876"; a="244131678"
-X-IronPort-AV: E=Sophos;i="5.79,379,1602572400"; 
-   d="scan'208";a="244131678"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2021 03:39:48 -0800
-IronPort-SDR: izU7PJSyxj/BLuqlBKSZGH6Nn3kBRZ/L71qhQfsbJEAsgb+teQeCGvvrGU7HbamglHkAreuo5I
- HbqvS/W1LHNw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,379,1602572400"; 
-   d="scan'208";a="574357735"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga006.fm.intel.com with ESMTP; 27 Jan 2021 03:39:48 -0800
-Received: from [10.213.2.78] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.2.78])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id 568995807C8;
-        Wed, 27 Jan 2021 03:39:47 -0800 (PST)
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org
-Subject: release plan for mdadm
-Message-ID: <de867ab3-9942-77a0-c14d-dbfc67465888@linux.intel.com>
-Date:   Wed, 27 Jan 2021 12:39:45 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S233089AbhA0Qw4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 27 Jan 2021 11:52:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47226 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231352AbhA0Qwz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 27 Jan 2021 11:52:55 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B836C061573
+        for <linux-raid@vger.kernel.org>; Wed, 27 Jan 2021 08:52:15 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id l18so1723119pji.3
+        for <linux-raid@vger.kernel.org>; Wed, 27 Jan 2021 08:52:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=lQKD9AgPexRDubj64bboSIKnHej4WVBTeYTVGyeOaHk=;
+        b=0n7IOfJztdBvyCO+NwquWZO/9oDoBxQCCGXsafUQ/GvUYsfJ9GMPAPuFm/2AHz2s7h
+         uCjspaY6eWonaZrU5TNO1bFTgmPIbBbshQEov2cSyySKuYe6JHBj4YtmSsCgqqeJQ0sz
+         TEp+kDX55Ttsnc0J6mELqLNa4WTTuqIBpHFd3WA2ygVL+9LP+Y/h3dPZ0HRlZG6rjvCq
+         o8+mzv9CEKGMlgIZqlWOyLBHKwUPEfZAqrHsgb5eQJ8jwi6mY18MiLv0LfN195kWsU1I
+         9aIP573InHU/7bIMgKM0aes7wOoE1YqdbZK7PAc68mg/7wVOpXqK0JLzoUJL/hUqxtsf
+         yCNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=lQKD9AgPexRDubj64bboSIKnHej4WVBTeYTVGyeOaHk=;
+        b=JeZg8ZgzaTKyzBArd5qKENpnOO/ufydiEs3zZU79T0U2gI4kc8SwSeahLtjs3Neo7h
+         YCwzmxHYEP3QePVV+pVZ62sHuENPx1m9gXjRfkzr4MqvDNt9vjF34oX0me0b7Y2pLwzW
+         dPsSLByYxXNbRNY9s9IeAi4K0Q3GtTfHXjBM3/DVBeEYfcWWjkSFDVUS3fOIcsjD50nL
+         7zuJut/3iDrTVNaUEoz626KnG7kSJPRzU7KZs4jnp2FvviM7y1OixgHZ1PD5Bj6SGe2o
+         q4Cn5e3n/ftHBsRwH7sOaGEeSQZM4jPpVhEopk3R53TXsVSlyVdhPBJmlt70491ISqcC
+         WHYQ==
+X-Gm-Message-State: AOAM530HkoxuamI5GWS2w2HFe/zoBExxefTysLtrYQRv7nAqfrwtAjkf
+        CBh6MPRMGqZ2V9KZ+1sBt15sHw==
+X-Google-Smtp-Source: ABdhPJznkZAkmGjzE0K3XJ7r+1OuPOB/uSu+0QVk0qZGt1uSi7gcicfz36VtRv3b8tVtY1Mr6zsRVA==
+X-Received: by 2002:a17:90a:b782:: with SMTP id m2mr6555276pjr.220.1611766334716;
+        Wed, 27 Jan 2021 08:52:14 -0800 (PST)
+Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
+        by smtp.gmail.com with ESMTPSA id z13sm2914261pgf.89.2021.01.27.08.52.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Jan 2021 08:52:14 -0800 (PST)
+Subject: Re: misc bio allocation cleanups
+To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        linux-nilfs@vger.kernel.org, dm-devel@redhat.com,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-mm@kvack.org
+References: <20210126145247.1964410-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <53e9b2e0-7169-f2fe-3c33-5f8a28cbd01b@kernel.dk>
+Date:   Wed, 27 Jan 2021 09:52:10 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20210126145247.1964410-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jes,
+On 1/26/21 7:52 AM, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series contains various cleanups for how bios are allocated or
+> initialized plus related fallout.
 
-It's been a while since last mdadm release. Mdadm-4.2 release that was
-mentioned back in July does not happened yet. It's getting messy to
-manage mdadm across multiple distributions.
+Applied, thanks.
 
-Also, not all OSVs are willing to cherry-pick the patches, especially
-for stable project - like mdadm, so only critical bugfixes are landing
-in the distros.
-As a result - new OSes has various forks of mdadm-4.1 and the difference
-is growing with every backported patch. It leads us to situation where
-those forks may have own bugs, caused by many missing bugfixes or wrongly
-resolved merge conflicts.
-To be honest - it becomes more and more problematic for us to track all
-fixes in different supported distros.
+-- 
+Jens Axboe
 
-We are searching for solutions for those problems and we are counting on
-your support:
-Short term - is there any way that we can help you to release next version
-of mdadm soon?
-
-Long term - what do you think about smaller, more frequent releases of
-mdadm? Maybe twice a year is an option (similar to RedHat/Ubuntu
-schedule)? That would be better for us and for vendors. They will need
-to follow upstream instead resolving bugs reported by us or community.
-
-The benefits will be gained by everyone. User will get up-to-date
-software much faster, with minimal vendor input and modifications.
-Mdadm bugs will be predictable across distros. We could help with
-testing IMSM and basic functionality of native metadata.
-
-What are your thoughts?
-Regards,
-Mariusz
