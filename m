@@ -2,111 +2,173 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E68C433E0
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Jan 2021 13:14:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CCC5C433E9
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Jan 2021 16:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AFAE64DDE
-	for <linux-raid@archiver.kernel.org>; Thu, 28 Jan 2021 13:14:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C92E64E02
+	for <linux-raid@archiver.kernel.org>; Thu, 28 Jan 2021 16:13:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232170AbhA1NNe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 28 Jan 2021 08:13:34 -0500
-Received: from mga02.intel.com ([134.134.136.20]:35916 "EHLO mga02.intel.com"
+        id S232216AbhA1QN3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 28 Jan 2021 11:13:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37336 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231948AbhA1NNX (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 28 Jan 2021 08:13:23 -0500
-IronPort-SDR: VZ//gs/H8SvR+ul3ngMdVqaH09E41tVXqOYL+ckFp/IjapoCUgENjXA40jWSwlI1tXnb8cXEOU
- 93buWIQe6OdQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9877"; a="167325789"
-X-IronPort-AV: E=Sophos;i="5.79,382,1602572400"; 
-   d="scan'208";a="167325789"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2021 05:11:36 -0800
-IronPort-SDR: iET11nVb36LishUF1mEm0DA53JARP5vym9iANZNKCvsBi61fdeViaszo8NNKns+j3nTW3Fsvi7
- 2O/8UnMuAIjQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,382,1602572400"; 
-   d="scan'208";a="473758017"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga001.fm.intel.com with ESMTP; 28 Jan 2021 05:11:36 -0800
-Received: from [10.213.25.38] (jradtke-MOBL1.ger.corp.intel.com [10.213.25.38])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id B96DB580781;
-        Thu, 28 Jan 2021 05:11:35 -0800 (PST)
-Subject: Re: [PATCH] md: change bitmap offset verification in write_sb_page
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-References: <20210105150635.2551-1-jakub.radtke@linux.intel.com>
- <CAPhsuW5TdVgh2RaxxJQkdUAKm2k-Eo11fOdWk1Mti=qsu7ZzUg@mail.gmail.com>
-From:   "Radtke, Jakub" <jakub.radtke@linux.intel.com>
-Message-ID: <6452c7ad-9879-ef8e-3eee-88d86c951aaa@linux.intel.com>
-Date:   Thu, 28 Jan 2021 14:11:31 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S232439AbhA1QML (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 28 Jan 2021 11:12:11 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 15C7D64DE5;
+        Thu, 28 Jan 2021 16:11:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611850291;
+        bh=l1fZVj6lNKrtqOWXBXFlHL9KLwU2deosKLGUjGIPhaQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Ae6xo2EqTNtPiMkPuwUBcZnLyMNEeIUX+7ThLWDfngvLkjuzBSsT7Pp5WbxiOPQho
+         O6jLUshdETUx1nN4PLVPFnCLafOw9dc+CXzttS8jN/C7hNRWXbzwJxsWaoyVHO2Zak
+         boAYycf/k6EsmAbrDlF+KkgSnuk0aRy1li4Y1jQCu0cqT5tL3yDWnu6TkthAWMZ7Dx
+         DC7+JL5QB88HCrDHygJRXveBJosYNKqjW8sNNn4SLZ0p6m6F4YaeXBueIVrn/8gnEY
+         BRgUeUzaBoReyjCxZvUdOjJysQUQlUOO/PKLFRuM9Cf/ybkQZOvsk0t6nN8lV4QP9L
+         vk5bWmlQu//Pg==
+Date:   Thu, 28 Jan 2021 08:11:28 -0800
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+        Chao Yu <chao@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        linux-nilfs@vger.kernel.org, dm-devel@redhat.com,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 08/17] f2fs: remove FAULT_ALLOC_BIO
+Message-ID: <YBLiMN7zm44VWaBI@google.com>
+References: <20210126145247.1964410-1-hch@lst.de>
+ <20210126145247.1964410-9-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <CAPhsuW5TdVgh2RaxxJQkdUAKm2k-Eo11fOdWk1Mti=qsu7ZzUg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: pl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210126145247.1964410-9-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Please ignore the patch.
-I see that the calculation is working for the other metadata formats too.
-The problem was related to my environment, and I misinterpret the 
-calculation in write_sb_page, which correctly reports the error.
-> On Tue, Jan 5, 2021 at 7:06 AM Jakub Radtke
-> <jakub.radtke@linux.intel.com> wrote:
->> From: Jakub Radtke <jakub.radtke@intel.com>
->>
->> Removes the code that is correct only for the native metadata.
->> Write-intent bitmap support for the other metadata formats is blocked.
->>
->> rdev->sb_start is used in the calculations.
->> The sb_start is only set and used for native metadata format, and
->> the bitmap offset check will always fail if it is not set.
-> Can we use different logic for native and other metadata, so that we can
-> keep the check for native metadata? Maybe we can use the combination
-> of mddev->major_version, mddev->minor_version, and rdev->sb_start?
->
-> Thanks,
-> Song
->
->> In the case of external metadata, the bitmap can be placed in various
->> places e.g. like the PPL between two volumes (the boundary checks are
->> performed on the sysfs level and in the mdadm).
->>
->> Signed-off-by: Jakub Radtke <jakub.radtke@linux.intel.com>
->> ---
->>   drivers/md/md-bitmap.c | 8 --------
->>   1 file changed, 8 deletions(-)
->>
->> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
->> index 200c5d0f08bf..a78b15df4d82 100644
->> --- a/drivers/md/md-bitmap.c
->> +++ b/drivers/md/md-bitmap.c
->> @@ -236,14 +236,6 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
->>                   */
->>                  if (mddev->external) {
->>                          /* Bitmap could be anywhere. */
->> -                       if (rdev->sb_start + offset + (page->index
->> -                                                      * (PAGE_SIZE/512))
->> -                           > rdev->data_offset
->> -                           &&
->> -                           rdev->sb_start + offset
->> -                           < (rdev->data_offset + mddev->dev_sectors
->> -                            + (PAGE_SIZE/512)))
->> -                               goto bad_alignment;
->>                  } else if (offset < 0) {
->>                          /* DATA  BITMAP METADATA  */
->>                          if (offset
->> --
->> 2.17.1
->>
+On 01/26, Christoph Hellwig wrote:
+> Sleeping bio allocations do not fail, which means that injecting an error
+> into sleeping bio allocations is a little silly.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Already merged tho.
+
+Acked-by: Jaegeuk Kim <jaegeuk@kernel.org>
+
+> ---
+>  Documentation/filesystems/f2fs.rst |  1 -
+>  fs/f2fs/data.c                     | 29 ++++-------------------------
+>  fs/f2fs/f2fs.h                     |  1 -
+>  fs/f2fs/super.c                    |  1 -
+>  4 files changed, 4 insertions(+), 28 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/f2fs.rst b/Documentation/filesystems/f2fs.rst
+> index dae15c96e659e2..624f5f3ed93e86 100644
+> --- a/Documentation/filesystems/f2fs.rst
+> +++ b/Documentation/filesystems/f2fs.rst
+> @@ -179,7 +179,6 @@ fault_type=%d		 Support configuring fault injection type, should be
+>  			 FAULT_KVMALLOC		  0x000000002
+>  			 FAULT_PAGE_ALLOC	  0x000000004
+>  			 FAULT_PAGE_GET		  0x000000008
+> -			 FAULT_ALLOC_BIO	  0x000000010
+>  			 FAULT_ALLOC_NID	  0x000000020
+>  			 FAULT_ORPHAN		  0x000000040
+>  			 FAULT_BLOCK		  0x000000080
+> diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+> index 0cf0c605992431..9fb6be65592b1f 100644
+> --- a/fs/f2fs/data.c
+> +++ b/fs/f2fs/data.c
+> @@ -50,28 +50,6 @@ void f2fs_destroy_bioset(void)
+>  	bioset_exit(&f2fs_bioset);
+>  }
+>  
+> -static inline struct bio *__f2fs_bio_alloc(gfp_t gfp_mask,
+> -						unsigned int nr_iovecs)
+> -{
+> -	return bio_alloc_bioset(gfp_mask, nr_iovecs, &f2fs_bioset);
+> -}
+> -
+> -static struct bio *f2fs_bio_alloc(struct f2fs_sb_info *sbi, int npages,
+> -		bool noio)
+> -{
+> -	if (noio) {
+> -		/* No failure on bio allocation */
+> -		return __f2fs_bio_alloc(GFP_NOIO, npages);
+> -	}
+> -
+> -	if (time_to_inject(sbi, FAULT_ALLOC_BIO)) {
+> -		f2fs_show_injection_info(sbi, FAULT_ALLOC_BIO);
+> -		return NULL;
+> -	}
+> -
+> -	return __f2fs_bio_alloc(GFP_KERNEL, npages);
+> -}
+> -
+>  static bool __is_cp_guaranteed(struct page *page)
+>  {
+>  	struct address_space *mapping = page->mapping;
+> @@ -433,7 +411,7 @@ static struct bio *__bio_alloc(struct f2fs_io_info *fio, int npages)
+>  	struct f2fs_sb_info *sbi = fio->sbi;
+>  	struct bio *bio;
+>  
+> -	bio = f2fs_bio_alloc(sbi, npages, true);
+> +	bio = bio_alloc_bioset(GFP_NOIO, npages, &f2fs_bioset);
+>  
+>  	f2fs_target_device(sbi, fio->new_blkaddr, bio);
+>  	if (is_read_io(fio->op)) {
+> @@ -1029,8 +1007,9 @@ static struct bio *f2fs_grab_read_bio(struct inode *inode, block_t blkaddr,
+>  	struct bio_post_read_ctx *ctx;
+>  	unsigned int post_read_steps = 0;
+>  
+> -	bio = f2fs_bio_alloc(sbi, min_t(int, nr_pages, BIO_MAX_PAGES),
+> -								for_write);
+> +	bio = bio_alloc_bioset(for_write ? GFP_NOIO : GFP_KERNEL,
+> +			       min_t(int, nr_pages, BIO_MAX_PAGES),
+> +			       &f2fs_bioset);
+>  	if (!bio)
+>  		return ERR_PTR(-ENOMEM);
+>  
+> diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+> index 902bd3267c03e1..6c78365d80ceb5 100644
+> --- a/fs/f2fs/f2fs.h
+> +++ b/fs/f2fs/f2fs.h
+> @@ -43,7 +43,6 @@ enum {
+>  	FAULT_KVMALLOC,
+>  	FAULT_PAGE_ALLOC,
+>  	FAULT_PAGE_GET,
+> -	FAULT_ALLOC_BIO,
+>  	FAULT_ALLOC_NID,
+>  	FAULT_ORPHAN,
+>  	FAULT_BLOCK,
+> diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+> index b4a07fe62d1a58..3a312642907e86 100644
+> --- a/fs/f2fs/super.c
+> +++ b/fs/f2fs/super.c
+> @@ -45,7 +45,6 @@ const char *f2fs_fault_name[FAULT_MAX] = {
+>  	[FAULT_KVMALLOC]	= "kvmalloc",
+>  	[FAULT_PAGE_ALLOC]	= "page alloc",
+>  	[FAULT_PAGE_GET]	= "page get",
+> -	[FAULT_ALLOC_BIO]	= "alloc bio",
+>  	[FAULT_ALLOC_NID]	= "alloc nid",
+>  	[FAULT_ORPHAN]		= "orphan",
+>  	[FAULT_BLOCK]		= "no more block",
+> -- 
+> 2.29.2
