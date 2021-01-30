@@ -2,90 +2,105 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F33A0C433E6
-	for <linux-raid@archiver.kernel.org>; Fri, 29 Jan 2021 20:39:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37303C433E6
+	for <linux-raid@archiver.kernel.org>; Sat, 30 Jan 2021 09:13:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7A2264E05
-	for <linux-raid@archiver.kernel.org>; Fri, 29 Jan 2021 20:39:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0360B64E1B
+	for <linux-raid@archiver.kernel.org>; Sat, 30 Jan 2021 09:13:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233152AbhA2UjK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 29 Jan 2021 15:39:10 -0500
-Received: from smtp1.math.uni-bielefeld.de ([129.70.45.10]:54352 "EHLO
-        smtp1.math.uni-bielefeld.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233287AbhA2UjK (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 29 Jan 2021 15:39:10 -0500
-X-Greylist: delayed 406 seconds by postgrey-1.27 at vger.kernel.org; Fri, 29 Jan 2021 15:39:09 EST
-Received: from [192.168.0.100] (tmo-111-25.customers.d1-online.com [80.187.111.25])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (3072 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by smtp1.math.uni-bielefeld.de (Postfix) with ESMTPSA id 983BF602A4
-        for <linux-raid@vger.kernel.org>; Fri, 29 Jan 2021 21:31:35 +0100 (CET)
-To:     linux-raid@vger.kernel.org
-From:   Tobias Jakobi <tjakobi@math.uni-bielefeld.de>
-Subject: Problem with initial sync of a RAID1 with 4Kn drives
-Message-ID: <87ddf15f-e133-47b4-32f6-64a8c7b9d993@math.uni-bielefeld.de>
-Date:   Fri, 29 Jan 2021 21:31:29 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S231887AbhA3JMy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 30 Jan 2021 04:12:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48550 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233654AbhA3EQf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 29 Jan 2021 23:16:35 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E69CFC061354;
+        Fri, 29 Jan 2021 19:57:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=DenP85I1Njjb0sm/Pv5awH6u78JiwmjeMN74Dl7XDmA=; b=H8SDl3brId4iyEQMOwW4BfEUQ2
+        Xy9mZcqFmFvcWvR6dxLgQ3QUwF+RwC9GNnBM28jr+2J7JQ5Bm8pWtzkJy9Bu5683unOHOgLMv+gFM
+        jYIfOM6Ao2NNEjEzqoWU83ro0i2k1QtT++2jpOr8mpPL1+MxGJTvy2GRgyUg+z6xssmGMSAnWY2zd
+        lqlVaZEtkQfNNrYTdAkx5Dh4tKL60XSKbWMPsTXg7ShS8Q1MALyQ1L4XvADIPpEa3DQT7A35auYCK
+        RYKeUzMDMR7ROqaOWCMHMSpzECR3dkUR8mtXMmO0lgMzXZcgza2tXYiFwaZvQ9UvVr3UoISIOLjsY
+        syMo01WQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l5hNO-00Afhm-T1; Sat, 30 Jan 2021 03:56:47 +0000
+Date:   Sat, 30 Jan 2021 03:56:46 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Lars Ellenberg <lars.ellenberg@linbit.com>,
+        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        linux-nilfs@vger.kernel.org, dm-devel@redhat.com,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 04/17] block: split bio_kmalloc from bio_alloc_bioset
+Message-ID: <20210130035646.GH308988@casper.infradead.org>
+References: <20210126145247.1964410-1-hch@lst.de>
+ <20210126145247.1964410-5-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20210126145247.1964410-5-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello folks,
+On Tue, Jan 26, 2021 at 03:52:34PM +0100, Christoph Hellwig wrote:
+> bio_kmalloc shares almost no logic with the bio_set based fast path
+> in bio_alloc_bioset.  Split it into an entirely separate implementation.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/bio.c         | 167 ++++++++++++++++++++++----------------------
+>  include/linux/bio.h |   6 +-
+>  2 files changed, 86 insertions(+), 87 deletions(-)
 
-I recently got two new Seagate drives, Seagate Exos X X16, which are 
-able to switch into native 4K mode. I used the Seagate tools to trigger 
-the switch, and now want to use the two drives in a RAID1.
+This patch causes current linux-next to OOM for me when running xfstests
+after about ten minutes.  Haven't looked into why yet, this is just the
+results of a git bisect.
 
-I proceeded to create the md device:
-mdadm --create --verbose --level=1 --metadata=1.2 --raid-devices=2 
-/dev/md/onyx-new /dev/sda /dev/sdb
+The qemu command line is:
 
-As soon as the initial sync starts the kernel log begins to fill up with 
-errors. Here's part of the kernel log:
-https://gist.github.com/tobiasjakobi/d5b5f1638d23765d5e1fecf0dfbcea3e
-
-This is a 5.10.11 vanilla kernel, but it also happens with the 5.9.y 
-series. As you can see I already patched the kernel to include 
-additional information:
-DEBUG: 40801 1 7
-
-This is just a simple print() in sd_setup_read_write_cmnd().
-printk("DEBUG: %x %x %x\n", blk_rq_pos(rq), blk_rq_sectors(rq), mask);
-
-So it seems that neither the position nor the number of sectors is 
-aligned to eight. I assume that the md subsystem is supposed to handle this?
-
-I then double-checked for sizes for the underlying block devices and the 
-md device itself:
-cat 
-/sys/block/{sda,sdb,md126}/queue/{hw_sector_size,logical_block_size,physical_block_size}
-4096
-
-So it's 4K for all of them.
-
-Here's the hdparm output for one of the drives:
-https://gist.github.com/tobiasjakobi/a52cf5d4461db35c1f474c6a69b0782a
-
-The drives themselves are fine, I can use them properly as standalone 
-devices, so I rule out a hardware error.
-
-Any hints how to further triage this? Also would it help to open a bug 
-on the kernel bugtracker?
-
-Thanks in advance!
-
-With best wishes,
-Tobias Jakobi
+qemu-system-x86_64 -nodefaults -nographic -cpu host -machine accel=3Dkvm,nv=
+dimm -m 2G,slots=3D8,maxmem=3D1T -smp 6 -kernel /home/willy/kernel/folio/.b=
+uild_test_kernel-x86_64/kpgk/vmlinuz -append console=3Dhvc0 root=3D/dev/sda=
+ rw log_buf_len=3D8M ktest.dir=3D/home/willy/kernel/ktest ktest.env=3D/tmp/=
+build-test-kernel-nJO6QgxOmo/env quiet systemd.show_status=3D0 systemd.log-=
+target=3Djournal crashkernel=3D128M no_console_suspend -device virtio-seria=
+l -chardev stdio,id=3Dconsole -device virtconsole,chardev=3Dconsole -serial=
+ unix:/tmp/build-test-kernel-nJO6QgxOmo/vm-kgdb,server,nowait -monitor unix=
+:/tmp/build-test-kernel-nJO6QgxOmo/vm-mon,server,nowait -gdb unix:/tmp/buil=
+d-test-kernel-nJO6QgxOmo/vm-gdb,server,nowait -device virtio-rng-pci -virtf=
+s local,path=3D/,mount_tag=3Dhost,security_model=3Dnone -device virtio-scsi=
+-pci,id=3Dhba -nic user,model=3Dvirtio,hostfwd=3Dtcp:127.0.0.1:24674-:22 -d=
+rive if=3Dnone,format=3Draw,id=3Ddisk0,file=3D/var/lib/ktest/root.amd64,sna=
+pshot=3Don -device scsi-hd,bus=3Dhba.0,drive=3Ddisk0 -drive if=3Dnone,forma=
+t=3Draw,id=3Ddisk1,file=3D/tmp/build-test-kernel-nJO6QgxOmo/dev-1,cache=3Du=
+nsafe -device scsi-hd,bus=3Dhba.0,drive=3Ddisk1 -drive if=3Dnone,format=3Dr=
+aw,id=3Ddisk2,file=3D/tmp/build-test-kernel-nJO6QgxOmo/dev-2,cache=3Dunsafe=
+ -device scsi-hd,bus=3Dhba.0,drive=3Ddisk2 -drive if=3Dnone,format=3Draw,id=
+=3Ddisk3,file=3D/tmp/build-test-kernel-nJO6QgxOmo/dev-3,cache=3Dunsafe -dev=
+ice scsi-hd,bus=3Dhba.0,drive=3Ddisk3
 
