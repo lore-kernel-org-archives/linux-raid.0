@@ -2,406 +2,171 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-20.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA4FC433E0
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:59:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 671A0C433DB
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 06:58:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0010064F58
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:59:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0254764E4D
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 06:58:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231602AbhBDF7U (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 Feb 2021 00:59:20 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:36820 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231124AbhBDF7T (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Feb 2021 00:59:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612418271;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Q5esikxUhAYv7WFcDhmCxr3WjY15S8viyre1qUMlQO4=;
-        b=fFyMCzqZtqzw0kQuui+jqxN+uCn1aZzQYt0UjvXATJlaitOwWo4/MJdA+Eqn/ru/Q1Qzlg
-        X9RneMyig8HAHVadzum/C+toOsgyH7CvG1wqVtPJu2U4fLXe2vWt04T7kZP+HUuMoe7kda
-        8UeUSqfB4zF895Dd+lBRAAquqpEZ59w=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-510-M9PkO4mgMAOI82q5sYcEKw-1; Thu, 04 Feb 2021 00:57:45 -0500
-X-MC-Unique: M9PkO4mgMAOI82q5sYcEKw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EE650108C2AC;
-        Thu,  4 Feb 2021 05:57:43 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 635C760C13;
-        Thu,  4 Feb 2021 05:57:39 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     songliubraving@fb.com
-Cc:     linux-raid@vger.kernel.org, matthew.ruffell@canonical.com,
-        colyli@suse.de, guoqing.jiang@cloud.ionos.com, ncroxon@redhat.com,
-        hch@infradead.org
-Subject: [PATCH V2 4/5] md/raid10: improve raid10 discard request
-Date:   Thu,  4 Feb 2021 13:57:17 +0800
-Message-Id: <1612418238-9976-5-git-send-email-xni@redhat.com>
-In-Reply-To: <1612418238-9976-1-git-send-email-xni@redhat.com>
-References: <1612418238-9976-1-git-send-email-xni@redhat.com>
+        id S233113AbhBDG5r (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Feb 2021 01:57:47 -0500
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:41452 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231872AbhBDG5m (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Feb 2021 01:57:42 -0500
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1146nNRB014663;
+        Wed, 3 Feb 2021 22:56:58 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : content-type : content-id :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=LG97oh28pa2hSyMQG//OS4Ho8eGQQzKlP/y6/WBPTN4=;
+ b=RaE536wB86aXa5bGLo0D6lqwOYrCKqHt399IP75Fbv7J8rPACN07L0peZaxhvRruroDb
+ KQox6nsnFePNIiMFnGw7z/YzCeXbAx95xl6A9wcdET9d1KUTJi1LdJ3Mq8/QYZFrOVKr
+ 1qHN3bN0efOBb+4mtKPgLq/RsPefVb33O9s= 
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com with ESMTP id 36fh1uqv8b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 03 Feb 2021 22:56:58 -0800
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (100.104.31.183)
+ by o365-in.thefacebook.com (100.104.36.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Wed, 3 Feb 2021 22:56:57 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Bz0fd4+Gp9bJfuo/dq/KABolLr5NRYd/zekRPPiL8pOHrMH0tsiAIT1G3VCzlXZX7SUBsSmBsgUgiOS1Hhr3+i+IYoYwwoIcFNzSHKGBCyUzklxFXtddD9g61OUb5lGgGTLt+3LZjP7CjlglL2kaNGdhgYNqPbMZuOXO68hui9DxS+KjkXs14bmM+/Thks/QDNfHX0xTqUnPXGkSQ6SXPLimZIDXUAWWEE/yQlIic94Nv2CsE9pus0cFr9iYaNDgK349laAwPEj+jt0zpGa2Z5Cwy6IcVWdR7JYM34OyopVFTfcqDvzxBA3+0k2kWZSgssv/3qHp0W617eA5p5AtYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=siEkvC0WBicY33MCFHtIWBDVAHM3cVilEBSfmnnttgU=;
+ b=m04MD1MV95iNfEc7Uz/f00FW//uEUw2LxEzUHgzkhYs0eQtYmUaZ06DmIMPL1YofdMBV1+ziDO7zVV4JJ62zU50ZEazA9kuabZmL4lwI/y6iEirTWEH1sE+eTtNWW8zXlBKCbbRDThb2aNWv67oLeEC6K/ZjF/bLFUCrsR+tM0JMLQPzu9W6Etem75cHoJpsBT/Ga7jjZDZINlrgNZaz0e+Nlp7EKloLgojkm0FOPy674kJF5fWHi7/zvL+euO6Q0013FLv9R66llgItqqlMiXivh1rvYuhBQznFg/VhQddNWnFbQTSqBADBpRyeqEupkIyoo0YsLBiGS1t6cpuLAg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
+ header.d=fb.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=siEkvC0WBicY33MCFHtIWBDVAHM3cVilEBSfmnnttgU=;
+ b=gW3qAqvd9w3Od/EJMofeSLiuxZQ9UKZJwck5+nXoQUYD6cpgHMyNNseMWnQAlh/Ss8e+5Qqu82GydYKgcy1ARQvxE7mO6gHB7ObRQNVgUCFAvifhO6f1MAq5XYmzpjyQAF3W9JsZx6nWc03vKENjn7g8YB4W0kL7dWjY2DcjcPc=
+Received: from BYAPR15MB2999.namprd15.prod.outlook.com (2603:10b6:a03:fa::12)
+ by BYAPR15MB3046.namprd15.prod.outlook.com (2603:10b6:a03:fa::25) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.20; Thu, 4 Feb
+ 2021 06:55:54 +0000
+Received: from BYAPR15MB2999.namprd15.prod.outlook.com
+ ([fe80::c97:58e4:ee9:1dc0]) by BYAPR15MB2999.namprd15.prod.outlook.com
+ ([fe80::c97:58e4:ee9:1dc0%7]) with mapi id 15.20.3763.019; Thu, 4 Feb 2021
+ 06:55:54 +0000
+From:   Song Liu <songliubraving@fb.com>
+To:     Jens Axboe <axboe@kernel.dk>
+CC:     linux-raid <linux-raid@vger.kernel.org>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Subject: [GIT PULL] md-next 20210203
+Thread-Topic: [GIT PULL] md-next 20210203
+Thread-Index: AQHW+sLI141TaXt0yku7lYchBUU78A==
+Date:   Thu, 4 Feb 2021 06:55:54 +0000
+Message-ID: <E3580228-B816-42CC-9E36-B72FF6347452@fb.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3654.40.0.2.32)
+authentication-results: kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=none action=none header.from=fb.com;
+x-originating-ip: [2620:10d:c091:480::1:aa49]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: de3fc342-b9ce-4af4-2815-08d8c8d9eaf5
+x-ms-traffictypediagnostic: BYAPR15MB3046:
+x-microsoft-antispam-prvs: <BYAPR15MB3046BB50CB9D15DBD4A180BAB3B39@BYAPR15MB3046.namprd15.prod.outlook.com>
+x-fb-source: Internal
+x-ms-oob-tlc-oobclassifiers: OLM:2000;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: YBSPus7I1G1VazoMNBZbKpCC/VmaR7RfpbWop/A8B0OfG7TXdCYgiHXLj4LdYOcnnZNDCHqFl5LAyMXwCtLm4UdJokYhrt0qkaz7AZ2omJxnSRlIGZ64E4s5AcTHIoum/g9NITCmKfN0FpyxyIxz+MfERF8IJjzD9W1xQNPufqiLU8v/B/yMSqq/x+FBbwrC8uIIwKpgE2/n9o9Ne8WPWEz36SOyyfCmd7e5YvjiAPyzTKQ3HkPSqqe9xdrDmRnTjRUx/12JrtM04+nZM27zixlBPn87n5GEXeRavQiwVzMgTA//hQ8bqc/6i4mxV4Q/0K8DFdZ3YrmskfQ9jI1tTZfzhOwGLt28r62mJXfu6v5gxwBsDiBAYjJU43V7gJXixN9I7LPuhosvtCqjnYl9/S+lpkPtUPotHikCjkzp/oEAi1NfYFGMaHWKd/JQcMxA6J4ue2a0KBAfIfReIig/jleR+KMvxyX/eXuXanQztcmTS9lxXiENxn6TuUXC7zrEW9nISq+HfMeyZ3YrTHDb02ghcARdlXLrmXasV4FArkCL591/ZoUNId9x7TKW5WabLugIdWCyks2XwRZpk0t/lqAt+TMRfB3DAHD3++x759G/3Z6uzb6mDZU978t+0VfFjX288GbcKndjxv85gylU2oe1eOXU5qIY/xensEWb4m8=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR15MB2999.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(39860400002)(366004)(136003)(346002)(376002)(8676002)(6916009)(66946007)(71200400001)(2616005)(316002)(966005)(478600001)(4744005)(4326008)(76116006)(6506007)(2906002)(83380400001)(5660300002)(8936002)(66556008)(86362001)(54906003)(36756003)(6512007)(186003)(33656002)(6486002)(91956017)(64756008)(66476007)(66446008)(45980500001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?RKcMDIiFmG+hAueR3WYB/DtRBOYHz8qSoowVgQPak+MV15FsgPTUVX75gBoc?=
+ =?us-ascii?Q?YPQQfx/djsoU0zfPw6i3vyyPuQ4kbTBjL7Q2NxoExSuUKgCTZmDbA1XxhYHf?=
+ =?us-ascii?Q?4LLuE2rVex/9QSvJVwO4lYs/t3e8aoCAr4yJdSCseFb34CUFvlisNPUekdRr?=
+ =?us-ascii?Q?OR8jB2CsLD2SBKMeKWUjqcwaeN0BdLd/sJYUgpOqq9/Cjy1jsetTBdZqmc3V?=
+ =?us-ascii?Q?1y/Up4ads4dQM8K0RhR1TKicntoRkjc3eZL6XARB5lLEA37xl0dmsHtVcWxl?=
+ =?us-ascii?Q?ObK/46mWM1/KTe7V+uSox62WgB1esu7NQTixwu3yemg4lJ7uIdzEcAZNQ+4o?=
+ =?us-ascii?Q?vJ+NYnn+SUBX2XgG8bwP3nyo/BCE7V4sVgaZ+tWN9LMWzwomhzcuDg/V7LIT?=
+ =?us-ascii?Q?t5iIFhaB/rmz7xVyEjKjOo3VSlhS3RZUKMkfZ84Za670h4RqCMvsBD/vwMmT?=
+ =?us-ascii?Q?xVEcUpYRh/4w5HrJzGnRDTFU6DUiUFt7ycF+j7iep8VHPYG/42Eosngp5sUu?=
+ =?us-ascii?Q?IRXUivZ7KicO5N7wMAiqxaMLHUi7gfZrIaH+J85mmSK/S5Ix0KTwHKX456I8?=
+ =?us-ascii?Q?q1d2XiTtHEDsQmtffvrHPchFFuM7BYtYr30+XMcC9NRuXvaVqpJo/GJNB2u6?=
+ =?us-ascii?Q?6ygYEkXocAdyc/q4Intdu8bEUz1QXscsmGNAtPgY0Xju24uZrJvbd5U7Voto?=
+ =?us-ascii?Q?p1zopy0uLKkkcZ+L/DbVuKLHuFo0UmmGTAOYrVeDGVX2SVrV+TNAlaUzCXX4?=
+ =?us-ascii?Q?NjKMhiSRJku9g2M41YUC+TZd8qRGyU4rWWu4Ix8cnX8Xa86XG0Gy0ZiLI5Xi?=
+ =?us-ascii?Q?NI3eCiQx/ZIQD1PU37wUXZI2oSUbu4AVWdk8x8nYxv0Sa0kBESUkF2A6PD57?=
+ =?us-ascii?Q?ZRuYTdLtE3o1gwPAp2fycBof215US9F5AgWdF1pMmGJjIBhq1yVF6aHep8uh?=
+ =?us-ascii?Q?NnRUKp8YJXBw9DXHojz8snTQ6vF5X1FC7CJJbfE2jNMs0kqb5hqi1o5AxJfj?=
+ =?us-ascii?Q?APibpvaY8kknsEkxVP3p9gjQ2jamv0dBKkrQXKUC1+8SffgTHvP70P1jlL5Q?=
+ =?us-ascii?Q?/qr8EHPNfCC43JiHs3amEe+CuVlpFE0xAZItfqRS/P/K+P9tBa1tCSVMmsfh?=
+ =?us-ascii?Q?YNs2WDAlYy7swPgGyECwRvhoNevEZan3lXs11zKS0vMFk2XtrKUerpSlZaS5?=
+ =?us-ascii?Q?WoyO+qHAVRDfRjAmcHZJt3kIVR8XffbrP0x7JQDISygQZyCHh2Va3yh1I1oc?=
+ =?us-ascii?Q?ISvbeR43p5EGWQzD2wmv1LV0ItqPRFjectZCt7qiZULqjMglokxsdSLo+Aos?=
+ =?us-ascii?Q?u+23E5udkdRLrx3M4I22SPDX7izY6jgKj8YVIRp9Yjfgx7drrK++wlsQ+oCw?=
+ =?us-ascii?Q?24JvY8Y=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <644F599A8CF692479C2349F9BF12D164@namprd15.prod.outlook.com>
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR15MB2999.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: de3fc342-b9ce-4af4-2815-08d8c8d9eaf5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Feb 2021 06:55:54.5790
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RdPlhV+NDl1ylwgv8hj3wO5KUat7zedxFDqqODYuBMu1BbfvVCi6MrOAMC6ZcdoA0YOq/QSmjeS6fRNNkHq0sA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR15MB3046
+X-OriginatorOrg: fb.com
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.737
+ definitions=2021-02-04_03:2021-02-03,2021-02-04 signatures=0
+X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 malwarescore=0
+ clxscore=1011 phishscore=0 mlxlogscore=999 bulkscore=0 suspectscore=0
+ lowpriorityscore=0 adultscore=0 priorityscore=1501 mlxscore=0
+ impostorscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2102040040
+X-FB-Internal: deliver
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Now the discard request is split by chunk size. So it takes a long time
-to finish mkfs on disks which support discard function. This patch improve
-handling raid10 discard request. It uses the similar way with patch
-29efc390b (md/md0: optimize raid0 discard handling).
+Hi Jens,=20
 
-But it's a little complex than raid0. Because raid10 has different layout.
-If raid10 is offset layout and the discard request is smaller than stripe
-size. There are some holes when we submit discard bio to underlayer disks.
+Please consider pulling the following change for md-next on top of your=20
+for-5.12/drivers branch.=20
 
-For example: five disks (disk1 - disk5)
-D01 D02 D03 D04 D05
-D05 D01 D02 D03 D04
-D06 D07 D08 D09 D10
-D10 D06 D07 D08 D09
-The discard bio just wants to discard from D03 to D10. For disk3, there is
-a hole between D03 and D08. For disk4, there is a hole between D04 and D09.
-D03 is a chunk, raid10_write_request can handle one chunk perfectly. So
-the part that is not aligned with stripe size is still handled by
-raid10_write_request.
+Thanks,
+Song
 
-If reshape is running when discard bio comes and the discard bio spans the
-reshape position, raid10_write_request is responsible to handle this
-discard bio.
 
-I did a test with this patch set.
-Without patch:
-time mkfs.xfs /dev/md0
-real4m39.775s
-user0m0.000s
-sys0m0.298s
+The following changes since commit 0d7389718c32ad6bb8bee7895c91e2418b6b26aa:
 
-With patch:
-time mkfs.xfs /dev/md0
-real0m0.105s
-user0m0.000s
-sys0m0.007s
+  Merge tag 'nvme-5.21-2020-02-02' of git://git.infradead.org/nvme into for=
+-5.12/drivers (2021-02-02 07:11:47 -0700)
 
-nvme3n1           259:1    0   477G  0 disk
-└─nvme3n1p1       259:10   0    50G  0 part
-nvme4n1           259:2    0   477G  0 disk
-└─nvme4n1p1       259:11   0    50G  0 part
-nvme5n1           259:6    0   477G  0 disk
-└─nvme5n1p1       259:12   0    50G  0 part
-nvme2n1           259:9    0   477G  0 disk
-└─nvme2n1p1       259:15   0    50G  0 part
-nvme0n1           259:13   0   477G  0 disk
-└─nvme0n1p1       259:14   0    50G  0 part
+are available in the Git repository at:
 
-Reviewed-by: Coly Li <colyli@suse.de>
-Reviewed-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/raid10.c | 263 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 262 insertions(+), 1 deletion(-)
+  https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ea97ce3..73d1b250 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1518,6 +1518,263 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 		raid10_write_request(mddev, bio, r10_bio);
- }
- 
-+static void raid10_end_discard_request(struct bio *bio)
-+{
-+	struct r10bio *r10_bio = bio->bi_private;
-+	struct r10conf *conf = r10_bio->mddev->private;
-+	struct md_rdev *rdev = NULL;
-+	int dev;
-+	int slot, repl;
-+
-+	/*
-+	 * We don't care the return value of discard bio
-+	 */
-+	if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
-+		set_bit(R10BIO_Uptodate, &r10_bio->state);
-+
-+	dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
-+	if (repl)
-+		rdev = conf->mirrors[dev].replacement;
-+	if (!rdev) {
-+		/*
-+		 * raid10_remove_disk uses smp_mb to make sure rdev is set to
-+		 * replacement before setting replacement to NULL. It can read
-+		 * rdev first without barrier protect even replacment is NULL
-+		 */
-+		smp_rmb();
-+		rdev = conf->mirrors[dev].rdev;
-+	}
-+
-+	if (atomic_dec_and_test(&r10_bio->remaining)) {
-+		md_write_end(r10_bio->mddev);
-+		raid_end_bio_io(r10_bio);
-+	}
-+
-+	rdev_dec_pending(rdev, conf->mddev);
-+}
-+
-+/*
-+ * There are some limitations to handle discard bio
-+ * 1st, the discard size is bigger than stripe_size*2.
-+ * 2st, if the discard bio spans reshape progress, we use the old way to
-+ * handle discard bio
-+ */
-+static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
-+{
-+	struct r10conf *conf = mddev->private;
-+	struct geom *geo = &conf->geo;
-+	struct r10bio *r10_bio;
-+	struct bio *split;
-+	int disk;
-+	sector_t chunk;
-+	unsigned int stripe_size;
-+	unsigned int stripe_data_disks;
-+	sector_t split_size;
-+	sector_t bio_start, bio_end;
-+	sector_t first_stripe_index, last_stripe_index;
-+	sector_t start_disk_offset;
-+	unsigned int start_disk_index;
-+	sector_t end_disk_offset;
-+	unsigned int end_disk_index;
-+	unsigned int remainder;
-+
-+	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-+		return -EAGAIN;
-+
-+	wait_barrier(conf);
-+
-+	/*
-+	 * Check reshape again to avoid reshape happens after checking
-+	 * MD_RECOVERY_RESHAPE and before wait_barrier
-+	 */
-+	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
-+		goto out;
-+
-+	if (geo->near_copies)
-+		stripe_data_disks = geo->raid_disks / geo->near_copies +
-+					geo->raid_disks % geo->near_copies;
-+	else
-+		stripe_data_disks = geo->raid_disks;
-+
-+	stripe_size = stripe_data_disks << geo->chunk_shift;
-+
-+	bio_start = bio->bi_iter.bi_sector;
-+	bio_end = bio_end_sector(bio);
-+
-+	/*
-+	 * Maybe one discard bio is smaller than strip size or across one
-+	 * stripe and discard region is larger than one stripe size. For far
-+	 * offset layout, if the discard region is not aligned with stripe
-+	 * size, there is hole when we submit discard bio to member disk.
-+	 * For simplicity, we only handle discard bio which discard region
-+	 * is bigger than stripe_size * 2
-+	 */
-+	if (bio_sectors(bio) < stripe_size*2)
-+		goto out;
-+
-+	/*
-+	 * Keep bio aligned with strip size.
-+	 */
-+	div_u64_rem(bio_start, stripe_size, &remainder);
-+	if (remainder) {
-+		split_size = stripe_size - remainder;
-+		split = bio_split(bio, split_size, GFP_NOIO, &conf->bio_split);
-+		bio_chain(split, bio);
-+		allow_barrier(conf);
-+		/* Resend the fist split part */
-+		submit_bio_noacct(split);
-+		wait_barrier(conf);
-+	}
-+	div_u64_rem(bio_end, stripe_size, &remainder);
-+	if (remainder) {
-+		split_size = bio_sectors(bio) - remainder;
-+		split = bio_split(bio, split_size, GFP_NOIO, &conf->bio_split);
-+		bio_chain(split, bio);
-+		allow_barrier(conf);
-+		/* Resend the second split part */
-+		submit_bio_noacct(bio);
-+		bio = split;
-+		wait_barrier(conf);
-+	}
-+
-+	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-+	r10_bio->mddev = mddev;
-+	r10_bio->state = 0;
-+	r10_bio->sectors = 0;
-+	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks);
-+
-+	wait_blocked_dev(mddev, r10_bio);
-+
-+	r10_bio->master_bio = bio;
-+
-+	bio_start = bio->bi_iter.bi_sector;
-+	bio_end = bio_end_sector(bio);
-+
-+	/*
-+	 * Raid10 uses chunk as the unit to store data. It's similar like raid0.
-+	 * One stripe contains the chunks from all member disk (one chunk from
-+	 * one disk at the same HBA address). For layout detail, see 'man md 4'
-+	 */
-+	chunk = bio_start >> geo->chunk_shift;
-+	chunk *= geo->near_copies;
-+	first_stripe_index = chunk;
-+	start_disk_index = sector_div(first_stripe_index, geo->raid_disks);
-+	if (geo->far_offset)
-+		first_stripe_index *= geo->far_copies;
-+	start_disk_offset = (bio_start & geo->chunk_mask) +
-+				(first_stripe_index << geo->chunk_shift);
-+
-+	chunk = bio_end >> geo->chunk_shift;
-+	chunk *= geo->near_copies;
-+	last_stripe_index = chunk;
-+	end_disk_index = sector_div(last_stripe_index, geo->raid_disks);
-+	if (geo->far_offset)
-+		last_stripe_index *= geo->far_copies;
-+	end_disk_offset = (bio_end & geo->chunk_mask) +
-+				(last_stripe_index << geo->chunk_shift);
-+
-+	rcu_read_lock();
-+	for (disk = 0; disk < geo->raid_disks; disk++) {
-+		struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+		struct md_rdev *rrdev = rcu_dereference(
-+			conf->mirrors[disk].replacement);
-+
-+		r10_bio->devs[disk].bio = NULL;
-+		r10_bio->devs[disk].repl_bio = NULL;
-+
-+		if (rdev && (test_bit(Faulty, &rdev->flags)))
-+			rdev = NULL;
-+		if (rrdev && (test_bit(Faulty, &rrdev->flags)))
-+			rrdev = NULL;
-+		if (!rdev && !rrdev)
-+			continue;
-+
-+		if (rdev) {
-+			r10_bio->devs[disk].bio = bio;
-+			atomic_inc(&rdev->nr_pending);
-+		}
-+		if (rrdev) {
-+			r10_bio->devs[disk].repl_bio = bio;
-+			atomic_inc(&rrdev->nr_pending);
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	atomic_set(&r10_bio->remaining, 1);
-+	for (disk = 0; disk < geo->raid_disks; disk++) {
-+		sector_t dev_start, dev_end;
-+		struct bio *mbio, *rbio = NULL;
-+		struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+		struct md_rdev *rrdev = rcu_dereference(
-+			conf->mirrors[disk].replacement);
-+
-+		/*
-+		 * Now start to calculate the start and end address for each disk.
-+		 * The space between dev_start and dev_end is the discard region.
-+		 *
-+		 * For dev_start, it needs to consider three conditions:
-+		 * 1st, the disk is before start_disk, you can imagine the disk in
-+		 * the next stripe. So the dev_start is the start address of next
-+		 * stripe.
-+		 * 2st, the disk is after start_disk, it means the disk is at the
-+		 * same stripe of first disk
-+		 * 3st, the first disk itself, we can use start_disk_offset directly
-+		 */
-+		if (disk < start_disk_index)
-+			dev_start = (first_stripe_index + 1) * mddev->chunk_sectors;
-+		else if (disk > start_disk_index)
-+			dev_start = first_stripe_index * mddev->chunk_sectors;
-+		else
-+			dev_start = start_disk_offset;
-+
-+		if (disk < end_disk_index)
-+			dev_end = (last_stripe_index + 1) * mddev->chunk_sectors;
-+		else if (disk > end_disk_index)
-+			dev_end = last_stripe_index * mddev->chunk_sectors;
-+		else
-+			dev_end = end_disk_offset;
-+
-+		/*
-+		 * It only handles discard bio which size is >= stripe size, so
-+		 * dev_end > dev_start all the time
-+		 */
-+		if (r10_bio->devs[disk].bio) {
-+			mbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
-+			mbio->bi_end_io = raid10_end_discard_request;
-+			mbio->bi_private = r10_bio;
-+			r10_bio->devs[disk].bio = mbio;
-+			r10_bio->devs[disk].devnum = disk;
-+			atomic_inc(&r10_bio->remaining);
-+			md_submit_discard_bio(mddev, rdev, mbio,
-+					dev_start + choose_data_offset(r10_bio, rdev),
-+					dev_end - dev_start);
-+			bio_endio(mbio);
-+		}
-+		if (r10_bio->devs[disk].repl_bio) {
-+			rbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
-+			rbio->bi_end_io = raid10_end_discard_request;
-+			rbio->bi_private = r10_bio;
-+			r10_bio->devs[disk].repl_bio = rbio;
-+			r10_bio->devs[disk].devnum = disk;
-+			atomic_inc(&r10_bio->remaining);
-+			md_submit_discard_bio(mddev, rrdev, rbio,
-+					dev_start + choose_data_offset(r10_bio, rrdev),
-+					dev_end - dev_start);
-+			bio_endio(rbio);
-+		}
-+	}
-+
-+	if (atomic_dec_and_test(&r10_bio->remaining)) {
-+		md_write_end(r10_bio->mddev);
-+		raid_end_bio_io(r10_bio);
-+	}
-+
-+	return 0;
-+out:
-+	allow_barrier(conf);
-+	return -EAGAIN;
-+}
-+
- static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
- {
- 	struct r10conf *conf = mddev->private;
-@@ -1532,6 +1789,10 @@ static bool raid10_make_request(struct mddev *mddev, struct bio *bio)
- 	if (!md_write_start(mddev, bio))
- 		return false;
- 
-+	if (unlikely(bio_op(bio) == REQ_OP_DISCARD))
-+		if (!raid10_handle_discard(mddev, bio))
-+			return true;
-+
- 	/*
- 	 * If this request crosses a chunk boundary, we need to split
- 	 * it.
-@@ -3771,7 +4032,7 @@ static int raid10_run(struct mddev *mddev)
- 
- 	if (mddev->queue) {
- 		blk_queue_max_discard_sectors(mddev->queue,
--					      mddev->chunk_sectors);
-+					      UINT_MAX);
- 		blk_queue_max_write_same_sectors(mddev->queue, 0);
- 		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
- 		blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
--- 
-2.7.5
+for you to fetch changes up to c5eec74f252dfba25269cd68f9a3407aedefd330:
 
+  md/raid5: cast chunk_sectors to sector_t value (2021-02-03 22:48:16 -0800)
+
+----------------------------------------------------------------
+Guoqing Jiang (1):
+      md/raid5: cast chunk_sectors to sector_t value
+
+ drivers/md/raid5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)=
