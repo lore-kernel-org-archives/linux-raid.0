@@ -2,109 +2,171 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B7C4C433DB
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 04:09:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A941C433E6
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEA4864F41
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 04:09:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F69A64F47
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229783AbhBDEJf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 3 Feb 2021 23:09:35 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:30025 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231343AbhBDEJd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 3 Feb 2021 23:09:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612411686;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ztv4WTJUx2soM9FXLZkTrJzhjec7THJ1EvSzmEV45CU=;
-        b=FHedWpz/D9MEtLYK6/IoElWOcU8fFVg1sSm3+FbugvZjqh5gN20yq+9oYl8Fg9dVwAcfb1
-        vZqUj2Z93dVN8eFtTFA1En7YAmOvJW0npNLo8CSFls/d6TwBASpFjsJgrqnfFnrhP6e8s1
-        KDkHxtzubxVYO4G8cEmBbt78t+u8iGE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-84-Y522x67jOBmcP6qyDXXmzA-1; Wed, 03 Feb 2021 23:08:05 -0500
-X-MC-Unique: Y522x67jOBmcP6qyDXXmzA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EBA7B8030B4;
-        Thu,  4 Feb 2021 04:08:03 +0000 (UTC)
-Received: from localhost.localdomain (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9F9AB101E81C;
-        Thu,  4 Feb 2021 04:08:00 +0000 (UTC)
-Subject: Re: [PATCH 1/5] md: add md_submit_discard_bio() for submitting
- discard bio
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     songliubraving@fb.com, linux-raid@vger.kernel.org,
-        matthew.ruffell@canonical.com, colyli@suse.de,
-        guoqing.jiang@cloud.ionos.com, ncroxon@redhat.com
-References: <1612359931-24209-1-git-send-email-xni@redhat.com>
- <1612359931-24209-2-git-send-email-xni@redhat.com>
- <20210203154425.GA4078626@infradead.org>
-From:   Xiao Ni <xni@redhat.com>
-Message-ID: <f2b663fd-349b-56b4-5b9b-3103184dbdda@redhat.com>
-Date:   Thu, 4 Feb 2021 12:07:58 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.2.1
+        id S231608AbhBDFee (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Feb 2021 00:34:34 -0500
+Received: from [105.162.114.197] ([105.162.114.197]:43611 "EHLO
+        premium81-4.web-hosting.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S231499AbhBDFeb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Feb 2021 00:34:31 -0500
+X-Greylist: delayed 452 seconds by postgrey-1.27 at vger.kernel.org; Thu, 04 Feb 2021 00:34:29 EST
+Message-ID: <2755d67a8f471c1034e15704f0367c7051f3dcf9@documents.co.ke>
+Reply-To: "Kenya Business Plans" <info@documents.co.ke>
+From:   "Kenya Business Plans" <newsletter@documents.co.ke>
+To:     <linux-raid@vger.kernel.org>
+Subject: Kenya Cutomized Business Plans for only Kes 499/=
+Date:   Thu, 4 Feb 2021 08:26:22 +0300
+Organization: Kenya Business Plans
 MIME-Version: 1.0
-In-Reply-To: <20210203154425.GA4078626@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset="utf-8";
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; d=documents.co.ke; s=default;
+        c=relaxed/relaxed; t=1612416382;
+        h=message-id:from:to:subject:date:mime-version;
+        bh=8BwyX4f9rAOXp44Y3cUBvaUTSdqFDEf96x4lvcYxHAk=;
+        b=ku/07F/jsPDKa00MgcTuk+hQmWHqfcIxA1YNy2FAIwFzeAy5wYmJToB0Y+c84c
+        Pn5W/UskZ+BmA+2iYlXEO+oBV06yOaD4mOT1OMfdAX4R1l6ExXEFAe5RWJ6P46uP
+        t4kJtDw2W9jB88DKa0uzIfPPRJzYpVX1u0azKSUBEqenJmpKW51TQNtWK1UzrMj+
+        FY2yQglsbefcLWO2hSVHm614XYNFPdV0VOezQ4HDAKhVx/9qegQ0or8F2KbHkJ+l
+        c9tJ0oC12k6DU0Xnn6JXqrT8sdnm3L/ylDljaHH068y7nc9y7zM9P6KbJvUmENzw
+        lejmJJFDVzfzjBznMH3dXkqQ==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+ =20
+Customized Kenya Business Plans
+Invest wisely by getting street smart market surveys, guides and info pac=
+ks with the sweet or harsh reality of the market.
+Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Com=
+petition, Survival rate, Differentiation, Capital, Process, Equipment, Su=
+ppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tric=
+ks & so so much more.
+
+We have comprehensive business plans in these categories:
+
+Agrovet
+Auto Glass Retail -17 Pages
+Bank Agency Fact-sheet
+Beef Butchery - 31 pages
+Boda Boda
+Bottled Water - 53 Pages
+Building Materials Yard - Dynamics & Case Study
+Car Wash Quick Guide
+Chapati Wholesale (Case Study)
+Chemist -Retail - 31 Pages
+Chicken Butchery
+Chips & Chicken Cafe - 31 Pages
+Concreting ( Koroga) Equipment Leasing - 29 Pages
+Corn Chips Snacks Making - 37 Pages
+Cosmetics Retail - 30 Pages
+Cosmetics Retail -30 Pages
+Courier - 35 Pages
+Cyber Cafe
+Day-care
+Electrical Parts Retail - 27 Pages
+Executive Barber Shop - 42 Pages
+Fish Supply - Nairobi Hotels Quick Overview
+Fish Supply - Nairobi Hotels Quick Survey
+Flowers - Nairobi (Retail/ Wholesale )
+Free Advertiser Magazine ( Quick Guide & Case Study )
+Fruit / Juice Parlour
+Gas (LPG) Retail
+Gift Service
+Gym - 38 pages
+Hair Salon
+Ice Lollies Making
+Ice Lollies Making ( Quick Guide )
+Imaging Clinic (Ultrasound and X-ray) - 46 Pages
+Inner-wear Retail - 27 Pages
+Laundry - 31 pages
+Leather: Skins Trade -26 Pages
+'Local' Bar - 48 Pages
+Maize Milling (Unga wa Ugali)
+Milk Distributorship
+Mitumba Clothes
+Money Lending - Informal Overview
+Motorcycle Spare Parts Retail -33 Pages
+Movie Shop
+M-pesa Sub Agent
+Nails (Misumari) Making - 60 Pages
+Non-Woven Bags Making -39 Pages
+Petrol Station (Independent) - 47 Pages
+Plumbing Hardware Retail - 35 Pages *New
+Primary School Business - 38 Pages
+Printing Business - 55 Pages
+Real Estate Agency - 42 Pages
+Second Hand Novels (R)
+Selling Cake Boxes
+Selling Cookies
+Senator Keg Bar
+Slot Machines Quick Guide
+Small Scale FMCG Distribution - New
+Smokies & Egg Vending
+Supermarket - 75 Pages
+Supermarket Shelf Space Guide
+Tents & Chairs Leasing
+Tiles Retail Business Fact-sheet
+Timber Yard - 32 Pages
+Tomato ( Greenhouse ) - Quick Market & Production Guide
+Tyres Retail Business - 29 Pages
+
+Invest wisely in 2020 by getting street smart market surveys with:
+- Market Analysis
+- Step by step establishing Process
+- Licenses - Issuing authority, cost, requirements
+- Equipment - Suppliers, Considerations, Cost
+- Other requirements
+- Suppliers & Prices
+- Raw Materials
+- Buying Selling Prices
+- Production Costs
+- Operational Costs
+- Day to day Operations
+- Revenue & Margins
+- Sample wholesale retail prices
+- Case Studies
+- Manpower
+- Capital breakdown
+- Opportunities
+- Competition
+- Surviving & Thriving
+- Analysis, figures, observations, dos & don'ts
+- Trends ,Tips, Tricks and so much more.
+
+To Download a Sample Business Plan Copy and paste the link below to your =
+browser
+
+https://drive.google.com/open?id=3D1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
+
+The whole package of 65 Business Plans above is available Offer Price @ K=
+shs. 499. We are only selling the guides as a package.
+
+To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931=
+.
+
+On payment kindly forward the Mpesa payment confirmation text and your em=
+ail address to +254 721 351 269.
+
+We deliver via email within 15 minutes of payment.
+
+TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Les=
+s Risk!
+
+Kind Regards;
 
 
-On 02/03/2021 11:44 PM, Christoph Hellwig wrote:
-> On Wed, Feb 03, 2021 at 09:45:27PM +0800, Xiao Ni wrote:
->> +	if (__blkdev_issue_discard(rdev->bdev, start, size,
->> +		GFP_NOIO, 0, &discard_bio) || !discard_bio)
->> +		return;
-> Very odd indentation.  Normally this would be:
->
-> 	if (__blkdev_issue_discard(rdev->bdev, start, size, GFP_NOIO, 0,
-> 			&discard_bio) || !discard_bio)
-> 		return;
->
->> +
->> +	bio_chain(discard_bio, bio);
->> +	bio_clone_blkg_association(discard_bio, bio);
->> +	if (mddev->gendisk)
->> +		trace_block_bio_remap(discard_bio,
->> +				disk_devt(mddev->gendisk),
->> +				bio->bi_iter.bi_sector);
->> +	submit_bio_noacct(discard_bio);
->> +}
->> +EXPORT_SYMBOL(md_submit_discard_bio);
-> EXPORT_SYMBOL_GPL like all the other exports in md.c, please.
->
->> +extern void md_submit_discard_bio(struct mddev *mddev, struct md_rdev *rdev,
->> +			struct bio *bio, sector_t start, sector_t size);
-> no need for the extern.
->
-Hi Christoph
-
-It needs to export it here. If not, there is compile error.
-
-raid0.c:502:3: error: implicit declaration of function 
-‘md_submit_discard_bio’ [-Werror=implicit-function-declaration]
-    md_submit_discard_bio(mddev, rdev, bio,
-    ^~~~~~~~~~~~~~~~~~~~~
-
-I'll export it in the next version.
-
-Regards
-Xiao
-
+Hashna A. Noor
+Manager - Sales & Marketing
+Kenya Business Plans Limited
++254721351269 | +254707559080
+78 Brookside Drive | Nairobi | Kenya
