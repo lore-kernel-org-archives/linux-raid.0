@@ -2,171 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A941C433E6
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0275CC433DB
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:58:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F69A64F47
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:34:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A05DB64F58
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 05:58:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231608AbhBDFee (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 Feb 2021 00:34:34 -0500
-Received: from [105.162.114.197] ([105.162.114.197]:43611 "EHLO
-        premium81-4.web-hosting.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S231499AbhBDFeb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Feb 2021 00:34:31 -0500
-X-Greylist: delayed 452 seconds by postgrey-1.27 at vger.kernel.org; Thu, 04 Feb 2021 00:34:29 EST
-Message-ID: <2755d67a8f471c1034e15704f0367c7051f3dcf9@documents.co.ke>
-Reply-To: "Kenya Business Plans" <info@documents.co.ke>
-From:   "Kenya Business Plans" <newsletter@documents.co.ke>
-To:     <linux-raid@vger.kernel.org>
-Subject: Kenya Cutomized Business Plans for only Kes 499/=
-Date:   Thu, 4 Feb 2021 08:26:22 +0300
-Organization: Kenya Business Plans
+        id S229998AbhBDF65 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Feb 2021 00:58:57 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:34119 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229609AbhBDF64 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Feb 2021 00:58:56 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612418250;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ewVN+e7o9bcV6tHm7OUWK7tQehJHV4ezJFmspWN9YiY=;
+        b=MXiKVmfX/wAvShFU8O1EED+BuwD3BVs7JUjcvYdyJJW/UVs43+ozlvIZRdme5euFwL84mO
+        7zWH5vU+kSD0Wc6IZSFO/ZDma67CD3KMQ6lSicUmanY5Jv8D6ty85YZw5u3o1RmkB/Qs8/
+        sNZyOtg7YC5i/4pPz2h1/kLaApA95KE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-112-JtD0p3ZqMaKCoAJOepQidQ-1; Thu, 04 Feb 2021 00:57:26 -0500
+X-MC-Unique: JtD0p3ZqMaKCoAJOepQidQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8F34985EE8F;
+        Thu,  4 Feb 2021 05:57:24 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-8-21.pek2.redhat.com [10.72.8.21])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E671760C5F;
+        Thu,  4 Feb 2021 05:57:20 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     songliubraving@fb.com
+Cc:     linux-raid@vger.kernel.org, matthew.ruffell@canonical.com,
+        colyli@suse.de, guoqing.jiang@cloud.ionos.com, ncroxon@redhat.com,
+        hch@infradead.org
+Subject: [PATCH V2 0/5] md/raid10: Improve handling raid10 discard request
+Date:   Thu,  4 Feb 2021 13:57:13 +0800
+Message-Id: <1612418238-9976-1-git-send-email-xni@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8";
-Content-Transfer-Encoding: quoted-printable
-DKIM-Signature: v=1; a=rsa-sha256; d=documents.co.ke; s=default;
-        c=relaxed/relaxed; t=1612416382;
-        h=message-id:from:to:subject:date:mime-version;
-        bh=8BwyX4f9rAOXp44Y3cUBvaUTSdqFDEf96x4lvcYxHAk=;
-        b=ku/07F/jsPDKa00MgcTuk+hQmWHqfcIxA1YNy2FAIwFzeAy5wYmJToB0Y+c84c
-        Pn5W/UskZ+BmA+2iYlXEO+oBV06yOaD4mOT1OMfdAX4R1l6ExXEFAe5RWJ6P46uP
-        t4kJtDw2W9jB88DKa0uzIfPPRJzYpVX1u0azKSUBEqenJmpKW51TQNtWK1UzrMj+
-        FY2yQglsbefcLWO2hSVHm614XYNFPdV0VOezQ4HDAKhVx/9qegQ0or8F2KbHkJ+l
-        c9tJ0oC12k6DU0Xnn6JXqrT8sdnm3L/ylDljaHH068y7nc9y7zM9P6KbJvUmENzw
-        lejmJJFDVzfzjBznMH3dXkqQ==
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
- =20
-Customized Kenya Business Plans
-Invest wisely by getting street smart market surveys, guides and info pac=
-ks with the sweet or harsh reality of the market.
-Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Com=
-petition, Survival rate, Differentiation, Capital, Process, Equipment, Su=
-ppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tric=
-ks & so so much more.
+Hi all
 
-We have comprehensive business plans in these categories:
+Now mkfs on raid10 which is combined with ssd/nvme disks takes a long time.
+This patch set tries to resolve this problem.
 
-Agrovet
-Auto Glass Retail -17 Pages
-Bank Agency Fact-sheet
-Beef Butchery - 31 pages
-Boda Boda
-Bottled Water - 53 Pages
-Building Materials Yard - Dynamics & Case Study
-Car Wash Quick Guide
-Chapati Wholesale (Case Study)
-Chemist -Retail - 31 Pages
-Chicken Butchery
-Chips & Chicken Cafe - 31 Pages
-Concreting ( Koroga) Equipment Leasing - 29 Pages
-Corn Chips Snacks Making - 37 Pages
-Cosmetics Retail - 30 Pages
-Cosmetics Retail -30 Pages
-Courier - 35 Pages
-Cyber Cafe
-Day-care
-Electrical Parts Retail - 27 Pages
-Executive Barber Shop - 42 Pages
-Fish Supply - Nairobi Hotels Quick Overview
-Fish Supply - Nairobi Hotels Quick Survey
-Flowers - Nairobi (Retail/ Wholesale )
-Free Advertiser Magazine ( Quick Guide & Case Study )
-Fruit / Juice Parlour
-Gas (LPG) Retail
-Gift Service
-Gym - 38 pages
-Hair Salon
-Ice Lollies Making
-Ice Lollies Making ( Quick Guide )
-Imaging Clinic (Ultrasound and X-ray) - 46 Pages
-Inner-wear Retail - 27 Pages
-Laundry - 31 pages
-Leather: Skins Trade -26 Pages
-'Local' Bar - 48 Pages
-Maize Milling (Unga wa Ugali)
-Milk Distributorship
-Mitumba Clothes
-Money Lending - Informal Overview
-Motorcycle Spare Parts Retail -33 Pages
-Movie Shop
-M-pesa Sub Agent
-Nails (Misumari) Making - 60 Pages
-Non-Woven Bags Making -39 Pages
-Petrol Station (Independent) - 47 Pages
-Plumbing Hardware Retail - 35 Pages *New
-Primary School Business - 38 Pages
-Printing Business - 55 Pages
-Real Estate Agency - 42 Pages
-Second Hand Novels (R)
-Selling Cake Boxes
-Selling Cookies
-Senator Keg Bar
-Slot Machines Quick Guide
-Small Scale FMCG Distribution - New
-Smokies & Egg Vending
-Supermarket - 75 Pages
-Supermarket Shelf Space Guide
-Tents & Chairs Leasing
-Tiles Retail Business Fact-sheet
-Timber Yard - 32 Pages
-Tomato ( Greenhouse ) - Quick Market & Production Guide
-Tyres Retail Business - 29 Pages
+This patch set had been reverted because of a data corruption problem. This
+version fix this problem. The root cause which causes the data corruption is
+the wrong calculation of start address of near copies disks.
 
-Invest wisely in 2020 by getting street smart market surveys with:
-- Market Analysis
-- Step by step establishing Process
-- Licenses - Issuing authority, cost, requirements
-- Equipment - Suppliers, Considerations, Cost
-- Other requirements
-- Suppliers & Prices
-- Raw Materials
-- Buying Selling Prices
-- Production Costs
-- Operational Costs
-- Day to day Operations
-- Revenue & Margins
-- Sample wholesale retail prices
-- Case Studies
-- Manpower
-- Capital breakdown
-- Opportunities
-- Competition
-- Surviving & Thriving
-- Analysis, figures, observations, dos & don'ts
-- Trends ,Tips, Tricks and so much more.
+Now we use a similar way with raid0 to handle discard request for raid10.
+Because the discard region is very big, we can calculate the start/end
+address for each disk. Then we can submit the discard request to each disk.
+But for raid10, it has copies. For near layout, if the discard request
+doesn't align with chunk size, we calculate a start_disk_offset. Now we only
+use start_disk_offset for the first disk, but it should be used for the
+near copies disks too.
 
-To Download a Sample Business Plan Copy and paste the link below to your =
-browser
+[  789.709501] discard bio start : 70968, size : 191176
+[  789.709507] first stripe index 69, start disk index 0, start disk offset 70968
+[  789.709509] last stripe index 256, end disk index 0, end disk offset 262144
+[  789.709511] disk 0, dev start : 70968, dev end : 262144
+[  789.709515] disk 1, dev start : 70656, dev end : 262144
 
-https://drive.google.com/open?id=3D1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
+For example, in this test case, it has 2 near copies. The start_disk_offset
+for the first disk is 70968. It should use the same offset address for second disk.
+But it uses the start address of this chunk. It discard more region. This version
+simply spilt the un-aligned part with strip size.
 
-The whole package of 65 Business Plans above is available Offer Price @ K=
-shs. 499. We are only selling the guides as a package.
+And it fixes another problem. The calculation of stripe_size is wrong in reverted version.
 
-To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931=
-.
+V2: Fix problems pointed by Christoph Hellwig.
 
-On payment kindly forward the Mpesa payment confirmation text and your em=
-ail address to +254 721 351 269.
+Xiao Ni (5):
+  md: add md_submit_discard_bio() for submitting discard bio
+  md/raid10: extend r10bio devs to raid disks
+  md/raid10: pull the code that wait for blocked dev into one function
+  md/raid10: improve raid10 discard request
+  md/raid10: improve discard request for far layout
 
-We deliver via email within 15 minutes of payment.
+ drivers/md/md.c     |  20 +++
+ drivers/md/md.h     |   2 +
+ drivers/md/raid0.c  |  14 +-
+ drivers/md/raid10.c | 434 +++++++++++++++++++++++++++++++++++++++++++++-------
+ drivers/md/raid10.h |   1 +
+ 5 files changed, 402 insertions(+), 69 deletions(-)
 
-TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Les=
-s Risk!
+-- 
+2.7.5
 
-Kind Regards;
-
-
-Hashna A. Noor
-Manager - Sales & Marketing
-Kenya Business Plans Limited
-+254721351269 | +254707559080
-78 Brookside Drive | Nairobi | Kenya
