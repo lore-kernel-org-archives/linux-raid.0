@@ -2,208 +2,132 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2430DC433DB
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 07:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E567C433DB
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 08:13:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAE1A64F55
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 07:52:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E787C64F51
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 08:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234768AbhBDHwq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 Feb 2021 02:52:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27898 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234740AbhBDHwn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Feb 2021 02:52:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612425076;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=SnfJ5bTL+AOXIpG4BIE64j8FVpkzKMfveJCUnuyt/kI=;
-        b=WDiPE7oer8h+CqNr1rCjr1sl7JqZXH8xItteXfWH0eVZia62meo7K4I97ZcYGPZNq4r8oM
-        sQkFLuT7qrxKHgqnQ2ZxD81Y+ZDRK+VvT6IQqSuYyf3YyfOlfdo/v1eFgAjv+6SMZjQM1V
-        x2a6viCr9PQCL4U3r9riw4/3VM7nrfs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-210-Nxpw3QOaNoSVI8T11uXb8g-1; Thu, 04 Feb 2021 02:51:15 -0500
-X-MC-Unique: Nxpw3QOaNoSVI8T11uXb8g-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 05A92427C1;
-        Thu,  4 Feb 2021 07:51:14 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A87185B695;
-        Thu,  4 Feb 2021 07:51:10 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     songliubraving@fb.com
-Cc:     linux-raid@vger.kernel.org, matthew.ruffell@canonical.com,
-        colyli@suse.de, guoqing.jiang@cloud.ionos.com, ncroxon@redhat.com
-Subject: [PATCH V2 5/5] md/raid10: improve discard request for far layout
-Date:   Thu,  4 Feb 2021 15:50:47 +0800
-Message-Id: <1612425047-10953-6-git-send-email-xni@redhat.com>
-In-Reply-To: <1612425047-10953-1-git-send-email-xni@redhat.com>
-References: <1612425047-10953-1-git-send-email-xni@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+        id S234927AbhBDINK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Feb 2021 03:13:10 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57286 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234918AbhBDINJ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 4 Feb 2021 03:13:09 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 161CF64F4D
+        for <linux-raid@vger.kernel.org>; Thu,  4 Feb 2021 08:12:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612426348;
+        bh=cLikH0Gaf6kB2lziknnT4r7OB6z2hHvDYKt15YW8GpA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=XxaFZrSoP12UTObG4p5dfA3jjZEGea2EYFaCc1Z/oVtBM36KVioIjXD3VPxwt1Vno
+         bPsenmdSFYX1yyVyPkGY9b9CdnSydHyyfm58oYFcBSW843kUcBhzJkMf92wSb7czFg
+         XXgWeS+AyuUeK5YSFXsh9Pd6pmFfgN+N6N/SBHlOIjHaN9u1SzfZMcbp2iA/t9wGup
+         f87XRSxBe0nU+44mR48VhPgEDUB/qZaAc7pAcjTm0pDaMpJ/8MAOiuubJ6z/MeoFb1
+         P60UvISGR7YynLs33oKQHQYuofxvEqjAp6PHgzex+dnzYav0BmXysEQEvAUzEN4l2W
+         DoHOqJTiq4izw==
+Received: by mail-lj1-f171.google.com with SMTP id y14so2310077ljn.8
+        for <linux-raid@vger.kernel.org>; Thu, 04 Feb 2021 00:12:27 -0800 (PST)
+X-Gm-Message-State: AOAM532OTiuBqK4d9gBNlfjnD0TkD/oD4bvkoof9Bh7Nc/MaUTUe5Qnk
+        A37/nfgN2/GlSKuySLRqeuAsN0hRTZf9NFFGXao=
+X-Google-Smtp-Source: ABdhPJxSrfMcsTv2YQzj3Anxg8uUPYknFhxUEhyfp4LO2wVen/tYqT9ciGUhoZK05gze/CrKJX8QU2y20xPcWLw1KWg=
+X-Received: by 2002:a2e:918f:: with SMTP id f15mr4007603ljg.357.1612426346259;
+ Thu, 04 Feb 2021 00:12:26 -0800 (PST)
+MIME-Version: 1.0
+References: <1612418238-9976-1-git-send-email-xni@redhat.com> <6359e6e0-4e50-912c-1f97-ae07db3eba70@redhat.com>
+In-Reply-To: <6359e6e0-4e50-912c-1f97-ae07db3eba70@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 4 Feb 2021 00:12:15 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6paostmNby1sHTPYM+2mmz_wxKBTw7e1G6tGFtema7Ow@mail.gmail.com>
+Message-ID: <CAPhsuW6paostmNby1sHTPYM+2mmz_wxKBTw7e1G6tGFtema7Ow@mail.gmail.com>
+Subject: Re: [PATCH V2 0/5] md/raid10: Improve handling raid10 discard request
+To:     Xiao Ni <xni@redhat.com>
+Cc:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Matthew Ruffell <matthew.ruffell@canonical.com>,
+        Coly Li <colyli@suse.de>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Nigel Croxon <ncroxon@redhat.com>, hch@infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-For far layout, the discard region is not continuous on disks. So it needs
-far copies r10bio to cover all regions. It needs a way to know all r10bios
-have finish or not. Similar with raid10_sync_request, only the first r10bio
-master_bio records the discard bio. Other r10bios master_bio record the
-first r10bio. The first r10bio can finish after other r10bios finish and
-then return the discard bio.
+On Wed, Feb 3, 2021 at 11:42 PM Xiao Ni <xni@redhat.com> wrote:
+>
+> Hi Song
+>
+> Please ignore the v2 version. There is a place that needs to be fix.
+> I'll re-send
+> v2 version again.
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/raid10.c | 79 ++++++++++++++++++++++++++++++++++++++++-------------
- drivers/md/raid10.h |  1 +
- 2 files changed, 61 insertions(+), 19 deletions(-)
+What did you change in the new v2? Removing "extern" in the header?
+For small changes like this, I can just update it while applying the patches.
+If we do need resend (for bigger changes), it's better to call it v3.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 73d1b250..f78212d 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1518,6 +1518,28 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 		raid10_write_request(mddev, bio, r10_bio);
- }
- 
-+static void raid_end_discard_bio(struct r10bio *r10bio)
-+{
-+	struct r10conf *conf = r10bio->mddev->private;
-+	struct r10bio *first_r10bio;
-+
-+	while (atomic_dec_and_test(&r10bio->remaining)) {
-+
-+		allow_barrier(conf);
-+
-+		if (!test_bit(R10BIO_Discard, &r10bio->state)) {
-+			first_r10bio = (struct r10bio *)r10bio->master_bio;
-+			free_r10bio(r10bio);
-+			r10bio = first_r10bio;
-+		} else {
-+			md_write_end(r10bio->mddev);
-+			bio_endio(r10bio->master_bio);
-+			free_r10bio(r10bio);
-+			break;
-+		}
-+	}
-+}
-+
- static void raid10_end_discard_request(struct bio *bio)
- {
- 	struct r10bio *r10_bio = bio->bi_private;
-@@ -1545,11 +1567,7 @@ static void raid10_end_discard_request(struct bio *bio)
- 		rdev = conf->mirrors[dev].rdev;
- 	}
- 
--	if (atomic_dec_and_test(&r10_bio->remaining)) {
--		md_write_end(r10_bio->mddev);
--		raid_end_bio_io(r10_bio);
--	}
--
-+	raid_end_discard_bio(r10_bio);
- 	rdev_dec_pending(rdev, conf->mddev);
- }
- 
-@@ -1563,7 +1581,9 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- {
- 	struct r10conf *conf = mddev->private;
- 	struct geom *geo = &conf->geo;
--	struct r10bio *r10_bio;
-+	int far_copies = geo->far_copies;
-+	bool first_copy = true;
-+	struct r10bio *r10_bio, *first_r10bio;
- 	struct bio *split;
- 	int disk;
- 	sector_t chunk;
-@@ -1637,16 +1657,6 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 		wait_barrier(conf);
- 	}
- 
--	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
--	r10_bio->mddev = mddev;
--	r10_bio->state = 0;
--	r10_bio->sectors = 0;
--	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks);
--
--	wait_blocked_dev(mddev, r10_bio);
--
--	r10_bio->master_bio = bio;
--
- 	bio_start = bio->bi_iter.bi_sector;
- 	bio_end = bio_end_sector(bio);
- 
-@@ -1673,6 +1683,29 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 	end_disk_offset = (bio_end & geo->chunk_mask) +
- 				(last_stripe_index << geo->chunk_shift);
- 
-+retry_discard:
-+	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
-+	r10_bio->mddev = mddev;
-+	r10_bio->state = 0;
-+	r10_bio->sectors = 0;
-+	memset(r10_bio->devs, 0, sizeof(r10_bio->devs[0]) * geo->raid_disks);
-+	wait_blocked_dev(mddev, r10_bio);
-+
-+	/*
-+	 * For far layout it needs more than one r10bio to cover all regions.
-+	 * Inspired by raid10_sync_request, we can use the first r10bio->master_bio
-+	 * to record the discard bio. Other r10bio->master_bio record the first
-+	 * r10bio. The first r10bio only release after all other r10bios finish.
-+	 * The discard bio returns only first r10bio finishes
-+	 */
-+	if (first_copy) {
-+		r10_bio->master_bio = bio;
-+		set_bit(R10BIO_Discard, &r10_bio->state);
-+		first_copy = false;
-+		first_r10bio = r10_bio;
-+	} else
-+		r10_bio->master_bio = (struct bio *)first_r10bio;
-+
- 	rcu_read_lock();
- 	for (disk = 0; disk < geo->raid_disks; disk++) {
- 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
-@@ -1764,11 +1797,19 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 		}
- 	}
- 
--	if (atomic_dec_and_test(&r10_bio->remaining)) {
--		md_write_end(r10_bio->mddev);
--		raid_end_bio_io(r10_bio);
-+	if (!geo->far_offset && --far_copies) {
-+		first_stripe_index += geo->stride >> geo->chunk_shift;
-+		start_disk_offset += geo->stride;
-+		last_stripe_index += geo->stride >> geo->chunk_shift;
-+		end_disk_offset += geo->stride;
-+		atomic_inc(&first_r10bio->remaining);
-+		raid_end_discard_bio(r10_bio);
-+		wait_barrier(conf);
-+		goto retry_discard;
- 	}
- 
-+	raid_end_discard_bio(r10_bio);
-+
- 	return 0;
- out:
- 	allow_barrier(conf);
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index 79cd2b7..1461fd5 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -179,5 +179,6 @@ enum r10bio_state {
- 	R10BIO_Previous,
- /* failfast devices did receive failfast requests. */
- 	R10BIO_FailFast,
-+	R10BIO_Discard,
- };
- #endif
--- 
-2.7.5
+I was testing the first v2 in the past hour or so, it looks good in the test.
+I will take a closer look tomorrow. On the other hand, we are getting close
+to the 5.12 merge window, so it is a little too late for bigger
+changes like this.
+Therefore, I would prefer to wait until 5.13. If you need it in 5.12 for some
+reason, please let me know.
 
+Thanks,
+Song
+
+>
+> Regards
+> Xiao
+>
+> On 02/04/2021 01:57 PM, Xiao Ni wrote:
+> > Hi all
+> >
+> > Now mkfs on raid10 which is combined with ssd/nvme disks takes a long time.
+> > This patch set tries to resolve this problem.
+> >
+> > This patch set had been reverted because of a data corruption problem. This
+> > version fix this problem. The root cause which causes the data corruption is
+> > the wrong calculation of start address of near copies disks.
+> >
+> > Now we use a similar way with raid0 to handle discard request for raid10.
+> > Because the discard region is very big, we can calculate the start/end
+> > address for each disk. Then we can submit the discard request to each disk.
+> > But for raid10, it has copies. For near layout, if the discard request
+> > doesn't align with chunk size, we calculate a start_disk_offset. Now we only
+> > use start_disk_offset for the first disk, but it should be used for the
+> > near copies disks too.
+> >
+> > [  789.709501] discard bio start : 70968, size : 191176
+> > [  789.709507] first stripe index 69, start disk index 0, start disk offset 70968
+> > [  789.709509] last stripe index 256, end disk index 0, end disk offset 262144
+> > [  789.709511] disk 0, dev start : 70968, dev end : 262144
+> > [  789.709515] disk 1, dev start : 70656, dev end : 262144
+> >
+> > For example, in this test case, it has 2 near copies. The start_disk_offset
+> > for the first disk is 70968. It should use the same offset address for second disk.
+> > But it uses the start address of this chunk. It discard more region. This version
+> > simply spilt the un-aligned part with strip size.
+> >
+> > And it fixes another problem. The calculation of stripe_size is wrong in reverted version.
+> >
+> > V2: Fix problems pointed by Christoph Hellwig.
+> >
+> > Xiao Ni (5):
+> >    md: add md_submit_discard_bio() for submitting discard bio
+> >    md/raid10: extend r10bio devs to raid disks
+> >    md/raid10: pull the code that wait for blocked dev into one function
+> >    md/raid10: improve raid10 discard request
+> >    md/raid10: improve discard request for far layout
+> >
+> >   drivers/md/md.c     |  20 +++
+> >   drivers/md/md.h     |   2 +
+> >   drivers/md/raid0.c  |  14 +-
+> >   drivers/md/raid10.c | 434 +++++++++++++++++++++++++++++++++++++++++++++-------
+> >   drivers/md/raid10.h |   1 +
+> >   5 files changed, 402 insertions(+), 69 deletions(-)
+> >
+>
