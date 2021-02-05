@@ -2,88 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D68AFC433E0
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 20:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CAD9C433DB
+	for <linux-raid@archiver.kernel.org>; Fri,  5 Feb 2021 00:28:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6BC764E35
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Feb 2021 20:03:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D0D864D9D
+	for <linux-raid@archiver.kernel.org>; Fri,  5 Feb 2021 00:28:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237957AbhBDUDe convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 Feb 2021 15:03:34 -0500
-Received: from mail.eclipso.de ([217.69.254.104]:51258 "EHLO mail.eclipso.de"
+        id S231997AbhBEA2z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Feb 2021 19:28:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56996 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239930AbhBDT7O (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 4 Feb 2021 14:59:14 -0500
-Received: from mail.eclipso.de (www1.eclipso.de [217.69.254.102])
-        by mail.eclipso.de with ESMTP id 4BDCF821
-        for <linux-raid@vger.kernel.org>; Thu, 04 Feb 2021 20:58:30 +0100 (CET)
-Date:   Thu, 04 Feb 2021 20:58:30 +0100
+        id S231986AbhBEA2x (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 4 Feb 2021 19:28:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 25E8D64D9D;
+        Fri,  5 Feb 2021 00:28:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612484892;
+        bh=VyPQeUP6hYEQR+ykMe5wt6/I1Xczuy8ZEfcC2XszI2s=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lMih/QbVj6JuByqgBKNSF+y9LTPwOy18eaxOHqcjaNB+DqV+IRr7K4FMpscWiRapY
+         khlPoypqEi1tJqKPBYxAdU9DNJn21PSSW93C8dz6M0sLlE7/SNVFjVyTYILXaThDDY
+         IEvuO1wu/S40zzf03IIw7dVI4svIf9+om0F+UbPIVkPJcxc5D62rLKukjIQjazugrp
+         G16ca3YB9sq11Qty3WKg8PCtPXke4PBoBSXVAMoKmtxPkxRyQsVaWpk+JyjJdLVjhW
+         zE8jRskpIsxv/I7uCMJgQ1EMoNXl/NpzoOx/5FsYYYpIKddYDvKDJzaarMmAr67Tti
+         Kh/LlzPYD7NQQ==
+Date:   Thu, 4 Feb 2021 19:28:11 -0500
+From:   Sasha Levin <sashal@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Anthony Iliopoulos <ailiop@suse.com>, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [dm-devel] [PATCH AUTOSEL 5.4 03/26] dm integrity: select
+ CRYPTO_SKCIPHER
+Message-ID: <20210205002811.GV4035784@sasha-vm>
+References: <20210120012704.770095-1-sashal@kernel.org>
+ <20210120012704.770095-3-sashal@kernel.org>
+ <YAfD81Jw/0NU0eWN@sol.localdomain>
 MIME-Version: 1.0
-Message-ID: <867a4658d076279f9b8c014835a161b4@mail.eclipso.de>
-X-Mailer: eclipso / 7.4.0
-From:   " " <Cedric.dewijs@eclipso.eu>
-Subject: Re: Re: put 2 hard drives in mdadm raid 1 and detect bitrot like btrfs
-        does, what's that called?
-Reply-To: " " <Cedric.dewijs@eclipso.eu>
-To:     <kreijack@inwind.it>
-Cc:     <andy@strugglers.net>, <linux-btrfs@vger.kernel.org>,
-        <linux-raid@vger.kernel.org>
-In-Reply-To: <adf8adda-015a-59a9-fdb9-32cad9f9ea49@libero.it>
-References: <f5d8af48e8d5543267089286c01c476f@mail.eclipso.de>
-        <a2cd87208a74fb36224539fa10727066@mail.eclipso.de>
-        <20210204105457.GI3712@bitfolk.com>
-        <24e578627d205151df16b5aebe4a551e@mail.eclipso.de>
-        <adf8adda-015a-59a9-fdb9-32cad9f9ea49@libero.it>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
+In-Reply-To: <YAfD81Jw/0NU0eWN@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Tue, Jan 19, 2021 at 09:47:31PM -0800, Eric Biggers wrote:
+>On Tue, Jan 19, 2021 at 08:26:40PM -0500, Sasha Levin wrote:
+>> From: Anthony Iliopoulos <ailiop@suse.com>
+>>
+>> [ Upstream commit f7b347acb5f6c29d9229bb64893d8b6a2c7949fb ]
+>>
+>> The integrity target relies on skcipher for encryption/decryption, but
+>> certain kernel configurations may not enable CRYPTO_SKCIPHER, leading to
+>> compilation errors due to unresolved symbols. Explicitly select
+>> CRYPTO_SKCIPHER for DM_INTEGRITY, since it is unconditionally dependent
+>> on it.
+>>
+>> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+>> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+>> Signed-off-by: Sasha Levin <sashal@kernel.org>
+>> ---
+>>  drivers/md/Kconfig | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+>> index aa98953f4462e..7dd6e98257c72 100644
+>> --- a/drivers/md/Kconfig
+>> +++ b/drivers/md/Kconfig
+>> @@ -565,6 +565,7 @@ config DM_INTEGRITY
+>>  	select BLK_DEV_INTEGRITY
+>>  	select DM_BUFIO
+>>  	select CRYPTO
+>> +	select CRYPTO_SKCIPHER
+>>  	select ASYNC_XOR
+>>  	---help---
+>>  	  This device-mapper target emulates a block device that has
+>
+>CRYPTO_SKCIPHER doesn't exist in 5.4 and earlier because it was renamed from
+>CRYPTO_BLKCIPHER in 5.5.  If this patch is really important enough to backport,
+>CRYPTO_SKCIPHER will need to be changed to CRYPTO_BLKCIPHER.
 
---- Ursprüngliche Nachricht ---
-Von: Goffredo Baroncelli <kreijack@libero.it>
-Datum: 04.02.2021 19:13:50
-An: Cedric.dewijs@eclipso.eu, Andy Smith <andy@strugglers.net>
-Betreff: Re: put 2 hard drives in mdadm raid 1 and detect bitrot like btrfs  does, what's that called?
+I'll just drop it, thanks!
 
-[...]
-> Hey Andy,
-> 
-> I would rather see performance figures for these setups:
-> A) btrfs with 2 (or more) hard drives and one SSD in writeback bcache
-configuration (unsafe against failure of the ssd):
-> +-----------------------------+
-> |      btrfs raid 1 /mnt      |
-> +--------------+--------------+
-> | /dev/Bcache0 | /dev/Bcache1 |
-> +--------------+--------------+
-> |   bcache writeback Cache    |
-> |           /dev/sdk1         |
-> +--------------+--------------+
-> | Data         | Data         |
-> | /dev/sdv1    | /dev/sdw1    |
-> +--------------+--------------+
-
-Doing that, you loose the protection of raid1 redundancy: now there is a
-single point of failure /dev/sdk1. Writeback is even more dangerous...
-
-
-Not really. if bcache is set to read cache, the SSD can die at any moment, without btrfs loosing any data. All written data has gone straight to the hard drives. I have not tried this scenario, but I would be very surprised if reading the data from /mnt is even interrupted for longer than a few seconds if the data cable from the ssd is pulled while data is written from another process.
-
-You are correct about writeback cache, if /dev/sdk1 dies, all dirty data is lost, and even worse, both copies of the btrfs data are side by side on only the SSD. (But I already mentioned this in my previous mail: "unsafe against failure of the ssd")
-
-Cheers,
-Cedric
-
----
-
-Take your mailboxes with you. Free, fast and secure Mail &amp; Cloud: https://www.eclipso.eu - Time to change!
-
-
+-- 
+Thanks,
+Sasha
