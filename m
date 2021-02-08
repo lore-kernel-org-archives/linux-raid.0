@@ -2,87 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B61C433E6
-	for <linux-raid@archiver.kernel.org>; Mon,  8 Feb 2021 15:37:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E14C433DB
+	for <linux-raid@archiver.kernel.org>; Mon,  8 Feb 2021 18:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 226E464DFF
-	for <linux-raid@archiver.kernel.org>; Mon,  8 Feb 2021 15:37:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3F7E64E6B
+	for <linux-raid@archiver.kernel.org>; Mon,  8 Feb 2021 18:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234007AbhBHPgw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 8 Feb 2021 10:36:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56702 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232951AbhBHPee (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 Feb 2021 10:34:34 -0500
-Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B4BDC06178A
-        for <linux-raid@vger.kernel.org>; Mon,  8 Feb 2021 07:33:38 -0800 (PST)
-Received: by mail-il1-x12d.google.com with SMTP id y15so13079094ilj.11
-        for <linux-raid@vger.kernel.org>; Mon, 08 Feb 2021 07:33:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=0H5gUc/Wq6b2vAxOqVg+YwgeGcV8rQ3iyVtvXXPrGes=;
-        b=Y6lY/bRb0ctKLz7Pk1mEpg1pP9v8g2PnaaDUei58i2sVYDXeMZET0RsIdjFbB8lwRK
-         q4bYTdi2YSKLDHJ3KDxP+uQZjPyI9SfkFFqrG2VVb/GhngL6tyHhxerjCEe+jU8ABxqa
-         hn9VrbdYDF1ag0zj8z3vxr1Ft9gmzeTRemo40kDZvmwnhqB72/y/2pG9eoUxVe4VFMr2
-         c9xlNyyZv/6YGxiO42OwK4HcJamhR3+C9d9/xL2PL7DeKS1QrIX/PKNMCJN0g7JOrtP5
-         evzintbZTcwQbwRNvhVAbijnzXMMA+PFW/l+UAfl41MxG0HmkUTgGFfYznJ80Kfwff2a
-         3j7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0H5gUc/Wq6b2vAxOqVg+YwgeGcV8rQ3iyVtvXXPrGes=;
-        b=Np9jyUsoGekWzVUQSbUFxrSrcdIZVWacbh8jW5EMu0M/T6VekFODdP1ZvSMSonAC9V
-         +TAWcCKQaZzhTGm3KMv6dWtTFBhJBi6NTukkQZ6UrRzgjQ8UWyCO+tqSilG45wlVmaFN
-         APpmfm+bIoVbhLAviDlLdmFc1o9zlRulgeTRovYgMm7HTxs8i9ZAQ6APiL9N9salRt0R
-         yFftJe3iDnbNKBOQBiXjCwB7mK+COgPNP6RxvCrgJ0acVR7qMBPqdOHPIFqF/6M8VyVo
-         rFPaOYZwcXKEDZCAHsdTfvGESW3VvkfviYPMwjmNFHxU0yZ210mngJ4HMKyAEpaxwX+6
-         bjBg==
-X-Gm-Message-State: AOAM530T4KDLE4x0H8V9TNeC6RGWEpSdLPySA1sfQPueF6gS0ybQcrwu
-        g+SVkEzbZZEb+in572Vo8czyaQOxD7tPwXR1
-X-Google-Smtp-Source: ABdhPJzoFS2b5GM3tLGwIOj7IgKU4wrrx/0D0PqKLe5KSDaxqBaYUVNxBMK5FNK3AjTl4yo7Knqq0w==
-X-Received: by 2002:a92:444e:: with SMTP id a14mr15790169ilm.215.1612798417195;
-        Mon, 08 Feb 2021 07:33:37 -0800 (PST)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id f15sm8968817ilj.23.2021.02.08.07.33.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Feb 2021 07:33:36 -0800 (PST)
-Subject: Re: cleanup bvec allocation
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-raid@vger.kernel.org
-References: <20210202171929.1504939-1-hch@lst.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <c77fd1d7-25b1-af1c-04ec-959ffb1b509c@kernel.dk>
-Date:   Mon, 8 Feb 2021 08:33:36 -0700
+        id S235764AbhBHSmX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 8 Feb 2021 13:42:23 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:58971 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S235767AbhBHSmH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 8 Feb 2021 13:42:07 -0500
+Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id E23A620647914;
+        Mon,  8 Feb 2021 19:41:15 +0100 (CET)
+Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
+ transition
+To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        it+raid@molgen.mpg.de
+References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
+ <b289ae15-ff82-b36e-4be4-a1c8bbdbacd7@cloud.ionos.com>
+ <37c158cb-f527-34f5-2482-cae138bc8b07@molgen.mpg.de>
+ <efb8d47b-ab9b-bdb9-ee2f-fb1be66343b1@molgen.mpg.de>
+ <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
+ <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
+ <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de>
+ <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
+ <bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de>
+ <c3390ab0-d038-f1c3-5544-67ae9c8408b1@cloud.ionos.com>
+ <a27c5a64-62bf-592c-e547-1e8e904e3c97@molgen.mpg.de>
+ <6c7008df-942e-13b1-2e70-a058e96ab0e9@cloud.ionos.com>
+ <12f09162-c92f-8fbb-8382-cba6188bfb29@molgen.mpg.de>
+ <6757d55d-ada8-9b7e-b7fd-2071fe905466@cloud.ionos.com>
+ <93d8d623-8aec-ad91-490c-a414c4926fb2@molgen.mpg.de>
+ <0bb7c8d8-6b96-ce70-c5ee-ba414de10561@cloud.ionos.com>
+ <e271e183-20e9-8ca2-83eb-225d4d7ab5db@molgen.mpg.de>
+ <1cdfceb6-f39b-70e1-3018-ea14dbe257d9@cloud.ionos.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <7733de01-d1b0-e56f-db6a-137a752f7236@molgen.mpg.de>
+Date:   Mon, 8 Feb 2021 19:41:14 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210202171929.1504939-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1cdfceb6-f39b-70e1-3018-ea14dbe257d9@cloud.ionos.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/2/21 10:19 AM, Christoph Hellwig wrote:
-> Hi Jens,
+Dear Guoqing,
+
+On 08.02.21 15:53, Guoqing Jiang wrote:
 > 
-> This series cleans up various lose ends in the bvec allocator.
+> 
+> On 2/8/21 12:38, Donald Buczek wrote:
+>>> 5. maybe don't hold reconfig_mutex when try to unregister sync_thread, like this.
+>>>
+>>>          /* resync has finished, collect result */
+>>>          mddev_unlock(mddev);
+>>>          md_unregister_thread(&mddev->sync_thread);
+>>>          mddev_lock(mddev);
+>>
+>> As above: While we wait for the sync thread to terminate, wouldn't it be a problem, if another user space operation takes the mutex?
+> 
+> I don't think other places can be blocked while hold mutex, otherwise these places can cause potential deadlock. Please try above two lines change. And perhaps others have better idea.
 
-Applied, thanks.
+Yes, this works. No deadlock after >11000 seconds,
 
--- 
-Jens Axboe
+(Time till deadlock from previous runs/seconds: 1723, 37, 434, 1265, 3500, 1136, 109, 1892, 1060, 664, 84, 315, 12, 820 )
 
+Best
+   Donald
+> 
+> Thanks,
+> Guoqing
