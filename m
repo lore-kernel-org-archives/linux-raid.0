@@ -2,76 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B29A2C433E6
-	for <linux-raid@archiver.kernel.org>; Tue,  9 Feb 2021 09:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39BFCC433DB
+	for <linux-raid@archiver.kernel.org>; Tue,  9 Feb 2021 09:43:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8211B64E16
-	for <linux-raid@archiver.kernel.org>; Tue,  9 Feb 2021 09:28:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB08764E88
+	for <linux-raid@archiver.kernel.org>; Tue,  9 Feb 2021 09:43:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230317AbhBIJ2W (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 9 Feb 2021 04:28:22 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:40171 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229913AbhBIJZr (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 9 Feb 2021 04:25:47 -0500
-Received: from [192.168.0.5] (ip5f5aed2c.dynamic.kabel-deutschland.de [95.90.237.44])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S229717AbhBIJnY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 9 Feb 2021 04:43:24 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:42020 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230144AbhBIJlY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 9 Feb 2021 04:41:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612863598;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=dKcvbNtEe9bhwZiM4KBxe/TcRpV/gAq8AJZ9zHFDxWg=;
+        b=Et2s5zOCQJMmpibe9BlPIvTrovln7GEXdFJMZudrOszdg3D7f/N/3fyuj49I7zTrHNfacN
+        JazsxTa1c5ReP9+h9LR0iY7vFiYSs3ZLbEzrXP+7vIxDRDrTuv5yiYlqazI5wLN6dvjkYU
+        0DEcglhQwKGlB+BcQ3b5uvUj01ALbgc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-546-IciD3cIwM8GX4Tlb96HCTQ-1; Tue, 09 Feb 2021 04:39:56 -0500
+X-MC-Unique: IciD3cIwM8GX4Tlb96HCTQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 51D6120647915;
-        Tue,  9 Feb 2021 10:24:58 +0100 (CET)
-Subject: Re: md_raid: mdX_raid6 looping after sync_action "check" to "idle"
- transition
-To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        it+raid@molgen.mpg.de
-References: <aa9567fd-38e1-7b9c-b3e1-dc2fdc055da5@molgen.mpg.de>
- <efb8d47b-ab9b-bdb9-ee2f-fb1be66343b1@molgen.mpg.de>
- <55e30408-ac63-965f-769f-18be5fd5885c@molgen.mpg.de>
- <d95aa962-9750-c27c-639a-2362bdb32f41@cloud.ionos.com>
- <30576384-682c-c021-ff16-bebed8251365@molgen.mpg.de>
- <cdc0b03c-db53-35bc-2f75-93bbca0363b5@molgen.mpg.de>
- <bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de>
- <c3390ab0-d038-f1c3-5544-67ae9c8408b1@cloud.ionos.com>
- <a27c5a64-62bf-592c-e547-1e8e904e3c97@molgen.mpg.de>
- <6c7008df-942e-13b1-2e70-a058e96ab0e9@cloud.ionos.com>
- <12f09162-c92f-8fbb-8382-cba6188bfb29@molgen.mpg.de>
- <6757d55d-ada8-9b7e-b7fd-2071fe905466@cloud.ionos.com>
- <93d8d623-8aec-ad91-490c-a414c4926fb2@molgen.mpg.de>
- <0bb7c8d8-6b96-ce70-c5ee-ba414de10561@cloud.ionos.com>
- <e271e183-20e9-8ca2-83eb-225d4d7ab5db@molgen.mpg.de>
- <1cdfceb6-f39b-70e1-3018-ea14dbe257d9@cloud.ionos.com>
- <7733de01-d1b0-e56f-db6a-137a752f7236@molgen.mpg.de>
- <d92922af-f411-fc53-219f-154de855cd13@cloud.ionos.com>
-From:   Donald Buczek <buczek@molgen.mpg.de>
-Message-ID: <5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de>
-Date:   Tue, 9 Feb 2021 10:24:57 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <d92922af-f411-fc53-219f-154de855cd13@cloud.ionos.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32F0580196C;
+        Tue,  9 Feb 2021 09:39:55 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-8-28.pek2.redhat.com [10.72.8.28])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 478D660C04;
+        Tue,  9 Feb 2021 09:39:52 +0000 (UTC)
+From:   Xiao Ni <xni@redhat.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org, ncroxon@redhat.com
+Subject: [PATCH 1/1] It should be FAILED when raid has not enough active disks
+Date:   Tue,  9 Feb 2021 17:39:51 +0800
+Message-Id: <1612863591-5725-1-git-send-email-xni@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 09.02.21 01:46, Guoqing Jiang wrote:
+It can't remove the disk if there are not enough disks. For example, raid5 can't remove the
+second disk. If the second disk is unplug from machine, it's better show missing and the raid
+should be FAILED. It's better for administrator to monitor the raid.
 
-> Great. I will send a formal patch with your reported-by and tested-by.
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ Detail.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Yes, that's fine.
+diff --git a/Detail.c b/Detail.c
+index f8dea6f..cd26fb0 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -355,9 +355,14 @@ int Detail(char *dev, struct context *c)
+ 	avail = xcalloc(array.raid_disks, 1);
+ 
+ 	for (d = 0; d < array.raid_disks; d++) {
+-
+-		if ((disks[d*2].state & (1<<MD_DISK_SYNC)) ||
+-		    (disks[d*2+1].state & (1<<MD_DISK_SYNC))) {
++		char *dv, *dv_rep;
++		dv = map_dev_preferred(disks[d*2].major,
++				disks[d*2].minor, 0, c->prefer);
++		dv_rep = map_dev_preferred(disks[d*2+1].major,
++				disks[d*2+1].minor, 0, c->prefer);
++
++		if ((dv && (disks[d*2].state & (1<<MD_DISK_SYNC))) ||
++		    (dv_rep && (disks[d*2+1].state & (1<<MD_DISK_SYNC)))) {
+ 			avail_disks ++;
+ 			avail[d] = 1;
+ 		} else
+@@ -789,7 +794,8 @@ This is pretty boring
+ 						       &max_devices, n_devices);
+ 			else
+ 				printf("   %s", dv);
+-		}
++		} else if (disk.major | disk.minor)
++			printf("   missing");
+ 		if (!c->brief)
+ 			printf("\n");
+ 	}
+-- 
+2.7.5
 
-Thanks a lot for your help!
-
-Donald
-
-> 
-> Thanks,
-> Guoqing
