@@ -2,185 +2,114 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE13DC43381
-	for <linux-raid@archiver.kernel.org>; Sat, 13 Feb 2021 00:51:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20885C433DB
+	for <linux-raid@archiver.kernel.org>; Mon, 15 Feb 2021 04:06:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B9F364E02
-	for <linux-raid@archiver.kernel.org>; Sat, 13 Feb 2021 00:51:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D848C64DA8
+	for <linux-raid@archiver.kernel.org>; Mon, 15 Feb 2021 04:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231883AbhBMAvC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 12 Feb 2021 19:51:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57966 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231175AbhBMAvA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 Feb 2021 19:51:00 -0500
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EDF7C061574
-        for <linux-raid@vger.kernel.org>; Fri, 12 Feb 2021 16:50:19 -0800 (PST)
-Received: by mail-ed1-x530.google.com with SMTP id df22so1931682edb.1
-        for <linux-raid@vger.kernel.org>; Fri, 12 Feb 2021 16:50:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=Vjj9qYSvQfQbP8LLjapg+ws1IefrfhkmMhOgFWMI9Dc=;
-        b=fAbGDvI1TGWPqn3td7hD3uOCkZf4pzLKmA3WZsUtAjKRG4gWfC6ZZk6Pd1FMJGoWS7
-         +A7ouz97ZPcaxOuZUsr1gjXTH2UIL7FSDEQUCRZE0emHUDXNdTUSr0qjkTjMtNhUH36L
-         ydZlLAIN4WYkk/61UOAh/oEz+8q0JN2zsk6yJ6Mo+OEhrcvHTIXPaLdAo41ySifGVInH
-         o7F6/YfiV+oDGeRSZ68CDUBTF3MruMCAdXP5VfJNUzDOrtHnc40CWS4LrENM18EaKYEx
-         /HABoz8P0Y085huuwTaMi6Wg7fJzS3a/+4yG1rjViXmrPN1l0otdG8EXoCQCpdnrdEbW
-         XArg==
+        id S229892AbhBOEF7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 14 Feb 2021 23:05:59 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:35127 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229865AbhBOEF6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 14 Feb 2021 23:05:58 -0500
+Received: from mail-pj1-f70.google.com ([209.85.216.70])
+        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <matthew.ruffell@canonical.com>)
+        id 1lBV8L-0007be-V6
+        for linux-raid@vger.kernel.org; Mon, 15 Feb 2021 04:05:14 +0000
+Received: by mail-pj1-f70.google.com with SMTP id fv24so6754126pjb.9
+        for <linux-raid@vger.kernel.org>; Sun, 14 Feb 2021 20:05:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=Vjj9qYSvQfQbP8LLjapg+ws1IefrfhkmMhOgFWMI9Dc=;
-        b=nbvvcUeHKhTFDnadhtWla5+D/SUdp9vn7TwjQB/AuD/IEww5o7Inv6bs9ipWVHIjtP
-         w77mWQhe0CCwHRI4UVl9qy7caFHU0U8/vYcrHIB3/8U51SxBtyePTl3nLAEDp9jUHTPg
-         xx4t6eiw8NUChCL3MoIR1Vxw+G2XIQbltm0Ztg8QRkGcOM/DXQQH43FLMhwTYz7iVQVg
-         5hIdO8Y3HjfG9LRSGNgNaHri5ESto1jgh0PxQPCmKFqknbwNPfDYd7FratojsqTQqAVA
-         e6WZGnd6uCvWLhf4rOTkAGIJ781l3Z7GRyTJDrCRieTCJlT/CzK683TbUIbwG6HEDzH+
-         2HVQ==
-X-Gm-Message-State: AOAM531QyvT+g79bptVINS8OaYYNpler72N687KjYwjTJk/kdDz+vhGd
-        E+57Sx6lkF8Y0qWq7gT+X9rOFQ==
-X-Google-Smtp-Source: ABdhPJwUUaMKuOdiJtXAePFBpMkAkKWzwNC9+NnwNOWYpuQaM5sgSKzXETgpdcKfunQ5LYMJm75ilQ==
-X-Received: by 2002:aa7:ce13:: with SMTP id d19mr6123370edv.208.1613177418112;
-        Fri, 12 Feb 2021 16:50:18 -0800 (PST)
-Received: from gqjiang-home.profitbricks.net ([240e:304:2c81:30a4:4403:7938:f6d4:38b1])
-        by smtp.gmail.com with ESMTPSA id q10sm393817edr.51.2021.02.12.16.50.12
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 12 Feb 2021 16:50:17 -0800 (PST)
-From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-To:     song@kernel.org
-Cc:     agk@redhat.com, snitzer@redhat.com, linux-raid@vger.kernel.org,
-        dm-devel@redhat.com, Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Subject: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex held
-Date:   Sat, 13 Feb 2021 01:49:59 +0100
-Message-Id: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
-X-Mailer: git-send-email 2.7.4
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=VWBqI87tduJn9har2RYL9IFmen1Ulxt1xpKdHfRxynY=;
+        b=jrLtwkisj5EH8HYtqIJHRL2hEt2+ZpzSu789coViPeQUqEeUPIRRCWDJMdnxqckJnN
+         tHxciHo1ahSyc7LCogrMRA0yK5QQTGk5h0EvB2r3XVlg/zz+ecxD6rmczbI9yMMtNSnN
+         Uirm2k8jK/ZwywI//Da9NDclQK5DJmkJ/yRFVXbK3D8roCiVw2HKXOf89ah1unFn8R1D
+         g5AXjDstOJQHVEyVGTh3fyeqaIqnXLudRo4br2pZfEDz+Cl9FIcuHErt3kdfV7ItK/YC
+         2sUfg8cJOoZ+tnFh7S8uhJMq6XHF3oJkFyz4w5G/r6whaAIKvn2h1ecMreAD2fLij24r
+         6TOA==
+X-Gm-Message-State: AOAM530WESj1Hibfx0NxnMq31SGpdemT/sea8hqihQh0zq8sqP34bvuV
+        2wsYq7RbNp/iI4HOR56WvQSKoczNP8AvOZP96bX/RunjerxPXPY1Vk6g67fKIvrQvYxM8PRW8m6
+        qfoF5+AMYGaWyEyEzb64n89oa/GVPbcW+/XWeb50=
+X-Received: by 2002:a63:cd09:: with SMTP id i9mr112256pgg.407.1613361912520;
+        Sun, 14 Feb 2021 20:05:12 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxIYlCag0+rDSGeEHzMxZ4EP+9A7e7hLqE9gcpLhLsyQCa0DhO4lyrBphZULT2YnCUtVzKFsw==
+X-Received: by 2002:a63:cd09:: with SMTP id i9mr112235pgg.407.1613361912228;
+        Sun, 14 Feb 2021 20:05:12 -0800 (PST)
+Received: from [192.168.1.107] (222-152-178-139-fibre.sparkbb.co.nz. [222.152.178.139])
+        by smtp.gmail.com with ESMTPSA id 194sm16168354pfu.165.2021.02.14.20.05.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 14 Feb 2021 20:05:11 -0800 (PST)
+Subject: Re: [PATCH V2 0/5] md/raid10: Improve handling raid10 discard request
+To:     Xiao Ni <xni@redhat.com>, songliubraving@fb.com
+Cc:     linux-raid@vger.kernel.org, colyli@suse.de,
+        guoqing.jiang@cloud.ionos.com, ncroxon@redhat.com
+References: <1612425047-10953-1-git-send-email-xni@redhat.com>
+From:   Matthew Ruffell <matthew.ruffell@canonical.com>
+Message-ID: <d86c7211-787f-ee34-d2c1-cf780ecd9322@canonical.com>
+Date:   Mon, 15 Feb 2021 17:05:06 +1300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.1
+MIME-Version: 1.0
+In-Reply-To: <1612425047-10953-1-git-send-email-xni@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Unregister sync_thread doesn't need to hold reconfig_mutex since it
-doesn't reconfigure array.
+Hi Xiao,
 
-And it could cause deadlock problem for raid5 as follows:
+Thanks for posting the patchset. I have been testing them over the past week,
+and they are looking good.
 
-1. process A tried to reap sync thread with reconfig_mutex held after echo
-   idle to sync_action.
-2. raid5 sync thread was blocked if there were too many active stripes.
-3. SB_CHANGE_PENDING was set (because of write IO comes from upper layer)
-   which causes the number of active stripes can't be decreased.
-4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was not able
-   to hold reconfig_mutex.
+I backported [0] the patchset to the Ubuntu 4.15, 5.4 and 5.8 kernels, and I have
+been testing them on public clouds.
 
-More details in the link:
-https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
+[0] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1896578/comments/13
 
-And add one parameter to md_reap_sync_thread since it could be called by
-dm-raid which doesn't hold reconfig_mutex.
+For performance, formatting a Raid10 array on NVMe disks drops from 8.5 minutes 
+to about 6 seconds [1], on AWS i3.8xlarge with 4x 1.7TB disks, due to the 
+speedup in block discard.
 
-Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
-Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
----
-V2:
-1. add one parameter to md_reap_sync_thread per Jack's suggestion.
+[1] https://paste.ubuntu.com/p/NNGqP3xdsc/
 
- drivers/md/dm-raid.c |  2 +-
- drivers/md/md.c      | 14 +++++++++-----
- drivers/md/md.h      |  2 +-
- 3 files changed, 11 insertions(+), 7 deletions(-)
+I have also tested the data corruption reproducer from my original problem 
+report [2], and I have found that throughout each of the steps of formatting the 
+array, doing a consistency check, writing data, doing a consistency check, 
+issuing a fstrim, doing a consistency check, the /sys/block/md0/md/mismatch_cnt 
+was always 0, and all deep fsck checks came back clean for individual disks [3].
 
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index cab12b2..0c4cbba 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -3668,7 +3668,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
- 	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
- 		if (mddev->sync_thread) {
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--			md_reap_sync_thread(mddev);
-+			md_reap_sync_thread(mddev, false);
- 		}
- 	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
- 		return -EBUSY;
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ca40942..0c12b7f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4857,7 +4857,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
- 				flush_workqueue(md_misc_wq);
- 			if (mddev->sync_thread) {
- 				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--				md_reap_sync_thread(mddev);
-+				md_reap_sync_thread(mddev, true);
- 			}
- 			mddev_unlock(mddev);
- 		}
-@@ -6234,7 +6234,7 @@ static void __md_stop_writes(struct mddev *mddev)
- 		flush_workqueue(md_misc_wq);
- 	if (mddev->sync_thread) {
- 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--		md_reap_sync_thread(mddev);
-+		md_reap_sync_thread(mddev, true);
- 	}
- 
- 	del_timer_sync(&mddev->safemode_timer);
-@@ -9256,7 +9256,7 @@ void md_check_recovery(struct mddev *mddev)
- 			 * ->spare_active and clear saved_raid_disk
- 			 */
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--			md_reap_sync_thread(mddev);
-+			md_reap_sync_thread(mddev, true);
- 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
- 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
-@@ -9291,7 +9291,7 @@ void md_check_recovery(struct mddev *mddev)
- 			goto unlock;
- 		}
- 		if (mddev->sync_thread) {
--			md_reap_sync_thread(mddev);
-+			md_reap_sync_thread(mddev, true);
- 			goto unlock;
- 		}
- 		/* Set RUNNING before clearing NEEDED to avoid
-@@ -9364,14 +9364,18 @@ void md_check_recovery(struct mddev *mddev)
- }
- EXPORT_SYMBOL(md_check_recovery);
- 
--void md_reap_sync_thread(struct mddev *mddev)
-+void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held)
- {
- 	struct md_rdev *rdev;
- 	sector_t old_dev_sectors = mddev->dev_sectors;
- 	bool is_reshaped = false;
- 
- 	/* resync has finished, collect result */
-+	if (reconfig_mutex_held)
-+		mddev_unlock(mddev);
- 	md_unregister_thread(&mddev->sync_thread);
-+	if (reconfig_mutex_held)
-+		mddev_lock_nointr(mddev);
- 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
- 	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
- 	    mddev->degraded != mddev->raid_disks) {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 34070ab..7ae3d98 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -705,7 +705,7 @@ extern struct md_thread *md_register_thread(
- extern void md_unregister_thread(struct md_thread **threadp);
- extern void md_wakeup_thread(struct md_thread *thread);
- extern void md_check_recovery(struct mddev *mddev);
--extern void md_reap_sync_thread(struct mddev *mddev);
-+extern void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held);
- extern int mddev_init_writes_pending(struct mddev *mddev);
- extern bool md_write_start(struct mddev *mddev, struct bio *bi);
- extern void md_write_inc(struct mddev *mddev, struct bio *bi);
--- 
-2.7.4
+[2] https://www.spinics.net/lists/kernel/msg3765302.html
+[3] https://paste.ubuntu.com/p/5DK57TzdFH/
 
+So I think your patches do solve the data corruption problem. Great job.
+
+To try and get some more eyes on the patches, I have provided my test kernels to
+5 other users who are hitting the Raid10 block discard performance problem, and
+I have asked them to test on spare test servers, and to provide feedback on
+performance and data safety.
+
+I will let you know their feedback as it comes in.
+
+As for getting this merged, I actually agree with Song, the 5.12 merge window
+is happening right now, and it is a bit too soon for large changes like this. 
+I think we should wait for the 5.13 merge window. That way we can do some more 
+testing, get feedback from some users, and make sure we don't cause any more 
+data corruption regressions.
+
+I will write back soon with some user feedback and more test results.
+
+Thanks,
+Matthew
