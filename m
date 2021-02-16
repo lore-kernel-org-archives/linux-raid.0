@@ -2,106 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F3AC433E0
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Feb 2021 14:29:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81729C433DB
+	for <linux-raid@archiver.kernel.org>; Tue, 16 Feb 2021 14:31:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C99764DEC
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Feb 2021 14:29:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C2B064DF5
+	for <linux-raid@archiver.kernel.org>; Tue, 16 Feb 2021 14:31:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230124AbhBPO3i (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 16 Feb 2021 09:29:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:29313 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230104AbhBPO3e (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 16 Feb 2021 09:29:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613485686;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kT8OQv/AhVbJZfxFFIWK9G3TxTZ5snJNw2OyCKigk7Y=;
-        b=aVomsOzdbFYhaZYGeo9FHXQuYaJfYaR/r77wFqZ4mKwIKhWNE0H7cGO5gYAbe7JFMnaCO3
-        h56NqsYomel5Sr7uGY6XSvDSeFJjffr8mxGcTWLgMoFgf5ESplUzwOoTMyYOMRfK1Z8jIs
-        hNZ2X/dXOqOR8c8ul9VruHUcDxhK/D4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-6-GW_9Y8NLMCi18l9WfEL_mw-1; Tue, 16 Feb 2021 09:28:05 -0500
-X-MC-Unique: GW_9Y8NLMCi18l9WfEL_mw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S230042AbhBPObT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 16 Feb 2021 09:31:19 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:38621 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229924AbhBPObN (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 16 Feb 2021 09:31:13 -0500
+Received: from torchwood.molgen.mpg.de (torchwood.molgen.mpg.de [141.14.21.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 081F2814304;
-        Tue, 16 Feb 2021 14:28:04 +0000 (UTC)
-Received: from ovpn-113-83.rdu2.redhat.com (ovpn-113-83.rdu2.redhat.com [10.10.113.83])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7D0FF60CE9;
-        Tue, 16 Feb 2021 14:28:03 +0000 (UTC)
-From:   Nigel Croxon <ncroxon@redhat.com>
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.60.0.2.21\))
-Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
-Date:   Tue, 16 Feb 2021 09:28:02 -0500
-References: <20210120200542.19139-1-ncroxon@redhat.com>
-To:     linux-raid@vger.kernel.org, jes@trained-monkey.org,
-        Xiao Ni <xni@redhat.com>
-In-Reply-To: <20210120200542.19139-1-ncroxon@redhat.com>
-Message-Id: <8BA6E41D-F35C-4261-88BE-6A32EB27F57D@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+        (Authenticated sender: kreitler)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 9F65120647939;
+        Tue, 16 Feb 2021 15:30:30 +0100 (CET)
+Subject: Re: mdxxx_raid6 kernel thread frozen
+To:     "Michael D. O'Brien" <obrienmd@gmail.com>,
+        linux-raid@vger.kernel.org
+References: <CACs3Z9oqWPRt4uT1pYKMHzH+7JHNtsk_stE_-OmQZSQsy4n46g@mail.gmail.com>
+From:   Thomas Kreitler <kreitler@molgen.mpg.de>
+Message-ID: <0d37d776-ef5e-8a8d-ab45-bd0addd17184@molgen.mpg.de>
+Date:   Tue, 16 Feb 2021 15:30:30 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
+MIME-Version: 1.0
+In-Reply-To: <CACs3Z9oqWPRt4uT1pYKMHzH+7JHNtsk_stE_-OmQZSQsy4n46g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Any update on accepting this patch ?
 
-> On Jan 20, 2021, at 3:05 PM, Nigel Croxon <ncroxon@redhat.com> wrote:
->=20
-> Reshaping a 3-disk RAID5 to 4-disk RAID6 will cause a hang of
-> the resync after the grow.
->=20
-> Adding a spare disk to avoid degrading the array when growing
-> is successful, but not successful when supplying a backup file
-> on the command line. If the reshape job is not already running,
-> set the sync_max value to max.
->=20
-> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
-> ---
-> Grow.c | 7 +++++--
-> 1 file changed, 5 insertions(+), 2 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 6b8321c..5c2512f 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -931,12 +931,15 @@ int start_reshape(struct mdinfo *sra, int =
-already_running,
-> 	err =3D err ?: sysfs_set_num(sra, NULL, "sync_max", =
-sync_max_to_set);
-> 	if (!already_running && err =3D=3D 0) {
-> 		int cnt =3D 5;
-> +		int err2;
-> 		do {
-> 			err =3D sysfs_set_str(sra, NULL, "sync_action",
-> 					    "reshape");
-> -			if (err)
-> +			err2 =3D sysfs_set_str(sra, NULL, "sync_max",
-> +					    "max");
-> +			if (err || err2)
-> 				sleep(1);
-> -		} while (err && errno =3D=3D EBUSY && cnt-- > 0);
-> +		} while (err && err2 && errno =3D=3D EBUSY && cnt-- > =
-0);
-> 	}
-> 	return err;
-> }
-> --=20
-> 2.20.1
->=20
+On 2021-02-15 22:31, Michael D. O'Brien wrote:
+> Hi, I have a single mdadm raid6 in a 56-drive raid60 (7x8) with a
+> kernel thread stuck at 100% cpu. The stuck thread typically happens
+> during array checks, but is not the resync thread - md122_raid6 is at
+> 100% cpu, whereas md122_resync is at ~0%. When this happens, the
+> reported sync speed drops until it reaches 4K/sec. Setting sync_action
+> to idle gets stuck.
+> 
+> iostat shows backing devices aren't doing anything i/o wise, SMART is
+> clean for all member drives, and dmesg doesn't say anything useful
+> (until the thread is hung for a long time, then it tells me as much -
+> I'll post that message when the current issue times out). A reboot
+> typically clears the issue, but takes quite a long time, as the raid
+> 60 is the backing device for a bcache device (with an optane cache)
+> that has a large mounted xfs file system in place.
+> 
+> I figured I could strace the process, but I learned that's impossible
+> with kernel threads :)
+> 
+[...]
 
+Hello Michael,
+
+This sounds pretty much the same what we have experienced whilst 
+checking raid6 assemblies.
+
+The issue is actively tackled in the moment, c.f the "[PATCH V2] md: 
+don't unregister sync_thread with reconfig_mutex held" thread.
+
+And more details in the link:
+https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
+
+
+Kind regards,
+
+	Thomas
+
+
+-- 
+Thomas Kreitler - Information Retrieval
+kreitler@molgen.mpg.de
+49/30/8413 1702
