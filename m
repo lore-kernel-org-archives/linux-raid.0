@@ -2,92 +2,75 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C179C433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Feb 2021 08:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 764ADC433E0
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Feb 2021 10:06:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D36B760C40
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Feb 2021 08:53:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F15264E24
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Feb 2021 10:06:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232038AbhBQIx4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Feb 2021 03:53:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33180 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbhBQIxx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Feb 2021 03:53:53 -0500
-Received: from mail-ua1-x934.google.com (mail-ua1-x934.google.com [IPv6:2607:f8b0:4864:20::934])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6722C061574
-        for <linux-raid@vger.kernel.org>; Wed, 17 Feb 2021 00:53:12 -0800 (PST)
-Received: by mail-ua1-x934.google.com with SMTP id n11so2835202uap.10
-        for <linux-raid@vger.kernel.org>; Wed, 17 Feb 2021 00:53:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=5jOsamckWNjO9AHxBIuLZbQoCQ6fAozjYX66GZLvOB0=;
-        b=jTnGrPWsFhJqq+EWqX8IShazDY1r7kYZMv5SfA0GOvEvUD4D/0zaCzBCvEDGtZqUh4
-         y1xzu/m9IGFGPx4L7LWy/NjgTkkvS7nQ03JKx8Khv+nrR6S/KgOR/A7N8F/hCYSAqTwW
-         asbkGtGE467s9Vzel7uyVvFq89RsI5PUYsWl3AeqYPqw4TbLTe/e5r6IOmNWaBv6FkX/
-         m2EA+ECYkrOFqTXs6ymmPTJBw3xa/QnG9hxhwi5lxR4iSeDf8Uk3Cn9hdupAcRUUZwEv
-         8ut8J1dg1gt+Xp7ueWrMOD8IhoV6cl4yiWz7Xiv2qh5FIUMaDzYlsyt4VOej/q/+gYYJ
-         89eg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=5jOsamckWNjO9AHxBIuLZbQoCQ6fAozjYX66GZLvOB0=;
-        b=ZlmlhCRDPofCR5lHoTRGzsAxe/W+aDMzRL32OCE5L49sfLILClwfMn6YAp9uZu7Ypg
-         kdEimYVacstmfJ6U5Rxqpdrn2KFCZTJKznkjQLPbqVl6HckLlScLAYr4wjUd2IHWQNrw
-         7r99GJ/ayj6rLx5qL6ZhDw5dtrBdoPSN/IzD/wTCFZNL95UYc6qLiTL2qsKVJhJaxdXS
-         Vq17iwl31/dA0F0lvFJ4tVqG6GB8XkRs3Cn8RIgCi/94U3CCYXLJkY6nRXYSR8O6x1RC
-         0k9t6YHhqnK7dd7QaptZilQzP2/KmyImtbaN+S9/vcUSU58rmBorA48eF9dV+0DBEnFe
-         tyhA==
-X-Gm-Message-State: AOAM532FUwIQvZ4/7g1Wis0Dn1bM3WQCMF+AIxHOckT6+oQF8RhG06Rr
-        0sWwq8EyrVS7QClZcvMgzSpIIXNbJuRqTL78jWpHYVlMlXY=
-X-Google-Smtp-Source: ABdhPJw30EQmsjVzJzO9bc2UkREZ0txSvEo9gQBAswk/P+ihqNpF/j9vwfgMAYW97FOl/sgeR9zLonhWjYfqNQJHVMM=
-X-Received: by 2002:ab0:6614:: with SMTP id r20mr13975930uam.68.1613551991171;
- Wed, 17 Feb 2021 00:53:11 -0800 (PST)
+        id S232041AbhBQKFu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Feb 2021 05:05:50 -0500
+Received: from SMTP.sabi.co.UK ([72.249.182.114]:40162 "EHLO sabi.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230045AbhBQKFq (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 17 Feb 2021 05:05:46 -0500
+X-Greylist: delayed 337 seconds by postgrey-1.27 at vger.kernel.org; Wed, 17 Feb 2021 05:05:46 EST
+Received: from b2b-5-147-245-68.unitymedia.biz ([5.147.245.68] helo=sabi.co.uk)
+        by sabi.co.uk with esmtpsa(Cipher TLS1.2:RSA_AES_256_CBC_SHA1:256)(Exim 4.82 id 1lCIsx-0006Dm-Ae        id 1lCIsx-0006Dm-Aeby authid <sabity>with cram
+        for <linux-raid@vger.kernel.org>; Wed, 17 Feb 2021 09:12:39 +0000
+Received: from [127.0.0.1] (helo=cyme.ty.sabi.co.uk)
+        by sabi.co.uk with esmtps(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)(Exim 4.93 5)
+        id 1lCIso-006dCg-Pw
+        for <linux-raid@vger.kernel.org>; Wed, 17 Feb 2021 10:12:30 +0100
 MIME-Version: 1.0
-References: <CAC6SzHLHq9yX+dtcYwYyhfoTufFYohg_ZMmaSv6-HVt4e-m-hA@mail.gmail.com>
- <20210217110923.62fd685f@natsu>
-In-Reply-To: <20210217110923.62fd685f@natsu>
-From:   d tbsky <tbskyd@gmail.com>
-Date:   Wed, 17 Feb 2021 16:52:59 +0800
-Message-ID: <CAC6SzHKj8J9nSAcvtFvAC4o1_iQCEhpY9R5305RA1nzB6bFKPA@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <24620.56829.93946.65275@cyme.ty.sabi.co.uk>
+Date:   Wed, 17 Feb 2021 10:12:29 +0100
+To:     list Linux RAID <linux-raid@vger.kernel.org>
 Subject: Re: use ssd as write-journal or lvm-cache?
-To:     Roman Mamedov <rm@romanrm.net>
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAC6SzHLHq9yX+dtcYwYyhfoTufFYohg_ZMmaSv6-HVt4e-m-hA@mail.gmail.com>
+References: <CAC6SzHLHq9yX+dtcYwYyhfoTufFYohg_ZMmaSv6-HVt4e-m-hA@mail.gmail.com>
+X-Mailer: VM 8.2.0b under 26.3 (x86_64-pc-linux-gnu)
+From:   pg@mdraid.list.sabi.co.UK (Peter Grandi)
+X-Disclaimer: This message contains only personal opinions
+X-Blacklisted-At: 
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Roman Mamedov <rm@romanrm.net>
->
-> On Wed, 17 Feb 2021 11:27:58 +0800
-> Why not both? It's not like you have to use the entire SSD for one or the
-> other. And it's very unlikely anything will be bottlenecked by concurrent
-> access to the SSD from both mechanisms.
+> I was to use ssd to cache my mdadm-raid5 + lvm storage.
 
-   if I use both, then data may write twice to the same ssd, it seems waste.
+Not that sure that layering MDADM on top of DM/LVM2 is always a
+good idea, I tend to prefer to keep things simple.
 
-> Choosing one, I would prefer LVM caching, since it also gives benefit for
-> reads. And the mdadm write journal feature sounds[1] more like of a
-> reliability, not a performance enhancement.
+> but I wonder if I should use them as lvm-cache or mdadm write
+> journal.  lvm-cache has benefits that it can do also
+> read-cache. but I wonder if full-stripe write is the key point
+> I need.
 
-   at final stage data write to disk with any kind of cache. so if the
-data can write to disk with optimized method,
-it seems speed up the whole thing. read-cache is fine, but I don't
-know how much benefit it will bring.
+It depends on your load; does the small chance of RAID5 "write
+hole" matter to your load? MDRAID has been used for a long time
+without having a write journal, as the "write hole" issue
+happens rarely and does not always matter. Anyhow with a write
+journal, slow "resyncs" are avoided, which may also be
+convenient (using the journal as a write buffer is not not that
+coherent).
 
-> In any case, in order to not add a single point of failure to the array,
-> better rely not on SSD being a "datacenter" one (anything can fail), but use a
-> RAID1 of two SSDs.
+Also, the MDRAID write journal is usually (and should be) a lot
+smaller than a whole flash SSD unit, so you can use a small part
+of a flash SSD for write journaling and most of it for caching.
 
-   yes raid1 is must. "datacenter" ssd can protect the ssd-cache so it
-won't suffer with power outage. so I think I can enable write-back
-mode safely.
+Whether caching is useful, and whether DM/LVM2 caching in
+particular is useful, depends a lot on the specific load.
+
+Apart from DM/LVM2 caching there is also "bcache", and there is
+a new and fairly reliable filesystem type, "bcachefs", that
+integrates it and gives quite neatly multiple tiers of storage
+(it also has some RAID aspects, but those can be ignored).
+
+https://www.reddit.com/r/bcachefs/comments/l44lmj/list_of_some_useful_links_for_bcachefs/
