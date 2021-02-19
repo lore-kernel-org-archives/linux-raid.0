@@ -2,72 +2,72 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E82D1C433DB
-	for <linux-raid@archiver.kernel.org>; Thu, 18 Feb 2021 12:07:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3158FC433DB
+	for <linux-raid@archiver.kernel.org>; Fri, 19 Feb 2021 20:46:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A67A564D79
-	for <linux-raid@archiver.kernel.org>; Thu, 18 Feb 2021 12:07:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD9C364E76
+	for <linux-raid@archiver.kernel.org>; Fri, 19 Feb 2021 20:46:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231899AbhBRMHE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 18 Feb 2021 07:07:04 -0500
-Received: from mga02.intel.com ([134.134.136.20]:60109 "EHLO mga02.intel.com"
+        id S229689AbhBSUqr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 19 Feb 2021 15:46:47 -0500
+Received: from vps.thesusis.net ([34.202.238.73]:48060 "EHLO vps.thesusis.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232001AbhBRJcn (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 18 Feb 2021 04:32:43 -0500
-IronPort-SDR: egxTiSJE6rgFfD1UxzNhlhSMjvQ/Ul4vzUYO3KyNsg9uypL7HztOWY/rzwCpBf7pz4L8wFRN86
- VHN8Y1U16FNw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9898"; a="170581367"
-X-IronPort-AV: E=Sophos;i="5.81,186,1610438400"; 
-   d="scan'208";a="170581367"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2021 01:30:54 -0800
-IronPort-SDR: i34OQFXi8O5Y62An2baQrob5dvcxAU3lx5KsvwFlwdkLhx0nMz+XEZsqlgfm+qeyBMe8IgJTMN
- utKRYWw++XJQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.81,186,1610438400"; 
-   d="scan'208";a="427085944"
-Received: from linux.intel.com ([10.54.29.200])
-  by FMSMGA003.fm.intel.com with ESMTP; 18 Feb 2021 01:30:54 -0800
-Received: from [10.249.158.176] (mtkaczyk-MOBL1.ger.corp.intel.com [10.249.158.176])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id B56AC580514;
-        Thu, 18 Feb 2021 01:30:53 -0800 (PST)
-Subject: Re: md read-only fixes
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org
-References: <20210201131721.750412-1-hch@lst.de>
- <656b8eb7-b2a1-b6ac-5620-29cb59fe5def@kernel.dk>
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-Message-ID: <60682445-c768-f003-157d-9c768c54983e@linux.intel.com>
-Date:   Thu, 18 Feb 2021 10:30:51 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S229555AbhBSUqr (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 19 Feb 2021 15:46:47 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by vps.thesusis.net (Postfix) with ESMTP id 5E33621B2C
+        for <linux-raid@vger.kernel.org>; Fri, 19 Feb 2021 15:30:02 -0500 (EST)
+Received: from vps.thesusis.net ([IPv6:::1])
+        by localhost (vps.thesusis.net [IPv6:::1]) (amavisd-new, port 10024)
+        with ESMTP id L0F1mJkIjV-A for <linux-raid@vger.kernel.org>;
+        Fri, 19 Feb 2021 15:30:02 -0500 (EST)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+        id 1141A21B37; Fri, 19 Feb 2021 15:30:02 -0500 (EST)
+User-agent: mu4e 1.5.7; emacs 26.3
+From:   Phillip Susi <phill@thesusis.net>
+To:     linux-raid@vger.kernel.org
+Subject: Raid10 reshape bug
+Date:   Fri, 19 Feb 2021 15:13:07 -0500
+Message-ID: <87tuq7g5rp.fsf@vps.thesusis.net>
 MIME-Version: 1.0
-In-Reply-To: <656b8eb7-b2a1-b6ac-5620-29cb59fe5def@kernel.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 01.02.2021 17:35, Jens Axboe wrote:
-> On 2/1/21 6:17 AM, Christoph Hellwig wrote:
->> Hi all,
->>
->> patch 1 fixes a regression in md in for-5.12/block, and patch 2
->> fixes a little inconsistency in the same area.
-> 
-> Applied, thanks.
-> 
+In the process of upgrading a xen server I broke the previous raid1 and
+used the removed disk to create a new raid10 to prepare the new install.
+I think initially I created it in the default near configuration, so I
+reshaped it to offset with 1M chunk size.  I got the domUs up and
+running again and was pretty happy with the result, so I blew away the
+old system disk and added that disk to the new array and allowed it to
+sync.  Then I thought that the 1M chunk size was hurting performance, so
+I requested a reshape to a 256k chunk size with mdadm -G /dev/md0 -c
+256.  It looked like it was proceeding fine so I went home for the
+night.
 
-Hi Song,
-Could you cherry-pick those fixes? The issue blocks our daily tests.
+When I came in this morming, mdadm -D showed that the reshape was
+complete, but I started getting ELF errors and such running various
+programs and I started to get a feeling that something had gone horribly
+wrong.  At one point I was trying to run blockdev --getsz and isntead
+the system somehow ran findmnt.  mdadm -E showed that there was a very
+large unused section of the disk both before and after.  This is
+probably because I had used -s to restrict the used size of the device
+to be only 256g instead of the full 2tb so it wouldn't take so long to
+resync, and since there was plenty of unused space, md decided to just
+write back the new layout stripes in unused space further down the disk.
+At this point I rebooted and grub could not recognize the filesystem.  I
+booted other media and tried an e2fsck but it had so many complaints,
+one of which being that the root directory was not, in fact, a directory
+so it deleted it that I just gave up and started reinstalling and
+restoring the domU from backup.
 
-Thanks,
-Mariusz
+Clearly somehow the reshape process did NOT write the data back to the
+disk in the correct place.  This was using debian testing with linux
+5.10.0 and mdadm v4.1.
+
+I will try to reproduce it in a vm at some point.
