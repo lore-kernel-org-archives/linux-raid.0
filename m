@@ -2,229 +2,351 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,ZIPFILE autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F6CCC433DB
-	for <linux-raid@archiver.kernel.org>; Fri, 26 Feb 2021 01:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A409C433E0
+	for <linux-raid@archiver.kernel.org>; Fri, 26 Feb 2021 14:11:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB79464F21
-	for <linux-raid@archiver.kernel.org>; Fri, 26 Feb 2021 01:03:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B9ED64EED
+	for <linux-raid@archiver.kernel.org>; Fri, 26 Feb 2021 14:11:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbhBZBDZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 25 Feb 2021 20:03:25 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54474 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231414AbhBZBDW (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 25 Feb 2021 20:03:22 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E912FAAC5;
-        Fri, 26 Feb 2021 01:02:40 +0000 (UTC)
-From:   NeilBrown <neilb@suse.de>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Date:   Fri, 26 Feb 2021 12:02:36 +1100
-Subject: [PATCH mdadm] Grow: be careful of corrupt dev_roles list
-cc:     linux-raid@vger.kernel.org
-Message-ID: <87pn0niqtv.fsf@notabene.neil.brown.name>
+        id S229845AbhBZOLP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 26 Feb 2021 09:11:15 -0500
+Received: from mx224fe01.twtmail.twt.it ([82.113.195.224]:56468 "EHLO
+        mx224fe01.twtmail.twt.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230207AbhBZOK4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 Feb 2021 09:10:56 -0500
+X-Greylist: delayed 344 seconds by postgrey-1.27 at vger.kernel.org; Fri, 26 Feb 2021 09:10:51 EST
+X-TWT-CheckIP: Proto=SMTP,IP=182.189.77.58,Type=External,Sender=Ufficio.Qualita@vvinternational.eu
+X-AttachExt: zip
+X-ExtScanner: Niversoft's FindAttachments (free)
+X-CMAE-Analysis: v=2.4 cv=W8uG6Tak c=1 sm=0 tr=0 ts=6038ffdb a=v6AD90q49ckYXKQ9fZVmGA==:117 a=v6AD90q49ckYXKQ9fZVmGA==:17 a=MKtGQD3n3ToA:10 a=qa6Q16uM49sA:10 a=AlNeH9IwYn4A:10 a=ZZnuYtJkoWoA:10 a=oz8MWdLqAAAA:8 a=BgFWV8DkFUaJGPVjrGYA:9 a=QEXdDO2ut3YA:10 a=mYihPoKyZr7LCHSAKVgA:9 a=IKIoO-ieCDEA:10 a=7qx8gLC0iM8A:10 a=wDOl-8IaFK0A:10 a=ckal8g68nOMA:10 a=Yy2xoct6d_2ZlxTvqP-Z:22 a=dZxWB2tDc_uFecB2NZd2:22
+X-CMAE-Analysis: v=2.4 cv=W8uG6Tak c=1 sm=0 tr=0 ts=6038ffdb a=v6AD90q49ckYXKQ9fZVmGA==:117 a=v6AD90q49ckYXKQ9fZVmGA==:17 a=MKtGQD3n3ToA:10 a=qa6Q16uM49sA:10 a=AlNeH9IwYn4A:10 a=ZZnuYtJkoWoA:10 a=oz8MWdLqAAAA:8 a=BgFWV8DkFUaJGPVjrGYA:9 a=QEXdDO2ut3YA:10 a=mYihPoKyZr7LCHSAKVgA:9 a=IKIoO-ieCDEA:10 a=7qx8gLC0iM8A:10 a=wDOl-8IaFK0A:10 a=ckal8g68nOMA:10 a=Yy2xoct6d_2ZlxTvqP-Z:22 a=dZxWB2tDc_uFecB2NZd2:22
+X-Scanned-By: MPP/Cloudmark http://www.messagepartners.com
+X-Scanned-By: This message was scanned by Mailspect MPP v.5 for TWT S.p.A.
+X-Scanned-By: MPP/Clamd http://www.messagepartners.com
+Received: from [182.189.77.58] (account ufficio.qualita@vvinternational.eu HELO smtp.vvinternational.eu)
+  by vvinternational.eu (CommuniGate Pro SMTP 6.1.17l)
+  with ESMTPSA id 133221994 for linux-raid@vger.kernel.org; Fri, 26 Feb 2021 15:04:10 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha256; protocol="application/pgp-signature"
+Date:   Fri, 26 Feb 2021 15:04:09 +0100
+Content-Type: multipart/mixed; boundary="------------070706000308070408040501"
+X-Priority: 3 (Normal)
+Subject: Re: [zfs-discuss]  Fwd: [OT][X-POST] RAID-6 hw rebuild speed
+From:   "rob_mailing_lists&rbabb net" <Ufficio.Qualita@vvinternational.eu>
+To:     "Linux RAID Mailing List" <linux-raid@vger.kernel.org>
+In-Reply-To: <5FC62A4F.9000100@youngman.org.uk>
+References: <5FC62A4F.9000100@youngman.org.uk>
+Message-ID: <C23EDB1A0E6DB7CEEDF5FD24FF7C9BD44811F208@unknown>
+X-Sender: Ufficio.Qualita@vvinternational.eu
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain
+--------------070706000308070408040501
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8; format=flowed
 
+ Greetings! As you required, I have found to you several necessary=0Adocume=
+nts and attached them to this email. If you will want to find=0Aadditional =
+information, you know, who can provide it. =0A=0A=0AOn 2020-12-01 12:34, Li=
+nux RAID Mailing List wrote:=0A> On 01/12/20 09:57, Gandalf Corvotempesta w=
+rote: > Sorry for the OT and=0A> X-POST but these 2 lists are full of skill=
+ed > storage engineer. > For a=0A> very,very,very,very long time I used 15k=
+ SAS 3.5'' disks. A > RAID-6=0A> hardware (8 disks) took about 20 hours to =
+rebuild. > > Now I've replaced a=0A> 3.5 disks with a 15k SAS 2.5'' disk. r=
+aid is > rebuilding properly, but the=0A> ETA is less then 1 hours. > > I'v=
+e moved from a 20 hours rebuild to about=0A> 50 minutes rebuild, by > just =
+changing one 3.5' disks with a 2.5' > > Is=0A> this normal ? I'm thinking s=
+omething strange is happening > Your rebuild=0A> time is effectively the ti=
+me it takes to write to the new disk. So I'm=0A> guessing if you had to wip=
+e and rebuild one of the old disks it would again=0A> be 20 hours. So what'=
+s different about the new disk? Yes I know it's a=0A> 2.5". But could it be=
+ it's SATA-3 as opposed to the old ones being SATA-2?=0A> There's a whole b=
+unch of things it could be. But my money's on it having a=0A> bigger cache.=
+ The ETA is based on how fast it can read from the existing=0A> array and t=
+he rebuild hasn't yet filled the cache. Once that fills up and=0A> the disk=
+ write speed kicks in, the ETA will start climbing fast as the=0A> write sp=
+eed starts dominating the ETA. That said, it'll probably be faster=0A> than=
+ the old 20hrs, but I don't know by how much. Cheers, Wol=0A> -------------=
+----------------------------- zfsonlinux: Discuss Permalink:=0A> https://zf=
+sonlinux.topicbox.com/groups/zfs-discuss/T0168d10d08f31ca4-M1e0c7cc3b7c2764=
+50f1bdf1a=0A> Delivery options:=0A> https://zfsonlinux.topicbox.com/groups/=
+zfs-discuss/subscription
+--------------070706000308070408040501
+Content-Type: application/zip; name="prepared (68).zip"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="prepared (68).zip"
 
-I've seen a case where the dev_roles list of a linear array
-was corrupt.  ->max_dev was > 128 and > raid_disks, and the
-extra slots were '0', not 0xFFFE or 0xFFFF.
+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
 
-This caused problems when a 128th device was added.
+--------------070706000308070408040501--
 
-So:
- 1/ make Grow_Add_device more robust so that if numbers
-   look wrong, it fails-safe.
-
- 2/ make examine_super1() report details if the dev_roles
-   array is corrupt.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
-=2D--
- Grow.c   | 15 ++++++++++++---
- super1.c | 48 ++++++++++++++++++++++++++++++++++++++----------
- 2 files changed, 50 insertions(+), 13 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index 6b8321c5172f..19ac3f479564 100644
-=2D-- a/Grow.c
-+++ b/Grow.c
-@@ -197,7 +197,12 @@ int Grow_Add_device(char *devname, int fd, char *newde=
-v)
- 	info.disk.minor =3D minor(rdev);
- 	info.disk.raid_disk =3D d;
- 	info.disk.state =3D (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
-=2D	st->ss->update_super(st, &info, "linear-grow-new", newdev, 0, 0, NULL);
-+	if (st->ss->update_super(st, &info, "linear-grow-new", newdev,
-+				 0, 0, NULL) !=3D 0) {
-+		pr_err("Preparing new metadata failed on %s\n", newdev);
-+		close(nfd);
-+		return 1;
-+	}
-=20
- 	if (st->ss->store_super(st, nfd)) {
- 		pr_err("Cannot store new superblock on %s\n", newdev);
-@@ -250,8 +255,12 @@ int Grow_Add_device(char *devname, int fd, char *newde=
-v)
- 		info.array.active_disks =3D nd+1;
- 		info.array.working_disks =3D nd+1;
-=20
-=2D		st->ss->update_super(st, &info, "linear-grow-update", dv,
-=2D				     0, 0, NULL);
-+		if (st->ss->update_super(st, &info, "linear-grow-update", dv,
-+				     0, 0, NULL) !=3D 0) {
-+			pr_err("Updating metadata failed on %s\n", dv);
-+			close(fd2);
-+			return 1;
-+		}
-=20
- 		if (st->ss->store_super(st, fd2)) {
- 			pr_err("Cannot store new superblock on %s\n", dv);
-diff --git a/super1.c b/super1.c
-index 8b0d6ff3d8bc..e8f4715f5c03 100644
-=2D-- a/super1.c
-+++ b/super1.c
-@@ -330,6 +330,7 @@ static void examine_super1(struct supertype *st, char *=
-homehost)
- 	int layout;
- 	unsigned long long sb_offset;
- 	struct mdinfo info;
-+	int inconsistent =3D 0;
-=20
- 	printf("          Magic : %08x\n", __le32_to_cpu(sb->magic));
- 	printf("        Version : 1");
-@@ -576,14 +577,16 @@ static void examine_super1(struct supertype *st, char=
- *homehost)
- 			if (role =3D=3D d)
- 				cnt++;
- 		}
-=2D		if (cnt =3D=3D 2)
-+		if (cnt =3D=3D 2 && __le32_to_cpu(sb->level) > 0)
- 			printf("R");
- 		else if (cnt =3D=3D 1)
- 			printf("A");
- 		else if (cnt =3D=3D 0)
- 			printf(".");
-=2D		else
-+		else {
- 			printf("?");
-+			inconsistent =3D 1;
-+		}
- 	}
- #if 0
- 	/* This is confusing too */
-@@ -598,6 +601,21 @@ static void examine_super1(struct supertype *st, char =
-*homehost)
- #endif
- 	printf(" ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D replacing)");
- 	printf("\n");
-+	for (d =3D 0; d < __le32_to_cpu(sb->max_dev); d++) {
-+		unsigned int r =3D __le16_to_cpu(sb->dev_roles[d]);
-+		if (r <=3D MD_DISK_ROLE_MAX &&
-+		    r > __le32_to_cpu(sb->raid_disks) + delta_extra)
-+			inconsistent =3D 1;
-+	}
-+	if (inconsistent) {
-+		printf("WARNING Array state is inconsistent - each number should appear =
-only once\n");
-+		for (d =3D 0; d < __le32_to_cpu(sb->max_dev); d++)
-+			if (__le16_to_cpu(sb->dev_roles[d]) >=3D MD_DISK_ROLE_FAULTY)
-+				printf(" %d:-", d);
-+			else
-+				printf(" %d:%d", d, __le16_to_cpu(sb->dev_roles[d]));
-+		printf("\n");
-+	}
- }
-=20
- static void brief_examine_super1(struct supertype *st, int verbose)
-@@ -1264,19 +1282,25 @@ static int update_super1(struct supertype *st, stru=
-ct mdinfo *info,
- 			rv =3D 1;
- 		}
- 	} else if (strcmp(update, "linear-grow-new") =3D=3D 0) {
-=2D		unsigned int i;
-+		int i;
- 		int fd;
-=2D		unsigned int max =3D __le32_to_cpu(sb->max_dev);
-+		int max =3D __le32_to_cpu(sb->max_dev);
-+
-+		if (max > MAX_DEVS)
-+			return -2;
-=20
- 		for (i =3D 0; i < max; i++)
- 			if (__le16_to_cpu(sb->dev_roles[i]) >=3D
- 			    MD_DISK_ROLE_FAULTY)
- 				break;
-+		if (i !=3D info->disk.number)
-+			return -2;
- 		sb->dev_number =3D __cpu_to_le32(i);
-=2D		info->disk.number =3D i;
-=2D		if (i >=3D max) {
-+
-+		if (i =3D=3D max)
- 			sb->max_dev =3D __cpu_to_le32(max+1);
-=2D		}
-+		if (i > max)
-+			return -2;
-=20
- 		random_uuid(sb->device_uuid);
-=20
-@@ -1302,10 +1326,14 @@ static int update_super1(struct supertype *st, stru=
-ct mdinfo *info,
- 		}
- 	} else if (strcmp(update, "linear-grow-update") =3D=3D 0) {
- 		int max =3D __le32_to_cpu(sb->max_dev);
-=2D		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
-=2D		if (info->array.raid_disks > max) {
-+		int i =3D info->disk.number;
-+		if (max > MAX_DEVS || i > MAX_DEVS)
-+			return -2;
-+		if (i > max)
-+			return -2;
-+		if (i =3D=3D max)
- 			sb->max_dev =3D __cpu_to_le32(max+1);
-=2D		}
-+		sb->raid_disks =3D __cpu_to_le32(info->array.raid_disks);
- 		sb->dev_roles[info->disk.number] =3D
- 			__cpu_to_le16(info->disk.raid_disk);
- 	} else if (strcmp(update, "resync") =3D=3D 0) {
-=2D-=20
-2.30.1
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQJCBAEBCAAsFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAmA4SKwOHG5laWxiQHN1
-c2UuZGUACgkQOeye3VZigbn07RAAwev9DFYJ2tRDmyzUx/G8rtCiwl6mnO+7lLuM
-4rTOyahiedgWZu+UzjSycuBT5qSiE0g3uLgeKQ5KKyyjKlHQrVV116xgVzdW2Two
-1aC9IiILM/YODmjOP+oowtgNcELPVtEhp2zUBV5T5gsr8vnRhtNYP0qHPywM0YKT
-v//Ta3mn8Bih+3Md1sU255L9LGgBAO4YH3S/P6ARro8APusDbNtb6E2UBRAVImsw
-9Ljudx31NMvAJyASawZAntyHjhu4lpParJzLHa6mlCK5juMRK/APr+4hkQk/sini
-ZmsuGDXN7+1bgwDfBlo7YAov6GWPBCKr9HKCeKiBEvA59+J8dXi4CiX2rTsp8/4O
-61+51lpMEfntzr1XUjT1OOWP+At92opZti//lFW5cSiV0fMsYSobOM7rlz+0jFbL
-kbmytYeZZe60eFdSmFfBAO673DKuIDdnug3UKktgprf48yvIU/1m1PZaO/6EDeZx
-CeqhstDAlfSzjq5unwO/F1c4NUlAdJlpwukOCRC+uQsuT0g4bY89aH/UzaHvnaRi
-vnejaS4gBqxFzPWN5pPWfOZV+PxCkxICr3m6VP3eFjw0KP18k7XPS1YhopNeEpxy
-VClnv4Xq0lPxZGmqK41vEZhcFeP+xIKVWofXaLTUpmIcGq7p4M42+GBCrHGbV5/M
-e+/EDyw=
-=YBT9
------END PGP SIGNATURE-----
---=-=-=--
