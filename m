@@ -2,81 +2,170 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C96AC433E0
-	for <linux-raid@archiver.kernel.org>; Fri, 26 Feb 2021 22:22:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D502FC433DB
+	for <linux-raid@archiver.kernel.org>; Sat, 27 Feb 2021 08:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EDDE64EC4
-	for <linux-raid@archiver.kernel.org>; Fri, 26 Feb 2021 22:22:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A849B64E46
+	for <linux-raid@archiver.kernel.org>; Sat, 27 Feb 2021 08:14:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230049AbhBZWV5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 26 Feb 2021 17:21:57 -0500
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17252 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230081AbhBZWVs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 26 Feb 2021 17:21:48 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1614378060; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=KqsYWZNatlOUMG66tSaCGrVLNImjClh6KYNBFRuOXYU/QL+bgTSPUvDIb659bypVdZl5u9gzVjH9hGM8XAR7DQfbOpD7teI/UqZJ0jF9C4++UC0/oMW8u12sgp3IP5004ABgr8xWgtIoxXJO3MnPYvOsaGwNa0NPzk971SAwLRU=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1614378060; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=LinEOCQp23kjuGVOxh1KlkmSSGYXm78vh4q6eYE0IZA=; 
-        b=lXeAT0O4Spjm8baxeTHjBOFimqRShsrwg6R6CSA8YQ9GeM1pWOvPwRj4WIn+4WfSFHe58JNQQrzeH6gG4nHJd6q2jxmX3j+vU6Bu7FfAkfzz7Suz3M6Muv+A4WSwVQE0ReOt7joMf1yztLhFPyaKxka8Qd6ebUNoHI3Wlr1qMTI=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 1614378058339396.1163673796394; Fri, 26 Feb 2021 23:20:58 +0100 (CET)
-Subject: Re: [PATCH mdadm] Grow: be careful of corrupt dev_roles list
-To:     NeilBrown <neilb@suse.de>
-Cc:     linux-raid@vger.kernel.org
-References: <87pn0niqtv.fsf@notabene.neil.brown.name>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <efcd7aba-0d7b-7707-00fb-682b31a10ad4@trained-monkey.org>
-Date:   Fri, 26 Feb 2021 17:20:57 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S229912AbhB0IOQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 27 Feb 2021 03:14:16 -0500
+Received: from 197.237.153.5.wananchi.com ([197.237.153.5]:49957 "EHLO
+        mail.detahost.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S229751AbhB0IOO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 27 Feb 2021 03:14:14 -0500
+Message-ID: <06e5c6c034e1d7aa8977e1b2b96d55391ae23f24a9@documents.co.ke>
+Reply-To: "Kenya Business Plans" <info@documents.co.ke>
+From:   "Kenya Business Plans" <newsletter@documents.co.ke>
+To:     <linux-raid@vger.kernel.org>
+Subject: Kenya Cutomized Business Plans for only Kes 499/=
+Date:   Sat, 27 Feb 2021 11:13:09 +0300
+Organization: Kenya Business Plans
 MIME-Version: 1.0
-In-Reply-To: <87pn0niqtv.fsf@notabene.neil.brown.name>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Type: text/plain; charset="utf-8";
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; d=documents.co.ke; s=default;
+        c=relaxed/relaxed; t=1614413589;
+        h=message-id:from:to:subject:date:mime-version;
+        bh=8BwyX4f9rAOXp44Y3cUBvaUTSdqFDEf96x4lvcYxHAk=;
+        b=ZbHiI+AM5+vqGjeo8u/jVkRvxAb7n53HLszXE5VaalS+Hk+MeOTa6UfsTJ0grJ
+        yegTWjPQK24WwTcQnE4ksTT6hLBEAfvD6ioeueqZ5oBwEQfIPFhBZwfXHwYrFW9+
+        SCfKv3hj827/s2d3X3Ry072reVHFJPVdndW0GhTi2wa72P1assLM6LMDKpktKm+9
+        6KKY34FJux5b0VftDxli+ESQbk9d40ctR5mkaFotgf99EalfRPoBqi8Y32NmlDh0
+        IQaMtcgRA60q+R6bY4AxhWE/7Z1IMQQQ+7JQVa8FrFyIPirWXcYJ/69NenzVBmZK
+        bR2zsdKXa7mhwNcj3Batqhqw==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2/25/21 8:02 PM, NeilBrown wrote:
-> 
-> I've seen a case where the dev_roles list of a linear array
-> was corrupt.  ->max_dev was > 128 and > raid_disks, and the
-> extra slots were '0', not 0xFFFE or 0xFFFF.
-> 
-> This caused problems when a 128th device was added.
-> 
-> So:
->  1/ make Grow_Add_device more robust so that if numbers
->    look wrong, it fails-safe.
-> 
->  2/ make examine_super1() report details if the dev_roles
->    array is corrupt.
-> 
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> ---
->  Grow.c   | 15 ++++++++++++---
->  super1.c | 48 ++++++++++++++++++++++++++++++++++++++----------
->  2 files changed, 50 insertions(+), 13 deletions(-)
-> 
+ =20
+Customized Kenya Business Plans
+Invest wisely by getting street smart market surveys, guides and info pac=
+ks with the sweet or harsh reality of the market.
+Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Com=
+petition, Survival rate, Differentiation, Capital, Process, Equipment, Su=
+ppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tric=
+ks & so so much more.
 
-Ohhh error handling!
+We have comprehensive business plans in these categories:
 
-Applied!
+Agrovet
+Auto Glass Retail -17 Pages
+Bank Agency Fact-sheet
+Beef Butchery - 31 pages
+Boda Boda
+Bottled Water - 53 Pages
+Building Materials Yard - Dynamics & Case Study
+Car Wash Quick Guide
+Chapati Wholesale (Case Study)
+Chemist -Retail - 31 Pages
+Chicken Butchery
+Chips & Chicken Cafe - 31 Pages
+Concreting ( Koroga) Equipment Leasing - 29 Pages
+Corn Chips Snacks Making - 37 Pages
+Cosmetics Retail - 30 Pages
+Cosmetics Retail -30 Pages
+Courier - 35 Pages
+Cyber Cafe
+Day-care
+Electrical Parts Retail - 27 Pages
+Executive Barber Shop - 42 Pages
+Fish Supply - Nairobi Hotels Quick Overview
+Fish Supply - Nairobi Hotels Quick Survey
+Flowers - Nairobi (Retail/ Wholesale )
+Free Advertiser Magazine ( Quick Guide & Case Study )
+Fruit / Juice Parlour
+Gas (LPG) Retail
+Gift Service
+Gym - 38 pages
+Hair Salon
+Ice Lollies Making
+Ice Lollies Making ( Quick Guide )
+Imaging Clinic (Ultrasound and X-ray) - 46 Pages
+Inner-wear Retail - 27 Pages
+Laundry - 31 pages
+Leather: Skins Trade -26 Pages
+'Local' Bar - 48 Pages
+Maize Milling (Unga wa Ugali)
+Milk Distributorship
+Mitumba Clothes
+Money Lending - Informal Overview
+Motorcycle Spare Parts Retail -33 Pages
+Movie Shop
+M-pesa Sub Agent
+Nails (Misumari) Making - 60 Pages
+Non-Woven Bags Making -39 Pages
+Petrol Station (Independent) - 47 Pages
+Plumbing Hardware Retail - 35 Pages *New
+Primary School Business - 38 Pages
+Printing Business - 55 Pages
+Real Estate Agency - 42 Pages
+Second Hand Novels (R)
+Selling Cake Boxes
+Selling Cookies
+Senator Keg Bar
+Slot Machines Quick Guide
+Small Scale FMCG Distribution - New
+Smokies & Egg Vending
+Supermarket - 75 Pages
+Supermarket Shelf Space Guide
+Tents & Chairs Leasing
+Tiles Retail Business Fact-sheet
+Timber Yard - 32 Pages
+Tomato ( Greenhouse ) - Quick Market & Production Guide
+Tyres Retail Business - 29 Pages
 
-Thanks,
-Jes
+Invest wisely in 2020 by getting street smart market surveys with:
+- Market Analysis
+- Step by step establishing Process
+- Licenses - Issuing authority, cost, requirements
+- Equipment - Suppliers, Considerations, Cost
+- Other requirements
+- Suppliers & Prices
+- Raw Materials
+- Buying Selling Prices
+- Production Costs
+- Operational Costs
+- Day to day Operations
+- Revenue & Margins
+- Sample wholesale retail prices
+- Case Studies
+- Manpower
+- Capital breakdown
+- Opportunities
+- Competition
+- Surviving & Thriving
+- Analysis, figures, observations, dos & don'ts
+- Trends ,Tips, Tricks and so much more.
+
+To Download a Sample Business Plan Copy and paste the link below to your =
+browser
+
+https://drive.google.com/open?id=3D1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
+
+The whole package of 65 Business Plans above is available Offer Price @ K=
+shs. 499. We are only selling the guides as a package.
+
+To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931=
+.
+
+On payment kindly forward the Mpesa payment confirmation text and your em=
+ail address to +254 721 351 269.
+
+We deliver via email within 15 minutes of payment.
+
+TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Les=
+s Risk!
+
+Kind Regards;
 
 
+Hashna A. Noor
+Manager - Sales & Marketing
+Kenya Business Plans Limited
++254721351269 | +254707559080
+78 Brookside Drive | Nairobi | Kenya
