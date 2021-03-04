@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77E78C433E0
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Mar 2021 14:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB772C433E0
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Mar 2021 14:41:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48C0D64F60
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Mar 2021 14:40:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FA1C64F3D
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Mar 2021 14:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232085AbhCDOkU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 Mar 2021 09:40:20 -0500
-Received: from mga14.intel.com ([192.55.52.115]:56078 "EHLO mga14.intel.com"
+        id S232077AbhCDOkx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Mar 2021 09:40:53 -0500
+Received: from mga09.intel.com ([134.134.136.24]:26537 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232065AbhCDOj7 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 4 Mar 2021 09:39:59 -0500
-IronPort-SDR: uWgND0QFg3u7VyMe6+uCARbe5/xtx5bcy7t+0J0NdDQhQh3f8DIA5DDMa4+0Sswedf01KniQ3V
- +Tx5UjTAKghQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9913"; a="186774463"
+        id S232128AbhCDOkb (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 4 Mar 2021 09:40:31 -0500
+IronPort-SDR: zlulpVI9RUPTwIGl6kU00MVKFAVMgsifWqduPTzPPBgFHm98O+Qn9F4KDYjwzkvC/fugjOtwV0
+ z2rCXn5+khNQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9913"; a="187533800"
 X-IronPort-AV: E=Sophos;i="5.81,222,1610438400"; 
-   d="scan'208";a="186774463"
+   d="scan'208";a="187533800"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2021 06:38:14 -0800
-IronPort-SDR: JWHcOo0+xoDadocrpf5eCbv6/bByFQs9hj+fBOdgj4yxnZGDNNgr4vs3Ax/Oswx+ORIPiCGrbm
- ZDiTBJMujEAw==
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2021 06:38:45 -0800
+IronPort-SDR: UKL4wd/qQW8fhe0Hfr3yGm58Dvzb5bNULGkL2LhMe9h11sM0J6IdodYoYFVkdZ7Ni/W8jzH9Rn
+ Ogb6gxVx5YLA==
 X-IronPort-AV: E=Sophos;i="5.81,222,1610438400"; 
-   d="scan'208";a="407809404"
+   d="scan'208";a="407809568"
 Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2021 06:38:13 -0800
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2021 06:38:44 -0800
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     jes@trained-monkey.org
 Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH RESEND] imsm: add verbose flag to compare_super
-Date:   Thu,  4 Mar 2021 15:38:05 +0100
-Message-Id: <20210304143805.8485-1-mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH RESEND] imsm: use saved fds during migration
+Date:   Thu,  4 Mar 2021 15:38:37 +0100
+Message-Id: <20210304143837.8579-1-mariusz.tkaczyk@linux.intel.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -45,170 +45,422 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-IMSM does more than comparing metadata and errors reported directly
-from compare_super_imsm can be useful.
-
-Add verbose flag to compare_super method and make all not critical
-error printing configurable.
+IMSM super keeps open descriptors in super->disks structure, they are
+reliable and should be chosen if possible. The repeatedly called open
+and close during reshape generates redundant udev change events on
+each member drive.
 
 Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- Assemble.c    |  2 +-
- Examine.c     |  2 +-
- Incremental.c |  2 +-
- mdadm.h       |  3 ++-
- super-ddf.c   |  3 ++-
- super-intel.c | 21 ++++++++++++---------
- super0.c      |  3 ++-
- super1.c      |  3 ++-
- 8 files changed, 23 insertions(+), 16 deletions(-)
+ super-intel.c | 208 +++++++++++++-------------------------------------
+ 1 file changed, 54 insertions(+), 154 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index ed0ddfb1..48556d8c 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -435,7 +435,7 @@ static int select_devices(struct mddev_dev *devlist,
- 
- 			if (st->ss != tst->ss ||
- 			    st->minor_version != tst->minor_version ||
--			    st->ss->compare_super(st, tst) != 0) {
-+			    st->ss->compare_super(st, tst, 1) != 0) {
- 				/* Some mismatch. If exactly one array matches this host,
- 				 * we can resolve on that one.
- 				 * Or, if we are auto assembling, we just ignore the second
-diff --git a/Examine.c b/Examine.c
-index 7013480d..4381cd56 100644
---- a/Examine.c
-+++ b/Examine.c
-@@ -130,7 +130,7 @@ int Examine(struct mddev_dev *devlist,
- 			char *d;
- 			for (ap = arrays; ap; ap = ap->next) {
- 				if (st->ss == ap->st->ss &&
--				    st->ss->compare_super(ap->st, st) == 0)
-+				    st->ss->compare_super(ap->st, st, 0) == 0)
- 					break;
- 			}
- 			if (!ap) {
-diff --git a/Incremental.c b/Incremental.c
-index e849bdda..cd9cc0fc 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -400,7 +400,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 			}
- 			st2 = dup_super(st);
- 			if (st2->ss->load_super(st2, dfd2, NULL) ||
--			    st->ss->compare_super(st, st2) != 0) {
-+			    st->ss->compare_super(st, st2, 1) != 0) {
- 				pr_err("metadata mismatch between %s and chosen array %s\n",
- 				       devname, chosen_name);
- 				close(dfd2);
-diff --git a/mdadm.h b/mdadm.h
-index 1ee6c92e..60575af0 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -966,7 +966,8 @@ extern struct superswitch {
- 	 * moved in, otherwise the superblock in 'st' is compared with
- 	 * 'tst'.
- 	 */
--	int (*compare_super)(struct supertype *st, struct supertype *tst);
-+	int (*compare_super)(struct supertype *st, struct supertype *tst,
-+			     int verbose);
- 	/* Load metadata from a single device.  If 'devname' is not NULL
- 	 * print error messages as appropriate */
- 	int (*load_super)(struct supertype *st, int fd, char *devname);
-diff --git a/super-ddf.c b/super-ddf.c
-index 7cd5702d..23147620 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -3914,7 +3914,8 @@ static int store_super_ddf(struct supertype *st, int fd)
- 	return 0;
- }
- 
--static int compare_super_ddf(struct supertype *st, struct supertype *tst)
-+static int compare_super_ddf(struct supertype *st, struct supertype *tst,
-+			     int verbose)
- {
- 	/*
- 	 * return:
 diff --git a/super-intel.c b/super-intel.c
-index 715febf7..fe385eb6 100644
+index 3a73d2b3..a507d886 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -3829,7 +3829,8 @@ static void imsm_copy_dev(struct imsm_dev *dest, struct imsm_dev *src)
- 	memcpy(dest, src, sizeof_imsm_dev(src, 0));
+@@ -3053,15 +3053,13 @@ static struct imsm_dev *imsm_get_device_during_migration(
+  *		sector of disk)
+  * Parameters:
+  *	super	: imsm internal array info
+- *	info	: general array info
+  * Returns:
+  *	 0 : success
+  *	-1 : fail
+  *	-2 : no migration in progress
+  ******************************************************************************/
+-static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
++static int load_imsm_migr_rec(struct intel_super *super)
+ {
+-	struct mdinfo *sd;
+ 	struct dl *dl;
+ 	char nm[30];
+ 	int retval = -1;
+@@ -3069,6 +3067,7 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	struct imsm_dev *dev;
+ 	struct imsm_map *map;
+ 	int slot = -1;
++	int keep_fd = 1;
+ 
+ 	/* find map under migration */
+ 	dev = imsm_get_device_during_migration(super);
+@@ -3077,44 +3076,40 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	if (dev == NULL)
+ 		return -2;
+ 
+-	if (info) {
+-		for (sd = info->devs ; sd ; sd = sd->next) {
+-			/* read only from one of the first two slots */
+-			if ((sd->disk.raid_disk < 0) ||
+-			    (sd->disk.raid_disk > 1))
+-				continue;
++	map = get_imsm_map(dev, MAP_0);
++	if (!map)
++		return -1;
+ 
+-			sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+-			fd = dev_open(nm, O_RDONLY);
+-			if (fd >= 0)
+-				break;
+-		}
+-	}
+-	if (fd < 0) {
+-		map = get_imsm_map(dev, MAP_0);
+-		for (dl = super->disks; dl; dl = dl->next) {
+-			/* skip spare and failed disks
+-			*/
+-			if (dl->index < 0)
+-				continue;
+-			/* read only from one of the first two slots */
+-			if (map)
+-				slot = get_imsm_disk_slot(map, dl->index);
+-			if (map == NULL || slot > 1 || slot < 0)
+-				continue;
++	for (dl = super->disks; dl; dl = dl->next) {
++		/* skip spare and failed disks
++		 */
++		if (dl->index < 0)
++			continue;
++		/* read only from one of the first two slots
++		 */
++		slot = get_imsm_disk_slot(map, dl->index);
++		if (slot > 1 || slot < 0)
++			continue;
++
++		if (dl->fd < 0) {
+ 			sprintf(nm, "%d:%d", dl->major, dl->minor);
+ 			fd = dev_open(nm, O_RDONLY);
+-			if (fd >= 0)
++			if (fd >= 0) {
++				keep_fd = 0;
+ 				break;
++			}
++		} else {
++			fd = dl->fd;
++			break;
+ 		}
+ 	}
++
+ 	if (fd < 0)
+-		goto out;
++		return retval;
+ 	retval = read_imsm_migr_rec(fd, super);
+-
+-out:
+-	if (fd >= 0)
++	if (!keep_fd)
+ 		close(fd);
++
+ 	return retval;
  }
  
--static int compare_super_imsm(struct supertype *st, struct supertype *tst)
-+static int compare_super_imsm(struct supertype *st, struct supertype *tst,
-+			      int verbose)
- {
- 	/*
- 	 * return:
-@@ -3852,18 +3853,20 @@ static int compare_super_imsm(struct supertype *st, struct supertype *tst)
- 	 */
- 	if (!check_env("IMSM_NO_PLATFORM") && first->hba && sec->hba) {
- 		if (first->hba->type != sec->hba->type) {
--			fprintf(stderr,
--				"HBAs of devices do not match %s != %s\n",
--				get_sys_dev_type(first->hba->type),
--				get_sys_dev_type(sec->hba->type));
-+			if (verbose)
-+				pr_err("HBAs of devices do not match %s != %s\n",
-+				       get_sys_dev_type(first->hba->type),
-+				       get_sys_dev_type(sec->hba->type));
- 			return 3;
+@@ -3175,8 +3170,6 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 	struct intel_super *super = st->sb;
+ 	unsigned int sector_size = super->sector_size;
+ 	unsigned long long dsize;
+-	char nm[30];
+-	int fd = -1;
+ 	int retval = -1;
+ 	struct dl *sd;
+ 	int len;
+@@ -3209,26 +3202,21 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 		if (map == NULL || slot > 1 || slot < 0)
+ 			continue;
+ 
+-		sprintf(nm, "%d:%d", sd->major, sd->minor);
+-		fd = dev_open(nm, O_RDWR);
+-		if (fd < 0)
+-			continue;
+-		get_dev_size(fd, NULL, &dsize);
+-		if (lseek64(fd, dsize - (MIGR_REC_SECTOR_POSITION*sector_size),
++		get_dev_size(sd->fd, NULL, &dsize);
++		if (lseek64(sd->fd, dsize - (MIGR_REC_SECTOR_POSITION *
++		    sector_size),
+ 		    SEEK_SET) < 0) {
+ 			pr_err("Cannot seek to anchor block: %s\n",
+ 			       strerror(errno));
+ 			goto out;
  		}
-+
- 		if (first->orom != sec->orom) {
--			fprintf(stderr,
--				"HBAs of devices do not match %s != %s\n",
--				first->hba->pci_id, sec->hba->pci_id);
-+			if (verbose)
-+				pr_err("HBAs of devices do not match %s != %s\n",
-+				       first->hba->pci_id, sec->hba->pci_id);
- 			return 3;
+-		if ((unsigned int)write(fd, super->migr_rec_buf,
++		if ((unsigned int)write(sd->fd, super->migr_rec_buf,
+ 		    MIGR_REC_BUF_SECTORS*sector_size) !=
+ 		    MIGR_REC_BUF_SECTORS*sector_size) {
+ 			pr_err("Cannot write migr record block: %s\n",
+ 			       strerror(errno));
+ 			goto out;
  		}
-+
+-		close(fd);
+-		fd = -1;
+ 	}
+ 	if (sector_size == 4096)
+ 		convert_from_4k_imsm_migr_rec(super);
+@@ -3254,8 +3242,6 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 
+ 	retval = 0;
+  out:
+-	if (fd >= 0)
+-		close(fd);
+ 	return retval;
+ }
+ 
+@@ -5014,7 +5000,7 @@ static int load_super_imsm_all(struct supertype *st, int fd, void **sbp,
  	}
  
- 	/* if an anchor does not have num_raid_devs set then it is a free
-@@ -6962,7 +6965,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
+ 	/* load migration record */
+-	err = load_imsm_migr_rec(super, NULL);
++	err = load_imsm_migr_rec(super);
+ 	if (err == -1) {
+ 		/* migration is in progress,
+ 		 * but migr_rec cannot be loaded,
+@@ -5263,7 +5249,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ 	}
  
- 			if (st->ss != tst->ss ||
- 			    st->minor_version != tst->minor_version ||
--			    st->ss->compare_super(st, tst) != 0) {
-+			    st->ss->compare_super(st, tst, 1) != 0) {
- 				/* Some mismatch. If exactly one array matches this host,
- 				 * we can resolve on that one.
- 				 * Or, if we are auto assembling, we just ignore the second
-diff --git a/super0.c b/super0.c
-index 6af140bb..b79b97a9 100644
---- a/super0.c
-+++ b/super0.c
-@@ -926,7 +926,8 @@ static int write_init_super0(struct supertype *st)
- 	return rv;
+ 	/* load migration record */
+-	if (load_imsm_migr_rec(super, NULL) == 0) {
++	if (load_imsm_migr_rec(super) == 0) {
+ 		/* Check for unsupported migration features */
+ 		if (check_mpb_migr_compatibility(super) != 0) {
+ 			pr_err("Unsupported migration detected");
+@@ -10379,21 +10365,6 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
+ 	}
  }
  
--static int compare_super0(struct supertype *st, struct supertype *tst)
-+static int compare_super0(struct supertype *st, struct supertype *tst,
-+			  int verbose)
- {
- 	/*
- 	 * return:
-diff --git a/super1.c b/super1.c
-index 8b0d6ff3..62dac9e7 100644
---- a/super1.c
-+++ b/super1.c
-@@ -2114,7 +2114,8 @@ out:
- 	return rv;
+-static void close_targets(int *targets, int new_disks)
+-{
+-	int i;
+-
+-	if (!targets)
+-		return;
+-
+-	for (i = 0; i < new_disks; i++) {
+-		if (targets[i] >= 0) {
+-			close(targets[i]);
+-			targets[i] = -1;
+-		}
+-	}
+-}
+-
+ static int imsm_get_allowed_degradation(int level, int raid_disks,
+ 					struct intel_super *super,
+ 					struct imsm_dev *dev)
+@@ -10447,62 +10418,6 @@ static int imsm_get_allowed_degradation(int level, int raid_disks,
+ 	}
  }
  
--static int compare_super1(struct supertype *st, struct supertype *tst)
-+static int compare_super1(struct supertype *st, struct supertype *tst,
-+			  int verbose)
- {
- 	/*
- 	 * return:
+-/*******************************************************************************
+- * Function:	open_backup_targets
+- * Description:	Function opens file descriptors for all devices given in
+- *		info->devs
+- * Parameters:
+- *	info		: general array info
+- *	raid_disks	: number of disks
+- *	raid_fds	: table of device's file descriptors
+- *	super		: intel super for raid10 degradation check
+- *	dev		: intel device for raid10 degradation check
+- * Returns:
+- *	 0 : success
+- *	-1 : fail
+- ******************************************************************************/
+-int open_backup_targets(struct mdinfo *info, int raid_disks, int *raid_fds,
+-			struct intel_super *super, struct imsm_dev *dev)
+-{
+-	struct mdinfo *sd;
+-	int i;
+-	int opened = 0;
+-
+-	for (i = 0; i < raid_disks; i++)
+-		raid_fds[i] = -1;
+-
+-	for (sd = info->devs ; sd ; sd = sd->next) {
+-		char *dn;
+-
+-		if (sd->disk.state & (1<<MD_DISK_FAULTY)) {
+-			dprintf("disk is faulty!!\n");
+-			continue;
+-		}
+-
+-		if (sd->disk.raid_disk >= raid_disks || sd->disk.raid_disk < 0)
+-			continue;
+-
+-		dn = map_dev(sd->disk.major,
+-			     sd->disk.minor, 1);
+-		raid_fds[sd->disk.raid_disk] = dev_open(dn, O_RDWR);
+-		if (raid_fds[sd->disk.raid_disk] < 0) {
+-			pr_err("cannot open component\n");
+-			continue;
+-		}
+-		opened++;
+-	}
+-	/* check if maximum array degradation level is not exceeded
+-	*/
+-	if ((raid_disks - opened) >
+-	    imsm_get_allowed_degradation(info->new_level, raid_disks,
+-					 super, dev)) {
+-		pr_err("Not enough disks can be opened.\n");
+-		close_targets(raid_fds, raid_disks);
+-		return -2;
+-	}
+-	return 0;
+-}
+-
+ /*******************************************************************************
+  * Function:	validate_container_imsm
+  * Description: This routine validates container after assemble,
+@@ -10743,13 +10658,11 @@ void init_migr_record_imsm(struct supertype *st, struct imsm_dev *dev,
+ 	int new_data_disks;
+ 	unsigned long long dsize, dev_sectors;
+ 	long long unsigned min_dev_sectors = -1LLU;
+-	struct mdinfo *sd;
+-	char nm[30];
+-	int fd;
+ 	struct imsm_map *map_dest = get_imsm_map(dev, MAP_0);
+ 	struct imsm_map *map_src = get_imsm_map(dev, MAP_1);
+ 	unsigned long long num_migr_units;
+ 	unsigned long long array_blocks;
++	struct dl *dl_disk = NULL;
+ 
+ 	memset(migr_rec, 0, sizeof(struct migr_record));
+ 	migr_rec->family_num = __cpu_to_le32(super->anchor->family_num);
+@@ -10778,16 +10691,14 @@ void init_migr_record_imsm(struct supertype *st, struct imsm_dev *dev,
+ 	migr_rec->post_migr_vol_cap_hi = dev->size_high;
+ 
+ 	/* Find the smallest dev */
+-	for (sd = info->devs ; sd ; sd = sd->next) {
+-		sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+-		fd = dev_open(nm, O_RDONLY);
+-		if (fd < 0)
++	for (dl_disk =  super->disks; dl_disk ; dl_disk = dl_disk->next) {
++		/* ignore spares in container */
++		if (dl_disk->index < 0)
+ 			continue;
+-		get_dev_size(fd, NULL, &dsize);
++		get_dev_size(dl_disk->fd, NULL, &dsize);
+ 		dev_sectors = dsize / 512;
+ 		if (dev_sectors < min_dev_sectors)
+ 			min_dev_sectors = dev_sectors;
+-		close(fd);
+ 	}
+ 	set_migr_chkp_area_pba(migr_rec, min_dev_sectors -
+ 					RAID_DISK_RESERVED_BLOCKS_IMSM_HI);
+@@ -10833,8 +10744,11 @@ int save_backup_imsm(struct supertype *st,
+ 
+ 	targets = xmalloc(new_disks * sizeof(int));
+ 
+-	for (i = 0; i < new_disks; i++)
+-		targets[i] = -1;
++	for (i = 0; i < new_disks; i++) {
++		struct dl *dl_disk = get_imsm_dl_disk(super, i);
++
++		targets[i] = dl_disk->fd;
++	}
+ 
+ 	target_offsets = xcalloc(new_disks, sizeof(unsigned long long));
+ 
+@@ -10847,10 +10761,6 @@ int save_backup_imsm(struct supertype *st,
+ 		target_offsets[i] -= start/data_disks;
+ 	}
+ 
+-	if (open_backup_targets(info, new_disks, targets,
+-				super, dev))
+-		goto abort;
+-
+ 	dest_layout = imsm_level_to_layout(map_dest->raid_level);
+ 	dest_chunk = __le16_to_cpu(map_dest->blocks_per_strip) * 512;
+ 
+@@ -10874,7 +10784,6 @@ int save_backup_imsm(struct supertype *st,
+ 
+ abort:
+ 	if (targets) {
+-		close_targets(targets, new_disks);
+ 		free(targets);
+ 	}
+ 	free(target_offsets);
+@@ -10901,7 +10810,7 @@ int save_checkpoint_imsm(struct supertype *st, struct mdinfo *info, int state)
+ 	unsigned long long blocks_per_unit;
+ 	unsigned long long curr_migr_unit;
+ 
+-	if (load_imsm_migr_rec(super, info) != 0) {
++	if (load_imsm_migr_rec(super) != 0) {
+ 		dprintf("imsm: ERROR: Cannot read migration record for checkpoint save.\n");
+ 		return 1;
+ 	}
+@@ -10952,8 +10861,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	unsigned long long read_offset;
+ 	unsigned long long write_offset;
+ 	unsigned unit_len;
+-	int *targets = NULL;
+-	int new_disks, i, err;
++	int new_disks, err;
+ 	char *buf = NULL;
+ 	int retval = 1;
+ 	unsigned int sector_size = super->sector_size;
+@@ -10961,6 +10869,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	unsigned long num_migr_units = get_num_migr_units(migr_rec);
+ 	char buffer[20];
+ 	int skipped_disks = 0;
++	struct dl *dl_disk;
+ 
+ 	err = sysfs_get_str(info, NULL, "array_state", (char *)buffer, 20);
+ 	if (err < 1)
+@@ -10993,37 +10902,34 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	unit_len = __le32_to_cpu(migr_rec->dest_depth_per_unit) * 512;
+ 	if (posix_memalign((void **)&buf, sector_size, unit_len) != 0)
+ 		goto abort;
+-	targets = xcalloc(new_disks, sizeof(int));
+ 
+-	if (open_backup_targets(info, new_disks, targets, super, id->dev)) {
+-		pr_err("Cannot open some devices belonging to array.\n");
+-		goto abort;
+-	}
++	for (dl_disk = super->disks; dl_disk; dl_disk = dl_disk->next) {
++		if (dl_disk->index < 0)
++			continue;
+ 
+-	for (i = 0; i < new_disks; i++) {
+-		if (targets[i] < 0) {
++		if (dl_disk->fd < 0) {
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if (lseek64(targets[i], read_offset, SEEK_SET) < 0) {
++		if (lseek64(dl_disk->fd, read_offset, SEEK_SET) < 0) {
+ 			pr_err("Cannot seek to block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if ((unsigned)read(targets[i], buf, unit_len) != unit_len) {
++		if (read(dl_disk->fd, buf, unit_len) != unit_len) {
+ 			pr_err("Cannot read copy area block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if (lseek64(targets[i], write_offset, SEEK_SET) < 0) {
++		if (lseek64(dl_disk->fd, write_offset, SEEK_SET) < 0) {
+ 			pr_err("Cannot seek to block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+ 			continue;
+ 		}
+-		if ((unsigned)write(targets[i], buf, unit_len) != unit_len) {
++		if (write(dl_disk->fd, buf, unit_len) != unit_len) {
+ 			pr_err("Cannot restore block: %s\n",
+ 			       strerror(errno));
+ 			skipped_disks++;
+@@ -11047,12 +10953,6 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 		retval = 0;
+ 
+ abort:
+-	if (targets) {
+-		for (i = 0; i < new_disks; i++)
+-			if (targets[i])
+-				close(targets[i]);
+-		free(targets);
+-	}
+ 	free(buf);
+ 	return retval;
+ }
 -- 
-2.25.0
+2.26.2
 
