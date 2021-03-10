@@ -2,135 +2,68 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C47BC433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Mar 2021 12:36:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 118B7C433E6
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Mar 2021 14:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF7C064FF3
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Mar 2021 12:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C490F64EFD
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Mar 2021 14:51:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231788AbhCJMfw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 10 Mar 2021 07:35:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35100 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229660AbhCJMf0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Mar 2021 07:35:26 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35A01C061760;
-        Wed, 10 Mar 2021 04:35:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=gI+fVKwWNdRCMXLSxBhBb6g0npcADtH3Xd9db2ybLVU=; b=W6bUKRZIT5KWYpA2Tcf98R55Li
-        rdV7pccBhtX/KUEPjKSP+gJVp7A5ngj21LOhWjri3WGIAUHm7+fZ9BGTPyZlpTc35Tfb2GMPa+FJY
-        Wr8nhkqe5owRjRQ3ujRu4q4NLgUK+cgUzXcfpSU8xlopjR8uUBFmf8owkXYSs9uLN0KF13GAFWiGX
-        VGEtWIl82UpTCEv9b9eBE0fDpqyQ6ENW7K3H60Lhix9ElTsGXgzNyLUJNHQkfXkAMn07xHAogAGpo
-        jOdS6/FjHx7+vlm1v+MG/4A5E2AX4GPhfMWveJIYb4gEoNSv4npdzLzRTsPWA6eKYksmRKDP4nEmh
-        NKS17l/A==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lJy3E-003O6D-2z; Wed, 10 Mar 2021 12:34:59 +0000
-Date:   Wed, 10 Mar 2021 12:34:56 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Sergei Shtepa <sergei.shtepa@veeam.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "agk@redhat.com" <agk@redhat.com>, "hare@suse.de" <hare@suse.de>,
-        "song@kernel.org" <song@kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        Pavel Tide <Pavel.TIde@veeam.com>
-Subject: Re: [PATCH v6 4/4] dm: add DM_INTERPOSED_FLAG
-Message-ID: <20210310123456.GA758100@infradead.org>
-References: <1614774618-22410-1-git-send-email-sergei.shtepa@veeam.com>
- <1614774618-22410-5-git-send-email-sergei.shtepa@veeam.com>
- <20210309173555.GC201344@infradead.org>
- <20210310052812.GB26929@veeam.com>
+        id S231790AbhCJOuf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 10 Mar 2021 09:50:35 -0500
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17145 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231163AbhCJOuU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Mar 2021 09:50:20 -0500
+ARC-Seal: i=1; a=rsa-sha256; t=1615387813; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=OwuPJPz25v4nLR8KBlDmzhL1znATgXZE2OAoLz1ARFK1GF7zGNeySK57N1oHGJgt1Y78bhNtXSMAstXGd0B0s1Qq7HkQRJ2JatJYHaONtSwOOH2bWcz5sKsImMXR3qsBPPGmgWSr46y1+FPkwy/6yGOcIqr3muYemNS4oEYc2mI=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1615387813; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=0YBP/Y/YWMPUoQQpzoO/2wPh813j6RnCTfHv+Tzxspg=; 
+        b=WndvD5aZLEMnkoA0CT/8jc5EGcR2grlWZSOL4c7qXEilZX8c0kxbOStuKZ2U8o4h+LLU2IKZ12I+4/P5F3XbAqZQfGiTR0aQcO1KCH5Qp1afBlEh+nhf08+lQsfU7jtKkJOOryvkDn6wws1qvTVyuZoxQ0yF3+2oHDIooCED8wE=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1615387811343660.4328267967068; Wed, 10 Mar 2021 15:50:11 +0100 (CET)
+Subject: Re: [PATCH 0/8] Write-intent bitmap support for IMSM metadata
+To:     Jakub Radtke <jakub.radtke@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20210115054701.92064-1-jakub.radtke@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <f06f1162-f80f-0afb-13e1-00ffce758354@trained-monkey.org>
+Date:   Wed, 10 Mar 2021 09:50:10 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210310052812.GB26929@veeam.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210115054701.92064-1-jakub.radtke@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Mar 10, 2021 at 08:28:12AM +0300, Sergei Shtepa wrote:
-> > So instead of doing this shoudn't the interposer just always submit to the
-> > whole device?  But if we keep it, the logic in this funtion should go
-> > into a block layer helper, passing a block device instead of the
-
+On 1/15/21 12:46 AM, Jakub Radtke wrote:
+> This patchset is aimed to add write-intent bitmap support for IMSM
+> metadata.
 > 
-> device-mapper allows to create devices of any size using only part of
-> the underlying device. Therefore, it is not possible to apply the
-> interposer to the whole block device.
-> Perhaps it makes sense to put the blk_partition_unremap() function in the
-> block layer? I'm not sure that's a good thing.
+> Additional function in the superswitch (set_bitmap) is proposed as
+> a place where the internal bitmaps configuration for non-native
+> metadata can be performed (through sysfs).
+> 
+> Adding the bitmap to existing volumes is implemented similarly like
+> for the PPL functionality (through --update-subarray).
+> 
+> The patchset was tested on HW and qemu.
 
-I suspect the answer is to not remap bios that are going to be handled
-by the interposer.  In fact much of submit_bio_checks as-is is a bad
-idea for interposed devices.  I think what we need to do instead is to
-pass an explicit bdev to submit_bio_checks and use that everywhere,
-including in the subfunctions.
+All applied, with a few minor tweaks to broken comment formatting.
 
-With that we might also be able to remove the separate interpose hook
-and thus struct bdev_interposer entirely as now ->submit_bio of the
-interposer could do all the work:
+Thanks,
+Jes
 
-static noinline blk_qc_t submit_bio_interposed(struct bio *bio)
-{
-	struct block_device *orig_bdev = bio->bi_bdev, *interposer;
-	struct bio_list bio_list[2] = { };
-	blk_qc_t ret = BLK_QC_T_NONE;
-
-	if (current->bio_list) {
-                bio_list_add(&current->bio_list[0], bio);
-                return BLK_QC_T_NONE;
-        }
-
-	if (unlikely(bio_queue_enter(bio)))
-		return BLK_QC_T_NONE;
-
-	interposer = orig_bdev->bd_interposer;
-	if (unlikely(!interposer)) {
-		/* interposer was removed */
-		bio_list_add(&current->bio_list[0], bio);
-		goto queue_exit;
-	}
-	if (!submit_bio_checks(bio, interposer))
-		goto queue_exit;
-
-	bio_set_flag(bio, BIO_INTERPOSED);
-
-	current->bio_list = bio_list;
-	ret = interposer->bd_disk->fops->submit_bio(bio);
-	current->bio_list = NULL;
-
-queue_exit:
-	blk_queue_exit(bdev->bd_disk->queue);
-
-	/* Resubmit remaining bios */
-	while ((bio = bio_list_pop(&bio_list[0])))
-		ret = submit_bio_noacct(bio);
-	return ret;
-}
-
-blk_qc_t submit_bio_noacct(struct bio *bio)
-{
-	if (bio->bi_bdev->bd_interposer && !bio_flagged(bio, BIO_INTERPOSED)
-		return submit_bio_interposed(bio);
-		
-	...
-}
-
-Note that both with this and your original code the interposer must
-never resubmit I/O to itself.  Is that actually the case for DM?  I'm
-trying to think of a good debug check for that, but right now I can't
-think of something that doesn't cause any overhead for n
