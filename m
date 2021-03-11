@@ -2,170 +2,321 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6FDCC433E0
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Mar 2021 10:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D08C433DB
+	for <linux-raid@archiver.kernel.org>; Thu, 11 Mar 2021 12:53:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66D4664FC4
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Mar 2021 10:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D16964E92
+	for <linux-raid@archiver.kernel.org>; Thu, 11 Mar 2021 12:53:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232224AbhCKKza (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 Mar 2021 05:55:30 -0500
-Received: from mx4.veeam.com ([104.41.138.86]:44886 "EHLO mx4.veeam.com"
+        id S232949AbhCKMw6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 Mar 2021 07:52:58 -0500
+Received: from mga18.intel.com ([134.134.136.126]:60823 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232213AbhCKKy7 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 11 Mar 2021 05:54:59 -0500
-Received: from mail.veeam.com (prgmbx01.amust.local [172.24.0.171])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx4.veeam.com (Postfix) with ESMTPS id B2743114A68;
-        Thu, 11 Mar 2021 13:54:51 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=veeam.com; s=mx4;
-        t=1615460091; bh=ysp9Ts3BASY43el8K+K9xpH4kcbWvg9lBmxtjeqWXw4=;
-        h=Date:From:To:CC:Subject:References:In-Reply-To:From;
-        b=kso9SN+yGQEoMFdxtov1n6mfmMQGtgQioYHIOavcU/58x8mJo5gx6obXdt9Kn1I39
-         PvfTOxQRq7wueAVxYpJmNmvGphc+QH9m1m39ejT2Hgd4MPQk3wid7k8xQqpt04SBxQ
-         wi8sQBfhLOM+a9gzjGFhl1ueHiKyml/fl5g9WpQA=
-Received: from veeam.com (172.24.14.5) by prgmbx01.amust.local (172.24.0.171)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.721.2; Thu, 11 Mar 2021
- 11:54:50 +0100
-Date:   Thu, 11 Mar 2021 13:54:42 +0300
-From:   Sergei Shtepa <sergei.shtepa@veeam.com>
-To:     Christoph Hellwig <hch@infradead.org>, <snitzer@redhat.com>
-CC:     "snitzer@redhat.com" <snitzer@redhat.com>,
-        "agk@redhat.com" <agk@redhat.com>, "hare@suse.de" <hare@suse.de>,
-        "song@kernel.org" <song@kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-        Pavel Tide <Pavel.TIde@veeam.com>
-Subject: Re: [PATCH v6 4/4] dm: add DM_INTERPOSED_FLAG
-Message-ID: <20210311105442.GA27754@veeam.com>
-References: <1614774618-22410-1-git-send-email-sergei.shtepa@veeam.com>
- <1614774618-22410-5-git-send-email-sergei.shtepa@veeam.com>
- <20210309173555.GC201344@infradead.org>
- <20210310052812.GB26929@veeam.com>
- <20210310123456.GA758100@infradead.org>
+        id S233155AbhCKMw4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 11 Mar 2021 07:52:56 -0500
+IronPort-SDR: kZPey2ewMYE7KjBQrLbsoUvXreiaFDCg1jc0w2CcVhi/6JmDPLlbSoa3vWKNIjeErNGHfDcU0p
+ LT2CGI/0LQgQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9919"; a="176254873"
+X-IronPort-AV: E=Sophos;i="5.81,240,1610438400"; 
+   d="scan'208";a="176254873"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2021 04:52:55 -0800
+IronPort-SDR: +h9hkWPJQrkwbJIPdpGMzaJUC1cLgEAw2vE7WzFhZWsgl1M/E7C2YZox9HK394T9rBNN67vrUR
+ QsMtyZWLkAkA==
+X-IronPort-AV: E=Sophos;i="5.81,240,1610438400"; 
+   d="scan'208";a="448275033"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2021 04:52:54 -0800
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH] imsm: extend curr_migr_unit to u64
+Date:   Thu, 11 Mar 2021 13:52:45 +0100
+Message-Id: <20210311125245.9615-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-In-Reply-To: <20210310123456.GA758100@infradead.org>
-X-Originating-IP: [172.24.14.5]
-X-ClientProxiedBy: prgmbx01.amust.local (172.24.0.171) To prgmbx01.amust.local
- (172.24.0.171)
-X-EsetResult: clean, is OK
-X-EsetId: 37303A29D2A50B58627062
-X-Veeam-MMEX: True
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The 03/10/2021 15:34, Christoph Hellwig wrote:
-> On Wed, Mar 10, 2021 at 08:28:12AM +0300, Sergei Shtepa wrote:
-> > > So instead of doing this shoudn't the interposer just always submit to the
-> > > whole device?  But if we keep it, the logic in this funtion should go
-> > > into a block layer helper, passing a block device instead of the
-> 
-> > 
-> > device-mapper allows to create devices of any size using only part of
-> > the underlying device. Therefore, it is not possible to apply the
-> > interposer to the whole block device.
-> > Perhaps it makes sense to put the blk_partition_unremap() function in the
-> > block layer? I'm not sure that's a good thing.
-> 
-> I suspect the answer is to not remap bios that are going to be handled
-> by the interposer.  In fact much of submit_bio_checks as-is is a bad
-> idea for interposed devices.  I think what we need to do instead is to
-> pass an explicit bdev to submit_bio_checks and use that everywhere,
-> including in the subfunctions.
-> 
-> With that we might also be able to remove the separate interpose hook
-> and thus struct bdev_interposer entirely as now ->submit_bio of the
-> interposer could do all the work:
-> 
-> static noinline blk_qc_t submit_bio_interposed(struct bio *bio)
-> {
-> 	struct block_device *orig_bdev = bio->bi_bdev, *interposer;
-> 	struct bio_list bio_list[2] = { };
-> 	blk_qc_t ret = BLK_QC_T_NONE;
-> 
-> 	if (current->bio_list) {
->                 bio_list_add(&current->bio_list[0], bio);
->                 return BLK_QC_T_NONE;
->         }
-> 
-> 	if (unlikely(bio_queue_enter(bio)))
-> 		return BLK_QC_T_NONE;
-> 
-> 	interposer = orig_bdev->bd_interposer;
-> 	if (unlikely(!interposer)) {
-> 		/* interposer was removed */
-> 		bio_list_add(&current->bio_list[0], bio);
-> 		goto queue_exit;
-> 	}
-> 	if (!submit_bio_checks(bio, interposer))
-> 		goto queue_exit;
-> 
-> 	bio_set_flag(bio, BIO_INTERPOSED);
-> 
-> 	current->bio_list = bio_list;
-> 	ret = interposer->bd_disk->fops->submit_bio(bio);
-> 	current->bio_list = NULL;
-> 
-> queue_exit:
-> 	blk_queue_exit(bdev->bd_disk->queue);
-> 
-> 	/* Resubmit remaining bios */
-> 	while ((bio = bio_list_pop(&bio_list[0])))
-> 		ret = submit_bio_noacct(bio);
-> 	return ret;
-> }
-> 
-> blk_qc_t submit_bio_noacct(struct bio *bio)
-> {
-> 	if (bio->bi_bdev->bd_interposer && !bio_flagged(bio, BIO_INTERPOSED)
-> 		return submit_bio_interposed(bio);
-> 		
-> 	...
-> }
+Make it u64 to align it with curr_migr_init field from migration_area.
 
-Your point of view is very interesting. I like.
-I will try to implement it and check how it works.
+Name helpers as vol_curr_migr_unit for differentiation between those
+fields. Add ommited fillers in struct migr_record.
 
-So far, I see the problem in that the interposer device has to intercept
-all bio requests from the original device. It will not be possible to
-implement an interception of some part. Device mapper can create its own
-target for a part of the block device.
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ super-intel.c | 92 ++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 51 insertions(+), 41 deletions(-)
 
-But maybe it's a good thing. First, there is little real benefit from
-being able to intercept bio requests from a part of the block device.
-In real use, this may not be necessary. Secondly, it will get rid of the
-problem when part of the bio needs to be intercepted, and part does not.
-
-I'd like to know Mike's opinion on this issue.
-
-> 
-> Note that both with this and your original code the interposer must
-> never resubmit I/O to itself.  Is that actually the case for DM?  I'm
-> trying to think of a good debug check for that, but right now I can't
-> think of something that doesn't cause any overhead for n
-
-I believe that the BIO_INTERPOSED flag is quite good at solving this
-problem. When cloning a bio, the flag is passed, which means that bio
-cannot be called twice.
-
-
-Thank you again.
-Because of you, I will have to rewrite some code again ;)
-But it's all for the best.
+diff --git a/super-intel.c b/super-intel.c
+index 715febf7..5c2c28b9 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -164,7 +164,7 @@ struct imsm_map {
+ ASSERT_SIZE(imsm_map, 52)
+ 
+ struct imsm_vol {
+-	__u32 curr_migr_unit;
++	__u32 curr_migr_unit_lo;
+ 	__u32 checkpoint_id;	/* id to access curr_migr_unit */
+ 	__u8  migr_state;	/* Normal or Migrating */
+ #define MIGR_INIT 0
+@@ -181,7 +181,8 @@ struct imsm_vol {
+ 	__u8  fs_state;		/* fast-sync state for CnG (0xff == disabled) */
+ 	__u16 verify_errors;	/* number of mismatches */
+ 	__u16 bad_blocks;	/* number of bad blocks during verify */
+-	__u32 filler[4];
++	__u32 curr_migr_unit_hi;
++	__u32 filler[3];
+ 	struct imsm_map map[1];
+ 	/* here comes another one if migr_state */
+ };
+@@ -343,8 +344,9 @@ struct migr_record {
+ 				       * destination - high order 32 bits */
+ 	__u32 num_migr_units_hi;      /* Total num migration units-of-op
+ 				       * high order 32 bits */
++	__u32 filler[16];
+ };
+-ASSERT_SIZE(migr_record, 64)
++ASSERT_SIZE(migr_record, 128)
+ 
+ struct md_list {
+ 	/* usage marker:
+@@ -551,7 +553,7 @@ struct imsm_update_size_change {
+ 
+ struct imsm_update_general_migration_checkpoint {
+ 	enum imsm_update_type type;
+-	__u32 curr_migr_unit;
++	__u64 curr_migr_unit;
+ };
+ 
+ struct disk_info {
+@@ -1229,6 +1231,14 @@ static unsigned long long num_data_stripes(struct imsm_map *map)
+ 	return join_u32(map->num_data_stripes_lo, map->num_data_stripes_hi);
+ }
+ 
++static unsigned long long vol_curr_migr_unit(struct imsm_dev *dev)
++{
++	if (dev == NULL)
++		return 0;
++
++	return join_u32(dev->vol.curr_migr_unit_lo, dev->vol.curr_migr_unit_hi);
++}
++
+ static unsigned long long imsm_dev_size(struct imsm_dev *dev)
+ {
+ 	if (dev == NULL)
+@@ -1288,6 +1298,14 @@ static void set_num_data_stripes(struct imsm_map *map, unsigned long long n)
+ 	split_ull(n, &map->num_data_stripes_lo, &map->num_data_stripes_hi);
+ }
+ 
++static void set_vol_curr_migr_unit(struct imsm_dev *dev, unsigned long long n)
++{
++	if (dev == NULL)
++		return;
++
++	split_ull(n, &dev->vol.curr_migr_unit_lo, &dev->vol.curr_migr_unit_hi);
++}
++
+ static void set_imsm_dev_size(struct imsm_dev *dev, unsigned long long n)
+ {
+ 	split_ull(n, &dev->size_low, &dev->size_high);
+@@ -1660,8 +1678,7 @@ static void print_imsm_dev(struct intel_super *super,
+ 		struct imsm_map *map = get_imsm_map(dev, MAP_1);
+ 
+ 		printf(" <-- %s", map_state_str[map->map_state]);
+-		printf("\n     Checkpoint : %u ",
+-			   __le32_to_cpu(dev->vol.curr_migr_unit));
++		printf("\n     Checkpoint : %llu ", vol_curr_migr_unit(dev));
+ 		if (is_gen_migration(dev) && (slot > 1 || slot < 0))
+ 			printf("(N/A)");
+ 		else
+@@ -1752,7 +1769,8 @@ void convert_to_4k(struct intel_super *super)
+ 		struct imsm_map *map = get_imsm_map(dev, MAP_0);
+ 		/* dev */
+ 		set_imsm_dev_size(dev, imsm_dev_size(dev)/IMSM_4K_DIV);
+-		dev->vol.curr_migr_unit /= IMSM_4K_DIV;
++		set_vol_curr_migr_unit(dev,
++				       vol_curr_migr_unit(dev) / IMSM_4K_DIV);
+ 
+ 		/* map0 */
+ 		set_blocks_per_member(map, blocks_per_member(map)/IMSM_4K_DIV);
+@@ -1880,7 +1898,8 @@ void convert_from_4k(struct intel_super *super)
+ 		struct imsm_map *map = get_imsm_map(dev, MAP_0);
+ 		/* dev */
+ 		set_imsm_dev_size(dev, imsm_dev_size(dev)*IMSM_4K_DIV);
+-		dev->vol.curr_migr_unit *= IMSM_4K_DIV;
++		set_vol_curr_migr_unit(dev,
++				       vol_curr_migr_unit(dev) * IMSM_4K_DIV);
+ 
+ 		/* map0 */
+ 		set_blocks_per_member(map, blocks_per_member(map)*IMSM_4K_DIV);
+@@ -3154,7 +3173,7 @@ static int imsm_create_metadata_checkpoint_update(
+ 	}
+ 	(*u)->type = update_general_migration_checkpoint;
+ 	(*u)->curr_migr_unit = current_migr_unit(super->migr_rec);
+-	dprintf("prepared for %u\n", (*u)->curr_migr_unit);
++	dprintf("prepared for %llu\n", (*u)->curr_migr_unit);
+ 
+ 	return update_memory_size;
+ }
+@@ -3446,7 +3465,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 		case MIGR_INIT: {
+ 			__u64 blocks_per_unit = blocks_per_migr_unit(super,
+ 								     dev);
+-			__u64 units = __le32_to_cpu(dev->vol.curr_migr_unit);
++			__u64 units = vol_curr_migr_unit(dev);
+ 
+ 			info->resync_start = blocks_per_unit * units;
+ 			break;
+@@ -4145,7 +4164,7 @@ static void migrate(struct imsm_dev *dev, struct intel_super *super,
+ 
+ 	dev->vol.migr_state = 1;
+ 	set_migr_type(dev, migr_type);
+-	dev->vol.curr_migr_unit = 0;
++	set_vol_curr_migr_unit(dev, 0);
+ 	dest = get_imsm_map(dev, MAP_1);
+ 
+ 	/* duplicate and then set the target end state in map[0] */
+@@ -4205,7 +4224,7 @@ static void end_migration(struct imsm_dev *dev, struct intel_super *super,
+ 
+ 	dev->vol.migr_state = 0;
+ 	set_migr_type(dev, 0);
+-	dev->vol.curr_migr_unit = 0;
++	set_vol_curr_migr_unit(dev, 0);
+ 	map->map_state = map_state;
+ }
+ 
+@@ -5491,7 +5510,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	vol->migr_state = 0;
+ 	set_migr_type(dev, MIGR_INIT);
+ 	vol->dirty = !info->state;
+-	vol->curr_migr_unit = 0;
++	set_vol_curr_migr_unit(dev, 0);
+ 	map = get_imsm_map(dev, MAP_0);
+ 	set_pba_of_lba0(map, super->create_offset);
+ 	map->blocks_per_strip = __cpu_to_le16(info_to_blocks_per_strip(info));
+@@ -6420,7 +6439,7 @@ static int validate_ppl_imsm(struct supertype *st, struct mdinfo *info,
+ 		   (map->map_state == IMSM_T_STATE_NORMAL &&
+ 		   !(dev->vol.dirty & RAIDVOL_DIRTY)) ||
+ 		   (is_rebuilding(dev) &&
+-		    dev->vol.curr_migr_unit == 0 &&
++		    vol_curr_migr_unit(dev) == 0 &&
+ 		    get_imsm_disk_idx(dev, disk->disk.raid_disk, MAP_1) != idx))
+ 			ret = st->ss->write_init_ppl(st, info, d->fd);
+ 		else
+@@ -7808,7 +7827,7 @@ static void update_recovery_start(struct intel_super *super,
+ 		return;
+ 	}
+ 
+-	units = __le32_to_cpu(dev->vol.curr_migr_unit);
++	units = vol_curr_migr_unit(dev);
+ 	rebuild->recovery_start = units * blocks_per_migr_unit(super, dev);
+ }
+ 
+@@ -8355,7 +8374,7 @@ static void imsm_progress_container_reshape(struct intel_super *super)
+ 		prev_num_members = map->num_members;
+ 		map->num_members = prev_disks;
+ 		dev->vol.migr_state = 1;
+-		dev->vol.curr_migr_unit = 0;
++		set_vol_curr_migr_unit(dev, 0);
+ 		set_migr_type(dev, MIGR_GEN_MIGR);
+ 		for (i = prev_num_members;
+ 		     i < map->num_members; i++)
+@@ -8392,10 +8411,10 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 		 * We might need to
+ 		 * - abort the reshape (if last_checkpoint is 0 and action!= reshape)
+ 		 * - finish the reshape (if last_checkpoint is big and action != reshape)
+-		 * - update curr_migr_unit
++		 * - update vol_curr_migr_unit
+ 		 */
+ 		if (a->curr_action == reshape) {
+-			/* still reshaping, maybe update curr_migr_unit */
++			/* still reshaping, maybe update vol_curr_migr_unit */
+ 			goto mark_checkpoint;
+ 		} else {
+ 			if (a->last_checkpoint == 0 && a->prev_action == reshape) {
+@@ -8409,7 +8428,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 						get_imsm_map(dev, MAP_1);
+ 					dev->vol.migr_state = 0;
+ 					set_migr_type(dev, 0);
+-					dev->vol.curr_migr_unit = 0;
++					set_vol_curr_migr_unit(dev, 0);
+ 					memcpy(map, map2,
+ 					       sizeof_imsm_map(map2));
+ 					super->updates_pending++;
+@@ -8485,25 +8504,16 @@ mark_checkpoint:
+ 	if (is_gen_migration(dev))
+ 		goto skip_mark_checkpoint;
+ 
+-	/* check if we can update curr_migr_unit from resync_start, recovery_start */
++	/* check if we can update vol_curr_migr_unit from resync_start,
++	 * recovery_start
++	 */
+ 	blocks_per_unit = blocks_per_migr_unit(super, dev);
+ 	if (blocks_per_unit) {
+-		__u32 units32;
+-		__u64 units;
+-
+-		units = a->last_checkpoint / blocks_per_unit;
+-		units32 = units;
+-
+-		/* check that we did not overflow 32-bits, and that
+-		 * curr_migr_unit needs updating
+-		 */
+-		if (units32 == units &&
+-		    units32 != 0 &&
+-		    __le32_to_cpu(dev->vol.curr_migr_unit) != units32) {
+-			dprintf("imsm: mark checkpoint (%u)\n", units32);
+-			dev->vol.curr_migr_unit = __cpu_to_le32(units32);
+-			super->updates_pending++;
+-		}
++		set_vol_curr_migr_unit(dev,
++				       a->last_checkpoint / blocks_per_unit);
++		dprintf("imsm: mark checkpoint (%llu)\n",
++			vol_curr_migr_unit(dev));
++		super->updates_pending++;
+ 	}
+ 
+ skip_mark_checkpoint:
+@@ -9588,7 +9598,7 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
+ 				id->index);
+ 			devices_to_reshape--;
+ 			newdev->vol.migr_state = 1;
+-			newdev->vol.curr_migr_unit = 0;
++			set_vol_curr_migr_unit(newdev, 0);
+ 			set_migr_type(newdev, MIGR_GEN_MIGR);
+ 			newmap->num_members = u->new_raid_disks;
+ 			for (i = 0; i < delta_disks; i++) {
+@@ -9790,8 +9800,8 @@ static void imsm_process_update(struct supertype *st,
+ 		/* find device under general migration */
+ 		for (id = super->devlist ; id; id = id->next) {
+ 			if (is_gen_migration(id->dev)) {
+-				id->dev->vol.curr_migr_unit =
+-					__cpu_to_le32(u->curr_migr_unit);
++				set_vol_curr_migr_unit(id->dev,
++						   u->curr_migr_unit);
+ 				super->updates_pending++;
+ 			}
+ 		}
+@@ -10959,8 +10969,8 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	char *buf = NULL;
+ 	int retval = 1;
+ 	unsigned int sector_size = super->sector_size;
+-	unsigned long curr_migr_unit = current_migr_unit(migr_rec);
+-	unsigned long num_migr_units = get_num_migr_units(migr_rec);
++	unsigned long long curr_migr_unit = current_migr_unit(migr_rec);
++	unsigned long long num_migr_units = get_num_migr_units(migr_rec);
+ 	char buffer[20];
+ 	int skipped_disks = 0;
+ 
 -- 
-Sergei Shtepa
-Veeam Software developer.
+2.26.2
+
