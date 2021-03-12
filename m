@@ -2,96 +2,270 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C58C433DB
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Mar 2021 12:59:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E61C433DB
+	for <linux-raid@archiver.kernel.org>; Fri, 12 Mar 2021 09:31:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 938CD64FE0
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Mar 2021 12:59:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDC8F64F00
+	for <linux-raid@archiver.kernel.org>; Fri, 12 Mar 2021 09:31:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233256AbhCKM6u (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 Mar 2021 07:58:50 -0500
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17198 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233125AbhCKM6S (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 Mar 2021 07:58:18 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1615467486; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=aaXFCrZZKgDbC/VqyThVCge1Y2zV1tSNTq2vLuNc0wPGQm2A2D4HHy/6/T9P+bALN0lYxj7n7o99UbnC+q8EFIzqHB3rEvUlmmvWP2O4xXetVujGo3KefpDDg8AMhP4wtZRbeZUK1u7qF3CcDWTOPfTVheGLjawraU8TYoQIIvg=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1615467486; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=Qz90IAd0tYxsZKK4mo1dSwxv3b6hs1wVl43VHzPADf8=; 
-        b=lUoNKfT9tt7HcbUjzfIgTLYJg0eI5LE3xZ/EnasL6+faaLahFOvVSbUYI/uVHK9wFGu9oPN0QxGKMZqm9LSQg+8MZLqotaBpUN5No8qWfnfn9pe0z7qnc5rBhfQZl8PCboOPTAbKDZ72kSCA5j456Z1ekKDsJ7kbmpC1BWR/vIU=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 1615467485268399.8704279807614; Thu, 11 Mar 2021 13:58:05 +0100 (CET)
-Subject: Re: [PATCH] mdmonitor: check if udev has finished events processing
-To:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>,
-        Michael Fritscher <michael@fritscher.net>,
-        Wols Lists <antlists@youngman.org.uk>,
-        Oleksandr Shchirskyi <oleksandr.shchirskyi@intel.com>
-Cc:     linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
-References: <20210114141416.42934-1-oleksandr.shchirskyi@intel.com>
- <a5f929eb-5103-1646-b321-65886157c9cc@trained-monkey.org>
- <51ec46c1-c632-b3a9-010f-8f13aee0e02c@linux.intel.com>
- <60473C1F.4080602@youngman.org.uk>
- <1b5b0495-c645-7f81-24f4-07fbad54ca0e@fritscher.net>
- <b604528a-2e5e-e5d7-0d05-e72e14f991e9@linux.intel.com>
- <6c833d95-7610-a3c3-01ca-3167a3e80335@trained-monkey.org>
- <4c6c4262-7590-df44-e8cb-eca6bc936287@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <7ac8d403-7624-10de-04ed-f3e12bac2955@trained-monkey.org>
-Date:   Thu, 11 Mar 2021 07:58:03 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S232904AbhCLJaq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 12 Mar 2021 04:30:46 -0500
+Received: from mga12.intel.com ([192.55.52.136]:40403 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232756AbhCLJaZ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 12 Mar 2021 04:30:25 -0500
+IronPort-SDR: wNTuoQoFcZ91m2l+e4KQ87JGWns+nDFCe4H2fN1J4vVR7LxtbQ8mdvMNC7VVGgt0vquVdw3EQh
+ ZAqLj3HwxyNA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9920"; a="168082127"
+X-IronPort-AV: E=Sophos;i="5.81,243,1610438400"; 
+   d="scan'208";a="168082127"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Mar 2021 01:30:24 -0800
+IronPort-SDR: wZqdV/ocxpsA3/leRCXA5eqNkti3VS9A1OupSNu1+HoatbY5or6rHl9U+JhyNQrDETPC7K5Gut
+ aBmWHm47XYyw==
+X-IronPort-AV: E=Sophos;i="5.81,243,1610438400"; 
+   d="scan'208";a="448572011"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Mar 2021 01:30:23 -0800
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH v2] imsm: nvme multipath support
+Date:   Fri, 12 Mar 2021 10:30:16 +0100
+Message-Id: <20210312093016.7886-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <4c6c4262-7590-df44-e8cb-eca6bc936287@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/10/21 11:46 AM, Tkaczyk, Mariusz wrote:
-> On 09.03.2021 15:52, Jes Sorensen wrote:
->> This is my main concern, small embedded devices that don't use systemd.
->> I've never been a big systemd fan, but it's how the chips have fallen,
->> so I am not overly worried about a couple of fanatics.
->>
->> If eudev can do the trick, that would be great.
->>
->> Cheers,
->> Jes
->>
-> Hello,
-> 
-> Mdadm is in use in openwrt without udev (thanks to Artur for research).
-> They are using hotplug scripts:
-> https://openwrt.org/docs/guide-user/base-system/hotplug#coldplug
-> To provide compatibility with libudev dependency they wrote small shim:
-> https://openwrt.org/packages/pkgdata/libudev-fbsd
-> Unfortunately, not all libudev functions are defined, mdadm compilation
-> there might be problematic:
-> https://openwrt.org/packages/pkgdata_lede17_1/mdadm
-> 
-> Now, it makes sense to define libudev as optional dependency.
-> It should be done before new release, Intel will do that.
-> 
-> Anyway, I still think that we should drop udev detection from mdadm.
-> I there is no systemd-udevd, we should expect other tool to provide
-> similar functionality, like hotplug scripts, eudev.
-> IMO mdadm doesn't need to create any link.
+From: Blazej Kucman <blazej.kucman@intel.com>
 
-Thanks for checking into this and taking care of it, appreciate it!
+Add support for nvme devices which are represented
+via nvme-subsystem.
+Print warning when multi-path disk is added to RAID.
 
-Cheers,
-Jes
+Signed-off-by: Oleksandr Shchirskyi <oleksandr.shchirskyi@intel.com>
+Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ platform-intel.c | 79 +++++++++++++++++++++++++++++++++++++++++++++++-
+ platform-intel.h |  2 ++
+ super-intel.c    | 38 ++++++++++++++---------
+ 3 files changed, 104 insertions(+), 15 deletions(-)
+
+diff --git a/platform-intel.c b/platform-intel.c
+index f1f6d4cd..0e1ec3d5 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -30,6 +30,8 @@
+ #include <sys/stat.h>
+ #include <limits.h>
+ 
++#define NVME_SUBSYS_PATH "/sys/devices/virtual/nvme-subsystem/"
++
+ static int devpath_to_ll(const char *dev_path, const char *entry,
+ 			 unsigned long long *val);
+ 
+@@ -668,12 +670,63 @@ const struct imsm_orom *find_imsm_capability(struct sys_dev *hba)
+ 	return NULL;
+ }
+ 
++/* Check whether the nvme device is represented by nvme subsytem,
++ * if yes virtual path should be changed to hardware device path,
++ * to allow IMSM capabilities detection.
++ * Returns:
++ *	hardware path to device - if the device is represented via
++ *		nvme virtual subsytem
++ *	NULL - if the device is not represented via nvme virtual subsytem
++ */
++char *get_nvme_multipath_dev_hw_path(const char *dev_path)
++{
++	DIR *dir;
++	struct dirent *ent;
++	char *rp = NULL;
++
++	if (strncmp(dev_path, NVME_SUBSYS_PATH, strlen(NVME_SUBSYS_PATH)) != 0)
++		return NULL;
++
++	dir = opendir(dev_path);
++	if (!dir)
++		return NULL;
++
++	for (ent = readdir(dir); ent; ent = readdir(dir)) {
++		char buf[strlen(dev_path) + strlen(ent->d_name) + 1];
++
++		/* Check if dir is a controller, ignore namespaces*/
++		if (!(strncmp(ent->d_name, "nvme", 4) == 0) ||
++		    (strrchr(ent->d_name, 'n') != &ent->d_name[0]))
++			continue;
++
++		sprintf(buf, "%s/%s", dev_path, ent->d_name);
++		rp = realpath(buf, NULL);
++		break;
++	}
++
++	closedir(dir);
++	return rp;
++}
++
+ char *devt_to_devpath(dev_t dev)
+ {
+ 	char device[46];
++	char *rp;
++	char *buf;
+ 
+ 	sprintf(device, "/sys/dev/block/%d:%d/device", major(dev), minor(dev));
+-	return realpath(device, NULL);
++
++	rp = realpath(device, NULL);
++	if (!rp)
++		return NULL;
++
++	buf = get_nvme_multipath_dev_hw_path(rp);
++	if (buf) {
++		free(rp);
++		return buf;
++	}
++
++	return rp;
+ }
+ 
+ char *diskfd_to_devpath(int fd)
+@@ -797,3 +850,27 @@ int imsm_is_nvme_supported(int disk_fd, int verbose)
+ 	}
+ 	return 1;
+ }
++
++/* Verify if multipath is supported by NVMe controller
++ * Returns:
++ *	0 - not supported
++ *	1 - supported
++ */
++int is_multipath_nvme(int disk_fd)
++{
++	char path_buf[PATH_MAX];
++	char ns_path[PATH_MAX];
++	char *kname = fd2kname(disk_fd);
++
++	if (!kname)
++		return 0;
++	sprintf(path_buf, "/sys/block/%s", kname);
++
++	if (!realpath(path_buf, ns_path))
++		return 0;
++
++	if (strncmp(ns_path, NVME_SUBSYS_PATH, strlen(NVME_SUBSYS_PATH)) == 0)
++		return 1;
++
++	return 0;
++}
+diff --git a/platform-intel.h b/platform-intel.h
+index 7371478e..8396a0f1 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -236,6 +236,7 @@ static inline char *guid_str(char *buf, struct efi_guid guid)
+ 	return buf;
+ }
+ 
++char *get_nvme_multipath_dev_hw_path(const char *dev_path);
+ char *diskfd_to_devpath(int fd);
+ __u16 devpath_to_vendor(const char *dev_path);
+ struct sys_dev *find_driver_devices(const char *bus, const char *driver);
+@@ -252,4 +253,5 @@ const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
+ struct sys_dev *device_by_id(__u16 device_id);
+ struct sys_dev *device_by_id_and_path(__u16 device_id, const char *path);
+ int imsm_is_nvme_supported(int disk_fd, int verbose);
++int is_multipath_nvme(int disk_fd);
+ char *vmd_domain_to_controller(struct sys_dev *hba, char *buf);
+diff --git a/super-intel.c b/super-intel.c
+index 715febf7..46513416 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2347,9 +2347,9 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
+ static int print_nvme_info(struct sys_dev *hba)
+ {
+ 	char buf[1024];
++	char *device_path;
+ 	struct dirent *ent;
+ 	DIR *dir;
+-	char *rp;
+ 	int fd;
+ 
+ 	dir = opendir("/sys/block/");
+@@ -2358,19 +2358,23 @@ static int print_nvme_info(struct sys_dev *hba)
+ 
+ 	for (ent = readdir(dir); ent; ent = readdir(dir)) {
+ 		if (strstr(ent->d_name, "nvme")) {
+-			sprintf(buf, "/sys/block/%s", ent->d_name);
+-			rp = realpath(buf, NULL);
+-			if (!rp)
++			fd = open_dev(ent->d_name);
++			if (fd < 0)
+ 				continue;
+-			if (path_attached_to_hba(rp, hba->path)) {
+-				fd = open_dev(ent->d_name);
+-				if (!imsm_is_nvme_supported(fd, 0)) {
+-					if (fd >= 0)
+-						close(fd);
+-					free(rp);
+-					continue;
+-				}
+ 
++			if (!imsm_is_nvme_supported(fd, 0)) {
++				if (fd >= 0)
++					close(fd);
++				continue;
++			}
++
++			device_path = diskfd_to_devpath(fd);
++			if (!device_path) {
++				close(fd);
++				continue;
++			}
++
++			if (path_attached_to_hba(device_path, hba->path)) {
+ 				fd2devname(fd, buf);
+ 				if (hba->type == SYS_DEV_VMD)
+ 					printf(" NVMe under VMD : %s", buf);
+@@ -2381,9 +2385,9 @@ static int print_nvme_info(struct sys_dev *hba)
+ 					printf(" (%s)\n", buf);
+ 				else
+ 					printf("()\n");
+-				close(fd);
+ 			}
+-			free(rp);
++			free(device_path);
++			close(fd);
+ 		}
+ 	}
+ 
+@@ -5858,6 +5862,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 		int i;
+ 		char *devpath = diskfd_to_devpath(fd);
+ 		char controller_path[PATH_MAX];
++		char *controller_name;
+ 
+ 		if (!devpath) {
+ 			pr_err("failed to get devpath, aborting\n");
+@@ -5868,6 +5873,11 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 		}
+ 
+ 		snprintf(controller_path, PATH_MAX-1, "%s/device", devpath);
++
++		controller_name = basename(devpath);
++		if (is_multipath_nvme(fd))
++			pr_err("%s controller supports Multi-Path I/O, Intel (R) VROC does not support multipathing\n", controller_name);
++
+ 		free(devpath);
+ 
+ 		if (!imsm_is_nvme_supported(dd->fd, 1)) {
+-- 
+2.26.2
 
