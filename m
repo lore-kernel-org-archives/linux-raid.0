@@ -2,162 +2,73 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8A67C433DB
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Mar 2021 13:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7235C433E6
+	for <linux-raid@archiver.kernel.org>; Tue, 16 Mar 2021 14:55:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8567E64FE4
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Mar 2021 13:23:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98AA165092
+	for <linux-raid@archiver.kernel.org>; Tue, 16 Mar 2021 14:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231405AbhCPNXQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 16 Mar 2021 09:23:16 -0400
-Received: from mga01.intel.com ([192.55.52.88]:29382 "EHLO mga01.intel.com"
+        id S237621AbhCPOy6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 16 Mar 2021 10:54:58 -0400
+Received: from mga05.intel.com ([192.55.52.43]:17077 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234802AbhCPNXM (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 16 Mar 2021 09:23:12 -0400
-IronPort-SDR: MRvY18bqafkkwh1bEsjj5pIW5STS7J0rkh8bNXj3GLiBLS+NsKXfD6+Rn240fCRM5eXhaZuWl9
- poQevMXP5z+w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9924"; a="209191125"
+        id S237578AbhCPOy3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 16 Mar 2021 10:54:29 -0400
+IronPort-SDR: zdUZOrnwl/aJ8pF1igbkBqhFo0MRP06my0WGdL0q3RLih16yLrXMTHmVJk5HOlC9tL0eP3RJz7
+ nZGFNfGmMP/A==
+X-IronPort-AV: E=McAfee;i="6000,8403,9924"; a="274314798"
 X-IronPort-AV: E=Sophos;i="5.81,251,1610438400"; 
-   d="scan'208";a="209191125"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2021 06:23:12 -0700
-IronPort-SDR: uYn2o78unSF8mFrjlJUlVpbEsIpPYwLKvYSliaJpXEqkaoJL9YK3qFrYfqm30fbd5I5Il8twfA
- 96I+w9lG6LNA==
+   d="scan'208";a="274314798"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2021 07:54:26 -0700
+IronPort-SDR: AQqAV3Nq07Oj+z1SHazu3kyZHsf1w5XPe6iw8armg/a1Z6WsWM5+f28QOjumPy/dpQoTeHu7P5
+ 0bWHvLOab9vQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,251,1610438400"; 
-   d="scan'208";a="605260013"
-Received: from lkp-server02.sh.intel.com (HELO 1c294c63cb86) ([10.239.97.151])
-  by fmsmga005.fm.intel.com with ESMTP; 16 Mar 2021 06:23:11 -0700
-Received: from kbuild by 1c294c63cb86 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lM9fC-00009x-Hr; Tue, 16 Mar 2021 13:23:10 +0000
-Date:   Tue, 16 Mar 2021 21:22:47 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- f3cf8c2b2caf6ae77b7c786218d3b060faef63a6
-Message-ID: <6050b127.DAogKvY+u5/9JuRd%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+   d="scan'208";a="440108339"
+Received: from linux.intel.com ([10.54.29.200])
+  by FMSMGA003.fm.intel.com with ESMTP; 16 Mar 2021 07:54:26 -0700
+Received: from [10.249.154.67] (mtkaczyk-MOBL1.ger.corp.intel.com [10.249.154.67])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by linux.intel.com (Postfix) with ESMTPS id 2FB095807EA;
+        Tue, 16 Mar 2021 07:54:24 -0700 (PDT)
+Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org,
+        xni@redhat.com
+References: <20210120200542.19139-1-ncroxon@redhat.com>
+ <84ed6e32-3b69-f13d-b1b8-33166c92e5ab@trained-monkey.org>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <eb0060d3-756d-c6f9-66d7-bcd7b0468bf7@linux.intel.com>
+Date:   Tue, 16 Mar 2021 15:54:22 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <84ed6e32-3b69-f13d-b1b8-33166c92e5ab@trained-monkey.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: f3cf8c2b2caf6ae77b7c786218d3b060faef63a6  md/raid10: improve discard request for far layout
+Hello Nigel,
 
-elapsed time: 764m
+Blame told us, that yours patch introduce regression in following
+scenario:
 
-configs tested: 94
-configs skipped: 2
+#mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0125]n1
+#mdadm -CR volume -l0 --chunk 64 --raid-devices=1 /dev/nvme0n1 --force
+#mdadm -G /dev/md/imsm0 -n2
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+At the end of reshape, level doesn't back to RAID0.
+Could you look into it?
+Let me know, if you need support.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-x86_64                           allyesconfig
-riscv                            allmodconfig
-nds32                            alldefconfig
-arc                      axs103_smp_defconfig
-mips                      malta_kvm_defconfig
-arm                           u8500_defconfig
-powerpc                      ppc6xx_defconfig
-powerpc                mpc7448_hpc2_defconfig
-mips                           xway_defconfig
-arm                       versatile_defconfig
-arm                         lpc32xx_defconfig
-sh                            shmin_defconfig
-mips                           ip32_defconfig
-powerpc                     rainier_defconfig
-parisc                generic-32bit_defconfig
-arm                        mini2440_defconfig
-sh                           se7705_defconfig
-arc                              alldefconfig
-arm                           viper_defconfig
-mips                       lemote2f_defconfig
-arc                        nsimosci_defconfig
-powerpc                 mpc837x_rdb_defconfig
-powerpc                      arches_defconfig
-sh                           se7712_defconfig
-arm                          pcm027_defconfig
-xtensa                           alldefconfig
-mips                          ath79_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                               tinyconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a006-20210315
-x86_64               randconfig-a001-20210315
-x86_64               randconfig-a005-20210315
-x86_64               randconfig-a004-20210315
-x86_64               randconfig-a002-20210315
-x86_64               randconfig-a003-20210315
-i386                 randconfig-a001-20210315
-i386                 randconfig-a005-20210315
-i386                 randconfig-a003-20210315
-i386                 randconfig-a002-20210315
-i386                 randconfig-a004-20210315
-i386                 randconfig-a006-20210315
-i386                 randconfig-a013-20210315
-i386                 randconfig-a016-20210315
-i386                 randconfig-a011-20210315
-i386                 randconfig-a012-20210315
-i386                 randconfig-a014-20210315
-i386                 randconfig-a015-20210315
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Thanks,
+Mariusz
