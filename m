@@ -2,133 +2,161 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E414C433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 08:35:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 535ECC433E0
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 12:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3EC864F2B
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 08:35:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0122064F3E
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 12:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbhCQIfE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Mar 2021 04:35:04 -0400
-Received: from mga07.intel.com ([134.134.136.100]:45358 "EHLO mga07.intel.com"
+        id S231511AbhCQMCF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Mar 2021 08:02:05 -0400
+Received: from mga17.intel.com ([192.55.52.151]:55757 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229467AbhCQIeh (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 17 Mar 2021 04:34:37 -0400
-IronPort-SDR: G58Vf6g1tk1Wq/XXrErf41UZssSEK+KrOE1qZTdjMwcD4Rq5XhC9aREghHbVLLaTcYj33dmoml
- LKjDh2sc259A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9925"; a="253428658"
-X-IronPort-AV: E=Sophos;i="5.81,255,1610438400"; 
-   d="scan'208";a="253428658"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2021 01:34:36 -0700
-IronPort-SDR: tmtsxV98T3jqEFUwYeaV+Qs3b6oHmu2fMILSX4vZQdatBr7Eu/63iJjwJGwaFbvI8SnfOTiVa4
- AAcPMdyqY/gA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.81,255,1610438400"; 
-   d="scan'208";a="379199671"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga007.fm.intel.com with ESMTP; 17 Mar 2021 01:34:35 -0700
-Received: from [10.213.18.95] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.18.95])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id 6160C580812;
-        Wed, 17 Mar 2021 01:34:34 -0700 (PDT)
-Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
-To:     Nigel Croxon <ncroxon@redhat.com>
-Cc:     Jes Sorensen <jes@trained-monkey.org>, linux-raid@vger.kernel.org,
-        xni@redhat.com
-References: <20210120200542.19139-1-ncroxon@redhat.com>
- <84ed6e32-3b69-f13d-b1b8-33166c92e5ab@trained-monkey.org>
- <eb0060d3-756d-c6f9-66d7-bcd7b0468bf7@linux.intel.com>
- <764426808.38181143.1615910368475.JavaMail.zimbra@redhat.com>
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-Message-ID: <cbaed953-90e8-3cc1-0e28-5ada3938c60e@linux.intel.com>
-Date:   Wed, 17 Mar 2021 09:34:32 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S231599AbhCQMCD (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 17 Mar 2021 08:02:03 -0400
+IronPort-SDR: nDPa9IhfvHu+fDCBu24WNc1+K/MwIlWKo4QQWfY2GeO63+yFh+tmnT/M7fPa0M7eDxvHfEObfp
+ 77JsjrzwyHHw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9925"; a="169364526"
+X-IronPort-AV: E=Sophos;i="5.81,256,1610438400"; 
+   d="scan'208";a="169364526"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2021 05:02:03 -0700
+IronPort-SDR: lpRDPQizidYegcqwzv769QHEE7ImHEQIzmhuo07APf3aXuweNkKhqKyccEROz3hG1mrsDrbJAU
+ pKZkIERlrk/w==
+X-IronPort-AV: E=Sophos;i="5.81,256,1610438400"; 
+   d="scan'208";a="412618991"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2021 05:02:02 -0700
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH] imsm: support for third Sata controller
+Date:   Wed, 17 Mar 2021 13:01:54 +0100
+Message-Id: <20210317120154.30806-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <764426808.38181143.1615910368475.JavaMail.zimbra@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 16.03.2021 16:59, Nigel Croxon wrote:
-> 
-> 
-> ----- Original Message -----
-> From: "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>
-> To: "Jes Sorensen" <jes@trained-monkey.org>, "Nigel Croxon" <ncroxon@redhat.com>, linux-raid@vger.kernel.org, xni@redhat.com
-> Sent: Tuesday, March 16, 2021 10:54:22 AM
-> Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
-> 
-> Hello Nigel,
-> 
-> Blame told us, that yours patch introduce regression in following
-> scenario:
-> 
-> #mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0125]n1
-> #mdadm -CR volume -l0 --chunk 64 --raid-devices=1 /dev/nvme0n1 --force
-> #mdadm -G /dev/md/imsm0 -n2
-> 
-> At the end of reshape, level doesn't back to RAID0.
-> Could you look into it?
-> Let me know, if you need support.
-> 
-> Thanks,
-> Mariusz
-> 
-> I’m trying your situation without my patch (its reverted) and I’m not seeing success.
-> See the dmesg log.
-> 
-> 
-> [root@fedora33 mdadmupstream]# mdadm -CR volume -l0 --chunk 64 --raid-devices=1 /dev/nvme0n1 --force
-> mdadm: /dev/nvme0n1 appears to be part of a raid array:
->        level=container devices=0 ctime=Wed Dec 31 19:00:00 1969
-> mdadm: Creating array inside imsm container md127
-> mdadm: array /dev/md/volume started.
-> 
-> [root@fedora33 mdadmupstream]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4] [raid0]
-> md126 : active raid0 nvme0n1[0]
->       500102144 blocks super external:/md127/0 64k chunks
-> 
-> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
->       4420 blocks super external:imsm
-> 
-> unused devices: <none>
-> [root@fedora33 mdadmupstream]# mdadm -G /dev/md/imsm0 -n2
-> [root@fedora33 mdadmupstream]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4] [raid0]
-> md126 : active raid4 nvme3n1[2] nvme0n1[0]
->       500102144 blocks super external:-md127/0 level 4, 64k chunk, algorithm 5 [2/1] [U_]
-> 
-> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
->       4420 blocks super external:imsm
-> 
-> unused devices: <none>
-> 
-> 
-> dmesg says:
-> [Mar16 11:46] md/raid:md126: device nvme0n1 operational as raid disk 0
-> [  +0.011147] md/raid:md126: raid level 4 active with 1 out of 2 devices, algorithm 5
-> [  +0.044605] md/raid0:md126: raid5 must have missing parity disk!
-> [  +0.000002] md: md126: raid0 would not accept array
-> 
-> -Nigel
-> 
-Hello Nigel,
-It looks strange. Could you try to reproduce it with --size, less than
-smaller drive in array (e.g. 10G)?
+Add new UEFI TSata variable. Remove CSata variable.
+This variable has been never exposed by UEFI.
+Remove vulnerability to match different hbas with SATA variable.
 
-If it doesn't help please provide me your kernel version. I will try to
-reproduce it myself.
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ platform-intel.c | 58 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 31 insertions(+), 27 deletions(-)
 
-Thanks,
-Mariusz
+diff --git a/platform-intel.c b/platform-intel.c
+index f1f6d4cd..5ae2d453 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -486,7 +486,7 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
+ #define SCU_PROP "RstScuV"
+ #define AHCI_PROP "RstSataV"
+ #define AHCI_SSATA_PROP "RstsSatV"
+-#define AHCI_CSATA_PROP "RstCSatV"
++#define AHCI_TSATA_PROP "RsttSatV"
+ #define VMD_PROP "RstUefiV"
+ 
+ #define VENDOR_GUID \
+@@ -494,7 +494,8 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
+ 
+ #define PCI_CLASS_RAID_CNTRL 0x010400
+ 
+-static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
++static int read_efi_var(void *buffer, ssize_t buf_size,
++			const char *variable_name, struct efi_guid guid)
+ {
+ 	char path[PATH_MAX];
+ 	char buf[GUID_STR_MAX];
+@@ -523,7 +524,8 @@ static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_name, str
+ 	return 0;
+ }
+ 
+-static int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
++static int read_efi_variable(void *buffer, ssize_t buf_size,
++			     const char *variable_name, struct efi_guid guid)
+ {
+ 	char path[PATH_MAX];
+ 	char buf[GUID_STR_MAX];
+@@ -576,7 +578,9 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+ {
+ 	struct imsm_orom orom;
+ 	struct orom_entry *ret;
+-	int err;
++	static const char * const sata_efivars[] = {AHCI_PROP, AHCI_SSATA_PROP,
++						    AHCI_TSATA_PROP};
++	unsigned long i;
+ 
+ 	if (check_env("IMSM_TEST_AHCI_EFI") || check_env("IMSM_TEST_SCU_EFI"))
+ 		return imsm_platform_test(hba);
+@@ -585,35 +589,35 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+ 	if (check_env("IMSM_TEST_OROM"))
+ 		return NULL;
+ 
+-	if (hba->type == SYS_DEV_SATA && hba->class != PCI_CLASS_RAID_CNTRL)
+-		return NULL;
+-
+-	err = read_efi_variable(&orom, sizeof(orom), hba->type == SYS_DEV_SAS ? SCU_PROP : AHCI_PROP, VENDOR_GUID);
++	switch (hba->type) {
++	case SYS_DEV_SAS:
++		if (!read_efi_variable(&orom, sizeof(orom), SCU_PROP,
++				       VENDOR_GUID))
++			break;
+ 
+-	/* try to read variable for second AHCI controller */
+-	if (err && hba->type == SYS_DEV_SATA)
+-		err = read_efi_variable(&orom, sizeof(orom), AHCI_SSATA_PROP, VENDOR_GUID);
++		return NULL;
++	case SYS_DEV_SATA:
++		if (hba->class != PCI_CLASS_RAID_CNTRL)
++			return NULL;
+ 
+-	/* try to read variable for combined AHCI controllers */
+-	if (err && hba->type == SYS_DEV_SATA) {
+-		static struct orom_entry *csata;
++		for (i = 0; i < ARRAY_SIZE(sata_efivars); i++) {
++			if (!read_efi_variable(&orom, sizeof(orom),
++						sata_efivars[i], VENDOR_GUID))
++				break;
+ 
+-		err = read_efi_variable(&orom, sizeof(orom), AHCI_CSATA_PROP, VENDOR_GUID);
+-		if (!err) {
+-			if (!csata)
+-				csata = add_orom(&orom);
+-			add_orom_device_id(csata, hba->dev_id);
+-			csata->type = hba->type;
+-			return &csata->orom;
+ 		}
+-	}
++		if (i == ARRAY_SIZE(sata_efivars))
++			return NULL;
+ 
+-	if (hba->type == SYS_DEV_VMD) {
+-		err = read_efi_variable(&orom, sizeof(orom), VMD_PROP, VENDOR_GUID);
+-	}
+-
+-	if (err)
++		break;
++	case SYS_DEV_VMD:
++		if (!read_efi_variable(&orom, sizeof(orom), VMD_PROP,
++				       VENDOR_GUID))
++			break;
+ 		return NULL;
++	default:
++		return NULL;
++	}
+ 
+ 	ret = add_orom(&orom);
+ 	add_orom_device_id(ret, hba->dev_id);
+-- 
+2.26.2
+
