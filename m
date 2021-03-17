@@ -2,74 +2,79 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA3F8C433E6
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Mar 2021 20:27:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFF31C433E0
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 04:38:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8FC864D9D
-	for <linux-raid@archiver.kernel.org>; Tue, 16 Mar 2021 20:27:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A48E64F01
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 04:38:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231147AbhCPU1L (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 16 Mar 2021 16:27:11 -0400
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17224 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230308AbhCPU0X (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 16 Mar 2021 16:26:23 -0400
-ARC-Seal: i=1; a=rsa-sha256; t=1615926374; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=XZGsDQmVLwYPPzxrBXLsJVlBbG7jwG++Xt/vEMe+hQoUC17fINmCSkTALluAPQwIBuHC1QU70N8gcJHEzBSylqc0iDyYDSispsh7kbXA6f+LGUUsl4C/UFRkBJDfB4iod8QcwBU/JPCKe77qMnKXQBlalqIz/DMfL34glvoB+v8=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1615926374; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=b+f/OqXFF5cidV5lUdjlprMoUZZrNyX4ZT247I5Zeu4=; 
-        b=gUT3f3KOIzoy2FelVBcftVlJ13YLdjMuby5rtF9z4ggj43HFL8dI+V/73XxMvaKsyGwhUMQObq05HvHbnjhJHZkdr1lAIJlMwAVkHD9g3S07dtWuvGumv9IIa7mqb2kGBwLGpz3xPK0WhV0c+bUbHoILtx+cDvUZjj9m6II/JPk=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 1615926372141902.2962961973266; Tue, 16 Mar 2021 21:26:12 +0100 (CET)
-Subject: Re: [PATCH v2] imsm: nvme multipath support
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org
-References: <20210312093016.7886-1-mariusz.tkaczyk@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <149777c0-03c8-6a0f-0d2c-64836539c7da@trained-monkey.org>
-Date:   Tue, 16 Mar 2021 16:26:11 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
-MIME-Version: 1.0
-In-Reply-To: <20210312093016.7886-1-mariusz.tkaczyk@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+        id S229482AbhCQEiB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Mar 2021 00:38:01 -0400
+Received: from mail.snapdragon.cc ([103.26.41.109]:37894 "EHLO
+        mail.snapdragon.cc" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229469AbhCQEiA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Mar 2021 00:38:00 -0400
+Received: by mail.snapdragon.cc (Postfix, from userid 65534)
+        id EC9AD19E0448; Wed, 17 Mar 2021 04:37:54 +0000 (UTC)
+From:   Manuel Riel <manu@snapdragon.cc>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=snapdragon.cc;
+        s=default; t=1615955874;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Hv9952StmTKGHcH1kUljNiQd9kzt41vsqcMmd/H+9Bk=;
+        b=AmAjY8Za4UvDF6j9KQ41dXxYBQlirxKBX3W6Lz2LOgX05C5+8rxb8TxMl9LHnuy6CGjnd/
+        Nh66b8MusAbpjjS7+Xed7m4xubizoXblctCae6lcmE3sBkJof1Ji4Qhh2eRRGrvljvBoKR
+        IUVKyVaQ3rVRXifIYC8dnOTR5TnZwc4=
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.60.0.2.21\))
+Subject: [PATCH] md: warn about using another MD array as write journal
+Message-Id: <DAEB6C2F-3AE0-4EBE-8775-7C6292F8749A@snapdragon.cc>
+Date:   Wed, 17 Mar 2021 12:37:52 +0800
+Cc:     Vojtech Myslivec <vojtech@xmyslivec.cz>
+To:     Linux-RAID <linux-raid@vger.kernel.org>, Song Liu <song@kernel.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/12/21 4:30 AM, Mariusz Tkaczyk wrote:
-> From: Blazej Kucman <blazej.kucman@intel.com>
-> 
-> Add support for nvme devices which are represented
-> via nvme-subsystem.
-> Print warning when multi-path disk is added to RAID.
-> 
-> Signed-off-by: Oleksandr Shchirskyi <oleksandr.shchirskyi@intel.com>
-> Signed-off-by: Blazej Kucman <blazej.kucman@intel.com>
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> ---
->  platform-intel.c | 79 +++++++++++++++++++++++++++++++++++++++++++++++-
->  platform-intel.h |  2 ++
->  super-intel.c    | 38 ++++++++++++++---------
->  3 files changed, 104 insertions(+), 15 deletions(-)
-> 
+To follow up on a previous discussion[1] about stuck RAIDs, I'd like to =
+propose adding a warning
+about this to the relevant docs. Specifically users shouldn't add other =
+MD arrays as journal device.
 
-Applied!
+Ideally mdadm would check for this, but having it in the docs is useful =
+too.
 
-Thanks,
-Jes
+1: =
+https://lore.kernel.org/linux-btrfs/d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@x=
+myslivec.cz/
 
+---
 
+diff --git a/Documentation/driver-api/md/raid5-cache.rst =
+b/Documentation/driver-api/md/raid5-cache.rst
+index d7a15f44a..128044018 100644
+--- a/Documentation/driver-api/md/raid5-cache.rst
++++ b/Documentation/driver-api/md/raid5-cache.rst
+@@ -17,7 +17,10 @@ And switch it back to write-through mode by::
+        echo "write-through" > /sys/block/md0/md/journal_mode
+
+ In both modes, all writes to the array will hit cache disk first. This =
+means
+-the cache disk must be fast and sustainable.
++the cache disk must be fast and sustainable. The cache disk also can't =
+be
++another MD RAID array, since such a nested setup can cause problems =
+when
++assembling an array or lead to the primary array getting stuck during
++operation.
+
+ write-through mode
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
