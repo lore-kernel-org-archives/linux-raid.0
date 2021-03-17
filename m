@@ -2,161 +2,99 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 535ECC433E0
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 12:02:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 958E7C433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 14:06:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0122064F3E
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 12:02:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EDE864F67
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 14:06:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231511AbhCQMCF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Mar 2021 08:02:05 -0400
-Received: from mga17.intel.com ([192.55.52.151]:55757 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231599AbhCQMCD (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 17 Mar 2021 08:02:03 -0400
-IronPort-SDR: nDPa9IhfvHu+fDCBu24WNc1+K/MwIlWKo4QQWfY2GeO63+yFh+tmnT/M7fPa0M7eDxvHfEObfp
- 77JsjrzwyHHw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9925"; a="169364526"
-X-IronPort-AV: E=Sophos;i="5.81,256,1610438400"; 
-   d="scan'208";a="169364526"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2021 05:02:03 -0700
-IronPort-SDR: lpRDPQizidYegcqwzv769QHEE7ImHEQIzmhuo07APf3aXuweNkKhqKyccEROz3hG1mrsDrbJAU
- pKZkIERlrk/w==
-X-IronPort-AV: E=Sophos;i="5.81,256,1610438400"; 
-   d="scan'208";a="412618991"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Mar 2021 05:02:02 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH] imsm: support for third Sata controller
-Date:   Wed, 17 Mar 2021 13:01:54 +0100
-Message-Id: <20210317120154.30806-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S231615AbhCQOFg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Mar 2021 10:05:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49826 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231644AbhCQOFN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Mar 2021 10:05:13 -0400
+Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2141C06175F
+        for <linux-raid@vger.kernel.org>; Wed, 17 Mar 2021 07:05:12 -0700 (PDT)
+Received: by mail-qv1-xf36.google.com with SMTP id o19so1447364qvu.0
+        for <linux-raid@vger.kernel.org>; Wed, 17 Mar 2021 07:05:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=digitalocean.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=PWoltp9WmwyO3d7XhliVywf9i2GXKDnsLpbRrO2NbGI=;
+        b=WsRpNG8sX0PGjK+pfA+SQ3Bb3jhflsFaBhjj63LbczCkJ+7RcnSs60BJC1XVRTzffh
+         ROYiVgrbr2NmfFs/FGJdGvIW460RaXjSJ7qb5vOugINIc9EiS1DXbtJFe0WYDSAPHGlA
+         HQ4SiZdhN07sZRsTsJtQi+VtW6bA1Cr6v/QjY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=PWoltp9WmwyO3d7XhliVywf9i2GXKDnsLpbRrO2NbGI=;
+        b=OHXGhllJ3spu+7RFMt70i5F3uaxSQ/b0QBFKbucQgXXxZQrjRw1qYt0XehbRjxpNk7
+         Tl7zgEc5wqj6p+f/MNl1EGt8Z2GS5rznsJS/THsNWiV3u6b1pPloedekMrfix4Re1WOV
+         AxMBolUdgczj95IITRlKSnuA/b11AsZ0yzyGMnORKTrwrVdRI5md9goaMoOr5+nxrmgD
+         xRerdbSgHw6jXNqr48/SCjrOlmgIzagMjUw/LKV/zGJiAK2lU72taAk28Bn00BGSjwMZ
+         NHCRre7RpaB1h4ycZfeq0d9NJD+z787hQIKCuNX32ilT7C0ukRxxup7gvfd1/ZxDKMTn
+         E3GA==
+X-Gm-Message-State: AOAM531H81sUXdzre4IRkmRiqqFtAWi6bWgEsszCqNX0hiCpeB/IXUAP
+        XbZODPQTcBaVyt6aW4+Ix+Kkfp1etizO8onbLZc=
+X-Google-Smtp-Source: ABdhPJyuvoed78WS6+HdEBNB7QZ/3oGdsTqI0V2wAYQM4QWLyFqID+v4ui/DHHggT9LydDHCzeR7Ng==
+X-Received: by 2002:a0c:a909:: with SMTP id y9mr5600566qva.20.1615989911862;
+        Wed, 17 Mar 2021 07:05:11 -0700 (PDT)
+Received: from tuna.fritz.box ([2a02:8070:87b9:f700:d43d:6bf:d9e5:58a3])
+        by smtp.gmail.com with ESMTPSA id e3sm17864791qkn.39.2021.03.17.07.05.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Mar 2021 07:05:11 -0700 (PDT)
+From:   Jan Glauber <jglauber@digitalocean.com>
+To:     linux-raid@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>,
+        Jan Glauber <jglauber@digitalocean.com>
+Subject: [PATCH] md: Fix missing unused status line of /proc/mdstat
+Date:   Wed, 17 Mar 2021 15:04:39 +0100
+Message-Id: <20210317140439.9499-1-jglauber@digitalocean.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Add new UEFI TSata variable. Remove CSata variable.
-This variable has been never exposed by UEFI.
-Remove vulnerability to match different hbas with SATA variable.
+Reading /proc/mdstat with a read buffer size that would not
+fit the unused status line in the first read will skip this
+line from the output.
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+So 'dd if=/proc/mdstat bs=64 2>/dev/null' will not print something
+like: unused devices: <none>
+
+Don't return NULL immediately in start() for v=2 but call
+show() once to print the status line also for multiple reads.
+
+Fixes: 1f4aace60b0e ("fs/seq_file.c: simplify seq_file iteration code and interface")
+Signed-off-by: Jan Glauber <jglauber@digitalocean.com>
 ---
- platform-intel.c | 58 ++++++++++++++++++++++++++----------------------
- 1 file changed, 31 insertions(+), 27 deletions(-)
+ drivers/md/md.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/platform-intel.c b/platform-intel.c
-index f1f6d4cd..5ae2d453 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -486,7 +486,7 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
- #define SCU_PROP "RstScuV"
- #define AHCI_PROP "RstSataV"
- #define AHCI_SSATA_PROP "RstsSatV"
--#define AHCI_CSATA_PROP "RstCSatV"
-+#define AHCI_TSATA_PROP "RsttSatV"
- #define VMD_PROP "RstUefiV"
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 21da0c48f6c2..cb19d50fa672 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8153,7 +8153,11 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
+ 	loff_t l = *pos;
+ 	struct mddev *mddev;
  
- #define VENDOR_GUID \
-@@ -494,7 +494,8 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
- 
- #define PCI_CLASS_RAID_CNTRL 0x010400
- 
--static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
-+static int read_efi_var(void *buffer, ssize_t buf_size,
-+			const char *variable_name, struct efi_guid guid)
- {
- 	char path[PATH_MAX];
- 	char buf[GUID_STR_MAX];
-@@ -523,7 +524,8 @@ static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_name, str
- 	return 0;
- }
- 
--static int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
-+static int read_efi_variable(void *buffer, ssize_t buf_size,
-+			     const char *variable_name, struct efi_guid guid)
- {
- 	char path[PATH_MAX];
- 	char buf[GUID_STR_MAX];
-@@ -576,7 +578,9 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
- {
- 	struct imsm_orom orom;
- 	struct orom_entry *ret;
--	int err;
-+	static const char * const sata_efivars[] = {AHCI_PROP, AHCI_SSATA_PROP,
-+						    AHCI_TSATA_PROP};
-+	unsigned long i;
- 
- 	if (check_env("IMSM_TEST_AHCI_EFI") || check_env("IMSM_TEST_SCU_EFI"))
- 		return imsm_platform_test(hba);
-@@ -585,35 +589,35 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
- 	if (check_env("IMSM_TEST_OROM"))
- 		return NULL;
- 
--	if (hba->type == SYS_DEV_SATA && hba->class != PCI_CLASS_RAID_CNTRL)
--		return NULL;
--
--	err = read_efi_variable(&orom, sizeof(orom), hba->type == SYS_DEV_SAS ? SCU_PROP : AHCI_PROP, VENDOR_GUID);
-+	switch (hba->type) {
-+	case SYS_DEV_SAS:
-+		if (!read_efi_variable(&orom, sizeof(orom), SCU_PROP,
-+				       VENDOR_GUID))
-+			break;
- 
--	/* try to read variable for second AHCI controller */
--	if (err && hba->type == SYS_DEV_SATA)
--		err = read_efi_variable(&orom, sizeof(orom), AHCI_SSATA_PROP, VENDOR_GUID);
-+		return NULL;
-+	case SYS_DEV_SATA:
-+		if (hba->class != PCI_CLASS_RAID_CNTRL)
-+			return NULL;
- 
--	/* try to read variable for combined AHCI controllers */
--	if (err && hba->type == SYS_DEV_SATA) {
--		static struct orom_entry *csata;
-+		for (i = 0; i < ARRAY_SIZE(sata_efivars); i++) {
-+			if (!read_efi_variable(&orom, sizeof(orom),
-+						sata_efivars[i], VENDOR_GUID))
-+				break;
- 
--		err = read_efi_variable(&orom, sizeof(orom), AHCI_CSATA_PROP, VENDOR_GUID);
--		if (!err) {
--			if (!csata)
--				csata = add_orom(&orom);
--			add_orom_device_id(csata, hba->dev_id);
--			csata->type = hba->type;
--			return &csata->orom;
- 		}
--	}
-+		if (i == ARRAY_SIZE(sata_efivars))
-+			return NULL;
- 
--	if (hba->type == SYS_DEV_VMD) {
--		err = read_efi_variable(&orom, sizeof(orom), VMD_PROP, VENDOR_GUID);
--	}
--
--	if (err)
-+		break;
-+	case SYS_DEV_VMD:
-+		if (!read_efi_variable(&orom, sizeof(orom), VMD_PROP,
-+				       VENDOR_GUID))
-+			break;
- 		return NULL;
-+	default:
-+		return NULL;
+-	if (l >= 0x10000)
++	if (l == 0x10000) {
++		++*pos;
++		return (void *)2;
 +	}
- 
- 	ret = add_orom(&orom);
- 	add_orom_device_id(ret, hba->dev_id);
++	if (l > 0x10000)
+ 		return NULL;
+ 	if (!l--)
+ 		/* header */
 -- 
-2.26.2
+2.17.1
 
