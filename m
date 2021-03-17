@@ -2,99 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 958E7C433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 14:06:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4733FC433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 16:05:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EDE864F67
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 14:06:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01E8B64DD1
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 16:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231615AbhCQOFg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Mar 2021 10:05:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49826 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231644AbhCQOFN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Mar 2021 10:05:13 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2141C06175F
-        for <linux-raid@vger.kernel.org>; Wed, 17 Mar 2021 07:05:12 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id o19so1447364qvu.0
-        for <linux-raid@vger.kernel.org>; Wed, 17 Mar 2021 07:05:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=PWoltp9WmwyO3d7XhliVywf9i2GXKDnsLpbRrO2NbGI=;
-        b=WsRpNG8sX0PGjK+pfA+SQ3Bb3jhflsFaBhjj63LbczCkJ+7RcnSs60BJC1XVRTzffh
-         ROYiVgrbr2NmfFs/FGJdGvIW460RaXjSJ7qb5vOugINIc9EiS1DXbtJFe0WYDSAPHGlA
-         HQ4SiZdhN07sZRsTsJtQi+VtW6bA1Cr6v/QjY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=PWoltp9WmwyO3d7XhliVywf9i2GXKDnsLpbRrO2NbGI=;
-        b=OHXGhllJ3spu+7RFMt70i5F3uaxSQ/b0QBFKbucQgXXxZQrjRw1qYt0XehbRjxpNk7
-         Tl7zgEc5wqj6p+f/MNl1EGt8Z2GS5rznsJS/THsNWiV3u6b1pPloedekMrfix4Re1WOV
-         AxMBolUdgczj95IITRlKSnuA/b11AsZ0yzyGMnORKTrwrVdRI5md9goaMoOr5+nxrmgD
-         xRerdbSgHw6jXNqr48/SCjrOlmgIzagMjUw/LKV/zGJiAK2lU72taAk28Bn00BGSjwMZ
-         NHCRre7RpaB1h4ycZfeq0d9NJD+z787hQIKCuNX32ilT7C0ukRxxup7gvfd1/ZxDKMTn
-         E3GA==
-X-Gm-Message-State: AOAM531H81sUXdzre4IRkmRiqqFtAWi6bWgEsszCqNX0hiCpeB/IXUAP
-        XbZODPQTcBaVyt6aW4+Ix+Kkfp1etizO8onbLZc=
-X-Google-Smtp-Source: ABdhPJyuvoed78WS6+HdEBNB7QZ/3oGdsTqI0V2wAYQM4QWLyFqID+v4ui/DHHggT9LydDHCzeR7Ng==
-X-Received: by 2002:a0c:a909:: with SMTP id y9mr5600566qva.20.1615989911862;
-        Wed, 17 Mar 2021 07:05:11 -0700 (PDT)
-Received: from tuna.fritz.box ([2a02:8070:87b9:f700:d43d:6bf:d9e5:58a3])
-        by smtp.gmail.com with ESMTPSA id e3sm17864791qkn.39.2021.03.17.07.05.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Mar 2021 07:05:11 -0700 (PDT)
-From:   Jan Glauber <jglauber@digitalocean.com>
-To:     linux-raid@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>,
-        Jan Glauber <jglauber@digitalocean.com>
-Subject: [PATCH] md: Fix missing unused status line of /proc/mdstat
-Date:   Wed, 17 Mar 2021 15:04:39 +0100
-Message-Id: <20210317140439.9499-1-jglauber@digitalocean.com>
-X-Mailer: git-send-email 2.17.1
+        id S232163AbhCQQEu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Mar 2021 12:04:50 -0400
+Received: from mail.xmyslivec.cz ([83.167.247.77]:49662 "EHLO
+        mail.xmyslivec.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231993AbhCQQEi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Mar 2021 12:04:38 -0400
+X-Greylist: delayed 536 seconds by postgrey-1.27 at vger.kernel.org; Wed, 17 Mar 2021 12:04:38 EDT
+Received: from [172.23.0.68] (mh1-fw.logicworks.mh.etn.cz [82.113.58.199])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.xmyslivec.cz (Postfix) with ESMTPSA id 60EF640246;
+        Wed, 17 Mar 2021 16:55:38 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=xmyslivec.cz;
+        s=master; t=1615996538;
+        bh=JBMyqbIihgalcArsZ+QbCW8HrguuuQNErHtTO+I+rG0=;
+        h=To:Cc:References:From:Subject:Date:In-Reply-To:From;
+        b=Y4kAB/OmYBJU7x2IkPa+FBCO9lXmtna1WDvYmgg/bZrDZhYbdHbq+f/2QyPDpzF/u
+         VpcR9fLwzAByj5lEIFKWWrehQV2eeeOJA2s9sBmAhUPuRYM3fCslJNzM34XdPEBDVn
+         F3DDwC3XQhrGNrG+YiRFjBRrVnCVqMSo5AQZblmvE2iUpQEh1LaEE/mLBBeVBxs4k8
+         hVjnLBcbFnxY5n1OdecPeE+vxdiI8pal1P29pM/QAkbRlzQc+sAs4MR85EymrrQxrk
+         7v+jZ+pSg2M1pq+uzc+rxd4Hsc90Jd+XYj2A72WFbM04HUeI7t9i3gU8QkgV7pQ2xS
+         T8u0H5KsJHAOQ==
+To:     Manuel Riel <manu@snapdragon.cc>
+Cc:     Chris Murphy <lists@colorremedies.com>,
+        Michal Moravec <michal.moravec@logicworks.cz>,
+        songliubraving@fb.com, guoqing.jiang@cloud.ionos.com,
+        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
+        Linux-RAID <linux-raid@vger.kernel.org>
+References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
+ <CAJCQCtSfz+b38fW3zdcHwMMtO1LfXSq+0xgg_DaKShmAumuCWQ@mail.gmail.com>
+ <29509e08-e373-b352-d696-fcb9f507a545@xmyslivec.cz>
+ <CAJCQCtRx7NJP=-rX5g_n5ZL7ypX-5z_L6d6sk120+4Avs6rJUw@mail.gmail.com>
+ <695936b4-67a2-c862-9cb6-5545b4ab3c42@xmyslivec.cz>
+ <CAJCQCtQWNSd123OJ_Rp8NO0=upY2Mn+SE7pdMqmyizJP028Yow@mail.gmail.com>
+ <2f2f1c21-c81b-55aa-6f77-e2d3f32d32cb@xmyslivec.cz>
+ <CAJCQCtTQN60V=DEkNvDedq+usfmFB+SQP2SBezUaSeUjjY46nA@mail.gmail.com>
+ <4b0dd0aa-f77b-16c8-107b-0182378f34e6@xmyslivec.cz>
+ <CAJCQCtQWh2JBAL_SDRG-gMd9Z1TXad7aKjZVUGdY1Akj7fn5Qg@mail.gmail.com>
+ <5e79d1f8-7632-48ef-de56-9e79cba87434@xmyslivec.cz>
+ <CAJCQCtTR1JZTLr+xTEZxrwh8xSfb+zpKjc+_S2tJGFofVMUdSQ@mail.gmail.com>
+ <0c792470-6ee9-8254-dd57-a7a90ac95bcd@xmyslivec.cz>
+ <DBB07C8C-0D83-47DC-9B91-78AD385775E3@snapdragon.cc>
+ <D3026A55-A7F2-4432-87A8-3E9B2CACE4C2@snapdragon.cc>
+ <56AD80D0-6853-4E3A-A94C-AD1477D3FDA4@snapdragon.cc>
+From:   Vojtech Myslivec <vojtech@xmyslivec.cz>
+Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
+Message-ID: <5e9e627f-7f73-c243-8084-58f156b984c5@xmyslivec.cz>
+Date:   Wed, 17 Mar 2021 16:55:36 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
+MIME-Version: 1.0
+In-Reply-To: <56AD80D0-6853-4E3A-A94C-AD1477D3FDA4@snapdragon.cc>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Reading /proc/mdstat with a read buffer size that would not
-fit the unused status line in the first read will skip this
-line from the output.
+Thanks a lot Manuel for your findings and information.
 
-So 'dd if=/proc/mdstat bs=64 2>/dev/null' will not print something
-like: unused devices: <none>
+It's good to know btrfs is not causing this issue and the common symptom 
+is an MD journal on another RAID device.
 
-Don't return NULL immediately in start() for v=2 but call
-show() once to print the status line also for multiple reads.
+I have moved journal from logical volume on RAID1 to a plain partition 
+on a SSD and I will monitor the state.
 
-Fixes: 1f4aace60b0e ("fs/seq_file.c: simplify seq_file iteration code and interface")
-Signed-off-by: Jan Glauber <jglauber@digitalocean.com>
----
- drivers/md/md.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Vojtech
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 21da0c48f6c2..cb19d50fa672 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8153,7 +8153,11 @@ static void *md_seq_start(struct seq_file *seq, loff_t *pos)
- 	loff_t l = *pos;
- 	struct mddev *mddev;
- 
--	if (l >= 0x10000)
-+	if (l == 0x10000) {
-+		++*pos;
-+		return (void *)2;
-+	}
-+	if (l > 0x10000)
- 		return NULL;
- 	if (!l--)
- 		/* header */
--- 
-2.17.1
 
+
+On 17. 03. 21 5:35, Manuel Riel wrote:
+> Final update on this issue for anyone who encounters a similar problem in the future:
+> 
+> I didn't observe any "hanging" RAID devices after using an ordinary NVMe partition as journal. So using e.g. another md-RAID1 array as journal doesn't seem to be supported.
+> 
+> The docs[1] say "This means the cache disk must be ... sustainable." The sustainable part motivated me to use a md-RAID1 array. I think the docs should mention that the journal can't be on another RAID array.
+> 
+> I'm sending in a patch to emphasize this in the docs.
+> 
+> 
+> 1: https://www.kernel.org/doc/html/latest/driver-api/md/raid5-cache.html
+> 
+>> On Feb 28, 2021, at 4:34 PM, Manuel Riel <manu@snapdragon.cc> wrote:
+>>
+>> Hit another mdadm "hanger" today. No more reading possible and md4_raid6 stuck at 100% CPU.
+>>
+>> I've now moved the write journal off the RAID1 device. So it's not a "nested" RAID any more. Hope this will help.
+>>
+>> With only one hardware device used as write cache, I suppose only write-through mode[1] is suggested now.
+>>
+>>
+>> 1: https://www.kernel.org/doc/Documentation/md/raid5-cache.txt
+> 
