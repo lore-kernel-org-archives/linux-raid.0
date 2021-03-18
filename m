@@ -2,109 +2,67 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4733FC433DB
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 16:05:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08E06C433DB
+	for <linux-raid@archiver.kernel.org>; Thu, 18 Mar 2021 15:21:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01E8B64DD1
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Mar 2021 16:05:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5EA764E89
+	for <linux-raid@archiver.kernel.org>; Thu, 18 Mar 2021 15:21:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232163AbhCQQEu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Mar 2021 12:04:50 -0400
-Received: from mail.xmyslivec.cz ([83.167.247.77]:49662 "EHLO
-        mail.xmyslivec.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231993AbhCQQEi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Mar 2021 12:04:38 -0400
-X-Greylist: delayed 536 seconds by postgrey-1.27 at vger.kernel.org; Wed, 17 Mar 2021 12:04:38 EDT
-Received: from [172.23.0.68] (mh1-fw.logicworks.mh.etn.cz [82.113.58.199])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.xmyslivec.cz (Postfix) with ESMTPSA id 60EF640246;
-        Wed, 17 Mar 2021 16:55:38 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=xmyslivec.cz;
-        s=master; t=1615996538;
-        bh=JBMyqbIihgalcArsZ+QbCW8HrguuuQNErHtTO+I+rG0=;
-        h=To:Cc:References:From:Subject:Date:In-Reply-To:From;
-        b=Y4kAB/OmYBJU7x2IkPa+FBCO9lXmtna1WDvYmgg/bZrDZhYbdHbq+f/2QyPDpzF/u
-         VpcR9fLwzAByj5lEIFKWWrehQV2eeeOJA2s9sBmAhUPuRYM3fCslJNzM34XdPEBDVn
-         F3DDwC3XQhrGNrG+YiRFjBRrVnCVqMSo5AQZblmvE2iUpQEh1LaEE/mLBBeVBxs4k8
-         hVjnLBcbFnxY5n1OdecPeE+vxdiI8pal1P29pM/QAkbRlzQc+sAs4MR85EymrrQxrk
-         7v+jZ+pSg2M1pq+uzc+rxd4Hsc90Jd+XYj2A72WFbM04HUeI7t9i3gU8QkgV7pQ2xS
-         T8u0H5KsJHAOQ==
-To:     Manuel Riel <manu@snapdragon.cc>
-Cc:     Chris Murphy <lists@colorremedies.com>,
-        Michal Moravec <michal.moravec@logicworks.cz>,
-        songliubraving@fb.com, guoqing.jiang@cloud.ionos.com,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-References: <d3fced3f-6c2b-5ffa-fd24-b24ec6e7d4be@xmyslivec.cz>
- <CAJCQCtSfz+b38fW3zdcHwMMtO1LfXSq+0xgg_DaKShmAumuCWQ@mail.gmail.com>
- <29509e08-e373-b352-d696-fcb9f507a545@xmyslivec.cz>
- <CAJCQCtRx7NJP=-rX5g_n5ZL7ypX-5z_L6d6sk120+4Avs6rJUw@mail.gmail.com>
- <695936b4-67a2-c862-9cb6-5545b4ab3c42@xmyslivec.cz>
- <CAJCQCtQWNSd123OJ_Rp8NO0=upY2Mn+SE7pdMqmyizJP028Yow@mail.gmail.com>
- <2f2f1c21-c81b-55aa-6f77-e2d3f32d32cb@xmyslivec.cz>
- <CAJCQCtTQN60V=DEkNvDedq+usfmFB+SQP2SBezUaSeUjjY46nA@mail.gmail.com>
- <4b0dd0aa-f77b-16c8-107b-0182378f34e6@xmyslivec.cz>
- <CAJCQCtQWh2JBAL_SDRG-gMd9Z1TXad7aKjZVUGdY1Akj7fn5Qg@mail.gmail.com>
- <5e79d1f8-7632-48ef-de56-9e79cba87434@xmyslivec.cz>
- <CAJCQCtTR1JZTLr+xTEZxrwh8xSfb+zpKjc+_S2tJGFofVMUdSQ@mail.gmail.com>
- <0c792470-6ee9-8254-dd57-a7a90ac95bcd@xmyslivec.cz>
- <DBB07C8C-0D83-47DC-9B91-78AD385775E3@snapdragon.cc>
- <D3026A55-A7F2-4432-87A8-3E9B2CACE4C2@snapdragon.cc>
- <56AD80D0-6853-4E3A-A94C-AD1477D3FDA4@snapdragon.cc>
-From:   Vojtech Myslivec <vojtech@xmyslivec.cz>
-Subject: Re: Linux RAID with btrfs stuck and consume 100 % CPU
-Message-ID: <5e9e627f-7f73-c243-8084-58f156b984c5@xmyslivec.cz>
-Date:   Wed, 17 Mar 2021 16:55:36 +0100
+        id S230282AbhCRPVM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 18 Mar 2021 11:21:12 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17231 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231564AbhCRPUw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Mar 2021 11:20:52 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1616080846; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=Q2+H6i6OVGZwRkvXDTCh5spjPiA9HFtOIkd9v2s5N5wBF46jrt1kIP9aZTs53lG3mrXojpRyj5eCE7En8aZq8DiP6UIA/dDk+JF3Qwdnq+6Gt038QG3uxVtdbJosHNMRFuqjdDnzd6CA38OTFFmgFJ0BdU5nDOVZNmi6X9mmzF0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1616080846; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=efoHTvcHMfjRbMto8WPsCI2QqBVSyPA5vbDoZjp25Tw=; 
+        b=esmIH58agAtI/qPLLSVjlwNyt0FPdtZMh0ai4QckozavaMQPs9qeXrYhLrm5hv+A1YPsRUHSk0B2T9iRnoalbZuXDTW/aINZR9WciktMp7Eak4QKFpvfcjgCt2/GvkypylzOnbHRffw1//pQxZP5a25kLoIvF0HsCjlrp+4P2q8=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1616080844500169.56817978525726; Thu, 18 Mar 2021 16:20:44 +0100 (CET)
+Subject: Re: [PATCH] imsm: support for third Sata controller
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20210317120154.30806-1-mariusz.tkaczyk@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <74ba175e-9cd9-0724-232e-bae127eaf760@trained-monkey.org>
+Date:   Thu, 18 Mar 2021 11:20:43 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-In-Reply-To: <56AD80D0-6853-4E3A-A94C-AD1477D3FDA4@snapdragon.cc>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20210317120154.30806-1-mariusz.tkaczyk@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Thanks a lot Manuel for your findings and information.
+On 3/17/21 8:01 AM, Mariusz Tkaczyk wrote:
+> Add new UEFI TSata variable. Remove CSata variable.
+> This variable has been never exposed by UEFI.
+> Remove vulnerability to match different hbas with SATA variable.
+> 
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> ---
+>  platform-intel.c | 58 ++++++++++++++++++++++++++----------------------
+>  1 file changed, 31 insertions(+), 27 deletions(-)
+> 
 
-It's good to know btrfs is not causing this issue and the common symptom 
-is an MD journal on another RAID device.
+Applied!
 
-I have moved journal from logical volume on RAID1 to a plain partition 
-on a SSD and I will monitor the state.
+Thanks,
+Jes
 
-Vojtech
-
-
-
-On 17. 03. 21 5:35, Manuel Riel wrote:
-> Final update on this issue for anyone who encounters a similar problem in the future:
-> 
-> I didn't observe any "hanging" RAID devices after using an ordinary NVMe partition as journal. So using e.g. another md-RAID1 array as journal doesn't seem to be supported.
-> 
-> The docs[1] say "This means the cache disk must be ... sustainable." The sustainable part motivated me to use a md-RAID1 array. I think the docs should mention that the journal can't be on another RAID array.
-> 
-> I'm sending in a patch to emphasize this in the docs.
-> 
-> 
-> 1: https://www.kernel.org/doc/html/latest/driver-api/md/raid5-cache.html
-> 
->> On Feb 28, 2021, at 4:34 PM, Manuel Riel <manu@snapdragon.cc> wrote:
->>
->> Hit another mdadm "hanger" today. No more reading possible and md4_raid6 stuck at 100% CPU.
->>
->> I've now moved the write journal off the RAID1 device. So it's not a "nested" RAID any more. Hope this will help.
->>
->> With only one hardware device used as write cache, I suppose only write-through mode[1] is suggested now.
->>
->>
->> 1: https://www.kernel.org/doc/Documentation/md/raid5-cache.txt
-> 
