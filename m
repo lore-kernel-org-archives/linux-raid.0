@@ -2,83 +2,115 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB075C433DB
-	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 16:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5FB7C433DB
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 17:14:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 780066199F
-	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 16:59:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9136461994
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 17:14:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230422AbhCVQ6f (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 Mar 2021 12:58:35 -0400
-Received: from mga11.intel.com ([192.55.52.93]:39144 "EHLO mga11.intel.com"
+        id S232102AbhCVROP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 Mar 2021 13:14:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229728AbhCVQ6a (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 22 Mar 2021 12:58:30 -0400
-IronPort-SDR: E6LzvFyaIU9QhFBAQNlBnlhp0jr+luLNL5UPfEqoyb9iNwPeKeDYms1IN/QgAxHI8kxP9b9sje
- BL6z0YtBrPZg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="186991456"
-X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
-   d="scan'208";a="186991456"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 09:58:28 -0700
-IronPort-SDR: csMAkhWw4EdnJZ9PgSGX/hZmKqjDdhbJfNvfo6dXl9HkGJfJomXlruAKVg+r0+Bw6emB6BUlBn
- BjwSGkDpf3iw==
-X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
-   d="scan'208";a="451803351"
-Received: from oshchirs-mobl.ger.corp.intel.com (HELO [10.213.7.90]) ([10.213.7.90])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 09:58:27 -0700
-Subject: Re: IMSM regresion
-References: <0a15c6a6-e8ba-be96-4323-bddcc2b993b8 () trained-monkey ! org>
-From:   Oleksandr Shchirskyi <oleksandr.shchirskyi@linux.intel.com>
-To:     Jes Sorensen <jes@trained-monkey.org>, linux-raid@vger.kernel.org
-Message-ID: <f80d8e76-8ad3-1e82-e051-00e24d44be89@linux.intel.com>
-Date:   Mon, 22 Mar 2021 17:58:25 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S232021AbhCVRNp (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 22 Mar 2021 13:13:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 556FB601FB
+        for <linux-raid@vger.kernel.org>; Mon, 22 Mar 2021 17:13:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616433224;
+        bh=SjfKpTKQIcP9IPhgfbR7R2zwUiDElff6jqpd5qt1xaE=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=k0+kcYczYUte6eLJYst0TE3ACYaXAMfkGhjJGS9PeUdKdBeOw+widQTDuhB7I9f2C
+         ig+Qb1McBzOaXxOuhNWiTA7vzfAha1uLNKIL8hx9SAFquNqJsd/Lf6YIn85T0FLxud
+         ncU+vtkfV2WysmI2jpPx/wgdpMFgRtcJWG6uu2Oz2x5GSLzP5AT/DvzHKQH/B9DO0p
+         p2TOmwwyiKt2BU3eSf7JbOFLBRnF1vGLOd7qZTI5SZpHxm0rshIwb1iX+CmdCuKxjz
+         mYAxDYSOnlEmiLkAE/nKk2Zl6MMdF7J86+Ls7/1WW/dA3QKes+MAW1etOrdAzsjKN6
+         IlThLoFPahJOQ==
+Received: by mail-lj1-f173.google.com with SMTP id s17so22044631ljc.5
+        for <linux-raid@vger.kernel.org>; Mon, 22 Mar 2021 10:13:44 -0700 (PDT)
+X-Gm-Message-State: AOAM531Vrr/r0qiqNkmehznsRPsuoOYAOrv0z4zq95Bs+FCIeIQqou/l
+        OCTFDpPs5bGVJN2nZwU0Vxi0d//mWZ3WwQxcgYc=
+X-Google-Smtp-Source: ABdhPJyKFTACDEiXDHqnIcuNqZxZeWejvc2QgAl+7I6iycGMTCwT63qIVbHc2Hgx9AgbyNZRuqdPgkl6txa1dZVeRzs=
+X-Received: by 2002:a2e:b895:: with SMTP id r21mr351311ljp.506.1616433222691;
+ Mon, 22 Mar 2021 10:13:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <0a15c6a6-e8ba-be96-4323-bddcc2b993b8 () trained-monkey ! org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <DAEB6C2F-3AE0-4EBE-8775-7C6292F8749A@snapdragon.cc>
+ <CAPhsuW4=XoyQV_HNVnFnMWS2PvvU1+Rtbh9SJB-FQTO3haa3ig@mail.gmail.com>
+ <27EE5CBC-B1B8-4463-87F5-2AE73F30941B@snapdragon.cc> <C990C60B-FB5A-4709-949B-6D86AF9FA6B1@snapdragon.cc>
+In-Reply-To: <C990C60B-FB5A-4709-949B-6D86AF9FA6B1@snapdragon.cc>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 22 Mar 2021 10:13:31 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5urYTuOago=5sGiQ_7huQ6S+2rYkQ=n+_TwxQtxC3tWQ@mail.gmail.com>
+Message-ID: <CAPhsuW5urYTuOago=5sGiQ_7huQ6S+2rYkQ=n+_TwxQtxC3tWQ@mail.gmail.com>
+Subject: Re: [PATCH] md: warn about using another MD array as write journal
+To:     Manuel Riel <manu@snapdragon.cc>
+Cc:     Linux-RAID <linux-raid@vger.kernel.org>,
+        Vojtech Myslivec <vojtech@xmyslivec.cz>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello Jes,
+On Sat, Mar 20, 2021 at 9:22 PM Manuel Riel <manu@snapdragon.cc> wrote:
+>
+> My impression is that the write-journal feature isn't fully stable yet, as was already reported in 2019[^1]. Vojtech and me are seeing the same errors as mentioned there.
+>
+> No matter if the journal is on a block device or another RAID.
+>
+> 1: https://www.spinics.net/lists/raid/msg62646.html
+>
+>
+> > On Mar 20, 2021, at 9:12 AM, Manuel Riel <manu@snapdragon.cc> wrote:
+> >
+> > On Mar 20, 2021, at 7:16 AM, Song Liu <song@kernel.org> wrote:
+> >>
+> >> Sorry for being late on this issue.
+> >>
+> >> Manuel and Vojtech, are we confident that this issue only happens when we use
+> >> another md array as the journal device?
+> >>
+> >> Thanks,
+> >> Song
+> >
+> > Hi Song,
+> >
+> > thanks for getting back.
+> >
+> > Unfortunately it's still happening, even when using a NVMe partition directly. It just took a long 3 weeks to happen. So discard my patch. Here how it went down yesterday:
+> >
+> > - process md4_raid6 is running with 100% CPU utilization, all I/O to the array is blocked
+> > - no disk activity on the physical drives
+> > - soft reboot doesn't work, as md4_raid6 blocks, so hard reset is needed
+> > - when booting to rescue mode, it tries to assemble the array and shows the same issue of 100% CPU utilization. Also can't reboot.
+> > - when manually assembling it *with* the journal drive, it will read a few GB from the journal device and then get stuck at 100% CPU utilization again without any disk activity.
+> >
+> > Solution in the end was to avoid assembling the array on reboot, then assemble it *without* the existing journal and add an empty journal drive later. This lead to some data loss and a full resync.
 
-I have analyzed this issue, and information with this analysis is posted in 
-a separate thread.
-The issue is caused by patch 4ae96c802203.
-We have no fix for it at the moment, and if you plan to mark a release 
-candidate now, it would be good to revert that patch (as Nigel already 
-mentioned).
+Thanks for the information. Quick question, does the kernel have the
+following change?
+It fixes an issue at recovery time. Since you see the issue in normal
+execution, it is probably
+something different.
 
-Thank you!
+Thanks,
+Song
 
-On 3/16/2021 9:22 PM, Jes Sorensen wrote:
-> On 3/12/21 5:14 AM, Tkaczyk, Mariusz wrote:
->> Hello Jes,
->>
->> We discovered IMSM regression after last push in following scenario:
->>
->> #mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0125]n1
->> #mdadm -CR volume -l0 --chunk 64 --raid-devices=1 /dev/nvme0n1 --force
->> #mdadm -G /dev/md/imsm0 -n2
->>
->> At the end of reshape, level doesn't back to RAID0.
->>
->> This is an information. We are working on fix. Please don't mark release
->> candidate yet.
-> 
-> Thanks for the heads up!
-> 
-> Jes
-> 
+commit c9020e64cf33f2dd5b2a7295f2bfea787279218a
+Author: Song Liu <songliubraving@fb.com>
+Date:   9 months ago
 
--- 
-Regards,
-Oleksandr Shchirskyi
+    md/raid5-cache: clear MD_SB_CHANGE_PENDING before flushing stripes
+
+    In recovery, if we process too much data, raid5-cache may set
+    MD_SB_CHANGE_PENDING, which causes spinning in handle_stripe().
+    Fix this issue by clearing the bit before flushing data only
+    stripes. This issue was initially discussed in [1].
+
+    [1] https://www.spinics.net/lists/raid/msg64409.html
+
+    Signed-off-by: Song Liu <songliubraving@fb.com>
