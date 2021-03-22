@@ -2,229 +2,127 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F29ECC433E0
-	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 17:17:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B4DC433DB
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 17:29:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D1C96198E
-	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 17:17:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9704B61994
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 17:29:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231555AbhCVRQz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 22 Mar 2021 13:16:55 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:42758 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232085AbhCVRQp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 22 Mar 2021 13:16:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1616433405;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DnYVFwy+qw+4cnd/HmzGnJ8ZX+ZaeIrCjFq8Pozl1A4=;
-        b=a3ODGdS4jVnSPLcAVNtkyMcpcReEI8adKsT+KcAGf+IUEhp7jLt3P7Ws8Hb/jRaLx03Rw1
-        1aoySADh1g8LOm0WyJUfMB2m7BDr6ofRW8+k+ETdeni0HDCndmM8octZ+gHG/8k7W+U0ZP
-        tPvZwY99+NVVI+qx54YrX9GNzXTbPDU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-314-sS4hGNMtMsS6jDGXudlRVw-1; Mon, 22 Mar 2021 13:16:42 -0400
-X-MC-Unique: sS4hGNMtMsS6jDGXudlRVw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2D186180FCDE;
-        Mon, 22 Mar 2021 17:16:41 +0000 (UTC)
-Received: from colo-mx.corp.redhat.com (colo-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2331F1042B4C;
-        Mon, 22 Mar 2021 17:16:41 +0000 (UTC)
-Received: from zmail24.collab.prod.int.phx2.redhat.com (zmail24.collab.prod.int.phx2.redhat.com [10.5.83.30])
-        by colo-mx.corp.redhat.com (Postfix) with ESMTP id 0FC251809C81;
-        Mon, 22 Mar 2021 17:16:41 +0000 (UTC)
-Date:   Mon, 22 Mar 2021 13:16:40 -0400 (EDT)
-From:   Nigel Croxon <ncroxon@redhat.com>
-To:     Oleksandr Shchirskyi <oleksandr.shchirskyi@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <207580597.39647667.1616433400775.JavaMail.zimbra@redhat.com>
-In-Reply-To: <08b71ea7-bdd3-722d-d18f-aa065b8756c0@linux.intel.com>
-References: <764426808.38181143.1615910368475.JavaMail.zimbraredhat!com> <08b71ea7-bdd3-722d-d18f-aa065b8756c0@linux.intel.com>
-Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
+        id S231591AbhCVR2w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 Mar 2021 13:28:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46468 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230381AbhCVR2k (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 22 Mar 2021 13:28:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A9ADE6198E
+        for <linux-raid@vger.kernel.org>; Mon, 22 Mar 2021 17:28:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616434120;
+        bh=esQXG1/EJmCWFJd7zMttx3mNc3Uo6GCS+wrrenp/8og=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=psXJnnxJWfaVJbWvFsswJZGiW6Lpd1m5uxeIIIVsBrSVbW13k0TeOQcRe1TRtQRBw
+         dURzbHIyCs8m2cgH7QdICRODOzRyqXHTUfKPRZ+NDTWfYT3iysXNJl+lDbtg2LRa8G
+         caAoh2NtM9s/OGkSWH1cCose9W/keOWIJai8HC8g7rZSNhgPr0EMHh1clzEFAdLC16
+         9Aoh4DJPIs8tuK6O/nVyx2yf2cIzdu+H3r8SrYOlemXktFKj52c1AFP4txEpMfT2ZZ
+         L+wiCl5xa/089Pd2GYpXYDWmRuMx3E7udT+0wTpG+hyHNtb0+Eg/S7UcM6/NwOQFUj
+         7nfBy87l7+kpw==
+Received: by mail-lj1-f177.google.com with SMTP id z25so22089604lja.3
+        for <linux-raid@vger.kernel.org>; Mon, 22 Mar 2021 10:28:39 -0700 (PDT)
+X-Gm-Message-State: AOAM532vGUYaTz+oNm3DZ5/S2Rstl9/dBAYEW6noAf7sSc42jTZmNd4x
+        /ZVE2pl4ee/e3USttnBCDUG61kM2EeDwd6m3FgM=
+X-Google-Smtp-Source: ABdhPJzQ++TrTCoKi+CAXS7boMiyRabjJXylnFw6N19ZVBDrGdPdhZHUNa42+x8tavaU8ZgRN1a7scdoSMMcT6Hksfk=
+X-Received: by 2002:a2e:8508:: with SMTP id j8mr401085lji.270.1616434117861;
+ Mon, 22 Mar 2021 10:28:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.10.114.97, 10.4.195.29]
-Thread-Topic: mdadm: fix reshape from RAID5 to RAID6 with backup file
-Thread-Index: AnTuLLiwTV0uaQMPZU0dLaGXkh+1Nw==
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+References: <225718c0-475c-7bd7-e067-778f7097a923@redhat.com> <cdb11ed6-646e-85e6-79f7-cbf38c92b324@huawei.com>
+In-Reply-To: <cdb11ed6-646e-85e6-79f7-cbf38c92b324@huawei.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 22 Mar 2021 10:28:26 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5hV_-0+hcoK4b18h8gP6yy8UffV=wRQKtoCZbfXVu6fw@mail.gmail.com>
+Message-ID: <CAPhsuW5hV_-0+hcoK4b18h8gP6yy8UffV=wRQKtoCZbfXVu6fw@mail.gmail.com>
+Subject: Re: raid5 crash on system which PAGE_SIZE is 64KB
+To:     Yufen Yu <yuyufen@huawei.com>
+Cc:     Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>,
+        Nigel Croxon <ncroxon@redhat.com>,
+        Heinz Mauelshagen <heinzm@redhat.com>,
+        kent.overstreet@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
------ Original Message -----
-From: "Oleksandr Shchirskyi" <oleksandr.shchirskyi@linux.intel.com>
-To: "Nigel Croxon" <ncroxon@redhat.com>, linux-raid@vger.kernel.org
-Cc: "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>, "Jes Sorensen" <jes@trained-monkey.org>
-Sent: Monday, March 22, 2021 12:21:11 PM
-Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
-
-Hello Nigel,
-
-I have collected more info regarding this issue.
-I can confirm what Mariusz said, it's a regression caused by patch 4ae96c802203
-The reason for failure during the reshape, is that in this patch sync_max 
-value is set to max, but the function wait_for_reshape_imsm, used in some 
-reshape scenarios, relies on this parameter, and doesn't expect, that value 
-can be max. This leads to reshaping fail.
-Here's an example of a debug log from this method, when the issue is hit:
-
-mdadm: wait_for_reshape_imsm: wrong next position to set 4096 (2048)
-mdadm: imsm_manage_reshape: wait_for_reshape_imsm returned error!
-
-With this patch reverted, the issue is not observed. See my logs below:
-
-# mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0-3]n1 && mdadm -CR volume -l0 
---chunk 64 --size=10G --raid-devices=1 /dev/nvme0n1 --force
-# mdadm -D /dev/md/volume 
- 
-                                                               /dev/md/volume:
-          Container : /dev/md/imsm0, member 0
-         Raid Level : raid0
-         Array Size : 10485760 (10.00 GiB 10.74 GB)
-       Raid Devices : 1
-      Total Devices : 1
-              State : clean
-...
-# mdadm -G /dev/md/imsm0 -n2
-# mdadm -D /dev/md/volume
-/dev/md/volume:
-          Container : /dev/md/imsm0, member 0
-         Raid Level : raid4
-         Array Size : 10485760 (10.00 GiB 10.74 GB)
-      Used Dev Size : 10485760 (10.00 GiB 10.74 GB)
-       Raid Devices : 3
-      Total Devices : 2
-              State : clean, degraded
-...
-# git revert 4ae96c802203ec3cfbb089240c56d61f7f4661b3
-Auto-merging Grow.c
-[master 1166854] Revert "mdadm: fix reshape from RAID5 to RAID6 with backup 
-file"
-  1 file changed, 2 insertions(+), 5 deletions(-)
-# mdadm -Ss; wipefs -a /dev/nvme[0-3]n1
-# make clean; make; make install-systemd; make install
-# mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0-3]n1 && mdadm -CR volume -l0 
---chunk 64 --size=10G --raid-devices=1 /dev/nvme0n1 --force
-# mdadm -G /dev/md/imsm0 -n2
-# mdadm -D /dev/md/volume
-/dev/md/volume:
-          Container : /dev/md/imsm0, member 0
-         Raid Level : raid0
-         Array Size : 20971520 (20.00 GiB 21.47 GB)
-       Raid Devices : 2
-      Total Devices : 2
-
-              State : clean
-...
-#
-
-On 3/16/2021 4:59 PM, Nigel Croxon wrote:
-> ----- Original Message -----
-> From: "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>
-> To: "Jes Sorensen" <jes@trained-monkey.org>, "Nigel Croxon" <ncroxon@redhat=
-> .com>, linux-raid@vger.kernel.org, xni@redhat.com
-> Sent: Tuesday, March 16, 2021 10:54:22 AM
-> Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup fil=
-> e
-> 
-> Hello Nigel,
-> 
-> Blame told us, that yours patch introduce regression in following
-> scenario:
-> 
-> #mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0125]n1
-> #mdadm -CR volume -l0 --chunk 64 --raid-devices=3D1 /dev/nvme0n1 --force
-> #mdadm -G /dev/md/imsm0 -n2
-> 
-> At the end of reshape, level doesn't back to RAID0.
-> Could you look into it?
-> Let me know, if you need support.
-> 
+On Tue, Mar 16, 2021 at 2:20 AM Yufen Yu <yuyufen@huawei.com> wrote:
+>
+>
+>
+> On 2021/3/15 21:44, Xiao Ni wrote:
+> > Hi all
+> >
+> > We encounter one raid5 crash problem on POWER system which PAGE_SIZE is 64KB.
+> > I can reproduce this problem 100%.  This problem can be reproduced with latest upstream kernel.
+> >
+> > The steps are:
+> > mdadm -CR /dev/md0 -l5 -n3 /dev/sda1 /dev/sdc1 /dev/sdd1
+> > mkfs.xfs /dev/md0 -f
+> > mount /dev/md0 /mnt/test
+> >
+> > The error message is:
+> > mount: /mnt/test: mount(2) system call failed: Structure needs cleaning.
+> >
+> > We can see error message in dmesg:
+> > [ 6455.761545] XFS (md0): Metadata CRC error detected at xfs_agf_read_verify+0x118/0x160 [xfs], xfs_agf block 0x2105c008
+> > [ 6455.761570] XFS (md0): Unmount and run xfs_repair
+> > [ 6455.761575] XFS (md0): First 128 bytes of corrupted metadata buffer:
+> > [ 6455.761581] 00000000: fe ed ba be 00 00 00 00 00 00 00 02 00 00 00 00  ................
+> > [ 6455.761586] 00000010: 00 00 00 00 00 00 03 c0 00 00 00 01 00 00 00 00  ................
+> > [ 6455.761590] 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [ 6455.761594] 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [ 6455.761598] 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [ 6455.761601] 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [ 6455.761605] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [ 6455.761609] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [ 6455.761662] XFS (md0): metadata I/O error in "xfs_read_agf+0xb4/0x1a0 [xfs]" at daddr 0x2105c008 len 8 error 74
+> > [ 6455.761673] XFS (md0): Error -117 recovering leftover CoW allocations.
+> > [ 6455.761685] XFS (md0): Corruption of in-memory data detected. Shutting down filesystem
+> > [ 6455.761690] XFS (md0): Please unmount the filesystem and rectify the problem(s)
+> >
+> > This problem doesn't happen when creating raid device with --assume-clean. So the crash only happens when sync and normal
+> > I/O write at the same time.
+> >
+> > I tried to revert the patch set "Save memory for stripe_head buffer" and the problem can be fixed. I'm looking at this problem,
+> > but I haven't found the root cause. Could you have a look?
+>
+> Thanks for reporting this bug. Please give me some times to debug it,
+> recently time is very limited for me.
+>
 > Thanks,
-> Mariusz
-> 
-> I=E2=80=99m trying your situation without my patch (its reverted) and I=E2=
-> =80=99m not seeing success.
-> See the dmesg log.
-> 
-> 
-> [root@fedora33 mdadmupstream]# mdadm -CR volume -l0 --chunk 64 --raid-devic=
-> es=3D1 /dev/nvme0n1 --force
-> mdadm: /dev/nvme0n1 appears to be part of a raid array:
->        level=3Dcontainer devices=3D0 ctime=3DWed Dec 31 19:00:00 1969
-> mdadm: Creating array inside imsm container md127
-> mdadm: array /dev/md/volume started.
-> 
-> [root@fedora33 mdadmupstream]# cat /proc/mdstat=20
-> Personalities : [raid6] [raid5] [raid4] [raid0]=20
-> md126 : active raid0 nvme0n1[0]
->       500102144 blocks super external:/md127/0 64k chunks
-> 
-> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
->       4420 blocks super external:imsm
-> 
-> unused devices: <none>
-> [root@fedora33 mdadmupstream]# mdadm -G /dev/md/imsm0 -n2
-> [root@fedora33 mdadmupstream]# cat /proc/mdstat=20
-> Personalities : [raid6] [raid5] [raid4] [raid0]=20
-> md126 : active raid4 nvme3n1[2] nvme0n1[0]
->       500102144 blocks super external:-md127/0 level 4, 64k chunk, algorithm=
->   5 [2/1] [U_]
-> 
-> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
->       4420 blocks super external:imsm
-> 
-> unused devices: <none>
-> 
-> 
-> dmesg says:
-> [Mar16 11:46] md/raid:md126: device nvme0n1 operational as raid disk 0
-> [  +0.011147] md/raid:md126: raid level 4 active with 1 out of 2 devices, a=
-> lgorithm 5
-> [  +0.044605] md/raid0:md126: raid5 must have missing parity disk!
-> [  +0.000002] md: md126: raid0 would not accept array
-> 
-> -Nigel
-> 
+> Yufen
 
--- 
-Regards,
-Oleksandr Shchirskyi
+Hi Yufen,
 
+Have you got time to look into this?
 
-I still see this in dmesg, when testing your commands..  (with my patch reverted).
+>
+> >
+> > By the way, there is a place that I can't understand. Is it a bug? Should we do in this way:
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 5d57a5b..4a5e8ae 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -1479,7 +1479,7 @@ static struct page **to_addr_page(struct raid5_percpu *percpu, int i)
+> >   static addr_conv_t *to_addr_conv(struct stripe_head *sh,
+> >                                   struct raid5_percpu *percpu, int i)
+> >   {
+> > -       return (void *) (to_addr_page(percpu, i) + sh->disks + 2);
+> > +       return (void *) (to_addr_page(percpu, i) + sizeof(struct page*)*(sh->disks + 2));
 
-[ +15.062999]  nvme3n1:
-[  +0.027625]  nvme0n1:
-[  +0.014124] md126: detected capacity change from 0 to 204800
-[  +0.011697]  nvme0n1:
-[  +0.016679]  nvme0n1:
-[  +0.007536]  nvme3n1:
-[  +0.022917]  md126:
-[  +0.069564]  nvme0n1:
-[ +10.069299] md/raid:md126: device nvme0n1 operational as raid disk 0
-[  +0.010772] md/raid:md126: raid level 4 active with 1 out of 2 devices, algorithm 5
-[  +0.041509] md/raid0:md126: raid5 must have missing parity disk!
-[  +0.000003] md: md126: raid0 would not accept array
+I guess we don't need this change. to_add_page() returns "struct page **", which
+should have same size of "struct page*", no?
 
-
-
-
-
+Thanks,
+Song
