@@ -2,107 +2,185 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E524C433DB
-	for <linux-raid@archiver.kernel.org>; Sun, 21 Mar 2021 04:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1973FC433C1
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 16:22:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BC356193B
-	for <linux-raid@archiver.kernel.org>; Sun, 21 Mar 2021 04:29:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC1476197F
+	for <linux-raid@archiver.kernel.org>; Mon, 22 Mar 2021 16:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229787AbhCUEW5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 21 Mar 2021 00:22:57 -0400
-Received: from mail.snapdragon.cc ([103.26.41.109]:38474 "EHLO
-        mail.snapdragon.cc" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbhCUEWR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 21 Mar 2021 00:22:17 -0400
-Received: by mail.snapdragon.cc (Postfix, from userid 65534)
-        id 888B819E03CD; Sun, 21 Mar 2021 04:22:09 +0000 (UTC)
-Content-Type: text/plain;
-        charset=us-ascii
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=snapdragon.cc;
-        s=default; t=1616300528;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=4AEgPglP7gcgMKq2HTY+pMLQ//+eAe/CyUngUK9HH1w=;
-        b=Jfcfv9dgL10rtUQKCrw4X5f8TYLpEK2/brBIs8noPx/OULmVZF0WtxVS0QvdQKcwfG2T8J
-        1zpPC2C+cS5qVTQWyR+F3CBUWYHmSPfG4v5oP1LWCzsiVFCNjoVN/oh7weE6M1EyHNGSjQ
-        jmugFmgFmX2ja1q1Nzu1UrPEnDTdr6k=
-Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.60.0.2.21\))
-Subject: Re: [PATCH] md: warn about using another MD array as write journal
-From:   Manuel Riel <manu@snapdragon.cc>
-In-Reply-To: <27EE5CBC-B1B8-4463-87F5-2AE73F30941B@snapdragon.cc>
-Date:   Sun, 21 Mar 2021 12:22:05 +0800
-Cc:     Linux-RAID <linux-raid@vger.kernel.org>,
-        Vojtech Myslivec <vojtech@xmyslivec.cz>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <C990C60B-FB5A-4709-949B-6D86AF9FA6B1@snapdragon.cc>
-References: <DAEB6C2F-3AE0-4EBE-8775-7C6292F8749A@snapdragon.cc>
- <CAPhsuW4=XoyQV_HNVnFnMWS2PvvU1+Rtbh9SJB-FQTO3haa3ig@mail.gmail.com>
- <27EE5CBC-B1B8-4463-87F5-2AE73F30941B@snapdragon.cc>
-To:     Song Liu <song@kernel.org>
+        id S231228AbhCVQV1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 22 Mar 2021 12:21:27 -0400
+Received: from mga04.intel.com ([192.55.52.120]:24602 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231828AbhCVQVP (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 22 Mar 2021 12:21:15 -0400
+IronPort-SDR: h+zpV/dr5i6CUJtoJporrWvPeHWAaGZpPP3fW7G+sHUSXyVx0nM0rnMUR7fBK9aBOBA22iS/h4
+ 9NWwps873I+Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9931"; a="187981493"
+X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
+   d="scan'208";a="187981493"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 09:21:14 -0700
+IronPort-SDR: 0X3qpLfzPbPb2pZWnov2zN6XbpWOmI4Ptu1LRCo+3qYtKXDKELDZPiuR2Pt01s/7HlS0/tEz32
+ NLyk7P9suIbA==
+X-IronPort-AV: E=Sophos;i="5.81,269,1610438400"; 
+   d="scan'208";a="451790991"
+Received: from oshchirs-mobl.ger.corp.intel.com (HELO [10.213.7.90]) ([10.213.7.90])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2021 09:21:13 -0700
+Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
+To:     Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org
+References: <764426808.38181143.1615910368475.JavaMail.zimbra () redhat ! com>
+From:   Oleksandr Shchirskyi <oleksandr.shchirskyi@linux.intel.com>
+Cc:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>,
+        Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <08b71ea7-bdd3-722d-d18f-aa065b8756c0@linux.intel.com>
+Date:   Mon, 22 Mar 2021 17:21:11 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
+MIME-Version: 1.0
+In-Reply-To: <764426808.38181143.1615910368475.JavaMail.zimbra () redhat !
+ com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-My impression is that the write-journal feature isn't fully stable yet, =
-as was already reported in 2019[^1]. Vojtech and me are seeing the same =
-errors as mentioned there.
+Hello Nigel,
 
-No matter if the journal is on a block device or another RAID.
+I have collected more info regarding this issue.
+I can confirm what Mariusz said, it's a regression caused by patch 4ae96c802203
+The reason for failure during the reshape, is that in this patch sync_max 
+value is set to max, but the function wait_for_reshape_imsm, used in some 
+reshape scenarios, relies on this parameter, and doesn't expect, that value 
+can be max. This leads to reshaping fail.
+Here's an example of a debug log from this method, when the issue is hit:
 
-1: https://www.spinics.net/lists/raid/msg62646.html
+mdadm: wait_for_reshape_imsm: wrong next position to set 4096 (2048)
+mdadm: imsm_manage_reshape: wait_for_reshape_imsm returned error!
 
+With this patch reverted, the issue is not observed. See my logs below:
 
-> On Mar 20, 2021, at 9:12 AM, Manuel Riel <manu@snapdragon.cc> wrote:
->=20
-> On Mar 20, 2021, at 7:16 AM, Song Liu <song@kernel.org> wrote:
->>=20
->> Sorry for being late on this issue.
->>=20
->> Manuel and Vojtech, are we confident that this issue only happens =
-when we use
->> another md array as the journal device?
->>=20
->> Thanks,
->> Song
->=20
-> Hi Song,
->=20
-> thanks for getting back.
->=20
-> Unfortunately it's still happening, even when using a NVMe partition =
-directly. It just took a long 3 weeks to happen. So discard my patch. =
-Here how it went down yesterday:
->=20
-> - process md4_raid6 is running with 100% CPU utilization, all I/O to =
-the array is blocked
-> - no disk activity on the physical drives
-> - soft reboot doesn't work, as md4_raid6 blocks, so hard reset is =
-needed
-> - when booting to rescue mode, it tries to assemble the array and =
-shows the same issue of 100% CPU utilization. Also can't reboot.
-> - when manually assembling it *with* the journal drive, it will read a =
-few GB from the journal device and then get stuck at 100% CPU =
-utilization again without any disk activity.
->=20
-> Solution in the end was to avoid assembling the array on reboot, then =
-assemble it *without* the existing journal and add an empty journal =
-drive later. This lead to some data loss and a full resync.
->=20
-> I'm currently moving all data off this machine and will repave it. =
-Then see if that changes anything.
->=20
-> My main OS is CentOS 8 and the rescue system was Debian. Both showed a =
-similar issue. This must be connected to the journal drive somehow.
->=20
-> My journal drive is a partition on an NVMe with ~180GB in size.
->=20
-> Thanks for any pointers, I could try next.
->=20
-> Manu
+# mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0-3]n1 && mdadm -CR volume -l0 
+--chunk 64 --size=10G --raid-devices=1 /dev/nvme0n1 --force
+# mdadm -D /dev/md/volume 
+ 
+                                                               /dev/md/volume:
+          Container : /dev/md/imsm0, member 0
+         Raid Level : raid0
+         Array Size : 10485760 (10.00 GiB 10.74 GB)
+       Raid Devices : 1
+      Total Devices : 1
+              State : clean
+...
+# mdadm -G /dev/md/imsm0 -n2
+# mdadm -D /dev/md/volume
+/dev/md/volume:
+          Container : /dev/md/imsm0, member 0
+         Raid Level : raid4
+         Array Size : 10485760 (10.00 GiB 10.74 GB)
+      Used Dev Size : 10485760 (10.00 GiB 10.74 GB)
+       Raid Devices : 3
+      Total Devices : 2
+              State : clean, degraded
+...
+# git revert 4ae96c802203ec3cfbb089240c56d61f7f4661b3
+Auto-merging Grow.c
+[master 1166854] Revert "mdadm: fix reshape from RAID5 to RAID6 with backup 
+file"
+  1 file changed, 2 insertions(+), 5 deletions(-)
+# mdadm -Ss; wipefs -a /dev/nvme[0-3]n1
+# make clean; make; make install-systemd; make install
+# mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0-3]n1 && mdadm -CR volume -l0 
+--chunk 64 --size=10G --raid-devices=1 /dev/nvme0n1 --force
+# mdadm -G /dev/md/imsm0 -n2
+# mdadm -D /dev/md/volume
+/dev/md/volume:
+          Container : /dev/md/imsm0, member 0
+         Raid Level : raid0
+         Array Size : 20971520 (20.00 GiB 21.47 GB)
+       Raid Devices : 2
+      Total Devices : 2
 
+              State : clean
+...
+#
+
+On 3/16/2021 4:59 PM, Nigel Croxon wrote:
+> ----- Original Message -----
+> From: "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>
+> To: "Jes Sorensen" <jes@trained-monkey.org>, "Nigel Croxon" <ncroxon@redhat=
+> .com>, linux-raid@vger.kernel.org, xni@redhat.com
+> Sent: Tuesday, March 16, 2021 10:54:22 AM
+> Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup fil=
+> e
+> 
+> Hello Nigel,
+> 
+> Blame told us, that yours patch introduce regression in following
+> scenario:
+> 
+> #mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0125]n1
+> #mdadm -CR volume -l0 --chunk 64 --raid-devices=3D1 /dev/nvme0n1 --force
+> #mdadm -G /dev/md/imsm0 -n2
+> 
+> At the end of reshape, level doesn't back to RAID0.
+> Could you look into it?
+> Let me know, if you need support.
+> 
+> Thanks,
+> Mariusz
+> 
+> I=E2=80=99m trying your situation without my patch (its reverted) and I=E2=
+> =80=99m not seeing success.
+> See the dmesg log.
+> 
+> 
+> [root@fedora33 mdadmupstream]# mdadm -CR volume -l0 --chunk 64 --raid-devic=
+> es=3D1 /dev/nvme0n1 --force
+> mdadm: /dev/nvme0n1 appears to be part of a raid array:
+>        level=3Dcontainer devices=3D0 ctime=3DWed Dec 31 19:00:00 1969
+> mdadm: Creating array inside imsm container md127
+> mdadm: array /dev/md/volume started.
+> 
+> [root@fedora33 mdadmupstream]# cat /proc/mdstat=20
+> Personalities : [raid6] [raid5] [raid4] [raid0]=20
+> md126 : active raid0 nvme0n1[0]
+>       500102144 blocks super external:/md127/0 64k chunks
+> 
+> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
+>       4420 blocks super external:imsm
+> 
+> unused devices: <none>
+> [root@fedora33 mdadmupstream]# mdadm -G /dev/md/imsm0 -n2
+> [root@fedora33 mdadmupstream]# cat /proc/mdstat=20
+> Personalities : [raid6] [raid5] [raid4] [raid0]=20
+> md126 : active raid4 nvme3n1[2] nvme0n1[0]
+>       500102144 blocks super external:-md127/0 level 4, 64k chunk, algorithm=
+>   5 [2/1] [U_]
+> 
+> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
+>       4420 blocks super external:imsm
+> 
+> unused devices: <none>
+> 
+> 
+> dmesg says:
+> [Mar16 11:46] md/raid:md126: device nvme0n1 operational as raid disk 0
+> [  +0.011147] md/raid:md126: raid level 4 active with 1 out of 2 devices, a=
+> lgorithm 5
+> [  +0.044605] md/raid0:md126: raid5 must have missing parity disk!
+> [  +0.000002] md: md126: raid0 would not accept array
+> 
+> -Nigel
+> 
+
+-- 
+Regards,
+Oleksandr Shchirskyi
