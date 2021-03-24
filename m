@@ -2,66 +2,68 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A10FC433C1
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Mar 2021 15:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04AD4C433DB
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Mar 2021 21:12:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D06AE619B8
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Mar 2021 15:14:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AD5261A09
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Mar 2021 21:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236551AbhCXPOU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Mar 2021 11:14:20 -0400
-Received: from rin.romanrm.net ([51.158.148.128]:57578 "EHLO rin.romanrm.net"
+        id S238191AbhCXVMH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Mar 2021 17:12:07 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:12027 "EHLO smtp.hosts.co.uk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236500AbhCXPNv (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 24 Mar 2021 11:13:51 -0400
-Received: from natsu (unknown [IPv6:fd39::e99e:8f1b:cfc9:ccb8])
-        by rin.romanrm.net (Postfix) with SMTP id 7A9E76A4;
-        Wed, 24 Mar 2021 15:13:47 +0000 (UTC)
-Date:   Wed, 24 Mar 2021 20:13:47 +0500
-From:   Roman Mamedov <rm@romanrm.net>
-To:     Andy Smith <andy@strugglers.net>
-Cc:     linux-raid@vger.kernel.org
+        id S233583AbhCXVLj (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 24 Mar 2021 17:11:39 -0400
+Received: from host86-155-154-65.range86-155.btcentralplus.com ([86.155.154.65] helo=[192.168.1.64])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1lPAmv-000CPy-4q
+        for linux-raid@vger.kernel.org; Wed, 24 Mar 2021 21:11:37 +0000
 Subject: Re: MDRaid Rollback
-Message-ID: <20210324201347.33ef3184@natsu>
-In-Reply-To: <20210324144407.GL3712@bitfolk.com>
+To:     linux-raid@vger.kernel.org
 References: <CA+OzjxLW2Vw-ecs7jNELecpYxoBbK767pXEV8rFVaQp_HXfjOg@mail.gmail.com>
-        <20210324144407.GL3712@bitfolk.com>
+ <20210324144407.GL3712@bitfolk.com>
+From:   Wols Lists <antlists@youngman.org.uk>
+Message-ID: <605BB43C.5020201@youngman.org.uk>
+Date:   Wed, 24 Mar 2021 21:50:52 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
+ Thunderbird/38.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20210324144407.GL3712@bitfolk.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 24 Mar 2021 14:44:07 +0000
-Andy Smith <andy@strugglers.net> wrote:
-
-> The default metadata version (1.2) is placed at the start of an
-> array, so even if zeroed this will prevent the array member being
-> used as the filesystem that is on top of it.
-> ...
-> Finally, if you are on superblock versions 1.1 or 1.2 you may be
-> able to work out the offset into the device and use a loop device to
-> skip that, so treating it as a normal filesystem:
+On 24/03/21 14:44, Andy Smith wrote:
+> But, this being a RAID-1 you have at least two devices so wouldn't
+> it be safer to:
 > 
->     https://raid.wiki.kernel.org/index.php/RAID_superblock_formats#The_version-1_Superblock_Format
+> - Fail out one device
+> - Zero that device
+> - Create new filesystem on the removed device
+> - Copy data onto it from the still-running array that is currently
+>   degraded
+> - Use new filesystem for whatever you wanted
 
-Also could delete the partition and recreate it with the new starting offset,
-matching the offset for actual data. Recently I've migrated a couple of disks
-off LVM in this manner.
+Better yet just get another drive and copy it across. You can always do
+a "dd if=/dev/md0 of=/dev/sdc1" or whatever is appropriate. (And before
+anyone asks, I'm planning to copy a filesystem that way, because it's
+chokker with hard links. I *really* don't want to cp the contents ...)
 
-Or if the entire disk was used as an array member, then create a brand new
-partition table on it, with a single partition of the required offset.
+BUT. If you really do want to break the mirror (as I might, just to see
+what happens :-), then your best bet is to add a third disk, let it
+sync, then fail it off and play with that disk.
 
-sfdisk is helpful for dumping partitions into a text file ("-d"), which can
-then be edited and restored to the device with "sfdisk /dev/disk < file".
+As the others said, if you have a 0.9 or 1.0 superblock, your filesystem
+starts in the same place as your partition, so if you delete the
+superblock the partition becomes non-raid. But if your superblock is 1.1
+or 1.2, then that won't work.
 
-All of this is likely more complex if you have to use GPT.
-
--- 
-With respect,
-Roman
+Cheers,
+Wol
