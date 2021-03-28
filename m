@@ -6,34 +6,30 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DA27C433C1
-	for <linux-raid@archiver.kernel.org>; Sun, 28 Mar 2021 02:15:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D61C433E0
+	for <linux-raid@archiver.kernel.org>; Sun, 28 Mar 2021 02:19:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D03F961613
-	for <linux-raid@archiver.kernel.org>; Sun, 28 Mar 2021 02:15:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0DEC61950
+	for <linux-raid@archiver.kernel.org>; Sun, 28 Mar 2021 02:19:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231210AbhC1CPX convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 27 Mar 2021 22:15:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58148 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231232AbhC1COw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 27 Mar 2021 22:14:52 -0400
-X-Greylist: delayed 161 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 27 Mar 2021 19:14:52 PDT
-Received: from u17383850.onlinehome-server.com (u17383850.onlinehome-server.com [IPv6:2607:f1c0:83f:ac00::a6:f62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1778CC0613B1
-        for <linux-raid@vger.kernel.org>; Sat, 27 Mar 2021 19:14:52 -0700 (PDT)
+        id S231339AbhC1CSk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 27 Mar 2021 22:18:40 -0400
+Received: from u17383850.onlinehome-server.com ([74.208.250.170]:54975 "EHLO
+        u17383850.onlinehome-server.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231167AbhC1CSO (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 27 Mar 2021 22:18:14 -0400
+X-Greylist: delayed 359 seconds by postgrey-1.27 at vger.kernel.org; Sat, 27 Mar 2021 22:18:14 EDT
 Received: by u17383850.onlinehome-server.com (Postfix, from userid 5001)
-        id 8ACE9796; Sat, 27 Mar 2021 22:14:51 -0400 (EDT)
-Date:   Sat, 27 Mar 2021 22:14:51 -0400
+        id 4B823794; Sat, 27 Mar 2021 22:12:10 -0400 (EDT)
+Date:   Sat, 27 Mar 2021 22:12:10 -0400
 From:   David T-G <davidtg-robot@justpickone.org>
 To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: why won't this RAID5 device start?
-Message-ID: <20210328021451.GB1415@justpickone.org>
+Subject: how do i bring this disk back into the fold?
+Message-ID: <20210328021210.GA1415@justpickone.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
 User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
@@ -41,110 +37,94 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi, all --
 
-I recently migrated our disk farm to a new box with a new OS build
-(openSuSE from KNOPPIX).  Aside from the usual challenges of setting
-up the world again, I have a 3-device RAID5 volume that won't start.
-The other metadevice is fine, though; I think we can say that the md
-system is running.  Soooooo ...  Where do I start?
+I recently migrated our disk farm to a new server (see the next email),
+and I see that one of the partitions in a RAID5 set it inactive:
 
   diskfarm:~ # cat /proc/mdstat 
   Personalities : [raid6] [raid5] [raid4] 
-  md0 : active raid5 sdc1[3] sdd1[4] sdb1[0]
-        11720265216 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U_UU]
-        
-  md127 : inactive sdl2[0](S) sdj2[3](S) sdf2[1](S)
+  md127 : inactive sdf2[1](S) sdl2[0](S) sdj2[3](S)
         2196934199 blocks super 1.2
          
-  unused devices: <none>
+  md0 : active raid5 sdc1[3] sdd1[4] sdb1[0]
+        11720265216 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U_UU]
 
-[No, I don't know why md127 was first a moment ago!]  I tried reassembling
-the device, but mdadm doesn't like it.
-
-  diskfarm:~ # mdadm --stop /dev/md127
-  mdadm: stopped /dev/md127
-  diskfarm:~ # mdadm --assemble --scan
-  mdadm: /dev/md/750Graid5md assembled from 1 drive - not enough to start the array.
-  mdadm: Found some drive for an array that is already active: /dev/md/0
-  mdadm: giving up.
-  mdadm: No arrays found in config file or automatically
-
-But ... what's with just 1 drive?
-
-  diskfarm:~ # for D in /dev/sd[fjl] ; do parted $D print ; done
-  Model: ATA WDC WD7500BPKX-7 (scsi)
-  Disk /dev/sdf: 750GB
-  Sector size (logical/physical): 512B/4096B
-  Partition Table: gpt
-  Disk Flags: 
-
-  Number  Start   End    Size   File system  Name              Flags
-   2      1049kB  750GB  750GB  ntfs         Linux RAID        raid
-   3      750GB   750GB  134MB  ext3         Linux filesystem
-
-  Model: ATA WDC WD7500BPKX-7 (scsi)
-  Disk /dev/sdj: 750GB
-  Sector size (logical/physical): 512B/4096B
-  Partition Table: gpt
-  Disk Flags: 
-
-  Number  Start   End    Size   File system  Name              Flags
-   2      1049kB  750GB  750GB  ntfs         Linux RAID        raid
-   3      750GB   750GB  134MB  xfs          Linux filesystem
-
-  Model: ATA Hitachi HDE72101 (scsi)
-  Disk /dev/sdl: 1000GB
-  Sector size (logical/physical): 512B/512B
-  Partition Table: msdos
-  Disk Flags: 
-
-  Number  Start   End     Size    Type     File system  Flags
-   1      1049kB  4227MB  4226MB  primary  ntfs         diag, type=27
-   2      4227MB  754GB   750GB   primary  reiserfs     raid, type=fd
-   3      754GB   754GB   134MB   primary  reiserfs     type=83
-   4      754GB   1000GB  246GB   primary  reiserfs     type=83
-
-Slice 2 on each is the RAID partition, slice 3 on each is a little 
-filesystem for bare-bones info, and slice 4 on sdl is a normal basic
-filesystem for scratch content.
-
-  diskfarm:~ # mdadm --examine /dev/sd[fjl]2 | egrep '/dev|Name|Role|State|Checksum|Events|UUID'
-  /dev/sdf2:
-       Array UUID : 88575f01:592167fd:bd9f9ba1:a61fafc4
-             Name : diskfarm:750Graid5md  (local to host diskfarm)
+  diskfarm:~ # mdadm --examine /dev/sd[bcde]1 | egrep '/dev|Name|Role|State|Checksum|Events|UUID'
+  /dev/sdb1:
+       Array UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+             Name : diskfarm:0  (local to host diskfarm)
             State : clean
-      Device UUID : e916fc67:b8b7fc59:51440134:fa431d02
-         Checksum : 43f9e7a4 - correct
-           Events : 720
-     Device Role : Active device 1
-     Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
-  /dev/sdj2:
-       Array UUID : 88575f01:592167fd:bd9f9ba1:a61fafc4
-             Name : diskfarm:750Graid5md  (local to host diskfarm)
-            State : clean
-      Device UUID : 0b847f84:83e80a3d:a0dc11e7:60bffc9f
-         Checksum : 9522782b - correct
-           Events : 177792
-     Device Role : Active device 2
-     Array State : A.A ('A' == active, '.' == missing, 'R' == replacing)
-  /dev/sdl2:
-       Array UUID : 88575f01:592167fd:bd9f9ba1:a61fafc4
-             Name : diskfarm:750Graid5md  (local to host diskfarm)
-            State : clean
-      Device UUID : cc53440e:cb9180e4:be4c38d4:88a676eb
-         Checksum : fef95256 - correct
-           Events : 177794
+      Device UUID : bbcf5aff:e4a928b8:4fd788c2:c3f298da
+         Checksum : 4aa669d5 - correct
+           Events : 77944
      Device Role : Active device 0
-     Array State : A.. ('A' == active, '.' == missing, 'R' == replacing)
+     Array State : A.AA ('A' == active, '.' == missing, 'R' == replacing)
+  /dev/sdc1:
+       Array UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+             Name : diskfarm:0  (local to host diskfarm)
+            State : clean
+      Device UUID : c0a32425:2d206e98:78f9c264:d39e9720
+         Checksum : 38ee846d - correct
+           Events : 77944
+     Device Role : Active device 2
+     Array State : A.AA ('A' == active, '.' == missing, 'R' == replacing)
+  /dev/sdd1:
+       Array UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+             Name : diskfarm:0  (local to host diskfarm)
+            State : clean
+      Device UUID : f05a143b:50c9b024:36714b9a:44b6a159
+         Checksum : 49b381d8 - correct
+           Events : 77944
+     Device Role : Active device 3
+     Array State : A.AA ('A' == active, '.' == missing, 'R' == replacing)
+  /dev/sde1:
+       Array UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+             Name : diskfarm:0  (local to host diskfarm)
+            State : active
+      Device UUID : 835389bd:c065c575:0b9f2357:9070a400
+         Checksum : 80e1b8c4 - correct
+           Events : 60360
+     Device Role : Active device 1
+     Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
 
-Slice f2 looks great, but slices j2 & l2 seem to be missing -- even though
-they are present.  Worse, the Events counter on sdf2 is frighteningly
-small.  Where did it go?!?  So maybe I consider sdf2 failed and reassemble
-from the other two [only] and then put f2 back in?
+  diskfarm:~ # mdadm --detail /dev/md0
+  /dev/md0:
+             Version : 1.2
+       Creation Time : Mon Feb  6 05:56:35 2017
+          Raid Level : raid5
+          Array Size : 11720265216 (10.92 TiB 12.00 TB)
+       Used Dev Size : 3906755072 (3.64 TiB 4.00 TB)
+        Raid Devices : 4
+       Total Devices : 3
+         Persistence : Superblock is persistent
 
-Definitely time to stop, take a deep breath, and ask for help :-)
+         Update Time : Sun Mar 28 01:44:43 2021
+               State : clean, degraded 
+      Active Devices : 3
+     Working Devices : 3
+      Failed Devices : 0
+       Spare Devices : 0
+
+              Layout : left-symmetric
+          Chunk Size : 512K
+
+  Consistency Policy : resync
+
+                Name : diskfarm:0  (local to host diskfarm)
+                UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+              Events : 77944
+
+      Number   Major   Minor   RaidDevice State
+         0       8       17        0      active sync   /dev/sdb1
+         -       0        0        1      removed
+         3       8       33        2      active sync   /dev/sdc1
+         4       8       49        3      active sync   /dev/sdd1
+
+Before I go too crazy ...  What do I need to do to bring sde1 back into
+the RAID volume, either to catch up the missing 17k events (probably
+preferred) or just to rebuild it?
 
 
-TIA & HAND
+TIA & HANN
 
 :-D
 -- 
