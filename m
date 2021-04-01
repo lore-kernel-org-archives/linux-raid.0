@@ -2,157 +2,167 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD02C43617
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 18:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED388C433ED
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 20:49:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8444061130
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 18:11:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C02B76100C
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 20:49:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235659AbhDASK7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:10:59 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([194.104.109.102]:32335 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236421AbhDASD0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Apr 2021 14:03:26 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1617300204;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VfE1dRSTm8gKXW0rIRwb6T4/jt5EMPAEOR7117uI+HU=;
-        b=RoRx8lbLex+K/HxjK36feLhnnp5T/I3uv29/JHiHs9gdog9PhSvfOuJ4G+Ms5HHOo/ikPe
-        6TWzYwRQslixlP15B2lKxGwW62XajxqOT9nHBatDRdL8F6McxhvuhDp6t+aKJOlCdZsdbH
-        pkNu4CmbL0NugGoKNHphlGUuxWIyX20=
-Received: from EUR04-HE1-obe.outbound.protection.outlook.com
- (mail-he1eur04lp2053.outbound.protection.outlook.com [104.47.13.53]) (Using
- TLS) by relay.mimecast.com with ESMTP id de-mta-2-orhSqq7HPfigjgg1mKnt6w-1;
- Thu, 01 Apr 2021 15:01:20 +0200
-X-MC-Unique: orhSqq7HPfigjgg1mKnt6w-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JQGV0GpgKCz16u2SK4ucrwdkXg4yWELjCfNMJhoGxAADMtJEiaaontdCcH6anxgWLXKKWvKYBeZJcaoHXd5GQJwNTHgEpPyxAx9otqUJgc9dQJH8XQjts2FkR2EfqaOOuxqP9hOdQnHfFItgQJGg/pnu0n00q1mythr5xFB0IGlhq8stX1k9Tqnw8HhN5sKjGaClVA4JPjmgtc7pn0zvNtlOVQDeChjsa3DXipac0ZWiawMJz+LMSQXcFgMpLKha2fMvMRz0TiZet1cJO3TddKCR+9TTR13hxBsNeJFfZTKZJG4boOY0PCunvKMgdI7EzFp8TEZJqqZHUBaOOQIPuQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VfE1dRSTm8gKXW0rIRwb6T4/jt5EMPAEOR7117uI+HU=;
- b=FsfyVBdcR58lHoHWSkM5blMnTYwz09YD8fdrwc43BSz00MUATLf11Pi+uNYE8kUV4a8GSLOLM2qSS657YKbavbkdV1VJ+Q+FPbTqKA44wmnOasAf+34ONTwjc+5nrtH1LRNIi+tn+J6rZxP3vFX83757taZWARP2pjuGCjAwZktqRDXjIMgoj7KbC9+WyZPvH7UlvgoU0p+zvIqy2XTr4BPvr4qO6aa5P2lTahIfPDImVtTPjjyAWUrEdWfeldpHoH/kstKeNbz4gzWysxW/JI8T6Ap+DTrVexuZ3WsMBEaHxDu4e2xOb5CMxWKAYg2fT2zT4RlJCxyO4AkoU2Ku+A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=suse.com;
-Received: from DB7PR04MB4666.eurprd04.prod.outlook.com (2603:10a6:5:2b::14) by
- DBAPR04MB7462.eurprd04.prod.outlook.com (2603:10a6:10:1a0::12) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3999.28; Thu, 1 Apr 2021 13:01:18 +0000
-Received: from DB7PR04MB4666.eurprd04.prod.outlook.com
- ([fe80::c5e3:4b14:8fc0:b393]) by DB7PR04MB4666.eurprd04.prod.outlook.com
- ([fe80::c5e3:4b14:8fc0:b393%4]) with mapi id 15.20.3999.027; Thu, 1 Apr 2021
- 13:01:17 +0000
-Subject: Re: [PATCH v2] md: don't create mddev in md_open
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-raid@vger.kernel.org, song@kernel.org,
-        guoqing.jiang@cloud.ionos.com, lidong.zhong@suse.com,
-        xni@redhat.com, neilb@suse.de, colyli@suse.com
-References: <1617240896-15343-1-git-send-email-heming.zhao@suse.com>
- <20210401061722.GA1355765@infradead.org>
-From:   "heming.zhao@suse.com" <heming.zhao@suse.com>
-Message-ID: <a96554cc-abbd-347c-ea24-37d2a41e6073@suse.com>
-Date:   Thu, 1 Apr 2021 21:01:05 +0800
+        id S233827AbhDAUt7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 1 Apr 2021 16:49:59 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17122 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233588AbhDAUt6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Apr 2021 16:49:58 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1617310190; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=iUHKs+3iSkqzjsQM/vWfTzxJrdhJVjOSUAdSoHH4zc2SZPG6BYP6jGsR5NA3PGWtJFXAUfB7gOK8aqtAaX79ytt8o0UzPOFCm2ItJUfBFVUHXPDkjNfNZz4R0ZD8PCkz/Y6Zd0NdH1Sn5NE4AqTN7lMFOPmvtJhWTyF85du22S0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1617310190; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=7hi5FCyqIsJqxed2jhXWnumCUEOQ4pe7Vl3i03WylMU=; 
+        b=XSVdkTKmGlyvgOV/0gl98NkHpTzUPmbfdWvFvdkM2tmMLN3p0H02Ek9PnroN5yEYpo0v8va4L+2vG8QW/AI2ySYti3lxu3A/Mnng8Csb87Li+LQUkixTcoicrcHMuB/nF0SK/s20ZWEghpIfIkug1yKfEbx9WWRy9Pd5OwbMt8c=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org> header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1617310188525960.610227668454; Thu, 1 Apr 2021 22:49:48 +0200 (CEST)
+Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
+To:     Nigel Croxon <ncroxon@redhat.com>,
+        Oleksandr Shchirskyi <oleksandr.shchirskyi@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+References: <764426808.38181143.1615910368475.JavaMail.zimbraredhat!com>
+ <08b71ea7-bdd3-722d-d18f-aa065b8756c0@linux.intel.com>
+ <207580597.39647667.1616433400775.JavaMail.zimbra@redhat.com>
+ <5339fdf7-0d8a-e099-1fc4-be42a08c8ad3@linux.intel.com>
+ <1361244809.39731072.1616517370775.JavaMail.zimbra@redhat.com>
+ <b77b55d3-d9b2-fac9-c756-fabced0546a0@linux.intel.com>
+ <1876594627.1682680.1616759962103.JavaMail.zimbra@redhat.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <c98c5ee6-e66f-00a7-7eb2-081324cae31f@trained-monkey.org>
+Date:   Thu, 1 Apr 2021 16:49:47 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
-In-Reply-To: <20210401061722.GA1355765@infradead.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+ Thunderbird/78.7.0
+MIME-Version: 1.0
+In-Reply-To: <1876594627.1682680.1616759962103.JavaMail.zimbra@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [123.123.134.184]
-X-ClientProxiedBy: HKAPR04CA0005.apcprd04.prod.outlook.com
- (2603:1096:203:d0::15) To DB7PR04MB4666.eurprd04.prod.outlook.com
- (2603:10a6:5:2b::14)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from c73.home (123.123.134.184) by HKAPR04CA0005.apcprd04.prod.outlook.com (2603:1096:203:d0::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.26 via Frontend Transport; Thu, 1 Apr 2021 13:01:14 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 024bf0b0-153d-4d20-cea5-08d8f50e3d07
-X-MS-TrafficTypeDiagnostic: DBAPR04MB7462:
-X-LD-Processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DBAPR04MB7462210F0EC92F93A61DAC35977B9@DBAPR04MB7462.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: kZ3zhqfdxSaepiyOuwvEN87u/4OXa//2lVZptWDq/lDAq0GhBEieKRAartWDe1sx2MeeNUlRoOlQ47776Z+eQ8/TRfp2qpcGyYXrLPA2uFPUYzlsCsIXh2riWkIL8XRSZ3JyCV1lNNaLo4EaAx/nzZ4+DrNiPaXm1wRNQaoNbyjGENHe7Vm/r7+5409sqv/3gtbrkfrBlFNuS/zbZ7vGVf4GB2wyE3HH6zoeOOvQ+i/XvvrRimxwm1cDmtBozUFyTsfLWhsURnKe0SjZX2uA2LgWBdm/yjlIYEyv90x3EZ/8UC0pNKnovWeaduQZr1OJ2MuUe3dDqa/e9Xqv+xreU3xKv6w8suzOrG8VHaLPZVpE8ew37i/8rR6pCqDJZbbayGD4aNOigRSo2vRf6B7lGhMNUwdcsj8eMNuoE0Crkkxc3NfV31lt6DCGEKKhX06zQB8o0ngCBoXievhGBri2vBUnsBVzsxcbE7shgLcyYjBYR9VWLr0f+E2E2K9/vOyWqWzQ6UajXV5Fg/qrio5Ebas1Q3Y3MCSrFufSQZEdYgvKDVPEr+VmIy1u1I8QuEiwmGKq+Dv8wrgBETrNAHwtR1NiUPyHz4zeKzWbMPz7dZOMit6eGThJASCyxFEgRKQ9Oar8iucv9N8Uhr96gEIvPIOBvZEpDzuhg9lX2Dnx5NMD94LPHIwRl3n+bkVVUsvpruQGSl/EyCfIJY+MjP/da49jNqBnWPPtGgWSnkS3pxV6V475w3Y3xmCS6F5XxCwj
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB7PR04MB4666.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(366004)(376002)(39860400002)(396003)(346002)(2616005)(53546011)(8886007)(52116002)(8936002)(956004)(4326008)(31696002)(6916009)(478600001)(6506007)(8676002)(316002)(38100700001)(31686004)(2906002)(83380400001)(6666004)(26005)(36756003)(6512007)(16526019)(186003)(66556008)(6486002)(66476007)(66946007)(107886003)(5660300002)(86362001)(9126006)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?Windows-1252?Q?+iSkNLwqR0RGNuYPYtZQLDctoIjD8YaeUO5mlHu2vrHVvts2AQ/VE9m9?=
- =?Windows-1252?Q?0FKeWOY9WWWyh+jt/9uKXOAwT55v5eEjnhJu60GQgmoKgdteb89rtN+L?=
- =?Windows-1252?Q?C2JZU6z6pTq2q88oEWZuBCg83MXZ2TOzFuHblYjcm9ujpM+pb0e9/XvP?=
- =?Windows-1252?Q?SH4DcCacCb4UpkhWlEFR5Ig/YkL8DQFWBoNRuNnFdh8id97Ey63jCP5F?=
- =?Windows-1252?Q?6Me4HHLdjTfKo0Grzx55nKWq/Goa0le0R1NoiLYamBSwX1ztcD1lGSb+?=
- =?Windows-1252?Q?rsjeNSfmnHBIoodNLju5ijFXmGH+WxYdCwNsirXcGiCaRX++nsAC1dRY?=
- =?Windows-1252?Q?1vNYuYGSeLt8KDm0kCd2rdsslR2nsWzRZWLJH6zfL3ku3opOseQs2lTs?=
- =?Windows-1252?Q?A+wMVN9CyT5joulrSaa0wMah6RjvQh/FV45eJYEuhhJeRL+CF+QG7pOe?=
- =?Windows-1252?Q?dsXUdaEtnd2amlXwYpipY0kaFYEioAawmZ4+fMxcIA6G49qPIq57WcjX?=
- =?Windows-1252?Q?Jt/TAW908zG3yDgFeOPWpFRGzzXL5Rez+m69NXRUYwQyB55UAFShnoBl?=
- =?Windows-1252?Q?ixON3YDAilb4OBNGcmdRKYWpdbi7R8Td1ChLHVrKLBZEMkRWmaXo0tzJ?=
- =?Windows-1252?Q?CyYJDtrOyTYGhfUpA5DjfekO1wQy6fd4hzNhoa3IbqQ+Cnr5Z/TSxeqy?=
- =?Windows-1252?Q?6Au65g+MtPhS3JyT0gkN1kYPD2E9XpI5Hp3MJXjASvSXJlAW0Qspk2H9?=
- =?Windows-1252?Q?KHvsok/6eu0t/t2UtwOTD4l7SoqCOoFGA18onD+SRvR7fu2NhX0GAibo?=
- =?Windows-1252?Q?TKJbKJyq+Xl/0+rVehXMOIgQ8ZZhPFtOugJnz8T+1j+VThXn89wdjdjw?=
- =?Windows-1252?Q?NSSl2lFZCA88nJG9xex9iOBxrWgZ5FZjvvYM5SKqsr1x5c3bIvu8d5oW?=
- =?Windows-1252?Q?J3hgNrLS67n8B47wJbzai84dbEyqOKpvvG9NhoATNtiNCE4bQU0P7YCB?=
- =?Windows-1252?Q?aeZ3yRhQ+/StDLQszNF4tFD4jXtLp5L1C/BUck7FYCxXMw1+7ciNaq1J?=
- =?Windows-1252?Q?UHS8zzdwLZucfySsZegcghJvQJHOKOgdtrQnoV2kz+QAXj3i5AQ0bUHq?=
- =?Windows-1252?Q?8A97dbMuB8QuaIu3vUS2IZuqIYO0oGDIhRFEQUiWu71IVHKhaTu4RNwE?=
- =?Windows-1252?Q?kC/HHqAe2Kv5+LK7BngcUl9F4oZIUgqOsLuVnFDnAPRJ+q0Rvr0iAwRP?=
- =?Windows-1252?Q?3EXnwx3J6HD9jmKBevLQrRaeYNOzaOHoHizAbIiDaS/42u/D0oEejRjl?=
- =?Windows-1252?Q?Y2Iy87zQbHHomuvqb/YYyhMyMJa56VH9oGQpbqEMstm4DUj4V3vMoY75?=
- =?Windows-1252?Q?GO8rxH04NnSYJ6QYYZUs0k6kg9u6fwKoqkENITG7iQbSsny12e7DrnPp?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 024bf0b0-153d-4d20-cea5-08d8f50e3d07
-X-MS-Exchange-CrossTenant-AuthSource: DB7PR04MB4666.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2021 13:01:17.8042
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: navl9WLuXyOv/s7DqRRcpueFWkjzyXU+NDMTEuDgrp6cIKDRGkVM2ZTmg2HON0hgZXWtO8yTNUEZLHwkyz0FEw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7462
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 4/1/21 2:17 PM, Christoph Hellwig wrote:
-> On Thu, Apr 01, 2021 at 09:34:56AM +0800, Zhao Heming wrote:
->> commit d3374825ce57 ("md: make devices disappear when they are no longer
->> needed.") introduced protection between mddev creating & removing. The
->> md_open shouldn't create mddev when all_mddevs list doesn't contain
->> mddev. With currently code logic, there will be very easy to trigger
->> soft lockup in non-preempt env.
+On 3/26/21 7:59 AM, Nigel Croxon wrote:> ----- Original Message ----->
+From: "Oleksandr Shchirskyi" <oleksandr.shchirskyi@linux.intel.com>> To:
+"Nigel Croxon" <ncroxon@redhat.com>
+> Cc: linux-raid@vger.kernel.org, "Mariusz Tkaczyk" <mariusz.tkaczyk@linux.intel.com>, "Jes Sorensen" <jes@trained-monkey.org>
+> Sent: Tuesday, March 23, 2021 4:58:27 PM
+> Subject: Re: [PATCH] mdadm: fix reshape from RAID5 to RAID6 with backup file
 > 
-> As mention below, please don't make this even more of a mess than it
-> needs to.  We can just pick the two patches doing this from the series
-> I sent:
+> On 3/23/2021 5:36 PM, Nigel Croxon wrote:
+>> Oleksandr,
+>> Can you post your dmesg output when running the commands?
+>>
+>> I've back down from 5.11 to 5.8 and I still see:
+>> [  +0.042694] md/raid0:md126: raid5 must have missing parity disk!
+>> [  +0.000001] md: md126: raid0 would not accept array
+>>
+>> Thanks, Nigel
 > 
+> Hello Nigel,
+> 
+> I've switched to 4.18.0-240.el8.x86_64 kernel (I have RHEL8.3) and I still 
+> have the same results, issue is still easily reproducible when patch 
+> 4ae96c8 is applied.
+> 
+> Cropped test logs with and w/o your patch:
+> 
+> # git log -n1 --oneline
+> f94df5c (HEAD -> master, origin/master, origin/HEAD) imsm: support for 
+> third Sata controller
+> # make clean; make; make install-systemd; make install
+> # mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0-3]n1 && mdadm -CR volume -l0 
+> --chunk 64 --size=10G --raid-devices=1 /dev/nvme0n1 --force
+> # mdadm -G /dev/md/imsm0 -n2
+> # dmesg -c
+> [  393.530389] md126: detected capacity change from 0 to 10737418240
+> [  407.139318] md/raid:md126: device nvme0n1 operational as raid disk 0
+> [  407.153920] md/raid:md126: raid level 4 active with 1 out of 2 devices, 
+> algorithm 5
+> [  407.246037] md: reshape of RAID array md126
+> [  407.357940] md: md126: reshape interrupted.
+> [  407.388144] md: reshape of RAID array md126
+> [  407.398737] md: md126: reshape interrupted.
+> [  407.403486] md: reshape of RAID array md126
+> [  459.414250] md: md126: reshape done.
+> # cat /proc/mdstat
+> Personalities : [raid0] [raid6] [raid5] [raid4]
+> md126 : active raid4 nvme3n1[2] nvme0n1[0]
+>        10485760 blocks super external:/md127/0 level 4, 64k chunk, 
+> algorithm 0 [3/2] [UU_]
+> 
+> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
+>        4420 blocks super external:imsm
+> 
+> unused devices: <none>
+> 
+> # mdadm -Ss; wipefs -a /dev/nvme[0-3]n1
+> # dmesg -C
+> # git revert 4ae96c802203ec3cfbb089240c56d61f7f4661b3
+> # make clean; make; make install-systemd; make install
+> # mdadm -CR imsm0 -e imsm -n4 /dev/nvme[0-3]n1 && mdadm -CR volume -l0 
+> --chunk 64 --size=10G --raid-devices=1 /dev/nvme0n1 --force
+> # mdadm -G /dev/md/imsm0 -n2
+> # dmesg -c
+> [  623.772039] md126: detected capacity change from 0 to 10737418240
+> [  644.823245] md/raid:md126: device nvme0n1 operational as raid disk 0
+> [  644.838542] md/raid:md126: raid level 4 active with 1 out of 2 devices, 
+> algorithm 5
+> [  644.928672] md: reshape of RAID array md126
+> [  697.405351] md: md126: reshape done.
+> [  697.409659] md126: detected capacity change from 10737418240 to 21474836480
+> # cat /proc/mdstat
+> Personalities : [raid0] [raid6] [raid5] [raid4]
+> md126 : active raid0 nvme3n1[2] nvme0n1[0]
+>        20971520 blocks super external:/md127/0 64k chunks
+> 
+> md127 : inactive nvme3n1[3](S) nvme2n1[2](S) nvme1n1[1](S) nvme0n1[0](S)
+>        4420 blocks super external:imsm
+> 
+> 
+> Do you need more detailed logs? My system/drives configuration details?
+> 
+> Regards,
+> Oleksandr Shchirskyi
+> 
+> 
+> 
+> 
+> From f0c80c8e90b2ce113b6e22f919659430d3d20efa Mon Sep 17 00:00:00 2001
+> From: Nigel Croxon <ncroxon@redhat.com>
+> Date: Fri, 26 Mar 2021 07:56:10 -0400
+> Subject: [PATCH] mdadm: fix growing containers
+> 
+> This fixes growing containers which was broken with
+> commit 4ae96c802203ec3c (mdadm: fix reshape from RAID5 to RAID6 with
+> backup file)
+> 
+> The issue being that containers use the function
+> wait_for_reshape_isms and expect a number value and not a
+> string value of "max".  The change is to test for external
+> before setting the correct value.
+> 
+> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
 
-Hi,
-
-I already got your meaning on previously email.
-I sent v2 patch for Song's review comment. My patch is bugfix, it may need
-to back port into branch maintenance.
-
-Your attachment patch files is partly my patch.
-The left part is in md_open (response [PATCH 01/15] md: remove the code to flush
-an old instance in md_open)
-I still think you directly use bdev->bd_disk->private_data as mddev pointer is not safe.
-
-Let's wait for other guys opinions.
+I was about to revert the problematic patch. Oleksandr, can you confirm
+if it resolves the issues you were seeing?
 
 Thanks,
-heming
+Jes
 
