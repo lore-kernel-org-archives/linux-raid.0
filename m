@@ -2,124 +2,168 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5AEC433ED
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 01:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A673C433B4
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 06:18:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 293016105A
-	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 01:36:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAE5B61007
+	for <linux-raid@archiver.kernel.org>; Thu,  1 Apr 2021 06:18:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232492AbhDABfg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 31 Mar 2021 21:35:36 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:30978 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230385AbhDABfZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 31 Mar 2021 21:35:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1617240924;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=NU/142njraHvgAOjLKKh8uOQD1fqHXCB5Z3RP372ttc=;
-        b=XLGRdsZ4hxgcb3i0pOlJsfdKemXs/bk1YvfON9xO0kWGLFd91Vf5uqxIdIoHjisihK7MSO
-        NUxnCfaqFET8vgWtJCR/ZcaVmcEHDxSxatCWcg2+mExVbMbGfL/5QPNfB9O/vvKAcmrXv4
-        reYOf+jtR4I90JJ1KACMyBiXw9+2syQ=
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com
- (mail-vi1eur05lp2169.outbound.protection.outlook.com [104.47.17.169])
- (Using TLS) by relay.mimecast.com with ESMTP id
- de-mta-16-ejhCbi6LMECxbaTi_mwcpA-1; Thu, 01 Apr 2021 03:35:23 +0200
-X-MC-Unique: ejhCbi6LMECxbaTi_mwcpA-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NZwPR3AExVzosLxX73q9GctHTPZtt9hsTTT+0JO4hk7gEkSecb5D1t+DWh/E7Iu89PDlGyCnetY4qddaLM2mDH0ccnvSK//vmp9VMqvVEZOP0bz93Xxkh5/oOeGmdj3F+JXLnczSb6wvRf78xDXJdgfISdiD//Ypiv+yvMPPDH1SiX2QwirDb8nFsIOqtsQzC/BdpOoxRXgK/ZNTkqfnnF8waC0limnY0B4EbNzgP/KuALEh+27XGjwErwkVBmDB0oOrzWvgJObvuMIfsP6soKeRIse5OkBUDC3gSIoGLkaXoe/UmgosiMT+/uGpHbr4YowJ5IkN4AM25tXrgFhasw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NU/142njraHvgAOjLKKh8uOQD1fqHXCB5Z3RP372ttc=;
- b=FOUImjmLScYnRljQ4PlRLBt9dtjhWechj73B9TL4H0+K8SWV5Lt+Pm81F6K89qa6BH1OCOPj2I9FOWbayQ+zn8qgnsuuAUb/VCmCURalgTGb6N4UaJZTocTfPiBpxgdnta41XJnKDZO91LuVKlm0Qu2DK2V53dFh9TJ7YLdQIFpplRGW9FQ2CxvNmRiSAPOAv1WCG9N5gYGAt289D3rrAwA74KKA80koXQEValJlxlvU1cOYvryzCkwYS07ZP9R6O1TmYzB8l9snDXNp15pDlrkX+ZhAYY2xHBQaEioFM/f/TAv6KZtfBcez2JFJ7nbJPXbqGOEqO0eFrWFe9EzOsw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from DB7PR04MB4666.eurprd04.prod.outlook.com (2603:10a6:5:2b::14) by
- DBAPR04MB7462.eurprd04.prod.outlook.com (2603:10a6:10:1a0::12) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3999.28; Thu, 1 Apr 2021 01:35:20 +0000
-Received: from DB7PR04MB4666.eurprd04.prod.outlook.com
- ([fe80::c5e3:4b14:8fc0:b393]) by DB7PR04MB4666.eurprd04.prod.outlook.com
- ([fe80::c5e3:4b14:8fc0:b393%4]) with mapi id 15.20.3999.027; Thu, 1 Apr 2021
- 01:35:20 +0000
-From:   Zhao Heming <heming.zhao@suse.com>
-To:     linux-raid@vger.kernel.org, song@kernel.org
-Cc:     Zhao Heming <heming.zhao@suse.com>, guoqing.jiang@cloud.ionos.com,
-        lidong.zhong@suse.com, xni@redhat.com, neilb@suse.de,
-        colyli@suse.com
-Subject: [PATCH v2] md: don't create mddev in md_open
-Date:   Thu,  1 Apr 2021 09:34:56 +0800
-Message-Id: <1617240896-15343-1-git-send-email-heming.zhao@suse.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain
-X-Originating-IP: [123.123.134.184]
-X-ClientProxiedBy: HK2PR04CA0080.apcprd04.prod.outlook.com
- (2603:1096:202:15::24) To DB7PR04MB4666.eurprd04.prod.outlook.com
- (2603:10a6:5:2b::14)
+        id S233193AbhDAGRg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 1 Apr 2021 02:17:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52608 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233128AbhDAGRa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 1 Apr 2021 02:17:30 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7E50C061788
+        for <linux-raid@vger.kernel.org>; Wed, 31 Mar 2021 23:17:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=svtwyWZh8lE2SrMq5EIANMDYSuTYtqQjiXgR+54SJXU=; b=Kv6IvT0mlhAy5UsU2fUfjhjN3e
+        seXD+H196XA6HYySJEyAzHXyXdvE8W3XcbtYRdMc39AOD+m33eRRHo6CdXSJ5EWNV1PspfMsnEpd5
+        vK5FmWfQ3HNwAZ1quIjyNbXZVkDiicBYZ98keu4+LwEzlHUYW3sG5LOPxqpQQ37h0l2NktkL0bYTj
+        yULrkjObhLISUlq4xrLrMBgCN70VE2Mv+6/4QSJywzTWf2VN82urONx+zTZyVN5cklEN9sRvBOULd
+        VwKQZlyqV+6hW8UjztAZCWs18H4Up1b2j663y7ZDsVjiU4ELUNo5+I4qsP2N5haCTgHcAUr6A1nBa
+        6fEk3BZw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lRqdu-005hMz-RJ; Thu, 01 Apr 2021 06:17:24 +0000
+Date:   Thu, 1 Apr 2021 07:17:22 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Zhao Heming <heming.zhao@suse.com>
+Cc:     linux-raid@vger.kernel.org, song@kernel.org,
+        guoqing.jiang@cloud.ionos.com, lidong.zhong@suse.com,
+        xni@redhat.com, neilb@suse.de, colyli@suse.com
+Subject: Re: [PATCH v2] md: don't create mddev in md_open
+Message-ID: <20210401061722.GA1355765@infradead.org>
+References: <1617240896-15343-1-git-send-email-heming.zhao@suse.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from c73.home (123.123.134.184) by HK2PR04CA0080.apcprd04.prod.outlook.com (2603:1096:202:15::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3999.26 via Frontend Transport; Thu, 1 Apr 2021 01:35:16 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 51f699b9-d32f-4faa-3202-08d8f4ae68a3
-X-MS-TrafficTypeDiagnostic: DBAPR04MB7462:
-X-LD-Processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DBAPR04MB7462DB488C721B93D7A60F9C977B9@DBAPR04MB7462.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2399;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: C5m83823psj1wuPWHHUUQ49rNRoParRCkyCBy4t/IhmO6vA/WhDo5gdc/xItoJ+hTK5d+/8GNZaceq+YGVbHCm32rn7FEez/T+mUKedBCKBzHYHySCs1URLNYnU8xhDR53Vm9s0wlyljP9wKHquhvA3D0izk7W1f1dGCCvxfQmpch0oqWBf6UzmbjVXWRtsKMksl9vUSZ+QwIb101FF9tfzHTZ2BvNW74JXsbKHGf+gNL7Ih47dpETAFSbcW49o6OobKA1xUVd8nhSewugRfWQPuzr5WtZJolJWfi+vYeJv1DyETBW1QZl2JhUONljt0wVWwU7rrHCt72CmxECuW/061mhGJFcdHfQI/mkhiUUS9y2aSiMdS2vaAuZwt46/Gr+G72v/1pxK7jjUGIOCGSmLlODPLsfNiZe+yzHGWtNhWq0mIdwg/Ci7rYZAnIwvqHFUsIEyCG8DJ43gz/Mp56HCYMWUv+NANb3p/fOa6dAXw4zREphqAKRlwnt25O6PQL1lS2OvilNcmxgGD/gXBSD22XHhIGistw1S6wq5oYFqBAAhzRCDMvGrcHKcVXYK7MprDIVvztkVM70ozNtT4OHArycE3yUCyv2h33RvD7tPmD/ipSbKx1N4h/aCcpL3WdXcWGUNPJWtjLGCQv6i6LyNNXUToN5vFw8txRtAVa70xw/Ad1CqnjXqEYbznDj54
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB7PR04MB4666.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(346002)(366004)(39860400002)(376002)(6506007)(8886007)(2616005)(956004)(8936002)(52116002)(4326008)(478600001)(316002)(38100700001)(8676002)(83380400001)(2906002)(6666004)(36756003)(26005)(6512007)(16526019)(186003)(6486002)(66556008)(66476007)(86362001)(66946007)(107886003)(5660300002)(9126006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?CsSYxDLtd4cslfu5ElA5y0XIEykVTiUuKyIMDgIe3Gr9pCS+Q1JRYNwSf74U?=
- =?us-ascii?Q?IrjA0ONEWB4NGhur+GOemPA570QzWzYFX4f3q0MP8S+67TR3JmyvdS499CC3?=
- =?us-ascii?Q?5nvpve53sPFsDpKO6S3a3NxPGf56Ff+9kDlnS20R3Q5C1Mxx1HUC39kUCo1I?=
- =?us-ascii?Q?GGLzKc2gd6xxF2ahnnD/QPf0wsnB6vVGSO1e6acTyEKrBZkQwBbsoiCM/n4b?=
- =?us-ascii?Q?K1XnpotUVKwAD94lzC+emLXHi49bHV+/G//Ag72ZgKm3T4e9OepXzG4CmCfY?=
- =?us-ascii?Q?5ldLm2Z/Mb9P8XfAKKJj2tXtW1CWfuSumWGpneIYmAmxHiRYnmWECAP0y+2Z?=
- =?us-ascii?Q?3GawEnNeDtg6a765A1kk3aNImLSTmrnOf5nWjtnlBLZwjhIbhk+U64c8aGB5?=
- =?us-ascii?Q?aj5wgrYPA0NiLo0FKeCconwlixaScoj6Nr0ljKysYlEJsmTdqzO9LEmVWJYo?=
- =?us-ascii?Q?c4Zpkxwvubpwse7maclg+7SegNDClxrVS12vtPpVkRP0jiDn6jB8PgiaKLbO?=
- =?us-ascii?Q?DRGMB+o2bga7y4r0088W5iemh8XJaVTt3VsU235hTH0P6OeRodokDA1EVKVx?=
- =?us-ascii?Q?jVeC0SZaNw62zHv1GiC2rtjr4ekGIP3Dl35mtjRchxJXzrjAaiG4RvFH6yK9?=
- =?us-ascii?Q?1nUSD8nqQzeR5CcruLX2hgFDNkZBkz4/DHfsPC9sbeucsHKS6xv6XWMykEDP?=
- =?us-ascii?Q?m+Ho3JDv1odDGycWop8QeFjjXpUmrxTQbIH2xySKXCvTLIwCJq/UBEvzwWk5?=
- =?us-ascii?Q?vGDvbhsmQ+LBgpC16roA3C3AAvEfcNAvv4ou5sqcbQJtFk/AS/VLSzfViePv?=
- =?us-ascii?Q?Hi66IM25MPHBI8dToMctjFm5vn2bsnsgmoxj1KizJZyCnsVt5usJFkET+baA?=
- =?us-ascii?Q?cIqg8vQGJaPxmBPoeuqrFexEUCdFCwxhkpyHwNwwSncTlc+6W7hDfJUq9Mvm?=
- =?us-ascii?Q?qsCRwvgYkOS8aLUZHFOlsP9ru652I0BD//KsaeMGVP03qqSvq1XrCmOG26i/?=
- =?us-ascii?Q?r7+3zrpW2YdxEhtGJN/epnwK97d/Kye7Mu7i4YytL3g7G/8Rebj7CvN90hOX?=
- =?us-ascii?Q?WHNRVg7SOB/2QQdK/lVsvOA7XwHTNbHZQiZXtg0WJQ81dOmXkyxGXbS4J3uQ?=
- =?us-ascii?Q?E6mU71r607/Ng2rimzGlFrBhb/3GMSlHLqMJgies5eZ3vd4Oy0Y9psb+GT1g?=
- =?us-ascii?Q?RelBS/5VnQoStPRP1fZfjL646ndq34DxOWUAXAjx3DZj+uqANC2xUGc31HIv?=
- =?us-ascii?Q?NTrVO0enz1VJOcy0w7MWfE3Lznar0r/so2ZOszfo5wWyV+g1UfPwagN3HTeK?=
- =?us-ascii?Q?hQrsXEPWf3r5psJOzhpVjl/v?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 51f699b9-d32f-4faa-3202-08d8f4ae68a3
-X-MS-Exchange-CrossTenant-AuthSource: DB7PR04MB4666.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2021 01:35:20.0951
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4TNsIAJJXzf0Ir3n0Oqc51k/ROehZcrhx9IZd9FHaEPH4TaDeKsbJ9a5hg26ykvtoDPuMOM1HiDUmGJ70uCIPA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7462
+Content-Type: multipart/mixed; boundary="7AUc2qLy4jB3hD7Z"
+Content-Disposition: inline
+In-Reply-To: <1617240896-15343-1-git-send-email-heming.zhao@suse.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Thu, Apr 01, 2021 at 09:34:56AM +0800, Zhao Heming wrote:
+> commit d3374825ce57 ("md: make devices disappear when they are no longer
+> needed.") introduced protection between mddev creating & removing. The
+> md_open shouldn't create mddev when all_mddevs list doesn't contain
+> mddev. With currently code logic, there will be very easy to trigger
+> soft lockup in non-preempt env.
+
+As mention below, please don't make this even more of a mess than it
+needs to.  We can just pick the two patches doing this from the series
+I sent:
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment;
+	filename="0001-md-factor-out-a-mddev_find_locked-helper-from-mddev_.patch"
+
+From 86dfff895d62495120d8d61ef2bc5d48db89fe20 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 3 Mar 2021 15:04:15 +0100
+Subject: md: factor out a mddev_find_locked helper from mddev_find
+
+Factor out a self-contained helper to just lookup a mddev by the dev_t
+"unit".
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/md/md.c | 32 +++++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 368cad6cd53a6e..5692427e78ba37 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -734,6 +734,17 @@ void mddev_init(struct mddev *mddev)
+ }
+ EXPORT_SYMBOL_GPL(mddev_init);
+ 
++static struct mddev *mddev_find_locked(dev_t unit)
++{
++	struct mddev *mddev;
++
++	list_for_each_entry(mddev, &all_mddevs, all_mddevs)
++		if (mddev->unit == unit)
++			return mddev;
++
++	return NULL;
++}
++
+ static struct mddev *mddev_find(dev_t unit)
+ {
+ 	struct mddev *mddev, *new = NULL;
+@@ -745,13 +756,13 @@ static struct mddev *mddev_find(dev_t unit)
+ 	spin_lock(&all_mddevs_lock);
+ 
+ 	if (unit) {
+-		list_for_each_entry(mddev, &all_mddevs, all_mddevs)
+-			if (mddev->unit == unit) {
+-				mddev_get(mddev);
+-				spin_unlock(&all_mddevs_lock);
+-				kfree(new);
+-				return mddev;
+-			}
++		mddev = mddev_find_locked(unit);
++		if (mddev) {
++			mddev_get(mddev);
++			spin_unlock(&all_mddevs_lock);
++			kfree(new);
++			return mddev;
++		}
+ 
+ 		if (new) {
+ 			list_add(&new->all_mddevs, &all_mddevs);
+@@ -777,12 +788,7 @@ static struct mddev *mddev_find(dev_t unit)
+ 				return NULL;
+ 			}
+ 
+-			is_free = 1;
+-			list_for_each_entry(mddev, &all_mddevs, all_mddevs)
+-				if (mddev->unit == dev) {
+-					is_free = 0;
+-					break;
+-				}
++			is_free = !mddev_find_locked(dev);
+ 		}
+ 		new->unit = dev;
+ 		new->md_minor = MINOR(dev);
+-- 
+2.30.1
+
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="0002-md-split-mddev_find.patch"
+
+From f24462e5166808c4fd724f6b09233096d6ac1e56 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 3 Mar 2021 15:16:53 +0100
+Subject: md: split mddev_find
+
+Split mddev_find into a simple mddev_find that just finds an existing
+mddev by the unit number, and a more complicated mddev_find that deals
+with find or allocating a mddev.
+
+This turns out to fix this bug reported by
+Zhao Heming <heming.zhao@suse.com>:
+
+------------------------------ snip ------------------------------
 commit d3374825ce57 ("md: make devices disappear when they are no longer
 needed.") introduced protection between mddev creating & removing. The
 md_open shouldn't create mddev when all_mddevs list doesn't contain
@@ -132,11 +176,11 @@ kernel should be non-preempt
 
 *** script ***
 
-about trigger every time with below script
+about trigger 1 time with 10 tests
 
 ```
-1  node1="mdcluster1"
-2  node2="mdcluster2"
+1  node1="15sp3-mdcluster1"
+2  node2="15sp3-mdcluster2"
 3
 4  mdadm -Ss
 5  ssh ${node2} "mdadm -Ss"
@@ -144,7 +188,7 @@ about trigger every time with below script
 7  mdadm -CR /dev/md0 -b clustered -e 1.2 -n 2 -l mirror /dev/sda \
    /dev/sdb --assume-clean
 8
-9  for i in {1..10}; do
+9  for i in {1..100}; do
 10    echo ==== $i ====;
 11
 12    echo "test  ...."
@@ -164,6 +208,19 @@ run md_open.
 *** stack ***
 
 ```
+ID: 2831   TASK: ffff8dd7223b5040  CPU: 0   COMMAND: "mdadm"
+ #0 [ffffa15d00a13b90] __schedule at ffffffffb8f1935f
+ #1 [ffffa15d00a13ba8] exact_lock at ffffffffb8a4a66d
+ #2 [ffffa15d00a13bb0] kobj_lookup at ffffffffb8c62fe3
+ #3 [ffffa15d00a13c28] __blkdev_get at ffffffffb89273b9
+ #4 [ffffa15d00a13c98] blkdev_get at ffffffffb8927964
+ #5 [ffffa15d00a13cb0] do_dentry_open at ffffffffb88dc4b4
+ #6 [ffffa15d00a13ce0] path_openat at ffffffffb88f0ccc
+ #7 [ffffa15d00a13db8] do_filp_open at ffffffffb88f32bb
+ #8 [ffffa15d00a13ee0] do_sys_open at ffffffffb88ddc7d
+ #9 [ffffa15d00a13f38] do_syscall_64 at ffffffffb86053cb ffffffffb900008c
+
+or:
 [  884.226509]  mddev_put+0x1c/0xe0 [md_mod]
 [  884.226515]  md_open+0x3c/0xe0 [md_mod]
 [  884.226518]  __blkdev_get+0x30d/0x710
@@ -220,71 +277,67 @@ some time, the later "mdadm -A" (refer above script line 13) will call
 md_alloc to alloc a new gendisk for mddev. it will break md_open
 statement "if (mddev->gendisk != bdev->bd_disk)" and return 0 to caller,
 the soft lockup is broken.
+------------------------------ snip ------------------------------
 
-Signed-off-by: Zhao Heming <heming.zhao@suse.com>
+Fixes: d3374825ce57 ("md: make devices disappear when they are no longer needed.")
+Reported-by: Zhao Heming <heming.zhao@suse.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-v2:
-- add missed code in mddev_find
-- modify commit comment
-  - remove SUSE product name in test script
-  - soft lockup trigger time is incorrect, fix it. 
-  - only leave one soft lockup stack
-v1:
-- create patch
----
- drivers/md/md.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/md/md.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 21da0c48f6c2..fe6d9f6e3c3b 100644
+index 5692427e78ba37..08d24177bbd4a4 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -734,7 +734,7 @@ void mddev_init(struct mddev *mddev)
+@@ -746,6 +746,22 @@ static struct mddev *mddev_find_locked(dev_t unit)
  }
- EXPORT_SYMBOL_GPL(mddev_init);
  
--static struct mddev *mddev_find(dev_t unit)
-+static struct mddev *mddev_find(dev_t unit, bool create)
+ static struct mddev *mddev_find(dev_t unit)
++{
++	struct mddev *mddev;
++
++	if (MAJOR(unit) != MD_MAJOR)
++		unit &= ~((1 << MdpMinorShift) - 1);
++
++	spin_lock(&all_mddevs_lock);
++	mddev = mddev_find_locked(unit);
++	if (mddev)
++		mddev_get(mddev);
++	spin_unlock(&all_mddevs_lock);
++
++	return mddev;
++}
++
++static struct mddev *mddev_find_or_alloc(dev_t unit)
  {
  	struct mddev *mddev, *new = NULL;
  
-@@ -793,7 +793,8 @@ static struct mddev *mddev_find(dev_t unit)
- 	}
- 	spin_unlock(&all_mddevs_lock);
- 
--	new = kzalloc(sizeof(*new), GFP_KERNEL);
-+	if (create)
-+		new = kzalloc(sizeof(*new), GFP_KERNEL);
- 	if (!new)
- 		return NULL;
- 
-@@ -5644,7 +5645,7 @@ static int md_alloc(dev_t dev, char *name)
+@@ -5650,7 +5666,7 @@ static int md_alloc(dev_t dev, char *name)
  	 * writing to /sys/module/md_mod/parameters/new_array.
  	 */
  	static DEFINE_MUTEX(disks_mutex);
 -	struct mddev *mddev = mddev_find(dev);
-+	struct mddev *mddev = mddev_find(dev, true);
++	struct mddev *mddev = mddev_find_or_alloc(dev);
  	struct gendisk *disk;
  	int partitioned;
  	int shift;
-@@ -6523,7 +6524,7 @@ static void autorun_devices(int part)
- 		}
+@@ -6530,11 +6546,9 @@ static void autorun_devices(int part)
  
  		md_probe(dev);
--		mddev = mddev_find(dev);
-+		mddev = mddev_find(dev, true);
- 		if (!mddev || !mddev->gendisk) {
- 			if (mddev)
- 				mddev_put(mddev);
-@@ -7807,7 +7808,7 @@ static int md_open(struct block_device *bdev, fmode_t mode)
- 	 * Succeed if we can lock the mddev, which confirms that
- 	 * it isn't being stopped right now.
- 	 */
--	struct mddev *mddev = mddev_find(bdev->bd_dev);
-+	struct mddev *mddev = mddev_find(bdev->bd_dev, false);
- 	int err;
- 
- 	if (!mddev)
+ 		mddev = mddev_find(dev);
+-		if (!mddev || !mddev->gendisk) {
+-			if (mddev)
+-				mddev_put(mddev);
++		if (!mddev)
+ 			break;
+-		}
++
+ 		if (mddev_lock(mddev))
+ 			pr_warn("md: %s locked, cannot run\n", mdname(mddev));
+ 		else if (mddev->raid_disks || mddev->major_version
 -- 
-2.30.0
+2.30.1
 
+
+--7AUc2qLy4jB3hD7Z--
