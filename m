@@ -6,72 +6,74 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0132C433B4
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 10:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9320BC433B4
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 14:05:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0ECA610FC
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 10:48:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75BB961056
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 14:05:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234161AbhDBKss (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Apr 2021 06:48:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54850 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbhDBKsr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Apr 2021 06:48:47 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5EB5C0613E6
-        for <linux-raid@vger.kernel.org>; Fri,  2 Apr 2021 03:48:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PVx18KOtnb6FaB0oYKWHJ5qftiok+MYQK2IaFqG2Vd0=; b=fQK/neqN86x9f737PHaOvW8/t/
-        MpZ55jJs1cIY8v5wlHi5PvT9/PQBrzlGCM1R8Su6prdfNqwSrqrRobuv3ymzd29lv34FfWFHBR+bJ
-        8wWIoTSMXbM9d6mssPvGviJCuWvQOBZOGgYZ/Ig9zEEvy/XgLiK7opZwxy5PIGaZl/WkTJ0NTtRCg
-        JKWhBhOplj2uYEjOl6avAUzf5QEMuPZE9fjYOvptTMISpSB2E0zkIIeRT6SlTRkT6eIxOBKqbr/2C
-        gCIS8bedHghoHE2u0dR1HVg3xwQCIUvniXa6pu/WWpOo56roX+Dy+yyQbBQIpF6mx2mjaCxf4crwJ
-        KJihDZuw==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lSHLX-007XtD-6H; Fri, 02 Apr 2021 10:48:16 +0000
-Date:   Fri, 2 Apr 2021 11:48:11 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Song Liu <song@kernel.org>
-Cc:     "heming.zhao@suse.com" <heming.zhao@suse.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
-        lidong.zhong@suse.com, Xiao Ni <xni@redhat.com>,
-        NeilBrown <neilb@suse.de>, Coly Li <colyli@suse.com>
-Subject: Re: [PATCH v2] md: don't create mddev in md_open
-Message-ID: <20210402104811.GA1798339@infradead.org>
-References: <1617240896-15343-1-git-send-email-heming.zhao@suse.com>
- <20210401061722.GA1355765@infradead.org>
- <a96554cc-abbd-347c-ea24-37d2a41e6073@suse.com>
- <CAPhsuW6_9av6H=1LkD5qqpyOcA8j2jj8d660FUpadn3Jfd79Vw@mail.gmail.com>
+        id S235689AbhDBOF5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Apr 2021 10:05:57 -0400
+Received: from mail.skyhub.de ([5.9.137.197]:39516 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235675AbhDBOF4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 2 Apr 2021 10:05:56 -0400
+Received: from zn.tnic (p200300ec2f0a200019ff857a83051552.dip0.t-ipconnect.de [IPv6:2003:ec:2f0a:2000:19ff:857a:8305:1552])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 935A91EC0301;
+        Fri,  2 Apr 2021 16:05:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1617372354;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
+        bh=fawn1BZhXE7Mko9X0iWw+cF95ko4CyRJ+vlQBlaxIJw=;
+        b=BSEVff7uMXQkjtvCXSTN2lYFMSss+DdQpwycZJVLXucbyut+i73u/Iz6fnPFpjjI9S+cdR
+        g0J/dIxvOBJNnYJD1C4uBU7xXbR1+4qVhgtobBvEm8bhoKKdcTpqxrGer5t0VYkBmsACZe
+        vRUV/K5kURJWXfPSyzPU8fl2aMMwBlk=
+Date:   Fri, 2 Apr 2021 16:05:54 +0200
+From:   Borislav Petkov <bp@alien8.de>
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, x86@kernel.org,
+        LKML <linux-kernel@vger.kernel.org>, Song Liu <song@kernel.org>,
+        linux-raid@vger.kernel.org, it+linux-x86@molgen.mpg.de
+Subject: Re: [regression 5.4.97 =?utf-8?B?4oaSIDUu?= =?utf-8?B?MTAuMjRd?=
+ =?utf-8?Q?=3A?= raid6 avx2x4 speed drops from 18429 MB/s to 6155 MB/s
+Message-ID: <20210402140554.GG28499@zn.tnic>
+References: <6a1b0110-07f1-8c2e-fc7f-379758dbd8ca@molgen.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CAPhsuW6_9av6H=1LkD5qqpyOcA8j2jj8d660FUpadn3Jfd79Vw@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <6a1b0110-07f1-8c2e-fc7f-379758dbd8ca@molgen.mpg.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 10:58:54PM -0700, Song Liu wrote:
-> Hi Christoph and Heming,
+On Fri, Apr 02, 2021 at 10:33:51AM +0200, Paul Menzel wrote:
+> Dear Linux folks,
 > 
-> Trying to understand the whole picture here. Please let me know if I
-> misunderstood anything.
 > 
-> IIUC, the primary goal of Christoph's set is to get rid of the
-> ERESTARTSYS hack from md,
-> and eventually move bd_mutext. 02/15 to 07/15 of this set cleans up
-> code in md.c, and they
-> are not very important for the rest of the set (is this correct?).
+> On an two socket AMD EPYC 7601, we noticed a decrease in raid6 avx2x4 speed
+> shown at the beginning of the boot.
+> 
+>                        5.4.95        5.10.24
+> ----------------------------------------------
+> raid6: avx2x4 gen()   18429 MB/s     6155 MB/s
+> raid6: avx2x4 xor()    6644 MB/s     4274 MB/s
+> raid6: avx2x2 gen()   17894 MB/s    18744 MB/s
+> raid6: avx2x2 xor()   11642 MB/s    11950 MB/s
+> raid6: avx2x1 gen()   13992 MB/s    17112 MB/s
+> raid6: avx2x1 xor()   10855 MB/s    11143 MB/s
 
-Yes, at least that is the long term goal.
+Looks like those two might help:
 
-But as posted in this thread we can just split the two patches out
-to do the same thing that the patch from Heming did, without making more
-of a mess of mddev_find.  I can resend them separately as a small series
-instead of the attachment if that makes them easier to review.
+49200d17d27d x86/fpu/64: Don't FNINIT in kernel_fpu_begin()
+e45122893a98 x86/fpu: Add kernel_fpu_begin_mask() to selectively initialize state
+
+-- 
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
