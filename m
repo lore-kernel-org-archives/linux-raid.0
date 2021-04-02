@@ -2,200 +2,182 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95068C433ED
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 14:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA75C433B4
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 16:01:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E07361006
-	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 14:45:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9232D6115A
+	for <linux-raid@archiver.kernel.org>; Fri,  2 Apr 2021 16:01:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234640AbhDBOpr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 2 Apr 2021 10:45:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49444 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234488AbhDBOpr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 2 Apr 2021 10:45:47 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47512C0613E6;
-        Fri,  2 Apr 2021 07:45:46 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id g8so7855361lfv.12;
-        Fri, 02 Apr 2021 07:45:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=4L8O9R+b3yxpyXZWZYDFuq/gdZ5zPognKIR1rH6oTng=;
-        b=l2MaDNhNcxkm/UMV/ZuFb/LtA5kV0diO7St9qdz8d8QmutyoPWqSLYJgIwxrpyoYAn
-         I0tGM2no+l8y3vFC/ygEwXOIqcebgVrH4IPM64mQjPrb3qsKWvN8XRft8P9anE9N+Iv/
-         fXG8aqs/4EmD30d1od/4EXag8dbe3pz18QvXBB+Pq/Kpu1GRsZT3jqgIv46geJ9WX3JI
-         2xqQxEd7AEKx9qlZ2ME6VKD5ssHk486e1piPr5arbT03XIDPj6ZrDdyCOo0zLZKt2T1J
-         6z0ENXcDcSijzDQHuUBNGwK8NgWIh2g7sWmgm+rChAQxe30Xu9GQa6vewnfYgVHnIX0p
-         t8zQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=4L8O9R+b3yxpyXZWZYDFuq/gdZ5zPognKIR1rH6oTng=;
-        b=YKN3c0J/oAADLXKa/rLn2N0EnmoioEAdzd3icR4HAU0lhJaKcO/FGun+FoNnLzCUzp
-         R/THDSnCsWK5+LD4PjOXJTHCEA6MYI0NfdyTsN39ZApztX9yYfvRaOX3Im9VXw6lkoVR
-         r0GKdHG2d9rhefKZwwDzSW+AcCVa5JsucEwpCbj6sOqkzyNLHoF/f/s7oVRQfaWtEAMW
-         jYieCI3cePQbyVAr7upipLherYfmr1LbYAsMw/gCsfXYt/G/U6QB/q5rVvZWjoV6FHNY
-         lhl/nR6L3wpwnVutDMUMVx8Vf2ztyK1yFQmxw2sHadpqS0iV7dTA/moGeyc2orgX/z/Q
-         YJAQ==
-X-Gm-Message-State: AOAM533nczesq09qCOdVhNhsYm/dXIAtduX7usr70SPDMje+smWOXuAK
-        rufUrBnj9gBDGxryrteVcv4zJdY6NB7ol+OnzVr4ULr5vJM=
-X-Google-Smtp-Source: ABdhPJy1+4Hin00DaqW1l//jBwnZzIPQeswhbDJmhR8PYzmFP0Z642KTd/28afaSvr4/Wl3Y7sNf4jbsUkemtteeztk=
-X-Received: by 2002:a19:6d0:: with SMTP id 199mr9207233lfg.18.1617374744738;
- Fri, 02 Apr 2021 07:45:44 -0700 (PDT)
+        id S236406AbhDBQBP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 2 Apr 2021 12:01:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47490 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236096AbhDBQBO (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 2 Apr 2021 12:01:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2A66B61184
+        for <linux-raid@vger.kernel.org>; Fri,  2 Apr 2021 16:01:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617379273;
+        bh=vj5+iwAMbfGvuq//cjwc3HFmnDjVAadxNu6npXcG2E0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=b/kaWe+kRFLqN5GypANyE6PsnIKqVbKjhUGUw7APV8muKxswt07GWMJEW8VT1x7/y
+         L3w6vYu2S1LxahBKjxLeC7qXotxHAYozOqlBYVMPJHTZD/4VjvRReEoLqpP7JDCUnF
+         xZZ3vxqJ/0A8PHzVRTrhpCoZMpYqi95N8ParTNgYwuF5y9JtMTohNuaAQMZhQ4czCQ
+         4JvApVczZ23CZutzsGAxCzTY66wSQqGOHsTQ1OGOtSRjbJReE9n9QkMaD9VT143lFD
+         VVoIKJmA6CWKI6L4m3W2+IZsYRW92+sk+YFyhh4yEy/vXbIhOGeWYllsNmFiGhkz8Q
+         WDwA64JgEZPaw==
+Received: by mail-lf1-f50.google.com with SMTP id m12so8155630lfq.10
+        for <linux-raid@vger.kernel.org>; Fri, 02 Apr 2021 09:01:13 -0700 (PDT)
+X-Gm-Message-State: AOAM531aTrJX+cl4lMHSfaIf4grzrYutm+87ZoWp9qJtVt+G2UuCB2dl
+        GCzhAJiGeOVD9IiGeXGXE+SrbvvlEzhy18l4kQ4=
+X-Google-Smtp-Source: ABdhPJyv7uyaTZ0/Rz/dBhCmhxF62EfJf9QzBGjYU/hWHLRccrdvi3Azqjg4g6T6HhjIYP3ocdAix9heIPLgmckKG+A=
+X-Received: by 2002:a19:bce:: with SMTP id 197mr9152340lfl.281.1617379271389;
+ Fri, 02 Apr 2021 09:01:11 -0700 (PDT)
 MIME-Version: 1.0
-References: <16ceff73-1257-fc3d-aade-43656c7216e7@molgen.mpg.de>
- <12e8f7f1-6655-9f0b-72b1-0908f229dcac@molgen.mpg.de> <b5eb567d-9866-8f0f-ea61-83ae97d4d21f@molgen.mpg.de>
-In-Reply-To: <b5eb567d-9866-8f0f-ea61-83ae97d4d21f@molgen.mpg.de>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Fri, 2 Apr 2021 09:45:33 -0500
-Message-ID: <CAAMCDedmGUcWY=9Nb36gXoo0+F82rhq=-6yKZ1xPf74Gj0mq7Q@mail.gmail.com>
-Subject: Re: OT: Processor recommendation for RAID6
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Linux RAID <linux-raid@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
+References: <1617240896-15343-1-git-send-email-heming.zhao@suse.com>
+ <20210401061722.GA1355765@infradead.org> <a96554cc-abbd-347c-ea24-37d2a41e6073@suse.com>
+ <CAPhsuW6_9av6H=1LkD5qqpyOcA8j2jj8d660FUpadn3Jfd79Vw@mail.gmail.com> <b2288ab4-1da0-612d-8988-637cc33db99a@suse.com>
+In-Reply-To: <b2288ab4-1da0-612d-8988-637cc33db99a@suse.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 2 Apr 2021 09:01:00 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6RKA66Nj6ncW3+dmx6tjEzP4yZnifQiyHPoy1NSdM_7w@mail.gmail.com>
+Message-ID: <CAPhsuW6RKA66Nj6ncW3+dmx6tjEzP4yZnifQiyHPoy1NSdM_7w@mail.gmail.com>
+Subject: Re: [PATCH v2] md: don't create mddev in md_open
+To:     "heming.zhao@suse.com" <heming.zhao@suse.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        lidong.zhong@suse.com, Xiao Ni <xni@redhat.com>,
+        NeilBrown <neilb@suse.de>, Coly Li <colyli@suse.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Apr 2, 2021 at 4:13 AM Paul Menzel <pmenzel@molgen.mpg.de> wrote:
+On Fri, Apr 2, 2021 at 1:58 AM heming.zhao@suse.com
+<heming.zhao@suse.com> wrote:
 >
-> Dear Linux folks,
+> On 4/2/21 1:58 PM, Song Liu wrote:
+> > On Thu, Apr 1, 2021 at 6:03 AM heming.zhao@suse.com
+> > <heming.zhao@suse.com> wrote:
+> >>
+> >> On 4/1/21 2:17 PM, Christoph Hellwig wrote:
+> >>> On Thu, Apr 01, 2021 at 09:34:56AM +0800, Zhao Heming wrote:
+> >>>> commit d3374825ce57 ("md: make devices disappear when they are no longer
+> >>>> needed.") introduced protection between mddev creating & removing. The
+> >>>> md_open shouldn't create mddev when all_mddevs list doesn't contain
+> >>>> mddev. With currently code logic, there will be very easy to trigger
+> >>>> soft lockup in non-preempt env.
+> >>>
+> >>> As mention below, please don't make this even more of a mess than it
+> >>> needs to.  We can just pick the two patches doing this from the series
+> >>> I sent:
+> >>>
+> >>
+> >> Hi,
+> >>
+> >> I already got your meaning on previously email.
+> >> I sent v2 patch for Song's review comment. My patch is bugfix, it may need
+> >> to back port into branch maintenance.
+> >>
+> >> Your attachment patch files is partly my patch.
+> >> The left part is in md_open (response [PATCH 01/15] md: remove the code to flush
+> >> an old instance in md_open)
+> >> I still think you directly use bdev->bd_disk->private_data as mddev pointer is not safe.
+> >>
+> >
+> > Hi Christoph and Heming,
+> >
+> > Trying to understand the whole picture here. Please let me know if I
+> > misunderstood anything.
+> >
+> > IIUC, the primary goal of Christoph's set is to get rid of the
+> > ERESTARTSYS hack from md,
+> > and eventually move bd_mutext. 02/15 to 07/15 of this set cleans up
+> > code in md.c, and they
+> > are not very important for the rest of the set (is this correct?).
+> >
+> > Heming, you mentioned "the solution may simply return -EBUSY (instead
+> > of -ENODEV) to
+> > fail the open path". Could you please show the code? Maybe that would
+> > be enough to unblock
+> > the second half of Christoph's set (08/15 to 15/15)?
+> >
 >
+> I already sent the whole picture of md_open (email data: 2021-4-1,
+> subject: Re: [PATCH] md: don't create mddev in md_open).
+> My mail may fail to be delivered (at least, I got the "can't be delivered"
+> info on my last mail for linux-raid & guoqing's address). I put the related
+> email on attachment, anyone can read it again.
 >
-
-> > Are these values a good benchmark for comparing processors?
->
-> After two years, yes they are. I created 16 10 GB files in `/dev/shm`,
-> set them up as loop devices, and created a RAID6. For resync speed it
-> makes difference.
->
-> 2 x AMD EPYC 7601 32-Core Processor:    34671K/sec
-> 2 x Intel Xeon Gold 6248 CPU @ 2.50GHz: 87533K/sec
->
-> So, the current state of affairs seems to be, that AVX512 instructions
-> do help for software RAIDs, if you want fast rebuild/resync times.
-> Getting, for example, a four core/eight thread Intel Xeon Gold 5222
-> might be useful.
->
-> Now, the question remains, if AMD processors could make it up with
-> higher performance, or better optimized code, or if AVX512 instructions
-> are a must,
->
-> [=E2=80=A6]
->
->
-> Kind regards,
->
-> Paul
->
->
-> PS: Here are the commands on the AMD EPYC system:
+> For the convenience of discussion, I also pasted **patched** md_open below.
+> (I added more comments than enclosed email)
 >
 > ```
-> $ for i in $(seq 1 16); do truncate -s 10G /dev/shm/vdisk$i.img; done
-> $ for i in /dev/shm/v*.img; do sudo losetup --find --show $i; done
-> /dev/loop0
-> /dev/loop1
-> /dev/loop2
-> /dev/loop3
-> /dev/loop4
-> /dev/loop5
-> /dev/loop6
-> /dev/loop7
-> /dev/loop8
-> /dev/loop9
-> /dev/loop10
-> /dev/loop11
-> /dev/loop12
-> /dev/loop13
-> /dev/loop14
-> /dev/loop15
-> $ sudo mdadm --create /dev/md1 --level=3D6 --raid-devices=3D16
-> /dev/loop{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}
-> mdadm: Defaulting to version 1.2 metadata
-> mdadm: array /dev/md1 started.
-> $ more /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4]
-> [multipath]
-> md1 : active raid6 loop15[15] loop14[14] loop13[13] loop12[12]
-> loop11[11] loop10[10] loop9[9] loop8[8] loop7[7] loop6[6] loop5[5]266
-> loop4[4] loop3[3] lo
-> op2[2] loop1[1] loop0[0]
->        146671616 blocks super 1.2 level 6, 512k chunk, algorithm 276
-> [16/16] [UUUUUUUUUUUUUUUU]
->        [>....................]  resync =3D  3.9% (416880/10476544)
-> finish=3D5.6min speed=3D29777K/sec
+> static int md_open(struct block_device *bdev, fmode_t mode)
+> {
+>     /* section 1 */
+>     struct mddev *mddev = mddev_find(bdev->bd_dev); //hm: the new style, only do searching job
+>     int err;
 >
-> unused devices: <none>
-> $ more /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4]
-> [multipath]
-> md1 : active raid6 loop15[15] loop14[14] loop13[13] loop12[12]
-> loop11[11] loop10[10] loop9[9] loop8[8] loop7[7] loop6[6] loop5[5]
-> loop4[4] loop3[3] lo
-> op2[2] loop1[1] loop0[0]
->        146671616 blocks super 1.2 level 6, 512k chunk, algorithm 2
-> [16/16] [UUUUUUUUUUUUUUUU]
->        [>....................]  resync =3D  4.1% (439872/10476544)
-> finish=3D5.3min speed=3D31419K/sec
-> $ sudo mdadm -S /dev/md1
-> mdadm: stopped /dev/md1
-> $ sudo losetup -D
-> $ sudo rm /dev/shm/vdisk*.img
+>     if (!mddev) //hm: this will cover freeing path 2.2 (refer enclosed file)
+>         return -ENODEV;
+>
+>     if (mddev->gendisk != bdev->bd_disk) { //hm: for freeing path 2.1 (refer enclosed file)
+>         /* we are racing with mddev_put which is discarding this
+>          * bd_disk.
+>          */
+>         mddev_put(mddev);
+>         /* Wait until bdev->bd_disk is definitely gone */
+>         if (work_pending(&mddev->del_work))
+>             flush_workqueue(md_misc_wq);
+>         return -EBUSY; //hm: fail this path. it also makes __blkdev_get return fail, userspace can try later.
+>                        //
+>                        // the legacy code flow:
+>                        //   return -ERESTARTSYS here, later __blkdev_get reentry.
+>                        //   it will trigger first 'if' in this functioin, then
+>                        //   return -ENODEV.
+>     }
+>
+>     /* section 2 */
+>     /* hm: below same as Christoph's [PATCH 01/15] */
+>     err = mutex_lock_interruptible(&mddev->open_mutex);
+>     if (err)
+>         return err;
+>
+>     if (test_bit(MD_CLOSING, &mddev->flags)) {
+>         mutex_unlock(&mddev->open_mutex);
+>         return -ENODEV;
+>     }
+>
+>     mddev_get(mddev);
+>     atomic_inc(&mddev->openers);
+>     mutex_unlock(&mddev->open_mutex);
+>
+>     bdev_check_media_change(bdev);
+>     return 0;
+> }
+> ```
+>
+> I wrote again:
+> > Christoph's patch [01/15] totally dropped <section 1>, and use bdev->bd_disk->private_data
+> > to get mddev pointer, it's not safe.
+>
+> And with above **patched** md_open, Christoph's patches 02-07 can be work happily.
+> He only needs to adjust/modify 01 patch.
+> The md layer behavior will change from return -ENODEV to -EBUSY in some racing scenario.
 
+Thanks for the explanation.
 
-I think you are testing something else.  Your speeds are way below
-what the raw processor can do. You are probably testing memory
-speed/numa arch differences between the 2.
+Could you please send official patch of modified 01/15 and your fix
+(either in a set or merge into
+one patch)? This patch(set) would go to stable. Then, we can apply
+Christoph's 02 - 15 on top of
+it.
 
-On the intel arch there are 2 numa nodes total with 4 channels, so the
-system  has 8 usable channels of bandwidth, but a allocation on a
-single numa node will only have 4 channels usable (ddr4-2933)
-
-On the epyc there are 8 numa nodes with 2 channels each (ddr4-2666),
-so any single memory allocation will have only 2 channels available
-and if the accesses are across the numa bus will be slower.
-
-So 4*2933/2*2666 =3D 2.20 * 34671 =3D 76286 (fairly close to your results).
-
-How the allocation for memory works depends a lot on how much ram you
-actually have per numa node and how much for the whole machine.  But
-any single block for any single device should be on a single numa node
-almost all of the time.
-
-You might want to drop the cache before the test, run numactl
---hardware to see how much memory is free per numa node, then rerun
-the test and at the of the test before the stop run numactl --hardware
-again to see how it was spread across numa nodes.  Even if it spreads
-it across multiple numa nodes that may well mean that on the epyc case
-you are running with several numa nodes were the main raid processes
-are running against remote numa nodes, and because intel only has 2
-then there is a decent chance that it is only running on 1 most of the
-time (so no remote memory).  I have also seen in benchmarks I have run
-on 2P and 4P intel machines that interleaved on a 2P single thread job
-is faster than running on a single numa nodes memory (with the process
-pinned to a single cpu on one of the numa nodes, memory interleaved
-over both), but on a 4P/4numa node machine interleaving slows it down
-significantly.  And in the default case any single write/read of a
-block is likely only on a single numa node so that specific read/write
-is constrained by a single numa node bandwidth giving an advantage to
-fewer faster/bigger numa nodes and less remote memory.
-
-Outside of rebooting and forcing the entire machine to interleave I am
-not sure how to get shm to interleave.   It might be a good enough
-test to just force the epyc to interleave and see if the benchmark
-result changes in any way.  If the result does change repeat on the
-intel.  Overall for the most part the raid would not be able to use
-very many cpu anyway, so a bigger machine with more numa nodes may
-slow down the overall rate.
+Thanks,
+Song
