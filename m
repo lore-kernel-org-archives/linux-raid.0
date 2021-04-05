@@ -2,93 +2,153 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.8 required=3.0 tests=BAYES_05,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EEC4C433ED
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 03:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B9A3C433ED
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 07:54:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00F2261369
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 03:47:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA0046139B
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 07:54:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231697AbhDEDrG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 4 Apr 2021 23:47:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42774 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231694AbhDEDrG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 4 Apr 2021 23:47:06 -0400
-Received: from u17383850.onlinehome-server.com (u17383850.onlinehome-server.com [IPv6:2607:f1c0:83f:ac00::a6:f62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A18A6C061756
-        for <linux-raid@vger.kernel.org>; Sun,  4 Apr 2021 20:47:00 -0700 (PDT)
-Received: by u17383850.onlinehome-server.com (Postfix, from userid 5001)
-        id 4A1C37A0; Sun,  4 Apr 2021 23:46:59 -0400 (EDT)
-Date:   Sun, 4 Apr 2021 23:46:59 -0400
-From:   David T-G <davidtg-robot@justpickone.org>
-To:     Linux RAID list <linux-raid@vger.kernel.org>
-Subject: Re: bitmaps on xfs (was "Re: how do i bring this disk back into the
- fold?")
-Message-ID: <20210405034659.GG1415@justpickone.org>
-References: <20210328021210.GA1415@justpickone.org>
- <20210402004001.GH1711@justpickone.org>
- <62cc89ea-b9cf-d8a3-3d52-499fd84f7cc3@youngman.org.uk>
- <20210402050554.GF1415@justpickone.org>
- <CAAMCDecNM8X9tdWo-WKpQA3BE=_J=XKc1D75rcQiQN0owZ9kJQ@mail.gmail.com>
+        id S232439AbhDEHyT convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 5 Apr 2021 03:54:19 -0400
+Received: from [105.162.1.217] ([105.162.1.217]:26227 "EHLO
+        guard.vivawebhost.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S232187AbhDEHyT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 5 Apr 2021 03:54:19 -0400
+Message-ID: <22622b8f5c547e75696cda7690446e60200a84@yandex.ru>
+Reply-To: "Kenya Business Plans" <ylo@yandex.ru>
+From:   "Kenya Business Plans" <cawq@yandex.ru>
+To:     <linux-raid@vger.kernel.org>
+Subject: Kenya Cutomized Business Plans for only Kes 499/=
+Date:   Mon, 5 Apr 2021 10:54:07 +0300
+Organization: Kenya Business Plans
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAMCDecNM8X9tdWo-WKpQA3BE=_J=XKc1D75rcQiQN0owZ9kJQ@mail.gmail.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+Content-Type: text/plain; charset="utf-8";
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Roger, et al --
+  
+Customized Kenya Business Plans
+Invest wisely by getting street smart market surveys, guides and info packs with the sweet or harsh reality of the market.
+Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Competition, Survival rate, Differentiation, Capital, Process, Equipment, Suppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tricks & so so much more.
 
-...and then Roger Heflin said...
-% 
-% The re-add will only work if the array has bitmaps.  For quick disk
+We have comprehensive business plans in these categories:
 
-Ahhhhh...  Good point.
+Agrovet
+Auto Glass Retail -17 Pages
+Bank Agency Fact-sheet
+Beef Butchery - 31 pages
+Boda Boda
+Bottled Water - 53 Pages
+Building Materials Yard - Dynamics & Case Study
+Car Wash Quick Guide
+Chapati Wholesale (Case Study)
+Chemist -Retail - 31 Pages
+Chicken Butchery
+Chips & Chicken Cafe - 31 Pages
+Concreting ( Koroga) Equipment Leasing - 29 Pages
+Corn Chips Snacks Making - 37 Pages
+Cosmetics Retail - 30 Pages
+Cosmetics Retail -30 Pages
+Courier - 35 Pages
+Cyber Cafe
+Day-care
+Electrical Parts Retail - 27 Pages
+Executive Barber Shop - 42 Pages
+Fish Supply - Nairobi Hotels Quick Overview
+Fish Supply - Nairobi Hotels Quick Survey
+Flowers - Nairobi (Retail/ Wholesale )
+Free Advertiser Magazine ( Quick Guide & Case Study )
+Fruit / Juice Parlour
+Gas (LPG) Retail
+Gift Service
+Gym - 38 pages
+Hair Salon
+Ice Lollies Making
+Ice Lollies Making ( Quick Guide )
+Imaging Clinic (Ultrasound and X-ray) - 46 Pages
+Inner-wear Retail - 27 Pages
+Laundry - 31 pages
+Leather: Skins Trade -26 Pages
+'Local' Bar - 48 Pages
+Maize Milling (Unga wa Ugali)
+Milk Distributorship
+Mitumba Clothes
+Money Lending - Informal Overview
+Motorcycle Spare Parts Retail -33 Pages
+Movie Shop
+M-pesa Sub Agent
+Nails (Misumari) Making - 60 Pages
+Non-Woven Bags Making -39 Pages
+Petrol Station (Independent) - 47 Pages
+Plumbing Hardware Retail - 35 Pages *New
+Primary School Business - 38 Pages
+Printing Business - 55 Pages
+Real Estate Agency - 42 Pages
+Second Hand Novels (R)
+Selling Cake Boxes
+Selling Cookies
+Senator Keg Bar
+Slot Machines Quick Guide
+Small Scale FMCG Distribution - New
+Smokies & Egg Vending
+Supermarket - 75 Pages
+Supermarket Shelf Space Guide
+Tents & Chairs Leasing
+Tiles Retail Business Fact-sheet
+Timber Yard - 32 Pages
+Tomato ( Greenhouse ) - Quick Market & Production Guide
+Tyres Retail Business - 29 Pages
 
-It didn't really take 9 hours; a few minutes later it was up to 60+
-hours, and then it dropped to a couple of hours and was done the next
-time I looked.  I also forced the other array using just the last two
-drives and saw everything happy, so I then added the "first" drive and
-now it's all happy as well.  Woo hoo.
+Invest wisely in 2020 by getting street smart market surveys with:
+- Market Analysis
+- Step by step establishing Process
+- Licenses - Issuing authority, cost, requirements
+- Equipment - Suppliers, Considerations, Cost
+- Other requirements
+- Suppliers & Prices
+- Raw Materials
+- Buying Selling Prices
+- Production Costs
+- Operational Costs
+- Day to day Operations
+- Revenue & Margins
+- Sample wholesale retail prices
+- Case Studies
+- Manpower
+- Capital breakdown
+- Opportunities
+- Competition
+- Surviving & Thriving
+- Analysis, figures, observations, dos & don'ts
+- Trends ,Tips, Tricks and so much more.
+
+To Download a Sample Business Plan Copy and paste the link below to your browser
+
+https://drive.google.com/open?id=1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
+
+The whole package of 65 Business Plans above is available Offer Price @ Kshs. 499. We are only selling the guides as a package.
+
+To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931.
+
+On payment kindly forward the Mpesa payment confirmation text and your email address to +254 721 351 269.
+
+We deliver via email within 15 minutes of payment.
+
+TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Less Risk!
+
+Kind Regards;
 
 
-% hiccups the re-add is nice because instead of 9 hours, often it
-% finishes in only a few minutes assuming the disk has not been out of
-% the array for long.
-
-I love the idea.  I've been reading up, and in addition to questions of
-what size bitmap I need for my sizes
-
-  diskfarm:~ # df -kh /mnt/4Traid5md/ /mnt/750Graid5md/
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/md0p1       11T   11T  309G  98% /mnt/4Traid5md
-  /dev/md127p1    1.4T  1.4T   14G 100% /mnt/750Graid5md
-
-and how to tell it (or *if* I tell it; that still isn't clear) there's
-also the question of whether or not xfs
-
-  diskfarm:~ # grep /mnt/ssd /etc/fstab
-  LABEL=diskfarm-ssd      /mnt/ssd        xfs     defaults        0  0
-
-will work for my bitmap files target, since all I see is that it must be
-an ext2 or ext3 (not ext4? old news?) device.
-
-Anyway, thanks again for the sanity checks and pointers.  It's good to be
-whole again :-)  I look forward to the day when I can dig into growing to
-more larger disks and have to contemplate reshaping from RAID5 to RAID6 :-)
-
-
-HAND
-
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
-
+Hashna A. Noor
+Manager - Sales & Marketing
+Kenya Business Plans Limited
++254721351269 | +254707559080
+78 Brookside Drive | Nairobi | Kenya
