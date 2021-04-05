@@ -2,82 +2,105 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CF08C433ED
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 18:00:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B35CC433ED
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 18:59:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39018611BE
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 18:00:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4732E6128A
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 18:59:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232651AbhDESAf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 5 Apr 2021 14:00:35 -0400
-Received: from smtp.hosts.co.uk ([85.233.160.19]:52584 "EHLO smtp.hosts.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237515AbhDESAe (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 5 Apr 2021 14:00:34 -0400
-Received: from host86-156-102-23.range86-156.btcentralplus.com ([86.156.102.23] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1lTT2T-0008gG-5q; Mon, 05 Apr 2021 18:29:26 +0100
-Subject: Re: bitmaps on xfs (was "Re: how do i bring this disk back into the
- fold?")
-To:     Roger Heflin <rogerheflin@gmail.com>,
-        David T-G <davidtg-robot@justpickone.org>
-Cc:     Linux RAID list <linux-raid@vger.kernel.org>
-References: <20210328021210.GA1415@justpickone.org>
- <20210402004001.GH1711@justpickone.org>
- <62cc89ea-b9cf-d8a3-3d52-499fd84f7cc3@youngman.org.uk>
- <20210402050554.GF1415@justpickone.org>
- <CAAMCDecNM8X9tdWo-WKpQA3BE=_J=XKc1D75rcQiQN0owZ9kJQ@mail.gmail.com>
- <20210405034659.GG1415@justpickone.org>
- <CAAMCDecX3nawcYC4hFX+VjQTiHPaZDUb1RcM66=OBFoxhLwY4Q@mail.gmail.com>
-From:   antlists <antlists@youngman.org.uk>
-Message-ID: <5f58e78d-8d8c-c66c-7674-79832e22f200@youngman.org.uk>
-Date:   Mon, 5 Apr 2021 18:29:26 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
+        id S235455AbhDES7O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 5 Apr 2021 14:59:14 -0400
+Received: from mail1.g17.pair.com ([216.92.2.65]:48176 "EHLO
+        mail1.g17.pair.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234913AbhDES7J (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 5 Apr 2021 14:59:09 -0400
+Received: from mail1.g17.pair.com (localhost [127.0.0.1])
+        by mail1.g17.pair.com (Postfix) with ESMTP id DFB9AB1A64
+        for <linux-raid@vger.kernel.org>; Mon,  5 Apr 2021 14:59:00 -0400 (EDT)
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail1.g17.pair.com (Postfix) with ESMTPSA id DBF87D8FE5
+        for <linux-raid@vger.kernel.org>; Mon,  5 Apr 2021 14:59:00 -0400 (EDT)
+Received: by mail-ej1-f45.google.com with SMTP id u21so18151525ejo.13
+        for <linux-raid@vger.kernel.org>; Mon, 05 Apr 2021 11:59:00 -0700 (PDT)
+X-Gm-Message-State: AOAM533jW+vmoanrm+wuMLn+1xs7Op97pbsgte8PawsJhef4T3ELHNRc
+        AJEU1zXQ6ejckyz/iO6aQyWjrAKErwJx2Ekc7A==
+X-Google-Smtp-Source: ABdhPJyGMdtigz1lZaaPNqAEOHpPAGqvOoP/BYKKbynS+BWd4XgTD38W4W4LLm+44Kh6/W/iwxjyz0K39s1IdhAglgo=
+X-Received: by 2002:a17:906:1350:: with SMTP id x16mr7200353ejb.11.1617649139770;
+ Mon, 05 Apr 2021 11:58:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAAMCDecX3nawcYC4hFX+VjQTiHPaZDUb1RcM66=OBFoxhLwY4Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+References: <CAOLErMXeBKoC=7Bq0XddmVShJdSNrhTms+tbBnqih8nnXCF-iA@mail.gmail.com>
+In-Reply-To: <CAOLErMXeBKoC=7Bq0XddmVShJdSNrhTms+tbBnqih8nnXCF-iA@mail.gmail.com>
+Reply-To: jeff@cjsa.com
+From:   Jeffery Small <jeff@cjsa.com>
+Date:   Mon, 5 Apr 2021 11:58:43 -0700
+X-Gmail-Original-Message-ID: <CAOLErMWW4vxQgJkY_hBedmm_oTx34vNhGWZet-1bkJV8qSDH_w@mail.gmail.com>
+Message-ID: <CAOLErMWW4vxQgJkY_hBedmm_oTx34vNhGWZet-1bkJV8qSDH_w@mail.gmail.com>
+Subject: Re: Question about mdcheck
+To:     Mailing Lists <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 05/04/2021 12:30, Roger Heflin wrote:
->>    diskfarm:~ # grep /mnt/ssd /etc/fstab
->>    LABEL=diskfarm-ssd      /mnt/ssd        xfs     defaults        0  0
->>
->> will work for my bitmap files target, since all I see is that it must be
->> an ext2 or ext3 (not ext4? old news?) device.
+Following up to my own post:
 
-Bear in mind you're better off using a journal (and bitmaps and journals 
-are incompatible).
+Further exploration revealed a couple of things (to me!):
 
-"not ext4" seems odd to me because - from a kernel point of view - ext's 
-2 and 3 no longer longer exist.
->>
-> I don't know, I have always done mine internal.   I could see some
-> advantage to have it on a SSD vs internally.  I may have to try that,
-> I am about to do some array reworks to go from all 3tb disks to start
-> using some 6tb disks.   If the file was pre-allocated I would not
-> think it would matter which.    The page is dated 2011 so that would
-> have been old enough that no one tested ext4/xfs.
-> 
-Umm... don't use all the space on your 6TB disks. I'm planning to build 
-my arrays on dm-integrity, which will make raid 5 a bit more trustworthy.
+The mdcheck_start.timer and mdcheck_continue.timer files
+under /lib/systemd/system/ contain RandomizedDelaySec
+settings of 24h and 12h respectively.  This appears to be
+responsible for the odd starting times for the check which is
+interfering with daytime system use.  Why would these
+values be included for a service intended to only run once
+a month?
 
-> I was going to tell you you could just create a LV and format it ext3
-> and use it, but I see it appears you are using direct partitions only.
+I do not want to edit the files under /lib/systemd/system/
+which would certainly be overwritten with future updates.
+Can I place copies of these files in /etc/systemd/system
+and completely override the entries under /lib/systemd?
 
-Ny new system? 4TB disks, with one terabyte raided and lvm on top for 
-root partitions (I'll be configuring it multi-boot or VMs...). Then 
-three terabytes with dm-integrity at the bottom, then raid, then lvm on 
-top for /home and backup snapshots.
+Clearly, I'm still trying to figure out just how the systemd
+works and how it integrates with the old legacy init system.
 
-Cheers,
-Wol
+On Mon, Apr 5, 2021 at 10:17 AM Jeffery Small <jeff@cjsa.com> wrote:
+>
+> This is on an Xubuntu 20.04 system.
+>
+> I was wondering why I was occasionally seeing a "check" operation
+> occurring on my clean RAID1 mirrors.  Eventually I discovered the
+> checkarray and mdcheck scripts in /usr/share/mdadm.  It appears
+> that checkarray isn't used (is that correct?), but mdcheck is being
+> launched by /lib/systemd/system/mdcheck_start.service on the first
+> Sunday of each month.  I have a couple of questions?
+>
+> 1: Where do you look for the systemctl scheduling of services
+> like this?  Is there a cron-like scheduler?  The time for this needs
+> to be adjusted.
+>
+> 2: Why does mdcheck get a 6 hour run duration set?  Right now
+> it is starting a little after 8 AM, running until 2 PM and then check-
+> pointed and suspended.  On Monday at 9:10 AM it  continued due
+> to /lib/systemd/system/mdcheck_continue.service. It is running on
+> a 4TB raid that takes over 12 hours to complete, so why stop it
+> after 6 hours?  I'm certainly not getting any advantage to running in
+> off hours since it is starting at a really inappropriate time.
+>
+> 3: The process is really putting a load on the system and interfering
+> with other work.  Can the priority for this process be lowered so that
+> it doesn't consume so many resources?
+>
+> 4: How critical is the check operation?  Does it discover things that
+> the normal RAID operation misses?
+>
+> Anything else I should know about all of this?
+>
+> Thanks.
+> --
+> Jeffery Small
