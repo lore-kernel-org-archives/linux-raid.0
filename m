@@ -2,153 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.8 required=3.0 tests=BAYES_05,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B9A3C433ED
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 07:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 416D9C43460
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 11:30:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA0046139B
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 07:54:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DFE161396
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 11:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232439AbhDEHyT convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 5 Apr 2021 03:54:19 -0400
-Received: from [105.162.1.217] ([105.162.1.217]:26227 "EHLO
-        guard.vivawebhost.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S232187AbhDEHyT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 5 Apr 2021 03:54:19 -0400
-Message-ID: <22622b8f5c547e75696cda7690446e60200a84@yandex.ru>
-Reply-To: "Kenya Business Plans" <ylo@yandex.ru>
-From:   "Kenya Business Plans" <cawq@yandex.ru>
-To:     <linux-raid@vger.kernel.org>
-Subject: Kenya Cutomized Business Plans for only Kes 499/=
-Date:   Mon, 5 Apr 2021 10:54:07 +0300
-Organization: Kenya Business Plans
+        id S234736AbhDELax (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 5 Apr 2021 07:30:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58292 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230032AbhDELaw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 5 Apr 2021 07:30:52 -0400
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B829EC061756
+        for <linux-raid@vger.kernel.org>; Mon,  5 Apr 2021 04:30:45 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id w28so16905182lfn.2
+        for <linux-raid@vger.kernel.org>; Mon, 05 Apr 2021 04:30:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=h+xy/pq6CFIy6Q7xr2S7J5J/vfPKxJ5XwS41MZxFt4E=;
+        b=i/spc+1XVHQxQNtmh1+vxxI3cqXF1E9Zk9Mve94aUCgGpbDfROeRgEBAmTDmfrg5Ea
+         M+dVOQIJ0kQivHSbzTJWv326puLGUi4NfOqmVWbZ79Zke+1pVDt7xS4mbs2GnHyY3ayY
+         TpBQdNJW2YGpKaIJf1g+s5NYC7UI/pUasbRTohDcIsg1iW+nEA06eEkMpV/ky1gshXl5
+         RBpeXb3ImkxGE/GF7LejjQ5BQGAwrQqQQM7vHDHRi/h1n2GW8YoJPX1G4FpzSiVBNbNX
+         V8eEnHfZT/X2hw82UiKoST0TJhbE4WrmMGeaFZRG76NeQAEqpEwmmq2zgJF5fNbFEs1u
+         fHGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=h+xy/pq6CFIy6Q7xr2S7J5J/vfPKxJ5XwS41MZxFt4E=;
+        b=LU+1XlwgsWwNdeLhm7QxbZ29PaI1gd0YCo9A0bR4GsxWEbd8mY0+RjhGyDAnsDqmgP
+         cE9MfYryq4qbVh4ps96bQihjdOFl5T7/bsErsNeIDx2kj6oNrGmlzvfo7qbtnVAF4H2J
+         jmClunIxpsnjtwsGtQHe9KZCQghShbDHlExeE2JV3etKxwW3hRnFE6prrifiuURbIdUT
+         KfkN/YtroUiYqYibppO5McFb1qcaooO60gDN1wq3YV1CLKYIEWdH6SEH2Km7Rg3nCau9
+         7PnrxL8mmblBotI9dSrunzlLPDompjdpBJBl/pHY03kE/RaKL0DYAIo8SheysHJGR0iX
+         NaBA==
+X-Gm-Message-State: AOAM531XqyCieBrE3GmAjuBWQHJ92ChLetXvVcAskiebQh4BTXJm76vs
+        XnCqWgmLooMwsoxcnOCng1VRBbEw2XElEzVse8qrXblt3zw=
+X-Google-Smtp-Source: ABdhPJwFH/L9fzrp1vM7qgunLE6ZjmQSJNfc8Be4fEarECXkSZ7YQlgVRilHMPoWlCAEFtqu5WA7XL3cjYVJEiqmlyE=
+X-Received: by 2002:ac2:4e82:: with SMTP id o2mr17162158lfr.489.1617622243964;
+ Mon, 05 Apr 2021 04:30:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8";
-Content-Transfer-Encoding: 8BIT
+References: <20210328021210.GA1415@justpickone.org> <20210402004001.GH1711@justpickone.org>
+ <62cc89ea-b9cf-d8a3-3d52-499fd84f7cc3@youngman.org.uk> <20210402050554.GF1415@justpickone.org>
+ <CAAMCDecNM8X9tdWo-WKpQA3BE=_J=XKc1D75rcQiQN0owZ9kJQ@mail.gmail.com> <20210405034659.GG1415@justpickone.org>
+In-Reply-To: <20210405034659.GG1415@justpickone.org>
+From:   Roger Heflin <rogerheflin@gmail.com>
+Date:   Mon, 5 Apr 2021 06:30:32 -0500
+Message-ID: <CAAMCDecX3nawcYC4hFX+VjQTiHPaZDUb1RcM66=OBFoxhLwY4Q@mail.gmail.com>
+Subject: Re: bitmaps on xfs (was "Re: how do i bring this disk back into the fold?")
+To:     David T-G <davidtg-robot@justpickone.org>
+Cc:     Linux RAID list <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-  
-Customized Kenya Business Plans
-Invest wisely by getting street smart market surveys, guides and info packs with the sweet or harsh reality of the market.
-Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Competition, Survival rate, Differentiation, Capital, Process, Equipment, Suppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tricks & so so much more.
+On Sun, Apr 4, 2021 at 10:47 PM David T-G <davidtg-robot@justpickone.org> wrote:
+>
+> Roger, et al --
+>
+> ...and then Roger Heflin said...
+> %
+> % The re-add will only work if the array has bitmaps.  For quick disk
+>
+> Ahhhhh...  Good point.
+>
+> It didn't really take 9 hours; a few minutes later it was up to 60+
+> hours, and then it dropped to a couple of hours and was done the next
+> time I looked.  I also forced the other array using just the last two
+> drives and saw everything happy, so I then added the "first" drive and
+> now it's all happy as well.  Woo hoo.
+>
+>
+> % hiccups the re-add is nice because instead of 9 hours, often it
+> % finishes in only a few minutes assuming the disk has not been out of
+> % the array for long.
+>
+> I love the idea.  I've been reading up, and in addition to questions of
+> what size bitmap I need for my sizes
+>
+>   diskfarm:~ # df -kh /mnt/4Traid5md/ /mnt/750Graid5md/
+>   Filesystem      Size  Used Avail Use% Mounted on
+>   /dev/md0p1       11T   11T  309G  98% /mnt/4Traid5md
+>   /dev/md127p1    1.4T  1.4T   14G 100% /mnt/750Graid5md
+>
+> and how to tell it (or *if* I tell it; that still isn't clear) there's
+> also the question of whether or not xfs
 
-We have comprehensive business plans in these categories:
+Easy enough to tell if it is working:
+md14 : active raid6 sdh4[11] sdg4[6] sdf4[10] sdd4[5] sdc4[9] sdb4[7] sde4[1]
+      3612623360 blocks super 1.2 level 6, 512k chunk, algorithm 2
+[7/7] [UUUUUUU]
+      bitmap: 1/6 pages [4KB], 65536KB chunk
 
-Agrovet
-Auto Glass Retail -17 Pages
-Bank Agency Fact-sheet
-Beef Butchery - 31 pages
-Boda Boda
-Bottled Water - 53 Pages
-Building Materials Yard - Dynamics & Case Study
-Car Wash Quick Guide
-Chapati Wholesale (Case Study)
-Chemist -Retail - 31 Pages
-Chicken Butchery
-Chips & Chicken Cafe - 31 Pages
-Concreting ( Koroga) Equipment Leasing - 29 Pages
-Corn Chips Snacks Making - 37 Pages
-Cosmetics Retail - 30 Pages
-Cosmetics Retail -30 Pages
-Courier - 35 Pages
-Cyber Cafe
-Day-care
-Electrical Parts Retail - 27 Pages
-Executive Barber Shop - 42 Pages
-Fish Supply - Nairobi Hotels Quick Overview
-Fish Supply - Nairobi Hotels Quick Survey
-Flowers - Nairobi (Retail/ Wholesale )
-Free Advertiser Magazine ( Quick Guide & Case Study )
-Fruit / Juice Parlour
-Gas (LPG) Retail
-Gift Service
-Gym - 38 pages
-Hair Salon
-Ice Lollies Making
-Ice Lollies Making ( Quick Guide )
-Imaging Clinic (Ultrasound and X-ray) - 46 Pages
-Inner-wear Retail - 27 Pages
-Laundry - 31 pages
-Leather: Skins Trade -26 Pages
-'Local' Bar - 48 Pages
-Maize Milling (Unga wa Ugali)
-Milk Distributorship
-Mitumba Clothes
-Money Lending - Informal Overview
-Motorcycle Spare Parts Retail -33 Pages
-Movie Shop
-M-pesa Sub Agent
-Nails (Misumari) Making - 60 Pages
-Non-Woven Bags Making -39 Pages
-Petrol Station (Independent) - 47 Pages
-Plumbing Hardware Retail - 35 Pages *New
-Primary School Business - 38 Pages
-Printing Business - 55 Pages
-Real Estate Agency - 42 Pages
-Second Hand Novels (R)
-Selling Cake Boxes
-Selling Cookies
-Senator Keg Bar
-Slot Machines Quick Guide
-Small Scale FMCG Distribution - New
-Smokies & Egg Vending
-Supermarket - 75 Pages
-Supermarket Shelf Space Guide
-Tents & Chairs Leasing
-Tiles Retail Business Fact-sheet
-Timber Yard - 32 Pages
-Tomato ( Greenhouse ) - Quick Market & Production Guide
-Tyres Retail Business - 29 Pages
+I also hack my disks into several partitions such that I have 4 raid6
+arrays.   This helps because the rebuild time on the entire disk is
+days, and it makes me feel better when expanding the arrays as it
+makes the chunks smaller.    The biggest help is when I start getting
+bad blocks on one of the disks typically it is only 1 of the 4
+arrays/disk sections are having bad blocks.  I also made sure that
+md*4 always has partition sd*4 so to reduce the thinking about what
+was where.
 
-Invest wisely in 2020 by getting street smart market surveys with:
-- Market Analysis
-- Step by step establishing Process
-- Licenses - Issuing authority, cost, requirements
-- Equipment - Suppliers, Considerations, Cost
-- Other requirements
-- Suppliers & Prices
-- Raw Materials
-- Buying Selling Prices
-- Production Costs
-- Operational Costs
-- Day to day Operations
-- Revenue & Margins
-- Sample wholesale retail prices
-- Case Studies
-- Manpower
-- Capital breakdown
-- Opportunities
-- Competition
-- Surviving & Thriving
-- Analysis, figures, observations, dos & don'ts
-- Trends ,Tips, Tricks and so much more.
+>
+>   diskfarm:~ # grep /mnt/ssd /etc/fstab
+>   LABEL=diskfarm-ssd      /mnt/ssd        xfs     defaults        0  0
+>
+> will work for my bitmap files target, since all I see is that it must be
+> an ext2 or ext3 (not ext4? old news?) device.
+>
+I don't know, I have always done mine internal.   I could see some
+advantage to have it on a SSD vs internally.  I may have to try that,
+I am about to do some array reworks to go from all 3tb disks to start
+using some 6tb disks.   If the file was pre-allocated I would not
+think it would matter which.    The page is dated 2011 so that would
+have been old enough that no one tested ext4/xfs.
 
-To Download a Sample Business Plan Copy and paste the link below to your browser
-
-https://drive.google.com/open?id=1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
-
-The whole package of 65 Business Plans above is available Offer Price @ Kshs. 499. We are only selling the guides as a package.
-
-To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931.
-
-On payment kindly forward the Mpesa payment confirmation text and your email address to +254 721 351 269.
-
-We deliver via email within 15 minutes of payment.
-
-TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Less Risk!
-
-Kind Regards;
-
-
-Hashna A. Noor
-Manager - Sales & Marketing
-Kenya Business Plans Limited
-+254721351269 | +254707559080
-78 Brookside Drive | Nairobi | Kenya
+I was going to tell you you could just create a LV and format it ext3
+and use it, but I see it appears you are using direct partitions only.
