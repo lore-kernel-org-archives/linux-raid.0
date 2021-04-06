@@ -2,137 +2,272 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BA31C433B4
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 21:02:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CABC433ED
+	for <linux-raid@archiver.kernel.org>; Tue,  6 Apr 2021 06:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D36A6139F
-	for <linux-raid@archiver.kernel.org>; Mon,  5 Apr 2021 21:02:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0780610D0
+	for <linux-raid@archiver.kernel.org>; Tue,  6 Apr 2021 06:20:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241211AbhDEVCm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 5 Apr 2021 17:02:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41542 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237300AbhDEVCl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 5 Apr 2021 17:02:41 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C0DC061756
-        for <linux-raid@vger.kernel.org>; Mon,  5 Apr 2021 14:02:34 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id v140so1524785lfa.4
-        for <linux-raid@vger.kernel.org>; Mon, 05 Apr 2021 14:02:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dHCWAaYdMY+2nJCeYueGDqKcmaYN4wBenrdE/OegoJU=;
-        b=ROBEmN6VGZIC4JbZorbTOy0AGPLxEOv476eq7vB18FhGfUgeKuC5R7a8bJpOJY+WL9
-         lMWVUPXn0vQNSqbTghZzfcYEcnFhABLjrS1SN9DY3ixVOvtPOdLDmHEpGo90yWbtl7na
-         Kvh+dgixfwvYrzkUxKTieuo+hv0Yu77tFK8kP2rap18ewNih0yX7IPa1e2AYnk7HsF+R
-         awKzIYsW6aYlNzdSnC2KiW/d5fcEKpQVE50OuxR5gPpGCJwI/9usbdAtx0G9MkaKfIhp
-         yin9ElnTpc9jguzj6jDvK0cFunPH+Y+aImmBGaDKv+o4XeTIJrcLCM0GcrtQIhzXyixY
-         wDqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dHCWAaYdMY+2nJCeYueGDqKcmaYN4wBenrdE/OegoJU=;
-        b=crX5RlSsWLHCmh+p8Fr7wS29T0SzcJmR3hHpczkDJs2UU2WqymikC6ZihbAgNcwdro
-         TB5dAEHAmakGA4y4dMdPT1N/QYR3ZnG4OcIpE4OS3kJse5oNrbxCGhEcEdYIAVClOlgP
-         ULmM+PLUGdHRMAK2oxurebmkvvKCL+t8G05f7pp2jJh603jiVxfW4lT4i1SzKwoUZV5u
-         PO2X2WqmvpRCML437cre/Ztw2lzmO3p4C+1izdI29yQoRbqbjVvcq0CZuL3iW+Bd+MqS
-         kLLo4pf61Xw72nUurPRZFQTmUEFsEq/u4k5L8xUFy5X2kUa0ZxleUnB2S1hpbshoH3CD
-         I93Q==
-X-Gm-Message-State: AOAM532LJysaMRhCdIwa5xV4xyTW3YZWlLt0xy+m2u3Fi2xiXruViptV
-        R2iVtLEsMKHX9TbTWiaBhiFsuYZyYCaKOSlgX+NIQa8y
-X-Google-Smtp-Source: ABdhPJz0Uz5ajrsYPZBUBKhBHQK1+pxJbGBoZFFQiAMtFGbR8nbgh5+ktTKpOmyFwHSSJ4+nqLIsMkWc3dwTMnD5rCk=
-X-Received: by 2002:ac2:4e82:: with SMTP id o2mr18502007lfr.489.1617656552708;
- Mon, 05 Apr 2021 14:02:32 -0700 (PDT)
+        id S232701AbhDFGUd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 6 Apr 2021 02:20:33 -0400
+Received: from mga14.intel.com ([192.55.52.115]:3431 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232331AbhDFGUd (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 6 Apr 2021 02:20:33 -0400
+IronPort-SDR: GxWW0KnoOqbK+L6jTtCD47PsdNi7OmXiYlMSSimk9eRsjNxdSV1228MNFAyQnKoax/OP3q2QFO
+ Ffod96H7JV6w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9945"; a="192529859"
+X-IronPort-AV: E=Sophos;i="5.81,308,1610438400"; 
+   d="scan'208";a="192529859"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2021 23:20:25 -0700
+IronPort-SDR: xVXQ7C5bLuHJ5f9L2ULEaUmJSNO8N3jy8NVL/dvAWM2AlJJOOMNiAwwDVV3hg34r8nAKvqmdmZ
+ SpU8gK5YQvpQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,308,1610438400"; 
+   d="scan'208";a="447715892"
+Received: from lkp-server01.sh.intel.com (HELO 69d8fcc516b7) ([10.239.97.150])
+  by FMSMGA003.fm.intel.com with ESMTP; 05 Apr 2021 23:20:24 -0700
+Received: from kbuild by 69d8fcc516b7 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lTf4Z-000BMQ-Nm; Tue, 06 Apr 2021 06:20:23 +0000
+Date:   Tue, 06 Apr 2021 14:20:20 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ f21c86cf789a60e5f4054fe897026f612ac5f123
+Message-ID: <606bfda4.0vr1p7igOpzmjbMX%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-References: <20210328021210.GA1415@justpickone.org> <20210402004001.GH1711@justpickone.org>
- <62cc89ea-b9cf-d8a3-3d52-499fd84f7cc3@youngman.org.uk> <20210402050554.GF1415@justpickone.org>
- <CAAMCDecNM8X9tdWo-WKpQA3BE=_J=XKc1D75rcQiQN0owZ9kJQ@mail.gmail.com>
- <20210405034659.GG1415@justpickone.org> <CAAMCDecX3nawcYC4hFX+VjQTiHPaZDUb1RcM66=OBFoxhLwY4Q@mail.gmail.com>
- <5f58e78d-8d8c-c66c-7674-79832e22f200@youngman.org.uk>
-In-Reply-To: <5f58e78d-8d8c-c66c-7674-79832e22f200@youngman.org.uk>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Mon, 5 Apr 2021 16:02:19 -0500
-Message-ID: <CAAMCDedUf4viKzfoLYtMR7G=Or4h_zJt3Mm7-FhLbuVHv5QTzw@mail.gmail.com>
-Subject: Re: bitmaps on xfs (was "Re: how do i bring this disk back into the fold?")
-To:     antlists <antlists@youngman.org.uk>
-Cc:     David T-G <davidtg-robot@justpickone.org>,
-        Linux RAID list <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-I have read the analysis on data corruption in disks setups.    From
-what I can tell they are using incorrect assumptions and models and
-the estimates of risk are a fair number of orders of higher that is
-actually the case.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: f21c86cf789a60e5f4054fe897026f612ac5f123  md: split mddev_find
 
-Because of that I am not that worried about the risks to my data.
-If I lose a few blocks of data it is not the end of the world and
-there is a performance impact.  The data I have would be annoying to
-lose parts of it, but it is only annoying.
+elapsed time: 720m
 
-I have been managing large environments for 20+ years with 1000's
-petabyte years.    I have seen a total of 3 events where undetected
-corruptions happened, and the way they were detected makes it pretty
-unlikely there are more than 2x that number of undetected corruptions
-total in the environment.
+configs tested: 203
+configs skipped: 2
 
-One was a pci controller being bad corrupting reads (confirmed writes
-failed at least 100x less).
-One was a pci bus set too fast corrupting reads (confirmed writes
-failed at least 100x less).
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-The 3rd was the worst.  It was an enterprise/near enterprise 1st
-vendor array where a very small number (5 out of 1000's of ssds) would
-reboot/reset unexpectedly when not completely written data in them.
-And I believe they did have the drive write caches disabled, but the
-way the SSD's firmware worked if it lost power at the wrong time the
-data was not yet really written and was lost.  The 5 disks themselves
-seem to be broken.   The biggest mistake the vendor made was not
-immediately booting off the array any device that randomly "rebooted"
-and or reset without being told to.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+riscv                            allmodconfig
+x86_64                           allyesconfig
+riscv                            allyesconfig
+i386                             allyesconfig
+mips                        workpad_defconfig
+xtensa                generic_kc705_defconfig
+sh                         microdev_defconfig
+arm                            mmp2_defconfig
+sparc64                             defconfig
+sh                           se7343_defconfig
+powerpc                     akebono_defconfig
+arm                       aspeed_g4_defconfig
+sh                          sdk7786_defconfig
+csky                             alldefconfig
+arm                          lpd270_defconfig
+arm                        spear3xx_defconfig
+mips                        qi_lb60_defconfig
+sh                   sh7770_generic_defconfig
+powerpc                mpc7448_hpc2_defconfig
+powerpc                 canyonlands_defconfig
+sh                     sh7710voipgw_defconfig
+arm                            mps2_defconfig
+arc                         haps_hs_defconfig
+sh                        sh7763rdp_defconfig
+xtensa                       common_defconfig
+openrisc                 simple_smp_defconfig
+riscv                          rv32_defconfig
+arm                           corgi_defconfig
+sparc                       sparc32_defconfig
+um                            kunit_defconfig
+arm                         at91_dt_defconfig
+mips                             allyesconfig
+powerpc                      arches_defconfig
+powerpc                  storcenter_defconfig
+powerpc                   lite5200b_defconfig
+parisc                generic-64bit_defconfig
+mips                          malta_defconfig
+riscv             nommu_k210_sdcard_defconfig
+powerpc                 mpc85xx_cds_defconfig
+powerpc                 mpc836x_rdk_defconfig
+mips                      fuloong2e_defconfig
+powerpc                      ppc64e_defconfig
+powerpc                      katmai_defconfig
+powerpc                      ppc44x_defconfig
+nds32                             allnoconfig
+powerpc                     tqm8541_defconfig
+arm                     eseries_pxa_defconfig
+sh                         apsh4a3a_defconfig
+sh                          r7785rp_defconfig
+arm                       versatile_defconfig
+s390                             allmodconfig
+xtensa                  audio_kc705_defconfig
+arm                        magician_defconfig
+powerpc                     kilauea_defconfig
+mips                        nlm_xlp_defconfig
+sh                           se7705_defconfig
+xtensa                         virt_defconfig
+powerpc                     redwood_defconfig
+m68k                       m5475evb_defconfig
+powerpc                     tqm8540_defconfig
+arm                          collie_defconfig
+sparc                            allyesconfig
+mips                           xway_defconfig
+arm                        keystone_defconfig
+arm                          badge4_defconfig
+arm                  colibri_pxa270_defconfig
+powerpc                      ep88xc_defconfig
+arm                         palmz72_defconfig
+mips                         tb0219_defconfig
+arm                       mainstone_defconfig
+mips                     loongson1b_defconfig
+h8300                    h8300h-sim_defconfig
+mips                      loongson3_defconfig
+h8300                     edosk2674_defconfig
+m68k                             alldefconfig
+sh                               j2_defconfig
+sh                         ecovec24_defconfig
+m68k                        stmark2_defconfig
+s390                       zfcpdump_defconfig
+powerpc                      walnut_defconfig
+arm                            xcep_defconfig
+mips                      maltasmvp_defconfig
+powerpc                     mpc5200_defconfig
+openrisc                         alldefconfig
+mips                     loongson1c_defconfig
+mips                        bcm63xx_defconfig
+mips                malta_qemu_32r6_defconfig
+m68k                       m5249evb_defconfig
+sh                           sh2007_defconfig
+arm                           stm32_defconfig
+mips                           ip32_defconfig
+sh                            migor_defconfig
+mips                           ip22_defconfig
+arm                      tct_hammer_defconfig
+powerpc                 mpc8313_rdb_defconfig
+ia64                          tiger_defconfig
+arc                           tb10x_defconfig
+powerpc                   currituck_defconfig
+arm                       omap2plus_defconfig
+arm                        clps711x_defconfig
+arc                     haps_hs_smp_defconfig
+xtensa                              defconfig
+xtensa                  nommu_kc705_defconfig
+arc                          axs101_defconfig
+um                               alldefconfig
+mips                            gpr_defconfig
+arm                          simpad_defconfig
+sh                           se7721_defconfig
+powerpc                    klondike_defconfig
+mips                          rm200_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a004-20210406
+x86_64               randconfig-a003-20210406
+x86_64               randconfig-a005-20210406
+x86_64               randconfig-a001-20210406
+x86_64               randconfig-a002-20210406
+x86_64               randconfig-a006-20210406
+i386                 randconfig-a006-20210406
+i386                 randconfig-a003-20210406
+i386                 randconfig-a001-20210406
+i386                 randconfig-a004-20210406
+i386                 randconfig-a005-20210406
+i386                 randconfig-a002-20210406
+i386                 randconfig-a006-20210405
+i386                 randconfig-a003-20210405
+i386                 randconfig-a001-20210405
+i386                 randconfig-a004-20210405
+i386                 randconfig-a002-20210405
+i386                 randconfig-a005-20210405
+x86_64               randconfig-a014-20210405
+x86_64               randconfig-a015-20210405
+x86_64               randconfig-a013-20210405
+x86_64               randconfig-a011-20210405
+x86_64               randconfig-a012-20210405
+x86_64               randconfig-a016-20210405
+i386                 randconfig-a014-20210405
+i386                 randconfig-a011-20210405
+i386                 randconfig-a016-20210405
+i386                 randconfig-a012-20210405
+i386                 randconfig-a015-20210405
+i386                 randconfig-a013-20210405
+i386                 randconfig-a014-20210406
+i386                 randconfig-a016-20210406
+i386                 randconfig-a011-20210406
+i386                 randconfig-a012-20210406
+i386                 randconfig-a015-20210406
+i386                 randconfig-a013-20210406
+riscv                    nommu_k210_defconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+um                               allmodconfig
+um                                allnoconfig
+um                               allyesconfig
+um                                  defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
 
-On Mon, Apr 5, 2021 at 12:29 PM antlists <antlists@youngman.org.uk> wrote:
->
-> On 05/04/2021 12:30, Roger Heflin wrote:
-> >>    diskfarm:~ # grep /mnt/ssd /etc/fstab
-> >>    LABEL=diskfarm-ssd      /mnt/ssd        xfs     defaults        0  0
-> >>
-> >> will work for my bitmap files target, since all I see is that it must be
-> >> an ext2 or ext3 (not ext4? old news?) device.
->
-> Bear in mind you're better off using a journal (and bitmaps and journals
-> are incompatible).
->
-> "not ext4" seems odd to me because - from a kernel point of view - ext's
-> 2 and 3 no longer longer exist.
-> >>
-> > I don't know, I have always done mine internal.   I could see some
-> > advantage to have it on a SSD vs internally.  I may have to try that,
-> > I am about to do some array reworks to go from all 3tb disks to start
-> > using some 6tb disks.   If the file was pre-allocated I would not
-> > think it would matter which.    The page is dated 2011 so that would
-> > have been old enough that no one tested ext4/xfs.
-> >
-> Umm... don't use all the space on your 6TB disks. I'm planning to build
-> my arrays on dm-integrity, which will make raid 5 a bit more trustworthy.
->
-> > I was going to tell you you could just create a LV and format it ext3
-> > and use it, but I see it appears you are using direct partitions only.
->
-> Ny new system? 4TB disks, with one terabyte raided and lvm on top for
-> root partitions (I'll be configuring it multi-boot or VMs...). Then
-> three terabytes with dm-integrity at the bottom, then raid, then lvm on
-> top for /home and backup snapshots.
->
-> Cheers,
-> Wol
+clang tested configs:
+x86_64               randconfig-a004-20210405
+x86_64               randconfig-a003-20210405
+x86_64               randconfig-a005-20210405
+x86_64               randconfig-a001-20210405
+x86_64               randconfig-a002-20210405
+x86_64               randconfig-a006-20210405
+x86_64               randconfig-a014-20210406
+x86_64               randconfig-a015-20210406
+x86_64               randconfig-a013-20210406
+x86_64               randconfig-a011-20210406
+x86_64               randconfig-a012-20210406
+x86_64               randconfig-a016-20210406
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
