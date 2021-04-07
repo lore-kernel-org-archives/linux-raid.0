@@ -2,139 +2,86 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F142C43461
-	for <linux-raid@archiver.kernel.org>; Wed,  7 Apr 2021 18:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 855EDC433B4
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Apr 2021 20:15:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BACC601FE
-	for <linux-raid@archiver.kernel.org>; Wed,  7 Apr 2021 18:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58510611C9
+	for <linux-raid@archiver.kernel.org>; Wed,  7 Apr 2021 20:15:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230239AbhDGSVs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 7 Apr 2021 14:21:48 -0400
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:39309 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229606AbhDGSVp (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 7 Apr 2021 14:21:45 -0400
-Received: from [192.168.0.2] (ip5f5ae880.dynamic.kabel-deutschland.de [95.90.232.128])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 03491206473D0;
-        Wed,  7 Apr 2021 20:21:34 +0200 (CEST)
-To:     Hugh Dickins <hughd@google.com>
-Cc:     linux-mm@kvack.org, linux-raid@vger.kernel.org
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: SHM: blk_update_request: I/O error, dev loop5, sector 1001648 op
- 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-Message-ID: <2fb258a5-30d6-472c-364f-e190346e40d3@molgen.mpg.de>
-Date:   Wed, 7 Apr 2021 20:21:33 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
+        id S1355992AbhDGUPL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 7 Apr 2021 16:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39552 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1356000AbhDGUPL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 7 Apr 2021 16:15:11 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B7E0C061760
+        for <linux-raid@vger.kernel.org>; Wed,  7 Apr 2021 13:15:01 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id d5-20020a17090a2a45b029014d934553c4so1096061pjg.1
+        for <linux-raid@vger.kernel.org>; Wed, 07 Apr 2021 13:15:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=tpQt+97tUpg77hQIt/7xETM6NN8ilbA/x35rrjA/Txg=;
+        b=DtLA86dFuexXq9SCHR8cKjps6K3JYV/tEnOPjm5/EPM7DbmBNVi7hh9jeray+8x/H6
+         IxrysSRbIPUxo6qVRXfQZNFuDh2GsCFOlg7VvOmaO9vBoVCBYdw5DkYnXPcm+ROBrvK4
+         UvrYP1IIRCujA7qiWkzokLTtUXEb22v7hfqrJTPi9DQXC+Nl7eiJ6pnEqMSM0oh8M0dX
+         LqYaekJASvliZT+1zxddM0qM0DH6qjV2h1ijky/M3JBxmEMv31vtLrTfmbg1CMDDGquS
+         cz4dAPR9qvof7hSozdGm4mQHlQHy9/1BegTEp51C45VRMu2lWdRCfuFKHRcZf12ZVCzW
+         +aOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=tpQt+97tUpg77hQIt/7xETM6NN8ilbA/x35rrjA/Txg=;
+        b=fRfdiZFreiEZRBfNpmJhfEa/3+OsPoRJSvke9koh+6wmO7uS0JKppmdLbJZgWAxlFR
+         MI5+KYJefEEXsUWXEv6lgv6jYd7TMqSPpfs+aCP3eLZPBCWoR8XyFtmLQkKrHyyxaRWB
+         KjW/ay5S6wR8v0Mjy/fIuJRo6bqT+VsUIbYDmGGQ7CCXpv1Pl9KzDUkvRpzZ36rDlXTH
+         1mQf/vVHXwMpTtSdkgAffBtWbsOc8fFgCQ95boGY7hz8lLnU2KJO3bkU24PWTCn3nz+d
+         ukU6XMpzcpIL0fBIom+9bwLD0mIyZFTe3qFqCfxOPCuxOsT3Z3SfoRbRm5oe8HivpxAF
+         MQ2g==
+X-Gm-Message-State: AOAM5305dIdj5XAbYxm8sicmHxu9KRII6LgeDdb2ldNQlkL9aDePztGO
+        DrAE+dmz7/AETLaiO9to3P+tfLe7InQeE/il0Vku9sbY
+X-Google-Smtp-Source: ABdhPJyX8Wlwvg4fzYDhoJZnc4oDWPpkte5/KiTLE9veSCEYSV7kBraU8vckZLsPyDGq+KXOrWvoPlX843JpxKMK7bc=
+X-Received: by 2002:a17:90a:7444:: with SMTP id o4mr4937122pjk.205.1617826500557;
+ Wed, 07 Apr 2021 13:15:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20210328021210.GA1415@justpickone.org> <20210402004001.GH1711@justpickone.org>
+ <62cc89ea-b9cf-d8a3-3d52-499fd84f7cc3@youngman.org.uk> <20210402050554.GF1415@justpickone.org>
+ <CAAMCDecNM8X9tdWo-WKpQA3BE=_J=XKc1D75rcQiQN0owZ9kJQ@mail.gmail.com>
+ <20210405034659.GG1415@justpickone.org> <CAAMCDecX3nawcYC4hFX+VjQTiHPaZDUb1RcM66=OBFoxhLwY4Q@mail.gmail.com>
+ <5f58e78d-8d8c-c66c-7674-79832e22f200@youngman.org.uk> <20210405174649.GH1415@justpickone.org>
+ <583e250c-09f2-6c95-c62a-623e29cf0179@youngman.org.uk>
+In-Reply-To: <583e250c-09f2-6c95-c62a-623e29cf0179@youngman.org.uk>
+From:   Mark Wagner <carnildo@gmail.com>
+Date:   Wed, 7 Apr 2021 13:14:49 -0700
+Message-ID: <CAA04aRSf1ZDz_bHRsV6hRvZEV09B+G7JGfQ3uv4psET-_593xA@mail.gmail.com>
+Subject: Re: bitmaps on xfs
+To:     Linux RAID list <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Linux folks,
+On Tue, Apr 6, 2021 at 12:14 AM antlists <antlists@youngman.org.uk> wrote:
 
+> (I don't understand it, but if a system crashes in the middle
+> of a raid-5 write it can apparently mess things up something horrid).
 
-Probably, I am overlooking something, but testing a RAID6 setup with 
-loop-mounted fails on 16 GB RAM system (AMD and Intel), results in the 
-errors below. This happens with Linux 4.19.57 and 5.10.24 for example.
+Short version is that the disks making up a RAID stripe don't always
+get written simultaneously.  If things crash just wrong, you can get
+half the stripe with old data, half the stripe with new data, and no
+way to tell which is which.  A journal fixes this by writing the data
+twice: first to the journal, then to the array.  If the system crashes
+while writing to the journal, you've still got the entire old data on
+the array; if it crashes while writing to the array, you've got the
+entire new data on the journal.  You're never in an inconsistent
+half-and-half situation.
 
-$ cd /dev/shm
-$ for i in $(seq 1 16); do truncate -s 512M vdisk$i.img; done
-[…]
-$ sudo mdadm --create /dev/md1 --level=6 --raid-devices=16 
-/dev/loop{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}
-$ dmesg
-[…]
-[879198.509123] md/raid:md1: not clean -- starting background reconstruction
-[879198.515895] md/raid:md1: device loop15 operational as raid disk 15
-[879198.522115] md/raid:md1: device loop14 operational as raid disk 14
-[879198.528323] md/raid:md1: device loop13 operational as raid disk 13
-[879198.534525] md/raid:md1: device loop12 operational as raid disk 12
-[879198.540724] md/raid:md1: device loop11 operational as raid disk 11
-[879198.546924] md/raid:md1: device loop10 operational as raid disk 10
-[879198.553126] md/raid:md1: device loop9 operational as raid disk 9
-[879198.559155] md/raid:md1: device loop8 operational as raid disk 8
-[879198.565185] md/raid:md1: device loop7 operational as raid disk 7
-[879198.571212] md/raid:md1: device loop6 operational as raid disk 6
-[879198.577238] md/raid:md1: device loop5 operational as raid disk 5
-[879198.583269] md/raid:md1: device loop4 operational as raid disk 4
-[879198.589296] md/raid:md1: device loop3 operational as raid disk 3
-[879198.595324] md/raid:md1: device loop2 operational as raid disk 2
-[879198.601353] md/raid:md1: device loop1 operational as raid disk 1
-[879198.607381] md/raid:md1: device loop0 operational as raid disk 0
-[879198.613971] md/raid:md1: raid level 6 active with 16 out of 16 
-devices, algorithm 2
-[879198.621667] md1: detected capacity change from 0 to 7486832640
-[879198.627643] md: resync of RAID array md1
-[879203.512870] blk_update_request: I/O error, dev loop5, sector 1001648 
-op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512872] blk_update_request: I/O error, dev loop6, sector 1001648 
-op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512874] blk_update_request: I/O error, dev loop7, sector 1001648 
-op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512878] blk_update_request: I/O error, dev loop8, sector 1001656 
-op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512880] blk_update_request: I/O error, dev loop9, sector 1001656 
-op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512882] blk_update_request: I/O error, dev loop10, sector 
-1001656 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512884] blk_update_request: I/O error, dev loop11, sector 
-1001656 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512885] blk_update_request: I/O error, dev loop12, sector 
-1001656 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512886] blk_update_request: I/O error, dev loop13, sector 
-1001656 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.512887] blk_update_request: I/O error, dev loop15, sector 
-1001656 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[879203.526116] md/raid:md1: 558 read_errors > 557 stripes
-[879203.526117] md/raid:md1: 558 read_errors > 557 stripes
-[879203.526118] md/raid:md1: 558 read_errors > 557 stripes
-[879203.526118] md/raid:md1: Too many read errors, failing device loop6.
-[879203.526118] md/raid:md1: Too many read errors, failing device loop7.
-[879203.526119] md/raid:md1: Disk failure on loop6, disabling device.
-                 md/raid:md1: Operation continuing on 15 devices.
-[879203.526120] md/raid:md1: Disk failure on loop7, disabling device.
-                 md/raid:md1: Operation continuing on 14 devices.
-[879203.526127] md/raid:md1: read error not correctable (sector 1002288 
-on loop9).
-[879203.526128] md/raid:md1: read error not correctable (sector 1002288 
-on loop10).
-[879203.526129] md/raid:md1: read error not correctable (sector 1002288 
-on loop8).
-[879203.526130] md/raid:md1: read error not correctable (sector 1002288 
-on loop11).
-[879203.526131] md/raid:md1: read error not correctable (sector 1002288 
-on loop12).
-[879203.526134] md/raid:md1: read error not correctable (sector 1002288 
-on loop15).
-[879203.526136] md/raid:md1: read error not correctable (sector 1002280 
-on loop2).
-[879203.526137] md/raid:md1: read error not correctable (sector 1002280 
-on loop0).
-[879203.526138] md/raid:md1: read error not correctable (sector 1002288 
-on loop2).
-[879203.526139] md/raid:md1: read error not correctable (sector 1002288 
-on loop4).
-[879203.528980] md: md1: resync interrupted.
-[879203.746692] md/raid:md1: Too many read errors, failing device loop5.
-[879203.765274] md: resync of RAID array md1
-[879203.769254] md: md1: resync done.
-[879220.534393] md1: detected capacity change from 7486832640 to 0
-[879220.540270] md: md1 stopped.
-$ sudo mdadm -S /dev/md1 && sudo losetup -D && rm vdisk*
-```
-
-
-Kind regards,
-
-Paul
+-- 
+Mark
