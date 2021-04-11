@@ -2,279 +2,344 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0600DC433ED
-	for <linux-raid@archiver.kernel.org>; Sat, 10 Apr 2021 21:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76630C433B4
+	for <linux-raid@archiver.kernel.org>; Sun, 11 Apr 2021 09:04:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE42161105
-	for <linux-raid@archiver.kernel.org>; Sat, 10 Apr 2021 21:36:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CF21610A7
+	for <linux-raid@archiver.kernel.org>; Sun, 11 Apr 2021 09:04:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234975AbhDJVga (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 10 Apr 2021 17:36:30 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:35442 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232659AbhDJVg3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 10 Apr 2021 17:36:29 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13ALSE9P012285;
-        Sat, 10 Apr 2021 21:35:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=Ozn3F7cNES+nOgUc5CwfnUEC/pm0II+yIklzgNCbeJA=;
- b=to/cLIZu5a0F7pU5VJgY+qdsM1zhGT5C4AMhMAGfyxzUKm3JDvJAVIClB0JhpaioW3bL
- P0eiG4dIfBF4HZ2+gAv1oPLMXieVzlTK+lOQVyhimiBJdRKkPtA54uRKqF9e459D5nqv
- N0JjjAm0qXoDZ7viG+Y7A7dlRoNncQttQr29GGOfkRofWctOefmIrWq+TjaiPCV00Sri
- KCkA7xV0C3nxMW3wtXtTboDkpqop6RdkcBcY2mBzXB26hTeByIt8Hr3yEkXK1k/PkyXV
- 6A65x+AGJp6jMJ+sNv4CyBbz3W1qmnPBWjdmYea01vtQEOilALUk1TCD9nkpR/1CPizi YQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 37u1hb8yes-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 10 Apr 2021 21:35:55 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 13ALPVtM114059;
-        Sat, 10 Apr 2021 21:35:55 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2103.outbound.protection.outlook.com [104.47.55.103])
-        by aserp3020.oracle.com with ESMTP id 37u3u1sh0j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 10 Apr 2021 21:35:55 +0000
+        id S233696AbhDKJEx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 11 Apr 2021 05:04:53 -0400
+Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:21373 "EHLO
+        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231356AbhDKJEw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Sun, 11 Apr 2021 05:04:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
+        t=1618131875;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8/2wwDQT3RJsZWAltJOIn7vpBTbU4Y0A7OVDQD8flrY=;
+        b=E+QAUwaO0fmg8xhP0po5GKlAETvyKD2nyzlcdhHyxx1YX4emKKEXMb9JDvISKM8eOkS6Vr
+        RBfqYcyIZdqwmINkoTieZjmKEpie84d5f1oEsBt5WqmBK7taeVjUqHSDsyHfRZmVuZ6X4q
+        emwVbwoc6m3zeMI+z7HAe+aUuygiz9Q=
+Received: from EUR03-DB5-obe.outbound.protection.outlook.com
+ (mail-db5eur03lp2055.outbound.protection.outlook.com [104.47.10.55]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ de-mta-18-oAf9VYqIPjeTVuACZFhN9A-1; Sun, 11 Apr 2021 11:04:24 +0200
+X-MC-Unique: oAf9VYqIPjeTVuACZFhN9A-1
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=BaMPOSOK6nMsMHZP9LZXBo+v6mmwlWIvawyaj/KLcMGnzdkwATFHOvx01rsbtAAQkl49igjZz9nnYw1X7fcwYRxaaRjDgAC+oeZJRujaza7uhTPOKECe0GYiZl28eMN2k5T+aLEVc4XULsiWReh/svczMNgF9hjUXug3DMPeD0E8YPubpGvzBjEF2WTpMsnP1DKyQV9mJnQzW7Y5N4bMF+VDeBF9yVG7jHXDN4EF52cwNohjwIw+J3eJpHRaZsUKp7Bcx1XSanHVx/fC5iEIsZQTYKGHhGBjpROvLpQwncQwOmJsS+BBT0GpczceF4rbma7uIWZ2IvTEe7u2hj5Nxw==
+ b=YO5hkEYqmG8JbGsMJMDIcEnT+YxqKEOQlDpN5SCPNw/rnQHBCwsRdnvgfUTJu/yl6J6GC+d9THnFXAvREgLtfzy1NESHFWRs5/hI51ZZgACzijq+ACnAEdiWPEOBrqQsQdrS1lyOh+jEoVqO5hzu7TQsm32Vvv11PJOuQVN4ZNG4vzGEH+yA41EKFAU9fKetJoDTcUU4fv3eXp7tTjJmPcvvt9pferyR7sUBrJkgryrllCCkBAUnPmmscAIlxzUzKA7tsrk2Vk3A/Wp/kCjcw4Yx75lRkmTtuVr8fAQ0gLolPM58z1tsv6UdN/WUMvz/SYUyNULs+5s3TIJNRGXF/A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ozn3F7cNES+nOgUc5CwfnUEC/pm0II+yIklzgNCbeJA=;
- b=EderwXI5D4A+NZn2ERiv46c02c5mvWY+YwLpTDRNqompvU8s22EYPCQ3BrCwSEwxsxGrcX/ioCRipGfaQpY4wo/zVbHtW1wjLWOQoBMTElTToC69DlTrvlFLm+1yZWow/WSlmsfSnouhWySQ2KCP2jt5r6u768onjlV+MV+BHRuGP1IRZ99z2fo3Ax+y9DjUCn7gYJnlCpDqt8hJrQl1LSBvMVmsgTnGUJgsya1tsmFpMCfoFZmecQZ/p+Vd6E8CiIwgDqoW7FBlNbxIzySLLjheRTGV5rRdSzdG0/j+Hno5YaScFBrJb9FPgcradxDPcw7Bi4jJnVUr0qhxYZfebA==
+ bh=8/2wwDQT3RJsZWAltJOIn7vpBTbU4Y0A7OVDQD8flrY=;
+ b=Nyn1lU2nAyPBZ1+kkA7BAGj9olakNi1YBw/eTxU80HHE4upscmDo2fVj+ib2srfv9WqYPy+kxDSoC60+EQMAg+TBR0kXTUFQ3TS1O4au5VcqvJDve7M4eCigl4mbNjtJt9Uc6S5Yq0unYOunszf8S/IDulaUdRAAToCUw3nxE+lEuZV65xjVFt04QdJyznhSeMZDRL3iOjj85M4RpzasC97H2zuybsU6dQBCozkXzelTf7Rv11QHlZtlyA3OvGG2KoY9Oiw+BHcNjbdAoKUCmu6QIWneByn2wWTliY+BnhFOSH8MgyMPesg99pfxrjTYoI6RmAqBuWxLVyha8KkpCg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ozn3F7cNES+nOgUc5CwfnUEC/pm0II+yIklzgNCbeJA=;
- b=rRo4XdDr5I5JQnIqrtNZiaQtdyPeTkF14pa8PDGCPNolSWQCUyFRBgi07cgMSyBmudbtFMBwkpW+out17vtSFV3tdtmaHpk42XPzSo3dbPYgfpmzcrFnxV2FvHkWiH972ZndujoHcsBc/T9f9kAJAVbCa+aSpkXXa5+BHaw21T8=
-Received: from CY4PR10MB2007.namprd10.prod.outlook.com (2603:10b6:903:123::20)
- by CY4PR10MB1413.namprd10.prod.outlook.com (2603:10b6:903:27::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.18; Sat, 10 Apr
- 2021 21:35:52 +0000
-Received: from CY4PR10MB2007.namprd10.prod.outlook.com
- ([fe80::187f:a874:db5f:2974]) by CY4PR10MB2007.namprd10.prod.outlook.com
- ([fe80::187f:a874:db5f:2974%2]) with mapi id 15.20.4020.016; Sat, 10 Apr 2021
- 21:35:52 +0000
-From:   Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
-To:     "heming.zhao@suse.com" <heming.zhao@suse.com>,
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=suse.com;
+Received: from DB7PR04MB4666.eurprd04.prod.outlook.com (2603:10a6:5:2b::14) by
+ DB8PR04MB6649.eurprd04.prod.outlook.com (2603:10a6:10:104::16) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4020.21; Sun, 11 Apr 2021 09:04:23 +0000
+Received: from DB7PR04MB4666.eurprd04.prod.outlook.com
+ ([fe80::c5e3:4b14:8fc0:b393]) by DB7PR04MB4666.eurprd04.prod.outlook.com
+ ([fe80::c5e3:4b14:8fc0:b393%4]) with mapi id 15.20.3999.037; Sun, 11 Apr 2021
+ 09:04:23 +0000
+Subject: Re: [PATCH] md/bitmap: wait for bitmap writes to complete during the
+ tear down sequence
+To:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>,
         "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
         "song@kernel.org" <song@kernel.org>
-CC:     "lidong.zhong@suse.com" <lidong.zhong@suse.com>,
+Cc:     "lidong.zhong@suse.com" <lidong.zhong@suse.com>,
         "xni@redhat.com" <xni@redhat.com>,
         "colyli@suse.com" <colyli@suse.com>,
         Martin Petersen <martin.petersen@oracle.com>
-Subject: RE: [PATCH] md/bitmap: wait for bitmap writes to complete during the
- tear down sequence
-Thread-Topic: [PATCH] md/bitmap: wait for bitmap writes to complete during the
- tear down sequence
-Thread-Index: AQHXLL+jpqYxQ9QC0Uybi++B1tJz+6qt4qiAgABmX3A=
-Date:   Sat, 10 Apr 2021 21:35:51 +0000
-Message-ID: <CY4PR10MB20077F9F84680DC1C0CAE281FD729@CY4PR10MB2007.namprd10.prod.outlook.com>
 References: <20210408213917.GA3986@oracle.com>
  <ba0f4827-83ae-b7e2-2230-5f4afca2538a@suse.com>
-In-Reply-To: <ba0f4827-83ae-b7e2-2230-5f4afca2538a@suse.com>
-Accept-Language: en-US
+ <CY4PR10MB20077F9F84680DC1C0CAE281FD729@CY4PR10MB2007.namprd10.prod.outlook.com>
+From:   "heming.zhao@suse.com" <heming.zhao@suse.com>
+Message-ID: <2becafd0-7df7-7a79-8478-b8246f353c9b@suse.com>
+Date:   Sun, 11 Apr 2021 17:04:09 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.0
+In-Reply-To: <CY4PR10MB20077F9F84680DC1C0CAE281FD729@CY4PR10MB2007.namprd10.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=oracle.com;
-x-originating-ip: [73.217.118.174]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e9b6c20c-4e11-4880-9f0a-08d8fc689d6c
-x-ms-traffictypediagnostic: CY4PR10MB1413:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR10MB1413D55654E07D12630AB2EDFD729@CY4PR10MB1413.namprd10.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ylC8p+6BouWmVvXWTe7pgFfwE9iHk+BqylKZK5sTYUEPNeYHlRbzJqaMxT0HCacth65qGDBtdGbdFRyBAceLVvs7ClAq58zsFwu7c36WJhFh562XJDJgjvwEgJQShTbb398G+qbojNLR5bUP9BnBnN9xoxVgnmL0rm5bweoLP4fzzNnQ/PK0frzOGTjqlWvISK0EYWxkOg5iRyLz2sQHyEcts/oZrZivnR2OUmfj691nMEeRZAOfQWt351nbq68Nd4YfOyteX5fAzbiM6JrNgzsDkHR+jsTxcqKCqb6Rqb7onE+6IzEisvus+itrm6Gsh3EJjDGC2VeJni+TU8CNkrnbyAlbsqXWV1JIqsqLU1BSZX0MT6jgqU9MUvVISCpGfERNnfxG2nzGzOVV37Hw+OFoMa8RNf2nj4Uc7Mz14tD75zGCTyc3mZflWgx40WN/65iqsxvRsNpC8qWQe3YmmnYWncU93vuU4qavyMLqk0nmstyid/YMpIbeP6M37FhW6rdm6tTEzO3DwA8zlLbHpdnqtXfZRymY/QieVxkFBoOTsfOUw+5JdfcwMyizpK5tY4l3q2Yl6xKr5aiZPyg+SBf/cRSWvx5qYFQ3Y4f3Ct8=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR10MB2007.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(366004)(39860400002)(346002)(376002)(33656002)(186003)(316002)(9686003)(26005)(107886003)(55016002)(44832011)(38100700002)(110136005)(71200400001)(54906003)(7696005)(8676002)(4326008)(5660300002)(86362001)(64756008)(66476007)(66446008)(52536014)(83380400001)(76116006)(478600001)(8936002)(6506007)(66556008)(66946007)(2906002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?OVg3Q0xnaEZVOTNNc0lxZi9PV0RmTVo4T093WE5wQnhCL3EwajA3Q3hYSm9j?=
- =?utf-8?B?RkxWd0grSG1lb2x0VnhKenNyTnNxWEFGTXpWc1RlS21MRmZGK2NZamlSSnUy?=
- =?utf-8?B?ZnFrdnZwMC9SL2VUVWdyQnRDWjRmaGVCSXNoY205d2xYL0o2Z1htQU5qaFJ1?=
- =?utf-8?B?YjhlMzQvL3lNS254UE5ZbkxseTl5QlpBL3Uya25FbHhxNHNsNER3aXU2aWt1?=
- =?utf-8?B?TUdjQWNGNDFWT3N0bFAvMUt2dS8vMUFhd2lkdkxMU1V1UlNpay9aWW40VmY1?=
- =?utf-8?B?VDNoeVpManZRYlcrU0paOWJZU0F5ZGg4SWVYY2taaHh6S0RjWHFYMzhCalUv?=
- =?utf-8?B?MWhLUVNtNTJhRXFHRG1oOGZJRi9ISWJtMmRPVUtuMnd6SUh4dXdkUllKWEJK?=
- =?utf-8?B?SGJSVE01Vk5oV0VpMUY3K1puT2RIVEY0S2ludEVYeUtTSEFmUDRVQjU3Q25x?=
- =?utf-8?B?SDRIcVhLZHJtWHJvUWZxcndjeXBETlFwaFg5eXIrRDBqWkQ0b1BReGIybjQr?=
- =?utf-8?B?d1hYbmptNWVuMVl2UkF2MFVSTzFCbzJiMVZYYlNHaXRiWG5SWDNITmhINGRQ?=
- =?utf-8?B?Wml2UDlsclkyQVdzUnRwVnU4UDZLUzgwblQwVDFieXlKOUlMUWYxdXNkbnV4?=
- =?utf-8?B?ZXdxK25mZVRqaTVQRnFTaFVubjdPVHR3bFZRTnVpaFV5WmtwZFZMQ3B4TmdB?=
- =?utf-8?B?NXdLekQyYlVSb1FWVnd6TkJmUS95SkF1L2F3WXdWMlBySlNmbGw1QzhYbUhU?=
- =?utf-8?B?b2krYzBud2tnMlNNR25xWCtDQm1zMjNDRzFFVGU2bnRQVjkxNnIzZng2dE1M?=
- =?utf-8?B?V3duMCt5djJndUF5bmRCcHNyZHdjQVZYQ2FYYXR1NzJwb0xQZi9DaWxLVXZx?=
- =?utf-8?B?REI4eVVtdlZWdnVJSEtmenhzeDQzd2JXbS93Q3g1eHp5SkpJTHB3YWpTa2Y4?=
- =?utf-8?B?ZVkvZVFXcnFickphZURaSURxTHFWZ1R2dkNpbW56YjJ3ZzZhODNUYW5MWDBx?=
- =?utf-8?B?dlBhL0IyOVRsUlVDRlJEQXpadlp4RkV5eDJCaEhrOSs4UEF5bVZSTEdYNU93?=
- =?utf-8?B?ek1sQk8vMFl0U2J2VDFyNklzZmFNaEoybVNuTndPMUx5dXNtdm1MM0QwTHMw?=
- =?utf-8?B?bDBUZUpmWWp2NUFUQVgxRVBVb3Z6Z1NOOFRPNmFtNngvSzh4bWFnY1dWcmRi?=
- =?utf-8?B?TVhMMkREVmpVeHJyTTdQT0VLTCtTSDZ2ZVAzZzRLQlF2blA1Y0F2RThvZVJ0?=
- =?utf-8?B?bXU4SmdlQm8xV0YwK2U2bTRKdEU5a2hZSFB3a1E2Mk5sUFE4TDE4V3M3cHg5?=
- =?utf-8?B?V3AreDVxU0lmZENCVFoxa3lPeUlLTm5DOE5pbnR5YUxqcUw0eis0a05xM21x?=
- =?utf-8?B?NW5XaW8xOUZlWjF5M0dvQnY5dGhVcmNEbDFBT3djU3ZuMHJDYzdSSFJwa3Bz?=
- =?utf-8?B?dndlanB5Nnl1Y2JkVlEvbVpxUFFXaVI5UnArU1lxUFpPYmhlZ3RxMGQrZmF0?=
- =?utf-8?B?anJEREJ6YW1scGg2MmtaNGxFM0Z2c2Y0alByczVwU05CcG4yNXRvSTNaU243?=
- =?utf-8?B?YXBwN280UlE1U1lzMVdzeDlhL2dLanF0dU1LNGltV0pGTW5LQ0UrREZiWGV3?=
- =?utf-8?B?amVGditqZEMzUGZLbTF4ay9IK3FoSTJsOUN2a1VjemZObkgrYVo5dkZRR2li?=
- =?utf-8?B?cUN3STgxeEpoMGRLaTFDMTF5SmYyNERyQ3V5NzRFVnBWR0RRcm03c0RwZWlu?=
- =?utf-8?Q?I3dkhHEKd4hFKL00P4wULEwfs0UWARh5v1vstJX?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [123.123.133.187]
+X-ClientProxiedBy: HKAPR04CA0014.apcprd04.prod.outlook.com
+ (2603:1096:203:d0::24) To DB7PR04MB4666.eurprd04.prod.outlook.com
+ (2603:10a6:5:2b::14)
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from c73.home (123.123.133.187) by HKAPR04CA0014.apcprd04.prod.outlook.com (2603:1096:203:d0::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.17 via Frontend Transport; Sun, 11 Apr 2021 09:04:20 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 4c94bfb4-346c-4f4d-c0d6-08d8fcc8cc62
+X-MS-TrafficTypeDiagnostic: DB8PR04MB6649:
+X-LD-Processed: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba,ExtFwd
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DB8PR04MB6649EEE9D2D94FCB983A4BA197719@DB8PR04MB6649.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: L4mTdwGLA/XAFYVZjUkdOV1PZFc4AaqRdG6QqBFa/4Ob2nuEtLcFb1aYWKlz0+rCIOigJ7oVXt742SgPMzBqoAhMBmPSVO5XzmDJdxcUSfOVqY2MPKe27b9mAnIzZ/7s5NhGKcAcp5KR2QjDLA12OUoqFO5ruy8Qcm/9QhdihTdmfbIhwejpGckux+aIhCpkiPUt72DEh3QCD589Ag9mhDihxkQw4tVMVwVn16OHk8JInrWeS8OOp/n/Vg8K0q+aOs3a4Hy5KbMFGl2ZcPtrhMFY4fOMktfLoeRynzKg+fM3iQV06dBLf5IT1Hys5MR6yCHdcSUzvDWhSgcSr215p2MteGZYP+023Zq2QVJZ9Vwg7hbbeVekj4PXaLIyxSiTLxVZBqJtKDJ+gzWutFhMJlYmyOWhfK2hoIlzKFKjL6/B4dokRp130DO50TI2WNk2ZHN4vS1IwREYGpQzmM6R/iSJgCSuNF93KU1QHTEuZJzouHaS4Xcpbhle7K4q0kJUKGL7c+1kPUXhaUt+8YxyWe0xgTBPfNQqfpuC2GE0kqAxNH/cQOjkdkdBjpDoOI+06EkFUQbdNWClRpG9pjuc+JIWPbEOOlHiYCcz7jdI++h+B/jpCjT2CYvqsyHYzgZGpueqrL0y3RGuIgCjs4QXtjtwLc2vhQc0swcq0I9ZTqWWuFzIajN/dFS/uAzoGbEOZLEMTLXeHjMfsxakyn4oP5cohmKVYG9cHt4vm8nckp0=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DB7PR04MB4666.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(396003)(346002)(39860400002)(136003)(366004)(6512007)(52116002)(66946007)(5660300002)(6506007)(16526019)(8936002)(26005)(38350700002)(4326008)(83380400001)(38100700002)(316002)(6666004)(53546011)(110136005)(186003)(31696002)(8886007)(66556008)(66476007)(478600001)(956004)(6486002)(2616005)(31686004)(2906002)(86362001)(54906003)(8676002)(36756003)(9126006)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?cVgySGluMlkrelpER0pxa2VPMmwvWmdqTVBhUnRxWGx0MWxvMU8wbkhwanVB?=
+ =?utf-8?B?cDd2dE9nSjJjM28wUVNMeittNkVYWHd3dWo1OTRXRkRXZVNVaEpaUjJ3dXNB?=
+ =?utf-8?B?R3E4bTV0dy91bGFUc3pvSitwdFZHMVpwSkxDRUtPVHBaUlgvQm9YZ3RnVUli?=
+ =?utf-8?B?WWRQdmR5UEdqRHZ4ZStrbTJ1MFFoYmJjak9Lb3IxUk5YRXN1d0J2YzdLMkw4?=
+ =?utf-8?B?OWMzZXBPZjBFU0ZFQW5Yd0VYM3BSSmdSN3FHNjc1RnR1cUxwV1g1Z3FVYmZU?=
+ =?utf-8?B?K0V5UVlNOU1mQ0l5WXlYNjdzS08zYnE5TlRNOGU4Vk9OZHdUUStRVHlxc1NO?=
+ =?utf-8?B?QXRZa0pvdFVQdXVyOFo4Q3RyZ2lBWlV5Unc2eXpaMW9sUUZkN0ZwdFVTY2hI?=
+ =?utf-8?B?eEd4ZTZya1BFWjRjOVBXdlZVU1U5bmVsZUdWUnNVOFBZWXVMY3VWSmFxWGZx?=
+ =?utf-8?B?UjB0WEZuTjBScFA5Y3J3YVFVTkJaTmViMHBYclJadWZlRDA5QjVpalk2SGY4?=
+ =?utf-8?B?SlJYSHBPWnFxSUtzUkRSeWVJNHg4K1hxN1B5dlpSSldWK01pSFM3c21qekFE?=
+ =?utf-8?B?d0RaMmVMR1NwOHFyazVLT3F4eWhrWHVBZi9CZGtzVWl2ZzNScnZ6Sy9xbjZy?=
+ =?utf-8?B?aUJBWUgySlpjMnc3S0czSzVuSFV0V01rRGNvMHlHMGpDSzBrRkN4NGtrN3Y1?=
+ =?utf-8?B?T093VjFOZk1mYlJKemRnakpRcS91QXJ2ZEVzVVY5UVpDQXlyT01vUkRsTExN?=
+ =?utf-8?B?WEEyMjI5YURHcWlPVk9kSk1WSkFtb0lJQ25PY2xqV3FjZFFTMHNvME9wMU5T?=
+ =?utf-8?B?VnIwaE5NU1lYalVEMWJic2t0Q0dSRkZWVHRIcWhLK1JkYnJ2NmRzZStwR3cy?=
+ =?utf-8?B?c3IyZEtsL2lBeitqOENSajVnU2hENW8xOVZFY0x5RjVFZnVheDdqSXpHZERn?=
+ =?utf-8?B?KzdVdUlIVWdmMWViTnFxaTFibUNVMGlaTGsybVJWZmVKbGFsQ2ptUFRlNzJQ?=
+ =?utf-8?B?NnhXUmNyTnorYmJtemN1MUtrT1JDY0Z2ek54WE95cUFJdXdKT2dEOE9wN2lZ?=
+ =?utf-8?B?QjZPSjlXUjBwVm15VU5IN2tRVHcyWU9CZHNiczdaNnhtOERKS3kyZTZMbjIx?=
+ =?utf-8?B?QVBLWXJrbUxsdk8wd2J4ZGpvTDNhZGQzV3p0Q25CWWRYZ0UzVW9yUGJpdUhY?=
+ =?utf-8?B?NkhLWmU3ckRKNTdyOHdNcXBFL1hnSitRNDZveER4TS9HZmYwbXBHZFRFaDhx?=
+ =?utf-8?B?TUJwQlNvTDA4TGM4TE0yWlZWVkRTUlJycGo1Y2VZRVdPS1NSZnlCWURPY2tF?=
+ =?utf-8?B?cHlpUmZORlpjOVJ5M3l6RFBGYi95Q3ZNZERxOWxPZC93bWFiZE1BemZMeFdC?=
+ =?utf-8?B?SitxTWRzUXV2SWMxdXpZejNmekFaeFYwamkxMUVWVDdMb0dBY3kwSXhZY2pT?=
+ =?utf-8?B?OE8wcStOMVJyRUdONkVmaXo1NTlPY1Fhcm5iNkhjR1hsV1dpb1RyTytzRjFI?=
+ =?utf-8?B?VjNSSmdiZDdGdXB6T1YyMjRtRThNMTA2QUcybjhSTUxEVmoyQzNFUzg4eGwx?=
+ =?utf-8?B?ZkZnVTM5MzBxUEttQ2NPVFhaSVAxRUN1aWR1ZzYwMEZoWXM2cFlpYjBtRFYw?=
+ =?utf-8?B?S0x5RXlTWWozSjBVSzBKRHg5cVhyOE1oQXUyUzJ4Nkt4RWtOdjlrNG15MXFy?=
+ =?utf-8?B?UkhzTWxFN2J4S09GbkwzSnVTVW42QURBd3JOZDh2SlRDSENBTjhlU29ZYnM3?=
+ =?utf-8?Q?QvQjuKUzxPl0aPW0tWaU3YPS9R0rgNUfrOTEEyd?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4c94bfb4-346c-4f4d-c0d6-08d8fcc8cc62
+X-MS-Exchange-CrossTenant-AuthSource: DB7PR04MB4666.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR10MB2007.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e9b6c20c-4e11-4880-9f0a-08d8fc689d6c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Apr 2021 21:35:51.9835
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2021 09:04:23.0844
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: DXDZN1CQ9SQDyuM8Xp2XOnQXpZq7/pMMBfhatYEBEJncGLkZV6whX8hzWCyglsr9GjXny+WcEAVy+dEnIdSWiD/3b2BCyRrN7BqcuX4GHuaZIfbiC5sYhcEQ8FP5ETYr
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1413
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9950 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 adultscore=0
- malwarescore=0 mlxlogscore=999 suspectscore=0 mlxscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
- definitions=main-2104100162
-X-Proofpoint-GUID: 9obSPQBjRfAP-uhrMAgeVumIfqNJVikv
-X-Proofpoint-ORIG-GUID: 9obSPQBjRfAP-uhrMAgeVumIfqNJVikv
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9950 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- clxscore=1015 adultscore=0 mlxlogscore=999 impostorscore=0 malwarescore=0
- lowpriorityscore=0 spamscore=0 phishscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104060000
- definitions=main-2104100162
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: nGemQ/PwnfpRkI4dhiJCSReSMNEuNXmkkvr0STkTJ8AmAYbhTdFvF5kFEUy2lD0e7SwRVTqIJ0lGdwiWqHECaQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR04MB6649
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-PiBIZWxsbyBTdWRoYWthciwNCj4gDQo+IEZpcnN0LCBsZXQncyBkaXNjdXNzIHdpdGggbWFzdGVy
-IGJyYW5jaCBrZXJuZWwuDQo+IA0KPiBXaGF0IGNvbW1hbmQgb3IgYWN0aW9uIHN0YW5kcyBmb3Ig
-InRlYXIgZG93biIgPw0KPiAgRnJvbSB5b3VyIGRlc2NyaXB0aW9uLCBpdCB2ZXJ5IGxpa2UgaW9j
-dGwgU1RPUF9BUlJBWS4NCj4gWW91ciBjcmFzaCB3YXMgcmVsYXRlZCB3aXRoIHN1cGVyX3dyaXR0
-ZW4sIHdoaWNoIGlzIHRoZSBjYWxsYmFjayBmb3INCj4gdXBkYXRpbmcgYXJyYXkgc2IsIG5vdCBi
-aXRtYXAgc2IuIGluIG1kX3VwZGF0ZV9zYigpIHRoZXJlIGlzIGEgc3luYw0KPiBwb2ludCBtZF9z
-dXBlcl93YWl0KCksIHdoaWNoIHdpbGwgZ3VhcmFudGVlIGFsbCBzYiBiaW9zIGZpbmlzaGVkIHN1
-Y2Nlc3NmdWxseS4NCj4gDQo+IGZvciB5b3VyIHBhdGNoLCBkbyB5b3UgY2hlY2sgbWRfYml0bWFw
-X2ZyZWUsIHdoaWNoIGFscmVhZHkgZG9uZSB0aGUgeW91ciBwYXRjaCdzIGpvYi4NCj4gDQo+IHRo
-ZSBjYWxsIGZsb3c6DQo+IGBgYA0KPiBkb19tZF9zdG9wIC8vYnkgU1RPUF9BUlJBWQ0KPiAgICsg
-X19tZF9zdG9wX3dyaXRlcygpDQo+ICAgfCAgbWRfYml0bWFwX2ZsdXNoDQo+ICAgfCAgbWRfdXBk
-YXRlX3NiDQo+ICAgfCAgICsgbWRfc3VwZXJfd3JpdGUNCj4gICB8ICAgfCAgYmlvLT5iaV9lbmRf
-aW8gPSBzdXBlcl93cml0dGVuDQo+ICAgfCAgICsgbWRfc3VwZXJfd2FpdChtZGRldikgLy93YWl0
-IGZvciBhbGwgYmlvcyBkb25lDQo+ICAgKyBfX21kX3N0b3AobWRkZXYpDQo+ICAgfCAgbWRfYml0
-bWFwX2Rlc3Ryb3kobWRkZXYpOw0KPiAgIHwgICArIG1kX2JpdG1hcF9mcmVlIC8vc2VlIGJlbG93
-DQo+ICAgKyAuLi4NCj4gDQo+IG1kX2JpdG1hcF9mcmVlDQo+IHsNCj4gICAgIC4uLg0KPiAgICAg
-IC8vZG8geW91ciBwYXRjaCBqb2IuDQo+ICAgICAgLyogU2hvdWxkbid0IGJlIG5lZWRlZCAtIGJ1
-dCBqdXN0IGluIGNhc2UuLi4uICovDQo+ICAgICAgd2FpdF9ldmVudChiaXRtYXAtPndyaXRlX3dh
-aXQsDQo+ICAgICAgICAgICAgIGF0b21pY19yZWFkKCZiaXRtYXAtPnBlbmRpbmdfd3JpdGVzKSA9
-PSAwKTsNCj4gICAgIC4uLg0KPiB9DQo+IGBgYA0KPiANCj4gV291bGQgeW91IHNoYXJlIG1vcmUg
-YW5hbHlzaXMgb3IgdGVzdCByZXN1bHRzIGZvciB5b3VyIHBhdGNoPw0KDQpIZWxsbyBIZW1pbmcs
-DQoNClBsZWFzZSBmaW5kIG1vcmUgZGV0YWlscyBhYm91dCBvdXIgc3lzdGVtIGNvbmZpZ3VyYXRp
-b24gYW5kIHRoZSBkZXRhaWxlZA0Kc2VxdWVuY2UgdGhhdCBsZWQgdG8gdGhlIGNyYXNoLg0KDQpX
-ZSBoYXZlIGEgUkFJRDEgY29uZmlndXJlZCBvbiBhbiBleHRlcm5hbCBpbXNtIGNvbnRhaW5lci4g
-L3Byb2MvbWRzdGF0IG91dHB1dA0KbG9va3MgbGlrZSB0aGlzOg0KDQoqKioNCm1kMjQgOiBhY3Rp
-dmUgcmFpZDEgc2RiWzFdIHNkYVswXQ0KICAgICAgMTQxNTU3NzYwIGJsb2NrcyBzdXBlciBleHRl
-cm5hbDovbWQxMjcvMCBbMi8yXSBbVVVdDQogICAgICBiaXRtYXA6IDEvMiBwYWdlcyBbNEtCXSwg
-NjU1MzZLQiBjaHVuaw0KDQptZDEyNyA6IGluYWN0aXZlIHNkYlsxXShTKSBzZGFbMF0oUykNCiAg
-ICAgIDEwNDAyIGJsb2NrcyBzdXBlciBleHRlcm5hbDppbXNtDQoqKioNCg0KQWxsIG91ciBzeXN0
-ZW0gcGFydGl0aW9uIGlzIGxhaWQgb3V0IG9uIHRvcCBvZiB0aGUgYWJvdmUgUkFJRDEgZGV2aWNl
-IGFzDQpzaG93biBiZWxvdy4NCg0KKioqDQovZGV2L21kMjRwNSBvbiAvIHR5cGUgeGZzIChydyxy
-ZWxhdGltZSxhdHRyMixpbm9kZTY0LG5vcXVvdGEpDQovZGV2L21kMjRwMSBvbiAvYm9vdCB0eXBl
-IHhmcyAocncsbm9kZXYscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCxub3F1b3RhKQ0KL2Rldi9tZDI0
-cDE1IG9uIC9ob21lIHR5cGUgeGZzIChydyxub2RldixyZWxhdGltZSxhdHRyMixpbm9kZTY0LG5v
-cXVvdGEpDQovZGV2L21kMjRwMTIgb24gL3ZhciB0eXBlIHhmcyAocncsbm9kZXYscmVsYXRpbWUs
-YXR0cjIsaW5vZGU2NCxub3F1b3RhKQ0KL2Rldi9tZDI0cDE2IG9uIC90bXAgdHlwZSB4ZnMgKHJ3
-LG5vZGV2LHJlbGF0aW1lLGF0dHIyLGlub2RlNjQsbm9xdW90YSkNCi9kZXYvbWQyNHAxMSBvbiAv
-dmFyL2xvZyB0eXBlIHhmcyAocncsbm9kZXYscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCxub3F1b3Rh
-KQ0KL2Rldi9tZDI0cDE0IG9uIC92YXIvbG9nL2F1ZGl0IHR5cGUgeGZzIChydyxub2RldixyZWxh
-dGltZSxhdHRyMixpbm9kZTY0LG5vcXVvdGEpDQoqKioNCg0KSW4gc3VjaCBhIGNvbmZpZ3VyYXRp
-b24sIHRoZSBrZXJuZWwgcGFuaWMgZGVzY3JpYmVkIGluIHRoaXMgcGF0Y2ggb2NjdXJzDQpkdXJp
-bmcgdGhlICJzaHV0ZG93biIgb2YgdGhlIHNlcnZlci4gU2luY2UgdGhlIHN5c3RlbSBwYXJ0aXRp
-b24gaXMgbGFpZCBvdXQgb24NCnRoZSBSQUlEMSwgdGhlcmUgY291bGQgYmUgd3JpdGUgSS9PcyBn
-b2luZyB0byB0aGUgUkFJRCBkZXZpY2UgYXMgcGFydCBvZiBzeXN0ZW0NCmxvZyBhbmQgZmlsZXN5
-c3RlbSBhY3Rpdml0eSB0aGF0IHR5cGljYWxseSBvY2N1ciBkdXJpbmcgdGhlIHNodXRkb3duLg0K
-DQpGcm9tIHRoZSBjb3JlIGR1bXAsIEkgc2VlIHRoYXQsIGFmdGVyIGZpbGVzeXN0ZW1zIGFyZSB1
-bm1vdW50ZWQgYW5kIGtpbGxpbmcgYWxsDQpvdGhlciB1c2Vyc3BhY2UgcHJvY2Vzc2VzLCAibWRt
-b24iIHRocmVhZCBpbml0aWF0ZXMgdGhlICJzdG9wIiBvbiB0aGUgbWQgZGV2aWNlLg0KDQoqKioN
-CkNPTU1BTkQ6ICJtZG1vbiINCiAgIFRBU0s6IGZmZmY4ZmYyYjE2NjNjODAgIFtUSFJFQURfSU5G
-TzogZmZmZjhmZjJiMTY2M2M4MF0NCiAgICBDUFU6IDMwDQogIFNUQVRFOiBUQVNLX1VOSU5URVJS
-VVBUSUJMRQ0KY3Jhc2g+IGJ0DQpQSUQ6IDczOTAgICBUQVNLOiBmZmZmOGZmMmIxNjYzYzgwICBD
-UFU6IDMwICBDT01NQU5EOiAibWRtb24iDQogIzAgW2ZmZmZiOTlkNGVhY2JhMzBdIF9fc2NoZWR1
-bGUgYXQgZmZmZmZmZmY5MTg4NGFjYw0KICMxIFtmZmZmYjk5ZDRlYWNiYWQwXSBzY2hlZHVsZSBh
-dCBmZmZmZmZmZjkxODg1MGU2DQogIzIgW2ZmZmZiOTlkNGVhY2JhZThdIHNjaGVkdWxlX3RpbWVv
-dXQgYXQgZmZmZmZmZmY5MTg4OTYxNg0KICMzIFtmZmZmYjk5ZDRlYWNiYjc4XSB3YWl0X2Zvcl9j
-b21wbGV0aW9uIGF0IGZmZmZmZmZmOTE4ODVkMWINCiAjNCBbZmZmZmI5OWQ0ZWFjYmJlMF0gX193
-YWl0X3JjdV9ncCBhdCBmZmZmZmZmZjkxMTBjMTIzDQogIzUgW2ZmZmZiOTlkNGVhY2JjMjhdIHN5
-bmNocm9uaXplX3NjaGVkIGF0IGZmZmZmZmZmOTExMTAwOGUNCiAjNiBbZmZmZmI5OWQ0ZWFjYmM3
-OF0gdW5iaW5kX3JkZXZfZnJvbV9hcnJheSBhdCBmZmZmZmZmZjkxNjk2NDBmDQogIzcgW2ZmZmZi
-OTlkNGVhY2JjYzBdIGRvX21kX3N0b3AgYXQgZmZmZmZmZmY5MTY5ZjE2Mw0KICM4IFtmZmZmYjk5
-ZDRlYWNiZDU4XSBhcnJheV9zdGF0ZV9zdG9yZSBhdCBmZmZmZmZmZjkxNjlmNjQ0DQogIzkgW2Zm
-ZmZiOTlkNGVhY2JkOTBdIG1kX2F0dHJfc3RvcmUgYXQgZmZmZmZmZmY5MTY5YjcxZQ0KIzEwIFtm
-ZmZmYjk5ZDRlYWNiZGM4XSBzeXNmc19rZl93cml0ZSBhdCBmZmZmZmZmZjkxMzIwZWRmDQojMTEg
-W2ZmZmZiOTlkNGVhY2JkZDhdIGtlcm5mc19mb3Bfd3JpdGUgYXQgZmZmZmZmZmY5MTMyMDNjNA0K
-IzEyIFtmZmZmYjk5ZDRlYWNiZTE4XSBfX3Zmc193cml0ZSBhdCBmZmZmZmZmZjkxMjhmY2ZhDQoj
-MTMgW2ZmZmZiOTlkNGVhY2JlYTBdIHZmc193cml0ZSBhdCBmZmZmZmZmZjkxMjhmZmQyDQojMTQg
-W2ZmZmZiOTlkNGVhY2JlZTBdIHN5c193cml0ZSBhdCBmZmZmZmZmZjkxMjkwMjVjDQojMTUgW2Zm
-ZmZiOTlkNGVhY2JmMjhdIGRvX3N5c2NhbGxfNjQgYXQgZmZmZmZmZmY5MTAwM2EzOQ0KIzE2IFtm
-ZmZmYjk5ZDRlYWNiZjUwXSBlbnRyeV9TWVNDQUxMXzY0X2FmdGVyX2h3ZnJhbWUgYXQgZmZmZmZm
-ZmY5MWEwMDFiMQ0KICAgIFJJUDogMDAwMDdmZjNiZmM4NDZmZCAgUlNQOiAwMDAwN2ZmM2JmOGE2
-Y2YwICBSRkxBR1M6IDAwMDAwMjkzDQogICAgUkFYOiBmZmZmZmZmZmZmZmZmZmRhICBSQlg6IDAw
-MDA1NWUyNTdlZjA5NDEgIFJDWDogMDAwMDdmZjNiZmM4NDZmZA0KICAgIFJEWDogMDAwMDAwMDAw
-MDAwMDAwNSAgUlNJOiAwMDAwNTVlMjU3ZWYwOTQxICBSREk6IDAwMDAwMDAwMDAwMDAwMTANCiAg
-ICBSQlA6IDAwMDAwMDAwMDAwMDAwMTAgICBSODogMDAwMDAwMDAwMDAwMDAwMSAgIFI5OiAwMDAw
-MDAwMDAwMDAwMDAwDQogICAgUjEwOiAwMDAwMDAwMGZmZmZmZjAxICBSMTE6IDAwMDAwMDAwMDAw
-MDAyOTMgIFIxMjogMDAwMDAwMDAwMDAwMDAwMQ0KICAgIFIxMzogMDAwMDAwMDAwMDAwMDAwMCAg
-UjE0OiAwMDAwMDAwMDAwMDAwMDAxICBSMTU6IDAwMDAwMDAwMDAwMDAwMDANCiAgICBPUklHX1JB
-WDogMDAwMDAwMDAwMDAwMDAwMSAgQ1M6IDAwMzMgIFNTOiAwMDJiDQpjcmFzaD4NCioqKg0KDQpX
-aGlsZSBoYW5kbGluZyB0aGUgIm1kIiBzdG9wIGluIHRoZSBrZXJuZWwsIHRoZSBjb2RlIHNlcXVl
-bmNlIGJhc2VkIG9uIHRoZQ0KYWJvdmUgbWQgY29uZmlndXJhdGlvbiBpcw0KDQpkb19tZF9zdG9w
-DQogKyBfX21kX3N0b3Bfd3JpdGVzDQogfCArIG1kX2JpdG1hcF9mbHVzaA0KIHwgfCArIG1kX2Jp
-dG1hcF9kYWVtb25fd29yaw0KIHwgfCB8ICsgbWRfYml0bWFwX3dhaXRfd3JpdGVzKCkNCiB8IHwg
-fCB8IChUaGlzIHdhaXQgaXMgZm9yIGJpdG1hcCB3cml0ZXMgdGhhdCBoYXBwZW5lZCB1cCB1bnRp
-bCBub3cgYW5kIHRvIGF2b2lkDQogfCB8IHwgfCAgb3ZlcmxhcHBpbmcgd2l0aCB0aGUgbmV3IGJp
-dG1hcCB3cml0ZXMuKQ0KIHwgfCB8IHwgKHdhaXQgZmxhZyBpcyBzZXQgdG8gemVybyBmb3IgYXN5
-bmMgd3JpdGVzIHRvIGJpdG1hcC4pDQogfCB8IHwgKyB3cml0ZV9wYWdlKCkNCiB8IHwgfCB8IHwg
-KEZvciBleHRlcm5hbCBiaXRtYXAsIGJpdG1hcC0+c3RvcmFnZS5maWxlIGlzIE5VTEwsIGhlbmNl
-IGVuZHMgdXANCiB8IHwgfCB8IHwgIGNhbGxpbmcgd3JpdGVfc2JfcGFnZSgpKQ0KIHwgfCB8IHwg
-KyB3cml0ZV9zYl9wYWdlKCkNCiB8IHwgfCB8IHwgKyBtZF9zdXBlcl93cml0ZSgpDQogfCB8IHwg
-fCB8IHwgKFNpbmNlIHRoZSB3YWl0IGZsYWcgaXMgZmFsc2UsIHRoZSBiaXRtYXAgd3JpdGUgaXMg
-c3VibWl0dGVkDQogfCB8IHwgfCB8IHwgIHdpdGhvdXQgd2FpdGluZyBmb3IgaXQgdG8gY29tcGxl
-dGUuKQ0KIHwgfCB8IHwgfCB8ICsgbWRkZXYtPnBlbmRpbmdfd3JpdGVzIGlzIGluY3JlbWVudGVk
-LCB0aGVuIHRoZSBJTyBpcyBzdWJtaXR0ZWQNCiB8IHwgfCB8IHwgfCAgIGFuZCB0aGUgY2FsbCBy
-ZXR1cm5zIHdpdGhvdXQgd2FpdGluZw0KIHwgfCArIG1kX2JpdG1hcF91cGRhdGVfc2IoKSAtIChU
-aGlzIGNhbGwgc2ltcGx5IHJldHVybnMgYmVjYXVzZQ0KIHwgfCB8IHwgImJpdG1hcC0+bWRkZXYt
-PmJpdG1hcF9pbmZvLmV4dGVybmFsIiBpcyB0cnVlIGZvciBleHRlcm5hbCBiaXRtYXBzKQ0KIHwg
-KyBtZF91cGRhdGVfc2IoKSAtIChUaGlzIHdvbid0IGJlIGNhbGxlZCBhcyB0aGUgY2FsbCBpcyBj
-b25kaXRpb25hbCBhbmQgdGhlDQogfCB8IHwgfCB8IHwgY29uZGl0aW9uIGV2YWx1YXRlcyB0byBm
-YWxzZSBpbiBteSBzZXR1cChzZWUgYmVsb3cgZm9yIGNyYXNoIGluZm8pDQogKyBfX21kX3N0b3AN
-CiB8ICsgbWRfYml0bWFwX2Rlc3Ryb3kNCiB8IHwgKyBtZF9iaXRtYXBfZnJlZQ0KIHwgfCB8ICsg
-d2FpdF9ldmVudChiaXRtYXAtPndyaXRlX3dhaXQsDQogfCB8IHwgfCAgICAgICAgICAgIGF0b21p
-Y19yZWFkKCZiaXRtYXAtPnBlbmRpbmdfd3JpdGVzKSA9PSAwKTsNCiB8IHwgfCB8IGJpdG1hcC0+
-cGVuZGluZ193cml0ZXMgaXMgemVybywgYnV0IHRoZSBtZGRldi0+cGVuZGluZ193cml0ZXMgaXMg
-MSwNCiB8IHwgfCB8IHNvIHRoaXMgY2FsbCByZXR1cm5zIGltbWVkaWF0ZWx5Lg0KIHwgbWQgZGV0
-YWNobWVudCBjb250aW51ZXMgd2hpbGUgdGhlcmUgaXMgcGVuZGluZyBtZGRldiBJL08gY2F1aW5n
-IE5VTEwgcG9pbnRlcg0KIHwgZGVyZWZlbmNlIHdoZW4gdGhlIEkvTyBjYWxsYmFjaywgc3VwZXJf
-d3JpdHRlbiBpcyBjYWxsZWQuDQoNCioqKg0KICAgICAgICBjcmFzaD4gc3RydWN0IG1kZGV2LmJp
-dG1hcF9pbmZvLmV4dGVybmFsIDB4ZmZmZjhmZmI2MmYxMzgwMA0KICAgICAgICAgICAgICAgIGJp
-dG1hcF9pbmZvLmV4dGVybmFsID0gMSwNCiAgICAgICAgY3Jhc2g+IHN0cnVjdCBtZGRldi5pbl9z
-eW5jIDB4ZmZmZjhmZmI2MmYxMzgwMA0KICAgICAgICAgICAgICAgIGluX3N5bmMgPSAxDQogICAg
-ICAgIGNyYXNoPiBzdHJ1Y3QgbWRkZXYuc2JfZmxhZ3MgMHhmZmZmOGZmYjYyZjEzODAwDQogICAg
-ICAgICAgICAgICAgc2JfZmxhZ3MgPSAwDQogICAgICAgIGNyYXNoPiBzdHJ1Y3QgbWRkZXYucm8g
-MHhmZmZmOGZmYjYyZjEzODAwDQogICAgICAgICAgICAgICAgcm8gPSAwDQogICAgICAgIGNyYXNo
-PiBzdHJ1Y3QgbWRkZXYuY2x1c3Rlcl9pbmZvIDB4ZmZmZjhmZmI2MmYxMzgwMA0KICAgICAgICAg
-ICAgICAgIGNsdXN0ZXJfaW5mbyA9IDB4MA0KICAgICAgICBjcmFzaD4NCioqKg0KDQpQbGVhc2Ug
-cmV2aWV3IGFuZCBsZXQgbWUga25vdyB5b3VyIHRob3VnaHRzLg0KDQpUaGFua3MNClN1ZGhha2Fy
-DQoNCg0KDQoNCg0KDQoNCj4gDQo+IFRoYW5rcywNCj4gSGVtaW5nDQoNCg==
+On 4/11/21 5:35 AM, Sudhakar Panneerselvam wrote:
+>> Hello Sudhakar,
+>>
+>> First, let's discuss with master branch kernel.
+>>
+>> What command or action stands for "tear down" ?
+>>   From your description, it very like ioctl STOP_ARRAY.
+>> Your crash was related with super_written, which is the callback for
+>> updating array sb, not bitmap sb. in md_update_sb() there is a sync
+>> point md_super_wait(), which will guarantee all sb bios finished successfully.
+>>
+>> for your patch, do you check md_bitmap_free, which already done the your patch's job.
+>>
+>> the call flow:
+>> ```
+>> do_md_stop //by STOP_ARRAY
+>>    + __md_stop_writes()
+>>    |  md_bitmap_flush
+>>    |  md_update_sb
+>>    |   + md_super_write
+>>    |   |  bio->bi_end_io = super_written
+>>    |   + md_super_wait(mddev) //wait for all bios done
+>>    + __md_stop(mddev)
+>>    |  md_bitmap_destroy(mddev);
+>>    |   + md_bitmap_free //see below
+>>    + ...
+>>
+>> md_bitmap_free
+>> {
+>>      ...
+>>       //do your patch job.
+>>       /* Shouldn't be needed - but just in case.... */
+>>       wait_event(bitmap->write_wait,
+>>              atomic_read(&bitmap->pending_writes) == 0);
+>>      ...
+>> }
+>> ```
+>>
+>> Would you share more analysis or test results for your patch?
+> 
+> Hello Heming,
+> 
+> Please find more details about our system configuration and the detailed
+> sequence that led to the crash.
+> 
+> We have a RAID1 configured on an external imsm container. /proc/mdstat output
+> looks like this:
+> 
+> ***
+> md24 : active raid1 sdb[1] sda[0]
+>        141557760 blocks super external:/md127/0 [2/2] [UU]
+>        bitmap: 1/2 pages [4KB], 65536KB chunk
+> 
+> md127 : inactive sdb[1](S) sda[0](S)
+>        10402 blocks super external:imsm
+> ***
+> 
+> All our system partition is laid out on top of the above RAID1 device as
+> shown below.
+> 
+> ***
+> /dev/md24p5 on / type xfs (rw,relatime,attr2,inode64,noquota)
+> /dev/md24p1 on /boot type xfs (rw,nodev,relatime,attr2,inode64,noquota)
+> /dev/md24p15 on /home type xfs (rw,nodev,relatime,attr2,inode64,noquota)
+> /dev/md24p12 on /var type xfs (rw,nodev,relatime,attr2,inode64,noquota)
+> /dev/md24p16 on /tmp type xfs (rw,nodev,relatime,attr2,inode64,noquota)
+> /dev/md24p11 on /var/log type xfs (rw,nodev,relatime,attr2,inode64,noquota)
+> /dev/md24p14 on /var/log/audit type xfs (rw,nodev,relatime,attr2,inode64,noquota)
+> ***
+> 
+> In such a configuration, the kernel panic described in this patch occurs
+> during the "shutdown" of the server. Since the system partition is laid out on
+> the RAID1, there could be write I/Os going to the RAID device as part of system
+> log and filesystem activity that typically occur during the shutdown.
+> 
+>  From the core dump, I see that, after filesystems are unmounted and killing all
+> other userspace processes, "mdmon" thread initiates the "stop" on the md device.
+> 
+> ***
+> COMMAND: "mdmon"
+>     TASK: ffff8ff2b1663c80  [THREAD_INFO: ffff8ff2b1663c80]
+>      CPU: 30
+>    STATE: TASK_UNINTERRUPTIBLE
+> crash> bt
+> PID: 7390   TASK: ffff8ff2b1663c80  CPU: 30  COMMAND: "mdmon"
+>   #0 [ffffb99d4eacba30] __schedule at ffffffff91884acc
+>   #1 [ffffb99d4eacbad0] schedule at ffffffff918850e6
+>   #2 [ffffb99d4eacbae8] schedule_timeout at ffffffff91889616
+>   #3 [ffffb99d4eacbb78] wait_for_completion at ffffffff91885d1b
+>   #4 [ffffb99d4eacbbe0] __wait_rcu_gp at ffffffff9110c123
+>   #5 [ffffb99d4eacbc28] synchronize_sched at ffffffff9111008e
+>   #6 [ffffb99d4eacbc78] unbind_rdev_from_array at ffffffff9169640f
+>   #7 [ffffb99d4eacbcc0] do_md_stop at ffffffff9169f163
+>   #8 [ffffb99d4eacbd58] array_state_store at ffffffff9169f644
+>   #9 [ffffb99d4eacbd90] md_attr_store at ffffffff9169b71e
+> #10 [ffffb99d4eacbdc8] sysfs_kf_write at ffffffff91320edf
+> #11 [ffffb99d4eacbdd8] kernfs_fop_write at ffffffff913203c4
+> #12 [ffffb99d4eacbe18] __vfs_write at ffffffff9128fcfa
+> #13 [ffffb99d4eacbea0] vfs_write at ffffffff9128ffd2
+> #14 [ffffb99d4eacbee0] sys_write at ffffffff9129025c
+> #15 [ffffb99d4eacbf28] do_syscall_64 at ffffffff91003a39
+> #16 [ffffb99d4eacbf50] entry_SYSCALL_64_after_hwframe at ffffffff91a001b1
+>      RIP: 00007ff3bfc846fd  RSP: 00007ff3bf8a6cf0  RFLAGS: 00000293
+>      RAX: ffffffffffffffda  RBX: 000055e257ef0941  RCX: 00007ff3bfc846fd
+>      RDX: 0000000000000005  RSI: 000055e257ef0941  RDI: 0000000000000010
+>      RBP: 0000000000000010   R8: 0000000000000001   R9: 0000000000000000
+>      R10: 00000000ffffff01  R11: 0000000000000293  R12: 0000000000000001
+>      R13: 0000000000000000  R14: 0000000000000001  R15: 0000000000000000
+>      ORIG_RAX: 0000000000000001  CS: 0033  SS: 002b
+> crash>
+> ***
+> 
+> While handling the "md" stop in the kernel, the code sequence based on the
+> above md configuration is
+> 
+> do_md_stop
+>   + __md_stop_writes
+>   | + md_bitmap_flush
+>   | | + md_bitmap_daemon_work
+>   | | | + md_bitmap_wait_writes()
+>   | | | | (This wait is for bitmap writes that happened up until now and to avoid
+>   | | | |  overlapping with the new bitmap writes.)
+>   | | | | (wait flag is set to zero for async writes to bitmap.)
+>   | | | + write_page()
+>   | | | | | (For external bitmap, bitmap->storage.file is NULL, hence ends up
+>   | | | | |  calling write_sb_page())
+>   | | | | + write_sb_page()
+>   | | | | | + md_super_write()
+>   | | | | | | (Since the wait flag is false, the bitmap write is submitted
+>   | | | | | |  without waiting for it to complete.)
+>   | | | | | | + mddev->pending_writes is incremented, then the IO is submitted
+>   | | | | | |   and the call returns without waiting
+>   | | + md_bitmap_update_sb() - (This call simply returns because
+>   | | | | "bitmap->mddev->bitmap_info.external" is true for external bitmaps)
+>   | + md_update_sb() - (This won't be called as the call is conditional and the
+>   | | | | | | condition evaluates to false in my setup(see below for crash info)
+>   + __md_stop
+>   | + md_bitmap_destroy
+>   | | + md_bitmap_free
+>   | | | + wait_event(bitmap->write_wait,
+>   | | | |            atomic_read(&bitmap->pending_writes) == 0);
+>   | | | | bitmap->pending_writes is zero, but the mddev->pending_writes is 1,
+>   | | | | so this call returns immediately.
+>   | md detachment continues while there is pending mddev I/O cauing NULL pointer
+>   | derefence when the I/O callback, super_written is called.
+> 
+> ***
+>          crash> struct mddev.bitmap_info.external 0xffff8ffb62f13800
+>                  bitmap_info.external = 1,
+>          crash> struct mddev.in_sync 0xffff8ffb62f13800
+>                  in_sync = 1
+>          crash> struct mddev.sb_flags 0xffff8ffb62f13800
+>                  sb_flags = 0
+>          crash> struct mddev.ro 0xffff8ffb62f13800
+>                  ro = 0
+>          crash> struct mddev.cluster_info 0xffff8ffb62f13800
+>                  cluster_info = 0x0
+>          crash>
+> ***
+> 
+> Please review and let me know your thoughts.
+> 
+
+Hello
+
+On previous mail, I was wrong to assume the array mddev->bitmap_info.external is 0. So my analysis was not suite for your case.
+
+Now we understand your env, which is related with IMSM & external bitmap, and I have a little knowledge about this field. May need to add more people in the cc list.
+
+Just from code logic, your analysis is reasonable.
+The key of the crash is why md layer didn't do the waiting job for bitmap bios. There have wait points in md_bitmap_daemon_work, write_sb_page, md_bitmap_update_sb & md_update_sb. But in your scenario there all didn't take effect. At last md_bitmap_free do the additional wait bitmap->pending_writes but not mddev->pending_writes. the crash is triggered.
+
+In my opinion, using a special wait is more clear than calling general md_bitmap_wait_writes(). the md_bitmap_wait_writes makes people feel bitmap module does repetitive clean job.
+
+My idea like:
+```
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index 200c5d0f08bf..ea6fa5a2cb6b 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -1723,6 +1723,8 @@ void md_bitmap_flush(struct mddev *mddev)
+         bitmap->daemon_lastrun -= sleep;
+         md_bitmap_daemon_work(mddev);
+         md_bitmap_update_sb(bitmap);
++       if (mddev->bitmap_info.external)
++               md_super_wait(mddev);
+  }
+  
+  /*
+@@ -1746,6 +1748,7 @@ void md_bitmap_free(struct bitmap *bitmap)
+         /* Shouldn't be needed - but just in case.... */
+         wait_event(bitmap->write_wait,
+                    atomic_read(&bitmap->pending_writes) == 0);
++       wait_event(mddev->sb_wait, atomic_read(&mddev->pending_writes)==0);
+  
+         /* release the bitmap file  */
+         md_bitmap_file_unmap(&bitmap->storage);
+```
+
+All in all, your fix make sense to me. Let's wait for other people's feedback.
+
+Thanks,
+Heming
+
