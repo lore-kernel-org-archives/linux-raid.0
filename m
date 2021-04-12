@@ -2,313 +2,229 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFAC9C433B4
-	for <linux-raid@archiver.kernel.org>; Mon, 12 Apr 2021 06:06:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13A35C43460
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Apr 2021 06:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C2C061042
-	for <linux-raid@archiver.kernel.org>; Mon, 12 Apr 2021 06:06:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4D0B61025
+	for <linux-raid@archiver.kernel.org>; Mon, 12 Apr 2021 06:49:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230356AbhDLGGg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 12 Apr 2021 02:06:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46316 "EHLO mail.kernel.org"
+        id S236591AbhDLGtW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 12 Apr 2021 02:49:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56962 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229448AbhDLGGf (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 12 Apr 2021 02:06:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CE1FF61042
-        for <linux-raid@vger.kernel.org>; Mon, 12 Apr 2021 06:06:16 +0000 (UTC)
+        id S236562AbhDLGtV (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 12 Apr 2021 02:49:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 368336120F
+        for <linux-raid@vger.kernel.org>; Mon, 12 Apr 2021 06:49:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1618207577;
-        bh=btMne0D6J+4C2vjM0HxZtiifE1vnIJjBsUJKagkN+cM=;
+        s=k20201202; t=1618210143;
+        bh=yU0Mv0mGvGvyNPGuPgBOO8MrmmGPtWKDJ5mf3k7BDc4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=izGXbHeqAltA8pqvM0Mb/Vp45V2ig+0rXQMnLUMf9eruBEG7N64xzxWOw+A7GmXoR
-         3jPQuTv8T8keDKH9W5/El/DxjpLj39shs7fj5mipqwuiHdVhLFqvYkLVCcP0tV/VcN
-         Dge/0O9opGdLCuybtPR5GpnvFmzF9dlFKgC2PnBK0cFjD4Ib37CzBwjnSgMjJUv3Qx
-         2F74leNPSA7vPhAuWa1mOVLbXekaOzkQEUjKCT8dE4G3qV+jM26mVXFdTOUgZf1Qt4
-         4djROqGvX8XtGEX072QXRLpIl2dzP8stBlgA8wZ2gN2N3cKJWmTjMBI/z3onLyVMl5
-         Z1uAKyTqEQYOQ==
-Received: by mail-lf1-f41.google.com with SMTP id v140so19480062lfa.4
-        for <linux-raid@vger.kernel.org>; Sun, 11 Apr 2021 23:06:16 -0700 (PDT)
-X-Gm-Message-State: AOAM531WnCad2T2xVu3tGkwCKITCRU4IJn/U6vutz5zDPzc2OVumPiSN
-        Lj1BwrLXEOlo1kcnS3cQXL0yyI39YLZBP76B/FU=
-X-Google-Smtp-Source: ABdhPJz3OUlGAkWtHlzCHgUcluZpNxM3B5wbWDlpiHCBBvSpTSXb8nFfv2Y6zAmifz6C7X/IETqxEnwnesk4jzTHKhY=
-X-Received: by 2002:a05:6512:3582:: with SMTP id m2mr18464419lfr.10.1618207575127;
- Sun, 11 Apr 2021 23:06:15 -0700 (PDT)
+        b=eOZQzteuxCkrGl3EP84FUYqrh+4ACXEClXz6LvVNS5iDZCYvVwqdVXzSudsqWkI6i
+         7zQDilawBbKsSvcF6BXIkWIM3Tgl8vJiYGhi6wTGxHcqxIhmy3Bv30tEBoOAjJPC2v
+         zOvVya3WYbCO/RqRui60uiRBrKcf3LgzOHDPjS0rhYXO93+ufzXKd1H3UVXMiyVUBd
+         jYRWw6BrySL0wIlT0AnNo3i3zsUNRyDPX+l+u2ACKAmzF5+y+3FrFmjkeWZT5Cuf4j
+         IRz/VWLxMelvisVYUJraanychC0BugThu1Kjxi7N9DhS+vGdVcYrfVwH2a0i7nFJ53
+         okV8RJYNhBfJA==
+Received: by mail-lj1-f174.google.com with SMTP id m7so3223648ljp.10
+        for <linux-raid@vger.kernel.org>; Sun, 11 Apr 2021 23:49:03 -0700 (PDT)
+X-Gm-Message-State: AOAM530HHW92mVx/LwZRTRRmaoScxnJPBXvWRvTwdXzaBkIvxs/TmrEo
+        42lF9NLopvDJDPYXypyiVMSo2UO44Q2sDLrEK1s=
+X-Google-Smtp-Source: ABdhPJx5UDB78IsZJEQwJhQmzw7qdlSBthrUXbsRIC+4l9AFvF1xBXQJyALnWndhTnfW1FxTX45gilWqWYA352CANHY=
+X-Received: by 2002:a2e:bb9e:: with SMTP id y30mr3781901lje.177.1618210141523;
+ Sun, 11 Apr 2021 23:49:01 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210408213917.GA3986@oracle.com> <ba0f4827-83ae-b7e2-2230-5f4afca2538a@suse.com>
- <CY4PR10MB20077F9F84680DC1C0CAE281FD729@CY4PR10MB2007.namprd10.prod.outlook.com>
- <2becafd0-7df7-7a79-8478-b8246f353c9b@suse.com>
-In-Reply-To: <2becafd0-7df7-7a79-8478-b8246f353c9b@suse.com>
+References: <CADLTsw2OJtc30HyAHCpQVbbUyoD7P9bK-ZfaH+nrdZc+Je4b6g@mail.gmail.com>
+In-Reply-To: <CADLTsw2OJtc30HyAHCpQVbbUyoD7P9bK-ZfaH+nrdZc+Je4b6g@mail.gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Sun, 11 Apr 2021 23:06:03 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4S-FERHGfj6ENC3K70+9tMsupWVmc9yhLoLWB6qX0jMA@mail.gmail.com>
-Message-ID: <CAPhsuW4S-FERHGfj6ENC3K70+9tMsupWVmc9yhLoLWB6qX0jMA@mail.gmail.com>
-Subject: Re: [PATCH] md/bitmap: wait for bitmap writes to complete during the
- tear down sequence
-To:     "heming.zhao@suse.com" <heming.zhao@suse.com>
-Cc:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "lidong.zhong@suse.com" <lidong.zhong@suse.com>,
-        "xni@redhat.com" <xni@redhat.com>,
-        "colyli@suse.com" <colyli@suse.com>,
-        Martin Petersen <martin.petersen@oracle.com>
+Date:   Sun, 11 Apr 2021 23:48:50 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7YqvSBDhhOxX4oa8-Z0v5DMxtEeEWz4hs5SiNPxWrVmg@mail.gmail.com>
+Message-ID: <CAPhsuW7YqvSBDhhOxX4oa8-Z0v5DMxtEeEWz4hs5SiNPxWrVmg@mail.gmail.com>
+Subject: Re: PROBLEM: double fault in md_end_io
+To:     =?UTF-8?Q?Pawe=C5=82_Wiejacha?= <pawel.wiejacha@rtbhouse.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, Apr 11, 2021 at 2:04 AM heming.zhao@suse.com
-<heming.zhao@suse.com> wrote:
+On Fri, Apr 9, 2021 at 2:41 PM Pawe=C5=82 Wiejacha
+<pawel.wiejacha@rtbhouse.com> wrote:
 >
-> On 4/11/21 5:35 AM, Sudhakar Panneerselvam wrote:
-> >> Hello Sudhakar,
-> >>
-> >> First, let's discuss with master branch kernel.
-> >>
-> >> What command or action stands for "tear down" ?
-> >>   From your description, it very like ioctl STOP_ARRAY.
-> >> Your crash was related with super_written, which is the callback for
-> >> updating array sb, not bitmap sb. in md_update_sb() there is a sync
-> >> point md_super_wait(), which will guarantee all sb bios finished succe=
-ssfully.
-> >>
-> >> for your patch, do you check md_bitmap_free, which already done the yo=
-ur patch's job.
-> >>
-> >> the call flow:
-> >> ```
-> >> do_md_stop //by STOP_ARRAY
-> >>    + __md_stop_writes()
-> >>    |  md_bitmap_flush
-> >>    |  md_update_sb
-> >>    |   + md_super_write
-> >>    |   |  bio->bi_end_io =3D super_written
-> >>    |   + md_super_wait(mddev) //wait for all bios done
-> >>    + __md_stop(mddev)
-> >>    |  md_bitmap_destroy(mddev);
-> >>    |   + md_bitmap_free //see below
-> >>    + ...
-> >>
-> >> md_bitmap_free
-> >> {
-> >>      ...
-> >>       //do your patch job.
-> >>       /* Shouldn't be needed - but just in case.... */
-> >>       wait_event(bitmap->write_wait,
-> >>              atomic_read(&bitmap->pending_writes) =3D=3D 0);
-> >>      ...
-> >> }
-> >> ```
-> >>
-> >> Would you share more analysis or test results for your patch?
-> >
-> > Hello Heming,
-> >
-> > Please find more details about our system configuration and the detaile=
-d
-> > sequence that led to the crash.
-> >
-> > We have a RAID1 configured on an external imsm container. /proc/mdstat =
-output
-> > looks like this:
-> >
-> > ***
-> > md24 : active raid1 sdb[1] sda[0]
-> >        141557760 blocks super external:/md127/0 [2/2] [UU]
-> >        bitmap: 1/2 pages [4KB], 65536KB chunk
-> >
-> > md127 : inactive sdb[1](S) sda[0](S)
-> >        10402 blocks super external:imsm
-> > ***
-> >
-> > All our system partition is laid out on top of the above RAID1 device a=
-s
-> > shown below.
-> >
-> > ***
-> > /dev/md24p5 on / type xfs (rw,relatime,attr2,inode64,noquota)
-> > /dev/md24p1 on /boot type xfs (rw,nodev,relatime,attr2,inode64,noquota)
-> > /dev/md24p15 on /home type xfs (rw,nodev,relatime,attr2,inode64,noquota=
-)
-> > /dev/md24p12 on /var type xfs (rw,nodev,relatime,attr2,inode64,noquota)
-> > /dev/md24p16 on /tmp type xfs (rw,nodev,relatime,attr2,inode64,noquota)
-> > /dev/md24p11 on /var/log type xfs (rw,nodev,relatime,attr2,inode64,noqu=
-ota)
-> > /dev/md24p14 on /var/log/audit type xfs (rw,nodev,relatime,attr2,inode6=
-4,noquota)
-> > ***
-> >
-> > In such a configuration, the kernel panic described in this patch occur=
-s
-> > during the "shutdown" of the server. Since the system partition is laid=
- out on
-> > the RAID1, there could be write I/Os going to the RAID device as part o=
-f system
-> > log and filesystem activity that typically occur during the shutdown.
-> >
-> >  From the core dump, I see that, after filesystems are unmounted and ki=
-lling all
-> > other userspace processes, "mdmon" thread initiates the "stop" on the m=
-d device.
-> >
-> > ***
-> > COMMAND: "mdmon"
-> >     TASK: ffff8ff2b1663c80  [THREAD_INFO: ffff8ff2b1663c80]
-> >      CPU: 30
-> >    STATE: TASK_UNINTERRUPTIBLE
-> > crash> bt
-> > PID: 7390   TASK: ffff8ff2b1663c80  CPU: 30  COMMAND: "mdmon"
-> >   #0 [ffffb99d4eacba30] __schedule at ffffffff91884acc
-> >   #1 [ffffb99d4eacbad0] schedule at ffffffff918850e6
-> >   #2 [ffffb99d4eacbae8] schedule_timeout at ffffffff91889616
-> >   #3 [ffffb99d4eacbb78] wait_for_completion at ffffffff91885d1b
-> >   #4 [ffffb99d4eacbbe0] __wait_rcu_gp at ffffffff9110c123
-> >   #5 [ffffb99d4eacbc28] synchronize_sched at ffffffff9111008e
-> >   #6 [ffffb99d4eacbc78] unbind_rdev_from_array at ffffffff9169640f
-> >   #7 [ffffb99d4eacbcc0] do_md_stop at ffffffff9169f163
-> >   #8 [ffffb99d4eacbd58] array_state_store at ffffffff9169f644
-> >   #9 [ffffb99d4eacbd90] md_attr_store at ffffffff9169b71e
-> > #10 [ffffb99d4eacbdc8] sysfs_kf_write at ffffffff91320edf
-> > #11 [ffffb99d4eacbdd8] kernfs_fop_write at ffffffff913203c4
-> > #12 [ffffb99d4eacbe18] __vfs_write at ffffffff9128fcfa
-> > #13 [ffffb99d4eacbea0] vfs_write at ffffffff9128ffd2
-> > #14 [ffffb99d4eacbee0] sys_write at ffffffff9129025c
-> > #15 [ffffb99d4eacbf28] do_syscall_64 at ffffffff91003a39
-> > #16 [ffffb99d4eacbf50] entry_SYSCALL_64_after_hwframe at ffffffff91a001=
-b1
-> >      RIP: 00007ff3bfc846fd  RSP: 00007ff3bf8a6cf0  RFLAGS: 00000293
-> >      RAX: ffffffffffffffda  RBX: 000055e257ef0941  RCX: 00007ff3bfc846f=
-d
-> >      RDX: 0000000000000005  RSI: 000055e257ef0941  RDI: 000000000000001=
-0
-> >      RBP: 0000000000000010   R8: 0000000000000001   R9: 000000000000000=
-0
-> >      R10: 00000000ffffff01  R11: 0000000000000293  R12: 000000000000000=
-1
-> >      R13: 0000000000000000  R14: 0000000000000001  R15: 000000000000000=
-0
-> >      ORIG_RAX: 0000000000000001  CS: 0033  SS: 002b
-> > crash>
-> > ***
-> >
-> > While handling the "md" stop in the kernel, the code sequence based on =
-the
-> > above md configuration is
-> >
-> > do_md_stop
-> >   + __md_stop_writes
-> >   | + md_bitmap_flush
-> >   | | + md_bitmap_daemon_work
-> >   | | | + md_bitmap_wait_writes()
-> >   | | | | (This wait is for bitmap writes that happened up until now an=
-d to avoid
-> >   | | | |  overlapping with the new bitmap writes.)
-> >   | | | | (wait flag is set to zero for async writes to bitmap.)
-> >   | | | + write_page()
-> >   | | | | | (For external bitmap, bitmap->storage.file is NULL, hence e=
-nds up
-> >   | | | | |  calling write_sb_page())
-> >   | | | | + write_sb_page()
-> >   | | | | | + md_super_write()
-> >   | | | | | | (Since the wait flag is false, the bitmap write is submit=
-ted
-> >   | | | | | |  without waiting for it to complete.)
-> >   | | | | | | + mddev->pending_writes is incremented, then the IO is su=
-bmitted
-> >   | | | | | |   and the call returns without waiting
-> >   | | + md_bitmap_update_sb() - (This call simply returns because
-> >   | | | | "bitmap->mddev->bitmap_info.external" is true for external bi=
-tmaps)
-> >   | + md_update_sb() - (This won't be called as the call is conditional=
- and the
-> >   | | | | | | condition evaluates to false in my setup(see below for cr=
-ash info)
-> >   + __md_stop
-> >   | + md_bitmap_destroy
-> >   | | + md_bitmap_free
-> >   | | | + wait_event(bitmap->write_wait,
-> >   | | | |            atomic_read(&bitmap->pending_writes) =3D=3D 0);
-> >   | | | | bitmap->pending_writes is zero, but the mddev->pending_writes=
- is 1,
-> >   | | | | so this call returns immediately.
-> >   | md detachment continues while there is pending mddev I/O cauing NUL=
-L pointer
-> >   | derefence when the I/O callback, super_written is called.
-> >
-> > ***
-> >          crash> struct mddev.bitmap_info.external 0xffff8ffb62f13800
-> >                  bitmap_info.external =3D 1,
-> >          crash> struct mddev.in_sync 0xffff8ffb62f13800
-> >                  in_sync =3D 1
-> >          crash> struct mddev.sb_flags 0xffff8ffb62f13800
-> >                  sb_flags =3D 0
-> >          crash> struct mddev.ro 0xffff8ffb62f13800
-> >                  ro =3D 0
-> >          crash> struct mddev.cluster_info 0xffff8ffb62f13800
-> >                  cluster_info =3D 0x0
-> >          crash>
-> > ***
-> >
-> > Please review and let me know your thoughts.
-> >
+> Hello,
 >
-> Hello
+> Two of my machines constantly crash with a double fault like this:
 >
-> On previous mail, I was wrong to assume the array mddev->bitmap_info.exte=
-rnal is 0. So my analysis was not suite for your case.
+> 1146  <0>[33685.629591] traps: PANIC: double fault, error_code: 0x0
+> 1147  <4>[33685.629593] double fault: 0000 [#1] SMP NOPTI
+> 1148  <4>[33685.629594] CPU: 10 PID: 2118287 Comm: kworker/10:0
+> Tainted: P           OE     5.11.8-051108-generic #202103200636
+> 1149  <4>[33685.629595] Hardware name: ASUSTeK COMPUTER INC. KRPG-U8
+> Series/KRPG-U8 Series, BIOS 4201 09/25/2020
+> 1150  <4>[33685.629595] Workqueue: xfs-conv/md12 xfs_end_io [xfs]
+> 1151  <4>[33685.629596] RIP: 0010:__slab_free+0x23/0x340
+> 1152  <4>[33685.629597] Code: 4c fe ff ff 0f 1f 00 0f 1f 44 00 00 55
+> 48 89 e5 41 57 49 89 cf 41 56 49 89 fe 41 55 41 54 49 89 f4 53 48 83
+> e4 f0 48 83 ec 70 <48> 89 54 24 28 0f 1f 44 00 00 41 8b 46 28 4d 8b 6c
+> 24 20 49 8b 5c
+> 1153  <4>[33685.629598] RSP: 0018:ffffa9bc00848fa0 EFLAGS: 00010086
+> 1154  <4>[33685.629599] RAX: ffff94c04d8b10a0 RBX: ffff94437a34a880
+> RCX: ffff94437a34a880
+> 1155  <4>[33685.629599] RDX: ffff94437a34a880 RSI: ffffcec745e8d280
+> RDI: ffff944300043b00
+> 1156  <4>[33685.629599] RBP: ffffa9bc00849040 R08: 0000000000000001
+> R09: ffffffff82a5d6de
+> 1157  <4>[33685.629600] R10: 0000000000000001 R11: 000000009c109000
+> R12: ffffcec745e8d280
+> 1158  <4>[33685.629600] R13: ffff944300043b00 R14: ffff944300043b00
+> R15: ffff94437a34a880
+> 1159  <4>[33685.629601] FS:  0000000000000000(0000)
+> GS:ffff94c04d880000(0000) knlGS:0000000000000000
+> 1160  <4>[33685.629601] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> 1161  <4>[33685.629602] CR2: ffffa9bc00848f98 CR3: 000000014d04e000
+> CR4: 0000000000350ee0
+> 1162  <4>[33685.629602] Call Trace:
+> 1163  <4>[33685.629603]  <IRQ>
+> 1164  <4>[33685.629603]  ? kfree+0x3bc/0x3e0
+> 1165  <4>[33685.629603]  ? mempool_kfree+0xe/0x10
+> 1166  <4>[33685.629603]  ? mempool_kfree+0xe/0x10
+> 1167  <4>[33685.629604]  ? mempool_free+0x2f/0x80
+> 1168  <4>[33685.629604]  ? md_end_io+0x4a/0x70
+> 1169  <4>[33685.629604]  ? bio_endio+0xdc/0x130
+> 1170  <4>[33685.629605]  ? bio_chain_endio+0x2d/0x40
+> 1171  <4>[33685.629605]  ? md_end_io+0x5c/0x70
+> 1172  <4>[33685.629605]  ? bio_endio+0xdc/0x130
+> 1173  <4>[33685.629605]  ? bio_chain_endio+0x2d/0x40
+> 1174  <4>[33685.629606]  ? md_end_io+0x5c/0x70
+> 1175  <4>[33685.629606]  ? bio_endio+0xdc/0x130
+> 1176  <4>[33685.629606]  ? bio_chain_endio+0x2d/0x40
+> 1177  <4>[33685.629607]  ? md_end_io+0x5c/0x70
+> ... repeated ...
+> 1436  <4>[33685.629677]  ? bio_endio+0xdc/0x130
+> 1437  <4>[33685.629677]  ? bio_chain_endio+0x2d/0x40
+> 1438  <4>[33685.629677]  ? md_end_io+0x5c/0x70
+> 1439  <4>[33685.629677]  ? bio_endio+0xdc/0x130
+> 1440  <4>[33685.629678]  ? bio_chain_endio+0x2d/0x40
+> 1441  <4>[33685.629678]  ? md_
+> 1442  <4>[33685.629679] Lost 357 message(s)!
 >
-> Now we understand your env, which is related with IMSM & external bitmap,=
- and I have a little knowledge about this field. May need to add more peopl=
-e in the cc list.
+> This happens on:
+> 5.11.8-051108-generic #202103200636 SMP Sat Mar 20 11:17:32 UTC 2021
+> and on 5.8.0-44-generic #50~20.04.1-Ubuntu
+> (https://changelogs.ubuntu.com/changelogs/pool/main/l/linux/linux_5.8.0-4=
+4.50/changelog)
+> which contains backported
+> https://github.com/torvalds/linux/commit/41d2d848e5c09209bdb57ff9c0ca3407=
+5e22783d
+> ("md: improve io stats accounting").
+> The 5.8.18-050818-generic #202011011237 SMP Sun Nov 1 12:40:15 UTC
+> 2020 which does not contain above suspected change does not crash.
 >
-> Just from code logic, your analysis is reasonable.
-> The key of the crash is why md layer didn't do the waiting job for bitmap=
- bios. There have wait points in md_bitmap_daemon_work, write_sb_page, md_b=
-itmap_update_sb & md_update_sb. But in your scenario there all didn't take =
-effect. At last md_bitmap_free do the additional wait bitmap->pending_write=
-s but not mddev->pending_writes. the crash is triggered.
+> If there's a better way/place to report this bug just let me know. If
+> not, here are steps to reproduce:
 >
-> In my opinion, using a special wait is more clear than calling general md=
-_bitmap_wait_writes(). the md_bitmap_wait_writes makes people feel bitmap m=
-odule does repetitive clean job.
+> 1. Create a RAID 0 device using three Micron_9300_MTFDHAL7T6TDP disks.
+> mdadm --create --verbose /dev/md12 --level=3Dstripe --raid-devices=3D3
+> /dev/nvme0n1p1 /dev/nvme1n1p1 /dev/nvme2n1p1
 >
-> My idea like:
-> ```
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index 200c5d0f08bf..ea6fa5a2cb6b 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1723,6 +1723,8 @@ void md_bitmap_flush(struct mddev *mddev)
->          bitmap->daemon_lastrun -=3D sleep;
->          md_bitmap_daemon_work(mddev);
->          md_bitmap_update_sb(bitmap);
-> +       if (mddev->bitmap_info.external)
-> +               md_super_wait(mddev);
->   }
+> 2. Setup xfs on it:
+> mkfs.xfs /dev/md12 and mount it
 >
->   /*
-> @@ -1746,6 +1748,7 @@ void md_bitmap_free(struct bitmap *bitmap)
->          /* Shouldn't be needed - but just in case.... */
->          wait_event(bitmap->write_wait,
->                     atomic_read(&bitmap->pending_writes) =3D=3D 0);
-> +       wait_event(mddev->sb_wait, atomic_read(&mddev->pending_writes)=3D=
-=3D0);
+> 3. Write to a file on this filesystem:
+> while true; do rm -rf /mnt/md12/crash* ; for i in `seq 8`; do dd
+> if=3D/dev/zero of=3D/mnt/md12/crash$i bs=3D32K count=3D50000000 & done; w=
+ait;
+> done
+> Wait for a crash (usually less than 20 min).
 >
->          /* release the bitmap file  */
->          md_bitmap_file_unmap(&bitmap->storage);
-> ```
+> I couldn't reproduce it with a single dd process (maybe I have to wait
+> a little longer), but a single cat
+> /very/large/file/on/cephfs/over100GbE > /mnt/md12/crash is enough for
+> this double fault to occur.
+>
+> More info:
+> This long mempool_kfree - md_end_io - *  -md_end_io stack trace looks
+> always the same, but the panic occurs in different places:
+>
+> pstore/6948115143318/dmesg.txt-<4>[545649.087998] CPU: 88 PID: 0 Comm:
+> swapper/88 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6948377398316/dmesg.txt-<4>[11275.914909] CPU: 14 PID: 0 Comm:
+> swapper/14 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6948532816002/dmesg.txt-<4>[33685.629594] CPU: 10 PID: 2118287
+> Comm: kworker/10:0 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6948532816002/dmesg.txt-<4>[33685.629595] Workqueue:
+> xfs-conv/md12 xfs_end_io [xfs]
+> pstore/6948855849083/dmesg.txt-<4>[42934.321129] CPU: 85 PID: 0 Comm:
+> swapper/85 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6948876331782/dmesg.txt-<4>[ 3475.020672] CPU: 86 PID: 0 Comm:
+> swapper/86 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6949083860307/dmesg.txt-<4>[43048.254375] CPU: 45 PID: 0 Comm:
+> swapper/45 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6949091775931/dmesg.txt-<4>[ 1150.790240] CPU: 64 PID: 0 Comm:
+> swapper/64 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6949123356826/dmesg.txt-<4>[ 6963.858253] CPU: 6 PID: 51 Comm:
+> kworker/6:0 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6949123356826/dmesg.txt-<4>[ 6963.858255] Workqueue: ceph-msgr
+> ceph_con_workfn [libceph]
+> pstore/6949123356826/dmesg.txt-<4>[ 6963.858253] CPU: 6 PID: 51 Comm:
+> kworker/6:0 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+> pstore/6949123356826/dmesg.txt-<4>[ 6963.858255] Workqueue: ceph-msgr
+> ceph_con_workfn [libceph]
+> pstore/6949152322085/dmesg.txt-<4>[ 6437.077874] CPU: 59 PID: 0 Comm:
+> swapper/59 Tainted: P           OE     5.11.8-051108-generic
+> #202103200636
+>
+> cat /proc/cmdline
+> BOOT_IMAGE=3D/vmlinuz-5.11.8-051108-generic
+> root=3D/dev/mapper/ubuntu--vg-ubuntu--lv ro net.ifnames=3D0 biosdevname=
+=3D0
+> strict-devmem=3D0 mitigations=3Doff iommu=3Dpt
+>
+> cat /proc/cpuinfo
+> model name      : AMD EPYC 7552 48-Core Processor
+>
+> cat /proc/mounts
+> /dev/md12 /mnt/ssd1 xfs
+> rw,noatime,attr2,inode64,logbufs=3D8,logbsize=3D32k,sunit=3D1024,swidth=
+=3D3072,prjquota
+> 0 0
+>
+> Let me know if you need more information.
 
-I like Heming's version better.
+Hi Pawel,
 
-Hi Sudhakar,
-
-Are you able to reproduce the issue? If so, could you please verify
-that Heming's
+Thanks for the report. Could you please try whether the following
 change fixes the issue?
 
-Thanks,
 Song
+
+diff --git i/drivers/md/md.c w/drivers/md/md.c
+index bb09070a63bcf..889e9440a9f38 100644
+--- i/drivers/md/md.c
++++ w/drivers/md/md.c
+@@ -5648,7 +5648,7 @@ static int md_alloc(dev_t dev, char *name)
+                 */
+                mddev->hold_active =3D UNTIL_STOP;
+
+-       error =3D mempool_init_kmalloc_pool(&mddev->md_io_pool, BIO_POOL_SI=
+ZE,
++       error =3D mempool_init_slab_pool(&mddev->md_io_pool, BIO_POOL_SIZE,
+                                          sizeof(struct md_io));
+        if (error)
+                goto abort;
