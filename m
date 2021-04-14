@@ -2,170 +2,83 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B13C433ED
-	for <linux-raid@archiver.kernel.org>; Tue, 13 Apr 2021 18:52:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B26DC433B4
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Apr 2021 15:22:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6CFE613C7
-	for <linux-raid@archiver.kernel.org>; Tue, 13 Apr 2021 18:52:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01B2561158
+	for <linux-raid@archiver.kernel.org>; Wed, 14 Apr 2021 15:22:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347885AbhDMSws (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 13 Apr 2021 14:52:48 -0400
-Received: from mga03.intel.com ([134.134.136.65]:58215 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232517AbhDMSwr (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 13 Apr 2021 14:52:47 -0400
-IronPort-SDR: EufWeczvio/7L1TTYW34MjLP2fKlDMBvFx+f3mQz+pGLO/th5ySNP5xX5Wpb8zaZ35Wg3aAY3p
- mT+39WH+s+vg==
-X-IronPort-AV: E=McAfee;i="6200,9189,9953"; a="194507372"
-X-IronPort-AV: E=Sophos;i="5.82,220,1613462400"; 
-   d="scan'208";a="194507372"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2021 11:52:27 -0700
-IronPort-SDR: tjeDib//JhnJPx4lDXxJtOqm+TGfYMOr2aNMY/9OTEhFurP62vA+/2u9pVER9MvFrQmLQRyGdb
- hWl2xwoTKr5w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,220,1613462400"; 
-   d="scan'208";a="398872309"
-Received: from lkp-server01.sh.intel.com (HELO 69d8fcc516b7) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 13 Apr 2021 11:52:26 -0700
-Received: from kbuild by 69d8fcc516b7 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lWO9A-0001DU-RJ; Tue, 13 Apr 2021 18:52:24 +0000
-Date:   Wed, 14 Apr 2021 02:52:19 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 2715e61834586cef8292fcaa457cbf2da955a3b8
-Message-ID: <6075e863.+diRybMagWF1Y71A%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1351971AbhDNPWh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 14 Apr 2021 11:22:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45890 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232358AbhDNPWg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 14 Apr 2021 11:22:36 -0400
+Received: from mail-qv1-xf29.google.com (mail-qv1-xf29.google.com [IPv6:2607:f8b0:4864:20::f29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28D65C061574
+        for <linux-raid@vger.kernel.org>; Wed, 14 Apr 2021 08:22:15 -0700 (PDT)
+Received: by mail-qv1-xf29.google.com with SMTP id h15so251712qvu.4
+        for <linux-raid@vger.kernel.org>; Wed, 14 Apr 2021 08:22:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=FOVZwHsnTwZB3Eag/7SoyC6t+HwRXuLuKZPgASvf3xQ=;
+        b=kWZnfP+P5E5hyE6BugAmQfViCt0TkXdofbiuxDdgKNtd+5+hgrHLImu2A2+EheZG2X
+         5r/hC69Mk1R8mrLghyYeFldVlA8F6/sydFtEa9P3ROSGXPraZIDYmHvz6T4bi90jHCK0
+         CNQs30kGWRhfatSgAfOLXUxE8+9WezupYC8Hu2akSkVwty0ymqXXVJHhSXCdi5k8Km44
+         NfjXzsUR69iiaUSApuNVck2w5+tKsIIhJpiYf6vw3HOpfn7tx58EFdwEm/GPJpeMcKkl
+         Jk9V54gMWXyObERsHqM3h616W/WASOCSIOhQPDXRxgtvtdQC9RlXfib1XsL6W4HSFci0
+         5jxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=FOVZwHsnTwZB3Eag/7SoyC6t+HwRXuLuKZPgASvf3xQ=;
+        b=Ga0GTfn0amtNbUUqOsPVh79YU9Jvuws63Q8mS1yAPAODd2Tv0B8CmLYmDF3POX6IqJ
+         hnAL9iVTS2HujWlUPwQAGCUDXOSLg+X78Y4eu6nnnPcRks+4HdAFym4yV7VqzeBC+wYo
+         Wc9sD0m3mL2K51CannwDaLAPhBKiXPSBfOpoP61jk0SE0gNHmGqJDspkQK6KE0JgP1M/
+         vCnE/CaUeffYWzKsr3+/5NI1ZGGfM8W2ekJ68IU21zuYd9JQtjINy5HJZFKGer38vbUm
+         S09cmBJCY4g1SOWP3wu4pjUW5498nfeSp/okVrv+jAfjry74GlqqY7jQw/Ae8dqRTQC9
+         uurg==
+X-Gm-Message-State: AOAM533ERo5NxdLqI+q0csbW0UBSM0X0suRpHbLihsnWlU9fZ4M9Cpya
+        wXw3HQw4iTkXwlbhs7YqySg=
+X-Google-Smtp-Source: ABdhPJwWKqcLnfgkJ4QsjUKpAs9Sq3pHkVGbVRqvevXo/ielD5TkXvAItMMBwZ1dwjVyEnF3Y8n4uA==
+X-Received: by 2002:a0c:b294:: with SMTP id r20mr37963732qve.16.1618413734347;
+        Wed, 14 Apr 2021 08:22:14 -0700 (PDT)
+Received: from ?IPv6:2620:10d:c0a8:1102::1844? ([2620:10d:c091:480::1:1b53])
+        by smtp.gmail.com with ESMTPSA id o189sm571759qkd.60.2021.04.14.08.22.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Apr 2021 08:22:13 -0700 (PDT)
+From:   Jes Sorensen <jes.sorensen@gmail.com>
+X-Google-Original-From: Jes Sorensen <Jes.Sorensen@gmail.com>
+To:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Subject: mdadm-4.2-rc1
+Message-ID: <a1e3bf9d-0e92-c88e-13a1-7d2f6482fb01@gmail.com>
+Date:   Wed, 14 Apr 2021 11:22:12 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 2715e61834586cef8292fcaa457cbf2da955a3b8  md/bitmap: wait for external bitmap writes to complete during tear down
+I have pushed mdadm-4.2-rc1 to git and there should be binaries pushed
+as well.
 
-elapsed time: 722m
+Note I had to fix checking the return value of get_dev_sector_size() in
+super-intel.c. I think I got it right, but I don't have a test machine
+with IMSM at the moment, so please test I didn't break it.
 
-configs tested: 100
-configs skipped: 2
+Thanks,
+Jes
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-x86_64                           allyesconfig
-riscv                            allmodconfig
-i386                             allyesconfig
-h8300                       h8s-sim_defconfig
-mips                       bmips_be_defconfig
-powerpc                 canyonlands_defconfig
-mips                  decstation_64_defconfig
-arm                              alldefconfig
-powerpc                 mpc832x_rdb_defconfig
-arm                           h3600_defconfig
-powerpc                   lite5200b_defconfig
-arm                       netwinder_defconfig
-arm                           corgi_defconfig
-mips                        omega2p_defconfig
-arm                        magician_defconfig
-arm                            zeus_defconfig
-openrisc                         alldefconfig
-m68k                          atari_defconfig
-powerpc                    gamecube_defconfig
-arm                         hackkit_defconfig
-m68k                       m5208evb_defconfig
-arm                            xcep_defconfig
-arm                             ezx_defconfig
-arm                       multi_v4t_defconfig
-sh                     magicpanelr2_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a003-20210413
-x86_64               randconfig-a002-20210413
-x86_64               randconfig-a001-20210413
-x86_64               randconfig-a005-20210413
-x86_64               randconfig-a006-20210413
-x86_64               randconfig-a004-20210413
-i386                 randconfig-a003-20210413
-i386                 randconfig-a001-20210413
-i386                 randconfig-a006-20210413
-i386                 randconfig-a005-20210413
-i386                 randconfig-a004-20210413
-i386                 randconfig-a002-20210413
-i386                 randconfig-a015-20210413
-i386                 randconfig-a014-20210413
-i386                 randconfig-a013-20210413
-i386                 randconfig-a012-20210413
-i386                 randconfig-a016-20210413
-i386                 randconfig-a011-20210413
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-um                               allmodconfig
-um                                allnoconfig
-um                               allyesconfig
-um                                  defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a014-20210413
-x86_64               randconfig-a015-20210413
-x86_64               randconfig-a011-20210413
-x86_64               randconfig-a013-20210413
-x86_64               randconfig-a012-20210413
-x86_64               randconfig-a016-20210413
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
