@@ -3,62 +3,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A24C433B4
-	for <linux-raid@archiver.kernel.org>; Thu, 15 Apr 2021 19:50:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58428C433B4
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Apr 2021 20:16:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0284C60C3E
-	for <linux-raid@archiver.kernel.org>; Thu, 15 Apr 2021 19:50:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2817561153
+	for <linux-raid@archiver.kernel.org>; Thu, 15 Apr 2021 20:16:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235064AbhDOTvL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 15 Apr 2021 15:51:11 -0400
-Received: from mail-pl1-f181.google.com ([209.85.214.181]:43728 "EHLO
-        mail-pl1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235059AbhDOTvJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Apr 2021 15:51:09 -0400
-Received: by mail-pl1-f181.google.com with SMTP id u15so4133767plf.10;
-        Thu, 15 Apr 2021 12:50:46 -0700 (PDT)
+        id S235247AbhDOURJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 15 Apr 2021 16:17:09 -0400
+Received: from mail-pf1-f169.google.com ([209.85.210.169]:36626 "EHLO
+        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235169AbhDOURI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 15 Apr 2021 16:17:08 -0400
+Received: by mail-pf1-f169.google.com with SMTP id b26so11684367pfr.3;
+        Thu, 15 Apr 2021 13:16:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=jzSTR4S/XfBfmHFocbuUnh6F7IZZt8GfGeTP4lw6/K4=;
-        b=apWIUZHIHt4+i6wPIkUq+M+gy2DRbKQZ4yCC205zpY1de+xe3Q6pP2SZ2c+x+Kp4Pj
-         0YFxb6RFjlujEGFT8ZpSqPu1oMnTXknm3bc7iGRQoMy6CxWzR3pFY+N7X7CCkf4i+eqr
-         4vxgBvEB6w4xn7/tZQDR2S77kSm5O12H9zslXpO5P7XO5ZXMk4AyIWgVJDfQjoZ3/vQN
-         1EEIEY1E606I2lYDzpTlT6V2h726IczLnbYwZ1uknbZ/CVbyKxaQItvW1k0k86gWuMHY
-         Yon1rL4561ojF+QI15FoY/U+LLSlJwByfVgFy5/iy+QCigsNDp05u7V6PPuBahwEu2S7
-         +h5Q==
-X-Gm-Message-State: AOAM533A78SK7Xs4KCwhZj4prpXtRSoGd0H9pG8xvOUl9EWWidCFqADX
-        dRa1Ws8XUPHbnPMVyIC8AKU=
-X-Google-Smtp-Source: ABdhPJxePiKeGIZglO2VnENKO4CmWRNHyXXkuqGu0pEa2yWYv+nCrnpvMLLjycBthAhK0BSdfce1dg==
-X-Received: by 2002:a17:902:7689:b029:eb:3d5f:ae58 with SMTP id m9-20020a1709027689b02900eb3d5fae58mr5532107pll.39.1618516245716;
-        Thu, 15 Apr 2021 12:50:45 -0700 (PDT)
+        bh=R4MN2eqir+CBtD0tgtCkvzIAT+xpznMNoAirRW915JI=;
+        b=YSm6Chmuci5BtX2dDY+uJdjkpag/EU1LJSWwnOU/L5grSh/0xPWZVLLmuHUPQjotqJ
+         K1mBO6KtXSTCB+LP+YUB4FGE6aA0Gl6uIZHlzbxD1fdDjOAlDpDzy8+uiETE2XtoY2vf
+         ZSEDraAOOX/h8h+o1/JtczSikk0VHHCGs/8XEHiq1wk57Jymv/ERSgX/8Ab2HxtQGIuL
+         LkhUFlfJUQppynlFOjGqXLWt7FqnsShoKtuxLPZofqVyKtfb0lAQWj7I4vJVXnb21/Ou
+         lvnSvwY4SuL86lHx/qgTaE+Kyhpp2RbVTPo6TsvfsxHAd2WwxRZFiHDEYDuzS4FsK8MT
+         5wvw==
+X-Gm-Message-State: AOAM530ZZsJUHQMdVvcYXKQqWAiGZw7xSxxGymGjLo3pypcLPO4ejRO6
+        SM0VqcWe0AgX0NldtWsZwh0=
+X-Google-Smtp-Source: ABdhPJxasAeAsl5iQIA7O0Hpn7d6fx6L/z8/SVQlS1C09Khzz+GwalY1VdAAhZbxcExOg1StAuq49Q==
+X-Received: by 2002:a65:53c8:: with SMTP id z8mr5048457pgr.340.1618517804655;
+        Thu, 15 Apr 2021 13:16:44 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:f031:1d3a:7e95:2876? ([2601:647:4000:d7:f031:1d3a:7e95:2876])
-        by smtp.gmail.com with ESMTPSA id e9sm2997293pgk.69.2021.04.15.12.50.44
+        by smtp.gmail.com with ESMTPSA id y187sm2814668pfb.109.2021.04.15.13.16.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Apr 2021 12:50:44 -0700 (PDT)
-Subject: Re: [RFC PATCH 1/2] percpu_ref: add percpu_ref_tryget_many_live
+        Thu, 15 Apr 2021 13:16:43 -0700 (PDT)
+Subject: Re: [dm-devel] [RFC PATCH 2/2] block: support to freeze bio based
+ request queue
 To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org,
+Cc:     linux-raid@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>,
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        Song Liu <song@kernel.org>, dm-devel@redhat.com,
         Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
-        linux-nvme@lists.infradead.org, Tejun Heo <tj@kernel.org>,
         Christoph Hellwig <hch@lst.de>
 References: <20210415103310.1513841-1-ming.lei@redhat.com>
- <20210415103310.1513841-2-ming.lei@redhat.com>
+ <20210415103310.1513841-3-ming.lei@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <dcdc3233-b4a6-24b2-85dd-78ed9e70fef1@acm.org>
-Date:   Thu, 15 Apr 2021 12:50:43 -0700
+Message-ID: <af8f41f4-74e8-450d-fa63-6feb6b745222@acm.org>
+Date:   Thu, 15 Apr 2021 13:16:42 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.0
 MIME-Version: 1.0
-In-Reply-To: <20210415103310.1513841-2-ming.lei@redhat.com>
+In-Reply-To: <20210415103310.1513841-3-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -67,15 +67,54 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 On 4/15/21 3:33 AM, Ming Lei wrote:
->  /**
-> - * percpu_ref_tryget_live - try to increment a live percpu refcount
-> + * percpu_ref_tryget_many_live - try to increment a live percpu refcount
->   * @ref: percpu_ref to try-get
-> + * @nr: number of references to get
+> 1) grab two queue usage refcount for blk-mq before submitting blk-mq
+> bio, one is for bio, anther is for request;
+                       ^^^^^^
+                       another?
 
-You may want to change "increment" into "increase" to make it more clear
-that this function may increase the percpu refcount by more than one.
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 09f774e7413d..f71e4b433030 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -431,12 +431,13 @@ EXPORT_SYMBOL(blk_cleanup_queue);
+>  int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+>  {
+>  	const bool pm = flags & BLK_MQ_REQ_PM;
+> +	const unsigned int nr = (flags & BLK_MQ_REQ_DOUBLE_REF) ? 2 : 1;
 
-Anyway:
+Please leave out the parentheses from around the condition in the above
+and in other ternary expressions. The ternary operator has a very low
+precedence so adding parentheses around the condition in a ternary
+operator is almost never necessary.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> @@ -480,8 +481,18 @@ static inline int bio_queue_enter(struct bio *bio)
+>  	struct request_queue *q = bio->bi_bdev->bd_disk->queue;
+>  	bool nowait = bio->bi_opf & REQ_NOWAIT;
+>  	int ret;
+> +	blk_mq_req_flags_t flags = nowait ? BLK_MQ_REQ_NOWAIT : 0;
+> +	bool reffed = bio_flagged(bio, BIO_QUEUE_REFFED);
+>  
+> -	ret = blk_queue_enter(q, nowait ? BLK_MQ_REQ_NOWAIT : 0);
+> +	if (!reffed)
+> +		bio_set_flag(bio, BIO_QUEUE_REFFED);
+> +
+> +	/*
+> +	 * Grab two queue references for blk-mq, one is for bio, and
+> +	 * another is for blk-mq request.
+> +	 */
+> +	ret = blk_queue_enter(q, q->mq_ops && !reffed ?
+> +			(flags | BLK_MQ_REQ_DOUBLE_REF) : flags);
+
+Consider rewriting the above code as follows to make it easier to read:
+
+	if (q->mq_ops && !reffed)
+		flags |= BLK_MQ_REQ_DOUBLE_REF;
+	ret = blk_queue_enter(q, flags);
+
+Please also expand the comment above this code. The comment only
+explains the reffed == false case but not the reffed == true case. I
+assume that the reffed == true case applies to stacked bio-based drivers?
+
+Thanks,
+
+Bart.
