@@ -2,70 +2,110 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.2 required=3.0 tests=BAYES_20,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C35C433ED
-	for <linux-raid@archiver.kernel.org>; Thu,  6 May 2021 05:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB080C433B4
+	for <linux-raid@archiver.kernel.org>; Thu,  6 May 2021 05:48:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2D77611AC
-	for <linux-raid@archiver.kernel.org>; Thu,  6 May 2021 05:10:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E13761176
+	for <linux-raid@archiver.kernel.org>; Thu,  6 May 2021 05:48:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232097AbhEFFLI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 May 2021 01:11:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35632 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231488AbhEFFLD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 May 2021 01:11:03 -0400
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A0EC061574
-        for <linux-raid@vger.kernel.org>; Wed,  5 May 2021 22:10:04 -0700 (PDT)
-Received: by mail-ej1-x62a.google.com with SMTP id l4so6300444ejc.10
-        for <linux-raid@vger.kernel.org>; Wed, 05 May 2021 22:10:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=pzZ21OxY6xe+jvOiybiw8nb50XRY8hLZ0laWT+x69+o=;
-        b=Yr4LtwYtQLpePrDfWRp7Byrvv5xXIGFjrcjmEX5/i/C1lmfhWC1q9rTsiXjsqGyt3Q
-         mHLIxASjiAjPWlRcLYsEjaIODWIRnRnS4f+hXUQnlMBLK5s44DR1s+Qh/t/3XGePN6Fh
-         Z1XQQaWq726L77Kf+eguEK0B3XH3sAJc2/4KUjru9AijXSkAKhhcP6AamnlpuPH2mZpG
-         0sDOp+z4TmpEfX+8cvgpoGUx7j1mf1XfZqKhSQaN8r3P4o7YuTylViU8TKlzb+GYyZQs
-         jh3fTfjUkxhFGrCfkuJG3Me7adzf7Fi11dGpQmtqc8j71E+8cIY9Y3uHy5n+2jNCgNcV
-         u8+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=pzZ21OxY6xe+jvOiybiw8nb50XRY8hLZ0laWT+x69+o=;
-        b=BjFRzYdxyyE5BTdayKxM7lNBIYGQ+LKRsuHGZ7Ayhm6NpMqd+ZGMTE0Qx2MHSoOG36
-         ct/CRYQJ2yWCbse2N13ZbGl2fxL/mR5Pm8xEKzY1kRUE3cibM4i7sitiv/CbXdQaYiGw
-         Vquth2kjHp50woDSDW5U/lFRfRym3CfqsjPlutmVFJwJj29A+383cBb5IrAwt961jLQf
-         OFNXuzlDub+WwAz6w3UueT2JcBHxaTSHX2/UMIZ4kPDvpGvaVIpk7IbWuDHXZ3pF9wrN
-         qqwlkJLIMVkonhxawHiaq3dO2N0Yqm3eiYpsrnJu8YA/SreaFp59qcCQu0gLz4QolSpW
-         gazg==
-X-Gm-Message-State: AOAM532kg6iOKOQBmF9StFMNOF6Y8+YySwAglsEaBbDPwPOI7CtmA4We
-        2ku5fNGjVXuv5eCdcJR3F1pdTAYhZVbKELoWQPS99UpWArjRbg==
-X-Google-Smtp-Source: ABdhPJxhKkTK5kL5cfo/MU7ULgDYg2o/vzlybiLbA/J7KlgADG85aKWHH8M1uLgtQbBKCZAJj7nRevKuMsffzR9tozQ=
-X-Received: by 2002:a17:906:8a51:: with SMTP id gx17mr2319649ejc.549.1620277803103;
- Wed, 05 May 2021 22:10:03 -0700 (PDT)
+        id S229622AbhEFFt4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 May 2021 01:49:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40858 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231172AbhEFFtz (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 6 May 2021 01:49:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D02FD613B5
+        for <linux-raid@vger.kernel.org>; Thu,  6 May 2021 05:48:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620280137;
+        bh=TqlUHULfxBkEDNBb+7u2nZgkUnpbyob9Uc57JdTdhKs=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=U3dYtQ9kWGWcyrdTlQQJoIU8M5/AnpYz2LU4Vbyk4Stpr+2mxOFcgnlzQIuyrly0h
+         Ts3Tpp/OVdo2K+NWzYx2LTr6voFxoZ0CqG+rahCqxJe4vL6pGDxa42tEtNZRYezM18
+         V1NL6QUDfqwdxK31aTFc6pajPGR3o/2NrIRkhe2T6CSurJ/xdeHMR71lfu4sUQcKqs
+         SJwUlUvBQyWkGmjo2evI+qXWWQXhQE0xg+8pX2EWDT7iQpbg9e/Tet9Z92FFmMQJ+o
+         0QOJbn907A5KkIB664yg6W3bhkpC2C5MjJAPt7wfeUonsDSMoHPIRo9Z02p4ffMvWs
+         szMdfVrbmwIAg==
+Received: by mail-lj1-f178.google.com with SMTP id s25so5555085lji.0
+        for <linux-raid@vger.kernel.org>; Wed, 05 May 2021 22:48:57 -0700 (PDT)
+X-Gm-Message-State: AOAM533vhjakmIG1E5ShUhXzYs83HB6m4/nb2b5rix2fofoCtM24V/1P
+        5exzp2KS6x0bPFUnhgibvUhBgNJxrgFZl5YIzCc=
+X-Google-Smtp-Source: ABdhPJyPVOdYXorYoZzIUzUxQY+ecTfshqUFHHGefN3E6At8Ulrq5YygREsrvq7aVkVvoq/yE5PxmbSEYP+QNWxZ0ZY=
+X-Received: by 2002:a2e:1608:: with SMTP id w8mr1899858ljd.506.1620280136096;
+ Wed, 05 May 2021 22:48:56 -0700 (PDT)
 MIME-Version: 1.0
-From:   d tbsky <tbskyd@gmail.com>
-Date:   Thu, 6 May 2021 13:09:53 +0800
-Message-ID: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
-Subject: raid10 redundancy
-To:     list Linux RAID <linux-raid@vger.kernel.org>
+References: <CADLTsw2OJtc30HyAHCpQVbbUyoD7P9bK-ZfaH+nrdZc+Je4b6g@mail.gmail.com>
+ <ddbacea2-13d9-28ca-7ba2-50b581ac658a@gmail.com> <CAPhsuW743nJCFOv1SHyVU-hcOWMCdFhL4-404e0vE+BdTD3=CQ@mail.gmail.com>
+ <CADLTsw340wuEoX02ad-M6mN_48uDdnkj0dZSJGYMFrjgB+y80Q@mail.gmail.com>
+In-Reply-To: <CADLTsw340wuEoX02ad-M6mN_48uDdnkj0dZSJGYMFrjgB+y80Q@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 5 May 2021 22:48:44 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7ZzhXtg5MikTG+NtpQbYBZfpU5tDWzbZXDF4bhj9wwdA@mail.gmail.com>
+Message-ID: <CAPhsuW7ZzhXtg5MikTG+NtpQbYBZfpU5tDWzbZXDF4bhj9wwdA@mail.gmail.com>
+Subject: Re: PROBLEM: double fault in md_end_io
+To:     =?UTF-8?Q?Pawe=C5=82_Wiejacha?= <pawel.wiejacha@rtbhouse.com>
+Cc:     Guoqing Jiang <jgq516@gmail.com>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi:
-   I am curious about raid10 redundancy when created with disk numbers below:
+Hi Pawe=C5=82,
 
-2 disks => 1 disk tolerance
-3 disks = > 1 disk  tolerance
-4 disks =>  possible 2 disks?  or still only 1 disk ?
+On Tue, May 4, 2021 at 2:18 PM Pawe=C5=82 Wiejacha
+<pawel.wiejacha@rtbhouse.com> wrote:
+>
+> Guoqing's patch fixes the problem. Here's the actual patch I am using:
 
-how about 5/6 disks with raid10?
-thanks a lot for confirmation!!
+Thanks for running the tests.
+
+Hi Guoqing,
+
+Could you please send official patch for this fix?
+
+Thanks,
+Song
+
+>
+> -static void bio_chain_endio(struct bio *bio)
+> +void bio_chain_endio(struct bio *bio)
+>  {
+>     bio_endio(__bio_chain_endio(bio));
+>  }
+> +EXPORT_SYMBOL(bio_chain_endio);
+>
+>  /**
+>   * bio_chain - chain bio completions
+> diff --git drivers/md/md.c drivers/md/md.c
+> index 04384452a7ab..f157bd6e0478 100644
+> --- drivers/md/md.c
+> +++ drivers/md/md.c
+> @@ -507,7 +507,8 @@ static blk_qc_t md_submit_bio(struct bio *bio)
+>         return BLK_QC_T_NONE;
+>     }
+>
+> -   if (bio->bi_end_io !=3D md_end_io) {
+> +   if (bio->bi_end_io !=3D md_end_io && bio->bi_end_io !=3D
+> +                bio_chain_endio) {
+>         struct md_io *md_io;
+>
+>         md_io =3D mempool_alloc(&mddev->md_io_pool, GFP_NOIO);
+> diff --git include/linux/bio.h include/linux/bio.h
+> index 1edda614f7ce..bfb5bd0be397 100644
+> --- include/linux/bio.h
+> +++ include/linux/bio.h
+> @@ -427,6 +427,7 @@ static inline struct bio *bio_kmalloc(gfp_t
+> gfp_mask, unsigned int nr_iovecs)
+>  extern blk_qc_t submit_bio(struct bio *);
+>
+>  extern void bio_endio(struct bio *);
+> +extern void bio_chain_endio(struct bio *bio);
+
+[...]
