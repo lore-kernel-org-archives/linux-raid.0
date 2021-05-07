@@ -4,71 +4,84 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF0EC433B4
-	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 01:12:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B121EC433B4
+	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 01:27:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 071B7610F7
-	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 01:12:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B354610A5
+	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 01:27:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232357AbhEGBNR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 May 2021 21:13:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49492 "EHLO
+        id S233460AbhEGB2E (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 May 2021 21:28:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230387AbhEGBNR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 May 2021 21:13:17 -0400
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53433C061574
-        for <linux-raid@vger.kernel.org>; Thu,  6 May 2021 18:12:17 -0700 (PDT)
-Received: by mail-ed1-x52c.google.com with SMTP id l7so8268065edb.1
-        for <linux-raid@vger.kernel.org>; Thu, 06 May 2021 18:12:17 -0700 (PDT)
+        with ESMTP id S231461AbhEGB2D (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 May 2021 21:28:03 -0400
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A37CC061574
+        for <linux-raid@vger.kernel.org>; Thu,  6 May 2021 18:27:03 -0700 (PDT)
+Received: by mail-ej1-x62c.google.com with SMTP id a4so11111388ejk.1
+        for <linux-raid@vger.kernel.org>; Thu, 06 May 2021 18:27:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=sHA/oYYLqTpDNnqYHNHKCCcJNGLVoRL3Vp/NbjEBw6w=;
-        b=cxesg0hgh/dntcfo7eriiuW/2Aj78hVMgcE+I1hfQdzB2QLUUDoEMY1SEOa5PEpi2y
-         6W6UBqB7UyKz1AkIYmyekjzG2yDTS+qdGGFrOVjbii7J+g5s7989PTnpq2vk42nKhj7i
-         BG9etjysHDh/m9kWdiq5SoDhLJ6YU26KCVXIo928Dhnu+ahSNlkWkJwoOLGsewS/42mx
-         FXMMTAPd3UhFL6spM1XBi9XoAAZSEBsrTMbI3/YZRQZAcxjI47kYg+vICxifMvRcHDfH
-         8rtHw4/ovLwDu4nCgGL8WcDtShfWLHPVKPcdnsRxhOaOJVIPhfBt2aYNZgJuxRhFFuNe
-         cr0A==
+        bh=dLXqSYJrzgim9laaN+/MDEXD2hoQoAxl2PA9kPPdWBM=;
+        b=dVrrsgxH6kt+h1UvpPzorWQIwai7WXjOGU2eIfPL8BuMqFimcHKetKtVlyDGltg85D
+         faQ7fZq0Q2e7P/Y2DDDWCUia7YNzFPvB5eGW1/KxspXvCu5/53Cyyh2LAHK/3bilao5s
+         bfoQ2kF+zyxV1JmKUtKnmcOo2jAfTWsRF6wvtjSGBSZC24mAmqSEwHNTOhfcQVS65/ua
+         uieOR4v+nWKbBxF/a1taTMPWMcqBl/n/r6J7UUlcdLWVN+NrqGBcNvSUGHG8b+EX4u1N
+         Rb/2FzFd1X5mEakgSS7lQmZE3gavsMJ41QzT8tc1DCq9ia+c1DnPQAMkk7ipv/Mt6LhL
+         Ghbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=sHA/oYYLqTpDNnqYHNHKCCcJNGLVoRL3Vp/NbjEBw6w=;
-        b=fx5kPDPbPC0v9QidfUBo9GgUsXV+eYzCtEM5BuXo1Oejl3XWGjwBzKKGfLnlMFQXJ7
-         ryupUEOqVeckdSjTXu06tt3IIdRcAmSNRZ61sc+ZCH5/s/lCkF0roAB4xLTNBZ5VzatR
-         HZQryWCovG0Bit+BXXRXa7uPjRQB0QU3HL0c74ubZ8kKoF57dwOgJrqH/bxn0ncG32t+
-         5vZZsHp9M4ODegcOoFqSzl6WNKVMzOF29m2RmuPmrAKr6kDQUipm4T9dUPCtIszJuatE
-         Ry9z9L66pMmslYf0MVG3ZC1CmsH2GU151o4XOlNQHYfttPlwik5rSooZhQvF8jrxmiJ5
-         EkbA==
-X-Gm-Message-State: AOAM5326kOOQ03pYp9RBV8WsJkJyar9rK6CiB7nJf4Kac0ejFf4Dbu27
-        zjGadI91uNi7Ce1vfWBjB26RbxVH5EOfK1PKz1vXDV3XbK8=
-X-Google-Smtp-Source: ABdhPJyqTo0BloB/Qz0iCIE/AHUHtFoxenxzY8+SMsBUuqjEHM1QC8JBOS1VyC9YODG4cuAN6HPUTfaX1BEec5S4cbo=
-X-Received: by 2002:a05:6402:3594:: with SMTP id y20mr8307651edc.226.1620349936066;
- Thu, 06 May 2021 18:12:16 -0700 (PDT)
+        bh=dLXqSYJrzgim9laaN+/MDEXD2hoQoAxl2PA9kPPdWBM=;
+        b=J2ujmYzzPAMfGHP9z26/xCd8Pogj6K1XFc4n2zauklYYAOIvG477GTVYYYcWlE/CU9
+         1jUo6AQT1Su+hVxXcbvKemT+oCV8O0sLLnOTr644TTelIPaTlNITP7ivDCZhhZ2AYJMC
+         nkk+ZNqHGuyePAU4iWYkBoqPC0BNo7e8utUVKRFUz5KlLCWHge49A2iYCO+UN7x7GHjQ
+         JGsFaZHtmKj8/laE1eHvc//+m7vsJrYaEzIvDwoaqpKw0paZxW1u5wZq8zATYWg8ijyC
+         gdPhpYHRrHMIgnTEEPmjkwT8ttRJRXxylsrDzcLn/OUzqSmVHTqxBj68LR1FPFJYcGKs
+         eEVw==
+X-Gm-Message-State: AOAM533TUObbrfkUVIHM5T5E+Snheo2RYt+vYF3aMKLF9RZ9fmj6hBKM
+        oHk8tWHGn2hbH4yxetKWxAc+TfcvhEaRBfAEiAA=
+X-Google-Smtp-Source: ABdhPJwOIkrd5QpY5OSxeEHR6e7O6L3TTyMfmic/te7n/fvt8ns1ALwfBCP8uRM6smwk40IMhThWcDRM1wb1WkFGjq4=
+X-Received: by 2002:a17:906:8a51:: with SMTP id gx17mr7274778ejc.549.1620350822210;
+ Thu, 06 May 2021 18:27:02 -0700 (PDT)
 MIME-Version: 1.0
 References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
- <AD8C004B-FE83-4ABD-B58A-1F7F8683CD1F@websitemanagers.com.au>
-In-Reply-To: <AD8C004B-FE83-4ABD-B58A-1F7F8683CD1F@websitemanagers.com.au>
+ <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com> <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
+In-Reply-To: <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
 From:   d tbsky <tbskyd@gmail.com>
-Date:   Fri, 7 May 2021 09:12:06 +0800
-Message-ID: <CAC6SzHKH62XwudewxtOUyNQYi9QSFar=dZ64fz9HiEW1eZh47g@mail.gmail.com>
+Date:   Fri, 7 May 2021 09:26:52 +0800
+Message-ID: <CAC6SzHJbN1T=HUS1ANf1QLqh+KvHyUB6wgQPO0KZcWc_xQ3KEg@mail.gmail.com>
 Subject: Re: raid10 redundancy
-To:     Adam Goryachev <mailinglists@websitemanagers.com.au>
+To:     Xiao Ni <xni@redhat.com>
 Cc:     list Linux RAID <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Adam Goryachev <mailinglists@websitemanagers.com.au>
+Xiao Ni <xni@redhat.com>
+> > It depends on which layout do you use and the copies you specify. There
+> > is a detailed description in `man md 3`
 >
-> I guess it depends on your definition of raid 10... In my experience it means one or more raid 1 arrays combine with raid 0, so if each raid 1 arrays had 2 members, then it is either 2, 4, 6, etc for the total number of drives.
+> Thanks a lot for the hint. After studying the pattern I think n2 and
+> o2 could survive if losing two correct disks with 4 or 5 disks. but f2
+> will be dead. is my understanding correct?
 
-indeed. What I want to use is linux raid10 which can be used on
-2,3,4,5, etc of disk drives. so it is unlike hardware raid 10.
+it seems not correct. I check the pattern again. I found all
+layout(n2,o2,f2) tend to put second copy to neighbor disk.
+
+so if I link all disks as a circle ring, I will be safe if there are
+no two disks nearby are dead.
+in other words: if a disk is dead, but the two neighbor disks around
+it are alive, then I will be safe.
+hope this time the logic is correct....
+
+
+.
