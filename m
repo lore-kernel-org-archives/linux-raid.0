@@ -7,78 +7,56 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84347C433B4
-	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 03:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F89AC433B4
+	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 09:48:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5258B613E4
-	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 03:26:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E072613D6
+	for <linux-raid@archiver.kernel.org>; Fri,  7 May 2021 09:48:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231230AbhEGD1d (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 May 2021 23:27:33 -0400
-Received: from mail.thelounge.net ([91.118.73.15]:34147 "EHLO
-        mail.thelounge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231295AbhEGD1a (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 May 2021 23:27:30 -0400
-Received: from srv-rhsoft.rhsoft.net (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4FbwpZ10W0zXN5;
-        Fri,  7 May 2021 05:26:30 +0200 (CEST)
-To:     d tbsky <tbskyd@gmail.com>, Phillip Susi <phill@thesusis.net>
-Cc:     Xiao Ni <xni@redhat.com>,
-        list Linux RAID <linux-raid@vger.kernel.org>
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
- <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com>
- <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
- <871rakovki.fsf@vps.thesusis.net>
- <CAC6SzHKKPCk4fOx7b2CxMWorPghRPMH3GD2v7vcC_YLKbDn7KA@mail.gmail.com>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
+        id S236835AbhEGJtK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 May 2021 05:49:10 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:18109 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236892AbhEGJtK (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 7 May 2021 05:49:10 -0400
+Received: from host86-155-154-37.range86-155.btcentralplus.com ([86.155.154.37] helo=[192.168.1.64])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1lex5c-0009uM-8r; Fri, 07 May 2021 10:48:08 +0100
 Subject: Re: raid10 redundancy
-Message-ID: <9b57e1bf-a573-e6a1-2db8-080ab05205b1@thelounge.net>
-Date:   Fri, 7 May 2021 05:26:29 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+To:     d tbsky <tbskyd@gmail.com>,
+        Adam Goryachev <mailinglists@websitemanagers.com.au>
+References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
+ <AD8C004B-FE83-4ABD-B58A-1F7F8683CD1F@websitemanagers.com.au>
+ <CAC6SzHKH62XwudewxtOUyNQYi9QSFar=dZ64fz9HiEW1eZh47g@mail.gmail.com>
+Cc:     list Linux RAID <linux-raid@vger.kernel.org>
+From:   Wols Lists <antlists@youngman.org.uk>
+Message-ID: <60950C7B.5040706@youngman.org.uk>
+Date:   Fri, 7 May 2021 10:46:35 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
+ Thunderbird/38.7.0
 MIME-Version: 1.0
-In-Reply-To: <CAC6SzHKKPCk4fOx7b2CxMWorPghRPMH3GD2v7vcC_YLKbDn7KA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAC6SzHKH62XwudewxtOUyNQYi9QSFar=dZ64fz9HiEW1eZh47g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-Am 07.05.21 um 03:47 schrieb d tbsky:
-> Phillip Susi <phill@thesusis.net>
->> No, it only depends on the number of copies.  They layout just effects
->> the performance.
+On 07/05/21 02:12, d tbsky wrote:
+> Adam Goryachev <mailinglists@websitemanagers.com.au>
+>>
+>> I guess it depends on your definition of raid 10... In my experience it means one or more raid 1 arrays combine with raid 0, so if each raid 1 arrays had 2 members, then it is either 2, 4, 6, etc for the total number of drives.
 > 
-> I thought someone test the performance of two ssd, raid-1 outperforms
-> all the layout. so maybe under ssd it's not important?
+> indeed. What I want to use is linux raid10 which can be used on
+> 2,3,4,5, etc of disk drives. so it is unlike hardware raid 10.
 > 
->> No; 2 copies means you can lose one disk and still have the other copy.
->> Where those copies are stored doesn't matter for redundancy, only performance.
-> 
->   I am trying to figure out how to lose two disks without losing two
-> copies. in history there are time bombs in ssd (like hp ssd made by
-> samsung) caused by buggy firmware.
-> if I put the orders correct, it will be safe even the same twin ssd
-> died together.
+If you're worried about losing two drives, okay it's more disk space,
+but add the third drive and go for three copies. Then adding the fourth
+drive will give you extra space. Not the best but heigh ho.
 
-forget what you try to figure out, you can't control which two disks 
-fail at the same time, period
+Or make sure you've got a spare drive configured, so if one drive fails
+the array will rebuild immediately, and your window of danger is minimised.
 
-you can minimize the risk by using different disk types and/or 
-distribute their age (i am doing that currently by replacing all disks 
-on a backup server with two weeks between)
-
-in case of a frimware timebomb you have no chance in case of identical 
-disks and when you seek a soluton whuch survives two failures then for 
-the sake of god use one which is called RAID6 and not RAID10
-
-that you can lose two disk in a RAID10 with luck is exactly that: LUCK - 
-period
+Cheers,
+Wol
