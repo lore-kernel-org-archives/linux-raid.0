@@ -2,194 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B64DBC433B4
-	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 03:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD25EC433ED
+	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 05:55:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96E2B61107
-	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 03:49:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 910456141F
+	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 05:55:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231159AbhEHDt7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 May 2021 23:49:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34376 "EHLO
+        id S229583AbhEHF4I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 8 May 2021 01:56:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229947AbhEHDt7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 May 2021 23:49:59 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1B51C061574;
-        Fri,  7 May 2021 20:48:57 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id i5so4025463pgm.0;
-        Fri, 07 May 2021 20:48:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=B0X3rqhyNmx29/hjgf+W3ZlULuWwHF4lzKtT+tay8j4=;
-        b=kFKMhmsJhDoh4jy6jC7BpLKa/2syJLB78tKxVCH+Sm5txEG9obtTBL77t4pgwk4bSb
-         M7w8QusAOxtFcV34+kVNpS7+1GGHNdWxU3W8ZLPpBWjQG/moDw6eL/w5jwXqvMJxgWLd
-         5iVzL1ZVPxjH4s+aTU2NN04VxiucNHZhYKQvZOzozHT9HwJlqt3pzv+H3/sqSlm0teWr
-         HVH7LOsAHxiSZV33ScyA2VZSkfvDdaSh3I6qDitnAjiyV8Pg/kNoluScOyol7qbZDjtZ
-         9P3fgwdjqs0fMhWYQlmbU0SMlXzwLkVRuRUVhvpgqhwh00+K3cUpt22CamyjYe+8bjPX
-         PmPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=B0X3rqhyNmx29/hjgf+W3ZlULuWwHF4lzKtT+tay8j4=;
-        b=Kcm/qIYU/GaGcfMw6WcCCyR0iKSBhO/FcJ7LFUMGooTp3k1QVW/6hxmsQQjnZrG1Ny
-         nV5ymbYtdGuTHpsjDcGr3l2wvdKPs1wr+I9oqz0OpwFOU47IdObfgYURSS7bBUI6UzE2
-         9mkcJTd3FE0R5m8wwTqT4lADUIFwGqFAJuXWeT7CPpaapU1/+m1R42tvCQnoPnQZxpkE
-         tjssVVCgaG5MZm25XrJp0CxPNKaOqFN1lHaEtnmG8pLv3QwoHpgae4VqACyXyb/jlNyn
-         x26OZcjsxjbMsXpY4jphDWywUpRmhxvJWvujJ/HzDrKRy8TZjo7TLrK1xNrbH2lFrAm/
-         dE5Q==
-X-Gm-Message-State: AOAM531O9835yawAMfE8fiKFGpgYJ1UplKYtsgGcNAVcbTtd6XsHV2iZ
-        b/NAxLJq8PvLYEoKobMS4ng=
-X-Google-Smtp-Source: ABdhPJwV6b0nBVwp80hV8nH/UWz/D7qZnmczbCxuyilqkhFvTaY6nYKKm9wcOU6ju06L3F3UKMhD3A==
-X-Received: by 2002:a63:4a4b:: with SMTP id j11mr13244596pgl.451.1620445737373;
-        Fri, 07 May 2021 20:48:57 -0700 (PDT)
-Received: from localhost.localdomain ([89.187.161.155])
-        by smtp.gmail.com with ESMTPSA id w1sm6201943pgh.26.2021.05.07.20.48.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 May 2021 20:48:56 -0700 (PDT)
-From:   Guoqing Jiang <jgq516@gmail.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        pawel.wiejacha@rtbhouse.com,
-        Guoqing Jiang <jiangguoqing@kylinos.cn>
-Subject: [PATCH] md: don't account io stat for split bio
-Date:   Sat,  8 May 2021 11:48:15 +0800
-Message-Id: <20210508034815.123565-1-jgq516@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229473AbhEHF4I (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 8 May 2021 01:56:08 -0400
+Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A037C061574
+        for <linux-raid@vger.kernel.org>; Fri,  7 May 2021 22:55:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com
+        ; s=alpha; h=In-Reply-To:Content-Transfer-Encoding:Content-Type:MIME-Version:
+        References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=TXK+hBINWM/IGUpDrEfF8szC/IPTDjMIGD/bhCdnXew=; b=Eo72eIJCnr4KJappGaWzHxA/ze
+        LVFt2cv4UDiC0j8UgGho95UrYf7KiDHBIHrEger7atxXmM4v5sf2U8YRXeCgXDXPgoZWNX/hiDGMJ
+        lf66eE/BplYUqfJRaZHnEIe6pz2J8TjqKkMjRjjzCfWBJNmhoZB9P5tQOZEqo+7rtNSz2R20YCRDZ
+        t9WHU+HP5ypj4dHgua70D2B9GsDE5AgybGvY6/wSbE/YHBR1qq8y0QXcMoaj8uHc2caZuAmiAElYB
+        MyRrtWtY3GDMEsG1qcNjmflMP0weeKTtGh0IvIJosVvHnhDrPl6/zZy6ikzsYBM1VKOFWUfgOskD7
+        y4jxHmjw==;
+Received: from andy by mail.bitfolk.com with local (Exim 4.89)
+        (envelope-from <andy@strugglers.net>)
+        id 1lfFvd-0001Rd-VS
+        for linux-raid@vger.kernel.org; Sat, 08 May 2021 05:55:05 +0000
+Date:   Sat, 8 May 2021 05:55:05 +0000
+From:   Andy Smith <andy@strugglers.net>
+To:     list Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: raid10 redundancy
+Message-ID: <20210508055505.muicnszlwvpfqbnn@bitfolk.com>
+Mail-Followup-To: list Linux RAID <linux-raid@vger.kernel.org>
+References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
+ <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com>
+ <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
+ <871rakovki.fsf@vps.thesusis.net>
+ <CAC6SzHKKPCk4fOx7b2CxMWorPghRPMH3GD2v7vcC_YLKbDn7KA@mail.gmail.com>
+ <20210507145312.qjrvho4m64s3uz3t@bitfolk.com>
+ <CAC6SzHL+o6TY_7JhHvdZ52cu5DZySFk4nj84TnHf+p9nOvnp3g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAC6SzHL+o6TY_7JhHvdZ52cu5DZySFk4nj84TnHf+p9nOvnp3g@mail.gmail.com>
+OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
+X-URL:  http://strugglers.net/wiki/User:Andy
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: andy@strugglers.net
+X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Guoqing Jiang <jiangguoqing@kylinos.cn>
+Hello,
 
-We have used generic io accounting functions to manage md io stats,
-then for split bio, md also change it's bi_private and bi_end_io,
-which could trigger double fault problem.
+On Sat, May 08, 2021 at 09:54:03AM +0800, d tbsky wrote:
+> Andy Smith <andy@strugglers.net>
+> > If you're referring to this, which I wrote:
+> >
+> >     http://strugglers.net/~andy/blog/2019/06/01/why-linux-raid-10-sometimes-performs-worse-than-raid-1/
 
-1146  <0>[33685.629591] traps: PANIC: double fault, error_code: 0x0
-1147  <4>[33685.629593] double fault: 0000 [#1] SMP NOPTI
-1148  <4>[33685.629594] CPU: 10 PID: 2118287 Comm: kworker/10:0
-Tainted: P           OE     5.11.8-051108-generic #202103200636
-1149  <4>[33685.629595] Hardware name: ASUSTeK COMPUTER INC. KRPG-U8
-Series/KRPG-U8 Series, BIOS 4201 09/25/2020
-1150  <4>[33685.629595] Workqueue: xfs-conv/md12 xfs_end_io [xfs]
-1151  <4>[33685.629596] RIP: 0010:__slab_free+0x23/0x340
-1152  <4>[33685.629597] Code: 4c fe ff ff 0f 1f 00 0f 1f 44 00 00 55
-48 89 e5 41 57 49 89 cf 41 56 49 89 fe 41 55 41 54 49 89 f4 53 48 83
-e4 f0 48 83 ec 70 <48> 89 54 24 28 0f 1f 44 00 00 41 8b 46 28 4d 8b 6c
-24 20 49 8b 5c
-1153  <4>[33685.629598] RSP: 0018:ffffa9bc00848fa0 EFLAGS: 00010086
-1154  <4>[33685.629599] RAX: ffff94c04d8b10a0 RBX: ffff94437a34a880
-RCX: ffff94437a34a880
-1155  <4>[33685.629599] RDX: ffff94437a34a880 RSI: ffffcec745e8d280
-RDI: ffff944300043b00
-1156  <4>[33685.629599] RBP: ffffa9bc00849040 R08: 0000000000000001
-R09: ffffffff82a5d6de
-1157  <4>[33685.629600] R10: 0000000000000001 R11: 000000009c109000
-R12: ffffcec745e8d280
-1158  <4>[33685.629600] R13: ffff944300043b00 R14: ffff944300043b00
-R15: ffff94437a34a880
-1159  <4>[33685.629601] FS:  0000000000000000(0000)
-GS:ffff94c04d880000(0000) knlGS:0000000000000000
-1160  <4>[33685.629601] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-1161  <4>[33685.629602] CR2: ffffa9bc00848f98 CR3: 000000014d04e000
-CR4: 0000000000350ee0
-1162  <4>[33685.629602] Call Trace:
-1163  <4>[33685.629603]  <IRQ>
-1164  <4>[33685.629603]  ? kfree+0x3bc/0x3e0
-1165  <4>[33685.629603]  ? mempool_kfree+0xe/0x10
-1166  <4>[33685.629603]  ? mempool_kfree+0xe/0x10
-1167  <4>[33685.629604]  ? mempool_free+0x2f/0x80
-1168  <4>[33685.629604]  ? md_end_io+0x4a/0x70
-1169  <4>[33685.629604]  ? bio_endio+0xdc/0x130
-1170  <4>[33685.629605]  ? bio_chain_endio+0x2d/0x40
-1171  <4>[33685.629605]  ? md_end_io+0x5c/0x70
-1172  <4>[33685.629605]  ? bio_endio+0xdc/0x130
-1173  <4>[33685.629605]  ? bio_chain_endio+0x2d/0x40
-1174  <4>[33685.629606]  ? md_end_io+0x5c/0x70
-1175  <4>[33685.629606]  ? bio_endio+0xdc/0x130
-1176  <4>[33685.629606]  ? bio_chain_endio+0x2d/0x40
-1177  <4>[33685.629607]  ? md_end_io+0x5c/0x70
-... repeated ...
-1436  <4>[33685.629677]  ? bio_endio+0xdc/0x130
-1437  <4>[33685.629677]  ? bio_chain_endio+0x2d/0x40
-1438  <4>[33685.629677]  ? md_end_io+0x5c/0x70
-1439  <4>[33685.629677]  ? bio_endio+0xdc/0x130
-1440  <4>[33685.629678]  ? bio_chain_endio+0x2d/0x40
-1441  <4>[33685.629678]  ? md_
-1442  <4>[33685.629679] Lost 357 message(s)!
+[…]
 
-It looks like stack overflow happened for split bio, to fix this,
-let's keep split bio untouched in md_submit_bio.
+> sorry I didn't find that comprehensive report before.
 
-As a side effect, we need to export bio_chain_endio.
+Okay, so that wasn't what you were thinking of then.
 
-[1]. https://lore.kernel.org/linux-raid/3bf04253-3fad-434a-63a7-20214e38cf26@gmail.com/T/#t
+I haven't got anything published to back up the assertion but I
+haven't really noticed very much performance difference between
+RAID-10 and RAID-1 on non-rotational storage since the above fix.
+Most of my storage is non-rotational these days.
 
-Reported-by: Paweł Wiejacha <pawel.wiejacha@rtbhouse.com>
-Tested-by: Paweł Wiejacha <pawel.wiejacha@rtbhouse.com>
-Fixes: 41d2d848e5c0 ("md: improve io stats accounting")
-Signed-off-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
----
- block/bio.c         | 3 ++-
- drivers/md/md.c     | 2 +-
- include/linux/bio.h | 1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
+> what I saw is that raid10 and raid1 performance are similar and
+> raid1 is a little faster.
 
-diff --git a/block/bio.c b/block/bio.c
-index 44205dfb6b60..759da1f6ab61 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -283,10 +283,11 @@ static struct bio *__bio_chain_endio(struct bio *bio)
- 	return parent;
- }
- 
--static void bio_chain_endio(struct bio *bio)
-+void bio_chain_endio(struct bio *bio)
- {
- 	bio_endio(__bio_chain_endio(bio));
- }
-+EXPORT_SYMBOL(bio_chain_endio);
- 
- /**
-  * bio_chain - chain bio completions
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 49f897fbb89b..02fd272ff6f7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -489,7 +489,7 @@ static blk_qc_t md_submit_bio(struct bio *bio)
- 		return BLK_QC_T_NONE;
- 	}
- 
--	if (bio->bi_end_io != md_end_io) {
-+	if (bio->bi_end_io != md_end_io && bio->bi_end_io != bio_chain_endio) {
- 		struct md_io *md_io;
- 
- 		md_io = mempool_alloc(&mddev->md_io_pool, GFP_NOIO);
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index a0b4cfdf62a4..6ea48fa1ad64 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -465,6 +465,7 @@ extern void bio_init(struct bio *bio, struct bio_vec *table,
- extern void bio_uninit(struct bio *);
- extern void bio_reset(struct bio *);
- void bio_chain(struct bio *, struct bio *);
-+extern void bio_chain_endio(struct bio *bio);
- 
- extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
- extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
--- 
-2.25.1
+I haven't got anything published to back up the assertion but I
+haven't really noticed very much performance difference between
+RAID-10 and RAID-1 on non-rotational storage since the above fix.
+Most of my storage is non-rotational these days.
 
+That does assume a load that isn't single-threaded, since a single
+thread is only ever going to read from one half of an md RAID-1. It
+doesn't stripe.
+
+> so I just use raid1 at two disks conditions these years. like the
+> discussion here
+> https://www.reddit.com/r/homelab/comments/4pfonh/2_disk_ssd_raid_raid_1_or_10/
+
+I must admit that as most of my storage has shifted from HDD to SSD
+I've shifted away from md RAID-10, which I used to use even when
+there were only 2 devices. With HDDs I felt (and measured) the
+increased performance.
+
+But with SSDs these days I tend to just use RAID-1 pairs and
+concatenate them in LVM (which I am using anyway) afterwards. Mainly
+just because it's much simpler and the performance is good enough.
+
+If you need to eke out the most performance this is maybe not the
+way. Certainly not the way if you need better redundancy (lose any
+two devices etc). Many concerns, performance only one of them…
+
+> I don't know if the situation is the same now. I will try to do my
+> testing. but I think in theory they are similar under multiple
+> process.
+
+I think so but it's always good to see a recent test with numbers!
+
+Cheers,
+Andy
