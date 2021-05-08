@@ -2,105 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E31CFC433ED
-	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 01:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFF80C433ED
+	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 01:54:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4B166143B
-	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 01:17:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A83FC60C3E
+	for <linux-raid@archiver.kernel.org>; Sat,  8 May 2021 01:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbhEHBSv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 7 May 2021 21:18:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
+        id S229970AbhEHBzS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 7 May 2021 21:55:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229775AbhEHBSv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 May 2021 21:18:51 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C73E7C061574
-        for <linux-raid@vger.kernel.org>; Fri,  7 May 2021 18:17:49 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id v191so9075759pfc.8
-        for <linux-raid@vger.kernel.org>; Fri, 07 May 2021 18:17:49 -0700 (PDT)
+        with ESMTP id S229836AbhEHBzS (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 7 May 2021 21:55:18 -0400
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68E23C061574
+        for <linux-raid@vger.kernel.org>; Fri,  7 May 2021 18:54:16 -0700 (PDT)
+Received: by mail-ed1-x532.google.com with SMTP id g14so12290305edy.6
+        for <linux-raid@vger.kernel.org>; Fri, 07 May 2021 18:54:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=rk4hDE4sHjvPjZXwznS69vj82MjtBFOTFgH/bkCxRcc=;
-        b=sVzor52OQiNkwbsNoY8AMMC8avYzH4Zqxowzy4lt2z/jil1iwK/fEege6JEOi7Pj82
-         D4VA2bjVEAZmgMaAs8CQMDCZC9kbS9L3EZKEAc2ur2YAudcScYFJaZYDg9QU6TlXrIKq
-         6QIO6NDbC+zy8gmIS19rFVyY++bYgTYgC3EJtHw/bG93EUhz30G+ezbULUWunajdOWQ/
-         1zXZpQ/CtC5wEU2YX6b7/hZuiGfs1VBib6WrDhzustp/IJEDiCezdDcACajdpNzbaNqE
-         bMO5WrgeLBVinuubmCnkcfwakI068DN64sxB0DzPAlDEa/vtb4Ooq7OmNVBVDBegdLap
-         hU2g==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=uxvH7YhZLu+ngO2ZBjaLH1jIWm9L9T2JACxk280Itvk=;
+        b=aeudOeS4mfbFacTjS2DFknZZXajK+y6M1EeiYWIExuCtzy7fKvNhMthXxZMpkhgjJa
+         at54rRuB0CQ7Ty+spNdj1oHhI41yVDpcZjo0u3gigvtSE03tkf0UIu5qyLUa9/QYE/Kj
+         PNwVTSC4SMVl622P+apELKCAkuGqjzx86Lg/myOP+RboDIT3ieGPdI3bH/jCytwTHKIi
+         TEj76o+6F9VmB2dbRGKuIFyUqUORcsAkW0BIqOlFaIKk6fz7yFTJuncoELPFSQdrHBwx
+         Cnngu0ZhUMJ1l5lqdBIhEs2h1QmShzrnrl+ERHaKfAwwN6AyzcOxfK6ISZDSAobYjnTu
+         ysZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=rk4hDE4sHjvPjZXwznS69vj82MjtBFOTFgH/bkCxRcc=;
-        b=dZv1tgvqugx6FMNSP40bkTzlamcmDDvyFba/jChj3WJOmo52VXj6CZWNGW/9yY6SoK
-         h1YAoYf84CRbgkGTIOwLA4GGQy4lap9bfZd0BwFyhCz37ndJfUbQosleTIKbpmkbUOV+
-         v0tH5gofQnMwy5m1UM1Z30EeF+NLy16+QBT6VQkJlRSk7IxI49fLRnipy7UtsDXp7IjW
-         Cv8Wn3F/yRB7FHS7N8JL9a6MTPI+/OAtI5rgSl/aWkWwOxhYwRxIgioPEngEljluoxAA
-         nfXNWMFbrbUPCDnAZA12CJE8bd3OgauDg9gA2WHo85SuYXHS6HxAmHPrehud2ehAIyPb
-         tuYA==
-X-Gm-Message-State: AOAM531msEJG4oHSY4smaXVRi7XpsaLOuLrLwq4YDstC2fukLlV+Lj65
-        GhzsWt13zAE2gYQEA33ha4w=
-X-Google-Smtp-Source: ABdhPJzKluzb0qt0cil+TvgFG2/nduhkumbi9UXq/r6AJL+68QStdd4+S2Ug7KWiZfjdI111ODYZsQ==
-X-Received: by 2002:a62:fb14:0:b029:22e:e189:c6b1 with SMTP id x20-20020a62fb140000b029022ee189c6b1mr13607980pfm.31.1620436669353;
-        Fri, 07 May 2021 18:17:49 -0700 (PDT)
-Received: from [10.6.1.237] ([89.187.161.155])
-        by smtp.gmail.com with ESMTPSA id c9sm5157133pfl.169.2021.05.07.18.17.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 May 2021 18:17:48 -0700 (PDT)
-Subject: Re: PROBLEM: double fault in md_end_io
-From:   Guoqing Jiang <jgq516@gmail.com>
-To:     Song Liu <song@kernel.org>,
-        =?UTF-8?Q?Pawe=c5=82_Wiejacha?= <pawel.wiejacha@rtbhouse.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-References: <CADLTsw2OJtc30HyAHCpQVbbUyoD7P9bK-ZfaH+nrdZc+Je4b6g@mail.gmail.com>
- <ddbacea2-13d9-28ca-7ba2-50b581ac658a@gmail.com>
- <CAPhsuW743nJCFOv1SHyVU-hcOWMCdFhL4-404e0vE+BdTD3=CQ@mail.gmail.com>
- <CADLTsw340wuEoX02ad-M6mN_48uDdnkj0dZSJGYMFrjgB+y80Q@mail.gmail.com>
- <CAPhsuW7ZzhXtg5MikTG+NtpQbYBZfpU5tDWzbZXDF4bhj9wwdA@mail.gmail.com>
- <9d644350-12b1-e32d-ba69-31be8ac2f6cf@gmail.com>
-Message-ID: <3bf04253-3fad-434a-63a7-20214e38cf26@gmail.com>
-Date:   Sat, 8 May 2021 09:17:32 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=uxvH7YhZLu+ngO2ZBjaLH1jIWm9L9T2JACxk280Itvk=;
+        b=P4da/t9NGuOpJP4L0fWsyr6UI0RwmaAbnyHRPTF+FhZ8K2h4t5tuChLT07+xgHPx7X
+         3n2qr/zYFwX32Wo8N6i5bopxrXETn7cmZ4e2dyHfIKABglxvZI9YkrZEYqpyeCMvapHS
+         PmgkDBiBvSnaQAXxxERftVsgqio/JIeWvFVt7omZQgWXpwKvdvtuv6vGyPyAFhCRODQS
+         JtHAeM1twms2kSCPPCYDdSeKb+LlUvN0plQN4cyQczuTH1ATzm+yPOgpUi22koPP0RSn
+         dQf8qyYC1jqf9Gw+yNFSdn4fqAqoY5/MggiEV+5lCkkHTL4CnTqM/otvURWRoIuxWSLO
+         Y5Rg==
+X-Gm-Message-State: AOAM533QT9trqPBLKfQ+fSJma6pdl+0hw7i4UI4YWg3CmPePIkss1SWf
+        5+WLcFRO0TJ4dKP+Bni5fghS7usYFwXGLGSHXfXeMQlzo1fhdluR
+X-Google-Smtp-Source: ABdhPJyigFzsCGV+YdLNmc2SvKDxLdhAFMTFx6RtHUPDHHvlI+376XhAXGBIBePCdHWutfNQfWYjOSNl9p0bEcjwU4A=
+X-Received: by 2002:aa7:c7c5:: with SMTP id o5mr15082190eds.31.1620438854981;
+ Fri, 07 May 2021 18:54:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <9d644350-12b1-e32d-ba69-31be8ac2f6cf@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
+ <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com> <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
+ <871rakovki.fsf@vps.thesusis.net> <CAC6SzHKKPCk4fOx7b2CxMWorPghRPMH3GD2v7vcC_YLKbDn7KA@mail.gmail.com>
+ <20210507145312.qjrvho4m64s3uz3t@bitfolk.com>
+In-Reply-To: <20210507145312.qjrvho4m64s3uz3t@bitfolk.com>
+From:   d tbsky <tbskyd@gmail.com>
+Date:   Sat, 8 May 2021 09:54:03 +0800
+Message-ID: <CAC6SzHL+o6TY_7JhHvdZ52cu5DZySFk4nj84TnHf+p9nOvnp3g@mail.gmail.com>
+Subject: Re: raid10 redundancy
+To:     list Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 5/7/21 7:46 AM, Guoqing Jiang wrote:
+Andy Smith <andy@strugglers.net>
+> On Fri, May 07, 2021 at 09:47:39AM +0800, d tbsky wrote:
+> > I thought someone test the performance of two ssd, raid-1 outperforms
+> > all the layout. so maybe under ssd it's not important?
 >
+> If you're referring to this, which I wrote:
 >
-> On 5/6/21 1:48 PM, Song Liu wrote:
->> Hi Paweł,
->>
->> On Tue, May 4, 2021 at 2:18 PM Paweł Wiejacha
->> <pawel.wiejacha@rtbhouse.com> wrote:
->>> Guoqing's patch fixes the problem. Here's the actual patch I am using:
->> Thanks for running the tests.
+>     http://strugglers.net/~andy/blog/2019/06/01/why-linux-raid-10-sometimes-performs-worse-than-raid-1/
 >
-> Thanks for the test, the better way could be just call 
-> bio_flagged(bio, BIO_CHAIN)
-> then no need to export bi_chain_endio.
+> then it only matters when the devices have dramatically different
+> performance. In that case is was a SATA SSD and an NVMe, but
+> probably you could see the same with a rotational HDD and a SATA SSD.
+> Also, it was a bug (or rather a missing feature). RAID-10 was
+> missing the ability to choose to read from the least loaded device,
+> so it's the difference between getting 50% of your reads from the
+> much slower device compared to hardly any of them.
+> And Guoqing Jiang fixed it 2 years ago.
 
-Err, BIO_CHAIN is set for parent bio, then we have to export 
-bi_chain_endio if there
-is no way to detect whether the bio was split from parent bio or not.
-
-Thanks,
-Guoqing
+sorry I didn't find that comprehensive report before. what I saw is
+that raid10 and raid1 performance are similar and raid1 is a little
+faster.
+so I just use raid1 at two disks conditions these years. like the
+discussion here
+https://www.reddit.com/r/homelab/comments/4pfonh/2_disk_ssd_raid_raid_1_or_10/
+I don't know if the situation is the same now. I will try to do my
+testing. but I think in theory they are similar under multiple
+process.
