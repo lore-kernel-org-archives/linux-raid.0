@@ -2,77 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80169C433B4
-	for <linux-raid@archiver.kernel.org>; Tue, 11 May 2021 04:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58AA2C433ED
+	for <linux-raid@archiver.kernel.org>; Tue, 11 May 2021 06:39:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FEA86191F
-	for <linux-raid@archiver.kernel.org>; Tue, 11 May 2021 04:39:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 266FD616EB
+	for <linux-raid@archiver.kernel.org>; Tue, 11 May 2021 06:39:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229900AbhEKElE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 11 May 2021 00:41:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57098 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229586AbhEKElD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 May 2021 00:41:03 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 447A7C061574;
-        Mon, 10 May 2021 21:39:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=20LHnlnumNu0S4uklyLlpEJ56Pdr62kAvnnn+1GZFf4=; b=dH37xnoJgSLICkKar22gfCMZ20
-        OkRgim9SIXTsOt2j/3OU2+fYm/JVhbcihTtInwHHhnXdFMNHIuBIrjlv3XPjSTkiIiCU3kvUQ3RfH
-        DIc3nY3WPaqFYqMud4Nt7gakGCYSinQpa02PC0L1JZDP3wavh/g55dnUtF/N5u8XOSz2PEuIzzkE9
-        /ZV76LIvx2nKey/pkhYHZL+DRFEeNs2raD57ssgl8Flp5VLuzckTzZfRVxITHSzQ1YzpZgmdjKS+p
-        Rt9R0hD8b8NQ19FXKmnign77n3juHMxlc8NfdsZOHVllcf5lcdM6ofeLxglb+56ZChLhcVVz+y78j
-        2Qvc6/fg==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lgK9x-006udr-Ej; Tue, 11 May 2021 04:38:25 +0000
-Date:   Tue, 11 May 2021 05:38:17 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Guoqing Jiang <jgq516@gmail.com>
-Cc:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Christoph Hellwig <hch@infradead.org>, song@kernel.org,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        pawel.wiejacha@rtbhouse.com
-Subject: Re: [PATCH] md: don't account io stat for split bio
-Message-ID: <YJoKOT8U7+9fyraj@infradead.org>
-References: <20210508034815.123565-1-jgq516@gmail.com>
- <YJjL6AQ+mMgzmIqM@infradead.org>
- <14a350ee-1ec9-6a15-dd76-fb01d8dd2235@gmail.com>
- <6ffb719e-bb56-8f61-9cd3-a0852c4acb7d@intel.com>
- <c1bc42ff-eae7-d0ba-505d-9c6a19d60e93@gmail.com>
+        id S230026AbhEKGko (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 11 May 2021 02:40:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53536 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229807AbhEKGkn (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 11 May 2021 02:40:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7C28E61430
+        for <linux-raid@vger.kernel.org>; Tue, 11 May 2021 06:39:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620715177;
+        bh=dIIDGnlXNwzl9HhMtAvtVW/EMfPo+Cd1hpVIoOokMDg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ZXNdL44eyNVoDGZZM5fIWsNeyz4ECyJk6jRiX1Q0E+EthKHhzUGG3GiGYKDnlP8jL
+         1m5q+YBJGXr4iG4VGfts9QDuYmUAG9UerCX/p/KoWOq/sehIBgxXe28U4nqadiv4zu
+         wCDGXARRaA7Yzm/nWqUg01Bce8WhxNzu6mfRlwILqozemj4SYEZ4mgsTuOtbYpTV84
+         ekKYHCUxSmMBVkQpOIk5lEZ67DGOiuNyGWj3VKJpLI11orPqMonHSdYdSIYxDJMiOC
+         D85r20dsxILzjJg6cn0lfxl7xC9DayhS1ZxknUvRpz/TUxzutLsThMlZCtf9oExLox
+         yV4A57276JXNQ==
+Received: by mail-lj1-f180.google.com with SMTP id w15so23737883ljo.10
+        for <linux-raid@vger.kernel.org>; Mon, 10 May 2021 23:39:37 -0700 (PDT)
+X-Gm-Message-State: AOAM531BOOvi72UkmeRrHfArd8RFniNBbYxZzGD1DR4ehC1fdL/JNUza
+        k6Ix/ohtzFPMgVa/QQpM4+HKVaM1zudrH4P4Qos=
+X-Google-Smtp-Source: ABdhPJw+iV/BJSoj7166j6yiCArKw7HqKoAOXdrP0pRILByrl4HITwgtJtgkuD97qm2meg7k0md+CKQJA7cC71Jmxrc=
+X-Received: by 2002:a2e:1608:: with SMTP id w8mr23230242ljd.506.1620715175819;
+ Mon, 10 May 2021 23:39:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c1bc42ff-eae7-d0ba-505d-9c6a19d60e93@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+References: <20210428082903.14783-1-lidong.zhong@suse.com> <8c7a3fc1-eaf8-b67c-d981-29932168295f@suse.com>
+In-Reply-To: <8c7a3fc1-eaf8-b67c-d981-29932168295f@suse.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 10 May 2021 23:39:24 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4bCW3VJEMoZyFhrfesQB_GX9seoGvoPO-wFY8nQfZMoQ@mail.gmail.com>
+Message-ID: <CAPhsuW4bCW3VJEMoZyFhrfesQB_GX9seoGvoPO-wFY8nQfZMoQ@mail.gmail.com>
+Subject: Re: [PATCH] md: adding a new flag MD_DELETING
+To:     Zhong Lidong <lidong.zhong@suse.com>
+Cc:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, May 11, 2021 at 10:13:41AM +0800, Guoqing Jiang wrote:
-> > > Song and Artur, what are your opinion?
-> > In the initial version of the io accounting patch the bio was cloned instead
-> > of just overriding bi_end_io and bi_private. Would this be the right approach?
-> > 
-> > https://lore.kernel.org/linux-raid/20200601161256.27718-1-artur.paszkiewicz@intel.com/
-> 
-> Maybe we can have different approach for different personality layers.
-> 
-> 1. raid1 and raid10 can do the accounting in their own layer since they
-> already
-> ?????? clone bio here.
-> 2. make the initial version handles other personality such as raid0 and
-> raid5
-> ?????? in the md layer.
-> 
-> Also a sysfs node which can enable/disable the accounting could be helpful.
+Hi Lidong,
 
-Yes.  Also if the original bi_end_io is restore before completing the
-bio you can still override it.
+On Sat, May 8, 2021 at 12:41 AM Zhong Lidong <lidong.zhong@suse.com> wrote:
+>
+> Hi Song,
+>
+> Could you share your opinion about this patch please?
+>
+
+The patch looks good to me. I will process it (run some tests etc)
+later this week.
+
+Thanks,
+Song
+
+
+>
+> On 4/28/21 4:29 PM, Lidong Zhong wrote:
+> > The mddev data structure is freed in mddev_delayed_delete(), which is
+> > schedualed after the array is deconfigured completely when stopping. So
+> > there is a race window between md_open() and do_md_stop(), which leads
+> > to /dev/mdX can still be opened by userspace even it's not accessible
+> > any more. As a result, a DeviceDisappeared event will not be able to be
+> > monitored by mdadm in monitor mode. This patch tries to fix it by adding
+> > this new flag MD_DELETING.
+> >
+> > Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
+> > ---
+> >  drivers/md/md.c | 4 +++-
+> >  drivers/md/md.h | 2 ++
+> >  2 files changed, 5 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 21da0c48f6c2..566df2491318 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -6439,6 +6439,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
+> >               md_clean(mddev);
+> >               if (mddev->hold_active == UNTIL_STOP)
+> >                       mddev->hold_active = 0;
+> > +             set_bit(MD_DELETING, &mddev->flags);
+> >       }
+> >       md_new_event(mddev);
+> >       sysfs_notify_dirent_safe(mddev->sysfs_state);
+> > @@ -7829,7 +7830,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
+> >       if ((err = mutex_lock_interruptible(&mddev->open_mutex)))
+> >               goto out;
+> >
+> > -     if (test_bit(MD_CLOSING, &mddev->flags)) {
+> > +     if (test_bit(MD_CLOSING, &mddev->flags) ||
+> > +            (test_bit(MD_DELETING, &mddev->flags) && mddev->pers == NULL)) {
+> >               mutex_unlock(&mddev->open_mutex);
+> >               err = -ENODEV;
+> >               goto out;
+> > diff --git a/drivers/md/md.h b/drivers/md/md.h
+> > index bcbba1b5ec4a..83c7aa61699f 100644
+> > --- a/drivers/md/md.h
+> > +++ b/drivers/md/md.h
+> > @@ -262,6 +262,8 @@ enum mddev_flags {
+> >       MD_BROKEN,              /* This is used in RAID-0/LINEAR only, to stop
+> >                                * I/O in case an array member is gone/failed.
+> >                                */
+> > +     MD_DELETING,            /* If set, we are deleting the array, do not open
+> > +                              * it then */
+> >  };
+> >
+> >  enum mddev_sb_flags {
+> >
+>
