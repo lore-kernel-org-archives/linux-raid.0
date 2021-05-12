@@ -2,208 +2,169 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D38C43460
-	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 06:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E966C433B4
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 08:58:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A013E61421
-	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 06:19:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1614F6121E
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 08:58:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230373AbhELGUm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 May 2021 02:20:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36338 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229654AbhELGUb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 02:20:31 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6407C06175F;
-        Tue, 11 May 2021 23:19:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=mausZijoKljrr3VV+8fZtfAAbWU2lD4443TTtkB+6I4=; b=cklApESAT+Bl6eiwX2eWH3rWtY
-        RNVT54bHzk+5kINJbAm8H0ZaxH9lUELMeRzSWdmfB00r9GMjhF4YZhUg72SGQTEsLbPJROYW5nBDx
-        o3cSDxl2eHwFSVmBxaEspo8uTp11FdTWght8Sq0y4E2YPUkh9SEg0SQJRJg3dNmeiKZlH6gNuXlCq
-        jCi+6rRQ2H8gwJn+TEorJQDYyQ8guDIq4ercX1Mda5iBp65pjFmp3TuR6jTZNTsa1+M22Q0xafvVA
-        W8WE36mKmfpVsxKLuAtT+xht1x1L/7cAI6vI9rk17OvoGyfmRJMvP6C/vmejYcwPjj38ZcekJKTp0
-        8tJ2JSqA==;
-Received: from [2001:4bb8:198:fbc8:1036:7ab9:f97a:adbc] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
-        id 1lgiDH-00A8tD-UO; Wed, 12 May 2021 06:19:20 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>
-Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Nitin Gupta <ngupta@vflare.org>,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 8/8] block: remove bdget_disk
-Date:   Wed, 12 May 2021 08:18:56 +0200
-Message-Id: <20210512061856.47075-9-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512061856.47075-1-hch@lst.de>
-References: <20210512061856.47075-1-hch@lst.de>
+        id S230479AbhELI7J (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 May 2021 04:59:09 -0400
+Received: from outbound5c.eu.mailhop.org ([3.125.148.246]:47943 "EHLO
+        outbound5c.eu.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231189AbhELI7I (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 04:59:08 -0400
+X-Greylist: delayed 963 seconds by postgrey-1.27 at vger.kernel.org; Wed, 12 May 2021 04:59:07 EDT
+ARC-Seal: i=1; a=rsa-sha256; t=1620808917; cv=none;
+        d=outbound.mailhop.org; s=arc-outbound20181012;
+        b=jBYeoCYxoLVy+oLNckmxv2gZF2rTy4fx+RnpOdQVg66mpSNBg03lD0UbH6vh87qy8h4VOLegkyMMK
+         EwNPEcpT5VzzPHKZYLpzqUtlkaIWX5hNYH+Pr0cRJRQhXxXK4U3Kz2dxZ+GwWd+FWR4Fq8uP7Ddd+w
+         u1yq8Bq5tDU1aLTL/78iWSyViLvCjC9Yj99HCXQg9MnW7xQtOAgO2UG1N+sKGXpvmoPGH8as8eWnqe
+         uD9EmqxvXtbQotW272OtQlJkYCD4AlhawSzEFbJd8uVsJpq4Kl0GVt3rc6L3nyY9o9C6TT4Dk1vr+d
+         qAmH2vMGg4/ZRHXhnKaFKQJ4iUxOioQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=outbound.mailhop.org; s=arc-outbound20181012;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id:subject:
+         from:cc:to:dkim-signature:from;
+        bh=5K285XMBVcLfy95LgcVp6KHNfUmXi0cjj8QUMsYknnQ=;
+        b=Ek+BcXWyH2R9gAJPbFtLOKTYQJkv4KZ1zl7p7AvGmVTqhdHkNIAwPpYpUj1fy3d2BOhJ9PiwL2iCz
+         DzTxUcaSPshDvuyZ4EIPLaZ3DLC1+npTpeU9owv7hb4Y5pZeWxriNG16OCaUrZXEEZTlo16pL1YR2v
+         +TOJdaZDrsgObmAsdhe1mK2gfMGArE31H5CQqEh4fU1ibiqVaSMFvFYa04dQPJ9EH31Z5BxjZjpffm
+         PegQJqMl0znwgj/r9F98ngi3mPhoSV89N72mo7u+rC5Y/UFcwcNGg05A3ObmzBrK+o1iWQMxZzo1ko
+         tHlvGARPD1zFWM/SSyeVpp2/vHXIC9Q==
+ARC-Authentication-Results: i=1; outbound3.eu.mailhop.org;
+        spf=pass smtp.mailfrom=demonlair.co.uk smtp.remote-ip=81.143.99.161;
+        dmarc=none header.from=demonlair.co.uk;
+        arc=none header.oldest-pass=0;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=outbound.mailhop.org; s=dkim-high;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id:subject:
+         from:cc:to:from;
+        bh=5K285XMBVcLfy95LgcVp6KHNfUmXi0cjj8QUMsYknnQ=;
+        b=oRTyR81yWjv+og4nv0CSzBWnOGOU8IFWZnzaVVd0ekyCCT+IMfz/WIOGDquLnTszol4Mc+6dQlxVA
+         3VgwftElc3eybwjbEAKAZ/kLTr12oNTUadQYAgie/ZLEd+CfyqKI3b0oV7uBZCj9wIHjoOAGPrhm9y
+         U+F1/MrDJJxKxyo8X5aw03ohTEQ5zgrPkPOsyoE2SAkAq9uVnkYKRXwZh5xlC2IQmoA/1ZIvN6wuQq
+         fxByxMzmMa3sLfmFvY3C3GRRVnKqg9ETcrDgf3YN10yOcheo0gGJeBzx+mjpDBYCuWor+IVKcVjczX
+         jV3LKNFRTs0Cq21CBn42KgAm1cHg8jg==
+X-Originating-IP: 81.143.99.161
+X-MHO-RoutePath: ZGVtb25sYWly
+X-MHO-User: e78bf876-b2fd-11eb-a3fe-d17a12b91375
+X-Report-Abuse-To: https://support.duocircle.com/support/solutions/articles/5000540958-duocircle-standard-smtp-abuse-information
+X-Mail-Handler: DuoCircle Outbound SMTP
+Received: from mars.demonlair.co.uk (host81-143-99-161.in-addr.btopenworld.com [81.143.99.161])
+        by outbound3.eu.mailhop.org (Halon) with ESMTPA
+        id e78bf876-b2fd-11eb-a3fe-d17a12b91375;
+        Wed, 12 May 2021 08:41:54 +0000 (UTC)
+Received: from [10.57.1.96] (mercury.demonlair.co.uk [10.57.1.96])
+        by mars.demonlair.co.uk (Postfix) with ESMTP id 555121FC186;
+        Wed, 12 May 2021 09:41:54 +0100 (BST)
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+From:   Geoff Back <geoff@demonlair.co.uk>
+Subject: Patch to fix boot from RAID-1 partitioned arrays
+Message-ID: <d9e1f759-3a11-1d63-f16c-8b999190c633@demonlair.co.uk>
+Date:   Wed, 12 May 2021 09:41:53 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Language: en-GB
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just opencode the xa_load in the callers, as none of them actually
-needs a reference to the bdev.
+Good morning.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/genhd.c           | 35 +++++------------------------------
- block/partitions/core.c | 25 ++++++++++++-------------
- include/linux/genhd.h   |  1 -
- 3 files changed, 17 insertions(+), 44 deletions(-)
+I have had problems in all recent kernels with booting directly from MD 
+RAID-1 partitioned arrays (i.e. without using an initrd).
+All the usual requirements - building md and raid1 into the kernel, 
+correct partition types, etc - are correct.
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 14fd777811fe..a5847560719c 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -701,32 +701,6 @@ void blk_request_module(dev_t devt)
- 		request_module("block-major-%d", MAJOR(devt));
- }
- 
--/**
-- * bdget_disk - do bdget() by gendisk and partition number
-- * @disk: gendisk of interest
-- * @partno: partition number
-- *
-- * Find partition @partno from @disk, do bdget() on it.
-- *
-- * CONTEXT:
-- * Don't care.
-- *
-- * RETURNS:
-- * Resulting block_device on success, NULL on failure.
-- */
--struct block_device *bdget_disk(struct gendisk *disk, int partno)
--{
--	struct block_device *bdev = NULL;
--
--	rcu_read_lock();
--	bdev = xa_load(&disk->part_tbl, partno);
--	if (bdev && !bdgrab(bdev))
--		bdev = NULL;
--	rcu_read_unlock();
--
--	return bdev;
+Deep investigation has led me to conclude that the issue is caused by 
+boot-time assembly of the array not reading the partition table, meaning 
+that the partitions are not visible and cannot be mounted as root 
+filesystem.
+
+The change to drivers/md/md-autodetect.c in commit 
+a1d6bc018911390274e3904bdd28240cd96ddc54 appears to be related, although 
+this only covers some cases not all, so I have not been able to 
+determine exactly what commit led to this problem.
+
+I have implemented a patch that causes the partition table to be read 
+immediately after the array is started, for the two boot-time assembly 
+paths (from autodetect with raid=part, and from assembly with md=d0,...) 
+which is included below.
+
+Regards,
+
+Geoff.
+
+diff -Naur linux-5.12.2.orig/drivers/md/md-autodetect.c 
+linux-5.12.2/drivers/md/md-autodetect.c
+--- linux-5.12.2.orig/drivers/md/md-autodetect.c    2021-05-12 
+09:14:07.096442083 +0100
++++ linux-5.12.2/drivers/md/md-autodetect.c    2021-05-12 
+09:22:07.734653840 +0100
+@@ -232,8 +232,24 @@
+      mddev_unlock(mddev);
+  out_blkdev_put:
+      blkdev_put(bdev, FMODE_READ);
 -}
--
- /*
-  * print a full list of all partitions - intended for places where the root
-  * filesystem can't be mounted and thus to give the victim some idea of what
-@@ -1253,13 +1227,14 @@ module_init(proc_genhd_init);
- 
- dev_t part_devt(struct gendisk *disk, u8 partno)
- {
--	struct block_device *part = bdget_disk(disk, partno);
-+	struct block_device *part;
- 	dev_t devt = 0;
- 
--	if (part) {
-+	rcu_read_lock();
-+	part = xa_load(&disk->part_tbl, partno);
-+	if (part)
- 		devt = part->bd_dev;
--		bdput(part);
--	}
-+	rcu_read_unlock();
- 
- 	return devt;
- }
-diff --git a/block/partitions/core.c b/block/partitions/core.c
-index 0d33f55a7d78..325368b9de29 100644
---- a/block/partitions/core.c
-+++ b/block/partitions/core.c
-@@ -325,6 +325,8 @@ static struct block_device *add_partition(struct gendisk *disk, int partno,
- 	const char *dname;
- 	int err;
- 
-+	lockdep_assert_held(&disk->open_mutex);
+
++    /*
++     * Need to force read of partition table in order for partitioned
++     * arrays to be bootable.  Deliberately done after all cleanup,
++     * and only for successfully loaded arrays.
++     */
++    if (err == 0)
++    {
++        struct block_device *bd;
 +
- 	/*
- 	 * disk_max_parts() won't be zero, either GENHD_FL_EXT_DEVT is set
- 	 * or 'minors' is passed to alloc_disk().
-@@ -464,14 +466,13 @@ int bdev_add_partition(struct block_device *bdev, int partno,
- 
- int bdev_del_partition(struct block_device *bdev, int partno)
- {
--	struct block_device *part;
--	int ret;
--
--	part = bdget_disk(bdev->bd_disk, partno);
--	if (!part)
--		return -ENXIO;
-+	struct block_device *part = NULL;
-+	int ret = -ENXIO;
- 
- 	mutex_lock(&bdev->bd_disk->open_mutex);
-+	part = xa_load(&bdev->bd_disk->part_tbl, partno);
-+	if (!part)
-+		goto out_unlock;
- 
- 	ret = -EBUSY;
- 	if (part->bd_openers)
-@@ -481,21 +482,20 @@ int bdev_del_partition(struct block_device *bdev, int partno)
- 	ret = 0;
- out_unlock:
- 	mutex_unlock(&bdev->bd_disk->open_mutex);
--	bdput(part);
- 	return ret;
- }
- 
- int bdev_resize_partition(struct block_device *bdev, int partno,
- 		sector_t start, sector_t length)
- {
--	struct block_device *part;
--	int ret = 0;
-+	struct block_device *part = NULL;
-+	int ret = -ENXIO;
- 
--	part = bdget_disk(bdev->bd_disk, partno);
-+	mutex_lock(&bdev->bd_disk->open_mutex);
-+	part = xa_load(&bdev->bd_disk->part_tbl, partno);
- 	if (!part)
--		return -ENXIO;
-+		goto out_unlock;
- 
--	mutex_lock(&bdev->bd_disk->open_mutex);
- 	ret = -EINVAL;
- 	if (start != part->bd_start_sect)
- 		goto out_unlock;
-@@ -509,7 +509,6 @@ int bdev_resize_partition(struct block_device *bdev, int partno,
- 	ret = 0;
- out_unlock:
- 	mutex_unlock(&bdev->bd_disk->open_mutex);
--	bdput(part);
- 	return ret;
- }
- 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 4c4d903caa09..5043e5d9436a 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -222,7 +222,6 @@ static inline void add_disk_no_queue_reg(struct gendisk *disk)
- }
- 
- extern void del_gendisk(struct gendisk *gp);
--extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
- 
- void set_disk_ro(struct gendisk *disk, bool read_only);
- 
++        bd = blkdev_get_by_dev(mdev, FMODE_READ, NULL);
++        if (IS_ERR(bd))
++            pr_err("md: failed to get md device\n");
++        else
++            blkdev_put(bd, FMODE_READ);
++    }
++}
++
+  static int __init raid_setup(char *str)
+  {
+      int len, pos;
+diff -Naur linux-5.12.2.orig/drivers/md/md.c linux-5.12.2/drivers/md/md.c
+--- linux-5.12.2.orig/drivers/md/md.c    2021-05-12 09:14:07.127441838 +0100
++++ linux-5.12.2/drivers/md/md.c    2021-05-12 09:34:26.960827487 +0100
+@@ -6467,6 +6467,20 @@
+          pr_warn("md: do_md_run() returned %d\n", err);
+          do_md_stop(mddev, 0, NULL);
+      }
++    else
++    {
++        /*
++         * Need to force read of partition table in order for partitioned
++         * arrays to be bootable.
++         */
++        struct block_device *bd;
++
++        bd = blkdev_get_by_dev(mdev, FMODE_READ, NULL);
++        if (IS_ERR(bd))
++            pr_err("md: failed to get md device\n");
++        else
++            blkdev_put(bd, FMODE_READ);
++    }
+  }
+
+  /*
+
+
+
 -- 
-2.30.2
+Geoff Back
+What if we're all just characters in someone's nightmares?
 
