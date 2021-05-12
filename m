@@ -2,99 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC211C433ED
-	for <linux-raid@archiver.kernel.org>; Tue, 11 May 2021 13:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E812C43461
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 06:19:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82869616EB
-	for <linux-raid@archiver.kernel.org>; Tue, 11 May 2021 13:13:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 017B561433
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 06:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231476AbhEKNOp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 11 May 2021 09:14:45 -0400
-Received: from mga05.intel.com ([192.55.52.43]:21775 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230514AbhEKNOo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 11 May 2021 09:14:44 -0400
-IronPort-SDR: UV0pxapyLoTddh3WTCE/AGUPzmffoA0jpwBMTP9v59l4IsB4XyrK7Rge2NNQSbmgRpI56JDJFd
- LSd/HsCSCeFw==
-X-IronPort-AV: E=McAfee;i="6200,9189,9980"; a="284927953"
-X-IronPort-AV: E=Sophos;i="5.82,290,1613462400"; 
-   d="scan'208";a="284927953"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2021 06:13:38 -0700
-IronPort-SDR: V+BoSjxs4FzKaaLZWK2UTmLwB4fskikLbEW+veZHw8MmgHtOXVWyUv0G/fd4dG4VSQaTsEB195
- CMm2Rh2au06Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,290,1613462400"; 
-   d="scan'208";a="471119838"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga001.jf.intel.com with ESMTP; 11 May 2021 06:13:30 -0700
-Received: from [10.249.129.187] (mtkaczyk-MOBL1.ger.corp.intel.com [10.249.129.187])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id E0DE0580906;
-        Tue, 11 May 2021 06:13:25 -0700 (PDT)
-Subject: Re: Kernel bug in async_xor_offs during RAID5 recovery
-To:     Xiao Ni <xni@redhat.com>,
-        Oleksandr Shchirskyi <oleksandr.shchirskyi@linux.intel.com>,
-        linux-raid@vger.kernel.org
-References: <d58a9209-b2a2-6f2a-73ea-a90c0970daf3@linux.intel.com>
- <3e5b79fd-f4ec-1db4-bddb-c3cdb7124497@redhat.com>
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-Message-ID: <bdb2be6e-fd1b-ef5a-1de7-222e4b981ae2@linux.intel.com>
-Date:   Tue, 11 May 2021 15:13:23 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        id S230114AbhELGUR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 May 2021 02:20:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36258 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229803AbhELGUQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 02:20:16 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79B9AC061574;
+        Tue, 11 May 2021 23:19:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=2Hcku9WH1R6lN5lySgrbxkpD4gGvCRJ06pwV1NlY4Os=; b=Zuq012MxGibe0ULswBnSIyJ+E3
+        EkcSUJy52I+VUGuitU2jY2jg7PpgryC3pUmhkHbCsLJ3OJ6ysJY6TA66VygihfbNxSgsN/gqT7vCh
+        qlTacFyA/nSs36k0IMhPusJAFUlbLXOY6apxExiIyolCCcR0y9NtA9GdKj5DlhHtw/xwAkdgJ/DFt
+        sHTcpQxSI/DKsWI95czBYXg8Z7BLfmetS7G5mI3cG7y+BulZo2x2R9kc9GOQh4Nsjv/bmZX75Rh9K
+        OdKyJNgorZXQx7ftSGbOn7H5hElycSYU+24N5LvwJ4Moxa/jxB9SeeELEqI3UoOwTA6uTv0E0664a
+        vtynsIBA==;
+Received: from [2001:4bb8:198:fbc8:1036:7ab9:f97a:adbc] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lgiCw-00A8rS-6r; Wed, 12 May 2021 06:18:58 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>
+Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Nitin Gupta <ngupta@vflare.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: move bd_mutex to the gendisk (resend)
+Date:   Wed, 12 May 2021 08:18:48 +0200
+Message-Id: <20210512061856.47075-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-In-Reply-To: <3e5b79fd-f4ec-1db4-bddb-c3cdb7124497@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Hi all,
 
-Hi Xiao,
-I simplified the scenario.
+this series first cleans up gendisk allocation in the md driver to remove
+the ERESTARTSYS hack in blkdev_get, then further refactors blkdev_get
+and then finally moves bd_mutex into the gendisk as having separate locks
+for the whole device vs partitions just complicates locking in places that
+add an remove partitions a lot.
 
-On 06.05.2021 12:57, Xiao Ni wrote:
-> Hi Oleksandr Shchirskyi
-> 
-> Can this only happen with PPL, imsm and nvme disks? My machine doesn't support 
-> creating raid device with nvme devices.
-Could you try to create array with IMSM_NO_PLATFORM=1?
-
-> And rotational disks don't have /sys/block/nvme1n1/device/device/remove. What's 
-> the meaning about setting 1
-> to the remove file?
-> 
-> I tried to create the imsm raid with rotational disks and ppl. Then remove and 
-> add disk to trigger recovery. It works
-> well.
-I verified that drive removal is not crucial here.
-The main trick here is to impose the PPL recovery. I did that by following
-scenario:
-1. Create array (I was able to reproduce it with 1Gb size):
-#mdadm -CR imsm -e imsm -n3 /dev/nvme[456]n1
-#mdadm -CR vol2 -l5 -n3 /dev/nvme[456]n1 -z 1G -c64 --assume-clean 
---consistency-policy=ppl
-
-2. Get mdmon pid:
-# ps -ef | grep mdmon
-
-3. Write data to the drive, and kill mdmon after that (this will force
-array to stay dirty):
-#dd of=/dev/md126 if=/dev/urandom bs=4M oflag=direct; kill -9 {mdmon_pid}
-
-4. Stop Array:
-# mdadm -Ss
-
-5. Start Array:
-# mdadm -As
-
-Thanks,
-Mariusz
+Diffstat:
+ Documentation/filesystems/locking.rst |    2 
+ block/genhd.c                         |   59 +++------
+ block/ioctl.c                         |    2 
+ block/partitions/core.c               |   45 +++----
+ drivers/block/loop.c                  |   14 +-
+ drivers/block/xen-blkfront.c          |    8 -
+ drivers/block/zram/zram_drv.c         |   18 +--
+ drivers/block/zram/zram_drv.h         |    2 
+ drivers/md/md.h                       |    6 -
+ drivers/s390/block/dasd_genhd.c       |    8 -
+ drivers/scsi/sd.c                     |    4 
+ fs/block_dev.c                        |  204 ++++++++++++++++------------------
+ fs/btrfs/volumes.c                    |    2 
+ fs/super.c                            |    8 -
+ include/linux/blk_types.h             |    4 
+ include/linux/genhd.h                 |    6 -
+ init/do_mounts.c                      |   10 -
+ 17 files changed, 184 insertions(+), 218 deletions(-)
