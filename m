@@ -2,105 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A42C7C43470
-	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 18:55:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C70FC43460
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 23:21:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74549611C9
-	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 18:55:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EBC5613EB
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 23:21:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346317AbhELSsY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 May 2021 14:48:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57146 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243093AbhELSWq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 14:22:46 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAD3AC061349
-        for <linux-raid@vger.kernel.org>; Wed, 12 May 2021 11:20:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=OCivOL51UhMk7AZF74gVDFSOLNaxpo+hM6D+rdqPT3w=; b=NRuekcAuRtVdQDCqlrzm4J1VJO
-        NqcUOPj54tQe6whS3TsCcsrkRqKye4SpCtcOyuTfWkNu4fi4xpHTMZlFW5Q8yeCx/t5Ocs0kzx+rz
-        eUIffY9lFOyWugi/CV+0gGoZvHNkgKz8TKMRFpXCn4y12CHaOAw26BU+Vno32A0Ww2cb0DppwqV3N
-        /OaB21Wul/eD+zmRfZTENuaYfWESgXoGg5xq4oV+cVhF3NPpoCposUKCXARVpPz+b7hJqKYq2rgPx
-        kXGtEi+YP3wm0/vC2VpQOjGIlw/Gw1VVraXbDjpte9IAiNf4tkDtAsQD+4MFRXTEzUVM+1iIwIkeb
-        Dcet6RKQ==;
-Received: from [12.35.44.237] (helo=[172.30.2.77])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1lgtT9-0007CB-Iw; Wed, 12 May 2021 18:20:27 +0000
-Subject: Re: raid10 redundancy
-To:     David T-G <davidtg-robot@justpickone.org>,
-        list Linux RAID <linux-raid@vger.kernel.org>
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
- <AD8C004B-FE83-4ABD-B58A-1F7F8683CD1F@websitemanagers.com.au>
- <CAC6SzHKH62XwudewxtOUyNQYi9QSFar=dZ64fz9HiEW1eZh47g@mail.gmail.com>
- <60950C7B.5040706@youngman.org.uk>
- <8333ded7-8805-18df-13d8-166ba021ac02@turmel.org>
- <20210512172720.GY1415@justpickone.org>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <9790cd4b-8d19-49f4-d442-f900bfb37c7b@turmel.org>
-Date:   Wed, 12 May 2021 14:20:27 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S232135AbhELXWC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 May 2021 19:22:02 -0400
+Received: from pmta11.teksavvy.com ([76.10.157.34]:61554 "EHLO
+        pmta11.teksavvy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1348071AbhELW1n (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 18:27:43 -0400
+X-Greylist: delayed 436 seconds by postgrey-1.27 at vger.kernel.org; Wed, 12 May 2021 18:27:43 EDT
+IronPort-SDR: 8xpzZ/FHVDKWIpB8VxUvL8duN8yDB6rnu5k4S3rvaY+eEvPY0Px4TqYckxIDLM4nNWHrxAuROg
+ bC+GUmf0BcFQ==
+IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AeZvq1a31FUI9FsGS9AHHPQqjBLMkLtp133?=
+ =?us-ascii?q?Aq2lEZdPWaSKGlfrOV7ZMmPHjP+VIssRAb6LW90ca7IE80maQb3WBVB8bBYO?=
+ =?us-ascii?q?CEghrKEGgB1+XfKlTbckXDH6xmuZuIGJIUNDSfNzJHZIrBgDWFLw=3D=3D?=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2ErAAAtU5xg/40INJ0NTRwBAQEBAQE?=
+ =?us-ascii?q?HAQESAQEEBAEBQAmBPAUBAQsBiSmRVC0DhAqXAIF8CwEBAQEBAQEBAQk8BAE?=
+ =?us-ascii?q?BhEYJAoF2JjYHDgIEAQEBEgEBAQUBAQEBAQYEAgKBAIwrAQEBAyMPAQVBEAs?=
+ =?us-ascii?q?YAgImAgJXBgEMCAEBgm2rZHqBMoEBhGOFGYEQKgGJa4N3PQaCDYEVJ4JMLz6?=
+ =?us-ascii?q?HWoJjBIFNB1OBLoFwPxsFu30HA4MVnTMFDSKlNJUznl6FQoFbDIIBcBWDJU8?=
+ =?us-ascii?q?njisWjkeBDwIGAQkBAQMJjRABAQ?=
+X-IPAS-Result: =?us-ascii?q?A2ErAAAtU5xg/40INJ0NTRwBAQEBAQEHAQESAQEEBAEBQ?=
+ =?us-ascii?q?AmBPAUBAQsBiSmRVC0DhAqXAIF8CwEBAQEBAQEBAQk8BAEBhEYJAoF2JjYHD?=
+ =?us-ascii?q?gIEAQEBEgEBAQUBAQEBAQYEAgKBAIwrAQEBAyMPAQVBEAsYAgImAgJXBgEMC?=
+ =?us-ascii?q?AEBgm2rZHqBMoEBhGOFGYEQKgGJa4N3PQaCDYEVJ4JMLz6HWoJjBIFNB1OBL?=
+ =?us-ascii?q?oFwPxsFu30HA4MVnTMFDSKlNJUznl6FQoFbDIIBcBWDJU8njisWjkeBDwIGA?=
+ =?us-ascii?q?QkBAQMJjRABAQ?=
+X-IronPort-AV: E=Sophos;i="5.82,295,1613451600"; 
+   d="scan'208";a="163950734"
+Received: from 157-52-8-141.cpe.teksavvy.com (HELO [192.168.12.90]) ([157.52.8.141])
+  by smtp11.teksavvy.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 May 2021 18:18:46 -0400
+Subject: Re: Patch to fix boot from RAID-1 partitioned arrays
+To:     Geoff Back <geoff@demonlair.co.uk>,
+        Wols Lists <antlists@youngman.org.uk>,
+        Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+References: <d9e1f759-3a11-1d63-f16c-8b999190c633@demonlair.co.uk>
+ <609BB707.5030505@youngman.org.uk>
+ <3f46a847-3dc4-4f39-5789-f85872e03c43@demonlair.co.uk>
+From:   "J. Brian Kelley" <jbk@teksavvy.com>
+Message-ID: <5a061fb8-73e5-4f0e-6a97-92e2db816c90@teksavvy.com>
+Date:   Wed, 12 May 2021 18:18:46 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210512172720.GY1415@justpickone.org>
+In-Reply-To: <3f46a847-3dc4-4f39-5789-f85872e03c43@demonlair.co.uk>
 Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/12/21 1:27 PM, David T-G wrote:
-> Phil, et al --
-> 
-> ...and then Phil Turmel said...
-> %
-> % I do this for my medium-speed read-mostly tasks.  Raid10,n3 across 4
-> % or 5 disks gives me redundancy comparable to raid6 (lose any two)
-> % without the CPU load of parity and syndrome calculations.
-> 
-> I've been reading and I still need to catch up on the notation, but how
-> much space do you get in the end?
+Heh, sounds analogous to a quirk in BTRFS where a additional 'hook' is 
+required or "btrfs" included in MODULES= (apparently triggering some 
+(e)udev rule) in the initrd configuration file. Most linux distros take 
+care of this , but not ARCH (or derivatives).  Hate to even think of 
+incorporating this into a kernel....
 
-One third of the total, since I'm using n3.
-
-> I'm hoping to grow our disk farm and end up with 8+ disks.  I'm more than
-> a bit nervous about RAID5 across a bunch of 6T (or bigger) disks, so I've
-> been thinking of RAID6.  That would give me 6x6 = 36T plus two parity.
-> 
-> Putting 8 disks in RAID10 should give me 6x4 = 24T with mirroring.
-> That's a pretty hefty space penalty :-(  But ...
-
-I wouldn't use only two copies, as you cannot lose any two.  With three 
-copies, 8x6T/3 = 16T usable space.  Heftier space penalty, but necessary 
-to have confidence surviving a rebuild after a disk replacement.
-
-> How does RAID10 across 5 disks as above 1) work and 2) work out? 
-
-1)  Linux raid 10 does not layer raid 1 on top of raid 0, but implements 
-"n" copies of each chunk striped across all devices.  Which is why the 
-number of devices doesn't have to be a multiple of "n".
-
->  If you
-> had 8 disks with a huge need for space, how would y'all lay out everything?
-
-raid6.  I pretty much always layer LVM on top of mdraid.
-
-> Thanks in advance :-)
-> 
-> :-D
-> 
-
-Phil
+On 2021-05-12 6:56 a.m., Geoff Back wrote:
+>
+> The problem is not with in-kernel assembly and starting of the array -
+> that works perfectly well.  However, when the 'md' driver assembles and
+> runs the partitionable array device (typically /dev/md_d0) it only
+> causes the array device itself to get registered with the block layer.
+> The assembled array is not then scanned for partitions until something
+> accesses the device, at which point the pending GD_NEED_PART_SCAN flag
+> in the array's block-device structure causes the probe for a partition
+> table to take place and the partitions to become accessible.
+>
+> Without my patch, there does not appear to be anything between array
+> assembly and root mount that will access the array and cause the
+> partition probe operation.
+>
+> To be clear, the situation is that the array has been fully assembled
+> and activated but the partitions it contains remain inaccessible.
+>
+> Thanks,
+>
+> Geoff.
+>
