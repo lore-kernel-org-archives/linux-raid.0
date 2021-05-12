@@ -2,89 +2,78 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7AF7C433B4
-	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 18:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37ACDC433B4
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 18:55:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A079461026
-	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 18:46:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7FA2613C4
+	for <linux-raid@archiver.kernel.org>; Wed, 12 May 2021 18:55:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245620AbhELSr3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 May 2021 14:47:29 -0400
-Received: from mail.thelounge.net ([91.118.73.15]:52623 "EHLO
-        mail.thelounge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347205AbhELR1m (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 13:27:42 -0400
-Received: from srv-rhsoft.rhsoft.net (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256))
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4FgMCV262QzXSq;
-        Wed, 12 May 2021 19:26:30 +0200 (CEST)
-To:     David T-G <davidtg-robot@justpickone.org>,
-        list Linux RAID <linux-raid@vger.kernel.org>
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
- <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com>
- <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
- <6db10ef4-e087-3940-4870-e5d9717b853f@thelounge.net>
- <CAC6SzH+gZ_WYRdx-vHM6zZxH=kx0YBvV-x2VT9h7EugwdmGcxA@mail.gmail.com>
- <20210508134726.GA11665@www5.open-std.org> <87y2co1zun.fsf@vps.thesusis.net>
- <20210512172242.GX1415@justpickone.org>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
+        id S1343564AbhELSrz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 May 2021 14:47:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45026 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347553AbhELR2t (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 13:28:49 -0400
+X-Greylist: delayed 279 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 12 May 2021 10:27:23 PDT
+Received: from u17383850.onlinehome-server.com (u17383850.onlinehome-server.com [IPv6:2607:f1c0:83f:ac00::a6:f62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1631AC061347
+        for <linux-raid@vger.kernel.org>; Wed, 12 May 2021 10:27:22 -0700 (PDT)
+Received: by u17383850.onlinehome-server.com (Postfix, from userid 5001)
+        id 80E28770; Wed, 12 May 2021 13:27:20 -0400 (EDT)
+Date:   Wed, 12 May 2021 13:27:20 -0400
+From:   David T-G <davidtg-robot@justpickone.org>
+To:     list Linux RAID <linux-raid@vger.kernel.org>
 Subject: Re: raid10 redundancy
-Message-ID: <35f867b4-6e20-5325-3489-6dba62041fc2@thelounge.net>
-Date:   Wed, 12 May 2021 19:26:30 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+Message-ID: <20210512172720.GY1415@justpickone.org>
+References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
+ <AD8C004B-FE83-4ABD-B58A-1F7F8683CD1F@websitemanagers.com.au>
+ <CAC6SzHKH62XwudewxtOUyNQYi9QSFar=dZ64fz9HiEW1eZh47g@mail.gmail.com>
+ <60950C7B.5040706@youngman.org.uk>
+ <8333ded7-8805-18df-13d8-166ba021ac02@turmel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210512172242.GX1415@justpickone.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8333ded7-8805-18df-13d8-166ba021ac02@turmel.org>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Phil, et al --
+
+...and then Phil Turmel said...
+% 
+% I do this for my medium-speed read-mostly tasks.  Raid10,n3 across 4
+% or 5 disks gives me redundancy comparable to raid6 (lose any two)
+% without the CPU load of parity and syndrome calculations.
+
+I've been reading and I still need to catch up on the notation, but how
+much space do you get in the end?
+
+I'm hoping to grow our disk farm and end up with 8+ disks.  I'm more than
+a bit nervous about RAID5 across a bunch of 6T (or bigger) disks, so I've
+been thinking of RAID6.  That would give me 6x6 = 36T plus two parity.
+
+Putting 8 disks in RAID10 should give me 6x4 = 24T with mirroring.
+That's a pretty hefty space penalty :-(  But ...
+
+How does RAID10 across 5 disks as above 1) work and 2) work out?  If you
+had 8 disks with a huge need for space, how would y'all lay out everything?
 
 
-Am 12.05.21 um 19:22 schrieb David T-G:
-> Phillip, et al --
-> 
-> ...and then Phillip Susi said...
-> %
-> % keld@keldix.com writes:
-> %
-> % > My understanding is that raid10 - all layouts - are really raid0 and
-> % > then raid 1 on top.
-> %
-> % Naieve implementations work that way, and this is also why they require
-> % a an even number of disks with 4 being the minimum.  Linux raid10 is not
-> % naieve and can operate with any number of disks >= 2.
-> [snip]
-> 
-> I've been chewing on this for a few days and I am STILL confused.  Please
-> help! :-)
-> 
-> RAID10 is striping AND mirroring (leaving out for the moment the distinction
-> of striping mirrors vs mirroring stripes).  How can one have both with only
-> two disks??  You either stripe the two disks together for more storage or
-> mirror them for redundant storage, but I just don't see how one could do both
+% 
+% Phil
 
-by wasting even more space
 
-the point of mirroring is that there are two phyiscal drives with each 
-stripe
+Thanks in advance :-)
 
-you can even have 20 partitions on the disks and make a big RAID10 out 
-of them - not that it makes sense but you can
+:-D
+-- 
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
 
-the point of such setups is typically temporary: at the moment only two 
-disks are here but i want a RAID10 at the end of the day
-
-for such setups often you even start with a degraded RAID and later add 
-drives
