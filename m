@@ -2,79 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8598FC433ED
-	for <linux-raid@archiver.kernel.org>; Thu, 13 May 2021 01:20:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75832C433ED
+	for <linux-raid@archiver.kernel.org>; Thu, 13 May 2021 07:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 310BC61404
-	for <linux-raid@archiver.kernel.org>; Thu, 13 May 2021 01:20:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38BD0611CA
+	for <linux-raid@archiver.kernel.org>; Thu, 13 May 2021 07:24:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230333AbhEMBVQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 12 May 2021 21:21:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38218 "EHLO
+        id S231626AbhEMHZ4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 13 May 2021 03:25:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229927AbhEMBVO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 12 May 2021 21:21:14 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE45EC061574
-        for <linux-raid@vger.kernel.org>; Wed, 12 May 2021 18:20:04 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id c21so19769354pgg.3
-        for <linux-raid@vger.kernel.org>; Wed, 12 May 2021 18:20:04 -0700 (PDT)
+        with ESMTP id S231186AbhEMHZz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 13 May 2021 03:25:55 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2729AC061574;
+        Thu, 13 May 2021 00:24:45 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id l70so5819291pga.1;
+        Thu, 13 May 2021 00:24:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=vBsNNhS4SGhEj0Kx/oNja1GcHMEOZ8OnrTENTnBDF50=;
-        b=DIlAMF8Iq7ZwZWbTY5Z6/AKvhMLoz86hueZfKboha8BralBucEerrN4huuSWEihr0D
-         c6PD49IkCW4kLplLUiosrnCGGHqWROf/cwfy+36ziGG/030oW1qSErHFpauJHZZpWI61
-         LOpEFHyY+hUrjydpnrlsb2ApL6lOSL0KTUYiI58klt/NuiRGQae8+s3wA/uC2XH8Nj1O
-         70ZITa9KUraMiH6FYffXiO4ZsoDELYCbrvKiG9qvfuw0eI6s+k5ZMPJHQV0pUq59QCwC
-         9lbcKejQnxY73xipgP+P/uIb2aNg6vOB0OI5eh+6s8vakqCF+sHMxqlhqOj9/fZUas/9
-         1Tzg==
+        bh=rgXzYYK5Z0MLecdxrChbPktgTp37eF6Gz82P771tZ9Y=;
+        b=aliCCdsndaLIJHzenXEP2v4OAlnRaIuN4jnQ0SBGwc4KQWKn7U5OzyXxbGn3QeUKhg
+         kdeprgYn6hBiZtpZdzDe79aD0V2nGSCmPeZPs+1pdWwVohAwDr5XNWIN5gyvOB70vd3Y
+         dTBH4+SEIezEZKW8e9lK8gbgmvN+04YI9Dy/DE9G3pPVot2Tspcq3P5VmHsBOpO+1XRu
+         j7cUts4NK6dJrhyKks/QeO+lmNPnRphVila4we/7mYxGiZ0tnmxbKMe8Ky7C9MTAvGU/
+         urGh9pNr/7Vr8LoDy7VLYGS2H04Pd5y2Hvwwy4NJezFaULBPrv/pfi1Gl65TDjcIk1Q+
+         wUow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
-        bh=vBsNNhS4SGhEj0Kx/oNja1GcHMEOZ8OnrTENTnBDF50=;
-        b=GGq91DD9/SEAcXSi4Q+Swwym/bT710YZo9NM409ECoqqfZq+HIgM0ohfziVKQXDZyd
-         j5MqD/09G7x7WS66QPB2C801T4HWQ0VnXTs8JYMo5yr1TtrkJgh36tB1gpHBHvjtYFoe
-         CA9Aoh4xQ6DNLNGfL75llzk9RyFJJjpOcIj9R5+rh21QiZICsYjeMqevDDaSYLC9wWDa
-         kxnCYWXYjYJnfeqq+DjHM7/DYpDnmmmWzRgqpBXzpcyivmcnBIeTDLnnqzbZbM+uK+fC
-         aTG7gjQNMihR7U6ysjVLXL8UJCdRHVe7tpStHZwxcqKKO9Ja7HnmNx3+XyQ91n+VQbtI
-         L+dQ==
-X-Gm-Message-State: AOAM53151pfhTtZJ3w0nEGViUdNwupEQhFh50+TjiwmNZEXmmWkSMq8W
-        JG2M1ZR2vjr5z3ys5MEaleI=
-X-Google-Smtp-Source: ABdhPJzcqa+Gp4twUmHBy+vD8zSI06fHsYGdV89GQKhuVTVVN7XAV+3Qx5LojYFtSXDadLz1Gqc8Fw==
-X-Received: by 2002:a05:6a00:ac6:b029:27b:5d2:6e66 with SMTP id c6-20020a056a000ac6b029027b05d26e66mr37553065pfl.14.1620868804514;
-        Wed, 12 May 2021 18:20:04 -0700 (PDT)
-Received: from [10.6.2.83] ([89.187.161.155])
-        by smtp.gmail.com with ESMTPSA id q24sm815185pgk.32.2021.05.12.18.20.02
+        bh=rgXzYYK5Z0MLecdxrChbPktgTp37eF6Gz82P771tZ9Y=;
+        b=R6bzusk62TYOEgxVPf9YOZ+wsGDqW2R7pYWF/MuYU+IngAAShU6qzJU4BAsi99IVP4
+         TSo7Dl5ibPjlbsNH9mN6w96VjHQ77s8F+Oh9rSWWcMxbwL/LKWF/xbVfTkbl/LNxK6Op
+         st5esdK7Pjlc0P6BRt8oQPho7LjOha+OK7XUyeomlOCl/a6+Mflu5tRpTKWYsTSF9CaO
+         NBXGfKtPmOYppiHk3DhRuO8na9pZTjCVVgd/LNIpQMPcE5TYnQdVIgl4G3abLS2iiex1
+         ZHJooYts6Y8122+YIwfZgZqFwUpDqQvkJnKgPBElFpwPjkrmdHoX7ZRCVSNwfxCcUyn5
+         mFqQ==
+X-Gm-Message-State: AOAM532HHntV+NFkrBk01wuGgubvNZ1YqO++ktfaaVTQ4NK+4Mhh0pit
+        gVLFcy0QjgMuhM/fwWJ0hx8=
+X-Google-Smtp-Source: ABdhPJwXx2OG5VpEqLvmWJKr9VJYqB7FB0b1I2Ulw/Z+ul3Z1eFnl+dLZ1lBmiKOpg8es32j4owqzg==
+X-Received: by 2002:a62:528e:0:b029:1f5:c5ee:a487 with SMTP id g136-20020a62528e0000b02901f5c5eea487mr38685998pfb.7.1620890684676;
+        Thu, 13 May 2021 00:24:44 -0700 (PDT)
+Received: from [10.6.2.84] ([89.187.161.155])
+        by smtp.gmail.com with ESMTPSA id n9sm1514251pgt.35.2021.05.13.00.24.42
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 12 May 2021 18:20:04 -0700 (PDT)
-Subject: Re: [PATCH] md: warn about using another MD array as write journal
-To:     Vojtech Myslivec <vojtech@xmyslivec.cz>, Song Liu <song@kernel.org>
-Cc:     Manuel Riel <manu@snapdragon.cc>,
-        Linux-RAID <linux-raid@vger.kernel.org>,
-        Michal Moravec <michal.moravec@logicworks.cz>
-References: <DAEB6C2F-3AE0-4EBE-8775-7C6292F8749A@snapdragon.cc>
- <CAPhsuW4=XoyQV_HNVnFnMWS2PvvU1+Rtbh9SJB-FQTO3haa3ig@mail.gmail.com>
- <27EE5CBC-B1B8-4463-87F5-2AE73F30941B@snapdragon.cc>
- <C990C60B-FB5A-4709-949B-6D86AF9FA6B1@snapdragon.cc>
- <CAPhsuW5urYTuOago=5sGiQ_7huQ6S+2rYkQ=n+_TwxQtxC3tWQ@mail.gmail.com>
- <0016997f-7fbe-a346-e94a-b3dd6d5e04c0@xmyslivec.cz>
+        Thu, 13 May 2021 00:24:44 -0700 (PDT)
+Subject: Re: [PATCH] md: don't account io stat for split bio
+To:     Christoph Hellwig <hch@infradead.org>, Song Liu <song@kernel.org>
+Cc:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-block@vger.kernel.org,
+        Pawe?? Wiejacha <pawel.wiejacha@rtbhouse.com>
+References: <20210508034815.123565-1-jgq516@gmail.com>
+ <YJjL6AQ+mMgzmIqM@infradead.org>
+ <14a350ee-1ec9-6a15-dd76-fb01d8dd2235@gmail.com>
+ <6ffb719e-bb56-8f61-9cd3-a0852c4acb7d@intel.com>
+ <c1bc42ff-eae7-d0ba-505d-9c6a19d60e93@gmail.com>
+ <CAPhsuW44cc2p+29_rLqrq7i3R0d03sjtwRQtbLRkta+jzsdYsw@mail.gmail.com>
+ <YJot2JAZkQi7RPGS@infradead.org>
 From:   Guoqing Jiang <jgq516@gmail.com>
-Message-ID: <cb0f312e-55dc-cdc4-5d2e-b9b415de617f@gmail.com>
-Date:   Thu, 13 May 2021 09:19:53 +0800
+Message-ID: <5e91dccb-31f3-daa0-f974-9c3211cc6b15@gmail.com>
+Date:   Thu, 13 May 2021 15:24:27 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.1
 MIME-Version: 1.0
-In-Reply-To: <0016997f-7fbe-a346-e94a-b3dd6d5e04c0@xmyslivec.cz>
+In-Reply-To: <YJot2JAZkQi7RPGS@infradead.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -84,40 +86,37 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 
 
-On 5/13/21 6:39 AM, Vojtech Myslivec wrote:
-> It has been two months since I last reported the state of the issue:
->
-> On 17. 03. 21 16:55, Vojtech Myslivec wrote:
-> > Thanks a lot Manuel for your findings and information.
-> >
-> > I have moved journal from logical volume on RAID1 to a plain partition
-> > on a SSD and I will monitor the state.
->
-> So, we run the MD level 6 array (/dev/md1) with journal device on
-> a plain partition of one of SSD disk (/dev/sdh5) now. See attached files
-> for more details.
->
->
-> Since then (March 17th), our discussed issue happened "only" three 
-> times. First occurrence was on April 21st, 5 weeks after moving the 
-> journal.
->
-> *I can confirm that the issue still persist, but it is definitely less
-> frequent.*
+On 5/11/21 3:10 PM, Christoph Hellwig wrote:
+> On Mon, May 10, 2021 at 11:58:32PM -0700, Song Liu wrote:
+>> IIUC, the sysfs node is needed to get better performance (by disabling
+>> accounting)?
+> FYI, we already have that sysfs file in the block layer
+> ("queue/iostats"), please just observe QUEUE_FLAG_IO_STAT flag.
 
-Could you check if this helps?
+Seems only nvdimm observe the flag before call bio_{start,end}_io_acct.
+Does it make sense to make the checking mandatory? Something like.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bd813f747769..b97429f19247 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1014,6 +1014,7 @@ void md_super_write(struct mddev *mddev, struct 
-md_rdev *rdev,
-             !test_bit(LastDev, &rdev->flags))
-                 ff = MD_FAILFAST;
-         bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH | REQ_FUA 
-| ff;
-+       bio->bi_opf |= REQ_IDLE;
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1315,6 +1315,9 @@ static unsigned long __part_start_io_acct(struct 
+block_device *part,
+         const int sgrp = op_stat_group(op);
+         unsigned long now = READ_ONCE(jiffies);
+
++       if (!blk_queue_io_stat(part->bd_disk->queue))
++               return 0;
++
+         part_stat_lock();
+         update_io_ticks(part, now, false);
+         part_stat_inc(part, ios[sgrp]);
+@@ -1351,6 +1354,9 @@ static void __part_end_io_acct(struct block_device 
+*part, unsigned int op,
+         unsigned long now = READ_ONCE(jiffies);
+         unsigned long duration = now - start_time;
+
++       if (!blk_queue_io_stat(part->bd_disk->queue))
++               return;
++
 
 Thanks,
 Guoqing
