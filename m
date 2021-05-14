@@ -6,35 +6,37 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F105CC433B4
-	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 14:30:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B636C433ED
+	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 14:35:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADEFE6144A
-	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 14:30:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBD7A6141F
+	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 14:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231751AbhENObP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 14 May 2021 10:31:15 -0400
-Received: from vps.thesusis.net ([34.202.238.73]:59746 "EHLO vps.thesusis.net"
+        id S234206AbhENOgo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 14 May 2021 10:36:44 -0400
+Received: from vps.thesusis.net ([34.202.238.73]:59760 "EHLO vps.thesusis.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230141AbhENObP (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 14 May 2021 10:31:15 -0400
+        id S234450AbhENOgn (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 14 May 2021 10:36:43 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by vps.thesusis.net (Postfix) with ESMTP id 6A7CA21042;
-        Fri, 14 May 2021 10:30:03 -0400 (EDT)
+        by vps.thesusis.net (Postfix) with ESMTP id 01BFE21043;
+        Fri, 14 May 2021 10:35:32 -0400 (EDT)
 Received: from vps.thesusis.net ([127.0.0.1])
         by localhost (vps.thesusis.net [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ArY7Ln9a4yY7; Fri, 14 May 2021 10:30:03 -0400 (EDT)
+        with ESMTP id husKeRs7cn2j; Fri, 14 May 2021 10:35:31 -0400 (EDT)
 Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 2C01B21040; Fri, 14 May 2021 10:30:03 -0400 (EDT)
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com> <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com> <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com> <6db10ef4-e087-3940-4870-e5d9717b853f@thelounge.net> <CAC6SzH+gZ_WYRdx-vHM6zZxH=kx0YBvV-x2VT9h7EugwdmGcxA@mail.gmail.com> <20210508134726.GA11665@www5.open-std.org> <87y2co1zun.fsf@vps.thesusis.net> <20210512172242.GX1415@justpickone.org> <877dk2r5s3.fsf@vps.thesusis.net> <20210513155956.6m6yek3t4ln464bw@bitfolk.com>
+        id BE45C21042; Fri, 14 May 2021 10:35:31 -0400 (EDT)
+References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com> <2140221131.2872520.1620837067395.JavaMail.zimbra@karlsbakk.net> <87a6oyr64b.fsf@vps.thesusis.net> <3f3fd663-77e4-8c23-eb22-1b8223eaf277@turmel.org>
 User-agent: mu4e 1.5.7; emacs 26.3
 From:   Phillip Susi <phill@thesusis.net>
-To:     Andy Smith <andy@strugglers.net>
-Cc:     list Linux RAID <linux-raid@vger.kernel.org>
+To:     Phil Turmel <philip@turmel.org>
+Cc:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
+        d tbsky <tbskyd@gmail.com>,
+        Linux Raid <linux-raid@vger.kernel.org>
 Subject: Re: raid10 redundancy
-Date:   Fri, 14 May 2021 10:28:52 -0400
-In-reply-to: <20210513155956.6m6yek3t4ln464bw@bitfolk.com>
-Message-ID: <871ra95qxg.fsf@vps.thesusis.net>
+Date:   Fri, 14 May 2021 10:30:07 -0400
+In-reply-to: <3f3fd663-77e4-8c23-eb22-1b8223eaf277@turmel.org>
+Message-ID: <87y2ch4c3w.fsf@vps.thesusis.net>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
@@ -42,11 +44,15 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
-Andy Smith writes:
+Phil Turmel writes:
 
-> While the *layout* would be identical to RAID-1 in this case, there
-> is the difference that a single threaded read will come from both
-> devices with RAID-10, right?
+> No, rebuild isn't just writing to the new disk.  You have to read other 
+> disks to get the data to write.  In raid6, you must read at least n-2 
+> drives, compute, then write.  In raid10, you just read the other drive 
+> (or one of the other drives when copies>2), then write.
 
-No, since the data is not striped, you would get *worse* performance if
-you tried to do that.
+Yes, but the data is striped across those multiple disks, so reading
+them in parallel takes no more time.  At least unless you have a
+memory/bus bottleneck rather than a disk bottleneck.  so again, you're
+probably right if you are using blazing fast NVME drives, but not for
+conventional HDD.
