@@ -2,97 +2,61 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C77ABC433ED
-	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 14:48:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C2AC433B4
+	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 18:06:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C20161458
-	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 14:48:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94C32611CA
+	for <linux-raid@archiver.kernel.org>; Fri, 14 May 2021 18:06:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232542AbhENOtx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 14 May 2021 10:49:53 -0400
-Received: from zimbra.karlsbakk.net ([193.29.58.196]:53358 "EHLO
-        zimbra.karlsbakk.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229976AbhENOtw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 14 May 2021 10:49:52 -0400
-Received: from localhost (localhost.localdomain [IPv6:::1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id 26ADF3C032F;
-        Fri, 14 May 2021 16:48:40 +0200 (CEST)
-Received: from zimbra.karlsbakk.net ([IPv6:::1])
-        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id i7x4_dhElOkr; Fri, 14 May 2021 16:48:38 +0200 (CEST)
-Received: from localhost (localhost.localdomain [IPv6:::1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id C13123C28E4;
-        Fri, 14 May 2021 16:48:38 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 zimbra.karlsbakk.net C13123C28E4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=karlsbakk.net;
-        s=1DC131FE-D37A-11E7-BD32-3AD4DFE620DF; t=1621003718;
-        bh=viD8bH3E3Ceu41yk99WhMfXiK1v8GoNkvpCbGE+7QNc=;
-        h=Date:From:To:Message-ID:MIME-Version;
-        b=FLjVrh68n4pjmQXv9n/GO+JELGRIMcMZla1QvsV92EPfrB1RFuMI8owdfJ5Gme8N7
-         4FTDuCnc2LLtKdJPxgHmf1AhQEndMGWAHI1g9MdgC4kGBXdoHT05yn3dS5IRd1swqI
-         PcaNxhRRnMzkv0anv51XBS50Q68VT2C6yudJtd+FeXqiTDKThN1zkJhW1P7sEIGIda
-         24BYOJ6XLxMOF61sCqoLx7NRjCZ0bIdAI6jljsUlOCX71IEsOv0qcecVk70PlL5iRY
-         v07x244oDjbbACwuyKaMp7fr8MlVNzh49pcxx2ytyYjfIKH/DMJtBsL2dfbew9TJXx
-         JO4BL78JXhtsw==
-X-Virus-Scanned: amavisd-new at zimbra.karlsbakk.net
-Received: from zimbra.karlsbakk.net ([IPv6:::1])
-        by localhost (zimbra.karlsbakk.net [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id pFw19HivF-Zv; Fri, 14 May 2021 16:48:38 +0200 (CEST)
-Received: from zimbra.karlsbakk.net (localhost.localdomain [127.0.0.1])
-        by zimbra.karlsbakk.net (Postfix) with ESMTP id 615773C032F;
-        Fri, 14 May 2021 16:48:38 +0200 (CEST)
-Date:   Fri, 14 May 2021 16:48:37 +0200 (CEST)
-From:   Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-To:     Phillip Susi <phill@thesusis.net>
-Cc:     Phil Turmel <philip@turmel.org>, d tbsky <tbskyd@gmail.com>,
-        Linux Raid <linux-raid@vger.kernel.org>
-Message-ID: <947223877.4161967.1621003717636.JavaMail.zimbra@karlsbakk.net>
-In-Reply-To: <87y2ch4c3w.fsf@vps.thesusis.net>
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com> <2140221131.2872520.1620837067395.JavaMail.zimbra@karlsbakk.net> <87a6oyr64b.fsf@vps.thesusis.net> <3f3fd663-77e4-8c23-eb22-1b8223eaf277@turmel.org> <87y2ch4c3w.fsf@vps.thesusis.net>
-Subject: Re: raid10 redundancy
+        id S232649AbhENSHw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 14 May 2021 14:07:52 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:62421 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231394AbhENSHw (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 14 May 2021 14:07:52 -0400
+Received: from host109-154-217-227.range109-154.btcentralplus.com ([109.154.217.227] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1lha2L-000Bbh-3P; Fri, 14 May 2021 16:47:37 +0100
+Subject: Re: Looking for a good documentation on how to recover a raid
+To:     =?UTF-8?Q?Michael_Marr=c3=a9?= <michael.marre@web.de>,
+        linux-raid@vger.kernel.org
+References: <a8c41eed-6d56-e37e-99b6-0df160cc3126@web.de>
+From:   antlists <antlists@youngman.org.uk>
+Message-ID: <1b1aef27-4927-ec36-276b-09d76fd92e59@youngman.org.uk>
+Date:   Fri, 14 May 2021 16:47:37 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Originating-IP: [2a01:79c:cebf:61e4:981d:72a4:70a1:eb51]
-X-Mailer: Zimbra 8.8.10_GA_3801 (ZimbraWebClient - FF88 (Mac)/8.8.10_GA_3786)
-Thread-Topic: raid10 redundancy
-Thread-Index: u3K+AgT5hup15fuu+/xxIAYz2SIOxg==
+In-Reply-To: <a8c41eed-6d56-e37e-99b6-0df160cc3126@web.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-> Phil Turmel writes:
->=20
->> No, rebuild isn't just writing to the new disk.  You have to read other
->> disks to get the data to write.  In raid6, you must read at least n-2
->> drives, compute, then write.  In raid10, you just read the other drive
->> (or one of the other drives when copies>2), then write.
->=20
-> Yes, but the data is striped across those multiple disks, so reading
-> them in parallel takes no more time.  At least unless you have a
-> memory/bus bottleneck rather than a disk bottleneck.  so again, you're
-> probably right if you are using blazing fast NVME drives, but not for
-> conventional HDD.
+On 14/05/2021 09:43, Michael Marré wrote:
+> Hello,
+> 
+> I am new to this list and I would like to know if does an official FAQ 
+> and/or documentation exist on how to recover a broken raid?
 
-RAID10 is like RAID1+0, only a bit more fancy. That means it's basically st=
-riping across mirrors. It's *not* like RAID0+1, which is the other way, whe=
-n you mirror two RAID0 sets. So when a drive dies in a RAID10, you'll have =
-to read from one or two other drives, depending on redundancy and the numbe=
-r of drives (odd or even).
+https://raid.wiki.kernel.org/index.php/Linux_Raid
 
-Vennlig hilsen
+This is as close to official as you'll get. Failures tend to follow a 
+pattern, and I do try and document any variation I see, but it does tend 
+to be a case of "either it's easy or it turns into a big recovery job".
 
-roy
---=20
-Roy Sigurd Karlsbakk
-(+47) 98013356
-http://blogg.karlsbakk.net/
-GPG Public key: http://karlsbakk.net/roysigurdkarlsbakk.pubkey.txt
---
-Hi=C3=B0 g=C3=B3=C3=B0a skaltu =C3=AD stein h=C3=B6ggva, hi=C3=B0 illa =C3=
-=AD snj=C3=B3 rita.
+Look especially at
+https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
+and if it's not an easy fix (it might be as simple as a forced-assembly 
+followed by a fsck), post the requested info to the list and somebody 
+should dive in and help.
+
+Cheers,
+Wol
