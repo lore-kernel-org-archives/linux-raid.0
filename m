@@ -2,97 +2,264 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B069C433B4
-	for <linux-raid@archiver.kernel.org>; Mon, 17 May 2021 02:27:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEAAC433ED
+	for <linux-raid@archiver.kernel.org>; Mon, 17 May 2021 04:16:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1974160725
-	for <linux-raid@archiver.kernel.org>; Mon, 17 May 2021 02:27:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9099560249
+	for <linux-raid@archiver.kernel.org>; Mon, 17 May 2021 04:16:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232079AbhEQC2T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 16 May 2021 22:28:19 -0400
-Received: from ns3.fnarfbargle.com ([103.4.19.87]:56946 "EHLO
-        ns3.fnarfbargle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231338AbhEQC2S (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 16 May 2021 22:28:18 -0400
-X-Greylist: delayed 1168 seconds by postgrey-1.27 at vger.kernel.org; Sun, 16 May 2021 22:28:18 EDT
-Received: from [10.8.0.1] (helo=srv.home)
-        by ns3.fnarfbargle.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <lists2009@fnarfbargle.com>)
-        id 1liSdn-0004IJ-9A
-        for linux-raid@vger.kernel.org; Mon, 17 May 2021 12:05:55 +1000
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=fnarfbargle.com; s=mail; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
-        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=DcPonSpClQfrbf5MYFHXFau0quEAirKpUrlioMP3kzg=; b=OrDMnBo0goQsqsVdkfgNe2UFnl
-        zJGxgTDUXRbuIGMqaXo45rEBrwtTZVpuKClnyDqEHmwvq07a+Ppynm0hVItt8oLFdjim59VQHiUP8
-        BOM1APwxzUz9GuIhy2NOcSndpbWO5eQcp/zR9X/HZ7ZuSOv8ug7d4rmDHaUSj3mz6BXE=;
-Subject: Re: raid10 redundancy
-To:     list Linux RAID <linux-raid@vger.kernel.org>
-References: <8626adeb-696c-7778-2d5e-0718ed6aefdb@redhat.com>
- <CAC6SzHK1A=4wsbLRaYy9RTFZhda6EZs+2FjuKxahoos_zAd0iw@mail.gmail.com>
- <6db10ef4-e087-3940-4870-e5d9717b853f@thelounge.net>
- <CAC6SzH+gZ_WYRdx-vHM6zZxH=kx0YBvV-x2VT9h7EugwdmGcxA@mail.gmail.com>
- <20210508134726.GA11665@www5.open-std.org> <87y2co1zun.fsf@vps.thesusis.net>
- <20210512172242.GX1415@justpickone.org> <877dk2r5s3.fsf@vps.thesusis.net>
- <20210513155956.6m6yek3t4ln464bw@bitfolk.com>
- <871ra95qxg.fsf@vps.thesusis.net>
- <20210514143725.qaezymawflfybjv3@bitfolk.com>
-From:   Brad Campbell <lists2009@fnarfbargle.com>
-Message-ID: <9d1ec4f1-63c8-5521-96d6-7fff69f2eca6@fnarfbargle.com>
-Date:   Mon, 17 May 2021 10:07:07 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S231919AbhEQESB convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 17 May 2021 00:18:01 -0400
+Received: from mail-il1-f181.google.com ([209.85.166.181]:46034 "EHLO
+        mail-il1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231874AbhEQESA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 May 2021 00:18:00 -0400
+Received: by mail-il1-f181.google.com with SMTP id e14so4872321ils.12
+        for <linux-raid@vger.kernel.org>; Sun, 16 May 2021 21:16:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=Qasv4pF1LOuCIt7/cKuwxlXfDqKAY/cc9r8m5rm6sEk=;
+        b=TAYpFZEzNVdQKKdLacyI6FvKkROIZFcuzdXQ7ZZeIkzIOU9SgM43+A8e8xigVq4vj6
+         zWJLK8fCcw6MZI/eW6A7XkvlcjWDHhXtRAShugSDnnXJllydc2yshwm2X7+4hUtn9FE7
+         WQLhK57lmzjuKUkfqU/N8PNfKIlsXsD6ZkuxEVmPer2L171GjlHvweo02IC0l+ZvQBQ4
+         fXxVZaa+kat0clDMb5wBVcK4XQaQPbQQOcIh+MSksNyrgJqzOSYosoGGd/IsjBsM1cnu
+         JlGCYVat4DkBd9lIcX+F/m31peaEBdLOopRgsU8FcgLjY54N2rHcaLePvryXffzl7CI6
+         vp2g==
+X-Gm-Message-State: AOAM530Z8XB169+AYPyv7BKv0Ir1fhVFvDqMHpWt0vLblEavzhqZ2enm
+        rmcPSR45Y/FvClnRa753UXyj8imokvSFV8vqnBxNCheczRc=
+X-Google-Smtp-Source: ABdhPJxU/qMtMr/wuaZ3lHxml1y/f9cQxWGs2ZERchXP19Mo5FH1XnwXcgZhyDy1TcCEwu3yWJ9XbESZqx5sBbTejCc=
+X-Received: by 2002:a92:6e01:: with SMTP id j1mr25366660ilc.160.1621224993583;
+ Sun, 16 May 2021 21:16:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210514143725.qaezymawflfybjv3@bitfolk.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Christopher Thomas <youkai@earthlink.net>
+Date:   Sun, 16 May 2021 21:16:22 -0700
+Message-ID: <CA+o1gzBcQF_JeiC7Nv_zEBmJU2ypwQ_+RkbcZOOt0qOK1MkQww@mail.gmail.com>
+Subject: My superblocks have gone missing, can't reassemble raid5
+To:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 14/5/21 10:37 pm, Andy Smith wrote:
-> Hi Phillip,
-> 
-> On Fri, May 14, 2021 at 10:28:52AM -0400, Phillip Susi wrote:
->> Andy Smith writes:
->>> While the *layout* would be identical to RAID-1 in this case, there
->>> is the difference that a single threaded read will come from both
->>> devices with RAID-10, right?
->>
->> No, since the data is not striped, you would get *worse* performance if
->> you tried to do that.
-> 
-> Are you absolutely sure about this? Previous posts from Neil and
-> others seem to contradict you:
-> 
+Hi all,
 
-No they don't. If you read those posts closely you'll see that they are using RAID10 in a striped configuration (far). So not at all like a RAID1.
+I've updated my system & migrated my 3 raid5 component drives from the
+old to the new, but now can't reassemble the array - mdadm just
+doesn't recognize that these belong to an array at all.
 
-Picture it this way.
-You have two disks. You partition each disk in half and create a RAID0 across the first partition on each disk.
-You now have a RAID0 which has the same capacity as a single disk but twice the read performance.
-You have no redundancy.
-You now create another RAID0 across the second partition on each disk, but you do this such that the layout is alternated making sure there is a copy of every chunk on each disk.
-You then RAID1 these 2 RAID0 partitions.
+The scenario:
+For many years, I've run a raid5 array on a virtual Linux server
+(Ubuntu 12.04) in VirtualBox on a Windows 10 host, with 3 2.7TB drives
+attached to the virt in "Raw Disk" mode, and assembled into an array.
+I recently upgraded to a completely different physical machine, but
+still running Windows 10 and VirtualBox.  I'm reasonably sure that the
+last time I shut it down, the array was clean.  Or at they very least,
+the drives had superblocks.  I plugged the old drives into it,
+migrated the virtual machine image to the new system, and attached
+them as raw disks, just as in the old system.  And they show up as
+/dev/sd[b-d], as before.  However, it's not recognized automatically
+as an array at boot, and manual attempts to assemble & start the array
+fail with 'no superblock'
 
-Ordinarily this wouldn't provide any redundancy because a dead disk would leave you with 2 dead RAID0, however the linux RAID10 implementation knows that all the chunks are available on a single drive, they're just spread across both halves.
+The closest I've found online as a solution is to --create the array
+again using the same parameters.  But it sounds like if I don't get
+the drive order exactly the same, I'll lose the data.  Other solutions
+hint at playing with the partition table, but I'm equally nervous
+about that.  So I thought it was a good time to stop & ask for advice.
 
-So they are still striped and provide the performance of a striped array, moreso because when reading the drives are effectively "short-stroked" where all data is available on the first half of each disk.
+The details:
 
-The layout is *completely* different from a RAID-1 unless you use the "near" layout, in which case it'll be pretty much the same with the same performance limitations.
+Here's my arrangement of disks now, where sd[bcd] are the components:
 
-This gives a better explanation that my words :
-http://www.ilsistemista.net/index.php/linux-a-unix/35-linux-software-raid-10-layouts-performance-near-far-and-offset-benchmark-analysis.html?start=1
+==========
+chris@ursula:~$ lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda      8:0    0 20.1G  0 disk
+├─sda1   8:1    0 19.2G  0 part /
+├─sda2   8:2    0    1K  0 part
+└─sda5   8:5    0  976M  0 part [SWAP]
+sdb      8:16   0  2.7T  0 disk
+└─sdb1   8:17   0  128M  0 part
+sdc      8:32   0  2.7T  0 disk
+└─sdc1   8:33   0  128M  0 part
+sdd      8:48   0  2.7T  0 disk
+└─sdd1   8:49   0  128M  0 part
+sr0     11:0    1 1024M  0 rom
 
-Regards,
-Brad
+chris@ursula:~$ sudo /sbin/fdisk -l
+Disk /dev/sda: 20.1 GiB, 21613379584 bytes, 42213632 sectors
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x4bbbafdf
+
+Device     Boot    Start      End  Sectors  Size Id Type
+/dev/sda1  *        2048 40212479 40210432 19.2G 83 Linux
+/dev/sda2       40214526 42213375  1998850  976M  5 Extended
+/dev/sda5       40214528 42213375  1998848  976M 82 Linux swap / Solaris
+
+
+Disk /dev/sdb: 2.7 TiB, 3000592982016 bytes, 5860533168 sectors
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 6489224B-FAF8-45E2-AB3D-C0D280F8E91E
+
+Device     Start    End Sectors  Size Type
+/dev/sdb1     34 262177  262144  128M Microsoft reserved
+
+
+Disk /dev/sdc: 2.7 TiB, 3000592982016 bytes, 5860533168 sectors
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 6497BDEB-A8D0-40D7-9CD2-D06018862F2B
+
+Device     Start    End Sectors  Size Type
+/dev/sdc1     34 262177  262144  128M Microsoft reserved
+
+
+Disk /dev/sdd: 2.7 TiB, 3000592982016 bytes, 5860533168 sectors
+Disk model: VBOX HARDDISK
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 9DB2C3F2-F93D-4A6D-AE0E-CE28A8B8C4A2
+
+Device     Start    End Sectors  Size Type
+/dev/sdd1     34 262177  262144  128M Microsoft reserved
+==========
+
+Note: I always intended to use the whole disk, so I don't know why I
+would have created a single large partition on each, and I don't
+recall doing so.  But it's been a while, so I just might not be
+remembering.
+
+Here's what happens when I try to do anything with it:
+
+===========
+chris@ursula:~$ sudo /sbin/mdadm --verbose --assemble /dev/md0
+/dev/sdb /dev/sdc /dev/sdd
+mdadm: looking for devices for /dev/md0
+mdadm: Cannot assemble mbr metadata on /dev/sdb
+mdadm: /dev/sdb has no superblock - assembly aborted
+
+chris@ursula:~$ sudo /sbin/mdadm --examine /dev/sd[bcd]*
+/dev/sdb:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+mdadm: No md superblock detected on /dev/sdb1.
+/dev/sdc:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+mdadm: No md superblock detected on /dev/sdc1.
+/dev/sdd:
+   MBR Magic : aa55
+Partition[0] :   4294967295 sectors at            1 (type ee)
+mdadm: No md superblock detected on /dev/sdd1.
+======
+
+At some point on the old system, back when the array was still
+working, I did dump the results of Examine, which looked like this:
+
+==========
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 36205acf:993973ba:05712a13:ff75c031
+           Name : ursula:0  (local to host ursula)
+  Creation Time : Fri Apr 26 23:15:04 2013
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 8841770a:f653d990:d5db60a0:fe2e4276
+
+    Update Time : Sun Jul  5 12:36:19 2020
+       Checksum : 3a671053 - correct
+         Events : 76713
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAA ('A' == active, '.' == missing)
+/dev/sdc:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 36205acf:993973ba:05712a13:ff75c031
+           Name : ursula:0  (local to host ursula)
+  Creation Time : Fri Apr 26 23:15:04 2013
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 87fd8496:95c9cd5e:5caaa28a:25f6ab04
+
+    Update Time : Sat May 30 02:02:45 2020
+       Checksum : ce4cd20 - correct
+         Events : 76711
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAA ('A' == active, '.' == missing)
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 36205acf:993973ba:05712a13:ff75c031
+           Name : ursula:0  (local to host ursula)
+  Creation Time : Fri Apr 26 23:15:04 2013
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 5860270080 (5588.79 GiB 6000.92 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : c796e484:b4ed6813:a97e0ce9:66a56758
+
+    Update Time : Sun Jul  5 12:36:19 2020
+       Checksum : 6235188e - correct
+         Events : 76713
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAA ('A' == active, '.' == missing)
+==========
+
+Thank you for any ideas or guidance you can offer.
+-Chris
