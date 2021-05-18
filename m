@@ -2,108 +2,101 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E57C433B4
-	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 00:12:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1B7C433ED
+	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 05:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C66661359
-	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 00:12:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BEA760FDB
+	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 05:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239113AbhERANx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 17 May 2021 20:13:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59488 "EHLO
+        id S240914AbhERFeU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 May 2021 01:34:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237199AbhERANx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 17 May 2021 20:13:53 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08EF2C061573
-        for <linux-raid@vger.kernel.org>; Mon, 17 May 2021 17:12:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=XA9TcDHgVffi4WkCcGA/tJ2lqF5eEwVDDnDf4PaLsgI=; b=ZZ/LeXpyOq3PU983L1aymmn8P8
-        nwnTIl0yWoiqjoqiUnVy+v0DkBcUkJTO57LVrUBJEtzHJfX1XTWlZB4o94Ui9AhsjwlX3S5xPqPwS
-        o/7HHJIylksCHFy5Oh/7jSss46ySnbzSAtkg+tLmK7doxwpzj1nfF9cTFm7H/LOeyxbQqfNkUPBVf
-        RK4KKDRB+43000Ak/RnSao1Un2TmvXgEtzInk6eUUKOo+bRTmnP52765agOOw0ZasuicFhO0mm77u
-        4xxU1POJ+szXYSp8wGaE0cy5C2pXIQZoDcHPQpUUrSkAhMyXlEdIJzKCD+6E+/w1ILvdP1srDJe/s
-        FzXogJoA==;
-Received: from c-73-43-58-214.hsd1.ga.comcast.net ([73.43.58.214] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1linLd-00022Y-9H; Tue, 18 May 2021 00:12:33 +0000
-Subject: Re: raid10 redundancy
-To:     Wols Lists <antlists@youngman.org.uk>,
-        Phillip Susi <phill@thesusis.net>,
-        Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc:     Linux Raid <linux-raid@vger.kernel.org>
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
- <2140221131.2872520.1620837067395.JavaMail.zimbra@karlsbakk.net>
- <87a6oyr64b.fsf@vps.thesusis.net>
- <3f3fd663-77e4-8c23-eb22-1b8223eaf277@turmel.org>
- <87y2ch4c3w.fsf@vps.thesusis.net>
- <947223877.4161967.1621003717636.JavaMail.zimbra@karlsbakk.net>
- <87cztpm68z.fsf@vps.thesusis.net> <60A2EC87.9080701@youngman.org.uk>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <9ea829e3-b6b6-0bf7-328a-7f30bee26cc6@turmel.org>
-Date:   Mon, 17 May 2021 20:12:32 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        with ESMTP id S240761AbhERFeT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 May 2021 01:34:19 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 161C0C061573
+        for <linux-raid@vger.kernel.org>; Mon, 17 May 2021 22:33:02 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id g24so4889548pji.4
+        for <linux-raid@vger.kernel.org>; Mon, 17 May 2021 22:33:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3VJc2yUzng4VQB19e82N28A7WO9cMZehahmu2E+2OgI=;
+        b=TEHFJwlXa2ZtfIox7yQ//hIoJmaIVLQ+2IZt5nykAWy1MT0B1rYlzGtpkzAa8WuNfv
+         lLbjd+MvSiQkpYqJ+W/QLKLZUP2snF1iE2ZpwtR+K+XR3g2L4Sq/GR5oTfNZ3u9VVSPY
+         lHp1DWt8Gs86j2tT53pE/76kDnESirCPAKaYbMIU6464UtqT63dC7zi1myewd+LUC8f4
+         6kPVEZKVN4BpBk4noRYxPOTUuv9mOt7jEZkPvo94/diNks8Z3aTNfx8C/zlnqj4KSat2
+         InwBiksVuG+8WUHlPPFA88JHhpkdWrtCzHCQ9abUsONODrCwYa3i2ZALpCdQ/UNOHkMZ
+         IVgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3VJc2yUzng4VQB19e82N28A7WO9cMZehahmu2E+2OgI=;
+        b=kGS4yFJhx4Xr6JhiNPY6UdZpvp9yV7Jo7qKM/NgU3csGo1+g5Ovt+xqZmDY6m5XUWx
+         211TzVvfbYKMq4FBD0cfG+JZi6VE/U76/a87o8wvUFVDIfb/grCLV+KUR9x8UmnRB6+N
+         /F5alw2zMxVbP8GJBSRcCySS4snQYsc+4KRwvJdaMpVdRRnJxvEuuOpOtiV6jQz6GkR+
+         1x/vdGTnPXSr1KJKJ3bA0EWzIC6GP38xd479mAeFNT3JKKNMuPDY5xGW4hQ3PY5dFM3E
+         bc+zTYJH9o8i90N68yNl2uGKZoY+JgV/744NVN7FTulC4yTv7v8Yz+gmcCVaaaXKWYpa
+         INlw==
+X-Gm-Message-State: AOAM533vRVq/gGGJzCOa4gdhXMLyuEfmXvM5sCrHN5t3cvD16vPra5Id
+        +JKD9Bs2mu1iL0nSxs+Fh2E=
+X-Google-Smtp-Source: ABdhPJwoLRU9lzocuxBmITFTtTF8ur0Agl0OYFarXrKYSqqWDxhMYE0jjlP4qv0vl1kDaRDPxmpNYw==
+X-Received: by 2002:a17:90a:d793:: with SMTP id z19mr3511656pju.91.1621315981638;
+        Mon, 17 May 2021 22:33:01 -0700 (PDT)
+Received: from localhost.localdomain ([89.187.161.155])
+        by smtp.gmail.com with ESMTPSA id z20sm11756726pjq.47.2021.05.17.22.32.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 May 2021 22:33:01 -0700 (PDT)
+From:   Guoqing Jiang <jgq516@gmail.com>
+X-Google-Original-From: Guoqing Jiang <jiangguoqing@kylinos.cn>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com,
+        Guoqing Jiang <jiangguoqing@kylinos.cn>
+Subject: [PATCH 0/5] md: io stats accounting
+Date:   Tue, 18 May 2021 13:32:20 +0800
+Message-Id: <20210518053225.641506-1-jiangguoqing@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <60A2EC87.9080701@youngman.org.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/17/21 6:21 PM, Wols Lists wrote:
-> On 17/05/21 21:50, Phillip Susi wrote:
->>
->> Roy Sigurd Karlsbakk writes:
->>
->>> RAID10 is like RAID1+0, only a bit more fancy. That means it's
->>> basically striping across mirrors. It's *not* like RAID0+1, which is
->>> the other way, when you mirror two RAID0 sets. So when a drive dies in
->>> a RAID10, you'll have to read from one or two other drives, depending
->>> on redundancy and the number of drives (odd or even).
->>
->> Yes... what does that have to do with what I said?  My point was that as
->> long as you are IO bound, it doesn't make much difference between having
->> to read all of the disks in the stripe for a raid6 and having to read
->> some number that is possibly less than that for a raid10.  They both
->> take about the same amount of time as just writing the data to the new
->> disk.
->>
-> Possibly less? Or DEFINITELY less!
-> 
-> When rebuilding a mirror (of any sort), one block written requires ONE
-> block read. When rebuilding a parity array, one block written requires
-> one STRIPE read.
-> 
-> That's a hell of a lot more load on the machine. And when faced with a
-> production machine that needs to work (as opposed to a hobbyist machine
-> which can dedicate itself solely to a rebuild), you have the two
-> conflicting requirements that you need to finish the rebuild as quickly
-> as possible for data safety, but you also need the computer to do real
-> work. Minimising disk i/o is *crucial*.
-> 
-> This general attitude of "oh the computer can do everything, we don't
-> need to be efficient" is great - until it isn't. If it takes longer to
-> do the job than the time available, then you're in trouble ... been
-> there done that ...
-> 
-> Cheers,
-> Wol
-> 
+Hi Song,
 
-And don't forget the CPU load computing parity and syndrome.  Which can 
-be significant even if the machine isn't loaded down with real work.
+Based on previous discussion, this set reverts current mechanism, then
+switches back to the v1 version from Artur.
+
+Also reuses the current clone infrastructer for mpath, raid1 and raid10.
+
+Thanks,
+Guoqing    
+
+Guoqing Jiang (5):
+  md: revert io stats accounting
+  md: the latest try for improve io stats accounting
+  md-multipath: enable io accounting
+  md/raid1: enable io accounting
+  md/raid10: enable io accounting
+
+ drivers/md/md-multipath.c |  5 ++++
+ drivers/md/md-multipath.h |  1 +
+ drivers/md/md.c           | 63 ++++++++++++++++++++++-----------------
+ drivers/md/md.h           |  2 +-
+ drivers/md/raid1.c        | 11 +++++++
+ drivers/md/raid1.h        |  1 +
+ drivers/md/raid10.c       |  7 +++++
+ drivers/md/raid10.h       |  1 +
+ 8 files changed, 62 insertions(+), 29 deletions(-)
+
+-- 
+2.25.1
+
