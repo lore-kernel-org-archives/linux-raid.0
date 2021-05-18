@@ -2,50 +2,59 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED62C433ED
-	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 17:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6B1C433ED
+	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 17:47:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64F6C60FD9
-	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 17:38:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43F4660FE3
+	for <linux-raid@archiver.kernel.org>; Tue, 18 May 2021 17:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344043AbhERRj7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 May 2021 13:39:59 -0400
-Received: from mail.thelounge.net ([91.118.73.15]:22279 "EHLO
-        mail.thelounge.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237923AbhERRj7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 May 2021 13:39:59 -0400
-Received: from srv-rhsoft.rhsoft.net (rh.vpn.thelounge.net [10.10.10.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: h.reindl@thelounge.net)
-        by mail.thelounge.net (THELOUNGE MTA) with ESMTPSA id 4Fl3Bk6hJ5zXN3;
-        Tue, 18 May 2021 19:38:38 +0200 (CEST)
-Subject: Re: raid10 redundancy
-To:     Phillip Susi <phill@thesusis.net>,
-        Wols Lists <antlists@youngman.org.uk>
-Cc:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>,
-        Linux Raid <linux-raid@vger.kernel.org>
-References: <CAC6SzHJLG=0_URJUsgQshpk-QLh6b8SBJDrfxiNg4wikQw4uyw@mail.gmail.com>
- <2140221131.2872520.1620837067395.JavaMail.zimbra@karlsbakk.net>
- <87a6oyr64b.fsf@vps.thesusis.net>
- <3f3fd663-77e4-8c23-eb22-1b8223eaf277@turmel.org>
- <87y2ch4c3w.fsf@vps.thesusis.net>
- <947223877.4161967.1621003717636.JavaMail.zimbra@karlsbakk.net>
- <87cztpm68z.fsf@vps.thesusis.net> <60A2EC87.9080701@youngman.org.uk>
- <874kf0yq31.fsf@vps.thesusis.net>
-From:   Reindl Harald <h.reindl@thelounge.net>
-Organization: the lounge interactive design
-Message-ID: <b27c2f22-a88e-520f-57ef-bc84afb938c3@thelounge.net>
-Date:   Tue, 18 May 2021 19:38:38 +0200
+        id S1345315AbhERRsk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 18 May 2021 13:48:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43996 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245499AbhERRsk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 May 2021 13:48:40 -0400
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 685CBC061573
+        for <linux-raid@vger.kernel.org>; Tue, 18 May 2021 10:47:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
+        Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=eT9R6GJCM8t/EZbiQIzpi6p2448lhLwREnn/wHIKDZw=; b=Pk0pJPRxrQuGGK0SZuwMFcImD0
+        mrziu5iaOlslL8O4TOHxgLgsu5exnQsso/a+3GcilOYqRTQllKssUGPvE1RjNADYQ63k7MlunKaeH
+        QWZOxmDy/0smAbDabzhtWz7hNu7JEC5uYaOnV3vu4ZKG0topqGVSPu8QeF0G9T5mtLmVDWC8yhQRu
+        yuh8NirBB4oNv3CF5RgoxEz6riQEXs3SMlk64Fyp+FYV5b/wbT/lu8I2l+blBxAO5oJHba9OO/VMx
+        dERz8tFk4Bk4LO/LUnnMTTPX5f3/IC80ehZ/VLtIoMDEY8uV1ZzvNm5xOKVtStpQRDqs93b20YCbW
+        9WROYuqw==;
+Received: from c-98-192-104-236.hsd1.ga.comcast.net ([98.192.104.236] helo=[192.168.19.160])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1lj3oN-0001Xb-Sy; Tue, 18 May 2021 17:47:19 +0000
+Subject: Re: My superblocks have gone missing, can't reassemble raid5
+To:     Roman Mamedov <rm@romanrm.net>,
+        Roger Heflin <rogerheflin@gmail.com>
+Cc:     Christopher Thomas <youkai@earthlink.net>,
+        Linux RAID <linux-raid@vger.kernel.org>
+References: <CA+o1gzBcQF_JeiC7Nv_zEBmJU2ypwQ_+RkbcZOOt0qOK1MkQww@mail.gmail.com>
+ <20210517112844.388d2270@natsu>
+ <CAAMCDec=H=6ceP9bKjSnsQyvmZ0LqTAYzJTDmDQoBOHSJV+hDw@mail.gmail.com>
+ <20210517181905.6f976f1a@natsu>
+From:   Phil Turmel <philip@turmel.org>
+Message-ID: <2e37cf64-1696-a5ca-f7db-83a1d098133d@turmel.org>
+Date:   Tue, 18 May 2021 13:47:18 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <874kf0yq31.fsf@vps.thesusis.net>
+In-Reply-To: <20210517181905.6f976f1a@natsu>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -53,34 +62,36 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 5/17/21 9:19 AM, Roman Mamedov wrote:
+> On Mon, 17 May 2021 05:36:42 -0500
+> Roger Heflin <rogerheflin@gmail.com> wrote:
+> 
+>> When I look at my 1.2 block, the mdraid header appears to start at 4k, and
+>> the gpt partition table starts at 0x0000 and ends before 4k.
+>>
+>> He may be able to simply delete the partition and have it work.
+> 
+> Christopher wrote that he tried:
+> 
+> chris@ursula:~$ sudo /sbin/mdadm --verbose --assemble /dev/md0
+> /dev/sdb /dev/sdc /dev/sdd
+> mdadm: looking for devices for /dev/md0
+> mdadm: Cannot assemble mbr metadata on /dev/sdb
+> mdadm: /dev/sdb has no superblock - assembly aborted
+> 
+> I would have expected mdadm when passed entire devices (not partitions) to not
+> even look if there are any partitions, and directly proceed to checking if
+> there's a superblock at its supposed location. But maybe indeed, from the
+> messages it looks like it bails before that, on seeing "mbr metadata", i.e.
+> the enclosing MBR partition table of GPT.
+> 
 
+The Microsoft system partition starts on top of the location for v1.2 
+metadata.
 
-Am 18.05.21 um 18:05 schrieb Phillip Susi:
-> 
-> Wols Lists writes:
-> 
->> When rebuilding a mirror (of any sort), one block written requires ONE
->> block read. When rebuilding a parity array, one block written requires
->> one STRIPE read.
-> 
-> Again, we're in agreement here.  What you keep ignoring is the fact that
-> both of these take the same amount of time, provided that you are IO bound.
-> 
->> That's a hell of a lot more load on the machine. And when faced with a
->> production machine that needs to work (as opposed to a hobbyist machine
->> which can dedicate itself solely to a rebuild), you have the two
->> conflicting requirements that you need to finish the rebuild as quickly
->> as possible for data safety, but you also need the computer to do real
->> work. Minimising disk i/o is *crucial*.
-> 
-> That is true, it does put less load on the machine giving it more time
-> to perform other tasks, but your original argument was that it is more
-> likely to fail during a rebuild.  I suppose if you take the two together
-> and assume the machine is busy servicing other tasks while doing the
-> rebuild, then both are probably going to slow down somewhat leading to
-> the rebuild taking a little longer, but I have a hard time believing
-> that it is going to be 2-3 times longer, or that it is really very
-> likely of having a second failure in that time.
+Just another reason to *never* use bare drives.
 
-it's common sense that additional load on drives which have the same 
-history makes a failure one one of them more likely
+Sorry, Christopher.  You will have to experiment with --create.  Use 
+overlays.
+
+Phil
