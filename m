@@ -2,64 +2,69 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 737B2C433B4
-	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 07:26:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4AD5C433ED
+	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 07:47:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4671B61244
-	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 07:26:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83AE660FDC
+	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 07:47:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239411AbhESH1n (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 May 2021 03:27:43 -0400
-Received: from mga04.intel.com ([192.55.52.120]:9926 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230292AbhESH1n (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 19 May 2021 03:27:43 -0400
-IronPort-SDR: Scu3u763XciwIquQpVhLUbAshuRTZzMuXJ1XXOpgYYilzhIGu8uJ8rn+6Nn7NcFhueKaSGntyl
- nEPDDijaTREg==
-X-IronPort-AV: E=McAfee;i="6200,9189,9988"; a="198959802"
-X-IronPort-AV: E=Sophos;i="5.82,312,1613462400"; 
-   d="scan'208";a="198959802"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2021 00:26:24 -0700
-IronPort-SDR: 6RwAc0rFMxg0amHFXm1Vy/LqdB6rivH8Cbq6NMX8wHORXybALOkvL6gq0dIHDpRHO/0hC0Sz9e
- 4FgDpGC86YFQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,312,1613462400"; 
-   d="scan'208";a="544449297"
-Received: from apaszkie-desk.igk.intel.com ([10.102.102.225])
-  by orsmga004.jf.intel.com with ESMTP; 19 May 2021 00:26:22 -0700
+        id S234712AbhESHs2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 May 2021 03:48:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33820 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229776AbhESHs2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 May 2021 03:48:28 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE3DC06175F
+        for <linux-raid@vger.kernel.org>; Wed, 19 May 2021 00:47:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=A8ZQiKiJaM77dxWbdgIMR6eNkfgJoFh0T9LwR1CBaK4=; b=MNp5xKwpDw+VGqOS3S35UJiLGd
+        3qIypsaBxdlPy2XGnm2TazbvBDE0md7HT9s33xYyzs84rjJteZAUYNH6K+ODrZMAJJrUIaDJVmYkQ
+        1d1Ip4jBp2/b9NHN2fLNBllKPOu5sGUur5fYFNHQqk7HIvLjRQjynXAItzOTsixYbohCvEjfP3KsF
+        9q3b1pMt5EgucoqRdXZtR3D7PI5qMRtzXepO5iXpuRn57u77WNzCQGCH1WZjolcAGUzPuWx9Aapbo
+        FJRMYs6RRO86GmEQYNoVD2s9pXlpSQ0C8tQHri2hSVpFJQSv3o9ZurRLC+Ibmihb9NVTTn4XULSum
+        9+4N7Kww==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1ljGu0-00Ejmk-RK; Wed, 19 May 2021 07:46:27 +0000
+Date:   Wed, 19 May 2021 08:46:00 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc:     Guoqing Jiang <jgq516@gmail.com>, song@kernel.org,
+        linux-raid@vger.kernel.org, Guoqing Jiang <jiangguoqing@kylinos.cn>
 Subject: Re: [PATCH 2/5] md: the latest try for improve io stats accounting
-To:     Guoqing Jiang <jgq516@gmail.com>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org, Guoqing Jiang <jiangguoqing@kylinos.cn>
+Message-ID: <YKTCOHp0rKmKcW2K@infradead.org>
 References: <20210518053225.641506-1-jiangguoqing@kylinos.cn>
  <20210518053225.641506-3-jiangguoqing@kylinos.cn>
  <2887bc44-dd0b-0b24-ee97-b0a95f0c4936@intel.com>
  <2bfe7f2b-5b5b-634d-3996-3c4ed77e74ff@gmail.com>
-From:   Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Message-ID: <d788bc1f-3fd9-a293-2f2a-6047fdd45625@intel.com>
-Date:   Wed, 19 May 2021 09:26:21 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+ <d788bc1f-3fd9-a293-2f2a-6047fdd45625@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <2bfe7f2b-5b5b-634d-3996-3c4ed77e74ff@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d788bc1f-3fd9-a293-2f2a-6047fdd45625@intel.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 19.05.2021 03:30, Guoqing Jiang wrote:
-> Hmm, raid0 allocates split bio from mddev->bio_set, but raid5 is
-> different, it splits bio from r5conf->bio_split. So either let raid5 also
-> splits bio from mddev->bio_set, or add an additional checking for
-> raid5. Thoughts?
+On Wed, May 19, 2021 at 09:26:21AM +0200, Artur Paszkiewicz wrote:
+> On 19.05.2021 03:30, Guoqing Jiang wrote:
+> > Hmm, raid0 allocates split bio from mddev->bio_set, but raid5 is
+> > different, it splits bio from r5conf->bio_split. So either let raid5 also
+> > splits bio from mddev->bio_set, or add an additional checking for
+> > raid5. Thoughts?
+> 
+> It looks like raid5 has a different bio set for that because it uses
+> mddev->bio_set for something else - allocating a bio for rdev. So I 
+> think it can be changed to split from mddev->bio_set and have a private
+> bio set for the rdev bio allocation.
 
-It looks like raid5 has a different bio set for that because it uses
-mddev->bio_set for something else - allocating a bio for rdev. So I 
-think it can be changed to split from mddev->bio_set and have a private
-bio set for the rdev bio allocation.
+Just wondering: what about moving the allocation of the clone into the
+personalities entirely?
