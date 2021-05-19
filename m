@@ -2,82 +2,64 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D06F0C433ED
-	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 06:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 737B2C433B4
+	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 07:26:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1D37611AE
-	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 06:24:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4671B61244
+	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 07:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234952AbhESG0H (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 May 2021 02:26:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43772 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231191AbhESG0G (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 May 2021 02:26:06 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E9FFC06175F;
-        Tue, 18 May 2021 23:24:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=SDkzOixdbKtAXhONcwwO+uZ0tQOsJcX7nllPcsziFLE=; b=Yq44CG4ZbXirepqi/YtI0iGf6I
-        ra2hIhVutUDo3/WxEb6qeEanH2LcZOC0aMamk4HZQgQVhSr2Logy1iuSxsQMj3VqyJzqY9lH65XxX
-        f1QuYZ9Fj0fhkMi7Y2Q4FhnqIoXgtsT3asCT6YLsr67pLYp07pEDbd3XZJmBfiwl44+RGibUQ5JWo
-        4YuAV+jaPJEaxObGpCXHVgQCGarPoPWg9k3XDvvxoa+DlEaqbl3BhB520JZmvsWaFEdtLI+MFoC7I
-        7LdNQnF6TLFOhuAJx+Pd+sAiWuz8rPQs2CP9DbYQPL/Vv2xG62W60Of7xSTHi+r/Dwlx0hXXv0NTG
-        wTG51Ovg==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1ljFcr-00Egfv-5k; Wed, 19 May 2021 06:24:23 +0000
-Date:   Wed, 19 May 2021 07:24:13 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     song@kernel.org, axboe@kernel.dk, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org, "Florian D ." <spam02@dazinger.net>
-Subject: Re: [PATCH] md/raid5: remove an incorect assert in in_chunk_boundary
-Message-ID: <YKSvDeWqtmYOl/ua@infradead.org>
-References: <20210519062215.4111256-1-hch@lst.de>
+        id S239411AbhESH1n (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 May 2021 03:27:43 -0400
+Received: from mga04.intel.com ([192.55.52.120]:9926 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230292AbhESH1n (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 19 May 2021 03:27:43 -0400
+IronPort-SDR: Scu3u763XciwIquQpVhLUbAshuRTZzMuXJ1XXOpgYYilzhIGu8uJ8rn+6Nn7NcFhueKaSGntyl
+ nEPDDijaTREg==
+X-IronPort-AV: E=McAfee;i="6200,9189,9988"; a="198959802"
+X-IronPort-AV: E=Sophos;i="5.82,312,1613462400"; 
+   d="scan'208";a="198959802"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2021 00:26:24 -0700
+IronPort-SDR: 6RwAc0rFMxg0amHFXm1Vy/LqdB6rivH8Cbq6NMX8wHORXybALOkvL6gq0dIHDpRHO/0hC0Sz9e
+ 4FgDpGC86YFQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,312,1613462400"; 
+   d="scan'208";a="544449297"
+Received: from apaszkie-desk.igk.intel.com ([10.102.102.225])
+  by orsmga004.jf.intel.com with ESMTP; 19 May 2021 00:26:22 -0700
+Subject: Re: [PATCH 2/5] md: the latest try for improve io stats accounting
+To:     Guoqing Jiang <jgq516@gmail.com>, song@kernel.org
+Cc:     linux-raid@vger.kernel.org, Guoqing Jiang <jiangguoqing@kylinos.cn>
+References: <20210518053225.641506-1-jiangguoqing@kylinos.cn>
+ <20210518053225.641506-3-jiangguoqing@kylinos.cn>
+ <2887bc44-dd0b-0b24-ee97-b0a95f0c4936@intel.com>
+ <2bfe7f2b-5b5b-634d-3996-3c4ed77e74ff@gmail.com>
+From:   Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Message-ID: <d788bc1f-3fd9-a293-2f2a-6047fdd45625@intel.com>
+Date:   Wed, 19 May 2021 09:26:21 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210519062215.4111256-1-hch@lst.de>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <2bfe7f2b-5b5b-634d-3996-3c4ed77e74ff@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-s/incorect/incorrect/ in the subject, sorry.
+On 19.05.2021 03:30, Guoqing Jiang wrote:
+> Hmm, raid0 allocates split bio from mddev->bio_set, but raid5 is
+> different, it splits bio from r5conf->bio_split. So either let raid5 also
+> splits bio from mddev->bio_set, or add an additional checking for
+> raid5. Thoughts?
 
-On Wed, May 19, 2021 at 08:22:15AM +0200, Christoph Hellwig wrote:
-> Now that the original bdev is stored in the bio this assert is incorrect
-> and will trigge for any partitioned raid5 device.
-> 
-> Reported-by:  Florian D. <spam02@dazinger.net>
-> Fixes: 309dca309fc3 ("block: store a block_device pointer in struct bio"),
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/md/raid5.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 841e1c1aa5e6..7d4ff8a5c55e 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5311,8 +5311,6 @@ static int in_chunk_boundary(struct mddev *mddev, struct bio *bio)
->  	unsigned int chunk_sectors;
->  	unsigned int bio_sectors = bio_sectors(bio);
->  
-> -	WARN_ON_ONCE(bio->bi_bdev->bd_partno);
-> -
->  	chunk_sectors = min(conf->chunk_sectors, conf->prev_chunk_sectors);
->  	return  chunk_sectors >=
->  		((sector & (chunk_sectors - 1)) + bio_sectors);
-> -- 
-> 2.30.2
-> 
----end quoted text---
+It looks like raid5 has a different bio set for that because it uses
+mddev->bio_set for something else - allocating a bio for rdev. So I 
+think it can be changed to split from mddev->bio_set and have a private
+bio set for the rdev bio allocation.
