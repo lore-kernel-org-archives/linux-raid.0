@@ -7,59 +7,59 @@ X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31DEBC433ED
-	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 17:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13356C433ED
+	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 17:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EFB561363
-	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 17:04:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA439610CC
+	for <linux-raid@archiver.kernel.org>; Wed, 19 May 2021 17:09:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355509AbhESRGB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 May 2021 13:06:01 -0400
-Received: from sonic315-9.consmr.mail.gq1.yahoo.com ([98.137.65.33]:39945 "EHLO
-        sonic315-9.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1355502AbhESRF6 (ORCPT
+        id S242729AbhESRK5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 May 2021 13:10:57 -0400
+Received: from sonic309-24.consmr.mail.gq1.yahoo.com ([98.137.65.150]:45287
+        "EHLO sonic309-24.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240245AbhESRK5 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 19 May 2021 13:05:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=att.net; s=s1024; t=1621443878; bh=9ky9joefetayGTLqyiWu0oOLPOsY0Fvx+/hWrgNcR8o=; h=Subject:To:References:From:Date:In-Reply-To:From:Subject:Reply-To; b=6guHwpaHjQh3Fyfk+h6KhHs4Qx5AvPUNmaqEcf2MwpJFPzpI1JvNz38QQuLpWitnKGLZsHqSAATvVz/aCep7S9xjjX8aB83wtt8evMfR9eVK1TYp+WnWPZ+Ndb3ezFuPNHM6m8uOJDIYdpIzFC811Wr7OUQ5seID8RQejCtwOl8=
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1621443878; bh=KbpAi9EshelecTwGzozf85efai15bTpnx8f8sFD2YHK=; h=X-Sonic-MF:Subject:To:From:Date:From:Subject; b=JEbDtM/LrsHl37yo3DSe77kF7/CJkLxRDcII6JCIf2wl9Yavuxoo7D+SKFX0ueTYsRN5/fncgTtRcVyXRLs3x7NdlTI8DK5u4On6B/As6wx+BaVIPtxKxb9bPxOLcglbsm9ERYDPYZFhx9bKG6UwDTr8oNeKwVzU/esGhVDJkutFNd9yZcE7UjajfAk7HsreIAMxkFj45Dgl63NkFC3QQpPAWbbq2aj/rXwhR6stFstwwz8sAnPF2DAPkrRq/SbSl5lAa8G6gLtjOofUS7lSoJ4IxZWv4VXUiGGRi2Cuptr3ex+I/0vyPr9BIfMD/dTH9oGVXoxKKnJtGJmzRLGEqw==
-X-YMail-OSG: BLfvxQYVM1nG71aqpL6Mm85IzsLR0t8KvZGoZYMSNajXSJ69f0WW9NK1y_8b7yq
- ZHnOV_ZpfeR6y3p6WApm0fec8BMjoEsodfTZqsFm_nMj6x8fDq26x5V9gF5i_h4Dtlff.3yZ2kWw
- QWVQDyy7sxhX0tj5JOxfFOYbvg62g2YKLDUdu0CCY9O_y7ncIYT0oNjQwBVkWXLWwKPAZw4fEp7v
- DJSiyn4HqFzwADpvDJsAb5uuhUJFn8NGUTyz7Z81oPbddCRWKOLNwdrl.Wh9K_ynmqeEj1SxWPF2
- JTBvsf0Ph7OeTxVHW.9oCsUzIU.JWYal9j7rLTEzX4hAkOU.OKCLiW6LERCMx0rHEFQJeShGGaut
- sJdPKhsvQN0BSsxWdAWUr5Bx4qz7maqLVIk19jrjxBe6YCUoGtOKw7yNMP3HDsh4WXRmDdZAg_ea
- 3mDR8lq9_rcppjjRBVZRG1iPtqIlznC4aTfSJoyVYvNOnYLpCQ3hLvyd0rL4x00u_6nvrM59f_0F
- O4Or51t9kcNHS6qkxj4SmVhdWbHUrHmECDlzp7Xz3NfPu.8sifcbtukjXl1bs_A7Awhwxln7.cb3
- kbBMWhy_3djeUo58F5u919XFKd0KUIoBMKwONU8cDE01Hdb1b4bZZd6dZAOvXD.myerdGr7Xvau6
- cIt5zXJh79A2bpRKVpHNQSUAPOm_aV65pr5n647icbwSzWfZiJRY6cBPjeHBp4luQjkL52g39ntB
- zkwiWk_YYiWG5YMfVvyM17m_hrF_9zu0szLQDyCE5L.Obilf1laLeqDVD1958lLk76CvVq10rORx
- tuuRlHwAt6LLf155BOgo5cSRvvI77ckd7Kz4yofwHkDqNlpsV64vzf1cMLg3eI6Kn4imrE_3JciW
- ivMcq3Jdcky76JYeqRaMwpV0GtcZwEIoX2r1Tax.KOURsmEAfj5OfkFqsx3nWURT4YB42I6r5WMN
- ad8EJJUT5uyHAF6E4.bDkMCPNnYMyWfWnNcveepYkt950dvDD1xNflKxk9mFcg1cjtn_vsRb8Roi
- A.5dFhLdA8remBsHr9f7vznX8V._mKmWW.K45Q1h4h5zbi7EL_fXoAIhrTCp4LIwT2.MuoseW7Ib
- FW.pNGKfbql99artsZSZab4VB0e4k0CKEAPvwqHt4IS7Ac6WwKAj66vnXZ3n562q3OiucjDh1PBN
- zSe8ijv21zwH3fuC1vAaAsyFr0oGfkzrI1BfnA_wGz6up6fM3Ktg59F2pqp0mD_.7eTwdB3CecTN
- hP5cUO25vc1SIsFAL5JjZsuS.TTkmapRCCXxkfqwSLHOvSmzXBl.MDSzXR823DkSB83hs1iqh7Y2
- qLbd4d6sm9qCUiZ2iv8GuhZLF6vAG5Q5MXKwqSpK2YVDuuoX6UnDLrgog26NzoCnevj0ZMq_TaZX
- f.3AEyDy.GdCqewgrMW1QrxRN4gstzpC4e5jy6JsGQ..junMLCA_e9UxNqnPIU8AL1QOifFhcy3w
- 61hdVHqKQjt65F4d3AHSpovM.KrCumca5rGZuyijifPLBhcHyOQ8uxPPZM5e0IGZ3F3H2yCq_ZWO
- .P7Lct6yd9FGuPJrFImACOERtA3DJhjAm7E1.ukYyjaGXCPpbkTuClAd5SZSm6HhQVznpBZgZ_4p
- .BH_orG14M.e5iXrHT84yUxR3fKn4lTXPZ2C2eN7LIHSLNmY5OBkfubCnIsGVIqihvGqg6AK.gFj
- 7dZ4A7EyibenHGnm6ZB8GjpsRyY3GuOJGD4ziYPZacdL.1CnXISg.faS42O2ZeHkcJ.gaCTY._Ut
- rS42RAYc_kfzEthjVQiLNXbLW.zcV3aFykP.zdzCNe9Amd0YCR4R6h5kcgG_CGS4Ax_ZuCcEjX.S
- dYR37qpjZaQg728b_Xk98FRybq2pBgbH.NzpCCvxrLYkQyp_IfrMyTtDIS9iX4thxgdJevSNjsfI
- QQ78M.82bazxnseLPnOE0v4.l1fBGztnCTkQ1D1G.QrhW37bExtNvN5WUFMpHMHP_CSsEtC8y2bm
- HyJe92MepqKi26jeTsPa0KScmqN2pcSdFKda1Goj1sr.w8TEgodo84zPqjMfn.8LGV7KnLejs.GA
- FbmtYSFUTwlwoRi7MwHSRBrG_Yihu4ZHt1IM0_HvZjwJYuVplGpuK6bkLvE5PrsTr3zJPzFzdheB
- N7zwBcM_CPgrNN.o1pJGaiqhtt8ymtrjuR5n4TQghvidzrjoBN5gG6DD9vJuanmaqXPIQC0k1T58
- fJDOnGonWRewSthxJr5Xo1kZUZYQz8QK5xPB4GkawWHs9.roBT9qd63dnNUp_DUuyvh1alzRBhPa
- egj0ETaQvgJN2CfNNx4_sLLoVwz4Y_Pkn0yY5Vcvoc1So9ISOIVsk6IRNrf11E6NLjJLMilrr3PN
- cwmNgRevZ6ofCUESEGQK01wXvoNiv92VcbaDN6mSS1fv0yOvBFTRTfavgdFHIsjWv5Zeyq1blF2i
- Rt6KP.V52fg--
+        Wed, 19 May 2021 13:10:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=att.net; s=s1024; t=1621444177; bh=09L3Z/2/6WXFF4fpIQ27BmMVCn2VRCevtGB+u5wkxU4=; h=Subject:To:References:From:Date:In-Reply-To:From:Subject:Reply-To; b=s9q0oS//c08J05yX9AEiWgbjUgfzOmijzdRyotzBgGAbzEz67pkKUTLa+9Brm/zia4Xp1BaUem/ig3i2eHGKK6+oGPnSSVnx7Px8Dn1nMdpNKVtn8uatc3XORK4AiYEPR7Y0mW0+dj4I3+MUl7qMik9LM8A0biDjHKbk+1ZTUbs=
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1621444177; bh=+eCeu+tRNpe3rQUxSlD2mdLSJVxa6gqhs+ixH2TKpFZ=; h=X-Sonic-MF:Subject:To:From:Date:From:Subject; b=VWjcLwqfhfrY2pwu0V2UHNLq+Y5q1yCBMcYIHx3oCbVkqfOUjZB3hVMQQ0AkwdvdpouRA32N4JzIwijjPBk9niK97n5SXgiLbB2MbYBCT5EZcPBxOLRJ3vMtSx3L8nNEqACnE73maDmo4PTavKGrq61vT9TM+cYEpdlECRuCsjHWK4lKKMZ2vCL+Uih4QVYH8uTMthxL0gjdlE50eDJxk6CkH2n8/WmyCqGq+2FODY8GZhyMohGGQlJqIGyKFXso2AK6gsnN6sCU0hd0KbN3s0BLgP8P5n2cuw2yTvh75r2fSMq+F1sVI3uu8jM02kTVudeQC7Rcwo/IU7CnhJMnrg==
+X-YMail-OSG: r7WgLukVM1kmgQB3G9yChhVGnMAu6NCUI0gUAvRrFQfE5rwT.DHkxpBfldrUDVN
+ 0EhwcWrGxO17u3N9UaifMNoryEWtmNQShJj4FUrcjoGOve2tjKCcZ3jyNjl9DXUZMIdxchLiAqoE
+ Si8haespPM_wU7DePv4gTEAFTNfbpMA5LXdnxLUeDiMQtua162.f0wDH4PMV0VxumJBOMqf2IP79
+ vmUopUuly2QzPF3hXVJJrQ7mPSJqcVtGRHb5msAqpHHVyUs0NgVdh8hYguBRr9CFcFRIpFMqIiW_
+ 6sFB1_6N7J7tEpjq5u1gXft6UE1TPMnUi8SMnRC5oj47aGUGNR9uYVZgv9uv67Ic2S8okR6W9.B2
+ YtswDIRY4pUKCCPo0By_njbx3g_LJhOra5w8JZqvGtdI2tGIKMiqBi12x60M5qn3UGi8VMQNdPjJ
+ pUj7JtO66F6mCozsxEgJ2nA0Bxffq1O8bchRBTBWeJf16saj.Xe1SgX5VJArKhUsD7DFkRDJrgbD
+ EMRUlR35jaH0wFQOZl_77kqAvwoEX6zu44dGl3_demYtq9Ach5hEfMHUt22mO.a307O6d_HIOCqO
+ JMk21SxIYQNk7QEdKZQqbiWbdbAaWj99YaE8VGfBMtoc0owXBRuDtRkbcfuFJxY0Labh0vSr8tUQ
+ .rpz91amqIMGPYeUh_Ypu2pJtDwWnansG1MO5fwDdgq1b6s6uy6UK5Q03PPOdhe0W20YZkPmFCG8
+ lu4R8Dw7nmTbSTtbAHbvStZ6hDg7nhlI0Rte7D3wocj7f5KcH2p3j9LJBF6InrT6ST9W7ro0xlRS
+ R8fPcoQw1._8lqnbp_vN_KBLwVb1R4s3_FXwehmZb20Qx6aXwrlrpzL7FqnKJOjFJWZHprPUsH1u
+ GRvOF2RBXRGPT3guNoedbiY4iaMYttKaRnNl0M37hzE6Gepd06xIJMrnt9lMyPpOr6Y8yW3MSa0W
+ 2Lzxe0JYXFhOuiy65SLX5J7bBI61xgzFzSuyrfNh41Lba0EKNUJI9bSfr8gqKhio1dPkKDeCkpr0
+ 1CirwT3EoQBTz0gXC5I2V0lvQv_pKqCfwu8FtT62CASn8eoQwlqMD3MdifCV57swGSDu1RJQVEcZ
+ VehEi4mtWeVBGd1Y3pcVZgPsXUzof3Zd4zMlenbh0Y6RBrV5U44YhOtQgiC_2DKGHe.o8Na.OTHl
+ NF60NvpbfZm1KfsAzMTATuP6IcFqenrmaZjTJNtdXEvYPELJjXLyKQFRHBllGRo98CQLmRDYAJ1q
+ xnGBC_LXla1_qovutZDZw7RE7oam5GJYxRnh5K556A2EIfY0JRxjWSCZS8owP6xiWhOLDdEkR_3o
+ INIq2wbIfeHRQ9_9d9fH9XlQEoVTC3pW_WgrCOcX.FupkBrKLqXnX0IyUG9B5HkYMZmOpZ_Zhttd
+ vrImYNQVHBzFzpNEOUDRs8zOy9hTZ0cQHniDLazuh4JQG6R_6FHEgL7Ulc3Y2sF4ND8QU3fxmHwu
+ Wb0T2NP0WfZPOSEbG8qPKTfKE4yzBBiwPSeWJGHDeuvRPr9XGHgaoL8Lo2nchmILrai3R1kxYLtj
+ nsHqXwLg_UbqTQ7cNk49DJBqVxEThGY2D2ZnNFV.FB8tEbNdbcMgJX.klreOC3k94wCc5eGwZ_HE
+ mpjVau1znuPx1lOoqmZJCGJSpZQC0FC_V3tJ4ruPQi9J6jabsWVGh7Gc7X2SQWQ8YletgOXh_Umt
+ 5AUvntxlM8sFCuawzEROUiLKlPoVK.Kv5wCEyXRyOeZOxD6WP27B10pGiqAkNYQLTEwrfnXgV8eg
+ UI6O1h8vHVzAjEHVBEdxpPjt3Wtc7hb1SHLh789g0meGLqjkFPQvlpZ.673wEKDLfcz92LOsgpvR
+ SaKAjho1W5TZWea7znmmiwAmQshme_0B5bB41edho7s71qzsI3d1ZU1F42pfKLOmP2o2SrHg2QiL
+ cyLgq5tPZnNTaXEn2MmJrjnOo_CEa9EpbyhH05Cy1SSr2rHZRtReuX6Gk3jq0gWwnBGsVoDot_0d
+ mkYyrKuVpBPZ50lC4YFWVTVCgn7ehOkJ7j9ZINUw_RqfG6I9ksGVqzP5qQa1kMcE.pLgOKgPEp.H
+ m3LcUuqEcjvOcQ25HN6izQ8Q7.7xi38DFk9gKZ9s2aZhFy5t3qDVlYtMJWTvPqVh6Y1Mu1UMuO.1
+ 6gMHogj4lzF_ape.R6Le_CD8V4FquoKeSbcNE83xDv9Y4.yObuHxfzKoleVCg4a4JXfSvIdgkfCU
+ .aii.ReqkQpHYv_iZdXB1GCX9TmOKzJZ46.NyGbMn4CczEBcQreKW5yet87WJP_XuFkQAryYGfjq
+ ydSYFRf7sviHbaCGCTTT9fSFHWxDIUWQqsBI4wfmfglRYyPahY3.3514cFKOVytppGV3rmO1M0E9
+ mweAZ1e0yEj.H16yjRXSyynQSFsQt_s5IafdeAtN2UybPKLYkHDZ99aS98IgmYg7p589SEed5ImW
+ 03oyb.0j_PA2uXw--
 X-Sonic-MF: <lesrhorer@att.net>
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic315.consmr.mail.gq1.yahoo.com with HTTP; Wed, 19 May 2021 17:04:38 +0000
-Received: by kubenode510.mail-prod1.omega.ne1.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID 21aa9a99aa658f9d7edcca8e558fc0a2;
-          Wed, 19 May 2021 17:04:33 +0000 (UTC)
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic309.consmr.mail.gq1.yahoo.com with HTTP; Wed, 19 May 2021 17:09:37 +0000
+Received: by kubenode512.mail-prod1.omega.ne1.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID f3f230d30f2e1c5aa74c748545a1b4c8;
+          Wed, 19 May 2021 17:09:32 +0000 (UTC)
 Subject: Re: My superblocks have gone missing, can't reassemble raid5
 To:     antlists <antlists@youngman.org.uk>,
         Linux RAID <linux-raid@vger.kernel.org>
@@ -67,8 +67,8 @@ References: <CA+o1gzBcQF_JeiC7Nv_zEBmJU2ypwQ_+RkbcZOOt0qOK1MkQww@mail.gmail.com>
  <c99e3bac-469a-0b48-31df-481754c477c7@att.net>
  <cceec847-e2e2-3d7f-008e-e3f1fac9ca20@youngman.org.uk>
 From:   Leslie Rhorer <lesrhorer@att.net>
-Message-ID: <e7317eee-9a6d-7fbd-bdee-8aca788b47fe@att.net>
-Date:   Wed, 19 May 2021 12:03:50 -0500
+Message-ID: <3f77fc62-2698-a8cb-f366-75e8a63b9a8b@att.net>
+Date:   Wed, 19 May 2021 12:08:48 -0500
 User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
@@ -81,22 +81,15 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+
+
 On 5/19/2021 11:41 AM, antlists wrote:
 > On 19/05/2021 15:48, Leslie Rhorer wrote:
->>      Then I would try recreating the RAID based upon the earlier 
->> Examine report:
->>
->> mdadm -C -f -n 3 -l 5 -e 1.2 -c 512 -p ls /dev/md99 /dev/loop2 
->> /dev/loop0 /dev/loop1
->>
->>      You may notice some of the command switches are defaults.  
->> Remember what I said about a belt and suspenders?  Personally, in such 
->> a case I would not rely on defaults.
 > 
 > Because defaults change?
 
-	That is one reason, yes.  It also means no mater what else, I know what 
-the system is being told to do.
+	Oh, I also don't necessarily know which build of mdadm he is using. 
+They might be default on my build but not his.
 
 >>      Now try running a check on the assembled array:
 >> fsck /dev/md99
@@ -109,20 +102,7 @@ the system is being told to do.
 >> There are only two other possible permutations of three disks.  If 
 >> none of those work, you have some more serious problems.
 > 
-> And here you are oversimplifying the problem immensely.
+> And here you are oversimplifying the problem immensely. If those three 
+> drives aren't the originals
 
-	No, I am not.
-
-> If those three 
-> drives aren't the originals, then the chances are HIGH that a simple 
-> re-assembly/creation is going to fail your simplistic scenario.
-
-	Absolutely.  So what?  If it does, very little time and no data 
-whatsoever is lost.  If it doesn't fail, then his problem is solved with 
-very little trouble.  I have been troubleshooting technical issues for 
-well over 50 years, and one of the very first lessons I learned is one 
-should try the simplest solutions first.  Whenever they work, they can 
-save a tremendous amount of time and effort.  After that, it's time to 
-dig out the heavy tools.
-
-
+	Hang on.  Which drives do you mean?
