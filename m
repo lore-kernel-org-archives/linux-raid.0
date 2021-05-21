@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA46C433B4
-	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 00:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0002C433B4
+	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 00:56:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1FAA600CD
-	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 00:56:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF678600CD
+	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 00:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235618AbhEUA57 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 May 2021 20:57:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56286 "EHLO
+        id S235632AbhEUA6C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 May 2021 20:58:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235619AbhEUA56 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 May 2021 20:57:58 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EBC3C061763
-        for <linux-raid@vger.kernel.org>; Thu, 20 May 2021 17:56:36 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id b13so9940746pfv.4
-        for <linux-raid@vger.kernel.org>; Thu, 20 May 2021 17:56:36 -0700 (PDT)
+        with ESMTP id S235619AbhEUA6B (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 20 May 2021 20:58:01 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E0BAC061574
+        for <linux-raid@vger.kernel.org>; Thu, 20 May 2021 17:56:39 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id n8so4849100plf.7
+        for <linux-raid@vger.kernel.org>; Thu, 20 May 2021 17:56:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=CzyeW0naSWePcPj2uPR8PUqj6py64yU6rVDLUAUWGDs=;
-        b=TMg5HXkcpH9Ux4rxbBOj4h/moEcJ5UchLEFGKWKuaiwNkl4UZ5Seyliqp+fdXF+lGb
-         rhCcvbpy4k09sxd5bjU4FKgrU3DtvlvpJQn+0NqSaWn5d+av7Bm2yYTThR1vjkcXt4tI
-         3Q5eu9CzvMbs9szd3PAJYYRO/Ztq5HxvmNSAR4u/48HbhkUlJ7BQrULRyfukasVvvsdR
-         pyAOZZG7CQr1Tq22yT58RxKkCgMwtnFy3Qg4pU3moEqQondWgC9XFBvXRzh0pZgTp1Qq
-         rH+CtRluLYGS/Ddv//GE7X08HDDH7caPV4jT/5Rzg6ImdBdBrrXAthmBUkRaZM6C92oL
-         6q2A==
+        bh=FAACiYDE4vgtEht2NO8bSfTLuv4QC75m1wMXhVXHsfE=;
+        b=av4gXK+b0Qn7wS5IAGzXNf45gDIJJcf4XTwbC/Q9saR7KZD9q1/TqqspkHEmrV+BmW
+         Osgbrg7An/eeGSUiw8wPBptUqONZEeJ4qeX49YCmzGG4HQ3PS0pM6pnj/6Y7o8csFaig
+         ecBLD3n6fdLhO2Jx3QhMsvWDVsSll7gyq7FncAzp8Pdqbjb6G4yYk7NZP8tPgotDG4zz
+         zgfNXShPxe+6X4is7JH9X50prJVXeHiF0rZDu7/mKUT6RdTzFG27MCQlm6H5i/v0p+hy
+         sT7XegGj8nXQp4chSfeC6StdoWznB0eHsNS7Itx54DPd41NQXY22tXPBBhagPhOlP0Zr
+         +GuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CzyeW0naSWePcPj2uPR8PUqj6py64yU6rVDLUAUWGDs=;
-        b=Mhk0J9HR1Fge6p8P20isO9CmqkdGAGT252MDh7dewXNIviAJki/kSflJABCKQ1F/Yn
-         AUSm7nQrTUxrv8yScUs9g5Ha/8TSKjN6w3cfFv1E6x9FCk17GBzLW4wxRz/puW9wCZYI
-         UhPNj0/Kok6SZfS7z545Nty4PMb1jeEXpl2knAvGULEk9gvcXJbObZp3DOV/kpe8bOFU
-         ugsU+mcB8XGe6M/oD9Xs2TqzBdMgzV3eO1HCpiYPCwJIHwmULkysBUNxvkN98ggDpHxh
-         7Hjvq6B/wDYAo56xOOF5UUxTPCyngnPsHx4v6HR2NQ8Hd9BCoMGkkDq5gB4bWmz49Ak2
-         2vnQ==
-X-Gm-Message-State: AOAM531RChnRn/7lzgkC199eufjJKpRIdSIo2Uf9N1LHwWrZU2mn3oaa
-        6w2p73/lq4mrywNpA+z5XWc=
-X-Google-Smtp-Source: ABdhPJw2JhKP8pNwrP1Of/IfbL9wfRKBd5iyKQvwvU+aPtsfSYHQ2Vv+BaN1JxYjhWAiui7J6cUXIw==
-X-Received: by 2002:aa7:8202:0:b029:2d8:c24d:841d with SMTP id k2-20020aa782020000b02902d8c24d841dmr7504775pfi.57.1621558595535;
-        Thu, 20 May 2021 17:56:35 -0700 (PDT)
+        bh=FAACiYDE4vgtEht2NO8bSfTLuv4QC75m1wMXhVXHsfE=;
+        b=A0UopdafdLb6ZsWPnEzg1yeJd+kGHIYUJCQAxsDe1JHVYYe4usPZsC2Yk4StYh0hlu
+         psNlJhEXBpV1R2rr0NNlCSfylE/dUorGKxe7xzdeRTtuM57F5kSAQ0X5kVmRbes4HLvS
+         GK/ZLdaBppAsNp+EyRBfXUfopgp6vZsqo6LfMlitfYvZ6zWlT7tRgIi1AzFuFdn5y9VU
+         5nK/WWRpKU5pjvZl8wiNg3S7noejS0XPBvb/ycZFCS7BRHYyowNh0cHtzzhfUqDKThxf
+         4YaIz8kofO4xdR6bNy20+kpch1B+2jZkdWffG+KXVBTyf6n9laPdZdu4tTdJFA/NEDTh
+         IXxA==
+X-Gm-Message-State: AOAM5335E0cN+1LUVODBBf7iy4H11ARBsh07qB4s5WT4dCcBqMpCmlzB
+        vTzLzBjZPZGNqdVlytO6ah8=
+X-Google-Smtp-Source: ABdhPJyrNSIpr93Uiz/eGhNNalKNa4/Yba354EvoaFwkLPYdNOr4c0nrdWbcTlv6nRN3OtMoiFWhtQ==
+X-Received: by 2002:a17:90b:4a12:: with SMTP id kk18mr7699077pjb.99.1621558599128;
+        Thu, 20 May 2021 17:56:39 -0700 (PDT)
 Received: from localhost.localdomain ([89.187.161.155])
-        by smtp.gmail.com with ESMTPSA id 5sm7405945pjo.17.2021.05.20.17.56.31
+        by smtp.gmail.com with ESMTPSA id 5sm7405945pjo.17.2021.05.20.17.56.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 May 2021 17:56:35 -0700 (PDT)
+        Thu, 20 May 2021 17:56:38 -0700 (PDT)
 From:   Guoqing Jiang <jgq516@gmail.com>
 X-Google-Original-From: Guoqing Jiang <jiangguoqing@kylinos.cn>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
-Subject: [PATCH V2 3/7] md: the latest try for improve io stats accounting
-Date:   Fri, 21 May 2021 08:55:17 +0800
-Message-Id: <20210521005521.713106-4-jiangguoqing@kylinos.cn>
+Subject: [PATCH V2 4/7] md/raid1: rename print_msg with r1bio_existed
+Date:   Fri, 21 May 2021 08:55:18 +0800
+Message-Id: <20210521005521.713106-5-jiangguoqing@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210521005521.713106-1-jiangguoqing@kylinos.cn>
 References: <20210521005521.713106-1-jiangguoqing@kylinos.cn>
@@ -72,163 +72,55 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+The caller of raid1_read_request could pass NULL or a valid pointer for
+"struct r1bio *r1_bio", so it actually means whether r1_bio is existed
+or not.
 
-Use generic io accounting functions to manage io stats. There was an
-attempt to do this earlier in commit 18c0b223cf990172 ("md: use generic
-io stats accounting functions to simplify io stat accounting"), but it
-did not include a call to generic_end_io_acct() and caused issues with
-tracking in-flight IOs, so it was later removed in commit 74672d069b29
-("md: fix md io stats accounting broken").
-
-This patch attempts to fix this by using both generic_start_io_acct()
-and generic_end_io_acct(). To make it possible, in md_make_request() a
-bio is cloned with additional data - struct md_io, which includes the io
-start_time. A new bioset is introduced for this purpose. We call
-generic_start_io_acct() and pass the clone instead of the original to
-md_handle_request(). When it completes, we call generic_end_io_acct()
-and complete the original bio.
-
-This adds correct statistics about in-flight IOs and IO processing time,
-interpreted e.g. in iostat as await, svctm, aqu-sz and %util.
-
-It also fixes a situation where too many IOs where reported if a bio was
-re-submitted to the mddev, because io accounting is now performed only
-on newly arriving bios.
-
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-[Guoqing: rebase and make generic accounting applies to personalities
-	  which don't have clone infrastructure]
 Signed-off-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
 ---
- drivers/md/md.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/md.h |  1 +
- 2 files changed, 57 insertions(+), 1 deletion(-)
+ drivers/md/raid1.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7ba00e4c862d..13392fe9379c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -441,6 +441,25 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
- }
- EXPORT_SYMBOL(md_handle_request);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index ced076ba560e..696da6b8b7ed 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1210,7 +1210,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
+ 	int max_sectors;
+ 	int rdisk;
+-	bool print_msg = !!r1_bio;
++	bool r1bio_existed = !!r1_bio;
+ 	char b[BDEVNAME_SIZE];
  
-+struct md_io {
-+	struct mddev *mddev;
-+	struct bio *orig_bio;
-+	unsigned long start_time;
-+	struct bio bio_clone;
-+};
-+
-+static void md_end_io(struct bio *bio)
-+{
-+	struct md_io *md_io = bio->bi_private;
-+	struct bio *orig_bio = md_io->orig_bio;
-+
-+	orig_bio->bi_status = bio->bi_status;
-+
-+	bio_end_io_acct(orig_bio, md_io->start_time);
-+	bio_put(bio);
-+	bio_endio(orig_bio);
-+}
-+
- static blk_qc_t md_submit_bio(struct bio *bio)
- {
- 	const int rw = bio_data_dir(bio);
-@@ -465,6 +484,30 @@ static blk_qc_t md_submit_bio(struct bio *bio)
- 		return BLK_QC_T_NONE;
+ 	/*
+@@ -1220,7 +1220,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	 */
+ 	gfp_t gfp = r1_bio ? (GFP_NOIO | __GFP_HIGH) : GFP_NOIO;
+ 
+-	if (print_msg) {
++	if (r1bio_existed) {
+ 		/* Need to get the block device name carefully */
+ 		struct md_rdev *rdev;
+ 		rcu_read_lock();
+@@ -1252,7 +1252,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	if (rdisk < 0) {
+ 		/* couldn't find anywhere to read from */
+-		if (print_msg) {
++		if (r1bio_existed) {
+ 			pr_crit_ratelimited("md/raid1:%s: %s: unrecoverable I/O read error for block %llu\n",
+ 					    mdname(mddev),
+ 					    b,
+@@ -1263,7 +1263,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
  	}
+ 	mirror = conf->mirrors + rdisk;
  
-+	/*
-+	 * clone bio under conditions:
-+	 * 1. QUEUE_FLAG_IO_STAT flag is set.
-+	 * 2. bio just enters md and it is not split from personality.
-+	 */
-+	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue) &&
-+	    (bio->bi_pool != &mddev->md_io_bs) &&
-+	    (mddev->pers->accounting_bio &&
-+	     mddev->pers->accounting_bio(mddev, bio))) {
-+		struct md_io *md_io;
-+		struct bio *clone;
-+
-+		clone = bio_clone_fast(bio, GFP_NOIO, &mddev->md_io_bs);
-+
-+		md_io = container_of(clone, struct md_io, bio_clone);
-+		md_io->mddev = mddev;
-+		md_io->orig_bio = bio;
-+		md_io->start_time = bio_start_io_acct(bio);
-+
-+		clone->bi_end_io = md_end_io;
-+		clone->bi_private = md_io;
-+		bio = clone;
-+	}
-+
- 	/* bio could be mergeable after passing to underlayer */
- 	bio->bi_opf &= ~REQ_NOMERGE;
- 
-@@ -2340,9 +2383,12 @@ int md_integrity_register(struct mddev *mddev)
- 			       bdev_get_integrity(reference->bdev));
- 
- 	pr_debug("md: data integrity enabled on %s\n", mdname(mddev));
--	if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE)) {
-+	if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE) ||
-+	    bioset_integrity_create(&mddev->md_io_bs, BIO_POOL_SIZE)) {
- 		pr_err("md: failed to create integrity pool for %s\n",
- 		       mdname(mddev));
-+		bioset_exit(&mddev->bio_set);
-+		bioset_exit(&mddev->md_io_bs);
- 		return -EINVAL;
- 	}
- 	return 0;
-@@ -5569,6 +5615,7 @@ static void md_free(struct kobject *ko)
- 
- 	bioset_exit(&mddev->bio_set);
- 	bioset_exit(&mddev->sync_set);
-+	bioset_exit(&mddev->md_io_bs);
- 	kfree(mddev);
- }
- 
-@@ -5864,6 +5911,12 @@ int md_run(struct mddev *mddev)
- 		if (err)
- 			return err;
- 	}
-+	if (!bioset_initialized(&mddev->md_io_bs)) {
-+		err = bioset_init(&mddev->md_io_bs, BIO_POOL_SIZE,
-+				  offsetof(struct md_io, bio_clone), 0);
-+		if (err)
-+			return err;
-+	}
- 
- 	spin_lock(&pers_lock);
- 	pers = find_pers(mddev->level, mddev->clevel);
-@@ -6041,6 +6094,7 @@ int md_run(struct mddev *mddev)
- abort:
- 	bioset_exit(&mddev->bio_set);
- 	bioset_exit(&mddev->sync_set);
-+	bioset_exit(&mddev->md_io_bs);
- 	return err;
- }
- EXPORT_SYMBOL_GPL(md_run);
-@@ -6264,6 +6318,7 @@ void md_stop(struct mddev *mddev)
- 	__md_stop(mddev);
- 	bioset_exit(&mddev->bio_set);
- 	bioset_exit(&mddev->sync_set);
-+	bioset_exit(&mddev->md_io_bs);
- }
- 
- EXPORT_SYMBOL_GPL(md_stop);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 5125ccf9df06..d2f476c427a9 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -487,6 +487,7 @@ struct mddev {
- 	struct bio_set			sync_set; /* for sync operations like
- 						   * metadata and bitmap writes
- 						   */
-+	struct bio_set			md_io_bs; /* for io accounting */
- 
- 	/* Generic flush handling.
- 	 * The last to finish preflush schedules a worker to submit
+-	if (print_msg)
++	if (r1bio_existed)
+ 		pr_info_ratelimited("md/raid1:%s: redirecting sector %llu to other mirror: %s\n",
+ 				    mdname(mddev),
+ 				    (unsigned long long)r1_bio->sector,
 -- 
 2.25.1
 
