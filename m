@@ -2,74 +2,68 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5924CC43600
-	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 06:23:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36CF6C433ED
+	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 07:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33470613BB
-	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 06:23:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E7216108B
+	for <linux-raid@archiver.kernel.org>; Fri, 21 May 2021 07:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232037AbhEUGY3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 21 May 2021 02:24:29 -0400
-Received: from verein.lst.de ([213.95.11.211]:46545 "EHLO verein.lst.de"
+        id S235367AbhEUHeY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 21 May 2021 03:34:24 -0400
+Received: from mga11.intel.com ([192.55.52.93]:30857 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232002AbhEUGY3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 21 May 2021 02:24:29 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id C508C6736F; Fri, 21 May 2021 08:23:01 +0200 (CEST)
-Date:   Fri, 21 May 2021 08:23:01 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Coly Li <colyli@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, linux-m68k@lists.linux-m68k.org,
-        linux-xtensa@linux-xtensa.org, drbd-dev@lists.linbit.com,
-        linuxppc-dev@lists.ozlabs.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chris Zankel <chris@zankel.net>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jim Paris <jim@jtan.com>,
-        Joshua Morris <josh.h.morris@us.ibm.com>,
-        Philip Kelleher <pjk1939@linux.ibm.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Nitin Gupta <ngupta@vflare.org>,
-        Matias Bjorling <mb@lightnvm.io>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Alex Dubov <oakad@yahoo.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        linux-mmc@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org
-Subject: Re: [PATCH 12/26] bcache: convert to
- blk_alloc_disk/blk_cleanup_disk
-Message-ID: <20210521062301.GA10244@lst.de>
-References: <20210521055116.1053587-1-hch@lst.de> <20210521055116.1053587-13-hch@lst.de> <d4f1c005-2ce0-51b5-c861-431f0ffb3dcf@suse.de>
+        id S233932AbhEUHeX (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 21 May 2021 03:34:23 -0400
+IronPort-SDR: m8hhE5ywQ9pkcg7gbGoQffuHrc89EaWGagEEB6kQ9a9OQ3MXiWUgErD/JN1rcCtb5PKfoKkqv4
+ 88+jM4+GUJzQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,9990"; a="198344978"
+X-IronPort-AV: E=Sophos;i="5.82,313,1613462400"; 
+   d="scan'208";a="198344978"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2021 00:33:01 -0700
+IronPort-SDR: Dp1pltPo6Eo4TpexZYbqdudBwcCI8ksY3YMGmg2AzzXJJopOqawGjKwbY6UM8qXxuJl3yyaiTa
+ rUm0U7sHbMWg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,313,1613462400"; 
+   d="scan'208";a="406525757"
+Received: from apaszkie-desk.igk.intel.com ([10.102.102.225])
+  by fmsmga007.fm.intel.com with ESMTP; 21 May 2021 00:33:00 -0700
+Subject: Re: [PATCH V2 3/7] md: the latest try for improve io stats accounting
+To:     Guoqing Jiang <jgq516@gmail.com>, song@kernel.org
+Cc:     linux-raid@vger.kernel.org
+References: <20210521005521.713106-1-jiangguoqing@kylinos.cn>
+ <20210521005521.713106-4-jiangguoqing@kylinos.cn>
+From:   Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Message-ID: <83d02180-27ee-f8c2-7a41-f9b587324536@intel.com>
+Date:   Fri, 21 May 2021 09:32:59 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d4f1c005-2ce0-51b5-c861-431f0ffb3dcf@suse.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20210521005521.713106-4-jiangguoqing@kylinos.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, May 21, 2021 at 02:15:32PM +0800, Coly Li wrote:
-> The  above 2 lines are added on purpose to prevent an refcount
-> underflow. It is from commit 86da9f736740 ("bcache: fix refcount
-> underflow in bcache_device_free()").
-> 
-> Maybe add a parameter to blk_cleanup_disk() or checking (disk->flags &
-> GENHD_FL_UP) inside blk_cleanup_disk() ?
+> @@ -2340,9 +2383,12 @@ int md_integrity_register(struct mddev *mddev)
+>                              bdev_get_integrity(reference->bdev));
+>  
+>       pr_debug("md: data integrity enabled on %s\n", mdname(mddev));
+> -     if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE)) {
+> +     if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE) ||
+> +         bioset_integrity_create(&mddev->md_io_bs, BIO_POOL_SIZE)) {
+>               pr_err("md: failed to create integrity pool for %s\n",
+>                      mdname(mddev));
+> +             bioset_exit(&mddev->bio_set);
+> +             bioset_exit(&mddev->md_io_bs);
+>               return -EINVAL;
 
-Please take a look at patch 4 in the series.
+Are you sure bioset_exit() here is correct? This is always called from
+pers->run() and the cleanup in case of error is handled in md_run().
