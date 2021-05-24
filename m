@@ -2,66 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4990BC04FF3
-	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 08:46:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFB1C04FF3
+	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 11:00:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29F096113B
-	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 08:46:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C584610C7
+	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 11:00:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232469AbhEXIr3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 May 2021 04:47:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39130 "EHLO
+        id S232547AbhEXLCG convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 May 2021 07:02:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232445AbhEXIr2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 May 2021 04:47:28 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC22C061574
-        for <linux-raid@vger.kernel.org>; Mon, 24 May 2021 01:46:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4jd9MvMJExekmMK1F/mKb5naFnho9TV0zd6QNUaDE30=; b=W/qhBD3TpLHFJwC7Actn2CCy2t
-        yqiJgtomZ4ytSDknqCPnMtJGX1NbKVfxVQc29rAD5f1oJZq7aycLRtFGHOcSrJI/v8ChTgtqTftH9
-        Mu2Q17iHXfWq36N/KPsSncSDxld05+FRgAMiIvJ0lJPqNgYQD/RAfsFKNkpUf4c/YP9k6dyfKSb4j
-        3u9SF7i5xosRE6NgnltVeWPzYkV4IR3ZcN7AOuBBmscO2yw8ac6K1ZgT0tXRR7fcLUNJCwNuckDzN
-        IKF7iy+/Op9j1I5bjScaUkQEDj9MLlT/8ajQa/rV0HCxBgA7cCfPHY9U0+mJ3uIS6yO7WYM/Oq2qz
-        O7KNWtEA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1ll6DI-002BmY-2H; Mon, 24 May 2021 08:45:28 +0000
-Date:   Mon, 24 May 2021 09:45:28 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Guoqing Jiang <jgq516@gmail.com>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        artur.paszkiewicz@intel.com
-Subject: Re: [PATCH V2 2/7] md: add accounting_bio for raid0 and raid5
-Message-ID: <YKtnqNRcJV2xj/Mf@infradead.org>
-References: <20210521005521.713106-1-jiangguoqing@kylinos.cn>
- <20210521005521.713106-3-jiangguoqing@kylinos.cn>
+        with ESMTP id S232494AbhEXLCF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 May 2021 07:02:05 -0400
+Received: from wp118.webpack.hosteurope.de (wp118.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:847d::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F950C061574;
+        Mon, 24 May 2021 04:00:36 -0700 (PDT)
+Received: from 91.141.3.207.wireless.dyn.drei.com ([91.141.3.207] helo=[10.120.169.88]); authenticated
+        by wp118.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1ll8K0-0005Md-Js; Mon, 24 May 2021 13:00:32 +0200
+Date:   Mon, 24 May 2021 13:00:31 +0200
+User-Agent: K-9 Mail for Android
+In-Reply-To: <CAPhsuW7W7NfBTHY3A87py1No=FOPZgxMP4Ms43Re3uRnT0JzkQ@mail.gmail.com>
+References: <20210519062215.4111256-1-hch@lst.de> <1102825331.165797.1621422078235@ox.hosteurope.de> <CAPhsuW7W7NfBTHY3A87py1No=FOPZgxMP4Ms43Re3uRnT0JzkQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210521005521.713106-3-jiangguoqing@kylinos.cn>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Subject: Re: [PATCH] md/raid5: remove an incorect assert in in_chunk_boundary
+To:     Song Liu <song@kernel.org>
+CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-block@vger.kernel.org
+From:   "Florian D." <spam02@dazinger.net>
+Message-ID: <5C3BA4F9-DBA4-49AF-9F2C-D469BCA9E1A0@dazinger.net>
+X-bounce-key: webpack.hosteurope.de;spam02@dazinger.net;1621854037;a224ce19;
+X-HE-SMSGID: 1ll8K0-0005Md-Js
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, May 21, 2021 at 08:55:16AM +0800, Guoqing Jiang wrote:
-> Let's introduce accounting_bio which checks if md needs clone the bio
-> for accounting.
-> 
-> And add relevant function to raid0 and raid5 given both don't have
-> their own clone infrastrure, also checks if it is split bio.
+As you like... if it's better in the 'tested by:' line, you can also take my full name: Florian Dazinger.
+ I use the e- mail address regularly, so that's ok.
 
-Please don't add another indirect call in the I/O submission fast path.
-With Spectre mitigations these are really slow, and also are hard to
-follow.
+Thanks for the quick patch!
+Florian
 
-I think moving the call to allocate the accounting bio clone entirely
-into the personalities is probably the cleanest approach without any
-of these downsides.
+On 24 May 2021 06:38:35 CEST, Song Liu <song@kernel.org> wrote:
+>On Wed, May 19, 2021 at 4:36 AM wp1083705-spam02 wp1083705-spam02
+><spam02@dazinger.net> wrote:
+>>
+>>
+>> > Christoph Hellwig <hch@lst.de> hat am 19.05.2021 08:22 geschrieben:
+>> >
+>> >
+>> > Now that the original bdev is stored in the bio this assert is
+>incorrect
+>> > and will trigge for any partitioned raid5 device.
+>> >
+>> > Reported-by:  Florian D. <spam02@dazinger.net>
+>> > Fixes: 309dca309fc3 ("block: store a block_device pointer in struct
+>bio"),
+>> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> > ---
+>> >  drivers/md/raid5.c | 2 --
+>> >  1 file changed, 2 deletions(-)
+>> >
+>> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> > index 841e1c1aa5e6..7d4ff8a5c55e 100644
+>> > --- a/drivers/md/raid5.c
+>> > +++ b/drivers/md/raid5.c
+>> > @@ -5311,8 +5311,6 @@ static int in_chunk_boundary(struct mddev
+>*mddev, struct bio *bio)
+>> >       unsigned int chunk_sectors;
+>> >       unsigned int bio_sectors = bio_sectors(bio);
+>> >
+>> > -     WARN_ON_ONCE(bio->bi_bdev->bd_partno);
+>> > -
+>> >       chunk_sectors = min(conf->chunk_sectors,
+>conf->prev_chunk_sectors);
+>> >       return  chunk_sectors >=
+>> >               ((sector & (chunk_sectors - 1)) + bio_sectors);
+>> > --
+>> > 2.30.2
+>>
+>> yes, this solves it, I can confirm with this patch the error/warning
+>message when booting linux-5.12 is gone!
+>
+>Applied to md-fixes. Thanks all.
+>
+>@ Florian, would you like to update the Reported-by tag (with your
+>full name and/or
+>different email)?
+>
+>Thanks,
+>Song
+
+-- 
+Sent from my Android device with K-9 Mail. Please excuse my brevity.
