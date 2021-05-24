@@ -2,152 +2,99 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 717D2C47082
-	for <linux-raid@archiver.kernel.org>; Sun, 23 May 2021 16:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D2D0C04FF3
+	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 04:38:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56FF061263
-	for <linux-raid@archiver.kernel.org>; Sun, 23 May 2021 16:20:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 511DA610CE
+	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 04:38:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231869AbhEWQWO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 23 May 2021 12:22:14 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40046 "EHLO mx2.suse.de"
+        id S229733AbhEXEkQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 May 2021 00:40:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42550 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231841AbhEWQWN (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sun, 23 May 2021 12:22:13 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1621786845; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iFkWHMko4nu73I8bffz46LtF778hJacVhJlqbZzQwF8=;
-        b=xIMCLEuwtEJ3ZYLVT1jAFLSlmekHbIbar2TdYds2f7pJgux+ASXt64k09tx/I3VzYVSQbd
-        jYbEua8uhBBK1QtJJhgUBirelGonk+/REbn1EZdyuTOztWNmc/243wGZRrn0BpiSJnEF/k
-        3o6nC8QrS3eMOcehdY1jqcN3GUtqNzU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1621786845;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iFkWHMko4nu73I8bffz46LtF778hJacVhJlqbZzQwF8=;
-        b=OjWXQORh1AHg1yI5pLimYhJCE0/GNAVfRs6jLZKfmf7Vpd71K+gfdYi9LvcDAJhupXh6Tf
-        ZrcrurNwYt+dptBg==
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id DA2BFAAFD;
-        Sun, 23 May 2021 16:20:44 +0000 (UTC)
-Subject: Re: [PATCH 12/26] bcache: convert to blk_alloc_disk/blk_cleanup_disk
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chris Zankel <chris@zankel.net>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jim Paris <jim@jtan.com>,
-        Joshua Morris <josh.h.morris@us.ibm.com>,
-        Philip Kelleher <pjk1939@linux.ibm.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Nitin Gupta <ngupta@vflare.org>,
-        Matias Bjorling <mb@lightnvm.io>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Alex Dubov <oakad@yahoo.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>
-Cc:     linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-m68k@lists.linux-m68k.org, linux-xtensa@linux-xtensa.org,
-        drbd-dev@lists.linbit.com, linuxppc-dev@lists.ozlabs.org,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mmc@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org
-References: <20210521055116.1053587-1-hch@lst.de>
- <20210521055116.1053587-13-hch@lst.de>
-From:   Coly Li <colyli@suse.de>
-Message-ID: <19e05358-abc2-a577-d3bd-d4ae89f6316e@suse.de>
-Date:   Mon, 24 May 2021 00:20:34 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.10.2
+        id S229530AbhEXEkP (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 24 May 2021 00:40:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 42A0C611CB;
+        Mon, 24 May 2021 04:38:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621831128;
+        bh=/zWIZI3ezQM1Dl4LaC/TzYoxUOHy+syxhazkSgtgJF8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ZF+LOPrAnrLDCgopnhj0LMIECYdOElH0IDNpJlvbFHj6aiityQiaI00NlsEpt1/2a
+         79UTpUQy8n/KISa8tNXX7Z9hlmGyiJDx6r9Ls590oI5MkXKEaRJ9TCnrI+LaFdztIV
+         VLF9u6zrYC3LxtM97eFLx9raX7CIkxWVdn5frXF9tijAwOG8MJrqwSugNS6DlUgeqE
+         Frwwcw2XGYFSn7nfS1GVUaWNsqVYMcu42ZfhS/m3y+gl6EC+97s8YT8G2xz2vXI+aP
+         DMw5P/fAxj3cXfqwpoMdWA5L7Ke4glGGrS3L+ISGfqFiapOX960FAu7CJlpOs/wiqT
+         uOXDbj4/F1DyQ==
+Received: by mail-lf1-f52.google.com with SMTP id v8so33788601lft.8;
+        Sun, 23 May 2021 21:38:48 -0700 (PDT)
+X-Gm-Message-State: AOAM533UWLDHfxCWHohCOsLQFfTLj7w4SzEfG7a4WqvUO+j1p0MVaZrC
+        SyDbaAi6p7KJYHTAbPFuTFmw3hw0BMUG5GkGSno=
+X-Google-Smtp-Source: ABdhPJyLNqdxUBHx9zXjZwtz6wj73jwvOrpWkNHgy6aHajFit9H2vAMzKEAIrUmX5a4lvwXpEwG07ltEmWpq5qCYwYE=
+X-Received: by 2002:a19:6a10:: with SMTP id u16mr9425700lfu.281.1621831126540;
+ Sun, 23 May 2021 21:38:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210521055116.1053587-13-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210519062215.4111256-1-hch@lst.de> <1102825331.165797.1621422078235@ox.hosteurope.de>
+In-Reply-To: <1102825331.165797.1621422078235@ox.hosteurope.de>
+From:   Song Liu <song@kernel.org>
+Date:   Sun, 23 May 2021 21:38:35 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7W7NfBTHY3A87py1No=FOPZgxMP4Ms43Re3uRnT0JzkQ@mail.gmail.com>
+Message-ID: <CAPhsuW7W7NfBTHY3A87py1No=FOPZgxMP4Ms43Re3uRnT0JzkQ@mail.gmail.com>
+Subject: Re: [PATCH] md/raid5: remove an incorect assert in in_chunk_boundary
+To:     wp1083705-spam02 wp1083705-spam02 <spam02@dazinger.net>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-block@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 5/21/21 1:51 PM, Christoph Hellwig wrote:
-> Convert the bcache driver to use the blk_alloc_disk and blk_cleanup_disk
-> helpers to simplify gendisk and request_queue allocation.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Wed, May 19, 2021 at 4:36 AM wp1083705-spam02 wp1083705-spam02
+<spam02@dazinger.net> wrote:
+>
+>
+> > Christoph Hellwig <hch@lst.de> hat am 19.05.2021 08:22 geschrieben:
+> >
+> >
+> > Now that the original bdev is stored in the bio this assert is incorrect
+> > and will trigge for any partitioned raid5 device.
+> >
+> > Reported-by:  Florian D. <spam02@dazinger.net>
+> > Fixes: 309dca309fc3 ("block: store a block_device pointer in struct bio"),
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  drivers/md/raid5.c | 2 --
+> >  1 file changed, 2 deletions(-)
+> >
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 841e1c1aa5e6..7d4ff8a5c55e 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -5311,8 +5311,6 @@ static int in_chunk_boundary(struct mddev *mddev, struct bio *bio)
+> >       unsigned int chunk_sectors;
+> >       unsigned int bio_sectors = bio_sectors(bio);
+> >
+> > -     WARN_ON_ONCE(bio->bi_bdev->bd_partno);
+> > -
+> >       chunk_sectors = min(conf->chunk_sectors, conf->prev_chunk_sectors);
+> >       return  chunk_sectors >=
+> >               ((sector & (chunk_sectors - 1)) + bio_sectors);
+> > --
+> > 2.30.2
+>
+> yes, this solves it, I can confirm with this patch the error/warning message when booting linux-5.12 is gone!
 
-Acked-by: Coly Li <colyli@suse.de>
+Applied to md-fixes. Thanks all.
 
-Thanks.
+@ Florian, would you like to update the Reported-by tag (with your
+full name and/or
+different email)?
 
-
-Coly Li
-
-> ---
->  drivers/md/bcache/super.c | 15 ++++-----------
->  1 file changed, 4 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-> index bea8c4429ae8..185246a0d855 100644
-> --- a/drivers/md/bcache/super.c
-> +++ b/drivers/md/bcache/super.c
-> @@ -890,13 +890,9 @@ static void bcache_device_free(struct bcache_device *d)
->  		if (disk_added)
->  			del_gendisk(disk);
->  
-> -		if (disk->queue)
-> -			blk_cleanup_queue(disk->queue);
-> -
-> +		blk_cleanup_disk(disk);
->  		ida_simple_remove(&bcache_device_idx,
->  				  first_minor_to_idx(disk->first_minor));
-> -		if (disk_added)
-> -			put_disk(disk);
->  	}
->  
->  	bioset_exit(&d->bio_split);
-> @@ -946,7 +942,7 @@ static int bcache_device_init(struct bcache_device *d, unsigned int block_size,
->  			BIOSET_NEED_BVECS|BIOSET_NEED_RESCUER))
->  		goto err;
->  
-> -	d->disk = alloc_disk(BCACHE_MINORS);
-> +	d->disk = blk_alloc_disk(NUMA_NO_NODE);
->  	if (!d->disk)
->  		goto err;
->  
-> @@ -955,14 +951,11 @@ static int bcache_device_init(struct bcache_device *d, unsigned int block_size,
->  
->  	d->disk->major		= bcache_major;
->  	d->disk->first_minor	= idx_to_first_minor(idx);
-> +	d->disk->minors		= BCACHE_MINORS;
->  	d->disk->fops		= ops;
->  	d->disk->private_data	= d;
->  
-> -	q = blk_alloc_queue(NUMA_NO_NODE);
-> -	if (!q)
-> -		return -ENOMEM;
-> -
-> -	d->disk->queue			= q;
-> +	q = d->disk->queue;
->  	q->limits.max_hw_sectors	= UINT_MAX;
->  	q->limits.max_sectors		= UINT_MAX;
->  	q->limits.max_segment_size	= UINT_MAX;
-> 
-
+Thanks,
+Song
