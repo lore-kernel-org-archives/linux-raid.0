@@ -2,106 +2,255 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFB1C04FF3
-	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 11:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFDE6C2B9F8
+	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 17:35:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C584610C7
-	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 11:00:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BB7961400
+	for <linux-raid@archiver.kernel.org>; Mon, 24 May 2021 17:35:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232547AbhEXLCG convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 24 May 2021 07:02:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41184 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232494AbhEXLCF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 24 May 2021 07:02:05 -0400
-Received: from wp118.webpack.hosteurope.de (wp118.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:847d::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F950C061574;
-        Mon, 24 May 2021 04:00:36 -0700 (PDT)
-Received: from 91.141.3.207.wireless.dyn.drei.com ([91.141.3.207] helo=[10.120.169.88]); authenticated
-        by wp118.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1ll8K0-0005Md-Js; Mon, 24 May 2021 13:00:32 +0200
-Date:   Mon, 24 May 2021 13:00:31 +0200
-User-Agent: K-9 Mail for Android
-In-Reply-To: <CAPhsuW7W7NfBTHY3A87py1No=FOPZgxMP4Ms43Re3uRnT0JzkQ@mail.gmail.com>
-References: <20210519062215.4111256-1-hch@lst.de> <1102825331.165797.1621422078235@ox.hosteurope.de> <CAPhsuW7W7NfBTHY3A87py1No=FOPZgxMP4Ms43Re3uRnT0JzkQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Subject: Re: [PATCH] md/raid5: remove an incorect assert in in_chunk_boundary
+        id S233179AbhEXRhA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 24 May 2021 13:37:00 -0400
+Received: from mga09.intel.com ([134.134.136.24]:27300 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233112AbhEXRg7 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 24 May 2021 13:36:59 -0400
+IronPort-SDR: napefHMUuny9xeMOazkUsBlRXfD7WUaDKnFGfOw2wtwSeU9IoZseVpl5F5NDFMp84qULs0XfrU
+ 3A+K2Hoz8KAQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,9993"; a="202011762"
+X-IronPort-AV: E=Sophos;i="5.82,325,1613462400"; 
+   d="scan'208";a="202011762"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2021 10:35:28 -0700
+IronPort-SDR: NpByXquiLfIKic9Eu2OxlyYDBnMkMcfoo2nZK7UTvAUaHp/HEFugiFoBRAxYxOa4dtZa17L3ay
+ ckVCxHRnDOfQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,325,1613462400"; 
+   d="scan'208";a="475982436"
+Received: from lkp-server02.sh.intel.com (HELO 1ec8406c5392) ([10.239.97.151])
+  by orsmga001.jf.intel.com with ESMTP; 24 May 2021 10:35:27 -0700
+Received: from kbuild by 1ec8406c5392 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1llEUA-0001If-Ja; Mon, 24 May 2021 17:35:26 +0000
+Date:   Tue, 25 May 2021 01:35:11 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Song Liu <song@kernel.org>
-CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-block@vger.kernel.org
-From:   "Florian D." <spam02@dazinger.net>
-Message-ID: <5C3BA4F9-DBA4-49AF-9F2C-D469BCA9E1A0@dazinger.net>
-X-bounce-key: webpack.hosteurope.de;spam02@dazinger.net;1621854037;a224ce19;
-X-HE-SMSGID: 1ll8K0-0005Md-Js
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ ac5cf751a832c0dc7adf0e880158edd5c58ae854
+Message-ID: <60abe3cf.Xo+4cLf7gUxpK3a1%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-As you like... if it's better in the 'tested by:' line, you can also take my full name: Florian Dazinger.
- I use the e- mail address regularly, so that's ok.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: ac5cf751a832c0dc7adf0e880158edd5c58ae854  md/raid5: remove an incorrect assert in in_chunk_boundary
 
-Thanks for the quick patch!
-Florian
+elapsed time: 726m
 
-On 24 May 2021 06:38:35 CEST, Song Liu <song@kernel.org> wrote:
->On Wed, May 19, 2021 at 4:36 AM wp1083705-spam02 wp1083705-spam02
-><spam02@dazinger.net> wrote:
->>
->>
->> > Christoph Hellwig <hch@lst.de> hat am 19.05.2021 08:22 geschrieben:
->> >
->> >
->> > Now that the original bdev is stored in the bio this assert is
->incorrect
->> > and will trigge for any partitioned raid5 device.
->> >
->> > Reported-by:  Florian D. <spam02@dazinger.net>
->> > Fixes: 309dca309fc3 ("block: store a block_device pointer in struct
->bio"),
->> > Signed-off-by: Christoph Hellwig <hch@lst.de>
->> > ---
->> >  drivers/md/raid5.c | 2 --
->> >  1 file changed, 2 deletions(-)
->> >
->> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> > index 841e1c1aa5e6..7d4ff8a5c55e 100644
->> > --- a/drivers/md/raid5.c
->> > +++ b/drivers/md/raid5.c
->> > @@ -5311,8 +5311,6 @@ static int in_chunk_boundary(struct mddev
->*mddev, struct bio *bio)
->> >       unsigned int chunk_sectors;
->> >       unsigned int bio_sectors = bio_sectors(bio);
->> >
->> > -     WARN_ON_ONCE(bio->bi_bdev->bd_partno);
->> > -
->> >       chunk_sectors = min(conf->chunk_sectors,
->conf->prev_chunk_sectors);
->> >       return  chunk_sectors >=
->> >               ((sector & (chunk_sectors - 1)) + bio_sectors);
->> > --
->> > 2.30.2
->>
->> yes, this solves it, I can confirm with this patch the error/warning
->message when booting linux-5.12 is gone!
->
->Applied to md-fixes. Thanks all.
->
->@ Florian, would you like to update the Reported-by tag (with your
->full name and/or
->different email)?
->
->Thanks,
->Song
+configs tested: 186
+configs skipped: 4
 
--- 
-Sent from my Android device with K-9 Mail. Please excuse my brevity.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+powerpc                      tqm8xx_defconfig
+arm                       mainstone_defconfig
+powerpc                 mpc832x_rdb_defconfig
+powerpc                      mgcoge_defconfig
+arm                          imote2_defconfig
+arm                          pxa3xx_defconfig
+x86_64                              defconfig
+mips                        nlm_xlr_defconfig
+sh                             shx3_defconfig
+mips                         tb0287_defconfig
+m68k                            q40_defconfig
+sh                           se7343_defconfig
+powerpc                 mpc837x_mds_defconfig
+arm                            mps2_defconfig
+arm                          pxa910_defconfig
+powerpc                      pcm030_defconfig
+mips                           ip27_defconfig
+mips                           mtx1_defconfig
+arm                             mxs_defconfig
+mips                        bcm47xx_defconfig
+arm                         at91_dt_defconfig
+arm                            lart_defconfig
+sh                         apsh4a3a_defconfig
+arm                           spitz_defconfig
+powerpc                      makalu_defconfig
+arm                       aspeed_g4_defconfig
+arm64                            alldefconfig
+ia64                          tiger_defconfig
+csky                                defconfig
+powerpc                     stx_gp3_defconfig
+xtensa                           allyesconfig
+sh                          rsk7264_defconfig
+m68k                          amiga_defconfig
+arm                          ep93xx_defconfig
+sh                        sh7757lcr_defconfig
+arm                         axm55xx_defconfig
+arm                          pcm027_defconfig
+riscv                    nommu_virt_defconfig
+powerpc                   currituck_defconfig
+xtensa                              defconfig
+m68k                        m5407c3_defconfig
+mips                      pic32mzda_defconfig
+powerpc                     mpc83xx_defconfig
+ia64                             alldefconfig
+sh                           se7724_defconfig
+sparc                            allyesconfig
+mips                     cu1000-neo_defconfig
+sh                         microdev_defconfig
+arm                       spear13xx_defconfig
+riscv                          rv32_defconfig
+powerpc                  mpc866_ads_defconfig
+arm                           stm32_defconfig
+powerpc                     taishan_defconfig
+xtensa                       common_defconfig
+xtensa                    xip_kc705_defconfig
+powerpc                       ebony_defconfig
+powerpc                 canyonlands_defconfig
+arm                        neponset_defconfig
+sh                     magicpanelr2_defconfig
+powerpc                       maple_defconfig
+arm                            qcom_defconfig
+sh                   sh7724_generic_defconfig
+arm                      integrator_defconfig
+arm                        oxnas_v6_defconfig
+sh                           se7722_defconfig
+arm                          badge4_defconfig
+s390                                defconfig
+arm                         lpc18xx_defconfig
+openrisc                            defconfig
+riscv                               defconfig
+powerpc                     skiroot_defconfig
+arm                       imx_v4_v5_defconfig
+sh                          rsk7203_defconfig
+mips                           xway_defconfig
+mips                     loongson1c_defconfig
+mips                  cavium_octeon_defconfig
+sparc                               defconfig
+csky                             alldefconfig
+h8300                    h8300h-sim_defconfig
+openrisc                 simple_smp_defconfig
+sh                        edosk7705_defconfig
+arm                           h3600_defconfig
+mips                        omega2p_defconfig
+sh                        sh7785lcr_defconfig
+powerpc                     powernv_defconfig
+powerpc                 linkstation_defconfig
+mips                      bmips_stb_defconfig
+sh                            titan_defconfig
+m68k                         amcore_defconfig
+mips                        workpad_defconfig
+mips                     loongson2k_defconfig
+mips                           jazz_defconfig
+riscv                            alldefconfig
+arm                     eseries_pxa_defconfig
+powerpc                    adder875_defconfig
+xtensa                    smp_lx200_defconfig
+powerpc                      acadia_defconfig
+sh                           se7619_defconfig
+powerpc                     akebono_defconfig
+riscv                    nommu_k210_defconfig
+parisc                           alldefconfig
+openrisc                  or1klitex_defconfig
+parisc                generic-32bit_defconfig
+sh                          rsk7201_defconfig
+powerpc                  mpc885_ads_defconfig
+m68k                             alldefconfig
+sh                        sh7763rdp_defconfig
+sh                   rts7751r2dplus_defconfig
+mips                           gcw0_defconfig
+sh                          rsk7269_defconfig
+m68k                        m5307c3_defconfig
+sh                          r7780mp_defconfig
+m68k                            mac_defconfig
+xtensa                         virt_defconfig
+alpha                            alldefconfig
+arc                 nsimosci_hs_smp_defconfig
+x86_64                            allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a005-20210524
+x86_64               randconfig-a001-20210524
+x86_64               randconfig-a006-20210524
+x86_64               randconfig-a003-20210524
+x86_64               randconfig-a004-20210524
+x86_64               randconfig-a002-20210524
+i386                 randconfig-a001-20210524
+i386                 randconfig-a002-20210524
+i386                 randconfig-a005-20210524
+i386                 randconfig-a006-20210524
+i386                 randconfig-a004-20210524
+i386                 randconfig-a003-20210524
+i386                 randconfig-a011-20210524
+i386                 randconfig-a016-20210524
+i386                 randconfig-a015-20210524
+i386                 randconfig-a012-20210524
+i386                 randconfig-a014-20210524
+i386                 randconfig-a013-20210524
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                            allmodconfig
+um                               allmodconfig
+um                                allnoconfig
+um                               allyesconfig
+um                                  defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                           allyesconfig
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-b001-20210524
+x86_64               randconfig-a013-20210524
+x86_64               randconfig-a012-20210524
+x86_64               randconfig-a014-20210524
+x86_64               randconfig-a016-20210524
+x86_64               randconfig-a015-20210524
+x86_64               randconfig-a011-20210524
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
