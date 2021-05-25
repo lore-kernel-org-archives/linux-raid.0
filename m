@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB13C47084
-	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 09:47:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5836DC2B9F8
+	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 09:48:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF4406100B
-	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 09:47:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E2CF613FA
+	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 09:48:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232734AbhEYJsj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 25 May 2021 05:48:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39302 "EHLO
+        id S232728AbhEYJso (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 25 May 2021 05:48:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232713AbhEYJsg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 25 May 2021 05:48:36 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A60E6C061574
-        for <linux-raid@vger.kernel.org>; Tue, 25 May 2021 02:47:06 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id cu11-20020a17090afa8bb029015d5d5d2175so12900461pjb.3
-        for <linux-raid@vger.kernel.org>; Tue, 25 May 2021 02:47:06 -0700 (PDT)
+        with ESMTP id S232720AbhEYJsl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 25 May 2021 05:48:41 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D2A9C061756
+        for <linux-raid@vger.kernel.org>; Tue, 25 May 2021 02:47:10 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id 6so22283275pgk.5
+        for <linux-raid@vger.kernel.org>; Tue, 25 May 2021 02:47:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=p587mV7/AAq9YmpUV9Hsdc95M4rsuqjwQr1q0hoVAnw=;
-        b=RuIyz3oE1wPU71Fyyyp8BVc0d9PQ8/gdD/7pYfW7XxCbp9SsdcXSk1ISGj1QLLPuDJ
-         IDAM1Bshii49ubeaMLZyPEn1a8YXfCB8eboifgEeOmC55N3lBeGcmZc92BhFbH+oLkif
-         WeVe8QvZicCZr5Gktc3y3ujIilivVHnKai1ByohpXt81GqNOEvSTPxytUNWS6mi7GR3F
-         jxApSvSqcFoWcK9fgywHStGQLfYDSscafFUbBQc89VvWtLr17lcImfuD/4QEKLkXAjp/
-         yJy9cEhOc9iblGQWvOmapcFKabq0lKk9/CeSZqp7vCb68rw72LkYSOc2UqXlC29RPb24
-         0mbQ==
+        bh=yzPdPf8A+XYlIU6iP9u4H+UnqgjN/8DXh9TegflkiVo=;
+        b=an8o1jcwYf2/wwqCDf68X7M/hLMPnr+3S2pgkb1Slp9UOBTlWcbeoQFUNgU7bWAEjN
+         bCj7SGLy6oIstZhPo4d5HW72HYnJBhhaZzv1XCfpP6zoUX5unjGDWAq038FITaGoCxnV
+         pJH5L1bIjdg1bxShp3UiARyR2UTo/lGsOJQwdfH1F3KjlkHP8rwEjPhBuiW9PoJpIyQG
+         m2MyFyvZ1yl7fOwGXI2dq+/nBxdDU0nNj7CypqfdIF6ruguyCzNVDpxcpIqeslWEqqMw
+         aummQmNJMvU3Q7uUMid7yqMG1LQKf2TWtNOdO9wGk4RQEsZD3LU63k1WL5c3aJ6geSkh
+         CYTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=p587mV7/AAq9YmpUV9Hsdc95M4rsuqjwQr1q0hoVAnw=;
-        b=N3JogYms4sNiSui4RY+zej3/2P/mUusalJYhfa004wZLxl9uncvqZpm7GkKFUYQibd
-         GaIzXpzt217OqmPWQfTTEtOLjdO0rmWZvbgac+ZYCp/E9AfJRwccJvlRbldAYi6G0VG3
-         /Sc9dCqz8ZsbQ0FvS1XIwA3knLSDWVXIqpw8f9V8dkBuqpUlo1TTDCOakwbg9yH3ptqi
-         rcz2h4scn01U56B8JoPmJhCNAFNq4mYtxAahM1uNfkqd/B2Q04PsIKVOk3WQvqpokleZ
-         blnStL1qj1TQ2Bba6EIZ25wUwnchizq273DWhg9yQUf15jpwaJTImJ2v97xr0DWZ84Gq
-         tnDQ==
-X-Gm-Message-State: AOAM530r9PciMDFhdZVzD7x62edRYDm0MJiV3pH4C0rqlWOmU3EZsW6i
-        BCvMJE4MxYf7hCXfhpa0V9k=
-X-Google-Smtp-Source: ABdhPJysOM8bm57h3ZT96LOPCVFpx7vigdtGfvmMWVEcu++QIT40vTkLqPziS3a+pHW9GFhn8BRBhA==
-X-Received: by 2002:a17:90a:1588:: with SMTP id m8mr4000906pja.226.1621936025155;
-        Tue, 25 May 2021 02:47:05 -0700 (PDT)
+        bh=yzPdPf8A+XYlIU6iP9u4H+UnqgjN/8DXh9TegflkiVo=;
+        b=cE3k0Dpe6kl+lia7wAGczLtytmec9w9qXAziXyQf0iL9hbtxA3Pv9QvuKs/ztn5BUi
+         QnT4S08w97tttEOGv1HRCwnzIsP6HfMIgu9Y71gWMGQ+/1R5vXTwR/PkxmWInudSCHsr
+         tApIk9kH/wGOVvbkGF5dZRtV0DPcVWECbBTGgDH/bOlOG62mhwhgzu0OwdfwX5IWmKKe
+         j8XztgBWDJOb/fY8XYM9d+t1dkvKa9LzlKstKJOwSD1PzGpvuf0igRul4xuNWV3eKyxQ
+         5196kWpBtzOBOxmT8ftDLUyeV9IW+Lu97greQuLVQWhod2zsnHTaa/k0G6teCw/6bLDn
+         CNjg==
+X-Gm-Message-State: AOAM533bShBLnWog+OBJzFp4Myv/QE947NpXYElMwMDXw8Z1IriHWN3p
+        i19+P+9oIrEmYhen8AFLh8M=
+X-Google-Smtp-Source: ABdhPJw+WAGnWM8iWB6Dgr4lYiq50szEVjTaTwksJpd3/NiBIVI34FO3pPX2JphPUSGImTY/c68oDA==
+X-Received: by 2002:a62:8fcf:0:b029:2e8:f2ba:38e7 with SMTP id n198-20020a628fcf0000b02902e8f2ba38e7mr7050160pfd.1.1621936030247;
+        Tue, 25 May 2021 02:47:10 -0700 (PDT)
 Received: from localhost.localdomain ([89.187.161.155])
-        by smtp.gmail.com with ESMTPSA id r10sm13114437pfl.159.2021.05.25.02.47.03
+        by smtp.gmail.com with ESMTPSA id r10sm13114437pfl.159.2021.05.25.02.47.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 May 2021 02:47:04 -0700 (PDT)
+        Tue, 25 May 2021 02:47:09 -0700 (PDT)
 From:   Guoqing Jiang <jgq516@gmail.com>
 X-Google-Original-From: Guoqing Jiang <jiangguoqing@kylinos.cn>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com,
         hch@infradead.org
-Subject: [PATCH V3 4/8] md/raid5: avoid redundant bio clone in raid5_read_one_chunk
-Date:   Tue, 25 May 2021 17:46:19 +0800
-Message-Id: <20210525094623.763195-5-jiangguoqing@kylinos.cn>
+Subject: [PATCH V3 6/8] md/raid1: enable io accounting
+Date:   Tue, 25 May 2021 17:46:21 +0800
+Message-Id: <20210525094623.763195-7-jiangguoqing@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210525094623.763195-1-jiangguoqing@kylinos.cn>
 References: <20210525094623.763195-1-jiangguoqing@kylinos.cn>
@@ -73,120 +73,61 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-After enable io accounting, chunk read bio could be cloned twice which
-is not good. To avoid such inefficiency, let's clone align_bio from
-io_acct_set too, then we need only call md_account_bio in make_request
-unconditionally.
+For raid1, we record the start time between split bio and clone bio,
+and finish the accounting in the final endio.
+
+Also introduce start_time in r1bio accordingly.
 
 Signed-off-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
 ---
- drivers/md/raid5.c | 29 +++++++++++++++--------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+ drivers/md/raid1.c | 7 +++++++
+ drivers/md/raid1.h | 1 +
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 5a05277f4be7..f83623ac8c34 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5364,11 +5364,13 @@ static struct bio *remove_bio_from_retry(struct r5conf *conf,
-  */
- static void raid5_align_endio(struct bio *bi)
- {
--	struct bio* raid_bi  = bi->bi_private;
-+	struct md_io_acct *md_io_acct = bi->bi_private;
-+	struct bio *raid_bi = md_io_acct->orig_bio;
- 	struct mddev *mddev;
- 	struct r5conf *conf;
- 	struct md_rdev *rdev;
- 	blk_status_t error = bi->bi_status;
-+	unsigned long start_time = md_io_acct->start_time;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 696da6b8b7ed..51f2547c2007 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -300,6 +300,8 @@ static void call_bio_endio(struct r1bio *r1_bio)
+ 	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
+ 		bio->bi_status = BLK_STS_IOERR;
  
- 	bio_put(bi);
++	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++		bio_end_io_acct(bio, r1_bio->start_time);
+ 	bio_endio(bio);
+ }
  
-@@ -5380,6 +5382,8 @@ static void raid5_align_endio(struct bio *bi)
- 	rdev_dec_pending(rdev, conf->mddev);
+@@ -1292,6 +1294,9 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
  
- 	if (!error) {
-+		if (blk_queue_io_stat(raid_bi->bi_bdev->bd_disk->queue))
-+			bio_end_io_acct(raid_bi, start_time);
- 		bio_endio(raid_bi);
- 		if (atomic_dec_and_test(&conf->active_aligned_reads))
- 			wake_up(&conf->wait_for_quiescent);
-@@ -5398,6 +5402,7 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 	struct md_rdev *rdev;
- 	sector_t sector, end_sector, first_bad;
- 	int bad_sectors, dd_idx;
-+	struct md_io_acct *md_io_acct;
+ 	r1_bio->read_disk = rdisk;
  
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
- 		pr_debug("%s: non aligned\n", __func__);
-@@ -5434,14 +5439,18 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
- 		return 0;
- 	}
- 
--	align_bio = bio_clone_fast(raid_bio, GFP_NOIO, &mddev->bio_set);
-+	align_bio = bio_clone_fast(raid_bio, GFP_NOIO, &mddev->io_acct_set);
-+	md_io_acct = container_of(align_bio, struct md_io_acct, bio_clone);
-+	raid_bio->bi_next = (void *)rdev;
-+	if (blk_queue_io_stat(raid_bio->bi_bdev->bd_disk->queue))
-+		md_io_acct->start_time = bio_start_io_acct(raid_bio);
-+	md_io_acct->orig_bio = raid_bio;
++	if (!r1bio_existed && blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++		r1_bio->start_time = bio_start_io_acct(bio);
 +
- 	bio_set_dev(align_bio, rdev->bdev);
- 	align_bio->bi_end_io = raid5_align_endio;
--	align_bio->bi_private = raid_bio;
-+	align_bio->bi_private = md_io_acct;
- 	align_bio->bi_iter.bi_sector = sector;
+ 	read_bio = bio_clone_fast(bio, gfp, &mddev->bio_set);
  
--	raid_bio->bi_next = (void *)rdev;
--
- 	/* No reshape active, so we can trust rdev->data_offset */
- 	align_bio->bi_iter.bi_sector += rdev->data_offset;
- 
-@@ -5468,7 +5477,6 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
- 	sector_t sector = raid_bio->bi_iter.bi_sector;
- 	unsigned chunk_sects = mddev->chunk_sectors;
- 	unsigned sectors = chunk_sects - (sector & (chunk_sects-1));
--	struct r5conf *conf = mddev->private;
- 
- 	if (sectors < bio_sectors(raid_bio)) {
- 		struct r5conf *conf = mddev->private;
-@@ -5478,9 +5486,6 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
- 		raid_bio = split;
+ 	r1_bio->bios[rdisk] = read_bio;
+@@ -1461,6 +1466,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		r1_bio->sectors = max_sectors;
  	}
  
--	if (raid_bio->bi_pool != &conf->bio_split)
--		md_account_bio(mddev, &raid_bio);
--
- 	if (!raid5_read_one_chunk(mddev, raid_bio))
- 		return raid_bio;
++	if (blk_queue_io_stat(bio->bi_bdev->bd_disk->queue))
++		r1_bio->start_time = bio_start_io_acct(bio);
+ 	atomic_set(&r1_bio->remaining, 1);
+ 	atomic_set(&r1_bio->behind_remaining, 0);
  
-@@ -5760,7 +5765,6 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	DEFINE_WAIT(w);
- 	bool do_prepare;
- 	bool do_flush = false;
--	bool do_clone = false;
- 
- 	if (unlikely(bi->bi_opf & REQ_PREFLUSH)) {
- 		int ret = log_handle_flush_request(conf, bi);
-@@ -5789,7 +5793,6 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	if (rw == READ && mddev->degraded == 0 &&
- 	    mddev->reshape_position == MaxSector) {
- 		bi = chunk_aligned_read(mddev, bi);
--		do_clone = true;
- 		if (!bi)
- 			return true;
- 	}
-@@ -5804,9 +5807,7 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	last_sector = bio_end_sector(bi);
- 	bi->bi_next = NULL;
- 
--	if (!do_clone)
--		md_account_bio(mddev, &bi);
--
-+	md_account_bio(mddev, &bi);
- 	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
- 	for (; logical_sector < last_sector; logical_sector += RAID5_STRIPE_SECTORS(conf)) {
- 		int previous;
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index b7eb09e8c025..ccf10e59b116 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -158,6 +158,7 @@ struct r1bio {
+ 	sector_t		sector;
+ 	int			sectors;
+ 	unsigned long		state;
++	unsigned long		start_time;
+ 	struct mddev		*mddev;
+ 	/*
+ 	 * original bio going to /dev/mdx
 -- 
 2.25.1
 
