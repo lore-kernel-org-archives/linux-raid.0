@@ -8,41 +8,42 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EE10C2B9F8
-	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 08:08:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64362C47085
+	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 08:18:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 828C661401
-	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 08:08:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F3F861419
+	for <linux-raid@archiver.kernel.org>; Tue, 25 May 2021 08:18:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232106AbhEYIJj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 25 May 2021 04:09:39 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60656 "EHLO mx2.suse.de"
+        id S232202AbhEYIT4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 25 May 2021 04:19:56 -0400
+Received: from mx2.suse.de ([195.135.220.15]:59476 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231947AbhEYIJH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 25 May 2021 04:09:07 -0400
+        id S230370AbhEYIT4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 25 May 2021 04:19:56 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1621929850; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1621930705; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=C480wFYuyMOjFSQyTKDRSRXds+ZLVDO5E1tUMdJxUt4=;
-        b=xhE1T+Cno8jWuBsiEl2sdfKLsT7McuoVcMzjwR57HTVMOtcHFNBGnzsUYMGrWaMnKq8xog
-        SmghlYh9Gl940M3wDV+k+G2MjuVB+7kMX0Kpgx554C3Mh5l5/fX3OTTurMPxWNqyyrewe9
-        hMfwCFSY96LwEP2NNvy5miqhKeDNkAI=
+        bh=dx8Mp3xhIbC9s7UG8etfxN0DUmZKH5uLGFLLxpPpF5k=;
+        b=IymtYxBd/wEomXEep83nc/rgBdMCvkjFvi0Pb3VwB43kQA3t6IEPjQXylOT5wYQ/UNRmmL
+        43ny40FmOF/eLaRtZsXREkQ4fFxp5EDBtL/egvxW8mUvtyrQOlA1uW6WINlcAAj+wQugx/
+        EfqaPh03/0yuSlZkpygKJMJyIGAJ3Ew=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1621929850;
+        s=susede2_ed25519; t=1621930705;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=C480wFYuyMOjFSQyTKDRSRXds+ZLVDO5E1tUMdJxUt4=;
-        b=Xt1nrSXUUy05qzE6z8wXGM1BfTfpFvGIst+f7mMARjOU77Nj/4YJEkOTfh92Uayj0L5NMq
-        bXQqutIGYITGhgCg==
+        bh=dx8Mp3xhIbC9s7UG8etfxN0DUmZKH5uLGFLLxpPpF5k=;
+        b=FaJrILtbZNsCTNOxN7pTJBozXaRRhC58JWUc7EKPEGNbX7MjJbFQWaVI8ACjsRBXR7lCpI
+        y9GvtmRLf0yd7tAg==
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 01E89AE99;
-        Tue, 25 May 2021 08:04:10 +0000 (UTC)
-Subject: Re: [PATCH 1/8] block: split __blkdev_get
+        by mx2.suse.de (Postfix) with ESMTP id 75937AE1F;
+        Tue, 25 May 2021 08:18:25 +0000 (UTC)
+Subject: Re: [PATCH 4/8] block: move adjusting bd_part_count out of
+ __blkdev_get
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Song Liu <song@kernel.org>
 Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
@@ -52,17 +53,16 @@ Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         Stefan Haberland <sth@linux.ibm.com>,
         Jan Hoeppner <hoeppner@linux.ibm.com>,
         linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Ming Lei <ming.lei@redhat.com>
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
 References: <20210525061301.2242282-1-hch@lst.de>
- <20210525061301.2242282-2-hch@lst.de>
+ <20210525061301.2242282-5-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <80e5e5f9-463a-ce5c-460d-389e0589fb37@suse.de>
-Date:   Tue, 25 May 2021 10:04:08 +0200
+Message-ID: <e0927e9e-9bfc-45a7-5924-c0a0988d6fbe@suse.de>
+Date:   Tue, 25 May 2021 10:18:23 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210525061301.2242282-2-hch@lst.de>
+In-Reply-To: <20210525061301.2242282-5-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -71,17 +71,15 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 On 5/25/21 8:12 AM, Christoph Hellwig wrote:
-> Split __blkdev_get into one helper for the whole device, and one for
-> opening partitions.  This removes the (bounded) recursion when opening
-> a partition.
+> Keep in the callers and thus remove the for_part argument.  This mirrors
+> what is done on the blkdev_get side and slightly simplifies
+> blkdev_get_part as well.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Ming Lei <ming.lei@redhat.com>
 > ---
->   fs/block_dev.c | 118 ++++++++++++++++++++++++-------------------------
->   1 file changed, 57 insertions(+), 61 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>   fs/block_dev.c | 16 +++++++---------
+>   1 file changed, 7 insertions(+), 9 deletions(-)
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
