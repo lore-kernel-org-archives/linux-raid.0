@@ -2,126 +2,78 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BC1C47089
-	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 08:08:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 398CCC2B9F7
+	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 11:29:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 473C16143C
-	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 08:08:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1469B613CD
+	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 11:29:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231871AbhEZIJl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 May 2021 04:09:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58680 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232488AbhEZIJj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 May 2021 04:09:39 -0400
-Received: from mail-ua1-x92c.google.com (mail-ua1-x92c.google.com [IPv6:2607:f8b0:4864:20::92c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04D75C061760
-        for <linux-raid@vger.kernel.org>; Wed, 26 May 2021 01:08:09 -0700 (PDT)
-Received: by mail-ua1-x92c.google.com with SMTP id z14so299624uan.7
-        for <linux-raid@vger.kernel.org>; Wed, 26 May 2021 01:08:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GrfL+UvsoUYJEVH3FOBXMPqeLzeAwHNpUWgDzMspWKw=;
-        b=woqt8BnxKZukeBLeJd4w4lKnQ3cKCzoRk7QnVN0RWefRH0Lak2HbQbLhx/frNziCrW
-         vzOd63E9Idh6uhMeJbijddzANEGlwhq2a94sp+UT6X33w/HJrP0R4Xxsur3qtd3UJ9V3
-         RXhO2WmDqsPWGOOFe4Z1vXtU3Ajlf9H69hO1WGEkh2/q7XWi3knfCY64J+SzmkNKOe36
-         kp6uvOs+ndgfRymDdtUOUv9NQPYP8RiXXMABsN8MVSRmmehasPQ8UDsDcWRSt1e77qBG
-         1jHw1+BN8mfEhYZIvRTg/wyYkLYEyw3TBricpiOdb+JF5bZQWiaQ0RSSDpINkEteioTM
-         z8Uw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GrfL+UvsoUYJEVH3FOBXMPqeLzeAwHNpUWgDzMspWKw=;
-        b=oy6w6b9965yK1wfgN4R5QlHX/Ew8eA6rNSjjI/KZj7KqbRZTfhdwl/IFQNvWasCJ7O
-         3Zxg1heOPK479MoM+HtM7MF8Ei42/p+LUxksamPIk/Xr+Y5eqOMW/bkKFgblbiqZRLe2
-         Sr+/KzN66AlbnSqRAKP1QO2b4GAvp0rVDB3TH3dGREEPg1t6c8PMvRhscEquC5BEYBda
-         VbymE4ESIMyvpkUbvxwSB59eQpJqCWuZAUO1/BOMMN5NrTS9zFBZb6JWUpFEPAVp+B4s
-         AhWBS+lehsfP/oZn+4MrPEPUe6h6qmJFoQ/hk+ojpm+RFIB7CUQC7irT4+HdxFXV8etL
-         JJ1w==
-X-Gm-Message-State: AOAM533qOn+52MraWSqauAgRYQCkX72Ktb/1ugPOiOSQCfoB5W/RSiyP
-        OkO3YcalWAXaZdIgNbUfbfw9KUW/qanUPFlnHKfXEw==
-X-Google-Smtp-Source: ABdhPJxEKZ+yyN+wbXXVH9CKQ94TxTUrIX6SVT7ztQ9Bwftr62IUqVIB3GNBh5QlN3mdzVdDkjsC7QK+8McmDny5XO0=
-X-Received: by 2002:ab0:3351:: with SMTP id h17mr31776765uap.15.1622016487939;
- Wed, 26 May 2021 01:08:07 -0700 (PDT)
+        id S233081AbhEZLao (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 May 2021 07:30:44 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17031 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234658AbhEZL2t (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 26 May 2021 07:28:49 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1622028426; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=kNEBW7PT+/lT/DimeSHJbsB6EU5gDqGsBrZ82D2PA6KmypHcL+D4xLnXyqODr0s4KnxUA8OLqi58UZxjpDCJXBitBUFjgHAU3wd5KjvUhyHu+EozCIJuocARhedCDDI3uzF1iWPWutdwQGYSU4pvuznqqMlB88b8aF6LTmkpL+c=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1622028426; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=KfcEfC4R8YfY6Y//IrBcaY71vlp5PTHys+geKN2aUUU=; 
+        b=i/wJqjB59YCp4W9YIDV46M4iS0UTWo7Y4k/kWrndPIDrrKAex6ov3Lb4DZFDJIqw9XtlhITvr74PmVpayAjt2kSMj+X8fVGEPjcml1y3rP4cecx8ZeOGVifZagOq3dAGjKz2Jsgy0frNZLAMTb0/eyTSytKtPx5D4ugtGUgDPgQ=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1622028424344714.148785876924; Wed, 26 May 2021 13:27:04 +0200 (CEST)
+Subject: Re: [PATCH 0/4] imsm: lowest namespace support
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20210517143903.10077-1-mariusz.tkaczyk@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <beae1052-ee1e-c42f-5cde-24fd28586aa2@trained-monkey.org>
+Date:   Wed, 26 May 2021 07:27:02 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-References: <20210521055116.1053587-1-hch@lst.de> <CAPDyKFpqdSYeA+Zg=9Ewi46CmSWNpXQbju6HQo7aviCcRzyAAg@mail.gmail.com>
- <20210526044943.GA28551@lst.de>
-In-Reply-To: <20210526044943.GA28551@lst.de>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Wed, 26 May 2021 10:07:31 +0200
-Message-ID: <CAPDyKFpR0maO_Dj6bxWSLvh_jcGnrcZ=na42atXfNdkmMkmdig@mail.gmail.com>
-Subject: Re: simplify gendisk and request_queue allocation for bio based drivers
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chris Zankel <chris@zankel.net>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Lars Ellenberg <lars.ellenberg@linbit.com>,
-        Jim Paris <jim@jtan.com>,
-        Joshua Morris <josh.h.morris@us.ibm.com>,
-        Philip Kelleher <pjk1939@linux.ibm.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Nitin Gupta <ngupta@vflare.org>,
-        Matias Bjorling <mb@lightnvm.io>, Coly Li <colyli@suse.de>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Alex Dubov <oakad@yahoo.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        linux-block <linux-block@vger.kernel.org>, dm-devel@redhat.com,
-        linux-m68k@lists.linux-m68k.org, linux-xtensa@linux-xtensa.org,
-        drbd-dev@lists.linbit.com,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mmc <linux-mmc@vger.kernel.org>, nvdimm@lists.linux.dev,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20210517143903.10077-1-mariusz.tkaczyk@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 26 May 2021 at 06:49, Christoph Hellwig <hch@lst.de> wrote:
->
-> On Wed, May 26, 2021 at 12:41:37AM +0200, Ulf Hansson wrote:
-> > On Fri, 21 May 2021 at 07:51, Christoph Hellwig <hch@lst.de> wrote:
-> > >
-> > > Hi all,
-> > >
-> > > this series is the first part of cleaning up lifetimes and allocation of
-> > > the gendisk and request_queue structure.  It adds a new interface to
-> > > allocate the disk and queue together for bio based drivers, and a helper
-> > > for cleanup/free them when a driver is unloaded or a device is removed.
-> >
-> > May I ask what else you have in the pipe for the next steps?
-> >
-> > The reason why I ask is that I am looking into some issues related to
-> > lifecycle problems of gendisk/mmc, typically triggered at SD/MMC card
-> > removal.
->
-> In the short run not much more than superficial cleanups.  Eventually
-> I want bio based drivers to not require a separate request_queue, leaving
-> that purely as a data structure for blk-mq based drivers.  But it will
-> take a while until we get there, so it should not block any fixes.
+On 5/17/21 10:38 AM, Mariusz Tkaczyk wrote:
+> Nvme specification doesn't guarantee the first namespace existence.  
+> Imsm shall use lowest one instead of first. In this patchset imsm parts
+> responsible for reading sysfs attrs were refactored and simplified to
+> generic routines. Imsm compatibility checks were moved to
+> validate_geometry_imsm_container. This prevents from writing metadata
+> to rejected drive.
+> 
+> Mariusz Tkaczyk (4):
+>   imsm: add generic method to resolve "device" links
+>   imsm: add devpath_to_char method
+>   imsm: Limit support to the lowest namespace
+>   Manage: Call validate_geometry when adding drive to external container
+> 
+>  Manage.c         |   7 ++
+>  platform-intel.c | 179 +++++++++++++++++++++++++++---------
+>  platform-intel.h |   8 +-
+>  super-ddf.c      |   9 +-
+>  super-intel.c    | 233 +++++++++++++++++++++--------------------------
+>  5 files changed, 256 insertions(+), 180 deletions(-)
+> 
 
-Alright, thanks for clarifying.
+Applied!
 
->
-> For hot unplug handling it might be worth to take a look at nvme, as it
-> is tested a lot for that case.
+Thanks,
+Jes
 
-Okay, thanks for the hint.
-
-Kind regards
-Uffe
