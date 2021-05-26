@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D5D2C47088
-	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 02:06:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB44C4708A
+	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 02:09:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2923E6101B
-	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 02:06:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70E0D6128D
+	for <linux-raid@archiver.kernel.org>; Wed, 26 May 2021 02:09:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232859AbhEZCHt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 25 May 2021 22:07:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:60584 "EHLO
+        id S231532AbhEZCK6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 25 May 2021 22:10:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:42794 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230253AbhEZCHt (ORCPT
+        by vger.kernel.org with ESMTP id S231410AbhEZCK5 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 25 May 2021 22:07:49 -0400
+        Tue, 25 May 2021 22:10:57 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621994778;
+        s=mimecast20190719; t=1621994966;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=VV4Ss7z7/W3+oPYMl74/kRFL2uVRCt+xRvsZmOIiQjk=;
-        b=IIDhdC8OouehangEBO1LaONxRGxSb94WjGewCK5XTgMqqUCElg3nExX50UoxMADJvf6a9x
-        3mslAeaHlMvZMlifEWUxJdCVJMJE0WyZmS3VRRIbmvPwIc0OdF0LaQBQ1PKX8zqgdYE4jz
-        jPEtnol/S30fUbap/+fYvp2INhM+etc=
+        bh=O9O6+5/8MKchtIlmhwEYYkAbdnr4lPjC1tJpR0up8XM=;
+        b=CjcyULr8vXUfC7dGWIiCO/gu2LovbbCsKfZeyHA78GGPdIV2ryoZUu5zFJLdG2NPgWn2Bc
+        wOH7Vrc+i/teHqq/k40SrJv+SonuSJ7EOUT1UbUrqnINWE57aFDycsUwEcYFOq4jYTgi8M
+        jCb3a/Y6XzZUnJJUwA9gXeZbxJy4YIA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-228-KFerlU3EPaaJtsW-Fxf3AQ-1; Tue, 25 May 2021 22:06:14 -0400
-X-MC-Unique: KFerlU3EPaaJtsW-Fxf3AQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-500-8qWJyfyuMSmHGhC0ZNR1hQ-1; Tue, 25 May 2021 22:09:22 -0400
+X-MC-Unique: 8qWJyfyuMSmHGhC0ZNR1hQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E52B0801817;
-        Wed, 26 May 2021 02:06:12 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 49FE5803621;
+        Wed, 26 May 2021 02:09:21 +0000 (UTC)
 Received: from T590 (ovpn-12-85.pek2.redhat.com [10.72.12.85])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6FE41687DF;
-        Wed, 26 May 2021 02:06:03 +0000 (UTC)
-Date:   Wed, 26 May 2021 10:05:59 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F133B1F0CF;
+        Wed, 26 May 2021 02:09:10 +0000 (UTC)
+Date:   Wed, 26 May 2021 10:09:05 +0800
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
@@ -53,25 +53,25 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
         Jan Hoeppner <hoeppner@linux.ibm.com>,
         linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 5/8] block: split __blkdev_put
-Message-ID: <YK2tB3+jcAkj7i9V@T590>
+Subject: Re: [PATCH 6/8] block: move bd_part_count to struct gendisk
+Message-ID: <YK2twdjojSrZCLbP@T590>
 References: <20210525061301.2242282-1-hch@lst.de>
- <20210525061301.2242282-6-hch@lst.de>
+ <20210525061301.2242282-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210525061301.2242282-6-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <20210525061301.2242282-7-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, May 25, 2021 at 08:12:58AM +0200, Christoph Hellwig wrote:
-> Split __blkdev_put into one helper for the whole device, and one for
-> partitions as well as another shared helper for flushing the block
-> device inode mapping.
+On Tue, May 25, 2021 at 08:12:59AM +0200, Christoph Hellwig wrote:
+> The bd_part_count value only makes sense for whole devices, so move it
+> to struct gendisk and give it a more descriptive name.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
 Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
