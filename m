@@ -2,153 +2,165 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 803D2C4708C
-	for <linux-raid@archiver.kernel.org>; Fri, 28 May 2021 09:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5C7C47082
+	for <linux-raid@archiver.kernel.org>; Sat, 29 May 2021 10:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 628C2613B6
-	for <linux-raid@archiver.kernel.org>; Fri, 28 May 2021 09:21:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5292E61108
+	for <linux-raid@archiver.kernel.org>; Sat, 29 May 2021 10:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235991AbhE1JWc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 28 May 2021 05:22:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48478 "EHLO
+        id S229636AbhE2Kce (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 29 May 2021 06:32:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236024AbhE1JWb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 28 May 2021 05:22:31 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D85CCC061760
-        for <linux-raid@vger.kernel.org>; Fri, 28 May 2021 02:20:53 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id p39so2772931pfw.8
-        for <linux-raid@vger.kernel.org>; Fri, 28 May 2021 02:20:53 -0700 (PDT)
+        with ESMTP id S229597AbhE2Kcc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 29 May 2021 06:32:32 -0400
+Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A88C061574;
+        Sat, 29 May 2021 03:30:53 -0700 (PDT)
+Received: by mail-lj1-x22a.google.com with SMTP id e11so8363111ljn.13;
+        Sat, 29 May 2021 03:30:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=GEnAd40hx9wXFJ4T9RvTll6ZU+ig6IZ72jOkRmJF61o=;
-        b=NPuKslfWsLrB9i2smzFpRwgEV5YVilnyySXDTLp+LiRmcDle3qv/PdyDiQPEUXIO70
-         9OEYVS3wS3Mvjo6xzUE/ayBfcZih6WWKSL3taHACDEey1K0DuhtQVOc5G5An1oI67hgp
-         pgpZhnfCJnF0fUqoN30JXC/Awonu+Z/FJdbzMzOkUGUdUsdNa8QIU87zZYUkhsERaXsz
-         rY9KXFjQDcCz1UZt/Yaxe2dlz8h8LRlBB1cJK8gHQcuQ3g3UL6TIRTEhkp0sYogkf1XC
-         LfhjHZhbwedgbeEe8MrgDb9w++vXIIdcSGYP1gx9aWZ5X44FYMd4t6bPE73SOYGM9Nm4
-         yq0Q==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=50hwPVvRZ3142s7Xo8DfIlXJUFvV9AlvxnGrY96Cr2g=;
+        b=owQMaGcxk2frHqPxfCvSG5bOWEfnar1ZD3zGDO7vdOyYW4J2SSyMI7KdYqtI4idK2N
+         IM/aZJRrSmE4faYljK/hYiX52c/X+uqcX836B+ichUPyGKsbkEQPHlFpxQSsWOb1HV+s
+         nNvQuO4gsXMEyt5/Txiz9YOHgOZagbXsTRR/CUMmtwNVJcJF18dVJCQZMLyR+ipErcM5
+         cwK6wrwD+A7Fc3ZUdK9ryrYnr7Or8fFB0lnMLoMSzrs+LJ410y85rPR2wq4jo/UbHNTl
+         6VweI/nMHYhkpTIWHwlPBLGd9+JBZpZvc0vVIuAn77SrEC6gXfCRA50rtg5jMsZDVcSX
+         Adgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=GEnAd40hx9wXFJ4T9RvTll6ZU+ig6IZ72jOkRmJF61o=;
-        b=ZHw2ZwMgjmRTy//9YrCzswpt8XcBxJQX8HrO3m1HMPEJD7BFfBvJjkugR84QG4bJIm
-         p9A4dyCHuGqnPZSK7vStpSeuupPNp+0IC2CZvk+50lGUHgGfsUvSmEjUp6dA5H0Ek7MX
-         TG32QQHWcOt45htTN6c2AWOJuIB426806gAWMG27QBLm945Ak6ATlvrapjk6zRWlsEh0
-         ktDEYGN3RU9ZMxT2EW2yhELPk8SSTAm6fMQeWKeCM4KcrptXCIEQ30hzOFJgCloKYSlO
-         TOpRZFPYqjrRF68yn82F9yLqfUbD8cNm23WoLui2wmsqLbosavYucQIjpMeZR7JFCGWg
-         jnLw==
-X-Gm-Message-State: AOAM533+Wouuw25YA58PolW7UWcADw4O/oWQCcM3A4r+HdNSZo2KD1Gt
-        JNte0tBrOBEHFhFyOD+fpUw/HIasMuVwPQ==
-X-Google-Smtp-Source: ABdhPJxyDdg9CpJpbKvcrVdXSvZVy90OtmdI4JbKKOCfGvp9zJWLNFZi3sEUBVLKF5wYirckkZUavw==
-X-Received: by 2002:a63:5252:: with SMTP id s18mr8054343pgl.229.1622193653440;
-        Fri, 28 May 2021 02:20:53 -0700 (PDT)
-Received: from [10.6.2.165] ([89.187.161.155])
-        by smtp.gmail.com with ESMTPSA id s6sm3922465pjr.29.2021.05.28.02.20.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 28 May 2021 02:20:53 -0700 (PDT)
-Subject: Re: [PATCH V3 2/8] md: add io accounting for raid0 and raid5
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org,
-        artur.paszkiewicz@intel.com
-References: <20210525094623.763195-1-jiangguoqing@kylinos.cn>
- <20210525094623.763195-3-jiangguoqing@kylinos.cn>
- <YK+56xtF7VoZexoa@infradead.org>
-From:   Guoqing Jiang <jgq516@gmail.com>
-Message-ID: <1e491df0-4dff-f4b1-9d9d-e3c9c90dac74@gmail.com>
-Date:   Fri, 28 May 2021 17:20:35 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=50hwPVvRZ3142s7Xo8DfIlXJUFvV9AlvxnGrY96Cr2g=;
+        b=o5KpWhkOu4uqTYAUXhL9cS5o5Fw6wfYohq9zDtNnhCkX6WqcbPWj44K9hMAodL1mUa
+         TLDzCpA3pxm7dOVKjghCGlfiwNu1cPUVff+8nYu84XOqQ7tXOgxQX5aVKDCC8+tntAXr
+         Oxc4+rGQNbkOf0eLH11a2GKObQcuoVlfyZ2LY03QKYVhZ/k4SjKLCszMEafGkV7seBeV
+         ps0CP4sdUTzxryNYbbofyf480rE68PBAxUKEyGWEri/Eu03CVKN2Nws1aehRXX1PL3Jl
+         KefIrZI4h5fGYALa3WpIqDVyTLo0Hg4yBSH1NyllJ0Owd2bhkrHwurjfUjC5ZiEy18kK
+         KFlw==
+X-Gm-Message-State: AOAM532u6Xop71AR92UCcNuEIx+ilM/q3kzj4ofterYJzWOoabScZpB5
+        YYq+t0vrRC5DG9ECZOgLpzU=
+X-Google-Smtp-Source: ABdhPJwyN9w7uEgX9RLKeGig3ruPxN2SztK+BS13skwiGkwj7WYdhcOh2BmL31BxHfD6slaovl7+hA==
+X-Received: by 2002:a2e:9844:: with SMTP id e4mr9644371ljj.500.1622284252170;
+        Sat, 29 May 2021 03:30:52 -0700 (PDT)
+Received: from localhost.localdomain (h-98-128-228-193.NA.cust.bahnhof.se. [98.128.228.193])
+        by smtp.gmail.com with ESMTPSA id q9sm702146lfo.269.2021.05.29.03.30.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 29 May 2021 03:30:51 -0700 (PDT)
+From:   Rikard Falkeborn <rikard.falkeborn@gmail.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Rikard Falkeborn <rikard.falkeborn@gmail.com>
+Subject: [PATCH] md: Constify attribute_group structs
+Date:   Sat, 29 May 2021 12:30:49 +0200
+Message-Id: <20210529103049.5022-1-rikard.falkeborn@gmail.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <YK+56xtF7VoZexoa@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+The attribute_group structs are never modified, they're only passed to
+sysfs_create_group() and sysfs_remove_group(). Make them const to allow
+the compiler to put them in read-only memory.
 
+Signed-off-by: Rikard Falkeborn <rikard.falkeborn@gmail.com>
+---
+ drivers/md/md-bitmap.c | 2 +-
+ drivers/md/md.c        | 6 +++---
+ drivers/md/md.h        | 4 ++--
+ drivers/md/raid5.c     | 2 +-
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-On 5/27/21 11:25 PM, Christoph Hellwig wrote:
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index ea3130e11680..e29c6298ef5c 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2616,7 +2616,7 @@ static struct attribute *md_bitmap_attrs[] = {
+ 	&max_backlog_used.attr,
+ 	NULL
+ };
+-struct attribute_group md_bitmap_group = {
++const struct attribute_group md_bitmap_group = {
+ 	.name = "bitmap",
+ 	.attrs = md_bitmap_attrs,
+ };
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 49f897fbb89b..0e40bb5618a1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -824,7 +824,7 @@ static struct mddev *mddev_alloc(dev_t unit)
+ 	return ERR_PTR(error);
+ }
+ 
+-static struct attribute_group md_redundancy_group;
++static const struct attribute_group md_redundancy_group;
+ 
+ void mddev_unlock(struct mddev *mddev)
+ {
+@@ -841,7 +841,7 @@ void mddev_unlock(struct mddev *mddev)
+ 		 * test it under the same mutex to ensure its correct value
+ 		 * is seen.
+ 		 */
+-		struct attribute_group *to_remove = mddev->to_remove;
++		const struct attribute_group *to_remove = mddev->to_remove;
+ 		mddev->to_remove = NULL;
+ 		mddev->sysfs_active = 1;
+ 		mutex_unlock(&mddev->reconfig_mutex);
+@@ -5538,7 +5538,7 @@ static struct attribute *md_redundancy_attrs[] = {
+ 	&md_degraded.attr,
+ 	NULL,
+ };
+-static struct attribute_group md_redundancy_group = {
++static const struct attribute_group md_redundancy_group = {
+ 	.name = NULL,
+ 	.attrs = md_redundancy_attrs,
+ };
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index fb7eab58cfd5..31e743e2ecae 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -481,7 +481,7 @@ struct mddev {
+ 	atomic_t			max_corr_read_errors; /* max read retries */
+ 	struct list_head		all_mddevs;
+ 
+-	struct attribute_group		*to_remove;
++	const struct attribute_group	*to_remove;
+ 
+ 	struct bio_set			bio_set;
+ 	struct bio_set			sync_set; /* for sync operations like
+@@ -613,7 +613,7 @@ struct md_sysfs_entry {
+ 	ssize_t (*show)(struct mddev *, char *);
+ 	ssize_t (*store)(struct mddev *, const char *, size_t);
+ };
+-extern struct attribute_group md_bitmap_group;
++extern const struct attribute_group md_bitmap_group;
+ 
+ static inline struct kernfs_node *sysfs_get_dirent_safe(struct kernfs_node *sd, char *name)
+ {
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 841e1c1aa5e6..b0a3050aa0a4 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6930,7 +6930,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&ppl_write_hint.attr,
+ 	NULL,
+ };
+-static struct attribute_group raid5_attrs_group = {
++static const struct attribute_group raid5_attrs_group = {
+ 	.name = NULL,
+ 	.attrs = raid5_attrs,
+ };
+-- 
+2.31.1
 
->   
->   	pr_debug("md: data integrity enabled on %s\n", mdname(mddev));
-> -	if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE)) {
-> +	if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE) ||
-> +	    bioset_integrity_create(&mddev->io_acct_set, BIO_POOL_SIZE)) {
-> Don't we need to create this new only for raid0 and raid5?
-> Shouldn't they call helpers to create it?
-
-Good catch, will add a check for level.
-
->> @@ -5864,6 +5866,12 @@ int md_run(struct mddev *mddev)
->>   		if (err)
->>   			return err;
->>   	}
->> +	if (!bioset_initialized(&mddev->io_acct_set)) {
->> +		err = bioset_init(&mddev->io_acct_set, BIO_POOL_SIZE,
->> +				  offsetof(struct md_io_acct, bio_clone), 0);
->> +		if (err)
->> +			return err;
->> +	}
-> Can someone explain why we are having these bioset_initialized checks
-> here (also for the existing one)?  This just smells like very sloppy
-> life time rules.
-
-My understanding is that md_run is not only called when array is
-created/assembled, for example, it can also be called in md_ioctl,
-which means you can't call bioset_init unconditionally. Others may
-have better explanation.
-
-BTW, besides md, dm is another user of bioset_initialized.
-
->> +/* used by personalities (raid0 and raid5) to account io stats */
-> Instead of mentioning the personalities this migt better explain
-> something like ".. by personalities that don't already clone the
-> bio and thus can't easily add the timestamp to their extended bio
-> structure"
-
-Ok, thanks for rephrasing.
-
->> +void md_account_bio(struct mddev *mddev, struct bio **bio)
->> +{
->> +	struct md_io_acct *md_io_acct;
->> +	struct bio *clone;
->> +
->> +	if (!blk_queue_io_stat((*bio)->bi_bdev->bd_disk->queue))
->> +		return;
->> +
->> +	clone = bio_clone_fast(*bio, GFP_NOIO, &mddev->io_acct_set);
->> +	md_io_acct = container_of(clone, struct md_io_acct, bio_clone);
->> +	md_io_acct->orig_bio = *bio;
->> +	md_io_acct->start_time = bio_start_io_acct(*bio);
->> +
->> +	clone->bi_end_io = md_end_io_acct;
->> +	clone->bi_private = md_io_acct;
->> +	*bio = clone;
-> I would find a calling conventions that returns the allocated clone
-> (or the original bio if there is no accounting) more logical.
-
-Not sure if I follow, do you want the function return "struct bio *"
-instead of "void"? I don't think there is fundamental difference
-with current behavior.
-
->> +	struct bio_set			io_acct_set; /* for raid0 and raid5 io accounting */
-> crazy long line.
-
-At lease it aligns with above line and checkpatch doesn't complain
-either.
-
-Thanks,
-Guoqing
