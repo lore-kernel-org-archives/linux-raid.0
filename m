@@ -2,91 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 783EFC47096
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Jun 2021 06:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5FAC47082
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Jun 2021 09:21:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EEEF613F1
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Jun 2021 06:54:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E63A6100A
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Jun 2021 09:21:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229723AbhFCG4h (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Jun 2021 02:56:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46202 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229635AbhFCG4h (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 3 Jun 2021 02:56:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 69FFC613EE
-        for <linux-raid@vger.kernel.org>; Thu,  3 Jun 2021 06:54:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622703293;
-        bh=sTg+6FF5WZkydKldWWuRlbSbpeiuSa7aYiB4rqHU62g=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Gn33l0EusXqSrUgjBGM+V5NmWMsserP2ardPVVFVZqVian/KQvKsuddklRv/LjxHO
-         uav6sgI4cmD4sBs2UfrrNL+WpFAYMGwL0EuzGa7PBQarpAjm48enpwBu9EiAlo+Uce
-         b/FVYpC/ZynLtbKpELHV9Bm6P7Lr/0TFtfm+hwhHq7SahJUMFsJXfGrexwC/RyAOCA
-         5ZxKIwApIpbZTNuP4xfClmsqeqZG1ZrGPXA12xADC2VZmcWqiGW4A/464Y2SeM7VAv
-         F2oHOsesB1n58dhgRA00nDVzy8ada0rzsdYUylsANI2p8hWqFQB5jQZaWwD5DLMrG1
-         K35cOGGTF6fFw==
-Received: by mail-lj1-f179.google.com with SMTP id o8so5847493ljp.0
-        for <linux-raid@vger.kernel.org>; Wed, 02 Jun 2021 23:54:53 -0700 (PDT)
-X-Gm-Message-State: AOAM530TaSaHu2xGN+C2CP9TplWZNnPK3r+tCrQA3nbUpg6MdSDpspY7
-        S1fWiq2oEk6+9nlZC3v+VLov+/uqitHE7mM/6j8=
-X-Google-Smtp-Source: ABdhPJzdKcpKsjzbX5iDn1/rdZHc7jhXXsucreA2InY/n8z321KUierRsNk5rAaw9u7gB8aE5G34z4TknaYAB+1mkZY=
-X-Received: by 2002:a2e:2243:: with SMTP id i64mr4675185lji.344.1622703291799;
- Wed, 02 Jun 2021 23:54:51 -0700 (PDT)
+        id S229610AbhFCJXf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Jun 2021 05:23:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60782 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229567AbhFCJXf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Jun 2021 05:23:35 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C32A5C06174A
+        for <linux-raid@vger.kernel.org>; Thu,  3 Jun 2021 02:21:44 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id c13so2593563plz.0
+        for <linux-raid@vger.kernel.org>; Thu, 03 Jun 2021 02:21:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5AAS03L5ETEyXJmY7BKzSTzkPIrfsAOYUCBonylEsIc=;
+        b=EjtjPpjbmxF4VehDttASrL02pubglXKhaTWHGm3fzZfA3hrQdGjxya8RMivQO5TeUY
+         aW37tY5W1JSdDcGKUReFU3L0oIyvyqRSCtgPpd6JlRV/c/93NABiUwyJGUVks3Qv5vi2
+         1E4rzKMObZ4RVHU7GafFsK/y2L8HVjkurldc6rMGs6UxDftKIueKUlE2YuQijr2uLQLq
+         s7zXBLKNfNQ00R09Y8phtZGKz5wG5ITHJb+GT8hYvunPUii771ZBzDyyIPCcwhkOvBmO
+         ntTIg5HNuehogngtXFWxyu1v48rosHxUcfs3+CzYXPI+6TnqSjxH3eB7uTMU+z/4BnlW
+         WSKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5AAS03L5ETEyXJmY7BKzSTzkPIrfsAOYUCBonylEsIc=;
+        b=R3vTUVXopQhAqJgpXy3RuMKxbY2mYvdhbkEfpX48DV8Q32QettejUyG1jQ98dpBGHQ
+         zZ47nJPEIB/X5mnNlnt7epJxBko9Vqq+DT+m42jziPjJtDlJPqqAmj2vhFpVBZZhVgog
+         nMj/sk7gXnc/p5JU+iQob3fZSXMx5FZ8KEDv+e2pmaxkaqBJmMCfnM4tsIOAZ0qGQvTz
+         TWPIBvMMS8kOwYeGuQRSXUSA7CnyrhTyQuXltaCt924XvpXy5qNIz4gq7+dOAg7wVp+5
+         /FIpuRJKHnMmr9nPws2gMjVafGP6SwO3SHIFqCw7c8us+gvXNS6PlBIJ32eEp0+tzO5y
+         Y19w==
+X-Gm-Message-State: AOAM533v+fWxOFCEV5Anxp4hB4+55iFa38Is6DFB4bkkYrciC5GFy1zJ
+        OYGl3wpNVEn31O7r8Ldg+0M=
+X-Google-Smtp-Source: ABdhPJxpa5iK0syILaHGJ0AvEpXk10vo2leghfFGWRKvPqD584i4xyHNiSaCGsz8j3a4gqqyDxUOvw==
+X-Received: by 2002:a17:90a:c68a:: with SMTP id n10mr10303256pjt.32.1622712104284;
+        Thu, 03 Jun 2021 02:21:44 -0700 (PDT)
+Received: from localhost.localdomain ([89.187.161.155])
+        by smtp.gmail.com with ESMTPSA id c24sm1937249pfn.63.2021.06.03.02.21.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Jun 2021 02:21:43 -0700 (PDT)
+From:   Guoqing Jiang <jgq516@gmail.com>
+X-Google-Original-From: Guoqing Jiang <jiangguoqing@kylinos.cn>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH 0/2] incremental patches about io stats
+Date:   Thu,  3 Jun 2021 17:21:05 +0800
+Message-Id: <20210603092107.1415706-1-jiangguoqing@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20210525094623.763195-1-jiangguoqing@kylinos.cn>
- <20210601011946.1299847-1-jiangguoqing@kylinos.cn> <be04b7a2-d963-f83d-61d1-a1216097fe26@gmail.com>
-In-Reply-To: <be04b7a2-d963-f83d-61d1-a1216097fe26@gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 2 Jun 2021 23:54:40 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4uue=XtAE_tNHUHYbngq7n0pCC4MhpoEX6JRpqFk6mWw@mail.gmail.com>
-Message-ID: <CAPhsuW4uue=XtAE_tNHUHYbngq7n0pCC4MhpoEX6JRpqFk6mWw@mail.gmail.com>
-Subject: Re: [Update PATCH V3 2/8] md: add io accounting for raid0 and raid5
-To:     Guoqing Jiang <jgq516@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jun 2, 2021 at 6:17 PM Guoqing Jiang <jgq516@gmail.com> wrote:
->
->
->
-> On 6/1/21 9:19 AM, Guoqing Jiang wrote:
-> > From: Guoqing Jiang <jgq516@gmail.com>
-> >
-> > We introduce a new bioset (io_acct_set) for raid0 and raid5 since they
-> > don't own clone infrastructure to accounting io. And the bioset is added
-> > to mddev instead of to raid0 and raid5 layer, because with this way, we
-> > can put common functions to md.h and reuse them in raid0 and raid5.
-> >
-> > Also struct md_io_acct is added accordingly which includes io start_time,
-> > the origin bio and cloned bio. Then we can call bio_{start,end}_io_acct
-> > to get related io status.
-> >
-> > Signed-off-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
-> > Signed-off-by: Song Liu <song@kernel.org>
-> > ---
-> > Hi Song,
-> >
-> > Please consider apply the updated patch which has minor changes based on
-> > Christoph's comment.
-> >
-> > 1. don't create io_acct_set for raid1 and raid10.
-> > 2. update comment for md_account_bio.
->
-> Pls ignore this given it didn't check all the places before io_acct_set.
-> Do you want an incremental patch against for-next branch or a fresh
-> one to replace current patch in the tree?
+Hi Song,
 
-Hi Guoqing,
+The first one addressed Christoph's comment, and I also add another one
+to explain why error handling is not needed there. Please review.
 
-Thanks for the hard work on this. Please send a fix patch on top of current
-md-next.
+Thanks,
+Guoqing
 
-Song
+Guoqing Jiang (2):
+  md: check level before create and exit io_acct_set
+  md: add comments in md_integrity_register
+
+ drivers/md/md.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+-- 
+2.25.1
+
