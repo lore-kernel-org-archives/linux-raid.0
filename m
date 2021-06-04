@@ -4,114 +4,113 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=no autolearn_force=no version=3.4.0
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3718AC07E94
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Jun 2021 08:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB373C07E94
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Jun 2021 08:54:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1609F61414
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Jun 2021 08:42:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 857BD61358
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Jun 2021 08:54:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229959AbhFDIn5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Jun 2021 04:43:57 -0400
-Received: from mail-am6eur05on2134.outbound.protection.outlook.com ([40.107.22.134]:18657
-        "EHLO EUR05-AM6-obe.outbound.protection.outlook.com"
+        id S230008AbhFDIzp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Jun 2021 04:55:45 -0400
+Received: from mail-eopbgr20128.outbound.protection.outlook.com ([40.107.2.128]:35867
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229930AbhFDIn5 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 4 Jun 2021 04:43:57 -0400
+        id S229980AbhFDIzp (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 4 Jun 2021 04:55:45 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HUpjbEn8y39zlD37h+aaGo1fxhF5EiBi+R0Q1IO/L506y2R1H0gmD8wxUb/ECrr01WOyCDriTACfQKI1mo/rRj7MltdLwFruRF7uZLSpVHuYiZ+HQS7SAx4mPdzo8mZwszMX8e6y+0WTQu6i/rbdOrau5me13oEfJ3dIpD7jWLaZMnXvg+W64aWqRrA3WOuQ/N2dLjKCTHQZyrDuIHJf4Ygt12Bf3zOzzRu+ubeuCSivQ5FKEaUS6ZZTOOPIjUbfA4XEDUx+vfiHQSxXmXhTWlPgb/o6TCu+mHbMwAs199PK9CllrcHPlw+oXebvtCKMDJN0+V8KvixANfziw1l3bw==
+ b=FbD9o19yKpVinW+wOFd7Sy4TlmKWsckKleoTSg6NiFhF8cPqKArl6sGBYc67vwyfXgeUDdx8+s2TWKKmAF2FTT31qtmB1OFqNehgNgLQ6/iCX8WvjY5+5NkenaMNR+wVAxTSHXeYFf5bzAZfxLeI8p0tfryIVSE1fcPoEjfqpkjVbD/URih3QMHeTRqcs6O/5dJEDauI7dcwSNP1AswH8LS2o8oWcbmap4CU2Qkpx2ruBp1iI3mVzDznbSHNo6h6+XMDxk3qus4tBJftlj9wh6GyZO4TIvXLShdkgV1i4DmfsBP78wjAiyHLg3Dj7iNXPdi2KCIssTNTX/JAoxFRrw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jxtV6PUb9qLZGVIal/6Yr/c9zSlFOWpT9fuZ3kwbuTo=;
- b=L9uCaKojXcOeQFMTyy7bDfNdj2ANgB5qdZiTk7vPkRbay5KdVFnXCbFts3m+6L+SKlxxSs++flffiDyErWckXFjAngoFiTRjnvhLCjaZZKLtn8bBluTSO1FbjuxTSji/ioMu49ht8zYvgDMR2pBZStoAj/rKo3s3iPOQBLfBaXJsXX3gkDn6ZntM9szdpl38Xs4z6ldDImVU77of6V67YyLt49BfS2sMQtu1rtzPGazYseTckmW/c3eQuM0XzfpsENV2mNzJAD2n3DkgbuacYme/d8uzEo6zzg62SO9FRTWGBVowXx/D8e5zA687CZvNmIFCvuJDc1d2+tSU3d0Ffw==
+ bh=zK2v5XTcTMr8UtZGmpP8kElxBbdJcA4HHftqGJqedME=;
+ b=d1RZACpiVGGjN68jsjrb3mVf/BILPUXgiPc1s5CzXOfe3pLTZc7HWOoGoXmSev86UkWv3qZG72GBOOe7iQzF/FO2oBxRWP7uavrE964DT9xDM2hy8N12DQrBuVMi+TkaYDuOC3zdbbmMoET2GsLPaa5nNkRyPcpPcIC8Q7b60StH6YHHAUT7Lhbitc7omixamehzbH5qDiFy35xrUuUSoOAmHX1v9lxQfAAJ9FfDAGzT0C1Y0n+Gi8xHgm6mAWtJY+/DgERHBHdSWL7g51osRJW0aG9IjA1e8hgdfi4B4VRJ7AVNtgiaslG2b0F2vJl8671Crh5Md+ROthXj1Im6hg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=storing.io; dmarc=pass action=none header.from=storing.io;
  dkim=pass header.d=storing.io; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=storingio.onmicrosoft.com; s=selector1-storingio-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jxtV6PUb9qLZGVIal/6Yr/c9zSlFOWpT9fuZ3kwbuTo=;
- b=CaRrPgqcQWawfOmXXYxfvPA0GEALCleHrVrABLpRelCek6bBeFsIBG7cdcKA93AM4yFEPkfA1nHE8Y6f6nGhL45VM1Bx9FVBr0sKWbIfJx2mg8L7vLjx0T7gSHroXPN5KPDBfCs1YhmYhCSH8Tk0lLmTXWF0w1cndYCNSYYeTAqt4JPontPRq1yMxuF6wkGufjN+e8Op2vl6aVjobVptHLo0vTW5SDcqAQ0nGfkEoWe31bncuv3x9WLo2lMP0PeE45NEP8DNSdOsElm9ENh1ajJGhbUWG0uYO0IXYFOZpfMpdVxmMiMcFPPwNYO1tK1V8VRfe+hVE3rpEAfwc+BxQg==
-Authentication-Results: suse.de; dkim=none (message not signed)
- header.d=none;suse.de; dmarc=none action=none header.from=storing.io;
+ bh=zK2v5XTcTMr8UtZGmpP8kElxBbdJcA4HHftqGJqedME=;
+ b=FnLWlm8FVd+SKoNcshRtq724P0k7aYjw/X/TReNDT/XYiWOgebMeKHa4Bug51bF1fs09xlbE5J9XZzC4ynPNSiJbMXb8iEdyTlSVIM5dItEGRiJvOpOOgkEo/KQsZbvoVgylxxJVlXrbikWBFr7sGX9yO6K450mcf5BEHvo3o39zuJhC9rHOe0WpBZRa2ipI83pKDw2vwPsQqMXH36Bp8WBsoBThaY9VRH0ED23fQmYnbFKQ3lwrb7KWE4cL4U630XESDaJ7xY2TA+EOYMy9ABP1nyoyAVMLNqsN0EWMu8g/GMoPbuojUVxyj06n9K3HnPeqs95NW2jOCxQNpBHP7Q==
+Authentication-Results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=storing.io;
 Received: from AS8PR04MB7992.eurprd04.prod.outlook.com (2603:10a6:20b:2a4::6)
- by AM6PR04MB6247.eurprd04.prod.outlook.com (2603:10a6:20b:be::23) with
+ by AM6PR04MB5223.eurprd04.prod.outlook.com (2603:10a6:20b:3::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.24; Fri, 4 Jun
- 2021 08:42:09 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4173.22; Fri, 4 Jun
+ 2021 08:53:56 +0000
 Received: from AS8PR04MB7992.eurprd04.prod.outlook.com
  ([fe80::297f:63fe:225b:3d16]) by AS8PR04MB7992.eurprd04.prod.outlook.com
  ([fe80::297f:63fe:225b:3d16%6]) with mapi id 15.20.4195.023; Fri, 4 Jun 2021
- 08:42:09 +0000
-Date:   Fri, 4 Jun 2021 11:42:05 +0300
+ 08:53:56 +0000
+Date:   Fri, 4 Jun 2021 11:53:52 +0300
 From:   Gal Ofri <gal.ofri@storing.io>
-To:     "NeilBrown" <neilb@suse.de>
-Cc:     linux-raid@vger.kernel.org, "Song Liu" <song@kernel.org>
+To:     Guoqing Jiang <jgq516@gmail.com>
+Cc:     linux-raid@vger.kernel.org, Song Liu <song@kernel.org>,
+        Neil Brown <neilb@suse.de>
 Subject: Re: [PATCH] md/raid5: reduce lock contention in read_one_chunk()
-Message-ID: <20210604114205.3daf3e68@gofri-dell>
-In-Reply-To: <162276306409.16225.1432054245490518080@noble.neil.brown.name>
+Message-ID: <20210604115352.0393aa28@gofri-dell>
+In-Reply-To: <2a5d0251-bfa5-4ea5-084d-23bbe52104ac@gmail.com>
 References: <20210603135425.152570-1-gal.ofri@storing.io>
-        <162276306409.16225.1432054245490518080@noble.neil.brown.name>
+        <2a5d0251-bfa5-4ea5-084d-23bbe52104ac@gmail.com>
 Organization: Storing.IO
 X-Mailer: Claws Mail 3.17.5 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 X-Originating-IP: [77.127.21.223]
-X-ClientProxiedBy: VI1PR08CA0244.eurprd08.prod.outlook.com
- (2603:10a6:803:dc::17) To AS8PR04MB7992.eurprd04.prod.outlook.com
+X-ClientProxiedBy: MR2P264CA0120.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:500:33::36) To AS8PR04MB7992.eurprd04.prod.outlook.com
  (2603:10a6:20b:2a4::6)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from gofri-dell (77.127.21.223) by VI1PR08CA0244.eurprd08.prod.outlook.com (2603:10a6:803:dc::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.15 via Frontend Transport; Fri, 4 Jun 2021 08:42:08 +0000
+Received: from gofri-dell (77.127.21.223) by MR2P264CA0120.FRAP264.PROD.OUTLOOK.COM (2603:10a6:500:33::36) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.22 via Frontend Transport; Fri, 4 Jun 2021 08:53:55 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: cac1f7c2-b0dd-4e06-b037-08d92734a3bd
-X-MS-TrafficTypeDiagnostic: AM6PR04MB6247:
-X-Microsoft-Antispam-PRVS: <AM6PR04MB624755C15028113B6B71533AFE3B9@AM6PR04MB6247.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Office365-Filtering-Correlation-Id: cfc91260-e5eb-4360-99c8-08d927364928
+X-MS-TrafficTypeDiagnostic: AM6PR04MB5223:
+X-Microsoft-Antispam-PRVS: <AM6PR04MB522385BD14DA3F393CD52980FE3B9@AM6PR04MB5223.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: V+mof6cliO06Pv7kwyq15y8SCB0gpgUdJAgMUICcKmDce0OBjBJUON1XDJ5woyAEv9z8DqDLqonQypvPitldMOcsRltHixh7TxeJU5qF75FxUrbjEyMW4SY3ELOECfB5BzXfyJTc3VIGk2x56BPDgoSgkoy2GOHYkY4+qRGv+VdqL3lwV2uSHFBAZ7uxCdTwzJlOceJXlS7YnzJav8D3/E6zBC5IzMd43UPRQti+w49LzElBjAjrDyUfAdA7tXn3Xb4fydH2++evA9vBEcBtbMrWQOCnzRjRxKExehD00PAz3OIlTEmzitdFw6ClED/A3Zz5lWkBORCTorsDvbIcMJrrfgEDbN5QzaHlFB/rQ4/3gQHJccu+dTmEx9X48zu0GSjb6c6Rq4REuKugartBeFAOhmOWYLyt0pyP96tGRCcoXQLXAJ/pDCTxZciNQZWN96yZf2ePqObNmkMHebJTauv2mSQk6bMBkIHeCqtYf5D13deTsItJB5s4m3TXgHf7emJ4pk8XASl48e/5bZiyeA+xYyC1LBMz1piN0fC32DknBIKFZ0kNFlhZ8GxrI9AAeXdQG9ivduwW95MW4XRNG8cYCgcl7Bwan3QSN9awSi09vHe3PLjsSjPFZiWSoNN//6jOEmPcjN1EnmayOsHrVQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB7992.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(136003)(346002)(376002)(396003)(39830400003)(16526019)(186003)(33716001)(66556008)(66946007)(66476007)(26005)(8936002)(316002)(6496006)(1076003)(83380400001)(38350700002)(38100700002)(8676002)(956004)(44832011)(478600001)(6916009)(4326008)(52116002)(36916002)(5660300002)(6666004)(9686003)(2906002)(55016002)(86362001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: L3oX1U0nov+ICM0NmPoWa9OR48o2dJvyfQ1qOlDzjmhMy0cVFT7vCSJyciGyTZrb7ESkltvK1Dw+ZzDLvCJKcfN00DaHZ3XGBlqiLfDvzLzyI/2fGyy0rgoO2sF+vf4bHizFm2RO4qMpjJWFTF1fKEGPsIUINuJADSgEJOWYFqxwD3W6N99IFiGE5ffzlLVCgICpOE/c9Pr5n+tZLYPMKRa8BSGoBYwqOcSiytewkrlO3BSwXSyF586doa4ATOjYiOwHRStif5NSTyfws5DSR9fU756iYlhikVqHVxU2fCfhYjELBHn2rr/4+YwI/m5fSRYSyXHe3E4yxZgE2LiJBgMoQXiHBCaQiwQG5q4foVOi2ih7VDTgaTY/+arUTpykcZGvNJurdOTACGFZHqYfmWSy9+vmUUyz8G4zaFa0Zz4/rEqPbqFhRpT1tr8k3L17nFySC8c5d7FQ6qEsaPy9WizfGB6yMLI68UU0xdmrCHu85ea3Asc7kmF1k3lAFl2vB3s5g7coR3rXXxrJDXa1E+U3Va55H+1h+bxml8wIZ7iyQDFw0ISST2aR/KMa3oxgyfGegFimLyMHSEcQoSWTkHtalVNOqmX//U4IjBKZX/YTWDqg6gTVChv209+VSjTigpfa8XqoHr4bayxiTry/sMPWcNV1FfzGDitZIUSGJaN3TFgrbSODLDCeVNaVhYk1yYbMoyHH1A0gNKVjBNQ+zPfhtTbIFxwAYor9nTy/c9A41FlsAGPJCo69ta4ITXPa
+X-Microsoft-Antispam-Message-Info: KhvK2qWHyL6eY6OzedaPzkGBbYrEoolUXOWAoznIwhWj+yjfiThndWAzhGeuWp/P4eU4ymCIh/SNo4+xEGJNfx9YxOZJCWFGfE/VlCZ/ZWddeW7k7jFep0qNy5xZW83S2pOnr57GuLAYpw7WkFcmgQxSujSV6kA3S3ZkA3R+RJUXCD3n2/TURe+/PGvHaO9+ZrIkvwZfF2xc1BcTB2SV6kgM1KlYOc7DbwLSVuzmd9qWw5nqVfnLWkQDP0UQeNFLlCwSNqny/aEEiDxDlmWbxDP21sx+mV0iCIpM9uR+vjkIiIIC4o0kloagDnlrrCY6YD60/j4iwA+uxENEtrstymm9sqtwcWK3BJmsVTwO5XkiIBCCo0zbv+sH5j++9xPwGA5aWC2cXp2lj6gexDr26GcRBrwg2FCd7crh+8lTCURiBydKpfzwbE3D9ahSM0BxmS5vq7aYIqJ30jcWFx1yCjlRDmz3efbwa9J47YoPTTLzE/Ri0F+kwR/KqfubiBOEckAUxtE57H8fGbz5PtalBgkB+JrcPlhk+lRHkK98GgeCTwz7huQJA4oO3U9wOiH+8zzq3pZ/uAy61IoWmZuBwr0Iv28/KeouNnNNXq33RAN+jcmKBxtBR3NFFDCN/aMdKAEEj7stCBRo8KJbXgrZ6A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB7992.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(956004)(66556008)(38100700002)(9686003)(55016002)(66476007)(4744005)(36916002)(44832011)(4326008)(2906002)(54906003)(8936002)(52116002)(5660300002)(33716001)(1076003)(8676002)(6666004)(6496006)(26005)(83380400001)(16526019)(186003)(66946007)(86362001)(6916009)(508600001)(38350700002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: nHFXcz8d6Jikab1DzLpshuV292bFoYicn5Do8qNGYL2CQ5AeW9DYKKtnBwffeSqizgu9/HjjMhpv5hx1O9M53UU0LFl7d2dSwxW2noyYGQcw79+iLFqZ6u1BWniMQnU5edRQzt0KOS8+rn2j2XhMjL7QFyt7Tj6xlP7gYCnX9tNx8df1UiQ011iaOyBJeLnkEvb1z6t5M4T7H/33jUdMp2omqfXBhg9tVGUF4dnPpUFKokP85WPsSDuSJE5OsPQjitUu6cI/W09ixjSrvTc8c5t3X7A8GDf6HpP7fAtDoFs888Zo4ECXgnnRvuzgXurApMuNcsNlYUeqSXEoJEJO5irKQWNSJbmJ4xiyXQRwiNxjYeY2fMcup9ZSTFzit6LNWfSKolzdj+BXEa3tb2EdqiZtqlZ1VlpSGZh/W0LQSyiTQ2NlINFrNvRrq6KkgmH8LoT64cnmEPMZIPWANyrG4ycY+43O0yVXU5g3Swh+ksXcgyYmT/RHRDLPKSCoVuYFjrni9MV0Bmxww7LKRnNoeGq7pQFCw+9X1MElzjf/ThQuGMV5oTragEgkBVvYRQNFTqBKlLSPvWqqwsjL7lx+Sb0swC+zg62TKKOspOoD3LW2drPU2+p0Jj3UyikKn5mGVGrkdhpDzPjqffzhE/h3gZrgNAxmZAx8zjJuRFMyGa9dTfjd7BumgCff9/usLHSed+Vd+G51ZpoAmgedFyd+KdvKZEzdyrXwBnJZLZf2YQ9YpexC6/z9VPEp4+mCDNxG
 X-OriginatorOrg: storing.io
-X-MS-Exchange-CrossTenant-Network-Message-Id: cac1f7c2-b0dd-4e06-b037-08d92734a3bd
+X-MS-Exchange-CrossTenant-Network-Message-Id: cfc91260-e5eb-4360-99c8-08d927364928
 X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB7992.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2021 08:42:09.0417
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2021 08:53:56.0194
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: b1841924-914b-4377-bb23-9f1fac784a1d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /CSZEfE8Y38CGguWi+/ppwi2da7ozeZmGgHKLFYEpIr2JE9P5kMCcVdEH9llEr3rI4FCSIM2lsl+zQOFu37AAg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB6247
+X-MS-Exchange-CrossTenant-UserPrincipalName: Au73+2zrlo2HUxgTQGLXGd6qpglDsciccMrXzN+bdCjDekmp/fEkZE9SB/SkQVCrnWu+RoOHVeAJSfl7TyYJuQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5223
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 04 Jun 2021 09:31:04 +1000
-"NeilBrown" <neilb@suse.de> wrote:
-Hey Neil,
-thank you for your feedback !
+On Fri, 4 Jun 2021 15:43:48 +0800
+Guoqing Jiang <jgq516@gmail.com> wrote:
 
-> This surprises me.  I only expect rwlocks to be a benefit when the
-> readlock is held for significantly longer than the time it takes to get
-> an uncontended lock, and I don't think that is happening here.
-> However, you have done the measurements (thanks for that!) and I cannot
-> argue with numbers.
-To be honest, I expected spinlock to perform as well as rwlock in this case too,
-but experiment proves otherwise (lock contention and iops are almost identical to before the patch).
-Maybe it's because wait_event_lock_irq() is in the critical section ?
+> Just curious '8'=C2=A0 is chose for=C2=A0 group_thread_cnt. IIUC, group m=
+eans one=20
+> numa node, and better to
+> set it=C2=A0 to match the number of cores in one numa node in case better=
+=20
+> performance is expected.
+Since the worker threads has really low impact on 100%-read workloads,
+group_thread_cnt has no effect here.  It performs just as good with
+group_thread_cnt set to 0, 8 or 96.  Thinking about it, I should probably
+omit that comment from the patch.
 
-> Could you try that and report results?  Thanks.
-I patched the code as per your suggestion and it performs even better:
-up to 4.2M iops with zero contention on that lock (~55GB throughput).
-Since it only impacts quiesce now, I thought it'd be better to use spinlock afterall.
-Please let me know if you think otherwise.
+btw, in write workloads, the worker threads are actually contended by
+device_lock, so choosing any number >8 often results in degraded
+performance in my tests.  I have a p.o.c. branch that reduces the
+contention by replacing device_lock with hash locks to remove that
+contention, but it's a big-risky patch so I'd need to break it down first.=
+=20
 
-I'll run all tests again, rephrase where needed and resubmit.
-
-Thanks,
-Gal
+Thanks, Gal
