@@ -6,69 +6,68 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C07C47095
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Jun 2021 05:29:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D24C9C47095
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Jun 2021 05:48:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17683611BD
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Jun 2021 05:29:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B717D61352
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Jun 2021 05:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236094AbhFIFbU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Jun 2021 01:31:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49014 "EHLO mail.kernel.org"
+        id S232986AbhFIFuF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Jun 2021 01:50:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53268 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231443AbhFIFbT (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 9 Jun 2021 01:31:19 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E32C611BD
-        for <linux-raid@vger.kernel.org>; Wed,  9 Jun 2021 05:29:25 +0000 (UTC)
+        id S230152AbhFIFuE (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 9 Jun 2021 01:50:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C437661352
+        for <linux-raid@vger.kernel.org>; Wed,  9 Jun 2021 05:48:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623216565;
-        bh=svBHG4mjX/4zuX8O9FzKegZl/O1KW8dQQCH6m3dcifU=;
+        s=k20201202; t=1623217690;
+        bh=659FVspzmEGIMMAwVy9Fp41i0JjGGkpOz0Fh4e/poDI=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=dRJihe3z7eybGQHTgoVY7F8O8LqSp4nDLvBL8+OM4r9hZQM70gGSIXpM4NrpKqI1P
-         4XCpScPmaFE04FZfZ+9VtWAx8045Yj5X4uJE+s05AIYtOgBdch8V7ofRa9KEXlGh0r
-         rhAw/FbPMZ0knJE0KG7yTvSYiT2/6HF7IUnRF443Nj0LEaeNW420l5oaVbwit5eCNB
-         FF02G6eYzB9rX6239Kpc3xKesqxlxgQjijTWCg4bDUQc/pT2UkLWDWAWTtToULrpLi
-         T1QYWjP9X4yPU4vHyB0+lecoLh2abxA4oqmB1wwPDPQp9MVgDGRe+5Hn3FWaaaZdcL
-         YlYvL2J6+YlcA==
-Received: by mail-lj1-f176.google.com with SMTP id 131so30099514ljj.3
-        for <linux-raid@vger.kernel.org>; Tue, 08 Jun 2021 22:29:25 -0700 (PDT)
-X-Gm-Message-State: AOAM530Am1hsTwpghgncXyvuJICg0ks81PwqOlpPfX2jC3d1zF36m+Ol
-        LtK2so5J0xP11ixH5oE8xvUphzqqBhxvSF1zvY8=
-X-Google-Smtp-Source: ABdhPJwTJ+P8y8f3MjvI9xpRXXHq7nLaevCUYgePk+fVcNsSzFWDoJOg7qv9/s2S3OEtfMa+D1S7ypm2rkRSdKnxHIY=
-X-Received: by 2002:a2e:3a03:: with SMTP id h3mr14585423lja.357.1623216563811;
- Tue, 08 Jun 2021 22:29:23 -0700 (PDT)
+        b=XrG/saKM5cIei15HyU83sK46sZrtVx2hHEuVB8zfe7Ha2kaeFnJyL4B3q0WExJTUE
+         zFSFm2T28+3+PCzhqoD+bVQ9GLm7SSjFFI8kIh1vNwwqUf+8hZ+s5e9GQtcm8qxr5l
+         5j8jRQRIrYCd5BDeXS6oGk/e9SlYTm+NLQAwq8dcW7+Q6/ajuj7RfFHqps59cxVL+O
+         216oTVzkmV5EAKXfEuZyjZJi/bOuzjxbOdH2FF6SOk+us7PcrCfdcLvp5+qsZEjFpn
+         I6vJbxtDXXtT1EQgPsvjhL90of8/C8QqROSt6OX0MS8CUmbE+n4Mcw0vV7nRQlxoTD
+         82YVG47hb1dkA==
+Received: by mail-lf1-f53.google.com with SMTP id i10so36061328lfj.2
+        for <linux-raid@vger.kernel.org>; Tue, 08 Jun 2021 22:48:10 -0700 (PDT)
+X-Gm-Message-State: AOAM532tqovxk0r3QerCLC/EMkdqvOnIbvmZutNMxBK0YwEl9xSfEqEo
+        xbVzyqn4bM3vs757h50pTaDdi5xLnoHb+8pP8MU=
+X-Google-Smtp-Source: ABdhPJx8MEXilyL07wXTur+TJ623jho/vPw9DEvOzVOIeETzW4MELzFahpB2RkzMvqfh+5+TPGvfpb/D6hLSAxgiLrc=
+X-Received: by 2002:a05:6512:3713:: with SMTP id z19mr2411397lfr.438.1623217689098;
+ Tue, 08 Jun 2021 22:48:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210605152917.21806-1-lidong.zhong@suse.com>
-In-Reply-To: <20210605152917.21806-1-lidong.zhong@suse.com>
+References: <162302508816.16225.936948442459930625@noble.neil.brown.name>
+ <20210607110702.660443-1-gal.ofri@storing.io> <162306497207.32569.4821556528932781303@noble.neil.brown.name>
+In-Reply-To: <162306497207.32569.4821556528932781303@noble.neil.brown.name>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 8 Jun 2021 22:29:12 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7jGANVSYEWQVUkYu2W7ctKiUKJ3KxNEpjMz+P1bePZXw@mail.gmail.com>
-Message-ID: <CAPhsuW7jGANVSYEWQVUkYu2W7ctKiUKJ3KxNEpjMz+P1bePZXw@mail.gmail.com>
-Subject: Re: [RESEND] md: adding a new flag MD_DELETING
-To:     Lidong Zhong <lidong.zhong@suse.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
+Date:   Tue, 8 Jun 2021 22:47:58 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW42ggkudMKpoyZjyuG+nMQUbR8TbeK5mOpe-Z8hvU54WA@mail.gmail.com>
+Message-ID: <CAPhsuW42ggkudMKpoyZjyuG+nMQUbR8TbeK5mOpe-Z8hvU54WA@mail.gmail.com>
+Subject: Re: [PATCH v2] md/raid5: avoid device_lock in read_one_chunk()
+To:     NeilBrown <neilb@suse.de>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Gal Ofri <gal.ofri@storing.io>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Lidong,
-
-On Sat, Jun 5, 2021 at 8:29 AM Lidong Zhong <lidong.zhong@suse.com> wrote:
+On Mon, Jun 7, 2021 at 4:22 AM NeilBrown <neilb@suse.de> wrote:
 >
-> The mddev data structure is freed in mddev_delayed_delete(), which is
-> schedualed after the array is deconfigured completely when stopping. So
-> there is a race window between md_open() and do_md_stop(), which leads
-> to /dev/mdX can still be opened by userspace even it's not accessible
-> any more. As a result, a DeviceDisappeared event will not be able to be
-> monitored by mdadm in monitor mode. This patch tries to fix it by adding
-> this new flag MD_DELETING.
+> On Mon, 07 Jun 2021, gal.ofri@storing.io wrote:
+[...]
+> > -----------------------------------------------
+> > without patch | 2M             | ~80% | 24GB/s
+> > with patch    | 4M             | 0%   | 55GB/s
+> >
+> > CC: Song Liu <song@kernel.org>
+> > CC: Neil Brown <neilb@suse.de>
+> > Signed-off-by: Gal Ofri <gal.ofri@storing.io>
 >
-> Signed-off-by: Lidong Zhong <lidong.zhong@suse.com>
+> Reviewed-by: NeilBrown <neilb@suse.de>
 
-The patch still contains a lot of bad format strings. How did you send
-it? I guess
-it is not from git-send-email?
+Applied to md-next. Thanks!
 
-Thanks,
 Song
