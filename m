@@ -2,150 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4034C48BE5
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Jun 2021 13:39:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F082C48BDF
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Jun 2021 22:56:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B15BE610A0
-	for <linux-raid@archiver.kernel.org>; Sat, 12 Jun 2021 13:39:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E25F6124B
+	for <linux-raid@archiver.kernel.org>; Sun, 13 Jun 2021 22:56:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231166AbhFLNlr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 12 Jun 2021 09:41:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45628 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230191AbhFLNlq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 12 Jun 2021 09:41:46 -0400
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 601C0C061574
-        for <linux-raid@vger.kernel.org>; Sat, 12 Jun 2021 06:39:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com
-        ; s=alpha; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=OcYkHS3qi7JxEcDHuppg5aEmX+w5OrFCoHrDiHPlq/I=; b=RKBJAghUxVARStuB2bz39OtFb2
-        xZ29zYez7lnkuBOKfy+kflmm28fZd5SDOjxDf+nB1Vod6kTdXKUyre8XavaTL5HAaL5jnDO1HYXZm
-        i7sCuHm42XJTWENqkhPbahFMfni9NibyoWEeZ7ukq6DUWVLLn4ZTkclEKjyJ8OIDUCExCPPvQ71Ky
-        zhysp9E/SvEgPVIeOyOt84tOub0jycKrQk/gLuS0RP9RHX2vQ1a52Fv7OR53LWobHH+QurSJu+RvZ
-        SfHM1Ka8FUEaPgl8cpDJBunaVRDoWDpn0KHMHpgRvWdFvdPd2bQt1KORuvz+mNTpnyP1oX1xngwpU
-        KKKH/I5w==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.89)
-        (envelope-from <andy@strugglers.net>)
-        id 1ls3rV-0002Ru-VX
-        for linux-raid@vger.kernel.org; Sat, 12 Jun 2021 13:39:45 +0000
-Date:   Sat, 12 Jun 2021 13:39:45 +0000
-From:   Andy Smith <andy@strugglers.net>
-To:     linux-raid@vger.kernel.org
-Subject: Re: Intermittent stalling of all MD IO, Debian buster (4.19.0-16)
-Message-ID: <20210612133945.exl24sor4scy4sz6@bitfolk.com>
-Mail-Followup-To: linux-raid@vger.kernel.org
-References: <20210612124157.hq6da5zouwd53ucy@bitfolk.com>
+        id S232197AbhFMW6g (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 13 Jun 2021 18:58:36 -0400
+Received: from mout.perfora.net ([74.208.4.196]:34915 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232164AbhFMW6g (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sun, 13 Jun 2021 18:58:36 -0400
+X-Greylist: delayed 302 seconds by postgrey-1.27 at vger.kernel.org; Sun, 13 Jun 2021 18:58:36 EDT
+Received: from [192.168.1.23] ([72.94.51.172]) by mrelay.perfora.net
+ (mreueus002 [74.208.5.2]) with ESMTPSA (Nemesis) id 0M9ZXN-1m2DJz2Ib1-00CzU2
+ for <linux-raid@vger.kernel.org>; Mon, 14 Jun 2021 00:51:32 +0200
+To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
+From:   H <agents@meddatainc.com>
+Subject: Recovering RAID-1
+Message-ID: <e6940ac5-9c2a-35bb-04fe-c80fe2a95405@meddatainc.com>
+Date:   Sun, 13 Jun 2021 18:51:31 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210612124157.hq6da5zouwd53ucy@bitfolk.com>
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL:  http://strugglers.net/wiki/User:Andy
-User-Agent: NeoMutt/20170113 (1.7.2)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Provags-ID: V03:K1:hKGX7oQv1acJXa0QwON1WfNagw+MhSjn31N+c74xt8fPaennXRi
+ MF2fdCQBKFo5zb+CKPHq5fKfrZIGaED3DjFS7EA+31xo5nji/yNziFeegJ40Irx9MnEXn55
+ wZ3vLdBJyCpiiqdGrchta6Yd5tDqZURIrxVap0ZAU09mxb22bUPu/bYxUOi1rvaPv4gitXT
+ 8aQMF6vVJ4iUKVO273szA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:xsmBnYwyDBg=:GSjxZ1alHCIdshKsnqdDA6
+ 0FYGu/JhxC2imFdrJgh15K042X7Jay3FGWGeUa075hHTLydFc8AxdRPj5VSxCqjIC8xbikB+P
+ utUV9B0muk4bFxK6YSoNHWS/0wFbXfYnwdo7659URSUlwRMfmlyARmoBnGOv31zmUJ8mAp5rS
+ MpjpzbwCP9NwfAARl+4J4440qzIEshbE/lSfAHfb0+rssDmS3GIq5wFwOQzY1D4k7AYFYQdd0
+ zgcOxVQsQSnoaFNXUJmJyH9jro2GfgfE63z49XYZDJSIp0QOhGoqUvCePidVxq7dbyA5e3lEy
+ 8SqVXWc7pd+0bAOWvTeOMIeNxT0FpYYTNtqt73uUq41IX+5oAzqJ+sKhD8EzRb72wE0/0bCkN
+ AYWDeVTN13g/O7l/0Pm98jh43891KKUyeEWDoON4+rZmNjU1pPZ5fudsRmeLEUq63my5jusnd
+ 1KE/7AzwUis8+a21jaJnWFDNkY4hsT12t8V0fcRJY4guASIyWzb63RUmklW/UIxqEzBZejBpQ
+ Ro22Wj6VIogQUufIHSZhrI=
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Jun 12, 2021 at 12:41:57PM +0000, Andy Smith wrote:
-> Hi,
-> 
-> I've been experiencing this problem intermittently since December of
-> last year after upgrading some existing servers to Debian stable
-> (buster). I can't reproduce it at will and it can sometimes take
-> several months to happen again, although it has just happened twice
-> in 3 days on one host.
+I am running CentOS 7 and would like to see if I can "recover" a lost(?) RAID-1 setup on two identical SSDs and would greatly appreciate some assistance.
 
-I was in a bit of a rush when I dashed that email off. Here's some
-more information about the typical configuration of these servers.
+Part of the history is that I many months ago used Intel fake RAID on the motherboard but I /think/ I may also have used software RAID... The motherboard was replaced and because there were some issues I eventually abandoned the fake RAID and did not have mdadm running at that time. Thus, I have been operating off the two identical disks in non-RAID mode but would now like to see if I can get back to having RAID-1 running using mdadm only. There have been a number of OS updates, new software installed and work done on the computer since but it is running fine.
 
-$ uname -a
-Linux clockwork 4.19.0-16-amd64 #1 SMP Debian 4.19.181-1 (2021-03-19) x86_64 GNU/Linux
-$ mdadm --version
-mdadm - v4.1 - 2018-10-01
+Because I have no notes and really did not know what I had done before the above motherboard replacement I have to tread very carefully. Here is my current understanding:
 
-Most of these servers have spent about 5 years running on earlier
-versions of Debian, notably the full Debian jessie release cycle,
-without issue. I've only started having issues after upgrading to
-Debian buster.
+- mdadm is installed on the system
 
-I will omit details of all member devices as I'm not getting issues
-with IO errors, dropouts etc. Most of the servers just have two SATA
-SSDs although I am also seeing this on more complex setups.
+- the two relevant disks are currently /dev/sdb and /dev/sdc (I also have two other disks in the system that are, for this purpose, irrelevant)
 
-$ cat /proc/mdstat
-Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5] [raid4] [raid10]
+- gparted tells me that both disks are 238.47 GiB in size with:
 
-md5 : active raid1 sdb5[1] sda5[0]
-      3742779392 blocks super 1.2 [2/2] [UU]
-      bitmap: 14/28 pages [56KB], 65536KB chunk
+-- /boot/efi of 260 MiB
 
-md1 : active raid1 sdb1[1] sda1[0]
-      975296 blocks super 1.2 [2/2] [UU]
+-- /boot 1.00 GiB and formatted xfs
 
-md2 : active raid1 sda2[0] sdb2[1]
-      4878336 blocks super 1.2 [2/2] [UU]
+-- (LUKS) encrypted partition 247.22 GiB
 
-md3 : active (auto-read-only) raid1 sdb3[1] sda3[0]
-      1951744 blocks super 1.2 [2/2] [UU]
+-- unallocated 4.34 MiB
 
-unused devices: <none>
+- gparted further shows a key symbol next to /dev/sdc1 and /dev/sdc2 and /dev/sdb3 but not /dev/sdb1, /dev/sdb2 and /dev/sdc3. Googling this it suggests that partitions with keys are in use and the ones with /no/ keys are /not/ in use?
 
-$ sudo smartctl -i /dev/sda
-smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.19.0-16-amd64] (local build)
-Copyright (C) 2002-17, Bruce Allen, Christian Franke, www.smartmontools.org
+- am I correct therefore that the system booted from /dev/sdc1 and /dev/sdc2 and using /dev/sdb3 for everything /but/ /boot and /boot/efi?
 
-=== START OF INFORMATION SECTION ===
-Device Model:     SAMSUNG MZ7KH3T8HALS-00005
-Serial Number:    S47RNA0MC01657
-LU WWN Device Id: 5 002538 e09c88bb3
-Firmware Version: HXM7404Q
-User Capacity:    3,840,755,982,336 bytes [3.84 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Rotation Rate:    Solid State Device
-Form Factor:      2.5 inches
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   ACS-4 T13/BSR INCITS 529 revision 5
-SATA Version is:  SATA 3.2, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Sat Jun 12 13:36:47 2021 UTC
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+- cat /proc/mdstat does not show any RAID information
 
-$ sudo smartctl -i /dev/sdb
-smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.19.0-16-amd64] (local build)
-Copyright (C) 2002-17, Bruce Allen, Christian Franke, www.smartmontools.org
+- my /uneducated/ guess is that there /might/ be some RAID-information in the last 4.34 MiB but I am not sure how to check it?
 
-=== START OF INFORMATION SECTION ===
-Device Model:     SAMSUNG MZ7KH3T8HALS-00005
-Serial Number:    S47RNA0MC01656
-LU WWN Device Id: 5 002538 e09c88b8a
-Firmware Version: HXM7404Q
-User Capacity:    3,840,755,982,336 bytes [3.84 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Rotation Rate:    Solid State Device
-Form Factor:      2.5 inches
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   ACS-4 T13/BSR INCITS 529 revision 5
-SATA Version is:  SATA 3.2, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Sat Jun 12 13:36:54 2021 UTC
-Local Time is:    Sat Jun 12 13:36:54 2021 UTC
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+- my next /uneducated/ guess is that, if so, mdadm 0.90 was/could be used since that is the version that seems to use space at the end of the disk
 
-At this point it would be really helpful fi Ic ould even narrow it
-down to "Xen problem" or "dom0 kernel problem". :(
+I would very much appreciate if anyone can suggest how to check the last items? Once this has been verified the next step would be to get mdadm RAID-1 going again.
 
-Cheers,
-Andy
+If any of the above is incorrect in whole or partially, please advise.
+
+Thanks!
+
