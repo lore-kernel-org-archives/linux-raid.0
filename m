@@ -2,93 +2,154 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=BAYES_00,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D708C48BDF
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Jun 2021 21:43:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5317FC48BDF
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Jun 2021 22:23:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56C4E610A2
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Jun 2021 21:43:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A6346128C
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Jun 2021 22:23:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230001AbhFOVps (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Jun 2021 17:45:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53402 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229782AbhFOVps (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Jun 2021 17:45:48 -0400
-Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50B56C061574
-        for <linux-raid@vger.kernel.org>; Tue, 15 Jun 2021 14:43:42 -0700 (PDT)
-Received: by mail-oi1-x22c.google.com with SMTP id a26so114191oie.11
-        for <linux-raid@vger.kernel.org>; Tue, 15 Jun 2021 14:43:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=OyQfunXazoXBOXxJVefloBMvC5Js1RvOPuzhQE6Grpc=;
-        b=dNI9J7p9nMD7oxWyB8OhTlFQODmeqcFJoEUljGcOjnOvSjehPzcDxx3SaM8uH8RRRZ
-         ak6Jq+9bcQKD+HIm+9jQCkPCp/QFU8ERohhtIYT/uyaU7zs7QEldGaFnD9cUr8Gow31r
-         g18j5/8UpjHjUUmYWlMCtWBebLulpCcbMrP07ddlyAWDP1elY4UB7CXyer5wxKUmX59l
-         N5ZGY+Gf0OWCtLlm6WOwmjzaJSWLXSvKDTJZCchd3Oj/oCTh3uTOlfhskBzkRO01v4Et
-         KIF4DKToDRVgWfZ7dKnnYxkb5MhjvLesb4XRgcFsFCIygS3EwbvItE1u7lXg/E3y/B2p
-         /KLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=OyQfunXazoXBOXxJVefloBMvC5Js1RvOPuzhQE6Grpc=;
-        b=YB9KIVG7Z9kxG21dZw5EVxmqUs4MoYhfVFdjZVqnysfdQQ2kU8aGM/7aDpUgcrGkxz
-         h6dE1UDuB/feFpFSVR2UQXYfAJ13/Aq5jKxqDp43MDzQ5Y/M9by9FrqDOrrSIbCARqny
-         LGKJqy/1/ArHr3jatHbD2wimeRPdKZW6FH8u3dMMPNBzo28zEFX+nzgnveuGCQ890KcO
-         PrvgXN2kN83t8PtNHqrLRPDqmsM0sDtw34syjXMxgvaxEBYjFclL090razSmNfi3OySF
-         47VdGwf9ql8qIV1KURS7712Kp9pEaVeIr0g02PI4cD4HWCWV64VdFrPqylMwzFv1oFoW
-         H4Bg==
-X-Gm-Message-State: AOAM531mbKWjAasU2EU5v+x0/XM+ve8exhWu+jrA0IfZg8QtiSJs+9at
-        Nbh1cDqVVb1eZPASAjKRn6HXhA==
-X-Google-Smtp-Source: ABdhPJynU2tJqJMMPZFkRVOaadAMfu4Y5v72qYNalpg8im31anNNORh816UTQ12Sk1249OYouhE3NA==
-X-Received: by 2002:aca:ac02:: with SMTP id v2mr4855398oie.154.1623793421722;
-        Tue, 15 Jun 2021 14:43:41 -0700 (PDT)
-Received: from [192.168.1.134] ([198.8.77.61])
-        by smtp.gmail.com with ESMTPSA id l2sm49548otn.32.2021.06.15.14.43.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Jun 2021 14:43:41 -0700 (PDT)
-Subject: Re: [GIT PULL] md-next 20210615
-To:     Song Liu <songliubraving@fb.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Guoqing Jiang <jgq516@gmail.com>,
-        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
-        Guoqing Jiang <jiangguoqing@kylinos.cn>,
-        Gal Ofri <gal.ofri@storing.io>
-References: <88538F4F-01D2-4491-82D2-CD242F98AFC3@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <061705be-d9d7-31cc-9082-75e1a4562ba3@kernel.dk>
-Date:   Tue, 15 Jun 2021 15:43:40 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S230082AbhFOWZh convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Jun 2021 18:25:37 -0400
+Received: from [41.80.111.74] ([41.80.111.74]:61122 "EHLO
+        guard.vivawebhost.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S229931AbhFOWZh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 15 Jun 2021 18:25:37 -0400
+Message-ID: <005b12b6656d47475b5ee844a2765c523d3eca@yandex.ru>
+Reply-To: "Kenya Business Plans" <auiko@yandex.ru>
+From:   "Kenya Business Plans" <ahmq@yandex.ru>
+To:     <linux-raid@vger.kernel.org>
+Subject: Kenya Cutomized Business Plans for only Kes 499/=
+Date:   Wed, 16 Jun 2021 01:23:19 +0300
+Organization: Kenya Business Plans
 MIME-Version: 1.0
-In-Reply-To: <88538F4F-01D2-4491-82D2-CD242F98AFC3@fb.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8";
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 6/15/21 1:43 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes for md-next on top of your 
-> for-5.14/drivers branch. The major changes are:
-> 
->   1) iostats rewrite by Guoqing Jiang;
->   2) raid5 lock contention optimization by Gal Ofri.
+  
+Customized Kenya Business Plans
+Invest wisely by getting street smart market surveys, guides and info packs with the sweet or harsh reality of the market.
+Actual Facts & Figures on Revenue, Mark Up, Wholesale, Retail prices, Competition, Survival rate, Differentiation, Capital, Process, Equipment, Suppliers, Opportunities, Licenses, Consumer Behaviour, Manpower Tips, Tricks & so so much more.
 
-Pulled, thanks.
+We have comprehensive business plans in these categories:
 
--- 
-Jens Axboe
+Agrovet
+Auto Glass Retail -17 Pages
+Bank Agency Fact-sheet
+Beef Butchery - 31 pages
+Boda Boda
+Bottled Water - 53 Pages
+Building Materials Yard - Dynamics & Case Study
+Car Wash Quick Guide
+Chapati Wholesale (Case Study)
+Chemist -Retail - 31 Pages
+Chicken Butchery
+Chips & Chicken Cafe - 31 Pages
+Concreting ( Koroga) Equipment Leasing - 29 Pages
+Corn Chips Snacks Making - 37 Pages
+Cosmetics Retail - 30 Pages
+Cosmetics Retail -30 Pages
+Courier - 35 Pages
+Cyber Cafe
+Day-care
+Electrical Parts Retail - 27 Pages
+Executive Barber Shop - 42 Pages
+Fish Supply - Nairobi Hotels Quick Overview
+Fish Supply - Nairobi Hotels Quick Survey
+Flowers - Nairobi (Retail/ Wholesale )
+Free Advertiser Magazine ( Quick Guide & Case Study )
+Fruit / Juice Parlour
+Gas (LPG) Retail
+Gift Service
+Gym - 38 pages
+Hair Salon
+Ice Lollies Making
+Ice Lollies Making ( Quick Guide )
+Imaging Clinic (Ultrasound and X-ray) - 46 Pages
+Inner-wear Retail - 27 Pages
+Laundry - 31 pages
+Leather: Skins Trade -26 Pages
+'Local' Bar - 48 Pages
+Maize Milling (Unga wa Ugali)
+Milk Distributorship
+Mitumba Clothes
+Money Lending - Informal Overview
+Motorcycle Spare Parts Retail -33 Pages
+Movie Shop
+M-pesa Sub Agent
+Nails (Misumari) Making - 60 Pages
+Non-Woven Bags Making -39 Pages
+Petrol Station (Independent) - 47 Pages
+Plumbing Hardware Retail - 35 Pages *New
+Primary School Business - 38 Pages
+Printing Business - 55 Pages
+Real Estate Agency - 42 Pages
+Second Hand Novels (R)
+Selling Cake Boxes
+Selling Cookies
+Senator Keg Bar
+Slot Machines Quick Guide
+Small Scale FMCG Distribution - New
+Smokies & Egg Vending
+Supermarket - 75 Pages
+Supermarket Shelf Space Guide
+Tents & Chairs Leasing
+Tiles Retail Business Fact-sheet
+Timber Yard - 32 Pages
+Tomato ( Greenhouse ) - Quick Market & Production Guide
+Tyres Retail Business - 29 Pages
 
+Invest wisely in 2020 by getting street smart market surveys with:
+- Market Analysis
+- Step by step establishing Process
+- Licenses - Issuing authority, cost, requirements
+- Equipment - Suppliers, Considerations, Cost
+- Other requirements
+- Suppliers & Prices
+- Raw Materials
+- Buying Selling Prices
+- Production Costs
+- Operational Costs
+- Day to day Operations
+- Revenue & Margins
+- Sample wholesale retail prices
+- Case Studies
+- Manpower
+- Capital breakdown
+- Opportunities
+- Competition
+- Surviving & Thriving
+- Analysis, figures, observations, dos & don'ts
+- Trends ,Tips, Tricks and so much more.
+
+To Download a Sample Business Plan Copy and paste the link below to your browser
+
+https://drive.google.com/open?id=1gO2UiWble5J9oEvd8qH3oJ0XsrwvVdtQ
+
+The whole package of 65 Business Plans above is available Offer Price @ Kshs. 499. We are only selling the guides as a package.
+
+To Order Kindly use Lipa Na M-Pesa Buy Goods and Services Till No. 234931.
+
+On payment kindly forward the Mpesa payment confirmation text and your email address to +254 721 351 269.
+
+We deliver via email within 15 minutes of payment.
+
+TRIED, TESTED AND TRUSTED. Helping You Start a Business in Kenya With Less Risk!
+
+Kind Regards;
+
+
+Hashna A. Noor
+Manager - Sales & Marketing
+Kenya Business Plans Limited
++254721351269 | +254707559080
+78 Brookside Drive | Nairobi | Kenya
