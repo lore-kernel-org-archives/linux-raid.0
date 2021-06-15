@@ -2,162 +2,173 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-4.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 786C6C2B9F4
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Jun 2021 17:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07FCFC2B9F4
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Jun 2021 02:29:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DBEF61378
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Jun 2021 17:35:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D12086100B
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Jun 2021 02:29:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235481AbhFNRhL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Jun 2021 13:37:11 -0400
-Received: from mout.perfora.net ([74.208.4.196]:48255 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231499AbhFNRhL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 14 Jun 2021 13:37:11 -0400
-Received: from [192.168.1.23] ([72.94.51.172]) by mrelay.perfora.net
- (mreueus003 [74.208.5.2]) with ESMTPSA (Nemesis) id 0LqBHC-1lNtSV2CUi-00doTd
- for <linux-raid@vger.kernel.org>; Mon, 14 Jun 2021 19:35:07 +0200
-Subject: Re: Recovering RAID-1
-To:     Linux RAID Mailing List <linux-raid@vger.kernel.org>
-References: <e6940ac5-9c2a-35bb-04fe-c80fe2a95405@meddatainc.com>
- <b7f88b0e-9941-19c5-bd94-8a79896906f2@youngman.org.uk>
-From:   H <agents@meddatainc.com>
-Message-ID: <ae2589bb-43e9-863d-32f4-86d949f530bd@meddatainc.com>
-Date:   Mon, 14 Jun 2021 13:35:06 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S230017AbhFOCbH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Jun 2021 22:31:07 -0400
+Received: from sonic316-10.consmr.mail.gq1.yahoo.com ([98.137.69.34]:35334
+        "EHLO sonic316-10.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229919AbhFOCbF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 14 Jun 2021 22:31:05 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=att.net; s=s1024; t=1623724141; bh=7GxDmwhdMrAKBxBqnNX04Ero4wU5rhNLjp24UHX6tTg=; h=Subject:To:References:From:Date:In-Reply-To:From:Subject:Reply-To; b=zhPwQrQ1sGEJYPjhqPeiECNmi39UD59jAxpPW/qziABq5GLByfYuN1o0iM2vZhu+7Fx0hji7I/ptNj6FQwa6ZelrR4XlHbX0v731fJazlnBrJ6/F41Oa8AuB4jV0iEava08AoyMAcUDLBlD+xKXu1exJ27IqcvPd+ylRuq104g4=
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1623724141; bh=WjWKnogS4JEJaiHzpwJPeGUzy2dQUmLHvSJuFrqJ+J7=; h=X-Sonic-MF:Subject:To:From:Date:From:Subject; b=THj0oK3DDegCtkfhQ9YsEQtRBFVdVd9duNnW43RIA5MdR/79ekKvD0N4AxAaaG4B0c2L/CnPbELL7+a9wVy2mPOa0BhcR9xsZ33VFbIdMYTHvmWGX0QoXvhaP77pKr1rgMPxzurqqm+7CYErqOi0y8CJd6mJtUunUj98SNvoNMTos/hE6hnnHS+qYE/4cSeNhW//tlVO/sfh/SUMQ/GuWRyDfHnjE/Gn2LmMFkrjOZ2qDjzGZ0ed42lSw7uGTUDmfylBRunA1tCic/ZMu7Z/4REMIE6AstVethOH/V7OUeoU1CKEEhKFro5XsVLDle1YyRkovWVqmcOXuWzG5c2Zfw==
+X-YMail-OSG: uSoKhpIVM1kuZT.nk2aeIW03pwDWT7yO4hmvV53GHvMBCYSqXM2y4oT5LKOxrEt
+ li0WL0ATtaidzw8Mp5RSUdDnOabjc_4_g7Bf8c3tgZ.vigmalsLBZNo9.WgNTvYUB9Gdh9JtCFrh
+ fAV38XWKe6GjSe.aXzEpMaQ7_wBqp_UpltYYgwQIdIdXavxPV.xQzNkV7lvaeQDMBLJRy8rYHTgG
+ zoVIpsrKVAAchXcW50zNhqyN4hsPkS.lHp3Z4a64mSYuPBXyf1nEw9Vq.xKx_nPDd4PLZLy3CW7R
+ H1Tbt8z7EDetugP3h_hhwC.L6erzMU_.lcGYALK2Gb4pC8PaYUhFxT6bbQfnR5j8SsKc3vuI9e45
+ Xx8rn4EsmRzKM7qhJthCFUliyUIMWS8Ipql284j6lx68Mv6kqO1kYEGCNY.uvQy4be0IlG2InzTt
+ TzYipAK98QAjT1GlhXqaCwo89wiwADBcjnQ562B8yEnrAhxmgE9viDsccd_NrVkV3udH.IVG_JCQ
+ PwO5LFX88sDlV35QT.JK3hqO__F77NohTrYUJeNrFzYfBYjbz5eyhqQG65e2BdOEbxh.0B6DZM37
+ RTl6sc_GUrnDBpWy29a.l.CWYNbX4JIQwdRQ4GPbhmbEX6qsCHC8EwRpcQNzlm9VuieJDa0JdxOH
+ IPEb1sxKYYFZybvHpX.dDZu4BRQxUgCe6dlNvY569cI_hpA4oF7dKaaNvNbjlCGlW4gr7MBtBnQu
+ bUxO84O2ZazgwLqNQ5eSrKj6oXaAjWduiD4wb.R1cr7rgj03G2qACJcPcBEOjo6CtkKu4qRpAf8T
+ 5xp.TK23SsLnGE4Njcagt4.C2xocJQLxNlbcbgswK5zaH0avRvohLvWT4IPm8nkigKM3pmcOQm8B
+ heexyMK4IXwp4adRYlotCjQgy1wo9_0Wbf15huZ8nCHyD7fIX8yUerHi6DXP3Lf725LUC6RxB5cH
+ six9QJ0esZzpSnTx6JDZTi2wEMk1j9791UrHT9daDo7J56fzGwbYPblDSr70lOEOGecv7IpN2L06
+ YwqpYEOzmCF1nnqZ_kbKbt75CfgD_DVmaCnlHMg76k52A36WJc4v1O05ZYFUqPkUhITpd8XhGbiH
+ N0kLZbsjqt5U9kSQCGeLYHjFuJayVQWGQCOK5SevlC6AFDnNit761Q50BAKCC52SK1nyq46Km.PZ
+ ea7d6YGMeLYiLV5_KFJQLw7PxKoKRYC659VtW84092_R0wmDaVEcT_1Hjf1AumMtGTzuYXvdDP0P
+ W12WxGxEtnyc28JKoY_Pe4mZN.A_WcI3I0wvaD4Wrkird54tsAK7CxJbr3lKglrJNeuc4SXhWM9B
+ w991oGQC3BrHMWECrp_pquAlGjEFkbV6Q4GigFPrqyvdrD4Lmlcmdt7OB3KZMJmG24ZMjhzqKySy
+ MZBlcFdauM_IJvxWHp.qPL90btuHuFkT63QD1QQlahqPQbrCEDZPscRYuEZsQ6TqiETqRcyp0Kvu
+ TaWkpm.NEtdjeTMsUEKD_O3a1yh6nS7zrNRR03nenAFU6WmYuskn4WXG2qsKqciOxz6A1safAk8D
+ x2GXvZOiyPJFVg8DuHO8tam8rVLxDB9EkS6dcRCNz4fQAZUIxRg_ZqrG_REcoHIwsNpkAMVBnAnT
+ adOLJvyc.eMMh8IGklz47269qLgzDkdMpMeJkBC.ScKv5Ub2rkttSBr8XhreXSBhazXU6YfGQZE0
+ 6qXlQhZYuQJXxgYH.c9x4HaCfNO3dFd3Va4UFkAuIboz5zlTLHl62lhQfN4lxnPrWIJRVBOCPOgv
+ d2JJHkwAs3wggmdWBcYYrWOrGc8YPwFGJkYW2dWNqmiwFTc6CHSn4cRLO_TC1BSR8IhXw6dGagFW
+ Qi.3jPi.IpjCzytD_Gl_QUslP8PfwQmjOjsljHY3OLshNb8s0x_4opBjjRCaeG0GxvKpyw5qKYHR
+ Uk41fCfB3QF0389Bji7FSv_uPuUqwRgCp5aO0JMjhPdYOWhnTny9YWiJgsCqRScrnR7TBuJhsvBo
+ e2G1BkIrQhrUDeOjFRfo8n_RZAxbRduhIN4p2QTmd68w0rPLsU1VoIMyPx3n2AU9.0ecTeBkuFW2
+ LpPSR4LXWtE51aQlU5_o0E7BAXymRJVgLGAHrgknfmiCX9YtxdaEHzjzXRrVGvmPhyec.gJAK_ZX
+ 72YJZko_opayjzsmNSLMPrkChNVHal7hYFZicELC7LxeNggIAwVsACfYzVW2wl1G7FCh.lCyfiz5
+ kYEVlQ.DNXAR9usLBL18XqnLa2zD6SXS05QFoz31mLMxnDxU0.0a7XGL6C8utSp3uP4MXSAoylju
+ 1_2sXoPuTpdbZXJDLfeHtgEBrNFNOn1NWUUmnvZCRMgEEGtciYTZPn.wYjgl.WqSXv_JZMWznEKn
+ AbkT81oV6LvyMg27_rgpGIuQ-
+X-Sonic-MF: <lesrhorer@att.net>
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic316.consmr.mail.gq1.yahoo.com with HTTP; Tue, 15 Jun 2021 02:29:01 +0000
+Received: by kubenode546.mail-prod1.omega.ne1.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID 2a3195a317d85a6f81e72b7b0760453b;
+          Tue, 15 Jun 2021 01:33:24 +0000 (UTC)
+Subject: Re: Recover from crash in RAID6 due to hardware failure
+To:     Linux RAID <linux-raid@vger.kernel.org>
+References: <bd617822-79bd-ce40-f50e-21d482570324@gmail.com>
+ <4745ddd9-291b-00c7-8678-cac14905c188@att.net>
+ <ed21aa89-e6a1-651d-cc23-9f4c72cf63e0@gmail.com>
+From:   Leslie Rhorer <lesrhorer@att.net>
+Message-ID: <1c28967e-3dbc-e5ff-9536-b8de0cf9cd65@att.net>
+Date:   Mon, 14 Jun 2021 20:33:20 -0500
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <b7f88b0e-9941-19c5-bd94-8a79896906f2@youngman.org.uk>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <ed21aa89-e6a1-651d-cc23-9f4c72cf63e0@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-X-Provags-ID: V03:K1:i5rxAiDIycx+o/Mtlv7njQdsZybKuTHZDjuPx6POpYp1MfZ/BGQ
- s7tD1nFGWUZ2ZYa/Eb4hf5AiNzY1InPHUmeqit4vUIrLgRjdop+bwygMEQg6LNwAZudWDlM
- YqiekPL+Ld0EWPZC9zIKcHBiigMNtCbhh8TuW4FZrNCk5jLZtOW4itDjx3lt7Xl9xHyuxnk
- QWvKpc1NuNVVYmoTG8pBg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:z1mZqMZTRsw=:cdtgWIx4hxSuyD3LD66qfu
- S5HsG3+GSgzdEXZ7T3N++7DrzMJu6cq/n724MqYqjYaiDaIvaeRT81kQlh4cU9BO6O0QpTPEm
- DIHhmIdYqb4O41KydRkc72MPhCrK3Z/M3+IaQh7/cHmlOb+DA9ifzofGDAWPTBY5i3Ep/Uvwd
- u3Asa3SLTxBKZ7F7pzUK1jk95seMwN4aJ+n45CfuEkk1LVCYTrz8zXaGip+bw3CojSrjZe3ze
- hx2ZLVubbQqRLHucTF8Sv0IiiLBXzQbXWCAz4gzGFysFPgpsG5zkLMGfeTGgN72e2kVh6tncB
- 00TNA6wnWGEYwY1PUss+z1NQpbCfuIqz+mUrx9u9iuAAJrg3T6tS1thn8nOCDbgfZ07m+9l6R
- dC/SD2xCeoIFZkfJ9cePLD16t5EBugc2ggqKBdkAjCZJCU2GWLsNAH7f5FkgIckFqvMoQBKDf
- 6loKI0rztHkacnNxrwg2m/koC8G7fAWU0MHHMSP6ehc5yladE19Dz4gdqJPJaiUCAo7paJYbI
- /574qvQUnmOsil5z2lxJSo=
+Content-Transfer-Encoding: 8bit
+X-Mailer: WebService/1.1.18469 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 06/14/2021 04:17 AM, antlists wrote:
-> On 13/06/2021 23:51, H wrote:
->> I would very much appreciate if anyone can suggest how to check the last items? Once this has been verified the next step would be to get mdadm RAID-1 going again.
->
-> An obvious first step is to run lsdrv. https://raid.wiki.kernel.org/index.php/Asking_for_help
->
-> That will hopefully find anything there.
->
-> But before you do anything BACKUP BACKUP BACKUP. It's only 250GB from what I can see - getting your hands on a 500GB or 1TB drive shouldn't be hard, and a quick stream of the partition shouldn't take long (although a "cp -a" might be safer, given that LUKS is involved ...).
->
-> Cheers,
-> Wol
+	There is a fair chance you can recover the data by recreating the array:
 
-Thank you for the link, here is the output from the various packages listed on that page:
+mdadm -S /dev/md2
+mdadm -C -f -e 1.2 -n 6 -c 64K --level=6 -p left-symmetric /dev/md2 
+/dev/sda3 /dev/sdb3 /dev/sdc3 /dev/sdd3 /dev/sde3
 
-uname -a
-
-Linux tsp520c 3.10.0-1160.2.2.el7.x86_64 #1 SMP Tue Oct 20 16:53:08 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
-
-mdadm --version
-
-mdadm - v4.1 - 2018-10-01
-
-smartctl --xall /dev...
-
-I skipped this since the output is lengthy and not sure which parts we might need.
-
-mdadm --examine /dev/sdb (and /dev/sdc as well as individual partitions)
-
-[root@tsp520c ~]# mdadm --examine /dev/sdb
-/dev/sdb:
-   MBR Magic : aa55
-Partition[0] :    500118191 sectors at            1 (type ee)
-[root@tsp520c ~]# mdadm --examine /dev/sdb1
-/dev/sdb1:
-   MBR Magic : aa55
-Partition[0] :   1701978223 sectors at   1948285285 (type 6e)
-Partition[3] :          441 sectors at     28049408 (type 00)
-[root@tsp520c ~]# mdadm --examine /dev/sdb2
-mdadm: No md superblock detected on /dev/sdb2.
-[root@tsp520c ~]# mdadm --examine /dev/sdb3
-mdadm: No md superblock detected on /dev/sdb3.
-[root@tsp520c ~]#
-
-[root@tsp520c ~]# mdadm --examine /dev/sdc
-/dev/sdc:
-   MBR Magic : aa55
-Partition[0] :    500118191 sectors at            1 (type ee)
-[root@tsp520c ~]# mdadm --examine /dev/sdc1
-/dev/sdc1:
-   MBR Magic : aa55
-Partition[0] :   1701978223 sectors at   1948285285 (type 6e)
-Partition[3] :          441 sectors at     28049408 (type 00)
-[root@tsp520c ~]# mdadm --examine /dev/sdc2
-mdadm: No md superblock detected on /dev/sdc2.
-[root@tsp520c ~]# mdadm --examine /dev/sdc3
-mdadm: No md superblock detected on /dev/sdc3.
-
-cat /proc/mdstat
-
-Personalities :
-unused devices: <none>
-
-mdadm --detail /dev/mdx
-
-There are no /dev/md devices
-
-lsdrv
-
-**Warning** The following utility(ies) failed to execute:
-  sginfo
-Some information may be missing.
-
-USB [uas] Bus 002 Device 002: ID 0bc2:231a Seagate RSS LLC Expansion Portable {NAADA87P}
-└scsi 0:0:0:0 Seagate  Expansion      
- └sda 3.64t [8:0] crypto_LUKS {f573965d-f469-4fc2-abf6-8155f7f422c4}
-  └dm-4 3.64t [253:4] ext4 {3a94f5a0-058a-4002-9067-27ed211e99f0}
-   └Mounted as /dev/mapper/luks-f573965d-f469-4fc2-abf6-8155f7f422c4 @ /run/media/hakan/3a94f5a0-058a-4002-9067-27ed211e99f0
-PCI [ahci] 00:17.0 SATA controller: Intel Corporation 200 Series PCH SATA controller [AHCI mode]
-├scsi 1:0:0:0 ATA      SAMSUNG MZ7LH256 {S4VSNE0MA03154}
-│└sdb 238.47g [8:16] Partitioned (gpt)
-│ ├sdb1 260.00m [8:17] vfat 'SYSTEM' {A850-134B}
-│ ├sdb2 1.00g [8:18] xfs {2d8a56bf-f1e3-4f02-9ae7-3a20c987586d}
-│ └sdb3 237.22g [8:19] crypto_LUKS {8fb015aa-50d8-49b5-9001-964e3247fc87}
-│  └dm-0 237.21g [253:0] PV LVM2_member <237.21g used, 4.00m free {K082KU-HZAr-i6Np-9TwL-av7Z-Nytm-4I4jHe}
-│   └VG centos_tsp520c 237.21g 4.00m free {Y4mpA3-tMd8-L5Pg-xYQF-lcQY-7wgk-Ox2iSi}
-│    ├dm-3 179.52g [253:3] LV home xfs {1d7fabc3-c6f5-4e43-b609-ea86d33012c1}
-│    │└Mounted as /dev/mapper/centos_tsp520c-home @ /home
-│    ├dm-1 50.00g [253:1] LV root xfs {f4f1de82-b53d-4d6d-81f0-621103dddec5}
-│    │└Mounted as /dev/mapper/centos_tsp520c-root @ /
-│    └dm-2 7.69g [253:2] LV swap swap {7fbb4125-6394-4fe8-83a1-8ff0e079ae98}
-├scsi 2:0:0:0 ATA      SAMSUNG MZ7LH256 {S4VSNE0MA03145}
-│└sdc 238.47g [8:32] Partitioned (gpt)
-│ ├sdc1 260.00m [8:33] vfat 'SYSTEM' {A850-134B}
-│ │└Mounted as /dev/sdc1 @ /boot/efi
-│ ├sdc2 1.00g [8:34] xfs {2d8a56bf-f1e3-4f02-9ae7-3a20c987586d}
-│ │└Mounted as /dev/sdc2 @ /boot
-│ └sdc3 237.22g [8:35] crypto_LUKS {8fb015aa-50d8-49b5-9001-964e3247fc87}
-└scsi 7:0:0:0 ATA      Samsung SSD 860  {S597NE0MA20991N}
- └sdd 1.82t [8:48] Partitioned (gpt)
-  ├sdd1 1.82t [8:49] zfs_member 'zfspool' {3888980096123243448}
-  └sdd9 8.00m [8:57] Empty/Unknown
-Other Block Devices
-└loop0 0.00k [7:0] Empty/Unknown
-
-Note that there are two other disks in the system which are not relevant (sda and sdd). The two identical SSDs, SAMSUNG MZ7LH256, are the ones that should be configured RAID-1 (sdb and sdc).
-
-Thank you.
-
+On 6/8/2021 6:39 AM, Carlos Maziero wrote:
+> Em 07/06/2021 07:27, Leslie Rhorer escreveu:
+>> On 6/6/2021 10:07 PM, Carlos Maziero wrote:
+>>
+>>> However, the disks where added as spares and the volume remained
+>>> crashed. Now I'm afraid that such commands have erased metadata and made
+>>> things worse... :-(
+>>
+>>      Yeah.  Did you at any time Examine the drives and save the output?
+>>
+>> mdadm -E /dev/sd[a-e]3
+>>
+>>      If so, you have a little bit better chance.
+> 
+> Yes, but I did it only after the failure. The output for all disks is
+> attached to this message.
+> 
+> 
+>>> Is there a way to reconstruct the array and to recover its data, at
+>>> least partially?
+>>
+>>      Maybe.  Do you know eaxctly which physical disk was in which RAID
+>> position?  It seems likely the grouping was the same for the corrupted
+>> array as for the other arrays, given the drives are partitioned.
+> 
+> Yes, disk sda was in slot 1, and so on. I physically labelled all slots
+> and disks.
+> 
+> 
+>>
+>>      First off, try:
+>>
+>> mdadm -E /dev/sde3 > /etc/mdadm/RAIDfix
+>>
+>>      This should give you the details of the RAID array.  From this,
+>> you should be able to re-create the array.  I would heartily recommend
+>> getting some new drives and copying the data to them before
+>> proceeding.  I would get a 12T drive and copy all of the partitions to
+>> it:
+>>
+>> mkfs /dev/sdf  (or mkfs /dev/sdf1)
+>> mount /dev/sdf /mnt (or mount /dev/sdf1 /mnt)
+>> ddrescue /dev/sda3 /mnt/drivea /tmp/tmpdrivea
+>> ddrescue /dev/sdb3 /mnt/driveb /tmp/tmpdriveb
+>> ddrescue /dev/sdc3 /mnt/drivec /tmp/tmpdrivec
+>> ddrescue /dev/sdd3 /mnt/drived /tmp/tmpdrived
+>> ddrescue /dev/sde3 /mnt/drivee /tmp/tmpdrivee
+>>
+>>      You could skimp by getting an 8T drive, and then if drive e
+>> doesn't fit, you could create the array without it, and you will be
+>> pretty safe.  It's not what I would do, but if you are strapped for
+>> cash...
+> 
+> OK, I will try to have a secondary disk for that and another computer,
+> since the NAS has only 5 bays and I would need one more for doing such
+> operations.
+> 
+> 
+>>> Contents of /proc/mdstat (after the commands above):
+>>>
+>>> Personalities : [raid1] [linear] [raid0] [raid10] [raid6] [raid5]
+>>> [raid4]
+>>> md2 : active raid6 sda3[0](S) sdb3[1](S) sdc3[2](S) sdd3[3](S) sde3[4]
+>>>         8776632768 blocks super 1.2 level 6, 64k chunk, algorithm 2 [5/1]
+>>> [____U]
+>>>        md1 : active raid1 sda2[1] sdb2[2] sdc2[3] sdd2[0] sde2[4]
+>>>         2097088 blocks [5/5] [UUUUU]
+>>>        md0 : active raid1 sda1[1] sdb1[2] sdc1[3] sdd1[0] sde1[4]
+>>>         2490176 blocks [5/5] [UUUUU]
+>>
+>>      There is something odd here.  You say the disks failed, but
+>> clearly they are in decent shape.  The first and second partitions on
+>> all drives appear to be good.  Did the system recover the RAID1 arrays?
+> 
+> Apparently the failure was not in the disks, but in the NAS hardware. I
+> opened it one week ago for RAM upgrading (replaced the old 512M card by
+> a 1GB one), and maybe the slot connecting the main board to the SATA
+> board presented a connectivity problem (but the NAS OS said nothing
+> about). Anyway, I had 5 disks in a RAID 6 array and the logs showed 3
+> disks failing at the same time, which is quite unusual. This is the
+> reason I believe the disks are physically ok.
+> 
+> Thanks for your attention!
+> 
+> Carlos
+> 
+> 
