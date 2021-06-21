@@ -2,119 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 441C8C4743C
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 12:17:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE68C48BC2
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 16:58:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 209E560FF4
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 12:17:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13B3660C3F
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 16:58:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbhFUMTt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 21 Jun 2021 08:19:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56698 "EHLO
+        id S231559AbhFURAV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 21 Jun 2021 13:00:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229610AbhFUMTt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Jun 2021 08:19:49 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0610C061574
-        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 05:17:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=OTFUlO7li/jd6mUC/fX/i9nste0+2xewINHKPXZR2TM=; b=b0JHXDBGIigoNFLHMitez96G5h
-        rfzWbOC3Ji1gBmtCmHiLf7w18FrCCoPgpYjiFpuxO71p9xkloQjvNwiNgtIfJ2J47q+BfiEpHuuqO
-        Xxrh90UKxXn8WT4vWCVWqeNVbOHuddlDWFRQDsLhNpCWkE8DFSn9M9ZyXXi96S06E3iFUhYJjYdeI
-        Pdp9nPS7gi2Cw+7EFk0yAAHEeR5spZG0R9xuXcBs2j3To86cijoYKE/NQnnrCz2UED/8qjeVILIFB
-        4I33E8iQvfWHTHbWI+nP0qPn4nlVwAy7eB5IISM4iEgRfQ8D6zKouHeZO5lRomJTDTnssi5Yt0mzc
-        7afpet3g==;
-Received: from c-73-43-58-214.hsd1.ga.comcast.net ([73.43.58.214] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1lvIrt-0001x2-86; Mon, 21 Jun 2021 12:17:33 +0000
-Subject: Re: How does one enable SCTERC on an NVMe drive (and other install
- questions)
-To:     Edward Kuns <eddie.kuns@gmail.com>,
-        Linux-RAID <linux-raid@vger.kernel.org>
-References: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <823ffe5e-f2d2-3bd8-d947-8f3af8b1514e@turmel.org>
-Date:   Mon, 21 Jun 2021 08:17:32 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        with ESMTP id S233523AbhFURAI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Jun 2021 13:00:08 -0400
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1BADC0253A8
+        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 09:29:00 -0700 (PDT)
+Received: by mail-wm1-x334.google.com with SMTP id m3so10938493wms.4
+        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 09:29:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=RDeuyqO50C+1G3iGwqHa+KoifTcTWbA5G9yqzbRlYPs=;
+        b=nudmELTkw9kpK7B9bPIJHWucG3QvqnZA/lbYz9oW8AIIbDkklAqviNZRM7gIRt/DkS
+         dCha2iGOoR0KSdKQQ9gDjbQCWzEAM8IVZjiOCzpUKgcC6rtNWXz7Bc+J42GnaobL5Jv7
+         kGx9jWZKzb5O3Nh3AavIP5N4M0Tz9aUKd4fbpjTg0jfQEAg7+FHukv59dV06NH5talSI
+         AB1ziuguDFUz/ZOy2gEvsTZIm9sg99hCSMncpLHRi+SKa2w4lTyVXJheL1u/Ns6UloBy
+         C4JG/40g+mqbfD7F8/+G6CGpwYe7mTWg0TA7xScNSgsa2P+AT5KuXdNIGYGSbPL2Nix7
+         wjnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=RDeuyqO50C+1G3iGwqHa+KoifTcTWbA5G9yqzbRlYPs=;
+        b=Mhjq+d5oZTr62xrNEUNsYUfBR/6h5e2hSeoM/d6O1eEDJN7SpvvAfDaQ4H6JlMrwVi
+         wjpSatF5Vrr0NOBy10/INIdTjJc2kWm0eJjUXCzClSkGjQE1VvXQ0LXsCb5CshaqvyxF
+         thyxk/ZilmBGArz1n3m7JLvnYI97U5FA/pY5Ig3fVxlFJn9SGw7TPvG27BDZtT8vPggS
+         X0nvyPzEYeyfv3WTNDbmJSMGwEFElls84935eXYXrAweiKRsO+fgM2Mi0gX7arGo+3bi
+         pR1qmfaOxn8muKuuJ12q1jc4O4sF4tGUkSuGixJShICHlnSD+2UTCHbq55bHmOSeK4bt
+         Um8g==
+X-Gm-Message-State: AOAM531Ir+74eU1wzX1LbgaVN9TWhVrTFWdvCZt7M5wza2zbON75OtAR
+        fGzkFPiwhaZCDchK4lrqSOUPtKr6mekf4MyPGnS0Nj2IjboSRwxV
+X-Google-Smtp-Source: ABdhPJwA+cNyLMrJCAl2Udxlq5FYtXhWgy4uGBH+KMNdQib4rAk4a4WfkbcriMGFOwbRibcKmUB907qSAg5MqBEBndM=
+X-Received: by 2002:a1c:4d3:: with SMTP id 202mr27940074wme.11.1624292939334;
+ Mon, 21 Jun 2021 09:28:59 -0700 (PDT)
 MIME-Version: 1.0
+References: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
 In-Reply-To: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Mon, 21 Jun 2021 10:28:43 -0600
+Message-ID: <CAJCQCtQqtnh37hii+4Lb5gN33UWO+fWAcqBPyZJFM9rcp=ztEA@mail.gmail.com>
+Subject: Re: How does one enable SCTERC on an NVMe drive (and other install questions)
+To:     Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Eddie,
-
-On 6/21/21 1:00 AM, Edward Kuns wrote:
-> 1) Topic one - SCTERC on NVMe
-> 
-> I'm in the middle of installing Linux on a new PC.  I have a pair of
-> 1TB NVMe drives.  All of my non-NVMe drives support "smartctl -l
-> scterc,70,70" but the NVMe drives do not seem to.  How can one ensure
-> that SCTERC is configured properly in an NVMe drive that is part of a
-> software RAID constructed using mdadm?  Is this an issue that has been
-> solved or asked or addressed before?  The searching I did didn't bring
-> anything up.
-
-You can't, if the firmware doesn't allow it.  Do try reading the values 
-before writing them, though.  I've seen SSDs that start up with "40,40" 
-and refuse changes.  40,40 is fine.
-
-Please report here any brands/models that either don't support SCTERC at 
-all, or are stuck on disabled.  So the rest of us can avoid them.
-
 > 2) Topic two - RAID on /boot and /boot/efi
-> 
+>
 > It looks like RHEL 8 and clones don't support the installer building
-> LVM on top of RAID as they used to.  I kind of suspect that the
-> installer would prefer that if I want LVM, that I use the RAID built
-> into LVM at this point.  But it looks to me like the mdadm tools are
-> still much more mature than the RAID built into LVM.  (Even though it
-> appears that this is built on top of the same code base?)
-> 
-> This means I have to do that work before running the installer, by
-> running the installer in rescue mode, then run the installer and
-> "reformat' the partitions I have created by hand.  I haven't gone all
-> the way through this process but it looks like it works.  It also
+> LVM on top of RAID as they used to.
+
+I haven't tried it more recently in Fedora than a couple of years but
+it was putting LVM on mdadm raid, so I'd expect it is too for RHEL 8.
+I'm not sure how favoring LVM raid (LVM management and metadata, but
+still uses the md kernel driver) is exposed in the installer GUI,
+maybe it's just distinguished in kickstart?
+
+>It also
 > looks like maybe I cannot use the installer to set up RAID mirroring
-> for /boot or /boot/efi.  I may have to set that up after the fact.  It
-> looks like I have to use metadata format 1.0 for that?  I'm going to
-> go through a couple experimental installs to see how it all goes
-> (using wipefs, and so on, between attempts).  I've made a script to do
-> all the work for me so I can experiment.
-> 
-> The good thing about this is it gets me more familiar with the
-> command-line tools before I have an issue, and it forces me to
-> document what I'm doing in order to set it up.  One of my goals for
-> this install is that any single disk can fail, including a disk
-> containing / or /boot or /boot/efi, with a simple recovery process of
-> replacing the failed disk and rebuilding an array and no unscheduled
-> downtime.  I'm not sure it's possible (with /boot and /boot/efi in
-> particular)  but I'm going to find out.  All I can tell from research
-> so far is that metadata 1.1 or 1.2 won't work for such partitions.
+> for /boot or /boot/efi.
 
-I don't use CentOS, but you seem to be headed down the same path I would 
-follow.  And yes, use metadata v1.0 so the BIOS can treat /boot/efi as a 
-normal partition.  You may be able to use other metadata on /boot itself 
-if the grub shim in /boot/efi supports it.  (Not sure on that.)
+I'm virtually certain it will create an ESP on mdadm metadata v 0.9
+for /boot/efi, at least it used to. And it was discussed at the time
+on this list as not a good idea because these are strictly mdadm
+member drives, they aren't ESP's until the raid is assembled. So it
+leads to discontinuity in the best case. You either have to lie with a
+partition type claiming it's an ESP and yet it's really an mdadm
+member; or you tell the truth by saying it's an mdadm member but then
+possibly the firmware won't read from it because it has the wrong type
+guid. And some firmware care about that and others don't.
 
-[trimmed what Wol responded to]
+Further, it's possible for the firmware to write to the ESP. Which in
+this case means it modifies a member drive outside of kernel code and
+now they mismatch. As long as no further writes happen to either drive
+separate or via md, you could do a scrub repair and force the second
+drive to match the first. So long as the firmware modified the first
+drive, following scrub repair they'd both be properly in sync rather
+than regressing to a prior state. But I think this is just damn sloppy
+all the way around. The UEFI spec doesn't address syncing ESPs at all.
+And so we're left with bad hacks like using software raid rather than
+a proper utility that determines which drive has the most recent
+changes and syncing them to the other(s), which could be as simple as
+an rsync service unit for this task. Or possibly better would be for
+the canonical contents of the distro directory that belongs on the
+ESP, to actually be in /usr and sync from it as the primary source, to
+all the ESPs. Neither /boot nor /boot/efi need to be persistently
+mounted. It's just lack of resources and a good design that we keep
+these things around all the time. They only need to be mounted when
+they're updated. And they don't need to be mounted during boot because
+they're used strictly by the firmware to achieve boot.
 
-Regards,
+A better idea would be using x-systemd.automount and
+x-systemd.idle-timeout so that it's mounted on demand and unmounted
+when idle. Perhaps even better would be an exclusive owner that
+handles such things. One idea proposed is bootupd,
+https://github.com/coreos/bootupd and it could be enhanced to sync all
+the ESPs as well, in multiple disk scenarios.
 
-Phil
+
+
+
+-- 
+Chris Murphy
