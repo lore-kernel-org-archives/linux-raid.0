@@ -2,121 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE68C48BC2
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 16:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F31C4743C
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 21:11:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13B3660C3F
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 16:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C0BA6124B
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Jun 2021 21:11:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231559AbhFURAV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 21 Jun 2021 13:00:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35838 "EHLO
+        id S231226AbhFUVN1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 21 Jun 2021 17:13:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233523AbhFURAI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Jun 2021 13:00:08 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1BADC0253A8
-        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 09:29:00 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id m3so10938493wms.4
-        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 09:29:00 -0700 (PDT)
+        with ESMTP id S230102AbhFUVN0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Jun 2021 17:13:26 -0400
+Received: from mail-qt1-x829.google.com (mail-qt1-x829.google.com [IPv6:2607:f8b0:4864:20::829])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B134C061574
+        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 14:11:11 -0700 (PDT)
+Received: by mail-qt1-x829.google.com with SMTP id j12so80027qtv.11
+        for <linux-raid@vger.kernel.org>; Mon, 21 Jun 2021 14:11:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=RDeuyqO50C+1G3iGwqHa+KoifTcTWbA5G9yqzbRlYPs=;
-        b=nudmELTkw9kpK7B9bPIJHWucG3QvqnZA/lbYz9oW8AIIbDkklAqviNZRM7gIRt/DkS
-         dCha2iGOoR0KSdKQQ9gDjbQCWzEAM8IVZjiOCzpUKgcC6rtNWXz7Bc+J42GnaobL5Jv7
-         kGx9jWZKzb5O3Nh3AavIP5N4M0Tz9aUKd4fbpjTg0jfQEAg7+FHukv59dV06NH5talSI
-         AB1ziuguDFUz/ZOy2gEvsTZIm9sg99hCSMncpLHRi+SKa2w4lTyVXJheL1u/Ns6UloBy
-         C4JG/40g+mqbfD7F8/+G6CGpwYe7mTWg0TA7xScNSgsa2P+AT5KuXdNIGYGSbPL2Nix7
-         wjnQ==
+        d=gmail.com; s=20161025;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-transfer-encoding;
+        bh=WGykWfce6Zf1SmTYBALMbIjxA0BGdTgsMulCan5GJbo=;
+        b=gPho26NN+fYtf92tbgtVmJF06HDwvpMQidetorhTtmymUYFpeLnBO1uK0ugmxfsuMk
+         ZJFSYus752HBlmT+Ero5oe3ydBGhYzxzda/ULC3kqWpH53GKofXDnmI1m+4wZNxpAzgs
+         jSpk2T7JmrOEYE0ysxizRZhwdgUv1x3/a59RTNIIPq3lNn0RTQW+HqPHGs6oGZ9CWPHh
+         BpjIw28oP3BScpK6LYlyKbT0vJZmBgR8O6Qh87+FhJVIukWI74oclPil9Hh0jIz655Ok
+         nZmmZYaauABaIk190pHI4/Hn7wPQ9Q7VeltAjzWJkwqSubwg56Rb9JtwGiCWCrx3P+wH
+         6c0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=RDeuyqO50C+1G3iGwqHa+KoifTcTWbA5G9yqzbRlYPs=;
-        b=Mhjq+d5oZTr62xrNEUNsYUfBR/6h5e2hSeoM/d6O1eEDJN7SpvvAfDaQ4H6JlMrwVi
-         wjpSatF5Vrr0NOBy10/INIdTjJc2kWm0eJjUXCzClSkGjQE1VvXQ0LXsCb5CshaqvyxF
-         thyxk/ZilmBGArz1n3m7JLvnYI97U5FA/pY5Ig3fVxlFJn9SGw7TPvG27BDZtT8vPggS
-         X0nvyPzEYeyfv3WTNDbmJSMGwEFElls84935eXYXrAweiKRsO+fgM2Mi0gX7arGo+3bi
-         pR1qmfaOxn8muKuuJ12q1jc4O4sF4tGUkSuGixJShICHlnSD+2UTCHbq55bHmOSeK4bt
-         Um8g==
-X-Gm-Message-State: AOAM531Ir+74eU1wzX1LbgaVN9TWhVrTFWdvCZt7M5wza2zbON75OtAR
-        fGzkFPiwhaZCDchK4lrqSOUPtKr6mekf4MyPGnS0Nj2IjboSRwxV
-X-Google-Smtp-Source: ABdhPJwA+cNyLMrJCAl2Udxlq5FYtXhWgy4uGBH+KMNdQib4rAk4a4WfkbcriMGFOwbRibcKmUB907qSAg5MqBEBndM=
-X-Received: by 2002:a1c:4d3:: with SMTP id 202mr27940074wme.11.1624292939334;
- Mon, 21 Jun 2021 09:28:59 -0700 (PDT)
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-transfer-encoding;
+        bh=WGykWfce6Zf1SmTYBALMbIjxA0BGdTgsMulCan5GJbo=;
+        b=WtzVJZ0q4hMJeeii9jkQrBbmz8/GfcUo3BFTJGyOk1RiC2zCqw7/M8+ekz0piBxroW
+         O4SQCCIj1qJRK/jx0XCGMe0oI9GR870t/2vZicAsu2hFias9Ghft667zPrc0TdLhFB8s
+         viMdwDLnVZPQFAH0RLjMG0Dym/hcitW3qDV3Gb4dqrdNqYCEwFQobYI1rsSmELrvfYi5
+         dHY5VCrOth9QeHePTISfg6fwSX/Kkq0G8YB9JkdoREQYTPmMIbFJWneUh5vbDP+S35W2
+         8nnMfQd2TaB57o0FYJ4ZnTuUeP7XFIb6PtKqkSgEaXYXNZUlRXDBCk0JlCa18asV/hKr
+         mUVQ==
+X-Gm-Message-State: AOAM531SRoxOXa7GqXsUbXnt6G4MSUSNV009MfvBwuGjXnOQNRhy7Wra
+        DsrmXz79OlPseBABJHwBVDFMNfeRRGY=
+X-Google-Smtp-Source: ABdhPJxw8TduZ/TS7JdlEJcKT5jOw55z8qdCO7US2se2X/ZvaLvOGeszq2Wyml8OaeDMWMLk0TZ8Yg==
+X-Received: by 2002:ac8:544:: with SMTP id c4mr479112qth.299.1624309870304;
+        Mon, 21 Jun 2021 14:11:10 -0700 (PDT)
+Received: from hera.hudaceks.home (158-247-72-95.car1-wispds4-pool60.amplex.net. [158.247.72.95])
+        by smtp.gmail.com with ESMTPSA id z3sm9811803qki.73.2021.06.21.14.11.09
+        for <linux-raid@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Jun 2021 14:11:09 -0700 (PDT)
+To:     mdraid <linux-raid@vger.kernel.org>
+From:   Bill Hudacek <bill.hudacek@gmail.com>
+Subject: Question: RAID cabinet for home use
+Message-ID: <03ca5974-60ed-d596-7eff-cac44f4a6d62@gmail.com>
+Date:   Mon, 21 Jun 2021 17:11:08 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.0
 MIME-Version: 1.0
-References: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
-In-Reply-To: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
-From:   Chris Murphy <lists@colorremedies.com>
-Date:   Mon, 21 Jun 2021 10:28:43 -0600
-Message-ID: <CAJCQCtQqtnh37hii+4Lb5gN33UWO+fWAcqBPyZJFM9rcp=ztEA@mail.gmail.com>
-Subject: Re: How does one enable SCTERC on an NVMe drive (and other install questions)
-To:     Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-> 2) Topic two - RAID on /boot and /boot/efi
->
-> It looks like RHEL 8 and clones don't support the installer building
-> LVM on top of RAID as they used to.
+My 2021 Sans Digital TR5UT+B held 5 SATA disks. I had an eSATA=20
+connection to the host box. It went belly-up a few weeks ago.
 
-I haven't tried it more recently in Fedora than a couple of years but
-it was putting LVM on mdadm raid, so I'd expect it is too for RHEL 8.
-I'm not sure how favoring LVM raid (LVM management and metadata, but
-still uses the md kernel driver) is exposed in the installer GUI,
-maybe it's just distinguished in kickstart?
+After some careful searching, a good replacement seemed to be the Oyen=20
+Digital Mobius 3R5-EB3-M. Found it for about $300USD.
 
->It also
-> looks like maybe I cannot use the installer to set up RAID mirroring
-> for /boot or /boot/efi.
+It was plug-and-play replace. Drives were being addressed by UUID in=20
+Fedora so no issues at all. It came right up.
 
-I'm virtually certain it will create an ESP on mdadm metadata v 0.9
-for /boot/efi, at least it used to. And it was discussed at the time
-on this list as not a good idea because these are strictly mdadm
-member drives, they aren't ESP's until the raid is assembled. So it
-leads to discontinuity in the best case. You either have to lie with a
-partition type claiming it's an ESP and yet it's really an mdadm
-member; or you tell the truth by saying it's an mdadm member but then
-possibly the firmware won't read from it because it has the wrong type
-guid. And some firmware care about that and others don't.
+However, smart reporting looks horrible even compared to the TR5UT+B=20
+(which had its own issues).
 
-Further, it's possible for the firmware to write to the ESP. Which in
-this case means it modifies a member drive outside of kernel code and
-now they mismatch. As long as no further writes happen to either drive
-separate or via md, you could do a scrub repair and force the second
-drive to match the first. So long as the firmware modified the first
-drive, following scrub repair they'd both be properly in sync rather
-than regressing to a prior state. But I think this is just damn sloppy
-all the way around. The UEFI spec doesn't address syncing ESPs at all.
-And so we're left with bad hacks like using software raid rather than
-a proper utility that determines which drive has the most recent
-changes and syncing them to the other(s), which could be as simple as
-an rsync service unit for this task. Or possibly better would be for
-the canonical contents of the distro directory that belongs on the
-ESP, to actually be in /usr and sync from it as the primary source, to
-all the ESPs. Neither /boot nor /boot/efi need to be persistently
-mounted. It's just lack of resources and a good design that we keep
-these things around all the time. They only need to be mounted when
-they're updated. And they don't need to be mounted during boot because
-they're used strictly by the firmware to achieve boot.
+Here's what the TR5UT+B (old cabinet) reported for one disk in the=20
+unit (just the header section of smartctl -a):
 
-A better idea would be using x-systemd.automount and
-x-systemd.idle-timeout so that it's mounted on demand and unmounted
-when idle. Perhaps even better would be an exclusive owner that
-handles such things. One idea proposed is bootupd,
-https://github.com/coreos/bootupd and it could be enhanced to sync all
-the ESPs as well, in multiple disk scenarios.
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Model Family:=C2=A0=C2=A0=C2=A0=C2=A0 Western Digital Red
+Device Model:=C2=A0=C2=A0=C2=A0=C2=A0 WDC WD20EFRX-68EUZN0
+Serial Number:=C2=A0=C2=A0=C2=A0 WD-WCC4M6HX8XCR
+Firmware Version: 0957
+User Capacity:=C2=A0=C2=A0=C2=A0 2,000,398,934,016 bytes [2.00 TB]
+Sector Size:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 512 bytes logical/physical
+Device is:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 In smartctl database=
+ [for details use: -P show]
+
+Here's what the Mobius reports now for the same disk:
+
+=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+Device Model:=C2=A0=C2=A0=C2=A0=C2=A0 Mobius=C2=A0 DISK1
+Serial Number:=C2=A0=C2=A0=C2=A0 WD-WCC4M6HX8XCR
+Firmware Version: 0962
+User Capacity:=C2=A0=C2=A0=C2=A0 2,000,398,934,016 bytes [2.00 TB]
+Sector Size:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 512 bytes logical/physical
+Device is:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Not in smartctl data=
+base [for details use: -P showall]
+
+The disk model is gone. The firmware version is wrong (cabinet instead=20
+of disk?!). I imagine firmware updates are impossible here.
+
+The rest of it is unimpressive, too. No SCT (TLER) at all - not just=20
+ERC, but SCT Status, SCT Feature Control, SCT Data Table are all=20
+missing too.
+
+All the disks in the cabinet are WD20EFRX-68EUZN0. So I believe they=20
+have SCT/TLER.
+
+What RAID cabinets would be a better alternative? I have 5 drives but=20
+an 8-bay cabinet would work too.
+
+Obviously, SMART pass-through would be 'nice'. But so would SCT (ERC).
+
+--=20
+
+Kind Regards,
+
+Bill Hudacek
+IT Architect
+Currently Un-Attached, free & independent
 
 
-
-
--- 
-Chris Murphy
