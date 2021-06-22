@@ -2,94 +2,142 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2414C2B9F4
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Jun 2021 15:16:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E79D1C2B9F4
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Jun 2021 16:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF9196128E
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Jun 2021 15:16:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C445D6109E
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Jun 2021 16:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbhFVPSS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Jun 2021 11:18:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:47722 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231350AbhFVPSS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 22 Jun 2021 11:18:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624374961;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=/n/dlGsqSRC/mhD+z0vniMFq5LjTy2vLQFZqLM6aLr0=;
-        b=QO/DFa+uG/uUUwh0cwIzWoL5pPpKLpWRI39e6PeeKhWwdqmNueMwb/8PX7KmKmOOgSk34j
-        +P56vg0l6oNjnOijoM3uURkPmAFXDK/btbTTfZgGfwIiqWmiKMcJs9GiHiBlKhibnkTBa1
-        uyTPBDXpvWrYWf9NWv3zSsZdEztWpeQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-272-Z8NXL2dhOWKQdM41xeNTCw-1; Tue, 22 Jun 2021 11:16:00 -0400
-X-MC-Unique: Z8NXL2dhOWKQdM41xeNTCw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S230101AbhFVQMv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Jun 2021 12:12:51 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:56250 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229913AbhFVQMs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Jun 2021 12:12:48 -0400
+Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 89D071084F57;
-        Tue, 22 Jun 2021 15:15:59 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-29.pek2.redhat.com [10.72.8.29])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BA27860854;
-        Tue, 22 Jun 2021 15:15:57 +0000 (UTC)
-From:   Xiao Ni <xni@redhat.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, ncroxon@redhat.com
-Subject: [PATCH 1/1] mdadm: Fix building errors
-Date:   Tue, 22 Jun 2021 23:15:55 +0800
-Message-Id: <1624374955-13214-1-git-send-email-xni@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+        by smtp-out1.suse.de (Postfix) with ESMTPS id BB9A12196C;
+        Tue, 22 Jun 2021 16:10:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1624378231; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OBsiPuL7h3qkYc/fzzIiZgnMwkZnm2LoFEaxuYiK7oU=;
+        b=0qpUDOz/k6ZY3yfuY681vkq6Y0DDYra8sUKngniDbHSZA9WWr9yeh44EWcnKBHyuIBHw6/
+        NtJe7XPyzDkthNliUvKxwF62SZ0S32+VeHg+aRcW3STKsNJQOhpuFqlUxAF8MxtPSLqZEh
+        KHgVsPxZoVqmWgU/MEZXlJGEP1jBhDw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1624378231;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OBsiPuL7h3qkYc/fzzIiZgnMwkZnm2LoFEaxuYiK7oU=;
+        b=XtIutccXexZz64VEqwafXQ1xCTbg+rpiSuXnTbnMgzb57ucrRTsLr9bpveTi/D68k2aWHK
+        7xz2JtekQXzhPTBg==
+Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        by imap.suse.de (Postfix) with ESMTP id 7861111A97;
+        Tue, 22 Jun 2021 16:10:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1624378231; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OBsiPuL7h3qkYc/fzzIiZgnMwkZnm2LoFEaxuYiK7oU=;
+        b=0qpUDOz/k6ZY3yfuY681vkq6Y0DDYra8sUKngniDbHSZA9WWr9yeh44EWcnKBHyuIBHw6/
+        NtJe7XPyzDkthNliUvKxwF62SZ0S32+VeHg+aRcW3STKsNJQOhpuFqlUxAF8MxtPSLqZEh
+        KHgVsPxZoVqmWgU/MEZXlJGEP1jBhDw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1624378231;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OBsiPuL7h3qkYc/fzzIiZgnMwkZnm2LoFEaxuYiK7oU=;
+        b=XtIutccXexZz64VEqwafXQ1xCTbg+rpiSuXnTbnMgzb57ucrRTsLr9bpveTi/D68k2aWHK
+        7xz2JtekQXzhPTBg==
+Received: from director2.suse.de ([192.168.254.72])
+        by imap3-int with ESMTPSA
+        id dotLC3QL0mDIHgAALh3uQQ
+        (envelope-from <colyli@suse.de>); Tue, 22 Jun 2021 16:10:28 +0000
+Subject: Re: [PATCH] md: use BLK_STS_OK instead of hardcode
+To:     Xianting Tian <xianting_tian@126.com>
+Cc:     linux-bcache@vger.kernel.org, agk@redhat.com, snitzer@redhat.com,
+        kent.overstreet@gmail.com, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org,
+        Xianting Tian <xianting.tian@linux.alibaba.com>,
+        song@kernel.org, dm-devel@redhat.com
+References: <1624377241-8642-1-git-send-email-xianting_tian@126.com>
+From:   Coly Li <colyli@suse.de>
+Message-ID: <930e7a23-a22e-409f-e058-0b1576c5d9d0@suse.de>
+Date:   Wed, 23 Jun 2021 00:10:23 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.11.0
+MIME-Version: 1.0
+In-Reply-To: <1624377241-8642-1-git-send-email-xianting_tian@126.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In util.c, there is a building error:
-'/md/metadata_version' directive writing 20 bytes into a
-region of size between 0 and 255 [-Werror=format-overflow=]
+On 6/22/21 11:54 PM, Xianting Tian wrote:
+> When setting io status, sometimes it uses BLK_STS_*, sometimes,
+> it uses hardcode 0.
+> Use the macro to replace hardcode in multiple places.
+>
+> Signed-off-by: Xianting Tian <xianting.tian@linux.alibaba.com>
+> ---
+>  drivers/md/bcache/request.c  | 2 +-
+>  drivers/md/dm-clone-target.c | 2 +-
+>  drivers/md/dm-integrity.c    | 2 +-
+>  drivers/md/dm-mpath.c        | 2 +-
+>  drivers/md/dm-raid1.c        | 2 +-
+>  drivers/md/dm.c              | 2 +-
+>  drivers/md/raid1.c           | 4 ++--
+>  drivers/md/raid10.c          | 2 +-
+>  8 files changed, 9 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
+> index 6d1de88..73ba5a6 100644
+> --- a/drivers/md/bcache/request.c
+> +++ b/drivers/md/bcache/request.c
+> @@ -790,7 +790,7 @@ static void cached_dev_read_error(struct closure *cl)
+>  		/* Retry from the backing device: */
+>  		trace_bcache_read_retry(s->orig_bio);
+>  
+> -		s->iop.status = 0;
+> +		s->iop.status = BLK_STS_OK;
+>  		do_bio_hook(s, s->orig_bio, backing_request_endio);
+>  
+>  		/* XXX: invalidate cache */
 
-In mapfile.c
-It declares the fouth argument as 'int *' in map_update,
-but in mdadm.h it's previously declared as an array 'int[4]'
+Hi Xianting,
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- mapfile.c | 2 +-
- util.c    | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+NACK for bcache part.
 
-diff --git a/mapfile.c b/mapfile.c
-index 8d7acb3..6b2207d 100644
---- a/mapfile.c
-+++ b/mapfile.c
-@@ -215,7 +215,7 @@ void map_free(struct map_ent *map)
- }
- 
- int map_update(struct map_ent **mpp, char *devnm, char *metadata,
--	       int *uuid, char *path)
-+	       int uuid[4], char *path)
- {
- 	struct map_ent *map, *mp;
- 	int rv;
-diff --git a/util.c b/util.c
-index 5879694..cdf1da2 100644
---- a/util.c
-+++ b/util.c
-@@ -1543,7 +1543,7 @@ int open_container(int fd)
- 	/* 'fd' is a block device.  Find out if it is in use
- 	 * by a container, and return an open fd on that container.
- 	 */
--	char path[256];
-+	char path[288];
- 	char *e;
- 	DIR *dir;
- 	struct dirent *de;
--- 
-2.7.5
+The change is incomplete, if you want to replace 0 by BLK_STS_OK, you
+should check all locations
+where s->iop.status is checked and replace with BLK_STS_OK when necessary.
 
+One but not the only one example is,
+871         if (s->iop.status)
+872                 continue_at_nobarrier(cl, cached_dev_read_error,
+bcache_wq);
+Maybe you should change to
+        if (s->iop.status != BLK_STS_OK)
+                    continue_at_nobarrier(cl, cached_dev_read_error,
+bcache_wq);
+
+
+Just FYI.
+
+Coly Li
