@@ -2,184 +2,102 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E6BFC48BE5
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Jun 2021 19:03:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BDCC4743C
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Jun 2021 17:29:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71BDC61108
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Jun 2021 19:03:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01D7B611AC
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Jun 2021 17:29:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232571AbhFVTFT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Jun 2021 15:05:19 -0400
-Received: from m15111.mail.126.com ([220.181.15.111]:57166 "EHLO
-        m15111.mail.126.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229786AbhFVTFT (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Jun 2021 15:05:19 -0400
-X-Greylist: delayed 5409 seconds by postgrey-1.27 at vger.kernel.org; Tue, 22 Jun 2021 15:05:18 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=PjwTqKY8NvAoWllNHD
-        KS/5Am0qvY87nCeu1f99QwIUw=; b=fnDSTmHDUb56AgVG+DqrdaiHJAQBUll7ra
-        oEKaDxQJcVt1VlzwKFN+EeRR1gkSmlZiii8edRoE5SaaB7PaeHJt7PPIVzL3XE/A
-        m7zzi8Y+qcuxggU5OFkQHOImHpZIyPAbUt2e9kI6HAUMyYLQhSxxK/UHgAIKGu3E
-        cRW5+sD6k=
-Received: from 192.168.137.133 (unknown [112.10.75.196])
-        by smtp1 (Coremail) with SMTP id C8mowADXblu1B9JgHvJTSg--.5696S3;
-        Tue, 22 Jun 2021 23:54:31 +0800 (CST)
-From:   Xianting Tian <xianting_tian@126.com>
-To:     colyli@suse.de, kent.overstreet@gmail.com, agk@redhat.com,
-        snitzer@redhat.com, dm-devel@redhat.com, song@kernel.org
-Cc:     linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org,
-        Xianting Tian <xianting.tian@linux.alibaba.com>
-Subject: [PATCH] md: use BLK_STS_OK instead of hardcode
-Date:   Tue, 22 Jun 2021 11:54:01 -0400
-Message-Id: <1624377241-8642-1-git-send-email-xianting_tian@126.com>
-X-Mailer: git-send-email 1.8.3.1
-X-CM-TRANSID: C8mowADXblu1B9JgHvJTSg--.5696S3
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZFWDGFWkKF47ZryUXFyfCrg_yoWrCFy8pa
-        9rXrWfAw4rJw4UZF4DZaykua4rt3Z0grW7CFyxu3s3uFy5CF98ZF4UJFWUXr1DJFW3Ga42
-        q3WDtw4DuF45tr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jaiifUUUUU=
-X-Originating-IP: [112.10.75.196]
-X-CM-SenderInfo: h0ld03plqjs3xldqqiyswou0bp/1tbi5he5pFpEBKr-xAAAsn
+        id S229688AbhFWRb3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 23 Jun 2021 13:31:29 -0400
+Received: from li1843-175.members.linode.com ([172.104.24.175]:56650 "EHLO
+        mail.stoffel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229523AbhFWRb3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Jun 2021 13:31:29 -0400
+X-Greylist: delayed 400 seconds by postgrey-1.27 at vger.kernel.org; Wed, 23 Jun 2021 13:31:29 EDT
+Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.stoffel.org (Postfix) with ESMTPSA id C4D402468D;
+        Wed, 23 Jun 2021 13:22:30 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id B60DCA71B9; Wed, 23 Jun 2021 13:22:29 -0400 (EDT)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <24787.28117.662584.586506@quad.stoffel.home>
+Date:   Wed, 23 Jun 2021 13:22:29 -0400
+From:   "John Stoffel" <john@stoffel.org>
+To:     Bill Hudacek <bill.hudacek@gmail.com>
+Cc:     mdraid <linux-raid@vger.kernel.org>
+Subject: Re: Question: RAID cabinet for home use
+In-Reply-To: <03ca5974-60ed-d596-7eff-cac44f4a6d62@gmail.com>
+References: <03ca5974-60ed-d596-7eff-cac44f4a6d62@gmail.com>
+X-Mailer: VM 8.2.0b under 26.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-When setting io status, sometimes it uses BLK_STS_*, sometimes,
-it uses hardcode 0.
-Use the macro to replace hardcode in multiple places.
+>>>>> "Bill" == Bill Hudacek <bill.hudacek@gmail.com> writes:
 
-Signed-off-by: Xianting Tian <xianting.tian@linux.alibaba.com>
----
- drivers/md/bcache/request.c  | 2 +-
- drivers/md/dm-clone-target.c | 2 +-
- drivers/md/dm-integrity.c    | 2 +-
- drivers/md/dm-mpath.c        | 2 +-
- drivers/md/dm-raid1.c        | 2 +-
- drivers/md/dm.c              | 2 +-
- drivers/md/raid1.c           | 4 ++--
- drivers/md/raid10.c          | 2 +-
- 8 files changed, 9 insertions(+), 9 deletions(-)
+Bill> My 2021 Sans Digital TR5UT+B held 5 SATA disks. I had an eSATA 
+Bill> connection to the host box. It went belly-up a few weeks ago.
 
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 6d1de88..73ba5a6 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -790,7 +790,7 @@ static void cached_dev_read_error(struct closure *cl)
- 		/* Retry from the backing device: */
- 		trace_bcache_read_retry(s->orig_bio);
- 
--		s->iop.status = 0;
-+		s->iop.status = BLK_STS_OK;
- 		do_bio_hook(s, s->orig_bio, backing_request_endio);
- 
- 		/* XXX: invalidate cache */
-diff --git a/drivers/md/dm-clone-target.c b/drivers/md/dm-clone-target.c
-index a90bdf9..d3f1c67 100644
---- a/drivers/md/dm-clone-target.c
-+++ b/drivers/md/dm-clone-target.c
-@@ -684,7 +684,7 @@ static void hydration_init(struct dm_clone_region_hydration *hd, unsigned long r
- 	hd->region_nr = region_nr;
- 	hd->overwrite_bio = NULL;
- 	bio_list_init(&hd->deferred_bios);
--	hd->status = 0;
-+	hd->status = BLK_STS_OK;
- 
- 	INIT_LIST_HEAD(&hd->list);
- 	INIT_HLIST_NODE(&hd->h);
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 20f2510..179e126 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -1848,7 +1848,7 @@ static int dm_integrity_map(struct dm_target *ti, struct bio *bio)
- 	sector_t area, offset;
- 
- 	dio->ic = ic;
--	dio->bi_status = 0;
-+	dio->bi_status = BLK_STS_OK;
- 	dio->op = bio_op(bio);
- 
- 	if (unlikely(dio->op == REQ_OP_DISCARD)) {
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index bced42f..50f5945 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -648,7 +648,7 @@ static int __multipath_map_bio(struct multipath *m, struct bio *bio,
- 
- 	mpio->pgpath = pgpath;
- 
--	bio->bi_status = 0;
-+	bio->bi_status = BLK_STS_OK;
- 	bio_set_dev(bio, pgpath->path.dev->bdev);
- 	bio->bi_opf |= REQ_FAILFAST_TRANSPORT;
- 
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index b0a82f2..bf4d875 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -1283,7 +1283,7 @@ static int mirror_end_io(struct dm_target *ti, struct bio *bio,
- 
- 			dm_bio_restore(bd, bio);
- 			bio_record->details.bi_bdev = NULL;
--			bio->bi_status = 0;
-+			bio->bi_status = BLK_STS_OK;
- 
- 			queue_bio(ms, bio, rw);
- 			return DM_ENDIO_INCOMPLETE;
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index ca2aedd..3d2fe23 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -649,7 +649,7 @@ static struct dm_io *alloc_io(struct mapped_device *md, struct bio *bio)
- 
- 	io = container_of(tio, struct dm_io, tio);
- 	io->magic = DM_IO_MAGIC;
--	io->status = 0;
-+	io->status = BLK_STS_OK;
- 	atomic_set(&io->io_count, 1);
- 	io->orig_bio = bio;
- 	io->md = md;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index ced076b..418d789 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2081,7 +2081,7 @@ static int fix_sync_read_error(struct r1bio *r1_bio)
- 		idx ++;
- 	}
- 	set_bit(R1BIO_Uptodate, &r1_bio->state);
--	bio->bi_status = 0;
-+	bio->bi_status = BLK_STS_OK;
- 	return 1;
- }
- 
-@@ -2144,7 +2144,7 @@ static void process_checks(struct r1bio *r1_bio)
- 		if (sbio->bi_end_io != end_sync_read)
- 			continue;
- 		/* Now we can 'fixup' the error value */
--		sbio->bi_status = 0;
-+		sbio->bi_status = BLK_STS_OK;
- 
- 		bio_for_each_segment_all(bi, sbio, iter_all)
- 			page_len[j++] = bi->bv_len;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 13f5e6b..c9a146b 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -3797,7 +3797,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
- 
- 		if (bio->bi_end_io == end_sync_read) {
- 			md_sync_acct_bio(bio, nr_sectors);
--			bio->bi_status = 0;
-+			bio->bi_status = BLK_STS_OK;
- 			submit_bio_noacct(bio);
- 		}
- 	}
--- 
-1.8.3.1
+Bill> After some careful searching, a good replacement seemed to be the Oyen 
+Bill> Digital Mobius 3R5-EB3-M. Found it for about $300USD.
 
+Bill> It was plug-and-play replace. Drives were being addressed by
+Bill> UUID in Fedora so no issues at all. It came right up.
+
+Excellent!
+
+Bill> However, smart reporting looks horrible even compared to the
+Bill> TR5UT+B (which had its own issues).
+
+I think this all comes down to the eSATA bridge chip used in the
+expansion bay.  Not much you can do about it. 
+
+Bill> What RAID cabinets would be a better alternative? I have 5
+Bill> drives but an 8-bay cabinet would work too.
+
+I think what you're looking for isn't really a "RAID Cabinet" but an
+"Expansion Bay", which has full SATA passthrough.
+
+If you have space inside your main computer, then I would look into an
+LSI Logic MTP Fusion SATA/SAS controller with 8 ports.  Then you can
+use some of the "IcyDock" expansion bays inside which turns two or
+three 5.25" bays into 4-5 3.5" bays.
+
+Each bay has it's own direct connection to the controller, which is a
+good thing, since you'll have full access to the drives.
+
+The controllers are cheap on ebay, and you can even use multiple ones
+(if you have the room) to give even more redunacy and performance.
+
+Personally, I've been looking into getting a 4U server case with 12
+3.5" hot swap bays, but they're all either A) out of stock or B) don't
+have USB3 ports on them.  Life is all about tradeoffs.
+
+The problem with IcyDock and other bays like this is A) heat, B) poor
+fans, C) price, D) cheap handles, E) reliability.
+
+If you don't hot-swap often, then I think you'll be ok (as will I when
+I finally pull the trigger for my own setup) if you are careful when
+using them.
+
+I have a USB3/eSATA external case which holds five drives, but it
+flakes out if I put in more than two drives.  Ugh!  Doing this well
+can require spending some serious money.  I personally just like
+getting a big huge case with lots of drive bays and plugging stuff in
+directly.  It's my home system, so it can go down when needed.
+
+I'm not at the system, so getting you model number isn't easy.  But
+look in the archives of this list, there have been good discussions in
+the past year or so on controllers and such.
+
+John
