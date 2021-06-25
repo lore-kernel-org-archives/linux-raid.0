@@ -2,71 +2,97 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE64C2B9F4
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Jun 2021 14:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A8D7C2B9F4
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Jun 2021 20:04:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FD3E61946
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Jun 2021 14:20:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C02A61429
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Jun 2021 20:04:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231720AbhFYOWo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Jun 2021 10:22:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58090 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229653AbhFYOWl (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 25 Jun 2021 10:22:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C7476194D
-        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 14:20:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624630821;
-        bh=Z8k22WldToz+37xatq4AsmnptBZWHJX9DARMK/+tHxs=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=HoQauACcq/5vtTYIHL6htPAsD6Sry91y6HRwjHduUbvFthByzMAOY2ZrSVf/BpZUd
-         oBWdJsjijs70VNL/IglKIlP9WrrgLHPZxgW9MtTui6sMs2iovi81jIS/DEHFO8ZSIQ
-         ay8doMNdf/x+qqY61MzGWHevIec3xmbCw7ls2JZKaw8OwqnddDWxyJb5IixNmSB8+c
-         lpMYWaJTIUfOQQnv/CIfGrnApsxedlLXuN9OyTG4s37qHp4pjCD9mEvlYMSrkfiRug
-         be05Ob+P4kSKOmfM69UWEPOR4x8dHfgqTjmSZrWeJQ0rqpOQFlKo+GjzHwvqJN45ZY
-         bNrLm98VDxz7Q==
-Received: by mail-lf1-f41.google.com with SMTP id r5so16566499lfr.5
-        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 07:20:21 -0700 (PDT)
-X-Gm-Message-State: AOAM530IPZ6Euc7GIQVpu5rZyi9UTY2uBOZsMPjMs4nJgbh5+0V3tu5O
-        45iJgqndR+dlvMkm3dsM6KZHvvXzrlvVZwN2klQ=
-X-Google-Smtp-Source: ABdhPJy7/cCprSFPjjQKSJViMzfYSLIX0Bo/K2piZz+SgCMI4kvltU26dmUngEqLlAPdZ9Cnv3dS0qsQwPXgCuZmdio=
-X-Received: by 2002:a05:6512:1292:: with SMTP id u18mr4140827lfs.261.1624630819602;
- Fri, 25 Jun 2021 07:20:19 -0700 (PDT)
+        id S229796AbhFYUHN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Jun 2021 16:07:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47690 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229531AbhFYUHK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Jun 2021 16:07:10 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C64C061574
+        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 13:04:41 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id x21-20020a17090aa395b029016e25313bfcso6188506pjp.2
+        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 13:04:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=kRDKlJTvKjm3OvkIggHkSRhrRF1ON1eSY0mMVc8Wik0=;
+        b=eT2LIs8tk9Y7/DVDKaRSIB75LWEqS5YEaEKJwRFILGTbz9QpEJRgSwov+IfjNiGNoW
+         n3MhJNhci1reYC08x7522DgvVXx88niUnj92djevNOQrrArXld3mFSe8SZsB7TCAICio
+         2aQKGzAitXU5yB9/Aggh6mpxgX6+MgIj06/qFeqsuVSewza2KnHkVb6Qn5rJ2ymakjCp
+         jKyK/MOd/lUXbjvDVepRkF6MNXg1eLV3oyy66Fj4kvB/ZILHNjXd+dI5YLCOiQmbGcOW
+         3MKqg36PWOJxupfX6E06aEbr2DW5DhE1l9BOSAHT1DdfMzp3f1+j1Veiem6GSMZyBomF
+         yB5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kRDKlJTvKjm3OvkIggHkSRhrRF1ON1eSY0mMVc8Wik0=;
+        b=BmXhoiReDQD2/lEymQGCisczKpdEzeDkm/1xZVqd11QjfCiG6xtiM55dEJSFVD0by8
+         KNU1Ku7i+cb4xODdLWKCKZTmrDwAkby5uUyME8kCZXWmUdHE8m8wF24ux90Dk/7qJmB5
+         qfhKlRsRFWQcsQC+Q+3gpLRy2IXCv2yzjwC5ROWJVFfnj2897Iih6xToyosw75BN6cWr
+         v1yO7boIjF2DvTNzLYf83vtcGJI5qz2KlcaDd3WlKGeji0W/DHGrRST9xAW7KI9/ph7b
+         5UmXQnB7R1lHWhv23ynY0aqHKrwDlnYQRAK3/FGPFXpvlzXmBUtlx2kzxKMEH/yUJbko
+         uu4Q==
+X-Gm-Message-State: AOAM533Z5BVJMKiiE9RYheW98HgCf5o6hqeTgZpw1jbqpd8PAejZkYIn
+        uNlZ8NT1x+r9xlyj6FYfqcqH4TOB3e/RYWKeqkKbOkuqL5A=
+X-Google-Smtp-Source: ABdhPJz7e6cYMeeJwsGicsEaVaVd2N98TUSKPQhjfczkpI1xeaNgdvKR1LeUaxGICCU9gotiCRJg33WJB0bmfdOu8dU=
+X-Received: by 2002:a17:90a:4d4e:: with SMTP id l14mr12985930pjh.129.1624651480236;
+ Fri, 25 Jun 2021 13:04:40 -0700 (PDT)
 MIME-Version: 1.0
-References: <E1lwU4E-0029Uw-MM@dogben.com> <9245e56b-33f3-35f8-c02e-4d57a809c2c8@gmail.com>
- <26936ea3126d12df70fbdc274177cf9b@dogben.com>
-In-Reply-To: <26936ea3126d12df70fbdc274177cf9b@dogben.com>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 25 Jun 2021 07:20:07 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7Fp=nrW4vdM1QbaTnFvPW22Ht7WEiuGv=+SDzOLJ1S0g@mail.gmail.com>
-Message-ID: <CAPhsuW7Fp=nrW4vdM1QbaTnFvPW22Ht7WEiuGv=+SDzOLJ1S0g@mail.gmail.com>
-Subject: Re: [PATCH] md/raid10: properly indicate failure when ending a failed
- write request
-To:     Wei Shuyu <wsy@dogben.com>
-Cc:     Guoqing Jiang <jgq516@gmail.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Paul Clements <paul.clements@us.sios.com>,
-        Yufen Yu <yuyufen@huawei.com>
+References: <03ca5974-60ed-d596-7eff-cac44f4a6d62@gmail.com>
+ <24787.28117.662584.586506@quad.stoffel.home> <1986d43d-11e9-fbf0-7812-0aafc6568855@youngman.org.uk>
+ <CAAMCDedHYKqBDfTysU=-CtxRMVpftPK1+crewRM2yuTDDq653A@mail.gmail.com>
+ <CAAMCDee-1J2DVQWPyqe-rZ-E=Ers3Msvdn8+KpFnRxeyQafXWg@mail.gmail.com> <24788.46596.805675.840409@quad.stoffel.home>
+In-Reply-To: <24788.46596.805675.840409@quad.stoffel.home>
+From:   Mark Wagner <carnildo@gmail.com>
+Date:   Fri, 25 Jun 2021 13:04:29 -0700
+Message-ID: <CAA04aRQErD-cG5KThbtHSCX9LvPJLQzdZ+Y+wK_Gv12JAPhkQg@mail.gmail.com>
+Subject: Re: Question: RAID cabinet for home use
+To:     John Stoffel <john@stoffel.org>
+Cc:     Roger Heflin <rogerheflin@gmail.com>,
+        antlists <antlists@youngman.org.uk>,
+        Bill Hudacek <bill.hudacek@gmail.com>,
+        mdraid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jun 24, 2021 at 8:04 PM Wei Shuyu <wsy@dogben.com> wrote:
+On Thu, Jun 24, 2021 at 9:43 AM John Stoffel <john@stoffel.org> wrote:
 >
-[...]
-> > Thanks,
-> > Guoqing
+> >>>>> "Roger" == Roger Heflin <rogerheflin@gmail.com> writes:
 >
-> Shall I make another patch that fix the comments in both files or just
-> piggyback in V2?
+> Roger> resending without html.  Lovely that you seem to have to disable html
+> Roger> on each reply.
+>
+> Roger>  I found an $80 rackmount case that has 2 sets of 3x5.25" bays and
+> Roger> would take 2 of the  4 into 3 3.5" hot swap bays (icy dock or athena
+> Roger> like devices).
+> Roger> https://www.newegg.com/black-istarusa-d-416/p/N82E16811165215
+>
+> This looks like an interesting case, lots and lots of drive bays...
+>
+> https://www.newegg.com/rosewill-rsv-l4500u-black/p/N82E16811147328?quicklink=true
+>
+> and it looks like it even has USB3 on the front.
 
-Let's piggyback in V2.
+Looks like a USB3 update of the case I'm using.  It's basically a
+9x5.25"-bay case with three 3x5.25" -> 5x3.5" adapters.  The adapters
+it comes with aren't hotswap capable, but it's easy to pull them out
+and replace them with ones that are.
 
-Thanks,
-Song
+-- 
+Mark
