@@ -2,114 +2,134 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3430C2B9F4
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Jun 2021 22:09:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9BC6C2B9F4
+	for <linux-raid@archiver.kernel.org>; Sat, 26 Jun 2021 00:23:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCE1B611CA
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Jun 2021 22:09:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE7A361962
+	for <linux-raid@archiver.kernel.org>; Sat, 26 Jun 2021 00:23:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbhFYWL6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Jun 2021 18:11:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46902 "EHLO
+        id S229882AbhFZA0O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Jun 2021 20:26:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229531AbhFYWL5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Jun 2021 18:11:57 -0400
-Received: from mail-oi1-x229.google.com (mail-oi1-x229.google.com [IPv6:2607:f8b0:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BD67C061574
-        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 15:09:35 -0700 (PDT)
-Received: by mail-oi1-x229.google.com with SMTP id w127so12977591oig.12
-        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 15:09:35 -0700 (PDT)
+        with ESMTP id S229831AbhFZA0N (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Jun 2021 20:26:13 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68792C061574
+        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 17:23:51 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id h11so12445916wrx.5
+        for <linux-raid@vger.kernel.org>; Fri, 25 Jun 2021 17:23:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=ras0nJa1GpjekdzrqgqRtjaGMO8+G2JnJOEUaeB32rw=;
-        b=AZQz9e3bC8H/TyQ7RcpstMWF2DDMgDlhrM58w4KDXLSGDuS/koK0OxbaAHd2DRLC2S
-         iQU0mT7VHXArUKqKeSSGMOngDuAzvJEVY9tjB5pAf4bdEEu13fcunMjuAsyckrTN/ELl
-         Q84byYUsy0QLP+HV0inilnupKbyq6e1zpUUjhZxnsvi9LqKgsnck0qvRjRwmfhBtwn6f
-         UXpk6Q963YU2wyhPm/q+MFgswfNzIYTkRRR8tdLZ4Vl0XQK2mZ8QIlC8PX9FsZmJpBje
-         FOoHNuBWoDMUlFTm+8HEpqbSy+Eq/skKMSQcnPU+jbQ1VhVRv1UWjXJULZ8VB+c/qppm
-         ZFHw==
+        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=3zrz2hlk/Xdy/5xo1RyVFdS2pqd8iCl5ewMgibWYb8I=;
+        b=QmDX++iqV9vZlc0vNACRq6+/d0rvU90DkyThCl19TLGHymCPvgbwauTOEA57jE7NGl
+         a/d9ImpXqBFkvXb96WMeIjijOeLCShVaEof+GCIQfV6jp+C1raF5Y/xMg1k+8GAdepw7
+         zzTvxrr0sp2aRBtGmTawlUYlNTGSKXKA8hfOWlAUtYVEUN5qigVjgzh1x3v3P9VmNeEp
+         guUDRqjctGxr9op5Kwh0N9lSB5Jy9jQl844A/YfgoQDs6ZUxOHS/5H71Q167YlMHKuQf
+         OP0GYraXsg3zZsH77Y2qBceT5XJzyDaJNwUws+SSBTdcRGlVUX3FLZqZhkcyaq6BkIY3
+         MeDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=ras0nJa1GpjekdzrqgqRtjaGMO8+G2JnJOEUaeB32rw=;
-        b=ZqHI1yrTE0+ig2WyZDdum4qCt08V2pwyojytrFj4wXENX+PU7VQSmD2MZNilPRQcQ5
-         NotwUGSW5h6r1Zaqljyrqb11DP1YwaXr02yR8+AGkNpEAB+dh1sH+M0psAQPAwnAb5Ej
-         L3btDuq4taRylWMi9wPF6s4AmKrOXTTjKVrvuM8uq+bE27pzM609JZB/VuHIzMgxZgty
-         dNDtkT7HCx5ws7goKl985UcjRgVHkAfbH418TZ6UvhVDzBCK1hMWI70LG0SXo3MvmhEv
-         rIrPbjNpR1ISeA8Q8hUoURzy5jyqLdtuOeE37fSQL1941QBik+93ivgyOv+akXHHlnQl
-         BGow==
-X-Gm-Message-State: AOAM533LYWwLdHIesChGd1AIZwvwPV7TcuQG/2461OB6JKntXB1Kdrz0
-        5A72ihQgKJXTfsqSOJ6oTjG/3GFui0DBOw==
-X-Google-Smtp-Source: ABdhPJwVZV1NzHJxj3U8nEcwmkF2KDOgE3oM9CRb3oTH690DzsPkS6/p1RyKWmV8V2boQXlYyXNMRQ==
-X-Received: by 2002:aca:4141:: with SMTP id o62mr12994388oia.42.1624658974838;
-        Fri, 25 Jun 2021 15:09:34 -0700 (PDT)
-Received: from [192.168.3.32] ([47.189.16.5])
-        by smtp.googlemail.com with ESMTPSA id o20sm1539301ook.40.2021.06.25.15.09.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Jun 2021 15:09:34 -0700 (PDT)
-Subject: Re: Question: RAID cabinet for home use
-To:     Mark Wagner <carnildo@gmail.com>, John Stoffel <john@stoffel.org>
-Cc:     Roger Heflin <rogerheflin@gmail.com>,
-        antlists <antlists@youngman.org.uk>,
-        Bill Hudacek <bill.hudacek@gmail.com>,
-        mdraid <linux-raid@vger.kernel.org>
-References: <03ca5974-60ed-d596-7eff-cac44f4a6d62@gmail.com>
- <24787.28117.662584.586506@quad.stoffel.home>
- <1986d43d-11e9-fbf0-7812-0aafc6568855@youngman.org.uk>
- <CAAMCDedHYKqBDfTysU=-CtxRMVpftPK1+crewRM2yuTDDq653A@mail.gmail.com>
- <CAAMCDee-1J2DVQWPyqe-rZ-E=Ers3Msvdn8+KpFnRxeyQafXWg@mail.gmail.com>
- <24788.46596.805675.840409@quad.stoffel.home>
- <CAA04aRQErD-cG5KThbtHSCX9LvPJLQzdZ+Y+wK_Gv12JAPhkQg@mail.gmail.com>
-From:   Ram Ramesh <rramesh2400@gmail.com>
-Message-ID: <e2a6a38b-e4d2-ce13-424c-a25bb5f99e3d@gmail.com>
-Date:   Fri, 25 Jun 2021 17:09:33 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=3zrz2hlk/Xdy/5xo1RyVFdS2pqd8iCl5ewMgibWYb8I=;
+        b=mWQX3H/I1cwgAuop44S2Nz4YAHjDdKIC1yaSRE4eX5TbQc1Rs3Mbje8sgKB52rURQy
+         HU9X3NpOdUtDzb0w9kBNInq+aF8Ot1O3VBwhwQCvadMtBVaXLDXUMkN2+VA1/juCFkpc
+         4bkPL5d+dV2wMBvvYiXO/cC95FjAFck5JcQ2OQlLuXu+aioHyEHS8Z25zB+iWGRtzCHq
+         /z5bAZcbWct10IbGoi9Rs49+asZfm7LhzhotIZ8974icQ9FPayinyiXXdGXyjKraBqs+
+         DlKrkab0M+e0azvhibHuWwrYcH8lvVdrMzEwc8qST0zE+hZXTHVG1XrouNydKuf5iCXS
+         BvHw==
+X-Gm-Message-State: AOAM532/lmQCqIcltXzqs3Ogr/N7JUrEp82KJLAFHfwG4qjakWrggMd7
+        rLLt2t5N+2iMA+fq3q4ggQVExou5yEl1Xp8C5R1mZbT/HHyx1Oxci9Y=
+X-Google-Smtp-Source: ABdhPJz++TZC6tdTY3l/9SLJRz3VXQWLFc1P4sR2XnbjkwPbBjfyLbItxO4rATSQLoQWmi/U8w4zlnWyLtl8nl3gZZo=
+X-Received: by 2002:a05:6000:18ab:: with SMTP id b11mr14386969wri.42.1624667029854;
+ Fri, 25 Jun 2021 17:23:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAA04aRQErD-cG5KThbtHSCX9LvPJLQzdZ+Y+wK_Gv12JAPhkQg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+References: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
+ <20210625220845.57wcwz4sppavywf6@bitfolk.com>
+In-Reply-To: <20210625220845.57wcwz4sppavywf6@bitfolk.com>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Fri, 25 Jun 2021 18:23:33 -0600
+Message-ID: <CAJCQCtQ3zzqxQbtGCSko80d-u1zkWMPwkGQXf92p8Ozty+XGEg@mail.gmail.com>
+Subject: Re: Redundant EFI Systemp Partitions (Was Re: How does one enable
+ SCTERC on an NVMe drive (and other install questions))
+To:     Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 6/25/21 3:04 PM, Mark Wagner wrote:
-> On Thu, Jun 24, 2021 at 9:43 AM John Stoffel <john@stoffel.org> wrote:
->>>>>>> "Roger" == Roger Heflin <rogerheflin@gmail.com> writes:
->> Roger> resending without html.  Lovely that you seem to have to disable html
->> Roger> on each reply.
->>
->> Roger>  I found an $80 rackmount case that has 2 sets of 3x5.25" bays and
->> Roger> would take 2 of the  4 into 3 3.5" hot swap bays (icy dock or athena
->> Roger> like devices).
->> Roger> https://www.newegg.com/black-istarusa-d-416/p/N82E16811165215
->>
->> This looks like an interesting case, lots and lots of drive bays...
->>
->> https://www.newegg.com/rosewill-rsv-l4500u-black/p/N82E16811147328?quicklink=true
->>
->> and it looks like it even has USB3 on the front.
-> Looks like a USB3 update of the case I'm using.  It's basically a
-> 9x5.25"-bay case with three 3x5.25" -> 5x3.5" adapters.  The adapters
-> it comes with aren't hotswap capable, but it's easy to pull them out
-> and replace them with ones that are.
+On Fri, Jun 25, 2021 at 4:08 PM Andy Smith <andy@strugglers.net> wrote:
 >
-Can we make it a desktop case? I mean, remove the dog ear extension for 
-rack mounting?
-BTW, there is also a hot swap bay version, but only has 12 bays.
+> Hello,
+>
+> On Mon, Jun 21, 2021 at 12:00:13AM -0500, Edward Kuns wrote:
+> > looks like maybe I cannot use the installer to set up RAID mirroring
+> > for /boot or /boot/efi.  I may have to set that up after the fact.
+>
+> In November 2020 I had this discussion on debian-user:
+>
+>     https://www.mail-archive.com/debian-user@lists.debian.org/msg762784.html
+>
+> The summary was that the ESP is for the firmware and the firmware
+> doesn't know about MD RAID, so is only ever going to see the member
+> devices.
+>
+> You could lie to the firmware and tell it that each MD member device
+> is an ESP, but it isn't. This will probably work as long as you use
+> the correct metadata format (so the MD metadata is at the end and
+> the firmware is fooled that the member device is just a normal
+> partition). BUT it is in theory possible for the firmware to write
+> to the ESP and that would cause a broken array when you boot, which
+> you'd then recover by randomly choosing one of the member devices as
+> the "correct" one.
+>
+> Some people (myself included, after discovering all that) decided
+> that putting ESP on an MD device was too complicated due to these
+> issues and that it would be better to have one ESP on each bootable
+> device and be able to boot from any of them. The primary one is
+> synced to all the others any time there is a system update.
+>
+> Ubuntu have patched grub to detect multiple ESP and install grub on
+> all of them.
+>
+> In theory it would be possible to write an EFI firmware module that
+> understands MD devices and then you could put the ESP on an MD array
+> in the same way that grub can boot off of an MD array.
 
-https://www.newegg.com/rosewill-rsv-l4412u-black/p/11-147-330
+Yeah, efifs might have it
+https://github.com/pbatard/efifs
 
-Ramesh
+One solution is making the ESP static, other than OSLoader updates. A
+"stub" grub.cfg points to $BOOT/grub/grub.cfg or $BOOT/grub2/grub.cfg,
+where $BOOT is typically mounted at /boot; and then follow the Boot
+Loader Spec to add drop-in configuration files for each menu entry.
+Typically there is one drop in file per kernel. This is how Fedora has
+worked for several releases now. It permits the two grub.cfg's to
+remain static, is less prone to problems if replacing it or modifying
+it is interrupted by a crash. And the snippets are a more user
+friendly format for editing, should it be deemed necessary, while
+being less fragile.
 
-Ramesh
+A canonical ESP that resides virtually in /usr I think is another way
+of doing all of this; and use a service unit to sync from /usr to each
+ESP by mounting them e.g. somewhere in /run, in sequence, thereby
+containing any problems with interruptions.
+
+https://systemd.io/BOOT_LOADER_INTERFACE/
+https://systemd.io/BOOT_LOADER_SPECIFICATION/
+
+While some platforms are currently left out of the specs, I think it's
+better to grow the spec to make booting more reliable and a lower
+maintenance burden rather than continuing to do things in a rather ad
+hoc manner.
+
+
+-- 
+Chris Murphy
