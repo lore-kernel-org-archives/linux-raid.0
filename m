@@ -4,145 +4,117 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C67FC49EA6
-	for <linux-raid@archiver.kernel.org>; Sat, 26 Jun 2021 14:28:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B13F0C49EA5
+	for <linux-raid@archiver.kernel.org>; Sat, 26 Jun 2021 14:36:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CF6D61C2D
-	for <linux-raid@archiver.kernel.org>; Sat, 26 Jun 2021 14:28:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 856E961C2F
+	for <linux-raid@archiver.kernel.org>; Sat, 26 Jun 2021 14:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229890AbhFZOak (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 26 Jun 2021 10:30:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33040 "EHLO
+        id S229630AbhFZOjD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 26 Jun 2021 10:39:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229796AbhFZOak (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 26 Jun 2021 10:30:40 -0400
+        with ESMTP id S229518AbhFZOjD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 26 Jun 2021 10:39:03 -0400
 Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B25B6C061574
-        for <linux-raid@vger.kernel.org>; Sat, 26 Jun 2021 07:28:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2462AC061574
+        for <linux-raid@vger.kernel.org>; Sat, 26 Jun 2021 07:36:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
          s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
         Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=eE5hrhGyvRkpwxtRc8yJNBJGE/hT5OCKdPtmr+63Cac=; b=nbH+BjFZb8fEJpFBAgMTONqsiG
-        pTR4IsZs2eDwsndSZF9dWdN1GgHSqCgs/YBBFxrFmxsG/dQZbkuG/dxqH+RoN6Y8p0rddQEVxLM2u
-        Gy5ZNBHowWUr4hdlzrSGE5TkCo/NozT8F/c+bnKfqNNUYAbFPNeF8F8I+/dUr+E1mrRrcgxh6E7Yb
-        3w4ji4tNu+CQW/kL1e4q/5ecsFNYi1QgwdrQ/h/tJ3Asg0f1dQavdR6mUyATYEr0xZ0ivS24gKzxP
-        rmxIQVley5RDL+6C1faWfWlhM2zjfe2Q6PVIW9NLx7/y7UYn13G44HdlYtqRuLijr8WtJEkePC+n9
-        ZHS+iZqw==;
+        bh=IsBGiHXsXt08qX+Ne2CpKqoKEK0YtesKLGbmF2sH7qQ=; b=NcR17eSUUOTxTiObcpjUkZhIxw
+        ygbMB3aTmaLN20XeBIczsCrQmtooOBEX5EUyNOutmMP0aV6cC0blv84B3MXIPlCRALbyvYxsGDzTz
+        XJgwNtRp+MITS9GNj/xfrmYTAP/Na1IxDZZ5aDn60GFUgONr/6P3cK/EKQkgPVyTh73fezWeE2Rgz
+        6BBlxmIeYZ81r83Wa79Hqk1U4Cog3CD63Y6lgIutF4fXGS8ZAke9l6yKrbsnczvPXRl5BYUXesQDL
+        6auvvdX/Mf6M2JKnKRTLSfQ0cstKVelTIk+W2GRUSLyv/62yYtU4ALVg8C70bu+gxlbN6/3BYOZOG
+        jX3eiSow==;
 Received: from c-73-43-58-214.hsd1.ga.comcast.net ([73.43.58.214] helo=[192.168.20.123])
         by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.90_1)
         (envelope-from <philip@turmel.org>)
-        id 1lx9I5-0000ma-Of; Sat, 26 Jun 2021 14:28:13 +0000
-Subject: Re: 4-disk RAID6 (non-standard layout) normalise hung, now all disks
- spare
-To:     antlists <antlists@youngman.org.uk>,
-        Jason Flood <3mu5555@gmail.com>, linux-raid@vger.kernel.org
-References: <007601d769ba$ced0e870$6c72b950$@gmail.com>
- <6d412bf3-a7b9-1f08-2da9-96d34d8f112b@turmel.org>
- <00f101d76a7b$bdb3fc50$391bf4f0$@gmail.com>
- <df60eb5f-b1c0-b3f8-4985-3cb8d9dcc531@youngman.org.uk>
+        id 1lx9QG-0000qp-AW
+        for linux-raid@vger.kernel.org; Sat, 26 Jun 2021 14:36:40 +0000
+Subject: Re: Redundant EFI Systemp Partitions (Was Re: How does one enable
+ SCTERC on an NVMe drive (and other install questions))
+To:     Linux-RAID <linux-raid@vger.kernel.org>
+References: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
+ <20210625220845.57wcwz4sppavywf6@bitfolk.com>
 From:   Phil Turmel <philip@turmel.org>
-Message-ID: <011e281f-7ea3-9491-29fd-5e1574aa5819@turmel.org>
-Date:   Sat, 26 Jun 2021 10:28:13 -0400
+Message-ID: <afbb6970-72ac-6900-8bf9-ba84bc6f3ffb@turmel.org>
+Date:   Sat, 26 Jun 2021 10:36:40 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <df60eb5f-b1c0-b3f8-4985-3cb8d9dcc531@youngman.org.uk>
+In-Reply-To: <20210625220845.57wcwz4sppavywf6@bitfolk.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Good morning Jason, Wol,
+Good morning Andy,
 
-On 6/26/21 9:13 AM, antlists wrote:
-> On 26/06/2021 12:09, Jason Flood wrote:
->>      Reshape Status : 99% complete
->>       Delta Devices : -1, (5->4)
->>          New Layout : left-symmetric
->>
->>                Name : Universe:0
->>                UUID : 3eee8746:8a3bf425:afb9b538:daa61b29
->>              Events : 184255
->>
->>      Number   Major   Minor   RaidDevice State
->>         6       8       16        0      active sync   /dev/sdb
->>         7       8       32        1      active sync   /dev/sdc
->>         5       8       48        2      active sync   /dev/sdd
->>         4       8       64        3      active sync   /dev/sde
+On 6/25/21 6:08 PM, Andy Smith wrote:
+> Hello,
 > 
-> Phil will know much more about this than me, but I did notice that the 
-> system thinks there should be FIVE raid drives. Is that an mdadm bug?
-
-Not a bug, but a reshape from a degraded array with a reduction in space.
-
-> That would explain the failure to assemble - it thinks there's a drive 
-> missing. And while I don't think we've had data-eating trouble, 
-> reshaping a parity raid has caused quite a lot of grief for people over 
-> the years ...
-
-I've never tried it starting from a degraded array.  Might be a corner 
-case bug not yet exposed.
-
-> However, you're running a recent Ubuntu and mdadm - that should all have 
-> been fixed by now.
+> On Mon, Jun 21, 2021 at 12:00:13AM -0500, Edward Kuns wrote:
+>> looks like maybe I cannot use the installer to set up RAID mirroring
+>> for /boot or /boot/efi.  I may have to set that up after the fact.
+> 
+> In November 2020 I had this discussion on debian-user:
+> 
+>      https://www.mail-archive.com/debian-user@lists.debian.org/msg762784.html
+> 
+> The summary was that the ESP is for the firmware and the firmware
+> doesn't know about MD RAID, so is only ever going to see the member
+> devices.
 
 Indeed.
 
+> You could lie to the firmware and tell it that each MD member device
+> is an ESP, but it isn't. This will probably work as long as you use
+> the correct metadata format (so the MD metadata is at the end and
+> the firmware is fooled that the member device is just a normal
+> partition). BUT it is in theory possible for the firmware to write
+> to the ESP and that would cause a broken array when you boot, which
+> you'd then recover by randomly choosing one of the member devices as
+> the "correct" one.
+
+Pretty low risk, I think, but yes.  If you construct the raid with what 
+the EFI system thinks as the "first" bootable ESP as member role 0, 
+mdadm will sync correctly.  Fragile, but generally works.
+
+> Some people (myself included, after discovering all that) decided
+> that putting ESP on an MD device was too complicated due to these
+> issues and that it would be better to have one ESP on each bootable
+> device and be able to boot from any of them. The primary one is
+> synced to all the others any time there is a system update.
+
+I started doing this with my work server.  I wrote a hook script for 
+initramfs updates to ensure everything was in place.
+
+> Ubuntu have patched grub to detect multiple ESP and install grub on
+> all of them.
+
+Didn't know this.  I will experiment to see if I can retire my hook.
+
+> In theory it would be possible to write an EFI firmware module that
+> understands MD devices and then you could put the ESP on an MD array
+> in the same way that grub can boot off of an MD array.
+
+Yeah, not holding my breath for this.
+
 > Cheers,
-> Wol
+> Andy
 
-On 6/26/21 7:09 AM, Jason Flood wrote:
- > Thanks for that, Phil - I think I'm starting to piece it all together 
-now. I was going from a 4-disk RAID5 to 4-disk RAID6, so from my reading 
-the backup file was recommended. The non-standard layout meant that the 
-array had over 20TB usable, but standardising the layout reduced that to 
-16TB. In that case the reshape starts at the end so the critical section 
-(and so the backup file) may have been in progress at the 99% complete 
-point when it failed, hence the need to specify the backup file for the 
-assemble command.
- >
- > I ran "sudo mdadm --assemble --verbose --force /dev/md0 /dev/sd[bcde] 
---backup-file=/root/raid5backup":
- >
- > mdadm: looking for devices for /dev/md0
- > mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
- > mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
- > mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
- > mdadm: /dev/sde is identified as a member of /dev/md0, slot 3.
- > mdadm: Marking array /dev/md0 as 'clean'
- > mdadm: /dev/md0 has an active reshape - checking if critical section 
-needs to be restored
- > mdadm: No backup metadata on /root/raid5backup
- > mdadm: added /dev/sdc to /dev/md0 as 1
- > mdadm: added /dev/sdd to /dev/md0 as 2
- > mdadm: added /dev/sde to /dev/md0 as 3
- > mdadm: no uptodate device for slot 4 of /dev/md0
- > mdadm: added /dev/sdb to /dev/md0 as 0
- > mdadm: Need to backup 3072K of critical section..
- > mdadm: /dev/md0 has been started with 4 drives (out of 5).
- >
-
-So force was sufficient to assemble.  But you are still stuck at 99%.
-
-Look at the output of ps to see if mdmon is still running (that is the 
-background process that actually reshapes stripe by stripe).  If not, 
-look in your logs for clues as to why it died.
-
-If you can't find anything significant, the next step would be to backup 
-the currently functioning array to another system/drive collection and 
-start from scratch.  I wouldn't trust anything else with the information 
-available.
+Thanks!  Learned something new today.
 
 Phil
 
-ps.  Convention on kernel.org mailing lists is to NOT top-post, and to 
-trim unnecessary context.
