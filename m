@@ -2,97 +2,103 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 153A1C49EA6
-	for <linux-raid@archiver.kernel.org>; Sun, 27 Jun 2021 03:13:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEA73C48BC2
+	for <linux-raid@archiver.kernel.org>; Sun, 27 Jun 2021 11:10:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD7FB61438
-	for <linux-raid@archiver.kernel.org>; Sun, 27 Jun 2021 03:13:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3E25619B6
+	for <linux-raid@archiver.kernel.org>; Sun, 27 Jun 2021 11:10:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230388AbhF0DP7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 26 Jun 2021 23:15:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56278 "EHLO
+        id S229761AbhF0LM1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 27 Jun 2021 07:12:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230214AbhF0DP7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 26 Jun 2021 23:15:59 -0400
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8EEBC061574
-        for <linux-raid@vger.kernel.org>; Sat, 26 Jun 2021 20:13:34 -0700 (PDT)
-Received: by mail-wm1-x32d.google.com with SMTP id j11-20020a05600c1c0bb02901e23d4c0977so10509984wms.0
-        for <linux-raid@vger.kernel.org>; Sat, 26 Jun 2021 20:13:34 -0700 (PDT)
+        with ESMTP id S229702AbhF0LM0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Jun 2021 07:12:26 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6A3CC061574
+        for <linux-raid@vger.kernel.org>; Sun, 27 Jun 2021 04:10:01 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id m2so12744200pgk.7
+        for <linux-raid@vger.kernel.org>; Sun, 27 Jun 2021 04:10:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorremedies-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6QD87azr6hI4KW+iNRICm7JVXult4E4niwwuQi68CJE=;
-        b=eILCz3N0ADdVApWkrEuoxxVs22W6ugeciLPbuKl0TDNJMx3TGesFrW5IsylfyLEfce
-         6DwA5KHJ+P+S6gHTEvl4N62BdY50m785v5sz1bymzEugG18ZJxYYDRTimSTlG1ogGyTR
-         ICNlbwjrG4pQtqt0IGUqWzi0ao0GBD60KhkjUda4tM8Fb+DR7sNTyFdxUSN4e9MoPThz
-         16I/G8p+5RPvBXIyijS8/xvBde14dv+TtJPV4a4zI5IXqH75Ph41SNisOnbkVzKKA7u7
-         SEVNFPlZkMmUzQ7ayU/0XvbDyGGhHygSItpVZLlxj1Ns3i2EE2VODOR466uu6+9HBAsl
-         nfbQ==
+        d=gmail.com; s=20161025;
+        h=from:to:references:in-reply-to:subject:date:message-id:mime-version
+         :content-transfer-encoding:content-language:thread-index;
+        bh=z6Gz0ZpdJh+z+xHEBPyBPK/kKOzmCAGa72FKj4ztHhQ=;
+        b=cZMONAbOrLHmUXzLnU0MJ9QDB1NhnZp2gsS3nPBexWeOV3iRruuYhlM1CndTofxhgt
+         ET6tAwChca7R4EjfX+co3l7bUgrxXebm3SHAO86FcxnK8LEozqhgKTj+b6olMIZ6p/vz
+         1TqtDHLN1yNzqnHO4KNvXjyu6CnX/SyUEl6ykbntUlJvooXSEDodAGkkgzxdewKMaIuY
+         +0yvJwSTG/7bPT4zb03MllJFKkdixvndZagDF20GlUobXViX+cFoLa/IgrA241VGpDFl
+         l3hIMXudUogcSDCeSqX+5rUkk74K3RDmfa1HSVdf03KnvcMFD9yeuze4i9X1piKKBf4Z
+         kOJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=6QD87azr6hI4KW+iNRICm7JVXult4E4niwwuQi68CJE=;
-        b=HEVmS6MXpqIX7WJWErJwuM3EXPVVIlQnWgCR48bYM0wnACBvTvwcqvSYfNHtPrBnBV
-         wsCQ3mswN0Y/3h2wV+s3eiY+sip1xbm9dH+FJ9edVuv71l189uVNufI9PmLGwZwKZ6p6
-         EC5ffFL6EB9ToC2VmOsVZWNNAb5oZSuUZz9zt7a7AjK3tqSuhZ+jKyVRPSq0rrPJRp6S
-         jPM9txevyNNfNMd5zYM2T2BfTkOCluPuVZSR/4atW9tJe031ZoxwALHz9BzjaSeY1SBD
-         gQyiX38lsFXs5R2vr1/LPy9DobMuQbTHX02zI8IrYdQ8jT2VATco/mg3nh7Z+kokbs4o
-         sjtg==
-X-Gm-Message-State: AOAM532mC7tqPnvSqFGXC0pO5mVWC4J/AQrhCjypptoiSw9gp5AxtEEt
-        HQJYevpNgmprCbYLC3qvH3mwB5eeyGh7jJlux7iBhNCtALxkjhamyME=
-X-Google-Smtp-Source: ABdhPJxStiVJy12zAeyXAUX39dfzfG9DnIvkiGaJ/U0YsHWOkB4sSdn8KkI23qnsj8RJHEbZMYwclZMhen71gt5PcWw=
-X-Received: by 2002:a05:600c:3589:: with SMTP id p9mr9765050wmq.182.1624763612549;
- Sat, 26 Jun 2021 20:13:32 -0700 (PDT)
+        h=x-gm-message-state:from:to:references:in-reply-to:subject:date
+         :message-id:mime-version:content-transfer-encoding:content-language
+         :thread-index;
+        bh=z6Gz0ZpdJh+z+xHEBPyBPK/kKOzmCAGa72FKj4ztHhQ=;
+        b=nhmdY6X0XoZ1IE21im7ooSUA2EdlNyoRzNUW6xakLJ1VeKDadBs3cBHV0yjeg2GG/4
+         /1gUJl8IlUkkjuGBn8EVJc0SEYDLGTDJjb8QLBweVuTq2RIx/+aJvzB+Va9O9LB4jZHD
+         l7mm/cVcG0OcZHR/WTWwNBPH826hW1iHle8JRwwBA3P/pECYVWoRMISYzZO42XX8g0NX
+         k8aM5SKyc32IMIokqSIBdKthjM2qRivzqen6ASNP5j4kkmkQ/gAM9yPAuOdZdlpZ7Fyr
+         VPjw95OJaVSARrpYP97ZF1+VZMDnAcAbiIFiReFlVPAyBQnzDjOME6Gi6SHkqC9drEZw
+         lVBw==
+X-Gm-Message-State: AOAM531xPa7Z6C3y5VPyjckwMq815nMq6y8YsKdGHD24MkOiQoqzi6lm
+        Y4zghyYex9j32qaWFGGeGaR6t1dIU96HchgL
+X-Google-Smtp-Source: ABdhPJzq7hHvkco2Qzzi3ojW/D/Hy9GvZlF7fzwzx7dRIjDwK6RyvSvZ3Vh8a+HJWtthg9NuJgFEqg==
+X-Received: by 2002:a63:f009:: with SMTP id k9mr18439125pgh.356.1624792201214;
+        Sun, 27 Jun 2021 04:10:01 -0700 (PDT)
+Received: from EdgarII ([58.164.17.235])
+        by smtp.gmail.com with ESMTPSA id p38sm9410633pfh.151.2021.06.27.04.09.59
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 27 Jun 2021 04:10:00 -0700 (PDT)
+From:   "Jason Flood" <3mu5555@gmail.com>
+To:     "'Phil Turmel'" <philip@turmel.org>,
+        "'antlists'" <antlists@youngman.org.uk>,
+        <linux-raid@vger.kernel.org>
+References: <007601d769ba$ced0e870$6c72b950$@gmail.com> <6d412bf3-a7b9-1f08-2da9-96d34d8f112b@turmel.org> <00f101d76a7b$bdb3fc50$391bf4f0$@gmail.com> <df60eb5f-b1c0-b3f8-4985-3cb8d9dcc531@youngman.org.uk> <011e281f-7ea3-9491-29fd-5e1574aa5819@turmel.org>
+In-Reply-To: <011e281f-7ea3-9491-29fd-5e1574aa5819@turmel.org>
+Subject: RE: 4-disk RAID6 (non-standard layout) normalise hung, now all disks spare
+Date:   Sun, 27 Jun 2021 21:09:57 +1000
+Message-ID: <004b01d76b44$f8ff7b80$eafe7280$@gmail.com>
 MIME-Version: 1.0
-References: <CACsGCyRLJ7Lr5rpxUDaNRzZr=s0LjK8wwOENC2RXmNsHvz4HaA@mail.gmail.com>
- <20210625220845.57wcwz4sppavywf6@bitfolk.com> <afbb6970-72ac-6900-8bf9-ba84bc6f3ffb@turmel.org>
-In-Reply-To: <afbb6970-72ac-6900-8bf9-ba84bc6f3ffb@turmel.org>
-From:   Chris Murphy <lists@colorremedies.com>
-Date:   Sat, 26 Jun 2021 21:13:16 -0600
-Message-ID: <CAJCQCtQ0i2cOUnWZ-SAZMcf3m4jsmJz7wUpUzU+Ge3xL=dT+9A@mail.gmail.com>
-Subject: Re: Redundant EFI Systemp Partitions (Was Re: How does one enable
- SCTERC on an NVMe drive (and other install questions))
-To:     Phil Turmel <philip@turmel.org>
-Cc:     Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+        charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: en-au
+Thread-Index: AQGNx8sXAjFFTjp8y/bre2t4Ys80RwKF0iigAf62j18BY1FllAI3KL+zq3n7xDA=
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Jun 26, 2021 at 8:36 AM Phil Turmel <philip@turmel.org> wrote:
+Good morning Phil, Wol,
 
-> > You could lie to the firmware and tell it that each MD member device
-> > is an ESP, but it isn't. This will probably work as long as you use
-> > the correct metadata format (so the MD metadata is at the end and
-> > the firmware is fooled that the member device is just a normal
-> > partition). BUT it is in theory possible for the firmware to write
-> > to the ESP and that would cause a broken array when you boot, which
-> > you'd then recover by randomly choosing one of the member devices as
-> > the "correct" one.
->
-> Pretty low risk, I think, but yes.  If you construct the raid with what
-> the EFI system thinks as the "first" bootable ESP as member role 0,
-> mdadm will sync correctly.  Fragile, but generally works.
+> So force was sufficient to assemble.  But you are still stuck at 99%.
 
-I think it's unreliable. GRUB can write to the ESP when grubenv is on
-it. And sd-boot likewise can write to the ESP as part of
-https://systemd.io/AUTOMATIC_BOOT_ASSESSMENT/
+> Look at the output of ps to see if mdmon is still running (that is the =
+background process that actually reshapes stripe by stripe).  If not, =
+look in your logs for clues as to why it died.
 
-And the firmware itself can write to the ESP for any reason but most
-commonly when cleaning up after firmware updates. Any of these events
-would write to just one of the members, and involve file system
-writes. So now what happens when they're assembled by mdadm as a raid,
-and the two member devices have the same event count, and yet now
-completely different file system states? I think it's a train wreck.
+> If you can't find anything significant, the next step would be to =
+backup the currently functioning array to another system/drive =
+collection and start from scratch.  I wouldn't trust anything else with =
+the information available.
 
+> Phil
 
+Will do, thanks. I have a few assignments due next weekend so I may not =
+be able to report back for a week.
 
--- 
-Chris Murphy
+> ps.  Convention on kernel.org mailing lists is to NOT top-post, and to =
+trim unnecessary context.
+
+Sorry. First time on a mailing list since well before Outlook was =
+invented!
+
+Thanks again, Phil and Wol.
+
