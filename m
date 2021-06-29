@@ -2,94 +2,97 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 389ABC49EA3
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Jun 2021 14:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8337C11F66
+	for <linux-raid@archiver.kernel.org>; Tue, 29 Jun 2021 07:24:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F7BC61D09
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Jun 2021 14:34:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2E5361DD2
+	for <linux-raid@archiver.kernel.org>; Tue, 29 Jun 2021 07:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233737AbhF1Ogn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 28 Jun 2021 10:36:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36782 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235285AbhF1OfR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Jun 2021 10:35:17 -0400
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5950DC08E834
-        for <linux-raid@vger.kernel.org>; Mon, 28 Jun 2021 07:24:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:Cc:References:To:Subject:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=JgDoWd7nmte+GDd/9bYSPraCozU27CG4X79KcG1aT1I=; b=NGjzcmX7SYsN89dJsAb/SDAFLD
-        3r9B2BVAL/86Gu5dF4S9J36YJcI9hDjYUGwEx1TEZl7kBCHKCWkgEux1iuxxGuUM1Xk2XJZkqiX/K
-        i9r+i413UHqZAwB7YSPupkWl9K6QzHvBGI5qSiR116BF/rjKwvHz4vvrdKv3yMG2x8j2mZ/+7d13R
-        pQJT3YPVUpjV5qKMhQkAhcZyQSUFA2VkuOySLBexEemBrDrqbUJz/cfAKw87J66rtggG81i4a/mwB
-        VH2Iuqc64l4XRRqZhSWVKyvqptiOTzhSVIusQr6oWsAxjuwlmKmH3vklfXbLJ8ThB6Chrw3Dt7S0T
-        KtcvIn5w==;
-Received: from c-98-192-104-236.hsd1.ga.comcast.net ([98.192.104.236] helo=[192.168.19.160])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1lxsB9-0000d3-DV; Mon, 28 Jun 2021 14:24:03 +0000
-Subject: Re: 4-disk RAID6 (non-standard layout) normalise hung, now all disks
- spare
-To:     Jason Flood <3mu5555@gmail.com>, linux-raid@vger.kernel.org
-References: <007601d769ba$ced0e870$6c72b950$@gmail.com>
- <6d412bf3-a7b9-1f08-2da9-96d34d8f112b@turmel.org>
- <00f101d76a7b$bdb3fc50$391bf4f0$@gmail.com>
- <df60eb5f-b1c0-b3f8-4985-3cb8d9dcc531@youngman.org.uk>
- <011e281f-7ea3-9491-29fd-5e1574aa5819@turmel.org>
- <004b01d76b44$f8ff7b80$eafe7280$@gmail.com>
-Cc:     'antlists' <antlists@youngman.org.uk>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <7a7bd6ba-317f-acaa-6b2c-f57768098697@turmel.org>
-Date:   Mon, 28 Jun 2021 10:24:02 -0400
+        id S232213AbhF2H1F (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 29 Jun 2021 03:27:05 -0400
+Received: from mailgw.kylinos.cn ([123.150.8.42]:48548 "EHLO nksmu.kylinos.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232227AbhF2H1F (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 29 Jun 2021 03:27:05 -0400
+X-UUID: 05e6fcdca00641389e3384d0df8a4371-20210629
+X-UUID: 05e6fcdca00641389e3384d0df8a4371-20210629
+X-User: jiangguoqing@kylinos.cn
+Received: from [172.30.60.82] [(106.37.198.34)] by nksmu.kylinos.cn
+        (envelope-from <jiangguoqing@kylinos.cn>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES128-GCM-SHA256 128/128)
+        with ESMTP id 385053192; Tue, 29 Jun 2021 15:23:44 +0800
+Subject: Re: [PATCH v2][RESEND] md/raid10: properly indicate failure when
+ ending a failed write request
+To:     wsy@dogben.com, linux-raid@vger.kernel.org
+Cc:     song@kernel.org, jgq516@gmail.com, paul.clements@us.sios.com,
+        yuyufen@huawei.com
+References: <E1lxlU5-002GZB-TY@dogben.com>
+From:   Guoqing Jiang <jiangguoqing@kylinos.cn>
+Message-ID: <2398043c-8503-3a52-b995-6acce0d68917@kylinos.cn>
+Date:   Tue, 29 Jun 2021 15:24:23 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <004b01d76b44$f8ff7b80$eafe7280$@gmail.com>
+In-Reply-To: <E1lxlU5-002GZB-TY@dogben.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Good morning Jason,
 
-On 6/27/21 7:09 AM, Jason Flood wrote:
-> Good morning Phil, Wol,
-> 
->> So force was sufficient to assemble.  But you are still stuck at 99%.
-> 
->> Look at the output of ps to see if mdmon is still running (that is the background process that actually reshapes stripe by stripe).  If not, look in your logs for clues as to why it died.
-> 
->> If you can't find anything significant, the next step would be to backup the currently functioning array to another system/drive collection and start from scratch.  I wouldn't trust anything else with the information available.
-> 
->> Phil
-> 
-> Will do, thanks. I have a few assignments due next weekend so I may not be able to report back for a week.
 
-No worries.
+On 6/28/21 3:15 PM, wsy@dogben.com wrote:
+> Similar to commit 2417b9869b81882ab90fd5ed1081a1cb2d4db1dd, this patch
+> fixes the same bug in raid10. Also cleanup the comments.
+>
+> Fixes: 7cee6d4e6035 ("md/raid10: end bio when the device faulty")
+> Signed-off-by: Wei Shuyu <wsy@dogben.com>
+> ---
+>   drivers/md/raid1.c  | 2 --
+>   drivers/md/raid10.c | 4 ++--
+>   2 files changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index ced076ba560e..753822ca9613 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -472,8 +472,6 @@ static void raid1_end_write_request(struct bio *bio)
+>   		/*
+>   		 * When the device is faulty, it is not necessary to
+>   		 * handle write error.
+> -		 * For failfast, this is the only remaining device,
+> -		 * We need to retry the write without FailFast.
+>   		 */
+>   		if (!test_bit(Faulty, &rdev->flags))
+>   			set_bit(R1BIO_WriteError, &r1_bio->state);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 13f5e6b2a73d..40e845fb9717 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -469,12 +469,12 @@ static void raid10_end_write_request(struct bio *bio)
+>   			/*
+>   			 * When the device is faulty, it is not necessary to
+>   			 * handle write error.
+> -			 * For failfast, this is the only remaining device,
+> -			 * We need to retry the write without FailFast.
+>   			 */
+>   			if (!test_bit(Faulty, &rdev->flags))
+>   				set_bit(R10BIO_WriteError, &r10_bio->state);
+>   			else {
+> +				/* Fail the request */
+> +				set_bit(R10BIO_Degraded, &r10_bio->state);
+>   				r10_bio->devs[slot].bio = NULL;
+>   				to_put = bio;
+>   				dec_rdev = 1;
 
->> ps.  Convention on kernel.org mailing lists is to NOT top-post, and to trim unnecessary context.
-> 
-> Sorry. First time on a mailing list since well before Outlook was invented!
+Acked-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
 
-No worries.  Also note that many mailing lists disagree with this.  And 
-with kernel.org's convention to CC: all participants.  You almost can't 
-avoid getting flamed one way or the other. (:
-
-> Thanks again, Phil and Wol.
-
-You're welcome.
-
-Phil
+Thanks,
+Guoqing
