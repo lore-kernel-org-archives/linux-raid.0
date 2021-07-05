@@ -2,82 +2,105 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A22DC11F66
-	for <linux-raid@archiver.kernel.org>; Tue, 29 Jun 2021 08:38:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8831C07E99
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Jul 2021 12:20:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C01E61DC8
-	for <linux-raid@archiver.kernel.org>; Tue, 29 Jun 2021 08:38:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B1296135D
+	for <linux-raid@archiver.kernel.org>; Mon,  5 Jul 2021 12:20:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232428AbhF2Ika (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 29 Jun 2021 04:40:30 -0400
-Received: from mga07.intel.com ([134.134.136.100]:58121 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232411AbhF2Ik3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 29 Jun 2021 04:40:29 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10029"; a="271964210"
-X-IronPort-AV: E=Sophos;i="5.83,308,1616482800"; 
-   d="scan'208";a="271964210"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2021 01:38:01 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,308,1616482800"; 
-   d="scan'208";a="641230103"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga006.fm.intel.com with ESMTP; 29 Jun 2021 01:38:01 -0700
-Received: from [10.213.23.8] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.23.8])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id D8A46580AA9;
-        Tue, 29 Jun 2021 01:38:00 -0700 (PDT)
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-To:     NeilBrown <neilb@suse.com>
-Subject: max_queued_requests for raid1 and raid10 - questions
-Message-ID: <6f3265d4-6750-ff8d-27ec-a19d0ce54319@linux.intel.com>
-Date:   Tue, 29 Jun 2021 10:37:58 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S230188AbhGEMXe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 5 Jul 2021 08:23:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52412 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230131AbhGEMXe (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 5 Jul 2021 08:23:34 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C2D5C061574
+        for <linux-raid@vger.kernel.org>; Mon,  5 Jul 2021 05:20:56 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id l1so11262472wme.4
+        for <linux-raid@vger.kernel.org>; Mon, 05 Jul 2021 05:20:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=iBrcsOofjv/x6ea7ffcwng6pGant3YhpjSYNzr33sVE=;
+        b=KEzzJ3AAlRcM+MTuPGVs49Iuz/QylCbZvGHmztbuTLVv9c4OTBoDMR4jFClladSrMf
+         KbJ/r9ip3ShXVRK7FAC/rRDIx7gMNfmK6a2Ob556mi6N76rsgCy9AcdDErHCc202mbsw
+         wUyX3fju75xniuCZV0S0AYuLlPBCZVlzIySGbsUSKT+5Szrkwxf6VRh0bFLtVr9GiUgD
+         Rbqaz8kFPFMF9Ain7DloztqTXQL7PocBNFcMdestTYI85uvIXF/mB7THH+elvsKwNKIf
+         yZrN13wDTUzRVQh/mRfQXpCgLtzkc+qtfV952NDxK+rJy6KkaDkXpDVfSwVGwcjczzx2
+         DEhg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=iBrcsOofjv/x6ea7ffcwng6pGant3YhpjSYNzr33sVE=;
+        b=rPpiAk88pSEeXDkFiWb7A3GPLjrKcTM9HIdYFH98Y1CDxTv5cGzFMkEIu3iKKSvM8R
+         204aPHIboK9XEWtludIQ3ffihGixCNQC1qvkke8eL+4SyGdWdgAqxoA5njyujlTmSu7G
+         jFErXyMWcH0eY0CkDb0C9zS9zscTWEErIZKgpxaIqvRRwD1fYRlHzhBCncuFaj6kKeF8
+         Z0RdyPFjHLnBFvpN8oVXC1UQ2M5ax65R34Y9zK0lH+5K+gMogL4ncAl+Ym8rBDap8nVz
+         fRZ7GGS9zGMvW8YMuE46cM0tQwWkO9UBnA8nRkRy6qx836nf2tZ6cSI1bThYNfFDNiJI
+         geXg==
+X-Gm-Message-State: AOAM531tF1IzYNpHFbzD1SRK+xvD6KAsHpjDnhajSgfU3rrZznXOYTDS
+        3Td5bOdRVRcwNtaqFwSI4TPK+noeHC2dIsN7U4IBFJUoL4o=
+X-Google-Smtp-Source: ABdhPJz2Dky39GUd8VopRIhXvceroPxPhAPu4iz5DXshWJoYmIokOHMiO1ywOHM4p7VtP5S5gDtvl1/d7ZyjANRNKZE=
+X-Received: by 2002:a1c:26c2:: with SMTP id m185mr14973490wmm.146.1625487654957;
+ Mon, 05 Jul 2021 05:20:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   BW <m40636067@gmail.com>
+Date:   Mon, 5 Jul 2021 14:20:43 +0200
+Message-ID: <CADcL3SDfzw+PZHWabN0mrHFuyt1gVtD6Owf_bNpFT=xV-JrVVA@mail.gmail.com>
+Subject: --detail --export doesn't show all properties
+To:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello Neil,
-I have some questions related to max_queued_requests implemented by you
-for raid1 and raid10. See code below:
+This is an example of the --export output:
 
-/* When there are this many requests queue to be written by
-  * the raid thread, we become 'congested' to provide back-pressure
-  * for writeback.
-  */
-static int max_queued_requests = 1024;
+# mdadm --detail --export /dev/md127
+MD_DEVICES=3
+MD_METADATA=1.2
+MD_UUID=70bc1acd:f879f9cd:dca76d79:d9ce624a
+MD_DEVNAME=debian:R5
+MD_NAME=debian:R5
+MD_DEVICE_dev_sdc_ROLE=spare
+MD_DEVICE_dev_sdc_DEV=/dev/sdc
+MD_DEVICE_dev_sdd_ROLE=spare
+MD_DEVICE_dev_sdd_DEV=/dev/sdd
+MD_DEVICE_dev_sdb_ROLE=spare
+MD_DEVICE_dev_sdb_DEV=/dev/sdb
+
+This is the same command in "normal" format-output:
+
+# mdadm --detail /dev/md127
+/dev/md127:
+           Version : 1.2
+        Raid Level : raid5
+     Total Devices : 3
+       Persistence : Superblock is persistent
+             State : inactive
+   Working Devices : 3
+              Name : debian:R5
+              UUID : 70bc1acd:f879f9cd:dca76d79:d9ce624a
+            Events : 358
+    Number   Major   Minor   RaidDevice
+       -       8       32        -        /dev/sdc
+       -       8       48        -        /dev/sdd
+       -       8       16        -        /dev/sdb
 
 
-It was added years ago:
-https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit
-/?id=34db0cd60f8a1f4ab73d118a8be3797c20388223
+It would be nice if the --export included the properties "Raid Level",
+"State", "Persistence" (the first two most important).
 
-I've reached out scenario with cache in write-only mode where
-this limiter degrades performance significantly (around 4 times).
-I used Open-CAS:
-https://github.com/Open-CAS/open-cas-linux
+Another thing, is it correct that "MD_DEVNAME" and "MD_NAME" should be the same?
+Or perhaps "MD_NAME" should show the kernel/Device-Mapper name e.g.
+"md127", that would be helpful (by the way, what do you call this mdxx
+name?)
 
-So, at this point I have some basic questions:
-Is "back-pressure" still a case? Do you know any scenario where it
-brings benefits?
-If yes, I'll move this parameter to sysfs, to make it configurable
-via mdadm config file (using SYSFS line) per array.
-What do you think?
-
- From other hand, shall be consider to bump this value up? It seems to
-be small today.
-
-TIA,
-Mariusz
+Thanks
+Brian, Denmark
