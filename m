@@ -2,133 +2,132 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF11DC07E99
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Jul 2021 06:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8A30C07E99
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Jul 2021 12:33:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B05B361279
-	for <linux-raid@archiver.kernel.org>; Fri,  9 Jul 2021 06:13:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9775A61376
+	for <linux-raid@archiver.kernel.org>; Fri,  9 Jul 2021 12:33:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbhGIGQO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 9 Jul 2021 02:16:14 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:33356 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbhGIGQO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Jul 2021 02:16:14 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 8EFD721AB0;
-        Fri,  9 Jul 2021 06:13:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1625811210; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5vGunTupXTFZVDHosH7IbXx2aQukctaVEaCMnI04usk=;
-        b=k0y6vKV4SdtifpAZx1uzyORuw+f1hfucE/i6Oo1ITrOt4RcQKnRf5dIjonvxECCLUDMllV
-        pJfUw8z40NVQEe5C8Ll+eY1YBrxZO4EwscGlpQuJaOE6Ml6TUmseejXRmsfsbJl418oH6s
-        gmO0NpVk4prc+jkgQRLi/NbYmY+LOmM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1625811210;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5vGunTupXTFZVDHosH7IbXx2aQukctaVEaCMnI04usk=;
-        b=OFz6wvA4vMadPbjIq2LJjxtxVm4YM4QsQMKiuOTuVSljYN3SrNgzYZtT2oQmTU6tkvX5G3
-        Z9xLrOuR3mRH0EAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4BCDC13B2B;
-        Fri,  9 Jul 2021 06:13:28 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 4kdtOwjp52D6OAAAMHmgww
-        (envelope-from <neilb@suse.de>); Fri, 09 Jul 2021 06:13:28 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S231156AbhGIMgZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 9 Jul 2021 08:36:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33310 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230507AbhGIMgY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 9 Jul 2021 08:36:24 -0400
+X-Greylist: delayed 367 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 09 Jul 2021 05:33:41 PDT
+Received: from u17383850.onlinehome-server.com (u17383850.onlinehome-server.com [IPv6:2607:f1c0:83f:ac00::a6:f62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2A8BC0613DD
+        for <linux-raid@vger.kernel.org>; Fri,  9 Jul 2021 05:33:41 -0700 (PDT)
+Received: by u17383850.onlinehome-server.com (Postfix, from userid 5001)
+        id DFA8D79B; Fri,  9 Jul 2021 08:27:32 -0400 (EDT)
+Date:   Fri, 9 Jul 2021 08:27:32 -0400
+From:   David T-G <davidtg-robot@justpickone.org>
+To:     Linux RAID list <linux-raid@vger.kernel.org>
+Subject: 1T and 500+500 mirror, but different speeds
+Message-ID: <20210709122732.GB27083@justpickone.org>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "BW" <m40636067@gmail.com>
-Cc:     "Fine Fan" <ffan@redhat.com>, linux-raid@vger.kernel.org
-Subject: Re: --detail --export doesn't show all properties
-In-reply-to: <CADcL3SDik3whZoqk16r_HeK0_JU1RvUgekYPjwTpO4NN+DkBAg@mail.gmail.com>
-References: <CADcL3SDfzw+PZHWabN0mrHFuyt1gVtD6Owf_bNpFT=xV-JrVVA@mail.gmail.com>,
- <CAOaDVC6yNDOVAvMu4gBuc+sTH50UrXD3z4sODa1NtFsV9SEZ9Q@mail.gmail.com>,
- <CADcL3SBwbiZJgXVOOTqV2UPqTg=eJwG=ZDCwgzTd9Ez8FH5D6w@mail.gmail.com>,
- <162569672750.31036.1684525188878933981@noble.neil.brown.name>,
- <CADcL3SAWbA8C5c41MeuBczatmikUu0NMPY+1jjoy54AyObJVJA@mail.gmail.com>,
- <162578835845.31036.9861674953440872046@noble.neil.brown.name>,
- <CADcL3SDik3whZoqk16r_HeK0_JU1RvUgekYPjwTpO4NN+DkBAg@mail.gmail.com>
-Date:   Fri, 09 Jul 2021 16:13:25 +1000
-Message-id: <162581120598.31036.6598299608450900729@noble.neil.brown.name>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 09 Jul 2021, BW wrote:
-> It was a 4-drive RAID5 array missing one drive completely.
+Hi, all --
 
-That shouldn't result in the array not assembling....  though I guess
-that depends on how it was assembled.
-Do you know how it was assembled?
+I have a 1T drive
 
-> 
-> But I expected is was an easy thing to fix as "mdadm --detail
-> /dev/md1xxx" will show the details fine (out of the same information
-> in memory). But if it's not, maybe just make a note about it and move
-> on with more important things. I wouldn't be surprised if I'm the only
-> one ever needing this feature. And I already implemented a work-around
-> in my storage-management-system be getting the RAID level etc. from
-> /proc/mdstat first. A pain to serialize of course but it works now.
+  jpo:~ # parted /dev/sdb print
+  Model: ATA ST31000524AS (scsi)
+  Disk /dev/sdb: 1000GB
+  Sector size (logical/physical): 512B/512B
+  Partition Table: msdos
+  Disk Flags:
 
-It probably is easy to fix, once it is understood.  I want to understand
-it.  I need to be able to reproduce it.
+  Number  Start   End     Size    Type     File system  Flags
+   1      1049kB  1000GB  1000GB  primary  ntfs         type=07
 
-NeilBrown
+  jpo:~ # smartctl -i /dev/sdb
+  smartctl 7.0 2019-05-21 r4917 [x86_64-linux-5.3.18-lp152.78-default] (SUSE RPM)
+  Copyright (C) 2002-18, Bruce Allen, Christian Franke, www.smartmontools.org
+
+  === START OF INFORMATION SECTION ===
+  Model Family:     Seagate Barracuda 7200.12
+  Device Model:     ST31000524AS
+  Serial Number:    9VPG4SHD
+  LU WWN Device Id: 5 000c50 04d20d244
+  Firmware Version: JC45
+  User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+  Sector Size:      512 bytes logical/physical
+  Rotation Rate:    7200 rpm
+  Device is:        In smartctl database [for details use: -P show]
+  ATA Version is:   ATA8-ACS T13/1699-D revision 4
+  SATA Version is:  SATA 3.0, 6.0 Gb/s (current: 6.0 Gb/s)
+  Local Time is:    Thu Jul  8 11:32:27 2021 UTC
+  SMART support is: Available - device has SMART capability.
+  SMART support is: Enabled
+
+and also two 500G drives
+
+  jpo:~ # parted /dev/sdc print
+  Model: ATA WDC WD5000AAVS-0 (scsi)
+  Disk /dev/sdc: 500GB
+  Sector size (logical/physical): 512B/512B
+  Partition Table: gpt
+  Disk Flags:
+
+  Number  Start   End    Size    File system  Name                                  Flags
+   1      1049kB  356GB  356GB                ata-WDC_WD5000AAVS-00ZTB0_WD-WMASU06  raid
+   2      356GB   495GB  139GB                                                      raid
+   4      495GB   500GB  5001MB  reiserfs     wwn-0x50014ee055b724ad
+
+  jpo:~ # smartctl -i /dev/sdc
+  smartctl 7.0 2019-05-21 r4917 [x86_64-linux-5.3.18-lp152.78-default] (SUSE RPM)
+  Copyright (C) 2002-18, Bruce Allen, Christian Franke, www.smartmontools.org
+
+  === START OF INFORMATION SECTION ===
+  Model Family:     Western Digital Caviar Green
+  Device Model:     WDC WD5000AAVS-00ZTB0
+  Serial Number:    WD-WMASU0686160
+  LU WWN Device Id: 5 0014ee 055b724ad
+  Firmware Version: 01.01B01
+  User Capacity:    500,107,862,016 bytes [500 GB]
+  Sector Size:      512 bytes logical/physical
+  Device is:        In smartctl database [for details use: -P show]
+  ATA Version is:   ATA8-ACS (minor revision not indicated)
+  SATA Version is:  SATA 2.5, 3.0 Gb/s
+  Local Time is:    Thu Jul  8 11:32:35 2021 UTC
+  SMART support is: Available - device has SMART capability.
+  SMART support is: Enabled
+
+that I plan to stripe together to use to protect the first.  The Caviars
+are listed as variable speed, but in practice they apparently are just
+5400 rpm, so I'd like to take advantage of striping to make them as fast
+as possible.  This isn't the black magic ;-) of RAID10-on-two-drives,
+so I don't have to think of one as "front" and one as "back", but do I
+want more than one partition on each to stripe 4 or 6 slices to avoid
+hammering on one, or do I just go with each device as a whole and let
+mdadm handle the magic for me?
+
+I also plan to use a partition on the 1T drive, but once I have the
+striped metadevice do I particularly want or particlularly not want to
+slice a partition out of it?  I figured I would partition since that
+would let me exactly match the mirror halves to each other.
+
+Oh, and to make this more fun the two 500s are actually part of a 3-dev
+RAID5 set holding the data to migrate to the 1T to then mirror, so I
+don't get to destructively play with this a dozen times :-)
 
 
+Thanks in advance & have a great day!
 
-> 
-> On Fri, Jul 9, 2021 at 1:52 AM NeilBrown <neilb@suse.de> wrote:
-> >
-> > On Thu, 08 Jul 2021, BW wrote:
-> > > 1: Just because the array is inactive doesn't mean the information is
-> > > not valuable, actually it's even more,  as your most likely needs your
-> > > attention
-> > > 2: The information is available and is printed when not doing --export
-> >
-> > Ahh... I missed that.  My memory is that when the array is inactive, the
-> > md driver really don't know anything about the array.  It doesn't find
-> > out until it reads the metadata, and it does that as it activates the
-> > array.
-> > But looking at your sample output I see does, as you say, give a raid
-> > level for an inactive array.
-> >
-> > But looking at the code, it should do exactly the same thing for
-> > --export, and --brief, and normal.
-> > It determines the raid level:
-> >
-> >         if (inactive && info)
-> >                 str = map_num(pers, info->array.level);
-> >         else
-> >                 str = map_num(pers, array.level);
-> >
-> > and then report 'str' in all 3 cases (possibly substituting "-unknown-"
-> > or "container" for NULL) providing that array.raid_disks is non-zero -
-> > which it is in your example.
-> > So I cannot see how you would get the results that you report.
-> >
-> > Do you know how you got the array in this inactive state? I could then
-> > experiment and see if I can reproduce your result.
-> >
-> > NeilBrown
-> 
-> 
+:-D
+-- 
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
+
