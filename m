@@ -2,72 +2,70 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F96C07E95
-	for <linux-raid@archiver.kernel.org>; Sat, 10 Jul 2021 12:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17C0CC07E95
+	for <linux-raid@archiver.kernel.org>; Sat, 10 Jul 2021 18:43:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D87A60FF4
-	for <linux-raid@archiver.kernel.org>; Sat, 10 Jul 2021 12:15:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E881861249
+	for <linux-raid@archiver.kernel.org>; Sat, 10 Jul 2021 18:43:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232619AbhGJMSO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 10 Jul 2021 08:18:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38604 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231303AbhGJMSO (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 10 Jul 2021 08:18:14 -0400
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FF3FC0613DD
-        for <linux-raid@vger.kernel.org>; Sat, 10 Jul 2021 05:15:28 -0700 (PDT)
-Received: by mail-wm1-x336.google.com with SMTP id l17-20020a05600c1d11b029021f84fcaf75so948005wms.1
-        for <linux-raid@vger.kernel.org>; Sat, 10 Jul 2021 05:15:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=PfC1detABTXdUKRkQpNKHP4yGJHs9ITks6NhfZsn/c8=;
-        b=IeqmI5KmpGb6FWpkbDjxJLw3xaO0sOExb4hjSlFnRO8sj+eqHdq3mJcBBhZ0PYYmv5
-         QTuNXn3W9cm+VlXkQdi+pHDSgtA4hMsEOjTdE1SlO1s0cFUjLqXPSYb/OUn8kQIcCBM6
-         eUL5+ssg1euV8iPfg8YS7ujtcMyFShhO8Rv65eKqTQqwEmi8up+BthxyUUmyNmwLfPzW
-         L65eOewNNGUUCyfguS3EzbrGmS++jw67mQeWSByqh85b5RHM6fqDNqgqpsK+G6WVJ0c7
-         d0hAj+xHWOGV5cZ1OhyQ5+mmMlOBNi6SEtd5Ionw4VMCoy1EOUYrbHT+iR4FZcx/NqPt
-         WiOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=PfC1detABTXdUKRkQpNKHP4yGJHs9ITks6NhfZsn/c8=;
-        b=sIIqU+nMFAXda7sWjL9jyeJsHxLZ0RW0wIilSM3sBuVFz9A6qcsE/72NXXFazaXLKO
-         6N68yMuKy1sXGD4pkCVQEsTe2QP0do6/gT7qyRl3TfwsiN2Lv+3YINovPgvODAhnddP3
-         Gb55UwOQKUGT1ZW+Bq0InE5thVIhqSkfk3CqbahNdOxjNROqEEf1wo3Xp7mxMR98tgr4
-         qE8qTcfRUmfsdEpUeh9rZMS1mFwi5hrNe5IkMQBWRZ9xwhEbEKLDcpyof2KaMmxlhQ6i
-         d1snRIMozGUpl0RY1PnC0/UkcX9kpgvaSUhUguSxPmXXcUJclq4AJqm+R/HnDS1KM+2m
-         SNzA==
-X-Gm-Message-State: AOAM531bgQ9WMaurwCtx8++k3vucwpLTTQzwmpnAn4zmtIOKz/phh8U8
-        FkGRjgn9PW9urKWVzngbNFGdwy3dIMtS+mcuapGefbWiVBQ=
-X-Google-Smtp-Source: ABdhPJyygS1DQKFfGtNomYRmUWkQkJoMTBk90abxIVQLJcVqGuR2mlYNEgEL+u2+e679dC+KIZa74UYrpakKLXky2x4=
-X-Received: by 2002:a05:600c:2ca4:: with SMTP id h4mr27093637wmc.37.1625919326730;
- Sat, 10 Jul 2021 05:15:26 -0700 (PDT)
+        id S229652AbhGJSqH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 10 Jul 2021 14:46:07 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:55333 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229599AbhGJSqF (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 10 Jul 2021 14:46:05 -0400
+Received: from host86-159-54-55.range86-159.btcentralplus.com ([86.159.54.55] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1m2Hwc-000392-51; Sat, 10 Jul 2021 19:43:18 +0100
+Subject: Re: What about the kernel patch "failfast" and SCTERC/kernel-driver
+ timeouts
+To:     BW <m40636067@gmail.com>, linux-raid@vger.kernel.org
+References: <CADcL3SDHb-0U2cjoNOMXbFmbiwpVfytzczyg9VkaK=vWyKiFtA@mail.gmail.com>
+From:   antlists <antlists@youngman.org.uk>
+Message-ID: <46aa1b53-596f-a647-64ef-10e2fdb614e8@youngman.org.uk>
+Date:   Sat, 10 Jul 2021 19:43:19 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-From:   BW <m40636067@gmail.com>
-Date:   Sat, 10 Jul 2021 14:15:13 +0200
-Message-ID: <CADcL3SDHb-0U2cjoNOMXbFmbiwpVfytzczyg9VkaK=vWyKiFtA@mail.gmail.com>
-Subject: What about the kernel patch "failfast" and SCTERC/kernel-driver timeouts
-To:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CADcL3SDHb-0U2cjoNOMXbFmbiwpVfytzczyg9VkaK=vWyKiFtA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-I don't know if the "failfast" patch was ever pushed into the kernel
-back in 2017, but if it was, does it change anything in regards to the
-SCTERC/Kernel-driver. timeout issue(s)?
+On 10/07/2021 13:15, BW wrote:
+> I don't know if the "failfast" patch was ever pushed into the kernel
+> back in 2017, but if it was, does it change anything in regards to the
+> SCTERC/Kernel-driver. timeout issue(s)?
+> 
+> Link to a thread about the patch: https://lkml.org/lkml/2016/11/18/1
+> 
+> And what is the reason why mdadm just doesn't mark a drive fail if no
+> response has been received from a array-member-device within e.g. 29
+> seconds (just less than kernel-driver default timeout of 30 sec) e.g.
+> because of write/read issue. Then all those SCTERC/kernel-driver
+> timeout-issues would be solved, right?
+> 
+https://raid.wiki.kernel.org/index.php/Timeout_Mismatch
 
-Link to a thread about the patch: https://lkml.org/lkml/2016/11/18/1
+I suggest you read up on what the timeout mismatch problem really is.
 
-And what is the reason why mdadm just doesn't mark a drive fail if no
-response has been received from a array-member-device within e.g. 29
-seconds (just less than kernel-driver default timeout of 30 sec) e.g.
-because of write/read issue. Then all those SCTERC/kernel-driver
-timeout-issues would be solved, right?
+And why doesn't mdadm just mark a device as failed? - the problem is it 
+does EXACTLY THAT! And it is doing that that will destroy your parity 
+raid if you are unlucky.
+
+The whole point of the mismatch problem is that the kernel timeout MUST 
+be GREATER than the drive timeout. Modern desktop drives do NOT have a 
+configurable timeout which, with modern shingled drives, can be measured 
+in TENS of MINUTES.
+
+Cheers,
+Wol
