@@ -7,330 +7,183 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F6D8C63797
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Jul 2021 18:27:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E182C6377D
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Jul 2021 18:28:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51C1A608FB
-	for <linux-raid@archiver.kernel.org>; Thu, 22 Jul 2021 18:27:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 099BF60720
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Jul 2021 18:28:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229575AbhGVRrG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 22 Jul 2021 13:47:06 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:60320 "EHLO
+        id S229635AbhGVRrh (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Jul 2021 13:47:37 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:40524 "EHLO
         mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229530AbhGVRrF (ORCPT
+        by vger.kernel.org with ESMTP id S229530AbhGVRrh (ORCPT
         <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 22 Jul 2021 13:47:05 -0400
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16MIH99F016701;
-        Thu, 22 Jul 2021 18:27:38 GMT
+        Thu, 22 Jul 2021 13:47:37 -0400
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16MIGUmZ024405;
+        Thu, 22 Jul 2021 18:28:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : content-type : mime-version; s=corp-2021-07-09;
- bh=o7JKckCleKeoFz6EOL+C8M4/quPVmTP68e6ormTNVB4=;
- b=t7q8S4K05s91fHXOd1GQYp5D2g4fWyFvMuP5NXHCEkZSuhZwKJop8wryNvZR9Xv9VOAM
- k9VmjTbcYwRNwVFNVCCfeEPNNrEZWgPnGRUtfI5e5MYGWBfDcpTda1CUEjZv5eyQdsZm
- hdUZWH9/VuvgXG5HkaeAKCCPDwLCdjaXmdezJky2tvyEBzxn5wCdKm384cJI4+x/blTG
- bsoG3Ti/3r2ehr4HyGWCjmq1WIg5yjJhdFSdn9GC7onZvi6Z5bfAWWS05+GneXrjR9K5
- YpG33q6sDBMtgGO7QnAk/P0ufm2jG216NF4WR5FqR38YxiDQjg4I9jgc8x/Rfv11Q3ft kw== 
+ bh=rF53khICDDAIgLhkBTwPIk/3/ayu6aUegayFMHRfF3E=;
+ b=ggdP1ffpJOnwLfKUnhy+SNLn1Z/RCwV65/YFL+cINALY49MAQa9VKfUyYWIN+tV9ZG2V
+ LXkdJJwHA30wSWusbDZ3LOd8G5BF0KMqb3gTjvJZdhxmMfZ2YRQmmfIWJUqShu0595VV
+ PiZC0UabfrgVwzNclNUWVFrs+DgZDnQcrIgqokmVXuC1G0O9obxIiean9+eiE5hJCXRl
+ rUq1gGg7A2ilgqsm/R3BPqu57ggR7vJk4YYXJ7C6zaD6TxA4M9Mwwr1JADqzd7srZm4w
+ nU4B+stW4JlR76Nn1f7aZp8nwy8bSyAGbW6OLpuVG/j9/p9S18/VapZNis/JHXgEDuvd tQ== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : content-type : mime-version; s=corp-2020-01-29;
- bh=o7JKckCleKeoFz6EOL+C8M4/quPVmTP68e6ormTNVB4=;
- b=hSarb0CSLroC1fofS9/lwzh/sG9LJqT9guRXpW4C8BM1Alvro7N+MuuBfUbpYo0X0Jmj
- 3Lj+tx0t3edIEvahoKbZ+tl6pXzP8hkAuqWjRYt0QI+/dDRnHXWQ/iP40kOIDC1GiOyO
- U9jSvjbu8UNp/ay31q21JLodrk02unCtpX3fzszj6midO1s19Cpx/kIutTO6hwbCQD8k
- 45iB2LyWXu4PLbcGRWZFDJVlPNRQO87UiuWynm07IXwbHQGxa44+HRPmEewq9ngMXZsQ
- L26SM+o9RMXvE5mg6SatASCbKFAJ6/eOPxfNb9NQGOWUyXqJmtS8zO0igOJr5rvZjKFp Fw== 
+ bh=rF53khICDDAIgLhkBTwPIk/3/ayu6aUegayFMHRfF3E=;
+ b=iS0SAKk3tR7BmCiJ/A5wIFnDOk4GiWYj20lwH10RVuv0KdbvwV5BxgM1Mc1KSvvXeYtQ
+ EP46+piZD/Si9ylhOCu471YReZkFC+dsjwHkQlZ1+TAfbuHg/BDVNgIbvdXrNiC2vz6k
+ UzL7PPpJE2QH8FG0pvJcRms//mCGgt06ZRLKxLKDb7ZtVy4+8O9Q57rkQ24ERagaReeA
+ 9GDM6CMcScIy/m+5+976vQFr4OwloJ0bqiCgfLZSdODum9pwquPxBCo1Y8sMkbpYGI9s
+ j+WH64TVUW0qdN4gM4Cgk+K2qCSEVhbbLsTUT7Jt5QTXmM1pLE4NGFYiFErTj5GzUXKc EQ== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 39ya578q6b-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 39xu2ftdqt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Jul 2021 18:27:38 +0000
+        Thu, 22 Jul 2021 18:28:09 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16MIFFUx167796;
-        Thu, 22 Jul 2021 18:27:37 GMT
-Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2048.outbound.protection.outlook.com [104.47.56.48])
-        by aserp3020.oracle.com with ESMTP id 39uq1bpv4f-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16MIFEr8167699;
+        Thu, 22 Jul 2021 18:28:08 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2041.outbound.protection.outlook.com [104.47.56.41])
+        by aserp3020.oracle.com with ESMTP id 39uq1bpvs8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Jul 2021 18:27:37 +0000
+        Thu, 22 Jul 2021 18:28:08 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Dgc2LfqlC0ba6vOdaDj7T0/lEvQ97aPTd/u8gncYgy0eLUBjyhYN5xq3BYIAAtj6qqbKJAb91Z/vtaaehXmYdXRarNSxpVx75XmyEW63eijg3nRiL7MYqmsnBJwYSgpSzRVy32jwkJGniZy2P8AjrmhCiMjSd46I9NF8T8zlcXvJiq29fZs8kOqHqGMLCQmYC2QJ9QXJ+dOjI/4UvaOMDNg82ilqa9bkkBv8t61Il+GxGDPZx8UpPW3VA+qHsZjK7KzREoMQLX33yV/3cM4QQhBmGprYCezvW/W1KEVX1W/WDCnlPuUwtS+NWjBWpJ2C4arsryFPjGGzutO/XSmu4Q==
+ b=V6T9N/BbqtxmlU2hwv6FXemHonLIlspYzBs6C5r7Ip6iTg/mBQivZ8mO4ufsbYg+RCLcTQYF8DcnQ6wVqYdsnkKbFo42ZErgI7Sg2vHDpvB5Q0otcSD8i6DDUxf0Mu5zIQYUG/gYGlLWNroxc/nTokVD2t+Ebb3GQfotk8OyOkgZNfe8C6jpkC/oaxQAD62Mz6HeseFFj8M+7DLMXagXkSacBV01SN0a7czQ7OZxqX5QZpUT/WFODVq1wuJU+N6pAhMbJbqrvTW13ZPGlZ1P2jJBK/ZlhfiSrHx5O91zJdx/ZInahdQxV0Ufd3f9VRSqUCPskCslZxuIlf9X1rxNew==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o7JKckCleKeoFz6EOL+C8M4/quPVmTP68e6ormTNVB4=;
- b=FO3Lh7XYIMJF4jMClgsMJ2UMMRXS+YgrazN9TCo2ATjYMRPSIiD4eTiwbUquJmCc0442CnXPPVCnqZhXLvJHGSCkaVo5c0AGsYyjb1KSCLUHADA5FX1qEj+s6XpuvhAn2UATvwwY1b/SzQIFj5r2RmvhV6S3NUL+GT41Hdio6ShRMy5PICQkVKUXVIx4owuSI2ISOp6E2AH5PMF2k6R5WyLkwJDvIIh+2/zP7DBu2Ab6Eu1ppHb37pESMOvPS5Y/xPJ3Ohl+on5VgWtGldG16OeJs6wTZo9CZOOi32kilDIw8NkcZCi6I7CWb3bL8PP9LfToLQ7CJp3R1gzpPjsWoA==
+ bh=rF53khICDDAIgLhkBTwPIk/3/ayu6aUegayFMHRfF3E=;
+ b=H25Hll3JRWkzhmBdw/HWsFlPHXXgauZxxp6RHVsO+sEQUjG87eV79OlL7bbBkTgrliLiymb16K9A4isjiqtOo+5Y43gptgl/Wb+eIm0bjkQxMYmr5YwT1refA8GU+pSCy/P6uw8SZKEOCkyOd1M/KUskGtGdik/H4GUNOJSHOyF52MyomxqUYQEeX9T0fSuuZbSdwnaoAOCHQe50G8XcIp9HX+d1/96YlpkXB9xzkp7HtnWYVcgrDT+FMPkU8yCX25A+qGvAFmK70AJtBXB7WIXgOgYmlJk6Ea5SqlDHFf3bxTqBu+egDNf1Tu9oL06I4XRpJE8Ie6jZHgUihrKP8g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o7JKckCleKeoFz6EOL+C8M4/quPVmTP68e6ormTNVB4=;
- b=X1dCO5Kv4ysdTn7VkMYiUkM9zuhZoK8fLftcIoygkhYmJ8VmV6rqU9OCSQl7u37QyUzRte4zweHFSKhlYvQp9ZxBvWo6FVlyxj6KI1yDB+gOH2q4A+ZsmmlGsCHb3mLJORN2FvFPKIC+oMDCjTMi539pV5CnWcauSr3ZFK5D2mg=
+ bh=rF53khICDDAIgLhkBTwPIk/3/ayu6aUegayFMHRfF3E=;
+ b=OcvhDIfPRtfbWYBfU2XKAUF6zJGfoost95f6sGumyXol2Ow6y/5MWO9hdYVyaNIiw+hvupFs6wzx9LZZOmlivmQIfHEcHrJUtdSmqjOumwJXyv8Za61cYWyBUhkw/Ekg9XahQxHXd5kIBDlefzYRq24OT/BYp8e7WQ6jz5Q2tvM=
 Authentication-Results: trained-monkey.org; dkim=none (message not signed)
  header.d=none;trained-monkey.org; dmarc=none action=none
  header.from=oracle.com;
 Received: from CY4PR10MB2007.namprd10.prod.outlook.com (2603:10b6:903:123::20)
- by CY4PR10MB1494.namprd10.prod.outlook.com (2603:10b6:903:26::12) with
+ by CY4PR10MB1912.namprd10.prod.outlook.com (2603:10b6:903:125::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.26; Thu, 22 Jul
- 2021 18:27:36 +0000
+ 2021 18:28:07 +0000
 Received: from CY4PR10MB2007.namprd10.prod.outlook.com
  ([fe80::9d86:c5af:e982:11f2]) by CY4PR10MB2007.namprd10.prod.outlook.com
  ([fe80::9d86:c5af:e982:11f2%7]) with mapi id 15.20.4331.034; Thu, 22 Jul 2021
- 18:27:36 +0000
-Date:   Thu, 22 Jul 2021 18:27:33 +0000
+ 18:28:07 +0000
+Date:   Thu, 22 Jul 2021 18:28:03 +0000
 From:   Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
 To:     jes@trained-monkey.org
 Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 1/5] tests: remove raid0 tests for 0.90 metadata version
-Message-ID: <20210722182733.GA24996@oracle.com>
+Subject: [PATCH 2/5] tests: clear the superblock before adding a device to
+ the array.
+Message-ID: <20210722182803.GA25122@oracle.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 User-Agent: Mutt/1.5.21 (2010-09-15)
-X-ClientProxiedBy: SN4PR0501CA0155.namprd05.prod.outlook.com
- (2603:10b6:803:2c::33) To CY4PR10MB2007.namprd10.prod.outlook.com
+X-ClientProxiedBy: SA0PR11CA0143.namprd11.prod.outlook.com
+ (2603:10b6:806:131::28) To CY4PR10MB2007.namprd10.prod.outlook.com
  (2603:10b6:903:123::20)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from oracle.com (209.17.40.41) by SN4PR0501CA0155.namprd05.prod.outlook.com (2603:10b6:803:2c::33) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.7 via Frontend Transport; Thu, 22 Jul 2021 18:27:35 +0000
+Received: from oracle.com (209.17.40.41) by SA0PR11CA0143.namprd11.prod.outlook.com (2603:10b6:806:131::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.26 via Frontend Transport; Thu, 22 Jul 2021 18:28:06 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 8ae87e77-b1df-4975-557c-08d94d3e60f4
-X-MS-TrafficTypeDiagnostic: CY4PR10MB1494:
-X-Microsoft-Antispam-PRVS: <CY4PR10MB149442AAEC1DC7E4743D2C88FDE49@CY4PR10MB1494.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1923;
+X-MS-Office365-Filtering-Correlation-Id: b49cd94b-b017-47db-0d91-08d94d3e7381
+X-MS-TrafficTypeDiagnostic: CY4PR10MB1912:
+X-Microsoft-Antispam-PRVS: <CY4PR10MB1912C14F4848DF7D3B7F5B1EFDE49@CY4PR10MB1912.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2331;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: R2MtJzcryQtW49M8ezh+O0C1VRG+P0aMh78zUYw68BCfR5X7G7AaaVOaAGkZbSumRhEWTGR1gtK5ciEjNsrx44CuitolnbYXdrIO3/Qgdz51sHme9Qo57mF+nMo5i/fHmIibOsPvUWgj6nq4fP7viSG+k/rOYRpeh/MBldbvxeedMFYP9A6xkjJVwiLjPAB3f9USFj8mF2y3pK/M6LV/M2x7GyDnaiwonRUU1BR8S4JjjQphThJtQt47zZjtWkCNACwgpILMYAfIyDaYBxcUKLeZQzJ2oy3M7RjJ696puTlqzG5J+nKoORZUBjPSbWl2kEybnir+efg7DxYqJl8BcaIdLe/oij72A711609B/zynBFYZcTIh4sNlhDgy4jZ/h+7KhQReVLm0PbU2ngdnmXhyFsPo3NAtugkx2hHGtiIEMRlxXpvGXTG4sRD/2Ey+xCx3pJ5wZVP50ZzoWaNRQZWFp4vHYJwZqJ1xDUWHvd/FGz/rEOjMMFBtDLis8nIJTrm3JOtWUyCVeTOy8KW3qQA2id85E5S0E7oAtWNBhmR4vB6WqfAvyKzg4gpH/pa40o33ybZponO17Xw0DPvysWlUAN011QeEwm37bZtypRj+D40bAOzYzO2fIDEFdyaB/Er17epv07wygKOkb3Knat/sX8pFNuBrl1SZ2V/wY8Y/uJkAuVWUew3bLgASzDH6d3MOF+C2Mr6V8IP9mnOKQA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR10MB2007.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(39860400002)(376002)(366004)(136003)(346002)(4326008)(7696005)(83380400001)(6916009)(52116002)(8676002)(66476007)(8886007)(66946007)(66556008)(26005)(5660300002)(478600001)(36756003)(33656002)(1076003)(55016002)(8936002)(2616005)(38350700002)(44832011)(316002)(186003)(2906002)(956004)(86362001)(38100700002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Bee2265pfVgX7yJfRtrVKcziiB1A0yTyeqj3OaKRpVO3a6+CABMFJ1sRyGhrhzjU05whRzn6+oVT/U/4j9WeqJK6594+55NSDPNvwoj2gdXiA+bUx+hWECMS4QzzaynYdewCvVm1fCsT6qWKW4efzt7vgCAlAZ3mEWrekltVsPxClU1YAotvuV+qbdPATotJn3fmQutqfq+1bg3Fo2HJCxuyeLhhzBP9WwBwU8fryWjwMVBB3+MX/YDEqjEDcD9VLfI30/lK4jhu+4DeIexESCGGMCqAy46+nb7ksqKHyhYjiYY3+ekHD2nXDBffnUuKboAcfwjBmRU89LRkU+S2RRGoWF/RPYyR/cIFIWX0tB0l4Ecg45TsRetD6AZSotv+tZelYPMVdkOlfhBK3+dyoaWuJAIbdVi1qeES+sBf+cQoSBgaS0ACJX5msZzWdFOMo6wtx/u0JnHEd3UqIWnGh9qyXM0dRN9VwMkLwuFZdMY12InURnrwWMEJuH9QSUQ5Mj/T7n1pWMKrF/LYnNDEFTkG6VjcgOMwUJaA8yWDEl4uUvip6M+BSf3c4D6nKzjR2JbNj8s50U3SdX3bHJVCGRha0oh3FQYFOLREVlgraVv3//xFMr6OXZ/TNVYz5I2TkcZwDufGlSC4ndIz2NSIdZWC/kNIlcWCYkO1Cl1R0IhM+ShNKNYsjqq36mi/srYvurL6GhN+RLQkrhPwuSEXIA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR10MB2007.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(376002)(136003)(366004)(346002)(39860400002)(36756003)(1076003)(38350700002)(4326008)(83380400001)(66556008)(66946007)(66476007)(7696005)(6916009)(2906002)(38100700002)(186003)(6666004)(5660300002)(52116002)(4744005)(86362001)(26005)(316002)(8936002)(478600001)(2616005)(956004)(44832011)(8676002)(33656002)(55016002)(8886007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?fVKlwQUHbH1uFRtAsPBbLVBOnePUrq9OZpiqK8ps3r4GYcLbzsaW05bKzF4e?=
- =?us-ascii?Q?apLmLkSUkiJde7HFI87uDQbKkC3n6PxZV2xr00d6uXdsNM1Bh3PlBKAx3Jvn?=
- =?us-ascii?Q?hlrtvLgpip9V5vUyQiqN5eTBf4aAr0k3GhCv/DsA1ccHp7Yp0KX6dg6mWoVe?=
- =?us-ascii?Q?i/asZojWhSgqyoxNRv4/gMASIPRIqfNZtt/m5WgKkpvZ6IIBeZUlNfb43ZI5?=
- =?us-ascii?Q?Tx5hJeA1BADv0VrNjJQ2kbtqRe3xR/ALXAkVt480sWjKMqXwywJW6+EP3D1w?=
- =?us-ascii?Q?qrnIE3bGb4ZeB5+63Z7D9uxb1I0OuDR7Zk88nnt0JSHnVUSI9QXQBQZyA2IX?=
- =?us-ascii?Q?x+gL/vym4cQMq/5cJpee7INbyGC4SzAjXDake1XnTsTljf/rfvSPTSLEAI3N?=
- =?us-ascii?Q?zukFe1tJhCqTqVwtdc7K7AU6MiU/e4QUZjOM3uEi+b/HHzPa679z4xdtQBHL?=
- =?us-ascii?Q?k1YoVnN/NFRI/s4o9IA1TDJpaBKAYvGgh0lo/svnedhtdYjFqjO+f5k9m+un?=
- =?us-ascii?Q?4Aul0scFY+3wKIrCqpE9S5pvW8ckRS9S0bAiVYWzyNggQYgw+YlZo+m6S5GA?=
- =?us-ascii?Q?uPoNXa6DVxgB6WaBgiOoTrD9a01qi00GIvasPkl5qc72mjU/AHQXnx8yhHbr?=
- =?us-ascii?Q?I0G8vtGjjxa8jxR6BgG8zqQmFNNMVA8KZvjQZVdtyEATgd5rY6aGJzpIhpmU?=
- =?us-ascii?Q?+eQIY5pyQv/s6hdXtjTwySPYVQIkyTHWOWoFxbXchcmQPxglw0KHPV0IRBhS?=
- =?us-ascii?Q?HFXms9yeRAlWYMBnMfALJ6Wyl9OIFQuu5ZoqutHyBy7P4aj0b0bXb/LeNx1j?=
- =?us-ascii?Q?+aX/EakdkzPSsDbJx9E82fn7qzND0P70+D87jtSd8ZVPelR8PVnIyYUPvc6W?=
- =?us-ascii?Q?MPySJKZXpB+cAyx7NtyuKW8xHHJOYsOxJSRKWlz2jEbmcGMAUz1wHx5Vw4FY?=
- =?us-ascii?Q?xCCxYtPaipeAbYe1L68l7mousljPKHeU6AKdoQivoDf+QTnmh5ive52MUKaJ?=
- =?us-ascii?Q?C+QBnyU7G6OubdRyoTXfo50QKjn2hBgPGtiGX6stJVcgbl0668/snwh3YfxK?=
- =?us-ascii?Q?pAOCSQbAOG5KtL08wtlAHJs6JXZkmWmFvz9jcl6L7I7gvS5OC4FXluhHPbVZ?=
- =?us-ascii?Q?qJGtvRHgP9NSiQYHRPonIAXYi4ARi9FLMhM/CfhNdNPL3uUt8SLOtecaaE10?=
- =?us-ascii?Q?a+E/DihNVCMQbTBOKTPAIWxreFD+skmH8MiSdbb+3RZN8gWbGdnZT+kWVkqY?=
- =?us-ascii?Q?ZW2H1O8EHv08cf98QoKGWqQOy6XFE73NBa1pLehBO9nDTZG0M//zcutOkrNA?=
- =?us-ascii?Q?VK8icQxFoEBEtENc4zybOx8r?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hzizA3eOMeLd2vzgAApJkn3ZtZcPAf+h8xWrkQGDU8dHP6KEyOjaiPRoUr3C?=
+ =?us-ascii?Q?yvZpylrU1JFsx96anI3GVgH7UKXtOfcTLznirHCpPzMRbJ9DZMhn7dPXwY0F?=
+ =?us-ascii?Q?Q5iOZh6VsUn71PzBifFe7c9naLfUGr/IobgIMUr7sHCB4tr24vnLvlq5Qkog?=
+ =?us-ascii?Q?M13na4YNtzEu9uWPy60YHYHvAsfJs0nxk86BCJcUGsWCFo/1J3KRiVB4UQ79?=
+ =?us-ascii?Q?+lHw5cT+I6z4q/APEiqLcT3kuCfyEjA22v8yCUD4JeH59zayyOyZTJjo/pfZ?=
+ =?us-ascii?Q?ksyusp057lOLCbLtwVEwhuoSWiLE5UdROpJ9HecyH/ddliqHGO1BB/Mtn7+m?=
+ =?us-ascii?Q?L3aa9WULjbhcetVjpx+zbg5CjK54CbJdI2ZAbXcunM4gHJDLX2JkvkAwqx5c?=
+ =?us-ascii?Q?zR2cc/GoMHP/r7atO+luQUsa7n9X4bqWNg/EN0f19K9iljUjBk8GQUMHThC1?=
+ =?us-ascii?Q?KzyxD0GADDSB3kyLMy6464NcXS2f6fMNY9x7omRhigZXAmUr8z/3i3mE0Kfk?=
+ =?us-ascii?Q?eHU2oJwMNoBiAJcNc0jPSV3DoTwgLk64BUFOzzEjDTtlunjuDkgfQ7ON7XY9?=
+ =?us-ascii?Q?TYFqAviZCdEyFgZi2kmsY+pDAP/rrqFKDSwVmbMIoXdAuZOUVcYO/LaOgz2W?=
+ =?us-ascii?Q?ivvUt/iYnTnY+aUfTRedvPZFJWxelKG1BVzTmIydctpmNvOu05OPBEhUZInB?=
+ =?us-ascii?Q?CKM+DfJeaA4VCJ73M6N5O9lB/a2J/4hElgJhtdtZvzHh3CoECBphhjOk6aKK?=
+ =?us-ascii?Q?ihUPOBxBNk1j0sSeslmN7O36gVvFer3Qv7NhVn6pRekPwI1/TnstO7mZxh8/?=
+ =?us-ascii?Q?O6nDdsMPzXgRBi39JdaQZRg8vyhbAqUqL5kkRkKdRD4WetP2dBTL0mueg0+a?=
+ =?us-ascii?Q?vslXsqk7hJ4XdMlTFqKKdbIWy7kbMLcQsOuBgGHhwlVvSmFg06Z1jBKytMzy?=
+ =?us-ascii?Q?6OANkexHx2sPxjYqQalURLSIbT2GS9dMJ0CAayf+bA8zcisNq+ZHsYizLaRA?=
+ =?us-ascii?Q?fbEEeoFkGJV/OpiSH5Qaydt1r+9YQHIpnRffC/J+mZK/O2xvhuNzGk/ZtEKi?=
+ =?us-ascii?Q?eLkRXT9jDNUEdlUaguP0kg5Gw8MJhhf1brUUSoRIakqUnHag9x5C2VbRNTZR?=
+ =?us-ascii?Q?4WcyhDfm5GA/qLqL+8Yfd4rbi83T5L8YtsexdZDR3X6EZgLWSqEB+TTZpj+S?=
+ =?us-ascii?Q?NEGFfMeEe83xE4bAn2tcl8nJhwGNVpKdM+yKABM3lD3vOGY5chgqSt++k2Xd?=
+ =?us-ascii?Q?ujKRBlC/2qknq4gH0mmf19P+eNberta/1yndlhBaTiMbucpgPnM6yfq9uOgX?=
+ =?us-ascii?Q?ejF+hUqk34PasPjnWJaTNKTV?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8ae87e77-b1df-4975-557c-08d94d3e60f4
+X-MS-Exchange-CrossTenant-Network-Message-Id: b49cd94b-b017-47db-0d91-08d94d3e7381
 X-MS-Exchange-CrossTenant-AuthSource: CY4PR10MB2007.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2021 18:27:36.1181
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2021 18:28:07.2233
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sSoE5FPNebihzKKLkFWKFo983YJpohcEnDlN74cLywP2wBeeFwvj7D/L4rpMpRJlubFNgHoIHa4i2ptdxXMGY3DepM9XxdpePhZ9J+28wg1zqYi0LZvafNLZANOX/HM1
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1494
+X-MS-Exchange-CrossTenant-UserPrincipalName: RhIanq3OOkJIscZXFnMmw/yY/qzaEsbYQL9mQV627In3zgiAHr0rCDvpoFkxbeFsYeeQxzgPDP9xhn9ZYh+SCMlqM/4EQndZUNh0J3Xm9Q1OLX5bIh+nsSu4fdbZAWeI
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1912
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10053 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
  mlxlogscore=999 suspectscore=0 bulkscore=0 spamscore=0 phishscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2104190000 definitions=main-2107220120
-X-Proofpoint-GUID: SFvZJmCNzQ5rKWO7a8uFjCwZwvUxhQNB
-X-Proofpoint-ORIG-GUID: SFvZJmCNzQ5rKWO7a8uFjCwZwvUxhQNB
+X-Proofpoint-ORIG-GUID: L_M95E8AhW73fmnnAEm_odVUFCiW0Kjx
+X-Proofpoint-GUID: L_M95E8AhW73fmnnAEm_odVUFCiW0Kjx
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Some of the test cases fail because raid0 creation fails with the error,
-"0.90 metadata does not support layouts for RAID0" added by commit,
-329dfc28debb. Removing the 0.90 test to make these test cases to work.
-
-removed 04r0update test completely as it is specific to raid0 for 0.9
-version.
-
-'04update-metadata' and '03r0assem' still fails at a different place after
-this change which will be fixed in an upcoming commit.
+This fixes '02lineargrow' test as prior metadata causes --add operation
+to fail.
 
 Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
 ---
- tests/00raid0           | 11 --------
- tests/00readonly        |  4 +++
- tests/03r0assem         | 72 -------------------------------------------------
- tests/04r0update        | 20 --------------
- tests/04update-metadata |  2 +-
- 5 files changed, 5 insertions(+), 104 deletions(-)
- delete mode 100644 tests/04r0update
+ test | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/tests/00raid0 b/tests/00raid0
-index 8bc18985f91a..e0b6e325b4c9 100644
---- a/tests/00raid0
-+++ b/tests/00raid0
-@@ -6,12 +6,6 @@ check raid0
- testdev $md0 3 $mdsize2_l 512
- mdadm -S $md0
- 
--# now with version-0.90 superblock
--mdadm -CR $md0 -e0.90 -l0 -n4 $dev0 $dev1 $dev2 $dev3
--check raid0
--testdev $md0 4 $mdsize0 512
--mdadm -S $md0
--
- # now with no superblock
- mdadm -B $md0 -l0 -n5 $dev0 $dev1 $dev2 $dev3 $dev4
- check raid0
-@@ -22,11 +16,6 @@ mdadm -S $md0
- # now same again with different chunk size
- for chunk in 4 32 256
- do
--  mdadm -CR $md0 -e0.90 -l raid0 --chunk $chunk -n3 $dev0 $dev1 $dev2
--  check raid0
--  testdev $md0 3 $mdsize0 $chunk
--  mdadm -S $md0
--
-   # now with version-1 superblock
-   mdadm -CR $md0 -e1.0 -l0 -c $chunk -n4 $dev0 $dev1 $dev2 $dev3
-   check raid0
-diff --git a/tests/00readonly b/tests/00readonly
-index 28b0fa13f815..39202487f614 100644
---- a/tests/00readonly
-+++ b/tests/00readonly
-@@ -4,6 +4,10 @@ for metadata in 0.9 1.0 1.1 1.2
- do
- 	for level in linear raid0 raid1 raid4 raid5 raid6 raid10
- 	do
-+		if [[ $metadata == "0.9" && $level == "raid0" ]];
+diff --git a/test b/test
+index 711a3c7a2076..39a85d77fa25 100755
+--- a/test
++++ b/test
+@@ -48,7 +48,7 @@ mdadm() {
+ 		;;
+ 	esac
+ 	case $* in
+-	*-C* | *--create* | *-B* | *--build* )
++	*-C* | *--create* | *-B* | *--build* | *--add* )
+ 		# clear superblock every time once creating or
+ 		# building arrays, because it's always creating
+ 		# and building array many times in a test case.
+@@ -59,7 +59,12 @@ mdadm() {
+ 					$mdadm --zero $args > /dev/null
+ 			}
+ 		done
+-		$mdadm 2> $targetdir/stderr --quiet "$@" --auto=yes
++		if [[ $* == *--add* ]]
 +		then
-+			continue
++			$mdadm 2> $targetdir/stderr --quiet "$@"
++		else
++			$mdadm 2> $targetdir/stderr --quiet "$@" --auto=yes
 +		fi
- 		mdadm -CR $md0 -l $level -n 4 --metadata=$metadata \
- 			$dev1 $dev2 $dev3 $dev4 --assume-clean
- 		check nosync
-diff --git a/tests/03r0assem b/tests/03r0assem
-index 6744e3221062..9df7ba6a7613 100644
---- a/tests/03r0assem
-+++ b/tests/03r0assem
-@@ -63,75 +63,3 @@ echo "  metadata=0.90 devices=$dev0,$dev1,$dev2" >> $conf
- mdadm --assemble --scan --config=$conf $md2
- $tst
- mdadm -S $md2
--
--
--### Now for version 0...
--
--mdadm --zero-superblock $dev0 $dev1 $dev2
--mdadm -CR $md2 -l0 --metadata=0.90 -n3 $dev0 $dev1 $dev2
--check raid0
--tst="testdev $md2 3 $mdsize0 512"
--$tst
--
--uuid=`mdadm -Db $md2 | sed 's/.*UUID=//'`
--mdadm -S $md2
--
--mdadm -A $md2 $dev0 $dev1 $dev2
--$tst
--mdadm -S $md2
--
--mdadm -A $md2 -u $uuid $devlist
--$tst
--mdadm -S $md2
--
--mdadm --assemble $md2 --super-minor=2 $devlist #
--$tst
--mdadm -S $md2
--
--conf=$targetdir/mdadm.conf
--{
--  echo DEVICE $devlist
--  echo array $md2 UUID=$uuid
--} > $conf
--
--mdadm -As -c $conf $md2
--$tst
--mdadm -S $md2
--
--{
--  echo DEVICE $devlist
--  echo array $md2 super-minor=2
--} > $conf
--
--mdadm -As -c $conf $md2
--$tst
--mdadm -S $md2
--
--
--{
--  echo DEVICE $devlist
--  echo array $md2 devices=$dev0,$dev1,$dev2
--} > $conf
--
--mdadm -As -c $conf $md2
--$tst
--
--echo "DEVICE $devlist" > $conf
--mdadm -Db $md2 >> $conf
--mdadm -S $md2
--
--mdadm --assemble --scan --config=$conf $md2
--$tst
--mdadm -S $md2
--
--echo "  metadata=1 devices=$dev0,$dev1,$dev2" >> $conf
--mdadm --assemble --scan --config=$conf $md2
--$tst
--mdadm -S $md2
--
--# Now use incremental assembly.
--mdadm -I --config=$conf $dev0
--mdadm -I --config=$conf $dev1
--mdadm -I --config=$conf $dev2
--$tst
--mdadm -S $md2
-diff --git a/tests/04r0update b/tests/04r0update
-deleted file mode 100644
-index 73ee3b9fed91..000000000000
---- a/tests/04r0update
-+++ /dev/null
-@@ -1,20 +0,0 @@
--
--# create a raid0, re-assemble with a different super-minor
--mdadm -CR -e 0.90 $md0 -l0 -n3 $dev0 $dev1 $dev2
--testdev $md0 3 $mdsize0 512
--minor1=`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
--mdadm -S /dev/md0
--
--mdadm -A $md1 $dev0 $dev1 $dev2
--minor2=`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
--mdadm -S /dev/md1
--
--mdadm -A $md1 --update=super-minor $dev0 $dev1 $dev2
--minor3=`mdadm -E $dev0 | sed -n -e 's/.*Preferred Minor : //p'`
--mdadm -S /dev/md1
--
--case "$minor1 $minor2 $minor3" in
--  "0 0 1" ) ;;
--  * ) echo >&2 "ERROR minors should be '0 0 1' but are '$minor1 $minor2 $minor3'"
--      exit 1
--esac
-diff --git a/tests/04update-metadata b/tests/04update-metadata
-index 232fc1ffff4b..08c14af7ed29 100644
---- a/tests/04update-metadata
-+++ b/tests/04update-metadata
-@@ -8,7 +8,7 @@ set -xe
- 
- dlist="$dev0 $dev1 $dev2 $dev3"
- 
--for ls in raid0/4 linear/4 raid1/1 raid5/3 raid6/2
-+for ls in linear/4 raid1/1 raid5/3 raid6/2
- do
-   s=${ls#*/} l=${ls%/*}
-   mdadm -CR --assume-clean -e 0.90 $md0 --level $l -n 4 -c 64 $dlist
+ 		;;
+ 	* )
+ 		$mdadm 2> $targetdir/stderr --quiet "$@"
 -- 
 1.8.3.1
 
