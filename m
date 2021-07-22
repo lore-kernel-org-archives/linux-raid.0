@@ -4,348 +4,105 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9397C636C9
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Jul 2021 15:48:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90EA6C6377D
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Jul 2021 09:18:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCA656120C
-	for <linux-raid@archiver.kernel.org>; Wed, 21 Jul 2021 15:48:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DE4A6101B
+	for <linux-raid@archiver.kernel.org>; Thu, 22 Jul 2021 09:18:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239620AbhGUPHo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 21 Jul 2021 11:07:44 -0400
-Received: from mga01.intel.com ([192.55.52.88]:22928 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239699AbhGUPHm (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 21 Jul 2021 11:07:42 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10052"; a="233265574"
-X-IronPort-AV: E=Sophos;i="5.84,258,1620716400"; 
-   d="scan'208";a="233265574"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2021 08:48:15 -0700
-X-IronPort-AV: E=Sophos;i="5.84,258,1620716400"; 
-   d="scan'208";a="511838616"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2021 08:48:13 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org, devon@sigmalabsinc.com
-Subject: [PATCH] Assemble: start dirty and degraded array.
-Date:   Wed, 21 Jul 2021 17:47:54 +0200
-Message-Id: <20210721154754.31872-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
+        id S231300AbhGVIhx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 22 Jul 2021 04:37:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58806 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231245AbhGVIhw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 22 Jul 2021 04:37:52 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6443DC061757
+        for <linux-raid@vger.kernel.org>; Thu, 22 Jul 2021 02:18:27 -0700 (PDT)
+Received: from dude.hi.pengutronix.de ([2001:67c:670:100:1d::7])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <afa@pengutronix.de>)
+        id 1m6UqE-0001NN-VX; Thu, 22 Jul 2021 11:18:06 +0200
+Received: from afa by dude.hi.pengutronix.de with local (Exim 4.92)
+        (envelope-from <afa@pengutronix.de>)
+        id 1m6UqC-0001Cw-GC; Thu, 22 Jul 2021 11:18:04 +0200
+From:   Ahmad Fatoum <a.fatoum@pengutronix.de>
+To:     David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
+        Song Liu <song@kernel.org>, Richard Weinberger <richard@nod.at>
+Cc:     kernel@pengutronix.de, Ahmad Fatoum <a.fatoum@pengutronix.de>,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-security-module@vger.kernel.org,
+        linux-integrity@vger.kernel.org
+Subject: [RFC PATCH v1 3/4] ubifs: auth: remove never hit key type error check
+Date:   Thu, 22 Jul 2021 11:18:01 +0200
+Message-Id: <a7d493c678d5836577b0dc703e5f0adaa457a7f0.1626945419.git-series.a.fatoum@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <cover.b2fdd70b830d12853b12a12e32ceb0c8162c1346.1626945419.git-series.a.fatoum@pengutronix.de>
+References: <cover.b2fdd70b830d12853b12a12e32ceb0c8162c1346.1626945419.git-series.a.fatoum@pengutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::7
+X-SA-Exim-Mail-From: afa@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-raid@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The case when array is already degraded has been omitted
-by commit 7b99edab2834 ("Assemble.c: respect force flag.").
-Appropriative support has been added now.
+key_request accepts a key type as its first argument. If it returns a
+valid pointer, it should always have this same requested key type.
 
-Handlers for "run" and "force" have been divided into independent
-routines. Especially force has to be as meaningless as possible.
-It respects following rules:
-    - user agrees to start array as degraded (by --run) or is already
-      degraded
-    - raid456 module is in use
-    - some drives are missing (to limit potential abuses)
+Indeed other request_key users surveyed such as dm-crypt, ecryptfs
+and fscrypt v1 also don't check the key type. Therefore drop the
+apparently unneeded check.
 
-It doesn't allow to skip resync on dirty, but not degraded array.
-
-This patch cleans up message generation for external array and makes it
-consistent. Following code could be reused also for native.
-
-In current implementation assemble_container_content is called once, in
-both Incremental or Assembly mode. Thus makes that partial assembly is
-not likely to happen. It is possible, but requires user input.
-Partial assembly during reshape fails (sysfs_set_array
-error - not yet investigated). For now I put FIXME to mark current
-logic as known to be buggy because preexist_cnt contains both exp_cnt
-and new_cnt which may produce an incorrect message.
-
-Check for new disks and runstop is unnecessary, so has been removed.
-This allows to print assemble status in every case, even if nothing new
-happens.
-
-Reported-by: Devon Beets <devon@sigmalabsinc.com>
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
 ---
- Assemble.c    | 176 +++++++++++++++++++++++++++++---------------------
- mdadm.8.in    |   3 +-
- super-intel.c |   4 --
- 3 files changed, 103 insertions(+), 80 deletions(-)
+To: David Howells <dhowells@redhat.com>
+To: Jarkko Sakkinen <jarkko@kernel.org>
+To: James Morris <jmorris@namei.org>
+To: "Serge E. Hallyn" <serge@hallyn.com>
+To: Alasdair Kergon <agk@redhat.com>
+To: Mike Snitzer <snitzer@redhat.com>
+To: dm-devel@redhat.com
+To: Song Liu <song@kernel.org>
+To: Richard Weinberger <richard@nod.at>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
+Cc: keyrings@vger.kernel.org
+Cc: linux-mtd@lists.infradead.org
+Cc: linux-security-module@vger.kernel.org
+Cc: linux-integrity@vger.kernel.org
+---
+ fs/ubifs/auth.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 5c6aca92..f954b4db 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -25,6 +25,63 @@
- #include	"mdadm.h"
- #include	<ctype.h>
+diff --git a/fs/ubifs/auth.c b/fs/ubifs/auth.c
+index e564d5ff8781..6a0b8d858d81 100644
+--- a/fs/ubifs/auth.c
++++ b/fs/ubifs/auth.c
+@@ -286,12 +286,6 @@ int ubifs_init_authentication(struct ubifs_info *c)
  
-+mapping_t assemble_statuses[] = {
-+	{ "but cannot be started", INCR_NO },
-+	{ "but not safe to start", INCR_UNSAFE },
-+	{ "and started", INCR_YES },
-+	{ NULL, INCR_ALREADY }
-+};
-+
-+
-+/**
-+ * struct assembly_array_info - General, meaningful information for assembly.
-+ * @name: Array name.
-+ * @new_cnt: Count of drives known to be members, recently added.
-+ * @preexist_cnt: Count of member drives in pre-assembled array.
-+ * @exp_cnt: Count of known expansion targets.
-+ *
-+ * FIXME: @exp_new_cnt for recently added expansion targets.
-+ */
-+struct assembly_array_info {
-+	char *name;
-+	int new_cnt;
-+	int preexist_cnt;
-+	int exp_cnt;
-+};
-+
-+/**
-+ * set_array_assembly_status() - generate status of assembly for an array.
-+ * @c: Global settings.
-+ * @result: Pointer to status mask.
-+ * @status: Status to be set/printed.
-+ * @arr: Array information.
-+ *
-+ *  Print status message to user or set it in @result if it is not NULL.
-+ */
-+static void set_array_assembly_status(struct context *c,
-+				   int *result, int status,
-+				   struct assembly_array_info *arr)
-+{
-+	int raid_disks = arr->preexist_cnt + arr->new_cnt;
-+	char *status_msg = map_num(assemble_statuses, status);
-+
-+	if (c->export && result)
-+		*result |= status;
-+
-+	if (c->export || c->verbose < 0)
-+		return;
-+
-+	pr_err("%s has been assembled with %d device%s", arr->name,
-+	       raid_disks, raid_disks == 1 ? "":"s");
-+	if (arr->preexist_cnt > 0)
-+		fprintf(stderr, " (%d new)", arr->new_cnt);
-+	if (arr->exp_cnt)
-+		fprintf(stderr, " ( + %d for expansion)", arr->exp_cnt);
-+	if (status_msg)
-+		fprintf(stderr, " %s", status_msg);
-+	fprintf(stderr, ".\n");
-+}
-+
- static int name_matches(char *found, char *required, char *homehost, int require_homehost)
- {
- 	/* See if the name found matches the required name, possibly
-@@ -1911,12 +1968,12 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 			       char *chosen_name, int *result)
- {
- 	struct mdinfo *dev, *sra, *dev2;
--	int working = 0, preexist = 0;
--	int expansion = 0;
-+	struct assembly_array_info array = {chosen_name, 0, 0, 0};
- 	int old_raid_disks;
- 	int start_reshape;
- 	char *avail;
- 	int err;
-+	int is_raid456, is_clean, all_disks;
+ 	down_read(&keyring_key->sem);
  
- 	if (sysfs_init(content, mdfd, NULL)) {
- 		pr_err("Unable to initialize sysfs\n");
-@@ -1973,17 +2030,16 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		if (sysfs_add_disk(content, dev, 1) == 0) {
- 			if (dev->disk.raid_disk >= old_raid_disks &&
- 			    content->reshape_active)
--				expansion++;
-+				array.exp_cnt++;
- 			else
--				working++;
-+				array.new_cnt++;
- 		} else if (errno == EEXIST)
--			preexist++;
-+			array.preexist_cnt++;
- 	}
- 	sysfs_free(sra);
--	if (working + expansion == 0 && c->runstop <= 0) {
--		free(avail);
--		return 1;/* Nothing new, don't try to start */
+-	if (keyring_key->type != &key_type_logon) {
+-		ubifs_err(c, "key type must be logon");
+-		err = -ENOKEY;
+-		goto out;
 -	}
-+
-+	all_disks = array.new_cnt + array.exp_cnt + array.preexist_cnt;
-+
- 	map_update(NULL, fd2devnm(mdfd), content->text_version,
- 		   content->uuid, chosen_name);
- 
-@@ -2045,53 +2101,40 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		content->array.state |= 1;
- 	}
- 
-+	is_raid456 = (content->array.level >= 4 && content->array.level <= 6);
-+	is_clean = content->array.state & 1;
-+
- 	if (enough(content->array.level, content->array.raid_disks,
--		   content->array.layout, content->array.state & 1, avail) == 0) {
--		if (c->export && result)
--			*result |= INCR_NO;
--		else if (c->verbose >= 0) {
--			pr_err("%s assembled with %d device%s",
--			       chosen_name, preexist + working,
--			       preexist + working == 1 ? "":"s");
--			if (preexist)
--				fprintf(stderr, " (%d new)", working);
--			fprintf(stderr, " but not started\n");
--		}
-+		   content->array.layout, is_clean, avail) == 0) {
-+		set_array_assembly_status(c, result, INCR_NO, &array);
-+
-+		if (c->verbose >= 0 && is_raid456 && !is_clean)
-+			pr_err("Consider --force to start dirty degraded array\n");
-+
- 		free(avail);
- 		return 1;
- 	}
- 	free(avail);
- 
--	if ((working + preexist + expansion) < content->array.working_disks) {
--		if (c->runstop <= 0) {
--			if (c->export && result)
--				*result |= INCR_UNSAFE;
--			else if (c->verbose >= 0) {
--				pr_err("%s assembled with %d device%s",
--					chosen_name, preexist + working,
--					preexist + working == 1 ? "":"s");
--				if (preexist)
--					fprintf(stderr, " (%d new)", working);
--				fprintf(stderr, " but not safe to start\n");
--				if (c->force)
--					pr_err("Consider --run to start array as degraded.\n");
--			}
-+	if (c->runstop <= 0 && all_disks < content->array.working_disks) {
-+
-+		set_array_assembly_status(c, result, INCR_UNSAFE, &array);
-+
-+		if (c->verbose >= 0 && c->force)
-+			pr_err("Consider --run to start array as degraded.\n");
-+		return 1;
-+	}
-+
-+	if (is_raid456 && content->resync_start != MaxSector && c->force &&
-+	    all_disks < content->array.raid_disks) {
-+
-+		content->resync_start = MaxSector;
-+		err = sysfs_set_num(content, NULL, "resync_start", MaxSector);
-+		if (err)
- 			return 1;
--		} else if (content->array.level >= 4 &&
--			   content->array.level <= 6 &&
--			   content->resync_start != MaxSector &&
--			   c->force) {
--			/* Don't inform the kernel that the array is not
--			 * clean and requires resync.
--			 */
--			content->resync_start = MaxSector;
--			err = sysfs_set_num(content, NULL, "resync_start",
--					    MaxSector);
--			if (err)
--				return 1;
--			pr_err("%s array state forced to clean. It may cause data corruption.\n",
--				chosen_name);
--		}
-+
-+		pr_err("%s array state forced to clean. It may cause data corruption.\n",
-+		       chosen_name);
- 	}
- 
- 	/*
-@@ -2103,9 +2146,9 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		st->ss->set_bitmap(st, content);
- 
- 	if (start_reshape) {
--		int spare = content->array.raid_disks + expansion;
-+		int spare = content->array.raid_disks + array.exp_cnt;
- 		if (restore_backup(st, content,
--				   working,
-+				   array.new_cnt,
- 				   spare, &c->backup_file, c->verbose) == 1)
- 			return 1;
- 
-@@ -2168,31 +2211,14 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 	    !start_reshape)
- 		block_subarray(content);
- 
--	if (c->export && result) {
--		if (err)
--			*result |= INCR_NO;
--		else
--			*result |= INCR_YES;
--	} else if (c->verbose >= 0) {
--		if (err)
--			pr_err("array %s now has %d device%s",
--			       chosen_name, working + preexist,
--			       working + preexist == 1 ? "":"s");
--		else {
--			sysfs_rules_apply(chosen_name, content);
--			pr_err("Started %s with %d device%s",
--			       chosen_name, working + preexist,
--			       working + preexist == 1 ? "":"s");
--		}
--		if (preexist)
--			fprintf(stderr, " (%d new)", working);
--		if (expansion)
--			fprintf(stderr, " ( + %d for expansion)",
--				expansion);
--		fprintf(stderr, "\n");
--	}
--	if (!err)
-+	if (err)
-+		set_array_assembly_status(c, result, INCR_NO, &array);
-+	else {
-+		set_array_assembly_status(c, result, INCR_YES, &array);
- 		wait_for(chosen_name, mdfd);
-+		sysfs_rules_apply(chosen_name, content);
-+	}
-+
- 	return err;
- 	/* FIXME should have an O_EXCL and wait for read-auto */
- }
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 7cdb465d..8d7aad0c 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1132,7 +1132,8 @@ out-of-date.  If
- .I mdadm
- cannot find enough working devices to start the array, but can find
- some devices that are recorded as having failed, then it will mark
--those devices as working so that the array can be started.
-+those devices as working so that the array can be started. This works only for
-+native. For external metadata it allows to start dirty degraded RAID 4, 5, 6.
- An array which requires
- .B \-\-force
- to be started may contain data corruption.  Use it carefully.
-diff --git a/super-intel.c b/super-intel.c
-index 54699129..c8fd0971 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -8108,10 +8108,6 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 				if ((!able_to_resync(level, missing) ||
- 				     recovery_start == 0))
- 					this->resync_start = MaxSector;
--			} else {
--				/*
--				 * FIXME handle dirty degraded
--				 */
- 			}
- 
- 			if (skip)
+-
+ 	ukp = user_key_payload_locked(keyring_key);
+ 	if (!ukp) {
+ 		/* key was revoked before we acquired its semaphore */
 -- 
-2.26.2
-
+git-series 0.9.1
