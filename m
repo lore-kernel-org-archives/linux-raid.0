@@ -2,113 +2,68 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D40C4C4320A
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Jul 2021 08:35:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1D3FC4338F
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Jul 2021 20:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC54B60FC1
-	for <linux-raid@archiver.kernel.org>; Tue, 27 Jul 2021 08:35:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79AF760F9B
+	for <linux-raid@archiver.kernel.org>; Tue, 27 Jul 2021 20:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235939AbhG0IfT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 27 Jul 2021 04:35:19 -0400
-Received: from mga09.intel.com ([134.134.136.24]:23282 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235913AbhG0IfS (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 27 Jul 2021 04:35:18 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10057"; a="212386408"
-X-IronPort-AV: E=Sophos;i="5.84,272,1620716400"; 
-   d="scan'208";a="212386408"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2021 01:35:18 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,272,1620716400"; 
-   d="scan'208";a="662538559"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.57])
-  by fmsmga006.fm.intel.com with ESMTP; 27 Jul 2021 01:35:17 -0700
-From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org
-Subject: [PATCH] Fix memory leak after "mdadm --detail"
-Date:   Tue, 27 Jul 2021 10:25:18 +0200
-Message-Id: <20210727082518.10737-1-mateusz.grzonka@intel.com>
-X-Mailer: git-send-email 2.26.2
+        id S230425AbhG0UF1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 27 Jul 2021 16:05:27 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17059 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229681AbhG0UF0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 27 Jul 2021 16:05:26 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1627416319; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=d4vL6moeyldPyvC6tqBhmGSy5Jeit1zD4jwfKLMKSajKfMmksKoNiJURodYsByLJ4hPUEmOmPu95gD3qt54Kbm/gk4cqGMpjPPXoqfLbgg7GBCrh6/Vy09/9yDAdPCAaixPymlOVbzPaXNLSWoOyXVjkMh93l3iNHPal0DeR5iQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1627416319; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=D4r3TNxVX1+ztTeO3cPqct/6wqTlZ7uAjVnSA+stgaE=; 
+        b=PIzC3HD6cSPHrNS2krb4kfhI1uzldh+G1EuBf1XfenH+EgJQkKfY0Ckc0x3Fu1SOQly8VRK2UiuB5Jb9R6ldGMWCNXbWfI/N1uzjycaNxKdZ6mNpQ1C8Hu8rCRB8mVYgPs/mRyZQVSPWjSdIxX0h+k3wcJgkZ3GCmZUnJrXuNAU=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1627416317966869.5572101380953; Tue, 27 Jul 2021 22:05:17 +0200 (CEST)
+Subject: Re: [PATCH] imsm: fix num_data_stripes after raid0 takeover
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20210721114220.19399-1-mariusz.tkaczyk@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <1922ca0d-370c-8d99-20fa-591e76fd4844@trained-monkey.org>
+Date:   Tue, 27 Jul 2021 16:05:16 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210721114220.19399-1-mariusz.tkaczyk@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
----
- Detail.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+On 7/21/21 7:42 AM, Mariusz Tkaczyk wrote:
+> After raid1 to raid0 migration num_data_stripes value is
+> incorrect because was additionally divided by 2.
+> 
+> Create dedicated setters for num_data_stripes and num_domains
+> and propagate it across the code to unify alghoritms and
+> eliminate similar mistakes.
+> 
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> ---
 
-diff --git a/Detail.c b/Detail.c
-index ad56344f..d3af0ab5 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -66,11 +66,11 @@ int Detail(char *dev, struct context *c)
- 	int spares = 0;
- 	struct stat stb;
- 	int failed = 0;
--	struct supertype *st;
-+	struct supertype *st = NULL;
- 	char *subarray = NULL;
- 	int max_disks = MD_SB_DISKS; /* just a default */
- 	struct mdinfo *info = NULL;
--	struct mdinfo *sra;
-+	struct mdinfo *sra = NULL;
- 	struct mdinfo *subdev;
- 	char *member = NULL;
- 	char *container = NULL;
-@@ -93,8 +93,7 @@ int Detail(char *dev, struct context *c)
- 	if (!sra) {
- 		if (md_get_array_info(fd, &array)) {
- 			pr_err("%s does not appear to be an md device\n", dev);
--			close(fd);
--			return rv;
-+			goto out;
- 		}
- 	}
- 	external = (sra != NULL && sra->array.major_version == -1 &&
-@@ -108,16 +107,13 @@ int Detail(char *dev, struct context *c)
- 			    sra->devs == NULL) {
- 				pr_err("Array associated with md device %s does not exist.\n",
- 				       dev);
--				close(fd);
--				sysfs_free(sra);
--				return rv;
-+				goto out;
- 			}
- 			array = sra->array;
- 		} else {
- 			pr_err("cannot get array detail for %s: %s\n",
- 			       dev, strerror(errno));
--			close(fd);
--			return rv;
-+			goto out;
- 		}
- 	}
- 
-@@ -827,10 +823,12 @@ out:
- 	close(fd);
- 	free(subarray);
- 	free(avail);
--	for (d = 0; d < n_devices; d++)
--		free(devices[d]);
-+	if (devices)
-+		for (d = 0; d < n_devices; d++)
-+			free(devices[d]);
- 	free(devices);
- 	sysfs_free(sra);
-+	free(st);
- 	return rv;
- }
- 
--- 
-2.26.2
+Applied!
+
+Thanks,
+Jes
+
 
