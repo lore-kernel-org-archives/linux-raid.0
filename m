@@ -7,381 +7,502 @@ X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D79C4338F
-	for <linux-raid@archiver.kernel.org>; Fri, 30 Jul 2021 10:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 200B0C4338F
+	for <linux-raid@archiver.kernel.org>; Fri, 30 Jul 2021 14:04:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5936860F12
-	for <linux-raid@archiver.kernel.org>; Fri, 30 Jul 2021 10:09:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 047B960F4B
+	for <linux-raid@archiver.kernel.org>; Fri, 30 Jul 2021 14:04:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238441AbhG3KJU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 30 Jul 2021 06:09:20 -0400
-Received: from USAT19PA22.eemsg.mail.mil ([214.24.22.196]:27701 "EHLO
-        USAT19PA22.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238374AbhG3KJP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 30 Jul 2021 06:09:15 -0400
-X-Greylist: delayed 489 seconds by postgrey-1.27 at vger.kernel.org; Fri, 30 Jul 2021 06:09:15 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1627639751; x=1659175751;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=hsBF9hMYzaayFbpVoR2DrlMkkuJwCAHjUk5S2E8Ol74=;
-  b=FkoGOGjo3t0fYcBYQCbmqr6nSADsPqbjQfgrexCumBcqD1mOQGnUi4Rs
-   2C70MvMRhVBz0EOJaoE4Q24e0CfjYbTCgpKh5ZHXeArbzdJ588dJjt4U9
-   xd/AeWm/LflPyzWC3pq4aCdWkPPFLy3kZpTOTCkvTA7mLz4M+2NuFWCGc
-   uunV9B477S59rzj+bNAyBWdQscvQ2eBWhfGcD32sGGsVD13FnSSJ9NaT+
-   028RJFziVaetHe67INEYdR31cV7JqiH8P3xZkEANVKSkGeYd+sePmv37Z
-   EORgnx/FV/5LPE95ipIMigeEd2mJYVR5I6BpSXBZrhYfEIqVGLVPYw4Nq
-   w==;
-X-EEMSG-check-017: 242667599|USAT19PA22_ESA_OUT03.csd.disa.mil
-X-IronPort-AV: E=Sophos;i="5.84,281,1620691200"; 
-   d="scan'208";a="242667599"
-IronPort-HdrOrdr: A9a23:6u+CVqlKn7CCk5/a0jaSX5/6x+/pDfL23DAbv31ZSRFFG/Fwz/
- re+8jy1XfP5wr5K0tQ/+xoX5PwPE80lKQFm7X5Uo3SPzUO1FHEEGgm1/qH/9SCIVyDygc+79
- YDT0EWMrSZZjJHZITBkWyF+r4bsaa6GcuT69s2uk0McegcUcBdBmlCZjpzWXcGPTWuTaBJbK
- Z0yPA33AadRQ==
-Received: from edge-mech02.mail.mil ([214.21.130.229])
-  by USAT19PA22.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 30 Jul 2021 10:00:55 +0000
-Received: from UMECHPAOT.easf.csd.disa.mil (214.21.130.163) by
- edge-mech02.mail.mil (214.21.130.229) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Fri, 30 Jul 2021 09:59:55 +0000
-Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.97]) by
- umechpaot.easf.csd.disa.mil ([1.213.132.165]) with mapi id 14.03.0513.000;
- Fri, 30 Jul 2021 09:59:54 +0000
-From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-To:     'Miao Wang' <shankerwangmiao@gmail.com>
-CC:     'Matt Wallis' <mattw@madmonks.org>,
-        "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
-Subject: RE: [Non-DoD Source] Can't get RAID5/RAID6 NVMe randomread IOPS -
- AMD ROME what am I missing?????
-Thread-Topic: [Non-DoD Source] Can't get RAID5/RAID6 NVMe randomread IOPS -
- AMD ROME what am I missing?????
-Thread-Index: AQHXhBQyCYnzeb6zhEaJ8KArZSwefqtafCAAgAC1ZICAAATWAIAAE5Gw
-Date:   Fri, 30 Jul 2021 09:59:54 +0000
-Message-ID: <5EAED86C53DED2479E3E145969315A2385841727@UMECHPA7B.easf.csd.disa.mil>
-References: <5EAED86C53DED2479E3E145969315A2385841062@UMECHPA7B.easf.csd.disa.mil>
- <07195088-7E4B-4586-BB45-04890265BD62@madmonks.org>
- <5EAED86C53DED2479E3E145969315A23858411D1@UMECHPA7B.easf.csd.disa.mil>
- <21187A73-4000-4017-B016-15C03D19B799@madmonks.org>
- <5EAED86C53DED2479E3E145969315A23858415CB@UMECHPA7B.easf.csd.disa.mil>
- <EF5FF3B7-927D-44E5-89CE-CEB86BB225FF@madmonks.org>
- <CD53203D-6A23-40F8-9FD4-A60019F67B37@gmail.com>
-In-Reply-To: <CD53203D-6A23-40F8-9FD4-A60019F67B37@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [214.21.44.12]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S239127AbhG3OES (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 30 Jul 2021 10:04:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42145 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239137AbhG3OEP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 30 Jul 2021 10:04:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1627653850;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=z1Pc6Zj3lawvPSw8quTMgdkxFCkPh2Ccmo/F2yPWTpY=;
+        b=O+EOg1850rj+xuqX0yneZaE+/uOFUngfwRoLDP+83tx6x3b+W7o6ZebPdANOW2EJQhO0EQ
+        loREopK0aY9RJ6a3IPglFHGl1SPqLOhK229KfOgscSuR/s5eZqey72BKi6QCDBL+0XkVva
+        c45RP1KM9i+1U3wVc16JyjB/AZTQ2Ao=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-355-Eaa2gjuRO3O5WvDxaTS1Yg-1; Fri, 30 Jul 2021 10:04:08 -0400
+X-MC-Unique: Eaa2gjuRO3O5WvDxaTS1Yg-1
+Received: by mail-ej1-f71.google.com with SMTP id q19-20020a170906b293b029058a1e75c819so3113078ejz.16
+        for <linux-raid@vger.kernel.org>; Fri, 30 Jul 2021 07:04:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=z1Pc6Zj3lawvPSw8quTMgdkxFCkPh2Ccmo/F2yPWTpY=;
+        b=jIevIF+fyp85ZLr1fg+3N1xq+RYmil/sR6cavXWlIuGgg0w5H1gu+hdChOjqq8NvgE
+         PmtBzEL1GRRaLiJJTrOsOXAKfLaLfe6b18OH6cdyCSfk7YHfe+BqjiA4J2636rOfN9bg
+         AocgAjshc1Sfm09ANr2g4ZZT8MbQJ+QqkFvmnN/DbEGrrAUk38DqUfhovzlbqtOAXs6Q
+         TJKZLHSYvWTqCxtL8NfU3SKAPNAlGZ3+YQzflAsF2ujsLN8DZNEGm2WJDRsw0Ah4eP8s
+         1kPDL0lYjYG9lPCmU5ZmN6LoNAxxYSjC1VxOT/hPGXxHi21pxZaOi6rk3WcWGSt9AZ/h
+         cdhQ==
+X-Gm-Message-State: AOAM532PbS/msoPAfjgeQs0LMGnVkLYkRIkkGl5U5MkOBgdENDk/Xj1C
+        ENsJuRLDjjvmi0qAcvyD5DU0dl3Wvc5EDpA24U4LV1H56RV5vlwUvLx6j7mR8QGF3U9tlc8+ce7
+        vgxpbO7DSmtlGis9qOijkiRLvbZTcNwtK9nG30Q==
+X-Received: by 2002:a17:906:839a:: with SMTP id p26mr2709047ejx.547.1627653847023;
+        Fri, 30 Jul 2021 07:04:07 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx+LQGqOlougmwxdVYMJJ6OgWo2woDBHts1hIwI9q8gfFnGX8sCyvrPfo10uwuMMVcMdvFsYexq76yy6KRDYFs=
+X-Received: by 2002:a17:906:839a:: with SMTP id p26mr2709024ejx.547.1627653846751;
+ Fri, 30 Jul 2021 07:04:06 -0700 (PDT)
 MIME-Version: 1.0
+References: <5EAED86C53DED2479E3E145969315A2385841062@UMECHPA7B.easf.csd.disa.mil>
+ <07195088-7E4B-4586-BB45-04890265BD62@madmonks.org> <5EAED86C53DED2479E3E145969315A23858411D1@UMECHPA7B.easf.csd.disa.mil>
+ <21187A73-4000-4017-B016-15C03D19B799@madmonks.org> <5EAED86C53DED2479E3E145969315A23858415CB@UMECHPA7B.easf.csd.disa.mil>
+ <EF5FF3B7-927D-44E5-89CE-CEB86BB225FF@madmonks.org> <CD53203D-6A23-40F8-9FD4-A60019F67B37@gmail.com>
+ <5EAED86C53DED2479E3E145969315A2385841727@UMECHPA7B.easf.csd.disa.mil>
+In-Reply-To: <5EAED86C53DED2479E3E145969315A2385841727@UMECHPA7B.easf.csd.disa.mil>
+From:   Doug Ledford <dledford@redhat.com>
+Date:   Fri, 30 Jul 2021 10:03:25 -0400
+Message-ID: <CAGbH50v1P4LvEpyBvAq5OHrxXMc06X=SCH6CyrzzAZqpeEUv9A@mail.gmail.com>
+Subject: Re: [Non-DoD Source] Can't get RAID5/RAID6 NVMe randomread IOPS - AMD
+ ROME what am I missing?????
+To:     "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+Cc:     Miao Wang <shankerwangmiao@gmail.com>,
+        Matt Wallis <mattw@madmonks.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-VGhlcmUgaXMgaW50ZXJlc3QgaW4gWkZTLiAgIFdlJ3JlIHdhaXRpbmcgZm9yIHRoZSBkaXJlY3Qg
-SS9PIHBhdGNoZXMgdG8gc2V0dGxlIGluIE9wZW4gWkZTIGJlY2F1c2Ugd2UgY291bGRuJ3QgZmlu
-ZCBhbnkgd2F5IHRvIGdldCBhcm91bmQgdGhlIEFSQyAoZXZlcnl0aGluZyBoYXMgdG8gdG91Y2gg
-dGhlIEFSQykuICBaRlMgc3BpbnMgYW4gZW50aXJlIENQVSBjb3JlIG9yIG1vcmUgd29ycnlpbmcg
-YWJvdXQgd2hpY2ggQVJDIGVudHJpZXMgaXQgaGFzIHRvIGV2aWN0LiAgICAgIEkga25vdyB3aG8g
-aXMgZG9pbmcgdGhlIHdvcmsuICAgT25jZSBpdCBzZXR0bGVzLCBJJ2xsIHNlZSBpZiB0aGV5IGFy
-ZSB3aWxsaW5nIHRvIHB1Ymxpc2ggdG8gemZzLWRpc2N1c3MuDQoNCi0tLS0tT3JpZ2luYWwgTWVz
-c2FnZS0tLS0tDQpGcm9tOiBNaWFvIFdhbmcgPHNoYW5rZXJ3YW5nbWlhb0BnbWFpbC5jb20+IA0K
-U2VudDogRnJpZGF5LCBKdWx5IDMwLCAyMDIxIDQ6NDYgQU0NClRvOiBGaW5sYXlzb24sIEphbWVz
-IE0gQ0lWIChVU0EpIDxqYW1lcy5tLmZpbmxheXNvbjQuY2l2QG1haWwubWlsPg0KQ2M6IE1hdHQg
-V2FsbGlzIDxtYXR0d0BtYWRtb25rcy5vcmc+OyBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0K
-U3ViamVjdDogUmU6IFtOb24tRG9EIFNvdXJjZV0gQ2FuJ3QgZ2V0IFJBSUQ1L1JBSUQ2IE5WTWUg
-cmFuZG9tcmVhZCBJT1BTIC0gQU1EIFJPTUUgd2hhdCBhbSBJIG1pc3Npbmc/Pz8/Pw0KDQpIaSBK
-aW0sDQoNCk5pY2UgdG8gaGVhciBhYm91dCB5b3VyIGZpbmRpbmdzIG9uIGhvdyB0byBsZXQgbGlu
-dXggbWQgd29yayBiZXR0ZXIgb24gZmFzdCBudm1lIGRyaXZlcywgYmVjYXVzZSBwcmV2aW91c2x5
-IEkgd2FzIGFsc28gc3R1Y2sgaW4gYSBzaW1pbGFyIHByb2JsZW0gYW5kIGZpbmFsbHkgZ2F2ZSB1
-cC4gU2luY2UgaXQgaXMgdmVyeSBkaWZmaWN1bHQgdG8gZmluZCBzdWNoIGVudmlyb25tZW50IHdp
-dGggc28gbWFueSBmYXN0IG52bWUgZHJpdmVzLCBJIHdvbmRlciBpZiB5b3UgaGF2ZSBhbnkgaW50
-ZXJlc3QgaW4gWkZTLiBNYXliZSB5b3UgY2FuIHNldCB1cCBhIHNpbWlsYXIgcmFpZHogY29uZmln
-dXJhdGlvbiBvbiB0aG9zZSBkcml2ZXMgYW5kIHNlZSB3aGV0aGVyIGl0cyBwZXJmb3JtYW5jZSBp
-cyBiZXR0ZXIgb3Igd29yc2UuDQoNCkNoZWVycywNCg0KTWlhbyBXYW5nDQoNCj4gMjAyMeW5tDA3
-5pyIMzDml6UgMTY6MjjvvIxNYXR0IFdhbGxpcyA8bWF0dHdAbWFkbW9ua3Mub3JnPiDlhpnpgZPv
-vJoNCj4gDQo+IEhpIEppbSwNCj4gDQo+IFRoYXTigJlzIHNpZ25pZmljYW50bHkgYmV0dGVyIHRo
-YW4gSSBleHBlY3RlZCwgSSBuZWVkIHRvIHNlZSBpZiBJIGNhbiBnZXQgc29tZW9uZSB0byBzZW5k
-IG1lIHRoZSBib3ggSSB3YXMgdXNpbmcgc28gSSBjYW4gc3BlbmQgc29tZSBtb3JlIHRpbWUgb24g
-aXQuDQo+IA0KPiBHb29kIGx1Y2sgd2l0aCB0aGUgcmVzdCBvZiBpdCwgdGhlIGJpdCBJIHdhcyBs
-b29raW5nIGZvciBhcyBhIG5leHQgc3RlcCB3YXMgZ29pbmcgdG8gYmUgcG90ZW50aWFsbHkgdHdl
-YWtpbmcgc3RyaXBlIHdpZHRocyBhbmQgdGhlIGxpa2UgdG8gc2VlIGhvdyBtdWNoIGRpZmZlcmVu
-Y2UgaXQgbWFkZSBvbiBkaWZmZXJlbnQgd29ya2xvYWRzLg0KPiANCj4gTWF0dC4gDQo+IA0KPj4g
-T24gMzAgSnVsIDIwMjEsIGF0IDA4OjA1LCBGaW5sYXlzb24sIEphbWVzIE0gQ0lWIChVU0EpIDxq
-YW1lcy5tLmZpbmxheXNvbjQuY2l2QG1haWwubWlsPiB3cm90ZToNCj4+IA0KPj4gTWF0dCwNCj4+
-IFRoYW5rIHlvdSBmb3IgdGhlIHRpcC4gICBJIGhhdmUgcHV0IDMyIHBhcnRpdGlvbnMgb24gZWFj
-aCBvZiBteSBOVk1lIGRyaXZlcywgbWFkZSAzMiByYWlkNSBzdHJpcGVzIGFuZCB0aGVuIG1hZGUg
-YW4gTFZNIGZyb20gdGhlIDMyIHJhaWQ1IHN0cmlwZXMuICAgSSB0aGVuIGNyZWF0ZWQgb25lIHBo
-eXNpY2FsIHZvbHVtZSBwZXIgMTAgTlZNZSBkcml2ZXMgb24gZWFjaCBzb2NrZXQuICAgIEkgYmVs
-aWV2ZSBJIGhhdmUgc3VjY2Vzc2Z1bGx5IGhhcm5lc3NlZCAiYWxpZW4gdGVjaG5vbG9neSIgKGlu
-c2lkZSBqb2tlKSB0byBjcmVhdGUgYSBGcmFua2Vuc3RlaW4ncyBtb25zdGVyLiAgIFRoZXNlIGFy
-ZSBzdWJzdGFudGlhbGx5IGJldHRlciB0aGFuIGRvaW5nIGEgUkFJRDAgc3RyaXBlIG92ZXIgdGhl
-IHBhcnRpdGlvbmVkIG1kJ3MgaW4gdGhlIHBhc3QuICBJIHdoaXBwZWQgYWxsIG9mIHRoaXMgdG9n
-ZXRoZXIgaW4gdHdvIDE1IG1pbnV0ZSBzZXNzaW9ucyBsYXN0IG5pZ2h0IGFuZCBqdXN0IHJpZ2h0
-IG5vdywgc28gSSBtaWdodCBydW4gc29tZSBtb3JlIGV4dGVuc2l2ZSB0ZXN0cyB3aGVuIEkgaGF2
-ZSB0aGUgY3ljbGVzLiAgIEkgZGlkbid0IGludGVuZCB0byBsZWF2ZSB0aGUgdGhyZWFkIGhhbmdp
-bmcuDQo+PiBCTFVGIC0gIGZpbyBkZXRhaWxlZCBvdXRwdXQgYmVsb3cuLi4uLg0KPj4gOSBkcml2
-ZXMgcGVyIHNvY2tldCByYXcNCj4+IHNvY2tldDAsIDkgZHJpdmVzLCByYXcgNEsgcmFuZG9tIHJl
-YWRzIDEzLjZNIElPUFMgLCBzb2NrZXQxIDkgZHJpdmVzLCANCj4+IHJhdyA0SyByYW5kb20gcmVh
-ZHMgLCAxMi4zTSBJT1BTDQo+PiAlQ3B1KHMpOiAgNC40IHVzLCAyNS42IHN5LCAgMC4wIG5pLCA1
-Ni43IGlkLCAgMC4wIHdhLCAxMy4xIGhpLCAgMC4yIA0KPj4gc2ksICAwLjAgc3QNCj4+IA0KPj4g
-OSBkYXRhIGRyaXZlcyBwZXIgc29ja2V0IFJBSUQ1L0xWTSByYXcgKDkrMSkgc29ja2V0MCwgOSBk
-cml2ZXMsIHJhdyANCj4+IDRLIHJhbmRvbSByZWFkcyA4LjU3TSBJT1BTICwgc29ja2V0MSA5IGRy
-aXZlcywgcmF3IDRLIHJhbmRvbSByZWFkcyAsIA0KPj4gOC41N00gSU9QUw0KPj4gJUNwdShzKTog
-IDcuMCB1cywgMjIuMyBzeSwgIDAuMCBuaSwgNTguNCBpZCwgIDAuMCB3YSwgMTIuMSBoaSwgIDAu
-MiANCj4+IHNpLCAgMC4wIHN0DQo+PiANCj4+IA0KPj4gQWxsLA0KPj4gSSBpbnRlbmQgdG8gdGVz
-dCB0aGUgNC4xNSBrZXJuZWwgcGF0Y2ggbmV4dCB3ZWVrLiAgIE15IFNBIHdvdWxkIHByZWZlciBp
-ZiB0aGUgcGF0Y2ggaGFzIG1hZGUgaXQgaW50byB0aGUga2VybmVsLW1sIHN0cmVhbSB5ZXQsIHNv
-IGhlIGNvdWxkIGluc3RhbGwgYW4gcnBtLCBidXQgSSdsbCBnZXQgaGltIHRvIGJ1aWxkIHRoZSBr
-ZXJuZWwgaWYgbmVlZCBiZS4NCj4+IElmIHRoZSA0LjE1IGtlcm5lbCBwYXRjaCBkb2Vzbid0IGFs
-bGV2aWF0ZSB0aGUgaXNzdWVzLCBJIGhhdmUgYSBzdHJvbmcgZGVzaXJlIHRvIGhhdmUgbWRyYWlk
-IG1hZGUgYmV0dGVyLg0KPj4gDQo+PiANCj4+IFF1aWNrIGZpbyByZXN1bHRzOg0KPj4gc29ja2V0
-MDogKGc9MCk6IHJ3PXJhbmRyZWFkLCBicz0oUikgNDA5NkItNDA5NkIsIChXKSA0MDk2Qi00MDk2
-QiwgKFQpIA0KPj4gNDA5NkItNDA5NkIsIGlvZW5naW5lPWxpYmFpbywgaW9kZXB0aD0xMjggLi4u
-DQo+PiBzb2NrZXQxOiAoZz0xKTogcnc9cmFuZHJlYWQsIGJzPShSKSA0MDk2Qi00MDk2QiwgKFcp
-IDQwOTZCLTQwOTZCLCAoVCkgDQo+PiA0MDk2Qi00MDk2QiwgaW9lbmdpbmU9bGliYWlvLCBpb2Rl
-cHRoPTEyOCAuLi4NCj4+IHNvY2tldDAtbHY6IChnPTIpOiBydz1yYW5kcmVhZCwgYnM9KFIpIDQw
-OTZCLTQwOTZCLCAoVykgNDA5NkItNDA5NkIsIA0KPj4gKFQpIDQwOTZCLTQwOTZCLCBpb2VuZ2lu
-ZT1saWJhaW8sIGlvZGVwdGg9MTI4IC4uLg0KPj4gc29ja2V0MS1sdjogKGc9Myk6IHJ3PXJhbmRy
-ZWFkLCBicz0oUikgNDA5NkItNDA5NkIsIChXKSA0MDk2Qi00MDk2QiwgDQo+PiAoVCkgNDA5NkIt
-NDA5NkIsIGlvZW5naW5lPWxpYmFpbywgaW9kZXB0aD0xMjggLi4uDQo+PiBmaW8tMy4yNg0KPj4g
-U3RhcnRpbmcgMjU2IHByb2Nlc3Nlcw0KPj4gDQo+PiBzb2NrZXQwOiAoZ3JvdXBpZD0wLCBqb2Jz
-PTY0KTogZXJyPSAwOiBwaWQ9NjQwMzI6IFRodSBKdWwgMjkgMjE6NDg6MzIgDQo+PiAyMDIxDQo+
-PiByZWFkOiBJT1BTPTEzLjZNLCBCVz01MS43R2lCL3MgKDU1LjZHQi9zKSgzMTA1R2lCLzYwMDAz
-bXNlYykNCj4+ICAgc2xhdCAobnNlYyk6IG1pbj0xMjkyLCBtYXg9MTM3Ni43aywgYXZnPTI1NDUu
-MzIsIHN0ZGV2PTI2OTYuNzQNCj4+ICAgY2xhdCAodXNlYyk6IG1pbj0zNiwgbWF4PTcxNTgwLCBh
-dmc9NjAwLjY4LCBzdGRldj0zNjEuMzYNCj4+ICAgIGxhdCAodXNlYyk6IG1pbj0zOCwgbWF4PTcx
-NjE2LCBhdmc9NjAzLjMwLCBzdGRldj0zNjEuMzgNCj4+ICAgY2xhdCBwZXJjZW50aWxlcyAodXNl
-Yyk6DQo+PiAgICB8ICAxLjAwdGg9WyAgMTY5XSwgIDUuMDB0aD1bICAyMzFdLCAxMC4wMHRoPVsg
-IDI3N10sIDIwLjAwdGg9WyAgMzQ3XSwNCj4+ICAgIHwgMzAuMDB0aD1bICA0MDRdLCA0MC4wMHRo
-PVsgIDQ1N10sIDUwLjAwdGg9WyAgNTE5XSwgNjAuMDB0aD1bICA1OTRdLA0KPj4gICAgfCA3MC4w
-MHRoPVsgIDY3Nl0sIDgwLjAwdGg9WyAgNzkxXSwgOTAuMDB0aD1bICA5OTZdLCA5NS4wMHRoPVsg
-MTIwNV0sDQo+PiAgICB8IDk5LjAwdGg9WyAxOTA5XSwgOTkuNTB0aD1bIDI0MDldLCA5OS45MHRo
-PVsgMzU1Nl0sIDk5Ljk1dGg9WyAzODg0XSwNCj4+ICAgIHwgOTkuOTl0aD1bIDU1MzhdDQo+PiAg
-YncgKCAgTWlCL3MpOiBtaW49Mzk5NjAsIG1heD01NjY2MCwgcGVyPTIwLjk0JSwgYXZnPTUzMDQw
-LjY5LCBzdGRldj00OS42MSwgc2FtcGxlcz03NDg4DQo+PiAgaW9wcyAgICAgICAgOiBtaW49MTAy
-Mjk5NDYsIG1heD0xNDUwNDk0MSwgYXZnPTEzNTc4MzkxLjgwLCBzdGRldj0xMjY5OS42MSwgc2Ft
-cGxlcz03NDg4DQo+PiBsYXQgKHVzZWMpICAgOiA1MD0wLjAxJSwgMTAwPTAuMDElLCAyNTA9Ni44
-MyUsIDUwMD00MC4wNiUsIDc1MD0yOS45MiUNCj4+IGxhdCAodXNlYykgICA6IDEwMDA9MTMuNDIl
-DQo+PiBsYXQgKG1zZWMpICAgOiAyPTguOTElLCA0PTAuODIlLCAxMD0wLjA0JSwgMjA9MC4wMSUs
-IDUwPTAuMDElDQo+PiBsYXQgKG1zZWMpICAgOiAxMDA9MC4wMSUNCj4+IGNwdSAgICAgICAgICA6
-IHVzcj0xNC44MiUsIHN5cz00Ni41NyUsIGN0eD0zNTU2NDI0OSwgbWFqZj0wLCBtaW5mPTk3NTQN
-Cj4+IElPIGRlcHRocyAgICA6IDE9MC4xJSwgMj0wLjElLCA0PTAuMSUsIDg9MC4xJSwgMTY9MC4x
-JSwgMzI9MC4xJSwgPj02ND0xMDAuMCUNCj4+ICAgIHN1Ym1pdCAgICA6IDA9MC4wJSwgND0xMDAu
-MCUsIDg9MC4wJSwgMTY9MC4wJSwgMzI9MC4wJSwgNjQ9MC4wJSwgPj02ND0wLjAlDQo+PiAgICBj
-b21wbGV0ZSAgOiAwPTAuMCUsIDQ9MTAwLjAlLCA4PTAuMCUsIDE2PTAuMCUsIDMyPTAuMCUsIDY0
-PTAuMCUsID49NjQ9MC4xJQ0KPj4gICAgaXNzdWVkIHJ3dHM6IHRvdGFsPTgxMzkwOTIwMSwwLDAs
-MCBzaG9ydD0wLDAsMCwwIGRyb3BwZWQ9MCwwLDAsMA0KPj4gICAgbGF0ZW5jeSAgIDogdGFyZ2V0
-PTAsIHdpbmRvdz0wLCBwZXJjZW50aWxlPTEwMC4wMCUsIGRlcHRoPTEyOA0KPj4gc29ja2V0MTog
-KGdyb3VwaWQ9MSwgam9icz02NCk6IGVycj0gMDogcGlkPTY0MDk2OiBUaHUgSnVsIDI5IDIxOjQ4
-OjMyIA0KPj4gMjAyMQ0KPj4gcmVhZDogSU9QUz0xMi4zTSwgQlc9NDYuOUdpQi9zICg1MC4zR0Iv
-cykoMjgxMkdpQi82MDAwM21zZWMpDQo+PiAgIHNsYXQgKG5zZWMpOiBtaW49MTI5MiwgbWF4PTE2
-NzIuMmssIGF2Zz0yNjcyLjIxLCBzdGRldj0yNzQyLjA2DQo+PiAgIGNsYXQgKHVzZWMpOiBtaW49
-MjUsIG1heD03MzUyNiwgYXZnPTY2My4zNSwgc3RkZXY9NjExLjA2DQo+PiAgICBsYXQgKHVzZWMp
-OiBtaW49MjgsIG1heD03MzU0NSwgYXZnPTY2Ni4wOSwgc3RkZXY9NjExLjA4DQo+PiAgIGNsYXQg
-cGVyY2VudGlsZXMgKHVzZWMpOg0KPj4gICAgfCAgMS4wMHRoPVsgIDE0M10sICA1LjAwdGg9WyAg
-MTkwXSwgMTAuMDB0aD1bICAyMjddLCAyMC4wMHRoPVsgIDI4NV0sDQo+PiAgICB8IDMwLjAwdGg9
-WyAgMzM4XSwgNDAuMDB0aD1bICA0MDBdLCA1MC4wMHRoPVsgIDQ3OF0sIDYwLjAwdGg9WyAgNTg2
-XSwNCj4+ICAgIHwgNzAuMDB0aD1bICA3MjVdLCA4MC4wMHRoPVsgIDkzMF0sIDkwLjAwdGg9WyAx
-MjU0XSwgOTUuMDB0aD1bIDE2MTRdLA0KPj4gICAgfCA5OS4wMHRoPVsgMzQ5MF0sIDk5LjUwdGg9
-WyA0MTQ2XSwgOTkuOTB0aD1bIDYzOTBdLCA5OS45NXRoPVsgNjk4MF0sDQo+PiAgICB8IDk5Ljk5
-dGg9WyA4MzU2XQ0KPj4gIGJ3ICggIE1pQi9zKTogbWluPTI4OTYyLCBtYXg9NTUzMjYsIHBlcj0x
-Mi43MCUsIGF2Zz00ODAzNi4xMCwgc3RkZXY9OTYuNzUsIHNhbXBsZXM9NzQ4OA0KPj4gIGlvcHMg
-ICAgICAgIDogbWluPTc0MTQzMjcsIG1heD0xNDE2MzYxNSwgYXZnPTEyMjk3MjE0Ljk4LCBzdGRl
-dj0yNDc2OC44Miwgc2FtcGxlcz03NDg4DQo+PiBsYXQgKHVzZWMpICAgOiA1MD0wLjAxJSwgMTAw
-PTAuMDMlLCAyNTA9MTMuNzUlLCA1MDA9MzguODQlLCA3NTA9MTguNzElDQo+PiBsYXQgKHVzZWMp
-ICAgOiAxMDAwPTExLjU1JQ0KPj4gbGF0IChtc2VjKSAgIDogMj0xNC4zMCUsIDQ9Mi4yMyUsIDEw
-PTAuNjAlLCAyMD0wLjAxJSwgNTA9MC4wMSUNCj4+IGxhdCAobXNlYykgICA6IDEwMD0wLjAxJQ0K
-Pj4gY3B1ICAgICAgICAgIDogdXNyPTEzLjQxJSwgc3lzPTQ0LjQ0JSwgY3R4PTM5Mzc5NzExLCBt
-YWpmPTAsIG1pbmY9OTk4Mg0KPj4gSU8gZGVwdGhzICAgIDogMT0wLjElLCAyPTAuMSUsIDQ9MC4x
-JSwgOD0wLjElLCAxNj0wLjElLCAzMj0wLjElLCA+PTY0PTEwMC4wJQ0KPj4gICAgc3VibWl0ICAg
-IDogMD0wLjAlLCA0PTEwMC4wJSwgOD0wLjAlLCAxNj0wLjAlLCAzMj0wLjAlLCA2ND0wLjAlLCA+
-PTY0PTAuMCUNCj4+ICAgIGNvbXBsZXRlICA6IDA9MC4wJSwgND0xMDAuMCUsIDg9MC4wJSwgMTY9
-MC4wJSwgMzI9MC4wJSwgNjQ9MC4wJSwgPj02ND0wLjElDQo+PiAgICBpc3N1ZWQgcnd0czogdG90
-YWw9NzM3MTY4OTEzLDAsMCwwIHNob3J0PTAsMCwwLDAgZHJvcHBlZD0wLDAsMCwwDQo+PiAgICBs
-YXRlbmN5ICAgOiB0YXJnZXQ9MCwgd2luZG93PTAsIHBlcmNlbnRpbGU9MTAwLjAwJSwgZGVwdGg9
-MTI4DQo+PiBzb2NrZXQwLWx2OiAoZ3JvdXBpZD0yLCBqb2JzPTY0KTogZXJyPSAwOiBwaWQ9NjQx
-NjY6IFRodSBKdWwgMjkgDQo+PiAyMTo0ODozMiAyMDIxDQo+PiByZWFkOiBJT1BTPTg1NzBrLCBC
-Vz0zMi43R2lCL3MgKDM1LjFHQi9zKSgxOTYyR2lCLzYwMDA2bXNlYykNCj4+ICAgc2xhdCAobnNl
-Yyk6IG1pbj0xODczLCBtYXg9MTEwODVrLCBhdmc9NDY5NC40Nywgc3RkZXY9NDgyNS4zOQ0KPj4g
-ICBjbGF0ICh1c2VjKTogbWluPTI0LCBtYXg9MjE3MzksIGF2Zz05NTAuNTIsIHN0ZGV2PTk0OC44
-Mw0KPj4gICAgbGF0ICh1c2VjKTogbWluPTUxLCBtYXg9MjE3NDMsIGF2Zz05NTUuMjksIHN0ZGV2
-PTk0OC44OA0KPj4gICBjbGF0IHBlcmNlbnRpbGVzICh1c2VjKToNCj4+ICAgIHwgIDEuMDB0aD1b
-ICAxNTVdLCAgNS4wMHRoPVsgIDIxN10sIDEwLjAwdGg9WyAgMjY1XSwgMjAuMDB0aD1bICAzMzhd
-LA0KPj4gICAgfCAzMC4wMHRoPVsgIDQwNF0sIDQwLjAwdGg9WyAgNDg2XSwgNTAuMDB0aD1bICA1
-OTRdLCA2MC4wMHRoPVsgIDc2Nl0sDQo+PiAgICB8IDcwLjAwdGg9WyAxMDI5XSwgODAuMDB0aD1b
-IDE0MThdLCA5MC4wMHRoPVsgMjA4OV0sIDk1LjAwdGg9WyAyNzM3XSwNCj4+ICAgIHwgOTkuMDB0
-aD1bIDQ0OTBdLCA5OS41MHRoPVsgNTY2OV0sIDk5LjkwdGg9WyA4NTg2XSwgOTkuOTV0aD1bIDk4
-OTZdLA0KPj4gICAgfCA5OS45OXRoPVsxMjEyNV0NCj4+ICBidyAoICBNaUIvcyk6IG1pbj0yNDY1
-NywgbWF4PTM3NDUzLCBwZXI9LTI1LjE3JSwgYXZnPTMzNTE2LjAwLCBzdGRldj0zNS4zMiwgc2Ft
-cGxlcz03NjE2DQo+PiAgaW9wcyAgICAgICAgOiBtaW49NjMxMjMyNiwgbWF4PTk1ODgwMDcsIGF2
-Zz04NTgwMDc2LjAzLCBzdGRldj05MDQxLjg4LCBzYW1wbGVzPTc2MTYNCj4+IGxhdCAodXNlYykg
-ICA6IDUwPTAuMDElLCAxMDA9MC4wMSUsIDI1MD04LjQwJSwgNTAwPTMzLjIxJSwgNzUwPTE3LjU0
-JQ0KPj4gbGF0ICh1c2VjKSAgIDogMTAwMD05Ljg5JQ0KPj4gbGF0IChtc2VjKSAgIDogMj0xOS45
-MyUsIDQ9OS41OCUsIDEwPTEuNDAlLCAyMD0wLjA1JSwgNTA9MC4wMSUNCj4+IGNwdSAgICAgICAg
-ICA6IHVzcj05LjAxJSwgc3lzPTUxLjQ4JSwgY3R4PTI3ODI5OTUwLCBtYWpmPTAsIG1pbmY9OTAy
-OA0KPj4gSU8gZGVwdGhzICAgIDogMT0wLjElLCAyPTAuMSUsIDQ9MC4xJSwgOD0wLjElLCAxNj0w
-LjElLCAzMj0wLjElLCA+PTY0PTEwMC4wJQ0KPj4gICAgc3VibWl0ICAgIDogMD0wLjAlLCA0PTEw
-MC4wJSwgOD0wLjAlLCAxNj0wLjAlLCAzMj0wLjAlLCA2ND0wLjAlLCA+PTY0PTAuMCUNCj4+ICAg
-IGNvbXBsZXRlICA6IDA9MC4wJSwgND0xMDAuMCUsIDg9MC4wJSwgMTY9MC4wJSwgMzI9MC4wJSwg
-NjQ9MC4wJSwgPj02ND0wLjElDQo+PiAgICBpc3N1ZWQgcnd0czogdG90YWw9NTE0Mjc1MzIzLDAs
-MCwwIHNob3J0PTAsMCwwLDAgZHJvcHBlZD0wLDAsMCwwDQo+PiAgICBsYXRlbmN5ICAgOiB0YXJn
-ZXQ9MCwgd2luZG93PTAsIHBlcmNlbnRpbGU9MTAwLjAwJSwgZGVwdGg9MTI4DQo+PiBzb2NrZXQx
-LWx2OiAoZ3JvdXBpZD0zLCBqb2JzPTY0KTogZXJyPSAwOiBwaWQ9NjQyMzA6IFRodSBKdWwgMjkg
-DQo+PiAyMTo0ODozMiAyMDIxDQo+PiByZWFkOiBJT1BTPTg1NzFrLCBCVz0zMi43R2lCL3MgKDM1
-LjFHQi9zKSgxOTYyR2lCLzYwMDA2bXNlYykNCj4+ICAgc2xhdCAobnNlYyk6IG1pbj0xODIzLCBt
-YXg9MTQzNjJrLCBhdmc9NDgwOS4zMCwgc3RkZXY9NDk0MC40Mg0KPj4gICBjbGF0ICh1c2VjKTog
-bWluPTUwLCBtYXg9MjI4NTYsIGF2Zz05NTAuMzEsIHN0ZGV2PTk0OC4xMw0KPj4gICAgbGF0ICh1
-c2VjKTogbWluPTU0LCBtYXg9MjI4NjAsIGF2Zz05NTUuMTksIHN0ZGV2PTk0OC4xOQ0KPj4gICBj
-bGF0IHBlcmNlbnRpbGVzICh1c2VjKToNCj4+ICAgIHwgIDEuMDB0aD1bICAxNTddLCAgNS4wMHRo
-PVsgIDIyMV0sIDEwLjAwdGg9WyAgMjY5XSwgMjAuMDB0aD1bICAzNDNdLA0KPj4gICAgfCAzMC4w
-MHRoPVsgIDQxMl0sIDQwLjAwdGg9WyAgNDkwXSwgNTAuMDB0aD1bICA2MDNdLCA2MC4wMHRoPVsg
-IDc2Nl0sDQo+PiAgICB8IDcwLjAwdGg9WyAxMDI5XSwgODAuMDB0aD1bIDE0MThdLCA5MC4wMHRo
-PVsgMjA4OV0sIDk1LjAwdGg9WyAyNzM3XSwNCj4+ICAgIHwgOTkuMDB0aD1bIDQyOTNdLCA5OS41
-MHRoPVsgNTYwNF0sIDk5LjkwdGg9WyA5NTAzXSwgOTkuOTV0aD1bMTA2ODNdLA0KPj4gICAgfCA5
-OS45OXRoPVsxMjY0OV0NCj4+ICBidyAoICBNaUIvcyk6IG1pbj0yMzQzNCwgbWF4PTM2OTA5LCBw
-ZXI9LTI1LjE3JSwgYXZnPTMzNTE3LjE0LCBzdGRldj01MC4zNiwgc2FtcGxlcz03NjE2DQo+PiAg
-aW9wcyAgICAgICAgOiBtaW49NTk5OTIyMCwgbWF4PTk0NDg4MTgsIGF2Zz04NTgwMzY4LjY5LCBz
-dGRldj0xMjg5Mi45Mywgc2FtcGxlcz03NjE2DQo+PiBsYXQgKHVzZWMpICAgOiAxMDA9MC4wMSUs
-IDI1MD03Ljg4JSwgNTAwPTMzLjA5JSwgNzUwPTE4LjA5JSwgMTAwMD0xMC4wMiUNCj4+IGxhdCAo
-bXNlYykgICA6IDI9MTkuOTElLCA0PTkuNzUlLCAxMD0xLjE2JSwgMjA9MC4wOCUsIDUwPTAuMDEl
-DQo+PiBjcHUgICAgICAgICAgOiB1c3I9OS4xNCUsIHN5cz01MS45NCUsIGN0eD0yNTUyNDgwOCwg
-bWFqZj0wLCBtaW5mPTkwMzcNCj4+IElPIGRlcHRocyAgICA6IDE9MC4xJSwgMj0wLjElLCA0PTAu
-MSUsIDg9MC4xJSwgMTY9MC4xJSwgMzI9MC4xJSwgPj02ND0xMDAuMCUNCj4+ICAgIHN1Ym1pdCAg
-ICA6IDA9MC4wJSwgND0xMDAuMCUsIDg9MC4wJSwgMTY9MC4wJSwgMzI9MC4wJSwgNjQ9MC4wJSwg
-Pj02ND0wLjAlDQo+PiAgICBjb21wbGV0ZSAgOiAwPTAuMCUsIDQ9MTAwLjAlLCA4PTAuMCUsIDE2
-PTAuMCUsIDMyPTAuMCUsIDY0PTAuMCUsID49NjQ9MC4xJQ0KPj4gICAgaXNzdWVkIHJ3dHM6IHRv
-dGFsPTUxNDI5NDAxMCwwLDAsMCBzaG9ydD0wLDAsMCwwIGRyb3BwZWQ9MCwwLDAsMA0KPj4gICAg
-bGF0ZW5jeSAgIDogdGFyZ2V0PTAsIHdpbmRvdz0wLCBwZXJjZW50aWxlPTEwMC4wMCUsIGRlcHRo
-PTEyOA0KPj4gDQo+PiBSdW4gc3RhdHVzIGdyb3VwIDAgKGFsbCBqb2JzKToNCj4+ICBSRUFEOiBi
-dz01MS43R2lCL3MgKDU1LjZHQi9zKSwgNTEuN0dpQi9zLTUxLjdHaUIvcyANCj4+ICg1NS42R0Iv
-cy01NS42R0IvcyksIGlvPTMxMDVHaUIgKDMzMzRHQiksIHJ1bj02MDAwMy02MDAwM21zZWMNCj4+
-IA0KPj4gUnVuIHN0YXR1cyBncm91cCAxIChhbGwgam9icyk6DQo+PiAgUkVBRDogYnc9NDYuOUdp
-Qi9zICg1MC4zR0IvcyksIDQ2LjlHaUIvcy00Ni45R2lCL3MgDQo+PiAoNTAuM0dCL3MtNTAuM0dC
-L3MpLCBpbz0yODEyR2lCICgzMDE5R0IpLCBydW49NjAwMDMtNjAwMDNtc2VjDQo+PiANCj4+IFJ1
-biBzdGF0dXMgZ3JvdXAgMiAoYWxsIGpvYnMpOg0KPj4gIFJFQUQ6IGJ3PTMyLjdHaUIvcyAoMzUu
-MUdCL3MpLCAzMi43R2lCL3MtMzIuN0dpQi9zIA0KPj4gKDM1LjFHQi9zLTM1LjFHQi9zKSwgaW89
-MTk2MkdpQiAoMjEwNkdCKSwgcnVuPTYwMDA2LTYwMDA2bXNlYw0KPj4gDQo+PiBSdW4gc3RhdHVz
-IGdyb3VwIDMgKGFsbCBqb2JzKToNCj4+ICBSRUFEOiBidz0zMi43R2lCL3MgKDM1LjFHQi9zKSwg
-MzIuN0dpQi9zLTMyLjdHaUIvcyANCj4+ICgzNS4xR0Ivcy0zNS4xR0IvcyksIGlvPTE5NjJHaUIg
-KDIxMDdHQiksIHJ1bj02MDAwNi02MDAwNm1zZWMNCj4+IA0KPj4gRGlzayBzdGF0cyAocmVhZC93
-cml0ZSk6DQo+PiBudm1lMG4xOiBpb3M9OTAzMzY2OTQvMCwgbWVyZ2U9MC8wLCB0aWNrcz00NTEw
-MjE2My8wLCANCj4+IGluX3F1ZXVlPTQ1MTAyMTYzLCB1dGlsPTk3LjQ0JQ0KPj4gbnZtZTFuMTog
-aW9zPTkwMzM3MTUzLzAsIG1lcmdlPTAvMCwgdGlja3M9NDc0MjI4ODYvMCwgDQo+PiBpbl9xdWV1
-ZT00NzQyMjg4NywgdXRpbD05Ny44MSUNCj4+IG52bWUybjE6IGlvcz05MDMzNzUxNi8wLCBtZXJn
-ZT0wLzAsIHRpY2tzPTQ2NDE5NzgyLzAsIA0KPj4gaW5fcXVldWU9NDY0MTk3ODIsIHV0aWw9OTcu
-OTUlDQo+PiBudm1lM24xOiBpb3M9OTAzMzc4NDMvMCwgbWVyZ2U9MC8wLCB0aWNrcz00NjI1NjM3
-NC8wLCANCj4+IGluX3F1ZXVlPTQ2MjU2Mzc0LCB1dGlsPTk3Ljk1JQ0KPj4gbnZtZTRuMTogaW9z
-PTkwMzM3NzQyLzAsIG1lcmdlPTAvMCwgdGlja3M9NTkxMjIyMjYvMCwgDQo+PiBpbl9xdWV1ZT01
-OTEyMjIyNSwgdXRpbD05OC4xOSUNCj4+IG52bWU1bjE6IGlvcz05MDMzODgxMy8wLCBtZXJnZT0w
-LzAsIHRpY2tzPTU3ODExNzU4LzAsIA0KPj4gaW5fcXVldWU9NTc4MTE3NTgsIHV0aWw9OTguMzMl
-DQo+PiBudm1lNm4xOiBpb3M9OTAzMzkxOTQvMCwgbWVyZ2U9MC8wLCB0aWNrcz01NzM2OTMzNy8w
-LCANCj4+IGluX3F1ZXVlPTU3MzY5MzM3LCB1dGlsPTk4LjM3JQ0KPj4gbnZtZTduMTogaW9zPTkw
-MzM5MDQ4LzAsIG1lcmdlPTAvMCwgdGlja3M9NTU3OTEwNzYvMCwgDQo+PiBpbl9xdWV1ZT01NTc5
-MTA3NiwgdXRpbD05OC43OCUNCj4+IG52bWU4bjE6IGlvcz05MDM0MDIzNC8wLCBtZXJnZT0wLzAs
-IHRpY2tzPTQ0OTc3MDAxLzAsIA0KPj4gaW5fcXVldWU9NDQ5NzcwMDEsIHV0aWw9OTkuMDElDQo+
-PiBudm1lMTJuMTogaW9zPTgxODE5NjA4LzAsIG1lcmdlPTAvMCwgdGlja3M9MjY3ODgwODAvMCwg
-DQo+PiBpbl9xdWV1ZT0yNjc4ODA3OSwgdXRpbD05OS4yNCUNCj4+IG52bWUxM24xOiBpb3M9ODE4
-MTk4MzEvMCwgbWVyZ2U9MC8wLCB0aWNrcz0yNjczNjY4Mi8wLCANCj4+IGluX3F1ZXVlPTI2NzM2
-NjgxLCB1dGlsPTk5LjU3JQ0KPj4gbnZtZTE0bjE6IGlvcz04MTgyMDAwNi8wLCBtZXJnZT0wLzAs
-IHRpY2tzPTI2NzcyOTUxLzAsIA0KPj4gaW5fcXVldWU9MjY3NzI5NTEsIHV0aWw9OTkuNjclDQo+
-PiBudm1lMTVuMTogaW9zPTgxODIwMjE1LzAsIG1lcmdlPTAvMCwgdGlja3M9MjY3NDE1MzIvMCwg
-DQo+PiBpbl9xdWV1ZT0yNjc0MTUzMiwgdXRpbD05OS43OCUNCj4+IG52bWUxN24xOiBpb3M9ODE4
-MTk5MjIvMCwgbWVyZ2U9MC8wLCB0aWNrcz03NjQ1OTE5Mi8wLCANCj4+IGluX3F1ZXVlPTc2NDU5
-MTkyLCB1dGlsPTk5Ljg0JQ0KPj4gbnZtZTE4bjE6IGlvcz04MTgyMDE0Ni8wLCBtZXJnZT0wLzAs
-IHRpY2tzPTg2NzU2MzA5LzAsIA0KPj4gaW5fcXVldWU9ODY3NTYzMDksIHV0aWw9OTkuODIlDQo+
-PiBudm1lMTluMTogaW9zPTgxODIwNDgxLzAsIG1lcmdlPTAvMCwgdGlja3M9NzUwMDg5MTkvMCwg
-DQo+PiBpbl9xdWV1ZT03NTAwODkxOSwgdXRpbD0xMDAuMDAlDQo+PiBudm1lMjBuMTogaW9zPTgx
-ODE5NjkwLzAsIG1lcmdlPTAvMCwgdGlja3M9OTE4ODgyNzQvMCwgDQo+PiBpbl9xdWV1ZT05MTg4
-ODI3NSwgdXRpbD0xMDAuMDAlDQo+PiBudm1lMjFuMTogaW9zPTgxODIxODA5LzAsIG1lcmdlPTAv
-MCwgdGlja3M9MjY2NTMwNTYvMCwgDQo+PiBpbl9xdWV1ZT0yNjY1MzA1NywgdXRpbD0xMDAuMDAl
-IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+PiBGcm9tOiBNYXR0IFdhbGxpcyA8bWF0dHdA
-bWFkbW9ua3Mub3JnPg0KPj4gU2VudDogV2VkbmVzZGF5LCBKdWx5IDI4LCAyMDIxIDg6NTQgUE0N
-Cj4+IFRvOiBGaW5sYXlzb24sIEphbWVzIE0gQ0lWIChVU0EpIDxqYW1lcy5tLmZpbmxheXNvbjQu
-Y2l2QG1haWwubWlsPg0KPj4gQ2M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQo+PiBTdWJq
-ZWN0OiBSZTogW05vbi1Eb0QgU291cmNlXSBDYW4ndCBnZXQgUkFJRDUvUkFJRDYgTlZNZSByYW5k
-b21yZWFkIElPUFMgLSBBTUQgUk9NRSB3aGF0IGFtIEkgbWlzc2luZz8/Pz8/DQo+PiANCj4+IEhp
-IEppbSwNCj4+IA0KPj4gVG90YWxseSBnZXQgdGhlIEZyYW5rZW5zdGVpbuKAmXMgbW9uc3RlciBh
-c3BlY3QsIEkgdHJ5IG5vdCB0byBidWlsZCB0aG9zZSB3aGVyZSBJIGNhbiwgYnV0IGF0IHRoZSBt
-b21lbnQgSSBkb27igJl0IHRoaW5rIHRoZXJl4oCZcyBtdWNoIHRoYXQgY2FuIGJlIGRvbmUgYWJv
-dXQgaXQuDQo+PiBOb3Qgc3VyZSBpZiBMVk0gaXMgYmV0dGVyIHRoYW4gTURSQUlEIDAsIGl0IGp1
-c3QgZ2l2ZXMgeW91IG1vcmUgY29udHJvbCBvdmVyIHRoZSB2b2x1bWVzIHRoYXQgY2FuIGJlIGNy
-ZWF0ZWQsIGluc3RlYWQgb2YgaGF2aW5nIGl0IGFsbCBpbiBvbmUgYmlnIGNodW5rLiBJZiB5b3Ug
-anVzdCBuZWVkIG9uZSBiaWcgY2h1bmssIHRoZW4gTURSQUlEIDAgaXMgcHJvYmFibHkgZmluZS4N
-Cj4+IA0KPj4gSSB0aGluayBpZiB5b3UgY2FuIGNyZWF0ZSBhIGNvdXBsZSBvZiBzY3JpcHRzIHRo
-YXQgYWxsb3dzIHRoZSBhZG1pbiB0byBmYWlsIGEgZHJpdmUgb3V0IG9mIGFsbCB0aGUgYXJyYXlz
-IHRoYXQgaXTigJlzIGluIGF0IG9uY2UsIHRoZW4gaXQncyBub3QgdGhhdCBtdWNoIHdvcnNlIHRo
-YW4gbWFuYWdpbmcgYW4gTURSQUlEIGlzIG5vcm1hbGx5LiANCj4+IA0KPj4gTWF0dC4NCj4+IA0K
-Pj4+IE9uIDI4IEp1bCAyMDIxLCBhdCAyMDo0MywgRmlubGF5c29uLCBKYW1lcyBNIENJViAoVVNB
-KSA8amFtZXMubS5maW5sYXlzb240LmNpdkBtYWlsLm1pbD4gd3JvdGU6DQo+Pj4gDQo+Pj4gTWF0
-dCwNCj4+PiBJIGhhdmUgcHV0IGFzIG1hbnkgYXMgMzIgcGFydGl0aW9ucyBvbiBhIGRyaXZlIChi
-YXNlZCB1cG9uIGdyZWF0IGFkdmljZSBmcm9tIHRoaXMgbGlzdCkgYW5kIGRvbmUgUkFJRDYgb3Zl
-ciB0aGVtLCBidXQgSSB3YXMgY29uY2VybmVkIGFib3V0IG91ciBzdXN0YWluYWJpbGl0eSBsb25n
-IHRlcm0uICAgICBBcyBhIHJlc2VhcmNoZXIsIEkgY2FuIGRvIHRoZXNlIGNvb2wgc2NpZW5jZSBl
-eHBlcmltZW50cywgYnV0IEkgc3RpbGwgaGF2ZSB0byBoYW5kIGRlc2lnbnMgIHRvIHN1c3RhaW5t
-ZW50IGZvbGtzLiAgSSB3YXMgYWxzbyBydW5uaW5nIGludG8gYW4gaXNzdWUgb2YgZG9pbmcgYSBt
-ZHJhaWQgUkFJRDAgb24gdG9wIG9mIHRoZSBSQUlENidzIHNvIEkgY291bGQgdG9zcyBvbmUgIHhm
-cyBmaWxlIHN5c3RlbSBvbiB0b3AgZWFjaCBvZiB0aGUgbnVtYSBub2RlJ3MgZHJpdmVzIGFuZCB0
-aGUgbGFzdCBSQUlEMCBzdHJpcGUgb2YgYWxsIG9mIHRoZSBSQUlENidzIGNvdWxkbid0IGdlbmVy
-YXRlIHRoZSBxdWV1ZSBkZXB0aCBuZWVkZWQuICAgIFdlIGV2ZW4gcmVjb21waWxlZCB0aGUga2Vy
-bmVsIHRvIGNoYW5nZSB0aGUgbWRyYWlkIG5yX3JlcXVlc3QgbWF4IGZyb20gMTI4IHRvIDEwMjMu
-ICANCj4+PiANCj4+PiBJIHdpbGwgaGF2ZSB0byB0cnkgdGhlIExWTSBleHBlcmltZW50LiAgSSdt
-IGFuIExWTSAgbmVvcGh5dGUsIHNvIGl0IG1pZ2h0IHRha2UgbWUgdGhlIHJlc3Qgb2YgdG9kYXkv
-dG9tb3Jyb3cgdG8gZ2V0IG5ldyByZXN1bHRzIGFzIEkgdGVuZCB0byBsZXQgbWRyYWlkIGRvIGFs
-bCBvZiBpdHMgdm9sdW1lIGJ1aWxkcyB3aXRob3V0IGZvcmNpbmcsIHNvIHRoYXQgd2lsbCB0YWtl
-IGEgYml0IG9mIHRpbWUgYWxzby4gIE9uY2UgbWlnaHQgYmUgYWJsZSB0byBhcmd1ZSB0aGF0IGNv
-bmZpZ3VyYXRpb24gaXNuJ3QgdG9vIG11Y2ggb2YgYSAiRnJhbmtlbnN0ZWluJ3MgbW9uc3RlciIg
-Zm9yIG1lIHRvIGhhbmQgaXQgb2ZmLg0KPj4+IA0KPj4+IFRoYW5rcywNCj4+PiBKaW0NCj4+PiAN
-Cj4+PiANCj4+PiANCj4+PiANCj4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4+IEZy
-b206IE1hdHQgV2FsbGlzIDxtYXR0d0BtYWRtb25rcy5vcmc+DQo+Pj4gU2VudDogV2VkbmVzZGF5
-LCBKdWx5IDI4LCAyMDIxIDY6MzIgQU0NCj4+PiBUbzogRmlubGF5c29uLCBKYW1lcyBNIENJViAo
-VVNBKSA8amFtZXMubS5maW5sYXlzb240LmNpdkBtYWlsLm1pbD4NCj4+PiBDYzogbGludXgtcmFp
-ZEB2Z2VyLmtlcm5lbC5vcmcNCj4+PiBTdWJqZWN0OiBbTm9uLURvRCBTb3VyY2VdIFJlOiBDYW4n
-dCBnZXQgUkFJRDUvUkFJRDYgTlZNZSByYW5kb21yZWFkIElPUFMgLSBBTUQgUk9NRSB3aGF0IGFt
-IEkgbWlzc2luZz8/Pz8/DQo+Pj4gDQo+Pj4gSGkgSmltLA0KPj4+IA0KPj4+PiBPbiAyOCBKdWwg
-MjAyMSwgYXQgMDY6MzIsIEZpbmxheXNvbiwgSmFtZXMgTSBDSVYgKFVTQSkgPGphbWVzLm0uZmlu
-bGF5c29uNC5jaXZAbWFpbC5taWw+IHdyb3RlOg0KPj4+PiANCj4+Pj4gU29ycnksIHRoaXMgd2ls
-bCBiZSBhIGxvbmcgZW1haWwgd2l0aCBldmVyeXRoaW5nIEkgZmluZCB0byBiZSByZWxldmFudCwg
-YnV0IEkgY2FuIGdldCBvdmVyIDExMEdCL3Mgb2YgNGtCIHJhbmRvbSByZWFkcyBmcm9tIGluZGl2
-aWR1YWwgTlZNZSBTU0RzLCBidXQgSSdtIGF0IGEgbG9zcyB3aHkgbWRyYWlkIGNhbiBvbmx5IGRv
-IGEgdmVyeSBzbWFsbCAgZnJhY3Rpb24gb2YgaXQuICAgSSdtIGF0IG15ICJvcmdhbml6YXRpb25h
-bCB3b3JsZCByZWNvcmQiIGZvciBzdXN0YWluZWQgSU9QUywgYnV0IEkgbmVlZCBwcm90ZWN0ZWQg
-SU9QUyB0byBkbyBzb21ldGhpbmcgdXNlZnVsLiAgICAgVGhpcyBpcyBldmVyeXRoaW5nIEkgZG8g
-dG8gYSBzZXJ2ZXIgdG8gbWFrZSB0aGUgSS9PIGNyYW5rLi4uLi5NeSByb2xlIGlzIHRoYXQgb2Yg
-YSBsYWIgcmVzZWFyY2hlci9yZXNpZGVudCBleHBlcnQvY29uc3VsdGFudC4gICBJJ20ganVzdCBz
-dHVtcGVkIHdoeSBJIGNhbid0IGRvIGJldHRlci4gICBJZiB0aGVyZSBpcyBhIGZpbmUgbWFudWFs
-IHRoYXQgc29tZWJvZHkgY2FuIHBvaW50IG1lIHRvLCBJJ20gaGFwcHkgdG8gcmVhZCBpdOKApg0K
-Pj4+IA0KPj4+IEkgYW0gcHJvYmFibHkgZ29pbmcgdG8gZ2V0IGNvcnJlY3RlZCBvbiBzb21lIGlm
-IG5vdCBhbGwgb2YgdGhpcywgYnV0IGZyb20gd2hhdCBJIHVuZGVyc3RhbmQsIGFuZCBmcm9tIG15
-IG93biBsaXR0bGUgZXhwZXJpbWVudHMgb24gYSBzaW1pbGFyIEludGVsIGJhc2VkIHN5c3RlbeKA
-piAxLiBOVk1lIGlzIHN0dXBpZCBmYXN0LCB5b3UgbmVlZCBhIGdvb2QgY2h1bmsgb2YgQ1BVIHBl
-cmZvcm1hbmNlIHRvIG1heCBpdCBvdXQuDQo+Pj4gMi4gTW9zdCBibG9jayBJTyBpbiB0aGUga2Vy
-bmVsIGlzIGxpbWl0ZWQgaW4gdGVybXMgb2YgdGhyZWFkaW5nLCBpdCANCj4+PiBtYXkgZXZlbiBi
-ZSBlc3NlbnRpYWxseSBzaW5nbGUgdGhyZWFkZWQuIChUaGlzIGlzIHdoZXJlIEkgd2lsbCBnZXQg
-DQo+Pj4gY29ycmVjdGVkKSAzLiBBRkFJQ1QsIHRoaXMgaW5jbHVkZXMgbWRyYWlkLCB0aGVyZeKA
-mXMgYSBzaW5nbGUgdGhyZWFkIA0KPj4+IHBlciBSQUlEIGRldmljZSBoYW5kbGluZyBhbGwgdGhl
-IFJBSUQgY2FsY3VsYXRpb25zLiAobWRYX3JhaWQ2KQ0KPj4+IA0KPj4+IFdoYXQgSSBkaWQgdG8g
-Z2V0IElPUHMgdXAgaW4gYSBzeXN0ZW0gd2l0aCAyNCBOVk1lLCBzcGxpdCB1cCBpbnRvIDEyIHBl
-ciBOVU1BIGRvbWFpbi4NCj4+PiAxLiBDcmVhdGUgOCBwYXJ0aXRpb25zIG9uIGVhY2ggZHJpdmUg
-KHRoaXMgbWF5IGJlIG92ZXJraWxsLCBJIGp1c3Qgc3RhcnRlZCBoZXJlIGZvciBzb21lIHJlYXNv
-bikgMi4gQ3JlYXRlIDggUkFJRDYgYXJyYXlzIHdpdGggMSBwYXJ0aXRpb24gcGVyIGRyaXZlLg0K
-Pj4+IDMuIFVzZSBMVk0gdG8gY3JlYXRlIGEgc2luZ2xlIHN0cmlwZWQgbG9naWNhbCB2b2x1bWUg
-b3ZlciBhbGwgOCBSQUlEIHZvbHVtZXMuIFJBSUQgMCs2IGFzIGl0IHdlcmUuDQo+Pj4gDQo+Pj4g
-WW91IG5vdyBoYXZlIGFuIExWTSB0aHJlYWQgdGhhdCBpcyBiYXNpY2FsbHkgZG9pbmcgbm90aGlu
-ZyBtb3JlIHRoYW4gY2h1bmtpbmcgdGhlIGRhdGEgYXMgaXQgY29tZXMgaW4sIHRoZW4sIHNlbmRp
-bmcgdGhlIGNodW5rcyB0byA4IHNlcGFyYXRlIFJBSUQgZGV2aWNlcywgZWFjaCB3aXRoIHRoZWly
-IG93biB0aHJlYWRzLCBidWZmZXJzLCBxdWV1ZXMgZXRjLCBhbGwgb2Ygd2hpY2ggY2FuIGJlIHNw
-cmVhZCBvdmVyIG1vcmUgY29yZXMuDQo+Pj4gDQo+Pj4gSSBzYXcgYSBzaWduaWZpY2FudCAoZm9y
-IG1lLCBzaWduaWZpY2FudCBpcyA+MjAlKSBpbmNyZWFzZSBpbiBJT1BzIGRvaW5nIHRoaXMuIA0K
-Pj4+IA0KPj4+IFlvdSBzdGlsbCBoYXZlIFJBSUQ2IHByb3RlY3Rpb24sIGJ1dCB5b3UgbWlnaHQg
-d2FudCB0byB3cml0ZSBhIGNvdXBsZSBvZiBzY3JpcHRzIHRvIGhlbHAgeW91IG1hbmFnZSB0aGUg
-YXJyYXlzLCBiZWNhdXNlIGEgc2luZ2xlIGZhaWxlZCBkcml2ZSBub3cgbmVlZHMgdG8gYmUgcmVt
-b3ZlZCBmcm9tIDggUkFJRCB2b2x1bWVzLiANCj4+PiANCj4+PiBUaGVyZeKAmXMgbm90IGEgbG90
-IG9mIGNhcGFjaXR5IGxvc3QgZG9pbmcgdGhpcywgcHJldHR5IHN1cmUgSSBsb3N0IGxlc3MgdGhh
-biAxMDBNQiB0byB0aGUgcGFydGl0aW9ucyBhbmQgdGhlIFJBSUQgb3ZlcmhlYWQuDQo+Pj4gDQo+
-Pj4gWW91IHdvdWxkIG5ldmVyIGNvbnNpZGVyIHRoaXMgb24gc3Bpbm5pbmcgZGlzayBvZiBjb3Vy
-c2UsIHdheSB0byBzbG93IGFuZCB5b3XigJlyZSBqdXN0IGdvaW5nIHRvIG1ha2UgaXQgc2xvd2Vy
-LCBOVk1lIGFzIHlvdSBub3RpY2VkIGhhcyB0aGUgSU9QcyB0byBzcGFyZSwgc28gSeKAmW0gcHJl
-dHR5IHN1cmUgaXTigJlzIGp1c3QgdGhhdCB3ZeKAmXJlIG5vdCBhYmxlIHRvIGdldCB0aGUgZGF0
-YSB0byBpdCBmYXN0IGVub3VnaC4NCj4+PiANCj4+PiBNYXR0DQoNCg==
+You can try btrfs in lieu of zfs.  As long as metadata is raid1, data
+can be raid5/6 and things are ok.  The raid5 write issue only applies
+to metadata.
+
+On Fri, Jul 30, 2021 at 6:09 AM Finlayson, James M CIV (USA)
+<james.m.finlayson4.civ@mail.mil> wrote:
+>
+> There is interest in ZFS.   We're waiting for the direct I/O patches to s=
+ettle in Open ZFS because we couldn't find any way to get around the ARC (e=
+verything has to touch the ARC).  ZFS spins an entire CPU core or more worr=
+ying about which ARC entries it has to evict.      I know who is doing the =
+work.   Once it settles, I'll see if they are willing to publish to zfs-dis=
+cuss.
+>
+> -----Original Message-----
+> From: Miao Wang <shankerwangmiao@gmail.com>
+> Sent: Friday, July 30, 2021 4:46 AM
+> To: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>
+> Cc: Matt Wallis <mattw@madmonks.org>; linux-raid@vger.kernel.org
+> Subject: Re: [Non-DoD Source] Can't get RAID5/RAID6 NVMe randomread IOPS =
+- AMD ROME what am I missing?????
+>
+> Hi Jim,
+>
+> Nice to hear about your findings on how to let linux md work better on fa=
+st nvme drives, because previously I was also stuck in a similar problem an=
+d finally gave up. Since it is very difficult to find such environment with=
+ so many fast nvme drives, I wonder if you have any interest in ZFS. Maybe =
+you can set up a similar raidz configuration on those drives and see whethe=
+r its performance is better or worse.
+>
+> Cheers,
+>
+> Miao Wang
+>
+> > 2021=E5=B9=B407=E6=9C=8830=E6=97=A5 16:28=EF=BC=8CMatt Wallis <mattw@ma=
+dmonks.org> =E5=86=99=E9=81=93=EF=BC=9A
+> >
+> > Hi Jim,
+> >
+> > That=E2=80=99s significantly better than I expected, I need to see if I=
+ can get someone to send me the box I was using so I can spend some more ti=
+me on it.
+> >
+> > Good luck with the rest of it, the bit I was looking for as a next step=
+ was going to be potentially tweaking stripe widths and the like to see how=
+ much difference it made on different workloads.
+> >
+> > Matt.
+> >
+> >> On 30 Jul 2021, at 08:05, Finlayson, James M CIV (USA) <james.m.finlay=
+son4.civ@mail.mil> wrote:
+> >>
+> >> Matt,
+> >> Thank you for the tip.   I have put 32 partitions on each of my NVMe d=
+rives, made 32 raid5 stripes and then made an LVM from the 32 raid5 stripes=
+.   I then created one physical volume per 10 NVMe drives on each socket.  =
+  I believe I have successfully harnessed "alien technology" (inside joke) =
+to create a Frankenstein's monster.   These are substantially better than d=
+oing a RAID0 stripe over the partitioned md's in the past.  I whipped all o=
+f this together in two 15 minute sessions last night and just right now, so=
+ I might run some more extensive tests when I have the cycles.   I didn't i=
+ntend to leave the thread hanging.
+> >> BLUF -  fio detailed output below.....
+> >> 9 drives per socket raw
+> >> socket0, 9 drives, raw 4K random reads 13.6M IOPS , socket1 9 drives,
+> >> raw 4K random reads , 12.3M IOPS
+> >> %Cpu(s):  4.4 us, 25.6 sy,  0.0 ni, 56.7 id,  0.0 wa, 13.1 hi,  0.2
+> >> si,  0.0 st
+> >>
+> >> 9 data drives per socket RAID5/LVM raw (9+1) socket0, 9 drives, raw
+> >> 4K random reads 8.57M IOPS , socket1 9 drives, raw 4K random reads ,
+> >> 8.57M IOPS
+> >> %Cpu(s):  7.0 us, 22.3 sy,  0.0 ni, 58.4 id,  0.0 wa, 12.1 hi,  0.2
+> >> si,  0.0 st
+> >>
+> >>
+> >> All,
+> >> I intend to test the 4.15 kernel patch next week.   My SA would prefer=
+ if the patch has made it into the kernel-ml stream yet, so he could instal=
+l an rpm, but I'll get him to build the kernel if need be.
+> >> If the 4.15 kernel patch doesn't alleviate the issues, I have a strong=
+ desire to have mdraid made better.
+> >>
+> >>
+> >> Quick fio results:
+> >> socket0: (g=3D0): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-4096B=
+, (T)
+> >> 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
+> >> socket1: (g=3D1): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-4096B=
+, (T)
+> >> 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
+> >> socket0-lv: (g=3D2): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-40=
+96B,
+> >> (T) 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
+> >> socket1-lv: (g=3D3): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-40=
+96B,
+> >> (T) 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
+> >> fio-3.26
+> >> Starting 256 processes
+> >>
+> >> socket0: (groupid=3D0, jobs=3D64): err=3D 0: pid=3D64032: Thu Jul 29 2=
+1:48:32
+> >> 2021
+> >> read: IOPS=3D13.6M, BW=3D51.7GiB/s (55.6GB/s)(3105GiB/60003msec)
+> >>   slat (nsec): min=3D1292, max=3D1376.7k, avg=3D2545.32, stdev=3D2696.=
+74
+> >>   clat (usec): min=3D36, max=3D71580, avg=3D600.68, stdev=3D361.36
+> >>    lat (usec): min=3D38, max=3D71616, avg=3D603.30, stdev=3D361.38
+> >>   clat percentiles (usec):
+> >>    |  1.00th=3D[  169],  5.00th=3D[  231], 10.00th=3D[  277], 20.00th=
+=3D[  347],
+> >>    | 30.00th=3D[  404], 40.00th=3D[  457], 50.00th=3D[  519], 60.00th=
+=3D[  594],
+> >>    | 70.00th=3D[  676], 80.00th=3D[  791], 90.00th=3D[  996], 95.00th=
+=3D[ 1205],
+> >>    | 99.00th=3D[ 1909], 99.50th=3D[ 2409], 99.90th=3D[ 3556], 99.95th=
+=3D[ 3884],
+> >>    | 99.99th=3D[ 5538]
+> >>  bw (  MiB/s): min=3D39960, max=3D56660, per=3D20.94%, avg=3D53040.69,=
+ stdev=3D49.61, samples=3D7488
+> >>  iops        : min=3D10229946, max=3D14504941, avg=3D13578391.80, stde=
+v=3D12699.61, samples=3D7488
+> >> lat (usec)   : 50=3D0.01%, 100=3D0.01%, 250=3D6.83%, 500=3D40.06%, 750=
+=3D29.92%
+> >> lat (usec)   : 1000=3D13.42%
+> >> lat (msec)   : 2=3D8.91%, 4=3D0.82%, 10=3D0.04%, 20=3D0.01%, 50=3D0.01=
+%
+> >> lat (msec)   : 100=3D0.01%
+> >> cpu          : usr=3D14.82%, sys=3D46.57%, ctx=3D35564249, majf=3D0, m=
+inf=3D9754
+> >> IO depths    : 1=3D0.1%, 2=3D0.1%, 4=3D0.1%, 8=3D0.1%, 16=3D0.1%, 32=
+=3D0.1%, >=3D64=3D100.0%
+> >>    submit    : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.0%
+> >>    complete  : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.1%
+> >>    issued rwts: total=3D813909201,0,0,0 short=3D0,0,0,0 dropped=3D0,0,=
+0,0
+> >>    latency   : target=3D0, window=3D0, percentile=3D100.00%, depth=3D1=
+28
+> >> socket1: (groupid=3D1, jobs=3D64): err=3D 0: pid=3D64096: Thu Jul 29 2=
+1:48:32
+> >> 2021
+> >> read: IOPS=3D12.3M, BW=3D46.9GiB/s (50.3GB/s)(2812GiB/60003msec)
+> >>   slat (nsec): min=3D1292, max=3D1672.2k, avg=3D2672.21, stdev=3D2742.=
+06
+> >>   clat (usec): min=3D25, max=3D73526, avg=3D663.35, stdev=3D611.06
+> >>    lat (usec): min=3D28, max=3D73545, avg=3D666.09, stdev=3D611.08
+> >>   clat percentiles (usec):
+> >>    |  1.00th=3D[  143],  5.00th=3D[  190], 10.00th=3D[  227], 20.00th=
+=3D[  285],
+> >>    | 30.00th=3D[  338], 40.00th=3D[  400], 50.00th=3D[  478], 60.00th=
+=3D[  586],
+> >>    | 70.00th=3D[  725], 80.00th=3D[  930], 90.00th=3D[ 1254], 95.00th=
+=3D[ 1614],
+> >>    | 99.00th=3D[ 3490], 99.50th=3D[ 4146], 99.90th=3D[ 6390], 99.95th=
+=3D[ 6980],
+> >>    | 99.99th=3D[ 8356]
+> >>  bw (  MiB/s): min=3D28962, max=3D55326, per=3D12.70%, avg=3D48036.10,=
+ stdev=3D96.75, samples=3D7488
+> >>  iops        : min=3D7414327, max=3D14163615, avg=3D12297214.98, stdev=
+=3D24768.82, samples=3D7488
+> >> lat (usec)   : 50=3D0.01%, 100=3D0.03%, 250=3D13.75%, 500=3D38.84%, 75=
+0=3D18.71%
+> >> lat (usec)   : 1000=3D11.55%
+> >> lat (msec)   : 2=3D14.30%, 4=3D2.23%, 10=3D0.60%, 20=3D0.01%, 50=3D0.0=
+1%
+> >> lat (msec)   : 100=3D0.01%
+> >> cpu          : usr=3D13.41%, sys=3D44.44%, ctx=3D39379711, majf=3D0, m=
+inf=3D9982
+> >> IO depths    : 1=3D0.1%, 2=3D0.1%, 4=3D0.1%, 8=3D0.1%, 16=3D0.1%, 32=
+=3D0.1%, >=3D64=3D100.0%
+> >>    submit    : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.0%
+> >>    complete  : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.1%
+> >>    issued rwts: total=3D737168913,0,0,0 short=3D0,0,0,0 dropped=3D0,0,=
+0,0
+> >>    latency   : target=3D0, window=3D0, percentile=3D100.00%, depth=3D1=
+28
+> >> socket0-lv: (groupid=3D2, jobs=3D64): err=3D 0: pid=3D64166: Thu Jul 2=
+9
+> >> 21:48:32 2021
+> >> read: IOPS=3D8570k, BW=3D32.7GiB/s (35.1GB/s)(1962GiB/60006msec)
+> >>   slat (nsec): min=3D1873, max=3D11085k, avg=3D4694.47, stdev=3D4825.3=
+9
+> >>   clat (usec): min=3D24, max=3D21739, avg=3D950.52, stdev=3D948.83
+> >>    lat (usec): min=3D51, max=3D21743, avg=3D955.29, stdev=3D948.88
+> >>   clat percentiles (usec):
+> >>    |  1.00th=3D[  155],  5.00th=3D[  217], 10.00th=3D[  265], 20.00th=
+=3D[  338],
+> >>    | 30.00th=3D[  404], 40.00th=3D[  486], 50.00th=3D[  594], 60.00th=
+=3D[  766],
+> >>    | 70.00th=3D[ 1029], 80.00th=3D[ 1418], 90.00th=3D[ 2089], 95.00th=
+=3D[ 2737],
+> >>    | 99.00th=3D[ 4490], 99.50th=3D[ 5669], 99.90th=3D[ 8586], 99.95th=
+=3D[ 9896],
+> >>    | 99.99th=3D[12125]
+> >>  bw (  MiB/s): min=3D24657, max=3D37453, per=3D-25.17%, avg=3D33516.00=
+, stdev=3D35.32, samples=3D7616
+> >>  iops        : min=3D6312326, max=3D9588007, avg=3D8580076.03, stdev=
+=3D9041.88, samples=3D7616
+> >> lat (usec)   : 50=3D0.01%, 100=3D0.01%, 250=3D8.40%, 500=3D33.21%, 750=
+=3D17.54%
+> >> lat (usec)   : 1000=3D9.89%
+> >> lat (msec)   : 2=3D19.93%, 4=3D9.58%, 10=3D1.40%, 20=3D0.05%, 50=3D0.0=
+1%
+> >> cpu          : usr=3D9.01%, sys=3D51.48%, ctx=3D27829950, majf=3D0, mi=
+nf=3D9028
+> >> IO depths    : 1=3D0.1%, 2=3D0.1%, 4=3D0.1%, 8=3D0.1%, 16=3D0.1%, 32=
+=3D0.1%, >=3D64=3D100.0%
+> >>    submit    : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.0%
+> >>    complete  : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.1%
+> >>    issued rwts: total=3D514275323,0,0,0 short=3D0,0,0,0 dropped=3D0,0,=
+0,0
+> >>    latency   : target=3D0, window=3D0, percentile=3D100.00%, depth=3D1=
+28
+> >> socket1-lv: (groupid=3D3, jobs=3D64): err=3D 0: pid=3D64230: Thu Jul 2=
+9
+> >> 21:48:32 2021
+> >> read: IOPS=3D8571k, BW=3D32.7GiB/s (35.1GB/s)(1962GiB/60006msec)
+> >>   slat (nsec): min=3D1823, max=3D14362k, avg=3D4809.30, stdev=3D4940.4=
+2
+> >>   clat (usec): min=3D50, max=3D22856, avg=3D950.31, stdev=3D948.13
+> >>    lat (usec): min=3D54, max=3D22860, avg=3D955.19, stdev=3D948.19
+> >>   clat percentiles (usec):
+> >>    |  1.00th=3D[  157],  5.00th=3D[  221], 10.00th=3D[  269], 20.00th=
+=3D[  343],
+> >>    | 30.00th=3D[  412], 40.00th=3D[  490], 50.00th=3D[  603], 60.00th=
+=3D[  766],
+> >>    | 70.00th=3D[ 1029], 80.00th=3D[ 1418], 90.00th=3D[ 2089], 95.00th=
+=3D[ 2737],
+> >>    | 99.00th=3D[ 4293], 99.50th=3D[ 5604], 99.90th=3D[ 9503], 99.95th=
+=3D[10683],
+> >>    | 99.99th=3D[12649]
+> >>  bw (  MiB/s): min=3D23434, max=3D36909, per=3D-25.17%, avg=3D33517.14=
+, stdev=3D50.36, samples=3D7616
+> >>  iops        : min=3D5999220, max=3D9448818, avg=3D8580368.69, stdev=
+=3D12892.93, samples=3D7616
+> >> lat (usec)   : 100=3D0.01%, 250=3D7.88%, 500=3D33.09%, 750=3D18.09%, 1=
+000=3D10.02%
+> >> lat (msec)   : 2=3D19.91%, 4=3D9.75%, 10=3D1.16%, 20=3D0.08%, 50=3D0.0=
+1%
+> >> cpu          : usr=3D9.14%, sys=3D51.94%, ctx=3D25524808, majf=3D0, mi=
+nf=3D9037
+> >> IO depths    : 1=3D0.1%, 2=3D0.1%, 4=3D0.1%, 8=3D0.1%, 16=3D0.1%, 32=
+=3D0.1%, >=3D64=3D100.0%
+> >>    submit    : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.0%
+> >>    complete  : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, 6=
+4=3D0.0%, >=3D64=3D0.1%
+> >>    issued rwts: total=3D514294010,0,0,0 short=3D0,0,0,0 dropped=3D0,0,=
+0,0
+> >>    latency   : target=3D0, window=3D0, percentile=3D100.00%, depth=3D1=
+28
+> >>
+> >> Run status group 0 (all jobs):
+> >>  READ: bw=3D51.7GiB/s (55.6GB/s), 51.7GiB/s-51.7GiB/s
+> >> (55.6GB/s-55.6GB/s), io=3D3105GiB (3334GB), run=3D60003-60003msec
+> >>
+> >> Run status group 1 (all jobs):
+> >>  READ: bw=3D46.9GiB/s (50.3GB/s), 46.9GiB/s-46.9GiB/s
+> >> (50.3GB/s-50.3GB/s), io=3D2812GiB (3019GB), run=3D60003-60003msec
+> >>
+> >> Run status group 2 (all jobs):
+> >>  READ: bw=3D32.7GiB/s (35.1GB/s), 32.7GiB/s-32.7GiB/s
+> >> (35.1GB/s-35.1GB/s), io=3D1962GiB (2106GB), run=3D60006-60006msec
+> >>
+> >> Run status group 3 (all jobs):
+> >>  READ: bw=3D32.7GiB/s (35.1GB/s), 32.7GiB/s-32.7GiB/s
+> >> (35.1GB/s-35.1GB/s), io=3D1962GiB (2107GB), run=3D60006-60006msec
+> >>
+> >> Disk stats (read/write):
+> >> nvme0n1: ios=3D90336694/0, merge=3D0/0, ticks=3D45102163/0,
+> >> in_queue=3D45102163, util=3D97.44%
+> >> nvme1n1: ios=3D90337153/0, merge=3D0/0, ticks=3D47422886/0,
+> >> in_queue=3D47422887, util=3D97.81%
+> >> nvme2n1: ios=3D90337516/0, merge=3D0/0, ticks=3D46419782/0,
+> >> in_queue=3D46419782, util=3D97.95%
+> >> nvme3n1: ios=3D90337843/0, merge=3D0/0, ticks=3D46256374/0,
+> >> in_queue=3D46256374, util=3D97.95%
+> >> nvme4n1: ios=3D90337742/0, merge=3D0/0, ticks=3D59122226/0,
+> >> in_queue=3D59122225, util=3D98.19%
+> >> nvme5n1: ios=3D90338813/0, merge=3D0/0, ticks=3D57811758/0,
+> >> in_queue=3D57811758, util=3D98.33%
+> >> nvme6n1: ios=3D90339194/0, merge=3D0/0, ticks=3D57369337/0,
+> >> in_queue=3D57369337, util=3D98.37%
+> >> nvme7n1: ios=3D90339048/0, merge=3D0/0, ticks=3D55791076/0,
+> >> in_queue=3D55791076, util=3D98.78%
+> >> nvme8n1: ios=3D90340234/0, merge=3D0/0, ticks=3D44977001/0,
+> >> in_queue=3D44977001, util=3D99.01%
+> >> nvme12n1: ios=3D81819608/0, merge=3D0/0, ticks=3D26788080/0,
+> >> in_queue=3D26788079, util=3D99.24%
+> >> nvme13n1: ios=3D81819831/0, merge=3D0/0, ticks=3D26736682/0,
+> >> in_queue=3D26736681, util=3D99.57%
+> >> nvme14n1: ios=3D81820006/0, merge=3D0/0, ticks=3D26772951/0,
+> >> in_queue=3D26772951, util=3D99.67%
+> >> nvme15n1: ios=3D81820215/0, merge=3D0/0, ticks=3D26741532/0,
+> >> in_queue=3D26741532, util=3D99.78%
+> >> nvme17n1: ios=3D81819922/0, merge=3D0/0, ticks=3D76459192/0,
+> >> in_queue=3D76459192, util=3D99.84%
+> >> nvme18n1: ios=3D81820146/0, merge=3D0/0, ticks=3D86756309/0,
+> >> in_queue=3D86756309, util=3D99.82%
+> >> nvme19n1: ios=3D81820481/0, merge=3D0/0, ticks=3D75008919/0,
+> >> in_queue=3D75008919, util=3D100.00%
+> >> nvme20n1: ios=3D81819690/0, merge=3D0/0, ticks=3D91888274/0,
+> >> in_queue=3D91888275, util=3D100.00%
+> >> nvme21n1: ios=3D81821809/0, merge=3D0/0, ticks=3D26653056/0,
+> >> in_queue=3D26653057, util=3D100.00% -----Original Message-----
+> >> From: Matt Wallis <mattw@madmonks.org>
+> >> Sent: Wednesday, July 28, 2021 8:54 PM
+> >> To: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>
+> >> Cc: linux-raid@vger.kernel.org
+> >> Subject: Re: [Non-DoD Source] Can't get RAID5/RAID6 NVMe randomread IO=
+PS - AMD ROME what am I missing?????
+> >>
+> >> Hi Jim,
+> >>
+> >> Totally get the Frankenstein=E2=80=99s monster aspect, I try not to bu=
+ild those where I can, but at the moment I don=E2=80=99t think there=E2=80=
+=99s much that can be done about it.
+> >> Not sure if LVM is better than MDRAID 0, it just gives you more contro=
+l over the volumes that can be created, instead of having it all in one big=
+ chunk. If you just need one big chunk, then MDRAID 0 is probably fine.
+> >>
+> >> I think if you can create a couple of scripts that allows the admin to=
+ fail a drive out of all the arrays that it=E2=80=99s in at once, then it's=
+ not that much worse than managing an MDRAID is normally.
+> >>
+> >> Matt.
+> >>
+> >>> On 28 Jul 2021, at 20:43, Finlayson, James M CIV (USA) <james.m.finla=
+yson4.civ@mail.mil> wrote:
+> >>>
+> >>> Matt,
+> >>> I have put as many as 32 partitions on a drive (based upon great advi=
+ce from this list) and done RAID6 over them, but I was concerned about our =
+sustainability long term.     As a researcher, I can do these cool science =
+experiments, but I still have to hand designs  to sustainment folks.  I was=
+ also running into an issue of doing a mdraid RAID0 on top of the RAID6's s=
+o I could toss one  xfs file system on top each of the numa node's drives a=
+nd the last RAID0 stripe of all of the RAID6's couldn't generate the queue =
+depth needed.    We even recompiled the kernel to change the mdraid nr_requ=
+est max from 128 to 1023.
+> >>>
+> >>> I will have to try the LVM experiment.  I'm an LVM  neophyte, so it m=
+ight take me the rest of today/tomorrow to get new results as I tend to let=
+ mdraid do all of its volume builds without forcing, so that will take a bi=
+t of time also.  Once might be able to argue that configuration isn't too m=
+uch of a "Frankenstein's monster" for me to hand it off.
+> >>>
+> >>> Thanks,
+> >>> Jim
+> >>>
+> >>>
+> >>>
+> >>>
+> >>> -----Original Message-----
+> >>> From: Matt Wallis <mattw@madmonks.org>
+> >>> Sent: Wednesday, July 28, 2021 6:32 AM
+> >>> To: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>
+> >>> Cc: linux-raid@vger.kernel.org
+> >>> Subject: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread I=
+OPS - AMD ROME what am I missing?????
+> >>>
+> >>> Hi Jim,
+> >>>
+> >>>> On 28 Jul 2021, at 06:32, Finlayson, James M CIV (USA) <james.m.finl=
+ayson4.civ@mail.mil> wrote:
+> >>>>
+> >>>> Sorry, this will be a long email with everything I find to be releva=
+nt, but I can get over 110GB/s of 4kB random reads from individual NVMe SSD=
+s, but I'm at a loss why mdraid can only do a very small  fraction of it.  =
+ I'm at my "organizational world record" for sustained IOPS, but I need pro=
+tected IOPS to do something useful.     This is everything I do to a server=
+ to make the I/O crank.....My role is that of a lab researcher/resident exp=
+ert/consultant.   I'm just stumped why I can't do better.   If there is a f=
+ine manual that somebody can point me to, I'm happy to read it=E2=80=A6
+> >>>
+> >>> I am probably going to get corrected on some if not all of this, but =
+from what I understand, and from my own little experiments on a similar Int=
+el based system=E2=80=A6 1. NVMe is stupid fast, you need a good chunk of C=
+PU performance to max it out.
+> >>> 2. Most block IO in the kernel is limited in terms of threading, it
+> >>> may even be essentially single threaded. (This is where I will get
+> >>> corrected) 3. AFAICT, this includes mdraid, there=E2=80=99s a single =
+thread
+> >>> per RAID device handling all the RAID calculations. (mdX_raid6)
+> >>>
+> >>> What I did to get IOPs up in a system with 24 NVMe, split up into 12 =
+per NUMA domain.
+> >>> 1. Create 8 partitions on each drive (this may be overkill, I just st=
+arted here for some reason) 2. Create 8 RAID6 arrays with 1 partition per d=
+rive.
+> >>> 3. Use LVM to create a single striped logical volume over all 8 RAID =
+volumes. RAID 0+6 as it were.
+> >>>
+> >>> You now have an LVM thread that is basically doing nothing more than =
+chunking the data as it comes in, then, sending the chunks to 8 separate RA=
+ID devices, each with their own threads, buffers, queues etc, all of which =
+can be spread over more cores.
+> >>>
+> >>> I saw a significant (for me, significant is >20%) increase in IOPs do=
+ing this.
+> >>>
+> >>> You still have RAID6 protection, but you might want to write a couple=
+ of scripts to help you manage the arrays, because a single failed drive no=
+w needs to be removed from 8 RAID volumes.
+> >>>
+> >>> There=E2=80=99s not a lot of capacity lost doing this, pretty sure I =
+lost less than 100MB to the partitions and the RAID overhead.
+> >>>
+> >>> You would never consider this on spinning disk of course, way to slow=
+ and you=E2=80=99re just going to make it slower, NVMe as you noticed has t=
+he IOPs to spare, so I=E2=80=99m pretty sure it=E2=80=99s just that we=E2=
+=80=99re not able to get the data to it fast enough.
+> >>>
+> >>> Matt
+>
+
+
+--=20
+Doug Ledford <dledford@redhat.com>
+GPG KeyID: B826A3330E572FDD
+Key fingerprint =3D AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
+
