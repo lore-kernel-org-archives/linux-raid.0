@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F2DC4338F
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Aug 2021 14:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46948C4338F
+	for <linux-raid@archiver.kernel.org>; Mon,  2 Aug 2021 14:46:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F41060F4B
-	for <linux-raid@archiver.kernel.org>; Mon,  2 Aug 2021 14:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DC25600D4
+	for <linux-raid@archiver.kernel.org>; Mon,  2 Aug 2021 14:46:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234220AbhHBOe5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 2 Aug 2021 10:34:57 -0400
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17057 "EHLO
+        id S234648AbhHBOqc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 2 Aug 2021 10:46:32 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17036 "EHLO
         sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234190AbhHBOey (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Aug 2021 10:34:54 -0400
-ARC-Seal: i=1; a=rsa-sha256; t=1627914880; cv=none; 
+        with ESMTP id S234652AbhHBOqT (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 2 Aug 2021 10:46:19 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1627915562; cv=none; 
         d=zohomail.eu; s=zohoarc; 
-        b=PmllIUVl0Q9zu1pGiz+TxCIXitcElujysWIXUvJITXy1W30ogMChcS9NJCEouKg1dFa5a0Qab6MKZoIoaszjm8stVFt0cREjVbBAEm5E72v+LTDVIdFxVS4KZo9ztuBIcGPV22VzEf8F1AUGXo/LnZUJA1R4Pw+Rn4nmsFuRA7A=
+        b=Zhie40wRbHP/Umbfbq615yGeoRV+ltuGL5EHcOd69V8LdvSDTVkFOUnsmtk3Y/pMLWmRtNx+zPUNCTkvfbx7Ez5fGBBf7GrVY7ee8HO8LRsX0NWbbxOgFIjDOvlYchNGYMEkPr8CB0Gcxr4uk+J59+7dUIrMv1zkZaEOIS/NpgE=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1627914880; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=8OdkwZ/IPA8/7RO7vkAIwa7dd5AQ/3FADKRyEdy0ZB0=; 
-        b=YP5cedoCm5zPdmWIgp6mE/aYXpTXO1wsE0aY+U4Vw0JI/a5QO+v6rDU4wrvAbbCBxPb5p4dun/BlDKnIEh8mQtlTByScJFzRA4EigIvlIEjjYoaHOHI0L56mTUslCwEe6CMa3vYwPFGObJ3PhYLZnqMmpCWPjTnOYG4qtBaBTl8=
+        t=1627915562; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=FMPBBp3ZliPmOT0LwGM+F/SjQeSLiL+5n8fzqIBgUf4=; 
+        b=Rmo0QC7JAEdsi3fg3rLqcP8I9OOKlqihKIzSCBE78VMuzyh5ww/3cqbQaZQGzpGqQPy2CJK1j6ENGR2W7SyLUo88EsGYatcpRqqsaRS4XjzdS937rmQ7VirzCw9j4nc2qb5B1YmCm4BT+JEBPciaVDSQcpd8q84Hp4xCVqHAGuE=
 ARC-Authentication-Results: i=1; mx.zohomail.eu;
         spf=pass  smtp.mailfrom=jes@trained-monkey.org;
         dmarc=pass header.from=<jes@trained-monkey.org>
 Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 1627914880021569.0995172989291; Mon, 2 Aug 2021 16:34:40 +0200 (CEST)
-Subject: Re: [PATCH 1/5] tests: remove raid0 tests for 0.90 metadata version
+        with SMTPS id 1627915560170844.4754173667683; Mon, 2 Aug 2021 16:46:00 +0200 (CEST)
+Subject: Re: [PATCH 2/5] tests: clear the superblock before adding a device to
+ the array.
 To:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
 Cc:     linux-raid@vger.kernel.org
-References: <20210722182733.GA24996@oracle.com>
+References: <20210722182803.GA25122@oracle.com>
 From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <eecd7f0b-2d6c-44ac-92f8-33c600e13c3d@trained-monkey.org>
-Date:   Mon, 2 Aug 2021 10:34:39 -0400
+Message-ID: <e4fd4358-650f-f259-ca76-78a8342627d1@trained-monkey.org>
+Date:   Mon, 2 Aug 2021 10:45:59 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <20210722182733.GA24996@oracle.com>
+In-Reply-To: <20210722182803.GA25122@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -50,31 +51,48 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 7/22/21 2:27 PM, Sudhakar Panneerselvam wrote:
-> Some of the test cases fail because raid0 creation fails with the error,
-> "0.90 metadata does not support layouts for RAID0" added by commit,
-> 329dfc28debb. Removing the 0.90 test to make these test cases to work.
-> 
-> removed 04r0update test completely as it is specific to raid0 for 0.9
-> version.
-> 
-> '04update-metadata' and '03r0assem' still fails at a different place after
-> this change which will be fixed in an upcoming commit.
+On 7/22/21 2:28 PM, Sudhakar Panneerselvam wrote:
+> This fixes '02lineargrow' test as prior metadata causes --add operation
+> to fail.
 > 
 > Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
 > ---
->  tests/00raid0           | 11 --------
->  tests/00readonly        |  4 +++
->  tests/03r0assem         | 72 -------------------------------------------------
->  tests/04r0update        | 20 --------------
->  tests/04update-metadata |  2 +-
->  5 files changed, 5 insertions(+), 104 deletions(-)
->  delete mode 100644 tests/04r0update
+>  test | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/test b/test
+> index 711a3c7a2076..39a85d77fa25 100755
+> --- a/test
+> +++ b/test
+> @@ -48,7 +48,7 @@ mdadm() {
+>  		;;
+>  	esac
+>  	case $* in
+> -	*-C* | *--create* | *-B* | *--build* )
+> +	*-C* | *--create* | *-B* | *--build* | *--add* )
+>  		# clear superblock every time once creating or
+>  		# building arrays, because it's always creating
+>  		# and building array many times in a test case.
+> @@ -59,7 +59,12 @@ mdadm() {
+>  					$mdadm --zero $args > /dev/null
+>  			}
+>  		done
+> -		$mdadm 2> $targetdir/stderr --quiet "$@" --auto=yes
+> +		if [[ $* == *--add* ]]
+> +		then
+> +			$mdadm 2> $targetdir/stderr --quiet "$@"
+> +		else
+> +			$mdadm 2> $targetdir/stderr --quiet "$@" --auto=yes
+> +		fi
+>  		;;
+>  	* )
+>  		$mdadm 2> $targetdir/stderr --quiet "$@"
+> 
 
-I'm really happy to see effort put into updating the test suite. However
-rather than removing tests, it would be nice to turn it around and make
-a test that make sure we do not allow creating a 0.9 raid0 array with
-layouts.
+I am not sure this is the right approach to fix this. --add has two
+meanings and we would potentially want test cases where we make sure not
+to add arrays with pre-existing meta-data on them. I think it's better
+to fix this in 02lineargrow
 
-Cheers,
+Thanks,
 Jes
