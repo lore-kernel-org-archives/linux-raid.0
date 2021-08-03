@@ -2,90 +2,117 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C18C4338F
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 14:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F144C4338F
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 15:00:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5064A601FD
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 14:23:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2406760243
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 15:00:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235142AbhHCOX7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 3 Aug 2021 10:23:59 -0400
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17010 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234328AbhHCOX7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Aug 2021 10:23:59 -0400
-ARC-Seal: i=1; a=rsa-sha256; t=1628000616; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=bt0COOgZpeDk9g93LtEp483FBeO17r4rrmm+ZaWf7ZTUpWzsVQWBTjXeobcWf8QXuKWsqmDuSfPKhNHhBp05t9CvvBfFNHIN5hxmdYGLXGa4eHVNpWF2QksTdXODxc2NHwGsfQIKN5t3UtK5Wwr6V9sVFvO/epid/i4iCX1sqU4=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1628000616; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=LwxKGs1pJU9D2LnjIx/LkzIfcGdbhG0CWsnstdT6cZ0=; 
-        b=YPt32sC7R5QqX57O60EQoNHJem360adGb0eg3cEENVHlFXNI3HXqMPqndtqvp+0lqYmjT2zDdGkDUX+SuLOaxRqCSnPXAZkorOjWTfo1gPwnciDmyU5pxpzW54rw66fDBFhid4McOfouAZM6BxYUN9wXs8NBb66nYBe7BU0Nu7M=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 1628000615811985.1582916031455; Tue, 3 Aug 2021 16:23:35 +0200 (CEST)
-Subject: Re: ANNOUNCE: mdadm 4.2-rc2 - A tool for managing md Soft RAID under
- Linux
-To:     Felix Lechner <lechner@debian.org>
-Cc:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-References: <23ff060b-0958-ffc5-7da6-64948ec3179c@trained-monkey.org>
- <CAFHYt56dQ6NHL+q8vbFvF4+Dq0c7ui+p64fi0uUo=game-hRMw@mail.gmail.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <736a794b-26c5-4ea2-0464-3b2964684a45@trained-monkey.org>
-Date:   Tue, 3 Aug 2021 10:23:34 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
-MIME-Version: 1.0
-In-Reply-To: <CAFHYt56dQ6NHL+q8vbFvF4+Dq0c7ui+p64fi0uUo=game-hRMw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        id S235773AbhHCPAo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 3 Aug 2021 11:00:44 -0400
+Received: from UPDC19PA23.eemsg.mail.mil ([214.24.27.198]:47259 "EHLO
+        UPDC19PA23.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235368AbhHCPAm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Aug 2021 11:00:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
+  t=1628002832; x=1659538832;
+  h=from:to:subject:date:message-id:references:in-reply-to:
+   content-transfer-encoding:mime-version;
+  bh=gNvXUpO+FUybRRNkfiPGSijk9jBD0CXnbjyBh3gPVLg=;
+  b=cl73tNvrXb+8ghkQXc5N61ylMjSzu7Kv+/Vv1AhXVpoSBdeOQuyPQrC3
+   doreaY6rn+J1eEtxTzZ6PoHtX40tizOOZhkYWUdj45wxWcOeYI1rym4Kf
+   /tZQ6TG8hxl7qGDd8PMrROYskREWajViKhKPUB6zKPj5Ba4khl8PwMtRN
+   6eS5Uag4/aF1k0G+h0ApGb4nUvjXagczjfdMr1fkh0jdLZPTdqhVlmnCa
+   qv41bcE2uvnzmmcEnHhlB/GTbKuk/s106tau4CKfPprdomrNCqrKJXWU7
+   X0xYg4J0HKJ2J4I/lfOpIfU/89Mjz0H1FO2Z+UqtBaIdWDK2d0Z+t2OSm
+   Q==;
+X-EEMSG-check-017: 250496304|UPDC19PA23_ESA_OUT05.csd.disa.mil
+X-IronPort-AV: E=Sophos;i="5.84,291,1620691200"; 
+   d="scan'208";a="250496304"
+Received: from edge-mech02.mail.mil ([214.21.130.229])
+  by UPDC19PA23.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 03 Aug 2021 15:00:28 +0000
+Received: from UMECHPAPA.easf.csd.disa.mil (214.21.130.170) by
+ edge-mech02.mail.mil (214.21.130.229) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Tue, 3 Aug 2021 14:59:45 +0000
+Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.164]) by
+ umechpapa.easf.csd.disa.mil ([214.21.130.170]) with mapi id 14.03.0513.000;
+ Tue, 3 Aug 2021 14:59:45 +0000
+From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+To:     'Gal Ofri' <gal.ofri@volumez.com>,
+        "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+Subject: RE: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread IOPS
+ - AMD ROME what am I missing?????
+Thread-Topic: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread
+ IOPS - AMD ROME what am I missing?????
+Thread-Index: AQHXhsdfCwKapbYhRUCHiA82Jmy1gath4UwA
+Date:   Tue, 3 Aug 2021 14:59:45 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A2385856215@UMECHPA7B.easf.csd.disa.mil>
+References: <5EAED86C53DED2479E3E145969315A2385841062@UMECHPA7B.easf.csd.disa.mil>
+ <20210801142107.407b000a@gofri-dell>
+In-Reply-To: <20210801142107.407b000a@gofri-dell>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [214.21.44.12]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/3/21 8:07 AM, Felix Lechner wrote:
-> Hi Jes,
-> 
-> On Mon, Aug 2, 2021 at 10:14 AM Jes Sorensen <jes@trained-monkey.org> wrote:
->>
->> I am pleased to announce the availability of the second rc release of
->> mdadm-4.2
-> 
-> Thanks for this! I package mdadm in Debian. Did you push your most
-> recent changes?
-> 
-> Could you furthermore tag the RC commits, please? For the previous
-> release candidate 4.2-rc1 I found commit c11b1c3c, but it was
-> untagged. In Debian, we replace the tilde with an underscore as
-> described here [1] to get around Git's tag name restrictions. It would
-> be great if you tag both commits in Git, please.
+Gal,
+My SA just gave me the server with the 5.14 RC4 kernel built.   I have a tw=
+o pass preconditioning run  going right now to get us maximum results.   I =
+expect to be able to run the tests hopefully by COB Wednesday.   Preconditi=
+oning will take 8 hours unfortunately (15.36TB drives), I have to make BIOS=
+ changes for apples to apples "hero runs" and then get the mdraid's created=
+.    In your opinion, if I bypass the initial formatting with mdadm --assum=
+e-clean, will that make a difference in the results?    I usually let the f=
+ormat run, but I want to get you results as soon as possible.
+Thanks,
+Jim
 
-It's been pushed now, I forgot to push it after I tagged it and did the
-release build. My bad, sorry. Thanks for pointing this out.
 
-> Finally, a question about procedure: Do you folks copy people
-> explicitly when replying even though they are on the list? Thank you
-> for all your hard work!
 
-I generally reply all, I like to have the thread directly in my inbox if
-I am on the CC list.
+
+-----Original Message-----
+From: Gal Ofri <gal.ofri@volumez.com>=20
+Sent: Sunday, August 1, 2021 7:21 AM
+To: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>
+Cc: 'linux-raid@vger.kernel.org' <linux-raid@vger.kernel.org>
+Subject: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread IOPS - =
+AMD ROME what am I missing?????
+
+All active links contained in this email were disabled.  Please verify the =
+identity of the sender, and confirm the authenticity of all links contained=
+ within the message prior to copying and pasting the address to a Web brows=
+er. =20
+
+
+
+
+----
+
+Hey Jim,
+
+Read iops (rand/seq) were addressed in a recent commit:
+97ae27252f49 md/raid5: avoid device_lock in read_one_chunk() Caution-https:=
+//github.com/torvalds/linux/commit/97ae27252f4962d0fcc38ee1d9f913d817a2024e
+It was merged into 5.14, so you can either cherry-pick it or just use a lat=
+est-master kernel.
+
+Sounds like your environment is stronger than the one I used for the testin=
+g, so please do share your benchmark if you manage to surpass the results d=
+escribed in the commit message.
 
 Cheers,
-Jes
-
-
-> Kind regards
-> Felix Lechner
-> 
-> [1] https://dep-team.pages.debian.net/deps/dep14/
-> 
-
+Gal Ofri,
+Volumez (formerly storing.io)
