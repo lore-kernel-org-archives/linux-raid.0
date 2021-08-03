@@ -2,146 +2,58 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7274CC4338F
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 16:10:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C62C4338F
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 16:34:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5924161103
-	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 16:10:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF16F60F8F
+	for <linux-raid@archiver.kernel.org>; Tue,  3 Aug 2021 16:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232252AbhHCQKx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 3 Aug 2021 12:10:53 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:58112 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231688AbhHCQKv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 3 Aug 2021 12:10:51 -0400
-Date:   Tue, 3 Aug 2021 18:10:33 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1628007036;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZhCR89X1oG7iNKpxBHqwK160maOrSQVKgeomxdN0wRc=;
-        b=LwdXqV6TEL+jelWYIVu/L1AwkukJUhfDeR6fxf6HaCffMyf5pGalG64DdzD6SrFbnK74/x
-        PVNjb7a8JiALCQD3CJBVmxfKVnGPRCXtU70BUFy11admR5LtOLT9dQeI/ENtXdJ/CkhTdc
-        pZNvsYTpT+QPzjRhgzvNT0CjgoFJhxwmycapteSubpDkPSBjZ+FP8bxnvUSWW30Gz0Y7dW
-        1ffy1Rr5tDaLDwQ1cWTtCeME4yw92tE3YUaDago5Lw9pEtw1H1L8au8do+a32W2/sN3gs0
-        btcFKclunpFVufnMA6+fMpSDPoeRfMtyi+RFwzALyjj/jtaWzgKiRMXG8gO4tg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1628007036;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZhCR89X1oG7iNKpxBHqwK160maOrSQVKgeomxdN0wRc=;
-        b=CjGblo5JavDHAEsakSWenCqJ60bnDYFeC+TGn7n/YdarB5rRq+iJbcWjrVSzA5F0n0kDM4
-        Vc1wmHGVCRR8DGCA==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, tglx@linutronix.de,
-        Peter Zijlstra <peterz@infradead.org>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Amit Kucheria <amitk@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Ben Segall <bsegall@google.com>,
-        Borislav Petkov <bp@alien8.de>, cgroups@vger.kernel.org,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        coresight@lists.linaro.org,
-        Daniel Bristot de Oliveira <bristot@redhat.com>,
-        Daniel Jordan <daniel.m.jordan@oracle.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Dietmar Eggemann <dietmar.eggemann@arm.com>,
-        Gonglei <arei.gonglei@huawei.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jason Wang <jasowang@redhat.com>,
-        Jean Delvare <jdelvare@suse.com>,
-        Jiri Kosina <jikos@kernel.org>, Jiri Olsa <jolsa@redhat.com>,
-        Joe Lawrence <joe.lawrence@redhat.com>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Karol Herbst <karolherbst@gmail.com>,
-        Karsten Graul <kgraul@linux.ibm.com>, kvm-ppc@vger.kernel.org,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <lenb@kernel.org>, Len Brown <len.brown@intel.com>,
-        Leo Yan <leo.yan@linaro.org>, linux-acpi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-edac@vger.kernel.org,
-        linux-hwmon@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-mm@kvack.org, linux-pm@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, live-patching@vger.kernel.org,
-        Mark Gross <mgross@linux.intel.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Mel Gorman <mgorman@suse.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Mike Leach <mike.leach@linaro.org>,
-        Mike Travis <mike.travis@hpe.com>,
-        Miroslav Benes <mbenes@suse.cz>,
-        Namhyung Kim <namhyung@kernel.org>, netdev@vger.kernel.org,
-        nouveau@lists.freedesktop.org,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Paul Mackerras <paulus@samba.org>, Pavel Machek <pavel@ucw.cz>,
-        Pekka Paalanen <ppaalanen@gmail.com>,
-        Petr Mladek <pmladek@suse.com>,
-        platform-driver-x86@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, rcu@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, x86@kernel.org
-Subject: Re: [PATCH 00/38] Replace deprecated CPU-hotplug
-Message-ID: <20210803161033.vp3o34meyw3ek43z@linutronix.de>
-References: <20210803141621.780504-1-bigeasy@linutronix.de>
- <83dc5dfd-1ed0-f428-826f-fb819911fc89@redhat.com>
+        id S234065AbhHCQer (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 3 Aug 2021 12:34:47 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:27972 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234060AbhHCQeo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 3 Aug 2021 12:34:44 -0400
+Received: from host86-162-184-27.range86-162.btcentralplus.com ([86.162.184.27] helo=[192.168.1.64])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1mAxN8-0007ST-Fu; Tue, 03 Aug 2021 17:34:31 +0100
+Subject: Re: ANNOUNCE: mdadm 4.2-rc2 - A tool for managing md Soft RAID under
+ Linux
+To:     Jes Sorensen <jes@trained-monkey.org>,
+        Felix Lechner <lechner@debian.org>
+References: <23ff060b-0958-ffc5-7da6-64948ec3179c@trained-monkey.org>
+ <CAFHYt56dQ6NHL+q8vbFvF4+Dq0c7ui+p64fi0uUo=game-hRMw@mail.gmail.com>
+ <736a794b-26c5-4ea2-0464-3b2964684a45@trained-monkey.org>
+Cc:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+From:   Wols Lists <antlists@youngman.org.uk>
+Message-ID: <61096F94.8060201@youngman.org.uk>
+Date:   Tue, 3 Aug 2021 17:32:20 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
+ Thunderbird/38.7.0
 MIME-Version: 1.0
+In-Reply-To: <736a794b-26c5-4ea2-0464-3b2964684a45@trained-monkey.org>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <83dc5dfd-1ed0-f428-826f-fb819911fc89@redhat.com>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2021-08-03 17:30:40 [+0200], Hans de Goede wrote:
-> Hi Sebastien,
-Hi Hans,
+On 03/08/21 15:23, Jes Sorensen wrote:
+>> Finally, a question about procedure: Do you folks copy people
+>> > explicitly when replying even though they are on the list? Thank you
+>> > for all your hard work!
 
-> On 8/3/21 4:15 PM, Sebastian Andrzej Siewior wrote:
-> > This is a tree wide replacement of the deprecated CPU hotplug functions
-> > which are only wrappers around the actual functions.
-> > 
-> > Each patch is independent and can be picked up by the relevant maintainer.
-> 
-> Ok; and I take it that then also is the plan for merging these ?
-> 
-> FWIW I'm fine with the drivers/platform/x86 patch going upstream
-> through some other tree if its easier to keep the set together ...
+> I generally reply all, I like to have the thread directly in my inbox if
+> I am on the CC list.
 
-There is no need to keep that set together since each patch is
-independent. Please merge it through your tree.
+The raid web site asks people to follow lkml conventions of "reply all
+unless otherwise requested in the sig". Not that everybody does that :-)
 
-> Regards,
-> 
-> Hans
-
-Sebastian
+Cheers,
+Wol
