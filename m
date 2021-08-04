@@ -2,42 +2,39 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F26C8C43216
-	for <linux-raid@archiver.kernel.org>; Wed,  4 Aug 2021 10:12:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1BEAC4320A
+	for <linux-raid@archiver.kernel.org>; Wed,  4 Aug 2021 14:33:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD0E760F0F
-	for <linux-raid@archiver.kernel.org>; Wed,  4 Aug 2021 10:12:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CDBF60FC3
+	for <linux-raid@archiver.kernel.org>; Wed,  4 Aug 2021 14:33:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237425AbhHDKMS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 4 Aug 2021 06:12:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237586AbhHDKLC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 4 Aug 2021 06:11:02 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F5A3C0617A0;
-        Wed,  4 Aug 2021 03:10:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=GMfM9EsZUBHncaik750rjQrck1K0EDt7Zyd8DyDsQR8=; b=tr+JWjNanWktxua2tu8KBEVQPM
-        VyctgS15pe259rzKfF5Cnl9zsGOZwGuYm9KKXEG9KkVU/OXjXmoutUxD3KtVa1hc7sIzDOL0xBHg6
-        ouWKg49YE/w0a3I/5CyE5im2/IkgIt5h36qDG6iEVKLdm0bYYEaWZQNNpQ3/ly3BhHTT+VGChTRSA
-        t1t4AV538fKbiuL2Yzgst/hi/JUFHCOzwHqdzg8ut46IDHJ3Z60UfyB0/ffmOuu7Ku3k+weyK559G
-        73X58xMPec7XJUSNLOyS/qJ7yYdzHQEljjfYG426vMaByMMBIZ1fvI2CSO1n9hwhGNLZQ/aY/Dvn+
-        uR6ZApew==;
-Received: from [2a02:1205:5023:1f80:c068:bd3d:78b3:7d37] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mBDoj-005g7I-Ho; Wed, 04 Aug 2021 10:08:23 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Richard Weinberger <richard@nod.at>,
+        id S238675AbhHDOdv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 4 Aug 2021 10:33:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38844 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238703AbhHDOd3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 4 Aug 2021 10:33:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AA66960F58;
+        Wed,  4 Aug 2021 14:33:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628087596;
+        bh=C00JtgOcAHMho4HSW46amt4u1PEDLgE0FCLDRj9vJyE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=r5GGuOVFvQsum4XAR7C7YBvKDsK/mFn7OHK1uuaLXRstSUvJF6WN5SAcMH42cka84
+         XNI6JmV4ddzVk3D3J2YlbCsl6RVftxgl1k5Vs3nz5huKGNFgnQBY2iei65nSAundBj
+         gr1MQgM6nEcpjWrclG+PO2XuVtuhgDLnuVCxLN/ur1yVfnHV1jME0OH5CUcgso0JH9
+         OkCnqulR6QQPlr+/+sWhnm9w3GZI3LrX0Du7/iC3FQiuwUJ/6hK/4Zm/l13ruiwaM0
+         PswWW1T0VxSiyJLTXtgN/AKJ1p4nBl2lAi+w/iFwSNC7dXt6aRCMFqvyz/tryXYCNL
+         6UR6ytS23PJoQ==
+Date:   Wed, 4 Aug 2021 07:33:12 -0700
+From:   Keith Busch <kbusch@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
         Anton Ivanov <anton.ivanov@cambridgegreys.com>,
         Geoff Levand <geoff@infradead.org>,
         Ilya Dryomov <idryomov@gmail.com>,
@@ -54,45 +51,46 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 15/15] nvme: use bvec_virt
-Date:   Wed,  4 Aug 2021 11:56:34 +0200
-Message-Id: <20210804095634.460779-16-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210804095634.460779-1-hch@lst.de>
+Subject: Re: [PATCH 15/15] nvme: use bvec_virt
+Message-ID: <20210804143312.GA2296276@dhcp-10-100-145-180.wdc.com>
 References: <20210804095634.460779-1-hch@lst.de>
+ <20210804095634.460779-16-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210804095634.460779-16-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use bvec_virt instead of open coding it.
+On Wed, Aug 04, 2021 at 11:56:34AM +0200, Christoph Hellwig wrote:
+> Use bvec_virt instead of open coding it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/nvme/host/core.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index dfd9dec0c1f6..02ce94b2906b 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -968,12 +968,11 @@ void nvme_cleanup_cmd(struct request *req)
+>  {
+>  	if (req->rq_flags & RQF_SPECIAL_PAYLOAD) {
+>  		struct nvme_ctrl *ctrl = nvme_req(req)->ctrl;
+> -		struct page *page = req->special_vec.bv_page;
+>  
+> -		if (page == ctrl->discard_page)
+> +		if (req->special_vec.bv_page == ctrl->discard_page)
+>  			clear_bit_unlock(0, &ctrl->discard_page_busy);
+>  		else
+> -			kfree(page_address(page) + req->special_vec.bv_offset);
+> +			kfree(bvec_virt(&req->special_vec));
+>  	}
+>  }
+>  EXPORT_SYMBOL_GPL(nvme_cleanup_cmd);
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/host/core.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Looks good.
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index dfd9dec0c1f6..02ce94b2906b 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -968,12 +968,11 @@ void nvme_cleanup_cmd(struct request *req)
- {
- 	if (req->rq_flags & RQF_SPECIAL_PAYLOAD) {
- 		struct nvme_ctrl *ctrl = nvme_req(req)->ctrl;
--		struct page *page = req->special_vec.bv_page;
- 
--		if (page == ctrl->discard_page)
-+		if (req->special_vec.bv_page == ctrl->discard_page)
- 			clear_bit_unlock(0, &ctrl->discard_page_busy);
- 		else
--			kfree(page_address(page) + req->special_vec.bv_offset);
-+			kfree(bvec_virt(&req->special_vec));
- 	}
- }
- EXPORT_SYMBOL_GPL(nvme_cleanup_cmd);
--- 
-2.30.2
-
+Reviewed-by: Keith Busch <kbusch@kernel.org>
