@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FFEFC4338F
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 19:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89662C4338F
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 20:50:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 466AD60720
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 19:52:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F6DE600EF
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 20:50:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239523AbhHETw0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Aug 2021 15:52:26 -0400
-Received: from UPDC19PA21.eemsg.mail.mil ([214.24.27.196]:18208 "EHLO
-        UPDC19PA21.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231387AbhHETw0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 15:52:26 -0400
+        id S232591AbhHEUvM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Aug 2021 16:51:12 -0400
+Received: from UPDC19PA23.eemsg.mail.mil ([214.24.27.198]:55051 "EHLO
+        UPDC19PA23.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231689AbhHEUvI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 16:51:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1628193131; x=1659729131;
+  t=1628196653; x=1659732653;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=KqY0LEmrjcN3v6lErD6Ii62+Slw5gLg41OgTo7PpXL4=;
-  b=J2B6+7VSRDUdfwpb4dE4hR9MDgDk1Oh3wyEQlWFfPqrYW43kTVwoUTak
-   tMaIyLZp5n02pREwQpqCFp9d5XZ+26lRW5S3bY3sOUrYjal/8P6na7LQu
-   WSZuuiZFvEF5V2qaWqn0JAdFaNtfahLUP/HHM9VtidG/e7XkmcdrABXoF
-   ZGd3//UIlAK5qqLM6b76YmloloO5cst8LLto6GMWN/jmk5/pJTyQU7J1G
-   2+7qQkB+ycRteZIIlml1qxmqEU6TiY212qvwKn3m1b4R1J865jKJIvA42
-   XH3WlooqgXxaB9ambs2t4X+Mw7UYOVesoBLsavt2g7/EZdLS/qavv8wJO
-   w==;
-X-EEMSG-check-017: 251535518|UPDC19PA21_ESA_OUT03.csd.disa.mil
+  bh=z477zErh0GY0qzi5ROTRJFy5OQO3sv5oF1R0R5K3L48=;
+  b=Xr+eHhuO2kxWnGUIFNZaQ5YabhAt6+f9R/Is1e78y/DvSDzHIAiBkYl1
+   qBTaV3c5WFLGs9ctwqUI9D16rwQIJ8Blb8sMBaRBKS2S5Gcpq4Ix3choA
+   MNLRlLggyxvaWZpGmPK7oJQUMKWUex+bCQGVoWly/47+/0XoAO2hqgAqe
+   UFw2B6ynYDY1hagxFrtHc1jM3D64hFLqIqOH6iwbrvvGhrZf3tzP1Ianb
+   jk59HOLUAc7eT6W+ZrCmVlgVOUq++iPLXCQX4jp9dJmXZQmJMnQTPfTcH
+   v3zSEWBdi0qDCEk8H3+QteRlgSxQAniH5VYH8kh1j7Zfjhx6Vpe+c1IhB
+   g==;
+X-EEMSG-check-017: 251640452|UPDC19PA23_ESA_OUT05.csd.disa.mil
 X-IronPort-AV: E=Sophos;i="5.84,296,1620691200"; 
-   d="scan'208";a="251535518"
-Received: from edge-mech02.mail.mil ([214.21.130.230])
-  by UPDC19PA21.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 05 Aug 2021 19:52:07 +0000
-Received: from UMECHPAPB.easf.csd.disa.mil (214.21.130.171) by
- edge-mech02.mail.mil (214.21.130.230) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Thu, 5 Aug 2021 19:52:01 +0000
+   d="scan'208";a="251640452"
+Received: from edge-mech02.mail.mil ([214.21.130.229])
+  by UPDC19PA23.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 05 Aug 2021 20:50:50 +0000
+Received: from UMECHPAOW.easf.csd.disa.mil (214.21.130.166) by
+ edge-mech02.mail.mil (214.21.130.229) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Thu, 5 Aug 2021 20:50:16 +0000
 Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.164]) by
- umechpapb.easf.csd.disa.mil ([214.21.130.171]) with mapi id 14.03.0513.000;
- Thu, 5 Aug 2021 19:52:01 +0000
+ umechpaow.easf.csd.disa.mil ([214.21.130.166]) with mapi id 14.03.0513.000;
+ Thu, 5 Aug 2021 20:50:16 +0000
 From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
 To:     "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 CC:     'Gal Ofri' <gal.ofri@volumez.com>,
@@ -51,14 +51,15 @@ Subject: RE: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread IOPS
  - AMD ROME what am I missing?????
 Thread-Topic: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread
  IOPS - AMD ROME what am I missing?????
-Thread-Index: AQHXg5T/4rk7hCCa50OEioMjNG53XatlVF4ggAAKU8CAAACJAA==
-Date:   Thu, 5 Aug 2021 19:52:01 +0000
-Message-ID: <5EAED86C53DED2479E3E145969315A2385856B25@UMECHPA7B.easf.csd.disa.mil>
+Thread-Index: AQHXg5T/4rk7hCCa50OEioMjNG53XatlVF4ggAAKU8CAAACJAIAACzvA
+Date:   Thu, 5 Aug 2021 20:50:16 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A2385856B62@UMECHPA7B.easf.csd.disa.mil>
 References: <5EAED86C53DED2479E3E145969315A2385841062@UMECHPA7B.easf.csd.disa.mil>
  <AS8PR04MB799205817C4647DAC740DE9A91EA9@AS8PR04MB7992.eurprd04.prod.outlook.com>
  <5EAED86C53DED2479E3E145969315A2385856AD0@UMECHPA7B.easf.csd.disa.mil>
  <5EAED86C53DED2479E3E145969315A2385856AF7@UMECHPA7B.easf.csd.disa.mil>
-In-Reply-To: <5EAED86C53DED2479E3E145969315A2385856AF7@UMECHPA7B.easf.csd.disa.mil>
+ <5EAED86C53DED2479E3E145969315A2385856B25@UMECHPA7B.easf.csd.disa.mil>
+In-Reply-To: <5EAED86C53DED2479E3E145969315A2385856B25@UMECHPA7B.easf.csd.disa.mil>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -71,10 +72,47 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+As far as the slower hero numbers - false alarm on my part - rebooted with =
+4.18 RHEL 8.4 kernel
+Socket0 hero - 13.2M IOPS, Socket1 hero 13.7M IOPS.   I have to figure out =
+the differences either between my drives or my server.  Chances are, slot f=
+or slot I have PCIe cards that are in different slots between the two serve=
+rs if I had to guess....
+
+As a major flag though - with mdraid volumes I created under the 5.14rc3 ke=
+rnel, I lock the system up solid when I try to access them under 4.18.....I=
+'m not an expert on forcing NMI's and getting the stack traces, so I might =
+have to leave that to others.....After two lockups, I returned to the 5.14 =
+kernel.   If I need to run something - you have seen the config I have - I'=
+m willing.  =20
+
+I'm willing to push as hard as I can and to run anything that can help as l=
+ong as it isn't urgent - I have a day job and have some constraints as a ci=
+vil servant, however, I have the researcher, push push push mindset.   I wa=
+nt to really encourage the community to push as hard as possible on protect=
+ed IOPS and I'm willing to help however I can....In my interactions with th=
+e processor and server OEMs - I'm encouraging them to get the Linux leaders=
+ in I/O development, the biggest baddest Server/SSD combinations they have =
+early in the development.   I know they won't listen to me but I'm trying t=
+o help.
+
+For those of you on Rome server, get with your server provider.   There are=
+ some things in the BIOS that can be tweaked for I/O.  =20
+
+
+-----Original Message-----
+From: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>=20
+Sent: Thursday, August 5, 2021 3:52 PM
+To: 'linux-raid@vger.kernel.org' <linux-raid@vger.kernel.org>
+Cc: 'Gal Ofri' <gal.ofri@volumez.com>; Finlayson, James M CIV (USA) <james.=
+m.finlayson4.civ@mail.mil>
+Subject: RE: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread IOP=
+S - AMD ROME what am I missing?????
+
 Sorry - again..I sent HTML instead of plain text
 
-Resend - mailing list bounce=A0=20
-All,=20
+Resend - mailing list bounce
+All,
 Sorry for the delay - both work and life got into the way.=A0=A0 Here is so=
 me feedback:
 
@@ -106,7 +144,7 @@ n another - =A0the way HPE allocates the nvme drives to pcie root complexes=
  =A0is not how I'd like to do it so the drives are unbalanced on the PCIe r=
 oot complexes (drives are in 4 different root complexes on socket 0 and 3 o=
 n socket 1, so one would think socket0 will always be faster for hero runs =
-=A0(an NPS4 numa mapping is the best way to show it:=A0=20
+=A0(an NPS4 numa mapping is the best way to show it:
 [root@gremlin04 hornet05]# cat *nps4
 #filename=3D/dev/nvme0n1 0
 #filename=3D/dev/nvme1n1 0
@@ -136,21 +174,17 @@ n socket 1, so one would think socket0 will always be faster for hero runs =
 
 fio fiojim.hpdl385.nps1
 socket0: (g=3D0): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-4096B, (T)=
- 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128
-...
+ 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
 socket1: (g=3D1): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-4096B, (T)=
- 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128
-...
+ 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
 socket0-md: (g=3D2): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-4096B, =
-(T) 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128
-...
+(T) 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
 socket1-md: (g=3D3): rw=3Drandread, bs=3D(R) 4096B-4096B, (W) 4096B-4096B, =
-(T) 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128
-...
+(T) 4096B-4096B, ioengine=3Dlibaio, iodepth=3D128 ...
 fio-3.26
 Starting 256 processes
 Jobs: 128 (f=3D128): [_(128),r(128)][1.5%][r=3D42.8GiB/s][r=3D11.2M IOPS][e=
-ta 10h:40m:00s]=A0=A0=A0=A0=A0=A0=A0=20
+ta 10h:40m:00s]
 socket0: (groupid=3D0, jobs=3D64): err=3D 0: pid=3D522428: Thu Aug=A0 5 19:=
 33:05 2021
 =A0 read: IOPS=3D13.2M, BW=3D50.2GiB/s (53.9GB/s)(14.7TiB/300005msec)
@@ -374,7 +408,7 @@ Disk stats (read/write):
 =A0 md1: ios=3D1767484212/0, merge=3D0/0, ticks=3D427666887/0, in_queue=3D4=
 27666887, util=3D100.00%
 
-From: Gal Ofri <gal.ofri@volumez.com>=20
+From: Gal Ofri <gal.ofri@volumez.com>
 Sent: Wednesday, July 28, 2021 5:43 AM
 To: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>; 'linux-=
 raid@vger.kernel.org' <linux-raid@vger.kernel.org>
@@ -391,8 +425,8 @@ A recent commit raised the=A0limit on raid5/6 read iops.
 It's available in 5.14.
 See=A0Caution-https://github.com/torvalds/linux/commit/97ae27252f4962d0fcc3=
 8ee1d9f913d817a2024e=A0<=A0Caution-https://github.com/torvalds/linux/commit=
-/97ae27252f4962d0fcc38ee1d9f913d817a2024e=A0>=A0
-commit 97ae27252f4962d0fcc38ee1d9f913d817a2024e
+/97ae27252f4962d0fcc38ee1d9f913d817a2024e=A0> commit 97ae27252f4962d0fcc38e=
+e1d9f913d817a2024e
 Author: Gal Ofri <gal.ofri@storing.io>
 Date: =A0 Mon Jun 7 14:07:03 2021 +0300
 =A0 =A0 md/raid5: avoid device_lock in read_one_chunk()
@@ -401,5 +435,5 @@ Please do share if you reach more iops in your env than described in the co=
 mmit.
 
 Cheers,
-Gal,=A0
+Gal,
 Volumez (formerly storing.io)
