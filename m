@@ -2,63 +2,38 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CBAFC432BE
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 06:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FC1AC432BE
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 12:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B39561004
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 06:19:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D53161152
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 12:01:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235974AbhHEGUA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Aug 2021 02:20:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42534 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229778AbhHEGT7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 02:19:59 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 579D3C061765;
-        Wed,  4 Aug 2021 23:19:46 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id nh14so6531106pjb.2;
-        Wed, 04 Aug 2021 23:19:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Us8M4Gz10TOU+v1I5NsNfx0zgCQlwHS7fXqY8nkODX4=;
-        b=NmphZcKHDr5rzeeiJu0gciOePeopU2TUfYviW4P0HGDE7eQ7rlOkWulSippslpN7hI
-         KbiuY7BMkNLpA3KqdMnGptqECAiI0U+Ak9aV80XIgQ6d7TzHsqM4uDuFBN/RjTWP4dFi
-         v2wWmB7dicFmiRtF/+fN1KXwh1JHYKc7Cccp5WBNRYX1xc9WfWeQ98S5ZK3t/bQ/YWsA
-         1tn0ksVptVHOuY5mogE+aT/nGQLlOduKg9Neq8j/WElHzV63gKu4Ou+WpOPovZW8GC3S
-         lTU8D0eXfSbhbH4EHGHVR3wXlcn80rxe2kU9gIf02PVZUsle8ZWaAo8SBvhe2OpOLwMx
-         u/bg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Us8M4Gz10TOU+v1I5NsNfx0zgCQlwHS7fXqY8nkODX4=;
-        b=sA9cQNxq2I33w0ZIQSK3ezX+IhwzyK1VuFNlBJljZ97J8xbw+OOhUUcJWv04nB6Xm8
-         iq9u8t7QCNOXJLt5XEflAAjgvmvGW1aS8Ar3uM6fqQ7CbFWzVKRFSgmbleb69aPxTXqu
-         jnyYNlrz12vldMXzIdwDBPoAPhVE2/qTFLSYGH/DJO3gh/2bjFzOBBFQbtn/Xf8s1R4q
-         tmbKeqchqderb7WQsjmVXyZSwYHvGHCb8jOW6AiikqmA8/yC6gl72fyVgoGuPZqQWCYt
-         Vmy6cbMXv00QgM7rdjn5ao+1PESf0nGlkHGCr9uafBom2OBMXCuh8aaKAm+IPylVy3e8
-         b5QA==
-X-Gm-Message-State: AOAM532+g30XS73peaNKFVROyXy9XeVbRSlnEk4jOe93ALlWDSg6FoKe
-        K7n6KU/vDHLbrDZl74+m2QQPspcbt/nwiw==
-X-Google-Smtp-Source: ABdhPJylCwEmCslg5aa1nc2EitMfnv0khm5CC20SSkcpOfTgA4if26raJjt9hmbh77ooLfOKEQ2BOg==
-X-Received: by 2002:a17:90a:fef:: with SMTP id 102mr13385008pjz.148.1628144385681;
-        Wed, 04 Aug 2021 23:19:45 -0700 (PDT)
-Received: from [192.168.50.71] (ip70-175-137-120.oc.oc.cox.net. [70.175.137.120])
-        by smtp.gmail.com with ESMTPSA id l11sm5198375pfd.187.2021.08.04.23.19.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Aug 2021 23:19:45 -0700 (PDT)
-Subject: Re: [PATCH 02/15] block: use bvec_virt in
- bio_integrity_{process,free}
+        id S241196AbhHEMBa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Aug 2021 08:01:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39492 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230446AbhHEMBa (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 5 Aug 2021 08:01:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3A71D61132;
+        Thu,  5 Aug 2021 12:01:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628164876;
+        bh=16APo6fE3eY2p/uODzQ81+asSQi2UhYxhFw1Qx5gvPA=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=GBn0dlwHiVqhZLu0Fo3yWrc2WkaZ8Qxmkal+0DaBkwi+BvGzswN7HO32obdM883P8
+         GLXYp5zrCYFSooklqA/+FyCoX3FEdOBcszKoImj7aROLY8frbXu3pVDXLBfWyIDif2
+         7JZlUtaEG2Cs6EnBQrEMitiERfXIseQJZZ3Es/tUNvGXwIwE504ASrY3BUGa8BFQKq
+         Yn0f6WglLCJr4+2CLWe8GOkmTcQiNYAJ5IZ1S2rgdE92TbRixoDwaSh1iAiFVe10Uo
+         tXvaCfm8noqmXKtlQN9Az7jhyrZ6iFBXdlKQsstatDnle26sVhwJ2Qmu8JmMHb8E4/
+         AZo5dSnvsRRxg==
+Message-ID: <440e1815a8b6f1605b6bce51af6eceadf8e742f7.camel@kernel.org>
+Subject: Re: [PATCH 07/15] rbd: use bvec_virt
+From:   Jeff Layton <jlayton@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
         Anton Ivanov <anton.ivanov@cambridgegreys.com>,
@@ -77,33 +52,42 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
         linux-scsi@vger.kernel.org
+Date:   Thu, 05 Aug 2021 08:01:13 -0400
+In-Reply-To: <20210804095634.460779-8-hch@lst.de>
 References: <20210804095634.460779-1-hch@lst.de>
- <20210804095634.460779-3-hch@lst.de>
-From:   Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-Message-ID: <b1d05349-86d2-0334-436f-811600ee1578@gmail.com>
-Date:   Wed, 4 Aug 2021 23:19:45 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+         <20210804095634.460779-8-hch@lst.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.40.3 (3.40.3-1.fc34) 
 MIME-Version: 1.0
-In-Reply-To: <20210804095634.460779-3-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-
-On 8/4/2021 2:56 AM, Christoph Hellwig wrote:
-> Use the bvec_virt helper to clean up the bio integrity processing a
-> little bit.
+On Wed, 2021-08-04 at 11:56 +0200, Christoph Hellwig wrote:
+> Use bvec_virt instead of open coding it.
 > 
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/rbd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+> index 6d596c2c2cd6..e65c9d706f6f 100644
+> --- a/drivers/block/rbd.c
+> +++ b/drivers/block/rbd.c
+> @@ -2986,8 +2986,7 @@ static bool is_zero_bvecs(struct bio_vec *bvecs, u32 bytes)
+>  	};
+>  
+>  	ceph_bvec_iter_advance_step(&it, bytes, ({
+> -		if (memchr_inv(page_address(bv.bv_page) + bv.bv_offset, 0,
+> -			       bv.bv_len))
+> +		if (memchr_inv(bvec_virt(&bv), 0, bv.bv_len))
+>  			return false;
+>  	}));
+>  	return true;
 
-Looks good.
+LGTM
 
-Reviewed-by: Chaitanya Kulkarni <kch@kernel.org>
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
 
--- 
--ck
