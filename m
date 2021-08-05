@@ -2,47 +2,49 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLACK
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89662C4338F
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 20:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2607C4338F
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 21:11:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F6DE600EF
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 20:50:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CF08601FE
+	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 21:11:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232591AbhHEUvM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Aug 2021 16:51:12 -0400
-Received: from UPDC19PA23.eemsg.mail.mil ([214.24.27.198]:55051 "EHLO
-        UPDC19PA23.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231689AbhHEUvI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 16:51:08 -0400
+        id S241748AbhHEVLf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Aug 2021 17:11:35 -0400
+Received: from UCOL19PA35.eemsg.mail.mil ([214.24.24.195]:6762 "EHLO
+        UCOL19PA35.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231587AbhHEVLf (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 17:11:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1628196653; x=1659732653;
+  t=1628197880; x=1659733880;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=z477zErh0GY0qzi5ROTRJFy5OQO3sv5oF1R0R5K3L48=;
-  b=Xr+eHhuO2kxWnGUIFNZaQ5YabhAt6+f9R/Is1e78y/DvSDzHIAiBkYl1
-   qBTaV3c5WFLGs9ctwqUI9D16rwQIJ8Blb8sMBaRBKS2S5Gcpq4Ix3choA
-   MNLRlLggyxvaWZpGmPK7oJQUMKWUex+bCQGVoWly/47+/0XoAO2hqgAqe
-   UFw2B6ynYDY1hagxFrtHc1jM3D64hFLqIqOH6iwbrvvGhrZf3tzP1Ianb
-   jk59HOLUAc7eT6W+ZrCmVlgVOUq++iPLXCQX4jp9dJmXZQmJMnQTPfTcH
-   v3zSEWBdi0qDCEk8H3+QteRlgSxQAniH5VYH8kh1j7Zfjhx6Vpe+c1IhB
+  bh=939RNY3hBDS2G3Qeu3SBWG6TAdHmS7UkFlxf0B+XerA=;
+  b=hytmOJnRwH3rSRasUyY7vBb4x9Ie6InTCeET9Wa9U5upRcoBTymjXrAB
+   9otrfBekGvOSs4Eb9wykX89/K+WhpYWC5DEMLHKxiE3etr5AwNwghfvhh
+   +F19iJSyEDwPNzuXCqShJO/Ex4sSUNtbdaJPgFMfOv3DtwkSwQhOcYyhS
+   XiohTF43UiH8CW70ZyuvJekr4z/229rkL3WqWrvcf59/B2pHak/EKHNKL
+   Vnj9y1knJyjS/6s+djnY3UWXmO1bSZ1LGDVHMiKku9bBtDuo8TqkhI0+o
+   kAWIIIJAWG67sSUgSquFbStD4E41aljj3aTGivtrlXFPGIF4SuyOo1kxB
    g==;
-X-EEMSG-check-017: 251640452|UPDC19PA23_ESA_OUT05.csd.disa.mil
+X-EEMSG-check-017: 261402786|UCOL19PA35_ESA_OUT02.csd.disa.mil
 X-IronPort-AV: E=Sophos;i="5.84,296,1620691200"; 
-   d="scan'208";a="251640452"
-Received: from edge-mech02.mail.mil ([214.21.130.229])
-  by UPDC19PA23.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 05 Aug 2021 20:50:50 +0000
-Received: from UMECHPAOW.easf.csd.disa.mil (214.21.130.166) by
- edge-mech02.mail.mil (214.21.130.229) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Thu, 5 Aug 2021 20:50:16 +0000
+   d="scan'208";a="261402786"
+IronPort-HdrOrdr: A9a23:0AKOTKG3uNpGeiL7pLqE8ceALOsnbusQ8zAXPiFKKSC9Hfbyqy
+ nDpp4mPHzP6Qr5OktOpTnoAsDpfZq7z/NICOIqU4tKMjOLhILSFvAA0bff
+Received: from edge-mech02.mail.mil ([214.21.130.231])
+  by UCOL19PA35.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 05 Aug 2021 21:11:18 +0000
+Received: from UMECHPAOQ.easf.csd.disa.mil (214.21.130.160) by
+ edge-mech02.mail.mil (214.21.130.231) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Thu, 5 Aug 2021 21:10:43 +0000
 Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.164]) by
- umechpaow.easf.csd.disa.mil ([214.21.130.166]) with mapi id 14.03.0513.000;
- Thu, 5 Aug 2021 20:50:16 +0000
+ umechpaoq.easf.csd.disa.mil ([214.21.130.160]) with mapi id 14.03.0513.000;
+ Thu, 5 Aug 2021 21:10:41 +0000
 From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
 To:     "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 CC:     'Gal Ofri' <gal.ofri@volumez.com>,
@@ -51,15 +53,16 @@ Subject: RE: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread IOPS
  - AMD ROME what am I missing?????
 Thread-Topic: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread
  IOPS - AMD ROME what am I missing?????
-Thread-Index: AQHXg5T/4rk7hCCa50OEioMjNG53XatlVF4ggAAKU8CAAACJAIAACzvA
-Date:   Thu, 5 Aug 2021 20:50:16 +0000
-Message-ID: <5EAED86C53DED2479E3E145969315A2385856B62@UMECHPA7B.easf.csd.disa.mil>
+Thread-Index: AQHXg5T/4rk7hCCa50OEioMjNG53XatlVF4ggAAKU8CAAACJAIAACzvAgAAIODA=
+Date:   Thu, 5 Aug 2021 21:10:40 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A2385856B85@UMECHPA7B.easf.csd.disa.mil>
 References: <5EAED86C53DED2479E3E145969315A2385841062@UMECHPA7B.easf.csd.disa.mil>
  <AS8PR04MB799205817C4647DAC740DE9A91EA9@AS8PR04MB7992.eurprd04.prod.outlook.com>
  <5EAED86C53DED2479E3E145969315A2385856AD0@UMECHPA7B.easf.csd.disa.mil>
  <5EAED86C53DED2479E3E145969315A2385856AF7@UMECHPA7B.easf.csd.disa.mil>
  <5EAED86C53DED2479E3E145969315A2385856B25@UMECHPA7B.easf.csd.disa.mil>
-In-Reply-To: <5EAED86C53DED2479E3E145969315A2385856B25@UMECHPA7B.easf.csd.disa.mil>
+ <5EAED86C53DED2479E3E145969315A2385856B62@UMECHPA7B.easf.csd.disa.mil>
+In-Reply-To: <5EAED86C53DED2479E3E145969315A2385856B62@UMECHPA7B.easf.csd.disa.mil>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -71,6 +74,34 @@ MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
+
+Final spray from me for a few days.
+
+In my strict numa adherence with mdraid, I see lots of variability between =
+reboots/assembles.    Sometimes md0 wins, sometimes md1 wins, and in my ear=
+lier runs md0 and md1 are notionally balanced.   I change nothing but see t=
+his variance.   I just cranked up a week long extended run of these 10+1+1s=
+ under the 5.14rc3 kernel and right now   md0 is doing 5M IOPS and md1 6.3M=
+ - still totaling in the low 11's but quite the disparity.   Am I missing a=
+ tuning knob?   I shared everything I do and know in the earlier thread.   =
+I just want to point this out while I have attention.   I've have seen this=
+ behavior over and over again.    The more I know about AMD, the more I thi=
+nk I can't depend on the HPC profile provided and I need to take full contr=
+ol of the BIOS.   I know there is a ton of power management going on under =
+the covers, so maybe that is what I'm experiencing.    The more I type, the=
+ more I think I don't see it on Intel, but I don't have a modern Intel mach=
+ine with modern SSDs to test.   I'll accept that there is nothing inherent =
+in mdraid or the kernel to cause this and put my attention to the BIOS if t=
+he experts can confirm....
+
+-----Original Message-----
+From: Finlayson, James M CIV (USA) <james.m.finlayson4.civ@mail.mil>=20
+Sent: Thursday, August 5, 2021 4:50 PM
+To: 'linux-raid@vger.kernel.org' <linux-raid@vger.kernel.org>
+Cc: 'Gal Ofri' <gal.ofri@volumez.com>; Finlayson, James M CIV (USA) <james.=
+m.finlayson4.civ@mail.mil>
+Subject: RE: [Non-DoD Source] Re: Can't get RAID5/RAID6 NVMe randomread IOP=
+S - AMD ROME what am I missing?????
 
 As far as the slower hero numbers - false alarm on my part - rebooted with =
 4.18 RHEL 8.4 kernel
