@@ -1,110 +1,180 @@
 Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: **
-X-Spam-Status: No, score=2.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,LOTS_OF_MONEY,MAILING_LIST_MULTI,
-	MONEY_FREEMAIL_REPTO,MONEY_NOHTML,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B89B6C00143
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 22:04:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D6EC43216
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Aug 2021 02:38:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D88161159
-	for <linux-raid@archiver.kernel.org>; Thu,  5 Aug 2021 22:04:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8042B611BF
+	for <linux-raid@archiver.kernel.org>; Fri,  6 Aug 2021 02:38:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235961AbhHEWFE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 5 Aug 2021 18:05:04 -0400
-Received: from ns3020889.ip-5-39-64.eu ([5.39.64.141]:38394 "EHLO
-        server.example.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S238328AbhHEWE6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 18:04:58 -0400
-Received: by server.example.com (Postfix, from userid 1023)
-        id 3621FD47F2E; Thu,  5 Aug 2021 21:16:23 +0000 (UTC)
-To:     linux-raid@vger.kernel.org
-Subject: {Spam?} =?UTF-8?Q?Z._HD,Sehr_geehrte_/_r_Fondsempf=C3=A4nger?=
-Date:   Thu, 5 Aug 2021 21:16:23 +0000
-From:   "ANWALT BILBAO &EMMA ASSOZIIERT & CO..." 
-        <support@quali.speed.hebergement-com4design.fr>
-Reply-To: buroLotto.es@spainmail.com
-Message-ID: <1203d0a01cf6839d7ff5a20be2880d11@www.quali.speed.hebergement-com4design.fr>
+        id S235757AbhHFCjL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 5 Aug 2021 22:39:11 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:32792 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229938AbhHFCjK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 5 Aug 2021 22:39:10 -0400
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1762bApn026555;
+        Fri, 6 Aug 2021 02:38:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=lxe5Cm1S+VrVoP/j7wgprFlGF9L+RuNFvgHNCf2F8ak=;
+ b=wpwO0+WEvpTCBoixBRc+LQmJ1oLquhwSkNIP2tV9qsY+LY8VD42JLmwFq8+jmSTQPqfa
+ lwyLRw5UqyaIuC8Hk0grvtUtgXsiBzLJCcZ6TkSwAMaaF1pbxFdv+Bh4gR27jCbB3nuO
+ OXXn6+GZrlj/kMgQInFmmgNWzNhc6mb7B+Ucyd7nGfAa6B2oyMSTcnsaFiW+43rhYOJC
+ 6ua12Xx4fu2f6mFyE3oDfBXjfa1bGYS/l6OKXmTH08dSZoNK9BEY64DsSxCjbqNPQQDE
+ 7F+RNFszXa3hvugMt3luN/GpqYJhcE+fQ0aBVTfMmM2mzlY8RbWIZI5h41/CDkeN7hTA TQ== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=lxe5Cm1S+VrVoP/j7wgprFlGF9L+RuNFvgHNCf2F8ak=;
+ b=P6PdS3dSXhNmUDYbi06NJtU1h8uYfq9/zuEt2in+Ppx5YKhkplt/kzsqvmDbNGxyKnUu
+ tr3qtMKUIm7+Cg1te8Ho7y/gGfpKnWnX9jD0OJqMxKX51oeof0vuwvc7CPzoAqfj9/Xw
+ nObE2PxzTCswyf5Qq22i55yX3lMMZEFNseI/idnXNFW4rUWjWB4vW+iwng/etV9YNJul
+ H0iSp0R44hG+u0cNtRgu5y+a3T/XS68Zkled4xAdU8nNqCSjDpndGdctE3p+1/nm9y1P
+ 6zCN6gJnZZOXPJVDekHIVSy7Oc0YCeCVQFCBB3OWzaPM6hbr9eTibvIJhG7d43AXvHku Qg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3a7hxpnj7e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Aug 2021 02:38:18 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1762ZfOX163593;
+        Fri, 6 Aug 2021 02:38:17 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2108.outbound.protection.outlook.com [104.47.58.108])
+        by userp3030.oracle.com with ESMTP id 3a4un4x32e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Aug 2021 02:38:17 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=d45Wsz6J2Qp9srdC51J2vmTF5rw610I1vP/UJp5hPeWgUoCDX6pOFJnWsLhszXFWyIkXtOjfskPcOvtTzgU7qiGo9Di2tHimI22fH87ScRsSn358PRH9mo0wM5Lyo7lZf10PMwKtVR04ypyGmTMZu4cdwTtgFjGYRZJaWk4THR9c5iSLm5Thfd4/PghKpNT0GVl5SEHjZ0xM8cu3o9F1eznRsyg3y0zWsxRGBHZnEx0wu/tIYqfJefQCsJitigjm6bJI+eVVrpvJUhUba+k9yprm+mcJHznAvICi5RJsNBRrJZbRxqzDeHF86nmbbuXG7wVwI2wLpYFHIr8uVU0w1g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lxe5Cm1S+VrVoP/j7wgprFlGF9L+RuNFvgHNCf2F8ak=;
+ b=PL2bFGSwnD9QXLRgCF1HdNhdQVjJE6DUBN0HsYt81jgVYCO1EHqdS8S32hSsiRxkxTw7vpRA4oYmBUqYNk+aN2xLAprJWlF1zeD7z5vRwo0UIxPTj1aBYH3Cu0wU6e5TeugEwH3woa1YWjnyxOCb3NF9CZQnV78Rb4sZUF0h6HABIlvQsx257oFjCzqEze3XQajrFGm4dsf069isuTbsPEcLSW6mh6vFBnsEbZYWHOPOL/9qUP9/jA0vlCMmVhF+yZHnB1KvdR5yYRaA2r97Oa6fu5zXJlcK9FKhrTnLQbWN2qPaBcLG8VNGNk/zO3wiz1lPKLhnt31x7PjrmAi6hA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lxe5Cm1S+VrVoP/j7wgprFlGF9L+RuNFvgHNCf2F8ak=;
+ b=lm9GlDjuuZd8Pa0Zvqnjlcw+EeFydkj1l7wt65kpVbUkqbw9yJeo98EnXPbjAacnONFmwnzZ+CDWpiH/DP13DBJDDgmIdxt3pAQKj/SHGPcuUOr6xKSeQX+7ZGmS97KI6Wnx2RpdizO4hK+zQVTzD+FlUGOVHi7niXnKfpPg93M=
+Authentication-Results: lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB5547.namprd10.prod.outlook.com (2603:10b6:510:da::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.16; Fri, 6 Aug
+ 2021 02:38:15 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::153e:22d1:d177:d4f1]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::153e:22d1:d177:d4f1%8]) with mapi id 15.20.4373.026; Fri, 6 Aug 2021
+ 02:38:15 +0000
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Geoff Levand <geoff@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Song Liu <song@kernel.org>, Mike Snitzer <snitzer@redhat.com>,
+        Coly Li <colyli@suse.de>, Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-um@lists.infradead.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 01/15] bvec: add a bvec_virt helper
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1tuk3guwk.fsf@ca-mkp.ca.oracle.com>
+References: <20210804095634.460779-1-hch@lst.de>
+        <20210804095634.460779-2-hch@lst.de>
+Date:   Thu, 05 Aug 2021 22:38:11 -0400
+In-Reply-To: <20210804095634.460779-2-hch@lst.de> (Christoph Hellwig's message
+        of "Wed, 4 Aug 2021 11:56:20 +0200")
+Content-Type: text/plain
+X-ClientProxiedBy: SA9P223CA0025.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:806:26::30) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-yoursite-MailScanner-Information: Please contact the ISP for more information
-X-yoursite-MailScanner-ID: 3621FD47F2E.ABB92
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-SpamCheck: spam, SpamAssassin (cached, score=7.061,
-        required 6, ADVANCE_FEE_2_NEW_MONEY 0.15,
-        FREEMAIL_FORGED_REPLYTO 2.50, FREEMAIL_REPLYTO 1.00,
-        LOTS_OF_MONEY 0.00, MONEY_FREEMAIL_REPTO 2.43, MONEY_NOHTML 0.97,
-        NO_RELAYS -0.00, T_FILL_THIS_FORM_SHORT 0.01, XFER_LOTSA_MONEY 0.00)
-X-yoursite-MailScanner-SpamScore: sssssss
-X-yoursite-MailScanner-From: support@quali.speed.hebergement-com4design.fr
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SA9P223CA0025.NAMP223.PROD.OUTLOOK.COM (2603:10b6:806:26::30) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.16 via Frontend Transport; Fri, 6 Aug 2021 02:38:14 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 37bc1a19-ab81-480a-98f8-08d958833dd1
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5547:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB554779D0BA37A158A6A51D278EF39@PH0PR10MB5547.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5797;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: vEip2dgbKdqZ4Asg58kgknokPP0VL7s2MhAl/RcCcR3taRwndoxL7E712HIVgx9LdTrlNqQ0diDJszAe4rBXJk0aVwB4arw0ONCn5cC8IUL9sSK3UMCgZLnKV7lpO89eSju6eWWfvlJQEqK1lub3+ocK+KhN7n1FeZLZEUr/Jcml06d2lfKNyRuYie2qXchAtGxkZhaM3Oi14SiJEFPvo4x7wzO9tSPy2JWJ4buZKJzVDWs6k/UtiK4ZbNorEjE4noZAOk1OMRLJ+zfjo5YDXN3poq5pvQxuatHatDIDUCjIuU/B8F8712qa5z4b/W1TCyX8HP6DitEZqK4xOVUJPlbPduP4hcCTaQLOYSrt1f896Rj5NeitTldF/8Vf0KpemAdcgbbJc+zuiUHMkDpuVNPH0p1jqnVCy700lBRvG/zenHMOo8Y/ib7OAH18tWE+uzrMnDed1DQBDeOGAzCG6YtX5QQnCW6W2OLjQUjC+hagRWtuXZRIP2MCQf4IVU/O3a8AL6Eir5IPQ2n6tFbukGHagq3zIcXBS6AB9VAqCR3I9QG9gPILlANRxk6n72qdZlWr9fSHZ4u1CzIRT8N/5MfBcmQLhLXu9PfqFcxjgd4zqPPCkm9/ksZ9hBvEBaL4Fi9mamrnqQMjFrgduQP02LqQp0myyr5mWsUAHmHnJAk0ta8XMlLNoatxGvdoGcFhCZ1Zj3PBZrCUAwyyfV3Eeg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(376002)(39860400002)(396003)(136003)(346002)(186003)(55016002)(8936002)(2906002)(8676002)(7696005)(52116002)(36916002)(38350700002)(38100700002)(6916009)(478600001)(956004)(54906003)(66946007)(66556008)(5660300002)(6666004)(558084003)(316002)(26005)(7416002)(4326008)(66476007)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?HwqZ6hDDLzRzX+a0nli8YIlaVQoXWqp5xHzf2aqWrJ3KUDo/c3Z+0fVLgg7q?=
+ =?us-ascii?Q?7vHOTmdJPFqcfAu2fpD5jg51HVvw9a2CQOE4HPRPrzJqt9wFVr2Q7AfOON03?=
+ =?us-ascii?Q?YjK8VkpbCU3nrWFAxYqJMeeczHdsl95+tbc6lUjSfzJLsrRgqJ6S79QciLgN?=
+ =?us-ascii?Q?OKmg6/3qGpwmh3po3B3GPmKHSZkdTri7jadDwiOIZW8W2AKxx5bT1PbVJg9T?=
+ =?us-ascii?Q?CRXExyff6w4rG4/Q8s3aDOCD3yPqZZ/pHPwSA5BENGHOcAPCR8AaLtwVKZOM?=
+ =?us-ascii?Q?0HieGiehG3YEC8QboF86m+C6W3zMCK4zw7tUnsWAZVD6COzDyDQ8GPMU2rmu?=
+ =?us-ascii?Q?+4dCsq6TY85PRALRHUy0G4pq3f0+6+KK+Gf8AgbYBLGj2jedtz3yTrJ17V4K?=
+ =?us-ascii?Q?+xIyoun+VMyc8DU2RN7AE68VhGJIXo6a1Mc/qCCrKBYKNX37EO4kIziP11TJ?=
+ =?us-ascii?Q?K7YosFfZMrIrMeEgRsW6AH1+vVoAd71uZ4GLxjT15quVWtU+Dy8zXjlmlf5E?=
+ =?us-ascii?Q?+UUs6BwDodJIUdHzgLnxhwZAzfuQLc7VlmxVHz560DEgHMMsl18ES9YbmEHm?=
+ =?us-ascii?Q?uMBPFez7qUHTpb8vVktdVE8eIEMDD7fJoVamg6W7nZYu2WnD0nTKEgskawiP?=
+ =?us-ascii?Q?44VtjlUdvSRJxI0xkALX3mcwT7VNqoU9jH+sVI53gCNABV9G35ncG5JRGHYk?=
+ =?us-ascii?Q?LePs+GQjGe3Y0EgbXR74UEP+YbwvRr8qDg6luS7kmAhCWX9wTK+q0O9JFl8P?=
+ =?us-ascii?Q?g/bG5T6HvWy3Aw5YfS7R5bv2SgZkH75vYPxPJGEDxE/7QQeL9RkLuU+IZZKu?=
+ =?us-ascii?Q?Z3eGJcTwzmcg/ESN7zKy92HK7TMl2ywgAHPgo5QPEz0Xo9LAAxqlr8I8Kj/O?=
+ =?us-ascii?Q?EAZ1Y75kVbZKBSzurNCd1+dAsguu3XljvDtv5fsX0pEIMG0TRidcagMxozhr?=
+ =?us-ascii?Q?3LunAsi5D8FM90Zmi/v/WG0sY+vtR1d0ytcFSRUXW2JzgWjhdoFlMVi7Njak?=
+ =?us-ascii?Q?jEt5/8Dh1kcTdKsnklc5hjUx+kVQVLPNw7DayUcGCrHsH9CGGiCYBrZcAJeS?=
+ =?us-ascii?Q?3yMTOPfEI4+yStNsR0FzMDKggjC9DbLWxPpF8JF4kk25L6J9c/g5Hnu3PPCh?=
+ =?us-ascii?Q?P66okeQP5QxJJAam1nuti5Gi8YgGf/w+uj9BU2/2tLhzpAdTwe76fr/Bav5T?=
+ =?us-ascii?Q?OLRaUkPqAigRs0g93Hyc1laafVT+gxEOTSamnJIYBBe7Uqs8sO0ImoK9GqYA?=
+ =?us-ascii?Q?2UWltULOiOy71dumNVEd29A/nPXVs55U7EVadKMVwxx0V70I8iV2AK5cVE5r?=
+ =?us-ascii?Q?8mcQOfVqXytTFulDz3EDUjnj?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 37bc1a19-ab81-480a-98f8-08d958833dd1
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2021 02:38:15.1817
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: iOpJtuq92ls4/s19y3U0YyIwZnm7Sz8XctOTqylByalLubpc2b21MWjny/0ph5WA1NsDPw4JOHzXCamm5VUf2qTmj7M7hjw9NY8Excl2LRs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5547
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10067 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 malwarescore=0
+ suspectscore=0 mlxscore=0 adultscore=0 mlxlogscore=999 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
+ definitions=main-2108060013
+X-Proofpoint-GUID: wK_tIywM9icsTQkrrZ80TX8d8LC0f_PT
+X-Proofpoint-ORIG-GUID: wK_tIywM9icsTQkrrZ80TX8d8LC0f_PT
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Rechtsanwältin BILBAO &EMMA ASSOZIIERT & CO...
-#########################################
-AV/DE GRAN VIA NO.38k, 28008 MADRID.   SPAIN 
-TEL. ( 34) 602 810 185 FAX: ( 34) 931-702-120
-Eingetragener Fall NR: GY/Q3J63753 / SQQ/93000XS10.
 
-Ihnen wird empfohlen, die folgenden Informationen an Ihre Bevollmächtigte zu senden. Rechtsanwältin  BILBAO & EMMA  ASSOZIIERT CO ERMÖGLICHT IHNEN DIE FREIGABE IHRES FONDS:Wir bitten dringend, Ihre E-Mails an unsere Büro-E-Mail zu beantworten, buroLotto.es@spainmail.com, 
+Christoph,
 
-Wir gratulieren und informieren Sie über die Auswahl des Geldpreises €935.470,00 EUROS, SOMMERBONANZA, EL GORDO DE LA PRIMITIVA LOTTERIE IN VERBINDUNG MIT EUROMILLIONS ESPAÑA INTERNATIONAL LOTTERIE BEFÖRDERUNG  PROGRAMM Madrid Spanien
+> Add a helper to get the virtual address for a bvec.  This avoids that
+> all callers need to know about the page + offset representation.
 
- Sehr Geehrter  Begünstigten, 
-Wir möchten Sie informieren, dass das Büro des nicht Beanspruchten Preisgeldes in Spanien,unsere Anwaltskanzlei ernannt hat, als gesetzliche Berater zu handeln, in der Verarbeitung und der Zahlung eines Preisgeldes, das auf Ihrem Namen gutgeschrieben wurde, und nun seit über zwei Jahren nicht beansprucht wurde.
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
- Der Gesamtbetrag der ihnen zusteht beträgt momentan €935, 470, 15, cent.
-
-Der Gesamtbetrag der ihnen zusteht beträgt momentan  €935, 470, 15, neunhundert fünfunddreißigtausend, vierhundertsiebzig und fünfzehn Cent, Das ursprüngliche Preisgeld bertug €785.810, 15.00 EUROS. Siebenhundert Fünfundachtzigtausend Acht Hundertzehn Euro und fünfzehn Cent Diese Summe wurde fuer nun mehr als zwei Jahre,Gewinnbringend  angelegt,daher die aufstockung auf die oben genannte Gesamtsumme.Entsprechend dem Büros des nicht Beanspruchten  Preisgeldes,wurde dieses Geld als nicht beanspruchten Gewinn einer Lotterie Firma bei ihnen zum verwalten niedergelegt und  in ihrem namen versichert. Nach Ansicht der Lotterie Firma wurde ihnen das Geld nach einer Weihnachts Förderung Lotterie  zugesprochen. 
-
- Die Kupons wurden von einer Investmentgesellschaft gekauft.Nach Ansicht der Lotterie Firma wurden sie damals Angeschrieben um Sie über dieses Geld zu informieren es hat sich aber leider bis zum Ablauf  der  gesetzten  Frist  keiner gemeldet um den Gewinn zu Beanspruchen. Dieses war der Grund weshalb das Geld zum verwalten niedergelegt wurde. Gemab des Spanischen Gesetzes muss der inhaber alle zwei Jahre ueber seinen vorhanden Gewinn informiert werden.Sollte dass Geld wieder nicht beansprucht werden,.wird der Gewinn abermals ueber eine Investierung gesellschaft fur eine weitere Periode von zwei Jahren angelegt werden.Wir sind daher, durch das Buro des nicht Beanspruchten Preisgelds beauftragt worden sie anzuschreiben.Dies ist eine Notifikation für das Beanspruchen dieses Gelds.
-
-Wir möchten sie darauf hinweisen, dass die Lotteriegesellschaft überprüfen und bestätigen wird ob ihre Identität  übereinstimmt bevor ihnen ihr Geld ausbezahlt wird.Wir werden sie beraten wie sie ihren Anspruch geltend machen.Bitte  setzen sie sich dafuer mit unserer Deutsch Spanisch oder Englisch Sprachigen Rechtsanwalt in Verbindung Rechtsanwältin: Bilbao & Emma ASSOZIIERT & CO.., TEL( 34) 602 810 185 & email,( Ihre Antwort sollte an diese E-MAIL-Adresse gerichtet, (promolottooffice@spainmail.com  )ist zustaendig fuer  Auszahlungen ins Ausland und wird ihnen in dieser sache zur seite stehen. Der Anspruch sollte vor den 30 August 2021 geltend  gemacht werden,da sonst dass Geld wieder angelegt werden wuerde.Wir freuen uns, von Ihnen zu hören, während wir Ihnen  unsere Rechtshilfe Versichern.
-
-Nachdem Sie die von Ihnen geforderten Daten bereitgestellt haben, können Sie davon ausgehen, dass Sie innerhalb weniger  Stunden direkt von diesem Büro erfahren werden. Bis dahin müssen wir Ihre Informationen verarbeitet und Ihre Fonds Akte für  die Zustellung vorbereitet haben, um Verzögerungen zu vermeiden. 
-Wir gehen davon aus, dass Sie die erläuternden Anweisungen und Anweisungen für den Erhalt Ihrer Prämien (935 €, 470, 15 Cent) verstehen, die Ihnen von der spanischen Euro Millones /El Gordo de la Primitiva International lotterie Madrid Spain legal zugesprochen werden.
-
-HINWEIS: Um unnötige Verzögerungen zu vermeiden, wenn es eine Änderung Ihrer Adresse oder Komplikationen geben, informieren Sie Ihren Agenten so schnell wie möglich, Ihr Agent wird 10% des Premium Preises bezahlt, da die Provision NACH Dem, was Sie Ihr Geld auf Ihr kostenpflichtiges Konto erhalten haben. Das Zahlungsbearbeitung Formular ist mit einer Fotokopie Ihres Ausweises auszufüllen und zur Überprüfung per Faxnummer zu senden: ( 34) 935457490 & E-Mail: Wir bitten dringend, Ihre E-Mails an unsere Büro-E-Mail zu beantworten  promolottooffice@spainmail.com
-
-Mit Freundlichen Grüßen
-Rechtsanwältin Bilbao & Emma ASSOZIIERT & CO..
-
-ANMELDEFORMULAR FÜR DEN GEWINNANSPRUCH Vom 28. Juni bis 30. August 2021
-Hinweis bitte geben Sie die folgenden Informationen, wie unten gefordert, faxen   34935457490 oder e mail: promolottooffice@spainmail.com ,es zurück in mein Büro sofort für uns in der Lage zu sein die Legalisierung Prozess Ihrer  Persönliche investiertes Preisgeld zu vervollständigen, und das Geld wird Ihnen von Zentralbank spain Int  ausgezahlt.  Alle Prozess Überprüfung durch unsere Kanzlei ist für Sie kostenlos, weil unsere Kosten werden von der internationalen  Lotto Kommission am Ende des Prozesses zu zahlen, wenn Sie Ihr Geld erhalten.Wenn Sie nicht die erforderlichen  Informationen vor der Zeit gegeben hat, können ist Anwaltskanzlei nicht haftbar gemacht werden, wenn Ihr Geld reinvestiert  wurde.
-
-Ein Bestätigungsschreiben wird Ihnen gefaxt werden sofort wenn wir komplette Überprüfung der Informationen die Sie uns zur  Verfügung stellen habe, Ich werde die Investmentbank unverzüglich über die von Ihnen angegebene Informationen zu kommen,  bevor sie werden mit Ihnen Kontakt aufnehmen für die ausZahlung von Ihrem Geld . Ihre Daten werden vertraulich gehalten  nach der Europäischen Union Datenschutzrecht.
-
-"Antworten Sie nicht auf die Absenderadresse oder die Quell-E-Mail-Adresse, es wird über den Computer gesendet virtuelle  Hilfe für die Antwort wird  nicht meine menschliche sondern Computer" Daher müssen Sie die Treuhänder über Telefon und E- Mail-Adresse oben" (ACHTUNG Wir (bitten Sie, auf diese E-Mail-Adresse zu antworten, (promolottooffice@spainmail.com )
-########################################################
-
-REF.NR:………………………………STAPELN Sie NR:…………………………
-Vorname:……………………Vor-NACHNAME…………………………………
-GEBURTSDATUM:……………………………BERUF:……………………………
-STRASSE:………………………………………PLZ/ORT…………………………
-ADRESSE:……………………………………………………………………………
-TELEFON:(___)……………………HANDY:(__)………………FAX (__)………
-EMAIL:…………………………………………………………Nationalitit:……
-
-HINWEIS: BANKVERBINDUNG IST NUR ERFORDERLICH, WENN SIE BESCHLIEßEN, IHREN GEWINN ZU ERHALTEN PER ÜBERWEISUNG
-
-Nachdem Sie die von Ihnen geforderten Daten bereitgestellt haben, können Sie davon ausgehen, dass Sie innerhalb weniger  Stunden direkt von diesem Büro erfahren werden. Bis dahin müssen wir Ihre Informationen verarbeitet und Ihre Fonds Akte für  die Zustellung vorbereitet haben, um Verzögerungen zu vermeiden. Wir gehen davon aus, dass Sie die erklärenden Anweisungen  und Anweisungen zum Einholen und Einholen Ihrer Auszeichnungen (€935,470,15 EUROS) verstehen, die Ihnen vom spanischen Euro Millones de La Primitiva International Madrid legal zugesprochen wurden
-
-BANK ZAHLUNGSOPTIONEN: A / BANKÜBERWEISUNG Oder BANK CERTIFIED CHECK (BANKDATEN SIND NUR NOTWENDIG, WENN SIE SICH FÜR EINE  BANKÜBERWEISUNG ENTSCHIEDEN HABEN)
-ZAHLUNGSOPTION: (A) BESTÄTIGTER SCHECK (BEZAHLEN Sie ÜBERTRAGUNG EIN
-
-BETRÄGE GEWONNEN: ……………………………………………………
-NAME DER BANK:……………………………………………………………
-KONTONUMMER:…………………………SWIFT-CODE:…………………
-ADRESSE DER BANK …………………………………………………………
-GEB-DATUM:…………Unterschrift …………(Erst bei hmeAbna)
-
-Rechtsanwältin  Bilbao & Emma Asociados, Abogados, Fiscal Y Accesorios horario de consultas Lunes.bis Samstag De. 09 - 16.30 Uhr  654280 / MLA & (Seien Sie informiert, dass Ihr Vertreter 10% des Preises als Provision erhält, wenn Sie Ihr Geld auf Ihrem  angegebenen Konto erhalten haben) Mitglied des Consejo de Constitucional de España, (ACHTUNG Wir bitten Sie, auf diese E-Mail-Adresse zu antworten (promolottooffice@spainmail.com) BÜRO-KONTOINFORMATIONEN- BANK NAME: P.F.S.SPAIN SL SWIFT CODE: PFSSESM1 IBAN: ES17 6713   0002 5700 0584 3906)COPYRIGHT 2019.LOTERIA SPANIEN. Alle Rechte vorbehalten. NUTZUNGSBEDINGUNGEN HANDELSPOLITIK DATENSCHUTZ VON BESCHWERDEN....
- 
-Diese E-Mail ist für den vorgesehenen Empfänger bestimmt und enthält Informationen, die vertraulich sein können. Wenn Sie nicht der beabsichtigte Empfänger sind, benachrichtigen Sie bitte den Absender per E-Mail und löschen Sie diese E-Mail aus Ihrem Posteingang. Jede unbefugte Nutzung oder Verbreitung dieser E-Mail, ganz oder teilweise, ist strengstens untersagt und kann rechtswidrig sein. Alle in dieser E-Mail enthaltenen Preisangebote sind nur indikativ und führen zu keiner rechtlich bindenden oder durchsetzbaren Verpflichtung. Sofern nicht ausdrücklich als beabsichtigter E-Vertrag bezeichnet, stellt diese E-Mail kein Vertragsangebot, keine Vertragsänderung oder eine Annahme eines Vertragsangebots dar.
-WWW.GORDO/ EUROMILLIONS ESPAÑA  Sitz der Gesellschaft: Torre Europa Paseo de la Barcelona 15. Planta 16 28006 • Madrid. (Spanien)
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
