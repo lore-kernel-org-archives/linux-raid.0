@@ -2,207 +2,69 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2C6C432BE
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Aug 2021 11:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BC9C4338F
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Aug 2021 12:39:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 555DE6054F
-	for <linux-raid@archiver.kernel.org>; Mon,  9 Aug 2021 11:31:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CB8460FF2
+	for <linux-raid@archiver.kernel.org>; Mon,  9 Aug 2021 12:39:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235248AbhHILbY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 9 Aug 2021 07:31:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32780 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235183AbhHILbV (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 9 Aug 2021 07:31:21 -0400
-Received: from mail-ua1-x932.google.com (mail-ua1-x932.google.com [IPv6:2607:f8b0:4864:20::932])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AE96C061798
-        for <linux-raid@vger.kernel.org>; Mon,  9 Aug 2021 04:31:01 -0700 (PDT)
-Received: by mail-ua1-x932.google.com with SMTP id 91so6831599uas.10
-        for <linux-raid@vger.kernel.org>; Mon, 09 Aug 2021 04:31:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=IV6BRlu5nqWBo0sf/tGMiDpNp/29jpZe7hZGlMgK9TE=;
-        b=pd99atNghWR2EXFgv8XZJakjfWaxf7WhyknLM8kIoOHa4YgdfnoTPB5B5yZKzpLLeL
-         8Obky1Touzww7JJ1LPkDR5ussYz78TDCT/aOUVtyInKRanV+yhskxWy13r4ELz5Zt3+W
-         j9ZgRTqbG9Kk64HZ1JdseYys90ZGg5RbdLCoMBVBvfCnnouHZHy1qNjIffFsLIDWhKR3
-         uEtKIcbj7BvqzUXb9yfl6fU6G44H8iNCHs0xPANj5Q3vS42f1YwZgr2i8eKmWNKpr9uz
-         y4W3Mq4knk8u4HtsRKPZJo69FOfCe9ybgJAnEPiZm5i2N8d8t0qXR+Sy+nPjW/M5xCMV
-         9Ssw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=IV6BRlu5nqWBo0sf/tGMiDpNp/29jpZe7hZGlMgK9TE=;
-        b=bBdd8iaj/TFMAgyQAjtv8uELMj2djlIlmAb4+fWYluL690t3jz5DY+0Hx3DDel8WIY
-         3a9wm9UU7AqUj8T5JxjX9NwH9sdR2H2Lf14Xr1COfRqPQU7eAqYIV7QX3zLZFK0DMr97
-         ils+oqgY3kcEKIGLbIrVM8NJgEncJLCguvfgO1QfjLKAEXtl49qT3lihQjz85E0irRqG
-         6ZPMZlfz2ZogmDICFUDviPYXSi+eM2l3gzhLDcKXxhO/pxmgFmXqErHcW55D/AsyZa/E
-         T/3Rtt+2Qypqn2ScRDjZDP9OKASBxPthCUOxsugqAxlYEh92YolPEP8xPIEAlk5AIYkG
-         rzhA==
-X-Gm-Message-State: AOAM532M0rXIk04pN7ao37fJ76dokJuOTGEe0MulJA2SiGCehVVr6r6/
-        pa+LSWTcc3xaG2GJGniUqgHsOHdthokKO7yX7XlmYg==
-X-Google-Smtp-Source: ABdhPJy6uKMGreNLvF0Ki8YaGC8NZzCCp3R6j9fbKII+5cbhRx2RkmK8Ng+IHjA2Ta3Qj2A+jSG6gNmoplJ+Wp8abWQ=
-X-Received: by 2002:ab0:6f4b:: with SMTP id r11mr15007620uat.104.1628508660724;
- Mon, 09 Aug 2021 04:31:00 -0700 (PDT)
+        id S234946AbhHIMjj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 9 Aug 2021 08:39:39 -0400
+Received: from mga09.intel.com ([134.134.136.24]:25820 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235536AbhHIMjh (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 9 Aug 2021 08:39:37 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10070"; a="214669474"
+X-IronPort-AV: E=Sophos;i="5.84,307,1620716400"; 
+   d="scan'208";a="214669474"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2021 05:39:01 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,307,1620716400"; 
+   d="scan'208";a="438911441"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga002.jf.intel.com with ESMTP; 09 Aug 2021 05:39:01 -0700
+Received: from [10.213.0.184] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.0.184])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by linux.intel.com (Postfix) with ESMTPS id 11D89580922;
+        Mon,  9 Aug 2021 05:39:00 -0700 (PDT)
+Subject: Re: [GIT PULL] md-fixes 20210804
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <2D64F5A2-3D1B-4D27-BEA7-81B03B30D212@fb.com>
+ <145aaf29-535b-a0b5-3c6d-25b036df6dbb@kernel.dk>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <66c72f4f-7fa0-7491-e4ea-8d8a82483aaa@linux.intel.com>
+Date:   Mon, 9 Aug 2021 14:38:58 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-References: <20210809064028.1198327-1-hch@lst.de> <20210809064028.1198327-3-hch@lst.de>
-In-Reply-To: <20210809064028.1198327-3-hch@lst.de>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Mon, 9 Aug 2021 13:30:24 +0200
-Message-ID: <CAPDyKFoSKwamqRdQNkgwKTixSwXPEf9dB4jSiOh73DqXOZ1yGg@mail.gmail.com>
-Subject: Re: [PATCH 2/8] mmc: block: cleanup gendisk creation
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
-        Song Liu <song@kernel.org>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <145aaf29-535b-a0b5-3c6d-25b036df6dbb@kernel.dk>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, 9 Aug 2021 at 08:44, Christoph Hellwig <hch@lst.de> wrote:
->
-> Restructure mmc_blk_probe to avoid a failure path with a half created
-> disk.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 04.08.2021 23:50, Jens Axboe wrote:
+> On 8/4/21 3:47 PM, Song Liu wrote:
+>> Hi Jens,
+>>
+>> Please consider pulling the following fix on top of your for-5.14/block> branch.
+> 
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+Hi Song,
 
-Let's try to funnel this via Jens' tree. As long as his tree is based
-upon v5.14-rc3 or later I don't think we should have any problem with
-conflicts.
+Could you describe idea behind of "md-next" and "md-fixes" branches?
+I'm asking because we are running regression on "md-next", but since
+development has been divided into two separate branches I probably
+need to change current approach.
 
-Kind regards
-Uffe
-
-
-> ---
->  drivers/mmc/core/block.c | 49 ++++++++++++++--------------------------
->  1 file changed, 17 insertions(+), 32 deletions(-)
->
-> diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
-> index 4ac3e1b93e7e..4c11f171e56d 100644
-> --- a/drivers/mmc/core/block.c
-> +++ b/drivers/mmc/core/block.c
-> @@ -2328,7 +2328,8 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
->                                               sector_t size,
->                                               bool default_ro,
->                                               const char *subname,
-> -                                             int area_type)
-> +                                             int area_type,
-> +                                             unsigned int part_type)
->  {
->         struct mmc_blk_data *md;
->         int devidx, ret;
-> @@ -2375,6 +2376,7 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
->         kref_init(&md->kref);
->
->         md->queue.blkdata = md;
-> +       md->part_type = part_type;
->
->         md->disk->major = MMC_BLOCK_MAJOR;
->         md->disk->minors = perdev_minors;
-> @@ -2427,6 +2429,10 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
->                 md->disk->disk_name, mmc_card_id(card), mmc_card_name(card),
->                 cap_str, md->read_only ? "(ro)" : "");
->
-> +       /* used in ->open, must be set before add_disk: */
-> +       if (area_type == MMC_BLK_DATA_AREA_MAIN)
-> +               dev_set_drvdata(&card->dev, md);
-> +       device_add_disk(md->parent, md->disk, mmc_disk_attr_groups);
->         return md;
->
->   err_kfree:
-> @@ -2456,7 +2462,7 @@ static struct mmc_blk_data *mmc_blk_alloc(struct mmc_card *card)
->         }
->
->         return mmc_blk_alloc_req(card, &card->dev, size, false, NULL,
-> -                                       MMC_BLK_DATA_AREA_MAIN);
-> +                                       MMC_BLK_DATA_AREA_MAIN, 0);
->  }
->
->  static int mmc_blk_alloc_part(struct mmc_card *card,
-> @@ -2470,10 +2476,9 @@ static int mmc_blk_alloc_part(struct mmc_card *card,
->         struct mmc_blk_data *part_md;
->
->         part_md = mmc_blk_alloc_req(card, disk_to_dev(md->disk), size, default_ro,
-> -                                   subname, area_type);
-> +                                   subname, area_type, part_type);
->         if (IS_ERR(part_md))
->                 return PTR_ERR(part_md);
-> -       part_md->part_type = part_type;
->         list_add(&part_md->part, &md->part);
->
->         return 0;
-> @@ -2674,20 +2679,13 @@ static int mmc_blk_alloc_parts(struct mmc_card *card, struct mmc_blk_data *md)
->
->  static void mmc_blk_remove_req(struct mmc_blk_data *md)
->  {
-> -       struct mmc_card *card;
-> -
-> -       if (md) {
-> -               /*
-> -                * Flush remaining requests and free queues. It
-> -                * is freeing the queue that stops new requests
-> -                * from being accepted.
-> -                */
-> -               card = md->queue.card;
-> -               if (md->disk->flags & GENHD_FL_UP)
-> -                       del_gendisk(md->disk);
-> -               mmc_cleanup_queue(&md->queue);
-> -               mmc_blk_put(md);
-> -       }
-> +       /*
-> +        * Flush remaining requests and free queues. It is freeing the queue
-> +        * that stops new requests from being accepted.
-> +        */
-> +       del_gendisk(md->disk);
-> +       mmc_cleanup_queue(&md->queue);
-> +       mmc_blk_put(md);
->  }
->
->  static void mmc_blk_remove_parts(struct mmc_card *card,
-> @@ -2876,7 +2874,7 @@ static void mmc_blk_remove_debugfs(struct mmc_card *card,
->
->  static int mmc_blk_probe(struct mmc_card *card)
->  {
-> -       struct mmc_blk_data *md, *part_md;
-> +       struct mmc_blk_data *md;
->         int ret = 0;
->
->         /*
-> @@ -2904,19 +2902,6 @@ static int mmc_blk_probe(struct mmc_card *card)
->         if (ret)
->                 goto out;
->
-> -       dev_set_drvdata(&card->dev, md);
-> -
-> -       device_add_disk(md->parent, md->disk, mmc_disk_attr_groups);
-> -       if (ret)
-> -               goto out;
-> -
-> -       list_for_each_entry(part_md, &md->part, part) {
-> -               device_add_disk(part_md->parent, part_md->disk,
-> -                               mmc_disk_attr_groups);
-> -               if (ret)
-> -                       goto out;
-> -       }
-> -
->         /* Add two debugfs entries */
->         mmc_blk_add_debugfs(card, md);
->
-> --
-> 2.30.2
->
+Thanks,
+Mariusz
