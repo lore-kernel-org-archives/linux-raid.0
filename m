@@ -2,174 +2,98 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54ECBC4338F
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Aug 2021 13:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FB7C4338F
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Aug 2021 13:39:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C39260D07
-	for <linux-raid@archiver.kernel.org>; Wed, 11 Aug 2021 13:06:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9BB760FDA
+	for <linux-raid@archiver.kernel.org>; Wed, 11 Aug 2021 13:39:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230170AbhHKNG4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 11 Aug 2021 09:06:56 -0400
-Received: from mga12.intel.com ([192.55.52.136]:56378 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229941AbhHKNG4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 11 Aug 2021 09:06:56 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10072"; a="194705077"
-X-IronPort-AV: E=Sophos;i="5.84,313,1620716400"; 
-   d="scan'208";a="194705077"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Aug 2021 06:06:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,313,1620716400"; 
-   d="scan'208";a="526929423"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga002.fm.intel.com with ESMTP; 11 Aug 2021 06:06:30 -0700
-Received: from [10.213.3.231] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.3.231])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S230487AbhHKNj4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 11 Aug 2021 09:39:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44811 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230360AbhHKNjz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 11 Aug 2021 09:39:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1628689171;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=mBNQTG4kT8XD736g8tyFMXhl9tsW4f3Xh6ByTWmHGUU=;
+        b=DszVoyCK954ea/Az9SnVYrrlDFMNZ/l9MkVRqfCsptfsZbT78WxnH9sS7F6xlddjVzo9DR
+        Fg+QEQsOyNWkAM5xLfx0woIPTN99FHL8CfZviZ2+Rc87dabQ35GwrYKoiPsusWejaTIK3s
+        Sp7JanS1ynZeVvOP88gZG+6Rz4C4zBk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-122-6erko1QcPSGcFJwNo2RIOw-1; Wed, 11 Aug 2021 09:39:30 -0400
+X-MC-Unique: 6erko1QcPSGcFJwNo2RIOw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id E9449580815;
-        Wed, 11 Aug 2021 06:06:29 -0700 (PDT)
-Subject: Re: [PATCH] Fix return value from fstat calls
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-To:     Nigel Croxon <ncroxon@redhat.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-References: <20210810151507.1667518-1-ncroxon@redhat.com>
- <ed1b0603-e523-6ca6-12ce-d30a85afe885@linux.intel.com>
-Message-ID: <4d5a4bb0-e044-c225-f507-59d4167a8807@linux.intel.com>
-Date:   Wed, 11 Aug 2021 15:06:27 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E0C28801A92;
+        Wed, 11 Aug 2021 13:39:29 +0000 (UTC)
+Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id BC820781E8;
+        Wed, 11 Aug 2021 13:39:29 +0000 (UTC)
+From:   Nigel Croxon <ncroxon@redhat.com>
+To:     jes@trained-monkey.org, linux-raid@vger.kernel.org, xni@redhat.com
+Subject: [PATCH] Fix 2 dc stream buffer
+Date:   Wed, 11 Aug 2021 09:39:28 -0400
+Message-Id: <20210811133928.1791065-1-ncroxon@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <ed1b0603-e523-6ca6-12ce-d30a85afe885@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-+ linux raid
+To meet requirements of Common Criteria certification vulnerablility
+assessment. Static code analysis has been run and found the following
+Error: DC.STREAM_BUFFER (CWE-120): [#def46]
+mdadm-4.2: dont_call: "fscanf" assumes an arbitrarily
+long string, so callers must use correct precision specifiers or
+never use "fscanf".
 
-Mariusz
+The change is to define a value for string %s.
 
-On 11.08.2021 15:03, Tkaczyk, Mariusz wrote:
-> On 10.08.2021 17:15, Nigel Croxon wrote:
->> To meet requirements of Common Criteria certification vulnerablility
->> assessment. Static code analysis has been run and found the following
->> errors:
->> check_return: Calling "fstat(fd, &dstb)" without checking return value.
->> This library function may fail and return an error code.
->>
->> Changes are to add a test to the return value from fstat calls.
->>
-> 
-> Hi Nigel,
-> You introduce three different errors, repeated many times across code.
-> Could you make it generic using function or macro?
-> 
->> diff --git a/Assemble.c b/Assemble.c
->> index 0df46244..cae3224b 100644
->> --- a/Assemble.c
->> +++ b/Assemble.c
->> @@ -649,7 +649,14 @@ static int load_devices(struct devs *devices, char *devmap,
->>               /* prepare useful information in info structures */
->>               struct stat stb2;
->>               int err;
->> -            fstat(mdfd, &stb2);
->> +
->> +            if (fstat(mdfd, &stb2) != 0) {
->> +                pr_err("fstat failed for %s: %s\n",devname, strerror(errno));
->> +                close(mdfd);
->> +                free(devices);
->> +                free(devmap);
->> +                return -1;
->> +            }
-> another new case with direct error handling, could you use goto statement?
-> 
-> 
->> @@ -760,7 +767,17 @@ static int load_devices(struct devs *devices, char *devmap,
->>               tst->ss->getinfo_super(tst, content, devmap + devcnt * 
->> content->array.raid_disks);
->>           }
->> -        fstat(dfd, &stb);
->> +        if (fstat(dfd, &stb) != 0) {
->> +            pr_err("fstat failed for %s: %s - aborting\n",devname, 
->> strerror(errno));
->> +            close(dfd);
->> +            close(mdfd);
->> +            free(devices);
->> +            free(devmap);
->> +            tst->ss->free_super(tst);
->> +            free(tst);
->> +            *stp = st;
->> +            return -1;
->> +        }
-> Same here, I know that it is implemented this way, but we should take care about
-> code quality, this is our common interest.
-> 
->> diff --git a/Dump.c b/Dump.c
->> index 736bcb60..d1a8bb86 100644
->> --- a/Dump.c
->> +++ b/Dump.c
->> @@ -112,7 +112,14 @@ int Dump_metadata(char *dev, char *dir, struct context *c,
->>       }
->>       if (c->verbose >= 0)
->>           printf("%s saved as %s.\n", dev, fname);
->> -    fstat(fd, &dstb);
->> +
->> +    if (fstat(fd, &dstb) != 0) {
->> +        pr_err("fstat failed from %s: %s\n",fname, strerror(errno));
->> +        close(fd);
->> +        close(fl);
->> +        free(fname);
->> +        return 1;
->> +    }
-> Same here.
-> 
->> @@ -200,7 +207,11 @@ int Restore_metadata(char *dev, char *dir, struct context 
->> *c,
->>           char *chosen = NULL;
->>           unsigned int chosen_inode = 0;
->> -        fstat(fd, &dstb);
->> +        if (fstat(fd, &dstb) != 0) {
->> +            pr_err("fstat failed for %s: %s\n",dev, strerror(errno));
->> +            close(fd);
->> +            return 1;
->> +        }
->>           while (d && (de = readdir(d)) != NULL) {
->>               if (de->d_name[0] == '.')
->> diff --git a/Grow.c b/Grow.c
->> index 7506ab46..4c3ec9c1 100644
->> --- a/Grow.c
->> +++ b/Grow.c
->> @@ -1163,9 +1163,17 @@ int reshape_open_backup_file(char *backup_file,
->>        * way this will not notice, but it is better than
->>        * nothing.
->>        */
->> -    fstat(*fdlist, &stb);
->> +    if (fstat(*fdlist, &stb) != 0) {
->> +        pr_err("fstat failed for %s: %s\n",devname, strerror(errno));
->> +        close(*fdlist);
->> +        return 0;
->> +    }
->>       dev = stb.st_dev;
->> -    fstat(fd, &stb);
->> +    if (fstat(fd, &stb) != 0) {
->> +        pr_err("fstat failed for %s: %s\n",devname, strerror(errno));
->> +        close(*fdlist);
->> +        return 0;
->> +    }
->>       if (stb.st_rdev == dev) {
->>           pr_err("backup file must NOT be on the array being reshaped.\n");
->>           close(*fdlist);
-> Same error handling duplicated.
-> 
-> Thanks,
-> Mariusz
-> 
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ Monitor.c | 2 +-
+ policy.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Monitor.c b/Monitor.c
+index f5412299..8bd3b5a1 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -359,7 +359,7 @@ static int check_one_sharer(int scan)
+ 			 "/proc/%d/comm", pid);
+ 		comm_fp = fopen(comm_path, "r");
+ 		if (comm_fp) {
+-			if (fscanf(comm_fp, "%s", comm) &&
++			if (fscanf(comm_fp, "%19s", comm) &&
+ 			    strncmp(basename(comm), Name, strlen(Name)) == 0) {
+ 				if (scan) {
+ 					pr_err("Only one autorebuild process allowed in scan mode, aborting\n");
+diff --git a/policy.c b/policy.c
+index 3c53bd35..e9760a65 100644
+--- a/policy.c
++++ b/policy.c
+@@ -784,7 +784,7 @@ int policy_check_path(struct mdinfo *disk, struct map_ent *array)
+ 		if (!f)
+ 			continue;
+ 
+-		rv = fscanf(f, " %s %x:%x:%x:%x\n",
++		rv = fscanf(f, " %255s %x:%x:%x:%x\n",
+ 			    array->metadata,
+ 			    array->uuid,
+ 			    array->uuid+1,
+-- 
+2.29.2
 
