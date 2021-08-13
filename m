@@ -2,91 +2,79 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E41DC4338F
-	for <linux-raid@archiver.kernel.org>; Fri, 13 Aug 2021 07:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBCB8C4338F
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Aug 2021 07:45:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 364016103E
-	for <linux-raid@archiver.kernel.org>; Fri, 13 Aug 2021 07:19:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB4C660F14
+	for <linux-raid@archiver.kernel.org>; Fri, 13 Aug 2021 07:45:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239269AbhHMHTl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 13 Aug 2021 03:19:41 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:40038 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239248AbhHMHTl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 13 Aug 2021 03:19:41 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        id S239581AbhHMHp5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 13 Aug 2021 03:45:57 -0400
+Received: from mga06.intel.com ([134.134.136.31]:15267 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239456AbhHMHp4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 13 Aug 2021 03:45:56 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10074"; a="276551679"
+X-IronPort-AV: E=Sophos;i="5.84,318,1620716400"; 
+   d="scan'208";a="276551679"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2021 00:45:29 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,318,1620716400"; 
+   d="scan'208";a="528271004"
+Received: from linux.intel.com ([10.54.29.200])
+  by fmsmga002.fm.intel.com with ESMTP; 13 Aug 2021 00:45:29 -0700
+Received: from [10.213.30.238] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.30.238])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 7BFEB222A9;
-        Fri, 13 Aug 2021 07:19:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1628839154; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rPBVGwqjXL7VFX/bv8R5A0Lwbv6GE8yTlpKK+xm6Si8=;
-        b=0Toc8Yzu1183ap67oZsH8gItazcmLVIaaZfZrvuhIdZil90fUAJakcCHUv/GRxrX7yETWl
-        JKQV+x2FPg6SspQsyq9qRuSJVG7tJ8gS5ggaooumNlRSoc1kmPF7XJKczwVZLvPE2elYEJ
-        tPWzDV0R4Y45U12xYRNZt4mn9F/P/N0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1628839154;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rPBVGwqjXL7VFX/bv8R5A0Lwbv6GE8yTlpKK+xm6Si8=;
-        b=mP2Ce4ZEb67OMALZ6SnTPuWX0cSJZ+whyFa5SlnbkbLkijjufp+GhRJtwvTFKZfMnViGnY
-        cZ5NvYXWt0t/Q7Bg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E2F4D13A00;
-        Fri, 13 Aug 2021 07:19:12 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 3nsWKPAcFmHvYgAAMHmgww
-        (envelope-from <neilb@suse.de>); Fri, 13 Aug 2021 07:19:12 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-Cc:     "Nigel Croxon" <ncroxon@redhat.com>, jes@trained-monkey.org,
-        xni@redhat.com, linux-raid@vger.kernel.org
+        by linux.intel.com (Postfix) with ESMTPS id 0003D5806C8;
+        Fri, 13 Aug 2021 00:45:27 -0700 (PDT)
 Subject: Re: [PATCH V2] Fix return value from fstat calls
-In-reply-to: <5b71689a-6d07-0dfd-a4b6-26322ee3136e@linux.intel.com>
-References: <20210810151507.1667518-1-ncroxon@redhat.com>,
- <20210811190930.1822317-1-ncroxon@redhat.com>,
- <162872237888.31578.18083659195262526588@noble.neil.brown.name>,
- <346e8651-d861-45c7-9058-68008e691b93@Canary>,
- <162881060124.15074.6150940509008984778@noble.neil.brown.name>,
+To:     NeilBrown <neilb@suse.de>
+Cc:     Nigel Croxon <ncroxon@redhat.com>, jes@trained-monkey.org,
+        xni@redhat.com, linux-raid@vger.kernel.org
+References: <20210810151507.1667518-1-ncroxon@redhat.com>
+ <20210811190930.1822317-1-ncroxon@redhat.com>
+ <162872237888.31578.18083659195262526588@noble.neil.brown.name>
+ <346e8651-d861-45c7-9058-68008e691b93@Canary>
+ <162881060124.15074.6150940509008984778@noble.neil.brown.name>
  <5b71689a-6d07-0dfd-a4b6-26322ee3136e@linux.intel.com>
-Date:   Fri, 13 Aug 2021 17:19:10 +1000
-Message-id: <162883915010.1695.14187049458830945568@noble.neil.brown.name>
+ <162883915010.1695.14187049458830945568@noble.neil.brown.name>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <fe98561f-7f8f-45fa-bafa-e7f553a0f162@linux.intel.com>
+Date:   Fri, 13 Aug 2021 09:45:25 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <162883915010.1695.14187049458830945568@noble.neil.brown.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 13 Aug 2021, Tkaczyk, Mariusz wrote:
+On 13.08.2021 09:19, NeilBrown wrote:
+> On Fri, 13 Aug 2021, Tkaczyk, Mariusz wrote:
+>>
+
+> Error handling that is buggy, or that is hard to maintain is not better
+> than nothing.  If I can't guarantee that we never pass a bad file
+> descriptor, then you cannot guarantee that the error handling has no
+> bugs.   Less code generally means less bugs.
 > 
-> Maybe It won't be useful for users but it may help developers to avoid
-> trivial mistakes. As you told, if everything is fine then check is dead.
-> In my opinion any error handling is better than nothing.
+> Any attempt to try to handle an error that should not be able to happen
+> other than crashing is fairly pointless - you cannot guess the real
+> cause, so you cannot know how to repair.  Just printing a message and
+> continuing could be as bad as not checking the error.
+> As error handling, I meant any error verification. It doesn't indicate
+that we should return status and end gracefully. exit() is elegant
+solution in this case, totally agree.
 
-Error handling that is buggy, or that is hard to maintain is not better
-than nothing.  If I can't guarantee that we never pass a bad file
-descriptor, then you cannot guarantee that the error handling has no
-bugs.   Less code generally means less bugs.
+Thanks,
+Mariusz
 
-Any attempt to try to handle an error that should not be able to happen
-other than crashing is fairly pointless - you cannot guess the real
-cause, so you cannot know how to repair.  Just printing a message and
-continuing could be as bad as not checking the error.
-
-NeilBrown
