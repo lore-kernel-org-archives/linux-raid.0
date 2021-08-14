@@ -2,128 +2,146 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DAEC4320A
-	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 08:57:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A17BC4338F
+	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:34:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC20260F46
-	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 08:57:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D13360EE2
+	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:34:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237587AbhHNI5w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 14 Aug 2021 04:57:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:33942 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237543AbhHNI5v (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 14 Aug 2021 04:57:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628931442;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=hVaGgxPnEuUaeVNs1e3S9yjlL7gUklGWzlvGDXZIRvc=;
-        b=efYTrMuNZpbF8h40ieJd6aax+8kQd51t2ZXzvIXYt6HDt0GlSIa0cH6PCfbENggOubj/p9
-        lrLcKo7UH6FFOI/rn8FaBW0yqU997H0mEGXwmejAtSy1KX5/a8+Fgn02y1FmDFK27WEXtk
-        y8ybfmGGELPqoL1jNIsXHjTsWU5pHwE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-313-kmYA8s_vNyajXmJosHO4ow-1; Sat, 14 Aug 2021 04:57:21 -0400
-X-MC-Unique: kmYA8s_vNyajXmJosHO4ow-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 82B4D1853025;
-        Sat, 14 Aug 2021 08:57:19 +0000 (UTC)
-Received: from T590 (ovpn-8-25.pek2.redhat.com [10.72.8.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 60F2818A77;
-        Sat, 14 Aug 2021 08:57:10 +0000 (UTC)
-Date:   Sat, 14 Aug 2021 16:57:06 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org,
-        linux-raid@vger.kernel.org, jens@chianterastutte.eu,
-        linux-block@vger.kernel.org
-Subject: Re: [PATCH] raid1: ensure bio doesn't have more than BIO_MAX_VECS
- sectors
-Message-ID: <YReFYrjtWr9MvfBr@T590>
-References: <20210813060510.3545109-1-guoqing.jiang@linux.dev>
- <YRYj8A+mDfAQBo/E@infradead.org>
- <0eac4589-ffd2-fb1a-43cc-87722731438a@linux.dev>
- <YRd26VGAnBiYeHrH@infradead.org>
+        id S238997AbhHNSfR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 14 Aug 2021 14:35:17 -0400
+Received: from mout.kundenserver.de ([212.227.126.130]:38661 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233713AbhHNSfR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 14 Aug 2021 14:35:17 -0400
+Received: from weisslap.aisec.fraunhofer.de ([178.27.102.95]) by
+ mrelayeu.kundenserver.de (mreue010 [212.227.15.167]) with ESMTPSA (Nemesis)
+ id 1MBlgy-1mMhBF450u-00CDbq; Sat, 14 Aug 2021 20:34:34 +0200
+From:   =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>
+To:     Casey Schaufler <casey@schaufler-ca.com>
+Cc:     =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
+        Song Liu <song@kernel.org>, Paul Moore <paul@paul-moore.com>,
+        Eric Paris <eparis@redhat.com>, linux-kernel@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-audit@redhat.com
+Subject: [PATCH v2 0/3] dm: audit event logging
+Date:   Sat, 14 Aug 2021 20:33:52 +0200
+Message-Id: <20210814183359.4061-1-michael.weiss@aisec.fraunhofer.de>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YRd26VGAnBiYeHrH@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:upD3yRH5hFfQxAWGBD+cbK34kBXTUgHSWOzn/0o6eeF1UV6INC8
+ nWPgpTusd43NAKiNW/RRkfsimIls0/5covPu+MlMNO1CgSuOgsKyCxP67wyycvX6bpXZW8j
+ 9ntlEWN0juSCWi5UL3LWVABcW/IB1QL8mClvRBJ8NtfMnFH31qoERcZEl9qwYdCKD8OduYI
+ erw+aM7QGnaCuvKgh6J/g==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:eWWgpQeMjvI=:T0Hp/BqnPHfzstvVBrwuaq
+ d9wZNcguphCGb0uUPPLHkAr47mebdBJ1ENtO7PAbg+r6Chhv2q5M4BuDxrSUkVAAEGqMaZhtX
+ JwJTrLwnMMWcDYGgeAW0ew+0Mh6lLGRAO5qoScBCKB/YD2sS7+W46wFW1mIhj7p8ziCkGI1cn
+ zs89DeL0zb17GPxBXOu6FkJxuYXL/N6PkzsJ3LYSqNItwmXHY86BD8hnwtXCZdZ7D1gO62Qzs
+ F2Vwi2qXtsWiMJwm6aQShqpCqLAJTbJSBz5bECiLDv/6aJW8jt0AqjO4IQ9en1POH3SylTJiG
+ mwuRk0rxHiih5CcY/a6zh8OHtTWKPBgg38xm2RIMa/skMskrJ2EYANQPmVZsfSQaMLEXpUlbs
+ FKNShznyjfCzqhIteNK74OEZxfTPsuRMD2xrL3yBdFfTTZmW5psKg5q9k8/T/noMJDW9MzVvj
+ QExk+2XP/0xvGc6H4pv2tuFN3xt40y9exlHpzG+T1GGfM05CjQaI6NNsdS9c5RvZVfwpyK0+c
+ 0zWCyEENWVoCzN7ewNeIxQaDiKaT3a7LeFpnT5n/M7DtDv+/ZD+TL1pBOaO/792n45O44aD5W
+ ummoytgWaKbeMDdKAqJ8fLf136lbDLKOAlp5y3tsrWRZfX2IeEiXz876R2qyL5g3wxLhTfpUM
+ KvDc1vQEiXFutEmjN6RKvpuBdLvx1oz6v3s0weoyCbzXOEzeDzZ39h+uknhcA5ZC8dzqzSAkr
+ MMnasIL/khokW7o2JUAyAAWE/JqnEK9VfxJxPb3z2B07MuJ3yFaWKbS7I9yUoGMXIr6HpjiJ7
+ UqrJGoBwQzUHP4cOcT9ioEmtfpyistA47sNu8AT1dQnGWT5vcikQ/4bWNaQOQMZtxNVs4+z0g
+ Vv31CrOmyEIG6jcszs1A==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Aug 14, 2021 at 08:55:21AM +0100, Christoph Hellwig wrote:
-> On Fri, Aug 13, 2021 at 04:38:59PM +0800, Guoqing Jiang wrote:
-> > 
-> > Ok, thanks.
-> > 
-> > > In general the size of a bio only depends on the number of vectors, not
-> > > the total I/O size.  But alloc_behind_master_bio allocates new backing
-> > > pages using order 0 allocations, so in this exceptional case the total
-> > > size oes actually matter.
-> > > 
-> > > While we're at it: this huge memory allocation looks really deadlock
-> > > prone.
-> > 
-> > Hmm, let me think more about it, or could you share your thought? ????
-> 
-> Well, you'd need a mempool which can fit the max payload of a bio,
-> that is BIO_MAX_VECS pages.
-> 
-> FYI, this is what I'd do instead of this patch for now.  We don't really
-> need a vetor per sector, just per page.  So this limits the I/O
-> size a little less.
-> 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 3c44c4bb40fc..5b27d995302e 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1454,6 +1454,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->  		goto retry_write;
->  	}
->  
-> +	/*
-> +	 * When using a bitmap, we may call alloc_behind_master_bio below.
-> +	 * alloc_behind_master_bio allocates a copy of the data payload a page
-> +	 * at a time and thus needs a new bio that can fit the whole payload
-> +	 * this bio in page sized chunks.
-> +	 */
-> +	if (bitmap)
-> +		max_sectors = min_t(int, max_sectors, BIO_MAX_VECS * PAGE_SIZE);
+dm integrity and also stacked dm crypt devices track integrity
+violations internally. Thus, integrity violations could be polled
+from user space, e.g., by 'integritysetup status'.
 
-s/PAGE_SIZE/PAGE_SECTORS
+From an auditing perspective, we only could see that there were
+a number of integrity violations, but not when and where the
+violation exactly was taking place. The current error log to
+the kernel ring buffer, contains those information, time stamp and
+sector on device. However, for auditing the audit subsystem provides
+a separate logging mechanism which meets certain criteria for secure
+audit logging.
 
-> +
->  	if (max_sectors < bio_sectors(bio)) {
->  		struct bio *split = bio_split(bio, max_sectors,
->  					      GFP_NOIO, &conf->bio_split);
-> 
+With this small series we make use of the kernel audit framework
+and extend the dm driver to log audit events in case of such
+integrity violations. Further, we also log construction and
+destruction of the device mappings.
 
-Here the limit is max single-page vectors, and the above way may not work,
-such as:
+We focus on dm-integrity and stacked dm-crypt devices for now.
+However, the helper functions to log audit messages should be
+applicable to dm verity too.
 
-0 ~ 254: each bvec's length is 512
-255: bvec's length is 8192
+The first patch introduce generic audit wrapper functions.
+The second patch makes use of the audit wrapper functions in the
+dm-integrity.c.
+The third patch uses the wrapper functions in dm-crypt.c.
 
-the total length is just 512*255 + 8192 = 138752 bytes = 271 sectors, but it
-still may need 257 bvecs, which can't be allocated via bio_alloc_bioset().
+The audit logs look like this if executing the following simple test:
 
-One solution is to add queue limit of max_single_page_bvec, and let
-blk_queue_split() handle it.
+# dd if=/dev/zero of=test.img bs=1M count=1024
+# losetup -f test.img
+# integritysetup -vD format --integrity sha256 -t 32 /dev/loop0 
+# integritysetup open -D /dev/loop0 --integrity sha256 integritytest
+# integritysetup status integritytest
+# integritysetup close integritytest
+# integritysetup open -D /dev/loop0 --integrity sha256 integritytest
+# integritysetup status integritytest
+# dd if=/dev/urandom of=/dev/loop0 bs=512 count=1 seek=100000
+# dd if=/dev/mapper/integritytest of=/dev/null
 
+-------------------------
+audit.log from auditd
 
+type=UNKNOWN[1336] msg=audit(1628692862.187:409): module=integrity dev=254:3 op=ctr res=1
+type=UNKNOWN[1336] msg=audit(1628692862.443:410): module=integrity dev=254:3 op=dtr res=1
+type=UNKNOWN[1336] msg=audit(1628692862.543:411): module=integrity dev=254:3 op=ctr res=1
+type=UNKNOWN[1336] msg=audit(1628692877.943:412): module=integrity dev=254:3 op=dtr res=1
 
-Thanks,
-Ming
+type=UNKNOWN[1336] msg=audit(1628692887.287:413): module=integrity dev=254:3 op=ctr res=1
+
+type=UNKNOWN[1336] msg=audit(1628692925.156:417): module=integrity dev=254:3 op=dtr res=1
+
+type=UNKNOWN[1336] msg=audit(1628692930.720:418): module=integrity dev=254:3 op=ctr res=1
+
+type=UNKNOWN[1336] msg=audit(1628692989.344:419): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:420): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:421): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:422): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:423): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:424): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:425): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:426): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:427): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+type=UNKNOWN[1336] msg=audit(1628692989.348:428): module=integrity dev=254:3 op=integrity-checksum sector=77480 res=0
+
+v2 Changes:
+- Fixed compile errors if CONFIG_DM_AUDIT is not set
+- Fixed formatting and typos as suggested by Casey
+
+Michael Weiß (3):
+  dm: introduce audit event module for device mapper
+  dm integrity: log audit events for dm-integrity target
+  dm crypt: log aead integrity violations to audit subsystem
+
+ drivers/md/Kconfig         | 10 +++++++
+ drivers/md/Makefile        |  4 +++
+ drivers/md/dm-audit.c      | 59 ++++++++++++++++++++++++++++++++++++++
+ drivers/md/dm-audit.h      | 33 +++++++++++++++++++++
+ drivers/md/dm-crypt.c      | 22 +++++++++++---
+ drivers/md/dm-integrity.c  | 25 +++++++++++++---
+ include/uapi/linux/audit.h |  1 +
+ 7 files changed, 146 insertions(+), 8 deletions(-)
+ create mode 100644 drivers/md/dm-audit.c
+ create mode 100644 drivers/md/dm-audit.h
+
+-- 
+2.20.1
 
