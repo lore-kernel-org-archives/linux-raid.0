@@ -2,240 +2,172 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 232E6C432BE
-	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:34:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA4FC4338F
+	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:35:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0975560F39
-	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:34:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B216660ED5
+	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239016AbhHNSfX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 14 Aug 2021 14:35:23 -0400
-Received: from mout.kundenserver.de ([212.227.126.135]:44909 "EHLO
+        id S239038AbhHNSfY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 14 Aug 2021 14:35:24 -0400
+Received: from mout.kundenserver.de ([212.227.126.135]:46403 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239013AbhHNSfW (ORCPT
+        with ESMTP id S239018AbhHNSfW (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Sat, 14 Aug 2021 14:35:22 -0400
 Received: from weisslap.aisec.fraunhofer.de ([178.27.102.95]) by
  mrelayeu.kundenserver.de (mreue010 [212.227.15.167]) with ESMTPSA (Nemesis)
- id 1MKsWr-1mVo140zoz-00LBjr; Sat, 14 Aug 2021 20:34:39 +0200
+ id 1M2w0K-1mDrUz3jQa-003NuA; Sat, 14 Aug 2021 20:34:42 +0200
 From:   =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>
 To:     Casey Schaufler <casey@schaufler-ca.com>
 Cc:     =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>,
-        Alasdair Kergon <agk@redhat.com>,
+        Song Liu <song@kernel.org>, Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        Song Liu <song@kernel.org>, Paul Moore <paul@paul-moore.com>,
+        Paul Moore <paul@paul-moore.com>,
         Eric Paris <eparis@redhat.com>, linux-kernel@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-audit@redhat.com
-Subject: [PATCH v2 1/3] dm: introduce audit event module for device mapper
-Date:   Sat, 14 Aug 2021 20:33:53 +0200
-Message-Id: <20210814183359.4061-2-michael.weiss@aisec.fraunhofer.de>
+Subject: [PATCH v2 2/3] dm integrity: log audit events for dm-integrity target
+Date:   Sat, 14 Aug 2021 20:33:54 +0200
+Message-Id: <20210814183359.4061-3-michael.weiss@aisec.fraunhofer.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210814183359.4061-1-michael.weiss@aisec.fraunhofer.de>
 References: <20210814183359.4061-1-michael.weiss@aisec.fraunhofer.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:u2dVAf0ZtddTZ14NZnAn+TLJPTKr66gghVXqlc7nSaOPR30S8tm
- /vTMEXeV2herj/auuZ6GmRczRVzBiPpKjQGc3HvAWYhxvJJShSeSkPx91iykCtelfYg8lDA
- YpJXwh/MwmL51MPREQp7HSdH7LsYAoLdBKeQIJLf3xDddvO3k0YwU7TrbDp+Wi9ElfDaXZX
- HDZj9ZmzkSC4xejCor1lg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:CkJ2RcV9QeA=:gppEzhMPUmegmipNa1YRZH
- ucN+CHFumHwjl2GrAJ4bbktvXHpaITvXsNn3+Ru3Fd7k+wbaIA7EAu33GLy8FCKSul5so9BFZ
- 7KaKciA9+Z0NLcJ8ltXdo8xi8cY3U71h5m6AeF4hcz4KqH2ZylCdro4V8NN+wDZpsTn9vg2FA
- v8mPfECg9nzmI/79jTut7eUEXkjzHH2FaCr+il8VFhZGw9C/1ejVvVb64Y8ZyVbjQ3NtyFqG4
- /y2vJKl1uqUrSesDlLgpE/q9SkmdRYHTXbpQQttIAXTmllnoHYihgr/TJ9rz45rIohSr3GudT
- 4Glg5iZh2YroYcDFnXt6m6pIbXeP2iQnSD3/tMvZdW2yVainCGunklvyp6w+bqt/aWKju5u4g
- tSdqz+ORIhguxnbSZr78n/qTRprPggyKO70wTnGxeoqfbwlDbQ1pB+odImml0l08WtBmKb3sl
- f3297NSW6G2MoNoRXmjNLFVqlhVdDlVh7KV16WIpqarmDbYowSpJJyZb++J+UTb8tZ6e2PwzF
- 7v7K4nsOwpSGEjCMYkx2hOATVLo1zyAE+2JT2HhtdI9jzxaByGsvXFFwD/TEw3lfuKdXZ39Xg
- N9DRMORDqLcnDACLk/AlOM/gH3wLBuWDkBG9onMVrCnzCxCtOPgtBKCH4/H+DRiZzEDeEqoCG
- 1Wzzh5BvtXf3reJI8JdN7PeQtCv/nS0a9aMUEIrqPM3wL9z0gZVPJYEZUrmlVOPR2A+61mYdX
- MFyXWf/T4mbdfqoiXuzQLLE1nCGCood5RxGh8yydd41pWOdNz9Ezun1XGbIpcvG/c9TmGb1B4
- 8kimHkR7aB1huKNnbAZEsu/vKF0UCi26gmKWOspi0h3/L9/wBiOtOdupYMNxkuWZXNDIxVTl6
- eELTIsvwvXrG2kpU0qaA==
+X-Provags-ID: V03:K1:JRxIIEYVu7W68Mlh/36bVLtSpKe0BNTk++rItoE71sb3OJE4Ufu
+ BpFoHbvkB//iZsXEAsC2Co76DE0Q+kNrHge4hduygWjDobaWfbxmwELVaBgfF55PCMHu/Xu
+ Z2OYf1U6JRGFHRZOU/rJiuc5AddQyTU4f1hIFKYnj4x7Dg5vIu0fUd+T5g22lzULGoNN7OA
+ TvyYEd4h2JRHtb+o8C7fQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:X5q4v+IdAAc=:GLSSLqkM8rMdNut5VEXjSC
+ EFCqp3ZyUSfNhniV4bY8Ae5uH2LLKaIQqb96xiOyF4bRBgUx1T47x1J6v7ra/5+6AVleC66Wj
+ HxVpofC48uR+6RHe2fh9V9HMTbwFZ/tuP8puKHiyF1Oz9kbD7wNKkl9PVpfjKLX/bMmcwRv1Z
+ qFqtygxA+TRuhxpq6b41INGjIPU5VFbN0g1DYAyzbLcpPIUHZjjcSN0ftJOMLmwsoAwYvYgKB
+ fyd7o8avsSSWg/cxUJ/u5y20CMkhCGBKY3bG8MJgvXetkPdbBrZwLLz1dgsrQWxEnm52lR6VI
+ bzoZb9cY7Yq8xLn+F13bSXf4SsB9RbvXXXGr2lEN+gutdvcBt8zMoPQgC97kLCdgbDmWzFtgJ
+ c5S7gVrA+yU9hnWNnvUU9Mugi6Xue+qJbUeTI2wMWWRybi+FkcYWYodjNeiq6sLxafPARoIQZ
+ LWFiALVNgFudDkpWZrq/m3MZXpaayZ9aSXcH6QtwCbntmC0SMZvzuMRQ+z8KgYLOMVz6ut1Q4
+ sAw4t+gsg1Sxf9rZAlPI8zwICiipi6YJKCSwMp1lzH+ZylqIEMpcd9S5tXPgdXBEBjNbQIGVG
+ 28o8e7dtfmzBWcXFsGvrAnHhVee7XBt+SU0FXrIa294UyOsl/trrQszxmFe9SoCsmrz0qPn1y
+ L+POP9fV0dpz9VOH0SydmKDvenhv/NH1aO/te70Ygc6WoS92tE+fP2LzJMRACszxINZ6WKC5x
+ VZc6uJ+4G+TMmU8amePPBj1kCpok3Ede4EnYdqFHc062ngqdQ7Gz3VFrTi6Ty3S9TVXmHZ5DJ
+ A6zRiFN0VD1VmmmwZSK/S1CD/tS3AvfJpdPmAy8I/FxiofYqUMc73FJtEgi0ksWRSYSAzHTh0
+ EhXKyUWaD29BEFm7XU3A==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-To be able to send auditing events to user space, we introduce
-a generic dm-audit module. It provides helper functions to emit
-audit events through the kernel audit subsystem. We claim the
-AUDIT_DM type=1336 out of the audit event messages range in the
-corresponding userspace api in 'include/uapi/linux/audit.h' for
-those events.
+dm-integrity signals integrity violations by returning I/O errors
+to user space. To identify integrity violations by a controlling
+instance, the kernel audit subsystem can be used to emit audit
+events to user space. We use the new dm-audit submodule allowing
+to emit audit events on relevant I/O errors.
 
-Following commits to device mapper targets actually will make
-use of this to emit those events in relevant cases.
+The construction and destruction of integrity device mappings are
+also relevant for auditing a system. Thus, those events are also
+logged as audit events.
 
 Signed-off-by: Michael Weiß <michael.weiss@aisec.fraunhofer.de>
 ---
- drivers/md/Kconfig         | 10 +++++++
- drivers/md/Makefile        |  4 +++
- drivers/md/dm-audit.c      | 59 ++++++++++++++++++++++++++++++++++++++
- drivers/md/dm-audit.h      | 33 +++++++++++++++++++++
- include/uapi/linux/audit.h |  1 +
- 5 files changed, 107 insertions(+)
- create mode 100644 drivers/md/dm-audit.c
- create mode 100644 drivers/md/dm-audit.h
+ drivers/md/dm-integrity.c | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 0602e82a9516..48adbec12148 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -608,6 +608,7 @@ config DM_INTEGRITY
- 	select CRYPTO
- 	select CRYPTO_SKCIPHER
- 	select ASYNC_XOR
-+	select DM_AUDIT if AUDIT
- 	help
- 	  This device-mapper target emulates a block device that has
- 	  additional per-sector tags that can be used for storing
-@@ -640,4 +641,13 @@ config DM_ZONED
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index 20f2510db1f6..fbbb4c3f16cb 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -23,6 +23,8 @@
+ #include <linux/async_tx.h>
+ #include <linux/dm-bufio.h>
  
- 	  If unsure, say N.
- 
-+config DM_AUDIT
-+	bool "DM audit events"
-+	depends on AUDIT
-+	help
-+	  Generate audit events for device-mapper.
-+
-+	  Enables audit logging of several security relevant events in the
-+	  particular device-mapper targets, especially the integrity target.
-+
- endif # MD
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index a74aaf8b1445..4cd47623c742 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -103,3 +103,7 @@ endif
- ifeq ($(CONFIG_DM_VERITY_VERIFY_ROOTHASH_SIG),y)
- dm-verity-objs			+= dm-verity-verify-sig.o
- endif
-+
-+ifeq ($(CONFIG_DM_AUDIT),y)
-+dm-mod-objs				+= dm-audit.o
-+endif
-diff --git a/drivers/md/dm-audit.c b/drivers/md/dm-audit.c
-new file mode 100644
-index 000000000000..c7e5824821bb
---- /dev/null
-+++ b/drivers/md/dm-audit.c
-@@ -0,0 +1,59 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Creating audit records for mapped devices.
-+ *
-+ * Copyright (C) 2021 Fraunhofer AISEC. All rights reserved.
-+ *
-+ * Authors: Michael Weiß <michael.weiss@aisec.fraunhofer.de>
-+ */
-+
-+#include <linux/audit.h>
-+#include <linux/module.h>
-+#include <linux/device-mapper.h>
-+#include <linux/bio.h>
-+#include <linux/blkdev.h>
-+
 +#include "dm-audit.h"
-+#include "dm-core.h"
 +
-+void dm_audit_log_bio(const char *dm_msg_prefix, const char *op,
-+		      struct bio *bio, sector_t sector, int result)
-+{
-+	struct audit_buffer *ab;
-+
-+	if (audit_enabled == AUDIT_OFF)
-+		return;
-+
-+	ab = audit_log_start(audit_context(), GFP_KERNEL, AUDIT_DM);
-+	if (unlikely(!ab))
-+		return;
-+
-+	audit_log_format(ab, "module=%s dev=%d:%d op=%s sector=%llu res=%d",
-+			 dm_msg_prefix, MAJOR(bio->bi_bdev->bd_dev),
-+			 MINOR(bio->bi_bdev->bd_dev), op, sector, result);
-+	audit_log_end(ab);
-+}
-+EXPORT_SYMBOL_GPL(dm_audit_log_bio);
-+
-+void dm_audit_log_target(const char *dm_msg_prefix, const char *op,
-+			 struct dm_target *ti, int result)
-+{
-+	struct audit_buffer *ab;
-+	struct mapped_device *md = dm_table_get_md(ti->table);
-+
-+	if (audit_enabled == AUDIT_OFF)
-+		return;
-+
-+	ab = audit_log_start(audit_context(), GFP_KERNEL, AUDIT_DM);
-+	if (unlikely(!ab))
-+		return;
-+
-+	audit_log_format(ab, "module=%s dev=%s op=%s",
-+			 dm_msg_prefix, dm_device_name(md), op);
-+
-+	if (!result && !strcmp("ctr", op))
-+		audit_log_format(ab, " error_msg='%s'", ti->error);
-+	audit_log_format(ab, " res=%d", result);
-+	audit_log_end(ab);
-+}
-+EXPORT_SYMBOL_GPL(dm_audit_log_target);
-diff --git a/drivers/md/dm-audit.h b/drivers/md/dm-audit.h
-new file mode 100644
-index 000000000000..b9e31b9e3682
---- /dev/null
-+++ b/drivers/md/dm-audit.h
-@@ -0,0 +1,33 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Creating audit records for mapped devices.
-+ *
-+ * Copyright (C) 2021 Fraunhofer AISEC. All rights reserved.
-+ *
-+ * Authors: Michael Weiß <michael.weiss@aisec.fraunhofer.de>
-+ */
-+
-+#ifndef DM_AUDIT_H
-+#define DM_AUDIT_H
-+
-+#include <linux/device-mapper.h>
-+
-+#ifdef CONFIG_DM_AUDIT
-+void dm_audit_log_bio(const char *dm_msg_prefix, const char *op,
-+		      struct bio *bio, sector_t sector, int result);
-+void dm_audit_log_target(const char *dm_msg_prefix, const char *op,
-+			 struct dm_target *ti, int result);
-+#else
-+static inline void dm_audit_log_bio(const char *dm_msg_prefix, const char *op,
-+				    struct bio *bio, sector_t sector,
-+				    int result)
-+{
-+}
-+static inline void dm_audit_log_target(const char *dm_msg_prefix,
-+				       const char *op, struct dm_target *ti,
-+				       int result)
-+{
-+}
-+#endif
-+
-+#endif
-diff --git a/include/uapi/linux/audit.h b/include/uapi/linux/audit.h
-index daa481729e9b..aebfeee1c5b1 100644
---- a/include/uapi/linux/audit.h
-+++ b/include/uapi/linux/audit.h
-@@ -118,6 +118,7 @@
- #define AUDIT_TIME_ADJNTPVAL	1333	/* NTP value adjustment */
- #define AUDIT_BPF		1334	/* BPF subsystem */
- #define AUDIT_EVENT_LISTENER	1335	/* Task joined multicast read socket */
-+#define AUDIT_DM		1336	/* Device Mapper events */
+ #define DM_MSG_PREFIX "integrity"
  
- #define AUDIT_AVC		1400	/* SE Linux avc denial or grant */
- #define AUDIT_SELINUX_ERR	1401	/* Internal SE Linux Errors */
+ #define DEFAULT_INTERLEAVE_SECTORS	32768
+@@ -539,6 +541,7 @@ static int sb_mac(struct dm_integrity_c *ic, bool wr)
+ 		}
+ 		if (memcmp((__u8 *)ic->sb + (1 << SECTOR_SHIFT) - size, result, size)) {
+ 			dm_integrity_io_error(ic, "superblock mac", -EILSEQ);
++			dm_audit_log_target(DM_MSG_PREFIX, "mac-superblock", ic->ti, 0);
+ 			return -EILSEQ;
+ 		}
+ 	}
+@@ -876,8 +879,10 @@ static void rw_section_mac(struct dm_integrity_c *ic, unsigned section, bool wr)
+ 		if (likely(wr))
+ 			memcpy(&js->mac, result + (j * JOURNAL_MAC_PER_SECTOR), JOURNAL_MAC_PER_SECTOR);
+ 		else {
+-			if (memcmp(&js->mac, result + (j * JOURNAL_MAC_PER_SECTOR), JOURNAL_MAC_PER_SECTOR))
++			if (memcmp(&js->mac, result + (j * JOURNAL_MAC_PER_SECTOR), JOURNAL_MAC_PER_SECTOR)) {
+ 				dm_integrity_io_error(ic, "journal mac", -EILSEQ);
++				dm_audit_log_target(DM_MSG_PREFIX, "mac-journal", ic->ti, 0);
++			}
+ 		}
+ 	}
+ }
+@@ -1782,10 +1787,15 @@ static void integrity_metadata(struct work_struct *w)
+ 			if (unlikely(r)) {
+ 				if (r > 0) {
+ 					char b[BDEVNAME_SIZE];
+-					DMERR_LIMIT("%s: Checksum failed at sector 0x%llx", bio_devname(bio, b),
+-						    (sector - ((r + ic->tag_size - 1) / ic->tag_size)));
++					sector_t s;
++
++					s = sector - ((r + ic->tag_size - 1) / ic->tag_size);
++					DMERR_LIMIT("%s: Checksum failed at sector 0x%llx",
++						    bio_devname(bio, b), s);
+ 					r = -EILSEQ;
+ 					atomic64_inc(&ic->number_of_mismatches);
++					dm_audit_log_bio(DM_MSG_PREFIX, "integrity-checksum",
++							 bio, s, 0);
+ 				}
+ 				if (likely(checksums != checksums_onstack))
+ 					kfree(checksums);
+@@ -1991,6 +2001,8 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
+ 					if (unlikely(memcmp(checksums_onstack, journal_entry_tag(ic, je), ic->tag_size))) {
+ 						DMERR_LIMIT("Checksum failed when reading from journal, at sector 0x%llx",
+ 							    logical_sector);
++						dm_audit_log_bio(DM_MSG_PREFIX, "journal-checksum",
++								 bio, logical_sector, 0);
+ 					}
+ 				}
+ #endif
+@@ -2534,8 +2546,10 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
+ 
+ 					integrity_sector_checksum(ic, sec + ((l - j) << ic->sb->log2_sectors_per_block),
+ 								  (char *)access_journal_data(ic, i, l), test_tag);
+-					if (unlikely(memcmp(test_tag, journal_entry_tag(ic, je2), ic->tag_size)))
++					if (unlikely(memcmp(test_tag, journal_entry_tag(ic, je2), ic->tag_size))) {
+ 						dm_integrity_io_error(ic, "tag mismatch when replaying journal", -EILSEQ);
++						dm_audit_log_target(DM_MSG_PREFIX, "integrity-replay-journal", ic->ti, 0);
++					}
+ 				}
+ 
+ 				journal_entry_set_unused(je2);
+@@ -4490,9 +4504,11 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
+ 	if (ic->discard)
+ 		ti->num_discard_bios = 1;
+ 
++	dm_audit_log_target(DM_MSG_PREFIX, "ctr", ti, 1);
+ 	return 0;
+ 
+ bad:
++	dm_audit_log_target(DM_MSG_PREFIX, "ctr", ti, 0);
+ 	dm_integrity_dtr(ti);
+ 	return r;
+ }
+@@ -4566,6 +4582,7 @@ static void dm_integrity_dtr(struct dm_target *ti)
+ 	free_alg(&ic->journal_mac_alg);
+ 
+ 	kfree(ic);
++	dm_audit_log_target(DM_MSG_PREFIX, "dtr", ti, 1);
+ }
+ 
+ static struct target_type integrity_target = {
 -- 
 2.20.1
 
