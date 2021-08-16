@@ -4,67 +4,87 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1832BC4338F
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 09:33:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EF4C4338F
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 09:38:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F07FD61AFA
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 09:33:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15ECF61B51
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 09:38:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232260AbhHPJdw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Aug 2021 05:33:52 -0400
-Received: from out2.migadu.com ([188.165.223.204]:12210 "EHLO out2.migadu.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230506AbhHPJdu (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 16 Aug 2021 05:33:50 -0400
-Subject: Re: [PATCH 1/1] md/raid10: Remove rcu_dereference when it doesn't
- need rcu lock to protect
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1629106397;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6vKddxcvuqgOA5s2mFXquTaR5ywAqvgu83AKcJE6DtQ=;
-        b=e+vTCH5Q0OQhVWpWRPy+Bskbmlj19fTRK+Al+q/V1l31qf3scn5hEV2bKfsNSUU4o1O9Ru
-        sYFoC6pE0KDbem8vDQU6munHChTlmj3GbIuOK8OLNybKYcaItImEmJVjFA0u+L7cnIc1iO
-        S74G8YRK4rs+3CjJOLdJid13wZ46lBQ=
-To:     Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org
-References: <1628481709-3824-1-git-send-email-xni@redhat.com>
- <f8d6871b-c586-a572-4c78-ad5adafc2a6e@linux.dev>
- <CALTww2-YhNyKCyMjjviWJ4XmELNUZJonryrJfXtrwP4DU-C1zg@mail.gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <4398469c-571e-ae00-99df-6e46d2edb3a7@linux.dev>
-Date:   Mon, 16 Aug 2021 17:33:00 +0800
+        id S235091AbhHPJjR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Aug 2021 05:39:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53522 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230506AbhHPJjR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 16 Aug 2021 05:39:17 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6301C061764;
+        Mon, 16 Aug 2021 02:38:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=tYb26lD5y8OOKWadomD7Qv64PtRbDGKEV+koBkpG4/k=; b=ohmXCXFoh3/aIZHIXlVrhNuqDN
+        J4XZPlxnHhZGsFu780/7ZhxWLxCtAQXF2FiIZTjalWxwsKs7Vjw1zEoMyXG4KqV2+JcUCkWnyged0
+        z0VbDcUHGcJaC5lw/g9ndypCv0Idu0WVlwi0GqboWTK5ybNapRxQf1tpKIanjgylo6Gld8kgLb+H2
+        nUaD+wQoQvzKC5RVBwbmon08+PZ/vc9OhMQbuuONk7abD1FWehQZMaqzLVRsnsA26qVmuhgB+kkvF
+        Atzq8C/Ue4EyyDCi4j03IwC/doX4Q4A5ywyJzsP+SGtAlIo4U5ijSvV0TtLWPLOSeGnv1hGK/gp6n
+        fZx4viFw==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mFZ46-001Clr-Bc; Mon, 16 Aug 2021 09:38:06 +0000
+Date:   Mon, 16 Aug 2021 10:37:54 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org,
+        linux-raid@vger.kernel.org, jens@chianterastutte.eu,
+        linux-block@vger.kernel.org
+Subject: Re: [PATCH] raid1: ensure bio doesn't have more than BIO_MAX_VECS
+ sectors
+Message-ID: <YRox8gMjl/Y5Yt/k@infradead.org>
+References: <20210813060510.3545109-1-guoqing.jiang@linux.dev>
+ <YRYj8A+mDfAQBo/E@infradead.org>
+ <0eac4589-ffd2-fb1a-43cc-87722731438a@linux.dev>
+ <YRd26VGAnBiYeHrH@infradead.org>
+ <YReFYrjtWr9MvfBr@T590>
 MIME-Version: 1.0
-In-Reply-To: <CALTww2-YhNyKCyMjjviWJ4XmELNUZJonryrJfXtrwP4DU-C1zg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: guoqing.jiang@linux.dev
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YReFYrjtWr9MvfBr@T590>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Xiao,
+On Sat, Aug 14, 2021 at 04:57:06PM +0800, Ming Lei wrote:
+> > +	if (bitmap)
+> > +		max_sectors = min_t(int, max_sectors, BIO_MAX_VECS * PAGE_SIZE);
+> 
+> s/PAGE_SIZE/PAGE_SECTORS
 
-On 8/16/21 5:01 PM, Xiao Ni wrote:
-> On Mon, Aug 16, 2021 at 2:36 PM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
->> Can rdev be removed between the first loop and the second loop?
->>
-> Hi Guoqing
->
-> As the patch's commit message says, it adds rdev->nr_pending already.
-> So we can guarantee the rdev
-> can't be removed during the first loop and the second loop.
+Yeah, max_sectors is in size units, I messed that up.
 
-I missed that, thanks for clarification. Maybe mention it in description 
-that  nr_pending is incremented
-which means rdev can't disappear.
+> 
+> > +
+> >  	if (max_sectors < bio_sectors(bio)) {
+> >  		struct bio *split = bio_split(bio, max_sectors,
+> >  					      GFP_NOIO, &conf->bio_split);
+> > 
+> 
+> Here the limit is max single-page vectors, and the above way may not work,
+> such as:
+> 
+> 0 ~ 254: each bvec's length is 512
+> 255: bvec's length is 8192
+> 
+> the total length is just 512*255 + 8192 = 138752 bytes = 271 sectors, but it
+> still may need 257 bvecs, which can't be allocated via bio_alloc_bioset().
 
-Thanks,
-Guoqing
+Yes, we still need the rounding magic that alloc_behind_master_bio uses
+here.
+
+> One solution is to add queue limit of max_single_page_bvec, and let
+> blk_queue_split() handle it.
+
+I'd rather not bloat the core with this.
