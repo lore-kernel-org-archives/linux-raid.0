@@ -2,142 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C00C4338F
-	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:35:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BABC4338F
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 05:23:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B86F660F39
-	for <linux-raid@archiver.kernel.org>; Sat, 14 Aug 2021 18:35:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D5E0619EB
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 05:23:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239085AbhHNSff (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 14 Aug 2021 14:35:35 -0400
-Received: from mout.kundenserver.de ([212.227.126.130]:60663 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239044AbhHNSf1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 14 Aug 2021 14:35:27 -0400
-Received: from weisslap.aisec.fraunhofer.de ([178.27.102.95]) by
- mrelayeu.kundenserver.de (mreue010 [212.227.15.167]) with ESMTPSA (Nemesis)
- id 1MsI4Q-1n4JvY1XQ2-00th0a; Sat, 14 Aug 2021 20:34:46 +0200
-From:   =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>
-To:     Casey Schaufler <casey@schaufler-ca.com>
-Cc:     =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>,
-        Song Liu <song@kernel.org>, Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        Paul Moore <paul@paul-moore.com>,
-        Eric Paris <eparis@redhat.com>, linux-kernel@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-audit@redhat.com
-Subject: [PATCH v2 3/3] dm crypt: log aead integrity violations to audit subsystem
-Date:   Sat, 14 Aug 2021 20:33:55 +0200
-Message-Id: <20210814183359.4061-4-michael.weiss@aisec.fraunhofer.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210814183359.4061-1-michael.weiss@aisec.fraunhofer.de>
-References: <20210814183359.4061-1-michael.weiss@aisec.fraunhofer.de>
+        id S233001AbhHPFXb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Aug 2021 01:23:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55706 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232972AbhHPFX3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 16 Aug 2021 01:23:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E173A619EE
+        for <linux-raid@vger.kernel.org>; Mon, 16 Aug 2021 05:22:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1629091378;
+        bh=8T2vV4aQbCD4eKDsd1v0MNuXfB2Zz1uTHKgbj5qS9LI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=NKNydNuSDRueSATTuapFQJsRESiUTLwnD7x6hQfItfZELpNVevkIqVLVwAppR9nN0
+         vrSiDqIYHl5je6gHUO8qW9Y9rWogeplA9F0dNGY8WFFsL4yJJjB0EFylGUYyk+KurB
+         R0BhExtlaZAFB9My12SgSqViWSLK4H5rWfSgslNiEyye+mn9xnyKW+7yMqhKbysU/T
+         9fKITGSh4IefYEQw3dGO15odNW0EYr30Uhl0Qi1Hnpee2OEB7haPZztFRvdPIJe6hR
+         BP77qy+boJIu2UPRuTwSXi1VkQK7i4VhczbVc6WGG1FmCQEGTdzew1DV16/GvufPkV
+         QTyHRzYyjbpNQ==
+Received: by mail-lj1-f176.google.com with SMTP id i28so4044459ljm.7
+        for <linux-raid@vger.kernel.org>; Sun, 15 Aug 2021 22:22:58 -0700 (PDT)
+X-Gm-Message-State: AOAM531b3mPKBZqMQd56QWWa36hykGR8ukaLWmPGyhn/6IcFhjZIfeF1
+        5P1pmRIFwYs2aCvsvDnt8gIaQZCOGp5NxN4/CW4=
+X-Google-Smtp-Source: ABdhPJzylGf/ZQdzt1bJWSYnlYXSuLQW6nDzxQKDpe8xAgZCaC3pTD4vF2S2+/gfNQ6jq1uoUhaFhCYAXSYoKxnZ3mU=
+X-Received: by 2002:a05:651c:390:: with SMTP id e16mr6475541ljp.344.1629091377208;
+ Sun, 15 Aug 2021 22:22:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:CtoNFbEPV+8vqd27K0MnUwjFtAOw4axb5mfVZuAB5lwMuU7vLD7
- LG+BqLl4mtMr28N9LOxMPgHZ4MK5i50M6Q9smlyXuQ2WsFal4LxZQBCw4T0xBSt0b4P5Sc2
- M1OskO1MB8QXSnNwbyXYLmM5yIOgRLt0q0wCOpum2mojGFMZCGWPZGzjc5jS6jTp3AbLWa8
- pqomu0QeuppvzAGyhozaQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:+j3i/Gx0nXI=:lGogq2PrmQmbJOoU4JQ8Bu
- HAsUK52kNoePuQt8BO3ZSA8QRj7zItln8iyNRuHxl9s1EerAQPfRNEy3zfmfdwz+ls+o9O15W
- APi3zCwu8DV9izQv71XocknUUqtQ/Y/9c6BNRqZgSpgvEzVYFBPxzDYEuQpoUxkbIl0f65p7O
- glhJ6xZ6kMrL8I6bMtMRuEVke1BtBBmVtfP1afBTlcbsrGSA7n4U4oMuf3pbpX4AhKnT4JeV5
- k4FNlxcnoOZmPbdO7FH0I6vAGRxhB94k3xa3IBPDKqAbjmUZTn60wj2cDxcEpZC+KCyPcgnL/
- 5P46+rXIzV0kTy3hy1ypzrXL4zNRRGIVl7MTEGIK/V0ApSS8y2E0gvUe9gsPPzx2FA7zaHeew
- PN9fcHBFWQgc5hZAloClyaHQcdg/YOAa9XREO0W1nf2z7Mkx/ieD4vw/dRsVR8Vlnv9uWc1WP
- CMImBlY70hAgCaB8/tszaYeeSG18mHyOfszLFaZu0BbvrZc7OqZptyPxY9wAYQ8RGUhVYqgLl
- gZgiEDxhucrioOmMv86XG7HkGrTFXKFgpeMnVGdbierKP2ZyIULtndJ2zNpw4p43ttuCL1DHW
- qtM9Dk7vS1j4jOPxn5WGVwyVd911HwvKHoVLbwwhkgoCqR6A2XeKdD4+bayar7UKr1+KImws7
- vRc1rHpXOqVeAS5lSQmfVLwlXvJfPbg1YylM0bjobAiHH0O8YMm0z5wSNPT8NWZ9t1dI3QBF0
- q+2rVCp7IVHyBuWmZKO2w6kIY81Rt6JPmth1BC0QApvN7Ryuul9D84M7DqJYEXl+BuC5r9xkd
- 6O2xUCs6k0CLWTWoHDbXh/Ar9+vsHrGl7vWrwqZQD6E08Kq+Q1Ft6Irmia5MxNCMl7YrKVhsv
- 5SL3t8JrhdT8pWxIJtkg==
+References: <1628481709-3824-1-git-send-email-xni@redhat.com>
+ <CAPhsuW6iGBrdso3yStTxxv00qxLbW_gP_2H1CMsi5YzPFU5aqA@mail.gmail.com> <CALTww2-a0jw-LAqsZc8hDY49TqCCEX9KB4J14g2j7tDR3XF+GQ@mail.gmail.com>
+In-Reply-To: <CALTww2-a0jw-LAqsZc8hDY49TqCCEX9KB4J14g2j7tDR3XF+GQ@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Sun, 15 Aug 2021 22:22:46 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4Ev3WBqkFBCVE7h4T8mw4N3GyEmT0tp5StdSs+-UpeBw@mail.gmail.com>
+Message-ID: <CAPhsuW4Ev3WBqkFBCVE7h4T8mw4N3GyEmT0tp5StdSs+-UpeBw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] md/raid10: Remove rcu_dereference when it doesn't
+ need rcu lock to protect
+To:     Xiao Ni <xni@redhat.com>
+Cc:     Song Liu <songliubraving@fb.com>,
+        Nigel Croxon <ncroxon@redhat.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Since dm-crypt target can be stacked on dm-integrity targets to
-provide authenticated encryption, integrity violations are recognized
-here during aead computation. We use the dm-audit submodule to
-signal those events to user space, too.
+On Fri, Aug 13, 2021 at 6:34 PM Xiao Ni <xni@redhat.com> wrote:
+>
+> Hi Song
+>
+> It can improve the performance. It needs to add rcu lock when calling
+> rcu_dereference.
+> Now it has a bug. It doesn't use rcu lock to protect. In the second
+> loop, it doesn't need
+> to use rcu_dereference when getting rdev. So to resolve this bug, we can remove
+> rcu_dereference directly.
 
-The construction and destruction of crypt device mappings are also
-logged as audit events.
+In the second loop, we only use rdev and rrdev when bio and repl_bio
+exists. So we shouldn't trigger the "bug" in any cases, right?
 
-Signed-off-by: Michael Weiß <michael.weiss@aisec.fraunhofer.de>
----
- drivers/md/dm-crypt.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+Please:
+1) If you do think this is a bug, add a fix tag, so we can back port to stable.
+   (while I still think it is not a real bug).
+2) move struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev); to
+  under "if (r10_bio->devs[disk].bio)"; and the rrdev ... to "if
+(repl_bio)". And add
+  a comment there so it is more clear in the code.
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 50f4cbd600d5..2a336eacb50c 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -41,6 +41,8 @@
- 
- #include <linux/device-mapper.h>
- 
-+#include "dm-audit.h"
-+
- #define DM_MSG_PREFIX "crypt"
- 
- /*
-@@ -1362,8 +1364,12 @@ static int crypt_convert_block_aead(struct crypt_config *cc,
- 
- 	if (r == -EBADMSG) {
- 		char b[BDEVNAME_SIZE];
--		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu", bio_devname(ctx->bio_in, b),
--			    (unsigned long long)le64_to_cpu(*sector));
-+		sector_t s = le64_to_cpu(*sector);
-+
-+		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu",
-+			    bio_devname(ctx->bio_in, b), s);
-+		dm_audit_log_bio(DM_MSG_PREFIX, "integrity-aead",
-+				 ctx->bio_in, s, 0);
- 	}
- 
- 	if (!r && cc->iv_gen_ops && cc->iv_gen_ops->post)
-@@ -2173,8 +2179,12 @@ static void kcryptd_async_done(struct crypto_async_request *async_req,
- 
- 	if (error == -EBADMSG) {
- 		char b[BDEVNAME_SIZE];
--		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu", bio_devname(ctx->bio_in, b),
--			    (unsigned long long)le64_to_cpu(*org_sector_of_dmreq(cc, dmreq)));
-+		sector_t s = le64_to_cpu(*org_sector_of_dmreq(cc, dmreq));
-+
-+		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu",
-+			    bio_devname(ctx->bio_in, b), s);
-+		dm_audit_log_bio(DM_MSG_PREFIX, "integrity-aead",
-+				 ctx->bio_in, s, 0);
- 		io->error = BLK_STS_PROTECTION;
- 	} else if (error < 0)
- 		io->error = BLK_STS_IOERR;
-@@ -2729,6 +2739,8 @@ static void crypt_dtr(struct dm_target *ti)
- 	dm_crypt_clients_n--;
- 	crypt_calculate_pages_per_client();
- 	spin_unlock(&dm_crypt_clients_lock);
-+
-+	dm_audit_log_target(DM_MSG_PREFIX, "dtr", ti, 1);
- }
- 
- static int crypt_ctr_ivmode(struct dm_target *ti, const char *ivmode)
-@@ -3357,9 +3369,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	ti->num_flush_bios = 1;
- 	ti->limit_swap_bios = true;
- 
-+	dm_audit_log_target(DM_MSG_PREFIX, "ctr", ti, 1);
- 	return 0;
- 
- bad:
-+	dm_audit_log_target(DM_MSG_PREFIX, "ctr", ti, 0);
- 	crypt_dtr(ti);
- 	return ret;
- }
--- 
-2.20.1
-
+Thanks,
+Song
