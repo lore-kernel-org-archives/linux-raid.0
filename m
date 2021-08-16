@@ -2,81 +2,136 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BABC4338F
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 05:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8368DC4338F
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 06:28:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D5E0619EB
-	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 05:23:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 636A561A3F
+	for <linux-raid@archiver.kernel.org>; Mon, 16 Aug 2021 06:28:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233001AbhHPFXb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 16 Aug 2021 01:23:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55706 "EHLO mail.kernel.org"
+        id S232690AbhHPG2b (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 16 Aug 2021 02:28:31 -0400
+Received: from out0.migadu.com ([94.23.1.103]:25861 "EHLO out0.migadu.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232972AbhHPFX3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 16 Aug 2021 01:23:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E173A619EE
-        for <linux-raid@vger.kernel.org>; Mon, 16 Aug 2021 05:22:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629091378;
-        bh=8T2vV4aQbCD4eKDsd1v0MNuXfB2Zz1uTHKgbj5qS9LI=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=NKNydNuSDRueSATTuapFQJsRESiUTLwnD7x6hQfItfZELpNVevkIqVLVwAppR9nN0
-         vrSiDqIYHl5je6gHUO8qW9Y9rWogeplA9F0dNGY8WFFsL4yJJjB0EFylGUYyk+KurB
-         R0BhExtlaZAFB9My12SgSqViWSLK4H5rWfSgslNiEyye+mn9xnyKW+7yMqhKbysU/T
-         9fKITGSh4IefYEQw3dGO15odNW0EYr30Uhl0Qi1Hnpee2OEB7haPZztFRvdPIJe6hR
-         BP77qy+boJIu2UPRuTwSXi1VkQK7i4VhczbVc6WGG1FmCQEGTdzew1DV16/GvufPkV
-         QTyHRzYyjbpNQ==
-Received: by mail-lj1-f176.google.com with SMTP id i28so4044459ljm.7
-        for <linux-raid@vger.kernel.org>; Sun, 15 Aug 2021 22:22:58 -0700 (PDT)
-X-Gm-Message-State: AOAM531b3mPKBZqMQd56QWWa36hykGR8ukaLWmPGyhn/6IcFhjZIfeF1
-        5P1pmRIFwYs2aCvsvDnt8gIaQZCOGp5NxN4/CW4=
-X-Google-Smtp-Source: ABdhPJzylGf/ZQdzt1bJWSYnlYXSuLQW6nDzxQKDpe8xAgZCaC3pTD4vF2S2+/gfNQ6jq1uoUhaFhCYAXSYoKxnZ3mU=
-X-Received: by 2002:a05:651c:390:: with SMTP id e16mr6475541ljp.344.1629091377208;
- Sun, 15 Aug 2021 22:22:57 -0700 (PDT)
+        id S229774AbhHPG2b (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 16 Aug 2021 02:28:31 -0400
+Subject: Re: [PATCH] raid1: ensure bio doesn't have more than BIO_MAX_VECS
+ sectors
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1629095278;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=axkEiHAnVD5Wd2kbH1btpwM/jQcyRI29qQamEGMsVqA=;
+        b=UhVlWhH8OB9+HrsEMFizsUTdzU15w20HPCbXouscBYmUezSoGtfjf+gvOXs6u9F7BoSP3C
+        qQVn7CC2qHpRZuFySNbTgmwlOMTYaHueOhrM0HHvEQ7q4RyCFI36QxVrQHBH0D1HSwQvrJ
+        mJXDm3tKvGGc/qiZ8NdlzrGb+5Rjq4U=
+To:     Ming Lei <ming.lei@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        jens@chianterastutte.eu, linux-block@vger.kernel.org
+References: <20210813060510.3545109-1-guoqing.jiang@linux.dev>
+ <YRYj8A+mDfAQBo/E@infradead.org>
+ <0eac4589-ffd2-fb1a-43cc-87722731438a@linux.dev>
+ <YRd26VGAnBiYeHrH@infradead.org> <YReFYrjtWr9MvfBr@T590>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <05bdd906-2e78-bc85-c186-7bffac9076e0@linux.dev>
+Date:   Mon, 16 Aug 2021 14:27:48 +0800
 MIME-Version: 1.0
-References: <1628481709-3824-1-git-send-email-xni@redhat.com>
- <CAPhsuW6iGBrdso3yStTxxv00qxLbW_gP_2H1CMsi5YzPFU5aqA@mail.gmail.com> <CALTww2-a0jw-LAqsZc8hDY49TqCCEX9KB4J14g2j7tDR3XF+GQ@mail.gmail.com>
-In-Reply-To: <CALTww2-a0jw-LAqsZc8hDY49TqCCEX9KB4J14g2j7tDR3XF+GQ@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Sun, 15 Aug 2021 22:22:46 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4Ev3WBqkFBCVE7h4T8mw4N3GyEmT0tp5StdSs+-UpeBw@mail.gmail.com>
-Message-ID: <CAPhsuW4Ev3WBqkFBCVE7h4T8mw4N3GyEmT0tp5StdSs+-UpeBw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] md/raid10: Remove rcu_dereference when it doesn't
- need rcu lock to protect
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Song Liu <songliubraving@fb.com>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <YReFYrjtWr9MvfBr@T590>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: guoqing.jiang@linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Aug 13, 2021 at 6:34 PM Xiao Ni <xni@redhat.com> wrote:
->
-> Hi Song
->
-> It can improve the performance. It needs to add rcu lock when calling
-> rcu_dereference.
-> Now it has a bug. It doesn't use rcu lock to protect. In the second
-> loop, it doesn't need
-> to use rcu_dereference when getting rdev. So to resolve this bug, we can remove
-> rcu_dereference directly.
+Hi Ming and Christoph,
 
-In the second loop, we only use rdev and rrdev when bio and repl_bio
-exists. So we shouldn't trigger the "bug" in any cases, right?
+On 8/14/21 4:57 PM, Ming Lei wrote:
+> On Sat, Aug 14, 2021 at 08:55:21AM +0100, Christoph Hellwig wrote:
+>> On Fri, Aug 13, 2021 at 04:38:59PM +0800, Guoqing Jiang wrote:
+>>> Ok, thanks.
+>>>
+>>>> In general the size of a bio only depends on the number of vectors, not
+>>>> the total I/O size.  But alloc_behind_master_bio allocates new backing
+>>>> pages using order 0 allocations, so in this exceptional case the total
+>>>> size oes actually matter.
+>>>>
+>>>> While we're at it: this huge memory allocation looks really deadlock
+>>>> prone.
+>>> Hmm, let me think more about it, or could you share your thought? ????
+>> Well, you'd need a mempool which can fit the max payload of a bio,
+>> that is BIO_MAX_VECS pages.
 
-Please:
-1) If you do think this is a bug, add a fix tag, so we can back port to stable.
-   (while I still think it is not a real bug).
-2) move struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev); to
-  under "if (r10_bio->devs[disk].bio)"; and the rrdev ... to "if
-(repl_bio)". And add
-  a comment there so it is more clear in the code.
+IIUC, the behind bio is allocated from bio_set (mddev->bio_set) which is 
+allocated in md_run by
+call bioset_init, so the mempool (bvec_pool) of  this bio_set is created 
+by biovec_init_pool which
+uses global biovec slabs. Do we really need another mempool? Or, there 
+is no potential deadlock
+  for this case.
+
+>> FYI, this is what I'd do instead of this patch for now.  We don't really
+>> need a vetor per sector, just per page.  So this limits the I/O
+>> size a little less.
+>>
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 3c44c4bb40fc..5b27d995302e 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -1454,6 +1454,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>   		goto retry_write;
+>>   	}
+>>   
+>> +	/*
+>> +	 * When using a bitmap, we may call alloc_behind_master_bio below.
+>> +	 * alloc_behind_master_bio allocates a copy of the data payload a page
+>> +	 * at a time and thus needs a new bio that can fit the whole payload
+>> +	 * this bio in page sized chunks.
+>> +	 */
+
+Thanks for the above, will copy it accordingly. I will check if 
+WriteMostly is set before, then check both
+the flag and bitmap.
+
+>> +	if (bitmap)
+>> +		max_sectors = min_t(int, max_sectors, BIO_MAX_VECS * PAGE_SIZE);
+> s/PAGE_SIZE/PAGE_SECTORS
+
+Agree.
+
+>> +
+>>   	if (max_sectors < bio_sectors(bio)) {
+>>   		struct bio *split = bio_split(bio, max_sectors,
+>>   					      GFP_NOIO, &conf->bio_split);
+> Here the limit is max single-page vectors, and the above way may not work,
+> such as:ust splitted and not
+>
+> 0 ~ 254: each bvec's length is 512
+> 255: bvec's length is 8192
+>
+> the total length is just 512*255 + 8192 = 138752 bytes = 271 sectors, but it
+> still may need 257 bvecs, which can't be allocated via bio_alloc_bioset().
+
+Thanks for deeper looking! I guess it is because how vcnt is calculated.
+
+> One solution is to add queue limit of max_single_page_bvec, and let
+> blk_queue_split() handle it.
+
+The path (blk_queue_split -> blk_bio_segment_split -> bvec_split_segs) 
+which respects max_segments
+of limit. Do you mean introduce max_single_page_bvec to limit? Then 
+perform similar checking as for
+  max_segment.
 
 Thanks,
-Song
+Guoqing
