@@ -2,94 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29E0C4320A
-	for <linux-raid@archiver.kernel.org>; Tue, 17 Aug 2021 12:33:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0127FC4338F
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Aug 2021 13:06:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8183460F38
-	for <linux-raid@archiver.kernel.org>; Tue, 17 Aug 2021 12:33:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE0AB60F35
+	for <linux-raid@archiver.kernel.org>; Tue, 17 Aug 2021 13:06:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237001AbhHQMdk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 17 Aug 2021 08:33:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38169 "EHLO
+        id S231770AbhHQNGt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 17 Aug 2021 09:06:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20868 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230354AbhHQMdk (ORCPT
+        by vger.kernel.org with ESMTP id S229721AbhHQNGs (ORCPT
         <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 17 Aug 2021 08:33:40 -0400
+        Tue, 17 Aug 2021 09:06:48 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629203586;
+        s=mimecast20190719; t=1629205575;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U+2Yus84hIugUWcGN23eW/FcOG0akl8Mx705tKe61RM=;
-        b=Fe/ZPPD9m1G8r/GjhkLaE0zuAk/+Eylr++GP5+4NPXcF+Dw/R9Uc8fXDrWlpG5FnjY0niG
-        G1icc3Yv2/dlW5T/cXlhYqh+WgOqVgFiLvdJ/lcQ4M+8MWvU2h9rfnDx/WAlUFV8RsmOWr
-        CghvGETKaDl28iBotsUSqKyNzk6v758=
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=YW3w6jS7iwNDGfMtPYrSmkEJmlXikWTAZa43seiEAxY=;
+        b=EfzhOsZ4AKC3dEjaqJAFcdkQOoONQyr/JqOvnnnhKSlwcStQU2U6cnwE15TZkUcT0KZxKR
+        jYrer7QCYuqF5mk1VXwohi3Ykl3nv1zKvPEgXY/udUjsgzH3jONBnYtUm0/HUvNDxeRlzz
+        y2XJYzGRHRJpPeAn88VXJG2Lz52ObEQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-292-UW29Z0szPfKY3RMkeZj6ng-1; Tue, 17 Aug 2021 08:33:03 -0400
-X-MC-Unique: UW29Z0szPfKY3RMkeZj6ng-1
+ us-mta-455-rzjDnQRaOTilPjqzwhNd0A-1; Tue, 17 Aug 2021 09:06:13 -0400
+X-MC-Unique: rzjDnQRaOTilPjqzwhNd0A-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DB30D1008060;
-        Tue, 17 Aug 2021 12:33:00 +0000 (UTC)
-Received: from T590 (ovpn-8-40.pek2.redhat.com [10.72.8.40])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C58375DA60;
-        Tue, 17 Aug 2021 12:32:47 +0000 (UTC)
-Date:   Tue, 17 Aug 2021 20:32:42 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org,
-        linux-raid@vger.kernel.org, jens@chianterastutte.eu,
-        linux-block@vger.kernel.org
-Subject: Re: [PATCH] raid1: ensure bio doesn't have more than BIO_MAX_VECS
- sectors
-Message-ID: <YRusakafZq0NMqLe@T590>
-References: <20210813060510.3545109-1-guoqing.jiang@linux.dev>
- <YRYj8A+mDfAQBo/E@infradead.org>
- <0eac4589-ffd2-fb1a-43cc-87722731438a@linux.dev>
- <YRd26VGAnBiYeHrH@infradead.org>
- <YReFYrjtWr9MvfBr@T590>
- <YRox8gMjl/Y5Yt/k@infradead.org>
- <YRpOwFewTw4imskn@T590>
- <YRtDxEw7Zp2H7mxp@infradead.org>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 687D687D54F;
+        Tue, 17 Aug 2021 13:06:12 +0000 (UTC)
+Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3C8C15DA60;
+        Tue, 17 Aug 2021 13:06:12 +0000 (UTC)
+From:   Nigel Croxon <ncroxon@redhat.com>
+To:     jes@trained-monkey.org, mariusz.tkaczyk@linux.intel.com,
+        neilb@suse.de, xni@redhat.com, linux-raid@vger.kernel.org
+Subject: [PATCH] Fix buffer size warning for strcpy
+Date:   Tue, 17 Aug 2021 09:06:11 -0400
+Message-Id: <20210817130611.2496090-1-ncroxon@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YRtDxEw7Zp2H7mxp@infradead.org>
+Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 06:06:12AM +0100, Christoph Hellwig wrote:
-> On Mon, Aug 16, 2021 at 07:40:48PM +0800, Ming Lei wrote:
-> > > > 
-> > > > 0 ~ 254: each bvec's length is 512
-> > > > 255: bvec's length is 8192
-> > > > 
-> > > > the total length is just 512*255 + 8192 = 138752 bytes = 271 sectors, but it
-> > > > still may need 257 bvecs, which can't be allocated via bio_alloc_bioset().
-> > > 
-> > > Yes, we still need the rounding magic that alloc_behind_master_bio uses
-> > > here.
-> > 
-> > But it is wrong to use max sectors to limit number of bvecs(segments), isn't it?
-> 
-> The raid1 write behind code cares about the size ofa bio it can reach by
-> adding order 0 pages to it.  The bvecs are part of that and I think the
-> calculation in the patch documents that a well.
+To meet requirements of Common Criteria certification vulnerablility
+assessment. Static code analysis has been run and found the following
+error:
+buffer_size_warning: Calling "strncpy" with a maximum size
+argument of 16 bytes on destination array "ve->name" of
+size 16 bytes might leave the destination string unterminated.
 
-Thinking of further, your and Guoqing's patch are correct & enough since
-bio_copy_data() just copies bytes(sectors) stream from fs bio to the
-write behind bio.
+The change is to make the destination size to fit the allocated size.
 
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ super-ddf.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
-Ming
+diff --git a/super-ddf.c b/super-ddf.c
+index dc8e512f..486183ed 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -2637,9 +2637,10 @@ static int init_super_ddf_bvd(struct supertype *st,
+ 		ve->init_state = DDF_init_not;
+ 
+ 	memset(ve->pad1, 0xff, 14);
+-	memset(ve->name, ' ', 16);
++	memset(ve->name, ' ', 15);
++	ve->name[15] = '\0';
+ 	if (name)
+-		strncpy(ve->name, name, 16);
++		strncpy(ve->name, name, 15);
+ 	ddf->virt->populated_vdes =
+ 		cpu_to_be16(be16_to_cpu(ddf->virt->populated_vdes)+1);
+ 
+-- 
+2.29.2
 
