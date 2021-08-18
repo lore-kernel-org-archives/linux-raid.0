@@ -2,144 +2,242 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F96C4338F
-	for <linux-raid@archiver.kernel.org>; Wed, 18 Aug 2021 18:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA359C4338F
+	for <linux-raid@archiver.kernel.org>; Wed, 18 Aug 2021 18:59:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA8F66108D
-	for <linux-raid@archiver.kernel.org>; Wed, 18 Aug 2021 18:22:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D61D60EFE
+	for <linux-raid@archiver.kernel.org>; Wed, 18 Aug 2021 18:59:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229661AbhHRSWr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 18 Aug 2021 14:22:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58103 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229448AbhHRSWq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 18 Aug 2021 14:22:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629310931;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=FX1pRda3GcFUHm3oV7Xpyf7jtj1gPZce4Vf6SH1akwQ=;
-        b=UHlXxqjnJ+zhrhvn4pOm+/lJTjHhe+VAh3b26epGrP4vXMBJ4neAegEXAQP91Unw5ggCvh
-        BoOXe7FiXP8G6ENW20FmvT207Hm9FwmSC6JcmaaQ08UOYxE2qWIV7N4EA6ay0VeXa/8W3y
-        mXQTb0NaCm7F4JKLvIvBxgFWIvA1ly8=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-353-x2Fq3MliP_-8ws246ajJ_A-1; Wed, 18 Aug 2021 14:22:09 -0400
-X-MC-Unique: x2Fq3MliP_-8ws246ajJ_A-1
-Received: by mail-qv1-f70.google.com with SMTP id l16-20020a0cc2100000b029035a3d6757b3so2767793qvh.14
-        for <linux-raid@vger.kernel.org>; Wed, 18 Aug 2021 11:22:09 -0700 (PDT)
+        id S233038AbhHRS75 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 18 Aug 2021 14:59:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57188 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232453AbhHRS74 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 18 Aug 2021 14:59:56 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED671C0613CF
+        for <linux-raid@vger.kernel.org>; Wed, 18 Aug 2021 11:59:20 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id qk33so7063903ejc.12
+        for <linux-raid@vger.kernel.org>; Wed, 18 Aug 2021 11:59:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=U1zyi1q7r3FuL+wJh5Ih7H/8fdJI5IwoBKaDIus7E2s=;
+        b=uhtyKsOOPmcbpIYQ/tuIUGQpbFG2dRI/UNRe0vUocT2cJmfJ1PDKxAdEqVbpyosFxw
+         wSXtywoYBBusCCqZ/WDIaGhkNtGNcAaDprXBLa6scHS5C28HfKjlEKjUZTMKrp9uwaz2
+         g8CqBr5hTdSx13/qYEbmlYSaJJXwEmb+akv0vqmRB7j82UB6EM8oyQ2ZbbthUyGJtqUt
+         71aCb28ahPnhlyyiNdiPtb4FLIacGOomPXcATrSVW4Lip8C/OHIpnZ0Qb1SV8BbXsrnn
+         NX/1JjYpxZcoDWCmP5rhTf8rHobd2y878ZEcJKMnsvTmualU987sgfYHWWShlIhw41kD
+         eOSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=FX1pRda3GcFUHm3oV7Xpyf7jtj1gPZce4Vf6SH1akwQ=;
-        b=r5I4dhmpskZv7yMtyR44gfbnmqk1q1uOFEokS5v2icJON+MfzxE0SVi2XzQXmover7
-         hmIbs+AWi0uSSkZztT3Expn2rHzSG9QAZqpaUwhLliHYuyEmKX5aKOuKN6wV1m9drcO4
-         tkS1ti3b2sWYXu0mIArLIpsXGfmsjIE3iE46LyqRUcf+hL0NP2EXcgMK1UhDu0LjxJHY
-         EBVjMttXkAMz6romxGuHYuz+pmVpjzPPL7DF09Smw0KFHtQkNRXh6wLg4F8fE6U8jQDQ
-         nNdLeD7qrs9P5Fds99/guvo18oaNcsbbBr5C5AyiE1gU+IY9IMmwbS14DjmRwXXJOGjh
-         a1gA==
-X-Gm-Message-State: AOAM530ilRnqSmZa9B+Z6NaKwMwTNmkw1mJfzNUDyUd8WubQVtm48WQM
-        xPtMA8tWxDNDz3izWk7Re+rB+JRQbR2ZpKqyaFECvpJviX7TpI70JrkUc6kS4vDK5AfKpyajCcQ
-        l6ZDc18gPq83BNt2X4JYep0HmhB9yr3Nf6zsuPr3N97hkfoQCJQ9b9AhzbXifhhIIJlDLxPco
-X-Received: by 2002:a05:620a:2844:: with SMTP id h4mr11114114qkp.388.1629310929373;
-        Wed, 18 Aug 2021 11:22:09 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxZ1q/AU/mFev8q94uYc2l/N2zrcbqHVE2+Wm6po/G4B2cB4Fh8bbXxgPrsedg62fZAluxE1Q==
-X-Received: by 2002:a05:620a:2844:: with SMTP id h4mr11114085qkp.388.1629310929103;
-        Wed, 18 Aug 2021 11:22:09 -0700 (PDT)
-Received: from ?IPv6:2601:18c:600:e550::566a? ([2601:18c:600:e550::566a])
-        by smtp.gmail.com with ESMTPSA id y15sm294464qko.78.2021.08.18.11.22.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Aug 2021 11:22:08 -0700 (PDT)
-Subject: Re: [PATCH] Fix potential overlap dest buffer
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     jes@trained-monkey.org, mariusz.tkaczyk@linux.intel.com,
-        neilb@suse.de, xni@redhat.com, linux-raid@vger.kernel.org
-References: <20210817131448.2496995-1-ncroxon@redhat.com>
- <6ffc271e-c24e-aaf7-7392-0041f26e4bf2@molgen.mpg.de>
-From:   Nigel Croxon <ncroxon@redhat.com>
-Message-ID: <72098bc8-4429-6711-8b90-d5bf1e195ad8@redhat.com>
-Date:   Wed, 18 Aug 2021 14:22:07 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=U1zyi1q7r3FuL+wJh5Ih7H/8fdJI5IwoBKaDIus7E2s=;
+        b=YYzsU1NwB4tpIOBV28oADdLFRGxNarunhGOtUUrf316UKGqv4Ik6/KKc2sAKCItekH
+         oyluAmm+hwiwn3xi7LDpuNb1Tq7rgnLYEkXPddMFsZ1mMb79rOpefM96WvFvHV0aMQ6t
+         +IRUgu7MAcDs7dgpuzYO9SV8z55E1abNv26EmeYNUVW1yOoniWruU4mSCREvY2Nzps9U
+         if7yvpdpwrcbAI8kCHpQ36hxTVdM1xw+uKvYmPEU32FkAWsyv+zL5SoUbkodNCTcug0x
+         wLOg8eTT6wWz8AWUZpufioSBchYoWkAjb/l9IgeKy/YJXiDnv20zwAyHMl4dxyuFSQm1
+         9GFw==
+X-Gm-Message-State: AOAM531Yt2Tcj6NUYj/ck6x00SMp5iv/YnBK1QCzMNPwZqD0ynfW83E9
+        oE6lCWgOqLV2G0prEIsLZClpLg7Puzs48RbQnTii
+X-Google-Smtp-Source: ABdhPJw1AZje9L1Ml35RnyfG5pEKMOFRry97/jH8x8P45R8xQa7mBiF5FdtzzWX+UiP8gbrJtRQ0eTIKE4Hhkn77bD8=
+X-Received: by 2002:a17:906:488a:: with SMTP id v10mr11058189ejq.91.1629313159447;
+ Wed, 18 Aug 2021 11:59:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <6ffc271e-c24e-aaf7-7392-0041f26e4bf2@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20210814183359.4061-1-michael.weiss@aisec.fraunhofer.de> <20210814183359.4061-2-michael.weiss@aisec.fraunhofer.de>
+In-Reply-To: <20210814183359.4061-2-michael.weiss@aisec.fraunhofer.de>
+From:   Paul Moore <paul@paul-moore.com>
+Date:   Wed, 18 Aug 2021 14:59:08 -0400
+Message-ID: <CAHC9VhRB1iviuOyeqi3L4DC8LNfnkz1HXC3hdqNvqm2sZQYXMQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] dm: introduce audit event module for device mapper
+To:     =?UTF-8?Q?Michael_Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>
+Cc:     Casey Schaufler <casey@schaufler-ca.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
+        Song Liu <song@kernel.org>, Eric Paris <eparis@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-audit@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/18/21 2:34 AM, Paul Menzel wrote:
-> Dear Nigel,
-> 
-> 
-> Am 17.08.21 um 15:14 schrieb Nigel Croxon:
->> To meet requirements of Common Criteria certification vulnerablility
-> 
-> vulnerability
-> 
->> assessment.
-> 
-> That’s only part of a sentence? Is that supposed to be read as a 
-> continuation of the commit message summary: … to meet requirements …?
-> 
+On Sat, Aug 14, 2021 at 2:34 PM Michael Wei=C3=9F
+<michael.weiss@aisec.fraunhofer.de> wrote:
+>
+> To be able to send auditing events to user space, we introduce
+> a generic dm-audit module. It provides helper functions to emit
+> audit events through the kernel audit subsystem. We claim the
+> AUDIT_DM type=3D1336 out of the audit event messages range in the
+> corresponding userspace api in 'include/uapi/linux/audit.h' for
+> those events.
+>
+> Following commits to device mapper targets actually will make
+> use of this to emit those events in relevant cases.
+>
+> Signed-off-by: Michael Wei=C3=9F <michael.weiss@aisec.fraunhofer.de>
 
-Continuation of the commit message. Thanks for catching the
-spelling mistake.
+Hi Michael,
 
->> Static code analysis has been run and found the following
->> error.  Overlapping_buffer: The source buffer potentially overlaps
-> 
-> It’d be great, if you denoted, which tool was run. Maybe even add a 
-> Found-by tag.
-> 
+You went into more detail in your patchset cover letter, e.g. example
+audit records, which I think would be helpful here in the commit
+description so we have it as part of the git log.  I don't want to
+discourage you from writing cover letters, but don't forget that the
+cover letters can be lost to the ether after a couple of years whereas
+the git log has a much longer lifetime (we hope!) and a tighter
+binding to the related code.
 
-I ran the Coverity scan on the latest build.
-https://people.redhat.com/ncroxon/mdadm-4.2-rc2-scan-results.html
+> ---
+>  drivers/md/Kconfig         | 10 +++++++
+>  drivers/md/Makefile        |  4 +++
+>  drivers/md/dm-audit.c      | 59 ++++++++++++++++++++++++++++++++++++++
+>  drivers/md/dm-audit.h      | 33 +++++++++++++++++++++
+>  include/uapi/linux/audit.h |  1 +
+>  5 files changed, 107 insertions(+)
+>  create mode 100644 drivers/md/dm-audit.c
+>  create mode 100644 drivers/md/dm-audit.h
+>
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index 0602e82a9516..48adbec12148 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -608,6 +608,7 @@ config DM_INTEGRITY
+>         select CRYPTO
+>         select CRYPTO_SKCIPHER
+>         select ASYNC_XOR
+> +       select DM_AUDIT if AUDIT
+>         help
+>           This device-mapper target emulates a block device that has
+>           additional per-sector tags that can be used for storing
+> @@ -640,4 +641,13 @@ config DM_ZONED
+>
+>           If unsure, say N.
+>
+> +config DM_AUDIT
+> +       bool "DM audit events"
+> +       depends on AUDIT
+> +       help
+> +         Generate audit events for device-mapper.
+> +
+> +         Enables audit logging of several security relevant events in th=
+e
+> +         particular device-mapper targets, especially the integrity targ=
+et.
+> +
+>  endif # MD
+> diff --git a/drivers/md/Makefile b/drivers/md/Makefile
+> index a74aaf8b1445..4cd47623c742 100644
+> --- a/drivers/md/Makefile
+> +++ b/drivers/md/Makefile
+> @@ -103,3 +103,7 @@ endif
+>  ifeq ($(CONFIG_DM_VERITY_VERIFY_ROOTHASH_SIG),y)
+>  dm-verity-objs                 +=3D dm-verity-verify-sig.o
+>  endif
+> +
+> +ifeq ($(CONFIG_DM_AUDIT),y)
+> +dm-mod-objs                            +=3D dm-audit.o
+> +endif
+> diff --git a/drivers/md/dm-audit.c b/drivers/md/dm-audit.c
+> new file mode 100644
+> index 000000000000..c7e5824821bb
+> --- /dev/null
+> +++ b/drivers/md/dm-audit.c
+> @@ -0,0 +1,59 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Creating audit records for mapped devices.
+> + *
+> + * Copyright (C) 2021 Fraunhofer AISEC. All rights reserved.
+> + *
+> + * Authors: Michael Wei=C3=9F <michael.weiss@aisec.fraunhofer.de>
+> + */
+> +
+> +#include <linux/audit.h>
+> +#include <linux/module.h>
+> +#include <linux/device-mapper.h>
+> +#include <linux/bio.h>
+> +#include <linux/blkdev.h>
+> +
+> +#include "dm-audit.h"
+> +#include "dm-core.h"
+> +
+> +void dm_audit_log_bio(const char *dm_msg_prefix, const char *op,
+> +                     struct bio *bio, sector_t sector, int result)
+> +{
+> +       struct audit_buffer *ab;
+> +
+> +       if (audit_enabled =3D=3D AUDIT_OFF)
+> +               return;
+> +
+> +       ab =3D audit_log_start(audit_context(), GFP_KERNEL, AUDIT_DM);
+> +       if (unlikely(!ab))
+> +               return;
+> +
+> +       audit_log_format(ab, "module=3D%s dev=3D%d:%d op=3D%s sector=3D%l=
+lu res=3D%d",
+> +                        dm_msg_prefix, MAJOR(bio->bi_bdev->bd_dev),
+> +                        MINOR(bio->bi_bdev->bd_dev), op, sector, result)=
+;
+> +       audit_log_end(ab);
+> +}
+> +EXPORT_SYMBOL_GPL(dm_audit_log_bio);
+> +
+> +void dm_audit_log_target(const char *dm_msg_prefix, const char *op,
+> +                        struct dm_target *ti, int result)
+> +{
+> +       struct audit_buffer *ab;
+> +       struct mapped_device *md =3D dm_table_get_md(ti->table);
+> +
+> +       if (audit_enabled =3D=3D AUDIT_OFF)
+> +               return;
+> +
+> +       ab =3D audit_log_start(audit_context(), GFP_KERNEL, AUDIT_DM);
+> +       if (unlikely(!ab))
+> +               return;
+> +
+> +       audit_log_format(ab, "module=3D%s dev=3D%s op=3D%s",
+> +                        dm_msg_prefix, dm_device_name(md), op);
+> +
+> +       if (!result && !strcmp("ctr", op))
+> +               audit_log_format(ab, " error_msg=3D'%s'", ti->error);
+> +       audit_log_format(ab, " res=3D%d", result);
+> +       audit_log_end(ab);
+> +}
 
+Generally speaking we try to keep a consistent format and ordering
+within a given audit record type.  However you appear to have at least
+three different formats for the AUDIT_DM record in this patch:
 
->> with the destination buffer, which results in undefined
->> behavior for "memcpy".
->>
->> The change is to use memmove instead of memcpy.
->>
->> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
->> ---
->>   sha1.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/sha1.c b/sha1.c
->> index 11be7045..89b32f46 100644
->> --- a/sha1.c
->> +++ b/sha1.c
->> @@ -258,7 +258,7 @@ sha1_process_bytes (const void *buffer, size_t 
->> len, struct sha1_ctx *ctx)
->>       {
->>         sha1_process_block (ctx->buffer, 64, ctx);
->>         left_over -= 64;
->> -      memcpy (ctx->buffer, &ctx->buffer[16], left_over);
->> +      memmove (ctx->buffer, &ctx->buffer[16], left_over);
->>       }
->>         ctx->buflen = left_over;
->>       }
-> 
-> Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> 
-> 
-> Kind regards,
-> 
-> Paul
-> 
+  "... module=3D%s dev=3D%d:%d op=3D%s sector=3D%llu res=3D%d"
+  "... module=3D%s dev=3D%s op=3D%s error_msg=3D'%s' res=3D%d"
+  "... module=3D%s dev=3D%s op=3D%s res=3D%d"
 
+The first thing that jumps out is that some fields, e.g. "sector", are
+not always present in the record; we typically handle this by using a
+"?" for the field value in those cases where you would otherwise drop
+the field from the record, for example the following record:
+
+  "... module=3D%s dev=3D%s op=3D%s res=3D%d"
+
+... would be rewritten like this:
+
+  "... module=3D%s dev=3D%s op=3D%s sector=3D? res=3D%d"
+
+The second thing that I noticed is that the "dev" field changes from a
+"major:minor" number representation to an arbitrary string value, e.g.
+"dev=3D%s".  This generally isn't something we do with audit records,
+please stick to a single representation for a given audit
+record-type/field combination.
+
+--=20
+paul moore
+www.paul-moore.com
