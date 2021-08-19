@@ -2,92 +2,74 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C3C0C4338F
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Aug 2021 08:21:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2931C4338F
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Aug 2021 08:56:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 131B0610E5
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Aug 2021 08:21:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A15556109F
+	for <linux-raid@archiver.kernel.org>; Thu, 19 Aug 2021 08:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237224AbhHSIWX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Aug 2021 04:22:23 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:13446 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236873AbhHSIWW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Aug 2021 04:22:22 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GqyLv6F40zdcHs;
-        Thu, 19 Aug 2021 16:17:59 +0800 (CST)
-Received: from dggpemm500014.china.huawei.com (7.185.36.153) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 19 Aug 2021 16:21:42 +0800
-Received: from [10.174.179.184] (10.174.179.184) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 19 Aug 2021 16:21:42 +0800
-Message-ID: <07c4f930-cc9b-2fe8-7d01-04ff383ef90e@huawei.com>
-Date:   Thu, 19 Aug 2021 16:21:41 +0800
+        id S232653AbhHSI5J (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 19 Aug 2021 04:57:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49878 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229804AbhHSI5J (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Aug 2021 04:57:09 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 624D4C061575;
+        Thu, 19 Aug 2021 01:56:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=t2j00fcwtjdfugITzyV7IoRkwl4bJ89gqLKBUqgEM68=; b=eVHF0ajU3zoZ706J5Io89VYGjk
+        483z9qt4fyf22B+A+lSGhDoZkH9wsdfIg3KMf6hAmpLkaO1D3ZxJH5DgQekX6H1vSc/p387tLWX4/
+        tT7kdGZ9rY3PsGPeMsFn8TA/lMOMskZ68tKiQicAap2groq4d0m8PU8CZjHMtecOw3AgMzefSsEMy
+        6bntZsqiHG0rSFvUZ1zctTdQ/maDeBbPC0PxwLr6SIYViOYdX6u7kA+VCgM7pWzjV1Iq4tH9v2eB2
+        SJ6zHuoYBGentzKZjM8vpK6kZoC+I7DWXSsWpptATDQo3al6P+dzGTlsjqcu3BgZcbfD1PugdE0xr
+        Y2VcD3QQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mGdpz-004qFr-B9; Thu, 19 Aug 2021 08:55:57 +0000
+Date:   Thu, 19 Aug 2021 09:55:47 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-raid@vger.kernel.org
+Subject: Re: [PATCH V2] raid1: ensure write behind bio has less than
+ BIO_MAX_VECS sectors
+Message-ID: <YR4ckyTCiOXCRnue@infradead.org>
+References: <20210818073738.1271033-1-guoqing.jiang@linux.dev>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-Subject: Re: [PATCH]mdadm: fix coredump of mdadm --monitor -r
-To:     <linux-raid@vger.kernel.org>, <jsorensen@fb.com>,
-        <mariusz.tkaczyk@linux.intel.com>, <jes@trained-monkey.org>
-CC:     <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>
-References: <41edfa76-4327-7468-b861-1c1140ee9725@huawei.com>
-In-Reply-To: <41edfa76-4327-7468-b861-1c1140ee9725@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.184]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210818073738.1271033-1-guoqing.jiang@linux.dev>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-ping
+On Wed, Aug 18, 2021 at 03:37:38PM +0800, Guoqing Jiang wrote:
+>  	for (i = 0;  i < disks; i++) {
+>  		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+> +
+> +		if (test_bit(WriteMostly, &mirror->rdev->flags))
+> +			write_behind = true;
 
-在 2021/8/16 15:24, Wu Guanghao 写道:
-> Hi,
-> 
-> The --monitor -r option requires a parameter, otherwise a null pointer will be manipulated
-> when converting to integer data, and a coredump will appear.
-> 
-> # mdadm --monitor -r
-> Segmentation fault (core dumped)
-> 
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> ---
->  ReadMe.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 06b8f7e..070a164 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -81,11 +81,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
->   *     found, it is started.
->   */
-> 
-> -char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
-> +char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
->  char short_bitmap_options[]=
-> -               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
-> +               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
->  char short_bitmap_auto_options[]=
-> -               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
-> +               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sa:RSow1tye:k";
-> 
->  struct option long_options[] = {
->      {"manage",    0, 0, ManageOpt},
-> --
-> 2.23.0
-> .
-> 
+How does this condition relate to the ones used for actually calling
+alloc_behind_master_bio?  It looks related, but as someone not familiar
+with the code I can't really verify if this is correct, so a comment
+explaining it might be useful.
+
+> +	/*
+> +	 * When using a bitmap, we may call alloc_behind_master_bio below.
+> +	 * alloc_behind_master_bio allocates a copy of the data payload a page
+> +	 * at a time and thus needs a new bio that can fit the whole payload
+> +	 * this bio in page sized chunks.
+> +	 */
+> +	if (write_behind && bitmap)
+> +		max_sectors = min_t(int, max_sectors, BIO_MAX_VECS * PAGE_SECTORS);
+
+Overly long line here.
