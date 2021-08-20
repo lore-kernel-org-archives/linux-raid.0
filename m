@@ -2,123 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64A95C4338F
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Aug 2021 22:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B514C4338F
+	for <linux-raid@archiver.kernel.org>; Fri, 20 Aug 2021 08:19:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D46A610A0
-	for <linux-raid@archiver.kernel.org>; Thu, 19 Aug 2021 22:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73BDD6108B
+	for <linux-raid@archiver.kernel.org>; Fri, 20 Aug 2021 08:19:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235845AbhHSWR1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 19 Aug 2021 18:17:27 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:34572 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235676AbhHSWR0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 19 Aug 2021 18:17:26 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 7740922190;
-        Thu, 19 Aug 2021 22:16:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629411408; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S231685AbhHTIUK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 20 Aug 2021 04:20:10 -0400
+Received: from out2.migadu.com ([188.165.223.204]:64044 "EHLO out2.migadu.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231921AbhHTIUJ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 20 Aug 2021 04:20:09 -0400
+Subject: Re: [PATCH V2] raid1: ensure write behind bio has less than
+ BIO_MAX_VECS sectors
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1629447569;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=QtS0xy9X84EbUHop4l1BtDHXqaTWehl0Uav6iJeDZ/8=;
-        b=mpCHTEjCQL//bQ6/X3zVir9WRzHZhdchq3+p0BP2qFHgWXkKXgD+zUHesUQZf6nT8OIw5P
-        7gWj/y63daSoZeLAOnmq26MxU7iRrbFewT0ceXDEoCCtyZf47CXCBXKhN816oV5PVYGjMp
-        vlZb6e1PtgGftZMIdnPHlgmnp20c1PU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629411408;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=QtS0xy9X84EbUHop4l1BtDHXqaTWehl0Uav6iJeDZ/8=;
-        b=iMqeHUgQKXAvGBrry77sIYcnJuk62yEB8UYsJYjMxavp3GHymKAOnzZIYdf0HF5k/wjmbk
-        nsUN+ru1tdbJsgAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D62E6133E7;
-        Thu, 19 Aug 2021 22:16:46 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id M1+sJE7YHmH/AwAAMHmgww
-        (envelope-from <neilb@suse.de>); Thu, 19 Aug 2021 22:16:46 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        bh=yf4anWdazhvxt/TXRJ1WvOf6zp5A8gyIfbQCtNpJqYQ=;
+        b=GzP1H+J6Hb8eWp9ovFKBaupicgllZce804PBiD/x55yQVmFuvYZED34vW9yGu33Ll/1WY6
+        POMwfFsXThuLPOy2HzZxHvCNu02x00x9CKYJVKUXm6pkwDV1rkcddY+AzU42ZVZmkJUH4F
+        9GlqeioMwl+z/W/lz4O4l/RnfWFN3tY=
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
+        linux-raid@vger.kernel.org
+References: <20210818073738.1271033-1-guoqing.jiang@linux.dev>
+ <YR4ckyTCiOXCRnue@infradead.org>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <207ca922-4223-632b-ed68-4e78e40ac3dc@linux.dev>
+Date:   Fri, 20 Aug 2021 16:19:22 +0800
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Nigel Croxon" <ncroxon@redhat.com>
-Cc:     jes@trained-monkey.org, xni@redhat.com, linux-raid@vger.kernel.org,
-        mariusz.tkaczyk@linux.intel.com
-Subject: Re: [PATCH V2] Fix buffer size warning for strcpy
-In-reply-to: <20210819131017.2511208-1-ncroxon@redhat.com>
-References: <20210819131017.2511208-1-ncroxon@redhat.com>
-Date:   Fri, 20 Aug 2021 08:16:43 +1000
-Message-id: <162941140310.9892.4439598009992795158@noble.neil.brown.name>
+In-Reply-To: <YR4ckyTCiOXCRnue@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: guoqing.jiang@linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 19 Aug 2021, Nigel Croxon wrote:
-> To meet requirements of Common Criteria certification vulnerability
-> assessment. Static code analysis has been run and found the following
-> error:
-> buffer_size_warning: Calling "strncpy" with a maximum size
-> argument of 16 bytes on destination array "ve->name" of
-> size 16 bytes might leave the destination string unterminated.
-> 
-> The change is to make the destination size to fit the allocated size.
 
-You really should explain here why we change from filling with spaces to
-filling with nuls.
 
-> 
-> V2: Change from zero-terminated to zero-padded on memset and
-> change from using strncpy to memcpy, feedback from Neil Brown.
-> 
-> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
-> ---
->  super-ddf.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/super-ddf.c b/super-ddf.c
-> index dc8e512..1771316 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -2637,9 +2637,13 @@ static int init_super_ddf_bvd(struct supertype *st,
->  		ve->init_state = DDF_init_not;
->  
->  	memset(ve->pad1, 0xff, 14);
-> -	memset(ve->name, ' ', 16);
-> -	if (name)
-> -		strncpy(ve->name, name, 16);
-> +	memset(ve->name, '\0', sizeof(ve->name));
-> +	if (name) {
-> +		int l = strlen(ve->name);
-> +		if (l > 16)
-> +			l = 16;
-> +		memcpy(ve->name, name, l);
-> +	}
+On 8/19/21 4:55 PM, Christoph Hellwig wrote:
+> On Wed, Aug 18, 2021 at 03:37:38PM +0800, Guoqing Jiang wrote:
+>>   	for (i = 0;  i < disks; i++) {
+>>   		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+>> +
+>> +		if (test_bit(WriteMostly, &mirror->rdev->flags))
+>> +			write_behind = true;
+> How does this condition relate to the ones used for actually calling
+> alloc_behind_master_bio?  It looks related, but as someone not familiar
+> with the code I can't really verify if this is correct, so a comment
+> explaining it might be useful.
 
-Reviewed-by: NeilBrown <neilb@suse.de>
+How about this?
+
++               /*
++                * The write-behind io is only attempted on drives marked as
++                * write-mostly, which means we will allocate write behind
++                * bio later.
++                */
+                 if (test_bit(WriteMostly, &mirror->rdev->flags))
+                         write_behind = true;
+
+>> +	/*
+>> +	 * When using a bitmap, we may call alloc_behind_master_bio below.
+>> +	 * alloc_behind_master_bio allocates a copy of the data payload a page
+>> +	 * at a time and thus needs a new bio that can fit the whole payload
+>> +	 * this bio in page sized chunks.
+>> +	 */
+>> +	if (write_behind && bitmap)
+>> +		max_sectors = min_t(int, max_sectors, BIO_MAX_VECS * PAGE_SECTORS);
+> Overly long line here.
+
+I can change it given you still prefer the  limitation is 80 characters.
 
 Thanks,
-NeilBrown
-
->  	ddf->virt->populated_vdes =
->  		cpu_to_be16(be16_to_cpu(ddf->virt->populated_vdes)+1);
->  
-> -- 
-> 2.29.2
-> 
-> 
+Guoqing
