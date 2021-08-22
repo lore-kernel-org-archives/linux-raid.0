@@ -2,140 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D25C4338F
-	for <linux-raid@archiver.kernel.org>; Sat, 21 Aug 2021 00:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1692C4320A
+	for <linux-raid@archiver.kernel.org>; Sun, 22 Aug 2021 02:16:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9101261042
-	for <linux-raid@archiver.kernel.org>; Sat, 21 Aug 2021 00:31:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1E5C61248
+	for <linux-raid@archiver.kernel.org>; Sun, 22 Aug 2021 02:16:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232139AbhHUAc1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 20 Aug 2021 20:32:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229783AbhHUAc0 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 20 Aug 2021 20:32:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1BC0861175
-        for <linux-raid@vger.kernel.org>; Sat, 21 Aug 2021 00:31:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629505900;
-        bh=U5s7pwqFQejZnbF2637G7Qe18H+Si0LOHqFwd5P6O20=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=vFEGTodj7JtYEVcu1Za1Hqc10dW8EZvDiMaa/8ceET9DdgvfzK835+aO4FT9uHF+c
-         8gFi9iGcoNLJj7BdjVmJBvuYAhwg/2lf0b8cEjqXELWpylL6Oc9PjP+HvvE61GNK9c
-         DIKrNGfNzRcMDbC78q4IQc7grs2QFFxTcVqPQgV5Vm0sF8oK13uS3BQ13YHns2jPAS
-         04mrHS8N0aVa325WRM5TGm1R+N1YyBSAL3fyDXKVHPqn5dTD9AfLap3C0UEThwyfG5
-         sLFaQCf3ZmUVSZQMCWjHCuuau7FzL18ubprWpTg4wuNy2ufaf+8bJ6eJa339I0yEJr
-         t5M0f69JIzEJA==
-Received: by mail-lj1-f174.google.com with SMTP id q21so19876968ljj.6
-        for <linux-raid@vger.kernel.org>; Fri, 20 Aug 2021 17:31:39 -0700 (PDT)
-X-Gm-Message-State: AOAM53268WIaNcAyyCESEQUVfmB2/dwPl2PcxYdHojNV2KVZ6KaCcpSh
-        Yu79EkByYckXjVCKOBd7Y3hdTUxp+0LB8+KLKiY=
-X-Google-Smtp-Source: ABdhPJwAF9Lu3mWp7KbiAZO/3fvFUQ+/CJouh/tMgFdP1KWR6fhf/gOpLaMovLwFw2n55B2wWE85LFBZ+R290cghvEI=
-X-Received: by 2002:a2e:9953:: with SMTP id r19mr17896098ljj.270.1629505898512;
- Fri, 20 Aug 2021 17:31:38 -0700 (PDT)
+        id S231655AbhHVCRe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 21 Aug 2021 22:17:34 -0400
+Received: from atl4mhfb02.myregisteredsite.com ([209.17.115.118]:41802 "EHLO
+        atl4mhfb02.myregisteredsite.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229571AbhHVCRd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 21 Aug 2021 22:17:33 -0400
+X-Greylist: delayed 325 seconds by postgrey-1.27 at vger.kernel.org; Sat, 21 Aug 2021 22:17:33 EDT
+Received: from jax4mhob05.registeredsite.com (jax4mhob05.myregisteredsite.com [64.69.218.85])
+        by atl4mhfb02.myregisteredsite.com (8.14.4/8.14.4) with ESMTP id 17M2BPnD022478
+        for <linux-raid@vger.kernel.org>; Sat, 21 Aug 2021 22:11:25 -0400
+Received: from mailpod.hostingplatform.com ([10.30.71.209])
+        by jax4mhob05.registeredsite.com (8.14.4/8.14.4) with ESMTP id 17M2BNnJ024101
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-raid@vger.kernel.org>; Sat, 21 Aug 2021 22:11:23 -0400
+Received: (qmail 5580 invoked by uid 0); 22 Aug 2021 02:11:23 -0000
+X-TCPREMOTEIP: 24.7.18.247
+X-Authenticated-UID: scowles@ckhb.org
+Received: from unknown (HELO ckhb02.ckhb.org) (scowles@ckhb.org@24.7.18.247)
+  by 0 with ESMTPA; 22 Aug 2021 02:11:22 -0000
+Date:   Sat, 21 Aug 2021 19:10:56 -0700 (PDT)
+From:   scowles@ckhb.org
+Reply-To: scowles@ckhb.org
+To:     linux-raid <linux-raid@vger.kernel.org>
+Subject: volume recovery question
+Message-ID: <f820d037-c981-f1a1-49ca-dbf971695c80@ckhb.org>
+X-Face: Ek1c-Ll9]E|9mF*Z|hf5VSHqF.]0Qv%;h%=Zne"Y3am*(:Tf_BlXI;j'}FMhu%sNCjSk|</(~~v,k&/W^/<B[/4.rOqScspm-J_a)0xn*J8L[e:n%{R7'f`B`lQH]J;>cxD~oD:g5Tv,gN}{Y8("m<8<%%=_vy
 MIME-Version: 1.0
-References: <1629266268-3624-1-git-send-email-xni@redhat.com>
-In-Reply-To: <1629266268-3624-1-git-send-email-xni@redhat.com>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 20 Aug 2021 17:31:27 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW73qcuf-a=ENW+f3ecb548uL2zHxir7dYixrnz5838gZw@mail.gmail.com>
-Message-ID: <CAPhsuW73qcuf-a=ENW+f3ecb548uL2zHxir7dYixrnz5838gZw@mail.gmail.com>
-Subject: Re: [PATCH v2] md/raid10: Remove rcu_dereference when it doesn't need
- rcu lock to protect
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Nigel Croxon <ncroxon@redhat.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; format=flowed; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 10:58 PM Xiao Ni <xni@redhat.com> wrote:
->
-> One warning message is triggered like this:
-> [  695.110751] =============================
-> [  695.131439] WARNING: suspicious RCU usage
-> [  695.151389] 4.18.0-319.el8.x86_64+debug #1 Not tainted
-> [  695.174413] -----------------------------
-> [  695.192603] drivers/md/raid10.c:1776 suspicious
-> rcu_dereference_check() usage!
-> [  695.225107] other info that might help us debug this:
-> [  695.260940] rcu_scheduler_active = 2, debug_locks = 1
-> [  695.290157] no locks held by mkfs.xfs/10186.
->
-> In the first loop of function raid10_handle_discard. It already
-> determines which disk need to handle discard request and add the
-> rdev reference count rdev->nr_pending. So the conf->mirrors will
-> not change until all bios come back from underlayer disks. It
-> doesn't need to use rcu_dereference to get rdev.
->
-> Fixes: d30588b2731f ('md/raid10: improve raid10 discard request')
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
-Applied to md-fixes. Thanks!
-Song
+i apologize in advance if this is the wrong forum in which to pose this 
+question.  if so, where would it be appropriate?
 
-> ---
-> V2: Fix comment style problem
->
->  drivers/md/raid10.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 16977e8..d5d9233 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1712,6 +1712,11 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->         } else
->                 r10_bio->master_bio = (struct bio *)first_r10bio;
->
-> +       /*
-> +        * first select target devices under rcu_lock and
-> +        * inc refcount on their rdev.  Record them by setting
-> +        * bios[x] to bio
-> +        */
->         rcu_read_lock();
->         for (disk = 0; disk < geo->raid_disks; disk++) {
->                 struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
-> @@ -1743,9 +1748,6 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->         for (disk = 0; disk < geo->raid_disks; disk++) {
->                 sector_t dev_start, dev_end;
->                 struct bio *mbio, *rbio = NULL;
-> -               struct md_rdev *rdev = rcu_dereference(conf->mirrors[disk].rdev);
-> -               struct md_rdev *rrdev = rcu_dereference(
-> -                       conf->mirrors[disk].replacement);
->
->                 /*
->                  * Now start to calculate the start and end address for each disk.
-> @@ -1775,9 +1777,12 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->
->                 /*
->                  * It only handles discard bio which size is >= stripe size, so
-> -                * dev_end > dev_start all the time
-> +                * dev_end > dev_start all the time.
-> +                * It doesn't need to use rcu lock to get rdev here. We already
-> +                * add rdev->nr_pending in the first loop.
->                  */
->                 if (r10_bio->devs[disk].bio) {
-> +                       struct md_rdev *rdev = conf->mirrors[disk].rdev;
->                         mbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
->                         mbio->bi_end_io = raid10_end_discard_request;
->                         mbio->bi_private = r10_bio;
-> @@ -1790,6 +1795,7 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->                         bio_endio(mbio);
->                 }
->                 if (r10_bio->devs[disk].repl_bio) {
-> +                       struct md_rdev *rrdev = conf->mirrors[disk].replacement;
->                         rbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
->                         rbio->bi_end_io = raid10_end_discard_request;
->                         rbio->bi_private = r10_bio;
-> --
-> 2.7.5
->
+one disk in a two disk level 1 array failed.  i added another disk to the array 
+and the resynchronisation completed successfully.  while the synchronisation was 
+running, i removed the failed volume and the array filesystem specs vanished.
+
+so i have two questions:
+
+1)  what happened when i removed the failed array that caused the existing 
+filesystem to vanish?
+
+2)  is it possible to recovery the filesystem on the array?
+
+current status:
+
+------------------------------------------------------------------------------------
+# mdadm -Es
+ARRAY /dev/md/2  metadata=1.2 UUID=a58fd446:5acce560:16946592:61a8ef7e name=ckhb02:2
+------------------------------------------------------------------------------------
+# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md127 : active raid1 sdf1[2] sdd[0]
+       10737418240 blocks super 1.2 [2/2] [UU]
+       bitmap: 0/80 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+------------------------------------------------------------------------------------
+# mdadm --detail /dev/md127
+/dev/md127:
+            Version : 1.2
+      Creation Time : Sun Jun 28 16:55:00 2020
+         Raid Level : raid1
+         Array Size : 10737418240 (10240.00 GiB 10995.12 GB)
+      Used Dev Size : 10737418240 (10240.00 GiB 10995.12 GB)
+       Raid Devices : 2
+      Total Devices : 2
+        Persistence : Superblock is persistent
+
+      Intent Bitmap : Internal
+
+        Update Time : Tue Aug 17 13:20:32 2021
+              State : clean
+     Active Devices : 2
+    Working Devices : 2
+     Failed Devices : 0
+      Spare Devices : 0
+
+Consistency Policy : bitmap
+
+               Name : ckhb02:2  (local to host ckhb02)
+               UUID : a58fd446:5acce560:16946592:61a8ef7e
+             Events : 175334
+
+     Number   Major   Minor   RaidDevice State
+        0       8       48        0      active sync   /dev/sdd
+        2       8       81        1      active sync   /dev/sdf1
+------------------------------------------------------------------------------------
+/bin/ls -lF /dev/disk/by-uuid
+yields no volume associated with the array
+------------------------------------------------------------------------------------
+
