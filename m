@@ -2,114 +2,96 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80FEEC4338F
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 07:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92FB8C4338F
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 11:15:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64B7560F91
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 07:45:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F69E6120A
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 11:15:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234831AbhHXHp7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 24 Aug 2021 03:45:59 -0400
-Received: from smtp1.servermx.com ([134.19.178.79]:57988 "EHLO
-        smtp1.servermx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231437AbhHXHp6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 Aug 2021 03:45:58 -0400
-X-Greylist: delayed 564 seconds by postgrey-1.27 at vger.kernel.org; Tue, 24 Aug 2021 03:45:58 EDT
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=servermx.com; s=servermx; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:Date:From:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=S316GZth6dTRivVDE7QgxW/8U8eGuj8VZbox4YhtZtA=; b=rTYw9DLfdj449NnPHq6+Gmz4rM
-        z9rV/4dQNLgfDQgnEXO6eAxelBBLfJMiWmjvWhBa8k0p/TcZX4/Y+ODZvfztx3lCVgyE4Lns0wiNm
-        Zs9E0qg341fWfYaU1pREMxcncDu+Fh0RAPtZO2Q7r1qtxprCWWRoZqfOezoQCond1/Vo=;
-Received: by exim4; Tue, 24 Aug 2021 09:35:39 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=servermx.com; s=servermx; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:Date:From:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=S316GZth6dTRivVDE7QgxW/8U8eGuj8VZbox4YhtZtA=; b=rTYw9DLfdj449NnPHq6+Gmz4rM
-        z9rV/4dQNLgfDQgnEXO6eAxelBBLfJMiWmjvWhBa8k0p/TcZX4/Y+ODZvfztx3lCVgyE4Lns0wiNm
-        Zs9E0qg341fWfYaU1pREMxcncDu+Fh0RAPtZO2Q7r1qtxprCWWRoZqfOezoQCond1/Vo=;
-Received: by exim4; Tue, 24 Aug 2021 09:35:36 +0200
-Received: from usr01 (usr01.home.robinhill.me.uk [IPv6:2a01:348:2ab::50])
-        by cthulhu.home.robinhill.me.uk (Postfix) with SMTP id AC9276A01FD;
-        Tue, 24 Aug 2021 08:35:32 +0100 (BST)
-Received: by usr01 (sSMTP sendmail emulation); Tue, 24 Aug 2021 08:36:55 +0100
-From:   hillr@robinhill.me.uk
-Date:   Tue, 24 Aug 2021 08:36:55 +0100
-To:     NeilBrown <neilb@suse.de>
-Cc:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>,
-        Nigel Croxon <ncroxon@redhat.com>, jes@trained-monkey.org,
-        xni@redhat.com, linux-raid@vger.kernel.org
-Subject: Re: [PATCH V2] Fix buffer size warning for strcpy
-Message-ID: <YSShlyG5hzWPkjb5@usr01.home.robinhill.me.uk>
-Mail-Followup-To: NeilBrown <neilb@suse.de>,
-        "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>,
-        Nigel Croxon <ncroxon@redhat.com>, jes@trained-monkey.org,
-        xni@redhat.com, linux-raid@vger.kernel.org
-References: <20210819131017.2511208-1-ncroxon@redhat.com>
- <5d28eff3-d693-92c5-6e84-54846b36a480@linux.intel.com>
- <162975880927.9892.4170329329993823938@noble.neil.brown.name>
+        id S235768AbhHXLQZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 24 Aug 2021 07:16:25 -0400
+Received: from USAT19PA23.eemsg.mail.mil ([214.24.22.197]:18722 "EHLO
+        USAT19PA23.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235618AbhHXLQY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 24 Aug 2021 07:16:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
+  t=1629803740; x=1661339740;
+  h=from:to:cc:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=q1abTT18V0EVvvXO+EPfzXecHAV15lA63LGbEoLG19A=;
+  b=YnuIHQ0wmF8q8947uVNDUB6IqyzwgU65TIE3odx1TiwcAM7SUp+uTJJl
+   BUO9TNS3hMwzZG4eErpJ2sedHpAbNa+VCrzVe4p5slr1OJpnsFlJ2ymbR
+   zCrjvtJhF+r9mN8efXaXIoM4ej1LmIKdBEK4kdHZSq35ysZVaYNDRoamD
+   MnsGC5kNwVFE1n8mAIxdZnYlOKO+ivKYZf9W2/7vm9uxAhpd4JHihCFhr
+   4w90zUnWGcfDjLeLLSbVTCgw02vGvg40+9IAXHfqYGrJXi6uyghacSCAm
+   UnhOb6eXD67NZFA1y+tbXokH8jgjR6fAvcUJXYJPBKZPNnvoyKQDV9sj7
+   g==;
+X-EEMSG-check-017: 250267318|USAT19PA23_ESA_OUT04.csd.disa.mil
+X-IronPort-AV: E=Sophos;i="5.84,347,1620691200"; 
+   d="scan'208";a="250267318"
+IronPort-HdrOrdr: A9a23:HHynE69n73WaU0Vz54huk+Fldb1zdoMgy1knxilNoENuH/Bwxv
+ rFoB1E73TJYW4qKQodcdDpAtjifZquz+8O3WBxB8buYOCCggeVxe5ZnPLfKlHbehEW19Qtsp
+ uIEJIOROEYb2IK9foSiTPQe7lP/DDtytHLuQ6q9QYIcegcUdAE0+4WMGamO3wzYDMDKYsyFZ
+ Ka6MYCjSGnY24rYsOyAWRAd/TfpvXQ/aiWLyIuNloC0k2jnDmo4Ln1H1yzxREFSQ5Cxr8k7C
+ zsjxH53KO+qPu2oyWsllM7rq4m2OcJ+OEzRvBkufJlbwkEvzzYJ7iJFYfy+Azd69vflWrC2O
+ O83yvIef4DpE85BVvFxycFkjOQrgoG+jvsz0SVjmDkptG8TDUmC9BZjYYcaRfB7VE81esMmJ
+ 6j8ljpwaa/Nymw1RgVJuK4Ii1Chw6xuz4vgOQTh3tQXc8Xb6JQt5UW+AdQHI0bFCz35Yg7GK
+ 02Zfusrsp+YBefdTTUr2NvyNujUjA6GQqHWFELvoiQ3yJNlH50wkMEzIgUn2sG9pg6V55Yjt
+ 60eZhAhfVLVIsbfKh9DOAOTY+8AmnARh/FKyaJLU/mGLtCO3XWtpbx6rlw5OzCQu148HLzou
+ W3bLp8jx9BR6vDM7z/4HR7yGG4fIzmZ0WT9ih33ekLhoHB
+Received: from edge-mech02.mail.mil ([214.21.130.228])
+  by USAT19PA23.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 24 Aug 2021 11:15:38 +0000
+Received: from UMECHPAOU.easf.csd.disa.mil (214.21.130.164) by
+ edge-mech02.mail.mil (214.21.130.228) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Tue, 24 Aug 2021 11:14:54 +0000
+Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.164]) by
+ umechpaou.easf.csd.disa.mil ([214.21.130.164]) with mapi id 14.03.0513.000;
+ Tue, 24 Aug 2021 11:14:52 +0000
+From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+To:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+CC:     "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+Subject: SSDs and mdraid
+Thread-Topic: SSDs and mdraid
+Thread-Index: AdeY2FCguMmiPs6WQsubw5GWI/+SEw==
+Date:   Tue, 24 Aug 2021 11:14:51 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A238585EA77@UMECHPA7B.easf.csd.disa.mil>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [214.21.44.12]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <162975880927.9892.4170329329993823938@noble.neil.brown.name>
-Feedback-ID: outgoingmessage:robin@robinhill.me.uk:ns01.servermx.com:servermx.com
-X-AuthUser: bimu5pypsh
-X-AuthUser: bimu5pypsh
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue Aug 24, 2021 at 08:46:49AM +1000, NeilBrown wrote:
+All,
+As I'm trying to achieve maximum performance on mdraid with SSDs, I've noti=
+ced a situation that I think could be corrected somewhat easily.
 
-> On Mon, 23 Aug 2021, Tkaczyk, Mariusz wrote:
-> > On 19.08.2021 15:10, Nigel Croxon wrote:
-> > 
-> > > +	memset(ve->name, '\0', sizeof(ve->name));
-> > > +	if (name) {
-> > > +		int l = strlen(ve->name);
-> > > +		if (l > 16)
-> > > +			l = 16;
-> > > +		memcpy(ve->name, name, l);
-> > > +	}
-> > 
-> > What about:
-> > if (name)
-> > 	/*
-> > 	 * Name might not be null terminated.
-> > 	 */
-> > 	strncpy(ve->name, name, sizeof(ve->name));
-> 
-> I really like the idea of using strncpy().  I didn't realize it would
-> nul-pad to the full size, and that is exactly what we want.
-> So
-> 
->   strncpy(ve->name, name?:"", sizeof(ve->name));
-> 
-> would be a complete solution.
-> 
-Except that won't get rid of the buffer warning that was the point of
-this patch:
+I've been having to play the partitioning game to get enough kernel workers=
+ to achieve maximum performance on mdraid SSD stripes, but I've run into a =
+few troubling problems.   Basically on raid creation and on raid check, man=
+y events get DELAYED because they share underlying devices with other mdrai=
+d stripes when you look at the status in /proc/mdstat.   I feel like mdraid=
+ hasn't made the leap to SSDs, in that we have a signal in /sys/block/<md_d=
+evice>/queue/rotational that  could enable  these DELAYED activities for SS=
+Ds.  The SSDs have way more IOPS, both read and write, to handle these DELA=
+Ys and we need to start taking advantage of the abilities of the SSDs.   It=
+ is an SSD world now.
 
-buffer_size_warning: Calling "strncpy" with a maximum size
-argument of 16 bytes on destination array "ve->name" of
-size 16 bytes might leave the destination string unterminated.
+Regards,
+Jim
 
-Looking at the code, I don't think we're relying on the destination
-string being null terminated anyway (if it's the full 16 bytes), so it's
-not actually going to cause an issue, but we'll still be left with the
-warning. Presumably using memcpy doesn't flag on this (as it then
-doesn't know the value being copied is meant to be a string), which is
-why that was being proposed.
 
-Cheers.
-    Robin
+Jim Finlayson
+U.S. Department of Defense
+
