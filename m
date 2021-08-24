@@ -2,103 +2,142 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14E10C4338F
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 00:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D153C4338F
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 01:17:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE69F61222
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 00:43:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53AA96138B
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 01:17:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233480AbhHXAoT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 23 Aug 2021 20:44:19 -0400
-Received: from out1.migadu.com ([91.121.223.63]:61747 "EHLO out1.migadu.com"
+        id S233559AbhHXBSS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 23 Aug 2021 21:18:18 -0400
+Received: from out1.migadu.com ([91.121.223.63]:29485 "EHLO out1.migadu.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233101AbhHXAoK (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 23 Aug 2021 20:44:10 -0400
-Subject: Re: [PATCH V3] raid1: ensure write behind bio has less than
- BIO_MAX_VECS sectors
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1629765805;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JnRJoSVaRqHIZkKhzvuzuQ1A7N7puBWYd81TcQ3vXYQ=;
-        b=GpfEjz3z1TVApq0OANpSKTkarBWo9RcsQFV4mfpMQDkxiGYLw9ITddIzZHRYTSbdvp+RPX
-        odvzyMdUE9Qybwuadx+tUY3q3nVVagJYtUNR0nGo2+XOdVNaz4/0mkFl9FIRiajwI/ebl4
-        axZ6Wn8SUm/DWI66GY3N3zkrtnJcWvo=
-To:     kernel test robot <lkp@intel.com>, axboe@kernel.dk
-Cc:     kbuild-all@lists.01.org, song@kernel.org, hch@infradead.org,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org
-References: <20210823074513.3208278-1-guoqing.jiang@linux.dev>
- <202108232012.No5kysqW-lkp@intel.com>
+        id S229697AbhHXBSS (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 23 Aug 2021 21:18:18 -0400
+X-Greylist: delayed 2048 seconds by postgrey-1.27 at vger.kernel.org; Mon, 23 Aug 2021 21:18:18 EDT
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1629767854;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=+p/y4+X96U0IPsl0qhnYFKY9iIZpihn52Q9b7rWcaCI=;
+        b=KszRba48ZOjNYm7/U/KFc0BQofezUoJfrriiZTL1fec5SWonTOfVRgriUf2+0d5Z/s33SX
+        UJgCvoDuRHKhRtOOIuza6Ez1QEfxuZwXlBjkMMHDv515L4x8VkQqM7JBXet0zmcm1wfC9J
+        w4UXg2lOhmz0VrsoH34HGHQRZZ6Kimc=
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <f9748b7c-2c3f-ce4e-66a0-46c126c6b7dd@linux.dev>
-Date:   Tue, 24 Aug 2021 08:43:18 +0800
+To:     axboe@kernel.dk
+Cc:     song@kernel.org, hch@infradead.org, linux-raid@vger.kernel.org,
+        linux-block@vger.kernel.org
+Subject: [PATCH] raid1: ensure write behind bio has less than BIO_MAX_VECS sectors
+Date:   Tue, 24 Aug 2021 09:16:54 +0800
+Message-Id: <20210824011654.3829681-1-guoqing.jiang@linux.dev>
 MIME-Version: 1.0
-In-Reply-To: <202108232012.No5kysqW-lkp@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 X-Migadu-Auth-User: guoqing.jiang@linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+From: Guoqing Jiang <jiangguoqing@kylinos.cn>
 
-Thanks for the report!
+We can't split write behind bio with more than BIO_MAX_VECS sectors,
+otherwise the below call trace was triggered because we could allocate
+oversized write behind bio later.
 
-On 8/23/21 8:19 PM, kernel test robot wrote:
-> Hi Guoqing,
->
-> Thank you for the patch! Yet something to improve:
->
-> [auto build test ERROR on song-md/md-next]
-> [also build test ERROR on v5.14-rc7 next-20210820]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch]
->
-> url:    https://github.com/0day-ci/linux/commits/Guoqing-Jiang/raid1-ensure-write-behind-bio-has-less-than-BIO_MAX_VECS-sectors/20210823-154653
-> base:   git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-> config: sh-allmodconfig (attached as .config)
-> compiler: sh4-linux-gcc (GCC) 11.2.0
-> reproduce (this is a W=1 build):
->          wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->          chmod +x ~/bin/make.cross
->          # https://github.com/0day-ci/linux/commit/302a06a55fac4a9fb10f57dc96f6a618f3e853b4
->          git remote add linux-review https://github.com/0day-ci/linux
->          git fetch --no-tags linux-review Guoqing-Jiang/raid1-ensure-write-behind-bio-has-less-than-BIO_MAX_VECS-sectors/20210823-154653
->          git checkout 302a06a55fac4a9fb10f57dc96f6a618f3e853b4
->          # save the attached .config to linux build tree
->          mkdir build_dir
->          COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=sh SHELL=/bin/bash drivers/md/
->
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
->
-> All errors (new ones prefixed by >>):
->
->     drivers/md/raid1.c: In function 'raid1_write_request':
->>> drivers/md/raid1.c:1393:44: error: 'mirror' undeclared (first use in this function); did you mean 'md_error'?
->      1393 |                 if (test_bit(WriteMostly, &mirror->rdev->flags))
->           |                                            ^~~~~~
->           |                                            md_error
+[ 8.097936] bvec_alloc+0x90/0xc0
+[ 8.098934] bio_alloc_bioset+0x1b3/0x260
+[ 8.099959] raid1_make_request+0x9ce/0xc50 [raid1]
+[ 8.100988] ? __bio_clone_fast+0xa8/0xe0
+[ 8.102008] md_handle_request+0x158/0x1d0 [md_mod]
+[ 8.103050] md_submit_bio+0xcd/0x110 [md_mod]
+[ 8.104084] submit_bio_noacct+0x139/0x530
+[ 8.105127] submit_bio+0x78/0x1d0
+[ 8.106163] ext4_io_submit+0x48/0x60 [ext4]
+[ 8.107242] ext4_writepages+0x652/0x1170 [ext4]
+[ 8.108300] ? do_writepages+0x41/0x100
+[ 8.109338] ? __ext4_mark_inode_dirty+0x240/0x240 [ext4]
+[ 8.110406] do_writepages+0x41/0x100
+[ 8.111450] __filemap_fdatawrite_range+0xc5/0x100
+[ 8.112513] file_write_and_wait_range+0x61/0xb0
+[ 8.113564] ext4_sync_file+0x73/0x370 [ext4]
+[ 8.114607] __x64_sys_fsync+0x33/0x60
+[ 8.115635] do_syscall_64+0x33/0x40
+[ 8.116670] entry_SYSCALL_64_after_hwframe+0x44/0xae
 
-Oops, will fix it.
+Thanks for the comment from Christoph.
 
-> drivers/md/raid1.c:1477:52: error: 'PAGE_SECTORS' undeclared (first use in this function)
->      1477 |                                     BIO_MAX_VECS * PAGE_SECTORS);
->           |                                                    ^~~~~~~~~~~~
+[1]. https://bugs.archlinux.org/task/70992
 
-This patch is supposed to be merged by block tree due to dependency.
+Reported-by: Jens Stutte <jens@chianterastutte.eu>
+Tested-by: Jens Stutte <jens@chianterastutte.eu>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
+---
+V4 change:
+1. fix issue reported by lkp.
+2. add Reviewed-by tag.
 
-Thanks,
-Guoqing
+V3 change:
+1. add comment before test WriteMostly.
+2. reduce line length.
+
+V2 change:
+1. add checking for write-behind case and relevant comments from Christoph.
+
+ drivers/md/raid1.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 3c44c4bb40fc..ad51a60f1a93 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1329,6 +1329,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	struct raid1_plug_cb *plug = NULL;
+ 	int first_clone;
+ 	int max_sectors;
++	bool write_behind = false;
+ 
+ 	if (mddev_is_clustered(mddev) &&
+ 	     md_cluster_ops->area_resyncing(mddev, WRITE,
+@@ -1381,6 +1382,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	max_sectors = r1_bio->sectors;
+ 	for (i = 0;  i < disks; i++) {
+ 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
++
++		/*
++		 * The write-behind io is only attempted on drives marked as
++		 * write-mostly, which means we could allocate write behind
++		 * bio later.
++		 */
++		if (rdev && test_bit(WriteMostly, &rdev->flags))
++			write_behind = true;
++
+ 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+ 			atomic_inc(&rdev->nr_pending);
+ 			blocked_rdev = rdev;
+@@ -1454,6 +1464,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		goto retry_write;
+ 	}
+ 
++	/*
++	 * When using a bitmap, we may call alloc_behind_master_bio below.
++	 * alloc_behind_master_bio allocates a copy of the data payload a page
++	 * at a time and thus needs a new bio that can fit the whole payload
++	 * this bio in page sized chunks.
++	 */
++	if (write_behind && bitmap)
++		max_sectors = min_t(int, max_sectors,
++				    BIO_MAX_VECS * PAGE_SECTORS);
+ 	if (max_sectors < bio_sectors(bio)) {
+ 		struct bio *split = bio_split(bio, max_sectors,
+ 					      GFP_NOIO, &conf->bio_split);
+-- 
+2.25.1
+
