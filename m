@@ -2,142 +2,76 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D153C4338F
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 01:17:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8A4C4338F
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 07:35:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53AA96138B
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 01:17:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B11DE610D0
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 07:35:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233559AbhHXBSS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 23 Aug 2021 21:18:18 -0400
-Received: from out1.migadu.com ([91.121.223.63]:29485 "EHLO out1.migadu.com"
+        id S234865AbhHXHgD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 24 Aug 2021 03:36:03 -0400
+Received: from mga11.intel.com ([192.55.52.93]:50338 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229697AbhHXBSS (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 23 Aug 2021 21:18:18 -0400
-X-Greylist: delayed 2048 seconds by postgrey-1.27 at vger.kernel.org; Mon, 23 Aug 2021 21:18:18 EDT
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1629767854;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=+p/y4+X96U0IPsl0qhnYFKY9iIZpihn52Q9b7rWcaCI=;
-        b=KszRba48ZOjNYm7/U/KFc0BQofezUoJfrriiZTL1fec5SWonTOfVRgriUf2+0d5Z/s33SX
-        UJgCvoDuRHKhRtOOIuza6Ez1QEfxuZwXlBjkMMHDv515L4x8VkQqM7JBXet0zmcm1wfC9J
-        w4UXg2lOhmz0VrsoH34HGHQRZZ6Kimc=
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-To:     axboe@kernel.dk
-Cc:     song@kernel.org, hch@infradead.org, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: [PATCH] raid1: ensure write behind bio has less than BIO_MAX_VECS sectors
-Date:   Tue, 24 Aug 2021 09:16:54 +0800
-Message-Id: <20210824011654.3829681-1-guoqing.jiang@linux.dev>
+        id S235010AbhHXHfz (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 24 Aug 2021 03:35:55 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10085"; a="214132112"
+X-IronPort-AV: E=Sophos;i="5.84,346,1620716400"; 
+   d="scan'208";a="214132112"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2021 00:35:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,346,1620716400"; 
+   d="scan'208";a="443714576"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga002.jf.intel.com with ESMTP; 24 Aug 2021 00:35:11 -0700
+Received: from [10.237.140.108] (mtkaczyk-MOBL1.ger.corp.intel.com [10.237.140.108])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by linux.intel.com (Postfix) with ESMTPS id AD0055805CB;
+        Tue, 24 Aug 2021 00:35:10 -0700 (PDT)
+Subject: Re: [PATCH V3] Fix buffer size warning for strcpy
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+To:     Nigel Croxon <ncroxon@redhat.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+References: <20210823143525.2517040-1-ncroxon@redhat.com>
+ <1c777af7-dda5-4332-74d0-0d4e1ba58031@linux.intel.com>
+Message-ID: <92a90fb5-c9d7-92ea-2133-307fdb96e2a2@linux.intel.com>
+Date:   Tue, 24 Aug 2021 09:35:08 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
+In-Reply-To: <1c777af7-dda5-4332-74d0-0d4e1ba58031@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: guoqing.jiang@linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Guoqing Jiang <jiangguoqing@kylinos.cn>
+Hello Nigel,
+It current form it is not working. See my finding below.
 
-We can't split write behind bio with more than BIO_MAX_VECS sectors,
-otherwise the below call trace was triggered because we could allocate
-oversized write behind bio later.
+On 23.08.2021 17:36, Tkaczyk, Mariusz wrote:
+> 
+>> +        int l = strlen(ve->name);
+i think that you want to use name instead of ve->name.
+length of ve->name is zero after memset.
 
-[ 8.097936] bvec_alloc+0x90/0xc0
-[ 8.098934] bio_alloc_bioset+0x1b3/0x260
-[ 8.099959] raid1_make_request+0x9ce/0xc50 [raid1]
-[ 8.100988] ? __bio_clone_fast+0xa8/0xe0
-[ 8.102008] md_handle_request+0x158/0x1d0 [md_mod]
-[ 8.103050] md_submit_bio+0xcd/0x110 [md_mod]
-[ 8.104084] submit_bio_noacct+0x139/0x530
-[ 8.105127] submit_bio+0x78/0x1d0
-[ 8.106163] ext4_io_submit+0x48/0x60 [ext4]
-[ 8.107242] ext4_writepages+0x652/0x1170 [ext4]
-[ 8.108300] ? do_writepages+0x41/0x100
-[ 8.109338] ? __ext4_mark_inode_dirty+0x240/0x240 [ext4]
-[ 8.110406] do_writepages+0x41/0x100
-[ 8.111450] __filemap_fdatawrite_range+0xc5/0x100
-[ 8.112513] file_write_and_wait_range+0x61/0xb0
-[ 8.113564] ext4_sync_file+0x73/0x370 [ext4]
-[ 8.114607] __x64_sys_fsync+0x33/0x60
-[ 8.115635] do_syscall_64+0x33/0x40
-[ 8.116670] entry_SYSCALL_64_after_hwframe+0x44/0xae
+>> +        if (l > 16)
+>> +            l = 16;
+> I think that whole "if" statement can be replaced by:
+> strnlen(ve->name, sizeof(ve->name))
 
-Thanks for the comment from Christoph.
+I did a mistake here.
+I want to suggest usage of:
+l = strnlen(name, sizeof(ve->name));
 
-[1]. https://bugs.archlinux.org/task/70992
-
-Reported-by: Jens Stutte <jens@chianterastutte.eu>
-Tested-by: Jens Stutte <jens@chianterastutte.eu>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Guoqing Jiang <jiangguoqing@kylinos.cn>
----
-V4 change:
-1. fix issue reported by lkp.
-2. add Reviewed-by tag.
-
-V3 change:
-1. add comment before test WriteMostly.
-2. reduce line length.
-
-V2 change:
-1. add checking for write-behind case and relevant comments from Christoph.
-
- drivers/md/raid1.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 3c44c4bb40fc..ad51a60f1a93 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1329,6 +1329,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	struct raid1_plug_cb *plug = NULL;
- 	int first_clone;
- 	int max_sectors;
-+	bool write_behind = false;
- 
- 	if (mddev_is_clustered(mddev) &&
- 	     md_cluster_ops->area_resyncing(mddev, WRITE,
-@@ -1381,6 +1382,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	max_sectors = r1_bio->sectors;
- 	for (i = 0;  i < disks; i++) {
- 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
-+
-+		/*
-+		 * The write-behind io is only attempted on drives marked as
-+		 * write-mostly, which means we could allocate write behind
-+		 * bio later.
-+		 */
-+		if (rdev && test_bit(WriteMostly, &rdev->flags))
-+			write_behind = true;
-+
- 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
- 			atomic_inc(&rdev->nr_pending);
- 			blocked_rdev = rdev;
-@@ -1454,6 +1464,15 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 		goto retry_write;
- 	}
- 
-+	/*
-+	 * When using a bitmap, we may call alloc_behind_master_bio below.
-+	 * alloc_behind_master_bio allocates a copy of the data payload a page
-+	 * at a time and thus needs a new bio that can fit the whole payload
-+	 * this bio in page sized chunks.
-+	 */
-+	if (write_behind && bitmap)
-+		max_sectors = min_t(int, max_sectors,
-+				    BIO_MAX_VECS * PAGE_SECTORS);
- 	if (max_sectors < bio_sectors(bio)) {
- 		struct bio *split = bio_split(bio, max_sectors,
- 					      GFP_NOIO, &conf->bio_split);
--- 
-2.25.1
-
+>> +        memcpy(ve->name, name, l);
+>> +    }
+>
+Thanks,
+Mariusz
