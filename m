@@ -2,102 +2,67 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C54C4338F
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 12:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E37C4338F
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 13:07:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 465FD60E75
-	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 12:30:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15C8D61374
+	for <linux-raid@archiver.kernel.org>; Tue, 24 Aug 2021 13:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237203AbhHXMbB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 24 Aug 2021 08:31:01 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:26357 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230132AbhHXMa5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 24 Aug 2021 08:30:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629808213;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=8heildVPd8mP0xYFhIhBEPaTC5F0AYXa8QSNp+iIiQI=;
-        b=AlP1LqRCUQKlPgwIgLFsOCdzkbgqkusH9X9owexZYEY7mnv2rV1zb3466Vs50Xf6hhBNGt
-        zo+6yctzKW07xl/9lSf4r8IZpPJdrBSuKJq6UTzfej2rQc11gOXsruqPw536mH6WeShITO
-        +VvmNHJt/A/EEEtDOzS5CY9j3xLuPXE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-161-rfiLF01XMsSOle9ErhuXmg-1; Tue, 24 Aug 2021 08:30:09 -0400
-X-MC-Unique: rfiLF01XMsSOle9ErhuXmg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S237298AbhHXNHr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 24 Aug 2021 09:07:47 -0400
+Received: from mga05.intel.com ([192.55.52.43]:31361 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237363AbhHXNHq (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 24 Aug 2021 09:07:46 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10085"; a="302887249"
+X-IronPort-AV: E=Sophos;i="5.84,347,1620716400"; 
+   d="scan'208";a="302887249"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2021 06:07:02 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,347,1620716400"; 
+   d="scan'208";a="515449785"
+Received: from linux.intel.com ([10.54.29.200])
+  by fmsmga004.fm.intel.com with ESMTP; 24 Aug 2021 06:06:58 -0700
+Received: from [10.237.140.108] (mtkaczyk-MOBL1.ger.corp.intel.com [10.237.140.108])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 611101F2D9;
-        Tue, 24 Aug 2021 12:30:08 +0000 (UTC)
-Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 336A91ABD7;
-        Tue, 24 Aug 2021 12:30:08 +0000 (UTC)
-From:   Nigel Croxon <ncroxon@redhat.com>
-To:     neilb@suse.de, jes@trained-monkey.org, xni@redhat.com,
-        linux-raid@vger.kernel.org, mariusz.tkaczyk@linux.intel.com
-Subject: [PATCH V4] Fix buffer size warning for strcpy
-Date:   Tue, 24 Aug 2021 08:30:07 -0400
-Message-Id: <20210824123007.2776483-1-ncroxon@redhat.com>
+        by linux.intel.com (Postfix) with ESMTPS id 1F6765808BC;
+        Tue, 24 Aug 2021 06:06:56 -0700 (PDT)
+Subject: Re: [PATCH V4] Fix buffer size warning for strcpy
+To:     Nigel Croxon <ncroxon@redhat.com>, jes@trained-monkey.org,
+        linux-raid@vger.kernel.org
+References: <20210824123007.2776483-1-ncroxon@redhat.com>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <891a1b41-d860-fd86-489c-beb44fdd291e@linux.intel.com>
+Date:   Tue, 24 Aug 2021 15:06:55 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210824123007.2776483-1-ncroxon@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-To meet requirements of Common Criteria certification vulnerability
-assessment. Static code analysis has been run and found the following
-error:
-buffer_size_warning: Calling "strncpy" with a maximum size
-argument of 16 bytes on destination array "ve->name" of
-size 16 bytes might leave the destination string unterminated.
+Hello Nigel,
 
-The change is to make the destination size to fit the allocated size.
+> -	memset(ve->name, ' ', 16);
+> +	memset(ve->name, '\0', sizeof(ve->name));
+>   	if (name)
+> -		strncpy(ve->name, name, 16);
+> +		memcpy(ve->name, name, strnlen(ve->name, sizeof(ve->name)));
+>   	ddf->virt->populated_vdes =
+>   		cpu_to_be16(be16_to_cpu(ddf->virt->populated_vdes)+1);
 
-V4:
-Code cleanup of the interim "if" statement.
+As I wrote under v3, you should use 'name' instead 've->name' in strnlen.
+'ve->name' has length 0. You can also consider usage of memccpy.
 
-V3: Doc change only:
-The code change from filling ve->name with spaces to filling it with
-null-terminated is to comform to the SNIA - Common RAID Disk Data
-Format Specification. The format for VD_Name (ve->name) specifies
-the field to be either ASCII or UNICODE. Bit 2 of the VD_Type field
-MUST be used to determine the Unicode or ASCII format of this field.
-If this field is not used, all bytes MUST be set to zero.
-
-V2: Change from zero-terminated to zero-padded on memset and
-change from using strncpy to memcpy, feedback from Neil Brown.
-
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
----
- super-ddf.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/super-ddf.c b/super-ddf.c
-index dc8e512f..db2aaa7a 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2637,9 +2637,9 @@ static int init_super_ddf_bvd(struct supertype *st,
- 		ve->init_state = DDF_init_not;
- 
- 	memset(ve->pad1, 0xff, 14);
--	memset(ve->name, ' ', 16);
-+	memset(ve->name, '\0', sizeof(ve->name));
- 	if (name)
--		strncpy(ve->name, name, 16);
-+		memcpy(ve->name, name, strnlen(ve->name, sizeof(ve->name)));
- 	ddf->virt->populated_vdes =
- 		cpu_to_be16(be16_to_cpu(ddf->virt->populated_vdes)+1);
- 
--- 
-2.29.2
-
+Thanks,
+Mariusz
