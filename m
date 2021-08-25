@@ -2,221 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62801C4338F
-	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 11:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80967C4338F
+	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 14:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B6B161076
-	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 11:16:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6238861073
+	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 14:35:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240269AbhHYLQ6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 25 Aug 2021 07:16:58 -0400
-Received: from mga03.intel.com ([134.134.136.65]:10654 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239824AbhHYLQ5 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 25 Aug 2021 07:16:57 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10086"; a="217535937"
-X-IronPort-AV: E=Sophos;i="5.84,350,1620716400"; 
-   d="scan'208";a="217535937"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2021 04:16:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,350,1620716400"; 
-   d="scan'208";a="686036438"
-Received: from lkp-server01.sh.intel.com (HELO 4fbc2b3ce5aa) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 25 Aug 2021 04:16:07 -0700
-Received: from kbuild by 4fbc2b3ce5aa with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mIqt5-000062-0J; Wed, 25 Aug 2021 11:16:07 +0000
-Date:   Wed, 25 Aug 2021 19:15:50 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-fixes] BUILD SUCCESS
- bbe48a66a81d06da7db63b5cb7071531af447edc
-Message-ID: <61262666.9+KaJ/g+XlkQgU9e%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S241768AbhHYOgc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 25 Aug 2021 10:36:32 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:42434 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240114AbhHYOgb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 25 Aug 2021 10:36:31 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 427E222207;
+        Wed, 25 Aug 2021 14:35:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629902145; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=X8n1ifp2+Ye3e+kZcawyYARbkg48KaNoOeYTKrAJvlg=;
+        b=2V4CYc7b89OHh4QTVCdrGxsuaky9pfxEtMnFtsL4NLCZTIrYDJYLHmUTXwss9XolWFIdjd
+        lvRhaYmVpgVS8ocRLX6ZSWzvfrvSSMaAsAbOgMLVkm9t4CuTYDrIAZQNoX8Udhczuut8bF
+        z2tszf4CtJg75Cwr/FNQuZ1Khr4hmEU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629902145;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=X8n1ifp2+Ye3e+kZcawyYARbkg48KaNoOeYTKrAJvlg=;
+        b=cehA0XDVC4h8AmskuUI9G7QUT9nX+XvKUCbm3ONh+Wdnptb49ny6OKuP9fhhEVLrHkYQWY
+        3vurhhbMrjeZvHBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 37F2413C28;
+        Wed, 25 Aug 2021 14:35:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id kYxQDUFVJmFWbAAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 25 Aug 2021 14:35:45 +0000
+To:     Jes Sorensen <jsorensen@fb.com>, Coly Li <colyli@suse.de>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] mdadm: split off shared library
+Message-ID: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
+Date:   Wed, 25 Aug 2021 16:35:44 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
-branch HEAD: bbe48a66a81d06da7db63b5cb7071531af447edc  md/raid10: Remove rcu_dereference when it doesn't need rcu lock to protect
+Hi all,
 
-elapsed time: 730m
+this is, contrary to the subject, not a patch, but rather a question on
+how to submit a patchset.
+I've been working on splitting off a shared library from mdadm, with the
+aim that it can be included from other programs.
+Reasoning behind it that I've written a monitor program
+(github.com:/hreinecke/md_monitor) and found it a major pain having to
+exec() mdadm, and then keep fingers crossed that things succeed; error
+recovery from _that_ turned out to be a major drag. And so I figured
+that a shared library is possibly the best way to go.
 
-configs tested: 155
-configs skipped: 3
+(And, as a side note: having a shared library would also allow to build
+a python binding, which possibly will have even more use-cases ...)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+So I've build a patchset to split off a shared library from mdadm, and
+build mdadm against that:
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20210824
-sh                           se7722_defconfig
-powerpc                    mvme5100_defconfig
-powerpc                     ep8248e_defconfig
-sh                          sdk7786_defconfig
-arm                           viper_defconfig
-xtensa                  nommu_kc705_defconfig
-h8300                               defconfig
-powerpc                     ksi8560_defconfig
-arm                          simpad_defconfig
-arm                          imote2_defconfig
-arm                              alldefconfig
-riscv                            alldefconfig
-powerpc                        fsp2_defconfig
-sparc64                             defconfig
-arc                           tb10x_defconfig
-arm                          pxa910_defconfig
-mips                      fuloong2e_defconfig
-sh                        sh7763rdp_defconfig
-powerpc                 mpc837x_rdb_defconfig
-powerpc                     pq2fads_defconfig
-powerpc                       ebony_defconfig
-mips                      malta_kvm_defconfig
-powerpc                     pseries_defconfig
-arc                              alldefconfig
-arm                           tegra_defconfig
-sh                 kfr2r09-romimage_defconfig
-mips                           ci20_defconfig
-arm                        spear3xx_defconfig
-ia64                                defconfig
-arm                             ezx_defconfig
-powerpc                      ppc40x_defconfig
-mips                       lemote2f_defconfig
-mips                           xway_defconfig
-microblaze                          defconfig
-mips                        bcm63xx_defconfig
-powerpc                  mpc866_ads_defconfig
-powerpc                 mpc834x_itx_defconfig
-powerpc                      arches_defconfig
-arm                             rpc_defconfig
-riscv                    nommu_k210_defconfig
-s390                             allyesconfig
-arm                        realview_defconfig
-powerpc                      pmac32_defconfig
-arm                         cm_x300_defconfig
-powerpc                       maple_defconfig
-sh                               j2_defconfig
-i386                                defconfig
-arm                          ixp4xx_defconfig
-arc                     haps_hs_smp_defconfig
-powerpc                 linkstation_defconfig
-powerpc64                           defconfig
-mips                          ath79_defconfig
-arm                          lpd270_defconfig
-arm                         hackkit_defconfig
-sh                           se7206_defconfig
-arc                              allyesconfig
-arm                      tct_hammer_defconfig
-sh                            titan_defconfig
-xtensa                  audio_kc705_defconfig
-m68k                         apollo_defconfig
-sh                           se7721_defconfig
-mips                           ip28_defconfig
-sh                          rsk7269_defconfig
-xtensa                    xip_kc705_defconfig
-powerpc               mpc834x_itxgp_defconfig
-arm                           h3600_defconfig
-powerpc                 canyonlands_defconfig
-ia64                             allmodconfig
-ia64                             allyesconfig
-x86_64                            allnoconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a005-20210824
-x86_64               randconfig-a006-20210824
-x86_64               randconfig-a001-20210824
-x86_64               randconfig-a003-20210824
-x86_64               randconfig-a004-20210824
-x86_64               randconfig-a002-20210824
-i386                 randconfig-a006-20210824
-i386                 randconfig-a001-20210824
-i386                 randconfig-a002-20210824
-i386                 randconfig-a005-20210824
-i386                 randconfig-a003-20210824
-i386                 randconfig-a004-20210824
-x86_64               randconfig-a014-20210825
-x86_64               randconfig-a015-20210825
-x86_64               randconfig-a016-20210825
-x86_64               randconfig-a013-20210825
-x86_64               randconfig-a012-20210825
-x86_64               randconfig-a011-20210825
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
+git://git.kernel.org/pub/scm/linux/kernel/git/hare/mdadm.git
+branch shlib
 
-clang tested configs:
-i386                 randconfig-c001-20210824
-s390                 randconfig-c005-20210824
-arm                  randconfig-c002-20210824
-riscv                randconfig-c006-20210824
-powerpc              randconfig-c003-20210824
-x86_64               randconfig-c007-20210824
-mips                 randconfig-c004-20210824
-x86_64               randconfig-a014-20210824
-x86_64               randconfig-a015-20210824
-x86_64               randconfig-a016-20210824
-x86_64               randconfig-a013-20210824
-x86_64               randconfig-a012-20210824
-x86_64               randconfig-a011-20210824
-i386                 randconfig-a011-20210824
-i386                 randconfig-a016-20210824
-i386                 randconfig-a012-20210824
-i386                 randconfig-a014-20210824
-i386                 randconfig-a013-20210824
-i386                 randconfig-a015-20210824
-hexagon              randconfig-r041-20210824
-hexagon              randconfig-r045-20210824
-riscv                randconfig-r042-20210824
-s390                 randconfig-r044-20210824
+But as it turns out, these are 30+ patches, and I didn't want to flood
+the mailinglist with that.
+So what are the procedures here?
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Are you okay with having the entire patchset on the mailing list?
+Or are there other ways?
+
+Thanks for your help.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
