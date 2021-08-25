@@ -2,199 +2,232 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 010E5C4338F
-	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 10:06:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABDE2C4320A
+	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 10:28:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE65060E76
-	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 10:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FE8561052
+	for <linux-raid@archiver.kernel.org>; Wed, 25 Aug 2021 10:28:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237047AbhHYKHI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 25 Aug 2021 06:07:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35998 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234846AbhHYKHH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 25 Aug 2021 06:07:07 -0400
-Received: from mail-yb1-xb2e.google.com (mail-yb1-xb2e.google.com [IPv6:2607:f8b0:4864:20::b2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBD41C061757
-        for <linux-raid@vger.kernel.org>; Wed, 25 Aug 2021 03:06:21 -0700 (PDT)
-Received: by mail-yb1-xb2e.google.com with SMTP id x140so12464277ybe.0
-        for <linux-raid@vger.kernel.org>; Wed, 25 Aug 2021 03:06:21 -0700 (PDT)
+        id S240097AbhHYK3Y (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 25 Aug 2021 06:29:24 -0400
+Received: from USAT19PA25.eemsg.mail.mil ([214.24.22.199]:38885 "EHLO
+        USAT19PA25.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240583AbhHYK3W (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 25 Aug 2021 06:29:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=hcv/6t+ly7Js3Th/C75RCEMe3xplvmdZV5EmuT0whFI=;
-        b=tXrHKFJnLnY/nhbbEYOf+yPrkgKBWtTwoJpyPbVTXTT7iGOTkmXpJzdIyvfgVRFtZZ
-         YZZDehi/Xpqpw93NKc/BttjH24aOLZawK03/dc5n0Ptjcjbbf0lbdgVk7Xy2N5DlxdLK
-         GQ4vR+UnZcWJ1KEcaCbSXkhi1Ch2n4LnEH6YzG/NM2bOpiX0RlwsXNwTWxop5vnqr4VD
-         lw/QfkppYBxrUtWc8mANywI2hvn0YrKW+B1Vmw5g6H3HU4DO9OBYF3uvLDMNjl94dAff
-         nk31FDkUQGALPwG70E/SyAjC4n6NOh5Xzc8Ko1OwXX2/hfPKDvr5ARGcv+WscqNmu/CF
-         PyCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=hcv/6t+ly7Js3Th/C75RCEMe3xplvmdZV5EmuT0whFI=;
-        b=Bx1kKmFqWd8t4gjL4e1xmWbiIvX/essyXZrpZ9lrXK7w69tp+2Ih+KkV+Epcrj/s/a
-         u+19AcQ8g4TRFzu60HSHtotdyS24FqbJ6SOv3oo8JtrxepN3M72PZborCrHu23fW9TD7
-         3jPAzXPnmR3KX2p24aXFQHBiUmzfZazuUnzkpmFSpCjDN2LQqj3Y+0irbXhFDMGUZ6a/
-         Rz+XKcFl1C8rgcLeq5UQiIQaQqmITSU724iYLrbgANXeyJeTwMDF6b8rLZf+A8wmmVJ+
-         9LtVWmkpWUeiGDPGEA7PJh4CGqCAm78JQ4qmXTMI/H6T8KYYe0HL8UmK1J6WNr/3vWmO
-         KJqA==
-X-Gm-Message-State: AOAM530VpNFSrkvrqKOmeiEKOGI3PecY99IzPyikAJkRINHEvRwsdCaM
-        pjHOyNNxBJFAJQrm/hj5gocIPVjvlDvFXtDAWWLIKdeHj3s=
-X-Google-Smtp-Source: ABdhPJyiEqdbcOSndG6vxY5F58n8G2AfHhVuiQHAJ6JqY3oY6N+xq1HFQAzPU9Oou9cnh6Jfc9p50uvIdoKK5TkVc9U=
-X-Received: by 2002:a25:7285:: with SMTP id n127mr40169248ybc.439.1629885980749;
- Wed, 25 Aug 2021 03:06:20 -0700 (PDT)
-MIME-Version: 1.0
+  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
+  t=1629887316; x=1661423316;
+  h=from:to:subject:date:message-id:references:in-reply-to:
+   content-transfer-encoding:mime-version;
+  bh=p1EGnTHWUsq4X8BUejrNfKiunzVmvgdcPzUL/YQzkZs=;
+  b=Y7c9+tqdkd3r3nHqlsauGXoEHqBS/rUvwOfE3ISwZX8t/fX7n20HNCO7
+   IznR2iPoP9y4J46hcsS6OcHnW1oumbd9Xiey7ws2qZeKUvsMp6f0g3XZX
+   4gS3hGeXtu0sSitNdT3IMTPx4ygR2JVAtXW2YkdOYigD5hkUlzdtw88Fx
+   iYyj0KZl0ygqLet7+mAeKTqmlxC4uZTtjitU/OsYuV8annuEzjKEjtvB1
+   qzVVS9lUWZPWjsEh2W17vjgUFWlv55unJoDCyQCxKl0VY6f1SQ+MKrLB3
+   zEovwQz9BPIZnzHm8YON+foeMTTB51MvggjBDgm+pYeGT6QrH+yAKSTmS
+   w==;
+X-EEMSG-check-017: 250603417|USAT19PA25_ESA_OUT06.csd.disa.mil
+X-IronPort-AV: E=Sophos;i="5.84,350,1620691200"; 
+   d="scan'208";a="250603417"
+IronPort-HdrOrdr: A9a23:7EZ0uak7CyTurlqqyiqiaP+j7m/pDfJN3DAbv31ZSRFFG/Fw9v
+ rOoB11726WtN98Yh0dcK67WJVoKEm0nfQZ3WB7B9mftWfd11dAKrsI0bff
+Received: from edge-mech02.mail.mil ([214.21.130.231])
+  by USAT19PA25.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 25 Aug 2021 10:28:30 +0000
+Received: from UMECHPAPB.easf.csd.disa.mil (214.21.130.171) by
+ edge-mech02.mail.mil (214.21.130.231) with Microsoft SMTP Server (TLS) id
+ 14.3.498.0; Wed, 25 Aug 2021 10:28:25 +0000
+Received: from UMECHPA7D.easf.csd.disa.mil ([169.254.5.225]) by
+ umechpapb.easf.csd.disa.mil ([214.21.130.171]) with mapi id 14.03.0513.000;
+ Wed, 25 Aug 2021 10:28:25 +0000
+From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
+To:     'Marcin Wanat' <marcin.wanat@gmail.com>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Subject: RE: [Non-DoD Source] Re: Slow initial resync in RAID6 with 36 SAS
+ drives
+Thread-Topic: [Non-DoD Source] Re: Slow initial resync in RAID6 with 36 SAS
+ drives
+Thread-Index: AQHXmZjfEPqT3XYH2EurkCF3ApXUcKuEAzTw
+Date:   Wed, 25 Aug 2021 10:28:24 +0000
+Message-ID: <5EAED86C53DED2479E3E145969315A2385863D46@UMECHPA7D.easf.csd.disa.mil>
 References: <CAFDAVznKiKC7YrCTJ4oj6NimXrhnY-=PUnJhFopw6Ur5LvOCjg@mail.gmail.com>
-In-Reply-To: <CAFDAVznKiKC7YrCTJ4oj6NimXrhnY-=PUnJhFopw6Ur5LvOCjg@mail.gmail.com>
-From:   Marcin Wanat <marcin.wanat@gmail.com>
-Date:   Wed, 25 Aug 2021 12:06:09 +0200
-Message-ID: <CAFDAVzmjGYsdgx0Yyn3n8NWVpAZQqmhBSneZY9fagV5PGTrgGw@mail.gmail.com>
-Subject: Re: Slow initial resync in RAID6 with 36 SAS drives
-To:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+ <CAFDAVzmjGYsdgx0Yyn3n8NWVpAZQqmhBSneZY9fagV5PGTrgGw@mail.gmail.com>
+In-Reply-To: <CAFDAVzmjGYsdgx0Yyn3n8NWVpAZQqmhBSneZY9fagV5PGTrgGw@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [214.21.44.12]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Aug 19, 2021 at 11:28 AM Marcin Wanat <marcin.wanat@gmail.com> wrote:
->
-> Sorry, this will be a long email with everything I find to be relevant.
-> I have a mdraid6 array with 36 hdd SAS drives each able to do
-> >200MB/s, but I am unable to get more than 38MB/s resync speed on a
-> fast system (48cores/96GB ram) with no other load.
-
-I have done a bit more research on 24 NVMe drives server and found
-that resync speed bottleneck affect RAID6 with >16 drives:
-
-# mdadm --create --verbose /dev/md0 --level=6 --raid-devices=16
-/dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1 /dev/nvme4n1 /dev/nvme5n1
-/dev/nvme6n1 /dev/nvme7n1 /dev/nvme8n1 /dev/nvme9n1 /dev/nvme10n1
-/dev/nvme11n1 /dev/nvme12n1 /dev/nvme13n1 /dev/nvme14n1 /dev/nvme15n1
-/dev/nvme16n1
-# iostat -dx 5
-Device            r/s     w/s     rkB/s     wkB/s   rrqm/s   wrqm/s
-%rrqm  %wrqm r_await w_await aqu-sz rareq-sz wareq-sz  svctm  %util
-nvme0n1          0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme1n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.88    0.00   0.99   470.84     2.25   2.51  86.04
-nvme4n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.89    0.00   0.99   470.84     2.25   2.51  86.06
-nvme5n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.89    0.00   0.99   470.84     2.25   2.51  86.14
-nvme10n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.90    0.00   0.99   470.84     2.25   2.51  86.20
-nvme9n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.91    0.00   1.00   470.84     2.25   2.53  86.76
-nvme13n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.93    0.00   1.00   470.84     2.25   2.54  87.00
-nvme12n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.94    0.00   1.01   470.84     2.25   2.54  87.08
-nvme8n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.93    0.00   1.00   470.84     2.25   2.54  87.02
-nvme14n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.96    0.00   1.01   470.84     2.25   2.56  87.64
-nvme22n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme17n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme16n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    3.05    0.00   1.04   470.84     2.25   2.58  88.56
-nvme19n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme2n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.94    0.00   1.01   470.84     2.25   2.54  87.20
-nvme6n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.95    0.00   1.01   470.84     2.25   2.55  87.52
-nvme7n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.94    0.00   1.01   470.84     2.25   2.54  87.22
-nvme21n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme11n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.96    0.00   1.02   470.84     2.25   2.56  87.72
-nvme15n1       342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.99    0.00   1.02   470.84     2.25   2.53  86.84
-nvme23n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme18n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme3n1        342.60    0.40 161311.20      0.90 39996.60     0.00
-99.15   0.00    2.97    0.00   1.02   470.84     2.25   2.53  86.66
-nvme20n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-
-as you can see, there are 342 iops with ~470 rareq-sz, but when i
-create RAID6 with 17 drives or more:
-
-# mdadm --create --verbose /dev/md0 --level=6 --raid-devices=17
-/dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1 /dev/nvme4n1 /dev/nvme5n1
-/dev/nvme6n1 /dev/nvme7n1 /dev/nvme8n1 /dev/nvme9n1 /dev/nvme10n1
-/dev/nvme11n1 /dev/nvme12n1 /dev/nvme13n1 /dev/nvme14n1 /dev/nvme15n1
-/dev/nvme16n1 /dev/nvme17n1
-# iostat -dx 5
-Device            r/s     w/s     rkB/s     wkB/s   rrqm/s   wrqm/s
-%rrqm  %wrqm r_await w_await aqu-sz rareq-sz wareq-sz  svctm  %util
-nvme0n1          0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme1n1       21484.20    0.40  85936.80      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.82     4.00     2.25   0.05  99.16
-nvme4n1       21484.00    0.40  85936.00      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.74     4.00     2.25   0.05  99.16
-nvme5n1       21484.00    0.40  85936.00      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.84     4.00     2.25   0.05  99.16
-nvme10n1      21483.80    0.40  85935.20      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.65     4.00     2.25   0.04  83.64
-nvme9n1       21483.80    0.40  85935.20      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.67     4.00     2.25   0.04  85.86
-nvme13n1      21483.60    0.40  85934.40      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.63     4.00     2.25   0.04  83.66
-nvme12n1      21483.60    0.40  85934.40      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.65     4.00     2.25   0.04  83.66
-nvme8n1       21483.60    0.40  85934.40      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.81     4.00     2.25   0.05  99.22
-nvme14n1      21481.80    0.40  85927.20      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.67     4.00     2.25   0.04  83.66
-nvme22n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme17n1      21482.00    0.40  85928.00      0.90     0.00     0.00
-0.00   0.00    0.02    0.00   0.49     4.00     2.25   0.03  67.12
-nvme16n1      21481.60    0.40  85926.40      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.75     4.00     2.25   0.04  83.66
-nvme19n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme2n1       21481.60    0.40  85926.40      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.95     4.00     2.25   0.05  99.26
-nvme6n1       21481.60    0.40  85926.40      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.91     4.00     2.25   0.05  99.26
-nvme7n1       21481.60    0.40  85926.40      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.87     4.00     2.25   0.05  99.24
-nvme21n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme11n1      21481.20    0.40  85924.80      0.90     0.00     0.00
-0.00   0.00    0.03    0.00   0.75     4.00     2.25   0.04  83.66
-nvme15n1      21480.20    0.40  85920.80      0.90     0.00     0.00
-0.00   0.00    0.04    0.00   0.80     4.00     2.25   0.04  83.66
-nvme23n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme18n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-nvme3n1       21480.40    0.40  85921.60      0.90     0.00     0.00
-0.00   0.00    0.05    0.00   1.02     4.00     2.25   0.05  99.26
-nvme20n1         0.00    0.00      0.00      0.00     0.00     0.00
-0.00   0.00    0.00    0.00   0.00     0.00     0.00   0.00   0.00
-
-rareq-sz drops to 4, iops increase to 21483 and resync speed drops to 85MB/s.
-
-Why is it like that? Could someone let me know which part of mdraid
-kernel code is responsible for this limitation ? Is changing this and
-recompiling the kernel on machine with 512GB+ ram safe ?
-
-Regards,
-Marcin Wanat
+SSdtIG5vdCBhIHBlcnNvbiBuZWNlc3NhcmlseSBpbiB0aGUgImtub3ciLCBidXQgSSBtZXNzIHdp
+dGggdGhlc2UgaW4gdWRldiAgZm9yIFNTRHM6DQpTVUJTWVNURU09PSJibG9jayIsIEFDVElPTj09
+ImFkZHxjaGFuZ2UiLCBLRVJORUw9PSJtZCoiLCBBVFRSe21kL3N5bmNfc3BlZWRfbWF4fT0iMjAw
+MDAwMCIsQVRUUnttZC9ncm91cF90aHJlYWRfY250fT0iNjQiLCBBVFRSe21kL3N0cmlwZV9jYWNo
+ZV9zaXplfT0iODE5MiINCg0KR3VpZGFuY2Ugb24gd2h5IEkgY2hhbmdlIHRoZSB2YWx1ZXMgdGhp
+cyB3YXkgLSBlZHVjYXRlZCAiZ3Vlc3MiLCBhcyBJJ20gYW4gZXhwZXJpZW5jZWQgcHJhY3RpdGlv
+bmVyIGF0IGJlc3QgYW5kIG5vdCBzb21lb25lIHRoYXQgbWVzc2VzIHdpdGggdGhlIGNvZGUuLi4u
+Li5JJ3ZlIHNlZW4gcmVzeW5jIHJhdGVzIGFzIGhpZ2ggYXMgOTAwTUIvcyBzdXN0YWluZWQgb24g
+bXkgU1NEIG1kcmFpZHMsIGV2ZW4gdGhvdWdoIHRoZSBTU0RzIHNob3VsZCBiZSBhYmxlIHRvIHN1
+c3RhaW4gaGlnaGVyLi4uLi4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IE1h
+cmNpbiBXYW5hdCA8bWFyY2luLndhbmF0QGdtYWlsLmNvbT4gDQpTZW50OiBXZWRuZXNkYXksIEF1
+Z3VzdCAyNSwgMjAyMSA2OjA2IEFNDQpUbzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcNClN1
+YmplY3Q6IFtOb24tRG9EIFNvdXJjZV0gUmU6IFNsb3cgaW5pdGlhbCByZXN5bmMgaW4gUkFJRDYg
+d2l0aCAzNiBTQVMgZHJpdmVzDQoNCk9uIFRodSwgQXVnIDE5LCAyMDIxIGF0IDExOjI4IEFNIE1h
+cmNpbiBXYW5hdCA8bWFyY2luLndhbmF0QGdtYWlsLmNvbT4gd3JvdGU6DQo+DQo+IFNvcnJ5LCB0
+aGlzIHdpbGwgYmUgYSBsb25nIGVtYWlsIHdpdGggZXZlcnl0aGluZyBJIGZpbmQgdG8gYmUgcmVs
+ZXZhbnQuDQo+IEkgaGF2ZSBhIG1kcmFpZDYgYXJyYXkgd2l0aCAzNiBoZGQgU0FTIGRyaXZlcyBl
+YWNoIGFibGUgdG8gZG8NCj4gPjIwME1CL3MsIGJ1dCBJIGFtIHVuYWJsZSB0byBnZXQgbW9yZSB0
+aGFuIDM4TUIvcyByZXN5bmMgc3BlZWQgb24gYQ0KPiBmYXN0IHN5c3RlbSAoNDhjb3Jlcy85NkdC
+IHJhbSkgd2l0aCBubyBvdGhlciBsb2FkLg0KDQpJIGhhdmUgZG9uZSBhIGJpdCBtb3JlIHJlc2Vh
+cmNoIG9uIDI0IE5WTWUgZHJpdmVzIHNlcnZlciBhbmQgZm91bmQgdGhhdCByZXN5bmMgc3BlZWQg
+Ym90dGxlbmVjayBhZmZlY3QgUkFJRDYgd2l0aCA+MTYgZHJpdmVzOg0KDQojIG1kYWRtIC0tY3Jl
+YXRlIC0tdmVyYm9zZSAvZGV2L21kMCAtLWxldmVsPTYgLS1yYWlkLWRldmljZXM9MTYNCi9kZXYv
+bnZtZTFuMSAvZGV2L252bWUybjEgL2Rldi9udm1lM24xIC9kZXYvbnZtZTRuMSAvZGV2L252bWU1
+bjENCi9kZXYvbnZtZTZuMSAvZGV2L252bWU3bjEgL2Rldi9udm1lOG4xIC9kZXYvbnZtZTluMSAv
+ZGV2L252bWUxMG4xDQovZGV2L252bWUxMW4xIC9kZXYvbnZtZTEybjEgL2Rldi9udm1lMTNuMSAv
+ZGV2L252bWUxNG4xIC9kZXYvbnZtZTE1bjENCi9kZXYvbnZtZTE2bjENCiMgaW9zdGF0IC1keCA1
+DQpEZXZpY2UgICAgICAgICAgICByL3MgICAgIHcvcyAgICAgcmtCL3MgICAgIHdrQi9zICAgcnJx
+bS9zICAgd3JxbS9zDQolcnJxbSAgJXdycW0gcl9hd2FpdCB3X2F3YWl0IGFxdS1zeiByYXJlcS1z
+eiB3YXJlcS1zeiAgc3ZjdG0gICV1dGlsDQpudm1lMG4xICAgICAgICAgIDAuMDAgICAgMC4wMCAg
+ICAgIDAuMDAgICAgICAwLjAwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAw
+ICAgIDAuMDAgICAwLjAwICAgICAwLjAwICAgICAwLjAwICAgMC4wMCAgIDAuMDANCm52bWUxbjEg
+ICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAu
+MDANCjk5LjE1ICAgMC4wMCAgICAyLjg4ICAgIDAuMDAgICAwLjk5ICAgNDcwLjg0ICAgICAyLjI1
+ICAgMi41MSAgODYuMDQNCm52bWU0bjEgICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAg
+ICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjg5ICAgIDAuMDAg
+ICAwLjk5ICAgNDcwLjg0ICAgICAyLjI1ICAgMi41MSAgODYuMDYNCm52bWU1bjEgICAgICAgIDM0
+Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1
+ICAgMC4wMCAgICAyLjg5ICAgIDAuMDAgICAwLjk5ICAgNDcwLjg0ICAgICAyLjI1ICAgMi41MSAg
+ODYuMTQNCm52bWUxMG4xICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAg
+Mzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjkwICAgIDAuMDAgICAwLjk5ICAg
+NDcwLjg0ICAgICAyLjI1ICAgMi41MSAgODYuMjANCm52bWU5bjEgICAgICAgIDM0Mi42MCAgICAw
+LjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAg
+ICAyLjkxICAgIDAuMDAgICAxLjAwICAgNDcwLjg0ICAgICAyLjI1ICAgMi41MyAgODYuNzYNCm52
+bWUxM24xICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAg
+ICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjkzICAgIDAuMDAgICAxLjAwICAgNDcwLjg0ICAg
+ICAyLjI1ICAgMi41NCAgODcuMDANCm52bWUxMm4xICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMx
+MS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjk0ICAg
+IDAuMDAgICAxLjAxICAgNDcwLjg0ICAgICAyLjI1ICAgMi41NCAgODcuMDgNCm52bWU4bjEgICAg
+ICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDAN
+Cjk5LjE1ICAgMC4wMCAgICAyLjkzICAgIDAuMDAgICAxLjAwICAgNDcwLjg0ICAgICAyLjI1ICAg
+Mi41NCAgODcuMDINCm52bWUxNG4xICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAg
+IDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjk2ICAgIDAuMDAgICAx
+LjAxICAgNDcwLjg0ICAgICAyLjI1ICAgMi41NiAgODcuNjQNCm52bWUyMm4xICAgICAgICAgMC4w
+MCAgICAwLjAwICAgICAgMC4wMCAgICAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDANCjAuMDAgICAw
+LjAwICAgIDAuMDAgICAgMC4wMCAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDAgICAwLjAwICAgMC4w
+MA0KbnZtZTE3bjEgICAgICAgICAwLjAwICAgIDAuMDAgICAgICAwLjAwICAgICAgMC4wMCAgICAg
+MC4wMCAgICAgMC4wMA0KMC4wMCAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAgMC4wMCAgICAgMC4w
+MCAgICAgMC4wMCAgIDAuMDAgICAwLjAwDQpudm1lMTZuMSAgICAgICAzNDIuNjAgICAgMC40MCAx
+NjEzMTEuMjAgICAgICAwLjkwIDM5OTk2LjYwICAgICAwLjAwDQo5OS4xNSAgIDAuMDAgICAgMy4w
+NSAgICAwLjAwICAgMS4wNCAgIDQ3MC44NCAgICAgMi4yNSAgIDIuNTggIDg4LjU2DQpudm1lMTlu
+MSAgICAgICAgIDAuMDAgICAgMC4wMCAgICAgIDAuMDAgICAgICAwLjAwICAgICAwLjAwICAgICAw
+LjAwDQowLjAwICAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAwLjAwICAgICAwLjAwICAgICAwLjAw
+ICAgMC4wMCAgIDAuMDANCm52bWUybjEgICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAg
+ICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjk0ICAgIDAuMDAg
+ICAxLjAxICAgNDcwLjg0ICAgICAyLjI1ICAgMi41NCAgODcuMjANCm52bWU2bjEgICAgICAgIDM0
+Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1
+ICAgMC4wMCAgICAyLjk1ICAgIDAuMDAgICAxLjAxICAgNDcwLjg0ICAgICAyLjI1ICAgMi41NSAg
+ODcuNTINCm52bWU3bjEgICAgICAgIDM0Mi42MCAgICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAg
+Mzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4wMCAgICAyLjk0ICAgIDAuMDAgICAxLjAxICAg
+NDcwLjg0ICAgICAyLjI1ICAgMi41NCAgODcuMjINCm52bWUyMW4xICAgICAgICAgMC4wMCAgICAw
+LjAwICAgICAgMC4wMCAgICAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDANCjAuMDAgICAwLjAwICAg
+IDAuMDAgICAgMC4wMCAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDAgICAwLjAwICAgMC4wMA0KbnZt
+ZTExbjEgICAgICAgMzQyLjYwICAgIDAuNDAgMTYxMzExLjIwICAgICAgMC45MCAzOTk5Ni42MCAg
+ICAgMC4wMA0KOTkuMTUgICAwLjAwICAgIDIuOTYgICAgMC4wMCAgIDEuMDIgICA0NzAuODQgICAg
+IDIuMjUgICAyLjU2ICA4Ny43Mg0KbnZtZTE1bjEgICAgICAgMzQyLjYwICAgIDAuNDAgMTYxMzEx
+LjIwICAgICAgMC45MCAzOTk5Ni42MCAgICAgMC4wMA0KOTkuMTUgICAwLjAwICAgIDIuOTkgICAg
+MC4wMCAgIDEuMDIgICA0NzAuODQgICAgIDIuMjUgICAyLjUzICA4Ni44NA0KbnZtZTIzbjEgICAg
+ICAgICAwLjAwICAgIDAuMDAgICAgICAwLjAwICAgICAgMC4wMCAgICAgMC4wMCAgICAgMC4wMA0K
+MC4wMCAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAgMC4wMCAgICAgMC4wMCAgICAgMC4wMCAgIDAu
+MDAgICAwLjAwDQpudm1lMThuMSAgICAgICAgIDAuMDAgICAgMC4wMCAgICAgIDAuMDAgICAgICAw
+LjAwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAwLjAw
+ICAgICAwLjAwICAgICAwLjAwICAgMC4wMCAgIDAuMDANCm52bWUzbjEgICAgICAgIDM0Mi42MCAg
+ICAwLjQwIDE2MTMxMS4yMCAgICAgIDAuOTAgMzk5OTYuNjAgICAgIDAuMDANCjk5LjE1ICAgMC4w
+MCAgICAyLjk3ICAgIDAuMDAgICAxLjAyICAgNDcwLjg0ICAgICAyLjI1ICAgMi41MyAgODYuNjYN
+Cm52bWUyMG4xICAgICAgICAgMC4wMCAgICAwLjAwICAgICAgMC4wMCAgICAgIDAuMDAgICAgIDAu
+MDAgICAgIDAuMDANCjAuMDAgICAwLjAwICAgIDAuMDAgICAgMC4wMCAgIDAuMDAgICAgIDAuMDAg
+ICAgIDAuMDAgICAwLjAwICAgMC4wMA0KDQphcyB5b3UgY2FuIHNlZSwgdGhlcmUgYXJlIDM0MiBp
+b3BzIHdpdGggfjQ3MCByYXJlcS1zeiwgYnV0IHdoZW4gaSBjcmVhdGUgUkFJRDYgd2l0aCAxNyBk
+cml2ZXMgb3IgbW9yZToNCg0KIyBtZGFkbSAtLWNyZWF0ZSAtLXZlcmJvc2UgL2Rldi9tZDAgLS1s
+ZXZlbD02IC0tcmFpZC1kZXZpY2VzPTE3DQovZGV2L252bWUxbjEgL2Rldi9udm1lMm4xIC9kZXYv
+bnZtZTNuMSAvZGV2L252bWU0bjEgL2Rldi9udm1lNW4xDQovZGV2L252bWU2bjEgL2Rldi9udm1l
+N24xIC9kZXYvbnZtZThuMSAvZGV2L252bWU5bjEgL2Rldi9udm1lMTBuMQ0KL2Rldi9udm1lMTFu
+MSAvZGV2L252bWUxMm4xIC9kZXYvbnZtZTEzbjEgL2Rldi9udm1lMTRuMSAvZGV2L252bWUxNW4x
+DQovZGV2L252bWUxNm4xIC9kZXYvbnZtZTE3bjENCiMgaW9zdGF0IC1keCA1DQpEZXZpY2UgICAg
+ICAgICAgICByL3MgICAgIHcvcyAgICAgcmtCL3MgICAgIHdrQi9zICAgcnJxbS9zICAgd3JxbS9z
+DQolcnJxbSAgJXdycW0gcl9hd2FpdCB3X2F3YWl0IGFxdS1zeiByYXJlcS1zeiB3YXJlcS1zeiAg
+c3ZjdG0gICV1dGlsDQpudm1lMG4xICAgICAgICAgIDAuMDAgICAgMC4wMCAgICAgIDAuMDAgICAg
+ICAwLjAwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAw
+LjAwICAgICAwLjAwICAgICAwLjAwICAgMC4wMCAgIDAuMDANCm52bWUxbjEgICAgICAgMjE0ODQu
+MjAgICAgMC40MCAgODU5MzYuODAgICAgICAwLjkwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAg
+MC4wMCAgICAwLjA0ICAgIDAuMDAgICAwLjgyICAgICA0LjAwICAgICAyLjI1ICAgMC4wNSAgOTku
+MTYNCm52bWU0bjEgICAgICAgMjE0ODQuMDAgICAgMC40MCAgODU5MzYuMDAgICAgICAwLjkwICAg
+ICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAzICAgIDAuMDAgICAwLjc0ICAgICA0
+LjAwICAgICAyLjI1ICAgMC4wNSAgOTkuMTYNCm52bWU1bjEgICAgICAgMjE0ODQuMDAgICAgMC40
+MCAgODU5MzYuMDAgICAgICAwLjkwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAw
+LjA0ICAgIDAuMDAgICAwLjg0ICAgICA0LjAwICAgICAyLjI1ICAgMC4wNSAgOTkuMTYNCm52bWUx
+MG4xICAgICAgMjE0ODMuODAgICAgMC40MCAgODU5MzUuMjAgICAgICAwLjkwICAgICAwLjAwICAg
+ICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAzICAgIDAuMDAgICAwLjY1ICAgICA0LjAwICAgICAy
+LjI1ICAgMC4wNCAgODMuNjQNCm52bWU5bjEgICAgICAgMjE0ODMuODAgICAgMC40MCAgODU5MzUu
+MjAgICAgICAwLjkwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAzICAgIDAu
+MDAgICAwLjY3ICAgICA0LjAwICAgICAyLjI1ICAgMC4wNCAgODUuODYNCm52bWUxM24xICAgICAg
+MjE0ODMuNjAgICAgMC40MCAgODU5MzQuNDAgICAgICAwLjkwICAgICAwLjAwICAgICAwLjAwDQow
+LjAwICAgMC4wMCAgICAwLjAzICAgIDAuMDAgICAwLjYzICAgICA0LjAwICAgICAyLjI1ICAgMC4w
+NCAgODMuNjYNCm52bWUxMm4xICAgICAgMjE0ODMuNjAgICAgMC40MCAgODU5MzQuNDAgICAgICAw
+LjkwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAzICAgIDAuMDAgICAwLjY1
+ICAgICA0LjAwICAgICAyLjI1ICAgMC4wNCAgODMuNjYNCm52bWU4bjEgICAgICAgMjE0ODMuNjAg
+ICAgMC40MCAgODU5MzQuNDAgICAgICAwLjkwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4w
+MCAgICAwLjA0ICAgIDAuMDAgICAwLjgxICAgICA0LjAwICAgICAyLjI1ICAgMC4wNSAgOTkuMjIN
+Cm52bWUxNG4xICAgICAgMjE0ODEuODAgICAgMC40MCAgODU5MjcuMjAgICAgICAwLjkwICAgICAw
+LjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAzICAgIDAuMDAgICAwLjY3ICAgICA0LjAw
+ICAgICAyLjI1ICAgMC4wNCAgODMuNjYNCm52bWUyMm4xICAgICAgICAgMC4wMCAgICAwLjAwICAg
+ICAgMC4wMCAgICAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDANCjAuMDAgICAwLjAwICAgIDAuMDAg
+ICAgMC4wMCAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDAgICAwLjAwICAgMC4wMA0KbnZtZTE3bjEg
+ICAgICAyMTQ4Mi4wMCAgICAwLjQwICA4NTkyOC4wMCAgICAgIDAuOTAgICAgIDAuMDAgICAgIDAu
+MDANCjAuMDAgICAwLjAwICAgIDAuMDIgICAgMC4wMCAgIDAuNDkgICAgIDQuMDAgICAgIDIuMjUg
+ICAwLjAzICA2Ny4xMg0KbnZtZTE2bjEgICAgICAyMTQ4MS42MCAgICAwLjQwICA4NTkyNi40MCAg
+ICAgIDAuOTAgICAgIDAuMDAgICAgIDAuMDANCjAuMDAgICAwLjAwICAgIDAuMDMgICAgMC4wMCAg
+IDAuNzUgICAgIDQuMDAgICAgIDIuMjUgICAwLjA0ICA4My42Ng0KbnZtZTE5bjEgICAgICAgICAw
+LjAwICAgIDAuMDAgICAgICAwLjAwICAgICAgMC4wMCAgICAgMC4wMCAgICAgMC4wMA0KMC4wMCAg
+IDAuMDAgICAgMC4wMCAgICAwLjAwICAgMC4wMCAgICAgMC4wMCAgICAgMC4wMCAgIDAuMDAgICAw
+LjAwDQpudm1lMm4xICAgICAgIDIxNDgxLjYwICAgIDAuNDAgIDg1OTI2LjQwICAgICAgMC45MCAg
+ICAgMC4wMCAgICAgMC4wMA0KMC4wMCAgIDAuMDAgICAgMC4wNCAgICAwLjAwICAgMC45NSAgICAg
+NC4wMCAgICAgMi4yNSAgIDAuMDUgIDk5LjI2DQpudm1lNm4xICAgICAgIDIxNDgxLjYwICAgIDAu
+NDAgIDg1OTI2LjQwICAgICAgMC45MCAgICAgMC4wMCAgICAgMC4wMA0KMC4wMCAgIDAuMDAgICAg
+MC4wNCAgICAwLjAwICAgMC45MSAgICAgNC4wMCAgICAgMi4yNSAgIDAuMDUgIDk5LjI2DQpudm1l
+N24xICAgICAgIDIxNDgxLjYwICAgIDAuNDAgIDg1OTI2LjQwICAgICAgMC45MCAgICAgMC4wMCAg
+ICAgMC4wMA0KMC4wMCAgIDAuMDAgICAgMC4wNCAgICAwLjAwICAgMC44NyAgICAgNC4wMCAgICAg
+Mi4yNSAgIDAuMDUgIDk5LjI0DQpudm1lMjFuMSAgICAgICAgIDAuMDAgICAgMC4wMCAgICAgIDAu
+MDAgICAgICAwLjAwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjAwICAgIDAu
+MDAgICAwLjAwICAgICAwLjAwICAgICAwLjAwICAgMC4wMCAgIDAuMDANCm52bWUxMW4xICAgICAg
+MjE0ODEuMjAgICAgMC40MCAgODU5MjQuODAgICAgICAwLjkwICAgICAwLjAwICAgICAwLjAwDQow
+LjAwICAgMC4wMCAgICAwLjAzICAgIDAuMDAgICAwLjc1ICAgICA0LjAwICAgICAyLjI1ICAgMC4w
+NCAgODMuNjYNCm52bWUxNW4xICAgICAgMjE0ODAuMjAgICAgMC40MCAgODU5MjAuODAgICAgICAw
+LjkwICAgICAwLjAwICAgICAwLjAwDQowLjAwICAgMC4wMCAgICAwLjA0ICAgIDAuMDAgICAwLjgw
+ICAgICA0LjAwICAgICAyLjI1ICAgMC4wNCAgODMuNjYNCm52bWUyM24xICAgICAgICAgMC4wMCAg
+ICAwLjAwICAgICAgMC4wMCAgICAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDANCjAuMDAgICAwLjAw
+ICAgIDAuMDAgICAgMC4wMCAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDAgICAwLjAwICAgMC4wMA0K
+bnZtZTE4bjEgICAgICAgICAwLjAwICAgIDAuMDAgICAgICAwLjAwICAgICAgMC4wMCAgICAgMC4w
+MCAgICAgMC4wMA0KMC4wMCAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAgMC4wMCAgICAgMC4wMCAg
+ICAgMC4wMCAgIDAuMDAgICAwLjAwDQpudm1lM24xICAgICAgIDIxNDgwLjQwICAgIDAuNDAgIDg1
+OTIxLjYwICAgICAgMC45MCAgICAgMC4wMCAgICAgMC4wMA0KMC4wMCAgIDAuMDAgICAgMC4wNSAg
+ICAwLjAwICAgMS4wMiAgICAgNC4wMCAgICAgMi4yNSAgIDAuMDUgIDk5LjI2DQpudm1lMjBuMSAg
+ICAgICAgIDAuMDAgICAgMC4wMCAgICAgIDAuMDAgICAgICAwLjAwICAgICAwLjAwICAgICAwLjAw
+DQowLjAwICAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAwLjAwICAgICAwLjAwICAgICAwLjAwICAg
+MC4wMCAgIDAuMDANCg0KcmFyZXEtc3ogZHJvcHMgdG8gNCwgaW9wcyBpbmNyZWFzZSB0byAyMTQ4
+MyBhbmQgcmVzeW5jIHNwZWVkIGRyb3BzIHRvIDg1TUIvcy4NCg0KV2h5IGlzIGl0IGxpa2UgdGhh
+dD8gQ291bGQgc29tZW9uZSBsZXQgbWUga25vdyB3aGljaCBwYXJ0IG9mIG1kcmFpZCBrZXJuZWwg
+Y29kZSBpcyByZXNwb25zaWJsZSBmb3IgdGhpcyBsaW1pdGF0aW9uID8gSXMgY2hhbmdpbmcgdGhp
+cyBhbmQgcmVjb21waWxpbmcgdGhlIGtlcm5lbCBvbiBtYWNoaW5lIHdpdGggNTEyR0IrIHJhbSBz
+YWZlID8NCg0KUmVnYXJkcywNCk1hcmNpbiBXYW5hdA0K
