@@ -2,142 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB040C432BE
-	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 09:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 254F0C432BE
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 14:27:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9C5460F45
-	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 09:51:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03D1B60F91
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 14:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237918AbhHZJwe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 26 Aug 2021 05:52:34 -0400
-Received: from mga11.intel.com ([192.55.52.93]:45719 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234666AbhHZJwd (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 26 Aug 2021 05:52:33 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10087"; a="214582422"
-X-IronPort-AV: E=Sophos;i="5.84,353,1620716400"; 
-   d="scan'208";a="214582422"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2021 02:51:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,353,1620716400"; 
-   d="scan'208";a="527813644"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.57])
-  by FMSMGA003.fm.intel.com with ESMTP; 26 Aug 2021 02:51:33 -0700
-From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org
-Subject: [PATCH] Incremental: Fix possible memory and resource leaks
-Date:   Thu, 26 Aug 2021 11:40:40 +0200
-Message-Id: <20210826094040.30118-1-mateusz.grzonka@intel.com>
-X-Mailer: git-send-email 2.26.2
+        id S235064AbhHZO2M (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 26 Aug 2021 10:28:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59786 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231479AbhHZO2M (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 Aug 2021 10:28:12 -0400
+Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC0A0C061757
+        for <linux-raid@vger.kernel.org>; Thu, 26 Aug 2021 07:27:24 -0700 (PDT)
+Received: by mail-io1-xd2d.google.com with SMTP id f6so4067066iox.0
+        for <linux-raid@vger.kernel.org>; Thu, 26 Aug 2021 07:27:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=0rttwFoNj3ukgoxDu3FinE4i3YCrjxjwlv5aEFLHPT4=;
+        b=EaoPbWK+Dbq0WiqzTuwvhPjS3jLKbsY0KnIB4K9t3MEee4l5cbUSYOPmfIuHEDmx0U
+         VxkLiOQ57gJz8Vg7JmTiJg5xZ//MkKp6xKkTJUQDC+emgSbhzTEJPFaK6FzbMq8he3/0
+         AFng7fcgtFk+hLwYVdld7u+gZ4wFN7UmIUGETTABQ7nYRtSSie21lub0cC6gDO2GBbCw
+         Yvwwp65ZtAcssTsIB/qML4ycDpSJ+HAGE1YafEXes2CxrvqjG3aM8MUpx7KJiGAGHSgq
+         UuzJMSwNPrEFenffbr6hOz7VtBzh3wZQOgTousX+BZZbssByClwdhowHp2NnwBj7RhQ1
+         nyHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0rttwFoNj3ukgoxDu3FinE4i3YCrjxjwlv5aEFLHPT4=;
+        b=jftMnXVjI3F4PzW6tXMu0SxNmnRyCBUTWuglemImaaaINUoj4/aejQRIjPlFqFVEBV
+         66soM1m8k9urCDrhHPhTa/x8U4hgPu6U/ZlO6zcMlrjSPHtK9oQh2LhhdAX0k0fiOiIJ
+         duS8Uih5lEfuj4iBAQ/ei3C8t8qKglLMgqF4jD36EOV0rsIL3x57G1859r1LBPVCpI0e
+         cWFc791BrDsN5N+HNP/D5BIveV2j9vPBp0uRSbYKbBkfzqjBxpwG2cC4InNW3Je9NDiN
+         Fx9EyLKIQLkW2YvMvS01JZVQQdAqsleFk1np932iKHbRDjJcmOD2BuQsHQ149iu3ED+n
+         iSQQ==
+X-Gm-Message-State: AOAM531QqSamelAkEjBHL8m8jEkUsbAxPivDU1a+H7z7zD8fao4WKTuA
+        3BN2t28ull5JmLqFoHKcnVA8Lw==
+X-Google-Smtp-Source: ABdhPJybJJpFzNcFAlPKcMBYaOcyxdED9CF6FZtsDnQbft6FJyxnaKN+PatHvD64fdYyJCL7DrgGHQ==
+X-Received: by 2002:a02:a10b:: with SMTP id f11mr3839751jag.16.1629988044036;
+        Thu, 26 Aug 2021 07:27:24 -0700 (PDT)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id g12sm1683518iok.32.2021.08.26.07.27.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Aug 2021 07:27:23 -0700 (PDT)
+Subject: Re: [GIT PULL] md-fixes 20210825
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Xiao Ni <xni@redhat.com>
+References: <9E359DE1-AFC6-4D46-97C3-C8490D051B6E@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <167d18b5-f3bd-30fe-62b3-dd2b128739fb@kernel.dk>
+Date:   Thu, 26 Aug 2021 08:27:21 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <9E359DE1-AFC6-4D46-97C3-C8490D051B6E@fb.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-map allocated through map_by_uuid() is not freed if mdfd is invalid.
-It is also not freed at the end of Incremental_container().
-In addition mdfd is not closed, and mdinfo list is not
-freed too.
-Fix it.
+On 8/25/21 7:11 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following fix for raid10 on top of your
+> block-5.14 branch. 
 
-Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
----
- Incremental.c | 27 +++++++++++++++++++++------
- 1 file changed, 21 insertions(+), 6 deletions(-)
+Since 5.14 is days from release and this doesn't look like a super
+critical thing that needs fixing (not something that was introduced in
+this merge window), let's do it for 5.15 instead
 
-diff --git a/Incremental.c b/Incremental.c
-index cd9cc0fc..6678739b 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1416,6 +1416,7 @@ restart:
- 			}
- 			sysfs_free(sra);
- 		}
-+		close(mdfd);
- 	}
- 	map_free(mapl);
- 	return rv;
-@@ -1499,6 +1500,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 	}
- 	for (ra = list ; ra ; ra = ra->next) {
- 		int mdfd;
-+		int doclose = 0;
- 		char chosen_name[1024];
- 		struct map_ent *mp;
- 		struct mddev_ident *match = NULL;
-@@ -1513,6 +1515,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 
- 		if (mp) {
- 			mdfd = open_dev(mp->devnm);
-+			doclose = 1;
- 			if (mp->path)
- 				strcpy(chosen_name, mp->path);
- 			else
-@@ -1572,22 +1575,30 @@ static int Incremental_container(struct supertype *st, char *devname,
- 					    c->autof,
- 					    trustworthy,
- 					    chosen_name, 0);
-+			doclose = 1;
- 		}
--		if (only && (!mp || strcmp(mp->devnm, only) != 0))
--			continue;
- 
- 		if (mdfd < 0) {
- 			pr_err("failed to open %s: %s.\n",
- 				chosen_name, strerror(errno));
--			return 2;
-+			rv = 2;
-+			goto release;
-+		}
-+
-+		if (only && (!mp || strcmp(mp->devnm, only) != 0)) {
-+			if (doclose)
-+				close(mdfd);
-+			continue;
- 		}
- 
- 		assemble_container_content(st, mdfd, ra, c,
- 					   chosen_name, &result);
- 		map_free(map);
- 		map = NULL;
--		close(mdfd);
-+		if (doclose)
-+			close(mdfd);
- 	}
-+
- 	if (c->export && result) {
- 		char sep = '=';
- 		printf("MD_STARTED");
-@@ -1609,7 +1620,11 @@ static int Incremental_container(struct supertype *st, char *devname,
- 		}
- 		printf("\n");
- 	}
--	return 0;
-+
-+release:
-+	map_free(map);
-+	sysfs_free(list);
-+	return rv;
- }
- 
- static void run_udisks(char *arg1, char *arg2)
-@@ -1701,7 +1716,7 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 		return 1;
- 	}
- 	mdfd = open_dev_excl(ent->devnm);
--	if (mdfd > 0) {
-+	if (mdfd >= 0) {
- 		close(mdfd);
- 		if (sysfs_get_str(&mdi, NULL, "array_state",
- 				  buf, sizeof(buf)) > 0) {
 -- 
-2.26.2
+Jens Axboe
 
