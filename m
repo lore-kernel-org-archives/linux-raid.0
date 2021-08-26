@@ -2,116 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B934DC432BE
-	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 16:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC99C4320E
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 17:00:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F5E060F4C
-	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 16:29:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66DC160F6F
+	for <linux-raid@archiver.kernel.org>; Thu, 26 Aug 2021 17:00:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233532AbhHZQ3t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 26 Aug 2021 12:29:49 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:33616 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232496AbhHZQ3s (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 Aug 2021 12:29:48 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 77D95201D8;
-        Thu, 26 Aug 2021 16:29:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629995340; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mpa2fPdWObVWJuLpMykbLvAsDAQOt4pxTYFnBgGTMvg=;
-        b=nAAYwdhSMUhAQJVFNeooh2SBsMzRKEUsojKYztBh/ynj3Z+UnRK4SthlByK94n170Oybf8
-        1N6yzyvMeDuVAPoe0o1cM76aVHDWhIIWuy3J8vXd2YqAPhwPdblXbcT2+yp543WIfIUKTt
-        5AyyIQFj6ptLFnFPu8kMOQGpguTPH6Q=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629995340;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mpa2fPdWObVWJuLpMykbLvAsDAQOt4pxTYFnBgGTMvg=;
-        b=ndC1VqiAUisf8uEPPUZx/QJYw1S0OGIL1/qyXRbGTLbddoDWFGeiNYx7MTzwD02/rw8KHo
-        mTnwZPeN7sV9NaDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A84F413C74;
-        Thu, 26 Aug 2021 16:28:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 1lRcHEvBJ2ERHQAAMHmgww
-        (envelope-from <colyli@suse.de>); Thu, 26 Aug 2021 16:28:59 +0000
-Subject: Re: [PATCH] mdadm: split off shared library
-To:     Hannes Reinecke <hare@suse.de>, Jes Sorensen <jsorensen@fb.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-References: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
-From:   Coly Li <colyli@suse.de>
-Message-ID: <fc647fe7-542e-d8d0-920f-33a4edf92962@suse.de>
-Date:   Fri, 27 Aug 2021 00:28:57 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.13.0
+        id S243158AbhHZRBj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 26 Aug 2021 13:01:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38872 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243147AbhHZRBj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 26 Aug 2021 13:01:39 -0400
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE539C061757
+        for <linux-raid@vger.kernel.org>; Thu, 26 Aug 2021 10:00:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
+        Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=+a6FjJXxRh18RTOAJNwyUbcYDofVv8NZqZIrwzGq2Rs=; b=eiRGgKxmVL8krCfQ1duorLx5dm
+        j0ni9cueLJ1Yvgw31rMPPZbwwIyXwQ3wOFrQXAQn1biJxvZw2LKHez3tnFXg46DqkPWU+oGSsuJxD
+        fwbgeJ2RwVkc27MNlo/juT8/J5MiQ4ewjjmGCUrq59mzsMO6mMBfBY7mdkaOEgDQ9Pv9l/1qjbvhw
+        T7yGuv3LMM3D2fD4JTBRObvm6e+LJAY09KkbQzS6JiZU9vRR19jBVY2apN71KUX53QvkRcaIkoKt7
+        tk2Al0CWPLe96m6O9vqmMnRo6ts8GjoIZI7Cx2OXdjAaHHWNquvhd8wq5TlYs3RAzQsmrD13X/ICt
+        mEHP4miQ==;
+Received: from [12.35.44.237] (helo=[172.30.0.251])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1mJIkC-00072J-US; Thu, 26 Aug 2021 17:00:48 +0000
+Subject: Re: Raid 5 where 2 disks out of 4 were unplugged
+To:     Gennaro Oliva <gennaro.oliva@gmail.com>, linux-raid@vger.kernel.org
+References: <YSdcUa6ZYsdPEtFB@ischia>
+From:   Phil Turmel <philip@turmel.org>
+Message-ID: <11fe0c66-c128-2217-83fc-583d1a6c2b6e@turmel.org>
+Date:   Thu, 26 Aug 2021 13:00:48 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
+In-Reply-To: <YSdcUa6ZYsdPEtFB@ischia>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/25/21 10:35 PM, Hannes Reinecke wrote:
-> Hi all,
->
-> this is, contrary to the subject, not a patch, but rather a question on
-> how to submit a patchset.
-> I've been working on splitting off a shared library from mdadm, with the
-> aim that it can be included from other programs.
-> Reasoning behind it that I've written a monitor program
-> (github.com:/hreinecke/md_monitor) and found it a major pain having to
-> exec() mdadm, and then keep fingers crossed that things succeed; error
-> recovery from _that_ turned out to be a major drag. And so I figured
-> that a shared library is possibly the best way to go.
->
-> (And, as a side note: having a shared library would also allow to build
-> a python binding, which possibly will have even more use-cases ...)
->
-> So I've build a patchset to split off a shared library from mdadm, and
-> build mdadm against that:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/hare/mdadm.git
-> branch shlib
->
-> But as it turns out, these are 30+ patches, and I didn't want to flood
-> the mailinglist with that.
-> So what are the procedures here?
->
-> Are you okay with having the entire patchset on the mailing list?
-> Or are there other ways?
+Hello Gennaro,
 
-Hi Hannes,
+Good report.
 
-It is fine for me to receiving a series with 30+ patches in linux-raid 
-mailing list. And I also can help to review all the patches when they 
-are posted out.
+On 8/26/21 5:18 AM, Gennaro Oliva wrote:
+> Hello,
+> I have a QNAP with Linux 3.4.6 and mdadm 3.3. I have 4 drives assembled
+> in raid 5, two of those drives where accidentally removed and now they
+> are out of sync. This is a partial output of mdadm --examine
 
-Hi Jes,
+[trim /]
 
-If you are too busy to take care of mdadm, and you are glad, it is OK 
-for me to take the mdadm maintenance. I can be long term stable for the 
-maintenance task.
+> mdadm --verbose --assemble --force /dev/md1 /dev/sda3 /dev/sdb3 /dev/sdc3 /dev/sdd3
+> mdadm: looking for devices for /dev/md1
+> mdadm: failed to get exclusive lock on mapfile - continue anyway...
+> mdadm: /dev/sda3 is identified as a member of /dev/md1, slot 0.
+> mdadm: /dev/sdb3 is identified as a member of /dev/md1, slot 1.
+> mdadm: /dev/sdc3 is identified as a member of /dev/md1, slot 2.
+> mdadm: /dev/sdd3 is identified as a member of /dev/md1, slot 3.
+> mdadm: added /dev/sdb3 to /dev/md1 as 1
+> mdadm: added /dev/sdc3 to /dev/md1 as 2 (possibly out of date)
+> mdadm: added /dev/sdd3 to /dev/md1 as 3 (possibly out of date)
+> mdadm: added /dev/sda3 to /dev/md1 as 0
+> mdadm: /dev/md1 assembled from 2 drives - not enough to start the array.
+> 
 
-Thanks.
+This should have worked.  I suspect your mdadm is one of the buggy ones 
+for forced assembly.
 
-Coly Li
+Download and compile latest mdadm and do this again.  (Newer mdadm works 
+on older kernels.)
+
+Regards,
+
+Phil
