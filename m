@@ -2,26 +2,26 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2144C43214
-	for <linux-raid@archiver.kernel.org>; Tue, 31 Aug 2021 19:19:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BFE8C43214
+	for <linux-raid@archiver.kernel.org>; Tue, 31 Aug 2021 19:20:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C38261057
-	for <linux-raid@archiver.kernel.org>; Tue, 31 Aug 2021 19:19:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33F8961075
+	for <linux-raid@archiver.kernel.org>; Tue, 31 Aug 2021 19:20:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233147AbhHaTUu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 31 Aug 2021 15:20:50 -0400
-Received: from mout.kundenserver.de ([212.227.17.10]:53223 "EHLO
+        id S240693AbhHaTU4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 31 Aug 2021 15:20:56 -0400
+Received: from mout.kundenserver.de ([212.227.17.13]:52927 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240550AbhHaTUs (ORCPT
+        with ESMTP id S240564AbhHaTUs (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Tue, 31 Aug 2021 15:20:48 -0400
 Received: from weisslap.aisec.fraunhofer.de ([178.27.102.95]) by
  mrelayeu.kundenserver.de (mreue109 [212.227.15.183]) with ESMTPSA (Nemesis)
- id 1MBUuP-1m8pEM2qEB-00D0Q0; Tue, 31 Aug 2021 21:19:37 +0200
+ id 1MDQqe-1mAjyU11LK-00AWVx; Tue, 31 Aug 2021 21:19:40 +0200
 From:   =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>
 To:     Paul Moore <paul@paul-moore.com>,
         Casey Schaufler <casey@schaufler-ca.com>
@@ -31,142 +31,112 @@ Cc:     =?UTF-8?q?Michael=20Wei=C3=9F?= <michael.weiss@aisec.fraunhofer.de>,
         Song Liu <song@kernel.org>, Eric Paris <eparis@redhat.com>,
         linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-audit@redhat.com
-Subject: [PATCH v3 2/3] dm integrity: log audit events for dm-integrity target
-Date:   Tue, 31 Aug 2021 21:18:39 +0200
-Message-Id: <20210831191845.7928-3-michael.weiss@aisec.fraunhofer.de>
+Subject: [PATCH v3 3/3] dm crypt: log aead integrity violations to audit subsystem
+Date:   Tue, 31 Aug 2021 21:18:40 +0200
+Message-Id: <20210831191845.7928-4-michael.weiss@aisec.fraunhofer.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210831191845.7928-1-michael.weiss@aisec.fraunhofer.de>
 References: <20210831191845.7928-1-michael.weiss@aisec.fraunhofer.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:xMpaKCifDBlWiap1NWcMqokj8Q0hSpe1CN+SAJHuNzYCwloEljw
- frIfBUwGO8fQvZ48qefSTUONJ3EV2CPcWglYVt0oBMT71sCmEVtlqiVek0PY2SfPAukYGJ2
- CbWVbxlniEi6zqieiK3Fdc3o6kIuuAzTTk2XzgSGFCzK8hamBnZLqdEdYuIP2NORIScDycC
- FcTeBVyEZKfEbpgs0WJMw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:s+hL10tXHM4=:bos7SG8c6LXn0dXAkvwEIA
- GdgLrBvYT/wBCZMk4zBsIbf668hp/Jj1MjVxrHcWOpH0men8H+1CRRlFVfKhG38dA4PKdawaC
- 76qSs9c1LZwV58tJDU2t6FnWcdp4Se+OOq+ktNe75nMuXtsVCe7PxME8tQxF2UcgINaTc7TYI
- fEJaBfYPNcJFwiJFk0LOu4J8Vd+/XGc+/ig+GJpaSr0KZS44IUQeoXSnNed3xlJrMDvpDvgXJ
- hhSN0ANDtoMW6014UZ0ctzQgy2jSKCNzPNnz6sZKPKNGJ74vx88d33IdUFBUW80jLgIz2keSn
- w1AXY423IDQ0li18GESLsQslWBOMrynTfe8UK4BUvTSVAR2a/qbAaKv4TinJlUEcEs8Yfv4Q2
- K5o2bwlddUbzjfjJkqJ4O2DtkyKd6f9oTK7+YMZv11RpgBHjWIURFIgxLlU1kbQG3Gcz0GYg+
- Km42nPCSN1c0Vn+AJNhjFY/dchZGDRSku/spUzcqasO8It5JkGk58Ux0sKNl1v7B6as1ND374
- mSveiN9snx1XmFbhR3pUV7F8f3JNdqAx6QtThk9NvOUeUtfulr5pSk+9OrkFLn5waZH/61hp2
- DTaDhCKOD+ML3171/BP/S5pXh88PCR0HY+M+MYYBPkh2+2uxW1Zr3+8k7IePILn3W3M+lBS2+
- ZexPEh8HYZA2GQPy26GpBRh0g7DOfbMF1zUm7o/vYls7KfatKDzYwNtd3YJdkUT5je1J8X1+J
- sPXqZIkUGnAz+hW7d5fku998ciqU6N3W9a3yxw3AHE7gXvAbmi0xVHkzneQ=
+X-Provags-ID: V03:K1:IrWO8hNKbUyJGbXkVzHd+rTfxnWDoZDtfPQ4TxlfEze/ruCXXJr
+ /D15kCdQ3XnRZyT89l2wgZjhnoLP1M7LGpXR6f8TOEkx6SOc1MMHDa//EcvKMPvgFEeVWiP
+ WP5L3h8DnDFkF8lfM/QLvkd43Ado7xyGNgBni4D+aOin0kiBbAuxnWuOuvK3KpUj5yGenw9
+ 2D8HiY7EzjytAcFhlzasw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Fy0xCcQ7OtE=:siHcSREbi8J5D/whvYvK1T
+ COkJZUpBXpa+Ga0aXHql5J2wPTDL2RjcBVNTRkube504ABGTOMoxUbfScQqms09lc6YIH1jM2
+ GyrkiqXST+ulIyGRO4SEtYZFrv16oj2rxBT9U26TROq7ELBf+XHy7ThH3DMOAOBepEwVKfz8c
+ fGb4/snp8/724GopRka7LrsuK+gHjmFujAdtVqMNItsBsWPIUCk8VdHZZIgueCmPMi9POY0fB
+ W8CpeGf7IiHlSHqUpHHB7ocJ+8y/vRcaAmJdMQu/Siv1oIsyp+YcCAomwmyS7nm2gK+jyRUn2
+ iTNSSoza1uhZb7YeQkgZWfwfvLGGikS9x266LLm1CYgF7ZuN9uz2EM1U+iOWf/6WSC5q8oMGn
+ ZcGcK7kQdxmmHi1kLxFjMl0jvTVMTJWGp9Zsl8nwBd3qnFRCE5MntkY3Mkvuk2v78pVKXYMOQ
+ FtqG14mAB9wv9eUo204tyAb9LaYXN9OJR1w/Wy2o3GneoNaTfe8lNwqGS1/rQHi86G/Ayp8VM
+ IyAYPj39kut9cRP0QI3GEkkC1+R59pdZkB4ii58gX3zExghCMzdJjNLpt8UMilB0QBFnlPeBU
+ /6giM4hcAkS0czHl/x6kl9+LM+1VaMKzosXhZhEIBTmXk9XFGD9IIcQDAMTqqWw84RKgQqquj
+ Bz7UplUo0+DVruGesg+fiU9BryTJk2eIOJHM0X4mI4Y1SZlEp18kEe3gJCE/UXljo+Q8PG4T5
+ X4d7EdXyLr4OedvWK0d+tXUl5ZmtRVFDU1J7LtigIsFQZxhRlvl+UCgTLO4=
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-dm-integrity signals integrity violations by returning I/O errors
-to user space. To identify integrity violations by a controlling
-instance, the kernel audit subsystem can be used to emit audit
-events to user space. We use the new dm-audit submodule allowing
-to emit audit events on relevant I/O errors.
+Since dm-crypt target can be stacked on dm-integrity targets to
+provide authenticated encryption, integrity violations are recognized
+here during aead computation. We use the dm-audit submodule to
+signal those events to user space, too.
 
-The construction and destruction of integrity device mappings are
-also relevant for auditing a system. Thus, those events are also
+The construction and destruction of crypt device mappings are also
 logged as audit events.
 
 Signed-off-by: Michael Weiß <michael.weiss@aisec.fraunhofer.de>
 ---
- drivers/md/dm-integrity.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+ drivers/md/dm-crypt.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 20f2510db1f6..a881ead4b506 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -23,6 +23,8 @@
- #include <linux/async_tx.h>
- #include <linux/dm-bufio.h>
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index 50f4cbd600d5..5e02002345fa 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -41,6 +41,8 @@
+ 
+ #include <linux/device-mapper.h>
  
 +#include "dm-audit.h"
 +
- #define DM_MSG_PREFIX "integrity"
+ #define DM_MSG_PREFIX "crypt"
  
- #define DEFAULT_INTERLEAVE_SECTORS	32768
-@@ -539,6 +541,7 @@ static int sb_mac(struct dm_integrity_c *ic, bool wr)
- 		}
- 		if (memcmp((__u8 *)ic->sb + (1 << SECTOR_SHIFT) - size, result, size)) {
- 			dm_integrity_io_error(ic, "superblock mac", -EILSEQ);
-+			dm_audit_log_target(DM_MSG_PREFIX, "mac-superblock", ic->ti, 0);
- 			return -EILSEQ;
- 		}
- 	}
-@@ -876,8 +879,10 @@ static void rw_section_mac(struct dm_integrity_c *ic, unsigned section, bool wr)
- 		if (likely(wr))
- 			memcpy(&js->mac, result + (j * JOURNAL_MAC_PER_SECTOR), JOURNAL_MAC_PER_SECTOR);
- 		else {
--			if (memcmp(&js->mac, result + (j * JOURNAL_MAC_PER_SECTOR), JOURNAL_MAC_PER_SECTOR))
-+			if (memcmp(&js->mac, result + (j * JOURNAL_MAC_PER_SECTOR), JOURNAL_MAC_PER_SECTOR)) {
- 				dm_integrity_io_error(ic, "journal mac", -EILSEQ);
-+				dm_audit_log_target(DM_MSG_PREFIX, "mac-journal", ic->ti, 0);
-+			}
- 		}
- 	}
- }
-@@ -1782,10 +1787,15 @@ static void integrity_metadata(struct work_struct *w)
- 			if (unlikely(r)) {
- 				if (r > 0) {
- 					char b[BDEVNAME_SIZE];
--					DMERR_LIMIT("%s: Checksum failed at sector 0x%llx", bio_devname(bio, b),
--						    (sector - ((r + ic->tag_size - 1) / ic->tag_size)));
-+					sector_t s;
+ /*
+@@ -1362,8 +1364,12 @@ static int crypt_convert_block_aead(struct crypt_config *cc,
+ 
+ 	if (r == -EBADMSG) {
+ 		char b[BDEVNAME_SIZE];
+-		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu", bio_devname(ctx->bio_in, b),
+-			    (unsigned long long)le64_to_cpu(*sector));
++		sector_t s = le64_to_cpu(*sector);
 +
-+					s = sector - ((r + ic->tag_size - 1) / ic->tag_size);
-+					DMERR_LIMIT("%s: Checksum failed at sector 0x%llx",
-+						    bio_devname(bio, b), s);
- 					r = -EILSEQ;
- 					atomic64_inc(&ic->number_of_mismatches);
-+					dm_audit_log_bio(DM_MSG_PREFIX, "integrity-checksum",
-+							 bio, s, 0);
- 				}
- 				if (likely(checksums != checksums_onstack))
- 					kfree(checksums);
-@@ -1991,6 +2001,8 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
- 					if (unlikely(memcmp(checksums_onstack, journal_entry_tag(ic, je), ic->tag_size))) {
- 						DMERR_LIMIT("Checksum failed when reading from journal, at sector 0x%llx",
- 							    logical_sector);
-+						dm_audit_log_bio(DM_MSG_PREFIX, "journal-checksum",
-+								 bio, logical_sector, 0);
- 					}
- 				}
- #endif
-@@ -2534,8 +2546,10 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
++		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu",
++			    bio_devname(ctx->bio_in, b), s);
++		dm_audit_log_bio(DM_MSG_PREFIX, "integrity-aead",
++				 ctx->bio_in, s, 0);
+ 	}
  
- 					integrity_sector_checksum(ic, sec + ((l - j) << ic->sb->log2_sectors_per_block),
- 								  (char *)access_journal_data(ic, i, l), test_tag);
--					if (unlikely(memcmp(test_tag, journal_entry_tag(ic, je2), ic->tag_size)))
-+					if (unlikely(memcmp(test_tag, journal_entry_tag(ic, je2), ic->tag_size))) {
- 						dm_integrity_io_error(ic, "tag mismatch when replaying journal", -EILSEQ);
-+						dm_audit_log_target(DM_MSG_PREFIX, "integrity-replay-journal", ic->ti, 0);
-+					}
- 				}
+ 	if (!r && cc->iv_gen_ops && cc->iv_gen_ops->post)
+@@ -2173,8 +2179,12 @@ static void kcryptd_async_done(struct crypto_async_request *async_req,
  
- 				journal_entry_set_unused(je2);
-@@ -4490,9 +4504,11 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 	if (ic->discard)
- 		ti->num_discard_bios = 1;
+ 	if (error == -EBADMSG) {
+ 		char b[BDEVNAME_SIZE];
+-		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu", bio_devname(ctx->bio_in, b),
+-			    (unsigned long long)le64_to_cpu(*org_sector_of_dmreq(cc, dmreq)));
++		sector_t s = le64_to_cpu(*org_sector_of_dmreq(cc, dmreq));
++
++		DMERR_LIMIT("%s: INTEGRITY AEAD ERROR, sector %llu",
++			    bio_devname(ctx->bio_in, b), s);
++		dm_audit_log_bio(DM_MSG_PREFIX, "integrity-aead",
++				 ctx->bio_in, s, 0);
+ 		io->error = BLK_STS_PROTECTION;
+ 	} else if (error < 0)
+ 		io->error = BLK_STS_IOERR;
+@@ -2729,6 +2739,8 @@ static void crypt_dtr(struct dm_target *ti)
+ 	dm_crypt_clients_n--;
+ 	crypt_calculate_pages_per_client();
+ 	spin_unlock(&dm_crypt_clients_lock);
++
++	dm_audit_log_dtr(DM_MSG_PREFIX, ti, 1);
+ }
+ 
+ static int crypt_ctr_ivmode(struct dm_target *ti, const char *ivmode)
+@@ -3357,9 +3369,11 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
+ 	ti->num_flush_bios = 1;
+ 	ti->limit_swap_bios = true;
  
 +	dm_audit_log_ctr(DM_MSG_PREFIX, ti, 1);
  	return 0;
  
  bad:
 +	dm_audit_log_ctr(DM_MSG_PREFIX, ti, 0);
- 	dm_integrity_dtr(ti);
- 	return r;
+ 	crypt_dtr(ti);
+ 	return ret;
  }
-@@ -4566,6 +4582,7 @@ static void dm_integrity_dtr(struct dm_target *ti)
- 	free_alg(&ic->journal_mac_alg);
- 
- 	kfree(ic);
-+	dm_audit_log_dtr(DM_MSG_PREFIX, ti, 1);
- }
- 
- static struct target_type integrity_target = {
 -- 
 2.20.1
 
