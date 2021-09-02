@@ -2,81 +2,71 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 859BBC432BE
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 05:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D747C432BE
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 07:08:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50462610A2
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 05:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E407A60462
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 07:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230453AbhIBFHv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Sep 2021 01:07:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39624 "EHLO mail.kernel.org"
+        id S242634AbhIBHJ0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Sep 2021 03:09:26 -0400
+Received: from mga11.intel.com ([192.55.52.93]:9486 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229459AbhIBFHu (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 2 Sep 2021 01:07:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A229460F56
-        for <linux-raid@vger.kernel.org>; Thu,  2 Sep 2021 05:06:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630559212;
-        bh=eFmio9ARGDcUXKZxWmCA8ZFZaPweZCsUCTDFs3cUXzQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=V2TlqxC7ETZ29sRfRxxkf3H8MaqX531o7tcoXzS/xpbRpcR3u1KPMIvMgijrf4j1y
-         ALeCoayU9DqLu6y1MV9Ov+AoVOeHWL1AmK+LTWAk76L3PlEjLAyPvbVjHHrqWefzoA
-         V7eM3SieHjE1WKt2NsJmnZz2ykM6fD0kWX6MX/IRZ4lDRXM5BbrAiDbW2b+6u7H9XT
-         LiSHLF2LRzaaXxDOPj6znp4V3ik0d+PKBui3tmr05cuSM2OS0zBdWqDGWhMIAfY67h
-         DHe9doNvhpUCh7M/wlozjNqASyjxpUsJYO7JPhJ//+zPhabAYFbkGTB5JXB9Gq2A46
-         /0sabBvQHKNqQ==
-Received: by mail-lf1-f50.google.com with SMTP id bq28so1484063lfb.7
-        for <linux-raid@vger.kernel.org>; Wed, 01 Sep 2021 22:06:52 -0700 (PDT)
-X-Gm-Message-State: AOAM530ep2gnq/XdHIVmTlBgXLYeo6i4CHWi1v/M/fKzFj/af3d4YTAK
-        XJlGb8W4ldV5BpdHgSAh9GfGuUcdFeEGnm6JJFY=
-X-Google-Smtp-Source: ABdhPJzzBBqzmgqFODdSWB9h17CyRbCVsi+kl1uU5ZbuZc/IOV7zTtcdfHpHey09GnZAshUKs8q/mrXn6KmIsmkPcbY=
-X-Received: by 2002:a05:6512:169d:: with SMTP id bu29mr1185020lfb.160.1630559211070;
- Wed, 01 Sep 2021 22:06:51 -0700 (PDT)
+        id S240424AbhIBHJ0 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 2 Sep 2021 03:09:26 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10094"; a="215863138"
+X-IronPort-AV: E=Sophos;i="5.84,371,1620716400"; 
+   d="scan'208";a="215863138"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2021 00:08:28 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,371,1620716400"; 
+   d="scan'208";a="532744376"
+Received: from linux.intel.com ([10.54.29.200])
+  by FMSMGA003.fm.intel.com with ESMTP; 02 Sep 2021 00:08:28 -0700
+Received: from [10.213.25.121] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.25.121])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by linux.intel.com (Postfix) with ESMTPS id 406085802B1;
+        Thu,  2 Sep 2021 00:08:27 -0700 (PDT)
+Subject: Re: [PATCH v2] Monitor: print message before quit for no array to
+ monitor
+To:     Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org
+Cc:     George Gkioulis <ggkioulis@suse.com>,
+        Jes Sorensen <jsorensen@fb.com>
+References: <20210902023644.509-1-colyli@suse.de>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <59b40b04-399a-a0cd-f8be-ebdebe9a458c@linux.intel.com>
+Date:   Thu, 2 Sep 2021 09:08:25 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-References: <20210901113833.1334886-1-hch@lst.de>
-In-Reply-To: <20210901113833.1334886-1-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 1 Sep 2021 22:06:39 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7ju1zBwKYNZeWiYjEK0JRnxC7vorym9z=c_x83twd7wg@mail.gmail.com>
-Message-ID: <CAPhsuW7ju1zBwKYNZeWiYjEK0JRnxC7vorym9z=c_x83twd7wg@mail.gmail.com>
-Subject: Re: fix a lock order reversal in md_alloc
-To:     Christoph Hellwig <hch@lst.de>, Jes.Sorensen@gmail.com
-Cc:     Luis Chamberlain <mcgrof@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20210902023644.509-1-colyli@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Christoph,
+Hi Coly,
+On 02.09.2021 04:36, Coly Li wrote:
+> @@ -258,6 +258,7 @@ int Monitor(struct mddev_dev *devlist,
+>   			if (oneshot)
+>   				break;
+>   			else if (!anyredundant) {
+> +				pr_err("Stop for no array to monitor\n");
+>   				break;
 
-On Wed, Sep 1, 2021 at 4:39 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> Hi Song,
->
-> the first patch in this series fixed the reported lock order reversal
-> in md_alloc.  The rest sort out the error handling in that function,
-> starting with the patch from Luis to handle add_disk errors, which
-> would otherwise conflict with the first patch.
+IMO the message is not precise enough. See that if there is only raid0
+then it also stops. Something like:
+"No array with redundancy detected, stopping" is more detailed.
 
-Thanks for the fixes! I have noticed the issue, but haven't got a good
-solution for it. I will test and apply the set (maybe after the labor day
-long weekend).
+Thanks,
+Mariusz
 
->
-> Note that I have had a hard time verifying this all works fine as the
-> testsuite in mdadm already keeps failing a lot for me with the baseline
-> kernel. Some of thos reproducibly and others randomly.  Is there a
-> good document somehow describing what to expect from the mdadm test
-> suite?
-
-Unfortunately, mdadm test needs quite some work to be really useful again.
-I will work with Jes and other folks to come up with a plan for this.
-
-Thanks again,
-Song
