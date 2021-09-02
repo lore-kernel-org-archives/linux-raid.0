@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC42EC432BE
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 02:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 949F8C4320A
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 02:37:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3D7960F91
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 02:32:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F79961058
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 02:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243154AbhIBCdR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Sep 2021 22:33:17 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:39374 "EHLO
+        id S243008AbhIBCiG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Sep 2021 22:38:06 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:39804 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243187AbhIBCdP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Sep 2021 22:33:15 -0400
+        with ESMTP id S233159AbhIBCiD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Sep 2021 22:38:03 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id AFCBC22555;
-        Thu,  2 Sep 2021 02:32:16 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTP id 10A7822478;
+        Thu,  2 Sep 2021 02:37:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1630549936; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1630550225; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=bCU/Pj5OFaMnvHcI0AUc0ZOteruxeaT956fWe7O85n4=;
-        b=RINZyzzMEHATq/7cx7M8dP8y/vzrD7zmLTjcQ5uBmL/BuTivJsHD1zVxwDbVvAxDpNUX06
-        Vb/7hrsXeKbMXbl5EjYTF6z1WMO2tQvGuwL3Pkc54girM4vLhLbKuGNIgG8xDhBqM/mvil
-        IGybKr01U5qwMbDzvcIqz1L2BbA3oxQ=
+        bh=SvPBMFS+g1GFulNl5irsx/sMDQbAjfmEbCzH7LXwYLs=;
+        b=AVwxxIlI5lJpSpONv/nlkPnxb/NmnnoQbC4Siafb1osJUi6Uai7GKH6kgdXITKcA2xbl57
+        uBAQNvsc59RiliSK0Ik2E+UqxJDPubI8DIdHvh6oyFXzfG3Hu3r58TlhpAc93RlNVVJb8x
+        Y8LqBlwulko04zLvf4OJlyMh9R0DRfo=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1630549936;
+        s=susede2_ed25519; t=1630550225;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=bCU/Pj5OFaMnvHcI0AUc0ZOteruxeaT956fWe7O85n4=;
-        b=lY8yp8vlzUSEFw0lXm8FoeWVKlbJJnZcx5Hm+7lzSai4R6qDlrrG8X6+KmKrX/Gq56UscX
-        mZ387hPU8sjwHdAw==
+        bh=SvPBMFS+g1GFulNl5irsx/sMDQbAjfmEbCzH7LXwYLs=;
+        b=D/XI5BRAOtUzBmzaFkpqqqE+62pMnJYThuWQsDw1VawoaQ4KmzN8wiNvbMjDjmj6W8g72C
+        r1W2RIqnUlSVG+Dw==
 Received: from localhost.localdomain (unknown [10.163.16.22])
-        by relay2.suse.de (Postfix) with ESMTP id 160D3A3B8E;
-        Thu,  2 Sep 2021 02:32:14 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 192D2A3B83;
+        Thu,  2 Sep 2021 02:37:02 +0000 (UTC)
 From:   Coly Li <colyli@suse.de>
 To:     linux-raid@vger.kernel.org
-Cc:     Coly Li <colyli@suse.de>, George Gkioulis <ggkioulis@suse.com>
-Subject: [PATCH] Monitor: print message before quit for no array to monitor
-Date:   Thu,  2 Sep 2021 10:32:09 +0800
-Message-Id: <20210902023209.130858-1-colyli@suse.de>
+Cc:     Coly Li <colyli@suse.de>, George Gkioulis <ggkioulis@suse.com>,
+        Jes Sorensen <jsorensen@fb.com>
+Subject: [PATCH v2] Monitor: print message before quit for no array to monitor
+Date:   Thu,  2 Sep 2021 10:36:44 +0800
+Message-Id: <20210902023644.509-1-colyli@suse.de>
 X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -75,19 +76,24 @@ mdadm stops monitoring.
 
 Reported-by: George Gkioulis <ggkioulis@suse.com>
 Signed-off-by: Coly Li <colyli@suse.de>
+Cc: Jes Sorensen <jsorensen@fb.com>
 ---
+Changelog:
+v2: add CC to Jes, and fix typo.
+v1: the original version.
+
  Monitor.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/Monitor.c b/Monitor.c
-index f541229..88b2c3c 100644
+index f541229..5f399c4 100644
 --- a/Monitor.c
 +++ b/Monitor.c
 @@ -258,6 +258,7 @@ int Monitor(struct mddev_dev *devlist,
  			if (oneshot)
  				break;
  			else if (!anyredundant) {
-+				pr_info("Stop for no array to monitor\n");
++				pr_err("Stop for no array to monitor\n");
  				break;
  			}
  			else {
