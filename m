@@ -2,127 +2,95 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7FB0C432BE
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Sep 2021 11:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC42EC432BE
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 02:32:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87E656108E
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Sep 2021 11:44:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3D7960F91
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Sep 2021 02:32:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243356AbhIALpY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Sep 2021 07:45:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47294 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241703AbhIALpX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Sep 2021 07:45:23 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24CB7C061575
-        for <linux-raid@vger.kernel.org>; Wed,  1 Sep 2021 04:44:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=f0wKQ4Hfkr+1nzBiJhSprtOMQAuWfI6dwDBdIKoqMC4=; b=IEZaGqwoDqIIo0pwmmQzZ3O2EU
-        YliFuRTKFAJI1GFxK01xWbxDr04gAstHsYmkz3Jv6Rgc+RFwhIdMSijV4Ho4S2ZaJawuGQ6QE9VUA
-        EQaqnLsrG8yZLVQgW0Oqs5cxMQgUxsGC8qzF9Ij50y26b06L8dYXfLaA76VZ+zlc2cExr2aTGQbpX
-        Cn6lSlrkA2JG0tm8BKk9LVoHWX1O77JSuvEcjRfJTatwx5iPmuF6hHnww37whSziLkP7kydXUCcCT
-        ShsE3tTZw+gGQWkmtYrycKPhtFMXxTcZQ6FFqOhVCSDg48MgLhgqASjgmBDwYBgm5Zy2wicZqTtZA
-        KFaus3hA==;
-Received: from [2001:4bb8:180:a30:2deb:705a:5588:bf7d] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mLOeM-002FoU-W0; Wed, 01 Sep 2021 11:43:50 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Song Liu <song@kernel.org>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH 5/5] md: properly unwind when failing to add the kobject in md_alloc
-Date:   Wed,  1 Sep 2021 13:38:33 +0200
-Message-Id: <20210901113833.1334886-6-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210901113833.1334886-1-hch@lst.de>
-References: <20210901113833.1334886-1-hch@lst.de>
+        id S243154AbhIBCdR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Sep 2021 22:33:17 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:39374 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243187AbhIBCdP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Sep 2021 22:33:15 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id AFCBC22555;
+        Thu,  2 Sep 2021 02:32:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1630549936; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=bCU/Pj5OFaMnvHcI0AUc0ZOteruxeaT956fWe7O85n4=;
+        b=RINZyzzMEHATq/7cx7M8dP8y/vzrD7zmLTjcQ5uBmL/BuTivJsHD1zVxwDbVvAxDpNUX06
+        Vb/7hrsXeKbMXbl5EjYTF6z1WMO2tQvGuwL3Pkc54girM4vLhLbKuGNIgG8xDhBqM/mvil
+        IGybKr01U5qwMbDzvcIqz1L2BbA3oxQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1630549936;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=bCU/Pj5OFaMnvHcI0AUc0ZOteruxeaT956fWe7O85n4=;
+        b=lY8yp8vlzUSEFw0lXm8FoeWVKlbJJnZcx5Hm+7lzSai4R6qDlrrG8X6+KmKrX/Gq56UscX
+        mZ387hPU8sjwHdAw==
+Received: from localhost.localdomain (unknown [10.163.16.22])
+        by relay2.suse.de (Postfix) with ESMTP id 160D3A3B8E;
+        Thu,  2 Sep 2021 02:32:14 +0000 (UTC)
+From:   Coly Li <colyli@suse.de>
+To:     linux-raid@vger.kernel.org
+Cc:     Coly Li <colyli@suse.de>, George Gkioulis <ggkioulis@suse.com>
+Subject: [PATCH] Monitor: print message before quit for no array to monitor
+Date:   Thu,  2 Sep 2021 10:32:09 +0800
+Message-Id: <20210902023209.130858-1-colyli@suse.de>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Add proper error handling to delete the gendisk when failing to add
-the md kobject and clean up the error unwinding in general.
+If there is no array device to monitor, Monitor() will stop monitoring
+at line 261 from the following code block,
+ 257                 if (!new_found) {
+ 258                         if (oneshot)
+ 259                                 break;
+ 260                         else if (!anyredundant) {
+ 261                                 break;
+ 262                         }
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+This change was introduced by commit 007087d0898a ("Monitor: stop
+notifing about containers"). Before this commit, Monitor() will continue
+and won't quit even there is no array to monitor.
+
+It is fine to quit without any array device to monitor, but users may
+wonder whether there is something wrong with mdadm program or their
+configuration to make mdadm quit monitoring.
+
+This patch adds a simple error message to indicate Monitor() quits for
+array device to monitor, which makes users have hint to understand why
+mdadm stops monitoring.
+
+Reported-by: George Gkioulis <ggkioulis@suse.com>
+Signed-off-by: Coly Li <colyli@suse.de>
 ---
- drivers/md/md.c | 37 +++++++++++++++++--------------------
- 1 file changed, 17 insertions(+), 20 deletions(-)
+ Monitor.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b90dbf7cc2455..c322841d4edc3 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5672,7 +5672,7 @@ static int md_alloc(dev_t dev, char *name)
- 			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
- 				spin_unlock(&all_mddevs_lock);
- 				error = -EEXIST;
--				goto abort;
-+				goto out_unlock_disks_mutex;
+diff --git a/Monitor.c b/Monitor.c
+index f541229..88b2c3c 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -258,6 +258,7 @@ int Monitor(struct mddev_dev *devlist,
+ 			if (oneshot)
+ 				break;
+ 			else if (!anyredundant) {
++				pr_info("Stop for no array to monitor\n");
+ 				break;
  			}
- 		spin_unlock(&all_mddevs_lock);
- 	}
-@@ -5685,7 +5685,7 @@ static int md_alloc(dev_t dev, char *name)
- 	error = -ENOMEM;
- 	disk = blk_alloc_disk(NUMA_NO_NODE);
- 	if (!disk)
--		goto abort;
-+		goto out_unlock_disks_mutex;
- 
- 	disk->major = MAJOR(mddev->unit);
- 	disk->first_minor = unit << shift;
-@@ -5710,26 +5710,23 @@ static int md_alloc(dev_t dev, char *name)
- 	disk->events |= DISK_EVENT_MEDIA_CHANGE;
- 	mddev->gendisk = disk;
- 	error = add_disk(disk);
--	if (error) {
--		blk_cleanup_disk(disk);
--		goto abort;
--	}
-+	if (error)
-+		goto out_cleanup_disk;
- 
- 	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
--	if (error) {
--		/* This isn't possible, but as kobject_init_and_add is marked
--		 * __must_check, we must do something with the result
--		 */
--		pr_debug("md: cannot register %s/md - name in use\n",
--			 disk->disk_name);
--		error = 0;
--	}
-- abort:
--	if (!error && mddev->kobj.sd) {
--		kobject_uevent(&mddev->kobj, KOBJ_ADD);
--		mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
--		mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
--	}
-+	if (error)
-+		goto out_del_gendisk;
-+
-+	kobject_uevent(&mddev->kobj, KOBJ_ADD);
-+	mddev->sysfs_state = sysfs_get_dirent_safe(mddev->kobj.sd, "array_state");
-+	mddev->sysfs_level = sysfs_get_dirent_safe(mddev->kobj.sd, "level");
-+	goto out_unlock_disks_mutex;
-+
-+out_del_gendisk:
-+	del_gendisk(disk);
-+out_cleanup_disk:
-+	blk_cleanup_disk(disk);
-+out_unlock_disks_mutex:
- 	mutex_unlock(&disks_mutex);
- 	mddev_put(mddev);
- 	return error;
+ 			else {
 -- 
-2.30.2
+2.31.1
 
