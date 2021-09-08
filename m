@@ -2,114 +2,50 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7760C433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Sep 2021 08:34:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA1DFC433FE
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Sep 2021 13:16:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C64D61167
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Sep 2021 08:34:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCD7761158
+	for <linux-raid@archiver.kernel.org>; Wed,  8 Sep 2021 13:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348084AbhIHIfI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Sep 2021 04:35:08 -0400
-Received: from mail-edgeDD24.fraunhofer.de ([192.102.167.24]:65474 "EHLO
-        mail-edgeDD24.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1348153AbhIHIfE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Sep 2021 04:35:04 -0400
-X-Greylist: delayed 431 seconds by postgrey-1.27 at vger.kernel.org; Wed, 08 Sep 2021 04:35:01 EDT
-IronPort-SDR: EmX1Eo6OzySeSlo7jxtFOSVnu0c8XmYPykqL6L1483g3F0NQLxZ8SF3Mvf3fb1WvKy2fe0Si1T
- IoRubWPiyjsg==
-IronPort-PHdr: =?us-ascii?q?A9a23=3AkrJEvR9L61elO/9uWMnoyV9kXcBvk6/5Mg4c9?=
- =?us-ascii?q?twsjLcdOqig/pG3OkvZ6L0tiVLSRozU5rpCjPaeqKHvX2EMoPPj+HAPeZBBT?=
- =?us-ascii?q?VkJ3MMRmQFzGsOJCUTnavXtan9yEMFLTlQw+Xa9PABcE9r/YFuHpHq04FtwU?=
- =?us-ascii?q?hXyPAZ4PKL7AInX2s22zO25vZPJahhOhD2zbKk0IBjlxTg=3D?=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2FzAABQczhh/xoBYJlXAxwBAQEBAQE?=
- =?us-ascii?q?HAQESAQEEBAEBQIFHBQEBCwGBUikofllphEiDSAOFOYgFA4t1hBSKU4EugSU?=
- =?us-ascii?q?DTgYLAQEBAQEBAQEBBwEBKgsKAgQBAQMDJIRIAheCJwElNgcOAQIEAQEBEgE?=
- =?us-ascii?q?BBgEBAQEBBgQCAoEghWgBDINTgQgBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE?=
- =?us-ascii?q?BAQEBAQEBAQEBAQEFAg1SKT0BAQEBAgEBARAREQwBASQICwEECwIBCBgCAiY?=
- =?us-ascii?q?CAgIlCxUQAgQOBSKCBEsBglUDDiACDp4DAYE6AoofeoExgQGCCAEBBgQEhQo?=
- =?us-ascii?q?YgRaBHgMGCQGBBioBgn6EARGCbIN+J4IpgUuBBYE3Nz6CYgGBYRcKJoJQgmS?=
- =?us-ascii?q?HWgc9PhQrRhAFGBIMSRIBEBwOBRwgB5FFBIJ9RqhMB4IDUFuKQJQfMZVdkSi?=
- =?us-ascii?q?FUJBMjESTOzyEdAIEAgQFAg4BAQaBaAWCCU0kT4JpURkPjiAMFoNQil5DMTg?=
- =?us-ascii?q?CBgEKAQEDCYI5gw6MRQEB?=
-X-IPAS-Result: =?us-ascii?q?A2FzAABQczhh/xoBYJlXAxwBAQEBAQEHAQESAQEEBAEBQ?=
- =?us-ascii?q?IFHBQEBCwGBUikofllphEiDSAOFOYgFA4t1hBSKU4EugSUDTgYLAQEBAQEBA?=
- =?us-ascii?q?QEBBwEBKgsKAgQBAQMDJIRIAheCJwElNgcOAQIEAQEBEgEBBgEBAQEBBgQCA?=
- =?us-ascii?q?oEghWgBDINTgQgBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBA?=
- =?us-ascii?q?QEFAg1SKT0BAQEBAgEBARAREQwBASQICwEECwIBCBgCAiYCAgIlCxUQAgQOB?=
- =?us-ascii?q?SKCBEsBglUDDiACDp4DAYE6AoofeoExgQGCCAEBBgQEhQoYgRaBHgMGCQGBB?=
- =?us-ascii?q?ioBgn6EARGCbIN+J4IpgUuBBYE3Nz6CYgGBYRcKJoJQgmSHWgc9PhQrRhAFG?=
- =?us-ascii?q?BIMSRIBEBwOBRwgB5FFBIJ9RqhMB4IDUFuKQJQfMZVdkSiFUJBMjESTOzyEd?=
- =?us-ascii?q?AIEAgQFAg4BAQaBaAWCCU0kT4JpURkPjiAMFoNQil5DMTgCBgEKAQEDCYI5g?=
- =?us-ascii?q?w6MRQEB?=
-X-IronPort-AV: E=Sophos;i="5.85,277,1624312800"; 
-   d="scan'208";a="45332108"
-Received: from mail-mtaka26.fraunhofer.de ([153.96.1.26])
-  by mail-edgeDD24.fraunhofer.de with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2021 10:26:34 +0200
-IronPort-SDR: sylgJ2I8y9IgnVFf8sL7i5hHxjTRLqIg8rTI15VKeTic3b2mEVovL+VjNtMhNJj4zOFgtOrHDZ
- K58N3/zpQiI7w+oV86nnrOcHDwJk5xj8g=
-IronPort-PHdr: =?us-ascii?q?A9a23=3Ad6XkVxXFeD4N/EEKu9aC5BoDxLjV8K0WAWYlg?=
- =?us-ascii?q?6HPw5pUf6ij9oikN0vatr1hj17MCIPc7f8My+/bqLvpVmFI55Gd+GsDf5pBW?=
- =?us-ascii?q?15g640WkgUsDdTDBRj9K/jnPDY3EMRLSBlu+HToeURQEdz1MlvVpHD65DUOG?=
- =?us-ascii?q?xL5YAxyIOmQeMbSgs272vr09YfUZlBBhSGwavV8NhyrqwXWuMQMx4dvec4M?=
-IronPort-HdrOrdr: =?us-ascii?q?A9a23=3AqW47zqoelZK1wwKQii3eimkaV5oBeYIsim?=
- =?us-ascii?q?QD101hICG9Kvbo8vxG785rsSMc6QxhIE3I9urwW5VoLUmxyXcX2/hrAV7BZn?=
- =?us-ascii?q?iFhILAFugLhuGO/9SKIUPDH5tmtZuIBJIeNDSfNzdHZZmQ2njDLz9q+qjhzE?=
- =?us-ascii?q?nhv5a5857Gd3AWV0hP1XYBNjqm?=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A0DHAABQczhh/z6wYZlXAxwBAQEBAQE?=
- =?us-ascii?q?HAQESAQEEBAEBQAmBPgUBAQsBgVIpKAdMK1gBJkOER4NIA4U5hWGCJAM4AY9?=
- =?us-ascii?q?QilOBLoElA1QLAQMBAQEBAQcBAQQmCwkBAgQBASqESAIXgiQCJjYHDgECBAE?=
- =?us-ascii?q?BARIBAQUBAQECAQYEgREThWgBDIZCAQEBAQIBAQEQEREMAQEUEAgLAQQLAgE?=
- =?us-ascii?q?IGAICJgICAiULBw4QAgQOBSKCBEsBglUDDiACDp4DAYE6AoofeoExgQGCCAE?=
- =?us-ascii?q?BBgQEhQoYgRaBHgMGCQGBBioBgn6EARGCbIN+glCBS4EFgTc3PoJiAYFhFwo?=
- =?us-ascii?q?mglCCZIdaBz0+FCtGEAUYEgxJEgEQHA4FHCAHkUUEgn1GqEwHggNQW4pAlB8?=
- =?us-ascii?q?xlV2RKIVQkEyMRJM7PIR0AgQCBAUCDgEBBoFoBS+BWU0kT4JpURkPjiAMFoN?=
- =?us-ascii?q?Qil5CATE4AgYBCgEBAwmCOYMMAQGMRQEB?=
-X-IronPort-AV: E=Sophos;i="5.85,277,1624312800"; 
-   d="scan'208";a="123163249"
-Received: from 153-97-176-62.vm.c.fraunhofer.de (HELO mobile.exch.fraunhofer.de) ([153.97.176.62])
-  by mail-mtaKA26.fraunhofer.de with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2021 10:26:31 +0200
-Received: from XCH-HYBRID-01.ads.fraunhofer.de (10.225.8.57) by
- XCH-HYBRID-01.ads.fraunhofer.de (10.225.8.57) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.858.15; Wed, 8 Sep 2021 10:26:31 +0200
-Received: from EUR05-DB8-obe.outbound.protection.outlook.com (10.225.8.37) by
- XCH-HYBRID-01.ads.fraunhofer.de (10.225.8.57) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.858.15
- via Frontend Transport; Wed, 8 Sep 2021 10:26:30 +0200
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AqqGqerJIcFVnN6+m+02uWzEfuoFsSVDU/PuZfwtIGTo52Kg2lUemBZ0dzABK3AS7kEV/GSq4akOsWk1tMX5iEjmOsjKV/9Wc3sNxNQmRSVYJNaQCmWMWv2SgRFUHqHTrbMhAOkTHotQiVsCGeQa4nFb55j0igKjaitipEmNzUJ2uofWLIoao4PxiFowUGF61tIl6CNtlMdd20Qqjn4cfqiKk94OhTa2qbwInYzGrxfVS47S4GQxPS9TkUpDfbNfCYQJbhPdkvYpnUBvrzoQ2lcxSrjXBDWgO9MNk6ZTKdycymxsFd1fE++QqQ1PjVPYxklvgCVIJiER8D4nQnjTAg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=4P/y70C+aUPo6A9nAEfrFBBlYAiYxTrJ65i6FUKyuEE=;
- b=gLzIO3ael9B39Yb7bjOXf0KMyuPvoljxa06BCj7PweCWsP6ysC8A5LuTofv5L3KX4jaNyNNr6NmS9h+SDpaL5Do//0UCG//pWjjjSBQuGitS6LgJPYJOQN2/6bNQu+a1R7MLv4goy+r5XHr++oI3aCfpVQlcTb8/lWo6xc0RzvXIyzFqevEL/xUG4nfQ+cfGNPmEWiQmzlYmSu6PIJdL0f9MvSjo12RUWXNR5aZUcjWQH6jVrIxDLLEfERCuD3d01hPnXb5YfWltgn3UzZCoYNApzeGfFu2O+iKk2LOArPpd96D1uq/K3gtXCOIPwTsz9d/ln7eA7H7g8v6ZqaEzbg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=aisec.fraunhofer.de; dmarc=pass action=none
- header.from=aisec.fraunhofer.de; dkim=pass header.d=aisec.fraunhofer.de;
- arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=fraunhofer.onmicrosoft.com; s=selector2-fraunhofer-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4P/y70C+aUPo6A9nAEfrFBBlYAiYxTrJ65i6FUKyuEE=;
- b=dBcWNcmcmw3zor9IuBYCy8QWrjH9uLdQKW+I71NDbogCnv5ZyOtcXKEY48UQDRJ7VPZRpI/RercjWccmUvah+u3z2z92tIXd3n4GSD8saAbqRC14ON5UUphU4ewKbpmayR3NWfbIiSY4Q0DsioB0iByK8EcNd0HlIleaN7vdoUI=
-Received: from AS8P194MB1288.EURP194.PROD.OUTLOOK.COM (2603:10a6:20b:3c2::22)
- by AM6P194MB0471.EURP194.PROD.OUTLOOK.COM (2603:10a6:209:3f::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4478.19; Wed, 8 Sep
- 2021 08:26:30 +0000
-Received: from AS8P194MB1288.EURP194.PROD.OUTLOOK.COM
- ([fe80::ed17:5927:e044:2d07]) by AS8P194MB1288.EURP194.PROD.OUTLOOK.COM
- ([fe80::ed17:5927:e044:2d07%2]) with mapi id 15.20.4478.026; Wed, 8 Sep 2021
- 08:26:29 +0000
-From:   =?utf-8?B?V2Vpw58sIE1pY2hhZWw=?= 
-        <michael.weiss@aisec.fraunhofer.de>
-To:     "rgb@redhat.com" <rgb@redhat.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        id S1347852AbhIHNRt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 8 Sep 2021 09:17:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:41898 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1346419AbhIHNRs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Sep 2021 09:17:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1631107000;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Dju4hZk0b2PnFJLO2mFnIqujqgJy898L1CoYgrvBeIg=;
+        b=XAAB7jeBJoBrJHmzQVwCYZdKqLySIRkA9DORo9YclBq+IKieTpBOhcl6yEagP+6KQ0PZDA
+        mIAvr5L1nuPwj7G0GetCeFkAlIxpL9LPCWN4mPjut6r7cyrW367zCTCEMDBAgjIen6yGNl
+        oy2YFrYa4Cs+eNQTXH5RfSJt+sBPGWw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-444-QzesG9aePK-Z3hkvJTDCIw-1; Wed, 08 Sep 2021 09:16:39 -0400
+X-MC-Unique: QzesG9aePK-Z3hkvJTDCIw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4AA28835DEC;
+        Wed,  8 Sep 2021 13:16:38 +0000 (UTC)
+Received: from madcap2.tricolour.ca (unknown [10.3.128.14])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CF74F6B550;
+        Wed,  8 Sep 2021 13:16:19 +0000 (UTC)
+Date:   Wed, 8 Sep 2021 09:16:16 -0400
+From:   Richard Guy Briggs <rgb@redhat.com>
+To:     =?iso-8859-1?B?V2Vp3yw=?= Michael 
+        <michael.weiss@aisec.fraunhofer.de>, sgrubb@redhat.com
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-audit@redhat.com" <linux-audit@redhat.com>,
         "casey@schaufler-ca.com" <casey@schaufler-ca.com>,
         "agk@redhat.com" <agk@redhat.com>,
@@ -120,241 +56,236 @@ CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "paul@paul-moore.com" <paul@paul-moore.com>,
         "dm-devel@redhat.com" <dm-devel@redhat.com>
 Subject: Re: [PATCH v4 0/3] dm: audit event logging
-Thread-Topic: [PATCH v4 0/3] dm: audit event logging
-Thread-Index: AQHXoXOgatbSdzBqHE+NW6mrjnaMV6uZVrUAgAB81YA=
-Date:   Wed, 8 Sep 2021 08:26:29 +0000
-Message-ID: <9ca855cb19097b6fa98f2b3419864fd8ddadf065.camel@aisec.fraunhofer.de>
+Message-ID: <20210908131616.GK490529@madcap2.tricolour.ca>
 References: <20210904095934.5033-1-michael.weiss@aisec.fraunhofer.de>
-         <20210908005942.GJ490529@madcap2.tricolour.ca>
-In-Reply-To: <20210908005942.GJ490529@madcap2.tricolour.ca>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.30.5-1.1 
-authentication-results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none
- header.from=aisec.fraunhofer.de;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 54cd43ea-5c0a-4528-4cd3-08d972a25bb4
-x-ms-traffictypediagnostic: AM6P194MB0471:
-x-microsoft-antispam-prvs: <AM6P194MB0471E76E760F66AFA3B0DE83ACD49@AM6P194MB0471.EURP194.PROD.OUTLOOK.COM>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 2DNcku+YHuBM9ZMAXEOKazWbixFTKIyKyZrsEsAXuNShWglZT7BBm03DErWcmczF5mxwUWVZKqh5XxbZySfu5lshXxE5BljwrYaxiHTJyjkN4vtDvul4dpfcxAFBuFNQ/SD58EtS5jm3ICdvZvEs6mSdV1r2TcVyDGniZGgpEPRRvqtynouIzhUTkJwWrlvwJUxs0Oax3M6n3RA4iboA8UHKxwXAbJEZ0wdRKFqTohzaefcFxp5OUQoq2Hgr9NrD2w0Pcyd8EbrmzUns49onqWMbPOlUENZFuUvAPtsraIfnnh7tEKJ24RnPpO0VfxKBR2dhxFxaFBme/tcDdWwDwdnJM3DqwcSa1z3u8vJhKuiCvlK+Y5MlvQuPz2zloz8QwLbLx4n8kK6jSgZkDO8tXC0pIA/7yoNAA6xzh0EeqP6Ii0643czW++oCcEFqQR1T6kBtv30u8tERFqaWlEvlOPjnLFDuPVsK8/djvS1nNg6UL5RiyTFkeMKVGSxNo21azHYvjLF5dNGBSav6trXSYmatpwARKZRGtmNvnL15fWi/bFhv52FzwOeT0YHbC68CiJ04/mdnyzL5C2qujpHlxoqaAZvAOY6zkaEP47/fjBZVxUPblsshDZcq/2rIS3qarbHhDQ2JuYanBhWuQahAzS8O/JF0DQSQ2WmijtE1t8sMolEo8mY+CxvWQYO8yrppm6iPXdlGoobW88vn5iuUOfLWfhDHZA/3c3Eh3zh0X+CBDmD3SEsXRjnNfWDOjjfgAFOxP1L353TmDUVMWLPVC4kaFuzm+EcviowfBf9pyXk=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8P194MB1288.EURP194.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(396003)(136003)(346002)(376002)(366004)(66946007)(85182001)(66446008)(38100700002)(7416002)(478600001)(66476007)(86362001)(6486002)(6916009)(2906002)(53546011)(91956017)(6506007)(8936002)(76116006)(66556008)(64756008)(83380400001)(2616005)(5660300002)(186003)(54906003)(122000001)(26005)(6512007)(71200400001)(966005)(4326008)(316002)(8676002)(38070700005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?azc0bytVUWNUclNBaCtaQkpReTdJNDlaOWhYaCsxbHFlNTZDRmJSL1RoVkFQ?=
- =?utf-8?B?TDJTdVIvczVtK0JWUkJLMG1jRVB4NVJwblV1ZmNLQ0FHdmRGYnF6cGFkS0RZ?=
- =?utf-8?B?SE85WlI5eFl4RnM2T2NVdTUrYkxCSU1raDJnNVA2MXB3ZWlYWDd5dWFPZXBT?=
- =?utf-8?B?MitnM2ZTRktjQVNUWVRHMlowaFBSbnp6TWNhUGhZWUVJcmRmdUNaeUNkNTgy?=
- =?utf-8?B?b0dBMG9tVkZTaFZVcDRoOHIwb0VxMU5JUE9vRmNNVFdrNzhnVjg3b2M0NWN0?=
- =?utf-8?B?ZWZXYW5vTjBPQXZvUnc1YUFTOWU0alVTM3BRUVNGZ2QwS1hpTGNtbHlEV1Uv?=
- =?utf-8?B?V3JiMmdKdVV0K0paZ3Z4THl5V0xNWk5oUkJBWkVBSUdSVG0wQWtxaVRVdElH?=
- =?utf-8?B?NmhPQWEwK3kvUXJEa1NDbWs2YUhUMEV3WER0R0RLbm5MVEdmNjhqRUVNdDll?=
- =?utf-8?B?RkRNUURqbG8yVmd2a0wyUzdXeDljd2JWb3djSExRRVp6R3o3eCtFZUdPRG4x?=
- =?utf-8?B?TTlxY25zL2FwSWdMOEh1ZEYzWXZhekpkWERCQ0t4eHhCV0N5K2JqL1FJL0xz?=
- =?utf-8?B?Z2RJbTBWSzAvbEtZajFoUTcrMkpVYXhRSldWZkVSYTBPVmZKL2tKM3JvQUYw?=
- =?utf-8?B?a2lRVzJhRnAydzVwNFFzSkNDcndHVk1qYVI5eWxLbUxoWUFLQmN3M1hGMmVn?=
- =?utf-8?B?VEg2S3VHdEFxWWVqS1NGTTB5UFdwUGt3bmk2aE0xdlZBL0pqS0c5d211RVBE?=
- =?utf-8?B?alpRSDB4emV5L1Z2NDM2Nm5zb1dudkwyOTJSemJCQXJLU1RQVmFiYVg3ci9S?=
- =?utf-8?B?T2xiUnZWQkxKejVDMWVVUGdHKzB3UG05bWtlOEt6UU9RWmljVllGRk9mQVE2?=
- =?utf-8?B?MmtxRG1YdGRsc1RQYUlET2ZUcHpXWjgycEJqemUvUkVXZHk3a0M5RWUzN1lt?=
- =?utf-8?B?THhmcEZNeTZIV2NsTUZLRWsvcytndjM2VUdHeFp2ZHlYb1V4RjhNaGVXbU5P?=
- =?utf-8?B?MGE3dmpxQjhhUlgyMDdqY0FoRkU3UHQzZFlLMjFVZ1g5MGJ6L0dnWlVkNGJL?=
- =?utf-8?B?R3lKcXpER2NlbVpBWFdRQUJqVXg3T2U0eVdKV1p3UGZ1Y3VJUnJBV3BDUjRa?=
- =?utf-8?B?ME9NUzhrMWJEem5oVDRwdXJKNy9jdnI1UmV4VURQVUFGY1poY0hYM3N1WThs?=
- =?utf-8?B?RUhWVEZ4TFhhem9iemEreHVIbWtwdjJNVEt4LzZ2dGxNV3c1REhDcHpOK1hi?=
- =?utf-8?B?bXdnL0hqUzNNM1djWEhRMXg3Qk4xWWZMLzNlSFFMMEJHdE85ZjdLSFZWaEt4?=
- =?utf-8?B?N2xUdjM3QThIY0lNbU5oWUdnUS9uT3NHdUpBbnJ1cXIrK0J5MnN5L0Fpc3B3?=
- =?utf-8?B?YWpkNzRENy9KKzhidStWcS9LYVdtLzV0RnFKUTN4bXk2T29tY2YzbjF0RTF3?=
- =?utf-8?B?cTd5Vm1ZZVhDeHJLc1Iva3gwQklCWW9VSXdhVk14dEEwd1dpMFVKcDJ0SXlV?=
- =?utf-8?B?UlRaN2g4S0ZkdHJhUGxYYTFYUFRPMW16ZGcrUGFNTUxudUF2T0E3VWduckJw?=
- =?utf-8?B?QTlJc2hCdzF2YkpoNWRKa2NkTHlicHg2RU9xVllET3RGaUZqVURaMVF0YVNO?=
- =?utf-8?B?QTh6YURoejR0U0xXVlJIbzZiNFdvdWdRT2s4RkF6MHlUdVRTVU8wbWh6c0NI?=
- =?utf-8?B?WHBGLzVCck9EaUc3VHNZQ1Jad0h3UTJKRDRSTE8vR1kvZGtQOUNvSlZUYlNx?=
- =?utf-8?Q?AV+L9/QBnOkyCy4DrnQIrcDaBSs8+iVuT40tt1w?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <2E58E277737101419B4209E0AB5D38DD@EURP194.PROD.OUTLOOK.COM>
-Content-Transfer-Encoding: base64
+ <20210908005942.GJ490529@madcap2.tricolour.ca>
+ <9ca855cb19097b6fa98f2b3419864fd8ddadf065.camel@aisec.fraunhofer.de>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS8P194MB1288.EURP194.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 54cd43ea-5c0a-4528-4cd3-08d972a25bb4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Sep 2021 08:26:29.7232
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f930300c-c97d-4019-be03-add650a171c4
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ZjZHDIB5D9AnNv8CLy/edfWM07bTz1CEfEs2sZhAdKV3leF8Xr6fTvRGUQ8RUZFVJCATnsty0L8uocPsY46Yw6JOWzQYaF8AxMi5aR8AcWEzG8E//eAJas+m8ZHtyHxw
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6P194MB0471
-X-OriginatorOrg: aisec.fraunhofer.de
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9ca855cb19097b6fa98f2b3419864fd8ddadf065.camel@aisec.fraunhofer.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-T24gVHVlLCAyMDIxLTA5LTA3IGF0IDIwOjU5IC0wNDAwLCBSaWNoYXJkIEd1eSBCcmlnZ3Mgd3Jv
-dGU6DQo+IE9uIDIwMjEtMDktMDQgMTE6NTksIE1pY2hhZWwgV2Vpw58gd3JvdGU6DQo+ID4gZG0g
-aW50ZWdyaXR5IGFuZCBhbHNvIHN0YWNrZWQgZG0gY3J5cHQgZGV2aWNlcyB0cmFjayBpbnRlZ3Jp
-dHkNCj4gPiB2aW9sYXRpb25zIGludGVybmFsbHkuIFRodXMsIGludGVncml0eSB2aW9sYXRpb25z
-IGNvdWxkIGJlIHBvbGxlZA0KPiA+IGZyb20gdXNlciBzcGFjZSwgZS5nLiwgYnkgJ2ludGVncml0
-eXNldHVwIHN0YXR1cycuDQo+ID4gDQo+ID4gPiBGcm9tIGFuIGF1ZGl0aW5nIHBlcnNwZWN0aXZl
-LCB3ZSBvbmx5IGNvdWxkIHNlZSB0aGF0IHRoZXJlIHdlcmUNCj4gPiBhIG51bWJlciBvZiBpbnRl
-Z3JpdHkgdmlvbGF0aW9ucywgYnV0IG5vdCB3aGVuIGFuZCB3aGVyZSB0aGUNCj4gPiB2aW9sYXRp
-b24gZXhhY3RseSB3YXMgdGFraW5nIHBsYWNlLiBUaGUgY3VycmVudCBlcnJvciBsb2cgdG8NCj4g
-PiB0aGUga2VybmVsIHJpbmcgYnVmZmVyLCBjb250YWlucyB0aG9zZSBpbmZvcm1hdGlvbiwgdGlt
-ZSBzdGFtcCBhbmQNCj4gPiBzZWN0b3Igb24gZGV2aWNlLiBIb3dldmVyLCBmb3IgYXVkaXRpbmcg
-dGhlIGF1ZGl0IHN1YnN5c3RlbSBwcm92aWRlcw0KPiA+IGEgc2VwYXJhdGUgbG9nZ2luZyBtZWNo
-YW5pc20gd2hpY2ggbWVldHMgY2VydGFpbiBjcml0ZXJpYSBmb3Igc2VjdXJlDQo+ID4gYXVkaXQg
-bG9nZ2luZy4NCj4gPiANCj4gPiBXaXRoIHRoaXMgc21hbGwgc2VyaWVzIHdlIG1ha2UgdXNlIG9m
-IHRoZSBrZXJuZWwgYXVkaXQgZnJhbWV3b3JrDQo+ID4gYW5kIGV4dGVuZCB0aGUgZG0gZHJpdmVy
-IHRvIGxvZyBhdWRpdCBldmVudHMgaW4gY2FzZSBvZiBzdWNoDQo+ID4gaW50ZWdyaXR5IHZpb2xh
-dGlvbnMuIEZ1cnRoZXIsIHdlIGFsc28gbG9nIGNvbnN0cnVjdGlvbiBhbmQNCj4gPiBkZXN0cnVj
-dGlvbiBvZiB0aGUgZGV2aWNlIG1hcHBpbmdzLg0KPiA+IA0KPiA+IFdlIGZvY3VzIG9uIGRtLWlu
-dGVncml0eSBhbmQgc3RhY2tlZCBkbS1jcnlwdCBkZXZpY2VzIGZvciBub3cuDQo+ID4gSG93ZXZl
-ciwgdGhlIGhlbHBlciBmdW5jdGlvbnMgdG8gbG9nIGF1ZGl0IG1lc3NhZ2VzIHNob3VsZCBiZQ0K
-PiA+IGFwcGxpY2FibGUgdG8gZG0tdmVyaXR5IHRvby4NCj4gPiANCj4gPiBUaGUgZmlyc3QgcGF0
-Y2ggaW50cm9kdWNlIGdlbmVyaWMgYXVkaXQgd3JhcHBlciBmdW5jdGlvbnMuDQo+ID4gVGhlIHNl
-Y29uZCBwYXRjaCBtYWtlcyB1c2Ugb2YgdGhlIGF1ZGl0IHdyYXBwZXIgZnVuY3Rpb25zIGluIHRo
-ZQ0KPiA+IGRtLWludGVncml0eS5jLg0KPiA+IFRoZSB0aGlyZCBwYXRjaCB1c2VzIHRoZSB3cmFw
-cGVyIGZ1bmN0aW9ucyBpbiBkbS1jcnlwdC5jLg0KPiA+IA0KPiA+IFRoZSBhdWRpdCBsb2dzIGxv
-b2sgbGlrZSB0aGlzIGlmIGV4ZWN1dGluZyB0aGUgZm9sbG93aW5nIHNpbXBsZSB0ZXN0Og0KPiA+
-IA0KPiA+ICMgZGQgaWY9L2Rldi96ZXJvIG9mPXRlc3QuaW1nIGJzPTFNIGNvdW50PTEwMjQNCj4g
-PiAjIGxvc2V0dXAgLWYgdGVzdC5pbWcNCj4gPiAjIGludGVncml0eXNldHVwIC12RCBmb3JtYXQg
-LS1pbnRlZ3JpdHkgc2hhMjU2IC10IDMyIC9kZXYvbG9vcDANCj4gPiAjIGludGVncml0eXNldHVw
-IG9wZW4gLUQgL2Rldi9sb29wMCAtLWludGVncml0eSBzaGEyNTYgaW50ZWdyaXR5dGVzdA0KPiA+
-ICMgaW50ZWdyaXR5c2V0dXAgc3RhdHVzIGludGVncml0eXRlc3QNCj4gPiAjIGludGVncml0eXNl
-dHVwIGNsb3NlIGludGVncml0eXRlc3QNCj4gPiAjIGludGVncml0eXNldHVwIG9wZW4gLUQgL2Rl
-di9sb29wMCAtLWludGVncml0eSBzaGEyNTYgaW50ZWdyaXR5dGVzdA0KPiA+ICMgaW50ZWdyaXR5
-c2V0dXAgc3RhdHVzIGludGVncml0eXRlc3QNCj4gPiAjIGRkIGlmPS9kZXYvdXJhbmRvbSBvZj0v
-ZGV2L2xvb3AwIGJzPTUxMiBjb3VudD0xIHNlZWs9MTAwMDAwDQo+ID4gIyBkZCBpZj0vZGV2L21h
-cHBlci9pbnRlZ3JpdHl0ZXN0IG9mPS9kZXYvbnVsbA0KPiA+IA0KPiA+IC0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0NCj4gPiBhdWRpdC5sb2cgZnJvbSBhdWRpdGQNCj4gPiANCj4gPiB0eXBlPVVO
-S05PV05bMTMzNl0gbXNnPWF1ZGl0KDE2MzA0MjUwMzkuMzYzOjE4NCk6IG1vZHVsZT1pbnRlZ3Jp
-dHkgb3A9Y3RyIHBwaWQ9MzgwNyBwaWQ9MzgxOQ0KPiA+IGF1aWQ9MTAwMCB1aWQ9MCBnaWQ9MCBl
-dWlkPTAgc3VpZD0wIGZzdWlkPTAgZWdpZD0wIHNnaWQ9MCBmc2dpZD0wIHR0eT1wdHMyIHNlcz0z
-DQo+ID4gY29tbT0iaW50ZWdyaXR5c2V0dXAiIGV4ZT0iL3NiaW4vaW50ZWdyaXR5c2V0dXAiIHN1
-Ymo9PXVuY29uZmluZWQgZGV2PTI1NDozIGVycm9yX21zZz0nc3VjY2VzcycNCj4gPiByZXM9MQ0K
-PiA+IHR5cGU9VU5LTk9XTlsxMzM2XSBtc2c9YXVkaXQoMTYzMDQyNTAzOS40NzE6MTg1KTogbW9k
-dWxlPWludGVncml0eSBvcD1kdHIgcHBpZD0zODA3IHBpZD0zODE5DQo+ID4gYXVpZD0xMDAwIHVp
-ZD0wIGdpZD0wIGV1aWQ9MCBzdWlkPTAgZnN1aWQ9MCBlZ2lkPTAgc2dpZD0wIGZzZ2lkPTAgdHR5
-PXB0czIgc2VzPTMNCj4gPiBjb21tPSJpbnRlZ3JpdHlzZXR1cCIgZXhlPSIvc2Jpbi9pbnRlZ3Jp
-dHlzZXR1cCIgc3Viaj09dW5jb25maW5lZCBkZXY9MjU0OjMgZXJyb3JfbXNnPSdzdWNjZXNzJw0K
-PiA+IHJlcz0xDQo+ID4gdHlwZT1VTktOT1dOWzEzMzZdIG1zZz1hdWRpdCgxNjMwNDI1MDM5LjYx
-MToxODYpOiBtb2R1bGU9aW50ZWdyaXR5IG9wPWN0ciBwcGlkPTM4MDcgcGlkPTM4MTkNCj4gPiBh
-dWlkPTEwMDAgdWlkPTAgZ2lkPTAgZXVpZD0wIHN1aWQ9MCBmc3VpZD0wIGVnaWQ9MCBzZ2lkPTAg
-ZnNnaWQ9MCB0dHk9cHRzMiBzZXM9Mw0KPiA+IGNvbW09ImludGVncml0eXNldHVwIiBleGU9Ii9z
-YmluL2ludGVncml0eXNldHVwIiBzdWJqPT11bmNvbmZpbmVkIGRldj0yNTQ6MyBlcnJvcl9tc2c9
-J3N1Y2Nlc3MnDQo+ID4gcmVzPTENCj4gPiB0eXBlPVVOS05PV05bMTMzNl0gbXNnPWF1ZGl0KDE2
-MzA0MjUwNTQuNDc1OjE4Nyk6IG1vZHVsZT1pbnRlZ3JpdHkgb3A9ZHRyIHBwaWQ9MzgwNyBwaWQ9
-MzgxOQ0KPiA+IGF1aWQ9MTAwMCB1aWQ9MCBnaWQ9MCBldWlkPTAgc3VpZD0wIGZzdWlkPTAgZWdp
-ZD0wIHNnaWQ9MCBmc2dpZD0wIHR0eT1wdHMyIHNlcz0zDQo+ID4gY29tbT0iaW50ZWdyaXR5c2V0
-dXAiIGV4ZT0iL3NiaW4vaW50ZWdyaXR5c2V0dXAiIHN1Ymo9PXVuY29uZmluZWQgZGV2PTI1NDoz
-IGVycm9yX21zZz0nc3VjY2VzcycNCj4gPiByZXM9MQ0KPiA+IA0KPiA+IHR5cGU9VU5LTk9XTlsx
-MzM2XSBtc2c9YXVkaXQoMTYzMDQyNTA3My4xNzE6MTkxKTogbW9kdWxlPWludGVncml0eSBvcD1j
-dHIgcHBpZD0zODA3IHBpZD0zODgzDQo+ID4gYXVpZD0xMDAwIHVpZD0wIGdpZD0wIGV1aWQ9MCBz
-dWlkPTAgZnN1aWQ9MCBlZ2lkPTAgc2dpZD0wIGZzZ2lkPTAgdHR5PXB0czIgc2VzPTMNCj4gPiBj
-b21tPSJpbnRlZ3JpdHlzZXR1cCIgZXhlPSIvc2Jpbi9pbnRlZ3JpdHlzZXR1cCIgc3Viaj09dW5j
-b25maW5lZCBkZXY9MjU0OjMgZXJyb3JfbXNnPSdzdWNjZXNzJw0KPiA+IHJlcz0xDQo+ID4gDQo+
-ID4gdHlwZT1VTktOT1dOWzEzMzZdIG1zZz1hdWRpdCgxNjMwNDI1MDg3LjIzOToxOTIpOiBtb2R1
-bGU9aW50ZWdyaXR5IG9wPWR0ciBwcGlkPTM4MDcgcGlkPTM5MDINCj4gPiBhdWlkPTEwMDAgdWlk
-PTAgZ2lkPTAgZXVpZD0wIHN1aWQ9MCBmc3VpZD0wIGVnaWQ9MCBzZ2lkPTAgZnNnaWQ9MCB0dHk9
-cHRzMiBzZXM9Mw0KPiA+IGNvbW09ImludGVncml0eXNldHVwIiBleGU9Ii9zYmluL2ludGVncml0
-eXNldHVwIiBzdWJqPT11bmNvbmZpbmVkIGRldj0yNTQ6MyBlcnJvcl9tc2c9J3N1Y2Nlc3MnDQo+
-ID4gcmVzPTENCj4gPiANCj4gPiB0eXBlPVVOS05PV05bMTMzNl0gbXNnPWF1ZGl0KDE2MzA0MjUw
-OTMuNzU1OjE5Myk6IG1vZHVsZT1pbnRlZ3JpdHkgb3A9Y3RyIHBwaWQ9MzgwNyBwaWQ9MzkwNg0K
-PiA+IGF1aWQ9MTAwMCB1aWQ9MCBnaWQ9MCBldWlkPTAgc3VpZD0wIGZzdWlkPTAgZWdpZD0wIHNn
-aWQ9MCBmc2dpZD0wIHR0eT1wdHMyIHNlcz0zDQo+ID4gY29tbT0iaW50ZWdyaXR5c2V0dXAiIGV4
-ZT0iL3NiaW4vaW50ZWdyaXR5c2V0dXAiIHN1Ymo9PXVuY29uZmluZWQgZGV2PTI1NDozIGVycm9y
-X21zZz0nc3VjY2VzcycNCj4gPiByZXM9MQ0KPiA+IA0KPiA+IHR5cGU9VU5LTk9XTlsxMzM3XSBt
-c2c9YXVkaXQoMTYzMDQyNTExMi4xMTk6MTk0KTogbW9kdWxlPWludGVncml0eSBvcD1pbnRlZ3Jp
-dHktY2hlY2tzdW0NCj4gPiBkZXY9MjU0OjMgc2VjdG9yPTc3NDgwIHJlcz0wDQo+ID4gdHlwZT1V
-TktOT1dOWzEzMzddIG1zZz1hdWRpdCgxNjMwNDI1MTEyLjExOToxOTUpOiBtb2R1bGU9aW50ZWdy
-aXR5IG9wPWludGVncml0eS1jaGVja3N1bQ0KPiA+IGRldj0yNTQ6MyBzZWN0b3I9Nzc0ODAgcmVz
-PTANCj4gPiB0eXBlPVVOS05PV05bMTMzN10gbXNnPWF1ZGl0KDE2MzA0MjUxMTIuMTE5OjE5Nik6
-IG1vZHVsZT1pbnRlZ3JpdHkgb3A9aW50ZWdyaXR5LWNoZWNrc3VtDQo+ID4gZGV2PTI1NDozIHNl
-Y3Rvcj03NzQ4MCByZXM9MA0KPiA+IHR5cGU9VU5LTk9XTlsxMzM3XSBtc2c9YXVkaXQoMTYzMDQy
-NTExMi4xMTk6MTk3KTogbW9kdWxlPWludGVncml0eSBvcD1pbnRlZ3JpdHktY2hlY2tzdW0NCj4g
-PiBkZXY9MjU0OjMgc2VjdG9yPTc3NDgwIHJlcz0wDQo+ID4gdHlwZT1VTktOT1dOWzEzMzddIG1z
-Zz1hdWRpdCgxNjMwNDI1MTEyLjExOToxOTgpOiBtb2R1bGU9aW50ZWdyaXR5IG9wPWludGVncml0
-eS1jaGVja3N1bQ0KPiA+IGRldj0yNTQ6MyBzZWN0b3I9Nzc0ODAgcmVzPTANCj4gPiB0eXBlPVVO
-S05PV05bMTMzN10gbXNnPWF1ZGl0KDE2MzA0MjUxMTIuMTE5OjE5OSk6IG1vZHVsZT1pbnRlZ3Jp
-dHkgb3A9aW50ZWdyaXR5LWNoZWNrc3VtDQo+ID4gZGV2PTI1NDozIHNlY3Rvcj03NzQ4MCByZXM9
-MA0KPiA+IHR5cGU9VU5LTk9XTlsxMzM3XSBtc2c9YXVkaXQoMTYzMDQyNTExMi4xMTk6MjAwKTog
-bW9kdWxlPWludGVncml0eSBvcD1pbnRlZ3JpdHktY2hlY2tzdW0NCj4gPiBkZXY9MjU0OjMgc2Vj
-dG9yPTc3NDgwIHJlcz0wDQo+ID4gdHlwZT1VTktOT1dOWzEzMzddIG1zZz1hdWRpdCgxNjMwNDI1
-MTEyLjExOToyMDEpOiBtb2R1bGU9aW50ZWdyaXR5IG9wPWludGVncml0eS1jaGVja3N1bQ0KPiA+
-IGRldj0yNTQ6MyBzZWN0b3I9Nzc0ODAgcmVzPTANCj4gPiB0eXBlPVVOS05PV05bMTMzN10gbXNn
-PWF1ZGl0KDE2MzA0MjUxMTIuMTE5OjIwMik6IG1vZHVsZT1pbnRlZ3JpdHkgb3A9aW50ZWdyaXR5
-LWNoZWNrc3VtDQo+ID4gZGV2PTI1NDozIHNlY3Rvcj03NzQ4MCByZXM9MA0KPiA+IHR5cGU9VU5L
-Tk9XTlsxMzM3XSBtc2c9YXVkaXQoMTYzMDQyNTExMi4xMTk6MjAzKTogbW9kdWxlPWludGVncml0
-eSBvcD1pbnRlZ3JpdHktY2hlY2tzdW0NCj4gPiBkZXY9MjU0OjMgc2VjdG9yPTc3NDgwIHJlcz0w
-DQo+IA0KPiBBcmUgdGhlc2UgaXNvbGF0ZWQgcmVjb3Jkcywgb3IgYXJlIHRoZXkgYWNjb21wYW5p
-ZWQgYnkgYSB0eXBlPVNZU0NBTEwNCj4gcmVjb3JkIGluIHlvdXIgbG9ncz8NCg0KWW91IGFyZSBy
-aWdodCB0aGUgZG1fYXVkaXRfbG9nX3tjdHIsZHRyfSBmdW5jdGlvbnMgcHJvZHVjZSB0eXBlPUFV
-RElUX0RNX0NUUkwNCmFjY29tcGFuaWVkIGJ5IGENCnR5cGU9U1lTQ0FMTC4gVGhpcyB3YXMgYSBt
-aXN0YWtlIGJ5IG1lLiBJIGdyZXBwZWQNCnRoZSBhdWRpdCBsb2cgd2l0aCAnZ3JlcCAtZSAiMTMz
-WzYtN10iJyBkdXJpbmcgbXkNCnRlc3RzLCB0aHVzIEkgaGF2ZQ0KbWlzc2VkIHRoYXQuIEkgd2ls
-bCByZW1vdmUgdGhlIGF1ZGl0X2xvZ190YXNrX2luZm8oKSBjYWxsIGluIHRoZQ0KaW50ZXJuYWwg
-ZG1fYXVkaXRfbG9nX3RpKCkgZnVuY3Rpb24NCmZvciB0eXBlPUFVRElUX0RNX0NUUkwuDQoNCmRt
-X2F1ZGl0X2xvZ190YXJnZXQgYW5kIGRtX2F1ZGl0X2xvZ19iaW8gYXJlIHVzaW5nIHR5cGU9QVVE
-SVRfRE1fRVZFTlQsDQpUaGVzZSBhcmUgaXNvbGF0ZWQgZXZlbnRzIHNpbmNlIHRoZXkgYXJlIG5v
-dCB0cmlnZ2VydCBpbiB1c2VyIGNvbnRleHQuIA0KDQo+IA0KPiBUaGUgcmVhc29uIEkgYXNrIGlz
-IHRoYXQgYXVkaXRfbG9nX3Rhc2tfaW5mbygpIGlzIGluY2x1ZGVkIGluIHRocmVlIG9mDQo+IHRo
-ZSBjYWxsaW5nIG1ldGhvZHMgKGRtX2F1ZGl0X2xvZ197dGFyZ2V0LGN0cixkdHJ9KSB3aGljaCB1
-c2UgYQ0KPiBjb21iaW5hdGlvbiBvZiBBVURJVF9ETV9DVFJML0FVRElUX0RNX0VWRU5UIHR5cGUg
-d2hpbGUgdGhlIGZvdXJ0aA0KPiAoZG1fYXVkaXRfbG9nX2JpbykgYWxzbyB1c2VzIG9uZSBvZiB0
-aGUgdHlwZXMgYWJvdmUgYnV0IGRvZXMgbm90IGluY2x1ZGUNCj4gYXVkaXRfbG9nX3Rhc2tfaW5m
-bygpLiAgSWYgYWxsIHRoZXNlIHJlY29yZHMgYXJlIGFjY29tcGFuaWVkIGJ5IFNZU0NBTEwNCj4g
-cmVjb3JkcywgdGhlbiB0aGUgdGFzayBpbmZvIHdvdWxkIGJlIHJlZHVuZGFudCAoYW5kIG1pZ2h0
-IGV2ZW4gY29uZmxpY3QNCj4gaWYgdGhlcmUncyBhIGJ1ZykuICBBbm90aGVyIG1pbm9yIG9kZGl0
-eSBpcyB0aGUgZG91YmxlICI9IiBmb3IgdGhlIHN1YmoNCj4gZmllbGQsIHdoaWNoIGRvZXNuJ3Qg
-YXBwZWFyIHRvIGJlIGEgYnVnIGluIHlvdXIgY29kZSwgYnV0IHN0aWxsIHB1enpsaW5nLg0KDQpJ
-biB0aGUgdGVzdCBzZXR1cCwgSSBoYWQgQXBwYXJtb3IgZW5hYmxlZCBhbmQgc2V0IGFzIGRlZmF1
-bHQgc2VjdXJpdHkgbW9kdWxlLg0KVGhpcyBiZWhhdmlvciBvY2N1cnMgaW4gYW55IGF1ZGl0X2xv
-ZyBtZXNzYWdlLg0KU2VlbXMgdGhhdCB0aGlzIGlzIGNvbWluZyBmcm9tIHRoZSBsYWJlbCBoYW5k
-bGluZyB0aGVyZS4gSGF2aW5nIGEgcXVpY2sgbG9vaw0KYXQgdGhlIGNvZGUgdGhlcmUgaXMgdGhh
-dCB0aGV5IHVzZSAnPScgaW4gdGhlIGxhYmVsIHRvIHByb3ZpZGUgYSByb290IHZpZXcgYXMNCnBh
-cnQgb2YgdGhlaXIgcG9saWN5IHZpcnR1YWxpemF0aW9uLiBUaGUgY29ycmVzcG9uZGluZyBjb21t
-aXQgaXMgc2l0dGluZw0KdGhlcmUgc2luY2UgMjAxNzogIjI2Yjc4OTk1MTBhZTI0M2UzOTI5NjA3
-MDRlYmRiYTUyZDA1ZmJiMTMiDQoNCj4gDQo+IEFyZSB0aG9zZSBsYXN0IDEwIHJlY29yZHMgZXhw
-ZWN0ZWQgdG8gYmUgaWRlbnRpY2FsIG90aGVyIHRoYW4gZXZlbnQNCj4gc2VyaWFsIG51bWJlcj8N
-Cg0KWWVzLCBiZWNhdXNlIHRoZSBhY2Nlc3MgdG8gdGhlIGNvcnJ1cHQgc2VjdG9yIGlzIG1hZGUg
-MTAgdGltZXMuDQpUaGlzIHJlZmxlY3RzIGV4YWN0bHkgdGhlIHNhbWUgYmVoYXZpb3Igd2l0aG91
-dCB0aGUgYXVkaXQgbG9nZ2luZywgaW4gdGhlIA0Ka2VybmVsIGRlYnVnIGxvZy4NCg0KPiANCj4g
-PiB2NCBDaGFuZ2VzOg0KPiA+IC0gQWRkZWQgY29tbWVudHMgb24gaW50ZW5kZWQgdXNlIG9mIHdy
-YXBwZXIgZnVuY3Rpb25zIGluIGRtLWF1ZGl0LmgNCj4gPiAtIGRtX2F1ZGl0X2xvZ19iaW8oKTog
-Rml4ZWQgbWlzc2luZyAnPScgYXMgc3BvdHRlZCBieSBQYXVsDQo+ID4gLSBkbV9hdWRpdF9sb2df
-dGkoKTogSGFuZGxlIHdyb25nIGF1ZGl0X3R5cGUgYXMgc3VnZ2VzdGVkIGJ5IFBhdWwNCj4gPiAN
-Cj4gPiB2MyBDaGFuZ2VzOg0KPiA+IC0gVXNlIG9mIHR3byBhdWRpdCBldmVudCB0eXBlcyBBVURJ
-VF9ETV9FVkVOVCB1bmQgQVVESVRfRE1fQ1RSTA0KPiA+IC0gQWRkaXRpb25hbHkgdXNlIGF1ZGl0
-X2xvZ190YXNrX2luZm8gaW4gY2FzZSBvZiBBVURJVF9ETV9DVFJMIG1lc3NhZ2VzDQo+ID4gLSBQ
-cm92aWRlIGNvbnNpc3RlbnQgZmllbGRzIHBlciBtZXNzYWdlIHR5cGUgYXMgc3VnZ2VzdGVkIGJ5
-IFBhdWwNCj4gPiAtIEFkZGVkIHNhbXBsZSBldmVudHMgdG8gY29tbWl0IG1lc3NhZ2Ugb2YgWzEv
-M10gYXMgc3VnZ2VzdGVkIGJ5IFBhdWwNCj4gPiAtIFJlYmFzZWQgb24gdjUuMTQNCj4gPiANCj4g
-PiB2MiBDaGFuZ2VzOg0KPiA+IC0gRml4ZWQgY29tcGlsZSBlcnJvcnMgaWYgQ09ORklHX0RNX0FV
-RElUIGlzIG5vdCBzZXQNCj4gPiAtIEZpeGVkIGZvcm1hdHRpbmcgYW5kIHR5cG9zIGFzIHN1Z2dl
-c3RlZCBieSBDYXNleQ0KPiA+IA0KPiA+IE1pY2hhZWwgV2Vpw58gKDMpOg0KPiA+ICAgZG06IGlu
-dHJvZHVjZSBhdWRpdCBldmVudCBtb2R1bGUgZm9yIGRldmljZSBtYXBwZXINCj4gPiAgIGRtIGlu
-dGVncml0eTogbG9nIGF1ZGl0IGV2ZW50cyBmb3IgZG0taW50ZWdyaXR5IHRhcmdldA0KPiA+ICAg
-ZG0gY3J5cHQ6IGxvZyBhZWFkIGludGVncml0eSB2aW9sYXRpb25zIHRvIGF1ZGl0IHN1YnN5c3Rl
-bQ0KPiA+IA0KPiA+ICBkcml2ZXJzL21kL0tjb25maWcgICAgICAgICB8IDEwICsrKysrDQo+ID4g
-IGRyaXZlcnMvbWQvTWFrZWZpbGUgICAgICAgIHwgIDQgKysNCj4gPiAgZHJpdmVycy9tZC9kbS1h
-dWRpdC5jICAgICAgfCA4NCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0K
-PiA+ICBkcml2ZXJzL21kL2RtLWF1ZGl0LmggICAgICB8IDY2ICsrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKw0KPiA+ICBkcml2ZXJzL21kL2RtLWNyeXB0LmMgICAgICB8IDIyICsrKysrKysr
-LS0NCj4gPiAgZHJpdmVycy9tZC9kbS1pbnRlZ3JpdHkuYyAgfCAyNSArKysrKysrKysrLS0NCj4g
-PiAgaW5jbHVkZS91YXBpL2xpbnV4L2F1ZGl0LmggfCAgMiArDQo+ID4gIDcgZmlsZXMgY2hhbmdl
-ZCwgMjA1IGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pDQo+ID4gIGNyZWF0ZSBtb2RlIDEw
-MDY0NCBkcml2ZXJzL21kL2RtLWF1ZGl0LmMNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZl
-cnMvbWQvZG0tYXVkaXQuaA0KPiA+IA0KPiA+IC0tIA0KPiA+IDIuMjAuMQ0KPiA+IA0KPiA+IC0t
-DQo+ID4gTGludXgtYXVkaXQgbWFpbGluZyBsaXN0DQo+ID4gTGludXgtYXVkaXRAcmVkaGF0LmNv
-bQ0KPiA+IGh0dHBzOi8vbGlzdG1hbi5yZWRoYXQuY29tL21haWxtYW4vbGlzdGluZm8vbGludXgt
-YXVkaXQNCj4gDQo+IC0gUkdCDQo+IA0KPiAtLQ0KPiBSaWNoYXJkIEd1eSBCcmlnZ3MgPHJnYkBy
-ZWRoYXQuY29tPg0KPiBTci4gUy9XIEVuZ2luZWVyLCBLZXJuZWwgU2VjdXJpdHksIEJhc2UgT3Bl
-cmF0aW5nIFN5c3RlbXMNCj4gUmVtb3RlLCBPdHRhd2EsIFJlZCBIYXQgQ2FuYWRhDQo+IElSQzog
-cmdiLCBTdW5SYXljZXINCj4gVm9pY2U6ICsxLjY0Ny43NzcuMjYzNSwgSW50ZXJuYWw6ICg4MSkg
-MzI2MzUNCj4gDQoNClRoYW5rcywNCk1pY2hhZWwNCg==
+On 2021-09-08 08:26, Weiß, Michael wrote:
+> On Tue, 2021-09-07 at 20:59 -0400, Richard Guy Briggs wrote:
+> > On 2021-09-04 11:59, Michael Weiß wrote:
+> > > dm integrity and also stacked dm crypt devices track integrity
+> > > violations internally. Thus, integrity violations could be polled
+> > > from user space, e.g., by 'integritysetup status'.
+> > > 
+> > > > From an auditing perspective, we only could see that there were
+> > > a number of integrity violations, but not when and where the
+> > > violation exactly was taking place. The current error log to
+> > > the kernel ring buffer, contains those information, time stamp and
+> > > sector on device. However, for auditing the audit subsystem provides
+> > > a separate logging mechanism which meets certain criteria for secure
+> > > audit logging.
+> > > 
+> > > With this small series we make use of the kernel audit framework
+> > > and extend the dm driver to log audit events in case of such
+> > > integrity violations. Further, we also log construction and
+> > > destruction of the device mappings.
+> > > 
+> > > We focus on dm-integrity and stacked dm-crypt devices for now.
+> > > However, the helper functions to log audit messages should be
+> > > applicable to dm-verity too.
+> > > 
+> > > The first patch introduce generic audit wrapper functions.
+> > > The second patch makes use of the audit wrapper functions in the
+> > > dm-integrity.c.
+> > > The third patch uses the wrapper functions in dm-crypt.c.
+> > > 
+> > > The audit logs look like this if executing the following simple test:
+> > > 
+> > > # dd if=/dev/zero of=test.img bs=1M count=1024
+> > > # losetup -f test.img
+> > > # integritysetup -vD format --integrity sha256 -t 32 /dev/loop0
+> > > # integritysetup open -D /dev/loop0 --integrity sha256 integritytest
+> > > # integritysetup status integritytest
+> > > # integritysetup close integritytest
+> > > # integritysetup open -D /dev/loop0 --integrity sha256 integritytest
+> > > # integritysetup status integritytest
+> > > # dd if=/dev/urandom of=/dev/loop0 bs=512 count=1 seek=100000
+> > > # dd if=/dev/mapper/integritytest of=/dev/null
+> > > 
+> > > -------------------------
+> > > audit.log from auditd
+> > > 
+> > > type=UNKNOWN[1336] msg=audit(1630425039.363:184): module=integrity op=ctr ppid=3807 pid=3819
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > type=UNKNOWN[1336] msg=audit(1630425039.471:185): module=integrity op=dtr ppid=3807 pid=3819
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > type=UNKNOWN[1336] msg=audit(1630425039.611:186): module=integrity op=ctr ppid=3807 pid=3819
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > type=UNKNOWN[1336] msg=audit(1630425054.475:187): module=integrity op=dtr ppid=3807 pid=3819
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > 
+> > > type=UNKNOWN[1336] msg=audit(1630425073.171:191): module=integrity op=ctr ppid=3807 pid=3883
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > 
+> > > type=UNKNOWN[1336] msg=audit(1630425087.239:192): module=integrity op=dtr ppid=3807 pid=3902
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > 
+> > > type=UNKNOWN[1336] msg=audit(1630425093.755:193): module=integrity op=ctr ppid=3807 pid=3906
+> > > auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts2 ses=3
+> > > comm="integritysetup" exe="/sbin/integritysetup" subj==unconfined dev=254:3 error_msg='success'
+> > > res=1
+> > > 
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:194): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:195): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:196): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:197): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:198): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:199): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:200): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:201): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:202): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > > type=UNKNOWN[1337] msg=audit(1630425112.119:203): module=integrity op=integrity-checksum
+> > > dev=254:3 sector=77480 res=0
+> > 
+> > Are these isolated records, or are they accompanied by a type=SYSCALL
+> > record in your logs?
+> 
+> You are right the dm_audit_log_{ctr,dtr} functions produce type=AUDIT_DM_CTRL
+> accompanied by a
+> type=SYSCALL. This was a mistake by me. I grepped
+> the audit log with 'grep -e "133[6-7]"' during my
+> tests, thus I have
+> missed that. I will remove the audit_log_task_info() call in the
+> internal dm_audit_log_ti() function
+> for type=AUDIT_DM_CTRL.
+
+(To get the whole events, use "ausearch ... -m 1336,1337 ...".)
+
+> dm_audit_log_target and dm_audit_log_bio are using type=AUDIT_DM_EVENT,
+> These are isolated events since they are not triggert in user context. 
+
+Ok, so it sounds like those events *should* have task_info in their
+record format since they are not accompanied by SYSCALL records that
+already contain that information.  So it appears that
+audit_log_task_info() should be moved from the type=AUDIT_DM_CTRL case
+to the type=AUDIT_DM_EVENT case.
+
+> > The reason I ask is that audit_log_task_info() is included in three of
+> > the calling methods (dm_audit_log_{target,ctr,dtr}) which use a
+> > combination of AUDIT_DM_CTRL/AUDIT_DM_EVENT type while the fourth
+> > (dm_audit_log_bio) also uses one of the types above but does not include
+> > audit_log_task_info().  If all these records are accompanied by SYSCALL
+> > records, then the task info would be redundant (and might even conflict
+> > if there's a bug).  Another minor oddity is the double "=" for the subj
+> > field, which doesn't appear to be a bug in your code, but still puzzling.
+> 
+> In the test setup, I had Apparmor enabled and set as default security module.
+> This behavior occurs in any audit_log message.
+> Seems that this is coming from the label handling there. Having a quick look
+> at the code there is that they use '=' in the label to provide a root view as
+> part of their policy virtualization. The corresponding commit is sitting
+> there since 2017: "26b7899510ae243e392960704ebdba52d05fbb13"
+
+Interesting...  Thanks for tracking down that cause.  I don't know how
+much pain that will cause the userspace parsing tools.  I've added Steve
+Grubb to the Cc: to get his input, but this should not derail this patch
+set.
+
+This has parallels to this previously reported issue with ima/integrity:
+	https://github.com/linux-audit/audit-kernel/issues/113
+
+> > Are those last 10 records expected to be identical other than event
+> > serial number?
+> 
+> Yes, because the access to the corrupt sector is made 10 times.
+> This reflects exactly the same behavior without the audit logging, in the 
+> kernel debug log.
+
+Is there any other distinguishing information for that event other than
+audit log serial number that would be useful to add?  (It doesn't sound
+like it.)
+
+> > > v4 Changes:
+> > > - Added comments on intended use of wrapper functions in dm-audit.h
+> > > - dm_audit_log_bio(): Fixed missing '=' as spotted by Paul
+> > > - dm_audit_log_ti(): Handle wrong audit_type as suggested by Paul
+> > > 
+> > > v3 Changes:
+> > > - Use of two audit event types AUDIT_DM_EVENT und AUDIT_DM_CTRL
+> > > - Additionaly use audit_log_task_info in case of AUDIT_DM_CTRL messages
+> > > - Provide consistent fields per message type as suggested by Paul
+> > > - Added sample events to commit message of [1/3] as suggested by Paul
+> > > - Rebased on v5.14
+> > > 
+> > > v2 Changes:
+> > > - Fixed compile errors if CONFIG_DM_AUDIT is not set
+> > > - Fixed formatting and typos as suggested by Casey
+> > > 
+> > > Michael Weiß (3):
+> > >   dm: introduce audit event module for device mapper
+> > >   dm integrity: log audit events for dm-integrity target
+> > >   dm crypt: log aead integrity violations to audit subsystem
+> > > 
+> > >  drivers/md/Kconfig         | 10 +++++
+> > >  drivers/md/Makefile        |  4 ++
+> > >  drivers/md/dm-audit.c      | 84 ++++++++++++++++++++++++++++++++++++++
+> > >  drivers/md/dm-audit.h      | 66 ++++++++++++++++++++++++++++++
+> > >  drivers/md/dm-crypt.c      | 22 ++++++++--
+> > >  drivers/md/dm-integrity.c  | 25 ++++++++++--
+> > >  include/uapi/linux/audit.h |  2 +
+> > >  7 files changed, 205 insertions(+), 8 deletions(-)
+> > >  create mode 100644 drivers/md/dm-audit.c
+> > >  create mode 100644 drivers/md/dm-audit.h
+> > > 
+> > > -- 
+> > > 2.20.1
+> > > 
+> > > --
+> > > Linux-audit mailing list
+> > > Linux-audit@redhat.com
+> > > https://listman.redhat.com/mailman/listinfo/linux-audit
+> > 
+> > - RGB
+> > 
+> > --
+> > Richard Guy Briggs <rgb@redhat.com>
+> > Sr. S/W Engineer, Kernel Security, Base Operating Systems
+> > Remote, Ottawa, Red Hat Canada
+> > IRC: rgb, SunRaycer
+> > Voice: +1.647.777.2635, Internal: (81) 32635
+> > 
+> 
+> Thanks,
+> Michael
+
+- RGB
+
+--
+Richard Guy Briggs <rgb@redhat.com>
+Sr. S/W Engineer, Kernel Security, Base Operating Systems
+Remote, Ottawa, Red Hat Canada
+IRC: rgb, SunRaycer
+Voice: +1.647.777.2635, Internal: (81) 32635
+
