@@ -2,99 +2,77 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D562CC433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Sep 2021 15:39:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A90BC433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Sep 2021 06:14:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDF7261108
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Sep 2021 15:39:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0563E61158
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Sep 2021 06:14:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352096AbhIHPk7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Sep 2021 11:40:59 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43095 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1349764AbhIHPk7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Sep 2021 11:40:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1631115591;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=G48sRBUv0RW8Bmsn3wBbdcGbHLUcyA8MFWQ2Ei8wvdk=;
-        b=NE/7lgtGGWGJbuyFBUR+XbHbX5bqkSkSkpOzHLPeRYOZ1yqQYvgkHeR7YWe4tZeikx9BMl
-        V4pni2iD2XP5C2IrCEewKZIpcGN005Uva26m836L4cPyAXcvXhBTdBw7KnmwF0moloMPFu
-        TFlqEUWZF5UjNcp09qpd9XYgMBco81o=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-361-Yxml9_9IPZma1vMyFQgQOw-1; Wed, 08 Sep 2021 11:39:49 -0400
-X-MC-Unique: Yxml9_9IPZma1vMyFQgQOw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 884791030C20;
-        Wed,  8 Sep 2021 15:39:47 +0000 (UTC)
-Received: from x2.localnet (unknown [10.22.8.236])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4456E77F29;
-        Wed,  8 Sep 2021 15:39:31 +0000 (UTC)
-From:   Steve Grubb <sgrubb@redhat.com>
-To:     =?ISO-8859-1?Q?Wei=DF=2C?= Michael 
-        <michael.weiss@aisec.fraunhofer.de>,
-        Richard Guy Briggs <rgb@redhat.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-audit@redhat.com" <linux-audit@redhat.com>,
-        "casey@schaufler-ca.com" <casey@schaufler-ca.com>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "song@kernel.org" <song@kernel.org>,
-        "eparis@redhat.com" <eparis@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "paul@paul-moore.com" <paul@paul-moore.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>
-Subject: Re: [PATCH v4 0/3] dm: audit event logging
-Date:   Wed, 08 Sep 2021 11:39:02 -0400
-Message-ID: <4344604.LvFx2qVVIh@x2>
-Organization: Red Hat
-In-Reply-To: <20210908131616.GK490529@madcap2.tricolour.ca>
-References: <20210904095934.5033-1-michael.weiss@aisec.fraunhofer.de> <9ca855cb19097b6fa98f2b3419864fd8ddadf065.camel@aisec.fraunhofer.de> <20210908131616.GK490529@madcap2.tricolour.ca>
+        id S1352075AbhIIGPe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Sep 2021 02:15:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44944 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232357AbhIIGPc (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 9 Sep 2021 02:15:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BD33361176
+        for <linux-raid@vger.kernel.org>; Thu,  9 Sep 2021 06:14:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631168063;
+        bh=kfibSuV0sjJbhAx0kVB+fjPrq7yoBLwm6E+H5aSU9jA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=U6ZGeRboJLolLMlwsuAhMoHIRgB4rG5inJV+Rbyjkg3vgWeFvLg9A4VLigl8WckCH
+         kzJuyWVWE3PdrGY+TTfajrqDsGfFp2n6XTerfXCQLDdtlSkORDhMYC089zxsuRMzJg
+         ZwM3guKTAT1EzvrOx9x95PDD9JCLr/nj7C2Oq/HWQzWWsl+wRnddsjnFCwtPqzA4cF
+         KAIkRiKhbwP4M2uxrcyJds+GJtpNJbMG+eVct0KUfE9Qh0uEgepHcvzS0g0z1B0CIS
+         8cECTiuypm2zyzEa3e+V3j2hlvqLnA1h/EkAqq6ol/7FcapoLjDg3yM5YcaWuZ9x2X
+         U6lxrNIGUJVjQ==
+Received: by mail-lj1-f175.google.com with SMTP id f2so1256882ljn.1
+        for <linux-raid@vger.kernel.org>; Wed, 08 Sep 2021 23:14:23 -0700 (PDT)
+X-Gm-Message-State: AOAM532LBBcSW8Vk4AcrBVTdVkGZYgAo3JOjUHDqZNaBnpf26uzqEprs
+        QC2BadEru7xAT65g7aZ/FQ2hHPGD5xxtevuAKkk=
+X-Google-Smtp-Source: ABdhPJw2STYdPuRYRspO0NB/CTGskRGq/02+Q9O3tsFt8b99tycOxWdT0yzlsgHBBv10B1Lr6U/34fCRCl/F3qTIvDY=
+X-Received: by 2002:a2e:b80c:: with SMTP id u12mr924887ljo.436.1631168062104;
+ Wed, 08 Sep 2021 23:14:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+References: <20210901113833.1334886-1-hch@lst.de>
+In-Reply-To: <20210901113833.1334886-1-hch@lst.de>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 8 Sep 2021 23:14:11 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4DPag3p3CzV6poimFBPgdCs8mfQoMg8RnCdY4ti20trw@mail.gmail.com>
+Message-ID: <CAPhsuW4DPag3p3CzV6poimFBPgdCs8mfQoMg8RnCdY4ti20trw@mail.gmail.com>
+Subject: Re: fix a lock order reversal in md_alloc
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wednesday, September 8, 2021 9:16:16 AM EDT Richard Guy Briggs wrote:
->  Another minor oddity is the double "=" for the subj
-> 
-> > > field, which doesn't appear to be a bug in your code, but still
-> > > puzzling.
-> > 
-> > In the test setup, I had Apparmor enabled and set as default security
-> > module. This behavior occurs in any audit_log message.
-> > Seems that this is coming from the label handling there. Having a quick
-> > look at the code there is that they use '=' in the label to provide a
-> > root view as part of their policy virtualization. The corresponding
-> > commit is sitting there since 2017:
-> > "26b7899510ae243e392960704ebdba52d05fbb13"
-> 
-> Interesting...  Thanks for tracking down that cause.  I don't know how
-> much pain that will cause the userspace parsing tools.  I've added Steve
-> Grubb to the Cc: to get his input, but this should not derail this patch
-> set.
+On Wed, Sep 1, 2021 at 4:39 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Hi Song,
+>
+> the first patch in this series fixed the reported lock order reversal
+> in md_alloc.  The rest sort out the error handling in that function,
+> starting with the patch from Luis to handle add_disk errors, which
+> would otherwise conflict with the first patch.
+>
+> Note that I have had a hard time verifying this all works fine as the
+> testsuite in mdadm already keeps failing a lot for me with the baseline
+> kernel. Some of thos reproducibly and others randomly.  Is there a
+> good document somehow describing what to expect from the mdadm test
+> suite?
+>
+> Diffstat:
+>  drivers/md/md.c |   56 +++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 29 insertions(+), 27 deletions(-)
 
-It likely breaks any parser. I would even say that it's a malformed event 
-that should be corrected. There's been a published a specification for audit 
-events  for at least 5 years. Latest copy is here:
+Applied to md-fixes. Thanks!
 
-https://github.com/linux-audit/audit-documentation/wiki/SPEC-Writing-Good-Events
-
--Steve
-
-
-
+Song
