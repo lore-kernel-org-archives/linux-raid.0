@@ -2,137 +2,119 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1742C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:09:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30545C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0A5961163
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:09:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1066C6044F
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:26:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240566AbhINHKc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Sep 2021 03:10:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44033 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S240407AbhINHKb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 14 Sep 2021 03:10:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1631603354;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        id S240735AbhINH2D (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Sep 2021 03:28:03 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:41890 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240218AbhINH17 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Sep 2021 03:27:59 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 517EF21F32;
+        Tue, 14 Sep 2021 07:26:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1631604402; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wPybmw0b7JA71YhkMsZl+aNWwvG6YUaernbLPaOqLFw=;
-        b=dpToo9xM9ZFM3dO/EdsOPPS/9cILYmSy9ywpCBALgjfaWF5EHcCUWcKc8nt6TVYXWReiA1
-        uAKg6Io0ta7yh5a/wR980RxNBy3m2RVQBUitUpXc6pEWH3qbAHMicVLBovG1tJdxhIedEc
-        DguujH/L2WWu+6Vnh7w4w90fcjUMNk8=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-54-4cWyJy9pPSqQtXYsr_1qrA-1; Tue, 14 Sep 2021 03:09:11 -0400
-X-MC-Unique: 4cWyJy9pPSqQtXYsr_1qrA-1
-Received: by mail-ed1-f70.google.com with SMTP id y17-20020a50e611000000b003d051004603so5574879edm.8
-        for <linux-raid@vger.kernel.org>; Tue, 14 Sep 2021 00:09:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=wPybmw0b7JA71YhkMsZl+aNWwvG6YUaernbLPaOqLFw=;
-        b=rLWcIqXLbziMn7nCHVttIdiSkjNXNt6ASOYlEAue9j8HDNExYwTy4//A9aQ0iEVYs9
-         OynmxTYVj7wBPQ9HGcnJNyvf+KeGWJLKSP5gSCN02S++VgII9jiHy4I9LCASVyDvKplR
-         V41PNCqA3iqSUQOAI39Iab5opVR0JgR5/YjRFo4Qp+r8qL+5RquD1cgV+eRSaqxyqoB4
-         2CM5gfxC0gLYjRoi67qZDeblIKlxGTMNRdughSL4JcIOFwNBS91LL2a6iUXhQy8xaHi3
-         5plOatcNR5aUNZ77ZdU0TJUjEu5v4HvnyqJWHo5U4t5VdzSQRpZ1D1b9piwEnLVWlLRS
-         gWHg==
-X-Gm-Message-State: AOAM530wZn01xkRiTjE8R1SkDb94EGVeCnq9nw45ylf52JSzrveWRaxj
-        o10+AmtbtF6vq+T4WCBw09pwKYOK7+xlAeVbt2dhgw4B16Ruyl+vmppe5Qefvd32BKRWYZIpJN+
-        liZ/96bC5KQ9p/HVYNcFjXAAMLKXiqtUdzuvqvg==
-X-Received: by 2002:a17:906:e105:: with SMTP id gj5mr17185739ejb.408.1631603350076;
-        Tue, 14 Sep 2021 00:09:10 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxuTYMYAd2m4gigAhplgNJt0ePIRwJasVmCkftUF99Phk1/igYHzd60DHm4EvUDS58K+P43nC3zUZRrPZPE9QY=
-X-Received: by 2002:a17:906:e105:: with SMTP id gj5mr17185729ejb.408.1631603349888;
- Tue, 14 Sep 2021 00:09:09 -0700 (PDT)
-MIME-Version: 1.0
-References: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
-In-Reply-To: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Tue, 14 Sep 2021 15:08:58 +0800
-Message-ID: <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
+        bh=rzhYveKnEuQDKvAji7c4wmzEnmDO38ogMFPC41Q7zUc=;
+        b=jFMXlqjjxUlwkfuEprEFQTKUyJiLY79HiAfHmYx5BzQf3w/Vdq2W1hwBcfwOqgLV5CciwX
+        zDjUN9qxYF71aJzCbNE3K1Ct14xPD9nEXmWTOfiar0dVn/9rH5X1fCWJBgD1vz40P40MBN
+        XHZqci+BntaovA1RH33eIThZc5iiLMM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1631604402;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rzhYveKnEuQDKvAji7c4wmzEnmDO38ogMFPC41Q7zUc=;
+        b=sLET9nBBTaQRVwTuB1hjd7uv9iDKY4JXhAH89Wa8Kjae41uUUfhacaFNb5voS5E+3uyWqq
+        rgho9ateJYGJ5+CA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 45C6513E55;
+        Tue, 14 Sep 2021 07:26:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id j9jGELJOQGEyAgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 14 Sep 2021 07:26:42 +0000
 Subject: Re: [PATCH] mdadm: split off shared library
-To:     Hannes Reinecke <hare@suse.de>
+To:     Xiao Ni <xni@redhat.com>
 Cc:     Jes Sorensen <jsorensen@fb.com>, Coly Li <colyli@suse.de>,
         "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
+ <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <75fdd0fe-154b-f8eb-9ac3-bb948b432e39@suse.de>
+Date:   Tue, 14 Sep 2021 09:26:41 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+MIME-Version: 1.0
+In-Reply-To: <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Hannes
+On 9/14/21 9:08 AM, Xiao Ni wrote:
+> Hi Hannes
+> 
+> Thanks for these patches. It's a good idea to make codes more clearly
+> that which codes belong to which file.
+> There are many efforts that move codes from mdadm.c and mdadm.h to
+> specific files. Is it better to put these
+> patches together? For example, the patches(6, 11, 12, 16, 19, 20, 27,
+> 28) try to clean mdadm.c. Could you put
+> similar patches together? And there are some rename patches too, they
+> are sporadic.
+> 
+Sure. Wasn't sure how you'd like to handle it; some prefer smaller
+patches, some prefer less patches overall ...
 
-Thanks for these patches. It's a good idea to make codes more clearly
-that which codes belong to which file.
-There are many efforts that move codes from mdadm.c and mdadm.h to
-specific files. Is it better to put these
-patches together? For example, the patches(6, 11, 12, 16, 19, 20, 27,
-28) try to clean mdadm.c. Could you put
-similar patches together? And there are some rename patches too, they
-are sporadic.
+> For patch03, the argument is name, but it uses optarg in the function
+> mdadm_get_layout. Is it an error?
+> 
+Have to check.
 
-For patch03, the argument is name, but it uses optarg in the function
-mdadm_get_layout. Is it an error?
+> By the way, are there some other users who use the library besides mdadm/mdmon?
+> 
+Not yet, but there is a program I wrote some time ago
 
-By the way, are there some other users who use the library besides mdadm/md=
-mon?
+https://github.com/hreinecke/md_monitor.git
 
-And it's good for me if you send patches directly by email to
-linux-raid mail list.
+which currently does an 'exec' on mdadm, and error handling _that_ is a
+major pain. Having a shared library will make life easier there.
+And I've some projects planned which would need to leverage mdadm
+functionality, so for those a mdadm library would be ideal.
 
-Best Regards
-Xiao
+> And it's good for me if you send patches directly by email to
+> linux-raid mail list.
+> 
 
-On Wed, Aug 25, 2021 at 10:35 PM Hannes Reinecke <hare@suse.de> wrote:
->
-> Hi all,
->
-> this is, contrary to the subject, not a patch, but rather a question on
-> how to submit a patchset.
-> I've been working on splitting off a shared library from mdadm, with the
-> aim that it can be included from other programs.
-> Reasoning behind it that I've written a monitor program
-> (github.com:/hreinecke/md_monitor) and found it a major pain having to
-> exec() mdadm, and then keep fingers crossed that things succeed; error
-> recovery from _that_ turned out to be a major drag. And so I figured
-> that a shared library is possibly the best way to go.
->
-> (And, as a side note: having a shared library would also allow to build
-> a python binding, which possibly will have even more use-cases ...)
->
-> So I've build a patchset to split off a shared library from mdadm, and
-> build mdadm against that:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/hare/mdadm.git
-> branch shlib
->
-> But as it turns out, these are 30+ patches, and I didn't want to flood
-> the mailinglist with that.
-> So what are the procedures here?
->
-> Are you okay with having the entire patchset on the mailing list?
-> Or are there other ways?
->
-> Thanks for your help.
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                        Kernel Storage Architect
-> hare@suse.de                                      +49 911 74053 688
-> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> HRB 36809 (AG N=C3=BCrnberg), GF: Felix Imend=C3=B6rffer
->
+Sure.
 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
