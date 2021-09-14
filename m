@@ -2,119 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30545C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03098C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:57:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1066C6044F
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1DBD61355
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Sep 2021 07:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240735AbhINH2D (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Sep 2021 03:28:03 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:41890 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240218AbhINH17 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Sep 2021 03:27:59 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 517EF21F32;
-        Tue, 14 Sep 2021 07:26:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631604402; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+        id S229562AbhINH6U (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Sep 2021 03:58:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60237 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229477AbhINH6U (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 14 Sep 2021 03:58:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1631606222;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=rzhYveKnEuQDKvAji7c4wmzEnmDO38ogMFPC41Q7zUc=;
-        b=jFMXlqjjxUlwkfuEprEFQTKUyJiLY79HiAfHmYx5BzQf3w/Vdq2W1hwBcfwOqgLV5CciwX
-        zDjUN9qxYF71aJzCbNE3K1Ct14xPD9nEXmWTOfiar0dVn/9rH5X1fCWJBgD1vz40P40MBN
-        XHZqci+BntaovA1RH33eIThZc5iiLMM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631604402;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rzhYveKnEuQDKvAji7c4wmzEnmDO38ogMFPC41Q7zUc=;
-        b=sLET9nBBTaQRVwTuB1hjd7uv9iDKY4JXhAH89Wa8Kjae41uUUfhacaFNb5voS5E+3uyWqq
-        rgho9ateJYGJ5+CA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 45C6513E55;
-        Tue, 14 Sep 2021 07:26:42 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id j9jGELJOQGEyAgAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 14 Sep 2021 07:26:42 +0000
+        bh=Kw4mlNBFYcsGQv4qTyj3NqH4rmqCEnAwXScHDg5rYWE=;
+        b=TPFz2rcSznNC9zOdcwQBuGYTqMPqlfA2mNvW7Mvip+MLCWDITPlC5v5H5IDqP7Ux6KLWbn
+        Kp0XxcEsA4U9aMHN6mJ/RxVHj/GA/hOzvrfkIuyjc8rrcZUWxeYnEhaF+gtXBr1jhkCevQ
+        vS4HpKiTHL3X/iVL6KAJCXuAuAJb18I=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-555-79GHIYYLOCW-JJCHrL5T-A-1; Tue, 14 Sep 2021 03:57:01 -0400
+X-MC-Unique: 79GHIYYLOCW-JJCHrL5T-A-1
+Received: by mail-ed1-f69.google.com with SMTP id o18-20020a056402439200b003d2b11eb0a9so1633503edc.23
+        for <linux-raid@vger.kernel.org>; Tue, 14 Sep 2021 00:57:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Kw4mlNBFYcsGQv4qTyj3NqH4rmqCEnAwXScHDg5rYWE=;
+        b=Bb5U6XcTecKYwBEWQzs3XcMLtbt9sVOAsDOsTIyyrDpxPw7OQ+5KeYogDDAiW77bd7
+         bWDquBAu3QDg4Hu06uHHfrXXdmkj3lnEOK/MRclVEFjQGgc7LibeFm48QMDyejF4RPdu
+         5zbA98G6Wq4X6egVz7+YP9qZFy21abqHzK/J+ZRchvbJ1CZ7FMRbqj8v00buNOnP7QKp
+         g5/h08UzDM9sd9xrE0+TNgXAs+23w8+luIyS6+2Nlj1IDlT7InbEoeQnQ56+MKplCnV8
+         0hWEy2O8GapN0JyFiYiL4KKJPzvbEmH37tKj2CBjsEWF51lZvdQI0+kQbYqyWDER/C/g
+         hF/A==
+X-Gm-Message-State: AOAM530pH97lYnFV856OPn0Ii9RxHBAy3O6HRRGSw69NZC8vkS6bljby
+        zH5XiIMybMnijP58kx3UBPcHWJtap7oWIZ9GN7rCNyRksynBLOSYKPrzqEAL0hD4BBEyX3IBsHv
+        QVA7bUwSDNfL5CdHoNyrnHW4e9G/0xt25rK8wvw==
+X-Received: by 2002:a05:6402:40ce:: with SMTP id z14mr17774056edb.28.1631606220479;
+        Tue, 14 Sep 2021 00:57:00 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxtMcG1sOgYTczkH0WXGwbdOlLMi8XxPcgk+sexubwUx1GLU2mmiMU9XUaiy4piKVhgsgT4VJOnSHM+VCjGiMU=
+X-Received: by 2002:a05:6402:40ce:: with SMTP id z14mr17774043edb.28.1631606220271;
+ Tue, 14 Sep 2021 00:57:00 -0700 (PDT)
+MIME-Version: 1.0
+References: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de> <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
+ <75fdd0fe-154b-f8eb-9ac3-bb948b432e39@suse.de>
+In-Reply-To: <75fdd0fe-154b-f8eb-9ac3-bb948b432e39@suse.de>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Tue, 14 Sep 2021 15:56:48 +0800
+Message-ID: <CALTww28wGf=vCOsMC7reYOn03-V9v7iro-i7YoyUOUjiZyrU8g@mail.gmail.com>
 Subject: Re: [PATCH] mdadm: split off shared library
-To:     Xiao Ni <xni@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
 Cc:     Jes Sorensen <jsorensen@fb.com>, Coly Li <colyli@suse.de>,
         "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-References: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
- <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <75fdd0fe-154b-f8eb-9ac3-bb948b432e39@suse.de>
-Date:   Tue, 14 Sep 2021 09:26:41 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-MIME-Version: 1.0
-In-Reply-To: <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 9/14/21 9:08 AM, Xiao Ni wrote:
-> Hi Hannes
-> 
-> Thanks for these patches. It's a good idea to make codes more clearly
-> that which codes belong to which file.
-> There are many efforts that move codes from mdadm.c and mdadm.h to
-> specific files. Is it better to put these
-> patches together? For example, the patches(6, 11, 12, 16, 19, 20, 27,
-> 28) try to clean mdadm.c. Could you put
-> similar patches together? And there are some rename patches too, they
-> are sporadic.
-> 
-Sure. Wasn't sure how you'd like to handle it; some prefer smaller
-patches, some prefer less patches overall ...
+On Tue, Sep 14, 2021 at 3:26 PM Hannes Reinecke <hare@suse.de> wrote:
+> Sure. Wasn't sure how you'd like to handle it; some prefer smaller
+> patches, some prefer less patches overall ...
 
-> For patch03, the argument is name, but it uses optarg in the function
-> mdadm_get_layout. Is it an error?
-> 
-Have to check.
+Sorry for not describing clearly. I want to say these patches are good
+for me. It's better to
+put the patches together. For example, patch03, patch04, patch10,
+patch20 -> patch01,
+patch02, patch03, patch04(The numbers are just examples, not real patch)
 
-> By the way, are there some other users who use the library besides mdadm/mdmon?
-> 
-Not yet, but there is a program I wrote some time ago
+Regards
+Xiao
 
-https://github.com/hreinecke/md_monitor.git
-
-which currently does an 'exec' on mdadm, and error handling _that_ is a
-major pain. Having a shared library will make life easier there.
-And I've some projects planned which would need to leverage mdadm
-functionality, so for those a mdadm library would be ideal.
-
-> And it's good for me if you send patches directly by email to
-> linux-raid mail list.
-> 
-
-Sure.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
