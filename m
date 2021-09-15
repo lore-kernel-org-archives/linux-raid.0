@@ -2,85 +2,139 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 821D2C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Sep 2021 14:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74405C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Sep 2021 15:09:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 690F461164
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Sep 2021 14:11:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A63661029
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Sep 2021 15:09:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237723AbhIOOMb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 15 Sep 2021 10:12:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55658 "EHLO
+        id S234085AbhIOPKW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 15 Sep 2021 11:10:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234729AbhIOOMa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Sep 2021 10:12:30 -0400
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77AFCC061575
-        for <linux-raid@vger.kernel.org>; Wed, 15 Sep 2021 07:11:11 -0700 (PDT)
-Received: by mail-ej1-x633.google.com with SMTP id kt8so6348056ejb.13
-        for <linux-raid@vger.kernel.org>; Wed, 15 Sep 2021 07:11:11 -0700 (PDT)
+        with ESMTP id S233977AbhIOPKV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Sep 2021 11:10:21 -0400
+Received: from mail-ua1-x932.google.com (mail-ua1-x932.google.com [IPv6:2607:f8b0:4864:20::932])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D371DC061574
+        for <linux-raid@vger.kernel.org>; Wed, 15 Sep 2021 08:09:02 -0700 (PDT)
+Received: by mail-ua1-x932.google.com with SMTP id p9so1881787uak.4
+        for <linux-raid@vger.kernel.org>; Wed, 15 Sep 2021 08:09:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=R178KnP01yZ3w5fkn4jA7MEi6hbi/jGhfiTSu+3bznE=;
-        b=dVwsnocn1oARAiLObv7Bh8jNxWoHwsjrIdzojDAGgS7vil5kTA31jxJESvQWfX4tAn
-         6Po/xsQjWKlP/y37+Wxaovj4/qWOsdWPdwQmTcpPamSekLsYTe+JGyWEuGU5aFYu0260
-         DnDulEj6UDjdpMGgVoLiQVpgf7nbopI6P5WEzCe/xu78VrWSpib65nDKJfEXnw1aucTv
-         6nUP9OALtFNgI0bGAEsEznuI3wYBMmF5hgXNytpntHgK3jaS4YLvmlRYDGxUaT7TwrxX
-         zDHmfsTGLLeyjcJmjXcsOoujmP/wmbsrzJS03E62OJvNTV/ossdy/+oOAs4b9T7Chox8
-         U6lw==
+        d=smartx-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=RMJSUECpOrASX7O5LRnVxYeIxFzjfrmjLGpxkqAvY8k=;
+        b=fG1R+ZurZZNulSU4h2FyWa8BiLThdEPNYfMegeS+bqMakGkSdanMBkE+TPOqkBZ45K
+         zSj2rCbLodjCbuJ+ba+7+8wP36tkHVHGkv/X+ug2B/NBnsYDm0ES03GYQ7ltClBNLCBt
+         2v0FMjTe5USxxcwcE/1XPryTf/AfNCg08HZ0wNZdYE5ugt34VBoVUM1Pe7M11SGJrtFe
+         B5UZv3hgMb+9QMEWoT06Hz4zjii9wFSXH+BgCVb3SD6g8F6YRZKJuucVQ2/V7l4ck7j/
+         oD3jqxnjz/a/hCE6tY/zogQ5p3iR0rolSGAhaXU+4vNA+e2cdGhZDrzPBEeRygW1TkQL
+         so+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=R178KnP01yZ3w5fkn4jA7MEi6hbi/jGhfiTSu+3bznE=;
-        b=NAjmwZyqFXqlrTZfe9FwMpzTXFc6cBSMU7HnE5etICoRKlh/x6MfkzrWBzShlgDF5l
-         N+Oj1+Y5bs5WIZchjJJOehcykFEkF8WJYWOd1uFxxsg4wecW4Hrwc0noe4ZhRP78oqPv
-         cAh/fG2dCV6TUry4CA+2iVOixT1jM0xYFTnvrzJUgVX8PGPfV8pyffJp1ZvRqsYVVJzL
-         aUzBVcQbdGMMIABM5fiRIONP/mmHIqqieUOvvSIR9Lj/euu3y9zRH0pbDTEgDIjdIyAe
-         3Kcb8o6PucF6KToG45/Iqm1ojj1HlbHYYllLKlBXZqT2447WTSmZgSFoAsmPfLOjj+na
-         r6uQ==
-X-Gm-Message-State: AOAM531uN+bFi92DP96zwdgrnQYSw7Cm8gSzZJ9o2537keF7MvvxK9fy
-        FbzrvsNK7icg2StEqPg9a0w58lARr3Y=
-X-Google-Smtp-Source: ABdhPJzmV64XMnVnPdAYUAMoIlhJY4YqZqbHhDyelMV89csM9T+d022pQFiZnsLqZ33mCa3R1A7Pcw==
-X-Received: by 2002:a17:907:7601:: with SMTP id jx1mr192615ejc.69.1631715070063;
-        Wed, 15 Sep 2021 07:11:10 -0700 (PDT)
-Received: from localhost (94-36-77-208.adsl-ull.clienti.tiscali.it. [94.36.77.208])
-        by smtp.gmail.com with ESMTPSA id s4sm53160eja.23.2021.09.15.07.11.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Sep 2021 07:11:09 -0700 (PDT)
-Date:   Wed, 15 Sep 2021 16:11:08 +0200
-From:   Gennaro Oliva <gennaro.oliva@gmail.com>
-To:     Anthony Youngman <antmbox@youngman.org.uk>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: Raid 5 where 2 disks out of 4 were unplugged
-Message-ID: <YUH+/KIg+Jm/ueOG@guru>
-References: <YSdcUa6ZYsdPEtFB@ischia>
- <8a9c66df-b271-dcac-4ca3-86c2de083bfd@youngman.org.uk>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:content-transfer-encoding;
+        bh=RMJSUECpOrASX7O5LRnVxYeIxFzjfrmjLGpxkqAvY8k=;
+        b=6EwHeT+GnWydLMOF0Pg/hYDFGqdEqvHKlKSvb1n5KKiqAExmNz7WR4LzXfl5tcu/77
+         mM7xJWAnLgBAPqJHc57zmNX/MnIR9jdejmygsL2EBbNW/Bnm2U2VBCYukLODsaFDtxe/
+         gOEMeNnqeBhICclWlA3NT3tZFCn/ISaAvjxdfwV6t60XC+9BdekzxAowx8lK64eEFaRC
+         sQUefsANpNc7qqHJwmPUVamfnQ6+FxG6VyQDkN7gf613S2S4MUQ21JrZu31a8DNQa95A
+         ysksY3YlVTO5t02I5zh6fO3SuJOaxchSsimhxKgvkkX6Wkxs5dBABgaGdqN5l/YMTYmI
+         ysxw==
+X-Gm-Message-State: AOAM530i7kSIOR1w7EVRPe7tfKn73dzMtbJQuOGFKU2hu7u1ob7I5E9L
+        cBNjrdPb+syST6AFX782mM/w2+xiw3iPDpK1XK8nBg==
+X-Google-Smtp-Source: ABdhPJz+lGvkNRjznJyetIKGsh0f+EIE9yBanUGKONiFPZyfcHxk7aW8eKufEF0k707acuEIfxACcEktEQW9DrvGs18=
+X-Received: by 2002:ab0:2246:: with SMTP id z6mr290058uan.31.1631718541884;
+ Wed, 15 Sep 2021 08:09:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8a9c66df-b271-dcac-4ca3-86c2de083bfd@youngman.org.uk>
+References: <20210913032003.2836583-1-fengli@smartx.com>
+In-Reply-To: <20210913032003.2836583-1-fengli@smartx.com>
+From:   Li Feng <fengli@smartx.com>
+Date:   Wed, 15 Sep 2021 23:08:51 +0800
+Message-ID: <CAHckoCyDULok_QLLh5Nmbx4qLCxKL43TgtFgCSAwuaPpRy1BFw@mail.gmail.com>
+Subject: Re: [PATCH] md: allow to set the fail_fast on RAID1/RAID10
+To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Anthony and Phil,
+ping ...
 
-On Sat, Aug 28, 2021 at 07:02:03PM +0100, Anthony Youngman wrote:
-> Do NOT "rebuild the superblock" whatever you mean by that. What I think you
-> need to do is force-assemble the array. You might lose a bit of data - the
-> first thing you will need to do after a forced assembly is to check the file
-> system ...
+Thanks,
+Feng Li
 
-I attached the disk on a recent linux system and I was able to force
-assemble the raid again. Thank you for your valuable help.
-Best regards,
--- 
-Gennaro Oliva
+Li Feng <fengli@smartx.com> =E4=BA=8E2021=E5=B9=B49=E6=9C=8813=E6=97=A5=E5=
+=91=A8=E4=B8=80 =E4=B8=8A=E5=8D=8811:22=E5=86=99=E9=81=93=EF=BC=9A
+>
+> When the running RAID1/RAID10 need to be set with the fail_fast flag,
+> we have to remove each device from RAID and re-add it again with the
+> --fail_fast flag.
+>
+> Export the fail_fast flag to the userspace to support the read and
+> write.
+>
+> Signed-off-by: Li Feng <fengli@smartx.com>
+> ---
+>  drivers/md/md.c | 30 ++++++++++++++++++++++++++++++
+>  1 file changed, 30 insertions(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index ae8fe54ea358..ce63972a4555 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -3583,6 +3583,35 @@ ppl_size_store(struct md_rdev *rdev, const char *b=
+uf, size_t len)
+>  static struct rdev_sysfs_entry rdev_ppl_size =3D
+>  __ATTR(ppl_size, S_IRUGO|S_IWUSR, ppl_size_show, ppl_size_store);
+>
+> +static ssize_t
+> +fail_fast_show(struct md_rdev *rdev, char *page)
+> +{
+> +       return sprintf(page, "%d\n", test_bit(FailFast, &rdev->flags));
+> +}
+> +
+> +static ssize_t
+> +fail_fast_store(struct md_rdev *rdev, const char *buf, size_t len)
+> +{
+> +       int ret;
+> +       bool bit;
+> +
+> +       ret =3D kstrtobool(buf, &bit);
+> +       if (ret)
+> +               return ret;
+> +
+> +       if (test_bit(FailFast, &rdev->flags) && !bit) {
+> +               clear_bit(FailFast, &rdev->flags);
+> +               md_update_sb(rdev->mddev, 1);
+> +       } else if (!test_bit(FailFast, &rdev->flags) && bit) {
+> +               set_bit(FailFast, &rdev->flags);
+> +               md_update_sb(rdev->mddev, 1);
+> +       }
+> +       return len;
+> +}
+> +
+> +static struct rdev_sysfs_entry rdev_fail_fast =3D
+> +__ATTR(fail_fast, 0644, fail_fast_show, fail_fast_store);
+> +
+>  static struct attribute *rdev_default_attrs[] =3D {
+>         &rdev_state.attr,
+>         &rdev_errors.attr,
+> @@ -3595,6 +3624,7 @@ static struct attribute *rdev_default_attrs[] =3D {
+>         &rdev_unack_bad_blocks.attr,
+>         &rdev_ppl_sector.attr,
+>         &rdev_ppl_size.attr,
+> +       &rdev_fail_fast.attr,
+>         NULL,
+>  };
+>  static ssize_t
+> --
+> 2.31.1
+>
