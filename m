@@ -2,227 +2,167 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A8B8C433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 24 Sep 2021 15:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 118C9C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 24 Sep 2021 21:10:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D42F561212
-	for <linux-raid@archiver.kernel.org>; Fri, 24 Sep 2021 15:34:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E65D76140A
+	for <linux-raid@archiver.kernel.org>; Fri, 24 Sep 2021 21:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347127AbhIXPf5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 24 Sep 2021 11:35:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53158 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347105AbhIXPf4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 24 Sep 2021 11:35:56 -0400
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [IPv6:2001:67c:2050::465:101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A64FC061571;
-        Fri, 24 Sep 2021 08:34:21 -0700 (PDT)
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [80.241.60.240])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4HGGKj3jvmzQjv5;
-        Fri, 24 Sep 2021 17:34:17 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=chianterastutte.eu;
-        s=MBO0001; t=1632497655;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wfWagMPk1x7o5qHgvk7iojdPBkH3vg5ME/V2igYnNnQ=;
-        b=gm7l1gJhxXQH1IjiLC9UMNuN0i4tUBvnUVXGxzqIcO7F1yaX2VdUqsRxasobaCyUnoERJN
-        HWmvIT2ekDQvTJ7RcB4uhk+fQ9XgoCVskK/rdIRhjD7kzh/TrHDHYhzHUPVENc43d91IZQ
-        F4yU/V5SzQKkTOs87B5ChSYaqb6XCNX4xqcDnai5Z51ul4fsTPh+okNFlKlz+DXKSx2iK4
-        cddj5a9MJKCiRm+nLlofRPQNViEvLYEReFaEGEJV5RFKLC1Rpet28GgYyZ9H4V9Et43c6l
-        AXaj+B49W90DnFxVXZZSYzNM3WzLm2nGbIkND/8NgXrFWuldPlIRMk9AGT6Rjg==
-Subject: Re: [PATCH] raid1: ensure bio doesn't have more than BIO_MAX_VECS
- sectors
-To:     Ming Lei <ming.lei@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>, song@kernel.org,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org
-References: <20210813060510.3545109-1-guoqing.jiang@linux.dev>
- <YRYj8A+mDfAQBo/E@infradead.org>
- <0eac4589-ffd2-fb1a-43cc-87722731438a@linux.dev>
- <YRd26VGAnBiYeHrH@infradead.org> <YReFYrjtWr9MvfBr@T590>
- <YRox8gMjl/Y5Yt/k@infradead.org> <YRpOwFewTw4imskn@T590>
- <YRtDxEw7Zp2H7mxp@infradead.org> <YRusakafZq0NMqLe@T590>
-From:   "Jens Stutte (Archiv)" <jens@chianterastutte.eu>
-Message-ID: <cc91ef81-bf25-cee6-018f-2f79c7a183ae@chianterastutte.eu>
-Date:   Fri, 24 Sep 2021 17:34:11 +0200
+        id S1346894AbhIXVLo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 24 Sep 2021 17:11:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33662 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233217AbhIXVLo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 24 Sep 2021 17:11:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 918986140F
+        for <linux-raid@vger.kernel.org>; Fri, 24 Sep 2021 21:10:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632517810;
+        bh=f5h2ldwGpyAo9ota7BSHUvS661W+1jlBhKdeM5u78z8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Hpk3NjrzRPht+pcUi1UKc0+5uvS9i3BWyoJY9jvRqppUu7GgZo5wakM4Pb2kXM80N
+         X+OgiF22K2rOg5k/a+0yNKE4dHI9t3oSjlfwuAOs6LBsj7XpUaN8u2nTP433EjD7Fb
+         dzpYIQmCi4L02j/ybuC293Bwzbk6FwkGp/aowl2ccIGwSvV0H7PWmvDH7ISSpCJZFF
+         C2Oh2bBE5mJMEhar0eCm4IXSR7IUmcZ54hQu86e/UmnwQ6dwPeRaBrq3H3G1oBNrSK
+         bPZCy8Q6QOSifx/QpAWLgsJTTKGPqu4Xo87MtauHCFDpbPmEJZ+zxSjZMy0TCTvAhv
+         gqncjJ3zJdzwQ==
+Received: by mail-lf1-f41.google.com with SMTP id i25so46025343lfg.6
+        for <linux-raid@vger.kernel.org>; Fri, 24 Sep 2021 14:10:10 -0700 (PDT)
+X-Gm-Message-State: AOAM530g0hslP6YgrJ3RSnPpjHah5JmaW8NLkCtSLAJBPViqL4JpO5l+
+        SmJf4hK0ipox1cjJYVM9rTO1SPNtxPwNIFDnI54=
+X-Google-Smtp-Source: ABdhPJwA+ksmgKDOmoWE6Dw48eXe4IrrlQJ9bxW4z2BcCnV9uWahlsOONz4oogztXYsqhGjuFrTSs2zB7PX/l5aewKQ=
+X-Received: by 2002:a05:651c:b0b:: with SMTP id b11mr13665269ljr.234.1632517808941;
+ Fri, 24 Sep 2021 14:10:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <YRusakafZq0NMqLe@T590>
-Content-Type: multipart/mixed;
- boundary="------------9787683D99516DF32025A395"
-Content-Language: en-US
-X-Rspamd-Queue-Id: 4534F188C
+References: <20210917153452.5593-1-mariusz.tkaczyk@linux.intel.com> <20210917153452.5593-2-mariusz.tkaczyk@linux.intel.com>
+In-Reply-To: <20210917153452.5593-2-mariusz.tkaczyk@linux.intel.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 24 Sep 2021 14:09:56 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5bV+Bz=Od9jomNHoedaEMFAXymN11J80G62GVPwSp41g@mail.gmail.com>
+Message-ID: <CAPhsuW5bV+Bz=Od9jomNHoedaEMFAXymN11J80G62GVPwSp41g@mail.gmail.com>
+Subject: Re: [PATCH 1/2] md, raid1, raid10: Set MD_BROKEN for RAID1 and RAID10
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------9787683D99516DF32025A395
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Hi all,
-
-I just had the occasion to test the new patch as landed in arch linux 
-5.14.7. Unfortunately it does not work for me. Attached you can find a 
-modification that works for me, though I am not really sure why 
-write_behind seems not to be set to true on my configuration. If there 
-is any more data I can provide to help you to investigate, please let me 
-know.
-
-Thanks for any clues,
-
-Jens
-
-My configuration:
-
-[root@vdr jens]# mdadm --detail -v /dev/md0
-/dev/md0:
-            Version : 1.2
-      Creation Time : Fri Dec 26 09:50:53 2014
-         Raid Level : raid1
-         Array Size : 1953381440 (1862.89 GiB 2000.26 GB)
-      Used Dev Size : 1953381440 (1862.89 GiB 2000.26 GB)
-       Raid Devices : 2
-      Total Devices : 2
-        Persistence : Superblock is persistent
-
-      Intent Bitmap : Internal
-
-        Update Time : Fri Sep 24 17:30:51 2021
-              State : active
-     Active Devices : 2
-    Working Devices : 2
-     Failed Devices : 0
-      Spare Devices : 0
-
-Consistency Policy : bitmap
-
-               Name : vdr:0  (local to host vdr)
-               UUID : 5532ffda:ccbc790f:b50c4959:8f0fd43f
-             Events : 32805
-
-     Number   Major   Minor   RaidDevice State
-        2       8       33        0      active sync   /dev/sdc1
-        3       8       17        1      active sync   /dev/sdb1
-
-[root@vdr jens]# mdadm -X /dev/sdb1
-         Filename : /dev/sdb1
-            Magic : 6d746962
-          Version : 4
-             UUID : 5532ffda:ccbc790f:b50c4959:8f0fd43f
-           Events : 32804
-   Events Cleared : 32804
-            State : OK
-        Chunksize : 64 MB
-           Daemon : 5s flush period
-       Write Mode : Allow write behind, max 4096
-        Sync Size : 1953381440 (1862.89 GiB 2000.26 GB)
-           Bitmap : 29807 bits (chunks), 3 dirty (0.0%)
-
-[root@vdr jens]# mdadm -X /dev/sdc1
-         Filename : /dev/sdc1
-            Magic : 6d746962
-          Version : 4
-             UUID : 5532ffda:ccbc790f:b50c4959:8f0fd43f
-           Events : 32804
-   Events Cleared : 32804
-            State : OK
-        Chunksize : 64 MB
-           Daemon : 5s flush period
-       Write Mode : Allow write behind, max 4096
-        Sync Size : 1953381440 (1862.89 GiB 2000.26 GB)
-           Bitmap : 29807 bits (chunks), 3 dirty (0.0%)
-
-Am 17.08.21 um 14:32 schrieb Ming Lei:
-> On Tue, Aug 17, 2021 at 06:06:12AM +0100, Christoph Hellwig wrote:
->> On Mon, Aug 16, 2021 at 07:40:48PM +0800, Ming Lei wrote:
->>>>> 0 ~ 254: each bvec's length is 512
->>>>> 255: bvec's length is 8192
->>>>>
->>>>> the total length is just 512*255 + 8192 = 138752 bytes = 271 sectors, but it
->>>>> still may need 257 bvecs, which can't be allocated via bio_alloc_bioset().
->>>> Yes, we still need the rounding magic that alloc_behind_master_bio uses
->>>> here.
->>> But it is wrong to use max sectors to limit number of bvecs(segments), isn't it?
->> The raid1 write behind code cares about the size ofa bio it can reach by
->> adding order 0 pages to it.  The bvecs are part of that and I think the
->> calculation in the patch documents that a well.
-> Thinking of further, your and Guoqing's patch are correct & enough since
-> bio_copy_data() just copies bytes(sectors) stream from fs bio to the
-> write behind bio.
+On Fri, Sep 17, 2021 at 8:35 AM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
 >
+> The idea of stopping all writes if devices is failed, introduced by
+> 62f7b1989c0 ("md raid0/linear: Mark array as 'broken' and fail BIOs if
+> a member is gone") seems to be reasonable so use MD_BROKEN for RAID1 and
+> RAID10. Support in RAID456 is added in next commit.
+> If userspace (mdadm) forces md to fail the device (Failure state
+> written via sysfs), then EBUSY is expected if array will become failed.
+> To achieve that, check for MD_BROKEN and if is set, then return EBUSY to
+> be complaint with userspace.
+> For faulty state, handled via ioctl, let the error_handler to decide.
 >
-> Thanks,
-> Ming
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+
+Thanks for the patch and sorry for the late reply.
+
+> ---
+>  drivers/md/md.c     | 16 ++++++++++------
+>  drivers/md/md.h     |  4 ++--
+>  drivers/md/raid1.c  |  1 +
+>  drivers/md/raid10.c |  1 +
+>  4 files changed, 14 insertions(+), 8 deletions(-)
 >
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c322841d4edc..ac20eb2ddff7 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -926,8 +926,9 @@ static void super_written(struct bio *bio)
+>                 pr_err("md: %s gets error=%d\n", __func__,
+>                        blk_status_to_errno(bio->bi_status));
+>                 md_error(mddev, rdev);
+> -               if (!test_bit(Faulty, &rdev->flags)
+> -                   && (bio->bi_opf & MD_FAILFAST)) {
+> +               if (!test_bit(Faulty, &rdev->flags) &&
+> +                    !test_bit(MD_BROKEN, &mddev->flags) &&
+> +                    (bio->bi_opf & MD_FAILFAST)) {
 
---------------9787683D99516DF32025A395
-Content-Type: text/x-patch; charset=UTF-8;
- name="raid1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="raid1.patch"
+So with MD_BROKEN, we will not try to update the SB?
 
-diff --unified --recursive --text archlinux-linux/drivers/md/raid1.c archlinux-linux-diff/drivers/md/raid1.c
---- archlinux-linux/drivers/md/raid1.c	2021-09-24 14:37:15.347771866 +0200
-+++ archlinux-linux-diff/drivers/md/raid1.c	2021-09-24 14:40:02.443978319 +0200
-@@ -1501,7 +1501,7 @@
- 			 * Not if there are too many, or cannot
- 			 * allocate memory, or a reader on WriteMostly
- 			 * is waiting for behind writes to flush */
--			if (bitmap &&
-+			if (bitmap && write_behind &&
- 			    (atomic_read(&bitmap->behind_writes)
- 			     < mddev->bitmap_info.max_write_behind) &&
- 			    !waitqueue_active(&bitmap->behind_wait)) {
-diff --unified --recursive --text archlinux-linux/drivers/md/raid1.c archlinux-linux-changed/drivers/md/raid1.c
---- archlinux-linux/drivers/md/raid1.c	2021-09-24 15:43:22.842680119 +0200
-+++ archlinux-linux-changed/drivers/md/raid1.c	2021-09-24 15:43:59.426142955 +0200
-@@ -1329,7 +1329,6 @@
- 	struct raid1_plug_cb *plug = NULL;
- 	int first_clone;
- 	int max_sectors;
--	bool write_behind = false;
- 
- 	if (mddev_is_clustered(mddev) &&
- 	     md_cluster_ops->area_resyncing(mddev, WRITE,
-@@ -1383,14 +1382,6 @@
- 	for (i = 0;  i < disks; i++) {
- 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 
--		/*
--		 * The write-behind io is only attempted on drives marked as
--		 * write-mostly, which means we could allocate write behind
--		 * bio later.
--		 */
--		if (rdev && test_bit(WriteMostly, &rdev->flags))
--			write_behind = true;
--
- 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
- 			atomic_inc(&rdev->nr_pending);
- 			blocked_rdev = rdev;
-@@ -1470,7 +1461,7 @@
- 	 * at a time and thus needs a new bio that can fit the whole payload
- 	 * this bio in page sized chunks.
- 	 */
--	if (write_behind && bitmap)
-+	if (bitmap)
- 		max_sectors = min_t(int, max_sectors,
- 				    BIO_MAX_VECS * (PAGE_SIZE >> 9));
- 	if (max_sectors < bio_sectors(bio)) {
-@@ -1501,7 +1492,7 @@
- 			 * Not if there are too many, or cannot
- 			 * allocate memory, or a reader on WriteMostly
- 			 * is waiting for behind writes to flush */
--			if (bitmap &&
-+			if (bitmap && 
- 			    (atomic_read(&bitmap->behind_writes)
- 			     < mddev->bitmap_info.max_write_behind) &&
- 			    !waitqueue_active(&bitmap->behind_wait)) {
+>                         set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+>                         set_bit(LastDev, &rdev->flags);
+>                 }
+> @@ -2979,7 +2980,8 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>         int err = -EINVAL;
+>         if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+>                 md_error(rdev->mddev, rdev);
+> -               if (test_bit(Faulty, &rdev->flags))
+> +
+> +               if (!test_bit(MD_BROKEN, &rdev->mddev->flags))
 
---------------9787683D99516DF32025A395--
+I don't think this makes much sense. EBUSY for already failed array
+sounds weird.
+Also, shall we also set MD_BROKEN here?
+
+>                         err = 0;
+>                 else
+>                         err = -EBUSY;
+> @@ -7974,12 +7976,14 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+>         if (!mddev->pers || !mddev->pers->error_handler)
+>                 return;
+>         mddev->pers->error_handler(mddev,rdev);
+> -       if (mddev->degraded)
+> +       if (mddev->degraded && !test_bit(MD_BROKEN, &mddev->flags))
+>                 set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>         sysfs_notify_dirent_safe(rdev->sysfs_state);
+>         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> -       md_wakeup_thread(mddev->thread);
+> +       if (!test_bit(MD_BROKEN, &mddev->flags)) {
+> +               set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> +               md_wakeup_thread(mddev->thread);
+> +       }
+>         if (mddev->event_work.func)
+>                 queue_work(md_misc_wq, &mddev->event_work);
+>         md_new_event(mddev);
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 4c96c36bd01a..e01433f3b46a 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -259,8 +259,8 @@ enum mddev_flags {
+>         MD_NOT_READY,           /* do_md_run() is active, so 'array_state'
+>                                  * must not report that array is ready yet
+>                                  */
+> -       MD_BROKEN,              /* This is used in RAID-0/LINEAR only, to stop
+> -                                * I/O in case an array member is gone/failed.
+> +       MD_BROKEN,              /* This is used to stop I/O and mark device as
+> +                                * dead in case an array becomes failed.
+>                                  */
+>  };
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 19598bd38939..79462d860177 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1639,6 +1639,7 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+>                  */
+>                 conf->recovery_disabled = mddev->recovery_disabled;
+>                 spin_unlock_irqrestore(&conf->device_lock, flags);
+> +               set_bit(MD_BROKEN, &mddev->flags);
+>                 return;
+>         }
+>         set_bit(Blocked, &rdev->flags);
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index aa2636582841..02a4d84b4d2e 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1964,6 +1964,7 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+>                  * Don't fail the drive, just return an IO error.
+>                  */
+>                 spin_unlock_irqrestore(&conf->device_lock, flags);
+> +               set_bit(MD_BROKEN, &mddev->flags);
+>                 return;
+>         }
+>         if (test_and_clear_bit(In_sync, &rdev->flags))
+> --
+> 2.26.2
+>
