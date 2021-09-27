@@ -2,363 +2,129 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A117C43217
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 22:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8A2AC433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 22:59:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12DB460F4F
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 22:08:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4E3560F4F
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 22:59:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238103AbhI0WKA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Sep 2021 18:10:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52082 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238023AbhI0WJ4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Sep 2021 18:09:56 -0400
-Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75F23C08E876;
-        Mon, 27 Sep 2021 15:05:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=FEbfg3Ip2SxtKmcwLtx8iPGrMzlfqJBHD5on3T7ArDI=; b=0RaOKoCEDb+T5+lML154q4tQoM
-        iGf+xX6th/pyDKIj81wYzs+4eRSjZAisuq3KsOKCtkm/aoEBLgtV98vSVfpg9IpfcpPdO46NzadUt
-        r6pTgBRuesptsgKR/Nwi+S0olapnlSBqfy7kDwqw9ggAxPG5+PG8vse9bj73jeJK9pqMdthIsQ2ic
-        uvzNicCKcEZNQTx2c6+6pYmkbQpva0hixxT7a0XStsh80TQBImV0YfFPuoMePrs193InFshIcAj0Z
-        Ohf6wcrM3YLBAZBWhnqkCHFFIB9Vcmiom0Tpbx28YmJAwYSr8/JoFvLCAkUzCnrxVBHspfoq2syuj
-        ptU07Bhg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mUyij-004VaU-5A; Mon, 27 Sep 2021 22:03:33 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     axboe@kernel.dk, hch@lst.de, efremov@linux.com, song@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        viro@zeniv.linux.org.uk, hare@suse.de, jack@suse.cz,
-        ming.lei@redhat.com, tj@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
-        Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: [PATCH v2 1/2] block: make __register_blkdev() return an error
-Date:   Mon, 27 Sep 2021 15:03:31 -0700
-Message-Id: <20210927220332.1074647-2-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210927220332.1074647-1-mcgrof@kernel.org>
-References: <20210927220332.1074647-1-mcgrof@kernel.org>
+        id S237887AbhI0XBC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 27 Sep 2021 19:01:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41102 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237780AbhI0XBB (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 27 Sep 2021 19:01:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 653D561058
+        for <linux-raid@vger.kernel.org>; Mon, 27 Sep 2021 22:59:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632783563;
+        bh=nUwijAHpe0XlHUkWm21FXPsO14Qh0oKSosMNS14zQFU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=EtGgiZkbOaQN7cZAVgPSnNhvUyYVCNyp/53Jq6m65qMgtsyWcjZhp95ev5G73iGXy
+         DQFReF8hc2XyXccztSXhbXFhXB3WMw9k8IXhLMsEzfSS+V5aUr+fqmdSeoL5Rv18Cl
+         wM1Rzr6i/1IUwhXZ26MDs8xBznFSk+Ip5K4zKrbZz9d5vwavPfojYv99kUeKq7+TpU
+         av5HSaQiPP00Vpv8RG1XDSei6q2i/A3ZCHo0S2yme0tsSEWMdafVJDLSYkqCEVD8o8
+         QXnY3w8lGBNpYV8J72i6pUBQ5UYKpyteDPXfhZSu27tXyxk8R31KX/oqxpOrvQ/j0+
+         OWNjx3Oy9XZvg==
+Received: by mail-lf1-f52.google.com with SMTP id g41so84031592lfv.1
+        for <linux-raid@vger.kernel.org>; Mon, 27 Sep 2021 15:59:23 -0700 (PDT)
+X-Gm-Message-State: AOAM532iRiZ8sAZLE4dwVbs8PcnHvHN4u4aVE32Q8GcsAN5qOGr4Plcq
+        2Y9CXyggEFSoVTxSkuhulfpEmJuqphIrbiYJpmA=
+X-Google-Smtp-Source: ABdhPJyI9SQwLImbMMIeBM4aRc8PIxOuSADLClLZMgZvqdniEtusxlDQmfxfn29IFHjiUsheNst/d6yN3C5IL0u3xRQ=
+X-Received: by 2002:a2e:5442:: with SMTP id y2mr2563140ljd.436.1632783561741;
+ Mon, 27 Sep 2021 15:59:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+References: <20210917153452.5593-1-mariusz.tkaczyk@linux.intel.com>
+ <20210917153452.5593-2-mariusz.tkaczyk@linux.intel.com> <CAPhsuW5bV+Bz=Od9jomNHoedaEMFAXymN11J80G62GVPwSp41g@mail.gmail.com>
+ <CAPhsuW4HZFaPgKx68mDeWE0F7SAjpnXmHL0TzN1SuZD6_Kds-w@mail.gmail.com> <83f06776-891f-dffa-7449-4128c419ada9@linux.intel.com>
+In-Reply-To: <83f06776-891f-dffa-7449-4128c419ada9@linux.intel.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 27 Sep 2021 15:59:10 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7mi9KZBVH8YuUvvbCv8k-82tb=jJnkxU0RJXhj+OxXjg@mail.gmail.com>
+Message-ID: <CAPhsuW7mi9KZBVH8YuUvvbCv8k-82tb=jJnkxU0RJXhj+OxXjg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] md, raid1, raid10: Set MD_BROKEN for RAID1 and RAID10
+To:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This makes __register_blkdev() return an error, and also changes the
-probe() call to return an error as well.
+On Mon, Sep 27, 2021 at 7:54 AM Tkaczyk, Mariusz
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> Hi Song,
+> Thank for review.
+>
+> On 24.09.2021 23:15, Song Liu wrote:
+> >>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >>> index c322841d4edc..ac20eb2ddff7 100644
+> >>> --- a/drivers/md/md.c
+> >>> +++ b/drivers/md/md.c
+> >>> @@ -926,8 +926,9 @@ static void super_written(struct bio *bio)
+> >>>                  pr_err("md: %s gets error=%d\n", __func__,
+> >>>                         blk_status_to_errno(bio->bi_status));
+> >>>                  md_error(mddev, rdev);
+> >>> -               if (!test_bit(Faulty, &rdev->flags)
+> >>> -                   && (bio->bi_opf & MD_FAILFAST)) {
+> >>> +               if (!test_bit(Faulty, &rdev->flags) &&
+> >>> +                    !test_bit(MD_BROKEN, &mddev->flags) &&
+> >>> +                    (bio->bi_opf & MD_FAILFAST)) {
+> >>
+> >> So with MD_BROKEN, we will not try to update the SB?
+> Array is dead, is there added value in writing failed state?
 
-We expand documentation for the probe call to ensure that if the block
-device already exists we don't return on error on that condition. We do
-this as otherwise we loose ability to handle concurrent requests if the
-block device already existed.
+I think there is still value to remember this. Say a raid1 with 2 drives,
+A and B. If B is unpluged from the system, we would like to update SB
+on A to remember that. Otherwise, if B is pluged back later (maybe after
+system reset), we won't tell which one has the latest data.
 
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- block/bdev.c            |  5 ++++-
- block/genhd.c           | 21 +++++++++++++++------
- drivers/block/ataflop.c | 20 +++++++++++++++-----
- drivers/block/brd.c     |  7 +++++--
- drivers/block/floppy.c  | 14 ++++++++++----
- drivers/block/loop.c    | 11 ++++++++---
- drivers/md/md.c         | 12 +++++++++---
- drivers/scsi/sd.c       |  3 ++-
- include/linux/genhd.h   |  4 ++--
- 9 files changed, 70 insertions(+), 27 deletions(-)
+Does this make sense?
 
-diff --git a/block/bdev.c b/block/bdev.c
-index cf2780cb44a7..a9b39c3d13d7 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -733,10 +733,13 @@ struct block_device *blkdev_get_no_open(dev_t dev)
- {
- 	struct block_device *bdev;
- 	struct inode *inode;
-+	int ret;
- 
- 	inode = ilookup(blockdev_superblock, dev);
- 	if (!inode) {
--		blk_request_module(dev);
-+		ret = blk_request_module(dev);
-+		if (ret)
-+			return NULL;
- 		inode = ilookup(blockdev_superblock, dev);
- 		if (!inode)
- 			return NULL;
-diff --git a/block/genhd.c b/block/genhd.c
-index 7b6e5e1cf956..a5a41628aa59 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -180,7 +180,7 @@ static struct blk_major_name {
- 	struct blk_major_name *next;
- 	int major;
- 	char name[16];
--	void (*probe)(dev_t devt);
-+	int (*probe)(dev_t devt);
- } *major_names[BLKDEV_MAJOR_HASH_SIZE];
- static DEFINE_MUTEX(major_names_lock);
- static DEFINE_SPINLOCK(major_names_spinlock);
-@@ -210,7 +210,13 @@ void blkdev_show(struct seq_file *seqf, off_t offset)
-  * @major: the requested major device number [1..BLKDEV_MAJOR_MAX-1]. If
-  *         @major = 0, try to allocate any unused major number.
-  * @name: the name of the new block device as a zero terminated string
-- * @probe: allback that is called on access to any minor number of @major
-+ * @probe: callback that is called on access to any minor number of @major.
-+ * 	This will return 0 if the block device is already present or was
-+ * 	not present and it succcessfully added a new one. If the block device
-+ * 	was not already present but it was a valid request an error reflecting
-+ * 	the reason why adding the block device is returned. An error should not
-+ * 	be returned if the block device already exists as otherwise concurrent
-+ * 	requests to open an existing block device would fail.
-  *
-  * The @name must be unique within the system.
-  *
-@@ -228,7 +234,7 @@ void blkdev_show(struct seq_file *seqf, off_t offset)
-  * Use register_blkdev instead for any new code.
-  */
- int __register_blkdev(unsigned int major, const char *name,
--		void (*probe)(dev_t devt))
-+		int (*probe)(dev_t devt))
- {
- 	struct blk_major_name **n, *p;
- 	int index, ret = 0;
-@@ -626,17 +632,18 @@ static ssize_t disk_badblocks_store(struct device *dev,
- 	return badblocks_store(disk->bb, page, len, 0);
- }
- 
--void blk_request_module(dev_t devt)
-+int blk_request_module(dev_t devt)
- {
- 	unsigned int major = MAJOR(devt);
- 	struct blk_major_name **n;
-+	int err;
- 
- 	mutex_lock(&major_names_lock);
- 	for (n = &major_names[major_to_index(major)]; *n; n = &(*n)->next) {
- 		if ((*n)->major == major && (*n)->probe) {
--			(*n)->probe(devt);
-+			err = (*n)->probe(devt);
- 			mutex_unlock(&major_names_lock);
--			return;
-+			return err;
- 		}
- 	}
- 	mutex_unlock(&major_names_lock);
-@@ -644,6 +651,8 @@ void blk_request_module(dev_t devt)
- 	if (request_module("block-major-%d-%d", MAJOR(devt), MINOR(devt)) > 0)
- 		/* Make old-style 2.4 aliases work */
- 		request_module("block-major-%d", MAJOR(devt));
-+
-+	return 0;
- }
- 
- /*
-diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
-index 5dc9b3d32415..be0627345b21 100644
---- a/drivers/block/ataflop.c
-+++ b/drivers/block/ataflop.c
-@@ -1989,24 +1989,34 @@ static int ataflop_alloc_disk(unsigned int drive, unsigned int type)
- 
- static DEFINE_MUTEX(ataflop_probe_lock);
- 
--static void ataflop_probe(dev_t dev)
-+static int ataflop_probe(dev_t dev)
- {
- 	int drive = MINOR(dev) & 3;
- 	int type  = MINOR(dev) >> 2;
-+	int err = 0;
- 
- 	if (type)
- 		type--;
- 
--	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS)
--		return;
-+	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	mutex_lock(&ataflop_probe_lock);
- 	if (!unit[drive].disk[type]) {
--		if (ataflop_alloc_disk(drive, type) == 0) {
--			add_disk(unit[drive].disk[type]);
-+		err = ataflop_alloc_disk(drive, type);
-+		if (err == 0) {
-+			err = add_disk(unit[drive].disk[type]);
-+			if (err)
-+				blk_cleanup_disk(unit[drive].disk[type]);
- 			unit[drive].registered[type] = true;
- 		}
- 	}
- 	mutex_unlock(&ataflop_probe_lock);
-+
-+out:
-+	return err;
- }
- 
- static void atari_cleanup_floppy_disk(struct atari_floppy_struct *fs)
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index c2bf4946f4e3..82a93044de95 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -426,10 +426,11 @@ static int brd_alloc(int i)
- 	return err;
- }
- 
--static void brd_probe(dev_t dev)
-+static int brd_probe(dev_t dev)
- {
- 	int i = MINOR(dev) / max_part;
- 	struct brd_device *brd;
-+	int err = 0;
- 
- 	mutex_lock(&brd_devices_mutex);
- 	list_for_each_entry(brd, &brd_devices, brd_list) {
-@@ -437,9 +438,11 @@ static void brd_probe(dev_t dev)
- 			goto out_unlock;
- 	}
- 
--	brd_alloc(i);
-+	err = brd_alloc(i);
- out_unlock:
- 	mutex_unlock(&brd_devices_mutex);
-+
-+	return err;
- }
- 
- static void brd_del_one(struct brd_device *brd)
-diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
-index 0434f28742e7..95a1c8ef62f7 100644
---- a/drivers/block/floppy.c
-+++ b/drivers/block/floppy.c
-@@ -4517,21 +4517,27 @@ static int floppy_alloc_disk(unsigned int drive, unsigned int type)
- 
- static DEFINE_MUTEX(floppy_probe_lock);
- 
--static void floppy_probe(dev_t dev)
-+static int floppy_probe(dev_t dev)
- {
- 	unsigned int drive = (MINOR(dev) & 3) | ((MINOR(dev) & 0x80) >> 5);
- 	unsigned int type = (MINOR(dev) >> 2) & 0x1f;
-+	int err = 0;
- 
- 	if (drive >= N_DRIVE || !floppy_available(drive) ||
- 	    type >= ARRAY_SIZE(floppy_type))
--		return;
-+		return -EINVAL;
- 
- 	mutex_lock(&floppy_probe_lock);
- 	if (!disks[drive][type]) {
--		if (floppy_alloc_disk(drive, type) == 0)
--			add_disk(disks[drive][type]);
-+		if (floppy_alloc_disk(drive, type) == 0) {
-+			err = add_disk(disks[drive][type]);
-+			if (err)
-+				blk_cleanup_disk(disks[drive][type]);
-+		}
- 	}
- 	mutex_unlock(&floppy_probe_lock);
-+
-+	return err;
- }
- 
- static int __init do_floppy_init(void)
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 00ee365ed5e0..5ffb1900baa9 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -2433,13 +2433,18 @@ static void loop_remove(struct loop_device *lo)
- 	kfree(lo);
- }
- 
--static void loop_probe(dev_t dev)
-+static int loop_probe(dev_t dev)
- {
- 	int idx = MINOR(dev) >> part_shift;
-+	int ret;
- 
- 	if (max_loop && idx >= max_loop)
--		return;
--	loop_add(idx);
-+		return -EINVAL;
-+	ret = loop_add(idx);
-+	if (ret == -EEXIST)
-+		return 0;
-+
-+	return ret;
- }
- 
- static int loop_control_remove(int idx)
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 6bd5ad3c30b4..a68b47462ad7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5729,12 +5729,18 @@ static int md_alloc(dev_t dev, char *name)
- 	return error;
- }
- 
--static void md_probe(dev_t dev)
-+static int md_probe(dev_t dev)
- {
-+	int error = 0;
-+
- 	if (MAJOR(dev) == MD_MAJOR && MINOR(dev) >= 512)
--		return;
-+		return -EINVAL;
- 	if (create_on_open)
--		md_alloc(dev, NULL);
-+		error = md_alloc(dev, NULL);
-+	if (error == -EEXIST)
-+		return 0;
-+
-+	return error;
- }
- 
- static int add_named_array(const char *val, const struct kernel_param *kp)
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3a101ad4d16e..691dae32f02b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -631,8 +631,9 @@ static struct scsi_driver sd_template = {
-  * Don't request a new module, as that could deadlock in multipath
-  * environment.
-  */
--static void sd_default_probe(dev_t devt)
-+static int sd_default_probe(dev_t devt)
- {
-+	return 0;
- }
- 
- /*
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index c68d83c87f83..5828ecda5c49 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -281,7 +281,7 @@ struct gendisk *__blk_alloc_disk(int node, struct lock_class_key *lkclass);
- void blk_cleanup_disk(struct gendisk *disk);
- 
- int __register_blkdev(unsigned int major, const char *name,
--		void (*probe)(dev_t devt));
-+		int (*probe)(dev_t devt));
- #define register_blkdev(major, name) \
- 	__register_blkdev(major, name, NULL)
- void unregister_blkdev(unsigned int major, const char *name);
-@@ -317,7 +317,7 @@ static inline int bd_register_pending_holders(struct gendisk *disk)
- dev_t part_devt(struct gendisk *disk, u8 partno);
- void inc_diskseq(struct gendisk *disk);
- dev_t blk_lookup_devt(const char *name, int partno);
--void blk_request_module(dev_t devt);
-+int blk_request_module(dev_t devt);
- #ifdef CONFIG_BLOCK
- void printk_all_partitions(void);
- #else /* CONFIG_BLOCK */
--- 
-2.30.2
+>
+> For external arrays failed state is not written, because drive is
+> not removed from MD device and metadata manager cannot detect array
+> failure. This is how it was originally implemented (expect raid5 but I
+> aligned it around two years ago[1]). I tried to make it consistent for
+> everyone but I failed. Second patch restores possibility to remove
+> drive by kernel for raid5 so failed state will be detected (for external)
+> again.
+> So, maybe I should drop this change for native. What do you think?
+>
+> >>
+> >>>                          set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+> >>>                          set_bit(LastDev, &rdev->flags);
+> >>>                  }
+> >>> @@ -2979,7 +2980,8 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+> >>>          int err = -EINVAL;
+> >>>          if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+> >>>                  md_error(rdev->mddev, rdev);
+> >>> -               if (test_bit(Faulty, &rdev->flags))
+> >>> +
+> >>> +               if (!test_bit(MD_BROKEN, &rdev->mddev->flags))
+> >>
+> >> I don't think this makes much sense. EBUSY for already failed array
+> >> sounds weird.
+> >> Also, shall we also set MD_BROKEN here?
+> >>
+> > Actually, we just called md_error above, so we don't need to set MD_BROKEN here.
+> > But we shouldn't return EBUSY in such cases, right?
+> >
+> About EBUSY:
+> This is how it is implemented in mdadm, we are expecting it in
+> case of failure. See my fix[2].
+> I agree that it can be confusing, but this is how it is working.
+> Do you want to change it across mdadm and md?
+> This will break compatibility.
+>
+> About MD_BROKEN:
+> As you see we are determining failure by checking rdev state, if "Faulty"
+> in flags after md_error() is not set, then it assumes that array is
+> failed and EBUSY is returned to userspace.
 
+This changed the behavior for raid0, no?
+
+W/o the change mdadm --fail on raid0 will get EBUSY. W/ this change,
+it will get 0, and the device is NOT marked as faulty, right?
+
+Song
