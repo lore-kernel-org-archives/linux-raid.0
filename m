@@ -2,145 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16AF7C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 13:24:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A714C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 14:54:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E961461052
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 13:24:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0668C60FD7
+	for <linux-raid@archiver.kernel.org>; Mon, 27 Sep 2021 14:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234509AbhI0N0I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Sep 2021 09:26:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42124 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234058AbhI0N0I (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 27 Sep 2021 09:26:08 -0400
-Received: from mail-vs1-xe29.google.com (mail-vs1-xe29.google.com [IPv6:2607:f8b0:4864:20::e29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41C32C061604
-        for <linux-raid@vger.kernel.org>; Mon, 27 Sep 2021 06:24:30 -0700 (PDT)
-Received: by mail-vs1-xe29.google.com with SMTP id l19so18076213vst.7
-        for <linux-raid@vger.kernel.org>; Mon, 27 Sep 2021 06:24:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=DAo7I/BZC1qYd6MF3qSicniWvTR8rtUDikb4S5qnXhg=;
-        b=KwTuroM8SG4lRxbD4EIdWgTuAQeS+ADX1D2WvbgzV0GjrOZJF7nadBpzci5PZ0o5gP
-         qacO1s82qS5PcAKflWitGfnB8HkFf8xTi6gnV5gLKqoDO/DZ9gfQ2AJpeEFqEifyBWR7
-         QUYlTDIYdmdTpIf/Abq0WZSaH0HQmbfYOZENTtUGx9378wM7K3lsAxRbm0xdQdZgZPZB
-         UK1R/5m9qARU1rwBaI13APQymFD10p9u6GdkL65GOwTOMchN3AAD5hHg7/cvXYeXifBL
-         p43l98Em5bwPMCPbf2EOb8B7QBGUt0ob6McbDfkBjiCQaT3yde8cejoxo1sf7wxab7hx
-         dQmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:content-transfer-encoding;
-        bh=DAo7I/BZC1qYd6MF3qSicniWvTR8rtUDikb4S5qnXhg=;
-        b=YFZ/W8NJA6LLzIDQ136IPmsi8KJk4gYY03kPn4jah4/7s91W0wYTaSBsHKHVTMDl5K
-         HOT7FPr9Km0huTTFjGUdxBs5bf2y+KbHzxiEzxlwcJwoPkr+k+uqThOjTzZQCbIMViCL
-         nopgm476haDreOAeDP2OEceDAh585f0RAyLata9aBMHHdi55nypOHGdOfUHbiZf97JT+
-         PqS9OllotrC6bDMThJM59sVc8fbp+tqJGWFUZ5B6xA6q2eTCpPtzbNEkqFAMoJcYWB7f
-         1ezE3o17SURYsvbT32U9ICQRYGZeEGODBFSf59X8bz0yGMEN/aIe9YuD9ZXLOGjVxLas
-         9UmA==
-X-Gm-Message-State: AOAM531BfjYy9OcEqCiPq/Df1WfFrS3sfW2xkQOSwYCAKOR4zxR3MhKs
-        B2gSbzPry6K/E1tSzQ/omgBBvR8Wcn1FmynYQf7odg==
-X-Google-Smtp-Source: ABdhPJy87lQ9kGwsi669ZXp5VRXHe55QPzrnJ+B227yNYkw8/SaEKJAjjvNs4HEyzuIISpGuTPTpq0tMLf6gcM0SmhQ=
-X-Received: by 2002:a05:6102:222b:: with SMTP id d11mr3073514vsb.20.1632749069329;
- Mon, 27 Sep 2021 06:24:29 -0700 (PDT)
+        id S234819AbhI0O4J (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 27 Sep 2021 10:56:09 -0400
+Received: from mga09.intel.com ([134.134.136.24]:46184 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234782AbhI0O4I (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 27 Sep 2021 10:56:08 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10120"; a="224522286"
+X-IronPort-AV: E=Sophos;i="5.85,326,1624345200"; 
+   d="scan'208";a="224522286"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2021 07:54:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,326,1624345200"; 
+   d="scan'208";a="486172493"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga008.jf.intel.com with ESMTP; 27 Sep 2021 07:54:30 -0700
+Received: from [10.213.2.76] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.2.76])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by linux.intel.com (Postfix) with ESMTPS id D9F8F580677;
+        Mon, 27 Sep 2021 07:54:29 -0700 (PDT)
+Subject: Re: [PATCH 1/2] md, raid1, raid10: Set MD_BROKEN for RAID1 and RAID10
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20210917153452.5593-1-mariusz.tkaczyk@linux.intel.com>
+ <20210917153452.5593-2-mariusz.tkaczyk@linux.intel.com>
+ <CAPhsuW5bV+Bz=Od9jomNHoedaEMFAXymN11J80G62GVPwSp41g@mail.gmail.com>
+ <CAPhsuW4HZFaPgKx68mDeWE0F7SAjpnXmHL0TzN1SuZD6_Kds-w@mail.gmail.com>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <83f06776-891f-dffa-7449-4128c419ada9@linux.intel.com>
+Date:   Mon, 27 Sep 2021 16:54:27 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-References: <20210913032003.2836583-1-fengli@smartx.com> <CAHckoCyDULok_QLLh5Nmbx4qLCxKL43TgtFgCSAwuaPpRy1BFw@mail.gmail.com>
-In-Reply-To: <CAHckoCyDULok_QLLh5Nmbx4qLCxKL43TgtFgCSAwuaPpRy1BFw@mail.gmail.com>
-From:   Li Feng <fengli@smartx.com>
-Date:   Mon, 27 Sep 2021 21:24:18 +0800
-Message-ID: <CAHckoCwOgpH8E9UgkRkyZitPb6X5Jp-PVKoN6QFHJMt_4h+V6g@mail.gmail.com>
-Subject: Re: [PATCH] md: allow to set the fail_fast on RAID1/RAID10
-To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAPhsuW4HZFaPgKx68mDeWE0F7SAjpnXmHL0TzN1SuZD6_Kds-w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 Hi Song,
+Thank for review.
 
-What about this feature?
+On 24.09.2021 23:15, Song Liu wrote:
+>>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>>> index c322841d4edc..ac20eb2ddff7 100644
+>>> --- a/drivers/md/md.c
+>>> +++ b/drivers/md/md.c
+>>> @@ -926,8 +926,9 @@ static void super_written(struct bio *bio)
+>>>                  pr_err("md: %s gets error=%d\n", __func__,
+>>>                         blk_status_to_errno(bio->bi_status));
+>>>                  md_error(mddev, rdev);
+>>> -               if (!test_bit(Faulty, &rdev->flags)
+>>> -                   && (bio->bi_opf & MD_FAILFAST)) {
+>>> +               if (!test_bit(Faulty, &rdev->flags) &&
+>>> +                    !test_bit(MD_BROKEN, &mddev->flags) &&
+>>> +                    (bio->bi_opf & MD_FAILFAST)) {
+>>
+>> So with MD_BROKEN, we will not try to update the SB?
+Array is dead, is there added value in writing failed state?
+
+For external arrays failed state is not written, because drive is
+not removed from MD device and metadata manager cannot detect array
+failure. This is how it was originally implemented (expect raid5 but I
+aligned it around two years ago[1]). I tried to make it consistent for
+everyone but I failed. Second patch restores possibility to remove
+drive by kernel for raid5 so failed state will be detected (for external)
+again.
+So, maybe I should drop this change for native. What do you think?
+
+>>
+>>>                          set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+>>>                          set_bit(LastDev, &rdev->flags);
+>>>                  }
+>>> @@ -2979,7 +2980,8 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>>>          int err = -EINVAL;
+>>>          if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+>>>                  md_error(rdev->mddev, rdev);
+>>> -               if (test_bit(Faulty, &rdev->flags))
+>>> +
+>>> +               if (!test_bit(MD_BROKEN, &rdev->mddev->flags))
+>>
+>> I don't think this makes much sense. EBUSY for already failed array
+>> sounds weird.
+>> Also, shall we also set MD_BROKEN here?
+>>
+> Actually, we just called md_error above, so we don't need to set MD_BROKEN here.
+> But we shouldn't return EBUSY in such cases, right?
+>
+About EBUSY:
+This is how it is implemented in mdadm, we are expecting it in
+case of failure. See my fix[2].
+I agree that it can be confusing, but this is how it is working.
+Do you want to change it across mdadm and md?
+This will break compatibility.
+
+About MD_BROKEN:
+As you see we are determining failure by checking rdev state, if "Faulty"
+in flags after md_error() is not set, then it assumes that array is
+failed and EBUSY is returned to userspace.
+
+I changed verification to checking MD_BROKEN flag instead. It is
+potentially harmful for raid1 and raid10 as old way is working well but
+main target was to unify it across levels. Current verification method
+is not flexible enough for raid5 (second patch).
+Small benefit is that new IO will be failed faster, in md_submit_io().
 
 Thanks,
-Feng Li
+Mariusz
 
-Li Feng <fengli@smartx.com> =E4=BA=8E2021=E5=B9=B49=E6=9C=8815=E6=97=A5=E5=
-=91=A8=E4=B8=89 =E4=B8=8B=E5=8D=8811:08=E5=86=99=E9=81=93=EF=BC=9A
->
-> ping ...
->
-> Thanks,
-> Feng Li
->
-> Li Feng <fengli@smartx.com> =E4=BA=8E2021=E5=B9=B49=E6=9C=8813=E6=97=A5=
-=E5=91=A8=E4=B8=80 =E4=B8=8A=E5=8D=8811:22=E5=86=99=E9=81=93=EF=BC=9A
-> >
-> > When the running RAID1/RAID10 need to be set with the fail_fast flag,
-> > we have to remove each device from RAID and re-add it again with the
-> > --fail_fast flag.
-> >
-> > Export the fail_fast flag to the userspace to support the read and
-> > write.
-> >
-> > Signed-off-by: Li Feng <fengli@smartx.com>
-> > ---
-> >  drivers/md/md.c | 30 ++++++++++++++++++++++++++++++
-> >  1 file changed, 30 insertions(+)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index ae8fe54ea358..ce63972a4555 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -3583,6 +3583,35 @@ ppl_size_store(struct md_rdev *rdev, const char =
-*buf, size_t len)
-> >  static struct rdev_sysfs_entry rdev_ppl_size =3D
-> >  __ATTR(ppl_size, S_IRUGO|S_IWUSR, ppl_size_show, ppl_size_store);
-> >
-> > +static ssize_t
-> > +fail_fast_show(struct md_rdev *rdev, char *page)
-> > +{
-> > +       return sprintf(page, "%d\n", test_bit(FailFast, &rdev->flags));
-> > +}
-> > +
-> > +static ssize_t
-> > +fail_fast_store(struct md_rdev *rdev, const char *buf, size_t len)
-> > +{
-> > +       int ret;
-> > +       bool bit;
-> > +
-> > +       ret =3D kstrtobool(buf, &bit);
-> > +       if (ret)
-> > +               return ret;
-> > +
-> > +       if (test_bit(FailFast, &rdev->flags) && !bit) {
-> > +               clear_bit(FailFast, &rdev->flags);
-> > +               md_update_sb(rdev->mddev, 1);
-> > +       } else if (!test_bit(FailFast, &rdev->flags) && bit) {
-> > +               set_bit(FailFast, &rdev->flags);
-> > +               md_update_sb(rdev->mddev, 1);
-> > +       }
-> > +       return len;
-> > +}
-> > +
-> > +static struct rdev_sysfs_entry rdev_fail_fast =3D
-> > +__ATTR(fail_fast, 0644, fail_fast_show, fail_fast_store);
-> > +
-> >  static struct attribute *rdev_default_attrs[] =3D {
-> >         &rdev_state.attr,
-> >         &rdev_errors.attr,
-> > @@ -3595,6 +3624,7 @@ static struct attribute *rdev_default_attrs[] =3D=
- {
-> >         &rdev_unack_bad_blocks.attr,
-> >         &rdev_ppl_sector.attr,
-> >         &rdev_ppl_size.attr,
-> > +       &rdev_fail_fast.attr,
-> >         NULL,
-> >  };
-> >  static ssize_t
-> > --
-> > 2.31.1
-> >
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=fb73b3
+[2] https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=cb8f5371
