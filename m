@@ -2,159 +2,125 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7638DC433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Sep 2021 00:57:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F93AC433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Sep 2021 07:33:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E418611CE
-	for <linux-raid@archiver.kernel.org>; Tue, 28 Sep 2021 00:57:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7567660F46
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Sep 2021 07:33:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238467AbhI1A7B (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Sep 2021 20:59:01 -0400
-Received: from new4-smtp.messagingengine.com ([66.111.4.230]:54075 "EHLO
-        new4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238379AbhI1A7A (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 27 Sep 2021 20:59:00 -0400
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 5A767580410;
-        Mon, 27 Sep 2021 20:57:21 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Mon, 27 Sep 2021 20:57:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=aMTOwy
-        1kRDglv9bWeV4pQeESYMtX8UBlRbYC0yXYRgQ=; b=ZOuzWiffGLc+sX04l19gVI
-        YY7DB3F4UXso43esbO2BFAmGjtbUBmJrMhgHl4Fd4/lP1389NVGKiry/eU8DymQu
-        1YWx0FyxfMdNGl2+hMg3S1+BYOoPXz0iuv+o/CabL6FncacKte1kSmv/QFcq2FHn
-        1xi7LMekdnXTfgame6h/F8oo74ECuK5k1aubF5xuZ+D21osluDhHLH8s4hp7uJb5
-        PhhKkWS703MBMpMsGFLvfMibC9pyeZZVFcs75aEy8IAzwOw2I44j+Ud3S+iIaSrp
-        GjrX7GClyfWkWUEWAciNfw1iX0TwKthVfI2IoF/0ITpk+1cbfK2eeCRtmXkLhQbA
-        ==
-X-ME-Sender: <xms:cGhSYWo8LSaDS5CBcz8z2agNcO9RsgY4NFePO2R6WjZn1FbcQs4TIQ>
-    <xme:cGhSYUoROMuzQmTz7R1XF9w1PeOqNrp9XJZ58SY61SJsFZUD2uxtmBRit9tE-aWCw
-    IvO5nYnLuIP-qgsOIs>
-X-ME-Received: <xmr:cGhSYbMwAPqrJDPdUwn1qe4zIVqBIbetrlYFfo8K-g__-eSsleWq3aqc3QuUGIC_qzXJN52XBHe-0bdCf5JVbjfxta15FGTKnK4>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrudejledgfeejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucenucfjughrpeffhffvufgjkfhfgggtsehttdertd
-    dttddvnecuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidq
-    mheikehkrdhorhhgqeenucggtffrrghtthgvrhhnpeffudfhgeefvdeitedugfelueeghe
-    ekkeefveffhfeiveetledvhfdtveffteeuudenucevlhhushhtvghrufhiiigvpedtnecu
-    rfgrrhgrmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorh
-    hg
-X-ME-Proxy: <xmx:cGhSYV76vAE2s40-9N8gMALgTFevL4U99REmSJRJxxbuEhKrlwsr1g>
-    <xmx:cGhSYV7SUhVurhNb-_7AcydzfVg_o7Bj9UjG2nu_TcYCTsjbDgAmww>
-    <xmx:cGhSYVii0nBY_c8x90Xd2494z3rjIGeXZe4VJSWC2kwwcePJlerKiA>
-    <xmx:cWhSYcqI3kg4T2UcS-3xqpq_X1J9yeXvC8nWLZyY-XMIZB_gDdhJ5w>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 27 Sep 2021 20:57:18 -0400 (EDT)
-Date:   Tue, 28 Sep 2021 10:57:18 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-cc:     axboe@kernel.dk, hch@lst.de, efremov@linux.com, song@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        viro@zeniv.linux.org.uk, hare@suse.de, jack@suse.cz,
-        ming.lei@redhat.com, tj@kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: Re: [PATCH v2 1/2] block: make __register_blkdev() return an error
-In-Reply-To: <20210927220332.1074647-2-mcgrof@kernel.org>
-Message-ID: <2ac2e05f-327a-b66f-aaa0-276db2e46730@linux-m68k.org>
-References: <20210927220332.1074647-1-mcgrof@kernel.org> <20210927220332.1074647-2-mcgrof@kernel.org>
+        id S239239AbhI1He4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Sep 2021 03:34:56 -0400
+Received: from mga11.intel.com ([192.55.52.93]:28679 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239099AbhI1He4 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 28 Sep 2021 03:34:56 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10120"; a="221433385"
+X-IronPort-AV: E=Sophos;i="5.85,328,1624345200"; 
+   d="scan'208";a="221433385"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2021 00:33:15 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,328,1624345200"; 
+   d="scan'208";a="486424804"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga008.jf.intel.com with ESMTP; 28 Sep 2021 00:33:14 -0700
+Received: from [10.213.3.81] (mtkaczyk-MOBL1.ger.corp.intel.com [10.213.3.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by linux.intel.com (Postfix) with ESMTPS id 7ABDC5807C8;
+        Tue, 28 Sep 2021 00:33:13 -0700 (PDT)
+Subject: Re: [PATCH 1/2] md, raid1, raid10: Set MD_BROKEN for RAID1 and RAID10
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20210917153452.5593-1-mariusz.tkaczyk@linux.intel.com>
+ <20210917153452.5593-2-mariusz.tkaczyk@linux.intel.com>
+ <CAPhsuW5bV+Bz=Od9jomNHoedaEMFAXymN11J80G62GVPwSp41g@mail.gmail.com>
+ <CAPhsuW4HZFaPgKx68mDeWE0F7SAjpnXmHL0TzN1SuZD6_Kds-w@mail.gmail.com>
+ <83f06776-891f-dffa-7449-4128c419ada9@linux.intel.com>
+ <CAPhsuW7mi9KZBVH8YuUvvbCv8k-82tb=jJnkxU0RJXhj+OxXjg@mail.gmail.com>
+From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
+Message-ID: <d41df432-e4e1-9567-b0e6-14736407d808@linux.intel.com>
+Date:   Tue, 28 Sep 2021 09:33:10 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <CAPhsuW7mi9KZBVH8YuUvvbCv8k-82tb=jJnkxU0RJXhj+OxXjg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, 27 Sep 2021, Luis Chamberlain wrote:
+Hi Song,
 
-> diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
-> index 5dc9b3d32415..be0627345b21 100644
-> --- a/drivers/block/ataflop.c
-> +++ b/drivers/block/ataflop.c
-> @@ -1989,24 +1989,34 @@ static int ataflop_alloc_disk(unsigned int drive, unsigned int type)
->  
->  static DEFINE_MUTEX(ataflop_probe_lock);
->  
-> -static void ataflop_probe(dev_t dev)
-> +static int ataflop_probe(dev_t dev)
->  {
->  	int drive = MINOR(dev) & 3;
->  	int type  = MINOR(dev) >> 2;
-> +	int err = 0;
->  
->  	if (type)
->  		type--;
->  
-> -	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS)
-> -		return;
-> +	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS) {
-> +		err = -EINVAL;
-> +		goto out;
-> +	}
-> +
->  	mutex_lock(&ataflop_probe_lock);
->  	if (!unit[drive].disk[type]) {
-> -		if (ataflop_alloc_disk(drive, type) == 0) {
-> -			add_disk(unit[drive].disk[type]);
-> +		err = ataflop_alloc_disk(drive, type);
-> +		if (err == 0) {
-> +			err = add_disk(unit[drive].disk[type]);
-> +			if (err)
-> +				blk_cleanup_disk(unit[drive].disk[type]);
->  			unit[drive].registered[type] = true;
->  		}
->  	}
->  	mutex_unlock(&ataflop_probe_lock);
-> +
-> +out:
-> +	return err;
->  }
->  
->  static void atari_cleanup_floppy_disk(struct atari_floppy_struct *fs)
+On 28.09.2021 00:59, Song Liu wrote:
+>>>>> +               if (!test_bit(Faulty, &rdev->flags) &&
+>>>>> +                    !test_bit(MD_BROKEN, &mddev->flags) &&
+>>>>> +                    (bio->bi_opf & MD_FAILFAST)) {
+>>>>
+>>>> So with MD_BROKEN, we will not try to update the SB?
+>> Array is dead, is there added value in writing failed state?
+> 
+> I think there is still value to remember this. Say a raid1 with 2 drives,
+> A and B. If B is unpluged from the system, we would like to update SB
+> on A to remember that. Otherwise, if B is pluged back later (maybe after
+> system reset), we won't tell which one has the latest data.
+> 
+> Does this make sense?
 
-I think the change to ataflop_probe() would be more clear without adding 
-an 'out' label, like your change to floppy.c:
+Removing one drive from raid1 array doesn't cause raid failure.
+So, removing B will be recorded on A.
+Raid1 is not good example because to fail array we need to remove
+all members, so MD_BROKEN doesn't matter because
+!test_bit(Faulty, &rdev->flags) is true.
 
-> diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
-> index 0434f28742e7..95a1c8ef62f7 100644
-> --- a/drivers/block/floppy.c
-> +++ b/drivers/block/floppy.c
-> @@ -4517,21 +4517,27 @@ static int floppy_alloc_disk(unsigned int drive, unsigned int type)
->  
->  static DEFINE_MUTEX(floppy_probe_lock);
->  
-> -static void floppy_probe(dev_t dev)
-> +static int floppy_probe(dev_t dev)
->  {
->  	unsigned int drive = (MINOR(dev) & 3) | ((MINOR(dev) & 0x80) >> 5);
->  	unsigned int type = (MINOR(dev) >> 2) & 0x1f;
-> +	int err = 0;
->  
->  	if (drive >= N_DRIVE || !floppy_available(drive) ||
->  	    type >= ARRAY_SIZE(floppy_type))
-> -		return;
-> +		return -EINVAL;
->  
->  	mutex_lock(&floppy_probe_lock);
->  	if (!disks[drive][type]) {
-> -		if (floppy_alloc_disk(drive, type) == 0)
-> -			add_disk(disks[drive][type]);
-> +		if (floppy_alloc_disk(drive, type) == 0) {
-> +			err = add_disk(disks[drive][type]);
-> +			if (err)
-> +				blk_cleanup_disk(disks[drive][type]);
-> +		}
->  	}
->  	mutex_unlock(&floppy_probe_lock);
-> +
-> +	return err;
->  }
->  
->  static int __init do_floppy_init(void)
+Let say that we have raid10 with member A, B, C, D. Member A is removed,
+and it is recorded correctly (we are degraded now). Next, member B is
+removed which causes array failure.
+W/ my patch:
+member B failure is not saved on members C and D. Raid is failed but
+it is not recorded in metadata.
+w/o my patch:
+member B failure is saved on C and D, and metadata is in failed state.
+>>>>
+>>>>>                           set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
+>>>>>                           set_bit(LastDev, &rdev->flags);
+>>>>>                   }
+>>>>> @@ -2979,7 +2980,8 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>>>>>           int err = -EINVAL;
+>>>>>           if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+>>>>>                   md_error(rdev->mddev, rdev);
+>>>>> -               if (test_bit(Faulty, &rdev->flags))
+>>>>> +
+>>>>> +               if (!test_bit(MD_BROKEN, &rdev->mddev->flags))
+>>>>
+>>>> I don't think this makes much sense. EBUSY for already failed array
+>>>> sounds weird.
+>>>> Also, shall we also set MD_BROKEN here?
+>>>>
+>>> Actually, we just called md_error above, so we don't need to set MD_BROKEN here.
+>>> But we shouldn't return EBUSY in such cases, right?
+>>>
+>> About EBUSY:
+>> This is how it is implemented in mdadm, we are expecting it in
+>> case of failure. See my fix[2].
+>> I agree that it can be confusing, but this is how it is working.
+>> Do you want to change it across mdadm and md?
+>> This will break compatibility.
+>>
+>> About MD_BROKEN:
+>> As you see we are determining failure by checking rdev state, if "Faulty"
+>> in flags after md_error() is not set, then it assumes that array is
+>> failed and EBUSY is returned to userspace.
+> 
+> This changed the behavior for raid0, no?
+> 
+> W/o the change mdadm --fail on raid0 will get EBUSY. W/ this change,
+> it will get 0, and the device is NOT marked as faulty, right?
+> 
+See commit mentioned in description. MD_BROKEN is used for raid0,
+so EBUSY is returned, same as w/o patch.
 
-In floppy_probe(), I think you should return the potential error result 
-from floppy_alloc_disk(), like you did in ataflop.c.
+Thanks,
+Mariusz
