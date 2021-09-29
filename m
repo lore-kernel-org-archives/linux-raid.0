@@ -2,71 +2,76 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC8E6C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Sep 2021 08:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC78DC433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Sep 2021 07:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA69B613D0
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Sep 2021 08:07:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5457615E1
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Sep 2021 07:04:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244564AbhI2IJP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Sep 2021 04:09:15 -0400
-Received: from mga02.intel.com ([134.134.136.20]:7261 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244540AbhI2IJM (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 29 Sep 2021 04:09:12 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10121"; a="212141363"
-X-IronPort-AV: E=Sophos;i="5.85,331,1624345200"; 
-   d="scan'208";a="212141363"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2021 01:07:32 -0700
-X-IronPort-AV: E=Sophos;i="5.85,331,1624345200"; 
-   d="scan'208";a="554535631"
-Received: from mkusiak-mobl.ger.corp.intel.com (HELO [10.213.24.195]) ([10.213.24.195])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2021 01:07:30 -0700
-Message-ID: <a5db5b41-82bd-af57-6360-8434df02ba9b@linux.intel.com>
-Date:   Wed, 29 Sep 2021 10:07:27 +0200
+        id S1348462AbhI3HGE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 30 Sep 2021 03:06:04 -0400
+Received: from f1.1azy.net ([104.244.74.192]:49916 "EHLO
+        home.thecybershadow.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S233661AbhI3HGD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Sep 2021 03:06:03 -0400
+X-Greylist: delayed 81779 seconds by postgrey-1.27 at vger.kernel.org; Thu, 30 Sep 2021 03:06:03 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=home.thecybershadow.net; s=home; h=Sender:Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=CSg3qcUoUV34e9hqCIHB3KWfzLPdTdxdjadKcL6YrWE=; b=tGbx9m4IKyJ69tqp56057r1Y3A
+        5aAzWrMsIM5FVjHiJGlGn4Gb9AVuG4ufH8G0XZ2JhsFspEIdqkeqL2/kK6xqxW6IS0uLlZIs8wRZI
+        qIJElqiKKG3aXSFpNYbWNndCPiTysy63gGW7oo55xVPGCKOS87KUvo6+rltIqcXBN5ZU=;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cy.md;
+        s=home; h=Sender:Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
+        Subject:Cc:To:From:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=CSg3qcUoUV34e9hqCIHB3KWfzLPdTdxdjadKcL6YrWE=; b=wkcRZMLRdbAqkBDnhA/E1Xu6yb
+        P8Baaw8RhOmzwd8NUz5LOpvhakvEqs0797rBG7j9Ynbb+KXmgnOMuueGGdrbwWrsOqDjgZUUZgdqI
+        srXjOG4OpUnWgKrN8CJy/taJvXf1BjXTBvMg2pr7RTIgDi4yCjbM/0fHPF1xXNa9dUQ0=;
+Received: from vladimir by home.thecybershadow.net with local (Exim 4.94.2)
+        (envelope-from <vladimir@home.thecybershadow.net>)
+        id 1mVUq9-006Ekc-1L; Wed, 29 Sep 2021 08:21:21 +0000
+From:   Vladimir Panteleev <git@cy.md>
+To:     linux-raid@vger.kernel.org
+Cc:     Vladimir Panteleev <git@cy.md>
+Subject: [PATCH] mdadm.8: Copy --no-degraded clarification from --help output
+Date:   Wed, 29 Sep 2021 08:21:13 +0000
+Message-Id: <20210929082113.1486453-1-git@cy.md>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.1
-Subject: Re: Mdadm opinion request
-Content-Language: pl
-To:     Jes Sorensen <jes@trained-monkey.org>, colyli@suse.de,
-        linux-raid@vger.kernel.org
-References: <d70f2c8f-eafd-f3c6-39d0-e52a94507cdf@linux.intel.com>
- <c487ed96-b7da-0fea-5020-1cbf7207a8b7@trained-monkey.org>
-From:   "Kusiak, Mateusz" <mateusz.kusiak@linux.intel.com>
-In-Reply-To: <c487ed96-b7da-0fea-5020-1cbf7207a8b7@trained-monkey.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Sender:  <vladimir@home.thecybershadow.net>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Added linux-raid to recipients, as it should be in original message,
-sorry for inconvenience.
+Make it easier to discover this POLA violation.
+---
+ mdadm.8.in | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-On 28/09/2021 23:08, Jes Sorensen wrote:
-> On 9/28/21 5:28 AM, Kusiak, Mateusz wrote:
->> Hello all,
->> We've discovered an issue with mdadm monitor not checking if sendmail is
->> installed on the system. Software displays error:
->>      "/usr/sbin/sendmail: No such file or directory"
->> and continues to work.
->>
->> We have two ways to use mdmonitor:
->> - system wide mode (--scan option); this require --mail or --syslog,
->> notifications are mandatory.
->> - container/array tracking mode; notifications are optional.
->>
->> Providing wrong email does not stop mdmonitor, neither removing postfix.
->> There is a way to avoid mails in each mode, so why not make it
->> configurable globally? Any thoughts?
->>
->> Mateusz Kusiak
->>
-> 
-> Seems reasonable to me to make it configurable rather than implicit
-> enforce it in one mode and not the other.
-> 
-> Jes
-> 
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 96846035..74cca534 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1159,6 +1159,12 @@ are present.  This is only needed with
+ and can be used if the physical connections to devices are
+ not as reliable as you would like.
+ 
++Note that "all expected drives" means as many as were present the last
++time the array was running as recorded in the superblock.  If the
++array was already degraded, and the missing device is not a new
++problem, it will still be assembled.  It is only newly missing devices
++that cause the array not to be started.
++
+ .TP
+ .BR \-a ", " "\-\-auto{=no,yes,md,mdp,part}"
+ See this option under Create and Build options.
+-- 
+2.33.0
+
