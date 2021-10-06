@@ -2,86 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F176C433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Oct 2021 15:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E9ECC4332F
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Oct 2021 11:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77AD461186
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Oct 2021 15:02:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B10E610FC
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Oct 2021 11:13:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235600AbhJEPDu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 5 Oct 2021 11:03:50 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:34018 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235518AbhJEPDu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Oct 2021 11:03:50 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id BE1D11FE66;
-        Tue,  5 Oct 2021 15:01:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1633446118; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=vReLn03fAWBptLwyepcNiFCz5lmv8+ZXZOfrwzQ/HQU=;
-        b=2MCPcjp68wJzsnlPD4wkMsKEHCv2RI4Px5LxJFf2akYr5oa4CxR0wl3hwsKc72k//jQbrK
-        NsYYrnI3m3p5gW72BzKEvEAmN+Ztyxmc1ODJdlVNf3Gp4/KZo8rkEdxv9OR6Vz2yd0MMMz
-        8WkaqXmK3vOt8vP2OJpTeqv6vI6mHcI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1633446118;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=vReLn03fAWBptLwyepcNiFCz5lmv8+ZXZOfrwzQ/HQU=;
-        b=RdZ1BhQgsUmpjzhxvQzHkrYXPVxa6EcspLBjBZc42Rqep/ZCAvbqEJq7WamglDgAOWtf3y
-        MfjWOJWeCiIiX7AA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1C53F13D1D;
-        Tue,  5 Oct 2021 15:01:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 805eNuRoXGG0OwAAMHmgww
-        (envelope-from <colyli@suse.de>); Tue, 05 Oct 2021 15:01:56 +0000
-To:     Jes Sorensen <jsorensen@fb.com>, jes@trained-monkey.org
-Cc:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>,
-        "hare@suse.de" <hare@suse.de>, pmenzel@molgen.mpg.de,
-        linux-raid <linux-raid@vger.kernel.org>
-From:   Coly Li <colyli@suse.de>
-Subject: The mdadm maintenance
-Message-ID: <c27798e0-dc8b-7058-4347-732d7162f011@suse.de>
-Date:   Tue, 5 Oct 2021 23:01:54 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.14.0
+        id S238565AbhJFLPn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Oct 2021 07:15:43 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17278 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238192AbhJFLPM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Oct 2021 07:15:12 -0400
+X-Greylist: delayed 905 seconds by postgrey-1.27 at vger.kernel.org; Wed, 06 Oct 2021 07:15:12 EDT
+ARC-Seal: i=1; a=rsa-sha256; t=1633517886; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=NkvigmpN2lInNv7Gqrk0G4+fV3/cq5tU6zPX0kcM/yBvsn9xA4iMjGj46fuCFOQkKy8dNJKtwin4buinUVy6DgjQKHm3tOALbJ8LV5q//JdK7+a2L3iEGigRLVIKaaUenyfCY2HoOOgE8rHWAQfI1Edkiy17hyG8L5vKaRpR5mg=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1633517886; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=njNKFVdvs+DDHJXa2WRsdCD49rdXmgKF1c8MkxXWnt8=; 
+        b=aRwONLaoHbSqt8m/lEI/cTPau/TuMhDT3dxqukYiu5U3i++WPFshh+Pi7fzLskDZM1qPTZGwgeIKlq1VZFZkCkYGWFi/c40Q+q/KVo3yC/FS8Tb23aZ4Ss1vDdr+vyeay6WSXCWbAadaHLx5pPKccr4Znaxz0uqyS+Rebu10qt4=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.4.32] (85.184.170.180 [85.184.170.180]) by mx.zoho.eu
+        with SMTPS id 1633517883638242.40005363509636; Wed, 6 Oct 2021 12:58:03 +0200 (CEST)
+Subject: Re: [PATCH] mdadm: split off shared library
+To:     Hannes Reinecke <hare@suse.de>, Xiao Ni <xni@redhat.com>
+Cc:     Coly Li <colyli@suse.de>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <7461b27b-2a4b-fbbb-5cfd-8fab416cbc9f@suse.de>
+ <CALTww29nZV4A1BM_ShrmL1ud4YZC2YTG8q4LvW8pfhZwb=MhVQ@mail.gmail.com>
+ <75fdd0fe-154b-f8eb-9ac3-bb948b432e39@suse.de>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <c79d649d-a237-8d24-f05f-aa843831c9b7@trained-monkey.org>
+Date:   Wed, 6 Oct 2021 06:58:03 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <75fdd0fe-154b-f8eb-9ac3-bb948b432e39@suse.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jes,
+On 9/14/21 3:26 AM, Hannes Reinecke wrote:
+> On 9/14/21 9:08 AM, Xiao Ni wrote:
+>> Hi Hannes
+>>
+>> Thanks for these patches. It's a good idea to make codes more clearly
+>> that which codes belong to which file.
+>> There are many efforts that move codes from mdadm.c and mdadm.h to
+>> specific files. Is it better to put these
+>> patches together? For example, the patches(6, 11, 12, 16, 19, 20, 27,
+>> 28) try to clean mdadm.c. Could you put
+>> similar patches together? And there are some rename patches too, they
+>> are sporadic.
+>>
+> Sure. Wasn't sure how you'd like to handle it; some prefer smaller
+> patches, some prefer less patches overall ...
 
-As Paul and Mariusz suggested, I post this email for your opinion.
+Sorry I missed this mainly because it had PATCH in the title and I
+didn't feel the shared library subject was an urgent issue. I am not
+opposed to splitting things into a shared library, in fact I believe I
+suggested this to Neil many years ago. I don't remember why it didn't
+happen at the time.
 
- From the recent communication on linux-raid mailing list, I know and 
-fully understand you are too busy to take care mdadm and response other 
-developers in time. I'd like to help to maintainer mdadm project if you 
-are glad to. I am very happy with my current job and employer, it is 
-very probably I can be stable on the maintenance role for quite long 
-time before I am retired (maybe 20+ years if I may live that long time).
+That said, I don't think it's something that is appropriate for 4.2, but
+rather something to target for 5.0.
 
-So if you feel it works, and other folks on linux-raid being supportive, 
-I'd like to take the maintenance of mdadm and keep things moving 
-forward. Now I am bcache (linux/drivers/md/bcache/) maintainer of 
-upstream Linux kernel, and SUSE internal md raid and mdadm maintainer. 
-Taking care of mdadm can be my daily regular job for quite long time.
+For something like this I would prefer smaller patches so it's possible
+to bisect our way back if something broke in the process. Jumbo patches
+are always wrong.
 
-Thanks in advance for your response.
-
-Coly Li
-
+Cheers,
+Jes
