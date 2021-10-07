@@ -2,45 +2,46 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6806AC433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Oct 2021 06:20:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0020C433FE
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Oct 2021 06:26:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BBAF611AE
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Oct 2021 06:20:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EF7F61262
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Oct 2021 06:26:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240283AbhJGGWP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Oct 2021 02:22:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57114 "EHLO mail.kernel.org"
+        id S232454AbhJGG15 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Oct 2021 02:27:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58250 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240278AbhJGGWP (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 7 Oct 2021 02:22:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E1B216105A
-        for <linux-raid@vger.kernel.org>; Thu,  7 Oct 2021 06:20:21 +0000 (UTC)
+        id S232418AbhJGG14 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 7 Oct 2021 02:27:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6493E61260
+        for <linux-raid@vger.kernel.org>; Thu,  7 Oct 2021 06:26:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633587621;
-        bh=Hkz+TjkDVPMhEjH5ofaYFURCWjpm0Hli/uAcyPQIAN8=;
+        s=k20201202; t=1633587963;
+        bh=bJJMo4QsucR/+WfA1XsWxH78ecgszN4c6hUg7SNUXQw=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=VkuYODYVALdLvoEalmGxJXB0nACJG7J/c3G+8MKNN2AiEcEMjOtCS7x4/Erj1VKye
-         +jNDsiwIRgjb6P6pJdcnn54NPCVr3tBrHoReX2Z3ccvlbp5xiqHmvvSTqLnuxdlA3R
-         cCa1Pb/1QPfF1R7XP+G5wa+S88Wbybb5fDK7CE+ga6j89XVvmnzzK/V6b+OFi3TcK7
-         xh3emllzKZGMDUWbAIoAMtQH+YrYlM3sUDkWdbjhPEa28HdVpDd/Dgtzv2GgI9mGDi
-         UKgbrLfInxFlQtL1w4qKwH0KFpj8FASxc+SeWBe1BOvnCeZjg/onuztOBsxb02ZJFu
-         KcApM9NdDc6Tw==
-Received: by mail-lf1-f47.google.com with SMTP id n8so19584870lfk.6
-        for <linux-raid@vger.kernel.org>; Wed, 06 Oct 2021 23:20:21 -0700 (PDT)
-X-Gm-Message-State: AOAM533QMW3W4LC3Nc9qrUgjVz7BUG73LbDPdoE/RHCXKN/JU4RbbIDJ
-        dHw1MmCN0CU7rGDHyptSKtioDxMuyEAr9XvLdsY=
-X-Google-Smtp-Source: ABdhPJz2pBMSCQNvn8y6EwUpM39x30HfQQoJ4PzPFH8hQT7Fms5a/uSLnb0hRUrj7VF4kdlPbm5X13iu+FZbrtuhwyI=
-X-Received: by 2002:a05:6512:39c4:: with SMTP id k4mr2474991lfu.14.1633587620266;
- Wed, 06 Oct 2021 23:20:20 -0700 (PDT)
+        b=iX0/YQhnEV9CrBOR397B+c+Fu2KGJ4qyGzGSdsuD1XiKCSBS09/BM6hkYeuAXoSuT
+         0BDSbRc9cRgCTgbvaddRpovp+JzBEG2I2aljXNFNhDP5lCZ4C/tmcoLqC89AB95etB
+         fAmAO1qtE62CwWKuai0mPV7XHLqFAEoZ5e8lfUHXxLLjDt7XjCgyJlULdKOyWrpz+D
+         ErHWELeTEufpoED3ioz5CsWpV5rP0JNHj+4s6cO/SEejNxq/IGJGMejebHpJMBnB+P
+         1Bpr7kOyXhFYPXtVwJFHR14abHZG0BNS8Z5w9H99FycQudWmLRE0DKGCb8c70u8Wd2
+         40tsrm64HR5EQ==
+Received: by mail-lf1-f49.google.com with SMTP id r19so19347668lfe.10
+        for <linux-raid@vger.kernel.org>; Wed, 06 Oct 2021 23:26:03 -0700 (PDT)
+X-Gm-Message-State: AOAM532qz3gYJH7THICRdNInnRprs6obOMkJtD1U2wtdFCXIf9qHF6i+
+        2M1euwUYgMpzydCmkoDEUWF3Dqvg3Wl9ssrz2vo=
+X-Google-Smtp-Source: ABdhPJzs4hu98UsF4rmmuiQH05Qe/DMRUCn9VCbYkNmyRvJmCqSteqcDKYO9TElCExBIfJO3JZmmPGwI2ICdXYldhJM=
+X-Received: by 2002:ac2:41d4:: with SMTP id d20mr2538657lfi.598.1633587961799;
+ Wed, 06 Oct 2021 23:26:01 -0700 (PDT)
 MIME-Version: 1.0
-References: <20211004153453.14051-1-guoqing.jiang@linux.dev> <20211004153453.14051-5-guoqing.jiang@linux.dev>
-In-Reply-To: <20211004153453.14051-5-guoqing.jiang@linux.dev>
+References: <20211004153453.14051-1-guoqing.jiang@linux.dev> <20211004153453.14051-3-guoqing.jiang@linux.dev>
+In-Reply-To: <20211004153453.14051-3-guoqing.jiang@linux.dev>
 From:   Song Liu <song@kernel.org>
-Date:   Wed, 6 Oct 2021 23:20:09 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5DF-5O19M6GFCsdjZbtNSiG__QO4JqynFYpMBD0FTQuw@mail.gmail.com>
-Message-ID: <CAPhsuW5DF-5O19M6GFCsdjZbtNSiG__QO4JqynFYpMBD0FTQuw@mail.gmail.com>
-Subject: Re: [PATCH 4/6] md/raid10: add 'read_err' to raid10_read_request
+Date:   Wed, 6 Oct 2021 23:25:50 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW58FyoNgttdXiPUoCdA9Rfr8+yeq4xe9GdGp2F8+2b+OA@mail.gmail.com>
+Message-ID: <CAPhsuW58FyoNgttdXiPUoCdA9Rfr8+yeq4xe9GdGp2F8+2b+OA@mail.gmail.com>
+Subject: Re: [PATCH 2/6] md/bitmap: don't set max_write_behind if there is no
+ write mostly device
 To:     Guoqing Jiang <guoqing.jiang@linux.dev>
 Cc:     linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
@@ -50,60 +51,57 @@ X-Mailing-List: linux-raid@vger.kernel.org
 
 On Mon, Oct 4, 2021 at 8:40 AM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
 >
-> Add the paramenter since the err retry logic is only meaningful when
-> the caller is handle_read_error.
+> We shouldn't set it since write behind IO should only happen to write
+> mostly device.
 >
 > Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 > ---
->  drivers/md/raid10.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/md/md-bitmap.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
 >
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index aa2636582841..29eb538db953 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1116,7 +1116,7 @@ static void regular_request_wait(struct mddev *mddev, struct r10conf *conf,
->  }
->
->  static void raid10_read_request(struct mddev *mddev, struct bio *bio,
-> -                               struct r10bio *r10_bio)
-> +                               struct r10bio *r10_bio, bool read_err)
+> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+> index e29c6298ef5c..0346281b1555 100644
+> --- a/drivers/md/md-bitmap.c
+> +++ b/drivers/md/md-bitmap.c
+> @@ -2469,11 +2469,28 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
 >  {
->         struct r10conf *conf = mddev->private;
->         struct bio *read_bio;
-> @@ -1129,7 +1129,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->         struct md_rdev *err_rdev = NULL;
->         gfp_t gfp = GFP_NOIO;
->
-> -       if (slot >= 0 && r10_bio->devs[slot].rdev) {
-> +       if (read_err && slot >= 0 && r10_bio->devs[slot].rdev) {
+>         unsigned long backlog;
+>         unsigned long old_mwb = mddev->bitmap_info.max_write_behind;
+> +       struct md_rdev *rdev;
+> +       bool has_write_mostly = false;
+>         int rv = kstrtoul(buf, 10, &backlog);
+>         if (rv)
+>                 return rv;
+>         if (backlog > COUNTER_MAX)
+>                 return -EINVAL;
+> +
+> +       /*
+> +        * Without write mostly device, it doesn't make sense to set
+> +        * backlog for max_write_behind.
+> +        */
+> +       rdev_for_each(rdev, mddev)
+> +               if (test_bit(WriteMostly, &rdev->flags)) {
+> +                       has_write_mostly = true;
+> +                       break;
+> +               }
+> +       if (!has_write_mostly) {
+> +               pr_warn_ratelimited("md: No write mostly device available\n");
 
-How about we just move this section to a separate function?
+Most of these _store functions do not print warnings for invalid changes. So
+I am not sure whether we want to add this one. If we do want it, we should
+make it clear, as
+"md: No write mostly device available. Cannot set backlog\n".
+We may also add the device name there.
 
 Thanks,
 Song
 
->                 /*
->                  * This is an error retry, but we cannot
->                  * safely dereference the rdev in the r10_bio,
-> @@ -1519,7 +1519,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
->                         conf->geo.raid_disks);
->
->         if (bio_data_dir(bio) == READ)
-> -               raid10_read_request(mddev, bio, r10_bio);
-> +               raid10_read_request(mddev, bio, r10_bio, false);
->         else
->                 raid10_write_request(mddev, bio, r10_bio);
->  }
-> @@ -2918,7 +2918,7 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
->         rdev_dec_pending(rdev, mddev);
->         allow_barrier(conf);
->         r10_bio->state = 0;
-> -       raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
-> +       raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
->  }
->
->  static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+> +               return -EINVAL;
+> +       }
+> +
+>         mddev->bitmap_info.max_write_behind = backlog;
+>         if (!backlog && mddev->serial_info_pool) {
+>                 /* serial_info_pool is not needed if backlog is zero */
 > --
 > 2.31.1
 >
