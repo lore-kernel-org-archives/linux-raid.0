@@ -2,212 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77242C4332F
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 03:43:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F4CC433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 10:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5822760FD7
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 03:43:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CEEB60F48
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 10:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241321AbhJHDpX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Oct 2021 23:45:23 -0400
-Received: from mga12.intel.com ([192.55.52.136]:20717 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236957AbhJHDpW (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 7 Oct 2021 23:45:22 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10130"; a="206545713"
-X-IronPort-AV: E=Sophos;i="5.85,356,1624345200"; 
-   d="scan'208";a="206545713"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2021 20:43:27 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,356,1624345200"; 
-   d="scan'208";a="546083233"
-Received: from lkp-server01.sh.intel.com (HELO 72c3bd3cf19c) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 07 Oct 2021 20:43:26 -0700
-Received: from kbuild by 72c3bd3cf19c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mYgn7-0007zI-Se; Fri, 08 Oct 2021 03:43:25 +0000
-Date:   Fri, 08 Oct 2021 11:42:28 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 6d2b25bfc66f97d67ab0669bf655db8d71205209
-Message-ID: <615fbe24.GeB+8/VN6FUfzT8P%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S239500AbhJHKDe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Oct 2021 06:03:34 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17208 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238188AbhJHKDd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Oct 2021 06:03:33 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1633687283; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=cuOwFoyeJ69iP/Pi2KRPzPuBlDqmz3CWX4mgISZH4vacUnzrqR7k9GVICWEnrvgpfVEzzxbH1U13Z3WItFFaPo5q6HUijF81jI1reS3HF1w1vM3V2LW0qvlE2j6em3R0xekD+OsAmhRyNTouqjLiA3NiShUgEEsbt7erpp3q5sc=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1633687283; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=qBG6DoylBTntd1hu5Q6ei8TZmiw8UlaPs+GLe3AyAXI=; 
+        b=kdlhN8gK2UVkq03ckD3S6qqMkOmldMcwCHAPRvK7rHixP++zANakJLrTmJ6r7VDy/AA2wWx3CdDF7d3yo9N/8wOuxvgAyM+EU6EDalfwztNpal1jy3W1E2kZboasDnAvA/E5PBZUOftrWODakApV4m9iEmy01op6zuQ1YLxUj7A=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [100.110.16.7] (163.114.131.1 [163.114.131.1]) by mx.zoho.eu
+        with SMTPS id 1633687276072485.20053845983955; Fri, 8 Oct 2021 12:01:16 +0200 (CEST)
+Subject: Re: [PATCH]mdadm: fix coredump of mdadm --monitor -r
+To:     Wu Guanghao <wuguanghao3@huawei.com>, linux-raid@vger.kernel.org
+Cc:     liuzhiqiang26@huawei.com, linfeilong@huawei.com
+References: <41edfa76-4327-7468-b861-1c1140ee9725@huawei.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <a223ce17-66fb-690e-cba6-935122f4af88@trained-monkey.org>
+Date:   Fri, 8 Oct 2021 06:01:15 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <41edfa76-4327-7468-b861-1c1140ee9725@huawei.com>
+Content-Type: text/plain; charset=gbk
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 6d2b25bfc66f97d67ab0669bf655db8d71205209  md: remove unused argument from md_new_event
+On 8/16/21 3:24 AM, Wu Guanghao wrote:
+> Hi,
+> 
+> The --monitor -r option requires a parameter, otherwise a null pointer will be manipulated
+> when converting to integer data, and a coredump will appear.
+> 
+> # mdadm --monitor -r
+> Segmentation fault (core dumped)
+> 
+> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+> ---
+>  ReadMe.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 
-elapsed time: 1221m
+Something is fishy with your mail client as this didn't apply, but I
+applied it manually.
 
-configs tested: 149
-configs skipped: 3
+This seems a reasonable fix, even though we have different usages of -r
+they all require an argument. That said the whole argument parsing
+handling could do with an overhaul.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks,
+Jes
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allmodconfig
-arm                              allyesconfig
-m68k                       m5475evb_defconfig
-powerpc                     tqm5200_defconfig
-m68k                       m5249evb_defconfig
-powerpc                     skiroot_defconfig
-powerpc                   motionpro_defconfig
-arc                 nsimosci_hs_smp_defconfig
-m68k                          atari_defconfig
-powerpc                      ppc40x_defconfig
-powerpc                     stx_gp3_defconfig
-m68k                          multi_defconfig
-sh                          landisk_defconfig
-powerpc                      pcm030_defconfig
-mips                          malta_defconfig
-mips                        qi_lb60_defconfig
-mips                       bmips_be_defconfig
-powerpc                     tqm8560_defconfig
-sh                         microdev_defconfig
-powerpc                       ppc64_defconfig
-mips                          ath25_defconfig
-arm                         orion5x_defconfig
-arm                          collie_defconfig
-powerpc                      ppc6xx_defconfig
-powerpc                   microwatt_defconfig
-arm                        multi_v5_defconfig
-xtensa                       common_defconfig
-m68k                        m5272c3_defconfig
-s390                       zfcpdump_defconfig
-sparc                            alldefconfig
-sparc                       sparc64_defconfig
-sh                        sh7757lcr_defconfig
-sh                          rsk7264_defconfig
-mips                       capcella_defconfig
-arm                           h5000_defconfig
-sh                            migor_defconfig
-openrisc                    or1ksim_defconfig
-arc                          axs101_defconfig
-sh                          kfr2r09_defconfig
-mips                        maltaup_defconfig
-mips                      loongson3_defconfig
-sh                   sh7724_generic_defconfig
-arm                           viper_defconfig
-arm                          simpad_defconfig
-powerpc                         ps3_defconfig
-h8300                            allyesconfig
-powerpc                      pasemi_defconfig
-powerpc64                           defconfig
-arm                          moxart_defconfig
-arm                           sama5_defconfig
-arc                     nsimosci_hs_defconfig
-m68k                        stmark2_defconfig
-arm                       omap2plus_defconfig
-mips                           ip27_defconfig
-mips                      malta_kvm_defconfig
-riscv             nommu_k210_sdcard_defconfig
-arm                     davinci_all_defconfig
-sh                          polaris_defconfig
-xtensa                          iss_defconfig
-arm                       multi_v4t_defconfig
-powerpc                     ksi8560_defconfig
-mips                        bcm63xx_defconfig
-x86_64               randconfig-c001-20211003
-i386                 randconfig-c001-20211003
-arm                  randconfig-c002-20211003
-x86_64               randconfig-c001-20211004
-i386                 randconfig-c001-20211004
-arm                  randconfig-c002-20211004
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-nios2                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-parisc                           allyesconfig
-s390                                defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                             allyesconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-powerpc                          allyesconfig
-x86_64               randconfig-a015-20211004
-x86_64               randconfig-a012-20211004
-x86_64               randconfig-a016-20211004
-x86_64               randconfig-a014-20211004
-x86_64               randconfig-a013-20211004
-x86_64               randconfig-a011-20211004
-i386                 randconfig-a013-20211004
-i386                 randconfig-a016-20211004
-i386                 randconfig-a014-20211004
-i386                 randconfig-a011-20211004
-i386                 randconfig-a012-20211004
-i386                 randconfig-a015-20211004
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                           allyesconfig
 
-clang tested configs:
-x86_64               randconfig-c007-20211003
-i386                 randconfig-c001-20211003
-arm                  randconfig-c002-20211003
-s390                 randconfig-c005-20211003
-powerpc              randconfig-c003-20211003
-riscv                randconfig-c006-20211003
-mips                 randconfig-c004-20211003
-x86_64               randconfig-a003-20211004
-x86_64               randconfig-a005-20211004
-x86_64               randconfig-a001-20211004
-x86_64               randconfig-a002-20211004
-x86_64               randconfig-a004-20211004
-x86_64               randconfig-a006-20211004
-i386                 randconfig-a001-20211004
-i386                 randconfig-a003-20211004
-i386                 randconfig-a005-20211004
-i386                 randconfig-a002-20211004
-i386                 randconfig-a004-20211004
-i386                 randconfig-a006-20211004
-hexagon              randconfig-r045-20211007
-hexagon              randconfig-r041-20211007
-s390                 randconfig-r044-20211007
-riscv                randconfig-r042-20211007
+> diff --git a/ReadMe.c b/ReadMe.c
+> index 06b8f7e..070a164 100644
+> --- a/ReadMe.c
+> +++ b/ReadMe.c
+> @@ -81,11 +81,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
+>   *     found, it is started.
+>   */
+> 
+> -char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+> +char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
+>  char short_bitmap_options[]=
+> -               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+> +               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
+>  char short_bitmap_auto_options[]=
+> -               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
+> +               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sa:RSow1tye:k";
+> 
+>  struct option long_options[] = {
+>      {"manage",    0, 0, ManageOpt},
+> --
+> 2.23.0
+> 
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
