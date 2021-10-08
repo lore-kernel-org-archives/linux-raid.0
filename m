@@ -2,42 +2,43 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F4CC433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 10:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BCBCC433F5
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 10:30:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CEEB60F48
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 10:01:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C17660FF2
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 10:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239500AbhJHKDe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Oct 2021 06:03:34 -0400
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17208 "EHLO
+        id S239526AbhJHKcO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Oct 2021 06:32:14 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17279 "EHLO
         sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238188AbhJHKDd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Oct 2021 06:03:33 -0400
-ARC-Seal: i=1; a=rsa-sha256; t=1633687283; cv=none; 
+        with ESMTP id S230074AbhJHKcN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Oct 2021 06:32:13 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1633689010; cv=none; 
         d=zohomail.eu; s=zohoarc; 
-        b=cuOwFoyeJ69iP/Pi2KRPzPuBlDqmz3CWX4mgISZH4vacUnzrqR7k9GVICWEnrvgpfVEzzxbH1U13Z3WItFFaPo5q6HUijF81jI1reS3HF1w1vM3V2LW0qvlE2j6em3R0xekD+OsAmhRyNTouqjLiA3NiShUgEEsbt7erpp3q5sc=
+        b=eJCfEPfZ61G89iMJevWIwMvFBMWHhHeJkO7Zy0gIwhibCDilUyRjY7nLPjqXx95QL9OQ5/Mh4XVb7Wdq0MiLSW6v0dh2Y1NeVI9I6lOoPY5hcCt6O+YUfp5UBp8E18CSOvavyNL7k8oGnflhSjXHxNxk8mlXhmYl/lnhC4Xweeg=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1633687283; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=qBG6DoylBTntd1hu5Q6ei8TZmiw8UlaPs+GLe3AyAXI=; 
-        b=kdlhN8gK2UVkq03ckD3S6qqMkOmldMcwCHAPRvK7rHixP++zANakJLrTmJ6r7VDy/AA2wWx3CdDF7d3yo9N/8wOuxvgAyM+EU6EDalfwztNpal1jy3W1E2kZboasDnAvA/E5PBZUOftrWODakApV4m9iEmy01op6zuQ1YLxUj7A=
+        t=1633689010; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=8czNxJNxgihxv37CmPt9YvyKcb0HiDpralCm/NifoF0=; 
+        b=iyaDuuuOxBbjY/KQ5BlQQsSlKrX1j8NT2bSOPoR+mR0hVM/JVU+zobqlAuWUN+JsDXhUQQm4/mIK5FVB69stlYns83G2hNj4yYIBpWQCJolQ3Mdf9aPp14h83jNqhyiQ6oqBb904/nTN3YDNmKCFX7WzXmSYGyEgqp09TTdiN+Y=
 ARC-Authentication-Results: i=1; mx.zohomail.eu;
         spf=pass  smtp.mailfrom=jes@trained-monkey.org;
         dmarc=pass header.from=<jes@trained-monkey.org>
 Received: from [100.110.16.7] (163.114.131.1 [163.114.131.1]) by mx.zoho.eu
-        with SMTPS id 1633687276072485.20053845983955; Fri, 8 Oct 2021 12:01:16 +0200 (CEST)
-Subject: Re: [PATCH]mdadm: fix coredump of mdadm --monitor -r
-To:     Wu Guanghao <wuguanghao3@huawei.com>, linux-raid@vger.kernel.org
-Cc:     liuzhiqiang26@huawei.com, linfeilong@huawei.com
-References: <41edfa76-4327-7468-b861-1c1140ee9725@huawei.com>
+        with SMTPS id 163368893431184.98705208025876; Fri, 8 Oct 2021 12:28:54 +0200 (CEST)
+Subject: Re: [PATCH] Incremental: Fix possible memory and resource leaks
+To:     Mateusz Grzonka <mateusz.grzonka@intel.com>,
+        linux-raid@vger.kernel.org
+References: <20210826094040.30118-1-mateusz.grzonka@intel.com>
+Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
 From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <a223ce17-66fb-690e-cba6-935122f4af88@trained-monkey.org>
-Date:   Fri, 8 Oct 2021 06:01:15 -0400
+Message-ID: <b1b89215-d15f-c22f-b4e8-52576a454007@trained-monkey.org>
+Date:   Fri, 8 Oct 2021 06:28:53 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <41edfa76-4327-7468-b861-1c1140ee9725@huawei.com>
-Content-Type: text/plain; charset=gbk
+In-Reply-To: <20210826094040.30118-1-mateusz.grzonka@intel.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-ZohoMailClient: External
@@ -45,51 +46,140 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 8/16/21 3:24 AM, Wu Guanghao wrote:
-> Hi,
+On 8/26/21 5:40 AM, Mateusz Grzonka wrote:
+> map allocated through map_by_uuid() is not freed if mdfd is invalid.
+> It is also not freed at the end of Incremental_container().
+> In addition mdfd is not closed, and mdinfo list is not
+> freed too.
+> Fix it.
 > 
-> The --monitor -r option requires a parameter, otherwise a null pointer will be manipulated
-> when converting to integer data, and a coredump will appear.
-> 
-> # mdadm --monitor -r
-> Segmentation fault (core dumped)
-> 
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> ---
->  ReadMe.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
 
-Something is fishy with your mail client as this didn't apply, but I
-applied it manually.
+Hi Mateusz,
 
-This seems a reasonable fix, even though we have different usages of -r
-they all require an argument. That said the whole argument parsing
-handling could do with an overhaul.
+Sorry for the late feedback.
+
+Looking through this change, I would prefer to have had this done in
+multiple patches that are easier to review individually. Like the first
+close is obviously correct and the last change too, but they are
+independent of the middle changes.
+
+I also feel the second set of changes relying on doclose could be less
+convoluted if we just check the return value from open_dev() and
+create_mddev() immediately instead of trying to handle it in a catch all
+case. This would help make the code easier to read.
+
+Please see comments below.
+
+Thoughts?
 
 Thanks,
 Jes
 
 
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 06b8f7e..070a164 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -81,11 +81,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
->   *     found, it is started.
->   */
+>  Incremental.c | 27 +++++++++++++++++++++------
+>  1 file changed, 21 insertions(+), 6 deletions(-)
 > 
-> -char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
-> +char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
->  char short_bitmap_options[]=
-> -               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
-> +               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
->  char short_bitmap_auto_options[]=
-> -               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
-> +               "-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sa:RSow1tye:k";
-> 
->  struct option long_options[] = {
->      {"manage",    0, 0, ManageOpt},
-> --
-> 2.23.0
+> diff --git a/Incremental.c b/Incremental.c
+> index cd9cc0fc..6678739b 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -1416,6 +1416,7 @@ restart:
+>  			}
+>  			sysfs_free(sra);
+>  		}
+> +		close(mdfd);
+>  	}
+>  	map_free(mapl);
+>  	return rv;
+> @@ -1499,6 +1500,7 @@ static int Incremental_container(struct supertype *st, char *devname,
+>  	}
+>  	for (ra = list ; ra ; ra = ra->next) {
+>  		int mdfd;
+> +		int doclose = 0;
+>  		char chosen_name[1024];
+>  		struct map_ent *mp;
+>  		struct mddev_ident *match = NULL;
+> @@ -1513,6 +1515,7 @@ static int Incremental_container(struct supertype *st, char *devname,
+>  
+>  		if (mp) {
+>  			mdfd = open_dev(mp->devnm);
+> +			doclose = 1;
+
+Check mdfd >= 0 here and jump to release.
+
+>  			if (mp->path)
+>  				strcpy(chosen_name, mp->path);
+>  			else
+> @@ -1572,22 +1575,30 @@ static int Incremental_container(struct supertype *st, char *devname,
+>  					    c->autof,
+>  					    trustworthy,
+>  					    chosen_name, 0);
+> +			doclose = 1;
+
+Check mdfd >= 0 here and jump to release.
+
+>  		}
+> -		if (only && (!mp || strcmp(mp->devnm, only) != 0))
+> -			continue;
+>  
+>  		if (mdfd < 0) {
+>  			pr_err("failed to open %s: %s.\n",
+>  				chosen_name, strerror(errno));
+> -			return 2;
+> +			rv = 2;
+> +			goto release;
+> +		}
+
+We can then get rid of this block completely.
+
+> +		if (only && (!mp || strcmp(mp->devnm, only) != 0)) {
+> +			if (doclose)
+> +				close(mdfd);
+> +			continue;
+
+And call close() here unconditionally.
+
+>  		}
+>  
+>  		assemble_container_content(st, mdfd, ra, c,
+>  					   chosen_name, &result);
+>  		map_free(map);
+>  		map = NULL;
+> -		close(mdfd);
+> +		if (doclose)
+> +			close(mdfd);
+>  	}
+
+and get rid of the if() here
+> +
+>  	if (c->export && result) {
+>  		char sep = '=';
+>  		printf("MD_STARTED");
+> @@ -1609,7 +1620,11 @@ static int Incremental_container(struct supertype *st, char *devname,
+>  		}
+>  		printf("\n");
+>  	}
+> -	return 0;
+> +
+> +release:
+> +	map_free(map);
+> +	sysfs_free(list);
+> +	return rv;
+>  }
+>  
+>  static void run_udisks(char *arg1, char *arg2)
+> @@ -1701,7 +1716,7 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+>  		return 1;
+>  	}
+>  	mdfd = open_dev_excl(ent->devnm);
+> -	if (mdfd > 0) {
+> +	if (mdfd >= 0) {
+
+This part is also independent and fine by itself.
+
+>  		close(mdfd);
+>  		if (sysfs_get_str(&mdi, NULL, "array_state",
+>  				  buf, sizeof(buf)) > 0) {
 > 
 
