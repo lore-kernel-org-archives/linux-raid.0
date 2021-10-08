@@ -2,180 +2,212 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85562C433F5
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 03:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77242C4332F
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 03:43:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6364A6105A
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 03:23:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5822760FD7
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Oct 2021 03:43:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234828AbhJHDZe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Oct 2021 23:25:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbhJHDZd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Oct 2021 23:25:33 -0400
-Received: from mail-vk1-xa2b.google.com (mail-vk1-xa2b.google.com [IPv6:2607:f8b0:4864:20::a2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DD61C061714
-        for <linux-raid@vger.kernel.org>; Thu,  7 Oct 2021 20:23:39 -0700 (PDT)
-Received: by mail-vk1-xa2b.google.com with SMTP id w68so3629498vkd.7
-        for <linux-raid@vger.kernel.org>; Thu, 07 Oct 2021 20:23:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=YH7hWGnKeMLgME7ZCIPQSyX99DlhWg8uLLxzZysdl6c=;
-        b=xgmstvbjJLGF1lTZbyBTuNi5sVdmLkUuqSqjwmctdcKkGPx4U8PqmN1hnHImv1lKzr
-         OOONo1S/PEcXIZNyaIaWd3pZPLnGslMUukZihzinq2Q/ksQvdQPQV4bZPnnz7lmlYyDw
-         FOnXrT4hkEivmurDrwJ3k56fYsN60DRZwmUdRhobKaJvd4wYqlfMraH60uRCptnYx8Gw
-         FOj7OZl3WkiuXB+I+HDvXpILdP4LpPyA7tGlE7PEbBTHjKXEkpSpqBjmhmubEVNOMcV5
-         l1kdNxw3IUr1ErTV6H1/6R5P1e1zSdQpUU5sZtvd6Q3z7e9Tuim7g2WGG7vkARtqRoyA
-         Q05g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=YH7hWGnKeMLgME7ZCIPQSyX99DlhWg8uLLxzZysdl6c=;
-        b=pIJp5gMArdGxOJklHV8+3/4C0QreZ/JGC1VJUdVVWEo1FWEr54odJmKx82CnOKVV6e
-         OsN5xYdSa7fY6jcpGw+hIx2nDlB+B7xyrHJjq2zZNJYgxGUdrWbLMJ5y+vvclKm1N4NV
-         /JOUKFOs+JEe9iA2kTWqOmJhXoQ1zFU2M27vWS8v9GBaUdIz3NbjuouroUZgxjWLsVqw
-         ++iDkhWmI6BioVnNbaJ/sfYpt5tpSNYxOQ5r/p6r14riR02hEVuJxnc1Q2xdvSq6N3rB
-         HdbPNLmZObfxeIhBIxjuTBdQXA4IdfTeOjA1x+qbygRAXZoL3Kcr9EyRwEODUvDw2B7U
-         VNvA==
-X-Gm-Message-State: AOAM530JJDJ0cQ3RPQIZczjG2ke60e8IL9VztdQZ+kRaAX/uK8nroY1W
-        JpDtJzmhTgVaxPFFHY0AoXjSaHMxRmP5KFqZ6QfTPQ==
-X-Google-Smtp-Source: ABdhPJwqfz2mGqpRet+PozKsM933EUcZeBoNJ9o/urpvJvtSLhpa/iufwSAh2JhaCWf3z7kg+I4Y/RGaJtwQTQP1pv4=
-X-Received: by 2002:a1f:2603:: with SMTP id m3mr7759371vkm.2.1633663418390;
- Thu, 07 Oct 2021 20:23:38 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210913032003.2836583-1-fengli@smartx.com> <CAHckoCyDULok_QLLh5Nmbx4qLCxKL43TgtFgCSAwuaPpRy1BFw@mail.gmail.com>
- <CAHckoCwOgpH8E9UgkRkyZitPb6X5Jp-PVKoN6QFHJMt_4h+V6g@mail.gmail.com>
- <CAHckoCwk1i7_vV=oweLTNYkCjMi4ReyXed2NOvZ10z2J32xGBg@mail.gmail.com> <CAPhsuW5Txh_FSKCRNA8PPAwm2LesYAX5+k_bde87OsDvYpTi=Q@mail.gmail.com>
-In-Reply-To: <CAPhsuW5Txh_FSKCRNA8PPAwm2LesYAX5+k_bde87OsDvYpTi=Q@mail.gmail.com>
-From:   Li Feng <fengli@smartx.com>
-Date:   Fri, 8 Oct 2021 11:23:27 +0800
-Message-ID: <CAHckoCyMvAw8ux2mNdM6Keo+LeHY=1DNVOoEVNKkOi+cFds+CA@mail.gmail.com>
-Subject: Re: [PATCH] md: allow to set the fail_fast on RAID1/RAID10
+        id S241321AbhJHDpX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Oct 2021 23:45:23 -0400
+Received: from mga12.intel.com ([192.55.52.136]:20717 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236957AbhJHDpW (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 7 Oct 2021 23:45:22 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10130"; a="206545713"
+X-IronPort-AV: E=Sophos;i="5.85,356,1624345200"; 
+   d="scan'208";a="206545713"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Oct 2021 20:43:27 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,356,1624345200"; 
+   d="scan'208";a="546083233"
+Received: from lkp-server01.sh.intel.com (HELO 72c3bd3cf19c) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 07 Oct 2021 20:43:26 -0700
+Received: from kbuild by 72c3bd3cf19c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mYgn7-0007zI-Se; Fri, 08 Oct 2021 03:43:25 +0000
+Date:   Fri, 08 Oct 2021 11:42:28 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 6d2b25bfc66f97d67ab0669bf655db8d71205209
+Message-ID: <615fbe24.GeB+8/VN6FUfzT8P%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Done, thanks for responding.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 6d2b25bfc66f97d67ab0669bf655db8d71205209  md: remove unused argument from md_new_event
 
-Thanks,
-Feng Li
+elapsed time: 1221m
 
-Song Liu <song@kernel.org> =E4=BA=8E2021=E5=B9=B410=E6=9C=887=E6=97=A5=E5=
-=91=A8=E5=9B=9B =E4=B8=8B=E5=8D=8810:59=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Thu, Oct 7, 2021 at 12:00 AM Li Feng <fengli@smartx.com> wrote:
-> >
-> > Continue ping...
-> >
-> > Thanks,
-> > Feng Li
->
-> Hmm.. this is weird. I didn't see previous emails in this thread.
-> Could you please
-> send it again?
->
-> Thanks,
-> Song
->
-> >
-> > Li Feng <fengli@smartx.com> =E4=BA=8E2021=E5=B9=B49=E6=9C=8827=E6=97=A5=
-=E5=91=A8=E4=B8=80 =E4=B8=8B=E5=8D=889:24=E5=86=99=E9=81=93=EF=BC=9A
-> > >
-> > > Hi Song,
-> > >
-> > > What about this feature?
-> > >
-> > > Thanks,
-> > > Feng Li
-> > >
-> > > Li Feng <fengli@smartx.com> =E4=BA=8E2021=E5=B9=B49=E6=9C=8815=E6=97=
-=A5=E5=91=A8=E4=B8=89 =E4=B8=8B=E5=8D=8811:08=E5=86=99=E9=81=93=EF=BC=9A
-> > > >
-> > > > ping ...
-> > > >
-> > > > Thanks,
-> > > > Feng Li
-> > > >
-> > > > Li Feng <fengli@smartx.com> =E4=BA=8E2021=E5=B9=B49=E6=9C=8813=E6=
-=97=A5=E5=91=A8=E4=B8=80 =E4=B8=8A=E5=8D=8811:22=E5=86=99=E9=81=93=EF=BC=9A
-> > > > >
-> > > > > When the running RAID1/RAID10 need to be set with the fail_fast f=
-lag,
-> > > > > we have to remove each device from RAID and re-add it again with =
-the
-> > > > > --fail_fast flag.
-> > > > >
-> > > > > Export the fail_fast flag to the userspace to support the read an=
-d
-> > > > > write.
-> > > > >
-> > > > > Signed-off-by: Li Feng <fengli@smartx.com>
-> > > > > ---
-> > > > >  drivers/md/md.c | 30 ++++++++++++++++++++++++++++++
-> > > > >  1 file changed, 30 insertions(+)
-> > > > >
-> > > > > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > > > > index ae8fe54ea358..ce63972a4555 100644
-> > > > > --- a/drivers/md/md.c
-> > > > > +++ b/drivers/md/md.c
-> > > > > @@ -3583,6 +3583,35 @@ ppl_size_store(struct md_rdev *rdev, const=
- char *buf, size_t len)
-> > > > >  static struct rdev_sysfs_entry rdev_ppl_size =3D
-> > > > >  __ATTR(ppl_size, S_IRUGO|S_IWUSR, ppl_size_show, ppl_size_store)=
-;
-> > > > >
-> > > > > +static ssize_t
-> > > > > +fail_fast_show(struct md_rdev *rdev, char *page)
-> > > > > +{
-> > > > > +       return sprintf(page, "%d\n", test_bit(FailFast, &rdev->fl=
-ags));
-> > > > > +}
-> > > > > +
-> > > > > +static ssize_t
-> > > > > +fail_fast_store(struct md_rdev *rdev, const char *buf, size_t le=
-n)
-> > > > > +{
-> > > > > +       int ret;
-> > > > > +       bool bit;
-> > > > > +
-> > > > > +       ret =3D kstrtobool(buf, &bit);
-> > > > > +       if (ret)
-> > > > > +               return ret;
-> > > > > +
-> > > > > +       if (test_bit(FailFast, &rdev->flags) && !bit) {
-> > > > > +               clear_bit(FailFast, &rdev->flags);
-> > > > > +               md_update_sb(rdev->mddev, 1);
-> > > > > +       } else if (!test_bit(FailFast, &rdev->flags) && bit) {
-> > > > > +               set_bit(FailFast, &rdev->flags);
-> > > > > +               md_update_sb(rdev->mddev, 1);
-> > > > > +       }
-> > > > > +       return len;
-> > > > > +}
-> > > > > +
-> > > > > +static struct rdev_sysfs_entry rdev_fail_fast =3D
-> > > > > +__ATTR(fail_fast, 0644, fail_fast_show, fail_fast_store);
-> > > > > +
-> > > > >  static struct attribute *rdev_default_attrs[] =3D {
-> > > > >         &rdev_state.attr,
-> > > > >         &rdev_errors.attr,
-> > > > > @@ -3595,6 +3624,7 @@ static struct attribute *rdev_default_attrs=
-[] =3D {
-> > > > >         &rdev_unack_bad_blocks.attr,
-> > > > >         &rdev_ppl_sector.attr,
-> > > > >         &rdev_ppl_size.attr,
-> > > > > +       &rdev_fail_fast.attr,
-> > > > >         NULL,
-> > > > >  };
-> > > > >  static ssize_t
-> > > > > --
-> > > > > 2.31.1
-> > > > >
+configs tested: 149
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allmodconfig
+arm                              allyesconfig
+m68k                       m5475evb_defconfig
+powerpc                     tqm5200_defconfig
+m68k                       m5249evb_defconfig
+powerpc                     skiroot_defconfig
+powerpc                   motionpro_defconfig
+arc                 nsimosci_hs_smp_defconfig
+m68k                          atari_defconfig
+powerpc                      ppc40x_defconfig
+powerpc                     stx_gp3_defconfig
+m68k                          multi_defconfig
+sh                          landisk_defconfig
+powerpc                      pcm030_defconfig
+mips                          malta_defconfig
+mips                        qi_lb60_defconfig
+mips                       bmips_be_defconfig
+powerpc                     tqm8560_defconfig
+sh                         microdev_defconfig
+powerpc                       ppc64_defconfig
+mips                          ath25_defconfig
+arm                         orion5x_defconfig
+arm                          collie_defconfig
+powerpc                      ppc6xx_defconfig
+powerpc                   microwatt_defconfig
+arm                        multi_v5_defconfig
+xtensa                       common_defconfig
+m68k                        m5272c3_defconfig
+s390                       zfcpdump_defconfig
+sparc                            alldefconfig
+sparc                       sparc64_defconfig
+sh                        sh7757lcr_defconfig
+sh                          rsk7264_defconfig
+mips                       capcella_defconfig
+arm                           h5000_defconfig
+sh                            migor_defconfig
+openrisc                    or1ksim_defconfig
+arc                          axs101_defconfig
+sh                          kfr2r09_defconfig
+mips                        maltaup_defconfig
+mips                      loongson3_defconfig
+sh                   sh7724_generic_defconfig
+arm                           viper_defconfig
+arm                          simpad_defconfig
+powerpc                         ps3_defconfig
+h8300                            allyesconfig
+powerpc                      pasemi_defconfig
+powerpc64                           defconfig
+arm                          moxart_defconfig
+arm                           sama5_defconfig
+arc                     nsimosci_hs_defconfig
+m68k                        stmark2_defconfig
+arm                       omap2plus_defconfig
+mips                           ip27_defconfig
+mips                      malta_kvm_defconfig
+riscv             nommu_k210_sdcard_defconfig
+arm                     davinci_all_defconfig
+sh                          polaris_defconfig
+xtensa                          iss_defconfig
+arm                       multi_v4t_defconfig
+powerpc                     ksi8560_defconfig
+mips                        bcm63xx_defconfig
+x86_64               randconfig-c001-20211003
+i386                 randconfig-c001-20211003
+arm                  randconfig-c002-20211003
+x86_64               randconfig-c001-20211004
+i386                 randconfig-c001-20211004
+arm                  randconfig-c002-20211004
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                                defconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+nios2                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+xtensa                           allyesconfig
+parisc                              defconfig
+parisc                           allyesconfig
+s390                                defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                             allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+powerpc                          allyesconfig
+x86_64               randconfig-a015-20211004
+x86_64               randconfig-a012-20211004
+x86_64               randconfig-a016-20211004
+x86_64               randconfig-a014-20211004
+x86_64               randconfig-a013-20211004
+x86_64               randconfig-a011-20211004
+i386                 randconfig-a013-20211004
+i386                 randconfig-a016-20211004
+i386                 randconfig-a014-20211004
+i386                 randconfig-a011-20211004
+i386                 randconfig-a012-20211004
+i386                 randconfig-a015-20211004
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+x86_64                           allyesconfig
+
+clang tested configs:
+x86_64               randconfig-c007-20211003
+i386                 randconfig-c001-20211003
+arm                  randconfig-c002-20211003
+s390                 randconfig-c005-20211003
+powerpc              randconfig-c003-20211003
+riscv                randconfig-c006-20211003
+mips                 randconfig-c004-20211003
+x86_64               randconfig-a003-20211004
+x86_64               randconfig-a005-20211004
+x86_64               randconfig-a001-20211004
+x86_64               randconfig-a002-20211004
+x86_64               randconfig-a004-20211004
+x86_64               randconfig-a006-20211004
+i386                 randconfig-a001-20211004
+i386                 randconfig-a003-20211004
+i386                 randconfig-a005-20211004
+i386                 randconfig-a002-20211004
+i386                 randconfig-a004-20211004
+i386                 randconfig-a006-20211004
+hexagon              randconfig-r045-20211007
+hexagon              randconfig-r041-20211007
+s390                 randconfig-r044-20211007
+riscv                randconfig-r042-20211007
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
