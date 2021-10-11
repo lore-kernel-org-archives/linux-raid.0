@@ -2,287 +2,103 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B343FC433EF
-	for <linux-raid@archiver.kernel.org>; Sat,  9 Oct 2021 22:58:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE25FC433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 11 Oct 2021 07:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8365E60F6B
-	for <linux-raid@archiver.kernel.org>; Sat,  9 Oct 2021 22:58:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90D2B6056B
+	for <linux-raid@archiver.kernel.org>; Mon, 11 Oct 2021 07:50:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230342AbhJIW77 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 9 Oct 2021 18:59:59 -0400
-Received: from mga03.intel.com ([134.134.136.65]:5720 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230296AbhJIW77 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 9 Oct 2021 18:59:59 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10132"; a="226649297"
-X-IronPort-AV: E=Sophos;i="5.85,361,1624345200"; 
-   d="scan'208";a="226649297"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2021 15:58:01 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,361,1624345200"; 
-   d="scan'208";a="479370879"
-Received: from lkp-server02.sh.intel.com (HELO 08b2c502c3de) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 09 Oct 2021 15:58:00 -0700
-Received: from kbuild by 08b2c502c3de with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mZLHz-0000fR-Np; Sat, 09 Oct 2021 22:57:59 +0000
-Date:   Sun, 10 Oct 2021 06:57:49 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 2bb33192d6a707aa20f43ea865892b448dd298c1
-Message-ID: <61621e6d.Yl42GEv+At5ybxtk%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S234656AbhJKHwA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 11 Oct 2021 03:52:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:55030 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234625AbhJKHv5 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 11 Oct 2021 03:51:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633938597;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3qqrv9XMwmyzSCAT9HOBEBajfN1wyU+0aKu4BbhD+WY=;
+        b=PrVUHj93IefNOnf5De+11wg4w7xrBl7L+DTB8o7RCmxF5DOuOJLeadrpQc4R75CoYIYf4R
+        mxHQ4YHQQNnUZrPmhWoZqR42OvJhMFJN6/Mp/cet0tO9YW63KSPw/omvgqkAC2RRyapy94
+        4l68D66Xqs/tURTiKrr1h5ToKlyXh20=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-602-n2BekMOAMlq98zZdoS66MQ-1; Mon, 11 Oct 2021 03:49:56 -0400
+X-MC-Unique: n2BekMOAMlq98zZdoS66MQ-1
+Received: by mail-ed1-f72.google.com with SMTP id h19-20020aa7de13000000b003db6ad5245bso6490359edv.9
+        for <linux-raid@vger.kernel.org>; Mon, 11 Oct 2021 00:49:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=3qqrv9XMwmyzSCAT9HOBEBajfN1wyU+0aKu4BbhD+WY=;
+        b=L2vB2KyZbm1cavpUauJ0+/c+eLeY15lRaWEdoTx+wHfRJa0k7HQhOTctNBKD9CpLdi
+         sKBBtvrOxYc+IOq+ImEYYMRzvW9N7hkU7FCr1c/1XgJhEhCREfyA81FC9NK9zXl1XFSr
+         gUhQoGg3PuaSaSK3doi2S1CBEu0odWeGQsoFNp9cRFbiCDWk1x2SKofS1pOsMeiWAqQK
+         f4gFXwPHUrQ2D+RpYA5tDYoAFlT6YpDB5hbesr8mQt4IoGbRlLmaSLaYemfUhxR5xCxm
+         LzOq6JKxQAdJREP25oLgyjmYfuTSFIxO1b2DvDNLpHVb665zVZ9wrqyq11hkhEsSOdhe
+         7SVg==
+X-Gm-Message-State: AOAM533gamI8MMJfYuAIs1jaLCwc9V1DIqJZhn8zjZHnaSmu0GXZBS/C
+        iZ4+XFOPGwQ9UDJ6194FEw3A3auG1LoCTME9zzjZUvuWjd13Sbqhbbd3abOsYVrLFh1FrUsqoxP
+        P6Hk6NN8ah8pz+q/O7GByNLSSV7Ko/HMm8CYADg==
+X-Received: by 2002:a17:906:712:: with SMTP id y18mr23264720ejb.408.1633938595522;
+        Mon, 11 Oct 2021 00:49:55 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxcsgmGkDj767ghqvU3WJZCfGbpa7roToTs6zdyTFywS44/zg0bJae92rBiiw0MC/WXlSU3j02FTgJK8XhuKx4=
+X-Received: by 2002:a17:906:712:: with SMTP id y18mr23264703ejb.408.1633938595351;
+ Mon, 11 Oct 2021 00:49:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <20211008032231.1143467-1-fengli@smartx.com> <CAPhsuW5+bdQwsyjBP=QDGRbtnF021291D_XrhNtV+v-geVouVg@mail.gmail.com>
+In-Reply-To: <CAPhsuW5+bdQwsyjBP=QDGRbtnF021291D_XrhNtV+v-geVouVg@mail.gmail.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Mon, 11 Oct 2021 15:49:45 +0800
+Message-ID: <CALTww28b0HGzSTTNGVzeZdRp0nGMDAyY8sQ+cBsSCuYJ4jMaqw@mail.gmail.com>
+Subject: Re: [PATCH RESEND] md: allow to set the fail_fast on RAID1/RAID10
+To:     Song Liu <song@kernel.org>
+Cc:     Li Feng <fengli@smartx.com>,
+        "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" 
+        <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 2bb33192d6a707aa20f43ea865892b448dd298c1  md: add sysfs entry for fail_fast flag in RAID1/RAID10
+Hi all
 
-elapsed time: 1370m
+Now the per device sysfs interface file state can change failfast. Do
+we need a new file for failfast?
 
-configs tested: 223
-configs skipped: 4
+I did a test. The steps are:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+mdadm -CR /dev/md0 -l1 -n2 /dev/sdb /dev/sdc --assume-clean
+cd /sys/block/md0/md/dev-sdb
+echo failfast > state
+cat state
+in_sync,failfast
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20211009
-powerpc              randconfig-c003-20211009
-sh                          sdk7786_defconfig
-arm                           stm32_defconfig
-arm                             ezx_defconfig
-arm                          exynos_defconfig
-nios2                         10m50_defconfig
-mips                       capcella_defconfig
-arm                        trizeps4_defconfig
-powerpc                 mpc85xx_cds_defconfig
-powerpc                    sam440ep_defconfig
-powerpc                      tqm8xx_defconfig
-sh                          rsk7269_defconfig
-arm                             mxs_defconfig
-m68k                        mvme147_defconfig
-sh                            shmin_defconfig
-powerpc                      pcm030_defconfig
-um                             i386_defconfig
-arm                            xcep_defconfig
-arm                         lpc32xx_defconfig
-mips                      maltaaprp_defconfig
-arc                         haps_hs_defconfig
-mips                    maltaup_xpa_defconfig
-mips                          rb532_defconfig
-riscv             nommu_k210_sdcard_defconfig
-xtensa                          iss_defconfig
-arc                     haps_hs_smp_defconfig
-arm                        mvebu_v5_defconfig
-powerpc                       holly_defconfig
-powerpc                    gamecube_defconfig
-mips                       lemote2f_defconfig
-sh                        sh7763rdp_defconfig
-mips                        jmr3927_defconfig
-mips                       rbtx49xx_defconfig
-arm                           h5000_defconfig
-m68k                        m5272c3_defconfig
-arc                              allyesconfig
-mips                        omega2p_defconfig
-sh                        dreamcast_defconfig
-mips                           gcw0_defconfig
-powerpc                     pq2fads_defconfig
-mips                         mpc30x_defconfig
-m68k                          multi_defconfig
-arm                       omap2plus_defconfig
-ia64                                defconfig
-powerpc                     tqm8548_defconfig
-powerpc                  mpc885_ads_defconfig
-arm                         at91_dt_defconfig
-arm                       cns3420vb_defconfig
-mips                          ath25_defconfig
-xtensa                  cadence_csp_defconfig
-arm                         axm55xx_defconfig
-powerpc                     pseries_defconfig
-xtensa                           alldefconfig
-powerpc                     mpc83xx_defconfig
-powerpc                          allyesconfig
-sh                      rts7751r2d1_defconfig
-m68k                          atari_defconfig
-sh                   sh7770_generic_defconfig
-arm                        mvebu_v7_defconfig
-arm                       imx_v4_v5_defconfig
-arm                          collie_defconfig
-sh                           se7206_defconfig
-sh                               allmodconfig
-powerpc                 mpc837x_rdb_defconfig
-arm                         bcm2835_defconfig
-powerpc                 mpc832x_mds_defconfig
-ia64                             alldefconfig
-mips                           rs90_defconfig
-mips                        bcm63xx_defconfig
-mips                     loongson1b_defconfig
-arm64                            alldefconfig
-sh                             espt_defconfig
-riscv                             allnoconfig
-arm                          ixp4xx_defconfig
-powerpc                      mgcoge_defconfig
-mips                           mtx1_defconfig
-sh                           se7712_defconfig
-sh                   secureedge5410_defconfig
-sh                            titan_defconfig
-arm                        vexpress_defconfig
-powerpc                      ppc40x_defconfig
-um                                  defconfig
-mips                           ip22_defconfig
-mips                   sb1250_swarm_defconfig
-arm                        realview_defconfig
-arm                       versatile_defconfig
-powerpc                 mpc836x_mds_defconfig
-arm                          gemini_defconfig
-m68k                            q40_defconfig
-csky                                defconfig
-microblaze                      mmu_defconfig
-sh                  sh7785lcr_32bit_defconfig
-m68k                             allyesconfig
-sh                               j2_defconfig
-sh                           se7619_defconfig
-sh                           se7721_defconfig
-powerpc                      obs600_defconfig
-arm                           sama7_defconfig
-powerpc                     tqm8555_defconfig
-arm                         s5pv210_defconfig
-m68k                        m5307c3_defconfig
-arm                   milbeaut_m10v_defconfig
-arm                  colibri_pxa270_defconfig
-arm                            mps2_defconfig
-sh                          lboxre2_defconfig
-mips                           xway_defconfig
-arm                     eseries_pxa_defconfig
-arm                          ep93xx_defconfig
-x86_64               randconfig-c001-20211009
-arm                  randconfig-c002-20211009
-x86_64               randconfig-c001-20211008
-i386                 randconfig-c001-20211008
-arm                  randconfig-c002-20211008
-ia64                             allmodconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allmodconfig
-nios2                               defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-alpha                            allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-s390                                defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                             allmodconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a003-20211009
-x86_64               randconfig-a005-20211009
-x86_64               randconfig-a001-20211009
-x86_64               randconfig-a002-20211009
-x86_64               randconfig-a004-20211009
-x86_64               randconfig-a006-20211009
-i386                 randconfig-a001-20211009
-i386                 randconfig-a003-20211009
-i386                 randconfig-a005-20211009
-i386                 randconfig-a004-20211009
-i386                 randconfig-a002-20211009
-i386                 randconfig-a006-20211009
-x86_64               randconfig-a015-20211008
-x86_64               randconfig-a012-20211008
-x86_64               randconfig-a016-20211008
-x86_64               randconfig-a013-20211008
-x86_64               randconfig-a011-20211008
-x86_64               randconfig-a014-20211008
-i386                 randconfig-a013-20211008
-i386                 randconfig-a016-20211008
-i386                 randconfig-a014-20211008
-i386                 randconfig-a011-20211008
-i386                 randconfig-a012-20211008
-i386                 randconfig-a015-20211008
-arc                  randconfig-r043-20211008
-s390                 randconfig-r044-20211008
-riscv                randconfig-r042-20211008
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allyesconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                           allyesconfig
+Best Regards
+Xiao
 
-clang tested configs:
-x86_64               randconfig-c007-20211009
-i386                 randconfig-c001-20211009
-arm                  randconfig-c002-20211009
-s390                 randconfig-c005-20211009
-powerpc              randconfig-c003-20211009
-riscv                randconfig-c006-20211009
-mips                 randconfig-c004-20211009
-arm                  randconfig-c002-20211010
-mips                 randconfig-c004-20211010
-i386                 randconfig-c001-20211010
-s390                 randconfig-c005-20211010
-x86_64               randconfig-c007-20211010
-powerpc              randconfig-c003-20211010
-riscv                randconfig-c006-20211010
-i386                 randconfig-a001-20211008
-i386                 randconfig-a003-20211008
-i386                 randconfig-a005-20211008
-i386                 randconfig-a004-20211008
-i386                 randconfig-a002-20211008
-i386                 randconfig-a006-20211008
-x86_64               randconfig-a015-20211009
-x86_64               randconfig-a012-20211009
-x86_64               randconfig-a016-20211009
-x86_64               randconfig-a013-20211009
-x86_64               randconfig-a011-20211009
-x86_64               randconfig-a014-20211009
-i386                 randconfig-a013-20211009
-i386                 randconfig-a016-20211009
-i386                 randconfig-a014-20211009
-i386                 randconfig-a012-20211009
-i386                 randconfig-a011-20211009
-i386                 randconfig-a015-20211009
-x86_64               randconfig-a003-20211008
-x86_64               randconfig-a005-20211008
-x86_64               randconfig-a001-20211008
-x86_64               randconfig-a002-20211008
-x86_64               randconfig-a004-20211008
-x86_64               randconfig-a006-20211008
-hexagon              randconfig-r045-20211009
-hexagon              randconfig-r041-20211009
-s390                 randconfig-r044-20211009
-riscv                randconfig-r042-20211009
+On Sat, Oct 9, 2021 at 7:36 AM Song Liu <song@kernel.org> wrote:
+>
+> On Thu, Oct 7, 2021 at 8:22 PM Li Feng <fengli@smartx.com> wrote:
+> >
+> > When the running RAID1/RAID10 need to be set with the fail_fast flag,
+> > we have to remove each device from RAID and re-add it again with the
+> > --fail_fast flag.
+> >
+> > Export the fail_fast flag to the userspace to support the read and
+> > write.
+> >
+> > Signed-off-by: Li Feng <fengli@smartx.com>
+>
+> Thanks for the patch! I applied it to md-next, with some changes in the
+> commit log.
+>
+> Thanks,
+> Song
+>
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
