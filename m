@@ -2,91 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96B40C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 10:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F84C4167D
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 10:46:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80766610C9
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 10:44:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8CFB610C8
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 10:46:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229757AbhJMKqg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Oct 2021 06:46:36 -0400
-Received: from mga09.intel.com ([134.134.136.24]:61286 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229461AbhJMKqf (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 13 Oct 2021 06:46:35 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10135"; a="227294259"
-X-IronPort-AV: E=Sophos;i="5.85,370,1624345200"; 
-   d="scan'208";a="227294259"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2021 03:44:32 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,370,1624345200"; 
-   d="scan'208";a="592127994"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga004.jf.intel.com with ESMTP; 13 Oct 2021 03:44:32 -0700
-Received: from [10.249.145.103] (mtkaczyk-MOBL1.ger.corp.intel.com [10.249.145.103])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id 3E3665808DC;
-        Wed, 13 Oct 2021 03:44:31 -0700 (PDT)
-Subject: Re: [PATCH] mdadm.8: Copy --no-degraded clarification from --help
- output
-To:     Vladimir Panteleev <git@cy.md>, linux-raid@vger.kernel.org,
-        NeilBrown <neilb@suse.de>, Jes Sorensen <jes@trained-monkey.org>
-References: <20210929082113.1486453-1-git@cy.md>
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-Message-ID: <ca7c1718-9663-8272-289e-3a0d35643a98@linux.intel.com>
-Date:   Wed, 13 Oct 2021 12:44:28 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S230373AbhJMKsY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Oct 2021 06:48:24 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:33482 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229644AbhJMKsV (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Oct 2021 06:48:21 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id C770222349;
+        Wed, 13 Oct 2021 10:46:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1634121975; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7ReBJ39FQSq2Ri4gzsf/9HN/2AQLJSHkmbvHM+1gQDU=;
+        b=Bs0jLE6dW9R2XV5QAW5PANZfFI55neOv68yBXHDkKdpWkALHM8icU9xbSzdfnCREFrZMct
+        3+2oN3aeDktCUFxEHYH/VXi16HIjV43KTI+7DyCyp9zZ7xbHI93O8kiQ8PoweiysaY4pPN
+        UPyCFVv7pjQ3km4/YPlTqSGByM6p0LI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1634121975;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7ReBJ39FQSq2Ri4gzsf/9HN/2AQLJSHkmbvHM+1gQDU=;
+        b=r7uHZ7+0iVupNri72uYOV4o6jxkgpR8stOFMA8jxvLfFR9bxkjnCTl3Cs+7eA7SAyqgiLY
+        muVAi/A9MWKYZLDw==
+Received: from quack2.suse.cz (unknown [10.100.224.230])
+        by relay2.suse.de (Postfix) with ESMTP id A57B7A3B81;
+        Wed, 13 Oct 2021 10:46:15 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 7FB0E1E11B6; Wed, 13 Oct 2021 12:46:15 +0200 (CEST)
+Date:   Wed, 13 Oct 2021 12:46:15 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+        linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ntfs3@lists.linux.dev,
+        reiserfs-devel@vger.kernel.org
+Subject: Re: [PATCH 28/29] reiserfs: use sb_bdev_nr_blocks
+Message-ID: <20211013104615.GH19200@quack2.suse.cz>
+References: <20211013051042.1065752-1-hch@lst.de>
+ <20211013051042.1065752-29-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20210929082113.1486453-1-git@cy.md>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211013051042.1065752-29-hch@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 29.09.2021 10:21, Vladimir Panteleev wrote:
-> Make it easier to discover this POLA violation.
-> ---
->   mdadm.8.in | 6 ++++++
->   1 file changed, 6 insertions(+)
+On Wed 13-10-21 07:10:41, Christoph Hellwig wrote:
+> Use the sb_bdev_nr_blocks helper instead of open coding it.
 > 
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index 96846035..74cca534 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -1159,6 +1159,12 @@ are present.  This is only needed with
->   and can be used if the physical connections to devices are
->   not as reliable as you would like.
->   
-> +Note that "all expected drives" means as many as were present the last
-> +time the array was running as recorded in the superblock.  If the
-> +array was already degraded, and the missing device is not a new
-> +problem, it will still be assembled.  It is only newly missing devices
-> +that cause the array not to be started.
-> +
->   .TP
->   .BR \-a ", " "\-\-auto{=no,yes,md,mdp,part}"
->   See this option under Create and Build options.
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I think that it is not necessary anymore. This is default behavior,
-at least for IMSM/external.
-If we are using assemble with --scan then it is probably done
-manually. Do we should care about unstable connections?
+Looks good. Feel free to add:
 
-Normally, udev calls mdadm -I on each drive.
-There is also a timer which calls #mdadm -R on array
-after timeout.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-I would consider to drop --no-degraded support and adapt
-assemble behavior if is different.
-Neil, Jes could you look?
-
-Thanks,
-Mariusz
-
-
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
