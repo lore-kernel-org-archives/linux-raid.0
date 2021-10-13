@@ -2,63 +2,63 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9DD8C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 16:00:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 058C2C433FE
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 16:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD939610FE
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 16:00:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E115F61163
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 16:00:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237573AbhJMQCs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Oct 2021 12:02:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43378 "EHLO
+        id S237700AbhJMQCw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Oct 2021 12:02:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237567AbhJMQCq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Oct 2021 12:02:46 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39516C061570;
-        Wed, 13 Oct 2021 09:00:43 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id n12so1975492qvk.3;
-        Wed, 13 Oct 2021 09:00:43 -0700 (PDT)
+        with ESMTP id S237585AbhJMQCs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Oct 2021 12:02:48 -0400
+Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB1A0C061570;
+        Wed, 13 Oct 2021 09:00:44 -0700 (PDT)
+Received: by mail-qt1-x82d.google.com with SMTP id r17so2965645qtx.10;
+        Wed, 13 Oct 2021 09:00:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=pZexP7HogPfyV8yTiXGv7CUWiNgnazFkMB2vWUC/dbo=;
-        b=GJh4rtFJ38Z6naQzZ8Xp9sIvZwwAZbpY9qdMZbmiWoeDWkKABOU3kTQVN508osXhEu
-         VKW5jW1sgoSolLAwb1r0NnabzjFEaMiy32diG+QLlz+MU0cqbUlTmjbGhHjbTjLxpC1f
-         w6mKKLf+9C7rfLd6c3wvqlGFznroCDRis44gi83jSdA2dW3JGegquav69UiEHLxKzNCO
-         lBqQNR1LC15JS3OonZU+0n8/1DTjpf2Xnykr8W+bto0CmA+g5Sk2SsMZl5kMfpJ52yZZ
-         KzfvEFFuqROwoQNATs36ElJxJO0y7KAv709wsjXk+j4vgqyJO55498hcVI9y9jOqbhzi
-         dDxA==
+        bh=ExiMDGbOiJCAEk+N5uuM+TKuKA0rA49Uu1AdlJ97UCo=;
+        b=JdtUNo2uMuhB4xHYxxWXnoWBjLnKFx5ffqYUIWfHcOYu2yuZ8hKu7HEaIp6KCMIAP1
+         z200x6fijVza031Vgc145jKL2KJ5QHqcJGkx8J7ZuRm9kraci1vMLHWolIypPNJcP6qI
+         kMxwbvWJTgxXA9N67G/LFYC8bHbLymJot2bKKJNw1qM7f9RDBN8aBEvt7CQRI1jTKThO
+         t8TDKd4taCKcbBbjPQC2cAxqpRY3cHPyl4TzsprIWL5+UtPJPZ3ELKy0yDvZ5QfSIZgp
+         LRvqgNbkMjGuwWzw3TTbQmNcZ/zajOgvvlPkNHWMMP9wT8Icf51zb17iTUCbZdv1CoAI
+         S51g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=pZexP7HogPfyV8yTiXGv7CUWiNgnazFkMB2vWUC/dbo=;
-        b=mM5/niuJTQANGUFHP+Ts+9bpcZKYbixWuMT+QqPQq6eaY/nF+L9Nku6+HwT4mnKw42
-         0p8G+7pyZrXZgaoKSDIxV6RFIzi/6cuSURO5daX3HuvwOSmaGMy0MEH6jnBpANBo2vm9
-         tn9tVLfd+eNzw508QzR34Hndj/azEYo79uJdQI6k4+GiTLysgdNC2BsplQYDmi059kmT
-         1V8RM6tK1fv0MTcXByYSJofg9n+hqSk5Vw9YvYT3VWKPFeOy9qaLAlF/0ClOJpW/w2eK
-         8zcy2Voukeay/5ZasnnPoPU4foEgFb7nwDvs5J+OH714N+WbB6MmJGcJM5WvDUsApGTB
-         BBOQ==
-X-Gm-Message-State: AOAM531WL4CQDsvdbbNm53Peem+4jOqbirr0yB0Y7sLAzVnybMmcktri
-        NkjAVEwDEzVtcmMWAA/McvgHOry/VbBn
-X-Google-Smtp-Source: ABdhPJweZh80c8p2kCFXcJDAOtKDvmfyAuC0lF3eF4cM2TDclooX+UDe12liPR44rLkcgU6VXNe+iw==
-X-Received: by 2002:a05:6214:1c8d:: with SMTP id ib13mr36691652qvb.10.1634140841945;
-        Wed, 13 Oct 2021 09:00:41 -0700 (PDT)
+        bh=ExiMDGbOiJCAEk+N5uuM+TKuKA0rA49Uu1AdlJ97UCo=;
+        b=j5tFWV1EpNyP1W2kGvW2zCZxsGCDRk7q/jQ8yDa0TgXi9LzjttSXVyA1OXIViZDLjq
+         wPiFLJEYLKyPtgoeFnh8aTnHWQm2uzups7xLLQudym12ZJtvMSvLhHTHIxzH9sXaMOQI
+         DHuxq9iRlFtYPa0NfdWUIQPU7aUq29ctAcxDK9WmYZ97O/pjvP0sIEqth/F/CStcqcE9
+         9euOC0J2WZouPibpXdIBh4wna1XAafjfnNJmkbNFq9va7it4/+051MT/WFqutbweOCv1
+         W528J4SJbvTHOqAm97mpSilCJPP56BJQfTlt2yxkBWvICKUMiqouhU+DcOcenBCSMBdV
+         fvCQ==
+X-Gm-Message-State: AOAM533NE9IIobEqPaV9s9LuNV+HD+2Cy/wwg8jkgTn//t6kOjKLhEmx
+        J+xgiBfMYZOFfM76s0wJrMtfkfc9bvaE
+X-Google-Smtp-Source: ABdhPJyr+vj0+AmLaT4apOjAmLNIXpzPBUePVsaTpMuwFMwEuFhb9yVoLOfGZjkU0FPoV9K7FP/lCA==
+X-Received: by 2002:aed:2791:: with SMTP id a17mr145086qtd.34.1634140843570;
+        Wed, 13 Oct 2021 09:00:43 -0700 (PDT)
 Received: from moria.home.lan (c-73-219-103-14.hsd1.vt.comcast.net. [73.219.103.14])
-        by smtp.gmail.com with ESMTPSA id w17sm20161qts.53.2021.10.13.09.00.40
+        by smtp.gmail.com with ESMTPSA id w17sm20161qts.53.2021.10.13.09.00.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Oct 2021 09:00:41 -0700 (PDT)
+        Wed, 13 Oct 2021 09:00:42 -0700 (PDT)
 From:   Kent Overstreet <kent.overstreet@gmail.com>
 To:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
         akpm@linux-foundation.org, linux-raid@vger.kernel.org,
         linux-block@vger.kernel.org, axboe@kernel.dk
 Cc:     Kent Overstreet <kent.overstreet@gmail.com>,
         alexander.h.duyck@linux.intel.com
-Subject: [PATCH 1/5] mm: Make free_area->nr_free per migratetype
-Date:   Wed, 13 Oct 2021 12:00:30 -0400
-Message-Id: <20211013160034.3472923-2-kent.overstreet@gmail.com>
+Subject: [PATCH 2/5] mm: Introduce struct page_free_list
+Date:   Wed, 13 Oct 2021 12:00:31 -0400
+Message-Id: <20211013160034.3472923-3-kent.overstreet@gmail.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211013160034.3472923-1-kent.overstreet@gmail.com>
 References: <20211013160034.3472923-1-kent.overstreet@gmail.com>
@@ -68,237 +68,315 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This is prep work for introducing a struct page_free_list, which will
-have a list head and nr_free - it turns out a fair amount of the code
-looking at free_area->nr_free actually wants the number of elements on a
-particular freelist.
+Small type system cleanup, enabling further cleanups and possibly
+switching the freelists from linked lists to radix trees.
 
 Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
 ---
- include/linux/mmzone.h | 14 ++++++++++++--
- mm/page_alloc.c        | 30 +++++++++++++++++-------------
- mm/page_reporting.c    |  2 +-
- mm/vmstat.c            | 28 +++-------------------------
- 4 files changed, 33 insertions(+), 41 deletions(-)
+ include/linux/mmzone.h | 14 +++++++++-----
+ kernel/crash_core.c    |  4 ++--
+ mm/compaction.c        | 20 +++++++++++---------
+ mm/page_alloc.c        | 30 +++++++++++++++---------------
+ mm/page_reporting.c    | 20 ++++++++++----------
+ mm/vmstat.c            |  2 +-
+ 6 files changed, 48 insertions(+), 42 deletions(-)
 
 diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 6a1d79d846..089587b918 100644
+index 089587b918..1fe820ead2 100644
 --- a/include/linux/mmzone.h
 +++ b/include/linux/mmzone.h
-@@ -96,7 +96,7 @@ extern int page_group_by_mobility_disabled;
+@@ -94,21 +94,25 @@ extern int page_group_by_mobility_disabled;
+ #define get_pageblock_migratetype(page)					\
+ 	get_pfnblock_flags_mask(page, page_to_pfn(page), MIGRATETYPE_MASK)
  
++struct page_free_list {
++	struct list_head	list;
++	size_t			nr;
++};
++
  struct free_area {
- 	struct list_head	free_list[MIGRATE_TYPES];
--	unsigned long		nr_free;
-+	unsigned long		nr_free[MIGRATE_TYPES];
+-	struct list_head	free_list[MIGRATE_TYPES];
+-	unsigned long		nr_free[MIGRATE_TYPES];
++	struct page_free_list	free[MIGRATE_TYPES];
  };
  
  static inline struct page *get_page_from_free_area(struct free_area *area,
-@@ -108,7 +108,17 @@ static inline struct page *get_page_from_free_area(struct free_area *area,
+ 					    int migratetype)
+ {
+-	return list_first_entry_or_null(&area->free_list[migratetype],
++	return list_first_entry_or_null(&area->free[migratetype].list,
+ 					struct page, lru);
+ }
  
  static inline bool free_area_empty(struct free_area *area, int migratetype)
  {
--	return list_empty(&area->free_list[migratetype]);
-+	return area->nr_free[migratetype] == 0;
-+}
-+
-+static inline size_t free_area_nr_free(struct free_area *area)
-+{
-+	unsigned migratetype;
-+	size_t nr_free = 0;
-+
-+	for (migratetype = 0; migratetype < MIGRATE_TYPES; migratetype++)
-+		nr_free += area->nr_free[migratetype];
-+	return nr_free;
+-	return area->nr_free[migratetype] == 0;
++	return area->free[migratetype].nr == 0;
  }
  
- struct pglist_data;
+ static inline size_t free_area_nr_free(struct free_area *area)
+@@ -117,7 +121,7 @@ static inline size_t free_area_nr_free(struct free_area *area)
+ 	size_t nr_free = 0;
+ 
+ 	for (migratetype = 0; migratetype < MIGRATE_TYPES; migratetype++)
+-		nr_free += area->nr_free[migratetype];
++		nr_free += area->free[migratetype].nr;
+ 	return nr_free;
+ }
+ 
+diff --git a/kernel/crash_core.c b/kernel/crash_core.c
+index eb53f5ec62..f9cc4c3cd1 100644
+--- a/kernel/crash_core.c
++++ b/kernel/crash_core.c
+@@ -447,14 +447,14 @@ static int __init crash_save_vmcoreinfo_init(void)
+ 	VMCOREINFO_OFFSET(zone, free_area);
+ 	VMCOREINFO_OFFSET(zone, vm_stat);
+ 	VMCOREINFO_OFFSET(zone, spanned_pages);
+-	VMCOREINFO_OFFSET(free_area, free_list);
++	VMCOREINFO_OFFSET(free_area, free);
+ 	VMCOREINFO_OFFSET(list_head, next);
+ 	VMCOREINFO_OFFSET(list_head, prev);
+ 	VMCOREINFO_OFFSET(vmap_area, va_start);
+ 	VMCOREINFO_OFFSET(vmap_area, list);
+ 	VMCOREINFO_LENGTH(zone.free_area, MAX_ORDER);
+ 	log_buf_vmcoreinfo_setup();
+-	VMCOREINFO_LENGTH(free_area.free_list, MIGRATE_TYPES);
++	VMCOREINFO_LENGTH(free_area.free, MIGRATE_TYPES);
+ 	VMCOREINFO_NUMBER(NR_FREE_PAGES);
+ 	VMCOREINFO_NUMBER(PG_lru);
+ 	VMCOREINFO_NUMBER(PG_private);
+diff --git a/mm/compaction.c b/mm/compaction.c
+index bfc93da1c2..7a15f350e4 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -1414,19 +1414,21 @@ fast_isolate_freepages(struct compact_control *cc)
+ 	for (order = cc->search_order;
+ 	     !page && order >= 0;
+ 	     order = next_search_order(cc, order)) {
+-		struct free_area *area = &cc->zone->free_area[order];
+-		struct list_head *freelist;
++		struct page_free_list *free =
++			&cc->zone->free_area[order].free[MIGRATE_MOVABLE];
+ 		struct page *freepage;
+ 		unsigned long flags;
+ 		unsigned int order_scanned = 0;
+ 		unsigned long high_pfn = 0;
+ 
+-		if (!area->nr_free)
++		spin_lock_irqsave(&cc->zone->lock, flags);
++
++		if (!free->nr) {
++			spin_unlock_irqrestore(&cc->zone->lock, flags);
+ 			continue;
++		}
+ 
+-		spin_lock_irqsave(&cc->zone->lock, flags);
+-		freelist = &area->free_list[MIGRATE_MOVABLE];
+-		list_for_each_entry_reverse(freepage, freelist, lru) {
++		list_for_each_entry_reverse(freepage, &free->list, lru) {
+ 			unsigned long pfn;
+ 
+ 			order_scanned++;
+@@ -1464,7 +1466,7 @@ fast_isolate_freepages(struct compact_control *cc)
+ 		}
+ 
+ 		/* Reorder to so a future search skips recent pages */
+-		move_freelist_head(freelist, freepage);
++		move_freelist_head(&free->list, freepage);
+ 
+ 		/* Isolate the page if available */
+ 		if (page) {
+@@ -1786,11 +1788,11 @@ static unsigned long fast_find_migrateblock(struct compact_control *cc)
+ 		unsigned long flags;
+ 		struct page *freepage;
+ 
+-		if (!area->nr_free)
++		if (!free_area_nr_free(area))
+ 			continue;
+ 
+ 		spin_lock_irqsave(&cc->zone->lock, flags);
+-		freelist = &area->free_list[MIGRATE_MOVABLE];
++		freelist = &area->free[MIGRATE_MOVABLE].list;
+ 		list_for_each_entry(freepage, freelist, lru) {
+ 			unsigned long free_pfn;
+ 
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index b37435c274..8918c00a91 100644
+index 8918c00a91..70e4bcd2f3 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -966,7 +966,7 @@ static inline void add_to_free_list(struct page *page, struct zone *zone,
- 	struct free_area *area = &zone->free_area[order];
+@@ -963,20 +963,20 @@ compaction_capture(struct capture_control *capc, struct page *page,
+ static inline void add_to_free_list(struct page *page, struct zone *zone,
+ 				    unsigned int order, int migratetype)
+ {
+-	struct free_area *area = &zone->free_area[order];
++	struct page_free_list *list = &zone->free_area[order].free[migratetype];
  
- 	list_add(&page->lru, &area->free_list[migratetype]);
--	area->nr_free++;
-+	area->nr_free[migratetype]++;
+-	list_add(&page->lru, &area->free_list[migratetype]);
+-	area->nr_free[migratetype]++;
++	list_add(&page->lru, &list->list);
++	list->nr++;
  }
  
  /* Used for pages not on another list */
-@@ -976,7 +976,7 @@ static inline void add_to_free_list_tail(struct page *page, struct zone *zone,
- 	struct free_area *area = &zone->free_area[order];
+ static inline void add_to_free_list_tail(struct page *page, struct zone *zone,
+ 					 unsigned int order, int migratetype)
+ {
+-	struct free_area *area = &zone->free_area[order];
++	struct page_free_list *list = &zone->free_area[order].free[migratetype];
  
- 	list_add_tail(&page->lru, &area->free_list[migratetype]);
--	area->nr_free++;
-+	area->nr_free[migratetype]++;
+-	list_add_tail(&page->lru, &area->free_list[migratetype]);
+-	area->nr_free[migratetype]++;
++	list_add_tail(&page->lru, &list->list);
++	list->nr++;
  }
  
  /*
-@@ -993,7 +993,7 @@ static inline void move_to_free_list(struct page *page, struct zone *zone,
+@@ -987,9 +987,9 @@ static inline void add_to_free_list_tail(struct page *page, struct zone *zone,
+ static inline void move_to_free_list(struct page *page, struct zone *zone,
+ 				     unsigned int order, int migratetype)
+ {
+-	struct free_area *area = &zone->free_area[order];
++	struct page_free_list *list = &zone->free_area[order].free[migratetype];
+ 
+-	list_move_tail(&page->lru, &area->free_list[migratetype]);
++	list_move_tail(&page->lru, &list->list);
  }
  
  static inline void del_page_from_free_list(struct page *page, struct zone *zone,
--					   unsigned int order)
-+					   unsigned int order, int migratetype)
- {
- 	/* clear reported state and update reported page count */
- 	if (page_reported(page))
 @@ -1002,7 +1002,7 @@ static inline void del_page_from_free_list(struct page *page, struct zone *zone,
  	list_del(&page->lru);
  	__ClearPageBuddy(page);
  	set_page_private(page, 0);
--	zone->free_area[order].nr_free--;
-+	zone->free_area[order].nr_free[migratetype]--;
+-	zone->free_area[order].nr_free[migratetype]--;
++	zone->free_area[order].free[migratetype].nr--;
  }
  
  /*
-@@ -1098,7 +1098,7 @@ static inline void __free_one_page(struct page *page,
- 		if (page_is_guard(buddy))
- 			clear_page_guard(zone, buddy, order, migratetype);
- 		else
--			del_page_from_free_list(buddy, zone, order);
-+			del_page_from_free_list(buddy, zone, order, migratetype);
- 		combined_pfn = buddy_pfn & pfn;
- 		page = page + (combined_pfn - pfn);
- 		pfn = combined_pfn;
-@@ -2456,7 +2456,7 @@ struct page *__rmqueue_smallest(struct zone *zone, unsigned int order,
- 		page = get_page_from_free_area(area, migratetype);
- 		if (!page)
+@@ -2734,7 +2734,7 @@ int find_suitable_fallback(struct free_area *area, unsigned int order,
+ 	int i;
+ 	int fallback_mt;
+ 
+-	if (area->nr_free == 0)
++	if (free_area_nr_free(area) == 0)
+ 		return -1;
+ 
+ 	*can_steal = false;
+@@ -3290,7 +3290,7 @@ void mark_free_pages(struct zone *zone)
+ 
+ 	for_each_migratetype_order(order, t) {
+ 		list_for_each_entry(page,
+-				&zone->free_area[order].free_list[t], lru) {
++				&zone->free_area[order].free[t].list, lru) {
+ 			unsigned long i;
+ 
+ 			pfn = page_to_pfn(page);
+@@ -3886,7 +3886,7 @@ bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
+ 		struct free_area *area = &z->free_area[o];
+ 		int mt;
+ 
+-		if (!area->nr_free)
++		if (!free_area_nr_free(area))
  			continue;
--		del_page_from_free_list(page, zone, current_order);
-+		del_page_from_free_list(page, zone, current_order, migratetype);
- 		expand(zone, page, order, current_order, migratetype);
- 		set_pcppage_migratetype(page, migratetype);
- 		return page;
-@@ -3525,7 +3525,7 @@ int __isolate_free_page(struct page *page, unsigned int order)
  
- 	/* Remove page from free list */
- 
--	del_page_from_free_list(page, zone, order);
-+	del_page_from_free_list(page, zone, order, mt);
- 
- 	/*
- 	 * Set the pageblock if the isolated page is at least half of a
-@@ -6038,14 +6038,16 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
- 			struct free_area *area = &zone->free_area[order];
- 			int type;
- 
--			nr[order] = area->nr_free;
--			total += nr[order] << order;
-+			nr[order]	= 0;
-+			types[order]	= 0;
- 
--			types[order] = 0;
+ 		for (mt = 0; mt < MIGRATE_PCPTYPES; mt++) {
+@@ -6044,7 +6044,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
  			for (type = 0; type < MIGRATE_TYPES; type++) {
  				if (!free_area_empty(area, type))
  					types[order] |= 1 << type;
-+				nr[order] += area->nr_free[type];
+-				nr[order] += area->nr_free[type];
++				nr[order] += area->free[type].nr;
  			}
-+
-+			total += nr[order] << order;
- 		}
- 		spin_unlock_irqrestore(&zone->lock, flags);
- 		for (order = 0; order < MAX_ORDER; order++) {
-@@ -6623,7 +6625,7 @@ static void __meminit zone_init_free_lists(struct zone *zone)
+ 
+ 			total += nr[order] << order;
+@@ -6624,8 +6624,8 @@ static void __meminit zone_init_free_lists(struct zone *zone)
+ {
  	unsigned int order, t;
  	for_each_migratetype_order(order, t) {
- 		INIT_LIST_HEAD(&zone->free_area[order].free_list[t]);
--		zone->free_area[order].nr_free = 0;
-+		zone->free_area[order].nr_free[t] = 0;
+-		INIT_LIST_HEAD(&zone->free_area[order].free_list[t]);
+-		zone->free_area[order].nr_free[t] = 0;
++		INIT_LIST_HEAD(&zone->free_area[order].free[t].list);
++		zone->free_area[order].free[t].nr = 0;
  	}
  }
  
-@@ -9317,6 +9319,7 @@ void __offline_isolated_pages(unsigned long start_pfn, unsigned long end_pfn)
- 	struct page *page;
- 	struct zone *zone;
- 	unsigned int order;
-+	unsigned int migratetype;
- 	unsigned long flags;
- 
- 	offline_mem_sections(pfn, end_pfn);
-@@ -9346,7 +9349,8 @@ void __offline_isolated_pages(unsigned long start_pfn, unsigned long end_pfn)
- 		BUG_ON(page_count(page));
- 		BUG_ON(!PageBuddy(page));
- 		order = buddy_order(page);
--		del_page_from_free_list(page, zone, order);
-+		migratetype = get_pfnblock_migratetype(page, pfn);
-+		del_page_from_free_list(page, zone, order, migratetype);
- 		pfn += (1 << order);
- 	}
- 	spin_unlock_irqrestore(&zone->lock, flags);
-@@ -9428,7 +9432,7 @@ bool take_page_off_buddy(struct page *page)
- 			int migratetype = get_pfnblock_migratetype(page_head,
- 								   pfn_head);
- 
--			del_page_from_free_list(page_head, zone, page_order);
-+			del_page_from_free_list(page_head, zone, page_order, migratetype);
- 			break_down_buddy_pages(zone, page_head, page, 0,
- 						page_order, migratetype);
- 			if (!is_migrate_isolate(migratetype))
 diff --git a/mm/page_reporting.c b/mm/page_reporting.c
-index 382958eef8..4e45ae95db 100644
+index 4e45ae95db..c4362b4b0c 100644
 --- a/mm/page_reporting.c
 +++ b/mm/page_reporting.c
-@@ -145,7 +145,7 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
+@@ -115,8 +115,7 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
+ 		     unsigned int order, unsigned int mt,
+ 		     struct scatterlist *sgl, unsigned int *offset)
+ {
+-	struct free_area *area = &zone->free_area[order];
+-	struct list_head *list = &area->free_list[mt];
++	struct page_free_list *list = &zone->free_area[order].free[mt];
+ 	unsigned int page_len = PAGE_SIZE << order;
+ 	struct page *page, *next;
+ 	long budget;
+@@ -126,7 +125,7 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
+ 	 * Perform early check, if free area is empty there is
+ 	 * nothing to process so we can skip this free_list.
+ 	 */
+-	if (list_empty(list))
++	if (list_empty(&list->list))
+ 		return err;
+ 
+ 	spin_lock_irq(&zone->lock);
+@@ -145,10 +144,10 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
  	 * The division here should be cheap since PAGE_REPORTING_CAPACITY
  	 * should always be a power of 2.
  	 */
--	budget = DIV_ROUND_UP(area->nr_free, PAGE_REPORTING_CAPACITY * 16);
-+	budget = DIV_ROUND_UP(area->nr_free[mt], PAGE_REPORTING_CAPACITY * 16);
+-	budget = DIV_ROUND_UP(area->nr_free[mt], PAGE_REPORTING_CAPACITY * 16);
++	budget = DIV_ROUND_UP(list->nr, PAGE_REPORTING_CAPACITY * 16);
  
  	/* loop through free list adding unreported pages to sg list */
- 	list_for_each_entry_safe(page, next, list, lru) {
+-	list_for_each_entry_safe(page, next, list, lru) {
++	list_for_each_entry_safe(page, next, &list->list, lru) {
+ 		/* We are going to skip over the reported pages. */
+ 		if (PageReported(page))
+ 			continue;
+@@ -183,8 +182,8 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
+ 		 * the new head of the free list before we release the
+ 		 * zone lock.
+ 		 */
+-		if (!list_is_first(&page->lru, list))
+-			list_rotate_to_front(&page->lru, list);
++		if (!list_is_first(&page->lru, &list->list))
++			list_rotate_to_front(&page->lru, &list->list);
+ 
+ 		/* release lock before waiting on report processing */
+ 		spin_unlock_irq(&zone->lock);
+@@ -208,7 +207,7 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
+ 		 * Reset next to first entry, the old next isn't valid
+ 		 * since we dropped the lock to report the pages
+ 		 */
+-		next = list_first_entry(list, struct page, lru);
++		next = list_first_entry(&list->list, struct page, lru);
+ 
+ 		/* exit on error */
+ 		if (err)
+@@ -216,8 +215,9 @@ page_reporting_cycle(struct page_reporting_dev_info *prdev, struct zone *zone,
+ 	}
+ 
+ 	/* Rotate any leftover pages to the head of the freelist */
+-	if (!list_entry_is_head(next, list, lru) && !list_is_first(&next->lru, list))
+-		list_rotate_to_front(&next->lru, list);
++	if (!list_entry_is_head(next, &list->list, lru) &&
++	    !list_is_first(&next->lru, &list->list))
++		list_rotate_to_front(&next->lru, &list->list);
+ 
+ 	spin_unlock_irq(&zone->lock);
+ 
 diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 8ce2620344..eb46f99c72 100644
+index eb46f99c72..1620dc120f 100644
 --- a/mm/vmstat.c
 +++ b/mm/vmstat.c
-@@ -1071,7 +1071,7 @@ static void fill_contig_page_info(struct zone *zone,
- 		unsigned long blocks;
- 
- 		/* Count number of free blocks */
--		blocks = zone->free_area[order].nr_free;
-+		blocks = free_area_nr_free(&zone->free_area[order]);
- 		info->free_blocks_total += blocks;
- 
- 		/* Count free base pages */
-@@ -1445,7 +1445,7 @@ static void frag_show_print(struct seq_file *m, pg_data_t *pgdat,
- 
- 	seq_printf(m, "Node %d, zone %8s ", pgdat->node_id, zone->name);
- 	for (order = 0; order < MAX_ORDER; ++order)
--		seq_printf(m, "%6lu ", zone->free_area[order].nr_free);
-+		seq_printf(m, "%6zu ", free_area_nr_free(&zone->free_area[order]));
- 	seq_putc(m, '\n');
- }
- 
-@@ -1470,29 +1470,7 @@ static void pagetypeinfo_showfree_print(struct seq_file *m,
+@@ -1470,7 +1470,7 @@ static void pagetypeinfo_showfree_print(struct seq_file *m,
  					zone->name,
  					migratetype_names[mtype]);
  		for (order = 0; order < MAX_ORDER; ++order) {
--			unsigned long freecount = 0;
--			struct free_area *area;
--			struct list_head *curr;
--			bool overflow = false;
--
--			area = &(zone->free_area[order]);
--
--			list_for_each(curr, &area->free_list[mtype]) {
--				/*
--				 * Cap the free_list iteration because it might
--				 * be really large and we are under a spinlock
--				 * so a long time spent here could trigger a
--				 * hard lockup detector. Anyway this is a
--				 * debugging tool so knowing there is a handful
--				 * of pages of this order should be more than
--				 * sufficient.
--				 */
--				if (++freecount >= 100000) {
--					overflow = true;
--					break;
--				}
--			}
--			seq_printf(m, "%s%6lu ", overflow ? ">" : "", freecount);
-+			seq_printf(m, "%6zu ", zone->free_area[order].nr_free[mtype]);
+-			seq_printf(m, "%6zu ", zone->free_area[order].nr_free[mtype]);
++			seq_printf(m, "%6zu ", zone->free_area[order].free[mtype].nr);
  			spin_unlock_irq(&zone->lock);
  			cond_resched();
  			spin_lock_irq(&zone->lock);
