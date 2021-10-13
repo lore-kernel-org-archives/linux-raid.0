@@ -2,169 +2,136 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 077EAC433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 12 Oct 2021 17:20:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9306C4167B
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 05:13:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDD1E60F38
-	for <linux-raid@archiver.kernel.org>; Tue, 12 Oct 2021 17:20:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D66E960E8B
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 05:13:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230463AbhJLRW7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 12 Oct 2021 13:22:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50280 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229510AbhJLRW7 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 12 Oct 2021 13:22:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6A0F860F38;
-        Tue, 12 Oct 2021 17:20:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634059257;
-        bh=KLl+8VX4c+ZHvAiUyKBm4KSnrVYLhkWpkOqTx+1Xg4w=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Z2xEFEL96TpHzRNOvLt4aUcaDUXFHGEVxQmLRSAtRnrWcV5PgkBj2KkskG1zO1e33
-         GTm6+9WfWytxi6TzoSj5fKWvPd1KYdQ95Ms4l14xNemzw8xJGTNTSHh/CjXJxiOR/v
-         IyAzPzTaiasexyCwM59Eig41PeAwggHBU6eqaxD2PFS/Gf0VEggyPZSK8TWUSiHmNT
-         znaZMqhUj2bAhjLdRATqudk1UGxALj/QseGw/3HMeLM+ij/z4627mUUgVu+D1D148X
-         j05+IIk26QQWk26Yncm59YLR6SGZ35Ohif7wLOmacAQwnw2Ta1CyrCcWcZfhWNE4P8
-         4oAjTNIlzsWTg==
-Received: by mail-lf1-f53.google.com with SMTP id j5so16504lfg.8;
-        Tue, 12 Oct 2021 10:20:57 -0700 (PDT)
-X-Gm-Message-State: AOAM531ikpbEwazs0jmf3fVvrfNxum+48E0Ul3U13ml1MdwVE1VpgYkf
-        Txv+l8hEMBcyTCjNPFVx/sqoM8pkQt+IEPiaZM0=
-X-Google-Smtp-Source: ABdhPJybb1dYd09nhHdN5yW0bkJ51EQt4i1dBYJspuCmUsXDo07fUhszhEc/95naLZORz1gl34KRE5gIykClV1ajGjI=
-X-Received: by 2002:a2e:6e0b:: with SMTP id j11mr30821450ljc.527.1634059255633;
- Tue, 12 Oct 2021 10:20:55 -0700 (PDT)
+        id S234877AbhJMFPa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Oct 2021 01:15:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33614 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229514AbhJMFP2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 13 Oct 2021 01:15:28 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0C2BC061570;
+        Tue, 12 Oct 2021 22:13:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=ocvXC+DvSauKdmmvS3p+BxJi5u95doUk5KlK23wKtqo=; b=lKRpM4ZXjdzEAs+vZHMan9ZhwK
+        q3qA9dd5QajFA+KsuGdVyTH2p+oZZPEv/z2NSgSxTwIMMwqmktOR+s0Mrd19t1c1Y/TakGT40A9Wj
+        fXHJiNb6NQJwkxlZ/5iLycWCBNdMTLXRP1g8wuFiwK5UhTbY4DE7tpL0AHanppMBRE/m1Ine/XAEK
+        um2dw0LVt4/UjLCyOHoVNjJK0jpXEaLw+w3Q6MwnUfqPKIR8hZ7XIOjLGS/AwhJhnrAzptzhgIYv3
+        k508G2hmAkGrCbErzCtBLkTxM5WVEpuUuduXQQzcasviJArvc73oNwcMB0CSLN98PutjOV+1MzU1W
+        3RwzUyhQ==;
+Received: from 089144212063.atnat0021.highway.a1.net ([89.144.212.63] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1maWXM-0075tt-3G; Wed, 13 Oct 2021 05:10:57 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>, David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+        linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ntfs3@lists.linux.dev,
+        reiserfs-devel@vger.kernel.org
+Subject: don't use ->bd_inode to access the block device size
+Date:   Wed, 13 Oct 2021 07:10:13 +0200
+Message-Id: <20211013051042.1065752-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20211008032231.1143467-1-fengli@smartx.com> <CAPhsuW5+bdQwsyjBP=QDGRbtnF021291D_XrhNtV+v-geVouVg@mail.gmail.com>
- <CALTww28b0HGzSTTNGVzeZdRp0nGMDAyY8sQ+cBsSCuYJ4jMaqw@mail.gmail.com>
- <CAHckoCyuqxM8po4JA4=OacVWhYuo9SWescUVOKRFGwdc=aoN8A@mail.gmail.com>
- <CALTww28CsJdmVOLFeoHC8FgbHDK78h8Lncsf9fFA0RYXEj=R9A@mail.gmail.com>
- <CAHckoCzzVP7npmU4LWedzD-f1QmkH4K0iLk_=8ptSFXrFfRoDw@mail.gmail.com>
- <CAPhsuW4VFTpM94by-iMkTQ=b9Y7FqZ2oqHH+jV-f8BM=YKWyiA@mail.gmail.com>
- <CAHckoCxRj1qb=yfeQ2o_8n_BSSLD9JXqm8GopUp2qx9NEPxr7w@mail.gmail.com> <CALTww2_eScuqd4yUtDFhaRUGAK-f8J_L=yOZdTVA9uZ7Tq4bxg@mail.gmail.com>
-In-Reply-To: <CALTww2_eScuqd4yUtDFhaRUGAK-f8J_L=yOZdTVA9uZ7Tq4bxg@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 12 Oct 2021 10:20:44 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6F6kF8CWAFk8Af+-WrELKVz8BYuYPFF1Fy_fAq8us84Q@mail.gmail.com>
-Message-ID: <CAPhsuW6F6kF8CWAFk8Af+-WrELKVz8BYuYPFF1Fy_fAq8us84Q@mail.gmail.com>
-Subject: Re: [PATCH RESEND] md: allow to set the fail_fast on RAID1/RAID10
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Li Feng <fengli@smartx.com>,
-        "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" 
-        <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Oct 12, 2021 at 1:49 AM Xiao Ni <xni@redhat.com> wrote:
->
-> Hi all
->
-> How about this patch? Now writemostly flag doesn't be stored in
-> superblock too. So this patch fix this problem too.
-> If this patch is ok, I'll send the patch.
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 6c0c3d0d905a..9e8a8c5c7758 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2977,6 +2977,7 @@ state_store(struct md_rdev *rdev, const char
-> *buf, size_t len)
->       *  {,-}failfast - set/clear FailFast
->       */
->      int err =3D -EINVAL;
-> +    int need_update_sb =3D 0;
+Hi Jens,
 
-Please use bool for need_update_sb.
+various drivers currently poke directy at the block device inode, which
+is a bit of a mess.  This series cleans up the places that read the
+block device size to use the proper helpers.  I have separate patches
+for many of the other bd_inode uses, but this series is already big
+enough as-is,
 
->      if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
->          md_error(rdev->mddev, rdev);
->          if (test_bit(Faulty, &rdev->flags))
+I wondered about adding a helper for looking at the size in byte units
+to avoid the SECTOR_SHIFT shifts in various places.  But given that
+I could not come up with a good name and block devices fundamentally
+work in sector size granularity I decided against that.
 
-[...]
-
-> @@ -3120,6 +3122,11 @@ state_store(struct md_rdev *rdev, const char
-> *buf, size_t len)
->      }
->      if (!err)
->          sysfs_notify_dirent_safe(rdev->sysfs_state);
-> +    if (need_update_sb)
-> +        if (mddev->pers) {
-We can merge the two conditions in in one line
-
-if (need_update_sb && mddev->pers) {
-...
-}
-
-> +            set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
-> +            md_wakeup_thread(mddev->thread);
-> +        }
->      return err ? err : len;
->  }
->  static struct rdev_sysfs_entry rdev_state =3D
->
-> On Tue, Oct 12, 2021 at 4:44 PM Li Feng <fengli@smartx.com> wrote:
-> >
-> > Song Liu <song@kernel.org> =E4=BA=8E2021=E5=B9=B410=E6=9C=8812=E6=97=A5=
-=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=884:17=E5=86=99=E9=81=93=EF=BC=9A
-> > >
-> > > On Tue, Oct 12, 2021 at 1:07 AM Li Feng <fengli@smartx.com> wrote:
-> > > >
-> > > > Xiao Ni <xni@redhat.com> =E4=BA=8E2021=E5=B9=B410=E6=9C=8812=E6=97=
-=A5=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=882:58=E5=86=99=E9=81=93=EF=BC=9A
-> > > > >
-> > > > > On Mon, Oct 11, 2021 at 5:42 PM Li Feng <fengli@smartx.com> wrote=
-:
-> > > > > >
-> > > > > > Xiao Ni <xni@redhat.com> =E4=BA=8E2021=E5=B9=B410=E6=9C=8811=E6=
-=97=A5=E5=91=A8=E4=B8=80 =E4=B8=8B=E5=8D=883:49=E5=86=99=E9=81=93=EF=BC=9A
-> > > > > > >
-> > > > > > > Hi all
-> > > > > > >
-> > > > > > > Now the per device sysfs interface file state can change fail=
-fast. Do
-> > > > > > > we need a new file for failfast?
-> > > > > > >
-> > > > > > > I did a test. The steps are:
-> > > > > > >
-> > > > > > > mdadm -CR /dev/md0 -l1 -n2 /dev/sdb /dev/sdc --assume-clean
-> > > > > > > cd /sys/block/md0/md/dev-sdb
-> > > > > > > echo failfast > state
-> > > > > > > cat state
-> > > > > > > in_sync,failfast
-> > > > > >
-> > > > > > This works,  will it be persisted to disk?
-> > > > > >
-> > > > >
-> > > > > mdadm --detail /dev/md0 can show the failfast information. So it
-> > > > > should be written in superblock.
-> > > > > But I don't find how md does this. I'm looking at this.
-> > > > >
-> > > > Yes, I have tested that it has been persisted, but don't understand=
- who does it.
-> > >
-> > > I think this is not guaranteed to be persistent:
-> > >
-> > > [root@eth50-1 ~]# cat /sys/block/md127/md/rd1/state
-> > > in_sync,failfast
-> > > [root@eth50-1 ~]# echo -failfast >  /sys/block/md127/md/rd1/state
-> > > [root@eth50-1 ~]# cat /sys/block/md127/md/rd1/state
-> > > in_sync
-> > > [root@eth50-1 ~]# mdadm --stop /dev/md*
-> > > mdadm: /dev/md does not appear to be an md device
-> > > mdadm: stopped /dev/md127
-> > > [root@eth50-1 ~]# mdadm -As
-> > > mdadm: /dev/md/0_0 has been started with 4 drives.
-> > > [root@eth50-1 ~]# cat /sys/block/md127/md/rd1/state
-> > > in_sync,failfast
-> > >
-> > > How about we fix state_store to make sure it is always persistent?
-> > >
-> > I agree with you.
-> >
-> > > Thanks,
-> > > Song
-> >
->
+Diffstat:
+ block/fops.c                        |    2 +-
+ drivers/block/drbd/drbd_int.h       |    3 +--
+ drivers/md/bcache/super.c           |    2 +-
+ drivers/md/bcache/util.h            |    4 ----
+ drivers/md/bcache/writeback.c       |    2 +-
+ drivers/md/dm-bufio.c               |    2 +-
+ drivers/md/dm-cache-metadata.c      |    2 +-
+ drivers/md/dm-cache-target.c        |    2 +-
+ drivers/md/dm-clone-target.c        |    2 +-
+ drivers/md/dm-dust.c                |    5 ++---
+ drivers/md/dm-ebs-target.c          |    2 +-
+ drivers/md/dm-era-target.c          |    2 +-
+ drivers/md/dm-exception-store.h     |    2 +-
+ drivers/md/dm-flakey.c              |    3 +--
+ drivers/md/dm-integrity.c           |    6 +++---
+ drivers/md/dm-linear.c              |    3 +--
+ drivers/md/dm-log-writes.c          |    4 ++--
+ drivers/md/dm-log.c                 |    2 +-
+ drivers/md/dm-mpath.c               |    2 +-
+ drivers/md/dm-raid.c                |    6 +++---
+ drivers/md/dm-switch.c              |    2 +-
+ drivers/md/dm-table.c               |    3 +--
+ drivers/md/dm-thin-metadata.c       |    2 +-
+ drivers/md/dm-thin.c                |    2 +-
+ drivers/md/dm-verity-target.c       |    3 +--
+ drivers/md/dm-writecache.c          |    2 +-
+ drivers/md/dm-zoned-target.c        |    2 +-
+ drivers/md/md.c                     |   26 +++++++++++---------------
+ drivers/mtd/devices/block2mtd.c     |    5 +++--
+ drivers/nvme/target/io-cmd-bdev.c   |    4 ++--
+ drivers/target/target_core_iblock.c |    5 +++--
+ fs/affs/super.c                     |    2 +-
+ fs/btrfs/dev-replace.c              |    2 +-
+ fs/btrfs/disk-io.c                  |    3 ++-
+ fs/btrfs/ioctl.c                    |    4 ++--
+ fs/btrfs/volumes.c                  |    7 ++++---
+ fs/buffer.c                         |    4 ++--
+ fs/cramfs/inode.c                   |    2 +-
+ fs/ext4/super.c                     |    2 +-
+ fs/fat/inode.c                      |    5 +----
+ fs/hfs/mdb.c                        |    2 +-
+ fs/hfsplus/wrapper.c                |    2 +-
+ fs/jfs/resize.c                     |    5 ++---
+ fs/jfs/super.c                      |    5 ++---
+ fs/nfs/blocklayout/dev.c            |    4 ++--
+ fs/nilfs2/ioctl.c                   |    2 +-
+ fs/nilfs2/super.c                   |    2 +-
+ fs/nilfs2/the_nilfs.c               |    3 ++-
+ fs/ntfs/super.c                     |    8 +++-----
+ fs/ntfs3/super.c                    |    3 +--
+ fs/pstore/blk.c                     |    4 ++--
+ fs/reiserfs/super.c                 |    7 ++-----
+ fs/squashfs/super.c                 |    5 +++--
+ fs/udf/lowlevel.c                   |    5 ++---
+ fs/udf/super.c                      |    9 +++------
+ include/linux/genhd.h               |    6 ++++++
+ 56 files changed, 100 insertions(+), 117 deletions(-)
