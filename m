@@ -2,149 +2,83 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C71B6C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 17:27:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4B6C433FE
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 19:45:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97F7B6101D
-	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 17:27:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A7B1611CA
+	for <linux-raid@archiver.kernel.org>; Wed, 13 Oct 2021 19:45:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230232AbhJMR3O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 13 Oct 2021 13:29:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39444 "EHLO mail.kernel.org"
+        id S239087AbhJMTrK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 13 Oct 2021 15:47:10 -0400
+Received: from p3plsmtp21-04-2.prod.phx3.secureserver.net ([68.178.252.50]:36465
+        "EHLO p3plwbeout21-04.prod.phx3.secureserver.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229915AbhJMR3O (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 13 Oct 2021 13:29:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C2CB4610E5
-        for <linux-raid@vger.kernel.org>; Wed, 13 Oct 2021 17:27:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634146030;
-        bh=NCn7viDFzU1cWLTxMNpNtuqpdBLGeFZkYm+eMms3xqU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=auvMYV1bA7Ih7WmBXeL4NfGA7OFJSnoA8vUS3RIgCMTF71hi25U9U2yD6PXUnoGA0
-         KyZsShEylrkTFPW/RC2a+Gcbs0a03Chw0OpRYIIpdWLpyI9KTn1Ajj0jC0oVSv9sU+
-         a2zuO4FAZPsiclpIc4E5hx61uP8tE29dmyzIwEwN29kjQ93XPnHAIzBcidgiruriM2
-         kJTdiF868vy6/lOFQE4Ri1QjwytJZJN8EC+N3xIXloc05XwyzTQE9p04Er16OJQ6ak
-         SyKL81JQIy9JbsAvakX8O5cssrGufYri2huHw1SaPbwQCPKmNB2XtA95UOqSHapBoS
-         +6mPKGj25WETg==
-Received: by mail-lf1-f47.google.com with SMTP id c16so14935164lfb.3
-        for <linux-raid@vger.kernel.org>; Wed, 13 Oct 2021 10:27:10 -0700 (PDT)
-X-Gm-Message-State: AOAM530L2wYxvfc6wq9jUH7GmQsaAENcYjSKbVKbpLQFZ3gXw4GhH2pr
-        knSwCAdSkKMZuAciyH5ZXueN7xsI/4mZgwVF2hg=
-X-Google-Smtp-Source: ABdhPJw0IhN1sXQJAj0s3McovoH0Y1xB/pVSizwZs5xVU3WE7MHl92IJFBFogWlAi3LdMFRucpwLD+Wcm7hW/RN36hU=
-X-Received: by 2002:a05:6512:1042:: with SMTP id c2mr267304lfb.223.1634146028909;
- Wed, 13 Oct 2021 10:27:08 -0700 (PDT)
+        id S239068AbhJMTrG (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 13 Oct 2021 15:47:06 -0400
+X-Greylist: delayed 470 seconds by postgrey-1.27 at vger.kernel.org; Wed, 13 Oct 2021 15:47:06 EDT
+Received: from mailex.mailcore.me ([94.136.40.142])
+        by :WBEOUT: with ESMTP
+        id ak3omjDKHKGPkak3pmnHYE; Wed, 13 Oct 2021 12:37:09 -0700
+X-CMAE-Analysis: v=2.4 cv=fdBod2cF c=1 sm=1 tr=0 ts=61673565
+ a=s1hRAmXuQnGNrIj+3lWWVA==:117 a=84ok6UeoqCVsigPHarzEiQ==:17
+ a=ggZhUymU-5wA:10 a=IkcTkHD0fZMA:10 a=8gfv0ekSlNoA:10 a=FXvPX3liAAAA:8
+ a=Tqnnkb1RH65CB2acoZsA:9 a=QEXdDO2ut3YA:10 a=SM4aVyO6fsoA:10
+ a=UxLD5KG5Eu0A:10 a=OunuuIp3J4_2X_e7vt2U:22 a=fDQtvUcBV1mJc6yKnRhE:22
+ a=UObqyxdv-6Yh2QiB9mM_:22
+X-SECURESERVER-ACCT: phillip@squashfs.org.uk  
+X-SID:  ak3omjDKHKGPk
+Received: from 82-69-79-175.dsl.in-addr.zen.co.uk ([82.69.79.175] helo=[192.168.178.33])
+        by smtp01.mailcore.me with esmtpa (Exim 4.94.2)
+        (envelope-from <phillip@squashfs.org.uk>)
+        id 1mak3n-0001YR-Im; Wed, 13 Oct 2021 20:37:07 +0100
+Subject: Re: [PATCH 22/29] squashfs: use bdev_nr_sectors instead of open
+ coding it
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>, David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>, Jan Kara <jack@suse.com>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
+References: <20211013051042.1065752-1-hch@lst.de>
+ <20211013051042.1065752-23-hch@lst.de>
+From:   Phillip Lougher <phillip@squashfs.org.uk>
+Message-ID: <cbd3585f-87c6-ab31-2911-4d3550287e22@squashfs.org.uk>
+Date:   Wed, 13 Oct 2021 20:37:03 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-References: <1634137173-5342-1-git-send-email-xni@redhat.com> <CAHckoCymOtJoDZF7khAUJr2VQ-p0Xyzh+WQm7FtUCDqHvP2iBg@mail.gmail.com>
-In-Reply-To: <CAHckoCymOtJoDZF7khAUJr2VQ-p0Xyzh+WQm7FtUCDqHvP2iBg@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 13 Oct 2021 10:26:57 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6K0YbnoCf=zWxxR_bnde74tJAPfpwJZKtryao7GamDpg@mail.gmail.com>
-Message-ID: <CAPhsuW6K0YbnoCf=zWxxR_bnde74tJAPfpwJZKtryao7GamDpg@mail.gmail.com>
-Subject: Re: [PATCH V2 1/1] md: Need to update superblock after changing rdev sb_flags
-To:     Li Feng <fengli@smartx.com>
-Cc:     Xiao Ni <xni@redhat.com>,
-        "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" 
-        <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20211013051042.1065752-23-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
+X-Mailcore-Auth: 439999529
+X-Mailcore-Domain: 1394945
+X-123-reg-Authenticated:  phillip@squashfs.org.uk  
+X-Originating-IP: 82.69.79.175
+X-CMAE-Envelope: MS4xfHPsX/1rYw4coWDR/Lz29i3Qx4G0jysGeBfLoZNU4N6/y80LZ4snm6Fy5VGG3Ekx8hZg+gklb+yS0Pi6l84l9CFr5oRE/D6kJWA8ymeHfsphRNtDryyT
+ oIh8NUWjpLAhOlBVQ4/LzuGTPFwR4QyuHc9XOD174ih59wml5x9C+ThTjPJJNBFNR4clOQwpq9pZ/RnoylAdt1ezfeGZF7TOVjHLNu1q3dbH5ESVNgYHfPoq
+ +Yd98CjNpgKY0MPvmCcE6g==
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 8:19 AM Li Feng <fengli@smartx.com> wrote:
->
-> Looks good. Feel free to add:
->
-> Reviewed-by: Li Feng <fengli@smartx.com>
->
->
-> Xiao Ni <xni@redhat.com> =E4=BA=8E2021=E5=B9=B410=E6=9C=8813=E6=97=A5=E5=
-=91=A8=E4=B8=89 =E4=B8=8B=E5=8D=8810:59=E5=86=99=E9=81=93=EF=BC=9A
->
->
-> >
-> > It doesn't update rdev superblock flags to disk after changing these fl=
-ags.
-> > This patch does this job.
-> >
-> > Signed-off-by: Xiao Ni <xni@redhat.com>
+On 13/10/2021 06:10, Christoph Hellwig wrote:
+> Use the proper helper to read the block device size.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I updated the commit log and applied it to md-next.
-
-Thanks,
-Song
-
-> > ---
-> > V2: calls md_update_sb directly
-> > ---
-> >  drivers/md/md.c | 11 ++++++++++-
-> >  1 file changed, 10 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 6c0c3d0..e89eb46 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -2976,7 +2976,11 @@ state_store(struct md_rdev *rdev, const char *bu=
-f, size_t len)
-> >          *  -write_error - clears WriteErrorSeen
-> >          *  {,-}failfast - set/clear FailFast
-> >          */
-> > +
-> > +       struct mddev *mddev =3D rdev->mddev;
-> >         int err =3D -EINVAL;
-> > +       bool need_update_sb =3D false;
-> > +
-> >         if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
-> >                 md_error(rdev->mddev, rdev);
-> >                 if (test_bit(Faulty, &rdev->flags))
-> > @@ -2991,7 +2995,6 @@ state_store(struct md_rdev *rdev, const char *buf=
-, size_t len)
-> >                 if (rdev->raid_disk >=3D 0)
-> >                         err =3D -EBUSY;
-> >                 else {
-> > -                       struct mddev *mddev =3D rdev->mddev;
-> >                         err =3D 0;
-> >                         if (mddev_is_clustered(mddev))
-> >                                 err =3D md_cluster_ops->remove_disk(mdd=
-ev, rdev);
-> > @@ -3008,10 +3011,12 @@ state_store(struct md_rdev *rdev, const char *b=
-uf, size_t len)
-> >         } else if (cmd_match(buf, "writemostly")) {
-> >                 set_bit(WriteMostly, &rdev->flags);
-> >                 mddev_create_serial_pool(rdev->mddev, rdev, false);
-> > +               need_update_sb =3D true;
-> >                 err =3D 0;
-> >         } else if (cmd_match(buf, "-writemostly")) {
-> >                 mddev_destroy_serial_pool(rdev->mddev, rdev, false);
-> >                 clear_bit(WriteMostly, &rdev->flags);
-> > +               need_update_sb =3D true;
-> >                 err =3D 0;
-> >         } else if (cmd_match(buf, "blocked")) {
-> >                 set_bit(Blocked, &rdev->flags);
-> > @@ -3037,9 +3042,11 @@ state_store(struct md_rdev *rdev, const char *bu=
-f, size_t len)
-> >                 err =3D 0;
-> >         } else if (cmd_match(buf, "failfast")) {
-> >                 set_bit(FailFast, &rdev->flags);
-> > +               need_update_sb =3D true;
-> >                 err =3D 0;
-> >         } else if (cmd_match(buf, "-failfast")) {
-> >                 clear_bit(FailFast, &rdev->flags);
-> > +               need_update_sb =3D true;
-> >                 err =3D 0;
-> >         } else if (cmd_match(buf, "-insync") && rdev->raid_disk >=3D 0 =
-&&
-> >                    !test_bit(Journal, &rdev->flags)) {
-> > @@ -3118,6 +3125,8 @@ state_store(struct md_rdev *rdev, const char *buf=
-, size_t len)
-> >                 clear_bit(ExternalBbl, &rdev->flags);
-> >                 err =3D 0;
-> >         }
-> > +       if (need_update_sb)
-> > +               md_update_sb(mddev, 1);
-> >         if (!err)
-> >                 sysfs_notify_dirent_safe(rdev->sysfs_state);
-> >         return err ? err : len;
-> > --
-> > 2.7.5
-> >
+Acked-by: Phillip Lougher <phillip@squashfs.org.uk>
