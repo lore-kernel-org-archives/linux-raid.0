@@ -2,127 +2,126 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69AAAC433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 14 Oct 2021 15:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13528C433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 14 Oct 2021 15:14:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 413E860F36
-	for <linux-raid@archiver.kernel.org>; Thu, 14 Oct 2021 15:10:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF88F60F4A
+	for <linux-raid@archiver.kernel.org>; Thu, 14 Oct 2021 15:14:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233494AbhJNPMO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 14 Oct 2021 11:12:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:49291 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233350AbhJNPL7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 14 Oct 2021 11:11:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1634224194;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=jTxRkwer/L1jMFbVHe+gmT8Lx5IDhS6y3cTZBhYxWZc=;
-        b=V+NR87M6Ke+kFJ2EtEeR73PG6AmqBO24ZB74tC6610L/qviMPRbP4He5TibtZptsx0x/MY
-        FSqKVGvQtr/QMVxUNsvQWgD22uKMyndh2oMNIUcIH8zwvCR4bJUqdGYEZuV0+Qm2WBkM22
-        j8NF3awX3f43eTPWwCfXkuSfa6Ecayc=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-362-ptQvEvyOMOOx3prtfk7T5A-1; Thu, 14 Oct 2021 11:09:53 -0400
-X-MC-Unique: ptQvEvyOMOOx3prtfk7T5A-1
-Received: by mail-wr1-f70.google.com with SMTP id l6-20020adfa386000000b00160c4c1866eso4811851wrb.4
-        for <linux-raid@vger.kernel.org>; Thu, 14 Oct 2021 08:09:53 -0700 (PDT)
+        id S232909AbhJNPQi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 14 Oct 2021 11:16:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50592 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232696AbhJNPQh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 14 Oct 2021 11:16:37 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2160BC061570
+        for <linux-raid@vger.kernel.org>; Thu, 14 Oct 2021 08:14:33 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id y1so4379454plk.10
+        for <linux-raid@vger.kernel.org>; Thu, 14 Oct 2021 08:14:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kk58q1N6iOKJV9MmXM4g94KiVUwgBacQdDgb8dq+Hqc=;
+        b=mlZB9Nj4m8jk1JFv+iCH7Znrwanh3CDPQczVzomtmeQ5BLbFN1inwmhXkfQwL1sdEQ
+         hih7m3SNinxkOxv1CMzByR9lFDUUB4oAxo3E3cDYo/S67L6xZfuz5zRsWVJKP1+73Scy
+         QCwjhJQjGzKf7SNt+QV8U3nYErgEHf4yODN/I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=jTxRkwer/L1jMFbVHe+gmT8Lx5IDhS6y3cTZBhYxWZc=;
-        b=m0X/6wD33oAqJosMHTudDtJtdfHA3LNk9elyQE/vk9v4joFrtqJBiXPYVB4I7rwmrt
-         RwPMe3/WKSvjAsOeTbWRI7X+xhtzG21xknrnUmCN3zahu68oYHCa64Wf9cJkOlMIJlyE
-         xTKkkALQwT6mDpvl2kk0y9nZURUaEjBlTcXFHxZ6CmidlpaT2yAsyKasNzTHiBMZJNJh
-         /3YI0LBGXt1D42EAvKg/I/FUV3TIfVwgmMSKFlhp2eQGcajniQ7fOn45XavmBWqcVNbY
-         8AEnSOzWU+kQnkvyuky9FTSF6KAVbtgyxWDOlK3G0ut4dfK7NvKQLzwQUcMmdPboCBVC
-         dKug==
-X-Gm-Message-State: AOAM532oGZOj+fboIVGBlXMbdkMWMV0qnWtRZ74KjgYg2I1dFE2ijohh
-        5p1Vlr9rXZRBPLRZmeqKGf8SMMf2tFuC8Oi0Cz313nO5YQWFp+bYCFBPpqhpBgINcj6BvJb3Im1
-        B2I8DJeH9IyoYsON+40+9tA==
-X-Received: by 2002:a1c:29c7:: with SMTP id p190mr6271735wmp.65.1634224192158;
-        Thu, 14 Oct 2021 08:09:52 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwwspjmnn2UgF3wC80ffKADbfFGgTEqNvflKbpG+cgCWjua1idvpQ2j9r374S0fE1PxL0yFKA==
-X-Received: by 2002:a1c:29c7:: with SMTP id p190mr6271697wmp.65.1634224191871;
-        Thu, 14 Oct 2021 08:09:51 -0700 (PDT)
-Received: from [192.168.3.132] (p5b0c694e.dip0.t-ipconnect.de. [91.12.105.78])
-        by smtp.gmail.com with ESMTPSA id p25sm7981463wma.2.2021.10.14.08.09.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Oct 2021 08:09:51 -0700 (PDT)
-Message-ID: <eaa8ed55-f364-5518-0b30-3fec6bde99dc@redhat.com>
-Date:   Thu, 14 Oct 2021 17:09:50 +0200
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=kk58q1N6iOKJV9MmXM4g94KiVUwgBacQdDgb8dq+Hqc=;
+        b=VjYfJr9P/17VzjvlyFEaJd2S4OJAY+RfiBJxv5z3kVJrAFXMWluh1NenpomDR7ss4r
+         fbSs3yJ+pNDsz/K1wkeIlW7Iwg8I/iDACx+B5S755UidsRlBbz+iD0AhL04V5cPOP/g6
+         +f5yaK09CV7I1A7XMyHdfY77eI0RUKB4f3IbNgli+lZjzF/gRyZ6702ePSy3YfeQ+kyI
+         yjNCU42eQpZOz6TP4lDGFKL4s5tQ0h0PrKDzaB0lBUf1j+IW4D5SqlvfcfmzMeNghcIU
+         TZxGRSMvjUphMMOwrZ2+gQub1ABzjjzY4vnCh0FDzq7zpibMTtcklBrXmR2rjAXy0OYf
+         Q9YQ==
+X-Gm-Message-State: AOAM530eUkks2v40XetMzAbVYwUSzk+FYcydNMosJFkvzJzzBIdTJsbA
+        1l6vYuF4k6iA49Icpwg6rD3u9w==
+X-Google-Smtp-Source: ABdhPJz+A28iMSsGMew00w4bTffNulDM4PlP1p1A1+RouZBKHQoPJUsZrDvvxCBzVTavFWwP5kdepA==
+X-Received: by 2002:a17:90a:86:: with SMTP id a6mr20774739pja.190.1634224472530;
+        Thu, 14 Oct 2021 08:14:32 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id w4sm2822114pfb.3.2021.10.14.08.14.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Oct 2021 08:14:32 -0700 (PDT)
+Date:   Thu, 14 Oct 2021 08:14:31 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Dave Kleikamp <dave.kleikamp@oracle.com>
+Cc:     Anton Altaparmakov <anton@tuxera.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>, David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "jfs-discussion@lists.sourceforge.net" 
+        <jfs-discussion@lists.sourceforge.net>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
+        "linux-ntfs-dev@lists.sourceforge.net" 
+        <linux-ntfs-dev@lists.sourceforge.net>,
+        "ntfs3@lists.linux.dev" <ntfs3@lists.linux.dev>,
+        "reiserfs-devel@vger.kernel.org" <reiserfs-devel@vger.kernel.org>
+Subject: Re: don't use ->bd_inode to access the block device size
+Message-ID: <202110140813.44C95229@keescook>
+References: <20211013051042.1065752-1-hch@lst.de>
+ <20211014062844.GA25448@lst.de>
+ <3AB8052D-DD45-478B-85F2-BFBEC1C7E9DF@tuxera.com>
+ <a5eb3c18-deb2-6539-cc24-57e6d5d3500c@oracle.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.0
-Subject: Re: [PATCH 5/5] brd: Kill usage of page->index
-Content-Language: en-US
-To:     Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        akpm@linux-foundation.org, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org, axboe@kernel.dk
-Cc:     alexander.h.duyck@linux.intel.com
-References: <20211013160034.3472923-1-kent.overstreet@gmail.com>
- <20211013160034.3472923-6-kent.overstreet@gmail.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat
-In-Reply-To: <20211013160034.3472923-6-kent.overstreet@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a5eb3c18-deb2-6539-cc24-57e6d5d3500c@oracle.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 13.10.21 18:00, Kent Overstreet wrote:
-> As part of the struct page cleanups underway, we want to remove as much
-> usage of page->mapping and page->index as possible, as frequently they
-> are known from context.
+On Thu, Oct 14, 2021 at 08:13:59AM -0500, Dave Kleikamp wrote:
+> On 10/14/21 4:32AM, Anton Altaparmakov wrote:
+> > Hi Christoph,
+> > 
+> > > On 14 Oct 2021, at 07:28, Christoph Hellwig <hch@lst.de> wrote:
+> > > 
+> > > On Wed, Oct 13, 2021 at 07:10:13AM +0200, Christoph Hellwig wrote:
+> > > > I wondered about adding a helper for looking at the size in byte units
+> > > > to avoid the SECTOR_SHIFT shifts in various places.  But given that
+> > > > I could not come up with a good name and block devices fundamentally
+> > > > work in sector size granularity I decided against that.
+> > > 
+> > > So it seems like the biggest review feedback is that we should have
+> > > such a helper.  I think the bdev_size name is the worst as size does
+> > > not imply a particular unit.  bdev_nr_bytes is a little better but I'm
+> > > not too happy.  Any other suggestions or strong opinions?
+> > 
+> > bdev_byte_size() would seem to address your concerns?
+> > 
+> > bdev_nr_bytes() would work though - it is analogous to bdev_nr_sectors() after all.
+> > 
+> > No strong opinion here but I do agree with you that bdev_size() is a bad choice for sure.  It is bound to cause bugs down the line when people forget what unit it is in.
 > 
-> In the brd code, we're never actually reading from page->index except in
-> assertions, so references to it can be safely deleted.
-> 
-> Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
-> ---
->  drivers/block/brd.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-> index 58ec167aa0..0a55aed832 100644
-> --- a/drivers/block/brd.c
-> +++ b/drivers/block/brd.c
-> @@ -72,8 +72,6 @@ static struct page *brd_lookup_page(struct brd_device *brd, sector_t sector)
->  	page = radix_tree_lookup(&brd->brd_pages, idx);
->  	rcu_read_unlock();
->  
-> -	BUG_ON(page && page->index != idx);
-> -
->  	return page;
->  }
->  
-> @@ -108,12 +106,10 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
->  
->  	spin_lock(&brd->brd_lock);
->  	idx = sector >> PAGE_SECTORS_SHIFT;
-> -	page->index = idx;
->  	if (radix_tree_insert(&brd->brd_pages, idx, page)) {
->  		__free_page(page);
->  		page = radix_tree_lookup(&brd->brd_pages, idx);
->  		BUG_ON(!page);
-> -		BUG_ON(page->index != idx);
->  	} else {
->  		brd->brd_nr_pages++;
->  	}
-> 
+> I don't really mind bdev_size since it's analogous to i_size, but
+> bdev_nr_bytes seems good to me.
 
-Reviewed-by: David Hildenbrand <david@redhat.com>
+I much prefer bdev_nr_bytes(), as "size" has no units.
 
 -- 
-Thanks,
-
-David / dhildenb
-
+Kees Cook
