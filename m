@@ -2,52 +2,52 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC356C433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Oct 2021 16:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C93CC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Oct 2021 16:57:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4B6D611C3
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Oct 2021 16:56:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 567D360FF2
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Oct 2021 16:57:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241821AbhJOQ66 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Oct 2021 12:58:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34032 "EHLO
+        id S232328AbhJOQ7P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 15 Oct 2021 12:59:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241799AbhJOQ6z (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Oct 2021 12:58:55 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FB28C06176C
-        for <linux-raid@vger.kernel.org>; Fri, 15 Oct 2021 09:56:49 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id y4so6799738plb.0
-        for <linux-raid@vger.kernel.org>; Fri, 15 Oct 2021 09:56:49 -0700 (PDT)
+        with ESMTP id S241841AbhJOQ7M (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Oct 2021 12:59:12 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D318BC06176D
+        for <linux-raid@vger.kernel.org>; Fri, 15 Oct 2021 09:57:04 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id c4so2077046pgv.11
+        for <linux-raid@vger.kernel.org>; Fri, 15 Oct 2021 09:57:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=vfh8ldDPWodO2+NAKgs+77i4cirGVTrsvlhR7sq6n14=;
-        b=MF0yf140gbDAdW4BxnOXdsQIbZ1Zs20bgZWJgGQJccJRdMKWf0Z7qJMeg/xUZ/rSs6
-         VG3QCkdC2Gak2gGrkvLjpOyqG7g5cIFwioohIVF4DnPVlIrbB81BnizHen6OonQjrvMj
-         EAa7kecUI8Ha/nnI/LS4mNOBQr2yiVBjBbg4U=
+        bh=K+6isvwekOgtvopkqE4I0h7AgNguipVYqeEY21w12Mo=;
+        b=XiV2alQ2bCUhPKCRDy35L10uw/QVL0RMTX2wcoCawcZP+N544npMKl6qJHVNuREVMJ
+         /3k+gOTpyuD9GvBFRwBhJkrM/MdxCBPLCnVY/0SS1G/dQv3yvOXHSbjERi1b1HJ8bt6c
+         zWuPktMOT2lWvGeRm1bA9Ib7yGAG3xwtDOTDs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=vfh8ldDPWodO2+NAKgs+77i4cirGVTrsvlhR7sq6n14=;
-        b=IWYwqFW8YVw6uW0RQAjUr3FIEsSy8cjSeNxaj7YzA9IsynQESGfxJe5OQydCVW4PFZ
-         c/eXJDZejeptstlTL0wD6tSBxaPMJHR2G1o5CD5lbUl/OAcqy693R1XhmIRFmWBgjhLd
-         9ZIG3VUhHaHdHc9c55+jqzco+Q70EgGFgfPRux6x1C0XhkTiVj0Qhh+TOSMCJYbaQai+
-         Fdkb4c1RpxZRXsXxLBWZzOKGa92cOZ2JH2qGHJRnVcZ1orPibpcCZXBT1Nc2HCOydR96
-         kBEtzFptYvE/7tkZPVyJUu+80dT3gdWzb7EEvh5rrC8Ub6yU+wkMxGz7Sc1TYNQgX/qT
-         PJyQ==
-X-Gm-Message-State: AOAM532jsKYwbT6i6yn+NUr/sqSWu0C5NRjtBTf+qBR8DvFPscUEAJ9N
-        cgs3JbTjrosl68z0nhHz6xrZiQ==
-X-Google-Smtp-Source: ABdhPJwnnQ3ulrXVGFg4s+UA3ddGM8HwmAEnk5XYfNq6HtGw+i5b3OvChqf29ta/Idk60aluKwm2lg==
-X-Received: by 2002:a17:903:18d:b0:13e:f1ef:d80c with SMTP id z13-20020a170903018d00b0013ef1efd80cmr11974419plg.63.1634317008672;
-        Fri, 15 Oct 2021 09:56:48 -0700 (PDT)
+        bh=K+6isvwekOgtvopkqE4I0h7AgNguipVYqeEY21w12Mo=;
+        b=UNkOSA5A9KXRaznrXv+Z5SdWNSpy2qElmB9BmbZ8W/hiQcLH4kxVnfLdlR32NG/dhz
+         1vbQuNUFO1ynlL1kJeHqw+MYRwzUW2qT5WJgKXbD+SRRyAkCa5CuLQVYbJCowHj1osAa
+         TCpZs7KuL4J9FcP0kZMW5RJyVmugCpHTrMra5vjbTr/AjLZhnt2H8Z4lZZ+FHeq2TRzv
+         Chz1ggGZiJRyLDnXbRQv44LzwBCNv6kF/u6mvkUdKZjrz3e4VznP3uDCvs5kFMQp3fQ2
+         PIzm0+npHH9CMsONka3bSB5vW1acK2mLc20+4rBn4DoYagNOsLA51NcfKoh2+OrjTlYL
+         MrHg==
+X-Gm-Message-State: AOAM530+eWcx6VBeDnEMxsmeS+6CJhv6Rf2+hQ+kU3tL4qUuuBQNL5jQ
+        Bz2c4Eu0a0/7g/43Rzwam2ADOQ==
+X-Google-Smtp-Source: ABdhPJy+YUT6npY/fZ/G9URvGOZpt9eamOIJH1D5JMCGxtLxyzdwQfs5MmBQFVKQI/Zn2W8hW6yLYA==
+X-Received: by 2002:a05:6a00:1309:b0:44d:4d1e:c930 with SMTP id j9-20020a056a00130900b0044d4d1ec930mr12851663pfu.65.1634317024412;
+        Fri, 15 Oct 2021 09:57:04 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id t125sm5518370pfc.119.2021.10.15.09.56.48
+        by smtp.gmail.com with ESMTPSA id b16sm5793589pfm.58.2021.10.15.09.57.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Oct 2021 09:56:48 -0700 (PDT)
-Date:   Fri, 15 Oct 2021 09:56:47 -0700
+        Fri, 15 Oct 2021 09:57:04 -0700 (PDT)
+Date:   Fri, 15 Oct 2021 09:57:03 -0700
 From:   Kees Cook <keescook@chromium.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
@@ -69,24 +69,22 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
         linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
         linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 22/30] reiserfs: use bdev_nr_bytes instead of open coding
+        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
+Subject: Re: [PATCH 23/30] squashfs: use bdev_nr_bytes instead of open coding
  it
-Message-ID: <202110150956.A0360E2D01@keescook>
+Message-ID: <202110150957.38CBB0C08@keescook>
 References: <20211015132643.1621913-1-hch@lst.de>
- <20211015132643.1621913-23-hch@lst.de>
+ <20211015132643.1621913-24-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211015132643.1621913-23-hch@lst.de>
+In-Reply-To: <20211015132643.1621913-24-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Oct 15, 2021 at 03:26:35PM +0200, Christoph Hellwig wrote:
-> Use the proper helper to read the block device size and remove two
-> cargo culted checks that can't be false.
+On Fri, Oct 15, 2021 at 03:26:36PM +0200, Christoph Hellwig wrote:
+> Use the proper helper to read the block device size.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
