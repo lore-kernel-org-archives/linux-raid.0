@@ -2,150 +2,124 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8342CC433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Oct 2021 18:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB08BC4321E
+	for <linux-raid@archiver.kernel.org>; Sat, 16 Oct 2021 07:40:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B37161040
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Oct 2021 18:43:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D50F461242
+	for <linux-raid@archiver.kernel.org>; Sat, 16 Oct 2021 07:40:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241493AbhJOSpl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Oct 2021 14:45:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58760 "EHLO
+        id S243812AbhJPHmW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 16 Oct 2021 03:42:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241405AbhJOSpd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Oct 2021 14:45:33 -0400
-Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E19CC061570;
-        Fri, 15 Oct 2021 11:43:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=CrScqNKMgRV1rKvxe0whCx/+ah432GRzJ6rU4W802Bg=; b=e8yUBc7VImD8hMVZvoak5LZiI0
-        XuCa4kRJ/sMe0/AKP6Y7pUNQlINfWnpN48qy1UcXov5eBZRHO42yaD7EiJ8GfcsupZTucc7gp4uCI
-        RLRoYivgL3qydgIg9R0ydVOVNVoiooG2WZrbzU+52LgTABMGTysGTfVTuhhL/13yiC4IDQlEPOWoq
-        CFYEiCaUApfdlh4TZ3+gP7/ylAPPxxuF1xvYQ9Zs5PKvWttP8FrzuwGgkHyYsqTKzRe6SSMeqN+qg
-        03/46Fc11IfcngA7KSMUqv2x56TGi1o6PrzyiD4dLVRZSA4p7HU5f4IbPzDZ8+8W+C7GMQdtF8E4D
-        pc7XbnUw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mbSAn-008U2u-6D; Fri, 15 Oct 2021 18:43:17 +0000
-Date:   Fri, 15 Oct 2021 11:43:17 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Finn Thain <fthain@linux-m68k.org>
-Cc:     axboe@kernel.dk, hch@lst.de, efremov@linux.com, song@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        viro@zeniv.linux.org.uk, hare@suse.de, jack@suse.cz,
-        ming.lei@redhat.com, tj@kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: Re: [PATCH v2 1/2] block: make __register_blkdev() return an error
-Message-ID: <YWnLxahmHK5hDm2y@bombadil.infradead.org>
-References: <20210927220332.1074647-1-mcgrof@kernel.org>
- <20210927220332.1074647-2-mcgrof@kernel.org>
- <2ac2e05f-327a-b66f-aaa0-276db2e46730@linux-m68k.org>
+        with ESMTP id S243801AbhJPHmU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 16 Oct 2021 03:42:20 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B080CC061765;
+        Sat, 16 Oct 2021 00:40:12 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id n8so51503793lfk.6;
+        Sat, 16 Oct 2021 00:40:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=yeYbTALLt+81wu8WFfyKx0a33Kod/SnDLZRAl1Frm5U=;
+        b=cVnZ6+l+2XB64KtPGPsew2EuurYnsOpcBevvm/IVGVDWp/Lr378D4lUZAb7Ldqn1aU
+         Nechfd+nevnKJt8FFrjsUkhQRsZN4OdAe+y/4UgENJDxkcBm3bvvsqVp0+i7kz/ncskC
+         VTNCGAMRL2zXauGox8hUYH0e6cLX9YNzHMmZx68OgeqDdd/IPTSNwVgM/hhe43XfbD/A
+         Rsr2ngeAq8MwLS8wYqIQpA7q0jGrbmoIHsnPPXNshCS3yofpN7y1D6hLbuTi/3aHu8Hg
+         WHPyyYAgwzwuGQtuqb861mn1fmCGJ4Gxolg4kHeKn8eV14e/nwAYLFHNCnrx2jzkQiPm
+         sdiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=yeYbTALLt+81wu8WFfyKx0a33Kod/SnDLZRAl1Frm5U=;
+        b=1huJ5oysI05xJ1aHtwvlAGyBBPx/KuQAWKBT2mbRy2s/c41Q02EyXPqdoYas7YhLiw
+         aZbl36IYg9/w54HDTlWv4uwV92L/19zz/n+atRnkd5JmwAh2kzomA4aCed4ye4XkwNfx
+         WSvvvAgkB150U5+i7Eleh8RUEYD9u6cQzCrK4rStxxrWjDru8KdQqpcNhWPGLiUUTwg+
+         wFdr2niwD0jSxq5jXhK6t+Vyn/l4eCZUNNNBvs0UsPCami3Ng9vjevcxUAMLmUYIxA3I
+         zf7WZo/4dERpFEWwK9wv8SsuuczE/In0WD4P7RWskmZW1k6qwQKdX2O4YuO2x5Jzxjn8
+         gCMQ==
+X-Gm-Message-State: AOAM532mdIbON8UzZvjWjFYsfzqBlgByhpATVexRGrMZcPUC8hVnqM5c
+        KdHF7iq0yktmgbV/ThcmIrV6DO5XAhPEQA==
+X-Google-Smtp-Source: ABdhPJz42JllLibAuMU4PSsWo9d4pmXBI6FidoZzBNe3/Oe9MjVOfwHK8qKnrFH4pZzBziLDXJNmxQ==
+X-Received: by 2002:a05:6512:3190:: with SMTP id i16mr9019031lfe.224.1634370011048;
+        Sat, 16 Oct 2021 00:40:11 -0700 (PDT)
+Received: from kari-VirtualBox (85-23-89-224.bb.dnainternet.fi. [85.23.89.224])
+        by smtp.gmail.com with ESMTPSA id a19sm827633ljb.3.2021.10.16.00.40.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 16 Oct 2021 00:40:10 -0700 (PDT)
+Date:   Sat, 16 Oct 2021 10:40:08 +0300
+From:   Kari Argillander <kari.argillander@gmail.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
+Subject: Re: [PATCH 20/30] ntfs3: use bdev_nr_bytes instead of open coding it
+Message-ID: <20211016074008.o6wl7uy3vsrz4v3b@kari-VirtualBox>
+References: <20211015132643.1621913-1-hch@lst.de>
+ <20211015132643.1621913-21-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2ac2e05f-327a-b66f-aaa0-276db2e46730@linux-m68k.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20211015132643.1621913-21-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Sep 28, 2021 at 10:57:18AM +1000, Finn Thain wrote:
-> On Mon, 27 Sep 2021, Luis Chamberlain wrote:
+On Fri, Oct 15, 2021 at 03:26:33PM +0200, Christoph Hellwig wrote:
+> Use the proper helper to read the block device size.
 > 
-> > diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
-> > index 5dc9b3d32415..be0627345b21 100644
-> > --- a/drivers/block/ataflop.c
-> > +++ b/drivers/block/ataflop.c
-> > @@ -1989,24 +1989,34 @@ static int ataflop_alloc_disk(unsigned int drive, unsigned int type)
-> >  
-> >  static DEFINE_MUTEX(ataflop_probe_lock);
-> >  
-> > -static void ataflop_probe(dev_t dev)
-> > +static int ataflop_probe(dev_t dev)
-> >  {
-> >  	int drive = MINOR(dev) & 3;
-> >  	int type  = MINOR(dev) >> 2;
-> > +	int err = 0;
-> >  
-> >  	if (type)
-> >  		type--;
-> >  
-> > -	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS)
-> > -		return;
-> > +	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS) {
-> > +		err = -EINVAL;
-> > +		goto out;
-> > +	}
-> > +
-> >  	mutex_lock(&ataflop_probe_lock);
-> >  	if (!unit[drive].disk[type]) {
-> > -		if (ataflop_alloc_disk(drive, type) == 0) {
-> > -			add_disk(unit[drive].disk[type]);
-> > +		err = ataflop_alloc_disk(drive, type);
-> > +		if (err == 0) {
-> > +			err = add_disk(unit[drive].disk[type]);
-> > +			if (err)
-> > +				blk_cleanup_disk(unit[drive].disk[type]);
-> >  			unit[drive].registered[type] = true;
-> >  		}
-> >  	}
-> >  	mutex_unlock(&ataflop_probe_lock);
-> > +
-> > +out:
-> > +	return err;
-> >  }
-> >  
-> >  static void atari_cleanup_floppy_disk(struct atari_floppy_struct *fs)
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/ntfs3/super.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> I think the change to ataflop_probe() would be more clear without adding 
-> an 'out' label, like your change to floppy.c:
+> diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
+> index 55bbc9200a10e..7ed2cb5e8b1d9 100644
+> --- a/fs/ntfs3/super.c
+> +++ b/fs/ntfs3/super.c
+> @@ -918,7 +918,6 @@ static int ntfs_fill_super(struct super_block *sb, void *data, int silent)
+>  	int err;
+>  	struct ntfs_sb_info *sbi;
+>  	struct block_device *bdev = sb->s_bdev;
+> -	struct inode *bd_inode = bdev->bd_inode;
 
-Good point! Fixed.
+Linus merged latest ntfs3 stuff and this temp variable is not anymore in
+upstream. So this patch will conflict. Just so that you know.
 
-> > diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
-> > index 0434f28742e7..95a1c8ef62f7 100644
-> > --- a/drivers/block/floppy.c
-> > +++ b/drivers/block/floppy.c
-> > @@ -4517,21 +4517,27 @@ static int floppy_alloc_disk(unsigned int drive, unsigned int type)
-> >  
-> >  static DEFINE_MUTEX(floppy_probe_lock);
-> >  
-> > -static void floppy_probe(dev_t dev)
-> > +static int floppy_probe(dev_t dev)
-> >  {
-> >  	unsigned int drive = (MINOR(dev) & 3) | ((MINOR(dev) & 0x80) >> 5);
-> >  	unsigned int type = (MINOR(dev) >> 2) & 0x1f;
-> > +	int err = 0;
-> >  
-> >  	if (drive >= N_DRIVE || !floppy_available(drive) ||
-> >  	    type >= ARRAY_SIZE(floppy_type))
-> > -		return;
-> > +		return -EINVAL;
-> >  
-> >  	mutex_lock(&floppy_probe_lock);
-> >  	if (!disks[drive][type]) {
-> > -		if (floppy_alloc_disk(drive, type) == 0)
-> > -			add_disk(disks[drive][type]);
-> > +		if (floppy_alloc_disk(drive, type) == 0) {
-> > +			err = add_disk(disks[drive][type]);
-> > +			if (err)
-> > +				blk_cleanup_disk(disks[drive][type]);
-> > +		}
-> >  	}
-> >  	mutex_unlock(&floppy_probe_lock);
-> > +
-> > +	return err;
-> >  }
-> >  
-> >  static int __init do_floppy_init(void)
+>  	struct request_queue *rq = bdev_get_queue(bdev);
+>  	struct inode *inode = NULL;
+>  	struct ntfs_inode *ni;
+> @@ -967,7 +966,7 @@ static int ntfs_fill_super(struct super_block *sb, void *data, int silent)
+>  
+>  	/* Parse boot. */
+>  	err = ntfs_init_from_boot(sb, rq ? queue_logical_block_size(rq) : 512,
+> -				  bd_inode->i_size);
+> +				  bdev_nr_bytes(bdev));
+>  	if (err)
+>  		goto out;
+>  
+> -- 
+> 2.30.2
 > 
-> In floppy_probe(), I think you should return the potential error result 
-> from floppy_alloc_disk(), like you did in ataflop.c.
-
-Indeed, thanks, fixed.
-
-  Luis
+> 
