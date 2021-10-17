@@ -2,98 +2,89 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B3DAC433F5
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 14:02:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F7FC433EF
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 16:26:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B53D61244
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 14:02:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8E0761151
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 16:26:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237042AbhJQOE5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 17 Oct 2021 10:04:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60824 "EHLO
+        id S242531AbhJQQ20 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 17 Oct 2021 12:28:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242507AbhJQOE4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Oct 2021 10:04:56 -0400
-X-Greylist: delayed 2505 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 17 Oct 2021 07:02:47 PDT
-Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52F8DC061765
-        for <linux-raid@vger.kernel.org>; Sun, 17 Oct 2021 07:02:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
-         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=VqgNYATUS2Kl7qCaPLaomHiPpidGk0Ne+qCC4IAK8kw=; b=aol15gp1kzJzPYkZX30+R91QGo
-        lD12DoEUcQNcUJsnpEbd5qLITmwVo8vFe9GeloVihpfSAJ6CQ2sy/m4+gYTRTulEWLd7c2fRnSdwq
-        a7uhpj2PTQfuJUXc7HLYY8Zl8rOmL/j7+5WU64asLIgl845lF3TxorsdiHckcw0/9YOkUxz+i+gOk
-        YqabYnQ8FwlEsQbjxm9LSF2Hx+tlIHIc2eu4KO9S8AtUpwLFDTVoJIOIPVkjas8bEQeX2VQyv0t4a
-        TD0T8Op8M/tmRqvKyN4L/LhwY0dBhmP3DMoVJfC1r8Utf+EcYo5v5e3JN98KS53uLDUs171PmDWWr
-        +9SZNZ1g==;
-Received: from c-73-43-58-214.hsd1.ga.comcast.net ([73.43.58.214] helo=[192.168.20.123])
-        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <philip@turmel.org>)
-        id 1mc661-0000vk-0V; Sun, 17 Oct 2021 13:21:01 +0000
-Subject: Re: RAID5 - can't assemble array of 5
-To:     Romulo Albuquerque <romulo.albuquerque@gmail.com>,
-        linux-raid@vger.kernel.org
-References: <CACKE2TBmcQ12tyujnWzPUGCM6fYjzcUhFgmZQCT2usBAHb6MmQ@mail.gmail.com>
-From:   Phil Turmel <philip@turmel.org>
-Message-ID: <4f36271f-7355-9aea-6634-51c8d62d05a4@turmel.org>
-Date:   Sun, 17 Oct 2021 09:21:00 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        with ESMTP id S233820AbhJQQ20 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Oct 2021 12:28:26 -0400
+Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5716EC06161C
+        for <linux-raid@vger.kernel.org>; Sun, 17 Oct 2021 09:26:16 -0700 (PDT)
+Received: by mail-il1-x131.google.com with SMTP id w11so12448610ilv.6
+        for <linux-raid@vger.kernel.org>; Sun, 17 Oct 2021 09:26:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=UTayOQS6NMmtQmpLeEorjBDh793Tfq0LJcx60uzbfrM=;
+        b=kBhVOMSvcYjsHD7+LejRSuF7S7XkdDQfGfQNXE7eaAleCqxIOr9p9ias9/q0Z80AjR
+         B5SH7Pao92VU3U/jpkx5T4IkV0yeo+bAH56Er6WmM9gYF+i7Bbss3/M96JW2fsOsCTna
+         Yu3c0OB2bEZ1rZNwZvpiQiEQj68gBIJxwJrxh1l2FCiqGQxlLlDBK1jzDL8oe/q36DQL
+         8Gc82ySb1zxkZfD0s/poxVQW80jQkkHOqUeiW+9rsCavCMK0Qg2eCgpM8ylRCI6w87ub
+         Q38WztWU0UMBr52W8TYIxNm2iHpeWdzxXeibuGntA7eWQ8nFgV4cKAPMGFc+eKjhiFpb
+         lEfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=UTayOQS6NMmtQmpLeEorjBDh793Tfq0LJcx60uzbfrM=;
+        b=oVymqKYF1ZnS73C+rCPvYsG9i5WU4mZqBnaJsqE853Fyy74DvCYY+QVTtKUm1ag4uK
+         QQP8wG4e/qWTkpKg18IhawxD6PMd0bcEj5O6tjoV9rFfVxdJ1W4gGRbpZj7BzBXYzf3l
+         k9f47BVWX25SyP/ArodeZfBq1BJrVqYAjqh8GXpdkczge+7LtVSurYdVW4N712fAXUuE
+         r6gAZEvGT38EYL3S/b5C1jXSlT1B/9g82RknDCtOIHoEJGjDYFuzeaTgF29WlNAWZnuV
+         +ewdA2HbMncezgvQSSaFrgdNQ83RVRQUUljJznTlBdthOzCKYkIio8468V03cqtbJ6vo
+         Glcw==
+X-Gm-Message-State: AOAM533YG2U6ICLk5L/BDBANfe8iQtUDTcP3k9u12RhPhJwSFlc4O07g
+        IMbVQ8d9DIzs+mWaeSozwkxCEg==
+X-Google-Smtp-Source: ABdhPJwcf1Bxxq/xPeO5pYq66pm8UZe5M9Gvm8syAM+RgSm1tTVA9o17qdyw/iaXSMtWyU2bAT8npQ==
+X-Received: by 2002:a92:ca0c:: with SMTP id j12mr12163738ils.50.1634487975772;
+        Sun, 17 Oct 2021 09:26:15 -0700 (PDT)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id h9sm5567522ild.68.2021.10.17.09.26.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 17 Oct 2021 09:26:15 -0700 (PDT)
+Subject: Re: [GIT PULL] md-next 20211014
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>, Guoqing Jiang <jgq516@gmail.com>,
+        Luis Chamberlain <mcgrof@kernel.org>, Xiao Ni <xni@redhat.com>,
+        Li Feng <fengli@smartx.com>
+References: <7A48D169-FBD9-4F13-8E4C-022DCFAE3D8B@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <07ee5687-96cc-b38b-85cb-4af1a3cec896@kernel.dk>
+Date:   Sun, 17 Oct 2021 10:26:14 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <CACKE2TBmcQ12tyujnWzPUGCM6fYjzcUhFgmZQCT2usBAHb6MmQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <7A48D169-FBD9-4F13-8E4C-022DCFAE3D8B@fb.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Romulo,
-
-On 10/16/21 9:11 PM, Romulo Albuquerque wrote:
-> Hi All,
+On 10/14/21 6:28 PM, Song Liu wrote:
+> Hi Jens, 
 > 
-> I've 5 disks array 3TB each, but one of the disks /dev/sdb can't be recognized.
-> Using mdadm - v3.4 - 28th January 2016 on Debian GNU/Linux 9.11 (stretch).
+> Please consider pulling the following changes for md-next on top of your
+> for-5.16/drivers branch. The major changes are:
 > 
-> So, I tried to assemble the array with 4 disks, but it didn't work, see below >
-> sudo mdadm --assemble --verbose /dev/md0 /dev/sd[acde]
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/sda is identified as a member of /dev/md0, slot 0.
-> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 2.
-> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 3.
-> mdadm: /dev/sde is identified as a member of /dev/md0, slot 4.
-> mdadm: ignoring /dev/sdc as it reports /dev/sda as failed
-> mdadm: ignoring /dev/sdd as it reports /dev/sda as failed
-> mdadm: ignoring /dev/sde as it reports /dev/sda as failed
-> mdadm: no uptodate device for slot 1 of /dev/md0
-> mdadm: no uptodate device for slot 2 of /dev/md0
-> mdadm: no uptodate device for slot 3 of /dev/md0
-> mdadm: no uptodate device for slot 4 of /dev/md0
-> mdadm: added /dev/sda to /dev/md0 as 0
-> mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
+> 1. add_disk() error handling, by Luis Chamberlain;
+> 2. locking/unwind improvement in md_alloc, by Christoph Hellwig;
+> 3. update superblock after changing rdev flags, by Xiao Ni;
+> 4. various clean-ups and small fixes, by Guoqing Jiang.
 
-[trim /]
+Pulled, thanks.
 
-This didn't work because /dev/sda dropped out of your array back in the 
-middle of July.  You were running degraded for two months before 
-/dev/sdb dropped out.
+-- 
+Jens Axboe
 
-If /dev/sdb is totally dead, you will have to use a two-month-old device 
-to revive your array, with data corruption for anything written in the 
-past two months.  Add a --force to your assemble command to do so.
-
-I recommend trying harder to recover /dev/sdb onto another device.  Then 
-assemble that replacement with the other three, leaving out /dev/sda. 
-Also using --force.
-
-Finally, investigate why /dev/sda dropped out in July, and why you 
-didn't get an email from mdmon.  (Timeout mismatch for the former, 
-perhaps, and incomplete configuration for the latter, likely.)
-
-Phil
