@@ -2,35 +2,38 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7F2DC433EF
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 13:50:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 948A4C433F5
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 13:50:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98A6161027
-	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 13:50:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C7D361054
+	for <linux-raid@archiver.kernel.org>; Sun, 17 Oct 2021 13:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343776AbhJQNxD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        id S1343777AbhJQNxD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
         Sun, 17 Oct 2021 09:53:03 -0400
-Received: from out2.migadu.com ([188.165.223.204]:45959 "EHLO out2.migadu.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230400AbhJQNxA (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sun, 17 Oct 2021 09:53:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58218 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343773AbhJQNxA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Oct 2021 09:53:00 -0400
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85857C061765
+        for <linux-raid@vger.kernel.org>; Sun, 17 Oct 2021 06:50:50 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1634478649;
+        t=1634478648;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=lkuakjOFJBiXbbc3xG0NBKOY44kMZHe84MNCfBQ6Op4=;
-        b=M6Q7Pv8icGebhkK7AbqOWTcl+bsr8BnGAw8FexCJbyQzTs3BXeWFwiBEFViPlTv6VFkgyv
-        l0gKxUaz0BzYlwKnLuN/7deDc4u+8UIBpN3D+CfXLNnvm9jcnFbGyAon3kcAxXHHJDobuk
-        d9hWaYfWd8MyyvsJSSqgiHXnLZJdi3o=
+        bh=EMe8bzhIpvwhGFkd+ZZkUSesVIhIoX8hFMsII5ZI6Qc=;
+        b=Sf+3Gj9S0LOg0NqSEtew7f6JCwC/8wst6+W0lqITRwVr6BKqPxsQ4Ojt1z94+ZcsJC3XFn
+        UZchBMNSlQMaJNNZIjNYjAMsyGWPr56i7B97uq4AtMA4U6em89n9oZJvfEEyeewnB22VEU
+        4CYPA8Oh1wCU++R0SiciS/VpSuXi+94=
 From:   Guoqing Jiang <guoqing.jiang@linux.dev>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 2/3] md/raid10: add 'read_err' to raid10_read_request
-Date:   Sun, 17 Oct 2021 21:50:18 +0800
-Message-Id: <20211017135019.27346-3-guoqing.jiang@linux.dev>
+Subject: [PATCH 1/3] md/bitmap: don't set max_write_behind if there is no write mostly device
+Date:   Sun, 17 Oct 2021 21:50:17 +0800
+Message-Id: <20211017135019.27346-2-guoqing.jiang@linux.dev>
 In-Reply-To: <20211017135019.27346-1-guoqing.jiang@linux.dev>
 References: <20211017135019.27346-1-guoqing.jiang@linux.dev>
 MIME-Version: 1.0
@@ -41,54 +44,48 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Add the paramenter since the err retry logic is only meaningful when
-the caller is handle_read_error.
+We shouldn't set it since write behind IO should only happen to write
+mostly device.
 
 Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 ---
- drivers/md/raid10.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/md/md-bitmap.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index dde98f65bd04..49f3187b2d46 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1116,7 +1116,7 @@ static void regular_request_wait(struct mddev *mddev, struct r10conf *conf,
- }
- 
- static void raid10_read_request(struct mddev *mddev, struct bio *bio,
--				struct r10bio *r10_bio)
-+				struct r10bio *r10_bio, bool handle_read_err)
+diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
+index e29c6298ef5c..9424879d8d7e 100644
+--- a/drivers/md/md-bitmap.c
++++ b/drivers/md/md-bitmap.c
+@@ -2469,11 +2469,29 @@ backlog_store(struct mddev *mddev, const char *buf, size_t len)
  {
- 	struct r10conf *conf = mddev->private;
- 	struct bio *read_bio;
-@@ -1129,7 +1129,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
- 	struct md_rdev *err_rdev = NULL;
- 	gfp_t gfp = GFP_NOIO;
- 
--	if (slot >= 0 && r10_bio->devs[slot].rdev) {
-+	if (handle_read_err && slot >= 0 && r10_bio->devs[slot].rdev) {
- 		/*
- 		 * This is an error retry, but we cannot
- 		 * safely dereference the rdev in the r10_bio,
-@@ -1519,7 +1519,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
- 			conf->geo.raid_disks);
- 
- 	if (bio_data_dir(bio) == READ)
--		raid10_read_request(mddev, bio, r10_bio);
-+		raid10_read_request(mddev, bio, r10_bio, false);
- 	else
- 		raid10_write_request(mddev, bio, r10_bio);
- }
-@@ -2918,7 +2918,7 @@ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
- 	rdev_dec_pending(rdev, mddev);
- 	allow_barrier(conf);
- 	r10_bio->state = 0;
--	raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
-+	raid10_read_request(mddev, r10_bio->master_bio, r10_bio, true);
- }
- 
- static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ 	unsigned long backlog;
+ 	unsigned long old_mwb = mddev->bitmap_info.max_write_behind;
++	struct md_rdev *rdev;
++	bool has_write_mostly = false;
+ 	int rv = kstrtoul(buf, 10, &backlog);
+ 	if (rv)
+ 		return rv;
+ 	if (backlog > COUNTER_MAX)
+ 		return -EINVAL;
++
++	/*
++	 * Without write mostly device, it doesn't make sense to set
++	 * backlog for max_write_behind.
++	 */
++	rdev_for_each(rdev, mddev)
++		if (test_bit(WriteMostly, &rdev->flags)) {
++			has_write_mostly = true;
++			break;
++		}
++	if (!has_write_mostly) {
++		pr_warn_ratelimited("%s: can't set backlog, no write mostly"
++				    " device available\n", mdname(mddev));
++		return -EINVAL;
++	}
++
+ 	mddev->bitmap_info.max_write_behind = backlog;
+ 	if (!backlog && mddev->serial_info_pool) {
+ 		/* serial_info_pool is not needed if backlog is zero */
 -- 
 2.31.1
 
