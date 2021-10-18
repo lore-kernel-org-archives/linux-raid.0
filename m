@@ -2,58 +2,112 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C45AC433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Oct 2021 07:15:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACE5AC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Oct 2021 07:44:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 587D960FDC
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Oct 2021 07:15:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94AE56124F
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Oct 2021 07:44:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230241AbhJRHR1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Oct 2021 03:17:27 -0400
-Received: from mga11.intel.com ([192.55.52.93]:44713 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230006AbhJRHR0 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 18 Oct 2021 03:17:26 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10140"; a="225643953"
-X-IronPort-AV: E=Sophos;i="5.85,381,1624345200"; 
-   d="scan'208";a="225643953"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2021 00:15:12 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,381,1624345200"; 
-   d="scan'208";a="629050867"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga001.fm.intel.com with ESMTP; 18 Oct 2021 00:15:11 -0700
-Received: from [10.249.147.163] (mtkaczyk-MOBL1.ger.corp.intel.com [10.249.147.163])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S230392AbhJRHqy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 18 Oct 2021 03:46:54 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:33280 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229847AbhJRHqx (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Oct 2021 03:46:53 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id 2238E580978;
-        Mon, 18 Oct 2021 00:15:09 -0700 (PDT)
-Subject: Re: [PATCH 1/1] mdadm/Detail: Can't show container name correctly
- when unpluging disks
-From:   "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>, jes@trained-monkey.org
-Cc:     ncroxon@redhat.com, ffan@redhat.com, linux-raid@vger.kernel.org
-References: <1634289920-5037-1-git-send-email-xni@redhat.com>
- <92351bf8-b0e3-89da-48c0-993b0dc29db2@linux.intel.com>
-Message-ID: <150ef21b-91eb-2c9f-d813-e8791eded0c1@linux.intel.com>
-Date:   Mon, 18 Oct 2021 09:15:07 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7A87721A6B;
+        Mon, 18 Oct 2021 07:44:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1634543081; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uRitaSdTVQaJHWkcEYYfsZh1e5H5O4Y2u6C6EN9RHZw=;
+        b=gUoGOZZobYJpoYjwU2IYPymMA2YuQ+2qgz7MpnioolDyxfQi34gjYGErciu7THulCvDIqH
+        E7qmjTjvluoTqPaG4qvEl19HG8kMSL6uyXSBA/+xPDdly7aws8Gi9L8GNw+9p5mYyMAd4V
+        djR7gC7CKd0VOHwEq/c5fpRQ7D+qZ2o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1634543081;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uRitaSdTVQaJHWkcEYYfsZh1e5H5O4Y2u6C6EN9RHZw=;
+        b=fIfevUhOPCPCtiqRALZ1/X9QKxZrhIYuKH49E96y7E0LnvrY8Z1tbgxJtHXE3fpRTpSYki
+        Fq56TopyYm6xSyBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 504DD13CC9;
+        Mon, 18 Oct 2021 07:44:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id wgNzEuklbWFDFgAAMHmgww
+        (envelope-from <vbabka@suse.cz>); Mon, 18 Oct 2021 07:44:41 +0000
+Message-ID: <11b2fa69-ebcf-fec4-73e5-51ada24c5aaf@suse.cz>
+Date:   Mon, 18 Oct 2021 09:44:40 +0200
 MIME-Version: 1.0
-In-Reply-To: <92351bf8-b0e3-89da-48c0-993b0dc29db2@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+To:     Kent Overstreet <kent.overstreet@gmail.com>,
+        David Hildenbrand <david@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        akpm@linux-foundation.org, linux-raid@vger.kernel.org,
+        linux-block@vger.kernel.org, axboe@kernel.dk,
+        alexander.h.duyck@linux.intel.com,
+        David Rientjes <rientjes@google.com>
+References: <20211013160034.3472923-1-kent.overstreet@gmail.com>
+ <20211013160034.3472923-2-kent.overstreet@gmail.com>
+ <e29733c7-e65a-935a-4e05-3a060240ea5a@redhat.com>
+ <YWhCp/lKbJS9XSqn@moria.home.lan>
+From:   Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [PATCH 1/5] mm: Make free_area->nr_free per migratetype
+In-Reply-To: <YWhCp/lKbJS9XSqn@moria.home.lan>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
->> +        dv = devid2kname(makedev(disks[d*2].major, disks[d*2].minor));
->> +        dv_rep = devid2kname(makedev(disks[d*2+1].major, disks[d*2+1].minor));
+On 10/14/21 16:45, Kent Overstreet wrote:
+> On Wed, Oct 13, 2021 at 06:33:06PM +0200, David Hildenbrand wrote:
+>> > @@ -9317,6 +9319,7 @@ void __offline_isolated_pages(unsigned long start_pfn, unsigned long end_pfn)
+>> >  	struct page *page;
+>> >  	struct zone *zone;
+>> >  	unsigned int order;
+>> > +	unsigned int migratetype;
+>> >  	unsigned long flags;
+>> >  
+>> >  	offline_mem_sections(pfn, end_pfn);
+>> > @@ -9346,7 +9349,8 @@ void __offline_isolated_pages(unsigned long start_pfn, unsigned long end_pfn)
+>> >  		BUG_ON(page_count(page));
+>> >  		BUG_ON(!PageBuddy(page));
+>> >  		order = buddy_order(page);
+>> > -		del_page_from_free_list(page, zone, order);
+>> > +		migratetype = get_pfnblock_migratetype(page, pfn);
+>> 
+>> As the free pages are isolated, theoretically this should be
+>> MIGRATE_ISOLATE.
+> 
+> Thanks for noticing that - I somehow missed the fact that pageblock migratetypes
+> change at runtime,
 
-devid2kname() returns static memory. If both drive and replacement
-are available then dv value will be overwritten. Not sure if it is
-possible.
+Not only that. Buddy merging will also merge pages from different
+migratetypes. I think that's the main reason why nr_free is not per
+migratetype. Your patch has been attempted few times already, e.g. here [1].
 
-Mariusz
+[1]
+https://lore.kernel.org/all/alpine.DEB.2.10.1611161731350.17379@chino.kir.corp.google.com/
+
+> so my patch is wrong. I'm going to have to rework my patch to
+> store the migratetype of free pages in the page itself.
+
+Yeah that would be the solution. Will likely bring some overhead to
+alloc/free fastpaths, which would have to be worth it, so nobody attempted it.
+
+
