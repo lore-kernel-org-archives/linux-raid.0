@@ -2,550 +2,166 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7519AC433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 10:08:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81977C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 19:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D6A660F02
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 10:08:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5861960FD8
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 19:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235114AbhJSKKO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Oct 2021 06:10:14 -0400
-Received: from mga01.intel.com ([192.55.52.88]:31689 "EHLO mga01.intel.com"
+        id S230481AbhJST71 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Oct 2021 15:59:27 -0400
+Received: from mga18.intel.com ([134.134.136.126]:53742 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234794AbhJSKKL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 19 Oct 2021 06:10:11 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10141"; a="251942147"
-X-IronPort-AV: E=Sophos;i="5.85,384,1624345200"; 
-   d="scan'208";a="251942147"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2021 03:07:58 -0700
-X-IronPort-AV: E=Sophos;i="5.85,384,1624345200"; 
-   d="scan'208";a="661753342"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2021 03:07:57 -0700
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
+        id S230147AbhJST71 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 19 Oct 2021 15:59:27 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10142"; a="215539461"
+X-IronPort-AV: E=Sophos;i="5.87,164,1631602800"; 
+   d="scan'208";a="215539461"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2021 12:57:13 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,164,1631602800"; 
+   d="scan'208";a="483399544"
+Received: from lkp-server02.sh.intel.com (HELO 08b2c502c3de) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 19 Oct 2021 12:57:12 -0700
+Received: from kbuild by 08b2c502c3de with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mcvEV-000Cfz-P0; Tue, 19 Oct 2021 19:57:11 +0000
+Date:   Wed, 20 Oct 2021 03:56:29 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH v2] imsm: introduce helpers to manage file descriptors
-Date:   Tue, 19 Oct 2021 12:07:43 +0200
-Message-Id: <20211019100743.12247-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
+Subject: [song-md:md-next] BUILD SUCCESS
+ 042dce02de9c583e7fc8263e554cfbf0fcf4bae9
+Message-ID: <616f22ed.gN4TD4+m/6btgjtc%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-To avoid direct comparisions define dedicated inlines.
-This patch propagates them in super-intel.c. They are declared globally
-for future usage outside IMSM.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 042dce02de9c583e7fc8263e554cfbf0fcf4bae9  md/bitmap: don't set max_write_behind if there is no write mostly device
 
-Additionally, it adds fd check in save_backup_imsm() to remove
-code vulnerability and simplifies targets array implementation.
+elapsed time: 729m
 
-It also propagates pr_vrb() macro instead if (verbose) condidtion.
+configs tested: 105
+configs skipped: 3
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+powerpc                       maple_defconfig
+m68k                        m5407c3_defconfig
+arm                         lubbock_defconfig
+powerpc                          allmodconfig
+arm                       imx_v4_v5_defconfig
+um                           x86_64_defconfig
+powerpc                     skiroot_defconfig
+arc                    vdk_hs38_smp_defconfig
+arm                        neponset_defconfig
+arc                          axs101_defconfig
+parisc                generic-32bit_defconfig
+arm                   milbeaut_m10v_defconfig
+ia64                            zx1_defconfig
+sh                ecovec24-romimage_defconfig
+arm                       cns3420vb_defconfig
+powerpc                          g5_defconfig
+powerpc                       holly_defconfig
+arm                      integrator_defconfig
+powerpc                     tqm5200_defconfig
+powerpc                      walnut_defconfig
+powerpc                        fsp2_defconfig
+arm                         palmz72_defconfig
+arm                         s3c2410_defconfig
+mips                      maltasmvp_defconfig
+arm                  randconfig-c002-20211019
+i386                 randconfig-c001-20211019
+x86_64               randconfig-c001-20211019
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                             allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a015-20211019
+x86_64               randconfig-a012-20211019
+x86_64               randconfig-a016-20211019
+x86_64               randconfig-a014-20211019
+x86_64               randconfig-a013-20211019
+x86_64               randconfig-a011-20211019
+i386                 randconfig-a014-20211019
+i386                 randconfig-a016-20211019
+i386                 randconfig-a011-20211019
+i386                 randconfig-a015-20211019
+i386                 randconfig-a012-20211019
+i386                 randconfig-a013-20211019
+arc                  randconfig-r043-20211019
+s390                 randconfig-r044-20211019
+riscv                randconfig-r042-20211019
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a004-20211019
+x86_64               randconfig-a006-20211019
+x86_64               randconfig-a005-20211019
+x86_64               randconfig-a001-20211019
+x86_64               randconfig-a002-20211019
+x86_64               randconfig-a003-20211019
+i386                 randconfig-a001-20211019
+i386                 randconfig-a003-20211019
+i386                 randconfig-a004-20211019
+i386                 randconfig-a005-20211019
+i386                 randconfig-a002-20211019
+i386                 randconfig-a006-20211019
+hexagon              randconfig-r041-20211019
+hexagon              randconfig-r045-20211019
+
 ---
-Changes:
-- Fixed bug reported by Jes
-- changed close_fd to do_close in __free_imsm_disk()
-
- mdadm.h       |  25 ++++++++
- super-intel.c | 167 +++++++++++++++++++++++---------------------------
- 2 files changed, 100 insertions(+), 92 deletions(-)
-
-diff --git a/mdadm.h b/mdadm.h
-index 8f8841d8..4f6da7e2 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -782,6 +782,31 @@ static inline char *map_dev(int major, int minor, int create)
- 	return map_dev_preferred(major, minor, create, NULL);
- }
- 
-+/**
-+ * is_fd_valid() - check file descriptor.
-+ * @fd: file descriptor.
-+ *
-+ * The function checks if @fd is nonnegative integer and shall be used only
-+ * to verify open() result.
-+ */
-+static inline int is_fd_valid(int fd)
-+{
-+	return (fd > -1);
-+}
-+
-+/**
-+ * close_fd() - verify, close and unset file descriptor.
-+ * @fd: pointer to file descriptor.
-+ *
-+ * The function closes and invalidates file descriptor if appropriative. It
-+ * ignores incorrect file descriptor quitely to simplify error handling.
-+ */
-+static inline void close_fd(int *fd)
-+{
-+	if (is_fd_valid(*fd) && close(*fd) == 0)
-+		*fd = -1;
-+}
-+
- struct active_array;
- struct metadata_update;
- 
-diff --git a/super-intel.c b/super-intel.c
-index 83ddc000..5c87cd9b 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -691,7 +691,7 @@ static struct sys_dev* find_disk_attached_hba(int fd, const char *devname)
- 	if ((list = find_intel_devices()) == NULL)
- 		return 0;
- 
--	if (fd < 0)
-+	if (!is_fd_valid(fd))
- 		disk_path  = (char *) devname;
- 	else
- 		disk_path = diskfd_to_devpath(fd, 1, NULL);
-@@ -2406,7 +2406,7 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
- 		}
- 
- 		fd = dev_open(ent->d_name, O_RDONLY);
--		if (fd < 0)
-+		if (!is_fd_valid(fd))
- 			printf("          Port%d : - disk info unavailable -\n", port);
- 		else {
- 			fd2devname(fd, buf);
-@@ -2455,7 +2455,7 @@ static int print_nvme_info(struct sys_dev *hba)
- 			goto skip;
- 
- 		fd = open_dev(ent->d_name);
--		if (fd < 0)
-+		if (!is_fd_valid(fd))
- 			goto skip;
- 
- 		if (!diskfd_to_devpath(fd, 0, ns_path) ||
-@@ -2481,8 +2481,7 @@ static int print_nvme_info(struct sys_dev *hba)
- 			printf("()\n");
- 
- skip:
--		if (fd > -1)
--			close(fd);
-+		close_fd(&fd);
- 	}
- 
- 	closedir(dir);
-@@ -3171,10 +3170,11 @@ static int load_imsm_migr_rec(struct intel_super *super)
- 		if (slot > 1 || slot < 0)
- 			continue;
- 
--		if (dl->fd < 0) {
-+		if (!is_fd_valid(dl->fd)) {
- 			sprintf(nm, "%d:%d", dl->major, dl->minor);
- 			fd = dev_open(nm, O_RDONLY);
--			if (fd >= 0) {
-+
-+			if (is_fd_valid(fd)) {
- 				keep_fd = 0;
- 				break;
- 			}
-@@ -3184,7 +3184,7 @@ static int load_imsm_migr_rec(struct intel_super *super)
- 		}
- 	}
- 
--	if (fd < 0)
-+	if (!is_fd_valid(fd))
- 		return retval;
- 	retval = read_imsm_migr_rec(fd, super);
- 	if (!keep_fd)
-@@ -4542,10 +4542,10 @@ load_and_parse_mpb(int fd, struct intel_super *super, char *devname, int keep_fd
- 	return err;
- }
- 
--static void __free_imsm_disk(struct dl *d, int close_fd)
-+static void __free_imsm_disk(struct dl *d, int do_close)
- {
--	if (close_fd && d->fd > -1)
--		close(d->fd);
-+	if (do_close)
-+		close_fd(&d->fd);
- 	if (d->devname)
- 		free(d->devname);
- 	if (d->e)
-@@ -4650,12 +4650,12 @@ static int find_intel_hba_capability(int fd, struct intel_super *super, char *de
- 	struct sys_dev *hba_name;
- 	int rv = 0;
- 
--	if (fd >= 0 && test_partition(fd)) {
-+	if (is_fd_valid(fd) && test_partition(fd)) {
- 		pr_err("imsm: %s is a partition, cannot be used in IMSM\n",
- 		       devname);
- 		return 1;
- 	}
--	if (fd < 0 || check_env("IMSM_NO_PLATFORM")) {
-+	if (!is_fd_valid(fd) || check_env("IMSM_NO_PLATFORM")) {
- 		super->orom = NULL;
- 		super->hba = NULL;
- 		return 0;
-@@ -5064,7 +5064,7 @@ static int load_super_imsm_all(struct supertype *st, int fd, void **sbp,
- 	int err = 0;
- 	int i = 0;
- 
--	if (fd >= 0)
-+	if (is_fd_valid(fd))
- 		/* 'fd' is an opened container */
- 		err = get_sra_super_block(fd, &super_list, devname, &i, keep_fd);
- 	else
-@@ -5121,7 +5121,7 @@ static int load_super_imsm_all(struct supertype *st, int fd, void **sbp,
- 		return err;
- 
- 	*sbp = super;
--	if (fd >= 0)
-+	if (is_fd_valid(fd))
- 		strcpy(st->container_devnm, fd2devnm(fd));
- 	else
- 		st->container_devnm[0] = 0;
-@@ -5147,7 +5147,7 @@ get_devlist_super_block(struct md_list *devlist, struct intel_super **super_list
- 		if (tmpdev->container == 1) {
- 			int lmax = 0;
- 			int fd = dev_open(tmpdev->devname, O_RDONLY|O_EXCL);
--			if (fd < 0) {
-+			if (!is_fd_valid(fd)) {
- 				pr_err("cannot open device %s: %s\n",
- 					tmpdev->devname, strerror(errno));
- 				err = 8;
-@@ -5199,7 +5199,7 @@ static int get_super_block(struct intel_super **super_list, char *devnm, char *d
- 
- 	sprintf(nm, "%d:%d", major, minor);
- 	dfd = dev_open(nm, O_RDWR);
--	if (dfd < 0) {
-+	if (!is_fd_valid(dfd)) {
- 		err = 2;
- 		goto error;
- 	}
-@@ -5226,11 +5226,10 @@ static int get_super_block(struct intel_super **super_list, char *devnm, char *d
- 	} else {
- 		if (s)
- 			free_imsm(s);
--		if (dfd >= 0)
--			close(dfd);
-+		close_fd(&dfd);
- 	}
--	if (dfd >= 0 && !keep_fd)
--		close(dfd);
-+	if (!keep_fd)
-+		close_fd(&dfd);
- 	return err;
- 
- }
-@@ -5707,7 +5706,7 @@ static int drive_validate_sector_size(struct intel_super *super, struct dl *dl)
- {
- 	unsigned int member_sector_size;
- 
--	if (dl->fd < 0) {
-+	if (!is_fd_valid(dl->fd)) {
- 		pr_err("Invalid file descriptor for %s\n", dl->devname);
- 		return 0;
- 	}
-@@ -5739,7 +5738,7 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
- 		return 1;
- 	}
- 
--	if (fd == -1) {
-+	if (!is_fd_valid(fd)) {
- 		/* we're doing autolayout so grab the pre-marked (in
- 		 * validate_geometry) raid_disk
- 		 */
-@@ -6115,10 +6114,8 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
- 		if (write_super_imsm_spare(super, d))
- 			return 1;
- 
--		if (doclose) {
--			close(d->fd);
--			d->fd = -1;
--		}
-+		if (doclose)
-+			close_fd(&d->fd);
- 	}
- 
- 	return 0;
-@@ -6232,10 +6229,8 @@ static int write_super_imsm(struct supertype *st, int doclose)
- 				d->major, d->minor,
- 				d->fd, strerror(errno));
- 
--		if (doclose) {
--			close(d->fd);
--			d->fd = -1;
--		}
-+		if (doclose)
-+			close_fd(&d->fd);
- 	}
- 
- 	if (spares)
-@@ -6666,10 +6661,8 @@ static int validate_geometry_imsm_container(struct supertype *st, int level,
- 		return 1;
- 
- 	fd = dev_open(dev, O_RDONLY|O_EXCL);
--	if (fd < 0) {
--		if (verbose > 0)
--			pr_err("imsm: Cannot open %s: %s\n",
--				dev, strerror(errno));
-+	if (!is_fd_valid(fd)) {
-+		pr_vrb("imsm: Cannot open %s: %s\n", dev, strerror(errno));
- 		return 0;
- 	}
- 	if (!get_dev_size(fd, dev, &ldsize))
-@@ -6878,12 +6871,12 @@ active_arrays_by_format(char *name, char* hba, struct md_list **devlist,
- 		    memb->members) {
- 			struct dev_member *dev = memb->members;
- 			int fd = -1;
--			while(dev && (fd < 0)) {
-+			while (dev && !is_fd_valid(fd)) {
- 				char *path = xmalloc(strlen(dev->name) + strlen("/dev/") + 1);
- 				num = sprintf(path, "%s%s", "/dev/", dev->name);
- 				if (num > 0)
- 					fd = open(path, O_RDONLY, 0);
--				if (num <= 0 || fd < 0) {
-+				if (num <= 0 || !is_fd_valid(fd)) {
- 					pr_vrb("Cannot open %s: %s\n",
- 					       dev->name, strerror(errno));
- 				}
-@@ -6891,7 +6884,7 @@ active_arrays_by_format(char *name, char* hba, struct md_list **devlist,
- 				dev = dev->next;
- 			}
- 			found = 0;
--			if (fd >= 0 && disk_attached_to_hba(fd, hba)) {
-+			if (is_fd_valid(fd) && disk_attached_to_hba(fd, hba)) {
- 				struct mdstat_ent *vol;
- 				for (vol = mdstat ; vol ; vol = vol->next) {
- 					if (vol->active > 0 &&
-@@ -6911,8 +6904,7 @@ active_arrays_by_format(char *name, char* hba, struct md_list **devlist,
- 					*devlist = dv;
- 				}
- 			}
--			if (fd >= 0)
--				close(fd);
-+			close_fd(&fd);
- 		}
- 	}
- 	free_mdstat(mdstat);
-@@ -6973,7 +6965,7 @@ get_devices(const char *hba_path)
- 		free(path);
- 		path = NULL;
- 		fd = dev_open(ent->d_name, O_RDONLY);
--		if (fd >= 0) {
-+		if (is_fd_valid(fd)) {
- 			fd2devname(fd, buf);
- 			close(fd);
- 		} else {
-@@ -7032,7 +7024,7 @@ count_volumes_list(struct md_list *devlist, char *homehost,
- 		}
- 		tmpdev->container = 0;
- 		dfd = dev_open(devname, O_RDONLY|O_EXCL);
--		if (dfd < 0) {
-+		if (!is_fd_valid(dfd)) {
- 			dprintf("cannot open device %s: %s\n",
- 				devname, strerror(errno));
- 			tmpdev->used = 2;
-@@ -7069,8 +7061,8 @@ count_volumes_list(struct md_list *devlist, char *homehost,
- 				tmpdev->used = 2;
- 			}
- 		}
--		if (dfd >= 0)
--			close(dfd);
-+		close_fd(&dfd);
-+
- 		if (tmpdev->used == 2 || tmpdev->used == 4) {
- 			/* Ignore unrecognised devices during auto-assembly */
- 			goto loop;
-@@ -7643,26 +7635,26 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 
- 	/* This device needs to be a device in an 'imsm' container */
- 	fd = open(dev, O_RDONLY|O_EXCL, 0);
--	if (fd >= 0) {
--		if (verbose)
--			pr_err("Cannot create this array on device %s\n",
--			       dev);
-+
-+	if (is_fd_valid(fd)) {
-+		pr_vrb("Cannot create this array on device %s\n", dev);
- 		close(fd);
- 		return 0;
- 	}
--	if (errno != EBUSY || (fd = open(dev, O_RDONLY, 0)) < 0) {
--		if (verbose)
--			pr_err("Cannot open %s: %s\n",
--				dev, strerror(errno));
-+	if (errno == EBUSY)
-+		fd = open(dev, O_RDONLY, 0);
-+
-+	if (!is_fd_valid(fd)) {
-+		pr_vrb("Cannot open %s: %s\n", dev, strerror(errno));
- 		return 0;
- 	}
-+
- 	/* Well, it is in use by someone, maybe an 'imsm' container. */
- 	cfd = open_container(fd);
--	close(fd);
--	if (cfd < 0) {
--		if (verbose)
--			pr_err("Cannot use %s: It is busy\n",
--				dev);
-+	close_fd(&fd);
-+
-+	if (!is_fd_valid(cfd)) {
-+		pr_vrb("Cannot use %s: It is busy\n", dev);
- 		return 0;
- 	}
- 	sra = sysfs_read(cfd, NULL, GET_VERSION);
-@@ -8937,7 +8929,7 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
- 	for (dl = super->disks; dl; dl = dl->next) {
- 		/* If in this array, skip */
- 		for (d = a->info.devs ; d ; d = d->next)
--			if (d->state_fd >= 0 &&
-+			if (is_fd_valid(d->state_fd) &&
- 			    d->disk.major == dl->major &&
- 			    d->disk.minor == dl->minor) {
- 				dprintf("%x:%x already in array\n",
-@@ -9097,13 +9089,15 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 	int i;
- 	int allowed;
- 
--	for (d = a->info.devs ; d ; d = d->next) {
--		if ((d->curr_state & DS_FAULTY) &&
--			d->state_fd >= 0)
-+	for (d = a->info.devs ; d; d = d->next) {
-+		if (!is_fd_valid(d->state_fd))
-+			continue;
-+
-+		if (d->curr_state & DS_FAULTY)
- 			/* wait for Removal to happen */
- 			return NULL;
--		if (d->state_fd >= 0)
--			failed--;
-+
-+		failed--;
- 	}
- 
- 	dprintf("imsm: activate spare: inst=%d failed=%d (%d) level=%d\n",
-@@ -9159,7 +9153,7 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 			if (d->disk.raid_disk == i)
- 				break;
- 		dprintf("found %d: %p %x\n", i, d, d?d->curr_state:0);
--		if (d && (d->state_fd >= 0))
-+		if (d && is_fd_valid(d->state_fd))
- 			continue;
- 
- 		/*
-@@ -10893,26 +10887,22 @@ int save_backup_imsm(struct supertype *st,
- {
- 	int rv = -1;
- 	struct intel_super *super = st->sb;
--	unsigned long long *target_offsets;
--	int *targets;
- 	int i;
- 	struct imsm_map *map_dest = get_imsm_map(dev, MAP_0);
- 	int new_disks = map_dest->num_members;
- 	int dest_layout = 0;
--	int dest_chunk;
--	unsigned long long start;
-+	int dest_chunk, targets[new_disks];
-+	unsigned long long start, target_offsets[new_disks];
- 	int data_disks = imsm_num_data_members(map_dest);
- 
--	targets = xmalloc(new_disks * sizeof(int));
--
- 	for (i = 0; i < new_disks; i++) {
- 		struct dl *dl_disk = get_imsm_dl_disk(super, i);
--
--		targets[i] = dl_disk->fd;
-+		if (dl_disk && is_fd_valid(dl_disk->fd))
-+			targets[i] = dl_disk->fd;
-+		else
-+			goto abort;
- 	}
- 
--	target_offsets = xcalloc(new_disks, sizeof(unsigned long long));
--
- 	start = info->reshape_progress * 512;
- 	for (i = 0; i < new_disks; i++) {
- 		target_offsets[i] = migr_chkp_area_pba(super->migr_rec) * 512;
-@@ -10944,11 +10934,6 @@ int save_backup_imsm(struct supertype *st,
- 	rv = 0;
- 
- abort:
--	if (targets) {
--		free(targets);
--	}
--	free(target_offsets);
--
- 	return rv;
- }
- 
-@@ -11068,7 +11053,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
- 		if (dl_disk->index < 0)
- 			continue;
- 
--		if (dl_disk->fd < 0) {
-+		if (!is_fd_valid(dl_disk->fd)) {
- 			skipped_disks++;
- 			continue;
- 		}
-@@ -11992,7 +11977,7 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int ndata)
- 	unsigned long long to_complete = sra->reshape_progress;
- 	unsigned long long position_to_set = to_complete / ndata;
- 
--	if (fd < 0) {
-+	if (!is_fd_valid(fd)) {
- 		dprintf("cannot open reshape_position\n");
- 		return 1;
- 	}
-@@ -12079,6 +12064,7 @@ int check_degradation_change(struct mdinfo *info,
- 				continue;
- 			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
- 				char sbuf[100];
-+				int raid_disk = sd->disk.raid_disk;
- 
- 				if (sysfs_get_str(info,
- 					sd, "state", sbuf, sizeof(sbuf)) < 0 ||
-@@ -12086,13 +12072,8 @@ int check_degradation_change(struct mdinfo *info,
- 					strstr(sbuf, "in_sync") == NULL) {
- 					/* this device is dead */
- 					sd->disk.state = (1<<MD_DISK_FAULTY);
--					if (sd->disk.raid_disk >= 0 &&
--					    sources[sd->disk.raid_disk] >= 0) {
--						close(sources[
--							sd->disk.raid_disk]);
--						sources[sd->disk.raid_disk] =
--							-1;
--					}
-+					if (raid_disk >= 0)
-+						close_fd(&sources[raid_disk]);
- 					new_degraded++;
- 				}
- 			}
-@@ -12483,9 +12464,10 @@ static int validate_internal_bitmap_for_drive(struct supertype *st,
- 		return -1;
- 
- 	fd = d->fd;
--	if (fd < 0) {
-+	if (!is_fd_valid(fd)) {
- 		fd = open(d->devname, O_RDONLY, 0);
--		if (fd < 0) {
-+
-+		if (!is_fd_valid(fd)) {
- 			dprintf("cannot open the device %s\n", d->devname);
- 			goto abort;
- 		}
-@@ -12509,8 +12491,9 @@ static int validate_internal_bitmap_for_drive(struct supertype *st,
- 
- 	ret = 0;
- abort:
--	if ((d->fd < 0) && (fd >= 0))
--		close(fd);
-+	if (!is_fd_valid(d->fd))
-+		close_fd(&fd);
-+
- 	if (read_buf)
- 		free(read_buf);
- 
--- 
-2.26.2
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
