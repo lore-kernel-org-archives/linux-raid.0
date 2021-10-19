@@ -2,112 +2,150 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DFEBC433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 07:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F90C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 08:01:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5041B6134F
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 07:25:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5838D6136F
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 08:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234421AbhJSH15 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Oct 2021 03:27:57 -0400
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17272 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234412AbhJSH15 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Oct 2021 03:27:57 -0400
-ARC-Seal: i=1; a=rsa-sha256; t=1634628339; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=hpc/T2vJJVaEMRejrKPjDyVZ1B7Vm44g7/8aNDKX1nqsQoaCgcgA/d/sN3jVn53rYXuAN/S8XHvQbscOkqbOTzUoQgvVPRTTLjLaN4LKupWBh7qyWRJjKjeCz8uyR07pwsJs0LkLN7n0+I2eOuZw1KCO4XdsU1AddB5pLc9o/Zs=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1634628339; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=izKnbDffIDCEycQ9JfkPaMu4HRBdI+vz89x28qBGP4U=; 
-        b=L2muto/U5ZCfrpXV+NwDCs1dXp2CSytW6HCQ1S5dQ3cEpzZVjx2tmDwBRjs/jYE4ce4qPbjXSjMLRlh55vVhCYJxxYrPhn4yfJGIpo+vcwoQZJbPEpMVGOEQdTLU3UKRB80jTeQ1d0NdKJl57gREJrZeBLBRBZt3jcRXPqGa5Aw=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [100.109.156.142] (163.114.130.5 [163.114.130.5]) by mx.zoho.eu
-        with SMTPS id 1634628337287719.4498529326971; Tue, 19 Oct 2021 09:25:37 +0200 (CEST)
-Subject: Re: [PATCH] imsm: introduce helpers to manage file descriptors
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org
-References: <20211018151217.31583-1-mariusz.tkaczyk@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <d1cbeb1e-13f7-481b-81a6-9720b56d6a77@trained-monkey.org>
-Date:   Tue, 19 Oct 2021 03:25:34 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S234591AbhJSIDg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Oct 2021 04:03:36 -0400
+Received: from out2.migadu.com ([188.165.223.204]:25221 "EHLO out2.migadu.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234595AbhJSIDH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 19 Oct 2021 04:03:07 -0400
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1634630437;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=awFyg9JZxht9t2aSxlkReIe8+7ivtpDjrlqVRCr5/kE=;
+        b=Z+4eURsnlyKcUFsiyDVfqbXSV2/22qOxSHBGd7hWMPdtBT0OulYUxGI8xRdyReuwuKwWTQ
+        wKzN2XV62wh9oFBydAvxVwFua0OhMUrfe4C0YQNnuk81hRc00wcu1+orToMcd1Q0OAPwHo
+        UOQKGrIuVQYuTSA+X2XaiVoKx3GmHCo=
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Subject: Re: [PATCH 3/3] md/raid10: factor out a get_error_dev helper
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20211017135019.27346-1-guoqing.jiang@linux.dev>
+ <20211017135019.27346-4-guoqing.jiang@linux.dev>
+ <CAPhsuW7x19D4bFXdVQRx6nVjs-w+x34e_MzMidAsQ4T1RXdXKA@mail.gmail.com>
+Message-ID: <0c31ce7f-1ce9-60aa-ad61-a5320f61d49f@linux.dev>
+Date:   Tue, 19 Oct 2021 16:00:30 +0800
 MIME-Version: 1.0
-In-Reply-To: <20211018151217.31583-1-mariusz.tkaczyk@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <CAPhsuW7x19D4bFXdVQRx6nVjs-w+x34e_MzMidAsQ4T1RXdXKA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: guoqing.jiang@linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 10/18/21 11:12 AM, Mariusz Tkaczyk wrote:
-> To avoid direct comparisions define dedicated inlines.
-> This patch propagates them in super-intel.c. They are declared globally
-> for future usage outside IMSM.
-> 
-> Additionally, it adds fd check in save_backup_imsm() to remove
-> code vulnerability and simplifies targets array implementation.
-> 
-> It also propagates prr_vrb() macro instead if (verbose) condidtion.
-> 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> ---
-> Hi Jes,
-> For now scope is limited to IMSM. If you ok the idea please apply it.
-> I would like to use it in other places, but first I need to have it
-> applied.
 
-Hi Mariusz,
 
-I am not a huge fan of hiding things in wrappers, however we've seen a
-number of cases in the code with inconsistent checks for > 0 and >= 0,
-so I guess it makes sense.
+On 10/19/21 2:59 PM, Song Liu wrote:
+> On Sun, Oct 17, 2021 at 6:50 AM Guoqing Jiang<guoqing.jiang@linux.dev>  wrote:
+>> Add a helper to find error_dev in case handle_read_err is true.
+>>
+>> Signed-off-by: Guoqing Jiang<guoqing.jiang@linux.dev>
+> For 2/3 and 3/3, I was thinking about something like below (only
+> compile tested).
+> Would this work?
 
-However I think you introduce a bug or at least a behavioral change in
-the code, please see below.
+Thanks for clarification, I guess it works.
 
-> @@ -7643,26 +7635,27 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
->  
->  	/* This device needs to be a device in an 'imsm' container */
->  	fd = open(dev, O_RDONLY|O_EXCL, 0);
-> -	if (fd >= 0) {
-> -		if (verbose)
-> -			pr_err("Cannot create this array on device %s\n",
-> -			       dev);
+> Thanks,
+> Song
+>
+> diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
+> index dde98f65bd04f..c2387f55343dd 100644
+> --- i/drivers/md/raid10.c
+> +++ w/drivers/md/raid10.c
+> @@ -1116,7 +1116,7 @@ static void regular_request_wait(struct mddev
+> *mddev, struct r10conf *conf,
+>   }
+>
+>   static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+> -                               struct r10bio *r10_bio)
+> +                               struct r10bio *r10_bio, struct md_rdev
+> *err_rdev)
+>   {
+>          struct r10conf *conf = mddev->private;
+>          struct bio *read_bio;
+> @@ -1126,36 +1126,17 @@ static void raid10_read_request(struct mddev
+> *mddev, struct bio *bio,
+>          struct md_rdev *rdev;
+>          char b[BDEVNAME_SIZE];
+>          int slot = r10_bio->read_slot;
+> -       struct md_rdev *err_rdev = NULL;
+>          gfp_t gfp = GFP_NOIO;
+>
+> -       if (slot >= 0 && r10_bio->devs[slot].rdev) {
+> -               /*
+> -                * This is an error retry, but we cannot
+> -                * safely dereference the rdev in the r10_bio,
+> -                * we must use the one in conf.
+> -                * If it has already been disconnected (unlikely)
+> -                * we lose the device name in error messages.
+> -                */
+> -               int disk;
+> -               /*
+> -                * As we are blocking raid10, it is a little safer to
+> -                * use __GFP_HIGH.
+> -                */
+> +       /*
+> +        * As we are blocking raid10, it is a little safer to
+> +        * use __GFP_HIGH.
+> +        */
+> +       if (err_rdev) {
+>                  gfp = GFP_NOIO | __GFP_HIGH;
+> -
+> -               rcu_read_lock();
+> -               disk = r10_bio->devs[slot].devnum;
+> -               err_rdev = rcu_dereference(conf->mirrors[disk].rdev);
+> -               if (err_rdev)
+> -                       bdevname(err_rdev->bdev, b);
+> -               else {
+> -                       strcpy(b, "???");
+> -                       /* This never gets dereferenced */
+> -                       err_rdev = r10_bio->devs[slot].rdev;
+> -               }
+> -               rcu_read_unlock();
+> -       }
+> +               bdevname(err_rdev->bdev, b);
+> +       } else
+> +               strcpy(b, "???");
+>
+>          regular_request_wait(mddev, conf, bio, r10_bio->sectors);
+>          rdev = read_balance(conf, r10_bio, &max_sectors);
+> @@ -1519,7 +1500,7 @@ static void __make_request(struct mddev *mddev,
+> struct bio *bio, int sectors)
+>                          conf->geo.raid_disks);
+>
+>          if (bio_data_dir(bio) == READ)
+> -               raid10_read_request(mddev, bio, r10_bio);
+> +               raid10_read_request(mddev, bio, r10_bio, NULL);
+>          else
+>                  raid10_write_request(mddev, bio, r10_bio);
+>   }
+> @@ -2887,6 +2868,31 @@ static int narrow_write_error(struct r10bio
+> *r10_bio, int i)
+>          return ok;
+>   }
+>
+> +static struct md_rdev *get_error_dev(struct mddev *mddev, struct
+> r10conf *conf, int slot,
+> +                                    struct r10bio *r10_bio)
+> +{
+> +       struct md_rdev *err_rdev = NULL;
 > +
-> +	if (is_fd_valid(fd)) {
-> +		pr_vrb("Cannot create this array on device %s\n", dev);
->  		close(fd);
->  		return 0;
->  	}
-> -	if (errno != EBUSY || (fd = open(dev, O_RDONLY, 0)) < 0) {
-> -		if (verbose)
-> -			pr_err("Cannot open %s: %s\n",
-> -				dev, strerror(errno));
-> -		return 0;
-> +	if (errno != EBUSY) {
-> +		fd = open(dev, O_RDONLY, 0);
-> +
-> +		if (!is_fd_valid(fd)) {
-> +			pr_vrb("Cannot open %s: %s\n", dev, strerror(errno));
-> +			return 0;
-> +		}
->  	}
 
-The old code would only call open(dev, O_RDONLY, 0) if errno == EBUSY,
-and it enters the if() block unconditionally, unless errno == EBUSY and
-we fail to open O_RDONLY.
+We need the original check ("slot >= 0 && r10_bio->devs[slot].rdev ")
+in the function I think. Will take a closer look and send a new version.
 
-With your change you try to reopen the device for all error cases,
-except for EBUSY.
-
-I assume this is a mistake? If you do want to change the logic, it would
-be preferred to do it in a separate patch.
-
-Cheers,
-Jes
+Thanks,
+Guoqing
