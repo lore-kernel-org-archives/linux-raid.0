@@ -2,70 +2,179 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC3DC433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 06:58:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 096F0C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 06:59:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 202006108E
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 06:58:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF78F61260
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Oct 2021 06:59:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234178AbhJSHA1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 19 Oct 2021 03:00:27 -0400
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17243 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229649AbhJSHA1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Oct 2021 03:00:27 -0400
-ARC-Seal: i=1; a=rsa-sha256; t=1634626690; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=SAfvBfAD4ajayPKM1pKlT4WOilGcl2xl1YkEahk2kP/Ag/0+b4kTq5DJ3x+a2h1qu0fj7Us9z5dwBvrf+Ne5+KHCkLtXPggb2ZG5uq2xjeOq1q556PTxDN+LkcLuNxB8yjIEiAdm3Zaop71+o3oBWZsr3tQmZ9MAK5Tuj34Kz3w=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1634626690; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=w4pxqClwCZUz40Q+KCFeFZEz6+bVXtav6VXqjLKsnqg=; 
-        b=fiVuX4/9FH9kM4L2cw3C82zSGSv+YG6Hy4Brl/hfAaaI3YquyWIhVsnaYG0jZMZ86eyxslfBUPnOhR/XqQ96AW+2dTWqZw5U/+SR1kosvlTB9SlFA4Fx/gsUA6Xiovt0byc8Mpnw70WRgG5a0UACkl4l/VT4FuKl2lsjuPwYI5A=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [100.109.156.142] (163.114.130.5 [163.114.130.5]) by mx.zoho.eu
-        with SMTPS id 1634626688782137.34875461371087; Tue, 19 Oct 2021 08:58:08 +0200 (CEST)
-Subject: Re: [PATCH V2] Fix 2 dc stream buffer
-To:     Nigel Croxon <ncroxon@redhat.com>, linux-raid@vger.kernel.org
-References: <20211014160200.437040-1-ncroxon@redhat.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <79cf94e0-9945-f0a9-e15f-99b8390548ca@trained-monkey.org>
-Date:   Tue, 19 Oct 2021 02:58:06 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S229803AbhJSHB3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Oct 2021 03:01:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60506 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229649AbhJSHB2 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 19 Oct 2021 03:01:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E8DE61212
+        for <linux-raid@vger.kernel.org>; Tue, 19 Oct 2021 06:59:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634626756;
+        bh=UdCCcgNEWik0TG3mdn8L3Ua7autexDdpM0H8sX95zPo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=johwO0h290WRC6yiCRIzYRwb7cpsjFX0GunB+RhJI/MdKF+U3MPKG0BVG33godToh
+         FTzj6WMVO7fXzP7fx1HG8qt5NGG2rXNH/YK8BqDC7M89k44cAYzwBDMPRx1rfcV5oE
+         NVcemlIKp12ABkHarLaBQIP20/MkxWtsRXLtGQlj3RQFjlajBQCG4dixzi0lmCy0uw
+         ULqHAF73e6x52d2yogU2dh8y29rfJ29C/RC/MEbPrGFNfwxVRraUUloijP9wvteitc
+         k4jhWnOK1pfQUIa86FA2RvA9Q57lkaOkMbej1JVQvhcwXp4qqpTX8c7NUE1FO1WAs9
+         hQD3tKFR5IfQw==
+Received: by mail-lf1-f47.google.com with SMTP id y26so5167821lfa.11
+        for <linux-raid@vger.kernel.org>; Mon, 18 Oct 2021 23:59:16 -0700 (PDT)
+X-Gm-Message-State: AOAM533ZQQ5swQNo8j7OwynAPdD104UX5XRgCa6jcRn4Vt/ms4VUeUpI
+        HPTbQ1zPC516gm71KhXtt4/6IlXIqLJwsSr7x8o=
+X-Google-Smtp-Source: ABdhPJwNriYMxejKJeiYpE8p62bkonce4y0Puk+1Rtti3fyi8Lp/vT2MtDpx6Ya3UsCznnQ+SvNVZYjap6Zt256e0WI=
+X-Received: by 2002:ac2:5d4b:: with SMTP id w11mr4510048lfd.676.1634626754464;
+ Mon, 18 Oct 2021 23:59:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20211014160200.437040-1-ncroxon@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+References: <20211017135019.27346-1-guoqing.jiang@linux.dev> <20211017135019.27346-4-guoqing.jiang@linux.dev>
+In-Reply-To: <20211017135019.27346-4-guoqing.jiang@linux.dev>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 18 Oct 2021 23:59:03 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW7x19D4bFXdVQRx6nVjs-w+x34e_MzMidAsQ4T1RXdXKA@mail.gmail.com>
+Message-ID: <CAPhsuW7x19D4bFXdVQRx6nVjs-w+x34e_MzMidAsQ4T1RXdXKA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] md/raid10: factor out a get_error_dev helper
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 10/14/21 12:02 PM, Nigel Croxon wrote:
-> To meet requirements of Common Criteria certification vulnerablility
-> assessment. Static code analysis has been run and found the following
-> Error: DC.STREAM_BUFFER (CWE-120): [#def46]
-> mdadm-4.2: dont_call: "fscanf" assumes an arbitrarily
-> long string, so callers must use correct precision specifiers or
-> never use "fscanf".
-> 
-> The change is to define a value for string %s.
-> 
-> V2: Tighten the value in policy.c to match the limit of the metadata.
-> Add a change to policy_save_path() to use correct precision on the
-> fscanf call.
-> 
-> Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
-> ---
->  Monitor.c | 2 +-
->  policy.c  | 4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
+On Sun, Oct 17, 2021 at 6:50 AM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
+>
+> Add a helper to find error_dev in case handle_read_err is true.
+>
+> Signed-off-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 
-Applied
+For 2/3 and 3/3, I was thinking about something like below (only
+compile tested).
+Would this work?
 
-Thanks
-Jes
+Thanks,
+Song
 
+diff --git i/drivers/md/raid10.c w/drivers/md/raid10.c
+index dde98f65bd04f..c2387f55343dd 100644
+--- i/drivers/md/raid10.c
++++ w/drivers/md/raid10.c
+@@ -1116,7 +1116,7 @@ static void regular_request_wait(struct mddev
+*mddev, struct r10conf *conf,
+ }
+
+ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+-                               struct r10bio *r10_bio)
++                               struct r10bio *r10_bio, struct md_rdev
+*err_rdev)
+ {
+        struct r10conf *conf = mddev->private;
+        struct bio *read_bio;
+@@ -1126,36 +1126,17 @@ static void raid10_read_request(struct mddev
+*mddev, struct bio *bio,
+        struct md_rdev *rdev;
+        char b[BDEVNAME_SIZE];
+        int slot = r10_bio->read_slot;
+-       struct md_rdev *err_rdev = NULL;
+        gfp_t gfp = GFP_NOIO;
+
+-       if (slot >= 0 && r10_bio->devs[slot].rdev) {
+-               /*
+-                * This is an error retry, but we cannot
+-                * safely dereference the rdev in the r10_bio,
+-                * we must use the one in conf.
+-                * If it has already been disconnected (unlikely)
+-                * we lose the device name in error messages.
+-                */
+-               int disk;
+-               /*
+-                * As we are blocking raid10, it is a little safer to
+-                * use __GFP_HIGH.
+-                */
++       /*
++        * As we are blocking raid10, it is a little safer to
++        * use __GFP_HIGH.
++        */
++       if (err_rdev) {
+                gfp = GFP_NOIO | __GFP_HIGH;
+-
+-               rcu_read_lock();
+-               disk = r10_bio->devs[slot].devnum;
+-               err_rdev = rcu_dereference(conf->mirrors[disk].rdev);
+-               if (err_rdev)
+-                       bdevname(err_rdev->bdev, b);
+-               else {
+-                       strcpy(b, "???");
+-                       /* This never gets dereferenced */
+-                       err_rdev = r10_bio->devs[slot].rdev;
+-               }
+-               rcu_read_unlock();
+-       }
++               bdevname(err_rdev->bdev, b);
++       } else
++               strcpy(b, "???");
+
+        regular_request_wait(mddev, conf, bio, r10_bio->sectors);
+        rdev = read_balance(conf, r10_bio, &max_sectors);
+@@ -1519,7 +1500,7 @@ static void __make_request(struct mddev *mddev,
+struct bio *bio, int sectors)
+                        conf->geo.raid_disks);
+
+        if (bio_data_dir(bio) == READ)
+-               raid10_read_request(mddev, bio, r10_bio);
++               raid10_read_request(mddev, bio, r10_bio, NULL);
+        else
+                raid10_write_request(mddev, bio, r10_bio);
+ }
+@@ -2887,6 +2868,31 @@ static int narrow_write_error(struct r10bio
+*r10_bio, int i)
+        return ok;
+ }
+
++static struct md_rdev *get_error_dev(struct mddev *mddev, struct
+r10conf *conf, int slot,
++                                    struct r10bio *r10_bio)
++{
++       struct md_rdev *err_rdev = NULL;
++
++       /*
++        * This is an error retry, but we cannot
++        * safely dereference the rdev in the r10_bio,
++        * we must use the one in conf.
++        * If it has already been disconnected (unlikely)
++        * we lose the device name in error messages.
++        */
++       int disk;
++
++       rcu_read_lock();
++       disk = r10_bio->devs[slot].devnum;
++       err_rdev = rcu_dereference(conf->mirrors[disk].rdev);
++       if (!err_rdev) {
++               /* This never gets dereferenced */
++               err_rdev = r10_bio->devs[slot].rdev;
++       }
++       rcu_read_unlock();
++       return err_rdev;
++}
++
+ static void handle_read_error(struct mddev *mddev, struct r10bio *r10_bio)
+ {
+        int slot = r10_bio->read_slot;
+@@ -2918,7 +2924,8 @@ static void handle_read_error(struct mddev
+*mddev, struct r10bio *r10_bio)
+        rdev_dec_pending(rdev, mddev);
+        allow_barrier(conf);
+        r10_bio->state = 0;
+-       raid10_read_request(mddev, r10_bio->master_bio, r10_bio);
++       raid10_read_request(mddev, r10_bio->master_bio, r10_bio,
++                           get_error_dev(mddev, conf, slot, r10_bio));
+ }
+
+ static void handle_write_completed(struct r10conf *conf, struct
+r10bio *r10_bio)
