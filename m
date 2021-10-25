@@ -2,58 +2,68 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02138C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Oct 2021 11:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25A76C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 25 Oct 2021 12:02:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDA7860EDF
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Oct 2021 11:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED67A60527
+	for <linux-raid@archiver.kernel.org>; Mon, 25 Oct 2021 12:01:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232699AbhJYLDx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Oct 2021 07:03:53 -0400
-Received: from smarthost01c.ixn.mail.zen.net.uk ([212.23.1.22]:48356 "EHLO
-        smarthost01c.ixn.mail.zen.net.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232642AbhJYLDw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 25 Oct 2021 07:03:52 -0400
-Received: from [82.71.70.4] (helo=aawcs.co.uk)
-        by smarthost01c.ixn.mail.zen.net.uk with esmtp (Exim 4.90_1)
-        (envelope-from <john@aawcs.co.uk>)
-        id 1mexjM-0002uA-WB
-        for linux-raid@vger.kernel.org; Mon, 25 Oct 2021 11:01:29 +0000
-Received: from [192.168.1.200] ( [192.168.1.200])
-          by aawcs.co.uk with ESMTP (Mailtraq/2.17.7.3560) id AWCS4B5C02EF
-          for linux-raid@vger.kernel.org; Mon, 25 Oct 2021 12:02:33 +0100
-Subject: Missing Superblocks
-References: <de712291-fa08-b35a-f8fb-6d18b573f3f4@aawcs.co.uk>
-To:     linux-raid <linux-raid@vger.kernel.org>
-From:   John Atkins <John@aawcs.co.uk>
-Organization: AAW Control Systems
-X-Forwarded-Message-Id: <de712291-fa08-b35a-f8fb-6d18b573f3f4@aawcs.co.uk>
-Message-ID: <a5f362c3-122e-d0ac-1234-d4852e43adfa@aawcs.co.uk>
-Date:   Mon, 25 Oct 2021 12:01:26 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S230168AbhJYMEV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 25 Oct 2021 08:04:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34100 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230090AbhJYMEU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Oct 2021 08:04:20 -0400
+Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0801C061745
+        for <linux-raid@vger.kernel.org>; Mon, 25 Oct 2021 05:01:58 -0700 (PDT)
+Received: by mail-oi1-x22c.google.com with SMTP id q129so15249485oib.0
+        for <linux-raid@vger.kernel.org>; Mon, 25 Oct 2021 05:01:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=o5d+vCFvuo5OgndPJF7UIiuw1T9m3XWYeNbw60vdlUE=;
+        b=nNij9MbYCm2AovA+KWNso7CC6uiiSByya3LM5TKmGvJvmBVrMoWWp1rHT3/ljd7Dhp
+         fkHqGwTYm+MTix+PfLPYzprbmkwhT0Zmcar0yNThtcTOv3Sxbmvp+ghCZ72fHjkQKHMe
+         xDCCKFxlUuj1ifDrzHUCKN4ULFRn3O10AReAx3TpLzgYioOuTXCg7HNfq0wQIlEvIIpa
+         422yJfnIOqg0yx0TrujhWy8NNvRS+UctxEfOXoqv7+HhbB+lB2CEVAFT+tg1JBBDmep1
+         lZpPVn4GEyyCKcqI41x/sOHvsexH7QlM9JTjHXiBdXAWgaQAfZUudoQSjPzmrRd8SseF
+         4ElA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=o5d+vCFvuo5OgndPJF7UIiuw1T9m3XWYeNbw60vdlUE=;
+        b=22tHKjFrA9TknS8w3sA49YCxSxiu+c8bH6gCKErlnbWu2kPNTGWmUGtmDoUrgj6081
+         g5nkSna9Id5hTUX2ix5HOSvah43zDAhnQHJGkyFYxNlCZox0SHFxwd5Vz0kAtjoTckW7
+         NGc6Bpr/Yq6QhUtJQPzdLuCqiMQVaSm9sDAWsQ6JF16YrqNvoLKXYK0G0KOKHMS0D2jH
+         WjqiPh8giqnTCSnkqWWsokrnB9RcwMT3Tr7fldqfdNMeGF2YDbNdnRWgRW6TNWu61Syi
+         2voYcDRCWSj1QN/25ke6D3iADP0dnd135r9QYYtZlO2pVf++7KI1tyrYvIpos2YqUyx8
+         ATdw==
+X-Gm-Message-State: AOAM532ujtzbN7XcTkuzX+iFlZiX5Dxn1PR9ZHshr1y8jXMkE1y30pco
+        eQ7LmjRgXupG1cv6FtTi+xFrsK24I4ICN+nnOtr/qIxzu/bP+A==
+X-Google-Smtp-Source: ABdhPJyI1IhG9mMgNOWSw7RfqzFWL3zXx1B5E6+Pasfj9lmkz8ctMU6PiDGL5C8ARki4Z7O8C/7PRvmDIcmhQEruXuk=
+X-Received: by 2002:a05:6808:21a1:: with SMTP id be33mr11856095oib.161.1635163316912;
+ Mon, 25 Oct 2021 05:01:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <de712291-fa08-b35a-f8fb-6d18b573f3f4@aawcs.co.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Hops: 1
-X-Originating-smarthost01c-IP: [82.71.70.4]
-Feedback-ID: 82.71.70.4
+From:   Marek <mlf.conv@gmail.com>
+Date:   Mon, 25 Oct 2021 14:01:46 +0200
+Message-ID: <CA+sqOsZB7s76CVmOQw6jbG3L9q7FLJ_Lw85QEnYVn7RTr4RNxw@mail.gmail.com>
+Subject: (looking for) more info on parity creation
+To:     Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Good-day All
-I "have" an array RAID6 6drives 1 spare. The OS got corrupted on reboot.
-On a fresh install the array is non detectable. Investigation shows that 
-out of the 6 active drives only the first one has a valid super block 
-the rest look to be corrupt. My assumption is that this might be down to 
-the fact that I raided on raw drives /dev/sdX and not on partitions 
-/dev/sdX1. Is this recoverable or should I load from a backup?
-I assumed trying to create using --assume-clean should work but 
-currently the only drive with a super block shows as busy except it is 
-not mounted.
-Many Thanks
-John Atkins
+Hi all,
+
+I'm looking for the piece of code inside mdadm source code that
+calculates parity can someone please point me to the part of source
+code which implements parity creation?
+Also is it just a simple XOR as described everywhere:
+eg double word disk1 XOR  double word disk2 XOR double word disk3 =
+double word disk 4
+or is something more complex going on.
+thanks
+
+Marek
