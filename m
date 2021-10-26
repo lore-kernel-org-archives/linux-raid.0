@@ -2,68 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25A76C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Oct 2021 12:02:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65137C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Oct 2021 08:19:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED67A60527
-	for <linux-raid@archiver.kernel.org>; Mon, 25 Oct 2021 12:01:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40C6960E8B
+	for <linux-raid@archiver.kernel.org>; Tue, 26 Oct 2021 08:19:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230168AbhJYMEV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 25 Oct 2021 08:04:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34100 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230090AbhJYMEU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 25 Oct 2021 08:04:20 -0400
-Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0801C061745
-        for <linux-raid@vger.kernel.org>; Mon, 25 Oct 2021 05:01:58 -0700 (PDT)
-Received: by mail-oi1-x22c.google.com with SMTP id q129so15249485oib.0
-        for <linux-raid@vger.kernel.org>; Mon, 25 Oct 2021 05:01:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=o5d+vCFvuo5OgndPJF7UIiuw1T9m3XWYeNbw60vdlUE=;
-        b=nNij9MbYCm2AovA+KWNso7CC6uiiSByya3LM5TKmGvJvmBVrMoWWp1rHT3/ljd7Dhp
-         fkHqGwTYm+MTix+PfLPYzprbmkwhT0Zmcar0yNThtcTOv3Sxbmvp+ghCZ72fHjkQKHMe
-         xDCCKFxlUuj1ifDrzHUCKN4ULFRn3O10AReAx3TpLzgYioOuTXCg7HNfq0wQIlEvIIpa
-         422yJfnIOqg0yx0TrujhWy8NNvRS+UctxEfOXoqv7+HhbB+lB2CEVAFT+tg1JBBDmep1
-         lZpPVn4GEyyCKcqI41x/sOHvsexH7QlM9JTjHXiBdXAWgaQAfZUudoQSjPzmrRd8SseF
-         4ElA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=o5d+vCFvuo5OgndPJF7UIiuw1T9m3XWYeNbw60vdlUE=;
-        b=22tHKjFrA9TknS8w3sA49YCxSxiu+c8bH6gCKErlnbWu2kPNTGWmUGtmDoUrgj6081
-         g5nkSna9Id5hTUX2ix5HOSvah43zDAhnQHJGkyFYxNlCZox0SHFxwd5Vz0kAtjoTckW7
-         NGc6Bpr/Yq6QhUtJQPzdLuCqiMQVaSm9sDAWsQ6JF16YrqNvoLKXYK0G0KOKHMS0D2jH
-         WjqiPh8giqnTCSnkqWWsokrnB9RcwMT3Tr7fldqfdNMeGF2YDbNdnRWgRW6TNWu61Syi
-         2voYcDRCWSj1QN/25ke6D3iADP0dnd135r9QYYtZlO2pVf++7KI1tyrYvIpos2YqUyx8
-         ATdw==
-X-Gm-Message-State: AOAM532ujtzbN7XcTkuzX+iFlZiX5Dxn1PR9ZHshr1y8jXMkE1y30pco
-        eQ7LmjRgXupG1cv6FtTi+xFrsK24I4ICN+nnOtr/qIxzu/bP+A==
-X-Google-Smtp-Source: ABdhPJyI1IhG9mMgNOWSw7RfqzFWL3zXx1B5E6+Pasfj9lmkz8ctMU6PiDGL5C8ARki4Z7O8C/7PRvmDIcmhQEruXuk=
-X-Received: by 2002:a05:6808:21a1:: with SMTP id be33mr11856095oib.161.1635163316912;
- Mon, 25 Oct 2021 05:01:56 -0700 (PDT)
-MIME-Version: 1.0
-From:   Marek <mlf.conv@gmail.com>
-Date:   Mon, 25 Oct 2021 14:01:46 +0200
-Message-ID: <CA+sqOsZB7s76CVmOQw6jbG3L9q7FLJ_Lw85QEnYVn7RTr4RNxw@mail.gmail.com>
-Subject: (looking for) more info on parity creation
-To:     Linux-RAID <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S233551AbhJZIWG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 26 Oct 2021 04:22:06 -0400
+Received: from smtp25.cstnet.cn ([159.226.251.25]:53120 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233719AbhJZIWC (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 26 Oct 2021 04:22:02 -0400
+X-Greylist: delayed 398 seconds by postgrey-1.27 at vger.kernel.org; Tue, 26 Oct 2021 04:22:02 EDT
+Received: from localhost.localdomain (unknown [124.16.138.128])
+        by APP-05 (Coremail) with SMTP id zQCowAB3fKh3uHdhdvM0BQ--.56608S2;
+        Tue, 26 Oct 2021 16:12:39 +0800 (CST)
+From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Subject: [PATCH] md/raid5: Fix implicit type conversion
+Date:   Tue, 26 Oct 2021 08:12:37 +0000
+Message-Id: <1635235957-2446919-1-git-send-email-jiasheng@iscas.ac.cn>
+X-Mailer: git-send-email 2.7.4
+X-CM-TRANSID: zQCowAB3fKh3uHdhdvM0BQ--.56608S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7JrW5tr1ftw1rury8ZrWrXwb_yoWDXrXEkr
+        1fXr1Yqr9Yqrn2vw13Ww1fCryS93WkWws2va4FgrsIvw1Fqa13Wr1vg34rXr17CrZ8ZF4q
+        qryDtwn3Zry8WjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbckFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+        Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+        0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkIecxEwVAFwVW8ZwCF
+        04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r
+        18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vI
+        r41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr
+        1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
+        0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUIzuXUUUUU=
+X-Originating-IP: [124.16.138.128]
+X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi all,
+The variable 'cpu' is defined as ULONG.
+However in the for_each_present_cpu, its value is assigned to -1.
+That doesn't make sense and in the cpumask_next() it is implicitly
+type conversed to INT.
+It is universally accepted that the implicit type conversion is
+terrible.
+Also, having the good programming custom will set an example for
+others.
+Thus, it might be better to change the definition of 'cpu' from UINT
+to INT.
 
-I'm looking for the piece of code inside mdadm source code that
-calculates parity can someone please point me to the part of source
-code which implements parity creation?
-Also is it just a simple XOR as described everywhere:
-eg double word disk1 XOR  double word disk2 XOR double word disk3 =
-double word disk 4
-or is something more complex going on.
-thanks
+Fixes: 738a273 ("md/raid5: fix allocation of 'scribble' array.")
+Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
+---
+ drivers/md/raid5.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Marek
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7d4ff8a..c7b88eb 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2425,7 +2425,7 @@ static int scribble_alloc(struct raid5_percpu *percpu,
+ 
+ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+ {
+-	unsigned long cpu;
++	int cpu;
+ 	int err = 0;
+ 
+ 	/*
+-- 
+2.7.4
+
