@@ -2,136 +2,102 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B830C433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  2 Nov 2021 15:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC80FC433EF
+	for <linux-raid@archiver.kernel.org>; Tue,  2 Nov 2021 15:53:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 597C260EB4
-	for <linux-raid@archiver.kernel.org>; Tue,  2 Nov 2021 15:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7B7860F70
+	for <linux-raid@archiver.kernel.org>; Tue,  2 Nov 2021 15:53:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231472AbhKBPe3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 2 Nov 2021 11:34:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56360 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231314AbhKBPe3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 2 Nov 2021 11:34:29 -0400
-Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 256B8C061714
-        for <linux-raid@vger.kernel.org>; Tue,  2 Nov 2021 08:31:54 -0700 (PDT)
-Received: by mail-io1-xd34.google.com with SMTP id 62so18587226iou.2
-        for <linux-raid@vger.kernel.org>; Tue, 02 Nov 2021 08:31:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=yZ1Erm+ddI5FCImkZRnUGQcDdTBSUsffV/XYyOB6I6U=;
-        b=fvs6xYgpbEULHgb5ayELFXFrn1NDYut/1mBTMHyevS7nfeOocEtqaqARRLbXxv0unT
-         /3VumdOKoqCCfPCfVUePJ+lOehDBmliF3qsjHJvD+g7UOK8aft2rs/awXskx5ZUbZNB7
-         /7QvFda7ZQiPlS+Z7t18hTEi9RTuIYfZG7kOcD2d8BE8QsXWVsvKBq3uZAyQ/ThNe0sI
-         mlg0ipExdm7uPIZNpwX8qLanK1H3n5HeFXrQJ6eBcQKo/3L724b1ZTElbnmFC5XQZtGA
-         8XS/4XBCUrDAGOdESIvKXKmkrYn6Wmrq3bERBP7uHTB7WQt2dbF9MLUPfvMIJjRBUDyc
-         zitg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=yZ1Erm+ddI5FCImkZRnUGQcDdTBSUsffV/XYyOB6I6U=;
-        b=z94JjtSSDCacPwBDLBZDrEfw4Jnt5lAIPeQLGLh7bmWhBATAPdIKMZndfFmf6GHb3G
-         UDlCRCBPj2rrg2pdlz0xKuFYWg3+xZoAoZWaSTwFkdgtZ2juCi2fXZsqPVocaBq4c0TA
-         2SBsrMs+zCNX/5GYnvSLZW8CGO8XhtgHxUI2g2+zJ9abDHEfmv/J28FFeMvG8E29T3/U
-         j48/BZCS2JsasYVaFMZzvfzIoMh9TVyv0IV48y7/ofnTRutT6BSKvTv1Vj0aBrnH+02i
-         syiN03za7JLxIgrdeiMkCg7AI9gjc2zr+L7X7vlaL3Faz6sZeQ09d3cQQbz9FUadYCbm
-         /X3w==
-X-Gm-Message-State: AOAM531nxfLrdCozTzscqZAdNVEwRy7AaIsgXqJksFdyF3BdKjDrKpzK
-        zuYxwD8/0+3LtIjxKgRrxs9PfZQ5d85U0g==
-X-Google-Smtp-Source: ABdhPJwOQqeI+9NEzC0WOWXNs3b1YNHRbWU/dahqmWFwlxrNhyPBV2mvsV+BDxGH2KL/lLpcIDPAsA==
-X-Received: by 2002:a5d:9ed6:: with SMTP id a22mr26938658ioe.167.1635867113277;
-        Tue, 02 Nov 2021 08:31:53 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id h19sm3196332ila.37.2021.11.02.08.31.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Nov 2021 08:31:52 -0700 (PDT)
-Subject: Re: [PATCH v2] md: add support for REQ_NOWAIT
-To:     Vishal Verma <vverma@digitalocean.com>, song@kernel.org,
-        linux-raid@vger.kernel.org
-References: <CAPhsuW5FpeS9AfPYpNgHGCp8dP151g-t8whSiGyuxEfp2O92tg@mail.gmail.com>
- <20211102144004.25344-1-vverma@digitalocean.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <03b30587-c5a3-d871-9719-112930a9019d@kernel.dk>
-Date:   Tue, 2 Nov 2021 09:31:52 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S234642AbhKBP4T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 2 Nov 2021 11:56:19 -0400
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17283 "EHLO
+        sender12-1.zoho.eu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232135AbhKBP4S (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 2 Nov 2021 11:56:18 -0400
+ARC-Seal: i=1; a=rsa-sha256; t=1635868417; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=grgLG31DP8faliW/JRuEXLGy8oPZLKoPRFWubShAgBn197OLN3I7SV5jh35l+xdrnCwyBzD/GD7R8ZcGi09QTyluA4yQslMgUk/jo94YxniFDIEaNbROHYB2B3OeGzfpy6+BpHNPi39SkEvmxuvieiopDkMG4WERdiaJ7l8EVf8=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1635868417; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=Gr+VaL1c1joEE15crCXLCJ2VdNHEQWBSfeb1VRp3qW8=; 
+        b=OlRlWlMDx0680Hvpqbk07+8xApV5OZC4+68GTIhEfudmj/CRYh5mEgjhLhSvPgQospydgV+uYwROP0agGTYrUglhN8zd6CEg+saulcCmLsCo2gfGse/fmpK2x7gyDmH/pj+A8hLjogdJYa7pYGCOIgv6dv6VLQ/kgGYnVjNP++c=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1635868417183589.8306177256504; Tue, 2 Nov 2021 16:53:37 +0100 (CET)
+Subject: Re: Proposal of changing generating version of mdadm
+To:     "Tanska, Kinga" <kinga.tanska@intel.com>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <MN2PR11MB3776740E926BE3FE37C8B6E389BE9@MN2PR11MB3776.namprd11.prod.outlook.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <835df064-87ca-a3c1-bd29-d8df62c79da3@trained-monkey.org>
+Date:   Tue, 2 Nov 2021 11:53:36 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <20211102144004.25344-1-vverma@digitalocean.com>
+In-Reply-To: <MN2PR11MB3776740E926BE3FE37C8B6E389BE9@MN2PR11MB3776.namprd11.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/2/21 8:40 AM, Vishal Verma wrote:
-> commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
-> for checking whether a given bdev supports handling of REQ_NOWAIT or not.
-> Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
-> it for linear target") added support for REQ_NOWAIT for dm. This uses
-> a similar approach to incorporate REQ_NOWAIT for md based bios.
+On 10/20/21 8:43 AM, Tanska, Kinga wrote:
+> Hi,
 > 
-> This patch was tested using t/io_uring tool within FIO. A nvme drive
-> was partitioned into 2 partitions and a simple raid 0 configuration
-> /dev/md0 was created.
+> recently we diagnosed few issues with 'mdadm -version' output.
+> Main problem is that end output varies on few conditions. We come with
+> simplified proposal. First let's describe current schema:
 > 
-> md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
->       937423872 blocks super 1.2 512k chunks
+> mdadm - version - date - extraversion
+> (example: mdadm - v4.2-rc2 - 2021-08-02 - extraversion)
 > 
-> Before patch:
+> or
 > 
-> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+> mdadm - version - date
+> (example: mdadm - v4.2-rc2 - 2021-08-02).
 > 
-> Running top while the above runs:
+> VERSION could be taken from code (see ReadMe.c:31), but when git is
+> installed and .git directory is available in mdadm workspace, version
+> is replaced with output from # git describe HEAD command. It is assumed
+> that git command should return last tag from repo, which should contain
+> information about last release. This might not be true, especially if user
+> uses tags to mark internal milestones or custom mdadm spins.
 > 
-> $ ps -eL | grep $(pidof io_uring)
+> The second problem is DATE, which corresponds to date of last release.
+> When few patches are picked onto HEAD date is not reliable. In my opinion
+> DATE is not needed. Usually, packages do not contain this element, e.g.
+> -	# git --version
+> 		git version 2.27.0
+> -	# gcc --version
+> 		gcc (GCC) 8.3.1 20191121 (Red Hat 8.3.1-5)
+> -	# yum --version
+> 		4.2.23
 > 
->   38396   38396 pts/2    00:00:00 io_uring
->   38396   38397 pts/2    00:00:15 io_uring
->   38396   38398 pts/2    00:00:13 iou-wrk-38397
+> To make it const and reliable, I propose removing DATE and always
+> use VERSION from code. VERSION shall keep general release information.
+> I would like to move the changeable elements into EXTRAVERSION. This
+> field will respect following conditions:
+> -	user definition first
+>        	(by respecting EXTRAVERSION=xxx during compilation)
+> -	if not defined by user, result of # git describe HEAD
+> -	else empty.
 > 
-> We can see iou-wrk-38397 io worker thread created which gets created
-> when io_uring sees that the underlying device (/dev/md0 in this case)
-> doesn't support nowait.
-> 
-> After patch:
-> 
-> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
-> 
-> Running top while the above runs:
-> 
-> $ ps -eL | grep $(pidof io_uring)
-> 
->   38341   38341 pts/2    00:10:22 io_uring
->   38341   38342 pts/2    00:10:37 io_uring
-> 
-> After running this patch, we don't see any io worker thread
-> being created which indicated that io_uring saw that the
-> underlying device does support nowait. This is the exact behaviour
-> noticed on a dm device which also supports nowait.
-> 
-> I also successfully tested this patch on various other
-> raid personalities (1, 6 and 10).
+> Example output:
+> mdadm - version - extraversion (example: mdadm - v4.2-rc2 - extraversion).
+> Thanks for any opinion about this proposition.
 
-This seems incomplete. It looks like it's propagating the nowait
-flag based on constituent devices, which is correct, but surely there
-are cases off the the make_request path that now need to check for NOWAIT
-and return -EAGAIN if they need to block.
+Hi Kinga,
 
-From a quick look, raid0 looks fine as-is. raid1 would need checking
-for waiting on a read barrier, for example.
+I am not against changing the format, however I worry that doing so may
+break scripts and tools in the field that nobody is maintaining or have
+thought of. If we are to change the output, I suggest making a new flag
+that provides the details you want and we can deprecate the old one, but
+leave it in place.
 
-If we just add nowait and don't _actually_ fix the driver, then the
-nowait exercise is pointless as it would then just mean that io_uring
-would block attempting to submit. That's the broken aio behavior, and
-that's certainly not the desired outcome here.
+Thoughts?
 
--- 
-Jens Axboe
-
+Jes
