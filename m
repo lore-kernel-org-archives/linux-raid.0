@@ -2,94 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6933C433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  3 Nov 2021 19:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C76CCC433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  3 Nov 2021 23:04:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E81560FC2
-	for <linux-raid@archiver.kernel.org>; Wed,  3 Nov 2021 19:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEDA5611C6
+	for <linux-raid@archiver.kernel.org>; Wed,  3 Nov 2021 23:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230248AbhKCTat (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 3 Nov 2021 15:30:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42404 "EHLO
+        id S230229AbhKCXH2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 3 Nov 2021 19:07:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229697AbhKCTat (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 3 Nov 2021 15:30:49 -0400
-Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DBC5C061203
-        for <linux-raid@vger.kernel.org>; Wed,  3 Nov 2021 12:28:12 -0700 (PDT)
-Received: by mail-ot1-x331.google.com with SMTP id s19-20020a056830125300b0055ad9673606so3730309otp.0
-        for <linux-raid@vger.kernel.org>; Wed, 03 Nov 2021 12:28:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=UePDyJ5YGTt0SI7wSYrq2teto/cQR2vkkj6nAm2W3a0=;
-        b=iJPu7qjoWnWpnlD3pbi8ofB5MCwNTChZ4jlIPjBLmxcCizs6UsV3G8NIpJvwQns6xz
-         Mcu2063seKgTdnAoui3FtZzMw8tih4oa/T0SA1zkZ8TWIgMTCTlvKwUnRQJJX9o8hTQo
-         NO5VmJ63MSPyzGtQlLxtrNhEUEkrQEkpnINZoI7anc9hmGLMdLfv28zMqBiXyzp7XfrI
-         Ch4low2MMbl4FMIg2eatNVS8VMh4Fy+7tyv+dPfwdSjjwvwv6LXIR/YJ6bywUGJoXBmN
-         xJ2/AiVAJMuY6c1kefCFBdNCE67M6OuV9vkZKDH4WRUFtlR5dRH6zzPvPZ7M7qHdques
-         FncQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=UePDyJ5YGTt0SI7wSYrq2teto/cQR2vkkj6nAm2W3a0=;
-        b=KlAxjPcsYeWQQYAI9H8qEdqfwQ3Yem7Y13dDMJOtp5NoU3OYDq1O86nB+jUK5hX79Z
-         svX5OkTDDshN4JTqRAeJGrvmNvIe3bDVXQyFAbnSzcq8kA0HzJvfqHEWEK04nxTHOc4W
-         FYDtJ5McgX8Dd+S2ocmAN3LIPvpBu4e28/biSQLF2uNIjWVAEq2FnGhtZcc3P7W+HYbG
-         C8Ayalalocpe0i4Qaa26oI+E5oAl1uW4JAC5Zw/uS48/jpVYQPttmF+eJnmV2gcoY0U1
-         Ut9osmipcb5PJVoSCI+qQE3pYgQScAMGqIp7Tuq7WRsyuj0/rVlGg6TaPj3LArdPDNnM
-         WRaA==
-X-Gm-Message-State: AOAM5316wdkOyrarX7574gTxgRAELI7kXOdkaLiwNg+cBeuP7UbA+P2X
-        Wxcu/7XOODC70Egbhd8QLnm9IA==
-X-Google-Smtp-Source: ABdhPJyDHe9v7v0ovnKDw8B7RfOBJHhSliZhy8hiaOCde7In7CDoT4l8tvqDIUDUaywzpQBTQ1nVDQ==
-X-Received: by 2002:a05:6830:2058:: with SMTP id f24mr19740345otp.248.1635967691754;
-        Wed, 03 Nov 2021 12:28:11 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id c1sm790336otl.71.2021.11.03.12.28.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Nov 2021 12:28:11 -0700 (PDT)
-Subject: Re: [PATCH v4 0/4] last set for add_disk() error handling
-To:     Luis Chamberlain <mcgrof@kernel.org>, hch@lst.de,
-        penguin-kernel@i-love.sakura.ne.jp, dan.j.williams@intel.com,
-        vishal.l.verma@intel.com, dave.jiang@intel.com,
-        ira.weiny@intel.com, richard@nod.at, miquel.raynal@bootlin.com,
-        vigneshr@ti.com, efremov@linux.com, song@kernel.org,
-        martin.petersen@oracle.com, hare@suse.de, jack@suse.cz,
-        ming.lei@redhat.com, tj@kernel.org
+        with ESMTP id S229698AbhKCXH1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 3 Nov 2021 19:07:27 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 099AFC061714;
+        Wed,  3 Nov 2021 16:04:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=kKuyk0it+UywLX6eUgF3vZCrnbiGfSWFOUp8zvmSh8Y=; b=ef+fiMlfjhcpLl5jo5UAKF90Kq
+        4KQ7KFuiNUPNTJEDK4bIAkRkcyl5A+wU1UZWABknExtJUr9ixhyG/bN+j09cY/BnbSgP2ytqwiA8u
+        3ZiI8+DmPVVSzLewpnp0hd/tJucz9qWcsqPMb50DQqNEeIja0AUndbF71NjNu/YeSYN/GACPfILjV
+        4ZRSFo3zfxGgoBSo0melaer5gp9te525rvvVqvqS6r1/x9dJTN6cZ/QDyDR6R5V+set3m+6RUJoZ9
+        Xspmt0hfZXlDvTC7qpDcv30QanDV5odiaBAGN3HSJ+LPnocJDVXHhlzk64qRzYB0qbDlltgo2u5SO
+        EGdiJv5Q==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1miPJ8-006seR-J4; Wed, 03 Nov 2021 23:04:38 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     axboe@kernel.dk, hch@lst.de, penguin-kernel@i-love.sakura.ne.jp,
+        dan.j.williams@intel.com, vishal.l.verma@intel.com,
+        dave.jiang@intel.com, ira.weiny@intel.com, richard@nod.at,
+        miquel.raynal@bootlin.com, vigneshr@ti.com, efremov@linux.com,
+        song@kernel.org, martin.petersen@oracle.com, hare@suse.de,
+        jack@suse.cz, ming.lei@redhat.com, tj@kernel.org, mcgrof@kernel.org
 Cc:     linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org
-References: <20211103181258.1462704-1-mcgrof@kernel.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <e01938a3-11c9-e368-65da-fcb5830e5a4c@kernel.dk>
-Date:   Wed, 3 Nov 2021 13:28:10 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+Subject: [PATCH v5 04/14] nvdimm/blk: add error handling support for add_disk()
+Date:   Wed,  3 Nov 2021 16:04:27 -0700
+Message-Id: <20211103230437.1639990-5-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20211103230437.1639990-1-mcgrof@kernel.org>
+References: <20211103230437.1639990-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20211103181258.1462704-1-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/3/21 12:12 PM, Luis Chamberlain wrote:
-> This v4 only updates the last 2 patches from my v3 series of stragglers
-> to account for Christoph's request to split the __register_blkdev()
-> probe call changes into 3 patches, one for documentation, the other 2
-> patches for each respective driver.
+We never checked for errors on add_disk() as this function
+returned void. Now that this is fixed, use the shiny new
+error handling.
 
-Part of the reason why I think this has taken so long is that there's
-a hundreds of series, and then you get partial updates, etc. It's really
-super hard to keep track of...
+Since nvdimm/blk uses devm we just need to move the devm
+registration towards the end. And in hindsight, that seems
+to also provide a fix given del_gendisk() should not be
+called unless the disk was already added via add_disk().
+The probably of that issue happening is low though, like
+OOM while calling devm_add_action(), so the fix is minor.
 
-Can we please just have one final series, not 1 and then another one
-that turns the last two into more?
+We manually unwind in case of add_disk() failure prior
+to the devm registration.
 
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/nvdimm/blk.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/nvdimm/blk.c b/drivers/nvdimm/blk.c
+index 4eef67918a7e..228c33b8d1d6 100644
+--- a/drivers/nvdimm/blk.c
++++ b/drivers/nvdimm/blk.c
+@@ -264,7 +264,9 @@ static int nsblk_attach_disk(struct nd_namespace_blk *nsblk)
+ 	}
+ 
+ 	set_capacity(disk, available_disk_size >> SECTOR_SHIFT);
+-	device_add_disk(dev, disk, NULL);
++	rc = device_add_disk(dev, disk, NULL);
++	if (rc)
++		goto out_before_devm_err;
+ 
+ 	/* nd_blk_release_disk() is called if this fails */
+ 	if (devm_add_action_or_reset(dev, nd_blk_release_disk, disk))
 -- 
-Jens Axboe
+2.33.0
 
