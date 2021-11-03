@@ -2,84 +2,112 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C7AFC433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  2 Nov 2021 19:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A78C433F5
+	for <linux-raid@archiver.kernel.org>; Wed,  3 Nov 2021 08:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D567360EB8
-	for <linux-raid@archiver.kernel.org>; Tue,  2 Nov 2021 19:12:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2A8A610E8
+	for <linux-raid@archiver.kernel.org>; Wed,  3 Nov 2021 08:52:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229764AbhKBTPR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 2 Nov 2021 15:15:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52250 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbhKBTPQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 2 Nov 2021 15:15:16 -0400
-Received: from mail-il1-x12c.google.com (mail-il1-x12c.google.com [IPv6:2607:f8b0:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29465C061714
-        for <linux-raid@vger.kernel.org>; Tue,  2 Nov 2021 12:12:41 -0700 (PDT)
-Received: by mail-il1-x12c.google.com with SMTP id l19so173384ilk.0
-        for <linux-raid@vger.kernel.org>; Tue, 02 Nov 2021 12:12:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=K4SYCpCs7cyT6iyrmp5jcYOIGyV8TL0N7RQQPDr/SQI=;
-        b=h2vE8uEtmTiIalYUKHzXF0kUPMNGTyd/JUO27H2lZTtSEO8YJSzGiQdLSUrG3XUH1g
-         J6e/F4+I36DhT/3qSi027Xz1+BTi2CDFSkwJ7BDF+X6t+Qt2yRt2byknW1aXIVwUfm4q
-         c4XM2kv9YrBDwExKk3nwCIsQVTkqmaLlbG87IGwXTOP0C7z5hsWj199Hqetd6IaRiAlL
-         MBgykx30HA/kjD+O23SzbLmvEJjr1lm5nKQCIv6IQTk1uPQGISLqCbik1TOsUJUBdlsn
-         ThrYfhtq972KU8H73xLdLWMSDWPINtaaSLfIvhvuIDO/byiyrAqS5Pgb9pJP2Jv13k5a
-         8NxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=K4SYCpCs7cyT6iyrmp5jcYOIGyV8TL0N7RQQPDr/SQI=;
-        b=2oOPqzv9DVf1Kukz4Enre/Vbxs80kXYGVlIEw/DJqN7QrLawyI4M7g9tXyDnheuWJr
-         OTf0swlgZ9gzq4TaiYRkOTozePOQJm3Nc6VLFra9LDXi/+yKsqiThrua471A90vOdMK1
-         tl84BmSzsxpmKmjkxpR5+KeYdd8PQAVjL3J3VZOCAgomROcK3x9x+f5wkroxhzgNnNud
-         Izpx7/JDgLzPPKXESkQFBI/pVkFoLBjuz/sBc86vTYLOAP7d6JzOhOIzK9ybB9AoawX1
-         6wgNOjXm8JVEopTUByiio+wTJs2m9iDx4WyHuguvK64kzn2eZFnrkAWKraPTQay1AwMq
-         R6gA==
-X-Gm-Message-State: AOAM531bdVPCkBd/uaU4IpYAj/88iv0huORKzJQ7z3lh7CuTA840u+K5
-        7AG5ZBjynBlR3VHqo+7Y5Iv3sw==
-X-Google-Smtp-Source: ABdhPJz7G4LlD0Ekhvwu68OV0oMbnuzoTQLFYOkbEIzQ/NL49391EbgXLc4sMc5Ja2Akl2DGQMDj2g==
-X-Received: by 2002:a92:d908:: with SMTP id s8mr5524608iln.168.1635880360514;
-        Tue, 02 Nov 2021 12:12:40 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id x11sm3625995ilu.51.2021.11.02.12.12.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Nov 2021 12:12:40 -0700 (PDT)
-Subject: Re: [GIT PULL] md-next 20211102
-To:     Song Liu <songliubraving@fb.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Guoqing Jiang <jgq516@gmail.com>,
-        Yang Guang <yang.guang5@zte.com.cn>
-References: <B99EFF4D-AF56-41FB-AA4C-E42E05263D20@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <7e64038b-8996-292a-32e1-ef8329e70b3f@kernel.dk>
-Date:   Tue, 2 Nov 2021 13:12:39 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S231705AbhKCIyz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 3 Nov 2021 04:54:55 -0400
+Received: from mga17.intel.com ([192.55.52.151]:31560 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231338AbhKCIyy (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 3 Nov 2021 04:54:54 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10156"; a="212208780"
+X-IronPort-AV: E=Sophos;i="5.87,205,1631602800"; 
+   d="scan'208";a="212208780"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2021 01:52:18 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,205,1631602800"; 
+   d="scan'208";a="667452826"
+Received: from lkp-server02.sh.intel.com (HELO c20d8bc80006) ([10.239.97.151])
+  by orsmga005.jf.intel.com with ESMTP; 03 Nov 2021 01:52:17 -0700
+Received: from kbuild by c20d8bc80006 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1miC0G-0005PY-GC; Wed, 03 Nov 2021 08:52:16 +0000
+Date:   Wed, 03 Nov 2021 16:51:50 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 1e37799b50eccb79c59c660b330746a7848c346b
+Message-ID: <61824da6.D4GaTNNcfp71Dkzz%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <B99EFF4D-AF56-41FB-AA4C-E42E05263D20@fb.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/2/21 12:59 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes on top of your for-5.16/drivers
-> branch. The only significant change here is a fix in back_log sysfs entry, by
-> Guoqing Jiang. 
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 1e37799b50eccb79c59c660b330746a7848c346b  raid5-ppl: use swap() to make code cleaner
 
-Pulled, thanks.
+elapsed time: 769m
 
--- 
-Jens Axboe
+configs tested: 53
+configs skipped: 3
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                              allyesconfig
+arm                              allmodconfig
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                                defconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+nios2                               defconfig
+nds32                             allnoconfig
+arc                              allyesconfig
+nds32                               defconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+nios2                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                           allnoconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                                  kexec
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
