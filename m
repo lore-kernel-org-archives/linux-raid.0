@@ -2,162 +2,315 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D7DC433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Nov 2021 17:10:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D00C433FE
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Nov 2021 17:26:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4A166103B
-	for <linux-raid@archiver.kernel.org>; Thu,  4 Nov 2021 17:10:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E77F61157
+	for <linux-raid@archiver.kernel.org>; Thu,  4 Nov 2021 17:26:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232125AbhKDRN3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 4 Nov 2021 13:13:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52796 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232034AbhKDRN3 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 4 Nov 2021 13:13:29 -0400
-Received: from mail-oi1-x231.google.com (mail-oi1-x231.google.com [IPv6:2607:f8b0:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDAA1C061203
-        for <linux-raid@vger.kernel.org>; Thu,  4 Nov 2021 10:10:50 -0700 (PDT)
-Received: by mail-oi1-x231.google.com with SMTP id l15so10288051oie.8
-        for <linux-raid@vger.kernel.org>; Thu, 04 Nov 2021 10:10:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=SevfzmLSoiSwyaqVR0wq8id+v0W8G6ODuu7UIBW98Ck=;
-        b=FI/9ZNYr6/fAExz91u+4IwEk/Sxb4E3n6n+OTpB6yV1R775Z6Rzn9wDuRKyhtHW7Yh
-         l0iXs/DRJdBCFSmFd1drvVOSND9tg7xbhdWhPlV+E7agORgDq700oVfwOrZafut+uTjL
-         wZsxQZh6zgZB+DNENjftVxGc9YpUsDAGiRyi//LUZnHzRHIRnbOFxBpPg8XrR9F7ikSf
-         UDIo8ruFN9iOwT6B1ti3FGya6rHDXaX1OIjfzbF69TkBR2jACv9yQMF30HkEsRnr62o1
-         dHzC2TUCo67saJOtouCkKq8r/H4VDxeLV8YfMGOr2rul3DM4MH9og7FmH1N3/1TnIjKp
-         FZGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=SevfzmLSoiSwyaqVR0wq8id+v0W8G6ODuu7UIBW98Ck=;
-        b=MOnf23asdvn/IPMwhQH4TU+uL8253sgqQ/FeAN/Oq1EcLIvsZKRBDMhpin5kbU1/vn
-         dHSNiK4CoekeP1kzGZ/xiL6bqyEzmz+8fbdSSqtHKbA6BtYIbVysIELhtL8wsFxnG4OB
-         dAMYiKO22GFGuHGoT6+eqyg9ROdb5Rpyc/Q1mTI7nhfdluxKhVg6S4BFAkLyGcHrkt0w
-         L8CuKg0UdM/ROFCYPkrmPwxqZffnIUYNQFkEFnXud8XTBStJl0+vADmV9LhLMJkKOjvu
-         u9QPRqNiliO1TFyZcKvjYLkPuAfr8xE+tEoJ/3my74ZYhpRdXXfPVLdHJVZT0QhDiWwR
-         2kPQ==
-X-Gm-Message-State: AOAM531NKekCdC0Inyf5pojJkH4R+hYAy1SX+11cQwo5SVhJtVWheDKx
-        I87lC8r7KjezGNm1x10X/VXy5A==
-X-Google-Smtp-Source: ABdhPJwKmmjP4pd9sA9tjR2/ScYq3sGmtX9vWhgQjNflbjsCxPsKiictYttp6KRG05oAopieT+rW4g==
-X-Received: by 2002:aca:3fd7:: with SMTP id m206mr16918071oia.162.1636045850000;
-        Thu, 04 Nov 2021 10:10:50 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id a13sm1599171oiy.9.2021.11.04.10.10.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 04 Nov 2021 10:10:49 -0700 (PDT)
-Subject: Re: [PATCH v5 00/14] last set for add_disk() error handling
-To:     Luis Chamberlain <mcgrof@kernel.org>, martin.petersen@oracle.com
-Cc:     miquel.raynal@bootlin.com, hare@suse.de, jack@suse.cz, hch@lst.de,
-        song@kernel.org, dave.jiang@intel.com, richard@nod.at,
-        vishal.l.verma@intel.com, penguin-kernel@i-love.sakura.ne.jp,
-        tj@kernel.org, ira.weiny@intel.com, vigneshr@ti.com,
-        dan.j.williams@intel.com, ming.lei@redhat.com, efremov@linux.com,
-        linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20211103230437.1639990-1-mcgrof@kernel.org>
- <163602655191.22491.10844091970007142957.b4-ty@kernel.dk>
- <4764286a-99b4-39f7-ce5c-9e88cee1a538@kernel.dk>
- <YYQTYctDjaxU2tkQ@bombadil.infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <377b472e-b788-df12-f9cd-7fc7b0887dc0@kernel.dk>
-Date:   Thu, 4 Nov 2021 11:10:48 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S233478AbhKDR3R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 4 Nov 2021 13:29:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45640 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233882AbhKDR2h (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 4 Nov 2021 13:28:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A43CB60EBC;
+        Thu,  4 Nov 2021 17:25:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636046758;
+        bh=iljyx7XQo1AGixVFKlSIZx5VevJV4Cjm/AjIevs7I1U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=h0d9lTd2sp3RwJMx9oz4g47OKs7YxibtKB2gOoWuCLLKktLtKeYKzcIObbMSurcCg
+         TlUpQgVaXnydLW59Js18z6EGSGzbTO5+BIngUAgod4igTn+55Mm6u8UkG6fk/aFvwn
+         PIOaSQpAFVKVP4fIOGALRXC/vxseQiBG2N9jte/gIpfgq8K3zSAy82wguUlJe2Lpq+
+         hlDWrhixvaZ4owNXObcv3L1k1yiiR/lVq0uK4Eh/kp6dK1cWY9M16kBeogxcpTB58/
+         BBBwlb78CZg0sxh+3j4VebEdOOsEUMUNsKbjKnEBARp33aWKvMA8BQ8g+7dpYIbddw
+         /RrC6OPTWtgpw==
+Date:   Thu, 4 Nov 2021 10:25:58 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, dm-devel@redhat.com, axboe@kernel.dk,
+        agk@redhat.com, snitzer@redhat.com, song@kernel.org,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, javier@javigon.com,
+        johannes.thumshirn@wdc.com, bvanassche@acm.org,
+        dongli.zhang@oracle.com, ming.lei@redhat.com, osandov@fb.com,
+        willy@infradead.org, jefflexu@linux.alibaba.com,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, jack@suse.com,
+        tytso@mit.edu, adilger.kernel@dilger.ca, jlayton@kernel.org,
+        idryomov@gmail.com, danil.kipnis@cloud.ionos.com,
+        ebiggers@google.com, jinpu.wang@cloud.ionos.com,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Subject: Re: [RFC PATCH 1/8] block: add support for REQ_OP_VERIFY
+Message-ID: <20211104172558.GH2237511@magnolia>
+References: <20211104064634.4481-1-chaitanyak@nvidia.com>
+ <20211104064634.4481-2-chaitanyak@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <YYQTYctDjaxU2tkQ@bombadil.infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211104064634.4481-2-chaitanyak@nvidia.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/4/21 11:07 AM, Luis Chamberlain wrote:
-> On Thu, Nov 04, 2021 at 06:53:34AM -0600, Jens Axboe wrote:
->> On 11/4/21 5:49 AM, Jens Axboe wrote:
->>> On Wed, 3 Nov 2021 16:04:23 -0700, Luis Chamberlain wrote:
->>>> Jens,
->>>>
->>>> as requested, I've folded all pending changes into this series. This
->>>> v5 pegs on Christoph's reviewed-by tags and since I was respinning I
->>>> modified the ataprobe and floppy driver changes as he suggested.
->>>>
->>>> I think this is it. The world of floppy has been exciting for v5.16.
->>>>
->>>> [...]
->>>
->>> Applied, thanks!
->>>
->>> [01/14] nvdimm/btt: use goto error labels on btt_blk_init()
->>>         commit: 2762ff06aa49e3a13fb4b779120f4f8c12c39fd1
->>> [02/14] nvdimm/btt: add error handling support for add_disk()
->>>         commit: 16be7974ff5d0a5cd9f345571c3eac1c3f6ba6de
->>> [03/14] nvdimm/blk: avoid calling del_gendisk() on early failures
->>>         commit: b7421afcec0c77ab58633587ddc29d53e6eb95af
->>> [04/14] nvdimm/blk: add error handling support for add_disk()
->>>         commit: dc104f4bb2d0a652dee010e47bc89c1ad2ab37c9
->>> [05/14] nvdimm/pmem: cleanup the disk if pmem_release_disk() is yet assigned
->>>         commit: accf58afb689f81daadde24080ea1164ad2db75f
->>> [06/14] nvdimm/pmem: use add_disk() error handling
->>>         commit: 5a192ccc32e2981f721343c750b8cfb4c3f41007
->>> [07/14] z2ram: add error handling support for add_disk()
->>>         commit: 15733754ccf35c49d2f36a7ac51adc8b975c1c78
->>> [08/14] block/sunvdc: add error handling support for add_disk()
->>>         commit: f583eaef0af39b792d74e39721b5ba4b6948a270
->>> [09/14] mtd/ubi/block: add error handling support for add_disk()
->>>         commit: ed73919124b2e48490adbbe48ffe885a2a4c6fee
->>> [10/14] ataflop: remove ataflop_probe_lock mutex
->>>         commit: 4ddb85d36613c45bde00d368bf9f357bd0708a0c
->>> [11/14] block: update __register_blkdev() probe documentation
->>>         commit: 26e06f5b13671d194d67ae8e2b66f524ab174153
->>> [12/14] ataflop: address add_disk() error handling on probe
->>>         commit: 46a7db492e7a27408bc164cbe6424683e79529b0
->>> [13/14] floppy: address add_disk() error handling on probe
->>>         commit: ec28fcc6cfcd418d20038ad2c492e87bf3a9f026
->>> [14/14] block: add __must_check for *add_disk*() callers
->>>         commit: 1698712d85ec2f128fc7e7c5dc2018b5ed2b7cf6
->>
->> rivers/scsi/sd.c: In function ‘sd_probe’:
->> drivers/scsi/sd.c:3573:9: warning: ignoring return value of ‘device_add_disk’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
->>  3573 |         device_add_disk(dev, gd, NULL);
->>       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/scsi/sr.c: In function ‘sr_probe’:
->> drivers/scsi/sr.c:731:9: warning: ignoring return value of ‘device_add_disk’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
->>   731 |         device_add_disk(&sdev->sdev_gendev, disk, NULL);
->>       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>
->>
->> Dropping the last two patches...
+On Wed, Nov 03, 2021 at 11:46:27PM -0700, Chaitanya Kulkarni wrote:
+> From: Chaitanya Kulkarni <kch@nvidia.com>
 > 
-> Martin K Peterson has the respective patches needed queued up on his tree
-> for v5.16:
+> This adds a new block layer operation to offload verifying a range of
+> LBAs. This support is needed in order to provide file systems and
+> fabrics, kernel components to offload LBA verification when it is
+> supported by the hardware controller. In case hardware offloading is
+> not supported then we provide APIs to emulate the same. The prominent
+> example of that is NVMe Verify command. We also provide an emulation of
+> the same operation which can be used in case H/W does not support
+> verify. This is still useful when block device is remotely attached e.g.
+> using NVMeOF.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.16/scsi-staging&id=e9d658c2175b95a8f091b12ddefb271683aeacd9
-> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.16/scsi-staging&id=2a7a891f4c406822801ecd676b076c64de072c9e
+> Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+> ---
+>  Documentation/ABI/testing/sysfs-block |  14 ++
+>  block/blk-core.c                      |   5 +
+>  block/blk-lib.c                       | 192 ++++++++++++++++++++++++++
+>  block/blk-merge.c                     |  19 +++
+>  block/blk-settings.c                  |  17 +++
+>  block/blk-sysfs.c                     |   8 ++
+>  block/blk-zoned.c                     |   1 +
+>  block/bounce.c                        |   1 +
+>  block/ioctl.c                         |  35 +++++
+>  include/linux/bio.h                   |  10 +-
+>  include/linux/blk_types.h             |   2 +
+>  include/linux/blkdev.h                |  31 +++++
+>  include/uapi/linux/fs.h               |   1 +
+>  13 files changed, 332 insertions(+), 4 deletions(-)
 > 
-> Would the last patch be sent once that gets to Linus?
 
-But that dependency wasn't clear in the patches posted, and it leaves me
-wondering if there are others? I obviously can't queue up a patch that
-adds a must_check to a function, when we still have callers that don't
-properly check it.
+(skipping to the ioctl part; I didn't see anything obviously weird in
+the block/ changes)
 
-That should have been made clear, and that last patch never should've
-been part of the series. Please send it once Linus's tree has all
-callers checking the result.
+> diff --git a/block/ioctl.c b/block/ioctl.c
+> index d61d652078f4..5e1b3c4660bf 100644
+> --- a/block/ioctl.c
+> +++ b/block/ioctl.c
+> @@ -168,6 +168,39 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
+>  			BLKDEV_ZERO_NOUNMAP);
+>  }
+>  
+> +static int blk_ioctl_verify(struct block_device *bdev, fmode_t mode,
+> +		unsigned long arg)
+> +{
+> +	uint64_t range[2];
+> +	struct address_space *mapping;
+> +	uint64_t start, end, len;
+> +
+> +	if (!(mode & FMODE_WRITE))
+> +		return -EBADF;
 
-> Also curious why drop the last two patches instead just the last one for
-> now?
+Why does the fd have to be opened writable?  Isn't this a read test?
 
-Sorry, meant just the last one.
+> +
+> +	if (copy_from_user(range, (void __user *)arg, sizeof(range)))
+> +		return -EFAULT;
+> +
+> +	start = range[0];
+> +	len = range[1];
+> +	end = start + len - 1;
+> +
+> +	if (start & 511)
+> +		return -EINVAL;
+> +	if (len & 511)
+> +		return -EINVAL;
+> +	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
+> +		return -EINVAL;
+> +	if (end < start)
+> +		return -EINVAL;
+> +
+> +	/* Invalidate the page cache, including dirty pages */
+> +	mapping = bdev->bd_inode->i_mapping;
+> +	truncate_inode_pages_range(mapping, start, end);
 
--- 
-Jens Axboe
+Why do we need to invalidate the page cache to verify media?  Won't that
+cause data loss if those pages were dirty and about to be flushed?
 
+--D
+
+> +
+> +	return blkdev_issue_verify(bdev, start >> 9, len >> 9, GFP_KERNEL);
+> +}
+> +
+>  static int put_ushort(unsigned short __user *argp, unsigned short val)
+>  {
+>  	return put_user(val, argp);
+> @@ -460,6 +493,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
+>  				BLKDEV_DISCARD_SECURE);
+>  	case BLKZEROOUT:
+>  		return blk_ioctl_zeroout(bdev, mode, arg);
+> +	case BLKVERIFY:
+> +		return blk_ioctl_verify(bdev, mode, arg);
+>  	case BLKREPORTZONE:
+>  		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
+>  	case BLKRESETZONE:
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index c74857cf1252..d660c37b7d6c 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -63,7 +63,8 @@ static inline bool bio_has_data(struct bio *bio)
+>  	    bio->bi_iter.bi_size &&
+>  	    bio_op(bio) != REQ_OP_DISCARD &&
+>  	    bio_op(bio) != REQ_OP_SECURE_ERASE &&
+> -	    bio_op(bio) != REQ_OP_WRITE_ZEROES)
+> +	    bio_op(bio) != REQ_OP_WRITE_ZEROES &&
+> +	    bio_op(bio) != REQ_OP_VERIFY)
+>  		return true;
+>  
+>  	return false;
+> @@ -73,8 +74,8 @@ static inline bool bio_no_advance_iter(const struct bio *bio)
+>  {
+>  	return bio_op(bio) == REQ_OP_DISCARD ||
+>  	       bio_op(bio) == REQ_OP_SECURE_ERASE ||
+> -	       bio_op(bio) == REQ_OP_WRITE_SAME ||
+> -	       bio_op(bio) == REQ_OP_WRITE_ZEROES;
+> +	       bio_op(bio) == REQ_OP_WRITE_ZEROES ||
+> +	       bio_op(bio) == REQ_OP_VERIFY;
+>  }
+>  
+>  static inline bool bio_mergeable(struct bio *bio)
+> @@ -198,7 +199,7 @@ static inline unsigned bio_segments(struct bio *bio)
+>  	struct bvec_iter iter;
+>  
+>  	/*
+> -	 * We special case discard/write same/write zeroes, because they
+> +	 * We special case discard/write same/write zeroes/verify, because they
+>  	 * interpret bi_size differently:
+>  	 */
+>  
+> @@ -206,6 +207,7 @@ static inline unsigned bio_segments(struct bio *bio)
+>  	case REQ_OP_DISCARD:
+>  	case REQ_OP_SECURE_ERASE:
+>  	case REQ_OP_WRITE_ZEROES:
+> +	case REQ_OP_VERIFY:
+>  		return 0;
+>  	case REQ_OP_WRITE_SAME:
+>  		return 1;
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index 1bc6f6a01070..8877711c4c56 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -366,6 +366,8 @@ enum req_opf {
+>  	REQ_OP_SECURE_ERASE	= 5,
+>  	/* write the same sector many times */
+>  	REQ_OP_WRITE_SAME	= 7,
+> +	/* verify the sectors */
+> +	REQ_OP_VERIFY		= 8,
+>  	/* write the zero filled sector many times */
+>  	REQ_OP_WRITE_ZEROES	= 9,
+>  	/* Open a zone */
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 0dea268bd61b..99c41d90584b 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -334,6 +334,7 @@ struct queue_limits {
+>  	unsigned int		max_hw_discard_sectors;
+>  	unsigned int		max_write_same_sectors;
+>  	unsigned int		max_write_zeroes_sectors;
+> +	unsigned int		max_verify_sectors;
+>  	unsigned int		max_zone_append_sectors;
+>  	unsigned int		discard_granularity;
+>  	unsigned int		discard_alignment;
+> @@ -621,6 +622,7 @@ struct request_queue {
+>  #define QUEUE_FLAG_RQ_ALLOC_TIME 27	/* record rq->alloc_time_ns */
+>  #define QUEUE_FLAG_HCTX_ACTIVE	28	/* at least one blk-mq hctx is active */
+>  #define QUEUE_FLAG_NOWAIT       29	/* device supports NOWAIT */
+> +#define QUEUE_FLAG_VERIFY	30	/* supports Verify */
+>  
+>  #define QUEUE_FLAG_MQ_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+>  				 (1 << QUEUE_FLAG_SAME_COMP) |		\
+> @@ -667,6 +669,7 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
+>  #define blk_queue_fua(q)	test_bit(QUEUE_FLAG_FUA, &(q)->queue_flags)
+>  #define blk_queue_registered(q)	test_bit(QUEUE_FLAG_REGISTERED, &(q)->queue_flags)
+>  #define blk_queue_nowait(q)	test_bit(QUEUE_FLAG_NOWAIT, &(q)->queue_flags)
+> +#define blk_queue_verify(q)	test_bit(QUEUE_FLAG_VERIFY, &(q)->queue_flags)
+>  
+>  extern void blk_set_pm_only(struct request_queue *q);
+>  extern void blk_clear_pm_only(struct request_queue *q);
+> @@ -814,6 +817,9 @@ static inline bool rq_mergeable(struct request *rq)
+>  	if (req_op(rq) == REQ_OP_WRITE_ZEROES)
+>  		return false;
+>  
+> +	if (req_op(rq) == REQ_OP_VERIFY)
+> +		return false;
+> +
+>  	if (req_op(rq) == REQ_OP_ZONE_APPEND)
+>  		return false;
+>  
+> @@ -1072,6 +1078,9 @@ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+>  	if (unlikely(op == REQ_OP_WRITE_ZEROES))
+>  		return q->limits.max_write_zeroes_sectors;
+>  
+> +	if (unlikely(op == REQ_OP_VERIFY))
+> +		return q->limits.max_verify_sectors;
+> +
+>  	return q->limits.max_sectors;
+>  }
+>  
+> @@ -1154,6 +1163,8 @@ extern void blk_queue_max_discard_sectors(struct request_queue *q,
+>  		unsigned int max_discard_sectors);
+>  extern void blk_queue_max_write_same_sectors(struct request_queue *q,
+>  		unsigned int max_write_same_sectors);
+> +extern void blk_queue_max_verify_sectors(struct request_queue *q,
+> +		unsigned int max_verify_sectors);
+>  extern void blk_queue_max_write_zeroes_sectors(struct request_queue *q,
+>  		unsigned int max_write_same_sectors);
+>  extern void blk_queue_logical_block_size(struct request_queue *, unsigned int);
+> @@ -1348,6 +1359,16 @@ extern int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+>  		unsigned flags);
+>  extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+>  		sector_t nr_sects, gfp_t gfp_mask, unsigned flags);
+> +extern int __blkdev_emulate_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask, struct bio **biop,
+> +		char *buf);
+> +extern int blkdev_emulate_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask);
+> +extern int __blkdev_issue_verify(struct block_device *bdev,
+> +		sector_t sector, sector_t nr_sects, gfp_t gfp_mask,
+> +		struct bio **biop);
+> +extern int blkdev_issue_verify(struct block_device *bdev, sector_t sector,
+> +		sector_t nr_sects, gfp_t gfp_mask);
+>  
+>  static inline int sb_issue_discard(struct super_block *sb, sector_t block,
+>  		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
+> @@ -1553,6 +1574,16 @@ static inline unsigned int bdev_write_same(struct block_device *bdev)
+>  	return 0;
+>  }
+>  
+> +static inline unsigned int bdev_verify_sectors(struct block_device *bdev)
+> +{
+> +	struct request_queue *q = bdev_get_queue(bdev);
+> +
+> +	if (q)
+> +		return q->limits.max_verify_sectors;
+> +
+> +	return 0;
+> +}
+> +
+>  static inline unsigned int bdev_write_zeroes_sectors(struct block_device *bdev)
+>  {
+>  	struct request_queue *q = bdev_get_queue(bdev);
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index f44eb0a04afd..5eda16bd2c3d 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -184,6 +184,7 @@ struct fsxattr {
+>  #define BLKSECDISCARD _IO(0x12,125)
+>  #define BLKROTATIONAL _IO(0x12,126)
+>  #define BLKZEROOUT _IO(0x12,127)
+> +#define BLKVERIFY _IO(0x12,128)
+>  /*
+>   * A jump here: 130-131 are reserved for zoned block devices
+>   * (see uapi/linux/blkzoned.h)
+> -- 
+> 2.22.1
+> 
