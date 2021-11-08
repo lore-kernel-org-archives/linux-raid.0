@@ -2,66 +2,65 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7985DC433F5
-	for <linux-raid@archiver.kernel.org>; Mon,  8 Nov 2021 22:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF4BC433EF
+	for <linux-raid@archiver.kernel.org>; Mon,  8 Nov 2021 22:39:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59CF8619A6
-	for <linux-raid@archiver.kernel.org>; Mon,  8 Nov 2021 22:37:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCC3B619BB
+	for <linux-raid@archiver.kernel.org>; Mon,  8 Nov 2021 22:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240745AbhKHWjp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 8 Nov 2021 17:39:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38940 "EHLO
+        id S240752AbhKHWmF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 8 Nov 2021 17:42:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239019AbhKHWjo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 Nov 2021 17:39:44 -0500
-Received: from mail-ot1-x330.google.com (mail-ot1-x330.google.com [IPv6:2607:f8b0:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F25C061570
-        for <linux-raid@vger.kernel.org>; Mon,  8 Nov 2021 14:37:00 -0800 (PST)
-Received: by mail-ot1-x330.google.com with SMTP id g91-20020a9d12e4000000b0055ae68cfc3dso25198849otg.9
-        for <linux-raid@vger.kernel.org>; Mon, 08 Nov 2021 14:37:00 -0800 (PST)
+        with ESMTP id S239019AbhKHWmF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 8 Nov 2021 17:42:05 -0500
+Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73A6AC061570
+        for <linux-raid@vger.kernel.org>; Mon,  8 Nov 2021 14:39:20 -0800 (PST)
+Received: by mail-ot1-x343.google.com with SMTP id g25-20020a9d5f99000000b0055af3d227e8so23545145oti.11
+        for <linux-raid@vger.kernel.org>; Mon, 08 Nov 2021 14:39:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=digitalocean.com; s=google;
         h=message-id:date:mime-version:user-agent:subject:to:cc:references
          :from:in-reply-to:content-transfer-encoding;
-        bh=o6WSSVqh8lZtt9+L7YVjggWszcAAimuW93RHtkmDi50=;
-        b=R1CoWVreuCCui8c6f+KRNu2vGd2b24C9neaQkSkxJESoPeWmUrKSjejFeM3fToEfy7
-         sdNzWfj0prbQEdekEjGIDEqz0wIoTbwuxOSY8XjfWm1AoTNSWQTiSmBHDINbGNw49VV6
-         7dsk2Smljk53ElvbfEI+nTWUz0Wh4gYhliFhM=
+        bh=sWq7ndhlIh0Xxm2Trvu865dXAVJI2eTDNdllRHjZRsc=;
+        b=PWPE4G0/i8BM53ifP/KvT3ftpnWoSyr20o0vq2/jq/L5ugnxABnozgVyZ6z+DPt7j4
+         q5li1LV+DPr+hdC+YQzyNIO+qIGAN/zZBB19JoTVosLsabDgfaZZrG9itG42ff2N78n7
+         rYhg9JAY119AJLqCpzCEBJykGhUAAExiS5/vY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :to:cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=o6WSSVqh8lZtt9+L7YVjggWszcAAimuW93RHtkmDi50=;
-        b=GbbFHcBlQqfLwqxSsY6KgYWpujJJHpfWlVG+LO7Q+4wJyGPrlnIhP3cGQvGj2g538Y
-         ntfLl+D8TFZPbcQZw6mQR/vjBTp/shFzQSBlFIEcHBxIhlCcuRksfNUtxmFUrHWyYiOE
-         N0/pgQ0gdd36BpsofKj5q9uUUns/6EvA1DB2jhbR4l1UxnLBYl8Yjk+gijN379ht2KcK
-         aAYEF9h4KkE8Z+JAS0sidUywrevDLSzqyeRA9PBeHxeKQ36m7mqPxa/9FzATvy6wnAE+
-         ukASXXLKnDgBWFlhgAyOVbO+5CPHAmaes5juBW4UdXJFgzc3Op1J46aePGbBm4cwwtFR
-         7DlQ==
-X-Gm-Message-State: AOAM531mfXAebnYUchwWGtNPjScX263UMJyB/prNU4ENqlVoC3iF553s
-        Xfq6ZxM7E36wXc/LaWSDxrsB1A==
-X-Google-Smtp-Source: ABdhPJw1ADQcusTAKCt+4pUvg1Ub5A/nsZ2JUpf5aTP6sfguspArJ2H4/0wg6ZtRT7JIFO49vMFA4Q==
-X-Received: by 2002:a9d:352:: with SMTP id 76mr1825395otv.79.1636411019295;
-        Mon, 08 Nov 2021 14:36:59 -0800 (PST)
+        bh=sWq7ndhlIh0Xxm2Trvu865dXAVJI2eTDNdllRHjZRsc=;
+        b=Ubjw7qKcZ88dXiPJOqTkbzMaD3IGWfkPvnXNyzA+yWv69tGoG+5hWUcrGKErZeAUpR
+         W/uK80M0sqXNACkjBUautvCJyWsT+ZUZEiEN4MPdl+vw5HbHCSe6t8vHivPCstMlU06E
+         3h+1HzvEiqH0XPl3i1aXU5gwceQPdVXBkn4d8DBNwND1tP7j0KDNeLUenYRT0ykJFntx
+         Wc4G8DRZ+f4piMTtPwbHtShjKFSL6V58Vb6QrpxyH5eFQPAjSr/EYm4Wweaffo8l0Qj6
+         sWUYow1WiDKCfafSo8VxxWZk5lKcv15ExiLwzQtrz1XujQuERLXB329kBtcQwqCEfK7H
+         pJeA==
+X-Gm-Message-State: AOAM530Q5IKuwFzuEQXGWs54+uCzVUNRyiQNmpA+2v1BP5DjaFjThGAN
+        OjGsMI4zb3L5JwSvtsZwA29e1cM1d7cX5kk6
+X-Google-Smtp-Source: ABdhPJzxS2UKHbzRBzGbpj27ikiV0SkVmvLnAA2toZlq9GHDv6yX9VxTYb0zPFIGKp9jIIjwD/7d7Q==
+X-Received: by 2002:a05:6830:2695:: with SMTP id l21mr2034287otu.197.1636411159614;
+        Mon, 08 Nov 2021 14:39:19 -0800 (PST)
 Received: from [192.168.1.7] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
-        by smtp.gmail.com with ESMTPSA id t12sm2454335oor.21.2021.11.08.14.36.58
+        by smtp.gmail.com with ESMTPSA id c18sm7980132ots.64.2021.11.08.14.39.18
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Nov 2021 14:36:58 -0800 (PST)
-Message-ID: <62d56d6b-5651-f582-a9aa-e567d47d2876@digitalocean.com>
-Date:   Mon, 8 Nov 2021 15:36:57 -0700
+        Mon, 08 Nov 2021 14:39:19 -0800 (PST)
+Message-ID: <97bff08e-ecb7-37d7-c113-7f33bfca02d9@digitalocean.com>
+Date:   Mon, 8 Nov 2021 15:39:17 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.3.0
-Subject: Re: [PATCH v3 1/2] md: add support for REQ_NOWAIT
+Subject: Re: [PATCH v3 2/2] md: raid1 add nowait support
 To:     Song Liu <song@kernel.org>
 Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
         Jens Axboe <axboe@kernel.dk>
 References: <CAPhsuW5rGPP_6CZWC+W93dRHS6b3HJ7Yz4KR=r7ghhuZov2vfQ@mail.gmail.com>
  <20211104045149.9599-1-vverma@digitalocean.com>
- <20211104045149.9599-2-vverma@digitalocean.com>
- <CAPhsuW6OtyJ_e9ZSqDE1YRk+zfNfQn0KRGOBe2AetUe5c=BvMQ@mail.gmail.com>
+ <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
 From:   Vishal Verma <vverma@digitalocean.com>
-In-Reply-To: <CAPhsuW6OtyJ_e9ZSqDE1YRk+zfNfQn0KRGOBe2AetUe5c=BvMQ@mail.gmail.com>
+In-Reply-To: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -69,110 +68,213 @@ List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
 
-On 11/8/21 3:17 PM, Song Liu wrote:
+On 11/8/21 3:32 PM, Song Liu wrote:
 > On Wed, Nov 3, 2021 at 9:52 PM Vishal Verma <vverma@digitalocean.com> wrote:
->> commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
->> for checking whether a given bdev supports handling of REQ_NOWAIT or not.
->> Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
->> it for linear target") added support for REQ_NOWAIT for dm. This uses
->> a similar approach to incorporate REQ_NOWAIT for md based bios.
+>> This adds nowait support to the RAID1 driver. It makes RAID1 driver
+>> return with EAGAIN for situations where it could wait for eg:
 >>
->> This patch was tested using t/io_uring tool within FIO. A nvme drive
->> was partitioned into 2 partitions and a simple raid 0 configuration
->> /dev/md0 was created.
+>>    - Waiting for the barrier,
+>>    - Array got frozen,
+>>    - Too many pending I/Os to be queued.
 >>
->> md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
->>        937423872 blocks super 1.2 512k chunks
->>
->> Before patch:
->>
->> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
->>
->> Running top while the above runs:
->>
->> $ ps -eL | grep $(pidof io_uring)
->>
->>    38396   38396 pts/2    00:00:00 io_uring
->>    38396   38397 pts/2    00:00:15 io_uring
->>    38396   38398 pts/2    00:00:13 iou-wrk-38397
->>
->> We can see iou-wrk-38397 io worker thread created which gets created
->> when io_uring sees that the underlying device (/dev/md0 in this case)
->> doesn't support nowait.
->>
->> After patch:
->>
->> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
->>
->> Running top while the above runs:
->>
->> $ ps -eL | grep $(pidof io_uring)
->>
->>    38341   38341 pts/2    00:10:22 io_uring
->>    38341   38342 pts/2    00:10:37 io_uring
->>
->> After running this patch, we don't see any io worker thread
->> being created which indicated that io_uring saw that the
->> underlying device does support nowait. This is the exact behaviour
->> noticed on a dm device which also supports nowait.
->>
->> For all the other raid personalities except raid0, we would need
->> to train pieces which involves make_request fn in order for them
->> to correctly handle REQ_NOWAIT.
+>> wait_barrier() fn is modified to return bool to support error for
+>> wait barriers. It returns true in case of wait or if wait is not
+>> required and returns false if wait was required but not performed
+>> to support nowait.
 >>
 >> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
-> I think we still need the logic in md_handle_request() similar to v1?
+>> ---
+>>   drivers/md/raid1.c | 74 +++++++++++++++++++++++++++++++++++-----------
+>>   1 file changed, 57 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 7dc8026cf6ee..2e191fc2147b 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -929,8 +929,9 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+>>          wake_up(&conf->wait_barrier);
+>>   }
+>>
+>> -static void _wait_barrier(struct r1conf *conf, int idx)
+>> +static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
+>>   {
+>> +       bool ret = true;
+>>          /*
+>>           * We need to increase conf->nr_pending[idx] very early here,
+>>           * then raise_barrier() can be blocked when it waits for
+>> @@ -961,7 +962,7 @@ static void _wait_barrier(struct r1conf *conf, int idx)
+>>           */
+>>          if (!READ_ONCE(conf->array_frozen) &&
+>>              !atomic_read(&conf->barrier[idx]))
+>> -               return;
+>> +               return ret;
+>>
+>>          /*
+>>           * After holding conf->resync_lock, conf->nr_pending[idx]
+>> @@ -979,18 +980,27 @@ static void _wait_barrier(struct r1conf *conf, int idx)
+>>           */
+>>          wake_up(&conf->wait_barrier);
+>>          /* Wait for the barrier in same barrier unit bucket to drop. */
+>> -       wait_event_lock_irq(conf->wait_barrier,
+>> -                           !conf->array_frozen &&
+>> -                            !atomic_read(&conf->barrier[idx]),
+>> -                           conf->resync_lock);
+>> +       if (conf->array_frozen || atomic_read(&conf->barrier[idx])) {
+>> +               /* Return false when nowait flag is set */
+>> +               if (nowait)
+>> +                       ret = false;
+>> +               else {
+>> +                       wait_event_lock_irq(conf->wait_barrier,
+>> +                                       !conf->array_frozen &&
+>> +                                       !atomic_read(&conf->barrier[idx]),
+>> +                                       conf->resync_lock);
+>> +               }
+>> +       }
+>>          atomic_inc(&conf->nr_pending[idx]);
+>>          atomic_dec(&conf->nr_waiting[idx]);
+>>          spin_unlock_irq(&conf->resync_lock);
+>> +       return ret;
+>>   }
+>>
+>> -static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>> +static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+>>   {
+>>          int idx = sector_to_idx(sector_nr);
+>> +       bool ret = true;
+>>
+>>          /*
+>>           * Very similar to _wait_barrier(). The difference is, for read
+>> @@ -1002,7 +1012,7 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>>          atomic_inc(&conf->nr_pending[idx]);
+>>
+>>          if (!READ_ONCE(conf->array_frozen))
+>> -               return;
+>> +               return ret;
+>>
+>>          spin_lock_irq(&conf->resync_lock);
+>>          atomic_inc(&conf->nr_waiting[idx]);
+>> @@ -1013,19 +1023,27 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>>           */
+>>          wake_up(&conf->wait_barrier);
+>>          /* Wait for array to be unfrozen */
+>> -       wait_event_lock_irq(conf->wait_barrier,
+>> -                           !conf->array_frozen,
+>> -                           conf->resync_lock);
+>> +       if (conf->array_frozen || atomic_read(&conf->barrier[idx])) {
+>> +               if (nowait)
+>> +                       /* Return false when nowait flag is set */
+>> +                       ret = false;
+>> +               else {
+>> +                       wait_event_lock_irq(conf->wait_barrier,
+>> +                                       !conf->array_frozen,
+>> +                                       conf->resync_lock);
+>> +               }
+>> +       }
+>>          atomic_inc(&conf->nr_pending[idx]);
+>>          atomic_dec(&conf->nr_waiting[idx]);
+>>          spin_unlock_irq(&conf->resync_lock);
+>> +       return ret;
+>>   }
+>>
+>> -static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
+>> +static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+>>   {
+>>          int idx = sector_to_idx(sector_nr);
+>>
+>> -       _wait_barrier(conf, idx);
+>> +       return _wait_barrier(conf, idx, nowait);
+>>   }
+>>
+>>   static void _allow_barrier(struct r1conf *conf, int idx)
+>> @@ -1236,7 +1254,11 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+>>           * Still need barrier for READ in case that whole
+>>           * array is frozen.
+>>           */
+>> -       wait_read_barrier(conf, bio->bi_iter.bi_sector);
+>> +       if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+>> +                               bio->bi_opf & REQ_NOWAIT)) {
+>> +               bio_wouldblock_error(bio);
+>> +               return;
+>> +       }
+>>
+>>          if (!r1_bio)
+>>                  r1_bio = alloc_r1bio(mddev, bio);
+>> @@ -1336,6 +1358,10 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>                       bio->bi_iter.bi_sector, bio_end_sector(bio))) {
+>>
+>>                  DEFINE_WAIT(w);
+>> +               if (bio->bi_opf & REQ_NOWAIT) {
+>> +                       bio_wouldblock_error(bio);
+>> +                       return;
+>> +               }
+>>                  for (;;) {
+>>                          prepare_to_wait(&conf->wait_barrier,
+>>                                          &w, TASK_IDLE);
+>> @@ -1353,17 +1379,26 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>           * thread has put up a bar for new requests.
+>>           * Continue immediately if no resync is active currently.
+>>           */
+>> -       wait_barrier(conf, bio->bi_iter.bi_sector);
+>> +       if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+> We change wait_barrier to wait_read_barrier here, I guess this is a typo?
+>
+> Please include changes in raid10 and raid456 (or don't set QUEUE_FLAG_NOWAIT
+> for these personalities) and resend the patch. We will target it for
+> the next merge
+> window (5.17).
 >
 > Thanks,
 > Song
 >
-> Yes, I believe so. I misunderstood your earlier comment in v1 regarding bio_endio().
-> Will fix it.
->> ---
->>   drivers/md/md.c | 14 ++++++++++++++
->>   1 file changed, 14 insertions(+)
+> Thanks Song. I am almost done with the raid10 change and will do the
+> raid456 soon and resend.
+>> +                               bio->bi_opf & REQ_NOWAIT)) {
+>> +               bio_wouldblock_error(bio);
+>> +               return;
+>> +       }
 >>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 5111ed966947..73089776475f 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -5792,6 +5792,7 @@ int md_run(struct mddev *mddev)
->>          int err;
->>          struct md_rdev *rdev;
->>          struct md_personality *pers;
->> +       bool nowait = true;
+>>          r1_bio = alloc_r1bio(mddev, bio);
+>>          r1_bio->sectors = max_write_sectors;
 >>
->>          if (list_empty(&mddev->disks))
->>                  /* cannot run an array with no devices.. */
->> @@ -5862,8 +5863,13 @@ int md_run(struct mddev *mddev)
->>                          }
->>                  }
->>                  sysfs_notify_dirent_safe(rdev->sysfs_state);
->> +               nowait = nowait && blk_queue_nowait(bdev_get_queue(rdev->bdev));
+>>          if (conf->pending_count >= max_queued_requests) {
+>>                  md_wakeup_thread(mddev->thread);
+>> +               if (bio->bi_opf & REQ_NOWAIT) {
+>> +                       bio_wouldblock_error(bio);
+>> +                       return;
+>> +               }
+>>                  raid1_log(mddev, "wait queued");
+>>                  wait_event(conf->wait_barrier,
+>>                             conf->pending_count < max_queued_requests);
+>>          }
+>> +
+>>          /* first select target devices under rcu_lock and
+>>           * inc refcount on their rdev.  Record them by setting
+>>           * bios[x] to bio
+>> @@ -1458,9 +1493,14 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>                                  rdev_dec_pending(conf->mirrors[j].rdev, mddev);
+>>                  r1_bio->state = 0;
+>>                  allow_barrier(conf, bio->bi_iter.bi_sector);
+>> +
+>> +               if (bio->bi_opf & REQ_NOWAIT) {
+>> +                       bio_wouldblock_error(bio);
+>> +                       return;
+>> +               }
+>>                  raid1_log(mddev, "wait rdev %d blocked", blocked_rdev->raid_disk);
+>>                  md_wait_for_blocked_rdev(blocked_rdev, mddev);
+>> -               wait_barrier(conf, bio->bi_iter.bi_sector);
+>> +               wait_barrier(conf, bio->bi_iter.bi_sector, false);
+>>                  goto retry_write;
 >>          }
 >>
->> +       /* Set the NOWAIT flags if all underlying devices support it */
->> +       if (nowait)
->> +               blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
->> +
->>          if (!bioset_initialized(&mddev->bio_set)) {
->>                  err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
->>                  if (err)
->> @@ -7007,6 +7013,14 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
->>          set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
->>          if (!mddev->thread)
->>                  md_update_sb(mddev, 1);
->> +       /* If the new disk does not support REQ_NOWAIT,
->> +        * disable on the whole MD.
->> +        */
->> +       if (!blk_queue_nowait(bdev_get_queue(rdev->bdev))) {
->> +               pr_info("%s: Disabling nowait because %s does not support nowait\n",
->> +                       mdname(mddev), bdevname(rdev->bdev, b));
->> +               blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, mddev->queue);
->> +       }
->>          /*
->>           * Kick recovery, maybe this spare has to be added to the
->>           * array immediately.
+>> @@ -1687,7 +1727,7 @@ static void close_sync(struct r1conf *conf)
+>>          int idx;
+>>
+>>          for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
+>> -               _wait_barrier(conf, idx);
+>> +               _wait_barrier(conf, idx, false);
+>>                  _allow_barrier(conf, idx);
+>>          }
+>>
 >> --
 >> 2.17.1
 >>
