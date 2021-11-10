@@ -2,128 +2,171 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B57CAC433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 17:51:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8F2C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 18:15:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9ECB261159
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 17:51:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 527546103C
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 18:15:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232538AbhKJRyK convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 10 Nov 2021 12:54:10 -0500
-Received: from group.wh-serverpark.com ([159.69.170.92]:56198 "EHLO
-        group.wh-serverpark.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232460AbhKJRyJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Nov 2021 12:54:09 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by group.wh-serverpark.com (Postfix) with ESMTP id 90DFAEEA03A;
-        Wed, 10 Nov 2021 18:51:20 +0100 (CET)
-Received: from group.wh-serverpark.com ([127.0.0.1])
-        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id BxnguPyW0fgA; Wed, 10 Nov 2021 18:51:19 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by group.wh-serverpark.com (Postfix) with ESMTP id B339EEEBA3E;
-        Wed, 10 Nov 2021 18:51:19 +0100 (CET)
-X-Virus-Scanned: amavisd-new at valiant.wh-serverpark.com
-Received: from group.wh-serverpark.com ([127.0.0.1])
-        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GkFte_15o6zr; Wed, 10 Nov 2021 18:51:19 +0100 (CET)
-Received: from enterprise.localnet (unknown [93.189.159.254])
-        by group.wh-serverpark.com (Postfix) with ESMTPSA id 98101EEA03A;
-        Wed, 10 Nov 2021 18:51:19 +0100 (CET)
-From:   Markus Hochholdinger <Markus@hochholdinger.net>
-To:     Neil Brown <neilb@suse.de>
-Cc:     linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
-Date:   Wed, 10 Nov 2021 18:51:19 +0100
-Message-ID: <1941952.8ZYzkbqb7V@enterprise>
-User-Agent: KMail/5.2.3 (Linux/4.19.0-0.bpo.6-amd64; KDE/5.28.0; x86_64; ; )
-In-Reply-To: <1930539.SuHy7v25Ye@enterprise>
-References: <20080627164503.9671.patches@notabene> <201203242147.23273.Markus@hochholdinger.net> <1930539.SuHy7v25Ye@enterprise>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="iso-8859-1"
+        id S230459AbhKJSRu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 10 Nov 2021 13:17:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37148 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230100AbhKJSRt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Nov 2021 13:17:49 -0500
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD302C061764
+        for <linux-raid@vger.kernel.org>; Wed, 10 Nov 2021 10:15:01 -0800 (PST)
+Received: by mail-io1-xd34.google.com with SMTP id m9so3946974iop.0
+        for <linux-raid@vger.kernel.org>; Wed, 10 Nov 2021 10:15:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=digitalocean.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Hvxf5DUgc71LXKMopNQobFUCU0Ql//3TaxPXBTbYtZo=;
+        b=AYzor849il9mj7XDzqcqNxtKQUHPLUG5PFc46kOUyyyEBdtkEa7sfVVv3cO0sF2/9h
+         zzyTsWkT60WW84Lm8robOMd8ci7SZFmM+6bOy3pPghaVLpU49v1USbLj6GDKA3FULbmS
+         nKjCEnnSKWwXuUzOY2v6SYkvnOlziVTS46OCk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Hvxf5DUgc71LXKMopNQobFUCU0Ql//3TaxPXBTbYtZo=;
+        b=hLmLOOHLgiIlRXCZ2XgFO7xyOslEmZzHbD973s2XOq/Y2k8nvLzZeVu/5VPn7SRG5R
+         SvVwjVbgjTGsLLmhqKlNBbvn3u2q3Swt5MBz9MsPIefdjy0g68EuyK1qoDyCuYVDMobi
+         rWXVLTNfvVBIZ2IiMpxVz7jGrhmvYvuBKNd5SOS465nc7I8QBROQcNv/cg6OeBJOyH2N
+         8TvVTby1bm0CxiRWsp+lpqMV282BtB2E2KPQovKtx9WE13Sgl4AJzNa+8u4VHcmQYbJ7
+         fbKHG6fRU/R9EvA1NjehuhcHhUiksOkbLbnOHLhdqJRFCMwsZeoRbOjO1fInJNBKRmPA
+         nwHQ==
+X-Gm-Message-State: AOAM530XN59EhZvzqcGrhaMAsaUBmVakQwAl4euWH+7baHVpuQQJuga+
+        lqNrjNmE2P3Uxb8XSiHWZiMTWw==
+X-Google-Smtp-Source: ABdhPJwRhOolGq8co0hx7OSO3Mvd33H+BrrqsN2CgFTxP1sZGCm6P3G3LZtDIFoP/vmfTd60afndQg==
+X-Received: by 2002:a5d:9593:: with SMTP id a19mr696555ioo.201.1636568101221;
+        Wed, 10 Nov 2021 10:15:01 -0800 (PST)
+Received: from vverma-s2-cbrunner ([162.243.188.99])
+        by smtp.gmail.com with ESMTPSA id r3sm339289ila.42.2021.11.10.10.15.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Nov 2021 10:15:00 -0800 (PST)
+From:   Vishal Verma <vverma@digitalocean.com>
+To:     song@kernel.org, linux-raid@vger.kernel.org, rgoldwyn@suse.de
+Cc:     axboe@kernel.dk, Vishal Verma <vverma@digitalocean.com>
+Subject: [RFC PATCH v4 1/4] md: add support for REQ_NOWAIT
+Date:   Wed, 10 Nov 2021 18:14:38 +0000
+Message-Id: <20211110181441.9263-1-vverma@digitalocean.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
+References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
+for checking whether a given bdev supports handling of REQ_NOWAIT or not.
+Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
+it for linear target") added support for REQ_NOWAIT for dm. This uses
+a similar approach to incorporate REQ_NOWAIT for md based bios.
 
-Am Mittwoch, 10. November 2021, 14:09:53 CET schrieb Markus Hochholdinger:
-> Am Samstag, 24. März 2012, 21:47:15 CET schrieb Markus Hochholdinger:
-> > it's been a long time, but today I tried again and had success!
-> > Am 28.06.2008 um 01:41 Uhr schrieb Neil Brown <neilb@suse.de>:
-> > > On Friday June 27, Markus@hochholdinger.net wrote:
-> > > > Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
-> > > > > From: Chris Webb <chris@arachsys.com>
-> > [..]
-> > > You don't want to "mdadm --grow" until everything has been resized.
-> > > First lvresize one disk, then write '0' to the .../size file.
-> > > Then do the same for the other disk.
-> > > Then "mdadm --grow /dev/mdX --size max".
-> > it works for me, if I do:
-> >   echo 0 > /sys/block/md2/md/rd0/size
-> >   mdadm --grow /dev/md2 --size=max
-> >   # till here, nothing happens
-> >   echo 0 > /sys/block/md2/md/rd1/size
-> >   mdadm --grow /dev/md2 --size=max
-> >   # rebuild of the added space begins
-> This has been working for me till at least kernel 4.19.x and I first
-> recognized it not working anymore with kernel 5.10.x . So inbetween
-> something changed regarding the resize and grow of md raid1 with superblock
-> version 1.0. The grow still works and a rebuild is done, but afterwards the
-> superblock isn't created/moved to the new end of the devices. The raid1
-> works until you stop it, but you won't be able to re-assemble it
-> (re-creating works). While re-creating I recognized the grown filesystem
-> (after the raid1 was grown) was too large (fsck complained).
-> I already tracked it down to the version of the metadata/superblock. With
-> version 1.0 (superblock at the end) the above fails and it looks like the
-> superblock on the grown device is somehow there but with wrong informations
-> (mdadm --zero-superblock has removed something while mdadm -D .. tells me,
-> there's no superblock).
-> All works fine with superblock version 1.2 (superblock at the beginning).
-> Any ideas what could have changed so the grow feature for raid1 with
-> superblock version 1.0 isn't working anymore?
-> For now the workaround is to really remove a grown device from the raid1 and
-> do a full rebuild before re-adding the other grown device.
-> I'll test the different kernel versions to see, where/when this feature was
-> lost.
+This patch was tested using t/io_uring tool within FIO. A nvme drive
+was partitioned into 2 partitions and a simple raid 0 configuration
+/dev/md0 was created.
 
-It is working es (I) expected till at least kernel 5.4.158.
+md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
+      937423872 blocks super 1.2 512k chunks
 
-It is not working with 5.10.x till 5.15.1.
+Before patch:
 
-On my old systems (kernel <= 5.4.x) after resizing one component
-  mdadm -E /dev/xvda2
-is able to see the moved superblock only after
-  echo 0 > /sys/block/md2/md/rd0/size
+$ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
 
-On new systems (kernel >= 5.10.0) it doesn't matter if I issue
-  echo 0 > /sys/block/md2/md/rd0/size
-mdadm -E keeps complaining about no superblock on the grown device.
-(The bitmap was removed before the echo 0 and I tried to remove the bitmap at 
-all before resizing, still the same issue.)
+Running top while the above runs:
 
-It's only possible to remove the changed device and add with a full rebuild. 
-But this isn't possible, if both devices were resized before. mdadm complains 
-about no metadata available, no matter what I do while the md raid1 is still 
-running (where is the superblock updated on the disks then?).
+$ ps -eL | grep $(pidof io_uring)
 
+  38396   38396 pts/2    00:00:00 io_uring
+  38396   38397 pts/2    00:00:15 io_uring
+  38396   38398 pts/2    00:00:13 iou-wrk-38397
 
-> > If I do only:
-> >   echo 0 > /sys/block/md2/md/rd0/size
-> >   echo 0 > /sys/block/md2/md/rd1/size
-> >   mdadm --grow /dev/md2 --size=max
-> > 
-> > nothing will change.
-> > As I understand, with "echo 0" md sees the new size and only with --grow
-> > the superblock will be moved.
-> > I'm doing this with 2.6.32-5-xen-686 within Debian (squeeze) 6.0.
-> > Many thanks to you and all the other linux-raid developers for this
-> > feature! I'm very happy about this :-)
+We can see iou-wrk-38397 io worker thread created which gets created
+when io_uring sees that the underlying device (/dev/md0 in this case)
+doesn't support nowait.
 
+After patch:
 
+$ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+
+Running top while the above runs:
+
+$ ps -eL | grep $(pidof io_uring)
+
+  38341   38341 pts/2    00:10:22 io_uring
+  38341   38342 pts/2    00:10:37 io_uring
+
+After running this patch, we don't see any io worker thread
+being created which indicated that io_uring saw that the
+underlying device does support nowait. This is the exact behaviour
+noticed on a dm device which also supports nowait.
+
+For all the other raid personalities except raid0, we would need
+to train pieces which involves make_request fn in order for them
+to correctly handle REQ_NOWAIT.
+
+Signed-off-by: Vishal Verma <vverma@digitalocean.com>
+---
+ drivers/md/md.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5111ed966947..a30c78afcab6 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -419,6 +419,11 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
+ 	if (is_suspended(mddev, bio)) {
+ 		DEFINE_WAIT(__wait);
+ 		for (;;) {
++			/* Bail out if REQ_NOWAIT is set for the bio */
++			if (bio->bi_opf & REQ_NOWAIT) {
++				bio_wouldblock_error(bio);
++				return;
++			}
+ 			prepare_to_wait(&mddev->sb_wait, &__wait,
+ 					TASK_UNINTERRUPTIBLE);
+ 			if (!is_suspended(mddev, bio))
+@@ -5792,6 +5797,7 @@ int md_run(struct mddev *mddev)
+ 	int err;
+ 	struct md_rdev *rdev;
+ 	struct md_personality *pers;
++	bool nowait = true;
+ 
+ 	if (list_empty(&mddev->disks))
+ 		/* cannot run an array with no devices.. */
+@@ -5862,8 +5868,13 @@ int md_run(struct mddev *mddev)
+ 			}
+ 		}
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
++		nowait = nowait && blk_queue_nowait(bdev_get_queue(rdev->bdev));
+ 	}
+ 
++	/* Set the NOWAIT flags if all underlying devices support it */
++	if (nowait)
++		blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
++
+ 	if (!bioset_initialized(&mddev->bio_set)) {
+ 		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ 		if (err)
+@@ -7007,6 +7018,15 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+ 	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 	if (!mddev->thread)
+ 		md_update_sb(mddev, 1);
++	/*
++	 * If the new disk does not support REQ_NOWAIT,
++	 * disable on the whole MD.
++	 */
++	if (!blk_queue_nowait(bdev_get_queue(rdev->bdev))) {
++		pr_info("%s: Disabling nowait because %s does not support nowait\n",
++			mdname(mddev), bdevname(rdev->bdev, b));
++		blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, mddev->queue);
++	}
+ 	/*
+ 	 * Kick recovery, maybe this spare has to be added to the
+ 	 * array immediately.
 -- 
-Mfg
+2.17.1
 
-Markus Hochholdinger
