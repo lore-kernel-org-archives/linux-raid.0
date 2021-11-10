@@ -2,89 +2,128 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D13C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 17:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B57CAC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 17:51:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEBC661241
-	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 17:04:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9ECB261159
+	for <linux-raid@archiver.kernel.org>; Wed, 10 Nov 2021 17:51:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231336AbhKJRHU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 10 Nov 2021 12:07:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49588 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229602AbhKJRHU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Nov 2021 12:07:20 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6225FC061764
-        for <linux-raid@vger.kernel.org>; Wed, 10 Nov 2021 09:04:32 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id e65so2815453pgc.5
-        for <linux-raid@vger.kernel.org>; Wed, 10 Nov 2021 09:04:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google;
-        h=message-id:date:mime-version:user-agent:subject:to:cc:references
-         :from:in-reply-to:content-transfer-encoding;
-        bh=7FMYFnLu3I3/58T4ySEb6oqOYV4tVexvkZQnsU0PdxU=;
-        b=WiRvFcpIO9dRXaqOKtGrXrPK2evZXUC6D8RUK4qN66cZFdGCU4oUOpTn9HhW+WI1Ko
-         B/808zj1k+/cMblnUOXTYcpEmB7pbyC9r2prgRdTdjFQ/ro9aWe378v41kWHCW7vcf9W
-         hzFTtLXnuGXxyt+e7ovwT7O1vFlMgD2UiNtkc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :to:cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=7FMYFnLu3I3/58T4ySEb6oqOYV4tVexvkZQnsU0PdxU=;
-        b=AE5iK8Jj7aeYHBCVQaU68qGssf2pskF8oMEk+vmWF68/P9KGXp8mlwm+NacAKX3+9p
-         90VTZIX4JhYIHrHNnC1GjDotz7J9e1fI/nPxHlybTdxnOX/OrbufgIlrb3oDkzdzhSNx
-         u98onNLFJIhcUmiN7A6LXkoKIlhboczJzcvxHaopYABxVkat2r1YRi4FO1Vp+obH/goG
-         4R1C2Akl4vtqVgl0gEKDgyeS66Hl+SxW3H4iWNMaZ+9jztb4VvvlkDYW/CP0hTBbfQWH
-         nZYbRJmLSS8eThToG94YSA9y1nzEoRbNpUoErZ/uF/XtvYm3bIjtRn2N43efxi7uOlfm
-         gF6Q==
-X-Gm-Message-State: AOAM530jYVpK3sBJ+znk9iTAzWaD9WKZWiLo7RMavb69rDgFk9P3PJsJ
-        vFtn39kIzNU+nZnU54Oj4wuD1g==
-X-Google-Smtp-Source: ABdhPJxVquqoVKyqeZI/LPn7wIeIrCaaV8i2hgB3+EfDvAG0+allMxfntEZUTGT4jiUsPRkVNwZlFQ==
-X-Received: by 2002:a05:6a00:1310:b0:494:672b:1e97 with SMTP id j16-20020a056a00131000b00494672b1e97mr643069pfu.77.1636563870369;
-        Wed, 10 Nov 2021 09:04:30 -0800 (PST)
-Received: from [192.168.1.7] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
-        by smtp.gmail.com with ESMTPSA id l12sm246309pfu.100.2021.11.10.09.04.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Nov 2021 09:04:30 -0800 (PST)
-Message-ID: <d494671a-214c-aa10-393d-2ba12f479b3b@digitalocean.com>
-Date:   Wed, 10 Nov 2021 10:04:24 -0700
+        id S232538AbhKJRyK convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 10 Nov 2021 12:54:10 -0500
+Received: from group.wh-serverpark.com ([159.69.170.92]:56198 "EHLO
+        group.wh-serverpark.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232460AbhKJRyJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 10 Nov 2021 12:54:09 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by group.wh-serverpark.com (Postfix) with ESMTP id 90DFAEEA03A;
+        Wed, 10 Nov 2021 18:51:20 +0100 (CET)
+Received: from group.wh-serverpark.com ([127.0.0.1])
+        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id BxnguPyW0fgA; Wed, 10 Nov 2021 18:51:19 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by group.wh-serverpark.com (Postfix) with ESMTP id B339EEEBA3E;
+        Wed, 10 Nov 2021 18:51:19 +0100 (CET)
+X-Virus-Scanned: amavisd-new at valiant.wh-serverpark.com
+Received: from group.wh-serverpark.com ([127.0.0.1])
+        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id GkFte_15o6zr; Wed, 10 Nov 2021 18:51:19 +0100 (CET)
+Received: from enterprise.localnet (unknown [93.189.159.254])
+        by group.wh-serverpark.com (Postfix) with ESMTPSA id 98101EEA03A;
+        Wed, 10 Nov 2021 18:51:19 +0100 (CET)
+From:   Markus Hochholdinger <Markus@hochholdinger.net>
+To:     Neil Brown <neilb@suse.de>
+Cc:     linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
+Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
+Date:   Wed, 10 Nov 2021 18:51:19 +0100
+Message-ID: <1941952.8ZYzkbqb7V@enterprise>
+User-Agent: KMail/5.2.3 (Linux/4.19.0-0.bpo.6-amd64; KDE/5.28.0; x86_64; ; )
+In-Reply-To: <1930539.SuHy7v25Ye@enterprise>
+References: <20080627164503.9671.patches@notabene> <201203242147.23273.Markus@hochholdinger.net> <1930539.SuHy7v25Ye@enterprise>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.0
-Subject: Re: [PATCH v3 2/2] md: raid1 add nowait support
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
-        Jens Axboe <axboe@kernel.dk>
-References: <CAPhsuW5rGPP_6CZWC+W93dRHS6b3HJ7Yz4KR=r7ghhuZov2vfQ@mail.gmail.com>
- <20211104045149.9599-1-vverma@digitalocean.com>
- <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
- <97bff08e-ecb7-37d7-c113-7f33bfca02d9@digitalocean.com>
- <4d0dd51b-9176-99df-2002-77ecf48c6d20@digitalocean.com>
- <CAPhsuW56xhYA3Si65Hvvp-1HU3KTrjU8RN_aKWXw2A5C0YsVPA@mail.gmail.com>
-From:   Vishal Verma <vverma@digitalocean.com>
-In-Reply-To: <CAPhsuW56xhYA3Si65Hvvp-1HU3KTrjU8RN_aKWXw2A5C0YsVPA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="iso-8859-1"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Ack, thanks!
+Hi,
 
-On 11/10/21 10:02 AM, Song Liu wrote:
-> On Tue, Nov 9, 2021 at 12:59 PM Vishal Verma <vverma@digitalocean.com> wrote:
->> Hi Song,
->>
->> I did modify raid456 and raid10 with nowait support, but unfortunately
->> have been running into kernel task hung and panics while doing write IO
->> and having hard time trying to debug.
->>
->> Shall I post the patches in to get the feedback or go with an
->> alternative route to have a flag to only enable nowait for raid1 for now?
->>
-> There is still sufficient time before 5.17, so I would recommend we do all
-> personalities together. You can always post patches as RFC for feedback.
->
-> Thanks,
-> Song
+Am Mittwoch, 10. November 2021, 14:09:53 CET schrieb Markus Hochholdinger:
+> Am Samstag, 24. März 2012, 21:47:15 CET schrieb Markus Hochholdinger:
+> > it's been a long time, but today I tried again and had success!
+> > Am 28.06.2008 um 01:41 Uhr schrieb Neil Brown <neilb@suse.de>:
+> > > On Friday June 27, Markus@hochholdinger.net wrote:
+> > > > Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
+> > > > > From: Chris Webb <chris@arachsys.com>
+> > [..]
+> > > You don't want to "mdadm --grow" until everything has been resized.
+> > > First lvresize one disk, then write '0' to the .../size file.
+> > > Then do the same for the other disk.
+> > > Then "mdadm --grow /dev/mdX --size max".
+> > it works for me, if I do:
+> >   echo 0 > /sys/block/md2/md/rd0/size
+> >   mdadm --grow /dev/md2 --size=max
+> >   # till here, nothing happens
+> >   echo 0 > /sys/block/md2/md/rd1/size
+> >   mdadm --grow /dev/md2 --size=max
+> >   # rebuild of the added space begins
+> This has been working for me till at least kernel 4.19.x and I first
+> recognized it not working anymore with kernel 5.10.x . So inbetween
+> something changed regarding the resize and grow of md raid1 with superblock
+> version 1.0. The grow still works and a rebuild is done, but afterwards the
+> superblock isn't created/moved to the new end of the devices. The raid1
+> works until you stop it, but you won't be able to re-assemble it
+> (re-creating works). While re-creating I recognized the grown filesystem
+> (after the raid1 was grown) was too large (fsck complained).
+> I already tracked it down to the version of the metadata/superblock. With
+> version 1.0 (superblock at the end) the above fails and it looks like the
+> superblock on the grown device is somehow there but with wrong informations
+> (mdadm --zero-superblock has removed something while mdadm -D .. tells me,
+> there's no superblock).
+> All works fine with superblock version 1.2 (superblock at the beginning).
+> Any ideas what could have changed so the grow feature for raid1 with
+> superblock version 1.0 isn't working anymore?
+> For now the workaround is to really remove a grown device from the raid1 and
+> do a full rebuild before re-adding the other grown device.
+> I'll test the different kernel versions to see, where/when this feature was
+> lost.
+
+It is working es (I) expected till at least kernel 5.4.158.
+
+It is not working with 5.10.x till 5.15.1.
+
+On my old systems (kernel <= 5.4.x) after resizing one component
+  mdadm -E /dev/xvda2
+is able to see the moved superblock only after
+  echo 0 > /sys/block/md2/md/rd0/size
+
+On new systems (kernel >= 5.10.0) it doesn't matter if I issue
+  echo 0 > /sys/block/md2/md/rd0/size
+mdadm -E keeps complaining about no superblock on the grown device.
+(The bitmap was removed before the echo 0 and I tried to remove the bitmap at 
+all before resizing, still the same issue.)
+
+It's only possible to remove the changed device and add with a full rebuild. 
+But this isn't possible, if both devices were resized before. mdadm complains 
+about no metadata available, no matter what I do while the md raid1 is still 
+running (where is the superblock updated on the disks then?).
+
+
+> > If I do only:
+> >   echo 0 > /sys/block/md2/md/rd0/size
+> >   echo 0 > /sys/block/md2/md/rd1/size
+> >   mdadm --grow /dev/md2 --size=max
+> > 
+> > nothing will change.
+> > As I understand, with "echo 0" md sees the new size and only with --grow
+> > the superblock will be moved.
+> > I'm doing this with 2.6.32-5-xen-686 within Debian (squeeze) 6.0.
+> > Many thanks to you and all the other linux-raid developers for this
+> > feature! I'm very happy about this :-)
+
+
+-- 
+Mfg
+
+Markus Hochholdinger
