@@ -2,78 +2,110 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48413C433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Nov 2021 15:10:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AEDCC433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 11 Nov 2021 21:42:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C1D9610D0
-	for <linux-raid@archiver.kernel.org>; Thu, 11 Nov 2021 15:10:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7834860FC1
+	for <linux-raid@archiver.kernel.org>; Thu, 11 Nov 2021 21:42:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233847AbhKKPMt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 11 Nov 2021 10:12:49 -0500
-Received: from group.wh-serverpark.com ([159.69.170.92]:36594 "EHLO
-        group.wh-serverpark.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233940AbhKKPMs (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 11 Nov 2021 10:12:48 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by group.wh-serverpark.com (Postfix) with ESMTP id A049AEEBA45;
-        Thu, 11 Nov 2021 16:09:57 +0100 (CET)
-Received: from group.wh-serverpark.com ([127.0.0.1])
-        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id Nk5QbPLW9lku; Thu, 11 Nov 2021 16:09:57 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by group.wh-serverpark.com (Postfix) with ESMTP id 52CC5EEBA49;
-        Thu, 11 Nov 2021 16:09:57 +0100 (CET)
-X-Virus-Scanned: amavisd-new at valiant.wh-serverpark.com
-Received: from group.wh-serverpark.com ([127.0.0.1])
-        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Z_6cKn92I6Ar; Thu, 11 Nov 2021 16:09:57 +0100 (CET)
-Received: from enterprise.localnet (unknown [93.189.159.254])
-        by group.wh-serverpark.com (Postfix) with ESMTPSA id 3AE13EEBA45;
-        Thu, 11 Nov 2021 16:09:57 +0100 (CET)
-From:   Markus Hochholdinger <Markus@hochholdinger.net>
-To:     Neil Brown <neilb@suse.de>
-Cc:     linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
-Date:   Thu, 11 Nov 2021 16:09:56 +0100
-Message-ID: <2991762.XJcJRHA18g@enterprise>
-User-Agent: KMail/5.2.3 (Linux/4.19.0-0.bpo.6-amd64; KDE/5.28.0; x86_64; ; )
-In-Reply-To: <5424512.plDBMOIIcH@enterprise>
-References: <20080627164503.9671.patches@notabene> <1941952.8ZYzkbqb7V@enterprise> <5424512.plDBMOIIcH@enterprise>
+        id S232075AbhKKVpZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 11 Nov 2021 16:45:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52574 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229868AbhKKVpY (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 11 Nov 2021 16:45:24 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DA02C60F6E
+        for <linux-raid@vger.kernel.org>; Thu, 11 Nov 2021 21:42:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636666954;
+        bh=J963HWk0uAcNpEQOjesO+iUMM7rQLP9nvvkI58oYsYs=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=rLFCagttFET6uyCPdqzRI+Pi//bQZUcGZDAEz+0tNV/+qUI5rS7yQOUaQqbp9MF72
+         ic6C07gLGJFu4n2GecRLMGGMmodalvqtIe1ynVPpKm7xSkr2h98IyFqBFoiHJlwXvz
+         EUEpZy+/ukS5jaRtOreBFcvpJs+Z1Kq69WneU3x3CA85sfbyeXcB0rSDCxxK24al8r
+         ejs9KWzLPCyAvMF//a9EbMWBdTbB2FOuKZulQrotPOrGk6aPTFRRpSPITRV2C1tiBo
+         xBvyBX52+8jSbVU53WTSrxNB4HpJrd5RiDOWlDux1NX44U+KXiBy/HOGuMQGIX2NzB
+         Ahh6OTZIkaA8A==
+Received: by mail-yb1-f177.google.com with SMTP id v138so18485289ybb.8
+        for <linux-raid@vger.kernel.org>; Thu, 11 Nov 2021 13:42:34 -0800 (PST)
+X-Gm-Message-State: AOAM53131T32PsFrfIUK9RM79z0ONePwBB1Hfw612oWutVlaC4G2ITvl
+        /b6oaeuL6qVSNShMiVN/Mc7Tt1G9xqgy0duEUro=
+X-Google-Smtp-Source: ABdhPJzm9NdUcyqB3lhAaQD97m+Vg3s3eH02i+A1rWNiikWm5XM8vMFAUykFcQbyZb4bGSySx/TMDwwdJ41CbXLkVd8=
+X-Received: by 2002:a25:8882:: with SMTP id d2mr11706807ybl.68.1636666954074;
+ Thu, 11 Nov 2021 13:42:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
+ <20211110181441.9263-1-vverma@digitalocean.com> <20211110181441.9263-4-vverma@digitalocean.com>
+In-Reply-To: <20211110181441.9263-4-vverma@digitalocean.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 11 Nov 2021 13:42:23 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7=r4AmCqG3M0hU=fps6a-Zu9KF_RnyNf815d=43wTv5A@mail.gmail.com>
+Message-ID: <CAPhsuW7=r4AmCqG3M0hU=fps6a-Zu9KF_RnyNf815d=43wTv5A@mail.gmail.com>
+Subject: Re: [RFC PATCH v4 4/4] md: raid456 add nowait support
+To:     Vishal Verma <vverma@digitalocean.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-It's possible, I've found the error:
-  rdev->sb_start = sb_start;
-is missing within md.c within /* minor version 0; superblock after data */
-From my understanding, this means the new calculated superblock position isn't 
-used.
+On Wed, Nov 10, 2021 at 10:15 AM Vishal Verma <vverma@digitalocean.com> wrote:
+>
+> Returns EAGAIN in case the raid456 driver would block
+> waiting for situations like:
+>
+>   - Reshape operation,
+>   - Discard operation.
+>
+> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
 
-I changed:
---- a/drivers/md/md.c    2021-09-30 08:11:08.000000000 +0000
-+++ b/drivers/md/md.c     2021-11-11 14:54:10.535633028 +0000
-@@ -2252,6 +2252,7 @@
- 
-                if (!num_sectors || num_sectors > max_sectors)
-                        num_sectors = max_sectors;
-+               rdev->sb_start = sb_start;
-        }
-        sb = page_address(rdev->sb_page);
-        sb->data_size = cpu_to_le64(num_sectors);
+I think you mentioned there are some task hung issues, could you
+please provide some
+information about them?
 
-I tested it with 5.10.46 and resizing with superblock version 1.0 is now 
-working for me.
+btw: I am taking vacation this week. So I may not have time to try it
+out until next week.
 
-If this is correct, how can I get this into longterm 5.10.x and the current 
-kernel upstream?
+Thanks,
+Song
 
-Many thanks in advance.
-
-
--- 
-Mfg
-
-Markus Hochholdinger
+> ---
+>  drivers/md/raid5.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 9c1a5877cf9f..fa64ee315241 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5710,6 +5710,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+>                 int d;
+>         again:
+>                 sh = raid5_get_active_stripe(conf, logical_sector, 0, 0, 0);
+> +               /* Bail out if REQ_NOWAIT is set */
+> +               if (bi->bi_opf & REQ_NOWAIT) {
+> +                       bio_wouldblock_error(bi);
+> +                       return;
+> +               }
+>                 prepare_to_wait(&conf->wait_for_overlap, &w,
+>                                 TASK_UNINTERRUPTIBLE);
+>                 set_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags);
+> @@ -5820,6 +5825,15 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+>         bi->bi_next = NULL;
+>
+>         md_account_bio(mddev, &bi);
+> +       /* Bail out if REQ_NOWAIT is set */
+> +       if (bi->bi_opf & REQ_NOWAIT &&
+> +           conf->reshape_progress != MaxSector &&
+> +           mddev->reshape_backwards
+> +           ? logical_sector < conf->reshape_safe
+> +           : logical_sector >= conf->reshape_safe) {
+> +               bio_wouldblock_error(bi);
+> +               return true;
+> +       }
+>         prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
+>         for (; logical_sector < last_sector; logical_sector += RAID5_STRIPE_SECTORS(conf)) {
+>                 int previous;
+> --
+> 2.17.1
+>
