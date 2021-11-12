@@ -2,84 +2,129 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C7AC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 12 Nov 2021 14:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B49C43217
+	for <linux-raid@archiver.kernel.org>; Fri, 12 Nov 2021 15:19:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EE9B60FE7
-	for <linux-raid@archiver.kernel.org>; Fri, 12 Nov 2021 14:31:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE80761056
+	for <linux-raid@archiver.kernel.org>; Fri, 12 Nov 2021 15:19:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235318AbhKLOes (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 12 Nov 2021 09:34:48 -0500
-Received: from group.wh-serverpark.com ([159.69.170.92]:45017 "EHLO
-        group.wh-serverpark.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235334AbhKLOeq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 12 Nov 2021 09:34:46 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by group.wh-serverpark.com (Postfix) with ESMTP id 5FDF6EEBA4D;
-        Fri, 12 Nov 2021 15:31:54 +0100 (CET)
-Received: from group.wh-serverpark.com ([127.0.0.1])
-        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id Pw6HIVGiw-lD; Fri, 12 Nov 2021 15:31:53 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by group.wh-serverpark.com (Postfix) with ESMTP id DA912EEBA4E;
-        Fri, 12 Nov 2021 15:31:53 +0100 (CET)
-X-Virus-Scanned: amavisd-new at valiant.wh-serverpark.com
-Received: from group.wh-serverpark.com ([127.0.0.1])
-        by localhost (group.wh-serverpark.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id TPu8AQZ1TkBF; Fri, 12 Nov 2021 15:31:53 +0100 (CET)
-Received: from enterprise.localnet (unknown [81.89.200.146])
-        by group.wh-serverpark.com (Postfix) with ESMTPSA id C270DEEBA4D;
-        Fri, 12 Nov 2021 15:31:53 +0100 (CET)
-From:   Markus Hochholdinger <Markus@hochholdinger.net>
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org,
-        Chris Webb <chris@arachsys.com>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
-Date:   Fri, 12 Nov 2021 15:31:46 +0100
-Message-ID: <3594501.KpETP9ny9c@enterprise>
-User-Agent: KMail/5.2.3 (Linux/4.19.0-0.bpo.6-amd64; KDE/5.28.0; x86_64; ; )
-In-Reply-To: <9c51d755-1be3-dfb2-d26e-1b7d71cf1bbf@linux.dev>
-References: <20080627164503.9671.patches@notabene> <2991762.XJcJRHA18g@enterprise> <9c51d755-1be3-dfb2-d26e-1b7d71cf1bbf@linux.dev>
+        id S232841AbhKLPW3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 12 Nov 2021 10:22:29 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:44437 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231553AbhKLPW2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 12 Nov 2021 10:22:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636730376;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VFN3YfKrrN4rviirmH1lG0NY9uufAM6YHK0vPxccEaw=;
+        b=IEmTYYOVu8mnNf8dncwvv63iPXnTzw+SDFVpHEr5SCq5O1ZxbPCmPqq7Wdw97KhFccVCcs
+        PpvF0X6sLfvePo+htyPszZOVP9OPJFw+TC9+/jUt+DHqLVkcJdZ2V8c3AfrjHJX4R0Iaf/
+        vTUFGcudgKajU4OGV7+iJCc739D3CyQ=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-17-VBdGrfNPNKKTBqb0iyJkfA-1; Fri, 12 Nov 2021 10:19:35 -0500
+X-MC-Unique: VBdGrfNPNKKTBqb0iyJkfA-1
+Received: by mail-qk1-f200.google.com with SMTP id a10-20020a05620a066a00b0046742e40049so6638286qkh.14
+        for <linux-raid@vger.kernel.org>; Fri, 12 Nov 2021 07:19:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=VFN3YfKrrN4rviirmH1lG0NY9uufAM6YHK0vPxccEaw=;
+        b=Mf0DBL3L+eN6yukbKFrtG7s1gxVfNRRlaZw27K+07ShGlj9EdquA3xL/1pTGuvXMtV
+         OehzaCMwUxP9Z5uEbyWbBuwLRUewyy4+34+Pfolhg2ovReHSikYeSEnPaC0Gac4x8rTN
+         n1NH7VSlHlPNPGwIomAXp7KOL9Thue3By2rgwbQyfaOHtqc/p8tqK4bSdQmJyke00XlW
+         peT5TMYAdTfYe3QQFqdsMM2dQErhPmh12oMe4WRz/ppX5LtrW7sFSnKY2aPW0pXKAmUA
+         Qg9m9bqQlylSFbZd8HVZB3GFEAT7ctlEKPBhsCI4pA+CH2CGPxD3zEi4O+DhFvsgrb+z
+         C+8Q==
+X-Gm-Message-State: AOAM530JtUzQ9ueaaFyGOuuw4uDlgUg31Br/PUK8c3dOCX7+DwhHi8jf
+        taChqA3q8S1PBu9VWyqQ9abu2Ywm6Qw49VTYBcDygZ5svqewhOhcAKjcLJXTWDkp6BRUFyVt89G
+        ADqviNN8CQByGGp394LA4
+X-Received: by 2002:a37:2f02:: with SMTP id v2mr13127466qkh.232.1636730375039;
+        Fri, 12 Nov 2021 07:19:35 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxk6sSDPzw7jrkKAxFn/K0PAx9HKUToVCIsJBG7fV34DkkAlHg0N9AMoil4JWoJAqjFdQQ15g==
+X-Received: by 2002:a37:2f02:: with SMTP id v2mr13127438qkh.232.1636730374828;
+        Fri, 12 Nov 2021 07:19:34 -0800 (PST)
+Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
+        by smtp.gmail.com with ESMTPSA id az14sm2791255qkb.125.2021.11.12.07.19.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Nov 2021 07:19:34 -0800 (PST)
+Date:   Fri, 12 Nov 2021 10:19:33 -0500
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "song@kernel.org" <song@kernel.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "kbusch@kernel.org" <kbusch@kernel.org>, "hch@lst.de" <hch@lst.de>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "javier@javigon.com" <javier@javigon.com>,
+        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "idryomov@gmail.com" <idryomov@gmail.com>,
+        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
+        "ebiggers@google.com" <ebiggers@google.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
+Subject: Re: [RFC PATCH 8/8] md: add support for REQ_OP_VERIFY
+Message-ID: <YY6GBaSypKNPZnBj@redhat.com>
+References: <20211104064634.4481-1-chaitanyak@nvidia.com>
+ <20211104064634.4481-9-chaitanyak@nvidia.com>
+ <d770a769-7f2c-bb10-a3bd-0aca371a724e@nvidia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d770a769-7f2c-bb10-a3bd-0aca371a724e@nvidia.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Am Freitag, 12. November 2021, 09:22:26 CET schrieb Guoqing Jiang:
-> On 11/11/21 11:09 PM, Markus Hochholdinger wrote:
-> > It's possible, I've found the error:
-> >    rdev->sb_start = sb_start;
-> > is missing within md.c within /* minor version 0; superblock after data */
-> >  From my understanding, this means the new calculated superblock position
-> >  isn't> 
-> > used.
-> > I changed:
-> > --- a/drivers/md/md.c    2021-09-30 08:11:08.000000000 +0000
-> > +++ b/drivers/md/md.c     2021-11-11 14:54:10.535633028 +0000
-> > @@ -2252,6 +2252,7 @@
-> >                  if (!num_sectors || num_sectors > max_sectors)
-> >                          num_sectors = max_sectors;
-> > +               rdev->sb_start = sb_start;
-> >          }
-> >          sb = page_address(rdev->sb_page);
-> >          sb->data_size = cpu_to_le64(num_sectors);
-> > I tested it with 5.10.46 and resizing with superblock version 1.0 is now
-> > working for me.
-> > If this is correct, how can I get this into longterm 5.10.x and the
-> > current
-> > kernel upstream?
-> Please refer to submitting-patches.rst and stable-kernel-rules.rst which
-> are under
-> Documentation.
-> And I think this tag need to be added in your patch.
-> Fixes: commit d9c0fa509eaf ("md: fix max sectors calculation for super 1.0")
+On Thu, Nov 11 2021 at  3:13P -0500,
+Chaitanya Kulkarni <chaitanyak@nvidia.com> wrote:
 
-Many thanks, this was very helpful for me.
+> On 11/3/2021 11:46 PM, Chaitanya Kulkarni wrote:
+> > From: Chaitanya Kulkarni <kch@nvidia.com>
+> > 
+> > Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+> 
+> I want to make sure the new REQ_OP_VERIFY is compatible with the
+> dm side as it is a generic interface.
+> 
+> Any comments on the dm side ? It will help me to respin the series for
+> V1 of this proposal.
 
+I can review, but have you tested your XFS scrub usecase ontop of
+the various DM devices you modified?
 
--- 
-Mfg
+Also, you seem to have missed Keith's suggestion of using io_uring to
+expose this capability.  If you happen to go that route: making sure
+DM has required io_uring capabilities would be needed (IIRC there
+were/are some lingering patches from Ming Lei to facilitate more
+efficient io_uring on DM.. I'll try to find, could be I'm wrong).
 
-Markus Hochholdinger
+Mike
+
