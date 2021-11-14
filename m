@@ -2,129 +2,103 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B49C43217
-	for <linux-raid@archiver.kernel.org>; Fri, 12 Nov 2021 15:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E15BC433EF
+	for <linux-raid@archiver.kernel.org>; Sun, 14 Nov 2021 02:35:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE80761056
-	for <linux-raid@archiver.kernel.org>; Fri, 12 Nov 2021 15:19:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 838ED60F46
+	for <linux-raid@archiver.kernel.org>; Sun, 14 Nov 2021 02:35:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232841AbhKLPW3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 12 Nov 2021 10:22:29 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:44437 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231553AbhKLPW2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 12 Nov 2021 10:22:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636730376;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VFN3YfKrrN4rviirmH1lG0NY9uufAM6YHK0vPxccEaw=;
-        b=IEmTYYOVu8mnNf8dncwvv63iPXnTzw+SDFVpHEr5SCq5O1ZxbPCmPqq7Wdw97KhFccVCcs
-        PpvF0X6sLfvePo+htyPszZOVP9OPJFw+TC9+/jUt+DHqLVkcJdZ2V8c3AfrjHJX4R0Iaf/
-        vTUFGcudgKajU4OGV7+iJCc739D3CyQ=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-17-VBdGrfNPNKKTBqb0iyJkfA-1; Fri, 12 Nov 2021 10:19:35 -0500
-X-MC-Unique: VBdGrfNPNKKTBqb0iyJkfA-1
-Received: by mail-qk1-f200.google.com with SMTP id a10-20020a05620a066a00b0046742e40049so6638286qkh.14
-        for <linux-raid@vger.kernel.org>; Fri, 12 Nov 2021 07:19:35 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=VFN3YfKrrN4rviirmH1lG0NY9uufAM6YHK0vPxccEaw=;
-        b=Mf0DBL3L+eN6yukbKFrtG7s1gxVfNRRlaZw27K+07ShGlj9EdquA3xL/1pTGuvXMtV
-         OehzaCMwUxP9Z5uEbyWbBuwLRUewyy4+34+Pfolhg2ovReHSikYeSEnPaC0Gac4x8rTN
-         n1NH7VSlHlPNPGwIomAXp7KOL9Thue3By2rgwbQyfaOHtqc/p8tqK4bSdQmJyke00XlW
-         peT5TMYAdTfYe3QQFqdsMM2dQErhPmh12oMe4WRz/ppX5LtrW7sFSnKY2aPW0pXKAmUA
-         Qg9m9bqQlylSFbZd8HVZB3GFEAT7ctlEKPBhsCI4pA+CH2CGPxD3zEi4O+DhFvsgrb+z
-         C+8Q==
-X-Gm-Message-State: AOAM530JtUzQ9ueaaFyGOuuw4uDlgUg31Br/PUK8c3dOCX7+DwhHi8jf
-        taChqA3q8S1PBu9VWyqQ9abu2Ywm6Qw49VTYBcDygZ5svqewhOhcAKjcLJXTWDkp6BRUFyVt89G
-        ADqviNN8CQByGGp394LA4
-X-Received: by 2002:a37:2f02:: with SMTP id v2mr13127466qkh.232.1636730375039;
-        Fri, 12 Nov 2021 07:19:35 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxk6sSDPzw7jrkKAxFn/K0PAx9HKUToVCIsJBG7fV34DkkAlHg0N9AMoil4JWoJAqjFdQQ15g==
-X-Received: by 2002:a37:2f02:: with SMTP id v2mr13127438qkh.232.1636730374828;
-        Fri, 12 Nov 2021 07:19:34 -0800 (PST)
-Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
-        by smtp.gmail.com with ESMTPSA id az14sm2791255qkb.125.2021.11.12.07.19.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Nov 2021 07:19:34 -0800 (PST)
-Date:   Fri, 12 Nov 2021 10:19:33 -0500
-From:   Mike Snitzer <snitzer@redhat.com>
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "kbusch@kernel.org" <kbusch@kernel.org>, "hch@lst.de" <hch@lst.de>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "javier@javigon.com" <javier@javigon.com>,
-        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "idryomov@gmail.com" <idryomov@gmail.com>,
-        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [RFC PATCH 8/8] md: add support for REQ_OP_VERIFY
-Message-ID: <YY6GBaSypKNPZnBj@redhat.com>
-References: <20211104064634.4481-1-chaitanyak@nvidia.com>
- <20211104064634.4481-9-chaitanyak@nvidia.com>
- <d770a769-7f2c-bb10-a3bd-0aca371a724e@nvidia.com>
+        id S231736AbhKNChz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 13 Nov 2021 21:37:55 -0500
+Received: from smtp2.us.opalstack.com ([23.106.47.103]:35126 "EHLO
+        smtp2.us.opalstack.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234921AbhKNChv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 13 Nov 2021 21:37:51 -0500
+X-Greylist: delayed 328 seconds by postgrey-1.27 at vger.kernel.org; Sat, 13 Nov 2021 21:37:51 EST
+Received: from localhost (opal1.opalstack.com [108.59.4.161])
+        by smtp2.us.opalstack.com (Postfix) with ESMTPSA id 58DF16F29A;
+        Sun, 14 Nov 2021 02:29:25 +0000 (UTC)
+Date:   Sun, 14 Nov 2021 02:29:24 +0000
+From:   David T-G <davidtg+robot@justpickone.org>
+To:     Linux RAID <linux-raid@vger.kernel.org>
+Subject: overlays on dd images of 4T drives
+Message-ID: <20211114022924.GA21337@opal1.opalstack.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d770a769-7f2c-bb10-a3bd-0aca371a724e@nvidia.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Nov 11 2021 at  3:13P -0500,
-Chaitanya Kulkarni <chaitanyak@nvidia.com> wrote:
+Hi, all --
 
-> On 11/3/2021 11:46 PM, Chaitanya Kulkarni wrote:
-> > From: Chaitanya Kulkarni <kch@nvidia.com>
-> > 
-> > Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
-> 
-> I want to make sure the new REQ_OP_VERIFY is compatible with the
-> dm side as it is a generic interface.
-> 
-> Any comments on the dm side ? It will help me to respin the series for
-> V1 of this proposal.
+Crossing my fingers that this gets through ...  My last few messages have
+not come back to me on the list.
 
-I can review, but have you tested your XFS scrub usecase ontop of
-the various DM devices you modified?
+After a first attempt to assemble the two working and one wonky drives of
+my 4-disk array and then watching reads hang forever, I have now used dd
+to pull an image of each RAID partition
 
-Also, you seem to have missed Keith's suggestion of using io_uring to
-expose this capability.  If you happen to go that route: making sure
-DM has required io_uring capabilities would be needed (IIRC there
-were/are some lingering patches from Ming Lei to facilitate more
-efficient io_uring on DM.. I'll try to find, could be I'm wrong).
+  davidtg@gezebel:~> sudo fdisk -l /dev/sda
+  Disk /dev/sda: 3.7 TiB, 4000787030016 bytes, 7814037168 sectors
+  Disk model: ST4000DM000-1F21
+  Units: sectors of 1 * 512 = 512 bytes
+  Sector size (logical/physical): 512 bytes / 4096 bytes
+  I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+  Disklabel type: gpt
+  Disk identifier: 482CA0F0-663B-409D-A4DF-4A4B248E6D23
 
-Mike
+  Device          Start        End    Sectors   Size Type
+  /dev/sda1        2048 7813774990 7813772943   3.7T Linux RAID
+  /dev/sda2  7813775360 7814037134     261775 127.8M Linux filesystem
+
+  diskfarm:/mnt/10Traid50md/tmp # ls -goh 4T*
+  -rw-r--r-- 1 4.0T Nov 12 02:05 '4Tsda1.EYNA.dd-bs=256M-conv=sparse,noerror'
+  -rw-r--r-- 1 4.0T Nov 12 02:05 '4Tsdb1.5YD9.dd-bs=256M-conv=sparse,noerror'
+  -rw-r--r-- 1 4.0T Nov 12 02:05 '4Tsdc1.5ZY3.dd-bs=256M-conv=sparse,noerror'
+  diskfarm:/mnt/10Traid50md/tmp # file 4Tsda1.EYNA.dd-bs\=256M-conv\=sparse\,noerror
+  4Tsda1.EYNA.dd-bs=256M-conv=sparse,noerror: Linux Software RAID version 1.2 (1) UUID=ca7008ef:90693dae:6c231ad7: 8b3f92d name=diskfarm:0 level=5 disks=4
+
+so that I can use overlays to assemble the device and replay the XFS
+journal to get up and running again to finally be able to pull off this
+data.
+
+After going back and forth across the deprecated wiki pages, I'm working
+through Irreversible Failure Recovery
+
+  https://raid.wiki.kernel.org/index.php/Irreversible_mdadm_failure_recovery
+
+and have created
+
+  diskfarm:/mnt/10Traid50md/tmp # ls -goh overlay-sd*
+  -rw-r--r-- 1 4.0T Nov 12 02:05 overlay-sda1
+  -rw-r--r-- 1 4.0T Nov 12 02:05 overlay-sdb1
+  -rw-r--r-- 1 4.0T Nov 12 02:05 overlay-sdc1
+  diskfarm:/mnt/10Traid50md/tmp # losetup -a
+  /dev/loop1: [66326]:1059 (/mnt/10Traid50md/tmp/overlay-sdb1)
+  /dev/loop2: [66326]:1060 (/mnt/10Traid50md/tmp/overlay-sdc1)
+  /dev/loop0: [66326]:1058 (/mnt/10Traid50md/tmp/overlay-sda1)
+
+my overlay files and loopback devices.  But ...
+
+It seems that blockdev does not like
+
+  diskfarm:/mnt/10Traid50md/tmp # blockdev --getsize ./overlay-sda1
+  blockdev: ioctl error on BLKGETSIZE: Inappropriate ioctl for device
+
+my files and so it won't give me the size that I need for dmsetup in the
+next step.
+
+How can I use these partition images as source for faking up my RAID
+array to recover the contents?  I seem to have gotten myself stuck :-/
+
+
+TIA & HAND
+
+:-D
+-- 
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
 
