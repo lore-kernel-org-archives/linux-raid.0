@@ -2,38 +2,38 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE2A1C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 20:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E22C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 20:23:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CD6761B43
+	by mail.kernel.org (Postfix) with ESMTP id DB8AE61BE3
 	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 20:23:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240712AbhKQU0P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Nov 2021 15:26:15 -0500
+        id S240715AbhKQU0Q (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Nov 2021 15:26:16 -0500
 Received: from mga11.intel.com ([192.55.52.93]:31917 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238577AbhKQU0P (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        id S239825AbhKQU0P (ORCPT <rfc822;linux-raid@vger.kernel.org>);
         Wed, 17 Nov 2021 15:26:15 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10171"; a="231529211"
+X-IronPort-AV: E=McAfee;i="6200,9189,10171"; a="231529213"
 X-IronPort-AV: E=Sophos;i="5.87,241,1631602800"; 
-   d="scan'208";a="231529211"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+   d="scan'208";a="231529213"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
   by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2021 12:23:16 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,241,1631602800"; 
-   d="scan'208";a="736346565"
+   d="scan'208";a="604868235"
 Received: from lkp-server02.sh.intel.com (HELO c20d8bc80006) ([10.239.97.151])
-  by fmsmga005.fm.intel.com with ESMTP; 17 Nov 2021 12:23:14 -0800
+  by orsmga004.jf.intel.com with ESMTP; 17 Nov 2021 12:23:15 -0800
 Received: from kbuild by c20d8bc80006 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1mnRSc-0002Bi-5w; Wed, 17 Nov 2021 20:23:14 +0000
-Date:   Thu, 18 Nov 2021 04:22:55 +0800
+        id 1mnRSc-0002Bz-Ci; Wed, 17 Nov 2021 20:23:14 +0000
+Date:   Thu, 18 Nov 2021 04:22:58 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-fixes] BUILD SUCCESS
- 78a7fb15ebd7b8557a87ebcf02c81018fb7566f7
-Message-ID: <6195649f.agxoTeWuOgVYpp/j%lkp@intel.com>
+Subject: [song-md:md-next] BUILD SUCCESS
+ 673db576e886bb476aea3e82e1978fa6cb8bd368
+Message-ID: <619564a2.C3RlbmUpPWsU+kb8%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -42,13 +42,13 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
-branch HEAD: 78a7fb15ebd7b8557a87ebcf02c81018fb7566f7  md: fix the problem that the pointer may be double free
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 673db576e886bb476aea3e82e1978fa6cb8bd368  md/raid5: play nice with PREEMPT_RT
 
 elapsed time: 725m
 
-configs tested: 192
-configs skipped: 4
+configs tested: 170
+configs skipped: 3
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -61,30 +61,15 @@ arm                              allyesconfig
 arm                              allmodconfig
 i386                 randconfig-c001-20211117
 powerpc              randconfig-c003-20211117
-s390                       zfcpdump_defconfig
-arm                          gemini_defconfig
-powerpc                      mgcoge_defconfig
-ia64                          tiger_defconfig
 sh                ecovec24-romimage_defconfig
 m68k                          multi_defconfig
 powerpc                 mpc85xx_cds_defconfig
 arm                      jornada720_defconfig
-arm                         lpc18xx_defconfig
-sh                          urquell_defconfig
-nios2                         10m50_defconfig
-powerpc                   currituck_defconfig
-arm                          collie_defconfig
-powerpc                     kilauea_defconfig
 sh                          rsk7269_defconfig
 riscv                            alldefconfig
 alpha                               defconfig
 powerpc                     stx_gp3_defconfig
 arc                     nsimosci_hs_defconfig
-mips                     loongson2k_defconfig
-x86_64                           allyesconfig
-powerpc               mpc834x_itxgp_defconfig
-x86_64                              defconfig
-mips                         cobalt_defconfig
 powerpc                      pasemi_defconfig
 mips                           jazz_defconfig
 mips                malta_qemu_32r6_defconfig
@@ -95,12 +80,6 @@ sh                         apsh4a3a_defconfig
 arm                          ep93xx_defconfig
 mips                          ath79_defconfig
 sh                         ecovec24_defconfig
-openrisc                         alldefconfig
-powerpc                     pq2fads_defconfig
-powerpc                 mpc8272_ads_defconfig
-sh                           se7712_defconfig
-mips                          rb532_defconfig
-arm                          simpad_defconfig
 i386                             alldefconfig
 mips                       capcella_defconfig
 powerpc                     tqm8555_defconfig
@@ -111,19 +90,12 @@ um                           x86_64_defconfig
 sh                   secureedge5410_defconfig
 s390                             allmodconfig
 mips                      loongson3_defconfig
-h8300                       h8s-sim_defconfig
-arm                           stm32_defconfig
-xtensa                    smp_lx200_defconfig
-m68k                        mvme147_defconfig
-powerpc                     mpc83xx_defconfig
 sh                   sh7724_generic_defconfig
 mips                      malta_kvm_defconfig
 powerpc                 mpc832x_mds_defconfig
 h8300                    h8300h-sim_defconfig
 m68k                           sun3_defconfig
 sh                          lboxre2_defconfig
-powerpc                         ps3_defconfig
-ia64                        generic_defconfig
 powerpc                    socrates_defconfig
 m68k                          atari_defconfig
 mips                      bmips_stb_defconfig
@@ -141,15 +113,22 @@ arm                       aspeed_g5_defconfig
 sh                           se7619_defconfig
 arm                              alldefconfig
 sh                 kfr2r09-romimage_defconfig
+x86_64                              defconfig
 riscv             nommu_k210_sdcard_defconfig
 powerpc                        cell_defconfig
 um                             i386_defconfig
 powerpc                       holly_defconfig
 xtensa                              defconfig
 arm                            mps2_defconfig
+arm                          collie_defconfig
 sh                        edosk7705_defconfig
 m68k                         amcore_defconfig
 ia64                             allyesconfig
+sh                             sh03_defconfig
+mips                     loongson1c_defconfig
+powerpc                   currituck_defconfig
+powerpc                     ksi8560_defconfig
+xtensa                  nommu_kc705_defconfig
 arm                           tegra_defconfig
 powerpc                 mpc837x_mds_defconfig
 ia64                             alldefconfig
@@ -159,12 +138,10 @@ powerpc                  mpc866_ads_defconfig
 arm                         s3c6400_defconfig
 powerpc                      ppc6xx_defconfig
 powerpc                     tqm8560_defconfig
-arc                         haps_hs_defconfig
-sh                        apsh4ad0a_defconfig
-arm                         s3c2410_defconfig
 mips                           mtx1_defconfig
 parisc                generic-64bit_defconfig
 powerpc                     asp8347_defconfig
+arm                           stm32_defconfig
 arm                        magician_defconfig
 arm                         assabet_defconfig
 h8300                            alldefconfig
@@ -185,10 +162,10 @@ nds32                               defconfig
 nios2                            allyesconfig
 csky                                defconfig
 alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
 arc                                 defconfig
 sh                               allmodconfig
+h8300                            allyesconfig
+xtensa                           allyesconfig
 parisc                              defconfig
 s390                             allyesconfig
 parisc                           allyesconfig
@@ -223,6 +200,7 @@ riscv                             allnoconfig
 riscv                               defconfig
 riscv                            allmodconfig
 x86_64                    rhel-8.3-kselftests
+x86_64                           allyesconfig
 x86_64                               rhel-8.3
 x86_64                          rhel-8.3-func
 x86_64                                  kexec
