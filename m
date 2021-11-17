@@ -2,81 +2,70 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71128C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE311C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:17:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5601D61BF9
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:06:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DC9C62F90
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:17:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233663AbhKQHJb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Nov 2021 02:09:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49236 "EHLO mail.kernel.org"
+        id S233435AbhKQHUc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Nov 2021 02:20:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57796 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232468AbhKQHJa (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 17 Nov 2021 02:09:30 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8B8D361BF8;
-        Wed, 17 Nov 2021 07:06:32 +0000 (UTC)
+        id S229973AbhKQHUb (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 17 Nov 2021 02:20:31 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8617261BFB
+        for <linux-raid@vger.kernel.org>; Wed, 17 Nov 2021 07:17:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637132792;
-        bh=deQ+3gejzFlrmih5ge8vkutNVzvY5ImiHHpeuLw/QWk=;
+        s=k20201202; t=1637133453;
+        bh=6rlux3GjOoo8gqHEpQr6T4MSp6j3qNyOcLVXvcWfDaY=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=mQn5dNlhb0fduIs8ZwcOnVMhxem3w6hCOM/fAADHtK+on2+/KWK3B3kOJstFcrmdZ
-         1yP/MQA0HV3HY1peg2OtacmKdV0+L5kzhDdv7bMSRqPN77f8UPit75DmdvPeN2SJoP
-         3/CQzXim+NO6KIzWOdBbkwS3PyAtZpQlbnnQTWkPFykzZ5HZg56fCVabGnzyQd74sq
-         tgyjXnCxwPc49wnyoI4PypWdujqq4gsqP37dqrnUx4ZEfl3uzH9i5gnzl2QwH8hpU8
-         g6R3cZ+pM9WuQNGof18FIwoSnNuS4liGj+kI9u0IazoXHSsS6vENBBOIdrV6bP/+z5
-         Ou3x3VkQz0jlw==
-Received: by mail-yb1-f169.google.com with SMTP id i194so4555594yba.6;
-        Tue, 16 Nov 2021 23:06:32 -0800 (PST)
-X-Gm-Message-State: AOAM533Abg9TPeseaRVFXxJOG7rz7M8hUy+sm+lki+BwJUXk8ecu8RM5
-        S8ZEn3Fvt3cbsFNWV/1E3YRh6c8dUyskIcF3qkA=
-X-Google-Smtp-Source: ABdhPJwp1vIoZpvK3B9DRiT0ofiXZ7TgZosM9giZ5+9CRcwiVKwTLxxnuVflxN8EdJkJYtpEmzPuLhi0GMBPZvOPfNc=
-X-Received: by 2002:a25:344d:: with SMTP id b74mr15107301yba.317.1637132791830;
- Tue, 16 Nov 2021 23:06:31 -0800 (PST)
+        b=VFJp4QpZtt1DQ4qGscEHUscsp1arczJ92iWviMPzDWCtdCbKl2IcmjTbopR19P7u5
+         TCr+dPUwNnviZxP/sjWGO+Cwa34sU4f+m4BTfEILupcdofjVuKCJNhlRP4Kws6JSqD
+         YYXw10GOn2liLlUwRR4lRJBvbKQSvQNWfxGdMjy/kdtglxCCki38GRgCvm+6x2wGyb
+         tT+4DHAuZ8bDlxomM3tTRxxkSUwDLWlwlxAJrdq8Z+Mxd7jVlCRSu1udPAD+bKyHJ2
+         Qqy/ZSNKA1SRwBLOF39LArL7K6VYcF1E2Y7hHVbFl0Ako+cMwv3ZHIzKRAgG6nV0Nt
+         8oAmrc92PZxSw==
+Received: by mail-yb1-f174.google.com with SMTP id e136so4679738ybc.4
+        for <linux-raid@vger.kernel.org>; Tue, 16 Nov 2021 23:17:33 -0800 (PST)
+X-Gm-Message-State: AOAM5323urkX7kKeJUMmJcEUXNVPHxlD5Fvy+6F2xcYYA6JVSAG9zapl
+        snJPuj5rIW22BPIChH8HYvW6g8Qwc/1sD8E2b3Q=
+X-Google-Smtp-Source: ABdhPJyRLxdhRjd+T318qt4a2q6F9zcR66wDDTll0fZOJhRFMiMVqUGN8MY4OaCXXHzZEpRThRpgjYSERzQZd+dxV2A=
+X-Received: by 2002:a25:8882:: with SMTP id d2mr14990327ybl.68.1637133452763;
+ Tue, 16 Nov 2021 23:17:32 -0800 (PST)
 MIME-Version: 1.0
-References: <20211115031817.4193-1-bernard@vivo.com>
-In-Reply-To: <20211115031817.4193-1-bernard@vivo.com>
+References: <20211116102134.1738347-1-markus@hochholdinger.net>
+In-Reply-To: <20211116102134.1738347-1-markus@hochholdinger.net>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 16 Nov 2021 23:06:21 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW6ui=wBrToYkqEOpLyLYhjHMoy0mL0UMcXnq0ObKLLhoA@mail.gmail.com>
-Message-ID: <CAPhsuW6ui=wBrToYkqEOpLyLYhjHMoy0mL0UMcXnq0ObKLLhoA@mail.gmail.com>
-Subject: Re: [PATCH] drivers/md: fix potential memleak
-To:     bernard@vivo.com
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
+Date:   Tue, 16 Nov 2021 23:17:21 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4zBGnKAV_TWaZ78NVEhOUw61xYYKda1c33YB=JtAfChA@mail.gmail.com>
+Message-ID: <CAPhsuW4zBGnKAV_TWaZ78NVEhOUw61xYYKda1c33YB=JtAfChA@mail.gmail.com>
+Subject: Re: [PATCH v2] md: fix update super 1.0 on rdev size change
+To:     Markus Hochholdinger <markus@hochholdinger.net>
+Cc:     linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sun, Nov 14, 2021 at 7:18 PM Bernard Zhao <bernard@vivo.com> wrote:
+On Tue, Nov 16, 2021 at 2:22 AM Markus Hochholdinger
+<markus@hochholdinger.net> wrote:
 >
-> In function get_bitmap_from_slot, when md_bitmap_create failed,
-> md_bitmap_destroy must be called to do clean up.
+> The superblock of version 1.0 doesn't get moved to the new position on a
+> device size change. This leads to a rdev without a superblock on a known
+> position, the raid can't be re-assembled.
+>
+> The line was removed by mistake and is re-added by this patch.
+>
+> Fixes: d9c0fa509eaf ("md: fix max sectors calculation for super 1.0")
+>
+> Signed-off-by: Markus Hochholdinger <markus@hochholdinger.net>
+> Reviewd-by: Xiao Ni <xni@redhat.com>
 
-Could you please explain which variable(s) need clean up?
+Applied to md-fixes. Thanks!
 
-Thanks,
+This version still has some minor issues. I fixed them before applying. For
+future patches, please run ./scripts/checkpatch.pl on the .patch file.
+
 Song
-
->
-> Signed-off-by: Bernard Zhao <bernard@vivo.com>
-> ---
->  drivers/md/md-bitmap.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/md/md-bitmap.c b/drivers/md/md-bitmap.c
-> index bfd6026d7809..a227bd0b9301 100644
-> --- a/drivers/md/md-bitmap.c
-> +++ b/drivers/md/md-bitmap.c
-> @@ -1961,6 +1961,7 @@ struct bitmap *get_bitmap_from_slot(struct mddev *mddev, int slot)
->         bitmap = md_bitmap_create(mddev, slot);
->         if (IS_ERR(bitmap)) {
->                 rv = PTR_ERR(bitmap);
-> +               md_bitmap_destroy(mddev)
->                 return ERR_PTR(rv);
->         }
->
-> --
-> 2.33.1
->
