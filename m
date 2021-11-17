@@ -2,70 +2,73 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE311C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ADCDC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:23:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DC9C62F90
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D08D61544
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 07:23:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233435AbhKQHUc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Nov 2021 02:20:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57796 "EHLO mail.kernel.org"
+        id S232809AbhKQH0x (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Nov 2021 02:26:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36026 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229973AbhKQHUb (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 17 Nov 2021 02:20:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8617261BFB
-        for <linux-raid@vger.kernel.org>; Wed, 17 Nov 2021 07:17:33 +0000 (UTC)
+        id S232792AbhKQH0x (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 17 Nov 2021 02:26:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DCC8A61544;
+        Wed, 17 Nov 2021 07:23:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637133453;
-        bh=6rlux3GjOoo8gqHEpQr6T4MSp6j3qNyOcLVXvcWfDaY=;
+        s=k20201202; t=1637133834;
+        bh=GZZOJoaB2rZemxlLF0pucwz12KptrJbt1uNgr4ETHH4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=VFJp4QpZtt1DQ4qGscEHUscsp1arczJ92iWviMPzDWCtdCbKl2IcmjTbopR19P7u5
-         TCr+dPUwNnviZxP/sjWGO+Cwa34sU4f+m4BTfEILupcdofjVuKCJNhlRP4Kws6JSqD
-         YYXw10GOn2liLlUwRR4lRJBvbKQSvQNWfxGdMjy/kdtglxCCki38GRgCvm+6x2wGyb
-         tT+4DHAuZ8bDlxomM3tTRxxkSUwDLWlwlxAJrdq8Z+Mxd7jVlCRSu1udPAD+bKyHJ2
-         Qqy/ZSNKA1SRwBLOF39LArL7K6VYcF1E2Y7hHVbFl0Ako+cMwv3ZHIzKRAgG6nV0Nt
-         8oAmrc92PZxSw==
-Received: by mail-yb1-f174.google.com with SMTP id e136so4679738ybc.4
-        for <linux-raid@vger.kernel.org>; Tue, 16 Nov 2021 23:17:33 -0800 (PST)
-X-Gm-Message-State: AOAM5323urkX7kKeJUMmJcEUXNVPHxlD5Fvy+6F2xcYYA6JVSAG9zapl
-        snJPuj5rIW22BPIChH8HYvW6g8Qwc/1sD8E2b3Q=
-X-Google-Smtp-Source: ABdhPJyRLxdhRjd+T318qt4a2q6F9zcR66wDDTll0fZOJhRFMiMVqUGN8MY4OaCXXHzZEpRThRpgjYSERzQZd+dxV2A=
-X-Received: by 2002:a25:8882:: with SMTP id d2mr14990327ybl.68.1637133452763;
- Tue, 16 Nov 2021 23:17:32 -0800 (PST)
+        b=C+Zle1bqBsXcevdIkK6O3Q7gWWsWwFg6TptMY82V0rMJW3B2vspOwVTIlGNfEZETd
+         B7GrDOh3OdjQbYImspfe3iosRBDfzr2IHdQG8FazpZsphRaGL4l+Q0JbvlYIUavqfr
+         XxeDWIb1W3a02b3hzHoy2P5MHaF6N97Q1x5zYy9Q5JrUSoVjnLAZSat2vRckuzarUX
+         hPlkCHLQw1G9tcckC5A0W2jl5SoqwzcVpFXV0Etq6EYoR283nWfhGH9p/Sassa7k8+
+         ymq7AgDu/1rZcRSOokxxtI1KWVlKmrJrwcjvmA9YGJI/km1IJjTNoA5xC6ZrP29ORA
+         35ZDCx4aN4iyw==
+Received: by mail-yb1-f181.google.com with SMTP id n2so265450yba.2;
+        Tue, 16 Nov 2021 23:23:54 -0800 (PST)
+X-Gm-Message-State: AOAM531Dye3f7J2Iwgh5oCtugHtKOfaMW+Nbn43/Z5HcHVlff9w12VEP
+        ZX2KX6xVJbimLwy1clgHKQQWd+x2nPVKESVQF74=
+X-Google-Smtp-Source: ABdhPJz3yN/F+ytDeSifn9XNMg2kO3mvX+WshDAM3C9Qeg2hRsZe8ZQzGzqBNnWImxh3L2NktrbvgslpbIbsf3sCHbU=
+X-Received: by 2002:a25:324d:: with SMTP id y74mr15124707yby.526.1637133834160;
+ Tue, 16 Nov 2021 23:23:54 -0800 (PST)
 MIME-Version: 1.0
-References: <20211116102134.1738347-1-markus@hochholdinger.net>
-In-Reply-To: <20211116102134.1738347-1-markus@hochholdinger.net>
+References: <20211116023526.7077-1-zhangyue1@kylinos.cn>
+In-Reply-To: <20211116023526.7077-1-zhangyue1@kylinos.cn>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 16 Nov 2021 23:17:21 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4zBGnKAV_TWaZ78NVEhOUw61xYYKda1c33YB=JtAfChA@mail.gmail.com>
-Message-ID: <CAPhsuW4zBGnKAV_TWaZ78NVEhOUw61xYYKda1c33YB=JtAfChA@mail.gmail.com>
-Subject: Re: [PATCH v2] md: fix update super 1.0 on rdev size change
-To:     Markus Hochholdinger <markus@hochholdinger.net>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
+Date:   Tue, 16 Nov 2021 23:23:43 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7xJhRWv6N=-KJVd3+=zX1r5nxGguxe0kOC=Fk5JtXxVQ@mail.gmail.com>
+Message-ID: <CAPhsuW7xJhRWv6N=-KJVd3+=zX1r5nxGguxe0kOC=Fk5JtXxVQ@mail.gmail.com>
+Subject: Re: [PATCH] md: fix the problem that the pointer may be double free
+To:     zhangyue <zhangyue1@kylinos.cn>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Nov 16, 2021 at 2:22 AM Markus Hochholdinger
-<markus@hochholdinger.net> wrote:
+On Mon, Nov 15, 2021 at 6:37 PM zhangyue <zhangyue1@kylinos.cn> wrote:
 >
-> The superblock of version 1.0 doesn't get moved to the new position on a
-> device size change. This leads to a rdev without a superblock on a known
-> position, the raid can't be re-assembled.
+> int driver/md/md.c, if the function autorun_array() is called,
+> the problem of double free may occur.
 >
-> The line was removed by mistake and is re-added by this patch.
+> in function autorun_array(), when the function do_md_run() returns an
+> error, the function do_md_stop() will be called.
 >
-> Fixes: d9c0fa509eaf ("md: fix max sectors calculation for super 1.0")
+> The function do_md_run() called function md_run(), but in function
+> md_run(), the pointer mddev->private may be freed.
 >
-> Signed-off-by: Markus Hochholdinger <markus@hochholdinger.net>
-> Reviewd-by: Xiao Ni <xni@redhat.com>
+> The function do_md_stop() called the function __md_stop(), but in
+> function __md_stop(), the pointer mddev->private also will be freed
+> without judging null.
+>
+> At this time, the pointer mddev->private will be double free, so it
+> needs to be judged null or not.
+>
+> Signed-off-by: zhangyue <zhangyue1@kylinos.cn>
 
 Applied to md-fixes. Thanks!
-
-This version still has some minor issues. I fixed them before applying. For
-future patches, please run ./scripts/checkpatch.pl on the .patch file.
 
 Song
