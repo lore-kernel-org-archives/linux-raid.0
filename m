@@ -2,157 +2,256 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A664AC433FE
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 18:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE2A1C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 20:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8207E61BD4
-	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 18:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CD6761B43
+	for <linux-raid@archiver.kernel.org>; Wed, 17 Nov 2021 20:23:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239879AbhKQSN0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 17 Nov 2021 13:13:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51926 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239853AbhKQSN0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 17 Nov 2021 13:13:26 -0500
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48713C061570
-        for <linux-raid@vger.kernel.org>; Wed, 17 Nov 2021 10:10:27 -0800 (PST)
-Received: by mail-ed1-x533.google.com with SMTP id w1so15024053edc.6
-        for <linux-raid@vger.kernel.org>; Wed, 17 Nov 2021 10:10:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=zjlB3hrOFxaewC0B/0h8WdXl3O0vULDsbagiahTjDqQ=;
-        b=h8l1wTBxnXmRydLOjGhT2N2V05WdEaZqC6pL6t0Rpa8f+RG0yqAHbdTZ94ZUzEWeuj
-         ZRj25IttZdynBk3hwnKzjL2eSf6kZqSwB1agpw1XbYVh7sL1LMP9qpKWP1dja23nTz2y
-         b8RG15f/8XW0HQd8x0laBJRlHWRfISaEmjMEUVelPIM3p73thcZNiYYPGDkIPuVhV64E
-         J+MYbgFH3EaUTFyKLPdzitX8AAR8SnjRFKD8m/mj4R69ojUm55gj1gTlqITOQvWBMqhG
-         cLT1LpFBuffXGNBCr3Vw6YTPhQVVzwsaWZpfgFJ13HxztPnaWBhgJ9OxXqyFNVbCfR+2
-         k0zw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=zjlB3hrOFxaewC0B/0h8WdXl3O0vULDsbagiahTjDqQ=;
-        b=SU4hlsfCum+kVgH0vIXebd/Mg0AE9IoApbbmT4NV0HZa3ST555p3NDuocFs/Fxe6pF
-         0RD3pnJCVFGyG1aFipSlS9oyOPQpDsfRE4KKLqnKVDi2ExWnUOg71L7ZNv/jhEOayiCV
-         DyKcJMFQU0TrKbOcLjkd78PcAC92QV4l8rHpXF7XJQ4XI7r9OhejzNuhU/aH78UWb2mX
-         k6Zv2EMHosfrVL2wFGzGhuqu2FdWx/aD0+9TJcpgXP3dDoMxQHA0/OthLV5lGZbrCZft
-         LrLoXz+wJvU7JTI/k4rUH7fbD9M4ewQUHDmdj9FTLf1EEUV1QQFkswnC7BAzlGYDLkTg
-         Y4JQ==
-X-Gm-Message-State: AOAM533Pko6UChnV+gKcH5w4p5a/OMv4dheJfPFwm6EOsH3yA1Z6gR2C
-        5c6BdIFYUQSxCs+6OqG+jc1tMU56zTI1iUruf6jDzLc=
-X-Google-Smtp-Source: ABdhPJzpGjkMTP9OgSEAE1jjRv6MCjzDvicjX/W8vzPxghNyi/IYyy46345enJkHQ7dgwzPEAaxO/WQ0ENRCcSbfdT4=
-X-Received: by 2002:a17:907:3d94:: with SMTP id he20mr24876854ejc.75.1637172625784;
- Wed, 17 Nov 2021 10:10:25 -0800 (PST)
-MIME-Version: 1.0
-References: <CAFPgooeJrvrNQcOQXUD82oc52rgB3DvH=JFzDVDMnfc+gs7nDg@mail.gmail.com>
- <06b0f87c-2d06-3f94-f0b3-19d631968fa0@youngman.org.uk>
-In-Reply-To: <06b0f87c-2d06-3f94-f0b3-19d631968fa0@youngman.org.uk>
-From:   Martin Thoma <thomamartin1985@googlemail.com>
-Date:   Wed, 17 Nov 2021 19:10:14 +0100
-Message-ID: <CAFPgoofZWN8d9O6LQ0LtKaOnU9yofvNAYO6AKxjrztqzod+doQ@mail.gmail.com>
-Subject: Re: Failed Raid 5 - one Disk possibly Out of date - 2nd disk damaged
-To:     Wols Lists <antlists@youngman.org.uk>
+        id S240712AbhKQU0P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 17 Nov 2021 15:26:15 -0500
+Received: from mga11.intel.com ([192.55.52.93]:31917 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238577AbhKQU0P (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 17 Nov 2021 15:26:15 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10171"; a="231529211"
+X-IronPort-AV: E=Sophos;i="5.87,241,1631602800"; 
+   d="scan'208";a="231529211"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2021 12:23:16 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,241,1631602800"; 
+   d="scan'208";a="736346565"
+Received: from lkp-server02.sh.intel.com (HELO c20d8bc80006) ([10.239.97.151])
+  by fmsmga005.fm.intel.com with ESMTP; 17 Nov 2021 12:23:14 -0800
+Received: from kbuild by c20d8bc80006 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mnRSc-0002Bi-5w; Wed, 17 Nov 2021 20:23:14 +0000
+Date:   Thu, 18 Nov 2021 04:22:55 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
 Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ 78a7fb15ebd7b8557a87ebcf02c81018fb7566f7
+Message-ID: <6195649f.agxoTeWuOgVYpp/j%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Thanks a lot.
-Will try to get some new drives and do a dd and then will try to
-assemble the Raid again.
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: 78a7fb15ebd7b8557a87ebcf02c81018fb7566f7  md: fix the problem that the pointer may be double free
 
-The Drives are CMR Drives, a few Western Digital and Seagate drives.
+elapsed time: 725m
 
-Regards
+configs tested: 192
+configs skipped: 4
 
-Martin
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Am Mi., 17. Nov. 2021 um 18:56 Uhr schrieb Wols Lists
-<antlists@youngman.org.uk>:
->
-> On 17/11/2021 12:22, Martin Thoma wrote:
-> > Hi All,
-> >
->
->
-> >
-> > So /dev/sdd1 was considered , when i ran the command again the raid
-> > assembled without sdd1
-> >
-> > When i tried Reading Data after a while it stopped (propably when the
-> > data was on /dev/sdc
-> >
-> > dmesg showed this:
-> > [  368.433658] sd 8:0:0:1: [sdc] tag#0 FAILED Result: hostbyte=3DDID_OK
-> > driverbyte=3DDRIVER_SENSE
-> > [  368.433664] sd 8:0:0:1: [sdc] tag#0 Sense Key : Medium Error [curren=
-t]
-> > [  368.433669] sd 8:0:0:1: [sdc] tag#0 Add. Sense: Unrecovered read err=
-or
-> > [  368.433675] sd 8:0:0:1: [sdc] tag#0 CDB: Read(16) 88 00 00 00 00 00
-> > 00 08 81 d8 00 00 00 08 00 00
-> > [  368.433679] blk_update_request: critical medium error, dev sdc, sect=
-or 557528
-> > [  368.433689] raid5_end_read_request: 77 callbacks suppressed
-> > [  368.433692] md/raid:md0: read error not correctable (sector 555480 o=
-n sdc1).
-> > [  375.944254] sd 8:0:0:1: [sdc] tag#0 FAILED Result: hostbyte=3DDID_OK
-> > driverbyte=3DDRIVER_SENSE
-> >
-> > and the Raided stopped again.
-> >
-> > How can i force to assemble the raid including /dev/sdd1 and not
-> > include /dev/sdc (because that drive is possibly damaged now)?
-> > With a mdadm --create --assume-clean .. command?
->
-> NO NO NO NO NO !!!
-> >
-> > I'm using  mdadm/zesty-updates,now 3.4-4ubuntu0.1 amd64 [installed] on
-> > Linux version 4.10.0-21-generic (buildd@lgw01-12) (gcc version 6.3.0
-> > 20170406 (Ubuntu 6.3.0-12ubuntu2) )
-> >
-> That's an old ubuntu? and an ancient mdadm 3.4?
->
-> As a very first action, you need to source a much newer rescue disk!
->
-> As a second action, if you think sdc and sdd are dodgy, then you need to
-> replace them - use dd or ddrescue to do a brute-force copy.
->
-> You don't mention what drives they are. Are they CMR? Are they suitable
-> for raid? For replacement drives, I'd look at upsizing to 4TB for a bit
-> of headroom maybe (or look at moving to raid 6). And look at Seagate
-> IronWolf, WD Red *PRO*, or Toshiba N300. (Personally I'd pass on the WD .=
-..)
->
-> Once you've copied sdc and sdd, you can look at doing another force
-> assemble, and you'll hopefully get your array back. At least the event
-> count info implies damage to the array should be minimal.
->
-> https://raid.wiki.kernel.org/index.php/Linux_Raid#When_Things_Go_Wrogn
->
-> Read, learn, and inwardly digest ...
->
-> And DON'T do anything that will make changes to the disks - like a
-> re-create!!!
->
-> Cheers,
-> Wol
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+i386                 randconfig-c001-20211117
+powerpc              randconfig-c003-20211117
+s390                       zfcpdump_defconfig
+arm                          gemini_defconfig
+powerpc                      mgcoge_defconfig
+ia64                          tiger_defconfig
+sh                ecovec24-romimage_defconfig
+m68k                          multi_defconfig
+powerpc                 mpc85xx_cds_defconfig
+arm                      jornada720_defconfig
+arm                         lpc18xx_defconfig
+sh                          urquell_defconfig
+nios2                         10m50_defconfig
+powerpc                   currituck_defconfig
+arm                          collie_defconfig
+powerpc                     kilauea_defconfig
+sh                          rsk7269_defconfig
+riscv                            alldefconfig
+alpha                               defconfig
+powerpc                     stx_gp3_defconfig
+arc                     nsimosci_hs_defconfig
+mips                     loongson2k_defconfig
+x86_64                           allyesconfig
+powerpc               mpc834x_itxgp_defconfig
+x86_64                              defconfig
+mips                         cobalt_defconfig
+powerpc                      pasemi_defconfig
+mips                           jazz_defconfig
+mips                malta_qemu_32r6_defconfig
+sparc                       sparc64_defconfig
+powerpc                    adder875_defconfig
+ia64                                defconfig
+sh                         apsh4a3a_defconfig
+arm                          ep93xx_defconfig
+mips                          ath79_defconfig
+sh                         ecovec24_defconfig
+openrisc                         alldefconfig
+powerpc                     pq2fads_defconfig
+powerpc                 mpc8272_ads_defconfig
+sh                           se7712_defconfig
+mips                          rb532_defconfig
+arm                          simpad_defconfig
+i386                             alldefconfig
+mips                       capcella_defconfig
+powerpc                     tqm8555_defconfig
+arm                             ezx_defconfig
+powerpc                  mpc885_ads_defconfig
+powerpc                    ge_imp3a_defconfig
+um                           x86_64_defconfig
+sh                   secureedge5410_defconfig
+s390                             allmodconfig
+mips                      loongson3_defconfig
+h8300                       h8s-sim_defconfig
+arm                           stm32_defconfig
+xtensa                    smp_lx200_defconfig
+m68k                        mvme147_defconfig
+powerpc                     mpc83xx_defconfig
+sh                   sh7724_generic_defconfig
+mips                      malta_kvm_defconfig
+powerpc                 mpc832x_mds_defconfig
+h8300                    h8300h-sim_defconfig
+m68k                           sun3_defconfig
+sh                          lboxre2_defconfig
+powerpc                         ps3_defconfig
+ia64                        generic_defconfig
+powerpc                    socrates_defconfig
+m68k                          atari_defconfig
+mips                      bmips_stb_defconfig
+powerpc                      cm5200_defconfig
+arm                        mvebu_v7_defconfig
+arm                          exynos_defconfig
+powerpc                   motionpro_defconfig
+arm                       omap2plus_defconfig
+powerpc                 xes_mpc85xx_defconfig
+sparc                       sparc32_defconfig
+riscv                          rv32_defconfig
+m68k                        stmark2_defconfig
+powerpc                     mpc5200_defconfig
+arm                       aspeed_g5_defconfig
+sh                           se7619_defconfig
+arm                              alldefconfig
+sh                 kfr2r09-romimage_defconfig
+riscv             nommu_k210_sdcard_defconfig
+powerpc                        cell_defconfig
+um                             i386_defconfig
+powerpc                       holly_defconfig
+xtensa                              defconfig
+arm                            mps2_defconfig
+sh                        edosk7705_defconfig
+m68k                         amcore_defconfig
+ia64                             allyesconfig
+arm                           tegra_defconfig
+powerpc                 mpc837x_mds_defconfig
+ia64                             alldefconfig
+arc                        nsimosci_defconfig
+powerpc                      tqm8xx_defconfig
+powerpc                  mpc866_ads_defconfig
+arm                         s3c6400_defconfig
+powerpc                      ppc6xx_defconfig
+powerpc                     tqm8560_defconfig
+arc                         haps_hs_defconfig
+sh                        apsh4ad0a_defconfig
+arm                         s3c2410_defconfig
+mips                           mtx1_defconfig
+parisc                generic-64bit_defconfig
+powerpc                     asp8347_defconfig
+arm                        magician_defconfig
+arm                         assabet_defconfig
+h8300                            alldefconfig
+mips                         tb0287_defconfig
+powerpc64                           defconfig
+powerpc                      acadia_defconfig
+arm                       versatile_defconfig
+arm                            dove_defconfig
+arm                  randconfig-c002-20211117
+ia64                             allmodconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a005-20211117
+x86_64               randconfig-a003-20211117
+x86_64               randconfig-a002-20211117
+x86_64               randconfig-a001-20211117
+x86_64               randconfig-a006-20211117
+x86_64               randconfig-a004-20211117
+i386                 randconfig-a006-20211117
+i386                 randconfig-a003-20211117
+i386                 randconfig-a005-20211117
+i386                 randconfig-a001-20211117
+i386                 randconfig-a004-20211117
+i386                 randconfig-a002-20211117
+arc                  randconfig-r043-20211117
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                                  kexec
 
+clang tested configs:
+x86_64               randconfig-c007-20211117
+i386                 randconfig-c001-20211117
+arm                  randconfig-c002-20211117
+riscv                randconfig-c006-20211117
+powerpc              randconfig-c003-20211117
+s390                 randconfig-c005-20211117
+mips                 randconfig-c004-20211117
+x86_64               randconfig-a015-20211117
+x86_64               randconfig-a013-20211117
+x86_64               randconfig-a011-20211117
+x86_64               randconfig-a012-20211117
+x86_64               randconfig-a016-20211117
+x86_64               randconfig-a014-20211117
+i386                 randconfig-a014-20211117
+i386                 randconfig-a016-20211117
+i386                 randconfig-a012-20211117
+i386                 randconfig-a013-20211117
+i386                 randconfig-a011-20211117
+i386                 randconfig-a015-20211117
+hexagon              randconfig-r045-20211117
+hexagon              randconfig-r041-20211117
+s390                 randconfig-r044-20211117
+riscv                randconfig-r042-20211117
 
-
---=20
-With kind regards / Mit freundlichen Gr=C3=BC=C3=9Fen
-
-Martin Thoma
-
-G=C3=B6hrenstra=C3=9Fe 3
-72414 Rangendingen
-
-Cell:  0176 80 16 03 68
-
-Mail:  Thoma-Martin@gmx.net
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
