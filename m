@@ -1,148 +1,92 @@
 Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B3BC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 19 Nov 2021 04:20:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EFC961AD0
-	for <linux-raid@archiver.kernel.org>; Fri, 19 Nov 2021 04:20:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7441EC433F5
+	for <linux-raid@archiver.kernel.org>; Sat, 20 Nov 2021 07:24:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230478AbhKSEXf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 18 Nov 2021 23:23:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35118 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229472AbhKSEXf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 18 Nov 2021 23:23:35 -0500
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 196E1C061574
-        for <linux-raid@vger.kernel.org>; Thu, 18 Nov 2021 20:20:34 -0800 (PST)
-Received: by mail-pf1-x42b.google.com with SMTP id b68so8223241pfg.11
-        for <linux-raid@vger.kernel.org>; Thu, 18 Nov 2021 20:20:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google;
-        h=message-id:date:mime-version:user-agent:subject:to:cc:references
-         :from:in-reply-to:content-transfer-encoding;
-        bh=puLnF0Rdq4MZNWq7m79ICZ+Aaq88wKpOV4ZezkKYWnY=;
-        b=H4SfpIdHVj/yejZJJt+PrKpFnkg689nU1KZM8tGZJ/DJxCiYJuRIK7CUzXvO1jMSgW
-         8Ex1olvTOsZQZNAiugJ/3IYV98NXtLqXPqZA/hZNNZi2B2FVUQwqqZ5bIjWhtATrkl0u
-         gGSk+mhLvM41E6KYsUXYEpPKX97mXxF+wcS00=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :to:cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=puLnF0Rdq4MZNWq7m79ICZ+Aaq88wKpOV4ZezkKYWnY=;
-        b=UG33pVa26vtzCO7J80IsJT7njHxC85NLsDjeRGw9NtuCCwFO0fE77znfhNk/jaQzOd
-         MHmY505sduNaeBYQZkmViDrUK8tEDiVMvzz0Y3nONw/MmybscWA1cW/obpY+E0qUqakl
-         jVLzx5/DB6Uezu7NeTI6A24v1rqvhWxc/T3All4ZKkkDQJm04Me6SZGTdcxi0K8tublk
-         kStQcIZ3QPyeLn2pRuiHBLfRTlRKeGefpdzynCbfqQcKzEOaCLqxuVC/BfW64HuewNQP
-         yhwrhPSJLMXT8612Rsf3I50gRohjiPfv5GoU2d/DVp4mmsjM0xF5zOkOmAYIbBG1JTf8
-         IEbQ==
-X-Gm-Message-State: AOAM531C6ObeoeMC4/KICi+9jE/OsshXm18LWo1MvNNbgpUehJJ5DY4c
-        XqSMQYxJJPrOSMMdXYfVULABRw==
-X-Google-Smtp-Source: ABdhPJyoovnBVRJ3jzbNrC5Qcdt7oOaDGKKyXZEA4WY7/c6ulzFNv3r0bBLtcPPYwfDtyp8J/4INPw==
-X-Received: by 2002:a62:88c3:0:b0:4a2:b2d2:7082 with SMTP id l186-20020a6288c3000000b004a2b2d27082mr20275358pfd.48.1637295633592;
-        Thu, 18 Nov 2021 20:20:33 -0800 (PST)
-Received: from [192.168.1.5] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
-        by smtp.gmail.com with ESMTPSA id ot7sm10548012pjb.21.2021.11.18.20.20.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Nov 2021 20:20:33 -0800 (PST)
-Message-ID: <7fe8a49f-102f-3739-de08-265ba0450375@digitalocean.com>
-Date:   Thu, 18 Nov 2021 21:20:27 -0700
+        id S236816AbhKTH1C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 20 Nov 2021 02:27:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41786 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236790AbhKTH0n (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 20 Nov 2021 02:26:43 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9B36A60E93;
+        Sat, 20 Nov 2021 07:23:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637393020;
+        bh=yjzvhNcky041CJZ1uMGGqIn7woM9nhsIlPxWsJ0q0lU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=X6G9mpaBxLI82jpYTQnHU8reA3NvMkFXnOjLYR2QzhXgjjMSRXdBVnExaKyNiZ0Ew
+         GuCP/CEISRCzKKDNr5MgRWbfwpOUEEliAb0NIsU01RvxXaqIuYq8RkpiCEGRxIFKVL
+         0EaN/ra2WMVtVVM6RLOsGkc6TEbjqvTXMWy8FVHuHHeIJhuYcCdeZqSU1ysl+Zp5xN
+         EULeES6C5RRMaeihY6wGozUJWD3OjDceAZkrase5ljOe2rPD83H7+IX6PvZWQ2zVLw
+         dOnSmcVOKzwr0EWWxjjZM6O+x0jNHSvYFMoHxH9t+y962BknJAUE6+ORYx+1AhcSef
+         RDBoB94Zhu4bA==
+Received: by mail-yb1-f174.google.com with SMTP id j77so13907893ybg.6;
+        Fri, 19 Nov 2021 23:23:40 -0800 (PST)
+X-Gm-Message-State: AOAM531YSt5Ml28plT7FFxXMFWJ/kzdqguGSFHOfF6C8V6ywYKJUFq0b
+        BUinIx1a8KYBjZCjsQcRwJLOrVGgAQWLA4sa81Q=
+X-Google-Smtp-Source: ABdhPJxZehMkA4qKbP5ybYfYk3uvwIeMbRvBcKpGd8XnJPkd2cMJZcFHLQfbtjXhnxj/qD5Xz8JJGSIYwGECLEEZC1E=
+X-Received: by 2002:a25:660d:: with SMTP id a13mr44779897ybc.460.1637393019876;
+ Fri, 19 Nov 2021 23:23:39 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.0
-Subject: Re: [RFC PATCH v4 4/4] md: raid456 add nowait support
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
-        Jens Axboe <axboe@kernel.dk>
-References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
- <20211110181441.9263-1-vverma@digitalocean.com>
- <20211110181441.9263-4-vverma@digitalocean.com>
- <CAPhsuW7=r4AmCqG3M0hU=fps6a-Zu9KF_RnyNf815d=43wTv5A@mail.gmail.com>
- <f8c2a2bc-a885-8254-2b39-fc0c969ac70d@digitalocean.com>
- <CAPhsuW54EJOfAXrE-zVie561n+aF-+jvQz1152rqj=kU5Fk5ug@mail.gmail.com>
-From:   Vishal Verma <vverma@digitalocean.com>
-In-Reply-To: <CAPhsuW54EJOfAXrE-zVie561n+aF-+jvQz1152rqj=kU5Fk5ug@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211115031817.4193-1-bernard@vivo.com> <PSAPR06MB40216A2C236343B2300EFC48DF9A9@PSAPR06MB4021.apcprd06.prod.outlook.com>
+In-Reply-To: <PSAPR06MB40216A2C236343B2300EFC48DF9A9@PSAPR06MB4021.apcprd06.prod.outlook.com>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 19 Nov 2021 21:23:28 -1000
+X-Gmail-Original-Message-ID: <CAPhsuW7SCEXrU3AL8isD-3NwH+ChgwbUAR6y+6xDVRbZTFnEJg@mail.gmail.com>
+Message-ID: <CAPhsuW7SCEXrU3AL8isD-3NwH+ChgwbUAR6y+6xDVRbZTFnEJg@mail.gmail.com>
+Subject: Re: [PATCH] drivers/md: fix potential memleak
+To:     =?UTF-8?B?6LW15Yab5aWO?= <bernard@vivo.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Tue, Nov 16, 2021 at 9:57 PM =E8=B5=B5=E5=86=9B=E5=A5=8E <bernard@vivo.c=
+om> wrote:
+>
+>
+>
+> -----=E9=82=AE=E4=BB=B6=E5=8E=9F=E4=BB=B6-----
+> =E5=8F=91=E4=BB=B6=E4=BA=BA: bernard@vivo.com <bernard@vivo.com> =E4=BB=
+=A3=E8=A1=A8 Song Liu
+> =E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4: 2021=E5=B9=B411=E6=9C=8817=E6=97=A5=
+ 15:06
+> =E6=94=B6=E4=BB=B6=E4=BA=BA: =E8=B5=B5=E5=86=9B=E5=A5=8E <bernard@vivo.co=
+m>
+> =E6=8A=84=E9=80=81: linux-raid <linux-raid@vger.kernel.org>; open list <l=
+inux-kernel@vger.kernel.org>
+> =E4=B8=BB=E9=A2=98: Re: [PATCH] drivers/md: fix potential memleak
+>
+> On Sun, Nov 14, 2021 at 7:18 PM Bernard Zhao <bernard@vivo.com> wrote:
+> >
+> > In function get_bitmap_from_slot, when md_bitmap_create failed,
+> > md_bitmap_destroy must be called to do clean up.
+>
+> >Could you please explain which variable(s) need clean up?
+>
+> Hi Song:
+> The follow is the function md_bitmap_create`s annotation :
+> /*
+>  * initialize the bitmap structure
+>  * if this returns an error, bitmap_destroy must be called to do clean up
+>  * once mddev->bitmap is set
+>  */
+> struct bitmap *md_bitmap_create(struct mddev *mddev, int slot)
+>
+> It is mentioned that bitmap_destroy needs to be called to do clean up.
+> Other functions which called md_bitmap_create in the same file also calle=
+d md_bitmap_create to clean up(in the error branch), but this one didn`t.
+> I am not sure if there is some gap?
 
-On 11/18/21 9:07 PM, Song Liu wrote:
-> On Thu, Nov 11, 2021 at 10:09 PM Vishal Verma <vverma@digitalocean.com> wrote:
->> Yes, with raid10 the task hung happened when doing write IO using FIO where FIO just gets stuck  after like 30s or so and no I/O happens afterwards.
->> This was on a test nvme based raid10: (tried with both io_uring and aio, same issue)
->>
->> [ 1818.677686] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->> [ 1818.685512] task:fio             state:D stack:    0 pid:14314 ppid:     1 flags:0x00020004
->> [ 1818.685516] Call Trace:
->> [ 1818.685519]  __schedule+0x295/0x840
->> [ 1818.685525]  ? wbt_cleanup_cb+0x20/0x20
->> [ 1818.685528]  schedule+0x4e/0xb0
->> [ 1818.685529]  io_schedule+0x3f/0x70
->> [ 1818.685531]  rq_qos_wait+0xb9/0x130
->> [ 1818.685535]  ? sysv68_partition+0x280/0x280
->> [ 1818.685537]  ? wbt_cleanup_cb+0x20/0x20
->> [ 1818.685538]  wbt_wait+0x92/0xc0
->> [ 1818.685539]  __rq_qos_throttle+0x25/0x40
->> [ 1818.685541]  blk_mq_submit_bio+0xc6/0x5d0
->> [ 1818.685544]  ? submit_bio_checks+0x39e/0x5f0
->> [ 1818.685547]  __submit_bio+0x1bc/0x1d0
->> [ 1818.685549]  submit_bio_noacct+0x256/0x2a0
->> [ 1818.685550]  ? bio_associate_blkg+0x29/0x70
->> [ 1818.685553]  0xffffffffc028d38a
->> [ 1818.685555]  blk_flush_plug+0xc3/0x130
->> [ 1818.685558]  blk_finish_plug+0x26/0x40
->> [ 1818.685560]  blkdev_write_iter+0xf8/0x160
->> [ 1818.685561]  io_write+0x153/0x2e0
->> [ 1818.685564]  ? blk_mq_put_tags+0x1d/0x20
->> [ 1818.685566]  ? blk_mq_end_request_batch+0x295/0x2e0
->> [ 1818.685568]  ? sysvec_apic_timer_interrupt+0x46/0x80
->> [ 1818.685570]  io_issue_sqe+0x579/0x1990
->> [ 1818.685571]  ? io_req_prep+0x6a9/0xe60
->> [ 1818.685573]  ? __fget_files+0x56/0x80
->> [ 1818.685576]  ? fget+0x2a/0x30
->> [ 1818.685577]  io_submit_sqes+0x28c/0x930
->> [ 1818.685578]  ? __io_submit_flush_completions+0xdc/0x150
->> [ 1818.685580]  ? ctx_flush_and_put+0x4b/0x70
->> [ 1818.685581]  __x64_sys_io_uring_enter+0x1db/0x8e0
->> [ 1818.685583]  ? exit_to_user_mode_prepare+0x3e/0x1e0
->> [ 1818.685586]  ? exit_to_user_mode_prepare+0x3e/0x1e0
->> [ 1818.685588]  do_syscall_64+0x38/0x90
->> [ 1818.685591]  entry_SYSCALL_64_after_hwframe+0x44/0xae
->> [ 1818.685593] RIP: 0033:0x7f8a41c1889d
->> [ 1818.685594] RSP: 002b:00007ffe390d5af8 EFLAGS: 00000246 ORIG_RAX: 00000000000001aa
->> [ 1818.685596] RAX: ffffffffffffffda RBX: 00007ffe390d5b20 RCX: 00007f8a41c1889d
->> [ 1818.685597] RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000006
->> [ 1818.685597] RBP: 000055de073b6ef0 R08: 0000000000000000 R09: 0000000000000000
->> [ 1818.685598] R10: 0000000000000001 R11: 0000000000000246 R12: 00007f8a38400000
->> [ 1818.685599] R13: 0000000000000001 R14: 0000000000875bc1 R15: 0000000000000000
->>
->> For raid456, running into this as soon as I try to create a raid5 volume:
->>
->> [ 5338.620661] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.627457] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.634250] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.641043] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.647836] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.654632] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.661424] Dev md5: unable to read RDB block 0
->> [ 5338.665957] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.672746] Buffer I/O error on dev md5, logical block 0, async page read
->> [ 5338.679540] Buffer I/O error on dev md5, logical block 3, async page read
-> I am sorry that I haven't got time to look into this, and I will be on
-> vacation again from
-> tomorrow. If you make progress, please share your finding and/or
-> updated version.
-> I will try to look into this after Thanksgiving.
+I don't think we need to call md_bitmap_destroy in some of these cases.
+Please read the code carefully can decide where these are needed based
+on the logic of the code.
 
-Hi Song,
-
-Unfortunately, I didn't make any progress after posting my previous 
-email. I'll defintely share if I make any further progress (will be out 
-next week too).
-
-> Song
+Thanks,
+Song
