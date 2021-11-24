@@ -2,122 +2,58 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0772FC433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Nov 2021 11:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6F5C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 24 Nov 2021 12:09:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234231AbhKXLD0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Nov 2021 06:03:26 -0500
-Received: from mga11.intel.com ([192.55.52.93]:61084 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231610AbhKXLDZ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 24 Nov 2021 06:03:25 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10177"; a="232750857"
-X-IronPort-AV: E=Sophos;i="5.87,260,1631602800"; 
-   d="scan'208";a="232750857"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2021 03:00:15 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,260,1631602800"; 
-   d="scan'208";a="457439023"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.57])
-  by orsmga006.jf.intel.com with ESMTP; 24 Nov 2021 03:00:14 -0800
-From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org
-Subject: [PATCH] Correct checking if file descriptors are valid
-Date:   Wed, 24 Nov 2021 11:48:33 +0100
-Message-Id: <20211124104833.27368-1-mateusz.grzonka@intel.com>
-X-Mailer: git-send-email 2.26.2
+        id S242251AbhKXMMe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 24 Nov 2021 07:12:34 -0500
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17293 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242284AbhKXMJs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Nov 2021 07:09:48 -0500
+ARC-Seal: i=1; a=rsa-sha256; t=1637755596; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=D+XogClqbXnYWVNeSCjFkk7UpsHx6qNIDNeBuTRplH9I6DkbsluSRSxn1LTn/SaZBeAUsqH+FVZYDS4Vm1uawtx5u3ahOnqYHSENJOSU493IgA97FFJQ/l25+i2X/U7xKSyZbFwprmZibEIXn6vf/H2O4k+BmiYiJ2PUCGDXJwM=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1637755596; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=cxreUS312dOwz6LSNxB1hzl0TZBNMvI7W5/19y1+JZ0=; 
+        b=jY2ICgoTN+OWzVp6M3zZ9OdLCNd5dIFjD4y0SEUzrp+iAqjiTCAhG/5CKi+rXvDc0W1b1p37e+LzSuZpK9o3pxybxTbjtCOHtD4kQ7yPwp9cpHloVbIrpww32w9811jJTgcyDxQyHyPBd9v0TpL7o6EsKmWfHqiU38QfBQZQFts=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1637755593421625.292480405046; Wed, 24 Nov 2021 13:06:33 +0100 (CET)
+Subject: Re: [PATCH] Incremental: Close unclosed mdfd in IncrementalScan()
+To:     Mateusz Grzonka <mateusz.grzonka@intel.com>,
+        linux-raid@vger.kernel.org
+References: <20211124104530.26592-1-mateusz.grzonka@intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <934f4f9e-bc53-2cca-26bd-bb1e8ac1a42b@trained-monkey.org>
+Date:   Wed, 24 Nov 2021 07:06:31 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211124104530.26592-1-mateusz.grzonka@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In some cases file descriptors equal to 0 are treated as invalid.
-Fix it.
+On 11/24/21 5:45 AM, Mateusz Grzonka wrote:
+> In addition to closing mdfd, propagate helpers to manage file
+> descriptors across IncrementalScan().
+> 
+> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+> ---
+>  Incremental.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
 
-Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
----
- Assemble.c    | 3 +--
- Grow.c        | 5 +----
- Incremental.c | 4 ++--
- mdadm.c       | 3 +--
- super-ddf.c   | 2 +-
- 5 files changed, 6 insertions(+), 11 deletions(-)
+Applied,
 
-diff --git a/Assemble.c b/Assemble.c
-index 20fd97b5..704b8293 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -569,8 +569,7 @@ static int select_devices(struct mddev_dev *devlist,
- 				if (dfd < 0 ||
- 				    st->ss->load_super(st, dfd, NULL))
- 					tmpdev->used = 2;
--				if (dfd > 0)
--					close(dfd);
-+				close_fd(&dfd);
- 			}
- 		}
- 
-diff --git a/Grow.c b/Grow.c
-index 70f26c7e..9c6fc95e 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2334,10 +2334,7 @@ size_change_error:
- 		 * number of devices (On-Line Capacity Expansion) must be
- 		 * performed at the level of the container
- 		 */
--		if (fd > 0) {
--			close(fd);
--			fd = -1;
--		}
-+		close_fd(&fd);
- 		rv = reshape_container(container, devname, -1, st, &info,
- 				       c->force, c->backup_file, c->verbose,
- 				       0, 0, 0);
-diff --git a/Incremental.c b/Incremental.c
-index cd9cc0fc..d28925d6 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1701,8 +1701,8 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
- 		return 1;
- 	}
- 	mdfd = open_dev_excl(ent->devnm);
--	if (mdfd > 0) {
--		close(mdfd);
-+	if (is_fd_valid(mdfd)) {
-+		close_fd(&mdfd);
- 		if (sysfs_get_str(&mdi, NULL, "array_state",
- 				  buf, sizeof(buf)) > 0) {
- 			if (strncmp(buf, "active", 6) == 0 ||
-diff --git a/mdadm.c b/mdadm.c
-index a31ab99c..91e67467 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1770,8 +1770,7 @@ int main(int argc, char *argv[])
- 	}
- 	if (locked)
- 		cluster_release_dlmlock();
--	if (mdfd > 0)
--		close(mdfd);
-+	close_fd(&mdfd);
- 	exit(rv);
- }
- 
-diff --git a/super-ddf.c b/super-ddf.c
-index d334a79d..3f304cdc 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -4914,7 +4914,7 @@ static int raid10_degraded(struct mdinfo *info)
- 			pr_err("BUG: invalid raid disk\n");
- 			goto out;
- 		}
--		if (d->state_fd > 0)
-+		if (is_fd_valid(d->state_fd))
- 			found[i]++;
- 	}
- 	ret = 2;
--- 
-2.26.2
+Thanks,
+Jes
+
 
