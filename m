@@ -2,76 +2,329 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1633C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 24 Nov 2021 16:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB43C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 25 Nov 2021 11:43:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234379AbhKXQdD convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 24 Nov 2021 11:33:03 -0500
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17269 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230403AbhKXQdD (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 24 Nov 2021 11:33:03 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1637771388; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=DnkbD3FxIzy4kUfYFjMSlRucRyLrx6CVXn3a4P67Ob39nGrpae3HgWB8HlciqYrc++ux0xLvRPN86qJcIVt0ujbexfNFbd/eh7ZjdONsSn8OE/PZ/zNbZ3lBTPM0RL2MTMmDaBCFGsOekgYzSBwvRl1Yu5TXTAhl9jTHrLVU1f8=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1637771388; h=Content-Type:Content-Transfer-Encoding:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=i8CZjWJs7gPp/l7az5/A7hA82HZHhSDL+v4zl8AdCss=; 
-        b=Q+MGPFMB5dA2bma3xmFroYPqkzkaSLLYcjZuMdXu7Ng/bs5nDGzrHWNK8+tTyEODSwH7jxpArjeoCi2KAMxwBM0mSn6gcNJB6H5uqzR0IzmU+AbtSPZxL4Mm5DyY3iYdP+gd/FVfctKQgZAQpHZXTI+BnHKL7jw0zChWMuF3bb0=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.29] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 163777138498046.847552643352515; Wed, 24 Nov 2021 17:29:44 +0100 (CET)
-Subject: Re: [PATCH v2] Incremental: Fix possible memory and resource leaks
-To:     "Tkaczyk, Mariusz" <mariusz.tkaczyk@linux.intel.com>,
-        Mateusz Grzonka <mateusz.grzonka@intel.com>,
-        linux-raid@vger.kernel.org
-References: <20211124115819.7568-1-mateusz.grzonka@intel.com>
- <16c18e54-fb84-7b97-1aa7-f31979b87a9e@trained-monkey.org>
- <16d735b4-3ac9-44d9-af83-9f664c187cf0@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Message-ID: <a0e7a55f-ffab-f74e-c09c-0c13e4f7fb60@trained-monkey.org>
-Date:   Wed, 24 Nov 2021 11:29:42 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S235587AbhKYLrE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 25 Nov 2021 06:47:04 -0500
+Received: from mga04.intel.com ([192.55.52.120]:46868 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230241AbhKYLpD (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 25 Nov 2021 06:45:03 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10178"; a="234231131"
+X-IronPort-AV: E=Sophos;i="5.87,263,1631602800"; 
+   d="scan'208";a="234231131"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2021 03:41:52 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,263,1631602800"; 
+   d="scan'208";a="498045206"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.57])
+  by orsmga007.jf.intel.com with ESMTP; 25 Nov 2021 03:41:50 -0800
+From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org
+Subject: [PATCH v2] imsm: Remove possibility for get_imsm_dev to return NULL
+Date:   Thu, 25 Nov 2021 12:30:14 +0100
+Message-Id: <20211125113014.23920-1-mateusz.grzonka@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <16d735b4-3ac9-44d9-af83-9f664c187cf0@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8BIT
-X-ZohoMailClient: External
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/24/21 8:27 AM, Tkaczyk, Mariusz wrote:
-> On 24.11.2021 13:13, Jes Sorensen wrote:
->> On 11/24/21 6:58 AM, Mateusz Grzonka wrote:
->>> map allocated through map_by_uuid() is not freed if mdfd is invalid.
->>> In addition mdfd is not closed, and mdinfo list is not freed too.
->>>
->>> Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
->>> ---
->>>   Incremental.c | 32 +++++++++++++++++++++++---------
->>>   1 file changed, 23 insertions(+), 9 deletions(-)
->>
->> I already applied the previous version. Could you please send an updated
->> version on top of current tree.
->>
->> Thanks,
->> Jes
->>
-> 
-> Hi Jes,
-> I cannot see previous version in mdadm tree.
-> Could you verify?
+Returning NULL from get_imsm_dev or __get_imsm_dev will cause segfault.
+Guarantee that it never happens.
 
-You may have been too quick and it hadn't propagated yet. Mind trying
-one more time?
+Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+---
+ super-intel.c | 153 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 78 insertions(+), 75 deletions(-)
 
-Thanks,
-Jes
-
+diff --git a/super-intel.c b/super-intel.c
+index 28472a1a..b7441716 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -851,6 +851,21 @@ static struct disk_info *get_disk_info(struct imsm_update_create_array *update)
+ 	return inf;
+ }
+ 
++/**
++ * __get_imsm_dev() - Get device with index from imsm_super.
++ * @mpb: &imsm_super pointer, not NULL.
++ * @index: Device index.
++ *
++ * Function works as non-NULL, aborting in such a case,
++ * when NULL would be returned.
++ *
++ * Device index should be in range 0 up to num_raid_devs.
++ * Function assumes the index was already verified.
++ * Index must be valid, otherwise abort() is called.
++ *
++ * Return: Pointer to corresponding imsm_dev.
++ *
++ */
+ static struct imsm_dev *__get_imsm_dev(struct imsm_super *mpb, __u8 index)
+ {
+ 	int offset;
+@@ -858,30 +873,47 @@ static struct imsm_dev *__get_imsm_dev(struct imsm_super *mpb, __u8 index)
+ 	void *_mpb = mpb;
+ 
+ 	if (index >= mpb->num_raid_devs)
+-		return NULL;
++		goto error;
+ 
+ 	/* devices start after all disks */
+ 	offset = ((void *) &mpb->disk[mpb->num_disks]) - _mpb;
+ 
+-	for (i = 0; i <= index; i++)
++	for (i = 0; i <= index; i++, offset += sizeof_imsm_dev(_mpb + offset, 0))
+ 		if (i == index)
+ 			return _mpb + offset;
+-		else
+-			offset += sizeof_imsm_dev(_mpb + offset, 0);
+-
+-	return NULL;
++error:
++	pr_err("cannot find imsm_dev with index %u in imsm_super\n", index);
++	abort();
+ }
+ 
++/**
++ * get_imsm_dev() - Get device with index from intel_super.
++ * @super: &intel_super pointer, not NULL.
++ * @index: Device index.
++ *
++ * Function works as non-NULL, aborting in such a case,
++ * when NULL would be returned.
++ *
++ * Device index should be in range 0 up to num_raid_devs.
++ * Function assumes the index was already verified.
++ * Index must be valid, otherwise abort() is called.
++ *
++ * Return: Pointer to corresponding imsm_dev.
++ *
++ */
+ static struct imsm_dev *get_imsm_dev(struct intel_super *super, __u8 index)
+ {
+ 	struct intel_dev *dv;
+ 
+ 	if (index >= super->anchor->num_raid_devs)
+-		return NULL;
++		goto error;
++
+ 	for (dv = super->devlist; dv; dv = dv->next)
+ 		if (dv->index == index)
+ 			return dv->dev;
+-	return NULL;
++error:
++	pr_err("cannot find imsm_dev with index %u in intel_super\n", index);
++	abort();
+ }
+ 
+ static inline unsigned long long __le48_to_cpu(const struct bbm_log_block_addr
+@@ -4358,8 +4390,7 @@ int check_mpb_migr_compatibility(struct intel_super *super)
+ 	for (i = 0; i < super->anchor->num_raid_devs; i++) {
+ 		struct imsm_dev *dev_iter = __get_imsm_dev(super->anchor, i);
+ 
+-		if (dev_iter &&
+-		    dev_iter->vol.migr_state == 1 &&
++		if (dev_iter->vol.migr_state == 1 &&
+ 		    dev_iter->vol.migr_type == MIGR_GEN_MIGR) {
+ 			/* This device is migrating */
+ 			map0 = get_imsm_map(dev_iter, MAP_0);
+@@ -4508,8 +4539,6 @@ static void clear_hi(struct intel_super *super)
+ 	}
+ 	for (i = 0; i < mpb->num_raid_devs; ++i) {
+ 		struct imsm_dev *dev = get_imsm_dev(super, i);
+-		if (!dev)
+-			return;
+ 		for (n = 0; n < 2; ++n) {
+ 			struct imsm_map *map = get_imsm_map(dev, n);
+ 			if (!map)
+@@ -5830,7 +5859,7 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
+ 		struct imsm_dev *_dev = __get_imsm_dev(mpb, 0);
+ 
+ 		_disk = __get_imsm_disk(mpb, dl->index);
+-		if (!_dev || !_disk) {
++		if (!_disk) {
+ 			pr_err("BUG mpb setup error\n");
+ 			return 1;
+ 		}
+@@ -6165,10 +6194,10 @@ static int write_super_imsm(struct supertype *st, int doclose)
+ 	for (i = 0; i < mpb->num_raid_devs; i++) {
+ 		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
+ 		struct imsm_dev *dev2 = get_imsm_dev(super, i);
+-		if (dev && dev2) {
+-			imsm_copy_dev(dev, dev2);
+-			mpb_size += sizeof_imsm_dev(dev, 0);
+-		}
++
++		imsm_copy_dev(dev, dev2);
++		mpb_size += sizeof_imsm_dev(dev, 0);
++
+ 		if (is_gen_migration(dev2))
+ 			clear_migration_record = 0;
+ 	}
+@@ -9032,29 +9061,26 @@ static int imsm_rebuild_allowed(struct supertype *cont, int dev_idx, int failed)
+ 	__u8 state;
+ 
+ 	dev2 = get_imsm_dev(cont->sb, dev_idx);
+-	if (dev2) {
+-		state = imsm_check_degraded(cont->sb, dev2, failed, MAP_0);
+-		if (state == IMSM_T_STATE_FAILED) {
+-			map = get_imsm_map(dev2, MAP_0);
+-			if (!map)
+-				return 1;
+-			for (slot = 0; slot < map->num_members; slot++) {
+-				/*
+-				 * Check if failed disks are deleted from intel
+-				 * disk list or are marked to be deleted
+-				 */
+-				idx = get_imsm_disk_idx(dev2, slot, MAP_X);
+-				idisk = get_imsm_dl_disk(cont->sb, idx);
+-				/*
+-				 * Do not rebuild the array if failed disks
+-				 * from failed sub-array are not removed from
+-				 * container.
+-				 */
+-				if (idisk &&
+-				    is_failed(&idisk->disk) &&
+-				    (idisk->action != DISK_REMOVE))
+-					return 0;
+-			}
++
++	state = imsm_check_degraded(cont->sb, dev2, failed, MAP_0);
++	if (state == IMSM_T_STATE_FAILED) {
++		map = get_imsm_map(dev2, MAP_0);
++		for (slot = 0; slot < map->num_members; slot++) {
++			/*
++			 * Check if failed disks are deleted from intel
++			 * disk list or are marked to be deleted
++			 */
++			idx = get_imsm_disk_idx(dev2, slot, MAP_X);
++			idisk = get_imsm_dl_disk(cont->sb, idx);
++			/*
++			 * Do not rebuild the array if failed disks
++			 * from failed sub-array are not removed from
++			 * container.
++			 */
++			if (idisk &&
++			    is_failed(&idisk->disk) &&
++			    (idisk->action != DISK_REMOVE))
++				return 0;
+ 		}
+ 	}
+ 	return 1;
+@@ -10088,7 +10114,6 @@ static void imsm_process_update(struct supertype *st,
+ 		int victim = u->dev_idx;
+ 		struct active_array *a;
+ 		struct intel_dev **dp;
+-		struct imsm_dev *dev;
+ 
+ 		/* sanity check that we are not affecting the uuid of
+ 		 * active arrays, or deleting an active array
+@@ -10104,8 +10129,7 @@ static void imsm_process_update(struct supertype *st,
+ 		 * is active in the container, so checking
+ 		 * mpb->num_raid_devs is just extra paranoia
+ 		 */
+-		dev = get_imsm_dev(super, victim);
+-		if (a || !dev || mpb->num_raid_devs == 1) {
++		if (a || mpb->num_raid_devs == 1 || victim >= super->anchor->num_raid_devs) {
+ 			dprintf("failed to delete subarray-%d\n", victim);
+ 			break;
+ 		}
+@@ -10139,7 +10163,7 @@ static void imsm_process_update(struct supertype *st,
+ 			if (a->info.container_member == target)
+ 				break;
+ 		dev = get_imsm_dev(super, u->dev_idx);
+-		if (a || !dev || !check_name(super, name, 1)) {
++		if (a || !check_name(super, name, 1)) {
+ 			dprintf("failed to rename subarray-%d\n", target);
+ 			break;
+ 		}
+@@ -10168,10 +10192,6 @@ static void imsm_process_update(struct supertype *st,
+ 		struct imsm_update_rwh_policy *u = (void *)update->buf;
+ 		int target = u->dev_idx;
+ 		struct imsm_dev *dev = get_imsm_dev(super, target);
+-		if (!dev) {
+-			dprintf("could not find subarray-%d\n", target);
+-			break;
+-		}
+ 
+ 		if (dev->rwh_policy != u->new_policy) {
+ 			dev->rwh_policy = u->new_policy;
+@@ -11396,8 +11416,10 @@ static int imsm_create_metadata_update_for_migration(
+ {
+ 	struct intel_super *super = st->sb;
+ 	int update_memory_size;
++	int current_chunk_size;
+ 	struct imsm_update_reshape_migration *u;
+-	struct imsm_dev *dev;
++	struct imsm_dev *dev = get_imsm_dev(super, super->current_vol);
++	struct imsm_map *map = get_imsm_map(dev, MAP_0);
+ 	int previous_level = -1;
+ 
+ 	dprintf("(enter) New Level = %i\n", geo->level);
+@@ -11414,23 +11436,15 @@ static int imsm_create_metadata_update_for_migration(
+ 	u->new_disks[0] = -1;
+ 	u->new_chunksize = -1;
+ 
+-	dev = get_imsm_dev(super, u->subdev);
+-	if (dev) {
+-		struct imsm_map *map;
++	current_chunk_size = __le16_to_cpu(map->blocks_per_strip) / 2;
+ 
+-		map = get_imsm_map(dev, MAP_0);
+-		if (map) {
+-			int current_chunk_size =
+-				__le16_to_cpu(map->blocks_per_strip) / 2;
+-
+-			if (geo->chunksize != current_chunk_size) {
+-				u->new_chunksize = geo->chunksize / 1024;
+-				dprintf("imsm: chunk size change from %i to %i\n",
+-					current_chunk_size, u->new_chunksize);
+-			}
+-			previous_level = map->raid_level;
+-		}
++	if (geo->chunksize != current_chunk_size) {
++		u->new_chunksize = geo->chunksize / 1024;
++		dprintf("imsm: chunk size change from %i to %i\n",
++			current_chunk_size, u->new_chunksize);
+ 	}
++	previous_level = map->raid_level;
++
+ 	if (geo->level == 5 && previous_level == 0) {
+ 		struct mdinfo *spares = NULL;
+ 
+@@ -12517,9 +12531,6 @@ static int validate_internal_bitmap_imsm(struct supertype *st)
+ 	unsigned long long offset;
+ 	struct dl *d;
+ 
+-	if (!dev)
+-		return -1;
+-
+ 	if (dev->rwh_policy != RWH_BITMAP)
+ 		return 0;
+ 
+@@ -12565,16 +12576,8 @@ static int add_internal_bitmap_imsm(struct supertype *st, int *chunkp,
+ 		return -1;
+ 
+ 	dev = get_imsm_dev(super, vol_idx);
+-
+-	if (!dev) {
+-		dprintf("cannot find the device for volume index %d\n",
+-			vol_idx);
+-		return -1;
+-	}
+ 	dev->rwh_policy = RWH_BITMAP;
+-
+ 	*chunkp = calculate_bitmap_chunksize(st, dev);
+-
+ 	return 0;
+ }
+ 
+-- 
+2.26.2
 
