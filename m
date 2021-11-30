@@ -2,61 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9FFC433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 30 Nov 2021 16:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5877FC433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 30 Nov 2021 17:25:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244376AbhK3Qtn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 Nov 2021 11:49:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60420 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244408AbhK3Qtk (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 Nov 2021 11:49:40 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33332C06174A;
-        Tue, 30 Nov 2021 08:46:21 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S243342AbhK3R22 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 Nov 2021 12:28:28 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:60025 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S230247AbhK3R22 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 30 Nov 2021 12:28:28 -0500
+Received: from [192.168.0.2] (ip5f5aeac2.dynamic.kabel-deutschland.de [95.90.234.194])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 28049CE1A2E;
-        Tue, 30 Nov 2021 16:46:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E545AC53FC7;
-        Tue, 30 Nov 2021 16:46:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638290777;
-        bh=zQPHCktACgsZcfiSrGjoCRMRpuryXbvbksApzquh8Ic=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nSbMQGIJUKJRfK139+b1SbVf/LIGiFyIm2Dqvsgdrpq5E1D52EXHO/uedW/Y0KSMn
-         BGOP88NLzJZpa4uZMnwZ5sqqPKmGNi0E1ZbX2drse9K+jNtDUJMrL6RL6QeTyBNqs2
-         CemZ5X8846/olpyyefDFYDSWvjURZStdoLcMaobbBZDtgGfCqIJY6xR+z75fECwE5a
-         ZH3PS8u2couJD1KGTH3wypJ3aBhjgTXC5JJaVC9rqCPROuDATWnH8l8pzISonQKGSb
-         tBogMC2hjLag78Mb8jTzPnvPtYtPB9I5R2zA7cqamfmoBd+B0YByjCpf6FjenEkKk1
-         8PrFPLzqowxLw==
-Date:   Tue, 30 Nov 2021 08:46:14 -0800
-From:   Keith Busch <kbusch@kernel.org>
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        linux-accelerators@lists.ozlabs.org, linux-nvme@lists.infradead.org
-Subject: Re: Using aGPU for RAID calculations (proprietary GRAID SupremeRAID)
-Message-ID: <20211130164614.GB3627665@dhcp-10-100-145-180.wdc.com>
-References: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 8B1EC61E5FE00;
+        Tue, 30 Nov 2021 18:25:06 +0100 (CET)
+Message-ID: <a3a1fed7-b886-8603-aa20-20d667a837a7@molgen.mpg.de>
+Date:   Tue, 30 Nov 2021 18:25:06 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex
+ held
+Content-Language: en-US
+To:     Song Liu <song@kernel.org>,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com,
+        Donald Buczek <buczek@molgen.mpg.de>, it+raid@molgen.mpg.de
+References: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+ <36a660ed-b995-839e-ac82-dc4ca25ccb8a@molgen.mpg.de>
+ <CAPhsuW5s6fk3kua=9Z9o3VPCcN1wdUqXybXm9cp4arJW5+oBvQ@mail.gmail.com>
+ <9f28f6e2-e46a-bfed-09d8-2fec941ea881@cloud.ionos.com>
+ <CAPhsuW4V8JCCKePj11rf3zo4MJTz6TpW6DDeNmcJBfRSoN+NDA@mail.gmail.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <CAPhsuW4V8JCCKePj11rf3zo4MJTz6TpW6DDeNmcJBfRSoN+NDA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Nov 30, 2021 at 12:58:10PM +0100, Paul Menzel wrote:
-> If GPUs are that much better, are people already working on a FLOSS solution
-> for the Linux kernel, so people can “just” plug in a graphics card to
-> increase the speed?
-> 
-> Does the Linux kernel already have an API to offload calculations to
-> accelerator cards, so it’s basically plug and play (with AMD graphics cards
-> for example using HSA/KFD)? Entropy sources, like the ChaosKey [3], work
-> like that. If not, would the implementation go under `lib/raid6`?
+Dear Linux folks,
 
-I'm not very familiar with the subsystem, but I think these types of
-operation APIs are implemented under crypto/async_tx/.
+
+Am 20.03.21 um 00:00 schrieb Song Liu:
+> On Wed, Feb 24, 2021 at 1:26 AM Guoqing Jiang wrote:
+
+>> On 2/24/21 10:09, Song Liu wrote:
+>>> On Mon, Feb 15, 2021 at 3:08 AM Paul Menzel wrote:
+>>>>
+>>>> [+cc Donald]
+>>>>
+>>>> Am 13.02.21 um 01:49 schrieb Guoqing Jiang:
+>>>>> Unregister sync_thread doesn't need to hold reconfig_mutex since it
+>>>>> doesn't reconfigure array.
+>>>>>
+>>>>> And it could cause deadlock problem for raid5 as follows:
+>>>>>
+>>>>> 1. process A tried to reap sync thread with reconfig_mutex held after echo
+>>>>>       idle to sync_action.
+>>>>> 2. raid5 sync thread was blocked if there were too many active stripes.
+>>>>> 3. SB_CHANGE_PENDING was set (because of write IO comes from upper layer)
+>>>>>       which causes the number of active stripes can't be decreased.
+>>>>> 4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was not able
+>>>>>       to hold reconfig_mutex.
+>>>>>
+>>>>> More details in the link:
+>>>>> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
+>>>>>
+>>>>> And add one parameter to md_reap_sync_thread since it could be called by
+>>>>> dm-raid which doesn't hold reconfig_mutex.
+>>>>>
+>>>>> Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
+>>>>> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+>>>
+>>> I don't really like this fix. But I haven't got a better (and not too
+>>> complicated)
+>>> alternative.
+>>>
+>>>>> ---
+>>>>> V2:
+>>>>> 1. add one parameter to md_reap_sync_thread per Jack's suggestion.
+>>>>>
+>>>>>     drivers/md/dm-raid.c |  2 +-
+>>>>>     drivers/md/md.c      | 14 +++++++++-----
+>>>>>     drivers/md/md.h      |  2 +-
+>>>>>     3 files changed, 11 insertions(+), 7 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+>>>>> index cab12b2..0c4cbba 100644
+>>>>> --- a/drivers/md/dm-raid.c
+>>>>> +++ b/drivers/md/dm-raid.c
+>>>>> @@ -3668,7 +3668,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+>>>>>         if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
+>>>>>                 if (mddev->sync_thread) {
+>>>>>                         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+>>>>> -                     md_reap_sync_thread(mddev);
+>>>>> +                     md_reap_sync_thread(mddev, false);
+>>>
+>>> I think we can add mddev_lock() and mddev_unlock() here and then we don't
+>>> need the extra parameter?
+>>
+>> I thought it too, but I would prefer get the input from DM people first.
+>>
+>> @ Mike or Alasdair
+> 
+> Hi Mike and Alasdair,
+> 
+> Could you please comment on this option: adding mddev_lock() and mddev_unlock()
+> to raid_message() around md_reap_sync_thread()?
+
+The issue is unfortunately still unresolved (at least Linux 5.10.82). 
+How can we move forward?
+
+
+Kind regards,
+
+Paul
