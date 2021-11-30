@@ -2,73 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FBDC433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 30 Nov 2021 11:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33013C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 30 Nov 2021 14:46:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232391AbhK3MBo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 Nov 2021 07:01:44 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:38637 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S236368AbhK3MBe (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 30 Nov 2021 07:01:34 -0500
-Received: from [192.168.0.2] (ip5f5aeac2.dynamic.kabel-deutschland.de [95.90.234.194])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        id S242343AbhK3Ot4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 Nov 2021 09:49:56 -0500
+Received: from phobos.denx.de ([85.214.62.61]:42624 "EHLO phobos.denx.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233823AbhK3Otz (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 30 Nov 2021 09:49:55 -0500
+Received: from janitor.denx.de (unknown [62.91.23.180])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 1C59D61E5FE00;
-        Tue, 30 Nov 2021 12:58:11 +0100 (CET)
-Message-ID: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
-Date:   Tue, 30 Nov 2021 12:58:10 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.2
-Content-Language: en-US
-To:     linux-raid@vger.kernel.org
-Cc:     LKML <linux-kernel@vger.kernel.org>,
+        (Authenticated sender: noc@denx.de)
+        by phobos.denx.de (Postfix) with ESMTPSA id 5DACA8305E;
+        Tue, 30 Nov 2021 15:46:35 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+        s=phobos-20191101; t=1638283595;
+        bh=BZYi9ht2xy65JyC43IPolVUMbyaxhCW/7gh9Gp9ztQE=;
+        h=To:cc:From:Subject:In-reply-to:References:Date:From;
+        b=wBut36DpGx3qEDMfNoBVNMbRR4lO4jyH1JnQCjRHO3oSsxDKHStFrq/Q6ow10W6EQ
+         dZ9TVgOLHNQaHRArc/Q/BOgc66GiyCa4Pk/Lmm/iR9O5iZwSQWhjLzSDadDDD3GrYj
+         gAPrgB8zjdmIbbVagcz4sqOu03b/UEBqvThwCpNB8B0MO7PX9BC01q+k8QfmayFI6A
+         v/aiwXM7/QOguwjE0oERvWOwhM6JIr7g3FIEl6Lr4ja+sXZArRoQs5I4/VFF/t50GS
+         2gk6B7SHKfK9zQG2ExpH8uiDWu86z/RPlfSE6eZt2bKLOjT8C6meAcmTJQ3wMppCjR
+         Vil/zNP5GwL1A==
+Received: by janitor.denx.de (Postfix, from userid 108)
+        id 0D329A0260; Tue, 30 Nov 2021 15:46:35 +0100 (CET)
+Received: from gemini.denx.de (gemini.denx.de [10.4.0.2])
+        by janitor.denx.de (Postfix) with ESMTPS id 8D5B6A00AA;
+        Tue, 30 Nov 2021 15:46:25 +0100 (CET)
+Received: from gemini.denx.de (localhost [IPv6:::1])
+        by gemini.denx.de (Postfix) with ESMTP id 253191E0BCB;
+        Tue, 30 Nov 2021 15:46:25 +0100 (CET)
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+cc:     linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
         linux-accelerators@lists.ozlabs.org, linux-nvme@lists.infradead.org
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Using aGPU for RAID calculations (proprietary GRAID SupremeRAID)
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Wolfgang Denk <wd@denx.de>
+Subject: Re: Using aGPU for RAID calculations (proprietary GRAID SupremeRAID)
+MIME-Version: 1.0
+Content-type: text/plain; charset=UTF-8
+Content-transfer-encoding: 8bit
+In-reply-to: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
+References: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
+Comments: In-reply-to Paul Menzel <pmenzel@molgen.mpg.de>
+   message dated "Tue, 30 Nov 2021 12:58:10 +0100."
+Date:   Tue, 30 Nov 2021 15:46:25 +0100
+Message-ID: <3846571.1638283585@gemini.denx.de>
+X-Virus-Scanned: clamav-milter 0.103.2 at phobos.denx.de
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+Dear Paul,
 
-Dear Linux folks,
+In message <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de> you wrote:
+> 
+> I read about GRAID SupremeRAID [1], which seems to be an Nvidia T1000 
+> card and software to use the card for RAID calculations.
 
+I doubt this is an efficient way.
 
-I read about GRAID SupremeRAID [1], which seems to be an Nvidia T1000 
-card and software to use the card for RAID calculations.
+The (IMHO) most efficient solution I have seen so far was the AMCC
+PPC440SPe Power Architecture processors.  These we able to calculate
+the needed parity information on the fly in the DMA controller while
+writing the data to disk.
 
-> GRAID SupremeRAID works by installing a virtual NVMe controller onto
-> the operating system and integrating a PCIe device into the system
-> equipped with a high-performance AI processor to handle all RAID
-> operations of the virtual NVMe controller
+> Does the Linux kernel already have an API to offload calculations to 
+> accelerator cards, so it’s basically plug and play (with AMD graphics 
+> cards for example using HSA/KFD)? Entropy sources, like the ChaosKey 
+> [3], work like that. If not, would the implementation go under `lib/raid6`?
 
-According to the review *GRAID SupremeRAID SR-1000 Review* [2] it 
-performs quite well. I couldn’t find any driver files online.
-
-Now I am wondering, why a graphics card seems to help so much. What 
-operations are there, modern CPUs cannot keep up with?
-
-If GPUs are that much better, are people already working on a FLOSS 
-solution for the Linux kernel, so people can “just” plug in a graphics 
-card to increase the speed?
-
-Does the Linux kernel already have an API to offload calculations to 
-accelerator cards, so it’s basically plug and play (with AMD graphics 
-cards for example using HSA/KFD)? Entropy sources, like the ChaosKey 
-[3], work like that. If not, would the implementation go under `lib/raid6`?
+We implemented Linux driver support for adma/async_tx/raid6 for this
+hardware, but that was a long time ago (2008/2009), and I doubt this
+has been tested recently.  But at least some code is still in
+mainline, see for example arch/powerpc/platforms/44x/ppc440spe_dma_engines.c
 
 
-Kind regards,
+Best regards,
 
-Paul
+Wolfgang Denk
 
-
-[1]: 
-https://www.graidtech.com/post/graid-reveals-the-next-generation-of-enterprise-data-protection-nvme-ssds
-[2]: https://www.storagereview.com/review/graid-supremeraid-sr-1000-review
-[3]: https://altusmetrum.org/ChaosKey/
+-- 
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Another megabytes the dust.
