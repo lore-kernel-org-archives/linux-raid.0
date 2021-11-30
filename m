@@ -2,90 +2,127 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33013C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 30 Nov 2021 14:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 487D9C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 30 Nov 2021 16:21:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242343AbhK3Ot4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 Nov 2021 09:49:56 -0500
-Received: from phobos.denx.de ([85.214.62.61]:42624 "EHLO phobos.denx.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233823AbhK3Otz (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 30 Nov 2021 09:49:55 -0500
-Received: from janitor.denx.de (unknown [62.91.23.180])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        id S239079AbhK3QYU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 30 Nov 2021 11:24:20 -0500
+Received: from smtpout2.vodafonemail.de ([145.253.239.133]:35222 "EHLO
+        smtpout2.vodafonemail.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238919AbhK3QYU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 Nov 2021 11:24:20 -0500
+Received: from smtp.vodafone.de (unknown [10.2.0.33])
+        by smtpout2.vodafonemail.de (Postfix) with ESMTP id BEF0A6112C;
+        Tue, 30 Nov 2021 17:20:42 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
+        s=vfde-smtpout-mb-15sep; t=1638289242;
+        bh=IE2gRtUKwN9NbI3YSKGX70eCnOeuuRl6s2oJGbJ2gH8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=pJ490t83pP+ncPzgfB9z6sr2iX/9G91lUpPIy/oxF3lVhEVAaSjMrRHpFr9+4Y4l4
+         JXldhynKzm2A8ZfxBQEVKfG0d46iRJ+QbRzXT4JxBcTR6PJ/OXbMC5RdcoBo6T3HVH
+         PRXf8hCsNMxNFus8KDnzcRo16DA1qFTn6E9nzB+U=
+Received: from lazy.lzy (p579d7c55.dip0.t-ipconnect.de [87.157.124.85])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        (Authenticated sender: noc@denx.de)
-        by phobos.denx.de (Postfix) with ESMTPSA id 5DACA8305E;
-        Tue, 30 Nov 2021 15:46:35 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-        s=phobos-20191101; t=1638283595;
-        bh=BZYi9ht2xy65JyC43IPolVUMbyaxhCW/7gh9Gp9ztQE=;
-        h=To:cc:From:Subject:In-reply-to:References:Date:From;
-        b=wBut36DpGx3qEDMfNoBVNMbRR4lO4jyH1JnQCjRHO3oSsxDKHStFrq/Q6ow10W6EQ
-         dZ9TVgOLHNQaHRArc/Q/BOgc66GiyCa4Pk/Lmm/iR9O5iZwSQWhjLzSDadDDD3GrYj
-         gAPrgB8zjdmIbbVagcz4sqOu03b/UEBqvThwCpNB8B0MO7PX9BC01q+k8QfmayFI6A
-         v/aiwXM7/QOguwjE0oERvWOwhM6JIr7g3FIEl6Lr4ja+sXZArRoQs5I4/VFF/t50GS
-         2gk6B7SHKfK9zQG2ExpH8uiDWu86z/RPlfSE6eZt2bKLOjT8C6meAcmTJQ3wMppCjR
-         Vil/zNP5GwL1A==
-Received: by janitor.denx.de (Postfix, from userid 108)
-        id 0D329A0260; Tue, 30 Nov 2021 15:46:35 +0100 (CET)
-Received: from gemini.denx.de (gemini.denx.de [10.4.0.2])
-        by janitor.denx.de (Postfix) with ESMTPS id 8D5B6A00AA;
-        Tue, 30 Nov 2021 15:46:25 +0100 (CET)
-Received: from gemini.denx.de (localhost [IPv6:::1])
-        by gemini.denx.de (Postfix) with ESMTP id 253191E0BCB;
-        Tue, 30 Nov 2021 15:46:25 +0100 (CET)
+        by smtp.vodafone.de (Postfix) with ESMTPSA id 4J3SB51gJ3zHnJM;
+        Tue, 30 Nov 2021 16:20:26 +0000 (UTC)
+Received: from lazy.lzy (localhost [127.0.0.1])
+        by lazy.lzy (8.17.1/8.14.5) with ESMTPS id 1AUGKP8P012899
+        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+        Tue, 30 Nov 2021 17:20:25 +0100
+Received: (from red@localhost)
+        by lazy.lzy (8.17.1/8.16.1/Submit) id 1AUGKPZc012898;
+        Tue, 30 Nov 2021 17:20:25 +0100
+Date:   Tue, 30 Nov 2021 17:20:25 +0100
+From:   Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 To:     Paul Menzel <pmenzel@molgen.mpg.de>
-cc:     linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+Cc:     linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
         linux-accelerators@lists.ozlabs.org, linux-nvme@lists.infradead.org
-From:   Wolfgang Denk <wd@denx.de>
 Subject: Re: Using aGPU for RAID calculations (proprietary GRAID SupremeRAID)
-MIME-Version: 1.0
-Content-type: text/plain; charset=UTF-8
-Content-transfer-encoding: 8bit
-In-reply-to: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
+Message-ID: <YaZPScnojOLqDNPc@lazy.lzy>
 References: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
-Comments: In-reply-to Paul Menzel <pmenzel@molgen.mpg.de>
-   message dated "Tue, 30 Nov 2021 12:58:10 +0100."
-Date:   Tue, 30 Nov 2021 15:46:25 +0100
-Message-ID: <3846571.1638283585@gemini.denx.de>
-X-Virus-Scanned: clamav-milter 0.103.2 at phobos.denx.de
-X-Virus-Status: Clean
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de>
+X-purgate-type: clean
+X-purgate-Ad: Categorized by eleven eXpurgate (R) http://www.eleven.de
+X-purgate: This mail is considered clean (visit http://www.eleven.de for further information)
+X-purgate: clean
+X-purgate-size: 2214
+X-purgate-ID: 149169::1638289242-00000479-66182D27/0/0
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Paul,
-
-In message <ccdbb0d7-d043-d41f-508b-4a464ffa5fe9@molgen.mpg.de> you wrote:
+On Tue, Nov 30, 2021 at 12:58:10PM +0100, Paul Menzel wrote:
 > 
-> I read about GRAID SupremeRAID [1], which seems to be an Nvidia T1000 
-> card and software to use the card for RAID calculations.
+> Dear Linux folks,
+> 
+> 
+> I read about GRAID SupremeRAID [1], which seems to be an Nvidia T1000 card
+> and software to use the card for RAID calculations.
+> 
+> > GRAID SupremeRAID works by installing a virtual NVMe controller onto
+> > the operating system and integrating a PCIe device into the system
+> > equipped with a high-performance AI processor to handle all RAID
+> > operations of the virtual NVMe controller
+> 
+> According to the review *GRAID SupremeRAID SR-1000 Review* [2] it performs
+> quite well. I couldn’t find any driver files online.
+> 
+> Now I am wondering, why a graphics card seems to help so much. What
+> operations are there, modern CPUs cannot keep up with?
+> 
+> If GPUs are that much better, are people already working on a FLOSS solution
+> for the Linux kernel, so people can “just” plug in a graphics card to
+> increase the speed?
+> 
+> Does the Linux kernel already have an API to offload calculations to
+> accelerator cards, so it’s basically plug and play (with AMD graphics cards
+> for example using HSA/KFD)? Entropy sources, like the ChaosKey [3], work
+> like that. If not, would the implementation go under `lib/raid6`?
 
-I doubt this is an efficient way.
+I think this was somehow discussed here
+some times ago.
+That is the use of "GPU" to accellerate
+the parity computation.
 
-The (IMHO) most efficient solution I have seen so far was the AMCC
-PPC440SPe Power Architecture processors.  These we able to calculate
-the needed parity information on the fly in the DMA controller while
-writing the data to disk.
+There are a couple of things to keep in mind.
 
-> Does the Linux kernel already have an API to offload calculations to 
-> accelerator cards, so it’s basically plug and play (with AMD graphics 
-> cards for example using HSA/KFD)? Entropy sources, like the ChaosKey 
-> [3], work like that. If not, would the implementation go under `lib/raid6`?
+One is the data transfer to / from the video
+card, which might be a bottleneck.
+At any rate, there will be a write and read
+streams going across the system bus(es).
 
-We implemented Linux driver support for adma/async_tx/raid6 for this
-hardware, but that was a long time ago (2008/2009), and I doubt this
-has been tested recently.  But at least some code is still in
-mainline, see for example arch/powerpc/platforms/44x/ppc440spe_dma_engines.c
+An other point is that, unless an high end
+video card is used, with ECC memory, the
+reliability of the whole process might be
+of concern.
 
+Finally, usually video cards, while having
+a lot of memory (caching could be good),
+they miss the battery backup.
+Power is off, data is gone...
 
-Best regards,
+bye,
 
-Wolfgang Denk
+pg
+
+> 
+> 
+> Kind regards,
+> 
+> Paul
+> 
+> 
+> [1]: https://www.graidtech.com/post/graid-reveals-the-next-generation-of-enterprise-data-protection-nvme-ssds
+> [2]: https://www.storagereview.com/review/graid-supremeraid-sr-1000-review
+> [3]: https://altusmetrum.org/ChaosKey/
+> 
 
 -- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Another megabytes the dust.
+
+piergiorgio
