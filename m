@@ -2,52 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2039C433FE
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 16:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F91C433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 16:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351419AbhLAQNi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Dec 2021 11:13:38 -0500
-Received: from mga11.intel.com ([192.55.52.93]:3993 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351410AbhLAQNh (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 1 Dec 2021 11:13:37 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10185"; a="233989555"
-X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
-   d="scan'208";a="233989555"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 08:08:51 -0800
-X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
-   d="scan'208";a="460078184"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.14.163])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 08:08:48 -0800
-Date:   Wed, 1 Dec 2021 17:08:43 +0100
-From:   mtkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Coly Li <colyli@suse.de>
-Cc:     linux-raid@vger.kernel.org, Benjamin Brunner <bbrunner@suse.com>,
-        Neil Brown <neilb@suse.de>, Jes Sorensen <jsorensen@fb.com>
+        id S1350079AbhLAQ0l (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Dec 2021 11:26:41 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:46730 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232979AbhLAQ0f (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Dec 2021 11:26:35 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 10314212C2;
+        Wed,  1 Dec 2021 16:23:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1638375794; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1rZ2Gu6EpLjGBzCQKtoWt+aabGTwxSUGWzF4+pgFrzQ=;
+        b=o4xVbcKIksuWkKa6eb8dr92zFHM3elnYRBwC24QrvompgMKmqtqMAYrZrt/qaDvCORwS8A
+        +ZZizfZl8tBB16Fo1/pi24m6GBeLalf5CRts/EZ/pXFfkWulfFUhNoI9viAT7BMbONEjVP
+        5qoDGxK4oQ7D7PKHyXOtCkOzhP/Bgk0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1638375794;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1rZ2Gu6EpLjGBzCQKtoWt+aabGTwxSUGWzF4+pgFrzQ=;
+        b=Imi5biH6UKBvAENf86VHGOjLE5MpNha6LGnYOaxBAnE0SgsWqZJTUtkR7UhmsrM6cy69wM
+        OMyjEMA+Dnho+ADA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8CAB013D90;
+        Wed,  1 Dec 2021 16:23:12 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id eBAeD3Chp2GIGQAAMHmgww
+        (envelope-from <colyli@suse.de>); Wed, 01 Dec 2021 16:23:12 +0000
+Message-ID: <9ee380c8-e43b-8f58-c7d5-5bddb6f2e688@suse.de>
+Date:   Thu, 2 Dec 2021 00:23:09 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.2
 Subject: Re: [PATCH] mdadm/systemd: change KillMode from none to mixed in
  service files
-Message-ID: <20211201170843.00005f69@linux.intel.com>
-In-Reply-To: <20211201062245.6636-1-colyli@suse.de>
+Content-Language: en-US
+To:     mtkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org, Benjamin Brunner <bbrunner@suse.com>,
+        Neil Brown <neilb@suse.de>, Jes Sorensen <jsorensen@fb.com>
 References: <20211201062245.6636-1-colyli@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+ <20211201170843.00005f69@linux.intel.com>
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20211201170843.00005f69@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Coly,
+On 12/2/21 12:08 AM, mtkaczyk wrote:
+> Hi Coly,
+>
+>> This patch changes KillMode in above listed service files from "none"
+>> to "mixed", to follow systemd recommendation and avoid potential
+>> unnecessary issue.
+> What about mdmonitor.service? Should we add it there too? Now it is not
+> defined.
 
-> This patch changes KillMode in above listed service files from "none"
-> to "mixed", to follow systemd recommendation and avoid potential
-> unnecessary issue.
-What about mdmonitor.service? Should we add it there too? Now it is not
-defined.
+It was overlooked when I did grep KillMode. Yes, I agree 
+mdmonitor.service should have a KillMode key word as well.
 
-> Cc: Jes Sorensen <jsorensen@fb.com>
-Not sure if it a problem but Jes uses: jes@trained-monkey.org for
-communication with linux-raid.
+Let me post a v2 version.
 
-Thanks,
-Mariusz
+>> Cc: Jes Sorensen <jsorensen@fb.com>
+> Not sure if it a problem but Jes uses: jes@trained-monkey.org for
+> communication with linux-raid.
+
+Copied. Thanks for the hint.
+
+Coly Li
