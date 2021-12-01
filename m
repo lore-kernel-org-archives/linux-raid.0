@@ -2,96 +2,88 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B6EC433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 06:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 961A8C433FE
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 13:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236571AbhLAG1H (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Dec 2021 01:27:07 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:57264 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231871AbhLAG1H (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Dec 2021 01:27:07 -0500
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 3053421155;
-        Wed,  1 Dec 2021 06:23:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638339826; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=HdTKeoebT7JovkGnUSToUrOHmKYXHM/9+1P+IE3zpOQ=;
-        b=CSTYZoNOLl8K0u6AvaRKsg9HYcoh5VzMxlqNUdvosDXiGYiMkRV6J7a0m63+obwbotbG+Y
-        +A0K2UE1KtovI/QzJkY8NpvY5nUhlPcOGuMNPa1E/zpQr1xUtdKxCdwjECJvQ3vPWflntX
-        u5q2ldxT08zVF+JvKmLPmxtJADI8swA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638339826;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=HdTKeoebT7JovkGnUSToUrOHmKYXHM/9+1P+IE3zpOQ=;
-        b=zBqK6xmZXLQQpXKCq9usq2K8ICc2E8o5PSJ9S8CqcU6FjS1jokI+MbypiOXpK+btqdBbXj
-        tszFTCtQGAACZTCQ==
-Received: from suse.localdomain (colyli.tcp.ovpn1.nue.suse.de [10.163.16.22])
-        by relay2.suse.de (Postfix) with ESMTP id 8408EA3B81;
-        Wed,  1 Dec 2021 06:23:44 +0000 (UTC)
-From:   Coly Li <colyli@suse.de>
-To:     linux-raid@vger.kernel.org
-Cc:     Coly Li <colyli@suse.de>, Benjamin Brunner <bbrunner@suse.com>,
-        Neil Brown <neilb@suse.de>, Jes Sorensen <jsorensen@fb.com>
-Subject: [PATCH] mdadm/systemd: change KillMode from none to mixed in service files
-Date:   Wed,  1 Dec 2021 14:22:45 +0800
-Message-Id: <20211201062245.6636-1-colyli@suse.de>
-X-Mailer: git-send-email 2.31.1
+        id S1349718AbhLAN4I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Dec 2021 08:56:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36270 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349862AbhLANx6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Dec 2021 08:53:58 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9C72C0613F1;
+        Wed,  1 Dec 2021 05:50:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=daZqRcrqtRClKybfSmASggxYvpXjW9Q3L8ymYPZL+Rs=; b=3xvQYJuhYFIoGUFLzN8TNO/Wht
+        lc5sv2rA/kqj099GIBu8PgaiA1MmDgezzWxVAI7XLokAUhwMcM/NYT5UAS2/2n0mqUV4K/ehHeHjo
+        ez8cj3ZkjxarMnlPrNrweqdB4HCb9ROTrPBc6zw2eEohgEr3Fw9/tANXC8mHOnDNyfYem6o1Z3lGh
+        Pjc7r/GcAaPVFdPPAS841jOUxlkwFY0lKoh/zD+joWA9OdiAwMc4qPzLYdHpQaL77iQv3qwWxuV7d
+        ru8xneZkGRxbUXpJ0ZPItDzLcOURsokQj5Lhk1LWb49qBTGylhR4fAiyjTYk63cwJzxmUzC6QSXx/
+        daPpBajg==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1msQ0F-008tpW-0x; Wed, 01 Dec 2021 13:50:31 +0000
+Date:   Wed, 1 Dec 2021 05:50:30 -0800
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Li Jinlin <lijinlin3@huawei.com>
+Cc:     song@kernel.org, axboe@kernel.dk, hare@suse.de, jack@suse.cz,
+        ming.lei@redhat.com, tj@kernel.org, linux-raid@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linfeilong@huawei.com
+Subject: Re: [PATCH] md: Fix unexpected behaviour in is_mddev_idle
+Message-ID: <Yad9phRUdKF/giGD@bombadil.infradead.org>
+References: <20211201032712.3684503-1-lijinlin3@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211201032712.3684503-1-lijinlin3@huawei.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-For mdadm's systemd configuration, current systemd KillMode is "none" in
-following service files,
-- mdadm-grow-continue@.service
-- mdmon@.service
+On Wed, Dec 01, 2021 at 11:27:12AM +0800, Li Jinlin wrote:
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 5111ed966947..f47035838c43 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+>  {
+>  	struct md_rdev *rdev;
+>  	int idle;
+> -	int curr_events;
+> +	long curr_events;
 
-This "none" mode is strongly recommended againsted by systemd developers
-(see man 5 system.kill for "KillMode=" section), and is considering to
-remove in future systemd version.
+>  
+>  	idle = 1;
+>  	rcu_read_lock();
+>  	rdev_for_each_rcu(rdev, mddev) {
+>  		struct gendisk *disk = rdev->bdev->bd_disk;
+> -		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
+> -			      atomic_read(&disk->sync_io);
+> +		curr_events = (long)part_stat_read_accum(disk->part0, sectors) -
+> +			      atomic64_read(&disk->sync_io);
 
-A proper KillMode is "mixed", which is explained in the system.kill man
-page as,
-"If set to mixed, the SIGTERM signal (see below) is sent to the main
-process while the subsequent SIGKILL signal (see below) is sent to all
-remaining processes of the unit's control group."
+And what makes you believe you might not have to go and change all other
+drivers to address this as well?
 
-This patch changes KillMode in above listed service files from "none"
-to "mixed", to follow systemd recommendation and avoid potential
-unnecessary issue.
+>  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 74c410263113..efa7884de11b 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -150,7 +150,7 @@ struct gendisk {
+>  	struct list_head slave_bdevs;
+>  #endif
+>  	struct timer_rand_state *random;
+> -	atomic_t sync_io;		/* RAID */
+> +	atomic64_t sync_io;		/* RAID */
+>  	struct disk_events *ev;
+>  #ifdef  CONFIG_BLK_DEV_INTEGRITY
+>  	struct kobject integrity_kobj;
+> -- 
+> 2.31.1
 
-Suggested-by: Benjamin Brunner <bbrunner@suse.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: Jes Sorensen <jsorensen@fb.com>
----
- systemd/mdadm-grow-continue@.service | 2 +-
- systemd/mdmon@.service               | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-continue@.service
-index 5c667d2..5fe9d99 100644
---- a/systemd/mdadm-grow-continue@.service
-+++ b/systemd/mdadm-grow-continue@.service
-@@ -14,4 +14,4 @@ ExecStart=BINDIR/mdadm --grow --continue /dev/%I
- StandardInput=null
- StandardOutput=null
- StandardError=null
--KillMode=none
-+KillMode=mixed
-diff --git a/systemd/mdmon@.service b/systemd/mdmon@.service
-index 85a3a7c..5ef1bf5 100644
---- a/systemd/mdmon@.service
-+++ b/systemd/mdmon@.service
-@@ -25,4 +25,4 @@ Type=forking
- # it out) and systemd will remove it when transitioning from
- # initramfs to rootfs.
- #PIDFile=/run/mdadm/%I.pid
--KillMode=none
-+KillMode=mixed
--- 
-2.31.1
-
+  Luis
