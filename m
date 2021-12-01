@@ -2,88 +2,52 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 961A8C433FE
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 13:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2039C433FE
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 16:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349718AbhLAN4I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 1 Dec 2021 08:56:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36270 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349862AbhLANx6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Dec 2021 08:53:58 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9C72C0613F1;
-        Wed,  1 Dec 2021 05:50:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=daZqRcrqtRClKybfSmASggxYvpXjW9Q3L8ymYPZL+Rs=; b=3xvQYJuhYFIoGUFLzN8TNO/Wht
-        lc5sv2rA/kqj099GIBu8PgaiA1MmDgezzWxVAI7XLokAUhwMcM/NYT5UAS2/2n0mqUV4K/ehHeHjo
-        ez8cj3ZkjxarMnlPrNrweqdB4HCb9ROTrPBc6zw2eEohgEr3Fw9/tANXC8mHOnDNyfYem6o1Z3lGh
-        Pjc7r/GcAaPVFdPPAS841jOUxlkwFY0lKoh/zD+joWA9OdiAwMc4qPzLYdHpQaL77iQv3qwWxuV7d
-        ru8xneZkGRxbUXpJ0ZPItDzLcOURsokQj5Lhk1LWb49qBTGylhR4fAiyjTYk63cwJzxmUzC6QSXx/
-        daPpBajg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1msQ0F-008tpW-0x; Wed, 01 Dec 2021 13:50:31 +0000
-Date:   Wed, 1 Dec 2021 05:50:30 -0800
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Li Jinlin <lijinlin3@huawei.com>
-Cc:     song@kernel.org, axboe@kernel.dk, hare@suse.de, jack@suse.cz,
-        ming.lei@redhat.com, tj@kernel.org, linux-raid@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linfeilong@huawei.com
-Subject: Re: [PATCH] md: Fix unexpected behaviour in is_mddev_idle
-Message-ID: <Yad9phRUdKF/giGD@bombadil.infradead.org>
-References: <20211201032712.3684503-1-lijinlin3@huawei.com>
+        id S1351419AbhLAQNi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Dec 2021 11:13:38 -0500
+Received: from mga11.intel.com ([192.55.52.93]:3993 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1351410AbhLAQNh (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 1 Dec 2021 11:13:37 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10185"; a="233989555"
+X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
+   d="scan'208";a="233989555"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 08:08:51 -0800
+X-IronPort-AV: E=Sophos;i="5.87,278,1631602800"; 
+   d="scan'208";a="460078184"
+Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.14.163])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 08:08:48 -0800
+Date:   Wed, 1 Dec 2021 17:08:43 +0100
+From:   mtkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Coly Li <colyli@suse.de>
+Cc:     linux-raid@vger.kernel.org, Benjamin Brunner <bbrunner@suse.com>,
+        Neil Brown <neilb@suse.de>, Jes Sorensen <jsorensen@fb.com>
+Subject: Re: [PATCH] mdadm/systemd: change KillMode from none to mixed in
+ service files
+Message-ID: <20211201170843.00005f69@linux.intel.com>
+In-Reply-To: <20211201062245.6636-1-colyli@suse.de>
+References: <20211201062245.6636-1-colyli@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211201032712.3684503-1-lijinlin3@huawei.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Dec 01, 2021 at 11:27:12AM +0800, Li Jinlin wrote:
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5111ed966947..f47035838c43 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
->  {
->  	struct md_rdev *rdev;
->  	int idle;
-> -	int curr_events;
-> +	long curr_events;
+Hi Coly,
 
->  
->  	idle = 1;
->  	rcu_read_lock();
->  	rdev_for_each_rcu(rdev, mddev) {
->  		struct gendisk *disk = rdev->bdev->bd_disk;
-> -		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
-> -			      atomic_read(&disk->sync_io);
-> +		curr_events = (long)part_stat_read_accum(disk->part0, sectors) -
-> +			      atomic64_read(&disk->sync_io);
+> This patch changes KillMode in above listed service files from "none"
+> to "mixed", to follow systemd recommendation and avoid potential
+> unnecessary issue.
+What about mdmonitor.service? Should we add it there too? Now it is not
+defined.
 
-And what makes you believe you might not have to go and change all other
-drivers to address this as well?
+> Cc: Jes Sorensen <jsorensen@fb.com>
+Not sure if it a problem but Jes uses: jes@trained-monkey.org for
+communication with linux-raid.
 
->  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 74c410263113..efa7884de11b 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -150,7 +150,7 @@ struct gendisk {
->  	struct list_head slave_bdevs;
->  #endif
->  	struct timer_rand_state *random;
-> -	atomic_t sync_io;		/* RAID */
-> +	atomic64_t sync_io;		/* RAID */
->  	struct disk_events *ev;
->  #ifdef  CONFIG_BLK_DEV_INTEGRITY
->  	struct kobject integrity_kobj;
-> -- 
-> 2.31.1
-
-  Luis
+Thanks,
+Mariusz
