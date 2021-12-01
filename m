@@ -2,117 +2,96 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32581C433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 02:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B6EC433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  1 Dec 2021 06:23:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346305AbhLAC70 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 30 Nov 2021 21:59:26 -0500
-Received: from szxga08-in.huawei.com ([45.249.212.255]:28134 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241503AbhLAC7W (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 30 Nov 2021 21:59:22 -0500
-Received: from canpemm500008.china.huawei.com (unknown [172.30.72.57])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4J3kDH6rP1z1DJ7J;
-        Wed,  1 Dec 2021 10:53:19 +0800 (CST)
-Received: from localhost.huawei.com (10.175.124.27) by
- canpemm500008.china.huawei.com (7.192.105.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Wed, 1 Dec 2021 10:56:00 +0800
-From:   Li Jinlin <lijinlin3@huawei.com>
-To:     <song@kernel.org>, <axboe@kernel.dk>, <hare@suse.de>,
-        <jack@suse.cz>, <ming.lei@redhat.com>, <tj@kernel.org>,
-        <mcgrof@kernel.org>
-CC:     <linux-raid@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linfeilong@huawei.com>
-Subject: [PATCH] md: Fix unexpected behaviour in is_mddev_idle
-Date:   Wed, 1 Dec 2021 11:27:12 +0800
-Message-ID: <20211201032712.3684503-1-lijinlin3@huawei.com>
-X-Mailer: git-send-email 2.27.0
+        id S236571AbhLAG1H (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 1 Dec 2021 01:27:07 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:57264 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231871AbhLAG1H (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 1 Dec 2021 01:27:07 -0500
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 3053421155;
+        Wed,  1 Dec 2021 06:23:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1638339826; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=HdTKeoebT7JovkGnUSToUrOHmKYXHM/9+1P+IE3zpOQ=;
+        b=CSTYZoNOLl8K0u6AvaRKsg9HYcoh5VzMxlqNUdvosDXiGYiMkRV6J7a0m63+obwbotbG+Y
+        +A0K2UE1KtovI/QzJkY8NpvY5nUhlPcOGuMNPa1E/zpQr1xUtdKxCdwjECJvQ3vPWflntX
+        u5q2ldxT08zVF+JvKmLPmxtJADI8swA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1638339826;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=HdTKeoebT7JovkGnUSToUrOHmKYXHM/9+1P+IE3zpOQ=;
+        b=zBqK6xmZXLQQpXKCq9usq2K8ICc2E8o5PSJ9S8CqcU6FjS1jokI+MbypiOXpK+btqdBbXj
+        tszFTCtQGAACZTCQ==
+Received: from suse.localdomain (colyli.tcp.ovpn1.nue.suse.de [10.163.16.22])
+        by relay2.suse.de (Postfix) with ESMTP id 8408EA3B81;
+        Wed,  1 Dec 2021 06:23:44 +0000 (UTC)
+From:   Coly Li <colyli@suse.de>
+To:     linux-raid@vger.kernel.org
+Cc:     Coly Li <colyli@suse.de>, Benjamin Brunner <bbrunner@suse.com>,
+        Neil Brown <neilb@suse.de>, Jes Sorensen <jsorensen@fb.com>
+Subject: [PATCH] mdadm/systemd: change KillMode from none to mixed in service files
+Date:   Wed,  1 Dec 2021 14:22:45 +0800
+Message-Id: <20211201062245.6636-1-colyli@suse.de>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.124.27]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm500008.china.huawei.com (7.192.105.151)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The value of curr_events may be INT_MAX when mddev initializes IO event
-counters. Then, rdev->last_events will be set as INT_MAX. 
-If all the rdevs of mddev are in this case, 
-'curr_events - rdev->last_events > 64' will always false, and
-is_mddev_idle() will always return 1, which may cause non-sync IO very
-slow.
+For mdadm's systemd configuration, current systemd KillMode is "none" in
+following service files,
+- mdadm-grow-continue@.service
+- mdmon@.service
 
-Fix by using atomic64_t type for sync_io, and using long type for
-curr_events/last_events.
+This "none" mode is strongly recommended againsted by systemd developers
+(see man 5 system.kill for "KillMode=" section), and is considering to
+remove in future systemd version.
 
-Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+A proper KillMode is "mixed", which is explained in the system.kill man
+page as,
+"If set to mixed, the SIGTERM signal (see below) is sent to the main
+process while the subsequent SIGKILL signal (see below) is sent to all
+remaining processes of the unit's control group."
+
+This patch changes KillMode in above listed service files from "none"
+to "mixed", to follow systemd recommendation and avoid potential
+unnecessary issue.
+
+Suggested-by: Benjamin Brunner <bbrunner@suse.com>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Jes Sorensen <jsorensen@fb.com>
 ---
- drivers/md/md.c       | 6 +++---
- drivers/md/md.h       | 4 ++--
- include/linux/genhd.h | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ systemd/mdadm-grow-continue@.service | 2 +-
+ systemd/mdmon@.service               | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5111ed966947..f47035838c43 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
- {
- 	struct md_rdev *rdev;
- 	int idle;
--	int curr_events;
-+	long curr_events;
- 
- 	idle = 1;
- 	rcu_read_lock();
- 	rdev_for_each_rcu(rdev, mddev) {
- 		struct gendisk *disk = rdev->bdev->bd_disk;
--		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
--			      atomic_read(&disk->sync_io);
-+		curr_events = (long)part_stat_read_accum(disk->part0, sectors) -
-+			      atomic64_read(&disk->sync_io);
- 		/* sync IO will cause sync_io to increase before the disk_stats
- 		 * as sync_io is counted when a request starts, and
- 		 * disk_stats is counted when it completes.
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 53ea7a6961de..3f8327c42b7b 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -50,7 +50,7 @@ struct md_rdev {
- 
- 	sector_t sectors;		/* Device size (in 512bytes sectors) */
- 	struct mddev *mddev;		/* RAID array if running */
--	int last_events;		/* IO event timestamp */
-+	long last_events;		/* IO event timestamp */
- sync_io
- 	/*
- 	 * If meta_bdev is non-NULL, it means that a separate device is
-@@ -551,7 +551,7 @@ extern void mddev_unlock(struct mddev *mddev);
- 
- static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
- {
--	atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
-+	atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
- }
- 
- static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 74c410263113..efa7884de11b 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -150,7 +150,7 @@ struct gendisk {
- 	struct list_head slave_bdevs;
- #endif
- 	struct timer_rand_state *random;
--	atomic_t sync_io;		/* RAID */
-+	atomic64_t sync_io;		/* RAID */
- 	struct disk_events *ev;
- #ifdef  CONFIG_BLK_DEV_INTEGRITY
- 	struct kobject integrity_kobj;
+diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-continue@.service
+index 5c667d2..5fe9d99 100644
+--- a/systemd/mdadm-grow-continue@.service
++++ b/systemd/mdadm-grow-continue@.service
+@@ -14,4 +14,4 @@ ExecStart=BINDIR/mdadm --grow --continue /dev/%I
+ StandardInput=null
+ StandardOutput=null
+ StandardError=null
+-KillMode=none
++KillMode=mixed
+diff --git a/systemd/mdmon@.service b/systemd/mdmon@.service
+index 85a3a7c..5ef1bf5 100644
+--- a/systemd/mdmon@.service
++++ b/systemd/mdmon@.service
+@@ -25,4 +25,4 @@ Type=forking
+ # it out) and systemd will remove it when transitioning from
+ # initramfs to rootfs.
+ #PIDFile=/run/mdadm/%I.pid
+-KillMode=none
++KillMode=mixed
 -- 
 2.31.1
 
