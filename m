@@ -2,52 +2,61 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8EB7C433FE
-	for <linux-raid@archiver.kernel.org>; Thu,  2 Dec 2021 22:06:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E03C433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  2 Dec 2021 22:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbhLBWJ2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 2 Dec 2021 17:09:28 -0500
-Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:59949 "EHLO
+        id S237341AbhLBWJq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 2 Dec 2021 17:09:46 -0500
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:38615 "EHLO
         wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231365AbhLBWJ2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Dec 2021 17:09:28 -0500
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.west.internal (Postfix) with ESMTP id DA1C43201C6E
-        for <linux-raid@vger.kernel.org>; Thu,  2 Dec 2021 17:06:04 -0500 (EST)
+        by vger.kernel.org with ESMTP id S231365AbhLBWJq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 2 Dec 2021 17:09:46 -0500
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.west.internal (Postfix) with ESMTP id ECD663201C5C
+        for <linux-raid@vger.kernel.org>; Thu,  2 Dec 2021 17:06:22 -0500 (EST)
 Received: from imap47 ([10.202.2.97])
-  by compute4.internal (MEProxy); Thu, 02 Dec 2021 17:06:05 -0500
+  by compute5.internal (MEProxy); Thu, 02 Dec 2021 17:06:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.fm; h=
+        mime-version:message-id:date:from:to:subject:content-type; s=
+        fm1; bh=dwntib/i3+N8Anbry5EZdEnk9LYUhVOdIKrnmjeU+xk=; b=AXR5RDyb
+        +8RKAE9jXIjTwJag88qwn6vKMuEkSKwpLfoSX1qArw8owo3XVKkYl7Iv6tvH+siy
+        bjYDKINgQoe0NsRyvAbkQ0eKxrH9RRlpQ5t29+UxmGnDJRa2K0lE+Aw1Yr7HCqGx
+        WAl7buhlJQdUFu2ahN0taX7XiouhIPO/bemNMUolcUoYO5SW8mfjyObjA6eV7OZp
+        HJjFfZQNBseOXqwjeKlGfMHoFLJllYuoiOu+Zesk+ZtiYztnPVT1vITN/DfurKT3
+        GmOUiCzXK6X+pl0pQvWD4Nde+wjdhSPCRfmlzJOKXuBU3+lPdSGGtfCxcLOYMjv5
+        XBZAoGhlUlz+xw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=content-type:date:from:message-id
         :mime-version:subject:to:x-me-proxy:x-me-proxy:x-me-sender
         :x-me-sender:x-sasl-enc; s=fm1; bh=dwntib/i3+N8Anbry5EZdEnk9LYUh
-        VOdIKrnmjeU+xk=; b=SkufR4aCB9Oz19gPZ552dW2bOVLd2vEtRVGvPdz9qRQye
-        iiJEVZXBeKHBb+jpuki/MTAgTEjNPQVmk04bjR8KxoGHJUsYQHBZZeAMzApw1oxg
-        +vqKxOFx445aVzRO3BGAvykO8BmeRxD/3vgHFrvXDSeyO3qaormm0vnsAXLyxd6s
-        JBrUj/08TUCxld/piJ8Wv7THldwZqr1wj3lQNMx8692Ue4uORjFJxoBHj8t94nzM
-        bmkPkqWZB/OPG7DDB0myQp1+ez9uw15IrMdY4I1t+OYqKm4xZJz2ar8sCxQVGEwm
-        OxaTB57y6S5ao68wtlpu5A447qz3a8iC62av4ONmQ==
-X-ME-Sender: <xms:TEOpYRPCj9OaFI4tWgAjWpCcWRJUhBvf5-FHdN4S2tGnGayrCGrERQ>
-    <xme:TEOpYT_QDOjkSxlm6iivPFWtNPNn0JKh_ekjJ1Gi6vjBvqpS8_cC0sk__bILiS9aV
-    epbH-Q2FB9pMc2d>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvuddrieehgdduheejucetufdoteggodetrfdotf
+        VOdIKrnmjeU+xk=; b=g8o+BOUhbidk2HSwGJ6Ln7x7bYKkMdWdxDD50KsPBgiPr
+        57dnjOZTlrWFrL80TwJfwjES9Kc9RibUa2zL6pX+RUMvhrqUlCjWga2ggAnjKhdV
+        SVKdbjFWfQAEosN2vhLi1VrgFnhAmTawj7UA/tNpUKkahR/IO0bmpSOEacR04gT6
+        f2bJ4cL0r+gzbVhH45vC+Xpa1xlfwg3GOZI9eSLtK0ZJT0XSJ8nGYGu0bBnoHXaq
+        9GvDA8t2lAUlO6gjI+HdfWrORzcgJBVe1CSf+nMqNzIKl0EtJyo0LMqdG3eso8uq
+        W7jmGqLW0zj/wTj2UExHYhyYCRePrunu/7x8SHoSQ==
+X-ME-Sender: <xms:XkOpYdq5RU7ckpZlNy2B9EFCKADV_0TY54wltwjoRZsDC1wTimPscQ>
+    <xme:XkOpYfl-F8JkG-TCDtzudIO4AA-g19-zQZ5BuLr-_jwuU0SjcEQx0uck9pjfd3l-I
+    3O9TCCIrZJ4I000>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvuddrieehgdduheeiucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucenucfjughrpefofgggkfffhffvufgtsehttdertd
-    erredtnecuhfhrohhmpedfofgrthhtucfirghrrhgvthhsohhnfdcuoehmrghtthesmhgr
-    thhthihordhnvghtqeenucggtffrrghtthgvrhhnpefghfetfeejvdejuddtheduhfefue
-    dtkeevjeejheefhfefgedvleekudeuiedvhfenucevlhhushhtvghrufhiiigvpedtnecu
-    rfgrrhgrmhepmhgrihhlfhhrohhmpehmrghtthesmhgrthhthihordhnvght
-X-ME-Proxy: <xmx:TEOpYQSdAeRWBcFv7bjca2cIU5qb27wbh_UxAHT6YlmTvHhNkmMEVQ>
-    <xmx:TEOpYdveVAQcW_PQse2CKr_iqs_tqA1fS7t3OCNWGTFUyqWUS0m5dg>
-    <xmx:TEOpYZdpg7A2s-kZSxsSFJd4rRddRKHmzrjXFb-Hf_Zp4QiSszCRXQ>
-    <xmx:TEOpYTo8IfW0pcmOg6zSyQhdeH6wZzWdiSHHF7k6nl5iodwRfnI1iA>
+    erredtnecuhfhrohhmpehlihhsthihsehfrghsthhmrghilhdrfhhmnecuggftrfgrthht
+    vghrnhepudeggefftdekhfefgfeutdeufeehgffhueehueffgfevheehteeuudeggeffie
+    ehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheplhhi
+    shhthiesfhgrshhtmhgrihhlrdhfmh
+X-ME-Proxy: <xmx:XkOpYXG7xVxP87hQ__WI8VPt6YCUGuUSmfBHQ7AfFBr6IAvxG8EzSQ>
+    <xmx:XkOpYQpCb7LhWuGMgdtauJFD2ZWJOHKubi--DJpRMxhN13v2mwp4Zg>
+    <xmx:XkOpYb4j64oiB1zzsFWG3zO8DQ-RJeU5w8_gq-RlpzVGfInL3hvNcA>
+    <xmx:XkOpYRtSz_d0wgEmv9M7TQPdISGNCgLVAyRkkoTs5-DlEtnT08xIqg>
 Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id EAA9927407D4; Thu,  2 Dec 2021 17:06:03 -0500 (EST)
+        id 5545A274065C; Thu,  2 Dec 2021 17:06:22 -0500 (EST)
 X-Mailer: MessagingEngine.com Webmail Interface
 User-Agent: Cyrus-JMAP/3.5.0-alpha0-4458-g51a91c06b2-fm-20211130.004-g51a91c06
 Mime-Version: 1.0
-Message-Id: <7be1c467-c2c2-5f90-dc1c-f1c443954f03@mattyo.net>
-Date:   Thu, 02 Dec 2021 17:04:57 -0500
-From:   "Matt Garretson" <matt@mattyo.net>
+Message-Id: <5bf7416c-ee1f-4739-834c-cbf87441d3ed@www.fastmail.com>
+Date:   Thu, 02 Dec 2021 17:06:02 -0500
+From:   listy@fastmail.fm
 To:     linux-raid@vger.kernel.org
 Subject: Help ironing out persistent mismatches on raid6
 Content-Type: text/plain
