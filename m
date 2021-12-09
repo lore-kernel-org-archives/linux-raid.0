@@ -2,180 +2,72 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09F5AC433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 12:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7631C433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 14:31:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233810AbhLINBJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Dec 2021 08:01:09 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:36447 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229379AbhLINBJ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 9 Dec 2021 08:01:09 -0500
-Received: from [192.168.0.175] (ip5f5aed0f.dynamic.kabel-deutschland.de [95.90.237.15])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id F2E6E61E64846;
-        Thu,  9 Dec 2021 13:57:34 +0100 (CET)
-From:   Donald Buczek <buczek@molgen.mpg.de>
-Subject: Re: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex
- held
-To:     Paul Menzel <pmenzel@molgen.mpg.de>, song@kernel.org,
-        Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     agk@redhat.com, snitzer@redhat.com, linux-raid@vger.kernel.org,
-        dm-devel@redhat.com, it+raid@molgen.mpg.de
-References: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
- <36a660ed-b995-839e-ac82-dc4ca25ccb8a@molgen.mpg.de>
-Message-ID: <2cefad59-c0fc-d48f-f7a5-5d593931feb7@molgen.mpg.de>
-Date:   Thu, 9 Dec 2021 13:57:34 +0100
+        id S238640AbhLIOfC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Dec 2021 09:35:02 -0500
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17259 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232254AbhLIOe6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 09:34:58 -0500
+ARC-Seal: i=1; a=rsa-sha256; t=1639060276; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=W/kP5hVEwFuCBdVbe9s/21obhG0CYkCy8+OhC1u6K9mtRYl/1etRmbC2q54E5VaX93RihAQFuSlpmOXPTKyTq3B0hB16sFfeWGqjBS9f9Tb+eDCIwabOjX07w1uqhplMtt3XHzH/pl5Q0jDdOwCXP1mLYv9tjd/3gSNg/jxs9m0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1639060276; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=f7E47xSc1Mc3o+zmr+qWXrTtQeuP/1Cs5PI2eKZFeoU=; 
+        b=Tnt1RoYfVXJzXBvD4wzQ2kOO6lE5ApIMzyN9j5+9LdFLflQk/qF6RfvIxU78ZH4ETrOpEd9XBnIWi33PaqHTmAajoRCfJj5ZWiGv6z0npatZIotczoHPht8oxMjxBk+3PQhIIAhXECEX+nPueFElebu6RPHpJqveiylDN1EC74E=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.80] (72.69.75.15 [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1639060273546825.4196679152558; Thu, 9 Dec 2021 15:31:13 +0100 (CET)
+Subject: Re: [PATCH v3] Monitor: print message before quit for no array to
+ monitor
+To:     Coly Li <colyli@suse.de>
+Cc:     George Gkioulis <ggkioulis@suse.com>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        linux-raid@vger.kernel.org
+References: <20210902073220.19177-1-colyli@suse.de>
+ <c9e5b8af-1a1d-82c0-1ca0-af4bd1182d75@suse.de>
+ <46d238f5-0757-b876-4a41-6f89605b7d8a@trained-monkey.org>
+ <0cb02d8d-e74a-19e7-09df-09553397f4d5@suse.de>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <f8f7703e-be1e-29dd-e51f-73702f867d7f@trained-monkey.org>
+Date:   Thu, 9 Dec 2021 09:31:04 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+ Thunderbird/78.7.0
 MIME-Version: 1.0
-In-Reply-To: <36a660ed-b995-839e-ac82-dc4ca25ccb8a@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <0cb02d8d-e74a-19e7-09df-09553397f4d5@suse.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-[Update Guoqing’s email address]
-
-On 15.02.21 12:07, Paul Menzel wrote:
-> [+cc Donald]
+On 12/8/21 8:18 PM, Coly Li wrote:
+> On 12/8/21 10:45 PM, Jes Sorensen wrote:
 > 
-> Am 13.02.21 um 01:49 schrieb Guoqing Jiang:
->> Unregister sync_thread doesn't need to hold reconfig_mutex since it
->> doesn't reconfigure array.
+> Hi Jes,
+> 
+>> Hi Coly,
 >>
->> And it could cause deadlock problem for raid5 as follows:
+>> Didn't see this one as it was only copied to my work email. Sorry.
+> 
+> It should be my fault, I didn't notice that jes@trained-monkey.org was
+> the proper email address :-)
+> 
+>> Applied!
 >>
->> 1. process A tried to reap sync thread with reconfig_mutex held after echo
->>     idle to sync_action.
->> 2. raid5 sync thread was blocked if there were too many active stripes.
->> 3. SB_CHANGE_PENDING was set (because of write IO comes from upper layer)
->>     which causes the number of active stripes can't be decreased.
->> 4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was not able
->>     to hold reconfig_mutex.
->>
->> More details in the link:
->> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
->>
->> And add one parameter to md_reap_sync_thread since it could be called by
->> dm-raid which doesn't hold reconfig_mutex.
->>
->> Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
+> 
+> Thanks. I will post patches to the trained-monkey.org address in future.
 
-Thanks, Paul, for putting me into the cc.
+Great, thanks!
 
-Guoqing, I don't think, I've tested this patch. Please remove the tested-by.
+Anything else we want for 4.2?
 
-btw: We have the fix I suggested [1] running on 59 production raid6 sets with 16 disk each with various loads and with monthly mdcheck (paused during daytime, so a few transitions each month) on several kernel versions running for nearly a year now. Many more transitions during testing. That doesn't mean the fix is correct, of course. The configurations of our systems are almost identical and we don't do suspend or anything. But maybe you might want to reconsider.
+Jes
 
-[1]: https://lore.kernel.org/linux-raid/bc342de0-98d2-1733-39cd-cc1999777ff3@molgen.mpg.de/
-
-If you want me to test V3 of your patch, please put me in the cc.
-
-Best
-   Donald
-
->> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
->> ---
->> V2:
->> 1. add one parameter to md_reap_sync_thread per Jack's suggestion.
->>
->>   drivers/md/dm-raid.c |  2 +-
->>   drivers/md/md.c      | 14 +++++++++-----
->>   drivers/md/md.h      |  2 +-
->>   3 files changed, 11 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
->> index cab12b2..0c4cbba 100644
->> --- a/drivers/md/dm-raid.c
->> +++ b/drivers/md/dm-raid.c
->> @@ -3668,7 +3668,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
->>       if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
->>           if (mddev->sync_thread) {
->>               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> -            md_reap_sync_thread(mddev);
->> +            md_reap_sync_thread(mddev, false);
->>           }
->>       } else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
->>           return -EBUSY;
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index ca40942..0c12b7f 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -4857,7 +4857,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
->>                   flush_workqueue(md_misc_wq);
->>               if (mddev->sync_thread) {
->>                   set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> -                md_reap_sync_thread(mddev);
->> +                md_reap_sync_thread(mddev, true);
->>               }
->>               mddev_unlock(mddev);
->>           }
->> @@ -6234,7 +6234,7 @@ static void __md_stop_writes(struct mddev *mddev)
->>           flush_workqueue(md_misc_wq);
->>       if (mddev->sync_thread) {
->>           set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> -        md_reap_sync_thread(mddev);
->> +        md_reap_sync_thread(mddev, true);
->>       }
->>       del_timer_sync(&mddev->safemode_timer);
->> @@ -9256,7 +9256,7 @@ void md_check_recovery(struct mddev *mddev)
->>                * ->spare_active and clear saved_raid_disk
->>                */
->>               set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->> -            md_reap_sync_thread(mddev);
->> +            md_reap_sync_thread(mddev, true);
->>               clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->>               clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->>               clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
->> @@ -9291,7 +9291,7 @@ void md_check_recovery(struct mddev *mddev)
->>               goto unlock;
->>           }
->>           if (mddev->sync_thread) {
->> -            md_reap_sync_thread(mddev);
->> +            md_reap_sync_thread(mddev, true);
->>               goto unlock;
->>           }
->>           /* Set RUNNING before clearing NEEDED to avoid
->> @@ -9364,14 +9364,18 @@ void md_check_recovery(struct mddev *mddev)
->>   }
->>   EXPORT_SYMBOL(md_check_recovery);
->> -void md_reap_sync_thread(struct mddev *mddev)
->> +void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held)
->>   {
->>       struct md_rdev *rdev;
->>       sector_t old_dev_sectors = mddev->dev_sectors;
->>       bool is_reshaped = false;
->>       /* resync has finished, collect result */
->> +    if (reconfig_mutex_held)
->> +        mddev_unlock(mddev);
->>       md_unregister_thread(&mddev->sync_thread);
->> +    if (reconfig_mutex_held)
->> +        mddev_lock_nointr(mddev);
->>       if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
->>           !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
->>           mddev->degraded != mddev->raid_disks) {
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 34070ab..7ae3d98 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -705,7 +705,7 @@ extern struct md_thread *md_register_thread(
->>   extern void md_unregister_thread(struct md_thread **threadp);
->>   extern void md_wakeup_thread(struct md_thread *thread);
->>   extern void md_check_recovery(struct mddev *mddev);
->> -extern void md_reap_sync_thread(struct mddev *mddev);
->> +extern void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held);
->>   extern int mddev_init_writes_pending(struct mddev *mddev);
->>   extern bool md_write_start(struct mddev *mddev, struct bio *bi);
->>   extern void md_write_inc(struct mddev *mddev, struct bio *bi);
->>
-
--- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
