@@ -2,33 +2,33 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CAECC433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 12:54:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09F5AC433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 12:57:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236237AbhLIM6O (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Dec 2021 07:58:14 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:37461 "EHLO mx1.molgen.mpg.de"
+        id S233810AbhLINBJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Dec 2021 08:01:09 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:36447 "EHLO mx1.molgen.mpg.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S235554AbhLIM6O (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 9 Dec 2021 07:58:14 -0500
+        id S229379AbhLINBJ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 9 Dec 2021 08:01:09 -0500
 Received: from [192.168.0.175] (ip5f5aed0f.dynamic.kabel-deutschland.de [95.90.237.15])
         (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
         (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 139F561E5FE00;
-        Thu,  9 Dec 2021 13:54:39 +0100 (CET)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id F2E6E61E64846;
+        Thu,  9 Dec 2021 13:57:34 +0100 (CET)
+From:   Donald Buczek <buczek@molgen.mpg.de>
 Subject: Re: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex
  held
-To:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>, song@kernel.org
+To:     Paul Menzel <pmenzel@molgen.mpg.de>, song@kernel.org,
+        Guoqing Jiang <guoqing.jiang@linux.dev>
 Cc:     agk@redhat.com, snitzer@redhat.com, linux-raid@vger.kernel.org,
         dm-devel@redhat.com, it+raid@molgen.mpg.de
 References: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
  <36a660ed-b995-839e-ac82-dc4ca25ccb8a@molgen.mpg.de>
-From:   Donald Buczek <buczek@molgen.mpg.de>
-Message-ID: <36efcb65-71ba-0c80-2a8e-a1ff27957645@molgen.mpg.de>
-Date:   Thu, 9 Dec 2021 13:54:38 +0100
+Message-ID: <2cefad59-c0fc-d48f-f7a5-5d593931feb7@molgen.mpg.de>
+Date:   Thu, 9 Dec 2021 13:57:34 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
@@ -39,6 +39,8 @@ Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
+
+[Update Guoqing’s email address]
 
 On 15.02.21 12:07, Paul Menzel wrote:
 > [+cc Donald]
