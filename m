@@ -2,86 +2,112 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C3BC433FE
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 17:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 760C2C4332F
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 17:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242125AbhLIRE6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Dec 2021 12:04:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42790 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241886AbhLIREx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 12:04:53 -0500
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37B16C061D7E
-        for <linux-raid@vger.kernel.org>; Thu,  9 Dec 2021 09:01:17 -0800 (PST)
-Received: by mail-pf1-x436.google.com with SMTP id n26so5989397pff.3
-        for <linux-raid@vger.kernel.org>; Thu, 09 Dec 2021 09:01:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google;
-        h=message-id:date:mime-version:user-agent:subject:to:cc:references
-         :from:in-reply-to:content-transfer-encoding;
-        bh=Ud3lKXQYKGOuzl+KkRdHcKl/sXgpbsziWKn26STUYzg=;
-        b=c3npZUsjDLfM1VYqRItcNvvTHz3xeZ8zRQ59gFrvN+6dtEXOwCPRuAuYPZohbDMUgd
-         RV0si7L/Oi0aMvmnzELYdRVm+a8ga7sHiG5wmfHQ/24rQ3p4K0VS0Vxq9zfJ4LFlZUPr
-         WLjCk/pjEyOIss/x9PZ8Ikou5mRGqN3zjIA00=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :to:cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=Ud3lKXQYKGOuzl+KkRdHcKl/sXgpbsziWKn26STUYzg=;
-        b=t1beg4jhAqnPvAaVXKelbVTBS9ATdfD2Cwh/6QpygwLFrAeKa4fqmiEUqqb1cEJPD5
-         yvfAwP6B9OpUGm3VM6FdyRLFo/JzvJmUbJIga8A8QGlZxsU2/SiJSEDTw0h54HD6NvIJ
-         TndspPDSWIsmfd8OJY4i4EzWo2BxXzsH8iTjkqUDiIODyDGbJogQr732tg/JGvWubDOu
-         +QgJL8UXI7fMax+fevRr5qcCSuM2lvRdH90bTKNsMzgMM1tKGHBMNGp7XDXw+eo599HN
-         p+m9OnixAliP5iSG5wwkVUJGoLBPF5zqPieSLu+WyaytyUh4xKFrKv/AvNaGZwDFSceg
-         H4Ug==
-X-Gm-Message-State: AOAM533DmCC3WCCwj39XaZaC/5vljFTGknb1vh6lOCQfnrtpAmicUnTi
-        zdF15qUC6p7KWuYyAv+yF0ucnw/j76HaFQ==
-X-Google-Smtp-Source: ABdhPJzDuOmsGtRjkhCkZ1huSj/3A+OMnfQVIBbp/tQDXmcczCfWmHpj/MnaX82QGaiO4dFz9BiH4g==
-X-Received: by 2002:a63:703:: with SMTP id 3mr18091251pgh.128.1639069276724;
-        Thu, 09 Dec 2021 09:01:16 -0800 (PST)
-Received: from [192.168.1.5] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
-        by smtp.gmail.com with ESMTPSA id i2sm259678pfg.90.2021.12.09.09.01.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Dec 2021 09:01:16 -0800 (PST)
-Message-ID: <565a8e4b-7817-53e4-dcd3-b2320afbaecd@digitalocean.com>
-Date:   Thu, 9 Dec 2021 10:01:11 -0700
+        id S242704AbhLIRnY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Dec 2021 12:43:24 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:51730 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242483AbhLIRnX (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 12:43:23 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 2D45ACE276D;
+        Thu,  9 Dec 2021 17:39:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30F32C341CD;
+        Thu,  9 Dec 2021 17:39:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639071586;
+        bh=qYNFqkQwxVAeHZsMMhQPC8pTvIDP3euSi+noorx7pH0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=Ef7a/pLzC84q6l0bpD1Ouuu1jwXd9CWk/Vz2wkWVKxQ7tCBT3dqKVso4VDjGCCNcN
+         iOYw70pMI/Vtqz8DMuFPHN9toXpn2/49PWrnVCkvZQs8YvrdZP9JMtm5aFra7VUMp7
+         r+q6Ag0ZWAuiiBHEY98DuYrIauEmeMGClXRe9ZZbsXd8SgpSqH/C50CLOU6tpHjW6R
+         AZeQnk/fCXVbm3gCwmWcuItUckwfsfr7ebaLl/65hbv6Z8mbgWPFxGF36Vw808OXUc
+         hgtwmxv1UdgGGMYP/a/pR6tR6Ph8Xev9v33uzVll1X7fop/0nwYxLecdcfibHzpqxS
+         7p7/CiYFwfWCg==
+Received: by mail-yb1-f176.google.com with SMTP id q74so15366898ybq.11;
+        Thu, 09 Dec 2021 09:39:46 -0800 (PST)
+X-Gm-Message-State: AOAM530Rj5B5jyTGf3VhWpdqdaJQ/4l3SgyyYF6BmhauaXNqu8AtCU38
+        K0/4quzpBRvRPzjTZ0xF/dApKlhB418ej8UILmA=
+X-Google-Smtp-Source: ABdhPJwEaoB1dnsF15BdtCtWtqwmPOt+eNaurSXpzIIW1JOastQNXdj6/+OJ3JEn15TvFp68O0n7N/B+1jxAhdPcpLo=
+X-Received: by 2002:a25:3bc3:: with SMTP id i186mr8303350yba.282.1639071585209;
+ Thu, 09 Dec 2021 09:39:45 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [RFC PATCH v4 4/4] md: raid456 add nowait support
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
-        Jens Axboe <axboe@kernel.dk>
-References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
- <20211110181441.9263-1-vverma@digitalocean.com>
- <20211110181441.9263-4-vverma@digitalocean.com>
- <CAPhsuW7=r4AmCqG3M0hU=fps6a-Zu9KF_RnyNf815d=43wTv5A@mail.gmail.com>
- <f8c2a2bc-a885-8254-2b39-fc0c969ac70d@digitalocean.com>
- <CAPhsuW54EJOfAXrE-zVie561n+aF-+jvQz1152rqj=kU5Fk5ug@mail.gmail.com>
- <9fb2e648-9a6e-c4c0-4fe9-3e2a92ecd8d6@digitalocean.com>
- <CAPhsuW5cfy1+9YOT2620KycBN0juQN1ZKUewygqxK21BqQAyxg@mail.gmail.com>
-From:   Vishal Verma <vverma@digitalocean.com>
-In-Reply-To: <CAPhsuW5cfy1+9YOT2620KycBN0juQN1ZKUewygqxK21BqQAyxg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211201032712.3684503-1-lijinlin3@huawei.com>
+In-Reply-To: <20211201032712.3684503-1-lijinlin3@huawei.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 9 Dec 2021 09:39:34 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5sv5D8vmiJxS9SqCcit1a05F8kw80Q1TV9+26+QJkEsA@mail.gmail.com>
+Message-ID: <CAPhsuW5sv5D8vmiJxS9SqCcit1a05F8kw80Q1TV9+26+QJkEsA@mail.gmail.com>
+Subject: Re: [PATCH] md: Fix unexpected behaviour in is_mddev_idle
+To:     Li Jinlin <lijinlin3@huawei.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Jan Kara <jack@suse.cz>, Ming Lei <ming.lei@redhat.com>,
+        Tejun Heo <tj@kernel.org>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>, linfeilong@huawei.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Tue, Nov 30, 2021 at 6:56 PM Li Jinlin <lijinlin3@huawei.com> wrote:
+>
+> The value of curr_events may be INT_MAX when mddev initializes IO event
+> counters. Then, rdev->last_events will be set as INT_MAX.
+> If all the rdevs of mddev are in this case,
+> 'curr_events - rdev->last_events > 64' will always false, and
+> is_mddev_idle() will always return 1, which may cause non-sync IO very
+> slow.
+>
+> Fix by using atomic64_t type for sync_io, and using long type for
+> curr_events/last_events.
+>
+> Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+> ---
+>  drivers/md/md.c       | 6 +++---
+>  drivers/md/md.h       | 4 ++--
+>  include/linux/genhd.h | 2 +-
+>  3 files changed, 6 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 5111ed966947..f47035838c43 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+>  {
+>         struct md_rdev *rdev;
+>         int idle;
+> -       int curr_events;
+> +       long curr_events;
+>
+>         idle = 1;
+>         rcu_read_lock();
+>         rdev_for_each_rcu(rdev, mddev) {
+>                 struct gendisk *disk = rdev->bdev->bd_disk;
+> -               curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
+> -                             atomic_read(&disk->sync_io);
+> +               curr_events = (long)part_stat_read_accum(disk->part0, sectors) -
+> +                             atomic64_read(&disk->sync_io);
+>                 /* sync IO will cause sync_io to increase before the disk_stats
+>                  * as sync_io is counted when a request starts, and
+>                  * disk_stats is counted when it completes.
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index 53ea7a6961de..3f8327c42b7b 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -50,7 +50,7 @@ struct md_rdev {
+>
+>         sector_t sectors;               /* Device size (in 512bytes sectors) */
+>         struct mddev *mddev;            /* RAID array if running */
+> -       int last_events;                /* IO event timestamp */
+> +       long last_events;               /* IO event timestamp */
 
-On 12/9/21 9:59 AM, Song Liu wrote:
-> On Thu, Dec 9, 2021 at 8:53 AM Vishal Verma <vverma@digitalocean.com> wrote:
-> [...]
->>> Song
->>>
->>> Hi Song,
->>> Did you get chance to look into this? It looks like I am bit stuck here. The other option I am thinking is if we just add a flag for enabling nowait and enable it by default for raid1?
->>>
-> I am sorry for the delay. I will look into this and get back to you
-> early next week (or sooner).
->
-> Song
->
->
-> Np, thanks!
+I think we need long long here to be safe on 32-bit systems.
+
+Thanks,
+Song
