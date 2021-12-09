@@ -2,112 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 760C2C4332F
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 17:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04561C433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 18:02:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242704AbhLIRnY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Dec 2021 12:43:24 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:51730 "EHLO
+        id S243174AbhLISFz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Dec 2021 13:05:55 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:56800 "EHLO
         sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242483AbhLIRnX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 12:43:23 -0500
+        with ESMTP id S229803AbhLISFz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 13:05:55 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 2D45ACE276D;
-        Thu,  9 Dec 2021 17:39:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30F32C341CD;
-        Thu,  9 Dec 2021 17:39:46 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 6E388CE2588
+        for <linux-raid@vger.kernel.org>; Thu,  9 Dec 2021 18:02:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C8A6C004DD
+        for <linux-raid@vger.kernel.org>; Thu,  9 Dec 2021 18:02:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639071586;
-        bh=qYNFqkQwxVAeHZsMMhQPC8pTvIDP3euSi+noorx7pH0=;
+        s=k20201202; t=1639072938;
+        bh=+ao4LkkmbXoR+p58EoE8PqxiZWfvivA2ods3PZC4Xi4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Ef7a/pLzC84q6l0bpD1Ouuu1jwXd9CWk/Vz2wkWVKxQ7tCBT3dqKVso4VDjGCCNcN
-         iOYw70pMI/Vtqz8DMuFPHN9toXpn2/49PWrnVCkvZQs8YvrdZP9JMtm5aFra7VUMp7
-         r+q6Ag0ZWAuiiBHEY98DuYrIauEmeMGClXRe9ZZbsXd8SgpSqH/C50CLOU6tpHjW6R
-         AZeQnk/fCXVbm3gCwmWcuItUckwfsfr7ebaLl/65hbv6Z8mbgWPFxGF36Vw808OXUc
-         hgtwmxv1UdgGGMYP/a/pR6tR6Ph8Xev9v33uzVll1X7fop/0nwYxLecdcfibHzpqxS
-         7p7/CiYFwfWCg==
-Received: by mail-yb1-f176.google.com with SMTP id q74so15366898ybq.11;
-        Thu, 09 Dec 2021 09:39:46 -0800 (PST)
-X-Gm-Message-State: AOAM530Rj5B5jyTGf3VhWpdqdaJQ/4l3SgyyYF6BmhauaXNqu8AtCU38
-        K0/4quzpBRvRPzjTZ0xF/dApKlhB418ej8UILmA=
-X-Google-Smtp-Source: ABdhPJwEaoB1dnsF15BdtCtWtqwmPOt+eNaurSXpzIIW1JOastQNXdj6/+OJ3JEn15TvFp68O0n7N/B+1jxAhdPcpLo=
-X-Received: by 2002:a25:3bc3:: with SMTP id i186mr8303350yba.282.1639071585209;
- Thu, 09 Dec 2021 09:39:45 -0800 (PST)
+        b=sRWmsTrdeSR/iwgsMJnUrEWoNuQd8ruyPa6l8Kt2Qox013+Mv/dbpxcP70bEixCTy
+         oelm6Q1hA1Caj/+QoWMrRXfjfqNuouEOghAdTe+uikoptCpRM4GI5rmi8Ty970NyTn
+         GsmvBiDysWZ5g/rne7sDaOv+jDfmF0AbY4V7+9WBuJJ5H7Ptlk6cxpZonjY0cZr/HE
+         wpLKm17clumhTRKnQwxPZkxkXd66bVUt9d2E6e0aMYaA8Vu698IiP7VTi/de65dFg8
+         Uhe47qwViYix49+lJzpLNsbKwwNgyCbcF3JZ+vIStw1J4VJJubtMT09A1U+4kAPvyt
+         4bKNc4R/RYN7Q==
+Received: by mail-yb1-f170.google.com with SMTP id q74so15517570ybq.11
+        for <linux-raid@vger.kernel.org>; Thu, 09 Dec 2021 10:02:18 -0800 (PST)
+X-Gm-Message-State: AOAM530R8hg7EOA8NgqBVynOORkbTQxawqJHrTB4uMu1FOBiqOrfYo5i
+        p/QvFRlrtFhcrWzdJxyNSI9/fv+ICHnYtrdg9d4=
+X-Google-Smtp-Source: ABdhPJzg8G/Cn5SL/j1yZ9KhHqEwg3IxP8c8ISmle3s3wxJb0FX/QLyxpao70cxeAJxESlpo/IsMzImGT6MfoJ2JF4E=
+X-Received: by 2002:a25:b519:: with SMTP id p25mr8093122ybj.195.1639072937831;
+ Thu, 09 Dec 2021 10:02:17 -0800 (PST)
 MIME-Version: 1.0
-References: <20211201032712.3684503-1-lijinlin3@huawei.com>
-In-Reply-To: <20211201032712.3684503-1-lijinlin3@huawei.com>
+References: <1639029324-4026-1-git-send-email-xni@redhat.com> <1639029324-4026-2-git-send-email-xni@redhat.com>
+In-Reply-To: <1639029324-4026-2-git-send-email-xni@redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 9 Dec 2021 09:39:34 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5sv5D8vmiJxS9SqCcit1a05F8kw80Q1TV9+26+QJkEsA@mail.gmail.com>
-Message-ID: <CAPhsuW5sv5D8vmiJxS9SqCcit1a05F8kw80Q1TV9+26+QJkEsA@mail.gmail.com>
-Subject: Re: [PATCH] md: Fix unexpected behaviour in is_mddev_idle
-To:     Li Jinlin <lijinlin3@huawei.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Jan Kara <jack@suse.cz>, Ming Lei <ming.lei@redhat.com>,
-        Tejun Heo <tj@kernel.org>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>, linfeilong@huawei.com
+Date:   Thu, 9 Dec 2021 10:02:06 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW48S-L9QTH6q_7+Nq0+MmOfswPu5epMq=bkGokxBRE2ew@mail.gmail.com>
+Message-ID: <CAPhsuW48S-L9QTH6q_7+Nq0+MmOfswPu5epMq=bkGokxBRE2ew@mail.gmail.com>
+Subject: Re: [PATCH 1/2] md/raid0: Free r0conf memory when register integrity failed
+To:     Xiao Ni <xni@redhat.com>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Nigel Croxon <ncroxon@redhat.com>,
+        linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Nov 30, 2021 at 6:56 PM Li Jinlin <lijinlin3@huawei.com> wrote:
+On Wed, Dec 8, 2021 at 9:55 PM Xiao Ni <xni@redhat.com> wrote:
 >
-> The value of curr_events may be INT_MAX when mddev initializes IO event
-> counters. Then, rdev->last_events will be set as INT_MAX.
-> If all the rdevs of mddev are in this case,
-> 'curr_events - rdev->last_events > 64' will always false, and
-> is_mddev_idle() will always return 1, which may cause non-sync IO very
-> slow.
+> It doesn't free memory when register integrity failed. And move
+> free conf codes into a single function.
 >
-> Fix by using atomic64_t type for sync_io, and using long type for
-> curr_events/last_events.
->
-> Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+> Signed-off-by: Xiao Ni <xni@redhat.com>
 > ---
->  drivers/md/md.c       | 6 +++---
->  drivers/md/md.h       | 4 ++--
->  include/linux/genhd.h | 2 +-
->  3 files changed, 6 insertions(+), 6 deletions(-)
+>  drivers/md/raid0.c | 18 +++++++++++++++---
+>  1 file changed, 15 insertions(+), 3 deletions(-)
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5111ed966947..f47035838c43 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
->  {
->         struct md_rdev *rdev;
->         int idle;
-> -       int curr_events;
-> +       long curr_events;
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 62c8b6adac70..3fa47df1c60e 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -356,6 +356,7 @@ static sector_t raid0_size(struct mddev *mddev, sector_t sectors, int raid_disks
+>         return array_sectors;
+>  }
 >
->         idle = 1;
->         rcu_read_lock();
->         rdev_for_each_rcu(rdev, mddev) {
->                 struct gendisk *disk = rdev->bdev->bd_disk;
-> -               curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
-> -                             atomic_read(&disk->sync_io);
-> +               curr_events = (long)part_stat_read_accum(disk->part0, sectors) -
-> +                             atomic64_read(&disk->sync_io);
->                 /* sync IO will cause sync_io to increase before the disk_stats
->                  * as sync_io is counted when a request starts, and
->                  * disk_stats is counted when it completes.
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 53ea7a6961de..3f8327c42b7b 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -50,7 +50,7 @@ struct md_rdev {
+> +static void free_conf(struct r0conf *conf);
+>  static void raid0_free(struct mddev *mddev, void *priv);
 >
->         sector_t sectors;               /* Device size (in 512bytes sectors) */
->         struct mddev *mddev;            /* RAID array if running */
-> -       int last_events;                /* IO event timestamp */
-> +       long last_events;               /* IO event timestamp */
+>  static int raid0_run(struct mddev *mddev)
+> @@ -413,19 +414,30 @@ static int raid0_run(struct mddev *mddev)
+>         dump_zones(mddev);
+>
+>         ret = md_integrity_register(mddev);
+> +       if (ret)
+> +               goto free;
+>
+>         return ret;
+> +
+> +free:
+> +       free_conf(conf);
 
-I think we need long long here to be safe on 32-bit systems.
+Can we just use raid0_free() here? Also, after freeing conf,
+we should set mddev->private to NULL.
 
 Thanks,
 Song
