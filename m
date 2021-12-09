@@ -2,132 +2,177 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77A4CC433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  8 Dec 2021 21:27:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A55D6C433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 00:48:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237520AbhLHVb2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 8 Dec 2021 16:31:28 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:36680 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234766AbhLHVb1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Dec 2021 16:31:27 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 60E57212BA;
-        Wed,  8 Dec 2021 21:27:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638998874; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S241527AbhLIAvl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 8 Dec 2021 19:51:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43244 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229846AbhLIAvl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 8 Dec 2021 19:51:41 -0500
+Received: from out2.migadu.com (out2.migadu.com [IPv6:2001:41d0:2:aacc::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B8DEC061746
+        for <linux-raid@vger.kernel.org>; Wed,  8 Dec 2021 16:48:08 -0800 (PST)
+Subject: Re: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex
+ held
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1639010886;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=r1Nn/3chndDCNPZZd7gK0CCQs8RibhkzxpJ50mKriRs=;
-        b=XOwfZWBeOAuSWvl1xaAR33NqhkCyhlhIWX+qvHwL39Yya1WOIY9m8e/SIf7Deq9RnEpJy5
-        zvfrauF/fJDy9qc/8o/95GQYBn1A+xQpDL40vAPmuK97BpA/wucxSwY0Se19hUa9xZ6gk7
-        6knrj1UjdXi5nD3YsK4GM+G1WEThDE4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638998874;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=r1Nn/3chndDCNPZZd7gK0CCQs8RibhkzxpJ50mKriRs=;
-        b=YRY62lQSPs2gngH9N++1r5adyGiTvX1gHbmCpzZGGjFfW4kMc9XzlV9kkVTnMqhQDqrclB
-        Mj56UKQ5wQ2d/2Bw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8697E13C45;
-        Wed,  8 Dec 2021 21:27:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 3zxbEVgjsWHIagAAMHmgww
-        (envelope-from <neilb@suse.de>); Wed, 08 Dec 2021 21:27:52 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        bh=JXjvpq+POzAed39CIWta9xbbGkSUXLGwlPnpmpCSjIQ=;
+        b=Uvh5K8WMMoZUiH/VO5Mhiz8DNCUhKkQrfH/mx1H5y0yR8TL2Pv6T841ovV4BaUCktHSFHA
+        +GkVGL2VY/A3hid//jYWlB89lD0gs9n2uWkRbjjGPh23O51P6DEzgU5kUT2R+GAmurr930
+        D90MmutSYsh2XTqzs0fIAEF0DMsfxmc=
+To:     Heinz Mauelshagen <heinzm@redhat.com>
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, Song Liu <song@kernel.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        "Brassow, Jonathan" <jbrassow@redhat.com>,
+        linux-raid <linux-raid@vger.kernel.org>, dm-devel@redhat.com,
+        Donald Buczek <buczek@molgen.mpg.de>, it+raid@molgen.mpg.de
+References: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+ <36a660ed-b995-839e-ac82-dc4ca25ccb8a@molgen.mpg.de>
+ <CAPhsuW5s6fk3kua=9Z9o3VPCcN1wdUqXybXm9cp4arJW5+oBvQ@mail.gmail.com>
+ <9f28f6e2-e46a-bfed-09d8-2fec941ea881@cloud.ionos.com>
+ <CAPhsuW4V8JCCKePj11rf3zo4MJTz6TpW6DDeNmcJBfRSoN+NDA@mail.gmail.com>
+ <a3a1fed7-b886-8603-aa20-20d667a837a7@molgen.mpg.de>
+ <3f2ad763-6fcb-a652-7131-9e20135a1405@molgen.mpg.de>
+ <abe73176-03ca-9305-2005-677edc6ef158@linux.dev>
+ <CAM23VxrYRbWEUsCsez2QOQM9oWKxSv432rc9oZCj5zEPmtND0A@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <4beac38d-8932-9081-23ca-4552311697f0@linux.dev>
+Date:   Thu, 9 Dec 2021 08:47:58 +0800
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Franck Bui" <fbui@suse.de>
-Cc:     "Benjamin Brunner" <bbrunner@suse.com>, "Coly Li" <colyli@suse.de>,
-        linux-raid@vger.kernel.org,
-        "mtkaczyk" <mariusz.tkaczyk@linux.intel.com>,
-        "Jes Sorensen" <jsorensen@fb.com>
-Subject: Re: [PATCH] mdadm/systemd: change KillMode from none to mixed in
- service files
-In-reply-to: <4db89d7a-88c1-494f-359b-359e355d9b55@suse.de>
-References: <20211201062245.6636-1-colyli@suse.de>,
- <20211201170843.00005f69@linux.intel.com>,
- <9ee380c8-e43b-8f58-c7d5-5bddb6f2e688@suse.de>,
- <73287b77-33aa-a9bd-7efa-5816e098f02f@suse.com>,
- <39d432ad-b451-082a-e52d-ffa32155529b@suse.de>,
- <163839547917.26075.6431438000167570600@noble.neil.brown.name>,
- <dabe438e-3eca-8ad4-553e-ba8555d126bd@suse.de>,
- <28a04276-d338-2db5-bb3d-49616e14206b@suse.com>,
- <4db89d7a-88c1-494f-359b-359e355d9b55@suse.de>
-Date:   Thu, 09 Dec 2021 08:27:47 +1100
-Message-id: <163899886765.32564.8176199508001680040@noble.neil.brown.name>
+In-Reply-To: <CAM23VxrYRbWEUsCsez2QOQM9oWKxSv432rc9oZCj5zEPmtND0A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 09 Dec 2021, Franck Bui wrote:
-> Hi,
->=20
-> On 12/7/21 1:34 PM, Benjamin Brunner wrote:
-> >>>> Please correct me if I am wrong, I see the difference of the KillMode =
-is,
-> >>>> -- KillMode=3Dmixed stops the processes more gentally, it kill the main
-> >>>> process with SIGTERM and the remaining processes with SIGKILL.
-> >>>> -- KillMode=3Dcontrol-group kills all in-cgroup processes with SIGKILL,
-> >>>> which I feel a bit cruel for the main process.
->=20
-> I think there's a miss-understanding here.
->=20
-> Regardless of whether "mixed" or "control-group" mode (or any other mode
-> actually) is used, the process used to kill processes part of a service is
-> always the same, only the list of the killed processes differs.
->=20
-> The process is as follow:
->=20
->  1. send the signal specified by KillSignal=3D to the list of processes (if
->     any), TERM is the default
->  2. wait until either the target of process(es) exit or a timeout expires
->  3. if the timeout expires send the signal specified by FinalKillSignal=3D,
->     KILL is the default
->=20
-> For "control-group", all remaining processes will receive the SIGTERM signa=
-l (by
-> default) and if there are still processes after a period f time, they will =
-get
-> the SIGKILL signal.
->=20
-> For "mixed", only the main process will receive the SIGTERM signal, and if =
-there
-> are still processes after a period of time, all remaining processes (includ=
-ing
-> the main one) will receive the SIGKILL signal.
->=20
-> >>> There is no point sending SIGTERM to a process which doesn't respond to
-> >>> it.=C2=A0 mdmon is the only mdadm service which handles SIGTERM.=C2=A0 =
-So it might
-> >>> make sense to uise KillMode=3Dmixed for that.
-> >>> For anything else, SIGKILL via KillMode=3Dcontrol-group is perfectly
-> >>> acceptable.
->=20
-> I don't know enough mdadm to suggest a mode but maybe the clarification abo=
-ve
-> will help you figuring this out.
->=20
-> That said it sounds a bit strange that some processes don't respond to SIGT=
-ERM.
-> Is that done because some services need to run lately during the shutdown p=
-rocess ?
 
-When I wrote that they don't respond to SIGTERM, I meant that they don't
-take any special action.  They don't ignore SIGTERM, so they will exit
-when they are sent it.  i.e.  it doesn't matter whether they get SIGTERM
-or SIGKILL - either way they will exit.
 
-NeilBrown
+On 12/9/21 12:35 AM, Heinz Mauelshagen wrote:
+> NACK, see details below.
+>
+> On Wed, Dec 8, 2021 at 3:24 PM Guoqing Jiang <guoqing.jiang@linux.dev 
+> <mailto:guoqing.jiang@linux.dev>> wrote:
+>
+>
+>
+>     On 12/1/21 1:27 AM, Paul Menzel wrote:
+>     >
+>     >>>>>>> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+>     >>>>>>> index cab12b2..0c4cbba 100644
+>     >>>>>>> --- a/drivers/md/dm-raid.c
+>     >>>>>>> +++ b/drivers/md/dm-raid.c
+>     >>>>>>> @@ -3668,7 +3668,7 @@ static int raid_message(struct
+>     dm_target
+>     >>>>>>> *ti, unsigned int argc, char **argv,
+>     >>>>>>>         if (!strcasecmp(argv[0], "idle") ||
+>     !strcasecmp(argv[0],
+>     >>>>>>> "frozen")) {
+>     >>>>>>>                 if (mddev->sync_thread) {
+>     >>>>>>> set_bit(MD_RECOVERY_INTR,
+>     >>>>>>> &mddev->recovery);
+>     >>>>>>> - md_reap_sync_thread(mddev);
+>     >>>>>>> + md_reap_sync_thread(mddev, false);
+>     >>>>>
+>     >>>>> I think we can add mddev_lock() and mddev_unlock() here and
+>     then
+>     >>>>> we don't
+>     >>>>> need the extra parameter?
+>     >>>>
+>     >>>> I thought it too, but I would prefer get the input from DM
+>     people
+>     >>>> first.
+>     >>>>
+>     >>>> @ Mike or Alasdair
+>     >>>
+>     >>> Hi Mike and Alasdair,
+>     >>>
+>     >>> Could you please comment on this option: adding mddev_lock() and
+>     >>> mddev_unlock()
+>     >>> to raid_message() around md_reap_sync_thread()?
+>
+>     Add Heinz and Jonathan, could you comment about this? Thanks.
+>
+>     >>
+>     >> The issue is unfortunately still unresolved (at least Linux
+>     5.10.82).
+>     >> How can we move forward?
+>
+>     If it is not applicable to change dm-raid, another alternative
+>     could be
+>     like this
+>
+>     --- a/drivers/md/md.c
+>     +++ b/drivers/md/md.c
+>     @@ -9409,8 +9409,12 @@ void md_reap_sync_thread(struct mdev *mddev)
+>              sector_t old_dev_sectors = mddev->dev_sectors;
+>              bool is_reshaped = false;
+>
+>     +       if (mddev_is_locked(mddev))
+>     +               mddev_unlock(mddev);
+>              /* resync has finished, collect result */
+>              md_unregister_thread(&mddev->sync_thread);
+>     +       if (mddev_is_locked(mddev))
+>     +               mddev_lock(mddev);
+>              if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+>                  !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
+>                  mddev->degraded != mddev->raid_disks) {
+>     diff --git a/drivers/md/md.h b/drivers/md/md.h
+>     index 53ea7a6961de..96a88b7681d6 100644
+>     --- a/drivers/md/md.h
+>     +++ b/drivers/md/md.h
+>     @@ -549,6 +549,11 @@ static inline int mddev_trylock(struct mddev
+>     *mddev)
+>       }
+>       extern void mddev_unlock(struct mddev *mddev);
+>
+>     +static inline int mddev_is_locked(struct mddev *mddev)
+>     +{
+>     +       return mutex_is_locked(&mddev->reconfig_mutex);
+>     +}
+>     +
+>
+>
+> Patch is bogus relative to the proposed mddev_unlock/mddev_lock logic 
+> in md.c around the
+> md_unregister_thread() as it's failing to lock again if it was holding 
+> the mutex before as it again
+> calls mddev_locked() after having the mutex unlocked just before the 
+> md_unregister_thread() call.
+>
+> If that patch to md.c holds up in further analysis, it has to keep the 
+> mddev_is_locked() result
+> and unlock/lock conditionally based on its result.
+>
+
+Yes, that was my intention too, thanks for pointing it out.
+
+@@ -9407,10 +9407,16 @@ void md_reap_sync_thread(struct mddev *mddev)
+  {
+         struct md_rdev *rdev;
+         sector_t old_dev_sectors = mddev->dev_sectors;
+-       bool is_reshaped = false;
++       bool is_reshaped = false, is_locked = false;
+
+         /* resync has finished, collect result */
++       if (mddev_is_locked(mddev)) {
++               is_locked = true;
++               mddev_unlock(mddev);
++       }
+         md_unregister_thread(&mddev->sync_thread);
++       if (is_locked)
++               mddev_lock(mddev);
+
+Thanks,
+Guoqing
