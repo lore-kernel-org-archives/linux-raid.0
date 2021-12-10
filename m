@@ -2,188 +2,199 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BF4C433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 11:57:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 436E0C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 14:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233424AbhLJMBI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Dec 2021 07:01:08 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:47924 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229664AbhLJMBI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Dec 2021 07:01:08 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        id S238557AbhLJOUJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Dec 2021 09:20:09 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:49801 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S238547AbhLJOUJ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 10 Dec 2021 09:20:09 -0500
+Received: from [192.168.0.175] (ip5f5aed0f.dynamic.kabel-deutschland.de [95.90.237.15])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 2777C1F3A0;
-        Fri, 10 Dec 2021 11:57:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639137452; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=UGqTpPfwCs8oR8Xk7BbaQyH4TxPdYCJW+wRAyjcb1jA=;
-        b=GxujRQKr8kTHW6BgLKXN7cesdcK5g4mrvAjy2ijTC8S5o45G3NDAoNbj52b6dKYukmfgGj
-        I3BbsNBbq9/IYSVZM23rmB60lrmsJvphwGPTW+CzEzYJ0dNu1hWh9qtxyjcF7R3P3SV2qL
-        8DLfVGWxoLc2VdDTWqMsU5HZiQ7LP24=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639137452;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=UGqTpPfwCs8oR8Xk7BbaQyH4TxPdYCJW+wRAyjcb1jA=;
-        b=fYFBwEd9CeYR605E1fzzGEqZpAMN0R+tt0vmupkEFsl59zNCKFlIAYKqnn/pJfKfTjg5tl
-        9fRknwhnez8BnSAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EE3B413C1D;
-        Fri, 10 Dec 2021 11:57:31 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id SX0zOatAs2HqeQAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 10 Dec 2021 11:57:31 +0000
-To:     Li Jinlin <lijinlin3@huawei.com>, song@kernel.org,
-        philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
-        axboe@kernel.dk, jack@suse.cz, ming.lei@redhat.com, tj@kernel.org,
-        mcgrof@kernel.org
-Cc:     linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linfeilong@huawei.com
-References: <20211210120631.2578505-1-lijinlin3@huawei.com>
- <20211210120631.2578505-2-lijinlin3@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 1/3] md: Fix undefined behaviour in is_mddev_idle
-Message-ID: <65d045bc-45d2-9e02-f0f7-7a0f51504eb9@suse.de>
-Date:   Fri, 10 Dec 2021 12:57:31 +0100
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 9179E61E5FE00;
+        Fri, 10 Dec 2021 15:16:32 +0100 (CET)
+Subject: Re: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex
+ held
+To:     song@kernel.org, Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     agk@redhat.com, snitzer@redhat.com, linux-raid@vger.kernel.org,
+        dm-devel@redhat.com, Paul Menzel <pmenzel@molgen.mpg.de>
+References: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+From:   Donald Buczek <buczek@molgen.mpg.de>
+Message-ID: <8312a154-14fb-6f07-0cf1-8c970187cc49@molgen.mpg.de>
+Date:   Fri, 10 Dec 2021 15:16:32 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20211210120631.2578505-2-lijinlin3@huawei.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/10/21 1:06 PM, Li Jinlin wrote:
-> UBSAN reports this problem:
+Dear Guoqing,
+
+On 13.02.21 01:49, Guoqing Jiang wrote:
+> Unregister sync_thread doesn't need to hold reconfig_mutex since it
+> doesn't reconfigure array.
 > 
-> [ 5984.281385] UBSAN: Undefined behaviour in drivers/md/md.c:8175:15
-> [ 5984.281390] signed integer overflow:
-> [ 5984.281393] -2147483291 - 2072033152 cannot be represented in type 'int'
-> [ 5984.281400] CPU: 25 PID: 1854 Comm: md101_resync Kdump: loaded Not tainted 4.19.90
-> [ 5984.281404] Hardware name: Huawei TaiShan 200 (Model 5280)/BC82AMDDA
-> [ 5984.281406] Call trace:
-> [ 5984.281415]  dump_backtrace+0x0/0x310
-> [ 5984.281418]  show_stack+0x28/0x38
-> [ 5984.281425]  dump_stack+0xec/0x15c
-> [ 5984.281430]  ubsan_epilogue+0x18/0x84
-> [ 5984.281434]  handle_overflow+0x14c/0x19c
-> [ 5984.281439]  __ubsan_handle_sub_overflow+0x34/0x44
-> [ 5984.281445]  is_mddev_idle+0x338/0x3d8
-> [ 5984.281449]  md_do_sync+0x1bb8/0x1cf8
-> [ 5984.281452]  md_thread+0x220/0x288
-> [ 5984.281457]  kthread+0x1d8/0x1e0
-> [ 5984.281461]  ret_from_fork+0x10/0x18
+> And it could cause deadlock problem for raid5 as follows:
 > 
-> When the stat aacum of the disk is greater than INT_MAX, its
-> value becomes negative after casting to 'int', which may lead
-> to overflow after subtracting a positive number. In the same
-> way, when the value of sync_io is greater than INT_MAX,
-> overflow may also occur. These situations will lead to
-> undefined behavior.
+> 1. process A tried to reap sync thread with reconfig_mutex held after echo
+>     idle to sync_action.
+> 2. raid5 sync thread was blocked if there were too many active stripes.
+> 3. SB_CHANGE_PENDING was set (because of write IO comes from upper layer)
+>     which causes the number of active stripes can't be decreased.
+> 4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was not able
+>     to hold reconfig_mutex.
 > 
-> Otherwise, if the stat accum of the disk is close to INT_MAX
-> when creating raid arrays, the initial value of last_events
-> would be set close to INT_MAX when mddev initializes IO
-> event counters. 'curr_events - rdev->last_events > 64' will
-> always false during synchronization. If all the disks of mddev
-> are in this case, is_mddev_idle() will always return 1, which
-> may cause non-sync IO is very slow.
+> More details in the link:
+> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t
 > 
-> Fix by using atomic64_t type for sync_io, and using s64 type
-> for curr_events/last_events.
+> And add one parameter to md_reap_sync_thread since it could be called by
+> dm-raid which doesn't hold reconfig_mutex.
 > 
-> Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+> Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
+> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 > ---
->  drivers/md/md.c       | 6 +++---
->  drivers/md/md.h       | 4 ++--
->  include/linux/genhd.h | 2 +-
->  3 files changed, 6 insertions(+), 6 deletions(-)
+> V2:
+> 1. add one parameter to md_reap_sync_thread per Jack's suggestion.
 > 
+>   drivers/md/dm-raid.c |  2 +-
+>   drivers/md/md.c      | 14 +++++++++-----
+>   drivers/md/md.h      |  2 +-
+>   3 files changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index cab12b2..0c4cbba 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -3668,7 +3668,7 @@ static int raid_message(struct dm_target *ti, unsigned int argc, char **argv,
+>   	if (!strcasecmp(argv[0], "idle") || !strcasecmp(argv[0], "frozen")) {
+>   		if (mddev->sync_thread) {
+>   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -			md_reap_sync_thread(mddev);
+> +			md_reap_sync_thread(mddev, false);
+>   		}
+>   	} else if (decipher_sync_action(mddev, mddev->recovery) != st_idle)
+>   		return -EBUSY;
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5111ed966947..be73a5ae6864 100644
+> index ca40942..0c12b7f 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
->  {
->  	struct md_rdev *rdev;
->  	int idle;
-> -	int curr_events;
-> +	s64 curr_events;
->  
->  	idle = 1;
->  	rcu_read_lock();
->  	rdev_for_each_rcu(rdev, mddev) {
->  		struct gendisk *disk = rdev->bdev->bd_disk;
-> -		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
-> -			      atomic_read(&disk->sync_io);
-> +		curr_events = (s64)part_stat_read_accum(disk->part0, sectors) -
-> +			      atomic64_read(&disk->sync_io);
->  		/* sync IO will cause sync_io to increase before the disk_stats
->  		 * as sync_io is counted when a request starts, and
->  		 * disk_stats is counted when it completes.
+> @@ -4857,7 +4857,7 @@ action_store(struct mddev *mddev, const char *page, size_t len)
+>   				flush_workqueue(md_misc_wq);
+>   			if (mddev->sync_thread) {
+>   				set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -				md_reap_sync_thread(mddev);
+> +				md_reap_sync_thread(mddev, true);
+>   			}
+>   			mddev_unlock(mddev);
+>   		}
+> @@ -6234,7 +6234,7 @@ static void __md_stop_writes(struct mddev *mddev)
+>   		flush_workqueue(md_misc_wq);
+>   	if (mddev->sync_thread) {
+>   		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -		md_reap_sync_thread(mddev);
+> +		md_reap_sync_thread(mddev, true);
+>   	}
+>   
+>   	del_timer_sync(&mddev->safemode_timer);
+> @@ -9256,7 +9256,7 @@ void md_check_recovery(struct mddev *mddev)
+>   			 * ->spare_active and clear saved_raid_disk
+>   			 */
+>   			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> -			md_reap_sync_thread(mddev);
+> +			md_reap_sync_thread(mddev, true);
+>   			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>   			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   			clear_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags);
+> @@ -9291,7 +9291,7 @@ void md_check_recovery(struct mddev *mddev)
+>   			goto unlock;
+>   		}
+>   		if (mddev->sync_thread) {
+> -			md_reap_sync_thread(mddev);
+> +			md_reap_sync_thread(mddev, true);
+>   			goto unlock;
+>   		}
+>   		/* Set RUNNING before clearing NEEDED to avoid
+> @@ -9364,14 +9364,18 @@ void md_check_recovery(struct mddev *mddev)
+>   }
+>   EXPORT_SYMBOL(md_check_recovery);
+>   
+> -void md_reap_sync_thread(struct mddev *mddev)
+> +void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held)
+>   {
+>   	struct md_rdev *rdev;
+>   	sector_t old_dev_sectors = mddev->dev_sectors;
+>   	bool is_reshaped = false;
+>   
+>   	/* resync has finished, collect result */
+> +	if (reconfig_mutex_held)
+> +		mddev_unlock(mddev);
+
+
+If one thread got here, e.g. via action_store( /* "idle" */ ), now that the mutex is unlocked, is there anything which would prevent another thread getting  here as well, e.g. via the same path?
+
+If not, they both might call
+
+>   	md_unregister_thread(&mddev->sync_thread);
+
+Which is not reentrant:
+
+void md_unregister_thread(struct md_thread **threadp)
+{
+	struct md_thread *thread = *threadp;
+	if (!thread)
+		return;
+	pr_debug("interrupting MD-thread pid %d\n", task_pid_nr(thread->tsk));
+	/* Locking ensures that mddev_unlock does not wake_up a
+	 * non-existent thread
+	 */
+	spin_lock(&pers_lock);
+	*threadp = NULL;
+	spin_unlock(&pers_lock);
+
+	kthread_stop(thread->tsk);
+	kfree(thread);
+}
+
+This might be a preexisting problem, because the call site in dm-raid.c, which you updated to `md_reap_sync_thread(mddev, false);`, didn't hold the mutex anyway.
+
+Am I missing something? Probably, I do.
+
+Otherwise: Move the deref of threadp in md_unregister_thread() into the spinlock scope?
+
+Best
+   Donald
+
+> +	if (reconfig_mutex_held)
+> +		mddev_lock_nointr(mddev);
+>   	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+>   	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery) &&
+>   	    mddev->degraded != mddev->raid_disks) {
 > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 53ea7a6961de..e00d6730da13 100644
+> index 34070ab..7ae3d98 100644
 > --- a/drivers/md/md.h
 > +++ b/drivers/md/md.h
-> @@ -50,7 +50,7 @@ struct md_rdev {
->  
->  	sector_t sectors;		/* Device size (in 512bytes sectors) */
->  	struct mddev *mddev;		/* RAID array if running */
-> -	int last_events;		/* IO event timestamp */
-> +	s64 last_events;		/* IO event timestamp */
->  
->  	/*
->  	 * If meta_bdev is non-NULL, it means that a separate device is
-> @@ -551,7 +551,7 @@ extern void mddev_unlock(struct mddev *mddev);
->  
->  static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
->  {
-> -	atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
-> +	atomic64_add(nr_sectors, &bdev->bd_disk->sync_io);
->  }
->  
->  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 74c410263113..efa7884de11b 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -150,7 +150,7 @@ struct gendisk {
->  	struct list_head slave_bdevs;
->  #endif
->  	struct timer_rand_state *random;
-> -	atomic_t sync_io;		/* RAID */
-> +	atomic64_t sync_io;		/* RAID */
->  	struct disk_events *ev;
->  #ifdef  CONFIG_BLK_DEV_INTEGRITY
->  	struct kobject integrity_kobj;
+> @@ -705,7 +705,7 @@ extern struct md_thread *md_register_thread(
+>   extern void md_unregister_thread(struct md_thread **threadp);
+>   extern void md_wakeup_thread(struct md_thread *thread);
+>   extern void md_check_recovery(struct mddev *mddev);
+> -extern void md_reap_sync_thread(struct mddev *mddev);
+> +extern void md_reap_sync_thread(struct mddev *mddev, bool reconfig_mutex_held);
+>   extern int mddev_init_writes_pending(struct mddev *mddev);
+>   extern bool md_write_start(struct mddev *mddev, struct bio *bi);
+>   extern void md_write_inc(struct mddev *mddev, struct bio *bi);
 > 
-You haven't answered my question.
-This patch has exactly the same problem than the original, only shifted
-to LONG_MAX instead of INT_MAX.
 
-Have you considered decreasing 'sync_io' in the endio handler, and then
-just using the 'sync_io' value to figure out if sync_io is active?
-
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
