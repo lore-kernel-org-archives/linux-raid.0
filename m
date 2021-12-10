@@ -2,91 +2,85 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5F7AC433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  9 Dec 2021 19:20:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70548C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 01:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229699AbhLITYY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Dec 2021 14:24:24 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:9374 "EHLO smtp.hosts.co.uk"
+        id S235101AbhLJBKo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Dec 2021 20:10:44 -0500
+Received: from out2.migadu.com ([188.165.223.204]:16206 "EHLO out2.migadu.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229379AbhLITYY (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 9 Dec 2021 14:24:24 -0500
-Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1mvOIK-0002D4-EG; Thu, 09 Dec 2021 18:37:29 +0000
-Message-ID: <8f24c6f7-1799-e318-1b6c-e54083229b8b@youngman.org.uk>
-Date:   Thu, 9 Dec 2021 18:37:26 +0000
+        id S230526AbhLJBKo (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 9 Dec 2021 20:10:44 -0500
+Subject: Re: [PATCH V2] md: don't unregister sync_thread with reconfig_mutex
+ held
+To:     Donald Buczek <buczek@molgen.mpg.de>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, song@kernel.org
+Cc:     agk@redhat.com, snitzer@redhat.com, linux-raid@vger.kernel.org,
+        dm-devel@redhat.com, it+raid@molgen.mpg.de
+References: <1613177399-22024-1-git-send-email-guoqing.jiang@cloud.ionos.com>
+ <36a660ed-b995-839e-ac82-dc4ca25ccb8a@molgen.mpg.de>
+ <2cefad59-c0fc-d48f-f7a5-5d593931feb7@molgen.mpg.de>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+Message-ID: <43ae2d60-4f28-07ea-95dc-ae722ca13b23@linux.dev>
+Date:   Fri, 10 Dec 2021 09:06:57 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v3 3/6] badblocks: improvement badblocks_set() for
- multiple ranges handling
+In-Reply-To: <2cefad59-c0fc-d48f-f7a5-5d593931feb7@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-To:     Geliang Tang <geliang.tang@suse.com>, Coly Li <colyli@suse.de>
-Cc:     nvdimm@lists.linux.dev, linux-block@vger.kernel.org,
-        linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>,
-        Vishal L Verma <vishal.l.verma@intel.com>
-References: <20211202125245.76699-1-colyli@suse.de>
- <20211202125245.76699-4-colyli@suse.de>
- <20211209072859.GB26976@dhcp-10-157-36-190>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <20211209072859.GB26976@dhcp-10-157-36-190>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
+X-Migadu-Auth-User: guoqing.jiang@linux.dev
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 09/12/2021 07:28, Geliang Tang wrote:
-> On Thu, Dec 02, 2021 at 08:52:41PM +0800, Coly Li wrote:
->> Recently I received a bug report that current badblocks code does not
 
-> 
->> + *        +--------+----+
->> + *        |    S   | E  |
->> + *        +--------+----+
->> + * 2.2) The setting range size == already set range size
->> + * 2.2.1) If S and E are both acked or unacked range, the setting range S can
->> + *    be merged into existing bad range E. The result is,
->> + *        +-------------+
->> + *        |      S      |
->> + *        +-------------+
->> + * 2.2.2) If S is uncked setting and E is acked, the setting will be denied, and
-> 
-> uncked -> unacked
-> 
->> + *    the result is,
->> + *        +-------------+
->> + *        |      E      |
->> + *        +-------------+
->> + * 2.2.3) If S is acked setting and E is unacked, range S can overwirte all of
 
-overwirte -> overwrite
+On 12/9/21 8:57 PM, Donald Buczek wrote:
+> [Update Guoqing’s email address]
+>
+> On 15.02.21 12:07, Paul Menzel wrote:
+>> [+cc Donald]
+>>
+>> Am 13.02.21 um 01:49 schrieb Guoqing Jiang:
+>>> Unregister sync_thread doesn't need to hold reconfig_mutex since it
+>>> doesn't reconfigure array.
+>>>
+>>> And it could cause deadlock problem for raid5 as follows:
+>>>
+>>> 1. process A tried to reap sync thread with reconfig_mutex held 
+>>> after echo
+>>>     idle to sync_action.
+>>> 2. raid5 sync thread was blocked if there were too many active stripes.
+>>> 3. SB_CHANGE_PENDING was set (because of write IO comes from upper 
+>>> layer)
+>>>     which causes the number of active stripes can't be decreased.
+>>> 4. SB_CHANGE_PENDING can't be cleared since md_check_recovery was 
+>>> not able
+>>>     to hold reconfig_mutex.
+>>>
+>>> More details in the link:
+>>> https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#t 
+>>>
+>>>
+>>> And add one parameter to md_reap_sync_thread since it could be 
+>>> called by
+>>> dm-raid which doesn't hold reconfig_mutex.
+>>>
+>>> Reported-and-tested-by: Donald Buczek <buczek@molgen.mpg.de>
+>
+> Thanks, Paul, for putting me into the cc.
+>
+> Guoqing, I don't think, I've tested this patch. Please remove the 
+> tested-by.
 
->> +      bad blocks range E. The result is,
->> + *        +-------------+
->> + *        |      S      |
->> + *        +-------------+
->> + * 2.3) The setting range size > already set range size
->> + *        +-------------------+
->> + *        |          S        |
->> + *        +-------------------+
->> + *        +-------------+
->> + *        |      E      |
->> + *        +-------------+
->> + *    For such situation, the setting range S can be treated as two parts, the
->> + *    first part (S1) is as same size as the already set range E, the second
->> + *    part (S2) is the rest of setting range.
->> + *        +-------------+-----+        +-------------+       +-----+
->> + *        |    S1       | S2  |        |     S1      |       | S2  |
->> + *        +-------------+-----+  ===>  +-------------+       +-----+
->> + *        +-------------+              +-------------+
->> + *        |      E      |              |      E      |
->> + *        +-------------+              +-------------+
->> + *    Now we only focus on how to handle the setting range S1 and already set
->> + *    range E, which are already explained in 1.2), for the rest S2 it will be
-> 
-Cheers,
-Wol
+This version is basically the similar as the change in the thread.
+
+https://lore.kernel.org/linux-raid/5ed54ffc-ce82-bf66-4eff-390cb23bc1ac@molgen.mpg.de/T/#m546d8c55a42f308985b9d31d4be85832edcd15ab
+
+Anyway, I will remove your tested-by per the request if I will update 
+the patch.
+
+Thanks,
+Guoqing
