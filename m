@@ -2,411 +2,108 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 984EEC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 07:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39FC5C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 07:18:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237385AbhLJHUv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 10 Dec 2021 02:20:51 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:47773 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237246AbhLJHUv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Dec 2021 02:20:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1639120636; x=1670656636;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=7FfogzDJZyAmmUkEN16snEUFpH3F6ooonfvy8tAEA4w=;
-  b=SFD0Wq6aYCfdkdQIRhWUm6X4Qc3blm+h4FMGen1sEqcTrHlpNw4bLNfk
-   1CTPTqUtC4eD2HfenKRzNe6ggt0PHyQVyCuhg4+t4G9gtrj1qIKOdUasE
-   KGt7jtvWzSRormHPCS+EHCSjiVCHV7Qa/W8Dydhr0CZTNLbfaJjuEWA5k
-   5y1xszWtFohyTmni2QAQQnhSQjC4eGVAK2qvaKLKfdDelF/llX3x66h4F
-   6l32dmCY71YHmuB5zAihM5cr4V40/EUO6VAI4awuOIxawL2o+RxGJFxfz
-   P2E7U/uDXQ7GxalG7P0JzPJXzWhcA52g15bJ/MTPq069blMTPVDEuTFcG
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,194,1635177600"; 
-   d="scan'208";a="192699728"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Dec 2021 15:17:15 +0800
-IronPort-SDR: h3ExUe7l1fIlygWlvOpkaJn4lQGBw8j90NdfTlCvHUGU/N8Ql7sUPnQDBUsQiEKlMXcNCJp/xN
- hRwRyL5dSFMQ4IFug9XQ+oVbZRj5LsMedWtGy/Vz1V7ufcshVooUX240R5NtGDkUEfqntIghzM
- 6bqApGpRiStmkn28NAmMgAxSUzmVXr1kvNUA6LtsQac8tzRmx11KKVQ5JqLTtbgs/Wrx0Bls1m
- S7HktQXTXR2nbPsWAoyPEBa9Lt9zuAYMxKPGfMIbZng/xtAjXeTqI3FSGdiS6ZrKcloMeccuPf
- mA2yRSZIOKN/lXGkBIQB4wca
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Dec 2021 22:50:18 -0800
-IronPort-SDR: DM1ARlW7jrt2KQUjxE7aE8K2tKOo7LAW/2CvV+9DwAJWNd3S+vgg3a76Uq/zXPIGa9j6Q1thzk
- sv6yudSPZJg8INqHMOpH2353cXzeo1PKQnoJ/8/EINihxxlFd3vsGPTQ7HL8biNJpQTVmdUKvo
- h1lLS6naY4mW7NPumM9Pd287un91KaKZ/h0V4M2hyzTzJwAIInPYZ+qkX+pXf9nG7OyvZ+HcTm
- BLGLQkOd/FUu7MymGfZcBSKnPp26ZJUV5xMuO+pwSzHCNsefmIjvvXDqNZWAQQocDWhL1TDntm
- g7w=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Dec 2021 23:17:16 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J9Mfg5bzzz1Rwvd
-        for <linux-raid@vger.kernel.org>; Thu,  9 Dec 2021 23:17:15 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1639120634; x=1641712635; bh=7FfogzDJZyAmmUkEN16snEUFpH3F6ooonfv
-        y8tAEA4w=; b=FLNNOTlf886VbJW/cbE8UsVnfZ0jAVKa1bma8Ggo36pGz07jVwT
-        GcSoXE7t3MFRbs49zcFLBUl0mfbb+HOtwvyRHvEqCdk5NIgDRlXhVWhN3qJFqOAG
-        zHkw/zLBGxNCNS5nesuue9EQZRGRFYofPE29CdjHCyMNpXfhgeFPH3NSW+O4ob/y
-        WcVNfgb9D0DqTwIuypOMhmx2EQkJTW17UfqqadIxBz1cQ6f0hH9bBSZqXio0Bpx4
-        GJQw1MNGV35z+kSHhZ54iaYI2synkjg0XDjjZLvidJFmepYT16p8xJcqfDMhQPiv
-        FcOyr7GLmMQ1k0HA3QGYREyWeq0Z070QKOA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id YGiwaz1SbfPJ for <linux-raid@vger.kernel.org>;
-        Thu,  9 Dec 2021 23:17:14 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J9MfZ5t1Pz1RtVG;
-        Thu,  9 Dec 2021 23:17:10 -0800 (PST)
-Message-ID: <78032c30-3676-e772-bc8e-b9f00a652ce8@opensource.wdc.com>
-Date:   Fri, 10 Dec 2021 16:17:09 +0900
+        id S237417AbhLJHW0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 10 Dec 2021 02:22:26 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:49112 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237181AbhLJHWZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 10 Dec 2021 02:22:25 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4AD5DB82767
+        for <linux-raid@vger.kernel.org>; Fri, 10 Dec 2021 07:18:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AD13C341CA
+        for <linux-raid@vger.kernel.org>; Fri, 10 Dec 2021 07:18:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639120729;
+        bh=Tz37VLHjq8t0V4j3bMRL4B89VosEpskuN002+JUS8aA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=YTGl3PGAUcYVM0+bC4RvV/qmBTQ6lMqzG0waS/grRE7O+DMmVrKdnnzj1UHIuNWZu
+         LR4K97G39RfNFoY5koHUraZMXWjcX4InTOKlsgBs/Ji1Osschu5KSv9qiq7RJb5IOf
+         zPbfCTZ4z4tdnwraMoY55RNrEf9AD0UtBvk6GJXN9kYAA7+yRkkaqQIOhE+MbqCjaw
+         H08ul/CEm/Rdzb/xa5RpScq9wtFx0rPNgvx0s440R+bUqDTz5uiWUt+40WHgwnWFge
+         7Ylp/ahOgtGm612um+DTSqM7D98hLbVGD4Z3/hrjYehoAgQMjiImy1RM9x85AnPFTE
+         CYYimPzNcftMg==
+Received: by mail-yb1-f179.google.com with SMTP id 131so19228335ybc.7
+        for <linux-raid@vger.kernel.org>; Thu, 09 Dec 2021 23:18:49 -0800 (PST)
+X-Gm-Message-State: AOAM5323FDLPq9oqZspFS2FdKDs24kc0I++8M3rD+gCiajqJ6IguFwgF
+        B8lcxnS08aahg78otvsjZX764zrYS2Q+CMiu1cM=
+X-Google-Smtp-Source: ABdhPJzAQ5gNI2GBTMag8KSqp4YKUefc/EqxccXVCenKIalpy72DKArORmRybhLRDE9VgbU0isXy1KIPJI1xjTmBYYI=
+X-Received: by 2002:a25:850b:: with SMTP id w11mr1085048ybk.208.1639120728181;
+ Thu, 09 Dec 2021 23:18:48 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.4.0
-Subject: Re: [PATCH v2 1/3] md: Fix undefined behaviour in is_mddev_idle
-Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>, Li Jinlin <lijinlin3@huawei.com>,
-        song@kernel.org, philipp.reisner@linbit.com,
-        lars.ellenberg@linbit.com, axboe@kernel.dk, jack@suse.cz,
-        ming.lei@redhat.com, tj@kernel.org, mcgrof@kernel.org,
-        mcroce@microsoft.com
-Cc:     linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linfeilong@huawei.com
-References: <20211210051707.2202646-1-lijinlin3@huawei.com>
- <20211210051707.2202646-2-lijinlin3@huawei.com>
- <e9b03c2a-b1f6-e083-3a2b-bf1478628f31@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <e9b03c2a-b1f6-e083-3a2b-bf1478628f31@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
+ <20211110181441.9263-1-vverma@digitalocean.com> <20211110181441.9263-4-vverma@digitalocean.com>
+ <CAPhsuW5drRBWOV9-i7cQWHAwSe5qHff5k23Y2-LsNGS_s8updw@mail.gmail.com>
+In-Reply-To: <CAPhsuW5drRBWOV9-i7cQWHAwSe5qHff5k23Y2-LsNGS_s8updw@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 9 Dec 2021 23:18:37 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4bg4cNfXZ1-8KO90ZY5gxvKsz_aB7vWG2-LJS854_WVw@mail.gmail.com>
+Message-ID: <CAPhsuW4bg4cNfXZ1-8KO90ZY5gxvKsz_aB7vWG2-LJS854_WVw@mail.gmail.com>
+Subject: Re: [RFC PATCH v4 4/4] md: raid456 add nowait support
+To:     Vishal Verma <vverma@digitalocean.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2021/12/10 15:45, Hannes Reinecke wrote:
-> On 12/10/21 6:17 AM, Li Jinlin wrote:
->> UBSAN reports this problem:
->>
->> [ 5984.281385] UBSAN: Undefined behaviour in drivers/md/md.c:8175:15
->> [ 5984.281390] signed integer overflow:
->> [ 5984.281393] -2147483291 - 2072033152 cannot be represented in type 'int'
->> [ 5984.281400] CPU: 25 PID: 1854 Comm: md101_resync Kdump: loaded Not tainted 4.19.90
->> [ 5984.281404] Hardware name: Huawei TaiShan 200 (Model 5280)/BC82AMDDA
->> [ 5984.281406] Call trace:
->> [ 5984.281415]  dump_backtrace+0x0/0x310
->> [ 5984.281418]  show_stack+0x28/0x38
->> [ 5984.281425]  dump_stack+0xec/0x15c
->> [ 5984.281430]  ubsan_epilogue+0x18/0x84
->> [ 5984.281434]  handle_overflow+0x14c/0x19c
->> [ 5984.281439]  __ubsan_handle_sub_overflow+0x34/0x44
->> [ 5984.281445]  is_mddev_idle+0x338/0x3d8
->> [ 5984.281449]  md_do_sync+0x1bb8/0x1cf8
->> [ 5984.281452]  md_thread+0x220/0x288
->> [ 5984.281457]  kthread+0x1d8/0x1e0
->> [ 5984.281461]  ret_from_fork+0x10/0x18
->>
->> When the stat aacum of the disk is greater than INT_MAX, its
->> value becomes negative after casting to 'int', which may lead
->> to overflow after subtracting a positive number. In the same
->> way, when the value of sync_io is greater than INT_MAX,
->> overflow may also occur. These situations will lead to
->> undefined behavior.
->>
->> Otherwise, if the stat accum of the disk is close to INT_MAX
->> when creating raid arrays, the initial value of last_events
->> would be set close to INT_MAX when mddev initializes IO
->> event counters. 'curr_events - rdev->last_events > 64' will
->> always false during synchronization. If all the disks of mddev
->> are in this case, is_mddev_idle() will always return 1, which
->> may cause non-sync IO is very slow.
->>
->> To address these problems, need to use 64bit signed integer
->> type for sync_io, last_events, and curr_events.
->>
->> In all the drivers that come with the kernel, the sync_io
->> variable in struct gendisk is only used for the md driver
->> currently. It should be more suitable in struct md_rdev, so
->> add the sync_io variable in struct md_rdev, and use it to
->> replace. We modify md_sync_acct() and md_sync_acct_bio()
->> to fit for this change as well. md_sync_acct_bio() need
->> access to the rdev, so we set bio->bi_bdev to rdev before
->> calling it, and reset bio->bi_bdev to bdev in this function.
->>
-> Please make that two patches, one for moving sync_io and one for
-> fixing the undefined behaviour.
-> 
->> Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
->> ---
->>   drivers/md/md.c       |  6 +++---
->>   drivers/md/md.h       | 13 +++++++++----
->>   drivers/md/raid1.c    |  4 ++--
->>   drivers/md/raid10.c   | 24 ++++++++++++------------
->>   drivers/md/raid5.c    |  4 ++--
->>   include/linux/genhd.h |  1 -
->>   6 files changed, 28 insertions(+), 24 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 5111ed966947..f1b71a92801e 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -8429,14 +8429,14 @@ static int is_mddev_idle(struct mddev *mddev, int init)
->>   {
->>   	struct md_rdev *rdev;
->>   	int idle;
->> -	int curr_events;
->> +	s64 curr_events;
->>   
->>   	idle = 1;
->>   	rcu_read_lock();
->>   	rdev_for_each_rcu(rdev, mddev) {
->>   		struct gendisk *disk = rdev->bdev->bd_disk;
->> -		curr_events = (int)part_stat_read_accum(disk->part0, sectors) -
->> -			      atomic_read(&disk->sync_io);
->> +		curr_events = (s64)part_stat_read_accum(disk->part0, sectors) -
->> +			      atomic64_read(&rdev->sync_io);
-> 
-> So you are replacing a 'signed integer' (ie 32bit) calculation with a 
-> 'signed 64-bit integer' calculation.
-> IE you just shifted the overflow from INT_MAX to LONG_MAX, without 
-> actually fixing it, or?
-> 
->>   		/* sync IO will cause sync_io to increase before the disk_stats
->>   		 * as sync_io is counted when a request starts, and
->>   		 * disk_stats is counted when it completes.
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 53ea7a6961de..584e357e0940 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -50,7 +50,7 @@ struct md_rdev {
->>   
->>   	sector_t sectors;		/* Device size (in 512bytes sectors) */
->>   	struct mddev *mddev;		/* RAID array if running */
->> -	int last_events;		/* IO event timestamp */
->> +	s64 last_events;		/* IO event timestamp */
->>   
->>   	/*
->>   	 * If meta_bdev is non-NULL, it means that a separate device is
->> @@ -138,6 +138,8 @@ struct md_rdev {
->>   		unsigned int size;	/* Size in sectors of the PPL space */
->>   		sector_t sector;	/* First sector of the PPL space */
->>   	} ppl;
->> +
->> +	atomic64_t sync_io;		/* counter of sync IO (unit sectors) */
->>   };
->>   enum flag_bits {
->>   	Faulty,			/* device is known to have a fault */
->> @@ -549,14 +551,17 @@ static inline int mddev_trylock(struct mddev *mddev)
->>   }
->>   extern void mddev_unlock(struct mddev *mddev);
->>   
->> -static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
->> +static inline void md_sync_acct(struct md_rdev *rdev, unsigned long nr_sectors)
->>   {
->> -	atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
->> +	atomic64_add(nr_sectors, &rdev->sync_io);
->>   }
->>   
->>   static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
->>   {
->> -	md_sync_acct(bio->bi_bdev, nr_sectors);
->> +	struct md_rdev *rdev = (void *)bio->bi_bdev;
-> 
-> That look weird. bio->bi_bdev should be a 'struct gendisk', not a MD 
-> internal data structure.
+On Thu, Dec 9, 2021 at 6:16 PM Song Liu <song@kernel.org> wrote:
+>
+> On Wed, Nov 10, 2021 at 10:15 AM Vishal Verma <vverma@digitalocean.com> wrote:
+> >
+> > Returns EAGAIN in case the raid456 driver would block
+> > waiting for situations like:
+> >
+> >   - Reshape operation,
+> >   - Discard operation.
+> >
+> > Signed-off-by: Vishal Verma <vverma@digitalocean.com>
+> > ---
+> >  drivers/md/raid5.c | 14 ++++++++++++++
+> >  1 file changed, 14 insertions(+)
+> >
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 9c1a5877cf9f..fa64ee315241 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -5710,6 +5710,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+> >                 int d;
+> >         again:
+> >                 sh = raid5_get_active_stripe(conf, logical_sector, 0, 0, 0);
+> > +               /* Bail out if REQ_NOWAIT is set */
+> > +               if (bi->bi_opf & REQ_NOWAIT) {
+> > +                       bio_wouldblock_error(bi);
+> > +                       return;
+> > +               }
+>
+> This is not right. raid5_get_active_stripe() gets refcount on the sh,
+> we cannot simply
+> return here. I think we need the logic after raid5_release_stripe()
+> and before schedule().
+>
+> >                 prepare_to_wait(&conf->wait_for_overlap, &w,
+> >                                 TASK_UNINTERRUPTIBLE);
+> >                 set_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags);
+> > @@ -5820,6 +5825,15 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+> >         bi->bi_next = NULL;
+> >
+> >         md_account_bio(mddev, &bi);
+> > +       /* Bail out if REQ_NOWAIT is set */
+> > +       if (bi->bi_opf & REQ_NOWAIT &&
+> > +           conf->reshape_progress != MaxSector &&
+> > +           mddev->reshape_backwards
+> > +           ? logical_sector < conf->reshape_safe
+> > +           : logical_sector >= conf->reshape_safe) {
 
-You mean a "struct block_device". right ? :)
+There is also an Operator Precedence bug here. "&&" goes before "?
+:", so we need
+"()" around the "? :" block.
 
-> 
->> +
->> +	bio_set_dev(bio, rdev->bdev);
->> +	md_sync_acct(rdev, nr_sectors);
->>   }
->>   
->>   struct md_personality
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index 7dc8026cf6ee..74c42dabe57c 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -2232,7 +2232,7 @@ static void sync_request_write(struct mddev *mddev, struct r1bio *r1_bio)
->>   
->>   		wbio->bi_end_io = end_sync_write;
->>   		atomic_inc(&r1_bio->remaining);
->> -		md_sync_acct(conf->mirrors[i].rdev->bdev, bio_sectors(wbio));
->> +		md_sync_acct(conf->mirrors[i].rdev, bio_sectors(wbio));
->>   
->>   		submit_bio_noacct(wbio);
->>   	}
->> @@ -2791,7 +2791,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
->>   		if (rdev && bio->bi_end_io) {
->>   			atomic_inc(&rdev->nr_pending);
->>   			bio->bi_iter.bi_sector = sector_nr + rdev->data_offset;
->> -			bio_set_dev(bio, rdev->bdev);
->> +			bio->bi_bdev = (void *)rdev;
->>   			if (test_bit(FailFast, &rdev->flags))
->>   				bio->bi_opf |= MD_FAILFAST;
->>   		}
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index dde98f65bd04..fc1e6c0996de 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -2407,7 +2407,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>   
->>   		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
->>   		atomic_inc(&r10_bio->remaining);
->> -		md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(tbio));
->> +		md_sync_acct(conf->mirrors[d].rdev, bio_sectors(tbio));
->>   
->>   		if (test_bit(FailFast, &conf->mirrors[d].rdev->flags))
->>   			tbio->bi_opf |= MD_FAILFAST;
->> @@ -2430,7 +2430,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>   			bio_copy_data(tbio, fbio);
->>   		d = r10_bio->devs[i].devnum;
->>   		atomic_inc(&r10_bio->remaining);
->> -		md_sync_acct(conf->mirrors[d].replacement->bdev,
->> +		md_sync_acct(conf->mirrors[d].replacement,
->>   			     bio_sectors(tbio));
->>   		submit_bio_noacct(tbio);
->>   	}
->> @@ -2562,12 +2562,12 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>   		wbio2 = NULL;
->>   	if (wbio->bi_end_io) {
->>   		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
->> -		md_sync_acct(conf->mirrors[d].rdev->bdev, bio_sectors(wbio));
->> +		md_sync_acct(conf->mirrors[d].rdev, bio_sectors(wbio));
->>   		submit_bio_noacct(wbio);
->>   	}
->>   	if (wbio2) {
->>   		atomic_inc(&conf->mirrors[d].replacement->nr_pending);
->> -		md_sync_acct(conf->mirrors[d].replacement->bdev,
->> +		md_sync_acct(conf->mirrors[d].replacement,
->>   			     bio_sectors(wbio2));
->>   		submit_bio_noacct(wbio2);
->>   	}
->> @@ -3486,7 +3486,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->>   				from_addr = r10_bio->devs[j].addr;
->>   				bio->bi_iter.bi_sector = from_addr +
->>   					rdev->data_offset;
->> -				bio_set_dev(bio, rdev->bdev);
->> +				bio->bi_bdev = (void *)rdev;
->>   				atomic_inc(&rdev->nr_pending);
->>   				/* and we write to 'i' (if not in_sync) */
->>   
->> @@ -3508,7 +3508,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->>   					bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
->>   					bio->bi_iter.bi_sector = to_addr
->>   						+ mrdev->data_offset;
->> -					bio_set_dev(bio, mrdev->bdev);
->> +					bio->bi_bdev = (void *)mrdev;
->>   					atomic_inc(&r10_bio->remaining);
->>   				} else
->>   					r10_bio->devs[1].bio->bi_end_io = NULL;
->> @@ -3529,7 +3529,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->>   				bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
->>   				bio->bi_iter.bi_sector = to_addr +
->>   					mreplace->data_offset;
->> -				bio_set_dev(bio, mreplace->bdev);
->> +				bio->bi_bdev = (void *)mreplace;
->>   				atomic_inc(&r10_bio->remaining);
->>   				break;
->>   			}
->> @@ -3684,7 +3684,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->>   			if (test_bit(FailFast, &rdev->flags))
->>   				bio->bi_opf |= MD_FAILFAST;
->>   			bio->bi_iter.bi_sector = sector + rdev->data_offset;
->> -			bio_set_dev(bio, rdev->bdev);
->> +			bio->bi_bdev = (void *)rdev;
->>   			count++;
->>   
->>   			rdev = rcu_dereference(conf->mirrors[d].replacement);
->> @@ -3706,7 +3706,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
->>   			if (test_bit(FailFast, &rdev->flags))
->>   				bio->bi_opf |= MD_FAILFAST;
->>   			bio->bi_iter.bi_sector = sector + rdev->data_offset;
->> -			bio_set_dev(bio, rdev->bdev);
->> +			bio->bi_bdev = (void *)rdev;
->>   			count++;
->>   			rcu_read_unlock();
->>   		}
->> @@ -4865,7 +4865,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
->>   
->>   	read_bio = bio_alloc_bioset(GFP_KERNEL, RESYNC_PAGES, &mddev->bio_set);
->>   
->> -	bio_set_dev(read_bio, rdev->bdev);
->> +	read_bio->bi_bdev = (void *)rdev;
->>   	read_bio->bi_iter.bi_sector = (r10_bio->devs[r10_bio->read_slot].addr
->>   			       + rdev->data_offset);
->>   	read_bio->bi_private = r10_bio;
->> @@ -4921,7 +4921,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
->>   		if (!rdev2 || test_bit(Faulty, &rdev2->flags))
->>   			continue;
->>   
->> -		bio_set_dev(b, rdev2->bdev);
->> +		b->bi_bdev = (void *)rdev2;
->>   		b->bi_iter.bi_sector = r10_bio->devs[s/2].addr +
->>   			rdev2->new_data_offset;
->>   		b->bi_end_io = end_reshape_write;
->> @@ -5016,7 +5016,7 @@ static void reshape_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>   		}
->>   		atomic_inc(&rdev->nr_pending);
->>   		rcu_read_unlock();
->> -		md_sync_acct_bio(b, r10_bio->sectors);
->> +		md_sync_acct(rdev, r10_bio->sectors);
->>   		atomic_inc(&r10_bio->remaining);
->>   		b->bi_next = NULL;
->>   		submit_bio_noacct(b);
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 9c1a5877cf9f..b932282ff50a 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -1167,7 +1167,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
->>   		if (rdev) {
->>   			if (s->syncing || s->expanding || s->expanded
->>   			    || s->replacing)
->> -				md_sync_acct(rdev->bdev, RAID5_STRIPE_SECTORS(conf));
->> +				md_sync_acct(rdev, RAID5_STRIPE_SECTORS(conf));
->>   
->>   			set_bit(STRIPE_IO_STARTED, &sh->state);
->>   
->> @@ -1234,7 +1234,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
->>   		if (rrdev) {
->>   			if (s->syncing || s->expanding || s->expanded
->>   			    || s->replacing)
->> -				md_sync_acct(rrdev->bdev, RAID5_STRIPE_SECTORS(conf));
->> +				md_sync_acct(rrdev, RAID5_STRIPE_SECTORS(conf));
->>   
->>   			set_bit(STRIPE_IO_STARTED, &sh->state);
->>   
->> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
->> index 74c410263113..6b84444111e4 100644
->> --- a/include/linux/genhd.h
->> +++ b/include/linux/genhd.h
->> @@ -150,7 +150,6 @@ struct gendisk {
->>   	struct list_head slave_bdevs;
->>   #endif
->>   	struct timer_rand_state *random;
->> -	atomic_t sync_io;		/* RAID */
->>   	struct disk_events *ev;
->>   #ifdef  CONFIG_BLK_DEV_INTEGRITY
->>   	struct kobject integrity_kobj;
->>
-> 
-> Cheers,
-> 
-> Hannes
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+Song
