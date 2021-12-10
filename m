@@ -2,113 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FCBC433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 02:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED961C433FE
+	for <linux-raid@archiver.kernel.org>; Fri, 10 Dec 2021 02:27:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234314AbhLJCUw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 9 Dec 2021 21:20:52 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:20586 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231620AbhLJCUv (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 21:20:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1639102637;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=E+4efD1Z0dzZVosd9r/Ci6gd+zJYMhDI7V9TJDliWtI=;
-        b=DusasbTnw0q3jOXp3w7izaGuiwQvZ19zEa6HA9ybz8EZNzZBbjHyt+HYGxdKpspdYTtjVm
-        ON4q3xaFlCGJf9cJ6l0l+q2zsE7IavpFG94fThD6WoxFV+yjSV4fsMVYFjT8SPC9ElCMpf
-        pabx3Kkmn+r6CwkmTSM4YfXBugV1Opk=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-159-5W01T1feOF2AaSx_xC-Z9Q-1; Thu, 09 Dec 2021 21:17:16 -0500
-X-MC-Unique: 5W01T1feOF2AaSx_xC-Z9Q-1
-Received: by mail-ed1-f71.google.com with SMTP id q17-20020aa7da91000000b003e7c0641b9cso6913930eds.12
-        for <linux-raid@vger.kernel.org>; Thu, 09 Dec 2021 18:17:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=E+4efD1Z0dzZVosd9r/Ci6gd+zJYMhDI7V9TJDliWtI=;
-        b=uPD1uN+iLsaSyamWBxmVhKctVNeHRfUSe2KtZ7tuix6blQM08nwGbkaaiTiwu1Uj6T
-         Ru/m9gKY9zujRHZ3oU6ic2+TEKwGyF9mv1ao3LkDBKxTvZj9tCabsnibNkMkPjmr/oBJ
-         iwpX1HKSIunzmEumnXXv/AmiMd5plosp3zFw7pcI4hOur2s3smi0Grn5Sfa9kqjslntU
-         J7pC6e5YH8Ubkm9fj9Z7mx9AztbAgfnCVy4oOaXwIzC+yzoBGkVbgX8XVjxyRqbtbu5k
-         4NnbIyoeBdpKsUJ31vy/80ZtG4F4CswAl3x+7KEHsLZ3VRGw4YwAUctR7/t8ylcFC93K
-         U5Fw==
-X-Gm-Message-State: AOAM530ugd0oYinCCDtvvOxkjHXMUklRA8knJdbvxE1bFVg5su2lg+JD
-        QacUfiEDsRXPC7+aKG1dNlixqWQjmdv9WPFPIDmI8qEDiSHV+w7KHO9uJe6g/5SGtGojM10G09u
-        0xhndVkrSgrGKUF83cdrjb+ffEktWd+RZe95T+g==
-X-Received: by 2002:a17:906:9bf9:: with SMTP id de57mr20874575ejc.439.1639102634740;
-        Thu, 09 Dec 2021 18:17:14 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyC1hdfQfBjju22JWbDY2MiEIjbzNZ4vJLtLVuJbH29iiugLBgsHSZUSDXSJw4g/lLwYQotFKiHXT2HvMyvs70=
-X-Received: by 2002:a17:906:9bf9:: with SMTP id de57mr20874554ejc.439.1639102634599;
- Thu, 09 Dec 2021 18:17:14 -0800 (PST)
+        id S236025AbhLJCbF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 9 Dec 2021 21:31:05 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:46428 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236010AbhLJCbF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 9 Dec 2021 21:31:05 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id B7710CE2996
+        for <linux-raid@vger.kernel.org>; Fri, 10 Dec 2021 02:27:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E349CC341C6
+        for <linux-raid@vger.kernel.org>; Fri, 10 Dec 2021 02:27:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639103247;
+        bh=MvG18vWU7Stpf+612BhrO9IFuO8xqHuvaaAOUbRQgMA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ExqZMqf4PXEjhXiInXCrLT1rOqMa+FuIW7YXEGGavxq/rdBu4dP2VoOuGS39o2bk4
+         nHIv4m1EUdPULpTZRn7+B3KtdNR03qjKg9YYehfKkXtjaTZjOo9geHo3USSu2nouvg
+         QlL9U1QtOrBpvXnwG9/6m3EscoxDvW7+rk9URnO6sbjigL62PBrmQ7RFzynhSHofCQ
+         pG/s7Mzs1f1v+yCM0nj9Si9ACUrzKVACjUwcM4QUEHk8MO4yjR3HInqsT9IFngRziA
+         lseXgdwZSh9rg6Zqa855EOFkrNJR8eFkCzcj7W8uITkl2ukfrZTYx5zhb7NH3vABDm
+         vqgnivSk2ygjg==
+Received: by mail-yb1-f178.google.com with SMTP id 131so18142006ybc.7
+        for <linux-raid@vger.kernel.org>; Thu, 09 Dec 2021 18:27:27 -0800 (PST)
+X-Gm-Message-State: AOAM532ujz4YM9apwW8Eg6MIb6Ck6X/S91tNcRN49ueynCnm9kEufABY
+        goaoe1xMhXJX3ZbY/7OBn0+Dy09kpG3rCC1+HF0=
+X-Google-Smtp-Source: ABdhPJwqHPR+Ka3GIBrdidTbCeSh7B8jCwBxQkejQj+yyJ3sP1spi9oWKRr/MzWT3l1DT7WqbPYJNXl4Szwgm8pCGAM=
+X-Received: by 2002:a25:26cb:: with SMTP id m194mr10809224ybm.558.1639103247011;
+ Thu, 09 Dec 2021 18:27:27 -0800 (PST)
 MIME-Version: 1.0
 References: <1639029324-4026-1-git-send-email-xni@redhat.com>
  <1639029324-4026-2-git-send-email-xni@redhat.com> <CAPhsuW48S-L9QTH6q_7+Nq0+MmOfswPu5epMq=bkGokxBRE2ew@mail.gmail.com>
- <CALTww29Q57wDf4eWn31ChaU4dW7A=DehdtVkL-8oyzfxnwZY6w@mail.gmail.com> <c77770d1-3496-9fb9-9035-0c4d259572db@linux.dev>
-In-Reply-To: <c77770d1-3496-9fb9-9035-0c4d259572db@linux.dev>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Fri, 10 Dec 2021 10:17:04 +0800
-Message-ID: <CALTww2_O_p-hAaRnaZdC08hSU+ziSjnkVPA9er-Om=+Ded-opg@mail.gmail.com>
+ <CALTww29Q57wDf4eWn31ChaU4dW7A=DehdtVkL-8oyzfxnwZY6w@mail.gmail.com>
+In-Reply-To: <CALTww29Q57wDf4eWn31ChaU4dW7A=DehdtVkL-8oyzfxnwZY6w@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 9 Dec 2021 18:27:15 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW59g9mZNJ4mX8rviCnN6n3Ap8tA+215Ri+t727=3POKzw@mail.gmail.com>
+Message-ID: <CAPhsuW59g9mZNJ4mX8rviCnN6n3Ap8tA+215Ri+t727=3POKzw@mail.gmail.com>
 Subject: Re: [PATCH 1/2] md/raid0: Free r0conf memory when register integrity failed
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     Song Liu <song@kernel.org>, Nigel Croxon <ncroxon@redhat.com>,
+To:     Xiao Ni <xni@redhat.com>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Nigel Croxon <ncroxon@redhat.com>,
         linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Dec 10, 2021 at 10:07 AM Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
+On Thu, Dec 9, 2021 at 5:19 PM Xiao Ni <xni@redhat.com> wrote:
 >
-> Maybe something like this, just FYI.
+> On Fri, Dec 10, 2021 at 2:02 AM Song Liu <song@kernel.org> wrote:
+> >
+> > On Wed, Dec 8, 2021 at 9:55 PM Xiao Ni <xni@redhat.com> wrote:
+> > >
+> > > It doesn't free memory when register integrity failed. And move
+> > > free conf codes into a single function.
+> > >
+> > > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > > ---
+> > >  drivers/md/raid0.c | 18 +++++++++++++++---
+> > >  1 file changed, 15 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> > > index 62c8b6adac70..3fa47df1c60e 100644
+> > > --- a/drivers/md/raid0.c
+> > > +++ b/drivers/md/raid0.c
+> > > @@ -356,6 +356,7 @@ static sector_t raid0_size(struct mddev *mddev, sector_t sectors, int raid_disks
+> > >         return array_sectors;
+> > >  }
+> > >
+> > > +static void free_conf(struct r0conf *conf);
+> > >  static void raid0_free(struct mddev *mddev, void *priv);
+> > >
+> > >  static int raid0_run(struct mddev *mddev)
+> > > @@ -413,19 +414,30 @@ static int raid0_run(struct mddev *mddev)
+> > >         dump_zones(mddev);
+> > >
+> > >         ret = md_integrity_register(mddev);
+> > > +       if (ret)
+> > > +               goto free;
+> > >
+> > >         return ret;
+> > > +
+> > > +free:
+> > > +       free_conf(conf);
+> >
+> > Can we just use raid0_free() here? Also, after freeing conf,
 >
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 62c8b6adac70..c24bec49b36f 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -377,6 +377,12 @@ static int raid0_run(struct mddev *mddev)
->                          return ret;
->                  mddev->private = conf;
->          }
-> +
-> +       if (acct_bioset_init(mddev)) {
-> +               pr_err("md/raid0:%s: alloc acct bioset failed.\n",
-> mdname(mddev));
-> +               return -ENOMEM;
-> +       }
-> +
->          conf = mddev->private;
->          if (mddev->queue) {
->                  struct md_rdev *rdev;
-> @@ -413,6 +419,11 @@ static int raid0_run(struct mddev *mddev)
->          dump_zones(mddev);
+> At first I used raid0_free too. But it looks strange after adding
+> acct_bioset_exit
+> in raid0_free. Because if creating stripe zones failed, it doesn't
+> need to free conf,
+> although it doesn't have problems that passes NULL to kfree.
 >
->          ret = md_integrity_register(mddev);
-> +       if (ret) {
-> +               raid0_free(mddev, mddev->private);
-> +               mddev->private = NULL;
-> +               acct_bioset_exit(mddev);
-> +       }
->
->          return ret;
->   }
->
-> Thanks,
-> Guoqing
->
+I see. Let's add free_conf() then. Maybe we can move both free_conf()
+and raid0_free() ahead to avoid the extra declaration?
 
-This should not work. The way to fix the original problem is that we
-need to clean acct bio set of old
-level raid in pers->free and create acct bio set for new level raid in
-pers->run. So it doesn't need to
-change any codes in level_store. So it needs to put
-acct_bioset_init/acct_bioset_exit in pers->run/free.
-
-Regards
-Xiao
-
+Thanks,
+Song
