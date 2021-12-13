@@ -2,195 +2,172 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B728C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 13 Dec 2021 23:35:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE432C433FE
+	for <linux-raid@archiver.kernel.org>; Mon, 13 Dec 2021 23:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244217AbhLMXfa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Dec 2021 18:35:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55756 "EHLO
+        id S232649AbhLMXui (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Dec 2021 18:50:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244191AbhLMXfa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Dec 2021 18:35:30 -0500
-Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAED8C061574
-        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 15:35:29 -0800 (PST)
-Received: by mail-io1-xd32.google.com with SMTP id 14so20938058ioe.2
-        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 15:35:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=aH6+bnijsRiuEQBB90UdLGBJxVmFeY0kMEeq7Ffeh6s=;
-        b=JhikysSkSZ+gVBTqCciOP6h4D7gk6h7jqV8Js+b8DsXcqclQvh98h3aRlc5gMzBh6O
-         pWPrTg72MRwp5TExDaJjNGslI4FcK50RVhvA4yt6r3BP13WLO+nBPrg9tLAHFIv0oI1/
-         xhHsBbEitSxurG53TyagqKIxrUEyzUuXEKF3oq83ZIw/3sXr1yB63EAKgelhLjSSSXaF
-         +igUX0ONpHvfb0BUgfDb5fP0J6S90cFf9dXH63GkU1YMMleq/CKM/rkJAfwuhhZOl6s/
-         6jxSHH96hxgfJsgQPHPRQaeUz9Tv9m9G5cSwzxckJ+06t0vHHt/T1Sq/eSzr9thtqxem
-         ZR7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=aH6+bnijsRiuEQBB90UdLGBJxVmFeY0kMEeq7Ffeh6s=;
-        b=ymoP5NYQZBQP6N/Soy+jBnmE7ZnoMkiL31BNpNO2FZrjAPOlCC7HyVwSaYnHahdD1b
-         6g87TsUiGHXwasvHq0SzE144zdHX3ugmTGy1t2KsfZIi9cX6/IsFeWhqk4a9rXhcq3SY
-         TeChuo+C3mqeT5anWmP+ocMdVEtl4oTA1IrossluEy/60Pf2msTtaeINacN2YGBVVOQV
-         trRORjgc3BYoYIE25lgxkW8w/gL73k7sRLPiJEUD3LZ9c2FLxeNoE+IXHXpY4qKPA4Ds
-         a6OI0ombqqcjhrpFo0eVfyVM7IeWNvJUknDJbTeIBdLda+SGXsahmgK9saSTPu94zLZr
-         BXVw==
-X-Gm-Message-State: AOAM532v/sJu5lAxWqLY7b7EFSosSE8RhUYPHn439s1k+pfwo07HFwgp
-        0wV71uE65xqKUEpS3T4hp+nkpWD5NEU43w==
-X-Google-Smtp-Source: ABdhPJxJMSFoeR5/nt9jJ+qkJT7s0cQn+AK1JtJ/V2daOTgdQMOoR+8IF6lhkL+Z0LP6+xpC4s1u6A==
-X-Received: by 2002:a05:6602:280f:: with SMTP id d15mr1300358ioe.150.1639438528889;
-        Mon, 13 Dec 2021 15:35:28 -0800 (PST)
-Received: from [192.168.1.116] ([66.219.217.159])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-2faa6b4da16sm133554173.33.2021.12.13.15.35.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Dec 2021 15:35:28 -0800 (PST)
-Subject: Re: [RFC PATCH v4 4/4] md: raid456 add nowait support
-To:     Vishal Verma <vverma@digitalocean.com>, Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de
+        with ESMTP id S231599AbhLMXuh (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Dec 2021 18:50:37 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49369C061574
+        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 15:50:37 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 110F3B8172A
+        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 23:50:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A6CC34604
+        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 23:50:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639439434;
+        bh=pQObzqGknZ7bqUTKLhZ+zq5leGXXGCIyYg3hqM8F+sM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=sEdo8fnPzDsz5ZRAA8PDWYqM5vJXMeOZfauBWmTMBON6uLPrCD0sz9ApZuPpqDvrX
+         guLR01ghbk8+O+UV2cenDWjhfo2eUz91Ys6u0kZn1wwTYZmlUjOYHrYpts+y9o3vs6
+         pNibKK+OjD8J2fdHICt4pxqMz0Rq1G/li/7yKkTbn58MY7TwwoEdXS8G7RS+JkK6Hg
+         HN/D7ovCdaLgxVZ/rks8nussGTeKG8brImW/TpaLaqqYl2EbHjMETN4ZVN9o4pIRs6
+         hiCvnhnHMdV+2+vbABqMG6bVeMk7NABPSLPw+9cqKdWJVYpWX07BDAA9S+fWaEi1er
+         JNEpwP10NtGSw==
+Received: by mail-yb1-f179.google.com with SMTP id q74so42194407ybq.11
+        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 15:50:34 -0800 (PST)
+X-Gm-Message-State: AOAM5310ujrWrGZknSdkHNoZ8wpJqYtP6Qa4cuK1B/JwBz6CtccI2+xL
+        ezmbO2hueBWtxv3vZldueWt76VzRnJSlDdvP/3M=
+X-Google-Smtp-Source: ABdhPJzbfzH3UacknKYqcNjlKebKIe8ei7+QuTcnY1iCulBZJpsWS0HfZ8XvENn+lEdYsa/F6r+PDORWtU3pe3zh+Gg=
+X-Received: by 2002:a25:a283:: with SMTP id c3mr2005176ybi.219.1639439433817;
+ Mon, 13 Dec 2021 15:50:33 -0800 (PST)
+MIME-Version: 1.0
 References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
  <20211110181441.9263-1-vverma@digitalocean.com>
- <20211110181441.9263-4-vverma@digitalocean.com>
- <CAPhsuW5drRBWOV9-i7cQWHAwSe5qHff5k23Y2-LsNGS_s8updw@mail.gmail.com>
- <2354ab61-0d13-aec5-a45f-23c5cd3db319@digitalocean.com>
- <CAPhsuW7r-JX+zOadzbzLDa0WxZdLws9=mTbPc0ci6qNfRBxgjA@mail.gmail.com>
- <998a933f-e3af-2f2c-79c6-ae5a75f286de@digitalocean.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <b70fded5-8f65-7767-25c1-d45b1dcbbddf@kernel.dk>
-Date:   Mon, 13 Dec 2021 16:35:27 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <998a933f-e3af-2f2c-79c6-ae5a75f286de@digitalocean.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20211110181441.9263-1-vverma@digitalocean.com>
+From:   Song Liu <song@kernel.org>
+Date:   Mon, 13 Dec 2021 15:50:23 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7roOn=n4sX3ysN-z+WPLqUYFwUZr-SNspD1ajD5CONYg@mail.gmail.com>
+Message-ID: <CAPhsuW7roOn=n4sX3ysN-z+WPLqUYFwUZr-SNspD1ajD5CONYg@mail.gmail.com>
+Subject: Re: [RFC PATCH v4 1/4] md: add support for REQ_NOWAIT
+To:     Vishal Verma <vverma@digitalocean.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 12/13/21 3:43 PM, Vishal Verma wrote:
-> 
-> On 12/12/21 10:56 PM, Song Liu wrote:
->> On Fri, Dec 10, 2021 at 10:26 AM Vishal Verma <vverma@digitalocean.com> wrote:
->>>
->>> On 12/9/21 7:16 PM, Song Liu wrote:
->>>> On Wed, Nov 10, 2021 at 10:15 AM Vishal Verma <vverma@digitalocean.com> wrote:
->>>>> Returns EAGAIN in case the raid456 driver would block
->>>>> waiting for situations like:
->>>>>
->>>>>     - Reshape operation,
->>>>>     - Discard operation.
->>>>>
->>>>> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
->>>>> ---
->>>>>    drivers/md/raid5.c | 14 ++++++++++++++
->>>>>    1 file changed, 14 insertions(+)
->>>>>
->>>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->>>>> index 9c1a5877cf9f..fa64ee315241 100644
->>>>> --- a/drivers/md/raid5.c
->>>>> +++ b/drivers/md/raid5.c
->>>>> @@ -5710,6 +5710,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
->>>>>                   int d;
->>>>>           again:
->>>>>                   sh = raid5_get_active_stripe(conf, logical_sector, 0, 0, 0);
->>>>> +               /* Bail out if REQ_NOWAIT is set */
->>>>> +               if (bi->bi_opf & REQ_NOWAIT) {
->>>>> +                       bio_wouldblock_error(bi);
->>>>> +                       return;
->>>>> +               }
->>>> This is not right. raid5_get_active_stripe() gets refcount on the sh,
->>>> we cannot simply
->>>> return here. I think we need the logic after raid5_release_stripe()
->>>> and before schedule().
->>>>
->>>>>                   prepare_to_wait(&conf->wait_for_overlap, &w,
->>>>>                                   TASK_UNINTERRUPTIBLE);
->>>>>                   set_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags);
->>>>> @@ -5820,6 +5825,15 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->>>>>           bi->bi_next = NULL;
->>>>>
->>>>>           md_account_bio(mddev, &bi);
->>>>> +       /* Bail out if REQ_NOWAIT is set */
->>>>> +       if (bi->bi_opf & REQ_NOWAIT &&
->>>>> +           conf->reshape_progress != MaxSector &&
->>>>> +           mddev->reshape_backwards
->>>>> +           ? logical_sector < conf->reshape_safe
->>>>> +           : logical_sector >= conf->reshape_safe) {
->>>>> +               bio_wouldblock_error(bi);
->>>>> +               return true;
->>>>> +       }
->>>> This is also problematic, and is the trigger of those error messages.
->>>> We only want to trigger -EAGAIN when logical_sector is between
->>>> reshape_progress and reshape_safe.
->>>>
->>>> Just to clarify, did you mean doing something like:
->>>> if (bi->bi_opf & REQ_NOWAIT &&
->>>> +           conf->reshape_progress != MaxSector &&
->>>> +           (mddev->reshape_backwards
->>>> +           ? (logical_sector > conf->reshape_progress && logical_sector < conf->reshape_safe)
->>>> +           : logical_sector >= conf->reshape_safe)) {
->> I think this should be
->>    :   (logical_sector >= conf->reshape_safe && logical_sector <
->> conf->reshape_progress)
-> 
-> 
-> if (bi->bi_opf & REQ_NOWAIT &&
->                  conf->reshape_progress != MaxSector &&
->                  (mddev->reshape_backwards
->                  ? (logical_sector > conf->reshape_progress && 
-> logical_sector <= conf->reshape_safe)
->                  : (logical_sector >= conf->reshape_safe && 
-> logical_sector < conf->reshape_progress))) {
->                          bio_wouldblock_error(bi);
->                          return true;
->          }
-> 
-> After making this change along with other changes, I ran some tests with 
-> 100% reads, 70%read30%writes and 100% writes on a clean raid5 array.
-> 
-> Unfortunately, I ran into this following task hung with 100% writes 
-> (with both libaio and io_uring):
-> 
-> [21876.856692] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
-> disables this message.
-> [21876.864518] task:md5_raid5       state:D stack:    0 pid:11675 
-> ppid:     2 flags:0x00004000
-> [21876.864522] Call Trace:
-> [21876.864526]  __schedule+0x2d4/0x970
-> [21876.864532]  ? wbt_cleanup_cb+0x20/0x20
-> [21876.864535]  schedule+0x4e/0xb0
-> [21876.864537]  io_schedule+0x3f/0x70
-> [21876.864539]  rq_qos_wait+0xb9/0x130
-> [21876.864542]  ? sysv68_partition+0x280/0x280
-> [21876.864543]  ? wbt_cleanup_cb+0x20/0x20
-> [21876.864545]  wbt_wait+0x92/0xc0
-> [21876.864546]  __rq_qos_throttle+0x25/0x40
-> [21876.864548]  blk_mq_submit_bio+0xc6/0x5d0
-> [21876.864551]  ? submit_bio_checks+0x39e/0x5f0
-> [21876.864554]  __submit_bio+0x1bc/0x1d0
-> [21876.864555]  ? kmem_cache_free+0x378/0x3c0
-> [21876.864558]  ? mempool_free_slab+0x17/0x20
-> [21876.864562]  submit_bio_noacct+0x256/0x2a0
-> [21876.864565]  0xffffffffc01fa6d9
-> [21876.864568]  ? 0xffffffffc01f5d01
-> [21876.864569]  raid5_get_active_stripe+0x16c0/0x3e00 [raid456]
-> [21876.864571]  ? __wake_up_common_lock+0x8a/0xc0
-> [21876.864575]  raid5_get_active_stripe+0x2839/0x3e00 [raid456]
-> [21876.864577]  raid5_get_active_stripe+0x2d6e/0x3e00 [raid456]
-> [21876.864579]  md_thread+0xae/0x170
-> [21876.864581]  ? wait_woken+0x60/0x60
-> [21876.864582]  ? md_start_sync+0x60/0x60
-> [21876.864584]  kthread+0x127/0x150
-> [21876.864586]  ? set_kthread_struct+0x40/0x40
-> [21876.864588]  ret_from_fork+0x1f/0x30
+On Wed, Nov 10, 2021 at 10:15 AM Vishal Verma <vverma@digitalocean.com> wrote:
+>
+> commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
+> for checking whether a given bdev supports handling of REQ_NOWAIT or not.
+> Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
+> it for linear target") added support for REQ_NOWAIT for dm. This uses
+> a similar approach to incorporate REQ_NOWAIT for md based bios.
+>
+> This patch was tested using t/io_uring tool within FIO. A nvme drive
+> was partitioned into 2 partitions and a simple raid 0 configuration
+> /dev/md0 was created.
+>
+> md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
+>       937423872 blocks super 1.2 512k chunks
+>
+> Before patch:
+>
+> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+>
+> Running top while the above runs:
+>
+> $ ps -eL | grep $(pidof io_uring)
+>
+>   38396   38396 pts/2    00:00:00 io_uring
+>   38396   38397 pts/2    00:00:15 io_uring
+>   38396   38398 pts/2    00:00:13 iou-wrk-38397
+>
+> We can see iou-wrk-38397 io worker thread created which gets created
+> when io_uring sees that the underlying device (/dev/md0 in this case)
+> doesn't support nowait.
+>
+> After patch:
+>
+> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+>
+> Running top while the above runs:
+>
+> $ ps -eL | grep $(pidof io_uring)
+>
+>   38341   38341 pts/2    00:10:22 io_uring
+>   38341   38342 pts/2    00:10:37 io_uring
+>
+> After running this patch, we don't see any io worker thread
+> being created which indicated that io_uring saw that the
+> underlying device does support nowait. This is the exact behaviour
+> noticed on a dm device which also supports nowait.
+>
+> For all the other raid personalities except raid0, we would need
+> to train pieces which involves make_request fn in order for them
+> to correctly handle REQ_NOWAIT.
+>
+> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
+> ---
+>  drivers/md/md.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 5111ed966947..a30c78afcab6 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -419,6 +419,11 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
+>         if (is_suspended(mddev, bio)) {
+>                 DEFINE_WAIT(__wait);
+>                 for (;;) {
+> +                       /* Bail out if REQ_NOWAIT is set for the bio */
+> +                       if (bio->bi_opf & REQ_NOWAIT) {
+> +                               bio_wouldblock_error(bio);
+> +                               return;
+> +                       }
 
-What kernel base are you using for your patches?
+We need a rcu_read_unlock() before bio_wouldbock_error(bio).
 
--- 
-Jens Axboe
-
+>                         prepare_to_wait(&mddev->sb_wait, &__wait,
+>                                         TASK_UNINTERRUPTIBLE);
+>                         if (!is_suspended(mddev, bio))
+> @@ -5792,6 +5797,7 @@ int md_run(struct mddev *mddev)
+>         int err;
+>         struct md_rdev *rdev;
+>         struct md_personality *pers;
+> +       bool nowait = true;
+>
+>         if (list_empty(&mddev->disks))
+>                 /* cannot run an array with no devices.. */
+> @@ -5862,8 +5868,13 @@ int md_run(struct mddev *mddev)
+>                         }
+>                 }
+>                 sysfs_notify_dirent_safe(rdev->sysfs_state);
+> +               nowait = nowait && blk_queue_nowait(bdev_get_queue(rdev->bdev));
+>         }
+>
+> +       /* Set the NOWAIT flags if all underlying devices support it */
+> +       if (nowait)
+> +               blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
+> +
+>         if (!bioset_initialized(&mddev->bio_set)) {
+>                 err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+>                 if (err)
+> @@ -7007,6 +7018,15 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+>         set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+>         if (!mddev->thread)
+>                 md_update_sb(mddev, 1);
+> +       /*
+> +        * If the new disk does not support REQ_NOWAIT,
+> +        * disable on the whole MD.
+> +        */
+> +       if (!blk_queue_nowait(bdev_get_queue(rdev->bdev))) {
+> +               pr_info("%s: Disabling nowait because %s does not support nowait\n",
+> +                       mdname(mddev), bdevname(rdev->bdev, b));
+> +               blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, mddev->queue);
+> +       }
+>         /*
+>          * Kick recovery, maybe this spare has to be added to the
+>          * array immediately.
+> --
+> 2.17.1
+>
