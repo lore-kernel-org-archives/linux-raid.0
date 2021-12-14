@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1D1C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Dec 2021 00:32:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADB01C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Dec 2021 00:36:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240612AbhLNAcs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 13 Dec 2021 19:32:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40564 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236812AbhLNAcr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Dec 2021 19:32:47 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CB86C061574
-        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 16:32:47 -0800 (PST)
+        id S242463AbhLNAgd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 13 Dec 2021 19:36:33 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:43086 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236914AbhLNAgc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 13 Dec 2021 19:36:32 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 291DDB811E3
-        for <linux-raid@vger.kernel.org>; Tue, 14 Dec 2021 00:32:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED5F6C34603
-        for <linux-raid@vger.kernel.org>; Tue, 14 Dec 2021 00:32:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DC963B81749
+        for <linux-raid@vger.kernel.org>; Tue, 14 Dec 2021 00:36:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89588C34605
+        for <linux-raid@vger.kernel.org>; Tue, 14 Dec 2021 00:36:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639441964;
-        bh=qgKWLdxtVvQwC0MqnWulyZd//IPPYTMH92JZtGHPMwE=;
+        s=k20201202; t=1639442190;
+        bh=fCRDfV2bQ/rWlJ8HAURfhz2cDep6RNh5PLvfaNX+uIg=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Ls1/5M8fzItBwylBIpi1AtbZIEvwKpfstWEoHTayOIpPeX+hg2k19W1AhOKhecodt
-         wCWgLdT5l35OGqlPyib41kfrroE8YeLZ9di1fejHCG/WHZHfD4TQwfF1P0V6p1Ari+
-         pDlgsRGr8k2ro3IPbFFh8CFnIrSDNp53pFrbPtvYUNQfvvIsvgWD5UIATVdpW9iQab
-         6KZAJxQbVkp8B6tNOfbY33blenvUwceoe7xoF5efdj/KEz4s9sqLowh0vNeDeDNlQG
-         9W3Xz+OzdOqnaYrgTYQZ1BDJYXe0CBej4nq8ue/Z64nvoDCx9ARM2eJ6j2ElwGe39n
-         4ztvthw6HaeuQ==
-Received: by mail-yb1-f172.google.com with SMTP id v64so42427737ybi.5
-        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 16:32:43 -0800 (PST)
-X-Gm-Message-State: AOAM5328XU5ugzLtpFbFYg4epQrjbpN77mByHuqSmvuI030PbEImX/el
-        ugJ5vRNWPDY5zJS59cXtKOnJcfATut2Io4+2PdE=
-X-Google-Smtp-Source: ABdhPJyy0rqMBOF/kicTzw7T5sAdpJ+OgiECx8PGT4TFhs56FeynySQsoLEVVFW7eaanFMO+Tvo5NPlTtLuDZQdOkQc=
-X-Received: by 2002:a25:bf8f:: with SMTP id l15mr2096859ybk.670.1639441962980;
- Mon, 13 Dec 2021 16:32:42 -0800 (PST)
+        b=H0ppD52u3q7xHrPHf2ORvjDfbBa8EdJs152Ke95AF6yDNN2AGNpvsyPKhKEi56n3x
+         nx+St6ZAc6LMKfRAtkQivkvcJW2T3Yv75IJeT90uejNuTSnI6CII7SzTRqLluOfhpk
+         d+9LoOJeOCFQPO2T8yQhc5epPJRu0GolBlZr2oFZc8zTNgiJgsXDB4zpSb5pyPXEQg
+         JMumbWfTXC/iUFJt7pw/5GiIRnG5S4xeTxODiyhlgP9TWUcPLILEpsIbnJiD/05Zyd
+         lxtTpTTFviGDjtW1M32oH/73uAJJDKfFe1sofrer/tPBMd72bR7C3jufCDQUz/0zUo
+         wNUhhFifet1Lg==
+Received: by mail-yb1-f177.google.com with SMTP id v203so42465462ybe.6
+        for <linux-raid@vger.kernel.org>; Mon, 13 Dec 2021 16:36:30 -0800 (PST)
+X-Gm-Message-State: AOAM532XptWF5jgZXodZs5ODHdR/IJpmbG+Ypmtp73ft0/xobFcMQYl0
+        N3swf2s4cMl4IyAuhzHPy+JE9r2iMzDT+WHw8wE=
+X-Google-Smtp-Source: ABdhPJyxLE9RUXsCLrViOZuqsnpeup8NZrPgo19VsdSMmHHxp1XkKriNeVspfZdb1G9OLOpz/hlx2eINsG5eb9aYD/Q=
+X-Received: by 2002:a25:850b:: with SMTP id w11mr2239622ybk.208.1639442189610;
+ Mon, 13 Dec 2021 16:36:29 -0800 (PST)
 MIME-Version: 1.0
 References: <CAPhsuW6mSmxPOmU9=Gq-z_gV4V09+SFqrpKx33LzR=6Rg1fGZw@mail.gmail.com>
- <20211110181441.9263-1-vverma@digitalocean.com> <20211110181441.9263-3-vverma@digitalocean.com>
-In-Reply-To: <20211110181441.9263-3-vverma@digitalocean.com>
+ <20211110181441.9263-1-vverma@digitalocean.com> <20211110181441.9263-4-vverma@digitalocean.com>
+ <CAPhsuW5drRBWOV9-i7cQWHAwSe5qHff5k23Y2-LsNGS_s8updw@mail.gmail.com>
+ <2354ab61-0d13-aec5-a45f-23c5cd3db319@digitalocean.com> <CAPhsuW7r-JX+zOadzbzLDa0WxZdLws9=mTbPc0ci6qNfRBxgjA@mail.gmail.com>
+ <998a933f-e3af-2f2c-79c6-ae5a75f286de@digitalocean.com>
+In-Reply-To: <998a933f-e3af-2f2c-79c6-ae5a75f286de@digitalocean.com>
 From:   Song Liu <song@kernel.org>
-Date:   Mon, 13 Dec 2021 16:32:31 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7UpKURLoPyCtjU44SsVDXKabCrhJOY14U+fB0Hnbv9GA@mail.gmail.com>
-Message-ID: <CAPhsuW7UpKURLoPyCtjU44SsVDXKabCrhJOY14U+fB0Hnbv9GA@mail.gmail.com>
-Subject: Re: [RFC PATCH v4 3/4] md: raid10 add nowait support
+Date:   Mon, 13 Dec 2021 16:36:18 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7PcjJoN=uEv2G8wvCJmJJBdCW7o_V7e+aJrmkmwzTajA@mail.gmail.com>
+Message-ID: <CAPhsuW7PcjJoN=uEv2G8wvCJmJJBdCW7o_V7e+aJrmkmwzTajA@mail.gmail.com>
+Subject: Re: [RFC PATCH v4 4/4] md: raid456 add nowait support
 To:     Vishal Verma <vverma@digitalocean.com>
 Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de,
         Jens Axboe <axboe@kernel.dk>
@@ -55,256 +55,126 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Nov 10, 2021 at 10:15 AM Vishal Verma <vverma@digitalocean.com> wrote:
+On Mon, Dec 13, 2021 at 2:43 PM Vishal Verma <vverma@digitalocean.com> wrote:
 >
-> This adds nowait support to the RAID10 driver. Very similar to
-> raid1 driver changes. It makes RAID10 driver return with EAGAIN
-> for situations where it could wait for eg:
 >
->   - Waiting for the barrier,
->   - Too many pending I/Os to be queued,
->   - Reshape operation,
->   - Discard operation.
+> On 12/12/21 10:56 PM, Song Liu wrote:
+> > On Fri, Dec 10, 2021 at 10:26 AM Vishal Verma <vverma@digitalocean.com> wrote:
+> >>
+> >> On 12/9/21 7:16 PM, Song Liu wrote:
+> >>> On Wed, Nov 10, 2021 at 10:15 AM Vishal Verma <vverma@digitalocean.com> wrote:
+> >>>> Returns EAGAIN in case the raid456 driver would block
+> >>>> waiting for situations like:
+> >>>>
+> >>>>     - Reshape operation,
+> >>>>     - Discard operation.
+> >>>>
+> >>>> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
+> >>>> ---
+> >>>>    drivers/md/raid5.c | 14 ++++++++++++++
+> >>>>    1 file changed, 14 insertions(+)
+> >>>>
+> >>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >>>> index 9c1a5877cf9f..fa64ee315241 100644
+> >>>> --- a/drivers/md/raid5.c
+> >>>> +++ b/drivers/md/raid5.c
+> >>>> @@ -5710,6 +5710,11 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
+> >>>>                   int d;
+> >>>>           again:
+> >>>>                   sh = raid5_get_active_stripe(conf, logical_sector, 0, 0, 0);
+> >>>> +               /* Bail out if REQ_NOWAIT is set */
+> >>>> +               if (bi->bi_opf & REQ_NOWAIT) {
+> >>>> +                       bio_wouldblock_error(bi);
+> >>>> +                       return;
+> >>>> +               }
+> >>> This is not right. raid5_get_active_stripe() gets refcount on the sh,
+> >>> we cannot simply
+> >>> return here. I think we need the logic after raid5_release_stripe()
+> >>> and before schedule().
+> >>>
+> >>>>                   prepare_to_wait(&conf->wait_for_overlap, &w,
+> >>>>                                   TASK_UNINTERRUPTIBLE);
+> >>>>                   set_bit(R5_Overlap, &sh->dev[sh->pd_idx].flags);
+> >>>> @@ -5820,6 +5825,15 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+> >>>>           bi->bi_next = NULL;
+> >>>>
+> >>>>           md_account_bio(mddev, &bi);
+> >>>> +       /* Bail out if REQ_NOWAIT is set */
+> >>>> +       if (bi->bi_opf & REQ_NOWAIT &&
+> >>>> +           conf->reshape_progress != MaxSector &&
+> >>>> +           mddev->reshape_backwards
+> >>>> +           ? logical_sector < conf->reshape_safe
+> >>>> +           : logical_sector >= conf->reshape_safe) {
+> >>>> +               bio_wouldblock_error(bi);
+> >>>> +               return true;
+> >>>> +       }
+> >>> This is also problematic, and is the trigger of those error messages.
+> >>> We only want to trigger -EAGAIN when logical_sector is between
+> >>> reshape_progress and reshape_safe.
+> >>>
+> >>> Just to clarify, did you mean doing something like:
+> >>> if (bi->bi_opf & REQ_NOWAIT &&
+> >>> +           conf->reshape_progress != MaxSector &&
+> >>> +           (mddev->reshape_backwards
+> >>> +           ? (logical_sector > conf->reshape_progress && logical_sector < conf->reshape_safe)
+> >>> +           : logical_sector >= conf->reshape_safe)) {
+> > I think this should be
+> >    :   (logical_sector >= conf->reshape_safe && logical_sector <
+> > conf->reshape_progress)
 >
-> wait_barrier() fn is modified to return bool to support error for
-> wait barriers. It returns true in case of wait or if wait is not
-> required and returns false if wait was required but not performed
-> to support nowait.
 >
-> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
-> ---
->  drivers/md/raid10.c | 87 +++++++++++++++++++++++++++++++--------------
->  1 file changed, 60 insertions(+), 27 deletions(-)
+> if (bi->bi_opf & REQ_NOWAIT &&
+>                  conf->reshape_progress != MaxSector &&
+>                  (mddev->reshape_backwards
+>                  ? (logical_sector > conf->reshape_progress &&
+> logical_sector <= conf->reshape_safe)
+>                  : (logical_sector >= conf->reshape_safe &&
+> logical_sector < conf->reshape_progress))) {
+>                          bio_wouldblock_error(bi);
+>                          return true;
+>          }
 >
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index dde98f65bd04..03983146d31a 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -952,8 +952,9 @@ static void lower_barrier(struct r10conf *conf)
->         wake_up(&conf->wait_barrier);
->  }
+> After making this change along with other changes, I ran some tests with
+> 100% reads, 70%read30%writes and 100% writes on a clean raid5 array.
 >
-> -static void wait_barrier(struct r10conf *conf)
-> +static bool wait_barrier(struct r10conf *conf, bool nowait)
->  {
-> +       bool ret = true;
->         spin_lock_irq(&conf->resync_lock);
->         if (conf->barrier) {
->                 struct bio_list *bio_list = current->bio_list;
-> @@ -968,26 +969,33 @@ static void wait_barrier(struct r10conf *conf)
->                  * count down.
->                  */
->                 raid10_log(conf->mddev, "wait barrier");
-> -               wait_event_lock_irq(conf->wait_barrier,
-> -                                   !conf->barrier ||
-> -                                   (atomic_read(&conf->nr_pending) &&
-> -                                    bio_list &&
-> -                                    (!bio_list_empty(&bio_list[0]) ||
-> -                                     !bio_list_empty(&bio_list[1]))) ||
-> -                                    /* move on if recovery thread is
-> -                                     * blocked by us
-> -                                     */
-> -                                    (conf->mddev->thread->tsk == current &&
-> -                                     test_bit(MD_RECOVERY_RUNNING,
-> -                                              &conf->mddev->recovery) &&
-> -                                     conf->nr_queued > 0),
-> -                                   conf->resync_lock);
-> +               /* Return false when nowait flag is set */
-> +               if (nowait)
-> +                       ret = false;
-> +               else
-> +                       wait_event_lock_irq(conf->wait_barrier,
-> +                                           !conf->barrier ||
-> +                                           (atomic_read(&conf->nr_pending) &&
-> +                                            bio_list &&
-> +                                            (!bio_list_empty(&bio_list[0]) ||
-> +                                             !bio_list_empty(&bio_list[1]))) ||
-> +                                            /* move on if recovery thread is
-> +                                             * blocked by us
-> +                                             */
-> +                                            (conf->mddev->thread->tsk == current &&
-> +                                             test_bit(MD_RECOVERY_RUNNING,
-> +                                                      &conf->mddev->recovery) &&
-> +                                             conf->nr_queued > 0),
-> +                                           conf->resync_lock);
->                 conf->nr_waiting--;
->                 if (!conf->nr_waiting)
->                         wake_up(&conf->wait_barrier);
->         }
-> -       atomic_inc(&conf->nr_pending);
-> +       /* Only increment nr_pending when we wait */
-> +       if (ret)
-> +               atomic_inc(&conf->nr_pending);
->         spin_unlock_irq(&conf->resync_lock);
-> +       return ret;
->  }
+> Unfortunately, I ran into this following task hung with 100% writes
+> (with both libaio and io_uring):
+>
+> [21876.856692] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [21876.864518] task:md5_raid5       state:D stack:    0 pid:11675
+> ppid:     2 flags:0x00004000
+> [21876.864522] Call Trace:
+> [21876.864526]  __schedule+0x2d4/0x970
+> [21876.864532]  ? wbt_cleanup_cb+0x20/0x20
+> [21876.864535]  schedule+0x4e/0xb0
+> [21876.864537]  io_schedule+0x3f/0x70
+> [21876.864539]  rq_qos_wait+0xb9/0x130
+> [21876.864542]  ? sysv68_partition+0x280/0x280
+> [21876.864543]  ? wbt_cleanup_cb+0x20/0x20
+> [21876.864545]  wbt_wait+0x92/0xc0
+> [21876.864546]  __rq_qos_throttle+0x25/0x40
+> [21876.864548]  blk_mq_submit_bio+0xc6/0x5d0
+> [21876.864551]  ? submit_bio_checks+0x39e/0x5f0
+> [21876.864554]  __submit_bio+0x1bc/0x1d0
+> [21876.864555]  ? kmem_cache_free+0x378/0x3c0
+> [21876.864558]  ? mempool_free_slab+0x17/0x20
+> [21876.864562]  submit_bio_noacct+0x256/0x2a0
+> [21876.864565]  0xffffffffc01fa6d9
+> [21876.864568]  ? 0xffffffffc01f5d01
+> [21876.864569]  raid5_get_active_stripe+0x16c0/0x3e00 [raid456]
+> [21876.864571]  ? __wake_up_common_lock+0x8a/0xc0
+> [21876.864575]  raid5_get_active_stripe+0x2839/0x3e00 [raid456]
+> [21876.864577]  raid5_get_active_stripe+0x2d6e/0x3e00 [raid456]
+> [21876.864579]  md_thread+0xae/0x170
+> [21876.864581]  ? wait_woken+0x60/0x60
+> [21876.864582]  ? md_start_sync+0x60/0x60
+> [21876.864584]  kthread+0x127/0x150
+> [21876.864586]  ? set_kthread_struct+0x40/0x40
+> [21876.864588]  ret_from_fork+0x1f/0x30
 
-I guess something like this would simplify the code:
+While there is something suspicious with raid10_handle_discard(), I don't
+think it is related to this error. I couldn't reproduce this in my tests.
 
-static bool wait_barrier(struct r10conf *conf, bool nowait)
-{
-        bool ret = true;
-        spin_lock_irq(&conf->resync_lock);
-        if (conf->barrier) {
-                struct bio_list *bio_list = current->bio_list;
-
-                if (nowait) {
-                        spin_unlock_irq(&conf->resync_lock);
-                        return false;
-                }
-
->
->  static void allow_barrier(struct r10conf *conf)
-> @@ -1101,17 +1109,25 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
->  static void regular_request_wait(struct mddev *mddev, struct r10conf *conf,
->                                  struct bio *bio, sector_t sectors)
->  {
-> -       wait_barrier(conf);
-> +       /* Bail out if REQ_NOWAIT is set for the bio */
-> +       if (!wait_barrier(conf, bio->bi_opf & REQ_NOWAIT)) {
-> +               bio_wouldblock_error(bio);
-> +               return;
-> +       }
->         while (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
->             bio->bi_iter.bi_sector < conf->reshape_progress &&
->             bio->bi_iter.bi_sector + sectors > conf->reshape_progress) {
->                 raid10_log(conf->mddev, "wait reshape");
-> +               if (bio->bi_opf & REQ_NOWAIT) {
-> +                       bio_wouldblock_error(bio);
-> +                       return;
-> +               }
->                 allow_barrier(conf);
->                 wait_event(conf->wait_barrier,
->                            conf->reshape_progress <= bio->bi_iter.bi_sector ||
->                            conf->reshape_progress >= bio->bi_iter.bi_sector +
->                            sectors);
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->         }
->  }
->
-> @@ -1179,7 +1195,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
->                 bio_chain(split, bio);
->                 allow_barrier(conf);
->                 submit_bio_noacct(bio);
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->                 bio = split;
->                 r10_bio->master_bio = bio;
->                 r10_bio->sectors = max_sectors;
-> @@ -1338,7 +1354,7 @@ static void wait_blocked_dev(struct mddev *mddev, struct r10bio *r10_bio)
->                 raid10_log(conf->mddev, "%s wait rdev %d blocked",
->                                 __func__, blocked_rdev->raid_disk);
->                 md_wait_for_blocked_rdev(blocked_rdev, mddev);
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->                 goto retry_wait;
->         }
->  }
-> @@ -1357,6 +1373,11 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
->                                             bio_end_sector(bio)))) {
->                 DEFINE_WAIT(w);
->                 for (;;) {
-> +                       /* Bail out if REQ_NOWAIT is set for the bio */
-> +                       if (bio->bi_opf & REQ_NOWAIT) {
-> +                               bio_wouldblock_error(bio);
-> +                               return;
-> +                       }
->                         prepare_to_wait(&conf->wait_barrier,
->                                         &w, TASK_IDLE);
->                         if (!md_cluster_ops->area_resyncing(mddev, WRITE,
-> @@ -1381,6 +1402,10 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
->                               BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
->                 md_wakeup_thread(mddev->thread);
->                 raid10_log(conf->mddev, "wait reshape metadata");
-> +               if (bio->bi_opf & REQ_NOWAIT) {
-> +                       bio_wouldblock_error(bio);
-> +                       return;
-> +               }
->                 wait_event(mddev->sb_wait,
->                            !test_bit(MD_SB_CHANGE_PENDING, &mddev->sb_flags));
->
-> @@ -1390,6 +1415,10 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
->         if (conf->pending_count >= max_queued_requests) {
->                 md_wakeup_thread(mddev->thread);
->                 raid10_log(mddev, "wait queued");
-> +               if (bio->bi_opf & REQ_NOWAIT) {
-> +                       bio_wouldblock_error(bio);
-> +                       return;
-> +               }
->                 wait_event(conf->wait_barrier,
->                            conf->pending_count < max_queued_requests);
->         }
-> @@ -1482,7 +1511,7 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
->                 bio_chain(split, bio);
->                 allow_barrier(conf);
->                 submit_bio_noacct(bio);
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->                 bio = split;
->                 r10_bio->master_bio = bio;
->         }
-> @@ -1607,7 +1636,11 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->         if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
->                 return -EAGAIN;
->
-> -       wait_barrier(conf);
-> +       if (bio->bi_opf & REQ_NOWAIT) {
-> +               bio_wouldblock_error(bio);
-> +               return 0;
-> +       }
-
-Does this mean we always bail out on discard?
-
-> +       wait_barrier(conf, false);
->
->         /*
->          * Check reshape again to avoid reshape happens after checking
-> @@ -1649,7 +1682,7 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->                 allow_barrier(conf);
->                 /* Resend the fist split part */
->                 submit_bio_noacct(split);
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->         }
->         div_u64_rem(bio_end, stripe_size, &remainder);
->         if (remainder) {
-> @@ -1660,7 +1693,7 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->                 /* Resend the second split part */
->                 submit_bio_noacct(bio);
->                 bio = split;
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->         }
->
->         bio_start = bio->bi_iter.bi_sector;
-> @@ -1816,7 +1849,7 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
->                 end_disk_offset += geo->stride;
->                 atomic_inc(&first_r10bio->remaining);
->                 raid_end_discard_bio(r10_bio);
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->                 goto retry_discard;
->         }
->
-> @@ -2011,7 +2044,7 @@ static void print_conf(struct r10conf *conf)
->
->  static void close_sync(struct r10conf *conf)
->  {
-> -       wait_barrier(conf);
-> +       wait_barrier(conf, false);
->         allow_barrier(conf);
->
->         mempool_exit(&conf->r10buf_pool);
-> @@ -4819,7 +4852,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
->         if (need_flush ||
->             time_after(jiffies, conf->reshape_checkpoint + 10*HZ)) {
->                 /* Need to update reshape_position in metadata */
-> -               wait_barrier(conf);
-> +               wait_barrier(conf, false);
->                 mddev->reshape_position = conf->reshape_progress;
->                 if (mddev->reshape_backwards)
->                         mddev->curr_resync_completed = raid10_size(mddev, 0, 0)
-> --
-> 2.17.1
->
+Thanks,
+Song
