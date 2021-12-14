@@ -2,58 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C76C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 14 Dec 2021 17:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0619C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 14 Dec 2021 17:28:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236436AbhLNRZR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 14 Dec 2021 12:25:17 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:59832 "EHLO smtp.hosts.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236449AbhLNRZQ (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 14 Dec 2021 12:25:16 -0500
-Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1mxA8h-0008vL-52
-        for linux-raid@vger.kernel.org; Tue, 14 Dec 2021 15:54:51 +0000
-Message-ID: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
-Date:   Tue, 14 Dec 2021 15:54:50 +0000
+        id S233853AbhLNR2I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 14 Dec 2021 12:28:08 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:39692 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233789AbhLNR2H (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 14 Dec 2021 12:28:07 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 82E63B81BB9;
+        Tue, 14 Dec 2021 17:28:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5553BC34604;
+        Tue, 14 Dec 2021 17:28:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639502885;
+        bh=iWhZUpZug7nx6pfIKr0DItc2+D2cy9/JIdFzbQtsEhI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=rYv9JVZ9YX6Z0mBpVDMKm5mu/TzapluDlyLScme2UrTuIXRhZgJB+QO6JHt2eHkyY
+         3+Jqu7AOYi1QgWWEksD+65gGuD0VjAq1acIcvtuXXbqs+tH8BEhJowarrvQvSWSPCS
+         8kJvbqQpEEGu3nXWKmkGoYBqfMPTzpI/yorx8TTNlK8WkzYco3Cu1XxPzAxUGbcxsY
+         iO+svhxl9Uio5GhrkOjfUMJ1zxy9eQVcWcj0E5w9TM/2/0tMICRAFO/Yhd+T1cWrb7
+         gJ3bLGn7U40/JibUXtbMYNVionNiTEfCchB2L6TzUJibY8OBopc2EEs98X8fh7TMjS
+         l3SaS41aVL9JQ==
+Received: by mail-yb1-f180.google.com with SMTP id d10so48128844ybe.3;
+        Tue, 14 Dec 2021 09:28:05 -0800 (PST)
+X-Gm-Message-State: AOAM530j4MZ4wwlvdqpMAD0OIlKF4S3mrXfdpeDpk1u9t+t3reWEPLgJ
+        05JFBUiN2cHil5aUB3xrTVjkaylQzmD5FUbWWUY=
+X-Google-Smtp-Source: ABdhPJzaIWhZ2KXfV3WBSipGqRCpcplKqZGV0U2L1BO8aObP0RNronSXvgKpJlPOO1T9RuBg8PP4FeHUtdss6/yaXVI=
+X-Received: by 2002:a25:8284:: with SMTP id r4mr383980ybk.47.1639502884465;
+ Tue, 14 Dec 2021 09:28:04 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Content-Language: en-US
-To:     linux-raid <linux-raid@vger.kernel.org>
-From:   Wols Lists <antlists@youngman.org.uk>
-Subject: Debugging system hangs
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211214031553.16435-1-yajun.deng@linux.dev>
+In-Reply-To: <20211214031553.16435-1-yajun.deng@linux.dev>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 14 Dec 2021 09:27:53 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5X+zewpKoJLjMMGOUeSiJ1EYqD+0i1bA8y7SFtJLkMeg@mail.gmail.com>
+Message-ID: <CAPhsuW5X+zewpKoJLjMMGOUeSiJ1EYqD+0i1bA8y7SFtJLkMeg@mail.gmail.com>
+Subject: Re: [PATCH] lib/raid6: fix abnormally high latency
+To:     Yajun Deng <yajun.deng@linux.dev>
+Cc:     stockhausen@collogia.de, open list <linux-kernel@vger.kernel.org>,
+        linux-rt-users@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Don't know if this is off-topic or not, seeing as my system is very much 
-reliant on raid ...
+On Mon, Dec 13, 2021 at 7:17 PM Yajun Deng <yajun.deng@linux.dev> wrote:
+>
+> We found an abnormally high latency when executing modprobe raid6_pq, the
+> latency is greater than 1.2s when CONFIG_PREEMPT_VOLUNTARY=y, greater than
+> 67ms when CONFIG_PREEMPT=y, and greater than 16ms when CONFIG_PREEMPT_RT=y.
+> This is caused by disable the preemption, this time is too long and
+> unreasonable. We just need to disable migration. so used migrate_disable()/
+> migrate_enable() instead of preempt_disable()/preempt_enable(). This is
+> beneficial for CONFIG_PREEMPT=y or CONFIG_PREEMPT_RT=y, but no effect for
+> CONFIG_PREEMPT_VOLUNTARY=y.
+>
+> Fixes: fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
+> Signed-off-by: Yajun Deng <yajun.deng@linux.dev>
 
-But basically I'm seeing the system just stop responding. Typically it's 
-in screensaver mode, I've got a blank screen, and it won't wake up. (I 
-used to think it was something to do with Thunderbird, it mostly 
-happened while TB was hammering the system, but no ...)
+We measure the speed of different RAID algorithms.If we don't disable
+preempt, the result may be inaccurate, right? IIUC, we only disable preempt
+for 16 jiffies. Why do we see 1.2 second delay?
 
-Today, I had it happen while the system was idle but not in screensaver, 
-I run xosview, and everything was clearly frozen - including xosview.
+Thanks,
+Song
 
-As you might know, my stack is ext4 over lvm (over raid over 
-dm-integrity for /home) over spinning rust.
-
-And I run gentoo/systemd - currently on the latest stable kernel afaik, 
-5.10.76-gentoo-r1 SMP x86_64.
-
-Any advice on how to debug a hang - basically I need something that'll 
-just sit there so when it crashes (and I press the reset button to 
-recover) I'll have some sort of trace. It would be nice to prove it's 
-not the disk stack at fault ...
-
-Obviously, "set these options in the kernel" won't faze me ...
-
-Cheers,
-Wol
+> ---
+>  lib/raid6/algos.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+> index 6d5e5000fdd7..21611d05c34c 100644
+> --- a/lib/raid6/algos.c
+> +++ b/lib/raid6/algos.c
+> @@ -162,7 +162,7 @@ static inline const struct raid6_calls *raid6_choose_gen(
+>
+>                         perf = 0;
+>
+> -                       preempt_disable();
+> +                       migrate_disable();
+>                         j0 = jiffies;
+>                         while ((j1 = jiffies) == j0)
+>                                 cpu_relax();
+> @@ -171,7 +171,7 @@ static inline const struct raid6_calls *raid6_choose_gen(
+>                                 (*algo)->gen_syndrome(disks, PAGE_SIZE, *dptrs);
+>                                 perf++;
+>                         }
+> -                       preempt_enable();
+> +                       migrate_enable();
+>
+>                         if (perf > bestgenperf) {
+>                                 bestgenperf = perf;
+> @@ -186,7 +186,7 @@ static inline const struct raid6_calls *raid6_choose_gen(
+>
+>                         perf = 0;
+>
+> -                       preempt_disable();
+> +                       migrate_disable();
+>                         j0 = jiffies;
+>                         while ((j1 = jiffies) == j0)
+>                                 cpu_relax();
+> @@ -196,7 +196,7 @@ static inline const struct raid6_calls *raid6_choose_gen(
+>                                                       PAGE_SIZE, *dptrs);
+>                                 perf++;
+>                         }
+> -                       preempt_enable();
+> +                       migrate_enable();
+>
+>                         if (best == *algo)
+>                                 bestxorperf = perf;
+> --
+> 2.32.0
+>
