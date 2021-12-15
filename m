@@ -2,212 +2,291 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 085CAC433FE
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Dec 2021 22:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A66C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Dec 2021 22:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230365AbhLOWF1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 15 Dec 2021 17:05:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44950 "EHLO
+        id S231208AbhLOWUL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 15 Dec 2021 17:20:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230356AbhLOWF0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Dec 2021 17:05:26 -0500
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39980C061574
-        for <linux-raid@vger.kernel.org>; Wed, 15 Dec 2021 14:05:26 -0800 (PST)
-Received: by mail-qk1-x72c.google.com with SMTP id d21so14227580qkl.3
-        for <linux-raid@vger.kernel.org>; Wed, 15 Dec 2021 14:05:26 -0800 (PST)
+        with ESMTP id S230358AbhLOWUK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Dec 2021 17:20:10 -0500
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5371AC061574
+        for <linux-raid@vger.kernel.org>; Wed, 15 Dec 2021 14:20:10 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id y7so17799149plp.0
+        for <linux-raid@vger.kernel.org>; Wed, 15 Dec 2021 14:20:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pLQ8uqUVo+pLEz40EzSdJ2LDMNMdS9PebVcui444M+k=;
-        b=erL5DWFMD5T8HAfQAsNUTC/eIKyk69ClH9TcUAueELLPbGr3rB4zXhNpW7RGBWDvQz
-         EEzCS01a11QbfbZCtRkg+3GEXl0QdW5nzs3S2wMqHAwBxNPGfmYNeXHx7GjNmTVkKhaG
-         Yl4ldeQOobfA3Jb2AsU3soa3wSlnX1Lv+YR1TyWq3Z4SwUfLvidQaEeC8rBf3eA25Z/N
-         9L8YJc17u1uHhd/AHsL97MjCHuNh8p2WmqKkV+jDUEtWNzxca/FcK4kyALBj2eWtYxPF
-         n34LNC4cwkgPGpB+/bnPI3CwQtsLoRr5F7fuV7qy+PBqz8QwbZcAJE5XQxSt6WnnaMHX
-         Jqwg==
+        d=digitalocean.com; s=google;
+        h=message-id:date:mime-version:user-agent:subject:to:cc:references
+         :from:in-reply-to:content-transfer-encoding;
+        bh=hq3aa3/mR0XPG37OLEWCn2wsiiRrpPikP/IwjX+pfro=;
+        b=UQku9easbvzNuRVjT2bRtwJmWOYoAp9JF++DZ7SvuUTvV4c4PBuny+oQ5e/3Mfl2k+
+         nk6neX+0n0SDlK7TgNxZJA0XRQX4WtFbEE/dqV87mhlP+ktJJMKqdGIvRM1P+wf4jqzG
+         BOMYqwh9Q82ENirctlkWakYj4Y0EYgCl25LdI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pLQ8uqUVo+pLEz40EzSdJ2LDMNMdS9PebVcui444M+k=;
-        b=diwOgej+mZXekKPsm26YEgndMvOY2dZFxDAakQIEAfgX7YZom2pvE3+4rd3GWIyAKf
-         kl3ir9k1/TpkfbEXWWLv6i1NW4LN0UOHvUDitvTlMW2ZRODpxs3QQIj5xZXcT38PwQOk
-         /5okyJ3kTlp6q9D/LzZIs0IkcTJnEoGKTGf5cnOlmU4zGFvtYdm2VRiWNVSrFN0DI8Nh
-         OlpoNw2hBRCUEPNI4aZ2jzpaRYnEui9eTTxD0vyymw6t1VNQD3Uvh6blLhAi/63Hd9Or
-         DsiOngIeFT0FqnSD4T+xEwke/CJA8VCkyMNaU5BP6vG9LiHFGTeH6ywMhH00YPh+D+FA
-         Pt/Q==
-X-Gm-Message-State: AOAM5307awC4uGzmWMnRca2yi2EeHgfdFecVXRyuFwFZ4pER7CRKykvD
-        hv97i+ew0+IPnBTL8dyxbdC5Fw74WjNLZUVq8LMo5TMq7no=
-X-Google-Smtp-Source: ABdhPJw4FqoM7I4H2tQ+DxbnwiBrsx+hMSF7TFHDMlVOhA2hxA++uzgNapjyGUjyrHm2aG0ixmpQg3Efw5Jl2HlQoYo=
-X-Received: by 2002:a05:620a:4087:: with SMTP id f7mr10370029qko.56.1639605925181;
- Wed, 15 Dec 2021 14:05:25 -0800 (PST)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :to:cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=hq3aa3/mR0XPG37OLEWCn2wsiiRrpPikP/IwjX+pfro=;
+        b=2ihUOs4hSn03/o9xAbljtSIUe9eximQN1cO7eZfzNDYL8+9yjqQULTf3xKJzajNNpc
+         nbkOHtQWXW1h+wxxlyssPamIRhOV1RFb6sOnIzcITy7d0ODpM7irHA4IVK8JSFtt/BG2
+         VOclrhNieW9rMVW2hMHJa49Gq/Wdns24HFH3sDdtLa+jqQd0VvevWsPpOnVNe3VcxJKP
+         Hht8T2tZ3J34j5bjK+c2tlZU5SLwrDT604Uyhq44Ia1CeaMlb5/Ayw9w/k6veFT/mzb2
+         WL8ldu39Jpf0cpSlwH0bZlueWoID0lVrHq5KIS3tKPrljpsogu4Hk1zKrkrJ9SkuR/8r
+         jswg==
+X-Gm-Message-State: AOAM5321GiuMRMKlJTXTiumT0pZOTQfs38Df3eIUVigfpbOPSaPXiUYj
+        zS6yXK3DhoNTRDwJfP4TTXyka2HwkI8b+gk/
+X-Google-Smtp-Source: ABdhPJxZrZAp+nguvDID/8DwdvZQLBjifRq4YVUCOYcxR3VSbJmWvL7/DDE0sPClRRAHdiTlN20acw==
+X-Received: by 2002:a17:90b:350c:: with SMTP id ls12mr2217313pjb.197.1639606809559;
+        Wed, 15 Dec 2021 14:20:09 -0800 (PST)
+Received: from [192.168.1.5] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
+        by smtp.gmail.com with ESMTPSA id c21sm3686813pfl.138.2021.12.15.14.20.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Dec 2021 14:20:09 -0800 (PST)
+Message-ID: <f5b0b47f-cf0b-f74a-b8b6-80aeaa9b400d@digitalocean.com>
+Date:   Wed, 15 Dec 2021 15:20:03 -0700
 MIME-Version: 1.0
-References: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
- <CAAMCDeekr+a6e7BwyF9b=n49X6YgqUWBc8UtAyZkjFcHBnbyRQ@mail.gmail.com> <cbfc2f45-96d8-4ee7-a12b-5a24bd2f2159@youngman.org.uk>
-In-Reply-To: <cbfc2f45-96d8-4ee7-a12b-5a24bd2f2159@youngman.org.uk>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Wed, 15 Dec 2021 16:05:13 -0600
-Message-ID: <CAAMCDeemZO2u_4WW8pHVP2qOxz0HdHQTy2Gsa=zgY-7g4ptw7w@mail.gmail.com>
-Subject: Re: Debugging system hangs
-To:     Wol <antlists@youngman.org.uk>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.2
+Subject: Re: [PATCH v5 2/4] md: raid1 add nowait support
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, rgoldwyn@suse.de
+References: <CAPhsuW7OY+5-F6Vk6z=ngSMXEayz3si=Sdf69r4vexRo202X_Q@mail.gmail.com>
+ <20211215060906.3230-1-vverma@digitalocean.com>
+ <20211215060906.3230-2-vverma@digitalocean.com>
+ <CAPhsuW5vrMcyMHXNyyFUkzdHnWAGs+WUSLwkrrpyt81Bu3ap2g@mail.gmail.com>
+From:   Vishal Verma <vverma@digitalocean.com>
+In-Reply-To: <CAPhsuW5vrMcyMHXNyyFUkzdHnWAGs+WUSLwkrrpyt81Bu3ap2g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-There would be various messages.
- grep -E 'ATA| sd |ata[0-9]' /var/log/messages
-might get you details.  It will also show when the disks are first
-showing up and being reported.
 
-Timeouts look kind of like this:
-ata5: SError: { Handshk }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/40:58:40:e8:88/00:00:e8:00:00/40 tag 11 ncq dma 32768
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/18:60:48:ea:88/00:00:e8:00:00/40 tag 12 ncq dma 12288
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/08:68:00:eb:88/00:00:e8:00:00/40 tag 13 ncq dma 4096
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/08:78:60:ea:88/00:00:e8:00:00/40 tag 15 ncq dma 4096
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/08:c8:f8:e5:88/02:00:e8:00:00/40 tag 25 ncq dma 266240
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/40:d0:00:e8:88/00:00:e8:00:00/40 tag 26 ncq dma 32768
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/c8:d8:80:e8:88/01:00:e8:00:00/40 tag 27 ncq dma 233472
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5.00: failed command: WRITE FPDMA QUEUED
-ata5.00: cmd 61/08:f8:90:eb:88/00:00:e8:00:00/40 tag 31 ncq dma 4096
-out#012         res 40/00:6c:00:eb:88/00:00:e8:00:00/40 Emask 0x10
-(ATA bus error)
-ata5.00: status: { DRDY }
-ata5: hard resetting link
-ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-ata5.00: configured for UDMA/133
-ata5: EH complete
-[4544065.390549] ata4.00: exception Emask 0x10 SAct 0xc000 SErr
-0x400000 action 0x6 frozen
-[4544065.392582] ata4.00: irq_stat 0x08000000, interface fatal error
-[4544065.394543] ata4: SError: { Handshk }
-[4544065.396595] ata4.00: failed command: WRITE FPDMA QUEUED
-[4544065.398523] ata4.00: cmd 61/40:70:98:2d:ea/00:00:85:00:00/40 tag
-14 ncq dma 32768 out
-[4544065.398523]          res 40/00:7c:18:2e:ea/00:00:85:00:00/40
-Emask 0x10 (ATA bus error)
-[4544065.402441] ata4.00: status: { DRDY }
-[4544065.404753] ata4.00: failed command: WRITE FPDMA QUEUED
-[4544065.406946] ata4.00: cmd 61/40:78:18:2e:ea/00:00:85:00:00/40 tag
-15 ncq dma 32768 out
-[4544065.406946]          res 40/00:7c:18:2e:ea/00:00:85:00:00/40
-Emask 0x10 (ATA bus error)
-[4544065.410850] ata4.00: status: { DRDY }
-[4544065.412787] ata4: hard resetting link
-[4544065.877609] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[4544065.880880] ata4.00: configured for UDMA/133
-[4544065.882816] ata4: EH complete
-ata4.00: exception Emask 0x10 SAct 0xc000 SErr 0x400000 action 0x6 frozen
-ata4.00: irq_stat 0x08000000, interface fatal error
-ata4: SError: { Handshk }
-ata4.00: failed command: WRITE FPDMA QUEUED
-ata4.00: cmd 61/40:70:98:2d:ea/00:00:85:00:00/40 tag 14 ncq dma 32768
-out#012         res 40/00:7c:18:2e:ea/00:00:85:00:00/40 Emask 0x10
-(ATA bus error)
-ata4.00: status: { DRDY }
-ata4.00: failed command: WRITE FPDMA QUEUED
-ata4.00: cmd 61/40:78:18:2e:ea/00:00:85:00:00/40 tag 15 ncq dma 32768
-out#012         res 40/00:7c:18:2e:ea/00:00:85:00:00/40 Emask 0x10
-(ATA bus error)
-ata4.00: status: { DRDY }
-ata4: hard resetting link
-ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-ata4.00: configured for UDMA/133
-ata4: EH complete
-
-
-
-The autoreboot only happens after the machine has already 'crashed'
-and would have been otherwise unresponsive anyway.
-
-On Wed, Dec 15, 2021 at 3:53 PM Wol <antlists@youngman.org.uk> wrote:
+On 12/15/21 1:33 PM, Song Liu wrote:
+> On Tue, Dec 14, 2021 at 10:09 PM Vishal Verma <vverma@digitalocean.com> wrote:
+>> This adds nowait support to the RAID1 driver. It makes RAID1 driver
+>> return with EAGAIN for situations where it could wait for eg:
+>>
+>> - Waiting for the barrier,
+>> - Array got frozen,
+>> - Too many pending I/Os to be queued.
+>>
+>> wait_barrier() fn is modified to return bool to support error for
+>> wait barriers. It returns true in case of wait or if wait is not
+>> required and returns false if wait was required but not performed
+>> to support nowait.
+> Please see some detailed comments below. But a general and more important
+> question: were you able to trigger these conditions (path that lead to
+> bio_wouldblock_error) in the tests?
 >
-> On 15/12/2021 16:45, Roger Heflin wrote:
-> > If you cannot login to the machine via ssh, also try pinging it.  If
-> > ping works but ssh does not either ssh died, or the machine is paging
-> > so heavily that user space cannot respond in a reasonable time.
+> Ideally, we should test all these conditions. If something is really
+> hard to trigger,
+> please highlight that in the commit log, so that I can run more tests on them.
 >
-> "Unable to resolve host name 'thewolery'"
+> Thanks,
+> Song
 >
-> Paging is EXTREMELY unlikely with 32GB ram ... :-)
-> >
-> > If the disk were an issue there should be messages about something in
-> > the disk layer timing out, but it sounds like there aren't any of
-> > those sorts of messages.  If it was a controller hardware/pci slot/hw
-> > issue that will in some cases cause an immediate power cycle and boot
-> > back up.
+>> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
+>> ---
+>>   drivers/md/raid1.c | 74 +++++++++++++++++++++++++++++++++++-----------
+>>   1 file changed, 57 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> index 7dc8026cf6ee..727d31de5694 100644
+>> --- a/drivers/md/raid1.c
+>> +++ b/drivers/md/raid1.c
+>> @@ -929,8 +929,9 @@ static void lower_barrier(struct r1conf *conf, sector_t sector_nr)
+>>          wake_up(&conf->wait_barrier);
+>>   }
+>>
+>> -static void _wait_barrier(struct r1conf *conf, int idx)
+>> +static bool _wait_barrier(struct r1conf *conf, int idx, bool nowait)
+>>   {
+>> +       bool ret = true;
+>>          /*
+>>           * We need to increase conf->nr_pending[idx] very early here,
+>>           * then raise_barrier() can be blocked when it waits for
+>> @@ -961,7 +962,7 @@ static void _wait_barrier(struct r1conf *conf, int idx)
+>>           */
+>>          if (!READ_ONCE(conf->array_frozen) &&
+>>              !atomic_read(&conf->barrier[idx]))
+>> -               return;
+>> +               return ret;
+>>
+>>          /*
+>>           * After holding conf->resync_lock, conf->nr_pending[idx]
+>> @@ -979,18 +980,27 @@ static void _wait_barrier(struct r1conf *conf, int idx)
+>>           */
+>>          wake_up(&conf->wait_barrier);
+>>          /* Wait for the barrier in same barrier unit bucket to drop. */
+>> -       wait_event_lock_irq(conf->wait_barrier,
+>> -                           !conf->array_frozen &&
+>> -                            !atomic_read(&conf->barrier[idx]),
+>> -                           conf->resync_lock);
+>> +       if (conf->array_frozen || atomic_read(&conf->barrier[idx])) {
+> Do we really need this check?
+This was done when looking at the wait_event_lock_irq conditions.
+I am not very sure about this.
+>> +               /* Return false when nowait flag is set */
+>> +               if (nowait)
+>> +                       ret = false;
+>> +               else {
+>> +                       wait_event_lock_irq(conf->wait_barrier,
+>> +                                       !conf->array_frozen &&
+>> +                                       !atomic_read(&conf->barrier[idx]),
+>> +                                       conf->resync_lock);
+>> +               }
+>> +       }
+>>          atomic_inc(&conf->nr_pending[idx]);
+> Were you able to trigger the condition in the tests? I think we should
+> only increase
+> nr_pending for ret == true. Otherwise, we will leak a nr_pending.
+No I wasn't able to. Makes sense about nr_pending. Thanks for catching.
 >
-> Where do I look for those after a reboot? The system basically is
-> completely unresponsive - so no it's not a reset or anything, the system
-> just stops...
-> >
-> > You might also configure kdump, there should be doc's someplace on
-> > configuring it for your distribution, once configured then test it
-> > with "echo c > /proc/sysrq-trigger" and that should crash the machine
-> > and leave you with a kernel core dump + dmesg from the time of the
-> > crash.   Also if kdump is configured and working it will crash/dump
-> > memory and typically boot back up automatically.
+>>          atomic_dec(&conf->nr_waiting[idx]);
+>>          spin_unlock_irq(&conf->resync_lock);
+>> +       return ret;
+>>   }
+>>
+>> -static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>> +static bool wait_read_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+>>   {
+>>          int idx = sector_to_idx(sector_nr);
+>> +       bool ret = true;
+>>
+>>          /*
+>>           * Very similar to _wait_barrier(). The difference is, for read
+>> @@ -1002,7 +1012,7 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>>          atomic_inc(&conf->nr_pending[idx]);
+>>
+>>          if (!READ_ONCE(conf->array_frozen))
+>> -               return;
+>> +               return ret;
+>>
+>>          spin_lock_irq(&conf->resync_lock);
+>>          atomic_inc(&conf->nr_waiting[idx]);
+>> @@ -1013,19 +1023,27 @@ static void wait_read_barrier(struct r1conf *conf, sector_t sector_nr)
+>>           */
+>>          wake_up(&conf->wait_barrier);
+>>          /* Wait for array to be unfrozen */
+>> -       wait_event_lock_irq(conf->wait_barrier,
+>> -                           !conf->array_frozen,
+>> -                           conf->resync_lock);
+>> +       if (conf->array_frozen || atomic_read(&conf->barrier[idx])) {
+> I guess we don't need this either. Also, the condition there is not identical
+> to wait_barrier (no need to check conf->barrier[idx]).
+OK
+>> +               if (nowait)
+>> +                       /* Return false when nowait flag is set */
+>> +                       ret = false;
+>> +               else {
+>> +                       wait_event_lock_irq(conf->wait_barrier,
+>> +                                       !conf->array_frozen,
+>> +                                       conf->resync_lock);
+>> +               }
+>> +       }
+>>          atomic_inc(&conf->nr_pending[idx]);
+> ditto on nr_pending.
+OK
 >
-> I'll have to try it, although an autoreboot might not be a particularly
-> good idea ...
-> >
-> > On Wed, Dec 15, 2021 at 3:54 AM Wols Lists <antlists@youngman.org.uk> wrote:
-> >>
-> >> Don't know if this is off-topic or not, seeing as my system is very much
-> >> reliant on raid ...
-> >>
-> >> But basically I'm seeing the system just stop responding. Typically it's
-> >> in screensaver mode, I've got a blank screen, and it won't wake up. (I
-> >> used to think it was something to do with Thunderbird, it mostly
-> >> happened while TB was hammering the system, but no ...)
-> >>
-> >> Today, I had it happen while the system was idle but not in screensaver,
-> >> I run xosview, and everything was clearly frozen - including xosview.
-> >>
-> >> As you might know, my stack is ext4 over lvm (over raid over
-> >> dm-integrity for /home) over spinning rust.
-> >>
-> >> And I run gentoo/systemd - currently on the latest stable kernel afaik,
-> >> 5.10.76-gentoo-r1 SMP x86_64.
-> >>
-> >> Any advice on how to debug a hang - basically I need something that'll
-> >> just sit there so when it crashes (and I press the reset button to
-> >> recover) I'll have some sort of trace. It would be nice to prove it's
-> >> not the disk stack at fault ...
-> >>
-> >> Obviously, "set these options in the kernel" won't faze me ...
-> >>
-> >> Cheers,
-> >> Wol
+>>          atomic_dec(&conf->nr_waiting[idx]);
+>>          spin_unlock_irq(&conf->resync_lock);
+>> +       return ret;
+>>   }
+>>
+>> -static void wait_barrier(struct r1conf *conf, sector_t sector_nr)
+>> +static bool wait_barrier(struct r1conf *conf, sector_t sector_nr, bool nowait)
+>>   {
+>>          int idx = sector_to_idx(sector_nr);
+>>
+>> -       _wait_barrier(conf, idx);
+>> +       return _wait_barrier(conf, idx, nowait);
+>>   }
+>>
+>>   static void _allow_barrier(struct r1conf *conf, int idx)
+>> @@ -1236,7 +1254,11 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+>>           * Still need barrier for READ in case that whole
+>>           * array is frozen.
+>>           */
+>> -       wait_read_barrier(conf, bio->bi_iter.bi_sector);
+>> +       if (!wait_read_barrier(conf, bio->bi_iter.bi_sector,
+>> +                               bio->bi_opf & REQ_NOWAIT)) {
+>> +               bio_wouldblock_error(bio);
+>> +               return;
+>> +       }
+>>
+>>          if (!r1_bio)
+>>                  r1_bio = alloc_r1bio(mddev, bio);
+>> @@ -1336,6 +1358,10 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>                       bio->bi_iter.bi_sector, bio_end_sector(bio))) {
+>>
+>>                  DEFINE_WAIT(w);
+>> +               if (bio->bi_opf & REQ_NOWAIT) {
+>> +                       bio_wouldblock_error(bio);
+>> +                       return;
+>> +               }
+>>                  for (;;) {
+>>                          prepare_to_wait(&conf->wait_barrier,
+>>                                          &w, TASK_IDLE);
+>> @@ -1353,17 +1379,26 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>           * thread has put up a bar for new requests.
+>>           * Continue immediately if no resync is active currently.
+>>           */
+>> -       wait_barrier(conf, bio->bi_iter.bi_sector);
+>> +       if (!wait_barrier(conf, bio->bi_iter.bi_sector,
+>> +                               bio->bi_opf & REQ_NOWAIT)) {
+>> +               bio_wouldblock_error(bio);
+>> +               return;
+>> +       }
+>>
+>>          r1_bio = alloc_r1bio(mddev, bio);
+>>          r1_bio->sectors = max_write_sectors;
+>>
+>>          if (conf->pending_count >= max_queued_requests) {
+>>                  md_wakeup_thread(mddev->thread);
+>> +               if (bio->bi_opf & REQ_NOWAIT) {
+>> +                       bio_wouldblock_error(bio);
+> I think we need to fix conf->nr_pending before returning.
+OK, this one I am not sure. You mean dec conf->nr_pending?
+>> +                       return;
+>> +               }
+>>                  raid1_log(mddev, "wait queued");
+>>                  wait_event(conf->wait_barrier,
+>>                             conf->pending_count < max_queued_requests);
+>>          }
+>> +
+>>          /* first select target devices under rcu_lock and
+>>           * inc refcount on their rdev.  Record them by setting
+>>           * bios[x] to bio
+>> @@ -1458,9 +1493,14 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+>>                                  rdev_dec_pending(conf->mirrors[j].rdev, mddev);
+>>                  r1_bio->state = 0;
+>>                  allow_barrier(conf, bio->bi_iter.bi_sector);
+>> +
+>> +               if (bio->bi_opf & REQ_NOWAIT) {
+>> +                       bio_wouldblock_error(bio);
+>> +                       return;
+>> +               }
+>>                  raid1_log(mddev, "wait rdev %d blocked", blocked_rdev->raid_disk);
+>>                  md_wait_for_blocked_rdev(blocked_rdev, mddev);
+>> -               wait_barrier(conf, bio->bi_iter.bi_sector);
+>> +               wait_barrier(conf, bio->bi_iter.bi_sector, false);
+>>                  goto retry_write;
+>>          }
+>>
+>> @@ -1687,7 +1727,7 @@ static void close_sync(struct r1conf *conf)
+>>          int idx;
+>>
+>>          for (idx = 0; idx < BARRIER_BUCKETS_NR; idx++) {
+>> -               _wait_barrier(conf, idx);
+>> +               _wait_barrier(conf, idx, false);
+>>                  _allow_barrier(conf, idx);
+>>          }
+>>
+>> --
+>> 2.17.1
+>>
