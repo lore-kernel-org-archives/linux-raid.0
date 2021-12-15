@@ -2,73 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C21AFC433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Dec 2021 21:45:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CC15C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Dec 2021 21:53:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229618AbhLOVpu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 15 Dec 2021 16:45:50 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:54650 "EHLO smtp.hosts.co.uk"
+        id S230232AbhLOVxn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 15 Dec 2021 16:53:43 -0500
+Received: from smtp.hosts.co.uk ([85.233.160.19]:32692 "EHLO smtp.hosts.co.uk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229539AbhLOVpt (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 15 Dec 2021 16:45:49 -0500
+        id S230240AbhLOVxm (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 15 Dec 2021 16:53:42 -0500
 Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.65])
         by smtp.hosts.co.uk with esmtpa (Exim)
         (envelope-from <antlists@youngman.org.uk>)
-        id 1mxc5r-000148-By; Wed, 15 Dec 2021 21:45:48 +0000
-Message-ID: <8ebfb6f7-e9bc-0f10-2dfa-2e4b7bb174af@youngman.org.uk>
-Date:   Wed, 15 Dec 2021 21:45:46 +0000
+        id 1mxcDV-0002Kv-4C; Wed, 15 Dec 2021 21:53:41 +0000
+Message-ID: <cbfc2f45-96d8-4ee7-a12b-5a24bd2f2159@youngman.org.uk>
+Date:   Wed, 15 Dec 2021 21:53:40 +0000
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
 Subject: Re: Debugging system hangs
 Content-Language: en-GB
-To:     John Stoffel <john@stoffel.org>, Phil Turmel <philip@turmel.org>
-Cc:     Roman Mamedov <rm@romanrm.net>,
-        linux-raid <linux-raid@vger.kernel.org>
+To:     Roger Heflin <rogerheflin@gmail.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
 References: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
- <20211214224658.26cea5a0@nvm>
- <4187acd4-ece5-9d39-a008-5aa01c9b6d76@turmel.org>
- <25017.16380.261760.406891@quad.stoffel.home>
+ <CAAMCDeekr+a6e7BwyF9b=n49X6YgqUWBc8UtAyZkjFcHBnbyRQ@mail.gmail.com>
 From:   Wol <antlists@youngman.org.uk>
-In-Reply-To: <25017.16380.261760.406891@quad.stoffel.home>
+In-Reply-To: <CAAMCDeekr+a6e7BwyF9b=n49X6YgqUWBc8UtAyZkjFcHBnbyRQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 15/12/2021 01:08, John Stoffel wrote:
-> Can you explain more about your hardware?  Is it new?  Have you made
-> any changes recently?  Is there any over clocking?  As for changes,
-> I'm talking both hardware and software.  What daemons are you running?
-> Anything that changed is a good thing to take a long hard look at.
+On 15/12/2021 16:45, Roger Heflin wrote:
+> If you cannot login to the machine via ssh, also try pinging it.  If
+> ping works but ssh does not either ssh died, or the machine is paging
+> so heavily that user space cannot respond in a reasonable time.
 
-Well, it's a new system that's about three years old ... it's a 
-home-built, most of which I bought about three years ago, and I'm 
-finally finishing off commissioning it.
+"Unable to resolve host name 'thewolery'"
 
-The hard drives are new Seagate Ironwolves x2 and an old Barracuda, 32GB 
-of new DDR4 ram, and a Radeon 4350 video card which is also old but 
-hardly used.
+Paging is EXTREMELY unlikely with 32GB ram ... :-)
 > 
-> If you have another system, remote syslog might also be something to
-> add into the mix.  I also really like serial consoles, so you can
-> capture all the output onto another system easily.
+> If the disk were an issue there should be messages about something in
+> the disk layer timing out, but it sounds like there aren't any of
+> those sorts of messages.  If it was a controller hardware/pci slot/hw
+> issue that will in some cases cause an immediate power cycle and boot
+> back up.
+
+Where do I look for those after a reboot? The system basically is 
+completely unresponsive - so no it's not a reset or anything, the system 
+just stops...
 > 
-Hardware bought for this system is being re-purposed into a raid 
-test-bed so I will hopefully have one available soon (if anyone in SE 
-London has any 1TB drives they don't want, they'll be welcome for 
-this... :-)
+> You might also configure kdump, there should be doc's someplace on
+> configuring it for your distribution, once configured then test it
+> with "echo c > /proc/sysrq-trigger" and that should crash the machine
+> and leave you with a kernel core dump + dmesg from the time of the
+> crash.   Also if kdump is configured and working it will crash/dump
+> memory and typically boot back up automatically.
 
-> It might also be useful to try going back to an older kernel, but I
-> haven't a clue how hard that is with gentoo.  Does the distro still
-> expect you to compile everything and bootstrap yourself these days?
-
-Pretty much. There are utilities that make it un-necessary, but it's 
-easy enough and encouraged ... so my trouble COULD be as simple as a 
-misconfigured kernel ...
-
-But all this will be a learning experience :-)
-
-Cheers,
-Wol
+I'll have to try it, although an autoreboot might not be a particularly 
+good idea ...
+> 
+> On Wed, Dec 15, 2021 at 3:54 AM Wols Lists <antlists@youngman.org.uk> wrote:
+>>
+>> Don't know if this is off-topic or not, seeing as my system is very much
+>> reliant on raid ...
+>>
+>> But basically I'm seeing the system just stop responding. Typically it's
+>> in screensaver mode, I've got a blank screen, and it won't wake up. (I
+>> used to think it was something to do with Thunderbird, it mostly
+>> happened while TB was hammering the system, but no ...)
+>>
+>> Today, I had it happen while the system was idle but not in screensaver,
+>> I run xosview, and everything was clearly frozen - including xosview.
+>>
+>> As you might know, my stack is ext4 over lvm (over raid over
+>> dm-integrity for /home) over spinning rust.
+>>
+>> And I run gentoo/systemd - currently on the latest stable kernel afaik,
+>> 5.10.76-gentoo-r1 SMP x86_64.
+>>
+>> Any advice on how to debug a hang - basically I need something that'll
+>> just sit there so when it crashes (and I press the reset button to
+>> recover) I'll have some sort of trace. It would be nice to prove it's
+>> not the disk stack at fault ...
+>>
+>> Obviously, "set these options in the kernel" won't faze me ...
+>>
+>> Cheers,
+>> Wol
