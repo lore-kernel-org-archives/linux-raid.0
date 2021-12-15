@@ -2,103 +2,116 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBB44C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 15 Dec 2021 16:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 134D1C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 15 Dec 2021 16:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244972AbhLOQp7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 15 Dec 2021 11:45:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54740 "EHLO
+        id S245011AbhLOQwY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 15 Dec 2021 11:52:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232684AbhLOQp6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Dec 2021 11:45:58 -0500
-Received: from mail-qt1-x833.google.com (mail-qt1-x833.google.com [IPv6:2607:f8b0:4864:20::833])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80742C061574
-        for <linux-raid@vger.kernel.org>; Wed, 15 Dec 2021 08:45:58 -0800 (PST)
-Received: by mail-qt1-x833.google.com with SMTP id q14so22391496qtx.10
-        for <linux-raid@vger.kernel.org>; Wed, 15 Dec 2021 08:45:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=JKYwOuiD5aSSKclu6WANgCs8Yzk6v+1DTaFFtROAqfo=;
-        b=a2t9DvC4llNRUgfY1p+MnTvBR71/MpxcQGdKn6DcrkjtfULmzdcYJ11h11HD2LEMFh
-         GxKY14ZCUveWMitaA43ioJmL3lxNNf2CGvVLsdNXfizZChMuzAKiwZNyFjRDVulA5JxD
-         MQ6AnE8raXKoNprZX8Qr7vlm/dM07LaZtseUAM24IpUW/daGodtw7nU0Z3P8ls0Sn8FE
-         oUsL8YyTvIJyJwm1avlU5PuXkJ6SWTrz70jXAn2g/UfbiTNKk87PtVQkcqJPnyjxhycO
-         tRHZA1jkAI0XG7CzmwSEfb0rXUcsCM8jIe+85JoTbjiaG8aDwgmR9isOX+DN8HfzENXt
-         bEng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JKYwOuiD5aSSKclu6WANgCs8Yzk6v+1DTaFFtROAqfo=;
-        b=p/xe5TAZ6tyczlA/CnpHb9RvqODy6MZ6fSf7hqhq5uk9a2aQP7B4Pq5rfhxz58iwpX
-         Id5g0SMBu+mxrKJQx3kgeOFJ6PmgJHYWeVuwdDfHAE0sezkTQ4pplfrkxeq6u+BD8W+n
-         69ZHcNjBO3OtrkC0C7dTLumLRBHdTzxpaDWrx6h8CtJghvQ93KnsyLmFC1mIlFVO52+o
-         oKNpH38xzozlcBVe6zT8oMcq6UBQLSHCj9j4eYwdKatTf19gO9ReLL7EmuGdKSIQatOf
-         oSfGkuMkPfEgywkDGHk4pgj1VIFSpmkx8BUGYVZ8NmG5NpN3wXuTHPQaVNVubD2BtuLL
-         7bQg==
-X-Gm-Message-State: AOAM533SdOsN8KP/xIR20adxSw2K7djtTtvEWeMqUeWdaLGpXtiO4iq0
-        ActQNsQ3a6wQs5r2ifmFpzV20MMopi7h2yk+NRqNY8sX
-X-Google-Smtp-Source: ABdhPJzlHqMB0ITdNR7NQIUd4gUtDXDfmxgov72llYL6wPpYA0uJCw88Wrsd4hMYL62tVWf1xeyDVGnV1iznpNPiDWU=
-X-Received: by 2002:ac8:7f4b:: with SMTP id g11mr1691398qtk.4.1639586757637;
- Wed, 15 Dec 2021 08:45:57 -0800 (PST)
+        with ESMTP id S245006AbhLOQwY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 15 Dec 2021 11:52:24 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A0B1C061574;
+        Wed, 15 Dec 2021 08:52:24 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 28815619C2;
+        Wed, 15 Dec 2021 16:52:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 854C2C36AE3;
+        Wed, 15 Dec 2021 16:52:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639587142;
+        bh=gu0NXiWUgDFrZg3yWV6zoqWRSOaEF70afmPFo6FWlQo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ljs1hvcckUbQFv0LK09hIboci+KQM8lTnjHwDkGdTg/Bi1ErCsAiz9oGY2aKsOlf6
+         BZmX5h0V9CaHsRrJIHDUsRumrttZZt91MFx5Su+xWaU57ct8SJybjJvDrNiR8w/dIv
+         ITwrQ1MTakn/0zokQLYV98Dibn/696m1H1R5cjdvm0jjaVl9pxgj6attGZ7662bOb4
+         L7+mRd4AvgV8b45klMvjrFJ0cTfBhOhN50LPe1Z1CTNLSH0/9OBA8Yie+xgQa8Q7Go
+         M/NgSmKUB+oMV+p9zmA5nAXrHJEAp196laSwWNkavPdSsaf33lmHauNAv3fGXDp5Mt
+         /49rDGnrup59A==
+Received: by mail-yb1-f178.google.com with SMTP id 131so56820928ybc.7;
+        Wed, 15 Dec 2021 08:52:22 -0800 (PST)
+X-Gm-Message-State: AOAM5310pdtVX1TNndFV/DkI8pP0gcfNFUYeK2mrZlHxdgb3HUm7YyFq
+        H8PqFVjxaKUoJ02tIlPAji5lmr/8HQ0zNo6U6RQ=
+X-Google-Smtp-Source: ABdhPJyCKdltBMj18edFZ70YAKPO+yqbXdbg2IBe3ocP+p2sHYq63xHpS9x6KF3kkF3DZIlsllj8zdXHeOpL+yVHo3Q=
+X-Received: by 2002:a25:8284:: with SMTP id r4mr7725979ybk.47.1639587141669;
+ Wed, 15 Dec 2021 08:52:21 -0800 (PST)
 MIME-Version: 1.0
-References: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
-In-Reply-To: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
-From:   Roger Heflin <rogerheflin@gmail.com>
-Date:   Wed, 15 Dec 2021 10:45:46 -0600
-Message-ID: <CAAMCDeekr+a6e7BwyF9b=n49X6YgqUWBc8UtAyZkjFcHBnbyRQ@mail.gmail.com>
-Subject: Re: Debugging system hangs
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <20211214031553.16435-1-yajun.deng@linux.dev> <CAPhsuW5X+zewpKoJLjMMGOUeSiJ1EYqD+0i1bA8y7SFtJLkMeg@mail.gmail.com>
+ <0d07e13a5454dfb03b22e5223d101a1b@linux.dev>
+In-Reply-To: <0d07e13a5454dfb03b22e5223d101a1b@linux.dev>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 15 Dec 2021 08:52:10 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW6T_nqqfOtj_dVn9KV+iUbki2X3WU3pxfo25Ewj3i5ZjA@mail.gmail.com>
+Message-ID: <CAPhsuW6T_nqqfOtj_dVn9KV+iUbki2X3WU3pxfo25Ewj3i5ZjA@mail.gmail.com>
+Subject: Re: [PATCH] lib/raid6: fix abnormally high latency
+To:     yajun.deng@linux.dev
+Cc:     stockhausen@collogia.de, open list <linux-kernel@vger.kernel.org>,
+        linux-rt-users@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>, masahiroy@kernel.org,
+        williams@redhat.com
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-If you cannot login to the machine via ssh, also try pinging it.  If
-ping works but ssh does not either ssh died, or the machine is paging
-so heavily that user space cannot respond in a reasonable time.
+On Tue, Dec 14, 2021 at 6:14 PM <yajun.deng@linux.dev> wrote:
+>
+> December 15, 2021 1:27 AM, "Song Liu" <song@kernel.org> wrote:
+>
+> > On Mon, Dec 13, 2021 at 7:17 PM Yajun Deng <yajun.deng@linux.dev> wrote=
+:
+> >
+> >> We found an abnormally high latency when executing modprobe raid6_pq, =
+the
+> >> latency is greater than 1.2s when CONFIG_PREEMPT_VOLUNTARY=3Dy, greate=
+r than
+> >> 67ms when CONFIG_PREEMPT=3Dy, and greater than 16ms when CONFIG_PREEMP=
+T_RT=3Dy.
+> >> This is caused by disable the preemption, this time is too long and
+> >> unreasonable. We just need to disable migration. so used migrate_disab=
+le()/
+> >> migrate_enable() instead of preempt_disable()/preempt_enable(). This i=
+s
+> >> beneficial for CONFIG_PREEMPT=3Dy or CONFIG_PREEMPT_RT=3Dy, but no eff=
+ect for
+> >> CONFIG_PREEMPT_VOLUNTARY=3Dy.
+> >>
+> >> Fixes: fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
+> >> Signed-off-by: Yajun Deng <yajun.deng@linux.dev>
+> >
+> > We measure the speed of different RAID algorithms.If we don't disable
+> > preempt, the result may be inaccurate, right? IIUC, we only disable pre=
+empt
+> > for 16 jiffies. Why do we see 1.2 second delay?
+>
+> Here are the command of my test=EF=BC=9A
+> Execute "sudo cyclictest -S -p 95 -d 0 -i 1000 -D 24h -m" in one terminal=
+ and "sudo modprobe raid6_pq" in the other terminal.
+>
+> Here are the results of my test=EF=BC=9A
+> CONFIG_PREEMPT_VOLUNTARY=3Dy=EF=BC=8CCONFIG_HZ_250=3Dy
+> T: 0 ( 3092) P:95 I:1000 C:   8514 Min:      1 Act:    2 Avg:    1 Max:  =
+     6
+> T: 1 ( 3093) P:95 I:1000 C:   8511 Min:      1 Act:    2 Avg:    1 Max:  =
+    14
 
-If the disk were an issue there should be messages about something in
-the disk layer timing out, but it sounds like there aren't any of
-those sorts of messages.  If it was a controller hardware/pci slot/hw
-issue that will in some cases cause an immediate power cycle and boot
-back up.
+I am not very familiar with the RT work, so please forgive me for some
+rookie questions.
 
-You might also configure kdump, there should be doc's someplace on
-configuring it for your distribution, once configured then test it
-with "echo c > /proc/sysrq-trigger" and that should crash the machine
-and leave you with a kernel core dump + dmesg from the time of the
-crash.   Also if kdump is configured and working it will crash/dump
-memory and typically boot back up automatically.
+From the result, I think the CONFIG_PREEMPT_VOLUNTARY=3Dy and the
+CONFIG_PREEMPT=3Dy cases failed to preempt during the preempt enabled perio=
+d in
+raid6_choose_gen(). Is this expected?
 
-On Wed, Dec 15, 2021 at 3:54 AM Wols Lists <antlists@youngman.org.uk> wrote:
->
-> Don't know if this is off-topic or not, seeing as my system is very much
-> reliant on raid ...
->
-> But basically I'm seeing the system just stop responding. Typically it's
-> in screensaver mode, I've got a blank screen, and it won't wake up. (I
-> used to think it was something to do with Thunderbird, it mostly
-> happened while TB was hammering the system, but no ...)
->
-> Today, I had it happen while the system was idle but not in screensaver,
-> I run xosview, and everything was clearly frozen - including xosview.
->
-> As you might know, my stack is ext4 over lvm (over raid over
-> dm-integrity for /home) over spinning rust.
->
-> And I run gentoo/systemd - currently on the latest stable kernel afaik,
-> 5.10.76-gentoo-r1 SMP x86_64.
->
-> Any advice on how to debug a hang - basically I need something that'll
-> just sit there so when it crashes (and I press the reset button to
-> recover) I'll have some sort of trace. It would be nice to prove it's
-> not the disk stack at fault ...
->
-> Obviously, "set these options in the kernel" won't faze me ...
->
-> Cheers,
-> Wol
+OTOH, the 16ms latency with CONFIG_PREEMPT_RT=3Dy is more or less expected.
+Is this acceptable? If not, is 1ms latency acceptable?
+
+Thanks,
+Song
+
+
+[...]
