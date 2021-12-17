@@ -2,210 +2,79 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE4C4C433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 21:43:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 119DEC433FE
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 21:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230043AbhLQVnr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Dec 2021 16:43:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59984 "EHLO
+        id S230096AbhLQVvv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Dec 2021 16:51:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230034AbhLQVnq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Dec 2021 16:43:46 -0500
-Received: from mail-ua1-x92e.google.com (mail-ua1-x92e.google.com [IPv6:2607:f8b0:4864:20::92e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A75BC061574
-        for <linux-raid@vger.kernel.org>; Fri, 17 Dec 2021 13:43:46 -0800 (PST)
-Received: by mail-ua1-x92e.google.com with SMTP id y22so6879387uap.2
-        for <linux-raid@vger.kernel.org>; Fri, 17 Dec 2021 13:43:46 -0800 (PST)
+        with ESMTP id S229847AbhLQVvu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Dec 2021 16:51:50 -0500
+Received: from mail-ua1-x92d.google.com (mail-ua1-x92d.google.com [IPv6:2607:f8b0:4864:20::92d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0797C061574;
+        Fri, 17 Dec 2021 13:51:50 -0800 (PST)
+Received: by mail-ua1-x92d.google.com with SMTP id y22so6908774uap.2;
+        Fri, 17 Dec 2021 13:51:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:cc
-         :content-transfer-encoding;
-        bh=dLRIfMXscijVwX02/iyxcGJu9iZ9gntA3RrOduhrDRk=;
-        b=Ec9FjGri2lsYplifRzflf6w9mo/K6pEenKg49x/3t3NzqywHiG7Nhubkl7Zn8G0OtN
-         kBuszAqkpZ3kDZkFcTNn/5di4By/2PbsMtEyARbTas7jk6l4tIxSfF+DwjvH0IZSL15u
-         nSJks+lY4zKgupvDgkanH4LkrfRsYURfK3GbO3948L9mNId/elXNtQ6t7JL+Mnp482jE
-         Pu8bECHl0kLSWDBACLmRD/udOMnn5Qu58GbqRRIlWzrd7CC4Jnz69OB5aAtY7NutolVW
-         NmWN9Vr8bOvR1t3BHQI3CJ/57TNPS5HoJArAlgpHAy1EHZQ5cU62K4nM0vsx/O7i7ozY
-         13Iw==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=r2n81BHcQENwCQ3YEUE98CV3ubhZaf5BOJMeyRLoCPw=;
+        b=EPeAGhC7PjnOwghy82y4jkT8FX7habfMPn71bNpD7uEB0aAh831KSuXLues+XWrm9r
+         0O7uGakXxVIwRuRK9937fb8zm6Yj+y3GkUS3P3OlDYUDRC7Jz4/hxaEbgJAKCby6y0P6
+         FyAs3CXV8WLcHwufpg5ftaH4zd7avsc0E7IOP5+OFmO26eEWeBH6v0d4zsiMrvvHuVM5
+         qIa6bDx2TWmR7s8w/w3tzj2xtfYwDfWlzTgegdnwqUwihp8B/9mjzm314/kcDzZowrZy
+         2IMm7L2wpfGb0PmuYfFFz27eQOnpaUHEWjqoEKaRm4QzsjEl6wpnhDljjzWDKajR3sVF
+         jI7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:cc:content-transfer-encoding;
-        bh=dLRIfMXscijVwX02/iyxcGJu9iZ9gntA3RrOduhrDRk=;
-        b=Ow40tzwHh22NimI+ZpeQZ+EWDDgD/+GmCF2JjXYuHPrxCqhJJd56W9pgPC3I/0gAhS
-         sBQA66P35mURkyDlZl4pHjt7lfa3n5cwjfqmV6tOTRmUfn/VcRnc9HZxiAxBc84Y5yZh
-         hMr24H47u8YLeuUW+wkBalwcwII66up9RrgdlIbc3/7ps8RQTHx7o+2prdffwbbeK9hy
-         RHHG/QfwZAvJc5whQJ0sMAwYDnkhIAaqj5InjKx40pUhhaK+Iepf5Kz4Da+FKoeS4wih
-         hx7uhmIIPqfvOG0wmhbh/77zcUbH1YR/Uzzcbs/vZnnxGFzy4RqEmHjrzXvcf7UJWer2
-         9DGQ==
-X-Gm-Message-State: AOAM530YrV1h/vn1yJ0JnW+uNHqGQBHsxL4bkWa/x8nlf/5zy0RG2Rca
-        9XIutetyVsK0bynGYo66LSImsjTgjQhxbhSRStw=
-X-Received: by 2002:a67:d78c:: with SMTP id q12mt2243501vsj.35.1639777425497;
- Fri, 17 Dec 2021 13:43:45 -0800 (PST)
+         :message-id:subject:to:cc;
+        bh=r2n81BHcQENwCQ3YEUE98CV3ubhZaf5BOJMeyRLoCPw=;
+        b=aF13JvBbcw1w0Y4yDVGJWFljjGk9wSqyojwMoPk0I6fVVDzERQ99ILcEPEb9OqDeh6
+         MGC8cGSGC4VVw+LVkunrLxe5ubTSPSCZhv3DS6QtCLZmqZiIWcYjkkKwaSdRlIZ4S3Bq
+         inQypu4raVwBHKtUiidLsVQmOYUes8G50TRpKOtfB43+MsCmMiV2vQLR/MQWb49hcS2v
+         VhiWQYh9kkbb6hBExaOBgkytknIJ9MmNvzZ2DN2CEklTOHel7ULX1jJBIR6aRUt5kNKQ
+         2WXBpXzXPx4nU1oDgC+a/WKZQ2pPYWX9FjI+1qMtQLiKeem+NMwPrPTjbeAb01fXSgWO
+         RVaw==
+X-Gm-Message-State: AOAM5308fm3Og3GsSYn5UX2x74hTmhVyS9cV6nc5nAIfomHj3oFRQyzO
+        rcEgkALyP0MBz7jrP4IuwVYLObAoaoInsLqti002Nk5YpiA=
+X-Google-Smtp-Source: ABdhPJxJDQQzndQl4PQEsT6k0Z0vfJU1hu/u0NuoyuW8h8PbSpwF8KKS5BJu4z1xK667tv61DFz7OPncbF1llp165eA=
+X-Received: by 2002:ab0:2545:: with SMTP id l5mr1976547uan.103.1639777909847;
+ Fri, 17 Dec 2021 13:51:49 -0800 (PST)
 MIME-Version: 1.0
 References: <20211214031553.16435-1-yajun.deng@linux.dev> <CAPhsuW5X+zewpKoJLjMMGOUeSiJ1EYqD+0i1bA8y7SFtJLkMeg@mail.gmail.com>
- <0d07e13a5454dfb03b22e5223d101a1b@linux.dev> <CAA7rmPEjdV32_2A8zR0OnbG+kG8EpB3XEnBP7dGSJUm0hpnABg@mail.gmail.com>
-In-Reply-To: <CAA7rmPEjdV32_2A8zR0OnbG+kG8EpB3XEnBP7dGSJUm0hpnABg@mail.gmail.com>
+ <0d07e13a5454dfb03b22e5223d101a1b@linux.dev> <CAPhsuW6T_nqqfOtj_dVn9KV+iUbki2X3WU3pxfo25Ewj3i5ZjA@mail.gmail.com>
+ <3ed867e06f7f9bb9d89beaafc50905c8@linux.dev> <CAPhsuW63KawpM0vBPo9gXjgELKMtUtsL0M4DkbwWZTkub2ZDSw@mail.gmail.com>
+In-Reply-To: <CAPhsuW63KawpM0vBPo9gXjgELKMtUtsL0M4DkbwWZTkub2ZDSw@mail.gmail.com>
 From:   Daniel Vacek <neelx.g@gmail.com>
-Date:   Fri, 17 Dec 2021 22:43:33 +0100
-Message-ID: <CAA7rmPG7ktzQ1_Xn3hUiC8kfoMM5R=3JqaFsjjSfTH+H2u12Nw@mail.gmail.com>
-Subject: Fwd: [PATCH] lib/raid6: fix abnormally high latency
-Cc:     Song Liu <song@kernel.org>, stockhausen@collogia.de,
+Date:   Fri, 17 Dec 2021 22:51:38 +0100
+Message-ID: <CAA7rmPGOL0vGg_6xxyTx5fNHP75ZYYXukF737ycqyLgmYpqoVA@mail.gmail.com>
+Subject: Re: [PATCH] lib/raid6: fix abnormally high latency
+To:     Song Liu <song@kernel.org>
+Cc:     Yajun Deng <yajun.deng@linux.dev>, stockhausen@collogia.de,
         open list <linux-kernel@vger.kernel.org>,
         linux-rt-users <linux-rt-users@vger.kernel.org>,
         linux-raid <linux-raid@vger.kernel.org>, masahiroy@kernel.org,
         williams@redhat.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello,
+On Thu, Dec 16, 2021 at 1:19 PM Song Liu <song@kernel.org> wrote:
+> I think allowing preempt may still affect the speed comparison. But
+> such discrepancy
+> should be acceptable. I will apply this to md-next.
 
-This is perfectly correct and expected result. Further explanation
-follows down below.
+No, please. This could eventually result with people starting to
+report 'sometimes the storage does not perform' or 'random high CPU
+usage on some boots' kind of issues.
 
-On Wed, Dec 15, 2021 at 8:41 PM <yajun.deng@linux.dev> wrote:
->
-> December 15, 2021 1:27 AM, "Song Liu" <song@kernel.org> wrote:
->
-> > On Mon, Dec 13, 2021 at 7:17 PM Yajun Deng <yajun.deng@linux.dev> wrote=
-:
-> >
-> >> We found an abnormally high latency when executing modprobe raid6_pq, =
-the
-> >> latency is greater than 1.2s when CONFIG_PREEMPT_VOLUNTARY=3Dy, greate=
-r than
-> >> 67ms when CONFIG_PREEMPT=3Dy, and greater than 16ms when CONFIG_PREEMP=
-T_RT=3Dy.
-> >> This is caused by disable the preemption, this time is too long and
-> >> unreasonable. We just need to disable migration. so used migrate_disab=
-le()/
-> >> migrate_enable() instead of preempt_disable()/preempt_enable(). This i=
-s
-> >> beneficial for CONFIG_PREEMPT=3Dy or CONFIG_PREEMPT_RT=3Dy, but no eff=
-ect for
-> >> CONFIG_PREEMPT_VOLUNTARY=3Dy.
-> >>
-> >> Fixes: fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
-> >> Signed-off-by: Yajun Deng <yajun.deng@linux.dev>
-> >
-> > We measure the speed of different RAID algorithms.If we don't disable
-> > preempt, the result may be inaccurate, right? IIUC, we only disable pre=
-empt
-> > for 16 jiffies. Why do we see 1.2 second delay?
->
-> Here are the command of my test=EF=BC=9A
-> Execute "sudo cyclictest -S -p 95 -d 0 -i 1000 -D 24h -m" in one terminal=
- and "sudo modprobe raid6_pq" in the other terminal.
->
-> Here are the results of my test=EF=BC=9A
-> CONFIG_PREEMPT_VOLUNTARY=3Dy=EF=BC=8CCONFIG_HZ_250=3Dy
-> T:17 ( 3109) P:95 I:1000 C:   7255 Min:      1 Act:    2 Avg:  170 Max: 1=
-220832
-
-No preemption is expected with this config so the CPU is busy and
-occupied for full duration of all the benchmarks.
-
-> CONFIG_PREEMPT=3Dy,CONFIG_HZ_250=3Dy
-> T: 2 ( 2462) P:95 I:1000 C:  49024 Min:      1 Act:    2 Avg:    4 Max:  =
- 67888
-
-16 jiffies with 250 Hz equals to 64 ms. So again, this result is
-perfectly expected. The benchmarks can be preempted in between the
-individual measurements with preemptible kernel configuration.
-
-> CONFIG_PREEMPT_RT=3Dy,CONFIG_HZ_1000=3Dy
-> T: 6 ( 2561) P:95 I:1000 C:  25284 Min:      3 Act:    3 Avg:    4 Max:  =
- 16593
-
-16 jiffies by 1000 Hz is 16 ms. Ditto. So far so good.
-
-The thing is the preemption disabled region is introduced here
-precisely to guard the performance measurements and it cannot be
-removed. The purpose is to ensure the measurements are protected from
-external noise and hence the results are reliable and the best
-performing implementation can be selected.
-Changing it to migrate disable is incorrect. You can as well just
-remove it completely as with preemption enabled (migrate disable does
-not disable preemption) the benchmarks can be flawed with external
-noise and the results are not reliable anymore.
-In other words, the latency is desired here by design. Removing the
-preemption disabled region is a BUG.
-
-But really the main thing here is your test scenario is plain wrong.
-It's a common misunderstanding that you should never see high latency
-spikes. Sometimes you really should. There is an extended set of
-operations which should be strictly avoided (with regards to latency
-applications). Loading kernel modules is one example of them. It is
-not considered a latency safe operation and hence it is not allowed in
-production environment!
-
-The application (or operator/the system configuration) should ensure
-all the necessary modules are preloaded in setup phase before the
-application workload is executed. Ie. before you start the cyclictest.
-
-For example here, all the raid related modules *should* be loaded on
-system boot. So that the initialization does not interfere with the
-running production application.
-
-Makes sense?
+We should not touch this. See my other email with detailed explanation.
 
 --nX
 
-> >
-> > Thanks,
-> > Song
-> >
-> >> ---
-> >> lib/raid6/algos.c | 8 ++++----
-> >> 1 file changed, 4 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-> >> index 6d5e5000fdd7..21611d05c34c 100644
-> >> --- a/lib/raid6/algos.c
-> >> +++ b/lib/raid6/algos.c
-> >> @@ -162,7 +162,7 @@ static inline const struct raid6_calls *raid6_choo=
-se_gen(
-> >>
-> >> perf =3D 0;
-> >>
-> >> - preempt_disable();
-> >> + migrate_disable();
-> >> j0 =3D jiffies;
-> >> while ((j1 =3D jiffies) =3D=3D j0)
-> >> cpu_relax();
-> >> @@ -171,7 +171,7 @@ static inline const struct raid6_calls *raid6_choo=
-se_gen(
-> >> (*algo)->gen_syndrome(disks, PAGE_SIZE, *dptrs);
-> >> perf++;
-> >> }
-> >> - preempt_enable();
-> >> + migrate_enable();
-> >>
-> >> if (perf > bestgenperf) {
-> >> bestgenperf =3D perf;
-> >> @@ -186,7 +186,7 @@ static inline const struct raid6_calls *raid6_choo=
-se_gen(
-> >>
-> >> perf =3D 0;
-> >>
-> >> - preempt_disable();
-> >> + migrate_disable();
-> >> j0 =3D jiffies;
-> >> while ((j1 =3D jiffies) =3D=3D j0)
-> >> cpu_relax();
-> >> @@ -196,7 +196,7 @@ static inline const struct raid6_calls *raid6_choo=
-se_gen(
-> >> PAGE_SIZE, *dptrs);
-> >> perf++;
-> >> }
-> >> - preempt_enable();
-> >> + migrate_enable();
-> >>
-> >> if (best =3D=3D *algo)
-> >> bestxorperf =3D perf;
-> >> --
-> >> 2.32.0
+> Thanks,
+> Song
