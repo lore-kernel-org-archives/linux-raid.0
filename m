@@ -2,84 +2,83 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 378EBC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 10:08:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FD48C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 13:42:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231968AbhLQKIF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Dec 2021 05:08:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38146 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234685AbhLQKIC (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Dec 2021 05:08:02 -0500
-Received: from box.sotapeli.fi (sotapeli.fi [IPv6:2001:41d0:302:2200::1c0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9091BC06173E
-        for <linux-raid@vger.kernel.org>; Fri, 17 Dec 2021 02:08:02 -0800 (PST)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 5AF6080D84;
-        Fri, 17 Dec 2021 11:07:53 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sotapeli.fi; s=dkim;
-        t=1639735676; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-         content-transfer-encoding:in-reply-to:references;
-        bh=9lh/KbOSKigix137wz062Mx2VI8iMx/8uUirl3HkmA8=;
-        b=UYLwRfLyQ6PwGZMUyEfa1b2SqAdKOLqhLB4oWJT8QImX4yKl664opUQhFcduVycwnvKG23
-        lh3p8rH6pvgrGkaXoesyio5UIG6lzYq1qoeQSzq5decvKhZxtoZ7dlWJgx9RB/wSJx2juH
-        iszBrnG9J3iw8DB82zMvT7jVjtj7cQWqiefrmSyZSlo8chTlh/BUhsGXWrvgX7U6KFn5kg
-        eQiE9J9qoBsHrIsFjpblln+k9bnAWLNJR2eGDOj/ojF2xXxInGhfQ9m4tEwBRF74bezZwV
-        nE37KaNfnox6tjRm5pyaOI28dNbZrisRRfBgTkucERKc2Eg0/F2Yttxnad2qow==
-Message-ID: <6cf644c8-7433-b20c-8db4-191f7e2bc76e@sotapeli.fi>
-Date:   Fri, 17 Dec 2021 12:07:48 +0200
+        id S236710AbhLQNmV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Dec 2021 08:42:21 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:33360 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231375AbhLQNmU (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Dec 2021 08:42:20 -0500
+Date:   Fri, 17 Dec 2021 14:42:17 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1639748539;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=y9t3us+BAk9470BAEhbmBUCeSGzoYQ7LS0Tsk6tNMXY=;
+        b=c+B1b8JaAQoEvO43R2R6bRsFgYeE3YSp4vWxLWZU3xOfdlAnmEwte/hjSx468Vzm0HkCDz
+        q2i/IKbJIBh4zDPJlBheB0HkXsMzAjUtPN1rJQ4xTkZbH5bQjpiDVv7iRPUIUm3emapHxT
+        2r6+FqO40r2sIjedtNWxyreM0Q9O93AsrpUWq8DDZ2rtJfQSDQ/tWNXtMeXgziBSzDUQ10
+        YqpplUEJpihQRUYa93/LM5Bcobz/hdcywuTg85FDtEP+eqlRGnI4CopwSm1LgMVxvrS2WB
+        xsxtUn3WcghLnJXWh6qe47sWtvMcSZGUPKzGCeWfiA0AG5D3vAQAr1JRmY+yPA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1639748539;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=y9t3us+BAk9470BAEhbmBUCeSGzoYQ7LS0Tsk6tNMXY=;
+        b=1HvD9OCjzb8K+rydxGcStwI2YQMC5j6haYHY0xcYDRhOJ1YQEyCNoR2KH/4TvnUcxcWBW4
+        xLUEs8YOC5oMUUBA==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Yajun Deng <yajun.deng@linux.dev>
+Cc:     song@kernel.org, masahiroy@kernel.org, williams@redhat.com,
+        pmenzel@molgen.mpg.de, linux-kernel@vger.kernel.org,
+        linux-rt-users@vger.kernel.org, linux-raid@vger.kernel.org,
+        stable@vger.kernel.org, tglx@linutronix.de
+Subject: Re: [PATCH v3] lib/raid6: Reduce high latency by using migrate
+ instead of preempt
+Message-ID: <YbyTuRWkB0gYbn7x@linutronix.de>
+References: <20211217021610.12801-1-yajun.deng@linux.dev>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: Debugging system hangs
-To:     Wols Lists <antlists@youngman.org.uk>,
-        John Stoffel <john@stoffel.org>,
-        Roger Heflin <rogerheflin@gmail.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-References: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
- <CAAMCDeekr+a6e7BwyF9b=n49X6YgqUWBc8UtAyZkjFcHBnbyRQ@mail.gmail.com>
- <cbfc2f45-96d8-4ee7-a12b-5a24bd2f2159@youngman.org.uk>
- <CAAMCDeemZO2u_4WW8pHVP2qOxz0HdHQTy2Gsa=zgY-7g4ptw7w@mail.gmail.com>
- <25019.45839.872620.235430@quad.stoffel.home>
- <63778a8a-aba9-c70c-d325-b5c786e50f18@youngman.org.uk>
-From:   Jani Partanen <jiipee@sotapeli.fi>
-In-Reply-To: <63778a8a-aba9-c70c-d325-b5c786e50f18@youngman.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20211217021610.12801-1-yajun.deng@linux.dev>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Wols Lists kirjoitti 17/12/2021 klo 0.30:
-> On 16/12/2021 21:43, John Stoffel wrote:
->> Another thing that struck me is maybe it's time to boot into a small
->> stress testing image and see if it's more of a hardware issue. It
->> might also be a power supply issue, where as the load goes up, your
->> power supply can't keep the voltage up and the system fails that way?
->
-> Unlikely, but never say never ...
->
-> It doesn't seem to be crashing under load, it's more like getting 
-> stuck in idle, but I've debugged enough problems to know that it's 
-> rarely what you initially think it is.
->
-> The PSU is a 550W Corsair unit, so unless it's faulty power load 
-> certainly won't be an issue...
->
-> I'll need to do a lot of playing over Christmas, if I get the chance ...
->
-> Cheers,
-> Wol
+On 2021-12-17 10:16:10 [+0800], Yajun Deng wrote:
+> We found an abnormally high latency when executing modprobe raid6_pq, the
+> latency is greater than 1.2s when CONFIG_PREEMPT_VOLUNTARY=y, greater than
+> 67ms when CONFIG_PREEMPT=y, and greater than 16ms when CONFIG_PREEMPT_RT=y.
+> 
+> How to reproduce:
+>  - Install cyclictest
+>      sudo apt install rt-tests
+>  - Run cyclictest example in one terminal
+>      sudo cyclictest -S -p 95 -d 0 -i 1000 -D 24h -m
+>  - Modprobe raid6_pq in another terminal
+>      sudo modprobe raid6_pq
+> 
+> This is caused by ksoftirqd fail to scheduled due to disable preemption,
+> this time is too long and unreasonable.
+> 
+> Reduce high latency by using migrate_disabl()/emigrate_enable() instead of
+> preempt_disable()/preempt_enable(), the latency won't greater than 100us.
+> 
+> This patch beneficial for CONFIG_PREEMPT=y or CONFIG_PREEMPT_RT=y, but no
+> effect for CONFIG_PREEMPT_VOLUNTARY=y.
 
-I have couple old CPU's I5 4670K and I7 4790K, both have idle locking 
-issues. I solved my issue boosting voltages little from bios. I7 from 
-friend and I know it's been heavily overclocked and it's so bad that if 
-I use stock settings what bios set, I cannot even install OS because it 
-just lock up or crash on install.
-But when I boost voltages, it does run stable. Another lockup source 
-what I have got is memory. I was trying to add 16GB momory, but sticks 
-are not same brand and speed and they just don't play nice together even 
-if I run them with stock settings.
+Why does it matter? This is only during boot-up/ module loading or do I
+miss something? 
+The delay is a jiffy so it depends on CONFIG_HZ. You do benchmark for
+the best algorithm and if you get preempted during that period then your
+results may be wrong and you make a bad selection.
 
+You can either enable one algorithm and or disable
+CONFIG_RAID6_PQ_BENCHMARK. I don't see the need for this patch not to
+mention the stable tree.
 
-// JiiPee
+Sebastian
