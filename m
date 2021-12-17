@@ -2,118 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A09C433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 09:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 378EBC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 10:08:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231653AbhLQJaU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Dec 2021 04:30:20 -0500
-Received: from mga14.intel.com ([192.55.52.115]:37614 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230497AbhLQJaT (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 17 Dec 2021 04:30:19 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10200"; a="239943189"
-X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
-   d="scan'208";a="239943189"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 01:30:19 -0800
-X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
-   d="scan'208";a="506702024"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 01:30:18 -0800
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH] md: drop queue limitation for RAID1 and RAID10
-Date:   Fri, 17 Dec 2021 10:29:55 +0100
-Message-Id: <20211217092955.24010-1-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
+        id S231968AbhLQKIF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Dec 2021 05:08:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38146 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234685AbhLQKIC (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 17 Dec 2021 05:08:02 -0500
+Received: from box.sotapeli.fi (sotapeli.fi [IPv6:2001:41d0:302:2200::1c0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9091BC06173E
+        for <linux-raid@vger.kernel.org>; Fri, 17 Dec 2021 02:08:02 -0800 (PST)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 5AF6080D84;
+        Fri, 17 Dec 2021 11:07:53 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sotapeli.fi; s=dkim;
+        t=1639735676; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+         content-transfer-encoding:in-reply-to:references;
+        bh=9lh/KbOSKigix137wz062Mx2VI8iMx/8uUirl3HkmA8=;
+        b=UYLwRfLyQ6PwGZMUyEfa1b2SqAdKOLqhLB4oWJT8QImX4yKl664opUQhFcduVycwnvKG23
+        lh3p8rH6pvgrGkaXoesyio5UIG6lzYq1qoeQSzq5decvKhZxtoZ7dlWJgx9RB/wSJx2juH
+        iszBrnG9J3iw8DB82zMvT7jVjtj7cQWqiefrmSyZSlo8chTlh/BUhsGXWrvgX7U6KFn5kg
+        eQiE9J9qoBsHrIsFjpblln+k9bnAWLNJR2eGDOj/ojF2xXxInGhfQ9m4tEwBRF74bezZwV
+        nE37KaNfnox6tjRm5pyaOI28dNbZrisRRfBgTkucERKc2Eg0/F2Yttxnad2qow==
+Message-ID: <6cf644c8-7433-b20c-8db4-191f7e2bc76e@sotapeli.fi>
+Date:   Fri, 17 Dec 2021 12:07:48 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: Debugging system hangs
+To:     Wols Lists <antlists@youngman.org.uk>,
+        John Stoffel <john@stoffel.org>,
+        Roger Heflin <rogerheflin@gmail.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <d8a0d8c9-f8cc-a70a-03a0-aae2fd6c68c2@youngman.org.uk>
+ <CAAMCDeekr+a6e7BwyF9b=n49X6YgqUWBc8UtAyZkjFcHBnbyRQ@mail.gmail.com>
+ <cbfc2f45-96d8-4ee7-a12b-5a24bd2f2159@youngman.org.uk>
+ <CAAMCDeemZO2u_4WW8pHVP2qOxz0HdHQTy2Gsa=zgY-7g4ptw7w@mail.gmail.com>
+ <25019.45839.872620.235430@quad.stoffel.home>
+ <63778a8a-aba9-c70c-d325-b5c786e50f18@youngman.org.uk>
+From:   Jani Partanen <jiipee@sotapeli.fi>
+In-Reply-To: <63778a8a-aba9-c70c-d325-b5c786e50f18@youngman.org.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-As suggested by Neil Brown[1], this limitation seems to be
-deprecated.
+Wols Lists kirjoitti 17/12/2021 klo 0.30:
+> On 16/12/2021 21:43, John Stoffel wrote:
+>> Another thing that struck me is maybe it's time to boot into a small
+>> stress testing image and see if it's more of a hardware issue. It
+>> might also be a power supply issue, where as the load goes up, your
+>> power supply can't keep the voltage up and the system fails that way?
+>
+> Unlikely, but never say never ...
+>
+> It doesn't seem to be crashing under load, it's more like getting 
+> stuck in idle, but I've debugged enough problems to know that it's 
+> rarely what you initially think it is.
+>
+> The PSU is a 550W Corsair unit, so unless it's faulty power load 
+> certainly won't be an issue...
+>
+> I'll need to do a lot of playing over Christmas, if I get the chance ...
+>
+> Cheers,
+> Wol
 
-With plugging in use, writes are processed behind the raid thread
-and conf->pending_count is not increased. This limitation occurs only
-if caller doesn't use plugs.
+I have couple old CPU's I5 4670K and I7 4790K, both have idle locking 
+issues. I solved my issue boosting voltages little from bios. I7 from 
+friend and I know it's been heavily overclocked and it's so bad that if 
+I use stock settings what bios set, I cannot even install OS because it 
+just lock up or crash on install.
+But when I boost voltages, it does run stable. Another lockup source 
+what I have got is memory. I was trying to add 16GB momory, but sticks 
+are not same brand and speed and they just don't play nice together even 
+if I run them with stock settings.
 
-It can be avoided and often it is (with plugging). There are no reports
-that queue is growing to enormous size so remove queue limitation for
-non-plugged IOs too.
 
-[1] https://lore.kernel.org/linux-raid/162496301481.7211.18031090130574610495@noble.neil.brown.name
-
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
- drivers/md/raid1-10.c | 6 ------
- drivers/md/raid1.c    | 7 -------
- drivers/md/raid10.c   | 7 -------
- 3 files changed, 20 deletions(-)
-
-diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
-index 54db34163968..83f9a4f3d82e 100644
---- a/drivers/md/raid1-10.c
-+++ b/drivers/md/raid1-10.c
-@@ -22,12 +22,6 @@
- 
- #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
- 
--/* When there are this many requests queue to be written by
-- * the raid thread, we become 'congested' to provide back-pressure
-- * for writeback.
-- */
--static int max_queued_requests = 1024;
--
- /* for managing resync I/O pages */
- struct resync_pages {
- 	void		*raid_bio;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7dc8026cf6ee..eeaedd6e0ce1 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1358,12 +1358,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 	r1_bio = alloc_r1bio(mddev, bio);
- 	r1_bio->sectors = max_write_sectors;
- 
--	if (conf->pending_count >= max_queued_requests) {
--		md_wakeup_thread(mddev->thread);
--		raid1_log(mddev, "wait queued");
--		wait_event(conf->wait_barrier,
--			   conf->pending_count < max_queued_requests);
--	}
- 	/* first select target devices under rcu_lock and
- 	 * inc refcount on their rdev.  Record them by setting
- 	 * bios[x] to bio
-@@ -3410,4 +3404,3 @@ MODULE_ALIAS("md-personality-3"); /* RAID1 */
- MODULE_ALIAS("md-raid1");
- MODULE_ALIAS("md-level-1");
- 
--module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index dde98f65bd04..c683ba138b58 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1387,12 +1387,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 		conf->reshape_safe = mddev->reshape_position;
- 	}
- 
--	if (conf->pending_count >= max_queued_requests) {
--		md_wakeup_thread(mddev->thread);
--		raid10_log(mddev, "wait queued");
--		wait_event(conf->wait_barrier,
--			   conf->pending_count < max_queued_requests);
--	}
- 	/* first select target devices under rcu_lock and
- 	 * inc refcount on their rdev.  Record them by setting
- 	 * bios[x] to bio
-@@ -5243,4 +5237,3 @@ MODULE_ALIAS("md-personality-9"); /* RAID10 */
- MODULE_ALIAS("md-raid10");
- MODULE_ALIAS("md-level-10");
- 
--module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
--- 
-2.26.2
-
+// JiiPee
