@@ -2,105 +2,118 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FFA3C433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 08:38:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A09C433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 17 Dec 2021 09:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233849AbhLQIiV (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 17 Dec 2021 03:38:21 -0500
-Received: from mga01.intel.com ([192.55.52.88]:24699 "EHLO mga01.intel.com"
+        id S231653AbhLQJaU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 17 Dec 2021 04:30:20 -0500
+Received: from mga14.intel.com ([192.55.52.115]:37614 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229616AbhLQIiV (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Fri, 17 Dec 2021 03:38:21 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10200"; a="263884456"
+        id S230497AbhLQJaT (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Fri, 17 Dec 2021 04:30:19 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10200"; a="239943189"
 X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
-   d="scan'208";a="263884456"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 00:38:01 -0800
+   d="scan'208";a="239943189"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 01:30:19 -0800
 X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
-   d="scan'208";a="683311076"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.21.206])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 00:38:00 -0800
-Date:   Fri, 17 Dec 2021 09:37:55 +0100
+   d="scan'208";a="506702024"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 01:30:18 -0800
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 3/3] raid5: introduce MD_BROKEN
-Message-ID: <20211217093755.00007264@linux.intel.com>
-In-Reply-To: <3d5fe975-265f-557e-5d13-88ef6b06bcba@linux.dev>
-References: <20211216145222.15370-1-mariusz.tkaczyk@linux.intel.com>
-        <20211216145222.15370-4-mariusz.tkaczyk@linux.intel.com>
-        <3d5fe975-265f-557e-5d13-88ef6b06bcba@linux.dev>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH] md: drop queue limitation for RAID1 and RAID10
+Date:   Fri, 17 Dec 2021 10:29:55 +0100
+Message-Id: <20211217092955.24010-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Guoqing,
+As suggested by Neil Brown[1], this limitation seems to be
+deprecated.
 
-On Fri, 17 Dec 2021 10:26:27 +0800
-Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
+With plugging in use, writes are processed behind the raid thread
+and conf->pending_count is not increased. This limitation occurs only
+if caller doesn't use plugs.
 
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 1240a5c16af8..8b5561811431 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -690,6 +690,9 @@ static int has_failed(struct r5conf *conf)
-> >   {
-> >   	int degraded;
-> >   
-> > +	if (test_bit(MD_BROKEN, &conf->mddev->flags))
-> > +		return 1;
-> > +
-> >   	if (conf->mddev->reshape_position == MaxSector)
-> >   		return conf->mddev->degraded > conf->max_degraded;
-> >   
-> > @@ -2877,34 +2880,29 @@ static void raid5_error(struct mddev
-> > *mddev, struct md_rdev *rdev) unsigned long flags;
-> >   	pr_debug("raid456: error called\n");
-> >   
-> > -	spin_lock_irqsave(&conf->device_lock, flags);
-> > -
-> > -	if (test_bit(In_sync, &rdev->flags) &&
-> > -	    mddev->degraded == conf->max_degraded) {
-> > -		/*
-> > -		 * Don't allow to achieve failed state
-> > -		 * Don't try to recover this device
-> > -		 */
-> > -		conf->recovery_disabled = mddev->recovery_disabled;
-> > -		spin_unlock_irqrestore(&conf->device_lock, flags);
-> > -		return;
-> > -	}
-> > +	pr_crit("md/raid:%s: Disk failure on %s, disabling
-> > device.\n",
-> > +		mdname(mddev), bdevname(rdev->bdev, b));
-> >   
-> > +	spin_lock_irqsave(&conf->device_lock, flags);
-> >   	set_bit(Faulty, &rdev->flags);
-> >   	clear_bit(In_sync, &rdev->flags);
-> >   	mddev->degraded = raid5_calc_degraded(conf);
-> > +
-> > +	if (has_failed(conf)) {
-> > +		set_bit(MD_BROKEN, &mddev->flags);  
-> 
-> What about other callers of has_failed? Do they need to set BROKEN
-> flag? Or set the flag in has_failed if it returns true, just FYI.
-> 
+It can be avoided and often it is (with plugging). There are no reports
+that queue is growing to enormous size so remove queue limitation for
+non-plugged IOs too.
 
-The function checks rdev->state for faulty. There are two, places
-where it can be set:
-- raid5_error (handled here)
-- raid5_spare_active (not a case IMO).
+[1] https://lore.kernel.org/linux-raid/162496301481.7211.18031090130574610495@noble.neil.brown.name
 
-I left it in raid5_error to be consistent with other levels.
-I think that moving it t has_failed is safe but I don't see any
-additional value in it.
-I see that in raid5_error we hold device_lock. It is not true for
-all has_failed calls.
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ drivers/md/raid1-10.c | 6 ------
+ drivers/md/raid1.c    | 7 -------
+ drivers/md/raid10.c   | 7 -------
+ 3 files changed, 20 deletions(-)
 
-Do you have any recommendations?
-
-Thanks,
-Mariusz 
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 54db34163968..83f9a4f3d82e 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -22,12 +22,6 @@
+ 
+ #define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
+ 
+-/* When there are this many requests queue to be written by
+- * the raid thread, we become 'congested' to provide back-pressure
+- * for writeback.
+- */
+-static int max_queued_requests = 1024;
+-
+ /* for managing resync I/O pages */
+ struct resync_pages {
+ 	void		*raid_bio;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 7dc8026cf6ee..eeaedd6e0ce1 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1358,12 +1358,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	r1_bio = alloc_r1bio(mddev, bio);
+ 	r1_bio->sectors = max_write_sectors;
+ 
+-	if (conf->pending_count >= max_queued_requests) {
+-		md_wakeup_thread(mddev->thread);
+-		raid1_log(mddev, "wait queued");
+-		wait_event(conf->wait_barrier,
+-			   conf->pending_count < max_queued_requests);
+-	}
+ 	/* first select target devices under rcu_lock and
+ 	 * inc refcount on their rdev.  Record them by setting
+ 	 * bios[x] to bio
+@@ -3410,4 +3404,3 @@ MODULE_ALIAS("md-personality-3"); /* RAID1 */
+ MODULE_ALIAS("md-raid1");
+ MODULE_ALIAS("md-level-1");
+ 
+-module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index dde98f65bd04..c683ba138b58 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1387,12 +1387,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		conf->reshape_safe = mddev->reshape_position;
+ 	}
+ 
+-	if (conf->pending_count >= max_queued_requests) {
+-		md_wakeup_thread(mddev->thread);
+-		raid10_log(mddev, "wait queued");
+-		wait_event(conf->wait_barrier,
+-			   conf->pending_count < max_queued_requests);
+-	}
+ 	/* first select target devices under rcu_lock and
+ 	 * inc refcount on their rdev.  Record them by setting
+ 	 * bios[x] to bio
+@@ -5243,4 +5237,3 @@ MODULE_ALIAS("md-personality-9"); /* RAID10 */
+ MODULE_ALIAS("md-raid10");
+ MODULE_ALIAS("md-level-10");
+ 
+-module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
+-- 
+2.26.2
 
