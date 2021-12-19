@@ -2,271 +2,102 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1AD7C433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 18 Dec 2021 23:17:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC011C433EF
+	for <linux-raid@archiver.kernel.org>; Sun, 19 Dec 2021 03:21:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232017AbhLRXRH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 18 Dec 2021 18:17:07 -0500
-Received: from mga04.intel.com ([192.55.52.120]:56578 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229745AbhLRXRH (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sat, 18 Dec 2021 18:17:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1639869427; x=1671405427;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=L1+nbShmuQ95xQjzNupA4qO9zIi+4G24PwpDl2BEKJk=;
-  b=Mph8Xl2jYmDeBihRvc5PuUEBRBk0H44uSPMDBrJZlgvxO4vkER1TPoGj
-   r4r2wnxgpK9c1zYfrhD4sjGG+PE5xsw+d+ds4kV+kRoXmqe8Svm+AsoFi
-   ieyjk/L+l4DrqWUpchZL/OrawPn8RHm5AvNowMaDQkJBF9XXp9i9FimOF
-   JRm38UjSziECOdNjL+PqgOiHp1MMXRYYwYcJKk/7ziwTUy8o/S+9qDSwx
-   S3gkW0uf0kKQwGglDjjfmFSsCjt02mkjlLKsI6ZIEy+zAa1rRc8WtXHt+
-   kjogFIk7uwNmyca7LcLq7hGguxUjyDhx/cEHwO6tNemBV6/TH3J6roYJS
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10202"; a="238701454"
-X-IronPort-AV: E=Sophos;i="5.88,217,1635231600"; 
-   d="scan'208";a="238701454"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Dec 2021 15:17:06 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,217,1635231600"; 
-   d="scan'208";a="615954303"
-Received: from lkp-server02.sh.intel.com (HELO 9f38c0981d9f) ([10.239.97.151])
-  by orsmga004.jf.intel.com with ESMTP; 18 Dec 2021 15:17:05 -0800
-Received: from kbuild by 9f38c0981d9f with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1myiwq-0006V3-BP; Sat, 18 Dec 2021 23:17:04 +0000
-Date:   Sun, 19 Dec 2021 07:16:28 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- fbcddf788fe221573a9d30acd8018db0cc6c1e89
-Message-ID: <61be6bcc.qPCdirkK81JsXqnG%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S234131AbhLSDVO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 18 Dec 2021 22:21:14 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:22229 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229710AbhLSDVN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 18 Dec 2021 22:21:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639884073;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YxR/UyTOlBO2F/4PuCxDSNpPTC5l4cKM8QIFcw7NaN4=;
+        b=KZ5GKu0m6QqZQ4wjPfjOwKL9EiBlpsLGkKs5EBcqEuuuaDDPEfMfP3nO8G9wkqomxfmCmY
+        oQvRJl7RFd0nJFfTKtLmHQvSQJ13du38NEv5+yeuWnpak1SmWsbZHjYCjuYnBXfGwZBGif
+        gAu7zoN8Sq2FXc36+/CElV4KQuW26Bo=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-673-Qs9plmReNB2vGaPdy6bZiQ-1; Sat, 18 Dec 2021 22:21:11 -0500
+X-MC-Unique: Qs9plmReNB2vGaPdy6bZiQ-1
+Received: by mail-ed1-f71.google.com with SMTP id c19-20020a05640227d300b003f81c7154fbso4157316ede.7
+        for <linux-raid@vger.kernel.org>; Sat, 18 Dec 2021 19:21:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=YxR/UyTOlBO2F/4PuCxDSNpPTC5l4cKM8QIFcw7NaN4=;
+        b=dCYkf0lgR0TYhYznS8mb+YkUla7agT6BzDFZaopZBtJCRPRBpQRxkyo5oCWTP2BARv
+         tui57BGJ2JV54SPC011pbNG6gmt5FaeI+HICeqG2jEiwQ+ksHXAH+s1yQEdf/37pwfRk
+         rF00sIGSNiZy+UmsIy4VlifL/77/oAP9a5LYKGkwx6Y09dcFOfDN7XS99iiuKfNLL3VQ
+         Tnj/gYPuKYKta9Z+Su1gKBIdTUItD79GrNUaAwB4ptyqsWfV0LTLZ/7ouZfkx5eq4oqa
+         h8AMmo9DNjCYo9dUgydYzoIQeme8vEI+QVn/2pzT25pWp5NdBDb8jw5OinjYAmydroqF
+         y74g==
+X-Gm-Message-State: AOAM533ZE66dbYSwEwuCtp3WK+Kcf9pkpd+yp7ZMphnYN4SxZB7iCclV
+        Ec4Pl/OxrIJ9qNrooTOjWjFUQUSqQFJ6KtD/n+5QAn9rCbL9gxC9SLMSPpB2GpuJSHyRSeEwjfz
+        nsTV76TSd18fN++jhdd/m4HN6F+EM1F439au9Hg==
+X-Received: by 2002:a17:906:458:: with SMTP id e24mr8396829eja.108.1639884070387;
+        Sat, 18 Dec 2021 19:21:10 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyaBa3D2NfaW6isDVETdRy+cEMVNnIWQfXEDSmApqqnYMKIIlVKk3SGnBSPM0WJNIMnAbIig+WVb9wqKC2fBmo=
+X-Received: by 2002:a17:906:458:: with SMTP id e24mr8396822eja.108.1639884070173;
+ Sat, 18 Dec 2021 19:21:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <20211216145222.15370-1-mariusz.tkaczyk@linux.intel.com> <20211216145222.15370-2-mariusz.tkaczyk@linux.intel.com>
+In-Reply-To: <20211216145222.15370-2-mariusz.tkaczyk@linux.intel.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Sun, 19 Dec 2021 11:20:59 +0800
+Message-ID: <CALTww2818H-T5W4oOSG_o_SU1MRAp+_=u9J824V0w1JcX8zZ8Q@mail.gmail.com>
+Subject: Re: [PATCH 1/3] raid0, linear, md: add error_handlers for raid0 and linear
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: fbcddf788fe221573a9d30acd8018db0cc6c1e89  md/raid5: play nice with PREEMPT_RT
+On Thu, Dec 16, 2021 at 10:53 PM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> Patch 62f7b1989c0 ("md raid0/linear: Mark array as 'broken' and fail BIOs
+> if a member is gone") allowed to finish writes earlier (before level
+> dependent actions) for non-redundant arrays.
+>
+> To achieve that MD_BROKEN is added to mddev->flags if drive disappearance
+> is detected. This is done in is_mddev_broken() which is confusing and not
+> consistent with other levels where error_handler() is used.
+> This patch adds appropriate error_handler for raid0 and linear.
+>
+> It also adopts md_error(), we only want to call .error_handler for those
+> levels. mddev->pers->sync_request is additionally checked, its existence
+> implies a level with redundancy.
+>
+> Usage of error_handler causes that disk failure can be requested from
+> userspace. User can fail the array via #mdadm --set-faulty command. This
+> is not safe and will be fixed in mdadm. It is correctable because failed
+> state is not recorded in the metadata. After next assembly array will be
+> read-write again. For safety reason is better to keep MD_BROKEN in
+> runtime only.
 
-elapsed time: 826m
+Hi Mariusz
 
-configs tested: 200
-configs skipped: 3
+Let me call them chapter[1-4]
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Could you explain more about 'mdadm --set-faulty' part? I've read this
+patch. But I don't
+know the relationship between the patch and chapter4.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20211218
-mips                 randconfig-c004-20211218
-mips                         rt305x_defconfig
-sh                      rts7751r2d1_defconfig
-powerpc                    ge_imp3a_defconfig
-powerpc                      bamboo_defconfig
-powerpc                     ppa8548_defconfig
-sh                           se7780_defconfig
-powerpc                       maple_defconfig
-nds32                               defconfig
-arm                          simpad_defconfig
-mips                        bcm63xx_defconfig
-sh                           se7724_defconfig
-mips                     loongson1b_defconfig
-openrisc                            defconfig
-powerpc                   motionpro_defconfig
-powerpc                    socrates_defconfig
-powerpc                      arches_defconfig
-powerpc                          g5_defconfig
-powerpc                 canyonlands_defconfig
-arm                        trizeps4_defconfig
-powerpc                      chrp32_defconfig
-nios2                         10m50_defconfig
-arm                          lpd270_defconfig
-powerpc                 mpc8315_rdb_defconfig
-mips                   sb1250_swarm_defconfig
-parisc                              defconfig
-m68k                        m5307c3_defconfig
-mips                      malta_kvm_defconfig
-um                             i386_defconfig
-sparc64                             defconfig
-arm                        mvebu_v7_defconfig
-mips                malta_qemu_32r6_defconfig
-mips                             allmodconfig
-powerpc                 mpc85xx_cds_defconfig
-alpha                            alldefconfig
-arc                        nsim_700_defconfig
-powerpc                 mpc837x_rdb_defconfig
-arm                      pxa255-idp_defconfig
-h8300                            alldefconfig
-arm                       spear13xx_defconfig
-mips                         cobalt_defconfig
-mips                           ip28_defconfig
-powerpc                      pasemi_defconfig
-nds32                             allnoconfig
-powerpc                        fsp2_defconfig
-nios2                            alldefconfig
-m68k                        m5407c3_defconfig
-ia64                          tiger_defconfig
-arm                       netwinder_defconfig
-powerpc                      pmac32_defconfig
-m68k                             alldefconfig
-mips                         tb0219_defconfig
-sparc                       sparc64_defconfig
-m68k                        mvme147_defconfig
-arm                  colibri_pxa270_defconfig
-sh                         ecovec24_defconfig
-powerpc                     pseries_defconfig
-i386                                defconfig
-arm                         palmz72_defconfig
-ia64                         bigsur_defconfig
-arm                            dove_defconfig
-arm                        multi_v7_defconfig
-m68k                         apollo_defconfig
-m68k                         amcore_defconfig
-mips                        bcm47xx_defconfig
-h8300                    h8300h-sim_defconfig
-mips                             allyesconfig
-sh                   sh7770_generic_defconfig
-arm                         mv78xx0_defconfig
-powerpc                     tqm8560_defconfig
-i386                             alldefconfig
-sh                ecovec24-romimage_defconfig
-powerpc                     tqm8548_defconfig
-sh                        dreamcast_defconfig
-powerpc                    adder875_defconfig
-m68k                            q40_defconfig
-powerpc                 mpc8313_rdb_defconfig
-arm                         s5pv210_defconfig
-mips                  decstation_64_defconfig
-mips                  cavium_octeon_defconfig
-m68k                          hp300_defconfig
-xtensa                generic_kc705_defconfig
-sh                          rsk7269_defconfig
-arm                          pxa168_defconfig
-powerpc                     taishan_defconfig
-powerpc                      acadia_defconfig
-xtensa                  nommu_kc705_defconfig
-arm                       aspeed_g4_defconfig
-sh                             espt_defconfig
-parisc                           allyesconfig
-powerpc                      makalu_defconfig
-arc                     haps_hs_smp_defconfig
-mips                          rb532_defconfig
-m68k                            mac_defconfig
-arc                     nsimosci_hs_defconfig
-h8300                            allyesconfig
-powerpc                 linkstation_defconfig
-m68k                           sun3_defconfig
-openrisc                    or1ksim_defconfig
-arm                         s3c6400_defconfig
-arm                          iop32x_defconfig
-arm                         vf610m4_defconfig
-arm                         assabet_defconfig
-mips                      pic32mzda_defconfig
-powerpc                    mvme5100_defconfig
-powerpc                         ps3_defconfig
-parisc                           alldefconfig
-m68k                       m5208evb_defconfig
-powerpc                     tqm5200_defconfig
-arm                  randconfig-c002-20211218
-arm                  randconfig-c002-20211219
-ia64                                defconfig
-ia64                             allmodconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-s390                             allyesconfig
-s390                             allmodconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-nios2                               defconfig
-arc                              allyesconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a006-20211218
-x86_64               randconfig-a005-20211218
-x86_64               randconfig-a001-20211218
-x86_64               randconfig-a003-20211218
-x86_64               randconfig-a002-20211218
-x86_64               randconfig-a004-20211218
-i386                 randconfig-a002-20211216
-i386                 randconfig-a005-20211216
-i386                 randconfig-a003-20211216
-i386                 randconfig-a006-20211216
-i386                 randconfig-a004-20211216
-i386                 randconfig-a001-20211216
-i386                 randconfig-a002-20211218
-i386                 randconfig-a005-20211218
-i386                 randconfig-a003-20211218
-i386                 randconfig-a006-20211218
-i386                 randconfig-a004-20211218
-x86_64               randconfig-a005-20211216
-x86_64               randconfig-a001-20211216
-x86_64               randconfig-a002-20211216
-x86_64               randconfig-a003-20211216
-x86_64               randconfig-a004-20211216
-x86_64               randconfig-a006-20211216
-i386                 randconfig-a011-20211219
-i386                 randconfig-a015-20211219
-i386                 randconfig-a012-20211219
-i386                 randconfig-a013-20211219
-i386                 randconfig-a016-20211219
-i386                 randconfig-a014-20211219
-arc                  randconfig-r043-20211216
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
+In patch2, you write "As in previous commit, it causes that #mdadm
+--set-faulty is able to
+mark array as failed." I tried to run command `mdadm /dev/md0 -f
+/dev/sda`. md0 is a raid0.
+It can't remove sda from md0.
 
-clang tested configs:
-x86_64               randconfig-a011-20211216
-x86_64               randconfig-a014-20211216
-x86_64               randconfig-a012-20211216
-x86_64               randconfig-a013-20211216
-x86_64               randconfig-a016-20211216
-x86_64               randconfig-a015-20211216
-x86_64               randconfig-a011-20211218
-x86_64               randconfig-a015-20211218
-x86_64               randconfig-a016-20211218
-hexagon              randconfig-r045-20211216
-s390                 randconfig-r044-20211216
-riscv                randconfig-r042-20211216
-hexagon              randconfig-r041-20211216
+Best Regards
+Xiao
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
