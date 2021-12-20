@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 877E0C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 20 Dec 2021 08:45:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AD2AC433FE
+	for <linux-raid@archiver.kernel.org>; Mon, 20 Dec 2021 09:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234545AbhLTIps (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 20 Dec 2021 03:45:48 -0500
-Received: from mga17.intel.com ([192.55.52.151]:49092 "EHLO mga17.intel.com"
+        id S229890AbhLTJjT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 20 Dec 2021 04:39:19 -0500
+Received: from mga09.intel.com ([134.134.136.24]:30550 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231216AbhLTIps (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 20 Dec 2021 03:45:48 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10203"; a="220802553"
+        id S229842AbhLTJjS (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 20 Dec 2021 04:39:18 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10203"; a="239941853"
 X-IronPort-AV: E=Sophos;i="5.88,220,1635231600"; 
-   d="scan'208";a="220802553"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2021 00:45:26 -0800
+   d="scan'208";a="239941853"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2021 01:39:18 -0800
 X-IronPort-AV: E=Sophos;i="5.88,220,1635231600"; 
-   d="scan'208";a="507608899"
+   d="scan'208";a="520735485"
 Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.9.163])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2021 00:45:24 -0800
-Date:   Mon, 20 Dec 2021 09:45:19 +0100
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2021 01:39:17 -0800
+Date:   Mon, 20 Dec 2021 10:39:12 +0100
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org
 Subject: Re: [PATCH 1/3] raid0, linear, md: add error_handlers for raid0 and
  linear
-Message-ID: <20211220094519.000013d0@linux.intel.com>
-In-Reply-To: <CALTww2818H-T5W4oOSG_o_SU1MRAp+_=u9J824V0w1JcX8zZ8Q@mail.gmail.com>
+Message-ID: <20211220103912.00000fd2@linux.intel.com>
+In-Reply-To: <3d8128c8-7cca-a805-5433-027378cdd060@linux.dev>
 References: <20211216145222.15370-1-mariusz.tkaczyk@linux.intel.com>
         <20211216145222.15370-2-mariusz.tkaczyk@linux.intel.com>
-        <CALTww2818H-T5W4oOSG_o_SU1MRAp+_=u9J824V0w1JcX8zZ8Q@mail.gmail.com>
+        <3d8128c8-7cca-a805-5433-027378cdd060@linux.dev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
@@ -38,42 +38,66 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Xiao,
+Hi Guoqing,
+On Fri, 17 Dec 2021 10:00:25 +0800
+Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
 
-On Sun, 19 Dec 2021 11:20:59 +0800
-Xiao Ni <xni@redhat.com> wrote:
-
-> > Usage of error_handler causes that disk failure can be requested
-> > from userspace. User can fail the array via #mdadm --set-faulty
-> > command. This is not safe and will be fixed in mdadm. It is
-> > correctable because failed state is not recorded in the metadata.
-> > After next assembly array will be read-write again. For safety
-> > reason is better to keep MD_BROKEN in runtime only.  
+> > @@ -281,6 +282,17 @@ static void linear_status (struct seq_file
+> > *seq, struct mddev *mddev) seq_printf(seq, " %dk rounding",
+> > mddev->chunk_sectors / 2); }
+> >   
+> > +static void linear_error(struct mddev *mddev, struct md_rdev *rdev)
+> > +{
+> > +	char b[BDEVNAME_SIZE];
+> > +
+> > +	if (!test_and_set_bit(MD_BROKEN, &rdev->mddev->flags))
+> > +		pr_crit("md/linear%s: Disk failure on %s
+> > detected.\n"
+> > +			"md/linear:%s: Cannot continue, failing
+> > array.\n",
+> > +			mdname(mddev), bdevname(rdev->bdev, b),
+> > +			mdname(mddev));
+> > +}
+> > +  
 > 
-> Hi Mariusz
-> 
-> Let me call them chapter[1-4]
-> 
-> Could you explain more about 'mdadm --set-faulty' part? I've read this
-> patch. But I don't
-> know the relationship between the patch and chapter4.
-> 
-> In patch2, you write "As in previous commit, it causes that #mdadm
-> --set-faulty is able to
-> mark array as failed." I tried to run command `mdadm /dev/md0 -f
-> /dev/sda`. md0 is a raid0.
-> It can't remove sda from md0.
-
-Did you test kernel with my patchset applied?
-
-I've added chapter 4 because I'm aware of behavior change.
-Now for r0, nothing happens when we are trying to write failure to
-md/<disk>/state.
+> Do you consider to use %pg to print block device?
  
-After the change, drive is not remove too, but MD_BROKEN is set and
-any new write will be rejected. The drive will be still visible
-in array (I didn't change that). Should I add it to description?
+Will do.
+ 
+> > @@ -588,6 +589,17 @@ static void raid0_status(struct seq_file *seq,
+> > struct mddev *mddev) return;
+> >   }
+> >   
+> > +static void raid0_error(struct mddev *mddev, struct md_rdev *rdev)
+> > +{
+> > +	char b[BDEVNAME_SIZE];
+> > +
+> > +	if (!test_and_set_bit(MD_BROKEN, &rdev->mddev->flags))
+> > +		pr_crit("md/raid0%s: Disk failure on %s
+> > detected.\n"
+> > +			"md/raid0:%s: Cannot continue, failing
+> > array.\n",
+> > +			mdname(mddev), bdevname(rdev->bdev, b),
+> > +			mdname(mddev));
+> > +}
+> > +
+> >   static void *raid0_takeover_raid45(struct mddev *mddev)
+> >   {
+> >   	struct md_rdev *rdev;
+> > @@ -763,6 +775,7 @@ static struct md_personality raid0_personality=
+> >   	.size		= raid0_size,
+> >   	.takeover	= raid0_takeover,
+> >   	.quiesce	= raid0_quiesce,
+> > +	.error_handler	= raid0_error,
+> >   };
+> >     
+> 
+> What is the advantage of adding error_handler for raid0 and linear?
+> IOW, without implement the error_handler, is there some existing
+> issue?
+> 
+There is no issue. It was suggested by Song:
+https://lore.kernel.org/linux-raid/CAPhsuW4X94eJ8aG6i7F0zCmgjuWHSRWuBH2gOJjTe5uWg_rMvQ@mail.gmail.com/
 
 Thanks,
 Mariusz
-
