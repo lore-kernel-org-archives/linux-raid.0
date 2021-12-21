@@ -2,242 +2,169 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8A5C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 21 Dec 2021 16:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC468C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 21 Dec 2021 20:06:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234799AbhLUQ0S (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 21 Dec 2021 11:26:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45434 "EHLO
+        id S231281AbhLUUGj (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 21 Dec 2021 15:06:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233360AbhLUQ0R (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Dec 2021 11:26:17 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDE92C061574
-        for <linux-raid@vger.kernel.org>; Tue, 21 Dec 2021 08:26:17 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id v16so12971579pjn.1
-        for <linux-raid@vger.kernel.org>; Tue, 21 Dec 2021 08:26:17 -0800 (PST)
+        with ESMTP id S229916AbhLUUGj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 21 Dec 2021 15:06:39 -0500
+Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99015C061574
+        for <linux-raid@vger.kernel.org>; Tue, 21 Dec 2021 12:06:38 -0800 (PST)
+Received: by mail-qk1-x72b.google.com with SMTP id g28so152361qkk.9
+        for <linux-raid@vger.kernel.org>; Tue, 21 Dec 2021 12:06:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=digitalocean.com; s=google;
-        h=message-id:date:mime-version:user-agent:subject:to:cc:references
-         :from:in-reply-to:content-transfer-encoding;
-        bh=MhejC9BKuveDv4ii94v9VaMMCuHK+OjfiJJ5YTsMLRs=;
-        b=RZE7fJfepNMIB+tLW5wEDI9+vXZh0+XvbH5xIAjL4ICWnhFZckB2O9mTwVPQ5qh0PF
-         x4bOXfhm3Kh5Q9uE9h81OX1i7RG1nA7BOHu+qZ0d9OHhE4YeU8zNXgMi8d24tFeJXYZp
-         7i8UVcoYQf9OhL4VhF6rhFWcATNKE+ZZki50w=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Fv+GVhTh+gh68aGg97S2nAgHDimFjXCkbqCYMFbylPM=;
+        b=YkvTFsD827vo34hxlTPVw58cGXvba06dcVobx26RkFifQDriFizzgmvIRwbCe5D0p7
+         LThxNJCP13ernCynKUVbcEdZsis1W5jfbmPW7vNAYJ6ZDKvOysLwl5IPd0vYW9TNTvAr
+         oa+FG3n830BrcNBfWKKs2Uo9vp0zsgCENILTw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :to:cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=MhejC9BKuveDv4ii94v9VaMMCuHK+OjfiJJ5YTsMLRs=;
-        b=B1C8tYU8EQC4iZwtOQ/Zk04D7Tsu8ONgOTTiQ7NbTVM97gBhwVXU+JzbBkGAFqohWJ
-         UcwdDgpqraBfMA2LNIVJcVThBeWTczgiPxqOkBywVeuBewvuTLhSo5SuwFw3YamljvOc
-         cqDtzNXvza6BZv0EYvssAcVtNzeNMJr9loOpBoQV//fBPlVPLUd3s+F4mAiDLsfKhkzS
-         rj/JdlOK5A1S1L/aMlA2FC/MO6wGUU9flkvktrdfSHtimYNw/PE5kCX/PVQBFuqNtrUz
-         toWLuQl+lzRyya2rzzSY7LUuH3q4KDSGhAwo5T4BjcrFaB+LwyPErhzH1djfR9opSuaG
-         XR8A==
-X-Gm-Message-State: AOAM531BBDtyn+LvJRUigM7VRnpur1okwPn5Z6YKGNhchAvA3Bfk5+F3
-        sz/VCgf7AaKZ3unPAHJY20zU8A==
-X-Google-Smtp-Source: ABdhPJzFMBjw7DKzltT6WM8bTDobSrAV27y9TGIY8GHhqFLxgNSl9EYtz0XHVnYZ5nGvTuWtUiUs+A==
-X-Received: by 2002:a17:90b:1e0e:: with SMTP id pg14mr4922614pjb.188.1640103977102;
-        Tue, 21 Dec 2021 08:26:17 -0800 (PST)
-Received: from [192.168.1.4] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
-        by smtp.gmail.com with ESMTPSA id b9sm8861933pfo.128.2021.12.21.08.26.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Dec 2021 08:26:16 -0800 (PST)
-Message-ID: <593f9a8c-901d-1320-cc59-1b7053423d22@digitalocean.com>
-Date:   Tue, 21 Dec 2021 09:26:11 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [PATCH v5 3/4] md: raid10 add nowait support
-To:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, rgoldwyn@suse.de
-References: <CAPhsuW7OY+5-F6Vk6z=ngSMXEayz3si=Sdf69r4vexRo202X_Q@mail.gmail.com>
- <20211215060906.3230-1-vverma@digitalocean.com>
- <20211215060906.3230-3-vverma@digitalocean.com>
- <CAPhsuW5=GLRW9g2QxgBfcx_OKq08x5GqGO4iC86x6YzDHRz8fA@mail.gmail.com>
- <9a85af03-a551-6650-3807-c177659cd17b@digitalocean.com>
- <7592d323-a07f-e333-220c-e9a7321a16f3@digitalocean.com>
- <4d246589-2184-91ec-613c-a3e8926a2b92@kernel.dk>
- <d93019e5-1669-0eb6-1e8e-73768aa6f917@digitalocean.com>
- <051b25ce-3b6b-b156-f6fa-2da36bbd9144@kernel.dk>
- <dbd77650-7a27-1a7b-935c-aba1057d385b@digitalocean.com>
- <CAPhsuW44Y-Lw01yEzVJH4J=JvBLbcKBOyva-75ivT2mdfsS2fg@mail.gmail.com>
- <50e23aee-af38-4da2-0f2f-da16af4fc477@digitalocean.com>
- <CAPhsuW5X7T67odWhZ=AqQMGvZATmHrxNeGOuLH-fmhy_L1r+Ag@mail.gmail.com>
- <bd90d6e6-adb4-2696-3110-fad0b1ee00dc@digitalocean.com>
- <CAPhsuW5kLZ=jQQWQwRG8-XnLihQ1R30s9CdLjm3s40J7axTU8Q@mail.gmail.com>
- <75ef7111-c291-51a9-5531-fa6965361b06@digitalocean.com>
- <5d718039-52d4-33e7-b7be-c12c3100a1e5@kernel.dk>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Fv+GVhTh+gh68aGg97S2nAgHDimFjXCkbqCYMFbylPM=;
+        b=rdJaPLCUWes8Mq+Eff7CASynCSd6E80G+/msQ35Eivw6yw6XIWVKzYBCSIt8ijM7Dr
+         caDvZdZ2rzbqWFkAJaHRItMgmp/5Ci63ZnViv2h7Y0zVBANi9duWDMnOPHXSj6uC/dZR
+         wARwAc7titGfHOn02fRne7rIFolh0bqNkwtgYgQolSMLVHvPb6RblTlSdvRPqtNp4lP4
+         ri/Q8A9L0rTs9Wn6GFUC1nGwvHZ/ANjzBlp8jc/meYYhdSrOiKThUuRKeUtZyHXJ7ziX
+         XkhqOOh5s/xKCzNHYSGpWLS2VKJIIoBOFJhHMabIIVzd4qpmyzckpVPTih5xjqCK5u5y
+         ywaQ==
+X-Gm-Message-State: AOAM532ggBlXjx3hWuqwJt+6EIN4RrFOSYQ+L2jzgVCrzrfEMl+043uI
+        KwN+kybWTvHgXx04XFjzfF6y5NxoqNqgVQ==
+X-Google-Smtp-Source: ABdhPJwx03w0lOfYiubC4YlbD8xdkvfKuAlonLnHPN4wFw7I7IPkd6MBnZ8vWLyow5J1xdkymR6y+Q==
+X-Received: by 2002:a05:620a:44c6:: with SMTP id y6mr3268679qkp.601.1640117197730;
+        Tue, 21 Dec 2021 12:06:37 -0800 (PST)
+Received: from vverma-s2-cbrunner ([162.243.188.99])
+        by smtp.gmail.com with ESMTPSA id o21sm18518446qta.89.2021.12.21.12.06.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Dec 2021 12:06:37 -0800 (PST)
 From:   Vishal Verma <vverma@digitalocean.com>
-In-Reply-To: <5d718039-52d4-33e7-b7be-c12c3100a1e5@kernel.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     song@kernel.org, linux-raid@vger.kernel.org
+Cc:     axboe@kernel.dk, rgoldwyn@suse.de,
+        Vishal Verma <vverma@digitalocean.com>
+Subject: [PATCH v6 1/4] md: add support for REQ_NOWAIT
+Date:   Tue, 21 Dec 2021 20:06:19 +0000
+Message-Id: <20211221200622.29795-1-vverma@digitalocean.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <f5b0b47f-cf0b-f74a-b8b6-80aeaa9b400d@digitalocean.com>
+References: <f5b0b47f-cf0b-f74a-b8b6-80aeaa9b400d@digitalocean.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
+for checking whether a given bdev supports handling of REQ_NOWAIT or not.
+Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
+it for linear target") added support for REQ_NOWAIT for dm. This uses
+a similar approach to incorporate REQ_NOWAIT for md based bios.
 
-On 12/21/21 8:59 AM, Jens Axboe wrote:
-> On 12/21/21 8:29 AM, Vishal Verma wrote:
->> On 12/21/21 1:13 AM, Song Liu wrote:
->>> On Mon, Dec 20, 2021 at 6:22 AM Vishal Verma <vverma@digitalocean.com> wrote:
->>>> On 12/16/21 4:50 PM, Song Liu wrote:
->>>>
->>>> On Thu, Dec 16, 2021 at 12:38 PM Vishal Verma <vverma@digitalocean.com> wrote:
->>>>
->>>> [...]
->>>>
->>>> [  740.106431] invalid opcode: 0000 [#1] PREEMPT SMP KASAN NOPTI
->>>>
->>>> What's the exact command line that triggers this? I am not able to
->>>> trigger it with
->>>> either fio or t/io_uring.
->>>>
->>>> Song
->>>>
->>>> I only had 1 nvme so was creating 4 partitions on it and creating a
->>>> raid10 and doing:
->>>>
->>>> mdadm -C /dev/md10 -l 10 -n 4 /dev/nvme4n1p1 /dev/nvme4n1p2
->>>> /dev/nvme4n1p3 /dev/nvme4n1p4
->>>> ./t/io_uring /dev/md10-d 256 -p 0 -a 0 -r 100
->>>>
->>>> on top of commit: c14704e1cb556 (md-next branch) + "md: add support for
->>>> REQ_NOWAIT" patch
->>>> Also, applied the commit (75feae73a28) Jens pointed earlier today.
->>>>
->>>> I am able to trigger the following error. I will look into it.
->>>>
->>>> Thanks,
->>>> Song
->>>>
->>>> [ 1583.149004] ==================================================================
->>>> [ 1583.150100] BUG: KASAN: use-after-free in raid10_end_read_request+0x91/0x310
->>>> [ 1583.151042] Read of size 8 at addr ffff888160a1c928 by task io_uring/1165
->>>> [ 1583.152016]
->>>> [ 1583.152247] CPU: 0 PID: 1165 Comm: io_uring Not tainted 5.16.0-rc3+ #660
->>>> [ 1583.153159] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
->>>> BIOS 1.13.0-2.module_el8.4.0+547+a85d02ba 04/01/2014
->>>> [ 1583.154572] Call Trace:
->>>> [ 1583.155005]  <IRQ>
->>>> [ 1583.155338]  dump_stack_lvl+0x44/0x57
->>>> [ 1583.155950]  print_address_description.constprop.8.cold.17+0x12/0x339
->>>> [ 1583.156969]  ? raid10_end_read_request+0x91/0x310
->>>> [ 1583.157578]  ? raid10_end_read_request+0x91/0x310
->>>> [ 1583.158272]  kasan_report.cold.18+0x83/0xdf
->>>> [ 1583.158889]  ? raid10_end_read_request+0x91/0x310
->>>> [ 1583.159554]  raid10_end_read_request+0x91/0x310
->>>> [ 1583.160201]  ? raid10_resize+0x270/0x270
->>>> [ 1583.160724]  ? bio_uninit+0xc7/0x1e0
->>>> [ 1583.161274]  blk_update_request+0x21f/0x810
->>>> [ 1583.161893]  blk_mq_end_request_batch+0x11c/0xa70
->>>> [ 1583.162497]  ? blk_mq_end_request+0x460/0x460
->>>> [ 1583.163204]  ? nvme_complete_batch_req+0x12/0x30
->>>> [ 1583.163888]  nvme_irq+0x6ad/0x6f0
->>>> [ 1583.164354]  ? io_queue_count_set+0xe0/0xe0
->>>> [ 1583.164980]  ? nvme_unmap_data+0x1e0/0x1e0
->>>> [ 1583.165504]  ? rcu_read_lock_bh_held+0xb0/0xb0
->>>> [ 1583.166149]  ? io_queue_count_set+0xe0/0xe0
->>>> [ 1583.166721]  __handle_irq_event_percpu+0x79/0x440
->>>> [ 1583.167446]  handle_irq_event_percpu+0x6f/0xe0
->>>> [ 1583.168101]  ? __handle_irq_event_percpu+0x440/0x440
->>>> [ 1583.168734]  ? lock_contended+0x6e0/0x6e0
->>>> [ 1583.169349]  ? do_raw_spin_unlock+0xa2/0x130
->>>> [ 1583.169961]  handle_irq_event+0x54/0x90
->>>> [ 1583.170442]  handle_edge_irq+0x121/0x300
->>>> [ 1583.171012]  __common_interrupt+0x7d/0x170
->>>> [ 1583.171538]  common_interrupt+0xa0/0xc0
->>>> [ 1583.172103]  </IRQ>
->>>> [ 1583.172389]  <TASK>
->>>>
->>>> When running t/io_uring on a raid1 array, I get following:
->>>>
->>>> [  189.863726] RIP: 0010:__kmalloc+0xfa/0x430
->>>> [  189.867825] Code: 05 4b 9a 35 43 48 8b 50 08 48 83 78 10 00 4c 8b 20 0f 84 fa 02 00 00 4d 85 e4 0f 84 f1 02 00 00 41 8b 47 28 49 8b 3f 4c 01 e0 <48> 8b 18 48 89 c1 49 33 9f b8 00 00 00 4c 89 e0 48 0f c9 48 31 cb
->>>> [  189.886573] RSP: 0018:ffffaf09e28b7828 EFLAGS: 00010286
->>>> [  189.891799] RAX: a0fa1099d2b0fff3 RBX: 0000000000092900 RCX: 0000000000000000
->>>> [  189.898930] RDX: 00000002ba79600b RSI: 0000000000092900 RDI: 00000000000340e0
->>>> [  189.906062] RBP: ffffaf09e28b7860 R08: ffff90fb8b6ea560 R09: ffff90fba7205f60
->>>> [  189.913195] R10: ffffaf09e28b7c18 R11: 0000000000000000 R12: a0fa1099d2b0ffb3
->>>> [  189.920329] R13: 0000000000000000 R14: ffffffffc074c277 R15: ffff90bc00044700
->>>> [  189.927461] FS:  00007fd6209d7700(0000) GS:ffff913a6e140000(0000) knlGS:0000000000000000
->>>> [  189.935549] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>>> [  189.941295] CR2: 00007f16998bebf0 CR3: 00000040be512005 CR4: 0000000000770ee0
->>>> [  189.948426] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->>>> [  189.955560] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
->>>> [  189.962691] PKRU: 55555554
->>>> [  189.965403] Call Trace:
->>>> [  189.967857]  <TASK>
->>>> [  189.969966]  0xffffffffc074c277
->>>> [  189.973110]  mempool_alloc+0x61/0x180
->>>> [  189.976777]  ? bio_associate_blkg_from_css+0xf5/0x2c0
->>>> [  189.981829]  ? __bio_clone_fast+0xa9/0xf0
->>>> [  189.985842]  ? __sbitmap_get_word+0x36/0x80
->>>> [  189.990027]  0xffffffffc074ac50
->>>> [  189.993174]  ? __sbitmap_queue_get+0x9/0x10
->>>> [  189.997359]  ? blk_mq_get_tag+0x241/0x270
->>>> [  190.001373]  ? ktime_get+0x3b/0xa0
->>>> [  190.004776]  ? blk_mq_rq_ctx_init.isra.0+0x1a5/0x1c0
->>>> [  190.009743]  0xffffffffc074efb3
->>>> [  190.012891]  md_handle_request+0x134/0x1b0
->>>> [  190.016989]  ? ktime_get+0x3b/0xa0
->>>> [  190.020395]  md_submit_bio+0x6d/0xa0
->>>> [  190.023976]  __submit_bio+0x94/0x140
->>>> [  190.027555]  submit_bio_noacct+0xe1/0x2a0
->>>> [  190.031566]  submit_bio+0x48/0x120
->>>> [  190.034972]  blkdev_direct_IO+0x19b/0x540
->>>> [  190.038987]  ? __fsnotify_parent+0xff/0x330
->>>> [  190.043172]  ? __fsnotify_parent+0x10f/0x330
->>>> [  190.047445]  generic_file_read_iter+0xa5/0x160
->>>> [  190.051889]  blkdev_read_iter+0x38/0x70
->>>> [  190.055731]  io_read+0x119/0x420
->>>> [  190.058963]  ? blk_queue_exit+0x23/0x50
->>>> [  190.062801]  ? __blk_mq_free_request+0x86/0xc0
->>>> [  190.067247]  io_issue_sqe+0x7ec/0x19c0
->>>> [  190.071002]  ? io_req_prep+0x6a9/0xe60
->>>> [  190.074754]  io_submit_sqes+0x2a0/0x9f0
->>>> [  190.078594]  ? __fget_files+0x6a/0x90
->>>> [  190.082259]  __x64_sys_io_uring_enter+0x1da/0x8c0
->>>> [  190.086965]  ? debug_smp_processor_id+0x17/0x20
->>>> [  190.091498]  ? fpregs_assert_state_consistent+0x23/0x50
->>>> [  190.096723]  ? exit_to_user_mode_prepare+0x4b/0x1e0
->>>> [  190.101602]  do_syscall_64+0x38/0x90
->>>> [  190.105182]  entry_SYSCALL_64_after_hwframe+0x44/0xae
->>>> [  190.110236] RIP: 0033:0x7fd620af589d
->>>> [  190.113815] Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d c3 f5 0c 00 f7 d8 64 89 01 48
->>>> [  190.132563] RSP: 002b:00007fd6209d6e98 EFLAGS: 00000246 ORIG_RAX: 00000000000001aa
->>>> [  190.140126] RAX: ffffffffffffffda RBX: 00007fd620d4bfc0 RCX: 00007fd620af589d
->>>> [  190.147261] RDX: 0000000000000000 RSI: 0000000000000020 RDI: 0000000000000004
->>>> [  190.154391] RBP: 0000000000000020 R08: 0000000000000000 R09: 0000000000000000
->>>> [  190.161524] R10: 0000000000000000 R11: 0000000000000246 R12: 0000561889c472a0
->>>> [  190.168657] R13: 0000000000000020 R14: 0000000000000000 R15: 0000000000000020
->>>> [  190.175793]  </TASK>
->>>>
->>>> It seems this issue is getting triggered with the following commit:
->>>>
->>>> commit 5b13bc8a3fd519d86e5b1a0b1d1b996cace62f3f
->>>> Author: Christoph Hellwig <hch@lst.de>
->>>> Date:   Wed Nov 24 07:28:56 2021 +0100
->>>>
->>>>       blk-mq: cleanup request allocation
->>> Good finding. I am not able to repro these issues after reverting this commit.
->>>
->>> Vishal, how does it work in your tests?
->> Same. I haven't seen any issue in my tests (io_uring, aio) after
->> reverting this commit.
->> Should I go ahead and send v6 patchset after incororating your prev
->> feedback?
-> Do you have this one:
->
-> commit a08ed9aae8a3d2321ef378d6581cc87a3fb75b44
-> Author: Jens Axboe <axboe@kernel.dk>
-> Date:   Thu Dec 2 12:43:46 2021 -0700
->
->      block: fq queue when merging in cached request path
->
-Nope, md-next branch didn't have that commit. I manually applied it. 
-Tests seem to run fine now.
-Thank you :)
+This patch was tested using t/io_uring tool within FIO. A nvme drive
+was partitioned into 2 partitions and a simple raid 0 configuration
+/dev/md0 was created.
 
+md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
+      937423872 blocks super 1.2 512k chunks
+
+Before patch:
+
+$ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+
+Running top while the above runs:
+
+$ ps -eL | grep $(pidof io_uring)
+
+  38396   38396 pts/2    00:00:00 io_uring
+  38396   38397 pts/2    00:00:15 io_uring
+  38396   38398 pts/2    00:00:13 iou-wrk-38397
+
+We can see iou-wrk-38397 io worker thread created which gets created
+when io_uring sees that the underlying device (/dev/md0 in this case)
+doesn't support nowait.
+
+After patch:
+
+$ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+
+Running top while the above runs:
+
+$ ps -eL | grep $(pidof io_uring)
+
+  38341   38341 pts/2    00:10:22 io_uring
+  38341   38342 pts/2    00:10:37 io_uring
+
+After running this patch, we don't see any io worker thread
+being created which indicated that io_uring saw that the
+underlying device does support nowait. This is the exact behaviour
+noticed on a dm device which also supports nowait.
+
+For all the other raid personalities except raid0, we would need
+to train pieces which involves make_request fn in order for them
+to correctly handle REQ_NOWAIT.
+
+Signed-off-by: Vishal Verma <vverma@digitalocean.com>
+---
+ drivers/md/md.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5111ed966947..ccd296aa9641 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -418,6 +418,11 @@ void md_handle_request(struct mddev *mddev, struct bio *bio)
+ 	rcu_read_lock();
+ 	if (is_suspended(mddev, bio)) {
+ 		DEFINE_WAIT(__wait);
++		/* Bail out if REQ_NOWAIT is set for the bio */
++		if (bio->bi_opf & REQ_NOWAIT) {
++			bio_wouldblock_error(bio);
++			return;
++		}
+ 		for (;;) {
+ 			prepare_to_wait(&mddev->sb_wait, &__wait,
+ 					TASK_UNINTERRUPTIBLE);
+@@ -5792,6 +5797,7 @@ int md_run(struct mddev *mddev)
+ 	int err;
+ 	struct md_rdev *rdev;
+ 	struct md_personality *pers;
++	bool nowait = true;
+ 
+ 	if (list_empty(&mddev->disks))
+ 		/* cannot run an array with no devices.. */
+@@ -5862,8 +5868,13 @@ int md_run(struct mddev *mddev)
+ 			}
+ 		}
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
++		nowait = nowait && blk_queue_nowait(bdev_get_queue(rdev->bdev));
+ 	}
+ 
++	/* Set the NOWAIT flags if all underlying devices support it */
++	if (nowait)
++		blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
++
+ 	if (!bioset_initialized(&mddev->bio_set)) {
+ 		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+ 		if (err)
+@@ -7007,6 +7018,15 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+ 	set_bit(MD_SB_CHANGE_DEVS, &mddev->sb_flags);
+ 	if (!mddev->thread)
+ 		md_update_sb(mddev, 1);
++	/*
++	 * If the new disk does not support REQ_NOWAIT,
++	 * disable on the whole MD.
++	 */
++	if (!blk_queue_nowait(bdev_get_queue(rdev->bdev))) {
++		pr_info("%s: Disabling nowait because %s does not support nowait\n",
++			mdname(mddev), bdevname(rdev->bdev, b));
++		blk_queue_flag_clear(QUEUE_FLAG_NOWAIT, mddev->queue);
++	}
+ 	/*
+ 	 * Kick recovery, maybe this spare has to be added to the
+ 	 * array immediately.
+-- 
+2.17.1
 
