@@ -2,200 +2,126 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0878C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 22 Dec 2021 07:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B204BC433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 22 Dec 2021 16:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242970AbhLVHZJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 22 Dec 2021 02:25:09 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:22525 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239225AbhLVHZI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 22 Dec 2021 02:25:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1640157907;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/+F3RmmopjyDZfmud46qsBBLC0JX2c4pdKIsnigeLX8=;
-        b=CYSpcs7baTaLxaKsDdZI8O8J81E5uToQWK1kYsLYLe9le2HgcEJUx4t6z6lAfejxzQc6q7
-        B3Ej+ovtZWlWtaMulyI+pp4qjPLzeJ6en77TnhJiqBPG4vAz2U6QL0MK62Dg13RgVWZWhG
-        32eA7zJaGs39alCrSvOO8oj3fxcXrYA=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-275-IugVMJ8LNc6StAwMkHXpCw-1; Wed, 22 Dec 2021 02:25:06 -0500
-X-MC-Unique: IugVMJ8LNc6StAwMkHXpCw-1
-Received: by mail-ed1-f71.google.com with SMTP id t1-20020a056402524100b003f8500f6e35so1094580edd.8
-        for <linux-raid@vger.kernel.org>; Tue, 21 Dec 2021 23:25:06 -0800 (PST)
+        id S231635AbhLVQGw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 22 Dec 2021 11:06:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56122 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231421AbhLVQGv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 22 Dec 2021 11:06:51 -0500
+Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1C57C061574
+        for <linux-raid@vger.kernel.org>; Wed, 22 Dec 2021 08:06:51 -0800 (PST)
+Received: by mail-io1-xd36.google.com with SMTP id y16so3479449ioc.8
+        for <linux-raid@vger.kernel.org>; Wed, 22 Dec 2021 08:06:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=3jgRacYUS8Qgs1rOthnUYPJ+DJhj2dYVhswQkydjxRM=;
+        b=aurg6tDuwSN48Vxy5eIL3sHjzwenWpccg+2H9gU08hz9CwOMCSuimQiuvBFr1CBADx
+         OBwFR2r0bhJUAbeFsPOgV0aI6PAC6FjAv7ocv+QNgX9+qI0ZKwnAcux3/Oy3yvElYHIT
+         fOIGI2QNp35ZlBIhF0mv1VQ74Zb7f4F4SFE4VG4oJU6F6OMiYOwO5Cm3K+dLPZj0nqx7
+         BrjIG97eyoswhNpM3tRPR447PEOu6gh2yyThcq15elu+8BNvZsfF0Uqay8XUjpfowyQs
+         Z7FCVD9Lj8cNjQ6HE4ZXZ8zgnmAedctOTS4/yREGmwKFspQZaI7co2sp1O5i+0pqrKSR
+         U/HQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=/+F3RmmopjyDZfmud46qsBBLC0JX2c4pdKIsnigeLX8=;
-        b=0Xhkx7+rWKfSoZp+NH2bZw31bJ1x3lZv4nP5kostOlfkUCLJ8qCXX4jC8qPdOvX5Qj
-         4g9O7IzjQJk++Cr0ADegrRCT5qmwy2Jl94sQUPPXEp9KoXVUEGBHvIeoAxmxqpx75qEf
-         rAT2lxT8sne8iQd5YpFi+rZujxWg1/l+dqfkKtzHGH5NIbJdLWm8LTCAUzN+wANM4qB3
-         VXRWnJrui/OslNlaPYP6DJAD4x4GId6ml156WlRTPSRsYz4anV7fmFNJOgqpg8+ozv31
-         rd+J55UbPokrOyR2Uvk0m9c3VL3pjA7C/S9HJHw/f6giJwB8Fd1e2Oh51GF583LNo0ol
-         VB6Q==
-X-Gm-Message-State: AOAM533LnINSJ+vnrL3YrOVJljBxrJFntiaH13ZZw3hKMeXGnNbRlfAM
-        KFEeJTO25ANlq2MRXOPfCKo/kStZaRfVcdfcAsPa4QS8BjcTUmRW1qsRh4rniopzhfReP/tZOpu
-        vN2F07moRqf+GQDDsDvQEhrRIH6fc9Khb8K9Y4A==
-X-Received: by 2002:a17:906:b04c:: with SMTP id bj12mr1416918ejb.716.1640157905296;
-        Tue, 21 Dec 2021 23:25:05 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJy4eV9LB9gQsDrVBT14QVoWrpa8iMyGij1/fPcUOXjYhKYGJehh4LfVJhgtj1rIDZgcggysuwDaUY6oUQk6Lzw=
-X-Received: by 2002:a17:906:b04c:: with SMTP id bj12mr1416899ejb.716.1640157904965;
- Tue, 21 Dec 2021 23:25:04 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3jgRacYUS8Qgs1rOthnUYPJ+DJhj2dYVhswQkydjxRM=;
+        b=UjV9oZ4K+C2DzVUY7+sFd0v2Tt7ojA9MT5siLzIP0z+bN7cywJrRUAc/m1QmaU2znR
+         x/WPDSySch7/ELp2nQa7VHFsRueJZIRt+rx7PvgQnVB9w0dtHdZD/TNFKNR1p2XH1y9v
+         KR+n8hxKyamMzoRQB+dQaQKvDZyyZ6efKfXHgu3byiQwbKayTa1QWcJE2G+p1xsGwAAD
+         L3Bwc3bhq0smF5HaRYg2g0Cg3igwViI0+DhAsfdoDvIGKsptTI9u3hKl5ixD3ZHkUCU7
+         fQVrduq1cWAIRtobRvS4nUul6IY7M7tlFoTWN8Eq/blMG8U+TyjW+bv2MnlaTcl+1Rbv
+         P6MQ==
+X-Gm-Message-State: AOAM533tjYyK7l+pMZE5CDcZPiXb2mYbYfd68ZpNF5gkqY82+l1kOsUs
+        qc/qFHtWOFQn08yX413X0BDVzA==
+X-Google-Smtp-Source: ABdhPJyCUqMZ27jOgmmpGkbvNR3+UUuvjvX/ToiR0kELGz2l5PxkwhqejQedr8mJimDUuIJK8CYxIA==
+X-Received: by 2002:a05:6638:150e:: with SMTP id b14mr2041352jat.246.1640189211046;
+        Wed, 22 Dec 2021 08:06:51 -0800 (PST)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id i8sm310027ilm.63.2021.12.22.08.06.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Dec 2021 08:06:50 -0800 (PST)
+Subject: Re: [PATCH v6 1/4] md: add support for REQ_NOWAIT
+To:     Vishal Verma <vverma@digitalocean.com>, song@kernel.org,
+        linux-raid@vger.kernel.org
+Cc:     rgoldwyn@suse.de
+References: <f5b0b47f-cf0b-f74a-b8b6-80aeaa9b400d@digitalocean.com>
+ <20211221200622.29795-1-vverma@digitalocean.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <3659a288-022e-d613-7d07-47ab0c2997a5@kernel.dk>
+Date:   Wed, 22 Dec 2021 09:06:48 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <20211216145222.15370-1-mariusz.tkaczyk@linux.intel.com> <20211216145222.15370-3-mariusz.tkaczyk@linux.intel.com>
-In-Reply-To: <20211216145222.15370-3-mariusz.tkaczyk@linux.intel.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Wed, 22 Dec 2021 15:24:54 +0800
-Message-ID: <CALTww29eqakZmp4oiDDZOWZtiz7q2yXCPidBoJVfVpodDcYdzw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] md: Set MD_BROKEN for RAID1 and RAID10
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20211221200622.29795-1-vverma@digitalocean.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Dec 16, 2021 at 10:53 PM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
->
-> There was no direct mechanism to determine raid failure outside
-> personality. It was done by checking rdev->flags after executing
-> md_error(). If "faulty" was not set then -EBUSY was returned to
-> userspace. It causes that mdadm expects -EBUSY if the array
-> becomes failed. There are some reasons to not consider this mechanism
-> as correct:
-> - drive can't be failed for different reasons.
-> - there are path where -EBUSY is not reported and drive removal leads
-> to failed array, without notification for userspace.
-> - in the array failure case -EBUSY seems to be wrong status. Array is
-> not busy, but removal process cannot proceed safe.
->
-> -EBUSY expectation cannot be removed without breaking compatibility
-> with userspace, but we can adopt the failed state verification method.
->
-> In this patch MD_BROKEN flag support, used to mark non-redundant array
-> as dead, is added to RAID1 and RAID10. Support for RAID456 is added in
-> next commit.
->
-> Now the array failure can be checked, so verify MD_BROKEN flag, however
-> still return -EBUSY to userspace.
->
-> As in previous commit, it causes that #mdadm --set-faulty is able to
-> mark array as failed. Previously proposed workaround is valid if optional
-> functionality 9a567843f79("md: allow last device to be forcibly
-> removed from RAID1/RAID10.") is disabled.
->
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> ---
->  drivers/md/md.c     | 17 ++++++++++-------
->  drivers/md/md.h     |  4 ++--
->  drivers/md/raid1.c  |  1 +
->  drivers/md/raid10.c |  1 +
->  4 files changed, 14 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f888ef197765..fda8473f96b8 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2983,10 +2983,11 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
->
->         if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
->                 md_error(rdev->mddev, rdev);
-> -               if (test_bit(Faulty, &rdev->flags))
-> -                       err = 0;
-> -               else
-> +
-> +               if (test_bit(MD_BROKEN, &rdev->mddev->flags))
->                         err = -EBUSY;
-> +               else
-> +                       err = 0;
->         } else if (cmd_match(buf, "remove")) {
->                 if (rdev->mddev->pers) {
->                         clear_bit(Blocked, &rdev->flags);
-> @@ -7441,7 +7442,7 @@ static int set_disk_faulty(struct mddev *mddev, dev_t dev)
->                 err =  -ENODEV;
->         else {
->                 md_error(mddev, rdev);
-> -               if (!test_bit(Faulty, &rdev->flags))
-> +               if (test_bit(MD_BROKEN, &mddev->flags))
->                         err = -EBUSY;
->         }
->         rcu_read_unlock();
-> @@ -7987,12 +7988,14 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
->         if (!mddev->pers->sync_request)
->                 return;
->
-> -       if (mddev->degraded)
-> +       if (mddev->degraded && !test_bit(MD_BROKEN, &mddev->flags))
->                 set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->         sysfs_notify_dirent_safe(rdev->sysfs_state);
->         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> -       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -       md_wakeup_thread(mddev->thread);
-> +       if (!test_bit(MD_BROKEN, &mddev->flags)) {
-> +               set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +               md_wakeup_thread(mddev->thread);
-> +       }
->         if (mddev->event_work.func)
->                 queue_work(md_misc_wq, &mddev->event_work);
->         md_new_event();
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index bc3f2094d0b6..d3a897868695 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -259,8 +259,8 @@ enum mddev_flags {
->         MD_NOT_READY,           /* do_md_run() is active, so 'array_state'
->                                  * must not report that array is ready yet
->                                  */
-> -       MD_BROKEN,              /* This is used in RAID-0/LINEAR only, to stop
-> -                                * I/O in case an array member is gone/failed.
-> +       MD_BROKEN,              /* This is used to stop I/O and mark device as
-> +                                * dead in case an array becomes failed.
->                                  */
->  };
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 7dc8026cf6ee..45dc75f90476 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1638,6 +1638,7 @@ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
->                  */
->                 conf->recovery_disabled = mddev->recovery_disabled;
->                 spin_unlock_irqrestore(&conf->device_lock, flags);
-> +               set_bit(MD_BROKEN, &mddev->flags);
->                 return;
->         }
->         set_bit(Blocked, &rdev->flags);
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index dde98f65bd04..d7cefd212e6b 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1964,6 +1964,7 @@ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
->                  * Don't fail the drive, just return an IO error.
->                  */
->                 spin_unlock_irqrestore(&conf->device_lock, flags);
-> +               set_bit(MD_BROKEN, &mddev->flags);
->                 return;
->         }
->         if (test_and_clear_bit(In_sync, &rdev->flags))
-> --
-> 2.26.2
->
+On 12/21/21 1:06 PM, Vishal Verma wrote:
+> commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
+> for checking whether a given bdev supports handling of REQ_NOWAIT or not.
+> Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
+> it for linear target") added support for REQ_NOWAIT for dm. This uses
+> a similar approach to incorporate REQ_NOWAIT for md based bios.
+> 
+> This patch was tested using t/io_uring tool within FIO. A nvme drive
+> was partitioned into 2 partitions and a simple raid 0 configuration
+> /dev/md0 was created.
+> 
+> md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
+>       937423872 blocks super 1.2 512k chunks
+> 
+> Before patch:
+> 
+> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+> 
+> Running top while the above runs:
+> 
+> $ ps -eL | grep $(pidof io_uring)
+> 
+>   38396   38396 pts/2    00:00:00 io_uring
+>   38396   38397 pts/2    00:00:15 io_uring
+>   38396   38398 pts/2    00:00:13 iou-wrk-38397
+> 
+> We can see iou-wrk-38397 io worker thread created which gets created
+> when io_uring sees that the underlying device (/dev/md0 in this case)
+> doesn't support nowait.
+> 
+> After patch:
+> 
+> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
+> 
+> Running top while the above runs:
+> 
+> $ ps -eL | grep $(pidof io_uring)
+> 
+>   38341   38341 pts/2    00:10:22 io_uring
+>   38341   38342 pts/2    00:10:37 io_uring
+> 
+> After running this patch, we don't see any io worker thread
+> being created which indicated that io_uring saw that the
+> underlying device does support nowait. This is the exact behaviour
+> noticed on a dm device which also supports nowait.
+> 
+> For all the other raid personalities except raid0, we would need
+> to train pieces which involves make_request fn in order for them
+> to correctly handle REQ_NOWAIT.
 
-Hi Mariusz
+1-4 look fine to me now:
 
-In your first Version, it checks MD_BROKEN in super_written. Does it
-need to do this in this version?
-From my understanding, it needs to retry the write when failfast is
-supported. If it checks MD_BROKEN
-in super_written, it can't send re-write anymore. Am I right?
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
 
-Regards
-Xiao
+-- 
+Jens Axboe
 
