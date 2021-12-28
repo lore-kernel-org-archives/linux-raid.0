@@ -2,210 +2,248 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F2BC433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 27 Dec 2021 12:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F442C433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 28 Dec 2021 23:56:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236686AbhL0Mem (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 27 Dec 2021 07:34:42 -0500
-Received: from mga02.intel.com ([134.134.136.20]:43133 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233041AbhL0Mej (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 27 Dec 2021 07:34:39 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1640608479; x=1672144479;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=jczE1BRlNFx/ePaDPOs7zRVJf0svJVnVT5+C53QO18U=;
-  b=gKg99r2W575nC7jXHOxa0TMzpix8Xe4WjCjT+/r8VKgPcZNpnyGK1v6D
-   Wq1l25y7GGsg6qUeNUmmlmDL4no+r6C19fZYlvfCH1F9gvT+J+Bg6ilrD
-   PDWPyoMIcHJHlNipMxbaZrEDkiFOvtzIJPpt6/xbvf4AwNbaXEiJd2C7r
-   J+ddbTiCPjnSXq3K4++sD+AHJtBh4A1j0tHv4Ix2tZB3asYm6nypoMtzG
-   ogUWvklYznvGR7a1aIitXj7C7mHDhovJ06eAFRN4iHPXLeyrOvopgJ1Ia
-   7c0OTmBmEhQyVI4jmpSc7g7y0rx4jc8I7Fa0mBrhzds4AU7iJjiHTYf2N
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10209"; a="228506798"
-X-IronPort-AV: E=Sophos;i="5.88,239,1635231600"; 
-   d="scan'208";a="228506798"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2021 04:34:36 -0800
-X-IronPort-AV: E=Sophos;i="5.88,239,1635231600"; 
-   d="scan'208";a="523269848"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.11.152])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2021 04:34:34 -0800
-Date:   Mon, 27 Dec 2021 13:34:29 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Song Liu <song@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Subject: Re: [PATCH 2/3] md: Set MD_BROKEN for RAID1 and RAID10
-Message-ID: <20211227133429.00002062@linux.intel.com>
-In-Reply-To: <CALTww29eqakZmp4oiDDZOWZtiz7q2yXCPidBoJVfVpodDcYdzw@mail.gmail.com>
-References: <20211216145222.15370-1-mariusz.tkaczyk@linux.intel.com>
-        <20211216145222.15370-3-mariusz.tkaczyk@linux.intel.com>
-        <CALTww29eqakZmp4oiDDZOWZtiz7q2yXCPidBoJVfVpodDcYdzw@mail.gmail.com>
+        id S231980AbhL1X4t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 28 Dec 2021 18:56:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41308 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231940AbhL1X4s (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 28 Dec 2021 18:56:48 -0500
+Received: from mail-yb1-xb2e.google.com (mail-yb1-xb2e.google.com [IPv6:2607:f8b0:4864:20::b2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E430FC061574
+        for <linux-raid@vger.kernel.org>; Tue, 28 Dec 2021 15:56:47 -0800 (PST)
+Received: by mail-yb1-xb2e.google.com with SMTP id w184so38282138ybg.5
+        for <linux-raid@vger.kernel.org>; Tue, 28 Dec 2021 15:56:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jcnFkePmR3hTnKNiRnec4wehDBrexIQyviW3Yw/lp8M=;
+        b=o0hprRFZS2lbMVdyCXd9/KRDtoSIkuzSpMmGPZxvxqNOx/vfrpz+uUqGAUetsPI6Jl
+         7XNRaZpmhT8mshwTsaSKhzDAoMz52nMgH+MkXnjSX8TAEUZ0MC49mX9zKbI3e0Ee9LFF
+         AsMradUzZqvDGetMhE/uWUcFnd6N9UtvoyuJnMecA0LZeNxNllDnktl1PbFm4bmMHPH7
+         tT/EP6jnf0RUyMWcT0+IZL84MjnN84EjZ278qeRYAAIZzOVHvfyXWyk443shIxHGVaNH
+         LLyNK5LhbjQhC0OalSc+P9jsxAAHEbiFbfIW0qtFn0oYhk730466PMkh716KxOebIFMQ
+         sa7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=jcnFkePmR3hTnKNiRnec4wehDBrexIQyviW3Yw/lp8M=;
+        b=d7mkf7RGgUi1QGMHu/NVKV3Fxl5qunSP8wCu9xqVmeTk5FdFg6S7DoeosCI4P1U8W0
+         Ll6hcxGd/+Jmyj63PQCgzcrY97cQL5CPOraFQSbpj/u0vOAgRXzATIKcOClOA0kEOFn2
+         5v0FfMuQzwZJBwa4ii/DYYl8C8EDKCgWgluvvKDTkKBUE5AZ6XgbkrMhDMQS8NJeEfi3
+         E7ElKllYUUxh7zWhOhoeEZz4km6Jm8R3UrwA0rhlVcLDUWOT14B6+bcml7dxEKW5Dt2L
+         BdnxBSeBfzzRtX9il6awJXHunR5vQZ5aWbDgoi4QweO3nWLMNKQlVaEr1vOZ/I8gVshr
+         CSqA==
+X-Gm-Message-State: AOAM531h/UdtZH0ngtFqlNrLcd0H20+fKsPpi4GDU0tNip+5jyki4QLL
+        i/YxoLcpYeE/8zuVxXK+v3373cEnAmYzHjx1IygtG62x5rw=
+X-Google-Smtp-Source: ABdhPJyEeLBW3G+G/gOhLtkPAb25CDFYyMVMPmGC80VsbaNjM3cdE7VUXq0x53HhnAzcoknyEp6Lj4b6lNvLv22BjXQ=
+X-Received: by 2002:a25:f449:: with SMTP id p9mr28691457ybe.594.1640735806921;
+ Tue, 28 Dec 2021 15:56:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <CAA9kLn1nZZKHLahjkyJzChgTMC2WKEoyJG2PhHzeXbD_qY_-yw@mail.gmail.com>
+ <Yb8ebs7lhEHHTqif@metamorpher.de> <CAA9kLn1JwRLWpOd-kRnLj2YqQhkRM_R_LFisA9_acxHdFJpFVg@mail.gmail.com>
+ <YcV6tUwlKd+tLd78@metamorpher.de>
+In-Reply-To: <YcV6tUwlKd+tLd78@metamorpher.de>
+From:   Tony Bush <thecompguru@gmail.com>
+Date:   Tue, 28 Dec 2021 18:56:35 -0500
+Message-ID: <CAA9kLn3AYkoa5ybqoxoVRg1umhCbAwsshGNDPtV05tU7K-ZCAQ@mail.gmail.com>
+Subject: Re: Need help Recover raid5 array
+To:     Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 22 Dec 2021 15:24:54 +0800
-Xiao Ni <xni@redhat.com> wrote:
+Thanks for the help.  I have successfully recovered my raid.  Here is
+what I did if it helps someone else.
 
-> On Thu, Dec 16, 2021 at 10:53 PM Mariusz Tkaczyk
-> <mariusz.tkaczyk@linux.intel.com> wrote:
-> >
-> > There was no direct mechanism to determine raid failure outside
-> > personality. It was done by checking rdev->flags after executing
-> > md_error(). If "faulty" was not set then -EBUSY was returned to
-> > userspace. It causes that mdadm expects -EBUSY if the array
-> > becomes failed. There are some reasons to not consider this
-> > mechanism as correct:
-> > - drive can't be failed for different reasons.
-> > - there are path where -EBUSY is not reported and drive removal
-> > leads to failed array, without notification for userspace.
-> > - in the array failure case -EBUSY seems to be wrong status. Array
-> > is not busy, but removal process cannot proceed safe.
-> >
-> > -EBUSY expectation cannot be removed without breaking compatibility
-> > with userspace, but we can adopt the failed state verification
-> > method.
-> >
-> > In this patch MD_BROKEN flag support, used to mark non-redundant
-> > array as dead, is added to RAID1 and RAID10. Support for RAID456 is
-> > added in next commit.
-> >
-> > Now the array failure can be checked, so verify MD_BROKEN flag,
-> > however still return -EBUSY to userspace.
-> >
-> > As in previous commit, it causes that #mdadm --set-faulty is able to
-> > mark array as failed. Previously proposed workaround is valid if
-> > optional functionality 9a567843f79("md: allow last device to be
-> > forcibly removed from RAID1/RAID10.") is disabled.
-> >
-> > Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-> > ---
-> >  drivers/md/md.c     | 17 ++++++++++-------
-> >  drivers/md/md.h     |  4 ++--
-> >  drivers/md/raid1.c  |  1 +
-> >  drivers/md/raid10.c |  1 +
-> >  4 files changed, 14 insertions(+), 9 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index f888ef197765..fda8473f96b8 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -2983,10 +2983,11 @@ state_store(struct md_rdev *rdev, const
-> > char *buf, size_t len)
-> >
-> >         if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
-> >                 md_error(rdev->mddev, rdev);
-> > -               if (test_bit(Faulty, &rdev->flags))
-> > -                       err = 0;
-> > -               else
-> > +
-> > +               if (test_bit(MD_BROKEN, &rdev->mddev->flags))
-> >                         err = -EBUSY;
-> > +               else
-> > +                       err = 0;
-> >         } else if (cmd_match(buf, "remove")) {
-> >                 if (rdev->mddev->pers) {
-> >                         clear_bit(Blocked, &rdev->flags);
-> > @@ -7441,7 +7442,7 @@ static int set_disk_faulty(struct mddev
-> > *mddev, dev_t dev) err =  -ENODEV;
-> >         else {
-> >                 md_error(mddev, rdev);
-> > -               if (!test_bit(Faulty, &rdev->flags))
-> > +               if (test_bit(MD_BROKEN, &mddev->flags))
-> >                         err = -EBUSY;
-> >         }
-> >         rcu_read_unlock();
-> > @@ -7987,12 +7988,14 @@ void md_error(struct mddev *mddev, struct
-> > md_rdev *rdev) if (!mddev->pers->sync_request)
-> >                 return;
-> >
-> > -       if (mddev->degraded)
-> > +       if (mddev->degraded && !test_bit(MD_BROKEN, &mddev->flags))
-> >                 set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-> >         sysfs_notify_dirent_safe(rdev->sysfs_state);
-> >         set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> > -       set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> > -       md_wakeup_thread(mddev->thread);
-> > +       if (!test_bit(MD_BROKEN, &mddev->flags)) {
-> > +               set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> > +               md_wakeup_thread(mddev->thread);
-> > +       }
-> >         if (mddev->event_work.func)
-> >                 queue_work(md_misc_wq, &mddev->event_work);
-> >         md_new_event();
-> > diff --git a/drivers/md/md.h b/drivers/md/md.h
-> > index bc3f2094d0b6..d3a897868695 100644
-> > --- a/drivers/md/md.h
-> > +++ b/drivers/md/md.h
-> > @@ -259,8 +259,8 @@ enum mddev_flags {
-> >         MD_NOT_READY,           /* do_md_run() is active, so
-> > 'array_state'
-> >                                  * must not report that array is
-> > ready yet */
-> > -       MD_BROKEN,              /* This is used in RAID-0/LINEAR
-> > only, to stop
-> > -                                * I/O in case an array member is
-> > gone/failed.
-> > +       MD_BROKEN,              /* This is used to stop I/O and
-> > mark device as
-> > +                                * dead in case an array becomes
-> > failed. */
-> >  };
-> >
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> > index 7dc8026cf6ee..45dc75f90476 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -1638,6 +1638,7 @@ static void raid1_error(struct mddev *mddev,
-> > struct md_rdev *rdev) */
-> >                 conf->recovery_disabled = mddev->recovery_disabled;
-> >                 spin_unlock_irqrestore(&conf->device_lock, flags);
-> > +               set_bit(MD_BROKEN, &mddev->flags);
-> >                 return;
-> >         }
-> >         set_bit(Blocked, &rdev->flags);
-> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> > index dde98f65bd04..d7cefd212e6b 100644
-> > --- a/drivers/md/raid10.c
-> > +++ b/drivers/md/raid10.c
-> > @@ -1964,6 +1964,7 @@ static void raid10_error(struct mddev *mddev,
-> > struct md_rdev *rdev)
-> >                  * Don't fail the drive, just return an IO error.
-> >                  */
-> >                 spin_unlock_irqrestore(&conf->device_lock, flags);
-> > +               set_bit(MD_BROKEN, &mddev->flags);
-> >                 return;
-> >         }
-> >         if (test_and_clear_bit(In_sync, &rdev->flags))
-> > --
-> > 2.26.2
-> >  
-> 
-> Hi Mariusz
-> 
-> In your first Version, it checks MD_BROKEN in super_written. Does it
-> need to do this in this version?
-> From my understanding, it needs to retry the write when failfast is
-> supported. If it checks MD_BROKEN
-> in super_written, it can't send re-write anymore. Am I right?
-> 
-Hi Xiao,
-We have discussion about it with Song and as a result a dropped it.
-I just left it as before. V2 shouldn't race with failfast because it
-still takes care about faulty flag on device (MD_BROKEN is set
-additionally).
+My situation: /dev/sdd is in tact and the second (1) drive in my array
+for from mdadm examine of this drive
+I created a script to make and overlay via nano with this inside:
+-----------------------------------------------------------------------------
+devices="/dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde"
 
-I don't know a lot about failfast so, idea proposed in first patch could
-be wrong.  I did it this way because I've updated all md_error() and
-later test_bit(Faulty, &rdev->flags) paths, with strict assumption
-faulty == MD_BROKEN. For failfast and last_dev it is not obvious.
-If you have any recommendation, I will be grateful.
+overlay_create()
+{
 
-Thanks,
-Mariusz
+       free=$((`stat -c '%a*%S/1024/1024' -f .`))
+        echo free ${free}M
+        overlays=""
+        overlay_remove
+        for d in $devices; do
+                b=$(basename $d)
+                size_bkl=$(blockdev --getsz $d) # in 512 blocks/sectors
+                # reserve 1M space for snapshot header
+                # ext3 max file length is 2TB
+                truncate -s$((((size_bkl+1)/2)+1024))K $b.ovr || (echo
+"Do you use ext4?"; return 1)
+                loop=$(losetup -f --show -- $b.ovr)
+                #
+https://www.kernel.org/doc/Documentation/device-mapper/snapshot.txt
+                dmsetup create $b --table "0 $size_bkl snapshot $d $loop P 8"
+                echo $d $((size_bkl/2048))M $loop /dev/mapper/$b
+                overlays="$overlays /dev/mapper/$b"
+        done
+        overlays=${overlays# }
+}
+
+overlay_remove()
+{
+        for d in $devices; do
+                b=$(basename $d)
+                [ -e /dev/mapper/$b ] && dmsetup remove $b && echo
+/dev/mapper/$b
+                if [ -e $b.ovr ]; then
+                        echo $b.ovr
+                        l=$(losetup -j $b.ovr | cut -d : -f1)
+                        echo $l
+                        [ -n "$l" ] && losetup -d $(losetup -j $b.ovr
+| cut -d : -f1)
+                        rm -f $b.ovr &> /dev/null
+                fi
+        done
+}
+
+overlay_create
+------------------------------------------------------------------------------
+ran script
+sudo ./overlay.sh
+
+cleared bogus info on my overlayed drives:
+sudo wipefs --all --types pmbr,gpt,dos /dev/mapper/sda
+sudo wipefs --all --types pmbr,gpt,dos /dev/mapper/sdb
+sudo wipefs --all --types pmbr,gpt,dos /dev/mapper/sdc
+sudo wipefs --all --types pmbr,gpt,dos /dev/mapper/sde
+
+ created script createmdadm.sh with this in it:
+-------------------------------------------------------------------------------
+mdadm --create /dev/md2 --assume-clean  --readonly    --level=5
+--chunk=512K --metadata=1.2  --layout left-symmetric
+--data-offset=257024s     --raid-devices=5 /dev/mapper/sd"$1"
+/dev/mapper/sdd /dev/mapper/sd"$2" /dev/mapper/sd"$3"
+/dev/mapper/sd"$4"
+-----------------------------------------------------------------------------------
+
+made a list of all 24 permutations of drive arrangements to plug into
+the script each time.  The actual list i used shown below with
+examples of outputs that were given:
+------
+aDbce*
+abce
+mount: /media/raid: wrong fs type, bad option, bad superblock on
+/dev/md2, missing codepage or helper program, or other error.
+*this was the output on all attempts to Mount the new array unless
+noted otherwise
+bace*
+cabe*
+acbe*
+bcae*
+cbae*
+ebac mount: /media/raid: mount(2) system call failed: Structure needs cleaning.
+
+beac*
+aebc*
+eabc mount: /media/raid: mount(2) system call failed: Structure needs cleaning.
+baec*
+abec*
+aceb*
+caeb*
+eacb mount: /media/raid: mount(2) system call failed: Structure needs cleaning.
+
+aecb*
+ceab*
+ecab mount: /media/raid: mount(2) system call failed: Structure needs cleaning.
+
+ecba mount: /media/raid: WARNING: source write-protected, mounted read-only.
+
+ceba
+beca
+ebca
+cbea
+bcea
+----------------
+ran the mdadmcreate script to create array:
+sudo ./createmdadm.sh a b c e
+sudo mount /dev/md2 /media/raid
+output: mount: /media/raid: wrong fs type, bad option, bad superblock
+on /dev/md2, missing codepage or helper program, or other error.
+
+didnt work so i stop it(never needed to umount)
+sudo mdadm --stop /dev/md2
+
+then repeat steps with new permutation of drive arrangement:
+sudo ./createmdadm.sh a b c e
+sudo mount /dev/md2 /media/raid
+sudo mdadm --stop /dev/md2
+
+I was looking for a change in output on mounting the raid.
+The first and second drive being correct seemed to give a different output:
+output:    mount: /media/raid: mount(2) system call failed: Structure
+needs cleaning.
+correct arrangment gave this output:
+output:    mount: /media/raid: WARNING: source write-protected,
+mounted read-only.
+
+I then mounted the drive as my user, tested multiple large files and
+when i was done crying i unmounted
+sudo umount /...
+sudo mdadm --stop /dev/md2
+
+modified my overlay.sh last line to overlay_remove instead of overlay_create
+removed the overlay the best i know how:
+sudo ./overlay.sh
+
+then ran mdadm create on the real drives without readonly peramiter
+and the discovered disk arrangements.  Also changed /dev/md2 to
+/dev/md0  which is the original config for my raid that is setup
+already:
+sudo mdadm --create /dev/md0 --assume-clean    --level=5 --chunk=512K
+--metadata=1.2  --layout left-symmetric  --data-offset=257024s
+--raid-devices=5 /dev/sde /dev/sdd /dev/sdc /dev/sdb /dev/sda
+sudo mount /dev/md0 /media/raid
+checked my files and rejoiced
+not elegant but simple enough.  Wish i would have had a play by play
+like this.  Knowing what to expect on outputs really would have been
+handy.  I hope this helps someone out there.
+
+My next task is creating a new raid that is inside of partitions.
+Need to do this with 2 new drives, transfer 10TB, then shrink and
+remove a drive to add to new raid, transfer and repeat.  Let me know
+if this is a bad idea please.  I fear shrinking or removing the raid
+but heard that this was a feature that has been added more recently
+and could work.
+
+Thanks guys.
+
+On Fri, Dec 24, 2021 at 2:45 AM Andreas Klauer
+<Andreas.Klauer@metamorpher.de> wrote:
+>
+> On Thu, Dec 23, 2021 at 10:55:01PM -0500, Tony Bush wrote:
+> > /dev/mapper/sda /dev/mapper/sdb /dev/mapper/sdc /dev/mapper/sdd
+> > /dev/mapper/sde
+>
+> Hi Tony,
+>
+> your examine output of the one drive that was left showed Device role 1,
+> and count starts from 0 so that's the 2nd drive in the array. The order
+> of the others is unknown so yes, unless you are able to derive order
+> from raw data, you simply have to try all combinations. This can be
+> scripted as well.
+>
+> Furthermore you should --examine the array you created and make sure
+> that all other variables (offset, level, layout, ...), match your
+> previous --examine.
+>
+> As for re-creating overlays, you can do that for every single step
+> but it might not be necessary just for mount attempt.
+>
+> Note that there is the case where mounting might succeed but drive
+> order is still wrong - find a large file and see if it is fully intact.
+>
+> Best of luck,
+> Andreas Klauer
