@@ -2,53 +2,53 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37CE2C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Dec 2021 22:34:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C84C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 29 Dec 2021 22:36:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231739AbhL2WeS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Dec 2021 17:34:18 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:45530 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231203AbhL2WeS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Dec 2021 17:34:18 -0500
+        id S232173AbhL2WgN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 29 Dec 2021 17:36:13 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:51456 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231203AbhL2WgN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Dec 2021 17:36:13 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 5EF9921106;
-        Wed, 29 Dec 2021 22:34:17 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 6BDEC1F37F;
+        Wed, 29 Dec 2021 22:36:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1640817257; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1640817372; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding;
-        bh=+z3kw5R9xk+IcyO0scZcZ/b22ndC2aci8xFBSKajVeA=;
-        b=f1WrmHKZ+VXfA6wwssT8+iMyOnLno3pgwIZ/Y240IYXp3rDuuRE0aXIPNTowSpJgIkY2/q
-        ouyc9E+LFbxEIipgIGXUTb0rZsCHEn5hQq/UqmDVORJ7w5ietEB15Xcd+L65WEhbqLFq/2
-        MngvMTHhcwquyywglSGLrym+Enr07EQ=
+        bh=nDAPWMEnuQXe9GldGZJPH8iD3QPwfp0TH1ywh8bgN+M=;
+        b=RXSnTd3faGUuS7fQcV8wogoB7sa9WNmTJCXcf3f6O/6W3bfHN+WvDl5xYRzba5zc71UfjN
+        hZj1BHsioPBTupTmN5KikR+c0APXaNKFbrJTlDHf0SItiv9hW0vjfRGZan0/bAJiOdRfZu
+        pNIwAXn3f7BXjCIEsB+MnrIl4kggdz8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1640817257;
+        s=susede2_ed25519; t=1640817372;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding;
-        bh=+z3kw5R9xk+IcyO0scZcZ/b22ndC2aci8xFBSKajVeA=;
-        b=ywiXb1OUqqzcBDW5MLiaKthDGdT91+f8bZlGknyyElX/NsHOMAv4yAOPQmA0u/oESJcGpu
-        rD0J9ge+LGbwpoBg==
+        bh=nDAPWMEnuQXe9GldGZJPH8iD3QPwfp0TH1ywh8bgN+M=;
+        b=dnxFBIDnfcxG74i8NFR2DTEkjC3Sj0k1K3xBR8GmfbN27va9G1F4V89w+5W7IgaaYILHJI
+        1UkCslPjt6O5txAg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 42AB613C0F;
-        Wed, 29 Dec 2021 22:34:17 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 56E0A13C0F;
+        Wed, 29 Dec 2021 22:36:12 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id aIm0DmnizGGPXgAAMHmgww
-        (envelope-from <dmueller@suse.de>); Wed, 29 Dec 2021 22:34:17 +0000
+        id usxKFNzizGH9XgAAMHmgww
+        (envelope-from <dmueller@suse.de>); Wed, 29 Dec 2021 22:36:12 +0000
 From:   =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
 To:     linux-raid@vger.kernel.org
 Cc:     =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
-Subject: [PATCH] Skip benchmarking of non-best xor_syndrome functions
-Date:   Wed, 29 Dec 2021 23:34:07 +0100
-Message-Id: <20211229223407.11647-1-dmueller@suse.de>
+Subject: [PATCH] Use strict priority ranking for pq gen() benchmarking
+Date:   Wed, 29 Dec 2021 23:36:00 +0100
+Message-Id: <20211229223600.29346-1-dmueller@suse.de>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -57,130 +57,110 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-In commit fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
-a xor_syndrome() has been added for optimized syndrome calculation and
-being added also to to the raid6_choose_gen() function. However, the
-result of the xor_syndrome() benchmarking was intentionally discarded
-and did not influence the choice.
+On x86_64, currently 3 variants of AVX512, 3 variants of AVX2
+and 3 variants of SSE2 are benchmarked on initialization, taking
+between 144-153 jiffies. Over a hardware pool of various generations
+of intel cpus I could not find a single case where SSE2 won over
+AVX2 or AVX512. There are cases where AVX2 wins over AVX512.
 
-We can optimize raid6_choose_gen() without changing its behavior by
-only benchmarking the chosen xor_syndrome() variant and printing it
-output, rather than benchmarking also the ones that are discarded and
-never influence the outcome.
-
-For x86_64, this removes 8 out of 18 benchmark loops which each take
-16 jiffies, so up to 160 jiffies saved on module load (640ms on a 250HZ
-kernel).
+By giving AVXx variants higher priority over SSE, we can generally
+skip 3 benchmarks which speeds this up by 33% - 50%, depending on
+whether AVX512 is available.
 
 Signed-off-by: Dirk Müller <dmueller@suse.de>
 ---
- lib/raid6/algos.c | 76 +++++++++++++++++++++++------------------------
- 1 file changed, 37 insertions(+), 39 deletions(-)
+ include/linux/raid/pq.h | 2 +-
+ lib/raid6/algos.c       | 2 +-
+ lib/raid6/avx2.c        | 6 +++---
+ lib/raid6/avx512.c      | 6 +++---
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index 154e954b711d..d6e5a1feb947 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -81,7 +81,7 @@ struct raid6_calls {
+ 	void (*xor_syndrome)(int, int, int, size_t, void **);
+ 	int  (*valid)(void);	/* Returns 1 if this routine set is usable */
+ 	const char *name;	/* Name of this routine set */
+-	int prefer;		/* Has special performance attribute */
++	int priority;		/* Relative priority ranking if non-zero */
+ };
+ 
+ /* Selected algorithm */
 diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index 6d5e5000fdd7..889033b7fc0d 100644
+index 889033b7fc0d..d1e8ff837a32 100644
 --- a/lib/raid6/algos.c
 +++ b/lib/raid6/algos.c
-@@ -145,12 +145,12 @@ static inline const struct raid6_recov_calls *raid6_choose_recov(void)
- static inline const struct raid6_calls *raid6_choose_gen(
- 	void *(*const dptrs)[RAID6_TEST_DISKS], const int disks)
- {
--	unsigned long perf, bestgenperf, bestxorperf, j0, j1;
-+	unsigned long perf, bestgenperf, j0, j1;
- 	int start = (disks>>1)-1, stop = disks-3;	/* work on the second half of the disks */
- 	const struct raid6_calls *const *algo;
+@@ -151,7 +151,7 @@ static inline const struct raid6_calls *raid6_choose_gen(
  	const struct raid6_calls *best;
  
--	for (bestgenperf = 0, bestxorperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
-+	for (bestgenperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
- 		if (!best || (*algo)->prefer >= best->prefer) {
+ 	for (bestgenperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
+-		if (!best || (*algo)->prefer >= best->prefer) {
++		if (!best || (*algo)->priority >= best->priority) {
  			if ((*algo)->valid && !(*algo)->valid())
  				continue;
-@@ -180,50 +180,48 @@ static inline const struct raid6_calls *raid6_choose_gen(
- 			pr_info("raid6: %-8s gen() %5ld MB/s\n", (*algo)->name,
- 				(perf * HZ * (disks-2)) >>
- 				(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2));
-+		}
-+	}
  
--			if (!(*algo)->xor_syndrome)
--				continue;
-+	if (best == NULL) {
-+		pr_err("raid6: Yikes! No algorithm found!\n");
-+		goto out;
-+	}
+diff --git a/lib/raid6/avx2.c b/lib/raid6/avx2.c
+index f299476e1d76..31be496b8c81 100644
+--- a/lib/raid6/avx2.c
++++ b/lib/raid6/avx2.c
+@@ -132,7 +132,7 @@ const struct raid6_calls raid6_avx2x1 = {
+ 	raid6_avx21_xor_syndrome,
+ 	raid6_have_avx2,
+ 	"avx2x1",
+-	1			/* Has cache hints */
++	.priority = 2
+ };
  
--			perf = 0;
-+	raid6_call = *best;
+ /*
+@@ -262,7 +262,7 @@ const struct raid6_calls raid6_avx2x2 = {
+ 	raid6_avx22_xor_syndrome,
+ 	raid6_have_avx2,
+ 	"avx2x2",
+-	1			/* Has cache hints */
++	.priority = 2
+ };
  
--			preempt_disable();
--			j0 = jiffies;
--			while ((j1 = jiffies) == j0)
--				cpu_relax();
--			while (time_before(jiffies,
--					    j1 + (1<<RAID6_TIME_JIFFIES_LG2))) {
--				(*algo)->xor_syndrome(disks, start, stop,
--						      PAGE_SIZE, *dptrs);
--				perf++;
--			}
--			preempt_enable();
--
--			if (best == *algo)
--				bestxorperf = perf;
-+	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK)) {
-+		pr_info("raid6: skipped pq benchmark and selected %s\n",
-+			best->name);
-+		goto out;
-+	}
+ #ifdef CONFIG_X86_64
+@@ -465,6 +465,6 @@ const struct raid6_calls raid6_avx2x4 = {
+ 	raid6_avx24_xor_syndrome,
+ 	raid6_have_avx2,
+ 	"avx2x4",
+-	1			/* Has cache hints */
++	.priority = 2
+ };
+ #endif
+diff --git a/lib/raid6/avx512.c b/lib/raid6/avx512.c
+index bb684d144ee2..63ae197c3294 100644
+--- a/lib/raid6/avx512.c
++++ b/lib/raid6/avx512.c
+@@ -162,7 +162,7 @@ const struct raid6_calls raid6_avx512x1 = {
+ 	raid6_avx5121_xor_syndrome,
+ 	raid6_have_avx512,
+ 	"avx512x1",
+-	1                       /* Has cache hints */
++	.priority = 2
+ };
  
--			pr_info("raid6: %-8s xor() %5ld MB/s\n", (*algo)->name,
--				(perf * HZ * (disks-2)) >>
--				(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2 + 1));
-+	pr_info("raid6: using algorithm %s gen() %ld MB/s\n",
-+		best->name,
-+		(bestgenperf * HZ * (disks-2)) >>
-+		(20 - PAGE_SHIFT+RAID6_TIME_JIFFIES_LG2));
-+
-+	if (best->xor_syndrome) {
-+		perf = 0;
-+
-+		preempt_disable();
-+		j0 = jiffies;
-+		while ((j1 = jiffies) == j0)
-+			cpu_relax();
-+		while (time_before(jiffies,
-+				   j1 + (1 << RAID6_TIME_JIFFIES_LG2))) {
-+			best->xor_syndrome(disks, start, stop,
-+					   PAGE_SIZE, *dptrs);
-+			perf++;
- 		}
--	}
-+		preempt_enable();
+ /*
+@@ -319,7 +319,7 @@ const struct raid6_calls raid6_avx512x2 = {
+ 	raid6_avx5122_xor_syndrome,
+ 	raid6_have_avx512,
+ 	"avx512x2",
+-	1                       /* Has cache hints */
++	.priority = 2
+ };
  
--	if (best) {
--		if (IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK)) {
--			pr_info("raid6: using algorithm %s gen() %ld MB/s\n",
--				best->name,
--				(bestgenperf * HZ * (disks-2)) >>
--				(20 - PAGE_SHIFT+RAID6_TIME_JIFFIES_LG2));
--			if (best->xor_syndrome)
--				pr_info("raid6: .... xor() %ld MB/s, rmw enabled\n",
--					(bestxorperf * HZ * (disks-2)) >>
--					(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2 + 1));
--		} else
--			pr_info("raid6: skip pq benchmark and using algorithm %s\n",
--				best->name);
--		raid6_call = *best;
--	} else
--		pr_err("raid6: Yikes!  No algorithm found!\n");
-+		pr_info("raid6: .... xor() %ld MB/s, rmw enabled\n",
-+			(perf * HZ * (disks-2)) >>
-+			(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2 + 1));
-+	}
- 
-+out:
- 	return best;
- }
+ #ifdef CONFIG_X86_64
+@@ -557,7 +557,7 @@ const struct raid6_calls raid6_avx512x4 = {
+ 	raid6_avx5124_xor_syndrome,
+ 	raid6_have_avx512,
+ 	"avx512x4",
+-	1                       /* Has cache hints */
++	.priority = 2
+ };
+ #endif
  
 -- 
 2.34.1
