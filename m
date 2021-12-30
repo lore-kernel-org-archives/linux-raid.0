@@ -2,69 +2,60 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FC8C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 30 Dec 2021 19:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F2E6C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Dec 2021 21:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240402AbhL3Twy (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 30 Dec 2021 14:52:54 -0500
-Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17009 "EHLO
-        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234372AbhL3Twy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Dec 2021 14:52:54 -0500
-ARC-Seal: i=1; a=rsa-sha256; t=1640893968; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=jP3YvcjEluAM7RTS9SxXgnZuvuGO0iNDdbeCr0K03sRMhNvUBwIO33c6gNiAw9PXyKWr0ZNA9hKKwvqkUac33qjw6/m/BMfpsS6Jcw699TuLF3jKabT2T711HK8f8Gqcz35OmUUlFXl266mWQg7pWdGqTR6idF8ObyuXySzKjh0=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1640893968; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:MIME-Version:Message-ID:Subject:To; 
-        bh=kcVtzsAyctx6LX230HJriRgD5LLoVC8q9t3HlpHU5Gk=; 
-        b=K3pQVnsRk+RDqkyt5FmGhZIjPhe94VchRBnCrxFJ2h33rBDuXC8cr4o5G6+ZOl+nnjwISFgTKaToQYdDW2VtJfbgqVdJ1/vylj+jaC5itsXo725aA357jcuR0ixXloAzmJUMQ1y3FvzRu1sMBXp2sF1UNMvXZsSA4c+y9LlaAig=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [192.168.99.80] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
-        with SMTPS id 1640893966504906.1598330846416; Thu, 30 Dec 2021 20:52:46 +0100 (CET)
-To:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
-Cc:     Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-Subject: ANNOUNCE mdadm-4.2
-Message-ID: <28fdbc45-96ca-7cdb-3ced-a5f65d978048@trained-monkey.org>
-Date:   Thu, 30 Dec 2021 14:52:44 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S242193AbhL3VlP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 30 Dec 2021 16:41:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50278 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242191AbhL3VlP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Dec 2021 16:41:15 -0500
+Received: from mail-yb1-xb2d.google.com (mail-yb1-xb2d.google.com [IPv6:2607:f8b0:4864:20::b2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DEBDC061574
+        for <linux-raid@vger.kernel.org>; Thu, 30 Dec 2021 13:41:15 -0800 (PST)
+Received: by mail-yb1-xb2d.google.com with SMTP id e202so32974691ybf.4
+        for <linux-raid@vger.kernel.org>; Thu, 30 Dec 2021 13:41:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=colorremedies-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mU9QCxP8EZ/FrlvyFXOh6+zS+kOIuM++UDwDYPuGu3I=;
+        b=yCaN1g4T23HfGjucvDitFY5gSgmkLeCWk6blLBZUv8jcd9NF/bWa2uEYN2AzCuHRT/
+         /fBmQcda54Vi8s3WCzeLDQB8TDGFXSJrJ5V72ladCmHus1bhRcoiwQoLa+wVWy9C9bk9
+         YP/kpdyuSv9ES2S47Tnwv8eQ3NbI6po3MHRSlnVcO8MCFKZtL96IHe1jHq3woKCkje3E
+         5E7Bxxnsq9FLgPhkNmRsNtW2WN1wzgSm5Oo5qet7C4pS8hIbe5g1MaHkBjQp6ejwdZxb
+         7LYCBid/6ixQG7YIEbE/Y1uwOY8dWJsp3pz20flow7aApHjT0j5y7okUzAzHLzB1xrcV
+         m+gw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=mU9QCxP8EZ/FrlvyFXOh6+zS+kOIuM++UDwDYPuGu3I=;
+        b=ciolSKXn/8H2ZdMGD0zn/QXyfG/ZPCExNIsQ7Ds85Xa8yCZaFDCTZ5oO6ZMxDcIcSD
+         Vx8jJ69kEunzLWCpUGxeoLAuYo7A5sWsHAtl3mfPkmPF6G3a7frEdG9pVjqpYQMFI0/o
+         cCt+RITdfMwEGrBgLwTrAw0TIhoXDClgdZO0W4GVi3K4JTTX53MzRPeyrb300Tu4C9Yj
+         tJt3jIVBRKiGQ1FkWD24gnrPUGp2ggxEZVyiywIy9u0CZMUQyrko+g0n7upG4e4ytcxO
+         Y/aI/+HK3MTyamsNlOWzR5VAsqDCornv1mL747mwW0Cfpy35HPUkFoQVtkffLLF1Ff88
+         8//g==
+X-Gm-Message-State: AOAM5311PNvjXiGWZe+DurKMUXeUIFMZN3dVBYmCppf3d5BplCPw1QJ2
+        wSI0beBSS8lg81aE8uycHmt1wsOjnqDMAg49OJ0KVZBwLUZlew==
+X-Google-Smtp-Source: ABdhPJwLaWe0+mt760ImHWn7Bka+kFoQUGUjldjkbqkm/vCDoJGeYki00jie1ih7G8P0mI+i3blZP0iyqJNGL3Q0A18=
+X-Received: by 2002:a25:bd89:: with SMTP id f9mr37955253ybh.618.1640900474431;
+ Thu, 30 Dec 2021 13:41:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+References: <28fdbc45-96ca-7cdb-3ced-a5f65d978048@trained-monkey.org>
+In-Reply-To: <28fdbc45-96ca-7cdb-3ced-a5f65d978048@trained-monkey.org>
+From:   Chris Murphy <lists@colorremedies.com>
+Date:   Thu, 30 Dec 2021 14:40:58 -0700
+Message-ID: <CAJCQCtQJ6QNxy8hX42UaUuucgCEmTyuScJRs0GbJnGFi-t_S5w@mail.gmail.com>
+Subject: Re: ANNOUNCE mdadm-4.2
+To:     Jes Sorensen <jes@trained-monkey.org>
+Cc:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-Finally here it is, mdadm-4.2. Thanks for all the contributions and your
-patience.
-
-Happy New Year everyone!
-
-Jes
-
-From the announce file:
-
-I am pleased to finally announce the availability of mdadm-4.2.
-get 4.2 out the door soon.
-
-It is available at the usual places:
-   http://www.kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
-   http://git.kernel.org/cgit/utils/mdadm/
-
-The release includes more than two years of development and bugfixes,
-so it is difficult to remember everything. Highlights include
-enhancements and bug fixes including for IMSM RAID, Partial Parity
-Log, clustered RAID support, improved testing, and gcc-9 support.
-
-Thank you everyone who contributed to this release!
-
-Jes Sorensen, 2021-12-30
+\o/
