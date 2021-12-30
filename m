@@ -2,71 +2,191 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77D77C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 29 Dec 2021 23:36:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E21BC433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 30 Dec 2021 11:33:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233173AbhL2Xgn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 29 Dec 2021 18:36:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41632 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233348AbhL2Xgm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 29 Dec 2021 18:36:42 -0500
-X-Greylist: delayed 597 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 29 Dec 2021 15:36:41 PST
-Received: from afullo.net (160.16.69.32.v6.sakura.ne.jp [IPv6:2001:e42:102:1510:160:16:69:32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E6D05C061574
-        for <linux-raid@vger.kernel.org>; Wed, 29 Dec 2021 15:36:41 -0800 (PST)
-Received: by afullo.net (Postfix, from userid 48)
-        id 3B032143FB2; Thu, 30 Dec 2021 08:26:41 +0900 (JST)
-To:     linux-raid@vger.kernel.org
-Subject: =?ISO-2022-JP?B?GyRCIVo8K0YwSlY/LiFbJCpMZCQkOWckbyQ7JCIkaiQsJEgkJiQ0JDYkJCReJDckPyEjIT8zdDwwMnE8UiUiJUglaiUoJCIkVSRtGyhC?=
-X-PHP-Originating-Script: 501:class-phpmailer.php
-Date:   Wed, 29 Dec 2021 23:26:41 +0000
-From:   =?ISO-2022-JP?B?GyRCJSIlSCVqJSgkIiRVJG0bKEI=?= <info@afullo.com>
-Message-ID: <5f54701f99a4627cd21c67f7ef3d16fc@afullo.net>
-X-Mailer: PHPMailer 5.2.14 (https://github.com/PHPMailer/PHPMailer)
-X-WPCF7-Content-Type: text/plain
+        id S239025AbhL3LdW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 30 Dec 2021 06:33:22 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:35505 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S239049AbhL3LdW (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 30 Dec 2021 06:33:22 -0500
+Received: from [192.168.0.3] (ip5f5aeaad.dynamic.kabel-deutschland.de [95.90.234.173])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id C9BDD61E6478B;
+        Thu, 30 Dec 2021 12:33:20 +0100 (CET)
+Message-ID: <71f0f9ea-1431-a10c-084b-a956a5b9de2f@molgen.mpg.de>
+Date:   Thu, 30 Dec 2021 12:33:20 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [PATCH] Skip benchmarking of non-best xor_syndrome functions
+Content-Language: en-US
+To:     =?UTF-8?Q?Dirk_M=c3=bcller?= <dmueller@suse.de>
+References: <20211229223407.11647-1-dmueller@suse.de>
+Cc:     linux-raid@vger.kernel.org
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20211229223407.11647-1-dmueller@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-?? Judith liked you! Click Here: http://inx.lv/pIaX?esmz ?? $BMM(B
+Dear Dirk,
 
-$B$3$N$?$S$O!"$*Ld$$9g$o$;$$$?$@$-$"$j$,$H$&$4$6$$$^$7$?!#(B 
-$B2~$a$F!"C4Ev<T$h$j$4O"Mm$$$?$7$^$9!#(B
 
-$B0J2<$NFbMF$G%U%)!<%`$+$i$NAw?.$r<u$1IU$1$^$7$?!#(B
-$B(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(B
-$B"#$*L>A0(B
-?? Judith liked you! Click Here: http://inx.lv/pIaX?esmz ??
+Am 29.12.21 um 23:34 schrieb Dirk Müller:
+> In commit fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
+> a xor_syndrome() has been added for optimized syndrome calculation and
 
-$B"#%U%j%,%J(B
-bb4rl3
+was added
 
-$B"#%a!<%k%"%I%l%9(B
-linux-raid@vger.kernel.org
+> being added also to to the raid6_choose_gen() function. However, the > result of the xor_syndrome() benchmarking was intentionally discarded
 
-$B"#$*Ld$$9g$o$;FbMF(B
-1vitxfby
+s/to to/to/
 
-$B8e$[$I!"C4Ev<T$h$j$4O"Mm$5$;$F$$$?$@$-$^$9!#(B
+> and did not influence the choice.
+> 
+> We can optimize raid6_choose_gen() without changing its behavior by
+> only benchmarking the chosen xor_syndrome() variant and printing it
 
-$B(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(B
+it*s*
 
-$B!1!1!1!1!1!1!1!1!1!1!1!1!1!1!1!1!1!1!1(B
-WEB$B!&=PHGJ*!&9-9p$N!"4k2h!&JT=8!&@):n(B
-$B3t<02q<R%"%H%j%($"$U$m(B
+> output, rather than benchmarking also the ones that are discarded and
+> never influence the outcome.
+> 
+> For x86_64, this removes 8 out of 18 benchmark loops which each take
+> 16 jiffies, so up to 160 jiffies saved on module load (640ms on a 250HZ
+> kernel).
 
-$B!!$*Ld$$9g$o$;Ak8}(B
-$B!!(Binfo@afullo.com
-$B!!(Bwww.afullo.co.jp
+On what system?
 
-[TOKYO head office]
-107-0062 $BEl5~ET9A6hFn@D;3(B5-4-35-902
-TEL 03-6419-7399$B!!(BFAX 03-6419-7395
-[NAGOYA atelier & studio]
-460-0002 $BL>8E20;TCf6h4]$NFb(B2-3-25 MIZ$B%S%k(B7F
-TEL 052-265-7353$B!!(BFAX.052-265-7293
-$B!2!2!2!2!2!2!2!2!2!2!2!2!2(BAtelier Afullo
+The new message below is logged?
 
+     raid6: skipped pq benchmark and selected …
+
+I am booting my non-RAID systems with `cryptomgr.notests` to avoid this 
+boot time penalty.
+
+> Signed-off-by: Dirk Müller <dmueller@suse.de>
+> ---
+>   lib/raid6/algos.c | 76 +++++++++++++++++++++++------------------------
+>   1 file changed, 37 insertions(+), 39 deletions(-)
+> 
+> diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+> index 6d5e5000fdd7..889033b7fc0d 100644
+> --- a/lib/raid6/algos.c
+> +++ b/lib/raid6/algos.c
+> @@ -145,12 +145,12 @@ static inline const struct raid6_recov_calls *raid6_choose_recov(void)
+>   static inline const struct raid6_calls *raid6_choose_gen(
+>   	void *(*const dptrs)[RAID6_TEST_DISKS], const int disks)
+>   {
+> -	unsigned long perf, bestgenperf, bestxorperf, j0, j1;
+> +	unsigned long perf, bestgenperf, j0, j1;
+>   	int start = (disks>>1)-1, stop = disks-3;	/* work on the second half of the disks */
+>   	const struct raid6_calls *const *algo;
+>   	const struct raid6_calls *best;
+>   
+> -	for (bestgenperf = 0, bestxorperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
+> +	for (bestgenperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
+>   		if (!best || (*algo)->prefer >= best->prefer) {
+>   			if ((*algo)->valid && !(*algo)->valid())
+>   				continue;
+> @@ -180,50 +180,48 @@ static inline const struct raid6_calls *raid6_choose_gen(
+>   			pr_info("raid6: %-8s gen() %5ld MB/s\n", (*algo)->name,
+>   				(perf * HZ * (disks-2)) >>
+>   				(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2));
+> +		}
+
+In the diff, I do not see the corresponding removed }.
+
+> +	}
+>   
+> -			if (!(*algo)->xor_syndrome)
+> -				continue;
+> +	if (best == NULL) {
+> +		pr_err("raid6: Yikes! No algorithm found!\n");
+> +		goto out;
+> +	}
+>   
+> -			perf = 0;
+> +	raid6_call = *best;
+>   
+> -			preempt_disable();
+> -			j0 = jiffies;
+> -			while ((j1 = jiffies) == j0)
+> -				cpu_relax();
+> -			while (time_before(jiffies,
+> -					    j1 + (1<<RAID6_TIME_JIFFIES_LG2))) {
+> -				(*algo)->xor_syndrome(disks, start, stop,
+> -						      PAGE_SIZE, *dptrs);
+> -				perf++;
+> -			}
+> -			preempt_enable();
+> -
+> -			if (best == *algo)
+> -				bestxorperf = perf;
+> +	if (!IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK)) {
+> +		pr_info("raid6: skipped pq benchmark and selected %s\n",
+> +			best->name);
+> +		goto out;
+> +	}
+>   
+> -			pr_info("raid6: %-8s xor() %5ld MB/s\n", (*algo)->name,
+> -				(perf * HZ * (disks-2)) >>
+> -				(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2 + 1));
+> +	pr_info("raid6: using algorithm %s gen() %ld MB/s\n",
+> +		best->name,
+> +		(bestgenperf * HZ * (disks-2)) >>
+> +		(20 - PAGE_SHIFT+RAID6_TIME_JIFFIES_LG2));
+> +
+> +	if (best->xor_syndrome) {
+> +		perf = 0;
+> +
+> +		preempt_disable();
+> +		j0 = jiffies;
+> +		while ((j1 = jiffies) == j0)
+> +			cpu_relax();
+> +		while (time_before(jiffies,
+> +				   j1 + (1 << RAID6_TIME_JIFFIES_LG2))) {
+> +			best->xor_syndrome(disks, start, stop,
+> +					   PAGE_SIZE, *dptrs);
+> +			perf++;
+>   		}
+> -	}
+> +		preempt_enable();
+>   
+> -	if (best) {
+> -		if (IS_ENABLED(CONFIG_RAID6_PQ_BENCHMARK)) {
+> -			pr_info("raid6: using algorithm %s gen() %ld MB/s\n",
+> -				best->name,
+> -				(bestgenperf * HZ * (disks-2)) >>
+> -				(20 - PAGE_SHIFT+RAID6_TIME_JIFFIES_LG2));
+> -			if (best->xor_syndrome)
+> -				pr_info("raid6: .... xor() %ld MB/s, rmw enabled\n",
+> -					(bestxorperf * HZ * (disks-2)) >>
+> -					(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2 + 1));
+> -		} else
+> -			pr_info("raid6: skip pq benchmark and using algorithm %s\n",
+> -				best->name);
+> -		raid6_call = *best;
+> -	} else
+> -		pr_err("raid6: Yikes!  No algorithm found!\n");
+> +		pr_info("raid6: .... xor() %ld MB/s, rmw enabled\n",
+> +			(perf * HZ * (disks-2)) >>
+> +			(20 - PAGE_SHIFT + RAID6_TIME_JIFFIES_LG2 + 1));
+> +	}
+>   
+> +out:
+>   	return best;
+>   }
+>   
+
+
+Kind regards,
+
+Paul
