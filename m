@@ -2,60 +2,103 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F2E6C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 30 Dec 2021 21:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B43BC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 31 Dec 2021 08:35:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242193AbhL3VlP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 30 Dec 2021 16:41:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50278 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242191AbhL3VlP (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 30 Dec 2021 16:41:15 -0500
-Received: from mail-yb1-xb2d.google.com (mail-yb1-xb2d.google.com [IPv6:2607:f8b0:4864:20::b2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DEBDC061574
-        for <linux-raid@vger.kernel.org>; Thu, 30 Dec 2021 13:41:15 -0800 (PST)
-Received: by mail-yb1-xb2d.google.com with SMTP id e202so32974691ybf.4
-        for <linux-raid@vger.kernel.org>; Thu, 30 Dec 2021 13:41:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=colorremedies-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=mU9QCxP8EZ/FrlvyFXOh6+zS+kOIuM++UDwDYPuGu3I=;
-        b=yCaN1g4T23HfGjucvDitFY5gSgmkLeCWk6blLBZUv8jcd9NF/bWa2uEYN2AzCuHRT/
-         /fBmQcda54Vi8s3WCzeLDQB8TDGFXSJrJ5V72ladCmHus1bhRcoiwQoLa+wVWy9C9bk9
-         YP/kpdyuSv9ES2S47Tnwv8eQ3NbI6po3MHRSlnVcO8MCFKZtL96IHe1jHq3woKCkje3E
-         5E7Bxxnsq9FLgPhkNmRsNtW2WN1wzgSm5Oo5qet7C4pS8hIbe5g1MaHkBjQp6ejwdZxb
-         7LYCBid/6ixQG7YIEbE/Y1uwOY8dWJsp3pz20flow7aApHjT0j5y7okUzAzHLzB1xrcV
-         m+gw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mU9QCxP8EZ/FrlvyFXOh6+zS+kOIuM++UDwDYPuGu3I=;
-        b=ciolSKXn/8H2ZdMGD0zn/QXyfG/ZPCExNIsQ7Ds85Xa8yCZaFDCTZ5oO6ZMxDcIcSD
-         Vx8jJ69kEunzLWCpUGxeoLAuYo7A5sWsHAtl3mfPkmPF6G3a7frEdG9pVjqpYQMFI0/o
-         cCt+RITdfMwEGrBgLwTrAw0TIhoXDClgdZO0W4GVi3K4JTTX53MzRPeyrb300Tu4C9Yj
-         tJt3jIVBRKiGQ1FkWD24gnrPUGp2ggxEZVyiywIy9u0CZMUQyrko+g0n7upG4e4ytcxO
-         Y/aI/+HK3MTyamsNlOWzR5VAsqDCornv1mL747mwW0Cfpy35HPUkFoQVtkffLLF1Ff88
-         8//g==
-X-Gm-Message-State: AOAM5311PNvjXiGWZe+DurKMUXeUIFMZN3dVBYmCppf3d5BplCPw1QJ2
-        wSI0beBSS8lg81aE8uycHmt1wsOjnqDMAg49OJ0KVZBwLUZlew==
-X-Google-Smtp-Source: ABdhPJwLaWe0+mt760ImHWn7Bka+kFoQUGUjldjkbqkm/vCDoJGeYki00jie1ih7G8P0mI+i3blZP0iyqJNGL3Q0A18=
-X-Received: by 2002:a25:bd89:: with SMTP id f9mr37955253ybh.618.1640900474431;
- Thu, 30 Dec 2021 13:41:14 -0800 (PST)
+        id S230171AbhLaIfm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 31 Dec 2021 03:35:42 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:49258 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229862AbhLaIfm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 31 Dec 2021 03:35:42 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1FCE621106;
+        Fri, 31 Dec 2021 08:35:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1640939741; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=t7WnV9vuWs4O+i9LwCeNm+MouGOvWxC8rsw2SwWOvK0=;
+        b=z48F17mxrIRcqQlMDpmWOzwT+Or6vy/9nEk/Jdw8wiRqLNWlodxAj8aptuDxtd+Vx48Pi+
+        GkgXMv0sEXPtkYHRLCb0qe1a8G2jAFHOFt6GI1amp04FtKoU/MzQVZUkR4HrLugw2Liw5y
+        ns5DHhvE3OHBcHnfvsrYb4mvLvEL7HI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1640939741;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=t7WnV9vuWs4O+i9LwCeNm+MouGOvWxC8rsw2SwWOvK0=;
+        b=AQHujU7Rlum53aQMuB53crFswnu7/7Fd9m+cest8v9mdSaxUphXIxhnA5yofbQeQrCZzrT
+        YJLLcUcSryvwMFAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1193113C2F;
+        Fri, 31 Dec 2021 08:35:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id +EGcA93AzmHSeQAAMHmgww
+        (envelope-from <dmueller@suse.de>); Fri, 31 Dec 2021 08:35:41 +0000
 MIME-Version: 1.0
-References: <28fdbc45-96ca-7cdb-3ced-a5f65d978048@trained-monkey.org>
-In-Reply-To: <28fdbc45-96ca-7cdb-3ced-a5f65d978048@trained-monkey.org>
-From:   Chris Murphy <lists@colorremedies.com>
-Date:   Thu, 30 Dec 2021 14:40:58 -0700
-Message-ID: <CAJCQCtQJ6QNxy8hX42UaUuucgCEmTyuScJRs0GbJnGFi-t_S5w@mail.gmail.com>
-Subject: Re: ANNOUNCE mdadm-4.2
-To:     Jes Sorensen <jes@trained-monkey.org>
-Cc:     "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Date:   Fri, 31 Dec 2021 09:35:40 +0100
+From:   =?UTF-8?Q?Dirk_M=C3=BCller?= <dmueller@suse.de>
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     linux-raid@vger.kernel.org
+Subject: Re: [PATCH] Skip benchmarking of non-best xor_syndrome functions
+In-Reply-To: <71f0f9ea-1431-a10c-084b-a956a5b9de2f@molgen.mpg.de>
+References: <20211229223407.11647-1-dmueller@suse.de>
+ <71f0f9ea-1431-a10c-084b-a956a5b9de2f@molgen.mpg.de>
+User-Agent: Roundcube Webmail
+Message-ID: <4b0faf644530d0f7317bfeb88884f114@suse.de>
+X-Sender: dmueller@suse.de
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-\o/
+Am 2021-12-30 12:33, schrieb Paul Menzel:
+
+Hi Paul,
+
+Thank you for the wording improvements to the commit message, 
+incorporated for the next
+patch version.
+
+>> For x86_64, this removes 8 out of 18 benchmark loops which each take
+>> 16 jiffies, so up to 160 jiffies saved on module load (640ms on a 
+>> 250HZ
+>> kernel)
+> On what system?
+
+on a x86_64 system with avx512 capabilities. before this patch it was 
+doing 3x avx512, 3x avx2 and 3x sse2 xor() benchmark runs (so 9 total, 
+plus 9 gen() runs as well, leading to the 18 above). with this patch 
+applied the 9 xor() runs become just 1, saving 8. exact timing depends 
+on the CONFIG_HZ setting in use, as the benchmark timescale is in 
+jiffies (which is a problem on its own, but that is for another patch).
+
+> The new message below is logged?
+> 
+>     raid6: skipped pq benchmark and selected …
+
+its the same message like before, just worded slightly differently. I 
+can undo the wording change if requested.
+
+> I am booting my non-RAID systems with `cryptomgr.notests` to avoid
+> this boot time penalty.
+
+the benchmark option is recommended to be turned on, and I'm trying to 
+reduce the cost of that. turning it off avoids the cost altogether, but 
+I'm not able to judge (yet?) whether that's a better thing to do.
+
+
+Thanks
+Dirk
