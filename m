@@ -2,103 +2,134 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B43BC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 31 Dec 2021 08:35:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8192FC433F5
+	for <linux-raid@archiver.kernel.org>; Fri, 31 Dec 2021 08:52:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230171AbhLaIfm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 31 Dec 2021 03:35:42 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:49258 "EHLO
+        id S230087AbhLaIwz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 31 Dec 2021 03:52:55 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:49602 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229862AbhLaIfm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 31 Dec 2021 03:35:42 -0500
+        with ESMTP id S229862AbhLaIwy (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 31 Dec 2021 03:52:54 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 1FCE621106;
-        Fri, 31 Dec 2021 08:35:41 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B0CA8210E0;
+        Fri, 31 Dec 2021 08:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1640939741; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1640940773; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=t7WnV9vuWs4O+i9LwCeNm+MouGOvWxC8rsw2SwWOvK0=;
-        b=z48F17mxrIRcqQlMDpmWOzwT+Or6vy/9nEk/Jdw8wiRqLNWlodxAj8aptuDxtd+Vx48Pi+
-        GkgXMv0sEXPtkYHRLCb0qe1a8G2jAFHOFt6GI1amp04FtKoU/MzQVZUkR4HrLugw2Liw5y
-        ns5DHhvE3OHBcHnfvsrYb4mvLvEL7HI=
+        bh=e0jIpkFx9+ZCJMyylmHY4PBPHM1h5ol6xNB6hApTklA=;
+        b=K3yDJmOynTcJiVVp5KwncmDVGG4qnweFG8Zn1JHbvOmBOAry9DNtaKu8POMwi62au1XevH
+        Hry6xT1clDeQW+7gXT88x9vp8poYekgV7KyvhdsdDsFqC0pgxG4P9xP6g+sUP2R39WaVv7
+        Wg8viuOaGCm+g5JyfyfI6tMhDMC4eVk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1640939741;
+        s=susede2_ed25519; t=1640940773;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=t7WnV9vuWs4O+i9LwCeNm+MouGOvWxC8rsw2SwWOvK0=;
-        b=AQHujU7Rlum53aQMuB53crFswnu7/7Fd9m+cest8v9mdSaxUphXIxhnA5yofbQeQrCZzrT
-        YJLLcUcSryvwMFAw==
+        bh=e0jIpkFx9+ZCJMyylmHY4PBPHM1h5ol6xNB6hApTklA=;
+        b=4g6je6U0z9kjQ6eP3sVAkdu9ZVJepEaJ91LuvYD3UdFZyp8LFUhTRNtOAhkEvQDwudKlfo
+        Y7e6Qc5lpI4u1LCQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1193113C2F;
-        Fri, 31 Dec 2021 08:35:41 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A1D5013C2F;
+        Fri, 31 Dec 2021 08:52:53 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id +EGcA93AzmHSeQAAMHmgww
-        (envelope-from <dmueller@suse.de>); Fri, 31 Dec 2021 08:35:41 +0000
+        id 29jTJuXEzmH7fgAAMHmgww
+        (envelope-from <dmueller@suse.de>); Fri, 31 Dec 2021 08:52:53 +0000
 MIME-Version: 1.0
-Date:   Fri, 31 Dec 2021 09:35:40 +0100
+Date:   Fri, 31 Dec 2021 09:52:53 +0100
 From:   =?UTF-8?Q?Dirk_M=C3=BCller?= <dmueller@suse.de>
 To:     Paul Menzel <pmenzel@molgen.mpg.de>
 Cc:     linux-raid@vger.kernel.org
-Subject: Re: [PATCH] Skip benchmarking of non-best xor_syndrome functions
-In-Reply-To: <71f0f9ea-1431-a10c-084b-a956a5b9de2f@molgen.mpg.de>
-References: <20211229223407.11647-1-dmueller@suse.de>
- <71f0f9ea-1431-a10c-084b-a956a5b9de2f@molgen.mpg.de>
+Subject: Re: [PATCH] Use strict priority ranking for pq gen() benchmarking
+In-Reply-To: <0c95af18-2924-573c-9473-6645f8fc93bd@molgen.mpg.de>
+References: <20211229223600.29346-1-dmueller@suse.de>
+ <0c95af18-2924-573c-9473-6645f8fc93bd@molgen.mpg.de>
 User-Agent: Roundcube Webmail
-Message-ID: <4b0faf644530d0f7317bfeb88884f114@suse.de>
+Message-ID: <5d98e14e6fbc4de157e16ca401d1a562@suse.de>
 X-Sender: dmueller@suse.de
-Content-Type: text/plain; charset=UTF-8;
+Content-Type: text/plain; charset=US-ASCII;
  format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Am 2021-12-30 12:33, schrieb Paul Menzel:
+Am 2021-12-30 14:46, schrieb Paul Menzel:
 
 Hi Paul,
 
-Thank you for the wording improvements to the commit message, 
-incorporated for the next
-patch version.
+> Can the AVX2 wins over AVX512 be explained, or does it point to some
+> implementation problem?
 
->> For x86_64, this removes 8 out of 18 benchmark loops which each take
->> 16 jiffies, so up to 160 jiffies saved on module load (640ms on a 
->> 250HZ
->> kernel)
-> On what system?
+I've not yet analyzed this deep enough to have a defendable explanation 
+ready, sorry. My patch is
+not changing the situation in regards to AVX512 vs AVX2 (both are ranked 
+equal, same like before).
+The only change I do is that SSE2 is ranked lower than AVX2, so cpu 
+generations that have AVX2 will
+stop benchmarking at AVX2 rather than also including SSE2 benchmark 
+runs.
 
-on a x86_64 system with avx512 capabilities. before this patch it was 
-doing 3x avx512, 3x avx2 and 3x sse2 xor() benchmark runs (so 9 total, 
-plus 9 gen() runs as well, leading to the 18 above). with this patch 
-applied the 9 xor() runs become just 1, saving 8. exact timing depends 
-on the CONFIG_HZ setting in use, as the benchmark timescale is in 
-jiffies (which is a problem on its own, but that is for another patch).
+The current benchmark routine is likely too naive when you look at the 
+last 20+ years of
+cpu design improvements (prefetching, Out-of-Order Execution, Turbo 
+modes, Energy-Cores,
+AVX512 licensing turbo and many other aspects). This is not in my 
+current focus, my current
+focus is on lowering the tax of the benchmark.
 
-> The new message below is logged?
-> 
->     raid6: skipped pq benchmark and selected …
+> By the way, Borislav did not give much credit to the benchmarks results 
+> [1].
 
-its the same message like before, just worded slightly differently. I 
-can undo the wording change if requested.
+I have seen that as well, there are two remarks on this (both not 
+invalidating what Borislav wrote):
 
-> I am booting my non-RAID systems with `cryptomgr.notests` to avoid
-> this boot time penalty.
+* the comment was about xor(), this patch is about gen()
+* the benchmark logic does a relative ranking of approaches, so the 
+absolute number fluctuation doesn't matter if they still rank the same.
 
-the benchmark option is recommended to be turned on, and I'm trying to 
-reduce the cost of that. turning it off avoids the cost altogether, but 
-I'm not able to judge (yet?) whether that's a better thing to do.
+>> By giving AVXx variants higher priority over SSE, we can generally
+>> skip 3 benchmarks which speeds this up by 33% - 50%, depending on
+>> whether AVX512 is available.
+> Please give concrete timing numbers for one system you tested this on.
+
+I have given an explanation of how this patch affects number of 
+benchmarks that are run. how long they take depends on other factors. 
+this is the list of benchmarks configured (lib/raid6/algos.c the 
+raid6_algos6[] array):
 
 
-Thanks
+   #if defined(__x86_64__) && !defined(__arch_um__)
+   #ifdef CONFIG_AS_AVX512
+           &raid6_avx512x4,
+           &raid6_avx512x2,
+           &raid6_avx512x1,
+   #endif
+           &raid6_avx2x4,
+           &raid6_avx2x2,
+           &raid6_avx2x1,
+           &raid6_sse2x4,
+           &raid6_sse2x2,
+           &raid6_sse2x1,
+   #endif
+
+without this patch, all 9 are executed. with this patch, the last 3 
+(sse2x*) are skipped, leading to a 3 out of 6 or 3 out of 9 (depending 
+on whether or not AVX512 is enabled) improvement, or 33%-50% as written 
+above.
+
+I'm open to any sugggestion of a wording change that makes this clearer.
+
+
+Thanks,
 Dirk
