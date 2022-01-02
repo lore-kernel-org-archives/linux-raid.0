@@ -2,137 +2,360 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48534C433EF
-	for <linux-raid@archiver.kernel.org>; Sun,  2 Jan 2022 02:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C98CC433F5
+	for <linux-raid@archiver.kernel.org>; Sun,  2 Jan 2022 07:04:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229618AbiABCIz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 1 Jan 2022 21:08:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47800 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbiABCIy (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 1 Jan 2022 21:08:54 -0500
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959B9C061574
-        for <linux-raid@vger.kernel.org>; Sat,  1 Jan 2022 18:08:54 -0800 (PST)
-Received: by mail-pj1-x1033.google.com with SMTP id l16-20020a17090a409000b001b2e9628c9cso1403761pjg.4
-        for <linux-raid@vger.kernel.org>; Sat, 01 Jan 2022 18:08:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google;
-        h=message-id:date:mime-version:user-agent:subject:to:cc:references
-         :from:in-reply-to:content-transfer-encoding;
-        bh=zHObVVdRTck30Otqg0yDMZAzPDOPFNGXOupEXUe6NbE=;
-        b=E/qv1Tzr6SDY59jCLcNdD/JCQpkrpO9GMIom7z5ubJ9rWGeqo57DMwyccPOvrkQzu8
-         YBlGaaWudYsaHasR+DW7CBZQK9ARjmjlWzh1boVG9oGGnmN4i6DqVL2I3XfxldFI8cL5
-         NEaTw5Bb7BozEPMRPhhOBfREWtcghilW8R0iQ=
+        id S232851AbiABHEi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 2 Jan 2022 02:04:38 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:21498 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229697AbiABHEi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 2 Jan 2022 02:04:38 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1641107077;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rNvgKa7RBKZAN1BbsQtt2iLEjXM+iSNPhCbUMTDF2yU=;
+        b=JnyZpjm4z58EM+GregvUUe07O0h0UzXqtPPH1zHa8o/3GX3/BPq8PvXi3SV3rvTMEOKWbn
+        tMxT9IpQX7qnHGqOcTUP0R626+3BdTBLV9mDLQOGexw+VseHgVlvnprgm6sjJ86xZFumtp
+        72RuSF+E49wYtZgwDVii/aayO2EdI2c=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-206-C6EwJiR8NpOFLfl_AA82JA-1; Sun, 02 Jan 2022 02:04:36 -0500
+X-MC-Unique: C6EwJiR8NpOFLfl_AA82JA-1
+Received: by mail-ed1-f72.google.com with SMTP id y10-20020a056402358a00b003f88b132849so21244973edc.0
+        for <linux-raid@vger.kernel.org>; Sat, 01 Jan 2022 23:04:36 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :to:cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=zHObVVdRTck30Otqg0yDMZAzPDOPFNGXOupEXUe6NbE=;
-        b=oTVx2E4Wrcg3KAkAXhSbm2gUP4P95XxNXQIjen1k+zs0ZtwcYziBaM/7grPT77L31A
-         H9ycJvgcNkowmcmK5MMropdb6XOkSt6a1b9z8Y5KJzWIzAuuLGxczZnThj40Ucgzby5V
-         WtxCY7ZOaH2v7GS2CoxDGbv5zc/7EzjAMS8Fqo5WizzQTgvqu/V1d43+Bv5JzSaCQ79Q
-         Lz9M2ttmCRubtQRS4kNvo8FHSsXgpeqPoItmx0oVyhO4ONWFxmyfO28bwpnV2SQo7KIg
-         664p3Cawdsvs7qVAPxsGUwPXJErx56+0SdknlHI/smSlahcQXz99N2wNJSrj/T3MUduj
-         xbIQ==
-X-Gm-Message-State: AOAM532V8eYBA8/8EjXwJX7dSYFaoTyslNe2a4R5dG93n60AP/eg1EpP
-        qiJK6lRbtHTV/HfiP1Zimsh2q6k8CjcPOQ==
-X-Google-Smtp-Source: ABdhPJz2gUYeo/tp7IJ3IxxlyvldqhZGfKjCnWcqVi/9FsWeffG5V4CXCNo54Sm7D5Tk4wtKsZ8dGw==
-X-Received: by 2002:a17:902:8f91:b0:149:87ff:ac85 with SMTP id z17-20020a1709028f9100b0014987ffac85mr23362626plo.162.1641089333425;
-        Sat, 01 Jan 2022 18:08:53 -0800 (PST)
-Received: from [192.168.1.4] (ip68-104-251-60.ph.ph.cox.net. [68.104.251.60])
-        by smtp.gmail.com with ESMTPSA id x31sm35788181pfh.116.2022.01.01.18.08.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 01 Jan 2022 18:08:52 -0800 (PST)
-Message-ID: <b5fc1c84-ddbe-78a4-2729-04e2fd6ca7fc@digitalocean.com>
-Date:   Sat, 1 Jan 2022 19:08:47 -0700
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=rNvgKa7RBKZAN1BbsQtt2iLEjXM+iSNPhCbUMTDF2yU=;
+        b=CO0t5xcSj4i4KcjdkI1Ax8uiqLDFftx0SHg17rnNNzbO8kVuy8kYviH/1egnC0xatc
+         L9PuPNJiZuPK29wmXHk35G67WOsnb/NCSVPl4Y6gaNortPbNWxdfJo1H5rC1nW1F6tj1
+         /mFNhwdT0XXnPD0XBbR0ntNAfLF7pYLcvQM+Gnb02X/BQLMfhG+t301b5rX/VP9yrfr1
+         LduLyRNFYMftj2k0ouEEDu6svM4d8k7DEzsoQoAoDkIpZ6pzHjkrzzvkxnExFaZNk3XE
+         4A/jExTq0A3vNFnCF7b2tcH0KmzXPsDCfwP9R2FYgi0zjcdBrvL93ggzS6O+jJUHyAno
+         BquQ==
+X-Gm-Message-State: AOAM531WkT3DOqslQA18xByN0zT2ptzyLxo2/TlHlSNHwPOgLswoMqLF
+        KU5CjEAwmkfQo9kV5lLnuCQd+FRjgHZ6OCFvF2WUdVb0VYBELJdY9WpmbIw/gdg9rkCxCORgeV5
+        gzUE7D5DOdDfzZWdB0gkdSTOJYEDZ+fVjZhi3+g==
+X-Received: by 2002:a17:907:8a0d:: with SMTP id sc13mr33324332ejc.498.1641107075677;
+        Sat, 01 Jan 2022 23:04:35 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxUIhr76bnjGItvqFPRFYIE+XdU78Fz4DGy60kqLhZt8/cvA7FCuOih75BkLEpO9m5Bs6UNO7PzGBT09Wbkddk=
+X-Received: by 2002:a17:907:8a0d:: with SMTP id sc13mr33324314ejc.498.1641107075471;
+ Sat, 01 Jan 2022 23:04:35 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [PATCH v6 1/4] md: add support for REQ_NOWAIT
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, rgoldwyn@suse.de
-References: <f5b0b47f-cf0b-f74a-b8b6-80aeaa9b400d@digitalocean.com>
- <20211221200622.29795-1-vverma@digitalocean.com>
- <CAPhsuW7-4UW3kMo6vcW1Mo=sZZK_AciFHSDaxsprVgjaP5GNzw@mail.gmail.com>
- <CAPhsuW6CR_+4pJx=Faf5KwusAoy1vOte9qQKBWy6fwNkp1PETA@mail.gmail.com>
-From:   Vishal Verma <vverma@digitalocean.com>
-In-Reply-To: <CAPhsuW6CR_+4pJx=Faf5KwusAoy1vOte9qQKBWy6fwNkp1PETA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211210160456.56816-1-colyli@suse.de> <20211210160456.56816-3-colyli@suse.de>
+In-Reply-To: <20211210160456.56816-3-colyli@suse.de>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Sun, 2 Jan 2022 15:04:24 +0800
+Message-ID: <CALTww28HF2SPrrQAaLd+H_De5F8aOemBHfU03zMVAYatb7k19Q@mail.gmail.com>
+Subject: Re: [PATCH v5 2/6] badblocks: add helper routines for badblock ranges handling
+To:     Coly Li <colyli@suse.de>
+Cc:     nvdimm@lists.linux.dev, linux-raid <linux-raid@vger.kernel.org>,
+        linux-block@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        Geliang Tang <geliang.tang@suse.com>,
+        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+        NeilBrown <neilb@suse.de>,
+        Vishal L Verma <vishal.l.verma@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Sat, Dec 11, 2021 at 12:05 AM Coly Li <colyli@suse.de> wrote:
+>
+> This patch adds several helper routines to improve badblock ranges
+> handling. These helper routines will be used later in the improved
+> version of badblocks_set()/badblocks_clear()/badblocks_check().
+>
+> - Helpers prev_by_hint() and prev_badblocks() are used to find the bad
+>   range from bad table which the searching range starts at or after.
+>
+> - The following helpers are to decide the relative layout between the
+>   manipulating range and existing bad block range from bad table.
+>   - can_merge_behind()
+>     Return 'true' if the manipulating range can backward merge with the
+>     bad block range.
+>   - can_merge_front()
+>     Return 'true' if the manipulating range can forward merge with the
+>     bad block range.
+>   - can_combine_front()
+>     Return 'true' if two adjacent bad block ranges before the
+>     manipulating range can be merged.
+>   - overlap_front()
+>     Return 'true' if the manipulating range exactly overlaps with the
+>     bad block range in front of its range.
+>   - overlap_behind()
+>     Return 'true' if the manipulating range exactly overlaps with the
+>     bad block range behind its range.
+>   - can_front_overwrite()
+>     Return 'true' if the manipulating range can forward overwrite the
+>     bad block range in front of its range.
+>
+> - The following helpers are to add the manipulating range into the bad
+>   block table. Different routine is called with the specific relative
+>   layout between the manipulating range and other bad block range in the
+>   bad block table.
+>   - behind_merge()
+>     Merge the manipulating range with the bad block range behind its
+>     range, and return the number of merged length in unit of sector.
+>   - front_merge()
+>     Merge the manipulating range with the bad block range in front of
+>     its range, and return the number of merged length in unit of sector.
+>   - front_combine()
+>     Combine the two adjacent bad block ranges before the manipulating
+>     range into a larger one.
+>   - front_overwrite()
+>     Overwrite partial of whole bad block range which is in front of the
+>     manipulating range. The overwrite may split existing bad block range
+>     and generate more bad block ranges into the bad block table.
+>   - insert_at()
+>     Insert the manipulating range at a specific location in the bad
+>     block table.
+>
+> All the above helpers are used in later patches to improve the bad block
+> ranges handling for badblocks_set()/badblocks_clear()/badblocks_check().
+>
+> Signed-off-by: Coly Li <colyli@suse.de>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Geliang Tang <geliang.tang@suse.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: NeilBrown <neilb@suse.de>
+> Cc: Vishal L Verma <vishal.l.verma@intel.com>
+> ---
+>  block/badblocks.c | 376 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 376 insertions(+)
+>
+> diff --git a/block/badblocks.c b/block/badblocks.c
+> index d39056630d9c..30958cc4469f 100644
+> --- a/block/badblocks.c
+> +++ b/block/badblocks.c
+> @@ -16,6 +16,382 @@
+>  #include <linux/types.h>
+>  #include <linux/slab.h>
+>
+> +/*
+> + * Find the range starts at-or-before 's' from bad table. The search
+> + * starts from index 'hint' and stops at index 'hint_end' from the bad
+> + * table.
+> + */
+> +static int prev_by_hint(struct badblocks *bb, sector_t s, int hint)
+> +{
+> +       int hint_end = hint + 2;
+> +       u64 *p = bb->page;
+> +       int ret = -1;
+> +
+> +       while ((hint < hint_end) && ((hint + 1) <= bb->count) &&
+> +              (BB_OFFSET(p[hint]) <= s)) {
+> +               if ((hint + 1) == bb->count || BB_OFFSET(p[hint + 1]) > s) {
+> +                       ret = hint;
+> +                       break;
+> +               }
+> +               hint++;
+> +       }
+> +
+> +       return ret;
+> +}
+> +
+> +/*
+> + * Find the range starts at-or-before bad->start. If 'hint' is provided
+> + * (hint >= 0) then search in the bad table from hint firstly. It is
+> + * very probably the wanted bad range can be found from the hint index,
+> + * then the unnecessary while-loop iteration can be avoided.
+> + */
+> +static int prev_badblocks(struct badblocks *bb, struct badblocks_context *bad,
+> +                         int hint)
+> +{
+> +       sector_t s = bad->start;
+> +       int ret = -1;
+> +       int lo, hi;
+> +       u64 *p;
+> +
+> +       if (!bb->count)
+> +               goto out;
+> +
+> +       if (hint >= 0) {
+> +               ret = prev_by_hint(bb, s, hint);
+> +               if (ret >= 0)
+> +                       goto out;
+> +       }
+> +
+> +       lo = 0;
+> +       hi = bb->count;
+> +       p = bb->page;
+> +
+> +       while (hi - lo > 1) {
+> +               int mid = (lo + hi)/2;
+> +               sector_t a = BB_OFFSET(p[mid]);
+> +
+> +               if (a <= s)
+> +                       lo = mid;
+> +               else
+> +                       hi = mid;
+> +       }
 
-On 1/1/22 5:11 PM, Song Liu wrote:
-> On Wed, Dec 22, 2021 at 6:57 PM Song Liu <song@kernel.org> wrote:
->> On Tue, Dec 21, 2021 at 12:06 PM Vishal Verma <vverma@digitalocean.com> wrote:
->>> commit 021a24460dc2 ("block: add QUEUE_FLAG_NOWAIT") added support
->>> for checking whether a given bdev supports handling of REQ_NOWAIT or not.
->>> Since then commit 6abc49468eea ("dm: add support for REQ_NOWAIT and enable
->>> it for linear target") added support for REQ_NOWAIT for dm. This uses
->>> a similar approach to incorporate REQ_NOWAIT for md based bios.
->>>
->>> This patch was tested using t/io_uring tool within FIO. A nvme drive
->>> was partitioned into 2 partitions and a simple raid 0 configuration
->>> /dev/md0 was created.
->>>
->>> md0 : active raid0 nvme4n1p1[1] nvme4n1p2[0]
->>>        937423872 blocks super 1.2 512k chunks
->>>
->>> Before patch:
->>>
->>> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
->>>
->>> Running top while the above runs:
->>>
->>> $ ps -eL | grep $(pidof io_uring)
->>>
->>>    38396   38396 pts/2    00:00:00 io_uring
->>>    38396   38397 pts/2    00:00:15 io_uring
->>>    38396   38398 pts/2    00:00:13 iou-wrk-38397
->>>
->>> We can see iou-wrk-38397 io worker thread created which gets created
->>> when io_uring sees that the underlying device (/dev/md0 in this case)
->>> doesn't support nowait.
->>>
->>> After patch:
->>>
->>> $ ./t/io_uring /dev/md0 -p 0 -a 0 -d 1 -r 100
->>>
->>> Running top while the above runs:
->>>
->>> $ ps -eL | grep $(pidof io_uring)
->>>
->>>    38341   38341 pts/2    00:10:22 io_uring
->>>    38341   38342 pts/2    00:10:37 io_uring
->>>
->>> After running this patch, we don't see any io worker thread
->>> being created which indicated that io_uring saw that the
->>> underlying device does support nowait. This is the exact behaviour
->>> noticed on a dm device which also supports nowait.
->>>
->>> For all the other raid personalities except raid0, we would need
->>> to train pieces which involves make_request fn in order for them
->>> to correctly handle REQ_NOWAIT.
->>>
->>> Signed-off-by: Vishal Verma <vverma@digitalocean.com>
->> I have made some changes and applied the set to md-next. However,
->> I think we don't yet have enough test coverage. Please continue testing
->> the code and send fixes on top of it. Based on the test results, we will
->> see whether we can ship it in the next merge window.
->>
->> Note, md-next branch doesn't have [1], so we need to cherry-pick it
->> for testing.
-> I went through all these changes again and tested many (but not all)
-> cases. The latest version is available in md-next branch.
->
-> Vishal, please run tests on this version and send fixes if anything
-> is broken.
->
-> Thanks,
-> Song
-Thanks Song. This latest version looks good!
-And yes, will report out if I notice any issues or anything.
+Hi Coly
+
+Does it need to stop the loop when "a == s". For example, there are
+100 bad blocks.
+The new bad starts equals offset(50). In the first loop, it can find
+the result. It doesn't
+need to go on running in the loop. If it still runs the loop, only the
+hi can be handled.
+It has no meaning.
+
+> +
+> +       if (BB_OFFSET(p[lo]) <= s)
+> +               ret = lo;
+> +out:
+> +       return ret;
+> +}
+> +
+> +/*
+> + * Return 'true' if the range indicated by 'bad' can be backward merged
+> + * with the bad range (from the bad table) index by 'behind'.
+> + */
+> +static bool can_merge_behind(struct badblocks *bb, struct badblocks_context *bad,
+> +                            int behind)
+> +{
+> +       sector_t sectors = bad->len;
+> +       sector_t s = bad->start;
+> +       u64 *p = bb->page;
+> +
+> +       if ((s <= BB_OFFSET(p[behind])) &&
+
+In fact, it can never trigger s == BB_OFFSET here. By the design, if s
+== offset(pos), prev_badblocks
+can find it. Then front_merge/front_overwrite can handle it.
+
+> +           ((s + sectors) >= BB_OFFSET(p[behind])) &&
+> +           ((BB_END(p[behind]) - s) <= BB_MAX_LEN) &&
+> +           BB_ACK(p[behind]) == bad->ack)
+> +               return true;
+> +       return false;
+> +}
+> +
+> +/*
+> + * Do backward merge for range indicated by 'bad' and the bad range
+> + * (from the bad table) indexed by 'behind'. The return value is merged
+> + * sectors from bad->len.
+> + */
+> +static int behind_merge(struct badblocks *bb, struct badblocks_context *bad,
+> +                       int behind)
+> +{
+> +       sector_t sectors = bad->len;
+> +       sector_t s = bad->start;
+> +       u64 *p = bb->page;
+> +       int merged = 0;
+> +
+> +       WARN_ON(s > BB_OFFSET(p[behind]));
+> +       WARN_ON((s + sectors) < BB_OFFSET(p[behind]));
+> +
+> +       if (s < BB_OFFSET(p[behind])) {
+> +               WARN_ON((BB_LEN(p[behind]) + merged) >= BB_MAX_LEN);
+> +
+> +               merged = min_t(sector_t, sectors, BB_OFFSET(p[behind]) - s);
+
+sectors must be >= BB_OFFSET(p[behind] - s) here? It's behind_merge, so the end
+of bad should be >= BB_OFFSET(p[behind])
+
+If we need to check merged value. The WARN_ON should be checked after merged
+
+> +               p[behind] =  BB_MAKE(s, BB_LEN(p[behind]) + merged, bad->ack);
+> +       } else {
+> +               merged = min_t(sector_t, sectors, BB_LEN(p[behind]));
+> +       }
+
+If we don't need to consider s == offset(pos) situation, it only needs
+to consider s < offset(pos) here
+> +
+> +       WARN_ON(merged == 0);
+> +
+> +       return merged;
+> +}
+> +
+> +/*
+> + * Return 'true' if the range indicated by 'bad' can be forward
+> + * merged with the bad range (from the bad table) indexed by 'prev'.
+> + */
+> +static bool can_merge_front(struct badblocks *bb, int prev,
+> +                           struct badblocks_context *bad)
+> +{
+> +       sector_t s = bad->start;
+> +       u64 *p = bb->page;
+> +
+> +       if (BB_ACK(p[prev]) == bad->ack &&
+> +           (s < BB_END(p[prev]) ||
+> +            (s == BB_END(p[prev]) && (BB_LEN(p[prev]) < BB_MAX_LEN))))
+> +               return true;
+> +       return false;
+> +}
+> +
+> +/*
+> + * Do forward merge for range indicated by 'bad' and the bad range
+> + * (from bad table) indexed by 'prev'. The return value is sectors
+> + * merged from bad->len.
+> + */
+> +static int front_merge(struct badblocks *bb, int prev, struct badblocks_context *bad)
+> +{
+> +       sector_t sectors = bad->len;
+> +       sector_t s = bad->start;
+> +       u64 *p = bb->page;
+> +       int merged = 0;
+> +
+> +       WARN_ON(s > BB_END(p[prev]));
+> +
+> +       if (s < BB_END(p[prev])) {
+> +               merged = min_t(sector_t, sectors, BB_END(p[prev]) - s);
+> +       } else {
+> +               merged = min_t(sector_t, sectors, BB_MAX_LEN - BB_LEN(p[prev]));
+> +               if ((prev + 1) < bb->count &&
+> +                   merged > (BB_OFFSET(p[prev + 1]) - BB_END(p[prev]))) {
+> +                       merged = BB_OFFSET(p[prev + 1]) - BB_END(p[prev]);
+> +               }
+> +
+> +               p[prev] = BB_MAKE(BB_OFFSET(p[prev]),
+> +                                 BB_LEN(p[prev]) + merged, bad->ack);
+> +       }
+> +
+> +       return merged;
+> +}
+> +
+> +/*
+> + * 'Combine' is a special case which can_merge_front() is not able to
+> + * handle: If a bad range (indexed by 'prev' from bad table) exactly
+> + * starts as bad->start, and the bad range ahead of 'prev' (indexed by
+> + * 'prev - 1' from bad table) exactly ends at where 'prev' starts, and
+> + * the sum of their lengths does not exceed BB_MAX_LEN limitation, then
+> + * these two bad range (from bad table) can be combined.
+> + *
+> + * Return 'true' if bad ranges indexed by 'prev' and 'prev - 1' from bad
+> + * table can be combined.
+> + */
+> +static bool can_combine_front(struct badblocks *bb, int prev,
+> +                             struct badblocks_context *bad)
+> +{
+> +       u64 *p = bb->page;
+> +
+> +       if ((prev > 0) &&
+> +           (BB_OFFSET(p[prev]) == bad->start) &&
+> +           (BB_END(p[prev - 1]) == BB_OFFSET(p[prev])) &&
+> +           (BB_LEN(p[prev - 1]) + BB_LEN(p[prev]) <= BB_MAX_LEN) &&
+> +           (BB_ACK(p[prev - 1]) == BB_ACK(p[prev])))
+> +               return true;
+> +       return false;
+> +}
+
+could you explain why BB_OFFSET(p[prev]) should == bad->start. If
+bad(prev-1) and
+bad(prev) are adjacent, can they be combine directly without
+considering bad->start
+
+Best Regards
+Xiao
+
