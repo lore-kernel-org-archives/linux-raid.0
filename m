@@ -2,141 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0513C4332F
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Jan 2022 01:19:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D37E4C433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Jan 2022 04:22:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231651AbiADBTF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 3 Jan 2022 20:19:05 -0500
-Received: from out0.migadu.com ([94.23.1.103]:48487 "EHLO out0.migadu.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229853AbiADBTD (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Mon, 3 Jan 2022 20:19:03 -0500
-Subject: Re: [PATCH] md/raid1: fix missing bitmap update w/o WriteMostly
- devices
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1641259138;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0Va7Q4P8AouCq7aKXPP/3Ce0JskJ6ujhX9CWOE7Rn5g=;
-        b=Yu5xEyCcRGvYQqH8OR446kFCQzdt5jszyicOqXPf0ToEUtjKUZOJbG5eYG3HA5W2aZYrQn
-        BQ9IKjQtco7BwfCtAk/cC50anTfs02F4hMgA37ajsqqBIkPOAZAgN010/E3tBykein3H42
-        pB06yxOf5EsBMOPh3fr6OzfR8fzANlU=
-To:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
+        id S232809AbiADEWB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 3 Jan 2022 23:22:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57308 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230044AbiADEWA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 3 Jan 2022 23:22:00 -0500
+Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C919C061761
+        for <linux-raid@vger.kernel.org>; Mon,  3 Jan 2022 20:22:00 -0800 (PST)
+Received: by mail-il1-x136.google.com with SMTP id x15so27399528ilc.5
+        for <linux-raid@vger.kernel.org>; Mon, 03 Jan 2022 20:22:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=b/ImgiPdbq2N+p166JQs3lDpTsm/xUH4BmSoapqHyKc=;
+        b=7ea+MipDKFNp8pexK4CQZQW07zkOWvhZT1++wlHsyUpyxqX5Qhm2vwbAXN+YCVBQew
+         opi95LEJXR4UOJM0skMcJA1295ySJmN7L/VQslmllJ3XpdRkfHn72uDTR/VeR6vkjAoK
+         ZduVZzn9gC4ua4v1kOIBsIqMJ1qWoI6/78Lu59LVoWDjvt3GnrpXr/jplZgkszM6/pS8
+         IP8eLmdfA+F3lWYIsyXWcP5JnIorQ2MrQ20zWKKM3wLfnGS7LWmqscyVfnz1VGmezXq3
+         Yvw0jL21PrFTAAXlYMbPtpDBKQ+QQRZXyrbai/SM6GeB4uIT78HlI1Tj8Lhv5g7PwFI8
+         4x0A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=b/ImgiPdbq2N+p166JQs3lDpTsm/xUH4BmSoapqHyKc=;
+        b=tRut2ZTNyzeKOZ7c4b8yhS2oEGzrPDK2hP4PVSmp4GWklt2N6crJklvFiQ9vWISsCn
+         DE/h10uCG4p3AKJkUZdYze6zRkYsqnwyB8cSiUG83PMYkuR3nfqW/PLOBTHHvCqbhAiY
+         cVFEP7AEDf8lBRmvh40ffSC2MgGHIC2EFxh0eQ8L9aHnTrX1BALxuRP2WVuTJkwgeakZ
+         zS7U30EHQ1g7Q9wMIUfdiZ6Qa7x9BnVaRkLio5yUd6gDsXyrLh+RTOYFCUWZKledHP3v
+         IqzdsCn8zP07+adVLIE1oOEhxNoXSg+10lrh+9tlFM7F/RhOqXu+9KNILd6XM6LoRion
+         G9/g==
+X-Gm-Message-State: AOAM530vDwFBzF3PeUjkbTMYjO3anMYgXLFM4GBc8SzUkTNjXCo2spYl
+        2OVC5PDYHQO851NswPVz2SbvTg==
+X-Google-Smtp-Source: ABdhPJz0IkAokrq+laDzYrRe1EY6L7kFS2boZTpCjSOeMA/D10L9yQHi4GGVHJfWynOufboNa0dJEQ==
+X-Received: by 2002:a05:6e02:1a2c:: with SMTP id g12mr21401051ile.192.1641270119662;
+        Mon, 03 Jan 2022 20:21:59 -0800 (PST)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id g11sm22499972ild.52.2022.01.03.20.21.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Jan 2022 20:21:59 -0800 (PST)
+Subject: Re: [GIT PULL] md-fixes 20220103
+To:     Song Liu <songliubraving@fb.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
         Norbert Warmuth <nwarmuth@t-online.de>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-References: <20220103230401.180704-1-song@kernel.org>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <842bd2f8-1903-6da9-8bbf-09229868c7dd@linux.dev>
-Date:   Tue, 4 Jan 2022 09:18:51 +0800
+        Guoqing Jiang <jgq516@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <C0F28A74-39F7-4B12-BC8F-96E2FEBE0AD0@fb.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <499b185d-ff9a-934e-7768-ec796244fa1a@kernel.dk>
+Date:   Mon, 3 Jan 2022 21:21:58 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20220103230401.180704-1-song@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <C0F28A74-39F7-4B12-BC8F-96E2FEBE0AD0@fb.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On 1/3/22 2:28 PM, Song Liu wrote:
+> Hi Jens, 
+> 
+> Please consider pulling the following fix on top of your block-5.16 branch. 
+> It fixes a raid1 regression with missing bitmap updates.
 
+Pulled, thanks.
 
-On 1/4/22 7:04 AM, Song Liu wrote:
-> commit [1] causes missing bitmap updates when there isn't any WriteMostly
-> devices.
->
-> Detailed steps to reproduce by Norbert (which somehow didn't make to lore):
->
->     # setup md10 (raid1) with two drives (1 GByte sparse files)
->     dd if=/dev/zero of=disk1 bs=1024k seek=1024 count=0
->     dd if=/dev/zero of=disk2 bs=1024k seek=1024 count=0
->
->     losetup /dev/loop11 disk1
->     losetup /dev/loop12 disk2
->
->     mdadm --create /dev/md10 --level=1 --raid-devices=2 /dev/loop11 /dev/loop12
->
->     # add bitmap (aka write-intent log)
->     mdadm /dev/md10 --grow --bitmap=internal
->
->     echo check > /sys/block/md10/md/sync_action
->
->     root:# cat /sys/block/md10/md/mismatch_cnt
->     0
->     root:#
->
->     # remove member drive disk2 (loop12)
->     mdadm /dev/md10 -f loop12 ; mdadm /dev/md10 -r loop12
->
->     # modify degraded md device
->     dd if=/dev/urandom of=/dev/md10 bs=512 count=1
->
->     # no blocks recorded as out of sync on the remaining member disk1/loop11
->     root:# mdadm -X /dev/loop11 | grep Bitmap
->               Bitmap : 16 bits (chunks), 0 dirty (0.0%)
->     root:#
->
->     # re-add disk2, nothing synced because of empty bitmap
->     mdadm /dev/md10 --re-add /dev/loop12
->
->     # check integrity again
->     echo check > /sys/block/md10/md/sync_action
->
->     # disk1 and disk2 are no longer in sync, reads return differend data
->     root:# cat /sys/block/md10/md/mismatch_cnt
->     128
->     root:#
->
->     # clean up
->     mdadm -S /dev/md10
->     losetup -d /dev/loop11
->     losetup -d /dev/loop12
->     rm disk1 disk2
->
-> Fix this by moving the WriteMostly check to the if condition for
-> alloc_behind_master_bio().
->
-> [1] commit fd3b6975e9c1 ("md/raid1: only allocate write behind bio for WriteMostly device")
-> Fixes: fd3b6975e9c1 ("md/raid1: only allocate write behind bio for WriteMostly device")
-> Cc: stable@vger.kernel.org # v5.12+
-> Cc: Guoqing Jiang <guoqing.jiang@linux.dev>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Reported-by: Norbert Warmuth <nwarmuth@t-online.de>
-> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Song Liu <song@kernel.org>
-> ---
->   drivers/md/raid1.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 7dc8026cf6ee..85505424f7a4 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1496,12 +1496,13 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
->   		if (!r1_bio->bios[i])
->   			continue;
->   
-> -		if (first_clone && test_bit(WriteMostly, &rdev->flags)) {
-> +		if (first_clone) {
->   			/* do behind I/O ?
->   			 * Not if there are too many, or cannot
->   			 * allocate memory, or a reader on WriteMostly
->   			 * is waiting for behind writes to flush */
->   			if (bitmap &&
-> +			    test_bit(WriteMostly, &rdev->flags) &&
->   			    (atomic_read(&bitmap->behind_writes)
->   			     < mddev->bitmap_info.max_write_behind) &&
->   			    !waitqueue_active(&bitmap->behind_wait)) {
-
-Indeed, I missed that md_bitmap_startwrite should be always called for 
-the first clone.
-
-Thanks,
-Guoqing
-
+-- 
+Jens Axboe
 
