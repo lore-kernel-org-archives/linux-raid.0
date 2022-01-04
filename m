@@ -2,84 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA1A2C433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Jan 2022 04:26:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 638A3C433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  4 Jan 2022 12:57:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232839AbiADE0C (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 3 Jan 2022 23:26:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58200 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232825AbiADE0C (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 3 Jan 2022 23:26:02 -0500
-Received: from mail-il1-x133.google.com (mail-il1-x133.google.com [IPv6:2607:f8b0:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D9B8C061761
-        for <linux-raid@vger.kernel.org>; Mon,  3 Jan 2022 20:26:02 -0800 (PST)
-Received: by mail-il1-x133.google.com with SMTP id u8so27427016ilk.0
-        for <linux-raid@vger.kernel.org>; Mon, 03 Jan 2022 20:26:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=vij5nkHSlsH/FGJLjrs1+obkJ7Ro/bx/HwYUNsX7fYg=;
-        b=n6ycA3XXCbLy47knEWpKD34JeA8ETb8B0KV+dwKYK4eJGVYwE0Rvu0G54t0qhrUVVF
-         cSjQEyhFR/Yz9uPiREfTaBpoHjf8YY/eNn0QI2fLveGgteNmSJLzpY/1OD8kYZHJX6Ea
-         CBREzfFk9XU3aZXSiPZGRqYCkXDlkmrmcFhm8wrZnq6SuYJr7Ub6nDTl9hcbCJqKrPwK
-         sFLDBcCoHGdqCUfRtgHHU22owuSI1t1z6ug3FW0bA5fgJEXTuIgz2KxGMH709SjvM3jJ
-         Agt3GqxnZey9N51qnEea+ad9Ck3/72gRJfjn7QYU+dmeC+ImwnOd33uWem6k+qCYfuot
-         u6/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=vij5nkHSlsH/FGJLjrs1+obkJ7Ro/bx/HwYUNsX7fYg=;
-        b=xELPDQt7rX/R8TB/3hOlyvhgXoIuzurJFAYF0XJ4SjJqqfecHvw6FKAbIqGUIkf6Dq
-         TrRR/QgsVuK65hNJJjMWyJypNKuAYujVgS+OTKIbkfBb1P6pbSWohRuf69Y/hn4EnVW+
-         d+R31zle4Qcnx+geYQVNxNut8Mh6ZyMyoR6bWGYBXzjygYCRG78HTB6m8XADXBCdMMf/
-         wQEkQL1VreUVn0+1T99pdLysZpL6XdWYch7Bzg6t+pMdQ74dV5i0/wKOkjJddIYlvs63
-         eyBzDsy14+adWIlN6mh63qnQ/y4gXVpksh0PkPevyHBZyO/edFx0385ZUmfPDSNzYZLw
-         3v/w==
-X-Gm-Message-State: AOAM5329QQdaGbdLQhpe894xxvz96YWrNx1JHD6p0t7O3kfami3pLPlJ
-        5t7Zy7QTTP6esG4yN20UjkNBQA==
-X-Google-Smtp-Source: ABdhPJyTKekCKbRgotBTNfLVoBraeZg+yA08JFsN7ScZWxlYoswvBoHbN5Ll7A5kpNaXTl+WBnREXQ==
-X-Received: by 2002:a92:c7c4:: with SMTP id g4mr22404671ilk.112.1641270361648;
-        Mon, 03 Jan 2022 20:26:01 -0800 (PST)
-Received: from [192.168.1.116] ([66.219.217.159])
-        by smtp.gmail.com with ESMTPSA id u14sm22054068ill.70.2022.01.03.20.26.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Jan 2022 20:26:01 -0800 (PST)
-Subject: Re: [Regression] md/raid1: write-intent logging/bitmap issue since
- fd3b6975e9c1 - v5.16-rc1
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Norbert Warmuth <nwarmuth@t-online.de>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <m3tuekbos5.fsf@nogrod.ivcecceob.t-online.de>
- <CAHk-=whzdxBuoeTP1uJrxRQYtwOxPDYuP92c8e=_K5T1xHy7Ug@mail.gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <eddcc94a-2cd4-6258-5614-88c4d1dbbca2@kernel.dk>
-Date:   Mon, 3 Jan 2022 21:26:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S233179AbiADM5w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Jan 2022 07:57:52 -0500
+Received: from mga12.intel.com ([192.55.52.136]:18780 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229543AbiADM5v (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Tue, 4 Jan 2022 07:57:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1641301071; x=1672837071;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=oK1jmrxVUxHU/Yor1sXMs5McfVxqpWoLn1MfUFx6yEk=;
+  b=fPNb+FhcIudhFYikpOS3edrBfX0Aw6+NkEqTh0J+85uUTyLZNHKonXB4
+   0JEe9AQxg/B7s8INi0DNrEsxDSEngFrH1QNDEG3IKW7CxIX4vaVaJgPr4
+   PJ47G5aLOheelbjJFWlaY3pTwopzUYMlZe8FMrhpwVJ7eD3zMS4qk9r5z
+   +rEJGdrousyFHROu3G61Ld9igavyzlVIXkd4rPBYcuFSXYl+8Tec/oP3n
+   wN97eUzz/mQrIIzOXJuedjzJ194pI0aAIv5owhuO3PGEAvmHmYUhDTDsb
+   ODGa19yYug7JjbYXKg9diYcNk4ZBym1ZgmB05rg+WxQ5LHkDgvGAXcpEY
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10216"; a="222211061"
+X-IronPort-AV: E=Sophos;i="5.88,261,1635231600"; 
+   d="scan'208";a="222211061"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jan 2022 04:57:51 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,261,1635231600"; 
+   d="scan'208";a="688558753"
+Received: from lkp-server01.sh.intel.com (HELO e357b3ef1427) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 04 Jan 2022 04:57:49 -0800
+Received: from kbuild by e357b3ef1427 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1n4jNt-000FMA-B1; Tue, 04 Jan 2022 12:57:49 +0000
+Date:   Tue, 04 Jan 2022 20:57:09 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-fixes] BUILD SUCCESS
+ 46669e8616c649c71c4cfcd712fd3d107e771380
+Message-ID: <61d44425.EnhrUBbGE/gBBhdP%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-In-Reply-To: <CAHk-=whzdxBuoeTP1uJrxRQYtwOxPDYuP92c8e=_K5T1xHy7Ug@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/3/22 11:53 AM, Linus Torvalds wrote:
-> [ Jens wasn't cc'd for some reason but was the signer-off-on the patch
-> you bisected to. Added him to the cc. I'll bounce the original
-> separately, as I also don't see this on lore.kernel.org - it might not
-> have gotten there yet ]
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-fixes
+branch HEAD: 46669e8616c649c71c4cfcd712fd3d107e771380  md/raid1: fix missing bitmap update w/o WriteMostly devices
 
-Thanks for adding me in, Song took care of it now. Will get sent out
-shortly.
+elapsed time: 724m
 
--- 
-Jens Axboe
+configs tested: 54
+configs skipped: 3
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm                              allyesconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allmodconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+s390                             allyesconfig
+i386                                defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+i386                             allyesconfig
+sparc                               defconfig
+sparc                            allyesconfig
+mips                             allmodconfig
+mips                             allyesconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                                  kexec
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
