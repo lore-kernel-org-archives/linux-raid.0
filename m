@@ -2,103 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6858AC433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  4 Jan 2022 23:30:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD18C433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  5 Jan 2022 03:07:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236476AbiADXal (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 4 Jan 2022 18:30:41 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:35433 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234152AbiADXal (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jan 2022 18:30:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641339039;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=jDT78lxxyYpi6memYHgpx5yzuIgibQmZrcVkx8OKH/Q=;
-        b=ZByfZ8Y+zdHiYoHP8xcro00Gw99v/nXjtIJQfdDjihHGilRprCVNcmo3SKnDFdVhD+Yvp0
-        hPYja5QAhL4/0jgIr1XYkNyPiBlOu3IDS3xUdxUPsxsZetvhtt+2n/VtW4mwWrMmXB/SJ7
-        2NEheF07PkIPR0FhMl2iLKaAll9GcQw=
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
- [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-41-YNFXEfzZObG47lHmv4CyfQ-1; Tue, 04 Jan 2022 18:30:37 -0500
-X-MC-Unique: YNFXEfzZObG47lHmv4CyfQ-1
-Received: by mail-pg1-f198.google.com with SMTP id u37-20020a632365000000b0033b4665d66cso20426442pgm.18
-        for <linux-raid@vger.kernel.org>; Tue, 04 Jan 2022 15:30:37 -0800 (PST)
+        id S237170AbiAEDHk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 4 Jan 2022 22:07:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57670 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236041AbiAEDHk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 4 Jan 2022 22:07:40 -0500
+Received: from mail-oi1-x235.google.com (mail-oi1-x235.google.com [IPv6:2607:f8b0:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE1FC061761
+        for <linux-raid@vger.kernel.org>; Tue,  4 Jan 2022 19:07:40 -0800 (PST)
+Received: by mail-oi1-x235.google.com with SMTP id x10so57477446oix.6
+        for <linux-raid@vger.kernel.org>; Tue, 04 Jan 2022 19:07:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:from:to:references:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=HIVhGwise128DLIwr3R3IQxs77/SwngSfauco86IkTg=;
+        b=P7oECmhIFawhtgKU0m+9gNeNrtXaycqFmtkp5A1mFtjZMC1EYEy5v4Yeqq6p2nnXGc
+         Jda7AKe/paY2hCb9TVlZRjoPAjcGSdL3QAiJYLbfvHjvEFpN6oSOBMpFN6HF2ES/qJir
+         B+mJJdQryjwtDZ3AYC773opQPvC1RlkTwpTfozjhESW3l8vtFqppfdhN3QIotoCIsSSV
+         6hdQiTBSbXYfC4gXFOv+VNqcPMNw439G2LuPFZAi9tuXryiXs1lm7fES+m5emUXQsj7Y
+         8veAu4TSh9N8Vd6peG0LesmlcuTB3Fi+Gv1jO8a4u8QQVy9fQn+IHVxPVfeAYd4TUeoL
+         sPpw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=jDT78lxxyYpi6memYHgpx5yzuIgibQmZrcVkx8OKH/Q=;
-        b=MZlKeEE+DOPpr451QRP4W7tHEMPD22fkg7zeP3KqRygpd7YkSXpaRSvDck2LKa74QE
-         hPV2BtHAjSfRYkjbhwiHk1OWzbn9M78+RLU0NprFAtEeLz8v4ZdzxLrHU0vBTe/CMkcB
-         fBfGLAbAKXzFYNItAtEH0AbPVFiZ2RUol/1rOs/kuaV1sBcybQ2pPf1L68UqOBmnUCWt
-         l4Nn8K3WUr9AvrZwF2P/9sUAIvjJe3wbAmed69yaWWgmDZ++nW9JXxbb2L1RGmXExSt5
-         XepD2SXszWrczHa+oz7zaCymwzyx7hDX09p2XkhV01HvYyOOyI1YozJ9vAWZGN040EZv
-         N5jw==
-X-Gm-Message-State: AOAM5327EdmbJr9wxuxvOrGL3ACe5HFHqwBujXLc+XS2AmuLumTltrnK
-        Asxfubj8Cyh/YY76oCbYvfvhZlwUAztjjx9LS7a/HdDAexigKjIeQzSN3dVF7VknQckRWJig0CK
-        q2m/4TT42B/5pYqkO9OsbvA==
-X-Received: by 2002:a17:90a:6d23:: with SMTP id z32mr851076pjj.144.1641339036883;
-        Tue, 04 Jan 2022 15:30:36 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJys1vJ4lHVKFe0cHn3ZUz5tp3yxOQka6NdrypCweHYmxBQOW/kdoHDJektYhlsvc3r8LFZieg==
-X-Received: by 2002:a17:90a:6d23:: with SMTP id z32mr851067pjj.144.1641339036651;
-        Tue, 04 Jan 2022 15:30:36 -0800 (PST)
-Received: from [10.72.12.249] ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id t126sm35249032pgc.61.2022.01.04.15.30.34
+        h=x-gm-message-state:subject:from:to:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=HIVhGwise128DLIwr3R3IQxs77/SwngSfauco86IkTg=;
+        b=btTFGGeXbl8n6t1dioNkRuqUy7ZuOuyh9NARLlXV643fQnvvlMt1/0WkcSncnaVq/P
+         dOTodrJR76dL11kbWPiSPCJQejwuBGV0cTshYyYCLza4epTBM5N1lI6FtyBsF+h9MoFD
+         kIaRaYE0hGqkRL5ljmj51cyMa5wKYjDrQYCYD6AdIC9v4tt3w+nd7qi9JOJt8NiHpqX1
+         IMoQUtn1GrGeJwU2J36EuTfu8cAUAB47OgvpcxtUvo/tZ7CeWPE26tM5plRJCHTh2FA0
+         grQ50u1rC3RwlNBI0XBWBArig1ObSrYT18H+zjezv9sVqeq6+PU9FIDEnLuina3wecu4
+         Ol7A==
+X-Gm-Message-State: AOAM5312wQd7m3cgi1re1HvlfuE6RamDVn3lecky5bCLzHZDQ8mqCpIp
+        XhjfzVLKoMEI2HRMeSQDnYluT6m2m00=
+X-Google-Smtp-Source: ABdhPJwIis4kg3W+sxTsWv1Z0ycVSZ96Ufxzul/8ywCIF7pbZBxBeaniYTJVeEALEg7HnHszTZA5Ag==
+X-Received: by 2002:a05:6808:1150:: with SMTP id u16mr1064991oiu.74.1641352059323;
+        Tue, 04 Jan 2022 19:07:39 -0800 (PST)
+Received: from [192.168.0.92] (cpe-70-94-157-206.satx.res.rr.com. [70.94.157.206])
+        by smtp.gmail.com with ESMTPSA id k1sm8491007otj.61.2022.01.04.19.07.38
+        for <linux-raid@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Jan 2022 15:30:36 -0800 (PST)
-Message-ID: <6bb93ce0-30e0-ff3b-9457-470496f7b1bc@redhat.com>
-Date:   Wed, 5 Jan 2022 07:30:32 +0800
+        Tue, 04 Jan 2022 19:07:39 -0800 (PST)
+Subject: mdadm regression tests fail
+From:   Bruce Dubbs <bruce.dubbs@gmail.com>
+To:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+References: <c4c17b11-16f4-ef70-5897-02f923907963@gmail.com>
+Message-ID: <f6db0bed-2f6c-d98c-c413-583030909700@gmail.com>
+Date:   Tue, 4 Jan 2022 21:07:38 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.1
-Subject: Re: [PATCH 0/2] md: it panice after reshape from raid1 to raid5
-From:   Xiao Ni <xni@redhat.com>
-To:     song@kernel.org
-Cc:     guoqing.jiang@linux.dev, ncroxon@redhat.com,
-        linux-raid@vger.kernel.org
-References: <20211210093116.7847-1-xni@redhat.com>
-In-Reply-To: <20211210093116.7847-1-xni@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <c4c17b11-16f4-ef70-5897-02f923907963@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Song
+I am trying to document the mdadm-4.2 installation procedures for our book,
+https://www.linuxfromscratch.org/blfs/view/svn/postlfs/mdadm.html
 
-Ping. Do I still change something else?
+For testing, I am doing a simple:
 
-Regards
+    make
+    sudo ./test --keep-going --logdir=test-logs --save-logs
 
-Xiao
+But I get failures for about half the tests.
 
-在 2021/12/10 17:31, Xiao Ni 写道:
-> Hi all
->
-> After reshape from raid1 to raid5, it can panice when there are I/Os
->
-> The steps can reproduce this:
-> mdadm -CR /dev/md0 -l1 -n2 /dev/loop0 /dev/loop1
-> mdadm --wait /dev/md0
-> mkfs.xfs /dev/md0
-> mdadm /dev/md0 --grow -l5
-> mount /dev/md0 /mnt
->
-> These two patches fix this problem.
->
-> Xiao Ni (2):
->    Free r0conf memory when register integrity failed
->    Move alloc/free acct bioset in to personality
->
->   drivers/md/md.c    | 27 +++++++++++++++++----------
->   drivers/md/md.h    |  2 ++
->   drivers/md/raid0.c | 28 ++++++++++++++++++++++++----
->   drivers/md/raid5.c | 41 ++++++++++++++++++++++++++++++-----------
->   4 files changed, 73 insertions(+), 25 deletions(-)
->
+Digging in a bit I just ran:
+
+   sudo ./test --tests=00raid0 --logdir=test-logs
+
+This is the first test that fails.  With some hacking, it appears that the first
+portion of this test that fails is:
+
+     mdadm -CR $md0 -e0.90 -l0 -n4 $dev0 $dev1 $dev2 $dev3
+
+This resolves to
+
+     mdadm -CR /dev/md0 -e0.90 -l0 -n4 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
+
+There is not a lot of error output in the test, so I manually ran:
+
+     dd if=/dev/zero of=/tmp/mdtest0 count=20000 bs=1K
+     losetup /dev/loop0 /tmp/mdtest0
+
+For /dev/loop[0123]
+
+Then I ran
+
+     mdadm -CR /dev/md0 -e0.90 -l0 -n4 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
+     mdadm: 0.90 metadata does not support layouts for RAID0
+
+My question is whether the regression tests in the tarball are valid for mdadm-4.2?
+
+     -- Bruce Dubbs
+        linuxfromscratch.org
+
+Note: The kernel is version 5.15.12.
 
