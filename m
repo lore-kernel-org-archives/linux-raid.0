@@ -2,73 +2,67 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 651E0C433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  5 Jan 2022 18:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD3A1C433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  5 Jan 2022 18:59:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243227AbiAESzg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 5 Jan 2022 13:55:36 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:39090 "EHLO
+        id S230295AbiAES7t (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 5 Jan 2022 13:59:49 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:41200 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230295AbiAESzg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 5 Jan 2022 13:55:36 -0500
+        with ESMTP id S243264AbiAES7l (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 5 Jan 2022 13:59:41 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 54173B81CF9
-        for <linux-raid@vger.kernel.org>; Wed,  5 Jan 2022 18:55:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23468C36AE9
-        for <linux-raid@vger.kernel.org>; Wed,  5 Jan 2022 18:55:34 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A1E17B81D46
+        for <linux-raid@vger.kernel.org>; Wed,  5 Jan 2022 18:59:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EC30C36AE9
+        for <linux-raid@vger.kernel.org>; Wed,  5 Jan 2022 18:59:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641408934;
-        bh=MCUqwYQ5pRk97dfSY7McRLlrzBVIVzbDpru5bVBXuJc=;
+        s=k20201202; t=1641409179;
+        bh=yUxAJZKQjIJaov4VQGfZDmDLqP52zCRxquOKUb648hM=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=V3+xt/Q4yRSN8UUS1SNL6+cjE0WGRlSM5IW/fA8ChMsWZHh/V/11u098YXzX4Jfre
-         S1mUU1RUJyUN4zl5ixrRJlJAuqVvani5+bSm1oYrfbg9nWIKsM6y0OwafHww4ou/Cd
-         JKn97BTw72m+Aq3pI4YUGHjmnzkCJLh2EIoUV24ndmgY+97gET5qC6Uv8WDxphZHzU
-         y2JtgYnTvCfDiqVLClzhEomDyR2bmfnDSLLto7G9h8ZjA792XYamHFOc9tKX1p4xiJ
-         qtVudRDi5wKahNlNzFMrJZB0e/WdbMlrBPL0vX46N8QIBdg5fGiWQUSehkRSFTAc3/
-         xhPOXq42oo7lw==
-Received: by mail-yb1-f181.google.com with SMTP id g80so776836ybf.0
-        for <linux-raid@vger.kernel.org>; Wed, 05 Jan 2022 10:55:34 -0800 (PST)
-X-Gm-Message-State: AOAM533gnSf4aVtVLAMhW2+nhBx1XIc0MDcF7kc2dT1PRSnBrgEqhDYd
-        dUmSsoLO60AfGWZlWu7U1TQ2fE1DqO9IEfTc36I=
-X-Google-Smtp-Source: ABdhPJzXLz+ytk+cFcYHuLnKYpwMydw5eQNSQIIFhrMgFxFeTzKxak8ju+MuJKN8mBcbVEsxxFZcvzLiMLm5prWDas4=
-X-Received: by 2002:a25:8690:: with SMTP id z16mr19231317ybk.282.1641408933289;
- Wed, 05 Jan 2022 10:55:33 -0800 (PST)
+        b=AY1miSERySPt8WVYLWD/m/A77zqY7jqtmn0GqXqyOy+GJG+weDHZjJ7gs+T8AJGDG
+         zGOnMlK2uZ1fR5JKhY8MfpNoq87vmRZF7zcISeQ9pDx2E2HBDkBfEywYxMBsTFuISz
+         x+Ua6/5zg6/wBrnf3uKzi8sQfOVvmdXFe1g+as5ffg2Lklevb87kA6eml9HXnMUkUi
+         nbxC0awdfVfsJVysMAdYC7nNyeEtmLO22Dv0m6OlzXhUTvo5FM4bT78H0fmJgCJW0/
+         Ew1OMz+nLUMa8VzabEr8FIZOpmmRUPA0CBJXcrHGrmZkMysI0dHPtJdSLUzmlmLOug
+         QBuLnH88rUz8A==
+Received: by mail-yb1-f169.google.com with SMTP id p15so559059ybk.10
+        for <linux-raid@vger.kernel.org>; Wed, 05 Jan 2022 10:59:39 -0800 (PST)
+X-Gm-Message-State: AOAM530uBzVjwajWCFY5s7n8+lH1IfiIEA6y/YgZN9BT3agt75lZYGO5
+        CiWHFqsE1ptg0bAhEhWLOM9oplP6ioShRAoe0ZI=
+X-Google-Smtp-Source: ABdhPJyz3789szJMMAGhBLl7s4mbRCBWeoq1R69nq2AfdYqxvkR48tkvtYWekre9yPkgTTwH1WQBerlsaAr/AGSQNsE=
+X-Received: by 2002:a25:8690:: with SMTP id z16mr19253757ybk.282.1641409178636;
+ Wed, 05 Jan 2022 10:59:38 -0800 (PST)
 MIME-Version: 1.0
-References: <20220105163847.18592-1-dmueller@suse.de>
-In-Reply-To: <20220105163847.18592-1-dmueller@suse.de>
+References: <20211210093116.7847-1-xni@redhat.com> <6bb93ce0-30e0-ff3b-9457-470496f7b1bc@redhat.com>
+In-Reply-To: <6bb93ce0-30e0-ff3b-9457-470496f7b1bc@redhat.com>
 From:   Song Liu <song@kernel.org>
-Date:   Wed, 5 Jan 2022 10:55:22 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7i2NxkOTBdtzeXXXGRGWkmDAUswudBBmo80oZmgorG5w@mail.gmail.com>
-Message-ID: <CAPhsuW7i2NxkOTBdtzeXXXGRGWkmDAUswudBBmo80oZmgorG5w@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] lib/raid6: skip benchmark of non-chosen
- xor_syndrome functions
-To:     =?UTF-8?B?RGlyayBNw7xsbGVy?= <dmueller@suse.de>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
+Date:   Wed, 5 Jan 2022 10:59:27 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4wmHMyG-DjR+SO5rweU70iqm903z9X3Pkxhpb8GzHFzg@mail.gmail.com>
+Message-ID: <CAPhsuW4wmHMyG-DjR+SO5rweU70iqm903z9X3Pkxhpb8GzHFzg@mail.gmail.com>
+Subject: Re: [PATCH 0/2] md: it panice after reshape from raid1 to raid5
+To:     Xiao Ni <xni@redhat.com>
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Nigel Croxon <ncroxon@redhat.com>,
+        linux-raid <linux-raid@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Jan 5, 2022 at 8:39 AM Dirk M=C3=BCller <dmueller@suse.de> wrote:
+On Tue, Jan 4, 2022 at 3:30 PM Xiao Ni <xni@redhat.com> wrote:
 >
-> In commit fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
-> a xor_syndrome() benchmarking was added also to the raid6_choose_gen()
-> function. However, the results of that benchmarking were intentionally
-> discarded and did not influence the choice. It picked the
-> xor_syndrome() variant related to the best performing gen_syndrome().
+> Hi Song
 >
-> Reduce runtime of raid6_choose_gen() without modifying its outcome by
-> only benchmarking the xor_syndrome() of the best gen_syndrome() variant.
->
-> For a HZ=3D250 x86_64 system with avx2 and without avx512 this removes
-> 5 out of 6 xor() benchmarks, saving 340ms of raid6 initialization time.
->
-> Signed-off-by: Dirk M=C3=BCller <dmueller@suse.de>
+> Ping. Do I still change something else?
 
-Applied both patches to md-next.
+I merged the two patches into one, rewrote the commit log, added
+Guoqing's Acked-by, and applied it to md-next.
+
+For future patches, please write the commit log according to the
+guidance in Documentation/process/submitting-patches.rst.
 
 Thanks,
 Song
