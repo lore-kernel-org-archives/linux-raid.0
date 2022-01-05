@@ -2,98 +2,73 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C196C433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  5 Jan 2022 17:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 651E0C433F5
+	for <linux-raid@archiver.kernel.org>; Wed,  5 Jan 2022 18:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242505AbiAERop (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 5 Jan 2022 12:44:45 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:23576 "EHLO smtp.hosts.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242461AbiAERok (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 5 Jan 2022 12:44:40 -0500
-Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1n5AKx-0000lW-FP; Wed, 05 Jan 2022 17:44:36 +0000
-Message-ID: <96d9e6d4-16e5-6bfe-fc5a-7d0dfbaeadf0@youngman.org.uk>
-Date:   Wed, 5 Jan 2022 17:44:34 +0000
+        id S243227AbiAESzg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 5 Jan 2022 13:55:36 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:39090 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230295AbiAESzg (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 5 Jan 2022 13:55:36 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 54173B81CF9
+        for <linux-raid@vger.kernel.org>; Wed,  5 Jan 2022 18:55:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23468C36AE9
+        for <linux-raid@vger.kernel.org>; Wed,  5 Jan 2022 18:55:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641408934;
+        bh=MCUqwYQ5pRk97dfSY7McRLlrzBVIVzbDpru5bVBXuJc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=V3+xt/Q4yRSN8UUS1SNL6+cjE0WGRlSM5IW/fA8ChMsWZHh/V/11u098YXzX4Jfre
+         S1mUU1RUJyUN4zl5ixrRJlJAuqVvani5+bSm1oYrfbg9nWIKsM6y0OwafHww4ou/Cd
+         JKn97BTw72m+Aq3pI4YUGHjmnzkCJLh2EIoUV24ndmgY+97gET5qC6Uv8WDxphZHzU
+         y2JtgYnTvCfDiqVLClzhEomDyR2bmfnDSLLto7G9h8ZjA792XYamHFOc9tKX1p4xiJ
+         qtVudRDi5wKahNlNzFMrJZB0e/WdbMlrBPL0vX46N8QIBdg5fGiWQUSehkRSFTAc3/
+         xhPOXq42oo7lw==
+Received: by mail-yb1-f181.google.com with SMTP id g80so776836ybf.0
+        for <linux-raid@vger.kernel.org>; Wed, 05 Jan 2022 10:55:34 -0800 (PST)
+X-Gm-Message-State: AOAM533gnSf4aVtVLAMhW2+nhBx1XIc0MDcF7kc2dT1PRSnBrgEqhDYd
+        dUmSsoLO60AfGWZlWu7U1TQ2fE1DqO9IEfTc36I=
+X-Google-Smtp-Source: ABdhPJzXLz+ytk+cFcYHuLnKYpwMydw5eQNSQIIFhrMgFxFeTzKxak8ju+MuJKN8mBcbVEsxxFZcvzLiMLm5prWDas4=
+X-Received: by 2002:a25:8690:: with SMTP id z16mr19231317ybk.282.1641408933289;
+ Wed, 05 Jan 2022 10:55:33 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: mdadm regression tests fail
-Content-Language: en-GB
-To:     Randy Dunlap <rdunlap@infradead.org>,
-        Bruce Dubbs <bruce.dubbs@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-raid@vger.kernel.org
-Cc:     "Douglas R. Reno" <renodr2002@gmail.com>,
-        Pierre Labastie <pierre.labastie@neuf.fr>
-References: <c4c17b11-16f4-ef70-5897-02f923907963@gmail.com>
- <45492ddd-42f1-674f-af27-5e0a0aace8c9@infradead.org>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <45492ddd-42f1-674f-af27-5e0a0aace8c9@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20220105163847.18592-1-dmueller@suse.de>
+In-Reply-To: <20220105163847.18592-1-dmueller@suse.de>
+From:   Song Liu <song@kernel.org>
+Date:   Wed, 5 Jan 2022 10:55:22 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7i2NxkOTBdtzeXXXGRGWkmDAUswudBBmo80oZmgorG5w@mail.gmail.com>
+Message-ID: <CAPhsuW7i2NxkOTBdtzeXXXGRGWkmDAUswudBBmo80oZmgorG5w@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] lib/raid6: skip benchmark of non-chosen
+ xor_syndrome functions
+To:     =?UTF-8?B?RGlyayBNw7xsbGVy?= <dmueller@suse.de>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Bear in mind raid superblock v0.9 is deprecated as in "if it breaks it 
-won't be fixed for you".
+On Wed, Jan 5, 2022 at 8:39 AM Dirk M=C3=BCller <dmueller@suse.de> wrote:
+>
+> In commit fe5cbc6e06c7 ("md/raid6 algorithms: delta syndrome functions")
+> a xor_syndrome() benchmarking was added also to the raid6_choose_gen()
+> function. However, the results of that benchmarking were intentionally
+> discarded and did not influence the choice. It picked the
+> xor_syndrome() variant related to the best performing gen_syndrome().
+>
+> Reduce runtime of raid6_choose_gen() without modifying its outcome by
+> only benchmarking the xor_syndrome() of the best gen_syndrome() variant.
+>
+> For a HZ=3D250 x86_64 system with avx2 and without avx512 this removes
+> 5 out of 6 xor() benchmarks, saving 340ms of raid6 initialization time.
+>
+> Signed-off-by: Dirk M=C3=BCller <dmueller@suse.de>
 
-So I would skip this test, and if you're mentioning raid in the 
-handbook, tell people they need to use one of the v1.x formats.
+Applied both patches to md-next.
 
-(NB - you can always point them at the linux raid wiki.)
-
-Cheers,
-Wol
-
-On 05/01/2022 17:12, Randy Dunlap wrote:
-> Hi.
-> [adding linux-raid mailing list]
-> 
-> 
-> On 1/4/22 10:55, Bruce Dubbs wrote:
->> I am trying to document the mdadm-4.2 installation procedures for our book,
->> https://www.linuxfromscratch.org/blfs/view/svn/postlfs/mdadm.html
->>
->> For testing, I am doing a simple:
->>
->>    make
->>    sudo ./test --keep-going --logdir=test-logs --save-logs
->>
->> But I get failures for about half the tests.
->>
->> Digging in a bit I just ran:
->>
->>   sudo ./test --tests=00raid0 --logdir=test-logs
->>
->> This is the first test that fails.  With some hacking, it appears that the first portion of this test that fails is:
->>
->>    mdadm -CR $md0 -e0.90 -l0 -n4 $dev0 $dev1 $dev2 $dev3
->>
->> This resolves to
->>
->>    mdadm -CR /dev/md0 -e0.90 -l0 -n4 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
->>
->> There is not a lot of error output in the test, so I manually ran:
->>
->>    dd if=/dev/zero of=/tmp/mdtest0 count=20000 bs=1K
->>    losetup /dev/loop0 /tmp/mdtest0
->>
->> For /dev/loop[0123]
->>
->> Then I ran
->>
->>    mdadm -CR /dev/md0 -e0.90 -l0 -n4 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
->>    mdadm: 0.90 metadata does not support layouts for RAID0
->>
->> My question is whether the regression tests in the tarball are valid for mdadm-4.2?
->>
->>    -- Bruce Dubbs
->>       linuxfromscratch.org
->>
->> Note: The kernel is version 5.15.12.
-> 
-
+Thanks,
+Song
