@@ -2,87 +2,154 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0BF0C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  6 Jan 2022 01:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2086C433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  6 Jan 2022 08:12:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344455AbiAFBxa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 5 Jan 2022 20:53:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:41012 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344450AbiAFBx0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 5 Jan 2022 20:53:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1641434004;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1Ee1p4G6J2sTk360ohjIYz8xlGjZ1bAejMNeaSvxDPA=;
-        b=T21/X/ldHMis25FQc734Wh7z9faFIJ4mAAcku4kr4evmfxLpI8bJirSUaUFpnOGQ0Odnat
-        FHZtG9s9fF8ibP+QteBvfPEklrIE5XlZPUaGrLFY75tsD1Vcr3A+UoElLhf2D9SvzQbXS6
-        OoU45d/SqY/Aofp7GsbEqUP7I5Gxkis=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-298-cRrJwFydM5G7kVo5KQkZTg-1; Wed, 05 Jan 2022 20:53:23 -0500
-X-MC-Unique: cRrJwFydM5G7kVo5KQkZTg-1
-Received: by mail-ed1-f72.google.com with SMTP id i5-20020a05640242c500b003f84839a8c3so769187edc.6
-        for <linux-raid@vger.kernel.org>; Wed, 05 Jan 2022 17:53:22 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=1Ee1p4G6J2sTk360ohjIYz8xlGjZ1bAejMNeaSvxDPA=;
-        b=c+V4rPb9ERpCRlFPJ8wNAOtzQhUk/taBt6pzECosFJw3ekUTzWI64W2x3R8z3htkVW
-         f4Nb5AjvJVQtGEAi3EUl7F2xwoKQGjrohtmJ32hAXIEe8KQ0+HDo0krmsaHVzVp6jwnb
-         UglnIvusLOJJG0GSDe5vo21vxcmwafyWue2pre0uoD1XTwE7i6ZHzSCg/Y/8O+wZAV89
-         YuIgwTi6bwUDWcnyMEgFxRDNQw1IElQYw5yB0PVP6HoNmiPXvjteJgUXKljM0AOXLXXE
-         pyK/qxHXMLwwqDHWfcDE1raOIgmMK+IB48T03Fo9jZsN1mHbepn8xp4cE50zEbNe0IuC
-         9X3A==
-X-Gm-Message-State: AOAM5333qzGk5jd2ejVxGti/PhKZYZJCr1iEkNy2AgHNjHDPfvdL4P1C
-        KIu1vxpnAfDdS7AhRg0S3CISfNzP0GwHHPoPGNEbJWQbr/XRdXdSRByClstqFcJI8mxBIlbWVkM
-        KatNX1jS14TIXKukyt7r9HREZql55XOBJOhc9fQ==
-X-Received: by 2002:aa7:cada:: with SMTP id l26mr56481687edt.376.1641434001875;
-        Wed, 05 Jan 2022 17:53:21 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzbe7JUjmuKYSG6Dvo3WyszYfDHgH3CFpzJvDnZyC5eVxzpkV9YOLQVI4oy2VUpj7TCXZKHMgoZKBzmjkbZ0yI=
-X-Received: by 2002:aa7:cada:: with SMTP id l26mr56481679edt.376.1641434001751;
- Wed, 05 Jan 2022 17:53:21 -0800 (PST)
-MIME-Version: 1.0
-References: <20211210093116.7847-1-xni@redhat.com> <6bb93ce0-30e0-ff3b-9457-470496f7b1bc@redhat.com>
- <CAPhsuW4wmHMyG-DjR+SO5rweU70iqm903z9X3Pkxhpb8GzHFzg@mail.gmail.com>
-In-Reply-To: <CAPhsuW4wmHMyG-DjR+SO5rweU70iqm903z9X3Pkxhpb8GzHFzg@mail.gmail.com>
-From:   Xiao Ni <xni@redhat.com>
-Date:   Thu, 6 Jan 2022 09:53:11 +0800
-Message-ID: <CALTww2-SF0juRYMvrkrexDOox5DzfuUM+TjsHA6dYxqzGGPUow@mail.gmail.com>
-Subject: Re: [PATCH 0/2] md: it panice after reshape from raid1 to raid5
+        id S236423AbiAFIMN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 Jan 2022 03:12:13 -0500
+Received: from mga09.intel.com ([134.134.136.24]:19414 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236348AbiAFIMM (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 6 Jan 2022 03:12:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1641456732; x=1672992732;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=fZ1KVvR5IVISH3jepAYgROhI/6uFGAJ1izvHxLH2B4k=;
+  b=bdN1ji//v69VcXtcBzUeTilZA449Amejd3Mdlb1EbJDENm7CSWKGnO1N
+   Y5p9FHH7rxSw/Egae1WbQwdeSO0wgJc1NWhtGRre1M4mP1zO8iZsdE/sP
+   D52Zrpb80dDyJDUDxt5Ltbf1Ixd9YXdMM5P3Vuvl1Ww8+sjkrr4ng06i0
+   wjXZartq0jtR2V5fFZk4gHs0jhPyVjZJEGnvg8o0fgjkUu0m9oLpAt2+D
+   v8oeyrKoiBMx4WAY4exyuS/oZufZfjZI2ONPpQPIUMpiPtmC1CqNcr1tS
+   3mIJK/3aokdgwz4/7LSKWuRLIpvJiZHFj6kXGTPQUAztadXz3KebnihkM
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10217"; a="242411369"
+X-IronPort-AV: E=Sophos;i="5.88,266,1635231600"; 
+   d="scan'208";a="242411369"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2022 00:12:12 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,266,1635231600"; 
+   d="scan'208";a="526894330"
+Received: from lkp-server01.sh.intel.com (HELO e357b3ef1427) ([10.239.97.150])
+  by fmsmga007.fm.intel.com with ESMTP; 06 Jan 2022 00:12:10 -0800
+Received: from kbuild by e357b3ef1427 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1n5NsX-000HUd-Se; Thu, 06 Jan 2022 08:12:09 +0000
+Date:   Thu, 06 Jan 2022 16:11:48 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Song Liu <song@kernel.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Nigel Croxon <ncroxon@redhat.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 8612bcac0b8db175ebc88fae40bab8c9d4b195dc
+Message-ID: <61d6a444.AzqT4JW1Rc6mqoWz%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Jan 6, 2022 at 2:59 AM Song Liu <song@kernel.org> wrote:
->
-> On Tue, Jan 4, 2022 at 3:30 PM Xiao Ni <xni@redhat.com> wrote:
-> >
-> > Hi Song
-> >
-> > Ping. Do I still change something else?
->
-> I merged the two patches into one, rewrote the commit log, added
-> Guoqing's Acked-by, and applied it to md-next.
->
-> For future patches, please write the commit log according to the
-> guidance in Documentation/process/submitting-patches.rst.
->
-> Thanks,
-> Song
->
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 8612bcac0b8db175ebc88fae40bab8c9d4b195dc  md: Move alloc/free acct bioset in to personality
 
-Thanks. I'll read this doc and follow the instructions.
+elapsed time: 727m
 
-Regards
-Xiao
+configs tested: 83
+configs skipped: 3
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+i386                 randconfig-c001-20220105
+sh                          r7785rp_defconfig
+sh                            titan_defconfig
+powerpc                      tqm8xx_defconfig
+h8300                     edosk2674_defconfig
+m68k                          amiga_defconfig
+arm                          iop32x_defconfig
+powerpc                      makalu_defconfig
+mips                           gcw0_defconfig
+openrisc                         alldefconfig
+arm                          pxa910_defconfig
+powerpc                    sam440ep_defconfig
+arm                         assabet_defconfig
+arm                  randconfig-c002-20220105
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a003-20220105
+i386                 randconfig-a005-20220105
+i386                 randconfig-a004-20220105
+i386                 randconfig-a006-20220105
+i386                 randconfig-a002-20220105
+i386                 randconfig-a001-20220105
+x86_64               randconfig-a005-20220105
+x86_64               randconfig-a001-20220105
+x86_64               randconfig-a004-20220105
+x86_64               randconfig-a006-20220105
+x86_64               randconfig-a003-20220105
+x86_64               randconfig-a002-20220105
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allmodconfig
+riscv                          rv32_defconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+x86_64                          rhel-8.3-func
+
+clang tested configs:
+hexagon              randconfig-r041-20220105
+hexagon              randconfig-r045-20220105
+riscv                randconfig-r042-20220105
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
