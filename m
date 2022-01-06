@@ -2,80 +2,72 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 280BCC433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  6 Jan 2022 10:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B627CC433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  6 Jan 2022 18:42:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237734AbiAFKDn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 Jan 2022 05:03:43 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:38630 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237526AbiAFKDj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jan 2022 05:03:39 -0500
+        id S242948AbiAFSmc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 Jan 2022 13:42:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58526 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242731AbiAFSmb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jan 2022 13:42:31 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DEA1C061245;
+        Thu,  6 Jan 2022 10:42:31 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6439D61671;
-        Thu,  6 Jan 2022 10:03:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C3F6C36AE5;
-        Thu,  6 Jan 2022 10:03:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1641463418;
-        bh=KFWyjx1BkuXLv8yzjWsH/m2TYNLsl9IwdLd6y1DXRKU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ddwopC1Fw6i5MX4RXUlhcY6Qy4GfNYTgzBmFzMfOjms372m13ZudIRxAx34roSZ1Q
-         xlsDs+why3iBIdF7IQ5sqP0v0idmQw8/f8SUCrBLw3tZn6YPHbhIc8pbEzwlajbmHo
-         7Q9Uycd9FSBrKiJdiYTj05KvpHhTLoS04oxvh5DI=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
-Subject: [PATCH] md: use default_groups in kobj_type
-Date:   Thu,  6 Jan 2022 11:03:35 +0100
-Message-Id: <20220106100335.3279066-1-gregkh@linuxfoundation.org>
-X-Mailer: git-send-email 2.34.1
+        by ams.source.kernel.org (Postfix) with ESMTPS id 54AEBB8216A;
+        Thu,  6 Jan 2022 18:42:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 114CEC36AED;
+        Thu,  6 Jan 2022 18:42:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641494549;
+        bh=AVM78RmfE8vDgH0zl071K/ipXbzcVJGsoaOCqdXNCqo=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=QQscDcxbMC/Z6pvcQ71mmVVKHz8+GqYGvHRGPROefMCWJMZfIOizODzskTjGNvuN8
+         nqna3rg/U51cAcIvFJ7rz8ouB+NUt4bxrnsU4dpMVX4gQEdO+cOj35jGNJyKCkjI4I
+         TQEutsC3lZPwj+Obt5kH1pYth62nX2uwkx+8G1vFwncFgp8qF0h9XuxCBo7l/+dFNU
+         HgLpJMFEWq+3IqLXKONX3U/OF/ZJaD2xzFwt24DKhZfLQtn2JvRxuikdZ7DTH24Dky
+         1SFpUP0J+e6PqHxUMgQ6T30qeJSQ8wTdIeBno/NmVrNXsg88kOELAIigrF1opcTwqZ
+         b5dY/vkKIGldw==
+Received: by mail-yb1-f178.google.com with SMTP id v186so694455ybg.1;
+        Thu, 06 Jan 2022 10:42:29 -0800 (PST)
+X-Gm-Message-State: AOAM530FFQfovabRxITXSqRy78WbgKphVJo74nvqtJiaUqq8veQclbWn
+        EjjdNDigLG4AE1P3t7CwStPmlR1KDvrjB4pVCFc=
+X-Google-Smtp-Source: ABdhPJxIpVyBxrDVktngcmRTfy3nlYGwvJuvTWxisNja+rcM7E97susiKeHKn4hCn0BWd0NBLQqVVU7quZsWoBzQ9Vc=
+X-Received: by 2002:a25:8e10:: with SMTP id p16mr66036062ybl.219.1641494548170;
+ Thu, 06 Jan 2022 10:42:28 -0800 (PST)
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1288; h=from:subject; bh=KFWyjx1BkuXLv8yzjWsH/m2TYNLsl9IwdLd6y1DXRKU=; b=owGbwMvMwCRo6H6F97bub03G02pJDInX9pU7Ju3Y/ZIxW+7OOo8SmW05cz8nxG7SV/aYnfSHY53i RM9/HbEsDIJMDLJiiixftvEc3V9xSNHL0PY0zBxWJpAhDFycAjCRQ2sZFsx9IKXy9vWVl813f1T0XJ v0aJXjsTsMCxqvqG9tOVin/0cxbcexr1ZLvj+92QsA
-X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
-Content-Transfer-Encoding: 8bit
+References: <20220106100335.3279066-1-gregkh@linuxfoundation.org>
+In-Reply-To: <20220106100335.3279066-1-gregkh@linuxfoundation.org>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 6 Jan 2022 10:42:17 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5hmLiMtW+U02kSQ3tcnhFQSAuG7=D8pwWM1JLWhvaWSw@mail.gmail.com>
+Message-ID: <CAPhsuW5hmLiMtW+U02kSQ3tcnhFQSAuG7=D8pwWM1JLWhvaWSw@mail.gmail.com>
+Subject: Re: [PATCH] md: use default_groups in kobj_type
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-There are currently 2 ways to create a set of sysfs files for a
-kobj_type, through the default_attrs field, and the default_groups
-field.  Move the md rdev sysfs code to use default_groups field which
-has been the preferred way since aa30f47cf666 ("kobject: Add support for
-default attribute groups to kobj_type") so that we can soon get rid of
-the obsolete default_attrs field.
+On Thu, Jan 6, 2022 at 2:03 AM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> There are currently 2 ways to create a set of sysfs files for a
+> kobj_type, through the default_attrs field, and the default_groups
+> field.  Move the md rdev sysfs code to use default_groups field which
+> has been the preferred way since aa30f47cf666 ("kobject: Add support for
+> default attribute groups to kobj_type") so that we can soon get rid of
+> the obsolete default_attrs field.
+>
+> Cc: Song Liu <song@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Cc: Song Liu <song@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/md/md.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Applied to md-next. Thanks!
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5111ed966947..7642f3fb38e6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3602,6 +3602,7 @@ static struct attribute *rdev_default_attrs[] = {
- 	&rdev_ppl_size.attr,
- 	NULL,
- };
-+ATTRIBUTE_GROUPS(rdev_default);
- static ssize_t
- rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
- {
-@@ -3651,7 +3652,7 @@ static const struct sysfs_ops rdev_sysfs_ops = {
- static struct kobj_type rdev_ktype = {
- 	.release	= rdev_free,
- 	.sysfs_ops	= &rdev_sysfs_ops,
--	.default_attrs	= rdev_default_attrs,
-+	.default_groups	= rdev_default_groups,
- };
- 
- int md_rdev_init(struct md_rdev *rdev)
--- 
-2.34.1
-
+Song
