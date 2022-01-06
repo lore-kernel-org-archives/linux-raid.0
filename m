@@ -2,154 +2,80 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2086C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  6 Jan 2022 08:12:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 280BCC433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  6 Jan 2022 10:03:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236423AbiAFIMN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 6 Jan 2022 03:12:13 -0500
-Received: from mga09.intel.com ([134.134.136.24]:19414 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236348AbiAFIMM (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 6 Jan 2022 03:12:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1641456732; x=1672992732;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=fZ1KVvR5IVISH3jepAYgROhI/6uFGAJ1izvHxLH2B4k=;
-  b=bdN1ji//v69VcXtcBzUeTilZA449Amejd3Mdlb1EbJDENm7CSWKGnO1N
-   Y5p9FHH7rxSw/Egae1WbQwdeSO0wgJc1NWhtGRre1M4mP1zO8iZsdE/sP
-   D52Zrpb80dDyJDUDxt5Ltbf1Ixd9YXdMM5P3Vuvl1Ww8+sjkrr4ng06i0
-   wjXZartq0jtR2V5fFZk4gHs0jhPyVjZJEGnvg8o0fgjkUu0m9oLpAt2+D
-   v8oeyrKoiBMx4WAY4exyuS/oZufZfjZI2ONPpQPIUMpiPtmC1CqNcr1tS
-   3mIJK/3aokdgwz4/7LSKWuRLIpvJiZHFj6kXGTPQUAztadXz3KebnihkM
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10217"; a="242411369"
-X-IronPort-AV: E=Sophos;i="5.88,266,1635231600"; 
-   d="scan'208";a="242411369"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2022 00:12:12 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,266,1635231600"; 
-   d="scan'208";a="526894330"
-Received: from lkp-server01.sh.intel.com (HELO e357b3ef1427) ([10.239.97.150])
-  by fmsmga007.fm.intel.com with ESMTP; 06 Jan 2022 00:12:10 -0800
-Received: from kbuild by e357b3ef1427 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1n5NsX-000HUd-Se; Thu, 06 Jan 2022 08:12:09 +0000
-Date:   Thu, 06 Jan 2022 16:11:48 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 8612bcac0b8db175ebc88fae40bab8c9d4b195dc
-Message-ID: <61d6a444.AzqT4JW1Rc6mqoWz%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S237734AbiAFKDn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 6 Jan 2022 05:03:43 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:38630 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237526AbiAFKDj (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 6 Jan 2022 05:03:39 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6439D61671;
+        Thu,  6 Jan 2022 10:03:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C3F6C36AE5;
+        Thu,  6 Jan 2022 10:03:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1641463418;
+        bh=KFWyjx1BkuXLv8yzjWsH/m2TYNLsl9IwdLd6y1DXRKU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ddwopC1Fw6i5MX4RXUlhcY6Qy4GfNYTgzBmFzMfOjms372m13ZudIRxAx34roSZ1Q
+         xlsDs+why3iBIdF7IQ5sqP0v0idmQw8/f8SUCrBLw3tZn6YPHbhIc8pbEzwlajbmHo
+         7Q9Uycd9FSBrKiJdiYTj05KvpHhTLoS04oxvh5DI=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Song Liu <song@kernel.org>, linux-raid@vger.kernel.org
+Subject: [PATCH] md: use default_groups in kobj_type
+Date:   Thu,  6 Jan 2022 11:03:35 +0100
+Message-Id: <20220106100335.3279066-1-gregkh@linuxfoundation.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1288; h=from:subject; bh=KFWyjx1BkuXLv8yzjWsH/m2TYNLsl9IwdLd6y1DXRKU=; b=owGbwMvMwCRo6H6F97bub03G02pJDInX9pU7Ju3Y/ZIxW+7OOo8SmW05cz8nxG7SV/aYnfSHY53i RM9/HbEsDIJMDLJiiixftvEc3V9xSNHL0PY0zBxWJpAhDFycAjCRQ2sZFsx9IKXy9vWVl813f1T0XJ v0aJXjsTsMCxqvqG9tOVin/0cxbcexr1ZLvj+92QsA
+X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 8612bcac0b8db175ebc88fae40bab8c9d4b195dc  md: Move alloc/free acct bioset in to personality
+There are currently 2 ways to create a set of sysfs files for a
+kobj_type, through the default_attrs field, and the default_groups
+field.  Move the md rdev sysfs code to use default_groups field which
+has been the preferred way since aa30f47cf666 ("kobject: Add support for
+default attribute groups to kobj_type") so that we can soon get rid of
+the obsolete default_attrs field.
 
-elapsed time: 727m
-
-configs tested: 83
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20220105
-sh                          r7785rp_defconfig
-sh                            titan_defconfig
-powerpc                      tqm8xx_defconfig
-h8300                     edosk2674_defconfig
-m68k                          amiga_defconfig
-arm                          iop32x_defconfig
-powerpc                      makalu_defconfig
-mips                           gcw0_defconfig
-openrisc                         alldefconfig
-arm                          pxa910_defconfig
-powerpc                    sam440ep_defconfig
-arm                         assabet_defconfig
-arm                  randconfig-c002-20220105
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a003-20220105
-i386                 randconfig-a005-20220105
-i386                 randconfig-a004-20220105
-i386                 randconfig-a006-20220105
-i386                 randconfig-a002-20220105
-i386                 randconfig-a001-20220105
-x86_64               randconfig-a005-20220105
-x86_64               randconfig-a001-20220105
-x86_64               randconfig-a004-20220105
-x86_64               randconfig-a006-20220105
-x86_64               randconfig-a003-20220105
-x86_64               randconfig-a002-20220105
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-riscv                          rv32_defconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                          rhel-8.3-func
-
-clang tested configs:
-hexagon              randconfig-r041-20220105
-hexagon              randconfig-r045-20220105
-riscv                randconfig-r042-20220105
-
+Cc: Song Liu <song@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5111ed966947..7642f3fb38e6 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3602,6 +3602,7 @@ static struct attribute *rdev_default_attrs[] = {
+ 	&rdev_ppl_size.attr,
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(rdev_default);
+ static ssize_t
+ rdev_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+ {
+@@ -3651,7 +3652,7 @@ static const struct sysfs_ops rdev_sysfs_ops = {
+ static struct kobj_type rdev_ktype = {
+ 	.release	= rdev_free,
+ 	.sysfs_ops	= &rdev_sysfs_ops,
+-	.default_attrs	= rdev_default_attrs,
++	.default_groups	= rdev_default_groups,
+ };
+ 
+ int md_rdev_init(struct md_rdev *rdev)
+-- 
+2.34.1
+
