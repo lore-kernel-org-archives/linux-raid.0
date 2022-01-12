@@ -2,210 +2,298 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C047C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 11 Jan 2022 20:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C136C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Jan 2022 01:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244397AbiAKUtG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 11 Jan 2022 15:49:06 -0500
-Received: from USAT19PA25.eemsg.mail.mil ([214.24.22.199]:15208 "EHLO
-        USAT19PA25.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244133AbiAKUtG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Jan 2022 15:49:06 -0500
-X-Greylist: delayed 430 seconds by postgrey-1.27 at vger.kernel.org; Tue, 11 Jan 2022 15:49:06 EST
+        id S1347749AbiALBaZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 11 Jan 2022 20:30:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41582 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235678AbiALBaY (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Jan 2022 20:30:24 -0500
+Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B15C06173F
+        for <linux-raid@vger.kernel.org>; Tue, 11 Jan 2022 17:30:24 -0800 (PST)
+Received: by mail-qt1-x832.google.com with SMTP id i8so1419225qtw.0
+        for <linux-raid@vger.kernel.org>; Tue, 11 Jan 2022 17:30:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1641934146; x=1673470146;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=FwqARLqtIPvCYhJZ4CIQwvTYBxt1KBtSu9LVPa0r9v4=;
-  b=GqRrn6QbPRrt3/ZK/HhDWh4et8wc4LORBjOIqiISKs+m+fH9q6Lh8GTH
-   hugFqT4uKCwQRxWsvXdV3oOBWPWn1HVHrUCkl0q/ZW6KmklwZd1asYhpz
-   MHB7UniH0pHqXLLPPcvCI9wIDEpLxtcHL6huLp/K/2Ch2Z1ChESiKso+6
-   Xk5O7t/rRIzmzi++753FVInyU9DtNjP/waAR4Zh5isOUQthw7QX2L5aPs
-   1RM6TpqtzYpu1fGOb/Z3ZbqYnK0k8d49mlZKE/Gicc6xpbLETDiPxOL2J
-   j8NBn6p73VOadQExc5wkNvQwq9LumAWg4sV7uuIsdqnqwmoTgffdLUADX
-   Q==;
-X-EEMSG-check-017: 290919507|USAT19PA25_ESA_OUT06.csd.disa.mil
-X-IronPort-AV: E=Sophos;i="5.88,279,1635206400"; 
-   d="scan'208";a="290919507"
-IronPort-Data: A9a23:jwmq16myASBPvfe2LDNgghbo5gxlJERdPkR7XQ2eYbSJt1+Wr1Gzt
- xJJWWzXOfmNN2T3eth3bd+w8koOu8ODyNdjQQVsrX8yEy4T+ZvOCOrCIxarNUt+DCFioGGLT
- Sk6QoOdRCwMZiaH4E/rbtANlFEkvU2ybuKU5NXsZ2YhFWeIdA970Ug5w7dg29Yy6TSEK1vlV
- e3a8pW31GCNhmYc3lI8s8pvmTs31BjAkGpwUm8WPJiniGTje0w9V/rzE00Rw0zQGeG4FsbiL
- wrKISrQEmnxp3/BAfv9+lr3n9Fjf1LcAeSOoiI+t6mKjxRNq2k33607bKBabE5Wj3OMntQZJ
- Ndl78XsD11wePSXwKJHCEEw/yJWZMWq/JfFKH2yqoqWiUPHdX/l0u5pCh1wNowG0uN+AGUI8
- P0cQNwIRkrS37Pvke/jFYGAgexmdqEHJrg3vnBm0CGcF/8nTbjdTKjQo9xVxjE9goZJB/m2T
- 9IZaD5udDzcfgdKN1NRD4gx9NpELFGXnyZwpV6aqO8y7mPTlFY31bHsNJzQe9jieCmcpW7Az
- kquwogzKkhDaoL3Jeatmp50utLyoA==
-IronPort-HdrOrdr: A9a23:gk0QFqwvyN5fW3bNutRTKrPwRb1zdoMgy1knxilNoHtuHPBw9v
- rAoB1573PJYVQqMk3I8OroUJVoKkmwyXca2+IsAYs=
-Received: from edge-mech02.mail.mil ([214.21.130.230])
-  by USAT19PA25.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 11 Jan 2022 20:39:10 +0000
-Received: from UMECHPAOT.easf.csd.disa.mil (214.21.130.163) by
- edge-mech02.mail.mil (214.21.130.230) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Tue, 11 Jan 2022 20:38:21 +0000
-Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.86]) by
- umechpaot.easf.csd.disa.mil ([1.213.132.165]) with mapi id 14.03.0513.000;
- Tue, 11 Jan 2022 20:38:21 +0000
-From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-To:     'Phil Turmel' <philip@turmel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Subject: RE: [Non-DoD Source] Re: MDRAID NVMe performance question, but I
- don't know what I don't know
-Thread-Topic: [Non-DoD Source] Re: MDRAID NVMe performance question, but I
- don't know what I don't know
-Thread-Index: AQHYByqyM005L7eI/ECLeuHdfvYby6xeR+hg
-Date:   Tue, 11 Jan 2022 20:38:20 +0000
-Message-ID: <5EAED86C53DED2479E3E145969315A238926CACA@UMECHPA7B.easf.csd.disa.mil>
-References: <5EAED86C53DED2479E3E145969315A238926397D@UMECHPA7B.easf.csd.disa.mil>
- <6941b93a-0e83-1e47-2769-f60785d4b41a@turmel.org>
-In-Reply-To: <6941b93a-0e83-1e47-2769-f60785d4b41a@turmel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [214.21.44.14]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=C+/xj3MBnk9YSHtDJqKFpDc95g3vgX3HnxmPZ5bpAZ8=;
+        b=fZz4NH4bxBRlIagjQF+hDq4F0XDsOYeRB9oqO0e1a2XgjpMCXO/FG02IaNPBDrqpei
+         K5Ua8dzDqyGDa5eQDAIe4WJgzm51u61UkQaF24rnJgDYvAVBIT1B8Vdg2VashDDMlYc1
+         1BTQ5lqSMGPV9NqouPkEmwvb9E2AaM4R1IA17tPWOaEa2+bI/gTS01VRaYuGVQBXvdTh
+         He+4umwtezEWoFHPVMdsJ2dOqkbqH1HoVjG+jZg+JSRxnOFKZ9BLCp5XjdzgyVI81hZ+
+         LdROlDq5YTGr0mvxZZUgx8s3PgJy3cZJZFizo4UtIA6YkxPOa8ZxuTX06UAkXwp8n2HI
+         n32Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=C+/xj3MBnk9YSHtDJqKFpDc95g3vgX3HnxmPZ5bpAZ8=;
+        b=IonBc+3e+gLOT/738IjEa8n++oX838ukoB+ovoNG5edqhl5GxbImoxOoLvsZZE89Xf
+         ryGwBXJ9my0u3aM4OYCbIUsf7ufIRPoP3LkOu2U9Uvd19wSfAIuiV/Oc1mbgpJFMxUR8
+         v1djCt/qNrDI2/71QG9e0nsqr6XjrxIhmDFdLIaI5ByxhKvFU82LPj+kDkHfWKYAsvoB
+         RiYLrJa47bIDDY1r2e9iszzB0/jpNItIuFC9fxM3WIlWXGtigcqOivUIMDnY5QRAUWYF
+         uNU4C50HzUNJxA0ZbLQE0rUSJnQepC8YmOoofg+Zalx4e8qw8rxaqp5fbeuNBV/bNjyo
+         fykg==
+X-Gm-Message-State: AOAM5333a/GvCRO/AMUlJV4OvyXtnT8r7Yith0FvxRtknETKhDVC+Pbr
+        t/sm2Dk0wiaS/RqN8DqA+Aw4WAs7h0Svnp0khgGHEkhivdQ=
+X-Google-Smtp-Source: ABdhPJz9OTDO393rWdsGFHmIHQ2vPn3zh7KjeEhGwUFklf2MG8ANRQqfyY6ixK/8QrbkaX6nqDT/pRiMb2mx6vooyDk=
+X-Received: by 2002:ac8:7e81:: with SMTP id w1mr6010197qtj.628.1641951023310;
+ Tue, 11 Jan 2022 17:30:23 -0800 (PST)
 MIME-Version: 1.0
+References: <CAPx-8MP0+C9M9ysigF-gfaUBE8nv7nzbm4HO06yC_z5i3U3D=Q@mail.gmail.com>
+ <20220110104733.00001048@linux.intel.com>
+In-Reply-To: <20220110104733.00001048@linux.intel.com>
+From:   Aidan Walton <aidan.walton@gmail.com>
+Date:   Wed, 12 Jan 2022 02:29:47 +0100
+Message-ID: <CAPx-8MNa97Aokgz8RzfiGEPXFLpzbGduNV9hUOYdGXRmfxSg3g@mail.gmail.com>
+Subject: Re: md device remains active even when all supporting disks have
+ failed and been disabled by the kernel.
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-W3Jvb3RAaG9ybmV0MDQgfl0jIGxzdG9wbyAtdiB8IGVncmVwIC1pICdudW1hfHBjaXxicmlkZ2Un
-DQogICAgTlVNQU5vZGUgTCMwIChQIzAgbG9jYWw9MjYzODczNDA0S0IgdG90YWw9MjYzODczNDA0
-S0IpDQogICAgSG9zdEJyaWRnZSBMIzAgKGJ1c2VzPTAwMDA6WzAwLTA2XSkNCiAgICAgIFBDSUJy
-aWRnZSBMIzEgKGJ1c2lkPTAwMDA6MDA6MDEuMyBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lC
-cmlkZ2UpIGxpbms9Ny44OEdCL3MgYnVzZXM9MDAwMDpbMDMtMDNdKQ0KICAgICAgICBQQ0kgTCMw
-IChidXNpZD0wMDAwOjAzOjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5r
-PTcuODhHQi9zIFBDSVNsb3Q9MTUpDQogICAgICBQQ0lCcmlkZ2UgTCMyIChidXNpZD0wMDAwOjAw
-OjAxLjQgaWQ9MTAyMjoxNDgzIGNsYXNzPTA2MDQoUENJQnJpZGdlKSBsaW5rPTcuODhHQi9zIGJ1
-c2VzPTAwMDA6WzA0LTA0XSkNCiAgICAgICAgUENJIEwjMSAoYnVzaWQ9MDAwMDowNDowMC4wIGlk
-PTE0NGQ6YTgyNCBjbGFzcz0wMTA4KE5WTUV4cCkgbGluaz03Ljg4R0IvcyBQQ0lTbG90PTE2KQ0K
-ICAgICAgUENJQnJpZGdlIEwjMyAoYnVzaWQ9MDAwMDowMDowMS41IGlkPTEwMjI6MTQ4MyBjbGFz
-cz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOlswNS0wNV0pDQogICAg
-ICAgIFBDSSBMIzIgKGJ1c2lkPTAwMDA6MDU6MDAuMCBpZD0xNDRkOmE4MjQgY2xhc3M9MDEwOChO
-Vk1FeHApIGxpbms9Ny44OEdCL3MgUENJU2xvdD0xNykNCiAgICAgIFBDSUJyaWRnZSBMIzQgKGJ1
-c2lkPTAwMDA6MDA6MDEuNiBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9
-Ny44OEdCL3MgYnVzZXM9MDAwMDpbMDYtMDZdKQ0KICAgICAgICBQQ0kgTCMzIChidXNpZD0wMDAw
-OjA2OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBD
-SVNsb3Q9MTgpDQogICAgSG9zdEJyaWRnZSBMIzUgKGJ1c2VzPTAwMDA6WzIwLTI3XSkNCiAgICAg
-IFBDSUJyaWRnZSBMIzYgKGJ1c2lkPTAwMDA6MjA6MDEuMSBpZD0xMDIyOjE0ODMgY2xhc3M9MDYw
-NChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdCL3MgYnVzZXM9MDAwMDpbMjMtMjNdKQ0KICAgICAgICBQ
-Q0kgTCM0IChidXNpZD0wMDAwOjIzOjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhw
-KSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9NykNCiAgICAgIFBDSUJyaWRnZSBMIzcgKGJ1c2lkPTAw
-MDA6MjA6MDEuMiBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdC
-L3MgYnVzZXM9MDAwMDpbMjQtMjRdKQ0KICAgICAgICBQQ0kgTCM1IChidXNpZD0wMDAwOjI0OjAw
-LjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9
-OC0xKQ0KICAgICAgUENJQnJpZGdlIEwjOCAoYnVzaWQ9MDAwMDoyMDowMS4zIGlkPTEwMjI6MTQ4
-MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOlsyNS0yNV0p
-DQogICAgICAgIFBDSSBMIzYgKGJ1c2lkPTAwMDA6MjU6MDAuMCBpZD0xNDRkOmE4MjQgY2xhc3M9
-MDEwOChOVk1FeHApIGxpbms9Ny44OEdCL3MgUENJU2xvdD05KQ0KICAgICAgUENJQnJpZGdlIEwj
-OSAoYnVzaWQ9MDAwMDoyMDowMS40IGlkPTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkg
-bGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOlsyNi0yNl0pDQogICAgICAgIFBDSSBMIzcgKGJ1c2lk
-PTAwMDA6MjY6MDAuMCBpZD0xNDRkOmE4MjQgY2xhc3M9MDEwOChOVk1FeHApIGxpbms9Ny44OEdC
-L3MgUENJU2xvdD0xMC0xKQ0KICAgICAgUENJQnJpZGdlIEwjMTAgKGJ1c2lkPTAwMDA6MjA6MDMu
-MSBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9MTUuNzVHQi9zIGJ1c2Vz
-PTAwMDA6WzI3LTI3XSkNCiAgICAgICAgUENJIEwjOCAoYnVzaWQ9MDAwMDoyNzowMC4wIGlkPTE1
-YjM6MTAxNyBjbGFzcz0wMjAwKEV0aGVybmV0KSBsaW5rPTE1Ljc1R0IvcyBQQ0lTbG90PTEpDQog
-ICAgICAgIFBDSSBMIzkgKGJ1c2lkPTAwMDA6Mjc6MDAuMSBpZD0xNWIzOjEwMTcgY2xhc3M9MDIw
-MChFdGhlcm5ldCkgbGluaz0xNS43NUdCL3MgUENJU2xvdD0xKQ0KICAgIEhvc3RCcmlkZ2UgTCMx
-MSAoYnVzZXM9MDAwMDpbNDAtNDVdKQ0KICAgICAgUENJQnJpZGdlIEwjMTIgKGJ1c2lkPTAwMDA6
-NDA6MDEuMSBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdCL3Mg
-YnVzZXM9MDAwMDpbNDMtNDNdKQ0KICAgICAgICBQQ0kgTCMxMCAoYnVzaWQ9MDAwMDo0MzowMC4w
-IGlkPTE0NGQ6YTgyNCBjbGFzcz0wMTA4KE5WTUV4cCkgbGluaz03Ljg4R0IvcyBQQ0lTbG90PTMp
-DQogICAgICBQQ0lCcmlkZ2UgTCMxMyAoYnVzaWQ9MDAwMDo0MDowMS4yIGlkPTEwMjI6MTQ4MyBj
-bGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOls0NC00NF0pDQog
-ICAgICAgIFBDSSBMIzExIChidXNpZD0wMDAwOjQ0OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAx
-MDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9NCkNCiAgICAgIFBDSUJyaWRnZSBMIzE0
-IChidXNpZD0wMDAwOjQwOjAxLjMgaWQ9MTAyMjoxNDgzIGNsYXNzPTA2MDQoUENJQnJpZGdlKSBs
-aW5rPTcuODhHQi9zIGJ1c2VzPTAwMDA6WzQ1LTQ1XSkNCiAgICAgICAgUENJIEwjMTIgKGJ1c2lk
-PTAwMDA6NDU6MDAuMCBpZD0xNWIzOjEwMTcgY2xhc3M9MDIwMChFdGhlcm5ldCkgbGluaz03Ljg4
-R0IvcyBQQ0lTbG90PTEwKQ0KICAgICAgICBQQ0kgTCMxMyAoYnVzaWQ9MDAwMDo0NTowMC4xIGlk
-PTE1YjM6MTAxNyBjbGFzcz0wMjAwKEV0aGVybmV0KSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MTAp
-DQogICAgSG9zdEJyaWRnZSBMIzE1IChidXNlcz0wMDAwOls2MC02NV0pDQogICAgICBQQ0lCcmlk
-Z2UgTCMxNiAoYnVzaWQ9MDAwMDo2MDowMy4yIGlkPTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJy
-aWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOls2NC02NF0pDQogICAgICAgIFBDSSBMIzE0
-IChidXNpZD0wMDAwOjY0OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5r
-PTcuODhHQi9zIFBDSVNsb3Q9MS0xKQ0KICAgICAgUENJQnJpZGdlIEwjMTcgKGJ1c2lkPTAwMDA6
-NjA6MDMuMyBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdCL3Mg
-YnVzZXM9MDAwMDpbNjUtNjVdKQ0KICAgICAgICBQQ0kgTCMxNSAoYnVzaWQ9MDAwMDo2NTowMC4w
-IGlkPTE0NGQ6YTgyNCBjbGFzcz0wMTA4KE5WTUV4cCkgbGluaz03Ljg4R0IvcyBQQ0lTbG90PTIp
-DQogICAgICBQQ0lCcmlkZ2UgTCMxOCAoYnVzaWQ9MDAwMDo2MDowNS4yIGlkPTEwMjI6MTQ4MyBj
-bGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz0wLjUwR0IvcyBidXNlcz0wMDAwOls2MS02MV0pDQog
-ICAgICAgIFBDSSBMIzE2IChidXNpZD0wMDAwOjYxOjAwLjEgaWQ9MTAyYjowNTM4IGNsYXNzPTAz
-MDAoVkdBKSBsaW5rPTAuNTBHQi9zKQ0KICAgIE5VTUFOb2RlIEwjMSAoUCMxIGxvY2FsPTI2NDE2
-NTI4MEtCIHRvdGFsPTI2NDE2NTI4MEtCKQ0KICAgIEhvc3RCcmlkZ2UgTCMxOSAoYnVzZXM9MDAw
-MDpbYTAtYTZdKQ0KICAgICAgUENJQnJpZGdlIEwjMjAgKGJ1c2lkPTAwMDA6YTA6MDMuMyBpZD0x
-MDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdCL3MgYnVzZXM9MDAwMDpb
-YTMtYTNdKQ0KICAgICAgICBQQ0kgTCMxNyAoYnVzaWQ9MDAwMDphMzowMC4wIGlkPTE0NGQ6YTgy
-NCBjbGFzcz0wMTA4KE5WTUV4cCkgbGluaz03Ljg4R0IvcyBQQ0lTbG90PTMxKQ0KICAgICAgUENJ
-QnJpZGdlIEwjMjEgKGJ1c2lkPTAwMDA6YTA6MDMuNCBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQ
-Q0lCcmlkZ2UpIGxpbms9Ny44OEdCL3MgYnVzZXM9MDAwMDpbYTQtYTRdKQ0KICAgICAgICBQQ0kg
-TCMxOCAoYnVzaWQ9MDAwMDphNDowMC4wIGlkPTE0NGQ6YTgyNCBjbGFzcz0wMTA4KE5WTUV4cCkg
-bGluaz03Ljg4R0IvcyBQQ0lTbG90PTMyKQ0KICAgICAgUENJQnJpZGdlIEwjMjIgKGJ1c2lkPTAw
-MDA6YTA6MDMuNSBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdC
-L3MgYnVzZXM9MDAwMDpbYTUtYTVdKQ0KICAgICAgICBQQ0kgTCMxOSAoYnVzaWQ9MDAwMDphNTow
-MC4wIGlkPTE0NGQ6YTgyNCBjbGFzcz0wMTA4KE5WTUV4cCkgbGluaz03Ljg4R0IvcyBQQ0lTbG90
-PTMzKQ0KICAgICAgUENJQnJpZGdlIEwjMjMgKGJ1c2lkPTAwMDA6YTA6MDMuNiBpZD0xMDIyOjE0
-ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9Ny44OEdCL3MgYnVzZXM9MDAwMDpbYTYtYTZd
-KQ0KICAgICAgICBQQ0kgTCMyMCAoYnVzaWQ9MDAwMDphNjowMC4wIGlkPTE0NGQ6YTgyNCBjbGFz
-cz0wMTA4KE5WTUV4cCkgbGluaz03Ljg4R0IvcyBQQ0lTbG90PTM0KQ0KICAgIEhvc3RCcmlkZ2Ug
-TCMyNCAoYnVzZXM9MDAwMDpbYzAtYzhdKQ0KICAgICAgUENJQnJpZGdlIEwjMjUgKGJ1c2lkPTAw
-MDA6YzA6MDEuMSBpZD0xMDIyOjE0ODMgY2xhc3M9MDYwNChQQ0lCcmlkZ2UpIGxpbms9My45NEdC
-L3MgYnVzZXM9MDAwMDpbYzMtYzNdKQ0KICAgICAgICBQQ0kgTCMyMSAoYnVzaWQ9MDAwMDpjMzow
-MC4wIGlkPTFiNGI6MjI0MSBjbGFzcz0wMTA4KE5WTUV4cCkgbGluaz0zLjk0R0IvcyBQQ0lTbG90
-PTgpDQogICAgICBQQ0lCcmlkZ2UgTCMyNiAoYnVzaWQ9MDAwMDpjMDowMy4xIGlkPTEwMjI6MTQ4
-MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOltjNS1jNV0p
-DQogICAgICAgIFBDSSBMIzIyIChidXNpZD0wMDAwOmM1OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNz
-PTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MjMpDQogICAgICBQQ0lCcmlkZ2Ug
-TCMyNyAoYnVzaWQ9MDAwMDpjMDowMy4yIGlkPTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJyaWRn
-ZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOltjNi1jNl0pDQogICAgICAgIFBDSSBMIzIzIChi
-dXNpZD0wMDAwOmM2OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcu
-ODhHQi9zIFBDSVNsb3Q9MjQpDQogICAgICBQQ0lCcmlkZ2UgTCMyOCAoYnVzaWQ9MDAwMDpjMDow
-My4zIGlkPTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNl
-cz0wMDAwOltjNy1jN10pDQogICAgICAgIFBDSSBMIzI0IChidXNpZD0wMDAwOmM3OjAwLjAgaWQ9
-MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MjUpDQog
-ICAgICBQQ0lCcmlkZ2UgTCMyOSAoYnVzaWQ9MDAwMDpjMDowMy40IGlkPTEwMjI6MTQ4MyBjbGFz
-cz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOltjOC1jOF0pDQogICAg
-ICAgIFBDSSBMIzI1IChidXNpZD0wMDAwOmM4OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgo
-TlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MjYpDQogICAgSG9zdEJyaWRnZSBMIzMwIChi
-dXNlcz0wMDAwOltlMC1lNl0pDQogICAgICBQQ0lCcmlkZ2UgTCMzMSAoYnVzaWQ9MDAwMDplMDow
-My4xIGlkPTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNl
-cz0wMDAwOltlNS1lNV0pDQogICAgICAgIFBDSSBMIzI2IChidXNpZD0wMDAwOmU1OjAwLjAgaWQ9
-MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MjEpDQog
-ICAgICBQQ0lCcmlkZ2UgTCMzMiAoYnVzaWQ9MDAwMDplMDowMy4yIGlkPTEwMjI6MTQ4MyBjbGFz
-cz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAwOltlNi1lNl0pDQogICAg
-ICAgIFBDSSBMIzI3IChidXNpZD0wMDAwOmU2OjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgo
-TlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MjIpDQogICAgICBQQ0lCcmlkZ2UgTCMzMyAo
-YnVzaWQ9MDAwMDplMDowMy4zIGlkPTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkgbGlu
-az03Ljg4R0IvcyBidXNlcz0wMDAwOltlMy1lM10pDQogICAgICAgIFBDSSBMIzI4IChidXNpZD0w
-MDAwOmUzOjAwLjAgaWQ9MTQ0ZDphODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9z
-IFBDSVNsb3Q9MTkpDQogICAgICBQQ0lCcmlkZ2UgTCMzNCAoYnVzaWQ9MDAwMDplMDowMy40IGlk
-PTEwMjI6MTQ4MyBjbGFzcz0wNjA0KFBDSUJyaWRnZSkgbGluaz03Ljg4R0IvcyBidXNlcz0wMDAw
-OltlNC1lNF0pDQogICAgICAgIFBDSSBMIzI5IChidXNpZD0wMDAwOmU0OjAwLjAgaWQ9MTQ0ZDph
-ODI0IGNsYXNzPTAxMDgoTlZNRXhwKSBsaW5rPTcuODhHQi9zIFBDSVNsb3Q9MjApDQoNCi0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBQaGlsIFR1cm1lbCA8cGhpbGlwQHR1cm1lbC5v
-cmc+IA0KU2VudDogVHVlc2RheSwgSmFudWFyeSAxMSwgMjAyMiAzOjM1IFBNDQpUbzogRmlubGF5
-c29uLCBKYW1lcyBNIENJViAoVVNBKSA8amFtZXMubS5maW5sYXlzb240LmNpdkBtYWlsLm1pbD47
-IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBbTm9uLURvRCBTb3VyY2VdIFJl
-OiBNRFJBSUQgTlZNZSBwZXJmb3JtYW5jZSBxdWVzdGlvbiwgYnV0IEkgZG9uJ3Qga25vdyB3aGF0
-IEkgZG9uJ3Qga25vdw0KDQpIaSBKYW1lcywNCg0KT24gMS8xMS8yMiAxMTowMyBBTSwgRmlubGF5
-c29uLCBKYW1lcyBNIENJViAoVVNBKSB3cm90ZToNCj4gSGksDQo+IFNvcnJ5IHRoaXMgaXMgYSBs
-b25nIHJlYWQuICAgSWYgeW91IHdhbnQgdG8gZ2V0IHRvIHRoZSBnaXN0IG9mIGl0LCBsb29rIGZv
-ciAiPEtFWT4iIGZvciBrZXkgcG9pbnRzLiAgIEknbSBoYXZpbmcgc29tZSBpc3N1ZXMgd2l0aCB3
-aGVyZSB0byBmaW5kIGluZm9ybWF0aW9uIHRvIHRyb3VibGVzaG9vdCBtZHJhaWQgcGVyZm9ybWFu
-Y2UgaXNzdWVzLiAgIFRoZSBsYXRlc3QgInJhdGhvbGUiIEknbSBnb2luZyBkb3duIGlzIHRoYXQg
-SSBoYXZlIHR3byBpZGVudGljYWxseSBjb25maWd1cmVkIG1kcmFpZHMsIDEgcGVyIE5VTUEgbm9k
-ZSBvbiBhIGR1YWwgc29ja2V0IEFNRCBSb21lIHdpdGggIm51bWFzIHBlciBzb2NrZXQiIHNldCB0
-byAxIGluIHRoZSBCSU9TLiAgIFRoaW5ncyBhcmUgY3Jhbmtpbmcgd2l0aCBhIDY0SyBibG9ja3Np
-emUgYnV0IEkgaGF2ZSBhIHN1YnN0YW50aWFsIGRpc3Bhcml0eSBiZXR3ZWVuIE5VTUEwJ3MgbWRy
-YWlkIGFuZCBOVU1BMSdzLg0KDQpbdHJpbSAvXQ0KDQpJcyB0aGVyZSBhbnkgY2hhbmNlIHlvdXIg
-TlZNZSBkZXZpY2VzIGFyZSBpbnN0YWxsZWQgYXN5bW1ldHJpY2FsbHkgb24geW91ciBQQ0llIGJ1
-cyhzZXMpID8NCg0KdHJ5Og0KDQojIGxzcGNpIC10dg0KDQpNaWdodCBiZSBpbGx1bWluYXRpbmcu
-ICBJbiBteSBvZmZpY2Ugc2VydmVyLCB0aGUgUENJZSBzbG90cyBhcmUgcm91dGVkIHRocm91Z2gg
-b25lIG9mIHRoZSB0d28gc29ja2V0cy4gIFRoZSBzbG90cyByb3V0ZWQgdGhyb3VnaCBzb2NrZXQg
-MSBzaW1wbHkgZG9uJ3Qgd29yayB3aGVuIHRoZSBzZWNvbmQgcHJvY2Vzc29yIGlzIG5vdCBpbnN0
-YWxsZWQuICBEZXZpY2VzIGluIGEgc29ja2V0IDAgc2xvdCBoYXZlIHRvIHJvdXRlIHRocm91Z2gg
-dGhhdCBDUFUgd2hlbiB0aGUgb3RoZXIgQ1BVIHRhbGtzIHRvIHRoZW0sIGFuZCB2aWNlIHZlcnNh
-Lg0KDQpQaGlsDQo=
+Hi Mariusz,
+In my case, the fact that mdraid does not show a 'total failure' is
+not the root of the problem. However in my opinion I would say that
+not having mdraid more accurately reflect the state of the underlying
+hardware can be mis-leading. Initially when I looked at this issue, I
+was convinced that only one disk had failed and I was scratching my
+head about firstly why I still could not R/W the array while it
+appeared to have an active member. Secondly, when I rebooted I noticed
+that the array became instantly synchronised with both members active.
+This was not what I expected, as normally an array that has had a
+single failed disk would require a ra-add and resync.  Then when the
+problem re-occured I noticed that it was not the same disk that was
+flagged faulty, next reboot; the faulty disk flipped back the other
+way... and so on. This was what prompted me to look closer at the
+kernel. Here I found my answer at the SATA controller. Therefore
+although mdraids design approach did not cause me any data loss, it
+did have me looking in the wrong direction for the fault, assuming a
+disk problem.
+
+I have still not been able to successfully --stop the array. I think
+the issue sits in the LVM domain. Although I can not be 100% sure.
+What I have achieved is some level of understanding that some process
+that starts a boot time is in some unknown manner holding a lock on
+the mdarid  - devmapper - LVM combination. I have unmounted the file
+system, but LVM refuses to let go of the logical volume. Therefore so
+does dev-mapper and of course mdraid. I have systematically stopped or
+killed almost every single running process on the system, taking it
+back to a skeleton, with not much more than init running, it still
+refuses to let go.
+
+However, when I prevent auto-mounting of the raid array at boot, and
+then manually assemble the raid array, LVM finds its meta data, builds
+the VG and LV and mounts. If I then manually force the exact same SATA
+controller failure, which results in the exact same mdraid behaviour,
+I am then able to unmount the filesystem and ...... hey presto
+deactivate the LVM LV. Which then allows me to --stop the mdraid. Just
+as I want. Again it does not solve my SATA hardware issues, but being
+at this point does give me options to restart the hardware etc, and
+probably, though very messily, get the filesystem up again without a
+reboot. The problem being I can not achieve this behaviour without
+manually assembling the array after boot. If you have any idea what
+could possibly be holding this lock I would be glad to hear.
+
+At this point I'm going to have to try and systematically step through
+the boot process and try re-arranging, when the array gets assembled.
+My first attempts at this have been to <ignore> the raid array in
+mdadm.conf and comment the array out of /etc/fstab. In this way mdraid
+inside initramfs does not auto-assemble and LVM does not auto scan for
+the VG. Once I am in the real boot sequence, I have created a systemd
+mount unit that I can pull in from other systemd units, to change the
+point in the boot process when the array is assembled. In this way
+hopefully I can influence when other services are interacting with the
+array in some way and perhaps find the root cause ......   Work in
+progress..but slowly as the fault occurs only very occasionally and I
+still need a working server.
+All the best.. Aidan
+
+On Mon, 10 Jan 2022 at 10:47, Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> On Fri, 7 Jan 2022 23:30:31 +0100
+> Aidan Walton <aidan.walton@gmail.com> wrote:
+>
+> > Hi,
+> > I have a system running:
+> > Ubuntu Server 20.04.3 LTS on a 5.4.0-92-generic kernel.
+> >
+> > On the motherboard is a:
+> > SATA controller: JMicron Technology Corp. JMB363 SATA/IDE Controller
+> > (rev 02)
+> >
+> > Connected to this I have:
+> > 2x Western Digital - WDC WD5001AALS-00L3B2, BIOS :01.03B01 500Gb
+> > drives
+> >
+> > Each drive has a single partition and is part of a RAID1 array:
+> > /dev/md90:
+> > .....
+> >     Number   Major   Minor   RaidDevice State
+> >        0       8       33        0      active sync   /dev/sdc1
+> >        2       8       49        1      active sync   /dev/sdd1
+> >
+> > On top of this I have a single LVM VG and LV. (Probably not important)
+> >
+> > I have noticed some strange behaviour and upon investigation I find
+> > the md device in the following state:
+> > /dev/md90:
+> > ....
+> >
+> >     Number   Major   Minor   RaidDevice State
+> >        0       8       33        0      active sync   /dev/sdc1
+> >        -       0        0        1      removed
+> >
+> >        2       8       49        -      faulty   /dev/sdd1
+> >
+> >
+> > In fact neither /dev/sdc1 or /dev/sdd1 are available. In fact neither
+> > are /dev/sdc or /dev/sdd, the physical drives, as they both been
+> > disconnected by the kernel:
+> > /dev/sdc is attached to ata7:00  and  /dev/sdd is attached to ata.8:00
+> > This is the log of the kernel events:
+> >
+> >
+> > Jan 07 22:09:03 mx kernel: ata7.00: exception Emask 0x32 SAct 0x0 SErr
+> > 0x0 action 0xe frozen
+> > Jan 07 22:09:03 mx kernel: ata7.00: irq_stat 0xffffffff, unknown FIS
+> > 00000000 00000000 00000000 00000000, host bus
+> > Jan 07 22:09:03 mx kernel: ata7.00: failed command: READ DMA
+> > Jan 07 22:09:03 mx kernel: ata7.00: cmd
+> > c8/00:00:00:cf:26/00:00:00:00:00/e0 tag 18 dma 131072 in
+> > Jan 07 22:09:03 mx kernel: ata7.00: status: { DRDY }
+> > Jan 07 22:09:03 mx kernel: ata7: hard resetting link
+> > Jan 07 22:09:03 mx kernel: ata7: SATA link up 1.5 Gbps (SStatus 113
+> > SControl 310)
+> > Jan 07 22:09:09 mx kernel: ata7.00: qc timeout (cmd 0xec)
+> > Jan 07 22:09:09 mx kernel: ata7.00: failed to IDENTIFY (I/O error,
+> > err_mask=0x4) Jan 07 22:09:09 mx kernel: ata7.00: revalidation failed
+> > (errno=-5) Jan 07 22:09:09 mx kernel: ata7: hard resetting link
+> > Jan 07 22:09:19 mx kernel: ata7: softreset failed (1st FIS failed)
+> > Jan 07 22:09:19 mx kernel: ata7: hard resetting link
+> > Jan 07 22:09:29 mx kernel: ata7: softreset failed (1st FIS failed)
+> > Jan 07 22:09:29 mx kernel: ata7: hard resetting link
+> > Jan 07 22:09:35 mx kernel: ata8.00: exception Emask 0x40 SAct 0x0 SErr
+> > 0x800 action 0x6 frozen
+> > Jan 07 22:09:35 mx kernel: ata8: SError: { HostInt }
+> > Jan 07 22:09:35 mx kernel: ata8.00: failed command: READ DMA
+> > Jan 07 22:09:35 mx kernel: ata8.00: cmd
+> > c8/00:00:00:64:4a/00:00:00:00:00/e0 tag 2 dma 131072 in
+> > Jan 07 22:09:35 mx kernel: ata8.00: status: { DRDY }
+> > Jan 07 22:09:35 mx kernel: ata8: hard resetting link
+> > Jan 07 22:09:45 mx kernel: ata8: softreset failed (1st FIS failed)
+> > Jan 07 22:09:45 mx kernel: ata8: hard resetting link
+> > Jan 07 22:09:55 mx kernel: ata8: softreset failed (1st FIS failed)
+> > Jan 07 22:09:55 mx kernel: ata8: hard resetting link
+> > Jan 07 22:10:04 mx kernel: ata7: softreset failed (1st FIS failed)
+> > Jan 07 22:10:04 mx kernel: ata7: hard resetting link
+> > Jan 07 22:10:09 mx kernel: ata7: softreset failed (1st FIS failed)
+> > Jan 07 22:10:09 mx kernel: ata7: reset failed, giving up
+> > Jan 07 22:10:09 mx kernel: ata7.00: disabled
+> > Jan 07 22:10:09 mx kernel: ata7: EH complete
+> > Jan 07 22:10:30 mx kernel: ata8: softreset failed (1st FIS failed)
+> > Jan 07 22:10:30 mx kernel: ata8: hard resetting link
+> > Jan 07 22:10:35 mx kernel: ata8: softreset failed (1st FIS failed)
+> > Jan 07 22:10:35 mx kernel: ata8: reset failed, giving up
+> > Jan 07 22:10:35 mx kernel: ata8.00: disabled
+> > Jan 07 22:10:35 mx kernel: ata8: EH complete
+> >
+> > This is happening because of some issue with the SATA controller on
+> > the motherboard. This has not been resolved and probably never will
+> > be, I see many others through google search complaining of similar
+> > issues with the SATA controller.
+> > This failure only occurs when the SATA controller is placed under very
+> > heavy load, I have minimised the impact of the problem by not using
+> > NCQ, this helps, but it still occurs. Ironically the biggest issue I
+> > have is that mdadm "checkarray" is running because of a systemd
+> > background process every week or so, and this hammers the disk into
+> > failure. Most of the normal daily usage never generates the link
+> > resets.
+> > Naturally I have changed SATA cables and moved drives around onto
+> > different controllers, but alas, it does seem to be the hardware on
+> > the motherboard.
+> > However as a workaround I was hoping to accept the occasional failure
+> > and then using some scripting and 'setpci' I can get the kernel to
+> > hard reset the chipset and attach the drives again. I have the process
+> > working in terms of getting the kernel to re-attach the drives,
+> > but.......
+> >
+> > Unfortunately mdraid will not let go of them, I can not stop the
+> > arrays, and therefore can't rebuild them. If I simply allow the kernel
+> > to re-attach the drives the kernel names are swapped over, as
+> > something (mdraid) is stopping the kernel re-using the same device
+> > names. Anyway being dependent on the same kernel device names is not a
+> > great plan anyway, so I was simply trying to get mdadm to reassemble
+> > the array as soon as the 'workaround' script gets the drives back in
+> > contact with libata (kernel).
+> >
+> > Plan:
+> > 1. Detecting the problem. (mdadm state)
+> > 2. Stop the array totally (can NOT do it)
+> > 3. reset the chipset across the PCI bus.
+> > 4. allow kernel to re-attach drives.
+> > 5. re-assemble the md device with mdadm
+> > 6. restart, if necessary higher layer services...
+> >
+> > So why is mdraid holding on to the array:
+> >
+> > # mdadm --stop /dev/md90
+> > mdadm: Cannot get exclusive access to /dev/md90:Perhaps a running
+> > process, mounted filesystem or active volume group?
+> >
+> > I can not be 100% sure that something else is using the device, but I
+> > can't think of anything that is and I stopped every process I can
+> > think of..... Plus why is the array still shown as 'active' when none
+> > of its member devices even exist anymore?
+> >
+> > What I do know is that device mapper (coming down from LVM)  still has
+> > an entry in /dev/mapper. But then probably no surprise as /dev/md90
+> > the failed array is still an active device node. If you attempt to
+> > write to it, I receive I/O errors from the kernel. In fact as far as
+> > any higher layer services are concerned md90 and the LVM LV on top of
+> > it are still active and working when in reality, they are not. It
+> > causes very strange NFS errors and such.
+> >
+> > mdraid does actually attempt to iteratively remove both partitions
+> > when the kernel signals the disable state, but only 1 of them
+> > succeeds.
+> > I did an strace of the same iterative 'fail:remove' process that
+> > mdraid attempts when the kernel issues -- kernel: ata7.00: disabled
+> >
+> > eg:
+> > /sbin/mdadm -If sdc1 --path pci-0000:02:00.0-ata-1
+> > mdadm: set device faulty failed for sdc1:  Device or resource busy
+> >
+> > The only clue is perhaps this line from the strace:
+> > openat(AT_FDCWD, "/sys/block/md90/md/dev-sdc1/block/dev", O_RDWR) = -1
+> > EACCES (Permission denied)    What is the mdadm command doing that
+> > results in a permission problem?
+> >
+> > So the only way I can get rid of this md raid array is a reboot.
+> > Damn!!!
+> >
+> >
+> > Any help is much appreciated.
+> > Aidan
+> >
+> >
+> >
+> Hi Aidan,
+> This is how it is implemented. Drive is not removed if array failure
+> will cause array failed. Please see:
+> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=9a567843f7ce0037bfd4d5fdc58a09d0a527b28b
+>
+> For RAID1 you can use solution proposed in patch below but IMO it is
+> not your problem. Please stop LVM and then try to stop array. To stop
+> array it needs to be "free" (all upper handlers are down).
+>
+> Thanks,
+> Mariusz
