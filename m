@@ -2,298 +2,214 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C136C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 12 Jan 2022 01:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 735BDC4332F
+	for <linux-raid@archiver.kernel.org>; Wed, 12 Jan 2022 17:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347749AbiALBaZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 11 Jan 2022 20:30:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41582 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235678AbiALBaY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 11 Jan 2022 20:30:24 -0500
-Received: from mail-qt1-x832.google.com (mail-qt1-x832.google.com [IPv6:2607:f8b0:4864:20::832])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B15C06173F
-        for <linux-raid@vger.kernel.org>; Tue, 11 Jan 2022 17:30:24 -0800 (PST)
-Received: by mail-qt1-x832.google.com with SMTP id i8so1419225qtw.0
-        for <linux-raid@vger.kernel.org>; Tue, 11 Jan 2022 17:30:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=C+/xj3MBnk9YSHtDJqKFpDc95g3vgX3HnxmPZ5bpAZ8=;
-        b=fZz4NH4bxBRlIagjQF+hDq4F0XDsOYeRB9oqO0e1a2XgjpMCXO/FG02IaNPBDrqpei
-         K5Ua8dzDqyGDa5eQDAIe4WJgzm51u61UkQaF24rnJgDYvAVBIT1B8Vdg2VashDDMlYc1
-         1BTQ5lqSMGPV9NqouPkEmwvb9E2AaM4R1IA17tPWOaEa2+bI/gTS01VRaYuGVQBXvdTh
-         He+4umwtezEWoFHPVMdsJ2dOqkbqH1HoVjG+jZg+JSRxnOFKZ9BLCp5XjdzgyVI81hZ+
-         LdROlDq5YTGr0mvxZZUgx8s3PgJy3cZJZFizo4UtIA6YkxPOa8ZxuTX06UAkXwp8n2HI
-         n32Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=C+/xj3MBnk9YSHtDJqKFpDc95g3vgX3HnxmPZ5bpAZ8=;
-        b=IonBc+3e+gLOT/738IjEa8n++oX838ukoB+ovoNG5edqhl5GxbImoxOoLvsZZE89Xf
-         ryGwBXJ9my0u3aM4OYCbIUsf7ufIRPoP3LkOu2U9Uvd19wSfAIuiV/Oc1mbgpJFMxUR8
-         v1djCt/qNrDI2/71QG9e0nsqr6XjrxIhmDFdLIaI5ByxhKvFU82LPj+kDkHfWKYAsvoB
-         RiYLrJa47bIDDY1r2e9iszzB0/jpNItIuFC9fxM3WIlWXGtigcqOivUIMDnY5QRAUWYF
-         uNU4C50HzUNJxA0ZbLQE0rUSJnQepC8YmOoofg+Zalx4e8qw8rxaqp5fbeuNBV/bNjyo
-         fykg==
-X-Gm-Message-State: AOAM5333a/GvCRO/AMUlJV4OvyXtnT8r7Yith0FvxRtknETKhDVC+Pbr
-        t/sm2Dk0wiaS/RqN8DqA+Aw4WAs7h0Svnp0khgGHEkhivdQ=
-X-Google-Smtp-Source: ABdhPJz9OTDO393rWdsGFHmIHQ2vPn3zh7KjeEhGwUFklf2MG8ANRQqfyY6ixK/8QrbkaX6nqDT/pRiMb2mx6vooyDk=
-X-Received: by 2002:ac8:7e81:: with SMTP id w1mr6010197qtj.628.1641951023310;
- Tue, 11 Jan 2022 17:30:23 -0800 (PST)
+        id S1355410AbiALRBq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 12 Jan 2022 12:01:46 -0500
+Received: from mout.web.de ([212.227.15.3]:46721 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1349807AbiALRBp (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 12 Jan 2022 12:01:45 -0500
+X-Greylist: delayed 313 seconds by postgrey-1.27 at vger.kernel.org; Wed, 12 Jan 2022 12:01:44 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1642006904;
+        bh=VpwX7tXhTbrLuzi1YF8Uzmb4A2oBhdUT14fAMPWrFis=;
+        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
+        b=PeskKWovL/ACSiPTBh401vUzji0my+TACRDRioT7OKxnbJRg38vK9L8VFKIJbqPcI
+         KXjyohg8wbSuXw6mRJ/2iQZJDVi6V7V1HeWGMM4MpinLd1V/Nl02zr+lUveXqI73dF
+         dKp91ZyAl1wVDk5yZVzUixu1s0L2gub2JgC+352M=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from gecko ([46.223.151.70]) by smtp.web.de (mrweb006
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1M91Pe-1n1fJI3tgc-006XPY; Wed, 12
+ Jan 2022 17:56:15 +0100
+Date:   Wed, 12 Jan 2022 16:56:12 +0000
+From:   Lukas Straub <lukasstraub2@web.de>
+To:     Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc:     David Woodhouse <dwmw2@infradead.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        linux-raid@vger.kernel.org
+Subject: Re: [dm-devel] Proper way to test RAID456?
+Message-ID: <20220112155351.5b670d81@gecko>
+In-Reply-To: <24998019-960c-0808-78df-72e0d08c904e@gmx.com>
+References: <0535d6c3-dec3-fb49-3707-709e8d26b538@gmx.com>
+        <20220108195259.33e9bdf0@gecko>
+        <20220108202922.6b00de19@gecko>
+        <5ffc44f1-7e82-bc85-fbb1-a4f89711ae8f@gmx.com>
+        <e209bfe191442846f66d790321f2db672edfb8ca.camel@infradead.org>
+        <24998019-960c-0808-78df-72e0d08c904e@gmx.com>
 MIME-Version: 1.0
-References: <CAPx-8MP0+C9M9ysigF-gfaUBE8nv7nzbm4HO06yC_z5i3U3D=Q@mail.gmail.com>
- <20220110104733.00001048@linux.intel.com>
-In-Reply-To: <20220110104733.00001048@linux.intel.com>
-From:   Aidan Walton <aidan.walton@gmail.com>
-Date:   Wed, 12 Jan 2022 02:29:47 +0100
-Message-ID: <CAPx-8MNa97Aokgz8RzfiGEPXFLpzbGduNV9hUOYdGXRmfxSg3g@mail.gmail.com>
-Subject: Re: md device remains active even when all supporting disks have
- failed and been disabled by the kernel.
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; boundary="Sig_/trK2B+bQZg4U+J+J8zLUK/8";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+X-Provags-ID: V03:K1:heywFokXSb224cpwvQrsi2v/LXbEHOE0r74vVZ0tAW61GPjbn6c
+ eDdc9ppwND/oggCfxDn5DN/mNAEMOVaVO4sSRcD5N3Lu0QPeZ0mcwnxvixwiuMB9gADj3xX
+ dVwYWnfBfnpweGh1YlYWJL76eTBrK6kgl6tA9RTyCdIlzfqKoVwEtzccIk2kpvTVW8uMHiR
+ nbXSeKAdNKk+mM7NioWjQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:HoFGdC2jWiw=:IO49La0OrTdQ2Ah/QSu86R
+ PInkEFYz0f7sLMKmILByyxEbjUOcCQgktOoaHafjY777p5GLH7bbCdB8Jz7611+wkdnpBRu7r
+ uOsURFWjr4Uv/Va3/HJqSR2CzbbVn/T4mQUwGUfZe+gJF9uOHT1FEj2hL8swfEpA2hKBagFFG
+ ahOztmFrt5u5vJ+7cSOi66FDfXwg9xr7L+ocsKIuXF/gA0XBzD4/9jsCrEtjlIhgfw4L/JcVT
+ E6XNq63820FwJ/iQvuDpBIH7/1f5WVZBonMyexMx7FEDeE98Q1hfz+DbMiFXMUDMajCB3yAgX
+ aRhDNXsrCu0seOZLJYeQNzhjJ7q3MmVx/71Ur8SzphSEKAm/Yp1bCE4Nqcyx19SZxUSSgJfso
+ MeWdPL9FHR+oRO8iNFcc6YA9p52dilbL6s7ycJbAr7RwVpXs/EZaD/3CZMIuKKFcwtkb8w+gA
+ DfKTiGgkSf7PndQWkSk260pTzE9gj6L9HpgoS74v5hXd27wuXTQxjM6UiAjcl0ujB3+TUni3e
+ cTO0EOcBYgpy85HayzEQMcnWDbP7A+Wia9gkjREnmEwhjLeBkWENf83z1uOo2AiX7V+pwgwv1
+ qMOLIOomVl+0Tr+FpBW+X4pFXqkvS+TEpeRgKny27cY00YaWBhLoiNXnIKAEidd/qA5WQbIJ5
+ alM8JfrfHK4cmMBtX+E/zwqH/HYaOtP58bwh8pjyNfJOjgqe0ym3ej6CcfCMHP3ci1YhzhmbL
+ sIMjcCUlLCD5ILBna9NQElbEAfcSACWI/bkz+g4kAehupxO6RM+2C6Msg7t0l/uclPPw6+wS+
+ d7OHze5YbfgRLNDHLyxYbl3cwM6zLgWj0i4pdXXSiinBcnh+JNndgXR4TR/Mcg6BqEcQJDJ+U
+ O3x24kK3e9PlhPSxSuHspAc1qoSqghi86xAX8NCS2y95PAceQbjOv01dZDBQCijS/L3xo8aTt
+ sdhGSC2NrB4ibyEf6PEKhxNZINhJX4JlFi9/VgOcnhsbyNjXw99oAo5wq99zxF50iolzY2bzw
+ U4/2Xn2bc4Sb9HdUEj8iOqHOx0g8+IWNXuvX7S3ZnfQbINbYU8F07rFS+GO+YZOtVaEBSZg1W
+ 4GFIFl2Xg7/rdQ=
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Mariusz,
-In my case, the fact that mdraid does not show a 'total failure' is
-not the root of the problem. However in my opinion I would say that
-not having mdraid more accurately reflect the state of the underlying
-hardware can be mis-leading. Initially when I looked at this issue, I
-was convinced that only one disk had failed and I was scratching my
-head about firstly why I still could not R/W the array while it
-appeared to have an active member. Secondly, when I rebooted I noticed
-that the array became instantly synchronised with both members active.
-This was not what I expected, as normally an array that has had a
-single failed disk would require a ra-add and resync.  Then when the
-problem re-occured I noticed that it was not the same disk that was
-flagged faulty, next reboot; the faulty disk flipped back the other
-way... and so on. This was what prompted me to look closer at the
-kernel. Here I found my answer at the SATA controller. Therefore
-although mdraids design approach did not cause me any data loss, it
-did have me looking in the wrong direction for the fault, assuming a
-disk problem.
+--Sig_/trK2B+bQZg4U+J+J8zLUK/8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I have still not been able to successfully --stop the array. I think
-the issue sits in the LVM domain. Although I can not be 100% sure.
-What I have achieved is some level of understanding that some process
-that starts a boot time is in some unknown manner holding a lock on
-the mdarid  - devmapper - LVM combination. I have unmounted the file
-system, but LVM refuses to let go of the logical volume. Therefore so
-does dev-mapper and of course mdraid. I have systematically stopped or
-killed almost every single running process on the system, taking it
-back to a skeleton, with not much more than init running, it still
-refuses to let go.
+On Sun, 9 Jan 2022 20:13:36 +0800
+Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
 
-However, when I prevent auto-mounting of the raid array at boot, and
-then manually assemble the raid array, LVM finds its meta data, builds
-the VG and LV and mounts. If I then manually force the exact same SATA
-controller failure, which results in the exact same mdraid behaviour,
-I am then able to unmount the filesystem and ...... hey presto
-deactivate the LVM LV. Which then allows me to --stop the mdraid. Just
-as I want. Again it does not solve my SATA hardware issues, but being
-at this point does give me options to restart the hardware etc, and
-probably, though very messily, get the filesystem up again without a
-reboot. The problem being I can not achieve this behaviour without
-manually assembling the array after boot. If you have any idea what
-could possibly be holding this lock I would be glad to hear.
+> On 2022/1/9 18:04, David Woodhouse wrote:
+> > On Sun, 2022-01-09 at 07:55 +0800, Qu Wenruo wrote: =20
+> >> On 2022/1/9 04:29, Lukas Straub wrote: =20
+> >>> But there is a even simpler solution for btrfs: It could just not tou=
+ch
+> >>> stripes that already contain data. =20
+> >>
+> >> That would waste a lot of space, if the fs is fragemented.
+> >>
+> >> Or we have to write into data stripes when free space is low.
+> >>
+> >> That's why I'm trying to implement a PPL-like journal for btrfs RAID56=
+. =20
+> >
+> > PPL writes the P/Q of the unmodified chunks from the stripe, doesn't
+> > it? =20
+>=20
+> Did I miss something or the PPL isn't what I thought?
+>=20
+> I thought PPL either:
+>=20
+> a) Just write a metadata entry into the journal to indicate a full
+>     stripe (along with its location) is going to be written.
+>=20
+> b) Write a metadata entry into the journal about a non-full stripe
+>     write, then write the new data and new P/Q into the journal
+>=20
+> And this is before we start any data/P/Q write.
+>=20
+> And after related data/P/Q write is finished, remove corresponding
+> metadata and data entry from the journal.
+>=20
+> Or PPL have even better solution?
 
-At this point I'm going to have to try and systematically step through
-the boot process and try re-arranging, when the array gets assembled.
-My first attempts at this have been to <ignore> the raid array in
-mdadm.conf and comment the array out of /etc/fstab. In this way mdraid
-inside initramfs does not auto-assemble and LVM does not auto scan for
-the VG. Once I am in the real boot sequence, I have created a systemd
-mount unit that I can pull in from other systemd units, to change the
-point in the boot process when the array is assembled. In this way
-hopefully I can influence when other services are interacting with the
-array in some way and perhaps find the root cause ......   Work in
-progress..but slowly as the fault occurs only very occasionally and I
-still need a working server.
-All the best.. Aidan
+Yes, PPL is a bit better than a journal as you described it (md
+supports both). Because a journal would need to be replicated to
+multiple devices (raid1) in the array while the PPL is only written to
+the drive containing the parity for the particular stripe. And since the
+parity is distributed across all drives, the PPL overhead is also
+distributed across all drives. However, PPL only works for raid5 as
+you'll see.
 
-On Mon, 10 Jan 2022 at 10:47, Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
->
-> On Fri, 7 Jan 2022 23:30:31 +0100
-> Aidan Walton <aidan.walton@gmail.com> wrote:
->
-> > Hi,
-> > I have a system running:
-> > Ubuntu Server 20.04.3 LTS on a 5.4.0-92-generic kernel.
+PPL works like this:
+
+Before any data/parity write either:
+
+ a) Just write a metadata entry into the PPL on the parity drive to
+    indicate a full stripe (along with its location) is going to be
+    written.
+
+ b) Write a metadata entry into the PPL on the parity drive about a
+    non-full stripe write, including which data chunks are going to be
+    modified, then write the XOR of chunks not modified by this write in
+    to the PPL.
+
+To recover a inconsistent array with a lost drive:
+
+In case a), the stripe consists only of newly written data, so it will
+be affected by the write-hole (this is the trade-off that PPL makes) so
+just standard parity recovery.
+
+In case b), XOR what we wrote to the PPL (the XOR of chunks not
+modified) with the modified data chunks to get our new (consistent)
+parity. Then do standard parity recovery. This just works if we lost a
+unmodified data chunk.
+If we lost a modified data chunk this is not possible and just do
+standard parity recovery from the beginning. Again, the newly written
+data is affected by the write-hole but existing data is not.
+If we lost the parity drive (containing the PPL) there is no need to
+recover since all the data chunks are present.
+
+Of course, this was a simplified explanation, see drivers/md/raid5-ppl.c
+for details (it has good comments with examples). This also covers the
+case where a data chunk is only partially modified and the unmodified
+part of the chunk also needs to be protected (by working on a per-block
+basis instead of per-chunk).
+
+The PPL is not possible for raid6 AFAIK, because there it could happen
+that you loose both a modified data chunk and a unmodified data chunk.
+
+Regards,
+Lukas Straub
+
 > >
-> > On the motherboard is a:
-> > SATA controller: JMicron Technology Corp. JMB363 SATA/IDE Controller
-> > (rev 02)
-> >
-> > Connected to this I have:
-> > 2x Western Digital - WDC WD5001AALS-00L3B2, BIOS :01.03B01 500Gb
-> > drives
-> >
-> > Each drive has a single partition and is part of a RAID1 array:
-> > /dev/md90:
-> > .....
-> >     Number   Major   Minor   RaidDevice State
-> >        0       8       33        0      active sync   /dev/sdc1
-> >        2       8       49        1      active sync   /dev/sdd1
-> >
-> > On top of this I have a single LVM VG and LV. (Probably not important)
-> >
-> > I have noticed some strange behaviour and upon investigation I find
-> > the md device in the following state:
-> > /dev/md90:
-> > ....
-> >
-> >     Number   Major   Minor   RaidDevice State
-> >        0       8       33        0      active sync   /dev/sdc1
-> >        -       0        0        1      removed
-> >
-> >        2       8       49        -      faulty   /dev/sdd1
-> >
-> >
-> > In fact neither /dev/sdc1 or /dev/sdd1 are available. In fact neither
-> > are /dev/sdc or /dev/sdd, the physical drives, as they both been
-> > disconnected by the kernel:
-> > /dev/sdc is attached to ata7:00  and  /dev/sdd is attached to ata.8:00
-> > This is the log of the kernel events:
-> >
-> >
-> > Jan 07 22:09:03 mx kernel: ata7.00: exception Emask 0x32 SAct 0x0 SErr
-> > 0x0 action 0xe frozen
-> > Jan 07 22:09:03 mx kernel: ata7.00: irq_stat 0xffffffff, unknown FIS
-> > 00000000 00000000 00000000 00000000, host bus
-> > Jan 07 22:09:03 mx kernel: ata7.00: failed command: READ DMA
-> > Jan 07 22:09:03 mx kernel: ata7.00: cmd
-> > c8/00:00:00:cf:26/00:00:00:00:00/e0 tag 18 dma 131072 in
-> > Jan 07 22:09:03 mx kernel: ata7.00: status: { DRDY }
-> > Jan 07 22:09:03 mx kernel: ata7: hard resetting link
-> > Jan 07 22:09:03 mx kernel: ata7: SATA link up 1.5 Gbps (SStatus 113
-> > SControl 310)
-> > Jan 07 22:09:09 mx kernel: ata7.00: qc timeout (cmd 0xec)
-> > Jan 07 22:09:09 mx kernel: ata7.00: failed to IDENTIFY (I/O error,
-> > err_mask=0x4) Jan 07 22:09:09 mx kernel: ata7.00: revalidation failed
-> > (errno=-5) Jan 07 22:09:09 mx kernel: ata7: hard resetting link
-> > Jan 07 22:09:19 mx kernel: ata7: softreset failed (1st FIS failed)
-> > Jan 07 22:09:19 mx kernel: ata7: hard resetting link
-> > Jan 07 22:09:29 mx kernel: ata7: softreset failed (1st FIS failed)
-> > Jan 07 22:09:29 mx kernel: ata7: hard resetting link
-> > Jan 07 22:09:35 mx kernel: ata8.00: exception Emask 0x40 SAct 0x0 SErr
-> > 0x800 action 0x6 frozen
-> > Jan 07 22:09:35 mx kernel: ata8: SError: { HostInt }
-> > Jan 07 22:09:35 mx kernel: ata8.00: failed command: READ DMA
-> > Jan 07 22:09:35 mx kernel: ata8.00: cmd
-> > c8/00:00:00:64:4a/00:00:00:00:00/e0 tag 2 dma 131072 in
-> > Jan 07 22:09:35 mx kernel: ata8.00: status: { DRDY }
-> > Jan 07 22:09:35 mx kernel: ata8: hard resetting link
-> > Jan 07 22:09:45 mx kernel: ata8: softreset failed (1st FIS failed)
-> > Jan 07 22:09:45 mx kernel: ata8: hard resetting link
-> > Jan 07 22:09:55 mx kernel: ata8: softreset failed (1st FIS failed)
-> > Jan 07 22:09:55 mx kernel: ata8: hard resetting link
-> > Jan 07 22:10:04 mx kernel: ata7: softreset failed (1st FIS failed)
-> > Jan 07 22:10:04 mx kernel: ata7: hard resetting link
-> > Jan 07 22:10:09 mx kernel: ata7: softreset failed (1st FIS failed)
-> > Jan 07 22:10:09 mx kernel: ata7: reset failed, giving up
-> > Jan 07 22:10:09 mx kernel: ata7.00: disabled
-> > Jan 07 22:10:09 mx kernel: ata7: EH complete
-> > Jan 07 22:10:30 mx kernel: ata8: softreset failed (1st FIS failed)
-> > Jan 07 22:10:30 mx kernel: ata8: hard resetting link
-> > Jan 07 22:10:35 mx kernel: ata8: softreset failed (1st FIS failed)
-> > Jan 07 22:10:35 mx kernel: ata8: reset failed, giving up
-> > Jan 07 22:10:35 mx kernel: ata8.00: disabled
-> > Jan 07 22:10:35 mx kernel: ata8: EH complete
-> >
-> > This is happening because of some issue with the SATA controller on
-> > the motherboard. This has not been resolved and probably never will
-> > be, I see many others through google search complaining of similar
-> > issues with the SATA controller.
-> > This failure only occurs when the SATA controller is placed under very
-> > heavy load, I have minimised the impact of the problem by not using
-> > NCQ, this helps, but it still occurs. Ironically the biggest issue I
-> > have is that mdadm "checkarray" is running because of a systemd
-> > background process every week or so, and this hammers the disk into
-> > failure. Most of the normal daily usage never generates the link
-> > resets.
-> > Naturally I have changed SATA cables and moved drives around onto
-> > different controllers, but alas, it does seem to be the hardware on
-> > the motherboard.
-> > However as a workaround I was hoping to accept the occasional failure
-> > and then using some scripting and 'setpci' I can get the kernel to
-> > hard reset the chipset and attach the drives again. I have the process
-> > working in terms of getting the kernel to re-attach the drives,
-> > but.......
-> >
-> > Unfortunately mdraid will not let go of them, I can not stop the
-> > arrays, and therefore can't rebuild them. If I simply allow the kernel
-> > to re-attach the drives the kernel names are swapped over, as
-> > something (mdraid) is stopping the kernel re-using the same device
-> > names. Anyway being dependent on the same kernel device names is not a
-> > great plan anyway, so I was simply trying to get mdadm to reassemble
-> > the array as soon as the 'workaround' script gets the drives back in
-> > contact with libata (kernel).
-> >
-> > Plan:
-> > 1. Detecting the problem. (mdadm state)
-> > 2. Stop the array totally (can NOT do it)
-> > 3. reset the chipset across the PCI bus.
-> > 4. allow kernel to re-attach drives.
-> > 5. re-assemble the md device with mdadm
-> > 6. restart, if necessary higher layer services...
-> >
-> > So why is mdraid holding on to the array:
-> >
-> > # mdadm --stop /dev/md90
-> > mdadm: Cannot get exclusive access to /dev/md90:Perhaps a running
-> > process, mounted filesystem or active volume group?
-> >
-> > I can not be 100% sure that something else is using the device, but I
-> > can't think of anything that is and I stopped every process I can
-> > think of..... Plus why is the array still shown as 'active' when none
-> > of its member devices even exist anymore?
-> >
-> > What I do know is that device mapper (coming down from LVM)  still has
-> > an entry in /dev/mapper. But then probably no surprise as /dev/md90
-> > the failed array is still an active device node. If you attempt to
-> > write to it, I receive I/O errors from the kernel. In fact as far as
-> > any higher layer services are concerned md90 and the LVM LV on top of
-> > it are still active and working when in reality, they are not. It
-> > causes very strange NFS errors and such.
-> >
-> > mdraid does actually attempt to iteratively remove both partitions
-> > when the kernel signals the disable state, but only 1 of them
-> > succeeds.
-> > I did an strace of the same iterative 'fail:remove' process that
-> > mdraid attempts when the kernel issues -- kernel: ata7.00: disabled
-> >
-> > eg:
-> > /sbin/mdadm -If sdc1 --path pci-0000:02:00.0-ata-1
-> > mdadm: set device faulty failed for sdc1:  Device or resource busy
-> >
-> > The only clue is perhaps this line from the strace:
-> > openat(AT_FDCWD, "/sys/block/md90/md/dev-sdc1/block/dev", O_RDWR) = -1
-> > EACCES (Permission denied)    What is the mdadm command doing that
-> > results in a permission problem?
-> >
-> > So the only way I can get rid of this md raid array is a reboot.
-> > Damn!!!
-> >
-> >
-> > Any help is much appreciated.
-> > Aidan
-> >
-> >
-> >
-> Hi Aidan,
-> This is how it is implemented. Drive is not removed if array failure
-> will cause array failed. Please see:
-> https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=9a567843f7ce0037bfd4d5fdc58a09d0a527b28b
->
-> For RAID1 you can use solution proposed in patch below but IMO it is
-> not your problem. Please stop LVM and then try to stop array. To stop
-> array it needs to be "free" (all upper handlers are down).
->
+> > An alternative in a true file system which can do its own block
+> > allocation is to just calculate the P/Q of the final stripe after it's
+> > been modified, and write those (and) the updated data out to newly-
+> > allocated blocks instead of overwriting the original. =20
+>=20
+> This is what Johannes is considering, but for a different purpose.
+> Johannes' idea is to support zoned device. As the physical location a
+> zoned append write will only be known after it's written.
+>=20
+> So his idea is to maintain another mapping tree for zoned write, so that
+> full stripe update will also happen in that tree.
+>=20
+> But that idea is still in the future, on the other hand I still prefer
+> some tried-and-true method, as I'm 100% sure there will be new
+> difficulties waiting us for the new mapping tree method.
+>=20
 > Thanks,
-> Mariusz
+> Qu
+>=20
+> >
+> > Then the final step is to free the original data blocks and P/Q.
+> >
+> > This means that your RAID stripes no longer have a fixed topology; you
+> > need metadata to be able to *find* the component data and P/Q chunks...
+> > it ends up being non-trivial, but it has attractive properties if we
+> > can work it out. =20
+
+
+
+--=20
+
+
+--Sig_/trK2B+bQZg4U+J+J8zLUK/8
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEg/qxWKDZuPtyYo+kNasLKJxdslgFAmHfCCwACgkQNasLKJxd
+slj5YRAAriTi+zPKCzdoJ0d2cj8ZkHXtVoQMa5qr3R5f20aEyu/oTPkMFvmtsOKj
+ViMcFhTaV5Ceardq7Td7G3N2QzBJjEQsrg0FIl6aD9Jp8XWW49VwXRTyHihXi7xy
+HRCziWCxp8HWc6qy3IpOCm/XD3i0i37IDrm8dmA7r62swOALFX5g5zIpDo/CkfNU
+Tln3wA97KMEd93dWLzvWZsXFhETQ2lX9l5EMYzTjUqR0PAtbVJlHfeVYTnF1eAnw
+S5+TyiwfXa0lqOKUABYR8Ygnelu98VROpNWXUJi25CaY8l2T5jigskFdNvm+Ihy+
+era4R8dAsXCBhTEmO4JXNLmE42IU+m+6DnZlGHxn+v3wuh7Tz46sAAC9JX73R6Fk
+e925eXQ2e2df7Ej964r3f4u/yiVO+/MaoiLUacz+U3VbZu9LOGYJ+xmnmycjhV3X
+NmfBV1nnWIeYU6fHvRigLCMJXnVd9dPlYlqW0alRq/OtLW2rKlUkXf+RWLOpT8By
++ZMyloNz0/84MFLN+XhgdbwpEJ/NStbaJXJtD7T2nUf2l3+kWV6rFrmPIgxdPYyb
+7yJMWxj9rGaU+2XmAkqoyC5ahj30apruZbQLyCXqc1EeHlGY8/Wrq5h2ZBAJcDbr
+CH22cVV2JzDT77MvzC+9nPWT/rkm8MNna4TRLZgtTauio9bPGHg=
+=Jly6
+-----END PGP SIGNATURE-----
+
+--Sig_/trK2B+bQZg4U+J+J8zLUK/8--
