@@ -2,329 +2,121 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F20C433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 14 Jan 2022 17:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB2CAC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 14 Jan 2022 17:53:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243725AbiANRFx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 14 Jan 2022 12:05:53 -0500
-Received: from li1843-175.members.linode.com ([172.104.24.175]:57926 "EHLO
-        mail.stoffel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243708AbiANRFw (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 14 Jan 2022 12:05:52 -0500
-Received: from quad.stoffel.org (068-116-170-226.res.spectrum.com [68.116.170.226])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.stoffel.org (Postfix) with ESMTPSA id E169E2395D;
-        Fri, 14 Jan 2022 12:05:50 -0500 (EST)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-        id 658B1A7792; Fri, 14 Jan 2022 12:05:50 -0500 (EST)
+        id S243936AbiANRxd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 14 Jan 2022 12:53:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42040 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229449AbiANRxd (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 14 Jan 2022 12:53:33 -0500
+Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F199DC061574
+        for <linux-raid@vger.kernel.org>; Fri, 14 Jan 2022 09:53:32 -0800 (PST)
+Received: by mail-qt1-x82c.google.com with SMTP id 14so4033389qty.2
+        for <linux-raid@vger.kernel.org>; Fri, 14 Jan 2022 09:53:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=grenf96LWEXU1js57ztZaeSaNnFPMbb+myOCtvyGDXg=;
+        b=MGbgdPINeVW0ETnF2ezt/hPz003t8O9pogDzimpzpFrwlE1cJcqGjuPt+i4FLPi/vT
+         lEWqjBTklDppQlH0pH6I6lZC+aoW61mXrFlzZ4Snjr9j2PZ+8LWsfHVdG5OZVkQNMLs0
+         v285HCtf8W/oIeznIsUxFikZ7odQ1Q3oZDOiIJojwBBj7vudF7wNL3JQY8ulq4UbyQj4
+         AhLkb0womu6xl6N1jS3pBrRQzzNOVu35LGrm/VQixuYYJ6iaafqUwyHpQkMxh4Gip+BI
+         40P/9lzrroGkcgLFDOyx9MqJ0914vuMBj2TYtyK9CpHLszIBIXeP677E8Dmij3AUhnwC
+         YVtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=grenf96LWEXU1js57ztZaeSaNnFPMbb+myOCtvyGDXg=;
+        b=m0fHsf+XULESXqeaI7RnNSa+tX17aqD8ry368RgnQ7Ns9hW2UZhMp9u0R+9tGiaAR0
+         pQuaH84CmCtBwYo+e2/Hn43npZ6uwDH5VptwLXKfcx5FGNAYWfmlWHLjGt4eu5YGasGv
+         dJWLa1A2rgueDjaTrWWKMoJUkNMA8Eg20VKrYUVf7lgaUdI92i7IkXv5kqBk5ZOnW5Tt
+         vT3b+smcvK/8IqMWtfCogkc1j8zwqMEUNx6rOUlQB3cZG/NvwLt58Nudfs2UfCtp84uR
+         /d3HFUE+3gZx7gkvX1E9ZrRnU5FDuBStR93TwZNzJmDCp3vV/sAj6oUu2SH/qp3MX2Ed
+         FG1g==
+X-Gm-Message-State: AOAM533FcBopUuszHWOaRL1UHII0qhKc0gNR93QDHdxavTGZJoIMdWWJ
+        a2a7GmAi0qK2TauR9t1p2MDiEHP8r6EmhkvSEEGhc124
+X-Google-Smtp-Source: ABdhPJzj9Jkl5ureGMQw1W1GjbgafimbcKb/eHzcsxQhXWI3OBs5qLTAOxqtwvgCdn7tdZgGPHgNORQUdkG4Lr9xTR8=
+X-Received: by 2002:ac8:570b:: with SMTP id 11mr8606432qtw.128.1642182812046;
+ Fri, 14 Jan 2022 09:53:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <25057.44398.332147.121077@quad.stoffel.home>
-Date:   Fri, 14 Jan 2022 12:05:50 -0500
-From:   "John Stoffel" <john@stoffel.org>
-To:     Aidan Walton <aidan.walton@gmail.com>
-Cc:     Roger Heflin <rogerheflin@gmail.com>,
-        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Subject: Re: md device remains active even when all supporting disks have
- failed and been disabled by the kernel.
-In-Reply-To: <CAPx-8MNgtVuUgdOBsZiQyXmS=nCoj255D+oNrkGOcsNVhixC3g@mail.gmail.com>
-References: <CAPx-8MP0+C9M9ysigF-gfaUBE8nv7nzbm4HO06yC_z5i3U3D=Q@mail.gmail.com>
-        <20220110104733.00001048@linux.intel.com>
-        <CAPx-8MNa97Aokgz8RzfiGEPXFLpzbGduNV9hUOYdGXRmfxSg3g@mail.gmail.com>
-        <CAAMCDecViLw=V_nFgJicLa=nDoADScpwg_pfWF2ubF5D=aCsaA@mail.gmail.com>
-        <CAPx-8MNgtVuUgdOBsZiQyXmS=nCoj255D+oNrkGOcsNVhixC3g@mail.gmail.com>
-X-Mailer: VM 8.2.0b under 26.1 (x86_64-pc-linux-gnu)
+References: <Ja6.44rcR.6N3YLK}k{ZL.1XskzP@seznam.cz> <0394837e-0109-e7b7-59f9-5e90a03bc629@youngman.org.uk>
+ <CAAMCDec5kcK62enZCOh=SJZu0fecSV60jW8QjMierC147HE5bA@mail.gmail.com>
+ <KN4.44rdw.1WKWgyVtkH0.1XtLJu@seznam.cz> <CAAMCDef-bxeM0a_qS0FuviZ89a_Qn496KDsj1WQ3r7NT+t5+_Q@mail.gmail.com>
+ <Ly2.44rd2.7sLtKmD9o5e.1Xto6p@seznam.cz> <NWX.44oOw.7USLwiS0IVD.1XuOH9@seznam.cz>
+In-Reply-To: <NWX.44oOw.7USLwiS0IVD.1XuOH9@seznam.cz>
+From:   Roger Heflin <rogerheflin@gmail.com>
+Date:   Fri, 14 Jan 2022 11:53:20 -0600
+Message-ID: <CAAMCDedMLUPawEwKZWw4gRSP-04SyihqiLcHeXTN2XhfDTcsKg@mail.gmail.com>
+Subject: Re: Feature request: Add flag for assuming a new clean drive
+ completely dirty when adding to a degraded raid5 array in order to increase
+ the speed of the array rebuild
+To:     =?UTF-8?B?SmFyb23DrXIgQ8OhcMOtaw==?= <jaromir.capik@email.cz>
+Cc:     Linux RAID <linux-raid@vger.kernel.org>,
+        Wols Lists <antlists@youngman.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
->>>>> "Aidan" == Aidan Walton <aidan.walton@gmail.com> writes:
+That is typically 100MB/sec per disk as it is reported, and that is a
+typical speed I have seen for a rebuild and/or grow.
 
-Aidan> Hi Roger,
-Aidan> As I mentioned, it is a:
-Aidan> JMicron Technology Corp. JMB363
+There are almost certainly algorithm sync points that constrain the
+speed less than full streaming speed of all disks.
 
-Aidan> The reason for it failing is not entirely clear, but I'm fairly sure
-Aidan> it's not related to your suggestions. I can make it fail at will by
-Aidan> using:
-Aidan>  dd if=/dev/sdc of=/dev/null bs=64k count=10000   and  dd if=/dev/sdd
-Aidan> of=/dev/null bs=64k count=10000
+The algorithm may well be, read the stripe, process the stripe and
+write out the new stripe, and start over (in a linear manner)  I would
+expect that to be the easiest to keep track of, and that would roughly
+get your speed (costs a read to each old disk + a write to the new
+disk + bookkeeping writes + parity calc).     Setting up the code such
+that it overlaps the operations is going to complicate the code, and
+as such was likely not done.
 
-Aidan> Now as I increase the block size of dd, the rate of errors and resets
-Aidan> reduces, in what seems to be a rather linear manner. (Not in any way
-Aidan> scientifically proven) but there is a clear relationship between
-Aidan> commands/sec and resets.
+And regardless of the client's only being able to run raid5, there is
+significant risks to running raid5.   If on the rebuild you find a bad
+block on one of the other disks then you have lost data, and that is
+very likely to happen--that exact failure was the first raid failure I
+saw 28+ years ago).
 
-If you can make the controller failover that quickly and easily, then
-it's a crap controller and should be ripped out.  Go with anything
-LSI, they're well supported in the Linux kernel and rock solid.  The
-the JBOD firmware version as well, not the RAID firmware. 
+How often are you replacing/rebuilding the disks and why?
 
-
-Aidan> If I use dd on only one disk, I get no errors and no resets, and this
-Aidan> applies to either disk.
-
-Aidan> Thanks for the interest, however I was not trying to digress off topic
-Aidan> too much. I don't think the linux-raid list is responsible for all
-Aidan> possible controllers out there. However the interactions between
-Aidan> mdraid and LVM is important and this is actually why I posted
-Aidan> initially.
-
-Aidan> Essentially I'm hoping someone comes back and says....hey did you
-Aidan> check that such a file under sys/.... is clear or not etc.
-Aidan> i.e. My instinct tells me somehow the kernel is holding a lock on LVM
-Aidan> and the mount/umount commands don't seem to care. They do what is
-Aidan> expected and /proc/mounts is updated accordingly. That is to say, file
-Aidan> locking is not the problem, but something is that I have missed and I
-Aidan> dont have the necessary knowledge to focus down onto it.
-
-Aidan> On Wed, 12 Jan 2022 at 23:54, Roger Heflin <rogerheflin@gmail.com> wrote:
->> 
->> What kind of sata controller do you have?   I know of some 4pt marvell
->> ones that if you execute smart commands or too many commands against
->> it will "fault" and drop all of the disks going via that controller.
->> 
->> On Wed, Jan 12, 2022 at 4:10 PM Aidan Walton <aidan.walton@gmail.com> wrote:
->> >
->> > Hi Mariusz,
->> > In my case, the fact that mdraid does not show a 'total failure' is
->> > not the root of the problem. However in my opinion I would say that
->> > not having mdraid more accurately reflect the state of the underlying
->> > hardware can be mis-leading. Initially when I looked at this issue, I
->> > was convinced that only one disk had failed and I was scratching my
->> > head about firstly why I still could not R/W the array while it
->> > appeared to have an active member. Secondly, when I rebooted I noticed
->> > that the array became instantly synchronised with both members active.
->> > This was not what I expected, as normally an array that has had a
->> > single failed disk would require a ra-add and resync.  Then when the
->> > problem re-occured I noticed that it was not the same disk that was
->> > flagged faulty, next reboot; the faulty disk flipped back the other
->> > way... and so on. This was what prompted me to look closer at the
->> > kernel. Here I found my answer at the SATA controller. Therefore
->> > although mdraids design approach did not cause me any data loss, it
->> > did have me looking in the wrong direction for the fault, assuming a
->> > disk problem.
->> >
->> > I have still not been able to successfully --stop the array. I think
->> > the issue sits in the LVM domain. Although I can not be 100% sure.
->> > What I have achieved is some level of understanding that some process
->> > that starts a boot time is in some unknown manner holding a lock on
->> > the mdarid  - devmapper - LVM combination. I have unmounted the file
->> > system, but LVM refuses to let go of the logical volume. Therefore so
->> > does dev-mapper and of course mdraid. I have systematically stopped or
->> > killed almost every single running process on the system, taking it
->> > back to a skeleton, with not much more than init running, it still
->> > refuses to let go.
->> >
->> > However, when I prevent auto-mounting of the raid array at boot, and
->> > then manually assemble the raid array, LVM finds its meta data, builds
->> > the VG and LV and mounts. If I then manually force the exact same SATA
->> > controller failure, which results in the exact same mdraid behaviour,
->> > I am then able to unmount the filesystem and ...... hey presto
->> > deactivate the LVM LV. Which then allows me to --stop the mdraid. Just
->> > as I want. Again it does not solve my SATA hardware issues, but being
->> > at this point does give me options to restart the hardware etc, and
->> > probably, though very messily, get the filesystem up again without a
->> > reboot. The problem being I can not achieve this behaviour without
->> > manually assembling the array after boot. If you have any idea what
->> > could possibly be holding this lock I would be glad to hear.
->> >
->> > At this point I'm going to have to try and systematically step through
->> > the boot process and try re-arranging, when the array gets assembled.
->> > My first attempts at this have been to <ignore> the raid array in
->> > mdadm.conf and comment the array out of /etc/fstab. In this way mdraid
->> > inside initramfs does not auto-assemble and LVM does not auto scan for
->> > the VG. Once I am in the real boot sequence, I have created a systemd
->> > mount unit that I can pull in from other systemd units, to change the
->> > point in the boot process when the array is assembled. In this way
->> > hopefully I can influence when other services are interacting with the
->> > array in some way and perhaps find the root cause ......   Work in
->> > progress..but slowly as the fault occurs only very occasionally and I
->> > still need a working server.
->> > All the best.. Aidan
->> >
->> > On Mon, 10 Jan 2022 at 10:47, Mariusz Tkaczyk
->> > <mariusz.tkaczyk@linux.intel.com> wrote:
->> > >
->> > > On Fri, 7 Jan 2022 23:30:31 +0100
->> > > Aidan Walton <aidan.walton@gmail.com> wrote:
->> > >
->> > > > Hi,
->> > > > I have a system running:
->> > > > Ubuntu Server 20.04.3 LTS on a 5.4.0-92-generic kernel.
->> > > >
->> > > > On the motherboard is a:
->> > > > SATA controller: JMicron Technology Corp. JMB363 SATA/IDE Controller
->> > > > (rev 02)
->> > > >
->> > > > Connected to this I have:
->> > > > 2x Western Digital - WDC WD5001AALS-00L3B2, BIOS :01.03B01 500Gb
->> > > > drives
->> > > >
->> > > > Each drive has a single partition and is part of a RAID1 array:
->> > > > /dev/md90:
->> > > > .....
->> > > >     Number   Major   Minor   RaidDevice State
->> > > >        0       8       33        0      active sync   /dev/sdc1
->> > > >        2       8       49        1      active sync   /dev/sdd1
->> > > >
->> > > > On top of this I have a single LVM VG and LV. (Probably not important)
->> > > >
->> > > > I have noticed some strange behaviour and upon investigation I find
->> > > > the md device in the following state:
->> > > > /dev/md90:
->> > > > ....
->> > > >
->> > > >     Number   Major   Minor   RaidDevice State
->> > > >        0       8       33        0      active sync   /dev/sdc1
->> > > >        -       0        0        1      removed
->> > > >
->> > > >        2       8       49        -      faulty   /dev/sdd1
->> > > >
->> > > >
->> > > > In fact neither /dev/sdc1 or /dev/sdd1 are available. In fact neither
->> > > > are /dev/sdc or /dev/sdd, the physical drives, as they both been
->> > > > disconnected by the kernel:
->> > > > /dev/sdc is attached to ata7:00  and  /dev/sdd is attached to ata.8:00
->> > > > This is the log of the kernel events:
->> > > >
->> > > >
->> > > > Jan 07 22:09:03 mx kernel: ata7.00: exception Emask 0x32 SAct 0x0 SErr
->> > > > 0x0 action 0xe frozen
->> > > > Jan 07 22:09:03 mx kernel: ata7.00: irq_stat 0xffffffff, unknown FIS
->> > > > 00000000 00000000 00000000 00000000, host bus
->> > > > Jan 07 22:09:03 mx kernel: ata7.00: failed command: READ DMA
->> > > > Jan 07 22:09:03 mx kernel: ata7.00: cmd
->> > > > c8/00:00:00:cf:26/00:00:00:00:00/e0 tag 18 dma 131072 in
->> > > > Jan 07 22:09:03 mx kernel: ata7.00: status: { DRDY }
->> > > > Jan 07 22:09:03 mx kernel: ata7: hard resetting link
->> > > > Jan 07 22:09:03 mx kernel: ata7: SATA link up 1.5 Gbps (SStatus 113
->> > > > SControl 310)
->> > > > Jan 07 22:09:09 mx kernel: ata7.00: qc timeout (cmd 0xec)
->> > > > Jan 07 22:09:09 mx kernel: ata7.00: failed to IDENTIFY (I/O error,
->> > > > err_mask=0x4) Jan 07 22:09:09 mx kernel: ata7.00: revalidation failed
->> > > > (errno=-5) Jan 07 22:09:09 mx kernel: ata7: hard resetting link
->> > > > Jan 07 22:09:19 mx kernel: ata7: softreset failed (1st FIS failed)
->> > > > Jan 07 22:09:19 mx kernel: ata7: hard resetting link
->> > > > Jan 07 22:09:29 mx kernel: ata7: softreset failed (1st FIS failed)
->> > > > Jan 07 22:09:29 mx kernel: ata7: hard resetting link
->> > > > Jan 07 22:09:35 mx kernel: ata8.00: exception Emask 0x40 SAct 0x0 SErr
->> > > > 0x800 action 0x6 frozen
->> > > > Jan 07 22:09:35 mx kernel: ata8: SError: { HostInt }
->> > > > Jan 07 22:09:35 mx kernel: ata8.00: failed command: READ DMA
->> > > > Jan 07 22:09:35 mx kernel: ata8.00: cmd
->> > > > c8/00:00:00:64:4a/00:00:00:00:00/e0 tag 2 dma 131072 in
->> > > > Jan 07 22:09:35 mx kernel: ata8.00: status: { DRDY }
->> > > > Jan 07 22:09:35 mx kernel: ata8: hard resetting link
->> > > > Jan 07 22:09:45 mx kernel: ata8: softreset failed (1st FIS failed)
->> > > > Jan 07 22:09:45 mx kernel: ata8: hard resetting link
->> > > > Jan 07 22:09:55 mx kernel: ata8: softreset failed (1st FIS failed)
->> > > > Jan 07 22:09:55 mx kernel: ata8: hard resetting link
->> > > > Jan 07 22:10:04 mx kernel: ata7: softreset failed (1st FIS failed)
->> > > > Jan 07 22:10:04 mx kernel: ata7: hard resetting link
->> > > > Jan 07 22:10:09 mx kernel: ata7: softreset failed (1st FIS failed)
->> > > > Jan 07 22:10:09 mx kernel: ata7: reset failed, giving up
->> > > > Jan 07 22:10:09 mx kernel: ata7.00: disabled
->> > > > Jan 07 22:10:09 mx kernel: ata7: EH complete
->> > > > Jan 07 22:10:30 mx kernel: ata8: softreset failed (1st FIS failed)
->> > > > Jan 07 22:10:30 mx kernel: ata8: hard resetting link
->> > > > Jan 07 22:10:35 mx kernel: ata8: softreset failed (1st FIS failed)
->> > > > Jan 07 22:10:35 mx kernel: ata8: reset failed, giving up
->> > > > Jan 07 22:10:35 mx kernel: ata8.00: disabled
->> > > > Jan 07 22:10:35 mx kernel: ata8: EH complete
->> > > >
->> > > > This is happening because of some issue with the SATA controller on
->> > > > the motherboard. This has not been resolved and probably never will
->> > > > be, I see many others through google search complaining of similar
->> > > > issues with the SATA controller.
->> > > > This failure only occurs when the SATA controller is placed under very
->> > > > heavy load, I have minimised the impact of the problem by not using
->> > > > NCQ, this helps, but it still occurs. Ironically the biggest issue I
->> > > > have is that mdadm "checkarray" is running because of a systemd
->> > > > background process every week or so, and this hammers the disk into
->> > > > failure. Most of the normal daily usage never generates the link
->> > > > resets.
->> > > > Naturally I have changed SATA cables and moved drives around onto
->> > > > different controllers, but alas, it does seem to be the hardware on
->> > > > the motherboard.
->> > > > However as a workaround I was hoping to accept the occasional failure
->> > > > and then using some scripting and 'setpci' I can get the kernel to
->> > > > hard reset the chipset and attach the drives again. I have the process
->> > > > working in terms of getting the kernel to re-attach the drives,
->> > > > but.......
->> > > >
->> > > > Unfortunately mdraid will not let go of them, I can not stop the
->> > > > arrays, and therefore can't rebuild them. If I simply allow the kernel
->> > > > to re-attach the drives the kernel names are swapped over, as
->> > > > something (mdraid) is stopping the kernel re-using the same device
->> > > > names. Anyway being dependent on the same kernel device names is not a
->> > > > great plan anyway, so I was simply trying to get mdadm to reassemble
->> > > > the array as soon as the 'workaround' script gets the drives back in
->> > > > contact with libata (kernel).
->> > > >
->> > > > Plan:
->> > > > 1. Detecting the problem. (mdadm state)
->> > > > 2. Stop the array totally (can NOT do it)
->> > > > 3. reset the chipset across the PCI bus.
->> > > > 4. allow kernel to re-attach drives.
->> > > > 5. re-assemble the md device with mdadm
->> > > > 6. restart, if necessary higher layer services...
->> > > >
->> > > > So why is mdraid holding on to the array:
->> > > >
->> > > > # mdadm --stop /dev/md90
->> > > > mdadm: Cannot get exclusive access to /dev/md90:Perhaps a running
->> > > > process, mounted filesystem or active volume group?
->> > > >
->> > > > I can not be 100% sure that something else is using the device, but I
->> > > > can't think of anything that is and I stopped every process I can
->> > > > think of..... Plus why is the array still shown as 'active' when none
->> > > > of its member devices even exist anymore?
->> > > >
->> > > > What I do know is that device mapper (coming down from LVM)  still has
->> > > > an entry in /dev/mapper. But then probably no surprise as /dev/md90
->> > > > the failed array is still an active device node. If you attempt to
->> > > > write to it, I receive I/O errors from the kernel. In fact as far as
->> > > > any higher layer services are concerned md90 and the LVM LV on top of
->> > > > it are still active and working when in reality, they are not. It
->> > > > causes very strange NFS errors and such.
->> > > >
->> > > > mdraid does actually attempt to iteratively remove both partitions
->> > > > when the kernel signals the disable state, but only 1 of them
->> > > > succeeds.
->> > > > I did an strace of the same iterative 'fail:remove' process that
->> > > > mdraid attempts when the kernel issues -- kernel: ata7.00: disabled
->> > > >
->> > > > eg:
->> > > > /sbin/mdadm -If sdc1 --path pci-0000:02:00.0-ata-1
->> > > > mdadm: set device faulty failed for sdc1:  Device or resource busy
->> > > >
->> > > > The only clue is perhaps this line from the strace:
->> > > > openat(AT_FDCWD, "/sys/block/md90/md/dev-sdc1/block/dev", O_RDWR) = -1
->> > > > EACCES (Permission denied)    What is the mdadm command doing that
->> > > > results in a permission problem?
->> > > >
->> > > > So the only way I can get rid of this md raid array is a reboot.
->> > > > Damn!!!
->> > > >
->> > > >
->> > > > Any help is much appreciated.
->> > > > Aidan
->> > > >
->> > > >
->> > > >
->> > > Hi Aidan,
->> > > This is how it is implemented. Drive is not removed if array failure
->> > > will cause array failed. Please see:
->> > > https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=9a567843f7ce0037bfd4d5fdc58a09d0a527b28b
->> > >
->> > > For RAID1 you can use solution proposed in patch below but IMO it is
->> > > not your problem. Please stop LVM and then try to stop array. To stop
->> > > array it needs to be "free" (all upper handlers are down).
->> > >
->> > > Thanks,
->> > > Mariusz
+On Fri, Jan 14, 2022 at 8:10 AM Jarom=C3=ADr C=C3=A1p=C3=ADk <jaromir.capik=
+@email.cz> wrote:
+>
+> Hello Roger.
+>
+> >> Also, grow differs in the fact that blocks get moved around hence the =
+writes.
+> >
+> > Of course, but even of that the speed was poor :]
+>
+> Just for info, I just tried to DD data on the second (faster) hardware
+> from one RAID drive to an empty one with MD offline and the transfer
+> speed is the following (sorry for the czech locale :) ...
+>
+> 25423+0 z=C3=A1znam=C5=AF p=C5=99e=C4=8Dteno
+> 25422+0 z=C3=A1znam=C5=AF zaps=C3=A1no
+> 26656899072 bajt=C5=AF (27 GB, 25 GiB) zkop=C3=ADrov=C3=A1no, 105,227 s, =
+253 MB/s
+> 25903+0 z=C3=A1znam=C5=AF p=C5=99e=C4=8Dteno
+> 25902+0 z=C3=A1znam=C5=AF zaps=C3=A1no
+> 27160215552 bajt=C5=AF (27 GB, 25 GiB) zkop=C3=ADrov=C3=A1no, 107,235 s, =
+253 MB/s
+> 26386+0 z=C3=A1znam=C5=AF p=C5=99e=C4=8Dteno
+> 26385+0 z=C3=A1znam=C5=AF zaps=C3=A1no
+> 27666677760 bajt=C5=AF (28 GB, 26 GiB) zkop=C3=ADrov=C3=A1no, 109,245 s, =
+253 MB/s
+>
+> as you can see, the write speed really matches the speed from the drive d=
+atasheet,
+> so ... why the sync speed was 100MB/s only when the CPU load was low?
+> Can you explain that?
+>
+> Thanks,
+> Jaromir
