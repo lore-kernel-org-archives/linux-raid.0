@@ -2,130 +2,223 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D8BC433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 15 Jan 2022 15:47:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B807DC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 17 Jan 2022 11:39:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231997AbiAOPrF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 15 Jan 2022 10:47:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47168 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232964AbiAOPrE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 15 Jan 2022 10:47:04 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7831C06161C
-        for <linux-raid@vger.kernel.org>; Sat, 15 Jan 2022 07:47:04 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id b1-20020a17090a990100b001b14bd47532so17133339pjp.0
-        for <linux-raid@vger.kernel.org>; Sat, 15 Jan 2022 07:47:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=DlsP7pR1KtRraZ7uD0ETGSTmj2dlGItT6jo9tnSlcWA=;
-        b=Hg4LUhVHr/AQ93nNgy/TVg94Xpwc3YI1tJo7oqjt+wFCY+N1id/MwTULa3OxoKIWIB
-         au1FyN5jC8H3kuBB54b7Gh9MJxa7kq6kNTlOV6uqIhONg4PsvrzDXIgNPFOfITzgqPw4
-         WsbRF18D0CffD7ld49fMxOUH+XBM1qHxJJFLY5gS97ypLdMB7n7KO7wxBFnJeX1ZDDnF
-         b/zwXpEv0sydff7WfOJzpouy7t4NAU5RoGFbYDsppgUVqF70WqPQMKTxL7SF5e8boYNE
-         uVvqPksh0elD/+Q7FKkNiBckxuM9JcxKHi2fyooGA5C3hG6zaOAAcx1i0H7BQYvU66Xl
-         cErw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=DlsP7pR1KtRraZ7uD0ETGSTmj2dlGItT6jo9tnSlcWA=;
-        b=stBH+C50STuoy2Ioiu8AKm1UzAGVpk/w4cWYVA3q1lhDsPfIkSuFyBOqEQctu0OhxF
-         O/VsKc6QksZcAtNN7qc6Cu7JSugH07LEsEcglIKliST82Qw51FgW3RoN0mqU9aqYSb2m
-         QUtfjqmASfa9E6I/519etqVxa5wFZQb7oYWZ8n697C48BD3A1G0usOVfIB9Mzoj+2Gwj
-         VyQNSb+O81WRC8pslLyznqsy7qdbkKrBqAal7ocMYPxhACu68mP2RXS55kWQFzBkTa3n
-         AC3u3R0ZbuVJfZuNRX46qkmqplQlPEiF6dlNyTcGaF+qsBiePMx26VlqLDEa5WPMT04P
-         RNOw==
-X-Gm-Message-State: AOAM5319wfSeFEpLwZ6UAVbq/EYsz4JhsNmQK+nn7ACXkxjEVCSXwCgL
-        M8r5ybG5pCNWtgtT2L7RrvkH1jqU/EjjnIkq1bBW1R70EHJ1MA==
-X-Google-Smtp-Source: ABdhPJwdRnlxojsOijLfJ1VzYrkBP4sP2PtexT6U3Py+GbjUnFuX+4cm0ciblPsXWv1RNTSj1vg0eXs5vyJHgvsr8tQ=
-X-Received: by 2002:a17:902:8a82:b0:149:db00:dbab with SMTP id
- p2-20020a1709028a8200b00149db00dbabmr14219130plo.140.1642261623830; Sat, 15
- Jan 2022 07:47:03 -0800 (PST)
+        id S239163AbiAQLjB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 17 Jan 2022 06:39:01 -0500
+Received: from mga02.intel.com ([134.134.136.20]:60115 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239124AbiAQLi7 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Mon, 17 Jan 2022 06:38:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1642419539; x=1673955539;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=GgRVeLvBcuPEQpk27aQQGXFd/1IzuuaMXpkeQ5eHYT8=;
+  b=Y1E5RYtbfv39b1J+5E+CPK0yza8jfl0dgaxefMi+BbDyYrOOF1tbioZw
+   xh74lXV6/cm3QqL8L8Z4FieOt51KkcEwnyBPFrDmhsMxY/TIpP2HFlSm/
+   jMY1iF0O81qU56qiHPeNg2u4WMvYlCiWf1u8g47zHdA4K6V7CV9LnJg72
+   lNKpod4vypbKlb6upKMzjbkRv5XUttceIbsSoR5aRlYzHYdhj6j7BK3OZ
+   P8Kpp5rn8J0v1h3F6TaCS+2jqevITMbLvJqsFzdnJRdHwUBGOr+lLt27+
+   iBy2d2gUZQ0gLB0ec2Mus3Kitg3747h7KMz8RkfYYUN8lOxzoR0K+VgK1
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10229"; a="231965766"
+X-IronPort-AV: E=Sophos;i="5.88,295,1635231600"; 
+   d="scan'208";a="231965766"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2022 03:38:58 -0800
+X-IronPort-AV: E=Sophos;i="5.88,295,1635231600"; 
+   d="scan'208";a="693050117"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2022 03:38:57 -0800
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org
+Subject: [PATCH] raid1, raid10: drop pending_cnt.
+Date:   Mon, 17 Jan 2022 12:38:47 +0100
+Message-Id: <20220117113847.13115-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-References: <CA+Kggd7mUF9MWdJsLtAQMv=KXtwaNvj6BqfM+NMyffE86iHBoQ@mail.gmail.com>
- <20210907125201.0cc77658@natsu> <20210907141835.259010e3@natsu> <CA+Kggd6AghdZt6YpBL24xC5TtMKqUiaHyoiyRLd2+dVJhVOP7w@mail.gmail.com>
-In-Reply-To: <CA+Kggd6AghdZt6YpBL24xC5TtMKqUiaHyoiyRLd2+dVJhVOP7w@mail.gmail.com>
-From:   Ryan Patterson <ryan.goat@gmail.com>
-Date:   Sat, 15 Jan 2022 10:46:52 -0500
-Message-ID: <CA+Kggd4gPsK+vUWvb8+tcenTBKF=AU7QYwm44YvUNRgjtu9bWA@mail.gmail.com>
-Subject: Re: mdadm resync causes stable system to crash every 2 or 3 hours
-To:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Sep 7, 2021 at 6:55 PM Ryan Patterson <ryan.goat@gmail.com> wrote:
->
-> On Tue, Sep 7, 2021 at 5:18 AM Roman Mamedov <rm@romanrm.net> wrote:
-> >
-> > On Tue, 7 Sep 2021 12:52:01 +0500
-> > Roman Mamedov <rm@romanrm.net> wrote:
-> >
-> > > On Mon, 6 Sep 2021 20:44:31 -0400
-> > > Ryan Patterson <ryan.goat@gmail.com> wrote:
-> > >
-> > > > My file server is usually very stable.  The past week I had two mdadm
-> > > > arrays that required recync operations.
-> > > > * newly created raid6 array (14 x 16TB seagate exos)
-> > > > * existing raid 6 array, after a reboot resync on hot spare (14 x 4TB
-> > > > seagate barracuda)
-> > > >
-> > > > During both resync operations (they ran one at a time) the system
-> > > > would routinely experience a major error and require a hard reboot,
-> > > > every two or three hours.  I saw several errors, such as:
-> > > > * kernel watchdog soft lockups [md127_raid6:364]
-> > > > * general protection faults (I have a few saved with the full exception stack)
-> > > > * exceptions in iommu routines (again I have the full error with
-> > > > exception stack saved)
-> > > > * full system lockup
-> > >
-> > > So in other words the server is very stable, unless asked to do full-speed
-> > > reads from all disks at the same time.
-> > >
-> > > I'd suggest to check or improve cooling on the HBA cards, and then try a
-> > > different PSU.
-> >
-> > Also the motherboard chipset cooling, since that's a lot of PCI-E traffic.
-> > Maybe the CPU cooling as well, or at least check the CPU temperatures during
-> > this load.
-> >
-> > And since you have full logs and backtraces, there's no point in waiting to
-> > post those, just go ahead. Maybe they will point to something other than
-> > suspect hardware, or at least to which part of hardware to suspect.
-> >
-> > --
-> > With respect,
-> > Roman
->
-> Thanks for the suggestions.  Hardware overheating might be my problem.
-> I have several (loud) case fans blowing away.  But the HBA cards and
-> mobo southbridge are only passively cooled.  Maybe I could mount fans
-> on each cards' headsink.  I'll investigate.
->
-> The power supply is not an off the shelf job.  So I don't convientanly
-> have a replacement to try.  I might have to bite the bullet and buy a
-> second.
->
-> I forgot to put in my original note that I ran memtest86 on this
-> machine for four full cycles with no faults found.  Also nothing is
-> overclocked.
->
-> Here are some of the errors I recorded.  Maybe somebody can see a
-> pattern in them...
->
-> [snip]
+Those counters are not necessary after commit 11bb45e8aaf6 ("md: drop queue
+limitation for RAID1 and RAID10"). Remove them from all code (conf and
+plug structs). raid1_plug_cb and raid10_plug_cb are identical, so move
+definition of raid1_plug_cb to common raid1-10 definitions and use it for
+RAID10 too.
 
-Just to provide closure to the system instability I reported four
-months ago.  End of 2021 I replaced the motherboard, CPU, & RAM with
-"server grade" hardware (intel xeon).  Ever since upgrading hardware,
-the system has been 100% stable.  Even during sustained mdadm I/O
-workloads, etc.
+Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+---
+ drivers/md/raid1-10.c |  5 +++++
+ drivers/md/raid1.c    | 11 -----------
+ drivers/md/raid1.h    |  1 -
+ drivers/md/raid10.c   | 17 +++--------------
+ drivers/md/raid10.h   |  1 -
+ 5 files changed, 8 insertions(+), 27 deletions(-)
 
-So it appears the consumer grade motherboard was at fault all along.
-Thanks for the help troubleshooting the issue.
-_____________
-Ryan Patterson
-May the wings of liberty never lose a feather.
+diff --git a/drivers/md/raid1-10.c b/drivers/md/raid1-10.c
+index 83f9a4f3d82e..e61f6cad4e08 100644
+--- a/drivers/md/raid1-10.c
++++ b/drivers/md/raid1-10.c
+@@ -28,6 +28,11 @@ struct resync_pages {
+ 	struct page	*pages[RESYNC_PAGES];
+ };
+ 
++struct raid1_plug_cb {
++	struct blk_plug_cb	cb;
++	struct bio_list		pending;
++};
++
+ static void rbio_pool_free(void *rbio, void *data)
+ {
+ 	kfree(rbio);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 02db187090fa..b9d563ded8bf 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -824,7 +824,6 @@ static void flush_pending_writes(struct r1conf *conf)
+ 		struct bio *bio;
+ 
+ 		bio = bio_list_get(&conf->pending_bio_list);
+-		conf->pending_count = 0;
+ 		spin_unlock_irq(&conf->device_lock);
+ 
+ 		/*
+@@ -1166,12 +1165,6 @@ static void alloc_behind_master_bio(struct r1bio *r1_bio,
+ 	bio_put(behind_bio);
+ }
+ 
+-struct raid1_plug_cb {
+-	struct blk_plug_cb	cb;
+-	struct bio_list		pending;
+-	int			pending_cnt;
+-};
+-
+ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ {
+ 	struct raid1_plug_cb *plug = container_of(cb, struct raid1_plug_cb,
+@@ -1183,7 +1176,6 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ 	if (from_schedule || current->bio_list) {
+ 		spin_lock_irq(&conf->device_lock);
+ 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+-		conf->pending_count += plug->pending_cnt;
+ 		spin_unlock_irq(&conf->device_lock);
+ 		wake_up(&conf->wait_barrier);
+ 		md_wakeup_thread(mddev->thread);
+@@ -1585,11 +1577,9 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 			plug = NULL;
+ 		if (plug) {
+ 			bio_list_add(&plug->pending, mbio);
+-			plug->pending_cnt++;
+ 		} else {
+ 			spin_lock_irqsave(&conf->device_lock, flags);
+ 			bio_list_add(&conf->pending_bio_list, mbio);
+-			conf->pending_count++;
+ 			spin_unlock_irqrestore(&conf->device_lock, flags);
+ 			md_wakeup_thread(mddev->thread);
+ 		}
+@@ -3057,7 +3047,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	init_waitqueue_head(&conf->wait_barrier);
+ 
+ 	bio_list_init(&conf->pending_bio_list);
+-	conf->pending_count = 0;
+ 	conf->recovery_disabled = mddev->recovery_disabled - 1;
+ 
+ 	err = -EIO;
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index ccf10e59b116..ebb6788820e7 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -87,7 +87,6 @@ struct r1conf {
+ 
+ 	/* queue pending writes to be submitted on unplug */
+ 	struct bio_list		pending_bio_list;
+-	int			pending_count;
+ 
+ 	/* for use when syncing mirrors:
+ 	 * We don't allow both normal IO and resync/recovery IO at
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 2b969f70a31f..60e96c556540 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -861,7 +861,6 @@ static void flush_pending_writes(struct r10conf *conf)
+ 		struct bio *bio;
+ 
+ 		bio = bio_list_get(&conf->pending_bio_list);
+-		conf->pending_count = 0;
+ 		spin_unlock_irq(&conf->device_lock);
+ 
+ 		/*
+@@ -1054,16 +1053,9 @@ static sector_t choose_data_offset(struct r10bio *r10_bio,
+ 		return rdev->new_data_offset;
+ }
+ 
+-struct raid10_plug_cb {
+-	struct blk_plug_cb	cb;
+-	struct bio_list		pending;
+-	int			pending_cnt;
+-};
+-
+ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ {
+-	struct raid10_plug_cb *plug = container_of(cb, struct raid10_plug_cb,
+-						   cb);
++	struct raid1_plug_cb *plug = container_of(cb, struct raid1_plug_cb, cb);
+ 	struct mddev *mddev = plug->cb.data;
+ 	struct r10conf *conf = mddev->private;
+ 	struct bio *bio;
+@@ -1071,7 +1063,6 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ 	if (from_schedule || current->bio_list) {
+ 		spin_lock_irq(&conf->device_lock);
+ 		bio_list_merge(&conf->pending_bio_list, &plug->pending);
+-		conf->pending_count += plug->pending_cnt;
+ 		spin_unlock_irq(&conf->device_lock);
+ 		wake_up(&conf->wait_barrier);
+ 		md_wakeup_thread(mddev->thread);
+@@ -1239,7 +1230,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+ 	const unsigned long do_fua = (bio->bi_opf & REQ_FUA);
+ 	unsigned long flags;
+ 	struct blk_plug_cb *cb;
+-	struct raid10_plug_cb *plug = NULL;
++	struct raid1_plug_cb *plug = NULL;
+ 	struct r10conf *conf = mddev->private;
+ 	struct md_rdev *rdev;
+ 	int devnum = r10_bio->devs[n_copy].devnum;
+@@ -1282,16 +1273,14 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+ 
+ 	cb = blk_check_plugged(raid10_unplug, mddev, sizeof(*plug));
+ 	if (cb)
+-		plug = container_of(cb, struct raid10_plug_cb, cb);
++		plug = container_of(cb, struct raid1_plug_cb, cb);
+ 	else
+ 		plug = NULL;
+ 	if (plug) {
+ 		bio_list_add(&plug->pending, mbio);
+-		plug->pending_cnt++;
+ 	} else {
+ 		spin_lock_irqsave(&conf->device_lock, flags);
+ 		bio_list_add(&conf->pending_bio_list, mbio);
+-		conf->pending_count++;
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
+ 		md_wakeup_thread(mddev->thread);
+ 	}
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index c34bb196790e..5c0804d8bb1f 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -75,7 +75,6 @@ struct r10conf {
+ 
+ 	/* queue pending writes and submit them on unplug */
+ 	struct bio_list		pending_bio_list;
+-	int			pending_count;
+ 
+ 	spinlock_t		resync_lock;
+ 	atomic_t		nr_pending;
+-- 
+2.26.2
+
