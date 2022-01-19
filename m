@@ -2,66 +2,77 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB79C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Jan 2022 01:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F696C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Jan 2022 08:53:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344444AbiASBZp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 18 Jan 2022 20:25:45 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:36912 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241868AbiASBZl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 18 Jan 2022 20:25:41 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AE9B4B8188A
-        for <linux-raid@vger.kernel.org>; Wed, 19 Jan 2022 01:25:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D338C340E5
-        for <linux-raid@vger.kernel.org>; Wed, 19 Jan 2022 01:25:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642555539;
-        bh=1XGM/JrbLzmEiA1+J9LfItr4lrg0bTJZmd6Y31lUn00=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=eB7BS1eMdHZJLSyfyXwXdrcdZg5dTNC9pn26IeK+n7YQgp2hCldxaOgBajh8TD118
-         IVdxvGVucONZogP2FTbVqcRRg1cr/undwhXPcVNYWiAQmmRALiigP4IF6Qfl6Niet0
-         Q4q7GhkE1E1WYCPul/avvbNzbUa2KL96BaUuMJOdL5hWV10Z6TwwEeVsZytr7na3Ys
-         RWB5FXr557ae+uZ+AwEpRSz/GgZqgeZRARiaVC0YUDuKeqpkOPcY6NMVqeWvd+RriE
-         SaPV9FHdB33IgyVeIOCSKDKHIpNGixCHpvvfcW6S+HaQbCSsZaA1sC8ufmC5IcbCLY
-         V3yl9Ojc+POMw==
-Received: by mail-yb1-f182.google.com with SMTP id l68so1877217ybl.0
-        for <linux-raid@vger.kernel.org>; Tue, 18 Jan 2022 17:25:39 -0800 (PST)
-X-Gm-Message-State: AOAM532c6yqQf6q9dYs5vhjqNGIeNR5LRqwr39dprtYCfBad6C+tW1eO
-        TNHCGIzEnVFKnTeTiiNUNMsLjnOWJXsEH8jo68g=
-X-Google-Smtp-Source: ABdhPJxf2DcvhUL+l5z85wGL4fy4Tsy31zarhuijgd5DhdTQc5gqg/xlXONttrpIA20aRY+Ty6I5QZgzpe9a3X74N5U=
-X-Received: by 2002:a25:dc84:: with SMTP id y126mr1311339ybe.282.1642555538535;
- Tue, 18 Jan 2022 17:25:38 -0800 (PST)
+        id S1352621AbiASIxD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Jan 2022 03:53:03 -0500
+Received: from smtp.hosts.co.uk ([85.233.160.19]:10791 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1352622AbiASIxB (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 19 Jan 2022 03:53:01 -0500
+Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1nA6iA-0003k4-9r;
+        Wed, 19 Jan 2022 08:52:58 +0000
+Message-ID: <cfea15f4-228e-4a38-5567-9b710b6dc5c2@youngman.org.uk>
+Date:   Wed, 19 Jan 2022 08:52:56 +0000
 MIME-Version: 1.0
-References: <20220117113847.13115-1-mariusz.tkaczyk@linux.intel.com>
-In-Reply-To: <20220117113847.13115-1-mariusz.tkaczyk@linux.intel.com>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 18 Jan 2022 17:25:27 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7VK4Tac7YDQ1hzQQTPx9MGjpXDiq5p7+YUMPJoh1M1cg@mail.gmail.com>
-Message-ID: <CAPhsuW7VK4Tac7YDQ1hzQQTPx9MGjpXDiq5p7+YUMPJoh1M1cg@mail.gmail.com>
-Subject: Re: [PATCH] raid1, raid10: drop pending_cnt.
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: PANIC OVER! Re: The mysterious case of the disappearing superblock
+ ...
+Content-Language: en-GB
+To:     NeilBrown <neilb@suse.de>, anthony <antmbox@youngman.org.uk>
+Cc:     Linux RAID <linux-raid@vger.kernel.org>,
+        Phil Turmel <philip@turmel.org>
+References: <2fa7a4a8-b6c2-ac2f-725b-31620984efce@youngman.org.uk>
+ <164254680952.24166.7553126422166310408@noble.neil.brown.name>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <164254680952.24166.7553126422166310408@noble.neil.brown.name>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Jan 17, 2022 at 3:39 AM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
->
-> Those counters are not necessary after commit 11bb45e8aaf6 ("md: drop queue
-> limitation for RAID1 and RAID10"). Remove them from all code (conf and
-> plug structs). raid1_plug_cb and raid10_plug_cb are identical, so move
-> definition of raid1_plug_cb to common raid1-10 definitions and use it for
-> RAID10 too.
->
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+On 18/01/2022 23:00, NeilBrown wrote:
+>> Firstly, given that superblocks seem to disappear every now and then,
+>> does anybody have any ideas for something that might help us track it
+>> down? The 1.2 superblock is 4K into the device I believe? So if I copy
+>> the first 8K ( dd if=/dev/sda4 of=sda4.img bs=4K count=2 ) of each
+>> partition, that might help provide any clues as to what's happened to
+>> it? What am I looking for? What is the superblock supposed to look like?
 
-Applied to md-next (with minor changes to the commit log).
+> Yes, 4K offset.  Yes, that dd command will get what you want it to.
+> It hardly matters what the superblock should looks like, because it
+> won't be there.  The thing you want to know is: what is there?
+> i.e.  you see random bytes and need to guess what they mean, so you can
+> guess where they came from.
+> Best to post the "od -x" output and crowd-source.
 
-Thanks,
-Song
+That's exactly what I was thinking. But I was thinking if it had been 
+damaged rather than destroyed maybe stuff would have been recoverable.
+> 
+> Are you sure the partition starts haven't changed? Was the array made of
+> whole-devices or of partitions?
+
+That's what I missed. I forgot my array was on top of dm-integrity, so 
+although I think of it as sda4, sdb1, sdc4, they each in fact have an 
+extra layer between them and the raid.
+
+Dunno what or why, but my systemd service that fires that up failed. 
+status tells me it was killed after 2msec.
+
+So if that wasn't running, the integrity devices weren't there, and 
+mdadm couldn't start the array.
+
+Oh well, the good thing is that backup drive is on its way. I'm planning 
+to put plain lvm on it, and write a bunch of services that create backup 
+volumes then do a overwrite-in-place rsync. So as I keep advising 
+people, it does an incremental backup, but the COW volumes mean I have 
+full backups.
+
+Cheers,
+Wol
