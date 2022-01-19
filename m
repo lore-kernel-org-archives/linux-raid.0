@@ -2,77 +2,114 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F696C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 19 Jan 2022 08:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7578C433F5
+	for <linux-raid@archiver.kernel.org>; Wed, 19 Jan 2022 13:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352621AbiASIxD (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 19 Jan 2022 03:53:03 -0500
-Received: from smtp.hosts.co.uk ([85.233.160.19]:10791 "EHLO smtp.hosts.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1352622AbiASIxB (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 19 Jan 2022 03:53:01 -0500
-Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1nA6iA-0003k4-9r;
-        Wed, 19 Jan 2022 08:52:58 +0000
-Message-ID: <cfea15f4-228e-4a38-5567-9b710b6dc5c2@youngman.org.uk>
-Date:   Wed, 19 Jan 2022 08:52:56 +0000
+        id S232897AbiASNWd (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 19 Jan 2022 08:22:33 -0500
+Received: from sender11-op-o11.zoho.eu ([31.186.226.225]:17072 "EHLO
+        sender11-op-o11.zoho.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354783AbiASNW0 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 19 Jan 2022 08:22:26 -0500
+ARC-Seal: i=1; a=rsa-sha256; t=1642598538; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=LUL1K2hGxdq+BshU3mZcnXxBSxKY62/km8ZIxIxu8Z3G2bGeOzoLqO1/bl/v3yAUadeUQceDEIREAnPx90MfbuEexS+E8/boJAyzEFq66OFBmITdx8SE680SM5OIvwTEij2l2q8lQJ+UyDq9P8NFMvfa+iA3m6eeE8rAtQR7boE=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1642598538; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=wuaVoITNm9ZgHjsTOgHLWCCm68EQEEtTINFPQ7MSqnY=; 
+        b=PRqp009lggmrF0PLcdjBpItGAnDCqhz1sM+XcdUz04HXHtBIatNvadmd2I3rW4JT8h4myNTMQPQkeaCLzOYyCqXeaBkGRFC9fb/XviEhVnwSk0Cj8RaxAqcqr4orG+sw/zVOyA0rPm3uKblX2gA5TpwNirTTReXT6ylDilIMFVM=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [192.168.99.80] (pool-72-69-75-15.nycmny.fios.verizon.net [72.69.75.15]) by mx.zoho.eu
+        with SMTPS id 1642598536571136.285935625344; Wed, 19 Jan 2022 14:22:16 +0100 (CET)
+Message-ID: <2263d913-f062-9ae0-9830-7c628e5eaeb7@trained-monkey.org>
+Date:   Wed, 19 Jan 2022 08:22:14 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: PANIC OVER! Re: The mysterious case of the disappearing superblock
- ...
-Content-Language: en-GB
-To:     NeilBrown <neilb@suse.de>, anthony <antmbox@youngman.org.uk>
-Cc:     Linux RAID <linux-raid@vger.kernel.org>,
-        Phil Turmel <philip@turmel.org>
-References: <2fa7a4a8-b6c2-ac2f-725b-31620984efce@youngman.org.uk>
- <164254680952.24166.7553126422166310408@noble.neil.brown.name>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <164254680952.24166.7553126422166310408@noble.neil.brown.name>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ Thunderbird/91.2.0
+Subject: Re: [PATCH] udev: adapt rules to systemd v247
+Content-Language: en-US
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20220114154433.7386-1-mariusz.tkaczyk@linux.intel.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+In-Reply-To: <20220114154433.7386-1-mariusz.tkaczyk@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 18/01/2022 23:00, NeilBrown wrote:
->> Firstly, given that superblocks seem to disappear every now and then,
->> does anybody have any ideas for something that might help us track it
->> down? The 1.2 superblock is 4K into the device I believe? So if I copy
->> the first 8K ( dd if=/dev/sda4 of=sda4.img bs=4K count=2 ) of each
->> partition, that might help provide any clues as to what's happened to
->> it? What am I looking for? What is the superblock supposed to look like?
-
-> Yes, 4K offset.  Yes, that dd command will get what you want it to.
-> It hardly matters what the superblock should looks like, because it
-> won't be there.  The thing you want to know is: what is there?
-> i.e.  you see random bytes and need to guess what they mean, so you can
-> guess where they came from.
-> Best to post the "od -x" output and crowd-source.
-
-That's exactly what I was thinking. But I was thinking if it had been 
-damaged rather than destroyed maybe stuff would have been recoverable.
+On 1/14/22 10:44, Mariusz Tkaczyk wrote:
+> New events have been added in kernel 4.14 ("bind" and "unbind").
+> Systemd maintainer suggests to modify "add|change" branches.
+> This patches implements their suggestions. There is no issue yet because
+> new event types are not used in md.
 > 
-> Are you sure the partition starts haven't changed? Was the array made of
-> whole-devices or of partitions?
+> Please see systemd announcement for details[1].
+> 
+> [1] https://lists.freedesktop.org/archives/systemd-devel/2020-November/045646.html
+> 
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 
-That's what I missed. I forgot my array was on top of dm-integrity, so 
-although I think of it as sda4, sdb1, sdc4, they each in fact have an 
-extra layer between them and the raid.
+Hi Mariusz,
 
-Dunno what or why, but my systemd service that fires that up failed. 
-status tells me it was killed after 2msec.
+It looks fine to me, but it does raise the question how does this change
+affect anyone building mdadm running an older systemd since you're
+removing most of the add|change triggers in this patch?
 
-So if that wasn't running, the integrity devices weren't there, and 
-mdadm couldn't start the array.
+Thanks,
+Jes
 
-Oh well, the good thing is that backup drive is on its way. I'm planning 
-to put plain lvm on it, and write a bunch of services that create backup 
-volumes then do a overwrite-in-place rsync. So as I keep advising 
-people, it does an incremental backup, but the COW volumes mean I have 
-full backups.
+> ---
+>  udev-md-raid-arrays.rules        | 2 +-
+>  udev-md-raid-assembly.rules      | 5 +++--
+>  udev-md-raid-safe-timeouts.rules | 2 +-
+>  3 files changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/udev-md-raid-arrays.rules b/udev-md-raid-arrays.rules
+> index 13c9076e..2967ace1 100644
+> --- a/udev-md-raid-arrays.rules
+> +++ b/udev-md-raid-arrays.rules
+> @@ -3,7 +3,7 @@
+>  SUBSYSTEM!="block", GOTO="md_end"
+>  
+>  # handle md arrays
+> -ACTION!="add|change", GOTO="md_end"
+> +ACTION=="remove", GOTO="md_end"
+>  KERNEL!="md*", GOTO="md_end"
+>  
+>  # partitions have no md/{array_state,metadata_version}, but should not
+> diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
+> index d668cddd..39b4344b 100644
+> --- a/udev-md-raid-assembly.rules
+> +++ b/udev-md-raid-assembly.rules
+> @@ -30,8 +30,9 @@ LABEL="md_inc"
+>  
+>  # remember you can limit what gets auto/incrementally assembled by
+>  # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+> -ACTION=="add|change", IMPORT{program}="BINDIR/mdadm --incremental --export $devnode --offroot $env{DEVLINKS}"
+> -ACTION=="add|change", ENV{MD_STARTED}=="*unsafe*", ENV{MD_FOREIGN}=="no", ENV{SYSTEMD_WANTS}+="mdadm-last-resort@$env{MD_DEVICE}.timer"
+> +ACTION!="remove", IMPORT{program}="BINDIR/mdadm --incremental --export $devnode --offroot $env{DEVLINKS}"
+> +ACTION!="remove", ENV{MD_STARTED}=="*unsafe*", ENV{MD_FOREIGN}=="no", ENV{SYSTEMD_WANTS}+="mdadm-last-resort@$env{MD_DEVICE}.timer"
+> +
+>  ACTION=="remove", ENV{ID_PATH}=="?*", RUN+="BINDIR/mdadm -If $name --path $env{ID_PATH}"
+>  ACTION=="remove", ENV{ID_PATH}!="?*", RUN+="BINDIR/mdadm -If $name"
+>  
+> diff --git a/udev-md-raid-safe-timeouts.rules b/udev-md-raid-safe-timeouts.rules
+> index 12bdcaa8..2e185cee 100644
+> --- a/udev-md-raid-safe-timeouts.rules
+> +++ b/udev-md-raid-safe-timeouts.rules
+> @@ -50,7 +50,7 @@ ENV{DEVTYPE}!="partition", GOTO="md_timeouts_end"
+>  
+>  IMPORT{program}="/sbin/mdadm --examine --export $devnode"
+>  
+> -ACTION=="add|change", \
+> +ACTION!="remove", \
+>    ENV{ID_FS_TYPE}=="linux_raid_member", \
+>    ENV{MD_LEVEL}=="raid[1-9]*", \
+>    TEST=="/sys/block/$parent/device/timeout", \
+> 
 
-Cheers,
-Wol
