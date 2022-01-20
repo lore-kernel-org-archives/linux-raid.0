@@ -2,425 +2,187 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE75DC433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 20 Jan 2022 12:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 067CBC433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 20 Jan 2022 12:30:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241934AbiATMSt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 20 Jan 2022 07:18:49 -0500
-Received: from mga11.intel.com ([192.55.52.93]:54204 "EHLO mga11.intel.com"
+        id S242382AbiATMa3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 20 Jan 2022 07:30:29 -0500
+Received: from mga07.intel.com ([134.134.136.100]:62801 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S241752AbiATMSs (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Thu, 20 Jan 2022 07:18:48 -0500
+        id S232606AbiATMa3 (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Thu, 20 Jan 2022 07:30:29 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642681128; x=1674217128;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=AErkOTAf2z0EFTtgK6qQQ3f4nRECKxUmvDG97tk7EBo=;
-  b=mTokL1Z/48olHUfs1rooeeYFLYkc1vap6H0cC+cvqwpMG8C+pc9rB6R4
-   /3w1kCN8dEMQWUBFcQIKSoiM+VpMgtQSJwAGnTG61vVMc6KCnPHo9510e
-   mQGl1kosnKgt9BT1Ve2+yZLofE6WKqqSgrhyUtS9r+90BO63bHVixOzfq
-   tF815ZPzXwiPhUwyGE83csoPxgD7DuuU6AHXu25unvbcReoKDQXgnkfM/
-   RetMf979gxmYXa0bGd4p9PXtC+Zsx4KLxeBE/YMqMwhsCymzRlt/YKC4o
-   /VAV6IjLxC/5sy1Lu7LvAH14GZb2eLsgXptR9m9yULpkKywolyNDFbALS
+  t=1642681829; x=1674217829;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=n6OcYj1V8RD9Ie+lh2zLjrW3Sv1/WvMJhf4uHfVR10Q=;
+  b=hTB/QJoWA79M4QiLR50M+CKEssBdNqLRDnpbe1aHYvYUQ3JwlPsgH7aG
+   fA+kCpNcdwwjs553oo+jZIxIi0B1aTD9Xyn/gSsvBkFugPfWD2bsBkWNM
+   ZF6kCMgWxU9BuJyfjIFlJIpiVBDbyuykWs0VtYgkXes2CDBrIKMCyv2mF
+   sqMD0WC0Cljyj1UF1QXmxRuhDqABtYly5QOFrK79xcJAQ8OQ1Lk3D+183
+   IeJU9LCz1r9eAyimFD4VV+5D3jUe2BOjKfKEpuljkPjj4MfhK4ieHXzP8
+   66cAQ4+PXoJgbYdkHzvd7rmCI/x7wnilLsUwewabt7fzACBlXf9wA9xa3
    g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10232"; a="242902490"
+X-IronPort-AV: E=McAfee;i="6200,9189,10232"; a="308680233"
 X-IronPort-AV: E=Sophos;i="5.88,302,1635231600"; 
-   d="scan'208";a="242902490"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2022 04:18:47 -0800
+   d="scan'208";a="308680233"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2022 04:30:28 -0800
+X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,302,1635231600"; 
-   d="scan'208";a="532751019"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2022 04:18:46 -0800
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     jes@trained-monkey.org
-Cc:     linux-raid@vger.kernel.org
-Subject: [PATCH 2/2] mdadm: add map_num_s()
-Date:   Thu, 20 Jan 2022 13:18:33 +0100
-Message-Id: <20220120121833.16055-3-mariusz.tkaczyk@linux.intel.com>
+   d="scan'208";a="518595265"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.97])
+  by orsmga007.jf.intel.com with ESMTP; 20 Jan 2022 04:30:27 -0800
+From:   Kinga Tanska <kinga.tanska@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org
+Subject: [PATCH] Mdmonitor: Fix segfault and improve logging
+Date:   Thu, 20 Jan 2022 13:32:13 +0100
+Message-Id: <20220120123213.17891-1-kinga.tanska@intel.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20220120121833.16055-1-mariusz.tkaczyk@linux.intel.com>
-References: <20220120121833.16055-1-mariusz.tkaczyk@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-map_num() returns NULL if key is not defined. This patch adds
-alternative, non NULL version for cases where NULL is not expected.
+From: Oleksandr Shchirskyi <oleksandr.shchirskyi@linux.intel.com>
 
-There are many printf() calls where map_num() is called on variable
-without NULL verification. It works, even if NULL is passed because
-gcc is able to ignore NULL argument quietly but the behavior is
-undefined. For safety reasons such usages will use map_num_s() now.
-It is a potential point of regression.
+Check that devices passed to mdmonitor are md arrays.
+Also, change logging, so mdmonitor in verbose mode will report its
+configuration.
 
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Signed-off-by: Oleksandr Shchirskyi <oleksandr.shchirskyi@intel.com>
+Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
 ---
- Assemble.c    |  6 ++----
- Create.c      |  2 +-
- Detail.c      |  4 ++--
- Grow.c        | 16 ++++++++--------
- Query.c       |  4 ++--
- maps.c        | 24 ++++++++++++++++++++++++
- mdadm.c       | 20 ++++++++++----------
- mdadm.h       |  2 +-
- super-ddf.c   |  6 +++---
- super-intel.c |  2 +-
- super0.c      |  2 +-
- super1.c      |  2 +-
- sysfs.c       |  9 +++++----
- 13 files changed, 61 insertions(+), 38 deletions(-)
+ Monitor.c | 36 ++++++++++++++++++++++++------------
+ mdadm.h   |  1 +
+ mdopen.c  | 17 +++++++++++++++++
+ util.c    |  2 +-
+ 4 files changed, 43 insertions(+), 13 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 704b829..9eac9ce 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -63,7 +63,7 @@ static void set_array_assembly_status(struct context *c,
- 				   struct assembly_array_info *arr)
- {
- 	int raid_disks = arr->preexist_cnt + arr->new_cnt;
--	char *status_msg = map_num(assemble_statuses, status);
-+	char *status_msg = map_num_s(assemble_statuses, status);
+diff --git a/Monitor.c b/Monitor.c
+index f5412299..bd417d04 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -137,24 +137,27 @@ int Monitor(struct mddev_dev *devlist,
+ 	struct mddev_ident *mdlist;
+ 	int delay_for_event = c->delay;
  
- 	if (c->export && result)
- 		*result |= status;
-@@ -77,9 +77,7 @@ static void set_array_assembly_status(struct context *c,
- 		fprintf(stderr, " (%d new)", arr->new_cnt);
- 	if (arr->exp_cnt)
- 		fprintf(stderr, " ( + %d for expansion)", arr->exp_cnt);
--	if (status_msg)
--		fprintf(stderr, " %s", status_msg);
--	fprintf(stderr, ".\n");
-+	fprintf(stderr, " %s.\n", status_msg);
- }
+-	if (!mailaddr) {
++	if (!mailaddr)
+ 		mailaddr = conf_get_mailaddr();
+-		if (mailaddr && ! c->scan)
+-			pr_err("Monitor using email address \"%s\" from config file\n",
+-			       mailaddr);
+-	}
+-	mailfrom = conf_get_mailfrom();
  
- static int name_matches(char *found, char *required, char *homehost, int require_homehost)
-diff --git a/Create.c b/Create.c
-index 9ea19de..c84c1ac 100644
---- a/Create.c
-+++ b/Create.c
-@@ -83,7 +83,7 @@ int default_layout(struct supertype *st, int level, int verbose)
- 
- 	if (layout_map) {
- 		layout = map_name(layout_map, "default");
--		layout_name = map_num(layout_map, layout);
-+		layout_name = map_num_s(layout_map, layout);
- 	}
- 	if (layout_name && verbose > 0)
- 		pr_err("layout defaults to %s\n", layout_name);
-diff --git a/Detail.c b/Detail.c
-index 95d4cc7..ce7a844 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -495,8 +495,8 @@ int Detail(char *dev, struct context *c)
- 			if (array.state & (1 << MD_SB_CLEAN)) {
- 				if ((array.level == 0) ||
- 				    (array.level == LEVEL_LINEAR))
--					arrayst = map_num(sysfs_array_states,
--							  sra->array_state);
-+					arrayst = map_num_s(sysfs_array_states,
-+							       sra->array_state);
- 				else
- 					arrayst = "clean";
- 			} else {
-diff --git a/Grow.c b/Grow.c
-index 9c6fc95..bb505c3 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -548,7 +548,7 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
- 	if (s->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
- 	    s->consistency_policy != CONSISTENCY_POLICY_PPL) {
- 		pr_err("Operation not supported for consistency policy %s\n",
--		       map_num(consistency_policies, s->consistency_policy));
-+		       map_num_s(consistency_policies, s->consistency_policy));
+-	if (!alert_cmd) {
++	if (!alert_cmd)
+ 		alert_cmd = conf_get_program();
+-		if (alert_cmd && !c->scan)
+-			pr_err("Monitor using program \"%s\" from config file\n",
+-			       alert_cmd);
+-	}
++
++	mailfrom = conf_get_mailfrom();
++
+ 	if (c->scan && !mailaddr && !alert_cmd && !dosyslog) {
+ 		pr_err("No mail address or alert command - not monitoring.\n");
  		return 1;
  	}
- 
-@@ -579,14 +579,14 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
- 
- 	if (sra->consistency_policy == (unsigned)s->consistency_policy) {
- 		pr_err("Consistency policy is already %s\n",
--		       map_num(consistency_policies, s->consistency_policy));
-+		       map_num_s(consistency_policies, s->consistency_policy));
- 		ret = 1;
- 		goto free_info;
- 	} else if (sra->consistency_policy != CONSISTENCY_POLICY_RESYNC &&
- 		   sra->consistency_policy != CONSISTENCY_POLICY_PPL) {
- 		pr_err("Current consistency policy is %s, cannot change to %s\n",
--		       map_num(consistency_policies, sra->consistency_policy),
--		       map_num(consistency_policies, s->consistency_policy));
-+		       map_num_s(consistency_policies, sra->consistency_policy),
-+		       map_num_s(consistency_policies, s->consistency_policy));
- 		ret = 1;
- 		goto free_info;
- 	}
-@@ -705,8 +705,8 @@ int Grow_consistency_policy(char *devname, int fd, struct context *c, struct sha
- 	}
- 
- 	ret = sysfs_set_str(sra, NULL, "consistency_policy",
--			    map_num(consistency_policies,
--				    s->consistency_policy));
-+			    map_num_s(consistency_policies,
-+					 s->consistency_policy));
- 	if (ret)
- 		pr_err("Failed to change array consistency policy\n");
- 
-@@ -2236,7 +2236,7 @@ size_change_error:
- 		info.new_layout = UnSet;
- 		if (info.array.level == 6 && info.new_level == UnSet) {
- 			char l[40], *h;
--			strcpy(l, map_num(r6layout, info.array.layout));
-+			strcpy(l, map_num_s(r6layout, info.array.layout));
- 			h = strrchr(l, '-');
- 			if (h && strcmp(h, "-6") == 0) {
- 				*h = 0;
-@@ -2261,7 +2261,7 @@ size_change_error:
- 			info.new_layout = info.array.layout;
- 		else if (info.array.level == 5 && info.new_level == 6) {
- 			char l[40];
--			strcpy(l, map_num(r5layout, info.array.layout));
-+			strcpy(l, map_num_s(r5layout, info.array.layout));
- 			strcat(l, "-6");
- 			info.new_layout = map_name(r6layout, l);
- 		} else {
-diff --git a/Query.c b/Query.c
-index 23fbf8a..adcd231 100644
---- a/Query.c
-+++ b/Query.c
-@@ -93,7 +93,7 @@ int Query(char *dev)
- 	else {
- 		printf("%s: %s %s %d devices, %d spare%s. Use mdadm --detail for more detail.\n",
- 		       dev, human_size_brief(larray_size,IEC),
--		       map_num(pers, level), raid_disks,
-+		       map_num_s(pers, level), raid_disks,
- 		       spare_disks, spare_disks == 1 ? "" : "s");
- 	}
- 	st = guess_super(fd);
-@@ -131,7 +131,7 @@ int Query(char *dev)
- 		       dev,
- 		       info.disk.number, info.array.raid_disks,
- 		       activity,
--		       map_num(pers, info.array.level),
-+		       map_num_s(pers, info.array.level),
- 		       mddev);
- 		if (st->ss == &super0)
- 			put_md_name(mddev);
-diff --git a/maps.c b/maps.c
-index a4fd279..20fcf71 100644
---- a/maps.c
-+++ b/maps.c
-@@ -166,6 +166,30 @@ mapping_t sysfs_array_states[] = {
- 	{ NULL, ARRAY_UNKNOWN_STATE }
- };
- 
-+/**
-+ * map_num_s() - Safer alternative of map_num() function.
-+ * @map: map to search.
-+ * @num: key to match.
-+ *
-+ * Shall be used only if key existence is quaranted.
-+ *
-+ * Return: Pointer to name of the element.
-+ */
-+char *map_num_s(mapping_t *map, int num)
-+{
-+	char *ret = map_num(map, num);
 +
-+	assert(ret);
-+	return ret;
-+}
++	if (c->verbose) {
++		pr_err("Monitor is started with delay %ds\n", c->delay);
++		if (mailaddr)
++			pr_err("Monitor using email address %s\n", mailaddr);
++		if (alert_cmd)
++			pr_err("Monitor using program %s\n", alert_cmd);
++	}
 +
-+/**
-+ * map_num() - get element name by key.
-+ * @map: map to search.
-+ * @num: key to match.
-+ *
-+ * Return: Pointer to name of the element or NULL.
-+ */
- char *map_num(mapping_t *map, int num)
- {
- 	while (map->name) {
-diff --git a/mdadm.c b/mdadm.c
-index 26299b2..be40686 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -280,8 +280,8 @@ int main(int argc, char *argv[])
- 			else
- 				fprintf(stderr, "-%c", opt);
- 			fprintf(stderr, " would set mdadm mode to \"%s\", but it is already set to \"%s\".\n",
--				map_num(modes, newmode),
--				map_num(modes, mode));
-+				map_num_s(modes, newmode),
-+				map_num_s(modes, mode));
- 			exit(2);
- 		} else if (!mode && newmode) {
- 			mode = newmode;
-@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
- 			switch(s.level) {
- 			default:
- 				pr_err("layout not meaningful for %s arrays.\n",
--					map_num(pers, s.level));
-+					map_num_s(pers, s.level));
- 				exit(2);
- 			case UnSet:
- 				pr_err("raid level must be given before layout.\n");
-@@ -1248,10 +1248,10 @@ int main(int argc, char *argv[])
- 		if (option_index > 0)
- 			pr_err(":option --%s not valid in %s mode\n",
- 				long_options[option_index].name,
--				map_num(modes, mode));
-+				map_num_s(modes, mode));
- 		else
- 			pr_err("option -%c not valid in %s mode\n",
--				opt, map_num(modes, mode));
-+				opt, map_num_s(modes, mode));
- 		exit(2);
+ 	info.alert_cmd = alert_cmd;
+ 	info.mailaddr = mailaddr;
+ 	info.mailfrom = mailfrom;
+@@ -183,6 +186,10 @@ int Monitor(struct mddev_dev *devlist,
+ 				continue;
+ 			if (strcasecmp(mdlist->devname, "<ignore>") == 0)
+ 				continue;
++
++			if (!is_mddev(mdlist->devname))
++				return 1;
++
+ 			st = xcalloc(1, sizeof *st);
+ 			if (mdlist->devname[0] == '/')
+ 				st->devname = xstrdup(mdlist->devname);
+@@ -204,7 +211,12 @@ int Monitor(struct mddev_dev *devlist,
+ 		struct mddev_dev *dv;
  
- 	}
-@@ -1276,7 +1276,7 @@ int main(int argc, char *argv[])
- 		if (s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN &&
- 		    s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
- 			pr_err("--write-journal is not supported with consistency policy: %s\n",
--			       map_num(consistency_policies, s.consistency_policy));
-+			       map_num_s(consistency_policies, s.consistency_policy));
- 			exit(2);
- 		}
- 	}
-@@ -1285,12 +1285,12 @@ int main(int argc, char *argv[])
- 	    s.consistency_policy != CONSISTENCY_POLICY_UNKNOWN) {
- 		if (s.level <= 0) {
- 			pr_err("--consistency-policy not meaningful with level %s.\n",
--			       map_num(pers, s.level));
-+			       map_num_s(pers, s.level));
- 			exit(2);
- 		} else if (s.consistency_policy == CONSISTENCY_POLICY_JOURNAL &&
- 			   !s.journaldisks) {
- 			pr_err("--write-journal is required for consistency policy: %s\n",
--			       map_num(consistency_policies, s.consistency_policy));
-+			       map_num_s(consistency_policies, s.consistency_policy));
- 			exit(2);
- 		} else if (s.consistency_policy == CONSISTENCY_POLICY_PPL &&
- 			   s.level != 5) {
-@@ -1300,14 +1300,14 @@ int main(int argc, char *argv[])
- 			   (!s.bitmap_file ||
- 			    strcmp(s.bitmap_file, "none") == 0)) {
- 			pr_err("--bitmap is required for consistency policy: %s\n",
--			       map_num(consistency_policies, s.consistency_policy));
-+			       map_num_s(consistency_policies, s.consistency_policy));
- 			exit(2);
- 		} else if (s.bitmap_file &&
- 			   strcmp(s.bitmap_file, "none") != 0 &&
- 			   s.consistency_policy != CONSISTENCY_POLICY_BITMAP &&
- 			   s.consistency_policy != CONSISTENCY_POLICY_JOURNAL) {
- 			pr_err("--bitmap is not compatible with consistency policy: %s\n",
--			       map_num(consistency_policies, s.consistency_policy));
-+			       map_num_s(consistency_policies, s.consistency_policy));
- 			exit(2);
- 		}
- 	}
+ 		for (dv = devlist; dv; dv = dv->next) {
+-			struct state *st = xcalloc(1, sizeof *st);
++			struct state *st;
++
++			if (!is_mddev(dv->devname))
++				return 1;
++
++			st = xcalloc(1, sizeof *st);
+ 			mdlist = conf_get_ident(dv->devname);
+ 			st->devname = xstrdup(dv->devname);
+ 			st->next = statelist;
 diff --git a/mdadm.h b/mdadm.h
-index 6aff034..9e9c4d8 100644
+index 8f8841d8..03151c34 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -769,7 +769,7 @@ extern int restore_stripes(int *dest, unsigned long long *offsets,
- #endif
+@@ -1607,6 +1607,7 @@ extern int create_mddev(char *dev, char *name, int autof, int trustworthy,
+ #define	FOREIGN	2
+ #define	METADATA 3
+ extern int open_mddev(char *dev, int report_errors);
++extern int is_mddev(char *dev);
+ extern int open_container(int fd);
+ extern int metadata_container_matches(char *metadata, char *devnm);
+ extern int metadata_subdev_matches(char *metadata, char *devnm);
+diff --git a/mdopen.c b/mdopen.c
+index 245be537..d18c9319 100644
+--- a/mdopen.c
++++ b/mdopen.c
+@@ -475,6 +475,23 @@ int open_mddev(char *dev, int report_errors)
+ 	return mdfd;
+ }
  
- #define SYSLOG_FACILITY LOG_DAEMON
--
-+char *map_num_s(mapping_t *map, int num);
- extern char *map_num(mapping_t *map, int num);
- extern int map_name(mapping_t *map, char *name);
- extern mapping_t r0layout[], r5layout[], r6layout[],
-diff --git a/super-ddf.c b/super-ddf.c
-index 3f304cd..8cda23a 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -1477,13 +1477,13 @@ static void examine_vds(struct ddf_super *sb)
- 		printf("\n");
- 		printf("         unit[%d] : %d\n", i, be16_to_cpu(ve->unit));
- 		printf("        state[%d] : %s, %s%s\n", i,
--		       map_num(ddf_state, ve->state & 7),
-+		       map_num_s(ddf_state, ve->state & 7),
- 		       (ve->state & DDF_state_morphing) ? "Morphing, ": "",
- 		       (ve->state & DDF_state_inconsistent)? "Not Consistent" : "Consistent");
- 		printf("   init state[%d] : %s\n", i,
--		       map_num(ddf_init_state, ve->init_state&DDF_initstate_mask));
-+		       map_num_s(ddf_init_state, ve->init_state & DDF_initstate_mask));
- 		printf("       access[%d] : %s\n", i,
--		       map_num(ddf_access, (ve->init_state & DDF_access_mask) >> 6));
-+		       map_num_s(ddf_access, (ve->init_state & DDF_access_mask) >> 6));
- 		printf("         Name[%d] : %.16s\n", i, ve->name);
- 		examine_vd(i, sb, ve->guid);
- 	}
-diff --git a/super-intel.c b/super-intel.c
-index d5fad10..f72d485 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5625,7 +5625,7 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
- 		free(dev);
- 		free(dv);
- 		pr_err("imsm does not support consistency policy %s\n",
--		       map_num(consistency_policies, s->consistency_policy));
-+		       map_num_s(consistency_policies, s->consistency_policy));
- 		return 0;
- 	}
- 
-diff --git a/super0.c b/super0.c
-index b79b97a..61c9ec1 100644
---- a/super0.c
-+++ b/super0.c
-@@ -288,7 +288,7 @@ static void export_examine_super0(struct supertype *st)
- {
- 	mdp_super_t *sb = st->sb;
- 
--	printf("MD_LEVEL=%s\n", map_num(pers, sb->level));
-+	printf("MD_LEVEL=%s\n", map_num_s(pers, sb->level));
- 	printf("MD_DEVICES=%d\n", sb->raid_disks);
- 	if (sb->minor_version >= 90)
- 		printf("MD_UUID=%08x:%08x:%08x:%08x\n",
-diff --git a/super1.c b/super1.c
-index a12a5bc..e3e2f95 100644
---- a/super1.c
-+++ b/super1.c
-@@ -671,7 +671,7 @@ static void export_examine_super1(struct supertype *st)
- 	int len = 32;
- 	int layout;
- 
--	printf("MD_LEVEL=%s\n", map_num(pers, __le32_to_cpu(sb->level)));
-+	printf("MD_LEVEL=%s\n", map_num_s(pers, __le32_to_cpu(sb->level)));
- 	printf("MD_DEVICES=%d\n", __le32_to_cpu(sb->raid_disks));
- 	for (i = 0; i < 32; i++)
- 		if (sb->set_name[i] == '\n' || sb->set_name[i] == '\0') {
-diff --git a/sysfs.c b/sysfs.c
-index 2995713..0d98a65 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -689,7 +689,7 @@ int sysfs_set_array(struct mdinfo *info, int vers)
- 	if (info->array.level < 0)
- 		return 0; /* FIXME */
- 	rv |= sysfs_set_str(info, NULL, "level",
--			    map_num(pers, info->array.level));
-+			    map_num_s(pers, info->array.level));
- 	if (info->reshape_active && info->delta_disks != UnSet)
- 		raid_disks -= info->delta_disks;
- 	rv |= sysfs_set_num(info, NULL, "raid_disks", raid_disks);
-@@ -724,9 +724,10 @@ int sysfs_set_array(struct mdinfo *info, int vers)
- 	}
- 
- 	if (info->consistency_policy == CONSISTENCY_POLICY_PPL) {
--		if (sysfs_set_str(info, NULL, "consistency_policy",
--				  map_num(consistency_policies,
--					  info->consistency_policy))) {
-+		char *policy = map_num_s(consistency_policies,
-+					    info->consistency_policy);
++/**
++ * is_mddev() - check that file name passed is an md device.
++ * @dev: file name that has to be checked.
++ * Return: 1 if file passed is an md device, 0 if not.
++ */
++int is_mddev(char *dev)
++{
++	int fd = open_mddev(dev, 1);
 +
-+		if (sysfs_set_str(info, NULL, "consistency_policy", policy)) {
- 			pr_err("This kernel does not support PPL. Falling back to consistency-policy=resync.\n");
- 			info->consistency_policy = CONSISTENCY_POLICY_RESYNC;
- 		}
++	if (fd >= 0) {
++		close(fd);
++		return 1;
++	}
++
++	return 0;
++}
++
+ char *find_free_devnm(int use_partitions)
+ {
+ 	static char devnm[32];
+diff --git a/util.c b/util.c
+index cdf1da24..003b2f86 100644
+--- a/util.c
++++ b/util.c
+@@ -268,7 +268,7 @@ int md_array_active(int fd)
+ 		 * GET_ARRAY_INFO doesn't provide access to the proper state
+ 		 * information, so fallback to a basic check for raid_disks != 0
+ 		 */
+-		ret = ioctl(fd, GET_ARRAY_INFO, &array);
++		ret = md_get_array_info(fd, &array);
+ 	}
+ 
+ 	return !ret;
 -- 
 2.26.2
 
