@@ -2,187 +2,137 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73D55C433F5
-	for <linux-raid@archiver.kernel.org>; Sun, 23 Jan 2022 18:01:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 230A5C433F5
+	for <linux-raid@archiver.kernel.org>; Sun, 23 Jan 2022 21:34:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239435AbiAWSBe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 23 Jan 2022 13:01:34 -0500
-Received: from mout.web.de ([212.227.17.12]:41687 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229782AbiAWSBe (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Sun, 23 Jan 2022 13:01:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1642960885;
-        bh=bJsXUuPlICLfbiMkqCIV04KvOojmltiJuRPCGGD/u4U=;
-        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
-        b=nbY02BpE2Kqki6uJfnLbdJJ/jJ0v/4ZSgx98Zf41cEi9U/wGWt2a/hvF5oU6EP9ga
-         ZGFznj3fJFalfn0wo99vxCStNh0uLo6JeFQHwvN5GNHwio6uI8nJKJ9A8vX3oKYfVP
-         6a2lkVJTwiCPL2ME2/0EDvRZHUEaWz+HdLNNqkVw=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from gecko.fritz.box ([88.130.61.190]) by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1N2jWI-1m8liL0rs4-013RFz; Sun, 23
- Jan 2022 19:01:25 +0100
-Date:   Sun, 23 Jan 2022 18:00:58 +0000
-From:   Lukas Straub <lukasstraub2@web.de>
+        id S240227AbiAWVeG (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 23 Jan 2022 16:34:06 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:59963 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S235024AbiAWVeG (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sun, 23 Jan 2022 16:34:06 -0500
+Received: from [192.168.0.2] (ip5f5aeacb.dynamic.kabel-deutschland.de [95.90.234.203])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id D07E361E6478B;
+        Sun, 23 Jan 2022 22:34:03 +0100 (CET)
+Message-ID: <70008df6-ef90-6e8d-8a57-9b30077508e7@molgen.mpg.de>
+Date:   Sun, 23 Jan 2022 22:34:02 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [dm-devel] Raid0 performance regression
+Content-Language: en-US
 To:     Roger Willcocks <roger@filmlight.ltd.uk>
 Cc:     dm-devel@redhat.com, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org
-Subject: Re: [dm-devel] Raid0 performance regression
-Message-ID: <20220123180058.372f72ce@gecko.fritz.box>
-In-Reply-To: <747C2684-B570-473E-9146-E8AB53102236@filmlight.ltd.uk>
+        linux-raid@vger.kernel.org, Lukas Straub <lukasstraub2@web.de>
 References: <747C2684-B570-473E-9146-E8AB53102236@filmlight.ltd.uk>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/GZ0tmCs_SnSHS/nelJGggip";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-X-Provags-ID: V03:K1:kPWNIjImIHtuCjzpGybCkDSuTRJFlUEXHw8hoVW59PKAIbK2WEp
- SqypDWP/V44GOWjrPD/PIwM1hRp8jyONukUuWUNThzrwRpkZBLetPO5mEqh1LDNhw7ucx5f
- bGcZcRJr3iRsLeM2Eh2Hlrw+ScpBPfMrz3R5jAM/66Vm4P+oOYZgXr5JVzcWxTYpZmxU/KA
- eg8QqnPgwbN1+IwzdoH5A==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:7DHrsCfIh00=:H9N7OWxrwBp/8CgtS6PCb1
- 6ilP9T8pGFRJ171de7chibE+7APLwkWJxGlXUAs3ybf4O7rRKAwJauL6Youaj+Kqr6Oc0ybcJ
- mgtT/NbkkC21gtog5W/OUS1DaNyPnWz4r5UxlxGxVh1Yea74gqRsOdXftuvCE0HQnJSPzprAU
- HZO8kJaRoSIitxRTfi7BaHfgtI4R2hZcgRJFAYAH8Ysa+h/rLN7X4//bQe+7kmFH5j9kUq6Bg
- XZWzPetr4OjIYV4/5zmyy0w7v7XRtoO36T19LT/838WYBPscO7cqrtO37wIXpJ3JQXTaehlhg
- VkFHUaGJlHrJr9BQtP/GRP0eNfd6hSgQ5c9oZpXXnwWbgzlf/Kse3xeckamK8Bta2JjXfgr9s
- pRFRtCn/1TIZzQ2sGa5L/cuFYuU48aem/P/aFB3iJ41KORYpAQ2VbXlqTSDHa/zE+PXfARXlU
- 3cGgtL/+HQEu1j6cEsNsRiNC8HFGVPU8andb/Heqeqpx+qCjmvwc8YnAffzDF7YFHJ4FzOxp6
- ngMCGasROZkP4ZKLLd4AgMpmtUxuIPGwoGnL1j1M20qG0NLNQHI86kcl+st4HfmZubCT4PNc5
- xJdfmhMdG0hLxW+IiT5TbVhz2+TpyEm98oD+Dv9bX9FPpU1dmC4GVBzs4vTlp9u6MBE7bmR90
- HhStCEvi66SeYnYmezVNyRGCjE0gaeYYOLGrP0Pnzre0Q5oKRNme/5zvJpxxoi4JBUvw8d08V
- KwqYcDJDpYrpiMv1puhIyQ4ZQ0wA13d2SDToVPYV5hkV22ES2xT171IgzqN7bqyJ7porApNPc
- 5XkcalVZv1Xgp6lury7AQ4g62vxuDo179bosBNQTVSoLik+ycWKt2omD7JqP441iWx3OR1H4D
- Fb+PmxFlHIQuMq1q4Qp5TF6RV46qnxKeib7jlLBt0yUmwoOzHYpBKKsprYr1QPExPOcQtJkoR
- F2L1ym8BG+pUjvs/cv2197CouzEEKgQLPB8u/JpMHYie0XwV41dPVEb3iuolVreWBi9EzN4Dw
- dZoBN6Adi1gvUu3pRXctvVkl1jypdZkGNL73cw1/pAAO7O/mo7RBwPhteaolV4N/ds7ANKjZh
- rYkb3gFZ3yDuqU=
+ <20220123180058.372f72ce@gecko.fritz.box>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20220123180058.372f72ce@gecko.fritz.box>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
---Sig_/GZ0tmCs_SnSHS/nelJGggip
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-CC'ing Song Liu (md-raid maintainer) and linux-raid mailing list.
-
-On Fri, 21 Jan 2022 16:38:03 +0000
-Roger Willcocks <roger@filmlight.ltd.uk> wrote:
-
-> Hi folks,
->=20
-> we noticed a thirty percent drop in performance on one of our raid
-> arrays when switching from CentOS 6.5 to 8.4; it uses raid0-like
-> striping to balance (by time) access to a pair of hardware raid-6
-> arrays. The underlying issue is also present in the native raid0
-> driver so herewith the gory details; I'd appreciate your thoughts.
->=20
-> --
->=20
-> blkdev_direct_IO() calls submit_bio() which calls an outermost
-> generic_make_request() (aka submit_bio_noacct()).
->=20
-> md_make_request() calls blk_queue_split() which cuts an incoming
-> request into two parts with the first no larger than get_max_io_size()
-> bytes (which in the case of raid0, is the chunk size):
->=20
->   R -> AB
->  =20
-> blk_queue_split() gives the second part 'B' to generic_make_request()
-> to worry about later and returns the first part 'A'.
->=20
-> md_make_request() then passes 'A' to a more specific request handler,
-> In this case raid0_make_request().
->=20
-> raid0_make_request() cuts its incoming request into two parts at the
-> next chunk boundary:
->=20
-> A -> ab
->=20
-> it then fixes up the device (chooses a physical device) for 'a', and
-> gives both parts, separately, to generic make request()
->=20
-> This is where things go awry, because 'b' is still targetted to the
-> original device (same as 'B'), but 'B' was queued before 'b'. So we
-> end up with:
->=20
->   R -> Bab
->=20
-> The outermost generic_make_request() then cuts 'B' at
-> get_max_io_size(), and the process repeats. Ascii art follows:
->=20
->=20
->     /---------------------------------------------------/   incoming rq
->=20
->     /--------/--------/--------/--------/--------/------/   max_io_size
->      =20
-> |--------|--------|--------|--------|--------|--------|--------| chunks
->=20
-> |...=3D=3D=3D=3D=3D|---=3D=3D=3D=3D=3D|---=3D=3D=3D=3D=3D|---=3D=3D=3D=3D=
-=3D|---=3D=3D=3D=3D=3D|---=3D=3D=3D=3D=3D|--......| rq out
->       a    b  c     d  e     f  g     h  i     j  k     l
->=20
-> Actual submission order for two-disk raid0: 'aeilhd' and 'cgkjfb'
->=20
-> --
->=20
-> There are several potential fixes -
->=20
-> simplest is to set raid0 blk_queue_max_hw_sectors() to UINT_MAX
-> instead of chunk_size, so that raid0_make_request() receives the
-> entire transfer length and cuts it up at chunk boundaries;
->=20
-> neatest is for raid0_make_request() to recognise that 'b' doesn't
-> cross a chunk boundary so it can be sent directly to the physical
-> device;
->=20
-> and correct is for blk_queue_split to requeue 'A' before 'B'.
->=20
-> --
->=20
-> There's also a second issue - with large raid0 chunk size (256K), the
-> segments submitted to the physical device are at least 128K and
-> trigger the early unplug code in blk_mq_make_request(), so the
-> requests are never merged. There are legitimate reasons for a large
-> chunk size so this seems unhelpful.
->=20
-> --
->=20
-> As I said, I'd appreciate your thoughts.
->=20
-> --
->=20
-> Roger
->=20
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://listman.redhat.com/mailman/listinfo/dm-devel
->=20
+Dear Roger,
 
 
+Am 23.01.22 um 19:00 schrieb Lukas Straub:
+> CC'ing Song Liu (md-raid maintainer) and linux-raid mailing list.
+> 
+> On Fri, 21 Jan 2022 16:38:03 +0000 Roger Willcocks wrote:
 
---=20
+>> we noticed a thirty percent drop in performance on one of our raid
+>> arrays when switching from CentOS 6.5 to 8.4; it uses raid0-like
+
+For those outside the CentOS universe, what Linux kernel versions are those?
+
+>> striping to balance (by time) access to a pair of hardware raid-6
+>> arrays. The underlying issue is also present in the native raid0
+>> driver so herewith the gory details; I'd appreciate your thoughts.
+>>
+>> --
+>>
+>> blkdev_direct_IO() calls submit_bio() which calls an outermost
+>> generic_make_request() (aka submit_bio_noacct()).
+>>
+>> md_make_request() calls blk_queue_split() which cuts an incoming
+>> request into two parts with the first no larger than get_max_io_size()
+>> bytes (which in the case of raid0, is the chunk size):
+>>
+>>    R -> AB
+>>    
+>> blk_queue_split() gives the second part 'B' to generic_make_request()
+>> to worry about later and returns the first part 'A'.
+>>
+>> md_make_request() then passes 'A' to a more specific request handler,
+>> In this case raid0_make_request().
+>>
+>> raid0_make_request() cuts its incoming request into two parts at the
+>> next chunk boundary:
+>>
+>> A -> ab
+>>
+>> it then fixes up the device (chooses a physical device) for 'a', and
+>> gives both parts, separately, to generic make request()
+>>
+>> This is where things go awry, because 'b' is still targetted to the
+>> original device (same as 'B'), but 'B' was queued before 'b'. So we
+>> end up with:
+>>
+>>    R -> Bab
+>>
+>> The outermost generic_make_request() then cuts 'B' at
+>> get_max_io_size(), and the process repeats. Ascii art follows:
+>>
+>>
+>>      /---------------------------------------------------/   incoming rq
+>>
+>>      /--------/--------/--------/--------/--------/------/   max_io_size
+>>        
+>> |--------|--------|--------|--------|--------|--------|--------| chunks
+>>
+>> |...=====|---=====|---=====|---=====|---=====|---=====|--......| rq out
+>>        a    b  c     d  e     f  g     h  i     j  k     l
+>>
+>> Actual submission order for two-disk raid0: 'aeilhd' and 'cgkjfb'
+>>
+>> --
+>>
+>> There are several potential fixes -
+>>
+>> simplest is to set raid0 blk_queue_max_hw_sectors() to UINT_MAX
+>> instead of chunk_size, so that raid0_make_request() receives the
+>> entire transfer length and cuts it up at chunk boundaries;
+>>
+>> neatest is for raid0_make_request() to recognise that 'b' doesn't
+>> cross a chunk boundary so it can be sent directly to the physical
+>> device;
+>>
+>> and correct is for blk_queue_split to requeue 'A' before 'B'.
+>>
+>> --
+>>
+>> There's also a second issue - with large raid0 chunk size (256K), the
+>> segments submitted to the physical device are at least 128K and
+>> trigger the early unplug code in blk_mq_make_request(), so the
+>> requests are never merged. There are legitimate reasons for a large
+>> chunk size so this seems unhelpful.
+>>
+>> --
+>>
+>> As I said, I'd appreciate your thoughts.
+
+Thank you for the report and the analysis.
+
+Is the second issue also a regression? If not, I suggest to split it 
+into a separate thread.
 
 
---Sig_/GZ0tmCs_SnSHS/nelJGggip
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Kind regards,
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEg/qxWKDZuPtyYo+kNasLKJxdslgFAmHtl9oACgkQNasLKJxd
-sli4Sw/+N9iq8lks5gThYPYEHqhuC6L6uxjdOaKbogXJeJTFOJgeEVK2h8uDmmRF
-O2v0r6+GVf9NUL6PDYPKYyixprJVIFAlnysylH/dWxXoQpfOgy43ZZ1GzsHabuvb
-zNUszjQZup1siYl4aPm/XmHF3IhaQWlM0zRVSC/A5kysJaAWvdRV2ZW8G0kO5kBP
-kDTF0oNEaq2LuYhH5V//9gXJnG7uNAqh+m+vEs/spYLiExkvBv4zHnKIJqA46ZxZ
-zb/NXlRuAKE7EQZUzKCUhErSaMz/YDxA9eb/6lDFq44SwjE3tJoW269ED5pKNxm9
-yiZebo+iWCKm1qkzyECSTNAQ/qqVb+jXCI8864tQjjd/tRYnV15MGeFfJkhmUKJP
-E2cjz5jmNNg6m95qzQKB0dAepJSq4b6xWdg2CvfPdxnj5UQU5PXVpeopldaE9DER
-pCXHPPpBwbYDkIVWgFP2HV8GQ71xHl3Y9jfrMzMrA44vUPK7agU4gZcqEdP80mle
-mrv/xbkqo/uvZ2AVBs89Ohxdd5AdnbcVJjfnDRWHAC5HFMDB4wJoLPQX0cByMhlr
-QQbfxv1/QdPWGugwSxPMkET0ya8xlMNgGADn1aCzmGCgnhih33s0YxyDFPaQBV4N
-oAFbVrpJW068KXTSyBwTN5migxe58FEkOjDQKfdvATOZfpMaIag=
-=MMEp
------END PGP SIGNATURE-----
-
---Sig_/GZ0tmCs_SnSHS/nelJGggip--
+Paul
