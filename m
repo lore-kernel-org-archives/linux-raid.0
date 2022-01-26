@@ -2,128 +2,62 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 150E8C2BA4C
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Jan 2022 11:42:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A1CC2BA4C
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Jan 2022 12:06:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240841AbiAZLmS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Jan 2022 06:42:18 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:60575 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S240838AbiAZLmL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 26 Jan 2022 06:42:11 -0500
-Received: from localhost.localdomain (ip5f5aecd1.dynamic.kabel-deutschland.de [95.90.236.209])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 076D661EA1922;
-        Wed, 26 Jan 2022 12:42:10 +0100 (CET)
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-To:     Song Liu <song@kernel.org>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linuxppc-dev@lists.ozlabs.org, linux-raid@vger.kernel.org,
-        Matt Brown <matthew.brown.dev@gmail.com>
-Subject: [PATCH 3/3] lib/raid6/test: Rename variable to avoid `raid6_call` name clash
-Date:   Wed, 26 Jan 2022 12:41:44 +0100
-Message-Id: <20220126114144.370517-3-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+        id S241089AbiAZMGQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Jan 2022 07:06:16 -0500
+Received: from eu-smtp-delivery-151.mimecast.com ([185.58.85.151]:27904 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241060AbiAZMGP (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 26 Jan 2022 07:06:15 -0500
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-68-SGSsYXn4MZ-w7ghbs9S6ew-1; Wed, 26 Jan 2022 12:06:12 +0000
+X-MC-Unique: SGSsYXn4MZ-w7ghbs9S6ew-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
+ Server (TLS) id 15.0.1497.28; Wed, 26 Jan 2022 12:06:09 +0000
+Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
+ AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
+ 15.00.1497.028; Wed, 26 Jan 2022 12:06:09 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Paul Menzel' <pmenzel@molgen.mpg.de>, Song Liu <song@kernel.org>
+CC:     "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        Matt Brown <matthew.brown.dev@gmail.com>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH 1/3] lib/raid6/test/Makefile: Use `$(pound)` instead of
+ `\#` for Make 4.3
+Thread-Topic: [PATCH 1/3] lib/raid6/test/Makefile: Use `$(pound)` instead of
+ `\#` for Make 4.3
+Thread-Index: AQHYEqnO/EgEqhFx3k6DzicFruc4Lax1NEHA
+Date:   Wed, 26 Jan 2022 12:06:09 +0000
+Message-ID: <0214ae2639174812948a631ac4e142c8@AcuMS.aculab.com>
 References: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+In-Reply-To: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Ubuntu 21.10 (ppc64le) building `raid6test` with gcc (Ubuntu
-11.2.0-7ubuntu2) 11.2.0 fails with the error below.
-
-    $ cd lib/raid6/test
-    $ make
-    […]
-    gcc -I.. -I ../../../include -g -O2                      -I../../../arch/powerpc/include -DCONFIG_ALTIVEC -o raid6test test.c raid6.a
-    /usr/bin/ld: raid6.a(algos.o):/dev/shm/linux/lib/raid6/test/algos.c:28: multiple definition of `raid6_call'; /scratch/local/ccHnUnID.o:/dev/shm/linux/lib/raid6/test/test.c:22: first defined here
-    collect2: error: ld returned 1 exit status
-    make: *** [Makefile:74: raid6test] Error 1
-
-Renaming the variable in `test.c` to `raid6_call2` works around that.
-
-The resulting binary terminates with a segmentation fault:
-
-    $ ./raid6test
-    using recovery intx1
-    Segmentation fault (core dumped)
-    $ dmesg | tail -3
-    [75519.758988] raid6test[1891185]: segfault (11) at 0 nip 0 lr 708aa3fe197c code 1 in libc.so.6[708aa3ca0000+260000]
-    [75519.759006] raid6test[1891185]: code: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
-    [75519.759024] raid6test[1891185]: code: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
-
-Cc: Matt Brown <matthew.brown.dev@gmail.com>
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
----
- lib/raid6/test/test.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
-index a3cf071941ab..937d2a8bb294 100644
---- a/lib/raid6/test/test.c
-+++ b/lib/raid6/test/test.c
-@@ -19,7 +19,7 @@
- #define NDISKS		16	/* Including P and Q */
- 
- const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
--struct raid6_calls raid6_call;
-+struct raid6_calls raid6_call2;
- 
- char *dataptrs[NDISKS];
- char data[NDISKS][PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
-@@ -71,7 +71,7 @@ static int test_disks(int i, int j)
- 		erra = errb = 0;
- 	} else {
- 		printf("algo=%-8s  faila=%3d(%c)  failb=%3d(%c)  %s\n",
--		       raid6_call.name,
-+		       raid6_call2.name,
- 		       i, disk_type(i),
- 		       j, disk_type(j),
- 		       (!erra && !errb) ? "OK" :
-@@ -107,30 +107,30 @@ int main(int argc, char *argv[])
- 			if ((*algo)->valid && !(*algo)->valid())
- 				continue;
- 
--			raid6_call = **algo;
-+			raid6_call2 = **algo;
- 
- 			/* Nuke syndromes */
- 			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
- 
- 			/* Generate assumed good syndrome */
--			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
-+			raid6_call2.gen_syndrome(NDISKS, PAGE_SIZE,
- 						(void **)&dataptrs);
- 
- 			for (i = 0; i < NDISKS-1; i++)
- 				for (j = i+1; j < NDISKS; j++)
- 					err += test_disks(i, j);
- 
--			if (!raid6_call.xor_syndrome)
-+			if (!raid6_call2.xor_syndrome)
- 				continue;
- 
- 			for (p1 = 0; p1 < NDISKS-2; p1++)
- 				for (p2 = p1; p2 < NDISKS-2; p2++) {
- 
- 					/* Simulate rmw run */
--					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+					raid6_call2.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
- 								(void **)&dataptrs);
- 					makedata(p1, p2);
--					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+					raid6_call2.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-                                                                 (void **)&dataptrs);
- 
- 					for (i = 0; i < NDISKS-1; i++)
--- 
-2.34.1
+RnJvbTogUGF1bCBNZW56ZWwNCj4gU2VudDogMjYgSmFudWFyeSAyMDIyIDExOjQyDQo+IA0KLi4N
+Cj4gK3BvdW5kIDo9IFwjDQoNClBsZWFzZSB1c2UgJ2hhc2gnIG5vdCAncG91bmQnLg0KT25seSBh
+bWVyaWNhbiBncmVlbmdyb2NlcnMgdXNlIHRoYXQgaG9ycmlkIG5hbWUuDQoNCkEgJ3BvdW5kJyBp
+cyAnwqMnLg0KDQoJRGF2aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBCcmFt
+bGV5IFJvYWQsIE1vdW50IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdpc3Ry
+YXRpb24gTm86IDEzOTczODYgKFdhbGVzKQ0K
 
