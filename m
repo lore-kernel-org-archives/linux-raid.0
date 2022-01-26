@@ -2,32 +2,34 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66294C28CF5
-	for <linux-raid@archiver.kernel.org>; Wed, 26 Jan 2022 11:42:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 150E8C2BA4C
+	for <linux-raid@archiver.kernel.org>; Wed, 26 Jan 2022 11:42:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240837AbiAZLmJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 26 Jan 2022 06:42:09 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:56489 "EHLO mx1.molgen.mpg.de"
+        id S240841AbiAZLmS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 26 Jan 2022 06:42:18 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:60575 "EHLO mx1.molgen.mpg.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233852AbiAZLmI (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Wed, 26 Jan 2022 06:42:08 -0500
+        id S240838AbiAZLmL (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Wed, 26 Jan 2022 06:42:11 -0500
 Received: from localhost.localdomain (ip5f5aecd1.dynamic.kabel-deutschland.de [95.90.236.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id C98BE61EA191D;
-        Wed, 26 Jan 2022 12:42:05 +0100 (CET)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 076D661EA1922;
+        Wed, 26 Jan 2022 12:42:10 +0100 (CET)
 From:   Paul Menzel <pmenzel@molgen.mpg.de>
 To:     Song Liu <song@kernel.org>
 Cc:     Paul Menzel <pmenzel@molgen.mpg.de>,
         Michael Ellerman <mpe@ellerman.id.au>,
         linuxppc-dev@lists.ozlabs.org, linux-raid@vger.kernel.org,
         Matt Brown <matthew.brown.dev@gmail.com>
-Subject: [PATCH 1/3] lib/raid6/test/Makefile: Use `$(pound)` instead of `\#` for Make 4.3
-Date:   Wed, 26 Jan 2022 12:41:42 +0100
-Message-Id: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+Subject: [PATCH 3/3] lib/raid6/test: Rename variable to avoid `raid6_call` name clash
+Date:   Wed, 26 Jan 2022 12:41:44 +0100
+Message-Id: <20220126114144.370517-3-pmenzel@molgen.mpg.de>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+References: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -35,91 +37,93 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Buidling `raid6test` on Ubuntu 21.10 (ppc64le) with GNU Make 4.3 shows the
-errors below:
+On Ubuntu 21.10 (ppc64le) building `raid6test` with gcc (Ubuntu
+11.2.0-7ubuntu2) 11.2.0 fails with the error below.
 
-    $ cd lib/raid6/test/
+    $ cd lib/raid6/test
     $ make
-    <stdin>:1:1: error: stray ‘\’ in program
-    <stdin>:1:2: error: stray ‘#’ in program
-    <stdin>:1:11: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘<’ token
-    cp -f ../int.uc int.uc
-    awk -f ../unroll.awk -vN=1 < int.uc > int1.c
-    gcc -I.. -I ../../../include -g -O2                      -c -o int1.o int1.c
-    awk -f ../unroll.awk -vN=2 < int.uc > int2.c
-    gcc -I.. -I ../../../include -g -O2                      -c -o int2.o int2.c
-    awk -f ../unroll.awk -vN=4 < int.uc > int4.c
-    gcc -I.. -I ../../../include -g -O2                      -c -o int4.o int4.c
-    awk -f ../unroll.awk -vN=8 < int.uc > int8.c
-    gcc -I.. -I ../../../include -g -O2                      -c -o int8.o int8.c
-    awk -f ../unroll.awk -vN=16 < int.uc > int16.c
-    gcc -I.. -I ../../../include -g -O2                      -c -o int16.o int16.c
-    awk -f ../unroll.awk -vN=32 < int.uc > int32.c
-    gcc -I.. -I ../../../include -g -O2                      -c -o int32.o int32.c
-    rm -f raid6.a
-    ar cq raid6.a int1.o int2.o int4.o int8.o int16.o int32.o recov.o algos.o tables.o
-    ranlib raid6.a
-    gcc -I.. -I ../../../include -g -O2                      -o raid6test test.c raid6.a
-    /usr/bin/ld: raid6.a(algos.o):/dev/shm/linux/lib/raid6/test/algos.c:28: multiple definition of `raid6_call'; /scratch/local/ccIJjN8s.o:/dev/shm/linux/lib/raid6/test/test.c:22: first defined here
+    […]
+    gcc -I.. -I ../../../include -g -O2                      -I../../../arch/powerpc/include -DCONFIG_ALTIVEC -o raid6test test.c raid6.a
+    /usr/bin/ld: raid6.a(algos.o):/dev/shm/linux/lib/raid6/test/algos.c:28: multiple definition of `raid6_call'; /scratch/local/ccHnUnID.o:/dev/shm/linux/lib/raid6/test/test.c:22: first defined here
     collect2: error: ld returned 1 exit status
-    make: *** [Makefile:72: raid6test] Error 1
+    make: *** [Makefile:74: raid6test] Error 1
 
-The errors come from the `HAS_ALTIVEC` test, which fails, and the POWER
-optimized versions are not built. That’s also reason nobody noticed on the
-other architectures.
+Renaming the variable in `test.c` to `raid6_call2` works around that.
 
-GNU Make 4.3 does not remove the backslash anymore. From the 4.3 release
-announcment:
+The resulting binary terminates with a segmentation fault:
 
-> * WARNING: Backward-incompatibility!
->   Number signs (#) appearing inside a macro reference or function invocation
->   no longer introduce comments and should not be escaped with backslashes:
->   thus a call such as:
->     foo := $(shell echo '#')
->   is legal.  Previously the number sign needed to be escaped, for example:
->     foo := $(shell echo '\#')
->   Now this latter will resolve to "\#".  If you want to write makefiles
->   portable to both versions, assign the number sign to a variable:
->     H := \#
->     foo := $(shell echo '$H')
->   This was claimed to be fixed in 3.81, but wasn't, for some reason.
->   To detect this change search for 'nocomment' in the .FEATURES variable.
-
-So, do the same as commit 9564a8cf422d (Kbuild: fix # escaping in .cmd
-files for future Make) and commit 929bef467771 (bpf: Use $(pound) instead
-of \# in Makefiles) and define and use a `$(pound)` variable.
-
-Reference for the change in make:
-https://git.savannah.gnu.org/cgit/make.git/commit/?id=c6966b323811c37acedff05b57
+    $ ./raid6test
+    using recovery intx1
+    Segmentation fault (core dumped)
+    $ dmesg | tail -3
+    [75519.758988] raid6test[1891185]: segfault (11) at 0 nip 0 lr 708aa3fe197c code 1 in libc.so.6[708aa3ca0000+260000]
+    [75519.759006] raid6test[1891185]: code: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
+    [75519.759024] raid6test[1891185]: code: XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
 
 Cc: Matt Brown <matthew.brown.dev@gmail.com>
 Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
 ---
- lib/raid6/test/Makefile | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ lib/raid6/test/test.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/lib/raid6/test/Makefile b/lib/raid6/test/Makefile
-index a4c7cd74cff5..4fb7700a741b 100644
---- a/lib/raid6/test/Makefile
-+++ b/lib/raid6/test/Makefile
-@@ -4,6 +4,8 @@
- # from userspace.
- #
+diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
+index a3cf071941ab..937d2a8bb294 100644
+--- a/lib/raid6/test/test.c
++++ b/lib/raid6/test/test.c
+@@ -19,7 +19,7 @@
+ #define NDISKS		16	/* Including P and Q */
  
-+pound := \#
-+
- CC	 = gcc
- OPTFLAGS = -O2			# Adjust as desired
- CFLAGS	 = -I.. -I ../../../include -g $(OPTFLAGS)
-@@ -42,7 +44,7 @@ else ifeq ($(HAS_NEON),yes)
-         OBJS   += neon.o neon1.o neon2.o neon4.o neon8.o recov_neon.o recov_neon_inner.o
-         CFLAGS += -DCONFIG_KERNEL_MODE_NEON=1
- else
--        HAS_ALTIVEC := $(shell printf '\#include <altivec.h>\nvector int a;\n' |\
-+        HAS_ALTIVEC := $(shell printf '$(pound)include <altivec.h>\nvector int a;\n' |\
-                          gcc -c -x c - >/dev/null && rm ./-.o && echo yes)
-         ifeq ($(HAS_ALTIVEC),yes)
-                 CFLAGS += -I../../../arch/powerpc/include
+ const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+-struct raid6_calls raid6_call;
++struct raid6_calls raid6_call2;
+ 
+ char *dataptrs[NDISKS];
+ char data[NDISKS][PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+@@ -71,7 +71,7 @@ static int test_disks(int i, int j)
+ 		erra = errb = 0;
+ 	} else {
+ 		printf("algo=%-8s  faila=%3d(%c)  failb=%3d(%c)  %s\n",
+-		       raid6_call.name,
++		       raid6_call2.name,
+ 		       i, disk_type(i),
+ 		       j, disk_type(j),
+ 		       (!erra && !errb) ? "OK" :
+@@ -107,30 +107,30 @@ int main(int argc, char *argv[])
+ 			if ((*algo)->valid && !(*algo)->valid())
+ 				continue;
+ 
+-			raid6_call = **algo;
++			raid6_call2 = **algo;
+ 
+ 			/* Nuke syndromes */
+ 			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
+ 
+ 			/* Generate assumed good syndrome */
+-			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
++			raid6_call2.gen_syndrome(NDISKS, PAGE_SIZE,
+ 						(void **)&dataptrs);
+ 
+ 			for (i = 0; i < NDISKS-1; i++)
+ 				for (j = i+1; j < NDISKS; j++)
+ 					err += test_disks(i, j);
+ 
+-			if (!raid6_call.xor_syndrome)
++			if (!raid6_call2.xor_syndrome)
+ 				continue;
+ 
+ 			for (p1 = 0; p1 < NDISKS-2; p1++)
+ 				for (p2 = p1; p2 < NDISKS-2; p2++) {
+ 
+ 					/* Simulate rmw run */
+-					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
++					raid6_call2.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
+ 								(void **)&dataptrs);
+ 					makedata(p1, p2);
+-					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
++					raid6_call2.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
+                                                                 (void **)&dataptrs);
+ 
+ 					for (i = 0; i < NDISKS-1; i++)
 -- 
 2.34.1
 
