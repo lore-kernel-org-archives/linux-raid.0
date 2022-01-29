@@ -2,154 +2,69 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FEFDC433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 27 Jan 2022 17:15:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25A0CC433EF
+	for <linux-raid@archiver.kernel.org>; Sat, 29 Jan 2022 15:21:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238835AbiA0RPg (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 27 Jan 2022 12:15:36 -0500
-Received: from UPDC19PA22.eemsg.mail.mil ([214.24.27.197]:14342 "EHLO
-        UPDC19PA22.eemsg.mail.mil" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238767AbiA0RPf (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 27 Jan 2022 12:15:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=mail.mil; i=@mail.mil; q=dns/txt; s=EEMSG2021v1a;
-  t=1643303735; x=1674839735;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=EPK2Ma3PhWi7jKJ7bw7VNUNkMnIRrqJxEuhjOT4vquo=;
-  b=bEeLu2W+zd9z9k051/6OVCfhCH7dbYxQuLHTXNEF7MRRINxIUVXaHTtG
-   aUkbkh8kplAFBQfkKp/PDhyDMQGY97irL6Ev5if7Bz3MXDDzQRVWVj8ea
-   MBN8IjZ4Yzl6SKn8SUVpBgX6b6XPM9Q3uUNxo1ngfw4l5Lhif9N2kGuXJ
-   Po8dliv0ZrE2MEBsqHkSI0QgH6O5G0txYsovRuBjh9GNEtheF90C43yFx
-   A9G4tfEszxUj5PPH6lO8ZqqNajdacoaezc++EMEw8RrsxpAq7N7FnGtJw
-   xdQ70TWXjuLL3z6XrhGbIQBokpszc7hqubuZkbTTTcZMJLMMxeZB4yRhG
-   A==;
-X-EEMSG-check-017: 314100856|UPDC19PA22_ESA_OUT04.csd.disa.mil
-X-IronPort-AV: E=Sophos;i="5.88,321,1635206400"; 
-   d="scan'208";a="314100856"
-Received: from edge-mech02.mail.mil ([214.21.130.228])
-  by UPDC19PA22.eemsg.mail.mil with ESMTP/TLS/ECDHE-RSA-AES256-SHA384; 27 Jan 2022 17:15:29 +0000
-Received: from UMECHPAOV.easf.csd.disa.mil (214.21.130.165) by
- edge-mech02.mail.mil (214.21.130.228) with Microsoft SMTP Server (TLS) id
- 14.3.498.0; Thu, 27 Jan 2022 17:15:22 +0000
-Received: from UMECHPA7B.easf.csd.disa.mil ([169.254.8.67]) by
- umechpaov.easf.csd.disa.mil ([214.21.130.165]) with mapi id 14.03.0513.000;
- Thu, 27 Jan 2022 17:15:22 +0000
-From:   "Finlayson, James M CIV (USA)" <james.m.finlayson4.civ@mail.mil>
-To:     'Jeff Johnson' <jeff.johnson@aeoncomputing.com>,
-        "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
-Subject: RE: [Non-DoD Source] Re: Showing my ignorance - kernel workers
-Thread-Topic: [Non-DoD Source] Re: Showing my ignorance - kernel workers
-Thread-Index: AdgTBazYqoptaUGySyWZKmR38CC+9wAmjk9Q
-Date:   Thu, 27 Jan 2022 17:15:21 +0000
-Message-ID: <5EAED86C53DED2479E3E145969315A2389282D88@UMECHPA7B.easf.csd.disa.mil>
-References: <5EAED86C53DED2479E3E145969315A2389282A9C@UMECHPA7B.easf.csd.disa.mil>
-In-Reply-To: <5EAED86C53DED2479E3E145969315A2389282A9C@UMECHPA7B.easf.csd.disa.mil>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [214.21.44.13]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1344843AbiA2PVS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 29 Jan 2022 10:21:18 -0500
+Received: from www18.qth.com ([69.16.238.59]:37976 "EHLO www18.qth.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232848AbiA2PVS (ORCPT <rfc822;linux-raid@vger.kernel.org>);
+        Sat, 29 Jan 2022 10:21:18 -0500
+Received: from [73.207.192.158] (port=38562 helo=justpickone.org)
+        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <davidtg+robot@justpickone.org>)
+        id 1nDpXT-0003aZ-Q5; Sat, 29 Jan 2022 09:21:17 -0600
+Date:   Sat, 29 Jan 2022 10:21:15 -0500
+From:   David T-G <davidtg+robot@justpickone.org>
+To:     Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: hardware recovery and RAID5 services
+Message-ID: <20220129152115.GI14596@justpickone.org>
+References: <20220121164804.GE14596@justpickone.org>
+ <6cfb92e5-5845-37ff-d237-4c3d663446e3@youngman.org.uk>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6cfb92e5-5845-37ff-d237-4c3d663446e3@youngman.org.uk>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - www18.qth.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - justpickone.org
+X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
+X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-SSBtYWRlIHRoZSBCSU9TIHNldHRpbmdzIGlkZW50aWNhbCBhbmQgcmVib290ZWQsIGJ1dCBzYW1l
-IHJlc3VsdHMgYW5kIGFzIGFuIEZZSSBvbiBBUElDICAgIlByb2NYMkFwaWMiOiAiRm9yY2VFbmFi
-bGVkIiAtIEkgZG9u4oCZdCBzZXQgaXQsIGl0IGlzIHBhcnQgb2YgdGhlIEhQQyB3b3JrbG9hZCBw
-cm9maWxlLi4uDQoNCkkgaGF2ZSBhbiBJUlEgdG9wIHNjcmlwdCBhbmQgSSBkb24ndCBzZWUgYW55
-dGhpbmcgdHJvdWJsaW5nIHdpdGggdGhlIGludGVycnVwdHMuICAgIEkgZG8gc2V0IHJxX2FmZmlu
-aXR5IHRvIDIgZm9yIGV2ZXJ5IGJsb2NrIGRldmljZSBJIGNhcmUgYWJvdXQgaW4gdGhlIHN5c3Rl
-bSAobnZtZSdzIGFuZCBtZCdzKS4uLg0KDQpBbSBvcGVuIHRvIHN1Z2dlc3Rpb25zIGFuZCBpZiBu
-b3QsIEknZCBsaWtlIHRvIGZvcm1hbGx5IGFzayBmb3IgdGhlIGFiaWxpdHkgdG8gcGluIHRoZSBr
-ZXJuZWwgd29ya2VycyB0byBhcHByb3ByaWF0ZSBOVU1BIG5vZGVzIG9yIHBvc3NpYmx5IGV2ZW4g
-c3BlY2lmaWMgQ1BVcy4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEZpbmxh
-eXNvbiwgSmFtZXMgTSBDSVYgKFVTQSkgDQpTZW50OiBXZWRuZXNkYXksIEphbnVhcnkgMjYsIDIw
-MjIgNTo0NCBQTQ0KVG86ICdKZWZmIEpvaG5zb24nIDxqZWZmLmpvaG5zb25AYWVvbmNvbXB1dGlu
-Zy5jb20+OyAnbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcnIDxsaW51eC1yYWlkQHZnZXIua2Vy
-bmVsLm9yZz4NCkNjOiBGaW5sYXlzb24sIEphbWVzIE0gQ0lWIChVU0EpIDxqYW1lcy5tLmZpbmxh
-eXNvbjQuY2l2QG1haWwubWlsPg0KU3ViamVjdDogUmU6IFtOb24tRG9EIFNvdXJjZV0gUmU6IFNo
-b3dpbmcgbXkgaWdub3JhbmNlIC0ga2VybmVsIHdvcmtlcnMNCg0KVGhlIEJJT1Mgc2V0dGluZ3Mg
-aGF2ZSBkcmlmdGVkIGEgYml0IGJlY2F1c2Ugb2Ygc29tZSBndWlkYW5jZSBmcm9tIGFuIEhQRS9B
-TUQgZW5naW5lZXIuICAgIElmIHRoZXNlIGFyZSByZWxldmFudCwgeW91IGNhbiB0ZWxsIG1lIHRv
-IGdvIGF3YXkgZm9yIGEgZGF5IGFuZCBJJ2xsIGNoYW5nZSBhbmQgcmVhc2ssIGJ1dCB3aGF0IHdl
-J3ZlIGJlZW4gbWVzc2luZyB3aXRoIGlzIHR1cm5pbmcgb2ZmIGFsbCBvZiB0aGUgcG93ZXIgc2F2
-aW5nIG1vZGVzIG9uIHRoZSBST01FIHRvIG1heGltaXplIHBlcmZvcm1hbmNlLiBUaGVzZSBhcmUg
-dGhlIG9ubHkgZGlmZnMgYmV5b25kIHNlcmlhbCBudW1iZXIuICAgSSBhcG9sb2dpemUgZm9yIHRo
-ZSBkcmlmdC4gICBJJ20gdXN1YWxseSBiZXR0ZXIgdGhhbiB0aGlzIDopDQoNCg0KPCAgICAgICAg
-ICAgIkNTdGF0ZUVmZmljaWVuY3lNb2RlIjogIkRpc2FibGVkIiwNCi0tLQ0KPiAgICAgICAgICAg
-IkNTdGF0ZUVmZmljaWVuY3lNb2RlIjogIkVuYWJsZWQiLA0KNDhjNDgNCjwgICAgICAgICAgICJE
-YXRhRmFicmljQ1N0YXRlRW5hYmxlIjogIkRpc2FibGVkIiwNCi0tLQ0KPiAgICAgICAgICAgIkRh
-dGFGYWJyaWNDU3RhdGVFbmFibGUiOiAiQXV0byIsDQo5OGM5OA0KPCAgICAgICAgICAgIk1pblBy
-b2NJZGxlUG93ZXIiOiAiQzYiLA0KLS0tDQo+ICAgICAgICAgICAiTWluUHJvY0lkbGVQb3dlciI6
-ICJOb0NTdGF0ZXMiLA0KMjI0YzIyNA0KPCAgICAgICAgICAgIlRoZXJtYWxDb25maWciOiAiT3B0
-aW1hbENvb2xpbmciLA0KLS0tDQo+ICAgICAgICAgICAiVGhlcm1hbENvbmZpZyI6ICJFbmhhbmNl
-ZENQVUNvb2xpbmciLA0KMjU1LDI1NmMyNTUsMjU2DQo8ICAgICAgICAgICAiV29ya2xvYWRQcm9m
-aWxlIjogIkN1c3RvbSIsDQo8ICAgICAgICAgICAiWEdNSUZvcmNlTGlua1dpZHRoIjogIngxNiIs
-DQotLS0NCj4gICAgICAgICAgICJXb3JrbG9hZFByb2ZpbGUiOiAiSGlnaFBlcmZvcm1hbmNlQ29t
-cHV0ZShIUEMpIiwNCj4gICAgICAgICAgICJYR01JRm9yY2VMaW5rV2lkdGgiOiAiQXV0byIsDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBGaW5sYXlzb24sIEphbWVzIE0gQ0lW
-IChVU0EpIA0KU2VudDogV2VkbmVzZGF5LCBKYW51YXJ5IDI2LCAyMDIyIDU6MDEgUE0NClRvOiAn
-SmVmZiBKb2huc29uJyA8amVmZi5qb2huc29uQGFlb25jb21wdXRpbmcuY29tPjsgbGludXgtcmFp
-ZEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJFOiBbVVJMIFZlcmRpY3Q6IE5ldXRyYWxdUmU6
-IFtOb24tRG9EIFNvdXJjZV0gUmU6IFNob3dpbmcgbXkgaWdub3JhbmNlIC0ga2VybmVsIHdvcmtl
-cnMNCg0KSSB3aWxsIHZlcmlmeSwgYnV0IEknbSBwcmV0dHkgc3VyZSB0aGV5IGFyZSBzdGlsbCBz
-aXR0aW5nIHdpdGggdGhlIHNhbWUgYmlvcyAtIEkgZGlkIGFuIGhwZSBpbG8gZ2V0IG9mIHRoZSBv
-bmUgYmlvcyBhbmQgcHVzaGVkIGl0IHRvIHRoZSBvdGhlciBvbmNlIEkgc2F3IGdvb2QgaW5kaXZp
-ZHVhbCBTU0QgcGVyZm9ybWFuY2Ugd2l0aCBGSU8uICAgSSdtIGFsd2F5cyBmZWFyZnVsIGdvaW5n
-IG91dCB0byB0aGVzZSBsaXN0cyBiZWNhdXNlIHRoZXJlIGlzIG11Y2ggbW9yZSB0aGF0IEkgZG9u
-J3Qga25vdyB0aGFuIEkgZG8sIGJ1dCBhdCBsZWFzdCBteSBwcm9ibGVtcyBhcmUgZGlmZmVyZW50
-IHRoYW4gIkknbSBydW5uaW5nIGFsbCBvZiB0aGVzZSBkZXNrdG9wIGRyaXZlcyBvbiBhIHN5c3Rl
-bSB3aXRoIG5vbi1FQ0MgbWVtb3J5IGFuZCBJIGp1c3QgbG9zdCBhbGwgb2YgbXkgbW92aWVzLCBj
-YW4geW91IGhlbHAgbWUgOikiDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBK
-ZWZmIEpvaG5zb24gPGplZmYuam9obnNvbkBhZW9uY29tcHV0aW5nLmNvbT4gDQpTZW50OiBXZWRu
-ZXNkYXksIEphbnVhcnkgMjYsIDIwMjIgMzo1MyBQTQ0KVG86IGxpbnV4LXJhaWRAdmdlci5rZXJu
-ZWwub3JnDQpDYzogRmlubGF5c29uLCBKYW1lcyBNIENJViAoVVNBKSA8amFtZXMubS5maW5sYXlz
-b240LmNpdkBtYWlsLm1pbD4NClN1YmplY3Q6IFtVUkwgVmVyZGljdDogTmV1dHJhbF1SZTogW05v
-bi1Eb0QgU291cmNlXSBSZTogU2hvd2luZyBteSBpZ25vcmFuY2UgLSBrZXJuZWwgd29ya2Vycw0K
-DQpBbGwgYWN0aXZlIGxpbmtzIGNvbnRhaW5lZCBpbiB0aGlzIGVtYWlsIHdlcmUgZGlzYWJsZWQu
-ICBQbGVhc2UgdmVyaWZ5IHRoZSBpZGVudGl0eSBvZiB0aGUgc2VuZGVyLCBhbmQgY29uZmlybSB0
-aGUgYXV0aGVudGljaXR5IG9mIGFsbCBsaW5rcyBjb250YWluZWQgd2l0aGluIHRoZSBtZXNzYWdl
-IHByaW9yIHRvIGNvcHlpbmcgYW5kIHBhc3RpbmcgdGhlIGFkZHJlc3MgdG8gYSBXZWIgYnJvd3Nl
-ci4gIA0KDQoNCg0KDQotLS0tDQoNCkl0IG1pZ2h0IGJlIHdvcnRod2hpbGUgdG8gY2hlY2sgdGhl
-IEJJT1Mgc2V0dGluZ3Mgb24gdGhlIHR3byBSb21lIHNlcnZlcnMgdG8gbWFrZSBzdXJlIHRoZSBz
-ZXR0aW5ncyBtYXRjaCwgcGF5aW5nIHBhcnRpY3VsYXIgYXR0ZW50aW9uIHRvIE5VTUEgYW5kIGlv
-YXBpYyBzZXR0aW5ncy4NCg0KQmFja2dyb3VuZDogQ2F1dGlvbi1odHRwczovL2RldmVsb3Blci5h
-bWQuY29tL3dwLWNvbnRlbnQvcmVzb3VyY2VzLzU2NzQ1XzAuODAucGRmDQoNCi0tSmVmZg0KDQpP
-biBXZWQsIEphbiAyNiwgMjAyMiBhdCAxMjo0MCBQTSBGaW5sYXlzb24sIEphbWVzIE0gQ0lWIChV
-U0EpIDxqYW1lcy5tLmZpbmxheXNvbjQuY2l2QG1haWwubWlsPiB3cm90ZToNCj4NCj4gQm90aCBk
-dWFsIHNvY2tldCBBTUQgUm9tZXMuICAgSWRlbnRpY2FsIGluIGV2ZXJ5IHdheS4gICBOVU1BcyBw
-ZXIgc29ja2V0IHNldCB0byAxIGluIHRoZSBCSU9TLiAgIEknbSB1c2luZyB0aGUgZXhhY3Qgc2Ft
-ZSAxMCBkcml2ZXMgb24gZWFjaCBzeXN0ZW0gYW5kIHRoZXkgYXJlIFBDSWUgR2VuNCBIUEUgT0VN
-IG9mIFNBTVNVTkcuLi4uDQo+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206
-IEphbmkgUGFydGFuZW4gPGppaXBlZUBzb3RhcGVsaS5maT4NCj4gU2VudDogV2VkbmVzZGF5LCBK
-YW51YXJ5IDI2LCAyMDIyIDM6MzIgUE0NCj4gVG86IEZpbmxheXNvbiwgSmFtZXMgTSBDSVYgKFVT
-QSkgPGphbWVzLm0uZmlubGF5c29uNC5jaXZAbWFpbC5taWw+OyANCj4gbGludXgtcmFpZEB2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW05vbi1Eb0QgU291cmNlXSBSZTogU2hvd2luZyBteSBp
-Z25vcmFuY2UgLSBrZXJuZWwgd29ya2Vycw0KPg0KPiBIZWxsbywgYXJlIGJvdGggc3lzdGVtcyBp
-ZGVudGljYWwgd2hhdCBjb21lcyB0byBoYXJkd2FyZT8gTWFpbmx5IG1vYm8uDQo+DQo+IElmIG5v
-IGFuZCB0aGV5IGFyZSBkdWFsIHNvY2tldCBzeXN0ZW1zLCB0aGVuIGl0IG1heSBiZSB0aGF0IG9u
-ZSBvZiB0aGUgc3lzdGVtcyBpcyBkZXNpZ25lZCB0byByb3V0ZSBhbGwgUENJLWUgdmlhIG9uZSBz
-b2NrZXQgc28gdGhhdCBhbGwgZHJpdmUgc2xvdHMgY2FuIGJlIHVzZWQganVzdCAxIHNvY2tlZCBw
-b3B1bGF0ZWQuIEFuZCBhbm90aGVyIGlzIGRlc2lnbmVkIHNvIHRhaHQgb25seSBoYWxmIG9mIHRo
-ZSBkcml2ZSBzbG90cyB3b3JrcyB3aGVuIG9ubHkgMSBzb2NrZXQgaXMgcG9wdWxhdGVkLg0KPiBB
-dCBsZWFzdCBJIGhhdmUgcmVhZCBzb21ldGhpbmcgbGlrZSB0aGlzIHByZXZpb3VzbHkgZnJvbSB0
-aGlzIGxpc3QuDQo+DQo+IC8vIEppaVBlZQ0KPg0KPg0KPiBGaW5sYXlzb24sIEphbWVzIE0gQ0lW
-IChVU0EpIGtpcmpvaXR0aSAyNi8wMS8yMDIyIGtsbyAyMi4xNzoNCj4gPiBJIGFwb2xvZ2l6ZSBp
-biBhZHZhbmNlIGlmIHlvdSBjYW4gcG9pbnQgbWUgdG8gc29tZXRoaW5nIEkgY2FuIHJlYWQgYWJv
-dXQgbWRyYWlkIGJlc2lkZXMgdGhlIHNvdXJjZSBjb2RlLiAgSSdtIGJleW9uZCB0aGUgYm91bmRz
-IG9mIG15IHVuZGVyc3RhbmRpbmcgb2YgTGludXguICAgQmFja2dyb3VuZCwgSSBkbyBhIGJ1bmNo
-IG9mIE5VTUEgYXdhcmUgY29tcHV0aW5nLiAgIEkgaGF2ZSB0d28gc3lzdGVtcyBjb25maWd1cmVk
-IGlkZW50aWNhbGx5IHdpdGggYSBOVU1BIG5vZGUgMCBmb2N1c2VkIFJBSUQ1IExVTiBjb250YWlu
-aW5nIE5VTUEgbm9kZSAwIG52bWUgZHJpdmVzICBhbmQgYSBOVU1BIG5vZGUgMSBmb2N1c2VkIFJB
-SUQ1IExVTiBpZGVudGljYWxseSBjb25maWd1cmVkLiAgOSsxIG52bWUsIDEyOEtCIHN0cmlwZSwg
-eGZzIHNpdHRpbmcgb24gdG9wLCA2NEtCIE9fRElSRUNUIHJlYWRzIGZyb20gdGhlIGFwcGxpY2F0
-aW9uLg0KPg0KDQoNCi0tDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkplZmYgSm9o
-bnNvbg0KQ28tRm91bmRlcg0KQWVvbiBDb21wdXRpbmcNCg0KamVmZi5qb2huc29uQGFlb25jb21w
-dXRpbmcuY29tDQpDYXV0aW9uLXd3dy5hZW9uY29tcHV0aW5nLmNvbQ0KdDogODU4LTQxMi0zODEw
-IHgxMDAxICAgZjogODU4LTQxMi0zODQ1DQptOiA2MTktMjA0LTkwNjENCg0KNDE3MCBNb3JlbmEg
-Qm91bGV2YXJkLCBTdWl0ZSBDIC0gU2FuIERpZWdvLCBDQSA5MjExNw0KDQpIaWdoLVBlcmZvcm1h
-bmNlIENvbXB1dGluZyAvIEx1c3RyZSBGaWxlc3lzdGVtcyAvIFNjYWxlLW91dCBTdG9yYWdlDQo=
+Wol, et al --
+
+...and then Wols Lists said...
+% 
+% On 21/01/2022 16:48, David T-G wrote:
+% > Has anyone worked with any recovery companies in the US?  One of the 4T
+...
+% 
+% Secondly, I'm sure I've dealt with these people in the past, although I
+% can't vouch for them ...
+% 
+% https://www.vogon-computer-evidence.com/our-story/
+[snip]
+
+Even though they're dead now, the name is too good to pass up :-)  Thanks
+for the link.
+
+
+HANW
+
+:-D
+-- 
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
+
