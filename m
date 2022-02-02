@@ -2,247 +2,104 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A30DEC433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Feb 2022 22:20:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D40CC433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  2 Feb 2022 06:57:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238734AbiBAWUs (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Feb 2022 17:20:48 -0500
-Received: from srv.fail ([135.181.244.181]:41086 "EHLO srv.fail"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238746AbiBAWUs (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-        Tue, 1 Feb 2022 17:20:48 -0500
-X-Greylist: delayed 323 seconds by postgrey-1.27 at vger.kernel.org; Tue, 01 Feb 2022 17:20:48 EST
-Received: from localhost (localhost [127.0.0.1])
-        by srv.fail (Postfix) with ESMTP id E0B9D152FB43;
-        Tue,  1 Feb 2022 23:15:22 +0100 (CET)
-X-Virus-Scanned: Debian amavisd-new at srv.fail
-Received: from srv.fail ([127.0.0.1])
-        by localhost (srv.fail [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id yZUI9kr7QaSn; Tue,  1 Feb 2022 23:15:13 +0100 (CET)
-Received: from [IPV6:2a02:908:1086:27c0::84a] (unknown [IPv6:2a02:908:1086:27c0::84a])
-        by srv.fail (Postfix) with ESMTPSA id D40D5152FB3D;
-        Tue,  1 Feb 2022 23:15:12 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=totally.rip;
-        s=default; t=1643753713;
-        bh=lkLNNAz7fkIuV21UXK4R2RVkyClu0WNIvGPFECqpeX0=;
-        h=Date:To:Cc:From:Subject:From;
-        b=tm8mZAO6X/tvjx/tQT/wsg68fAGQ81kQnSxD2P8yghu1Ft337NL8+ihdbiucKymqd
-         qZtZjNH9gBMEm3PYkJ7pGfKlATeDxqVXhYEOLKHClMrejAibMh7DoWf/KoyUeyebYF
-         zOOzK3T16yP4WuVfcrKe95vn6eNeeBNLYSBXwJtTQ+RE00e0qCjJ49rMJijXxsLkFj
-         DEA6wyO7gC1wBY3AvD0OIJHySpfw3Ho9ANZ+4ISOF9Nm6CBRZF9cMzivU8ughYxz65
-         zeYODLnYqbPy5mXkdt891PjTA6cLf06lsYJyKb+DzqpeoimWea/Apw+5UOWWAKtkPM
-         IinrK7uZVbL0w==
-Content-Type: multipart/mixed; boundary="------------SSgSYbS3AegeHNoZlXSzN7ss"
-Message-ID: <a673c90f-d9eb-c6d5-b675-e6c2e1c04e5f@totally.rip>
-Date:   Tue, 1 Feb 2022 23:15:11 +0100
+        id S233883AbiBBG5w (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 2 Feb 2022 01:57:52 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:47400 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229518AbiBBG5v (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 2 Feb 2022 01:57:51 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5CE5A6173B
+        for <linux-raid@vger.kernel.org>; Wed,  2 Feb 2022 06:57:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B24EAC340EC
+        for <linux-raid@vger.kernel.org>; Wed,  2 Feb 2022 06:57:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643785070;
+        bh=3nNGpIKWAShvhxmRkjg9ACNEoKryUARsN4tAkpqWqiE=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=esV+m+VFWb6Hq4lhgAKsMjZKp0l5TH9brpU54JQQY3yo7SXw7dl+KiVdsUchymHfl
+         mbsiF9ibVMXBcBEP+LS5JVW6eub5btk656rnoMW1KV08Cg54oULe9OFf0q9bkCIjtY
+         0UBhtyzQ3E3YVl7zUzaVGnSBMfDttbdaXEVcdumcpEjTlQlKTAt8IO+WIZljIJ3hHI
+         ZwyvXo/JX5r5JSeEr/yPU177U2gXrP4MSKWxOO6sbSQuLrO2J+pZ9VK1f0GP3TRjtM
+         1FU/5Syrn1dDwzZBYBmuIA7pNf1kP4kQ5Xdy1t6npcEhZTT4y4FDbdgMdplnCBO6do
+         XA5opE2JkKePw==
+Received: by mail-yb1-f181.google.com with SMTP id m6so58052597ybc.9
+        for <linux-raid@vger.kernel.org>; Tue, 01 Feb 2022 22:57:50 -0800 (PST)
+X-Gm-Message-State: AOAM533XKS6SiSUQ7UwDE9HUME/v16K3GMIp9PJ7EhPHc9D8jGfb5tab
+        mgICywtjxTc+xCzfmFCrvgo/Fk6T9RwHwhhLnvA=
+X-Google-Smtp-Source: ABdhPJzcMhFYGmRTcy9UjZ4py9L/SKUguv94oU9jn7X/ehFkXLf228/Ba7nxH5UJVHBfbTSNmfeQmrmHgK1JPXPVvVo=
+X-Received: by 2002:a25:27c8:: with SMTP id n191mr10213060ybn.670.1643785069826;
+ Tue, 01 Feb 2022 22:57:49 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.1
-Content-Language: en-US
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-From:   jkhsjdhjs <jkhsjdhjs@totally.rip>
-Subject: NULL pointer dereference in blk_queue_flag_set
+References: <a673c90f-d9eb-c6d5-b675-e6c2e1c04e5f@totally.rip>
+In-Reply-To: <a673c90f-d9eb-c6d5-b675-e6c2e1c04e5f@totally.rip>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 1 Feb 2022 22:57:39 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5H1uROu868FhS5MNXuP=nS_=6b8zUrFv4jBjPEA=joPQ@mail.gmail.com>
+Message-ID: <CAPhsuW5H1uROu868FhS5MNXuP=nS_=6b8zUrFv4jBjPEA=joPQ@mail.gmail.com>
+Subject: Re: NULL pointer dereference in blk_queue_flag_set
+To:     jkhsjdhjs <jkhsjdhjs@totally.rip>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------SSgSYbS3AegeHNoZlXSzN7ss
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi Leon,
 
-Dear Song Liu,
+On Tue, Feb 1, 2022 at 2:15 PM jkhsjdhjs <jkhsjdhjs@totally.rip> wrote:
+>
+> Dear Song Liu,
+>
+> my kernel (5.17-rc2) experiences a NULL pointer dereference when
+> activating an LDM (Windows Logical Disk Manager) on Arch Linux using
+> ldmtool [1]. I have attached the relevant excerpt of dmesg. This bug
+> causes my LDM RAID to fail activating (see ldmtool-status.txt and
+> lsblk.txt). Since this worked fine with 5.16 I bisected the kernel and
+> found, that commit f51d46d0e7cb5b8494aa534d276a9d8915a2443d [2]
+> introduced the issue.
+>
+> I'm not sure what else to add, if there's more information I can
+> provide, please tell me. Otherwise I'll happily assist in fixing this
+> issue - if there's something I can do.
 
-my kernel (5.17-rc2) experiences a NULL pointer dereference when 
-activating an LDM (Windows Logical Disk Manager) on Arch Linux using 
-ldmtool [1]. I have attached the relevant excerpt of dmesg. This bug 
-causes my LDM RAID to fail activating (see ldmtool-status.txt and 
-lsblk.txt). Since this worked fine with 5.16 I bisected the kernel and 
-found, that commit f51d46d0e7cb5b8494aa534d276a9d8915a2443d [2] 
-introduced the issue.
+Thanks for the report! And sorry for the bug.
 
-I'm not sure what else to add, if there's more information I can 
-provide, please tell me. Otherwise I'll happily assist in fixing this 
-issue - if there's something I can do.
+For the next step, could you please test whether the following change
+fixes the issue?
 
-Best Regards,
+Best,
+Song
 
-Leon
+diff --git i/drivers/md/md.c w/drivers/md/md.c
+index 854cbf4234aa..18e987c644c6 100644
+--- i/drivers/md/md.c
++++ w/drivers/md/md.c
+@@ -5868,10 +5868,6 @@ int md_run(struct mddev *mddev)
+                nowait = nowait && blk_queue_nowait(bdev_get_queue(rdev->bdev));
+        }
 
-[1] https://github.com/mdbooth/libldm
-[2] 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f51d46d0e7cb5b8494aa534d276a9d8915a2443d
-
-
-
---------------SSgSYbS3AegeHNoZlXSzN7ss
-Content-Type: text/plain; charset=UTF-8; name="ldmtool-status.txt"
-Content-Disposition: attachment; filename="ldmtool-status.txt"
-Content-Transfer-Encoding: base64
-
-JCBzeXN0ZW1jdGwgc3RhdHVzIGxkbXRvb2wuc2VydmljZQrDlyBsZG10b29sLnNlcnZpY2Ug
-LSBXaW5kb3dzIER5bmFtaWMgRGlzayBNb3VudAogICAgIExvYWRlZDogbG9hZGVkICgvdXNy
-L2xpYi9zeXN0ZW1kL3N5c3RlbS9sZG10b29sLnNlcnZpY2U7IGVuYWJsZWQ7IHZlbmRvciBw
-cmVzZXQ6IGRpc2FibGVkKQogICAgIEFjdGl2ZTogZmFpbGVkIChSZXN1bHQ6IHNpZ25hbCkg
-c2luY2UgVHVlIDIwMjItMDItMDEgMTc6NDg6MTcgQ0VUOyA0MnMgYWdvCiAgICBQcm9jZXNz
-OiA0ODQgRXhlY1N0YXJ0PS91c3IvYmluL2xkbXRvb2wgY3JlYXRlIGFsbCAoY29kZT1raWxs
-ZWQsIHNpZ25hbD1LSUxMKQogICBNYWluIFBJRDogNDg0IChjb2RlPWtpbGxlZCwgc2lnbmFs
-PUtJTEwpCiAgICAgICAgQ1BVOiAyMTZtcwoKRmViIDAxIDE3OjQ4OjE3IGJlbnppdW1pbmF0
-b3Igc3lzdGVtZFsxXTogbGRtdG9vbC5zZXJ2aWNlOiBNYWluIHByb2Nlc3MgZXhpdGVkLCBj
-b2RlPWtpbGxlZCwgc3RhdHVzPTkvS0lMTApGZWIgMDEgMTc6NDg6MTcgYmVueml1bWluYXRv
-ciBzeXN0ZW1kWzFdOiBsZG10b29sLnNlcnZpY2U6IEZhaWxlZCB3aXRoIHJlc3VsdCAnc2ln
-bmFsJy4=
---------------SSgSYbS3AegeHNoZlXSzN7ss
-Content-Type: text/x-log; charset=UTF-8; name="dmesg_excerpt.log"
-Content-Disposition: attachment; filename="dmesg_excerpt.log"
-Content-Transfer-Encoding: base64
-
-WyAgIDE1LjEyMzc2MV0gZGV2aWNlLW1hcHBlcjogcmFpZDogTG9hZGluZyB0YXJnZXQgdmVy
-c2lvbiAxLjE1LjEKWyAgIDE1LjEyNDE4NV0gZGV2aWNlLW1hcHBlcjogcmFpZDogSWdub3Jp
-bmcgY2h1bmsgc2l6ZSBwYXJhbWV0ZXIgZm9yIFJBSUQgMQpbICAgMTUuMTI0MTkyXSBkZXZp
-Y2UtbWFwcGVyOiByYWlkOiBDaG9vc2luZyBkZWZhdWx0IHJlZ2lvbiBzaXplIG9mIDRNaUIK
-WyAgIDE1LjEyOTUyNF0gQlVHOiBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlLCBh
-ZGRyZXNzOiAwMDAwMDAwMDAwMDAwMDYwClsgICAxNS4xMjk1MzBdICNQRjogc3VwZXJ2aXNv
-ciB3cml0ZSBhY2Nlc3MgaW4ga2VybmVsIG1vZGUKWyAgIDE1LjEyOTUzM10gI1BGOiBlcnJv
-cl9jb2RlKDB4MDAwMikgLSBub3QtcHJlc2VudCBwYWdlClsgICAxNS4xMjk1MzVdIFBHRCAw
-IFA0RCAwIApbICAgMTUuMTI5NTM4XSBPb3BzOiAwMDAyIFsjMV0gUFJFRU1QVCBTTVAgTk9Q
-VEkKWyAgIDE1LjEyOTU0MV0gQ1BVOiA1IFBJRDogNDk0IENvbW06IGxkbXRvb2wgTm90IHRh
-aW50ZWQgNS4xNy4wLXJjMi0xLW1haW5saW5lICMxIDlmZTg5ZDQzZGZjYjIxNWQyNzMxZTZm
-ODg1MTc0MDUyMDc3ODYxNWUKWyAgIDE1LjEyOTU0Nl0gSGFyZHdhcmUgbmFtZTogR2lnYWJ5
-dGUgVGVjaG5vbG9neSBDby4sIEx0ZC4gWDU3MCBBT1JVUyBFTElURS9YNTcwIEFPUlVTIEVM
-SVRFLCBCSU9TIEYzNmUgMTAvMTQvMjAyMQpbICAgMTUuMTI5NTQ5XSBSSVA6IDAwMTA6Ymxr
-X3F1ZXVlX2ZsYWdfc2V0KzB4Ny8weDIwClsgICAxNS4xMjk1NTVdIENvZGU6IDAwIDAwIDAw
-IDBmIDFmIDQ0IDAwIDAwIDQ4IDhiIDM1IGU0IGUwIDA0IDAyIDQ4IDhkIDU3IDI4IGJmIDQw
-IDAxIDAwIDAwIGU5IDE2IGMxIGJlIGZmIDY2IDBmIDFmIDQ0IDAwIDAwIDBmIDFmIDQ0IDAw
-IDAwIDg5IGZmIDxmMD4gNDggMGYgYWIgN2UgNjAgMzEgZjYgODkgZjcgYzMgNjYgNjYgMmUg
-MGYgMWYgODQgMDAgMDAgMDAgMDAgMDAKWyAgIDE1LjEyOTU1OV0gUlNQOiAwMDE4OmZmZmY5
-NjZiODE5ODdhODggRUZMQUdTOiAwMDAxMDIwMgpbICAgMTUuMTI5NTYyXSBSQVg6IGZmZmY4
-YjExYzM2M2EwZDAgUkJYOiBmZmZmOGIxMWUyOTRiMDcwIFJDWDogMDAwMDAwMDAwMDAwMDAw
-MApbICAgMTUuMTI5NTY0XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwMDAwMDAw
-MDAwMDAwIFJESTogMDAwMDAwMDAwMDAwMDAxZApbICAgMTUuMTI5NTY2XSBSQlA6IGZmZmY4
-YjExZTI5NGIwNTggUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAw
-MApbICAgMTUuMTI5NTY4XSBSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAw
-MDAwMDAwIFIxMjogZmZmZjhiMTFlMjk0YjA3MApbICAgMTUuMTI5NTcwXSBSMTM6IDAwMDAw
-MDAwMDAwMDAwMDAgUjE0OiBmZmZmOGIxMWUyOTRiMDAwIFIxNTogMDAwMDAwMDAwMDAwMDAw
-MQpbICAgMTUuMTI5NTcyXSBGUzogIDAwMDA3ZmE5NmU4MjY3ODAoMDAwMCkgR1M6ZmZmZjhi
-MThkZWI0MDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwClsgICAxNS4xMjk1NzVd
-IENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMKWyAg
-IDE1LjEyOTU3N10gQ1IyOiAwMDAwMDAwMDAwMDAwMDYwIENSMzogMDAwMDAwMDEwYjhjZTAw
-MCBDUjQ6IDAwMDAwMDAwMDAzNTA2ZTAKWyAgIDE1LjEyOTU4MF0gQ2FsbCBUcmFjZToKWyAg
-IDE1LjEyOTU4Ml0gIDxUQVNLPgpbICAgMTUuMTI5NTg0XSAgbWRfcnVuKzB4NjdjLzB4Yzcw
-IFttZF9tb2QgMWU0NzBjMWI2YmNmMTExNDE5ODEwOWY0MjY4MmY1YTI3NDBlOTUzMV0KWyAg
-IDE1LjEyOTU5N10gIHJhaWRfY3RyKzB4MTM0YS8weDI4ZWEgW2RtX3JhaWQgNmE2NDVkZDc1
-MTllNzI4MzRiZDdlOThjMjM0OTdlZWFkZTE0Y2Q2M10KWyAgIDE1LjEyOTYwNF0gID8gZG1f
-c3BsaXRfYXJncysweDYzLzB4MTUwIFtkbV9tb2QgMGQ3YjBiYzM0MTQzNDBhNzljNDU1M2Jh
-ZTVjYTk3Mjk0Yjc4MzM2ZV0KWyAgIDE1LjEyOTYxNV0gIGRtX3RhYmxlX2FkZF90YXJnZXQr
-MHgxODgvMHgzODAgW2RtX21vZCAwZDdiMGJjMzQxNDM0MGE3OWM0NTUzYmFlNWNhOTcyOTRi
-NzgzMzZlXQpbICAgMTUuMTI5NjI1XSAgdGFibGVfbG9hZCsweDEzYi8weDM3MCBbZG1fbW9k
-IDBkN2IwYmMzNDE0MzQwYTc5YzQ1NTNiYWU1Y2E5NzI5NGI3ODMzNmVdClsgICAxNS4xMjk2
-MzVdICA/IGRldl9zdXNwZW5kKzB4MmQwLzB4MmQwIFtkbV9tb2QgMGQ3YjBiYzM0MTQzNDBh
-NzljNDU1M2JhZTVjYTk3Mjk0Yjc4MzM2ZV0KWyAgIDE1LjEyOTY0NF0gIGN0bF9pb2N0bCsw
-eDFiZC8weDQ2MCBbZG1fbW9kIDBkN2IwYmMzNDE0MzQwYTc5YzQ1NTNiYWU1Y2E5NzI5NGI3
-ODMzNmVdClsgICAxNS4xMjk2NTVdICBkbV9jdGxfaW9jdGwrMHhhLzB4MjAgW2RtX21vZCAw
-ZDdiMGJjMzQxNDM0MGE3OWM0NTUzYmFlNWNhOTcyOTRiNzgzMzZlXQpbICAgMTUuMTI5NjYz
-XSAgX194NjRfc3lzX2lvY3RsKzB4OGUvMHhkMApbICAgMTUuMTI5NjY3XSAgZG9fc3lzY2Fs
-bF82NCsweDVjLzB4OTAKWyAgIDE1LjEyOTY3Ml0gID8gc3lzY2FsbF9leGl0X3RvX3VzZXJf
-bW9kZSsweDIzLzB4NTAKWyAgIDE1LjEyOTY3NV0gID8gZG9fc3lzY2FsbF82NCsweDY5LzB4
-OTAKWyAgIDE1LjEyOTY3N10gID8gZG9fc3lzY2FsbF82NCsweDY5LzB4OTAKWyAgIDE1LjEy
-OTY3OV0gID8gc3lzY2FsbF9leGl0X3RvX3VzZXJfbW9kZSsweDIzLzB4NTAKWyAgIDE1LjEy
-OTY4Ml0gID8gZG9fc3lzY2FsbF82NCsweDY5LzB4OTAKWyAgIDE1LjEyOTY4NF0gID8gZG9f
-c3lzY2FsbF82NCsweDY5LzB4OTAKWyAgIDE1LjEyOTY4Nl0gIGVudHJ5X1NZU0NBTExfNjRf
-YWZ0ZXJfaHdmcmFtZSsweDQ0LzB4YWUKWyAgIDE1LjEyOTY4OV0gUklQOiAwMDMzOjB4N2Zh
-OTZlY2Q1NTliClsgICAxNS4xMjk2OTJdIENvZGU6IGZmIGZmIGZmIDg1IGMwIDc5IDliIDQ5
-IGM3IGM0IGZmIGZmIGZmIGZmIDViIDVkIDRjIDg5IGUwIDQxIDVjIGMzIDY2IDBmIDFmIDg0
-IDAwIDAwIDAwIDAwIDAwIGYzIDBmIDFlIGZhIGI4IDEwIDAwIDAwIDAwIDBmIDA1IDw0OD4g
-M2QgMDEgZjAgZmYgZmYgNzMgMDEgYzMgNDggOGIgMGQgYTUgYTggMGMgMDAgZjcgZDggNjQg
-ODkgMDEgNDgKWyAgIDE1LjEyOTY5Nl0gUlNQOiAwMDJiOjAwMDA3ZmZjYWY4NWMyNTggRUZM
-QUdTOiAwMDAwMDIwNiBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDAxMApbICAgMTUuMTI5Njk5
-XSBSQVg6IGZmZmZmZmZmZmZmZmZmZGEgUkJYOiAwMDAwN2ZhOTZmMWI0OGYwIFJDWDogMDAw
-MDdmYTk2ZWNkNTU5YgpbICAgMTUuMTI5NzAxXSBSRFg6IDAwMDA3ZmE5NzAxN2U2MTAgUlNJ
-OiAwMDAwMDAwMGMxMzhmZDA5IFJESTogMDAwMDAwMDAwMDAwMDAwMwpbICAgMTUuMTI5NzAy
-XSBSQlA6IDAwMDA3ZmE5NmViYWI1ODMgUjA4OiAwMDAwN2ZhOTcwMTdjOWUwIFIwOTogMDAw
-MDdmZmNhZjg1YmYyNwpbICAgMTUuMTI5NzA0XSBSMTA6IDAwMDAwMDAwMDAwMDAwMDEgUjEx
-OiAwMDAwMDAwMDAwMDAwMjA2IFIxMjogMDAwMDdmYTk3MDE3ZTYxMApbICAgMTUuMTI5NzA2
-XSBSMTM6IDAwMDA3ZmE5NzAxN2U2NDAgUjE0OiAwMDAwN2ZhOTcwMTdlNmMwIFIxNTogMDAw
-MDdmYTk3MDE3ZTUzMApbICAgMTUuMTI5NzA5XSAgPC9UQVNLPgpbICAgMTUuMTI5NzEwXSBN
-b2R1bGVzIGxpbmtlZCBpbjogcmFpZDEgYW1kNjRfZWRhYygtKSBmamVzKC0pIHBjY19jcHVm
-cmVxKC0pIGRtX3JhaWQgcmFpZDQ1NiBtZF9tb2QgYXN5bmNfcmFpZDZfcmVjb3YgYXN5bmNf
-bWVtY3B5IGFzeW5jX3BxIGFzeW5jX3hvciBpbnRlbF9yYXBsX21zciBhc3luY190eCB4b3Ig
-cmFpZDZfcHEgaW50ZWxfcmFwbF9jb21tb24gbGliY3JjMzJjIGVkYWNfbWNlX2FtZCBhbWRn
-cHUoKykgc25kX2hkYV9jb2RlY19yZWFsdGVrIHdtaV9ibW9mIHNuZF9oZGFfY29kZWNfZ2Vu
-ZXJpYyBrdm1fYW1kIGdpZ2FieXRlX3dtaSBsZWR0cmlnX2F1ZGlvIHNuZF9oZGFfY29kZWNf
-aGRtaSBzbmRfaGRhX2ludGVsIGt2bSBzbmRfaW50ZWxfZHNwY2ZnIHNuZF9pbnRlbF9zZHdf
-YWNwaSBzbmRfdXNiX2F1ZGlvIHNuZF9oZGFfY29kZWMgZ3B1X3NjaGVkIHNwNTEwMF90Y28g
-c25kX3VzYm1pZGlfbGliIGlycWJ5cGFzcyBkcm1fdHRtX2hlbHBlciBzbmRfaGRhX2NvcmUg
-cmFwbCBpMmNfcGlpeDQgam95ZGV2IG1vdXNlZGV2IHR0bSBzbmRfaHdkZXAgc25kX3Jhd21p
-ZGkgc25kX3NlcV9kZXZpY2UgaWdiIGRjYSB3bWkgcGluY3RybF9hbWQgbWFjX2hpZCBhY3Bp
-X2NwdWZyZXEgbmxzX2lzbzg4NTlfMSB2ZmF0IGZhdCBzbmRfYWxvb3Agc25kX3BjbSBzbmRf
-dGltZXIgc25kIHNvdW5kY29yZSB2aWRlb2RldiBtYyBzZyBjcnlwdG9fdXNlciBmdXNlIGlw
-X3RhYmxlcyB4X3RhYmxlcyBleHQ0IGNyYzMyY19nZW5lcmljIGNyYzE2IG1iY2FjaGUgamJk
-MiBkbV9jcnlwdCBjYmMgZW5jcnlwdGVkX2tleXMgdHJ1c3RlZCBhc24xX2VuY29kZXIgdGVl
-IHRwbSB1YXMgdXNiX3N0b3JhZ2UgdXNiaGlkIGRtX21vZCBjcmN0MTBkaWZfcGNsbXVsIGNy
-YzMyX3BjbG11bCBjcmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbCBhZXNuaV9pbnRl
-bCBjcnlwdG9fc2ltZCBjcnlwdGQgY2NwIHNyX21vZCBybmdfY29yZSBjZHJvbSB4aGNpX3Bj
-aQpbICAgMTUuMTI5NzUwXSAgeGhjaV9wY2lfcmVuZXNhcwpbICAgMTUuMTI5NzY0XSBDUjI6
-IDAwMDAwMDAwMDAwMDAwNjAKWyAgIDE1LjEyOTc2Nl0gLS0tWyBlbmQgdHJhY2UgMDAwMDAw
-MDAwMDAwMDAwMCBdLS0tClsgICAxNS4xMjk3NjddIFJJUDogMDAxMDpibGtfcXVldWVfZmxh
-Z19zZXQrMHg3LzB4MjAKWyAgIDE1LjEyOTc3MF0gQ29kZTogMDAgMDAgMDAgMGYgMWYgNDQg
-MDAgMDAgNDggOGIgMzUgZTQgZTAgMDQgMDIgNDggOGQgNTcgMjggYmYgNDAgMDEgMDAgMDAg
-ZTkgMTYgYzEgYmUgZmYgNjYgMGYgMWYgNDQgMDAgMDAgMGYgMWYgNDQgMDAgMDAgODkgZmYg
-PGYwPiA0OCAwZiBhYiA3ZSA2MCAzMSBmNiA4OSBmNyBjMyA2NiA2NiAyZSAwZiAxZiA4NCAw
-MCAwMCAwMCAwMCAwMApbICAgMTUuMTI5Nzc0XSBSU1A6IDAwMTg6ZmZmZjk2NmI4MTk4N2E4
-OCBFRkxBR1M6IDAwMDEwMjAyClsgICAxNS4xMjk3NzZdIFJBWDogZmZmZjhiMTFjMzYzYTBk
-MCBSQlg6IGZmZmY4YjExZTI5NGIwNzAgUkNYOiAwMDAwMDAwMDAwMDAwMDAwClsgICAxNS4x
-Mjk3NzhdIFJEWDogMDAwMDAwMDAwMDAwMDAwMCBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJ
-OiAwMDAwMDAwMDAwMDAwMDFkClsgICAxNS4xMjk3ODBdIFJCUDogZmZmZjhiMTFlMjk0YjA1
-OCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwClsgICAxNS4x
-Mjk3ODJdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgUjEy
-OiBmZmZmOGIxMWUyOTRiMDcwClsgICAxNS4xMjk3ODRdIFIxMzogMDAwMDAwMDAwMDAwMDAw
-MCBSMTQ6IGZmZmY4YjExZTI5NGIwMDAgUjE1OiAwMDAwMDAwMDAwMDAwMDAxClsgICAxNS4x
-Mjk3ODZdIEZTOiAgMDAwMDdmYTk2ZTgyNjc4MCgwMDAwKSBHUzpmZmZmOGIxOGRlYjQwMDAw
-KDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKWyAgIDE1LjEyOTc4OF0gQ1M6ICAwMDEw
-IERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMwpbICAgMTUuMTI5Nzkw
-XSBDUjI6IDAwMDAwMDAwMDAwMDAwNjAgQ1IzOiAwMDAwMDAwMTBiOGNlMDAwIENSNDogMDAw
-MDAwMDAwMDM1MDZlMA==
---------------SSgSYbS3AegeHNoZlXSzN7ss
-Content-Type: text/plain; charset=UTF-8; name="lsblk.txt"
-Content-Disposition: attachment; filename="lsblk.txt"
-Content-Transfer-Encoding: base64
-
-IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMgTk9STUFMIGxzYmxrICMjIyMjIyMjIyMjIyMj
-IyMjIyMjIyMjIyMjCk5BTUUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgTUFK
-Ok1JTiBSTSAgIFNJWkUgUk8gVFlQRSAgTU9VTlRQT0lOVFMKc2RiICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIDg6MTYgICAxICAgNywzVCAgMCBkaXNrICAK4pSc4pSA
-c2RiMSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA4OjE3ICAgMSAgICAgMU0g
-IDAgcGFydCAgCuKUnOKUgHNkYjIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ODoxOCAgIDEgICAxMjdNICAwIHBhcnQgIArilJzilIBzZGIzICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIDg6MTkgICAxICAgNywzVCAgMCBwYXJ0ICAK4pSU4pSAbGRtX3Bh
-cnRfQkVOWklVTUlOQVRPUi1EZzBfRGlzazItMDEgMjU0OjUgICAgMCAgIDcsM1QgIDAgbGRt
-ICAgCiAg4pSU4pSAbGRtX3ZvbF9CRU5aSVVNSU5BVE9SLURnMF9Wb2x1bWUxIDI1NDo2ICAg
-IDAgICA3LDNUICAwIGxkbSAgIApzZGMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgODozMiAgIDEgICA3LDNUICAwIGRpc2sgIArilJzilIBzZGMxICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIDg6MzMgICAxICAgNywzVCAgMCBwYXJ0ICAK4pSc4pSA
-c2RjMiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA4OjM0ICAgMSAgICAgMU0g
-IDAgcGFydCAgCuKUnOKUgHNkYzMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ODozNSAgIDEgICAxMjdNICAwIHBhcnQgIArilJTilIBsZG1fcGFydF9CRU5aSVVNSU5BVE9S
-LURnMF9EaXNrMS0wMSAyNTQ6NCAgICAwICAgNywzVCAgMCBsZG0gICAKICDilJTilIBsZG1f
-dm9sX0JFTlpJVU1JTkFUT1ItRGcwX1ZvbHVtZTEgMjU0OjYgICAgMCAgIDcsM1QgIDAgbGRt
-CgojIyMjIyMjIyMjIyMjIyMgbHNibGsgd2l0aCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2Ug
-IyMjIyMjIyMjIyMjIyMjCk5BTUUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-TUFKOk1JTiBSTSAgIFNJWkUgUk8gVFlQRSAgTU9VTlRQT0lOVFMKc2RiICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIDg6MTYgICAxICAgNywzVCAgMCBkaXNrICAK4pSc
-4pSAc2RiMSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA4OjE3ICAgMSAgICAg
-MU0gIDAgcGFydCAgCuKUnOKUgHNkYjIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgODoxOCAgIDEgICAxMjdNICAwIHBhcnQgIArilJzilIBzZGIzICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIDg6MTkgICAxICAgNywzVCAgMCBwYXJ0ICAK4pSU4pSAbGRt
-X3BhcnRfQkVOWklVTUlOQVRPUi1EZzBfRGlzazItMDEgMjU0OjUgICAgMCAgIDcsM1QgIDAg
-bGRtICAgCnNkYyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA4OjMyICAg
-MSAgIDcsM1QgIDAgZGlzayAgCuKUnOKUgHNkYzEgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgODozMyAgIDEgICA3LDNUICAwIHBhcnQgIArilJzilIBzZGMyICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIDg6MzQgICAxICAgICAxTSAgMCBwYXJ0ICAK4pSc
-4pSAc2RjMyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA4OjM1ICAgMSAgIDEy
-N00gIDAgcGFydCAgCuKUlOKUgGxkbV9wYXJ0X0JFTlpJVU1JTkFUT1ItRGcwX0Rpc2sxLTAx
-IDI1NDo0ICAgIDAgICA3LDNUICAwIGxkbQoKCg==
-
---------------SSgSYbS3AegeHNoZlXSzN7ss--
+-       /* Set the NOWAIT flags if all underlying devices support it */
+-       if (nowait)
+-               blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
+-
+        if (!bioset_initialized(&mddev->bio_set)) {
+                err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0,
+BIOSET_NEED_BVECS);
+                if (err)
+@@ -6009,6 +6005,10 @@ int md_run(struct mddev *mddev)
+                else
+                        blk_queue_flag_clear(QUEUE_FLAG_NONROT, mddev->queue);
+                blk_queue_flag_set(QUEUE_FLAG_IO_STAT, mddev->queue);
++
++               /* Set the NOWAIT flags if all underlying devices support it */
++               if (nowait)
++                       blk_queue_flag_set(QUEUE_FLAG_NOWAIT, mddev->queue);
+        }
+        if (pers->sync_request) {
+                if (mddev->kobj.sd &&
