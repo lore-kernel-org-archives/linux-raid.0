@@ -2,105 +2,122 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6EDDC433EF
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Feb 2022 22:15:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6B0C4332F
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 01:06:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243902AbiBGWP1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Feb 2022 17:15:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45146 "EHLO
+        id S1344024AbiBHBG1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Feb 2022 20:06:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233534AbiBGWP0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Feb 2022 17:15:26 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E6B16C061355
-        for <linux-raid@vger.kernel.org>; Mon,  7 Feb 2022 14:15:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1644272125;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=+m82o+thtcm+LpZOWYXh2SYpqiYTlY0IM2ueDhDDL8c=;
-        b=i6iApITCQamA0Oq1KHL1FbucTxXLIEy5uQAQ+RCtUbylCP7/ZpJqFE+NRSIBtQggT8cnGj
-        4P52Pt3q2DvnDgZ/IPPRZQP8TcVcrVQQ93LhhFJ2YYn/fP+uioAT7uqk3xn/kJslqfNoEl
-        AduG3uaHu9mb1RHIjVCAC9R5pmGEIGU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-556-wb_ijW9_Npe31Dm-kUfmOw-1; Mon, 07 Feb 2022 17:15:22 -0500
-X-MC-Unique: wb_ijW9_Npe31Dm-kUfmOw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E800A10B7440;
-        Mon,  7 Feb 2022 22:15:20 +0000 (UTC)
-Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 93FB65E26B;
-        Mon,  7 Feb 2022 22:15:20 +0000 (UTC)
-From:   Nigel Croxon <ncroxon@redhat.com>
-To:     mariusz.tkaczyk@linux.intel.com, jes@trained-monkey.org,
-        linux-raid@vger.kernel.org
-Subject: [PATCH] mdadm: fix msg when removing a device using the short arg -r
-Date:   Mon,  7 Feb 2022 17:15:19 -0500
-Message-Id: <20220207221519.3169427-1-ncroxon@redhat.com>
+        with ESMTP id S232539AbiBHAIk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Feb 2022 19:08:40 -0500
+X-Greylist: delayed 5980 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 16:08:38 PST
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99FF5C061355
+        for <linux-raid@vger.kernel.org>; Mon,  7 Feb 2022 16:08:38 -0800 (PST)
+Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1nHCVD-0000ir-44; Mon, 07 Feb 2022 22:28:55 +0000
+Message-ID: <c6873b6a-eabf-d6db-80f1-20b75a37bca7@youngman.org.uk>
+Date:   Mon, 7 Feb 2022 22:28:57 +0000
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: Replacing all disks in a an array as a preventative measure
+ before failing.
+Content-Language: en-GB
+To:     Red Wil <redwil@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+References: <20220207152648.42dd311a@falcon.sitarc.ca>
+From:   Wol <antlists@youngman.org.uk>
+In-Reply-To: <20220207152648.42dd311a@falcon.sitarc.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The change from commit mdadm: fix coredump of mdadm
---monitor -r broke the printing of the return message when
-passing -r to mdadm --manage, the removal of a device from
-an array.
+On 07/02/2022 20:26, Red Wil wrote:
+> Hello,
+> 
+> It started as the subject said:
+>   - goal was to replace all 10 disks in a R6
+>   - context and perceived constraints
+>     - soft raid (no imsm and or ddl containers)
+>     - multiple disk partition. partitions across 10 disks formed R6
+>     - downtime not an issue
+>     - minimize the number of commands
+>     - minimize disks stress
+>     - reduce the time spent with this process
+>     - difficult to add 10 spares at once in the rig
+>     - after a reshape/grow from 6 to 10 disks offset of data in raid
+>       members was all over the place from cca 10ksect to 200ksect
+> 
+> Approaches/solutions and critique
+>   1- add one by one a 'spare' and 'replace' raid member
+>    critique:
+>    - seem to me long and tedious process
+>    - cannot/will not run in parallel
 
-If the current code reverts this commit, both issues are
-still fixed.
+There's not a problem running in parallel as far as mdraid is concerned. 
+If you can get the spare drives into the chassis (or on eSATA), you can 
+--replace several drives at once.
 
-The original problem reported that the fix tried to address
-was:  The --monitor -r option requires a parameter,
-otherwise a null pointer will be manipulated when
-converting to integer data, and a core dump will appear.
+And it pretty much just does a dd, just on the live system keeping you 
+raid-safe.
 
-The original problem was really fixed with:
-60815698c0a Refactor parse_num and use it to parse optarg.
-Which added a check for NULL in 'optarg' before moving it
-to the 'increments' variable.
+>   2- add all the spares at once and perform 'replace' on members
+>    critique
+>    - just tedious - lots of cli commands which can be prone to mistakes.
 
-New issue: When trying to remove a device using the short
-argument -r, instead of the long argument --remove, the
-output is empty. The problem started when commit 
-546047688e1c was added.
+pretty much the same as (1). Given that your sdX's are moving all over 
+the place, I would work with uuids even though it's more typing, it's safer.
 
-Steps to Reproduce:
-1. create/assemble /dev/md0 device
-2. mdadm --manage /dev/md0 -r /dev/vdxx
+>   next ones assume I have all the 'spares' in the rig
+>   3- create new arrays on spares, fresh fs and copy data.
 
-Actual results:
-Nothing, empty output, nothing happens, the device is still
-connected to the array.
+Well, you could fail/replace all the old drives, but yes just building a 
+new array from scratch (if you can afford the downtime) is probably better.
 
-The output should have stated "mdadm: hot remove failed
-for /dev/vdxx: Device or resource busy", if the device was
-still active. Or it should remove the device and print
-a message:
+>   4- dd/ddrescue copy each drive to a new one. Advantage can be done one
+>   by one or in parallel. less commands in the terminal.
 
-# mdadm --set-faulty /dev/md0 /dev/vdd
-mdadm: set /dev/vdd faulty in /dev/md0
-# mdadm --manage /dev/md0 -r /dev/vdd
-mdadm: hot removed /dev/vdd from /dev/md0
+Less commands? Dunno about that. Much safer in many ways though, remove 
+the drive you're replacing, copy it, put the new one back. Less chance 
+for a physical error.
+> 
+> In the end I decided I will use route (3).
+>   - flexibility on creation
+>   - copy only what I need
+>   - old array is a sort of backup
+> 
+> Question:
+> Just for my curiosity regarding (4) assuming array is offline:
+> Besides being not recommended in case of imsm/ddl containers which (as
+> far as i understood) keep some data on the hardware itself
+> 
+> In case of pure soft raid is anything technical or safety related that
+> prevents a 'dd' copy of a physical hard drive to act exactly as the
+> original.
+> 
+Nope. You've copied the partition byte for byte, the raid won't know any 
+different.
 
+One question, though. Why are you replacing the drives? Just a precaution?
 
-The following commit should be reverted as it breaks
-mdadm --manage -r.
+How big are the drives? What I'd do if you're not replacing dying 
+drives, is buy five or possibly six drives of twice the capacity. Do a 
+--replace on those five drives. Now take two of the drives you've 
+removed, raid-0 them, and now do a major re-org, adding your raid-0 as 
+device 6, reducing your raid to a 6-device array, and removing the last 
+four old drives from the array. Assuming you've only got 10 bays and 
+you've been faffing about externally as you replace drives, you can now 
+use the last three drives in the chassis to create another two-drive 
+raid-0, add that as a spare into your raid-6, and add your last drive as 
+a spare into both your raid-0s.
 
-commit 546047688e1c64638f462147c755b58119cabdc8
-Author: Wu Guanghao <wuguanghao3@huawei.com>
-Date:   Mon Aug 16 15:24:51 2021 +0800
-mdadm: fix coredump of mdadm --monitor -r
+So you end up with a 6-device+plus-spare raid-6, and devices 6 & spare 
+(your raid-0s) share a spare between them.
 
--Nigel
-
-Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
-
-
+Cheers,
+Wol
