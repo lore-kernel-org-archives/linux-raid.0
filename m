@@ -2,94 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA94C433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 16:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D60C433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 16:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383555AbiBHQvB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Feb 2022 11:51:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36124 "EHLO
+        id S1383560AbiBHQvc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Feb 2022 11:51:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352392AbiBHQvA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Feb 2022 11:51:00 -0500
+        with ESMTP id S1352392AbiBHQvc (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Feb 2022 11:51:32 -0500
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE25DC061578;
-        Tue,  8 Feb 2022 08:50:59 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A55FC061578
+        for <linux-raid@vger.kernel.org>; Tue,  8 Feb 2022 08:51:32 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 8F7DC210F9;
-        Tue,  8 Feb 2022 16:50:58 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id ED3DC210FF;
+        Tue,  8 Feb 2022 16:51:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1644339058; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1644339090; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=gzFuTD+9STDC0IKWKq1VpmaF63x4/CpD8VdnqroWAnI=;
-        b=W7UVBCvL89jTllIADx5bULOQFaYryz8JCdeEAx/oqXomOtJJjejiBROemapnE6mI8EWKUf
-        /DTQ988OLJPabhMzUr6uksDHyP5QOvh116U5LZPYmbvMhTfX1xi3QF5ye1qAZ811gy8U5w
-        gIL77fq2l199+OWAGG0dPHs/nE4SdJM=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XHH/88UX7WLl3K3TpYHGDWPNU8IY6bF0y7mGF2g32pk=;
+        b=i/trnZ0sXIHbhKMGT/bQJ3O+ZYRvJP162sI0DBz7BQA5Cf6EnhZhUEKG/BdMARHter122e
+        QT29dbcvCJHtYCxsgrOdkKciDwC98h2lT/ILv6U/0EN7RwBI/xx6lPJmY/j2SdUbdEuXLC
+        ZSK4lPo4zBPOQ9CBgQVSpRqaCnzxbHw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1644339058;
+        s=susede2_ed25519; t=1644339090;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=gzFuTD+9STDC0IKWKq1VpmaF63x4/CpD8VdnqroWAnI=;
-        b=EydRchZ/j6IsUnpMltUJOJiSRvLba4+jGzzgPIL8+i0CCkJ7Cm4Lzhgbrbz+gHimu7OPVK
-        LJS1O6QCSEKHuqBw==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XHH/88UX7WLl3K3TpYHGDWPNU8IY6bF0y7mGF2g32pk=;
+        b=5+l220907oqXHX2/VsP7DhN8VOvgv4wHmRB60I2sZQXdoE5ZkAZBfAAqQVL7VUVEKy5Qix
+        wOxW8h2XNxeLI4Cw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7280413A1A;
-        Tue,  8 Feb 2022 16:50:58 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DAA7B13A1A;
+        Tue,  8 Feb 2022 16:51:30 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id G+LVGXKfAmKLUgAAMHmgww
-        (envelope-from <dmueller@suse.de>); Tue, 08 Feb 2022 16:50:58 +0000
-From:   =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
-To:     linux-raid@vger.kernel.org
-Cc:     =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>,
-        stable@vger.kernel.org, Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: [PATCH v2] lib/raid6/test: fix multiple definition linking error
-Date:   Tue,  8 Feb 2022 17:50:50 +0100
-Message-Id: <20220208165050.13893-1-dmueller@suse.de>
-X-Mailer: git-send-email 2.35.1
+        id 52xsNJKfAmLCUgAAMHmgww
+        (envelope-from <dmueller@suse.de>); Tue, 08 Feb 2022 16:51:30 +0000
+From:   Dirk =?ISO-8859-1?Q?M=FCller?= <dmueller@suse.de>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+Subject: Re: [PATCH] fix multiple definition linking error due to missing extern
+Date:   Tue, 08 Feb 2022 17:51:30 +0100
+Message-ID: <2235987.xdJb8MTqgy@magnolia>
+Organization: SUSE Software Solutions Germany GmbH; GF: Ivo Totev; HRB 36809 (AG =?UTF-8?B?TsO8cm5iZXJnKQ==?=
+In-Reply-To: <CAPhsuW58UrCJMgKiW0mRSMbc00UoZtY=944Ut1SvjDHewM+gmA@mail.gmail.com>
+References: <20220206205137.21717-1-dmueller@suse.de> <CAPhsuW58UrCJMgKiW0mRSMbc00UoZtY=944Ut1SvjDHewM+gmA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-GCC 10+ defaults to -fno-common, which enforces proper declaration of
-external references using "extern". without this change a link would
-fail with:
+On Dienstag, 8. Februar 2022 06:45:45 CET Song Liu wrote:
 
-  lib/raid6/test/algos.c:28: multiple definition of `raid6_call';
-  lib/raid6/test/test.c:22: first defined here
+Hi Song,
 
-the pq.h header that is included already includes an extern declaration
-so we can just remove the redundant one here.
+> > -struct raid6_calls raid6_call;
+> > +extern struct raid6_calls raid6_call;
+> 
+> Can we just remove this line?
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Dirk Müller <dmueller@suse.de>
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
----
- lib/raid6/test/test.c | 1 -
- 1 file changed, 1 deletion(-)
+oh yes indeed, it is already declared in the header file. that is much simpler. 
+I've sent a PATCH v2 just now. 
 
-diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
-index a3cf071941ab..841a55242aba 100644
---- a/lib/raid6/test/test.c
-+++ b/lib/raid6/test/test.c
-@@ -19,7 +19,6 @@
- #define NDISKS		16	/* Including P and Q */
- 
- const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
--struct raid6_calls raid6_call;
- 
- char *dataptrs[NDISKS];
- char data[NDISKS][PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
--- 
-2.35.1
+Thank you,
+Dirk
+
+
 
