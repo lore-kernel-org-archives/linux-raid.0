@@ -2,75 +2,55 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09360C433FE
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 17:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1B8CC433FE
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 18:45:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353352AbiBHR7R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Feb 2022 12:59:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44172 "EHLO
+        id S1385015AbiBHSpC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Feb 2022 13:45:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384517AbiBHR7E (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Feb 2022 12:59:04 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBC85C0612B8;
-        Tue,  8 Feb 2022 09:58:58 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 76BF161766;
-        Tue,  8 Feb 2022 17:58:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE9A2C36AE2;
-        Tue,  8 Feb 2022 17:58:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644343137;
-        bh=MBI7NcGaRtsLJ4Pa/QylcWfb7IB5aUeZAVi7a5i/U9Q=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=p6DEwQnIl3YhK1HFbTGMK8DSmIl8nW3MbznTt05hNhPJWq0n8pkfK7mUo8a+0Osla
-         OH7RLM72JStbspEhs9qS6HeMzpZxc5Rf6Er99NYJtsJB/veJAtYAvO4/Q4qJp0txHL
-         bOvnHT2RUaAplstCYD0q6XSP4HyQE2ddsywU9ZBnEECo8VOyUFKQxO3h9dWRa4ZfD8
-         txzNMyRcALiZ88MfMAq0Fdy8o/KbwiL00W+v7fYsEa+1lxLWboyzC5ojZyPsHEFOuz
-         NDDmzjajLBhvhLeOdmgInTpA+kEdYCwSKvycbwY8cArFr5pBavP8ndLVo3PVuYc7Xv
-         RfP2EeI1i5SNA==
-Received: by mail-yb1-f178.google.com with SMTP id bt13so28190773ybb.2;
-        Tue, 08 Feb 2022 09:58:57 -0800 (PST)
-X-Gm-Message-State: AOAM532XlD+q+A3QZbDl1ak9mlwLF18iR7E7+DkZR05csLTF97j+OLr5
-        vmUxkMoCjTdz8sc0HPzCM8bqCwMUlCaCFR1geuM=
-X-Google-Smtp-Source: ABdhPJx8LaFqRFjjwTHBownYBNXWetg2JZUqOIHFR4zdRIGbwOGj40Lyaco5MlcNX5+O0Ug/avD3K4UmZ8yfQImSP18=
-X-Received: by 2002:a81:6502:: with SMTP id z2mr6222051ywb.148.1644343136961;
- Tue, 08 Feb 2022 09:58:56 -0800 (PST)
+        with ESMTP id S1385312AbiBHSpA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Feb 2022 13:45:00 -0500
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54C0DC0612AA
+        for <linux-raid@vger.kernel.org>; Tue,  8 Feb 2022 10:44:45 -0800 (PST)
+Received: from host81-132-12-162.range81-132.btcentralplus.com ([81.132.12.162] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1nHVTm-000AKN-99; Tue, 08 Feb 2022 18:44:43 +0000
+Message-ID: <0c20be6e-87f2-b9dc-4c9a-85680ba10417@youngman.org.uk>
+Date:   Tue, 8 Feb 2022 18:44:41 +0000
 MIME-Version: 1.0
-References: <20220208165050.13893-1-dmueller@suse.de>
-In-Reply-To: <20220208165050.13893-1-dmueller@suse.de>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 8 Feb 2022 09:58:46 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW4wcfoiYHY4JXSME3K0ZJtVgo9hC37vS8YqAHxe_u2=Fw@mail.gmail.com>
-Message-ID: <CAPhsuW4wcfoiYHY4JXSME3K0ZJtVgo9hC37vS8YqAHxe_u2=Fw@mail.gmail.com>
-Subject: Re: [PATCH v2] lib/raid6/test: fix multiple definition linking error
-To:     =?UTF-8?B?RGlyayBNw7xsbGVy?= <dmueller@suse.de>
-Cc:     linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
-        Paul Menzel <pmenzel@molgen.mpg.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH 1/3] lib/raid6/test/Makefile: Use `$(pound)` instead of
+ `\#` for Make 4.3
+Content-Language: en-GB
+To:     Paul Menzel <pmenzel@molgen.mpg.de>, Song Liu <song@kernel.org>
+Cc:     Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, linux-raid@vger.kernel.org,
+        Matt Brown <matthew.brown.dev@gmail.com>
+References: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <20220126114144.370517-1-pmenzel@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Feb 8, 2022 at 8:51 AM Dirk M=C3=BCller <dmueller@suse.de> wrote:
->
-> GCC 10+ defaults to -fno-common, which enforces proper declaration of
-> external references using "extern". without this change a link would
-> fail with:
->
->   lib/raid6/test/algos.c:28: multiple definition of `raid6_call';
->   lib/raid6/test/test.c:22: first defined here
->
-> the pq.h header that is included already includes an extern declaration
-> so we can just remove the redundant one here.
->
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Dirk M=C3=BCller <dmueller@suse.de>
-> Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+On 26/01/2022 11:41, Paul Menzel wrote:
+> So, do the same as commit 9564a8cf422d (Kbuild: fix # escaping in .cmd
+> files for future Make) and commit 929bef467771 (bpf: Use $(pound) instead
+> of \# in Makefiles) and define and use a `$(pound)` variable.
 
-Applied to md-next. Thanks!
+Ouch!
 
-Song
+In the English (as opposed to American) speaking world this will be very 
+confusing! The pound sign is £ not #.
+
+If this is not dictated by some sort of upstream PLEASE can we make it 
+$(hash) not $(pound)
+
+Cheers,
+Wol
