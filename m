@@ -2,82 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C522C433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 15:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA94C433EF
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Feb 2022 16:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380037AbiBHPX3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Feb 2022 10:23:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39390 "EHLO
+        id S1383555AbiBHQvB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Feb 2022 11:51:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380046AbiBHPXZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Feb 2022 10:23:25 -0500
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A28BCC0612B8;
-        Tue,  8 Feb 2022 07:23:21 -0800 (PST)
-Received: from localhost.localdomain (ip5f5aebc2.dynamic.kabel-deutschland.de [95.90.235.194])
+        with ESMTP id S1352392AbiBHQvA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Feb 2022 11:51:00 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE25DC061578;
+        Tue,  8 Feb 2022 08:50:59 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 3486761E6478B;
-        Tue,  8 Feb 2022 16:23:20 +0100 (CET)
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linuxppc-dev@lists.ozlabs.org, Song Liu <song@kernel.org>,
-        linux-raid@vger.kernel.org,
-        Matt Brown <matthew.brown.dev@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/2] lib/raid6: Include <asm/ppc-opcode.h> for `VPERMXOR`
-Date:   Tue,  8 Feb 2022 16:21:50 +0100
-Message-Id: <20220208152148.48534-2-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220208152148.48534-1-pmenzel@molgen.mpg.de>
-References: <20220208152148.48534-1-pmenzel@molgen.mpg.de>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 8F7DC210F9;
+        Tue,  8 Feb 2022 16:50:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1644339058; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=gzFuTD+9STDC0IKWKq1VpmaF63x4/CpD8VdnqroWAnI=;
+        b=W7UVBCvL89jTllIADx5bULOQFaYryz8JCdeEAx/oqXomOtJJjejiBROemapnE6mI8EWKUf
+        /DTQ988OLJPabhMzUr6uksDHyP5QOvh116U5LZPYmbvMhTfX1xi3QF5ye1qAZ811gy8U5w
+        gIL77fq2l199+OWAGG0dPHs/nE4SdJM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1644339058;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=gzFuTD+9STDC0IKWKq1VpmaF63x4/CpD8VdnqroWAnI=;
+        b=EydRchZ/j6IsUnpMltUJOJiSRvLba4+jGzzgPIL8+i0CCkJ7Cm4Lzhgbrbz+gHimu7OPVK
+        LJS1O6QCSEKHuqBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7280413A1A;
+        Tue,  8 Feb 2022 16:50:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id G+LVGXKfAmKLUgAAMHmgww
+        (envelope-from <dmueller@suse.de>); Tue, 08 Feb 2022 16:50:58 +0000
+From:   =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>
+To:     linux-raid@vger.kernel.org
+Cc:     =?UTF-8?q?Dirk=20M=C3=BCller?= <dmueller@suse.de>,
+        stable@vger.kernel.org, Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH v2] lib/raid6/test: fix multiple definition linking error
+Date:   Tue,  8 Feb 2022 17:50:50 +0100
+Message-Id: <20220208165050.13893-1-dmueller@suse.de>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Ubuntu 21.10 (ppc64le) building `raid6test` with gcc (Ubuntu
-11.2.0-7ubuntu2) 11.2.0 fails with the error below.
+GCC 10+ defaults to -fno-common, which enforces proper declaration of
+external references using "extern". without this change a link would
+fail with:
 
-    gcc -I.. -I ../../../include -g -O2                      -I../../../arch/powerpc/include -DCONFIG_ALTIVEC -c -o vpermxor1.o vpermxor1.c
-    vpermxor1.c: In function ‘raid6_vpermxor1_gen_syndrome_real’:
-    vpermxor1.c:64:29: error: expected string literal before ‘VPERMXOR’
-       64 |                         asm(VPERMXOR(%0,%1,%2,%3):"=v"(wq0):"v"(gf_high), "v"(gf_low), "v"(wq0));
-          |                             ^~~~~~~~
-    make: *** [Makefile:58: vpermxor1.o] Error 1
+  lib/raid6/test/algos.c:28: multiple definition of `raid6_call';
+  lib/raid6/test/test.c:22: first defined here
 
-So, include the header `asm/ppc-opcode.h` defining this macro also when
-not building the Linux kernel but only this too.
+the pq.h header that is included already includes an extern declaration
+so we can just remove the redundant one here.
 
-Cc: Matt Brown <matthew.brown.dev@gmail.com>
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Dirk Müller <dmueller@suse.de>
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
 ---
-v2: Resend
+ lib/raid6/test/test.c | 1 -
+ 1 file changed, 1 deletion(-)
 
- lib/raid6/vpermxor.uc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/lib/raid6/vpermxor.uc b/lib/raid6/vpermxor.uc
-index 10475dc423c1..1bfb127fbfe8 100644
---- a/lib/raid6/vpermxor.uc
-+++ b/lib/raid6/vpermxor.uc
-@@ -24,9 +24,9 @@
- #ifdef CONFIG_ALTIVEC
+diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
+index a3cf071941ab..841a55242aba 100644
+--- a/lib/raid6/test/test.c
++++ b/lib/raid6/test/test.c
+@@ -19,7 +19,6 @@
+ #define NDISKS		16	/* Including P and Q */
  
- #include <altivec.h>
-+#include <asm/ppc-opcode.h>
- #ifdef __KERNEL__
- #include <asm/cputable.h>
--#include <asm/ppc-opcode.h>
- #include <asm/switch_to.h>
- #endif
+ const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+-struct raid6_calls raid6_call;
  
+ char *dataptrs[NDISKS];
+ char data[NDISKS][PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 -- 
-2.34.1
+2.35.1
 
