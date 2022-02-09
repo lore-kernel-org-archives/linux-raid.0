@@ -2,98 +2,133 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDF2DC43217
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Feb 2022 09:42:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A411C433F5
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Feb 2022 12:42:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232902AbiBIJmO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Feb 2022 04:42:14 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:52982 "EHLO
+        id S233565AbiBIMmq (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Feb 2022 07:42:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231789AbiBIJmL (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Feb 2022 04:42:11 -0500
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F37C02B5C0
-        for <linux-raid@vger.kernel.org>; Wed,  9 Feb 2022 01:42:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644399729; x=1675935729;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=LVmUfe5DYqjgI9/YcZwzU10Qt1uiZNaj8OswbmgGyk4=;
-  b=XoRlOUzzRqSed2h7aiyaASiAt5R+5MtI/S0bso4xSk5x4p8xvPvz5yJp
-   CneJxw7+QwTOZ1VVICi/m7xASmVU98EjgE1Dy/yfo7qukWLA1mgdXmHSb
-   YjrKh5tf5e4CameBfjV5OiVlixqdeJFehU5mgLyQCz4bihghBwWa4ulsx
-   Ky1AbYmvn1fYMexJ5M9DHhdfe5rC+IgQgUw9qBlgtUlVSIoJSIOrunqe7
-   DRATieeA3tVBFMO/D5QBMsT0XwImTO495fzgJdvy1AqmUApiGv5M7ZnFp
-   xpYRbILiIYUYdV88pdZqwu1l7FmMDCGYxkUpYYt+kMiLZUZT1ARReyV6Y
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10252"; a="248926992"
-X-IronPort-AV: E=Sophos;i="5.88,355,1635231600"; 
-   d="scan'208";a="248926992"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2022 01:40:53 -0800
-X-IronPort-AV: E=Sophos;i="5.88,355,1635231600"; 
-   d="scan'208";a="541022759"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.31.96])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2022 01:40:51 -0800
-Date:   Wed, 9 Feb 2022 10:40:46 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Song Liu <song@kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Subject: fail_last_dev and FailFast/LastDev flag incompatibility
-Message-ID: <20220209104046.00004427@linux.intel.com>
+        with ESMTP id S230053AbiBIMmp (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Feb 2022 07:42:45 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 53057C05CB86
+        for <linux-raid@vger.kernel.org>; Wed,  9 Feb 2022 04:42:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644410568;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=K0boWr3oekGE6Cf9h6rhjBSwHVUXEFVn6iztQwveECU=;
+        b=G5JD3KIDW/O8aCbWIv+ZDHS1c6XKeFhcD/gRdZME8FohLGY9LruYJ9h5ZZWxr1QBU9ru6u
+        SL4GQBwlbLAExdeial1fHTdfi6EG6FtGUoDqnqH3+CgsmW7KFRY1vGqT3KCpzXCe3VIEaM
+        dV+5G4VooroBl35HOALdsKnQ67/Ck0E=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-437-6LSmoyDSMu6y7LISfO-g7g-1; Wed, 09 Feb 2022 07:42:47 -0500
+X-MC-Unique: 6LSmoyDSMu6y7LISfO-g7g-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 62E328189CF;
+        Wed,  9 Feb 2022 12:42:46 +0000 (UTC)
+Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C364E752C5;
+        Wed,  9 Feb 2022 12:42:44 +0000 (UTC)
+From:   Nigel Croxon <ncroxon@redhat.com>
+To:     linux-raid@vger.kernel.org, wuguanghao3@huawei.com,
+        mariusz.tkaczyk@linux.intel.com, jes@trained-monkey.org
+Subject: [PATCH] Revert "mdadm: fix coredump of mdadm --monitor -r"
+Date:   Wed,  9 Feb 2022 07:42:44 -0500
+Message-Id: <20220209124244.3466068-1-ncroxon@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi All,
-During my work under failed arrays handling[1] improvements, I
-discovered potential issue with "failfast" and metadata writes. In
-commit message[2] Neil mentioned that:
-"If we get a failure writing metadata but the device doesn't
-fail, it must be the last device so we re-write without
-FAILFAST".
+This reverts commit 546047688e1c64638f462147c755b58119cabdc8.
 
-Obviously, this is not true for RAID456 (again)[1] but it is also not
-true for RAID1 and RAID10 with "fail_las_dev"[3] functionality enabled.
+mdadm: fix msg when removing a device using the short arg -r
 
-I did a quick check and can see that setter for "LastDev" flag is
-called if "Faulty" on device is not set. I proposed some changes in the
-area in my patchset[4] but after discussion we decided to drop changes
-here. Current approach is not correct for all branches, so my proposal
-is to change:
+The change from commit mdadm: fix coredump of mdadm
+--monitor -r broke the printing of the return message when
+passing -r to mdadm --manage, the removal of a device from
+an array.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7b024912f1eb..3daec14ef6b2 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -931,7 +931,7 @@ static void super_written(struct bio *bio)
-                pr_err("md: %s gets error=%d\n", __func__,
-                       blk_status_to_errno(bio->bi_status));
-                md_error(mddev, rdev);
--               if (!test_bit(Faulty, &rdev->flags)
-+               if (test_bit(MD_BROKEN, mddev->flag)
-                    && (bio->bi_opf & MD_FAILFAST)) {
-                        set_bit(MD_SB_NEED_REWRITE, &mddev->sb_flags);
-                        set_bit(LastDev, &rdev->flags);
+If the current code reverts this commit, both issues are
+still fixed.
+
+The original problem reported that the fix tried to address
+was:  The --monitor -r option requires a parameter,
+otherwise a null pointer will be manipulated when
+converting to integer data, and a core dump will appear.
+
+The original problem was really fixed with:
+60815698c0a Refactor parse_num and use it to parse optarg.
+Which added a check for NULL in 'optarg' before moving it
+to the 'increments' variable.
+
+New issue: When trying to remove a device using the short
+argument -r, instead of the long argument --remove, the
+output is empty. The problem started when commit 
+546047688e1c was added.
+
+Steps to Reproduce:
+1. create/assemble /dev/md0 device
+2. mdadm --manage /dev/md0 -r /dev/vdxx
+
+Actual results:
+Nothing, empty output, nothing happens, the device is still
+connected to the array.
+
+The output should have stated "mdadm: hot remove failed
+for /dev/vdxx: Device or resource busy", if the device was
+still active. Or it should remove the device and print
+a message:
+
+# mdadm --set-faulty /dev/md0 /dev/vdd
+mdadm: set /dev/vdd faulty in /dev/md0
+# mdadm --manage /dev/md0 -r /dev/vdd
+mdadm: hot removed /dev/vdd from /dev/md0
 
 
-It will force "LastDev" to be set on every metadata rewrite if mddevice
-is known to be failed.
-Do you have any other suggestions?
+The following commit should be reverted as it breaks
+mdadm --manage -r.
 
-+ Guoqing - author of fail_last_dev.
-+ Xiao - you are familiarized with FailFast so please take a look.
+commit 546047688e1c64638f462147c755b58119cabdc8
+Author: Wu Guanghao <wuguanghao3@huawei.com>
+Date:   Mon Aug 16 15:24:51 2021 +0800
+mdadm: fix coredump of mdadm --monitor -r
 
-[1]https://lore.kernel.org/linux-raid/CAPhsuW54_9CTR6sh7mnQ6O77F2HNArLHGWHYsUdbNGy7pXgipQ@mail.gmail.com/T/#m8cf7c57429b6fd332220157186151900ce23865d
-[2]https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=46533ff7fefb7e9e3539494f5873b00091caa8eb
-[3]https://git.kernel.org/pub/scm/linux/kernel/git/song/md.git/commit/?id=9a567843f7ce
-[4]https://lore.kernel.org/linux-raid/CAPhsuW5bV+Bz=Od9jomNHoedaEMFAXymN11J80G62GVPwSp41g@mail.gmail.com/
+-Nigel
 
-Thanks,
-Mariusz
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ ReadMe.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ReadMe.c b/ReadMe.c
+index 81399765..ee457a54 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -81,11 +81,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
+  *     found, it is started.
+  */
+ 
+-char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
++char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+ char short_bitmap_options[]=
+-		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
++		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+ char short_bitmap_auto_options[]=
+-		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
++		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
+ 
+ struct option long_options[] = {
+     {"manage",    0, 0, ManageOpt},
+-- 
+2.29.2
+
