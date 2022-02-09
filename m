@@ -2,101 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 779CEC433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Feb 2022 14:47:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49E76C433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Feb 2022 14:57:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235207AbiBIOrA convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Feb 2022 09:47:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39588 "EHLO
+        id S235359AbiBIO52 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Feb 2022 09:57:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235195AbiBIOq7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Feb 2022 09:46:59 -0500
-X-Greylist: delayed 100 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 09 Feb 2022 06:47:02 PST
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2D0BEC0613C9
-        for <linux-raid@vger.kernel.org>; Wed,  9 Feb 2022 06:47:01 -0800 (PST)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-242-qivUEKu-Nx-csT-ffmbl5A-1; Wed, 09 Feb 2022 14:45:19 +0000
-X-MC-Unique: qivUEKu-Nx-csT-ffmbl5A-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
- Server (TLS) id 15.0.1497.28; Wed, 9 Feb 2022 14:45:18 +0000
-Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
- AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
- 15.00.1497.028; Wed, 9 Feb 2022 14:45:18 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'David T-G' <davidtg+robot@justpickone.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-CC:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 1/2] lib/raid6/test/Makefile: Use `$(pound)` instead of
- `\#` for Make 4.3
-Thread-Topic: [PATCH v2 1/2] lib/raid6/test/Makefile: Use `$(pound)` instead
- of `\#` for Make 4.3
-Thread-Index: AQHYHbrjaaGrMTB3M0ipeBb59E9eX6yLST5A
-Date:   Wed, 9 Feb 2022 14:45:18 +0000
-Message-ID: <6879dfb9fd594925b348fbbbf0051670@AcuMS.aculab.com>
-References: <20220208152148.48534-1-pmenzel@molgen.mpg.de>
- <d07a9d41-5a8f-a1f3-59f7-d2a75d6df2e5@youngman.org.uk>
- <20220209134139.GA4455@justpickone.org>
-In-Reply-To: <20220209134139.GA4455@justpickone.org>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        with ESMTP id S231365AbiBIO50 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Feb 2022 09:57:26 -0500
+Received: from hermes.turmel.org (hermes.turmel.org [IPv6:2604:180:f1::1e9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E22E5C06157B
+        for <linux-raid@vger.kernel.org>; Wed,  9 Feb 2022 06:57:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=turmel.org;
+         s=a; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:To
+        :Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=KZIInqJSptTDAP1ydybPEwcvVGzTa4k701AoZ+Dkvz8=; b=HStHl0cjLDfPwQduwwDVt9hLJb
+        YLtNKGpD4XhLNxJUN2X8ZfmK5Axg+YYNiX8gv0G4VNwXYNh9May3awgPRm2YEhmrTR8AgGKZ8ecrF
+        lfTSsUg5TsuakyQfkODVb/QS+PLRPTj5ggkJU97f7SgOm9tjf+HhxsdrEt04SUYwz8fkB2Lpcywtu
+        J7HMazJSkrLFXlaRvbh//IyomGqU38I4v/m/kdSu0sRz24GeS8LhCBLOQvJ9tFoZaLyAD1KBAX2vX
+        JcHJC9HEuURQ5+D/9ji5vUXLQ2ue8qznHF8ChMKo5Nmh3wePw+nKi6VaSGG4TElBw+oGZR2LaBkvc
+        CwhRs6vw==;
+Received: from c-98-192-104-236.hsd1.ga.comcast.net ([98.192.104.236] helo=[192.168.19.160])
+        by hermes.turmel.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <philip@turmel.org>)
+        id 1nHoPP-00008T-Jh; Wed, 09 Feb 2022 14:57:27 +0000
+Message-ID: <bb5b9cb3-8f74-3194-1193-2108a39d6cdb@turmel.org>
+Date:   Wed, 9 Feb 2022 09:57:25 -0500
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: Replacing all disks in a an array as a preventative measure
+ before failing.
 Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+To:     Red Wil <redwil@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+References: <20220207152648.42dd311a@falcon.sitarc.ca>
+From:   Phil Turmel <philip@turmel.org>
+In-Reply-To: <20220207152648.42dd311a@falcon.sitarc.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: David T-G
-> Sent: 09 February 2022 13:42
-> 
-> ...and then Wols Lists said...
-> %
-> % On 08/02/2022 15:21, Paul Menzel wrote:
-> ...
-> %
-> % As commented elsewhere, for the sake of us ENGLISH speakers,
-> % *PLEASE* make that $(hash). A pound sign is £.
-> 
-> Or, even better, $(octothorpe) since that's merely a symbol rather than a
-> food product or a result of an algorithm on data.  You might even hope
-> that we hash this out eventually ...
+On 2/7/22 15:26, Red Wil wrote:
+> Hello,
 
-I was more worried that people might think we should smoke the hash.
+[trim/]
 
-The # symbol called 'hash' in the UK. Can't remember why - but it is used
-to mean 'number'.
+> Approaches/solutions and critique
+>   1- add one by one a 'spare' and 'replace' raid member
+>    critique:
+>    - seem to me long and tedious process
+>    - cannot/will not run in parallel
+>   2- add all the spares at once and perform 'replace' on members
+>    critique
+>    - just tedious - lots of cli commands which can be prone to mistakes.
+>   next ones assume I have all the 'spares' in the rig
+>   3- create new arrays on spares, fresh fs and copy data.
+>   4- dd/ddrescue copy each drive to a new one. Advantage can be done one
+>   by one or in parallel. less commands in the terminal.
 
-'octothorpe' is some brain-damaged name and should be shot^Werased on sight.
+My last drive upgrades were done in a chassis that had two extra hot 
+swap bays.  So I could do two at a time.  I wanted to keep careful track 
+of roles, so I started a replace after each spare added, to ensure that 
+spare would get the designated role.  After it was running, I would 
+--add and --replace the next.  After the first two were running 
+(staggered), it was just waiting for one to finish to pop it out and 
+start the next.
 
-The whole UK v US confusion about what a 'pound' sign looks like almost
-certainly led to UK ascii using the £ glyph for 0x23.
-I can imaging a phone call where a US person said '0x23 is the pound sign'.
+After completion, I used --grow to occupy the new space on each.
 
-I remember problems with ascii peripherals on a ebcdic mainframe where
-£ $ # and \ had to get squeezed into the three available codes.
-Not only was in semi-random what a line printer might print,
-we had 'page mode' terminals where the input and output translation
-tables didn't always match.
+Took several days, but no downtime at all.
 
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+Phil
