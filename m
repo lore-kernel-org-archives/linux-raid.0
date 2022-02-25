@@ -2,131 +2,85 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 301F4C433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Feb 2022 07:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB1CC433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 25 Feb 2022 08:17:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236865AbiBYHWm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Feb 2022 02:22:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56570 "EHLO
+        id S235991AbiBYIRc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 25 Feb 2022 03:17:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233550AbiBYHWl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Feb 2022 02:22:41 -0500
-Received: from out0.migadu.com (out0.migadu.com [94.23.1.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9067D17776B
-        for <linux-raid@vger.kernel.org>; Thu, 24 Feb 2022 23:22:08 -0800 (PST)
-Subject: Re: [PATCH 3/3] raid5: introduce MD_BROKEN
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1645773726;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=V9LSbFbaAGBt8uzTZ/YGzsOZocdYy4E+0RdAFgfXZxs=;
-        b=DLPzE0s6IInBJvgw1NQ2FgXEfL6+jWKFXpZboppdAdQXeb+x04HpmRn32YTfS2VOuRF1lC
-        xaUXbfii+7T8x+p+AA6bCCZMoO4Qd5DJRZWzKuASU5OcS1m6rKHXP09ULIbetDkJHwj0ZK
-        1IKizQus+GSoqFq6gLbXDHdP6kVNs8E=
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>, song@kernel.org
-Cc:     linux-raid@vger.kernel.org
-References: <20220127153912.26856-1-mariusz.tkaczyk@linux.intel.com>
- <20220127153912.26856-4-mariusz.tkaczyk@linux.intel.com>
- <fbe1ec39-acee-8226-adb2-6c61e3d7fdd0@linux.dev>
- <20220222151851.0000089a@linux.intel.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Message-ID: <8b918c2a-5b68-6ddc-0a23-69af70f28d7d@linux.dev>
-Date:   Fri, 25 Feb 2022 15:22:00 +0800
+        with ESMTP id S232624AbiBYIRb (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Feb 2022 03:17:31 -0500
+X-Greylist: delayed 400 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 25 Feb 2022 00:16:58 PST
+Received: from pasta.tip.net.au (pasta.tip.net.au [IPv6:2401:fc00:0:129::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08EFE488A8
+        for <linux-raid@vger.kernel.org>; Fri, 25 Feb 2022 00:16:57 -0800 (PST)
+Received: from pasta.tip.net.au (pasta.tip.net.au [IPv6:2401:fc00:0:129::2])
+        by mailhost.tip.net.au (Postfix) with ESMTP id 4K4jBD4f1Gz9PxM
+        for <linux-raid@vger.kernel.org>; Fri, 25 Feb 2022 19:10:12 +1100 (AEDT)
+Received: from [192.168.122.14] (unknown [121.45.47.198])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by pasta.tip.net.au (Postfix) with ESMTPSA id 4K4jBD3yRFz8tBG
+        for <linux-raid@vger.kernel.org>; Fri, 25 Feb 2022 19:10:12 +1100 (AEDT)
+Message-ID: <932f281a-3c42-a5cc-2705-ea32cf6af738@eyal.emu.id.au>
+Date:   Fri, 25 Feb 2022 19:10:11 +1100
 MIME-Version: 1.0
-In-Reply-To: <20220222151851.0000089a@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+From:   Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: What leads to "bitmap file is out of date, doing full recovery"
+To:     linux-raid@vger.kernel.org
 Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Mariusz,
+A few days ago my machine locked up hard, requiring pressing the reset button.
+This morning I noticed that a resync is going on. Here are the relevant messages in the system log (after boot):
+-----
+Feb 23 21:16:09 e7 kernel: md/raid:md127: not clean -- starting background reconstruction
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdg1 operational as raid disk 5
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdf1 operational as raid disk 4
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdd1 operational as raid disk 2
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdh1 operational as raid disk 6
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sde1 operational as raid disk 3
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdc1 operational as raid disk 1
+Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdb1 operational as raid disk 0
+Feb 23 21:16:09 e7 kernel: md/raid:md127: raid level 6 active with 7 out of 7 devices, algorithm 2
+Feb 23 21:16:09 e7 kernel: md127: bitmap file is out of date, doing full recovery
+Feb 23 21:16:09 e7 kernel: md127: detected capacity change from 0 to 117187522560
+Feb 23 21:16:09 e7 kernel: md: resync of RAID array md127
+	Then finally
+Feb 24 17:40:27 e7 kernel: md: md127: resync done.
+Feb 24 17:40:28 e7 mdadm[1194]: RebuildFinished event detected on md device /dev/md127
 
-On 2/22/22 10:18 PM, Mariusz Tkaczyk wrote:
->
->>>    
->>> -static int has_failed(struct r5conf *conf)
->>> +static bool has_failed(struct r5conf *conf)
->>>    {
->>> -	int degraded;
->>> +	int degraded = conf->mddev->degraded;
->>>    
->>> -	if (conf->mddev->reshape_position == MaxSector)
->>> -		return conf->mddev->degraded > conf->max_degraded;
->>> +	if (test_bit(MD_BROKEN, &conf->mddev->flags))
->>> +		return true;
->> If one member disk was set Faulty which caused BROKEN was set, is it
->> possible to re-add the same member disk again?
->>
-> Is possible to re-add drive to failed raid5 array now? From my
-> understanding of raid5_add_disk it is not possible.
+fsck of the fs on md127 was clean.
 
-I mean the below steps, it works as you can see.
+I thought that the whole point of the logfile/bitmap is to avoid this and allow a quick recovery,
+and as such these files are written very carefully and safely.
 
->> [root@vm ~]# echo faulty > /sys/block/md0/md/dev-loop1/state
->> [root@vm ~]# cat /proc/mdstat
->> Personalities : [raid6] [raid5] [raid4]
->> md0 : active raid5 loop2[2] loop1[0](F)
->>         1046528 blocks super 1.2 level 5, 512k chunk, algorithm 2
->> [2/1] [_U] bitmap: 0/1 pages [0KB], 65536KB chunk
->>
->> unused devices: <none>
->> [root@vm ~]# echo re-add > /sys/block/md0/md/dev-loop1/state
->> [root@vm ~]# cat /proc/mdstat
->> Personalities : [raid6] [raid5] [raid4]
->> md0 : active raid5 loop2[2] loop1[0]
->>         1046528 blocks super 1.2 level 5, 512k chunk, algorithm 2
->> [2/2] [UU] bitmap: 0/1 pages [0KB], 65536KB chunk
->>
->> unused devices: <none>
->>
->> And have you run mdadm test against the series?
->>
-> I run imsm test suite and our internal IMSM scope. I will take the
-> challenge and will verify with native. Thanks for suggestion.
+In the past, following a similar lockup/reset recovered quickly. bitmap was probably valid:
+Oct  3 21:25:21 e7 kernel: md/raid:md127: not clean -- starting background reconstruction
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdf1 operational as raid disk 2
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdd1 operational as raid disk 4
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdi1 operational as raid disk 6
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdh1 operational as raid disk 0
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sde1 operational as raid disk 3
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdg1 operational as raid disk 1
+Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdc1 operational as raid disk 5
+Oct  3 21:25:21 e7 kernel: md/raid:md127: raid level 6 active with 7 out of 7 devices, algorithm 2
+Oct  3 21:25:21 e7 kernel: md127: detected capacity change from 0 to 20003251814400
+Oct  3 21:25:21 e7 kernel: md: resync of RAID array md127
+Oct  3 21:25:23 e7 kernel: md: md127: resync done.
 
-Cool, thank you.
+kernel is 5.16.9-100.fc34.x86_6
+The array uses an internal bitmap.
 
-BTW, I know the mdadm test suite is kind of broke, at least this one
-which I aware.
+What can lead to 'bitmap file is out of date'?
 
-https://lore.kernel.org/all/20220119055501.GD27703@xsang-OptiPlex-9020/
-
-And given the complexity of md, the more we test, the less bug we can
-avoid.
-
-
->>> -	degraded = raid5_calc_degraded(conf);
->>> -	if (degraded > conf->max_degraded)
->>> -		return 1;
->>> -	return 0;
->>> +	if (conf->mddev->reshape_position != MaxSector)
->>> +		degraded = raid5_calc_degraded(conf);
->>> +
->>> +	if (degraded > conf->max_degraded) {
->>> +		set_bit(MD_BROKEN, &conf->mddev->flags);
->> Why not set BROKEN flags in err handler to align with other levels? Or
->> do it in md_error only.
-> https://lore.kernel.org/linux-raid/3da9324e-01e7-2a07-4bcd-14245db56693@linux.dev/
->
-> You suggested that.
-> Other levels doesn't have dedicates has_failed() routines. For raid5 it
-> is reasonable to set it in has_failed().
-
-When has_failed returns true which means MD_BROKEN should be set, if so,
-then it makes sense to set it in raid5_error.
-
-
-> I can't do that in md_error because I don't have such information in
-> all cases. !test_bit("Faulty", rdev->flags) result varies.
-
-Fair enough.
-
-Thanks,
-Guoqing
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
