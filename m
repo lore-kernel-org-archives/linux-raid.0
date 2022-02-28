@@ -2,85 +2,83 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB1CC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 25 Feb 2022 08:17:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EAB1C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Feb 2022 08:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235991AbiBYIRc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 25 Feb 2022 03:17:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45634 "EHLO
+        id S234030AbiB1ItM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 28 Feb 2022 03:49:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232624AbiBYIRb (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 25 Feb 2022 03:17:31 -0500
-X-Greylist: delayed 400 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 25 Feb 2022 00:16:58 PST
-Received: from pasta.tip.net.au (pasta.tip.net.au [IPv6:2401:fc00:0:129::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08EFE488A8
-        for <linux-raid@vger.kernel.org>; Fri, 25 Feb 2022 00:16:57 -0800 (PST)
-Received: from pasta.tip.net.au (pasta.tip.net.au [IPv6:2401:fc00:0:129::2])
-        by mailhost.tip.net.au (Postfix) with ESMTP id 4K4jBD4f1Gz9PxM
-        for <linux-raid@vger.kernel.org>; Fri, 25 Feb 2022 19:10:12 +1100 (AEDT)
-Received: from [192.168.122.14] (unknown [121.45.47.198])
+        with ESMTP id S231856AbiB1ItL (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Feb 2022 03:49:11 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48C1E31218
+        for <linux-raid@vger.kernel.org>; Mon, 28 Feb 2022 00:48:30 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by pasta.tip.net.au (Postfix) with ESMTPSA id 4K4jBD3yRFz8tBG
-        for <linux-raid@vger.kernel.org>; Fri, 25 Feb 2022 19:10:12 +1100 (AEDT)
-Message-ID: <932f281a-3c42-a5cc-2705-ea32cf6af738@eyal.emu.id.au>
-Date:   Fri, 25 Feb 2022 19:10:11 +1100
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 858611F3A2;
+        Mon, 28 Feb 2022 08:48:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1646038109; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=oIl4TCAsntWfHRhoWRXm/3sc0oOrrazRga8qUgVuIAE=;
+        b=UxZmUk+L7sOF8xUNDoho/tenawIy2yW0b0E+kEZXl+XEiM/v1w+unGYF9FWR3tANP+8Pzu
+        wHTJJoYzFX32BcoHLBOa9NWbKaOGK+IsGzBIoDGRY8tdM5aPwMFopn0ZLo0dHZXqzpg0Jd
+        F7BX6xJtbM2yyjJ33W6/6vDMSiwsdt0=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 23D2512FC5;
+        Mon, 28 Feb 2022 08:48:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Kd6BBl2MHGJsQwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 28 Feb 2022 08:48:29 +0000
+Message-ID: <ff8030340e30963a1772f43e8bdfb6b610219887.camel@suse.com>
+Subject: Re: [PATCH] udev-md-raid-assembly.rules: skip if
+ DM_UDEV_DISABLE_OTHER_RULES_FLAG
+From:   Martin Wilck <mwilck@suse.com>
+To:     Jes Sorensen <jsorensen@fb.com>, NeilBrown <neilb@suse.de>
+Cc:     Peter Rajnoha <prajnoha@redhat.com>, Coly Li <colyli@suse.com>,
+        lvm-devel@redhat.com, linux-raid@vger.kernel.org,
+        dm-devel@redhat.com, Heming Zhao <heming.zhao@suse.com>
+Date:   Mon, 28 Feb 2022 09:48:28 +0100
+In-Reply-To: <164557016782.28944.17731814770525408828@noble.neil.brown.name>
+References: <20220216205914.7575-1-mwilck@suse.com>
+        , <164504936873.10228.7361167610237544463@noble.neil.brown.name>
+        , <e8720e3f8734cbad1af34d5e54afc47ba3ef1b8f.camel@suse.com>
+        , <20220217130934.lh2b33255kyx2pax@alatyr-rpi.brq.redhat.com>
+        , <164548656531.8827.3365536065813085321@noble.neil.brown.name>
+        , <4b61ca1eafb35e3fdfbc9bb260dc89d56d181499.camel@suse.com>
+         <164557016782.28944.17731814770525408828@noble.neil.brown.name>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-From:   Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: What leads to "bitmap file is out of date, doing full recovery"
-To:     linux-raid@vger.kernel.org
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-A few days ago my machine locked up hard, requiring pressing the reset button.
-This morning I noticed that a resync is going on. Here are the relevant messages in the system log (after boot):
------
-Feb 23 21:16:09 e7 kernel: md/raid:md127: not clean -- starting background reconstruction
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdg1 operational as raid disk 5
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdf1 operational as raid disk 4
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdd1 operational as raid disk 2
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdh1 operational as raid disk 6
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sde1 operational as raid disk 3
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdc1 operational as raid disk 1
-Feb 23 21:16:09 e7 kernel: md/raid:md127: device sdb1 operational as raid disk 0
-Feb 23 21:16:09 e7 kernel: md/raid:md127: raid level 6 active with 7 out of 7 devices, algorithm 2
-Feb 23 21:16:09 e7 kernel: md127: bitmap file is out of date, doing full recovery
-Feb 23 21:16:09 e7 kernel: md127: detected capacity change from 0 to 117187522560
-Feb 23 21:16:09 e7 kernel: md: resync of RAID array md127
-	Then finally
-Feb 24 17:40:27 e7 kernel: md: md127: resync done.
-Feb 24 17:40:28 e7 mdadm[1194]: RebuildFinished event detected on md device /dev/md127
+On Wed, 2022-02-23 at 09:49 +1100, NeilBrown wrote:
+> 
+> But if libdevmapper.h is the best you have, then maybe it'll have to
+> do.
+> It is up to Jes what he accepts of course.
 
-fsck of the fs on md127 was clean.
+Jes, have you made up your mind on this patch yet?
+Please contact me if you have remarks or questions.
 
-I thought that the whole point of the logfile/bitmap is to avoid this and allow a quick recovery,
-and as such these files are written very carefully and safely.
+Note that the patch that started this thread is broken; the v2 is
+correct. With the v2, I was able to reach 1000 consecutive reboots on
+a system with MD on top of multipath that would otherwise hang during
+boot about once every 50-100 reboots.
 
-In the past, following a similar lockup/reset recovered quickly. bitmap was probably valid:
-Oct  3 21:25:21 e7 kernel: md/raid:md127: not clean -- starting background reconstruction
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdf1 operational as raid disk 2
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdd1 operational as raid disk 4
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdi1 operational as raid disk 6
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdh1 operational as raid disk 0
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sde1 operational as raid disk 3
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdg1 operational as raid disk 1
-Oct  3 21:25:21 e7 kernel: md/raid:md127: device sdc1 operational as raid disk 5
-Oct  3 21:25:21 e7 kernel: md/raid:md127: raid level 6 active with 7 out of 7 devices, algorithm 2
-Oct  3 21:25:21 e7 kernel: md127: detected capacity change from 0 to 20003251814400
-Oct  3 21:25:21 e7 kernel: md: resync of RAID array md127
-Oct  3 21:25:23 e7 kernel: md: md127: resync done.
+Regards
+Martin
 
-kernel is 5.16.9-100.fc34.x86_6
-The array uses an internal bitmap.
 
-What can lead to 'bitmap file is out of date'?
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
