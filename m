@@ -2,117 +2,148 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC104C433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  1 Mar 2022 07:53:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87846C433EF
+	for <linux-raid@archiver.kernel.org>; Tue,  1 Mar 2022 08:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233128AbiCAHyi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 1 Mar 2022 02:54:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36116 "EHLO
+        id S233500AbiCAIqv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 1 Mar 2022 03:46:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231983AbiCAHyi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Mar 2022 02:54:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BFC4A6E8D2
-        for <linux-raid@vger.kernel.org>; Mon, 28 Feb 2022 23:53:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646121236;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QVnFIZhFNYTKL1SBRvgDq8aonG+DvL7dUgSwlUWc5mM=;
-        b=NJrsCuRO9cLD1bOvDX1ct4+yRVz1L9lej5HJ7eG7Kd+ENz3SeG2b9z1TKEaWgMSbCzR+jn
-        NyIjuaE6L3vkulUYBedQ5qe/3Fi9+MAz2beq9F1i5N1syNldiPZORH6mB8y8+B2IUW4YsN
-        5kO2jOQwKaTMFrNaUmyHVDuodbLQsbQ=
-Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
- [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-483--LcuxTIOP2agH7IEJislwQ-1; Tue, 01 Mar 2022 02:53:55 -0500
-X-MC-Unique: -LcuxTIOP2agH7IEJislwQ-1
-Received: by mail-ed1-f69.google.com with SMTP id b13-20020a056402278d00b0041311e02a9bso7245972ede.13
-        for <linux-raid@vger.kernel.org>; Mon, 28 Feb 2022 23:53:54 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=QVnFIZhFNYTKL1SBRvgDq8aonG+DvL7dUgSwlUWc5mM=;
-        b=FJIHQSCS3vqkTQ0qjZ3mXqYPjiITRqdSr6ITy7FOtjhTRFc6P668DPuDMFhDO0xy2z
-         a54ArXWQ3uPzdJBOMQ6PgE1Bxl52jLR//m5vghMRsXYBrdebztT11rCIS0vXqboS/552
-         S3jyNGKrBcC4oEDuH3pGIK4bQIaMyL0Fm3+FB0R2Uj8au4kDtqUscSCA6UZEeZ2oY5IO
-         9Dlins/9W6VX+t7gR3QBWGwu8lvEmOIfdenvCHPQfL/BiP3eB3i1L8S27b4Mwlm4IsHH
-         gJQAUT1W6GgAu6veQxj19JKoRNcgbq03pc9uTdrh9/oq44gOvrbQozjLh+GTZDo20eIp
-         rwbQ==
-X-Gm-Message-State: AOAM5326rP3ndlBOMo9HoOnOL8J+8S6XJhjDUu2qqmR+47Am22pajn/g
-        y9RCYHD+j6fytYkgnqeTXRrUHb7Vg8FAeaTLp+ynfccw+SlpXeU432Xy5YGNORWjnW/EPBUmhid
-        v4ECOkrbBImyRlXfxHxFMdg==
-X-Received: by 2002:a17:906:d935:b0:6cc:fcfc:c286 with SMTP id rn21-20020a170906d93500b006ccfcfcc286mr18098683ejb.423.1646121234054;
-        Mon, 28 Feb 2022 23:53:54 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJysts8BwR7kcT2eYdWIeAKaNDkPSFZ3Y7NmajZMDMKGdqDOlJPCJrK4VFsbK9YtcY5F4jFAyA==
-X-Received: by 2002:a17:906:d935:b0:6cc:fcfc:c286 with SMTP id rn21-20020a170906d93500b006ccfcfcc286mr18098675ejb.423.1646121233798;
-        Mon, 28 Feb 2022 23:53:53 -0800 (PST)
-Received: from alatyr-rpi.brq.redhat.com (nat-pool-brq-t.redhat.com. [213.175.37.10])
-        by smtp.gmail.com with ESMTPSA id c4-20020a170906340400b006d077e850b5sm5073999ejb.23.2022.02.28.23.53.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Feb 2022 23:53:53 -0800 (PST)
-Date:   Tue, 1 Mar 2022 08:53:49 +0100
-From:   Peter Rajnoha <prajnoha@redhat.com>
-To:     Xiao Ni <xni@redhat.com>
-Cc:     Martin Wilck <mwilck@suse.com>, Jes Sorensen <jsorensen@fb.com>,
-        lvm-devel@redhat.com, linux-raid <linux-raid@vger.kernel.org>,
-        Coly Li <colyli@suse.com>, dm-devel@redhat.com,
-        Heming Zhao <heming.zhao@suse.com>
-Subject: Re: [dm-devel] [PATCH] udev-md-raid-assembly.rules: skip if
- DM_UDEV_DISABLE_OTHER_RULES_FLAG
-Message-ID: <20220301075349.ao7a2rbjqn627oq4@alatyr-rpi.brq.redhat.com>
-References: <20220216205914.7575-1-mwilck@suse.com>
- <164504936873.10228.7361167610237544463@noble.neil.brown.name>
- <e8720e3f8734cbad1af34d5e54afc47ba3ef1b8f.camel@suse.com>
- <20220217130934.lh2b33255kyx2pax@alatyr-rpi.brq.redhat.com>
- <CALTww2-_rJDyVh2GLehJ8Yg9LOy4MnkvDeJnF2uunaOy6ONu7g@mail.gmail.com>
+        with ESMTP id S233484AbiCAIqt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 1 Mar 2022 03:46:49 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D01FE88B10;
+        Tue,  1 Mar 2022 00:46:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=RdSo7ItxpzbwhubLvjEO19q+rtasrdyXQ30J4z5AuZo=; b=hTajS4P+8SLazL66Mp984x7zSc
+        ulYJ41+w3C4E8L9bcduoQ34jKzixRDzB+fAt/3T/V1zA6Sf7m0/jZLi5Y1SSTGcOhO3FwxHFTT9ju
+        ihGtunxirtm6jy8gAFZwrlq4u7pBwvfJyKgkFKwzzSBSstThO9jeNMR+rMNiM5CSZopEX03lSaY94
+        fE/DRQoWHcmke7oceXQ0xmHcWMj2JTxRpaFkMZ/ST49jrV6kqaXuHEsqCpEjaemlFDtbXjJ96Bi8x
+        WYv4Ig0tTHig/xHz0w4NqNEyiYfAUgbE9VPPNJtT7KTfgLuFVU6NwztM8g0UtN7rz3g0dmaVoQmUJ
+        qf3uJrXg==;
+Received: from [2.53.44.23] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nOy8t-00FfP8-60; Tue, 01 Mar 2022 08:45:59 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+Subject: [PATCH 1/5] btrfs: simplify ->flush_bio handling
+Date:   Tue,  1 Mar 2022 10:45:48 +0200
+Message-Id: <20220301084552.880256-2-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220301084552.880256-1-hch@lst.de>
+References: <20220301084552.880256-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CALTww2-_rJDyVh2GLehJ8Yg9LOy4MnkvDeJnF2uunaOy6ONu7g@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi!
+Use and embedded bios that is initialized when used instead of
+bio_kmalloc plus bio_reset.
 
-On Mon 28 Feb 2022 23:28, Xiao Ni wrote:
-> Hi Peter
-> 
-> In rhel, we have a rhel only udev rule that checks
-> DM_UDEV_DISABLE_OTHER_RULES_FLAG. Maybe it's the reason why you don't
-> notice this. Besides DM_UDEV_DISABLE_OTHER_RULES_FLAG, it still checks
-> other flags.
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/btrfs/disk-io.c |  8 +++++---
+ fs/btrfs/volumes.c | 11 -----------
+ fs/btrfs/volumes.h |  2 +-
+ 3 files changed, 6 insertions(+), 15 deletions(-)
 
-Ah yes, that's it! I've been still recalling this to be patched once.
-So looks like it just didn't get propagated upstream :-/
-
-> # Next make sure that this isn't a dm device we should skip for some reason
-> ENV{DM_UDEV_RULES_VSN}!="?*", GOTO="dm_change_end"
-> ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="dm_change_end"
-> ENV{DM_SUSPENDED}=="1", GOTO="dm_change_end"
-> KERNEL=="dm-*", SUBSYSTEM=="block", ENV{ID_FS_TYPE}=="linux_raid_member", \
->         ACTION=="change", RUN+="/sbin/mdadm -I $env{DEVNAME}"
-> LABEL="dm_change_end"
-> 
-> In 10-dm.rules, if DM_SUSPENDED is 1, it sets
-> DM_UDEV_DISABLE_OTHER_RULES_FLAG to 1. So we don't need the check of
-> DM_SUSPENDED. But how DM_UDEV_RULES_VSN? Do we need to check it?
-> 
-
-Yes, right, the check for DM_SUSPENDED is superfluous here so we don't
-actually need that one. The single check for DM_UDEV_DISABLE_OTHER_RULES_FLAG
-covers it.
-
-The DM_UDEV_RULES_VSN - this was meant for future changes in case a new
-set of DM udev variables is used or existing set changed so the other rules
-know what exact variable set is available for checking. But I think the rules
-are settled down for a few years now and I don't expect any more radical
-changes here, so we can remove that check for DM_UDEV_RULES_VSN as well.
-
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index 505ba21230b1f..7d4229c769ac6 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -4127,6 +4127,7 @@ static int wait_dev_supers(struct btrfs_device *device, int max_mirrors)
+  */
+ static void btrfs_end_empty_barrier(struct bio *bio)
+ {
++	bio_uninit(bio);
+ 	complete(bio->bi_private);
+ }
+ 
+@@ -4136,7 +4137,7 @@ static void btrfs_end_empty_barrier(struct bio *bio)
+  */
+ static void write_dev_flush(struct btrfs_device *device)
+ {
+-	struct bio *bio = device->flush_bio;
++	struct bio *bio = &device->flush_bio;
+ 
+ #ifndef CONFIG_BTRFS_FS_CHECK_INTEGRITY
+ 	/*
+@@ -4154,7 +4155,8 @@ static void write_dev_flush(struct btrfs_device *device)
+ 		return;
+ #endif
+ 
+-	bio_reset(bio, device->bdev, REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH);
++	bio_init(bio, device->bdev, NULL, 0,
++		 REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH);
+ 	bio->bi_end_io = btrfs_end_empty_barrier;
+ 	init_completion(&device->flush_wait);
+ 	bio->bi_private = &device->flush_wait;
+@@ -4168,7 +4170,7 @@ static void write_dev_flush(struct btrfs_device *device)
+  */
+ static blk_status_t wait_dev_flush(struct btrfs_device *device)
+ {
+-	struct bio *bio = device->flush_bio;
++	struct bio *bio = &device->flush_bio;
+ 
+ 	if (!test_bit(BTRFS_DEV_STATE_FLUSH_SENT, &device->dev_state))
+ 		return BLK_STS_OK;
+diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+index b07d382d53a86..7015b3096f724 100644
+--- a/fs/btrfs/volumes.c
++++ b/fs/btrfs/volumes.c
+@@ -405,7 +405,6 @@ void btrfs_free_device(struct btrfs_device *device)
+ 	WARN_ON(!list_empty(&device->post_commit_list));
+ 	rcu_string_free(device->name);
+ 	extent_io_tree_release(&device->alloc_state);
+-	bio_put(device->flush_bio);
+ 	btrfs_destroy_dev_zone_info(device);
+ 	kfree(device);
+ }
+@@ -6962,16 +6961,6 @@ struct btrfs_device *btrfs_alloc_device(struct btrfs_fs_info *fs_info,
+ 	if (!dev)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	/*
+-	 * Preallocate a bio that's always going to be used for flushing device
+-	 * barriers and matches the device lifespan
+-	 */
+-	dev->flush_bio = bio_kmalloc(GFP_KERNEL, 0);
+-	if (!dev->flush_bio) {
+-		kfree(dev);
+-		return ERR_PTR(-ENOMEM);
+-	}
+-
+ 	INIT_LIST_HEAD(&dev->dev_list);
+ 	INIT_LIST_HEAD(&dev->dev_alloc_list);
+ 	INIT_LIST_HEAD(&dev->post_commit_list);
+diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
+index 005c9e2a491a1..9af7b6211920c 100644
+--- a/fs/btrfs/volumes.h
++++ b/fs/btrfs/volumes.h
+@@ -117,7 +117,7 @@ struct btrfs_device {
+ 	u64 commit_bytes_used;
+ 
+ 	/* for sending down flush barriers */
+-	struct bio *flush_bio;
++	struct bio flush_bio;
+ 	struct completion flush_wait;
+ 
+ 	/* per-device scrub information */
 -- 
-Peter
+2.30.2
 
