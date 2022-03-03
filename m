@@ -2,138 +2,93 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A6CC433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Mar 2022 16:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C433AC433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Mar 2022 23:19:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234940AbiCCQWT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Mar 2022 11:22:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44530 "EHLO
+        id S237164AbiCCXU0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Mar 2022 18:20:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234939AbiCCQWR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Mar 2022 11:22:17 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32ACA199E18
-        for <linux-raid@vger.kernel.org>; Thu,  3 Mar 2022 08:21:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646324492; x=1677860492;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=R2pEOSAiFF9NHcMMA0z2vLtdobKb8lj3feXC+wbx/sk=;
-  b=bXeQ4rnM4AaQZEmwXuHgABDZ5Ynm4+zprCK5dv9mzJ1yDjhXlomoTF15
-   fAVzmDY6hm7znkG5Q4Syz+Lf4F6Mjr5hWpJhjhGNaUkJrmWYs//4zY21m
-   bzPr7o/h62VhyA6Y9utahz94/sEHx87axB2vJHcTxrmNHFM9y/y4/u6V8
-   S9O8YydzrmtjoS+eFkRzxT7KdqNYyRX/P+Zf42KyGRqkPS2IG727WJtsK
-   EhXN6uKdzJndB7eUtnSBM+SOP2mBMO6WY/s3zygVlrVWsm0wNrYiRNJzt
-   dA3xEAYYvWkAlczFmsPUz/CwwDusJnA8F0khwtwtIOfcU/SUlSz/3rSN8
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10275"; a="241137609"
-X-IronPort-AV: E=Sophos;i="5.90,151,1643702400"; 
-   d="scan'208";a="241137609"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 08:21:30 -0800
-X-IronPort-AV: E=Sophos;i="5.90,151,1643702400"; 
-   d="scan'208";a="551808167"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.23.199])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 08:21:28 -0800
-Date:   Thu, 3 Mar 2022 17:21:23 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>
-Cc:     song@kernel.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 3/3] raid5: introduce MD_BROKEN
-Message-ID: <20220303172123.00000daa@linux.intel.com>
-In-Reply-To: <8b918c2a-5b68-6ddc-0a23-69af70f28d7d@linux.dev>
-References: <20220127153912.26856-1-mariusz.tkaczyk@linux.intel.com>
-        <20220127153912.26856-4-mariusz.tkaczyk@linux.intel.com>
-        <fbe1ec39-acee-8226-adb2-6c61e3d7fdd0@linux.dev>
-        <20220222151851.0000089a@linux.intel.com>
-        <8b918c2a-5b68-6ddc-0a23-69af70f28d7d@linux.dev>
+        with ESMTP id S236123AbiCCXUZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Mar 2022 18:20:25 -0500
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A13743BA6E;
+        Thu,  3 Mar 2022 15:19:39 -0800 (PST)
+Received: by mail-pf1-x42f.google.com with SMTP id t5so6061009pfg.4;
+        Thu, 03 Mar 2022 15:19:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=zjuVnCbRWCkKZzG24Qbc3K9Rg+v9KCs6GJmxooo6ImU=;
+        b=JunhUSYXT7H21ToQtYdrAhv32jLNwVVvUnOISnZrFUQSwXYeT9Xm+o7gyZhuoJZhVZ
+         5drHBIwbv04hR5IxcQgmbACgWc2rTxAlWFNhGCxsAxWS4RCXqtCzc2Tuga0fV5bX1HBH
+         y9Ngkvncl45cm9GapGWCtROcqfy9zGviZFNrybf55pyhToiq7KtM/ZKHO0eEM3GetPkc
+         p794iolP2OC1gc48ZH8tYdmfmb0QhiqGr0bAqBmYR8RQFieF+qvVFzy6aJfdQLTQkjYR
+         X0siBzdYBauPfOsPsZOSdyHuoPE6k13NwytrFqMpKKe8TKJnoG2b+7usdhT1rqimN9Mi
+         I+aA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=zjuVnCbRWCkKZzG24Qbc3K9Rg+v9KCs6GJmxooo6ImU=;
+        b=WVQRvbzJ4D5ItG7JEoPFQb3LEsXVoEpEDWqTzb47DCEM5J1QZjOZu3DYx0ykWf3Ucf
+         nXWvi/3jUMwpeA2ONsI4QxqAoHuP7lAGiQTgEYkhGegnmd6XRaOQMoeb1b/J032OlGMU
+         SWNzGHWP8tJ1ZR7BsPOPSGG+szJ2cc2kEEkOf1xtn8uWUO+5IyzLyEmzwInxCCN0dYYu
+         dNl8LmLTDbURDNClmg+Tpanu8UtCPihbycJPvkhPhF1nhz8MJsDRro+5RAX8mBfT5xCq
+         7NK8dFMT88WETbkpYn8ps6xowV8G62EY/PxNXxf3G9ZhNV0FZzvmrczEzuycMrQohch6
+         k7cw==
+X-Gm-Message-State: AOAM533TJSO0RRuzf21rFIFxYbTK5epQOdnWrtSG3WpLKvjFUSF0jPAS
+        KYCMY2SUMr5vsTgcxAAqlO8=
+X-Google-Smtp-Source: ABdhPJwDJODFk3S4d4ZDXWIYNC1lVTWKiEgRPAaVdcs+sRcG0Dlwm4CCVfmIShdQqnYrEx6HVt372A==
+X-Received: by 2002:a05:6a00:a1d:b0:4f6:5051:6183 with SMTP id p29-20020a056a000a1d00b004f650516183mr10703840pfh.42.1646349579082;
+        Thu, 03 Mar 2022 15:19:39 -0800 (PST)
+Received: from edumazet1.svl.corp.google.com ([2620:15c:2c4:201:5388:c313:5e37:a261])
+        by smtp.gmail.com with ESMTPSA id e14-20020a056a001a8e00b004e136d54a15sm3626149pfv.105.2022.03.03.15.19.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Mar 2022 15:19:38 -0800 (PST)
+From:   Eric Dumazet <eric.dumazet@gmail.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
+        Eric Dumazet <edumazet@google.com>,
+        Eric Dumazet <eric.dumazet@gmail.com>,
+        linux-raid@vger.kernel.org
+Subject: [PATCH] md: use msleep() in md_notify_reboot()
+Date:   Thu,  3 Mar 2022 15:19:33 -0800
+Message-Id: <20220303231933.1313075-1-eric.dumazet@gmail.com>
+X-Mailer: git-send-email 2.35.1.616.g0bdcbb4464-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 25 Feb 2022 15:22:00 +0800
-Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
+From: Eric Dumazet <edumazet@google.com>
 
-> >> If one member disk was set Faulty which caused BROKEN was set, is
-> >> it possible to re-add the same member disk again?
-> >> =20
-> > Is possible to re-add drive to failed raid5 array now? From my
-> > understanding of raid5_add_disk it is not possible. =20
->=20
-> I mean the below steps, it works as you can see.
->=20
-> >> [root@vm ~]# echo faulty > /sys/block/md0/md/dev-loop1/state
-> >> [root@vm ~]# cat /proc/mdstat
-> >> Personalities : [raid6] [raid5] [raid4]
-> >> md0 : active raid5 loop2[2] loop1[0](F)
-> >>   =A0=A0=A0=A0=A0 1046528 blocks super 1.2 level 5, 512k chunk, algori=
-thm 2
-> >> [2/1] [_U] bitmap: 0/1 pages [0KB], 65536KB chunk
-> >>
-> >> unused devices: <none>
-> >> [root@vm ~]# echo re-add > /sys/block/md0/md/dev-loop1/state
-> >> [root@vm ~]# cat /proc/mdstat
-> >> Personalities : [raid6] [raid5] [raid4]
-> >> md0 : active raid5 loop2[2] loop1[0]
-> >>   =A0=A0=A0=A0=A0 1046528 blocks super 1.2 level 5, 512k chunk, algori=
-thm 2
-> >> [2/2] [UU] bitmap: 0/1 pages [0KB], 65536KB chunk
-> >>
-> >> unused devices: <none>
+Calling mdelay(1000) from process context, even while a reboot
+is in progress, does not make sense.
 
+Using msleep() allows other threads to make progress.
 
-In this case array is not failed (it is degraded). For that reason I
-think that my changes are not related.
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+Cc: linux-raid@vger.kernel.org
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [raid1] [raid10]
-md127 : active raid5 nvme5n1[1] nvme4n1[0](F)
-      5242880 blocks super 1.2 level 5, 512k chunk, algorithm 2 [2/1]
-[_U]
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4d38bd7dadd604acdc9832d62c81c913abddc07d..330c53e212b82dd58670962fc9204cf4eec484f4 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9583,7 +9583,7 @@ static int md_notify_reboot(struct notifier_block *this,
+ 	 * driver, we do want to have a safe RAID driver ...
+ 	 */
+ 	if (need_delay)
+-		mdelay(1000*1);
++		msleep(1000);
+ 
+ 	return NOTIFY_DONE;
+ }
+-- 
+2.35.1.616.g0bdcbb4464-goog
 
-unused devices: <none>
-# cat /sys/block/md127/md/array_state clean
-
-# mdadm -D /dev/md127
-/dev/md127:
-           Version : 1.2
-     Creation Time : Thu Mar  3 18:49:53 2022
-        Raid Level : raid5
-        Array Size : 5242880 (5.00 GiB 5.37 GB)
-     Used Dev Size : 5242880 (5.00 GiB 5.37 GB)
-      Raid Devices : 2
-     Total Devices : 2
-       Persistence : Superblock is persistent
-
-       Update Time : Thu Mar  3 18:52:46 2022
-             State : clean, degraded
-    Active Devices : 1
-   Working Devices : 1
-    Failed Devices : 1
-     Spare Devices : 0
-
-            Layout : left-symmetric
-        Chunk Size : 512K
-
-Consistency Policy : resync
-
-              Name : gklab-localhost:vol  (local to host
-              gklab-localhost)
-              UUID : 711594e8:73ef988c:87a85085:b30c838d
-            Events : 8
-
-    Number   Major   Minor   RaidDevice State
-       -       0        0        0      removed
-       1     259        9        1      active sync   /dev/nvme5n1
-
-       0     259        5        -      faulty   /dev/nvme4n1
-
-
-Do I miss something?
-
-Thanks,
-Mariusz
