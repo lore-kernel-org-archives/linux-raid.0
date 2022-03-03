@@ -2,74 +2,138 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A93FC433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Mar 2022 16:20:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A6CC433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  3 Mar 2022 16:21:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233778AbiCCQUz (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Mar 2022 11:20:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42976 "EHLO
+        id S234940AbiCCQWT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 3 Mar 2022 11:22:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230522AbiCCQUz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Mar 2022 11:20:55 -0500
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2425199D7C
-        for <linux-raid@vger.kernel.org>; Thu,  3 Mar 2022 08:20:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:Cc:To:content-disposition;
-        bh=Soof3/++XSnUnQ3KKT9v4nghmSEVc3WNPP78zK1WNnI=; b=OnEE4NVgZ/mv1lhldvvJ5HOxKl
-        iWLzGj8Baz9kJwGTq0eagCcuYivKB+kvxvK6hr6MnqXhLdki2S7QTz45SryaiBQcWLrix3HcHCCiD
-        bDi7ijKZA/yOSdSoZa2l6/werMjYjUns66jMumtLhBw8hvnugANWWEaEtIn1GPV7XsNY0D/l5MigB
-        MpfCnxBXdmN3CfFBL9bEzsyVNGFpp1q4cB3V1wG/gEynkR2aP8I4ri2nRdxWGIappA9EwHg8RuqKO
-        TfECuF2mcM8JT71RnJaqwIqPprnQiuCsJ/cRiNeMRR1mOxcTP8nmXgqgRyJ7No5kt7u98k/+VoRR8
-        Gjt5lU1Q==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1nPoBR-00Djeb-3H; Thu, 03 Mar 2022 09:20:05 -0700
-To:     Guoqing Jiang <guoqing.jiang@linux.dev>, linux-raid@vger.kernel.org
-Cc:     Shaohua Li <shli@kernel.org>, Shaohua Li <shli@fb.com>,
-        Song Liu <song@kernel.org>
-References: <11cfe3aa-b778-b3e5-a152-50abc6c054ac@deltatee.com>
- <34a8b64a-37d3-9966-1fe8-d57c432600d7@deltatee.com>
- <806cdd27-8633-09dd-6942-12437c8b9818@linux.dev>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <ff15d173-277a-499e-d019-07f4d4ed9f19@deltatee.com>
-Date:   Thu, 3 Mar 2022 09:20:03 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        with ESMTP id S234939AbiCCQWR (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Mar 2022 11:22:17 -0500
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32ACA199E18
+        for <linux-raid@vger.kernel.org>; Thu,  3 Mar 2022 08:21:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646324492; x=1677860492;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=R2pEOSAiFF9NHcMMA0z2vLtdobKb8lj3feXC+wbx/sk=;
+  b=bXeQ4rnM4AaQZEmwXuHgABDZ5Ynm4+zprCK5dv9mzJ1yDjhXlomoTF15
+   fAVzmDY6hm7znkG5Q4Syz+Lf4F6Mjr5hWpJhjhGNaUkJrmWYs//4zY21m
+   bzPr7o/h62VhyA6Y9utahz94/sEHx87axB2vJHcTxrmNHFM9y/y4/u6V8
+   S9O8YydzrmtjoS+eFkRzxT7KdqNYyRX/P+Zf42KyGRqkPS2IG727WJtsK
+   EhXN6uKdzJndB7eUtnSBM+SOP2mBMO6WY/s3zygVlrVWsm0wNrYiRNJzt
+   dA3xEAYYvWkAlczFmsPUz/CwwDusJnA8F0khwtwtIOfcU/SUlSz/3rSN8
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10275"; a="241137609"
+X-IronPort-AV: E=Sophos;i="5.90,151,1643702400"; 
+   d="scan'208";a="241137609"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 08:21:30 -0800
+X-IronPort-AV: E=Sophos;i="5.90,151,1643702400"; 
+   d="scan'208";a="551808167"
+Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.23.199])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 08:21:28 -0800
+Date:   Thu, 3 Mar 2022 17:21:23 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     song@kernel.org, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 3/3] raid5: introduce MD_BROKEN
+Message-ID: <20220303172123.00000daa@linux.intel.com>
+In-Reply-To: <8b918c2a-5b68-6ddc-0a23-69af70f28d7d@linux.dev>
+References: <20220127153912.26856-1-mariusz.tkaczyk@linux.intel.com>
+        <20220127153912.26856-4-mariusz.tkaczyk@linux.intel.com>
+        <fbe1ec39-acee-8226-adb2-6c61e3d7fdd0@linux.dev>
+        <20220222151851.0000089a@linux.intel.com>
+        <8b918c2a-5b68-6ddc-0a23-69af70f28d7d@linux.dev>
 MIME-Version: 1.0
-In-Reply-To: <806cdd27-8633-09dd-6942-12437c8b9818@linux.dev>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: song@kernel.org, shli@fb.com, shli@kernel.org, linux-raid@vger.kernel.org, guoqing.jiang@linux.dev
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: Raid5 Batching Question
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
+On Fri, 25 Feb 2022 15:22:00 +0800
+Guoqing Jiang <guoqing.jiang@linux.dev> wrote:
+
+> >> If one member disk was set Faulty which caused BROKEN was set, is
+> >> it possible to re-add the same member disk again?
+> >> =20
+> > Is possible to re-add drive to failed raid5 array now? From my
+> > understanding of raid5_add_disk it is not possible. =20
+>=20
+> I mean the below steps, it works as you can see.
+>=20
+> >> [root@vm ~]# echo faulty > /sys/block/md0/md/dev-loop1/state
+> >> [root@vm ~]# cat /proc/mdstat
+> >> Personalities : [raid6] [raid5] [raid4]
+> >> md0 : active raid5 loop2[2] loop1[0](F)
+> >>   =A0=A0=A0=A0=A0 1046528 blocks super 1.2 level 5, 512k chunk, algori=
+thm 2
+> >> [2/1] [_U] bitmap: 0/1 pages [0KB], 65536KB chunk
+> >>
+> >> unused devices: <none>
+> >> [root@vm ~]# echo re-add > /sys/block/md0/md/dev-loop1/state
+> >> [root@vm ~]# cat /proc/mdstat
+> >> Personalities : [raid6] [raid5] [raid4]
+> >> md0 : active raid5 loop2[2] loop1[0]
+> >>   =A0=A0=A0=A0=A0 1046528 blocks super 1.2 level 5, 512k chunk, algori=
+thm 2
+> >> [2/2] [UU] bitmap: 0/1 pages [0KB], 65536KB chunk
+> >>
+> >> unused devices: <none>
 
 
-On 2022-03-02 6:40 p.m., Guoqing Jiang wrote:
-> 
-> 
-> On 3/3/22 7:24 AM, Logan Gunthorpe wrote:
->> So I'm back to square one trying to find some performance improvements
->> on the write path.
-> 
-> Did you try with group_thread_cnt?
-> 
-> /sys/block/md0/md/group_thread_cnt
+In this case array is not failed (it is degraded). For that reason I
+think that my changes are not related.
 
-Yes, I've tried group_thread_cnt and raised stripe_cache_size and a few
-other parameters. Still get limited write performance.
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid1] [raid10]
+md127 : active raid5 nvme5n1[1] nvme4n1[0](F)
+      5242880 blocks super 1.2 level 5, 512k chunk, algorithm 2 [2/1]
+[_U]
+
+unused devices: <none>
+# cat /sys/block/md127/md/array_state clean
+
+# mdadm -D /dev/md127
+/dev/md127:
+           Version : 1.2
+     Creation Time : Thu Mar  3 18:49:53 2022
+        Raid Level : raid5
+        Array Size : 5242880 (5.00 GiB 5.37 GB)
+     Used Dev Size : 5242880 (5.00 GiB 5.37 GB)
+      Raid Devices : 2
+     Total Devices : 2
+       Persistence : Superblock is persistent
+
+       Update Time : Thu Mar  3 18:52:46 2022
+             State : clean, degraded
+    Active Devices : 1
+   Working Devices : 1
+    Failed Devices : 1
+     Spare Devices : 0
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : resync
+
+              Name : gklab-localhost:vol  (local to host
+              gklab-localhost)
+              UUID : 711594e8:73ef988c:87a85085:b30c838d
+            Events : 8
+
+    Number   Major   Minor   RaidDevice State
+       -       0        0        0      removed
+       1     259        9        1      active sync   /dev/nvme5n1
+
+       0     259        5        -      faulty   /dev/nvme4n1
+
+
+Do I miss something?
 
 Thanks,
-
-Logan
+Mariusz
