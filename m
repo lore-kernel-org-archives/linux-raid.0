@@ -2,93 +2,72 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C433AC433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  3 Mar 2022 23:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4ECC433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 06:24:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237164AbiCCXU0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 3 Mar 2022 18:20:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57454 "EHLO
+        id S238353AbiCDGY5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Mar 2022 01:24:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236123AbiCCXUZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 3 Mar 2022 18:20:25 -0500
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A13743BA6E;
-        Thu,  3 Mar 2022 15:19:39 -0800 (PST)
-Received: by mail-pf1-x42f.google.com with SMTP id t5so6061009pfg.4;
-        Thu, 03 Mar 2022 15:19:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zjuVnCbRWCkKZzG24Qbc3K9Rg+v9KCs6GJmxooo6ImU=;
-        b=JunhUSYXT7H21ToQtYdrAhv32jLNwVVvUnOISnZrFUQSwXYeT9Xm+o7gyZhuoJZhVZ
-         5drHBIwbv04hR5IxcQgmbACgWc2rTxAlWFNhGCxsAxWS4RCXqtCzc2Tuga0fV5bX1HBH
-         y9Ngkvncl45cm9GapGWCtROcqfy9zGviZFNrybf55pyhToiq7KtM/ZKHO0eEM3GetPkc
-         p794iolP2OC1gc48ZH8tYdmfmb0QhiqGr0bAqBmYR8RQFieF+qvVFzy6aJfdQLTQkjYR
-         X0siBzdYBauPfOsPsZOSdyHuoPE6k13NwytrFqMpKKe8TKJnoG2b+7usdhT1rqimN9Mi
-         I+aA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zjuVnCbRWCkKZzG24Qbc3K9Rg+v9KCs6GJmxooo6ImU=;
-        b=WVQRvbzJ4D5ItG7JEoPFQb3LEsXVoEpEDWqTzb47DCEM5J1QZjOZu3DYx0ykWf3Ucf
-         nXWvi/3jUMwpeA2ONsI4QxqAoHuP7lAGiQTgEYkhGegnmd6XRaOQMoeb1b/J032OlGMU
-         SWNzGHWP8tJ1ZR7BsPOPSGG+szJ2cc2kEEkOf1xtn8uWUO+5IyzLyEmzwInxCCN0dYYu
-         dNl8LmLTDbURDNClmg+Tpanu8UtCPihbycJPvkhPhF1nhz8MJsDRro+5RAX8mBfT5xCq
-         7NK8dFMT88WETbkpYn8ps6xowV8G62EY/PxNXxf3G9ZhNV0FZzvmrczEzuycMrQohch6
-         k7cw==
-X-Gm-Message-State: AOAM533TJSO0RRuzf21rFIFxYbTK5epQOdnWrtSG3WpLKvjFUSF0jPAS
-        KYCMY2SUMr5vsTgcxAAqlO8=
-X-Google-Smtp-Source: ABdhPJwDJODFk3S4d4ZDXWIYNC1lVTWKiEgRPAaVdcs+sRcG0Dlwm4CCVfmIShdQqnYrEx6HVt372A==
-X-Received: by 2002:a05:6a00:a1d:b0:4f6:5051:6183 with SMTP id p29-20020a056a000a1d00b004f650516183mr10703840pfh.42.1646349579082;
-        Thu, 03 Mar 2022 15:19:39 -0800 (PST)
-Received: from edumazet1.svl.corp.google.com ([2620:15c:2c4:201:5388:c313:5e37:a261])
-        by smtp.gmail.com with ESMTPSA id e14-20020a056a001a8e00b004e136d54a15sm3626149pfv.105.2022.03.03.15.19.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Mar 2022 15:19:38 -0800 (PST)
-From:   Eric Dumazet <eric.dumazet@gmail.com>
-To:     Song Liu <song@kernel.org>
+        with ESMTP id S232071AbiCDGY4 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 01:24:56 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9AE66C961;
+        Thu,  3 Mar 2022 22:24:09 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7B75961CD2;
+        Fri,  4 Mar 2022 06:24:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE03BC340F2;
+        Fri,  4 Mar 2022 06:24:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646375044;
+        bh=cmSmvJubvXnBKZu876qJHYaGoLR7nF9IOp0DGZ8oYCc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=s5OsmlGlF7UPZe4GDO6wFvXtQF8pQfpEKKlFlHIWmx+EaX1pHPS7Djhm08QxQevTZ
+         wsX1H2r4Nnl7bDh+mzsRDeg+J9+oUE8LX74YnlYGmXfwfOtDdd+GkMwoHLMyLDsJFS
+         bp8VbvDMFTn7+PFt7fCDBiT4C4CMxrHJYPOz8yE4SQQTF+9qilLRX/eA5+koKViJhU
+         imZMXp4VsqeEwwU4+d7S5lqz1qySgohQpIL39wTMbwgnF8YSfH88NYe5z6XBUB0WIv
+         VVwXZ7ho+TmGNNIymxKmUKnbBIG9jluHSTUkiQdVQBxFhzHJEB7KlZzXvPgk8Yp6Tp
+         VHnEhwYr6mwYw==
+Received: by mail-yb1-f178.google.com with SMTP id w16so14920373ybi.12;
+        Thu, 03 Mar 2022 22:24:04 -0800 (PST)
+X-Gm-Message-State: AOAM530D+q2JubNEbh4iq54RPvx5CJv3sxqBTr/ZHVlo5+D7NbKTeGdJ
+        US1JLAHstacmx1nPbLLk5AoEZ31A3zN76JxkHng=
+X-Google-Smtp-Source: ABdhPJyWhShCPrnO9QtlwgdGZr5yvWxXWG+a37w5SymLcCreQX2N65S9uZikua4Xg7Unly/1FvNqv23OKxQPtN5z22k=
+X-Received: by 2002:a25:bcc:0:b0:628:c317:a1a4 with SMTP id
+ 195-20020a250bcc000000b00628c317a1a4mr5687713ybl.9.1646375043765; Thu, 03 Mar
+ 2022 22:24:03 -0800 (PST)
+MIME-Version: 1.0
+References: <20220303231933.1313075-1-eric.dumazet@gmail.com>
+In-Reply-To: <20220303231933.1313075-1-eric.dumazet@gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 3 Mar 2022 22:23:52 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW74Xkhpk=gHBxeSydCZ2R=UvW3mVmg8qE8Di0_7RqUnrg@mail.gmail.com>
+Message-ID: <CAPhsuW74Xkhpk=gHBxeSydCZ2R=UvW3mVmg8qE8Di0_7RqUnrg@mail.gmail.com>
+Subject: Re: [PATCH] md: use msleep() in md_notify_reboot()
+To:     Eric Dumazet <eric.dumazet@gmail.com>
 Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
         Eric Dumazet <edumazet@google.com>,
-        Eric Dumazet <eric.dumazet@gmail.com>,
-        linux-raid@vger.kernel.org
-Subject: [PATCH] md: use msleep() in md_notify_reboot()
-Date:   Thu,  3 Mar 2022 15:19:33 -0800
-Message-Id: <20220303231933.1313075-1-eric.dumazet@gmail.com>
-X-Mailer: git-send-email 2.35.1.616.g0bdcbb4464-goog
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-From: Eric Dumazet <edumazet@google.com>
+On Thu, Mar 3, 2022 at 3:19 PM Eric Dumazet <eric.dumazet@gmail.com> wrote:
+>
+> From: Eric Dumazet <edumazet@google.com>
+>
+> Calling mdelay(1000) from process context, even while a reboot
+> is in progress, does not make sense.
+>
+> Using msleep() allows other threads to make progress.
+>
+> Signed-off-by: Eric Dumazet <edumazet@google.com>
+> Cc: linux-raid@vger.kernel.org
 
-Calling mdelay(1000) from process context, even while a reboot
-is in progress, does not make sense.
+Applied to md-next. Thanks!
 
-Using msleep() allows other threads to make progress.
-
-Signed-off-by: Eric Dumazet <edumazet@google.com>
-Cc: linux-raid@vger.kernel.org
----
- drivers/md/md.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4d38bd7dadd604acdc9832d62c81c913abddc07d..330c53e212b82dd58670962fc9204cf4eec484f4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9583,7 +9583,7 @@ static int md_notify_reboot(struct notifier_block *this,
- 	 * driver, we do want to have a safe RAID driver ...
- 	 */
- 	if (need_delay)
--		mdelay(1000*1);
-+		msleep(1000);
- 
- 	return NOTIFY_DONE;
- }
--- 
-2.35.1.616.g0bdcbb4464-goog
-
+Song
