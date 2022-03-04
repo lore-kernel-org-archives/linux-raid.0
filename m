@@ -2,73 +2,54 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCEE4C43219
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 18:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE5B8C433FE
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 18:38:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241506AbiCDSCb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Mar 2022 13:02:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59728 "EHLO
+        id S241780AbiCDSjB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Mar 2022 13:39:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241480AbiCDSCZ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 13:02:25 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 230A11D06E0;
-        Fri,  4 Mar 2022 10:01:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=YZfuEEYnhVbo8r/s4SQj/tw1f3BGsvg3FGGkCFbsay4=; b=PlV4dFSwZ3gvToZvQqdUYoTDMT
-        QDi5Jmng39OdDzsyfY2Dy1gX1wRT+TyqvMM5jNjm4fa48l8btcuilcN2RgFfaI+8Fu9YC5LN4sxif
-        2U4DTcSzbwhAlZ3zssvvA4dpLfJB35SBoEVp4fmy5VxZV/sax8ohnPqCX0W/+rO1lLXkNmaS1RlsS
-        Q7aIJmtYkKCIJ9jUlf/4fXRSq1uG4LcI1/4OVB4uVCnl0dRFMvdTj2/V8uDDb8WN+wl1VeloFiq+3
-        Kp7iO9pF5RtyheUVpwnvwINIq6fRsa0gfj/APaXl6YKPzgTnl7sxjeBtRwIBDKrrCmGAuolbPY+VH
-        Kri+l+ig==;
-Received: from [2001:4bb8:180:5296:cded:8d4b:ace6:f3c] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nQCF9-00BUyz-SA; Fri, 04 Mar 2022 18:01:32 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Song Liu <song@kernel.org>, "Theodore Ts'o" <tytso@mit.edu>,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: [PATCH 09/10] ext4: stop using bio_devname
-Date:   Fri,  4 Mar 2022 19:01:04 +0100
-Message-Id: <20220304180105.409765-10-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220304180105.409765-1-hch@lst.de>
-References: <20220304180105.409765-1-hch@lst.de>
+        with ESMTP id S241785AbiCDSiz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 13:38:55 -0500
+Received: from mout.perfora.net (mout.perfora.net [74.208.4.197])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E49CE0AF0
+        for <linux-raid@vger.kernel.org>; Fri,  4 Mar 2022 10:38:06 -0800 (PST)
+Received: from DESKTOPVD7B5KJ ([68.65.65.114]) by mrelay.perfora.net
+ (mreueus004 [74.208.5.2]) with ESMTPSA (Nemesis) id 1N5VsU-1oEKdY0uGw-016xbh
+ for <linux-raid@vger.kernel.org>; Fri, 04 Mar 2022 19:38:06 +0100
+From:   <psangas@warren-selbert.com>
+To:     <linux-raid@vger.kernel.org>
+Subject: unsubcribe
+Date:   Fri, 4 Mar 2022 10:38:06 -0800
+Message-ID: <04d201d82ff6$fd8e4790$f8aad6b0$@warren-selbert.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: Adgv9vsrliSRKAMJTwu0ndRNclGY6w==
+Content-Language: en-us
+X-Provags-ID: V03:K1:c4EnnaEl4y/fMOI4xlikYH8gAu60CrD0JkeGW5UyyZct5s2DlFW
+ +sjmlU8VxKOHBMPXkyWnOJItvOcwEeaZ9jK88mjM3giNePPoaxflzbo2zNapFp/Aq1h7efm
+ siUykY+Y71+ZxOWRYK7Z/uPxD5gtVOr2TDHbal3PNkrPWFcuwTphXWQ4g5Z1JFfHKiqf3qd
+ WeHHvK28U/2DY1XGlDa9A==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:LU9pb0B/3/I=:Yw5FkRTkIF3yIsvw8U5VzE
+ EIeymnqAgAt62edNEyHZJ29JLwwEuX876qiixRJ7brCN7aptSSLKTuEnKowkqOXNgA5w7Dn2o
+ 9KutoOYadj4tezEr33s6B6tUHc+v6YMLt8AuJW8H3/SykETYWfT7s7x0RsnAvtzHFJ1pH9Mvj
+ Zpi0UznkH2DgM4rSQrK0fpqCvYG4h+S7I4qUaUWvcz++fm7aCUYgEFVMsXwmSC+ndrG7d6Wf5
+ YfSmiMLm2yk7xk7WkQIlzpmwZpSkzJt4SVW/LPNF2s6uYHMg62O8Izfxl/fo6Xo4FMJZY6T+Z
+ Rj6KcaS11uV+mQQvNxJkq1lxpdGIvy9EwEKyzN+RyBf8MDohBeZ61zhfo/NdYR+9ufr1CNQ9D
+ KE7I9VQvSYFY80loxGeN7avUe4IR/Vx2uENX7daSTsvFgIwz2+6bOEIvC4VJxg5kQmiqeV6kl
+ dgyjKpOHBfMX2HNP6Hp/xj4e/d1wTuK/AQSKGjtMwVLTxgnNrbXPzekqPlB07QE8ksHm9Hi4f
+ 4TVziqv4uEQDpuUxQC10505P7flMqqORwj99/D9hcIyOUt25lw6fqyx0RKYcb3co22iEEP01u
+ jy6Y1X7jB8gl2938jkmkesgYXBkGQtyA/yiqi01JadB8ke49y3+F23VaslO7gtXmbDbeZQlv0
+ 8U07rixSEPtbw0oLuiJXQQutwgti+Tb73IZzR1V8FOkNwodWbBuSFDWt5Jq1XJOD13us7CQPw
+ JZMYmBWDRMBVLKAo
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use the %pg format specifier to save on stack consuption and code size.
+unsubcribe
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/ext4/page-io.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
-index 1253982268730..18373fa529225 100644
---- a/fs/ext4/page-io.c
-+++ b/fs/ext4/page-io.c
-@@ -323,10 +323,9 @@ static void ext4_end_bio(struct bio *bio)
- {
- 	ext4_io_end_t *io_end = bio->bi_private;
- 	sector_t bi_sector = bio->bi_iter.bi_sector;
--	char b[BDEVNAME_SIZE];
- 
--	if (WARN_ONCE(!io_end, "io_end is NULL: %s: sector %Lu len %u err %d\n",
--		      bio_devname(bio, b),
-+	if (WARN_ONCE(!io_end, "io_end is NULL: %pg: sector %Lu len %u err %d\n",
-+		      bio->bi_bdev,
- 		      (long long) bio->bi_iter.bi_sector,
- 		      (unsigned) bio_sectors(bio),
- 		      bio->bi_status)) {
--- 
-2.30.2
 
