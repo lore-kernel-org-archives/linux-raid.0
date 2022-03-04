@@ -2,85 +2,95 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 322DDC433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 20:20:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C34C433F5
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 22:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbiCDUU7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Mar 2022 15:20:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47592 "EHLO
+        id S229731AbiCDWNu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Mar 2022 17:13:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229531AbiCDUU7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 15:20:59 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCF5612D203
-        for <linux-raid@vger.kernel.org>; Fri,  4 Mar 2022 12:20:10 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id gj15-20020a17090b108f00b001bef86c67c1so8809688pjb.3
-        for <linux-raid@vger.kernel.org>; Fri, 04 Mar 2022 12:20:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=MzIVLFYgbIHKi0WfmGy/b7PPLkLPtlBjK1VwtmfcCaA=;
-        b=2xgKttVdE+/3e73yVrW7xAHaDB3kKqtj49qJHIQnLCF0m/Opwy1KSuE9in16hG+ho5
-         4pncR48ceZqaBfGLvTX53Sn2ScC1bZ6IsUHeELUi3rPOasHA0Xq8YIAJ4WOEq7PMYR5x
-         OZcZaSdaQeFi70GWxawnI2Qy0xZE4Ltqs0zEZeMIBBIFT31oDwKMNHfE7Hfd4iFuqtU1
-         QIlBlYTLi0Q++xOVL4tXESTdjUyZPOUAvjuufrwIQ6DKdOVG9Q6xK7pOCnZmRPvD5ifH
-         /KkHUjNb5CadrWEaCLx4pT8+ljYKkchUVh3UvokT/F0ByHWSmvTVXZ3rLMg5LGBADHpa
-         dk9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=MzIVLFYgbIHKi0WfmGy/b7PPLkLPtlBjK1VwtmfcCaA=;
-        b=EqwdK+412mzT0aX1kLOn02OL3IIk0nc42wt3T9lknwo5am2nkl/ATAClZAbQNEXbkw
-         SJfIkal26dSiIro4D23A9G91cfDIeyWy78Q/8SVVn/V8ufgnI1AthIeCygkD1CgMWLT0
-         DY2SxgduAvrvgrnX24ZNrLSuYK/jo1nFWoVh/mJ5t0Q06wQsN6/I1IQOFUy8G7TSjjZX
-         kEWNmPJx/wYrlWaP2sq1xL3qenX/DM16uniR3lXO1lP59Sy+nUxehsg0Kg2ah6D+hyBq
-         yETnFfD4UfCjuU2YXrIispAn1MQH67h0g/r3UmTw5jm+HSYs5XBO5ZZLpKgOOKVro6qr
-         uGGA==
-X-Gm-Message-State: AOAM532caMw1k6DwCUq7ZsKBjzOcC7gCaesmgroP3DmWEZ78FsNqxyuW
-        SKPiq85VOkqYNVuk8ksDejKnsQ==
-X-Google-Smtp-Source: ABdhPJxzNrjaHLQHQLD/BhExavFf9aVSlD7kGy6+cUzSlMmSh60/B/1lked5Soafp5AjkDLXFnEiCg==
-X-Received: by 2002:a17:902:7404:b0:151:c3f9:e43a with SMTP id g4-20020a170902740400b00151c3f9e43amr105492pll.12.1646425210378;
-        Fri, 04 Mar 2022 12:20:10 -0800 (PST)
-Received: from [127.0.1.1] ([2600:380:777a:c32a:5fa9:a654:f35:71f6])
-        by smtp.gmail.com with ESMTPSA id mu9-20020a17090b388900b001bef86b7d92sm8488608pjb.24.2022.03.04.12.20.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Mar 2022 12:20:09 -0800 (PST)
-From:   Jens Axboe <axboe@kernel.dk>
+        with ESMTP id S229475AbiCDWNt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 17:13:49 -0500
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 10B85103F;
+        Fri,  4 Mar 2022 14:12:59 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A7D2D52FBC4;
+        Sat,  5 Mar 2022 09:12:56 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nQGAR-001Zvp-Ep; Sat, 05 Mar 2022 09:12:55 +1100
+Date:   Sat, 5 Mar 2022 09:12:55 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, sagi@grimberg.me,
-        kbusch@kernel.org, linux-raid@vger.kernel.org, song@kernel.org
-In-Reply-To: <20220304175556.407719-1-hch@lst.de>
+Cc:     axboe@kernel.dk, sagi@grimberg.me, kbusch@kernel.org,
+        song@kernel.org, linux-block@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] block: remove the per-bio/request write hint
+Message-ID: <20220304221255.GL3927073@dread.disaster.area>
 References: <20220304175556.407719-1-hch@lst.de>
-Subject: Re: [PATCH 1/2] nvme: remove support or stream based temperature hint
-Message-Id: <164642520857.251407.3488369238595834309.b4-ty@kernel.dk>
-Date:   Fri, 04 Mar 2022 13:20:08 -0700
+ <20220304175556.407719-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220304175556.407719-2-hch@lst.de>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62228eea
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=pB72X_AyP2OfXCB9ywQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 4 Mar 2022 18:55:55 +0100, Christoph Hellwig wrote:
-> This support was added for RocksDB, but RocksDB ended up not using it.
-> At the same time drives on the open marked (vs those build for OEMs
-> for non-Linux support) that actually support streams are extremly
-> rare.  Don't bloat the nvme driver for it.
+On Fri, Mar 04, 2022 at 06:55:56PM +0100, Christoph Hellwig wrote:
+> With the NVMe support for this gone, there are no consumers of these hints
+> left, so remove them.
 > 
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/bio.c                 |  2 --
+>  block/blk-crypto-fallback.c |  1 -
+>  block/blk-merge.c           | 14 --------------
+>  block/blk-mq-debugfs.c      | 24 ------------------------
+>  block/blk-mq.c              |  1 -
+>  block/bounce.c              |  1 -
+>  block/fops.c                |  3 ---
+>  drivers/md/raid1.c          |  2 --
+>  drivers/md/raid5-ppl.c      | 28 +++-------------------------
+>  drivers/md/raid5.c          |  6 ------
+>  fs/btrfs/extent_io.c        |  1 -
+>  fs/buffer.c                 | 13 +++++--------
+>  fs/direct-io.c              |  3 ---
+>  fs/ext4/page-io.c           |  5 +----
+>  fs/f2fs/data.c              |  2 --
+>  fs/gfs2/lops.c              |  1 -
+>  fs/iomap/buffered-io.c      |  2 --
+>  fs/iomap/direct-io.c        |  1 -
+>  fs/mpage.c                  |  1 -
+>  fs/zonefs/super.c           |  1 -
+>  include/linux/blk_types.h   |  1 -
+>  include/linux/blkdev.h      |  3 ---
+>  22 files changed, 9 insertions(+), 107 deletions(-)
 
-Applied, thanks!
+AFAICT, all the filesystem/IO path passthrough plumbing for hints is
+now gone, and no hardware will ever receive hints.  Doesn't this
+mean that file_write_hint(), file->f_write_hint and iocb->ki_hint
+are now completely unused, too?  That also means the fcntl()s for
+F_{G,S}ET_FILE_RW_HINT now have zero effect on IO, so should they be
+neutered, too?
 
-[1/2] nvme: remove support or stream based temperature hint
-      commit: 86cc47f6c199a71fdb28fe781174d9974ee14304
-[2/2] block: remove the per-bio/request write hint
-      commit: 6928b8f7eafaec1f0ea318fec71b537a165e552b
+AFAICT, this patch leaves just the f2fs allocator usage of
+inode->i_rw_hint to select a segment to allocate from as the
+remaining consumer of this entire plumbing and user API. Is that
+used by applications anywhere, or can that be removed and so the
+rest of the infrastructure get removed and the fcntl()s no-op'd or
+-EOPNOTSUPP?
 
-Best regards,
+Cheers,
+
+Dave.
 -- 
-Jens Axboe
-
-
+Dave Chinner
+david@fromorbit.com
