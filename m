@@ -2,54 +2,103 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE5B8C433FE
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 18:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF17C4332F
+	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 19:14:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241780AbiCDSjB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Mar 2022 13:39:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40082 "EHLO
+        id S229914AbiCDTPl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 4 Mar 2022 14:15:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241785AbiCDSiz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 13:38:55 -0500
-Received: from mout.perfora.net (mout.perfora.net [74.208.4.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E49CE0AF0
-        for <linux-raid@vger.kernel.org>; Fri,  4 Mar 2022 10:38:06 -0800 (PST)
-Received: from DESKTOPVD7B5KJ ([68.65.65.114]) by mrelay.perfora.net
- (mreueus004 [74.208.5.2]) with ESMTPSA (Nemesis) id 1N5VsU-1oEKdY0uGw-016xbh
- for <linux-raid@vger.kernel.org>; Fri, 04 Mar 2022 19:38:06 +0100
-From:   <psangas@warren-selbert.com>
-To:     <linux-raid@vger.kernel.org>
-Subject: unsubcribe
-Date:   Fri, 4 Mar 2022 10:38:06 -0800
-Message-ID: <04d201d82ff6$fd8e4790$f8aad6b0$@warren-selbert.com>
+        with ESMTP id S229529AbiCDTPi (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 14:15:38 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D5811F1601;
+        Fri,  4 Mar 2022 11:14:43 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CD5ACB82B66;
+        Fri,  4 Mar 2022 19:14:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D197C340EE;
+        Fri,  4 Mar 2022 19:14:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646421280;
+        bh=z9QOAPrGETQ++HWZY4bwoQ4oWyQg3KZKh7KMFBI9D3k=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=WfZBXhh7cjSx2qbz7lyWNwyYegtc9BVoVASPBl+AYWSzGRgv/lZrbKWP96hd5yKsr
+         sywrXu/hIEvE8UpLbSggbSUenfSEL143wXvWyl2AKiKPE5x3PvCVH1llOmPP/UH0F+
+         KvDKVIy2mG+ICjhAVP6GhOXjDlGHUBIKLkxTa+JPGfIgQZJkk5YwjG+GdC8RrHfQ/y
+         pcqcE1vFzhoU5skSDKZ6APVVNM+SeVRterRiquSWy1mP0jlJQhJY2wVwHxMhjgVsyy
+         36EKJ2NOW8UYdHfiHLakr6VypzkBPNalh8bZIqMKevUtnaKAQBaVjXelfkn5GM0ekY
+         zVb1qMo7OXvwA==
+Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-2dbc48104beso102387777b3.5;
+        Fri, 04 Mar 2022 11:14:40 -0800 (PST)
+X-Gm-Message-State: AOAM532FSOkPnuyEM8uiVMsLj/xL55Jgk2c0T0qLeOILqA8uDKCRcFEB
+        RpsJr3qAcjMAJBMEb15gcnyGXLayslYUAKbnz4E=
+X-Google-Smtp-Source: ABdhPJz1k+z6CdB1ZzQOzZSIjJIBSsGyOVyzuwjsvPhhdopH3DUGx0z8p5JWInYwnZDE3MO0ZqNgFRCZZrFdU5/nPZ4=
+X-Received: by 2002:a81:23ce:0:b0:2dc:b20:cc73 with SMTP id
+ j197-20020a8123ce000000b002dc0b20cc73mr51033ywj.130.1646421279615; Fri, 04
+ Mar 2022 11:14:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: Adgv9vsrliSRKAMJTwu0ndRNclGY6w==
-Content-Language: en-us
-X-Provags-ID: V03:K1:c4EnnaEl4y/fMOI4xlikYH8gAu60CrD0JkeGW5UyyZct5s2DlFW
- +sjmlU8VxKOHBMPXkyWnOJItvOcwEeaZ9jK88mjM3giNePPoaxflzbo2zNapFp/Aq1h7efm
- siUykY+Y71+ZxOWRYK7Z/uPxD5gtVOr2TDHbal3PNkrPWFcuwTphXWQ4g5Z1JFfHKiqf3qd
- WeHHvK28U/2DY1XGlDa9A==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:LU9pb0B/3/I=:Yw5FkRTkIF3yIsvw8U5VzE
- EIeymnqAgAt62edNEyHZJ29JLwwEuX876qiixRJ7brCN7aptSSLKTuEnKowkqOXNgA5w7Dn2o
- 9KutoOYadj4tezEr33s6B6tUHc+v6YMLt8AuJW8H3/SykETYWfT7s7x0RsnAvtzHFJ1pH9Mvj
- Zpi0UznkH2DgM4rSQrK0fpqCvYG4h+S7I4qUaUWvcz++fm7aCUYgEFVMsXwmSC+ndrG7d6Wf5
- YfSmiMLm2yk7xk7WkQIlzpmwZpSkzJt4SVW/LPNF2s6uYHMg62O8Izfxl/fo6Xo4FMJZY6T+Z
- Rj6KcaS11uV+mQQvNxJkq1lxpdGIvy9EwEKyzN+RyBf8MDohBeZ61zhfo/NdYR+9ufr1CNQ9D
- KE7I9VQvSYFY80loxGeN7avUe4IR/Vx2uENX7daSTsvFgIwz2+6bOEIvC4VJxg5kQmiqeV6kl
- dgyjKpOHBfMX2HNP6Hp/xj4e/d1wTuK/AQSKGjtMwVLTxgnNrbXPzekqPlB07QE8ksHm9Hi4f
- 4TVziqv4uEQDpuUxQC10505P7flMqqORwj99/D9hcIyOUt25lw6fqyx0RKYcb3co22iEEP01u
- jy6Y1X7jB8gl2938jkmkesgYXBkGQtyA/yiqi01JadB8ke49y3+F23VaslO7gtXmbDbeZQlv0
- 8U07rixSEPtbw0oLuiJXQQutwgti+Tb73IZzR1V8FOkNwodWbBuSFDWt5Jq1XJOD13us7CQPw
- JZMYmBWDRMBVLKAo
+References: <20220304180105.409765-1-hch@lst.de> <20220304180105.409765-7-hch@lst.de>
+In-Reply-To: <20220304180105.409765-7-hch@lst.de>
+From:   Song Liu <song@kernel.org>
+Date:   Fri, 4 Mar 2022 11:14:28 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4br23hby-nmQsx9=wTn3tgV+OCXh0kMBLQR7Nhc6zdzg@mail.gmail.com>
+Message-ID: <CAPhsuW4br23hby-nmQsx9=wTn3tgV+OCXh0kMBLQR7Nhc6zdzg@mail.gmail.com>
+Subject: Re: [PATCH 06/10] md-multipath: stop using bio_devname
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, "Theodore Ts'o" <tytso@mit.edu>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-unsubcribe
+On Fri, Mar 4, 2022 at 10:01 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Use the %pg format specifier to save on stack consuption and code size.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Acked-by: Song Liu <song@kernel.org>
 
-
+> ---
+>  drivers/md/md-multipath.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+> index c056a7d707b09..bc38a6133cda3 100644
+> --- a/drivers/md/md-multipath.c
+> +++ b/drivers/md/md-multipath.c
+> @@ -294,7 +294,6 @@ static void multipathd(struct md_thread *thread)
+>
+>         md_check_recovery(mddev);
+>         for (;;) {
+> -               char b[BDEVNAME_SIZE];
+>                 spin_lock_irqsave(&conf->device_lock, flags);
+>                 if (list_empty(head))
+>                         break;
+> @@ -306,13 +305,13 @@ static void multipathd(struct md_thread *thread)
+>                 bio->bi_iter.bi_sector = mp_bh->master_bio->bi_iter.bi_sector;
+>
+>                 if ((mp_bh->path = multipath_map (conf))<0) {
+> -                       pr_err("multipath: %s: unrecoverable IO read error for block %llu\n",
+> -                              bio_devname(bio, b),
+> +                       pr_err("multipath: %pg: unrecoverable IO read error for block %llu\n",
+> +                              bio->bi_bdev,
+>                                (unsigned long long)bio->bi_iter.bi_sector);
+>                         multipath_end_bh_io(mp_bh, BLK_STS_IOERR);
+>                 } else {
+> -                       pr_err("multipath: %s: redirecting sector %llu to another IO path\n",
+> -                              bio_devname(bio, b),
+> +                       pr_err("multipath: %pg: redirecting sector %llu to another IO path\n",
+> +                              bio->bi_bdev,
+>                                (unsigned long long)bio->bi_iter.bi_sector);
+>                         *bio = *(mp_bh->master_bio);
+>                         bio->bi_iter.bi_sector +=
+> --
+> 2.30.2
+>
