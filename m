@@ -2,106 +2,86 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BB81C433EF
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Mar 2022 09:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD6FEC433EF
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Mar 2022 21:41:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229615AbiCEJGS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 5 Mar 2022 04:06:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47342 "EHLO
+        id S232071AbiCEVlv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 5 Mar 2022 16:41:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43840 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229542AbiCEJGR (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Mar 2022 04:06:17 -0500
-X-Greylist: delayed 527 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 05 Mar 2022 01:05:27 PST
-Received: from mr4.vodafonemail.de (mr4.vodafonemail.de [145.253.228.164])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 530D1506F1
-        for <linux-raid@vger.kernel.org>; Sat,  5 Mar 2022 01:05:27 -0800 (PST)
-Received: from smtp.vodafone.de (unknown [10.0.0.2])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by mr4.vodafonemail.de (Postfix) with ESMTPS id 4K9dr70BQ4z1xyg;
-        Sat,  5 Mar 2022 08:56:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nexgo.de;
-        s=vfde-smtpout-mb-15sep; t=1646470599;
-        bh=iMelwn/UztAG4srYQBADI6jWSiHQ1Y69WSiF83MIPRw=;
-        h=Date:From:To:Subject:Message-ID:References:Content-Type:
-         In-Reply-To:From;
-        b=YR0NIQROFrxRjL6NvPv6xfqSxCWhhWJtFrl2kO4Ie/pKdBeC/G1SKvI+8OlJ7C0Qg
-         NdegXsJIqJ1F/iHmgG86y8V6zfKYpBHy+PGt30/K+bLtseg5NdlqTT57gTZ21LzLgh
-         5raX1RsmLfRyTCvF11wwXutVOaHJvUvlPlIIrlRg=
-Received: from lazy.lzy (p5dd47cf0.dip0.t-ipconnect.de [93.212.124.240])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp.vodafone.de (Postfix) with ESMTPSA id 4K9dr35SvmzMkrs;
-        Sat,  5 Mar 2022 08:56:32 +0000 (UTC)
-Received: from lazy.lzy (localhost [127.0.0.1])
-        by lazy.lzy (8.17.1/8.14.5) with ESMTPS id 2258uV7O003428
-        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-        Sat, 5 Mar 2022 09:56:31 +0100
-Received: (from red@localhost)
-        by lazy.lzy (8.17.1/8.16.1/Submit) id 2258uVFv003427;
-        Sat, 5 Mar 2022 09:56:31 +0100
-Date:   Sat, 5 Mar 2022 09:56:31 +0100
-From:   Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-To:     "Kengo.M" <kengo@kyoto-arc.or.jp>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: Number of parity disks
-Message-ID: <YiMlvzrUwFJtxqfr@lazy.lzy>
+        with ESMTP id S229805AbiCEVlu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Mar 2022 16:41:50 -0500
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2615637022;
+        Sat,  5 Mar 2022 13:41:00 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 91F0F53071C;
+        Sun,  6 Mar 2022 08:40:57 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1nQc92-001xlk-2s; Sun, 06 Mar 2022 08:40:56 +1100
+Date:   Sun, 6 Mar 2022 08:40:56 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     axboe@kernel.dk, sagi@grimberg.me, kbusch@kernel.org,
+        song@kernel.org, linux-block@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] block: remove the per-bio/request write hint
+Message-ID: <20220305214056.GO3927073@dread.disaster.area>
 References: <20220304175556.407719-1-hch@lst.de>
  <20220304175556.407719-2-hch@lst.de>
  <20220304221255.GL3927073@dread.disaster.area>
  <20220305051929.GA24696@lst.de>
- <p06001087de48ad4092ee@kyoto-arc.or.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <p06001087de48ad4092ee@kyoto-arc.or.jp>
-X-purgate-type: clean
-X-purgate: clean
-X-purgate-size: 1094
-X-purgate-ID: 155817::1646470598-00000483-3D828DEF/0/0
+In-Reply-To: <20220305051929.GA24696@lst.de>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=6223d8ea
+        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
+        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
+        a=PBs3jEgWuutBivueVwoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Sat, Mar 05, 2022 at 03:09:55PM +0900, Kengo.M wrote:
-> Hi Folks
+On Sat, Mar 05, 2022 at 06:19:29AM +0100, Christoph Hellwig wrote:
+> On Sat, Mar 05, 2022 at 09:12:55AM +1100, Dave Chinner wrote:
+> > AFAICT, all the filesystem/IO path passthrough plumbing for hints is
+> > now gone, and no hardware will ever receive hints.  Doesn't this
+> > mean that file_write_hint(), file->f_write_hint and iocb->ki_hint
+> > are now completely unused, too?
 > 
-> I use mdadm conveniently.
+> No, for the reason tha you state below.  f2fs still uses it.
+
+My point is that f2fs uses i_write_hint, not f_write_hint or
+ki_hint. IOWs, nothing in the IO path use the iocb or file write
+hints anymore because they only ever got used to set the hint for
+bios. It's now unused information.
+
+According to the io_uring ppl, setup of unnecessary fields in the
+iocb has a measurable cost and they've done work to minimise it in
+the past. So if these fields are not actually used by anyone in the
+IO path, why should we still pay the cost calling
+ki_hint_validate(file_write_hint(file)) when setting up an iocb?
+
+> > AFAICT, this patch leaves just the f2fs allocator usage of
+> > inode->i_rw_hint to select a segment to allocate from as the
+> > remaining consumer of this entire plumbing and user API. Is that
+> > used by applications anywhere, or can that be removed and so the
+> > rest of the infrastructure get removed and the fcntl()s no-op'd or
+> > -EOPNOTSUPP?
 > 
-> Let me ask a very very basic question.
-> 
-> One parity disk can be used in RAID 5 and 2 parity disks can be used in RAID 6.
-> ZFS RAIDZ-3 (raidz3) can use 3 parity disks.
-> 
-> Is it difficult to increase the number of parity disks to 4, 5 or more.
-> If so, is the reason for this because of the time it takes to generate the
-> parity bits?
+> I was told it is used quite heavily in android.
 
-There was a project, some times ago, with
-the aim to create a library, initially for
-btrfs, capable of adding "n" parities.
+So it's primarily used by out of tree code? And that after this
+patch, there's really no way to test that this API does anything
+useful at all?
 
-This should have been usable by md as well.
+Cheers,
 
-The problem is that the Vandermonde matrix
-might not invertible with more than 2 parities.
-So, they've to use a Cauchy matrix.
-
-It might be that performances are degrading
-quite a lot.
-
-I'm not sure about the status of such library,
-maybe you can ask in the btrfs mailing list.
-
-On the other hand, 3 parities (or more) case
-might be a bit an overkill.
-For md could be better to have things like
-RAID-61 or similar.
-
-bye,
-
+Dave.
 -- 
-
-piergiorgio
+Dave Chinner
+david@fromorbit.com
