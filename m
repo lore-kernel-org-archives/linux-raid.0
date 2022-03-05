@@ -2,95 +2,76 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C34C433F5
-	for <linux-raid@archiver.kernel.org>; Fri,  4 Mar 2022 22:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69AC8C433F5
+	for <linux-raid@archiver.kernel.org>; Sat,  5 Mar 2022 05:01:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbiCDWNu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 4 Mar 2022 17:13:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51454 "EHLO
+        id S229529AbiCEFB3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 5 Mar 2022 00:01:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbiCDWNt (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 4 Mar 2022 17:13:49 -0500
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 10B85103F;
-        Fri,  4 Mar 2022 14:12:59 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-17-0.pa.vic.optusnet.com.au [49.186.17.0])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A7D2D52FBC4;
-        Sat,  5 Mar 2022 09:12:56 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1nQGAR-001Zvp-Ep; Sat, 05 Mar 2022 09:12:55 +1100
-Date:   Sat, 5 Mar 2022 09:12:55 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, sagi@grimberg.me, kbusch@kernel.org,
-        song@kernel.org, linux-block@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/2] block: remove the per-bio/request write hint
-Message-ID: <20220304221255.GL3927073@dread.disaster.area>
-References: <20220304175556.407719-1-hch@lst.de>
- <20220304175556.407719-2-hch@lst.de>
+        with ESMTP id S229498AbiCEFB2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Mar 2022 00:01:28 -0500
+X-Greylist: delayed 809 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 04 Mar 2022 21:00:36 PST
+Received: from www18.qth.com (www18.qth.com [69.16.238.59])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B690E243151
+        for <linux-raid@vger.kernel.org>; Fri,  4 Mar 2022 21:00:36 -0800 (PST)
+Received: from [73.207.192.158] (port=39162 helo=justpickone.org)
+        by www18.qth.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <davidtg-robot@justpickone.org>)
+        id 1nQMJv-0003cx-PZ
+        for linux-raid@vger.kernel.org; Fri, 04 Mar 2022 22:47:06 -0600
+Date:   Fri, 4 Mar 2022 23:47:04 -0500
+From:   David T-G <davidtg-robot@justpickone.org>
+To:     Linux RAID <linux-raid@vger.kernel.org>
+Subject: striping 2x500G to mirror 1x1T
+Message-ID: <20220305044704.GB4455@justpickone.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220304175556.407719-2-hch@lst.de>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=deDjYVbe c=1 sm=1 tr=0 ts=62228eea
-        a=+dVDrTVfsjPpH/ci3UuFng==:117 a=+dVDrTVfsjPpH/ci3UuFng==:17
-        a=kj9zAlcOel0A:10 a=o8Y5sQTvuykA:10 a=7-415B0cAAAA:8
-        a=pB72X_AyP2OfXCB9ywQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - www18.qth.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - justpickone.org
+X-Get-Message-Sender-Via: www18.qth.com: authenticated_id: dmail@justpickone.org
+X-Authenticated-Sender: www18.qth.com: dmail@justpickone.org
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Mar 04, 2022 at 06:55:56PM +0100, Christoph Hellwig wrote:
-> With the NVMe support for this gone, there are no consumers of these hints
-> left, so remove them.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/bio.c                 |  2 --
->  block/blk-crypto-fallback.c |  1 -
->  block/blk-merge.c           | 14 --------------
->  block/blk-mq-debugfs.c      | 24 ------------------------
->  block/blk-mq.c              |  1 -
->  block/bounce.c              |  1 -
->  block/fops.c                |  3 ---
->  drivers/md/raid1.c          |  2 --
->  drivers/md/raid5-ppl.c      | 28 +++-------------------------
->  drivers/md/raid5.c          |  6 ------
->  fs/btrfs/extent_io.c        |  1 -
->  fs/buffer.c                 | 13 +++++--------
->  fs/direct-io.c              |  3 ---
->  fs/ext4/page-io.c           |  5 +----
->  fs/f2fs/data.c              |  2 --
->  fs/gfs2/lops.c              |  1 -
->  fs/iomap/buffered-io.c      |  2 --
->  fs/iomap/direct-io.c        |  1 -
->  fs/mpage.c                  |  1 -
->  fs/zonefs/super.c           |  1 -
->  include/linux/blk_types.h   |  1 -
->  include/linux/blkdev.h      |  3 ---
->  22 files changed, 9 insertions(+), 107 deletions(-)
+Hi, all --
 
-AFAICT, all the filesystem/IO path passthrough plumbing for hints is
-now gone, and no hardware will ever receive hints.  Doesn't this
-mean that file_write_hint(), file->f_write_hint and iocb->ki_hint
-are now completely unused, too?  That also means the fcntl()s for
-F_{G,S}ET_FILE_RW_HINT now have zero effect on IO, so should they be
-neutered, too?
+I have a 1T data drive (currently in use with data) that I'd like to
+mirror with a pair of 500G drives striped together.  I'll be mirroring
+two partitions, and I'll be striping partitions to ensure the correct
+size, and my understanding is that I'll have to create the mirror on the
+two new drives with half missing, mount it up, copy over the data, dump
+the original disk, and add it as the other half of the mirror to sync.
+If I've missed anything there, please let me know, but all of that
+matches my Googling and I don't think I have any questions.
 
-AFAICT, this patch leaves just the f2fs allocator usage of
-inode->i_rw_hint to select a segment to allocate from as the
-remaining consumer of this entire plumbing and user API. Is that
-used by applications anywhere, or can that be removed and so the
-rest of the infrastructure get removed and the fcntl()s no-op'd or
--EOPNOTSUPP?
+What I do wonder, and what I don't see in any searches since apparently
+nobody talks about striping up half of a mirror, is if I should do
+anything special with my two-disk RAID0 stripe.  I was gobsmacked at
+the simplicity of RAID10 on only two drives by splitting each in half
+and "flipping" one to maximize head movement performance.  Awesome! :-)
+Are there any brilliant hacks for simple striping?  If I'm just putting
+together two [not terribly large] disks, will I benefit from any other
+funny stuff, or should I just stripe together two partitions -- each
+half the size of my other drive, of course -- to make a "boring basic"
+stripe and run with that?
 
-Cheers,
 
-Dave.
+TIA & HANW
+
+:-D
 -- 
-Dave Chinner
-david@fromorbit.com
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
+
