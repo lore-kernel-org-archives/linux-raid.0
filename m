@@ -2,88 +2,104 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A063FC433F5
-	for <linux-raid@archiver.kernel.org>; Sat,  5 Mar 2022 23:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87747C433F5
+	for <linux-raid@archiver.kernel.org>; Sun,  6 Mar 2022 10:35:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230436AbiCEX4g (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 5 Mar 2022 18:56:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50648 "EHLO
+        id S231508AbiCFKgo (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sun, 6 Mar 2022 05:36:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbiCEX4f (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 5 Mar 2022 18:56:35 -0500
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF26F275C6;
-        Sat,  5 Mar 2022 15:55:44 -0800 (PST)
-Received: by mail-pg1-f177.google.com with SMTP id o8so10514700pgf.9;
-        Sat, 05 Mar 2022 15:55:44 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=fTFM0BLrFEzuVT+NEbfUfqIis6Wa5g9+pZvF27yAoQo=;
-        b=0wPEynVrY/qqA66VbkSOcfZOqffVUei6/bpMorLd1561OW2IiV7qCvgejAuNCp//XQ
-         3Hu6SOrZYdWHBX7EdOQ4Du9vn+6JFWLFbUgZ+B1oTz3qfVud5dNxxmaGjP6pt53irw0p
-         jzlGjQzwSgjAFqZIfZTr7zfJIrb8SYeE0KAgGeRhmuyrJpMCgA55ZXNXh1qOA+pL003Z
-         ZpfyXZt7aXOGVEnFlk+HRpehv1G6q/RORGylCfwhQkk/h4Cj6ksJb6C6+QSb3+hkLFZN
-         BtD5QNnMTnSIpAmc0c4e2efmwusSuyevh8ndn3Z7CP/6aW8uNaMsdG6zo3gMZeAeKRIk
-         sWnA==
-X-Gm-Message-State: AOAM530jGjMJMuFF7TLyaCxrs4S7fVj/sCh01IcmZvw2FvA/FgX2CfPe
-        4YvKFbnE44/UKhKO6wnGfoM8S3uWgqU=
-X-Google-Smtp-Source: ABdhPJz5VvA3U2fLc1z+mBiMQ4u+RZgL1KkG+Po1/Fl96HJUah2jzC5KKpI11NFwskc9qjJ1fhfUsQ==
-X-Received: by 2002:a62:cdc3:0:b0:4e0:e439:ed2d with SMTP id o186-20020a62cdc3000000b004e0e439ed2dmr5770274pfg.39.1646524543626;
-        Sat, 05 Mar 2022 15:55:43 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id h2-20020a056a00218200b004f6519ce666sm10984217pfi.170.2022.03.05.15.55.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 05 Mar 2022 15:55:43 -0800 (PST)
-Message-ID: <535ff59f-cde0-caf4-6e47-a0f2db03261e@acm.org>
-Date:   Sat, 5 Mar 2022 15:55:41 -0800
+        with ESMTP id S229686AbiCFKgm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sun, 6 Mar 2022 05:36:42 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4893B41FBE;
+        Sun,  6 Mar 2022 02:35:51 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id E6C591F38E;
+        Sun,  6 Mar 2022 10:35:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1646562949; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ncyEBdB3ccJeT/v1FwGpzA012uU/apTZMynZ78KjLtY=;
+        b=hN6/UQ0u7uGcE9vcylCAyQFjqcWaClXVfmJAO5v03VKAxjQA8DRJd69De0wynuQvaR5QA7
+        XRoRJyqA7Z2MfgY7mn+1zt5ReCNLMB1/tst7yvW/l2XhmGi1apjTgkCVJsnh2U+rAfVOQd
+        HjVvXvC+a+ZWK7qhAxAP7w1gDcDIXrQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1646562949;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ncyEBdB3ccJeT/v1FwGpzA012uU/apTZMynZ78KjLtY=;
+        b=SE2Cb90Y+Z+G8eIIJIf69ZN8iJ8wnVqsHRxZ7+DexDeYNLKKCh8cAYlBaUZGCZomNgLU08
+        PjmAHoD8ivL1hjBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3F29613510;
+        Sun,  6 Mar 2022 10:35:47 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id oL/ZNoOOJGJjDwAAMHmgww
+        (envelope-from <colyli@suse.de>); Sun, 06 Mar 2022 10:35:47 +0000
+Message-ID: <084b5385-ebe7-5fca-8b56-a66276005e78@suse.de>
+Date:   Sun, 6 Mar 2022 18:35:45 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 2/2] block: remove the per-bio/request write hint
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.1
 Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, sagi@grimberg.me, kbusch@kernel.org,
-        song@kernel.org, linux-block@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>
-References: <20220304175556.407719-1-hch@lst.de>
- <20220304175556.407719-2-hch@lst.de>
- <20220304221255.GL3927073@dread.disaster.area>
- <20220305051929.GA24696@lst.de>
- <20220305214056.GO3927073@dread.disaster.area>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20220305214056.GO3927073@dread.disaster.area>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+From:   Coly Li <colyli@suse.de>
+Subject: bcache patches for Linux v5.18
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/5/22 13:40, Dave Chinner wrote:
-> On Sat, Mar 05, 2022 at 06:19:29AM +0100, Christoph Hellwig wrote:
->> On Sat, Mar 05, 2022 at 09:12:55AM +1100, Dave Chinner wrote:
->>> AFAICT, this patch leaves just the f2fs allocator usage of
->>> inode->i_rw_hint to select a segment to allocate from as the
->>> remaining consumer of this entire plumbing and user API. Is that
->>> used by applications anywhere, or can that be removed and so the
->>> rest of the infrastructure get removed and the fcntl()s no-op'd or
->>> -EOPNOTSUPP?
->>
->> I was told it is used quite heavily in android.
-> 
-> So it's primarily used by out of tree code? And that after this
-> patch, there's really no way to test that this API does anything
-> useful at all?
+Hi Jens,
 
-Hi Dave,
+I have technical problem to send patches via email this time, please 
+consider to pull the bcache changes from my bcache tree. They can be 
+applied on top of your for-5.18/drivers branch.
 
-Android kernel developers follow the "upstream first" policy for core kernel 
-code (this means all kernel code other than kernel drivers that implement 
-support for the phone SoC). As a result, the Android 13 F2FS implementation is 
-very close to the upstream F2FS code. So the statement above about "out of tree 
-code" is not correct.
+We have 2 patches for Linux v5.18, both of them are from Mingzhe Zou. 
+The first patch improves bcache initialization speed by avoid 
+unnecessary cost of cache consistency, the second one fixes a potential 
+NULL pointer deference in bcache initialization time,
 
-Bart.
+Please take them for Linux v5.18, thanks in advance.
+
+Coly Li
+
+
+The following changes since commit dcde98da997075053041942ecf97d787855722ec:
+
+   Merge branch 'for-linus' of 
+git://git.kernel.org/pub/scm/linux/kernel/git/dtor/input (2022-03-05 
+15:49:45 -0800)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/colyli/linux-bcache.git/ 
+for-next
+
+for you to fetch changes up to 387ac428d163b6fffa923618624505e7afe0b53d:
+
+   bcache: fixup multiple threads crash (2022-03-06 18:14:43 +0800)
+
+----------------------------------------------------------------
+Mingzhe Zou (2):
+       bcache: fixup bcache_dev_sectors_dirty_add() multithreaded CPU 
+false sharing
+       bcache: fixup multiple threads crash
+
+  drivers/md/bcache/btree.c     |  6 ++++--
+  drivers/md/bcache/writeback.c | 17 +++++++++++------
+  2 files changed, 15 insertions(+), 8 deletions(-)
