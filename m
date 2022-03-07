@@ -2,112 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD2DC433EF
-	for <linux-raid@archiver.kernel.org>; Mon,  7 Mar 2022 13:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B890AC433EF
+	for <linux-raid@archiver.kernel.org>; Mon,  7 Mar 2022 14:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242843AbiCGNnv (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Mar 2022 08:43:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35506 "EHLO
+        id S237594AbiCGOUL (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Mar 2022 09:20:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231285AbiCGNnu (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Mar 2022 08:43:50 -0500
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0489D3153D
-        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 05:42:56 -0800 (PST)
-Received: by mail-pg1-x52a.google.com with SMTP id w37so13590115pga.7
-        for <linux-raid@vger.kernel.org>; Mon, 07 Mar 2022 05:42:55 -0800 (PST)
+        with ESMTP id S232301AbiCGOUK (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Mar 2022 09:20:10 -0500
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 106523A184
+        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 06:19:16 -0800 (PST)
+Received: by mail-ej1-x634.google.com with SMTP id kt27so32397316ejb.0
+        for <linux-raid@vger.kernel.org>; Mon, 07 Mar 2022 06:19:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=dO6x0urderFyV2KEmYHOZGi+h8qzVo3thAZZhX59WVI=;
-        b=5ivy39D4HyOHzg3oXUga22rP3KTFbBIawIRKB8iyjtZt6Z58pqc4Vql+X/c079mPEJ
-         f46YzW+GeFbCYLaUqhF8sKcWOG7kD0I6IAOSSvNUN25urxnis6OsYxY004mMcZ7s8Ot6
-         Cv40ygftIN8yDAI7xlnfg/uCigTwKBqyuwZcEuTsz996r2SqMANbP8/hilAuT89IyDnb
-         WDuKNZ/1/Ni+EBzc2RTEpBTQosuTWCnL43mmiICwJHjHdRofOxPPziZaIADND/ymXIH7
-         tzcUUP6N+Xo2Ct9hWPxVf5lBpRv8YJIceX/H68gQoUM3KU1za/aPz5aLYjJdmyuMB5mY
-         FICA==
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:to:references:from
+         :in-reply-to:content-transfer-encoding;
+        bh=VqMjXfW3DCCJ+9PbeG8/H+/I5ijzaS6z6cL2qigdRsU=;
+        b=hoPqpDYQIaTU8qe3YtB1QI/lq4e0X2jC+SRv1ZlFZlIUMEe6P47+Zwsv6IjELrXg0A
+         IRQfXLYlrnHVObZnpOpeTFt1NaDOJNx7Sp7FrrqJD94uWv34FLIh9rLdf1ph9w9VJgnN
+         CM9G5P/bOueubC0yIj5ob0g1zwuGKNhuJfqv7oNFvg/mYHVg2extat04K0IpbFTYoVBJ
+         vFvPXTKIMGgk96r1KQ4TIaIUmyLHFmnZn3X981sDaJ6hU6nPQLdjSBYhDK9wjlMPRDS7
+         r5fF8lA5MBhYi+WaOCtje26vxJe6tbrNARPKSW1ziYjowNLoD7FVtKjNGciebqS7ruqf
+         fwAg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=dO6x0urderFyV2KEmYHOZGi+h8qzVo3thAZZhX59WVI=;
-        b=qur19+INMgjC73UH6T+2FDZ7Ba6DOWqZCpsVMW1KI81abUeQORMpcRwvHXExoQ33jI
-         CtgV0mZ3zeOmWtpglSR5kAWQL3x4A9m0uwZI/pAUbo0Rw6lWrb+eJ6Rz+V+1js3ungf/
-         XLFakqJDII5ZQz4axfZFT/zX39sYSjo4UnbS3rDKKbkj2yxGD2lr+JQ3Ljfn3C1Ca7bL
-         ddkl20p14elgTvGTR97BVbL9nOVt61r61l8Ozs6YXLBtfTjnloAeVf5nInFFNbW3c9Gc
-         RB24WrOkwA0uvMjZbIcKV53VmmlmHdy03dQaGrK8dFg9K1KWPilq4yuWE4R0REX5qiDX
-         lEhw==
-X-Gm-Message-State: AOAM531SDd9rSEYkfd68j2DOUVtB2U+G7QFzM3m8DLUZ1blxMnsPHCY2
-        pj0xl9pgVARpumAnFZVzEaSD6CpZRNp/FhYk
-X-Google-Smtp-Source: ABdhPJw5/FtlFVkWiR7cSvl2rHTtKJ6vmy5dszUzno3/VlrXoUuSSW3LtUf6Iv+dMHFIDtyxNHJnyA==
-X-Received: by 2002:a63:6908:0:b0:372:d919:82ed with SMTP id e8-20020a636908000000b00372d91982edmr10020149pgc.104.1646660575327;
-        Mon, 07 Mar 2022 05:42:55 -0800 (PST)
-Received: from [127.0.1.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id 78-20020a621451000000b004f6e8a033b5sm6745253pfu.142.2022.03.07.05.42.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Mar 2022 05:42:54 -0800 (PST)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     dm-devel@redhat.com, linux-block@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>, Song Liu <song@kernel.org>
-In-Reply-To: <20220304180105.409765-1-hch@lst.de>
-References: <20220304180105.409765-1-hch@lst.de>
-Subject: Re: remove bio_devname
-Message-Id: <164666057398.15541.7415780807920631127.b4-ty@kernel.dk>
-Date:   Mon, 07 Mar 2022 06:42:53 -0700
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :to:references:from:in-reply-to:content-transfer-encoding;
+        bh=VqMjXfW3DCCJ+9PbeG8/H+/I5ijzaS6z6cL2qigdRsU=;
+        b=VOQb2qtcv8lE2CVZl1dy9LPDnCO3lf4tz4ifyx6Mf8g2j5cpruTke6gH3whYRF2bh0
+         fOICkB/Ks1H0DPv50q2B0CHfJ/GFTiAwUxmWqUSEHgx+D/MwbRZT16+dzWW6wNdpxDjl
+         8fUtGffWlEl5U/RKVd6Q9C/hVBLIcWGVu9VLFuxAuGOycWSYlTDAPzCuj6JhvIrvsiSt
+         yCp6Tgkjm684ndAzdF/k7PSpQq1eQbJ8h1oZX9WP6sUW6TvNd/NBjEXytBrjbqd1RVec
+         BOpOcD+ubbCSN9d02pxwwCHvz2e8wckB91YOuk7XYAsApzxyAphRgL2zkjhuMvbaTyvc
+         /8Mg==
+X-Gm-Message-State: AOAM532l+K7l3K0hLDQVZxEPehXo8kH/iJGM9gyrtXEP3XrkBIZC1NbW
+        X38DOzxMeCaBw+o7koveVXg/mPrus4Mmhw==
+X-Google-Smtp-Source: ABdhPJxkEUis4rXAJf+BSCJiuWZhmOmUMl7qHrz+OozvioJDCoLDISehGFH2AGrJ+eqixmXg5Rxomg==
+X-Received: by 2002:a17:906:6d09:b0:6b9:2e0e:5bdd with SMTP id m9-20020a1709066d0900b006b92e0e5bddmr9029027ejr.246.1646662754369;
+        Mon, 07 Mar 2022 06:19:14 -0800 (PST)
+Received: from ?IPV6:2a02:8109:8640:217c:10b4:80ba:ac1b:b250? ([2a02:8109:8640:217c:10b4:80ba:ac1b:b250])
+        by smtp.gmail.com with ESMTPSA id t19-20020a1709060c5300b006d582121f99sm4726508ejf.36.2022.03.07.06.19.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Mar 2022 06:19:13 -0800 (PST)
+Message-ID: <335f6238-9329-7616-051f-075706ac9022@gmail.com>
+Date:   Mon, 7 Mar 2022 15:19:13 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: striping 2x500G to mirror 1x1T
+To:     David T-G <davidtg-robot@justpickone.org>,
+        Linux RAID <linux-raid@vger.kernel.org>
+References: <20220305044704.GB4455@justpickone.org>
+From:   Natanji <natanji@gmail.com>
+In-Reply-To: <20220305044704.GB4455@justpickone.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 4 Mar 2022 19:00:55 +0100, Christoph Hellwig wrote:
-> this series removes the bio_devname helper and just switches all users
-> to use the %pg format string directly.
-> 
-> Diffstat
->  block/bio.c               |    6 ------
->  block/blk-core.c          |   25 +++++++------------------
->  drivers/block/pktcdvd.c   |    9 +--------
->  drivers/md/dm-crypt.c     |   10 ++++------
->  drivers/md/dm-integrity.c |    5 ++---
->  drivers/md/md-multipath.c |    9 ++++-----
->  drivers/md/raid1.c        |    5 ++---
->  drivers/md/raid5-ppl.c    |   13 ++++---------
->  fs/ext4/page-io.c         |    5 ++---
->  include/linux/bio.h       |    2 --
->  10 files changed, 26 insertions(+), 63 deletions(-)
-> 
-> [...]
+Hello David,
+what you propose here should work, but be aware that you are essentially 
+first writing all data to the 2 smaller drives and then reading from 
+them only when the mirror 1 TB disk gets added. If there are bad sectors 
+that only gets dicovered while reading (not writing), you might lose 
+data. A much cleaner way would be to make a backup of your data disk and 
+then first crate the array with all disks, then write the data back from 
+your backup once the disks are in sync. You should definitely make a 
+backup or you could potentially lose data when creating this array.
 
-Applied, thanks!
+I don't see the benefit of striping in your setup, by the way. For the 
+two smaller disks it might seem that this is beneficial for performance, 
+but since every write also needs to be made on the mirror, this will 
+essentially lead to your read/write head moving back and forth a lot, 
+no? Because if you write four consecutive chunks C1-C4 on the striped 
+side, two of these would be written to each smaller disk. And on the 1 
+TB disk side this would mean writing the sectors with only one 
+read/write head, each around 500GB apart from each other, and in a back 
+and worth fashion (although that might be optimized by queuing). So your 
+write performance could actually be *worse* than on a single drive, and 
+definitely not gain the 2x speed benefit of striping. For read 
+performance you might be okay, but nevertheless put unneccessary 
+mechanical wear on your 1 TB drive.
 
-[01/10] block: fix and cleanup bio_check_ro
-        commit: 57e95e4670d1126c103305bcf34a9442f49f6d6a
-[02/10] block: remove handle_bad_sector
-        commit: ad740780bbc2fe37856f944dbbaff07aac9db9e3
-[03/10] pktcdvd: remove a pointless debug check in pkt_submit_bio
-        commit: 47c426d5241795cfcd9be748c44d1b2e2987ce70
-[04/10] dm-crypt: stop using bio_devname
-        commit: 66671719650085f92fd460d2a356c33f9198dd35
-[05/10] dm-integrity: stop using bio_devname
-        commit: 0a806cfde82fcd1fb856864e33d17c68d1b51dee
-[06/10] md-multipath: stop using bio_devname
-        commit: ee1925bd834418218c782c94e889f826d40b14d5
-[07/10] raid1: stop using bio_devname
-        commit: ac483eb375fa4a815a515945a5456086c197430e
-[08/10] raid5-ppl: stop using bio_devname
-        commit: c7dec4623c9cde20dad8de319d177ed6aa382aaa
-[09/10] ext4: stop using bio_devname
-        commit: 734294e47a2ec48fd25dcf2d96cdf2c6c6740c00
-[10/10] block: remove bio_devname
-        commit: 97939610b893de068c82c347d06319cd231a4602
+[C1 C3 ....] 500GB-1      [C2 C4 ....] 500GB-2
+[C1 C3 ... (500G space)  C2 C4 ....] 1TB
+
+At least that's my understanding, someone correct me if I'm wrong and 
+mdadm handles such setups more intelligently (i.e. by laying out the 
+chunks completely linearly on the 1TB disk instead of 1-to-1 "mirroring" 
+the chunks on the 2x500G RAID0). If you think I'm correct, then instead 
+of striping I would just use linear mode on the 500GB disks to pool them 
+into one large volume, and thus essentially get Raid1 speed benefits of 
+double read performance compared to a single drive. This has the 
+downside of putting very different wear on the two 500GB volumes, of course.
 
 Best regards,
--- 
-Jens Axboe
+Natanji
 
-
+Am 05.03.2022 um 05:47 schrieb David T-G:
+> Hi, all --
+>
+> I have a 1T data drive (currently in use with data) that I'd like to
+> mirror with a pair of 500G drives striped together.  I'll be mirroring
+> two partitions, and I'll be striping partitions to ensure the correct
+> size, and my understanding is that I'll have to create the mirror on the
+> two new drives with half missing, mount it up, copy over the data, dump
+> the original disk, and add it as the other half of the mirror to sync.
+> If I've missed anything there, please let me know, but all of that
+> matches my Googling and I don't think I have any questions.
+>
+> What I do wonder, and what I don't see in any searches since apparently
+> nobody talks about striping up half of a mirror, is if I should do
+> anything special with my two-disk RAID0 stripe.  I was gobsmacked at
+> the simplicity of RAID10 on only two drives by splitting each in half
+> and "flipping" one to maximize head movement performance.  Awesome! :-)
+> Are there any brilliant hacks for simple striping?  If I'm just putting
+> together two [not terribly large] disks, will I benefit from any other
+> funny stuff, or should I just stripe together two partitions -- each
+> half the size of my other drive, of course -- to make a "boring basic"
+> stripe and run with that?
+>
+>
+> TIA & HANW
+>
+> :-D
