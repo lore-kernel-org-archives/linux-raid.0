@@ -2,196 +2,127 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72FBFC433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 02:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78018C433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 05:44:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243513AbiCHCNJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Mar 2022 21:13:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41658 "EHLO
+        id S237711AbiCHFpR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Mar 2022 00:45:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344367AbiCHCNH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Mar 2022 21:13:07 -0500
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B7022BDF
-        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 18:12:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646705532; x=1678241532;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=MONcJ+SWTLGtF6OsqGcVzwToMol7RVMGVDC7fyqBNJM=;
-  b=jm0T3jYb6hGBiop2JpXWcjL/6mF+b7xVMsb1ZWgCg+MWEfv+32dj6ggS
-   KZqccQrVJW0S//pehe03Ig41F2NPRFFyKpFhpwvou4QE5vPFCej69H2by
-   et4YvXObxDHAXra08fJ50eifOd2nGCMeyv7lWTmiPQje1Yskz54IXdGf9
-   Y/ZAzSeALEkkF9g7O8VrFUs1E7FiQYkEigtSC3itohHTaj3JSdoME47d8
-   aL4hULgZjrpD8siZtJXLamgRcEWDiufZ4bKo5qcG72dQETK4Ps78br92F
-   1QZbgbMcgJ4GG41I3RI7hMUaErFigyJ6goie7oKRnpip96SDFb5rTCefJ
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10279"; a="279277834"
-X-IronPort-AV: E=Sophos;i="5.90,163,1643702400"; 
-   d="scan'208";a="279277834"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2022 18:12:12 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,163,1643702400"; 
-   d="scan'208";a="687759257"
-Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
-  by fmsmga001.fm.intel.com with ESMTP; 07 Mar 2022 18:12:11 -0800
-Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nRPKc-0000rR-A7; Tue, 08 Mar 2022 02:12:10 +0000
-Date:   Tue, 08 Mar 2022 10:11:48 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Song Liu <song@kernel.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: [song-md:md-next] BUILD SUCCESS
- 0a43d103a1779d768bc52be4613f59d7c00c9a8a
-Message-ID: <6226bb64.wdysGf0x6jy4bWT6%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S232397AbiCHFpQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 00:45:16 -0500
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD763BA7D
+        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 21:44:19 -0800 (PST)
+Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1nRSdt-0001Fo-7F; Tue, 08 Mar 2022 06:44:17 +0100
+Message-ID: <2f516c43-b357-70d2-9c49-9633e8a4aa76@leemhuis.info>
+Date:   Tue, 8 Mar 2022 06:44:16 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: Raid6 check performance regression 5.15 -> 5.16
+Content-Language: en-US
+To:     Larkin Lowrey <llowrey@nuclearwinter.com>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+References: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+In-Reply-To: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1646718259;c58b755b;
+X-HE-SMSGID: 1nRSdt-0001Fo-7F
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
-branch HEAD: 0a43d103a1779d768bc52be4613f59d7c00c9a8a  md: use msleep() in md_notify_reboot()
+[TLDR: I'm adding the regression report below to regzbot, the Linux
+kernel regression tracking bot; all text you find below is compiled from
+a few templates paragraphs you might have encountered already already
+from similar mails.]
 
-elapsed time: 5487m
+On 07.03.22 19:15, Larkin Lowrey wrote:
+> I am seeing a 'check' speed regression between kernels 5.15 and 5.16.
+> One host with a 20 drive array went from 170MB/s to 11MB/s. Another host
+> with a 15 drive array went from 180MB/s to 43MB/s. In both cases the
+> arrays are almost completely idle. I can flip between the two kernels
+> with no other changes and observe the performance changes.
+> 
+> Is this a known issue?
 
-configs tested: 118
-configs skipped: 3
+Hi, this is your Linux kernel regression tracker.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks for the report.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20220307
-mips                 randconfig-c004-20220307
-powerpc                     pq2fads_defconfig
-ia64                          tiger_defconfig
-m68k                        m5272c3_defconfig
-arm                        multi_v7_defconfig
-um                             i386_defconfig
-sh                               alldefconfig
-mips                     loongson1b_defconfig
-powerpc                      ppc40x_defconfig
-powerpc                    amigaone_defconfig
-sh                           se7724_defconfig
-arm                           tegra_defconfig
-openrisc                 simple_smp_defconfig
-xtensa                         virt_defconfig
-mips                         db1xxx_defconfig
-arm                      jornada720_defconfig
-powerpc                    klondike_defconfig
-arm                         vf610m4_defconfig
-arm                          exynos_defconfig
-arm                           h3600_defconfig
-mips                         rt305x_defconfig
-powerpc                    adder875_defconfig
-powerpc                     tqm8555_defconfig
-sh                          lboxre2_defconfig
-arm                  randconfig-c002-20220307
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-h8300                            allyesconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc64                            defconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a006-20220307
-x86_64               randconfig-a004-20220307
-x86_64               randconfig-a005-20220307
-x86_64               randconfig-a001-20220307
-x86_64               randconfig-a003-20220307
-x86_64               randconfig-a002-20220307
-i386                 randconfig-a005-20220307
-i386                 randconfig-a004-20220307
-i386                 randconfig-a003-20220307
-i386                 randconfig-a006-20220307
-i386                 randconfig-a002-20220307
-i386                 randconfig-a001-20220307
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-riscv                    nommu_virt_defconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-x86_64                                  kexec
+CCing the regression mailing list, as it should be in the loop for all
+regressions, as explained here:
+https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html
 
-clang tested configs:
-x86_64               randconfig-c007-20220307
-i386                 randconfig-c001-20220307
-powerpc              randconfig-c003-20220307
-riscv                randconfig-c006-20220307
-mips                 randconfig-c004-20220307
-arm                  randconfig-c002-20220307
-s390                 randconfig-c005-20220307
-arm                       imx_v4_v5_defconfig
-x86_64                           allyesconfig
-mips                           rs90_defconfig
-powerpc                     tqm8540_defconfig
-powerpc                      ppc64e_defconfig
-powerpc                      obs600_defconfig
-arm                        magician_defconfig
-x86_64               randconfig-a016-20220307
-x86_64               randconfig-a012-20220307
-x86_64               randconfig-a015-20220307
-x86_64               randconfig-a013-20220307
-x86_64               randconfig-a014-20220307
-x86_64               randconfig-a011-20220307
-i386                 randconfig-a012-20220307
-i386                 randconfig-a013-20220307
-i386                 randconfig-a015-20220307
-i386                 randconfig-a011-20220307
-i386                 randconfig-a014-20220307
-i386                 randconfig-a016-20220307
-hexagon              randconfig-r045-20220307
-riscv                randconfig-r042-20220307
-hexagon              randconfig-r041-20220307
+To be sure below issue doesn't fall through the cracks unnoticed, I'm
+adding it to regzbot, my Linux kernel regression tracking bot:
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+#regzbot ^introduced v5.15..v5.16
+#regzbot title md: Raid6 check performance regression
+#regzbot ignore-activity
+
+If it turns out this isn't a regression, free free to remove it from the
+tracking by sending a reply to this thread containing a paragraph like
+"#regzbot invalid: reason why this is invalid" (without the quotes).
+
+Reminder for developers: when fixing the issue, please add a 'Link:'
+tags pointing to the report (the mail quoted above) using
+lore.kernel.org/r/, as explained in
+'Documentation/process/submitting-patches.rst' and
+'Documentation/process/5.Posting.rst'. Regzbot needs them to
+automatically connect reports with fixes, but they are useful in
+general, too.
+
+I'm sending this to everyone that got the initial report, to make
+everyone aware of the tracking. I also hope that messages like this
+motivate people to directly get at least the regression mailing list and
+ideally even regzbot involved when dealing with regressions, as messages
+like this wouldn't be needed then. And don't worry, if I need to send
+other mails regarding this regression only relevant for regzbot I'll
+send them to the regressions lists only (with a tag in the subject so
+people can filter them away). With a bit of luck no such messages will
+be needed anyway.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+
+P.S.: As the Linux kernel's regression tracker I'm getting a lot of
+reports on my table. I can only look briefly into most of them and lack
+knowledge about most of the areas they concern. I thus unfortunately
+will sometimes get things wrong or miss something important. I hope
+that's not the case here; if you think it is, don't hesitate to tell me
+in a public reply, it's in everyone's interest to set the public record
+straight.
+
+-- 
+Additional information about regzbot:
+
+If you want to know more about regzbot, check out its web-interface, the
+getting start guide, and the references documentation:
+
+https://linux-regtracking.leemhuis.info/regzbot/
+https://gitlab.com/knurd42/regzbot/-/blob/main/docs/getting_started.md
+https://gitlab.com/knurd42/regzbot/-/blob/main/docs/reference.md
+
+The last two documents will explain how you can interact with regzbot
+yourself if your want to.
+
+Hint for reporters: when reporting a regression it's in your interest to
+CC the regression list and tell regzbot about the issue, as that ensures
+the regression makes it onto the radar of the Linux kernel's regression
+tracker -- that's in your interest, as it ensures your report won't fall
+through the cracks unnoticed.
+
+Hint for developers: you normally don't need to care about regzbot once
+it's involved. Fix the issue as you normally would, just remember to
+include 'Link:' tag in the patch descriptions pointing to all reports
+about the issue. This has been expected from developers even before
+regzbot showed up for reasons explained in
+'Documentation/process/submitting-patches.rst' and
+'Documentation/process/5.Posting.rst'.
+
