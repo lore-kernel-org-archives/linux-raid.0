@@ -2,649 +2,120 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D93DC43217
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 06:16:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6510C433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 09:41:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344468AbiCHGRW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Mar 2022 01:17:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45066 "EHLO
+        id S1345388AbiCHJmR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Mar 2022 04:42:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344429AbiCHGRN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 01:17:13 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 874BD33E10;
-        Mon,  7 Mar 2022 22:16:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=ukAE8v1o8hTcbAf78eA6QmHVJ9Rq1Gt2GG+fclRvpYA=; b=gKuAg7kAfWjq3WPG00iFq7gHYh
-        1CiUUtCwzh5x4ELwdu6l5CQjIv8/UE+CK6+OPHVqRpkfoKKQo8Vl/VSaWVVjDndmPqITVr+vOFWu3
-        efgzmRzD/64O9OvUr6Y4AK9BovlqyHMwuLLYU6F+LpipUG44HHJYsSGqM5ipuWmjWuRSXiXzGGURN
-        CfSuwYhC5M4wlia1LwHqpRo+sG0NFtEWDu4gdSfKNbrOQVcvIKTQkKXjewjEe1wcGD/ozE1U5adDA
-        eoqPh5+6L2o3+vyaqYiIgjvmHW1gtdRQaYWnkO2RfTRk4Q5eiZKlz9k33uKjrLgAUHyRd1SxT/7eD
-        ipALGRYA==;
-Received: from [2001:4bb8:184:7746:6f50:7a98:3141:c37b] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nRT8f-002lWN-0h; Tue, 08 Mar 2022 06:16:05 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Subject: [PATCH 4/5] block: turn bio_kmalloc into a simple kmalloc wrapper
-Date:   Tue,  8 Mar 2022 07:15:50 +0100
-Message-Id: <20220308061551.737853-5-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220308061551.737853-1-hch@lst.de>
-References: <20220308061551.737853-1-hch@lst.de>
+        with ESMTP id S237159AbiCHJmQ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 04:42:16 -0500
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0068931511
+        for <linux-raid@vger.kernel.org>; Tue,  8 Mar 2022 01:41:19 -0800 (PST)
+Received: by mail-wr1-x434.google.com with SMTP id j26so17137840wrb.1
+        for <linux-raid@vger.kernel.org>; Tue, 08 Mar 2022 01:41:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=jrNNpWlY0stgMR4quabXg7igmoHPmedwMyUXaBM7TZ4=;
+        b=bUPTeTCWMUNbZiVpTV3ySj27HasaXAPEonSBbYlnb2/o5zfhLnxeMkxyKedcmY0JzP
+         ThJX/kceldj/k+o/Uqg71Krwdxj/Q86al5qI1Sr6dvOAcJCa4PGYY9H7I4RIQFJZXWOe
+         a5dI7ODOthkcmdQ+4+2Z0mg5/RdvfdUxZALAqe8EKOm3o0AYW+TJEwfoSNdjRHGqYO9Q
+         aTGUoOR8MRXv5uaiS+kF+ja/1Yue27SVFbGMqsf41KmQ4Y5/3iZ8E5WwtFjhwYreBnrQ
+         2jMf0AIBsVKEACcZo0WGzyc9tgu90N/XfGd2DNU3m0ZsPVF64C1A2C7NZNwpRDyOwA9v
+         lnjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:content-transfer-encoding:user-agent:mime-version;
+        bh=jrNNpWlY0stgMR4quabXg7igmoHPmedwMyUXaBM7TZ4=;
+        b=FfxIBtOomId5JYpb34I3sLkUz1raVfCCWSK/RcbCzvIO7K8dkj+tVeF6FQS8/2gYaU
+         jymVUbPezYkzGgYu/9fOX0gdhdsbQHwF5M+6WWIqhWWTqPqV0KzQlXLut+CzBtfE7oI0
+         v23WP/SxxGEV8t069g6+nlBVHXIFNJ7DenPbnknuwuxg9bUR2gGgTFJJNO4LxjbI58eL
+         VZWw1yrC+w9iB8QZefmUZOsmjoJUKSXvLqTTrV/kG7C3O2ytU8TuVibT1UAEGC7LXqs/
+         splrvEf8r38xHoK8+0qIYwY0R6Fn4e5C09OfWzZCPXz63CT7YrcAw472rvyXweGBunjR
+         S40A==
+X-Gm-Message-State: AOAM5316bmz++LU60rdzLpBARkdSWSXvRFB7b4LW6ldU6qV3pGgAT/sm
+        uciPCobVdVyZNqxGwkW6/MB34OVRvqs=
+X-Google-Smtp-Source: ABdhPJzymZ+8XinX+gGfmkEwincNU36hSYMqFoK+y8Ucg0LW9FCBe//zn3Jsa239x1iR2QhwnGF4YA==
+X-Received: by 2002:adf:ab09:0:b0:1f0:1208:5123 with SMTP id q9-20020adfab09000000b001f012085123mr11367270wrc.146.1646732478406;
+        Tue, 08 Mar 2022 01:41:18 -0800 (PST)
+Received: from www.Debian-Testing-WilsonJTR4 ([213.31.80.52])
+        by smtp.gmail.com with ESMTPSA id o11-20020adf9d4b000000b001f0077ea337sm13897118wre.22.2022.03.08.01.41.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Mar 2022 01:41:18 -0800 (PST)
+Message-ID: <1da6073c37b772a7171504272030af642e72b1d1.camel@gmail.com>
+Subject: Re: Raid6 check performance regression 5.15 -> 5.16
+From:   Wilson Jonathan <i400sjon@gmail.com>
+To:     Larkin Lowrey <llowrey@nuclearwinter.com>,
+        linux-raid <linux-raid@vger.kernel.org>
+Date:   Tue, 08 Mar 2022 09:41:17 +0000
+In-Reply-To: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
+References: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.43.2-2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Remove the magic autofree semantics and require the callers to explicitly
-call bio_init to initialize the bio.
+On Mon, 2022-03-07 at 13:15 -0500, Larkin Lowrey wrote:
+> I am seeing a 'check' speed regression between kernels 5.15 and 5.16.
+> One host with a 20 drive array went from 170MB/s to 11MB/s. Another
+> host=20
+> with a 15 drive array went from 180MB/s to 43MB/s. In both cases the=20
+> arrays are almost completely idle. I can flip between the two kernels
+> with no other changes and observe the performance changes.
 
-This allows bio_free to catch accidental bio_put calls on bio_init()ed
-bios as well.
+I am also seeing a huge slowdown on Debian using 5.16.0-3-amd64.
+Normally my monthly scrub would take from 1am till about 10am.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/bio.c                        | 47 ++++++++++++------------------
- block/blk-crypto-fallback.c        | 14 +++++----
- block/blk-map.c                    | 42 ++++++++++++++++----------
- drivers/block/pktcdvd.c            | 25 ++++++++--------
- drivers/md/bcache/debug.c          | 10 ++++---
- drivers/md/dm-bufio.c              |  9 +++---
- drivers/md/raid1.c                 | 12 +++++---
- drivers/md/raid10.c                | 21 ++++++++-----
- drivers/target/target_core_pscsi.c | 10 +++----
- fs/squashfs/block.c                |  9 +++---
- include/linux/bio.h                |  2 +-
- 11 files changed, 108 insertions(+), 93 deletions(-)
+This was a consistent timing which its been doing for close to two
+years without fail. The check speed would start in the 130MB-ish range
+and eventually slow to about 90MB-ish the closer to finishing it got.
+The disks are WD RED's (the non-dodgy ones) WDC WD40EFRX-68N32N0 and
+there are 6 of them in raid6 (no spares). There are no abnormal
+smartctl figures (such as RRER, MZER, etc.) showing so its not one
+starting to fail.
 
-diff --git a/block/bio.c b/block/bio.c
-index 151cace2dbe16..1fe243e61e55d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -224,24 +224,13 @@ EXPORT_SYMBOL(bio_uninit);
- static void bio_free(struct bio *bio)
- {
- 	struct bio_set *bs = bio->bi_pool;
--	void *p;
--
--	bio_uninit(bio);
-+	void *p = bio;
- 
--	if (bs) {
--		bvec_free(&bs->bvec_pool, bio->bi_io_vec, bio->bi_max_vecs);
-+	WARN_ON_ONCE(!bs);
- 
--		/*
--		 * If we have front padding, adjust the bio pointer before freeing
--		 */
--		p = bio;
--		p -= bs->front_pad;
--
--		mempool_free(p, &bs->bio_pool);
--	} else {
--		/* Bio was allocated by bio_kmalloc() */
--		kfree(bio);
--	}
-+	bio_uninit(bio);
-+	bvec_free(&bs->bvec_pool, bio->bi_io_vec, bio->bi_max_vecs);
-+	mempool_free(p - bs->front_pad, &bs->bio_pool);
- }
- 
- /*
-@@ -529,28 +518,28 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
- EXPORT_SYMBOL(bio_alloc_bioset);
- 
- /**
-- * bio_kmalloc - kmalloc a bio for I/O
-+ * bio_kmalloc - kmalloc a bio
-+ * @nr_vecs:	number of bio_vecs to allocate
-  * @gfp_mask:   the GFP_* mask given to the slab allocator
-- * @nr_iovecs:	number of iovecs to pre-allocate
-  *
-- * Use kmalloc to allocate and initialize a bio.
-+ * Use kmalloc to allocate a bio (including bvecs).  The bio must be initialized
-+ * using bio_init() before use.  To free a bio returned from this function use
-+ * kfree() after calling bio_uninit().  A bio returned from this function can
-+ * be reused by calling bio_uninit() before calling bio_init() again.
-+ *
-+ * Note that unlike bio_alloc() or bio_alloc_bioset() allocations from this
-+ * function are not backed by a mempool can can fail.  Do not use this function
-+ * for allocations in the file system I/O path.
-  *
-  * Returns: Pointer to new bio on success, NULL on failure.
-  */
--struct bio *bio_kmalloc(gfp_t gfp_mask, unsigned short nr_iovecs)
-+struct bio *bio_kmalloc(unsigned short nr_vecs, gfp_t gfp_mask)
- {
- 	struct bio *bio;
- 
--	if (nr_iovecs > UIO_MAXIOV)
-+	if (nr_vecs > UIO_MAXIOV)
- 		return NULL;
--
--	bio = kmalloc(struct_size(bio, bi_inline_vecs, nr_iovecs), gfp_mask);
--	if (unlikely(!bio))
--		return NULL;
--	bio_init(bio, NULL, nr_iovecs ? bio->bi_inline_vecs : NULL, nr_iovecs,
--		 0);
--	bio->bi_pool = NULL;
--	return bio;
-+	return kmalloc(struct_size(bio, bi_inline_vecs, nr_vecs), gfp_mask);
- }
- EXPORT_SYMBOL(bio_kmalloc);
- 
-diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index 18c8eafe20b94..1a624b75da94f 100644
---- a/block/blk-crypto-fallback.c
-+++ b/block/blk-crypto-fallback.c
-@@ -152,23 +152,25 @@ static void blk_crypto_fallback_encrypt_endio(struct bio *enc_bio)
- 
- 	src_bio->bi_status = enc_bio->bi_status;
- 
--	bio_put(enc_bio);
-+	bio_uninit(enc_bio);
-+	kfree(enc_bio);
- 	bio_endio(src_bio);
- }
- 
- static struct bio *blk_crypto_fallback_clone_bio(struct bio *bio_src)
- {
-+	unsigned int nr_segs = bio_segments(bio_src);
- 	struct bvec_iter iter;
- 	struct bio_vec bv;
- 	struct bio *bio;
- 
--	bio = bio_kmalloc(GFP_NOIO, bio_segments(bio_src));
-+	bio = bio_kmalloc(nr_segs, GFP_NOIO);
- 	if (!bio)
- 		return NULL;
--	bio->bi_bdev		= bio_src->bi_bdev;
-+	bio_init(bio, bio_src->bi_bdev, bio->bi_inline_vecs, nr_segs,
-+		 bio_src->bi_opf);
- 	if (bio_flagged(bio_src, BIO_REMAPPED))
- 		bio_set_flag(bio, BIO_REMAPPED);
--	bio->bi_opf		= bio_src->bi_opf;
- 	bio->bi_ioprio		= bio_src->bi_ioprio;
- 	bio->bi_write_hint	= bio_src->bi_write_hint;
- 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
-@@ -364,8 +366,8 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	blk_crypto_put_keyslot(slot);
- out_put_enc_bio:
- 	if (enc_bio)
--		bio_put(enc_bio);
--
-+		bio_uninit(enc_bio);
-+	kfree(enc_bio);
- 	return ret;
- }
- 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 4526adde01564..59be60e69e7af 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -152,10 +152,10 @@ static int bio_copy_user_iov(struct request *rq, struct rq_map_data *map_data,
- 	nr_pages = bio_max_segs(DIV_ROUND_UP(offset + len, PAGE_SIZE));
- 
- 	ret = -ENOMEM;
--	bio = bio_kmalloc(gfp_mask, nr_pages);
-+	bio = bio_kmalloc(nr_pages, gfp_mask);
- 	if (!bio)
- 		goto out_bmd;
--	bio->bi_opf |= req_op(rq);
-+	bio_init(bio, NULL, bio->bi_inline_vecs, nr_pages, req_op(rq));
- 
- 	if (map_data) {
- 		nr_pages = 1 << map_data->page_order;
-@@ -224,7 +224,8 @@ static int bio_copy_user_iov(struct request *rq, struct rq_map_data *map_data,
- cleanup:
- 	if (!map_data)
- 		bio_free_pages(bio);
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- out_bmd:
- 	kfree(bmd);
- 	return ret;
-@@ -234,6 +235,7 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
- 		gfp_t gfp_mask)
- {
- 	unsigned int max_sectors = queue_max_hw_sectors(rq->q);
-+	unsigned int nr_vecs = iov_iter_npages(iter, BIO_MAX_VECS);
- 	struct bio *bio;
- 	int ret;
- 	int j;
-@@ -241,10 +243,10 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
- 	if (!iov_iter_count(iter))
- 		return -EINVAL;
- 
--	bio = bio_kmalloc(gfp_mask, iov_iter_npages(iter, BIO_MAX_VECS));
-+	bio = bio_kmalloc(nr_vecs, gfp_mask);
- 	if (!bio)
- 		return -ENOMEM;
--	bio->bi_opf |= req_op(rq);
-+	bio_init(bio, NULL, bio->bi_inline_vecs, nr_vecs, req_op(rq));
- 
- 	while (iov_iter_count(iter)) {
- 		struct page **pages;
-@@ -303,7 +305,8 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
- 
-  out_unmap:
- 	bio_release_pages(bio, false);
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- 	return ret;
- }
- 
-@@ -323,7 +326,8 @@ static void bio_invalidate_vmalloc_pages(struct bio *bio)
- static void bio_map_kern_endio(struct bio *bio)
- {
- 	bio_invalidate_vmalloc_pages(bio);
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- }
- 
- /**
-@@ -348,9 +352,10 @@ static struct bio *bio_map_kern(struct request_queue *q, void *data,
- 	int offset, i;
- 	struct bio *bio;
- 
--	bio = bio_kmalloc(gfp_mask, nr_pages);
-+	bio = bio_kmalloc(nr_pages, gfp_mask);
- 	if (!bio)
- 		return ERR_PTR(-ENOMEM);
-+	bio_init(bio, NULL, bio->bi_inline_vecs, nr_pages, 0);
- 
- 	if (is_vmalloc) {
- 		flush_kernel_vmap_range(data, len);
-@@ -374,7 +379,8 @@ static struct bio *bio_map_kern(struct request_queue *q, void *data,
- 		if (bio_add_pc_page(q, bio, page, bytes,
- 				    offset) < bytes) {
- 			/* we don't support partial mappings */
--			bio_put(bio);
-+			bio_uninit(bio);
-+			kfree(bio);
- 			return ERR_PTR(-EINVAL);
- 		}
- 
-@@ -390,7 +396,8 @@ static struct bio *bio_map_kern(struct request_queue *q, void *data,
- static void bio_copy_kern_endio(struct bio *bio)
- {
- 	bio_free_pages(bio);
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- }
- 
- static void bio_copy_kern_endio_read(struct bio *bio)
-@@ -435,9 +442,10 @@ static struct bio *bio_copy_kern(struct request_queue *q, void *data,
- 		return ERR_PTR(-EINVAL);
- 
- 	nr_pages = end - start;
--	bio = bio_kmalloc(gfp_mask, nr_pages);
-+	bio = bio_kmalloc(nr_pages, gfp_mask);
- 	if (!bio)
- 		return ERR_PTR(-ENOMEM);
-+	bio_init(bio, NULL, bio->bi_inline_vecs, nr_pages, 0);
- 
- 	while (len) {
- 		struct page *page;
-@@ -471,7 +479,8 @@ static struct bio *bio_copy_kern(struct request_queue *q, void *data,
- 
- cleanup:
- 	bio_free_pages(bio);
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- 	return ERR_PTR(-ENOMEM);
- }
- 
-@@ -602,7 +611,8 @@ int blk_rq_unmap_user(struct bio *bio)
- 
- 		next_bio = bio;
- 		bio = bio->bi_next;
--		bio_put(next_bio);
-+		bio_uninit(next_bio);
-+		kfree(next_bio);
- 	}
- 
- 	return ret;
-@@ -648,8 +658,10 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
- 	bio->bi_opf |= req_op(rq);
- 
- 	ret = blk_rq_append_bio(rq, bio);
--	if (unlikely(ret))
--		bio_put(bio);
-+	if (unlikely(ret)) {
-+		bio_uninit(bio);
-+		kfree(bio);
-+	}
- 	return ret;
- }
- EXPORT_SYMBOL(blk_rq_map_kern);
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index e745fc29e55d8..5ab43f9027631 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -522,9 +522,10 @@ static struct packet_data *pkt_alloc_packet_data(int frames)
- 		goto no_pkt;
- 
- 	pkt->frames = frames;
--	pkt->w_bio = bio_kmalloc(GFP_KERNEL, frames);
-+	pkt->w_bio = bio_kmalloc(frames, GFP_KERNEL);
- 	if (!pkt->w_bio)
- 		goto no_bio;
-+	bio_init(pkt->w_bio, NULL, pkt->w_bio->bi_inline_vecs, frames, 0);
- 
- 	for (i = 0; i < frames / FRAMES_PER_PAGE; i++) {
- 		pkt->pages[i] = alloc_page(GFP_KERNEL|__GFP_ZERO);
-@@ -536,10 +537,10 @@ static struct packet_data *pkt_alloc_packet_data(int frames)
- 	bio_list_init(&pkt->orig_bios);
- 
- 	for (i = 0; i < frames; i++) {
--		struct bio *bio = bio_kmalloc(GFP_KERNEL, 1);
-+		struct bio *bio = bio_kmalloc(1, GFP_KERNEL);
- 		if (!bio)
- 			goto no_rd_bio;
--
-+		bio_init(bio, NULL, bio->bi_inline_vecs, 1, 0);
- 		pkt->r_bios[i] = bio;
- 	}
- 
-@@ -547,16 +548,16 @@ static struct packet_data *pkt_alloc_packet_data(int frames)
- 
- no_rd_bio:
- 	for (i = 0; i < frames; i++) {
--		struct bio *bio = pkt->r_bios[i];
--		if (bio)
--			bio_put(bio);
-+		if (pkt->r_bios[i])
-+			bio_uninit(pkt->r_bios[i]);
-+		kfree(pkt->r_bios[i]);
- 	}
--
- no_page:
- 	for (i = 0; i < frames / FRAMES_PER_PAGE; i++)
- 		if (pkt->pages[i])
- 			__free_page(pkt->pages[i]);
--	bio_put(pkt->w_bio);
-+	bio_uninit(pkt->w_bio);
-+	kfree(pkt->w_bio);
- no_bio:
- 	kfree(pkt);
- no_pkt:
-@@ -571,13 +572,13 @@ static void pkt_free_packet_data(struct packet_data *pkt)
- 	int i;
- 
- 	for (i = 0; i < pkt->frames; i++) {
--		struct bio *bio = pkt->r_bios[i];
--		if (bio)
--			bio_put(bio);
-+		bio_uninit(pkt->r_bios[i]);
-+		kfree(pkt->r_bios[i]);
- 	}
- 	for (i = 0; i < pkt->frames / FRAMES_PER_PAGE; i++)
- 		__free_page(pkt->pages[i]);
--	bio_put(pkt->w_bio);
-+	bio_uninit(pkt->w_bio);
-+	kfree(pkt->w_bio);
- 	kfree(pkt);
- }
- 
-diff --git a/drivers/md/bcache/debug.c b/drivers/md/bcache/debug.c
-index 6230dfdd9286e..7510d1c983a5e 100644
---- a/drivers/md/bcache/debug.c
-+++ b/drivers/md/bcache/debug.c
-@@ -107,15 +107,16 @@ void bch_btree_verify(struct btree *b)
- 
- void bch_data_verify(struct cached_dev *dc, struct bio *bio)
- {
-+	unsigned int nr_segs = bio_segments(bio);
- 	struct bio *check;
- 	struct bio_vec bv, cbv;
- 	struct bvec_iter iter, citer = { 0 };
- 
--	check = bio_kmalloc(GFP_NOIO, bio_segments(bio));
-+	check = bio_kmalloc(nr_segs, GFP_NOIO);
- 	if (!check)
- 		return;
--	bio_set_dev(check, bio->bi_bdev);
--	check->bi_opf = REQ_OP_READ;
-+	bio_init(check, bio->bi_bdev, check->bi_inline_vecs, nr_segs,
-+		 REQ_OP_READ);
- 	check->bi_iter.bi_sector = bio->bi_iter.bi_sector;
- 	check->bi_iter.bi_size = bio->bi_iter.bi_size;
- 
-@@ -146,7 +147,8 @@ void bch_data_verify(struct cached_dev *dc, struct bio *bio)
- 
- 	bio_free_pages(check);
- out_put:
--	bio_put(check);
-+	bio_uninit(check);
-+	kfree(check);
- }
- 
- #endif
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index e9cbc70d5a0ee..5ffa1dcf84cfc 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -611,7 +611,8 @@ static void bio_complete(struct bio *bio)
- {
- 	struct dm_buffer *b = bio->bi_private;
- 	blk_status_t status = bio->bi_status;
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- 	b->end_io(b, status);
- }
- 
-@@ -626,16 +627,14 @@ static void use_bio(struct dm_buffer *b, int rw, sector_t sector,
- 	if (unlikely(b->c->sectors_per_block_bits < PAGE_SHIFT - SECTOR_SHIFT))
- 		vec_size += 2;
- 
--	bio = bio_kmalloc(GFP_NOWAIT | __GFP_NORETRY | __GFP_NOWARN, vec_size);
-+	bio = bio_kmalloc(vec_size, GFP_NOWAIT | __GFP_NORETRY | __GFP_NOWARN);
- 	if (!bio) {
- dmio:
- 		use_dmio(b, rw, sector, n_sectors, offset);
- 		return;
- 	}
--
-+	bio_init(bio, b->c->bdev, bio->bi_inline_vecs, vec_size, rw);
- 	bio->bi_iter.bi_sector = sector;
--	bio_set_dev(bio, b->c->bdev);
--	bio_set_op_attrs(bio, rw, 0);
- 	bio->bi_end_io = bio_complete;
- 	bio->bi_private = b;
- 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 03477e971699b..60cf3ef6457c4 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -165,9 +165,10 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	 * Allocate bios : 1 for reading, n-1 for writing
- 	 */
- 	for (j = pi->raid_disks ; j-- ; ) {
--		bio = bio_kmalloc(gfp_flags, RESYNC_PAGES);
-+		bio = bio_kmalloc(RESYNC_PAGES, gfp_flags);
- 		if (!bio)
- 			goto out_free_bio;
-+		bio_init(bio, NULL, bio->bi_inline_vecs, RESYNC_PAGES, 0);
- 		r1_bio->bios[j] = bio;
- 	}
- 	/*
-@@ -206,8 +207,10 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
- 		resync_free_pages(&rps[j]);
- 
- out_free_bio:
--	while (++j < pi->raid_disks)
--		bio_put(r1_bio->bios[j]);
-+	while (++j < pi->raid_disks) {
-+		bio_uninit(r1_bio->bios[j]);
-+		kfree(r1_bio->bios[j]);
-+	}
- 	kfree(rps);
- 
- out_free_r1bio:
-@@ -225,7 +228,8 @@ static void r1buf_pool_free(void *__r1_bio, void *data)
- 	for (i = pi->raid_disks; i--; ) {
- 		rp = get_resync_pages(r1bio->bios[i]);
- 		resync_free_pages(rp);
--		bio_put(r1bio->bios[i]);
-+		bio_uninit(r1bio->bios[i]);
-+		kfree(r1bio->bios[i]);
- 	}
- 
- 	/* resync pages array stored in the 1st bio's .bi_private */
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 5dd2e17e1d0ea..781b7b8a4b558 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -145,15 +145,17 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	 * Allocate bios.
- 	 */
- 	for (j = nalloc ; j-- ; ) {
--		bio = bio_kmalloc(gfp_flags, RESYNC_PAGES);
-+		bio = bio_kmalloc(RESYNC_PAGES, gfp_flags);
- 		if (!bio)
- 			goto out_free_bio;
-+		bio_init(bio, NULL, bio->bi_inline_vecs, RESYNC_PAGES, 0);
- 		r10_bio->devs[j].bio = bio;
- 		if (!conf->have_replacement)
- 			continue;
--		bio = bio_kmalloc(gfp_flags, RESYNC_PAGES);
-+		bio = bio_kmalloc(RESYNC_PAGES, gfp_flags);
- 		if (!bio)
- 			goto out_free_bio;
-+		bio_init(bio, NULL, bio->bi_inline_vecs, RESYNC_PAGES, 0);
- 		r10_bio->devs[j].repl_bio = bio;
- 	}
- 	/*
-@@ -197,9 +199,11 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
- out_free_bio:
- 	for ( ; j < nalloc; j++) {
- 		if (r10_bio->devs[j].bio)
--			bio_put(r10_bio->devs[j].bio);
-+			bio_uninit(r10_bio->devs[j].bio);
-+		kfree(r10_bio->devs[j].bio);
- 		if (r10_bio->devs[j].repl_bio)
--			bio_put(r10_bio->devs[j].repl_bio);
-+			bio_uninit(r10_bio->devs[j].repl_bio);
-+		kfree(r10_bio->devs[j].repl_bio);
- 	}
- 	kfree(rps);
- out_free_r10bio:
-@@ -220,12 +224,15 @@ static void r10buf_pool_free(void *__r10_bio, void *data)
- 		if (bio) {
- 			rp = get_resync_pages(bio);
- 			resync_free_pages(rp);
--			bio_put(bio);
-+			bio_uninit(bio);
-+			kfree(bio);
- 		}
- 
- 		bio = r10bio->devs[j].repl_bio;
--		if (bio)
--			bio_put(bio);
-+		if (bio) {
-+			bio_uninit(bio);
-+			kfree(bio);
-+		}
- 	}
- 
- 	/* resync pages array stored in the 1st bio's .bi_private */
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index bd8ae07273f14..edda1a89d9357 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -820,7 +820,8 @@ static ssize_t pscsi_show_configfs_dev_params(struct se_device *dev, char *b)
- 
- static void pscsi_bi_endio(struct bio *bio)
- {
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- }
- 
- static sense_reason_t
-@@ -863,14 +864,13 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 			if (!bio) {
- new_bio:
- 				nr_vecs = bio_max_segs(nr_pages);
--				bio = bio_kmalloc(GFP_KERNEL, nr_vecs);
-+				bio = bio_kmalloc(nr_vecs, GFP_KERNEL);
- 				if (!bio)
- 					goto fail;
-+				bio_init(bio, NULL, bio->bi_inline_vecs, nr_vecs,
-+					 rw ? REQ_OP_WRITE : REQ_OP_READ);
- 				bio->bi_end_io = pscsi_bi_endio;
- 
--				if (rw)
--					bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
--
- 				pr_debug("PSCSI: Allocated bio: %p,"
- 					" dir: %s nr_vecs: %d\n", bio,
- 					(rw) ? "rw" : "r", nr_vecs);
-diff --git a/fs/squashfs/block.c b/fs/squashfs/block.c
-index 4311a32218928..930eb530fa622 100644
---- a/fs/squashfs/block.c
-+++ b/fs/squashfs/block.c
-@@ -86,12 +86,10 @@ static int squashfs_bio_read(struct super_block *sb, u64 index, int length,
- 	int error, i;
- 	struct bio *bio;
- 
--	bio = bio_kmalloc(GFP_NOIO, page_count);
-+	bio = bio_kmalloc(page_count, GFP_NOIO);
- 	if (!bio)
- 		return -ENOMEM;
--	bio_set_dev(bio, sb->s_bdev);
--	bio->bi_opf = REQ_OP_READ;
--
-+	bio_init(bio, sb->s_bdev, bio->bi_inline_vecs, page_count, REQ_OP_READ);
- 	bio->bi_iter.bi_sector = block * (msblk->devblksize >> SECTOR_SHIFT);
- 
- 	for (i = 0; i < page_count; ++i) {
-@@ -121,7 +119,8 @@ static int squashfs_bio_read(struct super_block *sb, u64 index, int length,
- 
- out_free_bio:
- 	bio_free_pages(bio);
--	bio_put(bio);
-+	bio_uninit(bio);
-+	kfree(bio);
- 	return error;
- }
- 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 4c21f6e69e182..e855bcf52fa7e 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -410,7 +410,7 @@ struct bio *bio_alloc_bioset(struct block_device *bdev, unsigned short nr_vecs,
- 			     struct bio_set *bs);
- struct bio *bio_alloc_kiocb(struct kiocb *kiocb, struct block_device *bdev,
- 		unsigned short nr_vecs, unsigned int opf, struct bio_set *bs);
--struct bio *bio_kmalloc(gfp_t gfp_mask, unsigned short nr_iovecs);
-+struct bio *bio_kmalloc(unsigned short nr_vecs, gfp_t gfp_mask);
- extern void bio_put(struct bio *);
- 
- struct bio *bio_alloc_clone(struct block_device *bdev, struct bio *bio_src,
--- 
-2.30.2
+The current speed is now down to 54,851K with at least 4 hours to go
+and has been running from 8PM to 9AM already (I kicked it off manually
+last night as I could see it was going to take forever at the weekend
+and granddaughter doesn't deal with "its going slow" very well so I
+killed it).
 
+The problem is not limited to hard drives. I also run 3
+arrays/partitions on NVME (set up as 3 drives, one spare, raid10-far2
+which are used for /, /var, *swap) which instead of taking about 2 mins
+are taking in excess of 10 mins to complete.
+
+Before running the current mdadm check(s) the kernel was upgraded. I
+try to apt-get update, apt-get dist-upgrade at the weekend but some
+times forget so I can't tell if a check was run under the previous
+version or a version prior to that... The previous version was 5.16.0-
+3-amd64 which as far as I can tell had no issues (I tend access my
+computer around 9 on a Sunday and get hit once a month by programs
+"hanging"/being slow which reminds me to check if a mdadm check is
+running, cat /proc/mdstat, which it usually is and it usually tells me
+that I should be fine by 10-ish (I do the mins/60).
+
+In the time its taken me to type this, and run commands to check
+figures etc, and then check it and amend things (about 30-40 mins) the
+speed is now down to 52,187K. I'm going to let it finish as I don't
+like the idea of not having the monthly scrub complete, but boy does it
+suck when I can see it getting much slower than usual the closer it
+gets to finishing.
+
+>=20
+> Is this a known issue?
+
+Well you and me makes two noticing an issue so...
+
+>=20
+> --Larkin
+
+Jon.
