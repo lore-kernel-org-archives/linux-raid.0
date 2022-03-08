@@ -2,73 +2,196 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81777C433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 01:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72FBFC433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 02:12:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344173AbiCHBBY (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 7 Mar 2022 20:01:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59244 "EHLO
+        id S243513AbiCHCNJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 7 Mar 2022 21:13:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231624AbiCHBBY (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Mar 2022 20:01:24 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1662D2AE36
-        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 17:00:29 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 7BFE7CE117E
-        for <linux-raid@vger.kernel.org>; Tue,  8 Mar 2022 01:00:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE16AC340F3
-        for <linux-raid@vger.kernel.org>; Tue,  8 Mar 2022 01:00:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646701225;
-        bh=79vbyQwVub2BEwx2i62db/Ye4MH6bgHHfnwCrFFoCe4=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=PW2q+uSkVDaf1w+qwsDB+RsZCmIkxT6kcp8kZasiQ7VKZoy2BUbnPJhamTU7HdmjO
-         deZ4I4siVraYJkGqhmZleAIrgTYJWgQZaPZvbmm5mebn6T5Jw4mQewP2P8Gtwoxcpc
-         hd2sEtRDotwJGhorNDmHUZoVwCRwuAeyccyYhsbg1ePdW8uEky+ee6RG2ltamEYDJb
-         AZ3i2yOzW/EL5RWpqvo/D9V4JH4bXCJNzfUg9xKA0XeSHgnvi0ubHF7fxwSFV0uL62
-         gvZ5zVJuu7cknB9kCjwBT600Sp65FRe5hTWZOZLMVx2ziLjUkUnuEugybhmelZSXot
-         JXn8JrTYfzbiA==
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-2dc348dab52so151151027b3.6
-        for <linux-raid@vger.kernel.org>; Mon, 07 Mar 2022 17:00:25 -0800 (PST)
-X-Gm-Message-State: AOAM531ACdBStxEe/NapfZYs7D4H6r/wVzvHnd0Dy12EBkgxA+goBXIj
-        R5XCx9vY+WRb/DeSIz2MW9I+77YlNogvbJ43oOA=
-X-Google-Smtp-Source: ABdhPJxcELJ+BTwx9VZ1T/67BEGrkfyBvNfl/aYXdnZECquDNFV4Jzyhn/fui481v4qUTypFMuAyJkmifRvHD+3V364=
-X-Received: by 2002:a81:57d5:0:b0:2dc:62b3:1455 with SMTP id
- l204-20020a8157d5000000b002dc62b31455mr10632453ywb.73.1646701224818; Mon, 07
- Mar 2022 17:00:24 -0800 (PST)
+        with ESMTP id S1344367AbiCHCNH (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 7 Mar 2022 21:13:07 -0500
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B7022BDF
+        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 18:12:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646705532; x=1678241532;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=MONcJ+SWTLGtF6OsqGcVzwToMol7RVMGVDC7fyqBNJM=;
+  b=jm0T3jYb6hGBiop2JpXWcjL/6mF+b7xVMsb1ZWgCg+MWEfv+32dj6ggS
+   KZqccQrVJW0S//pehe03Ig41F2NPRFFyKpFhpwvou4QE5vPFCej69H2by
+   et4YvXObxDHAXra08fJ50eifOd2nGCMeyv7lWTmiPQje1Yskz54IXdGf9
+   Y/ZAzSeALEkkF9g7O8VrFUs1E7FiQYkEigtSC3itohHTaj3JSdoME47d8
+   aL4hULgZjrpD8siZtJXLamgRcEWDiufZ4bKo5qcG72dQETK4Ps78br92F
+   1QZbgbMcgJ4GG41I3RI7hMUaErFigyJ6goie7oKRnpip96SDFb5rTCefJ
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10279"; a="279277834"
+X-IronPort-AV: E=Sophos;i="5.90,163,1643702400"; 
+   d="scan'208";a="279277834"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2022 18:12:12 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,163,1643702400"; 
+   d="scan'208";a="687759257"
+Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
+  by fmsmga001.fm.intel.com with ESMTP; 07 Mar 2022 18:12:11 -0800
+Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nRPKc-0000rR-A7; Tue, 08 Mar 2022 02:12:10 +0000
+Date:   Tue, 08 Mar 2022 10:11:48 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Song Liu <song@kernel.org>
+Cc:     linux-raid@vger.kernel.org
+Subject: [song-md:md-next] BUILD SUCCESS
+ 0a43d103a1779d768bc52be4613f59d7c00c9a8a
+Message-ID: <6226bb64.wdysGf0x6jy4bWT6%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-References: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
-In-Reply-To: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 7 Mar 2022 17:00:14 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW68V0ZO55_Un0vnrAt_+XpGRX3yq3nR=35f7P2d5iPvTA@mail.gmail.com>
-Message-ID: <CAPhsuW68V0ZO55_Un0vnrAt_+XpGRX3yq3nR=35f7P2d5iPvTA@mail.gmail.com>
-Subject: Re: Raid6 check performance regression 5.15 -> 5.16
-To:     Larkin Lowrey <llowrey@nuclearwinter.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Mar 7, 2022 at 10:21 AM Larkin Lowrey <llowrey@nuclearwinter.com> wrote:
->
-> I am seeing a 'check' speed regression between kernels 5.15 and 5.16.
-> One host with a 20 drive array went from 170MB/s to 11MB/s. Another host
-> with a 15 drive array went from 180MB/s to 43MB/s. In both cases the
-> arrays are almost completely idle. I can flip between the two kernels
-> with no other changes and observe the performance changes.
->
-> Is this a known issue?
+tree/branch: git://git.kernel.org/pub/scm/linux/kernel/git/song/md.git md-next
+branch HEAD: 0a43d103a1779d768bc52be4613f59d7c00c9a8a  md: use msleep() in md_notify_reboot()
 
-I am not aware of this issue. Could you please share
+elapsed time: 5487m
 
-  mdadm --detail /dev/mdXXXX
+configs tested: 118
+configs skipped: 3
 
-output of the array?
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Thanks,
-Song
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+i386                 randconfig-c001-20220307
+mips                 randconfig-c004-20220307
+powerpc                     pq2fads_defconfig
+ia64                          tiger_defconfig
+m68k                        m5272c3_defconfig
+arm                        multi_v7_defconfig
+um                             i386_defconfig
+sh                               alldefconfig
+mips                     loongson1b_defconfig
+powerpc                      ppc40x_defconfig
+powerpc                    amigaone_defconfig
+sh                           se7724_defconfig
+arm                           tegra_defconfig
+openrisc                 simple_smp_defconfig
+xtensa                         virt_defconfig
+mips                         db1xxx_defconfig
+arm                      jornada720_defconfig
+powerpc                    klondike_defconfig
+arm                         vf610m4_defconfig
+arm                          exynos_defconfig
+arm                           h3600_defconfig
+mips                         rt305x_defconfig
+powerpc                    adder875_defconfig
+powerpc                     tqm8555_defconfig
+sh                          lboxre2_defconfig
+arm                  randconfig-c002-20220307
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+h8300                            allyesconfig
+xtensa                           allyesconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc64                            defconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a006-20220307
+x86_64               randconfig-a004-20220307
+x86_64               randconfig-a005-20220307
+x86_64               randconfig-a001-20220307
+x86_64               randconfig-a003-20220307
+x86_64               randconfig-a002-20220307
+i386                 randconfig-a005-20220307
+i386                 randconfig-a004-20220307
+i386                 randconfig-a003-20220307
+i386                 randconfig-a006-20220307
+i386                 randconfig-a002-20220307
+i386                 randconfig-a001-20220307
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+riscv                    nommu_virt_defconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-c007-20220307
+i386                 randconfig-c001-20220307
+powerpc              randconfig-c003-20220307
+riscv                randconfig-c006-20220307
+mips                 randconfig-c004-20220307
+arm                  randconfig-c002-20220307
+s390                 randconfig-c005-20220307
+arm                       imx_v4_v5_defconfig
+x86_64                           allyesconfig
+mips                           rs90_defconfig
+powerpc                     tqm8540_defconfig
+powerpc                      ppc64e_defconfig
+powerpc                      obs600_defconfig
+arm                        magician_defconfig
+x86_64               randconfig-a016-20220307
+x86_64               randconfig-a012-20220307
+x86_64               randconfig-a015-20220307
+x86_64               randconfig-a013-20220307
+x86_64               randconfig-a014-20220307
+x86_64               randconfig-a011-20220307
+i386                 randconfig-a012-20220307
+i386                 randconfig-a013-20220307
+i386                 randconfig-a015-20220307
+i386                 randconfig-a011-20220307
+i386                 randconfig-a014-20220307
+i386                 randconfig-a016-20220307
+hexagon              randconfig-r045-20220307
+riscv                randconfig-r042-20220307
+hexagon              randconfig-r041-20220307
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
