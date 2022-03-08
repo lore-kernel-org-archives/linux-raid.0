@@ -2,127 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78018C433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 05:44:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF0C1C4167B
+	for <linux-raid@archiver.kernel.org>; Tue,  8 Mar 2022 06:16:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237711AbiCHFpR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Mar 2022 00:45:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38272 "EHLO
+        id S1344416AbiCHGRJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Mar 2022 01:17:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232397AbiCHFpQ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 00:45:16 -0500
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD763BA7D
-        for <linux-raid@vger.kernel.org>; Mon,  7 Mar 2022 21:44:19 -0800 (PST)
-Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1nRSdt-0001Fo-7F; Tue, 08 Mar 2022 06:44:17 +0100
-Message-ID: <2f516c43-b357-70d2-9c49-9633e8a4aa76@leemhuis.info>
-Date:   Tue, 8 Mar 2022 06:44:16 +0100
+        with ESMTP id S235643AbiCHGRG (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 01:17:06 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAC6C33A35;
+        Mon,  7 Mar 2022 22:16:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=VAc1SDe4gjp1IeSSzcV0Im0HYJaPZbBGhfAm1TWpBFw=; b=Tfew+EVd6uwYuNV+53KTuZszNJ
+        wNBwT5oJkc3r6VYCZNr6Mcq1Jf0iLnhOnSQ1WsSNSv7XtvfuGxHq3yjWIyW7rEirAh3Ej7Jidc4PD
+        +FgPl4I3ggY4B1bBfqNvpjdih+wAnD83nBJyNJ/XHWYxB2Kopy7vsFnPkglZjIVV6Ep1+vmu3qFPO
+        +Y++D3AWht97k2EkZJQqrYli+pUxWG7K8FoP1ehQIrKM2bAN1VShz/F7EDYh1g7Hxil1RIVVUlSG7
+        v5PqQksm+jzzs9rB2NEv0WZlbWuRchdzL8mOTaaL3tvpbxPLbT5qUTuaXI9JDdeR8D4zP82mdfcCh
+        tJbr8FFQ==;
+Received: from [2001:4bb8:184:7746:6f50:7a98:3141:c37b] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nRT8Z-002lVi-IG; Tue, 08 Mar 2022 06:16:00 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+Subject: [PATCH 2/5] squashfs: always use bio_kmalloc in squashfs_bio_read
+Date:   Tue,  8 Mar 2022 07:15:48 +0100
+Message-Id: <20220308061551.737853-3-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220308061551.737853-1-hch@lst.de>
+References: <20220308061551.737853-1-hch@lst.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: Raid6 check performance regression 5.15 -> 5.16
-Content-Language: en-US
-To:     Larkin Lowrey <llowrey@nuclearwinter.com>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <0eb91a43-a153-6e29-14b6-65f97b9f3d99@nuclearwinter.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1646718259;c58b755b;
-X-HE-SMSGID: 1nRSdt-0001Fo-7F
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-[TLDR: I'm adding the regression report below to regzbot, the Linux
-kernel regression tracking bot; all text you find below is compiled from
-a few templates paragraphs you might have encountered already already
-from similar mails.]
+If a plain kmalloc that is not backed by a mempool is safe here for a
+large read (and the actual page allocations), it must also be for a
+small one, so simplify the code a bit.
 
-On 07.03.22 19:15, Larkin Lowrey wrote:
-> I am seeing a 'check' speed regression between kernels 5.15 and 5.16.
-> One host with a 20 drive array went from 170MB/s to 11MB/s. Another host
-> with a 15 drive array went from 180MB/s to 43MB/s. In both cases the
-> arrays are almost completely idle. I can flip between the two kernels
-> with no other changes and observe the performance changes.
-> 
-> Is this a known issue?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Phillip Lougher <phillip@squashfs.org.uk>
+---
+ fs/squashfs/block.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-Hi, this is your Linux kernel regression tracker.
-
-Thanks for the report.
-
-CCing the regression mailing list, as it should be in the loop for all
-regressions, as explained here:
-https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html
-
-To be sure below issue doesn't fall through the cracks unnoticed, I'm
-adding it to regzbot, my Linux kernel regression tracking bot:
-
-#regzbot ^introduced v5.15..v5.16
-#regzbot title md: Raid6 check performance regression
-#regzbot ignore-activity
-
-If it turns out this isn't a regression, free free to remove it from the
-tracking by sending a reply to this thread containing a paragraph like
-"#regzbot invalid: reason why this is invalid" (without the quotes).
-
-Reminder for developers: when fixing the issue, please add a 'Link:'
-tags pointing to the report (the mail quoted above) using
-lore.kernel.org/r/, as explained in
-'Documentation/process/submitting-patches.rst' and
-'Documentation/process/5.Posting.rst'. Regzbot needs them to
-automatically connect reports with fixes, but they are useful in
-general, too.
-
-I'm sending this to everyone that got the initial report, to make
-everyone aware of the tracking. I also hope that messages like this
-motivate people to directly get at least the regression mailing list and
-ideally even regzbot involved when dealing with regressions, as messages
-like this wouldn't be needed then. And don't worry, if I need to send
-other mails regarding this regression only relevant for regzbot I'll
-send them to the regressions lists only (with a tag in the subject so
-people can filter them away). With a bit of luck no such messages will
-be needed anyway.
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I'm getting a lot of
-reports on my table. I can only look briefly into most of them and lack
-knowledge about most of the areas they concern. I thus unfortunately
-will sometimes get things wrong or miss something important. I hope
-that's not the case here; if you think it is, don't hesitate to tell me
-in a public reply, it's in everyone's interest to set the public record
-straight.
-
+diff --git a/fs/squashfs/block.c b/fs/squashfs/block.c
+index 622c844f6d118..4311a32218928 100644
+--- a/fs/squashfs/block.c
++++ b/fs/squashfs/block.c
+@@ -86,16 +86,11 @@ static int squashfs_bio_read(struct super_block *sb, u64 index, int length,
+ 	int error, i;
+ 	struct bio *bio;
+ 
+-	if (page_count <= BIO_MAX_VECS) {
+-		bio = bio_alloc(sb->s_bdev, page_count, REQ_OP_READ, GFP_NOIO);
+-	} else {
+-		bio = bio_kmalloc(GFP_NOIO, page_count);
+-		bio_set_dev(bio, sb->s_bdev);
+-		bio->bi_opf = REQ_OP_READ;
+-	}
+-
++	bio = bio_kmalloc(GFP_NOIO, page_count);
+ 	if (!bio)
+ 		return -ENOMEM;
++	bio_set_dev(bio, sb->s_bdev);
++	bio->bi_opf = REQ_OP_READ;
+ 
+ 	bio->bi_iter.bi_sector = block * (msblk->devblksize >> SECTOR_SHIFT);
+ 
 -- 
-Additional information about regzbot:
-
-If you want to know more about regzbot, check out its web-interface, the
-getting start guide, and the references documentation:
-
-https://linux-regtracking.leemhuis.info/regzbot/
-https://gitlab.com/knurd42/regzbot/-/blob/main/docs/getting_started.md
-https://gitlab.com/knurd42/regzbot/-/blob/main/docs/reference.md
-
-The last two documents will explain how you can interact with regzbot
-yourself if your want to.
-
-Hint for reporters: when reporting a regression it's in your interest to
-CC the regression list and tell regzbot about the issue, as that ensures
-the regression makes it onto the radar of the Linux kernel's regression
-tracker -- that's in your interest, as it ensures your report won't fall
-through the cracks unnoticed.
-
-Hint for developers: you normally don't need to care about regzbot once
-it's involved. Fix the issue as you normally would, just remember to
-include 'Link:' tag in the patch descriptions pointing to all reports
-about the issue. This has been expected from developers even before
-regzbot showed up for reasons explained in
-'Documentation/process/submitting-patches.rst' and
-'Documentation/process/5.Posting.rst'.
+2.30.2
 
