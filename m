@@ -2,102 +2,76 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32703C433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Mar 2022 06:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF74C433F5
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Mar 2022 06:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230091AbiCIGnv convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Mar 2022 01:43:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46378 "EHLO
+        id S229810AbiCIGvp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Mar 2022 01:51:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbiCIGnp (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Mar 2022 01:43:45 -0500
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D43DA66EB
-        for <linux-raid@vger.kernel.org>; Tue,  8 Mar 2022 22:42:44 -0800 (PST)
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 2291lchc007827
-        for <linux-raid@vger.kernel.org>; Tue, 8 Mar 2022 22:42:44 -0800
-Received: from mail.thefacebook.com ([163.114.132.120])
-        by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 3epjvu940k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-raid@vger.kernel.org>; Tue, 08 Mar 2022 22:42:44 -0800
-Received: from twshared33837.14.frc2.facebook.com (2620:10d:c085:108::4) by
- mail.thefacebook.com (2620:10d:c085:21d::5) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 8 Mar 2022 22:42:43 -0800
-Received: by devbig932.frc1.facebook.com (Postfix, from userid 4523)
-        id 1FC6D1EBC0D9; Tue,  8 Mar 2022 22:42:40 -0800 (PST)
-From:   Song Liu <song@kernel.org>
-To:     <linux-block@vger.kernel.org>, <linux-raid@vger.kernel.org>
-CC:     <axboe@kernel.dk>, Song Liu <song@kernel.org>,
-        <stable@vger.kernel.org>,
-        Larkin Lowrey <llowrey@nuclearwinter.com>,
-        Wilson Jonathan <i400sjon@gmail.com>,
-        Roger Heflin <rogerheflin@gmail.com>
-Subject: [PATCH] block: check more requests for multiple_queues in blk_attempt_plug_merge
-Date:   Tue, 8 Mar 2022 22:42:09 -0800
-Message-ID: <20220309064209.4169303-1-song@kernel.org>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S229475AbiCIGvo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Mar 2022 01:51:44 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D10E1520CE;
+        Tue,  8 Mar 2022 22:50:46 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C598761926;
+        Wed,  9 Mar 2022 06:50:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EC23C340EE;
+        Wed,  9 Mar 2022 06:50:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646808645;
+        bh=lqJEjruwZx8mXXJiqlEh+/jeYPddOkNF5TLCou4N5HQ=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=BblEClzX0poJxy4l8alu0/Rp5kko29oFe2eh00Fr2VFFdtFElysJ1sMhzSB4fLuR3
+         /cP8+8LYNjSOcx4mXo3+3g7vBKDKvWbs2mQ/6dNAvbjTdzX1ploQm7ub4Xs7HW8pEs
+         n2XwZ3GJweXuEoN14nhFBj6qpYS3bbNsJHhcsYOG1uT2nkQXSO1A1dms2ztAByMhlp
+         jSg5j3mvcWyULO+UOjR/ibYXASs1N0pN/0ixBgXf/pvrRUKeYh6qbxeIQVKaJplLgt
+         q080+UlRRQ6cpXTh3dw6n+d76OB/EoS05nFORkJo0t+GXJ/SCk3DVC/2h3bufnY/u/
+         rjoHbVQY5Ou/Q==
+Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-2dbd97f9bfcso12177917b3.9;
+        Tue, 08 Mar 2022 22:50:45 -0800 (PST)
+X-Gm-Message-State: AOAM530dWefFuRp41WMqzIh68jW2R2XbXilrT9qLuhJzdulS4cDceJA7
+        h4zF7jGgk+Sr14JMmAE/MTn1czgK6KRjmYfZLmg=
+X-Google-Smtp-Source: ABdhPJyHp22I+w4JGDzDNV/6AmYBB8SYK1M82LxlCb2voafFb0oACUeG8g6G2nCOzwlfAEaQ9mdV9FJn1KkouM8ByG8=
+X-Received: by 2002:a81:7814:0:b0:2ca:287c:6c2e with SMTP id
+ t20-20020a817814000000b002ca287c6c2emr16133695ywc.211.1646808644210; Tue, 08
+ Mar 2022 22:50:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: JJSmKNcr0L1rV8qnPySmHisXmu9QX2lm
-X-Proofpoint-GUID: JJSmKNcr0L1rV8qnPySmHisXmu9QX2lm
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.816,Hydra:6.0.425,FMLib:17.11.64.514
- definitions=2022-03-09_02,2022-03-04_01,2022-02-23_01
+References: <20220228112503.841449-1-hch@lst.de> <CAPhsuW7EGxoyc9dkpP0y9AUWrV5V6ZORhew+tX=rFXS+vRm_AA@mail.gmail.com>
+ <20220309060846.GA31216@lst.de>
+In-Reply-To: <20220309060846.GA31216@lst.de>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 8 Mar 2022 22:50:33 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7B+CaCuOPXnGwi5dL9QZrHbH6h2D_rWGm3c__6RDQG-Q@mail.gmail.com>
+Message-ID: <CAPhsuW7B+CaCuOPXnGwi5dL9QZrHbH6h2D_rWGm3c__6RDQG-Q@mail.gmail.com>
+Subject: Re: raid5 bio handling cleanups
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-RAID arrays check/repair operations benefit a lot from merging requests.
-If we only check the previous entry for merge attempt, many merge will be
-missed. As a result, significant regression is observed for RAID check
-and repair.
+On Tue, Mar 8, 2022 at 10:08 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Wed, Mar 02, 2022 at 04:14:40PM -0800, Song Liu wrote:
+> > On Mon, Feb 28, 2022 at 3:25 AM Christoph Hellwig <hch@lst.de> wrote:
+> > >
+> > > Hi Song,
+> > >
+> > > this series cleans up the raid5 bio handling to take advantage of
+> > > the bio allocation interface changes in Jens' for-5.18 branches.
+> >
+> > Applied to md-next. Thank
+>
+> Unless I'm missing something these did not make it into the pull
+> request to Jens, right?
 
-Fix this by checking more than just the previous entry when
-plug->multiple_queues == true.
+I messed it up. I will send them in the next pull request.
 
-This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
-103 MB/s.
-
-Fixes: d38a9c04c0d5 ("block: only check previous entry for plug merge attempt")
-Cc: stable@vger.kernel.org # v5.16
-Reported-by: Larkin Lowrey <llowrey@nuclearwinter.com>
-Reported-by: Wilson Jonathan <i400sjon@gmail.com>
-Reported-by: Roger Heflin <rogerheflin@gmail.com>
-Signed-off-by: Song Liu <song@kernel.org>
----
- block/blk-merge.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 4de34a332c9f..57e2075fb2f4 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -1089,12 +1089,14 @@ bool blk_attempt_plug_merge(struct request_queue *q, struct bio *bio,
- 	if (!plug || rq_list_empty(plug->mq_list))
- 		return false;
- 
--	/* check the previously added entry for a quick merge attempt */
--	rq = rq_list_peek(&plug->mq_list);
--	if (rq->q == q) {
--		if (blk_attempt_bio_merge(q, rq, bio, nr_segs, false) ==
--				BIO_MERGE_OK)
--			return true;
-+	rq_list_for_each(&plug->mq_list, rq) {
-+		if (rq->q == q) {
-+			if (blk_attempt_bio_merge(q, rq, bio, nr_segs, false) ==
-+			    BIO_MERGE_OK)
-+				return true;
-+		}
-+		if (!plug->multiple_queues)
-+			break;
- 	}
- 	return false;
- }
--- 
-2.30.2
-
+Thanks,
+Song
