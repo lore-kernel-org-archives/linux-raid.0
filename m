@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF74C433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Mar 2022 06:50:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B452AC433F5
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Mar 2022 07:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229810AbiCIGvp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 9 Mar 2022 01:51:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45172 "EHLO
+        id S230194AbiCIHBr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 9 Mar 2022 02:01:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbiCIGvo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Mar 2022 01:51:44 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D10E1520CE;
-        Tue,  8 Mar 2022 22:50:46 -0800 (PST)
+        with ESMTP id S229501AbiCIHBq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 9 Mar 2022 02:01:46 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4C032C11A;
+        Tue,  8 Mar 2022 23:00:48 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C598761926;
-        Wed,  9 Mar 2022 06:50:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EC23C340EE;
-        Wed,  9 Mar 2022 06:50:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7485A618C5;
+        Wed,  9 Mar 2022 07:00:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCB13C340EE;
+        Wed,  9 Mar 2022 07:00:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646808645;
-        bh=lqJEjruwZx8mXXJiqlEh+/jeYPddOkNF5TLCou4N5HQ=;
+        s=k20201202; t=1646809247;
+        bh=FEPiHd1X+MDtLyCbhxtahY903mlGOqX+stTXIKB2rg8=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=BblEClzX0poJxy4l8alu0/Rp5kko29oFe2eh00Fr2VFFdtFElysJ1sMhzSB4fLuR3
-         /cP8+8LYNjSOcx4mXo3+3g7vBKDKvWbs2mQ/6dNAvbjTdzX1ploQm7ub4Xs7HW8pEs
-         n2XwZ3GJweXuEoN14nhFBj6qpYS3bbNsJHhcsYOG1uT2nkQXSO1A1dms2ztAByMhlp
-         jSg5j3mvcWyULO+UOjR/ibYXASs1N0pN/0ixBgXf/pvrRUKeYh6qbxeIQVKaJplLgt
-         q080+UlRRQ6cpXTh3dw6n+d76OB/EoS05nFORkJo0t+GXJ/SCk3DVC/2h3bufnY/u/
-         rjoHbVQY5Ou/Q==
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-2dbd97f9bfcso12177917b3.9;
-        Tue, 08 Mar 2022 22:50:45 -0800 (PST)
-X-Gm-Message-State: AOAM530dWefFuRp41WMqzIh68jW2R2XbXilrT9qLuhJzdulS4cDceJA7
-        h4zF7jGgk+Sr14JMmAE/MTn1czgK6KRjmYfZLmg=
-X-Google-Smtp-Source: ABdhPJyHp22I+w4JGDzDNV/6AmYBB8SYK1M82LxlCb2voafFb0oACUeG8g6G2nCOzwlfAEaQ9mdV9FJn1KkouM8ByG8=
+        b=VtEx7RsetUkvviMtaz7t+sj8l4StzP6Pp+GtswZCxljvYOPC+Bt602nRWOLI/sDxy
+         5hFdkD1Yrn07FXu0OAO7ILO5+jVkqf7g7fhJN9/d9F20uzppKyPjZQEg7gAYxhR7MP
+         gU7j2G7qOAdtL6pBY3pTPKj+6E+ZC3OTiJ7fdkbQEYlHctlscetGLXVYmKf/k+TrQt
+         q7qF1qJNBWomnaIS6lHp2wJaeL/x4oL+myEiQnQ2zUslVigGKp6CiAVXnuqVYyLRKO
+         ip8q8u2PvWFHkgkLABHzPjKQb2E8l0GJCe6Naj2c/zR4+LjUWfPO2v2nzAWxZtdqLG
+         gal7T7TFl+c6g==
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-2dc242a79beso12412627b3.8;
+        Tue, 08 Mar 2022 23:00:47 -0800 (PST)
+X-Gm-Message-State: AOAM533dJ9rurKk24nDdKPc+fMmk6bdeSeZnniroTpUSt1V1WeC33rm3
+        zNtHWUT2hc2rsr5+kDf7q90ceVPm3JRFVUm5kvA=
+X-Google-Smtp-Source: ABdhPJzxKENx22Ul7Ucspy9KxYfaix5JdSHRerjRLT0lWnpOw0NpG9wve82+uqSGGyQ9NFo6MuZEua2BqPLTH8WXCQw=
 X-Received: by 2002:a81:7814:0:b0:2ca:287c:6c2e with SMTP id
- t20-20020a817814000000b002ca287c6c2emr16133695ywc.211.1646808644210; Tue, 08
- Mar 2022 22:50:44 -0800 (PST)
+ t20-20020a817814000000b002ca287c6c2emr16150633ywc.211.1646809246902; Tue, 08
+ Mar 2022 23:00:46 -0800 (PST)
 MIME-Version: 1.0
 References: <20220228112503.841449-1-hch@lst.de> <CAPhsuW7EGxoyc9dkpP0y9AUWrV5V6ZORhew+tX=rFXS+vRm_AA@mail.gmail.com>
- <20220309060846.GA31216@lst.de>
-In-Reply-To: <20220309060846.GA31216@lst.de>
+ <20220309060846.GA31216@lst.de> <CAPhsuW7B+CaCuOPXnGwi5dL9QZrHbH6h2D_rWGm3c__6RDQG-Q@mail.gmail.com>
+In-Reply-To: <CAPhsuW7B+CaCuOPXnGwi5dL9QZrHbH6h2D_rWGm3c__6RDQG-Q@mail.gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 8 Mar 2022 22:50:33 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW7B+CaCuOPXnGwi5dL9QZrHbH6h2D_rWGm3c__6RDQG-Q@mail.gmail.com>
-Message-ID: <CAPhsuW7B+CaCuOPXnGwi5dL9QZrHbH6h2D_rWGm3c__6RDQG-Q@mail.gmail.com>
+Date:   Tue, 8 Mar 2022 23:00:35 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5=Wnwz6bcAtS_AZwUhnnbafiWOYDC0YoHfSyqQKZSmRg@mail.gmail.com>
+Message-ID: <CAPhsuW5=Wnwz6bcAtS_AZwUhnnbafiWOYDC0YoHfSyqQKZSmRg@mail.gmail.com>
 Subject: Re: raid5 bio handling cleanups
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-raid <linux-raid@vger.kernel.org>,
@@ -56,22 +56,28 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 8, 2022 at 10:08 PM Christoph Hellwig <hch@lst.de> wrote:
+On Tue, Mar 8, 2022 at 10:50 PM Song Liu <song@kernel.org> wrote:
 >
-> On Wed, Mar 02, 2022 at 04:14:40PM -0800, Song Liu wrote:
-> > On Mon, Feb 28, 2022 at 3:25 AM Christoph Hellwig <hch@lst.de> wrote:
-> > >
-> > > Hi Song,
-> > >
-> > > this series cleans up the raid5 bio handling to take advantage of
-> > > the bio allocation interface changes in Jens' for-5.18 branches.
+> On Tue, Mar 8, 2022 at 10:08 PM Christoph Hellwig <hch@lst.de> wrote:
 > >
-> > Applied to md-next. Thank
+> > On Wed, Mar 02, 2022 at 04:14:40PM -0800, Song Liu wrote:
+> > > On Mon, Feb 28, 2022 at 3:25 AM Christoph Hellwig <hch@lst.de> wrote:
+> > > >
+> > > > Hi Song,
+> > > >
+> > > > this series cleans up the raid5 bio handling to take advantage of
+> > > > the bio allocation interface changes in Jens' for-5.18 branches.
+> > >
+> > > Applied to md-next. Thank
+> >
+> > Unless I'm missing something these did not make it into the pull
+> > request to Jens, right?
 >
-> Unless I'm missing something these did not make it into the pull
-> request to Jens, right?
+> I messed it up. I will send them in the next pull request.
 
-I messed it up. I will send them in the next pull request.
+I just pushed it again to md-next. I will send the pull request tomorrow
+or the day after.
 
-Thanks,
+Sorry for the confusion.
+
 Song
