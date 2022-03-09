@@ -2,167 +2,161 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C94F2C43217
-	for <linux-raid@archiver.kernel.org>; Wed,  9 Mar 2022 03:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20481C433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  9 Mar 2022 04:23:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231657AbiCIDIO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 8 Mar 2022 22:08:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39388 "EHLO
+        id S229505AbiCIEYc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 8 Mar 2022 23:24:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231633AbiCIDIN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 22:08:13 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0180214CC84;
-        Tue,  8 Mar 2022 19:07:14 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 228M8wUv028053;
-        Wed, 9 Mar 2022 03:06:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2021-07-09;
- bh=JIRzif8ElQ11YkMCVQYex0i5TpPFXhokbAn+PgJE8CQ=;
- b=chnFz2xDbGArfA2ox7fXcYIdbBtS/zW5gAYanJrKSeRllPCxWQb0h/wZnfEeUZ31MEMF
- RuritKg1MAYxykUeN+GyE+yA8ePtRWf5dXkk+fxWS2WBSKvW1ALiWD9Q0+uopdkgkMdh
- 1/gxnZW/2leqZ7BujWmg/x13uCH6bKpJ2Sf5CS58qW+zpSGaqrJpd3glqIHbnQ0Sj3VT
- /I3f1n3kMjrWMmXn6z6RkgKRgSPFFUvckeruZ2KJXi36Fw7S2ueuoqKfNGhnN1GjXAhe
- 1Um5z2VDJccLcuqSiL2WDkwZvP98RffAtRrmRxaR2vte6sl2gJMKLRUcQ9VpZx82Ogan NQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3ekxn2gtfy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Mar 2022 03:06:58 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 22935K3k167216;
-        Wed, 9 Mar 2022 03:06:57 GMT
-Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2046.outbound.protection.outlook.com [104.47.56.46])
-        by userp3020.oracle.com with ESMTP id 3envvm467u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Mar 2022 03:06:57 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=T3oYL3S8HtIACTiwk34rkz5hFOrDXpFI7dXfQXFwNyocfuFvXstpKBEHUoxnJ8qc+t4BhG3Qw80F7EX3PyDul7S3w3hgK7rk1EAq0a+gX2Sais0/ZS7ZhJfrYr/a/ZkR/Yo3FOK60jZB6mil/VAzFWcf7KAE8eLVVFnSJHujohlw2RG9PzJJ2ZJJV0xfX5v1RnGNpr7zq9VrtmgkwZdJ+9WIH7lDApBnoAXIyNaEMbmhu/ALVOecE0mWKFvn7YEbrwzx8kn+C0rr7hFqORO1/LKryHXoLOT/FsJurPypTaMTleLbmhoP8nVMEVo0muBBA+N56iNoSMqVpTQlkq3K9A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JIRzif8ElQ11YkMCVQYex0i5TpPFXhokbAn+PgJE8CQ=;
- b=I7kTael1+w8I82BxrhqQwmPmNalnO3Q/RgL/9sX4iXlwiI3dOGrKZoEJKz8wXRfkTnLz5brakqLVGfI6NylQh99m8BjjYqTkxIrvVpWcRmmpMg3PglSUjNF5wETUDUHucCHZE6f/VRCUFVO6TRzM0r41jFHNgJoBrYc16UJVbvBMBR4aP0yjNsPUCMfrp41/5FTcs8AzfHEZv+zOFSTR43OSiG60GV9NaJ5EEtDOvmPnw6C2vdlJIdVmuH5HQ51x3IVj0tQ8UdTe02KWPLbxU/mwsz9aLPAiIDOzSxys9hwQkuBo0vzGxlSX/kWe8LslSUDvNzWfkU2wSVOvOL2/gw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JIRzif8ElQ11YkMCVQYex0i5TpPFXhokbAn+PgJE8CQ=;
- b=yOuB2qDB4rmbBPgmMnQYwUtQLbeoUsTHKuYsGGGTrIFvOKh17XeSeKQYN6ivGuwSlIWR+EVQQ0dwHh/MeAXVulmo50XQhK/NhBBqEx2b/7DOqKTS4Q+Qx39PR2YI1WqfjYVvvCvohc2h+P1iPuZ6QT49p/aLmyNbyUBN2Il83Xk=
-Received: from SA2PR10MB4763.namprd10.prod.outlook.com (2603:10b6:806:117::19)
- by MWHPR10MB1854.namprd10.prod.outlook.com (2603:10b6:300:10b::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.15; Wed, 9 Mar
- 2022 03:06:55 +0000
-Received: from SA2PR10MB4763.namprd10.prod.outlook.com
- ([fe80::a045:e293:518:7604]) by SA2PR10MB4763.namprd10.prod.outlook.com
- ([fe80::a045:e293:518:7604%3]) with mapi id 15.20.5038.026; Wed, 9 Mar 2022
- 03:06:54 +0000
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] block: turn bio_kmalloc into a simple kmalloc wrapper
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1pmmvltea.fsf@ca-mkp.ca.oracle.com>
-References: <20220308061551.737853-1-hch@lst.de>
-        <20220308061551.737853-5-hch@lst.de>
-Date:   Tue, 08 Mar 2022 22:06:52 -0500
-In-Reply-To: <20220308061551.737853-5-hch@lst.de> (Christoph Hellwig's message
-        of "Tue, 8 Mar 2022 07:15:50 +0100")
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR13CA0026.namprd13.prod.outlook.com
- (2603:10b6:a03:2c0::31) To SA2PR10MB4763.namprd10.prod.outlook.com
- (2603:10b6:806:117::19)
+        with ESMTP id S229455AbiCIEYa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 8 Mar 2022 23:24:30 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4091948883
+        for <linux-raid@vger.kernel.org>; Tue,  8 Mar 2022 20:23:31 -0800 (PST)
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20220309042328epoutp039e6172e95cf92ea672348ebbbf90f84b~am7NoaPf50772407724epoutp03E
+        for <linux-raid@vger.kernel.org>; Wed,  9 Mar 2022 04:23:28 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20220309042328epoutp039e6172e95cf92ea672348ebbbf90f84b~am7NoaPf50772407724epoutp03E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1646799808;
+        bh=R+5MFabA9b+sam2wOPtEv1/EIjHnzZeKhYisnvKky8g=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=s+M1BRzR+OpRQSvmxo/1OjaCszVUm0rHdxjMyHErL3QPX1J2Gk769eUHPebHIbBcV
+         WexNuS/vCXUC14I4zhNPWs6uXJY1KFPIhcZ47fuy2mLwNRXIayoXTvqASVCFmfY83J
+         mZ1In9oq5O8jxr4QRW/KdGfVSEVDuOxIpK4WyQM8=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20220309042327epcas1p2e2702303bee5d532b775a7ac167275c1~am7MaRUe62900029000epcas1p2T;
+        Wed,  9 Mar 2022 04:23:27 +0000 (GMT)
+Received: from epsmges1p5.samsung.com (unknown [182.195.38.248]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4KCzb11WpFz4x9Q3; Wed,  9 Mar
+        2022 04:23:25 +0000 (GMT)
+Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
+        epsmges1p5.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C1.22.28648.DBB28226; Wed,  9 Mar 2022 13:23:25 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20220309042324epcas1p111312e20f4429dc3a17172458284a923~am7JxI2_D2642326423epcas1p1k;
+        Wed,  9 Mar 2022 04:23:24 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220309042324epsmtrp2c0e49ce98be7c4a571daa01cf2f7ab5f~am7JwJC_c2497624976epsmtrp2C;
+        Wed,  9 Mar 2022 04:23:24 +0000 (GMT)
+X-AuditID: b6c32a39-ff1ff70000006fe8-c2-62282bbd690a
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        74.92.29871.CBB28226; Wed,  9 Mar 2022 13:23:24 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.98.109]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20220309042324epsmtip2f332f5ca779a6d3f69bae5aa09ef2c40~am7JhWGXh2495824958epsmtip2Z;
+        Wed,  9 Mar 2022 04:23:24 +0000 (GMT)
+From:   Manjong Lee <mj0123.lee@samsung.com>
+To:     david@fromorbit.com
+Cc:     axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-raid@vger.kernel.org,
+        sagi@grimberg.me, song@kernel.org, seunghwan.hyun@samsung.com,
+        sookwan7.kim@samsung.com, nanich.lee@samsung.com,
+        woosung2.lee@samsung.com, yt0928.kim@samsung.com,
+        junho89.kim@samsung.com, jisoo2146.oh@samsung.com
+Subject: Re: [PATCH 2/2] block: remove the per-bio/request write hint.
+Date:   Wed,  9 Mar 2022 22:31:19 +0900
+Message-Id: <20220309133119.6915-1-mj0123.lee@samsung.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220306231727.GP3927073@dread.disaster.area>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: cd6429d1-51cd-4084-7e42-08da0179dda2
-X-MS-TrafficTypeDiagnostic: MWHPR10MB1854:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR10MB1854A9FFE5272217F0EF61FC8E0A9@MWHPR10MB1854.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: YyzsduugOE9lwovdee4nORz3NBkQN9+Fl/TnfzdZ8YooaoiYR2ashxDuzief7mTABmsMarRWi+EQC5YJYZ8Ia/KlI+V+aqRc3F6V01QSRI/3TXTUndpcCGkSOiQAsrtfcvcfPWz4Oqyr1EJFF+oSsOzmYhYI6o8BdEpiJlJkHLDp1gstb/3roC5lraFDGrWu7MRwZE/QacG0dhdq3+/YalBgjtj0ZCj3dkS57P9zmwlAnS/CzaYgpr1ExDWQwcmedOKHP25S5eXMLUod+QqGkKhoWvLm9GndQfJw5BcS5wDxPHR/utoefBXhVGc2McUpXaOI4ZTwQKMCciSFjDK/3swTJQ+gNeSzp29lr9S/gkstCjPs+/uk6Rx0la44ffxbAqMsga0Edo3jiDXKUoTufnaXdWxPwnEpJs3YXhI13wqLzQn3GCRoapyRhVWn4qtfBoEYOpBVUx7zo3A3PvMDaSeTmIDO6aWFqAxq52q2vTLwxD5jAzlgN5tz7yB8KJ/iih4VueJzRF7Y7zumbyD9VIRHr6WFiZta8Ted90uwXkL6AdJWCh5egQi4QQaBdhfVVBdib6nzq2N4kqoiyjODFom/sdToorz1NLD56jq1EBrIfN6LLdXiZfENi2L0jO/MoyUnGtRPqdDdQdTckG6QcvAFQCarbT6rVs2RHrXi5YjEm4d/BDkiiYahiYO2M6XkTXsETj5cgrH6rr1MJqSFTQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA2PR10MB4763.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(6512007)(52116002)(6486002)(508600001)(6506007)(26005)(36916002)(186003)(38350700002)(86362001)(66476007)(8936002)(7416002)(5660300002)(4326008)(8676002)(66946007)(66556008)(2906002)(4744005)(6916009)(54906003)(316002)(38100700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?cMh16E3nrKy496uc53H5fPmMCMq/eMFf/IFriDyvW90rKJ+3TJaVkrUkfKXl?=
- =?us-ascii?Q?kMA1WynXvSYyQMGB22UibieaKx/uzBzbmwQQ5qTSJknUXrySl12NgU+EHpJh?=
- =?us-ascii?Q?KGD7b6xd6L/tdSyVdZxMys5hLgeQI3JjmvZwi5ZvBQLjzzurNE0tQXKkGflK?=
- =?us-ascii?Q?VqpU2wNJ3wMWucMqvV6UIwjQ9R6Hn2pFi7jbWnLVWPH761cMbHk5eSsQ5Oqt?=
- =?us-ascii?Q?QsjZOKtvNd8MY42/i0WFbXDhjrjw+X8o0gC80nHfiB2oco7fnaO28psjkQf/?=
- =?us-ascii?Q?qMu9WVckRfdo5WYjG47askq6BuOTQIES9pyQPyv9e+7/qSqhHoJWinV6ukD3?=
- =?us-ascii?Q?AtAX2QiGgtb5iUFkbH1L5NBSI9+8H0vOfekiNzb+wrW7cGCyiehXc1RWK8WB?=
- =?us-ascii?Q?4vG0R/03TwJyQpqpuMoZHwjrL3Vvk2KQ7ZBLH1r7IPK7KN/Mrp3lO8ljrnOi?=
- =?us-ascii?Q?S54HPaL9ZTNzdzqq44CMy49ioxzy0ymDPqYCs+sHBq1KWEmaRwSNK2nqtrRh?=
- =?us-ascii?Q?sbgGR0e5Dp9THdeKkFjv68UEp6PE6yJ9Nwjl1q8xaSh8NanO9+5+y7/F7yeI?=
- =?us-ascii?Q?V0cScPCVLTmjrtHgTslBrF3V7c69nWDXTh8aYA84TBTBzVIOJlJ0u61500FH?=
- =?us-ascii?Q?a3+GJkpBkOx13ZR4RRya68+x81HlGjFWVdHGhN9Qy3csbP2w3iw7ikt0EucG?=
- =?us-ascii?Q?4QibLfriygrUj1QDT1zAc3S6tNJ/WrNxUefFPk57tRAdF7MjhaOecJU63ke/?=
- =?us-ascii?Q?vCCQwUfbDNzdRZA2vFbw7Cak6HlHdEWPLItS+ATcUJG/seT+8Ps4ifkLirIj?=
- =?us-ascii?Q?a10yR4H+MUi1qrdcJjHhzMTu2dMZ9FJNDLqdywihW8RNQEn/KxAA8URytJDf?=
- =?us-ascii?Q?Lfg/nJcg56R/zSidN4C/pjO5kKcu5nL65bCjC9kN1a/+E1YtXYGMmxnJSXTi?=
- =?us-ascii?Q?EZlyf7OmjpSdQFsRBxeii4fTPFyk1PgYlpCDZsJ5pThriquQe2MZ3W8Z1lf7?=
- =?us-ascii?Q?UWJaYiiZ8E9m7pCG8UUMLcI4ObXa2yNsa/IJ/nhTTbNz7dgLBjRSsBwaS4Li?=
- =?us-ascii?Q?X1TcfLkvFs9NMWWfGJmugW8r/DjmBmG3P44RJgwlxLsfaLLynxMySFld4/vL?=
- =?us-ascii?Q?qAklbt61DJSU4l2y+2F6xv6FOzQ/kMZGodboHrptaKzIsZ15S6oA/PH3aoo6?=
- =?us-ascii?Q?JdRGfIzLwulciSVi9bJW77ognB5aobpE9heaQuJRYczrNtMb+EL5hFA4YN/a?=
- =?us-ascii?Q?u1wCBlXyRLSKebU79y+avJgr/Dr6UzBKHx0pVto5KNYuw1XIXOLpyxwhypng?=
- =?us-ascii?Q?AwHOZ8cQxAeLiLy7q1wUGHC+D5ybJjr/eMiW0/w1EbEYDlT7xisYQQFLuXXS?=
- =?us-ascii?Q?Yv/CQxCRToOt9LH7c0MA1B3p53QkLvlXESJxnBPaZkT3vN4/EKvAJAvolgBe?=
- =?us-ascii?Q?ci4yKbBYUkIl4V2BgrblmT7/iwOiagg0Y/JXR+tM82WyDr7ui0SI/josxmKz?=
- =?us-ascii?Q?alhQqjD3UtPn/sVEjNNX9jYEt6xw+jGoSbPvsRLfsGwqWJSGR0wu4FA//Enj?=
- =?us-ascii?Q?Ko6Xm7vIwEcjrRWoWE3WbUaqRV8PpqQS26JXrNYI8mGKolwcbN4xKgvk0Pvu?=
- =?us-ascii?Q?d12devFrlma1L4r6SUETsJAWSS+sYe4zXyE8Emg1GNhcsds+3sDbUb5+QnzW?=
- =?us-ascii?Q?zORkSHPwqy2LsiSWOQANdEmJ4Fk=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cd6429d1-51cd-4084-7e42-08da0179dda2
-X-MS-Exchange-CrossTenant-AuthSource: SA2PR10MB4763.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2022 03:06:54.9149
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oJlGskmXSJKLaAty6IjqkKDMSXkCeyTjOpF7feTVmked8r+Fq6LIDHOcSUAzr1UWW0FbEFW55Y3rvsXdLtNqRrPvFF+6+vNuOTyydoqorrU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR10MB1854
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10280 signatures=690848
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 bulkscore=0
- phishscore=0 malwarescore=0 suspectscore=0 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2203090015
-X-Proofpoint-ORIG-GUID: VgWSyWj7774d-F8-GaJuGkifFUXVdhlv
-X-Proofpoint-GUID: VgWSyWj7774d-F8-GaJuGkifFUXVdhlv
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrKJsWRmVeSWpSXmKPExsWy7bCmru5ebY0kg8XvWC1W3+1ns9hy7B6j
+        xcrVR5ksep40sVp8fVhsMenQNUaLvbe0LfbsPcliMX/ZU3aL9vm7GC2u3T/DbrHu9XsWi3Mn
+        P7FaHF/+l81i3mMHi1M7JjNbrN/7k81B0OPUIgmP8/c2snhcPlvqsWlVJ5vH5iX1HrtvNrB5
+        9G1ZxejxeZNcAEdUtk1GamJKapFCal5yfkpmXrqtkndwvHO8qZmBoa6hpYW5kkJeYm6qrZKL
+        T4CuW2YO0AdKCmWJOaVAoYDE4mIlfTubovzSklSFjPziElul1IKUnAKzAr3ixNzi0rx0vbzU
+        EitDAwMjU6DChOyMiyunsBSc4K24cpWrgfEpVxcjJ4eEgInEw3kbmbsYuTiEBHYwSiz5cJ8V
+        wvnEKPHg5HomCOcbo8TLZUcZYVruLj/EDpHYyyix+9dfqJbPjBLzTs5iBaliE9CSWP7sAjuI
+        LSIgLnGvrResiFmgi1ni8u5uli5GDg5hATeJE4v8QWpYBFQlOntusIHYvAJWEi13f7BBbJOX
+        OLXsIBOIzSlgLTFt/TNWiBpBiZMzn7CA2MxANc1bZ4M9ISFwgkOife9vJohmF4kVU5awQ9jC
+        Eq+Ob4GypSQ+v9sLtaBYYsutyWD3SAhUSPR2xUKEjSU+ff7MCBJmFtCUWL9LHyKsKLHz91xG
+        iLV8Eu++9rBCdPJKdLQJQZSoSOxu/ga36M2rA4wQJR4SZ485QkKqj1Hi2/23jBMYFWYheWYW
+        kmdmISxewMi8ilEstaA4Nz212LDAFB6/yfm5mxjB6VnLcgfj9Lcf9A4xMnEwHmKU4GBWEuG9
+        f14lSYg3JbGyKrUoP76oNCe1+BCjKTCoJzJLiSbnAzNEXkm8oYmlgYmZkYmFsaWxmZI476pp
+        pxOFBNITS1KzU1MLUotg+pg4OKUamFZaCW8PWsDeFJnhUmR875LkuQdWcS1vr+++GO60yyY8
+        0Z6xPU/IwHzSh3IV/7d3K7bt+xpydPX8djXDkn478/6mHF2ZRz8WmiRJsqgFOZvxd226qvb2
+        p1TiofUfJjJof9Hf9v18usW9bz/Sa33t+Z4r/ZH51/njEr/jGY6NMcq/9MI1eupytZ46f3R5
+        tFD69302uxD+bRacekfjDorGWl/fuKH+wbype7Y6cOcu5+IoW/DzO8e6UkXBo0d5dl0037Wr
+        5t+sHF2jyd0hNawfdN65Wx9aXmu754RZ0RP1Y3v9ebUPvdNQXHelurbyCpeJjaHrSybPcJ5I
+        5xOsB6JknSU+33fN91c8lZxx6LCwEktxRqKhFnNRcSIAEcYqGlgEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpgkeLIzCtJLcpLzFFi42LZdlhJXnePtkaSwZRNIhar7/azWWw5do/R
+        YuXqo0wWPU+aWC2+Piy2mHToGqPF3lvaFnv2nmSxmL/sKbtF+/xdjBbX7p9ht1j3+j2LxbmT
+        n1gtji//y2Yx77GDxakdk5kt1u/9yeYg6HFqkYTH+XsbWTwuny312LSqk81j85J6j903G9g8
+        +rasYvT4vEkugCOKyyYlNSezLLVI3y6BK+PiyiksBSd4K65c5WpgfMrVxcjJISFgInF3+SH2
+        LkYuDiGB3YwS86++YoVISEnMW9vA1sXIAWQLSxw+XAxR85FR4sP5dkaQGjYBLYnlzy6wg9gi
+        AuIS99p6WUGKmAXmMUvMWT6RBaRZWMBN4sQif5AaFgFVic6eG2wgNq+AlUTL3R9sELvkJU4t
+        O8gEYnMKWEtMW/8M7AYhoJrOE+eYIeoFJU7OfMICYjMD1Tdvnc08gVFgFpLULCSpBYxMqxgl
+        UwuKc9Nziw0LDPNSy/WKE3OLS/PS9ZLzczcxgiNJS3MH4/ZVH/QOMTJxMB5ilOBgVhLhvX9e
+        JUmINyWxsiq1KD++qDQntfgQozQHi5I474Wuk/FCAumJJanZqakFqUUwWSYOTqkGJuX9D/0d
+        s6bdPntEzXbbMb+ZeyL+ZckWbkwvDTo+YZN0nbDPjAzBDYuKH/voBeYdlosy+eIXpfZV78ez
+        2M40Xv0/+87v0zJ8m/y64EPz/Ufl1k4XvHOlNmaeO6UdfHjZvRuS/vG7lzh2BK3KDzv244fb
+        X4PpkjtXZ39RmZE45UN/jc5D7ZNbbr/ZHaPz8e+8wP2HGg98m/NixkTWzK8TdZr0bC/utY21
+        qlY2Tzphv+bqq23Ms7LOzntw6ty/sOoDwkIatkdWp97KFU+qnrXYkt33+BuJGVuee/XLHJ9V
+        Pu3iu/r0CuHFCjcdzH0Wfc5RbrY4q9MreyFOvd55od3a4p7ER/vEu9rEkiY8Tn7ySFiJpTgj
+        0VCLuag4EQAjGlMpEwMAAA==
+X-CMS-MailID: 20220309042324epcas1p111312e20f4429dc3a17172458284a923
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20220309042324epcas1p111312e20f4429dc3a17172458284a923
+References: <20220306231727.GP3927073@dread.disaster.area>
+        <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-
-Christoph,
-
-> Remove the magic autofree semantics and require the callers to explicitly
-> call bio_init to initialize the bio.
+>On Sun, ddMar 06, 2022 at 11:06:12AM -0700, Jens Axboe wrote:
+>> On 3/6/22 11:01 AM, Christoph Hellwig wrote:
+>> > On Sun, Mar 06, 2022 at 10:11:46AM -0700, Jens Axboe wrote:
+>> >> Yes, I think we should kill it. If we retain the inode hint, the f2fs
+>> >> doesn't need a any changes. And it should be safe to make the per-file
+>> >> fcntl hints return EINVAL, which they would on older kernels anyway.
+>> >> Untested, but something like the below.
+>> > 
+>> > I've sent this off to the testing farm this morning, but EINVAL might
+>> > be even better:
+>> > 
+>> > http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/more-hint-removal
 >
-> This allows bio_free to catch accidental bio_put calls on bio_init()ed
-> bios as well.
+>Yup, I like that.
+>
+>> I do think EINVAL is better, as it just tells the app it's not available
+>> like we would've done before. With just doing zeroes, that might break
+>> applications that set-and-verify. Of course there's also the risk of
+>> that since we retain inode hints (so they work), but fail file hints.
+>> That's a lesser risk though, and we only know of the inode hints being
+>> used.
+>
+>Agreed, I think EINVAL would be better here - jsut make it behave
+>like it would on a kernel that never supported this functionality in
+>the first place. Seems simpler to me for user applications if we do
+>that.
+>
+>Cheers,
+>
+>Dave.
+>-- 
+>Dave Chinner
+>david@fromorbit.com
+>
 
-> -struct bio *bio_kmalloc(gfp_t gfp_mask, unsigned short nr_iovecs);
-> +struct bio *bio_kmalloc(unsigned short nr_vecs, gfp_t gfp_mask);
+Currently, UFS device also supports hot/cold data separation 
+and uses existing write_hint code.
 
-I understand why you did it but this parameter reversal is a bit
-scary. Hopefully gfp_t will cause any mistakes to be flagged.
+In other words, the function is also being used in storage other than NVMe,
+and if it is removed, it is thought that there will be an operation problem.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+If the code is removed, I am worried about how other devices
+that use the function.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Is there a good alternative?
