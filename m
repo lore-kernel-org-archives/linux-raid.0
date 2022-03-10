@@ -2,131 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB18C43217
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 22:18:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CA6C433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 22:37:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344351AbiCJWTZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Mar 2022 17:19:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52148 "EHLO
+        id S1344374AbiCJWid (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Mar 2022 17:38:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232607AbiCJWTX (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 17:19:23 -0500
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E0AF4EF60;
-        Thu, 10 Mar 2022 14:18:22 -0800 (PST)
-Received: by mail-pl1-f173.google.com with SMTP id n15so6135156plh.2;
-        Thu, 10 Mar 2022 14:18:22 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=5X5xVWc1nkDEIZdla3XpRNW/bQySQD0uGStRSZKwtGE=;
-        b=IBZfoKfGrgIwVgfLYskv27A7+PQBvlBev/0B6zmUjP5ASHmO8YgY0jpYnLplphXFlT
-         DSywr/P8HZxzbRJFbdpgGyQ3EyJggTdXOnpkGkWpo5SoUeVG0xnlwXYJuUBC7YTtzGyx
-         iAd/TVoA1JBI3tyHH8cfnJiQp25UyZAEr0o633/ZwILdCYqPKN66sI2fckkvHoQpQ/b6
-         G9TQJaJ0UzzYY4S/rY/+mU2i0tytn2bO0rGv1zjo+MhShTk8hGaaIqVg5I6VLksN6hMT
-         s5oBC/gIEc9oAl8YDWzedqRzBOCMibXEQaHNbmKXIXjeBsr2h1fLPS+zFXVWA7ieW3vY
-         fILA==
-X-Gm-Message-State: AOAM5332tZtBUKhhJ2jOsR+EuHPrz4jjdng5RxSGS+utseCHcELVy+nZ
-        MphcXp1ugIaVZuy6IR0sNk77WNhKt8A=
-X-Google-Smtp-Source: ABdhPJy62zhEbGvei3QmnuKG1X3fqXb+LD/edNZIPKgqnhwAVLyBG86WPVpfaMOVxXBkkDzB2GptKQ==
-X-Received: by 2002:a17:902:f646:b0:151:d5b1:cbb4 with SMTP id m6-20020a170902f64600b00151d5b1cbb4mr7207735plg.150.1646950701430;
-        Thu, 10 Mar 2022 14:18:21 -0800 (PST)
-Received: from ?IPV6:2620:15c:211:201:8b4d:7ed7:9546:30d2? ([2620:15c:211:201:8b4d:7ed7:9546:30d2])
-        by smtp.gmail.com with ESMTPSA id o5-20020a056a0015c500b004f76735be68sm5366491pfu.216.2022.03.10.14.18.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Mar 2022 14:18:21 -0800 (PST)
-Message-ID: <9d645cf0-1685-437a-23e4-b2a01553bba5@acm.org>
-Date:   Thu, 10 Mar 2022 14:18:19 -0800
+        with ESMTP id S233362AbiCJWid (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 17:38:33 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89CBF5F65;
+        Thu, 10 Mar 2022 14:37:29 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 50F2BB82902;
+        Thu, 10 Mar 2022 22:37:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F25B6C340E8;
+        Thu, 10 Mar 2022 22:37:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646951847;
+        bh=O5nu2s34Arb4kXnG4Xq0X7+UxfVtHqzsSPaGy/3wC4k=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=MfyyYt1+TWS5g7wisWkNI2uEq4rV3M0Fyw6gGygomdjOqlsSK+ko3yE2i8LVPVfeh
+         e4AwZzd9qhBjH801j/YeDcMTUK287DsettaMMkuptm11KIL3VTJHTymbtcECX9UNXM
+         msXshqw5cyxORhON2JK2iZmf7rnrNd3jD6PXJsg2pe/SH1qOxNRCxh8KFsoxrrzGIN
+         CDFhVlKKFRXs5MXmovRwNJML3BAeZR8x2RDNyHNlY+52LT56KHsqEpJJ3M987Ewkds
+         lT4Zdc+wK2RanrnSoLqQWmlMDqe2tDdqo+eDuKw56TvzUDxlOWQpuowP+coCMJOLlB
+         rKmywMBCMj3QA==
+Received: by mail-yb1-f174.google.com with SMTP id g1so13792384ybe.4;
+        Thu, 10 Mar 2022 14:37:26 -0800 (PST)
+X-Gm-Message-State: AOAM531K6Z+hUsrDAsRKATvTNFtleytEhlcGUqQmyCP73DZPsHxblSY2
+        Flb4zjeMJs6qHT4gSxvruDdliXK2KwOYfwkAWW4=
+X-Google-Smtp-Source: ABdhPJwvBfYY2TpIsgin8PDJQBVUKLBbtqz9wax7hteqL23GE/VW4aIi3Ja0d0/Lx91Hy9JT+BPlBdWT5VE4qhu36V4=
+X-Received: by 2002:a05:6902:1ca:b0:624:e2a1:2856 with SMTP id
+ u10-20020a05690201ca00b00624e2a12856mr5747607ybh.389.1646951845989; Thu, 10
+ Mar 2022 14:37:25 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
- hint.
-Content-Language: en-US
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Luca Porzio (lporzio)" <lporzio@micron.com>,
-        Manjong Lee <mj0123.lee@samsung.com>,
-        "david@fromorbit.com" <david@fromorbit.com>
-Cc:     "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "song@kernel.org" <song@kernel.org>,
-        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
-        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
-        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
-        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
-        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
-        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
-        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-References: <20220306231727.GP3927073@dread.disaster.area>
- <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
- <20220309133119.6915-1-mj0123.lee@samsung.com>
- <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk>
- <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk>
- <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org>
- <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20220309064209.4169303-1-song@kernel.org> <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
+In-Reply-To: <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 10 Mar 2022 14:37:15 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com>
+Message-ID: <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com>
+Subject: Re: [PATCH] block: check more requests for multiple_queues in blk_attempt_plug_merge
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
+        Larkin Lowrey <llowrey@nuclearwinter.com>,
+        Wilson Jonathan <i400sjon@gmail.com>,
+        Roger Heflin <rogerheflin@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/10/22 13:52, Bean Huo (beanhuo) wrote:
-> Yes, in upstream linux and upstream android, there is no such code. But as we know,
-> mobile customers have used bio->bi_write_hint in their products for years. And the
-> group ID is set according to bio->bi_write_hint before passing the CDB to UFS.
-> 
-> 
-> 	lrbp = &hba->lrb[tag];
->   
->                WARN_ON(lrbp->cmd);
->               + if(cmd->cmnd[0] == WRITE_10)
->                +{
->                  +             cmd->cmnd[6] = (0x1f& cmd->request->bio->bi_write_hint);
->                +}
->                lrbp->cmd = cmd;
->                lrbp->sense_bufflen = UFS_SENSE_SIZE;
->                lrbp->sense_buffer = cmd->sense_buffer;
-> 
-> I don't know why they don't push these changes to the community, maybe
-> it's because changes across the file system and block layers are unacceptable to the
-> block layer and FS. but for sure we should now warn them to push to the
-> community as soon as possible.
+On Thu, Mar 10, 2022 at 2:15 PM Jens Axboe <axboe@kernel.dk> wrote:
+>
+> On 3/8/22 11:42 PM, Song Liu wrote:
+> > RAID arrays check/repair operations benefit a lot from merging requests.
+> > If we only check the previous entry for merge attempt, many merge will be
+> > missed. As a result, significant regression is observed for RAID check
+> > and repair.
+> >
+> > Fix this by checking more than just the previous entry when
+> > plug->multiple_queues == true.
+> >
+> > This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
+> > 103 MB/s.
+>
+> Do the underlying disks not have an IO scheduler attached? Curious why
+> the merges aren't being done there, would be trivial when the list is
+> flushed out. Because if the perf difference is that big, then other
+> workloads would be suffering they are that sensitive to being within a
+> plug worth of IO.
 
-Thanks Bean for having shared this information. I think the above code sets the GROUP
-NUMBER information in the WRITE(10) command and also that the following text from the
-UFS specification applies to that information:
-<quote>
-GROUP NUMBER: Notifies the Target device that the data linked to a ContextID:
-  -----------------------------------------------------------------------------------------
-     GROUP NUMBER Value     |  Function
-  -----------------------------------------------------------------------------------------
-  00000b                    | Default, no Context ID is associated with the read operation.
-  00001b to 01111b (0XXXXb) | Context ID. (XXXX I from 0001b to 1111b ‐ Context ID value)
-  10000b                    | Data has System Data characteristics
-  10001b to 11111b          | Reserved
-  -----------------------------------------------------------------------------------------
+The disks have mq-deadline by default. I also tried kyber, the result is the
+same. Raid repair work sends IOs to all the HDDs in a round-robin manner.
+If we only check the previous request, there isn't much opportunity for
+merge. I guess other workloads may have different behavior?
 
-In case the GROUP NUMBER is set to a reserved value, the operation shall fail and a status
-response of CHECK CONDITION will be returned along with the sense key set to ILLEGAL REQUEST.
-</quote>
+> Between your two approaches, I do greatly prefer the first one though.
 
-Since there is a desire to remove the write hint information from struct bio, is there
-any other information the "system data characteristics" information can be derived from?
-How about e.g. deriving that information from request flags like REQ_SYNC, REQ_META and/or
-REQ_IDLE?
+I also like the first one better. But I am not sure whether it will slow down
+other workloads. We can probably also make the second one cleaner
+with a new variation of blk_start_plug.
 
 Thanks,
-
-Bart.
+Song
