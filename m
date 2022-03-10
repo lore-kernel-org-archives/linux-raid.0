@@ -2,170 +2,235 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0576CC4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 22:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A45C433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 22:10:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344279AbiCJWLn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Mar 2022 17:11:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36792 "EHLO
+        id S1344289AbiCJWLp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Mar 2022 17:11:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244338AbiCJWLm (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 17:11:42 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 292D519414A
-        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 14:10:40 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id bc27so5863979pgb.4
-        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 14:10:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=xsP1WXazU8yF9ogCr3BU1JiACfVvmKTu/fnyCfbOqUk=;
-        b=cWzs+wFg2VnGcpieyJaxcWJ19NFXtMUM5FJwD1QRmRVPQpOn+hrfhmieyKgY5aYyKs
-         8646n/XopKrT2QSjSnJ4O3ES6AxZEwG9cNQ1HtivZA+NXFfsY0talA6ne5uswoGVjLwa
-         4rbQTyibXfPzNi/8zXBv7Cho7AGRZWRnOFy98TTkL07qnEKc7NMLFULAvvzP55gDVcjs
-         tpamyOMx/Dwvv2Lf1Wd9aFWv4vWxsyCxiHJcQa0ksrX1UCPeSzxA/V0QLpOdTENIl++z
-         Sg+r6scTtoxN8ZP0tmofRRCDkzHSPZ1UGinWToGgROeeNgUsfNHFccXVV/+BYWLiGNyP
-         AOFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=xsP1WXazU8yF9ogCr3BU1JiACfVvmKTu/fnyCfbOqUk=;
-        b=KaylVoxXsjpzsKa0M6Y7oUTvcrZbyTZc3VW6zxQz/kQZFQFV3AjKV66JgTpi4czawd
-         Y6qab5+W1ws9vv8eTfg1GFCb9IXzxRPcp0sOhbXGtJfoXwuFmY128vlWPJvQmJIQbnum
-         cucrwzmcGRsTxONMvVBHpT7wlSP46bxqd95TfFCliefzexu2H130gRrqV8KP5hS+dO31
-         51R6WJtS0r25RzERAe2WfA61ApdEG/pkYYl4ylykO6IPdfL5pVRivcaMSRjX8fLqbgdG
-         17GAprcBi2ZtFc7e3PTSJUrzNY2SSH2Iqv+0+JqTCwvQpwDJ6xgSjh2txYbmuCutXzE+
-         AQyw==
-X-Gm-Message-State: AOAM533EN6xEYJU80v91bBr1Rx/PklPcme2IfLI2pvnnHJcKcz6JB66q
-        wVsz3EdgH9ZsLCGRr+UFMvG7Mw==
-X-Google-Smtp-Source: ABdhPJxbTLA0OsiplGUL6ou0rPxtgBzbqnjcq2fP5xl4uPaTzTuWqUWDxDpJoesTUoRFLCQFyTMfIA==
-X-Received: by 2002:a05:6a00:16ce:b0:4ce:118f:8e4f with SMTP id l14-20020a056a0016ce00b004ce118f8e4fmr7263609pfc.56.1646950239505;
+        with ESMTP id S240840AbiCJWLo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 17:11:44 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39F1F1959E8;
+        Thu, 10 Mar 2022 14:10:42 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DC847B828AE;
+        Thu, 10 Mar 2022 22:10:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 928EBC340E9;
+        Thu, 10 Mar 2022 22:10:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646950239;
+        bh=ciE3UiXOo8qUTGPSsYq8F51hde1jSkJhyknZojqG7HY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=iW8LoZv2jkoI6/s4RU7OqRDlWr/X1Kf1G6LRnMFbkqM/4V79sSKrORFmgiB4/YTWh
+         7jVz0fxWx/9qQgNZ0/7N26ApTEus7Pu1fwwi2lh4U5bcf/EOBGebp/gWsSo9PITr/B
+         45i5LB8hMRgiXn20i/4sy1miO/fA/rM+6ktWQ87fHb00Fp9psxn2F9aSwPiTxNgU5p
+         55QWwOX8VJejgV+mQoN5rcXAaMLmliEisLRu1Bdjun3Y8IsNk0gvQKxuAMG7bfI+0A
+         6aLCiD8iBGZfmKWN1wxiJS3PY8ciIyJJXD5ovP/BoKxJFFghx0w300oLUV+gtF28qe
+         i8C++WBeHABUw==
+Received: by mail-yb1-f181.google.com with SMTP id g1so13680028ybe.4;
         Thu, 10 Mar 2022 14:10:39 -0800 (PST)
-Received: from ?IPV6:2600:380:7676:ce7b:11ac:aee8:fe09:2807? ([2600:380:7676:ce7b:11ac:aee8:fe09:2807])
-        by smtp.gmail.com with ESMTPSA id x14-20020a17090ab00e00b001bf2d30ee9dsm10581380pjq.3.2022.03.10.14.10.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Mar 2022 14:10:39 -0800 (PST)
-Message-ID: <ef77ef36-df95-8658-ff54-7d8046f5d0e7@kernel.dk>
-Date:   Thu, 10 Mar 2022 15:10:35 -0700
+X-Gm-Message-State: AOAM532w8uAQvaWly1hAQQEnI6FkllypbiX6yZV14HZ3mGYuLZkXRKqi
+        U01rvjaNt1jyheAib8YemnOEpnxV7tumw0CKPqw=
+X-Google-Smtp-Source: ABdhPJwpvxpy0c9Yo21E4M2ZcsteYPHZBpbfcLZhyrm/KA5yOBkJDyFiagUv5wbNWoIzD8dljXpQcEZ8j23JdqeU0Pw=
+X-Received: by 2002:a25:8b81:0:b0:629:17d5:68c1 with SMTP id
+ j1-20020a258b81000000b0062917d568c1mr5607679ybl.449.1646950238655; Thu, 10
+ Mar 2022 14:10:38 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
- hint.
-Content-Language: en-US
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Luca Porzio (lporzio)" <lporzio@micron.com>,
-        Manjong Lee <mj0123.lee@samsung.com>,
-        "david@fromorbit.com" <david@fromorbit.com>
-Cc:     "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "song@kernel.org" <song@kernel.org>,
-        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
-        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
-        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
-        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
-        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
-        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
-        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-References: <20220306231727.GP3927073@dread.disaster.area>
- <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
- <20220309133119.6915-1-mj0123.lee@samsung.com>
- <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk>
- <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk>
- <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org>
- <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20220309064209.4169303-1-song@kernel.org> <YimfLJoWLKnnhLfR@infradead.org>
+ <CAPhsuW4DJbvH5QZ5YMC4Ms4bd66UOFsLL=-yK8tQKrwreCfKDQ@mail.gmail.com>
+In-Reply-To: <CAPhsuW4DJbvH5QZ5YMC4Ms4bd66UOFsLL=-yK8tQKrwreCfKDQ@mail.gmail.com>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 10 Mar 2022 14:10:27 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7AHuxOpiH_nsqg4dkb3pwOTy8f2sHsDrtAF73+BLZF5A@mail.gmail.com>
+Message-ID: <CAPhsuW7AHuxOpiH_nsqg4dkb3pwOTy8f2sHsDrtAF73+BLZF5A@mail.gmail.com>
+Subject: Re: [PATCH] block: check more requests for multiple_queues in blk_attempt_plug_merge
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-block@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, stable@vger.kernel.org,
+        Larkin Lowrey <llowrey@nuclearwinter.com>,
+        Wilson Jonathan <i400sjon@gmail.com>,
+        Roger Heflin <rogerheflin@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/10/22 2:52 PM, Bean Huo (beanhuo) wrote:
-> Micron Confidential
-> 
->>>>
->>>>>
->>>>> You do both realize that this is just the file specific hint? Inode
->>>>> based hints will still work fine for UFS.
->>>>>
->>>>> --
->>>>> Jens Axboe
->>>>
->>>> Jens,
->>>>
->>>> Thanks for this reply.
->>>>
->>>> This whole patch series removes support for per-bio write_hint.
->>>> Without bio write_hint, F2FS won't be able to cascade Hot/Warm/Cold
->>>> information to SCSI / UFS driver.
->>>>
->>>> This is my current understanding. I might be wrong but I don't think
->>>> we Are concerned with inode hint (as well as file hints).
->>>
->>> But ufs/scsi doesn't use it in mainline, as far as I can tell. So how
->>> does that work?
->>
->> Hi Luca,
->>
->> I'm not aware of any Android branch on which the UFS driver or the SCSI core
->> uses bi_write_hint or the struct request write_hint member. Did I perhaps
->> overlook something?
->>
->> Thanks,
->>
-> 
-> 
-> Bart,
-> 
-> Yes, in upstream linux and upstream android, there is no such code.
-> But as we know, mobile customers have used bio->bi_write_hint in their
-> products for years. And the group ID is set according to
-> bio->bi_write_hint before passing the CDB to UFS.
-> 
-> 
-> 	lrbp = &hba->lrb[tag];
->  
->               WARN_ON(lrbp->cmd);
->              + if(cmd->cmnd[0] == WRITE_10)
->               +{
->                 +             cmd->cmnd[6] = (0x1f& cmd->request->bio->bi_write_hint);
->               +}             
->               lrbp->cmd = cmd;
->               lrbp->sense_bufflen = UFS_SENSE_SIZE;
->               lrbp->sense_buffer = cmd->sense_buffer;
-> 
-> I don't know why they don't push these changes to the community, maybe
-> it's because changes across the file system and block layers are
-> unacceptable to the block layer and FS. but for sure we should now
-> warn them to push to the community as soon as possible. 
+On Wed, Mar 9, 2022 at 11:23 PM Song Liu <song@kernel.org> wrote:
+>
+> On Wed, Mar 9, 2022 at 10:48 PM Christoph Hellwig <hch@infradead.org> wrote:
+> >
+> > On Tue, Mar 08, 2022 at 10:42:09PM -0800, Song Liu wrote:
+> > > RAID arrays check/repair operations benefit a lot from merging requests.
+> > > If we only check the previous entry for merge attempt, many merge will be
+> > > missed. As a result, significant regression is observed for RAID check
+> > > and repair.
+> > >
+> > > Fix this by checking more than just the previous entry when
+> > > plug->multiple_queues == true.
+> >
+> > But this also means really significant CPU overhead for all other
+> > workloads.
+>
+> Would the following check help with these workloads?
+>
+>  if (!plug->multiple_queues)
+>               break;
+>
+> >
+> > >
+> > > This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
+> > > 103 MB/s.
+> >
+> > What driver uses multiple queues for HDDs?
+> >
+> > Can you explain the workload submitted by a md a bit better?  I wonder
+> > if we can easily do the right thing straight in the md driver.
+>
+> It is the md sync_thread doing check and repair. Basically, the md
+> thread reads all
+> the disks and computes parity from data.
+>
+> Maybe we should add a new flag to struct blk_plug for this special case?
 
-If the code isn't upstream, it's a bit late to start thinking about
-that now. This feature has existed for 5 years at this point, and the
-only consumer was NVMe. The upstream kernel cares only about what is
-in-tree, as that is the only part we can modify and fix. We
-change/modify internal kernel APIs all the time, which is how tech debt
-is removed and the long term sanity of the project is maintained. This
-in turn means that out-of-tree code will break, that's just a natural
-side effect and something we can't do anything about.
+I meant something like:
 
-If at some point there's a desire to actually try and upstream this
-support, then we'll be happy to review that patchset. Or you can
-continue to stay out-of-tree and just patch in what you need. If you're
-already modifying core code, then that shouldn't be a problem.
+diff --git c/block/blk-core.c w/block/blk-core.c
+index 1039515c99d6..4fb09243e908 100644
+--- c/block/blk-core.c
++++ w/block/blk-core.c
+@@ -1303,6 +1303,12 @@ void blk_finish_plug(struct blk_plug *plug)
+ }
+ EXPORT_SYMBOL(blk_finish_plug);
 
--- 
-Jens Axboe
++void blk_plug_merge_aggressively(struct blk_plug *plug)
++{
++    plug->aggresive_merge = true;
++}
++EXPORT_SYMBOL(blk_plug_merge_aggressively);
++
+ void blk_io_schedule(void)
+ {
+     /* Prevent hang_check timer from firing at us during very long I/O */
+diff --git c/block/blk-merge.c w/block/blk-merge.c
+index 4de34a332c9f..8b673288bc5f 100644
+--- c/block/blk-merge.c
++++ w/block/blk-merge.c
+@@ -1089,12 +1089,14 @@ bool blk_attempt_plug_merge(struct
+request_queue *q, struct bio *bio,
+     if (!plug || rq_list_empty(plug->mq_list))
+         return false;
 
+-    /* check the previously added entry for a quick merge attempt */
+-    rq = rq_list_peek(&plug->mq_list);
+-    if (rq->q == q) {
+-        if (blk_attempt_bio_merge(q, rq, bio, nr_segs, false) ==
+-                BIO_MERGE_OK)
+-            return true;
++    rq_list_for_each(&plug->mq_list, rq) {
++        if (rq->q == q) {
++            if (blk_attempt_bio_merge(q, rq, bio, nr_segs, false) ==
++                BIO_MERGE_OK)
++                return true;
++        }
++        if (!plug->aggresive_merge)
++            break;
+     }
+     return false;
+ }
+diff --git c/drivers/md/md.c w/drivers/md/md.c
+index 4d38bd7dadd6..6be56632a412 100644
+--- c/drivers/md/md.c
++++ w/drivers/md/md.c
+@@ -8901,6 +8901,7 @@ void md_do_sync(struct md_thread *thread)
+     update_time = jiffies;
+
+     blk_start_plug(&plug);
++    blk_plug_merge_aggressively(&plug);
+     while (j < max_sectors) {
+         sector_t sectors;
+
+diff --git c/drivers/md/raid1.c w/drivers/md/raid1.c
+index e2d8acb1e988..501d15532170 100644
+--- c/drivers/md/raid1.c
++++ w/drivers/md/raid1.c
+@@ -838,6 +838,7 @@ static void flush_pending_writes(struct r1conf *conf)
+          */
+         __set_current_state(TASK_RUNNING);
+         blk_start_plug(&plug);
++        blk_plug_merge_aggressively(&plug);
+         flush_bio_list(conf, bio);
+         blk_finish_plug(&plug);
+     } else
+@@ -2591,6 +2592,7 @@ static void raid1d(struct md_thread *thread)
+     }
+
+     blk_start_plug(&plug);
++    blk_plug_merge_aggressively(&plug);
+     for (;;) {
+
+         flush_pending_writes(conf);
+diff --git c/drivers/md/raid10.c w/drivers/md/raid10.c
+index 2b969f70a31f..0a594613a075 100644
+--- c/drivers/md/raid10.c
++++ w/drivers/md/raid10.c
+@@ -876,6 +876,7 @@ static void flush_pending_writes(struct r10conf *conf)
+         __set_current_state(TASK_RUNNING);
+
+         blk_start_plug(&plug);
++        blk_plug_merge_aggressively(&plug);
+         /* flush any pending bitmap writes to disk
+          * before proceeding w/ I/O */
+         md_bitmap_unplug(conf->mddev->bitmap);
+@@ -3088,6 +3089,7 @@ static void raid10d(struct md_thread *thread)
+     }
+
+     blk_start_plug(&plug);
++    blk_plug_merge_aggressively(&plug);
+     for (;;) {
+
+         flush_pending_writes(conf);
+diff --git c/drivers/md/raid5.c w/drivers/md/raid5.c
+index ffe720c73b0a..a96884ca5f08 100644
+--- c/drivers/md/raid5.c
++++ w/drivers/md/raid5.c
+@@ -6447,6 +6447,7 @@ static void raid5_do_work(struct work_struct *work)
+     pr_debug("+++ raid5worker active\n");
+
+     blk_start_plug(&plug);
++    blk_plug_merge_aggressively(&plug);
+     handled = 0;
+     spin_lock_irq(&conf->device_lock);
+     while (1) {
+@@ -6497,6 +6498,7 @@ static void raid5d(struct md_thread *thread)
+     md_check_recovery(mddev);
+
+     blk_start_plug(&plug);
++    blk_plug_merge_aggressively(&plug);
+     handled = 0;
+     spin_lock_irq(&conf->device_lock);
+     while (1) {
+diff --git c/include/linux/blkdev.h w/include/linux/blkdev.h
+index 16b47035e4b0..45b0da416302 100644
+--- c/include/linux/blkdev.h
++++ w/include/linux/blkdev.h
+@@ -775,6 +775,7 @@ struct blk_plug {
+     bool multiple_queues;
+     bool has_elevator;
+     bool nowait;
++    bool aggresive_merge;
+
+     struct list_head cb_list; /* md requires an unplug callback */
+ };
+@@ -791,6 +792,7 @@ extern struct blk_plug_cb
+*blk_check_plugged(blk_plug_cb_fn unplug,
+ extern void blk_start_plug(struct blk_plug *);
+ extern void blk_start_plug_nr_ios(struct blk_plug *, unsigned short);
+ extern void blk_finish_plug(struct blk_plug *);
++void blk_plug_merge_aggressively(struct blk_plug *plug);
+
+ void blk_flush_plug(struct blk_plug *plug, bool from_schedule);
