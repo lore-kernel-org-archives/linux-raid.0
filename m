@@ -2,133 +2,94 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AC36C4332F
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 22:12:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1DEEC433FE
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 22:15:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344317AbiCJWN4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Mar 2022 17:13:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39782 "EHLO
+        id S1344357AbiCJWQm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Mar 2022 17:16:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244576AbiCJWNz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 17:13:55 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BE2485969;
-        Thu, 10 Mar 2022 14:12:51 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CDBF261B83;
-        Thu, 10 Mar 2022 22:12:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CF4FC340E9;
-        Thu, 10 Mar 2022 22:12:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646950370;
-        bh=90dWd3WMXBfclXU6Ng7x5a7PuNyUNDhZeXRVc60uhbg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=ZQinx6cXjQW9sQyaGIDtFfN5rwwP3OCPXqofCwx5osBNdIXc0lQc298DHC0tpZYtY
-         ayJCIm7DMi3PisgVeUM+wifCKUhqMZ5SXZaP47ZIc/6NzxfhSte/I3K3zNEnJY1IGx
-         Pa476c+yTzzE1//a8Th7J6avpEZfTqYT6+U+oyuBN09RgnTO9eUf06NiPSTN5z9WXd
-         7wdpHyV8otQFuE7UdBBGCf6TUEDG4Iz1Jk6cI+Iyxfg3NooOAsrxVAio+ruO9HzWzp
-         wtOfG01WYIBb3DSHUPGScD+NS3HvguxYEX580b8MDBH3EQAsgR4hzzVXVKenuQ4nuS
-         uas3cVREKya9w==
-Received: by mail-yb1-f174.google.com with SMTP id u3so13677652ybh.5;
-        Thu, 10 Mar 2022 14:12:50 -0800 (PST)
-X-Gm-Message-State: AOAM530YrNyqju5qWS8SnebXmlcJnoFPEL6XsAVZtA085OtjLt9akQv2
-        GTFfy0Z3v7vwzMd0miWY55nJ9nfQL7CRyKXs5V4=
-X-Google-Smtp-Source: ABdhPJyWWyoP+V45Q5VDLQwckcRyWAX2SrIm2A03kp3jsjWKm2N0PX4WbP+K/vESY/C6arjFB5J2qsBGYGUM3tgo3Mg=
-X-Received: by 2002:a25:d350:0:b0:629:173b:b133 with SMTP id
- e77-20020a25d350000000b00629173bb133mr5689175ybf.561.1646950369311; Thu, 10
- Mar 2022 14:12:49 -0800 (PST)
+        with ESMTP id S1344037AbiCJWQk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 17:16:40 -0500
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20F03197B78
+        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 14:15:39 -0800 (PST)
+Received: by mail-pg1-x52b.google.com with SMTP id q19so5869275pgm.6
+        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 14:15:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=hnTFWnQJmvbm9LEtFQvI4GpVPQj/z6Hgu7d/5cJgwGU=;
+        b=GRACj0SFaphKhV/+h7K0CBcgmjtW+WehxP7ZAow2XGAC4beO1q+M8D3BP4sziJ809O
+         B/ttj3qNZ3hy9g10Auo2s91jwW/ms8f1uu0YPnSlDdbAO9TquV0X64CgPAybQ3cNGU44
+         udwqkTPbIM28s2aAXSBTNNdbwSrF3TLDb1Pf6MprMyyq1fLT6N59YVVEZY0aNkTwE59q
+         96IaDZqx7uctsRTwmrp6Q9315N+QOxiVgidlwmMDhU4vH289ShcbKdHW9ca0ywaAxmRk
+         smev9fdVuuWYL033r64YsZrL7+IDC5jP9n5QPbYUI0P3LA471jThNwsAlY55FIdqnpxQ
+         g9jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=hnTFWnQJmvbm9LEtFQvI4GpVPQj/z6Hgu7d/5cJgwGU=;
+        b=zncfjMtUujFotpkZm9cxwevdtXkKpWp5LXBOQ69mI4AS+c1eIplOJ+Wa2hhcoXtPpz
+         K3bfaRsz4TF9DilJUQR8jPmUJMl5lESuCHJYqZdL5eIM3PjvSVOuuaddPnFJpLnDIMUZ
+         Uj99HgvNUj98hd6nlZJHS7/V8CsiqTZhcMEwIBzk9FqSQQ6HUFoMg0ChQVF+nOfAjj9s
+         4T8m+zW8bZ2jk8L5ggjXllyx3NkomRUYHlZ+zC2BWlNPU2ULUe7qADobuR4kDglZ9sHO
+         O6mgE7gHXCFnTUsDGmDHNkGuxBY9kf3oG4ZGXdfyDaIt/m2AUhn6j1FGigo5o4opFMn4
+         cjww==
+X-Gm-Message-State: AOAM533FkhEOKIcl6DIlfkyIgr6KDQHvou9/PU+UTP9wSKcMocrGX+O8
+        U30O/d8JB/UH83iFypPOO0TWrRzpHCluoVJ+
+X-Google-Smtp-Source: ABdhPJw+pGFGO9T4EDDKaf9lZx4+G5dZFq0/F63AxN+xCER7XgP8Tywk2IfhNk0rJJLPup9XCcORyA==
+X-Received: by 2002:a62:5251:0:b0:4f6:ff68:50c2 with SMTP id g78-20020a625251000000b004f6ff6850c2mr6890521pfb.63.1646950538572;
+        Thu, 10 Mar 2022 14:15:38 -0800 (PST)
+Received: from ?IPV6:2600:380:7676:ce7b:11ac:aee8:fe09:2807? ([2600:380:7676:ce7b:11ac:aee8:fe09:2807])
+        by smtp.gmail.com with ESMTPSA id d4-20020aa78e44000000b004f6aaa184c9sm7740910pfr.71.2022.03.10.14.15.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Mar 2022 14:15:38 -0800 (PST)
+Message-ID: <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
+Date:   Thu, 10 Mar 2022 15:15:35 -0700
 MIME-Version: 1.0
-References: <20220309064209.4169303-1-song@kernel.org> <YimfLJoWLKnnhLfR@infradead.org>
- <CAPhsuW4DJbvH5QZ5YMC4Ms4bd66UOFsLL=-yK8tQKrwreCfKDQ@mail.gmail.com> <CAPhsuW7AHuxOpiH_nsqg4dkb3pwOTy8f2sHsDrtAF73+BLZF5A@mail.gmail.com>
-In-Reply-To: <CAPhsuW7AHuxOpiH_nsqg4dkb3pwOTy8f2sHsDrtAF73+BLZF5A@mail.gmail.com>
-From:   Song Liu <song@kernel.org>
-Date:   Thu, 10 Mar 2022 14:12:38 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5Ph5M5659xMAnMwmBvpsrWbFtVZB2j-EF7q3KHrrp-Ew@mail.gmail.com>
-Message-ID: <CAPhsuW5Ph5M5659xMAnMwmBvpsrWbFtVZB2j-EF7q3KHrrp-Ew@mail.gmail.com>
-Subject: Re: [PATCH] block: check more requests for multiple_queues in blk_attempt_plug_merge
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-block@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, stable@vger.kernel.org,
-        Larkin Lowrey <llowrey@nuclearwinter.com>,
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH] block: check more requests for multiple_queues in
+ blk_attempt_plug_merge
+Content-Language: en-US
+To:     Song Liu <song@kernel.org>, linux-block@vger.kernel.org,
+        linux-raid@vger.kernel.org
+Cc:     stable@vger.kernel.org, Larkin Lowrey <llowrey@nuclearwinter.com>,
         Wilson Jonathan <i400sjon@gmail.com>,
         Roger Heflin <rogerheflin@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+References: <20220309064209.4169303-1-song@kernel.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20220309064209.4169303-1-song@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 10, 2022 at 2:10 PM Song Liu <song@kernel.org> wrote:
->
-> On Wed, Mar 9, 2022 at 11:23 PM Song Liu <song@kernel.org> wrote:
-> >
-> > On Wed, Mar 9, 2022 at 10:48 PM Christoph Hellwig <hch@infradead.org> wrote:
-> > >
-> > > On Tue, Mar 08, 2022 at 10:42:09PM -0800, Song Liu wrote:
-> > > > RAID arrays check/repair operations benefit a lot from merging requests.
-> > > > If we only check the previous entry for merge attempt, many merge will be
-> > > > missed. As a result, significant regression is observed for RAID check
-> > > > and repair.
-> > > >
-> > > > Fix this by checking more than just the previous entry when
-> > > > plug->multiple_queues == true.
-> > >
-> > > But this also means really significant CPU overhead for all other
-> > > workloads.
-> >
-> > Would the following check help with these workloads?
-> >
-> >  if (!plug->multiple_queues)
-> >               break;
-> >
-> > >
-> > > >
-> > > > This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
-> > > > 103 MB/s.
-> > >
-> > > What driver uses multiple queues for HDDs?
-> > >
-> > > Can you explain the workload submitted by a md a bit better?  I wonder
-> > > if we can easily do the right thing straight in the md driver.
-> >
-> > It is the md sync_thread doing check and repair. Basically, the md
-> > thread reads all
-> > the disks and computes parity from data.
-> >
-> > Maybe we should add a new flag to struct blk_plug for this special case?
->
-> I meant something like:
->
-> diff --git c/block/blk-core.c w/block/blk-core.c
-> index 1039515c99d6..4fb09243e908 100644
-> --- c/block/blk-core.c
-> +++ w/block/blk-core.c
-> @@ -1303,6 +1303,12 @@ void blk_finish_plug(struct blk_plug *plug)
->  }
->  EXPORT_SYMBOL(blk_finish_plug);
->
-> +void blk_plug_merge_aggressively(struct blk_plug *plug)
-> +{
-> +    plug->aggresive_merge = true;
-> +}
-> +EXPORT_SYMBOL(blk_plug_merge_aggressively);
-> +
->  void blk_io_schedule(void)
->  {
->      /* Prevent hang_check timer from firing at us during very long I/O */
+On 3/8/22 11:42 PM, Song Liu wrote:
+> RAID arrays check/repair operations benefit a lot from merging requests.
+> If we only check the previous entry for merge attempt, many merge will be
+> missed. As a result, significant regression is observed for RAID check
+> and repair.
+> 
+> Fix this by checking more than just the previous entry when
+> plug->multiple_queues == true.
+> 
+> This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
+> 103 MB/s.
 
-Missed one change:
+Do the underlying disks not have an IO scheduler attached? Curious why
+the merges aren't being done there, would be trivial when the list is
+flushed out. Because if the perf difference is that big, then other
+workloads would be suffering they are that sensitive to being within a
+plug worth of IO.
 
---- c/block/blk-core.c
-+++ w/block/blk-core.c
-@@ -1188,6 +1188,7 @@ void blk_start_plug_nr_ios(struct blk_plug
-*plug, unsigned short nr_ios)
-     plug->multiple_queues = false;
-     plug->has_elevator = false;
-     plug->nowait = false;
-+    plug->aggresive_merge = false;
-     INIT_LIST_HEAD(&plug->cb_list);
+Between your two approaches, I do greatly prefer the first one though.
 
-     /*
+-- 
+Jens Axboe
+
