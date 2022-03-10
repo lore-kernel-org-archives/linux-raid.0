@@ -2,80 +2,109 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2AB7C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 23:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF1AC43219
+	for <linux-raid@archiver.kernel.org>; Thu, 10 Mar 2022 23:33:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344516AbiCJXFx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Mar 2022 18:05:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47594 "EHLO
+        id S1344794AbiCJXex (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 10 Mar 2022 18:34:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231866AbiCJXFx (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 18:05:53 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B35A713C240
-        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 15:04:51 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id mm23-20020a17090b359700b001bfceefd8c6so3279730pjb.3
-        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 15:04:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=aNv7HvFkg/UVzY5CpW+51gcwm/tSTicoot8l+5ODEIk=;
-        b=ylO7rYSWOVfkb0YMfUzF+jsHS+OGS1IOIkgO37JvgCS1A23mMYvTtBNH3arASbjKn2
-         cCok1EOcYGvt/p6wTRg9audnhVL8zsebxj5iW9aFkA7of0IXlPVKTd1CP2VXHO3XSExu
-         z3OHgIsGbQMUvV0nxeMFnn6X091UZ6bb0+zj59oOZX/Z/YCHxR8MnxTLC04Mhc3+Luxb
-         GiHdqbWPCaKmX/bwC/oFgmpPs2X/x23BLwKX7ViY3a0iFH9fOS9sKiAGcADBvWwJluaQ
-         OL0WONTcp4KBFXzeZdf02/Eddq6n9ovwzsGDeNSs9FneCDjvweM3RRXsAX7fpKnaV+bF
-         S3Uw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=aNv7HvFkg/UVzY5CpW+51gcwm/tSTicoot8l+5ODEIk=;
-        b=nzdqtdVHgVr/nBrFq1jrLG72ys3hG79zyxz8f0/SCXhM5WKFPO3x15O5t+8CBH86/B
-         EfDPIeUAz8lLPcfy9suaiMLQ0WW3Q223F+9wzrC/siLVZZ5YoI3flSEd7M+cgsWnersU
-         YMQlmQuXHSn3FjMogiQCAl7sqzosfsPksmIfMcM17cOrJsDlO8HKOg7fMlVh9zS++zpn
-         EbXO9vZyveQf1mLZ95b8X+9Kt/ac9aOg6FTDWs7B3RkQQiOqn5L+dOtFrYzZm+L+qu9m
-         +JHFovn3mmKdyfj8tZd1tBX/YJB4n/z6tyTjo6vpfm2InW5kFQ8MBz6TU0BaOuUjJfIJ
-         vmug==
-X-Gm-Message-State: AOAM531kEAM0k1gS05lWCXMLvZ4km3DlKBysWExQls4i45inVY/vekZ2
-        DIMhuV9lqnyhRl6X9S9Q07o37Y5Kgx6JCs+H
-X-Google-Smtp-Source: ABdhPJxQ+RyumRjWEA6N8t08BD3pUDAJuPL3jtPZKuhmR5bWi8RtlFxNrEJFBTwstQKVEnQ4qoi5Pw==
-X-Received: by 2002:a17:90b:4595:b0:1be:db22:8327 with SMTP id hd21-20020a17090b459500b001bedb228327mr18617675pjb.99.1646953491121;
-        Thu, 10 Mar 2022 15:04:51 -0800 (PST)
-Received: from ?IPV6:2600:380:7676:ce7b:11ac:aee8:fe09:2807? ([2600:380:7676:ce7b:11ac:aee8:fe09:2807])
-        by smtp.gmail.com with ESMTPSA id f7-20020a056a0022c700b004e11d3d0459sm8503584pfj.65.2022.03.10.15.04.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Mar 2022 15:04:50 -0800 (PST)
-Message-ID: <19254e98-8629-6ff0-6eec-d81d0b1488d5@kernel.dk>
-Date:   Thu, 10 Mar 2022 16:04:49 -0700
+        with ESMTP id S1344764AbiCJXen (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 18:34:43 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63ABF1520ED;
+        Thu, 10 Mar 2022 15:33:41 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C7E2A61D1C;
+        Thu, 10 Mar 2022 23:33:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 307FDC340E8;
+        Thu, 10 Mar 2022 23:33:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646955220;
+        bh=KtcNK43D297EfcW6xxSyyTTHCEYLXXZxSma9Kt0RP/Q=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=nT7vS9BgZbx3tjzdNBb0zd1p+9YH/6eFrpTUjgJKbzPipC1h1GhSKxHRS5cbj15hU
+         ZArBFUlBp0f83OrpjU3Dp3GDKnN7xOJLDYqYi7ClIi7iJH5Z28Oi7mEX8sZ9zYCCsa
+         O/sr6t6MyZL4GIoJQRM8AFaCuSUVJ3OGf4yvafrjkycCoy5VZ1DDQUYAIs4DV/WHMw
+         RtXxBTTTolsGIl76nniP+mpmg7Yc1e0xfkjYdv7PNwRUQ2hQEl5EleKz9lh8CPsqRJ
+         76tRJXIcqtL8aRXt99GsLCZ6izj9y4Z9DWqvCvVRiPnvFpMq2+jo4b+EgjRE64087e
+         sqZm8HvEkLbsg==
+Received: by mail-yb1-f182.google.com with SMTP id l2so13988690ybe.8;
+        Thu, 10 Mar 2022 15:33:40 -0800 (PST)
+X-Gm-Message-State: AOAM531XyYASr2TiAn5/cmrPhKZGVC2SA+5TCdHO4WyACfF0p+krkkg7
+        PZufWFYRCMdqNLOm2vDL+x71XmAc219oi5uVGHQ=
+X-Google-Smtp-Source: ABdhPJzlRrlnsJBA+uqStOGRXSBFuEe4HZtQjB64G+Dv/jMEjhl4wivxLaMX14y4N4Jq4AkuL7oRzpK2KPVK8zg4vvw=
+X-Received: by 2002:a25:d350:0:b0:629:173b:b133 with SMTP id
+ e77-20020a25d350000000b00629173bb133mr5913520ybf.561.1646955219254; Thu, 10
+ Mar 2022 15:33:39 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [GIT PULL] md-next 20220310
-Content-Language: en-US
-To:     Song Liu <songliubraving@fb.com>,
-        linux-raid <linux-raid@vger.kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>
-References: <0F4A0065-2209-40F3-A375-5660B5055FA5@fb.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <0F4A0065-2209-40F3-A375-5660B5055FA5@fb.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20220309064209.4169303-1-song@kernel.org> <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
+ <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com> <38f7aaf5-2043-b4f4-1fa5-52a7c883772b@kernel.dk>
+In-Reply-To: <38f7aaf5-2043-b4f4-1fa5-52a7c883772b@kernel.dk>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 10 Mar 2022 15:33:28 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW7zdYZqxaJ7SOWdnVOx-cASSoXS4OwtWVbms_jOHNh=Kw@mail.gmail.com>
+Message-ID: <CAPhsuW7zdYZqxaJ7SOWdnVOx-cASSoXS4OwtWVbms_jOHNh=Kw@mail.gmail.com>
+Subject: Re: [PATCH] block: check more requests for multiple_queues in blk_attempt_plug_merge
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
+        Larkin Lowrey <llowrey@nuclearwinter.com>,
+        Wilson Jonathan <i400sjon@gmail.com>,
+        Roger Heflin <rogerheflin@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/10/22 3:41 PM, Song Liu wrote:
-> Hi Jens, 
-> 
-> Please consider pulling the following changes for md-next on top of your
-> for-5.18/drivers branch. This set contains raid5 bio handling cleanups
-> for raid5. 
+On Thu, Mar 10, 2022 at 3:02 PM Jens Axboe <axboe@kernel.dk> wrote:
+>
+> On 3/10/22 3:37 PM, Song Liu wrote:
+> > On Thu, Mar 10, 2022 at 2:15 PM Jens Axboe <axboe@kernel.dk> wrote:
+> >>
+> >> On 3/8/22 11:42 PM, Song Liu wrote:
+> >>> RAID arrays check/repair operations benefit a lot from merging requests.
+> >>> If we only check the previous entry for merge attempt, many merge will be
+> >>> missed. As a result, significant regression is observed for RAID check
+> >>> and repair.
+> >>>
+> >>> Fix this by checking more than just the previous entry when
+> >>> plug->multiple_queues == true.
+> >>>
+> >>> This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
+> >>> 103 MB/s.
+> >>
+> >> Do the underlying disks not have an IO scheduler attached? Curious why
+> >> the merges aren't being done there, would be trivial when the list is
+> >> flushed out. Because if the perf difference is that big, then other
+> >> workloads would be suffering they are that sensitive to being within a
+> >> plug worth of IO.
+> >
+> > The disks have mq-deadline by default. I also tried kyber, the result
+> > is the same. Raid repair work sends IOs to all the HDDs in a
+> > round-robin manner. If we only check the previous request, there isn't
+> > much opportunity for merge. I guess other workloads may have different
+> > behavior?
+>
+> Round robin one at the time? I feel like there's something odd or
+> suboptimal with the raid rebuild, if it's that sensitive to plug
+> merging.
 
-Pulled, thanks.
+It is not one request at a time, but more like (for raid456):
+   read 4kB from HDD1, HDD2, HDD3...,
+   then read another 4kB from HDD1, HDD2, HDD3, ...
 
--- 
-Jens Axboe
+> Plug merging is mainly meant to reduce the overhead of merging,
+> complement what the scheduler would do. If there's a big drop in
+> performance just by not getting as efficient merging on the plug side,
+> that points to an issue with something else.
 
+We introduced blk_plug_max_rq_count() to give md more opportunities
+to merge at plug side, so I guess the behavior has been like this for a
+long time. I will take a look at the scheduler side and see whether we
+can just merge later, but I am not very optimistic about it.
+
+Thanks,
+Song
