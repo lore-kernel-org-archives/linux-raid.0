@@ -2,163 +2,175 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB69C433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 08:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 305B1C4332F
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 09:22:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347285AbiCKILB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 11 Mar 2022 03:11:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60240 "EHLO
+        id S238438AbiCKJXa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Mar 2022 04:23:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238609AbiCKILA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 03:11:00 -0500
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99BE1B8C95;
-        Fri, 11 Mar 2022 00:09:55 -0800 (PST)
-Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1nSaLR-0001Lq-4K;
-        Fri, 11 Mar 2022 08:09:53 +0000
-Message-ID: <8765a56b-3557-b659-96dc-90fe57506b7e@youngman.org.uk>
-Date:   Fri, 11 Mar 2022 08:09:52 +0000
+        with ESMTP id S1347490AbiCKJW6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 04:22:58 -0500
+Received: from mx0a-003b2802.pphosted.com (mx0a-003b2802.pphosted.com [205.220.168.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 461A81BD059;
+        Fri, 11 Mar 2022 01:21:52 -0800 (PST)
+Received: from pps.filterd (m0278966.ppops.net [127.0.0.1])
+        by mx0a-003b2802.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 22B9DKp7025827;
+        Fri, 11 Mar 2022 02:21:37 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=yEkgg8kFrNsu6TMViEijVYYrZ3Fg4FQX8RdygX9//JA=;
+ b=a11GNTEsPtI2y/Qj1OG7hGnhSKtCqKBD0Ao5qf0SsQnYUZAZ8+sqKjJft7u4Df+DyXGW
+ IRZqoCMqIl0XpDj/M2R3HzeqBlEB9Bu7DKs6uDnk40GeOLmhA8+sGW7EnHX09ZzBkNX1
+ wzTRBJWGTGGcQOA3aFmbOhqK3e/Elm+dhWq5/l/mExVkrGs6mJ5vVAAWBAP25LpwBqUs
+ 57PBxb29kELgdZqKqAWhMqm8Li8Xr08IFsw4Zv31rNA46s/aDKdmQMMNGBDLX8XgRYow
+ IY3qPz8QrYmJ64BL5ElvOHyZK/ytRbYtKTxy/bwSPEJWl3AOqZz+9uzo2Ptu2zDzcG9E cg== 
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
+        by mx0a-003b2802.pphosted.com (PPS) with ESMTPS id 3em5bgpx4a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 11 Mar 2022 02:21:37 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bPFcMVxE8j2p+Rgny5E2cD7SnLr7eEoI0Xz9rv69+Y43x4t9bAQLlWiISTCN+LT6L96MY56kTsXSePOxeYGqJG+e14hoARC06DQZ/MhIGmDFCMqhcHOtcKdUXnL/OKmm+6SPko9XxZUl9TeyK56JZkfCYck1uWYOcljRRg5mEg/fISrX9Qh+T7YZT+0nX1i98XuTKnmeWaM50h5M1dpCCvJUZSOegWRsGIJdIyG6BHThZeRmmQimEoLAzZUO9PFPW0fA0y4jPs09Y2G/cgDkT728Kw4tAbMISgGr4lAgbKZU7GND0jpHnMvB9Otkc7kaLp5wX2BG3xcsYwvm3dUY1A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=yEkgg8kFrNsu6TMViEijVYYrZ3Fg4FQX8RdygX9//JA=;
+ b=E0VtC5XkseH1IFoVv7gkX2V5+yqxYvwetQP0IipQAs27b7bLox7jAaJw7Cwgi6rfDe5nqHX87ujWzEEwZC/eMimIJnFcHir98TQtGpVslJ7znougTCxcEYs7VTtJdbBFRjywkrI+PQhlYQkQK571yH9lgyAskwVCYL4JdqvzZxWDJFurf0Kd9GpHNto33Xp/NFNX6U5Hn2E9ds0czFndqOszxl0YBI+9Pqn+YsEMB6ikqme/pzPMb+EV0HyK6JaTAGh/oHkii5z7BBGwfBQ9GgMwPdbSCLTdt5dLlUuFtuOcIsaJpviVeIXffvwXEgDgKJl6TQJ94nMGEMUbV90FRQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+Received: from CO3PR08MB7975.namprd08.prod.outlook.com (2603:10b6:303:166::10)
+ by SN6PR08MB3982.namprd08.prod.outlook.com (2603:10b6:805:22::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5061.22; Fri, 11 Mar
+ 2022 09:21:33 +0000
+Received: from CO3PR08MB7975.namprd08.prod.outlook.com
+ ([fe80::106d:1c1:99ae:45ac]) by CO3PR08MB7975.namprd08.prod.outlook.com
+ ([fe80::106d:1c1:99ae:45ac%9]) with mapi id 15.20.5061.024; Fri, 11 Mar 2022
+ 09:21:33 +0000
+From:   "Luca Porzio (lporzio)" <lporzio@micron.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Manjong Lee <mj0123.lee@samsung.com>,
+        "david@fromorbit.com" <david@fromorbit.com>
+CC:     "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "song@kernel.org" <song@kernel.org>,
+        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
+        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
+        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
+        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
+        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
+        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
+        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: RE: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
+ hint.
+Thread-Topic: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
+ hint.
+Thread-Index: AQHYM213hUiroX0Mx0m03tMAg0KZ2Ky4fWtAgAAMswCAAG2fIIAABmiAgAAGyQCAACZ5AIAABzyAgAC333A=
+Date:   Fri, 11 Mar 2022 09:21:33 +0000
+Message-ID: <CO3PR08MB7975A67FEDA70043DA3EDC8ADC0C9@CO3PR08MB7975.namprd08.prod.outlook.com>
+References: <20220306231727.GP3927073@dread.disaster.area>
+ <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
+ <20220309133119.6915-1-mj0123.lee@samsung.com>
+ <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
+ <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk>
+ <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
+ <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk>
+ <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org>
+ <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
+ <9d645cf0-1685-437a-23e4-b2a01553bba5@acm.org>
+In-Reply-To: <9d645cf0-1685-437a-23e4-b2a01553bba5@acm.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_Enabled=true;
+ MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_SetDate=2022-03-11T09:16:31Z;
+ MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_Method=Privileged;
+ MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_Name=Public;
+ MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_SiteId=f38a5ecd-2813-4862-b11b-ac1d563c806f;
+ MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_ActionId=86e74ac9-bd41-4c65-8e6f-8e7baccc7548;
+ MSIP_Label_6fdea275-d6f3-438f-b8d8-013cab2023d3_ContentBits=0
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 9167abd3-a5dd-4d19-664b-08da034088f2
+x-ms-traffictypediagnostic: SN6PR08MB3982:EE_
+x-microsoft-antispam-prvs: <SN6PR08MB398235A0682E0ABB15CD31F2DC0C9@SN6PR08MB3982.namprd08.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: oBVMwOH3i5lygWmGTb1IeNEyXQ1+hwlF8PoM17+0Ions4VM8pdgfZ16qZyUbImQltgLgpY8Lh1VmO/vOS3y/Aq5DkRTNpRlP8lgi7i6+BJAZS5rZpnqyPSILWzFdUHA/uqiO7aQCrk9RcfoGJcFWqOqQPxRxL9JmiJVJcnYpuGD/xgRRD46IgZEhuQfdp04LvjlhfiPe5pCwcrUIHgp0Y+pFjFAmA662jbWx2rrWW7n6abxsyhSlFc3ckR+fc/gGj4x/TwZKC2CojqF0ogw3gLTb5Q5w+Gd91GUtn/2nw3/I0Od3PTt9zHdSifsTPjajcii2jyfOHJhRAFtrhkQbgQM6+ArUey759e8gLSP6N+e+IIVxgzVWWhTfMsfVhk8flp9ze+6v+QxCRz0ZuckEkhlq5ENwC2HoMb0ytMkfGtT4+sk5Jp3VRV+UlmUU6zmr8U5AvhDqlgRAwRN06nSMFuWDFBnBLlXmY2UfUuAx+KHtl//qDj3WgCi1KA/4KiH04XoqufsD0o1ez2NklWAUabdsN4R1mkmuUuzMLN0vs+KwCXzMOvRuObKYnVhUuMfQsWY29TvYOoHdjyBQL+6GpT2htrNzOueBDuIJBjXzJfag3FrxB032xQV+yAnRcNo2ZdlLKlR52x7oBgYEbNg8WhpsIKTUOG5Wjqoq2Skl6CCDyHuBvBMwbR6NjemPxT/ts+KaLAB7pzv9GB2ynUsOeQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO3PR08MB7975.namprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66946007)(66556008)(66476007)(76116006)(8936002)(7416002)(5660300002)(52536014)(26005)(66446008)(64756008)(316002)(8676002)(4744005)(122000001)(110136005)(54906003)(38070700005)(2906002)(4326008)(38100700002)(83380400001)(86362001)(55016003)(71200400001)(186003)(508600001)(6506007)(7696005)(33656002)(9686003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?Z2IyMURHMUw1Ny8yTkVxaU5GZ0V2UGxlQVRjZzNFNUFrWGtvT0NjTG5iUzBt?=
+ =?utf-8?B?QUQxd3RMRXQvZzdYbC83cmdqelZheGN1dWtEUjZHMDJhZjAveW10ZUpXeFNz?=
+ =?utf-8?B?cENoa0RSaExWQ0hGOFJxVHdoOHBrV1BwSWJVNStzN1N6UWF1QXQwQWVMYU9O?=
+ =?utf-8?B?WjhycTRlWHVIZUtxWERCUUlYQmk3aG5BMVNTaW5SS3FPUFgxY3FVV09ocWRa?=
+ =?utf-8?B?TlUrbGdzN1FLaWNxa1VCT1djNmViRU5WUWwyRWIxbFBzaEdtQkVsckllWG1E?=
+ =?utf-8?B?amUycVpaSVRzNWpVM3ZaWkJqWHFiZnQzS0N4MU9XZytJYWVJam9oRHZaNVZj?=
+ =?utf-8?B?ZG9GcHcxckZjL2JLTHh0OGxVRkIwUlZyM3BJVkJFRWJ4MllueFEraW5Ja3M3?=
+ =?utf-8?B?bnE5ckNjYnNURGdRaU5mVGJrN0lQNElYSCtPZCtnMG15cDNMR3JCTjkzdXZF?=
+ =?utf-8?B?NUF5SDJlbHNmUVgwcTJWakhIcWZ2UGJMRXhvYTR2T09Cd2docmVwbEt3RU1z?=
+ =?utf-8?B?dEVmMm5OZGx1d3NkU1BrWDJ1TUVpTlpIeU1LLy9ZNm1GQUVkZnI2M3A0d213?=
+ =?utf-8?B?RTRVck5Hc0djNFdnSXorT0ZVazFaQk9tUHZRbEs5SUtmQ2txTC85ZkV6MGVt?=
+ =?utf-8?B?ak1tNHlPUGszYjJFMHZKMTlLSW8zZXA5V3FTeDJLbDRoZTNOQWZvWmNMME82?=
+ =?utf-8?B?bFJSYmtKSy9nNG1YT0JzVEFWSGErSEtVTjc2V0ZHQVBia0J5UVhzTzNyVzgz?=
+ =?utf-8?B?ZkJzemt1dVpBclJMeHBySHhBZWNYSE5sOHQwdXVjNGU5U1RpNmhFQXBBWGdG?=
+ =?utf-8?B?bU5oanlucitMUFNWOFpwMXZzVmh6VHhyUHhtREVmWVJYVm1IaWI1cEczQkRu?=
+ =?utf-8?B?K25UY1ZuOUQwSjE4cTM3N0ZDckxqN2REN0hldTFNM0tVN2VpdFRVckk2aTI4?=
+ =?utf-8?B?K1V3NTFKdDJxSUFhRXY4bndGa0hGcit1NnRnVldTTVVUL08zajQ0cWNjdDZK?=
+ =?utf-8?B?Ny92SXRDQWFMSC9aLzhvV2RVV2pNUHc0TjRtTDlJQzZQaTZ3eW54dlNnbk04?=
+ =?utf-8?B?TUZFanhjakRFcXJjdCtmQitaRG1QTHRha05PMTFRelJZdWpYdEIrMkxHTUZK?=
+ =?utf-8?B?ZkdweHE2NUlvN0RsZkVnOHprWnRsWjN5MGU2NVlYaTBoY1dWek9wdWwzbU5D?=
+ =?utf-8?B?VUt0UkNKNUlnaGx0dEE0U3NkSmhycnZRTEZhK1ExUjBaYW9xWCtlMnU5MUdL?=
+ =?utf-8?B?dFUrZm5SdTlwMUlEdCtrb1BleHdteEsrTzZYaThLN3owN1dSMzJ1cENLcXdM?=
+ =?utf-8?B?cmVrZjdia2k4M0hZRFRzWGhwa3k0ZFlMTk5hVU5nRnBRN2lNbzlUU213Q083?=
+ =?utf-8?B?anZUMGdaM1A5UzdjNHdQeUlsZWZwdHpCN1k0MmVyYmRQOWpKMEdtR3VSNU9z?=
+ =?utf-8?B?VW5iQlpYYXplTTZNbHdTTExuY0dBeW1zTVBzMmdUN3dTNTg5NnptK1REeTE5?=
+ =?utf-8?B?N09uS2Vmc25nM1JqbUJRM1NqWlc3NDdxcmsxbGJmcDRLSUlhQjdBQkVvNHdz?=
+ =?utf-8?B?VWxEMDdVMldBL2wzaHVkZ0JKM3JqSkVsMDV0a0NPUnpUYzZHSTUvek0wOCtx?=
+ =?utf-8?B?N01zck5nbGcwWFhOcldDeXdKbXhubHk4cmo3dkp5aGZXbE5tMkZ4bktYd01S?=
+ =?utf-8?B?TGxyOWJ3QXRWL2x4MGErUkpEeHFqcVZqdldCNlk4ZDdJNUVna0xsMlFQS2Yz?=
+ =?utf-8?B?ckVsdHN3bGVidUl1dU5DZ1V5OTkrbzRBdFdTWjhIb1BxK1lPT2F3VU14VHhp?=
+ =?utf-8?B?NTV3bHg4TGN6Q0NBbFI2V0RLcWVpS2dRR0szSE91Y1BOdWhlcm5WUDc2Rkpr?=
+ =?utf-8?B?WnYzb1RyemJqeDdsaFBvZ3N1ZjZzaitueEptTUZnU200MFozTDdiNTRnYTVp?=
+ =?utf-8?Q?i719mwh04zA0RNkM9fhpQU+SnUlWtR2x?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH] block: check more requests for multiple_queues in
- blk_attempt_plug_merge
-Content-Language: en-GB
-To:     Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
-Cc:     Song Liu <song@kernel.org>, linux-block@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
-        Larkin Lowrey <llowrey@nuclearwinter.com>,
-        Wilson Jonathan <i400sjon@gmail.com>,
-        Roger Heflin <rogerheflin@gmail.com>
-References: <20220309064209.4169303-1-song@kernel.org>
- <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
- <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com>
- <38f7aaf5-2043-b4f4-1fa5-52a7c883772b@kernel.dk>
- <CAPhsuW7zdYZqxaJ7SOWdnVOx-cASSoXS4OwtWVbms_jOHNh=Kw@mail.gmail.com>
- <2b437948-ba2a-c59c-1059-e937ea8636bd@kernel.dk>
- <CAPhsuW6ueGM_DZuAWvMbaB4PNftA5_MaqzMiY8_Bz7Bqy-ahZA@mail.gmail.com>
- <40ae10bd-6839-2246-c2d7-aa11e671d7d4@kernel.dk> <Yiqijd9S6Y92DnBu@T590>
- <0d7bb070-11a3-74b1-22d5-86001818018b@kernel.dk> <YiqmsypjvdPN/K3w@T590>
- <9e14586a-4f2a-fe9b-e32e-3bf05d6b4c5c@kernel.dk>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <9e14586a-4f2a-fe9b-e32e-3bf05d6b4c5c@kernel.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CO3PR08MB7975.namprd08.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9167abd3-a5dd-4d19-664b-08da034088f2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2022 09:21:33.5786
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: l9mAIgpMOYzQXqOPLnEAKmbQkrCjlk3hbyFaBJ8fooWtpR3bgsSsY2YFm/h55OO1Gc4JfGJ1PQ6RxHMQqMp9OA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR08MB3982
+X-Proofpoint-GUID: cN1uvc9-NPQMmiEWbHQ2mjgQGJthowxL
+X-Proofpoint-ORIG-GUID: cN1uvc9-NPQMmiEWbHQ2mjgQGJthowxL
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 11/03/2022 01:35, Jens Axboe wrote:
-> On 3/10/22 6:32 PM, Ming Lei wrote:
->> On Thu, Mar 10, 2022 at 06:21:33PM -0700, Jens Axboe wrote:
->>> On 3/10/22 6:14 PM, Ming Lei wrote:
->>>> On Thu, Mar 10, 2022 at 05:36:44PM -0700, Jens Axboe wrote:
->>>>> On 3/10/22 5:31 PM, Song Liu wrote:
->>>>>> On Thu, Mar 10, 2022 at 4:07 PM Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>
->>>>>>> On 3/10/22 4:33 PM, Song Liu wrote:
->>>>>>>> On Thu, Mar 10, 2022 at 3:02 PM Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>>>
->>>>>>>>> On 3/10/22 3:37 PM, Song Liu wrote:
->>>>>>>>>> On Thu, Mar 10, 2022 at 2:15 PM Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>>>>>
->>>>>>>>>>> On 3/8/22 11:42 PM, Song Liu wrote:
->>>>>>>>>>>> RAID arrays check/repair operations benefit a lot from merging requests.
->>>>>>>>>>>> If we only check the previous entry for merge attempt, many merge will be
->>>>>>>>>>>> missed. As a result, significant regression is observed for RAID check
->>>>>>>>>>>> and repair.
->>>>>>>>>>>>
->>>>>>>>>>>> Fix this by checking more than just the previous entry when
->>>>>>>>>>>> plug->multiple_queues == true.
->>>>>>>>>>>>
->>>>>>>>>>>> This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
->>>>>>>>>>>> 103 MB/s.
->>>>>>>>>>>
->>>>>>>>>>> Do the underlying disks not have an IO scheduler attached? Curious why
->>>>>>>>>>> the merges aren't being done there, would be trivial when the list is
->>>>>>>>>>> flushed out. Because if the perf difference is that big, then other
->>>>>>>>>>> workloads would be suffering they are that sensitive to being within a
->>>>>>>>>>> plug worth of IO.
->>>>>>>>>>
->>>>>>>>>> The disks have mq-deadline by default. I also tried kyber, the result
->>>>>>>>>> is the same. Raid repair work sends IOs to all the HDDs in a
->>>>>>>>>> round-robin manner. If we only check the previous request, there isn't
->>>>>>>>>> much opportunity for merge. I guess other workloads may have different
->>>>>>>>>> behavior?
->>>>>>>>>
->>>>>>>>> Round robin one at the time? I feel like there's something odd or
->>>>>>>>> suboptimal with the raid rebuild, if it's that sensitive to plug
->>>>>>>>> merging.
->>>>>>>>
->>>>>>>> It is not one request at a time, but more like (for raid456):
->>>>>>>>     read 4kB from HDD1, HDD2, HDD3...,
->>>>>>>>     then read another 4kB from HDD1, HDD2, HDD3, ...
->>>>>>>
->>>>>>> Ehm, that very much looks like one-at-the-time from each drive, which is
->>>>>>> pretty much the worst way to do it :-)
->>>>>>>
->>>>>>> Is there a reason for that? Why isn't it using 64k chunks or something
->>>>>>> like that? You could still do that as a kind of read-ahead, even if
->>>>>>> you're still processing in chunks of 4k.
->>>>>>
->>>>>> raid456 handles logic in the granularity of stripe. Each stripe is 4kB from
->>>>>> every HDD in the array. AFAICT, we need some non-trivial change to
->>>>>> enable the read ahead.
->>>>>
->>>>> Right, you'd need to stick some sort of caching in between so instead of
->>>>> reading 4k directly, you ask the cache for 4k and that can manage
->>>>> read-ahead.
->>>>>
->>>>>>>>> Plug merging is mainly meant to reduce the overhead of merging,
->>>>>>>>> complement what the scheduler would do. If there's a big drop in
->>>>>>>>> performance just by not getting as efficient merging on the plug side,
->>>>>>>>> that points to an issue with something else.
->>>>>>>>
->>>>>>>> We introduced blk_plug_max_rq_count() to give md more opportunities to
->>>>>>>> merge at plug side, so I guess the behavior has been like this for a
->>>>>>>> long time. I will take a look at the scheduler side and see whether we
->>>>>>>> can just merge later, but I am not very optimistic about it.
->>>>>>>
->>>>>>> Yeah I remember, and that also kind of felt like a work-around for some
->>>>>>> underlying issue. Maybe there's something about how the IO is issued
->>>>>>> that makes it go straight to disk and we never get any merging? Is it
->>>>>>> because they are sync reads?
->>>>>>>
->>>>>>> In any case, just doing larger reads would likely help quite a bit, but
->>>>>>> would still be nice to get to the bottom of why we're not seeing the
->>>>>>> level of merging we expect.
->>>>>>
->>>>>> Let me look more into this. Maybe we messed something up in the
->>>>>> scheduler.
->>>>>
->>>>> I'm assuming you have a plug setup for doing the reads, which is why you
->>>>> see the big difference (or there would be none). But
->>>>> blk_mq_flush_plug_list() should really take care of this when the plug
->>>>> is flushed, requests should be merged at that point. And from your
->>>>> description, doesn't sound like they are at all.
->>>>
->>>> requests are shared, when running out of request, plug list will be
->>>> flushed early.
->>>
->>> That is true, but I don't think that's the problem here with the round
->>> robin approach. Seems like it'd drive a pretty low queue depth, even
->>> considering SATA.
->>
->> Another one may be plug list not sorted before inserting requests to
->> scheduler in blk_mq_flush_plug_list(), looks you have mentioned.
-> 
-> Yep, it'd probably be the first thing I'd try... The way the IO is
-> issued, it's pretty much guaranteed that the plug list will be fully
-> interleaved with different queues and we're then issuine one-by-one and
-> running the queue each time.
-> 
-Naive question, but can you make the flush flush the first one, then 
-scan the queue for all bios for the same device, then go back and start 
-again? Simple approach if it'll work, at the expense of scanning the 
-queue once per device.
-
-Cheers,
-Wol
+DQoNCj4gU2luY2UgdGhlcmUgaXMgYSBkZXNpcmUgdG8gcmVtb3ZlIHRoZSB3cml0ZSBoaW50IGlu
+Zm9ybWF0aW9uIGZyb20gc3RydWN0IGJpbywgaXMNCj4gdGhlcmUgYW55IG90aGVyIGluZm9ybWF0
+aW9uIHRoZSAic3lzdGVtIGRhdGEgY2hhcmFjdGVyaXN0aWNzIiBpbmZvcm1hdGlvbg0KPiBjYW4g
+YmUgZGVyaXZlZCBmcm9tPw0KPiBIb3cgYWJvdXQgZS5nLiBkZXJpdmluZyB0aGF0IGluZm9ybWF0
+aW9uIGZyb20gcmVxdWVzdCBmbGFncyBsaWtlIFJFUV9TWU5DLA0KPiBSRVFfTUVUQSBhbmQvb3Ig
+UkVRX0lETEU/DQoNCkJhcnQsDQoNCkkgYWdyZWUgd2l0aCBhbGwgeW91ciBhbmFseXNpcy4gVGhl
+IHBvaW50IGlzIHRoZXNlIGZsYWdzIChTeW5jLCBNZXRhIGFuZCBJZGxlKSBhcmUgDQpyZWFsbHkg
+bWVhbnQgZm9yIGxhdGVuY3kgbWFuYWdlbWVudCB3aGVyZWFzIGhlcmUgdGhlIHByb2JsZW0gaXMg
+aG90L2NvbGQgc2VwYXJhdGlvbi4NCg0KQXQgdGhpcyBtb21lbnQgSSBhbSBub3QgYXdhcmUgb2Yg
+YW55IG1ldGhvZG9sb2d5IHdlIGNhbiB1c2UgdG8gbWFwIFMvTS9JZGxlIGZsYWdzDQpJbnRvIGhv
+dC9jb2xkIG1lYW5pbmcgYnV0IEkgYW0gb3BlbiB0byB0YWxrIGFuZCBkaXNjdXNzIDotKQ0KDQo+
+IA0KPiBUaGFua3MsDQo+IA0KPiBCYXJ0Lg0KDQpDaGVlcnMsDQogIEx1Y2ENCg==
