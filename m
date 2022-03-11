@@ -2,136 +2,163 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88256C43217
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 05:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB69C433FE
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 08:10:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346305AbiCKFdI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 11 Mar 2022 00:33:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40420 "EHLO
+        id S1347285AbiCKILB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Mar 2022 03:11:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234001AbiCKFdE (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 00:33:04 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D9111AC287;
-        Thu, 10 Mar 2022 21:32:00 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0BD32B82A83;
-        Fri, 11 Mar 2022 05:31:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E1FDC340EC;
-        Fri, 11 Mar 2022 05:31:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646976717;
-        bh=WZxaV6Pf7jSxcq9QhrqU6a6XmApG4E+JJxhTiL/TA4o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ob5ZHIgSUc7ffS1WUTii9bnVJtzk8WPUoL3UEGmI8LA/pPfuNB7aJAOSKJzkWpSQi
-         6LyEO8syF9aVEj5/kWXYkHf64UtKZowR1dt+yzXVzuHt8QOILVdmvn14AWZfemWF8Z
-         gRioblA5Yz3SMTchKuF0GTeIOFpHmvK2xP0Mt+8Racw4eelPzbjPuQLoTUM9PoLYpb
-         lOoPGvSqe3ouw9n3e/szesfGwcLH1zHCJEA3pyUnIMcJq/RMLFZ79HFRQCQJf92kuL
-         uu20kCmRhPJKE+nq/8Zu1kvu65ugM6zpbwbC3JAuQP+nEoBNPld58rMB3p3IbgSHYE
-         ls+X6siohQP0A==
-Date:   Thu, 10 Mar 2022 21:31:55 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Luca Porzio (lporzio)" <lporzio@micron.com>,
-        Manjong Lee <mj0123.lee@samsung.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "song@kernel.org" <song@kernel.org>,
-        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
-        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
-        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
-        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
-        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
-        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
-        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
- hint.
-Message-ID: <YireyyQvUnC7cik+@sol.localdomain>
-References: <20220306231727.GP3927073@dread.disaster.area>
- <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
- <20220309133119.6915-1-mj0123.lee@samsung.com>
- <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk>
- <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk>
- <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org>
- <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
- <9d645cf0-1685-437a-23e4-b2a01553bba5@acm.org>
+        with ESMTP id S238609AbiCKILA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 03:11:00 -0500
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99BE1B8C95;
+        Fri, 11 Mar 2022 00:09:55 -0800 (PST)
+Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1nSaLR-0001Lq-4K;
+        Fri, 11 Mar 2022 08:09:53 +0000
+Message-ID: <8765a56b-3557-b659-96dc-90fe57506b7e@youngman.org.uk>
+Date:   Fri, 11 Mar 2022 08:09:52 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9d645cf0-1685-437a-23e4-b2a01553bba5@acm.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH] block: check more requests for multiple_queues in
+ blk_attempt_plug_merge
+Content-Language: en-GB
+To:     Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc:     Song Liu <song@kernel.org>, linux-block@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
+        Larkin Lowrey <llowrey@nuclearwinter.com>,
+        Wilson Jonathan <i400sjon@gmail.com>,
+        Roger Heflin <rogerheflin@gmail.com>
+References: <20220309064209.4169303-1-song@kernel.org>
+ <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
+ <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com>
+ <38f7aaf5-2043-b4f4-1fa5-52a7c883772b@kernel.dk>
+ <CAPhsuW7zdYZqxaJ7SOWdnVOx-cASSoXS4OwtWVbms_jOHNh=Kw@mail.gmail.com>
+ <2b437948-ba2a-c59c-1059-e937ea8636bd@kernel.dk>
+ <CAPhsuW6ueGM_DZuAWvMbaB4PNftA5_MaqzMiY8_Bz7Bqy-ahZA@mail.gmail.com>
+ <40ae10bd-6839-2246-c2d7-aa11e671d7d4@kernel.dk> <Yiqijd9S6Y92DnBu@T590>
+ <0d7bb070-11a3-74b1-22d5-86001818018b@kernel.dk> <YiqmsypjvdPN/K3w@T590>
+ <9e14586a-4f2a-fe9b-e32e-3bf05d6b4c5c@kernel.dk>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <9e14586a-4f2a-fe9b-e32e-3bf05d6b4c5c@kernel.dk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 10, 2022 at 02:18:19PM -0800, Bart Van Assche wrote:
-> On 3/10/22 13:52, Bean Huo (beanhuo) wrote:
-> > Yes, in upstream linux and upstream android, there is no such code. But as we know,
-> > mobile customers have used bio->bi_write_hint in their products for years. And the
-> > group ID is set according to bio->bi_write_hint before passing the CDB to UFS.
-> > 
-> > 
-> > 	lrbp = &hba->lrb[tag];
-> >                WARN_ON(lrbp->cmd);
-> >               + if(cmd->cmnd[0] == WRITE_10)
-> >                +{
-> >                  +             cmd->cmnd[6] = (0x1f& cmd->request->bio->bi_write_hint);
-> >                +}
-> >                lrbp->cmd = cmd;
-> >                lrbp->sense_bufflen = UFS_SENSE_SIZE;
-> >                lrbp->sense_buffer = cmd->sense_buffer;
-> > 
-> > I don't know why they don't push these changes to the community, maybe
-> > it's because changes across the file system and block layers are unacceptable to the
-> > block layer and FS. but for sure we should now warn them to push to the
-> > community as soon as possible.
+On 11/03/2022 01:35, Jens Axboe wrote:
+> On 3/10/22 6:32 PM, Ming Lei wrote:
+>> On Thu, Mar 10, 2022 at 06:21:33PM -0700, Jens Axboe wrote:
+>>> On 3/10/22 6:14 PM, Ming Lei wrote:
+>>>> On Thu, Mar 10, 2022 at 05:36:44PM -0700, Jens Axboe wrote:
+>>>>> On 3/10/22 5:31 PM, Song Liu wrote:
+>>>>>> On Thu, Mar 10, 2022 at 4:07 PM Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>
+>>>>>>> On 3/10/22 4:33 PM, Song Liu wrote:
+>>>>>>>> On Thu, Mar 10, 2022 at 3:02 PM Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>>>
+>>>>>>>>> On 3/10/22 3:37 PM, Song Liu wrote:
+>>>>>>>>>> On Thu, Mar 10, 2022 at 2:15 PM Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>>>>>
+>>>>>>>>>>> On 3/8/22 11:42 PM, Song Liu wrote:
+>>>>>>>>>>>> RAID arrays check/repair operations benefit a lot from merging requests.
+>>>>>>>>>>>> If we only check the previous entry for merge attempt, many merge will be
+>>>>>>>>>>>> missed. As a result, significant regression is observed for RAID check
+>>>>>>>>>>>> and repair.
+>>>>>>>>>>>>
+>>>>>>>>>>>> Fix this by checking more than just the previous entry when
+>>>>>>>>>>>> plug->multiple_queues == true.
+>>>>>>>>>>>>
+>>>>>>>>>>>> This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
+>>>>>>>>>>>> 103 MB/s.
+>>>>>>>>>>>
+>>>>>>>>>>> Do the underlying disks not have an IO scheduler attached? Curious why
+>>>>>>>>>>> the merges aren't being done there, would be trivial when the list is
+>>>>>>>>>>> flushed out. Because if the perf difference is that big, then other
+>>>>>>>>>>> workloads would be suffering they are that sensitive to being within a
+>>>>>>>>>>> plug worth of IO.
+>>>>>>>>>>
+>>>>>>>>>> The disks have mq-deadline by default. I also tried kyber, the result
+>>>>>>>>>> is the same. Raid repair work sends IOs to all the HDDs in a
+>>>>>>>>>> round-robin manner. If we only check the previous request, there isn't
+>>>>>>>>>> much opportunity for merge. I guess other workloads may have different
+>>>>>>>>>> behavior?
+>>>>>>>>>
+>>>>>>>>> Round robin one at the time? I feel like there's something odd or
+>>>>>>>>> suboptimal with the raid rebuild, if it's that sensitive to plug
+>>>>>>>>> merging.
+>>>>>>>>
+>>>>>>>> It is not one request at a time, but more like (for raid456):
+>>>>>>>>     read 4kB from HDD1, HDD2, HDD3...,
+>>>>>>>>     then read another 4kB from HDD1, HDD2, HDD3, ...
+>>>>>>>
+>>>>>>> Ehm, that very much looks like one-at-the-time from each drive, which is
+>>>>>>> pretty much the worst way to do it :-)
+>>>>>>>
+>>>>>>> Is there a reason for that? Why isn't it using 64k chunks or something
+>>>>>>> like that? You could still do that as a kind of read-ahead, even if
+>>>>>>> you're still processing in chunks of 4k.
+>>>>>>
+>>>>>> raid456 handles logic in the granularity of stripe. Each stripe is 4kB from
+>>>>>> every HDD in the array. AFAICT, we need some non-trivial change to
+>>>>>> enable the read ahead.
+>>>>>
+>>>>> Right, you'd need to stick some sort of caching in between so instead of
+>>>>> reading 4k directly, you ask the cache for 4k and that can manage
+>>>>> read-ahead.
+>>>>>
+>>>>>>>>> Plug merging is mainly meant to reduce the overhead of merging,
+>>>>>>>>> complement what the scheduler would do. If there's a big drop in
+>>>>>>>>> performance just by not getting as efficient merging on the plug side,
+>>>>>>>>> that points to an issue with something else.
+>>>>>>>>
+>>>>>>>> We introduced blk_plug_max_rq_count() to give md more opportunities to
+>>>>>>>> merge at plug side, so I guess the behavior has been like this for a
+>>>>>>>> long time. I will take a look at the scheduler side and see whether we
+>>>>>>>> can just merge later, but I am not very optimistic about it.
+>>>>>>>
+>>>>>>> Yeah I remember, and that also kind of felt like a work-around for some
+>>>>>>> underlying issue. Maybe there's something about how the IO is issued
+>>>>>>> that makes it go straight to disk and we never get any merging? Is it
+>>>>>>> because they are sync reads?
+>>>>>>>
+>>>>>>> In any case, just doing larger reads would likely help quite a bit, but
+>>>>>>> would still be nice to get to the bottom of why we're not seeing the
+>>>>>>> level of merging we expect.
+>>>>>>
+>>>>>> Let me look more into this. Maybe we messed something up in the
+>>>>>> scheduler.
+>>>>>
+>>>>> I'm assuming you have a plug setup for doing the reads, which is why you
+>>>>> see the big difference (or there would be none). But
+>>>>> blk_mq_flush_plug_list() should really take care of this when the plug
+>>>>> is flushed, requests should be merged at that point. And from your
+>>>>> description, doesn't sound like they are at all.
+>>>>
+>>>> requests are shared, when running out of request, plug list will be
+>>>> flushed early.
+>>>
+>>> That is true, but I don't think that's the problem here with the round
+>>> robin approach. Seems like it'd drive a pretty low queue depth, even
+>>> considering SATA.
+>>
+>> Another one may be plug list not sorted before inserting requests to
+>> scheduler in blk_mq_flush_plug_list(), looks you have mentioned.
 > 
-> Thanks Bean for having shared this information. I think the above code sets the GROUP
-> NUMBER information in the WRITE(10) command and also that the following text from the
-> UFS specification applies to that information:
-> <quote>
-> GROUP NUMBER: Notifies the Target device that the data linked to a ContextID:
->  -----------------------------------------------------------------------------------------
->     GROUP NUMBER Value     |  Function
->  -----------------------------------------------------------------------------------------
->  00000b                    | Default, no Context ID is associated with the read operation.
->  00001b to 01111b (0XXXXb) | Context ID. (XXXX I from 0001b to 1111b ‐ Context ID value)
->  10000b                    | Data has System Data characteristics
->  10001b to 11111b          | Reserved
->  -----------------------------------------------------------------------------------------
+> Yep, it'd probably be the first thing I'd try... The way the IO is
+> issued, it's pretty much guaranteed that the plug list will be fully
+> interleaved with different queues and we're then issuine one-by-one and
+> running the queue each time.
 > 
-> In case the GROUP NUMBER is set to a reserved value, the operation shall fail and a status
-> response of CHECK CONDITION will be returned along with the sense key set to ILLEGAL REQUEST.
-> </quote>
-> 
-> Since there is a desire to remove the write hint information from struct bio, is there
-> any other information the "system data characteristics" information can be derived from?
-> How about e.g. deriving that information from request flags like REQ_SYNC, REQ_META and/or
-> REQ_IDLE?
-> 
+Naive question, but can you make the flush flush the first one, then 
+scan the queue for all bios for the same device, then go back and start 
+again? Simple approach if it'll work, at the expense of scanning the 
+queue once per device.
 
-[+Cc linux-f2fs-devel]
-
-I think the f2fs developers will need to chime in here, as it looks like f2fs
-uses the write hints for different data categories like hot/cold/warm.  I'm not
-sure those can be fully represented by other bio flags.
-
-Either way, the good news is that it sounds like this "GROUP NUMBER" thing is
-part of the UFS standard.  So whatever the best way to support it is, it can
-just be submitted upstream like any other standard UFS feature.  Why hasn't that
-been done?
-
-- Eric
+Cheers,
+Wol
