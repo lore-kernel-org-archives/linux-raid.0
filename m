@@ -2,186 +2,80 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFF9AC433FE
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 01:35:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E5EFC4332F
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 05:06:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244716AbiCKBgp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 10 Mar 2022 20:36:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56400 "EHLO
+        id S241949AbiCKFHQ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Mar 2022 00:07:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344012AbiCKBgo (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 10 Mar 2022 20:36:44 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A64E1A41F2
-        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 17:35:42 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id 27so6182501pgk.10
-        for <linux-raid@vger.kernel.org>; Thu, 10 Mar 2022 17:35:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=BRvjxADSpm6FBA6Nz+WD9hiRqLLrA5je7tABEatBKWM=;
-        b=1X4ChCCmiUl2Rq2tuKCmzepZ++utx35+F6eeFw0tRvE7KmHn93l56wZrN1YBKMgHAt
-         IaBG4bzFrQl/o3+NxL7nVB3JxLarmTHKu6bcmLAF1C+HXU90InJ70n2PiesxfaMsRBCT
-         BO4SsQRhLo1qLcsmgXNatmtQxezZZByTMT7C5a3iiSk5ZEfezkS75uqYSi4A08oUFjTR
-         2K+ZlYCqEO8lEFoacmuRMFxqys8bL3yZRWqi0CxjKXeQ95zDUZR/3jGIm+xjaS6hD3Hy
-         4H7Nnebh4yDmgUjeCSTiIsOPIx/9yxO4WEk+sQ08tMJ2sDYsxmsSrmnB+mUhgwiRsTz4
-         C/ow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=BRvjxADSpm6FBA6Nz+WD9hiRqLLrA5je7tABEatBKWM=;
-        b=Ufzm5hcFJDhLOqloiaZlJw3UBT+ZPGqjPnqout73+RgNQnKq/vMbzhuII4eBIUaKCk
-         FGPfMuJ/0t642i/SlCugGRjgCt7ck3+/GNTgNUqjVa6pIVFy0GZLvZU5i9jg5/yNgd32
-         9UPXNEOYe7hWp2yVES1GlC9LaiI0qLK3/MZN0CvCV7fq6pvX2Wr9dRNSGW3dkhVoYNp3
-         vzo+KJW92PGPmrdLk8pDoZf/nde1kTlA9O/zFa5CwM9Xs24l8vH+MdwjmVyMEaoDkVGJ
-         Nn0cvr+1Dpdvu/enxdFg74sPIhAib3nIfYKBOJTiMeXpQQKQp1XCfzfyBTuNFiPd5tBX
-         yPlQ==
-X-Gm-Message-State: AOAM532VN3/2/TuIVUXLdS3umy9RbBBD6/3LbKcLUeDrEwZaShvrLHr3
-        xh1oc1aDmynHTvw7tE+QJqCdiA==
-X-Google-Smtp-Source: ABdhPJwYXPFfEgcumDS+a8Btx4nuh02nvJmAhXR8V62h8fN2yBM7P5uudIWqI4PzRNOFJPwU5lH/2g==
-X-Received: by 2002:a05:6a00:3102:b0:4f6:b88d:9d45 with SMTP id bi2-20020a056a00310200b004f6b88d9d45mr7711120pfb.86.1646962541627;
-        Thu, 10 Mar 2022 17:35:41 -0800 (PST)
-Received: from [192.168.1.100] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id mm17-20020a17090b359100b001bef7e5bdffsm6988284pjb.20.2022.03.10.17.35.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Mar 2022 17:35:41 -0800 (PST)
-Message-ID: <9e14586a-4f2a-fe9b-e32e-3bf05d6b4c5c@kernel.dk>
-Date:   Thu, 10 Mar 2022 18:35:40 -0700
+        with ESMTP id S233316AbiCKFHN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 00:07:13 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D0DD1AC28A;
+        Thu, 10 Mar 2022 21:06:11 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1F1C1B82A7D;
+        Fri, 11 Mar 2022 05:06:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 384E1C340ED;
+        Fri, 11 Mar 2022 05:06:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646975168;
+        bh=AKcJwdPPGCmC8fnT+SzRmfs6FPJaBvqwnNz4bzPIPRI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gwWXoihYFEXXdqVuediOElDChCGopC96LqjN28ounv6QQ4t/nM6nQ7zaEaW74K00I
+         VU+JqBS/dFskSGFDaX8oATaI3CDAz/mEXDUUCbQG1m5Q0vxLet99mwu/eGHpBrJgK3
+         KGB4n9QfE7o6GOj3CEWYKcKACgXEQBwVLBA336ZWe8Z+kR3OJT1u9gIPtv8kdNJKO0
+         OhBBIq0xXlhD0H37V5rvzy2MIn13nbIEosxwBa37jdA7LHwr8B05do7MhB+FZRxK+V
+         g7E6xbqhpFY1ZRpxP/zwLkkaqom62qVk8+xNwD/c+ZjczSPOLRa5PXgmTnaGiuVeQt
+         chMhruCRIAHuA==
+Date:   Thu, 10 Mar 2022 21:06:06 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     "Luca Porzio (lporzio)" <lporzio@micron.com>
+Cc:     "hch@lst.de" <hch@lst.de>, Manjong Lee <mj0123.lee@samsung.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "song@kernel.org" <song@kernel.org>,
+        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
+        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
+        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
+        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
+        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
+        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
+        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>
+Subject: Re: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
+ hint.
+Message-ID: <YirYvvIBW+XNGvxP@sol.localdomain>
+References: <20220306231727.GP3927073@dread.disaster.area>
+ <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
+ <20220309133119.6915-1-mj0123.lee@samsung.com>
+ <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
+ <20220310142148.GA1069@lst.de>
+ <CO3PR08MB7975AB3E282C7DA35A5B1CF0DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH] block: check more requests for multiple_queues in
- blk_attempt_plug_merge
-Content-Language: en-US
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Song Liu <song@kernel.org>, linux-block@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
-        Larkin Lowrey <llowrey@nuclearwinter.com>,
-        Wilson Jonathan <i400sjon@gmail.com>,
-        Roger Heflin <rogerheflin@gmail.com>
-References: <20220309064209.4169303-1-song@kernel.org>
- <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
- <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com>
- <38f7aaf5-2043-b4f4-1fa5-52a7c883772b@kernel.dk>
- <CAPhsuW7zdYZqxaJ7SOWdnVOx-cASSoXS4OwtWVbms_jOHNh=Kw@mail.gmail.com>
- <2b437948-ba2a-c59c-1059-e937ea8636bd@kernel.dk>
- <CAPhsuW6ueGM_DZuAWvMbaB4PNftA5_MaqzMiY8_Bz7Bqy-ahZA@mail.gmail.com>
- <40ae10bd-6839-2246-c2d7-aa11e671d7d4@kernel.dk> <Yiqijd9S6Y92DnBu@T590>
- <0d7bb070-11a3-74b1-22d5-86001818018b@kernel.dk> <YiqmsypjvdPN/K3w@T590>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <YiqmsypjvdPN/K3w@T590>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CO3PR08MB7975AB3E282C7DA35A5B1CF0DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/10/22 6:32 PM, Ming Lei wrote:
-> On Thu, Mar 10, 2022 at 06:21:33PM -0700, Jens Axboe wrote:
->> On 3/10/22 6:14 PM, Ming Lei wrote:
->>> On Thu, Mar 10, 2022 at 05:36:44PM -0700, Jens Axboe wrote:
->>>> On 3/10/22 5:31 PM, Song Liu wrote:
->>>>> On Thu, Mar 10, 2022 at 4:07 PM Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>
->>>>>> On 3/10/22 4:33 PM, Song Liu wrote:
->>>>>>> On Thu, Mar 10, 2022 at 3:02 PM Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>>
->>>>>>>> On 3/10/22 3:37 PM, Song Liu wrote:
->>>>>>>>> On Thu, Mar 10, 2022 at 2:15 PM Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>>>>
->>>>>>>>>> On 3/8/22 11:42 PM, Song Liu wrote:
->>>>>>>>>>> RAID arrays check/repair operations benefit a lot from merging requests.
->>>>>>>>>>> If we only check the previous entry for merge attempt, many merge will be
->>>>>>>>>>> missed. As a result, significant regression is observed for RAID check
->>>>>>>>>>> and repair.
->>>>>>>>>>>
->>>>>>>>>>> Fix this by checking more than just the previous entry when
->>>>>>>>>>> plug->multiple_queues == true.
->>>>>>>>>>>
->>>>>>>>>>> This improves the check/repair speed of a 20-HDD raid6 from 19 MB/s to
->>>>>>>>>>> 103 MB/s.
->>>>>>>>>>
->>>>>>>>>> Do the underlying disks not have an IO scheduler attached? Curious why
->>>>>>>>>> the merges aren't being done there, would be trivial when the list is
->>>>>>>>>> flushed out. Because if the perf difference is that big, then other
->>>>>>>>>> workloads would be suffering they are that sensitive to being within a
->>>>>>>>>> plug worth of IO.
->>>>>>>>>
->>>>>>>>> The disks have mq-deadline by default. I also tried kyber, the result
->>>>>>>>> is the same. Raid repair work sends IOs to all the HDDs in a
->>>>>>>>> round-robin manner. If we only check the previous request, there isn't
->>>>>>>>> much opportunity for merge. I guess other workloads may have different
->>>>>>>>> behavior?
->>>>>>>>
->>>>>>>> Round robin one at the time? I feel like there's something odd or
->>>>>>>> suboptimal with the raid rebuild, if it's that sensitive to plug
->>>>>>>> merging.
->>>>>>>
->>>>>>> It is not one request at a time, but more like (for raid456):
->>>>>>>    read 4kB from HDD1, HDD2, HDD3...,
->>>>>>>    then read another 4kB from HDD1, HDD2, HDD3, ...
->>>>>>
->>>>>> Ehm, that very much looks like one-at-the-time from each drive, which is
->>>>>> pretty much the worst way to do it :-)
->>>>>>
->>>>>> Is there a reason for that? Why isn't it using 64k chunks or something
->>>>>> like that? You could still do that as a kind of read-ahead, even if
->>>>>> you're still processing in chunks of 4k.
->>>>>
->>>>> raid456 handles logic in the granularity of stripe. Each stripe is 4kB from
->>>>> every HDD in the array. AFAICT, we need some non-trivial change to
->>>>> enable the read ahead.
->>>>
->>>> Right, you'd need to stick some sort of caching in between so instead of
->>>> reading 4k directly, you ask the cache for 4k and that can manage
->>>> read-ahead.
->>>>
->>>>>>>> Plug merging is mainly meant to reduce the overhead of merging,
->>>>>>>> complement what the scheduler would do. If there's a big drop in
->>>>>>>> performance just by not getting as efficient merging on the plug side,
->>>>>>>> that points to an issue with something else.
->>>>>>>
->>>>>>> We introduced blk_plug_max_rq_count() to give md more opportunities to
->>>>>>> merge at plug side, so I guess the behavior has been like this for a
->>>>>>> long time. I will take a look at the scheduler side and see whether we
->>>>>>> can just merge later, but I am not very optimistic about it.
->>>>>>
->>>>>> Yeah I remember, and that also kind of felt like a work-around for some
->>>>>> underlying issue. Maybe there's something about how the IO is issued
->>>>>> that makes it go straight to disk and we never get any merging? Is it
->>>>>> because they are sync reads?
->>>>>>
->>>>>> In any case, just doing larger reads would likely help quite a bit, but
->>>>>> would still be nice to get to the bottom of why we're not seeing the
->>>>>> level of merging we expect.
->>>>>
->>>>> Let me look more into this. Maybe we messed something up in the
->>>>> scheduler.
->>>>
->>>> I'm assuming you have a plug setup for doing the reads, which is why you
->>>> see the big difference (or there would be none). But
->>>> blk_mq_flush_plug_list() should really take care of this when the plug
->>>> is flushed, requests should be merged at that point. And from your
->>>> description, doesn't sound like they are at all.
->>>
->>> requests are shared, when running out of request, plug list will be
->>> flushed early.
->>
->> That is true, but I don't think that's the problem here with the round
->> robin approach. Seems like it'd drive a pretty low queue depth, even
->> considering SATA.
-> 
-> Another one may be plug list not sorted before inserting requests to
-> scheduler in blk_mq_flush_plug_list(), looks you have mentioned.
+On Thu, Mar 10, 2022 at 06:51:39PM +0000, Luca Porzio (lporzio) wrote:
+>
+> Micron Confidential
 
-Yep, it'd probably be the first thing I'd try... The way the IO is
-issued, it's pretty much guaranteed that the plug list will be fully
-interleaved with different queues and we're then issuine one-by-one and
-running the queue each time.
+This is a public mailing list, so please do not use this header/footer.
 
--- 
-Jens Axboe
+> it is used across the (Android) ecosystem.
 
+So why hasn't it been submitted upstream?
+
+- Eric
