@@ -2,84 +2,73 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D41CC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 16:59:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8167C433EF
+	for <linux-raid@archiver.kernel.org>; Fri, 11 Mar 2022 17:30:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350486AbiCKRAX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 11 Mar 2022 12:00:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59830 "EHLO
+        id S1350779AbiCKRbu (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 11 Mar 2022 12:31:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350414AbiCKRAW (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 12:00:22 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7045694B8;
-        Fri, 11 Mar 2022 08:59:18 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3E63C61D85;
-        Fri, 11 Mar 2022 16:59:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6251C340EE;
-        Fri, 11 Mar 2022 16:59:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1647017957;
-        bh=TfUoDniLNAUWpN5c0ZvcL19CsqAGIJipVHp+JX8IZYU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=IGNZyrBivI/tTqZCSj1SnNnLybgw7ILcz/GOPJIbv9s5TofQZKuRam1jdoh8quoAH
-         RpfhJqKAOuD+BMhM98wO11QJaJCPGonkuOORU0/BvxI/Cm4Y/5+NLoASTIy1tIrCId
-         1UPuuHbLLcwa7If6D3lkZj0Dc4vjDL0GPjeZzh1zASE22jHf5EfN2pv0ViRm52ePDk
-         hF/Tt9Ob0GO16bmDuA7zZAWSdjYkAdFOVMpzzHJStzsoIqYVP/obqTM+ArqCqytbpd
-         HAIxODjbQgivDWVj8xIhAc7chRx3TxvHcKeIdo6vSpQ8l2FFUkl0+pICp1EZYxF0TP
-         euJFwelKIZxmw==
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-2dc348dab52so100167267b3.6;
-        Fri, 11 Mar 2022 08:59:17 -0800 (PST)
-X-Gm-Message-State: AOAM532Z4Mk9g0rl+RDeGxH38EjAA1flOcSiVIVwutt5yD1yF8lUS6Z2
-        xNIUNh4nc3qoUljz2rKooBBuS2oQZJkWfmxP7ko=
-X-Google-Smtp-Source: ABdhPJyjs53YNBDzki/gNd5IjlxDqN3gpH+kRPQ8Tg0rq78PB5ym7q5nPhRgFnuoO2cOP4YEesEHrF0VH/xjHrloqiw=
-X-Received: by 2002:a81:23ce:0:b0:2dc:b20:cc73 with SMTP id
- j197-20020a8123ce000000b002dc0b20cc73mr9213650ywj.130.1647017956691; Fri, 11
- Mar 2022 08:59:16 -0800 (PST)
+        with ESMTP id S233283AbiCKRbt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 11 Mar 2022 12:31:49 -0500
+Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EBF6C2E61
+        for <linux-raid@vger.kernel.org>; Fri, 11 Mar 2022 09:30:46 -0800 (PST)
+Received: by mail-io1-xd36.google.com with SMTP id k25so10820862iok.8
+        for <linux-raid@vger.kernel.org>; Fri, 11 Mar 2022 09:30:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=SXWf3I0xCujxLu8bDz7q+9+6F+4g6AyNkKp3SeHhzQU=;
+        b=Gw0hXQsoHkv9ZTjG/cWtnt4/GhK687iHDGX4SHp9exn7x/089wn4x5rmPdgD7+c7+b
+         eCDqKZpfNMMcuQzAajePs5PghSpYARbXnHLYcU9CeyqQbWlZqfi4ICd8aCUncygzzSxm
+         6jQ69tZnHKzmhg28HdUIlrPyh2NhX1DqAg2jSB07pso631qy9i6vrOHMaoA43hACPOKT
+         jDKg06rZ0WwhQMDva91IgkPH2f4XHy3UbOIoEReRnwyyA3yYfE/nlISMEF+zvKLqITl5
+         9ica4pLaVGUOESqsSqX2lvQGWtBIrZSuoCNvaoS7DUUtYukweDbOf2IQuypDrJgA5lC7
+         v45Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=SXWf3I0xCujxLu8bDz7q+9+6F+4g6AyNkKp3SeHhzQU=;
+        b=KlqsP2y181P1by7LI5aDZARZEF8b6VSLyD3rkztss+z6Tul1a9gJhxSGFhu0VLRjVy
+         N0cYvBQPZH69qu1/TYGEQyKABC+sqi8KvGT3vx1hMERszkMJF04qJXrdh/ISsILlUMPg
+         attNUlQvooQ0md8MAFikXH5nxClwJeQBeT9sGlbmUdVwP56kHbX86URGBuO9cdmmluPu
+         TfdlGwhw9nepzDfbC4Wp37dsZbb7w54asmarl01LZsRpEt4RWVg+7sqdf/qoqtjKXGab
+         hCwEf7+bQ7z1I8xbaTklu9+tv07z3VzYAd86cDfkL/QMgEAwkxzY/rsbc2DoavJvmQvS
+         w1TQ==
+X-Gm-Message-State: AOAM531UzyFlF9HuPhDSXBJKBDl2wFml0Jnx/9b2Kupis+Zf8n/LFMDP
+        myFABjfX+a86BOzJvSbNmOk3lw==
+X-Google-Smtp-Source: ABdhPJw6RkyEEarUKe3MuVgm7RweWmu0f/TyIsSTGawK16k+fDCI1QxenS7OBmHoUWt8ZgyqFtuhAA==
+X-Received: by 2002:a05:6602:2c52:b0:646:2488:a9a0 with SMTP id x18-20020a0566022c5200b006462488a9a0mr9005491iov.130.1647019845634;
+        Fri, 11 Mar 2022 09:30:45 -0800 (PST)
+Received: from m1.localdomain ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id r2-20020a92d442000000b002c62b540c85sm4622356ilm.5.2022.03.11.09.30.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Mar 2022 09:30:45 -0800 (PST)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     linux-block@vger.kernel.org
+Cc:     song@kernel.org, linux-raid@vger.kernel.org,
+        llowrey@nuclearwinter.com, i400sjon@gmail.com,
+        rogerheflin@gmail.com
+Subject: [PATCHSET 0/2] Fix raid rebuild performance regression
+Date:   Fri, 11 Mar 2022 10:30:39 -0700
+Message-Id: <20220311173041.165948-1-axboe@kernel.dk>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-References: <20220309064209.4169303-1-song@kernel.org> <9516f407-bb91-093b-739d-c32bda1b5d8d@kernel.dk>
- <CAPhsuW5zX96VaBMu-o=JUqDz2KLRBcNFM_gEsT=tHjeYqrngSQ@mail.gmail.com>
- <38f7aaf5-2043-b4f4-1fa5-52a7c883772b@kernel.dk> <CAPhsuW7zdYZqxaJ7SOWdnVOx-cASSoXS4OwtWVbms_jOHNh=Kw@mail.gmail.com>
- <2b437948-ba2a-c59c-1059-e937ea8636bd@kernel.dk> <84310ba2-a413-22f4-1349-59a09f4851a1@kernel.dk>
-In-Reply-To: <84310ba2-a413-22f4-1349-59a09f4851a1@kernel.dk>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 11 Mar 2022 08:59:05 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW492+zrVCyckgct_ju+5V_2grn4-s--TU2QVA7pkYtyzA@mail.gmail.com>
-Message-ID: <CAPhsuW492+zrVCyckgct_ju+5V_2grn4-s--TU2QVA7pkYtyzA@mail.gmail.com>
-Subject: Re: [PATCH] block: check more requests for multiple_queues in blk_attempt_plug_merge
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>, stable@vger.kernel.org,
-        Larkin Lowrey <llowrey@nuclearwinter.com>,
-        Wilson Jonathan <i400sjon@gmail.com>,
-        Roger Heflin <rogerheflin@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi Jens,
+Hi,
 
-On Fri, Mar 11, 2022 at 6:16 AM Jens Axboe <axboe@kernel.dk> wrote:
->
-> On 3/10/22 5:07 PM, Jens Axboe wrote:
-> > In any case, just doing larger reads would likely help quite a bit, but
-> > would still be nice to get to the bottom of why we're not seeing the
-> > level of merging we expect.
->
-> Song, can you try this one? It'll do the dispatch in a somewhat saner
-> fashion, bundling identical queues. And we'll keep iterating the plug
-> list for a merge if we have multiple disks, until we've seen a queue
-> match and checked.
+This should fix the reported RAID rebuild regression, while also
+providing better performance for other workloads particularly on
+rotating storage.
 
-This one works great! We are seeing 99% read request merge and
-500kB+ average read size. The original patch in this thread only got
-88% and 34kB for these two metrics.
+-- 
+Jens Axboe
 
-Thanks,
-Song
 
-[...]
