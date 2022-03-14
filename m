@@ -2,55 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ECC4C433F5
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Mar 2022 08:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C88C433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Mar 2022 10:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237604AbiCNIKU (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Mar 2022 04:10:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52304 "EHLO
+        id S236677AbiCNK70 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Mar 2022 06:59:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237593AbiCNIKS (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Mar 2022 04:10:18 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3D89140C1;
-        Mon, 14 Mar 2022 01:09:08 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 47B1C68B05; Mon, 14 Mar 2022 09:00:03 +0100 (CET)
-Date:   Mon, 14 Mar 2022 09:00:01 +0100
-From:   "hch@lst.de" <hch@lst.de>
-To:     Avi Shchislowski <Avi.Shchislowski@wdc.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>,
-        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        "Luca Porzio (lporzio)" <lporzio@micron.com>,
-        Manjong Lee <mj0123.lee@samsung.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "song@kernel.org" <song@kernel.org>,
-        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
-        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
-        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
-        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
-        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
-        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
-        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
- hint.
-Message-ID: <20220314080001.GB4921@lst.de>
-References: <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com> <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk> <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com> <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk> <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org> <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com> <ef77ef36-df95-8658-ff54-7d8046f5d0e7@kernel.dk> <bf221ef4-f4d0-4431-02f3-ef3bea0e8cb2@acm.org> <800fa121-5da2-e4c0-d756-991f007f0ad4@kernel.dk> <SN6PR04MB3872231050F8585FFC6824C59A0F9@SN6PR04MB3872.namprd04.prod.outlook.com>
+        with ESMTP id S233418AbiCNK7Z (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Mar 2022 06:59:25 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C87FBC9C
+        for <linux-raid@vger.kernel.org>; Mon, 14 Mar 2022 03:58:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1647255495; x=1678791495;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=oHjpnBSNGbH+G2s/j2kV6BMlQ9Ymw5y8PkhdjwUgTSY=;
+  b=XmOp2FPgTnnYozIAR0iatllzEyAU4IYR1iz6t1UT+kvnCHWzs7/pIj60
+   q04vKYdSPfwDxZheHcU0B5aa0rYabstF1fzoUtqtjvXItKJfmSGND2fmg
+   eSXYeg1JuoZmoB0Q1yuOd71CxY7GLuWu+Fml54v1VcePFS9x8PtKkbYak
+   szqbd1UTBSQdAW60KpzYnMANYIpgEFNkXuKaep4aGGdnG/o0ClmCrHxQV
+   02ZeUj5AlzJR78gCGrVk5EETOSif6dgEUo3GRYMuQB6Txd/+kAsO4qjdz
+   F2Zm1pOXlA4LLx1o549DRbYos2oCnPyb42Cz98E2z6VW+qklEq9tLKR94
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10285"; a="236597512"
+X-IronPort-AV: E=Sophos;i="5.90,180,1643702400"; 
+   d="scan'208";a="236597512"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2022 03:58:15 -0700
+X-IronPort-AV: E=Sophos;i="5.90,180,1643702400"; 
+   d="scan'208";a="539916648"
+Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.30.42])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2022 03:58:14 -0700
+Date:   Mon, 14 Mar 2022 11:58:09 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Kristoffer Knigga <kris@knigga.com>
+Cc:     linux-raid@vger.kernel.org
+Subject: Re: mdadm is unable to see Alder Lake IMSM array
+Message-ID: <20220314115809.00007ac1@linux.intel.com>
+In-Reply-To: <CAKhSdW1zghNFqn2qemMZ7FJpiBcbAd0BcYifHmcM8WWPnai-=g@mail.gmail.com>
+References: <CAKhSdW1zghNFqn2qemMZ7FJpiBcbAd0BcYifHmcM8WWPnai-=g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SN6PR04MB3872231050F8585FFC6824C59A0F9@SN6PR04MB3872.namprd04.prod.outlook.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Which part of "the Linux kernel does not keep unused code around" is still
-not clear to you after explaining it three times in this thread?
+On Wed, 9 Mar 2022 10:17:14 -0600
+Kristoffer Knigga <kris@knigga.com> wrote:
+
+> Hello,
+> 
+> I just built a new PC using an Intel i5-12600K CPU and an Asus Prime
+> H670-PLUS D4 motherboard.  Attached to the SATA ports on the
+> motherboard are two HDDs and an SSD.  I have enabled VMD, mapped the
+> SATA controller under VMD, and created a RAID1 array from the two HDDs
+> following the steps in Asus's RAID Configuration Guide
+> (https://dlcdnets.asus.com/pub/ASUS/mb/13MANUAL/RAID_Configuration_Guide_V2-EN.pdf).
+> 
+> However, mdadm doesn't seem to know what to do with the array.  I've
+> tried the stock Fedora 35 version of mdadm (mdadm-4.2-rc2.fc35) and
+> I've built mdadm 4.2 from source, most recently with DEBUG on.
+> 
+
+Hi,
+This is RST family product but mdadm implements VROC solution. Both
+products have same origin but now they are not aligned and as you can
+see, they may not be compatible at all.
+
+> 
+> I'm having a hard time figuring out where to go from here.  Does mdadm
+> not know how to deal with IMSM on this new hardware?  Or is hardware
+> not behaving correctly?
+> 
+> Any pointers are appreciated!
+> 
+
+We are using same metadata format with RST. It should work with basic
+functionalities. Here we have Sata remapping under VMD controller. I
+think that our mdadm implementation is not able to handle it correctly,
+we are assuming that it must be nvme device.
+
+Thanks,
+Mariusz
+
