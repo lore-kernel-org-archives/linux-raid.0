@@ -2,81 +2,82 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51BE0C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 14 Mar 2022 14:54:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A094C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 14 Mar 2022 19:52:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241035AbiCNOz1 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 14 Mar 2022 10:55:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50316 "EHLO
+        id S244585AbiCNTxO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 14 Mar 2022 15:53:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240855AbiCNOz0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Mar 2022 10:55:26 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02C3943386
-        for <linux-raid@vger.kernel.org>; Mon, 14 Mar 2022 07:54:17 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id y8so15220381edl.9
-        for <linux-raid@vger.kernel.org>; Mon, 14 Mar 2022 07:54:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=knigga.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VYdFA9Ic8kFGAerGks/81xcvlCs3aa+kHuR0U4G4T5g=;
-        b=df/GKA+OeA5j0t93FRlnPH9hDf/Msg9uLfBy+7/7kwa8PXDc4Qbdj6LYcL/8gHQYBG
-         HJemAkLedUlvlHUG6kGvactH2PKyaRoX5ITORMXxA/ZvYKPPbxESqCmKo+a0exhE3Df6
-         v+ZQ4YYoN25lzany6wAkRxWhexEffqGIq7R/4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=VYdFA9Ic8kFGAerGks/81xcvlCs3aa+kHuR0U4G4T5g=;
-        b=UAfyZjmwVygcS4bM5Gevr845TVvc5FgIv08BA1tnqsObo4tFbuS7uQUg6U2JrJZ8vj
-         HW8sptjjb9bgqzHEuiLReg/bChzbT+1GQweZJY516RzNZ3TuqQAnNpGrwVU/vIW7ZAiW
-         kwKPAa9jwEODZBRwmnCzkCZ4tY59SzVqLdHy4MlKDsVda4uBRvUm5J8sdgtt5C2AmlKI
-         TVBMIh0w2yJkZr6OxljGRUYRxCgv4ANGP7tGkKnfGsiMVROU9ypfK5gIs3uYpcXWbqOR
-         QETBUybkCwO6Ey/AMf05WFyCrio1MKO/q4WKmoImKy+Zz0186GTJa95umb1OA4QE9wvU
-         QrBA==
-X-Gm-Message-State: AOAM530ePzrXm878az/TuvkOSsTtgiO+If2Vt+zl+WHJ3mHM6bYGs20y
-        lTPO0NtC2Q2niYe0nhERFDDYxEIUec+ixxZX/jbjOgVOjGG2E4JwlNc=
-X-Google-Smtp-Source: ABdhPJzau2TDt34CFjY6Y4byiLQnkAR+ne5D+FlPX7L5Ocx4LIYq/HcoXqN6g4TPRN53tmPOqECxm1g6W2mih0u1YWc=
-X-Received: by 2002:aa7:db94:0:b0:410:f0e8:c39e with SMTP id
- u20-20020aa7db94000000b00410f0e8c39emr20671996edt.14.1647269655419; Mon, 14
- Mar 2022 07:54:15 -0700 (PDT)
+        with ESMTP id S244741AbiCNTw1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 14 Mar 2022 15:52:27 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B6573FD83;
+        Mon, 14 Mar 2022 12:51:00 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CE301611BD;
+        Mon, 14 Mar 2022 19:50:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFBBEC340EE;
+        Mon, 14 Mar 2022 19:50:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647287427;
+        bh=On3lskfefDO7Bl1q7PKJQXQAMhTxwnHGKT6na9XT9Wo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WFZcNWXFGZVA+2W7kyzs6SFdlrv3FyV/aJpjGOYQrp3rgQAHpkzRjFdMvwqDhPEVY
+         8HccX0Lo2E1PNfiZQDUrzkEZYvszKgIDh+jEv4UlieiUh562ltwNsZ+yC+z+A/sAvG
+         VQMJafX4Ed9uPokPP2M97s8W6Z/uFiwrLEVIODiu9Lw4BvxBUz98r92nboGi0+u9DC
+         rsyoWTTLz4oO2dWRjOaZxGA3OhCqhH9OiqCZtdX0G5qpVM+atFaGbdz5ZlHsYog415
+         LYR+jbkEfGOWoZwkJxMlwjdHCgo0dnUlWfhid2a5xtgycNP4N1S4HQNjiP7N/dP0ey
+         hYnS7fa2QRuvg==
+Date:   Mon, 14 Mar 2022 19:50:25 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Avi Shchislowski <Avi.Shchislowski@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>,
+        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        "Luca Porzio (lporzio)" <lporzio@micron.com>,
+        Manjong Lee <mj0123.lee@samsung.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "song@kernel.org" <song@kernel.org>,
+        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
+        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
+        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
+        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
+        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
+        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
+        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [PATCH 2/2] block: remove the per-bio/request write hint.
+Message-ID: <Yi+cgUXaSx+PN10B@gmail.com>
+References: <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
+ <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk>
+ <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
+ <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk>
+ <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org>
+ <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
+ <ef77ef36-df95-8658-ff54-7d8046f5d0e7@kernel.dk>
+ <bf221ef4-f4d0-4431-02f3-ef3bea0e8cb2@acm.org>
+ <800fa121-5da2-e4c0-d756-991f007f0ad4@kernel.dk>
+ <SN6PR04MB3872231050F8585FFC6824C59A0F9@SN6PR04MB3872.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-References: <CAKhSdW1zghNFqn2qemMZ7FJpiBcbAd0BcYifHmcM8WWPnai-=g@mail.gmail.com>
- <20220314115809.00007ac1@linux.intel.com>
-In-Reply-To: <20220314115809.00007ac1@linux.intel.com>
-From:   Kristoffer Knigga <kris@knigga.com>
-Date:   Mon, 14 Mar 2022 09:53:39 -0500
-Message-ID: <CAKhSdW3v-e6N8GA2Sq=qurACA9S1f5Bsf9pSq6oL1YH4aSR+=g@mail.gmail.com>
-Subject: Re: mdadm is unable to see Alder Lake IMSM array
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <SN6PR04MB3872231050F8585FFC6824C59A0F9@SN6PR04MB3872.namprd04.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Mariusz,
+On Mon, Mar 14, 2022 at 07:40:42AM +0000, Avi Shchislowski wrote:
+>
+> We also supports Samsung & Micron approach
 
-Thanks for taking a look at this.
+Great, so send some patches upstream to have it be supported properly.
 
-> This is RST family product but mdadm implements VROC solution. Both
-> products have same origin but now they are not aligned and as you can
-> see, they may not be compatible at all.
-
-Is RST support planned for mdadm?
-
-> Here we have Sata remapping under VMD controller. I
-> think that our mdadm implementation is not able to handle it correctly,
-> we are assuming that it must be nvme device.
-
-Out of curiosity, would you expect an array of NVMe devices to work?
-
-This kind of programming is far outside of my expertise, but if
-there's anything I can do to help an effort to add this support to
-mdadm, please let me know.  I can provide more information about the
-hardware, and I can build and run tests if that's useful.
-
-Thank you!
-
-Kris
+- Eric
