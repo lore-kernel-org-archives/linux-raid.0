@@ -2,157 +2,105 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD0F6C433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 15 Mar 2022 15:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08CDDC433EF
+	for <linux-raid@archiver.kernel.org>; Tue, 15 Mar 2022 16:02:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244542AbiCOPqJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 15 Mar 2022 11:46:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55312 "EHLO
+        id S1347393AbiCOQDx (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 15 Mar 2022 12:03:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237275AbiCOPqI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Mar 2022 11:46:08 -0400
-Received: from mail-il1-x12c.google.com (mail-il1-x12c.google.com [IPv6:2607:f8b0:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 568F213CD6
-        for <linux-raid@vger.kernel.org>; Tue, 15 Mar 2022 08:44:56 -0700 (PDT)
-Received: by mail-il1-x12c.google.com with SMTP id j29so13578991ila.4
-        for <linux-raid@vger.kernel.org>; Tue, 15 Mar 2022 08:44:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=kU+GLJEFYIiN6NGm+q/bq337K/F3drtFqv3LO1H4fKE=;
-        b=gT6Y1bbmKjfoWVGM6TuXc6Ew3txTgEY9NUokJyBPFxsps4dxNt108edzQMlliVyula
-         oSIaGoB2zOd7tJBXXETitXby9wwwghsCALOxo9SclxNe/c2zLW2xT7DuzfGcx2oj1B+d
-         xUaer0hBghpARihJCQG30tsZLNXZpVr0PU0tzOsBSY4KT6vt2STQAbQ4ZmCFXva3rwtk
-         8q7qLksIoMvpIw/WA2Kbc2QvQ2NIV4aADl5cST4HOY2frRlQWn1fH23PbDGkRljqI9NN
-         isLqrW4T0Ot7sJZElLaOFWkBsmvrMFUQ21PRhs8farpcJiB9D4vvpUd0tvp1DFjMtJWo
-         41wQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=kU+GLJEFYIiN6NGm+q/bq337K/F3drtFqv3LO1H4fKE=;
-        b=OTfVXNaLJi/sin4FcDnEMru3lqweSqRgM+rSkfmoiHUwspXZYoT+qiOI9cndWQ5dZ2
-         WZ++azlUD4wnpXYhK56cbjJ5meSOku+JGEhbAI+6Og7CEMuBZ2Abcxj1VgHHyjnDnK2V
-         nt3WnrYyI1ew6HN335QYfS7ybFpOIYybT3Zjl/P0H6ksamCJJk1dwDZHuQDa7ylOVvM0
-         qnV9G8dFJCVAqn29gPnfoZCz3ucrpdiTGO3Jw47wgEZVtXKJ8d3yyDXTu+LAMqNCN2vz
-         p87kIcIQ4B2p4MpTjXR5oLupN/Y2HnKf9A3fD8uQEWyYUYkMtv0quVQhwhe8J5IFeRie
-         Ecng==
-X-Gm-Message-State: AOAM530VgZQ0uZcWPXAeCOxSIiqzJYvpuSYIeBvt4C1Lsha+WiJqPEtl
-        zyczxEBGFBcXXqznClJZac9unQ==
-X-Google-Smtp-Source: ABdhPJyych0DqX/cH/hqdWSDTCrkBK3odSgH+RTperxlzi4UKTip9ytPQ9AbkvcaBJmp6mZx9NU3nA==
-X-Received: by 2002:a92:ca45:0:b0:2c7:c473:6785 with SMTP id q5-20020a92ca45000000b002c7c4736785mr800177ilo.40.1647359095651;
-        Tue, 15 Mar 2022 08:44:55 -0700 (PDT)
-Received: from [192.168.1.172] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id s10-20020a6b740a000000b006413d13477dsm10427409iog.33.2022.03.15.08.44.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Mar 2022 08:44:55 -0700 (PDT)
-Message-ID: <95588225-b2af-72b6-2feb-811a3b346f9f@kernel.dk>
-Date:   Tue, 15 Mar 2022 09:44:52 -0600
+        with ESMTP id S242652AbiCOQDw (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 15 Mar 2022 12:03:52 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 376485623B
+        for <linux-raid@vger.kernel.org>; Tue, 15 Mar 2022 09:02:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1647360158; x=1678896158;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ZXCwOKH1uj2qnbKec2q307655wWJvJMpOoQlBjuefvU=;
+  b=iO+8e1PdNX/vCOstO3zxSVy7CPXDZbteLk4PxvqjoiUvN1CpsFbtDppK
+   X3uMXSeEqqJ2g0FpIaXybX7rCnvvJBHiA7HGbBFFJtI74E7ESeynHdztM
+   UBPyX6ylpoA8MvrnMaNYU/FcmmdqS5E4uHdADIU8brAyLToOqJPn4Ifen
+   UhahvZ4kF6igZrd1HiXkENjA9bASR0zkJjnRb7UUE4NMJ+Jy7y98R7KiQ
+   IVThoTZ128PSTzBWRs2VrKiYqRFBlUXEu5vulx8IcEOIqjrZI1vgWBzXZ
+   /j4ivAeb9tclz7ikDuSgZV7XvjcBAZc7CsZeSCMLydxjCmFXgwkqOohJ2
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10286"; a="256069535"
+X-IronPort-AV: E=Sophos;i="5.90,184,1643702400"; 
+   d="scan'208";a="256069535"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2022 09:00:13 -0700
+X-IronPort-AV: E=Sophos;i="5.90,184,1643702400"; 
+   d="scan'208";a="515927050"
+Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.16.129])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2022 09:00:11 -0700
+Date:   Tue, 15 Mar 2022 17:00:06 +0100
+From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+To:     Coly Li <colyli@suse.de>
+Cc:     Lukasz Florczak <lukasz.florczak@linux.intel.com>,
+        jes@trained-monkey.org, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 2/2] mdadm: Update config man regarding default files
+ and multi-keyword behavior.
+Message-ID: <20220315170006.00005871@linux.intel.com>
+In-Reply-To: <70ee6acf-714b-10eb-dfed-284a67ae619d@suse.de>
+References: <20220315085549.59693-1-lukasz.florczak@linux.intel.com>
+        <20220315085549.59693-3-lukasz.florczak@linux.intel.com>
+        <70ee6acf-714b-10eb-dfed-284a67ae619d@suse.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: [EXT] Re: [PATCH 2/2] block: remove the per-bio/request write
- hint.
-Content-Language: en-US
-To:     "Luca Porzio (lporzio)" <lporzio@micron.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        Manjong Lee <mj0123.lee@samsung.com>,
-        "david@fromorbit.com" <david@fromorbit.com>
-Cc:     "hch@lst.de" <hch@lst.de>, "kbusch@kernel.org" <kbusch@kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "song@kernel.org" <song@kernel.org>,
-        "seunghwan.hyun@samsung.com" <seunghwan.hyun@samsung.com>,
-        "sookwan7.kim@samsung.com" <sookwan7.kim@samsung.com>,
-        "nanich.lee@samsung.com" <nanich.lee@samsung.com>,
-        "woosung2.lee@samsung.com" <woosung2.lee@samsung.com>,
-        "yt0928.kim@samsung.com" <yt0928.kim@samsung.com>,
-        "junho89.kim@samsung.com" <junho89.kim@samsung.com>,
-        "jisoo2146.oh@samsung.com" <jisoo2146.oh@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-References: <20220306231727.GP3927073@dread.disaster.area>
- <CGME20220309042324epcas1p111312e20f4429dc3a17172458284a923@epcas1p1.samsung.com>
- <20220309133119.6915-1-mj0123.lee@samsung.com>
- <CO3PR08MB797524ACBF04B861D48AF612DC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <e98948ae-1709-32ef-e1e4-063be38609b1@kernel.dk>
- <CO3PR08MB797562AAE72BC201EB951C6CDC0B9@CO3PR08MB7975.namprd08.prod.outlook.com>
- <d477c7bf-f3a7-ccca-5472-f9cbb05b83c1@kernel.dk>
- <c27a5ec3-f683-d2a7-d5e7-fd54d2baa278@acm.org>
- <PH0PR08MB7889642784B2E1FC1799A828DB0B9@PH0PR08MB7889.namprd08.prod.outlook.com>
- <ef77ef36-df95-8658-ff54-7d8046f5d0e7@kernel.dk>
- <bf221ef4-f4d0-4431-02f3-ef3bea0e8cb2@acm.org>
- <800fa121-5da2-e4c0-d756-991f007f0ad4@kernel.dk>
- <SN6PR04MB3872231050F8585FFC6824C59A0F9@SN6PR04MB3872.namprd04.prod.outlook.com>
- <0c40073d-3920-8835-fc50-b17d4da099f0@kernel.dk>
- <CO3PR08MB7975EF4B014E211ACFAB7AF4DC109@CO3PR08MB7975.namprd08.prod.outlook.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <CO3PR08MB7975EF4B014E211ACFAB7AF4DC109@CO3PR08MB7975.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/15/22 9:36 AM, Luca Porzio (lporzio) wrote:
->>
->> This isn't some setup to solicit votes on who supports what. If the code isn't
->> upstream, it by definition doesn't exist to the kernel. No amount of "we're
->> also interested in this" changes that.
->>
->> What I wrote earlier still applies - whoever is interested in supporting lifetime
->> hints should submit that code upstream. The existing patchset to clean this
->> up doesn't change that process AT ALL. As mentioned, the only difference is
->> what the baseline looks like in terms of what the patchset is based on.
->>
+On Tue, 15 Mar 2022 17:57:09 +0800
+Coly Li <colyli@suse.de> wrote:
+
+> On 3/15/22 4:55 PM, Lukasz Florczak wrote:
+> > Simplify default and alternative config file and directory location
+> > references from mdadm(8) as references to mdadm.conf(5). Add FILE
+> > section in config man and explain order and conditions in which
+> > default and alternative config files and directories are used.
+> >
+> > Update config man behavior regarding parsing order when multiple
+> > keywords/config files are involved.
+> >
+> > Additionally add missing HOMECLUSTER keyword description.
+> >
+> > Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>  
 > 
-> Jens, 
 > 
-> Actually we might work to issue a patch and revert the patch plus add
-> the code that Bean and Bart mentioned which is currently Android only.
-> The reason it has not been done before is because for now it's not
-> production yet but it may soon be that case.
+> Hi Lukasz,
 > 
-> Would this patch revert be an option and accepted as a closure for
-> this discussion?
-
-What patch revert? It's not clear to me which patch you're talking about
-here. If you're talking about the "remove the per-bio/request write
-hint" patch, then no, that's certainly not being reverted. See previous
-replies I made and also below for why, and let's please stop beating
-this dead horse.
-
-> Another option (which I actually prefer), if I ask for a MM & Storage
-> BoF discussion on storage hints where I can show you the status of
-> temperature management and my studies on how this is beneficial for
-> storage devices. 
-
-As long as it's accompanied by code that implements it, then that would
-be fine.
-
-> Would this be more beneficial and maybe get some wider consensus on
-> the write hints?
 > 
-> After that consensus reverting (or agreeing on a new approach) will be
-> easier.
+> This patch doesn't apply on branch 20220315-testing of the mdadm-CI 
+> tree, could you please rebase this series on
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/colyli/mdadm.git 
+> 20220315-testing
+> 
+> Then I will continue to test them.
+> 
 
-As I've said multiple times, whenever code is available, it'll be
-reviewed and discussed. I don't like to discuss hypotheticals as too
-many times in the past there's a promise made and expectations built
-only for nothing to materialize. As it stands, the only in-kernel user
-of the hints is gone, and that means that the support code is being
-removed. We NEVER keep code in the kernel that doesn't have a user, as
-it can't get tested.
+Hi Coly,
+This is great to see that something is happening in upstream :)
 
-Submit your patches when they are ready, it really has no bearing on the
-currently queued up changes to write hints.
+I can see that you created branch where some patches were merged and
+now you are reporting conflicts now. Our patches are based on last
+mdadm commit (which is mdadm-4.2 ).
+IMO you should try to apply them first on latest master and later
+cherry-pick/ rebase them on top of your testing branch. This should
+automatically resolve most of conflicts. Could you try that?
 
--- 
-Jens Axboe
+This is hard to follow all patches on list (especially that we cannot
+determine in which order they will be applied). Preparing patches for
+you testing branch (which could be changed in any moment), IMO is not a
+good solution.
 
+I really appreciate the work you put to enable upstream testing. If you
+need some help, let me know.
+
+Thanks,
+Mariusz
