@@ -2,118 +2,181 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD468C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 16 Mar 2022 08:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CAE8C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 16 Mar 2022 12:03:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347256AbiCPIx6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 16 Mar 2022 04:53:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52340 "EHLO
+        id S1355549AbiCPMEa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 16 Mar 2022 08:04:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354673AbiCPIx4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Mar 2022 04:53:56 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B187652C0
-        for <linux-raid@vger.kernel.org>; Wed, 16 Mar 2022 01:52:42 -0700 (PDT)
+        with ESMTP id S1355524AbiCPME3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 16 Mar 2022 08:04:29 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E26331E3C9
+        for <linux-raid@vger.kernel.org>; Wed, 16 Mar 2022 05:03:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647420762; x=1678956762;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Csk0v3U+AGXCHmaQoFQ49RI7na+6CYResC1kz7ZIV74=;
-  b=KpuQtGs/2jGhfG43A0snso5YpiE6ulj2/vHgTk3NpncQpJpDRDqjchO5
-   Luvr8m7buWvaBsBFoCWSmgrH+FCprYY5rV+fPF50gc2/8OUISFUcbdqaS
-   nELKFMFedh1tXw40yPEvzXk2p3FVlhkI2wLDSXV/slDgzwzeeeIMzxcur
-   BW+uTzGoixQKTV/5iA0CIQ3Vqvh+/zGQyWKoJx0nI0qRGe+Mw9Khq+fSu
-   t9Ps55B1fyp6spy/UF267Q32pjup/V15tUYksBUjJPhcKxpkDChH0K289
-   0Qso7WPPyAqIrzdjq34I8L0gg+G/oRp9BFUttBlBRwP/WvvFPu9K7XILG
+  t=1647432195; x=1678968195;
+  h=message-id:date:from:to:subject:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=TAelhbEmSFsN+yiBt0ve69UtIs56TEdGKB7SCjozvL4=;
+  b=kzWi0VSFiRxEkeSZOZky6MbZjIFVxUbJfcfAgdwQ25xYRixvVcK2T4ED
+   U3G2ajxerJjbUCGy3wpdCQaNkLiLFPAhHlMBRYod8T+MfPpd10OJ+A0oj
+   mxWNBKgmFa26hE/CkDH5YHiS8+pUTY66EbmAF3DheKgB7uqgVH8vbCsm5
+   I2lCFSUzc8d1rD+e77sQYu1x/E6rjqnm+A+yJXOdjRg2dUq0rL4IDU9Li
+   U0uy/wG33k1mG3sIj9dyBEY42kTh/P2xJD+Ek5f0giLMP3KDzapc+VLSP
+   AScEe7l+5NCU0YjJHi1s+DCKidVKjR+6BHayym8+vq1F30Lk/BS8vZX63
    w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10286"; a="243981059"
+X-IronPort-AV: E=McAfee;i="6200,9189,10286"; a="256513636"
 X-IronPort-AV: E=Sophos;i="5.90,186,1643702400"; 
-   d="scan'208";a="243981059"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2022 01:52:42 -0700
+   d="scan'208";a="256513636"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2022 05:03:04 -0700
+Message-Id: <722c05$g3qed5@orsmga007-auth.jf.intel.com>
 X-IronPort-AV: E=Sophos;i="5.90,186,1643702400"; 
-   d="scan'208";a="516246147"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.3.58])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2022 01:52:40 -0700
-Date:   Wed, 16 Mar 2022 09:52:35 +0100
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Coly Li <colyli@suse.de>
-Cc:     Lukasz Florczak <lukasz.florczak@linux.intel.com>,
-        jes@trained-monkey.org, linux-raid@vger.kernel.org
-Subject: Re: [PATCH 2/2] mdadm: Update config man regarding default files
- and multi-keyword behavior.
-Message-ID: <20220316095235.0000264f@linux.intel.com>
-In-Reply-To: <8ee252df-3ee2-36b0-7c4e-ef1f9c8e6f49@suse.de>
+   d="scan'208";a="540883365"
+Received: from lflorcza-mobl.ger.corp.intel.com (HELO intel.linux.com) ([10.213.5.226])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Mar 2022 05:03:02 -0700
+Date:   Wed, 16 Mar 2022 13:03:00 +0100
+From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
+To:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-raid@vger.kernel.org
+Subject: Re: [PATCH 1/2] mdadm: Respect config file location in man.
+In-Reply-To: <91ed523b-9518-1beb-039d-ab00b1bb0b44@molgen.mpg.de>
 References: <20220315085549.59693-1-lukasz.florczak@linux.intel.com>
-        <20220315085549.59693-3-lukasz.florczak@linux.intel.com>
-        <70ee6acf-714b-10eb-dfed-284a67ae619d@suse.de>
-        <20220315170006.00005871@linux.intel.com>
-        <8ee252df-3ee2-36b0-7c4e-ef1f9c8e6f49@suse.de>
+        <20220315085549.59693-2-lukasz.florczak@linux.intel.com>
+        <91ed523b-9518-1beb-039d-ab00b1bb0b44@molgen.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 16 Mar 2022 00:43:57 +0800
-Coly Li <colyli@suse.de> wrote:
+Dear Paul,
+Thanks for reviewing my patch.=20
 
-> On 3/16/22 12:00 AM, Mariusz Tkaczyk wrote:
-> > On Tue, 15 Mar 2022 17:57:09 +0800
-> > Coly Li <colyli@suse.de> wrote:
-> >
-> >> On 3/15/22 4:55 PM, Lukasz Florczak wrote:
-> >>> Simplify default and alternative config file and directory
-> >>> location references from mdadm(8) as references to mdadm.conf(5).
-> >>> Add FILE section in config man and explain order and conditions
-> >>> in which default and alternative config files and directories are
-> >>> used.
-> >>>
-> >>> Update config man behavior regarding parsing order when multiple
-> >>> keywords/config files are involved.
-> >>>
-> >>> Additionally add missing HOMECLUSTER keyword description.
-> >>>
-> >>> Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>
-> >>
-> >> Hi Lukasz,
-> >>
-> >>
-> >> This patch doesn't apply on branch 20220315-testing of the mdadm-CI
-> >> tree, could you please rebase this series on
-> >>
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/colyli/mdadm.git
-> >> 20220315-testing
-> >>
-> >> Then I will continue to test them.
-> >>
-> > Hi Coly,
-> > This is great to see that something is happening in upstream :)
-> >
-> > I can see that you created branch where some patches were merged and
-> > now you are reporting conflicts now. Our patches are based on last
-> > mdadm commit (which is mdadm-4.2 ).
-> > IMO you should try to apply them first on latest master and later
-> > cherry-pick/ rebase them on top of your testing branch. This should
-> > automatically resolve most of conflicts. Could you try that?
-> 
-> 
-> The testing branch is updated to latest mdadm upstream. Indeed the 
-> conflict is about blank line as I see, e.g. it removes some \t from 
-> empty line, but such issue was removed in latest upstream.
-> 
-> Ineed I can fix the conflict, but I don't know how to make you update 
-> the change from my side. Does it work if I sand you a diff of the
-> patch?
-> 
-Hi Coly,
-Resolving conflicts is a normal maintenance work. Just add you
-sign-off and modify whatever is necessary, ofc. if are sure that it is
-correct. If not, then ask owner to do that.
-IMO you should send a note that you resolved something, we can
-verify it ourselves in commit later.
+On Tue, 15 Mar 2022 13:39:25 +0100, Paul Menzel <pmenzel@molgen.mpg.de>
+wrote:
 
-Thanks,
-Mariusz
+> Dear Lukasz,
+>=20
+>=20
+> Thank you for your patches.
+>=20
+> Am 15.03.22 um 09:55 schrieb Lukasz Florczak:
+>=20
+> It=E2=80=99d be great if you removed the dot/period at the end of the git
+> commit message summaries [1]. (Also in second patch.)
+
+Noted.
+
+>=20
+> > Default config file location could differ depending on OS (e.g.
+> > Debian family). =20
+>=20
+> What is it an Debian?
+
+Could you elaborate?
+
+>=20
+>  [...] =20
+>=20
+> Looks like an independent fix. Please separate into a separate commit.
+
+It's just adding a missing option. I don't think that it deserves a
+separate commit. How about I will update the commit body to include
+this particular change?
+
+>=20
+> > +"  create, auto                                 used when creating
+> > device names in /dev\n" +"  homehost, policy, part-policy
+> >      used to guide policy in various\n" +"
+> >                      situations\n" +"\n"
+> > +"For more details see mdadm.conf(5).\n"
+> >   "\n"
+> >   ;
+> >  =20
+> > diff --git a/mdadm.8.in b/mdadm.8.in
+> > index be902dba..d41b3ca7 100644
+> > --- a/mdadm.8.in
+> > +++ b/mdadm.8.in
+> > @@ -267,13 +267,13 @@ the exact meaning of this option in different
+> > contexts. .TP
+> >   .BR \-c ", " \-\-config=3D
+> >   Specify the config file or directory.  Default is to use
+> > -.B /etc/mdadm.conf
+> > +.B {CONFFILE}
+> >   and
+> > -.BR /etc/mdadm.conf.d ,
+> > +.BR {CONFFILE}.d ,
+> >   or if those are missing then
+> > -.B /etc/mdadm/mdadm.conf
+> > +.B {CONFFILE2}
+> >   and
+> > -.BR /etc/mdadm/mdadm.conf.d .
+> > +.BR {CONFFILE2}.d .
+> >   If the config file given is
+> >   .B "partitions"
+> >   then nothing will be read, but
+> > @@ -2009,9 +2009,9 @@ The config file is only used if explicitly
+> > named with or requested with (a possibly implicit)
+> >   .BR \-\-scan .
+> >   In the later case,
+> > -.B /etc/mdadm.conf
+> > +.B {CONFFILE}
+> >   or
+> > -.B /etc/mdadm/mdadm.conf
+> > +.B {CONFFILE2}
+> >   is used.
+> >  =20
+> >   If
+> > @@ -3339,7 +3339,7 @@ uses this to find arrays when
+> >   is given in Misc mode, and to monitor array reconstruction
+> >   on Monitor mode.
+> >  =20
+> > -.SS /etc/mdadm.conf
+> > +.SS {CONFFILE} (or {CONFFILE2})
+> >  =20
+> >   The config file lists which devices may be scanned to see if
+> >   they contain MD super block, and gives identifying information
+> > @@ -3347,7 +3347,7 @@ they contain MD super block, and gives
+> > identifying information .BR mdadm.conf (5)
+> >   for more details.
+> >  =20
+> > -.SS /etc/mdadm.conf.d
+> > +.SS {CONFFILE}.d (or {CONFFILE2}.d)
+> >  =20
+> >   A directory containing configuration files which are read in
+> > lexical order.
+> > diff --git a/mdadm.conf.5 b/mdadm.conf.5.in
+> > similarity index 99%
+> > rename from mdadm.conf.5
+> > rename to mdadm.conf.5.in
+> > index 74a21c5f..83edd008 100644
+> > --- a/mdadm.conf.5
+> > +++ b/mdadm.conf.5.in
+> > @@ -8,7 +8,7 @@
+> >   .SH NAME
+> >   mdadm.conf \- configuration for management of Software RAID with
+> > mdadm .SH SYNOPSIS
+> > -/etc/mdadm.conf
+> > +{CONFFILE}
+> >   .SH DESCRIPTION
+> >   .PP
+> >   .I mdadm =20
+>=20
+> The rest looks good.
+>=20
+>=20
+> Kind regards,
+>=20
+> Paul
+>=20
+>=20
+> [1]: https://chris.beams.io/posts/git-commit/
+
+Regards,
+
+Lukasz
+
+
