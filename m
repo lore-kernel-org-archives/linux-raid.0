@@ -2,92 +2,90 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CF58C4167B
-	for <linux-raid@archiver.kernel.org>; Thu, 17 Mar 2022 15:50:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8630DC433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 17 Mar 2022 22:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbiCQPvX (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 17 Mar 2022 11:51:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54588 "EHLO
+        id S229882AbiCQWnF (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 17 Mar 2022 18:43:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236215AbiCQPvU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Mar 2022 11:51:20 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FA7E1B5382
-        for <linux-raid@vger.kernel.org>; Thu, 17 Mar 2022 08:50:02 -0700 (PDT)
-Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1nUsO0-0008Ws-4U;
-        Thu, 17 Mar 2022 15:50:00 +0000
-Message-ID: <8cb0792c-0e8f-e03c-bb74-91d9b0d21df5@youngman.org.uk>
-Date:   Thu, 17 Mar 2022 15:49:59 +0000
+        with ESMTP id S229608AbiCQWnE (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 17 Mar 2022 18:43:04 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B0422B4A5C;
+        Thu, 17 Mar 2022 15:41:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C41C8B81E99;
+        Thu, 17 Mar 2022 22:41:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F146C340F3;
+        Thu, 17 Mar 2022 22:41:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647556904;
+        bh=FHVVvG1Rr6KduhKbxfSM1ZOboRLahcePm/noojFXJbU=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=UXZ2FtRTaiQZA1h8vkSKLcMqTegt8/jWtJ3IMK+Z93VsCTwOzDrvBVi3IdVugxdF8
+         ZzfGG4Y6CIJ7PRys9bTsp/kmB361qPyfdC0iJalrzm7G4lkPWpdgtS3oDjIek7BCpM
+         z6BM3qopcNGP52kPfupvo/3XOtCwVaPBdzxhi0Ofd4au4+arMzKQZsvnvV6EqqV1Nt
+         EZz18u2vQp9bj3A3SsvSGDqJTA3ocAlvNIkT4oY/riYVlfSofl7rU+xGgylRsUpGER
+         yjkenM9/uBPfDaCoYc+r23XdG/rT6mvazd89Pe632iD4p82twwfdwcAWk9hgHVh2Gm
+         7e5nkxw9BQomQ==
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-2e59939b862so74204607b3.10;
+        Thu, 17 Mar 2022 15:41:44 -0700 (PDT)
+X-Gm-Message-State: AOAM530BZH8cPD2w4K+4ikCrVbicJWJbgKk+X394awycwgojF6lw3UwL
+        o7Jm0Og8c8r1MiSiZ5qHaoWOEKGlTvXE5/K90Hg=
+X-Google-Smtp-Source: ABdhPJwpLpgB9cyDboA5jfZvS5jXDt66IJFw/EavZfuqNUhe2jURYyPKbWxa2uUWdQZzL78EydR6lsVRhRMCnr+SzWU=
+X-Received: by 2002:a81:79d5:0:b0:2e5:9d33:82ab with SMTP id
+ u204-20020a8179d5000000b002e59d3382abmr8352505ywc.460.1647556903176; Thu, 17
+ Mar 2022 15:41:43 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: WD MyBookLiveDuo Raid repair/read
-Content-Language: en-GB
-To:     Rudolf Feile <rudolf@familie-feile.de>, linux-raid@vger.kernel.org
-References: <c4216c55-3756-8faa-29c1-318f90c4967c@familie-feile.de>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <c4216c55-3756-8faa-29c1-318f90c4967c@familie-feile.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <53e7de78-4d27-5089-f159-0d443b354666@leemhuis.info>
+ <35bafd68-b340-dfaa-dd5f-d45843104f91@leemhuis.info> <CAPhsuW44tX0rBpy5c63HgTtRSF=UAAsgv8ZuYE_QTLhi6syXaA@mail.gmail.com>
+ <Yh/nbZYmYD6SpZV9@sakura.greysector.net> <CAPhsuW4otwSDcOr8NWFhmecM4AfKim5jQ8aoZO-CY4KkwDFCgg@mail.gmail.com>
+ <254dc1fb-cda7-6249-35e5-a0c584c41206@leemhuis.info>
+In-Reply-To: <254dc1fb-cda7-6249-35e5-a0c584c41206@leemhuis.info>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 17 Mar 2022 15:41:32 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5vn7gepzFSn3a1p6SqzFHdvf0N7-U7EoAC7YTnF8wiFQ@mail.gmail.com>
+Message-ID: <CAPhsuW5vn7gepzFSn3a1p6SqzFHdvf0N7-U7EoAC7YTnF8wiFQ@mail.gmail.com>
+Subject: Re: Bug 215605 - [5.14 regression] BUG: unable to handle page fault
+ while running badblocks (fsck.ext4 -c) on a raid5 md array
+To:     Thorsten Leemhuis <regressions@leemhuis.info>
+Cc:     Dominik Mierzejewski <dominik@greysector.net>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 17/03/2022 14:42, Rudolf Feile wrote:
-> Hi,
-> 
-> some time ago, my MyBookLiveDuo didn't response anymore. I tried 
-> serveral actions mentioned at WD but they where not successful. Thus I 
-> took the drive apart, and shared with other things.
-> 
-> Meanwhile I set up a laptop with ubuntu and started to become familier 
-> with linux. As I knew, that the basic system on WD MyBookLiveDuo is also 
-> linux, I thought perhaps I could read the drives of the MBLD.
-> 
-> I own an usb- based double tray drive (SALCAR), took off the drive from 
-> MBLD, placed them into this double tray, and connected the usb to the 
-> ubuntu system.
-> 
-> Following  raid.wiki.kernel.org/.../Asking_for_help page I received the 
-> answers in request.txt attached.
-> 
-> It seems quite okay for my low level raid knowledge. The only thing I 
-> noticed is that one drive has a corrupt setup date fro 1970 compared to 
-> the other files date from 2011.
-> 
-> My question(s) are:
-> 
-> - can I get the data from the files directly via this usb double tray 
-> drive, and how this will be done
-> 
-> - or have I to repair the raid-system, and put the two files back to the 
-> MBLD.
-> 
-> Would be fine if someone could have a look into the file attached.
-> 
-> Thanks in advance,
-> 
-> Rudolf
-> 
-given that it comes up with both md2 and md3 reporting 2 active, and 
-working, devices, and /proc/mdstat looking good, I'd just try mounting 
-the two arrays and seeing if they work!
+On Thu, Mar 17, 2022 at 6:14 AM Thorsten Leemhuis
+<regressions@leemhuis.info> wrote:
+>
+> Hi, this is your Linux kernel regression tracker. Top-posting for once,
+> to make this easily accessible to everyone.
+>
+> Song, two weeks ago you said you would try to reproduce this. Any
+> success? Or was the discussion moved somewhere else and I just missed it?
+>
 
-THEN JUST GET THE DATA OFF.
+I haven't got luck to reproduce the issue yet. I will keep trying and
+update when
+there is progress.
 
-All being well, it's just a faulty cage. But sticking WD Greens in a 
-raid? That's not recommended!
+Thanks,
+Song
 
-The worst case is WD's trying to fix things might have re-initialised 
-the array.
-
-See if you can mount the array, and take it from there.
-
-(Note your tray is USB, try to minimise i/o - I know I know copying off 
-the drives will hammer it - because usb and raid don't like each other)
-
-Cheers,
-Wol
+> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+>
+> P.S.: As the Linux kernel's regression tracker I'm getting a lot of
+> reports on my table. I can only look briefly into most of them and lack
+> knowledge about most of the areas they concern. I thus unfortunately
+> will sometimes get things wrong or miss something important. I hope
+> that's not the case here; if you think it is, don't hesitate to tell me
+> in a public reply, it's in everyone's interest to set the public record
+> straight.
+>
