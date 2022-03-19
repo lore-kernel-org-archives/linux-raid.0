@@ -2,72 +2,141 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E5DC433F5
-	for <linux-raid@archiver.kernel.org>; Sat, 19 Mar 2022 10:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F3CC433EF
+	for <linux-raid@archiver.kernel.org>; Sat, 19 Mar 2022 15:12:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242711AbiCSKr3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 19 Mar 2022 06:47:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
+        id S240362AbiCSPOE (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 19 Mar 2022 11:14:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233854AbiCSKr2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Mar 2022 06:47:28 -0400
-Received: from rin.romanrm.net (rin.romanrm.net [IPv6:2001:bc8:2dd2:1000::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20CAE269A5F
-        for <linux-raid@vger.kernel.org>; Sat, 19 Mar 2022 03:46:03 -0700 (PDT)
-Received: from nvm (nvm2.home.romanrm.net [IPv6:fd39::4a:3cff:fe57:d6b5])
-        by rin.romanrm.net (Postfix) with SMTP id 3CEF8674;
-        Sat, 19 Mar 2022 10:46:00 +0000 (UTC)
-Date:   Sat, 19 Mar 2022 15:45:59 +0500
-From:   Roman Mamedov <rm@romanrm.net>
-To:     Marc MERLIN <marc@merlins.org>
-Cc:     linux-raid@vger.kernel.org
-Subject: Re: new drive is 4 sectors shorter, can it be used for swraid5
- array?
-Message-ID: <20220319154559.09f649e4@nvm>
-In-Reply-To: <20220318173007.3ad9348c@nvm>
-References: <20220318030855.GV3131742@merlins.org>
- <20220318173007.3ad9348c@nvm>
+        with ESMTP id S230497AbiCSPOD (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Mar 2022 11:14:03 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 259E95A085
+        for <linux-raid@vger.kernel.org>; Sat, 19 Mar 2022 08:12:41 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 71F0A21102;
+        Sat, 19 Mar 2022 15:12:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1647702760; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=wMhYQC9hNsv0BHgy31bnPlsg1ZG7fiIC/iAVAvY0sXs=;
+        b=Je6YzZK6ZI/LNK9GBuZ/wCXad6hUtSj07Q07K4O/DFCIfDlO0iyHcMhU2+8vMRL2DJQqbi
+        kHh9VqInqXWhxEcsmubByKAbFvGthZDFGeifNpQKcl8ojCtjgDet/CeL70xbeago9DzqX9
+        Hl/Vysn0XTDwi5BhgS8rHRKvvyqJDlw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1647702760;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=wMhYQC9hNsv0BHgy31bnPlsg1ZG7fiIC/iAVAvY0sXs=;
+        b=ILPViS6mNEvTVDtnDvCXRfdww5CI6h0to+5OThvUpfQnW+jr2uLTrpj4iJhttQDqm75Zgj
+        KjJY4BLMt9mX4vAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 491D0132D4;
+        Sat, 19 Mar 2022 15:12:39 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id mq4iBOfyNWJXCgAAMHmgww
+        (envelope-from <colyli@suse.de>); Sat, 19 Mar 2022 15:12:39 +0000
+Message-ID: <da2d2717-c278-62bc-d1e5-e0d371b66f9b@suse.de>
+Date:   Sat, 19 Mar 2022 23:12:36 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH] Assemble: check if device is container before scheduling
+ force-clean update
+Content-Language: en-US
+To:     Kinga Tanska <kinga.tanska@intel.com>
+Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
+References: <20220209090940.11973-1-kinga.tanska@intel.com>
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220209090940.11973-1-kinga.tanska@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 18 Mar 2022 17:30:07 +0500
-Roman Mamedov <rm@romanrm.net> wrote:
+On 2/9/22 5:09 PM, Kinga Tanska wrote:
+> When assemble is used with --force flag and array is not clean then
+> "force-clean" update is scheduled. Containers are considered as not
+> clean because this field is not set for them. To exclude them from
+> meaningless update (it is ignored quietly) check if the device
+> is a container first.
+> To unify all containers checks in code, is_container() function is
+> added and propagated.
+>
+> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
 
-> However there should not be such size difference in the first place
 
-If we look closely though, there actually doesn't appear to be:
+Hi Kinga,
 
-> On Thu, 17 Mar 2022 20:08:55 -0700
-> Marc MERLIN <marc@merlins.org> wrote:
-> 
-> > old drive:
-> > User Capacity:    6,001,175,126,016 bytes [6.00 TB]
-> > 
-> > new drive:
-> > User Capacity:    6,001,175,126,016 bytes [6.00 TB]
 
-As for...
+I am fine with the above idea, except the extra is_container(). IMHO 
+comparing directly with LEVEL_CONTAINER is fine, adding is_container() 
+doesn't help too much.
 
-> >    8      128 5860522584 sdi
-> >    8      129 5860521543 sdi1
-> >
-> >    8      160 5860522580 sdk
-> >    8      161 5860521536 sdk1
 
-Which tool returns this output?
+Except for the code replacement with is_container(), it looks good to me 
+for your fix.
 
-What do you get for 
 
-  blockdev --getsize64 /dev/sdi
-  blockdev --getsize64 /dev/sdk
+> ---
+>   Assemble.c    | 10 ++++------
+>   Create.c      |  6 +++---
+>   Grow.c        |  6 +++---
+>   Incremental.c |  4 ++--
+>   mdadm.h       | 14 ++++++++++++++
+>   super-ddf.c   |  6 +++---
+>   super-intel.c |  4 ++--
+>   super0.c      |  2 +-
+>   super1.c      |  2 +-
+>   sysfs.c       |  2 +-
+>   10 files changed, 34 insertions(+), 22 deletions(-)
+>
+> diff --git a/Assemble.c b/Assemble.c
+> index 704b8293..3d65212c 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1123,7 +1123,7 @@ static int start_array(int mdfd,
+>   			       i/2, mddev);
+>   	}
 
-If this returns the same size for both, wipe a few first MB the new drive with
-zeroes using dd, and try a different partitioning tool.
+[snipped]
 
--- 
-With respect,
-Roman
+
+>   	}
+> -	if (c->force && !clean &&
+> +	if (c->force && !clean && !is_container(content->array.level) &&
+>   	    !enough(content->array.level, content->array.raid_disks,
+> -		    content->array.layout, clean,
+> -		    avail)) {
+> +		    content->array.layout, clean, avail)) {
+>   		change += st->ss->update_super(st, content, "force-array",
+>   					       devices[chosen_drive].devname, c->verbose,
+>   					       0, NULL);
+
+
+For the above change,
+
+Acked-by: Coly Li <colyli@suse.de>
+
+
+Thanks.
+
+
+Coly Li
+
+[snipped]
+
+
