@@ -2,64 +2,72 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91860C433EF
-	for <linux-raid@archiver.kernel.org>; Sat, 19 Mar 2022 10:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E5DC433F5
+	for <linux-raid@archiver.kernel.org>; Sat, 19 Mar 2022 10:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242661AbiCSKPm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sat, 19 Mar 2022 06:15:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46024 "EHLO
+        id S242711AbiCSKr3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 19 Mar 2022 06:47:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235071AbiCSKPl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Mar 2022 06:15:41 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A16F1AFE85
-        for <linux-raid@vger.kernel.org>; Sat, 19 Mar 2022 03:14:20 -0700 (PDT)
-Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1nVW6D-0004LL-Fo;
-        Sat, 19 Mar 2022 10:14:18 +0000
-Message-ID: <01d2c8c5-46ea-f69e-e285-da0abe6cd594@youngman.org.uk>
-Date:   Sat, 19 Mar 2022 10:14:16 +0000
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: new drive is 4 sectors shorter, can it be used for swraid5 array?
-Content-Language: en-GB
-To:     Marc MERLIN <marc@merlins.org>, Roman Mamedov <rm@romanrm.net>,
-        Roger Heflin <rogerheflin@gmail.com>
+        with ESMTP id S233854AbiCSKr2 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Mar 2022 06:47:28 -0400
+Received: from rin.romanrm.net (rin.romanrm.net [IPv6:2001:bc8:2dd2:1000::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20CAE269A5F
+        for <linux-raid@vger.kernel.org>; Sat, 19 Mar 2022 03:46:03 -0700 (PDT)
+Received: from nvm (nvm2.home.romanrm.net [IPv6:fd39::4a:3cff:fe57:d6b5])
+        by rin.romanrm.net (Postfix) with SMTP id 3CEF8674;
+        Sat, 19 Mar 2022 10:46:00 +0000 (UTC)
+Date:   Sat, 19 Mar 2022 15:45:59 +0500
+From:   Roman Mamedov <rm@romanrm.net>
+To:     Marc MERLIN <marc@merlins.org>
 Cc:     linux-raid@vger.kernel.org
-References: <20220319041020.GW3131742@merlins.org>
-From:   Wols Lists <antlists@youngman.org.uk>
-In-Reply-To: <20220319041020.GW3131742@merlins.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: new drive is 4 sectors shorter, can it be used for swraid5
+ array?
+Message-ID: <20220319154559.09f649e4@nvm>
+In-Reply-To: <20220318173007.3ad9348c@nvm>
+References: <20220318030855.GV3131742@merlins.org>
+ <20220318173007.3ad9348c@nvm>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 19/03/2022 04:10, Marc MERLIN wrote:
->> If you find it needs more than the size of sdk1, as an emergency measure you
->> could wipe off the partition table and add the entire sdk as the array member.
+On Fri, 18 Mar 2022 17:30:07 +0500
+Roman Mamedov <rm@romanrm.net> wrote:
 
-> Yeah, I thought of that, just don't really like it, and not sure if
-> mdadm -can looks for raw drives in addition to partitions
+> However there should not be such size difference in the first place
+
+If we look closely though, there actually doesn't appear to be:
+
+> On Thu, 17 Mar 2022 20:08:55 -0700
+> Marc MERLIN <marc@merlins.org> wrote:
 > 
-mdadm has absolutely no trouble with that at all. All it cares about is 
-if something is a block device - if it finds an mdadm signature at the 
-start of a block device it will use it.
+> > old drive:
+> > User Capacity:    6,001,175,126,016 bytes [6.00 TB]
+> > 
+> > new drive:
+> > User Capacity:    6,001,175,126,016 bytes [6.00 TB]
 
-The problem is the eejits out there who assume that all physical drives 
-must be partitioned. And we know from experience that there are eejits 
-out there who assume that any drive without an MBR or GPT just *must* be 
-unused and it's *perfectly* *okay* to write said MBR or GPT *without* 
-*asking*. Just trashing your mdadm (or lvm, or whatever yada ydad) 
-signature in the process.
+As for...
 
-It's not common, but we do get calls to recover arrays where the 
-signature has gone missing because the owner made the mistake of 
-upgrading their system (Windows, linux, whatever) and the upgrade 
-stomped all over the array.
+> >    8      128 5860522584 sdi
+> >    8      129 5860521543 sdi1
+> >
+> >    8      160 5860522580 sdk
+> >    8      161 5860521536 sdk1
 
-Cheers,
-Wol
+Which tool returns this output?
+
+What do you get for 
+
+  blockdev --getsize64 /dev/sdi
+  blockdev --getsize64 /dev/sdk
+
+If this returns the same size for both, wipe a few first MB the new drive with
+zeroes using dd, and try a different partitioning tool.
+
+-- 
+With respect,
+Roman
