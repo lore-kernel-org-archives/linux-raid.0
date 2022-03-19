@@ -2,84 +2,92 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 448BAC433EF
-	for <linux-raid@archiver.kernel.org>; Fri, 18 Mar 2022 22:42:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3967C433EF
+	for <linux-raid@archiver.kernel.org>; Sat, 19 Mar 2022 04:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240276AbiCRWoK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 18 Mar 2022 18:44:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52716 "EHLO
+        id S241900AbiCSELr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 19 Mar 2022 00:11:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234474AbiCRWoJ (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 18 Mar 2022 18:44:09 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F26193148
-        for <linux-raid@vger.kernel.org>; Fri, 18 Mar 2022 15:42:50 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 6C49B1F37C;
-        Fri, 18 Mar 2022 22:42:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1647643368; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hK+VIFqpMeO+jWoArPz0m3Jg5uy5JzBEDBP0tRVyZvc=;
-        b=H36ARSWZrBMJh+K+B5ImHrKq3sJlckp8MSjlrtv7ba3vptkARbEhKBmIFwU59CIkKVwl2I
-        nleavfV9b0MWEJXfdto9k+Mj3Bw10Lnl0So6ZH12WOc/ZQIVe2N4HRN9hiSDjBDTlaLMiQ
-        VdFInhIP/p1qAS/QmMSvTMn1iO9/zgY=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 108DA132C1;
-        Fri, 18 Mar 2022 22:42:48 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id +XWTAegKNWJSegAAMHmgww
-        (envelope-from <mwilck@suse.com>); Fri, 18 Mar 2022 22:42:48 +0000
-Message-ID: <070c14f1a5e3a57bb45579991447d3267375e48f.camel@suse.com>
-Subject: Re: [PATCH] udev-md-raid-assembly.rules: skip if
- DM_UDEV_DISABLE_OTHER_RULES_FLAG
-From:   Martin Wilck <mwilck@suse.com>
-To:     Jes Sorensen <jsorensen@fb.com>, NeilBrown <neilb@suse.de>
-Cc:     Peter Rajnoha <prajnoha@redhat.com>, Coly Li <colyli@suse.com>,
-        lvm-devel@redhat.com, linux-raid@vger.kernel.org,
-        dm-devel@redhat.com, Heming Zhao <heming.zhao@suse.com>
-Date:   Fri, 18 Mar 2022 23:42:47 +0100
-In-Reply-To: <ff8030340e30963a1772f43e8bdfb6b610219887.camel@suse.com>
-References: <20220216205914.7575-1-mwilck@suse.com>
-         , <164504936873.10228.7361167610237544463@noble.neil.brown.name>
-         , <e8720e3f8734cbad1af34d5e54afc47ba3ef1b8f.camel@suse.com>
-         , <20220217130934.lh2b33255kyx2pax@alatyr-rpi.brq.redhat.com>
-         , <164548656531.8827.3365536065813085321@noble.neil.brown.name>
-         , <4b61ca1eafb35e3fdfbc9bb260dc89d56d181499.camel@suse.com>
-         <164557016782.28944.17731814770525408828@noble.neil.brown.name>
-         <ff8030340e30963a1772f43e8bdfb6b610219887.camel@suse.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S230088AbiCSELo (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 19 Mar 2022 00:11:44 -0400
+Received: from mail1.merlins.org (magic.merlins.org [209.81.13.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 248651BE4D0
+        for <linux-raid@vger.kernel.org>; Fri, 18 Mar 2022 21:10:22 -0700 (PDT)
+Received: from c-24-5-124-255.hsd1.ca.comcast.net ([24.5.124.255]:48552 helo=sauron.svh.merlins.org)
+        by mail1.merlins.org with esmtpsa 
+        (Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim 4.94.2 #2)
+        id 1nVQQ0-0007e7-PE by authid <merlins.org> with srv_auth_plain; Fri, 18 Mar 2022 21:10:20 -0700
+Received: from merlin by sauron.svh.merlins.org with local (Exim 4.92)
+        (envelope-from <marc@merlins.org>)
+        id 1nVQQ0-00BM1c-KJ; Fri, 18 Mar 2022 21:10:20 -0700
+Date:   Fri, 18 Mar 2022 21:10:20 -0700
+From:   Marc MERLIN <marc@merlins.org>
+To:     Roman Mamedov <rm@romanrm.net>,
+        Roger Heflin <rogerheflin@gmail.com>
+Cc:     linux-raid@vger.kernel.org
+Subject: Re: new drive is 4 sectors shorter, can it be used for swraid5 array?
+Message-ID: <20220319041020.GW3131742@merlins.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAMCDedQxBNc6JduBEp6NQ=5Ke9hrDQwvWkOT624LmXZtpv=PQ@mail.gmail.com>
+ <20220318173007.3ad9348c@nvm>
+X-Sysadmin: BOFH
+X-URL:  http://marc.merlins.org/
+X-SA-Exim-Connect-IP: 24.5.124.255
+X-SA-Exim-Mail-From: marc@merlins.org
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Jes,
+On Fri, Mar 18, 2022 at 05:30:07PM +0500, Roman Mamedov wrote:
+> Check "Used Dev Size" in "mdadm --detail" of your array. I suppose that is how
+> much (at least) it actually needs from any new member to be suitable for the
+> array.
+ 
+Thank you, it indeed uses a bit less than what was available on the
+first drives, so it looks like I'm set
+     Used Dev Size : 5860390400 (5588.90 GiB 6001.04 GB)
+5860521536-5860390400
+131136
 
-On Mon, 2022-02-28 at 09:48 +0100, Martin Wilck wrote:
-> On Wed, 2022-02-23 at 09:49 +1100, NeilBrown wrote:
-> > 
-> > But if libdevmapper.h is the best you have, then maybe it'll have
-> > to
-> > do.
-> > It is up to Jes what he accepts of course.
-> 
-> Jes, have you made up your mind on this patch yet?
-> Please contact me if you have remarks or questions.
+> If you find it needs more than the size of sdk1, as an emergency measure you
+> could wipe off the partition table and add the entire sdk as the array member.
 
-Gentle reminder ...
+Yeah, I thought of that, just don't really like it, and not sure if
+mdadm -can looks for raw drives in addition to partitions
 
-Regards
-Martin
+> However there should not be such size difference in the first place, check
+> your dmesg if drive detection messages report "HPA", and/or check with "hdparm
+> -N" if there's this HPA enabled, cutting off a portion of the drive at the end.
+ 
 
+[622993.224113] scsi 11:0:0:0: Direct-Access     Seagate  FA GoFlex Desk   0307 PQ: 0 ANSI: 6
+[622993.255658] sd 11:0:0:0: Attached scsi generic sg14 type 0
+[622993.273983] sd 11:0:0:0: [sdk] 1465130645 4096-byte logical blocks: (6.00 TB/5.46 TiB)
+[622993.300108] sd 11:0:0:0: [sdk] Write Protect is off
+[622993.315060] sd 11:0:0:0: [sdk] Mode Sense: 43 00 00 00
+[622993.316103] sd 11:0:0:0: [sdk] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[622993.392979] sd 11:0:0:0: [sdk] Attached SCSI disk
+gargamel:/dev# hdparm -N /dev/sdk
+/dev/sdk:
+ max sectors   = 11721045168/11721045168, HPA is disabled
+
+On Fri, Mar 18, 2022 at 01:07:49PM -0500, Roger Heflin wrote:
+> From the above your partition table seems to be starting at 1044.  There
+> are reasons to attempt to start on a boundary, but using a value like 1024
+> instead of 1044 should also work just fine and that will give you 20 more
+> sectors.
+
+normal fdisk won't allow that, but I forgot that I can go in expert mode
+and force the first sector to a value the regular tool won't allow by
+default.
+
+Thanks all for the answers and suggestions.
+
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+ 
+Home page: http://marc.merlins.org/                       | PGP 7F55D5F27AAF9D08
