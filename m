@@ -2,96 +2,71 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A64CFC433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 21 Mar 2022 15:06:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3AAC433EF
+	for <linux-raid@archiver.kernel.org>; Mon, 21 Mar 2022 20:25:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349802AbiCUPIO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 21 Mar 2022 11:08:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58176 "EHLO
+        id S1353298AbiCUU0b (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 21 Mar 2022 16:26:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238929AbiCUPIN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Mar 2022 11:08:13 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F223F89CC1
-        for <linux-raid@vger.kernel.org>; Mon, 21 Mar 2022 08:06:47 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B156E1F37C;
-        Mon, 21 Mar 2022 15:06:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1647875206; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=uO3vQVgv5azSDc0fXxwOezZz8Tj0JKg/emijxAvta9o=;
-        b=r3baS/mEyitSsBpi7WpU7/OAY96JxZ84uyJ97eh3lP834DG+ZVidkNEsKPjtY2jNOiuMBh
-        14JkNRZ2XpP3NaZm5i6aqfr9cnBGhm4OVh8FtIv7MmP+kaLyoxnaKpHVSNIbaT/1QIc3xb
-        EBFXH7Y5hphzCALMlDvf20Nof3FffYw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1647875206;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=uO3vQVgv5azSDc0fXxwOezZz8Tj0JKg/emijxAvta9o=;
-        b=IuCUMNisobIOYHV+KNHQCfexhu6KH1PQVTcAksC1nx9dzyZi9p/qHziqb2/twAfOyMEgCk
-        QjwkGeCATZgokoDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A982113419;
-        Mon, 21 Mar 2022 15:06:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id kF8/FoSUOGLJCgAAMHmgww
-        (envelope-from <colyli@suse.de>); Mon, 21 Mar 2022 15:06:44 +0000
-Message-ID: <05a9f84a-dc44-12db-2520-186f1c4450cd@suse.de>
-Date:   Mon, 21 Mar 2022 23:06:40 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH 1/4] mdadm: Respect config file location in man
-Content-Language: en-US
-From:   Coly Li <colyli@suse.de>
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     Lukasz Florczak <lukasz.florczak@linux.intel.com>,
-        jes@trained-monkey.org, pmenzel@molgen.mpg.de,
+        with ESMTP id S1346176AbiCUU0b (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 21 Mar 2022 16:26:31 -0400
+X-Greylist: delayed 2998 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 21 Mar 2022 13:25:04 PDT
+Received: from mail.esperi.org.uk (icebox.esperi.org.uk [81.187.191.129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0BCB165A83
+        for <linux-raid@vger.kernel.org>; Mon, 21 Mar 2022 13:25:04 -0700 (PDT)
+Received: from loom (nix@sidle.srvr.nix [192.168.14.8])
+        by mail.esperi.org.uk (8.16.1/8.16.1) with ESMTPS id 22LJZ0FA016566
+        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+        Mon, 21 Mar 2022 19:35:01 GMT
+From:   Nix <nix@esperi.org.uk>
+To:     Wols Lists <antlists@youngman.org.uk>
+Cc:     Marc MERLIN <marc@merlins.org>, Roman Mamedov <rm@romanrm.net>,
+        Roger Heflin <rogerheflin@gmail.com>,
         linux-raid@vger.kernel.org
-References: <20220318082607.675665-1-lukasz.florczak@linux.intel.com>
- <20220318082607.675665-2-lukasz.florczak@linux.intel.com>
- <51ee6419-9ae4-04a5-1a69-e3fd1b9f0d04@suse.de>
- <20220321091458.00007c0c@linux.intel.com>
- <084cd90c-fada-072e-aade-079b577cf107@suse.de>
-In-Reply-To: <084cd90c-fada-072e-aade-079b577cf107@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: Re: new drive is 4 sectors shorter, can it be used for swraid5 array?
+References: <20220319041020.GW3131742@merlins.org>
+        <01d2c8c5-46ea-f69e-e285-da0abe6cd594@youngman.org.uk>
+Emacs:  why choose between a word processor and a Lisp interpreter when you
+ could have neither instead?
+Date:   Mon, 21 Mar 2022 19:35:00 +0000
+In-Reply-To: <01d2c8c5-46ea-f69e-e285-da0abe6cd594@youngman.org.uk> (Wols
+        Lists's message of "Sat, 19 Mar 2022 10:14:16 +0000")
+Message-ID: <87zgljcd5n.fsf@esperi.org.uk>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.2.50 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
+X-DCC-wuwien-Metrics: loom 1290; Body=5 Fuz1=5 Fuz2=5
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/21/22 10:54 PM, Coly Li wrote:
-> On 3/21/22 4:14 PM, Mariusz Tkaczyk wrote:
->>
->>>
->> Hi Coly,
->> Could you please merge it to your master/for-jes branch then?
+On 19 Mar 2022, Wols Lists uttered the following:
+
+> On 19/03/2022 04:10, Marc MERLIN wrote:
+>>> If you find it needs more than the size of sdk1, as an emergency measure you
+>>> could wipe off the partition table and add the entire sdk as the array member.
 >
-> Sure, I will do it.
+>> Yeah, I thought of that, just don't really like it, and not sure if
+>> mdadm -can looks for raw drives in addition to partitions
+>> 
+> mdadm has absolutely no trouble with that at all. All it cares about is if something is a block device - if it finds an mdadm
+> signature at the start of a block device it will use it.
 >
-> Just to confirm, for this situation, do you want me to add the patch 
-> directly to for-jes branch with my Acked-by: tag, or you will post 
-> another version with the Acked-by: tag?
+> The problem is the eejits out there who assume that all physical
+> drives must be partitioned. And we know from experience that there are
+> eejits out there who assume that any drive without an MBR or GPT just
+> *must* be unused and it's *perfectly* *okay* to write said MBR or GPT
+> *without* *asking*. Just trashing your mdadm (or lvm, or whatever yada
+> ydad) signature in the process.
 
+... and we know that some of the eejits out there write EFI firmware :(
+and some of them blow away things like this on boot, on resume from
+suspend, 
 
-BTW, just for your information, the patches acked by me are pushed to 
-for-jes/20220321 branch of the mdadm-CI tree.
+> It's not common
 
+... thank goodness.
 
-Thanks.
-
-
-Coly Li
-
+-- 
+NULL && (void)
