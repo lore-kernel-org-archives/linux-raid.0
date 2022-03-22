@@ -2,46 +2,46 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B4D0C433F5
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Mar 2022 15:24:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40E0CC433FE
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Mar 2022 15:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237546AbiCVPZ3 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Mar 2022 11:25:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52462 "EHLO
+        id S238487AbiCVPZb (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Mar 2022 11:25:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232124AbiCVPZ0 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Mar 2022 11:25:26 -0400
+        with ESMTP id S232124AbiCVPZa (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Mar 2022 11:25:30 -0400
 Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49EEB6324
-        for <linux-raid@vger.kernel.org>; Tue, 22 Mar 2022 08:23:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D96E27E588
+        for <linux-raid@vger.kernel.org>; Tue, 22 Mar 2022 08:24:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647962639; x=1679498639;
+  t=1647962641; x=1679498641;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=MmEJx7mTs1nedGjU3jldmTw6lUqU+e17e0aVNN1BLB8=;
-  b=KTMRFVNWNO7Ogd3eJCqsZWDqy5ugzRwwkwUGJyG8uieu4dMjMw08L8cf
-   yL+M8FDtJQrHRMiUUFnEJeVh1V5dBEvP1N6QiIMf5pGyQajRuiszOKYLk
-   JE4mZeNgFv/GzvYFAwK0ewGUB3UF//aqmyIqhMbw9bJwwn9nJBselgdvA
-   fUu5XgwCBMoMTMuDYSahKjHbiFHEk22jPYnzu3hYdWrqu0zhzds3XpSQl
-   2rrwZlu+POETujgVfRJfMfI1ekBmE4pzDV/xoK58+Z35rMkwPdXSNWhlr
-   SM5a2qeYHQ4DxiajQMrwg+5j7iSzwfbzYh1eM3j8HwkienWcPLEGErwqj
+  bh=Zp97gpDVfMuZBvEg7MKNmXjeM0BTNWZBvQu6kGUNgcM=;
+  b=RycA5cuhrvc1BX5kRAVRWUdrecnd7HJ1vdf8ro4mFDv9BUqxLKfcD3rB
+   g23qi2QueTo3GuFQHP9daR9epkghfs6ZvhOhDOpAaeHuLVGIKKtp5K6/0
+   +NP9lLYuQtsq2FcdCh844//BTAhxYaEUYIL3zTtvK7XDxFxdc8oxVNmK/
+   Uci8kEQTbbE8t0AmHBwCp18F72WiYism9Ep3SzD+6wRsoeHJKYUfMmvwd
+   rezb42WhNNKYU//rjVJ97uQUlOiiCoer49BurXco8vgLN2OlEg0KCAJan
+   FvUEbWW/OvXzPfFwFb+A7g99d8xp2gyq7NZqEb0B+uHYQ6w03DQxJ6NC+
    g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="255409937"
+X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="255409958"
 X-IronPort-AV: E=Sophos;i="5.90,201,1643702400"; 
-   d="scan'208";a="255409937"
+   d="scan'208";a="255409958"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:23:59 -0700
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:24:01 -0700
 X-IronPort-AV: E=Sophos;i="5.90,201,1643702400"; 
-   d="scan'208";a="543732511"
+   d="scan'208";a="543732522"
 Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:23:57 -0700
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:24:00 -0700
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 To:     song@kernel.org
 Cc:     linux-raid@vger.kernel.org, guoqing.jiang@linux.dev
-Subject: [PATCH 1/3] raid0, linear, md: add error_handlers for raid0 and linear
-Date:   Tue, 22 Mar 2022 16:23:37 +0100
-Message-Id: <20220322152339.11892-2-mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH 2/3] md: Set MD_BROKEN for RAID1 and RAID10
+Date:   Tue, 22 Mar 2022 16:23:38 +0100
+Message-Id: <20220322152339.11892-3-mariusz.tkaczyk@linux.intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
 References: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
@@ -51,149 +51,299 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Patch 62f7b1989c0 ("md raid0/linear: Mark array as 'broken' and fail BIOs
-if a member is gone") allowed to finish writes earlier (before level
-dependent actions) for non-redundant arrays.
+There is no direct mechanism to determine raid failure outside
+personality. It is done by checking rdev->flags after executing
+md_error(). If "faulty" flag is not set then -EBUSY is returned to
+userspace. -EBUSY means that array will be failed after drive removal.
 
-To achieve that MD_BROKEN is added to mddev->flags if drive disappearance
-is detected. This is done in is_mddev_broken() which is confusing and not
-consistent with other levels where error_handler() is used.
-This patch adds appropriate error_handler for raid0 and linear and adopt
-md_error() to the change.
+Mdadm has special routine to handle the array failure and it is executed
+if -EBUSY is returned by md.
 
-Usage of error_handler causes that disk failure can be requested from
-userspace. User can fail the array via #mdadm --set-faulty command. This
-is not safe and will be fixed in mdadm. It is correctable because failed
-state is not recorded in the metadata. After next assembly array will be
-read-write again. For safety reason is better to keep MD_BROKEN in
-runtime only.
+There are at least two known reasons to not consider this mechanism
+as correct:
+1. drive can be removed even if array will be failed[1].
+2. -EBUSY seems to be wrong status. Array is not busy, but removal
+   process cannot proceed safe.
 
+-EBUSY expectation cannot be removed without breaking compatibility
+with userspace. In this patch first issue is resolved by adding support
+for MD_BROKEN flag for RAID1 and RAID10. Support for RAID456 is added in
+next commit.
+
+The idea is to set the MD_BROKEN if we are sure that raid is in failed
+state now. This is done in each error_handler(). In md_error() MD_BROKEN
+flag is checked. If is set, then -EBUSY is returned to userspace.
+
+As in previous commit, it causes that #mdadm --set-faulty is able to
+fail array. Previously proposed workaround is valid if optional
+functionality[1] is disabled.
+
+[1] commit 9a567843f7ce("md: allow last device to be forcibly removed from
+    RAID1/RAID10.")
 Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 ---
- drivers/md/md-linear.c | 14 +++++++++++++-
- drivers/md/md.c        |  6 +++++-
- drivers/md/md.h        | 10 ++--------
- drivers/md/raid0.c     | 14 +++++++++++++-
- 4 files changed, 33 insertions(+), 11 deletions(-)
+ drivers/md/md.c     | 24 ++++++++++--------
+ drivers/md/md.h     | 62 +++++++++++++++++++++++++--------------------
+ drivers/md/raid1.c  | 43 ++++++++++++++++++-------------
+ drivers/md/raid10.c | 40 +++++++++++++++++------------
+ 4 files changed, 98 insertions(+), 71 deletions(-)
 
-diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-index 1ff51647a682..c33cd28f1dba 100644
---- a/drivers/md/md-linear.c
-+++ b/drivers/md/md-linear.c
-@@ -233,7 +233,8 @@ static bool linear_make_request(struct mddev *mddev, struct bio *bio)
- 		     bio_sector < start_sector))
- 		goto out_of_bounds;
- 
--	if (unlikely(is_mddev_broken(tmp_dev->rdev, "linear"))) {
-+	if (unlikely(is_rdev_broken(tmp_dev->rdev))) {
-+		md_error(mddev, tmp_dev->rdev);
- 		bio_io_error(bio);
- 		return true;
- 	}
-@@ -281,6 +282,16 @@ static void linear_status (struct seq_file *seq, struct mddev *mddev)
- 	seq_printf(seq, " %dk rounding", mddev->chunk_sectors / 2);
- }
- 
-+static void linear_error(struct mddev *mddev, struct md_rdev *rdev)
-+{
-+	if (!test_and_set_bit(MD_BROKEN, &mddev->flags)) {
-+		char *md_name = mdname(mddev);
-+
-+		pr_crit("md/linear%s: Disk failure on %pg detected, failing array.\n",
-+			md_name, rdev->bdev);
-+	}
-+}
-+
- static void linear_quiesce(struct mddev *mddev, int state)
- {
- }
-@@ -297,6 +308,7 @@ static struct md_personality linear_personality =
- 	.hot_add_disk	= linear_add,
- 	.size		= linear_size,
- 	.quiesce	= linear_quiesce,
-+	.error_handler	= linear_error,
- };
- 
- static int __init linear_init (void)
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0a89f072dae0..3354afc9d2a3 100644
+index 3354afc9d2a3..3613b22b9097 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7985,7 +7985,11 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+@@ -2984,10 +2984,11 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
  
- 	if (!mddev->pers || !mddev->pers->error_handler)
+ 	if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+ 		md_error(rdev->mddev, rdev);
+-		if (test_bit(Faulty, &rdev->flags))
+-			err = 0;
+-		else
++
++		if (test_bit(MD_BROKEN, &rdev->mddev->flags))
+ 			err = -EBUSY;
++		else
++			err = 0;
+ 	} else if (cmd_match(buf, "remove")) {
+ 		if (rdev->mddev->pers) {
+ 			clear_bit(Blocked, &rdev->flags);
+@@ -4353,10 +4354,9 @@ __ATTR_PREALLOC(resync_start, S_IRUGO|S_IWUSR,
+  *     like active, but no writes have been seen for a while (100msec).
+  *
+  * broken
+- *     RAID0/LINEAR-only: same as clean, but array is missing a member.
+- *     It's useful because RAID0/LINEAR mounted-arrays aren't stopped
+- *     when a member is gone, so this state will at least alert the
+- *     user that something is wrong.
++*     Array is failed. It's useful because mounted-arrays aren't stopped
++*     when array is failed, so this state will at least alert the user that
++*     something is wrong.
+  */
+ enum array_state { clear, inactive, suspended, readonly, read_auto, clean, active,
+ 		   write_pending, active_idle, broken, bad_word};
+@@ -7444,7 +7444,7 @@ static int set_disk_faulty(struct mddev *mddev, dev_t dev)
+ 		err =  -ENODEV;
+ 	else {
+ 		md_error(mddev, rdev);
+-		if (!test_bit(Faulty, &rdev->flags))
++		if (test_bit(MD_BROKEN, &mddev->flags))
+ 			err = -EBUSY;
+ 	}
+ 	rcu_read_unlock();
+@@ -7990,12 +7990,14 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (mddev->pers->level == 0 || mddev->pers->level == LEVEL_LINEAR)
  		return;
--	mddev->pers->error_handler(mddev,rdev);
-+	mddev->pers->error_handler(mddev, rdev);
-+
-+	if (mddev->pers->level == 0 || mddev->pers->level == LEVEL_LINEAR)
-+		return;
-+
- 	if (mddev->degraded)
+ 
+-	if (mddev->degraded)
++	if (mddev->degraded && !test_bit(MD_BROKEN, &mddev->flags))
  		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
  	sysfs_notify_dirent_safe(rdev->sysfs_state);
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	md_wakeup_thread(mddev->thread);
++	if (!test_bit(MD_BROKEN, &mddev->flags)) {
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++		md_wakeup_thread(mddev->thread);
++	}
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+ 	md_new_event();
 diff --git a/drivers/md/md.h b/drivers/md/md.h
-index f1bf3625ef4c..13d435a303fa 100644
+index 13d435a303fa..3f056ec92473 100644
 --- a/drivers/md/md.h
 +++ b/drivers/md/md.h
-@@ -764,15 +764,9 @@ extern void mddev_destroy_serial_pool(struct mddev *mddev, struct md_rdev *rdev,
- struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
- struct md_rdev *md_find_rdev_rcu(struct mddev *mddev, dev_t dev);
+@@ -234,34 +234,42 @@ extern int rdev_clear_badblocks(struct md_rdev *rdev, sector_t s, int sectors,
+ 				int is_new);
+ struct md_cluster_info;
  
--static inline bool is_mddev_broken(struct md_rdev *rdev, const char *md_type)
-+static inline bool is_rdev_broken(struct md_rdev *rdev)
- {
--	if (!disk_live(rdev->bdev->bd_disk)) {
--		if (!test_and_set_bit(MD_BROKEN, &rdev->mddev->flags))
--			pr_warn("md: %s: %s array has a missing/failed member\n",
--				mdname(rdev->mddev), md_type);
--		return true;
--	}
--	return false;
-+	return !disk_live(rdev->bdev->bd_disk);
- }
- 
- static inline void rdev_dec_pending(struct md_rdev *rdev, struct mddev *mddev)
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index b59a77b31b90..b402e3dc4ead 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -582,8 +582,9 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
- 		return true;
- 	}
- 
--	if (unlikely(is_mddev_broken(tmp_dev, "raid0"))) {
-+	if (unlikely(is_rdev_broken(tmp_dev))) {
- 		bio_io_error(bio);
-+		md_error(mddev, tmp_dev);
- 		return true;
- 	}
- 
-@@ -606,6 +607,16 @@ static void raid0_status(struct seq_file *seq, struct mddev *mddev)
- 	return;
- }
- 
-+static void raid0_error(struct mddev *mddev, struct md_rdev *rdev)
-+{
-+	if (!test_and_set_bit(MD_BROKEN, &mddev->flags)) {
-+		char *md_name = mdname(mddev);
-+
-+		pr_crit("md/raid0%s: Disk failure on %pg detected, failing array.\n",
-+			md_name, rdev->bdev);
-+	}
-+}
-+
- static void *raid0_takeover_raid45(struct mddev *mddev)
- {
- 	struct md_rdev *rdev;
-@@ -781,6 +792,7 @@ static struct md_personality raid0_personality=
- 	.size		= raid0_size,
- 	.takeover	= raid0_takeover,
- 	.quiesce	= raid0_quiesce,
-+	.error_handler	= raid0_error,
+-/* change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added */
++/**
++ * enum mddev_flags - md device flags.
++ * @MD_ARRAY_FIRST_USE: First use of array, needs initialization.
++ * @MD_CLOSING: If set, we are closing the array, do not open it then.
++ * @MD_JOURNAL_CLEAN: A raid with journal is already clean.
++ * @MD_HAS_JOURNAL: The raid array has journal feature set.
++ * @MD_CLUSTER_RESYNC_LOCKED: cluster raid only, which means node, already took
++ *			       resync lock, need to release the lock.
++ * @MD_FAILFAST_SUPPORTED: Using MD_FAILFAST on metadata writes is supported as
++ *			    calls to md_error() will never cause the array to
++ *			    become failed.
++ * @MD_HAS_PPL:  The raid array has PPL feature set.
++ * @MD_HAS_MULTIPLE_PPLS: The raid array has multiple PPLs feature set.
++ * @MD_ALLOW_SB_UPDATE: md_check_recovery is allowed to update the metadata
++ *			 without taking reconfig_mutex.
++ * @MD_UPDATING_SB: md_check_recovery is updating the metadata without
++ *		     explicitly holding reconfig_mutex.
++ * @MD_NOT_READY: do_md_run() is active, so 'array_state', ust not report that
++ *		   array is ready yet.
++ * @MD_BROKEN: This is used to stop writes and mark array as failed.
++ *
++ * change UNSUPPORTED_MDDEV_FLAGS for each array type if new flag is added
++ */
+ enum mddev_flags {
+-	MD_ARRAY_FIRST_USE,	/* First use of array, needs initialization */
+-	MD_CLOSING,		/* If set, we are closing the array, do not open
+-				 * it then */
+-	MD_JOURNAL_CLEAN,	/* A raid with journal is already clean */
+-	MD_HAS_JOURNAL,		/* The raid array has journal feature set */
+-	MD_CLUSTER_RESYNC_LOCKED, /* cluster raid only, which means node
+-				   * already took resync lock, need to
+-				   * release the lock */
+-	MD_FAILFAST_SUPPORTED,	/* Using MD_FAILFAST on metadata writes is
+-				 * supported as calls to md_error() will
+-				 * never cause the array to become failed.
+-				 */
+-	MD_HAS_PPL,		/* The raid array has PPL feature set */
+-	MD_HAS_MULTIPLE_PPLS,	/* The raid array has multiple PPLs feature set */
+-	MD_ALLOW_SB_UPDATE,	/* md_check_recovery is allowed to update
+-				 * the metadata without taking reconfig_mutex.
+-				 */
+-	MD_UPDATING_SB,		/* md_check_recovery is updating the metadata
+-				 * without explicitly holding reconfig_mutex.
+-				 */
+-	MD_NOT_READY,		/* do_md_run() is active, so 'array_state'
+-				 * must not report that array is ready yet
+-				 */
+-	MD_BROKEN,              /* This is used in RAID-0/LINEAR only, to stop
+-				 * I/O in case an array member is gone/failed.
+-				 */
++	MD_ARRAY_FIRST_USE,
++	MD_CLOSING,
++	MD_JOURNAL_CLEAN,
++	MD_HAS_JOURNAL,
++	MD_CLUSTER_RESYNC_LOCKED,
++	MD_FAILFAST_SUPPORTED,
++	MD_HAS_PPL,
++	MD_HAS_MULTIPLE_PPLS,
++	MD_ALLOW_SB_UPDATE,
++	MD_UPDATING_SB,
++	MD_NOT_READY,
++	MD_BROKEN,
  };
  
- static int __init raid0_init (void)
+ enum mddev_sb_flags {
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 9b2f9745b4e0..bd1acfb42997 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1638,30 +1638,39 @@ static void raid1_status(struct seq_file *seq, struct mddev *mddev)
+ 	seq_printf(seq, "]");
+ }
+ 
++/**
++ * raid1_error() - RAID1 error handler.
++ * @mddev: affected md device.
++ * @rdev: member device to fail.
++ *
++ * The routine acknowledges &rdev failure and determines new @mddev state.
++ * If it failed, then:
++ *	- &MD_BROKEN flag is set in &mddev->flags.
++ *	- recovery is disabled.
++ * Otherwise, it must be degraded:
++ *	- recovery is interrupted.
++ *	- &mddev->degraded is bumped.
++ *
++ * @rdev is marked as &Faulty excluding case when array is failed and
++ * &mddev->fail_last_dev is off.
++ */
+ static void raid1_error(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	char b[BDEVNAME_SIZE];
+ 	struct r1conf *conf = mddev->private;
+ 	unsigned long flags;
+ 
+-	/*
+-	 * If it is not operational, then we have already marked it as dead
+-	 * else if it is the last working disks with "fail_last_dev == false",
+-	 * ignore the error, let the next level up know.
+-	 * else mark the drive as failed
+-	 */
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+-	if (test_bit(In_sync, &rdev->flags) && !mddev->fail_last_dev
+-	    && (conf->raid_disks - mddev->degraded) == 1) {
+-		/*
+-		 * Don't fail the drive, act as though we were just a
+-		 * normal single drive.
+-		 * However don't try a recovery from this drive as
+-		 * it is very likely to fail.
+-		 */
+-		conf->recovery_disabled = mddev->recovery_disabled;
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		return;
++
++	if (test_bit(In_sync, &rdev->flags) &&
++	    (conf->raid_disks - mddev->degraded) == 1) {
++		set_bit(MD_BROKEN, &mddev->flags);
++
++		if (!mddev->fail_last_dev) {
++			conf->recovery_disabled = mddev->recovery_disabled;
++			spin_unlock_irqrestore(&conf->device_lock, flags);
++			return;
++		}
+ 	}
+ 	set_bit(Blocked, &rdev->flags);
+ 	if (test_and_clear_bit(In_sync, &rdev->flags))
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index c2b5a9ff85cc..06f8c48c13c3 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1963,32 +1963,40 @@ static int enough(struct r10conf *conf, int ignore)
+ 		_enough(conf, 1, ignore);
+ }
+ 
++/**
++ * raid10_error() - RAID10 error handler.
++ * @mddev: affected md device.
++ * @rdev: member device to fail.
++ *
++ * The routine acknowledges &rdev failure and determines new @mddev state.
++ * If it failed, then:
++ *	- &MD_BROKEN flag is set in &mddev->flags.
++ * Otherwise, it must be degraded:
++ *	- recovery is interrupted.
++ *	- &mddev->degraded is bumped.
++
++ * @rdev is marked as &Faulty excluding case when array is failed and
++ * &mddev->fail_last_dev is off.
++ */
+ static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
+ {
+ 	char b[BDEVNAME_SIZE];
+ 	struct r10conf *conf = mddev->private;
+ 	unsigned long flags;
+ 
+-	/*
+-	 * If it is not operational, then we have already marked it as dead
+-	 * else if it is the last working disks with "fail_last_dev == false",
+-	 * ignore the error, let the next level up know.
+-	 * else mark the drive as failed
+-	 */
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+-	if (test_bit(In_sync, &rdev->flags) && !mddev->fail_last_dev
+-	    && !enough(conf, rdev->raid_disk)) {
+-		/*
+-		 * Don't fail the drive, just return an IO error.
+-		 */
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		return;
++
++	if (test_bit(In_sync, &rdev->flags) && !enough(conf, rdev->raid_disk)) {
++		set_bit(MD_BROKEN, &mddev->flags);
++
++		if (!mddev->fail_last_dev) {
++			spin_unlock_irqrestore(&conf->device_lock, flags);
++			return;
++		}
+ 	}
+ 	if (test_and_clear_bit(In_sync, &rdev->flags))
+ 		mddev->degraded++;
+-	/*
+-	 * If recovery is running, make sure it aborts.
+-	 */
++
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	set_bit(Blocked, &rdev->flags);
+ 	set_bit(Faulty, &rdev->flags);
 -- 
 2.26.2
 
