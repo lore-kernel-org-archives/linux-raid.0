@@ -2,135 +2,84 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5938AC433EF
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Mar 2022 08:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE72C433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Mar 2022 15:23:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229490AbiCVIIi (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Mar 2022 04:08:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51942 "EHLO
+        id S235390AbiCVPZZ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Mar 2022 11:25:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbiCVIIg (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Mar 2022 04:08:36 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7117822516
-        for <linux-raid@vger.kernel.org>; Tue, 22 Mar 2022 01:07:09 -0700 (PDT)
+        with ESMTP id S232124AbiCVPZZ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Mar 2022 11:25:25 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B0796324
+        for <linux-raid@vger.kernel.org>; Tue, 22 Mar 2022 08:23:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647936429; x=1679472429;
-  h=date:from:to:subject:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=vS4Jo5Fu1vmQcrGG+Vu3LpZeIMsh/xbiP2sklBn4GPw=;
-  b=MwGQFhusovgeze2XJQwXVirWOBmEHWfDYWAoIL8APVo8uubQdYop52eK
-   ZxE1hXzlp82aZr5uhx1ltXaGi0lq7Y1CQnXrpNpTeRSAEc2Kb7nWbKEP5
-   QMJ709tHkVWCURMbDxanf8sF5kELLleZk3VdMOfbKlYlD0f6ogmiE84Qk
-   Ab15xH6f1fwEUv7XfpoyiqavcyfNrtD3fES1ARVQLt9WhK1pOqp9B2X2r
-   HYl86K8EFHufrV02aUTEM+y2bTKu09EVuSSbEGK1ZNwYS3jvcSkl1M7pV
-   7evsOLc6xPXP+J1Ia7T9oOPXhmcI0tfMbkBgN6+oYveZvLgEjbIk/XGJS
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10293"; a="257706604"
+  t=1647962637; x=1679498637;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=D4kCD9dS23fdzAzfJsSzrJw6OYtSVQmnG/ODc1dnSyI=;
+  b=V+5i9CstdvVitzfmQrVQ7A0sMueaVTJsQUu9zS1VMe/O8OzAk7fPXBTT
+   At2FuwSbkZxPIdQlViNjGzx3yuX4j3J2mOSQOXaAeQwkmKx4uFdWLZ9v2
+   LwJxtmOUjGWiMy8p3657pVyo0tNhYKaE8JRlwKkxCjwXnN79EMZEz2lP3
+   1WWchbGaTjNvmiKZtgn/+uDjkAduNU2NRwJ90sok0hTQDewHVXW+GokuN
+   OS+nN/29O7bvvtqjXu5Oty59jigbrW3+P7WZ9ZgLlmNu50BMPgBEsPc1c
+   T6jkF8qD2P/xEXUShCmHQFw+PCb/qZT33asuntFNpEEqVMzTtz3mwlMO9
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="255409921"
 X-IronPort-AV: E=Sophos;i="5.90,201,1643702400"; 
-   d="scan'208";a="257706604"
+   d="scan'208";a="255409921"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 01:07:09 -0700
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:23:56 -0700
 X-IronPort-AV: E=Sophos;i="5.90,201,1643702400"; 
-   d="scan'208";a="543587093"
-Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.10.5])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 01:07:07 -0700
-Date:   Tue, 22 Mar 2022 09:07:02 +0100
+   d="scan'208";a="543732504"
+Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:23:54 -0700
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Nigel Croxon <ncroxon@redhat.com>, jes@trained-monkey.org,
-        linux-raid@vger.kernel.org, Wu Guanghao <wuguanghao3@huawei.com>,
-        Coly Li <colyli@suse.de>
-Subject: Re: [PATCH] mdadm: fix msg when removing a device using the short
- arg -r
-Message-ID: <20220322090702.00006d65@linux.intel.com>
-In-Reply-To: <20220208101450.00007baf@linux.intel.com>
-References: <20220207221519.3169427-1-ncroxon@redhat.com>
-        <20220208101450.00007baf@linux.intel.com>
+To:     song@kernel.org
+Cc:     linux-raid@vger.kernel.org, guoqing.jiang@linux.dev
+Subject: [PATCH 0/3] Failed array handling improvements
+Date:   Tue, 22 Mar 2022 16:23:36 +0100
+Message-Id: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, 8 Feb 2022 10:14:50 +0100
-Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+Hi Song,
+In v4 following changes were made:
+- raid1_error and raid10_error description reworked, suggested by Guoqing.
+- Error messages for raid0 and linear reworked, suggested by Guoqing.
+- check for sync_request replaced by level checks, suggested by Guoqing.
 
-> On Mon,  7 Feb 2022 17:15:19 -0500
-> Nigel Croxon <ncroxon@redhat.com> wrote:
-> 
-> > The change from commit mdadm: fix coredump of mdadm
-> > --monitor -r broke the printing of the return message when
-> > passing -r to mdadm --manage, the removal of a device from
-> > an array.
-> > 
-> > If the current code reverts this commit, both issues are
-> > still fixed.
-> > 
-> > The original problem reported that the fix tried to address
-> > was:  The --monitor -r option requires a parameter,
-> > otherwise a null pointer will be manipulated when
-> > converting to integer data, and a core dump will appear.
-> > 
-> > The original problem was really fixed with:
-> > 60815698c0a Refactor parse_num and use it to parse optarg.
-> > Which added a check for NULL in 'optarg' before moving it
-> > to the 'increments' variable.
-> > 
-> > New issue: When trying to remove a device using the short
-> > argument -r, instead of the long argument --remove, the
-> > output is empty. The problem started when commit 
-> > 546047688e1c was added.
-> > 
-> > Steps to Reproduce:
-> > 1. create/assemble /dev/md0 device
-> > 2. mdadm --manage /dev/md0 -r /dev/vdxx
-> > 
-> > Actual results:
-> > Nothing, empty output, nothing happens, the device is still
-> > connected to the array.
-> > 
-> > The output should have stated "mdadm: hot remove failed
-> > for /dev/vdxx: Device or resource busy", if the device was
-> > still active. Or it should remove the device and print
-> > a message:
-> > 
-> > # mdadm --set-faulty /dev/md0 /dev/vdd
-> > mdadm: set /dev/vdd faulty in /dev/md0
-> > # mdadm --manage /dev/md0 -r /dev/vdd
-> > mdadm: hot removed /dev/vdd from /dev/md0
-> > 
-> > 
-> > The following commit should be reverted as it breaks
-> > mdadm --manage -r.
-> > 
-> > commit 546047688e1c64638f462147c755b58119cabdc8
-> > Author: Wu Guanghao <wuguanghao3@huawei.com>
-> > Date:   Mon Aug 16 15:24:51 2021 +0800
-> > mdadm: fix coredump of mdadm --monitor -r
-> > 
-> > -Nigel
-> > 
-> > Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
-> > 
-> > 
-> Hi,
-> Thanks for the reminder. Revert is obviously correct. Jes could you
-> merge it?
-> 
-> In systemd world mdmonitor is rarely started from cmdline. If
-> "increment" option is not settable via config then it is probably
-> unused. I consider this option as deprecated and I suspect that no one
-> is using it now. Can we remove it completely?
-> 
-> If you disagree with that, then we should add support for it in config
-> file to make it usable. Additionally, I suggest to change "-r" for
-> "increments" to short opt always used with parameter.
-> 
+I did manual (mainly on IMSM) tests, here my next TODOs in mdadm:
+- broken state handling for redundant arrays in mdadm (it is exposed in sysfs).
+  Currently it is working same as before, because broken is not a case for
+  redundant arrays in mdadm. It requires to deal with already defined "FAILED"
+  state in mdadm.
+- Blocking manual removal of devices (#mdadm --set-faulty).
 
-Hi Coly,
-Could you take a look?
+I run following native mdadm tests with and without changes, all passed:
+#./test --disks=/dev/nullb[1-5] --tests=00raid1,00raid4,00raid5,00raid6,01r1fail,
+01r5fail,01replace,02r1add,05r1failfast,05r1re-add,05r1re-add-nosuper
 
-Thanks,
-Mariusz
+Mariusz Tkaczyk (3):
+  raid0, linear, md: add error_handlers for raid0 and linear
+  md: Set MD_BROKEN for RAID1 and RAID10
+  raid5: introduce MD_BROKEN
+
+ drivers/md/md-linear.c | 14 +++++++-
+ drivers/md/md.c        | 30 +++++++++++-------
+ drivers/md/md.h        | 72 ++++++++++++++++++++++--------------------
+ drivers/md/raid0.c     | 14 +++++++-
+ drivers/md/raid1.c     | 43 +++++++++++++++----------
+ drivers/md/raid10.c    | 40 +++++++++++++----------
+ drivers/md/raid5.c     | 48 ++++++++++++++--------------
+ 7 files changed, 155 insertions(+), 106 deletions(-)
+
+-- 
+2.26.2
+
