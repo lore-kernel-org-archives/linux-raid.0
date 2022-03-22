@@ -2,206 +2,87 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9931C433FE
-	for <linux-raid@archiver.kernel.org>; Tue, 22 Mar 2022 15:24:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13BCEC433F5
+	for <linux-raid@archiver.kernel.org>; Tue, 22 Mar 2022 15:29:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238500AbiCVPZe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 22 Mar 2022 11:25:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52814 "EHLO
+        id S235796AbiCVPaa (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 22 Mar 2022 11:30:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232124AbiCVPZc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Mar 2022 11:25:32 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 097776324
-        for <linux-raid@vger.kernel.org>; Tue, 22 Mar 2022 08:24:04 -0700 (PDT)
+        with ESMTP id S235805AbiCVPa3 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 22 Mar 2022 11:30:29 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C60E48BE05
+        for <linux-raid@vger.kernel.org>; Tue, 22 Mar 2022 08:29:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647962643; x=1679498643;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
+  t=1647962941; x=1679498941;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=N6OTJtYd40OYr9EGgo/N2Vl18QGRhqJXzedGn6ZpupI=;
-  b=DEHztDV8ZUaOfa+eFxIEIqIIoJghE4mZrbiVx/xQRDfJsjU04shAYRkI
-   PPp4qOYElrx1xLUuCPdooV9GC6a3LWIRdWx3iyAshR7I5hPrUepv5JpFL
-   F8bd3eIOJMTEOCAZWem29d2B/tneBP1SVRx18FklvlYNpa833t42GEZQh
-   I6JsPASdFN120HOY6HGFh+Nb8weHu9/DNJlun4yiDZpKJ4qcOf1DM9rS6
-   /sH9mFzpds2Jzc279lMmvqqu+W8fwGK1u2K8NxGO20C/9Bv7AgDr9USgP
-   MvYd4i2aQDKhiklOwvjZ5jx1Qu9YUM2EjoZYvSyT8XcFl6lKop9rtioRX
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="255409972"
+  bh=JUyyY3FhLWUCRknI9ixGWwwGH+LpK5h5rod48hT8AjE=;
+  b=crtQrW3fZkMaXLfKRLAQ84IAFXmHi2Q7QUS8vu+qPxkHcPLLmqxO7LKT
+   T2QLrm0FASUPDYsKSmVpTBqjtOIlKsoqmK4vOl/1UG7tf2D2gvnSJL1rr
+   WDJbGCI8qDbrlApXBl1v9/FKc8iqe3Un7shTM/d42wTdJVu8sv8ZiagjL
+   vnf6XkeGGDdn8EMljj2oD40lOiMVJEE/X0tW3nSKML4TGPMSntQHBO37y
+   1CZWhhyPiaT4YaFXDvn6KZU9wtsEdgMiDnNeSzgi2OlJcp8kPfZj9cmOn
+   MB2jVrYUFiqGYPjFjAzundxP3HFK4BqwqCeojPmUX2yW/TsO/4/Hb26Km
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="282686431"
 X-IronPort-AV: E=Sophos;i="5.90,201,1643702400"; 
-   d="scan'208";a="255409972"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:24:03 -0700
+   d="scan'208";a="282686431"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:29:01 -0700
 X-IronPort-AV: E=Sophos;i="5.90,201,1643702400"; 
-   d="scan'208";a="543732535"
-Received: from mtkaczyk-devel.igk.intel.com ([10.102.102.23])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:24:02 -0700
+   d="scan'208";a="518924956"
+Received: from mtkaczyk-mobl1.ger.corp.intel.com (HELO localhost) ([10.213.10.5])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Mar 2022 08:28:59 -0700
+Date:   Tue, 22 Mar 2022 16:28:54 +0100
 From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     song@kernel.org
-Cc:     linux-raid@vger.kernel.org, guoqing.jiang@linux.dev
-Subject: [PATCH 3/3] raid5: introduce MD_BROKEN
-Date:   Tue, 22 Mar 2022 16:23:39 +0100
-Message-Id: <20220322152339.11892-4-mariusz.tkaczyk@linux.intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
-References: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
+To:     jes@trained-monkey.org, Coly Li <colyli@suse.de>
+Cc:     linux-raid@vger.kernel.org
+Subject: Re: [PATCH 0/2] Add map_num_s
+Message-ID: <20220322162854.00005881@linux.intel.com>
+In-Reply-To: <20220120121833.16055-1-mariusz.tkaczyk@linux.intel.com>
+References: <20220120121833.16055-1-mariusz.tkaczyk@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Raid456 module had allowed to achieve failed state. It was fixed by
-fb73b357fb9 ("raid5: block failing device if raid will be failed").
-This fix introduces a bug, now if raid5 fails during IO, it may result
-with a hung task without completion. Faulty flag on the device is
-necessary to process all requests and is checked many times, mainly in
-analyze_stripe().
-Allow to set faulty on drive again and set MD_BROKEN if raid is failed.
+Hi Coly,
+Could you review?
 
-As a result, this level is allowed to achieve failed state again, but
-communication with userspace (via -EBUSY status) will be preserved.
+Thanks,
+Mariusz
 
-This restores possibility to fail array via #mdadm --set-faulty command
-and will be fixed by additional verification on mdadm side.
-
-Reproduction steps:
- mdadm -CR imsm -e imsm -n 3 /dev/nvme[0-2]n1
- mdadm -CR r5 -e imsm -l5 -n3 /dev/nvme[0-2]n1 --assume-clean
- mkfs.xfs /dev/md126 -f
- mount /dev/md126 /mnt/root/
-
- fio --filename=/mnt/root/file --size=5GB --direct=1 --rw=randrw
---bs=64k --ioengine=libaio --iodepth=64 --runtime=240 --numjobs=4
---time_based --group_reporting --name=throughput-test-job
---eta-newline=1 &
-
- echo 1 > /sys/block/nvme2n1/device/device/remove
- echo 1 > /sys/block/nvme1n1/device/device/remove
-
- [ 1475.787779] Call Trace:
- [ 1475.793111] __schedule+0x2a6/0x700
- [ 1475.799460] schedule+0x38/0xa0
- [ 1475.805454] raid5_get_active_stripe+0x469/0x5f0 [raid456]
- [ 1475.813856] ? finish_wait+0x80/0x80
- [ 1475.820332] raid5_make_request+0x180/0xb40 [raid456]
- [ 1475.828281] ? finish_wait+0x80/0x80
- [ 1475.834727] ? finish_wait+0x80/0x80
- [ 1475.841127] ? finish_wait+0x80/0x80
- [ 1475.847480] md_handle_request+0x119/0x190
- [ 1475.854390] md_make_request+0x8a/0x190
- [ 1475.861041] generic_make_request+0xcf/0x310
- [ 1475.868145] submit_bio+0x3c/0x160
- [ 1475.874355] iomap_dio_submit_bio.isra.20+0x51/0x60
- [ 1475.882070] iomap_dio_bio_actor+0x175/0x390
- [ 1475.889149] iomap_apply+0xff/0x310
- [ 1475.895447] ? iomap_dio_bio_actor+0x390/0x390
- [ 1475.902736] ? iomap_dio_bio_actor+0x390/0x390
- [ 1475.909974] iomap_dio_rw+0x2f2/0x490
- [ 1475.916415] ? iomap_dio_bio_actor+0x390/0x390
- [ 1475.923680] ? atime_needs_update+0x77/0xe0
- [ 1475.930674] ? xfs_file_dio_aio_read+0x6b/0xe0 [xfs]
- [ 1475.938455] xfs_file_dio_aio_read+0x6b/0xe0 [xfs]
- [ 1475.946084] xfs_file_read_iter+0xba/0xd0 [xfs]
- [ 1475.953403] aio_read+0xd5/0x180
- [ 1475.959395] ? _cond_resched+0x15/0x30
- [ 1475.965907] io_submit_one+0x20b/0x3c0
- [ 1475.972398] __x64_sys_io_submit+0xa2/0x180
- [ 1475.979335] ? do_io_getevents+0x7c/0xc0
- [ 1475.986009] do_syscall_64+0x5b/0x1a0
- [ 1475.992419] entry_SYSCALL_64_after_hwframe+0x65/0xca
- [ 1476.000255] RIP: 0033:0x7f11fc27978d
- [ 1476.006631] Code: Bad RIP value.
- [ 1476.073251] INFO: task fio:3877 blocked for more than 120 seconds.
-
-Cc: stable@vger.kernel.org
-Fixes: fb73b357fb9 ("raid5: block failing device if raid will be failed")
-Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
----
- drivers/md/raid5.c | 48 +++++++++++++++++++++++-----------------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7c119208a214..4d76e3a89aa5 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -686,17 +686,20 @@ int raid5_calc_degraded(struct r5conf *conf)
- 	return degraded;
- }
- 
--static int has_failed(struct r5conf *conf)
-+static bool has_failed(struct r5conf *conf)
- {
--	int degraded;
-+	int degraded = conf->mddev->degraded;
- 
--	if (conf->mddev->reshape_position == MaxSector)
--		return conf->mddev->degraded > conf->max_degraded;
-+	if (test_bit(MD_BROKEN, &conf->mddev->flags))
-+		return true;
-+
-+	if (conf->mddev->reshape_position != MaxSector)
-+		degraded = raid5_calc_degraded(conf);
- 
--	degraded = raid5_calc_degraded(conf);
- 	if (degraded > conf->max_degraded)
--		return 1;
--	return 0;
-+		return true;
-+
-+	return false;
- }
- 
- struct stripe_head *
-@@ -2877,34 +2880,31 @@ static void raid5_error(struct mddev *mddev, struct md_rdev *rdev)
- 	unsigned long flags;
- 	pr_debug("raid456: error called\n");
- 
-+	pr_crit("md/raid:%s: Disk failure on %s, disabling device.\n",
-+		mdname(mddev), bdevname(rdev->bdev, b));
-+
- 	spin_lock_irqsave(&conf->device_lock, flags);
-+	set_bit(Faulty, &rdev->flags);
-+	clear_bit(In_sync, &rdev->flags);
-+	mddev->degraded = raid5_calc_degraded(conf);
- 
--	if (test_bit(In_sync, &rdev->flags) &&
--	    mddev->degraded == conf->max_degraded) {
--		/*
--		 * Don't allow to achieve failed state
--		 * Don't try to recover this device
--		 */
-+	if (has_failed(conf)) {
-+		set_bit(MD_BROKEN, &conf->mddev->flags);
- 		conf->recovery_disabled = mddev->recovery_disabled;
--		spin_unlock_irqrestore(&conf->device_lock, flags);
--		return;
-+
-+		pr_crit("md/raid:%s: Cannot continue operation (%d/%d failed).\n",
-+			mdname(mddev), mddev->degraded, conf->raid_disks);
-+	} else {
-+		pr_crit("md/raid:%s: Operation continuing on %d devices.\n",
-+			mdname(mddev), conf->raid_disks - mddev->degraded);
- 	}
- 
--	set_bit(Faulty, &rdev->flags);
--	clear_bit(In_sync, &rdev->flags);
--	mddev->degraded = raid5_calc_degraded(conf);
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
- 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 
- 	set_bit(Blocked, &rdev->flags);
- 	set_mask_bits(&mddev->sb_flags, 0,
- 		      BIT(MD_SB_CHANGE_DEVS) | BIT(MD_SB_CHANGE_PENDING));
--	pr_crit("md/raid:%s: Disk failure on %s, disabling device.\n"
--		"md/raid:%s: Operation continuing on %d devices.\n",
--		mdname(mddev),
--		bdevname(rdev->bdev, b),
--		mdname(mddev),
--		conf->raid_disks - mddev->degraded);
- 	r5c_update_on_rdev_error(mddev, rdev);
- }
- 
--- 
-2.26.2
+On Thu, 20 Jan 2022 13:18:31 +0100
+Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com> wrote:
+> Hi Jes,
+> In this patchset not null version of map_num() was added.
+> Additionally, I propagaded default_layout() for Build mode.
+> 
+> I tested changes and I didn't find any regression.
+> 
+> Mariusz Tkaczyk (2):
+>   Create, Build: use default_layout()
+>   mdadm: add map_num_s()
+> 
+>  Assemble.c    |  6 ++---
+>  Build.c       | 23 +-----------------
+>  Create.c      | 67
+> +++++++++++++++++++++++++++++++-------------------- Detail.c      |
+> 4 +-- Grow.c        | 16 ++++++------
+>  Query.c       |  4 +--
+>  maps.c        | 24 ++++++++++++++++++
+>  mdadm.c       | 20 +++++++--------
+>  mdadm.h       |  3 ++-
+>  super-ddf.c   |  6 ++---
+>  super-intel.c |  2 +-
+>  super0.c      |  2 +-
+>  super1.c      |  2 +-
+>  sysfs.c       |  9 ++++---
+>  14 files changed, 103 insertions(+), 85 deletions(-)
+> 
 
