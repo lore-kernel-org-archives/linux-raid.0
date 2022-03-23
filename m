@@ -2,84 +2,99 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 740F1C43217
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Mar 2022 09:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB514C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 23 Mar 2022 10:31:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243090AbiCWJIS (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Mar 2022 05:08:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58344 "EHLO
+        id S242016AbiCWKdN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 23 Mar 2022 06:33:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243115AbiCWJHz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Mar 2022 05:07:55 -0400
-Received: from mga06.intel.com (mga06.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F384174857
-        for <linux-raid@vger.kernel.org>; Wed, 23 Mar 2022 02:06:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648026385; x=1679562385;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/s5c7P74VoMNNJ5KWQIA2V15n2vy9uKwouU4MFSB7tg=;
-  b=JgO2SmbUXBCz6GabMesZgU8DPV7Ksn6HxwS/asM03MB+B44WxxpLulmh
-   mPHOZbsi+uQUoPLudizstPkb7X/Vq7tkqOicZvT+xdGt3024GYvUZcou+
-   hnbdblX32QwhFd7W/xA9LN6lAgB6whuiIQXdSGn7djOJwrjzADPzXwx0s
-   usLTmeao9pluqWta/oQgX4rxc7FvftKin1nE0Jm6Yvfo4Rf3uYSsN086S
-   uHALC6w33IXtrX2BUqV2OYFTSii2F6BAfvmFm8fkELrNVinF5TdAz6NhA
-   C+LNJLvLiqqDW+UK4DRsq/+FxCq9vLkBwd45GdBihHg1nMAUfzOnpxjWx
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="318770745"
-X-IronPort-AV: E=Sophos;i="5.90,203,1643702400"; 
-   d="scan'208";a="318770745"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 02:06:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,203,1643702400"; 
-   d="scan'208";a="560809483"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.97])
-  by orsmga008.jf.intel.com with ESMTP; 23 Mar 2022 02:06:24 -0700
-From:   Kinga Tanska <kinga.tanska@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH 1/2] Assemble: check if device is container before scheduling force-clean update
-Date:   Wed, 23 Mar 2022 10:10:00 +0100
-Message-Id: <20220323091001.27139-2-kinga.tanska@intel.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20220323091001.27139-1-kinga.tanska@intel.com>
-References: <20220323091001.27139-1-kinga.tanska@intel.com>
+        with ESMTP id S243578AbiCWKcz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Mar 2022 06:32:55 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9624576E22
+        for <linux-raid@vger.kernel.org>; Wed, 23 Mar 2022 03:31:24 -0700 (PDT)
+Received: from [192.168.0.3] (ip5f5ae903.dynamic.kabel-deutschland.de [95.90.233.3])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id C0C6661EA1923;
+        Wed, 23 Mar 2022 11:31:22 +0100 (CET)
+Message-ID: <9eccf3ed-3db3-7ba7-fd8b-fa4273bc0752@molgen.mpg.de>
+Date:   Wed, 23 Mar 2022 11:31:21 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] Mdmonitor: Fix segfault and improve logging
+Content-Language: en-US
+To:     Kinga Tanska <kinga.tanska@linux.intel.com>
+Cc:     Kinga Tanska <kinga.tanska@intel.com>, linux-raid@vger.kernel.org,
+        jes@trained-monkey.org, colyli@suse.de
+References: <20220321123234.28769-1-kinga.tanska@intel.com>
+ <e5502af7-be1c-da7f-af3d-ca36d45e6301@molgen.mpg.de>
+ <9a062f0c-fcea-c543-3a46-05395c747fcd@linux.intel.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <9a062f0c-fcea-c543-3a46-05395c747fcd@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-When assemble is used with --force flag and array is not clean then
-"force-clean" update is scheduled. Containers are considered as not
-clean because this field is not set for them. To exclude them from
-meaningless update (it is ignored quietly) check if the device
-is a container first.
+Dear Kinga,
 
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
----
- Assemble.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 704b8293..f31372db 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1813,10 +1813,9 @@ try_again:
- 		}
- #endif
- 	}
--	if (c->force && !clean &&
-+	if (c->force && !clean && content->array.level != LEVEL_CONTAINER &&
- 	    !enough(content->array.level, content->array.raid_disks,
--		    content->array.layout, clean,
--		    avail)) {
-+		    content->array.layout, clean, avail)) {
- 		change += st->ss->update_super(st, content, "force-array",
- 					       devices[chosen_drive].devname, c->verbose,
- 					       0, NULL);
--- 
-2.26.2
+Am 23.03.22 um 10:02 schrieb Tanska, Kinga:
 
+> I will send splitted patches in next messages.
+
+Thank you.
+
+> There are steps to reproduce:
+> 
+> 1. Stop mdmonitor instance e.g.
+> 
+> # systemctl stop mdmonitor
+> 
+> 2. Run mdmonitor for non-md device e.g.
+> 
+> # mdadm --monitor /dev/nvme1n1
+> 
+> 
+> Call trace:
+> 
+> #0  0x00007ffff7617518 in __strcpy_sse2_unaligned () from 
+> /usr/lib64/libc.so.6
+> #1  0x000000000042bc9e in check_array ()
+> #2  0x000000000042c7af in Monitor ()
+> #3  0x0000000000406edc in main ()
+
+I am unable to reproduce it with mdadm 4.1:
+
+     $ sudo strace mdadm --monitor /dev/sda
+     execve("/usr/bin/mdadm", ["mdadm", "--monitor", "/dev/sda"], 
+0x7ffc8b00e880 /* 14 vars */) = 0
+     […]
+     openat(AT_FDCWD, "/dev/sda", O_RDONLY)  = 3
+fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(0x8, 0), ...}) = 0
+readlink("/sys/dev/block/8:0", "../../devices/pci0000:00/0000:00"..., 
+199) = 91
+     close(3)                                = 0
+     pselect6(1, NULL, NULL, [], {tv_sec=1000, tv_nsec=0}, NULL) = ? 
+ERESTARTNOHAND (To be restarted if no handler)
+     --- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+     pselect6(1, NULL, NULL, [], {tv_sec=999, tv_nsec=568020697}, NULL) 
+= ? ERESTARTNOHAND (To be restarted if no handler)
+     --- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+pselect6(1, NULL, NULL, [], {tv_sec=999, tv_nsec=521836826}, NULL
+
+Did a specific commit introduce the problem? If so, it’d be great if you 
+added a Fixes line.
+
+[…]
+
+
+Kind regards,
+
+Paul
