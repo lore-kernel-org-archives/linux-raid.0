@@ -2,127 +2,107 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0BAC433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 23 Mar 2022 14:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 018F9C433F5
+	for <linux-raid@archiver.kernel.org>; Thu, 24 Mar 2022 07:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244642AbiCWOIO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 23 Mar 2022 10:08:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42850 "EHLO
+        id S1348329AbiCXHKp (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 24 Mar 2022 03:10:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244734AbiCWOH7 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 23 Mar 2022 10:07:59 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A6D67EA1C
-        for <linux-raid@vger.kernel.org>; Wed, 23 Mar 2022 07:06:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648044390; x=1679580390;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=25aiIEKXiu+yT7AKQwWsqVzc8NtV7CULzeTZA38mCsM=;
-  b=De/ph5YZB+7GNOn4nvs/RHcrRIgL3ROYNz1OVHNdtcwukHBz2Vdbn+4R
-   XIrpi1A4ImIKRyLh76kQSeUY99fPmfXfNmIAUoW/+hKYX82RMg5bmbHKV
-   HiMtA/wTOAhxef+rsFZY4dfn9c39hg9RvzgxvN1NCMbAwNINIfSXKzkb8
-   hjoci5M0bx8wMz4sk+BXWj1mxS3a299Lsf8Kd27BBQS1KRhUyAG1u3rBo
-   FpZR33eIW2IsiyBfh40ae2D1EM5xppBzfv+2RJV539lZId8znIbDagRMa
-   w7Qu6Kp0YuXtE6ROieb+boPBiLX1B9Ahu6dXvHm9CKsrZ50vFFb8WI/bO
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10294"; a="238721784"
-X-IronPort-AV: E=Sophos;i="5.90,204,1643702400"; 
-   d="scan'208";a="238721784"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 07:06:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,204,1643702400"; 
-   d="scan'208";a="560915826"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.92.52])
-  by orsmga008.jf.intel.com with ESMTP; 23 Mar 2022 07:06:28 -0700
-From:   Mateusz Kusiak <mateusz.kusiak@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH] Grow_reshape: Add r0 grow size error message and update man
-Date:   Wed, 23 Mar 2022 15:05:19 +0100
-Message-Id: <20220323140519.1151-1-mateusz.kusiak@intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S1345176AbiCXHKl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 24 Mar 2022 03:10:41 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F163E92858
+        for <linux-raid@vger.kernel.org>; Thu, 24 Mar 2022 00:09:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1648105747;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YAwcixvco72+O2kbtJ9UZ9Z+L7LGzZb9cM/Z+jGg5LU=;
+        b=SDE42wLSVRb//3XEHJ2eyPi2K3FAyMZQsllSMc8az/UdApZOz3+P1tJVj52c6OtaxeE4+c
+        teEj99GkWNLZN2om8P+dwcz/WXIlW8g8MHKum9dLcf29Boq1U0ii/lXGrdJ5kQcJFpqOwe
+        HARtvZakpTAXWzkBvS8NrkRZjOqN6Mk=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-186-IF3tsDs9MnGmXgoyedO-Qw-1; Thu, 24 Mar 2022 03:09:06 -0400
+X-MC-Unique: IF3tsDs9MnGmXgoyedO-Qw-1
+Received: by mail-ej1-f71.google.com with SMTP id ga31-20020a1709070c1f00b006cec400422fso1952370ejc.22
+        for <linux-raid@vger.kernel.org>; Thu, 24 Mar 2022 00:09:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=YAwcixvco72+O2kbtJ9UZ9Z+L7LGzZb9cM/Z+jGg5LU=;
+        b=0zUZHpGpqyr85QwMo+/ThxgYgd6+5/nyeiioNZeiBrKSFNcdFaGNvkAev6oB95kqgH
+         k6TmQH05aERxxb95nlufACrCD07ZuSOnRQAOb0K7fIF3m1jlYcZT0s2UuSkN2YNZRfiI
+         OZ83JrP6w5yfkUrec8SE7o5R6/x5g5N9sYjEux4yQvVcVAFhNFcxaIvx5FwBgAZscY0Z
+         jP5lvmKO4vBN5fjrpOpqOHtu7uWQNFoRb6t+Ziig+7XGG99lVQZofOssnNnOtV5lt6bH
+         kiyNanEDLkrdAQp4/uLT+hIf3+CJcl4DMAowNJ9tCQgt0wQbelXB1a1p22DTkaNWuJfT
+         IrRA==
+X-Gm-Message-State: AOAM533I/EE6w9AAHUey4vEVrAWwj5WoDuh04Sl5vP5iFGlOeWykYqzm
+        +e5Ne8KjuqvTI+fpa5qWMCisHBZCgzPyJ/KghHCY3yGt+adDQn51H+7ynxLkDu08V3NWoSl7uDh
+        SXbwFC2HgsMAzS1UdAB+xWs4owKVqHudeaPCUgA==
+X-Received: by 2002:aa7:d619:0:b0:419:af7:841f with SMTP id c25-20020aa7d619000000b004190af7841fmr4987622edr.20.1648105743754;
+        Thu, 24 Mar 2022 00:09:03 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwwUJC3pb/b2onKZttCJA9CRCOervpMw5mGOivIZ1HdZaOuKbpMDFf+Uiy5/vGomMQ+ePz8X0A8FRWQds2jPgk=
+X-Received: by 2002:aa7:d619:0:b0:419:af7:841f with SMTP id
+ c25-20020aa7d619000000b004190af7841fmr4987608edr.20.1648105743543; Thu, 24
+ Mar 2022 00:09:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
+In-Reply-To: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Thu, 24 Mar 2022 15:09:47 +0800
+Message-ID: <CALTww29ZT2fK_rrecKOSO=ySu1VsLUYU4nGFY5ZcTyt8UPUHbw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Failed array handling improvements
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     Song Liu <song@kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Grow size on r0 is not supported for imsm and native metadata.
-Add proper error message.
-Update man for proper use of --size.
-Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
----
- Grow.c     |  6 ++++++
- mdadm.8.in | 19 ++++++++++++-------
- 2 files changed, 18 insertions(+), 7 deletions(-)
+On Tue, Mar 22, 2022 at 11:24 PM Mariusz Tkaczyk
+<mariusz.tkaczyk@linux.intel.com> wrote:
+>
+> Hi Song,
+> In v4 following changes were made:
+> - raid1_error and raid10_error description reworked, suggested by Guoqing.
+> - Error messages for raid0 and linear reworked, suggested by Guoqing.
+> - check for sync_request replaced by level checks, suggested by Guoqing.
+>
+> I did manual (mainly on IMSM) tests, here my next TODOs in mdadm:
+> - broken state handling for redundant arrays in mdadm (it is exposed in sysfs).
+>   Currently it is working same as before, because broken is not a case for
+>   redundant arrays in mdadm. It requires to deal with already defined "FAILED"
+>   state in mdadm.
+> - Blocking manual removal of devices (#mdadm --set-faulty).
+>
+> I run following native mdadm tests with and without changes, all passed:
+> #./test --disks=/dev/nullb[1-5] --tests=00raid1,00raid4,00raid5,00raid6,01r1fail,
+> 01r5fail,01replace,02r1add,05r1failfast,05r1re-add,05r1re-add-nosuper
+>
+> Mariusz Tkaczyk (3):
+>   raid0, linear, md: add error_handlers for raid0 and linear
+>   md: Set MD_BROKEN for RAID1 and RAID10
+>   raid5: introduce MD_BROKEN
+>
+>  drivers/md/md-linear.c | 14 +++++++-
+>  drivers/md/md.c        | 30 +++++++++++-------
+>  drivers/md/md.h        | 72 ++++++++++++++++++++++--------------------
+>  drivers/md/raid0.c     | 14 +++++++-
+>  drivers/md/raid1.c     | 43 +++++++++++++++----------
+>  drivers/md/raid10.c    | 40 +++++++++++++----------
+>  drivers/md/raid5.c     | 48 ++++++++++++++--------------
+>  7 files changed, 155 insertions(+), 106 deletions(-)
+>
+> --
+> 2.26.2
+>
 
-diff --git a/Grow.c b/Grow.c
-index 9c6fc95e..efbbf6a9 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1998,6 +1998,12 @@ int Grow_reshape(char *devname, int fd,
- 			goto release;
- 		}
- 
-+		if (array.level == 0) {
-+			pr_err("Component size change is not supported for RAID0\n");
-+			rv = 1;
-+			goto release;
-+		}
-+
- 		if (reshape_super(st, s->size, UnSet, UnSet, 0, 0, UnSet, NULL,
- 				  devname, APPLY_METADATA_CHANGES,
- 				  c->verbose > 0)) {
-diff --git a/mdadm.8.in b/mdadm.8.in
-index be902dba..e2a42425 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -459,7 +459,8 @@ number of spare devices.
- 
- .TP
- .BR \-z ", " \-\-size=
--Amount (in Kilobytes) of space to use from each drive in RAID levels 1/4/5/6.
-+Amount (in Kilobytes) of space to use from each drive in RAID levels 1/4/5/6/10
-+and for RAID 0 on external metadata.
- This must be a multiple of the chunk size, and must leave about 128Kb
- of space at the end of the drive for the RAID superblock.
- If this is not specified
-@@ -478,10 +479,19 @@ To guard against this it can be useful to set the initial size
- slightly smaller than the smaller device with the aim that it will
- still be larger than any replacement.
- 
-+This option can be used with
-+.B \-\-create
-+for determining initial size of an array. For external metadata,
-+it can be used on a volume, but not on a container itself.
-+Setting initial size of
-+.B RAID 0
-+array is only valid for external metadata.
-+
- This value can be set with
- .B \-\-grow
--for RAID level 1/4/5/6 though
-+for RAID level 1/4/5/6/10 though
- DDF arrays may not be able to support this.
-+RAID 0 array size cannot be changed.
- If the array was created with a size smaller than the currently
- active drives, the extra space can be accessed using
- .BR \-\-grow .
-@@ -501,11 +511,6 @@ problems the array can be made bigger again with no loss with another
- .B "\-\-grow \-\-size="
- command.
- 
--This value cannot be used when creating a
--.B CONTAINER
--such as with DDF and IMSM metadata, though it perfectly valid when
--creating an array inside a container.
--
- .TP
- .BR \-Z ", " \-\-array\-size=
- This is only meaningful with
--- 
-2.26.2
+Reviewd-by: Xiao Ni <xni@redhat.com>
 
