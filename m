@@ -2,83 +2,117 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94BFAC433FE
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Mar 2022 07:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9146C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Mar 2022 08:06:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238996AbiC1H6R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 28 Mar 2022 03:58:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42742 "EHLO
+        id S239125AbiC1IHt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 28 Mar 2022 04:07:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239000AbiC1H6Q (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Mar 2022 03:58:16 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 845A7DFAC;
-        Mon, 28 Mar 2022 00:56:36 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id n18so14095942plg.5;
-        Mon, 28 Mar 2022 00:56:36 -0700 (PDT)
+        with ESMTP id S234283AbiC1IHs (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Mar 2022 04:07:48 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D5852E58;
+        Mon, 28 Mar 2022 01:06:08 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id y10so8549422pfa.7;
+        Mon, 28 Mar 2022 01:06:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=kIfOoBDYEc7M5gSagMNoiVBJWuRqusDCDKPYz/4md+8=;
-        b=VqmjjWWVXkOeUbp3XOSMawZfyabaCITsH95uynydk7I4N2p27oAZ8BomdJ9dUuAg8O
-         yUuHzJB8t+LlX0UyIBbQbUH8PnsHWklT95BiTFlk5WNeysGT31aaCPf6RPx6RY0xR+4y
-         rzS9CwsJbvzu8lq7h2rvET9O5YuQBPrr1i0xZ0BKAVacjSeNxuvgjSKMO3pBGLps4gBq
-         v5hq97ZVruMim+482HeCJuUAgAcQkpE0Y/4NcLWdw8ZM6irZrCx7AqsSgpJEtyPnZO1J
-         YVeJfWH8enKrAWk8lIDcFhuT4r5xM+JcD9KDQt+qIzbe1ik9XeGUuWw5+1PVX3dftMSw
-         foAw==
+        h=from:to:cc:subject:date:message-id;
+        bh=CTu5Ckkhnxr3a4Bdessxh982+g7W1LXJx6RoEy52ElQ=;
+        b=fRhAkGn6eq8e9jJGRgqMzcIePzE3ErVy/ps/BdX/QZVWA2+9hgjm2fLRJEzMKvRJZP
+         l8KjfVUSxfq5ifGWAUHGK0UYYtqXluuAtxfLZa+1JaTdNToJx0b6+IbhlwMa3G+UjQxX
+         a3j+sCMAlPCZ7Ml5tAK5jHjl0ANQC7Q2wltz2LD3Eg+ACrryArMJGMZuovzfu39nzDxj
+         T0XBwUJKWj0DbcK0WD00kLb1QFO/VvKqxEyUzlYNrrrc2QZCPLbxgw+M+erJcJ85bBa4
+         EzxRkfuW9iqBv0EoAm1trzFn7QYF2K4QFnbW3J50ZJZhNki+66ivxsLNSDXpX/0xWtgb
+         oc9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=kIfOoBDYEc7M5gSagMNoiVBJWuRqusDCDKPYz/4md+8=;
-        b=7mvnNOVHD+VqM2FKTvu98fXtkeww6J0lyTQx/1aJEQjU95omfRDSZnlsoxRpGvMMSS
-         tHz0exTnIa6unKIReqq9byifGrr2l2DXiOUY48HMrfdzSXqh9vKNmFQ9ZuOtzx0qYf2e
-         Sl33CqrrsIJnSaM5r8aM0YOkCxSqcYjzuwam+j4LszxlQ7+klOkBrzd/Rh2EkwyJ2Onu
-         Mp7p1ZI6JzWjplIKs4LGW3npkXzkiyUuymwpgD8mzBsp9rmKtNDPDAn+hLFPG0a0a+1h
-         IN0o95CIcQp7JBFCylkw9/Vv8tiZ3kbV4Mh/vQh3eLl5wDe3slOsTYrE5RSTAPgjTonk
-         rWOA==
-X-Gm-Message-State: AOAM532vVOYo3a9lRLlrJsxEoUAv8QlwS/MW01ZPzgJkO64LP5wtty1Y
-        fxpjNo3XpjRnDjYBpnTynVDX4qdjeCtBdw==
-X-Google-Smtp-Source: ABdhPJwcYDZozrvxZwaqZGIKEnQhsqa0JD+d94ZjOS77DvW2lF4Y4Lkxl8Y03SezxTarAov7sSReFA==
-X-Received: by 2002:a17:90a:de82:b0:1c7:b10f:e33f with SMTP id n2-20020a17090ade8200b001c7b10fe33fmr26704591pjv.204.1648454196113;
-        Mon, 28 Mar 2022 00:56:36 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=CTu5Ckkhnxr3a4Bdessxh982+g7W1LXJx6RoEy52ElQ=;
+        b=Pf0MjjwzJfBaUkzx+1JhbSEo1BBP16Lpoq8BLA5wH+AvAvEBU1DCS4omIthHKVC7iA
+         R+9o1KYIX/mN2WpdtK3SB9vHKJ0Z8hEefaxW0NnJoAPj7VVxYR3DaxKow2xYDbuThqrD
+         +huXAd+dOjMUT7Bot7Yl466Difwj26gRdhx7RLG2LB97RoI4RKkhJyAQkcC1J3DSWUnK
+         DR9lmkRRV68OipoDMfH38dRDiQIgxxsFCSEywpzoJQx/ORDjkxDvnlfffCpXnXy+FN2W
+         UyHuSCyBy+m4lAVXfslijmrC5GYk+wSmP2JSASVg5gLC3Fgv9jv7eJcuhOnZieDbjM23
+         lO1A==
+X-Gm-Message-State: AOAM532LRpqugl3YleS9dlfoY6tGIoaDHW5SSe3k/QRTZEnQFn/oKT+y
+        rMVPGRLNZOSZoffulncNN7s=
+X-Google-Smtp-Source: ABdhPJz5wghyBWWMgvNVmm6L8kq6se/D4jpssaNA6P0qIsB0sUnGzEi4cKQu7LGKnjpzssfaUaqv8Q==
+X-Received: by 2002:a63:2004:0:b0:375:ed63:ab4c with SMTP id g4-20020a632004000000b00375ed63ab4cmr9405531pgg.255.1648454768060;
+        Mon, 28 Mar 2022 01:06:08 -0700 (PDT)
 Received: from ubuntu.huawei.com ([119.3.119.18])
-        by smtp.googlemail.com with ESMTPSA id v13-20020a17090a088d00b001c64d30fa8bsm16354494pjc.1.2022.03.28.00.56.32
+        by smtp.googlemail.com with ESMTPSA id j14-20020a056a00174e00b004f66ce6367bsm16752080pfc.147.2022.03.28.01.06.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Mar 2022 00:56:35 -0700 (PDT)
+        Mon, 28 Mar 2022 01:06:07 -0700 (PDT)
 From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
-To:     guoqing.jiang@linux.dev
-Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        rgoldwyn@suse.com, song@kernel.org, stable@vger.kernel.org,
-        xiam0nd.tong@gmail.com
-Subject: Re: [PATCH] md: md2: fix an incorrect NULL check on list iterator
-Date:   Mon, 28 Mar 2022 15:56:28 +0800
-Message-Id: <20220328075628.25545-1-xiam0nd.tong@gmail.com>
+To:     song@kernel.org
+Cc:     rgoldwyn@suse.com, guoqing.jiang@linux.dev,
+        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xiaomeng Tong <xiam0nd.tong@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH] md: fix an incorrect NULL check in md_reload_sb
+Date:   Mon, 28 Mar 2022 16:05:59 +0800
+Message-Id: <20220328080559.25984-1-xiam0nd.tong@gmail.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <bdc2ed02-6f13-c8a5-7e61-190a5dd9b6bc@linux.dev>
-References: <bdc2ed02-6f13-c8a5-7e61-190a5dd9b6bc@linux.dev>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-> I'd suggest to rephrase the subject to "md: fix an incorrect NULL check 
-> in md_reload_sb".
+The bug is here:
+	if (!rdev || rdev->desc_nr != nr) {
 
-Thank you for the suggestion, i will take it in PATCH v2.
+The list iterator value 'rdev' will *always* be set and non-NULL
+by rdev_for_each_rcu(), so it is incorrect to assume that the
+iterator value will be NULL if the list is empty or no element
+found (In fact, it will be a bogus pointer to an invalid struct
+object containing the HEAD). Otherwise it will bypass the check
+and lead to invalid memory access passing the check.
 
-> > -	if (!rdev || rdev->desc_nr != nr) {
-> > +	if (!rdev) {
-> >   		pr_warn("%s: %d Could not find rdev with nr %d\n", __func__, __LINE__, nr);
-> >   		return;
-> >   	}
-> 
-> I guess we only need to check desc_nr since rdev should always be valid 
-> , and IMO the fix tag
-> is not necessary.
+To fix the bug, use a new variable 'iter' as the list iterator,
+while using the original variable 'pdev' as a dedicated pointer to
+point to the found element.
 
-No. At least from the pr_warn log, the list can be empty or no element found in it.
-If this cases happen, the 'rdev' will be an invalid pointer that point to a invalid
-struct containning the HEAD '&((mddev)->disks)'. So this fix is necessary.
+Cc: stable@vger.kernel.org
+Fixes: 70bcecdb1534 ("amd-cluster: Improve md_reload_sb to be less error prone")
+Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
+---
 
---
-Xiaomeng Tong
+changes from v1:
+ - rephrase the subject (Guoqing Jiang)
+
+v1:https://lore.kernel.org/lkml/20220327080111.12028-1-xiam0nd.tong@gmail.com/
+
+---
+ drivers/md/md.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 7476fc204172..f156678c08bc 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9794,16 +9794,18 @@ static int read_rdev(struct mddev *mddev, struct md_rdev *rdev)
+ 
+ void md_reload_sb(struct mddev *mddev, int nr)
+ {
+-	struct md_rdev *rdev;
++	struct md_rdev *rdev = NULL, *iter;
+ 	int err;
+ 
+ 	/* Find the rdev */
+-	rdev_for_each_rcu(rdev, mddev) {
+-		if (rdev->desc_nr == nr)
++	rdev_for_each_rcu(iter, mddev) {
++		if (iter->desc_nr == nr) {
++			rdev = iter;
+ 			break;
++		}
+ 	}
+ 
+-	if (!rdev || rdev->desc_nr != nr) {
++	if (!rdev) {
+ 		pr_warn("%s: %d Could not find rdev with nr %d\n", __func__, __LINE__, nr);
+ 		return;
+ 	}
+-- 
+2.17.1
+
