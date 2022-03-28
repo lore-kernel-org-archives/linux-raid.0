@@ -2,99 +2,83 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 538C1C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 28 Mar 2022 02:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94BFAC433FE
+	for <linux-raid@archiver.kernel.org>; Mon, 28 Mar 2022 07:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237716AbiC1C7f (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 27 Mar 2022 22:59:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44228 "EHLO
+        id S238996AbiC1H6R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 28 Mar 2022 03:58:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236672AbiC1C7e (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 27 Mar 2022 22:59:34 -0400
-Received: from out1.migadu.com (out1.migadu.com [91.121.223.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5022650B04;
-        Sun, 27 Mar 2022 19:57:55 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1648436273;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=i6q6suH8KrNU8xV+UOxoXrCmknh3JGOhtLcTgk5QiSs=;
-        b=kMMcX5KYxuGE8MAj+8IQ6srEZXX4H3gGD2ws9AfVtPOaE0+nNLkcgTg6+3ZIl+YS2PwArJ
-        kNUjDIwzafR4A+ootL00BIGvpiGDGP5gvio+9kvyLqKdnLVNgGpc7ymZbLXrrUD9Iyy/ne
-        rnUL2q338hWg/75znNGR2s7kLGF/SHE=
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-Subject: Re: [PATCH] md: md1: fix an incorrect NULL check on list iterator
-To:     Xiaomeng Tong <xiam0nd.tong@gmail.com>, song@kernel.org,
-        rgoldwyn@suse.com
-Cc:     linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-References: <20220327080002.11923-1-xiam0nd.tong@gmail.com>
-Message-ID: <0e0ca783-0604-b8a6-24c2-247fd17a6af1@linux.dev>
-Date:   Mon, 28 Mar 2022 10:57:49 +0800
-MIME-Version: 1.0
-In-Reply-To: <20220327080002.11923-1-xiam0nd.tong@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+        with ESMTP id S239000AbiC1H6Q (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 28 Mar 2022 03:58:16 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 845A7DFAC;
+        Mon, 28 Mar 2022 00:56:36 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id n18so14095942plg.5;
+        Mon, 28 Mar 2022 00:56:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=kIfOoBDYEc7M5gSagMNoiVBJWuRqusDCDKPYz/4md+8=;
+        b=VqmjjWWVXkOeUbp3XOSMawZfyabaCITsH95uynydk7I4N2p27oAZ8BomdJ9dUuAg8O
+         yUuHzJB8t+LlX0UyIBbQbUH8PnsHWklT95BiTFlk5WNeysGT31aaCPf6RPx6RY0xR+4y
+         rzS9CwsJbvzu8lq7h2rvET9O5YuQBPrr1i0xZ0BKAVacjSeNxuvgjSKMO3pBGLps4gBq
+         v5hq97ZVruMim+482HeCJuUAgAcQkpE0Y/4NcLWdw8ZM6irZrCx7AqsSgpJEtyPnZO1J
+         YVeJfWH8enKrAWk8lIDcFhuT4r5xM+JcD9KDQt+qIzbe1ik9XeGUuWw5+1PVX3dftMSw
+         foAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=kIfOoBDYEc7M5gSagMNoiVBJWuRqusDCDKPYz/4md+8=;
+        b=7mvnNOVHD+VqM2FKTvu98fXtkeww6J0lyTQx/1aJEQjU95omfRDSZnlsoxRpGvMMSS
+         tHz0exTnIa6unKIReqq9byifGrr2l2DXiOUY48HMrfdzSXqh9vKNmFQ9ZuOtzx0qYf2e
+         Sl33CqrrsIJnSaM5r8aM0YOkCxSqcYjzuwam+j4LszxlQ7+klOkBrzd/Rh2EkwyJ2Onu
+         Mp7p1ZI6JzWjplIKs4LGW3npkXzkiyUuymwpgD8mzBsp9rmKtNDPDAn+hLFPG0a0a+1h
+         IN0o95CIcQp7JBFCylkw9/Vv8tiZ3kbV4Mh/vQh3eLl5wDe3slOsTYrE5RSTAPgjTonk
+         rWOA==
+X-Gm-Message-State: AOAM532vVOYo3a9lRLlrJsxEoUAv8QlwS/MW01ZPzgJkO64LP5wtty1Y
+        fxpjNo3XpjRnDjYBpnTynVDX4qdjeCtBdw==
+X-Google-Smtp-Source: ABdhPJwcYDZozrvxZwaqZGIKEnQhsqa0JD+d94ZjOS77DvW2lF4Y4Lkxl8Y03SezxTarAov7sSReFA==
+X-Received: by 2002:a17:90a:de82:b0:1c7:b10f:e33f with SMTP id n2-20020a17090ade8200b001c7b10fe33fmr26704591pjv.204.1648454196113;
+        Mon, 28 Mar 2022 00:56:36 -0700 (PDT)
+Received: from ubuntu.huawei.com ([119.3.119.18])
+        by smtp.googlemail.com with ESMTPSA id v13-20020a17090a088d00b001c64d30fa8bsm16354494pjc.1.2022.03.28.00.56.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Mar 2022 00:56:35 -0700 (PDT)
+From:   Xiaomeng Tong <xiam0nd.tong@gmail.com>
+To:     guoqing.jiang@linux.dev
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        rgoldwyn@suse.com, song@kernel.org, stable@vger.kernel.org,
+        xiam0nd.tong@gmail.com
+Subject: Re: [PATCH] md: md2: fix an incorrect NULL check on list iterator
+Date:   Mon, 28 Mar 2022 15:56:28 +0800
+Message-Id: <20220328075628.25545-1-xiam0nd.tong@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <bdc2ed02-6f13-c8a5-7e61-190a5dd9b6bc@linux.dev>
+References: <bdc2ed02-6f13-c8a5-7e61-190a5dd9b6bc@linux.dev>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The subject need to be improved as well.
+> I'd suggest to rephrase the subject to "md: fix an incorrect NULL check 
+> in md_reload_sb".
 
-On 3/27/22 4:00 PM, Xiaomeng Tong wrote:
-> The bug is here:
-> 	if (!rdev)
->
-> The list iterator value 'rdev' will *always* be set and non-NULL
-> by rdev_for_each(), so it is incorrect to assume that the iterator
-> value will be NULL if the list is empty or no element found.
-> Otherwise it will bypass the NULL check and lead to invalid memory
-> access passing the check.
->
-> To fix the bug, use a new variable 'iter' as the list iterator,
-> while use the original variable 'pdev' as a dedicated pointer to
-> point to the found element.
->
-> Cc:stable@vger.kernel.org
-> Fixes: 2aa82191ac36c ("md-cluster: Perform a lazy update")
-> Signed-off-by: Xiaomeng Tong<xiam0nd.tong@gmail.com>
-> ---
->   drivers/md/md.c | 8 +++++---
->   1 file changed, 5 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4d38bd7dadd6..7476fc204172 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2629,14 +2629,16 @@ static void sync_sbs(struct mddev *mddev, int nospares)
->   
->   static bool does_sb_need_changing(struct mddev *mddev)
->   {
-> -	struct md_rdev *rdev;
-> +	struct md_rdev *rdev = NULL, *iter;
->   	struct mdp_superblock_1 *sb;
->   	int role;
->   
->   	/* Find a good rdev */
-> -	rdev_for_each(rdev, mddev)
-> -		if ((rdev->raid_disk >= 0) && !test_bit(Faulty, &rdev->flags))
-> +	rdev_for_each(iter, mddev)
-> +		if ((iter->raid_disk >= 0) && !test_bit(Faulty, &iter->flags)) {
-> +			rdev = iter;
->   			break;
-> +		}
->   
->   	/* No good device found. */
->   	if (!rdev)
+Thank you for the suggestion, i will take it in PATCH v2.
 
+> > -	if (!rdev || rdev->desc_nr != nr) {
+> > +	if (!rdev) {
+> >   		pr_warn("%s: %d Could not find rdev with nr %d\n", __func__, __LINE__, nr);
+> >   		return;
+> >   	}
+> 
+> I guess we only need to check desc_nr since rdev should always be valid 
+> , and IMO the fix tag
+> is not necessary.
 
-Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+No. At least from the pr_warn log, the list can be empty or no element found in it.
+If this cases happen, the 'rdev' will be an invalid pointer that point to a invalid
+struct containning the HEAD '&((mddev)->disks)'. So this fix is necessary.
 
-Thanks,
-Guoqing
+--
+Xiaomeng Tong
