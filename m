@@ -2,134 +2,246 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C08BC433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 31 Mar 2022 18:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC97CC433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 31 Mar 2022 21:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233806AbiCaSQc (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 31 Mar 2022 14:16:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40382 "EHLO
+        id S241479AbiCaVUB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 31 Mar 2022 17:20:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231908AbiCaSQc (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 31 Mar 2022 14:16:32 -0400
-Received: from mail-yw1-x1135.google.com (mail-yw1-x1135.google.com [IPv6:2607:f8b0:4864:20::1135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81B7F8D691
-        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 11:14:44 -0700 (PDT)
-Received: by mail-yw1-x1135.google.com with SMTP id 00721157ae682-2e5e31c34bfso7261667b3.10
-        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 11:14:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=nbBuWg6h46HY+sJ6bCSIZCOzusnJLxYU43Fog/ZSgzQ=;
-        b=HDHuWfbjZMkg4myg7dvjHzJ9dX5eZR3L892CT0RLLqpCWZqfvpA2srF7rIPkuwyKUd
-         VeLnLjHVT26f/K16QeoE80/sMzB8oRtR2eBAvDagYfK9USaCJvpmMDe4cWC+UJm6Nlhi
-         mG+12ipQbz9lDlXVYHEuliC+1TMOqFJ5Q8ysDH9zC/9GfpXob1vZdVnlIzwlIi99uzZZ
-         mHrEYA9fPTszJ/LxPl/EFfam+MlmEOq8Pl0QhMDX/9aujYk+oLD0xdvYQIO4HjnDzmBY
-         ef3rjaZBXwHs3o/NPEGDCGrKVXTkzjzshZp8AaUSsHtp0BOghwkG+mFB27Yi2cUm9IXI
-         o3gQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=nbBuWg6h46HY+sJ6bCSIZCOzusnJLxYU43Fog/ZSgzQ=;
-        b=l876/nTTDhIxJWFmrn5vyn+dYNhVtVmwfMuYL+DctrPQsIYrhFIDloUBToOj2Fzgrv
-         +s7d4b+0GxpCESeVOhuC74eyMtXK7X3wmcGn9g3zUDT/R2fufdUatrQE3PQp5PW+L40a
-         Md64MgpvJi5/Fjo6iAFg734/7RXlcLSTVR1Ng+H9z33H0AYfz7p63Yzqj/nta0fPEPzJ
-         omjXyK5G5oLpxx8i6C6jc87/5gHw7CHwfwjTKRGqTKdKjCya9a7MXQsDTKxyzjjTA7CS
-         Y3yfy/rt8QDF2TsZG/18nuViT3zZt0YO9l+3Jq0EEkTju7dKxyAaK9EpRApFwML2sjiV
-         6Icg==
-X-Gm-Message-State: AOAM532IJ15rzkMNUF4vaT+Lo3IibUZ1pLxCIidEv/Hlo2rUvFS70yXg
-        lEdkOkDEE346B+yVpgs/iAXwD0Zec0SPjWicejUxPGat
-X-Google-Smtp-Source: ABdhPJy5cc6Dtid/P55/qskzBzoWPEHksFNSUtv3unWo+gSKBFZmYArcuiKxnikxHd5mhZbu2TCO91Fqhke9i63iPSU=
-X-Received: by 2002:a81:9104:0:b0:2e5:b044:2ac2 with SMTP id
- i4-20020a819104000000b002e5b0442ac2mr6230639ywg.498.1648750483695; Thu, 31
- Mar 2022 11:14:43 -0700 (PDT)
+        with ESMTP id S229911AbiCaVT7 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 31 Mar 2022 17:19:59 -0400
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 281F923B3E8
+        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 14:18:11 -0700 (PDT)
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20220331211806euoutp01bd847e3d79dfd0d27e3ebab29204fec7~hk9YkJl5y2147121471euoutp01F
+        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 21:18:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20220331211806euoutp01bd847e3d79dfd0d27e3ebab29204fec7~hk9YkJl5y2147121471euoutp01F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1648761486;
+        bh=DM0rhvB2GhxeOPQPo/EjMS38q+Iw5NVWfPDrrASpcb4=;
+        h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+        b=ja/zMyMDE2hI5nWK1cSG+xVwKDnHdB3TJJsbdYWzaeuSimQ3m9JkMJrhhXkbmjFkz
+         e2f0Sj3aKvgroxwesW/XSvOFwyXkOAq15i5RcLlHfNSmVWPBiN0QVU0vJC2kkc8Ck/
+         rErf/8S9OuUhBowX3M73oJFu2oPgR/2m7MXkX2ic=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20220331211805eucas1p2a8a5006c03c42a203bd56896dafbf5b4~hk9Xbop573192531925eucas1p2Z;
+        Thu, 31 Mar 2022 21:18:05 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id ED.B2.09887.D8A16426; Thu, 31
+        Mar 2022 22:18:05 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20220331211804eucas1p28da21f2dfd57aa490abffb8f87417f42~hk9WlERhz0832008320eucas1p2F;
+        Thu, 31 Mar 2022 21:18:04 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20220331211804eusmtrp20190ecaa189b027a004cf7cf2b9bcc1b~hk9WkFQiu0959209592eusmtrp2E;
+        Thu, 31 Mar 2022 21:18:04 +0000 (GMT)
+X-AuditID: cbfec7f4-471ff7000000269f-d8-62461a8d2ebf
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 7F.43.09404.C8A16426; Thu, 31
+        Mar 2022 22:18:04 +0100 (BST)
+Received: from [106.210.134.192] (unknown [106.210.134.192]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20220331211803eusmtip1a9ccf738d9b7d324aba71fa048d24a9b~hk9VwfLgt1478114781eusmtip1M;
+        Thu, 31 Mar 2022 21:18:03 +0000 (GMT)
+Message-ID: <6696cc6a-3e3f-035e-5b8c-05ea361383f3@samsung.com>
+Date:   Thu, 31 Mar 2022 23:18:03 +0200
 MIME-Version: 1.0
-References: <CAKRnqN+_=U58dT5bvgWJ1DgyEuhjsbmCuDL+xOLxmcuG1ML4qg@mail.gmail.com>
- <e3573002-05f3-3110-62a6-e704385f877f@youngman.org.uk>
-In-Reply-To: <e3573002-05f3-3110-62a6-e704385f877f@youngman.org.uk>
-Reply-To: bruce.korb+reply@gmail.com
-From:   Bruce Korb <bruce.korb@gmail.com>
-Date:   Thu, 31 Mar 2022 11:14:07 -0700
-Message-ID: <CAKRnqNLjsX9nVLrLedo4tfxtg0ZBz=6XJu=-z_Ebw6Auh+oz-Q@mail.gmail.com>
-Subject: Re: Trying to rescue a RAID-1 array
-To:     Wols Lists <antlists@youngman.org.uk>
-Cc:     brucekorbreply <bruce.korb+reply@gmail.com>,
-        linux-raid@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
+        Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH 4/5] block: turn bio_kmalloc into a simple kmalloc
+ wrapper
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+From:   Marek Szyprowski <m.szyprowski@samsung.com>
+In-Reply-To: <20220308061551.737853-5-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDKsWRmVeSWpSXmKPExsWy7djP87q9Um5JBg838VmsvtvPZjG98Ty7
+        xd53s1ktLvxoZLJYufook8Wfh4YWx7ZdY7LYe0vb4tLjFewWl3fNYbNon7+L0WL58X9MFkd7
+        NrNZtG38ymhxfPlfNovWpW+ZHAQ8Lp8t9di0qpPNY/fNBjaPj09vsXi833eVzWPK1+fMHuu3
+        XGXx2Hy62mPC5o2sHp83yQVwRXHZpKTmZJalFunbJXBlbJ49m7WgRadi6/J57A2Me1W6GDk5
+        JARMJJ7M3MEKYgsJrGCU2PvcuIuRC8j+wigx7/MeRgjnM6PE15P/WGE6Dt/6wwaRWM4o8X3P
+        ShYI5yOjRHfDIaAMBwevgJ3E5WteIA0sAqoSbbO/MYPYvAKCEidnPmEBsUUFkiRWb18NVi4s
+        ECAxb7cVSJhZQFzi1pP5TCC2iICDxOwNS8F2MQucZ5bY/OUOI0iCTcBQouttFxuIzQlk93y4
+        wQbRLC/RvHU2M0iDhMBuTom5R98wQ1ztIvF+51yoD4QlXh3fwg5hy0j83wmyjQPIzpf4O8MY
+        Ilwhce31GqhWa4k7536B3cksoCmxfpc+RNhR4mnjVjaITj6JG28FIS7gk5i0bTozRJhXoqNN
+        CKJaTWLW8XVwOw9euMQ8gVFpFlKYzELy/Cwkv8xC2LuAkWUVo3hqaXFuemqxUV5quV5xYm5x
+        aV66XnJ+7iZGYAI8/e/4lx2My1991DvEyMTBeIhRgoNZSYT3aqxrkhBvSmJlVWpRfnxRaU5q
+        8SFGaQ4WJXHe5MwNiUIC6YklqdmpqQWpRTBZJg5OqQam9Iw27xM7eus6sqM4NSetOn73XsrL
+        jPMnXyb/25a38anntEliL28rGemdCC07nuipf7QuN+/oBW22L9+eTZZfcG5mTrnk7Q72WnO+
+        mUKFm+PTBCeFT1KTf74wL9moLzp9cSzn5QoLltvLP6hfttnq/alz0tZvTAoy9ZPEpy04fOpk
+        nV6O3SPPe4zXdky93GDzZnbIs5xFN047H+XrnbBIzE1S8kzJqtMfzni+qbK6XSi5eqbWyQTj
+        X5IrpHYqXOdjNPokXrY1jeH5h2L74oNOWo5uyneOG6952ts6M80pIFdtZVvN7x+v/7ELZyqV
+        KvM9u8k44+XZYvU98ydVXdjHf/SzgKKv8LkIZck1n6WLlViKMxINtZiLihMBeBXxdu8DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRmVeSWpSXmKPExsVy+t/xu7o9Um5JBic+C1usvtvPZjG98Ty7
+        xd53s1ktLvxoZLJYufook8Wfh4YWx7ZdY7LYe0vb4tLjFewWl3fNYbNon7+L0WL58X9MFkd7
+        NrNZtG38ymhxfPlfNovWpW+ZHAQ8Lp8t9di0qpPNY/fNBjaPj09vsXi833eVzWPK1+fMHuu3
+        XGXx2Hy62mPC5o2sHp83yQVwRenZFOWXlqQqZOQXl9gqRRtaGOkZWlroGZlY6hkam8daGZkq
+        6dvZpKTmZJalFunbJehlbJ49m7WgRadi6/J57A2Me1W6GDk5JARMJA7f+sPWxcjFISSwlFHi
+        5IedbBAJGYmT0xpYIWxhiT/XusDiQgLvGSUO3HLqYuTg4BWwk7h8zQskzCKgKtE2+xsziM0r
+        IChxcuYTFhBbVCBJ4lJXOyOILSzgJ3Hh4gawMcwC4hK3nsxnArFFBBwkZm9YCnYDs8BFZon3
+        h6czQuwKl7h3pQlsKJuAoUTXW4gbOIHsng83oAaZSXRt7WKEsOUlmrfOZp7AKDQLyR2zkOyb
+        haRlFpKWBYwsqxhFUkuLc9Nzi430ihNzi0vz0vWS83M3MQLjftuxn1t2MK589VHvECMTB+Mh
+        RgkOZiUR3quxrklCvCmJlVWpRfnxRaU5qcWHGE2BgTGRWUo0OR+YePJK4g3NDEwNTcwsDUwt
+        zYyVxHk9CzoShQTSE0tSs1NTC1KLYPqYODilGpg04u5N1BdXFt3TNvtertcEwbUOK+pNbVMC
+        0yqWC3NGHL6966WrV+5xzZjP55NOVL94uu/z3qqNTW36Ho7qbw15BLI+aAUd5d3MF6U0Jf10
+        dOnCFx/XGnBld5xX57Dpa63Zmtxh4OjAVvLtxdmZt/ZJehVfOiZ2ZQ7P46oNwQ+iCzrclMvC
+        tjdpTfrh6Thd9dS9BLs3GnxTF1T2fF0UaXMlrGqJq8ipS8/teWdEFh/v1fX21Mq7lqgipa35
+        hVHyjf7D9SEfjtWubUxJrXohsy5CaavqvuOZ8qa/lzRf//jxlfZMhm23nU/5as3c5NO+t3AV
+        87slnskMM2TlfvcdFQn2LnwWfz8/OJbrntDORCWW4oxEQy3mouJEAFsaRTyEAwAA
+X-CMS-MailID: 20220331211804eucas1p28da21f2dfd57aa490abffb8f87417f42
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20220331211804eucas1p28da21f2dfd57aa490abffb8f87417f42
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20220331211804eucas1p28da21f2dfd57aa490abffb8f87417f42
+References: <20220308061551.737853-1-hch@lst.de>
+        <20220308061551.737853-5-hch@lst.de>
+        <CGME20220331211804eucas1p28da21f2dfd57aa490abffb8f87417f42@eucas1p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 31, 2022 at 10:06 AM Wols Lists <antlists@youngman.org.uk> wrote:
+Hi Christoph,
+
+On 08.03.2022 07:15, Christoph Hellwig wrote:
+> Remove the magic autofree semantics and require the callers to explicitly
+> call bio_init to initialize the bio.
 >
-> On 31/03/2022 17:44, Bruce Korb wrote:
-> > I moved the two disks from a cleanly shut down system that could not
-> > reboot and could not
-> > be upgraded to a new OS release. So, I put them in.a new box and did an install.
-> > The installation recognized them as a RAID and decided that the
-> > partitions needed a
-> > new superblock of type RAID-0.
+> This allows bio_free to catch accidental bio_put calls on bio_init()ed
+> bios as well.
 >
-> That's worrying, did it really write a superblock?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Yep. That worried me, too. I did the command to show the RAID status of the two
-partitions and, sure enough, both partitions were now listed as RAID0.
+This patch, which landed in today's next-20220331 as commit 57c47b42f454 
+("block: turn bio_kmalloc into a simple kmalloc wrapper"), breaks badly 
+all my test systems, which use squashfs initrd:
 
-> > Since these data have never been
-> > remounted since the
-> > shutdown on the original machine, I am hoping I can change the RAID
-> > type and mount it
-> > so as to recover my. .ssh and .thunderbird (email) directories. The
-> > bulk of the data are
-> > backed up (assuming no issues with the full backup of my critical
-> > data), but rebuilding
-> > and redistributing the .ssh directory would be a particular nuisance.
-> >
-> > SO: what are my options? I can't find any advice on how to tell mdadm
-> > that the RAID-0 partitions
-> > really are RAID-1 partitions. Last gasp might be to "mdadm --create"
-> > the RAID-1 again, but there's
-> > a lot of advice out there saying that it really is the last gasp
-> > before giving up. :)
-> >
->
-> https://raid.wiki.kernel.org/index.php/Asking_for_help
+RAMDISK: squashfs filesystem found at block 0
+RAMDISK: Loading 2489KiB [1 disk] into ram disk... done.
+using deprecated initrd support, will be removed in 2021.
+------------[ cut here ]------------
+WARNING: CPU: 4 PID: 1 at block/bio.c:229 bio_free+0x6c/0x70
+Modules linked in:
+CPU: 4 PID: 1 Comm: swapper/0 Not tainted 5.17.0-next-20220331 #4767
+Hardware name: Samsung Exynos (Flattened Device Tree)
+  unwind_backtrace from show_stack+0x10/0x14
+  show_stack from dump_stack_lvl+0x58/0x70
+  dump_stack_lvl from __warn+0xc8/0x218
+  __warn from warn_slowpath_fmt+0x5c/0xb4
+  warn_slowpath_fmt from bio_free+0x6c/0x70
+  bio_free from squashfs_read_data+0x118/0x748
+  squashfs_read_data from squashfs_read_table+0xdc/0x144
+  squashfs_read_table from squashfs_fill_super+0x100/0x9ec
+  squashfs_fill_super from get_tree_bdev+0x154/0x248
+  get_tree_bdev from vfs_get_tree+0x24/0xe4
+  vfs_get_tree from path_mount+0x3d0/0xb14
+  path_mount from init_mount+0x54/0x80
+  init_mount from do_mount_root+0x78/0x104
+  do_mount_root from mount_block_root+0xf0/0x1fc
+  mount_block_root from initrd_load+0xec/0x294
+  initrd_load from prepare_namespace+0xdc/0x18c
+  prepare_namespace from kernel_init+0x18/0x12c
+  kernel_init from ret_from_fork+0x14/0x2c
+Exception stack(0xf0835fb0 to 0xf0835ff8)
+...
+irq event stamp: 398271
+hardirqs last  enabled at (398279): [<c019c984>] __up_console_sem+0x50/0x60
+hardirqs last disabled at (398338): [<c019c970>] __up_console_sem+0x3c/0x60
+softirqs last  enabled at (398352): [<c0101680>] __do_softirq+0x348/0x610
+softirqs last disabled at (398347): [<c012f048>] __irq_exit_rcu+0x144/0x1ec
+---[ end trace 0000000000000000 ]---
+8<--- cut here ---
+Unable to handle kernel NULL pointer dereference at virtual address 00000004
+[00000004] *pgd=00000000
+Internal error: Oops: 5 [#1] PREEMPT SMP ARM
+Modules linked in:
+CPU: 4 PID: 1 Comm: swapper/0 Tainted: G        W 5.17.0-next-20220331 #4767
+Hardware name: Samsung Exynos (Flattened Device Tree)
+PC is at bio_free+0x24/0x70
+LR is at bio_free+0x24/0x70
+pc : [<c0502d28>]    lr : [<c0502d28>]    psr: 80000113
+sp : f0835cf0  ip : 00000000  fp : c28cae80
+r10: ef0a95c0  r9 : c2805cc0  r8 : 00000060
+r7 : 00000060  r6 : 00000060  r5 : 00000000  r4 : c2804a80
+r3 : c2804ac8  r2 : 00000001  r1 : c2804ac8  r0 : 00000074
+Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+Control: 10c5387d  Table: 4000406a  DAC: 00000051
+Register r0 information: non-paged memory
+Register r1 information: slab kmalloc-128 start c2804a80 pointer offset 
+72 size 128
+Register r2 information: non-paged memory
+Register r3 information: slab kmalloc-128 start c2804a80 pointer offset 
+72 size 128
+Register r4 information: slab kmalloc-128 start c2804a80 pointer offset 
+0 size 128
+Register r5 information: NULL pointer
+Register r6 information: non-paged memory
+Register r7 information: non-paged memory
+Register r8 information: non-paged memory
+Register r9 information: slab kmalloc-192 start c2805cc0 pointer offset 
+0 size 192
+Register r10 information: non-slab/vmalloc memory
+Register r11 information: slab kmalloc-64 start c28cae80 pointer offset 
+0 size 64
+Register r12 information: NULL pointer
+Process swapper/0 (pid: 1, stack limit = 0x(ptrval))
+Stack: (0xf0835cf0 to 0xf0836000)
+...
+  bio_free from squashfs_read_data+0x118/0x748
+  squashfs_read_data from squashfs_read_table+0xdc/0x144
+  squashfs_read_table from squashfs_fill_super+0x100/0x9ec
+  squashfs_fill_super from get_tree_bdev+0x154/0x248
+  get_tree_bdev from vfs_get_tree+0x24/0xe4
+  vfs_get_tree from path_mount+0x3d0/0xb14
+  path_mount from init_mount+0x54/0x80
+  init_mount from do_mount_root+0x78/0x104
+  do_mount_root from mount_block_root+0xf0/0x1fc
+  mount_block_root from initrd_load+0xec/0x294
+  initrd_load from prepare_namespace+0xdc/0x18c
+  prepare_namespace from kernel_init+0x18/0x12c
+  kernel_init from ret_from_fork+0x14/0x2c
+Exception stack(0xf0835fb0 to 0xf0835ff8)
+...
+---[ end trace 0000000000000000 ]---
+Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
 
-Sorry about that. I have two systems: the one I'm typing on and the one
-I am trying to bring up. At the moment, I'm in single user mode building
-out a new /home file system. mdadm --create is 15% done after an hour :(.
-It'll be mid/late afternoon before /home is rebuilt, mounted and I'll be
-able to run display commands on the "old" RAID1 (or 0) partitions.
+Reverting it on top of linux next-20220331 (together with commit 
+1292fb59f283 ("pktcdvd: stop using bio_reset")) fixes (or hides?) the issue.
 
-> Especially lsdrv. That tells us a LOT about your system.
+> ---
+>   block/bio.c                        | 47 ++++++++++++------------------
+>   block/blk-crypto-fallback.c        | 14 +++++----
+>   block/blk-map.c                    | 42 ++++++++++++++++----------
+>   drivers/block/pktcdvd.c            | 25 ++++++++--------
+>   drivers/md/bcache/debug.c          | 10 ++++---
+>   drivers/md/dm-bufio.c              |  9 +++---
+>   drivers/md/raid1.c                 | 12 +++++---
+>   drivers/md/raid10.c                | 21 ++++++++-----
+>   drivers/target/target_core_pscsi.c | 10 +++----
+>   fs/squashfs/block.c                |  9 +++---
+>   include/linux/bio.h                |  2 +-
+>   11 files changed, 108 insertions(+), 93 deletions(-)
 
-Expect email in about 6 hours or so. :) But openSUSE doesn't know
-about any "lsdrv" command. "cat /proc/mdstat" shows /dev/md1 (the
-RAID device I'm fretting over) to be active, raid-0 using /dev/sdc1 and sde1.
+ > [...]
 
-> What was the filesystem on your raid? Hopefully it's as simple as moving
-> the "start of partition", breaking the raid completely, and you can just
-> mount the filesystem.
+Best regards
+-- 
+Marek Szyprowski, PhD
+Samsung R&D Institute Poland
 
-I *think* it was EXT4, but. it might be the XFS one. I think I let it default
-and openSUSE appears to prefer the XFS file system for RAID devices.
-Definitely one of those two. I built it close to a decade ago, so I'll be moving
-the data to the new /home array.
-
-> What really worries me is how and why it both recognised it as a raid,
-> then thought it needed to be converted to raid-0. That just sounds wrong
-> on so many levels. Did you let it mess with your superblocks? I hope you
-> said "don't touch those drives"?
-
-In retrospect, I ought to have left the drives unplugged until the install was
-done. The installer saw that they were RAID so it RAID-ed them. Only it
-seems to have decided on type 0 over type 1. I wasn't attentive because
-I've upgraded Linux so many times and it was "just done correctly" without
-having to give it a lot of thought. "If only" I'd thought to back up
-email and ssh.
-(1.5TB of photos are likely okay.)
-
-Thank you so much for your reply and potentially help :)
-
-Regards, Bruce
