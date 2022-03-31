@@ -2,64 +2,198 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 576E2C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 31 Mar 2022 15:45:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F8FDC433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 31 Mar 2022 16:35:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238455AbiCaPqw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 31 Mar 2022 11:46:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42366 "EHLO
+        id S240029AbiCaQgw (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 31 Mar 2022 12:36:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239348AbiCaPqn (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 31 Mar 2022 11:46:43 -0400
-Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D334322451B
-        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 08:41:34 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1648741289; cv=none; 
-        d=zohomail.eu; s=zohoarc; 
-        b=JNIXyVEvsAIQUd2AwpEdLHkKn4talDshjZt8snKRagSx1j9IIh0s0Sjay4sokXp3R0DM/3GT3unURleCCAmqDQweMA1tXKIEQLs2BjL+6hQ+QBwQaks2XNqrkeBw0xNqbp8RaFTvTuflwP1rO8drCsldFaNQWfoMH2bq7Ju6eFY=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1648741289; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=OIClQwKwhgRjXzkazoypqiwLx57kdKyHrGAeqLPETTg=; 
-        b=ZdTM7uQEQa46c6cQ5YZbxv89aEnwpd94KFZuMjgzQ2NhgWHTOZxMdbVvZhqcMrHk55eVB7TTRo5QIk1goodi43oRdVHgJ0HQn+vUocmTahm0cMBbrE3D76Ln8XBseAFM+mMWe7SQKCwb7E5SAxRsk3K6IGTdRZM6bi4h3h6thN8=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
-        dmarc=pass header.from=<jes@trained-monkey.org>
-Received: from [172.30.27.237] (163.114.130.4 [163.114.130.4]) by mx.zoho.eu
-        with SMTPS id 1648741287539133.55575443384691; Thu, 31 Mar 2022 17:41:27 +0200 (CEST)
-Message-ID: <8494d046-814b-9ff4-1dc4-d9c49e0f9d93@trained-monkey.org>
-Date:   Thu, 31 Mar 2022 11:41:26 -0400
+        with ESMTP id S240022AbiCaQgv (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 31 Mar 2022 12:36:51 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 850411BBF62;
+        Thu, 31 Mar 2022 09:35:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1648744503; x=1680280503;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=vcu31rMS0yn2EqzHi27wb6PxKwLH34tTd/+ys8ECp/A=;
+  b=ADDuc88FzNWZGKBrIk06zzzX+k6YSxqk27uWQNihSUCGuZ1GtMpxcMlV
+   xTEWa75dpfcsFQw+mC064HKR7W4MWXLYRVTC8926TBwzR2AQWBCbndTjo
+   VEkv7SFykl4Py4aMRGoIAena380+aMTSMqaNCRjn7CsXqgUcJlMFOvVOW
+   g=;
+Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
+  by alexa-out.qualcomm.com with ESMTP; 31 Mar 2022 09:35:03 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2022 09:35:02 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 31 Mar 2022 09:35:02 -0700
+Received: from qian (10.80.80.8) by nalasex01a.na.qualcomm.com (10.47.209.196)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Thu, 31 Mar
+ 2022 09:34:58 -0700
+Date:   Thu, 31 Mar 2022 12:34:56 -0400
+From:   Qian Cai <quic_qiancai@quicinc.com>
+To:     Christoph Hellwig <hch@lst.de>
+CC:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "David Sterba" <dsterba@suse.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        <linux-block@vger.kernel.org>, <dm-devel@redhat.com>,
+        <linux-kernel@vger.kernel.org>, <linux-bcache@vger.kernel.org>,
+        <linux-raid@vger.kernel.org>, <target-devel@vger.kernel.org>,
+        <linux-btrfs@vger.kernel.org>
+Subject: Re: cleanup bio_kmalloc v2
+Message-ID: <YkXYMGGbk/ZTbGaA@qian>
+References: <20220308061551.737853-1-hch@lst.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH] udev: adapt rules to systemd v247
-Content-Language: en-US
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid@vger.kernel.org
-References: <20220114154433.7386-1-mariusz.tkaczyk@linux.intel.com>
-From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20220114154433.7386-1-mariusz.tkaczyk@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20220308061551.737853-1-hch@lst.de>
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 1/14/22 10:44, Mariusz Tkaczyk wrote:
-> New events have been added in kernel 4.14 ("bind" and "unbind").
-> Systemd maintainer suggests to modify "add|change" branches.
-> This patches implements their suggestions. There is no issue yet because
-> new event types are not used in md.
+On Tue, Mar 08, 2022 at 07:15:46AM +0100, Christoph Hellwig wrote:
+> Hi Jens,
 > 
-> Please see systemd announcement for details[1].
+> this series finishes off the bio allocation interface cleanups by dealing
+> with the weirdest member of the famility.  bio_kmalloc combines a kmalloc
+> for the bio and bio_vecs with a hidden bio_init call and magic cleanup
+> semantics.
 > 
-> [1] https://lists.freedesktop.org/archives/systemd-devel/2020-November/045646.html
+> This series moves a few callers away from bio_kmalloc and then turns
+> bio_kmalloc into a simple wrapper for a slab allocation of a bio and the
+> inline biovecs.  The callers need to manually call bio_init instead with
+> all that entails and the magic that turns bio_put into a kfree goes away
+> as well, allowing for a proper debug check in bio_put that catches
+> accidental use on a bio_init()ed bio.
+
+Reverting this series fixed boot crashes.
+
+ WARNING: CPU: 1 PID: 2622 at block/bio.c:229 bio_free
+ Modules linked in: cdc_ether usbnet ipmi_devintf ipmi_msghandler cppc_cpufreq fuse ip_tables x_tables ipv6 btrfs blake2b_generic libcrc32c xor xor_neon raid6_pq zstd_compress dm_mod nouveau crct10dif_ce drm_ttm_helper mlx5_core ttm drm_dp_helper drm_kms_helper nvme mpt3sas xhci_pci nvme_core raid_class drm xhci_pci_renesas
+ CPU: 1 PID: 2622 Comm: mount Not tainted 5.17.0-next-20220331 #50
+ pstate: 10400009 (nzcV daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+ pc : bio_free
+ lr : bio_put
+ sp : ffff8000371b7760
+ x29: ffff8000371b7760 x28: 0000000000000000 x27: dfff800000000000
+ x26: ffff08028f93a600 x25: 0000000000000000 x24: ffff08028f92f600
+ x23: 1ffff00006e36f10 x22: ffff08028fa18510 x21: 1fffe10051f430a2
+ x20: 0000000000000000 x19: ffff08028fa18500 x18: ffffde03db3e7d2c
+ x17: ffffde03d55f8bc4 x16: 1fffe10051e75129 x15: 1fffe106cfcfbb46
+ x14: 1fffe10051e7511c x13: 0000000000000004 x12: ffff700006e36eab
+ x11: 1ffff00006e36eaa x10: ffff700006e36eaa x9 : ffffde03d5cb9fec
+ x8 : ffff8000371b7557 x7 : 0000000000000001 x6 : ffff700006e36eaa
+ x5 : 1ffff00006e36ea9 x4 : 1ffff00006e36ebe x3 : 1fffe10051f430a2
+ x2 : 1fffe10051f430ae x1 : 0000000000000000 x0 : ffff08028fa18570
+ Call trace:
+  bio_free
+  bio_put
+  squashfs_read_data
+  squashfs_read_table
+  squashfs_fill_super
+  get_tree_bdev
+  squashfs_get_tree
+  vfs_get_tree
+  do_new_mount
+  path_mount
+  __arm64_sys_mount
+  invoke_syscall
+  el0_svc_common.constprop.0
+  do_el0_svc
+  el0_svc
+  el0t_64_sync_handler
+  el0t_64_sync
+ irq event stamp: 33146
+ hardirqs last  enabled at (33145):  free_unref_page
+ hardirqs last disabled at (33146):  el1_dbg
+ softirqs last  enabled at (33122):  __do_softirq
+ softirqs last disabled at (33111):  __irq_exit_rcu
+ ---[ end trace 0000000000000000 ]---
+ Unable to handle kernel paging request at virtual address dfff800000000001
+ KASAN: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]
+ Mem abort info:
+   ESR = 0x96000004
+   EC = 0x25: DABT (current EL), IL = 32 bits
+   SET = 0, FnV = 0
+   EA = 0, S1PTW = 0
+   FSC = 0x04: level 0 translation fault
+ Data abort info:
+   ISV = 0, ISS = 0x00000004
+   CM = 0, WnR = 0
+ [dfff800000000001] address between user and kernel address ranges
+ Internal error: Oops: 96000004 [#1] PREEMPT SMP
+ Modules linked in: cdc_ether usbnet ipmi_devintf ipmi_msghandler cppc_cpufreq fuse ip_tables x_tables ipv6 btrfs blake2b_generic libcrc32c xor xor_neon raid6_pq zstd_compress dm_mod nouveau crct10dif_ce
+drm_ttm_helper mlx5_core ttm drm_dp_helper drm_kms_helper nvme mpt3sas xhci_pci nvme_core raid_class drm xhci_pci_renesas
+ CPU: 1 PID: 2622 Comm: mount Tainted: G        W         5.17.0-next-20220331 #50
+ pc : bio_free
+ lr : bio_free
+ sp : ffff8000371b7760
+ x29: ffff8000371b7760 x28: 0000000000000000 x27: dfff800000000000
+ x26: ffff08028f93a600 x25: 0000000000000000 x24: ffff08028f92f600
+ x23: 1ffff00006e36f10 x22: ffff08028fa18548 x21: 00000000000000d0
+ x20: 0000000000000000 x19: ffff08028fa18500 x18: ffffde03db3e7d2c
+ x17: ffffde03d55f8bc4 x16: 1fffe10051e75129 x15: 1fffe106cfcfbb46
+ x14: 1fffe10051e7511c x13: 0000000000000004 x12: ffff700006e36eab
+ x11: 1ffff00006e36eaa x10: ffff700006e36eaa x9 : ffffde03d5cb9c78
+ x8 : ffff8000371b7557 x7 : 0000000000000001 x6 : ffff700006e36eaa
+ x5 : 1ffff00006e36ea9 x4 : 1fffe10051f430ac x3 : 0000000000000001
+ x2 : 0000000000000003 x1 : dfff800000000000 x0 : 0000000000000008
+ Call trace:
+  bio_free
+  bio_put
+  squashfs_read_data
+  squashfs_read_table
+  squashfs_fill_super
+  get_tree_bdev
+  squashfs_get_tree
+  vfs_get_tree
+  do_new_mount
+  path_mount
+  __arm64_sys_mount
+  invoke_syscall
+  el0_svc_common.constprop.0
+  do_el0_svc
+  el0_svc
+  el0t_64_sync_handler
+  el0t_64_sync
+ Code: d2d00001 f2fbffe1 52800062 d343fc03 (38e16861)
+ ---[ end trace 0000000000000000 ]---
+ SMP: stopping secondary CPUs
+ Kernel Offset: 0x5e03ccd70000 from 0xffff800008000000
+ PHYS_OFFSET: 0x80000000
+ CPU features: 0x000,00085c0d,19801c82
+ Memory Limit: none
+ ---[ end Kernel panic - not syncing: Oops: Fatal exception ]---
 > 
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-
-Applied!
-
-Thanks,
-Jes
-
-
+> Changes since v1:
+>  - update a pre-existing comment per maintainer suggestion
+> 
+> Diffstat:
+>  block/bio.c                        |   47 ++++++++++++++-----------------------
+>  block/blk-crypto-fallback.c        |   14 ++++++-----
+>  block/blk-map.c                    |   42 +++++++++++++++++++++------------
+>  drivers/block/pktcdvd.c            |   34 +++++++++++---------------
+>  drivers/md/bcache/debug.c          |   10 ++++---
+>  drivers/md/dm-bufio.c              |    9 +++----
+>  drivers/md/raid1.c                 |   12 ++++++---
+>  drivers/md/raid10.c                |   21 +++++++++++-----
+>  drivers/target/target_core_pscsi.c |   36 ++++------------------------
+>  fs/btrfs/disk-io.c                 |    8 +++---
+>  fs/btrfs/volumes.c                 |   11 --------
+>  fs/btrfs/volumes.h                 |    2 -
+>  fs/squashfs/block.c                |   14 +++--------
+>  include/linux/bio.h                |    2 -
+>  14 files changed, 116 insertions(+), 146 deletions(-)
