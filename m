@@ -2,102 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBAE2C433EF
-	for <linux-raid@archiver.kernel.org>; Thu, 31 Mar 2022 21:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F28C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 31 Mar 2022 21:34:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241858AbiCaVYI (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 31 Mar 2022 17:24:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39924 "EHLO
+        id S241886AbiCaVgJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 31 Mar 2022 17:36:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233183AbiCaVYG (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 31 Mar 2022 17:24:06 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D7A323D46B
-        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 14:22:18 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id u22so771484pfg.6
-        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 14:22:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=x3SePf6cYyzJ/sV6xHzMCnP/4ErKQDoUNlfoUc3FU/o=;
-        b=pbUrFWcZ2skLn6FAZKUppr3B/0KcKYvs7TVqCpR/V/wpljp0wGqVFJrj7vRAyJlZaG
-         N0rqPpfA6Eyg0swWL6TZQ2Ao2/Gs7zjCBpYKtGgeftbX9wZo5RutaAIdeBlBMTpypBzx
-         TGel8IyxgFZbX40O+FfItMq6FYmWpwXK95ZvQAB+ZeW7GfasepxJTsDFJwiOIPDzRraq
-         2L0hLd+MVFTJd98uB0m2smroBZU8rq8LJ+t/lj+n8QZvP6ZooUOk2UUyhrV3IJrm+6tP
-         Zl+ZU+WwG6a53qFjsvhKcgbDV5Sb6n1XbUYHqQhzrdurBPG4yfswzxy4qsxPu50Vppzu
-         xLQQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=x3SePf6cYyzJ/sV6xHzMCnP/4ErKQDoUNlfoUc3FU/o=;
-        b=Tf1ntKcf7rPdGOcF0IqLQG1hUzfNTY6W3RdwJyCCTh3MDmBgfE4B/LXVMqphKm/jCq
-         BDFi07XG92dSyCsM1s3IYKkNwW7Y7xdrmgZ+BBrgS3D3a/4BFnLDPdvmvnNx23jcpsij
-         jtMN1OT/h/Fqh8gvWDh800NF0ZXKTlD9U+WEr6yoM+VdC5xwu6JYVYyhnmIR3K8F1JYO
-         QgomuKOeQgryYiNwQoFe9HZsNp2FY8T/eJ8uhX4/yMPTg9KjqSQcHxyP+a/UFAx5TF9n
-         69glcdBx/kcwvQaiYt7AM/yGQXnD5C2n8Hr1qGZxVQM/KJMEqUsgS4Zr1TQcoRHYOVGz
-         0ICw==
-X-Gm-Message-State: AOAM5332PJVpIpaQpxzFv0+hooJI+TyFw9EYwkRiU5wAYgZAcXTZFyz5
-        VwbUAPxssi3/FuT+5neIDnV9Sw==
-X-Google-Smtp-Source: ABdhPJwYnU9r41ORdf19G02EFb5yhsyLJV8xzLTtxC7Sx8NiXMpF/1DkwJ2vuON7bztWgA+FZZylpQ==
-X-Received: by 2002:a05:6a00:328f:b0:4fa:95b5:e1ff with SMTP id ck15-20020a056a00328f00b004fa95b5e1ffmr7412958pfb.60.1648761737704;
-        Thu, 31 Mar 2022 14:22:17 -0700 (PDT)
-Received: from ?IPV6:2600:380:772e:9a93:98d9:fd90:ab06:5943? ([2600:380:772e:9a93:98d9:fd90:ab06:5943])
-        by smtp.gmail.com with ESMTPSA id j7-20020a056a00130700b004b9f7cd94a4sm410220pfu.56.2022.03.31.14.22.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 31 Mar 2022 14:22:17 -0700 (PDT)
-Message-ID: <1eb268c5-3420-0263-3f0c-7d3982f8f512@kernel.dk>
-Date:   Thu, 31 Mar 2022 15:22:14 -0600
+        with ESMTP id S233986AbiCaVgI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 31 Mar 2022 17:36:08 -0400
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0EEA50E3A
+        for <linux-raid@vger.kernel.org>; Thu, 31 Mar 2022 14:34:19 -0700 (PDT)
+Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1na2Qr-0005uF-5x;
+        Thu, 31 Mar 2022 22:34:18 +0100
+Message-ID: <8c2148d0-fa97-d0ef-10cc-11f79d7da5e5@youngman.org.uk>
+Date:   Thu, 31 Mar 2022 22:34:17 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH 4/5] block: turn bio_kmalloc into a simple kmalloc wrapper
-Content-Language: en-US
-To:     Marek Szyprowski <m.szyprowski@samsung.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-References: <20220308061551.737853-1-hch@lst.de>
- <20220308061551.737853-5-hch@lst.de>
- <CGME20220331211804eucas1p28da21f2dfd57aa490abffb8f87417f42@eucas1p2.samsung.com>
- <6696cc6a-3e3f-035e-5b8c-05ea361383f3@samsung.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <6696cc6a-3e3f-035e-5b8c-05ea361383f3@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Trying to rescue a RAID-1 array
+Content-Language: en-GB
+To:     bruce.korb+reply@gmail.com
+Cc:     linux-raid@vger.kernel.org
+References: <CAKRnqN+_=U58dT5bvgWJ1DgyEuhjsbmCuDL+xOLxmcuG1ML4qg@mail.gmail.com>
+ <e3573002-05f3-3110-62a6-e704385f877f@youngman.org.uk>
+ <CAKRnqNLjsX9nVLrLedo4tfxtg0ZBz=6XJu=-z_Ebw6Auh+oz-Q@mail.gmail.com>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <CAKRnqNLjsX9nVLrLedo4tfxtg0ZBz=6XJu=-z_Ebw6Auh+oz-Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/31/22 3:18 PM, Marek Szyprowski wrote:
-> Hi Christoph,
-> 
-> On 08.03.2022 07:15, Christoph Hellwig wrote:
->> Remove the magic autofree semantics and require the callers to explicitly
->> call bio_init to initialize the bio.
+On 31/03/2022 19:14, Bruce Korb wrote:
+> On Thu, Mar 31, 2022 at 10:06 AM Wols Lists <antlists@youngman.org.uk> wrote:
 >>
->> This allows bio_free to catch accidental bio_put calls on bio_init()ed
->> bios as well.
+>> On 31/03/2022 17:44, Bruce Korb wrote:
+>>> I moved the two disks from a cleanly shut down system that could not
+>>> reboot and could not
+>>> be upgraded to a new OS release. So, I put them in.a new box and did an install.
+>>> The installation recognized them as a RAID and decided that the
+>>> partitions needed a
+>>> new superblock of type RAID-0.
 >>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> That's worrying, did it really write a superblock?
 > 
-> This patch, which landed in today's next-20220331 as commit 57c47b42f454 
-> ("block: turn bio_kmalloc into a simple kmalloc wrapper"), breaks badly 
-> all my test systems, which use squashfs initrd:
+> Yep. That worried me, too. I did the command to show the RAID status of the two
+> partitions and, sure enough, both partitions were now listed as RAID0.
+> 
+>>> Since these data have never been
+>>> remounted since the
+>>> shutdown on the original machine, I am hoping I can change the RAID
+>>> type and mount it
+>>> so as to recover my. .ssh and .thunderbird (email) directories. The
+>>> bulk of the data are
+>>> backed up (assuming no issues with the full backup of my critical
+>>> data), but rebuilding
+>>> and redistributing the .ssh directory would be a particular nuisance.
+>>>
+>>> SO: what are my options? I can't find any advice on how to tell mdadm
+>>> that the RAID-0 partitions
+>>> really are RAID-1 partitions. Last gasp might be to "mdadm --create"
+>>> the RAID-1 again, but there's
+>>> a lot of advice out there saying that it really is the last gasp
+>>> before giving up. :)
+>>>
+>>
+>> https://raid.wiki.kernel.org/index.php/Asking_for_help
+> 
+> Sorry about that. I have two systems: the one I'm typing on and the one
+> I am trying to bring up. At the moment, I'm in single user mode building
+> out a new /home file system. mdadm --create is 15% done after an hour :(.
+> It'll be mid/late afternoon before /home is rebuilt, mounted and I'll be
+> able to run display commands on the "old" RAID1 (or 0) partitions.
+> 
+>> Especially lsdrv. That tells us a LOT about your system.
+> 
+> Expect email in about 6 hours or so. :) But openSUSE doesn't know
+> about any "lsdrv" command. "cat /proc/mdstat" shows /dev/md1 (the
+> RAID device I'm fretting over) to be active, raid-0 using /dev/sdc1 and sde1.
 
-The series has been reverted on the block side, so next linux-next should
-be fine again. We'll try again for 5.19.
+Well, the webpage does tell you where to download it from - it's not 
+part of the official tools, and it's a personal thing that's damn useful.
+> 
+>> What was the filesystem on your raid? Hopefully it's as simple as moving
+>> the "start of partition", breaking the raid completely, and you can just
+>> mount the filesystem.
+> 
+> I *think* it was EXT4, but. it might be the XFS one. I think I let it default
+> and openSUSE appears to prefer the XFS file system for RAID devices.
+> Definitely one of those two. I built it close to a decade ago, so I'll be moving
+> the data to the new /home array.
+> 
+>> What really worries me is how and why it both recognised it as a raid,
+>> then thought it needed to be converted to raid-0. That just sounds wrong
+>> on so many levels. Did you let it mess with your superblocks? I hope you
+>> said "don't touch those drives"?
+> 
+> In retrospect, I ought to have left the drives unplugged until the install was
+> done. The installer saw that they were RAID so it RAID-ed them. Only it
+> seems to have decided on type 0 over type 1. I wasn't attentive because
+> I've upgraded Linux so many times and it was "just done correctly" without
+> having to give it a lot of thought. "If only" I'd thought to back up
+> email and ssh.
+> (1.5TB of photos are likely okay.)
+> 
+> Thank you so much for your reply and potentially help :)
+> 
+If it says the drive is active ...
 
--- 
-Jens Axboe
+When you get and run lsdrv, see if it finds a filesystem on the raid-0 - 
+I suspect it might!
 
+There's a bug, which should be well fixed, but it might have bitten you. 
+It breaks raid arrays. But if the drive is active, it might well mount, 
+and you will be running a degraded mirror. Mount it read-only, back it 
+up, and then see whether you can force-assemble the two bits back 
+together :-)
+
+But don't do anything if you have any trouble whatsoever mounting and 
+backing up.
+
+Cheers,
+Wol
