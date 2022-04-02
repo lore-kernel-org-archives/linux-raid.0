@@ -2,163 +2,70 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE4A8C433F5
-	for <linux-raid@archiver.kernel.org>; Fri,  1 Apr 2022 22:43:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58541C433EF
+	for <linux-raid@archiver.kernel.org>; Sat,  2 Apr 2022 12:48:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241797AbiDAWgO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 1 Apr 2022 18:36:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38708 "EHLO
+        id S1354767AbiDBMuN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 2 Apr 2022 08:50:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236916AbiDAWgN (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 1 Apr 2022 18:36:13 -0400
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2145720D816
-        for <linux-raid@vger.kernel.org>; Fri,  1 Apr 2022 15:34:22 -0700 (PDT)
-Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1naNCm-0007MF-Dd;
-        Fri, 01 Apr 2022 20:45:08 +0100
-Message-ID: <776f85f6-33a2-f226-f6ff-09e736ccefd1@youngman.org.uk>
-Date:   Fri, 1 Apr 2022 20:45:10 +0100
+        with ESMTP id S1354763AbiDBMuM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 2 Apr 2022 08:50:12 -0400
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E617181
+        for <linux-raid@vger.kernel.org>; Sat,  2 Apr 2022 05:48:20 -0700 (PDT)
+Received: by mail-ej1-x62e.google.com with SMTP id bg10so11079610ejb.4
+        for <linux-raid@vger.kernel.org>; Sat, 02 Apr 2022 05:48:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=OuoNvybHWqOHL4346sL01VTY/xuio+MYXq6DvIel06g=;
+        b=VMjv2UvpSrlwa/Ds4cwCzSBDMsyq2ufLd7LFg2MgIHXp68ogVLDoxfEfvWRZtnhXsp
+         lSdMyCzPAheQ7PhHII3i9s+8pMAHORVqa0VOHHzE2Pibm9tG+zK6nJ23zC4lxnKNC3z3
+         boImjpdieoKbrs8jtwK006bFog0ytqlmjD8sItwmfEPgA/GxAHmoO+huz3kEx2sLqr8P
+         0x4FYbkOf3Y+5D2U991uohAE1Niw7gow5LAzrRwSaVtQT8zbs6LpnuDLVg95TGO4zuBd
+         sXRUcZOo78VDHJm7E50QSGKuooob/Nqo/feSm+yRGLHEKMRt1+XE8Ha8lVGhHlSvqC4N
+         IdDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=OuoNvybHWqOHL4346sL01VTY/xuio+MYXq6DvIel06g=;
+        b=XAyw/emZHlpZFW/NjWYJbEE9mdHBUbFGOeHHMSAUNflZQ7whYsS+CKrwpQeslep9al
+         uWvUvILlNU3HtQLmdIJ1slfyJmJt8NmXshr+IIuDeoHLesmpd69aodNLQQ9BczL5IxjN
+         DJRC0ttbGzBTcpN2M7SPe1UjLJhpjyo5x4Lth11TLEYJVsWRwMtke0gI/4yd7vLFQNea
+         rp2ybFRPfQRHPpdrPylanyr71qQ7JFDa9ATjB/sw9HhoinhIyu6nwIiqbHruIioHB8yS
+         J/ApV4zlyEwl2IcOkf5cEbbNL1Q6kUIm5Ee/uNVtbIUTeZrny1JRZJSXYrIBsnrPsf0V
+         iR3Q==
+X-Gm-Message-State: AOAM531wzneUzanoFfRhhczJk/UkksHUuAE9HveNa0vxvEL9tfxFQV+V
+        vSWKYMTo3hxqgaisFl4MIRT3UfBLFLc2H7aEwbI8tygC
+X-Google-Smtp-Source: ABdhPJwYCkkXOCc2ZxwsbJIfyKBCwbiRYmcHPm8Bs7nt8C5pbKaBE5rqD6b8Z+RiGdntHjkSudMWjpSsBatlGUtzJDE=
+X-Received: by 2002:a17:907:6e89:b0:6df:d819:dc9c with SMTP id
+ sh9-20020a1709076e8900b006dfd819dc9cmr3983185ejc.158.1648903698708; Sat, 02
+ Apr 2022 05:48:18 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: Trying to rescue a RAID-1 array
-Content-Language: en-GB
-To:     bruce.korb+reply@gmail.com
-Cc:     linux-raid@vger.kernel.org
-References: <CAKRnqN+_=U58dT5bvgWJ1DgyEuhjsbmCuDL+xOLxmcuG1ML4qg@mail.gmail.com>
- <e3573002-05f3-3110-62a6-e704385f877f@youngman.org.uk>
- <CAKRnqNLjsX9nVLrLedo4tfxtg0ZBz=6XJu=-z_Ebw6Auh+oz-Q@mail.gmail.com>
- <8c2148d0-fa97-d0ef-10cc-11f79d7da5e5@youngman.org.uk>
- <CAKRnqN+21BZT1eufn962xiEDvnrBtk68dTBSLT1mx7+Ac2kJ+w@mail.gmail.com>
- <CAKRnqN+6wAFPf5AGNEf948NunA97MJ9Gy5eFzLCfX+WfHY72Pg@mail.gmail.com>
-From:   Wol <antlists@youngman.org.uk>
-In-Reply-To: <CAKRnqN+6wAFPf5AGNEf948NunA97MJ9Gy5eFzLCfX+WfHY72Pg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20220318030855.GV3131742@merlins.org> <CAC6SzHKFga59KpzhRhE-sz3K5z+=LUXfyxSB14KaOj7DCxCj-Q@mail.gmail.com>
+ <20220328020512.GP4113@merlins.org> <CAJCQCtQyqG_zWhRVXjnc3Prc+J-7hK1hyp28mwyuKWWPJ8Uo5A@mail.gmail.com>
+ <CAC6SzHL9Vy2Tz_rVFRphTuAjwPNXg59WAuY8JCXXQ94W09y4sw@mail.gmail.com> <20220330023333.durdl4ydb3pz4yab@bitfolk.com>
+In-Reply-To: <20220330023333.durdl4ydb3pz4yab@bitfolk.com>
+From:   d tbsky <tbskyd@gmail.com>
+Date:   Sat, 2 Apr 2022 20:48:07 +0800
+Message-ID: <CAC6SzHLUOP0zyKGLHjcfxcgqy3XSCo2fHLTgZfhU_dNajnSFnA@mail.gmail.com>
+Subject: Re: new drive is 4 sectors shorter, can it be used for swraid5 array?
+To:     list Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hmmm... what drives are the damaged array on? There's an intact raid1 
-there ...
+Andy Smith <andy@strugglers.net>
+> There is a standard called IDEMA LBA1-03:
+>
+>     http://www.idema.org/wp-content/downloads/2169.pdf
+>
+> This says that a certain "marketing capacity" (i.e. when the drive
+> product description says "2TB" or whatever) will equal an exact
+> number of 512 or 4096 byte sectors.
 
-On 01/04/2022 19:21, Bruce Korb wrote:
-> Um, I forgot that with a fresh install, I have to remember what all
-> tools I had installed and re-install 'em.
-> 
-> bach:/home/bkorb # /home/bkorb/bin/lsdrv/lsdrv-master/lsdrv
-> 
-> PCI [ahci] 00:11.4 SATA controller: Intel Corporation C610/X99 series
-> chipset sSATA Controller [AHCI mode] (rev 05)
-> ├scsi 0:0:0:0 ATA      TOSHIBA HDWE160  {487OK01XFB8G}
-> │└sda 5.46t [8:0] Partitioned (gpt)
-> │ ├sda1 128.00g [8:1] btrfs 'OPT-USR' {649826e5-7406-49fb-ad4a-a35a0077a325}
-> │ │└Mounted as /dev/sda1 @ /opt
-> │ ├sda3 64.00g [8:3] Empty/Unknown
-> │ ├sda4 16.00g [8:4] Empty/Unknown
-> │ └sda5 5.25t [8:5] MD raid1 (0/2) (w/ sdb5) in_sync 'bach:0'
-
-So sda5 has a raid1 on it  ...
-
-> {0e2cb19c-b567-5fcc-2982-c38e81e42a71}
-> │  └md0 5.25t [9:0] MD v1.2 raid1 (2) clean
-
-called md0
-
-> {0e2cb19c:-b567-5f:cc-2982-:c38e81e42a71}
-> │   │               ext4 'HOME' {a6551143-65ab-40ff-82b6-8cc809a1a856}
-> │   └Mounted as /dev/md0 @ /home
-
-and mounted as /home.
-
-> ├scsi 1:0:0:0 ATA      TOSHIBA HDWE160  {487OK01SFB8G}
-> │└sdb 5.46t [8:16] Partitioned (gpt)
-> │ ├sdb1 192.00g [8:17] btrfs 'VAR-TMP' {c1304823-0b3b-4655-bfbb-a7f064ec59f5}
-> │ │└Mounted as /dev/sdb1 @ /var
-> │ ├sdb2 16.00g [8:18] Empty/Unknown
-> │ └sdb5 5.25t [8:21] MD raid1 (1/2) (w/ sda5) in_sync 'bach:0'
-> {0e2cb19c-b567-5fcc-2982-c38e81e42a71}
-> │  └md0 5.25t [9:0] MD v1.2 raid1 (2) clean
-
-and sdb5 is the other half.
-
-> {0e2cb19c:-b567-5f:cc-2982-:c38e81e42a71}
-> │                   ext4 'HOME' {a6551143-65ab-40ff-82b6-8cc809a1a856}
-> ├scsi 2:0:0:0 ATA      HGST HMS5C4040AL {PL1331LAHEZZ5H}
-> │└sdc 3.64t [8:32] Partitioned (gpt)
-> │ ├sdc1 3.20t [8:33] MD raid0 (0/2) (w/ sde1) in_sync 'any:1'
-> {f624aab2-afc1-8758-5c20-d34955b9b36f}
-> │ │└md1 6.40t [9:1] MD v1.0 raid0 (2) clean, 64k Chunk, None (None)
-> None {f624aab2:-afc1-87:58-5c20-:d34955b9b36f}
-> │ │                 xfs 'User' {fe716da2-b515-4fd6-8ea6-f44f48038b78}
-
-This looks promising ... dunno what on earth it thought it was doing, 
-but it's telling me that on sdc1 we have a raid 0, version 1.0, with an 
-xfs on it. Is there any chance your install formatted the new raid? 
-Because if it did your data is probably toast, but if it didn't we might 
-be home and dry.
-
-> │ ├sdc2 320.00g [8:34] ext4 'PHOTOS-B' {4ab1a2c2-dbee-4f4d-b491-8652ea7a24d7}
-> │ └sdc3 65.22g [8:35] ext4 'TEMP' {c18c28d3-dafd-4f1b-aa9f-b7a462139073}
-> └scsi 3:0:0:0 ATA      WDC WDS250G2B0A- {181202806197}
-> └sdd 232.89g [8:48] Partitioned (gpt)
->   ├sdd1 901.00m [8:49] vfat 'BOOT-EFI' {AF1B-15D7}
->   │└Mounted as /dev/sdd1 @ /boot/efi
->   ├sdd2 116.00g [8:50] Partitioned (dos) 'ROOT1'
-> {63e24f52-2f8f-4ad1-a1e6-cb5537efcf6f}
->   │├Mounted as /dev/sdd2 @ /
->   │├Mounted as /dev/sdd2 @ /.snapshots
->   │├Mounted as /dev/sdd2 @ /boot/grub2/i386-pc
->   │├Mounted as /dev/sdd2 @ /boot/grub2/x86_64-efi
->   │├Mounted as /dev/sdd2 @ /srv
->   │├Mounted as /dev/sdd2 @ /usr/local
->   │├Mounted as /dev/sdd2 @ /tmp
->   │└Mounted as /dev/sdd2 @ /root
->   └sdd3 116.01g [8:51] xfs 'ROOT2' {69178c35-15ea-4f04-8f29-bf4f1f6f890a}
->    └Mounted as /dev/sdd3 @ /root2
-> PCI [ahci] 00:1f.2 SATA controller: Intel Corporation C610/X99 series
-> chipset 6-Port SATA Controller [AHCI mode] (rev 05)
-> ├scsi 4:0:0:0 ATA      HGST HMS5C4040AL {PL1331LAHGEP7H}
-> │└sde 3.64t [8:64] Partitioned (gpt)
-> │ ├sde1 3.20t [8:65] MD raid0 (1/2) (w/ sdc1) in_sync 'any:1'
-> {f624aab2-afc1-8758-5c20-d34955b9b36f}
-> │ │└md1 6.40t [9:1] MD v1.0 raid0 (2) clean, 64k Chunk, None (None)
-> None {f624aab2:-afc1-87:58-5c20-:d34955b9b36f}
-> │ │                 xfs 'User' {fe716da2-b515-4fd6-8ea6-f44f48038b78}
-
-And the other half of the raid.
-
-> │ ├sde2 64.00g [8:66] swap {dbd52b6f-fc65-42e9-948b-33d9c3834c3c}
-> │ └sde3 385.22g [8:67] ext4 'PHOTO-A' {c84250ab-6563-4832-a919-632a34486bf1}
-> └scsi 5:0:0:0 HL-DT-ST BD-RE  WH14NS40  {SIK9TH8SE163}
-> └sr0 1.00g [11:0] Empty/Unknown
-> USB [usb-storage] Bus 002 Device 007: ID 05e3:0745 Genesys Logic, Inc.
-> Logilink CR0012 {000000000903}
-> └scsi 10:0:0:0 Generic  STORAGE DEVICE   {000000000503}
-> └sdf 0.00k [8:80] Empty/Unknown
-> USB [usb-storage] Bus 002 Device 008: ID 058f:6387 Alcor Micro Corp.
-> Flash Drive {A3A1458D}
-> └scsi 11:0:0:0 Generic  Flash Disk       {A}
-> └sdg 28.91g [8:96] Partitioned (dos)
->   └sdg1 28.91g [8:97] vfat '32GB' {1D6B-D5DB}
->    └Mounted as /dev/sdg1 @ /run/media/bkorb/32GB
-> 
-> Hmm. Interesting. Dunno what that /dev/sdf thingy is. I only have one
-> thumb drive plugged in and mounted as /dev/sdg1.
-> 
-Can you mount the raid? This just looks funny to me though, so make sure 
-it's read only.
-
-Seeing as it made it v1.0, that means the raid superblock is at the end 
-of the device and will not have done much if any damage ...
-
-It's probably a good idea to create a loopback device and mount it via 
-that because it will protect the filesystem.
-
-Does any of this feel like it's right?
-
-Cheers,
-Wol
+  thanks a lot for the information!  now I understand what happened to
+my disk drives :)
