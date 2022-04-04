@@ -2,75 +2,64 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC40C433EF
-	for <linux-raid@archiver.kernel.org>; Mon,  4 Apr 2022 12:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFAE8C433EF
+	for <linux-raid@archiver.kernel.org>; Mon,  4 Apr 2022 12:54:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346648AbiDDMm5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 4 Apr 2022 08:42:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51576 "EHLO
+        id S1347808AbiDDM4P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 4 Apr 2022 08:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347378AbiDDMmz (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Apr 2022 08:42:55 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DECBE2E689
-        for <linux-raid@vger.kernel.org>; Mon,  4 Apr 2022 05:40:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649076059; x=1680612059;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=6BPFWPkpg3nktGwZ2G0wS6rWo0xej4WmdtCuusxAUB0=;
-  b=BOYIdj/anw6aWigC0TTlmg+INO0GxawcKPnOm/6MmXQrOtVRs/HGswy/
-   njB9/842GQG6EblepbAChX/s6iPQ/buLCS63yyxokbjAoMzTAkGxF4Lg8
-   KHOdlkCkgfA3W3vAEWsimUC0WQKee1wXYmWuOHcioWdSPMP9ZwIY1erEL
-   if2ChPUkqu1t7heP1sMyYuz8v3aFiEP3OpqCLg5pV7UWG0I+jRxrCH+H/
-   /wltL7atS4xviASXTlLjfKMqCYTcBnusKHaGlL4NSS16Y+WGNcXd//e0a
-   gqFZKYw9vqs0JA8BRS5FxZZ1EX71cmzdWjJDNdtqA8B9sBghC+EdRYpdW
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10306"; a="260492375"
-X-IronPort-AV: E=Sophos;i="5.90,234,1643702400"; 
-   d="scan'208";a="260492375"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Apr 2022 05:40:59 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,234,1643702400"; 
-   d="scan'208";a="569365693"
-Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.97])
-  by orsmga008.jf.intel.com with ESMTP; 04 Apr 2022 05:40:58 -0700
-From:   Kinga Tanska <kinga.tanska@intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de
-Subject: [PATCH] util: replace ioctl use with function
-Date:   Mon,  4 Apr 2022 14:45:01 +0200
-Message-Id: <20220404124501.13218-1-kinga.tanska@intel.com>
-X-Mailer: git-send-email 2.26.2
+        with ESMTP id S239535AbiDDM4O (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Apr 2022 08:56:14 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC61C140F2
+        for <linux-raid@vger.kernel.org>; Mon,  4 Apr 2022 05:54:16 -0700 (PDT)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 62BAF61E6478B;
+        Mon,  4 Apr 2022 14:54:13 +0200 (CEST)
+Message-ID: <ee82953f-f156-040b-10b5-ae09f3f1c199@molgen.mpg.de>
+Date:   Mon, 4 Apr 2022 14:54:13 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH] Mdmonitor: Fix segfault and improve logging
+Content-Language: en-US
+To:     Kinga Tanska <kinga.tanska@linux.intel.com>
+References: <20220321123234.28769-1-kinga.tanska@intel.com>
+ <e5502af7-be1c-da7f-af3d-ca36d45e6301@molgen.mpg.de>
+ <9a062f0c-fcea-c543-3a46-05395c747fcd@linux.intel.com>
+ <9eccf3ed-3db3-7ba7-fd8b-fa4273bc0752@molgen.mpg.de>
+ <321885a5-f9c8-f9c2-fab2-2c31ead17b87@linux.intel.com>
+Cc:     Kinga Tanska <kinga.tanska@intel.com>, linux-raid@vger.kernel.org,
+        jes@trained-monkey.org, colyli@suse.de
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <321885a5-f9c8-f9c2-fab2-2c31ead17b87@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Replace using of ioctl calling to get md array info with
-special function prepared to it.
+Dear Kinga,
 
-Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
----
- util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/util.c b/util.c
-index cdf1da24..003b2f86 100644
---- a/util.c
-+++ b/util.c
-@@ -268,7 +268,7 @@ int md_array_active(int fd)
- 		 * GET_ARRAY_INFO doesn't provide access to the proper state
- 		 * information, so fallback to a basic check for raid_disks != 0
- 		 */
--		ret = ioctl(fd, GET_ARRAY_INFO, &array);
-+		ret = md_get_array_info(fd, &array);
- 	}
- 
- 	return !ret;
--- 
-2.26.2
+Am 04.04.22 um 14:39 schrieb Tanska, Kinga:
 
+> I've tried to reproduce it with mdadm 4.1 and mdadm 4.2 and both apps
+>  exit with segmentation fault. This patch is not a fix, it adds
+> checking if device is md array.
+> 
+> It hasn't been checked before in mdmonitor, so segmentation fault
+> should appear.
+Understood, still it’d be nice to have a way to reproduce this. So 
+please elaborate in the commit message, and give more details about your 
+test setup.
+
+
+Kind regards,
+
+Paul
