@@ -2,45 +2,43 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6981CC433EF
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Apr 2022 02:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D60DCC433F5
+	for <linux-raid@archiver.kernel.org>; Tue,  5 Apr 2022 02:36:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229772AbiDECh2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 4 Apr 2022 22:37:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40506 "EHLO
+        id S229731AbiDECio (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 4 Apr 2022 22:38:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229789AbiDEChU (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Apr 2022 22:37:20 -0400
+        with ESMTP id S229787AbiDECii (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 4 Apr 2022 22:38:38 -0400
 Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C996D1F1D0F
-        for <linux-raid@vger.kernel.org>; Mon,  4 Apr 2022 18:34:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1649121344; cv=none; 
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFDA02661ED
+        for <linux-raid@vger.kernel.org>; Mon,  4 Apr 2022 18:38:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1649121668; cv=none; 
         d=zohomail.eu; s=zohoarc; 
-        b=jUjX7/GyunFfGGBSTl0kcby53cK+GKW3VdWqHWSF0sZFrdMXrA2zofAjN4Z6dJ7PZnUjDRCKxdFgx5KOhMg/VTi54iGEv+5fFWpWytS4RA7Jkgj0yKulxTLpelpUhpUYzvoUlkZGt9/snrRcCP2u0bqHsALzyfEzZ7Y/RmbJlyo=
+        b=ZBGEiffNh9p3A2mxnYtFKxii+MHg2SemSJia4QgEfMGggLQQBhsCo6Oq/LDvLwGeDC1jsHc5yqD3C10kfFECYmHjvxiGgR+8YB4r51wo8hTwtmy3NX3F6ZFEtKaYqh+Xeuyu54nRLLkUuF2BVOLD2czKc/SxDzySWgaeUb/jr4M=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-        t=1649121344; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
-        bh=gxVn/VjwOlKkZWVwAL7Jr2wVRXeEJPfiteDUifIMku8=; 
-        b=Co0+hjxdZYFAyNQNzzLsOgAb5lGhcujw6RAXpST4MYCstbrbvtGHbNoIHjOZiz8xQBRzGaSxiNBOTMv1qI0MR7Zb0scw1CdtkS6e2/VxOP9CMBJ7lZhPhpk8poRYQoaQ8BX/uECHH2difSA9d3X3SbMZOfA38HFUrbE/p4qn9J0=
+        t=1649121668; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=7guxjgZKymkCyxbdfaVkqHLIp4bWEG0NyfeIRPn4Ehs=; 
+        b=lKIRPwmcCj4t82f2tvDKI7tYqYI17mSkKht2HvLqjVbjMSEKM/xCXBaGkssHYNF1rs2qLIdhlLi8+UuBV9ZiVH7mI/F3eLMncO+X43FTFtcbOglwFb2lmHE84T8WAhdT2wOsBs5zEzUIuFvo36W/VR9l0DPeT4OtaEfchvgqtec=
 ARC-Authentication-Results: i=1; mx.zohomail.eu;
         spf=pass  smtp.mailfrom=jes@trained-monkey.org;
         dmarc=pass header.from=<jes@trained-monkey.org>
 Received: from [172.30.27.237] (163.114.130.4 [163.114.130.4]) by mx.zoho.eu
-        with SMTPS id 16491213434931.9644866655601163; Tue, 5 Apr 2022 03:15:43 +0200 (CEST)
-Message-ID: <0d697c85-eec0-33be-b69a-7811c0049172@trained-monkey.org>
-Date:   Mon, 4 Apr 2022 21:15:42 -0400
+        with SMTPS id 1649121667688454.9125670769056; Tue, 5 Apr 2022 03:21:07 +0200 (CEST)
+Message-ID: <93089351-2e02-e647-f2ff-d9cfa1a2d85b@trained-monkey.org>
+Date:   Mon, 4 Apr 2022 21:21:06 -0400
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.2.0
-Subject: Re: [PATCH 3/4] mdadm: Update config man regarding default files and
- multi-keyword behavior
+Subject: Re: [PATCH 1/2] Create, Build: use default_layout()
 Content-Language: en-US
-To:     Lukasz Florczak <lukasz.florczak@linux.intel.com>,
-        linux-raid@vger.kernel.org
-Cc:     colyli@suse.de, pmenzel@molgen.mpg.de
-References: <20220318082607.675665-1-lukasz.florczak@linux.intel.com>
- <20220318082607.675665-4-lukasz.florczak@linux.intel.com>
+To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Cc:     linux-raid@vger.kernel.org
+References: <20220120121833.16055-1-mariusz.tkaczyk@linux.intel.com>
+ <20220120121833.16055-2-mariusz.tkaczyk@linux.intel.com>
 From:   Jes Sorensen <jes@trained-monkey.org>
-In-Reply-To: <20220318082607.675665-4-lukasz.florczak@linux.intel.com>
+In-Reply-To: <20220120121833.16055-2-mariusz.tkaczyk@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-ZohoMailClient: External
@@ -48,23 +46,21 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 3/18/22 04:26, Lukasz Florczak wrote:
-> Simplify default and alternative config file and directory location references
-> from mdadm(8) as references to mdadm.conf(5). Add FILE section in config man
-> and explain order and conditions in which default and alternative config files
-> and directories are used.
+On 1/20/22 07:18, Mariusz Tkaczyk wrote:
+> This code is duplicated for Build mode so make default_layout() extern
+> and use it. Simplify the function structure.
 > 
-> Update config man behavior regarding parsing order when multiple keywords/config
-> files are involved.
+> It introduced change for Build mode, now for raid0 RAID0_ORIG_LAYOUT
+> will be returned same as for Create.
 > 
-> Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>
+> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
 > ---
->  mdadm.8.in      | 30 +++++++++--------------
->  mdadm.conf.5.in | 65 ++++++++++++++++++++++++++++++++++++++++++++-----
->  2 files changed, 71 insertions(+), 24 deletions(-)
+>  Build.c  | 23 +------------------
+>  Create.c | 67 ++++++++++++++++++++++++++++++++++----------------------
+>  mdadm.h  |  1 +
+>  3 files changed, 43 insertions(+), 48 deletions(-)
 
-
-Applied!
+Looks good, applied!
 
 Thanks,
 Jes
