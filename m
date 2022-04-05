@@ -2,212 +2,85 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B68C433F5
-	for <linux-raid@archiver.kernel.org>; Tue,  5 Apr 2022 14:59:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63E8DC433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 01:26:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231511AbiDEPAt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Tue, 5 Apr 2022 11:00:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53344 "EHLO
+        id S1349476AbiDFBWW (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 5 Apr 2022 21:22:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354694AbiDENRa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Apr 2022 09:17:30 -0400
-Received: from mga06.intel.com (mga06.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C94AB130C12
-        for <linux-raid@vger.kernel.org>; Tue,  5 Apr 2022 05:22:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649161321; x=1680697321;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=ZnOstJtjyZAyi15BWyku+vhYPAFYrmphCVjkgoGFz6U=;
-  b=RQZ0OUM+DZ1DGQy1cWQZx3VF/apoTJvJTO/4yl0VAUpV7OPfUDRBDwYs
-   h27acV2dODY14OMBV4S4mn+oJtBUgAU46fJDNySZ/ZT5ge6oYy4H9+1n+
-   Z6wpnfhVuH0Y6koZ/JsiSP/6QAluzMN2lyGBNwVm6rFT0/DZat9A0hD6v
-   q8zVqZ/76b43Mz7RD4gf7M1hV3TjQ+D8qnuIMabf1KRF3HjRNTrFvnwnG
-   Nzuac7cqBiage9fcxV3patqy1L3k0haUVFNYq0H7cNdcveLv+zWVo3zLL
-   xBhZNo/TCkQBnoinCzIYFzOwEX3tYTgHgOP5fUuuvchcIrlWp03agcv4b
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10307"; a="321429806"
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="321429806"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 05:22:00 -0700
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="549034745"
-Received: from ktanska-mobl.ger.corp.intel.com (HELO [10.252.43.42]) ([10.252.43.42])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 05:21:59 -0700
-Message-ID: <1f34cd39-c9ee-ee48-6133-67f5abf3e9b1@linux.intel.com>
-Date:   Tue, 5 Apr 2022 14:21:57 +0200
+        with ESMTP id S1450283AbiDEWZA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 5 Apr 2022 18:25:00 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FB1B1788E6
+        for <linux-raid@vger.kernel.org>; Tue,  5 Apr 2022 14:24:40 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 7F5461F37D;
+        Tue,  5 Apr 2022 21:24:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1649193846; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=mZO2Hf6or89F8u3EhDa2AP1VOa0DNuSXf5xCG9Cgeso=;
+        b=V2vla/fHA/xcBMlOOIvMfEnwuS6JQGWrloVp7QqZ7SK14dJWjwYlp7mQVOpN8DRzfJ1hgj
+        +HQEwi8z94xR+nL2+asEu0Kfl6SBxb+CBfSSJTuxEaIBxg5+2tLvccNiyLqLJAEXZg1+Ut
+        sXaiLD6/wWyiTDZr65lSscmuk542+Sc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1649193846;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=mZO2Hf6or89F8u3EhDa2AP1VOa0DNuSXf5xCG9Cgeso=;
+        b=+rH0TUaAoW7IGCsh9Pt3N3Mf8EEaKGduTAIUdGOSuhzqWLcj6LzvLiWHvz54gSFWD83Vww
+        Ekzd7vWztP2OV3Cw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AF5B213A04;
+        Tue,  5 Apr 2022 21:24:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Cm5KG3WzTGLPAQAAMHmgww
+        (envelope-from <neilb@suse.de>); Tue, 05 Apr 2022 21:24:05 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH] Monitor: use devname as char array instead of pointer
-To:     Jes Sorensen <jes@trained-monkey.org>, Coly Li <colyli@suse.de>,
-        Kinga Tanska <kinga.tanska@intel.com>
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Pascal Hambourg" <pascal@plouf.fr.eu.org>
 Cc:     linux-raid@vger.kernel.org
-References: <20220209085628.11418-1-kinga.tanska@intel.com>
- <ade5153b-d07a-9c26-5c8e-12b8356f61b4@suse.de>
- <517ddb46-2666-f616-ed56-6f046ef3824e@trained-monkey.org>
-From:   "Tanska, Kinga" <kinga.tanska@linux.intel.com>
-In-Reply-To: <517ddb46-2666-f616-ed56-6f046ef3824e@trained-monkey.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: Re: RAID0 layout if strip_zone[1].nb_dev=1 ?
+In-reply-to: <7fb90df2-8913-717f-7078-550d59c94054@plouf.fr.eu.org>
+References: <7fb90df2-8913-717f-7078-550d59c94054@plouf.fr.eu.org>
+Date:   Wed, 06 Apr 2022 07:24:02 +1000
+Message-id: <164919384282.10985.10644950304504061908@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
-
-I will send correction in next patchset. I didn't include terminating null
-byte '\0' to size in snprintf function, which can cause memleaks.
-Also specific location of incorrect usage of strcpy will be pointed out 
-in commit message.
-
-Regards,
-Kinga
-
-On 4/4/2022 3:54 PM, Jes Sorensen wrote:
-
-On 3/19/22 11:42, Coly Li wrote:
-
-> On 2/9/22 4:56 PM, Kinga Tanska wrote:
->> Device name wasn't filled properly due to incorrect use of strcpy.
-> Could you point out the specific location for improper strcpy?
->
->
->> Instead pointer, devname with fixed size is used and safer string
->> functions are propagated.
->>
->> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
->> ---
->>    Monitor.c | 30 +++++++++++-------------------
->>    1 file changed, 11 insertions(+), 19 deletions(-)
->>
->> diff --git a/Monitor.c b/Monitor.c
->> index 30c031a2..d02344ec 100644
->> --- a/Monitor.c
->> +++ b/Monitor.c
->> @@ -34,8 +34,8 @@
->>    #endif
->>      struct state {
->> -    char *devname;
->> -    char devnm[32];    /* to sync with mdstat info */
->> +    char devname[MD_NAME_MAX + 8];
->> +    char devnm[MD_NAME_MAX];    /* to sync with mdstat info */
->>        unsigned int utime;
->>        int err;
->>        char *spare_group;
->> @@ -46,7 +46,7 @@ struct state {
->>        int devstate[MAX_DISKS];
->>        dev_t devid[MAX_DISKS];
->>        int percent;
->> -    char parent_devnm[32]; /* For subarray, devnm of parent.
->> +    char parent_devnm[MD_NAME_MAX]; /* For subarray, devnm of parent.
->>                    * For others, ""
->>                    */
->>        struct supertype *metadata;
->> @@ -184,13 +184,7 @@ int Monitor(struct mddev_dev *devlist,
->>                if (strcasecmp(mdlist->devname, "<ignore>") == 0)
->>                    continue;
->>                st = xcalloc(1, sizeof *st);
->> -            if (mdlist->devname[0] == '/')
->> -                st->devname = xstrdup(mdlist->devname);
->> -            else {
->> -                st->devname = xmalloc(8+strlen(mdlist->devname)+1);
->> -                strcpy(strcpy(st->devname, "/dev/md/"),
->> -                       mdlist->devname);
->> -            }
->> +            snprintf(st->devname, MD_NAME_MAX + 8, "/dev/md/%s",
->> basename(mdlist->devname));
-> I feel the above change is incorrect, the tailing '\0' of the string
-> might be cut by your change.
->
->
->>                st->next = statelist;
->>                st->devnm[0] = 0;
->>                st->percent = RESYNC_UNKNOWN;
->> @@ -206,7 +200,7 @@ int Monitor(struct mddev_dev *devlist,
->>            for (dv = devlist; dv; dv = dv->next) {
->>                struct state *st = xcalloc(1, sizeof *st);
->>                mdlist = conf_get_ident(dv->devname);
->> -            st->devname = xstrdup(dv->devname);
->> +            snprintf(st->devname, MD_NAME_MAX + 8, "%s", dv->devname);
->>                st->next = statelist;
->>                st->devnm[0] = 0;
->>                st->percent = RESYNC_UNKNOWN;
->> @@ -289,7 +283,6 @@ int Monitor(struct mddev_dev *devlist,
->>            for (stp = &statelist; (st = *stp) != NULL; ) {
->>                if (st->from_auto && st->err > 5) {
->>                    *stp = st->next;
->> -                free(st->devname);
->>                    free(st->spare_group);
->>                    free(st);
->>                } else
->> @@ -540,7 +533,7 @@ static int check_array(struct state *st, struct
->> mdstat_ent *mdstat,
->>            goto disappeared;
->>          if (st->devnm[0] == 0)
->> -        strcpy(st->devnm, fd2devnm(fd));
->> +        snprintf(st->devnm, MD_NAME_MAX, "%s", fd2devnm(fd));
->>          for (mse2 = mdstat; mse2; mse2 = mse2->next)
->>            if (strcmp(mse2->devnm, st->devnm) == 0) {
->> @@ -670,7 +663,7 @@ static int check_array(struct state *st, struct
->> mdstat_ent *mdstat,
->>            strncmp(mse->metadata_version, "external:", 9) == 0 &&
->>            is_subarray(mse->metadata_version+9)) {
->>            char *sl;
->> -        strcpy(st->parent_devnm, mse->metadata_version + 10);
->> +        snprintf(st->parent_devnm, MD_NAME_MAX, "%s",
->> mse->metadata_version + 10);
->>            sl = strchr(st->parent_devnm, '/');
->>            if (sl)
->>                *sl = 0;
->> @@ -758,14 +751,13 @@ static int add_new_arrays(struct mdstat_ent
->> *mdstat, struct state **statelist,
->>                    continue;
->>                }
->>    -            st->devname = xstrdup(name);
->> +            snprintf(st->devname, MD_NAME_MAX + 8, "%s", name);
->>                if ((fd = open(st->devname, O_RDONLY)) < 0 ||
->>                    md_get_array_info(fd, &array) < 0) {
->>                    /* no such array */
->>                    if (fd >= 0)
->>                        close(fd);
->>                    put_md_name(st->devname);
->> -                free(st->devname);
->>                    if (st->metadata) {
->>                        st->metadata->ss->free_super(st->metadata);
->>                        free(st->metadata);
->> @@ -777,7 +769,7 @@ static int add_new_arrays(struct mdstat_ent
->> *mdstat, struct state **statelist,
->>                st->next = *statelist;
->>                st->err = 1;
->>                st->from_auto = 1;
->> -            strcpy(st->devnm, mse->devnm);
->> +            snprintf(st->devnm, MD_NAME_MAX, "%s", mse->devnm);
->>                st->percent = RESYNC_UNKNOWN;
->>                st->expected_spares = -1;
->>                if (mse->metadata_version &&
->> @@ -785,8 +777,8 @@ static int add_new_arrays(struct mdstat_ent
->> *mdstat, struct state **statelist,
->>                        "external:", 9) == 0 &&
->>                    is_subarray(mse->metadata_version+9)) {
->>                    char *sl;
->> -                strcpy(st->parent_devnm,
->> -                    mse->metadata_version+10);
->> +                snprintf(st->parent_devnm, MD_NAME_MAX,
->> +                     "%s", mse->metadata_version + 10);
->>                    sl = strchr(st->parent_devnm, '/');
->>                    *sl = 0;
->>                } else
-> With your change, the tailing '\0' for dev name might be cut. Could you
-> please check whether it may introduce potential memleak ?
-
-Kinga,
-
-Any update on this?
+On Wed, 06 Apr 2022, Pascal Hambourg wrote:
+> [Please Cc me, I am not subscribed to the list]
+> 
+> Hello,
+> 
+> This is a question about original/alternate layout enforcement for RAID0 
+> arrays with members of different sizes introduced by commits
+> c84a1372df929033cb1a0441fb57bd3932f39ac9 ("md/raid0: avoid RAID0 data 
+> corruption due to layout confusion.)" and
+> 33f2c35a54dfd75ad0e7e86918dcbe4de799a56c ("md: add feature flag 
+> MD_FEATURE_RAID0_LAYOUT").
+> 
+> The layout is irrelevant if all members have the same size so the array 
+> has only one zone. But isn't it also irrelevant if the array has two 
+> zones and the second zone has only one device, for example if the array 
+> has two members of different sizes ?
+> 
+Yes.
 
 Thanks,
-Jes
-
-
+NeilBrown
