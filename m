@@ -2,113 +2,67 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A18C433FE
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 19:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE91C43217
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 21:12:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbiDFTy0 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Apr 2022 15:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53220 "EHLO
+        id S233558AbiDFVN4 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Apr 2022 17:13:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233135AbiDFTw2 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 15:52:28 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 607792CE209;
-        Wed,  6 Apr 2022 10:28:30 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id b21so5307724lfb.5;
-        Wed, 06 Apr 2022 10:28:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=WJLYFFwKJzu0AzBejzceyC93Fh4AhvIk3A/MNZXzKIU=;
-        b=nHoFYmIVcbUdYBuRBczLdRhO5AcYZ6GHHFtKpS9G1n5vNIpBGLipmKmQ40hQnwfBEK
-         9YcCx5HGe8T4NG1UPywpqZKblDsiU8Uam6EvTYaei53mUEV7gX/X6QEIMPDVNdTe1RsC
-         lSqUADllCjDlRJ3aqfDHj4gGsZ5WvTndElsOvm3ukXbURNWbOjm9tS3FKy9TW5JIte+s
-         iqchodtdlLO+0839AsHapTHL+am4rmkQFqKuweIuQiuTq0iA/dxkHoEkiJl793SmXbAL
-         d6FIVbXVTWtg6j4nPkHK8I7vb1+rBuBMN5T4ZVmgoa+qulAgS9/S0AV92hnwAdWJS/in
-         gNUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=WJLYFFwKJzu0AzBejzceyC93Fh4AhvIk3A/MNZXzKIU=;
-        b=RQhuh1VW2nh/dlZLeIhr9KmcpN0aPNEI+bySuhv/r4F71i1vjkfPP0l4zqy/umh7ki
-         L9hYrQAPZxIhhKyH29OI8SFZnOzKwIPrEK77UeJ14ahP0USQFU+Jv4F8GNGn4dBvfyDS
-         M9O+cFoN2t50uRNJVSbqaxsK1Val6vQbikXT/G6UharYbRtqMjRsMez2j3/syfoSZMsB
-         hwYPzdJqWT4l5fLkKOSZa3DXw/6Ks2UBeCXjV/0TMUooggjoq8C91XLr5HDzRIwGLAby
-         9oCZ+grhbBjh5zMNvy44LIs8hprwKhM6P8l1jlGsd67WJ6VRm0H7aZlPuXd4nlJD4IhT
-         ojbw==
-X-Gm-Message-State: AOAM533qJRZDilB+U+foSwg4+93mGooPkjZ6clWyf1Cx4YsYOKos1fbN
-        aKI5/NVj9Vxyc2bkKGTZSY6y8i3IZiG7RMTSTnnWKJBEjIqw4w==
-X-Google-Smtp-Source: ABdhPJxvT7YhfWN8QbCVz4oydCsKwT/zbXQ5089WXaSZlqzdjbFflulVc086iBmKtewP4KtbC66vp+jW8qrWjcRFTmg=
-X-Received: by 2002:ac2:5f4d:0:b0:43e:da3e:4529 with SMTP id
- 13-20020ac25f4d000000b0043eda3e4529mr6768924lfz.627.1649266108188; Wed, 06
- Apr 2022 10:28:28 -0700 (PDT)
+        with ESMTP id S236043AbiDFVMu (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 17:12:50 -0400
+Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4DF317ABB0
+        for <linux-raid@vger.kernel.org>; Wed,  6 Apr 2022 12:57:13 -0700 (PDT)
+Received: from host86-155-180-61.range86-155.btcentralplus.com ([86.155.180.61] helo=[192.168.1.218])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1ncBmB-0001MO-AO;
+        Wed, 06 Apr 2022 20:57:11 +0100
+Message-ID: <b9f58b50-3f79-4a81-2f47-0f23a6958e10@youngman.org.uk>
+Date:   Wed, 6 Apr 2022 20:57:10 +0100
 MIME-Version: 1.0
-References: <20220406060516.409838-1-hch@lst.de> <20220406060516.409838-24-hch@lst.de>
-In-Reply-To: <20220406060516.409838-24-hch@lst.de>
-From:   Ryusuke Konishi <konishi.ryusuke@gmail.com>
-Date:   Thu, 7 Apr 2022 02:28:15 +0900
-Message-ID: <CAKFNMokGOma3pvHdEsnsjuKgW+jpYX9zx8fWwJWyeKuCpKz-YQ@mail.gmail.com>
-Subject: Re: [PATCH 23/27] block: add a bdev_max_discard_sectors helper
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        device-mapper development <dm-devel@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
-        linux-nilfs <linux-nilfs@vger.kernel.org>, ntfs3@lists.linux.dev,
-        ocfs2-devel@oss.oracle.com, Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: RAID 1 to RAID 5 failure
+Content-Language: en-GB
+To:     Jorge Nunes <jorgebnunes@gmail.com>,
+        Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc:     Linux Raid <linux-raid@vger.kernel.org>
+References: <CANDfL1au6kdEkR3bmLAHTdGV-Rb==8Jy1ZnwNFjvjNq7drC1XA@mail.gmail.com>
+ <987997234.3307867.1649118543055.JavaMail.zimbra@karlsbakk.net>
+ <336816279.3605676.1649150230084.JavaMail.zimbra@karlsbakk.net>
+ <CANDfL1YiKq9aeUsrmdZyLb5Fy98Tifjcr_zZJY6a+LxyqKYKkA@mail.gmail.com>
+From:   Wols Lists <antlists@youngman.org.uk>
+In-Reply-To: <CANDfL1YiKq9aeUsrmdZyLb5Fy98Tifjcr_zZJY6a+LxyqKYKkA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, Apr 6, 2022 at 11:05 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> Add a helper to query the number of sectors support per each discard bio
-> based on the block device and use this helper to stop various places from
-> poking into the request_queue to see if discard is supported and if so how
-> much.  This mirrors what is done e.g. for write zeroes as well.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-...
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index 16e775bcf4a7c..7d510e4231713 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -829,9 +829,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
->  }
->
->  /*
-> - * Check if the underlying struct block_device request_queue supports
-> - * the QUEUE_FLAG_DISCARD bit for UNMAP/WRITE_SAME in SCSI + TRIM
-> - * in ATA and we need to set TPE=1
+On 05/04/2022 11:50, Jorge Nunes wrote:
+> Hi roy.
+> 
+> Thank you for your time.
+> 
+> Now, I'm doing a photorec on /dev/sda and /dev/sdd and I get better
+> results on (some) of the data recovered if I do it on top of /dev/md0.
+> I don't care anymore about recovering the filesystem, I just want to
+> maximize the quality of data recovered with photorec.
 
-> + * Check if the underlying struct block_device request_queue supports disard.
->   */
+Once you've recovered everything you can, if no-one else has chimed in, 
+do try shrinking it back to a 2-disk raid-5. It SHOULD restore your 
+original filesystem. You've then just got to find out where it starts - 
+what filesystem was it?
 
-Here was a typo:
+If it's an ext4 there's probably a signature which will tell you where 
+it starts. Then somebody should be able to tell you how to mount it and 
+back it up properly ...
 
- s/disard/discard/
+I'm sure there will be clues to other file systems, ask on your distro 
+list for more information - the more people who see a request for help, 
+the more likely you are to get some.
 
-On Thu, Apr 7, 2022 at 12:19 AM Andreas Gruenbacher <agruenba@redhat.com> wrote:
-> If I'm misreading things, could you please document that
-> bdev_max_discard_sectors() != 0 implies that discard is supported?
-
-I got the same impression.   Checking the discard support with
-bdev_max_discard_sectors() != 0 seems a bit unclear than before.
-
-Thanks,
-Ryusuke Konishi
+Cheers,
+Wol
