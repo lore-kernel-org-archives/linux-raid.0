@@ -2,151 +2,142 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC1CC4332F
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 09:28:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14CB0C433FE
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 10:06:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229718AbiDFJaC (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:30:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57710 "EHLO
+        id S242304AbiDFKIM (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Apr 2022 06:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1579549AbiDFJUa (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:20:30 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8747B493CEC;
-        Tue,  5 Apr 2022 23:12:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=oBOOfc3iQHyh4s/28CPoA+VriGqSgcKurZz21BM76xw=; b=pJCGiZx3jyaVpZeZ0r9wUwDapM
-        vnq8sVI2OmDjjjAlFeiXpQpXHd3qLUTQmrO2SbOe0V6Khalibg7qRuv2CX/PmXjL37DUcmx7RyXUD
-        uqV0VALE0g88DIoHQ8FOht85xvAYgQtSSQkYwAbHZrJs1DJK9oJoVWzqXmfVBMdHkAXiYPHbSqsOm
-        JRH353S+zCB5cxULSv0TJdyD4SZcedhDbR4o7iLNacPeClM4cp0ji0qL5BFynmSG+uTd35rxhyItY
-        UxPsxFWrFNYMOUR5XuvZyJCMiOjiUFIHRMbQ3DBI8Pg1KPplQ7VNfvN9RWt3m4kjFOi/RjGHDlxuI
-        e40KmP4g==;
-Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyuA-003zHx-LZ; Wed, 06 Apr 2022 06:12:35 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Subject: [PATCH 1/5] btrfs: simplify ->flush_bio handling
-Date:   Wed,  6 Apr 2022 08:12:24 +0200
-Message-Id: <20220406061228.410163-2-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220406061228.410163-1-hch@lst.de>
-References: <20220406061228.410163-1-hch@lst.de>
+        with ESMTP id S1345694AbiDFKG6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 06:06:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C07A167D6
+        for <linux-raid@vger.kernel.org>; Tue,  5 Apr 2022 23:35:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1649226932;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rm5ZcYRG9yo1Jj2BdA6/avZk1CyKfinSMrTDramV4ec=;
+        b=egeXnP1hYD9pENenRHMylEl7lLf8zVt6PeUtd5m2TvzNfYqXd2HQSOGGDW/HwENk7tMa2b
+        CmcT4vbvNh+ey3xwoEHLG4K0pMNAtnT6rXaBsk4K0/9JKy6xWJnB0yb3pK15ll8OyncVvI
+        ONETh4EQfYE3MCFSxRbA/hd7XaUCzrc=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-529-j-HBeg_mPoeOuD6Pod620g-1; Wed, 06 Apr 2022 02:35:31 -0400
+X-MC-Unique: j-HBeg_mPoeOuD6Pod620g-1
+Received: by mail-ej1-f72.google.com with SMTP id sd5-20020a1709076e0500b006e6e277d2b4so645002ejc.14
+        for <linux-raid@vger.kernel.org>; Tue, 05 Apr 2022 23:35:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=rm5ZcYRG9yo1Jj2BdA6/avZk1CyKfinSMrTDramV4ec=;
+        b=10UHy/R2zzT9xir4g9Zo3xigEAkgR7xEvh1yFN1iO5IXZjrxXZMpPH8wgPRLv/lc+B
+         F5e+dr9Z5O553Wc3FOnurq96jVnLHcFuD1MHLhrn7WQr4n51EEJKqGIX56fe5Z1UyA3t
+         QdYkWQrX/NzJKBNGjKFkCMd7JjRwZZKMvmCpdYAsdBvCd42sjUdTYFVRISvrWLe9sAS7
+         JlRkB6ebUpuIpL11YCm1WOwgXRGu+PytHP+IoNbnyyhXBOuXrwJStkQPVAeFN1QcmNhB
+         O57BIPR8EpwSA3aFv/UtDAzFKPO/MNu/NMExQXv28HpwqRMbHpG7c/aP6IgMe2Iu34nv
+         L5EQ==
+X-Gm-Message-State: AOAM533ZJ6pVKAleDhXyHy1Zi5KZxMNFvJ+Lfu6IGoph+XpX9F5KCQkN
+        wg0o1jYdLT5rl935hjx/J/r7OTTMUq5kae+DnsulGu5zAu7czB1OREJooqia9J6+rhuFmxxxQ6O
+        f1Hl3eNTg+lhndZ/BTCwBj9bVGxj9en8/GiVLpg==
+X-Received: by 2002:a17:907:d02:b0:6e0:4f1d:7ab1 with SMTP id gn2-20020a1709070d0200b006e04f1d7ab1mr6810601ejc.716.1649226929843;
+        Tue, 05 Apr 2022 23:35:29 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwdpv7VeUVoNDX0dsrhvNzzqQc60bqDcgPlfIZdV+awoCOlx5y5acJnndUmrhc5hpSPz/tSIBZWj8F01Mbcpk8=
+X-Received: by 2002:a17:907:d02:b0:6e0:4f1d:7ab1 with SMTP id
+ gn2-20020a1709070d0200b006e04f1d7ab1mr6810589ejc.716.1649226929634; Tue, 05
+ Apr 2022 23:35:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20220215133415.4138-1-colyli@suse.de>
+In-Reply-To: <20220215133415.4138-1-colyli@suse.de>
+From:   Xiao Ni <xni@redhat.com>
+Date:   Wed, 6 Apr 2022 14:36:13 +0800
+Message-ID: <CALTww28aKNSAj9a7kyYxPEJgUMRA5f0DGjc=X-SrRY5c5p6jyQ@mail.gmail.com>
+Subject: Re: [PATCH] mdadm/systemd: remove KillMode=none from service file
+To:     Coly Li <colyli@suse.de>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Benjamin Brunner <bbrunner@suse.com>,
+        Franck Bui <fbui@suse.de>,
+        Jes Sorensen <jes@trained-monkey.org>,
+        Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>,
+        Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Use and embedded bios that is initialized when used instead of
-bio_kmalloc plus bio_reset.
+Hi Jes
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: David Sterba <dsterba@suse.com>
----
- fs/btrfs/disk-io.c |  8 +++++---
- fs/btrfs/volumes.c | 11 -----------
- fs/btrfs/volumes.h |  4 ++--
- 3 files changed, 7 insertions(+), 16 deletions(-)
+Could you merge this patch.
 
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index b30309f187cf0..51f4cdf6bcaea 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -4225,6 +4225,7 @@ static int wait_dev_supers(struct btrfs_device *device, int max_mirrors)
-  */
- static void btrfs_end_empty_barrier(struct bio *bio)
- {
-+	bio_uninit(bio);
- 	complete(bio->bi_private);
- }
- 
-@@ -4234,7 +4235,7 @@ static void btrfs_end_empty_barrier(struct bio *bio)
-  */
- static void write_dev_flush(struct btrfs_device *device)
- {
--	struct bio *bio = device->flush_bio;
-+	struct bio *bio = &device->flush_bio;
- 
- #ifndef CONFIG_BTRFS_FS_CHECK_INTEGRITY
- 	/*
-@@ -4252,7 +4253,8 @@ static void write_dev_flush(struct btrfs_device *device)
- 		return;
- #endif
- 
--	bio_reset(bio, device->bdev, REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH);
-+	bio_init(bio, device->bdev, NULL, 0,
-+		 REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH);
- 	bio->bi_end_io = btrfs_end_empty_barrier;
- 	init_completion(&device->flush_wait);
- 	bio->bi_private = &device->flush_wait;
-@@ -4266,7 +4268,7 @@ static void write_dev_flush(struct btrfs_device *device)
-  */
- static blk_status_t wait_dev_flush(struct btrfs_device *device)
- {
--	struct bio *bio = device->flush_bio;
-+	struct bio *bio = &device->flush_bio;
- 
- 	if (!test_bit(BTRFS_DEV_STATE_FLUSH_SENT, &device->dev_state))
- 		return BLK_STS_OK;
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index 1be7cb2f955fc..00517239b5c01 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -405,7 +405,6 @@ void btrfs_free_device(struct btrfs_device *device)
- 	WARN_ON(!list_empty(&device->post_commit_list));
- 	rcu_string_free(device->name);
- 	extent_io_tree_release(&device->alloc_state);
--	bio_put(device->flush_bio);
- 	btrfs_destroy_dev_zone_info(device);
- 	kfree(device);
- }
-@@ -6956,16 +6955,6 @@ struct btrfs_device *btrfs_alloc_device(struct btrfs_fs_info *fs_info,
- 	if (!dev)
- 		return ERR_PTR(-ENOMEM);
- 
--	/*
--	 * Preallocate a bio that's always going to be used for flushing device
--	 * barriers and matches the device lifespan
--	 */
--	dev->flush_bio = bio_kmalloc(GFP_KERNEL, 0);
--	if (!dev->flush_bio) {
--		kfree(dev);
--		return ERR_PTR(-ENOMEM);
--	}
--
- 	INIT_LIST_HEAD(&dev->dev_list);
- 	INIT_LIST_HEAD(&dev->dev_alloc_list);
- 	INIT_LIST_HEAD(&dev->post_commit_list);
-diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
-index bd297f23d19e7..628c9af894749 100644
---- a/fs/btrfs/volumes.h
-+++ b/fs/btrfs/volumes.h
-@@ -121,8 +121,8 @@ struct btrfs_device {
- 	/* bytes used on the current transaction */
- 	u64 commit_bytes_used;
- 
--	/* for sending down flush barriers */
--	struct bio *flush_bio;
-+	/* Bio used for flushing device barriers */
-+	struct bio flush_bio;
- 	struct completion flush_wait;
- 
- 	/* per-device scrub information */
--- 
-2.30.2
+On Tue, Feb 15, 2022 at 9:34 PM Coly Li <colyli@suse.de> wrote:
+>
+> For mdadm's systemd configuration, current systemd KillMode is "none" in
+> following service files,
+> - mdadm-grow-continue@.service
+> - mdmon@.service
+>
+> This "none" mode is strongly againsted by systemd developers (see man 5
+> systemd.kill for "KillMode=" section), and is considering to remove in
+> future systemd version.
+>
+> As systemd developer explained in disuccsion, the systemd kill process
+> is,
+> 1. send the signal specified by KillSignal= to the list of processes (if
+>    any), TERM is the default
+> 2. wait until either the target of process(es) exit or a timeout expires
+> 3. if the timeout expires send the signal specified by FinalKillSignal=,
+>    KILL is the default
+>
+> For "control-group", all remaining processes will receive the SIGTERM
+> signal (by default) and if there are still processes after a period f
+> time, they will get the SIGKILL signal.
+>
+> For "mixed", only the main process will receive the SIGTERM signal, and
+> if there are still processes after a period of time, all remaining
+> processes (including the main one) will receive the SIGKILL signal.
+>
+> From the above comment, currently KillMode=control-group is a proper
+> kill mode. Since control-gropu is the default kill mode, the fix can be
+> simply removing KillMode=none line from the service file, then the
+> default mode will take effect.
+>
+> Signed-off-by: Coly Li <colyli@suse.de>
+> Cc: Benjamin Brunner <bbrunner@suse.com>
+> Cc: Franck Bui <fbui@suse.de>
+> Cc: Jes Sorensen <jes@trained-monkey.org>
+> Cc: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> Cc: Neil Brown <neilb@suse.de>
+> Cc: Xiao Ni <xni@redhat.com>
+> ---
+>  systemd/mdadm-grow-continue@.service | 1 -
+>  systemd/mdmon@.service               | 1 -
+>  2 files changed, 2 deletions(-)
+>
+> diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-continue@.service
+> index 5c667d2..9fdc8ec 100644
+> --- a/systemd/mdadm-grow-continue@.service
+> +++ b/systemd/mdadm-grow-continue@.service
+> @@ -14,4 +14,3 @@ ExecStart=BINDIR/mdadm --grow --continue /dev/%I
+>  StandardInput=null
+>  StandardOutput=null
+>  StandardError=null
+> -KillMode=none
+> diff --git a/systemd/mdmon@.service b/systemd/mdmon@.service
+> index 85a3a7c..7753395 100644
+> --- a/systemd/mdmon@.service
+> +++ b/systemd/mdmon@.service
+> @@ -25,4 +25,3 @@ Type=forking
+>  # it out) and systemd will remove it when transitioning from
+>  # initramfs to rootfs.
+>  #PIDFile=/run/mdadm/%I.pid
+> -KillMode=none
+> --
+> 2.31.1
+>
+
+Acked-by: Xiao Ni <xni@redhat.com>
 
