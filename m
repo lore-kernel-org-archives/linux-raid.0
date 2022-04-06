@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93EA9C3525B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC45C46467
 	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 09:28:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1441993AbiDFJ2G (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:28:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57850 "EHLO
+        id S1442943AbiDFJ2K (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:28:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1580556AbiDFJVA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:21:00 -0400
+        with ESMTP id S1579875AbiDFJUm (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:20:42 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F70E4BEF33;
-        Tue,  5 Apr 2022 23:12:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4228F493CF6;
+        Tue,  5 Apr 2022 23:12:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=WNO6sTXUX6Lx7qkV5Fa2+br/k0Bo8EgFlPApwDJnToY=; b=xn6wfwtVXlctp/6je7N/z3ay9E
-        vGgbs23+aruJ8Ua5VzorhXNI4nQMolw+5pKtcwBtlsPC54vTW3zS5Q3vVEOmi7hKNAeRnjCP5S2oc
-        MdDvUsYPr0xq+wTKucFCjIxAE2E0ovjCPpwm1eh2GygBnaD4y9og20yZkzsGTMXU5HfLXABk971aR
-        Hdpb4uVi+dtKTlTRcn2LAafiR1urZ/VfKUkW7R7a6J/8GstZI5Jz5EZ5CIp2kNLxmJRI4H15ddcHA
-        0hOoIrQx8+/15ngTv3AMezRv8D04WX+GJCeB5To1CSL5+vtqbrpg3UdV9n/ChPELmDeYtNeQueOc4
-        OCzyTuew==;
+        bh=VAc1SDe4gjp1IeSSzcV0Im0HYJaPZbBGhfAm1TWpBFw=; b=Vx9zBRc9mFA8+LncYvFBjDM/Zb
+        pbcSroZVNHizo8ag1zgWczJkPwKyKrQV0Ddx6EtdqvoGmN3ZLUsdLKTvi8QUvBrGPji55y+TUibqi
+        zyo3CCB6cpnNSwb7pmnPjpZLbfI+B4eUtQGJWZq/5pEMe3rKUBPsxd5x/+cxg3WaQbqwyNjJEdwOv
+        wwzXFbniePin6IMVNBsd2AtdfZYr63VsrGFltkW81NlLLVM1vcyriYiHfwMSFTiiKxwjpPqx/tka1
+        AeQtcSuZloD2zhVzVK5deQgejH67DXoe5LPb6Dlnskg8Cwr4FIv0XDPOAN09vQpBnQ8QmlfUg1UAv
+        3CHBg+qg==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbyuQ-003zQR-Ag; Wed, 06 Apr 2022 06:12:51 +0000
+        id 1nbyuE-003zKG-M9; Wed, 06 Apr 2022 06:12:39 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
@@ -39,9 +39,9 @@ Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
         linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org,
         linux-raid@vger.kernel.org, target-devel@vger.kernel.org,
         linux-btrfs@vger.kernel.org
-Subject: [PATCH 5/5] pktcdvd: stop using bio_reset
-Date:   Wed,  6 Apr 2022 08:12:28 +0200
-Message-Id: <20220406061228.410163-6-hch@lst.de>
+Subject: [PATCH 2/5] squashfs: always use bio_kmalloc in squashfs_bio_read
+Date:   Wed,  6 Apr 2022 08:12:25 +0200
+Message-Id: <20220406061228.410163-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406061228.410163-1-hch@lst.de>
 References: <20220406061228.410163-1-hch@lst.de>
@@ -52,105 +52,40 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Just initialize the bios on-demand.
+If a plain kmalloc that is not backed by a mempool is safe here for a
+large read (and the actual page allocations), it must also be for a
+small one, so simplify the code a bit.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Phillip Lougher <phillip@squashfs.org.uk>
 ---
- drivers/block/pktcdvd.c | 25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
+ fs/squashfs/block.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index 4a5b8730133c5..f270080f14786 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -525,7 +525,6 @@ static struct packet_data *pkt_alloc_packet_data(int frames)
- 	pkt->w_bio = bio_kmalloc(frames, GFP_KERNEL);
- 	if (!pkt->w_bio)
- 		goto no_bio;
--	bio_init(pkt->w_bio, NULL, pkt->w_bio->bi_inline_vecs, frames, 0);
+diff --git a/fs/squashfs/block.c b/fs/squashfs/block.c
+index 622c844f6d118..4311a32218928 100644
+--- a/fs/squashfs/block.c
++++ b/fs/squashfs/block.c
+@@ -86,16 +86,11 @@ static int squashfs_bio_read(struct super_block *sb, u64 index, int length,
+ 	int error, i;
+ 	struct bio *bio;
  
- 	for (i = 0; i < frames / FRAMES_PER_PAGE; i++) {
- 		pkt->pages[i] = alloc_page(GFP_KERNEL|__GFP_ZERO);
-@@ -537,26 +536,20 @@ static struct packet_data *pkt_alloc_packet_data(int frames)
- 	bio_list_init(&pkt->orig_bios);
- 
- 	for (i = 0; i < frames; i++) {
--		struct bio *bio = bio_kmalloc(1, GFP_KERNEL);
--		if (!bio)
-+		pkt->r_bios[i] = bio_kmalloc(1, GFP_KERNEL);
-+		if (!pkt->r_bios[i])
- 			goto no_rd_bio;
--		bio_init(bio, NULL, bio->bi_inline_vecs, 1, 0);
--		pkt->r_bios[i] = bio;
- 	}
- 
- 	return pkt;
- 
- no_rd_bio:
--	for (i = 0; i < frames; i++) {
--		if (pkt->r_bios[i])
--			bio_uninit(pkt->r_bios[i]);
-+	for (i = 0; i < frames; i++)
- 		kfree(pkt->r_bios[i]);
+-	if (page_count <= BIO_MAX_VECS) {
+-		bio = bio_alloc(sb->s_bdev, page_count, REQ_OP_READ, GFP_NOIO);
+-	} else {
+-		bio = bio_kmalloc(GFP_NOIO, page_count);
+-		bio_set_dev(bio, sb->s_bdev);
+-		bio->bi_opf = REQ_OP_READ;
 -	}
- no_page:
- 	for (i = 0; i < frames / FRAMES_PER_PAGE; i++)
- 		if (pkt->pages[i])
- 			__free_page(pkt->pages[i]);
--	bio_uninit(pkt->w_bio);
- 	kfree(pkt->w_bio);
- no_bio:
- 	kfree(pkt);
-@@ -571,13 +564,10 @@ static void pkt_free_packet_data(struct packet_data *pkt)
- {
- 	int i;
+-
++	bio = bio_kmalloc(GFP_NOIO, page_count);
+ 	if (!bio)
+ 		return -ENOMEM;
++	bio_set_dev(bio, sb->s_bdev);
++	bio->bi_opf = REQ_OP_READ;
  
--	for (i = 0; i < pkt->frames; i++) {
--		bio_uninit(pkt->r_bios[i]);
-+	for (i = 0; i < pkt->frames; i++)
- 		kfree(pkt->r_bios[i]);
--	}
- 	for (i = 0; i < pkt->frames / FRAMES_PER_PAGE; i++)
- 		__free_page(pkt->pages[i]);
--	bio_uninit(pkt->w_bio);
- 	kfree(pkt->w_bio);
- 	kfree(pkt);
- }
-@@ -952,6 +942,7 @@ static void pkt_end_io_read(struct bio *bio)
+ 	bio->bi_iter.bi_sector = block * (msblk->devblksize >> SECTOR_SHIFT);
  
- 	if (bio->bi_status)
- 		atomic_inc(&pkt->io_errors);
-+	bio_uninit(bio);
- 	if (atomic_dec_and_test(&pkt->io_wait)) {
- 		atomic_inc(&pkt->run_sm);
- 		wake_up(&pd->wqueue);
-@@ -969,6 +960,7 @@ static void pkt_end_io_packet_write(struct bio *bio)
- 
- 	pd->stats.pkt_ended++;
- 
-+	bio_uninit(bio);
- 	pkt_bio_finished(pd);
- 	atomic_dec(&pkt->io_wait);
- 	atomic_inc(&pkt->run_sm);
-@@ -1023,7 +1015,7 @@ static void pkt_gather_data(struct pktcdvd_device *pd, struct packet_data *pkt)
- 			continue;
- 
- 		bio = pkt->r_bios[f];
--		bio_reset(bio, pd->bdev, REQ_OP_READ);
-+		bio_init(bio, pd->bdev, bio->bi_inline_vecs, 1, REQ_OP_READ);
- 		bio->bi_iter.bi_sector = pkt->sector + f * (CD_FRAMESIZE >> 9);
- 		bio->bi_end_io = pkt_end_io_read;
- 		bio->bi_private = pkt;
-@@ -1236,7 +1228,8 @@ static void pkt_start_write(struct pktcdvd_device *pd, struct packet_data *pkt)
- {
- 	int f;
- 
--	bio_reset(pkt->w_bio, pd->bdev, REQ_OP_WRITE);
-+	bio_init(pkt->w_bio, pd->bdev, pkt->w_bio->bi_inline_vecs, pkt->frames,
-+		 REQ_OP_WRITE);
- 	pkt->w_bio->bi_iter.bi_sector = pkt->sector;
- 	pkt->w_bio->bi_end_io = pkt_end_io_packet_write;
- 	pkt->w_bio->bi_private = pkt;
 -- 
 2.30.2
 
