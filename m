@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F0EC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B36EEC433EF
 	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 09:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236043AbiDFJ1V (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:27:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52816 "EHLO
+        id S243720AbiDFJ1Z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:27:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356308AbiDFJDF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:03:05 -0400
+        with ESMTP id S1353711AbiDFJCt (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:02:49 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C8C948F716;
-        Tue,  5 Apr 2022 23:06:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C024445859;
+        Tue,  5 Apr 2022 23:05:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=6QVq+WRTbBiZAGVnN7IJPNcrDbkE5gjblRwCavAMwLY=; b=iYaG9VkUCm4D5TSOODWzio+3DR
-        ytZ5+1QAyty9m+UBWG1IlrNmfBUfcieyEgGbnGvY+TeziydmDWxyUyplf08DqEXPrSA6ogGWlWBdc
-        eN+NdSm2eI+GluAazic6ThRfk6EDWhUlwAFB1sgAiTcA0zTyVy4xoxDN7lNirp1PXWPDjCYKA8P/e
-        a8Slx22YjqPgPpaGfnOLHtBTxMkfAK1Qngg3xOt/ieRRfzMYcYXFMoAX7pejVqOX04vm+E3B6daNl
-        No56Cgl46IA8J2O0CAKFddZqGLAK02p4IZLzzaiPdfWcvculhrlYOGpmXilPV0+0lJWjaiLUMp8xe
-        qYLNQzvg==;
+        bh=WTqESTvtfO4RX0qAqhs2oFd2Ik59q54vLqp/V/y7bnI=; b=FyJUmCuIohn+Rc7Inqu3BniYMO
+        qIbi7WgRq0N7qblPyTDtikeMFm5V1dbLiaJQYES35HwVVDM5F002rNedhKojSjZSangf3g4TTB5H8
+        ose/VQW92oLsoNNnrgmuQ76bdKKE4T6Y3dmmZVsUWsnsPjVGMnUiPjquePmKO+IeMAi+ZQQvMCCYS
+        5PMGec+vFR133rAMQYM0lD1ltqCTBtpWog3Ko4h+ioJJRDUI+WLYZoytyDGy8Ig1GoZQ2cZVQBaiq
+        VeAMRPUX1EVBht4ncdSOvQy0zHk56lci0PZ4ia4LUpztUXudJZTNfnXGvXSxvvSo+c89mmlg6GRYS
+        FB4ItY+g==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbynq-003v9s-8N; Wed, 06 Apr 2022 06:06:02 +0000
+        id 1nbynb-003uwx-AJ; Wed, 06 Apr 2022 06:05:47 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 11/27] block: add a bdev_write_cache helper
-Date:   Wed,  6 Apr 2022 08:05:00 +0200
-Message-Id: <20220406060516.409838-12-hch@lst.de>
+Subject: [PATCH 07/27] btrfs: use bdev_max_active_zones instead of open coding it
+Date:   Wed,  6 Apr 2022 08:04:56 +0200
+Message-Id: <20220406060516.409838-8-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
@@ -56,100 +56,32 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Add a helper to check the write cache flag based on the block_device
-instead of having to poke into the block layer internal request_queue.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/rnbd/rnbd-srv.c       | 2 +-
- drivers/block/xen-blkback/xenbus.c  | 2 +-
- drivers/target/target_core_iblock.c | 8 ++------
- fs/btrfs/disk-io.c                  | 3 +--
- include/linux/blkdev.h              | 5 +++++
- 5 files changed, 10 insertions(+), 10 deletions(-)
+ fs/btrfs/zoned.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/block/rnbd/rnbd-srv.c b/drivers/block/rnbd/rnbd-srv.c
-index f04df6294650b..f8cc3c5fecb4b 100644
---- a/drivers/block/rnbd/rnbd-srv.c
-+++ b/drivers/block/rnbd/rnbd-srv.c
-@@ -558,7 +558,7 @@ static void rnbd_srv_fill_msg_open_rsp(struct rnbd_msg_open_rsp *rsp,
- 	rsp->secure_discard =
- 		cpu_to_le16(rnbd_dev_get_secure_discard(rnbd_dev));
- 	rsp->cache_policy = 0;
--	if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-+	if (bdev_write_cache(rnbd_dev->bdev))
- 		rsp->cache_policy |= RNBD_WRITEBACK;
- 	if (blk_queue_fua(q))
- 		rsp->cache_policy |= RNBD_FUA;
-diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
-index f09040435e2e5..8b691fe50475f 100644
---- a/drivers/block/xen-blkback/xenbus.c
-+++ b/drivers/block/xen-blkback/xenbus.c
-@@ -517,7 +517,7 @@ static int xen_vbd_create(struct xen_blkif *blkif, blkif_vdev_t handle,
- 		vbd->type |= VDISK_REMOVABLE;
+diff --git a/fs/btrfs/zoned.c b/fs/btrfs/zoned.c
+index b7b5fac1c7790..5b85004d85d6c 100644
+--- a/fs/btrfs/zoned.c
++++ b/fs/btrfs/zoned.c
+@@ -350,7 +350,6 @@ int btrfs_get_dev_zone_info(struct btrfs_device *device, bool populate_cache)
+ 	struct btrfs_fs_info *fs_info = device->fs_info;
+ 	struct btrfs_zoned_device_info *zone_info = NULL;
+ 	struct block_device *bdev = device->bdev;
+-	struct request_queue *queue = bdev_get_queue(bdev);
+ 	unsigned int max_active_zones;
+ 	unsigned int nactive;
+ 	sector_t nr_sectors;
+@@ -410,7 +409,7 @@ int btrfs_get_dev_zone_info(struct btrfs_device *device, bool populate_cache)
+ 	if (!IS_ALIGNED(nr_sectors, zone_sectors))
+ 		zone_info->nr_zones++;
  
- 	q = bdev_get_queue(bdev);
--	if (q && test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-+	if (bdev_write_cache(bdev))
- 		vbd->flush_support = true;
- 
- 	if (q && blk_queue_secure_erase(q))
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index b41ee5c3b5b82..03013e85ffc03 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -737,7 +737,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
- 			if (cmd->se_cmd_flags & SCF_FUA)
- 				opf |= REQ_FUA;
--			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-+			else if (!bdev_write_cache(ib_dev->ibd_bd))
- 				opf |= REQ_FUA;
- 		}
- 	} else {
-@@ -886,11 +886,7 @@ iblock_parse_cdb(struct se_cmd *cmd)
- 
- static bool iblock_get_write_cache(struct se_device *dev)
- {
--	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
--	struct block_device *bd = ib_dev->ibd_bd;
--	struct request_queue *q = bdev_get_queue(bd);
--
--	return test_bit(QUEUE_FLAG_WC, &q->queue_flags);
-+	return bdev_write_cache(IBLOCK_DEV(dev)->ibd_bd);
- }
- 
- static const struct target_backend_ops iblock_ops = {
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index b30309f187cf0..d80adee32128d 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -4247,8 +4247,7 @@ static void write_dev_flush(struct btrfs_device *device)
- 	 * of simplicity, since this is a debug tool and not meant for use in
- 	 * non-debug builds.
- 	 */
--	struct request_queue *q = bdev_get_queue(device->bdev);
--	if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-+	if (bdev_write_cache(device->bdev))
- 		return;
- #endif
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3a9578e14a6b0..807a49aa5a27a 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1331,6 +1331,11 @@ static inline bool bdev_nonrot(struct block_device *bdev)
- 	return blk_queue_nonrot(bdev_get_queue(bdev));
- }
- 
-+static inline bool bdev_write_cache(struct block_device *bdev)
-+{
-+	return test_bit(QUEUE_FLAG_WC, &bdev_get_queue(bdev)->queue_flags);
-+}
-+
- static inline enum blk_zoned_model bdev_zoned_model(struct block_device *bdev)
- {
- 	struct request_queue *q = bdev_get_queue(bdev);
+-	max_active_zones = queue_max_active_zones(queue);
++	max_active_zones = bdev_max_active_zones(bdev);
+ 	if (max_active_zones && max_active_zones < BTRFS_MIN_ACTIVE_ZONES) {
+ 		btrfs_err_in_rcu(fs_info,
+ "zoned: %s: max active zones %u is too small, need at least %u active zones",
 -- 
 2.30.2
 
