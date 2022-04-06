@@ -2,31 +2,31 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51B53C433EF
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 09:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7489CC433EF
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 09:25:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241998AbiDFJ1I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Apr 2022 05:27:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46706 "EHLO
+        id S236911AbiDFJ1P (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Apr 2022 05:27:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349398AbiDFJCq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:02:46 -0400
+        with ESMTP id S1358536AbiDFJDW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 05:03:22 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EDFB48EC7E;
-        Tue,  5 Apr 2022 23:05:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F25FD48F719;
+        Tue,  5 Apr 2022 23:06:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=sINtR+pRAAWqBCMZRslKVJyakyubEJXVW4tI3wGLsb0=; b=gBrZsvegbTHoIEG5qdijcHzNWW
-        PfzclL3zzl2tB5xhm8Sj7w6skVV8SvvJytC4EH0RoMlbB62c3vMVvjooDHTIWQ3smYKaAuMQ4cOli
-        spZhkrdfcyNNrOGeIUuTpGtX63bYCgqfiIr52xJMA9AGK42nQUGH/2eHVQ3foGEH/zFa8lWfGs7Pp
-        Ay5KyAHLP9DhsOCOpCtbHRVbRjzyQdYUTq4TkVLaYR9+Sga+ljLLLtQo5Hukpu2Q5UAw6RMQTfLQg
-        vt8zwwfekDfQOHpKLK7/INfKF40CQ8temfgKOOdrhB506dWycfStoRSbi1wi6owABwmVkNNzYqcsL
-        kVwVOMFA==;
+        bh=TxXl3MdplxU9MCO/Q7D4FJYRsok6DDTDVaSg962eOWw=; b=rucC9iJZF0nT1xLRSKT9tqQoP5
+        nL0SBYR/iPNSHB6wdcFxgaOg4ge9C2M4FP2p1JxUqmGG9zNBcpvn8l2ImaqSWUruwic5SBL+1Ka0A
+        N9OC/cngiat+LW2SmmgQgik6umVCvLvTWe7LVYau+JKoIVcB5LAd/jZAV15/t6fN+UTCCe2AFXibt
+        E1V1T10hMp3lTxlmDK2XsJoN/x/84A5CsbNWzJR1vr4eEH4n9FywvazpXPuwcYDJ3oSJzJmHtYcSR
+        fBAUwkO6DmJcsI89V/f7f2YpyrUwGe49T4osq7oE4lAOjncY7dpUANpsFS6qbMzskbxkKi/9ab/Dz
+        RphmF5Bw==;
 Received: from 213-225-3-188.nat.highway.a1.net ([213.225.3.188] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nbynD-003ul3-Rn; Wed, 06 Apr 2022 06:05:24 +0000
+        id 1nbyo9-003vQV-AV; Wed, 06 Apr 2022 06:06:22 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
         cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
         ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
-Subject: [PATCH 01/27] target: remove an incorrect unmap zeroes data deduction
-Date:   Wed,  6 Apr 2022 08:04:50 +0200
-Message-Id: <20220406060516.409838-2-hch@lst.de>
+Subject: [PATCH 16/27] drbd: use bdev_alignment_offset instead of queue_alignment_offset
+Date:   Wed,  6 Apr 2022 08:05:05 +0200
+Message-Id: <20220406060516.409838-17-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220406060516.409838-1-hch@lst.de>
 References: <20220406060516.409838-1-hch@lst.de>
@@ -56,31 +56,27 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-For block devices the target code implements UNMAP as calls to
-blkdev_issue_discard, which does not guarantee zeroing just because
-Write Zeroes is supported.
+The bdev version does the right thing for partitions, so use that.
 
-Note that this does not affect the file backed path which uses
-fallocate to punch holes.
-
-Fixes: 2237498f0b5c ("target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout")
+Fixes: 9104d31a759f ("drbd: introduce WRITE_SAME support")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/target/target_core_device.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/block/drbd/drbd_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 44bb380e7390c..fa866acef5bb2 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -850,7 +850,6 @@ bool target_configure_unmap_from_queue(struct se_dev_attrib *attrib,
- 	attrib->unmap_granularity = q->limits.discard_granularity / block_size;
- 	attrib->unmap_granularity_alignment = q->limits.discard_alignment /
- 								block_size;
--	attrib->unmap_zeroes_data = !!(q->limits.max_write_zeroes_sectors);
- 	return true;
- }
- EXPORT_SYMBOL(target_configure_unmap_from_queue);
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index d20d84ee7a88e..9d43aadde19ad 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -939,7 +939,7 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
+ 		p->qlim->logical_block_size =
+ 			cpu_to_be32(bdev_logical_block_size(bdev));
+ 		p->qlim->alignment_offset =
+-			cpu_to_be32(queue_alignment_offset(q));
++			cpu_to_be32(bdev_alignment_offset(bdev));
+ 		p->qlim->io_min = cpu_to_be32(bdev_io_min(bdev));
+ 		p->qlim->io_opt = cpu_to_be32(bdev_io_opt(bdev));
+ 		p->qlim->discard_enabled = blk_queue_discard(q);
 -- 
 2.30.2
 
