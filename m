@@ -2,125 +2,100 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8979C433F5
-	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 17:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99A51C433FE
+	for <linux-raid@archiver.kernel.org>; Wed,  6 Apr 2022 18:06:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239753AbiDFR4H (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 6 Apr 2022 13:56:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57132 "EHLO
+        id S240147AbiDFSI5 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 6 Apr 2022 14:08:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239559AbiDFRzj (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 13:55:39 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D532C22B07
-        for <linux-raid@vger.kernel.org>; Wed,  6 Apr 2022 09:05:17 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 3F60E1F856;
-        Wed,  6 Apr 2022 16:05:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649261116; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mCkm0RWjoXXZlGxNBJ2pBu0qVU1ebGtzpriMhcJfhUU=;
-        b=bCLQRmEgRkS/YeHyzu+2vnuGN9XONKIJeKFcLNzE95XxOXAqR6xUAzvH+Y2bcIYhbnKcGn
-        vehQIgbov3Ez5i6RmzjfYJZMwndbcVCRIlsAvNiPDloj3NSaldnggAb+fNLyljyIfvTwYM
-        iGTlKZF1bannsnSHIxGpPEK0HdKjeW0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649261116;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mCkm0RWjoXXZlGxNBJ2pBu0qVU1ebGtzpriMhcJfhUU=;
-        b=/zK0kKteG17UiYfN/BDX9CyOWk9aue+HSzhwd+9n+ApAqdFI29ncMynKBjZ4k6Q226nZXR
-        Ps5BI2EyQX2J/bDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 262FE139F5;
-        Wed,  6 Apr 2022 16:05:14 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id ixLuODq6TWKgSgAAMHmgww
-        (envelope-from <colyli@suse.de>); Wed, 06 Apr 2022 16:05:14 +0000
-Message-ID: <00b1f91b-4ffd-929e-e2c6-05ef283f0b80@suse.de>
-Date:   Thu, 7 Apr 2022 00:05:13 +0800
+        with ESMTP id S240470AbiDFSHz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 6 Apr 2022 14:07:55 -0400
+Received: from sender11-op-o11.zoho.eu (sender11-op-o11.zoho.eu [31.186.226.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CF62190EB2
+        for <linux-raid@vger.kernel.org>; Wed,  6 Apr 2022 09:46:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1649263568; cv=none; 
+        d=zohomail.eu; s=zohoarc; 
+        b=kWeyhsEQ31cWDRkH4l2riZGEh3TJnVB/HcG3zrr/gRV8UgbajTroNtErr6UnKrwZiimhXUesoSNpGvHIjLRdyYZx8tEKijU4XhMC7ZHK5f0Ge4xXOmINynLuJinlJxtQszm3H8GxIV8b469lHAAPPiiW5mOdSgU3PyV9YV9fQYQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+        t=1649263568; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=QkiXEz/nKzYteiEb21oAWMBJ79MonU7jpPcdstNaAIM=; 
+        b=PU8b1K9LLwq40eY/jCTzYOuRD6vDrf/zbDvqsUw6T28c7ijhBRjJICCR42sA3WYhx3NJew0m+rd4xhCRCPtWUAGrer33whG6Pj7A6saGCNTIORwwUt+/43fW2jioZaFoYH8LPYIRo2CkQWcTGjCpW1M5lGcp6pVe6WLM3/Qp4nk=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+        spf=pass  smtp.mailfrom=jes@trained-monkey.org;
+        dmarc=pass header.from=<jes@trained-monkey.org>
+Received: from [172.30.27.237] (163.114.130.4 [163.114.130.4]) by mx.zoho.eu
+        with SMTPS id 1649263566307185.44288498971616; Wed, 6 Apr 2022 18:46:06 +0200 (CEST)
+Date:   Wed, 6 Apr 2022 12:46:03 -0400
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH v2 2/2] mdadm: replace container level checking with
- inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [PATCH] Add RAID 1 chunksize test
 Content-Language: en-US
-To:     Kinga Tanska <kinga.tanska@intel.com>
-Cc:     jes@trained-monkey.org, linux-raid@vger.kernel.org
-References: <20220404140115.16973-1-kinga.tanska@intel.com>
- <20220404140115.16973-3-kinga.tanska@intel.com>
-From:   Coly Li <colyli@suse.de>
-In-Reply-To: <20220404140115.16973-3-kinga.tanska@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     Doug Ledford <dledford@redhat.com>,
+        Mateusz Kusiak <mateusz.kusiak@intel.com>,
+        linux-raid@vger.kernel.org
+Cc:     colyli@suse.de
+References: <20220404070830.7795-1-mateusz.kusiak@intel.com>
+ <53bc131b71b7f94210e507eed93390b1b3899246.camel@redhat.com>
+From:   Jes Sorensen <jes@trained-monkey.org>
+Message-ID: <9653c1f1-1aae-3c5d-2a43-4cb3109392b0@trained-monkey.org>
+In-Reply-To: <53bc131b71b7f94210e507eed93390b1b3899246.camel@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 4/4/22 10:01 PM, Kinga Tanska wrote:
-> To unify all containers checks in code, is_container() function is
-> added and propagated.
->
-> Signed-off-by: Kinga Tanska <kinga.tanska@intel.com>
-> ---
->   Assemble.c    |  5 ++---
->   Create.c      |  6 +++---
->   Grow.c        |  6 +++---
->   Incremental.c |  4 ++--
->   mdadm.h       | 14 ++++++++++++++
->   super-ddf.c   |  6 +++---
->   super-intel.c |  4 ++--
->   super0.c      |  2 +-
->   super1.c      |  2 +-
->   sysfs.c       |  2 +-
->   10 files changed, 32 insertions(+), 19 deletions(-)
->
-snipped.
+On 4/4/22 08:38, Doug Ledford wrote:
+> On Mon, 2022-04-04 at 09:08 +0200, Mateusz Kusiak wrote:
+>> Specifying chunksize for raid 1 is forbidden.
+>> Add test for blocking raid 1 creation with chunksize.
+>>
+>> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
+>> ---
+>>  tests/01r1create-chunk | 15 +++++++++++++++
+>>  1 file changed, 15 insertions(+)
+>>  create mode 100644 tests/01r1create-chunk
+>>
+>> diff --git a/tests/01r1create-chunk b/tests/01r1create-chunk
+>> new file mode 100644
+>> index 00000000..717a5e5a
+>> --- /dev/null
+>> +++ b/tests/01r1create-chunk
+>> @@ -0,0 +1,15 @@
+>> +# RAID 1 volume, 2 disks, chunk 64
+>> +# NEGATIVE test - creating raid 1 with chunksize specified is
+>> forbidden
+>> +
+>> +num_disks=2
+>> +level=1
+>> +device_list="$dev0 $dev1"
+>> +chunk=64
+>> +
+>> +# Create raid 1 with chunk 64k and fail
+>> +if ! mdadm --create --run $md0 --auto=md --level=$level --
+>> chunk=$chunk --raid-disks=$num_disks $device_list
+>> +then
+>> +       exit 0
+>> +fi
+>> +
+>> +exit 1
+> 
+> This is a case of overkill IMO.  Chunk size with raid1 isn't really a
+> problem and shouldn't result in mdadm refusing to work.  Chunk size with
+> raid1 simply has no effect and should just be ignored with at most a
+> warning by mdadm.
 
+I agree with Doug here. I think a warning from mdadm that chunksize
+makes no sense for raid1 would be good, but having a failed test over it
+makes little sense. If anything the test should detect the warning is
+happening.
 
-> diff --git a/Incremental.c b/Incremental.c
-> index a57fc323..077d4eea 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -244,7 +244,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->   		c->autof = ci->autof;
->   
->   	name_to_use = info.name;
-> -	if (name_to_use[0] == 0 && info.array.level == LEVEL_CONTAINER) {
-> +	if (name_to_use && is_container(info.array.level)) {
->   		name_to_use = info.text_version;
->   		trustworthy = METADATA;
->   	}
-I am not sure whether the above change is correct, name_to_use[0] is 
-different from name_to_use.
+Thanks,
+Jes
 
-The rested part of this patch is fine to me.
-
-
-> @@ -472,7 +472,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->   
->   	/* 7/ Is there enough devices to possibly start the array? */
->   	/* 7a/ if not, finish with success. */
-> -	if (info.array.level == LEVEL_CONTAINER) {
-> +	if (is_container(info.array.level)) {
->   		char devnm[32];
->   		/* Try to assemble within the container */
->   		sysfs_uevent(sra, "change");
-
-
-snipped.
-
-Coly Li
 
 
