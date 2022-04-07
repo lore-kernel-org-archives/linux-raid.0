@@ -2,98 +2,144 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 527B3C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7085C433FE
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346158AbiDGRYP (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 13:24:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46736 "EHLO
+        id S1346174AbiDGRYR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 13:24:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346118AbiDGRYH (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 13:24:07 -0400
+        with ESMTP id S1346085AbiDGRYA (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 13:24:00 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06782186DC;
-        Thu,  7 Apr 2022 10:22:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 981A913F42;
+        Thu,  7 Apr 2022 10:21:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=S+r51FPP6n10yfgtvgNM7cq5++cCBWiReTm/0uolfQY=; b=rYlQCuelx0cDeN85iw8hh4CWvr
-        LMbonNjYra2S9eW+CNjQD9KXGqbRr1Fb7DDvNPeI4frDJYTUjbAOJoy4GOqOdRnzt2m53OE1r3feS
-        OpHYXB4oqTP9wITJxILkMQ11xCDerUtvyOpdf7Najb5IqOJsOOcHBorNqxl3SMMXryX5PoAYZ2MMh
-        /lDd/oo1/lOeRjSqpoWhqvXSEdmid8zPpElTxESUaLWkGh7qNgzVIu86v3xp10cJ9g4BB3psd01T4
-        u80uTGSE+00er1CVhP+/dQwDPBJvwOYtL4r2wDxDeYc9eZ2tCUA4dVdlFtO+R4x84gmeoGPiHgOif
-        9WzlcTNA==;
+        bh=vUaTkhLKpC517uBr5V8nSaXBUclETbcgKiMjxeP1Ciw=; b=sg+YjSBPnepVHG/AtlVk/OqAQm
+        0WF5GZz2jT1Gy/kUHruPwf2d3Oo1U7JsNLSLga+7ccr65ElJtOB/6sevZhXobr2cDVSBj7yEucyUA
+        bkVleLBuhQNr5L/Oc0mY2AXuj/PGlbxhV/jTDSE7967CEcPuS4iQyhPzkKGkL0NLG8gtnAfhxp0cl
+        sLD3G1xic607XPD/M1oeqgA0lepnwC+Bn4fgj45BYXaDt3p5nSqnNYO/E0kFZxJoaIMq/302KjX4r
+        L2v8/2d23s+q1C2kpnsYTfHF/nXPTfZoNFA+ar5PB/wMI0uJ6juFckmAPBfOTGLY2KPFfpeJ2tvFu
+        lYz1oT0A==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ncVG1-002CHm-9u; Thu, 07 Apr 2022 10:45:19 -0600
+        id 1ncVRf-002CRf-HG; Thu, 07 Apr 2022 10:57:20 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ncVG0-0002De-41; Thu, 07 Apr 2022 10:45:16 -0600
+        id 1ncVRe-0002Q1-SN; Thu, 07 Apr 2022 10:57:18 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
-Cc:     Shaohua Li <shli@kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Stephen Bates <sbates@raithlin.com>,
-        Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
+Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu,  7 Apr 2022 10:45:05 -0600
-Message-Id: <20220407164511.8472-3-logang@deltatee.com>
+Date:   Thu,  7 Apr 2022 10:57:07 -0600
+Message-Id: <20220407165713.9243-2-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220407164511.8472-1-logang@deltatee.com>
-References: <20220407164511.8472-1-logang@deltatee.com>
+In-Reply-To: <20220407165713.9243-1-logang@deltatee.com>
+References: <20220407165713.9243-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, shli@kernel.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, guoqing.jiang@linux.dev, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 2/8] md/raid5: Move stripe_add_to_batch_list() call out of add_stripe_bio()
+Subject: [PATCH v1 1/7] md/raid5: Cleanup setup_conf() error returns
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-stripe_add_to_batch_list() is better done in the loop in make_request
-instead of inside add_stripe_bio(). This is clearer and allows for
-storing the batch_head state outside the loop in a subsequent patch.
+Be more careful about the error returns. Most errors in this function
+are actually ENOMEM, but it forcibly returns EIO if conf has been
+allocated.
 
-The call to add_stripe_bio() in retry_aligned_read() is for a read only
-and thus wouldn't have added the batch anyway.
-
-No functional changes intended.
+Instead return ret and ensure it is set appropriately before each goto
+abort.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid5.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/md/raid5.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b794253efd15..e3c75b3b8923 100644
+index 351d341a1ffa..c0e373a02d3a 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3504,8 +3504,6 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
- 	}
- 	spin_unlock_irq(&sh->stripe_lock);
+@@ -7166,7 +7166,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	int i;
+ 	int group_cnt;
+ 	struct r5worker_group *new_group;
+-	int ret;
++	int ret = -ENOMEM;
  
--	if (stripe_can_batch(sh))
--		stripe_add_to_batch_list(conf, sh);
- 	return 1;
- 
-  overlap:
-@@ -5918,6 +5916,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			goto retry;
- 		}
- 
-+		if (stripe_can_batch(sh))
-+			stripe_add_to_batch_list(conf, sh);
+ 	if (mddev->new_level != 5
+ 	    && mddev->new_level != 4
+@@ -7225,6 +7225,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	spin_lock_init(&conf->device_lock);
+ 	seqcount_spinlock_init(&conf->gen_lock, &conf->device_lock);
+ 	mutex_init(&conf->cache_size_mutex);
 +
- 		if (do_flush) {
- 			set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
- 			/* we only need flush for one stripe */
+ 	init_waitqueue_head(&conf->wait_for_quiescent);
+ 	init_waitqueue_head(&conf->wait_for_stripe);
+ 	init_waitqueue_head(&conf->wait_for_overlap);
+@@ -7302,11 +7303,13 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 
+ 	conf->level = mddev->new_level;
+ 	conf->chunk_sectors = mddev->new_chunk_sectors;
+-	if (raid5_alloc_percpu(conf) != 0)
++	ret = raid5_alloc_percpu(conf);
++	if (ret)
+ 		goto abort;
+ 
+ 	pr_debug("raid456: run(%s) called.\n", mdname(mddev));
+ 
++	ret = -EIO;
+ 	rdev_for_each(rdev, mddev) {
+ 		raid_disk = rdev->raid_disk;
+ 		if (raid_disk >= max_disks
+@@ -7370,6 +7373,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	if (grow_stripes(conf, conf->min_nr_stripes)) {
+ 		pr_warn("md/raid:%s: couldn't allocate %dkB for buffers\n",
+ 			mdname(mddev), memory);
++		ret = -ENOMEM;
+ 		goto abort;
+ 	} else
+ 		pr_debug("md/raid:%s: allocated %dkB\n", mdname(mddev), memory);
+@@ -7383,7 +7387,8 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	conf->shrinker.count_objects = raid5_cache_count;
+ 	conf->shrinker.batch = 128;
+ 	conf->shrinker.flags = 0;
+-	if (register_shrinker(&conf->shrinker)) {
++	ret = register_shrinker(&conf->shrinker);
++	if (ret) {
+ 		pr_warn("md/raid:%s: couldn't register shrinker.\n",
+ 			mdname(mddev));
+ 		goto abort;
+@@ -7394,17 +7399,16 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	if (!conf->thread) {
+ 		pr_warn("md/raid:%s: couldn't allocate thread.\n",
+ 			mdname(mddev));
++		ret = -ENOMEM;
+ 		goto abort;
+ 	}
+ 
+ 	return conf;
+ 
+  abort:
+-	if (conf) {
++	if (conf)
+ 		free_conf(conf);
+-		return ERR_PTR(-EIO);
+-	} else
+-		return ERR_PTR(-ENOMEM);
++	return ERR_PTR(ret);
+ }
+ 
+ static int only_parity(int raid_disk, int algo, int raid_disks, int max_degraded)
 -- 
 2.30.2
 
