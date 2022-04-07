@@ -2,144 +2,245 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7085C433FE
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BE8C433F5
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346174AbiDGRYR (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 13:24:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46082 "EHLO
+        id S1346182AbiDGRYT (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 13:24:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346085AbiDGRYA (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 13:24:00 -0400
+        with ESMTP id S1346131AbiDGRYJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 13:24:09 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 981A913F42;
-        Thu,  7 Apr 2022 10:21:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D854B286C3;
+        Thu,  7 Apr 2022 10:22:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=vUaTkhLKpC517uBr5V8nSaXBUclETbcgKiMjxeP1Ciw=; b=sg+YjSBPnepVHG/AtlVk/OqAQm
-        0WF5GZz2jT1Gy/kUHruPwf2d3Oo1U7JsNLSLga+7ccr65ElJtOB/6sevZhXobr2cDVSBj7yEucyUA
-        bkVleLBuhQNr5L/Oc0mY2AXuj/PGlbxhV/jTDSE7967CEcPuS4iQyhPzkKGkL0NLG8gtnAfhxp0cl
-        sLD3G1xic607XPD/M1oeqgA0lepnwC+Bn4fgj45BYXaDt3p5nSqnNYO/E0kFZxJoaIMq/302KjX4r
-        L2v8/2d23s+q1C2kpnsYTfHF/nXPTfZoNFA+ar5PB/wMI0uJ6juFckmAPBfOTGLY2KPFfpeJ2tvFu
-        lYz1oT0A==;
+        bh=43ieDeq7qFS7TQx+ySkeNxmmOsQba+pv9Ms1C88DsoQ=; b=UT1Tb1sWIBWWtUp5Pt5mUWoiaV
+        eJV1QDZ5uo4Rj3wEDshNlOop6MGUpDaWDOC02aRGwC1s3G3oGChKenS0eDSeSBpUN/0h3GrdFigqR
+        GE7XbCeYNc1mPdovxP3VRKUK3TdLtDS3uaIidNAPWNUGhlbS1Y0KxZW+AqLdZkKs2YAZohqOKsi9N
+        Y4J7zRP2yTttz+JNegEhw1m8hnAtzyK8EafCqONYZJSovEmnbwxvuCC/KlAHE57xLiBvwNpgVgzWr
+        MvMCZvxo7p9rg5J5FK3BI6L3H4guSBVPJWcM+y4yFJSEacziraPVBWI658GLBF4OQPyzXq1vQlmf0
+        xg0ezj9Q==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ncVRf-002CRf-HG; Thu, 07 Apr 2022 10:57:20 -0600
+        id 1ncVG1-002CHn-9w; Thu, 07 Apr 2022 10:45:18 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ncVRe-0002Q1-SN; Thu, 07 Apr 2022 10:57:18 -0600
+        id 1ncVG0-0002Dh-8S; Thu, 07 Apr 2022 10:45:16 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
-Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
+Cc:     Shaohua Li <shli@kernel.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Stephen Bates <sbates@raithlin.com>,
+        Martin Oliveira <Martin.Oliveira@eideticom.com>,
+        David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu,  7 Apr 2022 10:57:07 -0600
-Message-Id: <20220407165713.9243-2-logang@deltatee.com>
+Date:   Thu,  7 Apr 2022 10:45:06 -0600
+Message-Id: <20220407164511.8472-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220407165713.9243-1-logang@deltatee.com>
-References: <20220407165713.9243-1-logang@deltatee.com>
+In-Reply-To: <20220407164511.8472-1-logang@deltatee.com>
+References: <20220407164511.8472-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, guoqing.jiang@linux.dev, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, shli@kernel.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 1/7] md/raid5: Cleanup setup_conf() error returns
+Subject: [PATCH v1 3/8] md/raid5: Move common stripe count increment code into __find_stripe()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Be more careful about the error returns. Most errors in this function
-are actually ENOMEM, but it forcibly returns EIO if conf has been
-allocated.
+Both uses of find_stripe() require a fairly complicated dance to
+increment the reference count. Move this into a common place in
+__find_stripe()
 
-Instead return ret and ensure it is set appropriately before each goto
-abort.
+No functional changes intended.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid5.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ drivers/md/raid5.c | 118 +++++++++++++++++++--------------------------
+ 1 file changed, 49 insertions(+), 69 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 351d341a1ffa..c0e373a02d3a 100644
+index e3c75b3b8923..be01c4515f0e 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -7166,7 +7166,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	int i;
- 	int group_cnt;
- 	struct r5worker_group *new_group;
--	int ret;
-+	int ret = -ENOMEM;
- 
- 	if (mddev->new_level != 5
- 	    && mddev->new_level != 4
-@@ -7225,6 +7225,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	spin_lock_init(&conf->device_lock);
- 	seqcount_spinlock_init(&conf->gen_lock, &conf->device_lock);
- 	mutex_init(&conf->cache_size_mutex);
-+
- 	init_waitqueue_head(&conf->wait_for_quiescent);
- 	init_waitqueue_head(&conf->wait_for_stripe);
- 	init_waitqueue_head(&conf->wait_for_overlap);
-@@ -7302,11 +7303,13 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 
- 	conf->level = mddev->new_level;
- 	conf->chunk_sectors = mddev->new_chunk_sectors;
--	if (raid5_alloc_percpu(conf) != 0)
-+	ret = raid5_alloc_percpu(conf);
-+	if (ret)
- 		goto abort;
- 
- 	pr_debug("raid456: run(%s) called.\n", mdname(mddev));
- 
-+	ret = -EIO;
- 	rdev_for_each(rdev, mddev) {
- 		raid_disk = rdev->raid_disk;
- 		if (raid_disk >= max_disks
-@@ -7370,6 +7373,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	if (grow_stripes(conf, conf->min_nr_stripes)) {
- 		pr_warn("md/raid:%s: couldn't allocate %dkB for buffers\n",
- 			mdname(mddev), memory);
-+		ret = -ENOMEM;
- 		goto abort;
- 	} else
- 		pr_debug("md/raid:%s: allocated %dkB\n", mdname(mddev), memory);
-@@ -7383,7 +7387,8 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	conf->shrinker.count_objects = raid5_cache_count;
- 	conf->shrinker.batch = 128;
- 	conf->shrinker.flags = 0;
--	if (register_shrinker(&conf->shrinker)) {
-+	ret = register_shrinker(&conf->shrinker);
-+	if (ret) {
- 		pr_warn("md/raid:%s: couldn't register shrinker.\n",
- 			mdname(mddev));
- 		goto abort;
-@@ -7394,17 +7399,16 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	if (!conf->thread) {
- 		pr_warn("md/raid:%s: couldn't allocate thread.\n",
- 			mdname(mddev));
-+		ret = -ENOMEM;
- 		goto abort;
- 	}
- 
- 	return conf;
- 
-  abort:
--	if (conf) {
-+	if (conf)
- 		free_conf(conf);
--		return ERR_PTR(-EIO);
--	} else
--		return ERR_PTR(-ENOMEM);
-+	return ERR_PTR(ret);
+@@ -605,16 +605,42 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
  }
  
- static int only_parity(int raid_disk, int algo, int raid_disks, int max_degraded)
+ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
+-					 short generation)
++					 short generation, int hash)
+ {
++	int inc_empty_inactive_list_flag;
+ 	struct stripe_head *sh;
+ 
+ 	pr_debug("__find_stripe, sector %llu\n", (unsigned long long)sector);
+ 	hlist_for_each_entry(sh, stripe_hash(conf, sector), hash)
+ 		if (sh->sector == sector && sh->generation == generation)
+-			return sh;
++			goto found;
+ 	pr_debug("__stripe %llu not in cache\n", (unsigned long long)sector);
+ 	return NULL;
++
++found:
++	if (!atomic_inc_not_zero(&sh->count)) {
++		spin_lock(&conf->device_lock);
++		if (!atomic_read(&sh->count)) {
++			if (!test_bit(STRIPE_HANDLE, &sh->state))
++				atomic_inc(&conf->active_stripes);
++			BUG_ON(list_empty(&sh->lru) &&
++			       !test_bit(STRIPE_EXPANDING, &sh->state));
++			inc_empty_inactive_list_flag = 0;
++			if (!list_empty(conf->inactive_list + hash))
++				inc_empty_inactive_list_flag = 1;
++			list_del_init(&sh->lru);
++			if (list_empty(conf->inactive_list + hash) &&
++			    inc_empty_inactive_list_flag)
++				atomic_inc(&conf->empty_inactive_list_nr);
++			if (sh->group) {
++				sh->group->stripes_cnt--;
++				sh->group = NULL;
++			}
++		}
++		atomic_inc(&sh->count);
++		spin_unlock(&conf->device_lock);
++	}
++	return sh;
+ }
+ 
+ /*
+@@ -705,7 +731,6 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ {
+ 	struct stripe_head *sh;
+ 	int hash = stripe_hash_locks_hash(conf, sector);
+-	int inc_empty_inactive_list_flag;
+ 
+ 	pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
+ 
+@@ -715,57 +740,34 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ 		wait_event_lock_irq(conf->wait_for_quiescent,
+ 				    conf->quiesce == 0 || noquiesce,
+ 				    *(conf->hash_locks + hash));
+-		sh = __find_stripe(conf, sector, conf->generation - previous);
+-		if (!sh) {
+-			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
+-				sh = get_free_stripe(conf, hash);
+-				if (!sh && !test_bit(R5_DID_ALLOC,
+-						     &conf->cache_state))
+-					set_bit(R5_ALLOC_MORE,
+-						&conf->cache_state);
+-			}
+-			if (noblock && sh == NULL)
+-				break;
++		sh = __find_stripe(conf, sector, conf->generation - previous,
++				   hash);
++		if (sh)
++			break;
+ 
+-			r5c_check_stripe_cache_usage(conf);
+-			if (!sh) {
+-				set_bit(R5_INACTIVE_BLOCKED,
+-					&conf->cache_state);
+-				r5l_wake_reclaim(conf->log, 0);
+-				wait_event_lock_irq(
+-					conf->wait_for_stripe,
++		if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
++			sh = get_free_stripe(conf, hash);
++			if (!sh && !test_bit(R5_DID_ALLOC, &conf->cache_state))
++				set_bit(R5_ALLOC_MORE, &conf->cache_state);
++		}
++		if (noblock && !sh)
++			break;
++
++		r5c_check_stripe_cache_usage(conf);
++		if (!sh) {
++			set_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
++			r5l_wake_reclaim(conf->log, 0);
++			wait_event_lock_irq(conf->wait_for_stripe,
+ 					!list_empty(conf->inactive_list + hash) &&
+ 					(atomic_read(&conf->active_stripes)
+ 					 < (conf->max_nr_stripes * 3 / 4)
+ 					 || !test_bit(R5_INACTIVE_BLOCKED,
+ 						      &conf->cache_state)),
+ 					*(conf->hash_locks + hash));
+-				clear_bit(R5_INACTIVE_BLOCKED,
+-					  &conf->cache_state);
+-			} else {
+-				init_stripe(sh, sector, previous);
+-				atomic_inc(&sh->count);
+-			}
+-		} else if (!atomic_inc_not_zero(&sh->count)) {
+-			spin_lock(&conf->device_lock);
+-			if (!atomic_read(&sh->count)) {
+-				if (!test_bit(STRIPE_HANDLE, &sh->state))
+-					atomic_inc(&conf->active_stripes);
+-				BUG_ON(list_empty(&sh->lru) &&
+-				       !test_bit(STRIPE_EXPANDING, &sh->state));
+-				inc_empty_inactive_list_flag = 0;
+-				if (!list_empty(conf->inactive_list + hash))
+-					inc_empty_inactive_list_flag = 1;
+-				list_del_init(&sh->lru);
+-				if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
+-					atomic_inc(&conf->empty_inactive_list_nr);
+-				if (sh->group) {
+-					sh->group->stripes_cnt--;
+-					sh->group = NULL;
+-				}
+-			}
++			clear_bit(R5_INACTIVE_BLOCKED, &conf->cache_state);
++		} else {
++			init_stripe(sh, sector, previous);
+ 			atomic_inc(&sh->count);
+-			spin_unlock(&conf->device_lock);
+ 		}
+ 	} while (sh == NULL);
+ 
+@@ -819,7 +821,6 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 	sector_t head_sector, tmp_sec;
+ 	int hash;
+ 	int dd_idx;
+-	int inc_empty_inactive_list_flag;
+ 
+ 	/* Don't cross chunks, so stripe pd_idx/qd_idx is the same */
+ 	tmp_sec = sh->sector;
+@@ -829,28 +830,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 
+ 	hash = stripe_hash_locks_hash(conf, head_sector);
+ 	spin_lock_irq(conf->hash_locks + hash);
+-	head = __find_stripe(conf, head_sector, conf->generation);
+-	if (head && !atomic_inc_not_zero(&head->count)) {
+-		spin_lock(&conf->device_lock);
+-		if (!atomic_read(&head->count)) {
+-			if (!test_bit(STRIPE_HANDLE, &head->state))
+-				atomic_inc(&conf->active_stripes);
+-			BUG_ON(list_empty(&head->lru) &&
+-			       !test_bit(STRIPE_EXPANDING, &head->state));
+-			inc_empty_inactive_list_flag = 0;
+-			if (!list_empty(conf->inactive_list + hash))
+-				inc_empty_inactive_list_flag = 1;
+-			list_del_init(&head->lru);
+-			if (list_empty(conf->inactive_list + hash) && inc_empty_inactive_list_flag)
+-				atomic_inc(&conf->empty_inactive_list_nr);
+-			if (head->group) {
+-				head->group->stripes_cnt--;
+-				head->group = NULL;
+-			}
+-		}
+-		atomic_inc(&head->count);
+-		spin_unlock(&conf->device_lock);
+-	}
++	head = __find_stripe(conf, head_sector, conf->generation, hash);
+ 	spin_unlock_irq(conf->hash_locks + hash);
+ 
+ 	if (!head)
 -- 
 2.30.2
 
