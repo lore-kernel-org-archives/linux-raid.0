@@ -2,42 +2,42 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82CF4C433F5
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04D4EC433EF
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233096AbiDGRX6 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 13:23:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45784 "EHLO
+        id S1346084AbiDGRYA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 13:24:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346073AbiDGRX4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 13:23:56 -0400
+        with ESMTP id S1346071AbiDGRXz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 13:23:55 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ABC513D47;
-        Thu,  7 Apr 2022 10:21:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1380BE08;
+        Thu,  7 Apr 2022 10:21:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=UgtYxnZUE1oxXmbmvyRy5xJTosToTlA4CekiENW7Cls=; b=jnjOkpzVmSD5gJjs8S1zA0j10R
-        r8dfSrudZSfcdJ6AAZAo1oZsAdoESIfQHFSPlJ7K+lH2O2+0XIKu+O97UNcy7GzUIsNQWJ3OBSHFT
-        H0q70jDul3A8ZIXl2ZZ9agedNP8En3+70WLhOKx6bVNMRhMjANV6kEoaM6EDuCWex3Qbjl/UOq6J/
-        ErssYOokp0bCgJqgPK0GwYQn/1gHzMPdqqPg5e/9DU6ur/wctu3zIbxLFBZwSYr1ayzdVoUkRJOvb
-        j717nYL9BwU6GOiHFobGxOmppewwQU5f3HkGv8QfuQE0UE3wJS80RHGyBjHxcbbVarOob8wsDd3iq
-        bTEGeynw==;
+        bh=635ylQUcdfFmtEy7PfYRtKd/q8+5RGAxrk1aQwRlsw8=; b=PzXQRQYpXdXhwt9mfTGGsdnyJz
+        l0BTLXXaGHofw2ZqsBOF7SczKDAW+vTZzKlHQinURnmsNceWmWlSSy6xK8dCOTdA4dReoI3ZaTwe5
+        whstDVfyrbkTNi2b3ycXVvkM/6RRecLsobqgJl9Q5ZWuuSTErhuTFXCbEZFIAZTcPU+BWZ4O3qShp
+        7PAkXTLp1UjrnzfEOFMMbLg09XP/LUbsZwx/j79QQQMxjBFrw/dZGtMuorww51II/7Qju2ltmyiH9
+        SPdif6fNoXFELntKTQmXINf9ZvM7uxbjHEn6E1o1xJ6bwhEcp/L52LDzTfPLuVwibdw1aNg3Ujtgh
+        l6RzzhTg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ncVRg-002CRf-CN; Thu, 07 Apr 2022 10:57:21 -0600
+        id 1ncVRf-002CRm-Ow; Thu, 07 Apr 2022 10:57:22 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1ncVRf-0002QG-LB; Thu, 07 Apr 2022 10:57:19 -0600
+        id 1ncVRf-0002QA-Aw; Thu, 07 Apr 2022 10:57:19 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
 Cc:     Guoqing Jiang <guoqing.jiang@linux.dev>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu,  7 Apr 2022 10:57:12 -0600
-Message-Id: <20220407165713.9243-7-logang@deltatee.com>
+Date:   Thu,  7 Apr 2022 10:57:10 -0600
+Message-Id: <20220407165713.9243-5-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220407165713.9243-1-logang@deltatee.com>
 References: <20220407165713.9243-1-logang@deltatee.com>
@@ -46,65 +46,110 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, guoqing.jiang@linux.dev, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 6/7] md/raid5-ppl: Annotate with rcu_dereference_protected()
+Subject: [PATCH v1 4/7] md/raid5: Annotate rdev/replacement accesses when nr_pending is elevated
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-To suppress the last remaining sparse warnings about accessing
-rdev, add rcu_dereference_protected calls to a couple places
-in raid5-ppl. All of these places are called under raid5_run and
-therefore are occurring before the array has started and is thus
-safe.
+There are a number of accesses to __rcu variables that should be safe
+because nr_pending in the disk is known to be elevated.
 
-There's no sensible check to do for the second argument of
-rcu_dereference_protected() so a comment is added instead.
+Create a wrapper around rcu_dereference_protected() to annotate these
+accesses and verify that nr_pending is non-zero.
+
+This fixes a number of sparse warnings.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid5-ppl.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/md/raid5.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
-index d3962d92df18..55d065a87b89 100644
---- a/drivers/md/raid5-ppl.c
-+++ b/drivers/md/raid5-ppl.c
-@@ -883,7 +883,9 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
- 				 (unsigned long long)r_sector, dd_idx,
- 				 (unsigned long long)sector);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 4815f5351818..0f29a2769cb3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2648,6 +2648,16 @@ static void shrink_stripes(struct r5conf *conf)
+ 	conf->slab_cache = NULL;
+ }
  
--			rdev = conf->disks[dd_idx].rdev;
-+			/* Array has not started so rcu dereference is safe */
-+			rdev = rcu_dereference_protected(
-+					conf->disks[dd_idx].rdev, 1);
- 			if (!rdev || (!test_bit(In_sync, &rdev->flags) &&
- 				      sector >= rdev->recovery_offset)) {
- 				pr_debug("%s:%*s data member disk %d missing\n",
-@@ -934,7 +936,10 @@ static int ppl_recover_entry(struct ppl_log *log, struct ppl_header_entry *e,
- 		parity_sector = raid5_compute_sector(conf, r_sector_first + i,
- 				0, &disk, &sh);
- 		BUG_ON(sh.pd_idx != le32_to_cpu(e->parity_disk));
--		parity_rdev = conf->disks[sh.pd_idx].rdev;
++/*
++ * This helper wraps rcu_dereference_protected() and can be used when
++ * it is known that the nr_pending of the rdev is elevated.
++ */
++static struct md_rdev *rdev_pend_deref(struct md_rdev __rcu *rdev)
++{
++	return rcu_dereference_protected(rdev,
++			atomic_read(&rcu_access_pointer(rdev)->nr_pending));
++}
 +
-+		/* Array has not started so rcu dereference is safe */
-+		parity_rdev = rcu_dereference_protected(
-+					conf->disks[sh.pd_idx].rdev, 1);
+ static void raid5_end_read_request(struct bio * bi)
+ {
+ 	struct stripe_head *sh = bi->bi_private;
+@@ -2674,9 +2684,9 @@ static void raid5_end_read_request(struct bio * bi)
+ 		 * In that case it moved down to 'rdev'.
+ 		 * rdev is not removed until all requests are finished.
+ 		 */
+-		rdev = conf->disks[i].replacement;
++		rdev = rdev_pend_deref(conf->disks[i].replacement);
+ 	if (!rdev)
+-		rdev = conf->disks[i].rdev;
++		rdev = rdev_pend_deref(conf->disks[i].rdev);
  
- 		BUG_ON(parity_rdev->bdev->bd_dev != log->rdev->bdev->bd_dev);
- 		pr_debug("%s:%*s write parity at sector %llu, disk %s\n",
-@@ -1404,7 +1409,9 @@ int ppl_init_log(struct r5conf *conf)
+ 	if (use_new_offset(conf, sh))
+ 		s = sh->sector + rdev->new_data_offset;
+@@ -2790,11 +2800,11 @@ static void raid5_end_write_request(struct bio *bi)
  
- 	for (i = 0; i < ppl_conf->count; i++) {
- 		struct ppl_log *log = &ppl_conf->child_logs[i];
--		struct md_rdev *rdev = conf->disks[i].rdev;
-+		/* Array has not started so rcu dereference is safe */
-+		struct md_rdev *rdev =
-+			rcu_dereference_protected(conf->disks[i].rdev, 1);
- 
- 		mutex_init(&log->io_mutex);
- 		spin_lock_init(&log->io_list_lock);
+ 	for (i = 0 ; i < disks; i++) {
+ 		if (bi == &sh->dev[i].req) {
+-			rdev = conf->disks[i].rdev;
++			rdev = rdev_pend_deref(conf->disks[i].rdev);
+ 			break;
+ 		}
+ 		if (bi == &sh->dev[i].rreq) {
+-			rdev = conf->disks[i].replacement;
++			rdev = rdev_pend_deref(conf->disks[i].replacement);
+ 			if (rdev)
+ 				replacement = 1;
+ 			else
+@@ -2802,7 +2812,7 @@ static void raid5_end_write_request(struct bio *bi)
+ 				 * replaced it.  rdev is not removed
+ 				 * until all requests are finished.
+ 				 */
+-				rdev = conf->disks[i].rdev;
++				rdev = rdev_pend_deref(conf->disks[i].rdev);
+ 			break;
+ 		}
+ 	}
+@@ -5213,23 +5223,23 @@ static void handle_stripe(struct stripe_head *sh)
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if (test_and_clear_bit(R5_WriteError, &dev->flags)) {
+ 				/* We own a safe reference to the rdev */
+-				rdev = conf->disks[i].rdev;
++				rdev = rdev_pend_deref(conf->disks[i].rdev);
+ 				if (!rdev_set_badblocks(rdev, sh->sector,
+ 							RAID5_STRIPE_SECTORS(conf), 0))
+ 					md_error(conf->mddev, rdev);
+ 				rdev_dec_pending(rdev, conf->mddev);
+ 			}
+ 			if (test_and_clear_bit(R5_MadeGood, &dev->flags)) {
+-				rdev = conf->disks[i].rdev;
++				rdev = rdev_pend_deref(conf->disks[i].rdev);
+ 				rdev_clear_badblocks(rdev, sh->sector,
+ 						     RAID5_STRIPE_SECTORS(conf), 0);
+ 				rdev_dec_pending(rdev, conf->mddev);
+ 			}
+ 			if (test_and_clear_bit(R5_MadeGoodRepl, &dev->flags)) {
+-				rdev = conf->disks[i].replacement;
++				rdev = rdev_pend_deref(conf->disks[i].replacement);
+ 				if (!rdev)
+ 					/* rdev have been moved down */
+-					rdev = conf->disks[i].rdev;
++					rdev = rdev_pend_deref(conf->disks[i].rdev);
+ 				rdev_clear_badblocks(rdev, sh->sector,
+ 						     RAID5_STRIPE_SECTORS(conf), 0);
+ 				rdev_dec_pending(rdev, conf->mddev);
 -- 
 2.30.2
 
