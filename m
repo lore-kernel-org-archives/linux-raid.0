@@ -2,117 +2,213 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50560C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 07:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 762A9C4321E
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 08:04:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241425AbiDGHL5 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 03:11:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57004 "EHLO
+        id S242917AbiDGIGe (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 04:06:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241441AbiDGHL4 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 03:11:56 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 890CB13D33
-        for <linux-raid@vger.kernel.org>; Thu,  7 Apr 2022 00:09:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649315397; x=1680851397;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=fqSvJWl/uAT432C/ngN3GbC6cwHvtxQhn/NMFlctMq8=;
-  b=ktEP2wu8xg/05D6giBKTvflE3fZtLHalI4JxyvsRTBQh4MNaG1jjxquM
-   5U0Wz5AqxexpOfG8ot+dUDdNjhCxYdaik+qKPkvtTEwEyz9bisw7m/hFc
-   pnh5urVYMo3tVSqaMTOhwNN3xwBMQpZofkpRnRiIwOScFHyGFasCN1hAL
-   x8A8qYYpy8jUZPSP/0xXlFaUSpYkhyBt8zIlGZ6pLicZG+t1WZWoOTwqG
-   n00+XWCg3Wnqml2FalunfJESI1I6C2psWycmhVVGyHEqT3bloscRGRryB
-   aqhF6S2wGcDsy0KdRiD0E6A0wlzjtdDaaNgcARaecr4lMSf5uRqD17hG7
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10309"; a="261241178"
-X-IronPort-AV: E=Sophos;i="5.90,241,1643702400"; 
-   d="scan'208";a="261241178"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2022 00:09:57 -0700
-X-IronPort-AV: E=Sophos;i="5.90,241,1643702400"; 
-   d="scan'208";a="570926629"
-Received: from karolcwi-mobl.ger.corp.intel.com (HELO localhost) ([10.213.29.206])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2022 00:09:55 -0700
-Date:   Thu, 7 Apr 2022 09:09:50 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     Jes Sorensen <jes@trained-monkey.org>
-Cc:     Doug Ledford <dledford@redhat.com>,
-        Mateusz Kusiak <mateusz.kusiak@intel.com>,
-        linux-raid@vger.kernel.org, colyli@suse.de
-Subject: Re: [PATCH] Add RAID 1 chunksize test
-Message-ID: <20220407090950.0000501f@linux.intel.com>
-In-Reply-To: <9653c1f1-1aae-3c5d-2a43-4cb3109392b0@trained-monkey.org>
-References: <20220404070830.7795-1-mateusz.kusiak@intel.com>
-        <53bc131b71b7f94210e507eed93390b1b3899246.camel@redhat.com>
-        <9653c1f1-1aae-3c5d-2a43-4cb3109392b0@trained-monkey.org>
+        with ESMTP id S242826AbiDGIGW (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 04:06:22 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54C34160468;
+        Thu,  7 Apr 2022 01:03:18 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id BA7481F859;
+        Thu,  7 Apr 2022 08:03:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1649318596; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7k0z5t+RkWgzil40AtKwhJmpL0iBjAFtHXia6nIwjc8=;
+        b=BFj1weRWNO0gJwf1a0jytpVaNV2SIOQyml/DNHaVaAYv+GWtC9RRp3Nkr1QhUY/V7QdLG9
+        baoJsXmF2FufEolsvsTPwbwZ3Or5/MyPwA8jPnqPoYDtXH5U9TjRT7F8cNWLR3Nqx6fvJv
+        Ws2fOIHqbo98FqfWwnQjig+YJFloGxM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1649318596;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7k0z5t+RkWgzil40AtKwhJmpL0iBjAFtHXia6nIwjc8=;
+        b=DjSOFiN41nmAx2XAVq/tnPaDKbkIhCw6FaIeWu9KyiZMi8ecy7DPyjacZPoBAIl6E7Jspy
+        2pyi9oy0n8T7WCDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4CF8613485;
+        Thu,  7 Apr 2022 08:03:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id F2mtCL+aTmKlAgAAMHmgww
+        (envelope-from <colyli@suse.de>); Thu, 07 Apr 2022 08:03:11 +0000
+Message-ID: <9f91936a-7dd7-2ee6-3293-f199ada85210@suse.de>
+Date:   Thu, 7 Apr 2022 16:03:09 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.7.0
+Subject: Re: [PATCH 22/27] block: refactor discard bio size limiting
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        Jens Axboe <axboe@kernel.dk>
+References: <20220406060516.409838-1-hch@lst.de>
+ <20220406060516.409838-23-hch@lst.de>
+From:   Coly Li <colyli@suse.de>
+In-Reply-To: <20220406060516.409838-23-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 6 Apr 2022 12:46:03 -0400
-Jes Sorensen <jes@trained-monkey.org> wrote:
-
-> On 4/4/22 08:38, Doug Ledford wrote:
-> > On Mon, 2022-04-04 at 09:08 +0200, Mateusz Kusiak wrote: =20
-> >> Specifying chunksize for raid 1 is forbidden.
-> >> Add test for blocking raid 1 creation with chunksize.
-> >>
-> >> Signed-off-by: Mateusz Kusiak <mateusz.kusiak@intel.com>
-> >> ---
-> >> =A0tests/01r1create-chunk | 15 +++++++++++++++
-> >> =A01 file changed, 15 insertions(+)
-> >> =A0create mode 100644 tests/01r1create-chunk
-> >>
-> >> diff --git a/tests/01r1create-chunk b/tests/01r1create-chunk
-> >> new file mode 100644
-> >> index 00000000..717a5e5a
-> >> --- /dev/null
-> >> +++ b/tests/01r1create-chunk
-> >> @@ -0,0 +1,15 @@
-> >> +# RAID 1 volume, 2 disks, chunk 64
-> >> +# NEGATIVE test - creating raid 1 with chunksize specified is
-> >> forbidden
-> >> +
-> >> +num_disks=3D2
-> >> +level=3D1
-> >> +device_list=3D"$dev0 $dev1"
-> >> +chunk=3D64
-> >> +
-> >> +# Create raid 1 with chunk 64k and fail
-> >> +if ! mdadm --create --run $md0 --auto=3Dmd --level=3D$level --
-> >> chunk=3D$chunk --raid-disks=3D$num_disks $device_list
-> >> +then
-> >> +=A0=A0=A0=A0=A0=A0=A0exit 0
-> >> +fi
-> >> +
-> >> +exit 1 =20
-> >=20
-> > This is a case of overkill IMO.  Chunk size with raid1 isn't really
-> > a problem and shouldn't result in mdadm refusing to work.  Chunk
-> > size with raid1 simply has no effect and should just be ignored
-> > with at most a warning by mdadm. =20
->=20
-> I agree with Doug here. I think a warning from mdadm that chunksize
-> makes no sense for raid1 would be good, but having a failed test over
-> it makes little sense. If anything the test should detect the warning
-> is happening.
+On 4/6/22 2:05 PM, Christoph Hellwig wrote:
+> Move all the logic to limit the discard bio size into a common helper
+> so that it is better documented.
 >
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ideally, chunk parameter for RAID1 should not be recognized, because it
-is not an option. For that reason I'm closer to say that we shouldn't
-continue if chunk is passed. It helps to limit abuses from less
-experienced users.
+Acked-by: Coly Li <colyli@suse.de>
 
-Jes, you asked for this test:
-https://lore.kernel.org/linux-raid/bdcc98ec-72bc-d0ab-7e82-7e00bc02447f@tra=
-ined-monkey.org/
 
-Thanks,
-Mariusz
+Thanks for the change.
+
+Coly Li
+
+
+> ---
+>   block/blk-lib.c | 59 ++++++++++++++++++++++++-------------------------
+>   block/blk.h     | 14 ------------
+>   2 files changed, 29 insertions(+), 44 deletions(-)
+>
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 237d60d8b5857..2ae32a722851c 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -10,6 +10,32 @@
+>   
+>   #include "blk.h"
+>   
+> +static sector_t bio_discard_limit(struct block_device *bdev, sector_t sector)
+> +{
+> +	unsigned int discard_granularity =
+> +		bdev_get_queue(bdev)->limits.discard_granularity;
+> +	sector_t granularity_aligned_sector;
+> +
+> +	if (bdev_is_partition(bdev))
+> +		sector += bdev->bd_start_sect;
+> +
+> +	granularity_aligned_sector =
+> +		round_up(sector, discard_granularity >> SECTOR_SHIFT);
+> +
+> +	/*
+> +	 * Make sure subsequent bios start aligned to the discard granularity if
+> +	 * it needs to be split.
+> +	 */
+> +	if (granularity_aligned_sector != sector)
+> +		return granularity_aligned_sector - sector;
+> +
+> +	/*
+> +	 * Align the bio size to the discard granularity to make splitting the bio
+> +	 * at discard granularity boundaries easier in the driver if needed.
+> +	 */
+> +	return round_down(UINT_MAX, discard_granularity) >> SECTOR_SHIFT;
+> +}
+> +
+>   int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>   		sector_t nr_sects, gfp_t gfp_mask, int flags,
+>   		struct bio **biop)
+> @@ -17,7 +43,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>   	struct request_queue *q = bdev_get_queue(bdev);
+>   	struct bio *bio = *biop;
+>   	unsigned int op;
+> -	sector_t bs_mask, part_offset = 0;
+> +	sector_t bs_mask;
+>   
+>   	if (bdev_read_only(bdev))
+>   		return -EPERM;
+> @@ -48,36 +74,9 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>   	if (!nr_sects)
+>   		return -EINVAL;
+>   
+> -	/* In case the discard request is in a partition */
+> -	if (bdev_is_partition(bdev))
+> -		part_offset = bdev->bd_start_sect;
+> -
+>   	while (nr_sects) {
+> -		sector_t granularity_aligned_lba, req_sects;
+> -		sector_t sector_mapped = sector + part_offset;
+> -
+> -		granularity_aligned_lba = round_up(sector_mapped,
+> -				q->limits.discard_granularity >> SECTOR_SHIFT);
+> -
+> -		/*
+> -		 * Check whether the discard bio starts at a discard_granularity
+> -		 * aligned LBA,
+> -		 * - If no: set (granularity_aligned_lba - sector_mapped) to
+> -		 *   bi_size of the first split bio, then the second bio will
+> -		 *   start at a discard_granularity aligned LBA on the device.
+> -		 * - If yes: use bio_aligned_discard_max_sectors() as the max
+> -		 *   possible bi_size of the first split bio. Then when this bio
+> -		 *   is split in device drive, the split ones are very probably
+> -		 *   to be aligned to discard_granularity of the device's queue.
+> -		 */
+> -		if (granularity_aligned_lba == sector_mapped)
+> -			req_sects = min_t(sector_t, nr_sects,
+> -					  bio_aligned_discard_max_sectors(q));
+> -		else
+> -			req_sects = min_t(sector_t, nr_sects,
+> -					  granularity_aligned_lba - sector_mapped);
+> -
+> -		WARN_ON_ONCE((req_sects << 9) > UINT_MAX);
+> +		sector_t req_sects =
+> +			min(nr_sects, bio_discard_limit(bdev, sector));
+>   
+>   		bio = blk_next_bio(bio, bdev, 0, op, gfp_mask);
+>   		bio->bi_iter.bi_sector = sector;
+> diff --git a/block/blk.h b/block/blk.h
+> index 8ccbc6e076369..1fdc1d28e6d60 100644
+> --- a/block/blk.h
+> +++ b/block/blk.h
+> @@ -346,20 +346,6 @@ static inline unsigned int bio_allowed_max_sectors(struct request_queue *q)
+>   	return round_down(UINT_MAX, queue_logical_block_size(q)) >> 9;
+>   }
+>   
+> -/*
+> - * The max bio size which is aligned to q->limits.discard_granularity. This
+> - * is a hint to split large discard bio in generic block layer, then if device
+> - * driver needs to split the discard bio into smaller ones, their bi_size can
+> - * be very probably and easily aligned to discard_granularity of the device's
+> - * queue.
+> - */
+> -static inline unsigned int bio_aligned_discard_max_sectors(
+> -					struct request_queue *q)
+> -{
+> -	return round_down(UINT_MAX, q->limits.discard_granularity) >>
+> -			SECTOR_SHIFT;
+> -}
+> -
+>   /*
+>    * Internal io_context interface
+>    */
+
 
