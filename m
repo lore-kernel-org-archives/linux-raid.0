@@ -2,81 +2,95 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80610C433EF
-	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 14:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E73CC4167E
+	for <linux-raid@archiver.kernel.org>; Thu,  7 Apr 2022 15:25:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343942AbiDGOao (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 10:30:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41240 "EHLO
+        id S1344657AbiDGP05 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 11:26:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232310AbiDGOah (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 10:30:37 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 158D51959C2
-        for <linux-raid@vger.kernel.org>; Thu,  7 Apr 2022 07:28:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649341704; x=1680877704;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=YlepH2cXqH2l3b8yV47Fx6TAf5k51fKfGZ3QpS59gKU=;
-  b=g5cOtEJMhJDP8xytxCkOg8I5v0DuOioghmXLjfkSX6f7Ab5i44wiQrCA
-   sJK4qFBqsGTRdG/vcjlcTzZmmPb1T0TvYfJ50mTHdGaZ5DwU4+YYupP/l
-   jsBN9lZrYTFHJVqURt8Ge8fZke6Sv0HfeYg3e2jQqZECIHcX31lfGqkEU
-   jyhnR0Q2Hz//ICZV5pg3KuegCaa6v4UjaMGybyNIlTNdjWjRau54Y+S6L
-   KMlQl3FT7f0/ESwa43m2rX6x8YXzn19ZFsE9NYkVmZZYewM0sy+z+HOyg
-   Amk9qgSepOMnHaJbuFm7qsZaoC8gAWXXCiWePyQYG7rXHcINlmrjpqZgI
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10309"; a="261513381"
-X-IronPort-AV: E=Sophos;i="5.90,242,1643702400"; 
-   d="scan'208";a="261513381"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2022 07:28:23 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,242,1643702400"; 
-   d="scan'208";a="659077549"
-Received: from unknown (HELO gklab-109-9.igk.intel.com) ([10.102.109.9])
-  by orsmga004.jf.intel.com with ESMTP; 07 Apr 2022 07:28:22 -0700
-From:   Lukasz Florczak <lukasz.florczak@linux.intel.com>
-To:     linux-raid@vger.kernel.org
-Cc:     jes@trained-monkey.org, colyli@suse.de, pmenzel@molgen.mpg.de
-Subject: [PATCH 2/2] mdadm: Remove dead code in imsm_fix_size_mismatch
-Date:   Thu,  7 Apr 2022 16:27:39 +0200
-Message-Id: <20220407142739.60198-3-lukasz.florczak@linux.intel.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220407142739.60198-1-lukasz.florczak@linux.intel.com>
-References: <20220407142739.60198-1-lukasz.florczak@linux.intel.com>
+        with ESMTP id S1344634AbiDGP0y (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 11:26:54 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 965F821B425;
+        Thu,  7 Apr 2022 08:24:54 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id D66A6212CA;
+        Thu,  7 Apr 2022 15:24:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1649345092;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RtA+SPF4j8BVXsqmszO7xH0OxCICEh+Est/knHN20Pw=;
+        b=JdwcskixEmG8Id6CFcHmK2HMPcVcB071Gxs55mSKq7gYvR2Ikd8MNoO/fLtEbVpgdj1eqK
+        9zmwivWn67QHHcgD9Kfm5GQ7CXBQeMe5lW9iJ9AGGV3Pl0ul2ocJyd3loaCvdRBmNQxip+
+        WgCnpcThcFxRJmTkxC30BSU3q0i1qd4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1649345092;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RtA+SPF4j8BVXsqmszO7xH0OxCICEh+Est/knHN20Pw=;
+        b=pkLC9VLc/9JNFZ5DsOV/UM/28hXligCH1VLYaRzzl6m3sxWEGPlvl1H8p8FVldpalCYBR6
+        DsLUEWMcp0v/ApCw==
+Received: from ds.suse.cz (ds.suse.cz [10.100.12.205])
+        by relay2.suse.de (Postfix) with ESMTP id ADAE4A3B82;
+        Thu,  7 Apr 2022 15:24:52 +0000 (UTC)
+Received: by ds.suse.cz (Postfix, from userid 10065)
+        id 25B6BDA80E; Thu,  7 Apr 2022 17:20:50 +0200 (CEST)
+Date:   Thu, 7 Apr 2022 17:20:49 +0200
+From:   David Sterba <dsterba@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+Subject: Re: [PATCH 07/27] btrfs: use bdev_max_active_zones instead of open
+ coding it
+Message-ID: <20220407152049.GH15609@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+Mail-Followup-To: dsterba@suse.cz, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+References: <20220406060516.409838-1-hch@lst.de>
+ <20220406060516.409838-8-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220406060516.409838-8-hch@lst.de>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-imsm_create_metadata_update_for_size_change() that returns u_size value
-could return 0 in the past. As its behavior changed, and returned value
-is always the size of imsm_update_size_change structure, check for
-u_size is no longer needed.
+On Wed, Apr 06, 2022 at 08:04:56AM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Lukasz Florczak <lukasz.florczak@linux.intel.com>
----
- super-intel.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/super-intel.c b/super-intel.c
-index 102689bc..cb5292e1 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -11772,10 +11772,6 @@ static int imsm_fix_size_mismatch(struct supertype *st, int subarray_index)
- 		geo.size = d_size;
- 		u_size = imsm_create_metadata_update_for_size_change(st, &geo,
- 								     &update);
--		if (u_size < 1) {
--			dprintf("imsm: Cannot prepare size change update\n");
--			goto exit;
--		}
- 		imsm_update_metadata_locally(st, update, u_size);
- 		if (st->update_tail) {
- 			append_metadata_update(st, update, u_size);
--- 
-2.27.0
-
+As it's a standalone patch I can take it (possibly with other similar
+prep btrfs patches) in current development cycle to relieve the
+inter-tree dependencies.
