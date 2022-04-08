@@ -2,103 +2,122 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D74C433F5
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 00:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78378C433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 00:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232879AbiDHAbm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 20:31:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50808 "EHLO
+        id S232917AbiDHAjH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 20:39:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230079AbiDHAbl (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 20:31:41 -0400
+        with ESMTP id S232896AbiDHAjF (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 20:39:05 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 578521D08E1
-        for <linux-raid@vger.kernel.org>; Thu,  7 Apr 2022 17:29:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D5D3108195;
+        Thu,  7 Apr 2022 17:37:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E56C7615C6
-        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 00:29:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DF42C385A4
-        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 00:29:38 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E526F61877;
+        Fri,  8 Apr 2022 00:37:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CC5FC385A9;
+        Fri,  8 Apr 2022 00:37:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649377778;
-        bh=zxDfqdwCICYB6oHbCmvitUB1SOALJaIkCcX7W9ZMerw=;
+        s=k20201202; t=1649378222;
+        bh=i2XZq/Xu6H3REApuY9LUTcK2PgJHPjIMKr2oGYUJS+w=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=NyRGwJhtWGHmTe4WpyPPaux+46xMm09SrB9kTwaDNWONT5BrruZi05EBdhtTfsZ4v
-         MokqvC0ph/gOQZ06Pc4/XlJkxqvgGoKTX6xFpIgdY87tQ3lQKh6YXRYmla0Dg/8MWz
-         k7J9Y9Fv+PrsDKNaKkXcCwig7pt+Q7TawNiGVfOKlU6j8vcN4GQWrKMgtor56mKS+f
-         TpZTDhggoU8D/Q/HRwPYEI4SIrT+b6eiYoouXzEySJB0eMLu0jp3RqmMR1t0oIRfXy
-         qKmLqqqxZqHPGtM2P5unqkJzN4mvw6OweXH9INyyGPV5uJgM5FMyPMPrdW1a6+FHUm
-         qlZ9mlZ8z6NlQ==
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-2eb680211d9so79757467b3.9
-        for <linux-raid@vger.kernel.org>; Thu, 07 Apr 2022 17:29:38 -0700 (PDT)
-X-Gm-Message-State: AOAM531q4g+SD9ApzBwnxTplk1FdGnS91GlrRskYbOxnxIcmj42gNRGI
-        2p8iEpyLhqpUuGYrHIhg7RHaRdivgaQDvElgwoY=
-X-Google-Smtp-Source: ABdhPJwt5Cknl7GYC/lO6Y37cWJVAHS6YFr4BT6g1DhJt4nJ9E0jYW+SWEtAybCPIXr9SzHczW5ZkJotGcs5S4738T4=
-X-Received: by 2002:a81:1694:0:b0:2eb:8d40:abd7 with SMTP id
- 142-20020a811694000000b002eb8d40abd7mr13470753yww.211.1649377777251; Thu, 07
- Apr 2022 17:29:37 -0700 (PDT)
+        b=GyQOwOUtHJkHjJBvAbOA3vKcRaXiuGK57yvu8DZxwmGJcODd46H+mDgSPxPys/heZ
+         YIA0G9VUuHm1uD7T4wTIltvaCJC33lHy63MYlQk8SGTNJbRU8tEOeOnljBjOCAT9CK
+         0pkORZXXiztnnyvnEXxA6umz/fDxUB8+ygVGJRN67+GDyOPju3k4NkWVDQXfZIVnqt
+         t43io2YNgWVMMQqRfrSSujgXIMWNxjVIRB51B9IoXYbRRSAevcZ2H1AYAxR2kaIBai
+         y1XQmbuyJeV+kNq4WV35tfhDfL6qmQb5NcSx5aeFl/QeMCYlZ2rtFMzsrRnwiDQA1X
+         u5B355z4sgGyw==
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-2db2add4516so80278687b3.1;
+        Thu, 07 Apr 2022 17:37:02 -0700 (PDT)
+X-Gm-Message-State: AOAM532eJRsVSTymVVl59Nmc+EmZUe0oS5fRw26vU0I81AOraahNo+0o
+        EdAaFSUZsSDH382pYfH6bYywxXjziBW+Mim3vAs=
+X-Google-Smtp-Source: ABdhPJwvzDb1VlAhZdTtbxJtXVdfI6VVJsSdq+zEc/GLZ2R9uDVGKWfT7S5dkfsKzl9zBEZRMG+1axuvTWqaaMPQYDU=
+X-Received: by 2002:a0d:f6c6:0:b0:2e5:bf17:4dce with SMTP id
+ g189-20020a0df6c6000000b002e5bf174dcemr14410627ywf.130.1649378221272; Thu, 07
+ Apr 2022 17:37:01 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220322152339.11892-1-mariusz.tkaczyk@linux.intel.com> <20220322152339.11892-4-mariusz.tkaczyk@linux.intel.com>
-In-Reply-To: <20220322152339.11892-4-mariusz.tkaczyk@linux.intel.com>
+References: <20220328081127.26148-1-xiam0nd.tong@gmail.com>
+In-Reply-To: <20220328081127.26148-1-xiam0nd.tong@gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 7 Apr 2022 17:29:24 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW47katBeSM7yuWeAxOCaK1GjcvEW6wM5m+YW8p8MS7_aA@mail.gmail.com>
-Message-ID: <CAPhsuW47katBeSM7yuWeAxOCaK1GjcvEW6wM5m+YW8p8MS7_aA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] raid5: introduce MD_BROKEN
-To:     Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>
+Date:   Thu, 7 Apr 2022 17:36:48 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6S=PJsgVR=OkObMvs9uJ2QA3LFe+ZH8XtEyKRFh7XxHA@mail.gmail.com>
+Message-ID: <CAPhsuW6S=PJsgVR=OkObMvs9uJ2QA3LFe+ZH8XtEyKRFh7XxHA@mail.gmail.com>
+Subject: Re: [PATCH v2] md: fix an incorrect NULL check in sync_sbs
+To:     Xiaomeng Tong <xiam0nd.tong@gmail.com>
+Cc:     rgoldwyn@suse.com, Guoqing Jiang <guoqing.jiang@linux.dev>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Tue, Mar 22, 2022 at 8:24 AM Mariusz Tkaczyk
-<mariusz.tkaczyk@linux.intel.com> wrote:
+On Mon, Mar 28, 2022 at 1:11 AM Xiaomeng Tong <xiam0nd.tong@gmail.com> wrote:
 >
-> Raid456 module had allowed to achieve failed state. It was fixed by
-> fb73b357fb9 ("raid5: block failing device if raid will be failed").
-> This fix introduces a bug, now if raid5 fails during IO, it may result
-> with a hung task without completion. Faulty flag on the device is
-> necessary to process all requests and is checked many times, mainly in
-> analyze_stripe().
-[...]
+> The bug is here:
+>         if (!rdev)
+>
+> The list iterator value 'rdev' will *always* be set and non-NULL
+> by rdev_for_each(), so it is incorrect to assume that the iterator
+> value will be NULL if the list is empty or no element found.
+> Otherwise it will bypass the NULL check and lead to invalid memory
+> access passing the check.
+>
+> To fix the bug, use a new variable 'iter' as the list iterator,
+> while using the original variable 'pdev' as a dedicated pointer to
 
+s/pdev/rdev/
+
+> point to the found element.
+>
 > Cc: stable@vger.kernel.org
-> Fixes: fb73b357fb9 ("raid5: block failing device if raid will be failed")
-> Signed-off-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+> Fixes: 2aa82191ac36c ("md-cluster: Perform a lazy update")
+
+"Fixes" should use a hash of 12 characters (13 given here). Did
+checkpatch.pl complain about it?
+
+> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
+> Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
 > ---
->  drivers/md/raid5.c | 48 +++++++++++++++++++++++-----------------------
->  1 file changed, 24 insertions(+), 24 deletions(-)
 >
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 7c119208a214..4d76e3a89aa5 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -686,17 +686,20 @@ int raid5_calc_degraded(struct r5conf *conf)
->         return degraded;
->  }
+> changes since v1:
+>  - rephrase the subject (Guoqing Jiang)
+>  - add Acked-by: for Guoqing Jiang
+> v1:https://lore.kernel.org/lkml/20220327080002.11923-1-xiam0nd.tong@gmail.com/
 >
-> -static int has_failed(struct r5conf *conf)
-> +static bool has_failed(struct r5conf *conf)
+> ---
+>  drivers/md/md.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 4d38bd7dadd6..7476fc204172 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2629,14 +2629,16 @@ static void sync_sbs(struct mddev *mddev, int nospares)
+>
+>  static bool does_sb_need_changing(struct mddev *mddev)
 >  {
-> -       int degraded;
-> +       int degraded = conf->mddev->degraded;
+> -       struct md_rdev *rdev;
+> +       struct md_rdev *rdev = NULL, *iter;
+>         struct mdp_superblock_1 *sb;
+>         int role;
 >
-> -       if (conf->mddev->reshape_position == MaxSector)
-> -               return conf->mddev->degraded > conf->max_degraded;
-> +       if (test_bit(MD_BROKEN, &conf->mddev->flags))
-> +               return true;
-> +
-> +       if (conf->mddev->reshape_position != MaxSector)
-> +               degraded = raid5_calc_degraded(conf);
+>         /* Find a good rdev */
+> -       rdev_for_each(rdev, mddev)
+> -               if ((rdev->raid_disk >= 0) && !test_bit(Faulty, &rdev->flags))
+> +       rdev_for_each(iter, mddev)
+> +               if ((iter->raid_disk >= 0) && !test_bit(Faulty, &iter->flags)) {
+> +                       rdev = iter;
+>                         break;
+> +               }
 >
-> -       degraded = raid5_calc_degraded(conf);
->         if (degraded > conf->max_degraded)
-
-nit: we can just do
-   return degraded > conf->max_degraded;
-
-[...]
+>         /* No good device found. */
+>         if (!rdev)
+> --
+> 2.17.1
+>
