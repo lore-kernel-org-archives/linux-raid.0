@@ -2,126 +2,123 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FD97C433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 12:23:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 244DBC433EF
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 13:00:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234673AbiDHMZ7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Apr 2022 08:25:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39048 "EHLO
+        id S236033AbiDHNCN (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Apr 2022 09:02:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235602AbiDHMZ5 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 08:25:57 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 027A25FD7;
-        Fri,  8 Apr 2022 05:23:52 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 4C02221602;
-        Fri,  8 Apr 2022 12:23:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649420631; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uVUpaREMsqSl4vlaMoOMUHcCZsb/nYkNS050tsr5h/M=;
-        b=hRLmEUUKwmqeHOAJ7sPrZZE0DAA7RuiXmolBN1YA4t3HjT+nYOsFndqB3ZqKLUXsBO0XUI
-        RjbY2u1/yXMjxR4ZYLTynH/hKns1eAY0K31hlFJmfgmHS60qmQKbU+P/zUviosXfa7ILQz
-        7QH42GdiJwQYtp0uGYm1V0oQBnaI5eA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649420631;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uVUpaREMsqSl4vlaMoOMUHcCZsb/nYkNS050tsr5h/M=;
-        b=+teq62O8z1TBTVIYmFBH64RzHuCUsF41fVoS4jFt4GR+qXMQC66FxWwj18gZsbu1Ithokj
-        /+KBbhv3ImoCzgAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EFB6A132B9;
-        Fri,  8 Apr 2022 12:23:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5kxvLVYpUGLuEAAAMHmgww
-        (envelope-from <rgoldwyn@suse.de>); Fri, 08 Apr 2022 12:23:50 +0000
-Date:   Fri, 8 Apr 2022 07:23:48 -0500
-From:   Goldwyn Rodrigues <rgoldwyn@suse.de>
-To:     Xiaomeng Tong <xiam0nd.tong@gmail.com>
-Cc:     song@kernel.org, guoqing.jiang@linux.dev,
-        linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v3] md: fix an incorrect NULL check in
- does_sb_need_changing
-Message-ID: <20220408122348.bt7lkaumwhv36a2q@fiona>
-References: <20220408083728.25701-1-xiam0nd.tong@gmail.com>
+        with ESMTP id S236013AbiDHNCM (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 09:02:12 -0400
+X-Greylist: delayed 554 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 08 Apr 2022 06:00:01 PDT
+Received: from smtp-delay1.nerim.net (mailhost-v2-m3.nerim-networks.com [78.40.49.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BCC7A2ED6F
+        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 06:00:01 -0700 (PDT)
+Received: from maiev.nerim.net (smtp-155-friday.nerim.net [194.79.134.155])
+        by smtp-delay1.nerim.net (Postfix) with ESMTP id BBFB6C7A88
+        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 14:50:45 +0200 (CEST)
+Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
+        by maiev.nerim.net (Postfix) with ESMTP id 5E5E52E007;
+        Fri,  8 Apr 2022 14:50:39 +0200 (CEST)
+Message-ID: <23ea4d81-7c7e-0fea-8a15-52ee045da56f@plouf.fr.eu.org>
+Date:   Fri, 8 Apr 2022 14:50:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220408083728.25701-1-xiam0nd.tong@gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
+Subject: [PATCH] Ignore RAID0 layout if the second zone has only one device
+To:     NeilBrown <neilb@suse.de>
+Cc:     linux-raid@vger.kernel.org
+References: <7fb90df2-8913-717f-7078-550d59c94054@plouf.fr.eu.org>
+ <164919384282.10985.10644950304504061908@noble.neil.brown.name>
+ <3d16d210-2077-26bf-1eb7-6b9c5ab5fd24@plouf.fr.eu.org>
+ <164928572784.10985.3756904836293591231@noble.neil.brown.name>
+Content-Language: en-US
+Organization: Plouf !
+In-Reply-To: <164928572784.10985.3756904836293591231@noble.neil.brown.name>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 16:37 08/04, Xiaomeng Tong wrote:
-> The bug is here:
-> 	if (!rdev)
+Le 07/04/2022 à 00:55, NeilBrown wrote:
+> On Wed, 06 Apr 2022, Pascal Hambourg wrote:
+>> On 05/04/2022, NeilBrown wrote:
+>>> On Wed, 06 Apr 2022, Pascal Hambourg wrote:
+>>>>
+>>>> This is a question about original/alternate layout enforcement for RAID0
+>>>> arrays with members of different sizes introduced by commits
+>>>> c84a1372df929033cb1a0441fb57bd3932f39ac9 ("md/raid0: avoid RAID0 data
+>>>> corruption due to layout confusion.)" and
+>>>> 33f2c35a54dfd75ad0e7e86918dcbe4de799a56c ("md: add feature flag
+>>>> MD_FEATURE_RAID0_LAYOUT").
+>>>>
+>>>> The layout is irrelevant if all members have the same size so the array
+>>>> has only one zone. But isn't it also irrelevant if the array has two
+>>>> zones and the second zone has only one device, for example if the array
+>>>> has two members of different sizes ?
+>>>
+>>> Yes.
+>>
+>> So wouldn't it make sense to allow assembly even when the layout is
+>> undefined, like what is done when the array has only one zone ?
+>>
+> Yes.
 > 
-> The list iterator value 'rdev' will *always* be set and non-NULL
-> by rdev_for_each(), so it is incorrect to assume that the iterator
-> value will be NULL if the list is empty or no element found.
-> Otherwise it will bypass the NULL check and lead to invalid memory
-> access passing the check.
-> 
-> To fix the bug, use a new variable 'iter' as the list iterator,
-> while using the original variable 'rdev' as a dedicated pointer to
-> point to the found element.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 2aa82191ac36 ("md-cluster: Perform a lazy update")
-> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
-> Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
+> P.S.  maybe you would like to try making the code change yourself, and
+> posting the patch.
 
-Also safeguards from reading sb from a faulty device if all devices are
-faulty.
+Sure. In order to check the number of devices in the second zone I had
+to move the layout check after all zones are set up. Is this fine ?
 
-Acked-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index b21e101183f4..7623811cc11c 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -128,21 +128,6 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+    	pr_debug("md/raid0:%s: FINAL %d zones\n",
+    		 mdname(mddev), conf->nr_strip_zones);
 
-> v2:https://lore.kernel.org/lkml/20220328081127.26148-1-xiam0nd.tong@gmail.com/
-> v1:https://lore.kernel.org/lkml/20220327080002.11923-1-xiam0nd.tong@gmail.com/
-> 
-> ---
->  drivers/md/md.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4d38bd7dadd6..7476fc204172 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2629,14 +2629,16 @@ static void sync_sbs(struct mddev *mddev, int nospares)
->  
->  static bool does_sb_need_changing(struct mddev *mddev)
->  {
-> -	struct md_rdev *rdev;
-> +	struct md_rdev *rdev = NULL, *iter;
->  	struct mdp_superblock_1 *sb;
->  	int role;
->  
->  	/* Find a good rdev */
-> -	rdev_for_each(rdev, mddev)
-> -		if ((rdev->raid_disk >= 0) && !test_bit(Faulty, &rdev->flags))
-> +	rdev_for_each(iter, mddev)
-> +		if ((iter->raid_disk >= 0) && !test_bit(Faulty, &iter->flags)) {
-> +			rdev = iter;
->  			break;
-> +		}
->  
->  	/* No good device found. */
->  	if (!rdev)
-> -- 
-> 2.17.1
-> 
+-	if (conf->nr_strip_zones == 1) {
+-		conf->layout = RAID0_ORIG_LAYOUT;
+-	} else if (mddev->layout == RAID0_ORIG_LAYOUT ||
+-		   mddev->layout == RAID0_ALT_MULTIZONE_LAYOUT) {
+-		conf->layout = mddev->layout;
+-	} else if (default_layout == RAID0_ORIG_LAYOUT ||
+-		   default_layout == RAID0_ALT_MULTIZONE_LAYOUT) {
+-		conf->layout = default_layout;
+-	} else {
+-		pr_err("md/raid0:%s: cannot assemble multi-zone RAID0 with default_layout setting\n",
+-		       mdname(mddev));
+-		pr_err("md/raid0: please set raid0.default_layout to 1 or 2\n");
+-		err = -ENOTSUPP;
+-		goto abort;
+-	}
+    	/*
+    	 * now since we have the hard sector sizes, we can make sure
+    	 * chunk size is a multiple of that sector size
+@@ -273,6 +258,22 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+    			 (unsigned long long)smallest->sectors);
+    	}
 
--- 
-Goldwyn
++	if (conf->nr_strip_zones == 1 || conf->strip_zone[1].nb_dev == 1) {
++		conf->layout = RAID0_ORIG_LAYOUT;
++	} else if (mddev->layout == RAID0_ORIG_LAYOUT ||
++		   mddev->layout == RAID0_ALT_MULTIZONE_LAYOUT) {
++		conf->layout = mddev->layout;
++	} else if (default_layout == RAID0_ORIG_LAYOUT ||
++		   default_layout == RAID0_ALT_MULTIZONE_LAYOUT) {
++		conf->layout = default_layout;
++	} else {
++		pr_err("md/raid0:%s: cannot assemble multi-zone RAID0 with default_layout setting\n",
++		       mdname(mddev));
++		pr_err("md/raid0: please set raid0.default_layout to 1 or 2\n");
++		err = -ENOTSUPP;
++		goto abort;
++	}
++
+    	pr_debug("md/raid0:%s: done.\n", mdname(mddev));
+    	*private_conf = conf;
+
