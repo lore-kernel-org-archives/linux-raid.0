@@ -2,79 +2,81 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 429BEC433FE
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 16:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F26D2C433F5
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 16:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232969AbiDHQie (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Apr 2022 12:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37054 "EHLO
+        id S234723AbiDHRBr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Apr 2022 13:01:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232671AbiDHQic (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 12:38:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DBF1ED917;
-        Fri,  8 Apr 2022 09:36:27 -0700 (PDT)
+        with ESMTP id S229577AbiDHRBq (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 13:01:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 836D730F9DF
+        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 09:59:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 12E1B620D1;
-        Fri,  8 Apr 2022 16:36:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B7FEC385A1;
-        Fri,  8 Apr 2022 16:36:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F2166215B
+        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 16:59:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78EF4C385A1
+        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 16:59:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649435786;
-        bh=TkwBDUzJ9YyBhxYoCFRlqcRWI7UV6YLdvwfBWpDoxkM=;
+        s=k20201202; t=1649437181;
+        bh=zw0ARdpDW+LHaYLhbRipJvSqF5I9fE4zNhVIKiMDzkk=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=qw7sf9W6lt3RpDJwysfpT+r6eWzmBjwOklM08kfvAxsH09zK9Z7N81LfuSqO+ZpW0
-         bGff2jTH0wpqc4JIhk6m+W9Mx9dMriwrD2ZOh0okm75cNEy0C3Ko6G9JHkE5ynTPPa
-         G6ZG/hFe/DwTMGEV++XWjEeQ+PwnEueReLLet6B/1x6ncqWyyjxWCQ6S9gF5wUFXC3
-         BIHu0WSdmPsTuQtwIl5e8wGZfH/ss1IjXmMOHF6YPnQRhBEhJdzElF3LRxPL3mCTtt
-         T3iTE/B+n6KkCzP9Hsil1j2iClbeu/gzW5GwClPeqtIQL8lWkxLFghr/LafkrN55L+
-         yWG7NIGiQu5Uw==
-Received: by mail-yb1-f180.google.com with SMTP id d138so16016866ybc.13;
-        Fri, 08 Apr 2022 09:36:26 -0700 (PDT)
-X-Gm-Message-State: AOAM531RDa7P4bN4bilrXJvBuBi0GjPqP7cLkZCpWp3gvl/NQIFlNiW6
-        a7XgosQOD9rH+y78tbVf859yTrny6X2R57ixIHA=
-X-Google-Smtp-Source: ABdhPJyQCzENX7aSD7Xm1y3IHarGAd00OfvNz3MtCITUYG2YdmOP0Yp14ZXNlGZXyEFfqNQOqZ916X9Txnh0PrLZPX4=
-X-Received: by 2002:a25:d40e:0:b0:641:1842:ed4b with SMTP id
- m14-20020a25d40e000000b006411842ed4bmr1124711ybf.257.1649435785548; Fri, 08
- Apr 2022 09:36:25 -0700 (PDT)
+        b=AVvrnUpG0r7Sd2BxopNyrcXYjMsAcEPgcPmb/5t2LtTOoRxv6ErWOUraJDkWatd0T
+         jf0ERbr332R1mCKrYsTnNRFNeBDmwC2oziiqWSv6pPDzClNithi8azXQVXq6WLkhqh
+         avM79PZXbdXHt+h0iLd7QxcFZfhmQHea+Ew3FQSw9qHa3nPaBrfudzgkWbrDJO1j3P
+         bxD8GtfgnLyFgkU9vOel20I0qKaPFIgc+zXnYNZm383W9+8ntB24c4+JZcU2VaEr0y
+         iN3/LbYuTB85xH9OV88oZhKm9pTqsCLdugY7UATEKYeTmofDCIt2FUstJ/tsJxeWe8
+         DHKN8zApSENWg==
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-2ebd70a4cf5so44457567b3.3
+        for <linux-raid@vger.kernel.org>; Fri, 08 Apr 2022 09:59:41 -0700 (PDT)
+X-Gm-Message-State: AOAM533/vuSHvtOswQZPCVdjq+cTZxEjvIW5ADf5xXbCr7YbtGRmTMV9
+        mg/iAAZIerDc2svqILCZli5Hk/2NHoF9i6XqI9w=
+X-Google-Smtp-Source: ABdhPJxN73uoVcCYYBfki9c/0hIF/UpOD7XZqJF940MVCJFev3IAU6GkIHPcW2oyqzKWBL19bEPTaXs9wv36q98x2No=
+X-Received: by 2002:a0d:d610:0:b0:2eb:70c9:e7b0 with SMTP id
+ y16-20020a0dd610000000b002eb70c9e7b0mr17781828ywd.447.1649437180489; Fri, 08
+ Apr 2022 09:59:40 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220408084715.26097-1-xiam0nd.tong@gmail.com>
-In-Reply-To: <20220408084715.26097-1-xiam0nd.tong@gmail.com>
+References: <20220401021317.4046-1-heming.zhao@suse.com>
+In-Reply-To: <20220401021317.4046-1-heming.zhao@suse.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 8 Apr 2022 09:36:14 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4dTNShcoHGL1_t_=6f-+P3CSLTexSy+Mv2+HZSk8skOA@mail.gmail.com>
-Message-ID: <CAPhsuW4dTNShcoHGL1_t_=6f-+P3CSLTexSy+Mv2+HZSk8skOA@mail.gmail.com>
-Subject: Re: [PATCH v3] md: fix an incorrect NULL check in md_reload_sb
-To:     Xiaomeng Tong <xiam0nd.tong@gmail.com>
-Cc:     rgoldwyn@suse.com, Guoqing Jiang <guoqing.jiang@linux.dev>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        stable@vger.kernel.org
+Date:   Fri, 8 Apr 2022 09:58:59 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6TSD0Uiv7c+Xg7JD=n_EmSAX-FEQwM94CZoMfwFK+NEQ@mail.gmail.com>
+Message-ID: <CAPhsuW6TSD0Uiv7c+Xg7JD=n_EmSAX-FEQwM94CZoMfwFK+NEQ@mail.gmail.com>
+Subject: Re: [PATCH v4 0/2] md: fix md_bitmap_read_sb sanity check issue &
+ deprecated api issue
+To:     Heming Zhao <heming.zhao@suse.com>
+Cc:     linux-raid <linux-raid@vger.kernel.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>,
+        Xiao Ni <xni@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, Apr 8, 2022 at 1:47 AM Xiaomeng Tong <xiam0nd.tong@gmail.com> wrote:
+On Thu, Mar 31, 2022 at 7:13 PM Heming Zhao <heming.zhao@suse.com> wrote:
 >
-> The bug is here:
->         if (!rdev || rdev->desc_nr != nr) {
+> v4: split v3 to two patches.
+>     - one for sanity check issue
+>     - one for strlcpy to strscpy, and duplicated issue.
 >
-> The list iterator value 'rdev' will *always* be set and non-NULL
-> by rdev_for_each_rcu(), so it is incorrect to assume that the
-> iterator value will be NULL if the list is empty or no element
-> found (In fact, it will be a bogus pointer to an invalid struct
-> object containing the HEAD). Otherwise it will bypass the check
-> and lead to invalid memory access passing the check.
+> v3: fixed "uninitialized symbol" error which reported by kbuild robot.
 >
-> To fix the bug, use a new variable 'iter' as the list iterator,
-> while using the original variable 'pdev' as a dedicated pointer to
-> point to the found element.
+> v2: revise commit log
+>       - change mdadm "FPE" error to "Segmentation fault" error
+>         ("FPE" belongs to another issue)
+>       - add kernel crash log
+>     modify a comment style to follow code rule
+>     change strlcpy to strscpy for strlcpy is marked as deprecated in:
+>     - Documentation/process/deprecated.rst
 >
-> Cc: stable@vger.kernel.org
-> Fixes: 70bcecdb1534 ("md-cluster: Improve md_reload_sb to be less error prone")
-> Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
+> v1: for fixing sanity check issue in md_bitmap_read_sb() created v1.
+>
+> Heming Zhao (2):
+>   md/bitmap: don't set sb values if can't pass sanity check
+>   md: replace deprecated strlcpy & remove duplicated line
 
 Applied to md-next. Thanks!
