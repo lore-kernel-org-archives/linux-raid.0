@@ -2,51 +2,51 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78378C433EF
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 00:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 174D5C433FE
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 00:38:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232917AbiDHAjH (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 7 Apr 2022 20:39:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47928 "EHLO
+        id S232957AbiDHAkO (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 7 Apr 2022 20:40:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232896AbiDHAjF (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 20:39:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D5D3108195;
-        Thu,  7 Apr 2022 17:37:03 -0700 (PDT)
+        with ESMTP id S232174AbiDHAkN (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 7 Apr 2022 20:40:13 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF3EF16F6FF;
+        Thu,  7 Apr 2022 17:38:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E526F61877;
-        Fri,  8 Apr 2022 00:37:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CC5FC385A9;
-        Fri,  8 Apr 2022 00:37:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A0CA2B829B3;
+        Fri,  8 Apr 2022 00:38:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3463EC385A5;
+        Fri,  8 Apr 2022 00:38:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649378222;
-        bh=i2XZq/Xu6H3REApuY9LUTcK2PgJHPjIMKr2oGYUJS+w=;
+        s=k20201202; t=1649378289;
+        bh=CVHEzTa06w9IXQftEgZii1PHojo5m4h3tRQOFvFM99s=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=GyQOwOUtHJkHjJBvAbOA3vKcRaXiuGK57yvu8DZxwmGJcODd46H+mDgSPxPys/heZ
-         YIA0G9VUuHm1uD7T4wTIltvaCJC33lHy63MYlQk8SGTNJbRU8tEOeOnljBjOCAT9CK
-         0pkORZXXiztnnyvnEXxA6umz/fDxUB8+ygVGJRN67+GDyOPju3k4NkWVDQXfZIVnqt
-         t43io2YNgWVMMQqRfrSSujgXIMWNxjVIRB51B9IoXYbRRSAevcZ2H1AYAxR2kaIBai
-         y1XQmbuyJeV+kNq4WV35tfhDfL6qmQb5NcSx5aeFl/QeMCYlZ2rtFMzsrRnwiDQA1X
-         u5B355z4sgGyw==
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-2db2add4516so80278687b3.1;
-        Thu, 07 Apr 2022 17:37:02 -0700 (PDT)
-X-Gm-Message-State: AOAM532eJRsVSTymVVl59Nmc+EmZUe0oS5fRw26vU0I81AOraahNo+0o
-        EdAaFSUZsSDH382pYfH6bYywxXjziBW+Mim3vAs=
-X-Google-Smtp-Source: ABdhPJwvzDb1VlAhZdTtbxJtXVdfI6VVJsSdq+zEc/GLZ2R9uDVGKWfT7S5dkfsKzl9zBEZRMG+1axuvTWqaaMPQYDU=
-X-Received: by 2002:a0d:f6c6:0:b0:2e5:bf17:4dce with SMTP id
- g189-20020a0df6c6000000b002e5bf174dcemr14410627ywf.130.1649378221272; Thu, 07
- Apr 2022 17:37:01 -0700 (PDT)
+        b=pDZeBdKpytYf/RpT1wvDDi+93EZlNj/SQN1mhUKsjCetKqxsE6F3pgzwpBfPDQ4fZ
+         FDAD/ljw+OPvXlLbCvfQe2svXgSycFXKpYYoJGp6rRxieZiVYeHpGCmUAoDCCYtbH8
+         W0I7eNZQyi5sGKmBCFfHHlnjslk1VjRGX4MgsJIG25DPlKKkCEzt6tC+wrqhv541qD
+         KcvHrx1Imk/jfBC24wbY57AvDUSKiSYtmLuBDiwoz+VEmkkC3QUCfdFDn4R5qxpKdk
+         RWivXlbHO75PU/0wbwV8D3L2WTTXoFKGTqcxs4lIMSLbDNu+PUM0Jb/NB8Dy4v6GLr
+         4OesR0MEr+z9g==
+Received: by mail-yb1-f169.google.com with SMTP id r5so2738659ybd.8;
+        Thu, 07 Apr 2022 17:38:09 -0700 (PDT)
+X-Gm-Message-State: AOAM533OExlC8UVxblCgT71lQitsvmTOOnRLDx7GDxhtF9DtK4ztokLu
+        2QAymecNd5vFiuZulMpO3wN83pej61ButXrhYHI=
+X-Google-Smtp-Source: ABdhPJxZSEJvXnOSEuuJQrEwsomQA54vyst5hwzUzcTr7GcAKkuWwIWw4Yq8ZGv7YBWuDHCKqqxUUcRUzkhhmnK8mdE=
+X-Received: by 2002:a25:8b81:0:b0:629:17d5:68c1 with SMTP id
+ j1-20020a258b81000000b0062917d568c1mr11288152ybl.449.1649378288275; Thu, 07
+ Apr 2022 17:38:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220328081127.26148-1-xiam0nd.tong@gmail.com>
-In-Reply-To: <20220328081127.26148-1-xiam0nd.tong@gmail.com>
+References: <20220328080559.25984-1-xiam0nd.tong@gmail.com>
+In-Reply-To: <20220328080559.25984-1-xiam0nd.tong@gmail.com>
 From:   Song Liu <song@kernel.org>
-Date:   Thu, 7 Apr 2022 17:36:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6S=PJsgVR=OkObMvs9uJ2QA3LFe+ZH8XtEyKRFh7XxHA@mail.gmail.com>
-Message-ID: <CAPhsuW6S=PJsgVR=OkObMvs9uJ2QA3LFe+ZH8XtEyKRFh7XxHA@mail.gmail.com>
-Subject: Re: [PATCH v2] md: fix an incorrect NULL check in sync_sbs
+Date:   Thu, 7 Apr 2022 17:37:55 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6AJAo_k1a5-EiUp-Qx9Rp=jkON155AtOMRO2JmhBVFjw@mail.gmail.com>
+Message-ID: <CAPhsuW6AJAo_k1a5-EiUp-Qx9Rp=jkON155AtOMRO2JmhBVFjw@mail.gmail.com>
+Subject: Re: [PATCH] md: fix an incorrect NULL check in md_reload_sb
 To:     Xiaomeng Tong <xiam0nd.tong@gmail.com>
 Cc:     rgoldwyn@suse.com, Guoqing Jiang <guoqing.jiang@linux.dev>,
         linux-raid <linux-raid@vger.kernel.org>,
@@ -57,67 +57,66 @@ Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Mar 28, 2022 at 1:11 AM Xiaomeng Tong <xiam0nd.tong@gmail.com> wrote:
+On Mon, Mar 28, 2022 at 1:06 AM Xiaomeng Tong <xiam0nd.tong@gmail.com> wrote:
 >
 > The bug is here:
->         if (!rdev)
+>         if (!rdev || rdev->desc_nr != nr) {
 >
 > The list iterator value 'rdev' will *always* be set and non-NULL
-> by rdev_for_each(), so it is incorrect to assume that the iterator
-> value will be NULL if the list is empty or no element found.
-> Otherwise it will bypass the NULL check and lead to invalid memory
-> access passing the check.
+> by rdev_for_each_rcu(), so it is incorrect to assume that the
+> iterator value will be NULL if the list is empty or no element
+> found (In fact, it will be a bogus pointer to an invalid struct
+> object containing the HEAD). Otherwise it will bypass the check
+> and lead to invalid memory access passing the check.
 >
 > To fix the bug, use a new variable 'iter' as the list iterator,
 > while using the original variable 'pdev' as a dedicated pointer to
-
-s/pdev/rdev/
-
 > point to the found element.
 >
 > Cc: stable@vger.kernel.org
-> Fixes: 2aa82191ac36c ("md-cluster: Perform a lazy update")
+> Fixes: 70bcecdb1534 ("amd-cluster: Improve md_reload_sb to be less error prone")
 
-"Fixes" should use a hash of 12 characters (13 given here). Did
-checkpatch.pl complain about it?
+s/amd-cluster/md-cluster/
 
-> Acked-by: Guoqing Jiang <guoqing.jiang@linux.dev>
 > Signed-off-by: Xiaomeng Tong <xiam0nd.tong@gmail.com>
 > ---
 >
-> changes since v1:
+> changes from v1:
 >  - rephrase the subject (Guoqing Jiang)
->  - add Acked-by: for Guoqing Jiang
-> v1:https://lore.kernel.org/lkml/20220327080002.11923-1-xiam0nd.tong@gmail.com/
+>
+> v1:https://lore.kernel.org/lkml/20220327080111.12028-1-xiam0nd.tong@gmail.com/
 >
 > ---
->  drivers/md/md.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+>  drivers/md/md.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4d38bd7dadd6..7476fc204172 100644
+> index 7476fc204172..f156678c08bc 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -2629,14 +2629,16 @@ static void sync_sbs(struct mddev *mddev, int nospares)
+> @@ -9794,16 +9794,18 @@ static int read_rdev(struct mddev *mddev, struct md_rdev *rdev)
 >
->  static bool does_sb_need_changing(struct mddev *mddev)
+>  void md_reload_sb(struct mddev *mddev, int nr)
 >  {
 > -       struct md_rdev *rdev;
 > +       struct md_rdev *rdev = NULL, *iter;
->         struct mdp_superblock_1 *sb;
->         int role;
+>         int err;
 >
->         /* Find a good rdev */
-> -       rdev_for_each(rdev, mddev)
-> -               if ((rdev->raid_disk >= 0) && !test_bit(Faulty, &rdev->flags))
-> +       rdev_for_each(iter, mddev)
-> +               if ((iter->raid_disk >= 0) && !test_bit(Faulty, &iter->flags)) {
+>         /* Find the rdev */
+> -       rdev_for_each_rcu(rdev, mddev) {
+> -               if (rdev->desc_nr == nr)
+> +       rdev_for_each_rcu(iter, mddev) {
+> +               if (iter->desc_nr == nr) {
 > +                       rdev = iter;
 >                         break;
 > +               }
+>         }
 >
->         /* No good device found. */
->         if (!rdev)
+> -       if (!rdev || rdev->desc_nr != nr) {
+> +       if (!rdev) {
+>                 pr_warn("%s: %d Could not find rdev with nr %d\n", __func__, __LINE__, nr);
+>                 return;
+>         }
 > --
 > 2.17.1
 >
