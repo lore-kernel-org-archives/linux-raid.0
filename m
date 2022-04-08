@@ -2,81 +2,106 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F26D2C433F5
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 16:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C65CC433FE
+	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 17:18:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234723AbiDHRBr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Apr 2022 13:01:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40378 "EHLO
+        id S238085AbiDHRU2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 8 Apr 2022 13:20:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbiDHRBq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 13:01:46 -0400
+        with ESMTP id S238082AbiDHRU1 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 13:20:27 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 836D730F9DF
-        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 09:59:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A64FB10504D;
+        Fri,  8 Apr 2022 10:18:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F2166215B
-        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 16:59:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78EF4C385A1
-        for <linux-raid@vger.kernel.org>; Fri,  8 Apr 2022 16:59:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 40F3862175;
+        Fri,  8 Apr 2022 17:18:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E285C385AA;
+        Fri,  8 Apr 2022 17:18:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649437181;
-        bh=zw0ARdpDW+LHaYLhbRipJvSqF5I9fE4zNhVIKiMDzkk=;
+        s=k20201202; t=1649438302;
+        bh=MbZ+trhl7zeD1lTZLqOn8O3zllxwQ5hjkWePlpqfncc=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=AVvrnUpG0r7Sd2BxopNyrcXYjMsAcEPgcPmb/5t2LtTOoRxv6ErWOUraJDkWatd0T
-         jf0ERbr332R1mCKrYsTnNRFNeBDmwC2oziiqWSv6pPDzClNithi8azXQVXq6WLkhqh
-         avM79PZXbdXHt+h0iLd7QxcFZfhmQHea+Ew3FQSw9qHa3nPaBrfudzgkWbrDJO1j3P
-         bxD8GtfgnLyFgkU9vOel20I0qKaPFIgc+zXnYNZm383W9+8ntB24c4+JZcU2VaEr0y
-         iN3/LbYuTB85xH9OV88oZhKm9pTqsCLdugY7UATEKYeTmofDCIt2FUstJ/tsJxeWe8
-         DHKN8zApSENWg==
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-2ebd70a4cf5so44457567b3.3
-        for <linux-raid@vger.kernel.org>; Fri, 08 Apr 2022 09:59:41 -0700 (PDT)
-X-Gm-Message-State: AOAM533/vuSHvtOswQZPCVdjq+cTZxEjvIW5ADf5xXbCr7YbtGRmTMV9
-        mg/iAAZIerDc2svqILCZli5Hk/2NHoF9i6XqI9w=
-X-Google-Smtp-Source: ABdhPJxN73uoVcCYYBfki9c/0hIF/UpOD7XZqJF940MVCJFev3IAU6GkIHPcW2oyqzKWBL19bEPTaXs9wv36q98x2No=
-X-Received: by 2002:a0d:d610:0:b0:2eb:70c9:e7b0 with SMTP id
- y16-20020a0dd610000000b002eb70c9e7b0mr17781828ywd.447.1649437180489; Fri, 08
- Apr 2022 09:59:40 -0700 (PDT)
+        b=Tdc1pj5M3xQ4d3BE2ILiOy/9SVR4lC22W57HI2PTiihJ171vzw6AZt7jyp0QRvTj1
+         6z0aHHGApwW62oiyq7BpINCnoThD2FFJ4a1/VdVDC/j4jjEPcUjdA9axtw/CaDZl8Q
+         LyNpJTQjZAuy0B84rLhfxkDFgiB1HcI4lMPK/fF2e2w2OIsj5d8oIfyQbU/V+M+MOA
+         iRp9J8WrpGFGb0ndmQs68J/LmndlE577IoHsPd6iEwLuJiwCtxHjGlupOnl+wbj5Yv
+         8/twPKBzA9tiH1AKJoqVOU80NjcUK3ly987H0vmQIUsHV9CMjiyYR6NhXhCoIaZlMR
+         vmi7hE6EZrmuA==
+Received: by mail-yb1-f177.google.com with SMTP id f38so16277585ybi.3;
+        Fri, 08 Apr 2022 10:18:22 -0700 (PDT)
+X-Gm-Message-State: AOAM533i5FMDwHnXSoqpu0xJe5Xwyd8lqUprH/OQWGEKqGhpEKJWnr2q
+        97XcP3KJtQZe//JoKh5pTFDs2YifDd3usGOutfk=
+X-Google-Smtp-Source: ABdhPJx3lRrAf8LzfOfLcw9K6468JToUxW9zoGSZLqq0kwo5P4Vc1Oz8upqdJlDhdaqwdUY/ES0I7SKBi32XaC+iBLQ=
+X-Received: by 2002:a25:8546:0:b0:61e:1d34:ec71 with SMTP id
+ f6-20020a258546000000b0061e1d34ec71mr13416194ybn.259.1649438301674; Fri, 08
+ Apr 2022 10:18:21 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220401021317.4046-1-heming.zhao@suse.com>
-In-Reply-To: <20220401021317.4046-1-heming.zhao@suse.com>
+References: <20220407165713.9243-1-logang@deltatee.com>
+In-Reply-To: <20220407165713.9243-1-logang@deltatee.com>
 From:   Song Liu <song@kernel.org>
-Date:   Fri, 8 Apr 2022 09:58:59 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6TSD0Uiv7c+Xg7JD=n_EmSAX-FEQwM94CZoMfwFK+NEQ@mail.gmail.com>
-Message-ID: <CAPhsuW6TSD0Uiv7c+Xg7JD=n_EmSAX-FEQwM94CZoMfwFK+NEQ@mail.gmail.com>
-Subject: Re: [PATCH v4 0/2] md: fix md_bitmap_read_sb sanity check issue &
- deprecated api issue
-To:     Heming Zhao <heming.zhao@suse.com>
-Cc:     linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>,
-        Xiao Ni <xni@redhat.com>
+Date:   Fri, 8 Apr 2022 10:18:10 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW4=Ubc6LTmot97Tx2oGzuuBmV2U7yMWuEQMhPzjb+ed=w@mail.gmail.com>
+Message-ID: <CAPhsuW4=Ubc6LTmot97Tx2oGzuuBmV2U7yMWuEQMhPzjb+ed=w@mail.gmail.com>
+Subject: Re: [PATCH v1 0/7] Minor Raid5 Fixes and Cleanup
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        linux-raid <linux-raid@vger.kernel.org>,
+        Guoqing Jiang <guoqing.jiang@linux.dev>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Mar 31, 2022 at 7:13 PM Heming Zhao <heming.zhao@suse.com> wrote:
+On Thu, Apr 7, 2022 at 9:57 AM Logan Gunthorpe <logang@deltatee.com> wrote:
 >
-> v4: split v3 to two patches.
->     - one for sanity check issue
->     - one for strlcpy to strscpy, and duplicated issue.
+> Hi,
 >
-> v3: fixed "uninitialized symbol" error which reported by kbuild robot.
+> This series contains a few cleanup and minor fixes to the raid5 code
+> to make it a bit easier to hack on.
 >
-> v2: revise commit log
->       - change mdadm "FPE" error to "Segmentation fault" error
->         ("FPE" belongs to another issue)
->       - add kernel crash log
->     modify a comment style to follow code rule
->     change strlcpy to strscpy for strlcpy is marked as deprecated in:
->     - Documentation/process/deprecated.rst
+> Patch 1 cleans up the error returns in setup_conf() (I had an
+> abandonded patch that added another error out and needed this clean
+> more sensible).
 >
-> v1: for fixing sanity check issue in md_bitmap_read_sb() created v1.
+> Patch 2 fixes a sparse warning with the raid5_percpu structure.
 >
-> Heming Zhao (2):
->   md/bitmap: don't set sb values if can't pass sanity check
->   md: replace deprecated strlcpy & remove duplicated line
+> Patch 3 through 6 fixes sparse warnings related to missing __rcu
+> annotations when using the RCU calls.
+>
+> Patch 7 just adds some basic __must_hold annotations for the device_lock
+> to any function that is called while holding the lock. Sparse doesn't
+> really check this, but the annotation makes the locks a little easier
+> to analyze.
+>
+> Thanks,
+>
+> Logan
 
 Applied to md-next. Thanks!
+
+>
+> --
+>
+> Logan Gunthorpe (7):
+>   md/raid5: Cleanup setup_conf() error returns
+>   md/raid5: Un-nest struct raid5_percpu definition
+>   md/raid5: Add __rcu annotation to struct disk_info
+>   md/raid5: Annotate rdev/replacement accesses when nr_pending is
+>     elevated
+>   md/raid5: Annotate rdev/replacement access when mddev_lock is held
+>   md/raid5-ppl: Annotate with rcu_dereference_protected()
+>   md/raid5: Annotate functions that hold device_lock with __must_hold
+>
+>  drivers/md/raid5-ppl.c |  13 ++-
+>  drivers/md/raid5.c     | 179 ++++++++++++++++++++++++++---------------
+>  drivers/md/raid5.h     |  23 +++---
+>  3 files changed, 139 insertions(+), 76 deletions(-)
+>
+>
+> base-commit: 3123109284176b1532874591f7c81f3837bbdc17
+> --
+> 2.30.2
