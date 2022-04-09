@@ -2,106 +2,164 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C65CC433FE
-	for <linux-raid@archiver.kernel.org>; Fri,  8 Apr 2022 17:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A1D0C4167B
+	for <linux-raid@archiver.kernel.org>; Sat,  9 Apr 2022 04:50:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238085AbiDHRU2 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 8 Apr 2022 13:20:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52476 "EHLO
+        id S239400AbiDIExB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 9 Apr 2022 00:53:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238082AbiDHRU1 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 8 Apr 2022 13:20:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A64FB10504D;
-        Fri,  8 Apr 2022 10:18:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 40F3862175;
-        Fri,  8 Apr 2022 17:18:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E285C385AA;
-        Fri,  8 Apr 2022 17:18:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649438302;
-        bh=MbZ+trhl7zeD1lTZLqOn8O3zllxwQ5hjkWePlpqfncc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Tdc1pj5M3xQ4d3BE2ILiOy/9SVR4lC22W57HI2PTiihJ171vzw6AZt7jyp0QRvTj1
-         6z0aHHGApwW62oiyq7BpINCnoThD2FFJ4a1/VdVDC/j4jjEPcUjdA9axtw/CaDZl8Q
-         LyNpJTQjZAuy0B84rLhfxkDFgiB1HcI4lMPK/fF2e2w2OIsj5d8oIfyQbU/V+M+MOA
-         iRp9J8WrpGFGb0ndmQs68J/LmndlE577IoHsPd6iEwLuJiwCtxHjGlupOnl+wbj5Yv
-         8/twPKBzA9tiH1AKJoqVOU80NjcUK3ly987H0vmQIUsHV9CMjiyYR6NhXhCoIaZlMR
-         vmi7hE6EZrmuA==
-Received: by mail-yb1-f177.google.com with SMTP id f38so16277585ybi.3;
-        Fri, 08 Apr 2022 10:18:22 -0700 (PDT)
-X-Gm-Message-State: AOAM533i5FMDwHnXSoqpu0xJe5Xwyd8lqUprH/OQWGEKqGhpEKJWnr2q
-        97XcP3KJtQZe//JoKh5pTFDs2YifDd3usGOutfk=
-X-Google-Smtp-Source: ABdhPJx3lRrAf8LzfOfLcw9K6468JToUxW9zoGSZLqq0kwo5P4Vc1Oz8upqdJlDhdaqwdUY/ES0I7SKBi32XaC+iBLQ=
-X-Received: by 2002:a25:8546:0:b0:61e:1d34:ec71 with SMTP id
- f6-20020a258546000000b0061e1d34ec71mr13416194ybn.259.1649438301674; Fri, 08
- Apr 2022 10:18:21 -0700 (PDT)
+        with ESMTP id S229604AbiDIEw6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 9 Apr 2022 00:52:58 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A77A3186F5;
+        Fri,  8 Apr 2022 21:50:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=xqCE7mrNhx9Kh54A8pTQxucRKOOrbbHmaHFew3/JwbI=; b=eautlETAmAcOF4Rx+ajcsxqxAt
+        K/gc85CxDlYY+s5RX+TP4qAcopFOJMKyRoUbJGCZqLzThYN44a81gHztvDtTQOXXVmstC/BiZza91
+        +tK8A4YQHg+wud7jKaqcpT5eZw97ewGrhmTU8yf0v/D+yZnMWYW/4nRrMz5fe0RjHIwwo6UCcWnmG
+        q/WhOest1iceY98x52QbO+Ryd19aUS/0aFt0A0VdCFkKu7+7IrcjV/rCpnun6L4B6SbhX7D4hKxqE
+        vkbaC7lWGA+28JjJD9laatsN4l8Gz9BZIOD3BKi8HF53h/Wb9nBnpD0TIdhkMhGAybm9Za6sdmIlK
+        tpLM1eWg==;
+Received: from 213-147-167-116.nat.highway.webapn.at ([213.147.167.116] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nd33f-0020RM-19; Sat, 09 Apr 2022 04:50:47 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org
+Subject: use block_device based APIs in block layer consumers v2
+Date:   Sat,  9 Apr 2022 06:50:16 +0200
+Message-Id: <20220409045043.23593-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20220407165713.9243-1-logang@deltatee.com>
-In-Reply-To: <20220407165713.9243-1-logang@deltatee.com>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 8 Apr 2022 10:18:10 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW4=Ubc6LTmot97Tx2oGzuuBmV2U7yMWuEQMhPzjb+ed=w@mail.gmail.com>
-Message-ID: <CAPhsuW4=Ubc6LTmot97Tx2oGzuuBmV2U7yMWuEQMhPzjb+ed=w@mail.gmail.com>
-Subject: Re: [PATCH v1 0/7] Minor Raid5 Fixes and Cleanup
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        linux-raid <linux-raid@vger.kernel.org>,
-        Guoqing Jiang <guoqing.jiang@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, Apr 7, 2022 at 9:57 AM Logan Gunthorpe <logang@deltatee.com> wrote:
->
-> Hi,
->
-> This series contains a few cleanup and minor fixes to the raid5 code
-> to make it a bit easier to hack on.
->
-> Patch 1 cleans up the error returns in setup_conf() (I had an
-> abandonded patch that added another error out and needed this clean
-> more sensible).
->
-> Patch 2 fixes a sparse warning with the raid5_percpu structure.
->
-> Patch 3 through 6 fixes sparse warnings related to missing __rcu
-> annotations when using the RCU calls.
->
-> Patch 7 just adds some basic __must_hold annotations for the device_lock
-> to any function that is called while holding the lock. Sparse doesn't
-> really check this, but the annotation makes the locks a little easier
-> to analyze.
->
-> Thanks,
->
-> Logan
+Hi Jens,
 
-Applied to md-next. Thanks!
+this series cleanups up the block layer API so that APIs consumed
+by file systems are (almost) only struct block_devic based, so that
+file systems don't have to poke into block layer internals like the
+request_queue.
 
->
-> --
->
-> Logan Gunthorpe (7):
->   md/raid5: Cleanup setup_conf() error returns
->   md/raid5: Un-nest struct raid5_percpu definition
->   md/raid5: Add __rcu annotation to struct disk_info
->   md/raid5: Annotate rdev/replacement accesses when nr_pending is
->     elevated
->   md/raid5: Annotate rdev/replacement access when mddev_lock is held
->   md/raid5-ppl: Annotate with rcu_dereference_protected()
->   md/raid5: Annotate functions that hold device_lock with __must_hold
->
->  drivers/md/raid5-ppl.c |  13 ++-
->  drivers/md/raid5.c     | 179 ++++++++++++++++++++++++++---------------
->  drivers/md/raid5.h     |  23 +++---
->  3 files changed, 139 insertions(+), 76 deletions(-)
->
->
-> base-commit: 3123109284176b1532874591f7c81f3837bbdc17
-> --
-> 2.30.2
+I also found a bunch of existing bugs related to partition offsets
+and discard so these are fixed while going along.
+
+
+Changes since v1:
+ - fix a bisection hazard
+ - minor spelling fixes
+ - reorder hunks between two patches to make the changes more obvious
+ - reorder a patch to be earlier in the series to ease backporting
+
+
+Diffstat:
+ arch/um/drivers/ubd_kern.c           |    2 
+ block/blk-core.c                     |    4 -
+ block/blk-lib.c                      |  124 ++++++++++++++++++++---------------
+ block/blk-mq-debugfs.c               |    2 
+ block/blk-settings.c                 |   74 ++++++++++++++++++++
+ block/blk.h                          |   14 ---
+ block/fops.c                         |    2 
+ block/genhd.c                        |    4 -
+ block/ioctl.c                        |   48 ++++++++++---
+ block/partitions/core.c              |   12 ---
+ drivers/block/drbd/drbd_main.c       |   51 ++++++--------
+ drivers/block/drbd/drbd_nl.c         |   94 +++++++++++---------------
+ drivers/block/drbd/drbd_receiver.c   |   13 +--
+ drivers/block/loop.c                 |   15 +---
+ drivers/block/nbd.c                  |    5 -
+ drivers/block/null_blk/main.c        |    1 
+ drivers/block/rbd.c                  |    1 
+ drivers/block/rnbd/rnbd-clt.c        |    6 -
+ drivers/block/rnbd/rnbd-srv-dev.h    |    8 --
+ drivers/block/rnbd/rnbd-srv.c        |    5 -
+ drivers/block/virtio_blk.c           |    2 
+ drivers/block/xen-blkback/blkback.c  |   15 ++--
+ drivers/block/xen-blkback/xenbus.c   |    9 --
+ drivers/block/xen-blkfront.c         |    7 -
+ drivers/block/zram/zram_drv.c        |    1 
+ drivers/md/bcache/alloc.c            |    2 
+ drivers/md/bcache/request.c          |    4 -
+ drivers/md/bcache/super.c            |    3 
+ drivers/md/bcache/sysfs.c            |    2 
+ drivers/md/dm-cache-target.c         |    9 --
+ drivers/md/dm-clone-target.c         |    9 --
+ drivers/md/dm-io.c                   |    2 
+ drivers/md/dm-log-writes.c           |    3 
+ drivers/md/dm-raid.c                 |    9 --
+ drivers/md/dm-table.c                |   25 +------
+ drivers/md/dm-thin.c                 |   15 ----
+ drivers/md/dm.c                      |    3 
+ drivers/md/md-linear.c               |   11 ---
+ drivers/md/md.c                      |    5 -
+ drivers/md/raid0.c                   |    7 -
+ drivers/md/raid1.c                   |   18 -----
+ drivers/md/raid10.c                  |   20 -----
+ drivers/md/raid5-cache.c             |    8 +-
+ drivers/md/raid5.c                   |   14 +--
+ drivers/mmc/core/queue.c             |    3 
+ drivers/mtd/mtd_blkdevs.c            |    1 
+ drivers/nvme/host/core.c             |    6 -
+ drivers/nvme/target/io-cmd-bdev.c    |    2 
+ drivers/nvme/target/zns.c            |    3 
+ drivers/s390/block/dasd_fba.c        |    1 
+ drivers/scsi/sd.c                    |    2 
+ drivers/target/target_core_device.c  |   20 ++---
+ drivers/target/target_core_file.c    |   10 +-
+ drivers/target/target_core_iblock.c  |   17 +---
+ fs/btrfs/disk-io.c                   |    3 
+ fs/btrfs/extent-tree.c               |    8 +-
+ fs/btrfs/ioctl.c                     |   12 +--
+ fs/btrfs/volumes.c                   |    4 -
+ fs/btrfs/zoned.c                     |    3 
+ fs/direct-io.c                       |   32 +--------
+ fs/exfat/file.c                      |    5 -
+ fs/exfat/super.c                     |   10 --
+ fs/ext4/ioctl.c                      |   10 --
+ fs/ext4/mballoc.c                    |   10 +-
+ fs/ext4/super.c                      |   10 --
+ fs/f2fs/f2fs.h                       |    3 
+ fs/f2fs/file.c                       |   19 ++---
+ fs/f2fs/segment.c                    |    8 --
+ fs/fat/file.c                        |    5 -
+ fs/fat/inode.c                       |   10 --
+ fs/gfs2/rgrp.c                       |    7 -
+ fs/iomap/direct-io.c                 |    3 
+ fs/jbd2/journal.c                    |    9 --
+ fs/jfs/ioctl.c                       |    5 -
+ fs/jfs/super.c                       |    8 --
+ fs/nilfs2/ioctl.c                    |    6 -
+ fs/nilfs2/sufile.c                   |    4 -
+ fs/nilfs2/the_nilfs.c                |    4 -
+ fs/ntfs3/file.c                      |    6 -
+ fs/ntfs3/super.c                     |   10 +-
+ fs/ocfs2/ioctl.c                     |    5 -
+ fs/super.c                           |    2 
+ fs/xfs/xfs_discard.c                 |    8 +-
+ fs/xfs/xfs_log_cil.c                 |    2 
+ fs/xfs/xfs_super.c                   |   12 +--
+ fs/zonefs/super.c                    |    3 
+ include/linux/blkdev.h               |  112 +++++++++++--------------------
+ include/target/target_core_backend.h |    4 -
+ mm/swapfile.c                        |   31 ++------
+ 89 files changed, 493 insertions(+), 653 deletions(-)
