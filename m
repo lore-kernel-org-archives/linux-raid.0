@@ -2,89 +2,141 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20347C433FE
-	for <linux-raid@archiver.kernel.org>; Thu, 14 Apr 2022 11:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D05B2C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 14 Apr 2022 19:02:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242477AbiDNLJJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 14 Apr 2022 07:09:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38566 "EHLO
+        id S234302AbiDNTEm (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 14 Apr 2022 15:04:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242369AbiDNLJI (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 14 Apr 2022 07:09:08 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C4BE70CDD;
-        Thu, 14 Apr 2022 04:06:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649934404; x=1681470404;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=lpK5uTsGwurYPm1EZSv9KDNdr4wZT3Uq8fQlImPzuTw=;
-  b=nvyu91bkMdkz1y/WeyNHHECE9DuSUMZzQsCVTbKVzs83LGt03xqJqULY
-   aYNKexW8d9DtoRIDnqjqytMwibliM6f8VDAw6CnUIi5tAfC/fjHZVPCXK
-   O9utWiTf+DsnXDqTpOqanVKaQc4qCDn9wK0Spn3IbZVam7yjp418fdIIp
-   B5mKOentbRtjyTDkO4OeUkArflvVFyUmh2YCcdkLp3O91utRNTFPBjgYP
-   ETQFzq4/TZssJsU7kgG7p9SivYvHeridRFdxvnn8+EAYDRcmEtF/j3kY6
-   UuSCZ7wtmiJz4bSzIkQX4OO1eqXuM/zyl5WtSp3TSbj5gYgHdGnZJ3zNk
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10316"; a="287960501"
-X-IronPort-AV: E=Sophos;i="5.90,259,1643702400"; 
-   d="scan'208";a="287960501"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 04:06:43 -0700
-X-IronPort-AV: E=Sophos;i="5.90,259,1643702400"; 
-   d="scan'208";a="573750098"
-Received: from mtkaczyk-mobl.ger.corp.intel.com (HELO localhost) ([10.213.16.42])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 04:06:41 -0700
-Date:   Thu, 14 Apr 2022 13:06:36 +0200
-From:   Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-To:     "NeilBrown" <neilb@suse.de>
-Cc:     Song Liu <song@kernel.org>, linux-raid@vger.kernel.org,
-        linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Lennart Poettering <lennart@poettering.net>
-Subject: Re: [PATCH/RFC] md: remove media-change code
-Message-ID: <20220414130636.00002eca@linux.intel.com>
-In-Reply-To: <164991636542.11576.2282590308338864748@noble.neil.brown.name>
-References: <164991636542.11576.2282590308338864748@noble.neil.brown.name>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S244730AbiDNTEl (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 14 Apr 2022 15:04:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6F51EA345
+        for <linux-raid@vger.kernel.org>; Thu, 14 Apr 2022 12:02:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2E44461BFD
+        for <linux-raid@vger.kernel.org>; Thu, 14 Apr 2022 19:02:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CF89C385A1
+        for <linux-raid@vger.kernel.org>; Thu, 14 Apr 2022 19:02:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649962934;
+        bh=JbM1O4llxqIXw06CMwvK5P/+TFyNAdXwVDSE2pod5kA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=XPJ77gg391UzrkiOg9k0sTExzXGm0g7aguvpNAccn0HyvUd9YMXFjRg4U7tDYfbZB
+         IwvJkYcdlMWklf9oKhCZ0lxF5g0xdWo+9Wf32lXd/z/VNdnz+U5YHp5CnrOJGd3bQO
+         hN/0GO2MMuaSSK1UUDOTMMpzVKfRFgD0MvnxWItfDWHyeiVcgOGaMP98QaGelbekyS
+         GFBa5Zh06dKPAHlf/TovEvL8hR6Exb6tzUQ1a0oyCKzHtYYwLvV2IfRGSUTWrx8z2c
+         w2U/WkJy/KjkVBxaYoxqB8t1WUZYzTujETKjFb2DgrWx1v6mZjxDEnXBB64wdUQOxE
+         Ww3WhFrfSFDog==
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-2eba37104a2so65725617b3.0
+        for <linux-raid@vger.kernel.org>; Thu, 14 Apr 2022 12:02:14 -0700 (PDT)
+X-Gm-Message-State: AOAM533WaRc4zerOGo5XPKHzMl3Xw82Eq1j7/FaWKW6/bxSt3dl7pRXV
+        Cj2b60j5IN1bMwcnEgWVPqBMs6qjwFEPaTUgah0=
+X-Google-Smtp-Source: ABdhPJxmOwYGKqIxMBC5ZGKo/OYjqOyuQW8/dKQ8SuAFv+n2dt83EdsV2S6DgT/MXfXvVelD7glpSDWRDAPBgicHAvY=
+X-Received: by 2002:a81:238b:0:b0:2eb:fd76:29f8 with SMTP id
+ j133-20020a81238b000000b002ebfd7629f8mr3091802ywj.472.1649962933540; Thu, 14
+ Apr 2022 12:02:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <7ffe1f1e-1054-6119-83a8-53edd89a902b@plouf.fr.eu.org>
+In-Reply-To: <7ffe1f1e-1054-6119-83a8-53edd89a902b@plouf.fr.eu.org>
+From:   Song Liu <song@kernel.org>
+Date:   Thu, 14 Apr 2022 12:02:02 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW5+Y4K+fNSgx5AYwHkAHPw8i9z01LWrXM5qOP8qvvzuCg@mail.gmail.com>
+Message-ID: <CAPhsuW5+Y4K+fNSgx5AYwHkAHPw8i9z01LWrXM5qOP8qvvzuCg@mail.gmail.com>
+Subject: Re: [PATCH v2] md/raid0: Ignore RAID0 layout if the second zone has
+ only one device
+To:     Pascal Hambourg <pascal@plouf.fr.eu.org>
+Cc:     NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Thu, 14 Apr 2022 16:06:05 +1000
-"NeilBrown" <neilb@suse.de> wrote:
+On Tue, Apr 12, 2022 at 11:54 PM Pascal Hambourg <pascal@plouf.fr.eu.org> wrote:
+>
+> The RAID0 layout is irrelevant if all members have the same size so the
+> array has only one zone. It is *also* irrelevant if the array has two
+> zones and the second zone has only one device, for example if the array
+> has two members of different sizes.
+>
+> So in that case it makes sense to allow assembly even when the layout is
+> undefined, like what is done when the array has only one zone.
+>
+> Reviewed-By: NeilBrown <neilb@suse.de>
+> Signed-off-by: Pascal Hambourg <pascal@plouf.fr.eu.org>
 
-> md only ever used the media-change interfaces to trigger a partition
-> rescan once the array became active.  Normally partition scan only
-> happens when the disk is first added, and with md the disk is typically
-> inactive when first added.
-> 
-> This rescan can now be achieved by simply setting GD_NEED_PART_SCAN.
-> So do that, and remove all the rescan.
-> 
-Hi Neil,
+Thanks for the patch and thanks Neil for the review.
 
-I experimented in this area in the past, mainly on IMSM (external
-metadata). My problem is described here:
-https://lore.kernel.org/linux-raid/SA0PR11MB4542ECA84F72506B39C3C9F1FFEE0@SA0PR11MB4542.namprd11.prod.outlook.com/
-I lost reproduction on newer kernels, probably changes in block layer hide
-issue, it seems to be time race. The change you proposed could bring the issue
-back.
+Applied to md-next with two minor changes:
 
-The current way is working, so I consider your change as potentially dangerous.
-Anyway, I will help with testing if Song decides to take it.
-
-For external metadata we should impose partition read after mdmon start (when
-md device becomes RW), so it should be synchronized with mdadm.
-It could break autostart functionality for native metadata (if it is still
-in use).
-
-Eventually, external metadata should be handled separately.
+s/ENOTSUPP/EOPNOTSUPP/
+s/Reviewed-By/Review-by/
 
 Thanks,
-Mariusz
+Song
 
-
+> ---
+>
+> Changes since v1:
+> - add missing Signed-off-by
+> - add missing subsystem maintainer in recipients
+>
+> ---
+>   drivers/md/raid0.c | 31 ++++++++++++++++---------------
+>   1 file changed, 16 insertions(+), 15 deletions(-)
+>
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index b21e101183f4..7623811cc11c 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -128,21 +128,6 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+>         pr_debug("md/raid0:%s: FINAL %d zones\n",
+>                  mdname(mddev), conf->nr_strip_zones);
+>
+> -       if (conf->nr_strip_zones == 1) {
+> -               conf->layout = RAID0_ORIG_LAYOUT;
+> -       } else if (mddev->layout == RAID0_ORIG_LAYOUT ||
+> -                  mddev->layout == RAID0_ALT_MULTIZONE_LAYOUT) {
+> -               conf->layout = mddev->layout;
+> -       } else if (default_layout == RAID0_ORIG_LAYOUT ||
+> -                  default_layout == RAID0_ALT_MULTIZONE_LAYOUT) {
+> -               conf->layout = default_layout;
+> -       } else {
+> -               pr_err("md/raid0:%s: cannot assemble multi-zone RAID0 with default_layout setting\n",
+> -                      mdname(mddev));
+> -               pr_err("md/raid0: please set raid0.default_layout to 1 or 2\n");
+> -               err = -ENOTSUPP;
+> -               goto abort;
+> -       }
+>         /*
+>          * now since we have the hard sector sizes, we can make sure
+>          * chunk size is a multiple of that sector size
+> @@ -273,6 +258,22 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
+>                          (unsigned long long)smallest->sectors);
+>         }
+>
+> +       if (conf->nr_strip_zones == 1 || conf->strip_zone[1].nb_dev == 1) {
+> +               conf->layout = RAID0_ORIG_LAYOUT;
+> +       } else if (mddev->layout == RAID0_ORIG_LAYOUT ||
+> +                  mddev->layout == RAID0_ALT_MULTIZONE_LAYOUT) {
+> +               conf->layout = mddev->layout;
+> +       } else if (default_layout == RAID0_ORIG_LAYOUT ||
+> +                  default_layout == RAID0_ALT_MULTIZONE_LAYOUT) {
+> +               conf->layout = default_layout;
+> +       } else {
+> +               pr_err("md/raid0:%s: cannot assemble multi-zone RAID0 with default_layout setting\n",
+> +                      mdname(mddev));
+> +               pr_err("md/raid0: please set raid0.default_layout to 1 or 2\n");
+> +               err = -ENOTSUPP;
+> +               goto abort;
+> +       }
+> +
+>         pr_debug("md/raid0:%s: done.\n", mdname(mddev));
+>         *private_conf = conf;
+>
+> --
+> 2.11.0
+>
