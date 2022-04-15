@@ -2,176 +2,104 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9CFC433F5
-	for <linux-raid@archiver.kernel.org>; Fri, 15 Apr 2022 04:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADDBEC352A1
+	for <linux-raid@archiver.kernel.org>; Fri, 15 Apr 2022 04:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241474AbiDOEJt (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Apr 2022 00:09:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41258 "EHLO
+        id S1349593AbiDOE4A (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Fri, 15 Apr 2022 00:56:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238722AbiDOEJr (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Apr 2022 00:09:47 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69DBBA889B
-        for <linux-raid@vger.kernel.org>; Thu, 14 Apr 2022 21:07:20 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 01D88210E6;
-        Fri, 15 Apr 2022 04:07:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1649995639; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XG2J/b+vOhSkobI8M1mmZTNPm/b2yIX/1XTWkysYOE0=;
-        b=zEWEsfYyJpUNXatWB2ph8o9HF2OF2BJputKBFQIgQcDBZyej9a9xj2tehZM6rJ08v16Z8H
-        A5LPTgQpPu8wrxnuXE8fq2puyRBjl/vcUcDdZ6OjaraTss5wlef7SJpoMEfqbUrRJEkO0W
-        H29Lx21SpKGUljN3hayoPMcRXyWcNhk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1649995639;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XG2J/b+vOhSkobI8M1mmZTNPm/b2yIX/1XTWkysYOE0=;
-        b=5lklxQtdBG+5wdXDkdOSECvDt63MZy3sb6jXAA7deWDK40xA+fBUgGWTYMW3kiY6VuN6qJ
-        9BmQCHokdfD18hAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A2A5C13A9B;
-        Fri, 15 Apr 2022 04:07:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id A4UfF3TvWGJoWQAAMHmgww
-        (envelope-from <neilb@suse.de>); Fri, 15 Apr 2022 04:07:16 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S1349526AbiDOEzz (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Apr 2022 00:55:55 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371986A406;
+        Thu, 14 Apr 2022 21:53:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
+        To:From:Sender:Reply-To:Content-ID:Content-Description;
+        bh=XZGhvwW8WnEXnqFpyMAZS4hEeSHoeSYBiqC69zbelFo=; b=Gxz7Y5uJ+XKe3DFB5F+glNf4Qd
+        +ilmHliKeg1fmYV7/5LLANJc72+LNxw8j97CHk5ziFCgc1uz7kS3J7fxsGIO6cnBRc/aEIND8YKio
+        0SkKbU86rwF6U+vXBBwyr3GFqwWasgE9TCw8n+hO0zPxSPP5I4ZPpiX7PrV0Nkluz9OYVJwj4Hmwy
+        oKidnHT0/AqxHbe4vf+J+1VyQBy8myzVvzFwGzWB5MOWnMsTyORGtxjAzgY+jPvDzJzijUERBo3GF
+        IuBPqJCO6mtg8vZGmw86bOvzf7HW3Tdf+1Wt8evubUZivpuvFh33FBjqoHj3OCwfnGHVCD1k5Crl7
+        crl4uuXw==;
+Received: from [2a02:1205:504b:4280:f5dd:42a4:896c:d877] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nfDxW-008OrQ-LX; Fri, 15 Apr 2022 04:53:27 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     dm-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-um@lists.infradead.org,
+        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
+        nbd@other.debian.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@oss.oracle.com, linux-mm@kvack.org,
+        =?UTF-8?q?Christoph=20B=C3=B6hmwalder?= 
+        <christoph.boehmwalder@linbit.com>
+Subject: [PATCH 05/27] drbd: use bdev based limit helpers in drbd_send_sizes
+Date:   Fri, 15 Apr 2022 06:52:36 +0200
+Message-Id: <20220415045258.199825-6-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220415045258.199825-1-hch@lst.de>
+References: <20220415045258.199825-1-hch@lst.de>
 MIME-Version: 1.0
-From:   "NeilBrown" <neilb@suse.de>
-To:     "Song Liu" <song@kernel.org>
-Cc:     "Pascal Hambourg" <pascal@plouf.fr.eu.org>,
-        "linux-raid" <linux-raid@vger.kernel.org>
-Subject: Re: [PATCH v2] md/raid0: Ignore RAID0 layout if the second zone has
- only one device
-In-reply-to: <CAPhsuW5+Y4K+fNSgx5AYwHkAHPw8i9z01LWrXM5qOP8qvvzuCg@mail.gmail.com>
-References: <7ffe1f1e-1054-6119-83a8-53edd89a902b@plouf.fr.eu.org>,
- <CAPhsuW5+Y4K+fNSgx5AYwHkAHPw8i9z01LWrXM5qOP8qvvzuCg@mail.gmail.com>
-Date:   Fri, 15 Apr 2022 14:07:11 +1000
-Message-id: <164999563146.7179.4204941865640770764@noble.neil.brown.name>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 15 Apr 2022, Song Liu wrote:
-> On Tue, Apr 12, 2022 at 11:54 PM Pascal Hambourg <pascal@plouf.fr.eu.org> w=
-rote:
-> >
-> > The RAID0 layout is irrelevant if all members have the same size so the
-> > array has only one zone. It is *also* irrelevant if the array has two
-> > zones and the second zone has only one device, for example if the array
-> > has two members of different sizes.
-> >
-> > So in that case it makes sense to allow assembly even when the layout is
-> > undefined, like what is done when the array has only one zone.
-> >
-> > Reviewed-By: NeilBrown <neilb@suse.de>
-> > Signed-off-by: Pascal Hambourg <pascal@plouf.fr.eu.org>
->=20
-> Thanks for the patch and thanks Neil for the review.
->=20
-> Applied to md-next with two minor changes:
->=20
-> s/ENOTSUPP/EOPNOTSUPP/
+Use the bdev based limits helpers where they exist.
 
-Why did you change the error code that was returned?  If you want to do
-that it should be a separate patch with explanation.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com>
+---
+ drivers/block/drbd/drbd_main.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-> s/Reviewed-By/Review-by/
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 367715205c860..c39b04bda261f 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -924,7 +924,9 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
+ 
+ 	memset(p, 0, packet_size);
+ 	if (get_ldev_if_state(device, D_NEGOTIATING)) {
+-		struct request_queue *q = bdev_get_queue(device->ldev->backing_bdev);
++		struct block_device *bdev = device->ldev->backing_bdev;
++		struct request_queue *q = bdev_get_queue(bdev);
++
+ 		d_size = drbd_get_max_capacity(device->ldev);
+ 		rcu_read_lock();
+ 		u_size = rcu_dereference(device->ldev->disk_conf)->disk_size;
+@@ -933,13 +935,13 @@ int drbd_send_sizes(struct drbd_peer_device *peer_device, int trigger_reply, enu
+ 		max_bio_size = queue_max_hw_sectors(q) << 9;
+ 		max_bio_size = min(max_bio_size, DRBD_MAX_BIO_SIZE);
+ 		p->qlim->physical_block_size =
+-			cpu_to_be32(queue_physical_block_size(q));
++			cpu_to_be32(bdev_physical_block_size(bdev));
+ 		p->qlim->logical_block_size =
+-			cpu_to_be32(queue_logical_block_size(q));
++			cpu_to_be32(bdev_logical_block_size(bdev));
+ 		p->qlim->alignment_offset =
+ 			cpu_to_be32(queue_alignment_offset(q));
+-		p->qlim->io_min = cpu_to_be32(queue_io_min(q));
+-		p->qlim->io_opt = cpu_to_be32(queue_io_opt(q));
++		p->qlim->io_min = cpu_to_be32(bdev_io_min(bdev));
++		p->qlim->io_opt = cpu_to_be32(bdev_io_opt(bdev));
+ 		p->qlim->discard_enabled = blk_queue_discard(q);
+ 		put_ldev(device);
+ 	} else {
+-- 
+2.30.2
 
-Do you mean s/Reviewed-By/Reviewed-by/  - i.e. change the B to b ??
-
-Since v5.0 there have only be 5 "Review-by" and over 100,000
-"Reviewed-by" (and about 100 "Reviewed-By").
-
-Thanks,
-NeilBrown
-
-
->=20
-> Thanks,
-> Song
->=20
-> > ---
-> >
-> > Changes since v1:
-> > - add missing Signed-off-by
-> > - add missing subsystem maintainer in recipients
-> >
-> > ---
-> >   drivers/md/raid0.c | 31 ++++++++++++++++---------------
-> >   1 file changed, 16 insertions(+), 15 deletions(-)
-> >
-> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> > index b21e101183f4..7623811cc11c 100644
-> > --- a/drivers/md/raid0.c
-> > +++ b/drivers/md/raid0.c
-> > @@ -128,21 +128,6 @@ static int create_strip_zones(struct mddev *mddev, s=
-truct r0conf **private_conf)
-> >         pr_debug("md/raid0:%s: FINAL %d zones\n",
-> >                  mdname(mddev), conf->nr_strip_zones);
-> >
-> > -       if (conf->nr_strip_zones =3D=3D 1) {
-> > -               conf->layout =3D RAID0_ORIG_LAYOUT;
-> > -       } else if (mddev->layout =3D=3D RAID0_ORIG_LAYOUT ||
-> > -                  mddev->layout =3D=3D RAID0_ALT_MULTIZONE_LAYOUT) {
-> > -               conf->layout =3D mddev->layout;
-> > -       } else if (default_layout =3D=3D RAID0_ORIG_LAYOUT ||
-> > -                  default_layout =3D=3D RAID0_ALT_MULTIZONE_LAYOUT) {
-> > -               conf->layout =3D default_layout;
-> > -       } else {
-> > -               pr_err("md/raid0:%s: cannot assemble multi-zone RAID0 wit=
-h default_layout setting\n",
-> > -                      mdname(mddev));
-> > -               pr_err("md/raid0: please set raid0.default_layout to 1 or=
- 2\n");
-> > -               err =3D -ENOTSUPP;
-> > -               goto abort;
-> > -       }
-> >         /*
-> >          * now since we have the hard sector sizes, we can make sure
-> >          * chunk size is a multiple of that sector size
-> > @@ -273,6 +258,22 @@ static int create_strip_zones(struct mddev *mddev, s=
-truct r0conf **private_conf)
-> >                          (unsigned long long)smallest->sectors);
-> >         }
-> >
-> > +       if (conf->nr_strip_zones =3D=3D 1 || conf->strip_zone[1].nb_dev =
-=3D=3D 1) {
-> > +               conf->layout =3D RAID0_ORIG_LAYOUT;
-> > +       } else if (mddev->layout =3D=3D RAID0_ORIG_LAYOUT ||
-> > +                  mddev->layout =3D=3D RAID0_ALT_MULTIZONE_LAYOUT) {
-> > +               conf->layout =3D mddev->layout;
-> > +       } else if (default_layout =3D=3D RAID0_ORIG_LAYOUT ||
-> > +                  default_layout =3D=3D RAID0_ALT_MULTIZONE_LAYOUT) {
-> > +               conf->layout =3D default_layout;
-> > +       } else {
-> > +               pr_err("md/raid0:%s: cannot assemble multi-zone RAID0 wit=
-h default_layout setting\n",
-> > +                      mdname(mddev));
-> > +               pr_err("md/raid0: please set raid0.default_layout to 1 or=
- 2\n");
-> > +               err =3D -ENOTSUPP;
-> > +               goto abort;
-> > +       }
-> > +
-> >         pr_debug("md/raid0:%s: done.\n", mdname(mddev));
-> >         *private_conf =3D conf;
-> >
-> > --
-> > 2.11.0
-> >
->=20
