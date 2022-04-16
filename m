@@ -2,91 +2,57 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EA78C433FE
-	for <linux-raid@archiver.kernel.org>; Sat, 16 Apr 2022 02:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E185C433F5
+	for <linux-raid@archiver.kernel.org>; Sat, 16 Apr 2022 12:53:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbiDPCbf (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Fri, 15 Apr 2022 22:31:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59454 "EHLO
+        id S231993AbiDPM4I (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Sat, 16 Apr 2022 08:56:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbiDPCbd (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Fri, 15 Apr 2022 22:31:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00FA134BB6;
-        Fri, 15 Apr 2022 19:29:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9062F61F03;
-        Sat, 16 Apr 2022 02:29:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49BEAC385A9;
-        Sat, 16 Apr 2022 02:28:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650076142;
-        bh=64fC476XAzTfqTSPn+hnDLb+pMKn+pGg/cu9T2ZYoeo=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=YR2swQd5bHjAFWTiUHuzi2CBAoBviVOC618ZH6KrZjKGz54+nb14CQuuZA/rg7rT4
-         HOUGUM1/um4+uLyDQbz+2PZe7eFGngBlsNfmtF55BEnpI8SeGgAW1TB9RPEF0hZ/gu
-         wadS+mRuD6cvw4fVgc6pYN09yVoj6blhm7pLMwx6SJQPqerB95uO3eDsfGVZkI1tAT
-         ypjbfbxn7+bT/FWjnusepnTR0gEoGRsC/NgAvlwAmFKhGsjLJGRbec9W3gsrNwS1xO
-         /N5W0GD6Xr6BMAFslHSxbnYfv+w/HrqJWAmw3dvOKrGV8WDuaNAVrqQjvW1ASku3np
-         CHDdJgFxl65YQ==
-Message-ID: <ffa14a07-b8f9-828e-97bc-cf7a2099bab5@kernel.org>
-Date:   Sat, 16 Apr 2022 10:28:49 +0800
+        with ESMTP id S230085AbiDPM4I (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Sat, 16 Apr 2022 08:56:08 -0400
+Received: from mallaury.nerim.net (smtp-106-saturday.noc.nerim.net [178.132.17.106])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E55DC35DFE
+        for <linux-raid@vger.kernel.org>; Sat, 16 Apr 2022 05:53:33 -0700 (PDT)
+Received: from [192.168.0.252] (plouf.fr.eu.org [213.41.155.166])
+        by mallaury.nerim.net (Postfix) with ESMTP id EB75ADB17C;
+        Sat, 16 Apr 2022 14:53:25 +0200 (CEST)
+Message-ID: <251b98d6-2ea3-4668-6cdc-1dd99ba4707a@plouf.fr.eu.org>
+Date:   Sat, 16 Apr 2022 14:53:23 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101
  Thunderbird/91.8.0
-Subject: Re: [f2fs-dev] [PATCH 26/27] block: decouple REQ_OP_SECURE_ERASE from
- REQ_OP_DISCARD
+Subject: Re: [PATCH v2] md/raid0: Ignore RAID0 layout if the second zone has
+ only one device
 Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     jfs-discussion@lists.sourceforge.net,
-        linux-nvme@lists.infradead.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, target-devel@vger.kernel.org,
-        linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com,
-        linux-s390@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cluster-devel@redhat.com,
-        xen-devel@lists.xenproject.org, linux-ext4@vger.kernel.org,
-        linux-um@lists.infradead.org, nbd@other.debian.org,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        David Sterba <dsterba@suse.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, ceph-devel@vger.kernel.org,
-        Coly Li <colyli@suse.de>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        linux-raid@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-mmc@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org,
-        =?UTF-8?Q?Christoph_B=c3=b6hmwalder?= 
-        <christoph.boehmwalder@linbit.com>, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, ntfs3@lists.linux.dev,
-        linux-btrfs@vger.kernel.org
-References: <20220415045258.199825-1-hch@lst.de>
- <20220415045258.199825-27-hch@lst.de>
-From:   Chao Yu <chao@kernel.org>
-In-Reply-To: <20220415045258.199825-27-hch@lst.de>
+To:     Song Liu <song@kernel.org>, NeilBrown <neilb@suse.de>
+Cc:     linux-raid <linux-raid@vger.kernel.org>
+References: <7ffe1f1e-1054-6119-83a8-53edd89a902b@plouf.fr.eu.org>
+ <CAPhsuW5+Y4K+fNSgx5AYwHkAHPw8i9z01LWrXM5qOP8qvvzuCg@mail.gmail.com>
+From:   Pascal Hambourg <pascal@plouf.fr.eu.org>
+Organization: Plouf !
+In-Reply-To: <CAPhsuW5+Y4K+fNSgx5AYwHkAHPw8i9z01LWrXM5qOP8qvvzuCg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On 2022/4/15 12:52, Christoph Hellwig wrote:
-> Secure erase is a very different operation from discard in that it is
-> a data integrity operation vs hint.  Fully split the limits and helper
-> infrastructure to make the separation more clear.
+Le 14/04/2022 à 21:02, Song Liu a écrit :
+> On Tue, Apr 12, 2022 at 11:54 PM Pascal Hambourg <pascal@plouf.fr.eu.org> wrote:
+>>
+>> The RAID0 layout is irrelevant if all members have the same size so the
+>> array has only one zone. It is *also* irrelevant if the array has two
+>> zones and the second zone has only one device, for example if the array
+>> has two members of different sizes.
+>>
+>> So in that case it makes sense to allow assembly even when the layout is
+>> undefined, like what is done when the array has only one zone.
+>>
+>> Reviewed-By: NeilBrown <neilb@suse.de>
+>> Signed-off-by: Pascal Hambourg <pascal@plouf.fr.eu.org>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Acked-by: Christoph Böhmwalder <christoph.boehmwalder@linbit.com> [drbd]
-> Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com> [nifs2]
-> Acked-by: Jaegeuk Kim <jaegeuk@kernel.org> [f2fs]
-> Acked-by: Coly Li <colyli@suse.de> [bcache]
-> Acked-by: David Sterba <dsterba@suse.com> [btrfs]
+> Thanks for the patch and thanks Neil for the review. >
+> Applied to md-next with two minor changes:
 
-For f2fs part,
-
-Acked-by: Chao Yu <chao@kernel.org>
-
-Thanks,
+Do you think this patch qualifies for -stable too ?
