@@ -2,149 +2,129 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B697C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Apr 2022 13:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31890C433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Apr 2022 17:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239666AbiDRNZn (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Apr 2022 09:25:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45836 "EHLO
+        id S1347190AbiDRRrJ (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 18 Apr 2022 13:47:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241668AbiDRNY6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Apr 2022 09:24:58 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C81E53DA51
-        for <linux-raid@vger.kernel.org>; Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id mp16-20020a17090b191000b001cb5efbcab6so17171199pjb.4
-        for <linux-raid@vger.kernel.org>; Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=F9FMycteyYrs8wEiBExwTDtAcc/2JBQ5GQqodkswvTM=;
-        b=zqMJx9kEO/syGgh/jfUujcMdgZO1Zk4th79yyPJcsdnvdIDI8Xk864jrHuyarDgv8c
-         gBt2ez+Ym/+EaLgC6MfWMHx5OVcgB54eOfckx7Cmdvf3bmGVDc/T0aLwM9rpN+nKDwcO
-         dWklV+ARMeZbUO1+GrFCqFc/xZjiULaGiN1ll1DVCyoNwgzG1P+0Y9ZhUcwBpI/7WQx/
-         gN/pYZdJuI935bVWCVcjkTqu2k20R+5oG6mGhil2uYi4X3QtR1zxXemtHM8NZ8XUvixz
-         3tQXFtvzqXbRCXIajCtyaq1nqo4kcpEpLyzsTyB3FvSvWQd/rTixV4XGHzsBwq9Bu/vV
-         stDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=F9FMycteyYrs8wEiBExwTDtAcc/2JBQ5GQqodkswvTM=;
-        b=AzEj0xbP8WZxhV2RaoyQvRPAa60z77B1ZOkORsx8QOMU+G8lQs9giY4Lg+2sLUsYVd
-         efR6z7RBTWbTTs01tRNnK5iDEABt03Efl4mJwv2lJ3KjMqqJDnaiPBLmOJ/rnLbrZjHY
-         9kLsU2avw3pPefp/hzEZEIypW9jDR4Pos4WU8LtBEyomlM/sqyywKZj403GXdCPURJN0
-         l9RiCUCs6+rXcMIadAU8BT3X261ht+KRCPzu8J1Zu1n/nayZStmP7OuomYVJwtQniI26
-         lwmXOYdzUi7FArFsCUr2i9W+B6T5CQvScH2Jh2jkIez3NKSn568dPXAm5UGk44UUgPlv
-         ok0w==
-X-Gm-Message-State: AOAM532rmKW23O9q/ZsmENSJksxcAT1ZPVPfCXI/uOnIyU/gJSrgDqsE
-        +DdFuXtJVpyEcdsyxZw2HWnTGyrkjD1eNZLA
-X-Google-Smtp-Source: ABdhPJyPDIaLEewZhdBb/81ulQRxH4lnSCW72QYENTWzgjKzLqW/EIFRVhnHg8tc4oCKtNOZ6kDuRg==
-X-Received: by 2002:a17:902:6b44:b0:154:4bee:c434 with SMTP id g4-20020a1709026b4400b001544beec434mr10858040plt.43.1650286372060;
-        Mon, 18 Apr 2022 05:52:52 -0700 (PDT)
-Received: from [127.0.1.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id s24-20020a17090a441800b001ca9b5724a6sm12663301pjg.36.2022.04.18.05.52.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Apr 2022 05:52:51 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-f2fs-devel@lists.sourceforge.net,
-        jfs-discussion@lists.sourceforge.net, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, drbd-dev@lists.linbit.com,
-        xen-devel@lists.xenproject.org, nbd@other.debian.org,
-        linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-block@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        linux-ext4@vger.kernel.org, dm-devel@redhat.com,
-        linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, linux-bcache@vger.kernel.org,
-        ceph-devel@vger.kernel.org, ntfs3@lists.linux.dev,
-        linux-um@lists.infradead.org, target-devel@vger.kernel.org
-In-Reply-To: <20220415045258.199825-1-hch@lst.de>
-References: <20220415045258.199825-1-hch@lst.de>
-Subject: Re: use block_device based APIs in block layer consumers v3
-Message-Id: <165028636949.14872.7589996414521818725.b4-ty@kernel.dk>
-Date:   Mon, 18 Apr 2022 06:52:49 -0600
+        with ESMTP id S1346846AbiDRRrI (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Apr 2022 13:47:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C61430F5B
+        for <linux-raid@vger.kernel.org>; Mon, 18 Apr 2022 10:44:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650303868;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=LnkRM0HW2YYLqspOmPvsxTHjZZfEFLgJUTnQtu6wWX4=;
+        b=d7rAltIxVmXwhKQ9IaAkTX32qXrPx2DhndTqVh2OBPqRvbsaTPdEWMtEiwwH21ss3vztED
+        8ZPko0/BOX8yfdPpr+u0wv2Hv/czAlLnfEPPtJ6z+Ci88Le2pQ1e1NnivNUEKgO1cANGnZ
+        o/QD1QZJxrRxpq76c7al9YWJljLJ9Xc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-651-9ckji3UPMcyQEssi6KZSjQ-1; Mon, 18 Apr 2022 13:44:25 -0400
+X-MC-Unique: 9ckji3UPMcyQEssi6KZSjQ-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CBC5C1014A6B;
+        Mon, 18 Apr 2022 17:44:24 +0000 (UTC)
+Received: from localhost (dhcp-17-75.bos.redhat.com [10.18.17.75])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6D585536BB7;
+        Mon, 18 Apr 2022 17:44:24 +0000 (UTC)
+From:   Nigel Croxon <ncroxon@redhat.com>
+To:     jes@trained-monkey.org, linux-raid@vger.kernel.org,
+        mariusz.tkaczyk@linux.intel.com, wuguanghao3@huawei.com,
+        colyli@suse.de
+Subject: [PATCH] Revert "mdadm: fix coredump of mdadm --monitor -r"
+Date:   Mon, 18 Apr 2022 13:44:23 -0400
+Message-Id: <20220418174423.846026-1-ncroxon@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.10
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Fri, 15 Apr 2022 06:52:31 +0200, Christoph Hellwig wrote:
-> this series cleanups up the block layer API so that APIs consumed
-> by file systems are (almost) only struct block_devic based, so that
-> file systems don't have to poke into block layer internals like the
-> request_queue.
-> 
-> I also found a bunch of existing bugs related to partition offsets
-> and discard so these are fixed while going along.
-> 
-> [...]
+This reverts commit 546047688e1c64638f462147c755b58119cabdc8.
 
-Applied, thanks!
+The change from commit mdadm: fix coredump of mdadm
+--monitor -r broke the printing of the return message when
+passing -r to mdadm --manage, the removal of a device from
+an array.
 
-[01/27] target: remove an incorrect unmap zeroes data deduction
-        commit: 179d8609d8424529e95021df939ed7b0b82b37f1
-[02/27] target: pass a block_device to target_configure_unmap_from_queue
-        commit: 817e8b51eb3d927ce6d56ecf9f48bc3c5b26168b
-[03/27] target: fix discard alignment on partitions
-        commit: 968786b9ef56e75e0109158a4936ffffea962c1e
-[04/27] drbd: remove assign_p_sizes_qlim
-        commit: 40349d0e16cedd0de561f59752c3249780fb749b
-[05/27] drbd: use bdev based limit helpers in drbd_send_sizes
-        commit: 7a38acce229685968b770d1d9e64e01396b93643
-[06/27] drbd: use bdev_alignment_offset instead of queue_alignment_offset
-        commit: c6f23b1a05441a26f765e59dd95e8ba7354f9388
-[07/27] drbd: cleanup decide_on_discard_support
-        commit: 998e9cbcd615e5e6a7baa69e673ee845f812744e
-[08/27] btrfs: use bdev_max_active_zones instead of open coding it
-        commit: c1e7b24416400ef13ff92a1c60c336c9a2834d7b
-[09/27] ntfs3: use bdev_logical_block_size instead of open coding it
-        commit: f09dac9afb8e3ce4b6485dbc091a9b9c742db023
-[10/27] mm: use bdev_is_zoned in claim_swapfile
-        commit: 9964e674559b02619fee2012a56839624143d02e
-[11/27] block: add a bdev_nonrot helper
-        commit: 10f0d2a517796b8f6dc04fb0cc3e49003ae6b0bc
-[12/27] block: add a bdev_write_cache helper
-        commit: 08e688fdb8f7e862092ae64cee20bc8b463d1046
-[13/27] block: add a bdev_fua helper
-        commit: a557e82e5a01826f902bd94fc925c03f253cb712
-[14/27] block: add a bdev_stable_writes helper
-        commit: 36d254893aa6a6e204075c3cce94bb572ac32c04
-[15/27] block: add a bdev_max_zone_append_sectors helper
-        commit: 2aba0d19f4d8c8929b4b3b94a9cfde2aa20e6ee2
-[16/27] block: use bdev_alignment_offset in part_alignment_offset_show
-        commit: 64dcc7c2717395b7c83ffb10f040d3be795d03c1
-[17/27] block: use bdev_alignment_offset in disk_alignment_offset_show
-        commit: 640f2a23911b8388989547f89d055afbb910b88e
-[18/27] block: move bdev_alignment_offset and queue_limit_alignment_offset out of line
-        commit: 89098b075cb74a80083bc4ed6b71d0ee18b6898f
-[19/27] block: remove queue_discard_alignment
-        commit: 4e1462ffe8998749884d61f91be251a7a8719677
-[20/27] block: use bdev_discard_alignment in part_discard_alignment_show
-        commit: f0f975a4dde890bfe25ce17bf07a6495453988a4
-[21/27] block: move {bdev,queue_limit}_discard_alignment out of line
-        commit: 5c4b4a5c6f11c869a57c6bd977143430bc9dc43d
-[22/27] block: refactor discard bio size limiting
-        commit: e3cc28ea28b5f8794db2aed24f8a0282ad2e85a2
-[23/27] block: add a bdev_max_discard_sectors helper
-        commit: cf0fbf894bb543f472f682c486be48298eccf199
-[24/27] block: remove QUEUE_FLAG_DISCARD
-        commit: 70200574cc229f6ba038259e8142af2aa09e6976
-[25/27] block: add a bdev_discard_granularity helper
-        commit: 7b47ef52d0a2025fd1408a8a0990933b8e1e510f
-[26/27] block: decouple REQ_OP_SECURE_ERASE from REQ_OP_DISCARD
-        commit: 44abff2c0b970ae3d310b97617525dc01f248d7c
-[27/27] direct-io: remove random prefetches
-        commit: c22198e78d523c8fa079bbb70b2523bb6aa51849
+If the current code reverts this commit, both issues are
+still fixed.
 
-Best regards,
+The original problem reported that the fix tried to address
+was:  The --monitor -r option requires a parameter,
+otherwise a null pointer will be manipulated when
+converting to integer data, and a core dump will appear.
+
+The original problem was really fixed with:
+60815698c0a Refactor parse_num and use it to parse optarg.
+Which added a check for NULL in 'optarg' before moving it
+to the 'increments' variable.
+
+New issue: When trying to remove a device using the short
+argument -r, instead of the long argument --remove, the
+output is empty. The problem started when commit
+546047688e1c was added.
+
+Steps to Reproduce:
+1. create/assemble /dev/md0 device
+2. mdadm --manage /dev/md0 -r /dev/vdxx
+
+Actual results:
+Nothing, empty output, nothing happens, the device is still
+connected to the array.
+
+The output should have stated "mdadm: hot remove failed
+for /dev/vdxx: Device or resource busy", if the device was
+still active. Or it should remove the device and print
+a message:
+
+mdadm: set /dev/vdd faulty in /dev/md0
+mdadm: hot removed /dev/vdd from /dev/md0
+
+The following commit should be reverted as it breaks
+mdadm --manage -r.
+
+commit 546047688e1c64638f462147c755b58119cabdc8
+Author: Wu Guanghao <wuguanghao3@huawei.com>
+Date:   Mon Aug 16 15:24:51 2021 +0800
+mdadm: fix coredump of mdadm --monitor -r
+
+-Nigel
+
+Signed-off-by: Nigel Croxon <ncroxon@redhat.com>
+---
+ ReadMe.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ReadMe.c b/ReadMe.c
+index 8f873c48..bec1be9a 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -81,11 +81,11 @@ char Version[] = "mdadm - v" VERSION " - " VERS_DATE EXTRAVERSION "\n";
+  *     found, it is started.
+  */
+ 
+-char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:r:n:x:u:c:d:z:U:N:safRSow1tye:k";
++char short_options[]="-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+ char short_bitmap_options[]=
+-		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
++		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tye:k:";
+ char short_bitmap_auto_options[]=
+-		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:r:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
++		"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tye:k:";
+ 
+ struct option long_options[] = {
+     {"manage",    0, 0, ManageOpt},
 -- 
-Jens Axboe
-
+2.29.2
 
