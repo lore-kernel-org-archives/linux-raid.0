@@ -2,101 +2,78 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCB25C433EF
-	for <linux-raid@archiver.kernel.org>; Mon, 18 Apr 2022 01:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E10CFC433F5
+	for <linux-raid@archiver.kernel.org>; Mon, 18 Apr 2022 04:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235610AbiDRBgB (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Sun, 17 Apr 2022 21:36:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45932 "EHLO
+        id S236536AbiDRE4S (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Mon, 18 Apr 2022 00:56:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235613AbiDRBft (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Sun, 17 Apr 2022 21:35:49 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F31FC1835A
-        for <linux-raid@vger.kernel.org>; Sun, 17 Apr 2022 18:32:48 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id e8-20020a17090a118800b001cb13402ea2so12813673pja.0
-        for <linux-raid@vger.kernel.org>; Sun, 17 Apr 2022 18:32:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=KJfLbwgngO3OiGtIZhQTnGZUpV/6KTf4a6VxaVn0jHA=;
-        b=fUiWEs30cpVdTgnRTDuIunTyD3sFwyNXIMjD2xrDFFhby9PvozDytSBEVj5TLA3enQ
-         WJg5PUCFZhavWnDTUSjcqiWdtbmRSnwGPVoJqfidCHXMsRiC/8miYakfaAZVFsJvX3bS
-         5rW4pfgKMUPRH4xvCV8Ayqx16fXXcBpmLJ8ouv1MDWzBzzeX6sTvregS6+W7imKu2o9s
-         JkpStrFdIm2UGzcq7WrYJf9XXlMNLf1O1L3ohQXq8EaSjdqThCTtF7dsfLFbH0M279GX
-         9j/pkX//BLTGvZs/WRmTotqH1MNj+h8ET2s+rsNWcTHLVYqXbzx2Z0wD2+tsX+cqIWVh
-         IhOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=KJfLbwgngO3OiGtIZhQTnGZUpV/6KTf4a6VxaVn0jHA=;
-        b=rNaTbvAm8YNMrTFfrnLsTUWXx2vWEDZn4y+OtO3cyWbyzAkBqyKOl6n2v4tNKh+9M+
-         hjG+XjVCkqqLZzFsuk4rE8OmDJSgUACTPSRqWpr08Y2xRyx1G2BZJDE6am67ON8yLJA6
-         T/Kwufw7+1RQKkm1AJE3euQWp1zCb0yzgOqoWXPMx8hbLuKG/cNuVYqkhnwUpPDYs5iQ
-         vD05+dhqXvupxgYpqtKgpLCwWtTVjKYBVvKMIFrXJQBnNvxYsB9HN7c7hAUqDD/0tuDn
-         xBer9oGkrVUbDR3zVw9yhkyKFv6P763328jHcHkh1lWMZ+wc5PvP295mLhU/HAXWkL0F
-         g/Hw==
-X-Gm-Message-State: AOAM532iX9+N8IuCtFWFisd12F/PfmjGxO13y8t0JieeWpltjLeLwrwK
-        GeuukEVljxdZaP/wDYY07jinZA==
-X-Google-Smtp-Source: ABdhPJxH3Tcv8urG8TWDL99aaKBrMqsxLK1RCMCg75RZRVpxh7Td568gOGSDadX3DzyNp9aRqA2iCg==
-X-Received: by 2002:a17:903:2406:b0:158:f6f0:6c44 with SMTP id e6-20020a170903240600b00158f6f06c44mr4676524plo.88.1650245568439;
-        Sun, 17 Apr 2022 18:32:48 -0700 (PDT)
-Received: from [127.0.1.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id g15-20020a63be4f000000b0039934531e95sm10726611pgo.18.2022.04.17.18.32.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 17 Apr 2022 18:32:47 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-block@vger.kernel.org, phillip@squashfs.org.uk,
-        target-devel@vger.kernel.org, colyli@suse.de,
-        linux-btrfs@vger.kernel.org, martin.petersen@oracle.com,
-        linux-raid@vger.kernel.org, dsterba@suse.com, josef@toxicpanda.com,
-        song@kernel.org, dm-devel@redhat.com, snitzer@redhat.com,
-        linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20220406061228.410163-1-hch@lst.de>
-References: <20220406061228.410163-1-hch@lst.de>
-Subject: Re: cleanup bio_kmalloc v3
-Message-Id: <165024556441.258485.6980891929042026868.b4-ty@kernel.dk>
-Date:   Sun, 17 Apr 2022 19:32:44 -0600
+        with ESMTP id S230499AbiDRE4R (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Apr 2022 00:56:17 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D67717AA1;
+        Sun, 17 Apr 2022 21:53:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=tyZKBZElFW6HvHSlv9xeAjIG3dO7xKdX7mIPZUu3++o=; b=Fc1PLXWY+U61UCduGVVmNa4xRX
+        W2DkcCfgMrkwb1FtowTBpkb1LuVkZ8TInpQDBRu63s01XGNymYAVBze9K7cuggrvtLVCsRIQvDof7
+        ljUfhulALzTsFS4w+l71wYoV1q2Lm4YK8vgQZhkj/Np9aC0Yu9S1JLLXx3eykhjg6NsyORI3PutJm
+        sTMvqTpRRhFFdcZ7EV5IvV6e5FER4KWu6+dJ4duc2TYsclYeI94eZYYw/+h90AObggztOx4giuutC
+        Qw7muGk8qWXO7hVhEGAmI1WIrhzpj4Cevvqzf0Uppevy9o3pTO/Ek4OGE2kkDtP//trS4bSL7nhaU
+        +mBAe6Vg==;
+Received: from [2a02:1205:504b:4280:f5dd:42a4:896c:d877] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ngJO0-00FYhR-Fv; Mon, 18 Apr 2022 04:53:17 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Richard Weinberger <richard@nod.at>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Mike Snitzer <snitzer@kernel.org>, Song Liu <song@kernel.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        nbd@other.debian.org, virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        dm-devel@redhat.com
+Subject: fix and cleanup discard_alignment handling
+Date:   Mon, 18 Apr 2022 06:53:03 +0200
+Message-Id: <20220418045314.360785-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Wed, 6 Apr 2022 08:12:23 +0200, Christoph Hellwig wrote:
-> this series finishes off the bio allocation interface cleanups by dealing
-> with the weirdest member of the famility.  bio_kmalloc combines a kmalloc
-> for the bio and bio_vecs with a hidden bio_init call and magic cleanup
-> semantics.
-> 
-> This series moves a few callers away from bio_kmalloc and then turns
-> bio_kmalloc into a simple wrapper for a slab allocation of a bio and the
-> inline biovecs.  The callers need to manually call bio_init instead with
-> all that entails and the magic that turns bio_put into a kfree goes away
-> as well, allowing for a proper debug check in bio_put that catches
-> accidental use on a bio_init()ed bio.
-> 
-> [...]
+Hi all,
 
-Applied, thanks!
+the somewhat confusing name of the discard_alignment queue limit, that
+really is an offset for the discard granularity mislead a lot of driver
+authors to set it to an incorrect value.  This series tries to fix up
+all these cases.
 
-[1/5] btrfs: simplify ->flush_bio handling
-      commit: f9e69aa9ccd7e51c47b147e45e03987ea0ef9aa3
-[2/5] squashfs: always use bio_kmalloc in squashfs_bio_read
-      commit: 46a2d4ccc49903923506685a8368ca88312bbdc9
-[3/5] target/pscsi: remove pscsi_get_bio
-      commit: 7655db80932d95f501a0811544d9520ec720e38d
-[4/5] block: turn bio_kmalloc into a simple kmalloc wrapper
-      commit: 066ff571011d8416e903d3d4f1f41e0b5eb91e1d
-[5/5] pktcdvd: stop using bio_reset
-      commit: 852ad96cb03621f7995764b4b31cbff9801d8bcd
-
-Best regards,
--- 
-Jens Axboe
-
-
+Diffstat:
+ arch/um/drivers/ubd_kern.c         |    1 -
+ drivers/block/loop.c               |    1 -
+ drivers/block/nbd.c                |    3 ---
+ drivers/block/null_blk/main.c      |    1 -
+ drivers/block/rnbd/rnbd-srv-dev.h  |    2 +-
+ drivers/block/virtio_blk.c         |    7 ++++---
+ drivers/block/xen-blkback/xenbus.c |    4 ++--
+ drivers/md/dm-zoned-target.c       |    2 +-
+ drivers/md/raid5.c                 |    1 -
+ drivers/nvme/host/core.c           |    1 -
+ drivers/s390/block/dasd_fba.c      |    1 -
+ 11 files changed, 8 insertions(+), 16 deletions(-)
