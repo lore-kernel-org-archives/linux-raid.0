@@ -2,121 +2,131 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76744C433FE
-	for <linux-raid@archiver.kernel.org>; Tue, 19 Apr 2022 02:34:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4053EC433FE
+	for <linux-raid@archiver.kernel.org>; Tue, 19 Apr 2022 04:33:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344968AbiDSCgl (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Mon, 18 Apr 2022 22:36:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41242 "EHLO
+        id S1348272AbiDSEgK (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Tue, 19 Apr 2022 00:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344866AbiDSCgi (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Mon, 18 Apr 2022 22:36:38 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99D5BBAD
-        for <linux-raid@vger.kernel.org>; Mon, 18 Apr 2022 19:33:57 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id j70so1516505pgd.4
-        for <linux-raid@vger.kernel.org>; Mon, 18 Apr 2022 19:33:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=j9cziDR8TTkRRjQK85vGUcJr91F0j+7nYT1sRtOWrYo=;
-        b=lRy2Rw0ouK1ZNqUKDuvy71QtiCjcxxosNCLk+/x5xISfQsazZY8DdeA6EvpOqH8jCt
-         owSdGVwU6RLJphr6tcOaSitTaJWQcTa3XQvYSY9EDlIXHdcaC/NJmgHvL/ribWQB/o2Q
-         kWmLB7auKAHcCx8Lqs1Vyljv+hPuWddx3mdww=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=j9cziDR8TTkRRjQK85vGUcJr91F0j+7nYT1sRtOWrYo=;
-        b=amCLW4IpCxeauF3qi4BD5uex+TGFYCuuz3cmaWKXqC+HImnkin+swjdboyEDAfKRi/
-         7ZC6z0Bd+Hd2stwy+K0hHtU3Hi4l+1bBZH8qGrWI7rbiyT3Xa3dFp0To7Djl3EcGZswK
-         STAwHyXKZmM+nrlB1OQGcB8emupQ0qEXl+xzV7zPUr7NXYyCYDKcQXntz9gXCm/UyDn/
-         4SimLgvq9lC9coxSvXWUc5Up7gcL02yfJiDuOT9vLPmQ0/PEqNbUQV2fibH/xXxyYSvr
-         GMei8cFYP3IllZaaKpfNS5WdjVFizuvYg19hKUDJkL0taG2zsnOkRYeS0TOYzyTRU3By
-         d4Ew==
-X-Gm-Message-State: AOAM533aB7ygD/KUgqwQTQKMf0YEcgC1oCC8GkwdjS60qcma+nTJ2315
-        yl2o7mdWYp+QayB9BGSKWuHzRg==
-X-Google-Smtp-Source: ABdhPJxbQz3Vu6hsTbGBYxojsApKIqv4MmFTFy5f9XEVo+IQP8mxZsJhUUcVYLGxcRcQXCRGbyuF/A==
-X-Received: by 2002:a63:f341:0:b0:39d:3ce2:fc8d with SMTP id t1-20020a63f341000000b0039d3ce2fc8dmr12314343pgj.441.1650335637120;
-        Mon, 18 Apr 2022 19:33:57 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y131-20020a626489000000b00505a8f36965sm13955880pfb.184.2022.04.18.19.33.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Apr 2022 19:33:56 -0700 (PDT)
-Date:   Mon, 18 Apr 2022 19:33:55 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Matthias Kaehlcke <mka@chromium.org>
-Cc:     Alasdair Kergon <agk@redhat.com>,
+        with ESMTP id S1347682AbiDSEgJ (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Tue, 19 Apr 2022 00:36:09 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4017A2AC52;
+        Mon, 18 Apr 2022 21:33:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1650342808; x=1681878808;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=CmAcx2mBYxodDrmyuE8qbdUsmHTXfHUYcAr60iRLHG0=;
+  b=djvAzRv81GYtm7LH4vcn9x5eLD0SX/250MKV48SLdrwVCU7XmB/cxWR3
+   1NMMbVB47N8Ev8qDxeGiG7/t6/or1I/iHVuwsF1mwsBaggfjOHpxzpdJl
+   3lN+0cSjBTCsJuYMPTnAYphQUgGE9DOHoR/Htij7IJYzzSRRI1ipSMW6i
+   YGzMUX1k22XQyUkE/GGM4uqntJ/EKrFu/kvAkSqaUl26jQtgQfoEMlpJJ
+   7yFjivMNOKRJ2+Sc5lVrdr01KwwPfPS+GXT2QlJOE3TNrYqstuGGoIgmT
+   3xdXsrxycdOXl3tRACAsqMADxHhwxbQGjFWRCUtTi+LWxaSWAulIPJgHA
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10321"; a="288767659"
+X-IronPort-AV: E=Sophos;i="5.90,271,1643702400"; 
+   d="scan'208";a="288767659"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2022 21:33:27 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,271,1643702400"; 
+   d="scan'208";a="575900487"
+Received: from lkp-server01.sh.intel.com (HELO 3abc53900bec) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 18 Apr 2022 21:33:24 -0700
+Received: from kbuild by 3abc53900bec with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1ngfYJ-0005LY-TX;
+        Tue, 19 Apr 2022 04:33:23 +0000
+Date:   Tue, 19 Apr 2022 12:32:43 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Matthias Kaehlcke <mka@chromium.org>,
+        Alasdair Kergon <agk@redhat.com>,
         Mike Snitzer <snitzer@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
         James Morris <jmorris@namei.org>,
-        "Serge E . Hallyn" <serge@hallyn.com>, linux-raid@vger.kernel.org,
+        "Serge E . Hallyn" <serge@hallyn.com>
+Cc:     kbuild-all@lists.01.org, linux-raid@vger.kernel.org,
         linux-kernel@vger.kernel.org, Song Liu <song@kernel.org>,
         linux-security-module@vger.kernel.org,
-        Douglas Anderson <dianders@chromium.org>, dm-devel@redhat.com
-Subject: Re: [PATCH 0/3] LoadPin: Enable loading from trusted dm-verity
+        Douglas Anderson <dianders@chromium.org>, dm-devel@redhat.com,
+        Matthias Kaehlcke <mka@chromium.org>
+Subject: Re: [PATCH 2/3] LoadPin: Enable loading from trusted dm-verity
  devices
-Message-ID: <202204181931.A618DFF2C@keescook>
-References: <20220418211559.3832724-1-mka@chromium.org>
- <202204181512.DA0C0C6EBD@keescook>
- <Yl3pj72hM/Bo+Kf5@google.com>
+Message-ID: <202204191222.n0HWtNe0-lkp@intel.com>
+References: <20220418141545.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Yl3pj72hM/Bo+Kf5@google.com>
+In-Reply-To: <20220418141545.2.I01c67af41d2f6525c6d023101671d7339a9bc8b5@changeid>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-On Mon, Apr 18, 2022 at 03:43:27PM -0700, Matthias Kaehlcke wrote:
-> Hi Kees,
-> 
-> On Mon, Apr 18, 2022 at 03:14:14PM -0700, Kees Cook wrote:
-> > [oops, resending to actual CC list]
-> > 
-> > On Mon, Apr 18, 2022 at 02:15:56PM -0700, Matthias Kaehlcke wrote:
-> > > This series extends LoadPin to allow loading of kernel files
-> > > from trusted dm-verity devices. It adds the concept of
-> > > trusted verity devices to LoadPin. Userspace can use the
-> > > new systl file 'loadpin/trusted_verity_root_digests' to
-> > > provide LoadPin with a list of root digests from dm-verity
-> > > devices that LoadPin should consider as trusted. When a
-> > > kernel file is read LoadPin first checks (as usual) whether
-> > > the file is located on the pinned root, if so the file can
-> > > be loaded. Otherwise, if the verity extension is enabled,
-> > > LoadPin determines whether the file is located on a verity
-> > > backed device and whether the root digest of that device
-> > > is in the list of trusted digests. The file can be loaded
-> > > if the verity device has a trusted root digest.
-> > > 
-> > > The list of trusted root digests can only be written once
-> > > (typically at boot time), to limit the possiblity of
-> > > attackers setting up rogue verity devices and marking them
-> > > as trusted.
-> 
-> 
-> > Thanks for working all this out! Where does the list of trusted
-> > roothashes come from? I assume some chain of trust exists. Is the list
-> > maybe already stored on the rootfs?
-> 
-> Yes, at least the content of the list comes from the rootfs. The
-> userspace part is still TBD (also pending on the evolution of this
-> patchset), having the list pre-formatted in a single file on the
-> rootfs should be fine.
+Hi Matthias,
 
-Ah-ha, that's perfect.
+Thank you for the patch! Yet something to improve:
 
-> > It'd be nice if there was some way to pass the trust chain to LoadPin
-> > more directly.
-> 
-> I imagine you envision LoadPin reading the file itself, instead of
-> just processing the content. That should be doable. One option would
-> be to pass the path of the file with the hashes through the sysctl
-> file and use kernel_read_file_from_path() to read it if the path is
-> in the pinned root (or maybe even in any trusted file system ;-)
+[auto build test ERROR on device-mapper-dm/for-next]
+[also build test ERROR on song-md/md-next kees/for-next/pstore v5.18-rc3 next-20220414]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-It could be a boot param or a Kconfig too. But yeah, having LoadPin able
-to use itself to validate the file path would be much nicer.
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220419-051810
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/device-mapper/linux-dm.git for-next
+config: powerpc-buildonly-randconfig-r002-20220417 (https://download.01.org/0day-ci/archive/20220419/202204191222.n0HWtNe0-lkp@intel.com/config)
+compiler: powerpc-linux-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/5af892969b227a2602732e4be44a0c4a41967400
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthias-Kaehlcke/LoadPin-Enable-loading-from-trusted-dm-verity-devices/20220419-051810
+        git checkout 5af892969b227a2602732e4be44a0c4a41967400
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=powerpc SHELL=/bin/bash security/loadpin/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   security/loadpin/loadpin.c: In function 'loadpin_init':
+>> security/loadpin/loadpin.c:404:44: error: 'loadpin_sysctl_path' undeclared (first use in this function)
+     404 |                 if (!register_sysctl_paths(loadpin_sysctl_path,
+         |                                            ^~~~~~~~~~~~~~~~~~~
+   security/loadpin/loadpin.c:404:44: note: each undeclared identifier is reported only once for each function it appears in
+>> security/loadpin/loadpin.c:405:44: error: 'loadpin_sysctl_table_verity' undeclared (first use in this function)
+     405 |                                            loadpin_sysctl_table_verity))
+         |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +/loadpin_sysctl_path +404 security/loadpin/loadpin.c
+
+   395	
+   396	static int __init loadpin_init(void)
+   397	{
+   398		pr_info("ready to pin (currently %senforcing)\n",
+   399			enforce ? "" : "not ");
+   400		parse_exclude();
+   401		security_add_hooks(loadpin_hooks, ARRAY_SIZE(loadpin_hooks), "loadpin");
+   402	
+   403		if (IS_ENABLED(CONFIG_SECURITY_LOADPIN_VERITY)) {
+ > 404			if (!register_sysctl_paths(loadpin_sysctl_path,
+ > 405						   loadpin_sysctl_table_verity))
+   406				pr_notice("sysctl registration failed!\n");
+   407		}
+   408	
+   409		return 0;
+   410	}
+   411	
 
 -- 
-Kees Cook
+0-DAY CI Kernel Test Service
+https://01.org/lkp
