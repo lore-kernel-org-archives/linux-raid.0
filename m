@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91F2BC433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A5FC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349370AbiDTT5z (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Apr 2022 15:57:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39388 "EHLO
+        id S1381875AbiDTT54 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Apr 2022 15:57:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244058AbiDTT5y (ORCPT
+        with ESMTP id S1344286AbiDTT5y (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 15:57:54 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC97313F36;
-        Wed, 20 Apr 2022 12:55:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0306014003;
+        Wed, 20 Apr 2022 12:55:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=Tc/4updu0oXiBoTJVCaXt56ab14DRILkwn0ElXxLw4k=; b=osP4/WJYBYQbjKitA+IgBIZBj2
-        8u2yO6Kx//0FaaIKxTzh2hJROz8PJ26zI2sWKDWaeLflVsjC1u+0PEbZVpMZPs62KmPYsg8ht3MR5
-        6F5tlAZbLsJm9IfGvxrE3zodddmyeC/QU3dEK1/qJWpwe5NeweksYIqYnxjk5emXsg2HlX+a3d+rY
-        4haCV8HrI0KI/aKZexNZi48stTTi3P1NGgH1vowRbmrQqNONqUeMj0I8YPR7RsvWkliFwg9uaV9Dj
-        i30MoeUWwfoKDWnXkAxZi382c3zF4PiHEvAIqJna6hDhzgT1xkuW3kGN2FtTtG0HsP71D5Yh/vCs4
-        EHBIfiVA==;
+        bh=1+vyla/uaazPWsKpL3zLeU/4Q484AsJ5Xk5mcUxpJCo=; b=pE7ZqxnLRObgKJju9kdNMv2oDL
+        Ku/79G3fV2XH55cw1A7MaP9p08FLNAUpOX6VWebqsBZZMl/lbU9t8h2IxPGAPcpnwu5R/u1MqY2Ab
+        7xQqJqBGbD/9YwwPhSvWAKSQY8JvK8UgdKr1wgWNi3ntNx/0K/5DUZBouNf6+/c3VH4k3datAJmx1
+        AOTuPf9dLopWtnGqrnWPzLKI6PgRQ6POvfs9jRoDzVsNbUwC81wMyXtD1oUFA/p3tPZxcJhsgIWIk
+        RB9EdRh5UUvmJdnaA3aOail9DHCOiB8+Jv99lGUf9tq3/SPC+nPkHzNQMN0ytloJ63UEakyVe6ss9
+        sHrPoJHQ==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPp-00CRsE-AT; Wed, 20 Apr 2022 13:55:05 -0600
+        id 1nhGPp-00CRsI-J8; Wed, 20 Apr 2022 13:55:06 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPo-00096C-Sb; Wed, 20 Apr 2022 13:55:04 -0600
+        id 1nhGPp-00096H-5u; Wed, 20 Apr 2022 13:55:05 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -41,8 +41,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>
-Date:   Wed, 20 Apr 2022 13:54:14 -0600
-Message-Id: <20220420195425.34911-2-logang@deltatee.com>
+Date:   Wed, 20 Apr 2022 13:54:16 -0600
+Message-Id: <20220420195425.34911-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220420195425.34911-1-logang@deltatee.com>
 References: <20220420195425.34911-1-logang@deltatee.com>
@@ -51,91 +51,52 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com, hch@lst.de
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 01/12] md/raid5: Factor out ahead_of_reshape() function
+Subject: [PATCH v2 03/12] md/raid5: Move stripe_add_to_batch_list() call out of add_stripe_bio()
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-There are a few uses of an ugly ternary operator in raid5_make_request()
-to check if a sector is a head of a reshape sector.
+stripe_add_to_batch_list() is better done in the loop in make_request
+instead of inside add_stripe_bio(). This is clearer and allows for
+storing the batch_head state outside the loop in a subsequent patch.
 
-Factor this out into a simple helper called ahead_of_reshape().
+The call to add_stripe_bio() in retry_aligned_read() is for read
+and batching only applies to write. So it's impossible for batching
+to happen at that call site.
 
-This appears to fix the first bio_wouldblock_error() check which appears
-to have comparison operators that didn't match the check below which
-causes a schedule. Besides this, no functional changes intended.
+No functional changes intended.
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ drivers/md/raid5.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7f7d1546b9ba..97b23c18402b 100644
+index cda6857e6207..8e1ece5ce984 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5787,6 +5787,15 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 	bio_endio(bi);
- }
+@@ -3534,8 +3534,6 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
+ 	}
+ 	spin_unlock_irq(&sh->stripe_lock);
  
-+static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
-+			     sector_t reshape_sector)
-+{
-+	if (mddev->reshape_backwards)
-+		return sector < reshape_sector;
-+	else
-+		return sector >= reshape_sector;
-+}
+-	if (stripe_can_batch(sh))
+-		stripe_add_to_batch_list(conf, sh);
+ 	return 1;
+ 
+  overlap:
+@@ -5955,6 +5953,9 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 			goto retry;
+ 		}
+ 
++		if (stripe_can_batch(sh))
++			stripe_add_to_batch_list(conf, sh);
 +
- static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -5843,9 +5852,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	/* Bail out if conflicts with reshape and REQ_NOWAIT is set */
- 	if ((bi->bi_opf & REQ_NOWAIT) &&
- 	    (conf->reshape_progress != MaxSector) &&
--	    (mddev->reshape_backwards
--	    ? (logical_sector > conf->reshape_progress && logical_sector <= conf->reshape_safe)
--	    : (logical_sector >= conf->reshape_safe && logical_sector < conf->reshape_progress))) {
-+	    !ahead_of_reshape(mddev, logical_sector, conf->reshape_progress) &&
-+	    ahead_of_reshape(mddev, logical_sector, conf->reshape_safe)) {
- 		bio_wouldblock_error(bi);
- 		if (rw == WRITE)
- 			md_write_end(mddev);
-@@ -5874,14 +5882,12 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			 * to check again.
- 			 */
- 			spin_lock_irq(&conf->device_lock);
--			if (mddev->reshape_backwards
--			    ? logical_sector < conf->reshape_progress
--			    : logical_sector >= conf->reshape_progress) {
-+			if (ahead_of_reshape(mddev, logical_sector,
-+					     conf->reshape_progress)) {
- 				previous = 1;
- 			} else {
--				if (mddev->reshape_backwards
--				    ? logical_sector < conf->reshape_safe
--				    : logical_sector >= conf->reshape_safe) {
-+				if (ahead_of_reshape(mddev, logical_sector,
-+						     conf->reshape_safe)) {
- 					spin_unlock_irq(&conf->device_lock);
- 					schedule();
- 					do_prepare = true;
-@@ -5912,9 +5918,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 				 */
- 				int must_retry = 0;
- 				spin_lock_irq(&conf->device_lock);
--				if (mddev->reshape_backwards
--				    ? logical_sector >= conf->reshape_progress
--				    : logical_sector < conf->reshape_progress)
-+				if (!ahead_of_reshape(mddev, logical_sector,
-+						      conf->reshape_progress))
- 					/* mismatch, need to try again */
- 					must_retry = 1;
- 				spin_unlock_irq(&conf->device_lock);
+ 		if (do_flush) {
+ 			set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
+ 			/* we only need flush for one stripe */
 -- 
 2.30.2
 
