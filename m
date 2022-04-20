@@ -2,83 +2,118 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73317C433F5
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 11:08:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB282C433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 11:48:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351118AbiDTLK7 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Apr 2022 07:10:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48998 "EHLO
+        id S1378251AbiDTLvA (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Apr 2022 07:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233484AbiDTLK6 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 07:10:58 -0400
-Received: from mail.bitfolk.com (mail.bitfolk.com [IPv6:2001:ba8:1f1:f019::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B227B28E1D
-        for <linux-raid@vger.kernel.org>; Wed, 20 Apr 2022 04:08:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=bitfolk.com
-        ; s=alpha; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=w4v/km3eK82JY+avY3J6OYrhNtXO6e7ZOM0o+QMTc9Q=; b=XbnVIKpB9sDffCBbk0izrQmYzp
-        oaSQOzAxYl2wbjB9pSzZDAgxDKJShFs2X0nZjpBJrI182nPIsnSPv6hfOrczNKOyeERCxTptetNND
-        l5IWa1VxdPJbsTZqAZsYDmu9xwtJyRgTs71J27+FDHc+MAzRm1Xc1LwtQtwDOQqu4OboTsLSwfESk
-        Qa8QFrQ/l4DpgF3Nu8+SNz35+JPgcKXnoQfgngtG9IX8tNlI2mwJnngKPhx8/DU4plz5dlMMrv+hW
-        iu1QH3RS/qG6boPg/LLxY7tiFwHpiVPiCxAPTxzW0fvTm/oYw9GvGzeFu1mTMWsWuaUhWEm+n0bVh
-        El0mIbVQ==;
-Received: from andy by mail.bitfolk.com with local (Exim 4.89)
-        (envelope-from <andy@strugglers.net>)
-        id 1nh8Bu-0007w9-Hc
-        for linux-raid@vger.kernel.org; Wed, 20 Apr 2022 11:08:10 +0000
-Date:   Wed, 20 Apr 2022 11:08:10 +0000
-From:   Andy Smith <andy@strugglers.net>
-To:     Linux RAID <linux-raid@vger.kernel.org>
-Subject: Re: Need to move RAID1 with mounted partition
-Message-ID: <20220420110810.x2ydoqhyeuocnrwy@bitfolk.com>
-Mail-Followup-To: Linux RAID <linux-raid@vger.kernel.org>
-References: <CAKRnqN+_=U58dT5bvgWJ1DgyEuhjsbmCuDL+xOLxmcuG1ML4qg@mail.gmail.com>
- <e3573002-05f3-3110-62a6-e704385f877f@youngman.org.uk>
- <CAKRnqNLjsX9nVLrLedo4tfxtg0ZBz=6XJu=-z_Ebw6Auh+oz-Q@mail.gmail.com>
- <8c2148d0-fa97-d0ef-10cc-11f79d7da5e5@youngman.org.uk>
- <CAKRnqN+21BZT1eufn962xiEDvnrBtk68dTBSLT1mx7+Ac2kJ+w@mail.gmail.com>
- <CAKRnqN+6wAFPf5AGNEf948NunA97MJ9Gy5eFzLCfX+WfHY72Pg@mail.gmail.com>
- <b5c0e119-0159-8566-1c6e-6d13b65b2f89@att.net>
+        with ESMTP id S1378243AbiDTLu6 (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 07:50:58 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EA36419B7
+        for <linux-raid@vger.kernel.org>; Wed, 20 Apr 2022 04:48:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1650455293; x=1681991293;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=tYwucQsfN1+gg+IIOLWeTm84ZtJjUA/HcHCaAjbvdgQ=;
+  b=Ftp98ktsgBGraYvDHGBlEHoiGh9AN1Ho50NQPZkGeNNAl6zp/11EV7ev
+   otsKME4TArtAq841a/JTwPEeUBFxEUZmskxBjJVPXNYqRxivUpnVJtw3p
+   T3WxwzT/Ymton2lq/XCZLrlvC4ngm4RUVtdKi9d8c/kjTDuDlTqvy1Jj/
+   YhW9rB9aqBQh3GJ3CuF6VArdfGYFHXJNAdLBneORtPT9Ugu6E4jlKz2xq
+   EDZuHTU7jvCni0/nOSElEPKA10QJl2qMNWt9rFWSU8pw4lvGHhfqy+W28
+   RbuByv9fX7Olj45QdOShsvDS3S6x0/3BYEnIaHGMJflWSjGKVYOB5kyBy
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10322"; a="263769544"
+X-IronPort-AV: E=Sophos;i="5.90,275,1643702400"; 
+   d="scan'208";a="263769544"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2022 04:48:12 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,275,1643702400"; 
+   d="scan'208";a="529718443"
+Received: from unknown (HELO localhost.igk.intel.com) ([10.102.102.57])
+  by orsmga006.jf.intel.com with ESMTP; 20 Apr 2022 04:48:11 -0700
+From:   Mateusz Grzonka <mateusz.grzonka@intel.com>
+To:     linux-raid@vger.kernel.org
+Cc:     jes@trained-monkey.org
+Subject: [PATCH] Fix possible NULL ptr dereferences and memory leaks
+Date:   Wed, 20 Apr 2022 13:34:00 +0200
+Message-Id: <20220420113400.6103-1-mateusz.grzonka@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b5c0e119-0159-8566-1c6e-6d13b65b2f89@att.net>
-OpenPGP: id=BF15490B; url=http://strugglers.net/~andy/pubkey.asc
-X-URL:  http://strugglers.net/wiki/User:Andy
-User-Agent: NeoMutt/20170113 (1.7.2)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: andy@strugglers.net
-X-SA-Exim-Scanned: No (on mail.bitfolk.com); SAEximRunCond expanded to false
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hello,
+In Assemble there was a NULL check for sra variable,
+which effectively didn't stop the execution in every case.
+That might have resulted in a NULL pointer dereference.
 
-On Wed, Apr 20, 2022 at 03:40:12AM -0500, Leslie Rhorer wrote:
-> The third partition on each drive is assigned as swap, and of
-> course it was easy to resize those partitions, leaving an
-> additional 512MB between the second and third partitions on each
-> drive.  All I need to do is move the second partition on each
-> drive up by 512MB.
+Also in super-ddf, mu variable was set to NULL for some condition,
+and then immidiately dereferenced.
+Additionally some memory wasn't freed as well.
 
-I'd be tempted to just make these two new 512M spaces into new
-partitions for a RAID-1 and move your /boot to that, abandoning the
-RAID-1 you have for the /boot that is using the partitions at the
-start of the disk. What would you lose? A couple of hundred MB?
-Exchanged for a much easier life.
+Signed-off-by: Mateusz Grzonka <mateusz.grzonka@intel.com>
+---
+ Assemble.c  | 7 ++++++-
+ super-ddf.c | 9 +++++++--
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
-You could do away with the swap partitions entirely and use swap
-files instead.
-
-You could recycle the first partitions as swap, too.
-
-Cheers,
-Andy
-
+diff --git a/Assemble.c b/Assemble.c
+index 704b8293..2bd7f087 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1984,7 +1984,12 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 	}
+ 
+ 	sra = sysfs_read(mdfd, NULL, GET_VERSION|GET_DEVS);
+-	if (sra == NULL || strcmp(sra->text_version, content->text_version) != 0) {
++	if (sra == NULL) {
++		pr_err("Failed to read sysfs parameters\n");
++		return 1;
++	}
++
++	if (strcmp(sra->text_version, content->text_version) != 0) {
+ 		if (content->array.major_version == -1 &&
+ 		    content->array.minor_version == -2 &&
+ 		    c->readonly &&
+diff --git a/super-ddf.c b/super-ddf.c
+index 3f304cdc..a592c5d7 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -5125,13 +5125,16 @@ static struct mdinfo *ddf_activate_spare(struct active_array *a,
+ 	 */
+ 	vc = find_vdcr(ddf, a->info.container_member, rv->disk.raid_disk,
+ 		       &n_bvd, &vcl);
+-	if (vc == NULL)
++	if (vc == NULL) {
++		free(rv);
+ 		return NULL;
++	}
+ 
+ 	mu = xmalloc(sizeof(*mu));
+ 	if (posix_memalign(&mu->space, 512, sizeof(struct vcl)) != 0) {
+ 		free(mu);
+-		mu = NULL;
++		free(rv);
++		return NULL;
+ 	}
+ 
+ 	mu->len = ddf->conf_rec_len * 512 * vcl->conf.sec_elmnt_count;
+@@ -5161,6 +5164,8 @@ static struct mdinfo *ddf_activate_spare(struct active_array *a,
+ 			pr_err("BUG: can't find disk %d (%d/%d)\n",
+ 			       di->disk.raid_disk,
+ 			       di->disk.major, di->disk.minor);
++			free(mu);
++			free(rv);
+ 			return NULL;
+ 		}
+ 		vc->phys_refnum[i_prim] = ddf->phys->entries[dl->pdnum].refnum;
 -- 
-https://bitfolk.com/ -- No-nonsense VPS hosting
+2.26.2
+
