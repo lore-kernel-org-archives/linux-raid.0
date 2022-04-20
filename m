@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3607C433EF
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 298FEC433FE
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381917AbiDTT6R (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Apr 2022 15:58:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39700 "EHLO
+        id S1381941AbiDTT6T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Apr 2022 15:58:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381884AbiDTT56 (ORCPT
+        with ESMTP id S1381885AbiDTT56 (ORCPT
         <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 15:57:58 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACFD314095;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACEBF14003;
         Wed, 20 Apr 2022 12:55:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=Y305VOn5uSVqG7ZLxlVP+RdBS8eUiSPvZm9RD+YTK1o=; b=qLDKiAo39D8VStwKrfvtcxk6D5
-        dXxnm2OinpeQgJgsg52JWhkzqPTtmY47iLKLY11Pt5HJxDhij8wggDE3XztLBk8Unafz1iuBcaxM5
-        Gx0e9RchhtVybP+rXRJw1545DoiA1nLOoSNkmD4dQ8S8pbEVLJfSBlCtKPYf/U/gY3ZymwHHjvrUM
-        54Gp+qngPwwmGJiIoWa6WNOXByW3uq8hBO3x0kH134TVBHTdEb6F2iZ4us1PAEpoUPtAhxd4hCfs2
-        V3cZCgTu+x/fm4HABxiIFJmoTSoIAWQq82M4+QprLdxCZW0F1ppgiQIwz5ow9Aj78FVGegNjLDjJz
-        ZZAAaNHQ==;
+        bh=vIG3yPf6Z99Rw9//hJOFyO9CpFp0TwWujYCD5Vmfae0=; b=GECck8rsp4SiCN2EXz5B+wiOFG
+        cY766AErBfJij2w+ZMA2+8K+VTGYY+cHEBRPPaQk4PpoRYt4ccFR0cZ2lE4XdidyMuI0BCCtBl4Tr
+        bXF2zwojxkMXDih+s0NGHK4qyzsghjfSEVPITAF5FuPLIJ5I8QLjTsu6mtYFKiiUgVxAVFNV0qWmN
+        yHLXEuZJn1ou1mlY4safFGzHQDZhRGBz06MXV6OsWKnrHDKEz0RO3Uo+6v/uZ5E0UeQpF6wwY1Aya
+        6LBn318x5xcU1CbLVKos1EUSFvcZtxo9HMU+2R3MjHQiMqBFn7OkIl/jgDG3iQx849/qViQ5MUTXg
+        QsIy386g==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPr-00CRsG-JX; Wed, 20 Apr 2022 13:55:08 -0600
+        id 1nhGPr-00CRsO-K5; Wed, 20 Apr 2022 13:55:08 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPq-00096p-Jo; Wed, 20 Apr 2022 13:55:06 -0600
+        id 1nhGPp-00096W-UT; Wed, 20 Apr 2022 13:55:05 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -40,8 +40,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Wed, 20 Apr 2022 13:54:24 -0600
-Message-Id: <20220420195425.34911-12-logang@deltatee.com>
+Date:   Wed, 20 Apr 2022 13:54:21 -0600
+Message-Id: <20220420195425.34911-9-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220420195425.34911-1-logang@deltatee.com>
 References: <20220420195425.34911-1-logang@deltatee.com>
@@ -50,105 +50,53 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 11/12] md/raid5: Check all disks in a stripe_head for reshape progress
+Subject: [PATCH v2 08/12] md/raid5: Refactor for loop in raid5_make_request() into while loop
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-When testing if a previous stripe has had reshape expand past it, use
-the earliest or latest logical sector in all the disks for that stripe
-head. This will allow adding multiple disks at a time in a subesquent
-patch.
+The for loop with retry label can be more cleanly expressed as a while
+loop by moving the logical_sector increment into the success path.
 
-To do this cleaner, refactor the check into a helper function called
-stripe_ahead_of_reshape().
+No functional changes intended.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/md/raid5.c | 55 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 41 insertions(+), 14 deletions(-)
+ drivers/md/raid5.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1fa82d8fa89e..40a25c4b80bd 100644
+index 1bce9075e165..0c250cc3bfff 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5823,6 +5823,42 @@ static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
- 		return sector >= reshape_sector;
- }
- 
-+static bool range_ahead_of_reshape(struct mddev *mddev, sector_t min,
-+				   sector_t max, sector_t reshape_sector)
-+{
-+	if (mddev->reshape_backwards)
-+		return max < reshape_sector;
-+	else
-+		return min >= reshape_sector;
-+}
-+
-+static bool stripe_ahead_of_reshape(struct mddev *mddev, struct r5conf *conf,
-+				    struct stripe_head *sh)
-+{
-+	sector_t max_sector = 0, min_sector = MaxSector;
-+	bool ret = false;
-+	int dd_idx;
-+
-+	for (dd_idx = 0; dd_idx < sh->disks; dd_idx++) {
-+		if (dd_idx == sh->pd_idx)
+@@ -5971,20 +5971,21 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 	}
+ 	md_account_bio(mddev, &bi);
+ 	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
+-	for (; logical_sector < last_sector; logical_sector += RAID5_STRIPE_SECTORS(conf)) {
+-	retry:
++	while (logical_sector < last_sector) {
+ 		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
+ 					  bi);
+ 		if (res == STRIPE_FAIL) {
+ 			break;
+ 		} else if (res == STRIPE_RETRY) {
+-			goto retry;
 +			continue;
+ 		} else if (res == STRIPE_SCHEDULE_AND_RETRY) {
+ 			schedule();
+ 			prepare_to_wait(&conf->wait_for_overlap, &w,
+ 					TASK_UNINTERRUPTIBLE);
+-			goto retry;
++			continue;
+ 		}
 +
-+		min_sector = min(min_sector, sh->dev[dd_idx].sector);
-+		max_sector = min(max_sector, sh->dev[dd_idx].sector);
-+	}
-+
-+	spin_lock_irq(&conf->device_lock);
-+
-+	if (!range_ahead_of_reshape(mddev, min_sector, max_sector,
-+				     conf->reshape_progress))
-+		/* mismatch, need to try again */
-+		ret = true;
-+
-+	spin_unlock_irq(&conf->device_lock);
-+
-+	return ret;
-+}
-+
- enum stripe_result {
- 	STRIPE_SUCCESS = 0,
- 	STRIPE_RETRY,
-@@ -5883,26 +5919,17 @@ static enum stripe_result make_stripe_request(struct mddev *mddev,
- 		return STRIPE_FAIL;
++		logical_sector += RAID5_STRIPE_SECTORS(conf);
  	}
  
--	if (unlikely(previous)) {
--		/* expansion might have moved on while waiting for a
--		 * stripe, so we must do the range check again.
-+	if (unlikely(previous) &&
-+	    stripe_ahead_of_reshape(mddev, conf, sh)) {
-+		/* Expansion moved on while waiting for a stripe.
- 		 * Expansion could still move past after this
- 		 * test, but as we are holding a reference to
- 		 * 'sh', we know that if that happens,
- 		 *  STRIPE_EXPANDING will get set and the expansion
- 		 * won't proceed until we finish with the stripe.
- 		 */
--		int must_retry = 0;
--		spin_lock_irq(&conf->device_lock);
--		if (!ahead_of_reshape(mddev, logical_sector,
--				      conf->reshape_progress))
--			/* mismatch, need to try again */
--			must_retry = 1;
--		spin_unlock_irq(&conf->device_lock);
--		if (must_retry) {
--			raid5_release_stripe(sh);
--			return STRIPE_SCHEDULE_AND_RETRY;
--		}
-+		raid5_release_stripe(sh);
-+		return STRIPE_SCHEDULE_AND_RETRY;
- 	}
- 
- 	if (read_seqcount_retry(&conf->gen_lock, seq)) {
+ 	finish_wait(&conf->wait_for_overlap, &w);
 -- 
 2.30.2
 
