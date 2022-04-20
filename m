@@ -2,35 +2,35 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 724B3C4332F
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD7CC433EF
+	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381881AbiDTT55 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Apr 2022 15:57:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39386 "EHLO
+        id S1381887AbiDTT57 (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Wed, 20 Apr 2022 15:57:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239428AbiDTT5y (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 15:57:54 -0400
+        with ESMTP id S1348590AbiDTT5z (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 15:57:55 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C65861208E;
-        Wed, 20 Apr 2022 12:55:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB20F13FBE;
+        Wed, 20 Apr 2022 12:55:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
-        :references:content-disposition:in-reply-to;
-        bh=gpqOyn9klkajlxugEcVdviYbMNr3Ptwfjv0KlXkvz70=; b=BMWUlKcCxjm8BiRdDW8wRUlaP2
-        cYXdHD47jRCOGeCxfejcnk6DpJFaYU8zdXthFXh7nman+WrPROKqAzfpYhxtjvH+dNDrH0BtyhloQ
-        ZEyTHdMpm7K/gxHl1nPpAvTQvChc+SQQ5RHC86omBfv0vSKEb4H7k+OUDjqfFewGCTdNUF+ObxSTG
-        tx9YY2z3MPL/Mfgqvc/dFBd505aK5MF4O851C7TqZcllB8flNqROTP8FpRX7cg0zPQE+YOfaPGY1H
-        kXzURxRb2IW9SB/pZjvcYEwHsJMLYg3ucXf5IvZm3375zmCOb3FD+xI5aSY59FKrzvsR4V5s83Sda
-        58ygM+2g==;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=5Wt2EBL1j0ItIg9XZA+T0KAUXfaUNBmnwfs/d6ShImU=; b=CtomW+u3GgcqLEkkNzeVacivHN
+        wksuFjNdTuuN922F+Z6CAf6N5BRVsTeK/2jufvl9aVtTFE03Z/8r6fQZyNV2ZTHkrvSPt/Tw18Toc
+        dB0iiWmSGSpPLKZkSG19lqkWGQdIlGZpFZIHhFQg1DHMstN8ZEjtk5yQfP83g1AvlH4Y5VubTDY7n
+        TXwNSBxWPodwas+qaDtqjk0eGTQJuk8MT4g8GUcndxrvfRyKFOSQVmxDs4A/m5Y8CZ6Dysr/e9DwO
+        XBjSH+M/kbUJF1zlyWjiuQ0jmGW4BovmKUuFBhrOTdxn106IIRd46cs0NEodzwOcxGXkPab5tSZT3
+        LExi1klQ==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPn-00CRs3-Qn; Wed, 20 Apr 2022 13:55:04 -0600
+        id 1nhGPp-00CRsG-Ej; Wed, 20 Apr 2022 13:55:06 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPm-000968-DJ; Wed, 20 Apr 2022 13:55:02 -0600
+        id 1nhGPp-00096E-16; Wed, 20 Apr 2022 13:55:05 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>
@@ -40,103 +40,163 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Wed, 20 Apr 2022 13:54:13 -0600
-Message-Id: <20220420195425.34911-1-logang@deltatee.com>
+Date:   Wed, 20 Apr 2022 13:54:15 -0600
+Message-Id: <20220420195425.34911-3-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220420195425.34911-1-logang@deltatee.com>
+References: <20220420195425.34911-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 00/12] Improve Raid5 Lock Contention
+Subject: [PATCH v2 02/12] md/raid5: Refactor raid5_make_request loop
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Hi,
+Break immediately if raid5_get_active_stripe() returns NULL and deindent
+the rest of the loop. Annotate this check with an unlikely().
 
-This is v2 of this series which addresses Christoph's feedback and
-fixes some bugs. The first posting is at [1]. A git branch is
-available at [2].
+This makes the code easier to read and reduces the indentation level.
 
---
+No functional changes intended.
 
-I've been doing some work trying to improve the bulk write performance
-of raid5 on large systems with fast NVMe drives. The bottleneck appears
-largely to be lock contention on the hash_lock and device_lock. This
-series improves the situation slightly by addressing a couple of low
-hanging fruit ways to take the lock fewer times in the request path.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/md/raid5.c | 109 +++++++++++++++++++++++----------------------
+ 1 file changed, 55 insertions(+), 54 deletions(-)
 
-Patch 9 adjusts how batching works by keeping a reference to the
-previous stripe_head in raid5_make_request(). Under most situtations,
-this removes the need to take the hash_lock in stripe_add_to_batch_list()
-which should reduce the number of times the lock is taken by a factor of
-about 2.
-
-Patch 12 pivots the way raid5_make_request() works. Before the patch, the
-code must find the stripe_head for every 4KB page in the request, so each
-stripe head must be found once for every data disk. The patch changes this
-so that all the data disks can be added to a stripe_head at once and the
-number of times the stripe_head must be found (and thus the number of
-times the hash_lock is taken) should be reduced by a factor roughly equal
-to the number of data disks.
-
-The remaining patches are just cleanup and prep patches for those two
-patches.
-
-Doing apples to apples testing this series on a small VM with 5 ram
-disks, I saw a bandwidth increase of roughly 14% and lock contentions
-on the hash_lock (as reported by lock stat) reduced by more than a factor
-of 5 (though it is still significantly contended).
-
-Testing on larger systems with NVMe drives saw similar small bandwidth
-increases from 3% to 20% depending on the parameters. Oddly small arrays
-had larger gains, likely due to them having lower starting bandwidths; I
-would have expected larger gains with larger arrays (seeing there
-should have been even fewer locks taken in raid5_make_request()).
-
-Logan
-
-[1] https://lkml.kernel.org/r/20220407164511.8472-1-logang@deltatee.com
-[2] https://github.com/sbates130272/linux-p2pmem raid5_lock_cont_v2
-
---
-
-Changes since v1:
-  - Rebased on current md-next branch (190a901246c69d79)
-  - Added patch to create a helper for checking if a sector
-    is ahead of the reshape (per Christoph)
-  - Reworked the __find_stripe() patch to create a find_get_stripe()
-    helper (per Christoph)
-  - Added more patches to further refactor raid5_make_request() and
-    pull most of the loop body into a helper function (per Christoph)
-  - A few other minor cleanups (boolean return, droping casting when
-    printing sectors, commit message grammar) as suggested by Christoph.
-  - Fixed two uncommon but bad data corruption bugs in that were found.
-
---
-
-Logan Gunthorpe (12):
-  md/raid5: Factor out ahead_of_reshape() function
-  md/raid5: Refactor raid5_make_request loop
-  md/raid5: Move stripe_add_to_batch_list() call out of add_stripe_bio()
-  md/raid5: Move common stripe count increment code into __find_stripe()
-  md/raid5: Factor out helper from raid5_make_request() loop
-  md/raid5: Drop the do_prepare flag in raid5_make_request()
-  md/raid5: Move read_seqcount_begin() into make_stripe_request()
-  md/raid5: Refactor for loop in raid5_make_request() into while loop
-  md/raid5: Keep a reference to last stripe_head for batch
-  md/raid5: Refactor add_stripe_bio()
-  md/raid5: Check all disks in a stripe_head for reshape progress
-  md/raid5: Pivot raid5_make_request()
-
- drivers/md/raid5.c | 632 +++++++++++++++++++++++++++++----------------
- drivers/md/raid5.h |   1 +
- 2 files changed, 410 insertions(+), 223 deletions(-)
-
-
-base-commit: 190a901246c69d79dadd1ab574022548da612724
---
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 97b23c18402b..cda6857e6207 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5906,68 +5906,69 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
+ 
+ 		sh = raid5_get_active_stripe(conf, new_sector, previous,
+ 				       (bi->bi_opf & REQ_RAHEAD), 0);
+-		if (sh) {
+-			if (unlikely(previous)) {
+-				/* expansion might have moved on while waiting for a
+-				 * stripe, so we must do the range check again.
+-				 * Expansion could still move past after this
+-				 * test, but as we are holding a reference to
+-				 * 'sh', we know that if that happens,
+-				 *  STRIPE_EXPANDING will get set and the expansion
+-				 * won't proceed until we finish with the stripe.
+-				 */
+-				int must_retry = 0;
+-				spin_lock_irq(&conf->device_lock);
+-				if (!ahead_of_reshape(mddev, logical_sector,
+-						      conf->reshape_progress))
+-					/* mismatch, need to try again */
+-					must_retry = 1;
+-				spin_unlock_irq(&conf->device_lock);
+-				if (must_retry) {
+-					raid5_release_stripe(sh);
+-					schedule();
+-					do_prepare = true;
+-					goto retry;
+-				}
+-			}
+-			if (read_seqcount_retry(&conf->gen_lock, seq)) {
+-				/* Might have got the wrong stripe_head
+-				 * by accident
+-				 */
+-				raid5_release_stripe(sh);
+-				goto retry;
+-			}
++		if (unlikely(!sh)) {
++			/* cannot get stripe, just give-up */
++			bi->bi_status = BLK_STS_IOERR;
++			break;
++		}
+ 
+-			if (test_bit(STRIPE_EXPANDING, &sh->state) ||
+-			    !add_stripe_bio(sh, bi, dd_idx, rw, previous)) {
+-				/* Stripe is busy expanding or
+-				 * add failed due to overlap.  Flush everything
+-				 * and wait a while
+-				 */
+-				md_wakeup_thread(mddev->thread);
++		if (unlikely(previous)) {
++			/* expansion might have moved on while waiting for a
++			 * stripe, so we must do the range check again.
++			 * Expansion could still move past after this
++			 * test, but as we are holding a reference to
++			 * 'sh', we know that if that happens,
++			 *  STRIPE_EXPANDING will get set and the expansion
++			 * won't proceed until we finish with the stripe.
++			 */
++			int must_retry = 0;
++			spin_lock_irq(&conf->device_lock);
++			if (!ahead_of_reshape(mddev, logical_sector,
++					      conf->reshape_progress))
++				/* mismatch, need to try again */
++				must_retry = 1;
++			spin_unlock_irq(&conf->device_lock);
++			if (must_retry) {
+ 				raid5_release_stripe(sh);
+ 				schedule();
+ 				do_prepare = true;
+ 				goto retry;
+ 			}
+-			if (do_flush) {
+-				set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
+-				/* we only need flush for one stripe */
+-				do_flush = false;
+-			}
++		}
+ 
+-			set_bit(STRIPE_HANDLE, &sh->state);
+-			clear_bit(STRIPE_DELAYED, &sh->state);
+-			if ((!sh->batch_head || sh == sh->batch_head) &&
+-			    (bi->bi_opf & REQ_SYNC) &&
+-			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+-				atomic_inc(&conf->preread_active_stripes);
+-			release_stripe_plug(mddev, sh);
+-		} else {
+-			/* cannot get stripe for read-ahead, just give-up */
+-			bi->bi_status = BLK_STS_IOERR;
+-			break;
++		if (read_seqcount_retry(&conf->gen_lock, seq)) {
++			/* Might have got the wrong stripe_head by accident */
++			raid5_release_stripe(sh);
++			goto retry;
++		}
++
++		if (test_bit(STRIPE_EXPANDING, &sh->state) ||
++		    !add_stripe_bio(sh, bi, dd_idx, rw, previous)) {
++			/*
++			 * Stripe is busy expanding or add failed due to
++			 * overlap. Flush everything and wait a while.
++			 */
++			md_wakeup_thread(mddev->thread);
++			raid5_release_stripe(sh);
++			schedule();
++			do_prepare = true;
++			goto retry;
+ 		}
++
++		if (do_flush) {
++			set_bit(STRIPE_R5C_PREFLUSH, &sh->state);
++			/* we only need flush for one stripe */
++			do_flush = false;
++		}
++
++		set_bit(STRIPE_HANDLE, &sh->state);
++		clear_bit(STRIPE_DELAYED, &sh->state);
++		if ((!sh->batch_head || sh == sh->batch_head) &&
++		    (bi->bi_opf & REQ_SYNC) &&
++		    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
++			atomic_inc(&conf->preread_active_stripes);
++
++		release_stripe_plug(mddev, sh);
+ 	}
+ 	finish_wait(&conf->wait_for_overlap, &w);
+ 
+-- 
 2.30.2
+
