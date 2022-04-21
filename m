@@ -2,153 +2,150 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58571C433F5
-	for <linux-raid@archiver.kernel.org>; Thu, 21 Apr 2022 09:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F60C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 21 Apr 2022 15:54:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1387486AbiDUJUr (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Thu, 21 Apr 2022 05:20:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59138 "EHLO
+        id S1390342AbiDUP5T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 21 Apr 2022 11:57:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1387485AbiDUJUq (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Apr 2022 05:20:46 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03FB5255A4;
-        Thu, 21 Apr 2022 02:17:55 -0700 (PDT)
-Received: from [172.18.70.146] (unknown [46.183.103.17])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 103EB61EA1929;
-        Thu, 21 Apr 2022 11:17:51 +0200 (CEST)
-Message-ID: <b0bd9204-1f76-aba3-b754-464e28763f59@molgen.mpg.de>
-Date:   Thu, 21 Apr 2022 11:17:50 +0200
+        with ESMTP id S1390336AbiDUP5S (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Apr 2022 11:57:18 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6983D47392;
+        Thu, 21 Apr 2022 08:54:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+        MIME-Version:Date:Message-ID:content-disposition;
+        bh=hkyKr8j3OxoBTrWwgPc9PNlCF0d6AYPRaEfu+FOjftE=; b=MxidANs+F8ZM87gae7J2FlSgNz
+        toNb4BaJOpSIR3tZFT+xC1oEd/EUUR+yK+aXWaA1WGGuq4zTdwS0AIdiKn0O0DsThCLmTbE+nFMFE
+        Xi1lFdCOuq6GPZN421PH28ueyFgv924JEE5k7xHrwWU9WMV3sAd+fX+EFO7vOnG25U1Ncj4T8ZORD
+        RCvaGgFMaID4kWKIetXn6MwollYxbUAeymnKxDjTFEHWJmCWVhXifu0fd1hUDRthhuHGZylFRoLPQ
+        KyfDEIiua8v3we7KGrPIx+bdid2CZD0K0tDaWi27RBPiv3fEsNuKa3dMIPPgOZuew1PVuIUMBWOUw
+        iDoe2QUw==;
+Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
+        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <logang@deltatee.com>)
+        id 1nhZ8U-00DB5J-L7; Thu, 21 Apr 2022 09:54:27 -0600
+Message-ID: <d49e2bb9-c7ae-8192-dbca-5c0a0e18359c@deltatee.com>
+Date:   Thu, 21 Apr 2022 09:54:23 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH v2 01/12] md/raid5: Factor out ahead_of_reshape() function
-Content-Language: en-US
-To:     Logan Gunthorpe <logang@deltatee.com>
+ Thunderbird/91.7.0
+Content-Language: en-CA
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
         Song Liu <song@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
-        David Sloan <David.Sloan@eideticom.com>,
-        Christoph Hellwig <hch@lst.de>
+        David Sloan <David.Sloan@eideticom.com>
 References: <20220420195425.34911-1-logang@deltatee.com>
- <20220420195425.34911-2-logang@deltatee.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220420195425.34911-2-logang@deltatee.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <20220420195425.34911-13-logang@deltatee.com>
+ <YmD9KBJtOjV+J5We@infradead.org>
+From:   Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <YmD9KBJtOjV+J5We@infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 24.64.144.200
+X-SA-Exim-Rcpt-To: hch@infradead.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v2 12/12] md/raid5: Pivot raid5_make_request()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-Dear Logan,
 
 
-Thank you for these patches.
-
-
-Am 20.04.22 um 21:54 schrieb Logan Gunthorpe:
-> There are a few uses of an ugly ternary operator in raid5_make_request()
-> to check if a sector is a head of a reshape sector.
+On 2022-04-21 00:43, Christoph Hellwig wrote:
+> On Wed, Apr 20, 2022 at 01:54:25PM -0600, Logan Gunthorpe wrote:
+>>  struct stripe_request_ctx {
+>>  	bool do_flush;
+>>  	struct stripe_head *batch_last;
+>> +	sector_t disk_sector_done;
+>> +	sector_t start_disk_sector;
 > 
-> Factor this out into a simple helper called ahead_of_reshape().
+> Very nitpicky, but why use two different naming styles for the sectors
+> here?
 > 
-> This appears to fix the first bio_wouldblock_error() check which appears
-> to have comparison operators that didn't match the check below which
-> causes a schedule. Besides this, no functional changes intended.
-
-If there is an error, could that be fixed in a separate commit, which 
-could be applied to the stable series?
-
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->   drivers/md/raid5.c | 29 +++++++++++++++++------------
->   1 file changed, 17 insertions(+), 12 deletions(-)
+>> +	bool first_wrap;
+>> +	sector_t last_sector;
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 7f7d1546b9ba..97b23c18402b 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5787,6 +5787,15 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
->   	bio_endio(bi);
->   }
->   
-> +static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
-> +			     sector_t reshape_sector)
-> +{
-> +	if (mddev->reshape_backwards)
-> +		return sector < reshape_sector;
-> +	else
-> +		return sector >= reshape_sector;
+> And especially with the last_sector here a few comments explaining
+> what each of the sector values mean might be useful.
+> 
+> I'd also keep the two bool variables together for a better structure
+> layout.
 
-I like the ternary operator. ;-)
+Yeah, this logic has been very tricky to figure out. Thus explaining it
+was quite difficult. It was a consistent source of bugs for a me for a
+while until I figured out this little state machine. I'll follow your
+rough template and rework the comments and try to make a large example
+comment or something to explain this, and maybe factor it into a helper
+function.
 
-     return mddev->reshape_backwards ? (return sector < reshape_sector) 
-: (sector >= reshape_sector)
+>> +	 * if new_sector is less than the starting sector. Clear the
+>> +	 * boolean once the start sector is hit for the second time.
+>> +	 * When first_wrap is set, ignore the disk_sector_done.
+>> +	 */
+>> +	if (ctx->start_disk_sector == MaxSector) {
+>> +		ctx->start_disk_sector = new_sector;
+>> +	} else if (new_sector < ctx->start_disk_sector) {
+>> +		ctx->first_wrap = true;
+>> +	} else if (new_sector == ctx->start_disk_sector) {
+>> +		ctx->first_wrap = false;
+>> +		ctx->start_disk_sector = 0;
+>> +		return STRIPE_SUCCESS;
+>> +	} else if (!ctx->first_wrap && new_sector <= ctx->disk_sector_done) {
+>> +		return STRIPE_SUCCESS;
+>> +	}
+>> +
+> 
+> I find this a bit confusing to read.  While trying to mentally untangle
+> it I came up with this version instead, but it could really use some
+> good comments explaining each of the checks as I found your big comment
+> to not quite match the logic easily.
+> 
+> 	if (ctx->start_disk_sector == MaxSector) {
+> 		/*
+> 		 * First loop iteration, start our state machine.
+> 		 * 
+> 		ctx->start_disk_sector = new_sector;
+> 	} else {
+> 		/*
+> 		 * We are done if we wrapped around to the same sector.
+> 		 * (???)
+> 		 */
+> 		if (new_sector == ctx->start_disk_sector) {
+> 			ctx->first_wrap = false;
+> 			ctx->start_disk_sector = 0;
+> 			return STRIPE_SUCCESS;
+> 		}
+> 
+> 		/*
+> 		 * Sector before the start sector?  Keep going and wrap
+> 		 * around.
+> 		 */
+> 		if (new_sector < ctx->start_disk_sector) {
+> 			ctx->first_wrap = true;
+> 		} else {
+> 			// ???
 
-Sorry, does not matter.
+This is actually the common most important branch that says if we've
+already done this disk sector to stop and move on. So I'll probably
+rework it some so that it is not so deeply nested.
 
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> 			if (new_sector <= ctx->disk_sector_done &&
+> 			   !ctx->first_wrap)
+> 				return STRIPE_SUCCESS;
+> 		}
+> 	}
 
+No problem cleaning up your other nits. I'll send a v3 in due course.
 
+Thanks,
 
-Kind regards,
-
-Paul
-
-
-> +}
-> +
->   static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->   {
->   	struct r5conf *conf = mddev->private;
-> @@ -5843,9 +5852,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->   	/* Bail out if conflicts with reshape and REQ_NOWAIT is set */
->   	if ((bi->bi_opf & REQ_NOWAIT) &&
->   	    (conf->reshape_progress != MaxSector) &&
-> -	    (mddev->reshape_backwards
-> -	    ? (logical_sector > conf->reshape_progress && logical_sector <= conf->reshape_safe)
-> -	    : (logical_sector >= conf->reshape_safe && logical_sector < conf->reshape_progress))) {
-> +	    !ahead_of_reshape(mddev, logical_sector, conf->reshape_progress) &&
-> +	    ahead_of_reshape(mddev, logical_sector, conf->reshape_safe)) {
->   		bio_wouldblock_error(bi);
->   		if (rw == WRITE)
->   			md_write_end(mddev);
-> @@ -5874,14 +5882,12 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->   			 * to check again.
->   			 */
->   			spin_lock_irq(&conf->device_lock);
-> -			if (mddev->reshape_backwards
-> -			    ? logical_sector < conf->reshape_progress
-> -			    : logical_sector >= conf->reshape_progress) {
-> +			if (ahead_of_reshape(mddev, logical_sector,
-> +					     conf->reshape_progress)) {
->   				previous = 1;
->   			} else {
-> -				if (mddev->reshape_backwards
-> -				    ? logical_sector < conf->reshape_safe
-> -				    : logical_sector >= conf->reshape_safe) {
-> +				if (ahead_of_reshape(mddev, logical_sector,
-> +						     conf->reshape_safe)) {
->   					spin_unlock_irq(&conf->device_lock);
->   					schedule();
->   					do_prepare = true;
-> @@ -5912,9 +5918,8 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
->   				 */
->   				int must_retry = 0;
->   				spin_lock_irq(&conf->device_lock);
-> -				if (mddev->reshape_backwards
-> -				    ? logical_sector >= conf->reshape_progress
-> -				    : logical_sector < conf->reshape_progress)
-> +				if (!ahead_of_reshape(mddev, logical_sector,
-> +						      conf->reshape_progress))
->   					/* mismatch, need to try again */
->   					must_retry = 1;
->   				spin_unlock_irq(&conf->device_lock);
+Logan
