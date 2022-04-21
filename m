@@ -2,101 +2,64 @@ Return-Path: <linux-raid-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 298FEC433FE
-	for <linux-raid@archiver.kernel.org>; Wed, 20 Apr 2022 19:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 317A1C433EF
+	for <linux-raid@archiver.kernel.org>; Thu, 21 Apr 2022 06:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381941AbiDTT6T (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
-        Wed, 20 Apr 2022 15:58:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39698 "EHLO
+        id S1384645AbiDUGKk (ORCPT <rfc822;linux-raid@archiver.kernel.org>);
+        Thu, 21 Apr 2022 02:10:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381885AbiDTT56 (ORCPT
-        <rfc822;linux-raid@vger.kernel.org>); Wed, 20 Apr 2022 15:57:58 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACEBF14003;
-        Wed, 20 Apr 2022 12:55:09 -0700 (PDT)
+        with ESMTP id S1384641AbiDUGKk (ORCPT
+        <rfc822;linux-raid@vger.kernel.org>); Thu, 21 Apr 2022 02:10:40 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 436B010FE9;
+        Wed, 20 Apr 2022 23:07:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=vIG3yPf6Z99Rw9//hJOFyO9CpFp0TwWujYCD5Vmfae0=; b=GECck8rsp4SiCN2EXz5B+wiOFG
-        cY766AErBfJij2w+ZMA2+8K+VTGYY+cHEBRPPaQk4PpoRYt4ccFR0cZ2lE4XdidyMuI0BCCtBl4Tr
-        bXF2zwojxkMXDih+s0NGHK4qyzsghjfSEVPITAF5FuPLIJ5I8QLjTsu6mtYFKiiUgVxAVFNV0qWmN
-        yHLXEuZJn1ou1mlY4safFGzHQDZhRGBz06MXV6OsWKnrHDKEz0RO3Uo+6v/uZ5E0UeQpF6wwY1Aya
-        6LBn318x5xcU1CbLVKos1EUSFvcZtxo9HMU+2R3MjHQiMqBFn7OkIl/jgDG3iQx849/qViQ5MUTXg
-        QsIy386g==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPr-00CRsO-K5; Wed, 20 Apr 2022 13:55:08 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1nhGPp-00096W-UT; Wed, 20 Apr 2022 13:55:05 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        Song Liu <song@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jZM9msgDNeu7xI9NF/7peTFnK08gLMscQ4rYMQqGU2E=; b=nMkLeWmhfjkXKoni4Un4Mgw65Y
+        PuRJLMdtiHJOV8lHmucaN5dQAqpvMlAkBKfObYoJbXRkV5cGiIW2OfUW+Mjl4F7vFGbijA9wLa2Ib
+        RB6GGNoCBxpqVlWKQYaHumsW+0BbJUjEma05bxNjuPt9ZSRVF/aKCuxBGMAG2uU+9JMZFkGT1KDd4
+        gZNh2o1jMzxkayTHxp/w6gDANWDp469mrMjwgLgd/VovQXOhziczigxlfHnHiJwgiNsJQiUwg28h9
+        yv2iyhlad4GRwDgK4SL/noRlH+de37OLhfEpL//V6ic8cHniuQbO0ta4taELLZv5hb2tM9X9ls3ZH
+        yZPnKfQQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nhPym-00BdJE-UV; Thu, 21 Apr 2022 06:07:48 +0000
+Date:   Wed, 20 Apr 2022 23:07:48 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        Song Liu <song@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
         Guoqing Jiang <guoqing.jiang@linux.dev>,
         Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <Martin.Oliveira@eideticom.com>,
         David Sloan <David.Sloan@eideticom.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Wed, 20 Apr 2022 13:54:21 -0600
-Message-Id: <20220420195425.34911-9-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220420195425.34911-1-logang@deltatee.com>
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 01/12] md/raid5: Factor out ahead_of_reshape() function
+Message-ID: <YmD0tJ8JJmiL43q1@infradead.org>
 References: <20220420195425.34911-1-logang@deltatee.com>
+ <20220420195425.34911-2-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, song@kernel.org, hch@infradead.org, guoqing.jiang@linux.dev, sbates@raithlin.com, Martin.Oliveira@eideticom.com, David.Sloan@eideticom.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 08/12] md/raid5: Refactor for loop in raid5_make_request() into while loop
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220420195425.34911-2-logang@deltatee.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-raid.vger.kernel.org>
 X-Mailing-List: linux-raid@vger.kernel.org
 
-The for loop with retry label can be more cleanly expressed as a while
-loop by moving the logical_sector increment into the success path.
+On Wed, Apr 20, 2022 at 01:54:14PM -0600, Logan Gunthorpe wrote:
+> +static bool ahead_of_reshape(struct mddev *mddev, sector_t sector,
+> +			     sector_t reshape_sector)
+> +{
+> +	if (mddev->reshape_backwards)
+> +		return sector < reshape_sector;
+> +	else
+> +		return sector >= reshape_sector;
+> +}
 
-No functional changes intended.
+No real eed for the else here.  Otherwise looks good:
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/md/raid5.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1bce9075e165..0c250cc3bfff 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5971,20 +5971,21 @@ static bool raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	}
- 	md_account_bio(mddev, &bi);
- 	prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
--	for (; logical_sector < last_sector; logical_sector += RAID5_STRIPE_SECTORS(conf)) {
--	retry:
-+	while (logical_sector < last_sector) {
- 		res = make_stripe_request(mddev, conf, &ctx, logical_sector,
- 					  bi);
- 		if (res == STRIPE_FAIL) {
- 			break;
- 		} else if (res == STRIPE_RETRY) {
--			goto retry;
-+			continue;
- 		} else if (res == STRIPE_SCHEDULE_AND_RETRY) {
- 			schedule();
- 			prepare_to_wait(&conf->wait_for_overlap, &w,
- 					TASK_UNINTERRUPTIBLE);
--			goto retry;
-+			continue;
- 		}
-+
-+		logical_sector += RAID5_STRIPE_SECTORS(conf);
- 	}
- 
- 	finish_wait(&conf->wait_for_overlap, &w);
--- 
-2.30.2
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
